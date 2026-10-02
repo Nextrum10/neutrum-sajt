@@ -839,6 +839,10 @@
       digital: h.niva_id && h.nivaer ? U.digitalRad(h, S.forsok) : '',
       atgarder: (h.niva_id && h.nivaer
           ? '<button class="btn btn-ghost btn-sm" type="button" data-upg-forhand="' + esc(h.niva_id) + '">Frågorna</button>' : '')
+        /* Facit står bland åtgärderna, inte på materialraden: en knapp
+           till bredvid Öppna bröt den raden på en telefon. */
+        + (h.biblioteksmaterial && NX.facitLänk(h.biblioteksmaterial.lank)
+          ? '<a class="btn btn-ghost btn-sm" href="' + esc(NX.facitLänk(h.biblioteksmaterial.lank)) + '" target="_blank" rel="noopener">Facit</a>' : '')
         + '<button class="btn btn-ghost btn-sm" data-lax-bort="' + h.id + '">Ta bort</button>'
     }) });
   }
@@ -2479,6 +2483,11 @@
       + '<div class="bib-kort-knappar">'
       + '<button type="button" class="btn btn-ghost btn-sm" data-bib-titt="' + esc(b.id) + '">Titta på det</button>'
       + '<button type="button" class="btn btn-primary btn-sm" data-bib-lax="' + esc(b.id) + '">Ge som uppgift</button>'
+      /* Facit finns till bankens egna blad (NX.facitLänk). Det öppnas
+         här och i uppgiftsraden, aldrig i familjens vy. */
+      + (NX.facitLänk(b.lank)
+          ? '<a class="btn btn-ghost btn-sm" href="' + esc(NX.facitLänk(b.lank)) + '" target="_blank" rel="noopener">Facit</a>'
+          : '')
       /* Bara ditt eget går att ta bort. Nextrums bank sköts av admin,
          och en knapp som alltid svarar "det gick inte" är sämre än
          ingen knapp. */

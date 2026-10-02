@@ -32,9 +32,11 @@
      De som skriver window.NXStudie = … fungerar båda vägarna; de
      andra gör det inte, så det här är enda formen som håller. */
   /* skickaBarnHem kom med barnkontona: alla fyra vyerna anropar den
-     när de startar. */
+     när de startar. facitLänk kom med facit (Fas 15.9): studiehjälparvyn
+     och adminvyn ritar biblioteket med den. */
   var krav = [
-    [typeof NX !== 'undefined' && typeof NX.esc === 'function' && typeof NX.skickaBarnHem === 'function',
+    [typeof NX !== 'undefined' && typeof NX.esc === 'function' && typeof NX.skickaBarnHem === 'function'
+      && typeof NX.facitLänk === 'function',
       'nextrum-app.js']
   ];
 

@@ -5,7 +5,8 @@
        python3 verktyg/bygg-banken.py ak4- gy2-       # ritar bara blad vars filnamn innehåller något av dem
        python3 verktyg/bygg-banken.py --sql           # skriver raderna till biblioteksmaterial
        python3 verktyg/bygg-banken.py --sql ak4-      # bara de raderna: en ny migration tar bara de nya bladen
-       python3 verktyg/bygg-banken.py --kolla         # varje blad har en bild och en rad i en migration
+       python3 verktyg/bygg-banken.py --facit         # ritar facit, bank/facit/*.png (också med mönster)
+       python3 verktyg/bygg-banken.py --kolla         # varje blad har en bild, ett facit och en rad i en migration
 
 Bladen står i verktyg/bladen/ (en modul per stadium, figurer i figurer.py). Verktyget
 mäter varje sida innan den ritas och vägrar ett blad som inte ryms.
@@ -32,6 +33,14 @@ INGET FACIT PÅ BLADEN, OCH INTE I BESKRIVNINGEN. nextrum-larare-vy.js
 fyller läxans text med materialets beskrivning när studiehjälparen
 inte skrivit något eget, och läxtexten läser eleven. Ett facit i
 beskrivningen hade alltså följt med ut till barnet.
+
+FACIT FINNS, PÅ EN EGEN SIDA (Fas 15.9). Leo: "att det finns svar till
+uppgifterna lättillgängligt". Varje blad har ett facit i
+verktyg/bladen/facit_<modul>.py, ett svar per uppgift, ritat till
+bank/facit/<fil>.png. Studiehjälparen och admin når det med knappen
+Facit i biblioteket och på uppgiftsraden (NX.facitLänk); familjens och
+barnets vy visar det aldrig. Ändras en uppgift ändras dess svar i
+samma ändring: --kolla ser bara att antalet stämmer.
 
 Id:t är ett uuid5 ur filnamnet, så att --sql alltid ger samma rader
 och en migration kan köras om utan dubbletter.
@@ -152,27 +161,8 @@ def fyll(text):
     return ut.replace('___', '<span class="linje"></span>')
 
 
-def sida(b, mat=False):
-    typsnitt = 'file://' + os.path.join(ROT, 'typsnitt')
-    uppg = []
-    for i, u in enumerate(b['uppgifter'], 1):
-        text, extra = u[0], u[1]
-        figur = u[2] if len(u) > 2 else ''
-        under = ''
-        if extra == 'ruta':
-            under = '<div class="rit"></div>'
-        elif extra:
-            under = ''.join('<div class="rad"></div>' for _ in range(extra))
-        uppg.append('<li><span class="nr">%d</span><div><p>%s</p>%s%s</div></li>' % (i, fyll(text), figur, under))
-    lastext = ''
-    if b.get('text'):
-        t = b['text']
-        lastext = ('<div class="lastext">%s</div>' % html.escape(t)) if isinstance(t, str) else \
-            '<div class="lastext">%s</div>' % ''.join(
-                ('<p><b>%s</b></p>' % html.escape(s[2:])) if s.startswith('# ') else ('<p>%s</p>' % html.escape(s)) for s in t)
-    return """<!doctype html><html lang="sv"><head><meta charset="utf-8">
-<style>
-@font-face{font-family:'Schibsted Grotesk';font-weight:400 800;src:url(%(t)s/schibsted-grotesk-latin.woff2) format('woff2')}
+# Stilen delas av bladet och facit. %(t)s är typsnittsmappen och %(w)d sidans bredd.
+CSS = """@font-face{font-family:'Schibsted Grotesk';font-weight:400 800;src:url(%(t)s/schibsted-grotesk-latin.woff2) format('woff2')}
 @font-face{font-family:'IBM Plex Mono';font-weight:400;src:url(%(t)s/ibm-plex-mono-latin.woff2) format('woff2')}
 @font-face{font-family:'IBM Plex Mono';font-weight:500;src:url(%(t)s/ibm-plex-mono-500-latin.woff2) format('woff2')}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -215,7 +205,33 @@ li p{font-size:23px;line-height:1.45}
   font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;line-height:24px;vertical-align:2px}
 .fot{margin-top:24px;padding-top:16px;border-top:1.5px solid #DDCDB2;display:flex;justify-content:space-between;
   font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.06em;color:#665C49}
-</style></head><body>
+"""
+
+
+def stil():
+    return CSS % dict(t='file://' + os.path.join(ROT, 'typsnitt'), w=BREDD)
+
+
+def sida(b, mat=False):
+    uppg = []
+    for i, u in enumerate(b['uppgifter'], 1):
+        text, extra = u[0], u[1]
+        figur = u[2] if len(u) > 2 else ''
+        under = ''
+        if extra == 'ruta':
+            under = '<div class="rit"></div>'
+        elif extra:
+            under = ''.join('<div class="rad"></div>' for _ in range(extra))
+        uppg.append('<li><span class="nr">%d</span><div><p>%s</p>%s%s</div></li>' % (i, fyll(text), figur, under))
+    lastext = ''
+    if b.get('text'):
+        t = b['text']
+        lastext = ('<div class="lastext">%s</div>' % html.escape(t)) if isinstance(t, str) else \
+            '<div class="lastext">%s</div>' % ''.join(
+                ('<p><b>%s</b></p>' % html.escape(s[2:])) if s.startswith('# ') else ('<p>%s</p>' % html.escape(s)) for s in t)
+    return """<!doctype html><html lang="sv"><head><meta charset="utf-8">
+<style>
+%(css)s</style></head><body>
 <div class="topp"><div class="marke"><i>N</i>NEXTRUM<span>Övningsblad</span></div>
 <div class="chips"><span class="chip">%(amne)s</span><span class="chip ak">%(ak)s</span></div></div>
 <h1>%(titel)s</h1>
@@ -226,8 +242,8 @@ li p{font-size:23px;line-height:1.45}
 <ol>%(uppg)s</ol>
 <div class="fot"><span>nextrum.se · Nextrums materialbank</span><span>Får skrivas ut och kopieras för eget bruk</span></div>
 %(mat)s</body></html>""" % dict(
-        mat=MATSKRIPT if mat else '',
-        t=typsnitt, w=BREDD, amne=html.escape(b.get('chip') or b['amne'].split(' / ')[0]),
+        mat=MATSKRIPT if mat else '', css=stil(),
+        amne=html.escape(b.get('chip') or b['amne'].split(' / ')[0]),
         ak=ARSKURS_TEXT[b['arskurs']], titel=html.escape(b['titel']), omrade=html.escape(b['omrade']),
         tid=html.escape(b['tid']), instr=''.join('<p>%s</p>' % fyll(r) for r in b['instruktion']),
         lastext=lastext, uppg=''.join(uppg))
@@ -239,6 +255,92 @@ MATSKRIPT = """<script>document.fonts.ready.then(function(){
 var h=document.documentElement,li=document.querySelectorAll('li'),sist=li[li.length-1].getBoundingClientRect().bottom,
 fot=document.querySelector('.fot').getBoundingClientRect().top;
 h.setAttribute('data-over',String(h.scrollHeight-innerHeight));h.setAttribute('data-ledigt',String(Math.round(fot-sist)))})</script>"""
+
+
+# ---- Facit ----
+# Facit står i verktyg/bladen/facit_<modul>.py, en fil per modul med bladen:
+#   FACIT = {'ak4-matematik-brak': ['svar på uppgift 1', 'svar på uppgift 2', ...], ...}
+# Ett svar per uppgift, i bladets ordning. \n blir en radbrytning. Där svaren kan variera börjar
+# svaret med "Eget svar." och säger vad ett bra svar innehåller.
+#
+# Facit ritas till bank/facit/<fil>.png, en egen sida, och aldrig på bladet: bladet skrivs ut och
+# lämnas till eleven, och beskrivningen blir läxans text. Studiehjälparen når facit från biblioteket.
+# Repot är publikt, så facit är inte hemligt för den som letar; det är ett facit i bokens baksida,
+# inte ett prov.
+FACITMODULER = ('lagstadiet', 'mellanstadiet', 'hogstadiet', 'gymnasiet', 'np_ak6', 'np_ak9', 'np_gymnasiet')
+FACIT_UT = os.path.join(UT, 'facit')
+
+
+def las_facit():
+    """Läser facitfilerna som finns. En fil som saknas är ett tomt facit, så att bladen kan ritas
+    medan facit skrivs; --kolla säger vad som fattas."""
+    import importlib
+    facit, fel = {}, []
+    for m in FACITMODULER:
+        if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bladen', 'facit_%s.py' % m)):
+            continue
+        for fil, svar in importlib.import_module('facit_' + m).FACIT.items():
+            if fil in facit:
+                fel.append('facit: %s står i två facitfiler' % fil)
+            facit[fil] = svar
+    return facit, fel
+
+
+def kontrollera_facit(facit):
+    """Varje blad har ett svar per uppgift. Ett facit med ett svar för lite flyttar alla svar efter
+    luckan ett steg, och då stämmer inget av dem."""
+    fel, blad = [], {b['fil']: b for b in BLAD}
+    for b in BLAD:
+        svar = facit.get(b['fil'])
+        if svar is None:
+            fel.append('%s: facit saknas' % b['fil'])
+        elif len(svar) != len(b['uppgifter']):
+            fel.append('%s: facit har %d svar men bladet %d uppgifter' % (b['fil'], len(svar), len(b['uppgifter'])))
+        elif any(not isinstance(s, str) or not s.strip() for s in svar):
+            fel.append('%s: ett svar i facit är tomt' % b['fil'])
+    for f in sorted(set(facit) - set(blad)):
+        fel.append('facit: %s har inget blad' % f)
+    return fel
+
+
+def fraga_kort(text):
+    """Uppgiftens första rad, utan rutor och linjer, så att facit går att läsa utan bladet bredvid."""
+    rad = text.split('\n')[0]
+    rad = re.sub(r'\s*(\[\[\]\]|\[\]|___)\s*', ' … ', rad)
+    rad = re.sub(r'\s*\{[ECA]\}', '', rad).strip()
+    rad = re.sub(r'(\s*…)+$', '', rad)
+    return rad if len(rad) <= 150 else rad[:147].rsplit(' ', 1)[0] + ' …'
+
+
+def facit_text(s):
+    # Ett minus framför en siffra blir ett riktigt minustecken, som på bladen.
+    return html.escape(re.sub(r'(?<![\w)])-(?=\d)', '−', s)).replace('\n', '<br>')
+
+
+def facitsida(b, svar, tathet=0, mat=False):
+    """tathet 0: frågan och svaret. 1: bara svaret. 2: bara svaret, i mindre stil."""
+    rader = []
+    for i, (u, s) in enumerate(zip(b['uppgifter'], svar), 1):
+        fraga = '' if tathet else '<p class="ff">%s</p>' % html.escape(fraga_kort(u[0]))
+        rader.append('<li><span class="nr">%d</span><div>%s<p class="fs">%s</p></div></li>' % (i, fraga, facit_text(s)))
+    return """<!doctype html><html lang="sv"><head><meta charset="utf-8">
+<style>
+%(css)s
+ol.facit{gap:%(gap)dpx}
+.ff{font-size:18px;line-height:1.4;color:#665C49}
+.fs{font-size:%(fs)dpx;line-height:1.42;font-weight:600;margin-top:3px}
+</style></head><body>
+<div class="topp"><div class="marke"><i>N</i>NEXTRUM<span>Facit</span></div>
+<div class="chips"><span class="chip">%(amne)s</span><span class="chip ak">%(ak)s</span></div></div>
+<h1>%(titel)s</h1>
+<div class="meta">Facit · %(omrade)s</div>
+<div class="instr"><b>Till den som rättar</b><p>Svar till övningsbladet med samma namn. Där svaren kan variera står vad ett bra svar innehåller, och ett annat svar kan också vara rätt om det är väl motiverat.</p></div>
+<ol class="facit">%(rader)s</ol>
+<div class="fot"><span>nextrum.se · Nextrums materialbank</span><span>Facit, inte för eleven</span></div>
+%(mat)s</body></html>""" % dict(
+        css=stil(), gap=(18, 14, 10)[tathet], fs=(21, 21, 18)[tathet], mat=MATSKRIPT if mat else '',
+        amne=html.escape(b.get('chip') or b['amne'].split(' / ')[0]), ak=ARSKURS_TEXT[b['arskurs']],
+        titel=html.escape(b['titel']), omrade=html.escape(b['omrade']), rader=''.join(rader))
 
 
 def hitta_chrome():
@@ -272,10 +374,17 @@ def kolla():
     for l in LANKAR:
         if lank_id(l) not in migrationer:
             fel.append('%s: länkens rad saknas i supabase/migrations/, skriv en ny migration med --sql %s' % (l['namn'], l['namn']))
+    facit, facitfel = las_facit()
+    fel += facitfel + kontrollera_facit(facit)
+    facitbilder = {os.path.basename(p)[:-4] for p in glob.glob(os.path.join(FACIT_UT, '*.png'))}
+    for f in sorted(blad - facitbilder):
+        fel.append('%s: bank/facit/%s.png saknas, kör verktyget med --facit' % (f, f))
+    for f in sorted(facitbilder - blad):
+        fel.append('bank/facit/%s.png: inget blad med det namnet' % f)
     if fel:
         print('\n'.join('FEL  ' + f for f in fel))
         return 1
-    print('ok   %d blad och %d länkar, alla med bild och migration' % (len(BLAD), len(LANKAR)))
+    print('ok   %d blad och %d länkar, alla med bild, facit och migration' % (len(BLAD), len(LANKAR)))
     return 0
 
 
@@ -294,6 +403,13 @@ def mat(chrome, kalla):
     if not over or not ledigt:
         return None
     return int(over.group(1)), int(ledigt.group(1))
+
+
+def fota(chrome, kalla, mal):
+    subprocess.run([chrome, '--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
+                    '--force-device-scale-factor=1', '--window-size=%d,%d' % (BREDD, HOJD),
+                    '--screenshot=' + mal, 'file://' + kalla],
+                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def rita(monster):
@@ -327,12 +443,51 @@ def rita(monster):
                 continue
             with open(kalla, 'w', encoding='utf-8') as f:
                 f.write(sida(b))
-            mal = os.path.join(UT, b['fil'] + '.png')
-            subprocess.run([chrome, '--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
-                            '--force-device-scale-factor=1', '--window-size=%d,%d' % (BREDD, HOJD),
-                            '--screenshot=' + mal, 'file://' + kalla],
-                           check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            fota(chrome, kalla, os.path.join(UT, b['fil'] + '.png'))
             print('ok   bank/%s.png%s' % (b['fil'], '   (%d px ledigt, glest)' % m[1] if m[1] > 420 else ''))
+    return 1 if problem else 0
+
+
+def rita_facit(monster):
+    """Ritar bank/facit/<fil>.png. Ryms inte frågan och svaret tas frågan bort, och ryms inte det
+    heller blir stilen mindre; ryms facit inte ens då ska svaren kortas."""
+    facit, fel = las_facit()
+    valda = urval(monster)
+    namn = {b['fil'] for b in valda}
+    fel += kontrollera() + [f for f in kontrollera_facit(facit) if f.split(':')[0] in namn]
+    if fel:
+        print('\n'.join('FEL  ' + f for f in fel))
+        return 1
+    chrome = hitta_chrome()
+    if not chrome:
+        print('Hittar ingen Chromium. Sätt CHROME=/sökväg/till/chrome.')
+        return 1
+    if not valda:
+        print('Inga blad matchar %s.' % ' '.join(monster))
+        return 1
+    os.makedirs(FACIT_UT, exist_ok=True)
+    problem = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        for b in valda:
+            kalla = os.path.join(tmp, b['fil'] + '.html')
+            for tathet in (0, 1, 2):
+                with open(kalla, 'w', encoding='utf-8') as f:
+                    f.write(facitsida(b, facit[b['fil']], tathet, mat=True))
+                m = mat(chrome, kalla)
+                if m is not None and m[0] <= 0:
+                    break
+            if m is None:
+                print('FEL  bank/facit/%s.png: kunde inte mäta sidan' % b['fil'])
+                problem += 1
+                continue
+            if m[0] > 0:
+                print('FEL  bank/facit/%s.png: facit är %d px för högt, korta svaren' % (b['fil'], m[0]))
+                problem += 1
+                continue
+            with open(kalla, 'w', encoding='utf-8') as f:
+                f.write(facitsida(b, facit[b['fil']], tathet))
+            fota(chrome, kalla, os.path.join(FACIT_UT, b['fil'] + '.png'))
+            print('ok   bank/facit/%s.png%s' % (b['fil'], ('', '   (utan frågorna)', '   (utan frågorna, liten stil)')[tathet]))
     return 1 if problem else 0
 
 
@@ -365,6 +520,8 @@ if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     if '--kolla' in sys.argv:
         sys.exit(kolla())
+    if '--facit' in sys.argv:
+        sys.exit(rita_facit(args))
     if '--sql' in sys.argv:
         MONSTER_SQL = args
         sys.exit(sql())
