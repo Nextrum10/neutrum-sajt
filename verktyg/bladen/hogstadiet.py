@@ -211,7 +211,7 @@ BLAD = [
          titel='Atomer och grundämnen', omrade='Kemi: atomens byggnad', tid='35 minuter',
          instruktion=['En atom har en kärna med protoner (positiva) och neutroner (utan laddning). Runt kärnan finns elektroner (negativa).',
                       'Antalet protoner bestämmer vilket grundämne det är. En neutral atom har lika många elektroner som protoner.',
-                      'Ett grundämne består av en sorts atomer. En kemisk förening består av flera sorters atomer, till exempel H₂O.'],
+                      'Atomnumret är antalet protoner. Ett grundämne består av en sorts atomer, och en kemisk förening av flera sorters atomer, till exempel H₂O.'],
          uppgifter=[('Vilken laddning har protoner, neutroner och elektroner? ___, ___ och ___', 0),
                     ('Kol har atomnummer 6. Hur många protoner har en kolatom? []', 0),
                     ('En neutral syreatom har 8 protoner. Hur många elektroner har den? []', 0),
@@ -229,7 +229,7 @@ BLAD = [
                       'Svara sedan på frågorna med egna ord.'],
          text=('Fram till mitten av 1800-talet bodde de flesta svenskar på landsbygden och levde av jordbruk. '
                'Från ungefär 1850 började det som kallas industrialiseringen. Järnvägar byggdes, vilket gjorde '
-               'det lättare att transportera varor. Sågverk, järnbruk och textilfabriker växte fram, och '
+               'det lättare att transportera varor. Sågverk, verkstäder och textilfabriker växte fram, och '
                'maskiner ersatte handarbete på många ställen. Många flyttade från landet till städerna för att '
                'arbeta i fabrikerna, och det kallas urbanisering. Arbetsdagarna var långa och lönerna låga, och '
                'även barn arbetade. För att få bättre villkor bildade arbetarna fackföreningar. Samtidigt lämnade '
@@ -363,10 +363,11 @@ BLAD = [
                'till exempel Storbritannien, Sovjetunionen och USA, mot axelmakterna Tyskland, Italien och Japan.',
                'Nazisterna mördade omkring sex miljoner judar i Förintelsen, och miljontals andra människor dödades eller '
                'förföljdes. Kriget i Europa slutade den 8 maj 1945 när Tyskland kapitulerade. Kriget i Asien avslutades '
-               'sommaren 1945, efter att USA fällt atombomber över Hiroshima och Nagasaki.',
-               'Sverige var neutralt under kriget. Landet hade en svår balansgång mellan Tyskland och de allierade, och tog '
-               'emot många flyktingar.'],
-         uppgifter=[('Vilket år började andra världskriget, och vilket land anföll Tyskland först?', 1),
+               'i augusti–september 1945, när Japan kapitulerade efter att USA fällt atombomber över Hiroshima och Nagasaki.',
+               'Sverige var neutralt under kriget. Efter att Tyskland ockuperat Danmark och Norge 1940 var Sverige omringat, och landet '
+               'sålde bland annat järnmalm till Tyskland. Det blev en svår balansgång mellan Tyskland och de allierade. '
+               'Samtidigt tog Sverige emot många flyktingar.'],
+         uppgifter=[('Vilket år började andra världskriget, och vilket land anföll Tyskland först? ___', 0),
                     ('Vilka länder ingick i axelmakterna?', 1),
                     ('Vad kallas mordet på omkring sex miljoner judar?', 1),
                     ('Vad betyder det att ett land är neutralt?', 2),

@@ -189,7 +189,7 @@ BLAD = [
                'Sverige, Norge och Danmark. De flesta var bönder och fiskare, men många gav sig också ut på '
                'långa resor. De seglade i smala långskepp som gick bra både på hav och på floder. '
                'Vikingarna handlade med silver, pälsar och slavar, och en del plundrade också kloster och '
-               'städer. Vikingar från Sverige reste ofta österut, genom Ryssland och vidare mot Konstantinopel. '
+               'städer. Vikingar från Sverige reste ofta österut, genom det som i dag är Ryssland och Ukraina och vidare mot Konstantinopel. '
                'De trodde på många gudar, till exempel Oden, Tor och Frej. Viktiga frågor avgjordes på tinget, '
                'där fria människor samlades. För att skriva använde vikingarna runor, som ristades i sten och trä.'),
          uppgifter=[('När var vikingatiden ungefär?', 1),
@@ -270,6 +270,6 @@ BLAD = [
                     ('Nämn tre saker en kraft kan göra med ett föremål.', 2),
                     ('Varför är det lättare att gå på torr asfalt än på blank is? Förklara.', 2),
                     ('Ge ett exempel där friktion är bra och ett där den är besvärlig.', 2),
-                    ('Rita en låda som står på ett bord. Rita pilar som visar vilka krafter som verkar på lådan och skriv vad de heter.', 'ruta')],
+                    ('Rita en låda som skjuts över ett golv. Rita pilar som visar gravitationen och friktionen och skriv vad de heter.', 'ruta')],
          beskrivning='Krafter i vardagen: gravitation, friktion och newton, med frågor och en teckning med kraftpilar.'),
 ]
