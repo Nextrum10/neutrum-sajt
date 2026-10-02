@@ -24,6 +24,7 @@ tillbaka en kopia.**
 | `drift` | Tredje agenten (Fas 8). Läser verksamheten och siffrorna, föreslår. Inget utgående verktyg | Adminvyn |
 | `notis-ko` | Kö-arbetaren (Runda 2). Tar rader ur `notis_utskick`, renderar och skickar. Får alla sina beroenden inskickade | pg_cron, via `notis_konfig.arbetare_url` |
 | `ansokan-notis` | Ett besked till den som sökt jobb (Fas 16.1): kvittot, eller mejlet om ett steg framåt med hela processen och var hen står. Databasen bestämmer vad, funktionen skickar | Triggern `ansokan_besked` och pg_cron `ansokan-besked`, via `notis_konfig.ansokan_url` |
+| `admin-paminnelse` | Ett mejl till superadminarna med det som legat en timme i Att göra (2026-10-02): antal per sort och en knapp till adminvyn, aldrig namn. Databasen bestämmer vad och till vem (`admin_paminnelse_ta()`), funktionen skickar. Samma form som `ansokan-notis` | pg_cron `admin-paminnelse` via `intern.admin_paminnelse_koa()` och `notis_konfig.admin_paminnelse_url` |
 | `ansokan-gallring` | Tar bort ansökningar som inte ledde till anställning och CV-filer utan ansökan när de är ett år gamla (2026-09-27, avsnitt 5). Filen först genom Storage-API:t, sedan raden genom `ansokan_gallra()`, som vägrar medan filen finns. Svarar 500 om något inte gick | pg_cron `ansokan-gallring` via `intern.ansokan_gallring_vack()` och `notis_konfig.gallring_url` |
 | `notis-avanmal` | Stänger av EN notistyp i EN kanal utifrån en signerad token. Kan aldrig slå på något | Länken i mejlet, och mejlprogrammets One-Click |
 | `stripe-checkout` | Familjens kortbetalning för ETT bekräftat pass. **Hela beloppet till Nextrum**, ingen destination och ingen avgift. Beloppet räknas här, aldrig i anropet. Kassan öppnas i en panel på sidan (Fas 14.5), med Stripes egen sida som reserv. Sedan Fas 16.1 också köpet av en plan eller ett klippkort (`erbjudande` i anropet), med priset ur `erbjudanden_pris`. Sedan Fas 20.1 tar ett genomfört pass den hållna tiden, och `tillagg: true` tar betalt för övertiden på ett förbetalt pass (en egen rad i `pass_tillagg`). Sedan 2026-09-28 också ett pass som valts för faktura och inte står på en faktura än: det står kvar som `faktura` tills webhooken skrivit betalningen | Knappen på passet i föräldravyn, Betala med kort nu på ett fakturapass, och Köp under Erbjudanden |
@@ -36,7 +37,7 @@ tillbaka en kopia.**
 | `google-meet` | Meet-länken till ett bekräftat onlinepass (Fas 18.1). Läser passet med anroparens token först, skapar ett öppet rum och sparar länken i `pass_moten`. Ett rum som inte blev öppet sparas inte | Passets sida i föräldravyn och studiehjälparvyn |
 | `utbildningsprov` | Provet efter utbildningsmötet (Fas 22.1). Lämnar ut frågorna utan facit, rättar, och sparar försöket genom `utbildningsprov_lamna()`. Skyddet är nyckeln i länken, inte en inloggning. I drift sedan 2026-09-27. Med `prova: true` och adminens token: provläget, som inte sparar något och svarar med facit (2026-10-02) | `/utbildningsprov`, från länken i mejlet, och `/utbildningsprov?prova` från adminvyn |
 
-`supabase/config.toml` bär `verify_jwt = false` för de nio funktioner
+`supabase/config.toml` bär `verify_jwt = false` för de elva funktioner
 som anropas utan inloggad användare. Inställningen satt länge bara i
 dashboarden, och en `supabase functions deploy` utan filen hade slagit
 på JWT-kravet igen — då svarar triggrarna och arbetaren 401, och

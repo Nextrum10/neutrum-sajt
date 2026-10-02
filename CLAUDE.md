@@ -269,6 +269,13 @@ Detaljer: `minne/grunden.md`.
   prövar igen när den ska gå; barnets mallar (`barn.ts`) har aldrig pris, betalning eller skäl,
   bekräftelsen hälsar inte med namn och har ingen avanmälan, och barnets avanmälningstoken har
   fem delar, så den aldrig kan läsas som en vuxens.
+- **Att göra mejlas** (2026-10-02): pg_cron `admin-paminnelse` (var femte minut) → `intern.admin_paminnelse_koa()`
+  → `admin-paminnelse` → Resend. En sak som legat en timme i Att göra mejlas EN gång, till superadmins
+  (Att göra är bara deras vy), i ett mejl med högst ett per kvart: antal och sort, aldrig namn eller text.
+  Listan står både i `byggAttGöra` och i `intern.admin_att_gora()` och ändras tillsammans; rapporten som
+  familjen inte bekräftat och uppgifter systemet lagt finns bara i databasen. Det som stod i listan när
+  migrationen kördes räknas som mejlat. Av slås det genom att jobbet stängs av med `cron.alter_job`; det syns
+  då under System → Automationer.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot styrs av en INSERT, möteslänken är https, ett steg mejlas en

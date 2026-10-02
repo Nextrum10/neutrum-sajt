@@ -165,6 +165,13 @@
      något vi gör eller har påverkan på"), och en post här räknas
      också i NEX-ringen, notisklockan och menyns siffror. Hur många
      som väntar står i stället överst i Bokningar (ritaFörfrågningar).
+
+     LISTAN FINNS OCKSÅ I DATABASEN (2026-10-02). intern.admin_att_gora()
+     räknar samma poster, en rad per sak, och jobbet admin-paminnelse
+     mejlar superadminarna när en sak legat här i en timme. Ändras en
+     post här ska funktionen ändras i samma ändring (migrationen
+     admin_paminnelser), och tvärtom: annars mejlas en sak som inte står
+     här, eller en sak som står här mejlas aldrig.
      ------------------------------------------------------------ */
   function byggAttGöra() {
     const l = S.lage || {};
