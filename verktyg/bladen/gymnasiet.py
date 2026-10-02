@@ -328,12 +328,12 @@ BLAD = [
     # Egna uppgifter i samma stil som de nationella proven, aldrig provens egna. Med Gy25 finns prov i
     # matematik nivå 1 och 2, svenska nivå 1 och 3 och engelska nivå 1 och 2.
     dict(fil='gy1-np-matematik-niva-1-utan-digitala-verktyg', arskurs='gy1', amne='Matematik',
-         titel='NP-träning: matematik nivå 1 utan digitala verktyg', omrade='Nationella provet i matematik nivå 1', tid='40 minuter',
+         titel='NP-träning: matematik 1 utan räknare', omrade='Nationella provet i matematik nivå 1', tid='40 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'Provet har delar utan digitala verktyg, där du skriver svaret eller redovisar kort, och delar med räknare och formelblad. Det här bladet är utan.',
+                      'Provet har delar utan digitala verktyg, där du skriver svaret eller redovisar kort, och delar med digitala verktyg. Formelbladet får användas på alla delar. Det här bladet är utan digitala verktyg.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
-         uppgifter=[('a) 2,4 · 0,5 = []    b) Skriv 0,035 i procentform: [] {E}', 0),
-                    ('Förenkla (2x + 3) − (x − 4). [] {E}', 0),
+         uppgifter=[('a) 2,4 · 0,5 = []    b) Skriv 0,035 i procentform: [[]] {E}', 0),
+                    ('Förenkla (2x + 3) − (x − 4). [[]] {E}', 0),
                     ('Lös ekvationen 3(x − 2) = 12. x = [] {E}', 0),
                     ('Beräkna 10⁻² · 10⁵. [] {E}', 0),
                     ('Bestäm f(−2) om f(x) = 3x² − 1. [] {C}', 0),
@@ -346,7 +346,7 @@ BLAD = [
          beskrivning='Träning inför nationella provet i matematik nivå 1 utan digitala verktyg: räkning, algebra, funktioner och procent på nivåerna E, C och A.'),
 
     dict(fil='gy1-np-matematik-niva-1-med-digitala-verktyg', arskurs='gy1', amne='Matematik',
-         titel='NP-träning: matematik nivå 1 med digitala verktyg', omrade='Nationella provet i matematik nivå 1', tid='45 minuter',
+         titel='NP-träning: matematik 1 med räknare', omrade='Nationella provet i matematik nivå 1', tid='45 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'Redovisa dina lösningar så att någon annan kan följa dem. Du får använda räknare.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
@@ -357,14 +357,13 @@ BLAD = [
                      tabell(['Tid (min)', '5', '10', '20', '30'], [['Sträcka (km)', '1,2', '2,4', '4,8', '7,2']], bredd_kol=90)),
                     ('En klass säljer kakor. De har fasta kostnader på 450 kr, varje kaka kostar 4 kr att baka och säljs för 15 kr. '
                      'Hur många kakor måste de sälja för att gå med vinst? {C}', 2),
-                    ('Lös ekvationen 1,05ˣ = 2 grafiskt eller genom att pröva. Tolka svaret om 1,05 är förändringsfaktorn för pengar på ett sparkonto. {A}', 2)],
+                    ('Lös ekvationen 1,05ˣ = 2 grafiskt eller genom att pröva. Tolka svaret om 1,05 är förändringsfaktorn per år för pengar på ett sparkonto. {A}', 2)],
          beskrivning='Träning inför nationella provet i matematik nivå 1 med digitala verktyg: förändringsfaktor, volym, procentenheter, proportionalitet och modellering.'),
 
     dict(fil='gy1-np-svenska-niva-1-lasforstaelse', arskurs='gy1', amne='Svenska',
-         titel='NP-träning: läsförståelse i svenska nivå 1', omrade='Nationella provet i svenska nivå 1', tid='40 minuter',
+         titel='NP-träning: läsförståelse, svenska 1', omrade='Nationella provet i svenska nivå 1', tid='40 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'Provet i svenska nivå 1 har en del i läsförståelse där du läser sakprosa och skönlitteratur och svarar på frågor om innehåll, syfte och språk.',
-                      'Stöd dina svar på texten.'],
+                      'På provets läsdel svarar du på frågor om innehåll, syfte och språk. Stöd svaren på texten.'],
          text=['# Varför lånar svenskan ord?',
                'Svenskan har alltid lånat ord från andra språk. Under medeltiden kom många ord från lågtyskan, eftersom tyska '
                'köpmän i Hansan handlade i svenska städer. Ord som fönster, handla och borgmästare är exempel på sådana lån. På '
@@ -377,15 +376,15 @@ BLAD = [
                'och näringsliv. Andra ser lånen som ett tecken på att språket lever och förändras. Språkforskare brukar påpeka att '
                'svenskan har tagit emot lån i över tusen år och ändå fortfarande är svenska.'],
          uppgifter=[('Varför kom många lågtyska ord in i svenskan under medeltiden?', 1),
-                    ('Vilket språk har varit den största källan till lånord under 1900-talet och fram till i dag? ___', 0),
-                    ('Förklara med egna ord vad som händer med ett lånord när det anpassas till svenskan. Ge ett eget exempel.', 1),
-                    ('Ringa in det som bäst beskriver textens syfte: att underhålla – att informera – att sälja något', 0),
+                    ('Vilket språk har gett flest lånord sedan 1900-talet? ___', 0),
+                    ('Förklara med egna ord vad som händer med ett lånord när det anpassas till svenskan. Ge ett eget exempel.', 2),
+                    ('Ringa in det som bäst beskriver textens syfte:\ninformera om hur svenskan lånar ord – argumentera mot engelska lånord – varna för att svenskan försvinner', 0),
                     ('Vilka två synsätt på engelska lånord beskrivs i texten?', 1),
                     ('Vad menar språkforskarna med att svenskan ”ändå fortfarande är svenska”?', 1)],
          beskrivning='Träning inför nationella provets läsdel i svenska nivå 1: en sakprosatext om lånord med frågor om innehåll, syfte och perspektiv.'),
 
     dict(fil='gy1-np-svenska-niva-1-skriva', arskurs='gy1', amne='Svenska',
-         titel='NP-träning: argumenterande text i svenska nivå 1', omrade='Nationella provet i svenska nivå 1', tid='50 minuter',
+         titel='NP-träning: argumentera, svenska 1', omrade='Nationella provet i svenska nivå 1', tid='50 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'På provets skrivdel skriver du utifrån ett texthäfte. Hänvisa till källorna så att läsaren förstår vem som säger vad, '
                       'till exempel ”I en ledare i ... skriver ...”.',
@@ -405,7 +404,7 @@ BLAD = [
     dict(fil='gy1-np-engelska-niva-1-reading', arskurs='gy1', amne='Engelska',
          titel='NP-träning: reading, engelska nivå 1', omrade='Nationella provet i engelska nivå 1', tid='40 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      "In the reading part you read different kinds of texts and answer questions about main ideas, details and the writer's attitude. Answer in English, in full sentences."],
+                      "In the reading part you answer questions about main ideas, details and the writer's attitude. Use full sentences, except where you are asked for one word."],
          text=['# Science in your back garden',
                'Every winter, hundreds of thousands of people across the UK spend one hour looking out of their windows. They are '
                'not bored; they are doing science. The Big Garden Birdwatch, organised by the bird charity RSPB since 1979, asks '
@@ -437,12 +436,13 @@ BLAD = [
          beskrivning='Träning inför nationella provets skrivdel i engelska nivå 1: planera och skriva en argumenterande text om volontärarbete.'),
 
     dict(fil='gy2-np-matematik-niva-2-utan-digitala-verktyg', arskurs='gy2', amne='Matematik',
-         titel='NP-träning: matematik nivå 2 utan digitala verktyg', omrade='Nationella provet i matematik nivå 2', tid='40 minuter',
+         titel='NP-träning: matematik 2 utan räknare', omrade='Nationella provet i matematik nivå 2', tid='40 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'Provet har delar utan digitala verktyg och delar med räknare och formelblad. Det här bladet är utan.',
+                      'Provet har delar utan och med digitala verktyg, och formelbladet får användas på alla delar. Det här bladet är utan digitala verktyg.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
-         uppgifter=[('a) Lös x² − 9 = 0: []    b) Utveckla (x + 5)²: [] {E}', 0),
-                    ('Faktorisera x² − 6x. [] {E}', 0),
+         uppgifter=[('Lös ekvationen x² − 9 = 0. x = [[]] {E}', 0),
+                    ('Utveckla (x + 5)². {E}', 1),
+                    ('Faktorisera x² − 6x. [[]] {E}', 0),
                     ('Beräkna lg 1000 + lg 0,1. [] {E}', 0),
                     ('Lös ekvationen x² + 2x − 8 = 0. {E}', 1),
                     ('Lös ekvationssystemet y = 2x − 1 och y = −x + 5. {E}', 1),
@@ -452,7 +452,7 @@ BLAD = [
          beskrivning='Träning inför nationella provet i matematik nivå 2 utan digitala verktyg: andragradsekvationer, kvadreringsregler, logaritmer, ekvationssystem och bevis.'),
 
     dict(fil='gy2-np-matematik-niva-2-med-digitala-verktyg', arskurs='gy2', amne='Matematik',
-         titel='NP-träning: matematik nivå 2 med digitala verktyg', omrade='Nationella provet i matematik nivå 2', tid='45 minuter',
+         titel='NP-träning: matematik 2 med räknare', omrade='Nationella provet i matematik nivå 2', tid='45 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'Redovisa dina lösningar så att någon annan kan följa dem. Du får använda räknare.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
@@ -469,25 +469,22 @@ BLAD = [
     dict(fil='gy2-np-engelska-niva-2-reading', arskurs='gy2', amne='Engelska',
          titel='NP-träning: reading, engelska nivå 2', omrade='Nationella provet i engelska nivå 2', tid='40 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'In the reading part you show that you understand both what a text says and how it says it: main ideas, details, tone and structure.',
-                      'Answer in English, in full sentences.'],
+                      'Show that you understand what the text says and how. Use full sentences, except for one-word answers.'],
          text=['# Tomorrow, I promise',
                'Almost everyone knows the feeling. An essay is due on Friday, and on Thursday evening you find yourself reorganising '
-               'your bookshelf, watching videos about bridge construction, or suddenly deciding that your room needs a deep clean. '
+               'your bookshelf or suddenly deciding that your room needs a deep clean. '
                'You are not lazy: you are procrastinating.',
-               'For a long time, procrastination was seen as a problem of time management. If people only planned better, the '
-               'thinking went, they would get things done. Many psychologists now describe it differently. Procrastination, they '
+               'For a long time, procrastination was seen as a problem of time management. Many psychologists now describe it differently. Procrastination, they '
                'argue, is mainly about managing feelings. We put off tasks that make us feel bored, anxious or insecure, and reach '
                'for something that makes us feel better right now. The relief is real, but short-lived; the task, and the stress, are still waiting.',
-               'This explains why buying a new planner rarely helps. More useful strategies target the feeling itself: breaking a task '
-               'into steps so small that they seem almost silly, starting with just five minutes, or forgiving yourself for last time '
-               'instead of adding guilt to the pile.',
+               'This explains why buying a new planner rarely helps. More useful strategies target the feeling itself, for example '
+               'breaking a task into tiny steps or starting with just five minutes.',
                'None of this means that every delay is harmful. Letting an idea rest can improve it. The problem begins when putting '
                'things off becomes a habit that costs us sleep, grades or peace of mind.'],
-         uppgifter=[('How was procrastination explained in the past, and how do many psychologists explain it now?', 1),
+         uppgifter=[('How was procrastination explained in the past, and how do many psychologists explain it now?', 2),
                     ('Why, according to the writer, does buying a new planner rarely help?', 1),
                     ('What does the word "short-lived" mean? ___', 0),
-                    ('How does the final paragraph change the perspective of the text?', 1),
+                    ('How does the final paragraph change the perspective of the text?', 2),
                     ('Describe the tone of the first paragraph and give an example that supports your answer.', 1)],
          beskrivning='Träning inför nationella provets läsdel i engelska nivå 2: en essä om att skjuta upp saker, med frågor om innehåll, ton och struktur.'),
 
@@ -504,7 +501,7 @@ BLAD = [
          beskrivning='Träning inför nationella provets skrivdel i engelska nivå 2: en diskuterande text om ett kontantlöst samhälle.'),
 
     dict(fil='gy3-np-svenska-niva-3-utredande-text', arskurs='gy3', amne='Svenska',
-         titel='NP-träning: utredande text i svenska nivå 3', omrade='Nationella provet i svenska kurs 3 och nivå 3', tid='60 minuter',
+         titel='NP-träning: utredande text, svenska 3', omrade='Nationella provet i svenska kurs 3 och nivå 3', tid='60 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'På provet skriver du en utredande text utifrån ett texthäfte: du ställer en fråga, redogör för olika perspektiv '
                       'med korrekt källhänvisning och drar en egen slutsats.',
@@ -518,7 +515,7 @@ BLAD = [
                     ('Sammanfatta vad källa 1 säger, med egna ord och med hänvisning till källan.', 2),
                     ('Sammanfatta vad källa 2 säger på samma sätt.', 2),
                     ('Jämför källorna: på vilket sätt är de oense, och kan båda ha rätt?', 2),
-                    ('Skriv en slutsats som svarar på din frågeställning.', 1),
+                    ('Skriv en slutsats som svarar på din frågeställning.', 3),
                     ('Skriv hela texten med inledning, avhandling och avslutning på ett eget papper eller på datorn.', 0)],
          beskrivning='Träning inför nationella provets skrivdel i svenska nivå 3: utredande text utifrån två källor, med frågeställning, källhänvisning och slutsats.'),
 ]

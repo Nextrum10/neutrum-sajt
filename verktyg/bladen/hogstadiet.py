@@ -390,10 +390,10 @@ BLAD = [
                     ('4² − 3 · 2 = [] {E}', 0), ('Hur mycket är 20 % av 450? [] {E}', 0),
                     ('Lös ekvationen 5x + 4 = 29. x = [] {E}', 0),
                     ('Uppskatta 39,8 · 5,1 med huvudräkning. Förklara hur du gjorde. {E}', 1),
-                    ('Förenkla 3(2a − 1) − 2a. [] {C}', 0),
-                    ('Vilket tal är störst, 0,07 · 10³ eller 7 · 10⁻¹? [] {C}', 0),
+                    ('Förenkla 3(2a − 1) − 2a. [[]] {C}', 0),
+                    ('Vilket tal är störst, 0,07 · 10³ eller 7 · 10⁻¹? [[]] {C}', 0),
                     ('En rät linje går genom punkterna (0, −2) och (3, 4). Vilken lutning har linjen? [] {C}', 0),
-                    ('För vilka heltal x från 0 till 10 är 2x − 3 större än 7? {A}', 1),
+                    ('För vilka heltal x från 0 till 10 är 2x − 3 större än 7? {C}', 1),
                     ('Visa att summan av tre heltal som följer på varandra alltid är delbar med 3. {A}', 2)],
          beskrivning='Träning inför nationella provet i matematik åk 9, utan miniräknare: räkning, algebra, funktioner och bevis på nivåerna E, C och A.'),
 
@@ -408,17 +408,16 @@ BLAD = [
                     ('Ett rätvinkligt segel har kateterna 3,0 m och 4,5 m. Hur lång är den längsta sidan? {C}', 1),
                     ('Sannolikheten för regn är 0,3 på lördag och 0,4 på söndag, och dagarna påverkar inte varandra. '
                      'Hur stor är sannolikheten att det regnar båda dagarna? {C}', 1),
-                    ('Hur stor är sannolikheten att det inte regnar någon av dagarna? {A}', 1),
+                    ('Hur stor är sannolikheten att det inte regnar någon av dagarna? {C}', 1),
                     ('En kommun har 24 000 invånare och ökar med 1,5 % per år. Hur många invånare har den efter 10 år om ökningen fortsätter? {A}', 1),
                     ('Elin och Max cyklar mot varandra från två orter som ligger 27 km isär. Elin cyklar 15 km/h och Max 12 km/h. '
-                     'Efter hur lång tid möts de? {A}', 2)],
+                     'De startar samtidigt. Efter hur lång tid möts de? {A}', 2)],
          beskrivning='Träning inför nationella provet i matematik åk 9 med miniräknare: procent, proportionalitet, Pythagoras sats, sannolikhet och problemlösning.'),
 
     dict(fil='ak9-np-svenska-lasa', arskurs='ak9', amne='Svenska',
          titel='NP-träning: läsa en krönika', omrade='Nationella provet i svenska, åk 9', tid='35 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'På provet läser du flera texter kring ett tema och svarar på frågor om innehåll, syfte och språk.',
-                      'Texten nedan är en krönika: en personlig text där skribenten tycker något.'],
+                      'Provet har flera texter kring ett tema. Den här är en krönika, en personlig åsiktstext.'],
          text=['# Låt oss ha tråkigt',
                'Minns du senast du hade tråkigt på riktigt? Inte de tre minuterna i kön till kassan, utan en hel eftermiddag '
                'när ingenting hände. För många unga i dag är det en ovanlig känsla. Varje tom stund fylls med en skärm.',
@@ -429,7 +428,7 @@ BLAD = [
                'Jag vill inte förbjuda skärmar. Men jag önskar att fler vuxna vågade säga: ”Okej, du har tråkigt. Vad tänker du '
                'göra åt det?” Svaret kan bli en serie, en koja eller en ny vänskap.'],
          uppgifter=[('Vad vill skribenten övertyga läsaren om? Svara med en mening.', 1),
-                    ('Vilket exempel från sitt eget liv berättar skribenten om, och vad vill hen visa med det?', 1),
+                    ('Vilket exempel från sitt eget liv berättar skribenten om, och vad vill hen visa med det?', 2),
                     ('Ringa in rätt svar. ”Tristess är som en åker som får ligga i träda” är: en retorisk fråga – en liknelse – ett citat', 0),
                     ('Skriv av en retorisk fråga ur texten.', 1),
                     ('Varför tror du att skribenten skriver ”Jag vill inte förbjuda skärmar”?', 1),
@@ -437,7 +436,7 @@ BLAD = [
          beskrivning='Träning inför nationella provets läsdel i svenska åk 9: en krönika med frågor om tes, exempel, stilmedel och syfte.'),
 
     dict(fil='ak9-np-svenska-skriva', arskurs='ak9', amne='Svenska',
-         titel='NP-träning: skriva en argumenterande text', omrade='Nationella provet i svenska, åk 9', tid='45 minuter',
+         titel='NP-träning: argumenterande text', omrade='Nationella provet i svenska, åk 9', tid='45 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'På provet skriver du utifrån ett tema och ibland ett underlag. Använder du underlaget ska du tala om varifrån '
                       'uppgifterna kommer, till exempel ”Enligt Amir ...”.',
@@ -455,22 +454,21 @@ BLAD = [
     dict(fil='ak9-np-engelska-lasa', arskurs='ak9', amne='Engelska',
          titel='NP-träning: läsa på engelska', omrade='Nationella provet i engelska, åk 9', tid='35 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'På provet läser du texter av olika slag och svarar på frågor om innehåll, detaljer och vad texten antyder.',
-                      'Answer the questions in English.'],
+                      'På provet svarar du på frågor om innehåll, detaljer och vad texten antyder. Answer the questions in English.'],
          text=['# The Library of Things',
-               "When Maya Patel needed a drill to put up a shelf, she didn't buy one. She borrowed it from her local Library of "
+               "When Maya Patel needed a drill to put up a shelf, she didn't buy one. She borrowed one from her local Library of "
                "Things, a small shop in her neighbourhood where people borrow objects instead of books.",
                '"A drill spends most of its life in a drawer," says Tom, one of the volunteers. "It makes more sense to share it." '
                'The library lends everything from tents and sewing machines to board games and party speakers. Members pay a '
                'small fee each time they borrow something.',
                'The idea has spread to many cities in Europe. Supporters say it saves money, reduces waste and helps neighbours '
                'get to know each other. However, not everyone is convinced. Some shop owners worry that they will sell less, and '
-               'some members admit that it can be annoying when the thing you want is already borrowed.'],
+               'some members admit that it can be annoying when the thing you want has already been borrowed.'],
          uppgifter=[('What is a Library of Things?', 1),
-                    ('Name three things you can borrow there. ___, ___, ___', 0),
+                    ('Name two things you can borrow there. ___ and ___', 0),
                     ('Circle the right answer. Members ... pay nothing – pay a small fee each time – buy the things they borrow', 0),
-                    ('Why does Tom think it makes sense to share a drill?', 1),
-                    ('Give two arguments for the idea and one argument against it, according to the text.', 1),
+                    ('What does Tom mean when he says that a drill "spends most of its life in a drawer"?', 1),
+                    ('Give one argument for the idea and one against it, according to the text.', 2),
                     ('What does the word "convinced" mean in the text? ___', 0),
                     ('Would you use a Library of Things? Explain why or why not.', 1)],
          beskrivning='Träning inför nationella provets läsdel i engelska åk 9: en artikel om att låna saker i stället för att köpa.'),
@@ -478,7 +476,7 @@ BLAD = [
     dict(fil='ak9-np-engelska-skriva', arskurs='ak9', amne='Engelska',
          titel='NP-träning: skriva på engelska', omrade='Nationella provet i engelska, åk 9', tid='45 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'På provet väljer du ofta mellan två ämnen. Texten bedöms efter innehåll, struktur och språk: hur tydligt och varierat du skriver.',
+                      'På provet skriver du en sammanhängande text utifrån en uppgift, ofta med inspiration som citat, bilder eller förslag på vad du kan ta upp. Här får du välja mellan två ämnen.',
                       'Useful linking words: first of all, however, for example, because, on the other hand, in conclusion.'],
          uppgifter=[('Välj ett ämne och ringa in det.\nA) A place I would like to visit, and why.\n'
                      'B) Should students be allowed to use their phones during breaks?', 0),
@@ -507,17 +505,17 @@ BLAD = [
     dict(fil='ak9-np-so-kallor-och-samband', arskurs='ak9', amne='SO / Historia / Samhällskunskap',
          titel='NP-träning: SO – källor och samband', omrade='Nationella proven i SO-ämnena, åk 9', tid='40 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'På provet i geografi, historia, religionskunskap eller samhällskunskap använder du begrepp, förklarar orsaker och konsekvenser och granskar källor.',
+                      'På provet i SO-ämnena använder du begrepp, förklarar orsaker och konsekvenser och granskar källor.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
          text=['Påhittad källa för övningen, en dagbokssida som en fjortonårig flicka i Stockholm skulle kunna ha skrivit våren 1945: '
-               '”I dag ringde kyrkklockorna hela förmiddagen. Pappa kom hem från jobbet mitt på dagen och sa att kriget i Europa är slut. '
+               '”I dag på eftermiddagen ringde kyrkklockorna. Pappa kom hem tidigt från jobbet och sa att kriget i Europa är slut. '
                'På Kungsträdgården var det så mycket folk att vi inte kom fram. Mamma grät, fast hon var glad. Jag tänker på kusinerna '
                'i Norge. Nu kanske vi får träffa dem i sommar.”'],
          uppgifter=[('Om källan vore äkta, skulle den då vara en primärkälla eller en sekundärkälla? Motivera. {E}', 1),
                     ('Vad kan en historiker lära sig om våren 1945 av en sådan källa? {E}', 1),
                     ('Vad kan källan inte berätta? Tänk på vem som skrev den. {C}', 1),
                     ('Varför kan två personer som var med om samma händelse beskriva den olika? Ge ett exempel. {A}', 2),
-                    ('Geografi: förklara två orsaker till att allt fler människor i världen flyttar till städer, och en konsekvens det får. {C}', 1),
+                    ('Geografi: förklara en orsak till att allt fler människor i världen flyttar till städer, och en konsekvens det får. {C}', 2),
                     ('Samhällskunskap: vad innebär det att Sverige är en rättsstat? Ge ett exempel. {E}', 1),
                     ('Religionskunskap: ge ett exempel på hur en religion kan påverka människors vardag, till exempel mat, högtider eller klädsel. {E}', 1)],
          beskrivning='Träning inför nationella proven i SO åk 9: källkritik med en påhittad källa, orsaker och konsekvenser, rättsstaten och religion i vardagen.'),

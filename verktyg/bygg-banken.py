@@ -75,7 +75,7 @@ AMNEN = ['Matematik', 'Svenska', 'Engelska', 'NO / Fysik / Kemi / Biologi',
 #   text     (valfri)  en läsetext, str eller lista med stycken, ovanför uppgifterna; ett stycke som börjar med '# ' blir en rubrik
 #   chip     (valfri)  vad ämnesbrickan säger; annars ämnets första del ("NO", "SO")
 # En uppgift är (text, extra) eller (text, extra, figur):
-#   [] blir en svarsruta, ___ en skrivrad i texten, \n en radbrytning (en mening per rad när flera luckor ska fyllas)
+#   [] blir en svarsruta och [[]] en bred svarsruta för ett längre svar, ___ en skrivrad i texten, \n en radbrytning (en mening per rad när flera luckor ska fyllas)
 #   {E}, {C} och {A} blir ett nivåmärke, som på de nationella proven
 #   extra = antal tomma skrivrader under uppgiften, eller 'ruta' för en större ruta att rita i
 #   figur = en HTML- eller SVG-sträng, oftast ur verktyg/bladen/figurer.py
@@ -141,8 +141,10 @@ def blad_id(b):
 
 
 def fyll(text):
-    """[] blir en ruta, ___ en skrivrad, radbrytning en ny rad och {E}, {C} och {A} ett nivåmärke. Allt annat escapas."""
+    """[] blir en ruta, [[]] en bred ruta, ___ en skrivrad, radbrytning en ny rad och {E}, {C} och {A} ett nivåmärke.
+    Allt annat escapas."""
     ut = html.escape(text)
+    ut = ut.replace('[[]]', '<span class="ruta bred"></span>')
     ut = ut.replace('[]', '<span class="ruta"></span>').replace('\n', '<br>')
     for niva in ('E', 'C', 'A'):
         ut = ut.replace('{%s}' % niva, '<span class="niva">%s</span>' % niva)
@@ -202,6 +204,7 @@ li{display:flex;gap:18px;align-items:flex-start}
 li div{flex:1}
 li p{font-size:23px;line-height:1.45}
 .ruta{display:inline-block;width:62px;height:40px;border:2px solid #2E2A20;border-radius:8px;vertical-align:middle;margin:0 4px}
+.ruta.bred{width:150px}
 .linje{display:inline-block;width:170px;border-bottom:2px solid #2E2A20;height:26px;vertical-align:baseline;margin:0 4px}
 .rad{height:46px;border-bottom:1.5px solid #C9B492}
 .rit{height:250px;margin-top:10px;border:1.5px dashed #C9B492;border-radius:12px;

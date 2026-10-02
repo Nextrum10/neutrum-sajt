@@ -283,7 +283,7 @@ BLAD = [
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
          uppgifter=[('a) 305 − 48 = []    b) 6 · 70 = []    c) 0,6 + 0,25 = [] {E}', 0),
                     ('Skriv 3/4 i decimalform. [] {E}', 0), ('Hur mycket är 10 % av 90 kr? [] kr {E}', 0),
-                    ('En film börjar 17.45 och är 1 timme och 35 minuter lång. När slutar den? [] {E}', 0),
+                    ('En film börjar 17.45 och är 1 timme och 35 minuter lång. När slutar den? [[]] {E}', 0),
                     ('Vilket tal ligger mitt emellan 1,4 och 1,8? [] {C}', 0),
                     ('Vilket tal ska stå i rutan? 4 · [] + 3 = 31 {C}', 0),
                     ('Skriv talen i storleksordning, minst först: 0,5; 2/5; 0,45 {C}', 1),
@@ -304,7 +304,7 @@ BLAD = [
                     ('En femte elev läste också under sommaren. Hur många böcker måste hon ha läst för att medelvärdet för alla fem ska bli 5? {C}', 1),
                     ('Saga och Theo delar på 120 kr så att Saga får 30 kr mer än Theo. Hur mycket får var och en? {C}', 2),
                     ('En tröja kostar 250 kr. I en butik sänks priset med 20 %, och i en annan med 45 kr. I vilken butik blir tröjan billigast? Visa hur du vet. {C}', 1),
-                    ('Lisa säger: "Om man gör sidorna i en kvadrat dubbelt så långa blir arean dubbelt så stor." Har hon rätt? Förklara med ett exempel. {A}', 2)],
+                    ('Lisa säger: ”Om man gör sidorna i en kvadrat dubbelt så långa blir arean dubbelt så stor.” Har hon rätt? Förklara med ett exempel. {A}', 2)],
          beskrivning='Träning inför nationella provet i matematik åk 6 med miniräknare: problemlösning, medelvärde, skala och resonemang på nivåerna E, C och A.'),
 
     dict(fil='ak6-np-svenska-lasa', arskurs='ak6', amne='Svenska',
@@ -324,8 +324,8 @@ BLAD = [
          uppgifter=[('Vad äter ladusvalan? ___', 0),
                     ('Var bygger ladusvalan sitt bo på sommaren? ___', 0),
                     ('Varför flyttar ladusvalan söderut på hösten?', 1),
-                    ('Ringa in rätt svar. Ordet "kluven" i texten betyder ungefär: lång – delad i två delar – färgglad', 0),
-                    ('Varför tror du att det finns mer insekter där det finns kor och hästar?', 2),
+                    ('Ringa in rätt svar. Ordet ”kluven” i texten betyder ungefär: lång – delad i två delar – färgglad', 0),
+                    ('Varför tror du att det finns fler insekter där det finns kor och hästar?', 2),
                     ('Texten är en faktatext. Skriv två saker som visar det.', 2),
                     ('Om du fick fråga en fågelforskare en sak om ladusvalan, vad skulle du fråga?', 1)],
          beskrivning='Träning inför nationella provets läsdel i svenska åk 6: en faktatext om ladusvalan med frågor på olika nivåer.'),
@@ -333,9 +333,9 @@ BLAD = [
     dict(fil='ak6-np-svenska-skriva', arskurs='ak6', amne='Svenska',
          titel='NP-träning: skriva en berättelse', omrade='Nationella provet i svenska, åk 6', tid='45 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'På provet skriver du en egen text. Den bedöms efter innehållet, hur den är uppbyggd och hur du använder språket.',
+                      'På provet skriver du två texter, en berättelse och en faktatext. De bedöms efter innehåll, uppbyggnad, språk och skrivregler. Det här bladet tränar berättelsen.',
                       'En berättelse har en början, något som händer och driver handlingen framåt, och ett slut.'],
-         uppgifter=[('Din berättelse ska börja med meningen: "När jag öppnade dörren till vinden förstod jag att något hade hänt." '
+         uppgifter=[('Din berättelse ska börja med meningen: ”När jag öppnade dörren till vinden förstod jag att något hade hänt.” '
                      'Planera först: vem är med, var händer det och vad är problemet?', 3),
                     ('Hur slutar berättelsen? Skriv några stödord.', 1),
                     ('Skriv berättelsen. Fortsätt på ett eget papper om raderna inte räcker.', 8),
@@ -371,7 +371,7 @@ BLAD = [
                       'Användbara fraser: My name is ... I live in ... In my free time I ... My favourite ... is ... What about you?'],
          uppgifter=[('Du har fått en brevvän i England. Skriv ett mejl där du berättar om dig själv, din familj, en fritidsaktivitet och din skola. '
                      'Avsluta med en fråga till brevvännen. Planera först: skriv stödord för varje del.', 3),
-                    ('Skriv mejlet på engelska. Börja med Hi ... och avsluta med en hälsning.', 9),
+                    ('Skriv mejlet på engelska. Börja med Hi ... och avsluta med en hälsning. Fortsätt på ett eget papper om raderna inte räcker.', 11),
                     ('Läs igenom: har du använt and, but och because minst en gång var? Ringa in dem.', 0)],
          beskrivning='Träning inför nationella provets skrivdel i engelska åk 6: planera och skriva ett mejl till en brevvän.'),
 ]
