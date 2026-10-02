@@ -344,14 +344,20 @@ driftsatt svarar 404 på första mejlet.
 2. Kör `20261002120000_admin_paminnelser.sql`. Den lägger `admin_paminnelse_url`
    i `notis_konfig` (härledd ur `arbetare_url`, som `ansokan_url`), tabellerna,
    funktionerna och jobbet, och räknar det som redan står i Att göra som mejlat.
-3. Kör `verktyg/rls-test.sql` (hela filen, avsnitt 16 är nytt).
+3. Kör `verktyg/rls-test.sql` (hela filen, avsnitt 16 är nytt). Lokalt, med `verktyg/lokal-databas.sh`.
+
+**Gjort 2026-10-02:** funktionen driftsatt (v1), migrationen körd avsnitt för avsnitt och registrerad med
+rätt md5 (hänger sig verktyget, se `minne/databasen.md`), funktionskropparna jämförda med filen, RLS prövad
+i driften och ett utskick provat mot Resends testadress. **Kvar:** hela `rls-test.sql`. Avsnitt 16 är bara
+körd mot stubbar, eftersom Docker-bilden inte gick att hämta från sessionen.
 
 **De här mejlen går inte genom sandlådan och inte genom flaggan `notiser_mejl`**,
 som aviseringen om en intresseanmälan och beskeden till den som sökt jobb. De är
 interna: mottagarna är superadminarna, och mejlet har bara antal och sorter. Vill
-du prova dem först utan att något mejlas till de riktiga mottagarna: kör
-migrationen, sätt `notis_konfig.admin_paminnelse_url = null` och läs
-`admin_paminnelse_utskick`, som fylls ändå.
+du prova dem utan att något mejlas till de riktiga mottagarna: sätt
+`notis_konfig.admin_paminnelse_url = null` och läs `admin_paminnelse_utskick`, som fylls ändå, eller
+byt mottagarfunktionen i några sekunder mot Resends testadress `delivered@resend.dev` och återställ den
+genom att jämföra `md5(prosrc)` med filen (så gjordes provet 2026-10-02, innan något hunnit förfalla).
 
 När något inte kommer fram:
 

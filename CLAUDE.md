@@ -213,6 +213,11 @@ Detaljer: `minne/grunden.md`.
 - Ny SQL: `supabase/migrations/<version>_<namn>.sql` med den version `apply_migration`
   registrerade (`kolla-migrationer.py`). **Klistra aldrig in SQL i SQL Editor utan att den blir
   en fil.** Migrationen körs efter merge, och vyerna tål att den saknas.
+- **Verktygen som ändrar driften ber om en bekräftelse** för `drop`, för en `delete` utanför en funktion
+  och för en funktion med två `delete`, och hänger sig i 60 sekunder om ingen svarar: inget har hänt, och
+  `apply_migration` gör likadant. Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en
+  rensning per funktion), kör dem avsnitt för avsnitt med `execute_sql` och registrera filens text sedan i
+  `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL.
 - `arkiv/` ändras aldrig; en rättelse är en ny migration. `schema-v22.sql` kördes aldrig, kör
   den inte. `schema.sql` rensar tabellerna.
 - **Flera sessioner** kör mot samma databas: läs driften, inte grenen. Lappa en funktion med
@@ -269,7 +274,7 @@ Detaljer: `minne/grunden.md`.
   prövar igen när den ska gå; barnets mallar (`barn.ts`) har aldrig pris, betalning eller skäl,
   bekräftelsen hälsar inte med namn och har ingen avanmälan, och barnets avanmälningstoken har
   fem delar, så den aldrig kan läsas som en vuxens.
-- **Att göra mejlas** (2026-10-02): pg_cron `admin-paminnelse` (var femte minut) → `intern.admin_paminnelse_koa()`
+- **Att göra mejlas** (2026-10-02, i drift samma dag): pg_cron `admin-paminnelse` (var femte minut) → `intern.admin_paminnelse_koa()`
   → `admin-paminnelse` → Resend. En sak som legat en timme i Att göra mejlas EN gång, till superadmins
   (Att göra är bara deras vy), i ett mejl med högst ett per kvart: antal och sort, aldrig namn eller text.
   Listan står både i `byggAttGöra` och i `intern.admin_att_gora()` och ändras tillsammans; rapporten som

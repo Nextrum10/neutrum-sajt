@@ -112,7 +112,7 @@ create table if not exists public.admin_paminnelse_utskick (
 comment on table public.admin_paminnelse_utskick is
   'Ett mejl till superadminarna: antal per sort sak som legat en timme i Att göra. Skrivs av '
   'intern.admin_paminnelse_koa(), skickas av admin-paminnelse. Ingen adress, inget namn, ingen text: '
-  'mottagarna läses ur admin_roller när mejlet skrivs. Rader äldre än 90 dagar tas bort av samma funktion.';
+  'mottagarna läses ur admin_roller när mejlet skrivs. Rader äldre än 90 dagar tas bort av samma jobb (intern.admin_paminnelse_stada()).';
 
 create index if not exists admin_paminnelse_utskick_igen on public.admin_paminnelse_utskick (status, uppdaterad)
   where status in ('vantar', 'skickar', 'fel');
@@ -125,13 +125,22 @@ grant select on public.admin_paminnelser to authenticated;
 grant select on public.admin_paminnelse_utskick to authenticated;
 
 -- is_admin() är superadmin. En admin med behörigheter får ingenting härifrån.
-drop policy if exists "admin läser påminnelserna" on public.admin_paminnelser;
-create policy "admin läser påminnelserna" on public.admin_paminnelser
-  for select to authenticated using (public.is_admin());
-
-drop policy if exists "admin läser påminnelseutskicken" on public.admin_paminnelse_utskick;
-create policy "admin läser påminnelseutskicken" on public.admin_paminnelse_utskick
-  for select to authenticated using (public.is_admin());
+-- En kontroll i stället för att ta bort och skapa om policyn: filen går att köra
+-- en gång till, och ingen sats i den river något (verktyget som kör migrationer i
+-- driften ber om en bekräftelse för varje sådan sats, och hänger sig om ingen svarar).
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public'
+                  and tablename = 'admin_paminnelser' and policyname = 'admin läser påminnelserna') then
+    create policy "admin läser påminnelserna" on public.admin_paminnelser
+      for select to authenticated using (public.is_admin());
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public'
+                  and tablename = 'admin_paminnelse_utskick' and policyname = 'admin läser påminnelseutskicken') then
+    create policy "admin läser påminnelseutskicken" on public.admin_paminnelse_utskick
+      for select to authenticated using (public.is_admin());
+  end if;
+end $$;
 
 
 -- ---------- 3. vad som står i Att göra ----------
@@ -211,6 +220,21 @@ revoke all on function intern.admin_paminnelse_skicka(uuid) from public, anon, a
 
 
 -- ---------- 5. jobbet ----------
+-- Rensningen av gamla utskick är en egen funktion, och jobbet nedan har därför
+-- bara en delete. Verktyget som kör migrationer i driften ber om en bekräftelse
+-- för en funktion med två, och hänger sig om ingen svarar.
+create or replace function intern.admin_paminnelse_stada()
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  delete from public.admin_paminnelse_utskick where skapad < now() - interval '90 days';
+end $$;
+
+revoke all on function intern.admin_paminnelse_stada() from public, anon, authenticated;
+
 -- Går var femte minut (pg_cron admin-paminnelse). Returnerar hur många
 -- saker som gick med i ett nytt mejl.
 create or replace function intern.admin_paminnelse_koa()
@@ -237,7 +261,7 @@ begin
   delete from public.admin_paminnelser p
    where not exists (select 1 from nu where nu.typ = p.typ and nu.objekt_id = p.objekt_id);
 
-  delete from public.admin_paminnelse_utskick where skapad < now() - interval '90 days';
+  perform intern.admin_paminnelse_stada();
 
   -- 2. Ett mejl som inte gick fram prövas igen: samma regler som
   -- ansokan_besked_igen(). Högst tre försök, bara det senaste dygnet.

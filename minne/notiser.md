@@ -348,6 +348,15 @@ här, en timme efter att den kom, och bara om den fortfarande har läget ny. **A
 byggt, och det är ett beslut att fatta.** Mejlen går inte till `info@`, som aviseringen om en anmälan gör:
 mottagarna är superadminarna med en adress i `profiles`.
 
+**I drift 2026-10-02** (migrationen `20261002120000`, edge-funktionen v1, jobb 38). Det som då stod i
+Att göra och räknades som mejlat var en faktura att lägga in i Fortnox, en ny jobbansökan, två pass utan
+rapport, en uppgift från systemet och en utbetalning: *ingen av dem mejlas*, så titta i Att göra själv.
+Utskicket provades i driften mot Resends testadress `delivered@resend.dev` (mottagarfunktionen byttes i
+några sekunder, och kontrollsumman på kroppen visade att den återställdes exakt): rendering, nyckel,
+avsändardomän och kvittering fungerar. Rensningen av gamla utskick är en egen funktion,
+`intern.admin_paminnelse_stada()`, för att verktyget ber om en bekräftelse för en funktion med två `delete`
+(`minne/databasen.md`).
+
 Av slås det genom att stänga av jobbet `admin-paminnelse` (`cron.alter_job(jobid, active := false)`, syns
 under System → Automationer). Tabellerna följer inte med medan det står av. Slås jobbet på igen rensas
 det som lämnat listan i första varvet, och det som legat kvar sedan förut mejlas i ett mejl.

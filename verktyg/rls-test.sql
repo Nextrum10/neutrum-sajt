@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona och adminbehörigheterna)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna och påminnelserna till admin)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -48,7 +48,8 @@
 -- manadskorningens_svar_lases_den_forsta, anonyma_skrivningar_far_tak,
 -- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank), admin_oppnar_chatten,
 -- avbokningar_och_svar, tipskoder_och_kampanjkoder,
--- barnkonton_och_admin och manadskorningen_gar_varje_natt är körda.
+-- barnkonton_och_admin, manadskorningen_gar_varje_natt och admin_paminnelser
+-- är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -10961,6 +10962,8 @@ select pg_temp.prova('AP superadmin kör inte jobbet', '00000000-0000-4000-8000-
   array['select intern.admin_paminnelse_koa()'], 'nekad');
 select pg_temp.prova('AP superadmin läser inte listan genom funktionen', '00000000-0000-4000-8000-0000000000ad',
   array['select * from intern.admin_att_gora()'], 'nekad');
+select pg_temp.prova('AP superadmin kör inte rensningen', '00000000-0000-4000-8000-0000000000ad',
+  array['select intern.admin_paminnelse_stada()'], 'nekad');
 
 insert into utfall (test, ok, detalj)
 select 'AP jobbet går var femte minut', count(*) = 1, coalesce(string_agg(schedule || ' ' || command, '; '), 'inget jobb')
@@ -11071,6 +11074,15 @@ begin
     n := intern.admin_paminnelse_koa();
     ut := ut || jsonb_build_object('t', 'AP högst ett mejl per kvart', 'ok',
             n = 0 and exists (select 1 from public.admin_paminnelser ap where ap.mejlad_at is null), 'd', 'mejlade: ' || n);
+
+    -- Rensningen: utskick äldre än 90 dagar går, nyare står kvar.
+    insert into public.admin_paminnelse_utskick (id, antal, status, skapad) values
+      ('00000000-0000-4000-8000-0000000a9e01', '{"ny_lead": 1}', 'skickad', now() - interval '91 days'),
+      ('00000000-0000-4000-8000-0000000a9e02', '{"ny_lead": 1}', 'skickad', now() - interval '89 days');
+    perform intern.admin_paminnelse_stada();
+    ut := ut || jsonb_build_object('t', 'AP rensningen tar bort utskick äldre än 90 dagar och inget annat', 'ok',
+            not exists (select 1 from public.admin_paminnelse_utskick where id = '00000000-0000-4000-8000-0000000a9e01')
+            and exists (select 1 from public.admin_paminnelse_utskick where id = '00000000-0000-4000-8000-0000000a9e02'), 'd', null);
 
     -- Mottagarna: superadminarna, inte familjer och inte studiehjälpare.
     select ta.till into mott from public.admin_paminnelse_ta(utsk) ta;
