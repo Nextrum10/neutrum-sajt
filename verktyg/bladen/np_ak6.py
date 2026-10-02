@@ -141,7 +141,7 @@ BLAD = [
                      flera(vinkel(40, langd=110, namn='A'), vinkel(90, langd=110, namn='B'), vinkel(130, langd=110, namn='C'))),
                     ('Ett akvarium är 50 cm långt, 20 cm brett och 30 cm högt. Hur många liter rymmer det? 1 liter = 1 dm³. {C}', 1),
                     ('En karta har skalan 1 : 50 000. Hur långt i verkligheten är 4 cm på kartan? [] km {C}', 0),
-                    ('Rita en rektangel som har omkretsen 20 cm och arean 24 cm². Skriv sidornas längder. En ruta är 1 cm. {A}', 'ruta')],
+                    ('Rita en rektangel som har omkretsen 20 cm och arean 24 cm². Skriv sidornas längder. Räkna som om varje ruta har sidan 1 cm. {A}', 'ruta')],
          beskrivning='Träning inför nationella provet i matematik åk 6: omkrets och area, volym och liter, vinklar, skala och en rektangel att konstruera.'),
 
     dict(fil='ak6-np-matematik-statistik-och-monster', arskurs='ak6', amne='Matematik',
@@ -283,13 +283,13 @@ BLAD = [
          instruktion=['Ett faktablad om verbformer och frågeord som ofta behövs på engelska, med exempel.',
                       'Läs ett avsnitt i taget och pröva sedan uppgifterna längst ner.'],
          text=['# Present simple',
-               "Det man gör ofta eller alltid: I play, you play. Efter he, she, it och ett substantiv i singular får verbet -s: "
+               "Det man gör ofta eller alltid: I play, you play. Efter he, she, it och ett substantiv i singular får verbet -⁠s: "
                "she plays, my sister plays. Frågor och nekande meningar bildas med do och does: Do you like pizza? She doesn't "
                "like fish.",
                '# Present continuous',
-               'Det som pågår just nu: I am reading, she is playing, they are eating. Bildas med am, is eller are och verbet med -ing.',
+               'Det som pågår just nu: I am reading, she is playing, they are eating. Bildas med am, is eller are och verbet med -⁠ing.',
                '# Past simple',
-               'Det som hände vid en bestämd tid som är slut, till exempel yesterday eller last week: regelbundna verb får -ed, play – played och walk – walked. Vanliga oregelbundna verb: '
+               'Det som hände vid en bestämd tid som är slut, till exempel yesterday eller last week: regelbundna verb får -⁠ed, play – played och walk – walked. Vanliga oregelbundna verb: '
                'go – went, see – saw, eat – ate, have – had, come – came.',
                '# Frågeord',
                'What (vad), where (var), when (när), who (vem), why (varför), how (hur) och how many (hur många).'],

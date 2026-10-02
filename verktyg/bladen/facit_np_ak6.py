@@ -82,7 +82,7 @@ FACIT = {
         '8 grader (3 grader upp till 0 och 5 grader till)',
         '9 (täljare och nämnare gånger 3)',
         '3 700. Byt ordning: 4 · 25 = 100 och 100 · 37 = 3 700. C-nivå: förklaringen säger att man får byta ordning '
-        'på faktorerna och väljer ett par som ger ett jämnt tal.',
+        'på faktorerna och väljer ett par som ger ett jämnt hundratal (4 · 25 = 100).',
         '22 och 28: 50 − 6 = 44, 44 / 2 = 22, 22 + 6 = 28. Kontroll: 22 + 28 = 50. Högre nivå: en metod som går att '
         'följa och en kontroll, inte bara gissade tal.',
         'Nej. Motexempel: 6 · 0,5 = 3, mindre än 6 (eller 4 · 1 = 4, inte större än 4). A-nivå: motexemplet och en '
@@ -142,7 +142,7 @@ FACIT = {
         'ord. Högre nivå: fler och säkrare fakta med förklaringar (eftersom, därför), god ordning mellan styckena och ett '
         'språk som passar läsaren.',
         'Eget svar. Eleven stryker åsikter och påhittat ("jag tycker", en historia) och förklarar svåra ord, t.ex. '
-        '"däggdjur, alltså ett djur som ger di".',
+        '"däggdjur, alltså ett djur vars ungar dricker mjölk från sin mamma".',
     ],
     'ak6-genomgang-berattelse-och-faktatext': [
         'Eget svar. Ilskan visas med kropp, röst eller handling, utan ordet "arg", t.ex. "Sara smällde igen dörren och '
