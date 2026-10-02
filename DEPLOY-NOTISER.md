@@ -330,45 +330,53 @@ Vanliga svar:
 
 ---
 
-## 7. Påminnelserna till admin (2026-10-02)
+## 7. Mejlen till admin (2026-10-02)
 
-Ett mejl till superadminarna när något legat en timme i Att göra i adminvyn.
-Så fungerar det står i `minne/notiser.md`. Här är det som görs för hand.
+En jobbansökan mejlas direkt till admin, och det som ligger kvar i Att göra går i ETT mejl kl. 9 svensk tid.
+En intresseanmälan mejlas direkt av `lead-notis`, som förut. Så fungerar det står i `minne/notiser.md`
+(Mejlen till admin). Här är det som görs för hand.
 
-**Ordningen är edge-funktionen först, migrationen sedan.** Jobbet
-`admin-paminnelse` schemaläggs av migrationen, och en funktion som inte är
-driftsatt svarar 404 på första mejlet.
+**Ordningen är edge-funktionen först, migrationen sedan.** Den nya triggern börjar mejla direkt i samma stund
+som den skapas, och en funktion som inte förstår `slag` skulle skicka fel mejl.
 
-1. Efter merge: driftsätt `admin-paminnelse` från main. `supabase/config.toml`
-   har redan `verify_jwt = false` för den.
-2. Kör `20261002120000_admin_paminnelser.sql`. Den lägger `admin_paminnelse_url`
-   i `notis_konfig` (härledd ur `arbetare_url`, som `ansokan_url`), tabellerna,
-   funktionerna och jobbet, och räknar det som redan står i Att göra som mejlat.
-3. Kör `verktyg/rls-test.sql` (hela filen, avsnitt 16 är nytt). Lokalt, med `verktyg/lokal-databas.sh`.
+1. Efter merge: driftsätt `admin-paminnelse` från main (v2). `supabase/config.toml` har redan `verify_jwt = false`
+   för den. Alla filer under `_delad/` som den importerar ska med (`_delad/notiser/admin.ts` och dess grannar).
+2. Kör `20261002170000_admin_paminnelser_direkt_och_morgon.sql`, avsnitt för avsnitt (verktyget ber om en
+   bekräftelse för `drop` och `delete`, och filen har ingen sådan sats på toppnivå, men kör ändå inte hela
+   filen i ett svep: se `minne/databasen.md`, "Att köra en migration i driften från en session"). Registrera
+   filens text i `supabase_migrations.schema_migrations` med den version filen har och jämför md5.
+   Sista avsnittet sätter på jobbet igen, som pausades när första versionen visade sig vara fel.
+3. Jämför `md5(prosrc)` för de åtta funktionerna (`intern.admin_att_gora`, `_paminnelse_kor`, `_paminnelse_koa`,
+   `_ansokan_direkt`, `_paminnelse_skicka`, `_paminnelse_stada`, `public.admin_paminnelse_ta`, `_klar`) med filen.
+4. Kör `verktyg/rls-test.sql` (hela filen, avsnitt 16 är omskrivet). Lokalt, med `verktyg/lokal-databas.sh`.
 
-**Gjort 2026-10-02:** funktionen driftsatt (v1), migrationen körd avsnitt för avsnitt och registrerad med
-rätt md5 (hänger sig verktyget, se `minne/databasen.md`), funktionskropparna jämförda med filen, RLS prövad
-i driften och ett utskick provat mot Resends testadress. **Kvar:** hela `rls-test.sql`. Avsnitt 16 är bara
-körd mot stubbar, eftersom Docker-bilden inte gick att hämta från sessionen.
+**Testmejl.** Ett testmejl till admin är en rad i `admin_paminnelse_utskick` med `slag = 'prov'` och de
+sorter som ska visas i `antal`, följd av `select intern.admin_paminnelse_skicka(<id>)`. Mejlet går till de
+riktiga mottagarna, märkt "[Test]" i ämnet och i brevet, och jobbet köar eller prövar aldrig om ett.
 
-**De här mejlen går inte genom sandlådan och inte genom flaggan `notiser_mejl`**,
-som aviseringen om en intresseanmälan och beskeden till den som sökt jobb. De är
-interna: mottagarna är superadminarna, och mejlet har bara antal och sorter. Vill
-du prova dem utan att något mejlas till de riktiga mottagarna: sätt
-`notis_konfig.admin_paminnelse_url = null` och läs `admin_paminnelse_utskick`, som fylls ändå, eller
-byt mottagarfunktionen i några sekunder mot Resends testadress `delivered@resend.dev` och återställ den
-genom att jämföra `md5(prosrc)` med filen (så gjordes provet 2026-10-02, innan något hunnit förfalla).
+**Det här mejlas, och det här inte:**
+- En ny jobbansökan: direkt, i samma stund, ett mejl per ansökan (högst fem på tio minuter).
+- En intresseanmälan: direkt, av `lead-notis`.
+- Allt annat i Att göra (utom de två ovan): kl. 9 svensk tid, en gång per sak. Det som redan låg i Att göra när
+  migrationen kördes går med i första morgonmejlet, utom en jobbansökan.
+
+**De här mejlen går inte genom sandlådan och inte genom flaggan `notiser_mejl`**, som aviseringen om en
+intresseanmälan och beskeden till den som sökt jobb. De är interna: mottagarna är superadminarna och `info@`,
+och mejlet har bara antal och sorter. Vill du prova dem utan att något mejlas till de riktiga mottagarna:
+sätt `notis_konfig.admin_paminnelse_url = null` och läs `admin_paminnelse_utskick`, som fylls ändå.
 
 När något inte kommer fram:
 
 ```sql
-select skapad, status, forsok, fel, antal from admin_paminnelse_utskick order by skapad desc limit 10;
+select skapad, slag, status, forsok, fel, antal from admin_paminnelse_utskick order by skapad desc limit 10;
 select typ, count(*), count(mejlad_at) as mejlade from admin_paminnelser group by typ;
+select jobname, schedule, active from cron.job where jobname = 'admin-paminnelse';
 ```
 
-- `vantar` som inte rör sig: kontrollera `notis_konfig.admin_paminnelse_url` och att
-  `admin-paminnelse` finns i `cron.job`. Fel från anropet syns också under System → Fel.
-- `fel` med "Ingen superadmin med giltig adress": ingen i `admin_roller` med
-  `ar_superadmin` har en adress i `profiles.email`.
-- Jobbet kör men inget mejlas: en sak mejlas först en timme efter att den syntes, och
-  högst ett mejl per kvart. `forst_sedd_at` och `mejlad_at` i `admin_paminnelser` säger varför.
+- `vantar` som inte rör sig: kontrollera `notis_konfig.admin_paminnelse_url` och att `admin-paminnelse` finns i
+  `cron.job` och är aktivt (det prövar om raden var femte minut). Fel från anropet syns också under System → Fel.
+- `fel` med "Ingen mottagare med giltig adress": hela mottagarlistan föll bort, vilket kräver att `info@` inte
+  heller är en giltig adress.
+- Inget morgonmejl en dag: det kommer bara när något ligger kvar och inte mejlats, och bara om jobbet var aktivt
+  någon gång mellan 09:00 och 09:59 svensk tid. Missade det timmen går det som låg kvar i morgon.
+  `forst_sedd_at` och `mejlad_at` i `admin_paminnelser` säger vad som är mejlat.

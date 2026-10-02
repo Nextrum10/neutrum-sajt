@@ -86,11 +86,12 @@ verify_jwt = false
 [functions.ansokan-notis]
 verify_jwt = false
 
-# Påminnelsen till superadminarna när något legat en timme i Att göra
-# (2026-10-02). Väcks av intern.admin_paminnelse_koa() (pg_cron-jobbet
-# admin-paminnelse) genom notis_konfig.admin_paminnelse_url, med samma
-# hemlighet i headern. Står den här raden inte kvar svarar funktionen 401
-# på varje påminnelse, och det syns bara som notiser som inte gick fram.
+# Mejlen till admin (2026-10-02): en jobbansökan direkt, och det som ligger
+# kvar i Att göra kl. 9 svensk tid. Väcks av triggern admin_ansokan_direkt
+# och av intern.admin_paminnelse_koa() (pg_cron-jobbet admin-paminnelse)
+# genom notis_konfig.admin_paminnelse_url, med samma hemlighet i headern.
+# Står den här raden inte kvar svarar funktionen 401 på varje mejl, och det
+# syns bara som notiser som inte gick fram.
 [functions.admin-paminnelse]
 verify_jwt = false
 

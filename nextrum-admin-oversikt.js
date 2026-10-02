@@ -168,10 +168,12 @@
 
      LISTAN FINNS OCKSÅ I DATABASEN (2026-10-02). intern.admin_att_gora()
      räknar samma poster, en rad per sak, och jobbet admin-paminnelse
-     mejlar superadminarna när en sak legat här i en timme. Ändras en
-     post här ska funktionen ändras i samma ändring (migrationen
-     admin_paminnelser), och tvärtom: annars mejlas en sak som inte står
-     här, eller en sak som står här mejlas aldrig.
+     mejlar dem till admin kl. 9 svensk tid, en gång per sak. Intresse-
+     anmälan och jobbansökan är med i listan här men inte i funktionen:
+     de mejlas direkt (lead-notis och triggern admin_ansokan_direkt).
+     Ändras en annan post här ska funktionen ändras i samma ändring
+     (migrationen admin_paminnelser_direkt_och_morgon), och tvärtom: annars
+     mejlas en sak som inte står här, eller en sak som står här mejlas aldrig.
      ------------------------------------------------------------ */
   function byggAttGöra() {
     const l = S.lage || {};

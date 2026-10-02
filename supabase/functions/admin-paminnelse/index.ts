@@ -1,10 +1,19 @@
 // ============================================================
 // NEXTRUM — Edge Function: admin-paminnelse (2026-10-02)
 //
-// Skickar ETT mejl till superadminarna: det som legat en timme i Att
-// göra i adminvyn. Väcks av intern.admin_paminnelse_koa() (pg_cron
-// admin-paminnelse, var femte minut) med pg_net, med raden i
-// admin_paminnelse_utskick som enda argument.
+// Skickar ETT mejl till ledningen, av tre slag (admin_paminnelse_utskick.slag):
+//
+//   · direkt: en jobbansökan har kommit in. Väcks av triggern
+//     intern.admin_ansokan_direkt() i samma stund.
+//   · morgon: det som ligger kvar i Att göra kl. 9 svensk tid. Väcks av
+//     intern.admin_paminnelse_kor() (pg_cron admin-paminnelse, var femte
+//     minut, och bara timmen 9 skriver ett mejl).
+//   · prov: morgonmejlet som testmejl, märkt som ett.
+//
+// Direkt och morgon väcks med pg_net, med raden i admin_paminnelse_utskick
+// som enda argument; ett testmejl väcks av den som bett om det. Mottagarna
+// är superadminarna (läses i databasen) och info@, som aviseringen om en
+// intresseanmälan.
 //
 // DATABASEN BESTÄMMER, FUNKTIONEN SKICKAR
 //
@@ -30,7 +39,7 @@ import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.116.
 import { CORS, db, hemlighetOk, json } from '../_delad/notis.ts';
 import { epostOk, preflight } from '../_delad/http.ts';
 import { mejlfelSort, skickaViaResend } from '../_delad/mejl.ts';
-import { ADMIN_FRAN, renderaAdminPaminnelse } from '../_delad/notiser/admin.ts';
+import { ADMIN_EXTRA_TILL, ADMIN_FRAN, renderaAdminPaminnelse } from '../_delad/notiser/admin.ts';
 
 /** Kortare än radens lån på två minuter, så att ett hängande anrop aldrig överlever lånet. */
 const TIDSGRANS_MS = 8_000;
@@ -86,9 +95,11 @@ Deno.serve(async (req) => {
 
   // En adress som inte ser giltig ut stoppar hela utskicket hos Resend
   // (422), så den sorteras bort här i stället för att ta de andra med sig.
-  const till = (Array.isArray(rad.till) ? rad.till : []).filter(epostOk).map((a) => String(a).trim());
+  // Superadminarna och info@, utan dubbletter.
+  const till = [...new Set([...(Array.isArray(rad.till) ? rad.till : []), ...ADMIN_EXTRA_TILL]
+    .filter(epostOk).map((a) => String(a).trim().toLowerCase()))];
   if (!till.length) {
-    await klar(false, 'Ingen superadmin med giltig adress.', null, true);
+    await klar(false, 'Ingen mottagare med giltig adress.', null, true);
     console.error('admin-paminnelse: ingen mottagare', rad.id);
     return json({ ok: false, orsak: 'ingen mottagare' }, 200);
   }

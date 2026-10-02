@@ -411,7 +411,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 |---|---|---|
 | `notis-minut` | varje minut | köar påminnelserna och väcker `notis-ko` (Notiserna nedan) |
 | `ansokan-besked` | var femte minut | nya försök med beskeden till den som söker jobb |
-| `admin-paminnelse` | var femte minut | mejlar superadmins det som legat en timme i Att göra, ett mejl per kvart (2026-10-02, Notiserna) |
+| `admin-paminnelse` | var femte minut | räknar Att göra och skriver kl. 9 svensk tid ETT mejl till admin med det som ligger kvar och inte mejlats; klockan avgörs i funktionen, inte i schemat (2026-10-02, Notiserna) |
 | `timmar-betalar` | var femte minut | obesvarade förslag lämnar tillbaka timmen, lediga timmar betalar nästa pass (Fas 22.3–22.4) |
 | `timmar-gar-ut` | :07 varje timme | mejlet tio dagar innan köpta timmar går ut (Fas 21.2) |
 | `utbildningsprov-paminn` | :13 varje timme | påminnelserna om utbildningsprovet |

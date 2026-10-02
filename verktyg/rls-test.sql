@@ -98,6 +98,9 @@ end $$;
 -- till funktionen töms i stället, så att intern.ansokan_besked_skicka()
 -- returnerar innan pg_net ens anropas. Rullas tillbaka som allt annat.
 update public.notis_konfig set ansokan_url = null where id = 1;
+-- Samma för mejlen till admin (avsnitt 16): triggern admin_ansokan_direkt köar ett mejl för varje ansökan,
+-- också de som läggs in i avsnitten här ovanför.
+update public.notis_konfig set admin_paminnelse_url = null where id = 1;
 
 -- Fas 22.2: med flaggan erbjudanden på betalar köpta timmar ett pass
 -- av sig själva när det bekräftas eller genomförs. Proven nedan är
@@ -10902,26 +10905,29 @@ begin
 end $$;
 
 -- ------------------------------------------------------------
--- 16. Påminnelserna till admin (admin_paminnelser, 2026-10-02)
+-- 16. Mejlen till admin (admin_paminnelser, 2026-10-02)
 --
--- Att göra räknas också i databasen (intern.admin_att_gora()), och jobbet
--- admin-paminnelse mejlar superadminarna när en sak legat där en timme.
--- Proven mäter listan mot fixturerna, timmen och kvarten, att en sak
--- mejlas en gång, vilka som får mejlet, och att ingen inloggad når
--- tabellerna eller dörrarna.
+-- En jobbansökan mejlas direkt av triggern admin_ansokan_direkt, och det
+-- som ligger kvar i Att göra går i ETT mejl kl. 9 svensk tid
+-- (intern.admin_paminnelse_kor(), som får klockan som argument så att
+-- sommartid, vintertid och 08:59 går att prova). Proven mäter listan mot
+-- fixturerna, att en intresseanmälan och en ansökan aldrig kommer i
+-- morgonmejlet, klockan, att en sak mejlas en gång, direktmejlet och
+-- bromsen, vilka som får mejlet, och att ingen inloggad når tabellerna
+-- eller dörrarna.
 --
--- Adressen till funktionen töms, så att intern.admin_paminnelse_skicka()
--- returnerar innan pg_net anropas: sviten ska aldrig kunna bli ett mejl.
+-- Adressen till funktionen töms överst i filen, så att
+-- intern.admin_paminnelse_skicka() returnerar innan pg_net anropas:
+-- sviten ska aldrig kunna bli ett mejl.
 -- ------------------------------------------------------------
-update public.notis_konfig set admin_paminnelse_url = null where id = 1;
 
 -- Vem som läser: tabellerna fylls av jobbet, och en inloggad får bara
 -- läsa om hen är superadmin.
-select pg_temp.prova_med('AP superadmin läser listan', array['select intern.admin_paminnelse_koa()'],
+select pg_temp.prova_med('AP superadmin läser listan', array['select intern.admin_paminnelse_kor(''2026-10-02 12:00:00+00'')'],
   '00000000-0000-4000-8000-0000000000ad', array['select * from public.admin_paminnelser'], 'ok');
-select pg_temp.prova_med('AP familjen läser inte listan', array['select intern.admin_paminnelse_koa()'],
+select pg_temp.prova_med('AP familjen läser inte listan', array['select intern.admin_paminnelse_kor(''2026-10-02 12:00:00+00'')'],
   '00000000-0000-4000-8000-0000000000f1', array['select * from public.admin_paminnelser'], 'nekad');
-select pg_temp.prova_med('AP studiehjälparen läser inte listan', array['select intern.admin_paminnelse_koa()'],
+select pg_temp.prova_med('AP studiehjälparen läser inte listan', array['select intern.admin_paminnelse_kor(''2026-10-02 12:00:00+00'')'],
   '00000000-0000-4000-8000-0000000000a1', array['select * from public.admin_paminnelser'], 'nekad');
 select pg_temp.prova('AP anon läser inte listan', null,
   array['select * from public.admin_paminnelser'], 'nekad');
@@ -10960,6 +10966,14 @@ select pg_temp.prova('AP anon kvitterar inget utfall', null,
   array['select public.admin_paminnelse_klar(gen_random_uuid(), true, null, null, false)'], 'nekad');
 select pg_temp.prova('AP superadmin kör inte jobbet', '00000000-0000-4000-8000-0000000000ad',
   array['select intern.admin_paminnelse_koa()'], 'nekad');
+select pg_temp.prova('AP superadmin kör inte jobbet med en egen klocka', '00000000-0000-4000-8000-0000000000ad',
+  array['select intern.admin_paminnelse_kor(now())'], 'nekad');
+select pg_temp.prova('AP anon kör inte jobbet', null,
+  array['select intern.admin_paminnelse_koa()'], 'nekad');
+-- Den som söker jobb är anon. Triggern får aldrig stoppa ansökan, och anon får inte behöva
+-- något i schemat intern för att den ska gå igenom.
+select pg_temp.prova('AP anon kan skicka en ansökan: triggern som mejlar admin stoppar den inte', null,
+  array['insert into public.applications (name, email) values (''Prov Anon'', ''ap-anon@example.invalid'')'], 'ok');
 select pg_temp.prova('AP superadmin läser inte listan genom funktionen', '00000000-0000-4000-8000-0000000000ad',
   array['select * from intern.admin_att_gora()'], 'nekad');
 select pg_temp.prova('AP superadmin kör inte rensningen', '00000000-0000-4000-8000-0000000000ad',
@@ -10979,6 +10993,7 @@ declare
   rap   uuid;
   utsk  uuid;
   mott  text[];
+  ant   jsonb;
   P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
   A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
   -- Egna rader: ett gemensamt pass eller barn kan ha ändrats av ett prov
@@ -11005,7 +11020,8 @@ begin
 
     -- Samma utgångsläge i en tom databas och i driften: allt som redan
     -- står i listan är mejlat, och inga utskick finns kvar att räkna.
-    perform intern.admin_paminnelse_koa();
+    -- Klockan 14 svensk tid, så att körningen aldrig skriver ett morgonmejl, vad klockan än är när sviten går.
+    perform intern.admin_paminnelse_kor('2026-10-02 12:00:00+00');
     update public.admin_paminnelser set mejlad_at = now() where mejlad_at is null;
     delete from public.admin_paminnelse_utskick;
 
@@ -11027,53 +11043,92 @@ begin
     ut := ut || jsonb_build_object('t', 'AP Att göra: en bekräftad rapport tas ur listan', 'ok',
             not exists (select 1 from intern.admin_att_gora() al where al.typ = 'rapport_obekraftad' and al.objekt_id = rap::text), 'd', null);
 
-    -- Timmen: en ny sak registreras men mejlas inte före en timme.
+    -- Intresseanmälan och ansökan mejlas direkt och står aldrig i morgonmejlets lista.
     insert into public.leads (parent_name, email, child_name, grade, subject, tjanst, status)
     values ('Prov Pia', 'ap-prov@example.invalid', 'Prov Pelle', 'Åk 5', 'Matte', 'laxhjalp', 'new');
-    n := intern.admin_paminnelse_koa();
-    ut := ut || jsonb_build_object('t', 'AP en ny sak registreras men mejlas inte före en timme', 'ok',
-            n = 0 and exists (select 1 from public.admin_paminnelser ap where ap.typ = 'ny_lead' and ap.mejlad_at is null)
-            and not exists (select 1 from public.admin_paminnelse_utskick), 'd', 'mejlade: ' || n);
-
-    update public.admin_paminnelser set forst_sedd_at = now() - interval '59 minutes' where mejlad_at is null;
-    n := intern.admin_paminnelse_koa();
-    ut := ut || jsonb_build_object('t', 'AP 59 minuter är inte en timme', 'ok', n = 0, 'd', 'mejlade: ' || n);
-
-    -- En sak som hanteras före timmen lämnar listan och mejlas aldrig.
-    update public.leads set status = 'contacted' where email = 'ap-prov@example.invalid';
-    update public.admin_paminnelser set forst_sedd_at = now() - interval '2 hours' where mejlad_at is null and typ = 'ny_lead';
-    n := intern.admin_paminnelse_koa();
-    ut := ut || jsonb_build_object('t', 'AP en sak som hanterats före timmen får ingen rad kvar och inget mejl', 'ok',
-            not exists (select 1 from public.admin_paminnelser ap where ap.typ = 'ny_lead' and ap.mejlad_at is null), 'd', 'mejlade: ' || n);
     delete from public.admin_paminnelse_utskick;
-    update public.admin_paminnelser set mejlad_at = now() where mejlad_at is null;
+    insert into public.applications (name, email) values ('Prov Per', 'ap-ans@example.invalid');
+    ut := ut || jsonb_build_object('t', 'AP Att göra i databasen har varken intresseanmälan eller ansökan', 'ok',
+            not exists (select 1 from intern.admin_att_gora() al where al.typ in ('ny_lead', 'ny_ansokan')), 'd', null);
 
-    -- Efter timmen: ett mejl, med antalet per sort, och sakerna räknas som mejlade.
-    update public.leads set status = 'new' where email = 'ap-prov@example.invalid';
-    perform intern.admin_paminnelse_koa();
-    update public.admin_paminnelser set forst_sedd_at = now() - interval '61 minutes' where mejlad_at is null;
-    n := intern.admin_paminnelse_koa();
-    select u.id into utsk from public.admin_paminnelse_utskick u order by u.skapad desc limit 1;
-    ut := ut || jsonb_build_object('t', 'AP efter en timme går saken i ett mejl med antalet per sort', 'ok',
-            n = 1 and (select count(*) from public.admin_paminnelse_utskick) = 1
-            and (select antal from public.admin_paminnelse_utskick where id = utsk) = '{"ny_lead": 1}'::jsonb
+    -- Direktmejlet: en ansökan, ett mejl, utan en uppgift om vem som sökt.
+    ut := ut || jsonb_build_object('t', 'AP en ansökan ger ETT direktmejl, utan uppgifter om vem', 'ok',
+            (select count(*) from public.admin_paminnelse_utskick where slag = 'direkt') = 1
+            and (select antal from public.admin_paminnelse_utskick where slag = 'direkt') = '{"ny_ansokan": 1}'::jsonb, 'd', null);
+    update public.applications set name = 'Prov Per, ändrad' where email = 'ap-ans@example.invalid';
+    ut := ut || jsonb_build_object('t', 'AP en ändrad ansökan ger inget nytt direktmejl', 'ok',
+            (select count(*) from public.admin_paminnelse_utskick where slag = 'direkt') = 1, 'd', null);
+    -- Bromsen: fler än fem direktmejl på tio minuter, och alla ansökningar sparas ändå.
+    insert into public.applications (name, email)
+    select 'Prov Flod', 'ap-flod' || g || '@example.invalid' from generate_series(1, 8) g;
+    ut := ut || jsonb_build_object('t', 'AP bromsen: högst fem direktmejl på tio minuter, alla ansökningar sparade', 'ok',
+            (select count(*) from public.admin_paminnelse_utskick where slag = 'direkt') = 5
+            and (select count(*) from public.applications where email like 'ap-flod%@example.invalid') = 8, 'd', null);
+    delete from public.admin_paminnelse_utskick;
+
+    -- Klockan. Ett pass utan rapport ligger kvar och är inte mejlat.
+    perform intern.admin_paminnelse_kor('2026-10-02 12:00:00+00');
+    update public.admin_paminnelser set mejlad_at = now() where mejlad_at is null;
+    update public.admin_paminnelser set mejlad_at = null where typ = 'pass_saknar_rapport' and objekt_id = PASS1::text;
+
+    n := intern.admin_paminnelse_kor('2026-10-03 06:59:00+00');
+    ut := ut || jsonb_build_object('t', 'AP 08:59 svensk tid går inget mejl', 'ok',
+            n = 0 and not exists (select 1 from public.admin_paminnelse_utskick where slag = 'morgon'), 'd', 'mejlade: ' || n);
+
+    n := intern.admin_paminnelse_kor('2026-10-03 07:00:00+00');
+    ut := ut || jsonb_build_object('t', 'AP 09:00 svensk sommartid går ETT mejl med det som låg kvar', 'ok',
+            n >= 1 and (select count(*) from public.admin_paminnelse_utskick where slag = 'morgon') = 1
+            and (select (antal ->> 'pass_saknar_rapport')::int from public.admin_paminnelse_utskick where slag = 'morgon') = 1
+            and not exists (select 1 from public.admin_paminnelse_utskick where slag = 'morgon' and antal ?| array['ny_lead', 'ny_ansokan'])
             and not exists (select 1 from public.admin_paminnelser ap where ap.mejlad_at is null), 'd', 'mejlade: ' || n);
 
-    -- En sak mejlas en gång, hur många gånger jobbet än går.
-    update public.admin_paminnelse_utskick set skapad = now() - interval '1 hour';
-    n := intern.admin_paminnelse_koa();
-    ut := ut || jsonb_build_object('t', 'AP samma sak mejlas inte två gånger', 'ok',
-            n = 0 and (select count(*) from public.admin_paminnelse_utskick) = 1, 'd', 'mejlade: ' || n);
+    -- En gång per dag, hur många gånger jobbet än går och vad som än kommit emellan.
+    insert into public.contact_messages (name, email, message) values ('Prov Frida', 'ap-fraga@example.invalid', 'Prov');
+    n := intern.admin_paminnelse_kor('2026-10-03 07:05:00+00');
+    ut := ut || jsonb_build_object('t', 'AP 09:05 samma dag går inget andra mejl', 'ok',
+            n = 0 and (select count(*) from public.admin_paminnelse_utskick where slag = 'morgon') = 1, 'd', 'mejlade: ' || n);
+    n := intern.admin_paminnelse_kor('2026-10-03 08:00:00+00');
+    ut := ut || jsonb_build_object('t', 'AP 10:00 går inget', 'ok', n = 0, 'd', 'mejlade: ' || n);
 
-    -- Högst ett mejl per kvart: det som mognar inom kvarten väntar.
-    insert into public.leads (parent_name, email, child_name, grade, subject, tjanst, status)
-    values ('Prov Per', 'ap-prov2@example.invalid', 'Prov Pär', 'Åk 6', 'Engelska', 'laxhjalp', 'new');
-    perform intern.admin_paminnelse_koa();
-    update public.admin_paminnelser set forst_sedd_at = now() - interval '2 hours' where mejlad_at is null;
-    update public.admin_paminnelse_utskick set skapad = now() - interval '5 minutes';
-    n := intern.admin_paminnelse_koa();
-    ut := ut || jsonb_build_object('t', 'AP högst ett mejl per kvart', 'ok',
-            n = 0 and exists (select 1 from public.admin_paminnelser ap where ap.mejlad_at is null), 'd', 'mejlade: ' || n);
+    -- Nästa morgon: bara det nya. Det som mejlats kommer inte igen.
+    n := intern.admin_paminnelse_kor('2026-10-04 07:00:00+00');
+    ut := ut || jsonb_build_object('t', 'AP nästa morgon går bara det nya, inget gammalt igen', 'ok',
+            n = 1 and (select count(*) from public.admin_paminnelse_utskick where slag = 'morgon') = 2
+            and exists (select 1 from public.admin_paminnelse_utskick where slag = 'morgon' and antal = '{"fraga": 1}'::jsonb), 'd', 'mejlade: ' || n);
+
+    -- En morgon utan något nytt ger inget mejl.
+    n := intern.admin_paminnelse_kor('2026-10-05 07:00:00+00');
+    ut := ut || jsonb_build_object('t', 'AP en morgon utan något nytt ger inget mejl', 'ok',
+            n = 0 and (select count(*) from public.admin_paminnelse_utskick where slag = 'morgon') = 2, 'd', 'mejlade: ' || n);
+
+    -- En sak som hanteras före kl. 9 lämnar listan och mejlas aldrig.
+    insert into public.contact_messages (name, email, message) values ('Prov Fredrik', 'ap-fraga2@example.invalid', 'Prov');
+    n := intern.admin_paminnelse_kor('2026-10-06 03:00:00+00');
+    update public.contact_messages set hanterad_at = now() where email = 'ap-fraga2@example.invalid';
+    n := intern.admin_paminnelse_kor('2026-10-06 07:00:00+00');
+    ut := ut || jsonb_build_object('t', 'AP en sak som hanterats före kl. 9 får inget mejl', 'ok',
+            n = 0 and (select count(*) from public.admin_paminnelse_utskick where slag = 'morgon') = 2, 'd', 'mejlade: ' || n);
+
+    -- Vintertid: 9 svensk tid är 08:00 UTC, inte 07:00.
+    insert into public.contact_messages (name, email, message) values ('Prov Fanny', 'ap-fraga3@example.invalid', 'Prov');
+    n := intern.admin_paminnelse_kor('2026-11-10 07:00:00+00');
+    ut := ut || jsonb_build_object('t', 'AP vintertid: 08:00 svensk tid går inget', 'ok',
+            n = 0 and (select count(*) from public.admin_paminnelse_utskick where slag = 'morgon') = 2, 'd', 'mejlade: ' || n);
+    n := intern.admin_paminnelse_kor('2026-11-10 08:00:00+00');
+    ut := ut || jsonb_build_object('t', 'AP vintertid: 09:00 svensk tid (08:00 UTC) går mejlet', 'ok',
+            n = 1 and (select count(*) from public.admin_paminnelse_utskick where slag = 'morgon') = 3, 'd', 'mejlade: ' || n);
+
+    -- Databasen håller ett morgonmejl per svensk dag; ett direktmejl och ett testmejl samma dag går.
+    begin
+      insert into public.admin_paminnelse_utskick (antal, slag, skapad) values ('{"fraga": 1}', 'morgon', '2026-11-10 08:30:00+00');
+      ut := ut || jsonb_build_object('t', 'AP ett andra morgonmejl samma svenska dag nekas av indexet', 'ok', false, 'd', 'gick in');
+    exception when unique_violation then
+      ut := ut || jsonb_build_object('t', 'AP ett andra morgonmejl samma svenska dag nekas av indexet', 'ok', true, 'd', null);
+    end;
+    insert into public.admin_paminnelse_utskick (antal, slag, skapad) values
+      ('{"ny_ansokan": 1}', 'direkt', '2026-11-10 08:30:00+00'), ('{"fraga": 1}', 'prov', '2026-11-10 08:30:00+00');
+    ut := ut || jsonb_build_object('t', 'AP direkt och prov samma dag som ett morgonmejl går', 'ok', true, 'd', null);
+    delete from public.admin_paminnelse_utskick where skapad = '2026-11-10 08:30:00+00' and slag <> 'morgon';
 
     -- Rensningen: utskick äldre än 90 dagar går, nyare står kvar.
     insert into public.admin_paminnelse_utskick (id, antal, status, skapad) values
@@ -11084,11 +11139,13 @@ begin
             not exists (select 1 from public.admin_paminnelse_utskick where id = '00000000-0000-4000-8000-0000000a9e01')
             and exists (select 1 from public.admin_paminnelse_utskick where id = '00000000-0000-4000-8000-0000000a9e02'), 'd', null);
 
-    -- Mottagarna: superadminarna, inte familjer och inte studiehjälpare.
-    select ta.till into mott from public.admin_paminnelse_ta(utsk) ta;
+    -- Mottagarna: superadminarna, inte familjer och inte studiehjälpare. Slaget följer med i antal.
+    select u.id into utsk from public.admin_paminnelse_utskick u where u.slag = 'morgon' order by u.skapad desc limit 1;
+    select ta.till, ta.antal into mott, ant from public.admin_paminnelse_ta(utsk) ta;
     ut := ut || jsonb_build_object('t', 'AP mottagarna är superadminarna, inte familjer eller studiehjälpare', 'ok',
             mott @> array['rls-admin@example.invalid'] and not (mott && array['rls-a@example.invalid', 'rls-b@example.invalid',
             'rls-p@example.invalid', 'rls-q@example.invalid']), 'd', 'antal mottagare: ' || coalesce(cardinality(mott), 0));
+    ut := ut || jsonb_build_object('t', 'AP dörren lägger slaget i antal', 'ok', ant ->> 'slag' = 'morgon', 'd', null);
 
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
