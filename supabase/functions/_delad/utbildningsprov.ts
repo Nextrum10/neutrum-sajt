@@ -1,7 +1,7 @@
 // ============================================================
 // NEXTRUM — utbildningsprovet (Fas 22.1)
 //
-// Trettio flervalsfrågor om Handledarhandboken, som gås igenom på
+// Tjugosex flervalsfrågor om Handledarhandboken, som gås igenom på
 // utbildningsmötet. Den som sökt jobb gör provet efter mötet, utan
 // tidsgräns, och är godkänd vid 80 procent. Handboken finns inte i
 // repot; frågorna är skrivna ur versionen från september 2026, och
@@ -39,8 +39,8 @@
 // utbildningsprov_forsok.svar lagrar id:n, och ett gammalt försök ska
 // inte se ut att ha svarat på en ny fråga.
 //
-// Tiden: 30 frågor med fyra alternativ, de flesta scenarier, är
-// omkring 20 minuter för den som läser ordentligt. Uppdraget var 15 till
+// Tiden: 26 frågor med fyra alternativ, de flesta scenarier, är
+// omkring 15 till 20 minuter för den som läser ordentligt. Uppdraget var 15 till
 // 30 minuter.
 // ============================================================
 
@@ -237,17 +237,6 @@ export const FRAGOR: Fraga[] = [
     ],
     ratt: 'c',
   },
-  {
-    id: 'interleaving', avsnitt: 'aktiv',
-    fraga: 'Varför är interleaving (varierad träning) effektivt?',
-    alternativ: [
-      { id: 'a', text: 'Det känns enklare för eleven att göra likadana uppgifter i rad, och då orkar hen mer.' },
-      { id: 'b', text: 'Eleven måste själv avgöra vilken metod som passar, som på ett riktigt prov.' },
-      { id: 'c', text: 'Eleven lär sig känna igen mönster snabbare när samma typ av uppgift upprepas.' },
-      { id: 'd', text: 'Man kan hoppa över de svåraste områdena och ändå få med sig lite av allt.' },
-    ],
-    ratt: 'b',
-  },
 
   // ---------- Dokumentation och första lektionen ----------
   {
@@ -271,17 +260,6 @@ export const FRAGOR: Fraga[] = [
       { id: 'd', text: 'I en chatt med eleven, så att ni båda kan gå tillbaka och läsa.' },
     ],
     ratt: 'a',
-  },
-  {
-    id: 'objektivt', avsnitt: 'forsta',
-    fraga: 'Hur ska du skriva när du dokumenterar?',
-    alternativ: [
-      { id: 'a', text: 'Med dina egna tolkningar av varför eleven beter sig som hen gör.' },
-      { id: 'b', text: 'Objektivt och faktabaserat.' },
-      { id: 'c', text: 'Så kort som möjligt.' },
-      { id: 'd', text: 'Så positivt som möjligt, även om något oroande har hänt.' },
-    ],
-    ratt: 'b',
   },
   {
     id: 'forsta-mal', avsnitt: 'forsta',
@@ -341,17 +319,6 @@ export const FRAGOR: Fraga[] = [
     ratt: 'c',
   },
   {
-    id: 'angest', avsnitt: 'svart',
-    fraga: 'En elev berättar att hen har mycket ångest och ber dig lova att inte säga något till någon. Vad gör du?',
-    alternativ: [
-      { id: 'a', text: 'Lovar att det stannar mellan er, så att eleven fortsätter att lita på dig och vågar berätta mer.' },
-      { id: 'b', text: 'Försöker lista ut vilken diagnos eleven kan ha och ger råd om hur hen kan hantera den.' },
-      { id: 'c', text: 'Byter ämne, eftersom det inte hör till läxhjälpen, och tar upp det med Nextrum om det händer igen.' },
-      { id: 'd', text: 'Lyssnar lugnt, lovar inte fullständig tystnad och följer Nextrums rutiner.' },
-    ],
-    ratt: 'd',
-  },
-  {
     id: 'sjalvskada', avsnitt: 'svart',
     fraga: 'En elev säger något om att skada sig själv, men verkar skämta. Vad gäller?',
     alternativ: [
@@ -363,26 +330,15 @@ export const FRAGOR: Fraga[] = [
     ratt: 'a',
   },
   {
-    id: 'far-illa', avsnitt: 'svart',
-    fraga: 'Eleven berättar något som gör att du misstänker att hen far illa hemma. Vad gör du?',
+    id: 'oro-hemma', avsnitt: 'svart',
+    fraga: 'Eleven säger i förbifarten att hen inte vågar gå hem när det blir bråk, och ber dig glömma det. Vad gör du?',
     alternativ: [
-      { id: 'a', text: 'Frågar ut eleven och föräldrarna om vad som har hänt, så att du är säker innan du kontaktar någon.' },
-      { id: 'b', text: 'Dokumenterar vad som sagts, med tid och sammanhang, och kontaktar Nextrum och socialtjänsten så snart som möjligt.' },
-      { id: 'c', text: 'Väntar och ser om det händer igen, och dokumenterar i så fall båda gångerna innan du säger något till Nextrum.' },
-      { id: 'd', text: 'Tar upp det med föräldern i lugn och ro vid nästa lektion, så att familjen får en chans att förklara.' },
+      { id: 'a', text: 'Tar reda på mer själv, genom att fråga eleven om detaljer och prata med föräldern, så att det du rapporterar stämmer.' },
+      { id: 'b', text: 'Skriver ner vad eleven sa, när och i vilket sammanhang, och kontaktar Nextrum och socialtjänsten så snart som möjligt.' },
+      { id: 'c', text: 'Respekterar elevens önskan och låter det vara, men håller extra koll och skriver ner det om eleven säger något liknande igen.' },
+      { id: 'd', text: 'Berättar för Nextrum vid nästa avstämning, eftersom det är Nextrum och inte du som avgör om något ska anmälas.' },
     ],
     ratt: 'b',
-  },
-  {
-    id: 'foralder', avsnitt: 'svart',
-    fraga: 'En förälder är nedvärderande och aggressiv mot eleven under passet. Hur gör du?',
-    alternativ: [
-      { id: 'a', text: 'Säger ifrån till föräldern direkt och tydligt, så att eleven ser att du står på hens sida.' },
-      { id: 'b', text: 'Låtsas att du inte märkte något, eftersom det är familjens sak och inte läxhjälpens.' },
-      { id: 'c', text: 'Är professionell, går inte in i en konflikt, dokumenterar objektivt och berättar för Nextrum.' },
-      { id: 'd', text: 'Avbryter passet, går därifrån och skriver till Nextrum att du inte vill fortsätta med familjen.' },
-    ],
-    ratt: 'c',
   },
   {
     id: 'vagrar', avsnitt: 'svart',

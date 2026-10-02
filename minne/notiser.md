@@ -201,8 +201,14 @@ Sex regler bär det:
 ### Utbildningsprovet (Fas 22.1)
 
 Efter utbildningsmötet gör den som söker ett prov på nätet:
-`/utbildningsprov?t=<nyckel>`, trettio flervalsfrågor om
-Handledarhandboken, ingen tidsgräns, godkänt vid 24 rätt (80 procent).
+`/utbildningsprov?t=<nyckel>`, tjugosex flervalsfrågor om
+Handledarhandboken, ingen tidsgräns, godkänt vid 21 rätt (80 procent).
+Frågorna var trettio till 2026-10-02, då Leo tog bort fyra (varierad
+träning, att dokumentera objektivt, ångesten och den aggressiva
+föräldern) och lät skriva om den om ett barn som far illa
+(`oro-hemma`, förut `far-illa`): den är provets viktigaste, och
+handboken säger samma sak som förut, undersök inte själv, dokumentera
+och kontakta Nextrum och socialtjänsten.
 Hen får göra om det tills det går. Klarat prov sätter `prov_godkant_at`
 OCH `utbildad_at`, och då går mejlet om kontot av sig självt; "Markera
 utbildad" finns kvar för admin, men frågar först om provet inte är
@@ -247,7 +253,7 @@ klara utan att ha läst något. De fel alternativen är nu lika utförliga
 som det rätta, och Nextrum och rutinerna står också i fel svar.
 `utbildningsprov_test.ts` räknar vad "alltid längsta", "alltid
 kortaste" och "det som nämner Nextrum" ger, och taket ligger kring
-slumpen (8 av 30). Skriver du om en fråga, kör proven.
+slumpen (7 av 26). Skriver du om en fråga, kör proven.
 
 **Provet öppnas från ansökans översikt** (2026-09-29). Leo: "på
 rekrytering och utbildning i admin kan man inte lägga in
