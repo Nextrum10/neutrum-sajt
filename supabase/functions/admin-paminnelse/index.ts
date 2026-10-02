@@ -11,8 +11,9 @@
 //   · prov: morgonmejlet som testmejl, märkt som ett.
 //
 // Direkt och morgon väcks med pg_net, med raden i admin_paminnelse_utskick
-// som enda argument; ett testmejl väcks av den som bett om det. Mottagarna är superadminarna (läses i databasen) och info@,
-// som aviseringen om en intresseanmälan.
+// som enda argument; ett testmejl väcks av den som bett om det. Mottagarna
+// är superadminarna (läses i databasen) och info@, som aviseringen om en
+// intresseanmälan.
 //
 // DATABASEN BESTÄMMER, FUNKTIONEN SKICKAR
 //
