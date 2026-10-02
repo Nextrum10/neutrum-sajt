@@ -14,7 +14,7 @@ BLAD = [
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'På provet finns delar där du bara skriver svaret och delar där du redovisar hur du löst uppgiften. Här räknar du utan miniräknare.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
-         uppgifter=[('a) −7 + 12 = []    b) 3,2 · 100 = []    c) 2/3 + 1/6 = [] {E}', 0),
+         uppgifter=[('a) −7 + 12 = []    b) 3,2 · 100 = [[]]    c) 2/3 + 1/6 = [] {E}', 0),
                     ('4² − 3 · 2 = [] {E}', 0), ('Hur mycket är 20 % av 450? [] {E}', 0),
                     ('Lös ekvationen 5x + 4 = 29. x = [] {E}', 0),
                     ('Uppskatta 39,8 · 5,1 med huvudräkning. Förklara hur du gjorde. {E}', 1),
@@ -193,7 +193,7 @@ BLAD = [
                     ('I en klass med 25 elever har 60 % ett husdjur. Hur många elever har inget husdjur? [] {E}', 0),
                     ('Du kastar en vanlig tärning en gång. Hur stor är sannolikheten att få en femma eller en sexa? [] {E}', 0),
                     ('Två mynt kastas. Beräkna sannolikheten att få en krona och en klave. {C}', 2),
-                    ('Sannolikheten att Ella vinner en match är 0,6. Hon spelar två matcher som inte påverkar varandra. Hur stor är sannolikheten att hon vinner båda? [] {C}', 0),
+                    ('Sannolikheten att Ella vinner en match är 0,6. Hon spelar två matcher som inte påverkar varandra. Hur stor är sannolikheten att hon vinner båda? [[]] {C}', 0),
                     ('En tidning skriver: ”Hälften av alla som köper glass väljer choklad.” Undersökningen gjordes bland 12 kunder i en chokladbutik. '
                      'Vad är problemet med slutsatsen? {A}', 2)],
          beskrivning='Träning inför nationella provet i matematik åk 9: typvärde, medelvärde och median, procent, sannolikhet och att granska en undersökning.'),
