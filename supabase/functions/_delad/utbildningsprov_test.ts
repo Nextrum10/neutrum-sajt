@@ -13,7 +13,7 @@
 // ============================================================
 
 import { assert, assertEquals } from 'jsr:@std/assert@1';
-import { AVSNITT, FRAGOR, kravRatt, publikaFragor, ratta } from './utbildningsprov.ts';
+import { AVSNITT, FRAGOR, genomgang, kravRatt, publikaFragor, ratta } from './utbildningsprov.ts';
 import { ANTAL_FRAGOR } from './utbildningsprov_grans.ts';
 
 function facit(): Record<string, string> {
@@ -145,4 +145,17 @@ Deno.test('bara kända id:n följer med till databasen', () => {
   const r = ratta({ ...facit(), 'hittepa': 'a', '<script>': 'b' });
   assertEquals(Object.keys(r.svar).sort(), FRAGOR.map((f) => f.id).sort());
   for (const v of Object.values(r.svar)) assert(/^[a-d]$/.test(v));
+});
+
+Deno.test('genomgången för admin säger fråga för fråga vad som var rätt', () => {
+  const r = ratta(medFel(2));
+  const g = genomgang(r.svar);
+  assertEquals(g.length, 30);
+  assertEquals(g.filter((x) => !x.stammer).length, 2);
+  assertEquals(g.map((x) => x.nr), FRAGOR.map((_, i) => i + 1));
+  // Fel svar visar både det valda och det rätta, och de är olika.
+  const fel = g.find((x) => !x.stammer)!;
+  assert(fel.ditt && fel.ditt !== fel.ratt);
+  // Ett obesvarat svar är inget val, inte ett påhittat.
+  assertEquals(genomgang({})[0].ditt, null);
 });

@@ -486,3 +486,33 @@ export function ratta(svar: unknown): Rattat {
     svar: rent,
   };
 }
+
+export type Genomgang = {
+  nr: number;
+  avsnitt: string;
+  fraga: string;
+  ditt: string | null;
+  ratt: string;
+  stammer: boolean;
+}[];
+
+/**
+ * Fråga för fråga, med facit: bara för admin som provar provet
+ * (2026-10-02). Den som söker får aldrig det här, se filhuvudet: med
+ * svaret per fråga går provet att klara på tre försök utan att ha läst
+ * något. Funktionen prövar inte vem som frågar; det gör anroparen,
+ * innan den anropas.
+ */
+export function genomgang(svar: Record<string, string>): Genomgang {
+  return FRAGOR.map((f, i) => {
+    const valt = f.alternativ.find((a) => a.id === svar[f.id]);
+    return {
+      nr: i + 1,
+      avsnitt: AVSNITT[f.avsnitt],
+      fraga: f.fraga,
+      ditt: valt ? valt.text : null,
+      ratt: f.alternativ.find((a) => a.id === f.ratt)!.text,
+      stammer: svar[f.id] === f.ratt,
+    };
+  });
+}

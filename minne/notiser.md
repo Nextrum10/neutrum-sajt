@@ -259,6 +259,18 @@ flikarna Intervju och Utbildning öppnar panelen på Rekryteringen
 (`data-dp-start`), och Utbildning tar också den som har ett
 utbildningsmöte utan att steg 2 är avbockat.
 
+**Admin kan göra provet själv** (2026-10-02, Leo: "gör provet
+tillgängligt för admin genom admin vyn"). Prova utbildningsprovet i
+Ansökningars rubrikrad öppnar `/utbildningsprov?prova` i en ny flik.
+Anropet bär adminens egen inloggning i stället för en nyckel, och
+`utbildningsprov` prövar `kravAdmin` innan något lämnas ut. Samma
+frågor och samma rättning, men inget sparas och ingen ansökan rörs,
+och svaret har genomgången fråga för fråga med facit (`genomgang()`).
+Det är den enda vägen facit lämnar funktionen: regel 2 ovan gäller den
+som söker, och nyckeln i länken räcker aldrig till provläget. En
+funktion som inte driftsatts med provläget svarar 404 utan nyckel, och
+sidan säger då att den behöver driftsättas.
+
 Utfallet syns i rekryteringsrutan vid det steg som skickade mejlet, och
 ett som inte gick fram är rött. Samma sort som kvittot till familjen:
 inget går att välja bort, avsändaren är info@, och ingenting ur

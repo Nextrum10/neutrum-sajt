@@ -22,11 +22,19 @@
 //
 // ALDRIG RÅA FEL UTÅT, ALDRIG NYCKELN I LOGGEN. En nyckel i en logg är
 // en länk till någon annans prov.
+//
+// PROVLÄGET FÖR ADMIN (2026-10-02). { prova: true, handling } utan
+// nyckel, med adminens egen inloggning i Authorization. Admin prövas
+// mot Auth och databasen (kravAdmin) innan något lämnas ut. Samma
+// frågor, samma rättning, men ingenting sparas och ingen ansökan rörs,
+// och svaret har genomgången fråga för fråga med facit. Det är den
+// enda vägen facit lämnar funktionen, och den kräver admin: den som
+// söker har inget konto, och nyckeln i länken räcker aldrig hit.
 // ============================================================
 
 import { cors, json as jsonMed, preflight } from '../_delad/http.ts';
-import { serviceklient } from '../_delad/auth.ts';
-import { GRANS_PROCENT, kravRatt, publikaFragor, ratta } from '../_delad/utbildningsprov.ts';
+import { kravAdmin, serviceklient } from '../_delad/auth.ts';
+import { genomgang, GRANS_PROCENT, kravRatt, publikaFragor, ratta } from '../_delad/utbildningsprov.ts';
 
 const CORS = cors();
 const json = (body: unknown, status: number) => jsonMed(body, status, CORS);
@@ -48,7 +56,28 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ fel: 'Bara POST.' }, 405);
 
   const kropp = await req.json().catch(() => null) as
-    { t?: unknown; handling?: unknown; svar?: unknown } | null;
+    { t?: unknown; handling?: unknown; svar?: unknown; prova?: unknown } | null;
+
+  if (kropp?.prova === true) {
+    const vem = await kravAdmin(req.headers.get('Authorization'));
+    if (!vem.ok) return vem.svar;
+    if (kropp.handling === 'hamta') {
+      return json({
+        lage: 'oppet', prova: true, fornamn: null, sista_dag: null, forsok: 0, forsok_idag: 0,
+        basta: null, grans_procent: GRANS_PROCENT, krav: kravRatt(), fragor: publikaFragor(),
+      }, 200);
+    }
+    if (kropp.handling === 'lamna') {
+      const r = ratta(kropp.svar);
+      if (r.obesvarade.length) return json({ fel: 'obesvarade', obesvarade: r.obesvarade }, 400);
+      return json({
+        utfall: 'ok', prova: true, godkant: r.godkant, ratt: r.ratt, antal: r.antal,
+        krav: kravRatt(r.antal), forsok: 0, avsnitt: r.avsnitt, genomgang: genomgang(r.svar),
+      }, 200);
+    }
+    return json({ fel: 'Okänd handling.' }, 400);
+  }
+
   const nyckel = typeof kropp?.t === 'string' && UUID.test(kropp.t) ? kropp.t.toLowerCase() : null;
   // Samma svar för en nyckel som inte ser ut som en nyckel och en som
   // inte finns: ingen ska kunna skilja på dem utifrån.

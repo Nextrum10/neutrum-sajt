@@ -76,3 +76,20 @@
 .prov-resultat li b{font-family:var(--f-mono);font-weight:500;white-space:nowrap}
 .prov-resultat li.ar-miss b{color:var(--acc-text)}
 .prov-resultat .nx-cta-rad{margin-top:20px}
+
+/* Provläget för admin (?prova): genomgången med facit. Bara admin ser
+   den. Listan är en ol, och reglerna för avsnittens ul ovan gäller
+   alla li i rutan, så de nollas här. Fel och rätt syns både i färgen
+   och i texten. */
+.prov-provlage{border-left:3px solid var(--acc-text)}
+.prov-resultat .prov-gg-rubrik{margin:28px 0 8px;font-size:1.05rem}
+.prov-resultat ol.prov-gg{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.prov-resultat ol.prov-gg li{
+  display:block;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:.93rem;
+}
+.prov-resultat ol.prov-gg li.ar-fel{border-left:3px solid var(--acc-text)}
+.prov-resultat ol.prov-gg li b{font-family:inherit;font-weight:600;white-space:normal}
+.prov-gg-fraga{margin:0 0 6px}
+.prov-gg-fraga em{font-style:normal;color:var(--muted);margin-right:4px}
+.prov-gg-svar{margin:2px 0 0;color:var(--muted)}
+.prov-gg-ditt{color:var(--acc-text)}
