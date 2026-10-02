@@ -219,7 +219,7 @@ BLAD = [
          beskrivning='Träning inför nationella provet i matematik nivå 1: räta linjens ekvation, funktionsvärden, linjära och exponentiella modeller.'),
 
     dict(fil='gy1-np-matematik-1-geometri-och-sannolikhet', arskurs='gy1', amne='Matematik',
-         titel='NP-träning: matematik 1, geometri', omrade='Nationella provet i matematik nivå 1', tid='40 minuter',
+         titel='NP-träning: geometri och sannolikhet', omrade='Nationella provet i matematik nivå 1', tid='40 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'Redovisa dina lösningar. Du får använda räknare och formelblad.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
@@ -261,31 +261,29 @@ BLAD = [
                'Det var sista turen för säsongen. Färjan gled ut från bryggan, och Ingrid stod vid relingen med jackan uppdragen till '
                'hakan. Ön krympte bakom dem: de röda stugorna, flaggstången, klippan där de hade badat varje morgon. Hon räknade '
                'somrarna i huvudet. Sjutton. Nästa sommar skulle hon bo i en annan stad.',
-               'Pappa kom ut från kafeterian med två muggar choklad och ställde sig bredvid henne utan att säga något. Vinden tog ångan '
-               'från muggarna och förde bort den över vattnet.',
+               'Pappa kom ut från kafeterian med två muggar choklad och ställde sig bredvid henne utan att säga något.',
                '– Du kan alltid komma tillbaka, sa han till slut.',
-               'Ingrid nickade, men tänkte att det inte var samma sak. Den som kom tillbaka var aldrig samma person som den som åkte.',
-               'När ön bara var ett grått streck vid horisonten vände hon sig om och tittade framåt, mot fastlandet, där lamporna redan '
-               'hade börjat tändas.'],
-         uppgifter=[('Beskriv miljön och stämningen i början av texten. Ge exempel ur texten.', 1),
-                    ('Vilket berättarperspektiv används, och hur påverkar det läsningen?', 1),
-                    ('Vad menar Ingrid med att ”den som kom tillbaka var aldrig samma person som den som åkte”?', 2),
+               'Ingrid nickade. Men den som kom tillbaka var aldrig samma person som den som åkte.',
+               'När ön var ett grått streck vände hon sig om och tittade framåt, mot fastlandets tända lampor.'],
+         uppgifter=[('Beskriv miljön och stämningen i början av texten. Ge exempel ur texten.', 2),
+                    ('Vilket berättarperspektiv används, och hur påverkar det läsningen?', 2),
+                    ('Vad menar Ingrid med att ”den som kom tillbaka var aldrig samma person”?', 2),
                     ('Vad kan ön och fastlandet symbolisera?', 2),
-                    ('Vilket tema har texten? Motivera.', 1)],
+                    ('Vilket tema har texten? Motivera.', 2)],
          beskrivning='Träning inför nationella provets läsdel i svenska nivå 1: en kort berättelse med frågor om miljö, berättarperspektiv, symbolik och tema.'),
 
     dict(fil='gy1-np-svenska-1-referera', arskurs='gy1', amne='Svenska',
          titel='NP-träning: referera, svenska 1', omrade='Nationella provet i svenska nivå 1', tid='35 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'På provets skrivdel ska du kunna återge och hänvisa till källor. Här tränar du referat, citat och referatmarkörer.'],
-         text=['Påhittad artikel för övningen: Kim Berg, ”Varför vi glömmer”, publicerad på en webbplats om hälsa 2025.',
+         text=['Påhittad artikel för övningen: Kim Berg, ”Varför vi glömmer”, publicerad 2025 på en webbplats om hälsa.',
                'Vi glömmer för att hjärnan måste prioritera. Varje dag tar vi emot mer information än vi kan lagra, och det mesta '
                'sorteras bort redan efter några timmar. Det vi upprepar, eller som väcker starka känslor, har störst chans att stanna '
                'kvar. Glömska är alltså inte bara ett fel i systemet utan en del av hur minnet fungerar.'],
          uppgifter=[('Skriv ett referat av artikeln på två eller tre meningar. Börja med en referatmarkör, till exempel ”Enligt Kim Berg ...”.', 3),
                     ('Skriv ett direkt citat ur texten med korrekt hänvisning.', 1),
                     ('Vad är skillnaden mellan ett citat och ett referat?', 2),
-                    ('Vilken referatmarkör visar att du tvivlar på påståendet, konstaterar eller påstår? Förklara.', 1),
+                    ('Vilket av verben ”konstaterar” och ”påstår” visar att du tvivlar på det Berg skriver? Förklara.', 1),
                     ('Skriv en mening där du håller med Berg eller invänder, och där det tydligt framgår att det är din egen åsikt.', 2)],
          beskrivning='Träning inför nationella provets skrivdel i svenska nivå 1: referat, citat och referatmarkörer utifrån en påhittad artikel.'),
 
@@ -300,8 +298,8 @@ BLAD = [
                'Ethos bygger förtroende för den som talar eller skriver, pathos väcker känslor och logos övertygar med fakta och logik.',
                '# Referat och källhänvisning',
                'När du återger någon annans text gör du det med egna ord, i presens och utan egna värderingar. Referatmarkörer som '
-               'menar, skriver och konstaterar visar att det är någon annans tankar. Ange källan i texten: ”I artikeln Varför vi '
-               'glömmer (2025) skriver Kim Berg att ...”.',
+               'menar, skriver och konstaterar visar att det är någon annans tankar. Ange källan i texten, här med en påhittad '
+               'artikel: ”I artikeln ’Varför vi glömmer’ (2025) skriver Kim Berg att ...”.',
                '# Språket',
                'Dela in texten i stycken med en tanke vardera, variera meningsbyggnaden och använd bindeord som däremot, därför och '
                'dessutom för att visa hur resonemanget hänger ihop.'],
@@ -313,7 +311,7 @@ BLAD = [
     dict(fil='gy1-np-engelska-1-short-story', arskurs='gy1', amne='Engelska',
          titel='NP-träning: short story, engelska 1', omrade='Nationella provet i engelska nivå 1', tid='35 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'Answer in English. Use full sentences, except where you are asked for one word.'],
+                      'Answer in English. Use full sentences.'],
          text=['# The Interview',
                'Hannah had practised her answers in the mirror for a week. "Why do you want this job?" she had asked her reflection, and '
                'her reflection had answered with a confident smile. Now, sitting in the narrow corridor outside the manager\'s office, '
@@ -321,11 +319,11 @@ BLAD = [
                'The boy next to her was tapping his foot. He wore a suit that was clearly borrowed from someone taller. When their eyes '
                'met, he grinned. "First interview?" he whispered. She nodded. "Me too. My mum says to imagine they\'re wearing pyjamas."',
                'Hannah laughed so loudly that the receptionist looked up, and the knot in her stomach loosened. When her name was called, '
-               'she stood up, smoothed her jacket and, for some reason, pictured the manager in striped pyjamas.',
+               'she stood up, smoothed her jacket and pictured the manager in striped pyjamas.',
                'She did not get the job. But three weeks later, at a bus stop, she recognised the boy in the borrowed suit. This time she said hello first.'],
          uppgifter=[('How does Hannah feel before the interview? Support your answer with the text.', 1),
                     ("Why does the boy's comment help her?", 1),
-                    ('What does the word "loosened" mean in the text? ___', 0),
+                    ('What does it mean that "the knot in her stomach loosened"? Explain in your own words.', 1),
                     ('What does the detail of the borrowed suit tell us about the boy?', 1),
                     ('What does the ending suggest? Explain.', 2),
                     ('What is the theme of the story?', 1)],
@@ -337,7 +335,7 @@ BLAD = [
                       'Läs ett avsnitt i taget och pröva sedan uppgifterna längst ner.'],
          text=['# Formal and informal',
                "Informal texts use contractions (I'm, don't) and everyday words (get, a lot of, kids). Formal texts use full forms (I am, "
-               "do not) and more precise words (receive, a great deal of, children). Choose the style that suits the reader.",
+               "do not) and more formal words (receive, many or much, children). Choose the style that suits the reader.",
                '# Paragraphs',
                'Each paragraph develops one idea. The topic sentence tells the reader what the paragraph is about, and the following '
                'sentences explain it and give examples.',
@@ -348,7 +346,7 @@ BLAD = [
                'Use the present perfect for something that started in the past and is still true: I have lived here for three years. '
                'Information has no plural. Days and months have capital letters in English: Monday, May.'],
          uppgifter=[("Make it formal: \"I'm gonna get back to you asap.\"", 1),
-                    ('Correct the mistake: I live in Stockholm since 2020. ___', 0),
+                    ('Correct the mistake: I live in Stockholm since 2020.', 1),
                     ('Choose the right word: The plan is cheap. ___, it takes a long time. (Therefore / However / For instance)', 0)],
          beskrivning='Faktablad om formell och informell stil, stycken, bindeord och vanliga fel på engelska, med tre uppgifter.'),
 
@@ -393,8 +391,8 @@ BLAD = [
                '# Kvadreringsreglerna',
                '(a + b)² = a² + 2ab + b², (a − b)² = a² − 2ab + b² och konjugatregeln (a + b)(a − b) = a² − b².',
                '# Andragradsfunktioner',
-               'Grafen till y = x² + px + q är en parabel med symmetrilinjen x = −p/2. Är koefficienten framför x² positiv har grafen en '
-               'minimipunkt, annars en maximipunkt.',
+               'Grafen till y = ax² + bx + c är en parabel. Om a > 0 har den en minimipunkt och om a < 0 en maximipunkt. För '
+               'y = x² + px + q är symmetrilinjen x = −p/2.',
                '# Logaritmer och statistik',
                'lg x är det tal som 10 ska upphöjas till för att bli x. lg(ab) = lg a + lg b, lg(a/b) = lg a − lg b och lg aⁿ = n · lg a. '
                'Standardavvikelsen mäter hur mycket värdena sprider sig kring medelvärdet. I en normalfördelning ligger ungefär 68 % av '
@@ -448,7 +446,7 @@ BLAD = [
     dict(fil='gy3-np-svenska-3-jamfora-texter', arskurs='gy3', amne='Svenska',
          titel='NP-träning: jämföra texter, svenska 3', omrade='Nationella provet i svenska kurs 3 och nivå 3', tid='45 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
-                      'På provet arbetar du med flera källor. Här jämför du två påhittade texter med olika perspektiv på samma fråga.'],
+                      'På provet arbetar du med flera källor. Här jämför du två påhittade texter om samma fråga.'],
          text=['Text A, ur en påhittad debattartikel av en rektor: ”AI-verktyg kommer att förändra skolan i grunden. Den som lär sig '
                'använda dem klokt får en assistent som förklarar, ger exempel och svarar på frågor dygnet runt. Skolans uppgift är inte '
                'att förbjuda verktygen utan att lära eleverna att granska det de svarar.”',
@@ -458,8 +456,8 @@ BLAD = [
          uppgifter=[('Vad är huvudtanken i text A och i text B?', 2),
                     ('På vilket sätt är skribenterna överens, och var skiljer de sig åt?', 2),
                     ('Vilken text tycker du är mest övertygande? Motivera med textens argument och avsändare.', 2),
-                    ('Text B innehåller en liknelse. Vilken, och vad vill skribenten visa med den?', 1),
-                    ('Skriv ett stycke som sammanför båda perspektiven, med en hänvisning till varje text.', 3)],
+                    ('Text B innehåller en liknelse. Vilken, och vad vill skribenten visa med den?', 2),
+                    ('Skriv ett stycke som sammanför båda perspektiven, med en hänvisning till varje text. Fortsätt på eget papper vid behov.', 4)],
          beskrivning='Träning inför nationella provet i svenska nivå 3: jämföra två påhittade texter om AI i skolan och skriva ett stycke som sammanför dem.'),
 
     dict(fil='gy3-genomgang-utredande-text', arskurs='gy3', amne='Svenska',
@@ -471,7 +469,7 @@ BLAD = [
                'Avhandlingen redogör för olika perspektiv med stöd i källor, och avslutningen sammanfattar och drar en egen slutsats som '
                'svarar på frågeställningen.',
                '# Saklighet',
-               'Håll isär refererat och eget resonemang. Använd referatmarkörer och en neutral ton när du återger källor, och visa '
+               'Håll isär referat och eget resonemang. Använd referatmarkörer och en neutral ton när du återger källor, och visa '
                'tydligt när du själv tolkar eller värderar.',
                '# Källhänvisning',
                'Hänvisa i löptexten, till exempel (Berg, 2025), och samla källorna i en källförteckning med upphovsperson, år, titel och '
@@ -494,8 +492,8 @@ BLAD = [
                     ('Bestäm en primitiv funktion till g(x) = 6x² + 4. {E}', 1),
                     ('Förenkla (x² − 9) / (x − 3). [[]] {E}', 0),
                     ('Bestäm extrempunkterna till f(x) = x³ − 3x² och avgör om de är maximi- eller minimipunkter. {C}', 2),
-                    ('Beräkna ∫ (3x² + 2x) dx från x = 0 till x = 2. [] {C}', 0),
-                    ('I triangeln ABC är AB = 8 cm, AC = 6 cm och vinkeln A = 60°. Beräkna BC. Svara med en decimal. {C}', 1),
+                    ('Beräkna ∫ (3x² + 2x) dx från x = 0 till x = 2. [] {E}', 0),
+                    ('I triangeln ABC är AB = 8 cm, AC = 6 cm och vinkeln A = 60°. Beräkna BC. Svara med en decimal. {E}', 1),
                     ('Av en kvadratisk skiva med sidan 30 cm görs en låda utan lock genom att lika stora kvadrater skärs bort i hörnen. '
                      'Hur stora ska hörnkvadraterna vara för att volymen ska bli så stor som möjligt? {A}', 3)],
          beskrivning='Provträning i matematik 3c: derivator, primitiva funktioner, rationella uttryck, extrempunkter, integraler, cosinussatsen och optimering.'),
@@ -508,7 +506,7 @@ BLAD = [
          uppgifter=[('Beräkna (3 + 2i) + (1 − 5i). [[]] {E}', 0),
                     ('Beräkna (2 + i)(3 − i). [[]] {E}', 0),
                     ('Derivera f(x) = sin 3x. [[]] {E}', 0),
-                    ('Lös ekvationen z² + 4 = 0. [[]] {C}', 0),
+                    ('Lös ekvationen z² + 4 = 0. [[]] {E}', 0),
                     ('Derivera f(x) = x · e²ˣ. {C}', 1),
                     ('Lös ekvationen cos x = 0,5 för 0 ≤ x ≤ 2π. Svara exakt. {C}', 1),
                     ('Visa med enhetscirkeln att sin²x + cos²x = 1. {A}', 2),

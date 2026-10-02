@@ -162,7 +162,7 @@ BLAD = [
                      koordinatsystem(-2, 5, -2, 6, punkter=[(0, 1, 'A'), (2, 5, 'B')], linje=((-1, -1), (2.5, 6)), enhet=30)),
                     ('Lös ekvationen 3(x + 2) = 5x − 4. {C}', 1),
                     ('Faktorisera 6x + 9. [[]] {C}', 0),
-                    ('För vilket x är 2x + 5 och 4x − 7 lika stora? Förklara vad det betyder för linjerna y = 2x + 5 och y = 4x − 7. {A}', 2)],
+                    ('För vilket x är 2x + 5 och 4x − 7 lika stora? Förklara vad det betyder för linjerna y = 2x + 5 och y = 4x − 7. {C}', 2)],
          beskrivning='Träning inför nationella provet i matematik åk 9: förenkla, lösa ekvationer, tolka och bestämma räta linjens ekvation.'),
 
     dict(fil='ak9-np-matematik-geometri', arskurs='ak9', amne='Matematik',
@@ -173,12 +173,12 @@ BLAD = [
          uppgifter=[('Beräkna triangelns area. [] cm² {E}', 0,
                      triangel(6, 8, 10, sida_a='6 cm', sida_b='8 cm', rattvinkel='C', hojd=100)),
                     ('En cirkel har diametern 10 cm. Beräkna omkretsen. Avrunda till hela cm. [] cm {E}', 0),
-                    ('Beräkna arean av en cirkel med radien 4 cm. Avrunda till en decimal. [[]] cm² {E}', 0),
-                    ('Ett klot har radien 3 cm. Beräkna volymen. Svara med ett heltal. [] cm³ {C}', 0),
+                    ('Beräkna arean av en cirkel med radien 4 cm. Avrunda till hela cm². [] cm² {E}', 0),
+                    ('Ett klot har radien 3 cm. Beräkna volymen. Svara med ett heltal. [[]] cm³ {C}', 0),
                     ('En stege som är 4,0 m lång står 1,2 m från en vägg. Hur högt upp når den? Svara med en decimal. {C}', 1),
                     ('Två trianglar är likformiga. Den mindre har sidorna 3, 4 och 5 cm. Den längsta sidan i den större är 15 cm. Hur långa är de andra sidorna? {C}', 1),
-                    ('Vinklarna i en triangel förhåller sig som 1 : 2 : 3. Hur stora är vinklarna? {A}', 1),
-                    ('En kub har volymen 64 cm³. Hur stor är kubens begränsningsarea? {A}', 1)],
+                    ('Vinklarna i en triangel förhåller sig som 1 : 2 : 3. Hur stora är vinklarna? {C}', 1),
+                    ('En kubs begränsningsarea i cm² har samma mätetal som dess volym i cm³. Hur lång är kubens sida? {A}', 2)],
          beskrivning='Träning inför nationella provet i matematik åk 9: area och omkrets, cirkel, klot, Pythagoras sats, likformighet och vinklar.'),
 
     dict(fil='ak9-np-matematik-statistik-och-sannolikhet', arskurs='ak9', amne='Matematik',
@@ -192,8 +192,8 @@ BLAD = [
                     ('Vad är medianen? [] h {C}', 0),
                     ('I en klass med 25 elever har 60 % ett husdjur. Hur många elever har inget husdjur? [] {E}', 0),
                     ('Du kastar en vanlig tärning en gång. Hur stor är sannolikheten att få en femma eller en sexa? [] {E}', 0),
-                    ('Två mynt kastas. Rita ett träddiagram och beräkna sannolikheten att få en krona och en klave. {C}', 2),
-                    ('Sannolikheten att Ella vinner en match är 0,6. Hon spelar två matcher. Hur stor är sannolikheten att hon vinner båda? [] {C}', 0),
+                    ('Två mynt kastas. Beräkna sannolikheten att få en krona och en klave. {C}', 2),
+                    ('Sannolikheten att Ella vinner en match är 0,6. Hon spelar två matcher som inte påverkar varandra. Hur stor är sannolikheten att hon vinner båda? [] {C}', 0),
                     ('En tidning skriver: ”Hälften av alla som köper glass väljer choklad.” Undersökningen gjordes bland 12 kunder i en chokladbutik. '
                      'Vad är problemet med slutsatsen? {A}', 2)],
          beskrivning='Träning inför nationella provet i matematik åk 9: typvärde, medelvärde och median, procent, sannolikhet och att granska en undersökning.'),
@@ -247,18 +247,17 @@ BLAD = [
                'fick ställa om den. ”Då hinner man alltid i tid”, brukade morfar säga.',
                'Efter begravningen var lägenheten full av kartonger. Mamma sorterade och slängde, och Jonas bar ner säckar till '
                'soprummet utan att säga något. När han kom upp igen stod klockan på köksbordet.',
-               '– Vill du ha den? frågade mamma. Den går inte längre. Den stannade samma vecka som morfar.',
+               '– Vill du ha den? frågade mamma. – Den går inte längre. Den stannade samma vecka som morfar.',
                'Jonas vände på den. Han tänkte på alla gånger han kommit för tidigt till fotbollen, hur han suttit på läktaren och '
                'väntat medan de andra kom springande. Han hade alltid trott att det var morfars fel.',
                'Hemma ställde han klockan på sitt skrivbord och lät den vara som den var. Men på kvällen, när han ställde väckarklockan '
                'i mobilen, flyttade han den tio minuter tidigare.'],
          uppgifter=[('Vad var speciellt med morfars klocka, och vad sa morfar om det?', 1),
-                    ('Var och när utspelar sig novellen?', 1),
                     ('Varför tror du att Jonas inte säger något när han bär ner säckarna?', 1),
-                    ('Vad förstår Jonas när han tänker på fotbollen?', 1),
+                    ('Vad förstår Jonas när han tänker på fotbollen?', 2),
                     ('Vad betyder slutet, när Jonas flyttar väckarklockan tio minuter? Tolka.', 2),
-                    ('Vilket tema har novellen? Motivera med stöd i texten.', 1)],
-         beskrivning='Träning inför nationella provets läsdel i svenska åk 9: en novell om sorg och minnen med frågor om handling, tolkning och tema.'),
+                    ('Vilket tema har novellen? Motivera med stöd i texten.', 2)],
+         beskrivning='Träning inför nationella provets läsdel i svenska åk 9: en novell med frågor om handling, tolkning och tema.'),
 
     dict(fil='ak9-np-svenska-lasa-faktatext', arskurs='ak9', amne='Svenska',
          titel='NP-träning: läsa en faktatext med diagram', omrade='Nationella provet i svenska, åk 9', tid='35 minuter',
@@ -283,7 +282,7 @@ BLAD = [
          titel='NP-träning: skriva utifrån ett tema', omrade='Nationella provet i svenska, åk 9', tid='50 minuter',
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'Provet är byggt kring ett tema, och skrivuppgiften hänger ihop med det. Vilken sorts text du ska skriva varierar.',
-                      'Temat här är Att växa upp.'],
+                      'Temat här är ”Att växa upp”.'],
          uppgifter=[('Välj en uppgift och ringa in den.\nA) Krönika: Något jag har ändrat uppfattning om.\nB) Novell: En dag som förändrade allt.', 0),
                     ('Planera: vem skriver du för, vad är huvudtanken och hur ska texten börja och sluta?', 3),
                     ('Skriv texten. Fortsätt på ett eget papper om raderna inte räcker.', 9),
@@ -305,7 +304,7 @@ BLAD = [
                'Novellen är kort och handlar ofta om en enda händelse eller vändpunkt. Den har få personer, och mycket sägs mellan '
                'raderna. Bildspråk som liknelser och symboler ger texten djup.',
                '# Källhänvisning',
-               'Tala om varifrån uppgifterna kommer: ”Enligt artikeln Läser unga mindre i dag? ...”. Ett direkt citat skrivs inom citattecken.'],
+               'Tala om varifrån uppgifterna kommer: ”Enligt artikeln ’Läser unga mindre i dag?’ ...”. Ett direkt citat skrivs inom citattecken.'],
          uppgifter=[('Vilken texttyp passar bäst? Skriv A, U eller B.\nEn text om för- och nackdelar med sommarlov på åtta veckor. []\n'
                      'En text som ska få kommunen att bygga en skatepark. []\nEn text om en dag när allt gick fel. []', 0),
                     ('Skriv en tes om skoluniformer.', 1),
@@ -326,8 +325,8 @@ BLAD = [
                "coach walked over and handed him the captain's armband. \"You played for the team,\" she said. \"That's what a captain does. Take this with you.\""],
          uppgifter=[('Why was the last match so important to Leo?', 1),
                     ('What kind of player was Leo? Give two examples from the text.', 1),
-                    ('Why did Leo pass the ball instead of shooting himself?', 1),
-                    ('Find a word in the text that means "not watched by any player from the other team": ___', 0),
+                    ('Why did Leo pass the ball instead of taking the shot himself?', 1),
+                    ('Find a word that means "not watched by any player from the other team": ___', 0),
                     ('Why do you think the coach gave Leo the armband?', 1),
                     ('What is the message of the story? Explain in your own words.', 1)],
          beskrivning='Träning inför nationella provets läsdel i engelska åk 9: en kort berättelse om en fotbollsmatch, med frågor om personer och budskap.'),
@@ -362,10 +361,10 @@ BLAD = [
                'yesterday), present perfect for experience (I have played), and will or going to for the future.',
                '# Common mistakes',
                'Write I agree, not I am agree. People are, not people is. Information has no plural. At the same time, not in the same time.'],
-         uppgifter=[('Rätta felet: I am agree with you. ___', 0),
-                    ('Rätta felet: People is nice in my town. ___', 0),
+         uppgifter=[('Rätta meningen: I am agree with you.', 1),
+                    ('Rätta meningen: People is nice in my town.', 1),
                     ('Välj rätt bindeord: I like summer. ___, I hate the mosquitoes. (because / however / so)', 0),
-                    ('Skriv en ämnesmening till ett stycke om dina fritidsintressen.', 1)],
+                    ('Skriv en ämnesmening (topic sentence) på engelska till ett stycke om dina fritidsintressen.', 1)],
          beskrivning='Faktablad om struktur, bindeord, tempus och vanliga fel i engelska texter, och fyra uppgifter att pröva själv.'),
 
     # NO och SO: ett blad per ämne, eftersom eleven gör provet i ett NO-ämne och ett SO-ämne.
@@ -378,9 +377,9 @@ BLAD = [
                     ('Förklara skillnaden mellan en näringskedja och en näringsväv. {E}', 1),
                     ('I en sjö minskar antalet abborrar kraftigt. Gäddor äter abborre, och abborren äter bland annat djurplankton. '
                      'Vad kan hända med gäddorna och med djurplanktonet? Förklara. {C}', 2),
-                    ('Vilket organ pumpar runt blodet, och vilket renar blodet från restprodukter? ___ och ___ {E}', 0),
+                    ('Vilket organ pumpar blodet, och vilket bildar urin? ___ och ___ {E}', 0),
                     ('Varför hjälper inte antibiotika mot en förkylning? {C}', 1),
-                    ('Vad innebär det att bakterier blir resistenta mot antibiotika, och varför är det ett problem för samhället? {A}', 2),
+                    ('Vad innebär det att bakterier blir resistenta mot antibiotika, och varför är det ett problem för samhället? {A}', 4),
                     ('Ge ett argument för och ett emot att köpa ekologiskt odlad mat. {C}', 2)],
          beskrivning='Träning inför nationella provet i biologi åk 9: fotosyntes, ekosystem, kroppen, antibiotika och att ta ställning.'),
 
@@ -390,13 +389,14 @@ BLAD = [
                       'På provet använder du begrepp och modeller, räknar med fysikens samband och tar ställning i frågor om energi och miljö.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
          uppgifter=[('Vad är skillnaden mellan massa och tyngd? {E}', 1),
-                    ('En lampa har effekten 60 W och lyser i 5 timmar. Hur mycket energi går åt? Svara i kWh. [[]] {C}', 0),
-                    ('Ett element är anslutet till 230 V och strömmen är 4,0 A. Beräkna effekten. [[]] W {C}', 0),
+                    ('En tv har effekten 60 W och är på i 5 timmar. Hur mycket energi går åt? Svara i kWh. {C}', 1),
+                    ('Ett element är anslutet till 230 V och strömmen är 4,0 A. Beräkna effekten. {C}', 1),
                     ('En cyklist cyklar 12 km på 30 minuter. Vad är medelhastigheten? [] km/h {E}', 0),
                     ('Förklara varför en isbit smälter i ett varmt rum. Använd ordet energi. {E}', 1),
                     ('Ge två exempel på förnybara energikällor och ett på en energikälla som inte är förnybar. {E}', 1),
                     ('Förklara med tröghetslagen varför bilbälte skyddar vid en krock. {C}', 2),
-                    ('Ge ett skäl för och ett emot att bygga mer kärnkraft i Sverige. {A}', 2)],
+                    ('Resonera om för- och nackdelar med mer kärnkraft i Sverige utifrån minst två perspektiv, till exempel klimat, '
+                     'säkerhet, avfall och kostnad, och ta ställning. {A}', 4)],
          beskrivning='Träning inför nationella provet i fysik åk 9: massa och tyngd, energi och effekt, hastighet, energikällor och tröghet.'),
 
     dict(fil='ak9-np-kemi', arskurs='ak9', amne='NO / Fysik / Kemi / Biologi', chip='Kemi',
@@ -404,14 +404,14 @@ BLAD = [
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'På provet använder du begrepp och modeller, förklarar med partiklar och tar ställning i frågor om miljö och hälsa.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
-         uppgifter=[('Vad är skillnaden mellan ett grundämne och en kemisk förening? Ge ett exempel på varje. {E}', 1),
+         uppgifter=[('Vad är skillnaden mellan ett grundämne och en kemisk förening? Ge ett exempel på varje. {E}', 2),
                     ('Vad händer med vattnets partiklar när vatten kokar? {E}', 1),
-                    ('Ringa in de ämnen som är sura: citronsaft – tvål – ättika – bakpulver i vatten – läsk {E}', 0),
+                    ('Ringa in de ämnen som är sura: citronsaft – såpa – ättika – bikarbonat i vatten – läsk {E}', 0),
                     ('Vad visar pH-skalan, och vilket pH har en neutral lösning? {E}', 1),
-                    ('Skriv reaktionen i ord för när kol brinner: kol + ___ → ___ {C}', 0),
+                    ('Skriv reaktionen i ord för när kol brinner: kol + ___ → ___ {E}', 0),
                     ('Varför rostar järn snabbare vid havet än inne i landet? {C}', 1),
                     ('Förbränning av fossila bränslen ökar halten koldioxid i luften. Förklara hur det påverkar klimatet. {C}', 2),
-                    ('Förklara varför fotosyntes och förbränning kan beskrivas som varandras motsatser. {A}', 2)],
+                    ('Förklara varför fotosyntes och förbränning kan beskrivas som varandras motsatser. {A}', 4)],
          beskrivning='Träning inför nationella provet i kemi åk 9: grundämnen och föreningar, partiklar, syror och baser, förbränning och klimat.'),
 
     dict(fil='ak9-genomgang-biologi', arskurs='ak9', amne='NO / Fysik / Kemi / Biologi', chip='Biologi',
@@ -433,7 +433,7 @@ BLAD = [
                'fungerar mot bakterier men inte mot virus. Ett vaccin tränar immunförsvaret att känna igen ett smittämne.',
                '# Arv',
                'Generna sitter i DNA och styr hur kroppen byggs upp. Vi får hälften av våra kromosomer från varje förälder.'],
-         uppgifter=[('Var i cellen sker fotosyntesen, och var sker cellandningen? ___ och ___', 0),
+         uppgifter=[('Var i cellen sker fotosyntesen, och var sker cellandningen?', 1),
                     ('Vad gör nedbrytarna i ett ekosystem?', 1),
                     ('Varför får man inte antibiotika när man har influensa?', 1)],
          beskrivning='Faktablad om celler, fotosyntes och cellandning, ekosystem, kroppen och arv, med tre uppgifter.'),
@@ -445,7 +445,7 @@ BLAD = [
          text=['# Krafter och rörelse',
                'Medelhastighet = sträcka / tid. Kraft mäts i newton (N). Tyngden är kraften från jordens gravitation: ett föremål med '
                'massan 1 kg har tyngden ungefär 9,8 N. Tröghetslagen säger att ett föremål fortsätter i samma rörelse, eller står '
-               'still, om ingen kraft påverkar det.',
+               'still, om ingen kraft påverkar det eller om krafterna som påverkar det tar ut varandra.',
                '# Energi',
                'Energi kan varken skapas eller förstöras, bara omvandlas mellan olika former: rörelseenergi, lägesenergi, värme, '
                'kemisk energi, elektrisk energi och strålning. Förnybara energikällor som sol, vind och vatten tar inte slut, men '
@@ -457,7 +457,7 @@ BLAD = [
                'Ljud är vibrationer som sprids genom ett ämne, till exempel luft, och kan inte färdas i vakuum. Ljus kan färdas genom '
                'vakuum, med ungefär 300 000 km/s.'],
          uppgifter=[('Ett föremål har massan 5 kg. Hur stor är tyngden ungefär? [] N', 0),
-                    ('En dammsugare på 1 500 W används i två timmar. Hur många kWh går åt? [] kWh', 0),
+                    ('En värmefläkt på 1 500 W används i två timmar. Hur många kWh går åt? [] kWh', 0),
                     ('Varför hörs inget ljud i rymden?', 1)],
          beskrivning='Faktablad om krafter och rörelse, energi, elektricitet, ljud och ljus, med tre uppgifter.'),
 
@@ -476,7 +476,7 @@ BLAD = [
                'I en kemisk reaktion bildas nya ämnen, men atomerna försvinner inte: massan är densamma före och efter. Vid förbränning '
                'reagerar ett ämne med syre. När kol brinner bildas koldioxid.',
                '# Syror och baser',
-               'pH-skalan går från 0 till 14. Under 7 är surt, 7 är neutralt och över 7 är basiskt. En syra och en bas kan neutralisera '
+               'pH-skalan brukar anges från 0 till 14. Under 7 är surt, 7 är neutralt och över 7 är basiskt. En syra och en bas kan neutralisera '
                'varandra, och då bildas vatten och ett salt.'],
          uppgifter=[('Är luft ett grundämne, en kemisk förening eller en blandning? ___', 0),
                     ('En lösning har pH 3. Är den sur, neutral eller basisk? ___', 0),
@@ -494,7 +494,7 @@ BLAD = [
                     ('Vad visar en befolkningspyramid, och vad kan en bred bas säga om ett land? {C}', 2),
                     ('Förklara hur en varmare jord kan påverka människor som bor i ett lågt liggande kustland. {C}', 2),
                     ('Ge ett exempel på något en enskild person kan göra för en mer hållbar utveckling, och förklara varför det hjälper. {C}', 1),
-                    ('Jämför flyg och tåg mellan Stockholm och Göteborg ur ett hållbarhetsperspektiv: ekologiskt, ekonomiskt och socialt. {A}', 2)],
+                    ('Jämför flyg och tåg mellan Stockholm och Göteborg ur ett hållbarhetsperspektiv: ekologiskt, ekonomiskt och socialt. {A}', 4)],
          beskrivning='Träning inför nationella provet i geografi åk 9: väder och klimat, urbanisering, befolkning, klimatförändringar och hållbarhet.'),
 
     dict(fil='ak9-np-historia', arskurs='ak9', amne='SO / Historia / Samhällskunskap', chip='Historia',
@@ -502,13 +502,14 @@ BLAD = [
          instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
                       'På provet använder du historiska begrepp, förklarar orsaker och konsekvenser och granskar källor.',
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
-         uppgifter=[('Skriv händelserna i tidsordning: andra världskriget börjar, Berlinmuren faller, första världskriget börjar, '
-                     'kvinnor röstar för första gången i ett svenskt riksdagsval. {E}', 1),
+         uppgifter=[('Skriv 1–4 i rutorna så att händelserna kommer i tidsordning. {E}\n[] Andra världskriget börjar.\n'
+                     '[] Berlinmuren faller.\n[] Första världskriget börjar.\n'
+                     '[] Kvinnor röstar för första gången i ett svenskt riksdagsval.', 0),
                     ('Ge två orsaker till att första världskriget bröt ut. {C}', 2),
                     ('Vad var det kalla kriget? {E}', 1),
                     ('Varför bör en historiker vara försiktig med en källa som en regering skrev under ett krig? {C}', 1),
                     ('Förklara hur industrialiseringen förändrade människors liv i Sverige. Ge två exempel. {C}', 2),
-                    ('Vilken händelse under 1900-talet tycker du har påverkat Europa mest? Motivera med minst två konsekvenser. {A}', 2)],
+                    ('Vilken händelse under 1900-talet tycker du har påverkat Europa mest? Motivera med minst två konsekvenser. {A}', 4)],
          beskrivning='Träning inför nationella provet i historia åk 9: kronologi, orsaker till första världskriget, kalla kriget, källkritik och industrialiseringen.'),
 
     dict(fil='ak9-np-religionskunskap', arskurs='ak9', amne='SO / Historia / Samhällskunskap', chip='Religionskunskap',
@@ -522,7 +523,7 @@ BLAD = [
                     ('Vad innebär det att Sverige har religionsfrihet? {E}', 1),
                     ('Ge ett exempel på hur en religion kan påverka människors vardag. {E}', 1),
                     ('Förklara skillnaden mellan konsekvensetik och pliktetik med ett exempel. {C}', 2),
-                    ('Ska man alltid säga sanningen? Resonera utifrån två etiska modeller. {A}', 2)],
+                    ('Ska man alltid säga sanningen? Resonera utifrån två etiska modeller. {A}', 4)],
          beskrivning='Träning inför nationella provet i religionskunskap åk 9: heliga skrifter, likheter mellan religioner, karma, religionsfrihet och etik.'),
 
     dict(fil='ak9-np-samhallskunskap', arskurs='ak9', amne='SO / Historia / Samhällskunskap', chip='Samhällskunskap',
@@ -533,10 +534,10 @@ BLAD = [
          uppgifter=[('Vad gör riksdagen, regeringen och kommunen? Ge en uppgift för var och en. {E}', 2),
                     ('Vad innebär det att Sverige är en rättsstat? {E}', 1),
                     ('Vad är en marknadsekonomi? {E}', 1),
-                    ('Vad händer vanligtvis med priset om efterfrågan på en vara ökar men utbudet är detsamma? {C}', 1),
+                    ('Vad händer vanligtvis med priset om efterfrågan på en vara ökar men utbudet är detsamma? Förklara varför. {C}', 1),
                     ('Ge två exempel på hur medier kan påverka vad människor tycker. {C}', 1),
                     ('Varför är fria val och yttrandefrihet viktiga i en demokrati? {C}', 2),
-                    ('Borde rösträttsåldern sänkas till 16 år? Resonera om argument för och emot. {A}', 2)],
+                    ('Borde rösträttsåldern sänkas till 16 år? Resonera om argument för och emot. {A}', 4)],
          beskrivning='Träning inför nationella provet i samhällskunskap åk 9: riksdag, regering och kommun, rättsstaten, ekonomi, medier och demokrati.'),
 
     dict(fil='ak9-genomgang-historia-1900-talet', arskurs='ak9', amne='SO / Historia / Samhällskunskap', chip='Historia',
@@ -555,8 +556,8 @@ BLAD = [
                '# Kalla kriget',
                'USA och Sovjetunionen krigade aldrig direkt mot varandra, men tävlade om makt och inflytande genom kapprustning, '
                'rymdkapplöpning och krig i andra länder. Europa delades av en gräns som kallades järnridån.'],
-         uppgifter=[('Vilket år fick kvinnor i Sverige rösta i ett riksdagsval för första gången? []', 0),
-                    ('Nämn två långsiktiga orsaker till första världskriget. ___ och ___', 0),
+         uppgifter=[('Vilket år fick kvinnor i Sverige rösta i ett riksdagsval för första gången? [[]]', 0),
+                    ('Nämn två långsiktiga orsaker till första världskriget.', 1),
                     ('Varför kallas det kalla kriget för kallt?', 1)],
          beskrivning='Faktablad med en tidslinje över 1900-talet, orsakerna till första världskriget och kalla kriget, med tre uppgifter.'),
 
@@ -568,15 +569,16 @@ BLAD = [
                'Judendomens heliga skrift är Tanakh, där Torah är den viktigaste delen. Man samlas i synagogan och firar sabbat från '
                'fredag kväll till lördag kväll. Kristendomens heliga skrift är Bibeln, med Gamla och Nya testamentet. De kristna tror '
                'att Jesus är Guds son, och påsken firar hans uppståndelse. Islams heliga skrift är Koranen, och profeten Muhammed har '
-               'en central roll. De fem pelarna är trosbekännelsen, bönen, allmosan, fastan under ramadan och vallfärden till Mecka.',
+               'en central roll. Man samlas till gemensam bön i moskén, särskilt vid fredagsbönen. De fem pelarna är trosbekännelsen, bönen, allmosan, fastan under ramadan och vallfärden till Mecka.',
                '# Hinduism och buddhism',
-               'Inom hinduismen finns många gudar, och viktiga skrifter är Vedaskrifterna och Bhagavad Gita. Karma betyder att '
-               'handlingar får följder, och de påverkar återfödelsen. Buddhismen bygger på Buddhas lära om de fyra ädla sanningarna '
-               'och den åttafaldiga vägen, med målet nirvana.',
+               'Inom hinduismen finns många gudar, och många hinduer ser dem som uttryck för en och samma gudomliga kraft, Brahman. '
+               'Viktiga skrifter är Vedaskrifterna och Bhagavad Gita. Buddhismen bygger på Buddhas lära om de fyra ädla sanningarna '
+               'och den åttafaldiga vägen. Båda lär ut karma, att handlingar får följder, och återfödelse. Målet är att bli fri från '
+               'kretsloppet av återfödelser: moksha i hinduismen och nirvana i buddhismen.',
                '# Etiska modeller',
                'Konsekvensetik: en handling är rätt om följderna blir goda. Pliktetik: vissa handlingar är rätt eller fel oavsett '
                'följderna. Dygdetik: gör det som en god människa skulle ha gjort.'],
-         uppgifter=[('Vad heter islams heliga skrift, och var samlas man för bön? ___ och ___', 0),
+         uppgifter=[('Vad heter islams heliga skrift, och var samlas man för gemensam bön?', 1),
                     ('Vilken etisk modell används här: ”Jag ljuger inte, för det är fel att ljuga.” ___', 0),
                     ('Ge en likhet och en skillnad mellan hinduism och buddhism.', 2)],
          beskrivning='Faktablad om judendom, kristendom, islam, hinduism och buddhism och om tre etiska modeller, med tre uppgifter.'),
@@ -591,12 +593,12 @@ BLAD = [
                'äldreomsorg, och de 21 regionerna för sjukvård och kollektivtrafik. Val hålls vart fjärde år.',
                '# Grundlagar och rättsstat',
                'Sverige har fyra grundlagar: regeringsformen, successionsordningen, tryckfrihetsförordningen och '
-               'yttrandefrihetsgrundlagen. I en rättsstat gäller lagarna alla, och domstolarna, tingsrätt, hovrätt och Högsta '
+               'yttrandefrihetsgrundlagen. I en rättsstat gäller lagarna alla, och domstolarna, till exempel tingsrätt, hovrätt och Högsta '
                'domstolen, dömer oberoende av politikerna.',
                '# Ekonomi',
                'I en marknadsekonomi styrs priser av utbud och efterfrågan: om fler vill köpa en vara än det finns, stiger priset. '
                'Skatter betalar för gemensamma saker som skola, vård och vägar.'],
-         uppgifter=[('Hur många ledamöter har riksdagen? []', 0),
+         uppgifter=[('Hur många ledamöter har riksdagen? [[]]', 0),
                     ('Vem ansvarar för sjukvården, kommunen eller regionen? ___', 0),
                     ('Varför är det viktigt att domstolarna är oberoende?', 2)],
          beskrivning='Faktablad om riksdag, regering, kommuner och regioner, grundlagarna, rättsstaten och marknadsekonomi, med tre uppgifter.'),

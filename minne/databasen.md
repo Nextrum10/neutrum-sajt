@@ -383,6 +383,12 @@ sökvägen.
   använda, hade passat i läsdelarna, men molnmiljön nådde varken
   runeberg.org, litteraturbanken.se eller Wikisource, och klassiker citeras
   inte ur minnet. `[[]]` är en bred svarsruta för längre svar.
+- **Granskningen av omgång 2** (samma dag) lärde två saker. En skrivrad
+  rymmer tio–tolv handskrivna ord: en fråga med två led får två rader och en
+  A-uppgift fyra, och `[]` rymmer två siffror, `[[]]` fler. Och i åk 6 prövar
+  delprov C2 sakprosa, där texttypen växlar mellan åren (argumenterande,
+  beskrivande, förklarande eller instruerande, enligt provgruppens
+  resultatrapporter): skriv aldrig att det alltid är en faktatext.
 
 Ur avsnitt 11:
 
