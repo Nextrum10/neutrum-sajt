@@ -65,7 +65,7 @@ FACIT = {
         'adjektiv',
         'räkneord',
         'Hon gav honom den.',
-        'men (även fast, trots att eller även om godtas)',
+        'men. (Trots att, även om och fast passar också i meningen, men de är subjunktioner: de inleder en bisats.)',
         'Eget svar. Tre prepositioner, t.ex. på, under, i, bakom, med, över, framför.',
         'Eget svar. En mening med ett adverb och ett adjektiv, och orden utpekade, '
         't.ex. "Den glada hunden sprang snabbt." (adjektiv: glada, adverb: snabbt)',
@@ -215,7 +215,7 @@ FACIT = {
     ],
 
     'ak9-svenska-noveller-och-analys': [
-        'I skolans gympasal, under en idrottslektion (i nutid).',
+        'I skolans gympasal, under en idrottslektion.',
         'Noor. Hon känner sig ensam, utanför och nervös: hon "höll hårt i väskan", alla hade redan lag '
         'och hon "stod kvar på samma plats som förra veckan och veckan innan".',
         'När Alva ropar "Noor, du kan vara med oss!"',
@@ -243,8 +243,8 @@ FACIT = {
     'ak9-programmering-python-grunder': [
         'a) 12\nb) Hej Alva',
         'c) stort\nd) 0, 2, 4, 6 (på var sin rad)',
-        'e) 6 (summan 0 + 1 + 2 + 3)\nf) I villkoret ska det stå == i stället för =: if x == 5: '
-        '(= sparar ett värde, == jämför). Python ger SyntaxError.',
+        'e) 6 (summan 0 + 1 + 2 + 3)\nf) == (if x == 5:). Ett = sparar ett värde, == jämför; som koden står '
+        'ger Python SyntaxError.',
         'for i in range(1, 6):\n\u00a0\u00a0\u00a0\u00a0print(i)\n(Fem print-rader godtas också.)',
         'Eget svar. En variabel är ett namn som sparar ett värde i datorns minne, och värdet kan ändras, '
         't.ex. x = 5.',

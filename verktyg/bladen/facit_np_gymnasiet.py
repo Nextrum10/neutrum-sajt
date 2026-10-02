@@ -138,7 +138,7 @@ FACIT = {
         'k = 2, m = 3   (k = (11 − 3) / (4 − 0); m är y-värdet där x = 0)',
         '15   (2 · 9 − 3)',
         'y = −x + 3. Linjen skär y-axeln i 3, och k = (0 − 3) / (3 − 0) = −1. Högre nivå: både k och m avläses och motiveras.',
-        'Efter 3 månader. Kostnaderna är 300 + 250x och 400x; efter 2 månader kostar båda 800 kr, efter 3 månader 1 050 kr mot '
+        '3 månader. Kostnaderna är 300 + 250x och 400x; efter 2 månader kostar båda 800 kr, efter 3 månader 1 050 kr mot '
         '1 200 kr. Högre nivå: en modell eller tabell som visar brytpunkten och tolkas.',
         'Exponentiellt: y fördubblas för varje steg i x (förändringsfaktor 2), y = 5 · 2ˣ. Inte linjärt, eftersom ökningen '
         '(5, 10, 20) inte är konstant. Högre nivå: motiveringen visar både den konstanta kvoten och den ojämna ökningen.',
@@ -149,7 +149,7 @@ FACIT = {
         '5 cm   (sin 30° = x / 10, x = 10 · 0,5)',
         '45°',
         '37,7 cm³   (V = π · 3² · 4 / 3 = 12π ≈ 37,7)',
-        '8 gånger   (längdskalan 2 ger volymskalan 2³ = 8)',
+        '8 gånger så stor (längdskalan 2 ger volymskalan 2³ = 8)',
         '1/6   (6 av 36 utfall: 4+6, 5+5, 6+4, 5+6, 6+5, 6+6). Högre nivå: utfallen räknas upp systematiskt.',
         '2/7 ≈ 0,29   (12/22 · 11/21 = 132/462). Högre nivå: den andra dragningen görs utan återläggning, 11 av 21.',
         'Sidan s: Pythagoras sats ger s² + s² = d², alltså 2s² = d² och arean s² = d²/2. '
@@ -202,8 +202,8 @@ FACIT = {
         'to something good.',
     ],
     'gy1-genomgang-writing-engelska-1': [
-        'I will get back to you as soon as possible. (Eller: I will contact you / reply as soon as possible.) Fullständiga former, '
-        'inget gonna eller asap.',
+        'I will reply as soon as possible. (Eller: I will contact you as soon as possible.) Fullständiga former, '
+        'inget gonna, asap eller get, som bladet kallar vardagligt.',
         'I have lived in Stockholm since 2020. (Present perfect: det började 2020 och gäller fortfarande. Även: I have been living.)',
         'However',
     ],

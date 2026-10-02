@@ -6,7 +6,7 @@ BLAD = [
     dict(fil='ak7-matematik-procent', arskurs='ak7', amne='Matematik',
          titel='Procent i vardagen', omrade='Procent', tid='30 minuter',
          instruktion=['Procent betyder hundradelar: 25 % = 25/100 = 0,25.',
-                      'För att räkna ut en procentsats av ett tal kan du multiplicera talet med decimalformen.',
+                      'För att räkna ut hur mycket en viss procent av ett tal är kan du multiplicera talet med decimalformen.',
                       'Visa hur du räknar.'],
          uppgifter=[('Skriv 40 % i decimalform.', 1), ('Skriv 0,07 i procentform.', 1),
                     ('Hur mycket är 10 % av 350 kr?', 1), ('Hur mycket är 25 % av 80?', 1),
@@ -78,7 +78,7 @@ BLAD = [
          instruktion=['Substantiv är namn på saker, djur och människor. Adjektiv beskriver substantiv. Verb är handlingar. '
                       'Adverb beskriver verb och adjektiv (snabbt, mycket).',
                       'Pronomen ersätter substantiv (hon, den, vi). Preposition visar läge (på, under). '
-                      'Konjunktion binder ihop (och, men, eftersom). Räkneord är tal.'],
+                      'Konjunktion binder ihop (och, men, eller), och subjunktion inleder en bisats (att, eftersom, när). Räkneord är tal.'],
          uppgifter=[('Vilken ordklass är ordet "snabbt" i "Hon springer snabbt"? ___', 0),
                     ('Vilken ordklass är ordet "under" i "Katten sover under bordet"? ___', 0),
                     ('Vilken ordklass är ordet "och" i "Jag gillar äpplen och päron"? ___', 0),
@@ -299,7 +299,7 @@ BLAD = [
                'fram, utan att veta om hon skulle le eller inte. Under hela lektionen väntade hon på skämtet, på att någon '
                'skulle skratta åt henne. Men ingenting hände. När Noor till slut gjorde mål ropade Alva högt och räckte upp handen.',
                'På väg ut ur salen kände Noor att väskan var lättare än förut.'],
-         uppgifter=[('Var och när utspelar sig novellen? ___', 0),
+         uppgifter=[('Var utspelar sig novellen? ___', 0),
                     ('Vem är huvudpersonen och hur mår hon i början? Hitta belägg i texten.', 2),
                     ('Vad är novellens vändpunkt?', 1),
                     ('Är berättaren en jag-berättare eller en tredjepersonsberättare? Hur ser du det?', 2),
@@ -334,7 +334,7 @@ BLAD = [
                     ('Vad skriver programmen ut? c) ___   d) ___ (fyra rader, skriv dem efter varandra)', 0,
                      kodrad(('c)', 'x = 7\nif x > 5:\n    print("stort")\nelse:\n    print("litet")'),
                             ('d)', 'for i in range(4):\n    print(i * 2)'))),
-                    ('e) Vad skriver programmet ut? []   f) Vilket fel finns i koden? ___', 0,
+                    ('e) Vad skriver programmet ut? []   f) Vad ska stå i stället för = på rad 2? ___', 0,
                      kodrad(('e)', 'summa = 0\nfor i in range(1, 4):\n    summa = summa + i\nprint(summa)'),
                             ('f)', 'x = 5\nif x = 5:\n    print("fem")'))),
                     ('Skriv ett program som skriver ut talen 1 till 5.', 2),
@@ -363,10 +363,10 @@ BLAD = [
                       'Svara på frågorna med egna ord.'],
          text=['Andra världskriget började den 1 september 1939 när Tyskland, under Adolf Hitler, anföll Polen. '
                'Storbritannien och Frankrike svarade med att förklara krig mot Tyskland. Under kriget stod de allierade, '
-               'till exempel Storbritannien, Sovjetunionen och USA, mot axelmakterna Tyskland, Italien och Japan.',
+               'Storbritannien och från 1941 även Sovjetunionen och USA, mot axelmakterna Tyskland, Italien och Japan.',
                'Nazisterna mördade omkring sex miljoner judar i Förintelsen, och miljontals andra människor dödades eller '
-               'förföljdes. Kriget i Europa slutade den 8 maj 1945 när Tyskland kapitulerade. Kriget i Asien avslutades '
-               'i augusti–september 1945, när Japan kapitulerade efter att USA fällt atombomber över Hiroshima och Nagasaki.',
+               'förföljdes. Kriget i Europa slutade den 8 maj 1945 när Tyskland kapitulerade. Kriget i Asien slutade '
+               'i september 1945, när Japan kapitulerade efter att USA fällt atombomber över Hiroshima och Nagasaki.',
                'Sverige var neutralt under kriget. Efter att Tyskland ockuperat Danmark och Norge 1940 var Sverige omringat, och landet '
                'sålde bland annat järnmalm till Tyskland. Det blev en svår balansgång mellan Tyskland och de allierade. '
                'Samtidigt tog Sverige emot många flyktingar.'],

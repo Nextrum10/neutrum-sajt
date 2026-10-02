@@ -212,7 +212,7 @@ BLAD = [
                     ('Grafen visar en rät linje. Bestäm linjens ekvation. {C}', 1,
                      koordinatsystem(-1, 5, -3, 4, linje=((-1, 4), (5, -2)), punkter=[(0, 3, ''), (3, 0, '')], enhet=26)),
                     ('Ett gym kostar 300 kr i startavgift och 250 kr i månaden. Ett annat kostar 400 kr i månaden utan startavgift. '
-                     'Efter hur många månader har det första blivit billigast? {C}', 1),
+                     'Hur många månader måste man vara medlem för att det första gymmet ska bli billigast totalt? {C}', 1),
                     ('Är sambandet i tabellen linjärt, exponentiellt eller inget av dem? Motivera. {C}', 1,
                      tabell(['x', '0', '1', '2', '3'], [['y', '5', '10', '20', '40']], bredd_kol=80)),
                     ('Linjerna y = ax + 2 och y = 3x − 4 skär varandra där x = 2. Bestäm a och förklara vad svaret betyder för linjen. {A}', 2)],
@@ -226,7 +226,7 @@ BLAD = [
          uppgifter=[('I en rätvinklig triangel är hypotenusan 10 cm och en vinkel 30°. Hur lång är kateten mitt emot vinkeln? [] cm {E}', 0),
                     ('Bestäm vinkeln v om tan v = 1. [] ° {E}', 0),
                     ('En kon har radien 3 cm och höjden 4 cm. Beräkna volymen. Svara med en decimal. [[]] cm³ {E}', 0),
-                    ('Två likformiga cylindrar har höjderna 5 cm och 10 cm. Hur många gånger större volym har den större? [] {C}', 0),
+                    ('Två likformiga cylindrar har höjderna 5 cm och 10 cm. Hur många gånger så stor volym har den större cylindern? [] {C}', 0),
                     ('Du kastar två tärningar. Hur stor är sannolikheten att summan blir 10 eller mer? [[]] {C}', 0),
                     ('En klass har 12 tjejer och 10 killar. Två elever lottas till elevrådet. Hur stor är sannolikheten att båda är tjejer? {C}', 1),
                     ('Visa att arean av en kvadrat med diagonalen d är d²/2. {A}', 2)],

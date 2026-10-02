@@ -122,7 +122,7 @@ BLAD = [
          titel='Python: listor, funktioner och loopar', omrade='Programmering 1', tid='40 minuter',
          instruktion=['En lista samlar värden: tal = [4, 8, 15]. Första elementet har index 0, och len(tal) är antalet element. // ger heltalsdivision och % rest.',
                       'En funktion definieras med def och lämnar tillbaka ett värde med return. En while-loop körs så länge villkoret är sant.',
-                      'tal.append(x) lägger till x sist i listan, och s.upper() gör om texten till versaler. for o in orden går igenom listan ett element i taget.'],
+                      'tal.append(x) lägger till x sist, s.upper() ger versaler, och for o in orden går igenom listan.'],
          uppgifter=[('Vad skriver programmen ut? a) []   b) []', 0,
                      kodrad(('a)', 'tal = [4, 8, 15]\nprint(tal[1])'),
                             ('b)', 'tal = [2, 4, 6]\ntal.append(8)\nprint(len(tal))'))),
@@ -133,7 +133,7 @@ BLAD = [
                      kodrad(('e)', 'x = 10\nwhile x > 3:\n    x = x - 4\nprint(x)'),
                             ('f)', 'a = 7\nb = 2\nprint(a // b, a % b)'))),
                     ('Skriv en funktion kvadrat(x) som lämnar tillbaka x upphöjt till 2.', 1),
-                    ('Skriv kod som summerar talen i listan tal = [3, 5, 9] med en for-loop och skriver ut summan.', 2)],
+                    ('Skriv kod som summerar talen i listan tal = [3, 5, 9] med en for-loop och skriver ut summan.', 4)],
          beskrivning='Läsa och skriva Python med listor, funktioner, while- och for-loopar samt heltalsdivision och rest.'),
 
     # ---- Gymnasiet 2 ----
@@ -174,7 +174,7 @@ BLAD = [
          instruktion=['Sannolikhet = gynnsamma utfall / alla utfall. I ett träddiagram multiplicerar du längs en gren och adderar mellan grenar.',
                       'Utan återläggning ändras sannolikheterna för nästa dragning.',
                       'Antal sätt att ordna n olika saker är n! = n · (n − 1) · ... · 1. Att välja k av n utan hänsyn till ordning kan göras på n! / (k! · (n − k)!) sätt.'],
-         uppgifter=[('En påse har 3 röda och 2 blå kulor. Du drar två kulor utan återläggning. Rita ett träddiagram och beräkna sannolikheten för två röda.', 3),
+         uppgifter=[('En påse har 3 röda och 2 blå kulor. Du drar två kulor utan återläggning. Rita ett träddiagram och beräkna sannolikheten för två röda.', 4),
                     ('Beräkna sannolikheten att få en kula av varje färg i uppgiften ovan.', 1),
                     ('Samma påse, men du lägger tillbaka den första kulan innan du drar nästa. Vad är sannolikheten för två röda?', 1),
                     ('Två tärningar kastas. Vad är sannolikheten att summan blir 7?', 1),
