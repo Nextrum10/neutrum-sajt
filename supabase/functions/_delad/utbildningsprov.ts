@@ -1,7 +1,7 @@
 // ============================================================
 // NEXTRUM — utbildningsprovet (Fas 22.1)
 //
-// Tjugofem flervalsfrågor om Handledarhandboken, som gås igenom på
+// Tjugosex flervalsfrågor om Handledarhandboken, som gås igenom på
 // utbildningsmötet. Den som sökt jobb gör provet efter mötet, utan
 // tidsgräns, och är godkänd vid 80 procent. Handboken finns inte i
 // repot; frågorna är skrivna ur versionen från september 2026, och
@@ -39,7 +39,7 @@
 // utbildningsprov_forsok.svar lagrar id:n, och ett gammalt försök ska
 // inte se ut att ha svarat på en ny fråga.
 //
-// Tiden: 25 frågor med fyra alternativ, de flesta scenarier, är
+// Tiden: 26 frågor med fyra alternativ, de flesta scenarier, är
 // omkring 15 till 20 minuter för den som läser ordentligt. Uppdraget var 15 till
 // 30 minuter.
 // ============================================================
@@ -328,6 +328,17 @@ export const FRAGOR: Fraga[] = [
       { id: 'd', text: 'Du pratar med eleven om det varje lektion tills det känns bättre, och berättar för Nextrum om det inte gör det.' },
     ],
     ratt: 'a',
+  },
+  {
+    id: 'oro-hemma', avsnitt: 'svart',
+    fraga: 'Eleven säger i förbifarten att hen inte vågar gå hem när det blir bråk, och ber dig glömma det. Vad gör du?',
+    alternativ: [
+      { id: 'a', text: 'Tar reda på mer själv, genom att fråga eleven om detaljer och prata med föräldern, så att det du rapporterar stämmer.' },
+      { id: 'b', text: 'Skriver ner vad eleven sa, när och i vilket sammanhang, och kontaktar Nextrum och socialtjänsten så snart som möjligt.' },
+      { id: 'c', text: 'Respekterar elevens önskan och låter det vara, men håller extra koll och skriver ner det om eleven säger något liknande igen.' },
+      { id: 'd', text: 'Berättar för Nextrum vid nästa avstämning, eftersom det är Nextrum och inte du som avgör om något ska anmälas.' },
+    ],
+    ratt: 'b',
   },
   {
     id: 'vagrar', avsnitt: 'svart',

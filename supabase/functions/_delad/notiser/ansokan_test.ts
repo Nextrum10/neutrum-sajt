@@ -183,7 +183,7 @@ Deno.test('provmejlen länkar till provet och säger sista dagen i klartext', ()
     const m = mejl(steg);
     assertStringIncludes(m.text, `Gör provet:\n${adress}`, steg);
     assertStringIncludes(m.html, adress, steg);
-    assertStringIncludes(m.text, '20 rätt av 25', steg);
+    assertStringIncludes(m.text, '21 rätt av 26', steg);
     assertStringIncludes(m.text, 'göra om', steg);
   }
   assertStringIncludes(mejl('prov').text, 'onsdag 30 september');
