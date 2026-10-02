@@ -389,6 +389,20 @@ sökvägen.
   delprov C2 sakprosa, där texttypen växlar mellan åren (argumenterande,
   beskrivande, förklarande eller instruerande, enligt provgruppens
   resultatrapporter): skriv aldrig att det alltid är en faktatext.
+- **Facit till alla blad** (Fas 15.9, 2026-10-02). Leo: "Checka att alla
+  uppgifter i materialbanken är korrekta och att det finns svar till
+  uppgifterna lätttillgängligt". Facit skrevs uppgift för uppgift, och det
+  var granskningen: den som skriver svaret löser uppgiften, och en uppgift
+  utan entydigt svar syns då. En andra omgång löste uppgifterna blint och
+  jämförde. Facit står i `verktyg/bladen/facit_<modul>.py` och ritas till
+  `bank/facit/<fil>.png`, en egen sida som aldrig lämnas till eleven.
+  **Vem som ser det:** studiehjälparen (knappen Facit på bibliotekskortet
+  och på uppgiftsraden) och admin (biblioteket), genom `NX.facitLänk`, som
+  bara känner igen bankens egna adresser. Familjens vy visar det inte,
+  eftersom barnet gör NexLäx och läxorna i samma inloggning, och barnets vy
+  aldrig. **Det är inte hemligt:** repot är publikt och bilderna ligger
+  under /bank/, så den som letar hittar dem, precis som facit i bokens
+  baksida. Ett riktigt dolt facit hade krävt en privat hink och en policy.
 
 Ur avsnitt 11:
 
