@@ -75,7 +75,7 @@ BLAD = [
          titel='Retorik – ethos, pathos och logos', omrade='Svenska 1: tala och övertyga', tid='40 minuter',
          instruktion=['Retorik är konsten att övertyga. Ethos är talarens trovärdighet, pathos är känslor och logos är fakta och logiska argument.',
                       'Mottagare, syfte och situation styr hur man formulerar sig. Talet nedan är ett påhittat exempel.'],
-         text=('Kära klasskamrater. Jag har gått i den här skolan i nio år, och jag har sett något hända. Förr satt vi i matsalen och '
+         text=('Kära klasskamrater. Jag har gått i den här skolan i två år, och jag har sett något hända. Förr satt vi i matsalen och '
                'pratade. I dag sitter många med blicken i mobilen. Därför tycker jag att vår skola ska införa mobilfria raster. '
                'Som ordförande i elevrådet har jag pratat med över hundra elever, och de flesta säger att de saknar att umgås på '
                'riktigt. Tänk dig en rast där du hör någons skratt i stället för en notis. Rasten finns för att vi ska vila hjärnan '
@@ -120,21 +120,20 @@ BLAD = [
 
     dict(fil='gy1-programmering-listor-och-funktioner', arskurs='gy1', amne='Programmering',
          titel='Python: listor, funktioner och loopar', omrade='Programmering 1', tid='40 minuter',
-         instruktion=['En lista samlar värden: tal = [4, 8, 15]. Första elementet har index 0. len(tal) är antalet element.',
+         instruktion=['En lista samlar värden: tal = [4, 8, 15]. Första elementet har index 0, och len(tal) är antalet element. // ger heltalsdivision och % rest.',
                       'En funktion definieras med def och lämnar tillbaka ett värde med return. En while-loop körs så länge villkoret är sant.',
-                      'Operatorerna // och % ger heltalsdivision och rest.'],
+                      'tal.append(x) lägger till x sist i listan, och s.upper() gör om texten till versaler. for o in orden går igenom listan ett element i taget.'],
          uppgifter=[('Vad skriver programmen ut? a) []   b) []', 0,
                      kodrad(('a)', 'tal = [4, 8, 15]\nprint(tal[1])'),
                             ('b)', 'tal = [2, 4, 6]\ntal.append(8)\nprint(len(tal))'))),
-                    ('c) Vad skrivs ut? []   d) Vad skrivs ut? ___ (tre rader, skriv dem efter varandra)', 0,
+                    ('c) Vad skrivs ut? []   d) Vad skrivs ut? Skriv raderna efter varandra. ___', 0,
                      kodrad(('c)', 'def dubbla(x):\n    return x * 2\nprint(dubbla(5) + 1)'),
                             ('d)', 'orden = ["kal", "ba", "lo"]\nfor o in orden:\n    print(o.upper())'))),
                     ('e) Vad skrivs ut? []   f) Vad skrivs ut? ___', 0,
                      kodrad(('e)', 'x = 10\nwhile x > 3:\n    x = x - 4\nprint(x)'),
                             ('f)', 'a = 7\nb = 2\nprint(a // b, a % b)'))),
                     ('Skriv en funktion kvadrat(x) som lämnar tillbaka x upphöjt till 2.', 1),
-                    ('Skriv kod som summerar talen i listan tal = [3, 5, 9] med en for-loop och skriver ut summan.', 2),
-                    ('Förklara skillnaden mellan print och return.', 1)],
+                    ('Skriv kod som summerar talen i listan tal = [3, 5, 9] med en for-loop och skriver ut summan.', 2)],
          beskrivning='Läsa och skriva Python med listor, funktioner, while- och for-loopar samt heltalsdivision och rest.'),
 
     # ---- Gymnasiet 2 ----
@@ -191,11 +190,11 @@ BLAD = [
                       'Finns det en tendens, alltså ett syfte eller intresse bakom?',
                       'En primärkälla kommer direkt från händelsen. En sekundärkälla beskriver den i efterhand.'],
          uppgifter=[('Du hittar en blogg där en säljare av kosttillskott skriver att produkten botar trötthet. Vilket källkritiskt kriterium är viktigast? Förklara.', 2),
-                    ('Ett inlägg i sociala medier visar en bild "från gårdagens översvämning", men bilden är tre år gammal. Vilket kriterium brister?', 1),
-                    ('Tre tidningar publicerar exakt samma text om en händelse, eftersom alla fått den från samma nyhetsbyrå. Är det tre oberoende källor? Förklara.', 2),
+                    ('Ett inlägg i sociala medier visar en bild "från gårdagens översvämning", men bilden är tre år gammal. Vilket eller vilka kriterier brister? Förklara.', 2),
+                    ('Tre tidningar publicerar exakt samma text om en händelse, eftersom alla fått den från samma nyhetsbyrå. Är det tre oberoende källor? Förklara.', 1),
                     ('Förklara skillnaden mellan primärkälla och sekundärkälla. Ge ett exempel på vardera.', 2),
                     ('Hur kan du kontrollera att ett påstående du läst på nätet stämmer? Nämn tre sätt.', 2),
-                    ('Skriv en bedömning (5–6 meningar) av en källa som du själv använder när du söker information.', 4)],
+                    ('Skriv en bedömning (3–4 meningar) av en källa som du själv använder när du söker information.', 4)],
          beskrivning='Källkritiska kriterier och begrepp: äkthet, beroende, samtidighet, tendens, primär- och sekundärkälla.'),
 
     dict(fil='gy2-engelska-analysing-a-short-text', arskurs='gy2', amne='Engelska',
@@ -213,7 +212,7 @@ BLAD = [
                     ("How does Mira's mood change during the text? Quote two phrases that show it.", 2),
                     ('What might the flickering streetlamp and the snow symbolise?', 2),
                     ('Explain the last sentence: "the silence did not feel empty".', 2),
-                    ('Write a paragraph (6–8 lines) that continues the story in the same tone.', 3)],
+                    ('Write a short paragraph (3–4 lines) that continues the story in the same tone.', 3)],
          beskrivning='Analysera en kort original-text på engelska: miljö, berättare, stämning, symbolik och eget fortsatt skrivande.'),
 
     dict(fil='gy2-fysik-rorelse-och-newtons-lagar', arskurs='gy2', amne='NO / Fysik / Kemi / Biologi', chip='Fysik',
@@ -237,7 +236,7 @@ BLAD = [
          titel='Integraler – primitiva funktioner och area', omrade='Matematik 3', tid='40 minuter',
          instruktion=['En primitiv funktion F(x) till f(x) uppfyller F′(x) = f(x). Regeln: ∫ xⁿ dx = xⁿ⁺¹ / (n + 1) + C när n ≠ −1.',
                       'Bestämd integral: ∫ f(x) dx från a till b är F(b) − F(a). Om f(x) ≥ 0 är det arean under kurvan.'],
-         uppgifter=[('Bestäm ∫ x⁴ dx.', 0), ('Bestäm ∫ (6x² − 4x + 3) dx.', 1),
+         uppgifter=[('Bestäm ∫ x⁴ dx.', 1), ('Bestäm ∫ (6x² − 4x + 3) dx.', 1),
                     ('Beräkna ∫ 3x² dx från x = 0 till x = 2. []', 1),
                     ('Beräkna ∫ (2x + 1) dx från x = 1 till x = 4. []', 1),
                     ('Beräkna ∫ 1/x² dx från x = 1 till x = 2. Tips: 1/x² = x⁻². []', 1),
@@ -267,12 +266,13 @@ BLAD = [
          instruktion=['Att citera är att återge ord för ord inom citattecken. Att parafrasera är att återge idén med egna ord. '
                       'Att sammanfatta är att korta ner det viktigaste.',
                       'Ett referat är sakligt: presens, inga egna åsikter, och med hänvisning till källan.'],
-         text=('Under sömnen vilar inte hjärnan, den arbetar. Forskning om sömn visar att minnen som skapats under dagen '
+         text=['Under sömnen vilar inte hjärnan, den arbetar. Forskning om sömn visar att minnen som skapats under dagen '
                'befästs under natten, särskilt under djupsömnen. Det betyder att den som sover efter att ha pluggat ofta minns '
                'mer än den som är vaken. Under sömnen sorterar hjärnan också bort mindre viktig information och stärker det som verkar '
                'viktigt. Tonåringar behöver i regel åtta till tio timmar sömn per natt, men många sover betydligt mindre, bland '
                'annat eftersom den biologiska klockan under tonåren förskjuts mot senare kvällar. Skolor i flera länder har därför '
-               'prövat senare skolstart. Resultaten har varit blandade, men många elever uppger att de känner sig piggare.'),
+               'prövat senare skolstart. Resultaten har varit blandade, men många elever uppger att de känner sig piggare.',
+               'Källa: Nextrum, exempeltext om sömn och minne.'],
          uppgifter=[('Vilket är textens huvudbudskap? Svara med en mening.', 1),
                     ('Skriv ett referat av texten på högst 60 ord.', 4),
                     ('Förklara skillnaden mellan att citera, parafrasera och sammanfatta.', 2),
@@ -290,7 +290,7 @@ BLAD = [
                     ('Improve this sentence: "Social media is bad because it is bad for people."', 2),
                     ('Write a topic sentence for a paragraph arguing that young people learn useful skills online.', 1),
                     ('Write one counterargument and a rebuttal to it.', 3),
-                    ('Write a concluding paragraph of about five lines.', 4)],
+                    ('Write a concluding paragraph of about five lines.', 5)],
          beskrivning='Skriva en argumenterande text på engelska: tes, bindeord, ämnesmening, motargument med bemötande och avslutning.'),
 
     dict(fil='gy3-so-ekonomi-bnp-inflation-och-riksbanken', arskurs='gy3', amne='SO / Historia / Samhällskunskap', chip='Samhällskunskap',

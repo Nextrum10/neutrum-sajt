@@ -114,7 +114,7 @@ BLAD = [
                     ('Vilket tal är 10 mer än 36? []', 0), ('Vilket tal är 10 mindre än 52? []', 0),
                     ('40 + 30 = []', 0), ('90 − 50 = []', 0),
                     ('Skriv talen i storleksordning, minst först: 48, 84, 38, 83', 1),
-                    ('Rita 23 prickar. Ringa in tio prickar åt gången. Hur många tiotal och ental blir det?', 'ruta')],
+                    ('Rita 23 prickar. Ringa in tio prickar åt gången. Hur många tiotal och ental blir det? [] tiotal och [] ental', 'ruta')],
          beskrivning='Tiotal och ental i tal upp till 100: uppdelning, tio mer och tio mindre, och storleksordning.'),
 
     dict(fil='ak2-matematik-klockan', arskurs='ak2', amne='Matematik',
@@ -122,7 +122,7 @@ BLAD = [
          instruktion=['Den korta visaren visar timmen. Den långa visaren visar minuterna.',
                       'Pekar den långa visaren på 12 är klockan hel, till exempel tre. '
                       'Pekar den på 6 är klockan halv, till exempel halv fyra.',
-                      'Skriv klockslagen med siffror, till exempel 3.30.'],
+                      'Skriv klockslagen med siffror. Tre skrivs 3.00 och halv fyra skrivs 3.30.'],
          uppgifter=[('Vad är klockan? Skriv tiden under varje klocka.', 0,
                      klockor((4, 0), (9, 0), (12, 0))),
                     ('Vad är klockan nu? Skriv tiden under varje klocka.', 0,
@@ -205,7 +205,7 @@ BLAD = [
          titel='Längd – cm, dm och m', omrade='Mäta och jämföra längd', tid='20 minuter',
          instruktion=['Längd mäter vi i millimeter (mm), centimeter (cm), decimeter (dm) och meter (m).',
                       '1 cm = 10 mm, 1 dm = 10 cm och 1 m = 10 dm = 100 cm.',
-                      'Skriv svaret i rutan. Skriv enheten också.'],
+                      'Skriv svaret i rutan. Skriv enheten också när den inte står efter rutan.'],
          uppgifter=[('1 m = [] cm', 0), ('3 dm = [] cm', 0), ('2 m = [] dm', 0), ('50 cm = [] dm', 0),
                     ('Ringa in det som är mest rimligt: En penna är 15 cm – 15 dm – 15 m lång.', 0),
                     ('Ringa in det som är mest rimligt: En dörr är 2 cm – 2 dm – 2 m hög.', 0),
