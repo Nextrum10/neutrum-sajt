@@ -3,7 +3,7 @@
 #
 # FILEN FINNS FÖR ATT EN DRIFTSÄTTNING INTE SKA SLÅ PÅ JWT-KRAVET
 #
-# Tio funktioner anropas av något som inte har en inloggad användare:
+# Elva funktioner anropas av något som inte har en inloggad användare:
 # en databaswebhook, en trigger, ett pg_cron-jobb, Stripe, en knapp i
 # ett mejlprogram, Googles omdirigering tillbaka efter ett godkännande,
 # den som gör utbildningsprovet innan hen har ett konto, eller ett barn
@@ -24,10 +24,11 @@
 #
 # VAD SOM SKYDDAR DEM I STÄLLET
 #
-# Ingen av dem är öppen. Fem kräver en delad hemlighet i en egen
+# Ingen av dem är öppen. Sex kräver en delad hemlighet i en egen
 # header, jämförd i konstant tid: fakturering sin egen nyckel eller,
 # från schemat, hemligheten i notis_konfig, och lead-notis, notis-ko,
-# ansokan-notis och ansokan-gallring hemligheten i notis_konfig.
+# ansokan-notis, admin-paminnelse och ansokan-gallring hemligheten i
+# notis_konfig.
 # stripe-webhook kräver Stripes signatur. notis-avanmal kräver en
 # HMAC-signerad token i länken och kan bara stänga AV en notis,
 # aldrig slå på någon och aldrig läsa något. google-koppla kräver ett
@@ -83,6 +84,14 @@ verify_jwt = false
 # ansokan_besked och omförsöksjobbet genom notis_konfig.ansokan_url,
 # med samma hemlighet i headern.
 [functions.ansokan-notis]
+verify_jwt = false
+
+# Påminnelsen till superadminarna när något legat en timme i Att göra
+# (2026-10-02). Väcks av intern.admin_paminnelse_koa() (pg_cron-jobbet
+# admin-paminnelse) genom notis_konfig.admin_paminnelse_url, med samma
+# hemlighet i headern. Står den här raden inte kvar svarar funktionen 401
+# på varje påminnelse, och det syns bara som notiser som inte gick fram.
+[functions.admin-paminnelse]
 verify_jwt = false
 
 # Gallringen av ansökningar och CV:n efter ett år. Väcks av pg_cron-

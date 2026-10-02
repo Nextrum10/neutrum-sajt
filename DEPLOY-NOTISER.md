@@ -327,3 +327,42 @@ Vanliga svar:
   inte notiser utan besked om något mottagaren själv satt igång. Prova
   dem med en ansökan i ditt eget namn och din egen adress, och ta bort
   raden efteråt.
+
+---
+
+## 7. Påminnelserna till admin (2026-10-02)
+
+Ett mejl till superadminarna när något legat en timme i Att göra i adminvyn.
+Så fungerar det står i `minne/notiser.md`. Här är det som görs för hand.
+
+**Ordningen är edge-funktionen först, migrationen sedan.** Jobbet
+`admin-paminnelse` schemaläggs av migrationen, och en funktion som inte är
+driftsatt svarar 404 på första mejlet.
+
+1. Efter merge: driftsätt `admin-paminnelse` från main. `supabase/config.toml`
+   har redan `verify_jwt = false` för den.
+2. Kör `20261002120000_admin_paminnelser.sql`. Den lägger `admin_paminnelse_url`
+   i `notis_konfig` (härledd ur `arbetare_url`, som `ansokan_url`), tabellerna,
+   funktionerna och jobbet, och räknar det som redan står i Att göra som mejlat.
+3. Kör `verktyg/rls-test.sql` (hela filen, avsnitt 16 är nytt).
+
+**De här mejlen går inte genom sandlådan och inte genom flaggan `notiser_mejl`**,
+som aviseringen om en intresseanmälan och beskeden till den som sökt jobb. De är
+interna: mottagarna är superadminarna, och mejlet har bara antal och sorter. Vill
+du prova dem först utan att något mejlas till de riktiga mottagarna: kör
+migrationen, sätt `notis_konfig.admin_paminnelse_url = null` och läs
+`admin_paminnelse_utskick`, som fylls ändå.
+
+När något inte kommer fram:
+
+```sql
+select skapad, status, forsok, fel, antal from admin_paminnelse_utskick order by skapad desc limit 10;
+select typ, count(*), count(mejlad_at) as mejlade from admin_paminnelser group by typ;
+```
+
+- `vantar` som inte rör sig: kontrollera `notis_konfig.admin_paminnelse_url` och att
+  `admin-paminnelse` finns i `cron.job`. Fel från anropet syns också under System → Fel.
+- `fel` med "Ingen superadmin med giltig adress": ingen i `admin_roller` med
+  `ar_superadmin` har en adress i `profiles.email`.
+- Jobbet kör men inget mejlas: en sak mejlas först en timme efter att den syntes, och
+  högst ett mejl per kvart. `forst_sedd_at` och `mejlad_at` i `admin_paminnelser` säger varför.

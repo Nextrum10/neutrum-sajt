@@ -298,6 +298,55 @@ inbjudan från `bjud-in`, Glömt lösenordet) skickas av Supabase Auth med
 mallar i dashboarden, inte härifrån, och har inte det här skalet.
 Texterna står i `minne/sakerhet.md` (Kontomejlen).
 
+### Påminnelserna till admin (2026-10-02)
+
+Leo: "varje gång det kommer upp en sak att göra i admin, efter en timme om den saken är kvar att göra,
+skicka mail till administratörerna", med en jobbansökan, en intresseanmälan och en rapport som familjen
+inte bekräftat en timme efter att passet blev genomfört som exempel.
+
+```
+pg_cron "admin-paminnelse"  var femte minut, intern.admin_paminnelse_koa()
+  → admin_paminnelser       en rad per sak i Att göra: typ + id + när den först syntes
+  → admin_paminnelse_utskick  ETT mejl för det som mognat (antal per sort)
+  → pg_net → admin-paminnelse → admin_paminnelse_ta() → Resend → admin_paminnelse_klar()
+```
+
+Sju regler bär det:
+
+1. **Listan står på två ställen.** Att göra räknas i webbläsaren (`byggAttGöra`), men ett mejl kan inte
+   vänta på att någon har vyn öppen, så `intern.admin_att_gora()` räknar samma poster, en rad per sak.
+   Ändras den ena ändras den andra, med en kommentar i båda. Två sorter finns bara i databasen:
+   `rapport_obekraftad` (rapporten är skriven, familjen har inte bekräftat den) och `uppgift` (bara de
+   systemet lagt, `skapad_av_typ` system eller ai, aldrig de en människa skrev själv). Problemlistan
+   (klientfel, notiser som inte gick fram, avvikelser) är inte med: den räknar händelser i ett fönster,
+   inte saker att göra.
+2. **"Genomfört" är att rapporten finns, och timmen räknas från att saken syntes i listan.** Ett pass
+   som aldrig fick en rapport står i Att göra som "pass saknar rapport" först dagen efter, och mejlas
+   en timme efter det.
+3. **En sak mejlas en gång.** `forst_sedd_at` och `mejlad_at` sitter på raden, och raden raderas när saken
+   lämnar listan: en sak som kommer tillbaka är en ny sak med ny klocka. En sak som hanteras före timmen
+   får aldrig något mejl.
+4. **Högst ett mejl per kvart**, och det som mognar under tiden går med i nästa. En studiehjälpare som
+   rapporterar fem pass på kvällen ger ett mejl, inte fem.
+5. **Bara superadmins.** Att göra är deras vy (`BARA_SUPER`), och en admin med behörigheter ska inte få veta
+   att det finns fakturor att lägga in. Adresserna läses i `admin_paminnelse_ta()`, gemener, utan dubbletter,
+   utan raderade konton, och lämnar aldrig databasen utom till funktionen.
+6. **Inget ur raderna i mejlet.** Antal per sort (`ADMIN_SORTER` i `_delad/notiser/admin.ts`, som speglar
+   typlistan i tabellens CHECK) och en knapp till `/admin#oversikt`. En sort som databasen skickar men som
+   inte står i listan tas inte med. Ingen avanmälan: strömbrytaren är jobbet.
+7. **Det som stod i listan när migrationen kördes räknas som mejlat.** Annars hade allt som legat och väntat
+   kommit som ett mejl en timme efter driftsättningen.
+
+Intresseanmälan mejlas dessutom direkt av `lead-notis` (aviseringen), som förut. En jobbansökan mejlas bara
+här, en timme efter att den kom, och bara om den fortfarande har läget ny. **Att mejla ansökan direkt är inte
+byggt, och det är ett beslut att fatta.** Mejlen går inte till `info@`, som aviseringen om en anmälan gör:
+mottagarna är superadminarna med en adress i `profiles`.
+
+Av slås det genom att stänga av jobbet `admin-paminnelse` (`cron.alter_job(jobid, active := false)`, syns
+under System → Automationer). Tabellerna följer inte med medan det står av. Slås jobbet på igen rensas
+det som lämnat listan i första varvet, och det som legat kvar sedan förut mejlas i ett mejl.
+`rls-test.sql` avsnitt 16 prövar listan, timmen, kvarten, mottagarna och rättigheterna.
+
 ---
 
 ## Ur avsnitt 11
