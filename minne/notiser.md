@@ -371,9 +371,12 @@ jobb 38 aktivt igen). Funktionskropparna jämfördes med filen (md5) och ingen i
 testmejl (slag `prov`) skickades till alla tre mottagarna och landade i inkorgen, märkt "[Test]". Det första
 riktiga morgonmejlet kommer 2026-10-03 kl. 9 med det som då ligger kvar: i dag fem saker (två pass utan rapport,
 en faktura att lägga in i Fortnox, en utbetalning, en uppgift från systemet). Den ansökan som låg i Att göra
-vid driftsättningen får inget mejl. **Inte provat i driften:** triggern på en riktig ansökan (provad lokalt,
-mot en stubbad databas) och hela `rls-test.sql` mot det riktiga schemat. Den driftsatta funktionen skiljer sig
-från main i tre ord i kommentarer (inklistringen), inte i kod; nästa driftsättning rättar det.
+vid driftsättningen får inget mejl. Hela `rls-test.sql` kördes lokalt mot det riktiga schemat
+(`verktyg/lokal-databas.sh`, alla 159 migrationer): **1267 av 1267 ok**, varav 47 i avsnitt 16, också att `anon`
+kan skicka en ansökan med triggern på. **Inte provat i driften:** triggern på en riktig ansökan (en falsk
+ansökan hade gett er ett falskt larm). Den driftsatta funktionen skiljer sig från main i tre ord i kommentarer
+(inklistringen), inte i kod; nästa driftsättning rättar det. Mina provrester i driften (`zz_prov_*`, en tabell och
+två utskicksrader) väntar på en bekräftelse av verktygets `drop`/`delete`-spärr.
 
 Av slås morgonmejlet genom att stänga av jobbet `admin-paminnelse` (`cron.alter_job(jobid, active := false)`,
 syns under System → Automationer); det direkta mejlet om en ansökan följer triggern

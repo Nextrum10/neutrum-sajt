@@ -352,9 +352,9 @@ som den skapas, och en funktion som inte förstår `slag` skulle skicka fel mejl
 
 **Gjort 2026-10-02:** funktionen driftsatt (v2), migrationen körd avsnitt för avsnitt (funktionerna i ett svep per
 avsnitt, ingen sats med `drop` eller två `delete`) och registrerad med rätt md5, funktionskropparna jämförda med
-filen, jobbet på igen och ett testmejl provat mot de riktiga mottagarna. **Kvar:** hela `rls-test.sql` mot det riktiga
-schemat (avsnitt 16 är bara körd mot en stubbad databas, eftersom Docker-bilden inte gick att hämta från sessionen), och
-att se det första morgonmejlet 2026-10-03 kl. 9.
+filen, jobbet på igen och ett testmejl provat mot de riktiga mottagarna. Hela `rls-test.sql` kördes lokalt mot det
+riktiga schemat: 1267 av 1267 ok. **Kvar:** att se det första morgonmejlet 2026-10-03 kl. 9, och att bekräfta
+städningen av provresterna i driften (`zz_prov_*`, en tabell och två utskicksrader i `admin_paminnelse_utskick`).
 
 **Testmejl.** Ett testmejl till admin är en rad i `admin_paminnelse_utskick` med `slag = 'prov'` och de
 sorter som ska visas i `antal`, följd av `select intern.admin_paminnelse_skicka(<id>)`. Mejlet går till de
