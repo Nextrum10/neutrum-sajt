@@ -274,7 +274,7 @@ Detaljer: `minne/grunden.md`.
   prövar igen när den ska gå; barnets mallar (`barn.ts`) har aldrig pris, betalning eller skäl,
   bekräftelsen hälsar inte med namn och har ingen avanmälan, och barnets avanmälningstoken har
   fem delar, så den aldrig kan läsas som en vuxens.
-- **Mejl till admin** (2026-10-02): en intresseanmälan mejlas direkt, en gång, av `lead-notis`; en jobbansökan
+- **Mejl till admin** (2026-10-02, i drift samma dag): en intresseanmälan mejlas direkt, en gång, av `lead-notis`; en jobbansökan
   direkt, en gång, av triggern `admin_ansokan_direkt` (ingen uppgift om vem som sökt, och högst fem på tio
   minuter). **Resten av Att göra går i ETT mejl kl. 9 svensk tid**: pg_cron `admin-paminnelse` (var femte minut)
   → `intern.admin_paminnelse_koa()` → `admin-paminnelse` → Resend. Klockan avgörs i funktionen

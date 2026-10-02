@@ -339,7 +339,7 @@ En intresseanmälan mejlas direkt av `lead-notis`, som förut. Så fungerar det 
 **Ordningen är edge-funktionen först, migrationen sedan.** Den nya triggern börjar mejla direkt i samma stund
 som den skapas, och en funktion som inte förstår `slag` skulle skicka fel mejl.
 
-1. Efter merge: driftsätt `admin-paminnelse` från main (v2). `supabase/config.toml` har redan `verify_jwt = false`
+1. Efter merge: driftsätt `admin-paminnelse` från main (v2 eller senare; v2 är den första som förstår `slag`). `supabase/config.toml` har redan `verify_jwt = false`
    för den. Alla filer under `_delad/` som den importerar ska med (`_delad/notiser/admin.ts` och dess grannar).
 2. Kör `20261002170000_admin_paminnelser_direkt_och_morgon.sql`, avsnitt för avsnitt (verktyget ber om en
    bekräftelse för `drop` och `delete`, och filen har ingen sådan sats på toppnivå, men kör ändå inte hela
@@ -349,6 +349,12 @@ som den skapas, och en funktion som inte förstår `slag` skulle skicka fel mejl
 3. Jämför `md5(prosrc)` för de åtta funktionerna (`intern.admin_att_gora`, `_paminnelse_kor`, `_paminnelse_koa`,
    `_ansokan_direkt`, `_paminnelse_skicka`, `_paminnelse_stada`, `public.admin_paminnelse_ta`, `_klar`) med filen.
 4. Kör `verktyg/rls-test.sql` (hela filen, avsnitt 16 är omskrivet). Lokalt, med `verktyg/lokal-databas.sh`.
+
+**Gjort 2026-10-02:** funktionen driftsatt (v3, jämförd fil för fil mot main), migrationen körd avsnitt för avsnitt (funktionerna i ett svep per
+avsnitt, ingen sats med `drop` eller två `delete`) och registrerad med rätt md5, funktionskropparna jämförda med
+filen, jobbet på igen och ett testmejl provat mot de riktiga mottagarna. Hela `rls-test.sql` kördes lokalt mot det
+riktiga schemat: 1267 av 1267 ok. **Kvar:** att se det första morgonmejlet 2026-10-03 kl. 9, och att bekräfta
+städningen av provresterna i driften (`zz_prov_*`, en tabell och två utskicksrader i `admin_paminnelse_utskick`).
 
 **Testmejl.** Ett testmejl till admin är en rad i `admin_paminnelse_utskick` med `slag = 'prov'` och de
 sorter som ska visas i `antal`, följd av `select intern.admin_paminnelse_skicka(<id>)`. Mejlet går till de
