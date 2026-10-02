@@ -270,18 +270,20 @@ def prickar(n, rader=1, storlek=15, mellan=9):
     return _svg(2 * storlek + per * (2 * storlek + mellan), rader * (2 * storlek + mellan) + 4, ''.join(d))
 
 
-def vinkel(grader, langd=170, bredd=330, namn=''):
-    """Vinkel i grader ritad som två strålar från samma punkt."""
-    ox, oy = 60, 150
+def vinkel(grader, langd=170, namn=''):
+    """Vinkel i grader ritad som två strålar från samma punkt. Bilden anpassas efter vinkeln, så att
+    också en trubbig vinkel ryms: den andra strålen pekar då åt vänster om spetsen."""
     v = math.radians(grader)
+    ox = 30 + max(0.0, -langd * math.cos(v))
+    oy = 20 + langd * max(math.sin(v), 0.25)
     x2, y2 = ox + langd * math.cos(v), oy - langd * math.sin(v)
-    d = ['<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % (ox, oy, ox + langd, oy, SVART),
-         '<line x1="%d" y1="%d" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % (ox, oy, x2, y2, SVART),
-         '<path d="M%d,%d A50,50 0 0 0 %.1f,%.1f" fill="none" stroke="%s" stroke-width="3"/>'
-         % (ox + 50, oy, ox + 50 * math.cos(v), oy - 50 * math.sin(v), BRUN)]
+    d = ['<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % (ox, oy, ox + langd, oy, SVART),
+         '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="4" stroke-linecap="round"/>' % (ox, oy, x2, y2, SVART),
+         '<path d="M%.1f,%.1f A40,40 0 0 0 %.1f,%.1f" fill="none" stroke="%s" stroke-width="3"/>'
+         % (ox + 40, oy, ox + 40 * math.cos(v), oy - 40 * math.sin(v), BRUN)]
     if namn:
-        d.append(_t(ox + 78 * math.cos(v / 2), oy - 78 * math.sin(v / 2) + 7, namn, 22, 'middle', BRUN, 800))
-    return _svg(ox + langd + 20, oy + 24, ''.join(d))
+        d.append(_t(ox + 64 * math.cos(v / 2), oy - 64 * math.sin(v / 2) + 7, namn, 22, 'middle', BRUN, 800))
+    return _svg(int(ox + langd + 20), int(oy + 24), ''.join(d))
 
 
 def tabell(rubriker, rader, bredd_kol=150, tom_efter=None):

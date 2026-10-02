@@ -337,9 +337,9 @@ sökvägen.
   bibliotek.
 - `verktyg/rls-test.sql` har nitton BIB-rader, sju av dem om
   delningen. Kör dem efter varje ändring i policyn.
-- **Banken har 105 övningsblad och 14 länkar** (2026-10-02,
-  `materialbanken_fler_blad` och `materialbanken_np_traning`; Fas 15.5 la
-  ett blad per årskurs). Leo:
+- **Banken har 158 övningsblad och 14 länkar** (2026-10-02,
+  `materialbanken_fler_blad`, `materialbanken_np_traning` och
+  `materialbanken_np_omgang_2`; Fas 15.5 la ett blad per årskurs). Leo:
   "Material sidan har väldigt lite material". De är VÅRA blad, ritade
   till `bank/*.png` av `verktyg/bygg-banken.py` och inga andras sidor,
   och de ger inget facit varken på bladet eller i beskrivningen: vyn
@@ -370,6 +370,19 @@ sökvägen.
   och engelska nivå 1–2. Gymnasiebladen anger Gy25-nivån bara där den är
   bekräftad (matematik 1–2, svenska 1 och 3, engelska 1–2); trigonometriska
   ekvationer och radianer är Matematik 4, inte 3.
+- **NP-omgång 2 och genomgångarna** (Fas 15.8, 2026-10-02). Leo bad om
+  "många fler blad av riktig np" och om "material som besvarar frågorna från
+  riktiga svenska böcker". Det blev 53 blad till, i
+  `verktyg/bladen/np_ak6.py`, `np_ak9.py` och `np_gymnasiet.py` (alla NP-blad
+  bor där, de första 25 flyttades dit): fler NP-blad i matte, svenska och
+  engelska, ett NP-blad och en genomgång per NO- och SO-ämne i åk 9 (eleven
+  gör provet i ett av vardera), och provträning i Matematik 3c och 4 för
+  dem som läser de äldre kurserna. Det som "besvarar frågorna" är
+  **genomgångarna** (`*-genomgang-*`): egna faktablad med lösta exempel,
+  aldrig text ur läroböcker. Äldre svensk litteratur, som är fri att
+  använda, hade passat i läsdelarna, men molnmiljön nådde varken
+  runeberg.org, litteraturbanken.se eller Wikisource, och klassiker citeras
+  inte ur minnet. `[[]]` är en bred svarsruta för längre svar.
 
 Ur avsnitt 11:
 

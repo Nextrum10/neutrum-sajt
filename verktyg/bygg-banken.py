@@ -44,7 +44,7 @@ import glob, html, os, re, shutil, subprocess, sys, tempfile, uuid
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bladen'))
-import lagstadiet, mellanstadiet, hogstadiet, gymnasiet, lankar  # noqa: E402
+import lagstadiet, mellanstadiet, hogstadiet, gymnasiet, np_ak6, np_ak9, np_gymnasiet, lankar  # noqa: E402
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UT = os.path.join(ROT, 'bank')
@@ -66,7 +66,7 @@ ARSKURS_TEXT = {
 AMNEN = ['Matematik', 'Svenska', 'Engelska', 'NO / Fysik / Kemi / Biologi',
          'SO / Historia / Samhällskunskap', 'Moderna språk', 'Programmering']
 
-# Bladen står i verktyg/bladen/, en fil per stadium. Ordningen här är
+# Bladen står i verktyg/bladen/, en fil per stadium och en per NP-serie (np_ak6, np_ak9, np_gymnasiet). Ordningen här är
 # ordningen i --sql, och ett blads id kommer ur filnamnet, så en ny rad
 # läggs sist i sin modul och ett befintligt blads `fil` ändras aldrig.
 #
@@ -79,7 +79,8 @@ AMNEN = ['Matematik', 'Svenska', 'Engelska', 'NO / Fysik / Kemi / Biologi',
 #   {E}, {C} och {A} blir ett nivåmärke, som på de nationella proven
 #   extra = antal tomma skrivrader under uppgiften, eller 'ruta' för en större ruta att rita i
 #   figur = en HTML- eller SVG-sträng, oftast ur verktyg/bladen/figurer.py
-BLAD = (lagstadiet.BLAD + mellanstadiet.BLAD + hogstadiet.BLAD + gymnasiet.BLAD)
+BLAD = (lagstadiet.BLAD + mellanstadiet.BLAD + hogstadiet.BLAD + gymnasiet.BLAD
+        + np_ak6.BLAD + np_ak9.BLAD + np_gymnasiet.BLAD)
 
 # Länkar till andras material, i dag provgruppernas officiella sidor om de nationella proven. De
 # ritas inte; raden i biblioteksmaterial pekar dit med `lank`. Se verktyg/bladen/lankar.py.
