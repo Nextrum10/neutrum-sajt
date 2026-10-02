@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 """Bygger Nextrums egna övningsblad till materialbanken.
 
-       python3 verktyg/bygg-banken.py          # ritar bank/*.png
-       python3 verktyg/bygg-banken.py --sql    # skriver raderna till biblioteksmaterial
+       python3 verktyg/bygg-banken.py                 # ritar alla bank/*.png
+       python3 verktyg/bygg-banken.py ak4- gy2-       # ritar bara blad vars filnamn innehåller något av dem
+       python3 verktyg/bygg-banken.py --sql           # skriver raderna till biblioteksmaterial
+       python3 verktyg/bygg-banken.py --sql ak4-      # bara de raderna: en ny migration tar bara de nya bladen
+       python3 verktyg/bygg-banken.py --kolla         # varje blad har en bild och en rad i en migration
+
+Bladen står i verktyg/bladen/ (en modul per stadium, figurer i figurer.py). Verktyget
+mäter varje sida innan den ritas och vägrar ett blad som inte ryms.
 
 Bladen är VÅRA. Leo bad om "offentliga uppgifter och läxor du hittar
 för varje årskurs, helst skärmdumpar". Skärmdumpar av läromedel och
@@ -34,7 +40,11 @@ Webbläsaren: CHROME i miljön, annars den första som hittas av
 chromium, google-chrome, chromium-browser och Playwrights mapp.
 Körs inte i CI — bilderna checkas in, precis som /en/-sidorna.
 """
-import glob, html, os, shutil, subprocess, sys, tempfile, uuid
+import glob, html, os, re, shutil, subprocess, sys, tempfile, uuid
+
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bladen'))
+import lagstadiet, mellanstadiet, hogstadiet, gymnasiet  # noqa: E402
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UT = os.path.join(ROT, 'bank')
@@ -50,165 +60,55 @@ ARSKURS_TEXT = {
     'ak7': 'Åk 7', 'ak8': 'Åk 8', 'ak9': 'Åk 9', 'gy1': 'Gymnasiet 1', 'gy2': 'Gymnasiet 2',
     'gy3': 'Gymnasiet 3',
 }
+# Samma lista som NX.AMNEN i nextrum-app.js. Ett blad med ett ämne som inte
+# står där blir osynligt i filtret, och ett filter som tyst tappar rader
+# ser ut som ett tomt bibliotek.
+AMNEN = ['Matematik', 'Svenska', 'Engelska', 'NO / Fysik / Kemi / Biologi',
+         'SO / Historia / Samhällskunskap', 'Moderna språk', 'Programmering']
 
-# [] blir en svarsruta, ___ en skrivrad i texten. rader = antal tomma
-# skrivrader under uppgiften, ruta = en större ruta att rita i.
-BLAD = [
-    dict(fil='ak1-matematik-tiokamrater', arskurs='ak1', amne='Matematik',
-         titel='Tiokamrater', omrade='Addition upp till 10', tid='15 minuter',
-         instruktion=['Två tal som tillsammans blir 10 kallas tiokamrater.',
-                      'Skriv talet som fattas i rutan.',
-                      'Rita prickar eller räkna på fingrarna om du vill.'],
-         uppgifter=[('7 + [] = 10', 0), ('3 + [] = 10', 0), ('[] + 5 = 10', 0),
-                    ('9 + [] = 10', 0), ('[] + 4 = 10', 0), ('2 + [] = 10', 0),
-                    ('6 + [] = 10', 0), ('10 = 8 + []', 0),
-                    ('Hitta på en egen tiokamrat: [] + [] = 10', 0),
-                    ('Rita 10 prickar. Ringa in 4 av dem. Hur många är inte inringade? []', 'ruta')],
-         beskrivning='Tio uppgifter om talkamraterna till 10, med rutor att fylla i och en att rita i.'),
+# Bladen står i verktyg/bladen/, en fil per stadium. Ordningen här är
+# ordningen i --sql, och ett blads id kommer ur filnamnet, så en ny rad
+# läggs sist i sin modul och ett befintligt blads `fil` ändras aldrig.
+#
+# Ett blad är en dict:
+#   fil, arskurs, amne, titel, omrade, tid, instruktion=[...], uppgifter=[...], beskrivning
+#   text     (valfri)  en läsetext, str eller lista med stycken, ovanför uppgifterna
+#   chip     (valfri)  vad ämnesbrickan säger; annars ämnets första del ("NO", "SO")
+# En uppgift är (text, extra) eller (text, extra, figur):
+#   [] blir en svarsruta, ___ en skrivrad i texten, \n en radbrytning (en mening per rad när flera luckor ska fyllas)
+#   extra = antal tomma skrivrader under uppgiften, eller 'ruta' för en större ruta att rita i
+#   figur = en HTML- eller SVG-sträng, oftast ur verktyg/bladen/figurer.py
+BLAD = (lagstadiet.BLAD + mellanstadiet.BLAD + hogstadiet.BLAD + gymnasiet.BLAD)
 
-    dict(fil='ak2-svenska-stor-bokstav-och-punkt', arskurs='ak2', amne='Svenska',
-         titel='Stor bokstav och punkt', omrade='Meningar', tid='20 minuter',
-         instruktion=['En mening börjar med stor bokstav och slutar med punkt.',
-                      'Namn på personer, djur och platser börjar också med stor bokstav.',
-                      'Skriv av meningarna rätt på raden under.'],
-         uppgifter=[('idag regnar det i malmö', 1), ('min hund heter bamse', 1),
-                    ('vi ska åka till farmor på lördag', 1), ('elsa och omar spelar fotboll', 1),
-                    ('jag har en röd cykel', 1),
-                    ('Skriv en egen mening om vad du gjorde i helgen.', 2)],
-         beskrivning='Skriv av meningar med stor bokstav och punkt, och skriv en egen.'),
 
-    dict(fil='ak3-matematik-multiplikation', arskurs='ak3', amne='Matematik',
-         titel='Multiplikation med 2, 5 och 10', omrade='Multiplikationstabellerna', tid='20 minuter',
-         instruktion=['Multiplikation är upprepad addition: 3 · 5 betyder 5 + 5 + 5.',
-                      'Räkna ut och skriv svaret i rutan.',
-                      'På de två sista uppgifterna skriver du hur du tänkte.'],
-         uppgifter=[('4 · 2 = []', 0), ('6 · 5 = []', 0), ('3 · 10 = []', 0), ('7 · 2 = []', 0),
-                    ('9 · 5 = []', 0), ('8 · 10 = []', 0), ('[] · 5 = 35', 0), ('[] · 2 = 18', 0),
-                    ('Ett paket har 5 kakor. Hur många kakor finns det i 6 paket?', 2),
-                    ('Lisa har 4 tiokronor. Hur mycket pengar har hon?', 2)],
-         beskrivning='Tabellerna 2, 5 och 10, två saknade faktorer och två textuppgifter.'),
-
-    dict(fil='ak4-engelska-veckodagar-och-manader', arskurs='ak4', amne='Engelska',
-         titel='Days of the week and months', omrade='Veckodagar och månader', tid='15 minuter',
-         instruktion=['Skriv på engelska.',
-                      'Veckodagar och månader börjar alltid med stor bokstav på engelska: Monday, May.'],
-         uppgifter=[('måndag = ___', 0), ('onsdag = ___', 0), ('fredag = ___', 0),
-                    ('söndag = ___', 0), ('Vilken dag kommer efter Tuesday? ___', 0),
-                    ('Vilken månad kommer före May? ___', 0),
-                    ('Skriv månaden du fyller år på engelska: ___', 0),
-                    ('Fyll i: Today is ___. Tomorrow is ___.', 0)],
-         beskrivning='Veckodagar och månader på engelska, åtta korta uppgifter.'),
-
-    dict(fil='ak5-matematik-brak', arskurs='ak5', amne='Matematik',
-         titel='Bråk – en del av en helhet', omrade='Bråk', tid='25 minuter',
-         instruktion=['Ett bråk visar en del av något.',
-                      'Nämnaren, talet under strecket, visar hur många lika stora delar helheten har.',
-                      'Täljaren, talet över strecket, visar hur många av delarna vi menar.'],
-         uppgifter=[('En pizza är delad i 8 lika stora bitar. Du äter 3. Hur stor del av pizzan åt du?', 1),
-                    ('Vilket är störst, 1/2 eller 1/4? Förklara hur du vet.', 2),
-                    ('Skriv 2/4 på ett enklare sätt.', 1),
-                    ('Hur mycket är 1/3 av 12?', 1),
-                    ('Hur mycket är 3/4 av 20?', 1),
-                    ('Sortera från minst till störst: 3/5, 1/5, 5/5, 2/5', 1),
-                    ('Rita en rektangel och färglägg 2/3 av den.', 'ruta')],
-         beskrivning='Bråk som del av en helhet: jämföra, förenkla, räkna ut en del av ett tal.'),
-
-    dict(fil='ak6-no-igelkotten-gar-i-ide', arskurs='ak6', amne='NO / Fysik / Kemi / Biologi',
-         titel='Igelkotten går i ide', omrade='Djur på vintern', tid='25 minuter',
-         instruktion=['Läs texten två gånger. Stryk under det du tycker är viktigast.',
-                      'Svara sedan på frågorna med egna ord.'],
-         text=('Igelkotten är ett av de däggdjur i Sverige som går i ide. När hösten kommer äter '
-               'den mycket för att bygga upp ett lager av fett. Sedan bygger den ett bo av löv och '
-               'gräs, gärna under en buske eller i en komposthög. Där sover den ungefär från '
-               'november till april. Under vintern sjunker kroppstemperaturen och hjärtat slår '
-               'mycket långsammare än vanligt. Då går det åt lite energi. Om igelkotten väcks för '
-               'tidigt gör den av med för mycket av sitt fett och kan få svårt att klara resten av '
-               'vintern. Därför ska man inte flytta på lövhögar i trädgården på vintern.'),
-         uppgifter=[('Vad betyder det att ett djur går i ide? Förklara med egna ord.', 2),
-                    ('Varför äter igelkotten så mycket på hösten?', 2),
-                    ('Var bygger igelkotten sitt bo?', 1),
-                    ('Vad händer med igelkottens kropp under vintern?', 2),
-                    ('Varför ska man inte flytta på lövhögar på vintern?', 2)],
-         beskrivning='Läsförståelse om hur igelkotten klarar vintern, fem frågor.'),
-
-    dict(fil='ak7-matematik-procent', arskurs='ak7', amne='Matematik',
-         titel='Procent i vardagen', omrade='Procent', tid='30 minuter',
-         instruktion=['Procent betyder hundradelar: 25 % = 25/100 = 0,25.',
-                      'För att räkna ut en procentsats av ett tal kan du multiplicera talet med decimalformen.',
-                      'Visa hur du räknar.'],
-         uppgifter=[('Skriv 40 % i decimalform.', 1), ('Skriv 0,07 i procentform.', 1),
-                    ('Hur mycket är 10 % av 350 kr?', 1), ('Hur mycket är 25 % av 80?', 1),
-                    ('En tröja kostar 400 kr. Priset sänks med 30 %. Vad kostar tröjan nu?', 2),
-                    ('I en klass på 25 elever har 15 elever en cykel. Hur många procent har en cykel?', 2),
-                    ('Ett pris höjs från 200 kr till 250 kr. Hur många procent är höjningen?', 2)],
-         beskrivning='Procentform och decimalform, procent av ett tal, rabatt och höjning.'),
-
-    dict(fil='ak8-engelska-oregelbundna-verb', arskurs='ak8', amne='Engelska',
-         titel='Irregular verbs – past tense', omrade='Oregelbundna verb', tid='25 minuter',
-         instruktion=['Oregelbundna verb får inte -ed i dåtid. De måste läras in.',
-                      'Skriv verbet i dåtid (past tense). Fyll sedan i meningen.'],
-         uppgifter=[('go → ___   Yesterday we ___ to the cinema.', 0),
-                    ('eat → ___   She ___ a big breakfast this morning.', 0),
-                    ('buy → ___   I ___ a new phone last week.', 0),
-                    ('think → ___   We ___ the test was easy.', 0),
-                    ('write → ___   He ___ a letter to his grandmother.', 0),
-                    ('take → ___   They ___ the bus to school.', 0),
-                    ('Skriv tre meningar på engelska om vad du gjorde i helgen. '
-                     'Använd minst två oregelbundna verb.', 3)],
-         beskrivning='Sex vanliga oregelbundna verb i dåtid, och tre egna meningar.'),
-
-    dict(fil='ak9-matematik-linjara-funktioner', arskurs='ak9', amne='Matematik',
-         titel='Linjära funktioner: y = kx + m', omrade='Funktioner', tid='30 minuter',
-         instruktion=['I y = kx + m är k lutningen: hur mycket y ökar när x ökar med 1.',
-                      'm är värdet där linjen skär y-axeln.',
-                      'Visa dina uträkningar.'],
-         uppgifter=[('Vad är k och m i y = 3x + 2?', 1),
-                    ('Beräkna y när x = 4 i y = 2x − 5.', 1),
-                    ('En linje går genom punkterna (0, 1) och (2, 7). Bestäm k.', 2),
-                    ('Skriv ekvationen för linjen i uppgiften ovan.', 1),
-                    ('En taxi kostar 45 kr i startavgift och 12 kr per kilometer. '
-                     'Skriv en formel för priset y kr när man åker x km.', 1),
-                    ('Hur långt kan man åka för 225 kr med taxin?', 2),
-                    ('Rita linjen y = −x + 3 i ett koordinatsystem.', 'ruta')],
-         beskrivning='Lutning och m-värde, linjen genom två punkter, en taxiformel och en graf.'),
-
-    dict(fil='gy1-matematik-ekvationer-och-potenser', arskurs='gy1', amne='Matematik',
-         titel='Ekvationer och potenser', omrade='Matematik 1', tid='35 minuter',
-         instruktion=['Lös ekvationerna och förenkla uttrycken.',
-                      'Redovisa varje steg – det är stegen som visar att du förstått.'],
-         uppgifter=[('Lös 4x − 7 = 21.', 2), ('Lös 3(x + 2) = 2x + 11.', 2),
-                    ('Lös x/5 + 3 = 7.', 2), ('Förenkla 2³ · 2⁴.', 1), ('Förenkla (5x)².', 1),
-                    ('Skriv 0,00042 i grundpotensform.', 1),
-                    ('En mobil kostar 6 000 kr och minskar i värde med 15 % per år. '
-                     'Vad är den värd efter 2 år?', 2)],
-         beskrivning='Förstagradsekvationer, potenslagar, grundpotensform och procentuell minskning.'),
-
-    dict(fil='gy2-matematik-andragradsekvationer', arskurs='gy2', amne='Matematik',
-         titel='Andragradsekvationer', omrade='Matematik 2', tid='40 minuter',
-         instruktion=['En ekvation på formen x² + px + q = 0 kan lösas med pq-formeln:',
-                      'x = −p/2 ± √((p/2)² − q)',
-                      'Kontrollera svaren genom att sätta in dem i ekvationen.'],
-         uppgifter=[('Lös x² = 49.', 1), ('Lös x² − 6x + 8 = 0.', 2), ('Lös x² + 2x − 15 = 0.', 2),
-                    ('Lös 2x² − 8x − 10 = 0. Tips: dela först med 2.', 2),
-                    ('Lös x(x − 4) = 0.', 1),
-                    ('Har x² + 4x + 5 = 0 några reella lösningar? Motivera.', 2),
-                    ('En rektangel har arean 24 cm², och den ena sidan är 2 cm längre än den andra. '
-                     'Ställ upp en ekvation och bestäm sidornas längd.', 2)],
-         beskrivning='pq-formeln, nollproduktmetoden, diskriminanten och en areauppgift.'),
-
-    dict(fil='gy3-matematik-derivata', arskurs='gy3', amne='Matematik',
-         titel='Derivata – grunderna', omrade='Matematik 3', tid='40 minuter',
-         instruktion=['Derivatan f′(x) anger hur snabbt f(x) ändras – lutningen på kurvans tangent.',
-                      'Deriveringsregeln: om f(x) = xⁿ så är f′(x) = n · xⁿ⁻¹.'],
-         uppgifter=[('Derivera f(x) = x⁵.', 1), ('Derivera f(x) = 4x³ − 2x + 7.', 1),
-                    ('Beräkna f′(2) om f(x) = x² + 3x.', 2),
-                    ('Derivera f(x) = 6/x. Tips: skriv först om som 6x⁻¹.', 1),
-                    ('Bestäm lutningen på tangenten till y = x³ i punkten där x = −1.', 2),
-                    ('För vilket x har f(x) = x² − 8x + 3 en extrempunkt? Är det ett max eller ett min?', 2),
-                    ('En boll kastas uppåt och har höjden h(t) = 20t − 5t² meter efter t sekunder. '
-                     'Beräkna h′(1) och förklara vad svaret betyder.', 2)],
-         beskrivning='Deriveringsregler, tangentens lutning, extrempunkt och en tillämpning.'),
-]
+def kontrollera():
+    """Fel i bladen stoppar bygget: ett dubblerat filnamn ger två blad samma id, och en
+    årskurs som inte finns tas emot av check-villkoret i databasen med ett fel först när
+    migrationen körs."""
+    fel, sedda = [], set()
+    nycklar = {'fil', 'arskurs', 'amne', 'titel', 'omrade', 'tid', 'instruktion', 'uppgifter',
+               'beskrivning', 'text', 'chip'}
+    for b in BLAD:
+        namn = b.get('fil', '?')
+        if namn in sedda:
+            fel.append('dubblett: %s' % namn)
+        sedda.add(namn)
+        if set(b) - nycklar:
+            fel.append('%s: okänd nyckel %s' % (namn, sorted(set(b) - nycklar)))
+        if b['arskurs'] not in ARSKURS_TEXT:
+            fel.append('%s: okänd årskurs %s' % (namn, b['arskurs']))
+        if not namn.startswith(b['arskurs'] + '-'):
+            fel.append('%s: filnamnet ska börja med %s-' % (namn, b['arskurs']))
+        if b['amne'] not in AMNEN:
+            fel.append('%s: ämnet "%s" finns inte i NX.AMNEN' % (namn, b['amne']))
+        if not re.match(r'^[a-z0-9-]+$', namn):
+            fel.append('%s: filnamnet får bara ha a–z, siffror och bindestreck' % namn)
+        if len(b['titel']) > 200:
+            fel.append('%s: titeln är längre än 200 tecken' % namn)
+        for u in b['uppgifter']:
+            if len(u) not in (2, 3) or not isinstance(u[0], str):
+                fel.append('%s: uppgift med fel form: %r' % (namn, u[:1]))
+    return fel
 
 
 def blad_id(b):
@@ -216,23 +116,29 @@ def blad_id(b):
 
 
 def fyll(text):
-    """[] blir en ruta och ___ en skrivrad. Allt annat escapas."""
+    """[] blir en ruta, ___ en skrivrad och radbrytning en ny rad. Allt annat escapas."""
     ut = html.escape(text)
-    ut = ut.replace('[]', '<span class="ruta"></span>')
+    ut = ut.replace('[]', '<span class="ruta"></span>').replace('\n', '<br>')
     return ut.replace('___', '<span class="linje"></span>')
 
 
-def sida(b):
+def sida(b, mat=False):
     typsnitt = 'file://' + os.path.join(ROT, 'typsnitt')
     uppg = []
-    for i, (text, extra) in enumerate(b['uppgifter'], 1):
+    for i, u in enumerate(b['uppgifter'], 1):
+        text, extra = u[0], u[1]
+        figur = u[2] if len(u) > 2 else ''
         under = ''
         if extra == 'ruta':
             under = '<div class="rit"></div>'
         elif extra:
             under = ''.join('<div class="rad"></div>' for _ in range(extra))
-        uppg.append('<li><span class="nr">%d</span><div><p>%s</p>%s</div></li>' % (i, fyll(text), under))
-    lastext = ('<div class="lastext">%s</div>' % html.escape(b['text'])) if b.get('text') else ''
+        uppg.append('<li><span class="nr">%d</span><div><p>%s</p>%s%s</div></li>' % (i, fyll(text), figur, under))
+    lastext = ''
+    if b.get('text'):
+        t = b['text']
+        lastext = ('<div class="lastext">%s</div>' % html.escape(t)) if isinstance(t, str) else \
+            '<div class="lastext">%s</div>' % ''.join('<p>%s</p>' % html.escape(s) for s in t)
     return """<!doctype html><html lang="sv"><head><meta charset="utf-8">
 <style>
 @font-face{font-family:'Schibsted Grotesk';font-weight:400 800;src:url(%(t)s/schibsted-grotesk-latin.woff2) format('woff2')}
@@ -259,7 +165,8 @@ h1{font-size:54px;line-height:1.05;letter-spacing:-.03em;font-weight:800;margin:
 .instr b{display:block;font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:14px;letter-spacing:.14em;
   text-transform:uppercase;color:#9C4520;margin-bottom:8px}
 .instr p{font-size:21px;line-height:1.5}
-.lastext{margin:22px 0 4px;font-size:20.5px;line-height:1.62;border-left:4px solid #9C4520;padding:4px 0 4px 22px}
+.lastext{margin:22px 0 4px;font-size:20.5px;line-height:1.62;border-left:4px solid #9C4520;padding:4px 0 4px 22px;white-space:pre-line}
+.lastext p+p{margin-top:10px}
 ol{list-style:none;margin-top:22px;display:flex;flex-direction:column;gap:20px;flex:1}
 li{display:flex;gap:18px;align-items:flex-start}
 .nr{flex:none;width:36px;height:36px;border-radius:50%%;border:1.5px solid #2E2A20;display:grid;place-items:center;
@@ -284,11 +191,20 @@ li p{font-size:23px;line-height:1.45}
 %(lastext)s
 <ol>%(uppg)s</ol>
 <div class="fot"><span>nextrum.se · Nextrums materialbank</span><span>Får skrivas ut och kopieras för eget bruk</span></div>
-</body></html>""" % dict(
-        t=typsnitt, w=BREDD, amne=html.escape(b['amne'].split(' / ')[0] if b['amne'].startswith('NO') else b['amne']),
+%(mat)s</body></html>""" % dict(
+        mat=MATSKRIPT if mat else '',
+        t=typsnitt, w=BREDD, amne=html.escape(b.get('chip') or b['amne'].split(' / ')[0]),
         ak=ARSKURS_TEXT[b['arskurs']], titel=html.escape(b['titel']), omrade=html.escape(b['omrade']),
         tid=html.escape(b['tid']), instr=''.join('<p>%s</p>' % fyll(r) for r in b['instruktion']),
         lastext=lastext, uppg=''.join(uppg))
+
+
+# Mäter om sidan ryms: innehållet får inte vara högre än fönstret, annars klipps foten och
+# de sista uppgifterna syns inte. Skriver resultatet i <html data-over data-ledigt>.
+MATSKRIPT = """<script>document.fonts.ready.then(function(){
+var h=document.documentElement,li=document.querySelectorAll('li'),sist=li[li.length-1].getBoundingClientRect().bottom,
+fot=document.querySelector('.fot').getBoundingClientRect().top;
+h.setAttribute('data-over',String(h.scrollHeight-innerHeight));h.setAttribute('data-ledigt',String(Math.round(fot-sist)))})</script>"""
 
 
 def hitta_chrome():
@@ -302,15 +218,76 @@ def hitta_chrome():
     return kandidater[-1] if kandidater else None
 
 
-def rita():
+def kolla():
+    """Glapp mellan bladen, bilderna och databasen: ett blad utan bild ger en trasig länk, en bild utan
+    blad blir aldrig ombyggd, och ett blad utan rad i en migration syns aldrig i biblioteket."""
+    fel = kontrollera()
+    bilder = {os.path.basename(p)[:-4] for p in glob.glob(os.path.join(UT, '*.png'))}
+    blad = {b['fil'] for b in BLAD}
+    for f in sorted(blad - bilder):
+        fel.append('%s: bank/%s.png saknas, kör verktyget' % (f, f))
+    for f in sorted(bilder - blad):
+        fel.append('bank/%s.png: ingen post i verktyg/bladen/' % f)
+    migrationer = ''
+    for p in glob.glob(os.path.join(ROT, 'supabase', 'migrations', '*.sql')):
+        with open(p, encoding='utf-8') as fil:
+            migrationer += fil.read()
+    for b in BLAD:
+        if blad_id(b) not in migrationer:
+            fel.append('%s: raden saknas i supabase/migrations/, skriv en ny migration med --sql %s' % (b['fil'], b['fil']))
+    if fel:
+        print('\n'.join('FEL  ' + f for f in fel))
+        return 1
+    print('ok   %d blad, alla med bild och migration' % len(BLAD))
+    return 0
+
+
+def urval(monster):
+    return [b for b in BLAD if not monster or any(m in b['fil'] for m in monster)]
+
+
+def mat(chrome, kalla):
+    """(för mycket, ledigt) i pixlar. För mycket > 0: sidan ryms inte."""
+    ut = subprocess.run([chrome, '--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
+                         '--force-device-scale-factor=1', '--window-size=%d,%d' % (BREDD, HOJD),
+                         '--virtual-time-budget=4000', '--dump-dom', 'file://' + kalla],
+                        check=True, capture_output=True, text=True).stdout
+    over = re.search(r'data-over="(-?\d+)"', ut)
+    ledigt = re.search(r'data-ledigt="(-?\d+)"', ut)
+    if not over or not ledigt:
+        return None
+    return int(over.group(1)), int(ledigt.group(1))
+
+
+def rita(monster):
+    fel = kontrollera()
+    if fel:
+        print('\n'.join('FEL  ' + f for f in fel))
+        return 1
     chrome = hitta_chrome()
     if not chrome:
         print('Hittar ingen Chromium. Sätt CHROME=/sökväg/till/chrome.')
         return 1
+    valda = urval(monster)
+    if not valda:
+        print('Inga blad matchar %s.' % ' '.join(monster))
+        return 1
     os.makedirs(UT, exist_ok=True)
+    problem = 0
     with tempfile.TemporaryDirectory() as tmp:
-        for b in BLAD:
+        for b in valda:
             kalla = os.path.join(tmp, b['fil'] + '.html')
+            with open(kalla, 'w', encoding='utf-8') as f:
+                f.write(sida(b, mat=True))
+            m = mat(chrome, kalla)
+            if m is None:
+                print('FEL  bank/%s.png: kunde inte mäta sidan' % b['fil'])
+                problem += 1
+                continue
+            if m[0] > 0:
+                print('FEL  bank/%s.png: sidan är %d px för hög, korta bladet' % (b['fil'], m[0]))
+                problem += 1
+                continue
             with open(kalla, 'w', encoding='utf-8') as f:
                 f.write(sida(b))
             mal = os.path.join(UT, b['fil'] + '.png')
@@ -318,15 +295,20 @@ def rita():
                             '--force-device-scale-factor=1', '--window-size=%d,%d' % (BREDD, HOJD),
                             '--screenshot=' + mal, 'file://' + kalla],
                            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            print('ok   bank/%s.png' % b['fil'])
-    return 0
+            print('ok   bank/%s.png%s' % (b['fil'], '   (%d px ledigt, glest)' % m[1] if m[1] > 420 else ''))
+    return 1 if problem else 0
 
 
 def sql():
+    fel = kontrollera()
+    if fel:
+        print('\n'.join('FEL  ' + f for f in fel), file=sys.stderr)
+        return 1
+
     def q(v):
         return "'" + v.replace("'", "''") + "'"
     rader = []
-    for b in BLAD:
+    for b in urval(MONSTER_SQL):
         rader.append('  (%s, %s, %s, %s, %s, %s)' % (
             q(blad_id(b)), q(b['titel']), q(b['beskrivning']), q(b['amne']), q(b['arskurs']),
             q(SAJT + '/bank/' + b['fil'] + '.png')))
@@ -336,5 +318,13 @@ def sql():
     return 0
 
 
+MONSTER_SQL = []
+
 if __name__ == '__main__':
-    sys.exit(sql() if '--sql' in sys.argv else rita())
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    if '--kolla' in sys.argv:
+        sys.exit(kolla())
+    if '--sql' in sys.argv:
+        MONSTER_SQL = args
+        sys.exit(sql())
+    sys.exit(rita(args))

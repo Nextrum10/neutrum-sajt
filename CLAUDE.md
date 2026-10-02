@@ -369,7 +369,7 @@ Detaljer: `minne/funktioner.md`.
 ## 8. Genererade filer — ändra aldrig för hand
 Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessidor.py`
 (`laxhjalp-*`, guiderna, navets kort), `bygg-sitemap.py` (`lastmod` ur texten), `satt-logga.py`,
-`bygg-banken.py` (för hand), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar) och
+`bygg-banken.py` (för hand; bladen står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar) och
 `bygg-uppgifter.py --sql` (alltid en ny migration). **`satt-version.py` körs SIST.** Sidorna
 säger bara det som är sant: inga antal, betyg, betygshöjningar, okontrollerade skolnamn eller
 kursnamn med årtal; en guide länkar det den påstår, och dess författare är Nextrum. En adress
@@ -436,7 +436,8 @@ Detaljer: `minne/grunden.md`.
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
-  och inte läst av en lärare. Delade dokument: ingen notis, ingen underskrift, en person per
+  och inte läst av en lärare. Samma sak gäller de 80 övningsbladen
+  i materialbanken (`bank/`, `verktyg/bladen/`): Nextrums egna, utan facit, ingen lärare har läst dem. Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
 
 Detaljer: `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`, `minne/affaren.md`, `minne/notiser.md`.

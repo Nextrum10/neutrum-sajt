@@ -337,6 +337,19 @@ sökvägen.
   bibliotek.
 - `verktyg/rls-test.sql` har nitton BIB-rader, sju av dem om
   delningen. Kör dem efter varje ändring i policyn.
+- **Banken har 80 övningsblad, sex till åtta per årskurs** (2026-10-02,
+  `materialbanken_fler_blad`; Fas 15.5 la ett blad per årskurs). Leo:
+  "Material sidan har väldigt lite material". De är VÅRA blad, ritade
+  till `bank/*.png` av `verktyg/bygg-banken.py` och inga andras sidor,
+  och de ger inget facit varken på bladet eller i beskrivningen: vyn
+  fyller läxans text med beskrivningen, och den läser eleven. Alla sju
+  ämnena i `NX.AMNEN` har blad, också Moderna språk (tyska, spanska,
+  franska) och Programmering. **Bladen är skrivna med AI och granskade
+  av andra AI-granskare, inte lästa av en lärare**; sägs inte något
+  annat utåt än att de är Nextrums egna. Ett blad som rättas ritas om
+  och raden rörs inte (id:t är ett uuid5 ur filnamnet); ett nytt blad
+  är en ny migration med bara de nya raderna. Länkarna svarar 404 tills
+  `bank/` är driftsatt, så migrationen körs efter merge.
 
 Ur avsnitt 11:
 
