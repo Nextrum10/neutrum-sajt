@@ -5,8 +5,8 @@
 //
 // Proven håller fast det som gör provet värt att göra:
 //
-//   · 30 frågor, varje med fyra alternativ och exakt ett rätt
-//   · 80 procent är 24 av 30, inte 23
+//   · 25 frågor, varje med fyra alternativ och exakt ett rätt
+//   · 80 procent är 20 av 25, inte 19
 //   · facit följer aldrig med till sidan
 //   · resultatet säger rätt per avsnitt, aldrig per fråga
 //   · ett halvt ifyllt eller påhittat svar rättas inte som ett helt
@@ -27,8 +27,8 @@ function medFel(n: number): Record<string, string> {
   return s;
 }
 
-Deno.test('trettio frågor, fyra alternativ var och exakt ett rätt', () => {
-  assertEquals(FRAGOR.length, 30);
+Deno.test('tjugofem frågor, fyra alternativ var och exakt ett rätt', () => {
+  assertEquals(FRAGOR.length, 25);
   // Mejlen säger antalet ur utbildningsprov_grans.ts, utan frågorna.
   assertEquals(ANTAL_FRAGOR, FRAGOR.length);
   const id = new Set<string>();
@@ -55,9 +55,9 @@ Deno.test('rätt svar är utspritt, så att "välj alltid b" inte räcker', () =
 // Förut prövade det här provet bara att det längsta svaret inte var rätt
 // i ALLA frågor. Det var rätt i 25 av 30, och den som alltid valde det
 // längsta klarade provet utan att ha läst handboken. Gränsen är satt
-// kring slumpen: med fyra alternativ träffar en regel rätt i sju eller
-// åtta frågor av trettio utan att säga något om svaret.
-const TAK_FOR_EN_TUMREGEL = 8;
+// kring slumpen: med fyra alternativ träffar en regel rätt i sex eller
+// sju frågor av tjugofem utan att säga något om svaret.
+const TAK_FOR_EN_TUMREGEL = 7;
 
 function valjAlltid(valj: (alt: { id: string; text: string }[]) => string): number {
   return ratta(Object.fromEntries(FRAGOR.map((f) => [f.id, valj(f.alternativ)]))).ratt;
@@ -79,15 +79,15 @@ Deno.test('Nextrum och rutinerna pekar inte ut det rätta svaret', () => {
   }
 });
 
-Deno.test('80 procent är 24 av 30', () => {
-  assertEquals(kravRatt(), 24);
-  assertEquals(kravRatt(30), 24);
+Deno.test('80 procent är 20 av 25', () => {
+  assertEquals(kravRatt(), 20);
   assertEquals(kravRatt(25), 20);
+  assertEquals(kravRatt(30), 24);
   assertEquals(kravRatt(31), 25); // 24,8 avrundas uppåt: 24 av 31 är under 80
-  assertEquals(ratta(medFel(6)).godkant, true);
-  assertEquals(ratta(medFel(6)).ratt, 24);
-  assertEquals(ratta(medFel(7)).godkant, false);
-  assertEquals(ratta(facit()).ratt, 30);
+  assertEquals(ratta(medFel(5)).godkant, true);
+  assertEquals(ratta(medFel(5)).ratt, 20);
+  assertEquals(ratta(medFel(6)).godkant, false);
+  assertEquals(ratta(facit()).ratt, 25);
 });
 
 Deno.test('facit följer aldrig med till sidan', () => {
@@ -118,8 +118,8 @@ Deno.test('alternativen blandas, frågorna står still, och originalet rörs int
 Deno.test('resultatet räknas per avsnitt, aldrig per fråga', () => {
   const r = ratta(medFel(2));
   assertEquals(r.avsnitt.map((a) => a.namn), Object.values(AVSNITT));
-  assertEquals(r.avsnitt.reduce((s, a) => s + a.antal, 0), 30);
-  assertEquals(r.avsnitt.reduce((s, a) => s + a.ratt, 0), 28);
+  assertEquals(r.avsnitt.reduce((s, a) => s + a.antal, 0), 25);
+  assertEquals(r.avsnitt.reduce((s, a) => s + a.ratt, 0), 23);
   assertEquals(r.avsnitt[0].ratt, r.avsnitt[0].antal - 2);
   for (const a of r.avsnitt) assertEquals(Object.keys(a).sort(), ['antal', 'namn', 'ratt']);
 });
@@ -137,7 +137,7 @@ Deno.test('ett halvt ifyllt eller påhittat svar rättas inte som ett helt', () 
 
   // Allt som inte är ett objekt är ett tomt prov.
   for (const skrap of [null, undefined, 'b', 42, ['b', 'c'], { __proto__: { syfte: 'b' } }]) {
-    assertEquals(ratta(skrap).obesvarade.length, 30, String(skrap));
+    assertEquals(ratta(skrap).obesvarade.length, 25, String(skrap));
   }
 });
 
@@ -150,7 +150,7 @@ Deno.test('bara kända id:n följer med till databasen', () => {
 Deno.test('genomgången för admin säger fråga för fråga vad som var rätt', () => {
   const r = ratta(medFel(2));
   const g = genomgang(r.svar);
-  assertEquals(g.length, 30);
+  assertEquals(g.length, 25);
   assertEquals(g.filter((x) => !x.stammer).length, 2);
   assertEquals(g.map((x) => x.nr), FRAGOR.map((_, i) => i + 1));
   // Fel svar visar både det valda och det rätta, och de är olika.
