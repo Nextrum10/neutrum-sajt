@@ -339,7 +339,7 @@ En intresseanmälan mejlas direkt av `lead-notis`, som förut. Så fungerar det 
 **Ordningen är edge-funktionen först, migrationen sedan.** Den nya triggern börjar mejla direkt i samma stund
 som den skapas, och en funktion som inte förstår `slag` skulle skicka fel mejl.
 
-1. Efter merge: driftsätt `admin-paminnelse` från main (v2). `supabase/config.toml` har redan `verify_jwt = false`
+1. Efter merge: driftsätt `admin-paminnelse` från main (v2 eller senare; v2 är den första som förstår `slag`). `supabase/config.toml` har redan `verify_jwt = false`
    för den. Alla filer under `_delad/` som den importerar ska med (`_delad/notiser/admin.ts` och dess grannar).
 2. Kör `20261002170000_admin_paminnelser_direkt_och_morgon.sql`, avsnitt för avsnitt (verktyget ber om en
    bekräftelse för `drop` och `delete`, och filen har ingen sådan sats på toppnivå, men kör ändå inte hela
