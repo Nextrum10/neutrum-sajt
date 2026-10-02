@@ -84,7 +84,7 @@ FACIT = {
     ],
     'ak9-np-so-kallor-och-samband': [
         'En primärkälla: den är skriven samma dag av någon som var med.',
-        'Hur människor i Stockholm upplevde och firade att kriget i Europa tog slut: kyrkklockor, folkmassor på '
+        'Hur människor i Stockholm upplevde och firade att kriget i Europa tog slut: kyrkklockor, folkmassor i '
         'Kungsträdgården, glädje och lättnad, och oro för släktingar i Norge, som var ockuperat.',
         'Den visar en enda persons upplevelse, en fjortonårig flicka i Stockholm i ett land som inte var i krig. Den säger '
         'inget om hur kriget slutade eller hur folk i krigets länder hade det, och nyheten har hon från pappa. För C: begränsningen kopplas till vem som skrev.',
@@ -264,7 +264,7 @@ FACIT = {
         'Två av: jobb, utbildning, sjukvård och annan service, kultur och nöjen; jordbruket behöver färre arbetare.',
         'Hur befolkningen fördelar sig på ålder och kön. En bred bas betyder att det föds många barn, ofta i ett land med '
         'hög fruktsamhet och en ung, växande befolkning. För C: formen kopplas till landets befolkningsutveckling.',
-        'Isar smälter och havsvattnet utvidgas när det värms, så havsnivån stiger. Det ger översvämningar och stormfloder, '
+        'Glaciärer och inlandsisar på land smälter och havsvattnet utvidgas när det värms, så havsnivån stiger. Det ger översvämningar och stormfloder, '
         'saltvatten förstör åkrar och dricksvatten, och människor kan tvingas flytta (t.ex. i Bangladesh). För C: hela kedjan från uppvärmning till följder förklaras.',
         'Eget svar. T.ex. cykla eller åka kollektivt i stället för bil, vilket minskar utsläppen av koldioxid, eller köpa '
         'begagnat. För C: svaret förklarar varför det hjälper.',

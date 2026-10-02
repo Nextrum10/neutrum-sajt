@@ -121,7 +121,7 @@ BLAD = [
                'mycket vatten: 10 °C, 30 °C och 60 °C varmt. I varje glas lägger hon en sockerbit och mäter tiden tills sockret '
                'har löst sig helt.'),
          uppgifter=[('Vilken fråga vill Elsa få svar på med sin undersökning? {E}', 1),
-                    ('Vilken variabel ändrar Elsa med flit, och vilken mäter hon? {E}\nÄndrar: ___   Mäter: ___', 0),
+                    ('Vilken variabel ändrar Elsa med flit, och vilken mäter hon? {E}', 1),
                     ('Nämn två saker Elsa måste hålla lika i alla glasen för att jämförelsen ska bli rättvis. {C}', 1),
                     ('Elsas resultat står i tabellen. Vilken slutsats kan hon dra? {E}', 1,
                      tabell(['Vattnets temperatur', '10 °C', '30 °C', '60 °C'], [['Tid tills sockret löst sig', '240 s', '140 s', '60 s']], bredd_kol=110)),
@@ -137,7 +137,7 @@ BLAD = [
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
          text=['Påhittad källa för övningen, en dagbokssida som en fjortonårig flicka i Stockholm skulle kunna ha skrivit våren 1945: '
                '”I dag på eftermiddagen ringde kyrkklockorna. Pappa kom hem tidigt från jobbet och sa att kriget i Europa är slut. '
-               'På Kungsträdgården var det så mycket folk att vi inte kom fram. Mamma grät, fast hon var glad. Jag tänker på kusinerna '
+               'I Kungsträdgården var det så mycket folk att vi inte kom fram. Mamma grät, fast hon var glad. Jag tänker på kusinerna '
                'i Norge. Nu kanske vi får träffa dem i sommar.”'],
          uppgifter=[('Om källan vore äkta, skulle den då vara en primärkälla eller en sekundärkälla? Motivera. {E}', 1),
                     ('Vad kan en historiker lära sig om våren 1945 av en sådan källa? {E}', 1),
@@ -188,7 +188,7 @@ BLAD = [
                       'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
          uppgifter=[('Diagrammet visar hur många timmar sex elever tränade under en vecka. Vad är typvärdet? [] {E}', 0,
                      stapeldiagram([('Ali', 4), ('Bea', 6), ('Cem', 4), ('Dan', 2), ('Eva', 8), ('Fia', 4)], 10, 2, 'Timmar', hojd=120, bredd=540)),
-                    ('Beräkna medelvärdet för de sex eleverna. Avrunda till en decimal. [] h {E}', 0),
+                    ('Beräkna medelvärdet för de sex eleverna. Avrunda till en decimal. [[]] h {E}', 0),
                     ('Vad är medianen? [] h {C}', 0),
                     ('I en klass med 25 elever har 60 % ett husdjur. Hur många elever har inget husdjur? [] {E}', 0),
                     ('Du kastar en vanlig tärning en gång. Hur stor är sannolikheten att få en femma eller en sexa? [] {E}', 0),
@@ -308,7 +308,7 @@ BLAD = [
          uppgifter=[('Vilken texttyp passar bäst? Skriv A, U eller B.\nEn text om för- och nackdelar med sommarlov på åtta veckor. []\n'
                      'En text som ska få kommunen att bygga en skatepark. []\nEn text om en dag när allt gick fel. []', 0),
                     ('Skriv en tes om skoluniformer.', 1),
-                    ('Skriv om meningen så att källan framgår: ”Unga läser mindre i dag.”', 1)],
+                    ('Skriv om meningen så att källan framgår (påhittad källa: en enkät i skoltidningen 2025): ”Unga läser mindre i dag.”', 1)],
          beskrivning='Faktablad om argumenterande, utredande och berättande text och om källhänvisning, med tre uppgifter.'),
 
     dict(fil='ak9-np-engelska-lasa-short-story', arskurs='ak9', amne='Engelska',
