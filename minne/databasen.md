@@ -337,8 +337,9 @@ sökvägen.
   bibliotek.
 - `verktyg/rls-test.sql` har nitton BIB-rader, sju av dem om
   delningen. Kör dem efter varje ändring i policyn.
-- **Banken har 80 övningsblad, sex till åtta per årskurs** (2026-10-02,
-  `materialbanken_fler_blad`; Fas 15.5 la ett blad per årskurs). Leo:
+- **Banken har 105 övningsblad och 14 länkar** (2026-10-02,
+  `materialbanken_fler_blad` och `materialbanken_np_traning`; Fas 15.5 la
+  ett blad per årskurs). Leo:
   "Material sidan har väldigt lite material". De är VÅRA blad, ritade
   till `bank/*.png` av `verktyg/bygg-banken.py` och inga andras sidor,
   och de ger inget facit varken på bladet eller i beskrivningen: vyn
@@ -350,6 +351,25 @@ sökvägen.
   och raden rörs inte (id:t är ett uuid5 ur filnamnet); ett nytt blad
   är en ny migration med bara de nya raderna. Länkarna svarar 404 tills
   `bank/` är driftsatt, så migrationen körs efter merge.
+- **Nationella prov och läromedel kopieras aldrig in i banken** (Fas 15.7,
+  2026-10-02). Leo bad om att ladda ner alla nationella prov från åk 6 till
+  gymnasiet, och läromedel från förlag som Liber. Proven och deras texter är
+  upphovsrättsskyddade, och en kopia på nextrum.se är spridning i en
+  kommersiell tjänst; förlagens böcker är inte gratis att ladda ner. Det
+  som är fritt är att länka: `verktyg/bladen/lankar.py` har fjorton länkar
+  till provgruppernas egna sidor (PRIM-gruppen vid Stockholms universitet,
+  Göteborgs, Uppsala och Umeå universitet), en rad i `biblioteksmaterial`
+  med `lank` var, id:t ur namnet. Adresserna kommer ur webbsökningar och är
+  inte klickprovade, eftersom molnmiljön nekade alla de domänerna.
+- **NP-träningen är egna uppgifter i provens stil, aldrig provens egna.**
+  25 blad (`*-np-*`): delar med och utan räknare och nivåmärkena E, C och A
+  (`{E}` i texten), läs- och skrivdelar med påhittat underlag som säger att
+  det är påhittat. Varje blad säger på första instruktionsraden att det
+  inte är riktiga provuppgifter. Prov finns i åk 6 (Ma, Sv, En), åk 9 (Ma,
+  Sv, En, NO, SO) och med Gy25 i matematik nivå 1–2, svenska nivå 1 och 3
+  och engelska nivå 1–2. Gymnasiebladen anger Gy25-nivån bara där den är
+  bekräftad (matematik 1–2, svenska 1 och 3, engelska 1–2); trigonometriska
+  ekvationer och radianer är Matematik 4, inte 3.
 
 Ur avsnitt 11:
 

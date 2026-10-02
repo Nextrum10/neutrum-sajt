@@ -271,4 +271,107 @@ BLAD = [
                     ('Ge ett exempel där friktion är bra och ett där den är besvärlig.', 2),
                     ('Rita en låda som skjuts över ett golv. Rita pilar som visar gravitationen och friktionen och skriv vad de heter.', 'ruta')],
          beskrivning='Krafter i vardagen: gravitation, friktion och newton, med frågor och en teckning med kraftpilar.'),
+
+    # ---- NP-träning, åk 6 (2026-10-02) ----
+    # Egna uppgifter i samma stil som de nationella proven, aldrig provens egna. Upplägget kommer ur
+    # provgruppernas beskrivningar: matematik med och utan miniräknare och nivåerna E, C och A,
+    # svenska och engelska med läs- och skrivdelar.
+    dict(fil='ak6-np-matematik-utan-miniraknare', arskurs='ak6', amne='Matematik',
+         titel='NP-träning: matematik utan miniräknare', omrade='Nationella provet i matematik, åk 6', tid='35 minuter',
+         instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
+                      'På provet finns delar där du bara skriver svaret och delar där du visar hur du har tänkt. Här räknar du utan miniräknare.',
+                      'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
+         uppgifter=[('a) 305 − 48 = []    b) 6 · 70 = []    c) 0,6 + 0,25 = [] {E}', 0),
+                    ('Skriv 3/4 i decimalform. [] {E}', 0), ('Hur mycket är 10 % av 90 kr? [] kr {E}', 0),
+                    ('En film börjar 17.45 och är 1 timme och 35 minuter lång. När slutar den? [] {E}', 0),
+                    ('Vilket tal ligger mitt emellan 1,4 och 1,8? [] {C}', 0),
+                    ('Vilket tal ska stå i rutan? 4 · [] + 3 = 31 {C}', 0),
+                    ('Skriv talen i storleksordning, minst först: 0,5; 2/5; 0,45 {C}', 1),
+                    ('Figurerna är byggda av tändstickor. Hur många stickor behövs till figur 10? [] {C}', 0,
+                     stickfigurer(1, 2, 3)),
+                    ('Skriv en regel för hur många stickor som behövs till en figur med vilket nummer som helst. {A}', 2),
+                    ('En rektangel har omkretsen 24 cm. Den ena sidan är dubbelt så lång som den andra. Hur långa är sidorna? {A}', 2)],
+         beskrivning='Träning inför nationella provet i matematik åk 6, utan miniräknare: räkning, tal i olika former, mönster och problem på nivåerna E, C och A.'),
+
+    dict(fil='ak6-np-matematik-problemlosning', arskurs='ak6', amne='Matematik',
+         titel='NP-träning: problemlösning i matematik', omrade='Nationella provet i matematik, åk 6', tid='40 minuter',
+         instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
+                      'Visa hur du löser uppgifterna: skriv uträkningar, rita eller förklara med ord. Du får använda miniräknare.',
+                      'Märket efter uppgiften visar vilken nivå den tränar: E, C eller A.'],
+         uppgifter=[('Klass 6B ska åka på utflykt. Bussen kostar 3 600 kr och 24 elever åker med. Hur mycket blir det per elev? {E}', 1),
+                    ('Tabellen visar hur många böcker fyra elever läste under sommaren. Beräkna medelvärdet. {E}', 1,
+                     tabell(['Elev', 'Ali', 'Bea', 'Cem', 'Dina'], [['Antal böcker', 3, 5, 2, 6]], bredd_kol=110)),
+                    ('En femte elev läste också under sommaren. Hur många böcker måste hon ha läst för att medelvärdet för alla fem ska bli 5? {C}', 1),
+                    ('Saga och Theo delar på 120 kr så att Saga får 30 kr mer än Theo. Hur mycket får var och en? {C}', 2),
+                    ('En tröja kostar 250 kr. I en butik sänks priset med 20 %, och i en annan med 45 kr. I vilken butik blir tröjan billigast? Visa hur du vet. {C}', 1),
+                    ('Lisa säger: "Om man gör sidorna i en kvadrat dubbelt så långa blir arean dubbelt så stor." Har hon rätt? Förklara med ett exempel. {A}', 2)],
+         beskrivning='Träning inför nationella provet i matematik åk 6 med miniräknare: problemlösning, medelvärde, skala och resonemang på nivåerna E, C och A.'),
+
+    dict(fil='ak6-np-svenska-lasa', arskurs='ak6', amne='Svenska',
+         titel='NP-träning: läsa och förstå en faktatext', omrade='Nationella provet i svenska, åk 6', tid='35 minuter',
+         instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
+                      'På provet läser du både faktatexter och berättelser. Läs texten noga och gå tillbaka till den när du svarar.',
+                      'Vissa svar står direkt i texten. Andra måste du komma fram till själv genom att tänka efter.'],
+         text=['# Ladusvalan – en fågel som reser långt',
+               'Ladusvalan är en liten fågel med blåsvart rygg, rödbrun strupe och en lång, kluven stjärt. Den lever av '
+               'insekter som den fångar i flykten, ofta lågt över ängar och vatten. På sommaren bygger ladusvalan bo inne '
+               'i ladugårdar och stall. Boet byggs av lera och strå och sitter ofta högt upp, nära taket.',
+               'När hösten kommer blir det kallt i Sverige, och insekterna försvinner. Då har ladusvalan inget att äta. '
+               'Därför flyttar den söderut, ända till södra Afrika. Resan kan vara nästan tusen mil lång, och svalorna '
+               'vilar och äter på vägen. I april och maj kommer de tillbaka för att lägga ägg.',
+               'På många håll i Sverige har det blivit färre ladusvalor. En orsak är att det finns färre gårdar med kor '
+               'och hästar. Där djuren finns, finns också insekter, och öppna ladugårdar där svalorna kan bygga bo.'],
+         uppgifter=[('Vad äter ladusvalan? ___', 0),
+                    ('Var bygger ladusvalan sitt bo på sommaren? ___', 0),
+                    ('Varför flyttar ladusvalan söderut på hösten?', 1),
+                    ('Ringa in rätt svar. Ordet "kluven" i texten betyder ungefär: lång – delad i två delar – färgglad', 0),
+                    ('Varför tror du att det finns mer insekter där det finns kor och hästar?', 2),
+                    ('Texten är en faktatext. Skriv två saker som visar det.', 2),
+                    ('Om du fick fråga en fågelforskare en sak om ladusvalan, vad skulle du fråga?', 1)],
+         beskrivning='Träning inför nationella provets läsdel i svenska åk 6: en faktatext om ladusvalan med frågor på olika nivåer.'),
+
+    dict(fil='ak6-np-svenska-skriva', arskurs='ak6', amne='Svenska',
+         titel='NP-träning: skriva en berättelse', omrade='Nationella provet i svenska, åk 6', tid='45 minuter',
+         instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
+                      'På provet skriver du en egen text. Den bedöms efter innehållet, hur den är uppbyggd och hur du använder språket.',
+                      'En berättelse har en början, något som händer och driver handlingen framåt, och ett slut.'],
+         uppgifter=[('Din berättelse ska börja med meningen: "När jag öppnade dörren till vinden förstod jag att något hade hänt." '
+                     'Planera först: vem är med, var händer det och vad är problemet?', 3),
+                    ('Hur slutar berättelsen? Skriv några stödord.', 1),
+                    ('Skriv berättelsen. Fortsätt på ett eget papper om raderna inte räcker.', 8),
+                    ('Läs igenom texten. Har du stycken, stor bokstav och punkt, och minst ett ställe med dialog? Rätta det du hittar.', 0)],
+         beskrivning='Träning inför nationella provets skrivdel i svenska åk 6: planera, skriva och läsa igenom en berättelse.'),
+
+    dict(fil='ak6-np-engelska-lasa', arskurs='ak6', amne='Engelska',
+         titel='NP-träning: läsa på engelska', omrade='Nationella provet i engelska, åk 6', tid='30 minuter',
+         instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
+                      'På provet läser du olika slags texter och svarar på olika sätt: sant eller falskt, flera svarsalternativ och korta svar.',
+                      'Svara på engelska om inte frågan säger något annat.'],
+         text=['Hi Grandma!',
+               'We have lived in Edinburgh for one week now. Our flat is on the third floor, and from my window I can see a '
+               'castle on a hill. It rains almost every day, but nobody seems to care.',
+               'On Monday I started at my new school. I was nervous, but my teacher, Mr Brown, asked a girl called Isla to show '
+               'me around. She has a dog and plays the violin, just like me! At lunch we eat in a big hall, and on Wednesdays there is pizza.',
+               'The hardest thing is the accent. Sometimes I have to ask people to say things again. Isla says I will understand '
+               'everything by Christmas. I miss you and the summer house. Can you send me a photo of the cat?',
+               'Love,\nNoah'],
+         uppgifter=[('True or false? Write T or F in the box.\nNoah lives on the first floor. []\nIt rains a lot in Edinburgh. []\n'
+                     'Isla plays the violin. []', 0),
+                    ('What can Noah see from his window? ___', 0),
+                    ('Why does Noah sometimes ask people to say things again?', 1),
+                    ('Circle the right answer. How did Noah feel on his first day? happy – nervous – angry', 0),
+                    ('Find a word in the text that means "a home on one floor of a building": ___', 0),
+                    ('Do you think Noah will be happy in Edinburgh? Why or why not?', 1)],
+         beskrivning='Träning inför nationella provets läsdel i engelska åk 6: ett brev med frågor av olika slag.'),
+
+    dict(fil='ak6-np-engelska-skriva', arskurs='ak6', amne='Engelska',
+         titel='NP-träning: skriva på engelska', omrade='Nationella provet i engelska, åk 6', tid='40 minuter',
+         instruktion=['Nextrums egna uppgifter i samma stil som det nationella provet, inga riktiga provuppgifter.',
+                      'På provet skriver du en text på engelska. Det viktiga är att läsaren förstår vad du menar, att texten hänger ihop och att du använder varierade ord.',
+                      'Användbara fraser: My name is ... I live in ... In my free time I ... My favourite ... is ... What about you?'],
+         uppgifter=[('Du har fått en brevvän i England. Skriv ett mejl där du berättar om dig själv, din familj, en fritidsaktivitet och din skola. '
+                     'Avsluta med en fråga till brevvännen. Planera först: skriv stödord för varje del.', 3),
+                    ('Skriv mejlet på engelska. Börja med Hi ... och avsluta med en hälsning.', 9),
+                    ('Läs igenom: har du använt and, but och because minst en gång var? Ringa in dem.', 0)],
+         beskrivning='Träning inför nationella provets skrivdel i engelska åk 6: planera och skriva ett mejl till en brevvän.'),
 ]

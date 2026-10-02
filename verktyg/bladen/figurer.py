@@ -326,3 +326,27 @@ def kodrad(*poster, mellanrum=40):
     for (bokstav, text) in poster:
         delar.append('<div><b style="display:block;font-size:20px">%s</b>%s</div>' % (html.escape(bokstav), kod(text).replace('margin:10px 0 0', 'margin:4px 0 0')))
     return '<div style="display:flex;gap:%dpx;align-items:flex-start;flex-wrap:wrap;margin-top:10px">%s</div>' % (mellanrum, ''.join(delar))
+
+
+def stickfigurer(*antal, sida=50):
+    """Mönster av tändstickor: figur n är en rad med antal[n-1] kvadrater som delar sidor.
+    Varje sticka ritas för sig, så att det går att räkna dem på bladet."""
+    delar = []
+    for nr, k in enumerate(antal, 1):
+        b = k * sida + 24
+        d = []
+        def sticka(x1, y1, x2, y2):
+            d.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#A07A45" stroke-width="6" stroke-linecap="round"/>'
+                     % (x1, y1, x2, y2))
+            d.append('<circle cx="%.1f" cy="%.1f" r="5.5" fill="%s"/>' % (x2, y2, BRUN))
+        x0, y0, g = 12, 12, 5
+        for i in range(k):
+            x = x0 + i * sida
+            sticka(x + g, y0, x + sida - g, y0)                  # överkant
+            sticka(x + g, y0 + sida, x + sida - g, y0 + sida)    # underkant
+        for i in range(k + 1):
+            x = x0 + i * sida
+            sticka(x, y0 + g, x, y0 + sida - g)                  # lodräta
+        d.append(_t(b / 2.0, y0 + sida + 30, 'Figur %d' % nr, 18, vikt=600))
+        delar.append(_svg(int(b), int(y0 + sida + 40), ''.join(d)).replace('margin-top:10px;', ''))
+    return '<div style="display:flex;gap:44px;align-items:flex-end;margin-top:10px">%s</div>' % ''.join(delar)

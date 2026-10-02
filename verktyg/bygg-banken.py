@@ -44,7 +44,7 @@ import glob, html, os, re, shutil, subprocess, sys, tempfile, uuid
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bladen'))
-import lagstadiet, mellanstadiet, hogstadiet, gymnasiet  # noqa: E402
+import lagstadiet, mellanstadiet, hogstadiet, gymnasiet, lankar  # noqa: E402
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UT = os.path.join(ROT, 'bank')
@@ -72,13 +72,18 @@ AMNEN = ['Matematik', 'Svenska', 'Engelska', 'NO / Fysik / Kemi / Biologi',
 #
 # Ett blad är en dict:
 #   fil, arskurs, amne, titel, omrade, tid, instruktion=[...], uppgifter=[...], beskrivning
-#   text     (valfri)  en läsetext, str eller lista med stycken, ovanför uppgifterna
+#   text     (valfri)  en läsetext, str eller lista med stycken, ovanför uppgifterna; ett stycke som börjar med '# ' blir en rubrik
 #   chip     (valfri)  vad ämnesbrickan säger; annars ämnets första del ("NO", "SO")
 # En uppgift är (text, extra) eller (text, extra, figur):
 #   [] blir en svarsruta, ___ en skrivrad i texten, \n en radbrytning (en mening per rad när flera luckor ska fyllas)
+#   {E}, {C} och {A} blir ett nivåmärke, som på de nationella proven
 #   extra = antal tomma skrivrader under uppgiften, eller 'ruta' för en större ruta att rita i
 #   figur = en HTML- eller SVG-sträng, oftast ur verktyg/bladen/figurer.py
 BLAD = (lagstadiet.BLAD + mellanstadiet.BLAD + hogstadiet.BLAD + gymnasiet.BLAD)
+
+# Länkar till andras material, i dag provgruppernas officiella sidor om de nationella proven. De
+# ritas inte; raden i biblioteksmaterial pekar dit med `lank`. Se verktyg/bladen/lankar.py.
+LANKAR = lankar.LANKAR
 
 
 def kontrollera():
@@ -108,7 +113,27 @@ def kontrollera():
         for u in b['uppgifter']:
             if len(u) not in (2, 3) or not isinstance(u[0], str):
                 fel.append('%s: uppgift med fel form: %r' % (namn, u[:1]))
+    for l in LANKAR:
+        namn = l.get('namn', '?')
+        if namn in sedda:
+            fel.append('dubblett: %s' % namn)
+        sedda.add(namn)
+        if set(l) != {'namn', 'arskurs', 'amne', 'titel', 'beskrivning', 'lank'}:
+            fel.append('%s: länken ska ha namn, arskurs, amne, titel, beskrivning och lank' % namn)
+            continue
+        if l['arskurs'] not in ARSKURS_TEXT or not namn.startswith(l['arskurs'] + '-'):
+            fel.append('%s: årskursen saknas eller stämmer inte med namnet' % namn)
+        if l['amne'] not in AMNEN:
+            fel.append('%s: ämnet "%s" finns inte i NX.AMNEN' % (namn, l['amne']))
+        # Samma regel som biblioteksmaterial_lank_webbadress, men bara https: vi länkar inte okrypterat.
+        if not re.match(r'^https://[^\s]+$', l['lank']):
+            fel.append('%s: länken ska börja med https:// och sakna mellanslag' % namn)
     return fel
+
+
+def lank_id(l):
+    """Id:t kommer ur namnet, inte adressen: en adress som flyttar rättas med en update, inte en ny rad."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, SAJT + '/bank/lank/' + l['namn']))
 
 
 def blad_id(b):
@@ -116,9 +141,11 @@ def blad_id(b):
 
 
 def fyll(text):
-    """[] blir en ruta, ___ en skrivrad och radbrytning en ny rad. Allt annat escapas."""
+    """[] blir en ruta, ___ en skrivrad, radbrytning en ny rad och {E}, {C} och {A} ett nivåmärke. Allt annat escapas."""
     ut = html.escape(text)
     ut = ut.replace('[]', '<span class="ruta"></span>').replace('\n', '<br>')
+    for niva in ('E', 'C', 'A'):
+        ut = ut.replace('{%s}' % niva, '<span class="niva">%s</span>' % niva)
     return ut.replace('___', '<span class="linje"></span>')
 
 
@@ -138,7 +165,8 @@ def sida(b, mat=False):
     if b.get('text'):
         t = b['text']
         lastext = ('<div class="lastext">%s</div>' % html.escape(t)) if isinstance(t, str) else \
-            '<div class="lastext">%s</div>' % ''.join('<p>%s</p>' % html.escape(s) for s in t)
+            '<div class="lastext">%s</div>' % ''.join(
+                ('<p><b>%s</b></p>' % html.escape(s[2:])) if s.startswith('# ') else ('<p>%s</p>' % html.escape(s)) for s in t)
     return """<!doctype html><html lang="sv"><head><meta charset="utf-8">
 <style>
 @font-face{font-family:'Schibsted Grotesk';font-weight:400 800;src:url(%(t)s/schibsted-grotesk-latin.woff2) format('woff2')}
@@ -179,6 +207,8 @@ li p{font-size:23px;line-height:1.45}
 .rit{height:250px;margin-top:10px;border:1.5px dashed #C9B492;border-radius:12px;
   background-image:linear-gradient(#EFE6D6 1px,transparent 1px),linear-gradient(90deg,#EFE6D6 1px,transparent 1px);
   background-size:31px 31px}
+.niva{display:inline-block;margin-left:10px;padding:0 8px;border:1.5px solid #9C4520;border-radius:6px;color:#9C4520;
+  font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;line-height:24px;vertical-align:2px}
 .fot{margin-top:24px;padding-top:16px;border-top:1.5px solid #DDCDB2;display:flex;justify-content:space-between;
   font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.06em;color:#665C49}
 </style></head><body>
@@ -235,10 +265,13 @@ def kolla():
     for b in BLAD:
         if blad_id(b) not in migrationer:
             fel.append('%s: raden saknas i supabase/migrations/, skriv en ny migration med --sql %s' % (b['fil'], b['fil']))
+    for l in LANKAR:
+        if lank_id(l) not in migrationer:
+            fel.append('%s: länkens rad saknas i supabase/migrations/, skriv en ny migration med --sql %s' % (l['namn'], l['namn']))
     if fel:
         print('\n'.join('FEL  ' + f for f in fel))
         return 1
-    print('ok   %d blad, alla med bild och migration' % len(BLAD))
+    print('ok   %d blad och %d länkar, alla med bild och migration' % (len(BLAD), len(LANKAR)))
     return 0
 
 
@@ -312,6 +345,10 @@ def sql():
         rader.append('  (%s, %s, %s, %s, %s, %s)' % (
             q(blad_id(b)), q(b['titel']), q(b['beskrivning']), q(b['amne']), q(b['arskurs']),
             q(SAJT + '/bank/' + b['fil'] + '.png')))
+    for l in LANKAR:
+        if not MONSTER_SQL or any(m in l['namn'] for m in MONSTER_SQL):
+            rader.append('  (%s, %s, %s, %s, %s, %s)' % (
+                q(lank_id(l)), q(l['titel']), q(l['beskrivning']), q(l['amne']), q(l['arskurs']), q(l['lank'])))
     print('insert into public.biblioteksmaterial (id, titel, beskrivning, amne, arskurs, lank) values')
     print(',\n'.join(rader))
     print('on conflict (id) do nothing;')

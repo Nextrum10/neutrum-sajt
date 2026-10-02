@@ -75,6 +75,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   första pass, och intjänad ges den också med flaggan `tipstimme` av. Studiehjälpare får ingen
   ersättning, med flit. Den som tipsat ser antal, aldrig vilka. `/affisch` tar ingen fritext ur
   adressen, och QR-koden går till formuläret, inte till en områdessida.
+- **Materialbanken** (2026-10-02): bladen är våra egna. Nationella prov och läromedel kopieras aldrig in,
+  banken länkar till provgruppernas egna sidor (`verktyg/bladen/lankar.py`), och NP-träningen är egna
+  uppgifter i provens stil som säger det på bladet.
 - **Frågorna**: talregeln i `intern.niva_tal` och i Pythons `grund.lika()` ändras tillsammans.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används.
@@ -436,8 +439,9 @@ Detaljer: `minne/grunden.md`.
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
-  och inte läst av en lärare. Samma sak gäller de 80 övningsbladen
-  i materialbanken (`bank/`, `verktyg/bladen/`): Nextrums egna, utan facit, ingen lärare har läst dem. Delade dokument: ingen notis, ingen underskrift, en person per
+  och inte läst av en lärare. Samma sak gäller de 105 övningsbladen
+  i materialbanken (`bank/`, `verktyg/bladen/`): Nextrums egna, utan facit, ingen lärare har läst dem. De 14
+  länkarna till provgrupperna är inte klickprovade (miljön nådde dem inte). Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
 
 Detaljer: `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`, `minne/affaren.md`, `minne/notiser.md`.
