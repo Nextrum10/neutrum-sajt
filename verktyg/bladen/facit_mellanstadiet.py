@@ -72,7 +72,7 @@ FACIT = {
 
     'ak4-svenska-synonymer-och-motsatser': [
         'Till exempel: kul, skojig, lustig.',
-        'Till exempel: kvick, rask, hastig, fort.',
+        'Till exempel: kvick, rask, hastig, rapp.',
         'Till exempel: ilsken, sur, rasande, förargad.',
         'Till exempel: vacker = fin, söt, snygg, stilig.',
         'varm – kall, tung – lätt, ung – gammal, mörk – ljus',

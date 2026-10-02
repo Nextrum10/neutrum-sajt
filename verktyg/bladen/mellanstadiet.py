@@ -132,7 +132,7 @@ BLAD = [
                     ('En rektangel har omkretsen 20 cm och den ena sidan är 6 cm. Hur lång är den andra sidan? [] cm', 0),
                     ('En rektangel har arean 36 cm² och den ena sidan är 9 cm. Hur lång är den andra sidan? [] cm', 0),
                     ('Ett rum är 4 m brett och 5 m långt. Hur många kvadratmeter är golvet? [] m²', 0),
-                    ('Rita två olika rektanglar som båda har arean 12 cm². Skriv sidornas längder. Låt varje ruta ha sidan 1 cm.', 'ruta')],
+                    ('Rita två olika rektanglar som båda har arean 12 cm². Skriv sidornas längder. Räkna som om varje ruta har sidan 1 cm.', 'ruta')],
          beskrivning='Omkrets och area av rektanglar och kvadrater: räkna, räkna baklänges och rita.'),
 
     dict(fil='ak5-matematik-diagram-och-medelvarde', arskurs='ak5', amne='Matematik',
@@ -262,7 +262,7 @@ BLAD = [
     dict(fil='ak6-no-krafter-i-vardagen', arskurs='ak6', amne='NO / Fysik / Kemi / Biologi',
          titel='Krafter i vardagen', omrade='Fysik: krafter', tid='30 minuter',
          instruktion=['En kraft kan få något att börja röra sig, stanna, ändra riktning eller ändra form. Krafter mäter vi i newton (N).',
-                      'Gravitationen drar alla saker mot jorden. Friktion är en kraft som bromsar när två ytor gnuggar mot varandra.'],
+                      'Gravitationen drar alla saker mot jorden. Friktion är en kraft mellan två ytor som motverkar att de glider mot varandra. Den kan bromsa, men den ger också fäste.'],
          uppgifter=[('Vilken kraft gör att ett äpple faller till marken? ___', 0),
                     ('Vilken kraft bromsar cykeln när du trycker på bromsen? ___', 0),
                     ('Vad mäter vi krafter i? ___', 0),

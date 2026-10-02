@@ -17,7 +17,7 @@ BLAD = [
          uppgifter=[('a) 2,4 · 0,5 = []    b) Skriv 0,035 i procentform: [[]] {E}', 0),
                     ('Förenkla (2x + 3) − (x − 4). [[]] {E}', 0),
                     ('Lös ekvationen 3(x − 2) = 12. x = [] {E}', 0),
-                    ('Beräkna 10⁻² · 10⁵. [] {E}', 0),
+                    ('Beräkna 10⁻² · 10⁵. [[]] {E}', 0),
                     ('Bestäm f(−2) om f(x) = 3x² − 1. [] {C}', 0),
                     ('Linjen y = kx + 4 går genom punkten (2, 10). Bestäm k. k = [] {C}', 0),
                     ('Skriv ett förenklat uttryck för arean av en rektangel med sidorna x + 2 och 3x. {C}', 1),
@@ -227,7 +227,7 @@ BLAD = [
                     ('Bestäm vinkeln v om tan v = 1. [] ° {E}', 0),
                     ('En kon har radien 3 cm och höjden 4 cm. Beräkna volymen. Svara med en decimal. [[]] cm³ {E}', 0),
                     ('Två likformiga cylindrar har höjderna 5 cm och 10 cm. Hur många gånger större volym har den större? [] {C}', 0),
-                    ('Du kastar två tärningar. Hur stor är sannolikheten att summan blir 10 eller mer? [] {C}', 0),
+                    ('Du kastar två tärningar. Hur stor är sannolikheten att summan blir 10 eller mer? [[]] {C}', 0),
                     ('En klass har 12 tjejer och 10 killar. Två elever lottas till elevrådet. Hur stor är sannolikheten att båda är tjejer? {C}', 1),
                     ('Visa att arean av en kvadrat med diagonalen d är d²/2. {A}', 2)],
          beskrivning='Träning inför nationella provet i matematik nivå 1: trigonometri, volym, likformighet och sannolikhet i flera steg.'),
@@ -248,7 +248,7 @@ BLAD = [
                'I en rätvinklig triangel är sin v = motstående / hypotenusan, cos v = närliggande / hypotenusan och tan v = motstående / '
                'närliggande. För oberoende händelser multipliceras sannolikheterna, och sannolikheten att något inte inträffar är 1 minus '
                'sannolikheten att det inträffar.'],
-         uppgifter=[('Vilken förändringsfaktor hör till en minskning med 7 %? []', 0),
+         uppgifter=[('Vilken förändringsfaktor hör till en minskning med 7 %? [[]]', 0),
                     ('Skriv 0,00052 i grundpotensform. [[]]', 0),
                     ('Förenkla 3⁴ · 3² / 3⁵. []', 0)],
          beskrivning='Faktablad om förändringsfaktor, potenser, funktioner, trigonometri och sannolikhet, med tre uppgifter.'),
