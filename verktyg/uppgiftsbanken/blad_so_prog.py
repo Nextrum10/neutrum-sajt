@@ -1,0 +1,1792 @@
+# -*- coding: utf-8 -*-
+"""Nivåer ur materialbankens övningsblad (2026-10-03): alla SO-blad och de två
+programmeringsbladen. Varje nivå tränar det ett blad tränar, med bladets
+uppgifter och facit omskrivna till frågor som en maskin kan rätta.
+
+Källan är verktyg/bladen/ (mellanstadiet, hogstadiet, gymnasiet, np_ak9) och
+facit_*.py bredvid dem. Bladen är Nextrums egna: inget här är kopierat ur ett
+nationellt prov eller en lärobok.
+
+SO ak4, ak7 och ak9 och Programmering ak9 finns redan (so.py, programmering.py):
+nivåerna står i TILLAGG och läggs sist i banan. SO ak5, ak8 och gy3 och
+Programmering gy1 är nya banor (BANOR), med fler nivåer än bladet ensamt ger,
+skrivna ur säker kunskap: inga osäkra årtal eller siffror, hellre "ungefär".
+
+Programmeringens facit räknas ut genom att köra koden, med samma verktyg som
+programmering.py (visa, kor, vad_skrivs, vilket_skrivs). De felaktiga
+alternativen i ett val prövas mot samma körning.
+"""
+from fractions import Fraction as F
+
+from grund import bana, niva, val, skriv, ordna, sant, para, tal, lika
+from programmering import kor, rader, utskrift, felet, fraga_kod, vad_skrivs, vilket_skrivs
+
+SO = 'SO / Historia / Samhällskunskap'
+PROG = 'Programmering'
+
+
+def bygger(mening, titel):
+    return '%s Bygger på övningsbladet «%s» i materialbanken.' % (mening, titel)
+
+
+def lastext(delar):
+    """Bladets text som en sträng: stycken skilda med tom rad, rubriker utan '# '."""
+    if isinstance(delar, str):
+        delar = [delar]
+    return '\n\n'.join(d[2:] if d.startswith('# ') else d for d in delar)
+
+
+def i_tidsordning(fraga, handelser, forklaring):
+    """En ordna-fråga ur (år, händelse); ordningen räknas ur åren."""
+    ar = [a for a, _ in handelser]
+    assert len(set(ar)) == len(ar), 'två händelser samma år ger två rätta ordningar'
+    return ordna(fraga, [h for _, h in sorted(handelser)], forklaring=forklaring)
+
+
+def procent(fore, efter):
+    andel = F(efter - fore, fore) * 100
+    assert andel.denominator == 1
+    return int(andel)
+
+
+# ---------------------------------------------------------------------------
+# Bladens titlar, så som de står i verktyg/bladen/.
+
+T_KARTA = 'Karta och väderstreck'
+T_VIKING = 'Vikingatiden'
+T_STYRS = 'Hur Sverige styrs'
+T_INDUSTRI = 'Industrialiseringen i Sverige'
+T_AVK = 'Andra världskriget'
+T_KALLOR = 'NP-träning: SO – källor och samband'
+T_NP_GEO = 'NP-träning: geografi'
+T_NP_HIST = 'NP-träning: historia'
+T_NP_REL = 'NP-träning: religionskunskap'
+T_NP_SAM = 'NP-träning: samhällskunskap'
+T_G_HIST = 'Genomgång: 1900-talet i korthet'
+T_G_REL = 'Genomgång: världsreligionerna och etik'
+T_G_DEM = 'Genomgång: demokrati, rättsstat och ekonomi'
+T_G_KLIM = 'Genomgång: klimat, befolkning och hållbarhet'
+T_BNP = 'Ekonomi: BNP, inflation och Riksbanken'
+T_PY9 = 'Python: variabler, villkor och loopar'
+T_PYGY = 'Python: listor, funktioner och loopar'
+
+# Lästexterna, som de står på bladen.
+TEXT_VIKING = lastext(
+    'Vikingatiden varade ungefär från år 800 till år 1050. Vikingarna bodde i det som i dag är '
+    'Sverige, Norge och Danmark. De flesta var bönder och fiskare, men många gav sig också ut på '
+    'långa resor. De seglade i smala långskepp som gick bra både på hav och på floder. '
+    'Vikingarna handlade med silver, pälsar och slavar, och en del plundrade också kloster och '
+    'städer. Vikingar från Sverige reste ofta österut, genom det som i dag är Ryssland och Ukraina och vidare mot Konstantinopel. '
+    'De trodde på många gudar, till exempel Oden, Tor och Frej. Viktiga frågor avgjordes på tinget, '
+    'där fria män samlades. För att skriva använde vikingarna runor, som ristades i sten och trä.')
+
+TEXT_INDUSTRI = lastext(
+    'Fram till mitten av 1800-talet bodde de flesta svenskar på landsbygden och levde av jordbruk. '
+    'Från ungefär 1850 började det som kallas industrialiseringen. Järnvägar byggdes, vilket gjorde '
+    'det lättare att transportera varor. Sågverk, verkstäder och textilfabriker växte fram, och '
+    'maskiner ersatte handarbete på många ställen. Många flyttade från landet till städerna för att '
+    'arbeta i fabrikerna, och det kallas urbanisering. Arbetsdagarna var långa och lönerna låga, och '
+    'även barn arbetade. För att få bättre villkor bildade arbetarna fackföreningar. Samtidigt lämnade '
+    'mer än en miljon svenskar landet, de flesta för Nordamerika, i hopp om arbete och mark.')
+
+TEXT_AVK = lastext([
+    'Andra världskriget började den 1 september 1939 när Tyskland, under Adolf Hitler, anföll Polen. '
+    'Storbritannien och Frankrike svarade med att förklara krig mot Tyskland. Under kriget stod de allierade, '
+    'Storbritannien och från 1941 även Sovjetunionen och USA, mot axelmakterna Tyskland, Italien och Japan.',
+    'Nazisterna mördade omkring sex miljoner judar i Förintelsen, och miljontals andra människor dödades eller '
+    'förföljdes. Kriget i Europa slutade den 8 maj 1945 när Tyskland kapitulerade. Kriget i Asien slutade '
+    'i september 1945, när Japan kapitulerade efter att USA fällt atombomber över Hiroshima och Nagasaki.',
+    'Sverige var neutralt under kriget. Efter att Tyskland ockuperat Danmark och Norge 1940 var Sverige omringat, och landet '
+    'sålde bland annat järnmalm till Tyskland. Det blev en svår balansgång mellan Tyskland och de allierade. '
+    'Samtidigt tog Sverige emot många flyktingar.'])
+
+TEXT_KALLA = lastext(
+    'Påhittad källa för övningen, en dagbokssida som en fjortonårig flicka i Stockholm skulle kunna ha skrivit våren 1945: '
+    '”I dag på eftermiddagen ringde kyrkklockorna. Pappa kom hem tidigt från jobbet och sa att kriget i Europa är slut. '
+    'I Kungsträdgården var det så mycket folk att vi inte kom fram. Mamma grät, fast hon var glad. Jag tänker på kusinerna '
+    'i Norge. Nu kanske vi får träffa dem i sommar.”')
+
+TEXT_G_HIST = lastext([
+    '# Tidslinje',
+    '1914–1918: första världskriget. 1917: ryska revolutionen. 1919: riksdagen beslutar om rösträtt för kvinnor, och 1921 '
+    'röstar kvinnor för första gången i ett riksdagsval. 1929: börskraschen i New York och därefter den stora depressionen.',
+    '1933: Hitler blir rikskansler i Tyskland. 1939–1945: andra världskriget och Förintelsen. 1945: FN bildas. Ungefär '
+    '1947–1991: kalla kriget mellan USA och Sovjetunionen. 1961: Berlinmuren byggs, och 1989 faller den. 1991: '
+    'Sovjetunionen upplöses. 1995: Sverige blir medlem i EU.',
+    '# Varför började första världskriget?',
+    'Bakom kriget låg kapprustning, militära allianser, kampen om kolonier och en stark nationalism. Den utlösande händelsen '
+    'var mordet på den österrikiske tronföljaren Franz Ferdinand i Sarajevo den 28 juni 1914.',
+    '# Kalla kriget',
+    'USA och Sovjetunionen krigade aldrig direkt mot varandra, men tävlade om makt och inflytande genom kapprustning, '
+    'rymdkapplöpning och krig i andra länder. Europa delades av en gräns som kallades järnridån.'])
+
+TEXT_G_REL = lastext([
+    '# Judendom, kristendom och islam',
+    'Judendomens heliga skrift är Tanakh, där Torah är den viktigaste delen. Man samlas i synagogan och firar sabbat från '
+    'fredag kväll till lördag kväll. Kristendomens heliga skrift är Bibeln, med Gamla och Nya testamentet. De kristna tror '
+    'att Jesus är Guds son, och påsken firar hans uppståndelse. Islams heliga skrift är Koranen, och profeten Muhammed har '
+    'en central roll. Man samlas till gemensam bön i moskén, särskilt vid fredagsbönen. De fem pelarna är trosbekännelsen, bönen, allmosan, fastan under ramadan och vallfärden till Mecka.',
+    '# Hinduism och buddhism',
+    'Inom hinduismen finns många gudar, och många hinduer ser dem som uttryck för en och samma gudomliga kraft, Brahman. '
+    'Viktiga skrifter är Vedaskrifterna och Bhagavad Gita. Buddhismen bygger på Buddhas lära om de fyra ädla sanningarna '
+    'och den åttafaldiga vägen. Båda lär ut karma, att handlingar får följder, och återfödelse. Målet är att bli fri från '
+    'kretsloppet av återfödelser: moksha i hinduismen och nirvana i buddhismen.',
+    '# Etiska modeller',
+    'Konsekvensetik: en handling är rätt om följderna blir goda. Pliktetik: vissa handlingar är rätt eller fel oavsett '
+    'följderna. Dygdetik: gör det som en god människa skulle ha gjort.'])
+
+TEXT_G_DEM = lastext([
+    '# Hur Sverige styrs',
+    'Riksdagen har 349 ledamöter. Den stiftar lagar, bestämmer statens budget och skatter och granskar regeringen. '
+    'Regeringen leds av statsministern och styr landet. Sveriges 290 kommuner ansvarar bland annat för skola och '
+    'äldreomsorg, och de 21 regionerna för sjukvård och kollektivtrafik. Val hålls vart fjärde år.',
+    '# Grundlagar och rättsstat',
+    'Sverige har fyra grundlagar: regeringsformen, successionsordningen, tryckfrihetsförordningen och '
+    'yttrandefrihetsgrundlagen. I en rättsstat gäller lagarna alla, och domstolarna, till exempel tingsrätt, hovrätt och Högsta '
+    'domstolen, dömer oberoende av politikerna.',
+    '# Ekonomi',
+    'I en marknadsekonomi styrs priser av utbud och efterfrågan: om fler vill köpa en vara än det finns, stiger priset. '
+    'Skatter betalar för gemensamma saker som skola, vård och vägar.'])
+
+TEXT_G_KLIM = lastext([
+    '# Väder och klimat',
+    'Väder är hur det är just nu eller de närmaste dagarna. Klimat är det genomsnittliga vädret på en plats under lång tid, '
+    'oftast 30 år. Vid ekvatorn träffar solstrålarna jorden mer rakt, och energin sprids på en mindre yta än vid polerna. '
+    'Därför är det varmare där.',
+    '# Växthuseffekten',
+    'Gaser i atmosfären, som koldioxid och metan, släpper igenom solljuset men håller kvar en del av värmen. Utan dem hade '
+    'jorden varit mycket kallare. När mer växthusgaser släpps ut förstärks effekten, och jorden blir varmare.',
+    '# Befolkning',
+    'En befolkningspyramid visar hur många män och kvinnor det finns i olika åldrar. En bred bas betyder att det föds många '
+    'barn. Urbanisering är när allt fler bor i städer, till exempel för att det finns jobb och utbildning där.',
+    '# Hållbar utveckling',
+    'En hållbar utveckling tar hänsyn till miljön, ekonomin och människors levnadsvillkor, nu och för kommande generationer.'])
+
+
+# ---------------------------------------------------------------------------
+# Räkningarna i SO, uträknade här.
+
+VIKING_START, VIKING_SLUT = 800, 1050
+RIKSDAG = 349
+MAJORITET = RIKSDAG // 2 + 1
+assert MAJORITET == 175 and MAJORITET > RIKSDAG / 2 and MAJORITET - 1 <= RIKSDAG / 2
+MUR_BYGGS, MUR_FALLER = 1961, 1989
+KVINNOR_ROSTAR = 1921
+
+BNP_KR, INVANARE = 600 * 10 ** 9, 12 * 10 ** 6
+BNP_PER = BNP_KR // INVANARE
+assert BNP_PER * INVANARE == BNP_KR
+BNP_FORE, BNP_EFTER = 500, 520
+PRIS_FORE, PRIS_EFTER = 400, 420
+VARA, INFLATION = 200, 2
+VARA_EFTER = F(VARA) * (100 + INFLATION) / 100
+assert VARA_EFTER.denominator == 1
+SKATT_GRANS, SKATT_LAG, SKATT_HOG, INKOMST = 600000, 30, 50, 700000
+SKATT = F(SKATT_LAG, 100) * SKATT_GRANS + F(SKATT_HOG, 100) * (INKOMST - SKATT_GRANS)
+assert SKATT.denominator == 1
+
+
+# ---------------------------------------------------------------------------
+# Programmeringens kod, körd för facit.
+
+K_A = '''
+x = 4
+y = x * 3
+print(y)
+'''
+K_B = '''
+namn = "Alva"
+print("Hej " + namn)
+'''
+K_C = '''
+x = 7
+if x > 5:
+    print("stort")
+else:
+    print("litet")
+'''
+K_D = '''
+for i in range(4):
+    print(i * 2)
+'''
+K_E = '''
+summa = 0
+for i in range(1, 4):
+    summa = summa + i
+print(summa)
+'''
+K_F_FEL = '''
+x = 5
+if x = 5:
+    print("fem")
+'''
+F_ERSATT = ['==', '!=', '=>', '+=']
+assert felet(K_F_FEL) == 'SyntaxError'
+assert [kor(K_F_FEL.replace('x = 5:', 'x %s 5:' % e)) if felet(K_F_FEL.replace('x = 5:', 'x %s 5:' % e)) is None
+        else None for e in F_ERSATT].count('fem\n') == 1
+assert kor(K_F_FEL.replace('x = 5:', 'x == 5:')) == 'fem\n'
+
+ETT_TILL_FEM = ['for i in range(1, 6): print(i)', 'for i in range(5): print(i)',
+                'for i in range(1, 5): print(i)', 'for i in range(6): print(i)']
+assert [rader(k) for k in ETT_TILL_FEM].count(['1', '2', '3', '4', '5']) == 1
+assert rader(ETT_TILL_FEM[0]) == ['1', '2', '3', '4', '5']
+
+K_MINUS = '''
+x = 10
+x = x - 3
+print(x)
+'''
+K_HEJ_I = '''
+for i in range(1, 4):
+    print("Hej", i)
+'''
+K_JA = '''
+a = 3
+b = 4
+if a + b == 7:
+    print("ja")
+else:
+    print("nej")
+'''
+K_PRODUKT = '''
+p = 1
+for i in range(1, 5):
+    p = p * i
+print(p)
+'''
+K_JAMNA = '''
+antal = 0
+for i in range(10):
+    if i % 2 == 0:
+        antal = antal + 1
+print(antal)
+'''
+K_KOLON = '''
+for i in range(3)
+    print(i)
+'''
+assert felet(K_KOLON) == 'SyntaxError'
+assert felet(K_KOLON.replace('range(3)', 'range(3):')) is None
+K_INTE_STORRE = '''
+x = 5
+if x > 5:
+    print("större")
+else:
+    print("inte större")
+'''
+K_PRINT_X = '''
+x = 8
+print("x")
+'''
+K_RANGE_2_8 = '''
+for i in range(2, 8):
+    print(i)
+'''
+
+# Gymnasiet 1
+K_INDEX = '''
+tal = [4, 8, 15]
+print(tal[1])
+'''
+K_APPEND_LEN = '''
+tal = [2, 4, 6]
+tal.append(8)
+print(len(tal))
+'''
+K_INDEX_SUMMA = '''
+tal = [4, 8, 15]
+print(tal[0] + tal[2])
+'''
+K_SISTA = '''
+tal = [4, 8, 15, 16]
+print(tal[-1])
+'''
+K_UTANFOR = '''
+tal = [4, 8, 15]
+print(tal[3])
+'''
+assert felet(K_UTANFOR) == 'IndexError'
+K_APPEND_LISTA = '''
+tal = [2, 4]
+tal.append(6)
+print(tal)
+'''
+K_NAMN_LEN = '''
+namn = ["Ali", "Bea", "Cem"]
+print(len(namn))
+'''
+K_BYT_ELEMENT = '''
+tal = [5, 3, 9]
+tal[1] = 7
+print(tal[1] + tal[2])
+'''
+K_UPPER = '''
+orden = ["kal", "ba", "lo"]
+for o in orden:
+    print(o.upper())
+'''
+K_SUMMERA = '''
+tal = [3, 5, 9]
+summa = 0
+for t in tal:
+    summa = summa + t
+print(summa)
+'''
+K_RAKNA_STORA = '''
+tal = [3, 7, 1, 9, 4]
+antal = 0
+for t in tal:
+    if t > 4:
+        antal = antal + 1
+print(antal)
+'''
+K_STORST = '''
+tal = [3, 7, 1, 9, 4]
+storst = tal[0]
+for t in tal:
+    if t > storst:
+        storst = t
+print(storst)
+'''
+K_SATT_IHOP = '''
+delar = ["sol", "is"]
+text = ""
+for d in delar:
+    text = text + d
+print(text)
+'''
+K_BYGG_LISTA = '''
+dubbel = []
+for t in [1, 2, 3]:
+    dubbel.append(t * 2)
+print(len(dubbel), dubbel[2])
+'''
+K_MEDEL = '''
+tal = [3, 5, 10]
+print(sum(tal) / len(tal))
+'''
+LAGG_TILL = ['tal.append(10)', 'tal.add(10)', 'append(tal, 10)', 'tal = tal + 10']
+
+
+def _lagger_till(rad):
+    kod = 'tal = [1, 2]\n%s\nprint(tal == [1, 2, 10])' % rad
+    return felet(kod) is None and utskrift(kod) == 'True'
+
+
+assert [_lagger_till(r) for r in LAGG_TILL] == [True, False, False, False]
+K_INDEXLOOP = '''
+tal = [6, 2, 8, 1]
+for i in range(len(tal)):
+    print(i)
+'''
+K_DUBBLA = '''
+def dubbla(x):
+    return x * 2
+print(dubbla(5) + 1)
+'''
+KVADRAT = ['def kvadrat(x): return x ** 2', 'def kvadrat(x): return x * 2',
+           'def kvadrat(x): print(x ** 2)', 'def kvadrat(x): return x ^ 2']
+
+
+def _kvadrerar(rad):
+    kod = '%s\nsvar = kvadrat(3)\nprint(svar == 9 and kvadrat(5) == 25)' % rad
+    return rader(kod)[-1] == 'True'
+
+
+assert [_kvadrerar(r) for r in KVADRAT] == [True, False, False, False]
+K_SUMMA_F = '''
+def summa(a, b):
+    return a + b
+print(summa(3, 4) * 2)
+'''
+K_HALSA = '''
+def halsa(namn):
+    return "Hej " + namn + "!"
+print(halsa("Mo"))
+'''
+K_STORRE = '''
+def storre(a, b):
+    if a > b:
+        return a
+    return b
+print(storre(4, 9))
+'''
+K_F_X = '''
+def f(x):
+    return x * x
+print(f(3) + f(2))
+'''
+K_BARA_DEF = '''
+def f():
+    print("hej")
+'''
+assert kor(K_BARA_DEF) == ''
+K_DUBBLA_DUBBLA = '''
+def dubbla(x):
+    return x * 2
+print(dubbla(dubbla(3)))
+'''
+K_WHILE = '''
+x = 10
+while x > 3:
+    x = x - 4
+print(x)
+'''
+K_DIV_REST = '''
+a = 7
+b = 2
+print(a // b, a % b)
+'''
+K_HELTAL = '''
+print(23 // 4)
+'''
+K_REST = '''
+print(23 % 4)
+'''
+K_GANGER_TRE = '''
+n = 1
+antal = 0
+while n < 100:
+    n = n * 3
+    antal = antal + 1
+print(antal)
+'''
+K_SIFFERSUMMA = '''
+tal = 472
+summa = 0
+while tal > 0:
+    summa = summa + tal % 10
+    tal = tal // 10
+print(summa)
+'''
+K_EVIG = '''
+x = 5
+while x > 0:
+    print(x)
+'''
+K_MINUTER = '''
+minuter = 125
+print(minuter // 60, minuter % 60)
+'''
+K_SEX_STEG = '''
+x = 20
+while x > 0:
+    print(x)
+    x = x - 6
+'''
+assert all((t % 2 == 0) == (t in range(-10, 11, 2)) for t in range(-10, 11))
+
+
+# ---------------------------------------------------------------------------
+
+TILLAGG = [
+    # ------------------------------------------------------------------ SO åk 4
+    bana(SO, 'ak4', [
+        niva('so-ak4-blad-vaderstreck-1', 'Kompassrosen', 'Väderstreck och grannländer', [
+            para('Para ihop bokstaven på kompassrosen med väderstrecket.',
+                 [('N', 'norr'), ('Ö', 'öster'), ('S', 'söder'), ('V', 'väster')],
+                 'Bokstaven är början på väderstrecket: N för norr, Ö för öster, S för söder och V för väster.'),
+            val('Vilket väderstreck är mitt emot norr?', ['Söder', 'Öster', 'Väster', 'Nordost'], 'Söder',
+                'Norr och söder står mitt emot varandra på kompassrosen, precis som öster och väster.'),
+            val('Vilket väderstreck ligger mitt emot öster?', ['Väster', 'Norr', 'Söder', 'Sydost'], 'Väster',
+                'Öster och väster står på var sin sida av kompassrosen.'),
+            val('Vilket väderstreck ligger mellan söder och väster?', ['Sydväst', 'Sydost', 'Nordväst', 'Nordost'],
+                'Sydväst', 'Ett mellanväderstreck får namn efter de två väderstrecken det ligger mellan: syd och väst.'),
+            val('Vilket väderstreck ligger mellan norr och väster?', ['Nordväst', 'Nordost', 'Sydväst', 'Sydost'],
+                'Nordväst', 'Mellan norr och väster ligger nordväst: nord och väst satt ihop.'),
+            sant('Sydost ligger mitt emot nordväst på kompassrosen.', True,
+                 'Mitt emot norr är söder och mitt emot väster är öster. Därför är sydost mitt emot nordväst.'),
+            val('I vilket väderstreck går solen upp, ungefär?', ['Öster', 'Väster', 'Norr', 'Söder'], 'Öster',
+                'Jorden snurrar mot öster, så solen syns först i öster och går ner i väster.'),
+            val('Åt vilket håll står solen mitt på dagen i Sverige?', ['Söder', 'Norr', 'Öster', 'Väster'], 'Söder',
+                'Sverige ligger långt norr om ekvatorn. Därför står solen i söder när den är som högst.'),
+            val('Du går norrut och svänger till höger. Åt vilket håll går du nu?',
+                ['Öster', 'Väster', 'Söder', 'Norr'], 'Öster',
+                'Tänk på en karta med norr uppåt: till höger om norr ligger öster.'),
+            ordna('Ordna mellanväderstrecken medsols, som klockans visare, med början i nordost.',
+                  ['Nordost', 'Sydost', 'Sydväst', 'Nordväst'],
+                  forklaring='Medsols går man från norr till öster, söder och väster. Mellanväderstrecken kommer '
+                             'i samma ordning: nordost, sydost, sydväst och nordväst.'),
+        ], beskrivning=bygger('Väderstrecken och mellanväderstrecken på kompassrosen, och var solen står.', T_KARTA)),
+
+        niva('so-ak4-blad-vaderstreck-2', 'Sverige på kartan', 'Väderstreck och grannländer', [
+            val('Ligger Malmö norr eller söder om Stockholm?', ['Söder om Stockholm', 'Norr om Stockholm'],
+                'Söder om Stockholm', 'Malmö ligger i Skåne, längst ner i Sverige. Stockholm ligger längre norrut.'),
+            val('Vilka två länder har Sverige landgräns till?',
+                ['Norge och Finland', 'Norge och Danmark', 'Finland och Danmark', 'Danmark och Tyskland'],
+                'Norge och Finland',
+                'Norge ligger i väster och Finland i nordost. Till Danmark är det vatten emellan, och dit går en bro.'),
+            sant('Sverige har landgräns till Danmark.', False,
+                 'Mellan Sverige och Danmark ligger Öresund, som är hav. Öresundsbron går över vattnet.'),
+            val('Åt vilket håll från Sverige ligger Norge?', ['Väster', 'Öster', 'Söder'], 'Väster',
+                'Norge ligger på andra sidan fjällen, väster om Sverige.'),
+            val('Åt vilket håll från Stockholm ligger Kiruna?', ['Norr', 'Söder', 'Väster'], 'Norr',
+                'Kiruna ligger i Lappland, långt uppe i norra Sverige.'),
+            val('Åt vilket håll från Stockholm ligger Göteborg?', ['Sydväst', 'Nordost', 'Sydost', 'Nordväst'],
+                'Sydväst', 'Göteborg ligger vid västkusten och längre söderut än Stockholm, alltså åt sydväst.'),
+            val('Vad är en teckenförklaring?',
+                ['En förklaring av vad kartans tecken och färger betyder',
+                 'En förklaring av hur långt det är mellan två städer',
+                 'En förklaring av åt vilket håll vinden blåser i dag',
+                 'En förklaring av vem som har ritat den här kartan'],
+                'En förklaring av vad kartans tecken och färger betyder',
+                'Utan teckenförklaringen vet man inte om en blå linje är en å eller en väg.'),
+            sant('På de flesta kartor är norr uppåt.', True,
+                 'Så ritas nästan alla kartor. Då är söder nedåt, öster till höger och väster till vänster.'),
+            val('På en karta med norr uppåt, var ligger väster?', ['Till vänster', 'Till höger', 'Uppåt', 'Nedåt'],
+                'Till vänster', 'Med norr uppåt ligger öster till höger och väster till vänster.'),
+            val('Vilket land ligger öster om Sverige, på andra sidan Bottniska viken?',
+                ['Finland', 'Norge', 'Danmark', 'Island'], 'Finland',
+                'Bottniska viken skiljer Sverige och Finland åt. Längst i norr möts länderna på land.'),
+        ], beskrivning=bygger('Väderstreck på Sverigekartan: städer, grannländer och teckenförklaringen.', T_KARTA)),
+    ]),
+
+    # ------------------------------------------------------------------ SO åk 7
+    bana(SO, 'ak7', [
+        niva('so-ak7-blad-styrs-1', 'Riksdag, regering och kommun', 'Demokrati och val', [
+            val('Hur ofta är det val till riksdagen?',
+                ['Vart fjärde år', 'Vart annat år', 'Vart femte år', 'Varje år'], 'Vart fjärde år',
+                'Sverige har allmänna val vart fjärde år, samma dag till riksdag, region och kommun.'),
+            skriv('Hur många ledamöter har riksdagen?', tal(RIKSDAG),
+                  'Riksdagen har %d ledamöter. Ett udda antal gör att en omröstning inte så lätt hamnar på lika.'
+                  % RIKSDAG),
+            val('Vem leder regeringen?', ['Statsministern', 'Talmannen', 'Kungen', 'Justitieministern'],
+                'Statsministern', 'Statsministern väljer sina ministrar och leder regeringen. Talmannen leder riksdagen.'),
+            val('Vad är skillnaden mellan riksdagen och regeringen?',
+                ['Riksdagen stiftar lagarna, och regeringen styr landet och genomför besluten',
+                 'Regeringen stiftar lagarna, och riksdagen styr landet och genomför besluten',
+                 'Riksdagen bestämmer över kommunerna, och regeringen bestämmer över skolorna',
+                 'Riksdagen dömer i domstolarna, och regeringen väljs av kungen varje år'],
+                'Riksdagen stiftar lagarna, och regeringen styr landet och genomför besluten',
+                'Riksdagen är folkets valda ombud och fattar besluten. Regeringen ser till att de blir av.'),
+            para('Para ihop vem med vad de ansvarar för.',
+                 [('Riksdagen', 'stiftar lagar och beslutar om skatterna'),
+                  ('Regeringen', 'styr landet och genomför riksdagens beslut'),
+                  ('Kommunen', 'skola och äldreomsorg'),
+                  ('Regionen', 'sjukvården')],
+                 'Riksdag och regering styr hela landet. Kommunen och regionen sköter det som ligger nära invånarna.'),
+            val('Vem ansvarar för grundskolan?', ['Kommunen', 'Regionen', 'Riksdagen', 'Kungen'], 'Kommunen',
+                'Kommunen ansvarar för skola, förskola och äldreomsorg. Lagarna för skolan stiftas av riksdagen.'),
+            val('Vem ansvarar för sjukvården?', ['Regionen', 'Kommunen', 'Kungen', 'Talmannen'], 'Regionen',
+                'Sjukvården är regionernas största uppgift. Regionerna hette tidigare landsting.'),
+            sant('Kungen bestämmer vilka lagar Sverige ska ha.', False,
+                 'Kungen är statschef men har ingen politisk makt. Lagarna stiftas av riksdagen.'),
+            val('Vad är en riksdagsledamot?',
+                ['En person som har valts för att företräda folket i riksdagen',
+                 'En person som har anställts för att döma brott i en domstol',
+                 'En person som har utsetts av kungen för att leda en kommun',
+                 'En person som har valts för att leda en region i landet'],
+                'En person som har valts för att företräda folket i riksdagen',
+                'Ledamöterna väljs i riksdagsvalet och sitter för ett parti. De röstar om lagar och budget.'),
+            skriv('Riksdagen har %d ledamöter. Hur många ledamöter är det minsta antal som är fler än hälften?'
+                  % RIKSDAG, tal(MAJORITET),
+                  'Hälften av %d är %s. Det minsta hela antal som är mer än så är %d, och det är en majoritet.'
+                  % (RIKSDAG, tal(RIKSDAG / 2), MAJORITET)),
+        ], beskrivning=bygger('Vem som gör vad: riksdagen, regeringen, kommunen och regionen.', T_STYRS)),
+
+        niva('so-ak7-blad-styrs-2', 'Demokrati och yttrandefrihet', 'Demokrati och val', [
+            val('Vad betyder ordet demokrati?', ['Folkstyre', 'Kungastyre', 'Fåtalsstyre', 'Prästvälde'],
+                'Folkstyre', 'Demokrati kommer från grekiskans demos, folk, och kratos, makt. Folket bestämmer.'),
+            val('Vad är yttrandefrihet?',
+                ['Rätten att säga och skriva vad man tycker utan att staten straffar en',
+                 'Rätten att rösta i valet till riksdagen när man har fyllt arton år',
+                 'Rätten att få en advokat och en rättegång när man har blivit åtalad',
+                 'Rätten att få gå i skolan gratis och lära sig läsa och skriva'],
+                'Rätten att säga och skriva vad man tycker utan att staten straffar en',
+                'Yttrandefriheten skyddas i grundlagen. De andra är också rättigheter, men de har andra namn.'),
+            val('Vilket är ett exempel på yttrandefrihet?',
+                ['Att skriva en insändare i tidningen som kritiserar regeringen',
+                 'Att rösta på det parti man tycker bäst om i riksdagsvalet',
+                 'Att få hjälp av en läkare på vårdcentralen när man är sjuk',
+                 'Att få bo kvar i sin lägenhet när man har betalat hyran'],
+                'Att skriva en insändare i tidningen som kritiserar regeringen',
+                'Att få säga emot makthavarna utan att straffas är kärnan i yttrandefriheten. Att rösta är rösträtt.'),
+            sant('Yttrandefriheten gör att man får hota andra människor.', False,
+                 'Yttrandefriheten har gränser. Hot, förtal och hets mot folkgrupp är brott.'),
+            val('Vilka får rösta i riksdagsvalet?',
+                ['Svenska medborgare som har fyllt 18 år senast på valdagen',
+                 'Alla som bor i Sverige och har fyllt 16 år senast på valdagen',
+                 'Alla som betalar skatt i Sverige, oavsett hur gamla de är',
+                 'Svenska medborgare som har fyllt 21 år senast på valdagen'],
+                'Svenska medborgare som har fyllt 18 år senast på valdagen',
+                'Till riksdagen röstar svenska medborgare från 18 år. I kommunvalet får fler som bor här rösta.'),
+            val('Vad betyder det att valet är hemligt?',
+                ['Ingen annan kan se vilket parti man röstar på',
+                 'Ingen får veta vilken dag valet ska hållas',
+                 'Ingen får veta vilka partier som är med i valet',
+                 'Ingen annan än kungen får se hur valet slutade'],
+                'Ingen annan kan se vilket parti man röstar på',
+                'Man lägger rösten i ett kuvert bakom en skärm. Då kan ingen tvinga eller straffa en för hur man röstat.'),
+            val('Varför är det viktigt att många röstar i val?',
+                ['Då speglar besluten det som hela folket vill, inte bara en liten grupp',
+                 'Då blir valet billigare, eftersom det kostar mindre när fler röstar',
+                 'Då behöver riksdagen inte fatta några beslut under de kommande åren',
+                 'Då får kungen veta vilka som ska sitta i regeringen nästa gång'],
+                'Då speglar besluten det som hela folket vill, inte bara en liten grupp',
+                'De valda får starkare stöd när många har röstat, och ingen grupp kan bestämma ensam.'),
+            sant('I en diktatur kan folket byta ut ledarna i fria val.', False,
+                 'I en diktatur sitter makten kvar hos en person eller ett parti. Fria val finns bara i en demokrati.'),
+            val('Vad kallas en grupp med gemensamma åsikter som ställer upp i val för att få makt?',
+                ['Ett parti', 'En myndighet', 'En domstol', 'En kommun'], 'Ett parti',
+                'Partierna ställer upp i valet, och de som får många röster får platser i riksdagen.'),
+        ], beskrivning=bygger('Demokrati, rösträtt, hemliga val och yttrandefrihet.', T_STYRS)),
+    ]),
+
+    # ------------------------------------------------------------------ SO åk 9
+    bana(SO, 'ak9', [
+        niva('so-ak9-blad-np-historia-1', 'NP-träning: historia', 'NP-träning', [
+            i_tidsordning('Ordna händelserna i tidsordning, från äldst till yngst.',
+                          [(1914, 'Första världskriget börjar'), (1921, 'Kvinnor röstar för första gången i ett svenskt riksdagsval'),
+                           (1939, 'Andra världskriget börjar'), (1989, 'Berlinmuren faller')],
+                          'Första världskriget 1914, kvinnorna röstar 1921, andra världskriget 1939 och Berlinmuren faller 1989.'),
+            val('Vilka två är långsiktiga orsaker till första världskriget?',
+                ['Kapprustning och militära allianser', 'Börskraschen och den stora depressionen',
+                 'Kalla kriget och järnridån', 'Ryska revolutionen och FN:s bildande'],
+                'Kapprustning och militära allianser',
+                'Kapprustning, allianser, kampen om kolonier och nationalism låg bakom. De andra kom efter 1914.'),
+            val('Vilken händelse utlöste första världskriget?',
+                ['Mordet på tronföljaren Franz Ferdinand i Sarajevo', 'Tysklands anfall på Polen en septemberdag',
+                 'Börskraschen i New York och depressionen', 'Ryska revolutionen och tsarens fall'],
+                'Mordet på tronföljaren Franz Ferdinand i Sarajevo',
+                'Mordet i juni 1914 blev gnistan. Anfallet på Polen startade andra världskriget 1939.'),
+            val('Hur kunde allianserna göra en konflikt mellan två länder till ett storkrig?',
+                ['När ett land gick i krig drogs dess allierade med, och sedan deras motståndares allierade',
+                 'Allianserna förbjöd länderna att förhandla, så alla konflikter måste lösas med krig',
+                 'Allianserna delade upp kolonierna, och därför ville alla länder anfalla varandra',
+                 'Allianserna byggde upp en gemensam armé, som anföll de länder som stod utanför'],
+                'När ett land gick i krig drogs dess allierade med, och sedan deras motståndares allierade',
+                'Länderna hade lovat att hjälpa varandra. Därför spred sig kriget som en kedjereaktion.'),
+            val('Vad var det kalla kriget?',
+                ['En konflikt mellan USA och Sovjetunionen där de aldrig krigade direkt mot varandra',
+                 'Ett krig mellan Sverige och Ryssland som utkämpades på vintern i norra Finland',
+                 'En konflikt mellan Tyskland och Frankrike om vem som skulle styra kolonierna',
+                 'Ett krig mellan USA och Japan som slutade med atombomber över två städer'],
+                'En konflikt mellan USA och Sovjetunionen där de aldrig krigade direkt mot varandra',
+                'De tävlade med kapprustning, rymdkapplöpning och krig i andra länder, som Korea och Vietnam.'),
+            val('Ungefär när pågick det kalla kriget?',
+                ['Från omkring 1947 till 1991', 'Från omkring 1914 till 1918', 'Från omkring 1918 till 1939',
+                 'Från omkring 1991 till 2010'], 'Från omkring 1947 till 1991',
+                'Det började några år efter andra världskriget och slutade när Sovjetunionen upplöstes 1991.'),
+            val('Varför bör en historiker vara försiktig med en källa som en regering skrev under ett krig?',
+                ['Regeringen ville vinna kriget och kan ha överdrivit framgångar och dolt förluster',
+                 'Regeringen skrev bara om fred och kan därför inte säga något om själva kriget',
+                 'Regeringen hade inte tillgång till några uppgifter om vad som hände i kriget',
+                 'Regeringen skrev alltid långt efter kriget och mindes därför fel om det mesta'],
+                'Regeringen ville vinna kriget och kan ha överdrivit framgångar och dolt förluster',
+                'En sådan källa kan ha tendens: den kan vara propaganda. Jämför den med andra källor.'),
+            val('Hur förändrade industrialiseringen människors liv i Sverige?',
+                ['Många flyttade från landsbygden och arbetade långa dagar i fabriker i städerna',
+                 'Många flyttade från städerna och började odla egen mat på landsbygden igen',
+                 'Nästan alla fick kortare arbetsdagar och högre löner redan från början',
+                 'Nästan ingen märkte något, eftersom fabrikerna bara fanns i andra länder'],
+                'Många flyttade från landsbygden och arbetade långa dagar i fabriker i städerna',
+                'Urbanisering, fabriksarbete med låga löner och barnarbete hörde till. Facken växte som svar.'),
+            sant('USA och Sovjetunionen krigade aldrig direkt mot varandra under det kalla kriget.', True,
+                 'Därför kallas det kallt. Med kärnvapen på båda sidor hade ett direkt krig kunnat förstöra allt.'),
+            val('Vilken organisation bildades 1945 för att bevara freden i världen?',
+                ['FN', 'EU', 'Nato', 'Röda korset'], 'FN',
+                'FN bildades efter andra världskriget. Röda korset är mycket äldre, och EU kom senare.'),
+        ], beskrivning=bygger('Kronologi, orsaker till första världskriget, kalla kriget, källkritik och '
+                              'industrialiseringen, i provets stil.', T_NP_HIST)),
+
+        niva('so-ak9-blad-np-geografi-1', 'NP-träning: geografi', 'NP-träning', [
+            val('Vad är skillnaden mellan väder och klimat?',
+                ['Väder är hur det är just nu, klimat är det genomsnittliga vädret under lång tid',
+                 'Väder är det genomsnittliga vädret under lång tid, klimat är hur det är just nu',
+                 'Väder handlar om temperaturen, klimat handlar bara om hur mycket det regnar',
+                 'Väder gäller hela jorden, klimat gäller bara en enda plats under en dag'],
+                'Väder är hur det är just nu, klimat är det genomsnittliga vädret under lång tid',
+                'Klimatet räknas oftast som ett genomsnitt över 30 år. Vädret kan ändras från timme till timme.'),
+            val('Är ”det regnar i dag” ett påstående om väder eller klimat?', ['Väder', 'Klimat'], 'Väder',
+                'Det gäller just nu. Ett påstående om klimat handlar om hur det brukar vara under många år.'),
+            val('Varför är det varmare vid ekvatorn än vid polerna?',
+                ['Solstrålarna träffar mer rakt, så energin sprids på en mindre yta',
+                 'Ekvatorn ligger närmare solen än polerna gör, så det blir varmare',
+                 'Det finns mer växthusgaser över ekvatorn än över polerna',
+                 'Solen lyser fler timmar per år vid ekvatorn än vid polerna'],
+                'Solstrålarna träffar mer rakt, så energin sprids på en mindre yta',
+                'Vid polerna kommer strålarna snett och sprids ut. Avståndet till solen är nästan detsamma.'),
+            val('Vilka är två vanliga orsaker till att människor flyttar från landsbygden till städer?',
+                ['Det finns fler jobb och fler utbildningar i städerna',
+                 'Det finns mer mark och fler bondgårdar i städerna',
+                 'Det finns lägre hyror och mindre trafik i städerna',
+                 'Det finns renare luft och mer skog i städerna'],
+                'Det finns fler jobb och fler utbildningar i städerna',
+                'Jobb, utbildning och service drar till städerna, och jordbruket behöver färre arbetare än förr.'),
+            val('Vad visar en befolkningspyramid?',
+                ['Hur många män och kvinnor det finns i olika åldrar', 'Hur många som bor i varje stad i ett land',
+                 'Hur många som flyttar till och från ett land varje år', 'Hur befolkningen har växt de senaste hundra åren'],
+                'Hur många män och kvinnor det finns i olika åldrar',
+                'Varje stapel är en åldersgrupp, med männen på ena sidan och kvinnorna på den andra.'),
+            val('Vad kan en bred bas i en befolkningspyramid säga om ett land?',
+                ['Att det föds många barn och att befolkningen är ung',
+                 'Att det finns många äldre och att få barn föds',
+                 'Att många människor flyttar ut ur landet varje år',
+                 'Att befolkningen är lika stor i alla åldrar'],
+                'Att det föds många barn och att befolkningen är ung',
+                'Basen är de yngsta. Är den bred finns det många barn, och befolkningen växer ofta.'),
+            val('Hur kan en varmare jord påverka människor i ett lågt liggande kustland?',
+                ['Havsnivån stiger, och det kan ge översvämningar och förstöra åkrar och dricksvatten',
+                 'Havsnivån sjunker, och det gör att hamnarna torkar ut och fartygen inte kommer fram',
+                 'Kustlandet får mer snö, och det gör att vägarna stängs under långa vintrar',
+                 'Kustlandet får mindre sol, och det gör att skördarna blir sämre varje år'],
+                'Havsnivån stiger, och det kan ge översvämningar och förstöra åkrar och dricksvatten',
+                'Saltvatten tränger in i åkrar och brunnar, och människor kan tvingas flytta, till exempel i Bangladesh.'),
+            val('Varför stiger havsnivån när jorden blir varmare?',
+                ['Isar på land smälter, och havsvattnet utvidgas när det värms upp',
+                 'Det regnar mer över haven, och regnet stannar kvar där för alltid',
+                 'Havsisen vid Nordpolen smälter, och det är den enda orsaken',
+                 'Floderna blir längre, och de för med sig mer vatten ut i haven'],
+                'Isar på land smälter, och havsvattnet utvidgas när det värms upp',
+                'Is som redan flyter i havet höjer inte havsnivån när den smälter, men is på land gör det.'),
+            val('Vilka tre perspektiv brukar man använda när man talar om hållbar utveckling?',
+                ['Ekologiskt, ekonomiskt och socialt', 'Historiskt, religiöst och politiskt',
+                 'Lokalt, nationellt och globalt', 'Tekniskt, juridiskt och militärt'],
+                'Ekologiskt, ekonomiskt och socialt',
+                'Hållbarhet tar hänsyn till miljön, ekonomin och människors levnadsvillkor, nu och i framtiden.'),
+            val('Vilket färdsätt mellan Stockholm och Göteborg släpper ut minst koldioxid per resenär?',
+                ['Tåget', 'Flyget', 'En bil med bara föraren'], 'Tåget',
+                'Tågen i Sverige går på el och tar många resenärer, så utsläppen per person blir mycket små.'),
+        ], beskrivning=bygger('Väder och klimat, urbanisering, befolkningspyramider, klimatförändringar och '
+                              'hållbarhet, i provets stil.', T_NP_GEO)),
+
+        niva('so-ak9-blad-np-religion-1', 'NP-träning: religionskunskap', 'NP-träning', [
+            para('Para ihop religionen med dess heliga skrift.',
+                 [('Kristendom', 'Bibeln'), ('Islam', 'Koranen'), ('Judendom', 'Tanakh'),
+                  ('Hinduism', 'Vedaskrifterna')],
+                 'Tanakh är judendomens bibel. Kristendomens Gamla testamente bygger på samma skrifter.'),
+            val('Vilka två saker har judendom, kristendom och islam gemensamt?',
+                ['Tron på en enda Gud och Abraham som stamfar', 'Tron på karma och återfödelse',
+                 'Vedaskrifterna och Bhagavad Gita', 'Tron på många gudar och på Brahman'],
+                'Tron på en enda Gud och Abraham som stamfar',
+                'De kallas de abrahamitiska religionerna. Karma och återfödelse hör till hinduism och buddhism.'),
+            val('Vad betyder karma inom hinduism och buddhism?',
+                ['Att alla handlingar får följder, som påverkar återfödelsen',
+                 'Att man ska be fem gånger om dagen och fasta en månad',
+                 'Att Gud har skapat världen på sex dagar och vilat den sjunde',
+                 'Att man ska vila från arbete en hel dag varje vecka'],
+                'Att alla handlingar får följder, som påverkar återfödelsen',
+                'Goda handlingar ger goda följder och dåliga ger dåliga, i det här livet eller i nästa.'),
+            val('Vad innebär det att Sverige har religionsfrihet?',
+                ['Alla får tro på vad de vill, byta religion eller inte tro alls',
+                 'Alla måste tillhöra Svenska kyrkan men får välja vilken kyrka',
+                 'Alla får tro på vad de vill men bara utöva sin tro hemma',
+                 'Alla religioner får finnas, men ingen får byta religion'],
+                'Alla får tro på vad de vill, byta religion eller inte tro alls',
+                'Religionsfriheten står i grundlagen. Ingen får tvingas till eller från en tro.'),
+            val('Vilket är ett exempel på hur en religion kan påverka människors vardag?',
+                ['Att fasta under ramadan', 'Att betala skatt till staten', 'Att rösta i riksdagsvalet',
+                 'Att gå till tandläkaren'], 'Att fasta under ramadan',
+                'Fastan under ramadan är en av islams fem pelare. Mat, högtider och klädsel kan också påverkas.'),
+            val('Vad säger konsekvensetiken?',
+                ['En handling är rätt om följderna blir goda',
+                 'Vissa handlingar är alltid fel, vad som än händer',
+                 'Man ska göra det som en god människa skulle göra',
+                 'Man ska alltid göra det som lagen säger, inget annat'],
+                'En handling är rätt om följderna blir goda',
+                'Konsekvensetiken tittar på följderna. Pliktetiken på själva handlingen och dygdetiken på personen.'),
+            val('Vad säger pliktetiken?',
+                ['Vissa handlingar är rätt eller fel oavsett följderna',
+                 'En handling är rätt om den gör flest människor glada',
+                 'Man ska göra det som en god människa skulle göra',
+                 'Det som är rätt bestäms av vad de flesta tycker'],
+                'Vissa handlingar är rätt eller fel oavsett följderna',
+                'Enligt pliktetiken är det till exempel fel att ljuga, även om lögnen skulle ge goda följder.'),
+            val('”En lögn som skyddar någon från fara kan vara rätt.” Vilken etisk modell passar det påståendet?',
+                ['Konsekvensetik', 'Pliktetik', 'Ingen av de etiska modellerna'], 'Konsekvensetik',
+                'Lögnen bedöms efter följden, att någon skyddas. Pliktetiken säger att det är fel att ljuga ändå.'),
+            val('Vad säger dygdetiken?',
+                ['Gör det som en god människa skulle ha gjort', 'Gör det som ger bäst följder för flest',
+                 'Gör det som pliktetiken säger, men bara ibland', 'Gör det som du själv tjänar mest på'],
+                'Gör det som en god människa skulle ha gjort',
+                'Dygdetiken frågar efter goda egenskaper, dygder, som ärlighet, mod och omtanke.'),
+            sant('Enligt pliktetiken är det följderna som avgör om en handling är rätt.', False,
+                 'Det är konsekvensetiken. Pliktetiken säger att vissa handlingar är rätt eller fel oavsett följderna.'),
+        ], beskrivning=bygger('Heliga skrifter, likheter mellan religioner, karma, religionsfrihet och tre '
+                              'etiska modeller, i provets stil.', T_NP_REL)),
+
+        niva('so-ak9-blad-np-samhalle-1', 'NP-träning: samhällskunskap', 'NP-träning', [
+            para('Para ihop vem med en av deras uppgifter.',
+                 [('Riksdagen', 'stiftar lagar och beslutar om budget och skatter'),
+                  ('Regeringen', 'styr landet och lägger förslag till riksdagen'),
+                  ('Kommunen', 'skola, äldreomsorg och sophämtning')],
+                 'Riksdagen beslutar, regeringen styr och föreslår, och kommunen sköter det som ligger nära invånarna.'),
+            val('Vad innebär det att Sverige är en rättsstat?',
+                ['Lagarna gäller alla lika, och domstolarna dömer oberoende av politikerna',
+                 'Lagarna stiftas av domstolarna, och politikerna bestämmer vem som döms',
+                 'Lagarna gäller bara vanliga medborgare, inte de som har makten',
+                 'Lagarna kan ändras av polisen när det behövs för att lösa ett brott'],
+                'Lagarna gäller alla lika, och domstolarna dömer oberoende av politikerna',
+                'Ingen kan straffas utan rättegång, och en minister som bryter mot lagen kan åtalas.'),
+            val('Vad är en marknadsekonomi?',
+                ['Ett system där utbud och efterfrågan styr priserna och vad som tillverkas',
+                 'Ett system där staten bestämmer alla priser och vad som ska tillverkas',
+                 'Ett system där alla varor byts mot andra varor och inga pengar finns',
+                 'Ett system där bara torghandel är tillåten och inga butiker finns'],
+                'Ett system där utbud och efterfrågan styr priserna och vad som tillverkas',
+                'Företagen ägs oftast privat och konkurrerar. Sverige har en blandekonomi med stor offentlig sektor.'),
+            val('Efterfrågan på en vara ökar men utbudet är detsamma. Vad händer vanligtvis med priset?',
+                ['Priset stiger', 'Priset sjunker', 'Priset är detsamma'], 'Priset stiger',
+                'Fler vill köpa än det finns varor, så säljarna kan ta mer betalt.'),
+            val('Utbudet av en vara ökar men efterfrågan är densamma. Vad händer vanligtvis med priset?',
+                ['Priset sjunker', 'Priset stiger', 'Priset är detsamma'], 'Priset sjunker',
+                'Det finns fler varor än det finns köpare till, så säljarna sänker priset för att bli av med dem.'),
+            val('Hur kan medier påverka vad människor tycker?',
+                ['Genom vilka nyheter de väljer att ta upp och hur de vinklar dem',
+                 'Genom att bestämma vilka lagar som riksdagen ska rösta om',
+                 'Genom att välja vilka som ska sitta i regeringen efter valet',
+                 'Genom att döma i domstolarna när någon har brutit mot lagen'],
+                'Genom vilka nyheter de väljer att ta upp och hur de vinklar dem',
+                'Det som syns mycket upplevs som viktigt. Flöden i sociala medier kan också visa mer av samma åsikt.'),
+            val('Varför är fria val viktiga i en demokrati?',
+                ['Folket kan välja vem som ska styra och byta ut dem som styr',
+                 'Folket slipper bry sig om politik mellan valen',
+                 'Regeringen kan sitta kvar så länge den vill',
+                 'Domstolarna kan döma utan att följa lagarna'],
+                'Folket kan välja vem som ska styra och byta ut dem som styr',
+                'Makten utgår från folket. Den som styr dåligt kan röstas bort i nästa val.'),
+            val('Varför är yttrandefriheten viktig i en demokrati?',
+                ['Alla kan kritisera makthavarna och få information inför valet',
+                 'Alla måste tycka samma sak som regeringen inför valet',
+                 'Alla får rösta flera gånger om de har mycket att säga',
+                 'Alla får bestämma vilka lagar som ska gälla för dem själva'],
+                'Alla kan kritisera makthavarna och få information inför valet',
+                'Utan yttrandefrihet kan makten inte granskas, och väljarna vet inte vad de röstar på.'),
+            skriv('Hur gammal måste man vara för att få rösta i riksdagsvalet i Sverige? Svara i år.', '18',
+                  'Rösträttsåldern är 18 år, samma ålder som när man blir myndig.'),
+            val('Sverige har blandekonomi. Vad betyder det?',
+                ['Marknadsekonomi tillsammans med en stor offentlig sektor som betalas med skatt',
+                 'Staten äger alla företag, men människorna får välja vad de vill köpa',
+                 'Halva landet har marknadsekonomi och den andra halvan har planekonomi',
+                 'Varorna betalas ibland med pengar och ibland med andra varor'],
+                'Marknadsekonomi tillsammans med en stor offentlig sektor som betalas med skatt',
+                'Företagen konkurrerar på en marknad, men skola, vård och omsorg betalas till stor del med skatt.'),
+        ], beskrivning=bygger('Riksdag, regering och kommun, rättsstaten, utbud och efterfrågan, medier och '
+                              'demokrati, i provets stil.', T_NP_SAM)),
+
+        niva('so-ak9-blad-kallor-1', 'Källan från våren 1945', 'Läsa: källor och genomgångar', [
+            val('Om dagbokssidan vore äkta, vilken sorts källa skulle den vara?',
+                ['En primärkälla, eftersom den skrevs samma dag av någon som var med',
+                 'En sekundärkälla, eftersom den skrevs långt efter kriget av en historiker',
+                 'En sekundärkälla, eftersom den skrevs av en flicka som inte var vuxen',
+                 'En primärkälla, eftersom alla källor om krig räknas som primärkällor'],
+                'En primärkälla, eftersom den skrevs samma dag av någon som var med',
+                'En primärkälla kommer från tiden och från någon som var med. Ålder avgör inte vilken sorts källa det är.'),
+            val('Vad kan en historiker lära sig av en sådan källa?',
+                ['Hur människor i Stockholm upplevde och firade att kriget i Europa var slut',
+                 'Hur de allierade planerade de sista striderna i Tyskland våren 1945',
+                 'Hur många människor som dog under hela andra världskriget',
+                 'Hur kriget i Asien slutade, och varför Japan kapitulerade'],
+                'Hur människor i Stockholm upplevde och firade att kriget i Europa var slut',
+                'Kyrkklockor, folkmassan i Kungsträdgården och mammans tårar visar stämningen i Stockholm.'),
+            val('Vad kan källan INTE berätta?',
+                ['Hur människorna hade det i länderna som var med i kriget',
+                 'Att kyrkklockorna ringde i Stockholm den här dagen',
+                 'Att det var mycket folk i Kungsträdgården den dagen',
+                 'Att flickan hoppades kunna träffa sina kusiner snart'],
+                'Hur människorna hade det i länderna som var med i kriget',
+                'Källan visar en enda persons upplevelse i ett land som inte var i krig.'),
+            val('Hur fick flickan veta att kriget i Europa var slut?',
+                ['Av sin pappa', 'Av sin mamma', 'Av sina kusiner', 'Av en tidning'], 'Av sin pappa',
+                'Pappa kom hem tidigt och berättade. Själva nyheten har hon alltså i andra hand.'),
+            val('Varför tänker flickan på kusinerna i Norge?',
+                ['Hon hoppas att de kan träffas nu när kriget är slut',
+                 'Hon vet att kusinerna ska flytta till Stockholm i morgon',
+                 'Hon har fått ett brev där kusinerna berättar om freden',
+                 'Hon tänker åka till Norge samma kväll med sin pappa'],
+                'Hon hoppas att de kan träffas nu när kriget är slut',
+                'Hon skriver: ”Nu kanske vi får träffa dem i sommar.” Norge var ockuperat under kriget.'),
+            val('Varför kan två personer som var med om samma händelse beskriva den olika?',
+                ['De har olika perspektiv, känslor och minnen av det som hände',
+                 'Det går aldrig att veta något alls om det som har hänt',
+                 'Den ena personen ljuger alltid, och den andra säger alltid sanningen',
+                 'Den som skrev först har alltid rätt, och den andra har fel'],
+                'De har olika perspektiv, känslor och minnen av det som hände',
+                'Roll, ålder, intressen och vad var och en såg spelar in, och minnet ändras med tiden.'),
+            sant('Dagbokssidan i övningen är påhittad.', True,
+                 'Det står först i texten. Att veta om en källa är äkta är det första man prövar i källkritik.'),
+            val('Vad kallas det att pröva hur trovärdig en källa är?',
+                ['Källkritik', 'Kronologi', 'Propaganda', 'Arkeologi'], 'Källkritik',
+                'Källkritik är att fråga vem som skrev, när, varför och om andra källor säger samma sak.'),
+            val('Vilket källkritiskt kriterium handlar om hur lång tid det gick mellan händelsen och källan?',
+                ['Samtidighet', 'Tendens', 'Äkthet', 'Beroende'], 'Samtidighet',
+                'Ju närmare händelsen en källa skrevs, desto mindre har minnet hunnit ändras.'),
+            val('Vad betyder det att en källa har tendens?',
+                ['Den som skrev den vill påverka, eller har intresse av att visa saken på ett visst sätt',
+                 'Den som skrev den var inte med, utan har hört det från någon annan som var där',
+                 'Den som skrev den gjorde det långt senare, så minnet kan ha hunnit ändras',
+                 'Den som skrev den har förfalskat den, så att den ser äldre ut än den är'],
+                'Den som skrev den vill påverka, eller har intresse av att visa saken på ett visst sätt',
+                'De andra alternativen beskriver beroende, samtidighet och äkthet.'),
+        ], beskrivning=bygger('Källkritik med en påhittad dagbokssida från våren 1945: primärkälla, vad källan '
+                              'kan och inte kan berätta, och perspektiv.', T_KALLOR), text=TEXT_KALLA),
+
+        niva('so-ak9-blad-genomgang-historia-1', '1900-talet i korthet', 'Läsa: källor och genomgångar', [
+            skriv('Vilket år röstade kvinnor i Sverige för första gången i ett riksdagsval?', tal(KVINNOR_ROSTAR),
+                  'Riksdagen beslutade om kvinnors rösträtt 1919, och det första valet där kvinnor röstade var %d.'
+                  % KVINNOR_ROSTAR),
+            val('Vilka två är långsiktiga orsaker till första världskriget?',
+                ['Kampen om kolonier och en stark nationalism', 'Mordet i Sarajevo och börskraschen',
+                 'Kalla kriget och Berlinmuren', 'Förintelsen och ryska revolutionen'],
+                'Kampen om kolonier och en stark nationalism',
+                'Kapprustning, allianser, kolonier och nationalism låg bakom. Mordet i Sarajevo var gnistan.'),
+            val('Varför kallas det kalla kriget för kallt?',
+                ['USA och Sovjetunionen krigade aldrig direkt mot varandra',
+                 'De flesta striderna utkämpades på vintern i Sovjetunionen',
+                 'Kriget utkämpades nästan bara vid Nordpolen och i Arktis',
+                 'Ingen av sidorna hade några vapen, bara spioner'],
+                'USA och Sovjetunionen krigade aldrig direkt mot varandra',
+                'De tävlade i stället med kapprustning, rymdkapplöpning och krig i andra länder.'),
+            i_tidsordning('Ordna händelserna i tidsordning, från äldst till yngst.',
+                          [(1917, 'Ryska revolutionen'), (1929, 'Börskraschen i New York'),
+                           (1933, 'Hitler blir rikskansler'), (1945, 'FN bildas'), (1961, 'Berlinmuren byggs')],
+                          'Revolutionen 1917, kraschen 1929, Hitler 1933, FN 1945 och muren 1961.'),
+            val('Vad kallades gränsen som delade Europa under det kalla kriget?',
+                ['Järnridån', 'Berlinmuren', 'Maginotlinjen', 'Kinesiska muren'], 'Järnridån',
+                'Järnridån gick genom hela Europa. Berlinmuren var en del av den, mitt i en stad.'),
+            skriv('Vilket år blev Sverige medlem i EU?', '1995', 'Sverige gick med i EU 1995, efter en folkomröstning.'),
+            skriv('Berlinmuren byggdes %d och föll %d. Hur många år stod den?' % (MUR_BYGGS, MUR_FALLER),
+                  tal(MUR_FALLER - MUR_BYGGS), '%d − %d = %d år.' % (MUR_FALLER, MUR_BYGGS, MUR_FALLER - MUR_BYGGS)),
+            val('Vad kom efter börskraschen i New York 1929?',
+                ['Den stora depressionen', 'Första världskriget', 'Ryska revolutionen', 'Kalla kriget'],
+                'Den stora depressionen',
+                'Kraschen följdes av en djup ekonomisk kris med massarbetslöshet i många länder.'),
+            val('Vem mördades i Sarajevo den 28 juni 1914?',
+                ['Österrikes tronföljare Franz Ferdinand', 'Tysklands kejsare Wilhelm', 'Rysslands tsar Nikolaj',
+                 'Storbritanniens kung Georg'], 'Österrikes tronföljare Franz Ferdinand',
+                'Mordet blev den utlösande händelsen för första världskriget.'),
+            val('Vilket år upplöstes Sovjetunionen?', ['1991', '1989', '1961', '1945'], '1991',
+                'Muren föll 1989, och två år senare, 1991, upplöstes Sovjetunionen. Då slutade det kalla kriget.'),
+        ], beskrivning=bygger('Tidslinjen över 1900-talet, orsakerna till första världskriget och kalla kriget.',
+                              T_G_HIST), text=TEXT_G_HIST),
+
+        niva('so-ak9-blad-genomgang-religion-1', 'Världsreligionerna och etik', 'Läsa: källor och genomgångar', [
+            val('Vad heter islams heliga skrift, och var samlas man till gemensam bön?',
+                ['Koranen, i moskén', 'Tanakh, i synagogan', 'Bibeln, i kyrkan', 'Koranen, i synagogan'],
+                'Koranen, i moskén', 'Koranen är islams heliga skrift, och fredagsbönen hålls i moskén.'),
+            val('”Jag ljuger inte, för det är fel att ljuga.” Vilken etisk modell används?',
+                ['Pliktetik', 'Konsekvensetik', 'Dygdetik'], 'Pliktetik',
+                'Personen bryr sig inte om följderna: att ljuga är fel i sig. Det är pliktetik.'),
+            val('Vad har hinduism och buddhism gemensamt?',
+                ['Båda lär ut karma och återfödelse', 'Båda har Koranen som helig skrift',
+                 'Båda firar sabbat varje lördag', 'Båda tror att Jesus är Guds son'],
+                'Båda lär ut karma och återfödelse',
+                'Målet i båda är att bli fri från kretsloppet av återfödelser.'),
+            val('Vad kallas målet att bli fri från återfödelserna i buddhismen?',
+                ['Nirvana', 'Moksha', 'Brahman', 'Karma'], 'Nirvana',
+                'I buddhismen heter målet nirvana, i hinduismen moksha.'),
+            val('Vad är Torah?', ['Den viktigaste delen av Tanakh', 'Den sista delen av Koranen',
+                                  'En bönelokal inom hinduismen', 'En av islams fem pelare'],
+                'Den viktigaste delen av Tanakh', 'Torah är de fem Moseböckerna, den viktigaste delen av judendomens Tanakh.'),
+            val('När firas sabbaten inom judendomen?',
+                ['Från fredag kväll till lördag kväll', 'Från lördag morgon till söndag morgon',
+                 'Från söndag kväll till måndag kväll', 'Från torsdag kväll till fredag kväll'],
+                'Från fredag kväll till lördag kväll', 'Sabbaten är vilodagen och börjar när solen går ner på fredagen.'),
+            val('Vad firar de kristna vid påsken?', ['Jesu uppståndelse', 'Jesu födelse', 'Mose lagar', 'Muhammeds resa'],
+                'Jesu uppståndelse', 'Påsken firar att Jesus enligt kristen tro uppstod från de döda. Julen firar födelsen.'),
+            val('Vilken av dessa är INTE en av islams fem pelare?',
+                ['Dopet', 'Fastan under ramadan', 'Allmosan', 'Vallfärden till Mecka'], 'Dopet',
+                'De fem pelarna är trosbekännelsen, bönen, allmosan, fastan och vallfärden. Dopet hör till kristendomen.'),
+            val('Vad ser många hinduer de många gudarna som?',
+                ['Uttryck för en och samma gudomliga kraft, Brahman', 'Profeter som har skrivit Vedaskrifterna',
+                 'Människor som har nått nirvana genom att meditera', 'Andar som bara finns i templen i Indien'],
+                'Uttryck för en och samma gudomliga kraft, Brahman',
+                'Gudarna kan ses som olika sidor av samma gudomliga kraft.'),
+            val('Vilken etisk modell säger: gör det som en god människa skulle ha gjort?',
+                ['Dygdetik', 'Pliktetik', 'Konsekvensetik'], 'Dygdetik',
+                'Dygdetiken utgår från vilken sorts människa man vill vara, inte från regler eller följder.'),
+        ], beskrivning=bygger('Judendom, kristendom, islam, hinduism och buddhism, och tre etiska modeller.',
+                              T_G_REL), text=TEXT_G_REL),
+
+        niva('so-ak9-blad-genomgang-demokrati-1', 'Demokrati, rättsstat och ekonomi', 'Läsa: källor och genomgångar', [
+            skriv('Hur många ledamöter har riksdagen?', tal(RIKSDAG), 'Riksdagen har %d ledamöter.' % RIKSDAG),
+            val('Vem ansvarar för sjukvården, kommunen eller regionen?', ['Regionen', 'Kommunen'], 'Regionen',
+                'De 21 regionerna sköter sjukvården och kollektivtrafiken. Kommunerna sköter skola och äldreomsorg.'),
+            val('Varför är det viktigt att domstolarna är oberoende?',
+                ['Så att alla döms lika efter lagen och politikerna inte kan styra domarna',
+                 'Så att domstolarna kan stifta nya lagar utan att riksdagen behöver rösta',
+                 'Så att domarna kan välja vilka lagar de vill följa i varje enskilt fall',
+                 'Så att regeringen slipper ta ansvar för de domar som domstolarna fäller'],
+                'Så att alla döms lika efter lagen och politikerna inte kan styra domarna',
+                'Annars kunde makthavare gynna sig själva eller straffa sina motståndare. Det skyddar medborgarna.'),
+            skriv('Hur många grundlagar har Sverige?', '4',
+                  'Regeringsformen, successionsordningen, tryckfrihetsförordningen och yttrandefrihetsgrundlagen.'),
+            val('Vilken av dessa är INTE en av Sveriges grundlagar?',
+                ['Skollagen', 'Regeringsformen', 'Successionsordningen', 'Tryckfrihetsförordningen'], 'Skollagen',
+                'Skollagen är en vanlig lag. Grundlagarna är svårare att ändra och står över de andra lagarna.'),
+            ordna('Ordna domstolarna från den lägsta till den högsta.', ['Tingsrätt', 'Hovrätt', 'Högsta domstolen'],
+                  forklaring='Ett mål börjar i tingsrätten, kan överklagas till hovrätten och sist till Högsta domstolen.'),
+            val('Vad gör riksdagen, förutom att stifta lagar?',
+                ['Bestämmer statens budget och skatter och granskar regeringen',
+                 'Dömer i rättegångar och bestämmer straffen för brott',
+                 'Sköter sjukvården och kollektivtrafiken i hela landet',
+                 'Väljer kung och bestämmer vem som ska ärva tronen'],
+                'Bestämmer statens budget och skatter och granskar regeringen',
+                'Riksdagen har makten över pengarna och ska kontrollera att regeringen sköter sig.'),
+            skriv('Hur många kommuner har Sverige?', '290', 'Sverige har 290 kommuner och 21 regioner.'),
+            val('Vad betalar skatterna för?',
+                ['Gemensamma saker som skola, vård och vägar', 'Bara lönerna till riksdagens ledamöter',
+                 'Bara det som kungen och hovet behöver', 'Varor som privata företag säljer'],
+                'Gemensamma saker som skola, vård och vägar',
+                'Skatterna betalar det som alla har nytta av, och som annars bara de rika hade haft råd med.'),
+            val('Fler vill köpa en vara än det finns av den. Vad händer med priset i en marknadsekonomi?',
+                ['Det stiger', 'Det sjunker', 'Det är detsamma'], 'Det stiger',
+                'Priset styrs av utbud och efterfrågan. Är efterfrågan större än utbudet stiger priset.'),
+        ], beskrivning=bygger('Riksdag, regering, kommuner och regioner, grundlagarna, rättsstaten och '
+                              'marknadsekonomin.', T_G_DEM), text=TEXT_G_DEM),
+
+        niva('so-ak9-blad-genomgang-klimat-1', 'Klimat, befolkning och hållbarhet', 'Läsa: källor och genomgångar', [
+            val('Är ”det regnar i dag” ett påstående om väder eller klimat?', ['Väder', 'Klimat'], 'Väder',
+                'Väder är hur det är just nu. Klimat är hur det brukar vara under lång tid.'),
+            skriv('Under hur många år räknar man oftast ut det genomsnittliga vädret när man beskriver klimatet?',
+                  '30', 'Klimatet är medelvärdet av vädret under lång tid, oftast 30 år.'),
+            val('Varför är det varmare vid ekvatorn än vid polerna?',
+                ['Solstrålarna träffar mer rakt, så energin sprids på en mindre yta',
+                 'Ekvatorn ligger närmare solen än polerna gör, så det blir varmare',
+                 'Det finns mer koldioxid i luften vid ekvatorn än vid polerna',
+                 'Det blåser mindre vid ekvatorn, så värmen stannar kvar där'],
+                'Solstrålarna träffar mer rakt, så energin sprids på en mindre yta',
+                'Vid polerna kommer solstrålarna snett, och samma energi sprids ut över en större yta.'),
+            val('Vilka två är exempel på växthusgaser?',
+                ['Koldioxid och metan', 'Syre och kväve', 'Helium och neon', 'Vätgas och argon'],
+                'Koldioxid och metan', 'Koldioxid och metan håller kvar värme i atmosfären.'),
+            val('Varför hade jorden varit kallare utan växthusgaser?',
+                ['De håller kvar en del av värmen, som annars hade strålat ut i rymden',
+                 'De lyser själva och värmer upp jorden, ungefär som en extra liten sol',
+                 'De stoppar solljuset, så att det inte studsar bort från jordens yta',
+                 'De gör att jorden snurrar långsammare, så att dagarna blir längre'],
+                'De håller kvar en del av värmen, som annars hade strålat ut i rymden',
+                'Utan växthuseffekten vore medeltemperaturen långt under noll. Den behövs, men blir för stark nu.'),
+            val('Vad händer när mer växthusgaser släpps ut?',
+                ['Växthuseffekten förstärks, och jorden blir varmare',
+                 'Växthuseffekten försvagas, och jorden blir kallare',
+                 'Solljuset stoppas, och det blir mörkare på jorden',
+                 'Ingenting händer, eftersom gaserna försvinner direkt'],
+                'Växthuseffekten förstärks, och jorden blir varmare',
+                'Mer gas håller kvar mer värme. Därför blir jorden varmare när utsläppen ökar.'),
+            val('Vad visar en befolkningspyramid?',
+                ['Hur många män och kvinnor det finns i olika åldrar', 'Hur många som bor i städer och på landet',
+                 'Hur många barn varje familj har i genomsnitt', 'Hur befolkningen är spridd över landets yta'],
+                'Hur många män och kvinnor det finns i olika åldrar',
+                'Varje stapel är en åldersgrupp, med män på ena sidan och kvinnor på den andra.'),
+            val('Vad betyder en bred bas i en befolkningspyramid?',
+                ['Att det föds många barn', 'Att det finns många äldre', 'Att många flyttar ut ur landet',
+                 'Att fler män än kvinnor bor i landet'], 'Att det föds många barn',
+                'Basen är de yngsta åldrarna. Är den bred föds det många barn.'),
+            val('Vilket är en drivkraft bakom urbaniseringen?',
+                ['Det finns jobb och utbildning i städerna', 'Det finns mer jordbruksmark i städerna',
+                 'Det är billigare att bo i städerna', 'Det finns färre människor i städerna'],
+                'Det finns jobb och utbildning i städerna',
+                'Människor flyttar dit jobben, utbildningen och servicen finns.'),
+            val('Vad tar en hållbar utveckling hänsyn till?',
+                ['Miljön, ekonomin och människors levnadsvillkor, nu och i framtiden',
+                 'Bara miljön, eftersom det är det enda som påverkar framtiden',
+                 'Bara ekonomin, eftersom pengar behövs för allt annat i samhället',
+                 'Bara det som händer nu, eftersom framtiden inte går att påverka'],
+                'Miljön, ekonomin och människors levnadsvillkor, nu och i framtiden',
+                'Hållbarhet har tre perspektiv: ekologiskt, ekonomiskt och socialt, och gäller också kommande generationer.'),
+        ], beskrivning=bygger('Väder och klimat, växthuseffekten, befolkningspyramider, urbanisering och hållbar '
+                              'utveckling.', T_G_KLIM), text=TEXT_G_KLIM),
+
+        niva('so-ak9-blad-andra-varldskriget-1', 'Andra världskriget', 'Läsa: Andra världskriget', [
+            skriv('Vilket år började andra världskriget?', '1939',
+                  'Kriget började den 1 september 1939, när Tyskland anföll Polen.'),
+            val('Vilket land anföll Tyskland först?', ['Polen', 'Frankrike', 'Norge', 'Sovjetunionen'], 'Polen',
+                'Anfallet på Polen fick Storbritannien och Frankrike att förklara krig mot Tyskland.'),
+            val('Vilka länder ingick i axelmakterna?',
+                ['Tyskland, Italien och Japan', 'Storbritannien, USA och Sovjetunionen',
+                 'Tyskland, Sverige och Finland', 'Frankrike, Polen och Norge'],
+                'Tyskland, Italien och Japan', 'Axelmakterna stod mot de allierade.'),
+            val('Vilka länder var med bland de allierade enligt texten?',
+                ['Storbritannien, Sovjetunionen och USA', 'Tyskland, Italien och Japan',
+                 'Sverige, Danmark och Norge', 'Polen, Italien och Japan'],
+                'Storbritannien, Sovjetunionen och USA',
+                'Storbritannien var med från början, och Sovjetunionen och USA från 1941.'),
+            val('Vad kallas mordet på omkring sex miljoner judar?',
+                ['Förintelsen', 'Kalla kriget', 'Ockupationen', 'Kapitulationen'], 'Förintelsen',
+                'Nazisterna mördade judar och miljontals andra människor. Det kallas Förintelsen.'),
+            val('När slutade kriget i Europa?',
+                ['Den 8 maj 1945', 'Den 1 september 1939', 'I september 1945', 'Den 8 maj 1941'],
+                'Den 8 maj 1945', 'Tyskland kapitulerade den 8 maj 1945. Kriget i Asien höll på till september.'),
+            val('Vad hände innan Japan kapitulerade?',
+                ['USA fällde atombomber över Hiroshima och Nagasaki', 'Japan anföll Polen och Frankrike',
+                 'Sverige förklarade krig mot Japan', 'Tyskland vann kriget i Europa'],
+                'USA fällde atombomber över Hiroshima och Nagasaki',
+                'Efter atombomberna kapitulerade Japan i september 1945, och då var hela kriget slut.'),
+            val('Vad betyder det att ett land är neutralt i ett krig?',
+                ['Landet tar inte ställning för någon sida och deltar inte i kriget',
+                 'Landet hjälper båda sidor med soldater och vapen lika mycket',
+                 'Landet har blivit ockuperat och får inte längre bestämma själv',
+                 'Landet har förlorat kriget och måste betala för skadorna'],
+                'Landet tar inte ställning för någon sida och deltar inte i kriget',
+                'Sverige var neutralt, men det var svårt att hålla sig utanför helt.'),
+            val('Varför var Sveriges situation under kriget svår?',
+                ['Sverige var omringat sedan Danmark och Norge ockuperats och sålde järnmalm till Tyskland',
+                 'Sverige hade blivit ockuperat av Tyskland och fick inte ta emot några flyktingar alls',
+                 'Sverige var med i axelmakterna och måste skicka soldater till kriget i Sovjetunionen',
+                 'Sverige var med bland de allierade och blev därför bombat av Tyskland varje natt'],
+                'Sverige var omringat sedan Danmark och Norge ockuperats och sålde järnmalm till Tyskland',
+                'Sverige ville inte dras in i kriget. Det blev en svår balansgång mellan Tyskland och de allierade.'),
+            sant('Enligt texten tog Sverige emot många flyktingar under kriget.', True,
+                 'Texten säger att Sverige samtidigt tog emot många flyktingar.'),
+        ], beskrivning=bygger('Läsförståelse om andra världskriget: början och slut, de båda sidorna, '
+                              'Förintelsen och Sveriges neutralitet.', T_AVK), text=TEXT_AVK),
+    ]),
+
+    # ------------------------------------------------------------------ Programmering åk 9
+    bana(PROG, 'ak9', [
+        niva('prog-ak9-blad-python-1', 'Läs koden som datorn', 'Python-grunder', [
+            vad_skrivs(K_A, 'x är 4, så y blir 4 · 3 = %s. print(y) skriver värdet i y.' % utskrift(K_A)),
+            vad_skrivs(K_B, '+ sätter ihop texterna "Hej " och "Alva". Mellanslaget står i "Hej ".'),
+            vilket_skrivs(K_C, ['litet', 'stort, litet', 'Ett fel'],
+                          '7 > 5 är sant, så raden under if körs. else-delen hoppas över.'),
+            vilket_skrivs(K_D, ['2, 4, 6, 8', '0, 1, 2, 3', '0, 2, 4, 6, 8'],
+                          'range(4) ger 0, 1, 2 och 3. Varje tal gånger 2 blir 0, 2, 4 och 6.'),
+            vad_skrivs(K_E, 'range(1, 4) ger 1, 2 och 3. summa blir 0 + 1 + 2 + 3 = %s.' % utskrift(K_E)),
+            val(fraga_kod('Programmet ger ett fel. Vad ska stå i stället för = på rad 2, så att det skriver fem?',
+                          K_F_FEL), F_ERSATT, '==',
+                'Ett = sparar ett värde i en variabel. Två, ==, jämför två värden, och det är det if behöver.'),
+            sant('range(1, 4) ger talen 1, 2, 3 och 4.', list(range(1, 4)) == [1, 2, 3, 4],
+                 'range slutar alltid före det sista talet. range(1, 4) ger 1, 2 och 3.'),
+            val('Vilket program skriver ut talen 1 till 5, ett på varje rad?', ETT_TILL_FEM, ETT_TILL_FEM[0],
+                'range(1, 6) börjar på 1 och slutar före 6. range(5) börjar på 0, och range(1, 5) slutar på 4.'),
+            val('Vad är en variabel?',
+                ['Ett namn som sparar ett värde, och värdet kan ändras', 'Ett kommando som skriver ut text på skärmen',
+                 'En loop som upprepar samma rader flera gånger', 'Ett fel som gör att programmet stannar'],
+                'Ett namn som sparar ett värde, och värdet kan ändras',
+                'x = 5 sparar 5 i variabeln x. Sedan kan programmet räkna med x eller ge det ett nytt värde.'),
+        ], beskrivning=bygger('Läs korta Python-program rad för rad: variabler, if och else, for-loopar och = '
+                              'mot ==.', T_PY9)),
+
+        niva('prog-ak9-blad-python-2', 'Variabler, villkor och loopar', 'Python-grunder', [
+            vad_skrivs(K_MINUS, 'x är först 10. x = x − 3 räknar 10 − 3 och sparar %s i x.' % utskrift(K_MINUS)),
+            vilket_skrivs(K_HEJ_I, ['Hej 0, Hej 1, Hej 2', 'Hej 1, Hej 2, Hej 3, Hej 4', 'Hej i, Hej i, Hej i'],
+                          'range(1, 4) ger 1, 2 och 3. print med komma skriver ut båda med ett mellanslag emellan.'),
+            vad_skrivs(K_JA, 'a + b är 3 + 4 = 7, och 7 == 7 är sant. Därför körs raden under if.'),
+            vad_skrivs(K_PRODUKT, 'p multipliceras med 1, 2, 3 och 4: 1 · 2 · 3 · 4 = %s.' % utskrift(K_PRODUKT)),
+            vad_skrivs(K_JAMNA, 'i %% 2 == 0 är sant för de jämna talen 0, 2, 4, 6 och 8. Det är %s stycken.'
+                       % utskrift(K_JAMNA)),
+            val(fraga_kod('Programmet ger ett fel. Vad fattas?', K_KOLON),
+                ['Ett kolon efter range(3)', 'Ett likhetstecken efter for', 'Citattecken runt i',
+                 'En punkt efter print(i)'], 'Ett kolon efter range(3)',
+                'En rad som börjar med for, if, else eller while slutar med kolon. Raden efter är indragen.'),
+            vad_skrivs(K_INTE_STORRE, '5 > 5 är falskt, för 5 är inte större än sig själv. Då körs else.'),
+            sant(fraga_kod('Programmet skriver ut 8.', K_PRINT_X), utskrift(K_PRINT_X) == '8',
+                 'Citattecknen gör "x" till text. print skriver bokstaven x. Utan citattecken, print(x), blir det 8.'),
+            skriv(fraga_kod('Hur många rader skriver programmet ut?', K_RANGE_2_8), tal(len(rader(K_RANGE_2_8))),
+                  'range(2, 8) ger 2, 3, 4, 5, 6 och 7. Det är 8 − 2 = %d tal.' % len(rader(K_RANGE_2_8))),
+        ], beskrivning=bygger('Fler program att läsa och felsöka: räkna med variabler, villkor med == och else, '
+                              'och loopar som räknar.', T_PY9)),
+    ]),
+]
+
+
+BANOR = [
+    # ------------------------------------------------------------------ SO åk 5
+    bana(SO, 'ak5', [
+        niva('so-ak5-blad-vikingar-1', 'Resor och handel', 'Vikingarnas värld', [
+            val('Ungefär när var vikingatiden?',
+                ['Från år 800 till år 1050', 'Från år 1050 till år 1500', 'Från år 500 till år 800',
+                 'Från år 1500 till år 1700'], 'Från år 800 till år 1050',
+                'Vikingatiden varade ungefär från år 800 till år 1050. Sedan kom medeltiden.'),
+            val('I vilka nuvarande länder bodde vikingarna?',
+                ['Sverige, Norge och Danmark', 'Finland, Estland och Lettland', 'Tyskland, Polen och Litauen',
+                 'Spanien, Portugal och Italien'], 'Sverige, Norge och Danmark',
+                'Vikingarna kom från Norden: det som i dag är Sverige, Norge och Danmark.'),
+            val('Varför var långskeppen så bra?',
+                ['De var smala och kunde segla både på hav och på floder',
+                 'De var breda och kunde bära hela byar med hus och djur',
+                 'De hade motorer och kunde segla fort utan någon vind',
+                 'De var byggda av sten och kunde inte sjunka i storm'],
+                'De var smala och kunde segla både på hav och på floder',
+                'Långskeppen gick inte djupt i vattnet. Därför kunde vikingarna ta sig långt upp på floderna.'),
+            val('Mot vilken stad reste vikingar från Sverige ofta, österut?',
+                ['Konstantinopel', 'Rom', 'Lissabon', 'Dublin'], 'Konstantinopel',
+                'De reste genom det som i dag är Ryssland och Ukraina och vidare mot Konstantinopel.'),
+            val('Vad heter staden Konstantinopel i dag?', ['Istanbul', 'Moskva', 'Kyiv', 'Aten'], 'Istanbul',
+                'Konstantinopel ligger i Turkiet och heter i dag Istanbul.'),
+            val('Vilken av de här varorna handlade vikingarna med?',
+                ['Silver', 'Kaffe', 'Potatis', 'Choklad'], 'Silver',
+                'Vikingarna handlade med silver, pälsar och slavar. Kaffe, potatis och choklad kom till Europa långt senare.'),
+            sant('En del vikingar plundrade kloster och städer.', True,
+                 'Många vikingar var fredliga bönder och handelsmän, men en del for ut för att plundra.'),
+            val('Vilken handelsplats på en ö i Mälaren var viktig under vikingatiden?',
+                ['Birka', 'Visby', 'Kiruna', 'Malmö'], 'Birka',
+                'Birka låg på Björkö i Mälaren. Där möttes handelsmän från många länder.'),
+            sant('Vikingar från Norden seglade västerut ända till Nordamerika omkring år 1000.', True,
+                 'Vikingar seglade till Island, Grönland och vidare till Nordamerika. Man har hittat spår av dem där.'),
+            val('Genom vilka nuvarande länder reste vikingar från Sverige på väg österut?',
+                ['Ryssland och Ukraina', 'Frankrike och Spanien', 'England och Irland', 'Island och Grönland'],
+                'Ryssland och Ukraina', 'De följde de stora floderna genom Ryssland och Ukraina.'),
+        ], beskrivning=bygger('Vikingarnas resor och handel: långskeppen, vägen österut, varorna och Birka.',
+                              T_VIKING)),
+
+        niva('so-ak5-blad-vikingar-2', 'Gudar, ting och runor', 'Vikingarnas värld', [
+            para('Para ihop guden med det den är känd för.',
+                 [('Oden', 'den högste guden, visdomens gud'), ('Tor', 'åskguden med hammaren'),
+                  ('Frej', 'guden för fruktbarhet och god skörd'), ('Loke', 'den listige som ofta ställde till bråk')],
+                 'Vikingarna trodde på många gudar, asarna. Oden var den högste, och Tor var stark med sin hammare.'),
+            val('Vad hette Tors hammare?', ['Mjölner', 'Valhall', 'Midgård', 'Yggdrasil'], 'Mjölner',
+                'Mjölner var Tors hammare. Valhall var Odens hall, Midgård människornas värld och Yggdrasil världsträdet.'),
+            val('Vad var tinget?',
+                ['En samling där fria män avgjorde viktiga frågor',
+                 'Ett stort skepp som seglade på floderna i öster',
+                 'Ett tempel där vikingarna offrade till Oden',
+                 'En sten där man ristade in runor om de döda'],
+                'En samling där fria män avgjorde viktiga frågor',
+                'På tinget löste man tvister och bestämde om lagar. Det var ett sätt att styra utan kung.'),
+            val('Vilka fick vara med och bestämma på tinget?',
+                ['De fria männen', 'Alla som bodde i byn, även trälarna', 'Bara kungen och hans söner',
+                 'Bara barnen i byn'], 'De fria männen',
+                'Bara fria män fick vara med. Trälar var inte fria och fick inte bestämma.'),
+            val('Vad var en träl?',
+                ['En ofri människa som ägdes av någon annan', 'En fri bonde som ägde sin egen gård',
+                 'En präst som offrade till gudarna', 'En handelsman som seglade österut'],
+                'En ofri människa som ägdes av någon annan',
+                'Trälar fick arbeta utan lön och kunde säljas. De var vikingatidens slavar.'),
+            val('Vad är runor?',
+                ['Tecken som vikingarna ristade i sten och trä', 'Sånger som vikingarna sjöng på tinget',
+                 'Skepp som vikingarna seglade österut med', 'Gudar som vikingarna trodde på'],
+                'Tecken som vikingarna ristade i sten och trä',
+                'Runorna var vikingarnas bokstäver. De är raka streck, för de skulle vara lätta att rista.'),
+            sant('Vikingarna trodde på en enda gud.', False,
+                 'Vikingarna trodde på många gudar, till exempel Oden, Tor och Frej.'),
+            val('Vad var en runsten ofta?',
+                ['Ett minnesmärke över någon som hade dött', 'En gränssten mellan två länder',
+                 'En karta över vägen till Konstantinopel', 'Ett hus där tinget samlades'],
+                'Ett minnesmärke över någon som hade dött',
+                'De flesta runstenar restes till minne av en släkting. Många av dem står i Uppland.'),
+            val('Vad hette platsen dit vikingarna trodde att krigare som dött i strid kom?',
+                ['Valhall', 'Mjölner', 'Birka', 'Tinget'], 'Valhall',
+                'Valhall var Odens hall. Där trodde man att krigarna festade efter döden.'),
+            sant('Under vikingatiden började kristendomen spridas i Norden.', True,
+                 'Missionärer kom till Norden under vikingatiden, och efter den var de flesta kristna.'),
+        ], beskrivning=bygger('Vikingarnas gudar, tinget, trälarna och runorna.', T_VIKING)),
+
+        niva('so-ak5-blad-vikingar-3', 'Vikingatiden i tiden', 'Vikingarnas värld', [
+            ordna('Ordna tiderna från den äldsta till den yngsta.',
+                  ['Stenåldern', 'Bronsåldern', 'Vikingatiden', 'Medeltiden'],
+                  forklaring='Först stenåldern, sedan bronsåldern och järnåldern. Vikingatiden är slutet på järnåldern, '
+                             'och efter den kommer medeltiden.'),
+            val('Vilken tid kom efter vikingatiden?', ['Medeltiden', 'Stenåldern', 'Bronsåldern', 'Stormaktstiden'],
+                'Medeltiden', 'Efter vikingatiden, omkring år 1050, börjar medeltiden i Norden.'),
+            sant('Vikingatiden räknas som slutet av järnåldern.', True,
+                 'Järnåldern är den tid då man började göra verktyg och vapen av järn. Vikingatiden är dess sista del.'),
+            skriv('Vikingatiden varade ungefär från år %d till år %d. Ungefär hur många år är det?'
+                  % (VIKING_START, VIKING_SLUT), tal(VIKING_SLUT - VIKING_START),
+                  '%d − %d = %d år.' % (VIKING_SLUT, VIKING_START, VIKING_SLUT - VIKING_START)),
+            val('Vilken metall gjorde vikingarna de flesta vapen och verktyg av?',
+                ['Järn', 'Guld', 'Aluminium', 'Plast'], 'Järn',
+                'Järn var hårt och fanns att få tag på i Norden. Silver och guld användes mest till smycken och pengar.'),
+            val('Vilket av de här är en källa som vikingarna själva gjorde?',
+                ['En runsten', 'En film om vikingar', 'En lärobok från i dag', 'Ett datorspel om vikingar'],
+                'En runsten', 'Runstenarna ristades av vikingarna själva. De andra är gjorda långt senare.'),
+            val('Varför vet vi ganska lite om vad vikingarna själva tänkte?',
+                ['De skrev bara korta texter med runor, och mycket skrevs ner av andra långt senare',
+                 'De skrev långa böcker om allt, men alla böckerna brann upp i en stor brand',
+                 'De pratade ett språk som ingen forskare i dag kan förstå något av alls',
+                 'De bodde så långt bort att ingen annan visste att de fanns förrän nu'],
+                'De skrev bara korta texter med runor, och mycket skrevs ner av andra långt senare',
+                'Runstenarnas texter är korta. Berättelserna om vikingarna skrevs ofta ner flera hundra år senare.'),
+            sant('Arkeologer kan lära sig om vikingarna genom att undersöka deras gravar.', True,
+                 'I gravarna finns föremål som visar hur vikingarna levde, vad de ägde och vad de trodde på.'),
+            val('Vilket var det vanligaste arbetet för vikingarna?', ['Bonde', 'Präst', 'Kung', 'Krigare'], 'Bonde',
+                'De flesta vikingar var bönder och fiskare. Resorna gjordes ofta på sommaren.'),
+        ], beskrivning=bygger('Vikingatiden bland de andra tiderna, och hur vi vet något om den.', T_VIKING)),
+
+        niva('so-ak5-blad-vikingar-las-1', 'Vikingatiden', 'Läsa: Vikingatiden', [
+            val('När var vikingatiden ungefär, enligt texten?',
+                ['Från år 800 till år 1050', 'Från år 1050 till år 1500', 'Från år 500 till år 800',
+                 'Från år 1800 till år 1850'], 'Från år 800 till år 1050', 'Det står i textens första mening.'),
+            val('Vad kallades de smala skeppen som vikingarna seglade i?',
+                ['Långskepp', 'Koggar', 'Kanoter', 'Ångbåtar'], 'Långskepp',
+                'Texten säger att de seglade i smala långskepp.'),
+            val('Vilka två saker handlade vikingarna med, enligt texten?',
+                ['Silver och pälsar', 'Kaffe och socker', 'Potatis och tobak', 'Papper och glas'],
+                'Silver och pälsar', 'Texten nämner silver, pälsar och slavar.'),
+            val('Vilka två gudar nämns i texten?',
+                ['Tor och Frej', 'Zeus och Apollon', 'Jupiter och Mars', 'Osiris och Ra'], 'Tor och Frej',
+                'Texten nämner Oden, Tor och Frej. De andra är gudar från Grekland, Rom och Egypten.'),
+            val('Vad var tinget?',
+                ['En samling där fria män avgjorde viktiga frågor',
+                 'Ett stort skepp som seglade på floderna i öster',
+                 'Ett tempel där vikingarna offrade till Oden',
+                 'En sten där vikingarna ristade in sina runor'],
+                'En samling där fria män avgjorde viktiga frågor',
+                'Texten säger att viktiga frågor avgjordes på tinget, där fria män samlades.'),
+            val('Vart reste vikingar från Sverige ofta?',
+                ['Österut, mot Konstantinopel', 'Västerut, mot England', 'Söderut, mot Spanien', 'Norrut, mot Island'],
+                'Österut, mot Konstantinopel',
+                'De reste genom det som i dag är Ryssland och Ukraina och vidare mot Konstantinopel.'),
+            sant('Enligt texten var de flesta vikingar bönder och fiskare.', True,
+                 'Det står i texten. Bara en del av dem gav sig ut på långa resor.'),
+            sant('Enligt texten kunde långskeppen bara segla på öppet hav.', False,
+                 'Texten säger att långskeppen gick bra både på hav och på floder.'),
+            val('Vad använde vikingarna för att skriva?',
+                ['Runor', 'Bläck och papper', 'Bokstäverna vi har i dag', 'Bilder på lertavlor'], 'Runor',
+                'Runorna ristades i sten och trä.'),
+            val('Varför kan man säga att vikingarna var både bönder och upptäcktsresande?',
+                ['De flesta odlade jorden hemma, men många gav sig också ut på långa resor',
+                 'Alla vikingar reste bort varje sommar och odlade aldrig något alls hemma',
+                 'De odlade sina grödor ombord på skeppen medan de seglade över haven',
+                 'De var bönder i Konstantinopel och reste hem till Norden på vintern'],
+                'De flesta odlade jorden hemma, men många gav sig också ut på långa resor',
+                'Texten säger att de flesta var bönder och fiskare, men att många också reste långt.'),
+        ], beskrivning=bygger('Läsförståelse om vikingatiden: tid, skepp, handel, gudar, tinget och runor.',
+                              T_VIKING), text=TEXT_VIKING),
+    ]),
+
+    # ------------------------------------------------------------------ SO åk 8
+    bana(SO, 'ak8', [
+        niva('so-ak8-blad-industri-las-1', 'Industrialiseringen i Sverige', 'Läsa: Industrialiseringen', [
+            val('Ungefär när började industrialiseringen i Sverige, enligt texten?',
+                ['Omkring 1850', 'Omkring 1750', 'Omkring 1650', 'Omkring 1950'], 'Omkring 1850',
+                'Texten säger: från ungefär 1850 började det som kallas industrialiseringen.'),
+            val('Vad gjorde järnvägarna lättare?',
+                ['Att transportera varor', 'Att odla jorden', 'Att bilda fackföreningar', 'Att emigrera till Amerika'],
+                'Att transportera varor', 'Med järnvägen kunde varor fraktas snabbt och billigt.'),
+            val('Vilka sorters arbetsplatser växte fram, enligt texten?',
+                ['Sågverk, verkstäder och textilfabriker', 'Bilfabriker, flygplatser och kontor',
+                 'Kloster, borgar och marknader', 'Gruvor, kraftverk och oljeraffinaderier'],
+                'Sågverk, verkstäder och textilfabriker', 'Det står i texten, och maskiner ersatte handarbete.'),
+            val('Vad betyder urbanisering?',
+                ['Att människor flyttar från landsbygden till städerna',
+                 'Att människor flyttar från städerna ut på landsbygden',
+                 'Att människor flyttar från Sverige till andra länder',
+                 'Att människor slutar arbeta i fabriker och blir bönder'],
+                'Att människor flyttar från landsbygden till städerna',
+                'Texten säger att flytten från landet till städerna kallas urbanisering.'),
+            val('Varför flyttade många från landsbygden till städerna?',
+                ['För att få arbete i fabrikerna', 'För att få gå i skolan längre',
+                 'För att städerna hade billigare mat', 'För att det var förbjudet att bo på landet'],
+                'För att få arbete i fabrikerna', 'Arbetet fanns i fabrikerna, och de låg ofta i städerna.'),
+            val('Vad är en fackförening?',
+                ['En förening där arbetare går samman för att få bättre villkor',
+                 'En förening där fabriksägare går samman för att sänka lönerna',
+                 'En förening där bönder går samman för att köpa mer mark',
+                 'En förening där emigranter går samman för att resa till Amerika'],
+                'En förening där arbetare går samman för att få bättre villkor',
+                'Tillsammans var arbetarna starkare än var och en för sig.'),
+            val('Varför bildade arbetarna fackföreningar, enligt texten?',
+                ['Arbetsdagarna var långa och lönerna låga', 'Fabrikerna låg för långt från städerna',
+                 'Järnvägarna var för dyra att åka med', 'Det fanns för få maskiner i fabrikerna'],
+                'Arbetsdagarna var långa och lönerna låga',
+                'Texten säger att arbetarna bildade fackföreningar för att få bättre villkor.'),
+            sant('Enligt texten arbetade även barn.', True, 'Texten säger att även barn arbetade.'),
+            val('Hur många svenskar lämnade landet, enligt texten?',
+                ['Mer än en miljon', 'Omkring tiotusen', 'Omkring hundra tusen', 'Mer än tio miljoner'],
+                'Mer än en miljon', 'Texten säger att mer än en miljon svenskar lämnade landet.'),
+            val('Vart reste de flesta som lämnade Sverige?', ['Nordamerika', 'Afrika', 'Australien', 'Asien'],
+                'Nordamerika', 'De flesta reste till Nordamerika i hopp om arbete och mark.'),
+        ], beskrivning=bygger('Läsförståelse om industrialiseringen i Sverige: järnvägar, fabriker, urbanisering, '
+                              'fackföreningar och emigration.', T_INDUSTRI), text=TEXT_INDUSTRI),
+
+        niva('so-ak8-blad-industri-1', 'Maskiner och fabriker', 'Industrialiseringen', [
+            val('I vilket land började industrialiseringen?',
+                ['Storbritannien', 'Sverige', 'Ryssland', 'Spanien'], 'Storbritannien',
+                'Den började i Storbritannien på 1700-talet och spreds sedan till andra länder, Sverige senare.'),
+            val('Vilken uppfinning drev många av de första fabrikerna och loken?',
+                ['Ångmaskinen', 'Elmotorn', 'Bensinmotorn', 'Vindkraftverket'], 'Ångmaskinen',
+                'Ångmaskinen eldades med kol eller ved och kunde driva maskiner, tåg och fartyg.'),
+            val('Vad betyder industrialisering?',
+                ['Att varor tillverkas med maskiner i fabriker i stället för för hand',
+                 'Att människor flyttar från städerna ut till landsbygden igen',
+                 'Att staten tar över alla gårdar och bestämmer vad som odlas',
+                 'Att människor slutar handla med andra länder helt och hållet'],
+                'Att varor tillverkas med maskiner i fabriker i stället för för hand',
+                'Med maskiner gick det fortare och blev billigare att tillverka mycket av samma vara.'),
+            val('Ungefär när började industrialiseringen i Sverige?',
+                ['I mitten av 1800-talet', 'I mitten av 1600-talet', 'I mitten av 1700-talet', 'I mitten av 1900-talet'],
+                'I mitten av 1800-talet', 'Sverige industrialiserades senare än Storbritannien, från omkring 1850.'),
+            val('Vilken råvara från Norrland blev en viktig vara att sälja till andra länder?',
+                ['Trä från skogarna', 'Bomull från fälten', 'Olja från haven', 'Kaffe från odlingarna'],
+                'Trä från skogarna', 'Sågverken längs Norrlandskusten sågade timmer som såldes till andra länder.'),
+            val('Varför var järnvägarna så viktiga för industrin?',
+                ['Råvaror och varor kunde fraktas snabbt och billigt långa sträckor',
+                 'Arbetarna kunde bo i tågen och slapp betala hyra i städerna',
+                 'Tågen kunde tillverka varor medan de körde mellan städerna',
+                 'Järnvägarna gjorde att ingen längre behövde arbeta i fabrikerna'],
+                'Råvaror och varor kunde fraktas snabbt och billigt långa sträckor',
+                'Förut gick det mesta med häst eller båt. Tåget band ihop skogar, gruvor, fabriker och hamnar.'),
+            sant('Innan industrialiseringen bodde de flesta svenskar på landsbygden.', True,
+                 'De flesta levde av jordbruk. Först under 1900-talet bodde fler i tätorter än på landet.'),
+            val('Vad är en råvara?',
+                ['Ett material från naturen som används för att tillverka varor',
+                 'En färdig vara som säljs i en butik till en kund',
+                 'En maskin som används i fabriken för att tillverka',
+                 'En arbetare som arbetar med att bära varor i hamnen'],
+                'Ett material från naturen som används för att tillverka varor',
+                'Trä, järnmalm och bomull är råvaror. Av dem blir det plankor, verktyg och tyg.'),
+            ordna('Ordna stegen så att de visar hur järnvägen hjälpte industrin.',
+                  ['Järnvägen byggs', 'Varorna kan fraktas billigare', 'Fabrikerna säljer mer',
+                   'Fler får arbete i fabrikerna'],
+                  forklaring='Varje steg leder till nästa: billigare frakt gör att fabrikerna säljer mer, och då behövs '
+                             'fler arbetare.'),
+        ], beskrivning=bygger('Hur industrialiseringen började: ångmaskinen, fabrikerna, järnvägarna och råvarorna.',
+                              T_INDUSTRI)),
+
+        niva('so-ak8-blad-industri-2', 'Arbetarna och folkrörelserna', 'Industrialiseringen', [
+            val('Hur var arbetsvillkoren i de första fabrikerna?',
+                ['Långa arbetsdagar och låga löner', 'Korta arbetsdagar och höga löner',
+                 'Långa semestrar och fri sjukvård', 'Fria arbetstider och egen bostad'],
+                'Långa arbetsdagar och låga löner', 'Arbetarna hade få rättigheter, och även barn arbetade.'),
+            val('Vad är en strejk?',
+                ['Arbetarna slutar arbeta tillsammans för att kräva bättre villkor',
+                 'Arbetsgivaren stänger fabriken för att den inte går med vinst',
+                 'Arbetarna byter till en annan fabrik med högre lön',
+                 'Staten bestämmer hur mycket arbetarna ska få i lön'],
+                'Arbetarna slutar arbeta tillsammans för att kräva bättre villkor',
+                'En strejk är ett vapen för fackföreningarna: utan arbetare står fabriken stilla.'),
+            para('Para ihop folkrörelsen med det den arbetade för.',
+                 [('Arbetarrörelsen', 'bättre löner och villkor för arbetarna'),
+                  ('Nykterhetsrörelsen', 'att människor skulle dricka mindre alkohol'),
+                  ('Frikyrkorörelsen', 'att få tro och samlas utanför statskyrkan'),
+                  ('Kvinnorörelsen', 'rösträtt och samma rättigheter för kvinnor')],
+                 'Folkrörelserna var föreningar där vanliga människor gick samman. De lärde många hur demokrati fungerar.'),
+            val('Vilket parti växte fram ur arbetarrörelsen i slutet av 1800-talet?',
+                ['Socialdemokraterna', 'Moderaterna', 'Miljöpartiet', 'Centerpartiet'], 'Socialdemokraterna',
+                'Socialdemokraterna bildades av arbetarrörelsen för att arbetarna skulle få en röst i politiken.'),
+            sant('Under industrialiseringen arbetade inga barn i fabrikerna.', False,
+                 'Barnarbete var vanligt. Barn var billig arbetskraft och kunde arbeta långa dagar.'),
+            val('Varför flyttade många från landsbygden under 1800-talet?',
+                ['Befolkningen växte, det fanns inte mark åt alla, och i städerna fanns arbete',
+                 'Befolkningen minskade, och därför stängdes alla gårdar på landsbygden',
+                 'Staten förbjöd jordbruk, och därför måste alla bönder flytta till staden',
+                 'Städerna betalade alla som flyttade dit, och därför ville alla bo där'],
+                'Befolkningen växte, det fanns inte mark åt alla, och i städerna fanns arbete',
+                'Fler barn överlevde, men gårdarna kunde inte delas hur många gånger som helst.'),
+            val('Vilka tre orsaker brukar nämnas till att Sveriges befolkning växte under 1800-talet?',
+                ['Freden, vaccinet och potatisen', 'Kriget, järnvägen och telefonen',
+                 'Elen, bilen och radion', 'Pesten, missväxten och emigrationen'],
+                'Freden, vaccinet och potatisen',
+                'Sverige hade inga krig, vaccin mot smittkoppor räddade barn, och potatisen gav mer mat.'),
+            val('Vad betyder urbanisering?',
+                ['Att människor flyttar från landsbygden till städerna',
+                 'Att människor flyttar från städerna ut på landsbygden',
+                 'Att människor flyttar från sitt land till ett annat land',
+                 'Att människor flyttar mellan olika gårdar på landet'],
+                'Att människor flyttar från landsbygden till städerna',
+                'Urban betyder stad. Att flytta till ett annat land heter att emigrera.'),
+            sant('En fackförening arbetar för att medlemmarna ska få bättre löner och villkor.', True,
+                 'Tillsammans kan arbetarna förhandla med arbetsgivarna, och i värsta fall strejka.'),
+        ], beskrivning=bygger('Arbetarnas villkor, fackföreningar, strejker och folkrörelserna, och varför folk '
+                              'flyttade.', T_INDUSTRI)),
+
+        niva('so-ak8-blad-industri-3', 'Emigrationen till Amerika', 'Industrialiseringen', [
+            para('Para ihop ordet med vad det betyder.',
+                 [('Emigrera', 'flytta från sitt land'), ('Immigrera', 'flytta till ett nytt land'),
+                  ('Urbanisering', 'flytta från landsbygden till staden'),
+                  ('Industrialisering', 'varor börjar tillverkas med maskiner')],
+                 'E i emigrera betyder ut, och i i immigrera betyder in. Samma resa är båda, beroende på var man står.'),
+            val('Vart reste de flesta svenska emigranterna?',
+                ['Till Nordamerika, främst USA', 'Till Australien', 'Till Sydafrika', 'Till Kina'],
+                'Till Nordamerika, främst USA', 'I USA fanns mark att odla och arbete i städerna.'),
+            val('Ungefär hur många svenskar emigrerade från mitten av 1800-talet till början av 1900-talet?',
+                ['Mer än en miljon', 'Omkring tiotusen', 'Omkring hundra tusen', 'Mer än tio miljoner'],
+                'Mer än en miljon', 'Det var en stor del av befolkningen. Omkring år 1900 bodde ungefär fem miljoner människor i Sverige.'),
+            val('Vilket var en orsak som drev människor BORT från Sverige?',
+                ['Fattigdom och brist på mark', 'Billig mark att odla i Amerika',
+                 'Släktingar som redan bodde i Amerika', 'Arbete i de amerikanska städerna'],
+                'Fattigdom och brist på mark',
+                'Fattigdomen var en orsak hemma, en pushfaktor. De andra lockade till Amerika.'),
+            val('Vilket var en orsak som LOCKADE människor till Amerika?',
+                ['Billig mark att odla', 'Missväxt och svält i Sverige', 'Fattigdom på landsbygden',
+                 'Brist på arbete i Sverige'], 'Billig mark att odla',
+                'Billig mark i Amerika drog till sig, en pullfaktor. De andra drev folk bort från Sverige.'),
+            val('Vilken delstat i mellersta USA blev ett av de vanligaste målen för svenska emigranter?',
+                ['Minnesota', 'Florida', 'Hawaii', 'Alaska'], 'Minnesota',
+                'I Minnesota fanns mycket mark, och klimatet liknade Sveriges. Många svenskar bosatte sig där.'),
+            val('Vad gjorde att väldigt många emigrerade i slutet av 1860-talet?',
+                ['Flera år med missväxt och hungersnöd', 'Ett krig mellan Sverige och Norge',
+                 'Att alla fabriker i Sverige stängdes', 'Att det blev förbjudet att äga mark'],
+                'Flera år med missväxt och hungersnöd',
+                'Skördarna slog fel flera år i rad, och många bönder såg ingen framtid hemma.'),
+            val('Hur tog sig emigranterna över Atlanten?', ['Med fartyg', 'Med flygplan', 'Med tåg', 'Med buss'],
+                'Med fartyg', 'Först med segelfartyg, som tog flera veckor, och senare med ångbåtar, som gick mycket fortare.'),
+            sant('Brev från släktingar i Amerika fick fler att vilja emigrera.', True,
+                 'Amerikabreven berättade om mark och arbete, och ibland skickades pengar till biljetten.'),
+        ], beskrivning=bygger('Emigrationen till Amerika: orsaker som drev bort och lockade, och vart de reste.',
+                              T_INDUSTRI)),
+    ]),
+
+    # ------------------------------------------------------------------ SO gy3
+    bana(SO, 'gy3', [
+        niva('so-gy3-blad-bnp-1', 'BNP och konjunkturen', 'BNP och inflation', [
+            val('Vad mäter BNP?',
+                ['Värdet av alla varor och tjänster som produceras i ett land under ett år',
+                 'Värdet av alla varor som ett land säljer till andra länder under ett år',
+                 'Värdet av alla pengar som hushållen i ett land har sparat på banken',
+                 'Värdet av alla skatter som staten tar in från hushåll och företag'],
+                'Värdet av alla varor och tjänster som produceras i ett land under ett år',
+                'BNP är bruttonationalprodukten, ett mått på hur stor ekonomin är och om den växer.'),
+            val('Hur räknar man ut BNP per capita?',
+                ['BNP delat med antalet invånare', 'BNP gånger antalet invånare',
+                 'BNP delat med antalet företag', 'BNP minus statens utgifter'],
+                'BNP delat med antalet invånare', 'Per capita betyder per huvud. Då går länder av olika storlek att jämföra.'),
+            skriv('Ett land har en BNP på 600 miljarder kronor och 12 miljoner invånare. Hur stor är BNP per '
+                  'invånare, i kronor?', tal(BNP_PER),
+                  '600 000 000 000 / 12 000 000 = %s kr per invånare.' % tal(BNP_PER)),
+            skriv('BNP ökar från %d till %d miljarder kronor på ett år. Hur många procent har BNP ökat?'
+                  % (BNP_FORE, BNP_EFTER), tal(procent(BNP_FORE, BNP_EFTER)),
+                  'Ökningen är %d miljarder, och %d / %d = %s, alltså %d %%.'
+                  % (BNP_EFTER - BNP_FORE, BNP_EFTER - BNP_FORE, BNP_FORE,
+                     tal(float(F(BNP_EFTER - BNP_FORE, BNP_FORE))), procent(BNP_FORE, BNP_EFTER))),
+            val('Vad är real BNP-tillväxt?',
+                ['Tillväxten när prisökningarna har räknats bort', 'Tillväxten innan skatterna har dragits av',
+                 'Tillväxten när exporten har räknats bort', 'Tillväxten räknad i en annan valuta'],
+                'Tillväxten när prisökningarna har räknats bort',
+                'Stiger BNP bara för att priserna stiger har inget mer producerats. Real tillväxt visar den riktiga ökningen.'),
+            sant('Obetalt arbete i hemmet, som matlagning och städning, räknas in i BNP.', False,
+                 'BNP räknar bara det som säljs och köps eller betalas med skatt. Obetalt hemarbete syns inte.'),
+            val('Vad är en svaghet med BNP som mått på hur bra människor har det?',
+                ['Det säger inget om hur inkomsterna fördelas eller hur miljön påverkas',
+                 'Det räknar bara med det som tillverkas i fabriker, inte med några tjänster',
+                 'Det räknas bara ut vart tionde år, så det är nästan alltid för gammalt',
+                 'Det mäter bara hur mycket staten tjänar, inte hushållen eller företagen'],
+                'Det säger inget om hur inkomsterna fördelas eller hur miljön påverkas',
+                'Ett land kan ha hög BNP men stora klyftor, eller växa genom att förstöra miljön.'),
+            val('Vad kännetecknar en högkonjunktur?',
+                ['Hög efterfrågan och låg arbetslöshet', 'Låg efterfrågan och hög arbetslöshet',
+                 'Sjunkande priser och fler konkurser', 'Minskande BNP och färre investeringar'],
+                'Hög efterfrågan och låg arbetslöshet',
+                'I en högkonjunktur köper hushållen mycket, företagen anställer, och priserna kan stiga snabbare.'),
+            val('Vilka tre är tecken på en lågkonjunktur?',
+                ['Arbetslösheten ökar, konsumtionen minskar och företagen investerar mindre',
+                 'Arbetslösheten minskar, konsumtionen ökar och företagen investerar mer',
+                 'Arbetslösheten minskar, priserna stiger snabbt och BNP växer fort',
+                 'Arbetslösheten är oförändrad, lönerna stiger och exporten ökar'],
+                'Arbetslösheten ökar, konsumtionen minskar och företagen investerar mindre',
+                'När efterfrågan minskar säljer företagen mindre, och då behövs färre anställda.'),
+            sant('Under en lågkonjunktur brukar arbetslösheten öka.', True,
+                 'Företagen säljer mindre och anställer färre, och en del måste säga upp personal.'),
+        ], beskrivning=bygger('BNP, BNP per invånare, real tillväxt och konjunkturens svängningar.', T_BNP)),
+
+        niva('so-gy3-blad-inflation-1', 'Inflation och köpkraft', 'BNP och inflation', [
+            val('Vad är inflation?',
+                ['Att priserna i allmänhet stiger', 'Att priserna i allmänhet sjunker',
+                 'Att lönerna i allmänhet stiger', 'Att BNP minskar två kvartal i rad'],
+                'Att priserna i allmänhet stiger', 'Vid inflation får man mindre för samma summa pengar.'),
+            skriv('En vara kostade %d kr förra året och kostar %d kr i år. Hur många procent har priset ökat?'
+                  % (PRIS_FORE, PRIS_EFTER), tal(procent(PRIS_FORE, PRIS_EFTER)),
+                  'Ökningen är %d kr, och %d / %d = 0,05, alltså %d %%.'
+                  % (PRIS_EFTER - PRIS_FORE, PRIS_EFTER - PRIS_FORE, PRIS_FORE, procent(PRIS_FORE, PRIS_EFTER))),
+            val('Lönen är oförändrad men priserna stiger med 3 procent. Vad händer med köpkraften?',
+                ['Den minskar', 'Den ökar', 'Den är oförändrad'], 'Den minskar',
+                'Med samma lön kan man köpa ungefär 3 procent mindre än förut.'),
+            skriv('Lönen ökar nominellt med 3 procent och inflationen är 2 procent. Ungefär hur många procent ökar '
+                  'lönen räknat i köpkraft?', tal(3 - 2),
+                  'Ungefär 3 − 2 = 1 procent. Exakt är det 1,03 / 1,02 ≈ 1,0098, alltså knappt 1 procent.'),
+            skriv('Lönen ökar nominellt med 4 procent och inflationen är 1 procent. Ungefär hur många procent ökar '
+                  'reallönen?', tal(4 - 1),
+                  'Reallönen är lönen räknad i vad man kan köpa: ungefär 4 − 1 = 3 procent.'),
+            val('Vad är deflation?',
+                ['Att priserna i allmänhet sjunker', 'Att priserna i allmänhet stiger',
+                 'Att Riksbanken höjer styrräntan', 'Att staten sänker skatterna'],
+                'Att priserna i allmänhet sjunker',
+                'Deflation kan låta bra, men hushållen väntar då med att köpa, och ekonomin kan bromsa in.'),
+            val('Vad mäter konsumentprisindex, KPI?',
+                ['Hur priserna på en korg av varor och tjänster förändras',
+                 'Hur mycket varor och tjänster som säljs till andra länder',
+                 'Hur mycket hushållen sparar av sina inkomster varje år',
+                 'Hur stor del av befolkningen som har ett arbete'],
+                'Hur priserna på en korg av varor och tjänster förändras',
+                'Korgen innehåller det ett vanligt hushåll köper. Ändras dess pris ändras KPI.'),
+            skriv('En vara kostar %d kr, och priserna stiger med %d procent på ett år. Vad kostar varan efter ett år, '
+                  'om den följer inflationen? Svara i kronor.' % (VARA, INFLATION), tal(int(VARA_EFTER)),
+                  '%d · 1,0%d = %s kr.' % (VARA, INFLATION, tal(int(VARA_EFTER)))),
+            val('Vem förlorar mest på en hög inflation?',
+                ['Den som har sparpengar på ett konto med låg ränta', 'Den som har ett stort lån med fast ränta',
+                 'Den som får sin lön höjd mer än inflationen', 'Ett företag som höjer sina priser i takt med inflationen'],
+                'Den som har sparpengar på ett konto med låg ränta',
+                'Pengarna på kontot blir mindre värda. För den som har lån blir skulden i stället mindre värd.'),
+            val('Vilket mål har Riksbanken för inflationen?', ['2 procent', '0 procent', '5 procent', '10 procent'],
+                '2 procent', 'Riksbanken vill att priserna ska stiga lugnt och stadigt med omkring 2 procent om året.'),
+        ], beskrivning=bygger('Inflation, deflation, KPI, köpkraft och reallön, med enkla uträkningar.', T_BNP)),
+
+        niva('so-gy3-blad-riksbank-1', 'Styrräntan', 'Riksbanken och staten', [
+            val('Vad gör Riksbanken vanligen när inflationen är för hög?',
+                ['Höjer styrräntan', 'Sänker styrräntan', 'Höjer momsen', 'Sänker skatterna'], 'Höjer styrräntan',
+                'Högre ränta bromsar efterfrågan, och då stiger priserna långsammare. Skatterna beslutar riksdagen om.'),
+            ordna('Ordna kedjan från en höjd styrränta till lägre inflation.',
+                  ['Riksbanken höjer styrräntan', 'Bankerna höjer sina räntor',
+                   'Det blir dyrare att låna och mer lönsamt att spara', 'Hushåll och företag köper mindre',
+                   'Priserna stiger långsammare'],
+                  forklaring='Styrräntan styr bankernas räntor. Då lånar och konsumerar man mindre, efterfrågan minskar, '
+                             'och priserna stiger långsammare.'),
+            val('Vad gör Riksbanken vanligen när inflationen är långt under målet och ekonomin är svag?',
+                ['Sänker styrräntan', 'Höjer styrräntan', 'Höjer skatterna', 'Stänger bankerna'], 'Sänker styrräntan',
+                'Lägre ränta gör det billigare att låna, och då ökar konsumtion och investeringar.'),
+            val('Vad händer vanligtvis med priset på importerade varor om kronan blir starkare?',
+                ['De blir billigare', 'De blir dyrare', 'De är oförändrade'], 'De blir billigare',
+                'Med en starkare krona räcker kronorna till mer utländsk valuta, så importen kostar mindre.'),
+            para('Para ihop begreppet med vad det betyder.',
+                 [('Penningpolitik', 'Riksbanken styr räntan för att påverka inflationen'),
+                  ('Finanspolitik', 'riksdag och regering ändrar skatter och utgifter')],
+                 'Riksbanken sköter penningpolitiken, och staten sköter finanspolitiken med budgeten.'),
+            sant('Regeringen får inte bestämma över Riksbankens styrränta.', True,
+                 'Riksbanken är en självständig myndighet under riksdagen. Räntan ska inte styras av politiska skäl.'),
+            sant('En sänkt styrränta gör det vanligen billigare att låna.', True,
+                 'Bankerna följer styrräntan, så räntan på lån brukar sjunka när styrräntan sänks.'),
+            val('Vad kan staten göra i en lågkonjunktur för att öka efterfrågan?',
+                ['Öka sina utgifter eller sänka skatterna', 'Minska sina utgifter och höja skatterna',
+                 'Höja styrräntan och stänga bankerna', 'Förbjuda import och export helt'],
+                'Öka sina utgifter eller sänka skatterna',
+                'Då får hushåll och företag mer pengar att spendera. Tanken går tillbaka på ekonomen Keynes.'),
+            val('Varför har Riksbanken ett mål om låg och stabil inflation i stället för noll?',
+                ['En liten och jämn prisökning gör det lättare att planera och minskar risken för deflation',
+                 'En liten och jämn prisökning gör att lönerna alltid stiger mer än priserna gör',
+                 'En liten och jämn prisökning gör att staten kan ta in mer skatt utan att höja den',
+                 'En liten och jämn prisökning gör att kronan alltid blir starkare än andra valutor'],
+                'En liten och jämn prisökning gör det lättare att planera och minskar risken för deflation',
+                'Hushåll och företag vet ungefär vad saker kommer att kosta, och fallande priser kan bromsa ekonomin.'),
+        ], beskrivning=bygger('Riksbanken och styrräntan, kedjan till inflationen, kronan och finanspolitiken.', T_BNP)),
+
+        niva('so-gy3-blad-budget-1', 'Statens budget och skatterna', 'Riksbanken och staten', [
+            val('Vilken av dessa är en inkomst i statens budget?',
+                ['Moms', 'Försvaret', 'Polisen', 'Bistånd till andra länder'], 'Moms',
+                'Momsen är en skatt som staten tar in. Försvaret, polisen och biståndet är utgifter.'),
+            val('Vilken av dessa är en utgift i statens budget?',
+                ['Försvaret', 'Moms', 'Statlig inkomstskatt', 'Arbetsgivaravgifter'], 'Försvaret',
+                'Försvaret betalas av staten. De andra är skatter och avgifter som staten tar in.'),
+            val('Vad innebär progressiv skatt?',
+                ['Ju högre inkomst, desto större andel av inkomsten betalar man i skatt',
+                 'Alla betalar samma andel av inkomsten i skatt, oavsett hur mycket de tjänar',
+                 'Alla betalar samma summa i kronor i skatt, oavsett hur mycket de tjänar',
+                 'Ju högre inkomst, desto mindre andel av inkomsten betalar man i skatt'],
+                'Ju högre inkomst, desto större andel av inkomsten betalar man i skatt',
+                'I Sverige betalar den som tjänar mer än en viss gräns också statlig inkomstskatt.'),
+            val('Vilket är ett argument FÖR progressiv skatt?',
+                ['Den omfördelar och minskar klyftorna, eftersom de som har mer bidrar mer',
+                 'Den kan minska viljan att arbeta mer eller att utbilda sig till ett bättre jobb',
+                 'Den gör att alla betalar exakt lika mycket, vilket många ser som rättvist',
+                 'Den gör att staten får in mindre pengar och därför måste spara mer'],
+                'Den omfördelar och minskar klyftorna, eftersom de som har mer bidrar mer',
+                'Omfördelningen är ett skäl för. Att viljan att arbeta kan minska är ett skäl emot, och progressiv skatt gör inte att alla betalar lika.'),
+            val('Vilket är ett argument MOT progressiv skatt?',
+                ['Den kan minska viljan att arbeta mer eller att utbilda sig till ett bättre jobb',
+                 'Den omfördelar och minskar klyftorna, eftersom de som har mer bidrar mer',
+                 'Den gör att de med låga inkomster får behålla en större del av sin lön',
+                 'Den ger staten pengar till skola och vård som alla har nytta av'],
+                'Den kan minska viljan att arbeta mer eller att utbilda sig till ett bättre jobb',
+                'Om man får behålla mindre av varje extra krona kan det kännas mindre lönt att tjäna mer.'),
+            para('Para ihop skatten med vilken sorts skatt det är.',
+                 [('Inkomstskatt', 'direkt skatt, som dras på inkomsten'),
+                  ('Moms', 'indirekt skatt, som ingår i priset')],
+                 'En direkt skatt betalar man på det man tjänar. En indirekt skatt betalar man när man köper något.'),
+            skriv('Anta att skatten är %d %% på inkomster upp till %s kr och %d %% på det som är över. Hur mycket '
+                  'skatt betalar den som tjänar %s kr?' % (SKATT_LAG, tal(SKATT_GRANS), SKATT_HOG, tal(INKOMST)),
+                  tal(int(SKATT)),
+                  '%d %% av %s är %s, och %d %% av de %s kr som är över gränsen är %s. Sammanlagt %s kr.'
+                  % (SKATT_LAG, tal(SKATT_GRANS), tal(int(F(SKATT_LAG, 100) * SKATT_GRANS)), SKATT_HOG,
+                     tal(INKOMST - SKATT_GRANS), tal(int(F(SKATT_HOG, 100) * (INKOMST - SKATT_GRANS))),
+                     tal(int(SKATT)))),
+            val('Vad betyder det att statens budget har ett underskott?',
+                ['Statens utgifter är större än inkomsterna', 'Statens inkomster är större än utgifterna',
+                 'Statens inkomster och utgifter är lika stora', 'Staten har inga skulder alls'],
+                'Statens utgifter är större än inkomsterna',
+                'Ett underskott måste lånas. Ett överskott kan användas till att betala av på skulden.'),
+            sant('Kommunalskatten är progressiv: procentsatsen stiger ju mer man tjänar.', False,
+                 'Kommunalskatten är samma procent för alla inkomster i kommunen. Det är den statliga inkomstskatten '
+                 'som gör systemet progressivt.'),
+            val('Vad är arbetsgivaravgifter?',
+                ['Avgifter som arbetsgivaren betalar till staten utöver lönen',
+                 'Avgifter som den anställde betalar till facket varje månad',
+                 'Avgifter som arbetsgivaren tar ut av kunderna för en vara',
+                 'Avgifter som staten betalar till företag som anställer'],
+                'Avgifter som arbetsgivaren betalar till staten utöver lönen',
+                'Avgifterna betalar bland annat pensioner och sjukförsäkring.'),
+        ], beskrivning=bygger('Statens budget, direkt och indirekt skatt, progressiv skatt och argument för och emot.',
+                              T_BNP)),
+    ]),
+
+    # ------------------------------------------------------------------ Programmering gy1
+    bana(PROG, 'gy1', [
+        niva('prog-gy1-blad-listor-1', 'Index och len', 'Listor', [
+            vad_skrivs(K_INDEX, 'Index börjar på 0. tal[0] är 4, och tal[1], det andra elementet, är %s.'
+                       % utskrift(K_INDEX)),
+            vad_skrivs(K_APPEND_LEN, 'append lägger till 8 sist, så listan blir [2, 4, 6, 8]. len ger antalet: %s.'
+                       % utskrift(K_APPEND_LEN)),
+            vad_skrivs(K_INDEX_SUMMA, 'tal[0] är 4 och tal[2] är 15. 4 + 15 = %s.' % utskrift(K_INDEX_SUMMA)),
+            vad_skrivs(K_SISTA, 'Ett negativt index räknar bakifrån. tal[-1] är det sista elementet, %s.'
+                       % utskrift(K_SISTA)),
+            val(fraga_kod('Vad händer när programmet körs?', K_UTANFOR),
+                ['Ett fel: listan har inget element med index 3', '15', '4', 'None'],
+                'Ett fel: listan har inget element med index 3',
+                'Listan har tre element med index 0, 1 och 2. Index 3 finns inte, och Python ger ett IndexError.'),
+            val(fraga_kod('Vad skrivs ut?', K_APPEND_LISTA), [utskrift(K_APPEND_LISTA), '[6, 2, 4]', '[2, 4]', '[2, 4, 6, 6]'],
+                utskrift(K_APPEND_LISTA), 'append lägger till 6 sist i listan, och print skriver hela listan.'),
+            vad_skrivs(K_NAMN_LEN, 'len räknar elementen i listan: Ali, Bea och Cem är %s.' % utskrift(K_NAMN_LEN)),
+            vad_skrivs(K_BYT_ELEMENT, 'tal[1] = 7 byter 3 mot 7, så listan blir [5, 7, 9]. 7 + 9 = %s.'
+                       % utskrift(K_BYT_ELEMENT)),
+            sant('Det första elementet i en lista har index 1.', [4, 8, 15][1] == 4,
+                 'I Python har det första elementet index 0. tal[1] är det andra.'),
+        ], beskrivning=bygger('Listor i Python: index från 0, negativt index, len, append och att byta ett element.',
+                              T_PYGY)),
+
+        niva('prog-gy1-blad-listor-2', 'Gå igenom en lista', 'Listor', [
+            vilket_skrivs(K_UPPER, ['KALBALO', 'LO, BA, KAL', 'KAL, KAL, KAL'],
+                          'Loopen tar ett ord i taget, och upper() gör om det till versaler. print skriver en rad per varv.'),
+            vad_skrivs(K_SUMMERA, 'summa börjar på 0 och får 3, 5 och 9 i tur och ordning: 3 + 5 + 9 = %s.'
+                       % utskrift(K_SUMMERA)),
+            vad_skrivs(K_RAKNA_STORA, 'Bara 7 och 9 är större än 4, så antal ökar två gånger.'),
+            vad_skrivs(K_STORST, 'storst börjar på 3. Den byts mot 7 och sedan mot 9. 1 och 4 är mindre.'),
+            vad_skrivs(K_SATT_IHOP, 'text börjar tom. Först läggs "sol" till och sedan "is", så det blir %s.'
+                       % utskrift(K_SATT_IHOP)),
+            vilket_skrivs(K_BYGG_LISTA, ['3 4', '2 6', '3 3'],
+                          'Listan blir [2, 4, 6]. len är 3, och dubbel[2], det tredje elementet, är 6.'),
+            vad_skrivs(K_MEDEL, 'sum ger 18 och len ger 3. / ger alltid ett decimaltal i Python: 18 / 3 = 6.0.'),
+            val('Listan heter tal. Vilken rad lägger till talet 10 sist i listan?', LAGG_TILL, LAGG_TILL[0],
+                'append är listans metod för att lägga till sist. Listor har ingen add, och en lista plus ett tal ger ett fel.'),
+            vilket_skrivs(K_INDEXLOOP, ['6, 2, 8, 1', '1, 2, 3, 4', '0, 1, 2, 3, 4'],
+                          'len(tal) är 4, så range(4) ger index 0, 1, 2 och 3. Loopen skriver index, inte talen.'),
+        ], beskrivning=bygger('Gå igenom en lista med for: summera, räkna, hitta det största och bygga en ny lista.',
+                              T_PYGY)),
+
+        niva('prog-gy1-blad-funktioner-1', 'def och return', 'Funktioner och loopar', [
+            vad_skrivs(K_DUBBLA, 'dubbla(5) lämnar tillbaka 10, och 10 + 1 = %s.' % utskrift(K_DUBBLA)),
+            val('Vilken funktion lämnar tillbaka x upphöjt till 2?', KVADRAT, KVADRAT[0],
+                '** är upphöjt till. * 2 dubblar, ^ är något annat i Python, och print visar svaret men lämnar inte '
+                'tillbaka det.'),
+            vad_skrivs(K_SUMMA_F, 'summa(3, 4) lämnar tillbaka 7, och 7 · 2 = %s.' % utskrift(K_SUMMA_F)),
+            vad_skrivs(K_HALSA, 'Funktionen sätter ihop "Hej ", namnet och "!" till en text, som print skriver.'),
+            vad_skrivs(K_STORRE, '4 > 9 är falskt, så return a hoppas över, och funktionen lämnar tillbaka b, %s.'
+                       % utskrift(K_STORRE)),
+            val('Vad är skillnaden mellan return och print i en funktion?',
+                ['return lämnar tillbaka värdet så att koden kan räkna vidare, print visar det bara på skärmen',
+                 'print lämnar tillbaka värdet så att koden kan räkna vidare, return visar det bara på skärmen',
+                 'return och print gör exakt samma sak, men return går lite snabbare att köra i Python',
+                 'return används bara i loopar, och print används bara i funktioner med två parametrar'],
+                'return lämnar tillbaka värdet så att koden kan räkna vidare, print visar det bara på skärmen',
+                'Med return kan man skriva dubbla(5) + 1. En funktion som bara skriver ut lämnar tillbaka None.'),
+            vad_skrivs(K_F_X, 'f(3) är 3 · 3 = 9 och f(2) är 2 · 2 = 4. 9 + 4 = %s.' % utskrift(K_F_X)),
+            sant(fraga_kod('Programmet skriver ut hej.', K_BARA_DEF), kor(K_BARA_DEF) == 'hej\n',
+                 'def bara definierar funktionen. Den körs först när någon anropar den, med f().'),
+            vad_skrivs(K_DUBBLA_DUBBLA, 'Det inre anropet körs först: dubbla(3) är 6, och dubbla(6) är %s.'
+                       % utskrift(K_DUBBLA_DUBBLA)),
+        ], beskrivning=bygger('Funktioner med def och return: anropa, räkna vidare med svaret och skilja return från '
+                              'print.', T_PYGY)),
+
+        niva('prog-gy1-blad-loopar-1', 'while, // och %', 'Funktioner och loopar', [
+            vad_skrivs(K_WHILE, 'x blir 10 − 4 = 6 och sedan 6 − 4 = 2. Då är 2 > 3 falskt, och loopen slutar.'),
+            vilket_skrivs(K_DIV_REST, ['3.5 1', '3 0', '1 3'],
+                          '7 // 2 är heltalsdivision: 3. 7 % 2 är resten: 1, eftersom 2 · 3 = 6 och 7 − 6 = 1.'),
+            vad_skrivs(K_HELTAL, '// delar och stryker decimalerna. 23 / 4 = 5,75, så 23 // 4 är %s.' % utskrift(K_HELTAL)),
+            vad_skrivs(K_REST, '%% ger resten. 4 · 5 = 20, och 23 − 20 = %s.' % utskrift(K_REST)),
+            vad_skrivs(K_GANGER_TRE, 'n blir 3, 9, 27, 81 och 243. Efter fem varv är n inte längre mindre än 100.'),
+            sant('tal % 2 == 0 är sant precis när tal är ett jämnt tal.', True,
+                 'Ett jämnt tal går att dela med 2 utan rest. Ett udda tal ger resten 1.'),
+            vad_skrivs(K_SIFFERSUMMA, 'tal %% 10 tar sista siffran och tal // 10 stryker den. 2 + 7 + 4 = %s.'
+                       % utskrift(K_SIFFERSUMMA)),
+            val(fraga_kod('Vad händer när programmet körs?', K_EVIG),
+                ['Det skriver 5 om och om igen, utan slut', 'Det skriver 5, 4, 3, 2 och 1',
+                 'Det skriver ingenting alls', 'Det skriver 5 en gång och slutar'],
+                'Det skriver 5 om och om igen, utan slut',
+                'x ändras aldrig i loopen, så x > 0 är alltid sant. Det behövs en rad som x = x - 1.'),
+            vilket_skrivs(K_MINUTER, ['2 25', '2.08 5', '1 65'],
+                          '125 // 60 = 2 hela timmar, och 125 % 60 = 5 minuter kvar.'),
+            skriv(fraga_kod('Hur många rader skriver programmet ut?', K_SEX_STEG), tal(len(rader(K_SEX_STEG))),
+                  'x är 20, 14, 8 och 2 när det skrivs ut. Sedan blir x −4, och loopen slutar.'),
+        ], beskrivning=bygger('while-loopar, heltalsdivision med // och rest med %: läsa och följa programmen.',
+                              T_PYGY)),
+    ]),
+]
