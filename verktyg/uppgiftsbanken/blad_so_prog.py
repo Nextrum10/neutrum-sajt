@@ -1304,7 +1304,7 @@ BANOR = [
             val('Vilka två saker handlade vikingarna med, enligt texten?',
                 ['Silver och pälsar', 'Kaffe och socker', 'Potatis och tobak', 'Papper och glas'],
                 'Silver och pälsar', 'Texten nämner silver, pälsar och slavar.'),
-            val('Vilka två av gudarna i texten är nordiska gudar?',
+            val('Vilket par är två av gudarna som texten nämner?',
                 ['Tor och Frej', 'Zeus och Apollon', 'Jupiter och Mars', 'Osiris och Ra'], 'Tor och Frej',
                 'Texten nämner Oden, Tor och Frej. De andra är gudar från Grekland, Rom och Egypten.'),
             val('Vad var tinget?',
