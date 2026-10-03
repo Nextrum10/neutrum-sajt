@@ -199,7 +199,7 @@ AK2_PENGAR = niva('ma-ak2-blad-pengar-1', 'Mynt och sedlar', 'Tiotal, klockan oc
 
 # ===================================================================== åk 3
 
-HOR_IHOP_21 = ['3 · 7 = 21', '21 − 3 = 18', '7 + 3 = 10']
+HOR_IHOP_21 = ['3 · 7 = 21', '3 · 21 = 63', '7 · 21 = 147']
 BERATTELSE_8 = ['8 bullar delas lika mellan 2 barn, och varje barn får 4 bullar.',
                 '8 bullar och 2 bullar till läggs på ett fat, och det blir 10 bullar.',
                 '2 barn har 4 bullar var, och de äter upp 2 av bullarna tillsammans.']
@@ -230,7 +230,7 @@ AK3_DIVISION = niva('ma-ak3-blad-division-1', 'Dela lika', 'Gånger och delat', 
     skriv('20 elever delas in i grupper med 5 elever i varje. Hur många grupper blir det?', t(20 // 5),
           'Hur många femmor ryms i 20? 20 : 5 = 4 grupper.'),
     val('Vilken multiplikation hör ihop med 21 : 3 = 7?', HOR_IHOP_21,
-        enda(HOR_IHOP_21, lambda a: '·' in a),
+        enda(HOR_IHOP_21, lambda a: sorted(a.split(' = ')[0].split(' · ')) == ['3', '7']),
         'Division är multiplikation baklänges: 21 : 3 = 7 eftersom 3 · 7 = 21.'),
     val('Vilken berättelse passar till 8 : 2 = 4?', BERATTELSE_8, BERATTELSE_8[0],
         '8 : 2 betyder att 8 saker delas lika i 2 delar. Varje del får 4.'),

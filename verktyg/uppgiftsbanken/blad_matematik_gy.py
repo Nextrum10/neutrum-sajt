@@ -358,7 +358,7 @@ def xy(text):
 assert [a for a in SYS_1 if (lambda x, y: y == 2 * x - 1 and y == -x + 5)(*xy(a))] == ['x = 2, y = 3']
 SYS_2 = ['x = 3, y = 2', 'x = 2, y = 3', 'x = 4, y = 3', 'x = 6, y = 0']
 assert [a for a in SYS_2 if (lambda x, y: 2 * x + 3 * y == 12 and x - y == 1)(*xy(a))] == ['x = 3, y = 2']
-K_ALT = ['k < 4', 'k > 4', 'k = 4', 'k < −4']
+K_ALT = ['k < 4', 'k > 4', 'k = 4', 'k ≤ 4']
 assert all(((F(4, 2) ** 2 - k) > 0) == (k < 4) for k in range(-10, 11))
 MINPUNKT = ['(2, −1)', '(−2, 15)', '(2, 3)', '(1, 0)']
 
@@ -628,8 +628,8 @@ GY1 = bana('Matematik', 'gy1', [
             'A: 20 · 15 + 120 = 420 kr. B: 300 kr. C: 10 · 15 + 200 = 350 kr. B är billigast.'),
         val('Kostnaden för ett mobilabonnemang är y = 20x + 120 kr, där x är antal GB. Vad betyder talet 120?',
             ['Den fasta månadsavgiften, alltså kostnaden vid 0 GB',
-             'Kostnaden för varje extra GB under månaden',
-             'Det antal GB som ingår i månadsavgiften'],
+             'Kostnaden för varje extra GB som används under månaden',
+             'Det antal GB som ingår i den fasta månadsavgiften'],
             'Den fasta månadsavgiften, alltså kostnaden vid 0 GB',
             'm = 120 är y-värdet när x = 0, startvärdet. Kostnaden per GB är k = 20.'),
         val('A kostar 120 kr i månaden plus 20 kr per GB och C kostar 200 kr i månaden plus 10 kr per GB. '
@@ -1209,7 +1209,7 @@ GY3 = bana('Matematik', 'gy3', [
         val_derivata('Derivera f(x) = 7.', F_7, [P(), P((7, 0)), P((7, 1)), P((1, 0))],
                      'En konstant ändras aldrig, så lutningen är 0 överallt.'),
         sant('f(x) = x² + 100 och g(x) = x² har samma derivata.', D(P((1, 2), (100, 0))) == D(P((1, 2))),
-             'Konstanten 100 försvinner när man deriverar. Båda har derivatan 2x: kurvorna är samma, bara förskjutna uppåt.'),
+             'Konstanten 100 försvinner när man deriverar. Båda har derivatan 2x: kurvorna har samma form, och den ena är bara förskjuten uppåt.'),
         val('Derivera f(x) = √x, för x > 0. Tips: √x = x^(1/2).', [a for a, _ in SQRTX], 'f′(x) = 1/(2√x)',
             'x^(1/2) blir (1/2) · x^(−1/2), och x^(−1/2) är 1/√x. Alltså 1/(2√x).'),
     ], beskrivning='Deriveringsregeln för xⁿ, term för term, och för negativa och halva exponenter. '
