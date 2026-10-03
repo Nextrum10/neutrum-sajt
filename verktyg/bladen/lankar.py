@@ -11,6 +11,11 @@ Adresserna kommer ur webbsökningar 2026-10-02. Miljön där de lades in nådde 
 de är inte klickprovade; en länk som slutat fungera stängs av i adminvyn och rättas här med en
 ny migration som uppdaterar raden (id:t kommer ur namnet, inte ur adressen).
 
+2026-10-03 jämfördes varje adress med vad sökmotorerna har indexerat, eftersom miljön fortfarande
+inte nådde sidorna. Tre fanns inte där och byttes mot de sidor som finns (engelska nivå 1 och 2
+och Umeås tidigare prov i matematik), och PRIM-gruppens två rader pekar nu på sidan om proven i
+stället för gruppens startsida (20261003020000_materialbanken_lankarna_rattas).
+
 En länk är en dict med namn (börjar med årskursen), arskurs, amne, titel, beskrivning och lank.
 Beskrivningen säger vem som står bakom sidan och lovar inget om vad som ligger där i dag.
 """
@@ -19,7 +24,7 @@ LANKAR = [
     dict(namn='ak6-matematik-np-prim-gruppen', arskurs='ak6', amne='Matematik',
          titel='Nationella proven i matematik (PRIM-gruppen)',
          beskrivning='Stockholms universitets provgrupp, som gör proven i matematik för åk 6 och åk 9. Information om proven och publicerat provmaterial.',
-         lank='https://www.su.se/enheter/prim-gruppen'),
+         lank='https://www.su.se/enheter/prim-gruppen/nationella-prov'),
 
     dict(namn='ak6-engelska-np-exempeluppgifter', arskurs='ak6', amne='Engelska',
          titel='Exempel på uppgifter i nationella provet i engelska, åk 6',
@@ -59,7 +64,7 @@ LANKAR = [
     dict(namn='gy1-matematik-np-prim-gruppen', arskurs='gy1', amne='Matematik',
          titel='Nationella proven i matematik (PRIM-gruppen)',
          beskrivning='Stockholms universitets provgrupp för matematik: information om proven och publicerat provmaterial.',
-         lank='https://www.su.se/enheter/prim-gruppen'),
+         lank='https://www.su.se/enheter/prim-gruppen/nationella-prov'),
 
     dict(namn='gy1-svenska-np-niva-1', arskurs='gy1', amne='Svenska',
          titel='Nationella provet i svenska nivå 1',
@@ -69,17 +74,17 @@ LANKAR = [
     dict(namn='gy1-engelska-np-niva-1', arskurs='gy1', amne='Engelska',
          titel='Nationella provet i engelska nivå 1',
          beskrivning='Göteborgs universitets provgrupp: om provet i engelska nivå 1 och exempel på uppgifter.',
-         lank='https://www.gu.se/nationella-prov-frammande-sprak/prov-och-bedomningsstod-i-engelska/engelska-pa-niva-1/nationella-prov-i-engelska-pa-niva-1'),
+         lank='https://www.gu.se/nationella-prov-frammande-sprak/prov-och-bedomningsstod-i-engelska/engelska-pa-niva-1/nationellt-prov-i-engelska-pa-niva-1'),
 
     dict(namn='gy2-matematik-np-tidigare-givna-prov', arskurs='gy2', amne='Matematik',
          titel='Tidigare givna prov i matematik, gymnasiet (Umeå universitet)',
          beskrivning='Umeå universitets provgrupp, som gör proven i matematik på gymnasiet efter nivå 1, publicerar här tidigare prov.',
-         lank='https://www.umu.se/npma/tidigare-givna-prov/'),
+         lank='https://www.umu.se/en/department-of-applied-educational-science/national-test-and-test-bank/national-course-tests-in-mathematics/earlier-given-tests/'),
 
     dict(namn='gy2-engelska-np-niva-2', arskurs='gy2', amne='Engelska',
          titel='Nationella provet i engelska nivå 2',
          beskrivning='Göteborgs universitets provgrupp: om provet i engelska nivå 2 och exempel på uppgifter.',
-         lank='https://www.gu.se/nationella-prov-frammande-sprak/prov-och-bedomningsstod-i-engelska/engelska-pa-niva-2-gymnasiet/nationellt-prov-i-engelska-pa-niva-2'),
+         lank='https://www.gu.se/nationella-prov-frammande-sprak/prov-och-bedomningsstod-i-engelska/engelska-pa-niva-2/nationellt-prov-i-engelska-pa-niva-2'),
 
     dict(namn='gy3-svenska-np-niva-3', arskurs='gy3', amne='Svenska',
          titel='Nationella provet i svenska kurs 3 och nivå 3',

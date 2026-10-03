@@ -305,7 +305,7 @@ BLAD = [
                     ('Är berättaren en jag-berättare eller en tredjepersonsberättare? Hur ser du det?', 2),
                     ('Vad menar författaren med att "väskan var lättare än förut"? Tolka bilden.', 2),
                     ('Vilket tema tycker du novellen har? Motivera.', 2)],
-         beskrivning='Läsa en kort original-novell och analysera miljö, huvudperson, vändpunkt, berättarperspektiv, bildspråk och tema.'),
+         beskrivning='Läsa en kort originalnovell och analysera miljö, huvudperson, vändpunkt, berättarperspektiv, bildspråk och tema.'),
 
     dict(fil='ak9-engelska-present-perfect', arskurs='ak9', amne='Engelska',
          titel='Present perfect eller past simple?', omrade='Grammatik', tid='30 minuter',
