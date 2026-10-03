@@ -125,7 +125,8 @@ för en nivå första gången och 100 för ett område (`intern.nexlax_*`,
 inräknade, bryts först efter en hel dag utan något och påminns aldrig
 om. Mästarprovet (områden med minst två nivåer) och repetitionen drar
 sina frågor ur banan, och banans procent räknar bara de vanliga
-nivåerna. Banken (Fas 23.3) har 40 banor i sex ämnen, skrivna från
+nivåerna. Banken har 55 banor i sex ämnen (2026-10-03, med en nivå per
+övningsblad i materialbanken, lagd sist i banan genom `TILLAGG`), skrivna från
 grunden mot Lgr22: inget kopieras ur nationella prov eller från nätet,
 för det är skyddat eller icke-kommersiellt. En fråga ska gå att förstå
 ensam, för Mästarprovet och repetitionen drar den ur sin nivå.
