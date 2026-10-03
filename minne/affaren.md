@@ -22,6 +22,15 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
 Föräldravyn låses upp först efter steg 4. Innan dess: väntläge, inte
 trasig sida.
 
+**Kontaktvalet** (2026-10-03): familjen väljer i intresseanmälan om vi
+ska ringa eller mejla först. Inget förval, och Ring kräver telefon.
+Svaret står som första rad i `message` ("Kontakt först: ring" eller
+"mejl"), före familjens text, eftersom databasen kapar message
+bakifrån vid 4000 tecken. Ingen egen kolumn: då behövdes ingen
+migration, och `lead-notis` mejlar det redan i meddelandet. Tacket
+följer valet (`tackIntresseRing`). Steg 2 ovan gäller bara den som
+valt Ring; den som valt mejl får ett mejl först.
+
 ## Uppstarten
 
 **Intresseanmälan säger att Nextrum bildas** (2026-09-29). Leo: "just

@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=7999196a">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=88994baf">
 <!-- rutan om att Nextrum bildas; bara här och på den svenska sidan -->
 <link rel="stylesheet" href="../nextrum-uppstart.css?v=f10d1d31">
 </head>
@@ -203,6 +203,19 @@
               <input class="inp" id="l-name" name="parent_name" required autocomplete="name"></div>
             <div class="pay-field"><label for="l-email">Email</label>
               <input class="inp" id="l-email" name="email" type="email" required autocomplete="email"></div>
+            <!-- KONTAKTVALET (2026-10-03). Ring eller mejl först, och
+                 inget är förvalt: ett förval väljer åt familjen. Ring
+                 kräver telefon, och skriptet längst ner säger till.
+                 Svaret står överst i message, så det är det första
+                 den som hör av sig läser. Samma fält står i
+                 intresseanmalan.html. -->
+            <fieldset class="nx-kontaktval full" id="l-kontakt">
+              <legend>How would you like us to contact you first?</legend>
+              <div class="nx-kontaktval-rad">
+                <label><input type="radio" name="kontakt" value="ring" required><span>Call me</span></label>
+                <label><input type="radio" name="kontakt" value="mejl" required><span>Email first</span></label>
+              </div>
+            </fieldset>
             <div class="pay-field"><label for="l-phone">Phone</label>
               <input class="inp" id="l-phone" name="phone" type="tel" autocomplete="tel" placeholder="Optional"></div>
             <div class="pay-field"><label for="l-child">Student’s name</label>
@@ -395,7 +408,7 @@
 <script src="../nextrum-config.js?v=fdfed591"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=f943570b"></script>
+<script src="../nextrum-app.js?v=60c61372"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
@@ -485,6 +498,8 @@
      De fält som inte har någon egen kolumn (telefon, upplägg,
      tider, samtycke) läggs sist i "message" som märkta rader.
      Då behöver schemat inte ändras och ingenting går förlorat.
+     Kontaktvalet står i stället ÖVERST: det är det första den som
+     hör av sig behöver, och databasen kapar message bakifrån.
      ========================================================== */
   const leadForm = $('#lead-form');
   if (leadForm) {
@@ -506,16 +521,53 @@
       gdpr.addEventListener('change', () => { if (gdpr.checked) märkSamtycke(false); });
     }
 
+    /* Kontaktvalet: Ring kräver telefon. Platshållaren säger det så
+       fort Ring väljs, i stället för först när knappen trycks. */
+    const telInp = $('#l-phone');
+    const telValfri = telInp.placeholder;
+    const kontaktFält = $('#l-kontakt');
+    const kontaktVal = () => {
+      const v = leadForm.querySelector('input[name="kontakt"]:checked');
+      return v ? v.value : '';
+    };
+    const märkKontakt = på => { if (kontaktFält) kontaktFält.classList.toggle('fel', på); };
+    const telefonKrävs = ring => {
+      telInp.required = ring;
+      telInp.placeholder = ring ? t('telefonForRing') : telValfri;
+      if (!ring) telInp.removeAttribute('aria-invalid');
+    };
+    leadForm.querySelectorAll('input[name="kontakt"]').forEach(r =>
+      r.addEventListener('change', () => { märkKontakt(false); telefonKrävs(kontaktVal() === 'ring'); }));
+    telInp.addEventListener('input', () => { if (telInp.value.trim()) telInp.removeAttribute('aria-invalid'); });
+
     leadForm.addEventListener('submit', async e => {
       e.preventDefault();
       const msg = $('#lead-msg'), knapp = $('#lead-submit');
       rensa(msg);
       märkSamtycke(false);
+      märkKontakt(false);
 
       const namn = $('#l-name').value.trim();
       const epost = $('#l-email').value.trim();
       if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
       if (!epostOk(epost)) { säg(msg, t('felEpost'), false); return; }
+      const kontakt = kontaktVal();
+      if (!kontakt) {
+        säg(msg, t('valjKontakt'), false);
+        märkKontakt(true);
+        const första = leadForm.querySelector('input[name="kontakt"]');
+        första.focus({ preventScroll: true });
+        första.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
+      const tel = telInp.value.trim();
+      if (kontakt === 'ring' && !tel) {
+        säg(msg, t('felTelefonRing'), false);
+        telInp.setAttribute('aria-invalid', 'true');
+        telInp.focus({ preventScroll: true });
+        telInp.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
       if (!gdpr.checked) {
         säg(msg, t('samtyckeIntresse'), false);
         märkSamtycke(true);
@@ -526,7 +578,6 @@
       if (!supa) { säg(msg, t('ingenDatabasForm'), false); return; }
 
       const extra = [];
-      const tel = $('#l-phone').value.trim();
       const format = $('#l-format').value;
       const tider = $('#l-tider').value.trim();
       if (tel) extra.push('Telefon: ' + tel);
@@ -535,7 +586,8 @@
       extra.push('Läst integritetspolicyn: ja (' + new Date().toISOString().slice(0, 10) + ')');
 
       const fritext = $('#l-msg').value.trim();
-      const message = [fritext, extra.join('\n')].filter(Boolean).join('\n\n');
+      const kontaktRad = 'Kontakt först: ' + (kontakt === 'ring' ? 'ring' : 'mejl');
+      const message = [kontaktRad, fritext, extra.join('\n')].filter(Boolean).join('\n\n');
 
       /* Valde de "Andra ämnen" är fritexten det som faktiskt betyder
          något — skriv den i subject-kolumnen i stället för etiketten. */
@@ -579,8 +631,14 @@
 
       if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       leadForm.reset();
-      säg(msg, uppstartOm ? t('tackIntresseUppstart', { e: epost, om: uppstartOm })
-                          : t('tackIntresse', { e: epost }), true);
+      telefonKrävs(false);
+      if (kontakt === 'ring') {
+        säg(msg, uppstartOm ? t('tackIntresseRingUppstart', { tel: tel, om: uppstartOm })
+                            : t('tackIntresseRing', { tel: tel }), true);
+      } else {
+        säg(msg, uppstartOm ? t('tackIntresseUppstart', { e: epost, om: uppstartOm })
+                            : t('tackIntresse', { e: epost }), true);
+      }
       NX.händelse('intresseanmalan', {
         kanal: NX.källa().kanal || 'okänd',
         kampanj: NX.källa().kampanj || 'ingen',
