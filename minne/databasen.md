@@ -360,7 +360,12 @@ sökvägen.
   till provgruppernas egna sidor (PRIM-gruppen vid Stockholms universitet,
   Göteborgs, Uppsala och Umeå universitet), en rad i `biblioteksmaterial`
   med `lank` var, id:t ur namnet. Adresserna kommer ur webbsökningar och är
-  inte klickprovade, eftersom molnmiljön nekade alla de domänerna.
+  inte klickprovade, eftersom molnmiljön nekade alla de domänerna. 2026-10-03
+  jämfördes varje adress med sökmotorernas index i stället: nio fanns exakt
+  så, tre fanns inte och byttes (engelska nivå 1 och 2, Umeås tidigare prov
+  i matematik), och PRIM-gruppens två rader pekar på sidan om proven
+  (`20261003020000_materialbanken_lankarna_rattas`). Ett index är inte ett
+  klick: en människa bör ändå trycka på dem en gång.
 - **NP-träningen är egna uppgifter i provens stil, aldrig provens egna.**
   25 blad (`*-np-*`): delar med och utan räknare och nivåmärkena E, C och A
   (`{E}` i texten), läs- och skrivdelar med påhittat underlag som säger att

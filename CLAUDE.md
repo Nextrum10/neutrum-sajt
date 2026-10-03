@@ -452,7 +452,7 @@ Detaljer: `minne/grunden.md`.
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14
-  länkarna till provgrupperna är inte klickprovade (miljön nådde dem inte). Delade dokument: ingen notis, ingen underskrift, en person per
+  länkarna till provgrupperna är inte klickprovade (miljön nådde dem inte), men jämförda med sökmotorernas index 2026-10-03, då fyra rättades. Delade dokument: ingen notis, ingen underskrift, en person per
   handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
 
 Detaljer: `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`, `minne/affaren.md`, `minne/notiser.md`.
