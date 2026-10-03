@@ -31,6 +31,13 @@ migration, och `lead-notis` mejlar det redan i meddelandet. Tacket
 följer valet (`tackIntresseRing`). Steg 2 ovan gäller bara den som
 valt Ring; den som valt mejl får ett mejl först.
 
+**Timmarna i ansökan** (2026-10-03): den som söker svarar ja eller nej
+på om hen kan jobba minst 4 timmar i veckan. Inget förval, och ett nej
+stoppar inte ansökan. Svaret står som första rad i `applications.why`
+("Minst 4 timmar i veckan: ja"), av samma skäl som kontaktvalet, genom
+`kopplaAnsökan`s `överst()`; sidans kontroll går genom `kontroll()`.
+Kontrollen och valet delar stilen `.nx-val` med kontaktvalet.
+
 ## Uppstarten
 
 **Intresseanmälan säger att Nextrum bildas** (2026-09-29). Leo: "just

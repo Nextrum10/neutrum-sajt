@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=88994baf">
+<link rel="stylesheet" href="nextrum-cinema.css?v=47a1da42">
 </head>
 <body>
 
@@ -240,6 +240,16 @@
           <div class="pay-field"><label for="ap-school">Skola &amp; program</label><input class="inp" id="ap-school" name="skola" placeholder="t.ex. gymnasiet, naturvetenskapsprogrammet"></div>
           <div class="pay-field"><label for="ap-subj">Ämnen du vill hjälpa till med</label><input class="inp" id="ap-subj" name="amnen" placeholder="t.ex. matematik, fysik, engelska"></div>
           <div class="pay-field"><label for="ap-avail">Tider som funkar för dig</label><input class="inp" id="ap-avail" name="tider" placeholder="t.ex. vardagar efter 16, helger"></div>
+          <!-- TIMMARNA (2026-10-03). Ja eller nej, inget förval. Ett nej
+               stoppar inte ansökan; svaret står överst i why, så det är
+               det första vi läser. Samma fält står i en/bli-studiehjalpare.html. -->
+          <fieldset class="nx-val" id="ap-timmar">
+            <legend>Kan du jobba minst 4 timmar i veckan?</legend>
+            <div class="nx-val-rad">
+              <label><input type="radio" name="timmar" value="ja" required><span>Ja</span></label>
+              <label><input type="radio" name="timmar" value="nej" required><span>Nej</span></label>
+            </div>
+          </fieldset>
           <div class="pay-field"><label for="ap-erf">Erfarenhet av att förklara för andra</label><textarea class="inp" id="ap-erf" name="erfarenhet" style="min-height:74px" placeholder="Läxhjälp, ledarskap, träning, syskon — allt räknas. Har du ingen alls är det också helt okej."></textarea></div>
           <div class="pay-field"><label for="ap-why">Varför vill du bli studiehjälpare?</label><textarea class="inp" id="ap-why" name="varfor" style="min-height:110px"></textarea></div>
 
@@ -443,7 +453,7 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=60c61372"></script>
+<script src="nextrum-app.js?v=f7c55a87"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-motion.js?v=f1ce069c"></script>
@@ -502,9 +512,29 @@
     });
   });
 
+  /* Timmarna: ja eller nej måste väljas. Rutan markeras som den
+     glömda samtyckesrutan och släpper när något väljs. */
+  const timmarFält = $('#ap-timmar');
+  const timmarVal = () => {
+    const v = $('#apply-form').querySelector('input[name="timmar"]:checked');
+    return v ? v.value : '';
+  };
+  $('#apply-form').querySelectorAll('input[name="timmar"]').forEach(r =>
+    r.addEventListener('change', () => timmarFält.classList.remove('fel')));
+
   NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), {
     krävSamtycke: '#ap-gdpr',
     cv: '#ap-cv',
+    kontroll: () => {
+      timmarFält.classList.remove('fel');
+      if (timmarVal()) return '';
+      timmarFält.classList.add('fel');
+      const första = timmarFält.querySelector('input');
+      första.focus({ preventScroll: true });
+      första.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return t('valjTimmar');
+    },
+    överst: () => 'Minst 4 timmar i veckan: ' + timmarVal(),
     extra: () => {
       const rader = [];
       const tel = $('#ap-phone') && $('#ap-phone').value.trim();
