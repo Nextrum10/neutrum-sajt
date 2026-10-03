@@ -101,6 +101,10 @@
         + (b.skapad_av ? '<span class="adm-und">' + esc(namnFör(b.skapad_av)) + '</span>' : '') },
       { namn: '', höger: true, rita: b =>
         '<button class="btn btn-ghost btn-sm" data-bib-oppna="' + esc(b.id) + '">Öppna</button>'
+        /* Bankens egna blad har facit bredvid sig (NX.facitLänk). */
+        + (NX.facitLänk(b.lank)
+          ? ' <a class="btn btn-ghost btn-sm" href="' + esc(NX.facitLänk(b.lank)) + '" target="_blank" rel="noopener">Facit</a>'
+          : '')
         /* Vägen in i banken. Bara hitåt: en delad rad går inte att
            lämna tillbaka till en enskild ägare, för då hade femtio
            studiehjälpare som redan gett den som läxa plötsligt tappat

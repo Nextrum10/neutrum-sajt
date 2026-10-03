@@ -337,6 +337,72 @@ sökvägen.
   bibliotek.
 - `verktyg/rls-test.sql` har nitton BIB-rader, sju av dem om
   delningen. Kör dem efter varje ändring i policyn.
+- **Banken har 158 övningsblad och 14 länkar** (2026-10-02,
+  `materialbanken_fler_blad`, `materialbanken_np_traning` och
+  `materialbanken_np_omgang_2`; Fas 15.5 la ett blad per årskurs). Leo:
+  "Material sidan har väldigt lite material". De är VÅRA blad, ritade
+  till `bank/*.png` av `verktyg/bygg-banken.py` och inga andras sidor,
+  och de ger inget facit varken på bladet eller i beskrivningen: vyn
+  fyller läxans text med beskrivningen, och den läser eleven. Alla sju
+  ämnena i `NX.AMNEN` har blad, också Moderna språk (tyska, spanska,
+  franska) och Programmering. **Bladen är skrivna med AI och granskade
+  av andra AI-granskare, inte lästa av en lärare**; sägs inte något
+  annat utåt än att de är Nextrums egna. Ett blad som rättas ritas om
+  och raden rörs inte (id:t är ett uuid5 ur filnamnet); ett nytt blad
+  är en ny migration med bara de nya raderna. Länkarna svarar 404 tills
+  `bank/` är driftsatt, så migrationen körs efter merge.
+- **Nationella prov och läromedel kopieras aldrig in i banken** (Fas 15.7,
+  2026-10-02). Leo bad om att ladda ner alla nationella prov från åk 6 till
+  gymnasiet, och läromedel från förlag som Liber. Proven och deras texter är
+  upphovsrättsskyddade, och en kopia på nextrum.se är spridning i en
+  kommersiell tjänst; förlagens böcker är inte gratis att ladda ner. Det
+  som är fritt är att länka: `verktyg/bladen/lankar.py` har fjorton länkar
+  till provgruppernas egna sidor (PRIM-gruppen vid Stockholms universitet,
+  Göteborgs, Uppsala och Umeå universitet), en rad i `biblioteksmaterial`
+  med `lank` var, id:t ur namnet. Adresserna kommer ur webbsökningar och är
+  inte klickprovade, eftersom molnmiljön nekade alla de domänerna.
+- **NP-träningen är egna uppgifter i provens stil, aldrig provens egna.**
+  25 blad (`*-np-*`): delar med och utan räknare och nivåmärkena E, C och A
+  (`{E}` i texten), läs- och skrivdelar med påhittat underlag som säger att
+  det är påhittat. Varje blad säger på första instruktionsraden att det
+  inte är riktiga provuppgifter. Prov finns i åk 6 (Ma, Sv, En), åk 9 (Ma,
+  Sv, En, NO, SO) och med Gy25 i matematik nivå 1–2, svenska nivå 1 och 3
+  och engelska nivå 1–2. Gymnasiebladen anger Gy25-nivån bara där den är
+  bekräftad (matematik 1–2, svenska 1 och 3, engelska 1–2); trigonometriska
+  ekvationer och radianer är Matematik 4, inte 3.
+- **NP-omgång 2 och genomgångarna** (Fas 15.8, 2026-10-02). Leo bad om
+  "många fler blad av riktig np" och om "material som besvarar frågorna från
+  riktiga svenska böcker". Det blev 53 blad till, i
+  `verktyg/bladen/np_ak6.py`, `np_ak9.py` och `np_gymnasiet.py` (alla NP-blad
+  bor där, de första 25 flyttades dit): fler NP-blad i matte, svenska och
+  engelska, ett NP-blad och en genomgång per NO- och SO-ämne i åk 9 (eleven
+  gör provet i ett av vardera), och provträning i Matematik 3c och 4 för
+  dem som läser de äldre kurserna. Det som "besvarar frågorna" är
+  **genomgångarna** (`*-genomgang-*`): egna faktablad med lösta exempel,
+  aldrig text ur läroböcker. Äldre svensk litteratur, som är fri att
+  använda, hade passat i läsdelarna, men molnmiljön nådde varken
+  runeberg.org, litteraturbanken.se eller Wikisource, och klassiker citeras
+  inte ur minnet. `[[]]` är en bred svarsruta för längre svar.
+- **Granskningen av omgång 2** (samma dag) lärde två saker. En skrivrad
+  rymmer tio–tolv handskrivna ord: en fråga med två led får två rader och en
+  A-uppgift fyra, och `[]` rymmer två siffror, `[[]]` fler. Och i åk 6 prövar
+  delprov C2 sakprosa, där texttypen växlar mellan åren (argumenterande,
+  beskrivande, förklarande eller instruerande, enligt provgruppens
+  resultatrapporter): skriv aldrig att det alltid är en faktatext.
+- **Facit till alla blad** (Fas 15.9, 2026-10-02). Leo: "Checka att alla
+  uppgifter i materialbanken är korrekta och att det finns svar till
+  uppgifterna lätttillgängligt". Facit skrevs uppgift för uppgift, och det
+  var granskningen: den som skriver svaret löser uppgiften, och en uppgift
+  utan entydigt svar syns då. En andra omgång löste uppgifterna blint och
+  jämförde. Facit står i `verktyg/bladen/facit_<modul>.py` och ritas till
+  `bank/facit/<fil>.png`, en egen sida som aldrig lämnas till eleven.
+  **Vem som ser det:** studiehjälparen (knappen Facit på bibliotekskortet
+  och på uppgiftsraden) och admin (biblioteket), genom `NX.facitLänk`, som
+  bara känner igen bankens egna adresser. Familjens vy visar det inte,
+  eftersom barnet gör NexLäx och läxorna i samma inloggning, och barnets vy
+  aldrig. **Det är inte hemligt:** repot är publikt och bilderna ligger
+  under /bank/, så den som letar hittar dem, precis som facit i bokens
+  baksida. Ett riktigt dolt facit hade krävt en privat hink och en policy.
 
 Ur avsnitt 11:
 

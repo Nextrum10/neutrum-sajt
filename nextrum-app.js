@@ -290,6 +290,16 @@ const NX = (function () {
     return n ? 'ak' + n : '';
   }
 
+  /* Facit till ett av Nextrums egna blad ligger bredvid bladet, i
+     /bank/facit/ (verktyg/bygg-banken.py ritar båda). Bara bankens blad
+     har facit; en länk till någon annans sida eller en uppladdad fil
+     har inget, och då blir svaret tomt. Facit visas för studiehjälparen
+     och admin, aldrig i familjens eller barnets vy: bladet är läxan. */
+  function facitLänk(lank) {
+    const m = /^https:\/\/nextrum\.se\/bank\/([a-z0-9-]+)\.png$/.exec(lank || '');
+    return m ? 'https://nextrum.se/bank/facit/' + m[1] + '.png' : '';
+  }
+
   function rensa(el) {
     if (!el) return;
     el.textContent = '';
@@ -1168,6 +1178,6 @@ const NX = (function () {
     hämtaSession, hämtaProfil, vyFörRoll, vyFör, ärBarn, skickaBarnHem,
     inbjudan: INBJUDAN, återställning: ÅTERSTÄLLNING, länkfel: LÄNKFEL,
     hämtaUpptagna, tiderFörDatum,
-    MANADER, DAGAR, CFG, AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod
+    MANADER, DAGAR, CFG, AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod, facitLänk
   };
 })();
