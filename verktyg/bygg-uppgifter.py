@@ -20,6 +20,11 @@ NY ELLER ÄNDRAD UPPGIFT:
   --kolla jämför den senaste *_uppgiftsbanken_*.sql med det verktyget
   skriver nu. Ändras banken utan en ny migration blir CI rött.
 
+TILLAGG (2026-10-03): en fil kan också ha listan TILLAGG, banor som redan
+står i en annan fil. Deras nivåer läggs SIST i den banan. Nivåerna ur
+materialbanken (verktyg/uppgiftsbanken/blad_*.py) står så, så att ingen
+elev får en ny nivå mitt i vägen som låser nästa.
+
 MÄSTARPROVET OCH REPETITIONEN (Fas 23.2) läggs till här, inte i
 filerna: ett Mästarprov sist i varje område och en repetition sist i
 varje bana, med nycklar ur ämnet, årskursen och området. De har inga
@@ -125,7 +130,7 @@ def amnen_i_appen():
 def las_banken():
     """En fil som inte går att läsa blir ett fel i listan, inte ett
     avbrott: resten av banken ska fortfarande gå att pröva."""
-    banor, fel = [], []
+    banor, tillagg, fel = [], [], []
     for fil in sorted(glob.glob(os.path.join(BANKEN, '*.py'))):
         namn = os.path.basename(fil)
         if namn in ('grund.py', '__init__.py'):
@@ -140,6 +145,22 @@ def las_banken():
         for b in getattr(modul, 'BANOR', []):
             b['fil'] = namn
             banor.append(b)
+        for b in getattr(modul, 'TILLAGG', []):
+            b['fil'] = namn
+            tillagg.append(b)
+    # TILLAGG är nivåer som läggs SIST i en bana som står i en annan fil
+    # (2026-10-03, nivåerna ur materialbanken). Sist, för en nivå mitt i
+    # vägen låser nästa nivå för den som redan gått förbi (CLAUDE.md
+    # avsnitt 11), och för att flera filer ska kunna skrivas samtidigt utan
+    # att röra samma lista. I filernas namnordning, som banorna.
+    for t in tillagg:
+        mal = [b for b in banor if (b['amne'], b['arskurs']) == (t['amne'], t['arskurs'])]
+        if not mal:
+            fel.append('%s: TILLAGG till %s %s, men den banan finns inte' % (t['fil'], t['amne'], t['arskurs']))
+            continue
+        mal[0]['nivaer'] = mal[0]['nivaer'] + list(t['nivaer'])
+        if t['fil'] not in mal[0]['fil']:
+            mal[0]['fil'] += ' + ' + t['fil']
     return banor, fel
 
 
