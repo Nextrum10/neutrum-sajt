@@ -240,8 +240,9 @@
           <div class="pay-field"><label for="ap-school">School &amp; programme</label><input class="inp" id="ap-school" name="skola" placeholder="e.g. upper secondary, science programme"></div>
           <div class="pay-field"><label for="ap-subj">Subjects you want to help with</label><input class="inp" id="ap-subj" name="amnen" placeholder="e.g. maths, physics, English"></div>
           <div class="pay-field"><label for="ap-avail">Times that suit you</label><input class="inp" id="ap-avail" name="tider" placeholder="e.g. weekdays after 4pm, weekends"></div>
-          <!-- TIMMARNA (2026-10-03). Ja eller nej, inget förval. Ett nej
-               stoppar inte ansökan; svaret står överst i why, så det är
+          <!-- TIMMARNA (2026-10-03). Ja eller nej, inget förval. Minst 4
+               timmar är meriterande, inget krav (Leo), så ett nej stoppar
+               inte ansökan; svaret står överst i why, så det är
                det första vi läser. Samma fält står i bli-studiehjalpare.html. -->
           <fieldset class="nx-val" id="ap-timmar">
             <legend>Can you work at least 4 hours a week?</legend>
@@ -249,6 +250,7 @@
               <label><input type="radio" name="timmar" value="ja" required><span>Yes</span></label>
               <label><input type="radio" name="timmar" value="nej" required><span>No</span></label>
             </div>
+            <p class="nx-fil-hjalp">Not a requirement, but it counts in your favour.</p>
           </fieldset>
           <div class="pay-field"><label for="ap-erf">Experience of explaining things to others</label><textarea class="inp" id="ap-erf" name="erfarenhet" style="min-height:74px" placeholder="Tutoring, leadership, coaching, siblings — it all counts. If you have none at all, that is fine too."></textarea></div>
           <div class="pay-field"><label for="ap-why">Why do you want to become a tutor?</label><textarea class="inp" id="ap-why" name="varfor" style="min-height:110px"></textarea></div>
@@ -295,7 +297,7 @@
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">How much do I need to work?<span class="pm"></span></button>
-        <div class="faq-a"><p>You decide which subjects you take, how much you work and when. There is no minimum. But the student does best with the same person week after week, so expect to keep to what you say yes to.</p></div>
+        <div class="faq-a"><p>You decide which subjects you take, how much you work and when. There is no required number of hours, but it counts in your favour if you can work at least 4 hours a week. The student does best with the same person week after week, so expect to keep to what you say yes to.</p></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">How do I get paid?<span class="pm"></span></button>
@@ -459,7 +461,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=37f1cb07"></script>
+<script src="../nextrum-maskot-svar.js?v=3ac82b1c"></script>
 <script src="../nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {
