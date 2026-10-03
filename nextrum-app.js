@@ -101,6 +101,20 @@ const NX = (function () {
        räknat fram, "om ungefär tre veckor" eller "inom kort". */
     tackIntresseUppstart: ['Tack. Vi har tagit emot er intresseanmälan och hör av oss på {e} inom 24 timmar, så planerar vi ert första pass till starten {om}.',
                            'Thank you. We have received your enquiry and will get back to you at {e} within 24 hours to plan your first session for when we start {om}.'],
+    /* Kontaktvalet i intresseanmälan (2026-10-03). {tel} och inte {e}:
+       se ingenDatabasForm ovan. */
+    tackIntresseRing: ['Tack. Vi har tagit emot er intresseanmälan och ringer er på {tel} inom 24 timmar.',
+                       'Thank you. We have received your enquiry and will call you on {tel} within 24 hours.'],
+    tackIntresseRingUppstart: ['Tack. Vi har tagit emot er intresseanmälan och ringer er på {tel} inom 24 timmar, så planerar vi ert första pass till starten {om}.',
+                               'Thank you. We have received your enquiry and will call you on {tel} within 24 hours to plan your first session for when we start {om}.'],
+    valjTimmar:      ['Svara ja eller nej på om du kan jobba minst 4 timmar i veckan.',
+                      'Please answer yes or no to whether you can work at least 4 hours a week.'],
+    valjKontakt:     ['Välj om ni vill att vi ringer eller mejlar först.',
+                      'Please choose whether you would like us to call or email first.'],
+    telefonForRing:  ['Behövs för att vi ska kunna ringa',
+                      'Needed so we can call you'],
+    felTelefonRing:  ['Skriv ett telefonnummer, eller välj att vi mejlar först.',
+                      'Please enter a phone number, or choose to be emailed first.'],
     omVeckor:        ['om ungefär {n} veckor', 'in about {n} weeks'],
     omEnVecka:       ['om ungefär en vecka', 'in about a week'],
     omNagraDagar:    ['om några dagar', 'in a few days'],
@@ -835,6 +849,13 @@ const NX = (function () {
       if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
       if (!epostOk(epost)) { säg(msg, t('felEpost'), false); return; }
 
+      /* Sidans egna kontroller, i formulärets ordning före samtycket:
+         svarar med en text när något saknas, annars tomt. */
+      if (typeof o.kontroll === 'function') {
+        const fel = o.kontroll();
+        if (fel) { säg(msg, fel, false); return; }
+      }
+
       /* Kryssrutan för samtycke finns bara där den efterfrågas.
          Utan opts.krävSamtycke beter sig funktionen precis som förut. */
       if (o.krävSamtycke) {
@@ -889,7 +910,11 @@ const NX = (function () {
       /* extra() får vara async. Sync-varianter fungerar precis som förut. */
       const extraRader = typeof o.extra === 'function' ? String((await o.extra()) || '').trim() : '';
       const tillägg = [cvRad, extraRader, källrader().join('\n')].filter(Boolean).join('\n');
-      const why = [fritext, tillägg].filter(Boolean).join('\n\n');
+      /* överst() står före den sökandes egen text: databasen kapar
+         why bakifrån vid 4000 tecken, och det som står först är det
+         första som läses. */
+      const överst = typeof o.överst === 'function' ? String(o.överst() || '').trim() : '';
+      const why = [överst, fritext, tillägg].filter(Boolean).join('\n\n');
 
       /* Vilka uppdrag den sökande vill ta. Läses ur formuläret med
          getAll, så markupen styr och funktionen slipper veta vilka

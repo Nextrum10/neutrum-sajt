@@ -22,6 +22,25 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
 Föräldravyn låses upp först efter steg 4. Innan dess: väntläge, inte
 trasig sida.
 
+**Kontaktvalet** (2026-10-03): familjen väljer i intresseanmälan om vi
+ska ringa eller mejla först. Inget förval, och Ring kräver telefon.
+Svaret står som första rad i `message` ("Kontakt först: ring" eller
+"mejl"), före familjens text, eftersom databasen kapar message
+bakifrån vid 4000 tecken. Ingen egen kolumn: då behövdes ingen
+migration, och `lead-notis` mejlar det redan i meddelandet. Tacket
+följer valet (`tackIntresseRing`). Steg 2 ovan gäller bara den som
+valt Ring; den som valt mejl får ett mejl först.
+
+**Timmarna i ansökan** (2026-10-03): den som söker svarar ja eller nej
+på om hen kan jobba minst 4 timmar i veckan. Inget förval. **Fyra timmar
+är meriterande, inget krav** (Leo 2026-10-03): ett nej stoppar inte
+ansökan, och raden under valet och svaret på "Hur mycket behöver jag
+jobba?" (`faq.html`, `bli-studiehjalpare.html`, båda språken) säger
+detsamma. Blir det ett krav ändras de tre samtidigt. Svaret står som första rad i `applications.why`
+("Minst 4 timmar i veckan: ja"), av samma skäl som kontaktvalet, genom
+`kopplaAnsökan`s `överst()`; sidans kontroll går genom `kontroll()`.
+Kontrollen och valet delar stilen `.nx-val` med kontaktvalet.
+
 ## Uppstarten
 
 **Intresseanmälan säger att Nextrum bildas** (2026-09-29). Leo: "just

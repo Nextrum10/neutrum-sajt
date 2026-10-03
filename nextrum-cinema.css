@@ -1554,6 +1554,50 @@ html[lang="en"] .nx-hero-rubrik{
 @media (max-width:520px){.nx-roll{grid-template-columns:1fr}.nx-roll{border-radius:18px}
   .nx-roll button{border-radius:14px}}
 
+/* Två val i ett formulär (2026-10-03): ring eller mejl först i
+   intresseanmälan, minst fyra timmar i veckan i ansökan. Samma spår
+   som rollväljaren, men riktiga radioknappar, så att piltangenterna
+   och skärmläsaren fungerar som i ett formulär.
+   Rundan döljs men tar fokus; det valda läget sitter på etiketten
+   genom :has(). Inget förval, så båda står tomma tills någon väljer. */
+.nx-val{border:0;margin:0 0 12px;padding:0;min-width:0}
+.nx-val legend{
+  font-family:var(--f-mono);font-size:.78rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding:0;
+}
+.nx-val-rad{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;
+  padding:5px;border:1px solid var(--ln-2);border-radius:100px;
+  background:var(--pap-2);
+}
+.nx-val-rad label{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  min-height:44px;padding:10px 14px;border-radius:100px;cursor:pointer;
+  font-size:.925rem;font-weight:600;letter-spacing:-.014em;
+  color:var(--bl-2);text-align:center;
+  transition:background .28s var(--e),color .28s var(--e);
+}
+.nx-val-rad input{
+  position:absolute;inset:0;width:100%;height:100%;margin:0;
+  opacity:0;cursor:pointer;
+}
+.nx-val-rad label:hover{color:var(--bl)}
+.nx-val-rad label:has(input:checked){
+  background:var(--pap);color:var(--bl);box-shadow:var(--sk-1);
+}
+.nx-val-rad label:has(input:focus-visible){
+  outline:2px solid var(--focus,var(--bl));outline-offset:2px;
+}
+/* Glömt val: samma outline som den glömda samtyckesrutan. */
+.nx-val.fel .nx-val-rad{
+  outline:2px solid color-mix(in srgb,var(--acc) 55%,transparent);outline-offset:4px;
+}
+.nx-mork .nx-val legend{color:var(--nt-mut)}
+.nx-mork .nx-val-rad{background:transparent;border-color:var(--nt-ln)}
+.nx-mork .nx-val-rad label{color:var(--nt-mut)}
+.nx-mork .nx-val-rad label:has(input:checked){color:var(--nt-fg);background:color-mix(in srgb,var(--nt-fg) 10%,transparent)}
+.inp[aria-invalid="true"]{border-color:color-mix(in srgb,var(--acc) 70%,var(--ln-2))}
+
 /* Panelerna som byts när rollen byts */
 .nx-roll-panel[hidden]{display:none}
 
