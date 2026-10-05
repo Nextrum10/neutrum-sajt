@@ -160,13 +160,19 @@ applications (insert/update)
 | "Öppna provet i tre dagar till" | `prov` igen, med den nya sista dagen |
 | provet klarat, eller "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
 | läget blir Godkänd | `valkommen` |
-| läget blir Avböjd | **inget, med flit** |
+| ansökan kommer in, under 18 med vårdnadshavarens e-post (2026-10-05) | `vardnadshavare`: till vårdnadshavaren, barnet har sökt och vi behöver ett skriftligt godkännande |
+| admin rättar eller lägger till vårdnadshavarens e-post, utan godkännande | `vardnadshavare` igen, en gång per adress |
+| läget blir Avböjd (2026-10-05) | `avbojd`: tack, vi har valt att gå vidare med andra sökande. Tidigast en halvtimme senare, aldrig 20–9, inte om läget hunnit bytas. Adminvyn visar mejlet innan |
 
 Sex regler bär det:
 
-1. **INSERT-grenen läser bara kvittot.** Vem som helst kan skriva en
-   rad i `applications`, så ingenting annat i raden får styra ett
-   mejl. `skydda_ansokningsfalt` nollar dessutom `mote_tid` och
+1. **INSERT-grenen läser bara kvittot, och vårdnadshavarens adress.** Vem
+   som helst kan skriva en rad i `applications`, så ingenting annat i
+   raden får styra ett mejl. Adressen till vårdnadshavaren (2026-10-05) är
+   ett beslut: Leo vill att vårdnadshavaren mejlas direkt. Samma broms som
+   kvittot, samma vårdnadshavare högst en gång per dygn, adressen sparas
+   bara för den som är under 18, och mejlet återger bara barnets förnamn.
+   `skydda_ansokningsfalt` nollar dessutom `mote_tid` och
    `mote_lank` vid en insert som inte kommer från admin: annars hade
    en främling kunnat få oss att mejla "ditt möte är bokat" med en
    länk hen själv valt, från vår domän med godkänd DKIM.
@@ -178,8 +184,20 @@ Sex regler bär det:
    den är tid plus länk: ny tid är nytt mejl ("Ny tid för ditt möte"),
    samma tid igen är det inte. Ångra och klicka igen ger inget nytt
    mejl.
-4. **Ett nej skrivs av en människa.** Den som söker är ofta sexton, och
-   ett felklick som genast mejlar ett nej går inte att ta tillbaka.
+4. **Ett nej mejlas, men inte genast** (2026-10-05). Fram till dess skrevs
+   ett nej av en människa: den som söker är ofta sexton, och ett felklick
+   som genast mejlar ett nej går inte att ta tillbaka. Leo vill att Avböjd
+   mejlar ett nej. Skälet står kvar, så `intern.ansokan_nej_koa` köar det
+   med `skicka_efter` = `intern.ansokan_nej_tid(now())`: en halvtimme
+   senare, och mellan 20 och 9 svensk tid kl. 9. Raden lånas inte ut före
+   sin tid, omförsöksjobbet (`ansokan-besked`) väcker den när tiden kommit,
+   och `ansokan_besked_ta` hoppar över den om läget inte längre är Avböjd.
+   Avböjd igen köar samma rad om; ett nej som gått mejlas aldrig igen.
+   Rullgardinen frågar först och visar mejlet ord för ord (`bekräftaNej`),
+   och texten står på två ställen: `NEJ` i `_delad/notiser/ansokan.ts` och
+   `NEJ_MEJLET` i `nextrum-admin-rekrytering.js`.
+   `verktyg/kolla-mejltexter.py` håller dem lika i CI. Raderas ansökan
+   innan nejet gått går det aldrig (raden följer med i raderingen).
 5. **Kvittot bromsas vid flod.** Fler än fem ansökningar på en minut
    eller tjugo på en timme, eller samma adress igen inom ett dygn, blir
    `bromsad` — raden finns, mejlet går inte. Det är skyddet mot att
@@ -197,6 +215,34 @@ Sex regler bär det:
 6. **Godkänd i rullgardinen är inte "Ta in i poolen".** Båda mejlar
    välkomsten, men bara den senare godkänner profilen. Rullgardinen
    frågar därför först.
+
+### Vårdnadshavarens godkännande (2026-10-05)
+
+Leo: "jobbansökan, fråga om den sökande är under 18, är den det så ber du
+den skriva in sina föräldrars mail och dokumenterar det, föräldrarna får
+automatiskt ett mail om att deras barn har sökt en tjänst och att vi
+behöver deras skriftliga bekräftelse skickad till vår mail med dennes barns
+namn och efternamn som bekräftelse. efter det så kan vi dokumentera det och
+lägga in kopia av mail till barnet."
+
+- **Formuläret** frågar redan efter åldern, så fältet för vårdnadshavarens
+  e-post fälls ut när den är under 18 (`NX.läsÅlder`, samma läsning som
+  databasen ser; "16 år" är 16). Det krävs då, och den egna adressen duger
+  inte. Tacket säger att vårdnadshavaren får ett mejl. Saknas kolumnen
+  (migrationen inte körd) går ansökan in ändå, med adressen först i `why`.
+- **Mejlet** (`vardnadshavare`) går till vårdnadshavaren från info@: barnets
+  förnamn, att vi behöver ett skriftligt godkännande, att man svarar med
+  barnets för- och efternamn till info@ eller på mejlet, en knapp till
+  `/bli-studiehjalpare`, och vad man gör om man inte känner igen det.
+  Hälsningen har inget namn: namnet i ansökan är barnets. Inga steg.
+- **Admin lägger in svaret** i ansökan (Lägg in godkännandet): en kopia av
+  mejlet (`vardnadshavare_svar`, högst 20 000 tecken) och tiden
+  (`vardnadshavare_godkand_at`). Inget mejlas. Auditloggen får tiden,
+  aldrig kopian eller adressen. Det går att ta bort om det lades in fel.
+  Gallringen räknar godkännandet som ett steg (`intern.ansokan_gallras_fran`).
+- **Ta in i poolen** frågar först om godkännandet saknas för någon under 18,
+  som för introduktionen: det kan finnas på annat sätt.
+- Adminvyn visar raderna bara när kolumnerna finns.
 
 ### Utbildningsprovet (Fas 22.1)
 

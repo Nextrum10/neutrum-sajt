@@ -2,9 +2,10 @@
 // NEXTRUM — mejlen till den som sökt jobb (Fas 16.1)
 //
 // Ett kvitto när ansökan kommit in, och ett mejl per steg framåt:
-// mötet bokat, mötet hållet, introduktionen klar, godkänd. Varje mejl
-// visar alla fyra stegen och vilket mottagaren står på — den som söker
-// ska kunna se var hen är utan att behöva fråga.
+// mötet bokat, mötet hållet, introduktionen klar, godkänd. Varje sådant
+// mejl visar alla fyra stegen och vilket mottagaren står på — den som
+// söker ska kunna se var hen är utan att behöva fråga. Sedan 2026-10-05
+// också nejet och mejlet till vårdnadshavaren, utan stegen (nedan).
 //
 // Samma sort som kvittot på en intresseanmälan (kvitto.ts), och av
 // samma skäl gör de samma saker annorlunda än notismejlen:
@@ -18,11 +19,28 @@
 //     och de två sista är själva beskedet.
 //
 //
-// AVBÖJD HAR INGEN MALL, MED FLIT
+// NEJET (2026-10-05)
 //
-// Ett nej ska skrivas av en människa. Det är ofta en sextonåring som
-// söker sitt första jobb, och ett felklick som genast mejlar ett nej
-// går inte att ta tillbaka. Databasen köar inget sådant heller.
+// Fram till 2026-10-05 hade Avböjd ingen mall, med flit: ett nej skulle
+// skrivas av en människa. Det är ofta en sextonåring som söker sitt första
+// jobb, och ett felklick som genast mejlar ett nej går inte att ta
+// tillbaka. Leo vill att det mejlas. Skälet står kvar, så databasen köar
+// nejet tidigast 30 minuter efter klicket och aldrig mellan 20 och 9
+// (intern.ansokan_nej_tid), och byts läget tillbaka före dess går inget.
+// Texten är kort och snäll, och står också i adminvyn, som visar mejlet
+// innan läget sätts (NEJ_MEJLET i nextrum-admin-rekrytering.js;
+// verktyg/kolla-mejltexter.py håller dem lika).
+//
+//
+// VÅRDNADSHAVAREN (2026-10-05)
+//
+// Den som är under 18 skriver sin vårdnadshavares e-post i ansökan, och
+// vårdnadshavaren får ett mejl direkt: barnet har sökt, och vi behöver ett
+// skriftligt godkännande. Mejlet går till någon som inte själv skickat
+// något, så det säger varför det kom, återger bara barnets förnamn, och
+// säger vad man gör om man inte känner igen det. Varken det eller nejet
+// visar stegen: vårdnadshavaren är inte på väg någonstans, och den som fått
+// ett nej är inte det längre.
 //
 //
 // KONTAKT-STEGET HAR INGEN MALL HELLER
@@ -43,6 +61,7 @@ export const ANSOKAN_FRAN = `Nextrum <${KONTAKT}>`;
 
 export const ANSOKAN_STEG = [
   'mottagen', 'mote', 'utbildning', 'prov', 'prov_paminnelse', 'prov_sista_dagen', 'sista_steget', 'valkommen',
+  'vardnadshavare', 'avbojd',
 ] as const;
 export type AnsokanSteg = typeof ANSOKAN_STEG[number];
 
@@ -57,9 +76,12 @@ export function arAnsokanSteg(v: unknown): v is AnsokanSteg {
  */
 export const RESAN = ['Ansökan', 'Digitalt möte', 'Introduktion', 'Konto och godkännande'];
 
+/** Mejlen som inte visar stegen: till vårdnadshavaren, och nejet. */
+type UtanResa = 'vardnadshavare' | 'avbojd';
+
 /* Provet (Fas 22.1) hör till introduktionen: det är sista delen av
    den, inte ett eget steg för den som söker. */
-const PLATS: Record<AnsokanSteg, number> = {
+const PLATS: Record<Exclude<AnsokanSteg, UtanResa>, number> = {
   mottagen: 0, mote: 1, utbildning: 2, prov: 2, prov_paminnelse: 2, prov_sista_dagen: 2,
   sista_steget: 3, valkommen: RESAN.length,
 };
@@ -93,7 +115,9 @@ function omProvet(): [string, string][] {
   ];
 }
 
-export function resa(steg: AnsokanSteg): Resa {
+/** Stegen och var mottagaren står, eller null för de två mejlen utan resa. */
+export function resa(steg: AnsokanSteg): Resa | null {
+  if (steg === 'vardnadshavare' || steg === 'avbojd') return null;
   const nu = PLATS[steg];
   return {
     rubrik: nu >= RESAN.length ? 'Alla steg klara' : `Steg ${nu + 1} av ${RESAN.length}`,
@@ -171,8 +195,50 @@ type Text = {
 const VARFOR = 'Du får det här mejlet för att du har sökt jobb som studiehjälpare hos Nextrum '
   + 'med den här e-postadressen.';
 
+/** Vårdnadshavaren har inte själv skickat något, och ska få veta varför mejlet kom. */
+const VARFOR_VARDNADSHAVARE = 'Du får det här mejlet för att någon som sökt jobb som studiehjälpare '
+  + 'hos Nextrum har skrivit din adress som vårdnadshavares.';
+
+/**
+ * Nejet, ord för ord. Samma text står i adminvyn, som visar mejlet innan
+ * läget sätts (NEJ_MEJLET i nextrum-admin-rekrytering.js), och
+ * verktyg/kolla-mejltexter.py håller dem lika. Ändra båda.
+ */
+export const NEJ = {
+  amne: 'Om din ansökan till Nextrum',
+  rubrik: 'Tack för din ansökan',
+  mening: 'Tack för att du ville jobba som studiehjälpare hos oss, och för tiden du lade på ansökan. '
+    + 'Vi har valt att gå vidare med andra sökande den här gången.',
+  avslutning: 'Du är välkommen att söka igen längre fram. Undrar du något om beskedet? '
+    + 'Svara på det här mejlet.',
+} as const;
+
 function texten(a: AnsokanIn): Text {
   switch (a.steg) {
+    case 'avbojd':
+      return { amne: NEJ.amne, rubrik: NEJ.rubrik, mening: NEJ.mening, avslutning: NEJ.avslutning };
+
+    case 'vardnadshavare': {
+      // Barnets förnamn, och inget annat ur ansökan. Utan ett förnamn som
+      // går att lita på står "ditt barn".
+      const barn = fornamn(a.namn);
+      return {
+        amne: `${barn ?? 'Ditt barn'} har sökt jobb hos Nextrum`,
+        rubrik: 'Vi behöver ditt godkännande',
+        mening: `${barn ?? 'Ditt barn'} har sökt jobb som studiehjälpare hos Nextrum och skrivit att du är `
+          + `vårdnadshavare. Eftersom ${barn ?? 'barnet'} är under 18 år behöver vi ditt skriftliga `
+          + 'godkännande innan vi går vidare med ansökan.',
+        fakta: [
+          ['Svara med', 'barnets för- och efternamn, och att du godkänner ansökan'],
+          ['Till', `${KONTAKT}, eller svara på det här mejlet`],
+        ],
+        knapp: 'Om jobbet som studiehjälpare',
+        knappAdress: `${SAJT}/bli-studiehjalpare`,
+        avslutning: 'Känner du inte igen det här? Då behöver du inte göra något: utan ditt godkännande '
+          + 'går vi inte vidare med ansökan.',
+      };
+    }
+
     case 'mottagen':
       return {
         amne: 'Tack för din ansökan till Nextrum',
@@ -289,9 +355,11 @@ function texten(a: AnsokanIn): Text {
 export function renderaAnsokan(a: AnsokanIn): Renderat {
   const t = texten(a);
   const forst = fornamn(a.namn);
+  const tillVardnadshavaren = a.steg === 'vardnadshavare';
   const ram: Ram = {
     roll: 'tutor',
-    halsning: forst ? `Hej ${forst},` : 'Hej,',
+    // Vårdnadshavarens namn har vi inte. Namnet i ansökan är barnets.
+    halsning: forst && !tillVardnadshavaren ? `Hej ${forst},` : 'Hej,',
     innehall: {
       amne: t.amne,
       rubrik: t.rubrik,
@@ -301,9 +369,11 @@ export function renderaAnsokan(a: AnsokanIn): Renderat {
       fakta: t.fakta ?? [],
     },
     knappAdress: t.knappAdress ?? SAJT,
-    varfor: a.steg === 'mottagen'
-      ? VARFOR + ' Var det inte du kan du bortse från mejlet.'
-      : VARFOR,
+    varfor: tillVardnadshavaren
+      ? VARFOR_VARDNADSHAVARE
+      : a.steg === 'mottagen'
+        ? VARFOR + ' Var det inte du kan du bortse från mejlet.'
+        : VARFOR,
     // Besked, inte nyhetsbrev: ingen avanmälan, ingen inställningssida.
     avregistrera: null,
     val: null,

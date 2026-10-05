@@ -18,7 +18,7 @@
 
   const { LEAD_LAGE, S, SH_LAGE, elevHjälpare, funktionsFel, hämtaAllt,
           hämtaMatchunderlag, kontaktaRuta, kortDatum, läge, matchar, namnFör,
-          namnlista, pill, ritaPanelen, tabell, tomtText, visaRuta, ärRaderad } = NXAdmin;
+          namnlista, närText, pill, ritaPanelen, tabell, tomtText, visaRuta, ärNyNu, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
@@ -70,6 +70,9 @@
       typ: 'anmalan', id: l => l.id,
       namn: l => l.parent_name || l.email,
       läge: l => läge(LEAD_LAGE, l.status),
+      /* Den som kom in sedan du tittade senast (2026-10-05, ärNyNu). */
+      nytt: l => ärNyNu('leads', l),
+      under: l => (ärNyNu('leads', l) ? 'Ny sedan du tittade senast · ' + närText(l.created_at) : ''),
       tomt: tomtText(sök || st, 'Ingen intresseanmälan matchar filtret', 'Inga intresseanmälningar än')
     }) + (gallrade
       ? '<p class="xsmall" style="color:var(--bl-3);margin:12px 0 0">'

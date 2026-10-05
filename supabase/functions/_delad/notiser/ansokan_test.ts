@@ -11,11 +11,13 @@
 //   · en möteslänk blir en knapp bara om den är en riktig https-adress
 //   · ingenting ur ansökan återges utom förnamnet
 //   · de går inte att välja bort, och de ber om svar till en läst adress
+//   · nejet och mejlet till vårdnadshavaren (2026-10-05) visar inga steg,
+//     och vårdnadshavaren hälsas aldrig med barnets namn
 // ============================================================
 
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import {
-  ANSOKAN_FRAN, ANSOKAN_STEG, RESAN, arAnsokanSteg, motesText, provAdress, renderaAnsokan, resa, sakerLank,
+  ANSOKAN_FRAN, ANSOKAN_STEG, NEJ, RESAN, arAnsokanSteg, motesText, provAdress, renderaAnsokan, resa, sakerLank,
   type AnsokanSteg,
 } from './ansokan.ts';
 import { KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
@@ -25,6 +27,8 @@ const MOTE = '2026-10-02T15:00:00Z'; // kl. 17:00 i Stockholm, sommartid
 const LANK = 'https://meet.google.com/abc-defg-hij';
 const NYCKEL = '3f2c1a9e-8b7d-4c6e-9f10-2a3b4c5d6e7f';
 const SISTA = '2026-09-30';
+/** Stegen som visar resan. Nejet och mejlet till vårdnadshavaren gör det inte. */
+const MED_RESA = ANSOKAN_STEG.filter((s) => s !== 'vardnadshavare' && s !== 'avbojd');
 
 function mejl(steg: AnsokanSteg, extra: Record<string, unknown> = {}) {
   return renderaAnsokan({
@@ -41,13 +45,13 @@ Deno.test('kvittot tackar och lovar svar så fort vi kan, senast inom löftet p�
   assertStringIncludes(m.text, `senast inom ${SVAR_INOM_TIMMAR} timmar`);
 });
 
-Deno.test('varje mejl visar alla fyra stegen och var mottagaren står', () => {
-  const nu: Record<AnsokanSteg, string | null> = {
+Deno.test('varje stegmejl visar alla fyra stegen och var mottagaren står', () => {
+  const nu: Partial<Record<AnsokanSteg, string | null>> = {
     mottagen: 'Ansökan', mote: 'Digitalt möte', utbildning: 'Introduktion',
     prov: 'Introduktion', prov_paminnelse: 'Introduktion', prov_sista_dagen: 'Introduktion',
     sista_steget: 'Konto och godkännande', valkommen: null,
   };
-  for (const steg of ANSOKAN_STEG) {
+  for (const steg of MED_RESA) {
     const m = mejl(steg);
     for (const s of RESAN) {
       assertStringIncludes(m.text, s, `${steg}: steget ${s} saknas i texten`);
@@ -65,10 +69,14 @@ Deno.test('varje mejl visar alla fyra stegen och var mottagaren står', () => {
 });
 
 Deno.test('stegen före är klara, stegen efter kommer', () => {
-  assertEquals(resa('utbildning').steg.map((s) => s.lage), ['klar', 'klar', 'nu', 'kommer']);
-  assertEquals(resa('mottagen').rubrik, 'Steg 1 av 4');
-  assertEquals(resa('sista_steget').rubrik, 'Steg 4 av 4');
-  assertEquals(resa('valkommen').steg.every((s) => s.lage === 'klar'), true);
+  assertEquals(resa('utbildning')?.steg.map((s) => s.lage), ['klar', 'klar', 'nu', 'kommer']);
+  assertEquals(resa('mottagen')?.rubrik, 'Steg 1 av 4');
+  assertEquals(resa('sista_steget')?.rubrik, 'Steg 4 av 4');
+  assertEquals(resa('valkommen')?.steg.every((s) => s.lage === 'klar'), true);
+  // Vårdnadshavaren är inte på väg någonstans, och den som fått ett nej
+  // är inte det längre.
+  assertEquals(resa('vardnadshavare'), null);
+  assertEquals(resa('avbojd'), null);
 });
 
 Deno.test('mötets tid står i svensk tid, inte i UTC', () => {
@@ -129,7 +137,8 @@ Deno.test('ingenting ur ansökan återges, bara förnamnet', () => {
     const m = renderaAnsokan({
       steg, namn: 'Tove Lindqvist', moteTid: MOTE, moteLank: LANK, provNyckel: NYCKEL, provSistaDag: SISTA,
     });
-    assertStringIncludes(m.text, 'Hej Tove,');
+    // Vårdnadshavaren hälsas utan namn: namnet i ansökan är barnets.
+    assertStringIncludes(m.text, steg === 'vardnadshavare' ? 'Hej,' : 'Hej Tove,');
     assertEquals(m.text.includes('Lindqvist'), false, `${steg}: efternamnet följde med`);
     assertEquals(m.html.includes('Lindqvist'), false, `${steg}: efternamnet följde med`);
   }
@@ -165,16 +174,56 @@ Deno.test('samma ram och samma logga som allt annat vi skickar', () => {
   }
 });
 
-Deno.test('avböjd och kontakt har ingen mall, med flit', () => {
-  // Ett nej skrivs av en människa. Kontakten är adminens eget mejl.
-  assertEquals(arAnsokanSteg('avbojd'), false);
-  assertEquals(arAnsokanSteg('rejected'), false);
+Deno.test('kontakten har ingen mall, med flit, och listan speglar databasen', () => {
+  // Kontakten är adminens eget mejl. Nejet har en mall sedan 2026-10-05.
   assertEquals(arAnsokanSteg('kontakt'), false);
+  assertEquals(arAnsokanSteg('rejected'), false);
+  assertEquals(arAnsokanSteg('avbojd'), true);
   assertEquals(arAnsokanSteg('mottagen'), true);
-  // Listan speglar check-villkoret i ansokan_utskick.steg.
+  // Listan speglar check-villkoret i ansokan_utskick.steg
+  // (20261005120000_ansokan_vardnadshavare_och_nej).
   assertEquals([...ANSOKAN_STEG], [
     'mottagen', 'mote', 'utbildning', 'prov', 'prov_paminnelse', 'prov_sista_dagen', 'sista_steget', 'valkommen',
+    'vardnadshavare', 'avbojd',
   ]);
+});
+
+Deno.test('nejet är kort, snällt och utan steg eller knapp', () => {
+  const m = mejl('avbojd');
+  assertEquals(m.amne, NEJ.amne);
+  assertEquals(m.amne, 'Om din ansökan till Nextrum');
+  assertStringIncludes(m.text, 'Hej Tove,');
+  assertStringIncludes(m.text, 'Vi har valt att gå vidare med andra sökande den här gången.');
+  assertStringIncludes(m.text, 'Du är välkommen att söka igen');
+  assertEquals(m.text.includes('du är här'), false);
+  assertEquals(m.text.includes('Steg '), false);
+  // Ingen knapp: det finns ingenting att göra.
+  assertEquals(m.text.includes(`${SAJT}/`), false);
+  // Mejlet och adminvyns förhandsvisning säger samma sak, ord för ord
+  // (verktyg/kolla-mejltexter.py prövar adminvyns kopia).
+  for (const del of [NEJ.rubrik, NEJ.mening, NEJ.avslutning]) assertStringIncludes(m.text, del);
+});
+
+Deno.test('vårdnadshavaren får barnets förnamn, vad vi behöver och varför mejlet kom', () => {
+  const m = mejl('vardnadshavare');
+  assertEquals(m.amne, 'Tove har sökt jobb hos Nextrum');
+  assertStringIncludes(m.text, 'Hej,');
+  assertEquals(m.text.includes('Hej Tove'), false);
+  assertStringIncludes(m.text, 'Eftersom Tove är under 18 år');
+  assertStringIncludes(m.text, 'skriftliga godkännande');
+  assertStringIncludes(m.text, 'Svara med: barnets för- och efternamn');
+  assertStringIncludes(m.text, `Till: ${KONTAKT}`);
+  assertStringIncludes(m.text, `${SAJT}/bli-studiehjalpare`);
+  assertStringIncludes(m.text, 'skrivit din adress som vårdnadshavares');
+  assertStringIncludes(m.text, 'Känner du inte igen det här?');
+  assertEquals(m.text.includes('du är här'), false);
+  // Inget förnamn att lita på: "ditt barn", inte "undefined" eller en adress.
+  const utan = renderaAnsokan({ steg: 'vardnadshavare', namn: '  ' });
+  assertEquals(utan.amne, 'Ditt barn har sökt jobb hos Nextrum');
+  assertStringIncludes(utan.text, 'Eftersom barnet är under 18 år');
+  const ond = renderaAnsokan({ steg: 'vardnadshavare', namn: 'evil.example/login' });
+  assertEquals(ond.text.includes('evil.example'), false);
+  assertEquals(ond.amne.includes('evil.example'), false);
 });
 
 Deno.test('provmejlen länkar till provet och säger sista dagen i klartext', () => {

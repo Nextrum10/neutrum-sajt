@@ -17,8 +17,8 @@
   const M = NXMedia;
 
   const { ANS_LAGE, S, fråga, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
-          kortDatum, läge, matchar, namnlista, ritaPanelen, tomtText, visaRuta,
-          ärRaderad } = NXAdmin;
+          kortDatum, läge, matchar, namnlista, närText, ritaPanelen, tomtText, visaRuta,
+          ärNyNu, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const kandidater = (...a) => NXAdmin.rita.kandidater(...a);
@@ -46,6 +46,9 @@
       typ: 'ansokan', id: a => a.id,
       namn: a => a.name || a.email,
       läge: a => läge(ANS_LAGE, a.status),
+      /* Den som kom in sedan du tittade senast (2026-10-05, ärNyNu). */
+      nytt: a => ärNyNu('ansokningar', a),
+      under: a => (ärNyNu('ansokningar', a) ? 'Ny sedan du tittade senast · ' + närText(a.created_at) : ''),
       tomt: tomtText(sök || st, 'Ingen ansökan matchar filtret', 'Inga ansökningar än')
     });
 
@@ -456,8 +459,30 @@
     prov_paminnelse: 'Påminnelsen dagen efter',
     prov_sista_dagen: 'Påminnelsen sista dagen',
     sista_steget: 'Skapa ditt konto',
-    valkommen: 'Välkomstmejlet'
+    valkommen: 'Välkomstmejlet',
+    /* 2026-10-05 */
+    vardnadshavare: 'Mejlet till vårdnadshavaren',
+    avbojd: 'Nejet'
   };
+
+  /* När ett köat mejl går, i svensk tid: "i dag kl. 14:35", "i morgon
+     kl. 09:00". Bara nejet har en tid (skicka_efter). */
+  const STHLM = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm', year: 'numeric',
+    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  function sthlm(d) {
+    const p = {};
+    STHLM.formatToParts(d).forEach(x => { p[x.type] = x.value; });
+    return { dag: p.year + '-' + p.month + '-' + p.day, tim: Number(p.hour), klocka: p.hour + ':' + p.minute };
+  }
+  function dagOrd(dag) {
+    const idag = sthlm(new Date()).dag;
+    const imorgon = sthlm(new Date(Date.now() + 24 * 3600 * 1000)).dag;
+    return dag === idag ? 'i dag' : dag === imorgon ? 'i morgon' : kortDatum(dag);
+  }
+  function närDetGår(iso) {
+    const t = sthlm(new Date(iso));
+    return dagOrd(t.dag) + ' kl. ' + t.klocka;
+  }
 
   /* Omförsöken ger upp efter tredje försöket eller efter ett dygn
      (intern.ansokan_besked_igen). Därefter är det en människas tur. */
@@ -466,15 +491,19 @@
   function besked(a, steg) {
     const rad = (S.ansokanUtskick[a.id] || []).find(r => r.steg === steg);
     if (!rad) return '';
-    const uppgett = rad.forsok >= 3 || Date.now() - new Date(rad.skapad).getTime() > DYGN;
+    /* Dygnet räknas från när mejlet fick gå, som omförsöken gör. */
+    const start = rad.skicka_efter || rad.skapad;
+    const väntar = rad.status === 'vantar' && rad.skicka_efter && new Date(rad.skicka_efter).getTime() > Date.now();
+    const uppgett = !väntar && (rad.forsok >= 3 || Date.now() - new Date(start).getTime() > DYGN);
     const läge = {
       skickad: '✓ mejlat ' + kortDatum(rad.uppdaterad),
-      vantar: uppgett ? 'har fastnat och skickas inte. Skriv själv.' : 'på väg',
+      vantar: väntar ? 'går ' + närDetGår(rad.skicka_efter) + '. Byt läget före dess så går det inte.'
+        : uppgett ? 'har fastnat och skickas inte. Skriv själv.' : 'på väg',
       skickar: uppgett ? 'har fastnat och skickas inte. Skriv själv.' : 'på väg',
       fel: 'gick inte fram' + (rad.fel ? ' (' + rad.fel + ')' : '')
         + (uppgett ? '. Försöker inte igen — skriv själv.' : '. Försöker igen om en stund.'),
       bromsad: 'skickades inte' + (rad.fel ? ': ' + rad.fel : ''),
-      hoppad: 'skickades inte, beskedet hann bli inaktuellt'
+      hoppad: 'skickades inte, ' + (rad.fel || 'beskedet hann bli inaktuellt')
     }[rad.status] || rad.status;
     const fel = rad.status === 'fel' || (uppgett && rad.status !== 'skickad'
       && rad.status !== 'bromsad' && rad.status !== 'hoppad');
@@ -486,8 +515,10 @@
      den finns redan när svaret kommit. Utan en ny hämtning hade rutan
      visat det gamla läget tills hela vyn hämtats om. */
   async function hämtaBesked(id) {
+    /* Alla kolumner: skicka_efter finns först med migrationen
+       ansokan_vardnadshavare_och_nej (se hämtaAllt i kärnan). */
     const { data, error } = await supa.from('ansokan_utskick')
-      .select('ansokan_id, steg, status, forsok, fel, skapad, uppdaterad')
+      .select('*')
       .eq('ansokan_id', id).order('skapad', { ascending: false });
     if (!error) S.ansokanUtskick[id] = data || [];
   }
@@ -564,7 +595,7 @@
           a.kontaktad_at,
           '<button type="button" class="btn btn-ghost btn-sm" data-ans-kontakt="' + id + '">'
           + (a.kontaktad_at ? 'Skriv igen' : 'Skriv till hen') + '</button>',
-          besked(a, 'mottagen'))
+          besked(a, 'mottagen') + besked(a, 'vardnadshavare'))
 
       + spårSteg(2, 'Digitalt möte',
           'En kvart över video. Det är ett samtal, inget prov — vi vill höra hur hen '
@@ -626,11 +657,15 @@
           besked(a, 'valkommen'))
 
       + '</div>'
-      /* Det enda steget utan eget mejl, och det enda som inte står i
-         listan ovan. Därför här, där den som ska säga nej läser. */
+      /* Nejet står inte bland stegen ovan. Därför här, där den som ska
+         säga nej läser. Sedan 2026-10-05 mejlas det, men inte genast. */
+      + besked(a, 'avbojd')
       + '<p class="xsmall" style="color:var(--muted-2);margin-top:12px;line-height:1.6">'
-      + 'Ett nej mejlas aldrig automatiskt. Sätts läget till Avböjd går ingenting ut, '
-      + 'så det mejlet skriver du själv.'
+      + ('vardnadshavare_godkand_at' in a
+        ? 'Sätts läget till Avböjd mejlas ett nej, tidigast en halvtimme senare och aldrig mellan 20 och 9. '
+          + 'Byter du läget innan dess går det inte iväg. Ett nej mejlas en gång.'
+        : 'Ett nej mejlas inte härifrån än: migrationen ansokan_vardnadshavare_och_nej är inte körd. '
+          + 'Sätts läget till Avböjd går ingenting ut, så det mejlet skriver du själv.')
       + (S.ansokanUtskickFel
         ? ' Mejlstatusen gick inte att läsa: ' + esc(S.ansokanUtskickFel) + '.'
         : '')
@@ -788,6 +823,21 @@
     const ans = S.ansokningar.find(a => a.id === knapp.dataset.ansPool);
     if (!ans) return;
 
+    /* Den som är under 18 behöver vårdnadshavarens godkännande för att
+       börja jobba (2026-10-05). Saknas det i ansökan frågar vi, som för
+       introduktionen: det kan finnas på annat sätt. */
+    if (ärUnder18(ans) && harVhKolumner(ans) && !ans.vardnadshavare_godkand_at) {
+      const ändå = await bekräfta({
+        titel: 'Vårdnadshavarens godkännande saknas',
+        text: (ans.name || 'Den sökande') + ' är ' + ans.age + ' år, och den som är under 18 behöver sin '
+          + 'vårdnadshavares godkännande för att börja jobba. Lägg in det under Ansökan först, eller '
+          + 'fortsätt om du har det på annat sätt.',
+        knapp: 'Ta in ändå',
+        avbryt: 'Avbryt'
+      });
+      if (!ändå) return;
+    }
+
     /* Utbildningen är inte en artighet. En studiehjälpare som inte
        vet hur rapporten fungerar lämnar inga rapporter — och utan
        rapport blir passet aldrig genomfört, alltså aldrig fakturerat
@@ -882,6 +932,185 @@
   });
 
 
+  /* ============================================================
+     UNDER 18: VÅRDNADSHAVARENS GODKÄNNANDE (2026-10-05)
+
+     Leo: "fråga om den sökande är under 18, är den det så ber du den
+     skriva in sina föräldrars mail och dokumenterar det, föräldrarna får
+     automatiskt ett mail ... efter det så kan vi dokumentera det och
+     lägga in kopia av mail till barnet." Formuläret frågar efter
+     vårdnadshavarens e-post när åldern är under 18, och databasen mejlar
+     vårdnadshavaren direkt (steget vardnadshavare). Svaret kommer till
+     info@, och läggs in här: när, och en kopia av mejlet. Ingenting
+     mejlas när det läggs in.
+
+     Raderna visas bara när kolumnerna finns (migrationen
+     ansokan_vardnadshavare_och_nej): en knapp som sparar till en kolumn
+     som saknas hade sett ut att fungera.
+     ============================================================ */
+  const ärUnder18 = a => a.age != null && a.age > 0 && a.age < 18;
+  const harVhKolumner = a => !!a && 'vardnadshavare_godkand_at' in a;
+
+  /* Det senaste mejlet till vårdnadshavaren, kort: det står i Ansökan,
+     bredvid adressen. Hela beskedet står under Rekryteringen. */
+  function vhMejlat(a) {
+    const rad = (S.ansokanUtskick[a.id] || []).find(r => r.steg === 'vardnadshavare');
+    if (!rad) return '';
+    return {
+      skickad: 'mejlad ' + kortDatum(rad.uppdaterad),
+      vantar: 'mejlet är på väg', skickar: 'mejlet är på väg',
+      fel: 'mejlet gick inte fram',
+      bromsad: 'mejlades inte' + (rad.fel ? ': ' + rad.fel : ''),
+      hoppad: 'mejlades inte'
+    }[rad.status] || '';
+  }
+
+  /* Raderna i ansökans faktaruta (dpAnsokan). Tom för en vuxen. */
+  function vhFakta(a) {
+    if (!harVhKolumner(a)) return [];
+    if (!ärUnder18(a) && !a.vardnadshavare_epost && !a.vardnadshavare_godkand_at) return [];
+    const mejlat = vhMejlat(a);
+    const adress = a.vardnadshavare_epost
+      ? '<a href="mailto:' + esc(a.vardnadshavare_epost) + '" data-mailtext="keep">'
+        + esc(a.vardnadshavare_epost) + '</a>'
+        + (mejlat ? esc(' · ' + mejlat) : '')
+      : null;
+    const godkänt = a.vardnadshavare_godkand_at
+      ? esc('Inlagt ' + kortDatum(a.vardnadshavare_godkand_at) + '. Mejlet står under Vårdnadshavarens svar.')
+      : esc(a.vardnadshavare_epost ? 'Väntar på svar till info@.' : 'Inget mejl har gått: adressen saknas.')
+        + ' <button type="button" class="btn btn-ghost btn-sm" data-ans-vh-in="'
+        + esc(a.id) + '">Lägg in godkännandet</button>';
+    return [
+      ['Vårdnadshavare', adress, 'saknas. Lägg till adressen under Redigera uppgifterna, så mejlas hen.'],
+      ['Godkännande', godkänt]
+    ];
+  }
+
+  /* Kopian av vårdnadshavarens svar, och vägen att ta bort den. Tom
+     sträng när inget är inlagt. */
+  function vhSvar(a) {
+    if (!harVhKolumner(a) || !a.vardnadshavare_godkand_at) return '';
+    return '<div class="dp-text">' + esc(a.vardnadshavare_svar || '(ingen kopia)') + '</div>'
+      + '<div class="dp-atgard"><button type="button" class="btn btn-ghost btn-sm" data-ans-vh-bort="'
+      + esc(a.id) + '">Ta bort godkännandet</button></div>';
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-ans-vh-in]');
+    if (!knapp) return;
+    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansVhIn);
+    if (!a) return;
+    const svar = await fråga({
+      titel: 'Vårdnadshavarens godkännande',
+      text: 'Klistra in mejlet där ' + (a.vardnadshavare_epost || 'vårdnadshavaren') + ' godkänner ansökan, '
+        + 'med avsändare och datum. Det sparas i ansökan och tas bort med den. Ingenting mejlas.',
+      innehåll: '<div class="fgroup"><label for="vh-svar">Mejlet från vårdnadshavaren</label>'
+        + '<textarea class="inp" id="vh-svar" rows="9" maxlength="20000"></textarea></div>',
+      knapp: 'Lägg in godkännandet',
+      läs: r => {
+        const text = $('#vh-svar', r).value.trim();
+        if (text.length < 10) return { fel: 'Klistra in mejlet där vårdnadshavaren godkänner ansökan.' };
+        return { värde: text };
+      }
+    });
+    if (!svar) return;
+    const { data, error } = await supa.from('applications')
+      .update({ vardnadshavare_godkand_at: new Date().toISOString(), vardnadshavare_svar: svar })
+      .eq('id', a.id).select('*').maybeSingle();
+    if (error || !data) { alert('Kunde inte spara: ' + (error ? felText(error) : 'ingen rad ändrades')); return; }
+    Object.assign(a, data);
+    ritaOm();
+  });
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-ans-vh-bort]');
+    if (!knapp) return;
+    const a = S.ansokningar.find(x => x.id === knapp.dataset.ansVhBort);
+    if (!a) return;
+    const ja = await bekräfta({
+      titel: 'Ta bort godkännandet?',
+      text: 'Tidpunkten och kopian av mejlet tas bort ur ansökan. Gör det bara om det lades in av misstag.',
+      knapp: 'Ta bort',
+      avbryt: 'Behåll'
+    });
+    if (!ja) return;
+    await medan(knapp, '…', async () => {
+      const { data, error } = await supa.from('applications')
+        .update({ vardnadshavare_godkand_at: null, vardnadshavare_svar: null })
+        .eq('id', a.id).select('*').maybeSingle();
+      if (error || !data) { alert('Kunde inte ta bort: ' + (error ? felText(error) : 'ingen rad ändrades')); return; }
+      Object.assign(a, data);
+      ritaOm();
+    });
+  });
+
+  /* ============================================================
+     NEJET (2026-10-05)
+
+     Leo: "klickar vi i avböjd i ansökningarna så skickas automatiskt ett
+     mail till den sökande om att vi har valt att gå vidare med en annan."
+     Rullgardinen frågar först och visar mejlet, ord för ord. Databasen
+     köar det tidigast en halvtimme senare och aldrig mellan 20 och 9
+     (intern.ansokan_nej_tid); byts läget före dess går inget.
+
+     TEXTEN STÅR PÅ TVÅ STÄLLEN: här och i mallen (NEJ i
+     supabase/functions/_delad/notiser/ansokan.ts). verktyg/kolla-mejltexter.py
+     håller dem lika i CI, för en förhandsvisning som säger något annat än
+     mejlet är värre än ingen.
+     ============================================================ */
+  const NEJ_MEJLET = {
+    amne: 'Om din ansökan till Nextrum',
+    rubrik: 'Tack för din ansökan',
+    mening: 'Tack för att du ville jobba som studiehjälpare hos oss, och för tiden du lade på ansökan. '
+      + 'Vi har valt att gå vidare med andra sökande den här gången.',
+    avslutning: 'Du är välkommen att söka igen längre fram. Undrar du något om beskedet? '
+      + 'Svara på det här mejlet.'
+  };
+
+  /* Förnamnet som mallen tar det (fornamn() i _delad/notiser/typer.ts). */
+  function förnamn(namn) {
+    const första = String(namn || '').trim().split(/\s+/)[0] || '';
+    const ren = första.replace(/[^\p{L}-]/gu, '').slice(0, 30);
+    return /\p{L}/u.test(ren) ? ren : null;
+  }
+
+  /* När nejet går om det sätts nu: samma regel som intern.ansokan_nej_tid. */
+  function nejNär() {
+    const t = sthlm(new Date(Date.now() + 30 * 60000));
+    if (t.tim < 9) return dagOrd(t.dag) + ' kl. 09:00';
+    if (t.tim >= 20) return 'i morgon kl. 09:00';
+    return dagOrd(t.dag) + ' kl. ' + t.klocka;
+  }
+
+  /* Frågan innan läget blir Avböjd. Svarar true när det får sättas. */
+  async function bekräftaNej(a) {
+    /* Utan migrationen köar databasen inget nej, och rutan hade lovat
+       ett mejl som aldrig går. */
+    if (!harVhKolumner(a)) return true;
+    const vem = a.name || 'Den sökande';
+    const gått = (S.ansokanUtskick[a.id] || []).find(r => r.steg === 'avbojd' && r.status === 'skickad');
+    if (gått) {
+      return bekräfta({
+        titel: 'Avböja ' + vem + '?',
+        text: vem + ' fick ett nej ' + kortDatum(gått.uppdaterad) + '. Ett nej mejlas en gång, så inget nytt mejl går.',
+        knapp: 'Avböj',
+        avbryt: 'Avbryt'
+      });
+    }
+    const namn = förnamn(a.name);
+    return bekräfta({
+      titel: 'Avböja och mejla ' + vem + '?',
+      text: vem + ' får mejlet nedan ' + nejNär() + '. Byter du läget innan dess går det inte iväg.',
+      forhandsvisning: 'Ämne: ' + NEJ_MEJLET.amne + '\n\n'
+        + (namn ? 'Hej ' + namn + ',' : 'Hej,') + '\n\n'
+        + NEJ_MEJLET.rubrik + '\n\n'
+        + NEJ_MEJLET.mening + '\n\n'
+        + NEJ_MEJLET.avslutning,
+      knapp: 'Avböj och mejla',
+      avbryt: 'Avbryt'
+    });
+  }
+
   /* Det de skrev under "Varför", utan CV-raden: den står som en knapp
      i panelen i stället för som en sökväg. */
   function ansökansText(a) {
@@ -890,6 +1119,7 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ansökansText, cvKnapp, provKort, provKnapp, ritaAnsokningar, spårLista
+    ansökansText, bekräftaNej, cvKnapp, hämtaBesked, provKort, provKnapp, ritaAnsokningar, spårLista,
+    vhFakta, vhSvar
   });
 })();

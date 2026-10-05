@@ -41,6 +41,16 @@ detsamma. Blir det ett krav ändras de tre samtidigt. Svaret står som första r
 `kopplaAnsökan`s `överst()`; sidans kontroll går genom `kontroll()`.
 Kontrollen och valet delar stilen `.nx-val` med kontaktvalet.
 
+**Under 18 i ansökan** (2026-10-05): åldern under 18 fäller ut
+vårdnadshavarens e-post, som krävs och inte får vara den egna. Den går som
+en egen kolumn (`kopplaAnsökan`s `kolumner()`), inte i `why`, eftersom
+databasen mejlar den. Vårdnadshavaren svarar till info@ med barnets för-
+och efternamn, och admin lägger in svaret i ansökan. Hela kedjan står i
+`minne/notiser.md` (Vårdnadshavarens godkännande).
+
+**Avböjd mejlar ett nej** (2026-10-05), tidigast en halvtimme senare och
+aldrig på kvällen. Se `minne/notiser.md`, regel 4.
+
 ## Uppstarten
 
 **Intresseanmälan säger att Nextrum bildas** (2026-09-29). Leo: "just

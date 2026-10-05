@@ -42,7 +42,7 @@
   const M = NXMedia;
 
   const { S, elevNamn, funktionsFel, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag,
-          hämtaMatchunderlag, kortDatum, namnFör, närText, skriv, skrivOmOförändrad, tabell,
+          hämtaMatchunderlag, kortDatum, markeraSett, namnFör, närText, skriv, skrivOmOförändrad, tabell,
           visa, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
@@ -132,8 +132,20 @@
         });
         if (!ja) { el.value = gammal; return; }
       }
+      /* Avböjd mejlar ett nej (2026-10-05), en halvtimme senare och aldrig
+         på kvällen. Rutan visar mejlet och när det går (bekräftaNej i
+         nextrum-admin-rekrytering.js). */
+      if (el.value === 'rejected' && gammal !== 'rejected') {
+        const ja = await NXAdmin.rita.bekräftaNej(a);
+        if (!ja) { el.value = gammal; return; }
+      }
       a.status = el.value;
       if (!await skriv('applications', a.id, { status: el.value })) a.status = gammal;
+      /* Databasen köar nejet, eller låter det gå förbi när läget byts
+         tillbaka. Rekryteringen visar när det går, så raden hämtas om. */
+      if ((a.status === 'rejected') !== (gammal === 'rejected') && NXAdmin.rita.hämtaBesked) {
+        await NXAdmin.rita.hämtaBesked(a.id);
+      }
       ritaAnsokningar(); ritaÖversikt();
       return;
     }
@@ -708,6 +720,37 @@
   }
 
   /* ------------------------------------------------------------
+     SETT (2026-10-05)
+
+     När Intresseanmälningar eller Ansökningar står framme markeras det
+     nya som sett (markeraSett i kärnan, en tid per admin i admin_sett):
+     siffran i menyn, raden i Att göra och pricken i klockan går bort,
+     och raderna som var nya märks i listan så länge man står kvar. Det
+     räcker att sektionen visas, för det är där man ser att något kommit
+     in och vad. En dold flik har inte sett något: då väntar det tills
+     den kommer fram. Titelns (n) nollas som när klockan öppnas.
+
+     stannar: samma besök (en ny rad kom in, fliken kom fram). Annars är
+     det ett nytt besök om sektionen inte var den förra.
+     ------------------------------------------------------------ */
+  let settKlar = false;
+
+  async function sektionSedd(stannar) {
+    if (!settKlar || document.hidden) return;
+    const framme = $('#view-app section[data-sek]:not([hidden])');
+    const sek = framme ? framme.dataset.sek : null;
+    const samma = !!stannar || S.settSek === sek;
+    S.settSek = sek;
+    if (sek !== 'leads' && sek !== 'ansokningar') return;
+    if (!await markeraSett(sek, samma)) return;
+    if (sek === 'leads') ritaLeads(); else ritaAnsokningar();
+    await ritaÖversikt();
+    if (NXAdmin.rita.sättTitel) NXAdmin.rita.sättTitel(0);
+  }
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) sektionSedd(true); });
+
+  /* ------------------------------------------------------------
      BEVAKNINGEN
 
      Adminvyn hämtade allt EN gång, vid inloggning. Kom en ansökan in
@@ -796,8 +839,10 @@
       await ritaÖversikt();
 
       /* Titeln är det enda som syns när fliken ligger bakom en annan.
-         Den nollställs av sättTitel(0) när man öppnar notiserna. */
+         Den nollställs av sättTitel(0) när man öppnar notiserna, och när
+         det nya syns i sektionen man står i (sektionSedd). */
       if (nytt > 0) sättTitel(nytt);
+      await sektionSedd(true);
     }
 
     /* Titeln bär antalet nya, som i studievyerna. */
@@ -805,6 +850,7 @@
       const ren = document.title.replace(/^\(\d+\)\s*/, '');
       document.title = n ? '(' + n + ') ' + ren : ren;
     }
+    NXAdmin.rita.sättTitel = sättTitel;
 
     /* ------------------------------------------------------------
        REALTIDEN
@@ -991,6 +1037,7 @@
         const [huvud, flik] = adress.split('/');
         if (flik && S.flikar[huvud]) S.flikar[huvud].visa(flik);
         ritaVar();
+        sektionSedd();
       }
       window.addEventListener('hashchange', följHash);
       följHash();
@@ -1045,6 +1092,10 @@
       ritaAutomationer();
       await ritaAI();
       await ritaÖversikt();
+      /* Står man redan i Ansökningar (en adress med #ansokningar) är det
+         nya sett när det ritats. */
+      settKlar = true;
+      await sektionSedd();
 
       /* Hjältebildens enda kort räknade "saker att göra" och länkade
          till det främsta. Driftkonsolens disk visar samma tal och

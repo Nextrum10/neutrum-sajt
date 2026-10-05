@@ -232,6 +232,16 @@
           </div>
           <div class="pay-field"><label for="ap-email">E-post</label><input class="inp" id="ap-email" name="epost" type="email" required autocomplete="email"></div>
           <div class="pay-field"><label for="ap-phone">Telefon</label><input class="inp" id="ap-phone" name="telefon" type="tel" autocomplete="tel" placeholder="Valfritt"></div>
+          <!-- UNDER 18 (2026-10-05). Visas när åldern är under 18. Databasen
+               mejlar vårdnadshavaren (ansokan_besked), som svarar med sitt
+               godkännande; admin lägger in det i ansökan. autocomplete av:
+               webbläsaren fyller annars i den sökandes egen adress. Samma
+               fält står i en/bli-studiehjalpare.html. -->
+          <div class="pay-field" id="ap-vh-falt" hidden>
+            <label for="ap-vh">Din vårdnadshavares e-post</label>
+            <input class="inp" id="ap-vh" name="vardnadshavare" type="email" autocomplete="off">
+            <p class="nx-fil-hjalp">Du är under 18, så vi behöver din vårdnadshavares skriftliga godkännande innan du kan börja. Vi mejlar hen när du skickat ansökan.</p>
+          </div>
           <!-- Vilka uppdrag du vill ta. Ritas av NXTjanster ur
                tabellen tjanster; bara aktiva tjänster med for_jobb
                syns, så listan växer av sig själv den dag en
@@ -455,7 +465,7 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=f7c55a87"></script>
+<script src="nextrum-app.js?v=371d3290"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-motion.js?v=f1ce069c"></script>
@@ -514,6 +524,41 @@
     });
   });
 
+  /* UNDER 18 (2026-10-05). Leo: "fråga om den sökande är under 18, är
+     den det så ber du den skriva in sina föräldrars mail". Åldern
+     frågas redan, så fältet för vårdnadshavarens e-post visas när den
+     är under 18, i stället för en fråga till om samma sak. NX.läsÅlder
+     läser fältet som kopplaAnsökan gör, och databasen sparar adressen
+     bara för den som är under 18 (skydda_ansokningsfalt). */
+  const åldersFält = $('#ap-age'), vhFält = $('#ap-vh-falt'), vh = $('#ap-vh');
+  const under18 = () => {
+    const n = NX.läsÅlder(åldersFält.value);
+    return n != null && n > 0 && n < 18;
+  };
+  const visaVh = () => {
+    const på = under18();
+    vhFält.hidden = !på;
+    vh.required = på;
+    if (!på) vh.removeAttribute('aria-invalid');
+  };
+  åldersFält.addEventListener('input', visaVh);
+  vh.addEventListener('input', () => vh.removeAttribute('aria-invalid'));
+  /* reset töms efter händelsen, så fältet döljs ett varv senare. */
+  $('#apply-form').addEventListener('reset', () => setTimeout(visaVh));
+  visaVh();
+  const vhFel = () => {
+    if (!under18()) return '';
+    const adress = vh.value.trim();
+    const egen = $('#ap-email').value.trim().toLowerCase();
+    const fel = !NX.epostOk(adress) ? t('vardnadshavareSaknas')
+      : adress.toLowerCase() === egen ? t('vardnadshavareSamma') : '';
+    if (!fel) return '';
+    vh.setAttribute('aria-invalid', 'true');
+    vh.focus({ preventScroll: true });
+    vh.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return fel;
+  };
+
   /* Timmarna: ja eller nej måste väljas. Rutan markeras som den
      glömda samtyckesrutan och släpper när något väljs. */
   const timmarFält = $('#ap-timmar');
@@ -528,6 +573,8 @@
     krävSamtycke: '#ap-gdpr',
     cv: '#ap-cv',
     kontroll: () => {
+      const vhSvar = vhFel();
+      if (vhSvar) return vhSvar;
       timmarFält.classList.remove('fel');
       if (timmarVal()) return '';
       timmarFält.classList.add('fel');
@@ -537,6 +584,8 @@
       return t('valjTimmar');
     },
     överst: () => 'Minst 4 timmar i veckan: ' + timmarVal(),
+    kolumner: () => (under18() ? { vardnadshavare_epost: vh.value.trim() } : {}),
+    tack: () => (under18() ? t('tackAnsokanUnder18') : ''),
     extra: () => {
       const rader = [];
       const tel = $('#ap-phone') && $('#ap-phone').value.trim();

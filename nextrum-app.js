@@ -109,6 +109,13 @@ const NX = (function () {
                                'Thank you. We have received your enquiry and will call you on {tel} within 24 hours to plan your first session for when we start {om}.'],
     valjTimmar:      ['Svara ja eller nej på om du kan jobba minst 4 timmar i veckan.',
                       'Please answer yes or no to whether you can work at least 4 hours a week.'],
+    /* Under 18 (2026-10-05): vårdnadshavarens e-post i ansökan. */
+    vardnadshavareSaknas: ['Skriv din vårdnadshavares e-post. Du är under 18, och då behöver vi hens godkännande.',
+                           'Please enter your parent or guardian’s email. You are under 18, so we need their approval.'],
+    vardnadshavareSamma:  ['Skriv din vårdnadshavares egen e-post, inte din.',
+                           'Please enter your parent or guardian’s own email, not yours.'],
+    tackAnsokanUnder18:   ['Tack för din ansökan. Vi läser alla och hör av oss inom 24 timmar. Din vårdnadshavare får ett mejl från oss om att godkänna den.',
+                           'Thank you for your application. We read every one and will be in touch within 24 hours. Your parent or guardian will get an email from us asking them to approve it.'],
     valjKontakt:     ['Välj om ni vill att vi ringer eller mejlar först.',
                       'Please choose whether you would like us to call or email first.'],
     telefonForRing:  ['Behövs för att vi ska kunna ringa',
@@ -832,6 +839,18 @@ const NX = (function () {
     } catch (e) { /* inte heller här */ }
   }
 
+  /* Åldern ur fältet: det första talet, så att "16 år" blir 16. Tomt
+     eller utan siffror är null. Sidan använder samma läsning för att
+     veta när vårdnadshavarens fält ska visas. */
+  function läsÅlder(v) {
+    const m = /\d{1,3}/.exec(String(v == null ? '' : v));
+    return m ? Number(m[0]) : null;
+  }
+
+  /* Hur en kolumn som saknas skrivs i why (reserven i kopplaAnsökan).
+     Svenska: den läses av oss, inte av den som söker. */
+  const KOLUMN_I_WHY = { vardnadshavare_epost: 'Vårdnadshavarens e-post' };
+
   /* ---------- ansökan om att bli studiehjälpare ----------
      Samma formulär finns i modalen på startsidan och som vanligt
      formulär på bli-studiehjalpare.html. Logiken bor här så att en
@@ -870,7 +889,16 @@ const NX = (function () {
       const knapp = form.querySelector('button[type="submit"]');
       if (knapp) knapp.setAttribute('aria-busy', 'true');
 
-      const ålderRaw = String(f.get('alder') || '').trim();
+      /* Åldern som ett tal (2026-10-05): "16 år" var förut NaN och
+         sparades som null. Under 18 frågar formuläret efter
+         vårdnadshavaren, och databasen sparar adressen bara då
+         (skydda_ansokningsfalt), så båda måste läsa samma tal. */
+      const ålder = läsÅlder(f.get('alder'));
+      /* Kolumner som sidan själv lägger till (vårdnadshavarens e-post).
+         Tack-texten läses före form.reset(), som tömmer fälten den
+         räknas på. */
+      const kolumner = typeof o.kolumner === 'function' ? (o.kolumner() || {}) : {};
+      const tack = typeof o.tack === 'function' ? o.tack() : '';
 
       /* Fält utan egen kolumn (telefon, erfarenhet, samtycke) läggs
          sist i "why" som märkta rader. Då slipper schemat ändras och
@@ -927,21 +955,34 @@ const NX = (function () {
          fältet inte alls, och kolumnens default gäller. */
       const utanVal = typeof NXTjanster !== 'undefined' && NXTjanster.standardJobb
         ? [NXTjanster.standardJobb()] : null;
-      const { error } = await supa.from('applications').insert({
+      const rad = {
         name: namn,
         ...(tjanster.length ? { tjanster } : (utanVal ? { tjanster: utanVal } : {})),
-        age: ålderRaw ? Number(ålderRaw) : null,
+        age: ålder,
         email: epost,
         school: String(f.get('skola') || '').trim() || null,
         subjects: String(f.get('amnen') || '').trim() || null,
         availability: String(f.get('tider') || '').trim() || null,
         why: why || null
-      });
+      };
+      let { error } = await supa.from('applications').insert(Object.assign({}, rad, kolumner));
+      /* Kolumnen kan saknas en stund efter en driftsättning: migrationen
+         körs efter merge (CLAUDE.md, avsnitt 5). Då går ansökan in ändå,
+         med värdet som en märkt rad först i why, så att det inte
+         försvinner (databasen kapar why bakifrån). Bara när sidan lagt
+         till något och PostgREST säger att en kolumn saknas (PGRST204). */
+      const tillagda = Object.keys(kolumner).filter(k => kolumner[k] != null && kolumner[k] !== '');
+      if (error && error.code === 'PGRST204' && tillagda.length) {
+        const rader = tillagda.map(k => (KOLUMN_I_WHY[k] || k) + ': ' + kolumner[k]);
+        ({ error } = await supa.from('applications').insert(Object.assign({}, rad, {
+          why: [rader.join('\n'), rad.why].filter(Boolean).join('\n\n')
+        })));
+      }
 
       if (knapp) knapp.removeAttribute('aria-busy');
       if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       form.reset();
-      säg(msg, t('tackAnsokan'), true);
+      säg(msg, tack || t('tackAnsokan'), true);
       händelse('ansokan_studiehjalpare', { kanal: källa().kanal || 'okänd', kampanj: källa().kampanj || 'ingen' });
     });
   }
@@ -1192,7 +1233,7 @@ const NX = (function () {
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
-    initFaq, initPris, initErbjudanden, kopplaAnsökan, märkInloggad,
+    initFaq, initPris, initErbjudanden, kopplaAnsökan, läsÅlder, märkInloggad,
     källa, händelse, uppstart,
     bildIntoning, initVagval,
     /* hämtaTillganglighet stod här i Fas 14.0-grenen. Main tog bort

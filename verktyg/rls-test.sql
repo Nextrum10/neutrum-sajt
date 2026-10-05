@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna och påminnelserna till admin)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, och det admin sett)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -48,8 +48,8 @@
 -- manadskorningens_svar_lases_den_forsta, anonyma_skrivningar_far_tak,
 -- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank), admin_oppnar_chatten,
 -- avbokningar_och_svar, tipskoder_och_kampanjkoder,
--- barnkonton_och_admin, manadskorningen_gar_varje_natt och admin_paminnelser
--- är körda.
+-- barnkonton_och_admin, manadskorningen_gar_varje_natt, admin_paminnelser,
+-- ansokan_vardnadshavare_och_nej och admin_sett är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -11155,6 +11155,302 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('AP Påminnelserna till admin', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 17. Jobbansökan: vårdnadshavaren och nejet
+--     (ansokan_vardnadshavare_och_nej, 2026-10-05)
+--
+-- Den som är under 18 skriver vårdnadshavarens e-post, och databasen köar
+-- ett mejl dit med samma broms som kvittot. Godkännandet läggs in av
+-- admin och går inte att skriva utifrån. Avböjd köar ett nej som går
+-- tidigast efter en halvtimme och aldrig mellan 20 och 9, hoppas över om
+-- läget hunnit bytas, köas om vid ett nytt nej och mejlas en gång.
+--
+-- Adressen till funktionen är tömd överst i filen: inget av det här blir
+-- ett mejl.
+-- ------------------------------------------------------------
+
+-- Nejets tid, i svensk tid, sommar och vinter. I ett block: körs filen
+-- före migrationen ska raderna bli röda, inte hela körningen falla.
+do $$
+declare
+  v record;
+  fick timestamptz;
+begin
+  for v in
+    select * from (values
+      ('17 nejet: mitt på dagen en halvtimme senare', '2026-10-05 10:00:00+00'::timestamptz, '2026-10-05 10:30:00+00'::timestamptz),
+      ('17 nejet: 19:20 svensk tid går 19:50', '2026-10-05 17:20:00+00', '2026-10-05 17:50:00+00'),
+      ('17 nejet: 19:40 svensk tid väntar till 09:00 dagen efter', '2026-10-05 17:40:00+00', '2026-10-06 07:00:00+00'),
+      ('17 nejet: 07:00 svensk tid väntar till 09:00 samma dag', '2026-10-05 05:00:00+00', '2026-10-05 07:00:00+00'),
+      ('17 nejet: vintertid 23:00 väntar till 09:00 dagen efter', '2026-12-03 22:00:00+00', '2026-12-04 08:00:00+00'),
+      ('17 nejet: vintertid efter midnatt väntar till 09:00 samma dag', '2026-12-03 23:45:00+00', '2026-12-04 08:00:00+00')
+    ) as x(t, in_tid, ut_tid)
+  loop
+    begin
+      fick := intern.ansokan_nej_tid(v.in_tid);
+      insert into utfall (test, ok, detalj) values (v.t, fick = v.ut_tid, fick::text || ' mot ' || v.ut_tid::text);
+    exception when others then
+      insert into utfall (test, ok, detalj) values (v.t, false, sqlerrm);
+    end;
+  end loop;
+end $$;
+
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  ung   constant uuid := '00000000-0000-4000-8000-0000000017a1';
+  vuxen constant uuid := '00000000-0000-4000-8000-0000000017a2';
+  syster constant uuid := '00000000-0000-4000-8000-0000000017a3';
+  a     public.applications%rowtype;
+  rad   record;
+  n     integer;
+  vh_id uuid;
+  nej   public.ansokan_utskick%rowtype;
+  igen  integer;
+begin
+  begin
+    -- Utifrån: sexton år, vårdnadshavarens adress, och ett försök att
+    -- skriva godkännandet själv.
+    perform pg_temp.bli(null);
+    insert into public.applications (id, name, email, age, vardnadshavare_epost, vardnadshavare_godkand_at, vardnadshavare_svar)
+    values (ung, 'Prov Ung', 'rls-ung@example.invalid', 16, '  RLS-Mamma@example.invalid ', now(), 'Jag godkänner');
+    insert into public.applications (id, name, email, age, vardnadshavare_epost)
+    values (vuxen, 'Prov Vuxen', 'rls-vuxen@example.invalid', 22, 'rls-mamma2@example.invalid');
+    insert into public.applications (id, name, email, age, vardnadshavare_epost)
+    values (syster, 'Prov Syster', 'rls-syster@example.invalid', 15, 'rls-mamma@example.invalid');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    select * into a from public.applications where id = ung;
+    ut := ut || jsonb_build_object('t', '17 adressen sparas för den som är under 18, utan kantmellanslag', 'ok',
+            a.vardnadshavare_epost = 'RLS-Mamma@example.invalid', 'd', a.vardnadshavare_epost);
+    ut := ut || jsonb_build_object('t', '17 godkännandet går inte att skriva utifrån', 'ok',
+            a.vardnadshavare_godkand_at is null and a.vardnadshavare_svar is null, 'd', null);
+    select count(*) into n from public.ansokan_utskick
+     where ansokan_id = ung and steg = 'vardnadshavare' and status = 'vantar'
+       and nyckel = 'vardnadshavare:' || md5(intern.epost_nyckel('rls-mamma@example.invalid'));
+    ut := ut || jsonb_build_object('t', '17 vårdnadshavaren mejlas, en rad per adress', 'ok', n = 1, 'd', 'rader: ' || n);
+    select * into a from public.applications where id = vuxen;
+    select count(*) into n from public.ansokan_utskick where ansokan_id = vuxen and steg = 'vardnadshavare';
+    ut := ut || jsonb_build_object('t', '17 den som är vuxen: ingen adress sparas och ingen mejlas', 'ok',
+            a.vardnadshavare_epost is null and n = 0, 'd', coalesce(a.vardnadshavare_epost, '') || ' rader: ' || n);
+    select u.status, u.fel into rad from public.ansokan_utskick u where u.ansokan_id = syster and u.steg = 'vardnadshavare';
+    ut := ut || jsonb_build_object('t', '17 samma vårdnadshavare igen samma dygn bromsas', 'ok',
+            rad.status = 'bromsad', 'd', coalesce(rad.status, 'ingen rad') || ': ' || coalesce(rad.fel, ''));
+
+    -- Dörren: raden till vårdnadshavaren bär hens adress, inte den sökandes.
+    select id into vh_id from public.ansokan_utskick where ansokan_id = ung and steg = 'vardnadshavare';
+    select * into rad from public.ansokan_besked_ta(vh_id);
+    ut := ut || jsonb_build_object('t', '17 mejlet till vårdnadshavaren går till vårdnadshavaren', 'ok',
+            rad.epost = 'RLS-Mamma@example.invalid' and rad.namn = 'Prov Ung', 'd', coalesce(rad.epost, 'ingen rad'));
+    perform public.ansokan_besked_klar(vh_id, true, null, 'prov', false);
+
+    -- Admin rättar adressen: ny adress, nytt mejl. Samma adress igen: inget.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set vardnadshavare_epost = 'rls-pappa@example.invalid' where id = ung;
+    update public.applications set vardnadshavare_epost = 'RLS-Pappa@Example.invalid' where id = ung;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*) into n from public.ansokan_utskick where ansokan_id = ung and steg = 'vardnadshavare';
+    ut := ut || jsonb_build_object('t', '17 en rättad adress mejlas, samma adress igen gör det inte', 'ok', n = 2, 'd', 'rader: ' || n);
+
+    -- Godkännandet läggs in: loggas utan text, och den köade raden hoppas över.
+    select id into vh_id from public.ansokan_utskick
+     where ansokan_id = ung and steg = 'vardnadshavare' and status = 'vantar';
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set vardnadshavare_godkand_at = now(), vardnadshavare_svar = 'Från: pappa. Jag godkänner.'
+     where id = ung;
+    update public.applications set vardnadshavare_epost = 'rls-tredje@example.invalid' where id = ung;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*) into n from public.ansokan_utskick where ansokan_id = ung and steg = 'vardnadshavare';
+    ut := ut || jsonb_build_object('t', '17 med godkännandet inlagt mejlas ingen ny adress', 'ok', n = 2, 'd', 'rader: ' || n);
+    perform public.ansokan_besked_ta(vh_id);
+    select u.status into rad from public.ansokan_utskick u where u.id = vh_id;
+    ut := ut || jsonb_build_object('t', '17 ett köat mejl till vårdnadshavaren hoppas över när godkännandet finns', 'ok',
+            rad.status = 'hoppad', 'd', rad.status);
+    select count(*) into n from public.audit_logg
+     where tabell = 'applications' and objekt_id = ung::text and efter ? 'vardnadshavare_godkand_at'
+       and not (coalesce(efter, '{}') ? 'vardnadshavare_svar') and not (coalesce(efter, '{}') ? 'vardnadshavare_epost');
+    ut := ut || jsonb_build_object('t', '17 auditloggen får tiden för godkännandet, aldrig kopian eller adressen', 'ok',
+            n = 1, 'd', 'rader: ' || n);
+
+    -- Nejet: köas med en tid, lånas inte ut före den, och omförsöken tar det först när det är dags.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set status = 'rejected' where id = vuxen;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into nej from public.ansokan_utskick where ansokan_id = vuxen and steg = 'avbojd';
+    ut := ut || jsonb_build_object('t', '17 Avböjd köar ett nej med en tid', 'ok',
+            nej.status = 'vantar' and nej.skicka_efter = intern.ansokan_nej_tid(now()), 'd',
+            coalesce(nej.status, 'ingen rad') || ' ' || coalesce(nej.skicka_efter::text, ''));
+    select count(*) into n from public.ansokan_besked_ta(nej.id);
+    ut := ut || jsonb_build_object('t', '17 nejet lånas inte ut före sin tid', 'ok', n = 0, 'd', 'rader: ' || n);
+    igen := intern.ansokan_besked_igen();
+    ut := ut || jsonb_build_object('t', '17 omförsöken tar inte nejet före sin tid', 'ok', igen = 0, 'd', 'tog: ' || igen);
+    update public.ansokan_utskick set skicka_efter = now() - interval '1 minute' where id = nej.id;
+    igen := intern.ansokan_besked_igen();
+    ut := ut || jsonb_build_object('t', '17 omförsöken tar nejet när tiden kommit', 'ok', igen = 1, 'd', 'tog: ' || igen);
+    select * into rad from public.ansokan_besked_ta(nej.id);
+    ut := ut || jsonb_build_object('t', '17 nejet går till den som sökt', 'ok',
+            rad.steg = 'avbojd' and rad.epost = 'rls-vuxen@example.invalid', 'd', coalesce(rad.epost, 'ingen rad'));
+    perform public.ansokan_besked_klar(nej.id, true, null, 'prov', false);
+
+    -- Ett nej mejlas en gång: tillbaka och avböjd igen köar inget nytt.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set status = 'contacted' where id = vuxen;
+    update public.applications set status = 'rejected' where id = vuxen;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*) filter (where status = 'skickad'), count(*) into igen, n
+      from public.ansokan_utskick where ansokan_id = vuxen and steg = 'avbojd';
+    ut := ut || jsonb_build_object('t', '17 ett nej som gått mejlas aldrig igen', 'ok', n = 1 and igen = 1, 'd',
+            'rader: ' || n || ', skickade: ' || igen);
+
+    -- Ångrat: läget byts tillbaka före tiden, och raden hoppas över. Avböjd
+    -- igen köar samma rad om, med ny tid.
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set status = 'rejected' where id = syster;
+    update public.applications set status = 'contacted' where id = syster;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into nej from public.ansokan_utskick where ansokan_id = syster and steg = 'avbojd';
+    update public.ansokan_utskick set skicka_efter = now() - interval '1 minute' where id = nej.id;
+    select count(*) into n from public.ansokan_besked_ta(nej.id);
+    select * into nej from public.ansokan_utskick where id = nej.id;
+    ut := ut || jsonb_build_object('t', '17 ett ångrat nej går inte', 'ok', n = 0 and nej.status = 'hoppad', 'd',
+            nej.status || ': ' || coalesce(nej.fel, ''));
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set status = 'rejected' where id = syster;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into nej from public.ansokan_utskick where id = nej.id;
+    ut := ut || jsonb_build_object('t', '17 avböjd igen köar samma rad om, med ny tid', 'ok',
+            nej.status = 'vantar' and nej.skicka_efter > now() and nej.forsok = 0, 'd',
+            nej.status || ' ' || nej.skicka_efter::text || ' försök ' || nej.forsok);
+
+    -- Villkoret på steg tar de två nya, och bara kända steg.
+    begin
+      insert into public.ansokan_utskick (ansokan_id, steg, nyckel) values (ung, 'nej', 'nej');
+      ut := ut || jsonb_build_object('t', '17 ett okänt steg nekas', 'ok', false, 'd', 'gick igenom');
+    exception when check_violation then
+      ut := ut || jsonb_build_object('t', '17 ett okänt steg nekas', 'ok', true, 'd', null);
+    end;
+
+    -- Gallringen räknar godkännandet som ett steg.
+    update public.applications set created_at = now() - interval '2 years', vardnadshavare_godkand_at = now() - interval '10 days',
+           status = 'contacted' where id = ung;
+    select * into a from public.applications where id = ung;
+    ut := ut || jsonb_build_object('t', '17 gallringen räknar från godkännandet', 'ok',
+            intern.ansokan_gallras_fran(a) = a.vardnadshavare_godkand_at + interval '30 days', 'd',
+            intern.ansokan_gallras_fran(a)::text);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('17 Vårdnadshavaren och nejet', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- Ingen utom admin ändrar en ansökan, och därmed inte godkännandet. I ett
+-- block, av samma skäl som ovan.
+do $$
+begin
+  insert into public.applications (id, name, email, age, vardnadshavare_epost)
+  values ('00000000-0000-4000-8000-0000000017b1', 'Prov Läs Ung', 'rls-lasung@example.invalid', 16, 'rls-x@example.invalid');
+exception when others then
+  raise notice '17b1: %', sqlerrm;
+end $$;
+select pg_temp.prova('17 familjen lägger inte in ett godkännande', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$update public.applications set vardnadshavare_godkand_at = now()
+          where id = '00000000-0000-4000-8000-0000000017b1'$q$], 'nekad');
+select pg_temp.prova('17 anon lägger inte in ett godkännande', null,
+  array[$q$update public.applications set vardnadshavare_godkand_at = now()
+          where id = '00000000-0000-4000-8000-0000000017b1'$q$], 'nekad');
+select pg_temp.prova('17 admin lägger in godkännandet', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$update public.applications set vardnadshavare_godkand_at = now(), vardnadshavare_svar = 'Ja'
+          where id = '00000000-0000-4000-8000-0000000017b1'$q$], 'ok');
+select pg_temp.prova('17 anon köar inget nej', null,
+  array[$q$select intern.ansokan_nej_koa('00000000-0000-4000-8000-0000000017b1')$q$], 'nekad');
+
+-- ------------------------------------------------------------
+-- 18. Det admin sett (admin_sett, 2026-10-05)
+--
+-- En tid per admin och område, skriven bara av admin_sett_markera():
+-- aldrig bakåt, aldrig förbi nu, och bara för det man får se.
+-- Intresseanmälningarna kräver behörigheten leads, ansökningarna
+-- superadmin. Var och en läser bara sina egna rader.
+-- ------------------------------------------------------------
+select pg_temp.prova('18 superadmin markerar ansökningarna', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$select public.admin_sett_markera('ansokningar', '2026-10-01 10:00:00+00')$q$], 'ok');
+select pg_temp.prova('18 admin med leads markerar anmälningarna', '00000000-0000-4000-8000-0000000bcad1',
+  array[$q$select public.admin_sett_markera('leads', now())$q$], 'ok');
+select pg_temp.prova('18 admin med leads markerar inte ansökningarna', '00000000-0000-4000-8000-0000000bcad1',
+  array[$q$select public.admin_sett_markera('ansokningar', now())$q$], 'nekad');
+select pg_temp.prova('18 admin utan leads markerar inte anmälningarna', '00000000-0000-4000-8000-0000000bcad3',
+  array[$q$select public.admin_sett_markera('leads', now())$q$], 'nekad');
+select pg_temp.prova('18 familjen markerar ingenting', '00000000-0000-4000-8000-0000000000f1',
+  array[$q$select public.admin_sett_markera('leads', now())$q$], 'nekad');
+select pg_temp.prova('18 anon markerar ingenting', null,
+  array[$q$select public.admin_sett_markera('leads', now())$q$], 'nekad');
+select pg_temp.prova('18 superadmin skriver inte i tabellen direkt', '00000000-0000-4000-8000-0000000000ad',
+  array[$q$insert into public.admin_sett (user_id, omrade, sett_till)
+          values ('00000000-0000-4000-8000-0000000000ad', 'leads', now())$q$], 'nekad');
+
+do $$
+declare
+  ut  jsonb := '[]'::jsonb;
+  fel text;
+  v1  timestamptz;
+  v2  timestamptz;
+  v3  timestamptz;
+  n   bigint;
+  kod text;
+begin
+  begin
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    v1 := public.admin_sett_markera('ansokningar', '2026-10-01 10:00:00+00');
+    v2 := public.admin_sett_markera('ansokningar', '2026-09-01 10:00:00+00');
+    v3 := public.admin_sett_markera('leads', now() + interval '1 day');
+    ut := ut || jsonb_build_object('t', '18 tiden går aldrig bakåt', 'ok', v2 = v1, 'd', v2::text);
+    ut := ut || jsonb_build_object('t', '18 och aldrig förbi nu', 'ok', v3 <= now(), 'd', v3::text);
+    select count(*) into n from public.admin_sett;
+    ut := ut || jsonb_build_object('t', '18 superadmin ser sina två rader', 'ok', n = 2, 'd', 'rader: ' || n);
+
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000bcad1');
+    perform public.admin_sett_markera('leads', now());
+    select count(*) into n from public.admin_sett;
+    ut := ut || jsonb_build_object('t', '18 en annan admin ser bara sin egen rad', 'ok', n = 1, 'd', 'rader: ' || n);
+
+    begin
+      perform public.admin_sett_markera('bokningar', now());
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', '18 ett okänt område nekas', 'ok', kod in ('22023', '42501'), 'd', kod);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('18 Det admin sett', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
