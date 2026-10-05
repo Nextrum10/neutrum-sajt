@@ -361,3 +361,13 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
      ett snedstreck** ("0,25 mol/dm3", "2,0 m/s2"); talet ensamt,
      "dm³" och "cm2" godtas. Regeln står i `intern.niva_tal` och
      `grund.talvarde` och ändras i båda, i en egen ändring.
+     **I drift sedan 2026-10-05**, som `20261003120000` (versionen i
+     filnamnet), körd efter att PR #187 mergats, samma väg som punkt 3
+     till 6: databasen hämtade filen från merge-commiten med tillägget
+     `http`, prövade md5 och skrev raden i `schema_migrations` i samma
+     transaktion, så `created_by` är tom. Det driften sparade har samma
+     md5 som filen, och 885 nivåer och 4 989 frågor är aktiva, ingen
+     inaktiv. Hela `rls-test.sql` efteråt: 1 279 av 1 280. Den som föll,
+     "14.6 familjen väljer faktura på ett genomfört obetalt pass", rör
+     inte banken: september stängdes i bokföringen 2026-10-03, och
+     provets pass ligger i en stängd månad.
