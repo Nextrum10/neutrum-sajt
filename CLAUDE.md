@@ -83,7 +83,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   familjens och barnets vy. Ändras en uppgift ändras dess svar samtidigt.
 - **Frågorna**: talregeln i `intern.niva_tal` och i Pythons `grund.lika()` ändras tillsammans.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
-  aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används.
+  aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används
+  (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad).
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
   kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
@@ -326,7 +327,9 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
 - En funktion som svarar om en PERSON har `is_admin`s vakt på första raden. Supabase ger varje
   ny funktion EXECUTE som förval; en triggerfunktion ska inte ha den.
 - `invoices` och `payouts` har ingen INSERT-policy och `integrationer` ingen skrivpolicy;
-  `google_koppling` ser ingen inloggad; delade avtal läses genom `mina_handlingar()`.
+  `google_koppling` ser ingen inloggad; delade avtal läses genom `mina_handlingar()`, och ett
+  inklistrat avtal genom `min_handling_text()`: en handling är en fil eller en text, och texten
+  ändras aldrig (`handlingar_texten_star_fast`).
   Notishemligheten står i `notis_konfig`, inte i en secret.
 - Rå servertext visas bara i de inloggade vyerna; en återvändsgränd bär `{oss}`. Anonyma
   skrivningar har tak, och deras `created_at` sätts av databasen.
@@ -466,7 +469,7 @@ Detaljer: `minne/grunden.md`.
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14
   länkarna till provgrupperna är inte klickprovade (miljön nådde dem inte), men jämförda med sökmotorernas index 2026-10-03, då fyra rättades. Delade dokument: ingen notis, ingen underskrift, en person per
-  handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
+  handling. Avtal som text (`avtal_som_text`) är i drift sedan 2026-10-05. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
 
 Detaljer: `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`, `minne/affaren.md`, `minne/notiser.md`.
 

@@ -181,7 +181,7 @@ Deno.test('kontakten har ingen mall, med flit, och listan speglar databasen', ()
   assertEquals(arAnsokanSteg('avbojd'), true);
   assertEquals(arAnsokanSteg('mottagen'), true);
   // Listan speglar check-villkoret i ansokan_utskick.steg
-  // (20261005120000_ansokan_vardnadshavare_och_nej).
+  // (20261005210000_ansokan_vardnadshavare_och_nej).
   assertEquals([...ANSOKAN_STEG], [
     'mottagen', 'mote', 'utbildning', 'prov', 'prov_paminnelse', 'prov_sista_dagen', 'sista_steget', 'valkommen',
     'vardnadshavare', 'avbojd',

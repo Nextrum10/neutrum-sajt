@@ -880,6 +880,16 @@
      säga. Innan migrationen dokument_delas_med_personen är körd finns
      den inte, och då ska en vanlig uppladdning fortfarande gå; bara
      delningen säger att den inte finns än.
+
+     ETT AVTAL SOM TEXT (2026-10-05)
+
+     Leo: "jag ska kunna klistra in avtal som lagras hos mig och hos
+     de. avtalet ska kunna namges hur som helst". En handling är en fil
+     eller en text i kolumnen innehall (avtal_som_text), aldrig båda.
+     Texten har ingen fil att ladda upp och ingen att städa: en rad,
+     ingenting mer. Den ändras aldrig när den är sparad, av samma skäl
+     som filen inte byts här, och databasen nekar det också. Personen
+     läser den genom min_handling_text(), aldrig ur tabellen.
      ============================================================ */
   const DOK_TYP = {
     avtal: 'Avtal', intyg: 'Intyg', forsakring: 'Försäkring',
@@ -894,6 +904,21 @@
     if (!h.fil) return null;
     /* Sökvägen är "<id>/<tidsstämpel>-<filnamn>". Visa bara det sista. */
     return String(h.fil).split('/').slice(1).join('/').replace(/^\d+-/, '');
+  }
+
+  /* En handling är en text när den har en; filen och texten utesluter
+     varandra (handlingar_fil_eller_text). */
+  function dokÄrText(h) {
+    return !h.fil && typeof h.innehall === 'string';
+  }
+
+  /* Fil eller text: bara en ny handling väljer. En sparad handling byter
+     varken fil eller text. */
+  function dokSom(ny) {
+    const text = $('#dok-som').value === 'text';
+    $('#dok-som-grupp').hidden = !ny;
+    $('#dok-fil-grupp').hidden = !ny || text;
+    $('#dok-text-grupp').hidden = !ny || !text;
   }
 
   function dokPersonId(h) {
@@ -965,13 +990,17 @@
     dokÄndras = null;
     const form = $('#dok-form');
     if (!form) return;
+    /* Fil eller text står kvar: den som klistrat in ett avtal klistrar
+       ofta in nästa. */
+    const som = $('#dok-som').value;
     form.reset();
+    $('#dok-som').value = som;
     $('#dok-rubrik').textContent = 'Ny handling';
     $('#dok-spara').textContent = 'Lägg till';
     $('#dok-avbryt').hidden = true;
     $('#dok-ta-bort').hidden = true;
     delete $('#dok-ta-bort').dataset.dokBort;
-    $('#dok-fil-grupp').hidden = false;
+    dokSom(true);
     fyllDokPersoner();
     $('#dok-person').value = förval && S.personer[förval] ? förval : '';
     $('#dok-person').disabled = false;
@@ -991,10 +1020,11 @@
        förut, och det som inte går att ångra ett steg bort. */
     $('#dok-ta-bort').hidden = false;
     $('#dok-ta-bort').dataset.dokBort = h.id;
-    /* Filen byts inte här. En ny fil är en ny handling, och den gamla
-       tas bort för sig: annars hade personen kunnat ha den gamla
-       öppen medan den byttes under hen. */
-    $('#dok-fil-grupp').hidden = true;
+    /* Filen byts inte här, och inte texten. En ny version är en ny
+       handling, och den gamla tas bort för sig: annars hade personen
+       kunnat ha den gamla öppen medan den byttes under hen, och ett
+       avtal hen läst hade blivit ett annat utan att hen fått veta det. */
+    dokSom(false);
     $('#dok-typ').value = h.typ;
     $('#dok-titel').value = h.titel || '';
     $('#dok-till').value = h.giltig_till || '';
@@ -1024,6 +1054,15 @@
   }
   const DOK_EJ_KORD = 'Delningen finns inte i databasen än: migrationen dokument_delas_med_personen '
     + 'är inte körd. Ingenting sparades.';
+  /* Samma sak för texten: PGRST204 med kolumnens namn. Prövas före
+     delningen, som annars hade tagit varje PGRST204. */
+  function dokTextSaknas(fel) {
+    return !!fel && /innehall/.test(String(fel.message || ''));
+  }
+  const DOK_TEXT_EJ_KORD = 'Texter finns inte i databasen än: migrationen avtal_som_text '
+    + 'är inte körd. Ingenting sparades. Ladda upp avtalet som en fil så länge.';
+  /* Samma tak som handlingar_innehall_langd. Ett sextiosidigt avtal. */
+  const DOK_TEXT_MAX = 200000;
 
   function dokPerson(h) {
     const id = dokPersonId(h);
@@ -1062,7 +1101,9 @@
     host.innerHTML = tabell([
       { namn: 'Sort', rita: h => '<b>' + esc(DOK_TYP[h.typ] || h.typ) + '</b>' },
       { namn: 'Vad', rita: h => esc(h.titel)
-        + (dokFilnamn(h) ? '<span class="adm-und">' + esc(dokFilnamn(h)) + '</span>' : '') },
+        + (dokFilnamn(h) ? '<span class="adm-und">' + esc(dokFilnamn(h)) + '</span>'
+          : dokÄrText(h) ? '<span class="adm-und">Text, ' + esc(h.innehall.length.toLocaleString('sv-SE'))
+            + ' tecken</span>' : '') },
       { namn: 'Person', rita: dokPerson },
       { namn: 'Giltig till', rita: h => h.giltig_till
         ? '<span class="adm-tal">' + esc(kortDatum(h.giltig_till)) + '</span>'
@@ -1071,7 +1112,7 @@
       { namn: 'Uppladdad', rita: h => '<span class="adm-tal">' + esc(kortDatum(h.uppladdad)) + '</span>'
         + '<span class="adm-und">' + esc(h.uppladdad_av ? namnFör(h.uppladdad_av) : 'okänt') + '</span>' },
       { namn: '', höger: true, rita: h =>
-        (h.fil ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button> ' : '')
+        (h.fil || dokÄrText(h) ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button> ' : '')
         + '<button class="btn btn-ghost btn-sm" type="button" data-dok-andra="' + esc(h.id) + '">Ändra</button>' }
     ], rader, filter ? 'Ingen handling här' : 'Inga handlingar än');
   }
@@ -1088,6 +1129,12 @@
 
   const dokFilter = $('#dok-filter');
   if (dokFilter) dokFilter.addEventListener('change', ritaDokument);
+
+  const dokSomVal = $('#dok-som');
+  if (dokSomVal) dokSomVal.addEventListener('change', () => {
+    dokSom(true);
+    rensa($('#dok-msg'));
+  });
 
   const dokFlik = $('#flik-dokument');
   if (dokFlik) dokFlik.addEventListener('click', hämtaHandlingar);
@@ -1144,7 +1191,35 @@
       return;
     }
 
-    /* ---------- ny ---------- */
+    /* ---------- ny text ---------- */
+    if ($('#dok-som').value === 'text') {
+      const text = $('#dok-text').value;
+      if (!/\S/.test(text)) { säg(msg, 'Klistra in texten.', false); $('#dok-text').focus(); return; }
+      if (text.length > DOK_TEXT_MAX) {
+        säg(msg, 'Texten är längre än ' + DOK_TEXT_MAX.toLocaleString('sv-SE')
+          + ' tecken. Ladda upp avtalet som en fil i stället.', false);
+        return;
+      }
+      await medan(knapp, 'Sparar…', async () => {
+        const { error } = await supa.from('handlingar').insert(Object.assign(rad, {
+          innehall: text,
+          uppladdad_av: S.user.id
+        }));
+        if (error) {
+          säg(msg, dokTextSaknas(error) ? DOK_TEXT_EJ_KORD
+            : dokDelningSaknas(error) ? DOK_EJ_KORD : 'Kunde inte spara: ' + felText(error), false);
+          return;
+        }
+        dokNy();
+        säg(msg, delad
+          ? '✓ Texten är sparad. ' + namnFör(person) + ' läser den under Profil & inställningar → Dokument.'
+          : '✓ Texten är sparad.', true);
+        await hämtaHandlingar();
+      });
+      return;
+    }
+
+    /* ---------- ny fil ---------- */
     const fil = ($('#dok-fil').files || [])[0];
     if (!fil) { säg(msg, 'Välj en fil.', false); return; }
     const filfel = M.granskaFil(fil);
@@ -1196,7 +1271,24 @@
     const öppna = e.target.closest('[data-dok-oppna]');
     if (öppna) {
       const h = (S.handlingar || []).find(x => x.id === öppna.dataset.dokOppna);
-      if (!h || !h.fil || öppna.getAttribute('aria-busy')) return;
+      if (!h || öppna.getAttribute('aria-busy')) return;
+      /* En text visas här, som den står och som personen läser den.
+         Ladda ned ger samma textfil som personen får. */
+      if (dokÄrText(h)) {
+        const person = dokPersonId(h);
+        const spara = await bekräfta({
+          titel: h.titel,
+          text: h.delad_med_personen && person
+            ? namnFör(person) + ' läser samma text under Profil & inställningar → Dokument.'
+            : 'Bara vi ser texten.',
+          forhandsvisning: h.innehall,
+          knapp: 'Ladda ned',
+          avbryt: 'Stäng'
+        });
+        if (spara) M.sparaText(h.innehall, h.titel);
+        return;
+      }
+      if (!h.fil) return;
       /* öppnaFil öppnar fliken innan den väntar på något, och medan
          anropar den direkt: allt sker i samma tryck, som Safari kräver. */
       await medan(öppna, 'Öppnar…', async () => {
@@ -1229,7 +1321,8 @@
       const person = dokPersonId(h);
       const ja = await bekräfta({
         titel: 'Ta bort handlingen?',
-        text: h.titel + '. Både raden och filen försvinner, och det går inte att ångra.'
+        text: h.titel + (h.fil ? '. Både raden och filen försvinner' : '. Texten försvinner')
+          + ', och det går inte att ångra.'
           + (h.delad_med_personen && person
             ? ' ' + namnFör(person) + ' ser den inte längre i sin vy.' : ''),
         knapp: 'Ta bort'

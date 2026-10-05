@@ -3447,6 +3447,12 @@ window.NXStudie = (function () {
      är inte körd) står listan tom, inte som ett fel: det finns inget
      delat förrän den är det.
 
+     ETT AVTAL SOM TEXT (2026-10-05). Leo: "jag ska kunna klistra in
+     avtal som lagras hos mig och hos de". En rad utan fil är en text
+     (avtal_som_text). Listan bär den inte; Läs hämtar den genom
+     min_handling_text() och fäller ut den under raden, och Ladda ned
+     ger en textfil som är personens egen kopia, utanför inloggningen.
+
      supa skickas in, som till notisval: resten av filen rör ingen
      databas, och två vyer med var sin kopia av samma fråga glider isär.
      ============================================================ */
@@ -3463,6 +3469,8 @@ window.NXStudie = (function () {
     var supa = o.supa;
     var msg = o.msg || null;
     var rader = [];
+    /* Texterna som hämtats, per id. Läs en gång till hämtar inte igen. */
+    var texter = {};
     if (!host || !supa) return;
 
     /* Samma regel som NXMedia.öppnaFil: det webbläsaren visar öppnas,
@@ -3470,6 +3478,7 @@ window.NXStudie = (function () {
     function iFlik(d) {
       return /^(application\/pdf|image\/(jpeg|png|webp))$/.test(d.mimetyp || '');
     }
+    function ärText(d) { return !d.fil; }
     /* Sökvägen är "<id>/<tidsstämpel>-<filnamn>". */
     function filnamn(d) {
       return String(d.fil || '').split('/').slice(1).join('/').replace(/^\d+-/, '');
@@ -3482,7 +3491,8 @@ window.NXStudie = (function () {
       }
       var idag = NX.isoFor(new Date());
       host.innerHTML = rader.map(function (d) {
-        var under = [DOKTYP[d.typ] || 'Dokument', NXMedia.filEtikett(d.mimetyp), NXMedia.filstorlek(d.storlek),
+        var under = [DOKTYP[d.typ] || 'Dokument',
+                     ärText(d) ? 'Text' : NXMedia.filEtikett(d.mimetyp), NXMedia.filstorlek(d.storlek),
                      d.uppladdad ? 'tillagt ' + NX.datumText(String(d.uppladdad).slice(0, 10)) : null];
         if (d.giltig_till) {
           under.push((d.giltig_till < idag ? 'gällde till ' : 'gäller till ') + NX.datumText(d.giltig_till));
@@ -3491,8 +3501,12 @@ window.NXStudie = (function () {
           + '<span class="vy-rad-ik ar-tyst">' + DOK_IKON + '</span>'
           + '<div class="nx-dok-text"><b>' + esc(d.titel) + '</b>'
           + '<span class="xsmall">' + esc(under.filter(Boolean).join(' · ')) + '</span></div>'
-          + '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(d.id) + '">'
-          + (iFlik(d) ? 'Öppna' : 'Ladda ned') + '</button>'
+          + (ärText(d)
+            ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-las="' + esc(d.id) + '"'
+              + ' aria-expanded="false" aria-controls="dok-las-' + esc(d.id) + '">Läs</button>'
+              + '<div class="nx-dok-las" id="dok-las-' + esc(d.id) + '" hidden></div>'
+            : '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(d.id) + '">'
+              + (iFlik(d) ? 'Öppna' : 'Ladda ned') + '</button>')
           + '</div>';
       }).join('');
     }
@@ -3502,6 +3516,51 @@ window.NXStudie = (function () {
        Lyssnaren sitter på behållaren, som för notisvalen: raderna ritas
        om, behållaren står kvar. */
     host.addEventListener('click', function (e) {
+      var spara = e.target.closest('[data-dok-spara]');
+      if (spara) {
+        var t = rader.filter(function (x) { return x.id === spara.dataset.dokSpara; })[0];
+        if (t && texter[t.id] != null) NXMedia.sparaText(texter[t.id], t.titel);
+        return;
+      }
+      /* Texten fälls ut under raden, nedanför knappen: det som står
+         ovanför det man trycker på byter inte höjd. */
+      var läs = e.target.closest('[data-dok-las]');
+      if (läs) {
+        if (läs.getAttribute('aria-busy')) return;
+        var dt = rader.filter(function (x) { return x.id === läs.dataset.dokLas; })[0];
+        var ruta = dt && document.getElementById('dok-las-' + dt.id);
+        if (!ruta) return;
+        if (msg) NX.rensa(msg);
+        if (!ruta.hidden) {
+          ruta.hidden = true;
+          läs.setAttribute('aria-expanded', 'false');
+          läs.textContent = 'Läs';
+          return;
+        }
+        var visa = function () {
+          ruta.innerHTML = '<div class="nx-dok-avtal">' + esc(texter[dt.id]) + '</div>'
+            + '<button class="btn btn-ghost btn-sm" type="button" data-dok-spara="' + esc(dt.id) + '">Ladda ned</button>';
+          ruta.hidden = false;
+          läs.setAttribute('aria-expanded', 'true');
+          läs.textContent = 'Dölj';
+        };
+        if (texter[dt.id] != null) { visa(); return; }
+        medan(läs, 'Hämtar…', function () {
+          return supa.rpc('min_handling_text', { p_id: dt.id });
+        }).then(function (svar) {
+          /* Null är en text som inte längre är delad, eller borttagen
+             sedan listan hämtades. */
+          if (!svar || svar.error || typeof svar.data !== 'string') {
+            var fel = 'Texten gick inte att hämta. Ladda om sidan, eller skriv till oss.';
+            if (msg) NX.säg(msg, fel, false);
+            else alert(fel);
+            return;
+          }
+          texter[dt.id] = svar.data;
+          visa();
+        });
+        return;
+      }
       var knapp = e.target.closest('[data-dok-oppna]');
       if (!knapp || knapp.getAttribute('aria-busy')) return;
       var d = rader.filter(function (x) { return x.id === knapp.dataset.dokOppna; })[0];
