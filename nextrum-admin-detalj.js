@@ -607,14 +607,17 @@
      (S.handlingar, hämtade när vyn startar), samma Öppna, och en länk
      dit med personen redan vald. Leo: "anställningsavtal med lärare
      eller annat avtal med kund" — den som öppnar personen ska se att
-     avtalet finns utan att leta i en annan lista.
+     avtalet finns utan att leta i en annan lista. Ett avtal som
+     klistrats in som text (2026-10-05) öppnas likadant: Öppna visar
+     texten i samma ruta som under System → Dokument.
      ------------------------------------------------------------ */
   function dpDokument(p) {
     const egna = (S.handlingar || []).filter(h => h.kopplad_tabell === 'profiles' && h.kopplad_id === p.id);
     const rader = egna.map(h => dpRad(h.titel,
       [kör('dokTyp', h.typ), h.delad_med_personen ? 'ser det i sin vy' : 'bara vi ser det',
        h.giltig_till ? 'giltigt till ' + kortDatum(h.giltig_till) : null].filter(Boolean).join(' · '),
-      h.fil ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button>' : ''
+      h.fil || typeof h.innehall === 'string'
+        ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button>' : ''
     )).join('');
     return dpRubrik('Dokument', egna.length ? String(egna.length) : '')
       + (S.handlingarFel ? tomt('Dokumenten gick inte att läsa', S.handlingarFel)

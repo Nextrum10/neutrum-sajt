@@ -169,6 +169,15 @@ sitt dokument" på hinken `dokument`. Två villkor: en koppling till
 (`handlingar_person_id`), och bara en handling kopplad till en person
 kan delas (`handlingar_delas_med_en_person`). `delad_med_personen` står
 i auditloggens vitlista. Tabellen har fortfarande bara adminpolicyerna.
+`avtal_som_text` (2026-10-05, avsnitt 1) la till `handlingar.innehall`:
+ett avtal som klistras in i stället för att laddas upp. Villkoren
+`handlingar_fil_eller_text` (aldrig båda) och `handlingar_innehall_langd`
+(inte bara blanktecken, högst 200 000 tecken), BEFORE-triggern
+`handlingar_texten_star_fast` (texten ändras aldrig, inte ens av admin;
+en ny version är en ny handling), och `min_handling_text(id)`, som ger
+texten till den den delats med och null för allt annat. `mina_handlingar()`
+lappades med `replace()` och tar nu med en rad med text; en rad utan fil är
+en text. `innehall` står INTE i auditloggens vitlista.
 `admin_oppnar_chatten` (2026-09-29, avsnitt 1) la till `chatt_las()`:
 tråden mellan en familj och en studiehjälpare för admin, SECURITY
 DEFINER med `is_admin()` på första raden, VOLATILE för att den skriver

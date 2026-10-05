@@ -328,7 +328,12 @@ window.NXMedia = (function () {
 
     var svar = await supa.storage.from(hink).download(sökväg);
     if (svar.error || !svar.data) return 'Filen gick inte att hämta. Försök igen om en stund.';
-    var blob = URL.createObjectURL(svar.data);
+    laddaNed(svar.data, namn);
+    return null;
+  }
+
+  function laddaNed(data, namn) {
+    var blob = URL.createObjectURL(data);
     var länk = document.createElement('a');
     länk.href = blob;
     länk.download = namn;
@@ -336,7 +341,16 @@ window.NXMedia = (function () {
     länk.click();
     länk.remove();
     setTimeout(function () { URL.revokeObjectURL(blob); }, 60000);
-    return null;
+  }
+
+  /* Ett avtal som klistrats in som text (avtal_som_text, 2026-10-05)
+     sparas som en textfil med avtalets namn. Det är motpartens egen
+     kopia, utanför vår inloggning. BOM:en först, så att ett äldre
+     Windowsprogram läser å, ä och ö som UTF-8. Ett namn får inte bära
+     tecken som Windows inte tillåter i ett filnamn. */
+  function sparaText(text, titel) {
+    var namn = String(titel || 'Avtal').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').trim().slice(0, 100) || 'Avtal';
+    laddaNed(new Blob(['﻿' + String(text || '')], { type: 'text/plain;charset=utf-8' }), namn + '.txt');
   }
 
   /* ============================================================
@@ -364,7 +378,7 @@ window.NXMedia = (function () {
   return {
     kontoAvatar: kontoAvatar,
     filstorlek: filstorlek, filEtikett: filEtikett,
-    signera: signera, glömSignerad: glömSignerad, öppnaFil: öppnaFil,
+    signera: signera, glömSignerad: glömSignerad, öppnaFil: öppnaFil, sparaText: sparaText,
     avatar: avatar, avatarKarta: avatarKarta, initialer: initialer,
     beskär: beskär, granska: granska, granskaFil: granskaFil,
     sparaAvatar: sparaAvatar, taBortAvatar: taBortAvatar

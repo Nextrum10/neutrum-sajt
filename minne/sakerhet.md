@@ -108,6 +108,9 @@ att visa **rätt sida**, inte för att skydda data.
   sökvägen och inte bara mappen (`intern.handling_delad_med_mig`,
   SECURITY DEFINER eftersom personen inte ser `handlingar`). Läsa, inget
   annat: uppladdning, byte och borttagning är fortfarande admin ensam.
+  Ett avtal som klistrats in som text (2026-10-05) ligger i
+  `handlingar.innehall`, inte i hinken, och personen läser det bara
+  genom `min_handling_text()`, samma prövning som filen.
 - **`cv` är undantaget** (v11, läsrätten 2026-09-27). Den som söker
   har inget konto och ingen rad när filen laddas upp, så sökvägen är
   tid, slump och filnamnet, och kopplingen till ansökan är raden

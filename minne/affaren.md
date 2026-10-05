@@ -328,6 +328,37 @@ Personens panel i adminvyn visar dokumenten under Översikt, med en
 länk till formuläret där personen redan är vald. Ingen notis går ut
 när något delas (avsnitt 11).
 
+**Ett avtal klistras in som text** (2026-10-05, Leo: "avtalen som
+skrivs ska kunna kopplas till användare också, dvs föräldrar vilket
+innebör att jag ska kunna klistra in avtal som lagras hos mig och hos
+de. avtalet ska kunna namges hur som helst"). Under System → Dokument
+väljer admin **Som: Inklistrad text**, och avtalet blir en rad i
+`handlingar` med texten i `innehall` (`avtal_som_text`). Titeln är fri
+text som förut, och personen ser den som rubrik; sorten är den fasta
+listan. Personen trycker **Läs** under Profil & inställningar →
+Dokument, texten fälls ut under raden, och **Ladda ned** ger en
+textfil med avtalets namn (`NXMedia.sparaText`), samma fil som admin
+får från Öppna. Fyra saker:
+- **En fil eller en text, aldrig båda** (`handlingar_fil_eller_text`).
+  En rad utan fil är en text; så vet vyn vilken knapp den ska rita.
+- **Texten ändras aldrig**, inte ens av admin
+  (`handlingar_texten_star_fast`). Ett avtal motparten läst får inte
+  bli ett annat utan att hen vet det. En ny version är en ny handling,
+  och den gamla tas bort för sig. Titeln, sorten, giltigheten och
+  delningen går att ändra.
+- **Ingen maxlength i rutan.** Webbläsaren kortar en inklistrad text
+  tyst vid gränsen, och ett avkortat avtal ser helt ut. Taket (200 000
+  tecken) prövas när det sparas, med ett besked, och i databasen.
+- **Bara text.** Radbrytningarna står kvar, men inte fetstil, tabeller
+  eller bilder; ett avtal som behöver dem laddas upp som PDF.
+  Formuläret säger det.
+Att avtalet syns i en inloggad vy är inte säkert samma sak som att
+familjen fått det på ett **varaktigt medium**, som distansavtalslagen
+kräver av bekräftelsen: en sida vi styr och kan ta bort räknas troligen
+inte som det (EU-domstolen, Content Services, C-49/11). Ladda ned ger
+familjen en egen kopia, men vill vi kunna visa att de fått villkoren ska
+avtalet också mejlas. Det är en fråga för juristen, inte för koden.
+
 Driftsättningen och det som är kvar, ur avsnitt 11:
 
 - **Avtalen som delas med personen (2026-09-29, avsnitt 1) är i drift.**
