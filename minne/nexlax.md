@@ -327,3 +327,37 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
      igen. Hela `rls-test.sql` gick igenom före, i en transaktion som
      rullades tillbaka med migrationen inläst, och efter: 923 av 923.
      Ingen fråga blev inaktiv, så gamla svar och XP står kvar.
+  7. **Nivåerna ur materialbanken (2026-10-03,
+     `uppgiftsbanken_ur_materialbanken`).** Leo: "Använd material banken
+     för att uppdatera NexLäx. Fler frågor, fler ämnen Uppdelat i
+     årskurs och ämne". Varje övningsblad i `verktyg/bladen/` (155 av
+     158; de tre i moderna språk är tyska, spanska och franska, och
+     ämnet har ingen bana, se ovan) är minst en nivå, byggd på bladets
+     uppgifter och facit och omskriven till frågor som rättas av
+     databasen. Öppna uppgifter ("förklara", "visa att", "skriv en
+     text") blev valfrågor om samma kunskap, och ett blad med läsetext
+     blev en nivå med lästext. Nivåns beskrivning säger vilket blad den
+     bygger på. 231 nivåer och 2 094 frågor, 15 nya banor (Matematik
+     gy3, Svenska åk 1, gy2 och gy3, Engelska gy2 och gy3, NO åk 1, åk
+     2 och gy1 till gy3, SO åk 5, åk 8 och gy3, Programmering gy1), så
+     banken har 55 banor, 590 vanliga nivåer och 4 989 frågor.
+     **Allt står sist i banorna**, i nya områden, genom listan
+     `TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py` (bygg-uppgifter.py
+     lägger dem efter banans egna nivåer). Ingen fråga som redan fanns
+     ändrades, så ingen blev inaktiv. Skrivet av sju skribenter med AI,
+     ett ämnesområde var, och läst av tre granskare som räknade om
+     varje facit och körde programmeringens kod: inga fel facit, men
+     två faktafel (ekologisk odling får använda vissa bekämpningsmedel,
+     Norden blev kristet under medeltiden), en tvetydig källkritikfråga
+     och ett hundratal valfrågor där det rätta alternativet var längst
+     är rättade. Varje facit rättas som rätt av `intern.niva_ratta` i en
+     lokal databas, och inget fel valalternativ godtas. En lärare bör
+     läsa: Matematik gy3, som blandar Matematik 3c och 4 som bladen
+     gör; tolkningsfrågorna i läsnivåerna (tema, symbol, ton);
+     samhällsfakta som ändras (349 ledamöter, 290 kommuner, 21
+     regioner, inflationsmålet); Engelska gy3 och Svenska gy2, som till
+     stor del är skribentens egen kunskap; och genetiska koden i NO gy3.
+     **Rättningen nekar en enhet med vanlig siffra som exponent efter
+     ett snedstreck** ("0,25 mol/dm3", "2,0 m/s2"); talet ensamt,
+     "dm³" och "cm2" godtas. Regeln står i `intern.niva_tal` och
+     `grund.talvarde` och ändras i båda, i en egen ändring.
