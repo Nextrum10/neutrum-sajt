@@ -59,6 +59,14 @@
 
 begin;
 
+-- Månader som stängts i bokföringen på riktigt öppnas, bara i den här
+-- transaktionen. Fixturerna lägger pass i förra månaden och längre
+-- bak, och en stängd månad nekar varje skrivning där (Fas 20.2): när
+-- september stängdes 2026-10-03 föll "14.6 familjen väljer faktura på
+-- ett genomfört obetalt pass" med 42501, fast inget i fakturan ändrats.
+-- Proven för själva låset stänger sina egna månader.
+update public.manadsbokslut set stangd = false where stangd;
+
 -- Notistriggrarna stängs av, så att fixturpassen och provanmälningarna
 -- aldrig kan bli ett mejl. Också de ändringarna rullas tillbaka.
 --
@@ -7462,6 +7470,8 @@ begin
              || jsonb_build_object('t', 'NX rättning: 9.8 N/kg är 9,8', 'ok', intern.niva_lika('9,8', '9.8 N/kg'), 'd', null)
              || jsonb_build_object('t', 'NX rättning: 20 cm2 och 60 dm^3 är talen', 'ok',
                 intern.niva_lika('20', '20 cm2') and intern.niva_lika('60', '60 dm^3') and intern.niva_lika('20', '20 cm²'), 'd', null)
+             || jsonb_build_object('t', 'NX rättning: 0,25 mol/dm3 och 2 m/s^2 är talen', 'ok',
+                intern.niva_lika('0,25', '0,25 mol/dm3') and intern.niva_lika('2', '2 m/s^2') and intern.niva_lika('2', '2 m/s2'), 'd', null)
              || jsonb_build_object('t', 'NX rättning: 3x2 är inte 3', 'ok', not intern.niva_lika('3', '3x2'), 'd', null)
              || jsonb_build_object('t', 'NX rättning: 5 är fortfarande inte 5y', 'ok', not intern.niva_lika('5y', '5'), 'd', null)
              || jsonb_build_object('t', 'NX rättning: 3/4 är fortfarande inte 0,75', 'ok', not intern.niva_lika('0,75', '3/4'), 'd', null);

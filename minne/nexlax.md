@@ -170,7 +170,10 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   km/h", "9,8 N/kg" och "20 cm2" är 15, 9,8 och 20, som "12 cm" var 12
   (`intern.niva_tal`, `grund.talvarde`). Fysiken i åk 8 frågar efter
   fart och tyngd och geometrin efter area, och ett tangentbord utan ²
-  skriver en tvåa. Exponenten godtas bara efter en längdenhet: "3x2" är
+  skriver en tvåa. Exponenten godtas efter en längdenhet och, sedan
+  2026-10-05, efter ett snedstreck ("0,25 mol/dm3" och "2 m/s2", som
+  NO gy1 och gy2 frågar efter; migrationen
+  `rattningen_tar_exponent_efter_snedstreck`), aldrig annars: "3x2" är
   inte talet 3.
 - **Studiehjälparvyn** visar elevens XP och serie över Rättade nivåer,
   och nivåväljaren kan ge ett Mästarprov eller repetitionen som uppgift.
@@ -357,10 +360,8 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
      samhällsfakta som ändras (349 ledamöter, 290 kommuner, 21
      regioner, inflationsmålet); Engelska gy3 och Svenska gy2, som till
      stor del är skribentens egen kunskap; och genetiska koden i NO gy3.
-     **Rättningen nekar en enhet med vanlig siffra som exponent efter
-     ett snedstreck** ("0,25 mol/dm3", "2,0 m/s2"); talet ensamt,
-     "dm³" och "cm2" godtas. Regeln står i `intern.niva_tal` och
-     `grund.talvarde` och ändras i båda, i en egen ändring.
+     Rättningen nekade först "0,25 mol/dm3" och "2,0 m/s2"; det är
+     lagat (punkten om enheter ovan).
      **I drift sedan 2026-10-05**, som `20261003120000` (versionen i
      filnamnet), körd efter att PR #187 mergats, samma väg som punkt 3
      till 6: databasen hämtade filen från merge-commiten med tillägget
@@ -370,4 +371,5 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
      inaktiv. Hela `rls-test.sql` efteråt: 1 279 av 1 280. Den som föll,
      "14.6 familjen väljer faktura på ett genomfört obetalt pass", rör
      inte banken: september stängdes i bokföringen 2026-10-03, och
-     provets pass ligger i en stängd månad.
+     provets pass ligger i en stängd månad. `rls-test.sql` öppnar sedan
+     dess stängda månader överst, i sin egen transaktion.
