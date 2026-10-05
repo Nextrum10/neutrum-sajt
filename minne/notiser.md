@@ -234,7 +234,10 @@ lägga in kopia av mail till barnet."
   förnamn, att vi behöver ett skriftligt godkännande, att man svarar med
   barnets för- och efternamn till info@ eller på mejlet, en knapp till
   `/bli-studiehjalpare`, och vad man gör om man inte känner igen det.
-  Hälsningen har inget namn: namnet i ansökan är barnets. Inga steg.
+  Hälsningen har inget namn: namnet i ansökan är barnets. Inga steg. Foten
+  länkar till `integritetspolicy#vardnadshavare`: adressen kom inte från
+  vårdnadshavaren själv, och då ska hen få veta hur den hanteras redan i
+  första mejlet (GDPR artikel 14). Avsnittet finns på båda språken.
 - **Admin lägger in svaret** i ansökan (Lägg in godkännandet): en kopia av
   mejlet (`vardnadshavare_svar`, högst 20 000 tecken) och tiden
   (`vardnadshavare_godkand_at`). Inget mejlas. Auditloggen får tiden,

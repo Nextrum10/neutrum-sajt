@@ -17,8 +17,8 @@
 
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import {
-  ANSOKAN_FRAN, ANSOKAN_STEG, NEJ, RESAN, arAnsokanSteg, motesText, provAdress, renderaAnsokan, resa, sakerLank,
-  type AnsokanSteg,
+  ANSOKAN_FRAN, ANSOKAN_STEG, NEJ, POLICY_VARDNADSHAVARE, RESAN, arAnsokanSteg, motesText, provAdress,
+  renderaAnsokan, resa, sakerLank, type AnsokanSteg,
 } from './ansokan.ts';
 import { KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
 import { SVAR_INOM_TIMMAR } from './kvitto.ts';
@@ -216,6 +216,11 @@ Deno.test('vårdnadshavaren får barnets förnamn, vad vi behöver och varför m
   assertStringIncludes(m.text, `${SAJT}/bli-studiehjalpare`);
   assertStringIncludes(m.text, 'skrivit din adress som vårdnadshavares');
   assertStringIncludes(m.text, 'Känner du inte igen det här?');
+  // Adressen kom inte från vårdnadshavaren själv: första mejlet säger hur
+  // den hanteras (GDPR artikel 14), med en länk till policyns avsnitt.
+  assertEquals(POLICY_VARDNADSHAVARE, `${SAJT}/integritetspolicy#vardnadshavare`);
+  assertStringIncludes(m.text, POLICY_VARDNADSHAVARE);
+  assertStringIncludes(m.html, POLICY_VARDNADSHAVARE);
   assertEquals(m.text.includes('du är här'), false);
   // Inget förnamn att lita på: "ditt barn", inte "undefined" eller en adress.
   const utan = renderaAnsokan({ steg: 'vardnadshavare', namn: '  ' });

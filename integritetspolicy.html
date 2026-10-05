@@ -204,6 +204,21 @@
         läsa en ansökan.</li>
     </ul>
 
+    <!-- 2026-10-05. Vårdnadshavaren har inte själv lämnat adressen, och ska
+         få veta hur den hanteras redan i första mejlet (GDPR artikel 14).
+         Mejlet till vårdnadshavaren länkar hit (#vardnadshavare, VARFOR_VARDNADSHAVARE
+         i supabase/functions/_delad/notiser/ansokan.ts). -->
+    <h3 id="vardnadshavare">Om dig som är vårdnadshavare till någon som söker jobb</h3>
+    <ul>
+      <li>Är den som söker under 18 skriver hen din e-post i ansökan. Vi mejlar dig en gång för
+        att be om ditt skriftliga godkännande, och använder inte adressen till något annat</li>
+      <li>Svarar du sparar vi en kopia av ditt svar, och när det kom, med ansökan. Det är så vi
+        kan visa att du godkänt</li>
+      <li>Adressen och svaret tas bort med ansökan, se Hur länge vi sparar nedan</li>
+      <li>Känner du inte igen det behöver du inte göra något. Vill du att vi tar bort din adress,
+        skriv till <a href="mailto:info@nextrum.se">info@nextrum.se</a></li>
+    </ul>
+
     <h3>Om passen och kontakten</h3>
     <ul>
       <li>Datum, tid, ämne, längd och format för varje bokat pass</li>
@@ -272,9 +287,10 @@
         intresse (artikel 6.1 f): att skydda barnets inloggning mot gissning.</li>
       <li><b>Bokföringsunderlag</b>: rättslig förpliktelse (artikel 6.1 c), bokföringslagen.</li>
       <li><b>Jobbansökningar</b>: berättigat intresse (artikel 6.1 f), att kunna anställa rätt
-        studiehjälpare. Blir du anställd gäller avtalet. Är du under 18 ber vi om din
-        vårdnadshavares godkännande, eftersom den som är under 18 inte kan ta anställning utan
-        det; därför sparar vi hens e-post och svar (berättigat intresse, artikel 6.1 f).</li>
+        studiehjälpare. Blir du anställd gäller avtalet.</li>
+      <li><b>Vårdnadshavarens e-post och svar</b>: berättigat intresse (artikel 6.1 f). Den som
+        är under 18 kan inte ta anställning utan vårdnadshavarens samtycke, och vi behöver kunna
+        visa att vi fått det. Adressen får vi av den som söker.</li>
       <li><b>Kontaktformuläret och felrapporterna</b>: berättigat intresse (artikel 6.1 f),
         att kunna svara den som skriver och hålla webbplatsen igång.</li>
       <li><b>Ändringsloggen och skyddet av uppgifterna</b>: berättigat intresse (artikel 6.1 f),
@@ -336,8 +352,9 @@
         IP och webbläsartyp med ett salt som byts varje dygn, och den råa IP-adressen sparas
         inte. Studievyn och studiehjälparvyn mäts inte.</li>
       <li><b>Resend</b> (USA): skickar våra mejl, som bokningsbekräftelser, påminnelser och
-        notiser, och mejlen till ett barns egen adress när ni slagit på dem. Resend får
-        mottagarens adress och mejlets innehåll.</li>
+        notiser, mejlen till ett barns egen adress när ni slagit på dem, och beskeden till den
+        som söker jobb och till hens vårdnadshavare. Resend får mottagarens adress och mejlets
+        innehåll.</li>
       <li><b>Anthropic</b> (USA): när en studiehjälpare väljer det formulerar Anthropics AI om
         hens anteckningar efter ett pass till en rapport, och föreslår korta hälsningar.
         Anthropic får anteckningarna och elevens förnamn och årskurs. Personnummer,

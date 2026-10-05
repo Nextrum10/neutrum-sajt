@@ -195,9 +195,15 @@ type Text = {
 const VARFOR = 'Du får det här mejlet för att du har sökt jobb som studiehjälpare hos Nextrum '
   + 'med den här e-postadressen.';
 
-/** Vårdnadshavaren har inte själv skickat något, och ska få veta varför mejlet kom. */
+/**
+ * Vårdnadshavaren har inte själv skickat något, och ska få veta varför
+ * mejlet kom och hur adressen hanteras. Uppgifter som inte kommer från den
+ * de gäller ska beskrivas senast i första mejlet (GDPR artikel 14), så foten
+ * länkar till avsnittet om vårdnadshavaren i integritetspolicyn.
+ */
+export const POLICY_VARDNADSHAVARE = `${SAJT}/integritetspolicy#vardnadshavare`;
 const VARFOR_VARDNADSHAVARE = 'Du får det här mejlet för att någon som sökt jobb som studiehjälpare '
-  + 'hos Nextrum har skrivit din adress som vårdnadshavares.';
+  + `hos Nextrum har skrivit din adress som vårdnadshavares. Så hanterar vi den: ${POLICY_VARDNADSHAVARE}`;
 
 /**
  * Nejet, ord för ord. Samma text står i adminvyn, som visar mejlet innan

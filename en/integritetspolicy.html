@@ -205,6 +205,22 @@
         to read an application.</li>
     </ul>
 
+    <!-- 2026-10-05. Vårdnadshavaren har inte själv lämnat adressen, och ska
+         få veta hur den hanteras redan i första mejlet (GDPR artikel 14).
+         Mejlet till vårdnadshavaren länkar hit (#vardnadshavare, VARFOR_VARDNADSHAVARE
+         i supabase/functions/_delad/notiser/ansokan.ts). -->
+    <h3 id="vardnadshavare">About you as the parent or guardian of someone who applies</h3>
+    <ul>
+      <li>If the applicant is under 18, they write your email in the application. We email you
+        once to ask for your written approval, and use the address for nothing else</li>
+      <li>If you reply, we keep a copy of your reply, and when it came, with the application.
+        That is how we can show that you approved</li>
+      <li>The address and the reply are deleted with the application, see How long we keep
+        things below</li>
+      <li>If you do not recognise this, you do not need to do anything. If you want us to delete
+        your address, write to <a href="mailto:info@nextrum.se">info@nextrum.se</a></li>
+    </ul>
+
     <h3>About the sessions and the contact</h3>
     <ul>
       <li>Date, time, subject, length and format for each booked session</li>
@@ -276,9 +292,10 @@
       <li><b>Accounting records</b>: legal obligation (Article 6(1)(c)), the Swedish Accounting
         Act.</li>
       <li><b>Job applications</b>: legitimate interest (Article 6(1)(f)), being able to hire the
-        right tutors. If you are hired, the contract applies. If you are under 18 we ask for your
-        parent or guardian’s approval, since someone under 18 cannot take employment without it;
-        that is why we keep their email and reply (legitimate interest, Article 6(1)(f)).</li>
+        right tutors. If you are hired, the contract applies.</li>
+      <li><b>A parent or guardian’s email and reply</b>: legitimate interest (Article 6(1)(f)).
+        Someone under 18 cannot take employment without their parent or guardian’s consent, and
+        we need to be able to show that we have it. We get the address from the applicant.</li>
       <li><b>The contact form and error reports</b>: legitimate interest (Article 6(1)(f)),
         being able to reply to whoever writes and to keep the website running.</li>
       <li><b>The change log and protecting the data</b>: legitimate interest (Article 6(1)(f)),
@@ -341,8 +358,9 @@
         from a hash of IP and browser type with a salt that changes every day, and the raw IP
         address is not stored. The student view and the tutor view are not measured.</li>
       <li><b>Resend</b> (USA): sends our emails, such as booking confirmations, reminders and
-        notifications, and the emails to a child’s own address when you have turned them on.
-        Resend gets the recipient’s address and the email’s content.</li>
+        notifications, the emails to a child’s own address when you have turned them on, and
+        the messages to job applicants and their parents or guardians. Resend gets the
+        recipient’s address and the email’s content.</li>
       <li><b>Anthropic</b> (USA): when a tutor chooses to, Anthropic’s AI rewrites the tutor’s
         notes after a session into a report, and suggests short greetings. Anthropic gets the
         notes and the student’s first name and school year. Personal identity numbers, phone
