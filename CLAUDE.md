@@ -318,7 +318,9 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
 - En funktion som svarar om en PERSON har `is_admin`s vakt på första raden. Supabase ger varje
   ny funktion EXECUTE som förval; en triggerfunktion ska inte ha den.
 - `invoices` och `payouts` har ingen INSERT-policy och `integrationer` ingen skrivpolicy;
-  `google_koppling` ser ingen inloggad; delade avtal läses genom `mina_handlingar()`.
+  `google_koppling` ser ingen inloggad; delade avtal läses genom `mina_handlingar()`, och ett
+  inklistrat avtal genom `min_handling_text()`: en handling är en fil eller en text, och texten
+  ändras aldrig (`handlingar_texten_star_fast`).
   Notishemligheten står i `notis_konfig`, inte i en secret.
 - Rå servertext visas bara i de inloggade vyerna; en återvändsgränd bär `{oss}`. Anonyma
   skrivningar har tak, och deras `created_at` sätts av databasen.
@@ -454,7 +456,7 @@ Detaljer: `minne/grunden.md`.
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14
   länkarna till provgrupperna är inte klickprovade (miljön nådde dem inte), men jämförda med sökmotorernas index 2026-10-03, då fyra rättades. Delade dokument: ingen notis, ingen underskrift, en person per
-  handling. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
+  handling; ett avtal som text (`avtal_som_text`, 2026-10-05) är inte kört i driften förrän efter merge. Inte heller: Google Workspace (Meet), bakgrundskontroller, riktiga foton.
 
 Detaljer: `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`, `minne/affaren.md`, `minne/notiser.md`.
 
