@@ -197,9 +197,26 @@
     <ul>
       <li>Namn, ålder, e-post, skola, ämnen och när du kan arbeta</li>
       <li>Det du skriver i fritextfältet, och ditt CV om du bifogar ett</li>
+      <li>Är du under 18: din vårdnadshavares e-post. Vi mejlar hen och ber om ett skriftligt
+        godkännande, och sparar svaret och när det kom med din ansökan</li>
       <li>Blir du antagen: din profiltext, ort, ämnen och den timpenning vi kommit överens om</li>
       <li>Ta bort ditt personnummer ur CV:t innan du skickar det. Vi behöver det inte för att
         läsa en ansökan.</li>
+    </ul>
+
+    <!-- 2026-10-05. Vårdnadshavaren har inte själv lämnat adressen, och ska
+         få veta hur den hanteras redan i första mejlet (GDPR artikel 14).
+         Mejlet till vårdnadshavaren länkar hit (#vardnadshavare, VARFOR_VARDNADSHAVARE
+         i supabase/functions/_delad/notiser/ansokan.ts). -->
+    <h3 id="vardnadshavare">Om dig som är vårdnadshavare till någon som söker jobb</h3>
+    <ul>
+      <li>Är den som söker under 18 skriver hen din e-post i ansökan. Vi mejlar dig en gång för
+        att be om ditt skriftliga godkännande, och använder inte adressen till något annat</li>
+      <li>Svarar du sparar vi en kopia av ditt svar, och när det kom, med ansökan. Det är så vi
+        kan visa att du godkänt</li>
+      <li>Adressen och svaret tas bort med ansökan, se Hur länge vi sparar nedan</li>
+      <li>Känner du inte igen det behöver du inte göra något. Vill du att vi tar bort din adress,
+        skriv till <a href="mailto:info@nextrum.se">info@nextrum.se</a></li>
     </ul>
 
     <h3>Om passen och kontakten</h3>
@@ -271,6 +288,9 @@
       <li><b>Bokföringsunderlag</b>: rättslig förpliktelse (artikel 6.1 c), bokföringslagen.</li>
       <li><b>Jobbansökningar</b>: berättigat intresse (artikel 6.1 f), att kunna anställa rätt
         studiehjälpare. Blir du anställd gäller avtalet.</li>
+      <li><b>Vårdnadshavarens e-post och svar</b>: berättigat intresse (artikel 6.1 f). Den som
+        är under 18 kan inte ta anställning utan vårdnadshavarens samtycke, och vi behöver kunna
+        visa att vi fått det. Adressen får vi av den som söker.</li>
       <li><b>Kontaktformuläret och felrapporterna</b>: berättigat intresse (artikel 6.1 f),
         att kunna svara den som skriver och hålla webbplatsen igång.</li>
       <li><b>Ändringsloggen och skyddet av uppgifterna</b>: berättigat intresse (artikel 6.1 f),
@@ -332,8 +352,9 @@
         IP och webbläsartyp med ett salt som byts varje dygn, och den råa IP-adressen sparas
         inte. Studievyn och studiehjälparvyn mäts inte.</li>
       <li><b>Resend</b> (USA): skickar våra mejl, som bokningsbekräftelser, påminnelser och
-        notiser, och mejlen till ett barns egen adress när ni slagit på dem. Resend får
-        mottagarens adress och mejlets innehåll.</li>
+        notiser, mejlen till ett barns egen adress när ni slagit på dem, och beskeden till den
+        som söker jobb och till hens vårdnadshavare. Resend får mottagarens adress och mejlets
+        innehåll.</li>
       <li><b>Anthropic</b> (USA): när en studiehjälpare väljer det formulerar Anthropics AI om
         hens anteckningar efter ett pass till en rapport, och föreslår korta hälsningar.
         Anthropic får anteckningarna och elevens förnamn och årskurs. Personnummer,
@@ -373,8 +394,8 @@
         besöket kom och koden om ni skrev en, som inte pekar ut er. Det sker automatiskt varje
         natt. Raderas kontot som en kod hör till försvinner koden, och med den kopplingen till
         vem som tipsat.</li>
-      <li><b>Ansökningar och CV</b>: tas bort ett år efter att de kom in, eller trettio dagar
-        efter senaste steget i rekryteringen om det är senare. Det sker automatiskt varje natt.
+      <li><b>Ansökningar och CV</b>, med vårdnadshavarens e-post och svar: tas bort ett år efter
+        att de kom in, eller trettio dagar efter senaste steget i rekryteringen om det är senare. Det sker automatiskt varje natt.
         Blir du studiehjälpare står ansökan kvar medan du arbetar hos oss, och tas bort två år
         efter ditt senaste pass, din senaste rapport eller din senaste inloggning.</li>
       <li><b>Konto och studiehistorik</b>: så länge ni använder tjänsten. Har ett konto inte
@@ -484,7 +505,7 @@
     <p>Ändrar vi något väsentligt uppdaterar vi datumet nedan, och hör av oss till er som har
       konto om ändringen påverkar er.</p>
 
-    <p class="jur-datum">Senast uppdaterad 1 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 5 oktober 2026.</p>
   </div>
 </section>
 
@@ -614,7 +635,7 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-images.js?v=50260f9d"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=f7c55a87"></script>
+<script src="nextrum-app.js?v=371d3290"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=f1ce069c"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

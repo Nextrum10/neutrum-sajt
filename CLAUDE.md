@@ -85,6 +85,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används
   (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad).
+- **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
+  databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
+  kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
+  poolen frågar först om det saknas.
 - **Barnkontona** (2026-09-30): ett barnkonto är ett användarnamn och ett lösenord, inget mer.
   Varje inloggning tar e-post eller användarnamn (`NXStudie.loggaIn`, 2026-10-01): med @ en
   vuxen, utan @ ett barn, som hamnar på `/barn`. Adressen `<namn>@barn.nextrum.se` finns bara
@@ -191,7 +195,9 @@ med `elementFromPoint`.
 Samma hus som de andra vyerna: KÄNSLAN och INNEHÅLLET står på `.vy` och adminvyn har inga egna
 ytor; ändras de andra vyerna oväntat är specificiteten första stället. Menyn är en egen rullyta
 som `sidomeny()` drar, aldrig sidan, och en lång etikett får bryta; `täcktÖverst()` räknar
-toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är bara vårt drag.
+toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är bara vårt drag. Siffran vid
+Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-10-05), och att visa
+sektionen är att se den; utan tabellen räknas läget Ny som förut.
 Fällor: `h5` och `h6` har webbläsarens marginal; `--pap-2` och `--yta` är nästan samma i mörkt
 läge (`--tint`, `--bricka`); KÄNSLAN står sist och väger lika mycket; `nextrum-admin-konsol.css`
 vinner över arbetsytan. Headless Chromium döljer rullningslister; mät ett tryck med `el.click()`
@@ -293,8 +299,11 @@ Detaljer: `minne/grunden.md`.
   följer triggern, inte jobbet.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
-- Till den som söker: bara kvittot styrs av en INSERT, möteslänken är https, ett steg mejlas en
-  gång, ett nej skrivs av en människa, och Godkänd i rullgardinen är inte Ta in i poolen.
+- Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
+  möteslänken är https, ett steg mejlas en gång, och Godkänd i rullgardinen är inte Ta in i poolen.
+  Avböjd mejlar ett nej (2026-10-05) men inte genast: tidigast en halvtimme senare, aldrig 20–9,
+  och inte om läget hunnit bytas. Rullgardinen visar mejlet först, och texten står i mallen och i
+  adminvyn (`kolla-mejltexter.py`).
   Provets facit finns bara i funktionen, resultatet visas per avsnitt, fel svar är lika
   utförliga som rätt, nyckeln hamnar aldrig i en logg, och ändras handboken läses frågorna om.
 
@@ -397,7 +406,7 @@ Detaljer: `minne/genererat-och-ci.md`.
 ## 9. CI — `.github/workflows/kontroll.yml`
 Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
 `kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`,
-`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `satt-version.py --kolla`, de genererade filerna
+`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `satt-version.py --kolla`, de genererade filerna
 (`git diff --exit-code`), språkdiffen (också attributnamn), `deno check` och `deno test`.
 - `node --check` ser bara syntax; ett namn som inte hämtats ur `NXAdmin` smäller vid körning.
 - `indexnow.yml` är ingen kontroll. Nyckeln står i roten och i `verktyg/indexnow.py`: byt båda.
@@ -449,6 +458,10 @@ Detaljer: `minne/grunden.md`.
   funktionerna gick ut samma dag, och flaggan `barn_epost` står av tills juristen läst policyn,
   registrets rad 22 och konsekvensbedömningen; sedan ett prov i sandlådan
   (`DEPLOY-BARNKONTON.md` 8). Adminvyn visar inte barnens inloggningar, och inte adressen.
+- **Under 18, nejet och det admin sett** (2026-10-05): inte i drift förrän migrationerna
+  `ansokan_vardnadshavare_och_nej` och `admin_sett` körts och `ansokan-notis` driftsatts, efter
+  merge. Vyerna och formuläret tål att de saknas. Policytexten om vårdnadshavaren är inte läst av
+  juristen.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

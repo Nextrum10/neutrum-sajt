@@ -198,9 +198,27 @@
     <ul>
       <li>Name, age, email, school, subjects and when you can work</li>
       <li>What you write in the free-text field, and your CV if you attach one</li>
+      <li>If you are under 18: your parent or guardian’s email. We email them to ask for written
+        approval, and keep their reply, and when it came, with your application</li>
       <li>If you are accepted: your profile text, town, subjects and the hourly rate we agreed</li>
       <li>Remove your personal identity number from the CV before you send it. We do not need it
         to read an application.</li>
+    </ul>
+
+    <!-- 2026-10-05. Vårdnadshavaren har inte själv lämnat adressen, och ska
+         få veta hur den hanteras redan i första mejlet (GDPR artikel 14).
+         Mejlet till vårdnadshavaren länkar hit (#vardnadshavare, VARFOR_VARDNADSHAVARE
+         i supabase/functions/_delad/notiser/ansokan.ts). -->
+    <h3 id="vardnadshavare">About you as the parent or guardian of someone who applies</h3>
+    <ul>
+      <li>If the applicant is under 18, they write your email in the application. We email you
+        once to ask for your written approval, and use the address for nothing else</li>
+      <li>If you reply, we keep a copy of your reply, and when it came, with the application.
+        That is how we can show that you approved</li>
+      <li>The address and the reply are deleted with the application, see How long we keep
+        things below</li>
+      <li>If you do not recognise this, you do not need to do anything. If you want us to delete
+        your address, write to <a href="mailto:info@nextrum.se">info@nextrum.se</a></li>
     </ul>
 
     <h3>About the sessions and the contact</h3>
@@ -275,6 +293,9 @@
         Act.</li>
       <li><b>Job applications</b>: legitimate interest (Article 6(1)(f)), being able to hire the
         right tutors. If you are hired, the contract applies.</li>
+      <li><b>A parent or guardian’s email and reply</b>: legitimate interest (Article 6(1)(f)).
+        Someone under 18 cannot take employment without their parent or guardian’s consent, and
+        we need to be able to show that we have it. We get the address from the applicant.</li>
       <li><b>The contact form and error reports</b>: legitimate interest (Article 6(1)(f)),
         being able to reply to whoever writes and to keep the website running.</li>
       <li><b>The change log and protecting the data</b>: legitimate interest (Article 6(1)(f)),
@@ -337,8 +358,9 @@
         from a hash of IP and browser type with a salt that changes every day, and the raw IP
         address is not stored. The student view and the tutor view are not measured.</li>
       <li><b>Resend</b> (USA): sends our emails, such as booking confirmations, reminders and
-        notifications, and the emails to a child’s own address when you have turned them on.
-        Resend gets the recipient’s address and the email’s content.</li>
+        notifications, the emails to a child’s own address when you have turned them on, and
+        the messages to job applicants and their parents or guardians. Resend gets the
+        recipient’s address and the email’s content.</li>
       <li><b>Anthropic</b> (USA): when a tutor chooses to, Anthropic’s AI rewrites the tutor’s
         notes after a session into a report, and suggests short greetings. Anthropic gets the
         notes and the student’s first name and school year. Personal identity numbers, phone
@@ -378,8 +400,8 @@
         came from and the code if you typed one remain, which do not identify you. This happens
         automatically every night. If the account a code belongs to is deleted, the code goes
         with it, and so does the link to who recommended you.</li>
-      <li><b>Applications and CVs</b>: deleted a year after they arrived, or thirty days after
-        the last step in the recruitment if that is later. This happens automatically every
+      <li><b>Applications and CVs</b>, with a parent or guardian’s email and reply: deleted a year
+        after they arrived, or thirty days after the last step in the recruitment if that is later. This happens automatically every
         night. If you become a tutor, the application stays while you work with us, and is
         deleted two years after your last session, report or login.</li>
       <li><b>Account and study history</b>: as long as you use the service. If an account has not
@@ -493,7 +515,7 @@
     <p>If we change anything material we update the date below, and contact those of you with an
       account if the change affects you.</p>
 
-    <p class="jur-datum">Last updated 1 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 5 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 
@@ -623,7 +645,7 @@
 <script src="../nextrum-config.js?v=fdfed591"></script>
 <script src="../nextrum-images.js?v=50260f9d"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=f7c55a87"></script>
+<script src="../nextrum-app.js?v=371d3290"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

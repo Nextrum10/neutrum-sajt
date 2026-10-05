@@ -17,7 +17,7 @@
   const M = NXMedia;
 
   const { DAG, S, dagarSedan, elevNamn, kortDatum, märkFlik, namnFör,
-          närText, tabell, ärRaderad } = NXAdmin;
+          närText, osedda, tabell, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaNotiser = (...a) => NXAdmin.rita.ritaNotiser(...a);
@@ -174,10 +174,17 @@
      Ändras en annan post här ska funktionen ändras i samma ändring
      (migrationen admin_paminnelser_direkt_och_morgon), och tvärtom: annars
      mejlas en sak som inte står här, eller en sak som står här mejlas aldrig.
+
+     ANMÄLNINGARNA OCH ANSÖKNINGARNA ÄR DE DU INTE SETT (2026-10-05). De
+     två första posterna räknar det som kommit in sedan du senast öppnade
+     sektionen (osedda i kärnan, admin_sett), inte allt med läget Ny: Leo
+     ville att siffran försvinner när man tittat. Utan tabellen räknas
+     läget Ny som förut. Ingen av dem finns i intern.admin_att_gora().
      ------------------------------------------------------------ */
   function byggAttGöra() {
     const l = S.lage || {};
     const idag = isoFor(new Date());
+    const sett = !!S.sett;
 
     /* Elevens egen matchning sedan schema-v14, inte familjens.
        En familj kan vara "matchad" och ändå ha ett barn utan
@@ -195,12 +202,16 @@
       u.status === 'utkast' || u.status === 'godkand').length;
 
     return [
-      { antal: l.nya_leads != null ? l.nya_leads : S.leads.filter(x => x.status === 'new').length,
+      { antal: sett ? osedda('leads').length
+          : l.nya_leads != null ? l.nya_leads : S.leads.filter(x => x.status === 'new').length,
         rubrik: 'nya intresseanmälningar', ental: 'ny intresseanmälan',
-        under: 'Familjer som hört av sig och väntar på svar.', till: '#leads' },
-      { antal: l.nya_ansokningar != null ? l.nya_ansokningar : S.ansokningar.filter(x => x.status === 'new').length,
+        under: sett ? 'Har kommit in sedan du tittade senast.' : 'Familjer som hört av sig och väntar på svar.',
+        till: '#leads' },
+      { antal: sett ? osedda('ansokningar').length
+          : l.nya_ansokningar != null ? l.nya_ansokningar : S.ansokningar.filter(x => x.status === 'new').length,
         rubrik: 'nya ansökningar', ental: 'ny ansökan',
-        under: 'Unga som vill bli studiehjälpare.', till: '#ansokningar' },
+        under: sett ? 'Har kommit in sedan du tittade senast.' : 'Unga som vill bli studiehjälpare.',
+        till: '#ansokningar' },
       { antal: Object.values(S.tutorProfiler).filter(t => t.status === 'pending').length,
         rubrik: 'studiehjälpare att godkänna', ental: 'studiehjälpare att godkänna',
         under: 'Kontot fungerar men vyn är låst tills någon godkänner.', till: '#studiehjalpare' },

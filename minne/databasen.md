@@ -63,6 +63,17 @@ betala nästa bekräftade pass. Fas 22.4 la till
 `bookings_timmar_betalar_forslaget` och
 `intern.obesvarade_forslag_slapper_timmarna`: timmen dras när förslaget
 skapas och kommer tillbaka om ingen svarat när dagen gått.
+2026-10-05 la till `admin_sett` (hur långt varje admin sett anmälningarna och
+ansökningarna; var och en läser sin egen rad, bara `admin_sett_markera()`
+skriver), kolumnerna `applications.vardnadshavare_epost`,
+`vardnadshavare_godkand_at` och `vardnadshavare_svar`, och
+`ansokan_utskick.skicka_efter` med stegen `vardnadshavare` och `avbojd`
+(`minne/notiser.md`). Migrationen `ansokan_vardnadshavare_och_nej` börjar med
+en vakt som jämför md5 för de fem funktioner den skriver om mot driften
+2026-10-05, och stannar om någon av dem ändrats sedan: läs driften och skriv
+om den hellre än att skriva över någon annans ändring. Den har ett `drop
+constraint` (villkoret på steg går inte att vidga annars), som verktygen ber
+om en bekräftelse för.
 Lönespecifikationen (2026-09-28) la till pg_cron-jobbet `manadskorning`,
 den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`. Sedan
 2026-10-01 går det varje natt 04:17 (`manadskorningen_gar_varje_natt`),

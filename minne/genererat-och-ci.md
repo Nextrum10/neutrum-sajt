@@ -121,7 +121,10 @@ Körs på varje push och PR. Ska vara grön före merge.
    barnens användarnamn och domän prövas lika i databasen, `barn-konto`,
    inloggningen (`nextrum-studie.js` sedan 2026-10-01, delad av alla
    fyra vyerna) och föräldrarnas ruta (barnkonton_och_admin)
-6. `verktyg/kolla-webp.py`
+6. `verktyg/kolla-webp.py`, och `verktyg/kolla-mejltexter.py` (2026-10-05):
+   nejet som rullgardinen Avböjd visar (`NEJ_MEJLET` i
+   `nextrum-admin-rekrytering.js`) är samma som mejlet (`NEJ` i
+   `_delad/notiser/ansokan.ts`), fält för fält
 7. `verktyg/satt-version.py --kolla`
 8. Genererade filer är aktuella (bygg om + `git diff --exit-code`):
    maskotsvaren, FAQ-schemat och `sitemap.xml`
@@ -251,6 +254,14 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
 b6c1 från Fas 14.6 står bekräftat och obetalt, så sex prov för
 timmarna (22.1–22.3) föll i varje hel körning. Fixturerna ställs nu
 tillbaka överst i avsnittet för 22.1.
+
+### Webbläsarprovet för ansökan under 18, nejet och det admin sett (2026-10-05)
+`verktyg/prova-ansokningar.js` är byggt som de två nedan (egen port, 8963):
+vårdnadshavarens fält i formuläret på båda språken och vad som skickas,
+reserven när kolumnen saknas, rutan som visar nejet innan läget blir Avböjd,
+godkännandet i ansökan, frågan i Ta in i poolen, och att siffran vid
+Ansökningar och Intresseanmälningar går bort när sektionen visats, med och
+utan tabellen `admin_sett`.
 
 ### Webbläsarprovet för barnkontona och adminbehörigheterna (2026-09-30)
 `verktyg/prova-barnkonton.js` kör barnets vy, NexLäx i barnets vy och

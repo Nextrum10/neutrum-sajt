@@ -10,7 +10,10 @@
 //
 // Vilket steg, om det redan skickats, om ansökan hunnit avböjas eller
 // mötet fått en nyare tid — allt det avgörs av ansokan_besked_ta(),
-// som också lånar raden i två minuter. Får funktionen ingen rad
+// som också lånar raden i två minuter. Sedan 2026-10-05 också nejet
+// (som inte lånas ut före sin tid, och hoppas över om läget hunnit
+// ändras) och mejlet till vårdnadshavaren, vars adress kommer i epost
+// precis som den sökandes gör för de andra stegen. Får funktionen ingen rad
 // tillbaka är beskedet redan hanterat, och den svarar 200 utan att
 // göra något. Samma rad kan alltså väckas två gånger utan att mejlet
 // går två gånger, och Resends idempotensnyckel är en andra spärr om
@@ -87,7 +90,7 @@ Deno.serve(async (req) => {
     return json({ error: 'Raden gick inte att läsa.' }, 500);
   }
   const rad = (Array.isArray(data) ? data[0] : null) as Rad | null;
-  if (!rad) return json({ ok: true, hanterad: 'redan skickad, avböjd eller ersatt' }, 200);
+  if (!rad) return json({ ok: true, hanterad: 'redan skickad, inte dags än, avböjd eller ersatt' }, 200);
 
   const klar = async (ok: boolean, fel: string | null, leverantorId: string | null, permanent: boolean) => {
     const { error: e } = await klient.rpc('ansokan_besked_klar', {

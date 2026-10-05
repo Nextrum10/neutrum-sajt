@@ -498,6 +498,44 @@ tabellerna och listorna, inte ytorna.
 - NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
   vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
 
+### Siffran vid Intresseanmälningar och Ansökningar är det du inte sett (2026-10-05)
+
+Leo: "notiserna ska försvinna efter vi klickat på områden och exempelvis sett
+att en ansökan kommit in, och just vilken ansökan som kommit in." Siffran
+räknade allt med läget Ny (`admin_lage`) och stod kvar tills någon bytte
+läget, också när man redan tittat: det fanns inget man kunde göra för att få
+bort den utom att svara.
+
+- **Per admin, i databasen.** `admin_sett` har en tid per admin och område
+  (`leads`, `ansokningar`): den nyaste raden som stod i listan när hen
+  öppnade sektionen. Den skrivs bara av `admin_sett_markera()`, som aldrig
+  flyttar tiden bakåt och aldrig förbi nu, och bara för det man får se
+  (leads med behörigheten, ansökningarna som superadmin). Var och en läser
+  bara sina egna rader. I webbläsaren hade det följt datorn, inte personen.
+- **Osett = läget Ny och efter tiden** (`osedda()` i kärnan). En anmälan som
+  den andra admin redan kontaktat är inte ny för någon. Det är vad menyns
+  siffror, Att göra, NEX-ringen och notisklockan räknar för de två
+  områdena; resten av Att göra är som förut, och `intern.admin_att_gora()`
+  har aldrig haft dem.
+- **Att visa sektionen är att se den** (`sektionSedd()` i skalet, vid
+  `hashchange`, efter första hämtningen, när en ny rad kommer in och när
+  fliken kommer fram). Raderna som var osedda märks med en prick och "Ny
+  sedan du tittade senast" så länge man står kvar (`S.nyttNu`, `ärNyNu()`);
+  nästa besök är inget märkt. En dold flik har inte sett något. Titelns
+  (n) nollas som när klockan öppnas.
+- **Utan tabellen** (migrationen `admin_sett` inte körd) är `S.sett` null och
+  allt räknas som förut, utan markering.
+- `verktyg/prova-ansokningar.js` provar det i Chromium mot en falsk Supabase:
+  siffran, markeringen, nästa besök, och reserven utan tabellen.
+
+**Fälla: `.pay-field{display:flex}` tar över `[hidden]`** (`nextrum.css`).
+Ett fält som skulle fällas ut först när det behövs syntes hela tiden:
+"Andra ämnen" i intresseanmälan gjorde det sedan det kom till, och
+vårdnadshavarens e-post i ansökan gjorde det tills `.pay-field[hidden]`
+kom till samma dag. Samma fälla som `.adm-panel[hidden]` och de andra i
+`nextrum-arbetsyta.css`: en klass med `display` behöver sin egen
+`[hidden]`-regel.
+
 ### Tusen rader (2026-09-29)
 
 Leo: "de raderna ska inte försvinna efter 1000st". PostgREST lämnar ut

@@ -1140,6 +1140,8 @@
       + dpFakta([
         ['E-post', dpMejl(a.email)],
         ['Ålder', a.age ? esc(a.age + ' år') : null],
+        /* Under 18: vårdnadshavaren och godkännandet (2026-10-05). */
+        ...(kör('vhFakta', a) || []),
         ['Skola', a.school ? esc(a.school) : null],
         ['Ämnen', a.subjects ? esc(a.subjects) : null],
         ['Kan jobba', a.availability ? esc(a.availability) : null],
@@ -1154,6 +1156,9 @@
       + dpRubrik('Varför hen söker')
       + (text ? '<div class="dp-text">' + esc(text) + '</div>' : tomt('Inget skrivet', ''))
       + (a.notering ? dpRubrik('Vår notering') + '<div class="dp-text">' + esc(a.notering) + '</div>' : '')
+      + (a.vardnadshavare_godkand_at
+        ? dpRubrik('Vårdnadshavarens svar', 'inlagt ' + kortDatum(a.vardnadshavare_godkand_at)) + (kör('vhSvar', a) || '')
+        : '')
       + dpRubrik('Läge')
       + '<div class="dp-atgard">'
       + väljare('ans', ANS_LAGE, a.status, 'data-ans="' + esc(a.id) + '"')
@@ -1164,9 +1169,10 @@
       + '</div>'
       + dpHantera('ansokan', a, {
           rubrik: 'Radera ansökan',
-          text: 'När hen inte ska anställas, eller själv ber om det. Ansökan, CV:t och meddelanden med '
-            + 'samma adress tas bort ur våra system. Ett nej mejlas inte av sig självt: skriv det först. '
-            + 'Har hen ett konto raderas det under Studiehjälpare.'
+          text: 'När hen själv ber om det, eller ansökan är skräp. Ansökan, CV:t och meddelanden med '
+            + 'samma adress tas bort ur våra system, och ett nej som inte gått än går aldrig. Ska hen '
+            + 'få ett: sätt läget till Avböjd och radera först när nejet gått (det står under '
+            + 'Rekryteringen). Har hen ett konto raderas det under Studiehjälpare.'
         });
   }
 
@@ -1238,6 +1244,11 @@
     ansokan: { tabell: 'applications', fält: [
       { k: 'name', et: 'Namn', krav: true, max: 120 },
       { k: 'email', et: 'E-post', krav: true, epost: true, max: 200 },
+      /* 2026-10-05. En ny eller rättad adress mejlas av databasen
+         (ansokan_besked), en gång per adress, så länge godkännandet
+         saknas. Bara när kolumnen finns: om() tar bort fältet annars. */
+      { k: 'vardnadshavare_epost', et: 'Vårdnadshavarens e-post', epost: true, max: 200,
+        om: r => 'vardnadshavare_epost' in r },
       { k: 'age', et: 'Ålder', tal: [10, 99] },
       { k: 'school', et: 'Skola', max: 120 },
       { k: 'subjects', et: 'Ämnen', max: 200 },
@@ -1332,7 +1343,7 @@
         ? '<p class="dp-red-not">E-post: <b>' + esc(rad.email || '—') + '</b>. Adressen är '
           + 'inloggningen och ändras inte här.</p>'
         : '')
-      + spec.fält.map(f => redFält(typ, rad.id, f)).join('')
+      + spec.fält.filter(f => !f.om || f.om(rad)).map(f => redFält(typ, rad.id, f)).join('')
       + '<p class="ok-msg" data-dp-red-msg></p>'
       + '<div class="dp-atgard">'
       + '<button class="btn btn-ghost btn-sm" type="button" data-dp-red-avbryt>Avbryt</button>'

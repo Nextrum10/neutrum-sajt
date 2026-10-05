@@ -36,6 +36,11 @@ const NXAdmin = (function () {
     leads: [], ansokningar: [], kontakt: [], bokningar: [], bibliotek: [],
     /* Fas 16.1: mejlen till den som sökt jobb, per ansökan. */
     ansokanUtskick: {}, ansokanUtskickFel: null, provForsok: {},
+    /* 2026-10-05: hur långt den inloggade har sett anmälningarna och
+       ansökningarna (admin_sett), och vilka rader som var nya när hen
+       öppnade sektionen. null: tabellen finns inte, och läget Ny räknas
+       som förut. */
+    sett: null, nyttNu: { leads: new Set(), ansokningar: new Set() }, settSek: null,
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     elevlista: [], allaElever: [], rapporter: [], lage: null, attGora: [],
@@ -126,7 +131,10 @@ const NXAdmin = (function () {
       /* Initialerna först (2026-09-29): ögat hittar en person på formen
          innan det läst namnet, och en lista med bara text var en vägg. De
          är aria-hidden; skärmläsaren läser namnet som förut. */
-      return '<li><button type="button" class="adm-namn" data-dp="' + esc(o.typ + ':' + o.id(r)) + '"'
+      /* o.nytt: raden kom in sedan du tittade senast (2026-10-05).
+         Pricken är en genväg; o.under säger det i ord. */
+      return '<li><button type="button" class="adm-namn' + (o.nytt && o.nytt(r) ? ' ar-nytt' : '')
+        + '" data-dp="' + esc(o.typ + ':' + o.id(r)) + '"'
         + (o.flik ? ' data-dp-start="' + esc(o.flik) + '"' : '') + '>'
         + M.avatar(o.namn(r) || '', null, { liten: true })
         + '<span class="adm-namn-text"><b>' + esc(o.namn(r) || '(namn saknas)') + '</b>'
@@ -142,6 +150,70 @@ const NXAdmin = (function () {
      stå i någon lista. En anmälan märks som nattjobbet märker den. */
   function ärRaderad(rad) {
     return !!rad && (!!rad.raderad_at || rad.email === 'gallrad');
+  }
+
+  /* ============================================================
+     DET DU INTE SETT (2026-10-05)
+
+     Leo: "notiserna ska försvinna efter vi klickat på områden och
+     exempelvis sett att en ansökan kommit in, och just vilken ansökan
+     som kommit in." Siffran vid Intresseanmälningar och Ansökningar
+     räknade allt med läget Ny och stod kvar tills läget byttes, också
+     när man redan tittat. Nu räknar den det som kommit in sedan den
+     inloggade senast öppnade sektionen (admin_sett, en tid per admin och
+     område). Raderna som var nya när sektionen öppnades märks i listan
+     så länge man står kvar där.
+
+     Läget Ny är kvar som villkor: en anmälan som den andra admin redan
+     kontaktat är inte ny för någon. Saknas tabellen (S.sett null) är det
+     som förut.
+     ============================================================ */
+  const OMRADE = { leads: () => S.leads.filter(l => !ärRaderad(l)), ansokningar: () => S.ansokningar };
+
+  /* Millisekunder räcker: två rader samma millisekund är samma besök.
+     PostgREST skriver mikrosekunder, som ECMAScript inte lovar att läsa;
+     de kapas till tre siffror först. */
+  const tid = v => {
+    const t = Date.parse(String(v || '').replace(/(\.\d{3})\d+/, '$1'));
+    return Number.isNaN(t) ? 0 : t;
+  };
+
+  function ärOsedd(omrade, r) {
+    if (r.status !== 'new') return false;
+    if (!S.sett) return true;
+    const till = S.sett[omrade];
+    return !till || tid(r.created_at) > tid(till);
+  }
+
+  function osedda(omrade) {
+    return OMRADE[omrade] ? OMRADE[omrade]().filter(r => ärOsedd(omrade, r)) : [];
+  }
+
+  /* Raden är ny sedan du tittade, och sektionen står öppen. */
+  const ärNyNu = (omrade, r) => S.nyttNu[omrade].has(r.id);
+
+  /* Sektionen visas: märk det nya i listan och spara hur långt du sett.
+     Ett nytt besök börjar om med det som är osett nu; en ny rad medan du
+     står kvar läggs till. Tiden är den nyaste raden i listan, inte
+     klockan: det som kommer in medan sidan ritas är inte sett. Svarar
+     med om något ändrades, så att anroparen vet om den ska rita om. */
+  async function markeraSett(omrade, stannar) {
+    if (!S.sett || !OMRADE[omrade]) return false;
+    const rader = OMRADE[omrade]();
+    const nya = rader.filter(r => ärOsedd(omrade, r));
+    if (!stannar) S.nyttNu[omrade] = new Set();
+    nya.forEach(r => S.nyttNu[omrade].add(r.id));
+    const senast = rader.reduce((m, r) => (tid(r.created_at) > tid(m) ? r.created_at : m), null);
+    if (!senast || tid(senast) <= tid(S.sett[omrade])) return nya.length > 0 || !stannar;
+    const { data, error } = await supa.rpc('admin_sett_markera', { p_omrade: omrade, p_till: senast });
+    if (error) {
+      /* Siffran står kvar: hellre en etta för mycket än en ansökan som
+         försvann ur siffran utan att någon sett den. */
+      console.warn('admin_sett_markera:', error.message);
+      return true;
+    }
+    S.sett[omrade] = data || senast;
+    return true;
   }
 
   /* Panelen ritas om när en lista gör det, så att ett nytt läge syns på
@@ -362,7 +434,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
-           bankPass, kkSkarp, tips] = await Promise.all([
+           bankPass, kkSkarp, tips, sett] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -419,10 +491,11 @@ const NXAdmin = (function () {
       bara(() => hämtaAlla('klippkort_saldo', '*', nyastFörst('created_at'))),
       /* Fas 16.1: vilka besked den som sökt jobb har fått. Tabellen
          bär ingen adress och ingen brödtext, bara steg och utfall.
-         Bara admin läser den. id följer med för att hämtaAlla() ska
-         kunna känna igen en rad som kom med på två sidor. */
-      bara(() => hämtaAlla('ansokan_utskick', 'id, ansokan_id, steg, status, forsok, fel, skapad, uppdaterad',
-        nyastFörst('skapad'))),
+         Bara admin läser den. Alla kolumner sedan 2026-10-05: skicka_efter
+         (när nejet går) finns först när migrationen
+         ansokan_vardnadshavare_och_nej är körd, och en lista som nämner
+         en kolumn som saknas hade tömt hela rutan. */
+      bara(() => hämtaAlla('ansokan_utskick', '*', nyastFörst('skapad'))),
       /* Fas 20.1: övertiden på ett pass som redan var betalt, betald som
          en egen kortbetalning. En egen tabell och inte fler kolumner på
          passet: en återbetalning av tillägget hade annars skrivit över
@@ -450,12 +523,22 @@ const NXAdmin = (function () {
          gett, räknat i databasen med samma regler som timmen på köpet.
          En rad per kod: en per familj och studiehjälpare som öppnat
          sin flik, och en per affisch. */
-      bara(() => supa.rpc('tipskoder_lage'))
+      bara(() => supa.rpc('tipskoder_lage')),
+      /* 2026-10-05: hur långt den inloggade sett anmälningarna och
+         ansökningarna. Bara de egna raderna (policyn), och för alla
+         admins: den som bara har Intresseanmälningar ska också slippa
+         siffran för det hen redan sett. */
+      supa.from('admin_sett').select('omrade, sett_till')
     ]);
 
     S.leads = leads.data || [];
     S.bibliotek = bib.data || [];
     S.ansokningar = ans.data || [];
+    /* Ett fel (tabellen saknas, migrationen admin_sett är inte körd) gör
+       att siffrorna räknar läget Ny som förut, i stället för att allt
+       ser osett ut. */
+    S.sett = sett.error ? null
+      : Object.fromEntries((sett.data || []).map(r => [r.omrade, r.sett_till]));
     /* Nyast först per ansökan, så att ett ombokat möte visar det
        senaste mejlet och inte det första. */
     S.ansokanUtskick = {};
@@ -866,8 +949,8 @@ const NXAdmin = (function () {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
-    kortDatum, läge, lönemånad, matchar, märkFlik, namnFör, namnlista, närText, pill, rad,
+    kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
-    ärRaderad, rita
+    ärNyNu, ärRaderad, rita
   };
 })();

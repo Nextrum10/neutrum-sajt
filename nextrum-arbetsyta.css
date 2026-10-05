@@ -920,6 +920,13 @@ table.adm .adm-tal{
   display:block;margin-top:2px;
   font-size:.8rem;line-height:1.45;color:var(--bl-2);
 }
+/* Det som kom in sedan du tittade senast (2026-10-05, ärNyNu i
+   nextrum-admin-karna.js): en prick före namnet, som en oläst notis i
+   barnets vy. Orden står under namnet; pricken är bara en genväg. */
+.adm-namn.ar-nytt .adm-namn-text b::before{
+  content:"";display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--acc);margin-right:8px;vertical-align:.12em;
+}
 .adm-namn-lage{
   display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;
   flex:none;max-width:55%;
