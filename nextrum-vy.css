@@ -1835,6 +1835,20 @@ a.pass-lank:hover{color:var(--acc)}
 .nx-dok-text .xsmall{color:var(--muted-2);line-height:1.5}
 .nx-dok .btn{flex:none}
 .nx-dok-tom{margin:0;color:var(--muted-2);line-height:1.6}
+/* Ett avtal som klistrats in som text (2026-10-05) fälls ut under sin
+   rad, i full bredd. Raden får radbrytas, men gör det bara för texten:
+   .nx-dok-text har flex-basis noll, så ikonen, titeln och knappen ryms
+   alltid på första raden. Ingen display här, så att hidden fortfarande
+   döljer den. Ingen egen rullning: ett avtal läses med sidan, på en
+   telefon också. */
+.nx-dok{flex-wrap:wrap}
+.nx-dok-las{flex-basis:100%;min-width:0;margin-top:4px}
+.nx-dok-avtal{
+  white-space:pre-wrap;overflow-wrap:anywhere;
+  font-size:.9rem;line-height:1.7;color:var(--bl-2);
+  margin:0 0 12px;padding:16px 18px;
+  border:1px solid var(--ln);border-radius:14px;background:var(--pap-2);
+}
 @media (max-width:460px){
   .nx-dok{flex-wrap:wrap}
   .nx-dok .btn{width:100%;justify-content:center}

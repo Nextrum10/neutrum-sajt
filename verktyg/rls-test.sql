@@ -1775,6 +1775,128 @@ select 'Dokument delas: hinkens hjälpare nås av inloggade, inte av anon',
        coalesce(f::text, 'intern.handling_delad_med_mig finns inte')
   from (select to_regprocedure('intern.handling_delad_med_mig(text)') f) x;
 
+-- ---------- avtalet klistras in som text (avtal_som_text) ----------
+-- Leo 2026-10-05: ett avtal ska kunna klistras in och lagras hos oss
+-- och hos familjen, med vilket namn som helst. En handling är en fil
+-- eller en text. Texten ändras aldrig, inte ens av admin; personen
+-- läser den bara genom min_handling_text(), bara sin egen och bara när
+-- den är delad; och den står aldrig i auditloggen. Deltransaktion som
+-- rullas tillbaka, som avsnittet ovan.
+do $$
+declare
+  adm  constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  a    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  p    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  t1   constant uuid := '00000000-0000-4000-8000-00000000d0e1';
+  t2   constant uuid := '00000000-0000-4000-8000-00000000d0e2';
+  t3   constant uuid := '00000000-0000-4000-8000-00000000d0e3';
+  avtal constant text := E'Avtal mellan Nextrum och familjen P\n\n1. Priset är 379 kr per timme.\n';
+  fel text; kod text;
+  titel_andrad bigint; text_andrad text; bada text; tom text;
+  p_lista uuid[]; p_text text; p_odelad text; p_annans text; p_tabell bigint;
+  q_text text; a_text text; a_andrar bigint; n_audit bigint; n_audit_text bigint;
+begin
+  if to_regprocedure('public.min_handling_text(uuid)') is null then
+    insert into utfall (test, ok, detalj)
+    values ('Avtal som text: migrationen avtal_som_text är körd', false,
+            'min_handling_text() finns inte');
+    return;
+  end if;
+
+  begin
+    -- Admin klistrar in tre texter: en delad med familj P, en P inte
+    -- ser än, och en delad med studiehjälpare A. Titeln är fri.
+    perform pg_temp.bli(adm);
+    insert into public.handlingar (id, typ, titel, innehall, kopplad_tabell, kopplad_id,
+                                   delad_med_personen, uppladdad_av)
+    values (t1, 'avtal', 'Vad som helst – familjen P, höst 2026 ✓', avtal, 'profiles', p::text, true, adm),
+           (t2, 'avtal', 'Utkast', 'Inte delat än', 'profiles', p::text, false, adm),
+           (t3, 'ovrigt', 'Studiehjälpare A', 'Avtalet med A', 'profiles', a::text, true, adm);
+    update public.handlingar set titel = 'Ett annat namn' where id = t1;
+    get diagnostics titel_andrad = row_count;
+    begin
+      update public.handlingar set innehall = avtal || 'Och en rad till.' where id = t1;
+      text_andrad := 'gick igenom';
+    exception when others then text_andrad := sqlstate;
+    end;
+    begin
+      insert into public.handlingar (typ, titel, fil, innehall)
+      values ('avtal', 'Båda', '00000000-0000-4000-8000-00000000d0e9/1-x.pdf', 'text');
+      bada := 'gick igenom';
+    exception when others then bada := sqlstate;
+    end;
+    begin
+      insert into public.handlingar (typ, titel, innehall) values ('avtal', 'Tom', E'  \n\t ');
+      tom := 'gick igenom';
+    exception when others then tom := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Familj P: sin delade text i listan och att läsa, inte den odelade
+    -- och inte A:s.
+    perform pg_temp.bli(p);
+    select array_agg(x.id) into p_lista from public.mina_handlingar() x;
+    p_text := public.min_handling_text(t1);
+    p_odelad := public.min_handling_text(t2);
+    p_annans := public.min_handling_text(t3);
+    select count(*) into p_tabell from public.handlingar;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    perform pg_temp.bli(q);
+    q_text := public.min_handling_text(t1);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Studiehjälpare A läser sitt, och ändrar inget.
+    perform pg_temp.bli(a);
+    a_text := public.min_handling_text(t3);
+    update public.handlingar set titel = 'A byter namn' where id = t3;
+    get diagnostics a_andrar = row_count;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    select count(*) into n_audit from public.audit_logg
+     where tabell = 'handlingar' and objekt_id = t1::text;
+    select count(*) into n_audit_text from public.audit_logg
+     where tabell = 'handlingar' and objekt_id in (t1::text, t2::text, t3::text)
+       and (coalesce(fore::text, '') || coalesce(efter::text, '')) ~ '(innehall|379 kr|Inte delat|Avtalet med A)';
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm; kod := sqlstate;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Avtal som text', false, coalesce(kod, '') || ' ' || fel);
+    return;
+  end if;
+
+  insert into utfall (test, ok, detalj) values
+    ('Avtal som text: familjen har texten i sin lista, inte den odelade',
+      p_lista = array[t1], coalesce(p_lista::text, 'inget')),
+    ('Avtal som text: familjen läser texten precis som den klistrades in',
+      p_text is not distinct from avtal, coalesce(left(p_text, 40), 'null')),
+    ('Avtal som text: en odelad text läses inte', p_odelad is null, coalesce(p_odelad, 'null')),
+    ('Avtal som text: någon annans text läses inte',
+      p_annans is null and q_text is null, coalesce(p_annans, 'null') || ' / ' || coalesce(q_text, 'null')),
+    ('Avtal som text: familjen läser fortfarande inte tabellen', p_tabell = 0, 'rader: ' || p_tabell),
+    ('Avtal som text: studiehjälparen läser sin', a_text is not distinct from 'Avtalet med A',
+      coalesce(a_text, 'null')),
+    ('Avtal som text: studiehjälparen ändrar ingenting', a_andrar = 0, 'rader: ' || a_andrar),
+    ('Avtal som text: titeln går att byta', titel_andrad = 1, 'rader: ' || titel_andrad),
+    ('Avtal som text: texten ändras inte, inte ens av admin', text_andrad = '23514', text_andrad),
+    ('Avtal som text: en fil och en text på samma handling nekas', bada = '23514', bada),
+    ('Avtal som text: en tom text nekas', tom = '23514', tom),
+    ('Avtal som text: auditloggen har handlingen men aldrig texten',
+      n_audit >= 1 and n_audit_text = 0, 'rader ' || n_audit || ', med text ' || n_audit_text);
+end $$;
+
+select pg_temp.prova('Avtal som text: anon når inte min_handling_text', null,
+  array[$q$select public.min_handling_text('00000000-0000-4000-8000-00000000d0e1')$q$], 'nekad');
+
 -- Auditloggens vitlistor får bara nämna kolumner som finns. En
 -- felstavad kolumn i tg_argv ger inget fel — den loggar bara
 -- ingenting, för alltid, tyst.

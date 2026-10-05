@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=47a1da42">
-<link rel="stylesheet" href="nextrum-vy.css?v=28e93927">
+<link rel="stylesheet" href="nextrum-vy.css?v=9c77621b">
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=0a60891b">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
@@ -2088,6 +2088,12 @@
                Dokument i sin egen vy, och ingen annan gör det. Utan en
                person, eller utan krysset, är den admin ensam som förut.
 
+               Sedan 2026-10-05 kan ett avtal klistras in som text i
+               stället för att laddas upp (avtal_som_text). Leo: "jag ska
+               kunna klistra in avtal som lagras hos mig och hos de".
+               Texten ändras aldrig när den är sparad; en ny version är
+               en ny handling.
+
                Undervisningsmaterial hör INTE hit. Det har en egen hink
                vars policyer släpper in familjen och studiehjälparen,
                och en provräkning som hamnar här blir osynlig för dem
@@ -2115,8 +2121,19 @@
                          placeholder="t.ex. Anställningsavtal 2026"></div>
                 <div class="fgroup"><label for="dok-till">Giltig till <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
                   <input class="inp" type="date" id="dok-till"></div>
+                <div class="fgroup" id="dok-som-grupp"><label for="dok-som">Som</label>
+                  <select class="sel" id="dok-som">
+                    <option value="fil">En fil</option>
+                    <option value="text">Inklistrad text</option>
+                  </select></div>
                 <div class="fgroup" id="dok-fil-grupp"><label for="dok-fil">Fil</label>
                   <input class="inp" type="file" id="dok-fil"></div>
+                <!-- Ingen maxlength: webbläsaren kortar en inklistrad text
+                     tyst vid gränsen, och ett avkortat avtal ser helt ut.
+                     Längden prövas när det sparas, med ett besked. -->
+                <div class="fgroup uppg-bred" id="dok-text-grupp" hidden><label for="dok-text">Texten</label>
+                  <textarea class="inp" id="dok-text" rows="12" spellcheck="false"
+                            placeholder="Klistra in avtalet här."></textarea></div>
                 <div class="fgroup uppg-bred"><label for="dok-person">Vem det gäller <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
                   <select class="sel" id="dok-person" style="max-width:none">
                     <option value="">Ingen person, bara vi</option>
@@ -2136,7 +2153,11 @@
               <p class="graf-not">Giltig till är valfritt. Fyll i det på sådant som går ut —
                 en försäkring, ett intyg — så syns det i listan när datumet närmar sig.
                 Ett avtal med en studiehjälpare eller en familj: välj personen, så ser hen
-                sin kopia i sin egen vy. Ingen annan gör det.</p>
+                sin kopia i sin egen vy. Ingen annan gör det.
+                Ett avtal kan också klistras in som text. Radbrytningarna står kvar, men inte
+                fetstil, tabeller eller bilder: ett avtal som behöver dem laddas upp som PDF.
+                Texten ändras inte när den är sparad. En ny version är en ny handling, och den
+                gamla tas bort för sig.</p>
             </div>
 
             <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
@@ -2294,14 +2315,14 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=f7c55a87"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=82d80d53"></script>
+<script src="nextrum-studie.js?v=528b75ed"></script>
 <script src="nextrum-arbetsyta.js?v=6c1e8e1a"></script>
-<script src="nextrum-media.js?v=01adfb73"></script>
+<script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=d7fc6340"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=03c45dd1"></script>
-<script src="nextrum-admin-detalj.js?v=be392451"></script>
+<script src="nextrum-admin-detalj.js?v=a5d309a1"></script>
 <script src="nextrum-admin-oversikt.js?v=63b1b5a4"></script>
 <script src="nextrum-admin-kunder.js?v=09fbce10"></script>
 <script src="nextrum-admin-rekrytering.js?v=0941aacd"></script>
@@ -2312,7 +2333,7 @@
 <script src="nextrum-admin-manaden.js?v=7c5c8380"></script>
 <script src="nextrum-admin-loner.js?v=d691f1a8"></script>
 <script src="nextrum-admin-tjanster.js?v=997de096"></script>
-<script src="nextrum-admin-system.js?v=db07019e"></script>
+<script src="nextrum-admin-system.js?v=850d4673"></script>
 <script src="nextrum-admin-behorighet.js?v=4e952a41"></script>
 <script src="nextrum-admin-automationer.js?v=0fb655ba"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
