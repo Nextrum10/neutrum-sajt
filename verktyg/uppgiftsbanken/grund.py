@@ -175,11 +175,11 @@ def norm(t):
 
 def talvarde(t, enhet=True):
     """Samma som intern.niva_tal() i databasen. enhet=True för elevens
-    svar ("12 cm", "15 km/h" och "20 cm2" är 12, 15 och 20), enhet=False för facit: bara ett rent tal, med
+    svar ("12 cm", "15 km/h", "20 cm2" och "2 m/s2" är 12, 15, 20 och 2), enhet=False för facit: bara ett rent tal, med
     ett procenttecken som enda tillägg. Ett facit som "5y" är inget tal."""
     t = re.sub(r'(\d) (\d)', r'\1\2', re.sub(r'(\d) (\d)', r'\1\2', t))
     if enhet:
-        m = re.match(r'^([-+]?(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?:%|(?:[kcdm]?m\^?[23]|[a-zåäö²³°ω]{1,12}(?:/[a-zåäö²³°ω]{1,12})?\.?)(?: [a-zåäö²³°ω]{1,12}(?:/[a-zåäö²³°ω]{1,12})?\.?)?)?$', t)
+        m = re.match(r'^([-+]?(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*(?:%|(?:[kcdm]?m\^?[23]|[a-zåäö²³°ω]{1,12}(?:/[a-zåäö²³°ω]{1,12}(?:\^?[23])?)?\.?)(?: [a-zåäö²³°ω]{1,12}(?:/[a-zåäö²³°ω]{1,12}(?:\^?[23])?)?\.?)?)?$', t)
     else:
         m = re.match(r'^([-+]?(?:\d+(?:[.,]\d+)?|[.,]\d+))\s*%?$', t)
     return float(m.group(1).replace(',', '.')) if m else None
