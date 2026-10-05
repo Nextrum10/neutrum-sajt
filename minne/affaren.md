@@ -361,6 +361,17 @@ avtalet också mejlas. Det är en fråga för juristen, inte för koden.
 
 Driftsättningen och det som är kvar, ur avsnitt 11:
 
+- **Avtal som text (2026-10-05) är i drift.** PR #188 mergades och
+  Vercel driftsatte merge-commiten samma kväll. Migrationen
+  `avtal_som_text` kördes avsnitt för avsnitt efter merge, som version
+  `20261005120000`, och det driften sparade har samma md5 som filen
+  (`5145c632…`). Hela `rls-test.sql` från merge-commiten mot driften, i
+  en transaktion som rullades tillbaka: 1279 av 1280, alla 13 nya gröna.
+  Den röda är 14.6 "familjen väljer faktura på ett genomfört obetalt
+  pass": fixturen lägger passet "förra månaden", och september 2026 är
+  stängd i driftens bokslut (Fas 20.2), så månadslåset nekar. Det är en
+  datumfälla i testfilen, inte ett fel i schemat; lokalt 1280 av 1280.
+
 - **Avtalen som delas med personen (2026-09-29, avsnitt 1) är i drift.**
   Migrationen `dokument_delas_med_personen` kördes efter att PR #126
   mergats, som version `20260929080900`, och det driften sparade har
