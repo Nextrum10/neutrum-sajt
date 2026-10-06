@@ -326,6 +326,15 @@ utveckling som är roligare att följa, och ett quest-system.
   (åk 6, 9, gy1, gy2) och matematik åk 3. Lokalt 2026-10-06: rls-test
   1 340 av 1 340, och facitprovet (varje aktiv fråga lämnas ut, facit
   rättas som rätt och inget fel alternativ godtas) 6 485 frågor utan fel.
+  **I drift sedan 2026-10-06**, som `20261006120000` och
+  `20261006120100`, körda efter att PR #198 mergats, samma väg som punkt
+  3 till 7: databasen hämtade filerna från merge-commiten med tillägget
+  `http`, prövade md5 och skrev raderna i `schema_migrations` i samma
+  transaktion, så `created_by` är tom. Det driften sparade har samma md5
+  som filerna, och 1 148 nivåer och 6 485 frågor är aktiva. Hela
+  `rls-test.sql` före, i en transaktion som rullades tillbaka med båda
+  migrationerna inlästa, och efter: 1 340 av 1 340. Tillägget `http`
+  stod redan installerat i driften och står kvar.
 - **Skrivet och granskat med AI.** Skribenter skrev språken,
   företagsekonomin, lågstadiet, engelskan och NP-träningen; juridiken
   skrevs i huvudsessionen. En granskare per ämnesgrupp läste sedan varje
