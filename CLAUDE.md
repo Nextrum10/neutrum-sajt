@@ -78,8 +78,6 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och barnets vy har inga länkar ut. Fel i en fråga rapporteras i spelaren (`rapportera_fragefel`,
   fyra skäl, ingen fritext, ingen person) och syns under Material i adminvyn. Ljuden räknas fram i webbläsaren (`nextrum-ljud.js`) och
   valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
-  **Prova NexLäx** på startsidan (2026-10-06) har tre egna frågor som rättas i webbläsaren,
-  aldrig bankens, räknar inga XP och sparar inget.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare (`mina_tips()`) och
   en kampanjkod per affisch; `leads.kod`. Koden syns i formuläret och lagras aldrig i
   webbläsaren, och en okänd kod fäller aldrig anmälan. Tipstimmen är `startrabatt` med
@@ -103,6 +101,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
   ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
   under Profil. Skicka inbjudan igen står i personens panel tills hen loggat in.
+- **Vem som får bli studiehjälpare** (2026-10-06, Leo): alla som får jobba. Ingen sida kräver
+  att man pluggar; "nyligen läst samma kurser" är vad matchningen letar efter, inget krav för att söka.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
   kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
@@ -194,8 +194,8 @@ Detaljer: `minne/grunden.md`.
 ### Startsidan efter hero
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
 delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
-Herons film och rubrik är orörda med flit; etiketten (Läxhjälp i Stockholm), ingressen och raden med pris, första timmen
-och 24 timmar talar till föräldern sedan 2026-10-06. Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
+Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
+under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
 första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen

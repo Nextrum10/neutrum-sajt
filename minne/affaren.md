@@ -499,11 +499,17 @@ Driftsättningen och det som är kvar, ur avsnitt 11:
   belastningsregister i ordet. Bakgrundskontroller är inte byggda. Sidorna
   säger nu det som sker: intervju, utbildning och ett prov.
   Börjar ni begära utdrag ur belastningsregistret får sidorna säga det.
-- **Vem som får söka:** startsidan sa "du behöver inte studera för att
-  jobba här", medan Bli studiehjälpare, FAQ:n och formuläret säger
-  gymnasie- och högskolestudenter. Startsidan följer nu de andra. Ska
-  även den som tagit studenten och inte pluggar få söka är det ett
-  beslut, och då ändras alla ställena.
+- **Vem som får söka:** alla som får jobba (Leo, 2026-10-06). Startsidan sa
+  "du behöver inte studera för att jobba här", medan Bli studiehjälpare,
+  FAQ:n, Vår idé, prissidan, två läxhjälpssidor och kontaktformuläret sa
+  gymnasie- och högskolestudenter. Nu säger alla att den som får jobba får
+  söka, också den som inte pluggar; under 18 gäller vårdnadshavarens
+  godkännande. "Nyligen läst samma kurser" står kvar som det matchningen
+  letar efter, och "Av unga, för unga" som namnet på idén. Fältet Skola &
+  program i ansökan var aldrig obligatoriskt och säger nu "om du pluggar".
+  Juridik- och ekonomiagenternas beskrivning av affären
+  (`supabase/functions/juridik`, `ekonomi`) säger fortfarande gymnasie- och
+  högskolestudenter; den ändras när funktionerna ändå driftsätts.
 - **Hemma eller online:** familjen väljer för varje pass; att ses hemma
   förutsätter att matchningen ger någon som kan ta sig dit varje vecka,
   annars börjar man online. Områdessidorna sa att formatet "avgörs av
