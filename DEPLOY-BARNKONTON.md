@@ -217,20 +217,21 @@ se och göra med sin inloggning. Varför det ser ut som det gör:
    och barnets vy visar allt. Ta in familjen och Ta in i poolen fungerar
    med den gamla `bjud-in` (v8), men Skicka inbjudan igen svarar 409 tills
    steg 3.
-2. **Kör migrationen**
-   `supabase/migrations/20261006230000_barnets_behorigheter.sql` avsnitt
+2. **Kör migrationen** efter `barnets_chatt` (`20261006230000`, som
+   måste vara körd först: filen stannar annars i första avsnittet):
+   `supabase/migrations/20261006233000_barnets_behorigheter.sql` avsnitt
    för avsnitt med `execute_sql` (ingen `drop`, ingen `delete`, så inga
    bekräftelser), och registrera hela filens text som version
-   `20261006230000`, namn `barnets_behorigheter`, och pröva md5
+   `20261006233000`, namn `barnets_behorigheter`, och pröva md5
    (`minne/databasen.md`, Att köra en migration i driften). Lapparna
-   stannar med "texten som ska bytas hittades N gånger" om någon av de tolv
+   stannar med "texten som ska bytas hittades N gånger" om någon av de arton
    funktionerna ändrats i driften sedan 2026-10-06: läs driften och lappa
    om, gissa inte.
 3. **Driftsätt från main** `bjud-in` och `ansokan-notis` (mejlet om sista
    steget säger nu att vi skapar kontot). Hämta tillbaka och jämför med
    main fil för fil. `bjud-in` utan admininloggning ska svara 401.
 4. **`verktyg/rls-test.sql` mot driften**, hela filen i en transaktion som
-   rullas tillbaka: varje rad ok (1385 lokalt 2026-10-06).
+   rullas tillbaka: varje rad ok (1433 lokalt 2026-10-06).
 5. **Auth-inställningarna**: lämna Email OTP Expiration på förvalet, en
    timme, med flit: en längre tid gäller alla mejllänkar och deras
    koder, och en utgången inbjudan leder rakt till en ny länk

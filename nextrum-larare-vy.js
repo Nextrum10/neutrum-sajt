@@ -55,6 +55,8 @@
   /* Glömt lösenordet? är ett tredje läge i samma ruta (NXStudie). */
   function sättLäge(l) { läge = l; ritaAuth(); }
   NXStudie.glömtLänkar(sättLäge);
+  /* Elev i rollvalet är ett läge i samma ruta (2026-10-06). */
+  läge = NXStudie.elevLänk(sättLäge);
 
   $('#auth-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -68,7 +70,7 @@
     const namn = $('#a-name').value.trim();
 
     const fel = kolla([
-      { fel: !epost, text: 'Fyll i din e-postadress.', falt: $('#a-email') },
+      { fel: !epost, text: läge === 'elev' ? 'Fyll i ditt användarnamn.' : 'Fyll i din e-postadress.', falt: $('#a-email') },
       { fel: !lösen, text: 'Fyll i ditt lösenord.', falt: $('#a-pass') },
       { fel: läge === 'up' && !namn, text: 'Fyll i ditt namn.', falt: $('#a-name') },
       { fel: läge === 'up' && lösen.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#a-pass') }
@@ -77,7 +79,7 @@
 
     /* E-post eller användarnamn, som i alla vyer: ett barn som loggar in
        här skickas till /barn (NXStudie.loggaInHär). */
-    if (läge === 'in') { await NXStudie.loggaInHär(supa, epost, lösen); return; }
+    if (läge === 'in' || läge === 'elev') { await NXStudie.loggaInHär(supa, epost, lösen); return; }
 
     await medan(knapp, 'Skapar…', async () => {
       const res = await supa.auth.signUp({ email: epost, password: lösen, options: {
@@ -568,6 +570,128 @@
       }
     });
   }
+
+  /* ============================================================
+     ELEVERNAS TRÅDAR (barnets_chatt, 2026-10-06)
+
+     Leo: "Man ska kunna skriva till sin studiehjälpare på barn vyn", och
+     valet "egen tråd, föräldern läser". En tråd per elev med egen
+     inloggning, i barn_meddelanden och inte i familjens messages, så
+     familjens tråd ovanför och dess Realtime står som förut. Allt går
+     genom databasens funktioner: barnchatt_tradar() (listan, med det
+     olästa), barnchatt_trad() (tråden, som markerar det eleven skrivit
+     som läst) och barnchatt_skriv(). Tråden öppnas först när Meddelanden
+     visas: att hämta den är att läsa den. Utan funktionerna (PGRST202)
+     står rutan dold.
+     ============================================================ */
+  S.bc = { tradar: [], aktiv: null, ritare: null, data: null, synlig: false };
+
+  function barnOlästa() {
+    return (S.bc.tradar || []).reduce((a, t) => a + (Number(t.olasta) || 0), 0);
+  }
+
+  async function laddaBarnchatt() {
+    const { data, error } = await supa.rpc('barnchatt_tradar');
+    if (error) {
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.warn('barnchatt_tradar:', error.message);
+      return;
+    }
+    S.bc.tradar = Array.isArray(data) ? data : [];
+    $('#bc-ruta').hidden = !S.bc.tradar.length;
+    if (S.bc.tradar.length && !S.bc.tradar.some(t => t.elev === S.bc.aktiv)) {
+      const oläst = S.bc.tradar.find(t => Number(t.olasta) > 0);
+      S.bc.aktiv = (oläst || S.bc.tradar[0]).elev;
+    }
+    ritaBarnchattLista();
+    ritaÖvSamtal();
+    if (S.bc.synlig && S.bc.aktiv) await öppnaBarnchatt(S.bc.aktiv);
+  }
+
+  function ritaBarnchattLista() {
+    const host = $('#bc-lista');
+    if (!host) return;
+    host.innerHTML = S.bc.tradar.map(t => {
+      const oläst = Number(t.olasta) || 0;
+      return '<button type="button" class="ch-rad" data-bc-elev="' + esc(t.elev) + '"'
+        + ' aria-pressed="' + (t.elev === S.bc.aktiv ? 'true' : 'false') + '">'
+        + M.avatar(t.namn || 'Elev', null, { liten: true })
+        + '<span class="ch-rad-text">'
+        + '<span class="ch-rad-topp"><b>' + esc(t.namn || 'Elev') + '</b>'
+        + (t.senaste ? '<time>' + esc(NXKontakt.dagText(t.senaste)) + '</time>' : '') + '</span>'
+        + '<span class="ch-rad-barn">' + esc(t.avstangd ? 'Tråden är avstängd av föräldern'
+          : t.inloggning ? 'Egen inloggning' : 'Inloggningen är pausad') + '</span>'
+        + '</span>'
+        + (oläst ? '<span class="ch-rad-larm">' + oläst + '</span>' : '')
+        + '</button>';
+    }).join('');
+  }
+
+  async function öppnaBarnchatt(elev) {
+    S.bc.aktiv = elev;
+    const { data, error } = await supa.rpc('barnchatt_trad', { p_elev: elev });
+    if (error || !data || data.lage !== 'ok') {
+      if (error) console.warn('barnchatt_trad:', error.message);
+      $('#bc-trad').innerHTML = tomt('Tråden gick inte att hämta', 'Försök igen om en stund.');
+      return;
+    }
+    S.bc.data = data;
+    const namn = data.namn || 'eleven';
+    $('#bc-topp').innerHTML = M.avatar(namn, null, { liten: true })
+      + '<span class="ch-topp-text"><b>' + esc(namn) + '</b><span>Eleven, i sin egen inloggning</span></span>';
+    const ruta = $('#bc-text'), knapp = $('#bc-skicka');
+    ruta.disabled = knapp.disabled = !data.kan_skriva;
+    /* avstangd: föräldern har stängt av tråden (barnets_behorigheter). Den
+       går att läsa, men ingen skriver i den. */
+    ruta.placeholder = data.kan_skriva ? 'Skriv till ' + namn + '…'
+      : data.avstangd ? 'Elevens förälder har stängt av tråden. Den går att läsa.'
+      : 'Elevens inloggning är pausad, eller relationen vilar.';
+    if (!S.bc.ritare) {
+      S.bc.ritare = NXStudie.barnTråd({
+        host: $('#bc-trad'), jag: 'studiehjalpare',
+        tom: 'Inga meddelanden än. Det ni skriver här kan elevens förälder läsa, och Nextrum också.',
+        skriv: ruta, knapp, skicka: skickaBarnchatt
+      });
+    }
+    S.bc.ritare.rita(data.meddelanden || []);
+    /* Det eleven skrivit är läst nu: siffran i listan och menyn går. */
+    const t = S.bc.tradar.find(x => x.elev === elev);
+    if (t && Number(t.olasta)) { t.olasta = 0; ritaÖvSamtal(); }
+    ritaBarnchattLista();
+  }
+
+  const BC_FEL = {
+    tak: 'Du har skrivit många meddelanden på kort tid. Vänta en stund.',
+    ingen_inloggning: 'Eleven har ingen egen inloggning just nu, så meddelandet gick inte iväg.',
+    ingen: 'Du är inte elevens studiehjälpare just nu, eller relationen vilar.',
+    avstangd: 'Elevens förälder har stängt av tråden, så meddelandet gick inte iväg.',
+    lang: 'Meddelandet är för långt. Dela upp det i två.'
+  };
+
+  async function skickaBarnchatt(text) {
+    const msg = $('#bc-msg');
+    rensa(msg);
+    const { data, error } = await supa.rpc('barnchatt_skriv', { p_elev: S.bc.aktiv, p_text: text });
+    const läge = data && data.lage;
+    if (error || läge !== 'ok') {
+      säg(msg, BC_FEL[läge] || 'Meddelandet gick inte iväg. Försök igen om en stund.', false);
+      return { fel: true };
+    }
+    await öppnaBarnchatt(S.bc.aktiv);
+    return {};
+  }
+
+  document.addEventListener('click', e => {
+    const rad = e.target.closest('[data-bc-elev]');
+    if (!rad) return;
+    rensa($('#bc-msg'));
+    öppnaBarnchatt(rad.dataset.bcElev);
+  });
+
+  /* Medan Meddelanden står öppen hämtas listan var trettionde sekund,
+     och den öppna tråden med den. */
+  setInterval(() => {
+    if (S.user && S.bc.synlig && document.visibilityState === 'visible' && S.bc.tradar.length) laddaBarnchatt();
+  }, 30000);
 
   /* ============================================================
      UPPGIFTER (hette Läxor till Fas 23.1)
@@ -3127,7 +3251,8 @@
     const host = $('#ov-samtal');
     if (!host) return;
 
-    const totalOläst = Object.values(S.olästa || {}).reduce((a, b) => a + b, 0);
+    /* Familjernas olästa och elevernas (barnets_chatt). */
+    const totalOläst = Object.values(S.olästa || {}).reduce((a, b) => a + b, 0) + barnOlästa();
     const larm = $('#ov-samtal-larm');
     larm.hidden = !totalOläst;
     larm.textContent = totalOläst ? totalOläst + ' ny' + (totalOläst > 1 ? 'a' : '') : '';
@@ -4222,6 +4347,9 @@
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
       onByt: sek => {
         $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1;
+        /* Elevernas trådar läses först när Meddelanden visas. */
+        S.bc.synlig = sek === 'meddelanden';
+        if (S.bc.synlig && S.bc.aktiv) öppnaBarnchatt(S.bc.aktiv);
         bytteSektion(sek);
       }
     });
@@ -4311,7 +4439,7 @@
     await byggElev();
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaUpptagna()]);
     ritaNotiser();
-    await Promise.all([ritaÖvSamtal(), laddaErsattning()]);
+    await Promise.all([ritaÖvSamtal(), laddaErsattning(), laddaBarnchatt()]);
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

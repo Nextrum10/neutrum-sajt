@@ -465,6 +465,14 @@ tråd och spåret efter den. Tre saker:
 tidsordning hade tappat de nyaste. I drift sedan 2026-09-29 (avsnitt
 11).
 
+**Barnets egen tråd** (barnets_chatt, 2026-10-06): ett barn med egen
+inloggning skriver till sin studiehjälpare i `barn_meddelanden`, en
+tabell för sig, och föräldern läser utan att skriva. Admin läser den i
+samma Öppna chatt, under rubriken Barnens trådar, genom `barnchatt_las()`,
+som loggar `chatt.oppnad` med tabellen `barn_meddelanden`; samma regler
+som ovan, och det står i barnets och studiehjälparens ruta att föräldern
+och Nextrum kan läsa. Varför och hur: `minne/barnkonton-och-admin.md`.
+
 Driftsättningen och det som är kvar, ur avsnitt 11:
 
 - **Chatten som admin öppnar (2026-09-29, avsnitt 1) är i drift.**

@@ -112,14 +112,22 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   vuxen, utan @ ett barn, som hamnar på `/barn`. Adressen `<namn>@barn.nextrum.se` finns bara
   för att Auth kräver en, nekas i inloggningen och tar aldrig emot mejl. Bara föräldern skapar, pausar och tar bort
   inloggningen, genom `barn-konto`. Barnet kan inte boka, avboka, svara eller ändra något utöver
-  NexLäx och bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01), och ser aldrig
-  priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade pass,
-  aldrig timbanken. NexLäx görs i barnets vy och i familjens inloggning, med samma rader.
-  Elevvyn har fyra delar och inget mer (2026-10-06): Översikt, NexLäx, Meddelanden (Nextrums
-  notiser, ingen chatt) och Profil; Elev i vyernas rollval och i sajtens Logga in leder till `/barn`.
-  **Föräldern väljer vad barnet får** (2026-10-06): pass, studieplan, rapporter, NexLäx och
-  meddelanden (`barn_behorigheter`, rapporterna i `visa_rapporter`). Barnets funktioner lämnar inte
-  ut det som är av; vyn säger bara det.
+  NexLäx, bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01) och sin tråd med
+  studiehjälparen, och ser aldrig priser, betalningar, erbjudanden eller föräldern; timmarna är
+  genomförda och bokade pass, aldrig timbanken. NexLäx görs i barnets vy och i familjens
+  inloggning, med samma rader. Elevvyn har fem delar och inget mer (2026-10-06): Översikt
+  (antal genomförda och kommande pass), Mina lektioner (utan betalning), NexLäx, Meddelanden och
+  Profil. Elev är ett läge i samma inloggningsruta (`/foralder#elev`, `NXStudie.elevLänk`), också
+  från sajtens Logga in, och `/barn` har ingen egen inloggning.
+  **Föräldern väljer vad barnet får** (2026-10-06): pass, studieplan, rapporter, NexLäx, notiserna
+  och tråden med studiehjälparen (`barn_behorigheter`, rapporterna i `visa_rapporter`). Barnets
+  funktioner lämnar inte ut det som är av; vyn säger bara det.
+- **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
+  genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
+  skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
+  Nextrum kan läsa står i barnets och studiehjälparens ruta och i policyn och tas inte bort.
+  Barnet får ingen notis om chatten, och studiehjälparens bär aldrig texten. Har föräldern stängt
+  av tråden (`chatt`) skriver ingen av dem i den, men den går att läsa.
 - **Barnets egen e-post** (`barnets_epost`, 2026-10-01; flaggan `barn_epost` står AV tills
   juristen läst): föräldern lägger till den, barnet bekräftar den med en knapp, och först då
   används den, till inloggning (`barn-inloggning`) och, om föräldern slår på det, till mejl om
@@ -498,12 +506,15 @@ Detaljer: `minne/grunden.md`.
   funktionerna gick ut samma dag, och flaggan `barn_epost` står av tills juristen läst policyn,
   registrets rad 22 och konsekvensbedömningen; sedan ett prov i sandlådan
   (`DEPLOY-BARNKONTON.md` 8). Adminvyn visar inte barnens inloggningar, och inte adressen.
+- **Barnets chatt och elevvyns fem delar** (2026-10-06): migrationen `barnets_chatt` körs efter
+  merge och är då på, utan flagga (Leos val). Juristen har inte läst rad 23 i `DATASKYDD.md`, och
+  familjerna med barnkonto och studiehjälparna har inte fått veta (avsnitt 8 där).
 - **Under 18, nejet och det admin sett** (2026-10-05) är i drift sedan 2026-10-06: migrationerna
   `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Inget riktigt
   nej eller mejl till en vårdnadshavare har gått än. Policytexten om vårdnadshavaren är inte läst av
   juristen.
 - **Intaget, introduktionen och barnets behörigheter** (2026-10-06) går ut efter merge: migrationen
-  `barnets_behorigheter` (efter `nexlax_felrapporter`), `bjud-in` och `ansokan-notis` från main;
+  `barnets_behorigheter` (efter `barnets_chatt`), `bjud-in` och `ansokan-notis` från main;
   vyerna tål att migrationen saknas (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller en timme
   (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny. Ingen
   godkänner villkoren när kontot skapas, varken i inbjudan eller i registreringen: en lucka sedan förut.

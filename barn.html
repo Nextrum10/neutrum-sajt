@@ -13,7 +13,7 @@
 <meta name="robots" content="noindex">
 <!-- Barnets vy, elevvyn (barnkonton_och_admin). Samma lager som studievyn,
      så att den ser ut som resten av Nextrum, men bara det barnet får se: det
-     barn_oversikt(), barn_notiser(), barn_nexlax() och
+     barn_oversikt(), barn_notiser(), barn_nexlax(), barn_chatt() och
      barn_installningar() svarar, inget annat. Barnets roll
      i databasen (nextrum_barn) når inga tabeller alls, så sidan KAN inte
      hämta mer än så, vad som än står i skriptet. -->
@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=abbf3691">
 <link rel="stylesheet" href="nextrum-vy.css?v=b4b12c20">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=bd5e3942">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=15418a08">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=71cb53d7">
 </head>
 <body class="vy vy-barn">
@@ -45,36 +45,11 @@
 
   <div id="view-loading"><div class="loading">Laddar din vy</div></div>
 
-  <!-- ============ INLOGGNING ============
-       Användarnamn eller e-post, och lösenord. För ett användarnamn byggs
-       adressen i skriptet (<användarnamn>@barn.nextrum.se); en e-post är
-       barnets egen, om föräldern lagt till den och barnet bekräftat den
-       (barnets_epost), eller en vuxens. Felet är alltid detsamma, så att
-       sidan inte svarar på vilka användarnamn och adresser som finns. -->
-  <div id="view-auth" hidden>
-    <div class="auth-wrap">
-      <div class="auth-card">
-        <span class="nx-et acc">Logga in</span>
-        <h1 style="margin-top:16px">Din egen vy</h1>
-        <p class="nx-lede">Här ser du dina pass, din studieplan och vad som hänt. Logga in med användarnamnet och lösenordet du fått av din förälder.</p>
-
-        <form id="bv-form" novalidate>
-          <div class="fgroup">
-            <label for="bv-anv">Användarnamn eller e-post</label>
-            <input class="inp" id="bv-anv" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254" required>
-          </div>
-          <div class="fgroup">
-            <label for="a-pass">Lösenord</label>
-            <input class="inp" id="a-pass" type="password" autocomplete="current-password" required>
-          </div>
-          <button class="btn btn-primary btn-block" type="submit" id="bv-logga-in">Logga in</button>
-          <p class="ok-msg" id="auth-msg" role="alert" style="margin-top:16px"></p>
-        </form>
-
-        <p class="auth-alt">Har du glömt lösenordet? Fråga din förälder, så kan de byta det.</p>
-      </div>
-    </div>
-  </div>
+  <!-- ============ INLOGGNINGEN ============
+       Står inte här sedan 2026-10-06. Leo: "när man väljer att logga in som
+       elev ska man inte komma till en separat sida". Elev är ett läge i
+       studievyns inloggning (/foralder#elev), och den som öppnar /barn
+       utan att vara inloggad skickas dit. -->
 
   <!-- ============ BEKRÄFTA E-POSTEN ============
        Länken i bekräftelsemejlet (barnets_epost) leder hit, med koden i
@@ -89,7 +64,7 @@
         <p class="nx-lede" id="bv-bek-text">Din förälder har lagt till den här adressen för ditt konto hos Nextrum. Tryck på knappen om adressen är din.</p>
         <button class="btn btn-primary btn-block" type="button" id="bv-bek-knapp">Bekräfta adressen</button>
         <p class="ok-msg" id="bv-bek-msg" role="alert" style="margin-top:16px"></p>
-        <p class="auth-alt"><a href="/barn" id="bv-bek-vidare">Till inloggningen</a></p>
+        <p class="auth-alt"><a href="/foralder#elev" id="bv-bek-vidare">Till inloggningen</a></p>
       </div>
     </div>
   </div>
@@ -134,17 +109,18 @@
   </div>
 
   <!-- ============ SJÄLVA VYN ============
-       Elevvyn (2026-10-06): samma skal som studievyn, med hälsningen
-       överst och en sidomeny med fyra delar, Översikt, NexLäx, Meddelanden
-       och Profil, och inget mer. Leo: "På elevvyn ska bara Översikt,
-       nexläx, meddelanden, och profil för barnet finnas."
+       Elevvyn: samma skal som studievyn, med hälsningen överst och en
+       sidomeny med fem delar och inget mer. 2026-10-06 fyra (Leo: "På
+       elevvyn ska bara Översikt, nexläx, meddelanden, och profil för
+       barnet finnas"), samma kväll också Mina lektioner, "bara att ingen
+       betalning syns", och en chatt med studiehjälparen under
+       Meddelanden.
 
        Allt nedan ritas av nextrum-barn-vy.js med textContent, ur det
        barn_oversikt(), barn_notiser() och barn_installningar() svarar.
-       NexLäx ritas av NXUppgifter (nextrum-uppgifter.js), som i
-       studievyn, med esc() på allt som kommer ur databasen, ur det
-       barn_nexlax() svarar. Hälsningen ritas av NXArbete.hero med esc(),
-       när namnet kommit: markupen är tom med flit. -->
+       NexLäx ritas av NXUppgifter, hälsningen av NXArbete.hero och tråden
+       med studiehjälparen av NXStudie.barnTråd, alla med esc() på det som
+       kommer ur databasen. -->
   <div id="view-app" hidden>
 
     <section class="vy-hero" id="vy-hero" aria-label="Hälsningen"></section>
@@ -152,6 +128,7 @@
     <div class="vy-layout">
       <nav class="vy-sido" id="vy-sido" aria-label="Delar av din vy">
         <a href="#oversikt" data-sek="oversikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Översikt</a>
+        <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Mina lektioner</a>
         <a href="#nexlax" data-sek="nexlax"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg>NexLäx</a>
         <a href="#meddelanden" data-sek="meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Meddelanden</a>
         <a href="#profil" data-sek="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg>Profil</a>
@@ -159,40 +136,65 @@
 
       <div>
 
-      <!-- ============ ÖVERSIKT ============ -->
+      <!-- ============ ÖVERSIKT ============
+           Antalet pass, inte timmar (2026-10-06, Leo: "antal genomförda
+           lektioner. och kommande lektioner istället för timmar
+           genomförda"), och de närmaste passen. Allt om passen står under
+           Mina lektioner. -->
       <section class="vy-sek" data-sek="oversikt">
         <div class="vy-sek-topp">
           <div>
             <h2>Översikt</h2>
-            <p>Dina pass, din studieplan och vad som hänt.</p>
+            <p>Dina pass och vad som väntar.</p>
           </div>
         </div>
 
         <!-- Det föräldern stängt av (barnets_behorigheter, 2026-10-06)
-             står inte här, och raden nedan säger varför. Delarna göms
-             av nextrum-barn-vy.js; databasen lämnar inte ut dem. -->
-        <p class="bv-fraga bv-avstangt" id="bv-avstangt" hidden></p>
+             står inte här, och raden säger varför. Delarna göms av
+             nextrum-barn-vy.js; databasen lämnar inte ut dem. -->
+        <p class="bv-fraga bv-avstangt" id="bv-avstangt-oversikt" hidden></p>
 
         <div class="bv-del" data-bv-far="pass">
-          <div class="vy-grupp"><h3>Dina timmar</h3></div>
-          <div class="vy-kort"><div class="vy-kort-kropp bv-timmar" id="bv-timmar"></div></div>
+          <div class="vy-grupp"><h3>Dina pass</h3></div>
+          <div class="vy-kort"><div class="vy-kort-kropp bv-antal" id="bv-antal"></div></div>
 
+          <div class="vy-grupp"><h3>Närmast</h3><a class="vy-lank" href="#lektioner">Alla pass<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></div>
+          <div class="vy-kort vy-lista" id="bv-narmast"></div>
+        </div>
+      </section>
+
+      <!-- ============ MINA LEKTIONER ============
+           Som föräldrarnas, men utan betalning, bokning och svar: passen,
+           studieplanen och vad som hände på varje pass, det sista bara när
+           föräldern slagit på rapporterna. -->
+      <section class="vy-sek" data-sek="lektioner" hidden>
+        <div class="vy-sek-topp">
+          <div>
+            <h2>Mina lektioner</h2>
+            <p>Dina pass, planen bakom dem och vad som hände på varje.</p>
+          </div>
+        </div>
+        <!-- Flikarna Pass och Studieplan göms när föräldern stängt av dem
+             (barnets_behorigheter); står ingen kvar säger raden det. -->
+        <p class="bv-fraga bv-avstangt" id="bv-avstangt-lektioner" hidden></p>
+        <div class="vy-flikar" role="tablist" aria-label="Delar av lektionerna">
+          <button class="vy-flik" type="button" role="tab" data-flik="pass" id="bv-flik-pass"
+                  aria-controls="bv-panel-pass" aria-selected="true">Pass</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="plan" id="bv-flik-plan"
+                  aria-controls="bv-panel-plan" aria-selected="false" tabindex="-1">Studieplan</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="rapporter" id="bv-flik-rapporter"
+                  aria-controls="bv-panel-rapporter" aria-selected="false" tabindex="-1" hidden>Efter passen</button>
+        </div>
+        <div class="vy-flik-panel" role="tabpanel" data-flik="pass" id="bv-panel-pass" aria-labelledby="bv-flik-pass">
           <div class="vy-grupp"><h3>Kommande pass</h3><span class="vy-antal" id="bv-kommande-antal"></span></div>
           <div class="vy-kort vy-lista" id="bv-kommande"></div>
-        </div>
-
-        <div class="bv-del" data-bv-far="studieplan">
-          <div class="vy-grupp"><h3>Studieplan</h3></div>
-          <div class="vy-kort"><div class="vy-kort-kropp" id="bv-plan"></div></div>
-        </div>
-
-        <div class="bv-del" data-bv-far="pass">
-          <div class="vy-grupp"><h3>Genomförda pass</h3></div>
+          <div class="vy-grupp"><h3>Genomförda pass</h3><span class="vy-antal" id="bv-genomforda-antal"></span></div>
           <div class="vy-kort vy-lista" id="bv-genomforda"></div>
         </div>
-
-        <div class="bv-del" id="bv-rapporter-del" hidden>
-          <div class="vy-grupp"><h3>Rapporter</h3></div>
+        <div class="vy-flik-panel" role="tabpanel" data-flik="plan" id="bv-panel-plan" aria-labelledby="bv-flik-plan" hidden>
+          <div class="vy-kort"><div class="vy-kort-kropp" id="bv-plan"></div></div>
+        </div>
+        <div class="vy-flik-panel" role="tabpanel" data-flik="rapporter" id="bv-panel-rapporter" aria-labelledby="bv-flik-rapporter" hidden>
           <div class="vy-kort vy-lista" id="bv-rapporter"></div>
         </div>
       </section>
@@ -227,19 +229,31 @@
       </section>
 
       <!-- ============ MEDDELANDEN ============
-           Det Nextrum berättar för barnet om passen (barn_notiser). Ingen
-           chatt: barnet skriver inte till studiehjälparen och läser inte
-           familjens tråd, för den är förälderns. Det står i rutan. -->
+           Tråden med studiehjälparen (barn_meddelanden, 2026-10-06) och det
+           Nextrum berättar om passen (barn_notiser). Tråden är barnets egen,
+           inte familjens: föräldern kan läsa den men skriver inte i den, och
+           rutan säger det, liksom att vi kan läsa den. -->
       <section class="vy-sek vy-sek-smal" data-sek="meddelanden" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Meddelanden</h2>
-            <p>Det Nextrum berättar för dig om dina pass.</p>
+            <p>Skriv till din studiehjälpare, och se vad Nextrum berättar om dina pass.</p>
           </div>
         </div>
+        <div class="dbox bv-chatt" id="bv-chatt" hidden>
+          <h5>Din studiehjälpare <em id="bv-chatt-vem"></em></h5>
+          <div class="tr" id="bv-trad"><div class="loading">Hämtar</div></div>
+          <div class="tr-skriv">
+            <textarea class="inp" id="bv-tr-text" rows="1" maxlength="2000" placeholder="Skriv till din studiehjälpare…" aria-label="Skriv ett meddelande"></textarea>
+            <button class="btn btn-primary" id="bv-tr-skicka" type="button">Skicka</button>
+          </div>
+          <p class="tr-tips">Din förälder kan läsa det ni skriver, och det kan Nextrum också.</p>
+          <p class="ok-msg" id="bv-tr-msg" role="alert"></p>
+        </div>
+        <p class="bv-fraga" id="bv-skriva" hidden>När du har en studiehjälpare kan du skriva till hen här.</p>
+        <p class="bv-fraga" id="bv-chatt-av" hidden>Din förälder har valt att du inte skriver till din studiehjälpare här. Undrar du något? Fråga din förälder.</p>
         <div class="vy-grupp"><h3>Från Nextrum</h3><span class="vy-antal ar-gor" id="bv-notiser-antal"></span></div>
         <div class="vy-kort vy-lista" id="bv-notiser"></div>
-        <p class="bv-fraga" id="bv-skriva">Vill du fråga din studiehjälpare något? Säg det på nästa pass, eller be din förälder skriva till hen.</p>
       </section>
 
       <!-- ============ PROFIL ============
@@ -274,12 +288,12 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=e2e42d6b"></script>
-<script src="nextrum-studie.js?v=01b4f157"></script>
+<script src="nextrum-studie.js?v=236cfa26"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-arbetsyta.js?v=35b67861"></script>
 <script src="nextrum-ljud.js?v=af6ef39f"></script>
 <script src="nextrum-uppgifter.js?v=5c84b3cb"></script>
-<script src="nextrum-modulvakt.js?v=099b1ee9"></script>
-<script src="nextrum-barn-vy.js?v=80cc3607"></script>
+<script src="nextrum-modulvakt.js?v=14db8045"></script>
+<script src="nextrum-barn-vy.js?v=3dfc267a"></script>
 </body>
 </html>

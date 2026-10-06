@@ -157,7 +157,7 @@ Körs på varje push och PR. Ska vara grön före merge.
    barnens användarnamn och domän prövas lika i databasen, `barn-konto`,
    inloggningen (`nextrum-studie.js` sedan 2026-10-01, delad av alla
    fyra vyerna) och föräldrarnas ruta (barnkonton_och_admin), och
-   barnets fem behörigheter (2026-10-06) står lika i migrationen
+   barnets sex behörigheter (2026-10-06) står lika i migrationen
    (`intern.barn_behorigheter_alla()`, villkoret, förvalet och
    återställningarna), i studievyn (`BARN_FÅR`, `BARN_FÅR_FÖRVAL`) och i
    barnets vy (`FÅR`)
@@ -317,7 +317,13 @@ och liten telefon (360 × 740), och mörkt läge. `prova-aterstallning.js`
 följde med: rutan för en inbjudan heter Skapa ditt lösenord och har inget
 Inte nu. `prova-barnkonton.js` har `provaBarnetsBehörigheter`: rutorna
 när inloggningen skapas, på och av i kortet, och barnets vy med varje del
-av.
+av, med main:s fem delar (Översikt, flikarna under Mina lektioner, tråden
+och notiserna under Meddelanden).
+
+Kör inte alla webbläsarprov samtidigt: under den lasten hann
+ansökningsformulärets animation inte stanna innan `prova-ansokningar.js`
+klickade, och provet kraschade på ett val som inte bytte läge (2026-10-06;
+ensamt gröna två gånger av två, både på main och på grenen).
 
 ### Webbläsarprovet för familjens faktura (2026-10-06)
 `verktyg/prova-fakturor.js` är byggt som de nedan (egen port, 8964), med

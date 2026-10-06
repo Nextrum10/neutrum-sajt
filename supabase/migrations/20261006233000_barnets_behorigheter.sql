@@ -11,6 +11,7 @@
 --                fanns sedan barnkonton_och_admin; av som förval)
 --   nexlax       NexLäx: nivåerna, läget och bocken på en uppgift
 --   meddelanden  Nextrums notiser om passen (barn_notiser)
+--   chatt        tråden med studiehjälparen (barn_meddelanden, barnets_chatt)
 --
 -- Det barnet aldrig får (boka, avboka, svara, priser, betalningar,
 -- föräldern) står inte här: det går inte att slå på.
@@ -27,7 +28,14 @@
 --     stället för intern.mitt_aktiva_barn(), så att ett barn utan NexLäx
 --     inte kan spela genom att anropa dem själv;
 --   · rapportera_fragefel() (nexlax_felrapporter, som går före den här)
---     tar inte emot en rapport från ett barn utan NexLäx.
+--     tar inte emot en rapport från ett barn utan NexLäx;
+--   · barn_chatt(), barn_chatt_last() och barn_chatt_skriv() (barnets_chatt,
+--     som går före den här) svarar {lage: 'avstangd'} när tråden är av, och
+--     studiehjälparen skriver inte heller i den: barnchatt_skriv() svarar
+--     likadant, och barnchatt_tradar() och barnchatt_trad() säger det
+--     (avstangd, kan_skriva). Tråden står kvar och går att läsa för
+--     studiehjälparen och föräldern;
+--   · barn_oversikt():s antal (barnets_chatt) går med passen.
 -- Notiserna skapas som förut när meddelandena är av; de lämnas bara inte
 -- ut. Mejlen till barnets egen adress följer sitt eget val (barn_epost).
 --
@@ -39,7 +47,12 @@
 -- och en lista med en kolumn som inte finns hade fällt barnlistan.
 --
 -- Barn som redan har en inloggning får allt utom rapporterna, alltså det
--- de hade: förvalet är det som gällde före den här migrationen.
+-- de hade: förvalet är det som gällde före den här migrationen, också
+-- tråden, som Leo ville ha på direkt.
+--
+-- Körs EFTER barnets_chatt (20261006230000): den skapar funktionerna som
+-- lappas här, och hade den körts efter hade den skrivit över lapparna.
+-- Första avsnittet stannar därför om den inte är körd.
 --
 -- Lapparna går på driftens text (pg_get_functiondef) med en vakt som
 -- räknar träffarna (CLAUDE.md avsnitt 5), och hoppar över en funktion
@@ -48,10 +61,21 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
+-- 0. barnets_chatt först
+-- ------------------------------------------------------------
+do $$
+begin
+  if to_regprocedure('public.barn_chatt()') is null then
+    raise exception 'Kör barnets_chatt (20261006230000) före barnets_behorigheter.';
+  end if;
+end $$;
+
+
+-- ------------------------------------------------------------
 -- 1. Kolumnen
 -- ------------------------------------------------------------
 alter table public.students
-  add column if not exists barn_behorigheter text[] not null default '{meddelanden,nexlax,pass,studieplan}';
+  add column if not exists barn_behorigheter text[] not null default '{chatt,meddelanden,nexlax,pass,studieplan}';
 
 do $$
 begin
@@ -62,13 +86,13 @@ begin
     -- som står i visa_rapporter. verktyg/kolla-behorigheter.py jämför dem
     -- med föräldrarnas ruta.
     alter table public.students add constraint students_barn_behorigheter_kanda
-      check (barn_behorigheter <@ array['meddelanden', 'nexlax', 'pass', 'studieplan']::text[]);
+      check (barn_behorigheter <@ array['chatt', 'meddelanden', 'nexlax', 'pass', 'studieplan']::text[]);
   end if;
 end $$;
 
 comment on column public.students.barn_behorigheter is
   'Vad barnet får se och göra med sin egen inloggning, valt av föräldern (barnets_behorigheter): '
-  'pass, studieplan, nexlax, meddelanden. Rapporterna står i visa_rapporter. Bara föräldern ändrar den.';
+  'pass, studieplan, nexlax, meddelanden, chatt. Rapporterna står i visa_rapporter. Bara föräldern ändrar den.';
 
 
 -- ------------------------------------------------------------
@@ -81,7 +105,7 @@ language sql
 immutable
 set search_path = public, pg_temp
 as $$
-  select array['pass', 'studieplan', 'rapporter', 'nexlax', 'meddelanden']::text[]
+  select array['pass', 'studieplan', 'rapporter', 'nexlax', 'meddelanden', 'chatt']::text[]
 $$;
 
 -- Det barnet har, rapporterna medräknade, i bokstavsordning.
@@ -106,7 +130,7 @@ set search_path = public, pg_temp
 as $$
   select (svar
           - case when 'pass' = any (b.barn_behorigheter) then '{}'::text[]
-                 else array['kommande', 'genomforda', 'timmar'] end
+                 else array['kommande', 'genomforda', 'timmar', 'antal'] end
           - case when 'studieplan' = any (b.barn_behorigheter) then '{}'::text[]
                  else array['studieplan'] end)
          || jsonb_build_object('behorigheter', to_jsonb(intern.barnets_behorigheter(b)))
@@ -198,6 +222,71 @@ declare
       raise exception 'NexLäx är avstängt' using errcode = '42501';
     end if;
     v_konto := 'barn';$n$, '1'],
+    -- Tråden av: barnet läser och skriver inte, och studiehjälparen skriver inte.
+    array['public.barn_chatt()',
+          $g$    return jsonb_build_object('lage', 'saknas');
+  end if;
+$g$,
+          $n$    return jsonb_build_object('lage', 'saknas');
+  end if;
+  -- barnets_behorigheter: föräldern har stängt av tråden.
+  if not exists (select 1 from public.students x where x.id = barn and 'chatt' = any (x.barn_behorigheter)) then
+    return jsonb_build_object('lage', 'avstangd');
+  end if;
+$n$, '1'],
+    array['public.barn_chatt_skriv(text)',
+          $g$    return jsonb_build_object('lage', 'saknas');
+  end if;
+$g$,
+          $n$    return jsonb_build_object('lage', 'saknas');
+  end if;
+  -- barnets_behorigheter: föräldern har stängt av tråden.
+  if not exists (select 1 from public.students x where x.id = barn and 'chatt' = any (x.barn_behorigheter)) then
+    return jsonb_build_object('lage', 'avstangd');
+  end if;
+$n$, '1'],
+    array['public.barn_chatt_last()',
+          $g$  if barn is null then
+    return 0;
+  end if;
+$g$,
+          $n$  if barn is null then
+    return 0;
+  end if;
+  -- barnets_behorigheter: föräldern har stängt av tråden.
+  if not exists (select 1 from public.students x where x.id = barn and 'chatt' = any (x.barn_behorigheter)) then
+    return 0;
+  end if;
+$n$, '1'],
+    array['public.barnchatt_skriv(uuid, text)',
+          $g$    return jsonb_build_object('lage', 'ingen_inloggning');
+  end if;
+$g$,
+          $n$    return jsonb_build_object('lage', 'ingen_inloggning');
+  end if;
+  -- barnets_behorigheter: föräldern har stängt av tråden.
+  if not ('chatt' = any (s.barn_behorigheter)) then
+    return jsonb_build_object('lage', 'avstangd');
+  end if;
+$n$, '1'],
+    array['public.barnchatt_trad(uuid)',
+          $g$    'kan_skriva', s.user_id is not null and s.match_status = 'matched',
+$g$,
+          $n$    'kan_skriva', s.user_id is not null and s.match_status = 'matched' and 'chatt' = any (s.barn_behorigheter),
+    -- barnets_behorigheter: föräldern har stängt av tråden.
+    'avstangd', not ('chatt' = any (s.barn_behorigheter)),
+$n$, '1'],
+    array['public.barnchatt_tradar()',
+          $g$                   s.user_id is not null and s.match_status = 'matched' as kan_skriva,
+$g$,
+          $n$                   s.user_id is not null and s.match_status = 'matched'
+                     and 'chatt' = any (s.barn_behorigheter) as kan_skriva,
+                   -- barnets_behorigheter: föräldern har stängt av tråden.
+                   not ('chatt' = any (s.barn_behorigheter)) as avstangd,
+$n$, '1'],
+    array['public.barnchatt_tradar()',
+          $g$             'olasta', x.olasta, 'senaste', x.senaste)$g$,
+          $n$             'olasta', x.olasta, 'senaste', x.senaste, 'avstangd', x.avstangd)$n$, '1'],
     -- Bara föräldern ändrar valen, och utan inloggning börjar de om.
     array['public.skydda_studentfalt()',
           $g$      new.visa_rapporter := old.visa_rapporter;$g$,
@@ -207,18 +296,21 @@ declare
     array['public.skydda_studentfalt()',
           $g$    new.visa_rapporter            := false;$g$,
           $n$    new.visa_rapporter            := false;
-    new.barn_behorigheter         := '{meddelanden,nexlax,pass,studieplan}';$n$, '1'],
+    new.barn_behorigheter         := '{chatt,meddelanden,nexlax,pass,studieplan}';$n$, '1'],
     array['public.skydda_studentfalt_ny()',
           $g$    new.visa_rapporter            := false;$g$,
           $n$    new.visa_rapporter            := false;
     -- barnets_behorigheter: ett nytt barn börjar från förvalet.
-    new.barn_behorigheter         := '{meddelanden,nexlax,pass,studieplan}';$n$, '1']
+    new.barn_behorigheter         := '{chatt,meddelanden,nexlax,pass,studieplan}';$n$, '1']
   ];
   funktioner text[] := array['public.barn_oversikt()', 'public.barn_notiser()', 'public.barn_markera_last(uuid)',
                              'public.barn_nexlax()', 'public.niva_starta(uuid, uuid)',
                              'public.niva_svara(uuid, uuid, jsonb)', 'public.niva_genomgang(uuid)',
                              'public.nexlax_lage(uuid)', 'public.barn_uppgift(uuid, text)',
                              'public.rapportera_fragefel(uuid, text)',
+                             'public.barn_chatt()', 'public.barn_chatt_skriv(text)', 'public.barn_chatt_last()',
+                             'public.barnchatt_skriv(uuid, text)', 'public.barnchatt_trad(uuid)',
+                             'public.barnchatt_tradar()',
                              'public.skydda_studentfalt()', 'public.skydda_studentfalt_ny()'];
   fn     text;
   fore   text;

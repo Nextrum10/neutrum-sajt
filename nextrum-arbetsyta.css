@@ -4702,12 +4702,13 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
    (.vy-grupp:first-child); rapporterna ligger i en egen del. */
 .bv-del > .vy-grupp:first-child{margin-top:30px}
 
-/* Två tal bredvid varandra, under varandra på en smal telefon. */
-.bv-timmar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+/* Två tal bredvid varandra, under varandra på en smal telefon: antalet
+   genomförda och kommande pass (2026-10-06; förut timmar). */
+.bv-antal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .bv-tal{padding:14px 16px;border-radius:18px;background:var(--tint)}
 .bv-tal b{display:block;font-size:clamp(1.6rem,4vw,2.1rem);font-weight:750;letter-spacing:-.035em;line-height:1.1;color:var(--bl)}
 .bv-tal span{display:block;margin-top:4px;font-size:.86rem;line-height:1.4;color:var(--bl-2)}
-@media (max-width:360px){.bv-timmar{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:360px){.bv-antal{grid-template-columns:minmax(0,1fr)}}
 
 /* En oläst notis har en prick framför texten. Läst står kvar, dämpad. */
 .bv-notis:not(.ar-ny) .vy-rad-titel{font-weight:500;color:var(--bl-2)}
@@ -4753,10 +4754,18 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   margin:clamp(30px,4vw,44px) 0 0;padding:16px 18px;border-radius:18px;
   background:var(--tint);color:var(--bl-2);font-size:.95rem;line-height:1.55;text-align:center;
 }
-/* Meddelanden har bara listan ovanför sig, och Profil sin knapp under. */
-#bv-skriva{margin-top:clamp(18px,2.4vw,26px)}
-/* Det föräldern stängt av (barnets_behorigheter) står överst i Översikt. */
-#bv-avstangt{margin-top:0;text-align:left}
+/* Barnets tråd med studiehjälparen (barnets_chatt, 2026-10-06): i
+   studiehjälparvyn och studievyn en egen ruta under familjens tråd, med
+   en mening om vem som kan läsa. */
+.bc-ruta{margin-top:clamp(16px,1.8vw,22px)}
+.bc-not{margin:-2px 0 12px;color:var(--bl-2);line-height:1.5}
+.bc-barn + .bc-barn{margin-top:18px}
+.bc-barn-namn{margin:0 0 6px;font-size:.86rem;font-weight:650;color:var(--bl)}
+/* Tråden med studiehjälparen står överst i Meddelanden, notiserna under. */
+.bv-chatt{margin-bottom:clamp(16px,1.8vw,22px)}
+#bv-skriva{margin:0 0 clamp(18px,2.4vw,26px)}
+/* Det föräldern stängt av (barnets_behorigheter) står överst i delen. */
+.bv-avstangt{margin:0 0 clamp(16px,1.8vw,22px);text-align:left}
 .bv-ut{margin-top:18px;justify-content:center}
 
 /* ============================================================

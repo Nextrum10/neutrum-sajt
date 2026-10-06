@@ -197,6 +197,10 @@ en text. `innehall` står INTE i auditloggens vitlista.
 tråden mellan en familj och en studiehjälpare för admin, SECURITY
 DEFINER med `is_admin()` på första raden, VOLATILE för att den skriver
 `chatt.oppnad` i `audit_logg`. Den rör aldrig `messages`.
+`barnets_chatt` (2026-10-06) la till `barn_meddelanden`, barnets tråd med
+studiehjälparen, och `barnchatt_las()` på samma sätt: `chatt.oppnad` med
+`tabell = 'barn_meddelanden'`, och raden skrivs bara när det finns något
+att läsa. Ingen inloggad skriver i tabellen; se `minne/barnkonton-och-admin.md`.
 `avbokningar_och_svar` (2026-09-30, avsnitt 1) la till
 `bookings.avbokad_fran`, `motforslag_at` och `svar_meddelande`,
 `intern.svar_gallra()` med pg_cron-jobbet `svar-gallring`, och gör
@@ -817,21 +821,22 @@ och efter, i en transaktion som rullades tillbaka. Se
 
 ### Barnets behörigheter (barnets_behorigheter, 2026-10-06)
 Kolumnen `students.barn_behorigheter` (text[], förval
-`{meddelanden,nexlax,pass,studieplan}`, villkoret
+`{chatt,meddelanden,nexlax,pass,studieplan}`, villkoret
 `students_barn_behorigheter_kanda`), fyra hjälpare i `intern`
 (`barn_behorigheter_alla`, `barnets_behorigheter`, `barn_behorigt`,
 `mitt_nexlax_barn`), två funktioner för föräldern
 (`mina_barns_behorigheter`, `barn_behorigheter_satt`), och
-`students_barnkonto_audit` med kolumnen i listan. Tolv funktioner lappades
-med `replace()` på `pg_get_functiondef()` och en vakt som räknar
+`students_barnkonto_audit` med kolumnen i listan. Arton funktioner
+lappades med `replace()` på `pg_get_functiondef()` och en vakt som räknar
 träffarna: `barn_oversikt` (två lappar), `barn_notiser`,
 `barn_markera_last`, `barn_nexlax`, `niva_starta` (två träffar),
 `niva_svara`, `niva_genomgang`, `nexlax_lage`, `barn_uppgift`,
-`rapportera_fragefel`, `skydda_studentfalt` (två lappar) och
-`skydda_studentfalt_ny`. De var md5-lika i driften och lokalt innan.
-Ingen `drop` och ingen `delete`, så filen går att köra avsnitt för avsnitt
-utan bekräftelser. Versionen `20261006230000` valdes efter
-`nexlax_felrapporter` (`20261006220000`), som redan stod i driften när
-filen skrevs; den första versionen av filen låg före den och döptes om.
-`rls-test.sql` avsnitt 21. Körs efter merge (`DEPLOY-BARNKONTON.md` 9).
-Se `minne/barnkonton-och-admin.md`.
+`rapportera_fragefel`, barnets tre chattfunktioner, `barnchatt_skriv`,
+`barnchatt_trad`, `barnchatt_tradar` (två lappar), `skydda_studentfalt`
+(två lappar) och `skydda_studentfalt_ny`. Ingen `drop` och ingen
+`delete`, så filen går att köra avsnitt för avsnitt utan bekräftelser.
+Versionen `20261006233000` ligger efter `barnets_chatt`
+(`20261006230000`, en annan session samma kväll), vars funktioner lappas;
+första avsnittet stannar om den inte är körd. `rls-test.sql` avsnitt 22.
+Körs efter merge (`DEPLOY-BARNKONTON.md` 9). Se
+`minne/barnkonton-och-admin.md`.

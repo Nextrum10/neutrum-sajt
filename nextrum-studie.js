@@ -2835,13 +2835,30 @@ window.NXStudie = (function () {
   /* Inloggningsrutan i läge 'in', 'up' eller 'glomt'. t har titel,
      titelUpp, under och underUpp. Adminvyn har inga flikar och inget
      namnfält, och byter bara mellan 'in' och 'glomt'. */
+  /* ELEV I SAMMA RUTA (2026-10-06). Leo: "när man väljer att logga in som
+     elev ska man inte komma till en separat sida". Elev i rollvalet är ett
+     läge i samma formulär, i studievyn och studiehjälparvyn: användarnamn
+     och lösenord, inget Skapa konto och ingen länk för ett glömt lösenord,
+     för barnets lösenord byter föräldern. Inloggningen är densamma
+     (loggaIn), och barnet hamnar i sin vy på /barn. Kortet som var valt
+     när sidan öppnades minns rutan, så att det blir valt igen. */
+  var ELEV_UNDER = 'Logga in med användarnamnet och lösenordet du fått av din förälder.';
+
   function inloggningsruta(läge, t) {
-    var upp = läge === 'up', glömt = läge === 'glomt';
+    var upp = läge === 'up', glömt = läge === 'glomt', elev = läge === 'elev';
     NX.$$('[data-auth]').forEach(function (b) {
       b.setAttribute('aria-selected', String(b.dataset.auth === läge));
     });
+    NX.$$('.vy-roll').forEach(function (k) {
+      if (k.dataset.forvald == null) k.dataset.forvald = k.getAttribute('aria-current') === 'page' ? '1' : '0';
+      var vald = elev ? k.dataset.roll === 'elev' : k.dataset.forvald === '1';
+      if (vald) k.setAttribute('aria-current', 'page');
+      else k.removeAttribute('aria-current');
+    });
+    NX.$$('[data-ej-elev]').forEach(function (el) { el.hidden = elev; });
+    NX.$$('[data-bara-elev]').forEach(function (el) { el.hidden = !elev; });
     var flikar = NX.$('.auth-tabs'), namn = NX.$('#namn-grupp'), namnfält = NX.$('#a-name');
-    if (flikar) flikar.hidden = glömt;
+    if (flikar) flikar.hidden = glömt || elev;
     if (namn) namn.hidden = !upp;
     if (namnfält) namnfält.required = upp;
     var lösen = NX.$('#a-pass');
@@ -2856,9 +2873,18 @@ window.NXStudie = (function () {
        användarnamn. Ett konto skapas och en länk skickas alltid till en
        e-postadress. */
     var etikett = NX.$('label[for="a-email"]');
-    if (etikett) etikett.textContent = (läge === 'in' && t.etikett) || 'E-post';
-    NX.$('#auth-title').textContent = glömt ? 'Glömt lösenordet?' : upp ? t.titelUpp : t.titel;
-    NX.$('#auth-sub').textContent = glömt ? GLÖMT_UNDER : upp ? t.underUpp : t.under;
+    if (etikett) etikett.textContent = elev ? 'Användarnamn' : (läge === 'in' && t.etikett) || 'E-post';
+    /* Ett användarnamn är ingen adress: utan typen email får telefonen
+       ett vanligt tangentbord, utan versal först. */
+    var fält = NX.$('#a-email');
+    if (fält) {
+      fält.type = elev ? 'text' : 'email';
+      fält.autocomplete = elev ? 'username' : 'email';
+      fält.setAttribute('autocapitalize', elev ? 'none' : 'off');
+      fält.spellcheck = false;
+    }
+    NX.$('#auth-title').textContent = elev ? 'Elevvyn' : glömt ? 'Glömt lösenordet?' : upp ? t.titelUpp : t.titel;
+    NX.$('#auth-sub').textContent = elev ? ELEV_UNDER : glömt ? GLÖMT_UNDER : upp ? t.underUpp : t.under;
     NX.$('#auth-submit').textContent = glömt ? 'Skicka länken' : upp ? 'Skapa konto' : 'Logga in';
     NX.rensa(NX.$('#auth-msg'));
   }
@@ -3013,7 +3039,11 @@ window.NXStudie = (function () {
         return;
       }
       if (svar.barn) location.replace('/barn');
-      else location.reload();
+      else {
+        /* En vuxen som loggade in i Elev-läget: vyn laddas om utan läget. */
+        if (location.hash === '#elev') history.replaceState(history.state, '', location.pathname + location.search);
+        location.reload();
+      }
     });
   }
 
@@ -3046,6 +3076,22 @@ window.NXStudie = (function () {
      man tryckte på döljs. Inget byte medan inloggningen eller länken
      skickas: svaret hade hamnat i fel läge, och medan() hade satt
      tillbaka fel text på knappen. */
+  /* Elev i rollvalet byter läge i stället för sida, och en adress som
+     slutar på #elev (sajtens Logga in) öppnar rutan i det läget. Svarar
+     läget rutan ska börja i. */
+  function elevLänk(sätt) {
+    document.addEventListener('click', function (e) {
+      var k = e.target.closest('.vy-roll[data-roll="elev"]');
+      if (!k) return;
+      e.preventDefault();
+      if (NX.$('#auth-submit').hasAttribute('aria-busy')) return;
+      history.replaceState(history.state, '', location.pathname + location.search + '#elev');
+      sätt('elev');
+      NX.$('#a-email').focus();
+    });
+    return location.hash === '#elev' ? 'elev' : 'in';
+  }
+
   function glömtLänkar(sätt) {
     document.addEventListener('click', function (e) {
       var till = e.target.closest('[data-glomt] button') ? 'glomt'
@@ -3853,11 +3899,105 @@ window.NXStudie = (function () {
     return hämta();
   }
 
+  /* ============================================================
+     BARNETS TRÅD MED STUDIEHJÄLPAREN (2026-10-06)
+
+     Leo: "Man ska kunna skriva till sin studiehjälpare på barn vyn", och
+     sedan valet "egen tråd, föräldern läser". Tråden står i
+     barn_meddelanden, inte i familjens messages: barnkontot har ingen
+     profil att stå som avsändare, och familjens tråd är förälderns.
+     Alla vägar in går genom databasens funktioner, och samma ritning
+     används i tre vyer:
+
+       · elevvyn skriver som barnet (barn_chatt, barn_chatt_skriv)
+       · studiehjälparvyn skriver som studiehjälparen (barnchatt_trad,
+         barnchatt_skriv)
+       · studievyn läser, utan skrivruta: föräldern ser vad barnet och
+         studiehjälparen skriver, men deltar inte i den tråden
+
+     o.host     elementet tråden ritas i
+     o.jag      'barn', 'studiehjalpare' eller null (bara läsning)
+     o.namn     { barn, studiehjalpare }: förnamnen under bubblorna
+     o.tom      texten när tråden är tom
+     o.skriv, o.knapp, o.skicka(text) → Promise<{ fel }>: skrivrutan,
+                bara där någon skriver
+     Svarar { rita(rader) }. En rad är { id, fran, text, skapad, last }.
+     All text ur databasen ritas med esc().
+     ============================================================ */
+  function barnTråd(o) {
+    var host = o.host, senast = null;
+
+    function dag(iso) {
+      var d = String(iso || '').slice(0, 10);
+      var igår = new Date(); igår.setDate(igår.getDate() - 1);
+      var lokal = isoFor(new Date(iso));
+      if (lokal === isoFor(new Date())) return 'Idag';
+      if (lokal === isoFor(igår)) return 'Igår';
+      return datumText(lokal || d);
+    }
+    function klocka(iso) {
+      var d = new Date(iso);
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    function rita(rader) {
+      rader = rader || [];
+      var sign = rader.length + '|' + (rader.length ? rader[rader.length - 1].id + (rader[rader.length - 1].last || '') : '');
+      if (sign === senast) return;
+      senast = sign;
+      if (!rader.length) {
+        host.innerHTML = '<div class="empty">' + esc(o.tom || 'Inga meddelanden än.') + '</div>';
+        return;
+      }
+      var ut = '', förra = '';
+      rader.forEach(function (m) {
+        var d = dag(m.skapad);
+        if (d !== förra) { ut += '<div class="tr-dag">' + esc(d) + '</div>'; förra = d; }
+        /* Den som läser utan att skriva (föräldern) har studiehjälparen
+           till höger, som i föräldrarnas egen tråd. */
+        var min = o.jag ? m.fran === o.jag : m.fran === 'studiehjalpare';
+        var vem = (o.namn && o.namn[m.fran]) || (m.fran === 'barn' ? 'Eleven' : 'Studiehjälparen');
+        ut += '<div class="tr-rad ' + (min ? 'min' : 'deras') + '">'
+          + '<div class="tr-bubbla">' + esc(m.text) + '</div>'
+          + '<span class="tr-tid">' + (o.jag && min ? '' : esc(vem) + ' · ') + esc(klocka(m.skapad))
+          + (o.jag && min && !m.last ? ' · <span class="oläst">oläst</span>' : '')
+          + '</span></div>';
+      });
+      host.innerHTML = ut;
+      host.scrollTop = host.scrollHeight;
+    }
+
+    async function skicka() {
+      var text = String(o.skriv.value || '').trim();
+      if (!text || o.knapp.hasAttribute('aria-busy')) return;
+      await medan(o.knapp, 'Skickar…', async function () {
+        var svar = await o.skicka(text);
+        if (svar && svar.fel) return;
+        o.skriv.value = '';
+        o.skriv.style.height = '';
+      });
+    }
+
+    if (o.skriv && o.knapp && o.skicka) {
+      o.knapp.addEventListener('click', skicka);
+      /* Enter skickar och Skift+Enter ger en ny rad, som i familjens tråd. */
+      o.skriv.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); skicka(); }
+      });
+      o.skriv.addEventListener('input', function () {
+        o.skriv.style.height = 'auto';
+        o.skriv.style.height = Math.min(o.skriv.scrollHeight, 170) + 'px';
+      });
+    }
+
+    return { rita: rita };
+  }
+
   return {
     notisval: notisval, dokument: dokument, tipsa: tipsa,
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
-    glömtLänkar: glömtLänkar, länkenGickInte: länkenGickInte, glömtSkicka: glömtSkicka, nyttLösenord: nyttLösenord,
+    glömtLänkar: glömtLänkar, elevLänk: elevLänk, länkenGickInte: länkenGickInte, glömtSkicka: glömtSkicka, nyttLösenord: nyttLösenord,
     välkomstläge: välkomstläge, lösenordFörst: lösenordFörst, introduktion: introduktion,
     loggaIn: loggaIn, loggaInHär: loggaInHär,
     adminroll: adminroll,
@@ -3876,7 +4016,7 @@ window.NXStudie = (function () {
     hämtaMöte: hämtaMöte, mötesRad: mötesRad,
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,
     rapportKort: rapportKort,
-    radLank: radLank, betalval: betalval, IKON: IKON, längdText: längdText,
+    radLank: radLank, betalval: betalval, IKON: IKON, barnTråd: barnTråd, längdText: längdText,
     bekräfta: bekräfta, avbokaRuta: avbokaRuta, svarRuta: svarRuta, SVAR_MAX: SVAR_MAX,
     medan: medan, kolla: kolla
   };
