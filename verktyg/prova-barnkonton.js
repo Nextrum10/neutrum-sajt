@@ -61,7 +61,8 @@ const KONTON = {
     app_metadata: { provider: 'email', roll: 'barn', barn_id: 'barn-1', forald_id: 'foralder-1' } },
   'leo@example.se': { id: 'admin-1', losen: 'x', role: 'authenticated', app_metadata: { provider: 'email' } },
   'nina@example.se': { id: 'admin-2', losen: 'x', role: 'authenticated', app_metadata: { provider: 'email' } },
-  'ola@example.se': { id: 'vanlig-1', losen: 'x', role: 'authenticated', app_metadata: { provider: 'email' } }
+  'ola@example.se': { id: 'vanlig-1', losen: 'x', role: 'authenticated', app_metadata: { provider: 'email' } },
+  'sara@example.se': { id: 'handledare-1', losen: 'x', role: 'authenticated', app_metadata: { provider: 'email' } }
 };
 const ANVANDARE = Object.fromEntries(Object.entries(KONTON).map(([epost, k]) =>
   [k.id, { id: k.id, aud: 'authenticated', role: k.role, email: epost, app_metadata: k.app_metadata,
@@ -106,6 +107,17 @@ function värld() {
         detaljer: { efter: { superadmin: false, behorigheter: ['admin_hantera', 'leads'] }, via: 'gor_till_admin' } },
       { id: 1, tid: '2026-09-30T08:00:00Z', aktor: null, handling: 'skapad', mal_anvandare: 'admin-1',
         detaljer: { efter: { superadmin: true, behorigheter: [] }, via: 'migrering' } }
+    ],
+    tutor_profiles: [
+      { id: 'handledare-1', status: 'approved', subjects: ['Matematik'], grade_levels: ['Åk 6'], formats: [],
+        hourly_rate: 150, age: 19, school: 'Testskolan', city: 'Stockholm' }
+    ],
+    /* Barnets tråd med studiehjälparen (barnets_chatt), som föräldern läser. */
+    barn_meddelanden: [
+      { id: 'bm-1', student_id: 'barn-1', parent_id: 'foralder-1', tutor_id: 'handledare-1', fran: 'studiehjalpare',
+        body: ELAK + 'Hej Alva!', read_at: '2026-10-05T18:00:00Z', created_at: '2026-10-05T17:00:00Z' },
+      { id: 'bm-2', student_id: 'barn-1', parent_id: 'foralder-1', tutor_id: 'handledare-1', fran: 'barn',
+        body: 'Kan vi ta procent?', read_at: null, created_at: '2026-10-05T18:30:00Z' }
     ],
     leads: [
       { id: 'lead-1', parent_name: 'Karin Karlsson', email: 'karin@example.se', child_name: 'Kim', status: 'new',
@@ -303,12 +315,28 @@ const vänta = ms => new Promise(r => setTimeout(r, ms));
 /* ============ barnets vy ============ */
 /* Det enda barnets vy får fråga databasen om (nexlax_for_barnet lade
    till NexLäx, barnets_epost inställningarna och valen). */
-const BARNETS_FUNKTIONER = /\/rpc\/(barn_(oversikt|notiser|markera_last|nexlax|uppgift|installningar|notisval)|nexlax_lage|niva_(starta|svara|genomgang))$/;
+const BARNETS_FUNKTIONER = /\/rpc\/(barn_(oversikt|notiser|markera_last|nexlax|uppgift|installningar|notisval|chatt|chatt_last|chatt_skriv)|nexlax_lage|niva_(starta|svara|genomgang))$/;
 
 function barnRpc(extra) {
+  /* Tråden med studiehjälparen (barnets_chatt): ett oläst meddelande,
+     och det barnet skriver står kvar i samma tråd. */
+  const tråd = [{ id: 'bm-1', fran: 'studiehjalpare', text: ELAK + 'Hej Alva!', skapad: nu(-120), last: null }];
   return Object.assign({
+    barn_chatt: () => ({ lage: 'ok', studiehjalpare: 'Sara', kan_skriva: true,
+      olasta: tråd.filter(m => m.fran === 'studiehjalpare' && !m.last).length, meddelanden: tråd.slice() }),
+    barn_chatt_last: () => {
+      let n = 0;
+      tråd.forEach(m => { if (m.fran === 'studiehjalpare' && !m.last) { m.last = nu(0); n++; } });
+      return n;
+    },
+    barn_chatt_skriv: k => {
+      tråd.push({ id: 'bm-' + (tråd.length + 1), fran: 'barn', text: k.p_text, skapad: nu(0), last: null });
+      return { lage: 'ok' };
+    },
     barn_oversikt: () => ({
       lage: 'ok', fornamn: 'Alva', studiehjalpare: 'Sara',
+      /* Talen räknas i databasen; listan över genomförda stannar vid 50. */
+      antal: { genomforda: 12, kommande: 2 },
       kommande: [
         { datum: dagar(1), tid: '16:00', langd_min: 60, status: 'confirmed', amne: 'Matematik' },
         { datum: dagar(3), tid: '17:00', langd_min: 120, status: 'requested', amne: 'Engelska' }
@@ -327,29 +355,36 @@ function barnRpc(extra) {
 }
 
 async function provaBarnvyn(webb) {
-  /* 1. Utloggad: inloggningen, och samma besked för allt som är fel. */
+  /* 1. Utloggad: /barn skickar till Elev i studievyns inloggning
+        (2026-10-06), och samma besked för allt som är fel. */
   {
     const { context, page, S, riktiga } = await öppna(webb, { rpc: barnRpc() });
     await page.goto(BAS + '/barn');
-    await page.waitForSelector('#view-auth:not([hidden])');
-    prova('barn: utloggad ser inloggningen', await synlig(page, '#bv-form'));
-    prova('barn: ingen länk till föräldervyn i inloggningen',
-      (await page.locator('a[href*="foralder"], a[href*="larare"], a[href*="admin"]').count()) === 0);
+    await page.waitForURL(/\/foralder#elev$/, { timeout: 5000 }).catch(() => {});
+    prova('barn: utloggad skickas till Elev i studievyns inloggning', /\/foralder#elev$/.test(page.url()), page.url());
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('barn: rutan står i Elev-läget', (await text(page, '#auth-title')) === 'Elevvyn'
+      && (await text(page, 'label[for="a-email"]')) === 'Användarnamn'
+      && (await page.getAttribute('.vy-roll[data-roll="elev"]', 'aria-current')) === 'page',
+      (await text(page, '#auth-title')) + ' / ' + (await text(page, 'label[for="a-email"]')));
+    prova('barn: Elev-läget har varken Skapa konto eller Glömt lösenordet',
+      !(await synlig(page, '.auth-tabs')) && !(await synlig(page, '[data-glomt]')) && await synlig(page, '[data-bara-elev]'));
     await bild(page, 'barn-inloggning');
 
-    await page.fill('#bv-anv', 'Ogiltigt Namn!');
+    const fält = '#a-email', knapp = '#auth-submit';
+    await page.fill(fält, 'Ogiltigt Namn!');
     await page.fill('#a-pass', 'vadsomhelst');
-    await page.click('#bv-logga-in');
+    await page.click(knapp);
     await vänta(150);
     prova('barn: ogiltigt användarnamn ger samma besked',
       (await text(page, '#auth-msg')).trim() === 'Fel användarnamn eller lösenord', await text(page, '#auth-msg'));
     prova('barn: ogiltigt användarnamn skickas aldrig till Auth',
       !S.logg.some(r => r.väg === '/auth/v1/token'));
 
-    await page.fill('#bv-anv', 'alva.a');
+    await page.fill(fält, 'alva.a');
     await page.fill('#a-pass', 'fel-losen');
-    await page.click('#bv-logga-in');
-    await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0);
+    await page.click(knapp);
+    await page.waitForFunction(() => /användarnamn/.test(document.querySelector('#auth-msg').textContent), null, { timeout: 5000 }).catch(() => {});
     prova('barn: fel lösenord ger samma besked',
       (await text(page, '#auth-msg')).trim() === 'Fel användarnamn eller lösenord', await text(page, '#auth-msg'));
     const försök = S.logg.filter(r => r.väg === '/auth/v1/token').pop();
@@ -357,17 +392,19 @@ async function provaBarnvyn(webb) {
       försök && försök.kropp && försök.kropp.email === 'alva.a@barn.nextrum.se', JSON.stringify(försök && försök.kropp));
     prova('barn: lösenordsfältet töms efter ett fel', (await page.inputValue('#a-pass')) === '');
 
-    await page.fill('#bv-anv', 'finns.inte');
+    await page.fill(fält, 'finns.inte');
     await page.fill('#a-pass', 'nagot-langt');
-    await page.click('#bv-logga-in');
+    await page.click(knapp);
     await vänta(300);
     prova('barn: okänt användarnamn ger samma besked',
       (await text(page, '#auth-msg')).trim() === 'Fel användarnamn eller lösenord');
 
     /* 2. Rätt lösenord: vyn, med versaler i namnet som blir gemener. */
-    await page.fill('#bv-anv', '  Alva.A ');
+    await page.fill(fält, '  Alva.A ');
     await page.fill('#a-pass', 'alva-losen-1');
-    await page.click('#bv-logga-in');
+    await page.click(knapp);
+    await page.waitForURL(/\/barn$/, { timeout: 5000 }).catch(() => {});
+    const iVyn = S.logg.length;
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
     prova('barn: rätt lösenord öppnar vyn', await synlig(page, '#view-app'));
     prova('barn: hälsningen', /^(Godmorgon|Goddag|Godkväll), Alva\.$/.test(await text(page, '#vy-hero h1')), await text(page, '#vy-hero h1'));
@@ -376,18 +413,22 @@ async function provaBarnvyn(webb) {
     prova('barn: hälsningens kort visar nästa pass', (await text(page, '#vy-hero .vy-hero-kort')).includes('Nästa pass'),
       await text(page, '#vy-hero .vy-hero-kort'));
     const meny = await page.$$eval('#vy-sido a', a => a.filter(x => !x.hidden).map(x => x.textContent.replace(/\d+/g, '').trim()));
-    prova('barn: menyn har Översikt, NexLäx, Meddelanden och Profil och inget mer',
-      meny.join(',') === 'Översikt,NexLäx,Meddelanden,Profil', meny.join(','));
+    prova('barn: menyn har Översikt, Mina lektioner, NexLäx, Meddelanden och Profil och inget mer',
+      meny.join(',') === 'Översikt,Mina lektioner,NexLäx,Meddelanden,Profil', meny.join(','));
     prova('barn: Översikt är framme', await synlig(page, 'section[data-sek="oversikt"]'));
-    prova('barn: en ny i Meddelanden står i menyn', (await text(page, '#vy-sido a[data-sek="meddelanden"] .vy-sido-mark')) === '1',
+    /* En ny notis och ett nytt meddelande från studiehjälparen. */
+    await page.waitForSelector('#bv-chatt:not([hidden])', { timeout: 5000 }).catch(() => {});
+    prova('barn: notisen och studiehjälparens meddelande står i menyn', (await text(page, '#vy-sido a[data-sek="meddelanden"] .vy-sido-mark')) === '2',
       await text(page, '#vy-sido a[data-sek="meddelanden"]'));
+    prova('barn: Översikt räknar pass, inte timmar', (await text(page, '#bv-antal')).includes('12genomförda pass')
+      && (await text(page, '#bv-antal')).includes('2kommande pass') && !/timm/.test(await text(page, '#bv-antal')),
+      await text(page, '#bv-antal'));
+    prova('barn: Översikt visar de närmaste passen', (await page.locator('#bv-narmast .vy-rad').count()) === 2);
     prova('barn: två kommande pass', (await page.locator('#bv-kommande .vy-rad').count()) === 2);
     prova('barn: ett önskat pass väntar på svar', (await text(page, '#bv-kommande')).includes('Väntar på svar'));
-    prova('barn: timmarna', (await text(page, '#bv-timmar')).includes('12') && (await text(page, '#bv-timmar')).includes('timme bokade framåt'),
-      await text(page, '#bv-timmar'));
     prova('barn: studieplanen', (await text(page, '#bv-plan')).includes('Klara bråk inför provet'));
     prova('barn: genomförda pass', (await page.locator('#bv-genomforda .vy-rad').count()) === 1);
-    prova('barn: rapporterna syns inte när föräldern inte slagit på dem', !(await synlig(page, '#bv-rapporter-del')));
+    prova('barn: rapporterna syns inte när föräldern inte slagit på dem', (await page.getAttribute('#bv-flik-rapporter', 'hidden')) !== null);
     prova('barn: frågan till föräldern står kvar', (await text(page, 'section[data-sek="profil"] .bv-fraga')).trim() === 'Vill du ändra något? Fråga din förälder.');
     prova('barn: text ur databasen ritas som text, inte som html',
       (await page.locator('#view-app img[data-elak]').count()) === 0
@@ -397,9 +438,16 @@ async function provaBarnvyn(webb) {
       !/\bkr\b|betal|faktura|erbjud|klippkort|timbank/i.test(hela)
       && (await page.locator('#view-app a:not([href^="#"])').count()) === 0, hela.slice(0, 200));
     prova('barn: bara barnets egna funktioner och Auth frågades',
-      S.logg.filter(r => r.väg.startsWith('/rest/')).every(r => BARNETS_FUNKTIONER.test(r.väg)),
-      S.logg.filter(r => r.väg.startsWith('/rest/')).map(r => r.väg).join(', '));
+      S.logg.slice(iVyn).filter(r => r.väg.startsWith('/rest/')).every(r => BARNETS_FUNKTIONER.test(r.väg)),
+      S.logg.slice(iVyn).filter(r => r.väg.startsWith('/rest/')).map(r => r.väg).join(', '));
     await bild(page, 'barn-vyn-ljus');
+    await page.click('#vy-sido a[data-sek="lektioner"]');
+    await page.waitForSelector('section[data-sek="lektioner"]:not([hidden])', { timeout: 3000 }).catch(() => {});
+    prova('barn: Mina lektioner visar passen', await synlig(page, '#bv-kommande .vy-rad') && await synlig(page, '#bv-genomforda .vy-rad'));
+    prova('barn: Mina lektioner har ingen betalning', !/betal|faktura|\bkr\b/i.test(await page.locator('section[data-sek="lektioner"]').innerText()));
+    await page.click('#bv-flik-plan');
+    prova('barn: fliken Studieplan visar planen', await synlig(page, '#bv-plan') && !(await synlig(page, '#bv-kommande')));
+    await bild(page, 'barn-vyn-lektioner');
     await page.click('#vy-sido a[data-sek="nexlax"]');
     await page.waitForSelector('section[data-sek="nexlax"]:not([hidden])', { timeout: 3000 }).catch(() => {});
     prova('barn: utan barn_nexlax i databasen säger NexLäx det', !(await synlig(page, '#bv-nexlax'))
@@ -409,7 +457,20 @@ async function provaBarnvyn(webb) {
     await page.click('#vy-sido a[data-sek="meddelanden"]');
     await page.waitForSelector('section[data-sek="meddelanden"]:not([hidden])', { timeout: 3000 }).catch(() => {});
     prova('barn: Meddelanden visar notiserna', await synlig(page, '#bv-notiser .bv-notis'));
-    prova('barn: Meddelanden säger hur man frågar studiehjälparen', (await text(page, '#bv-skriva')).includes('be din förälder'));
+    prova('barn: tråden med studiehjälparen står överst', await synlig(page, '#bv-chatt')
+      && (await text(page, '#bv-trad')).includes('<img src=x data-elak=1>Hej Alva!')
+      && (await page.locator('#bv-trad img[data-elak]').count()) === 0, await text(page, '#bv-trad'));
+    prova('barn: rutan säger att föräldern och Nextrum kan läsa', (await text(page, '#bv-chatt .tr-tips')).includes('förälder'));
+    await page.waitForFunction(() => !document.querySelector('#vy-sido a[data-sek="meddelanden"] .vy-sido-mark')
+      || document.querySelector('#vy-sido a[data-sek="meddelanden"] .vy-sido-mark').textContent === '1', null, { timeout: 3000 }).catch(() => {});
+    prova('barn: att öppna Meddelanden läser studiehjälparens meddelande', S.logg.some(r => r.väg === '/rest/v1/rpc/barn_chatt_last'));
+    await page.fill('#bv-tr-text', 'Kan vi ta procent på torsdag?');
+    await page.click('#bv-tr-skicka');
+    await page.waitForFunction(() => /procent/.test(document.querySelector('#bv-trad').textContent), null, { timeout: 5000 }).catch(() => {});
+    const skrivet = S.logg.filter(r => r.väg === '/rest/v1/rpc/barn_chatt_skriv').pop();
+    prova('barn: barnet skriver till sin studiehjälpare', skrivet && skrivet.kropp && skrivet.kropp.p_text === 'Kan vi ta procent på torsdag?'
+      && (await text(page, '#bv-trad')).includes('procent') && (await page.inputValue('#bv-tr-text')) === '',
+      JSON.stringify(skrivet && skrivet.kropp));
     await bild(page, 'barn-vyn-meddelanden');
     await page.click('[data-bv-last="notis-1"]');
     await vänta(300);
@@ -442,7 +503,7 @@ async function provaBarnvyn(webb) {
     await page.goto(BAS + '/barn');
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
     prova(namn + ': vyn visas', await synlig(page, '#view-app'));
-    prova(namn + ': rapporterna syns när föräldern slagit på dem', await synlig(page, '#bv-rapporter-del')
+    prova(namn + ': rapporterna syns när föräldern slagit på dem', (await page.getAttribute('#bv-flik-rapporter', 'hidden')) === null
       && (await text(page, '#bv-rapporter')).includes('Förlänga bråk'));
     const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     prova(namn + ': ingen sidledsscroll', bredd <= 0, bredd + ' px');
@@ -483,11 +544,11 @@ async function provaBarnvyn(webb) {
   }
   {
     const { context, page } = await öppna(webb, { rpc: barnRpc(), tak: true });
-    await page.goto(BAS + '/barn');
-    await page.waitForSelector('#view-auth:not([hidden])');
-    await page.fill('#bv-anv', 'alva.a');
+    await page.goto(BAS + '/foralder#elev');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.fill('#a-email', 'alva.a');
     await page.fill('#a-pass', 'alva-losen-1');
-    await page.click('#bv-logga-in');
+    await page.click('#auth-submit');
     await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0);
     prova('barn: för många försök säger det, utan att säga något om kontot',
       (await text(page, '#auth-msg')).startsWith('För många försök'), await text(page, '#auth-msg'));
@@ -767,7 +828,18 @@ async function provaFamiljensInloggning(webb) {
     await page.click('[data-auth="in"]');
     const roller = await page.$$eval('.vy-roll b', b => b.map(x => x.textContent.trim()));
     prova('familjen: rollvalet är Förälder, Elev och Studiehjälpare', roller.join(',') === 'Förälder,Elev,Studiehjälpare', roller.join(','));
-    prova('familjen: Elev leder till barnets inloggning', (await page.getAttribute('.vy-roll:nth-child(2)', 'href')) === '/barn');
+    /* Elev byter läge i samma ruta, i stället för sida (2026-10-06). */
+    await page.click('.vy-roll[data-roll="elev"]');
+    prova('familjen: Elev byter läge i samma ruta', /\/foralder#elev$/.test(page.url())
+      && (await text(page, '#auth-title')) === 'Elevvyn' && (await text(page, 'label[for="a-email"]')) === 'Användarnamn'
+      && (await page.getAttribute('#a-email', 'type')) === 'text' && !(await synlig(page, '.auth-tabs')),
+      page.url() + ' ' + (await text(page, '#auth-title')));
+    prova('familjen: i Elev-läget är Elev valt, inte Förälder',
+      (await page.getAttribute('.vy-roll[data-roll="elev"]', 'aria-current')) === 'page'
+      && (await page.getAttribute('.vy-roll[href="/foralder"]', 'aria-current')) === null);
+    await bild(page, 'familjen-elevlage');
+    await page.goto(BAS + '/foralder');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
     await bild(page, 'familjen-inloggning');
 
     await page.click('#auth-submit');
@@ -804,7 +876,7 @@ async function provaFamiljensInloggning(webb) {
   /* 3. Barnkontots tekniska adress nekas i alla fyra, utan fråga till
      Auth: ett barn loggar bara in med användarnamnet. */
   for (const [vy, fält, knapp] of [['/foralder', '#a-email', '#auth-submit'], ['/larare', '#a-email', '#auth-submit'],
-                                   ['/admin', '#a-email', '#auth-submit'], ['/barn', '#bv-anv', '#bv-logga-in']]) {
+                                   ['/admin', '#a-email', '#auth-submit'], ['/foralder#elev', '#a-email', '#auth-submit']]) {
     const { context, page, S } = await öppna(webb, { rpc: barnRpc() });
     await page.goto(BAS + vy);
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
@@ -892,21 +964,20 @@ async function provaFamiljensInloggning(webb) {
     await context.close();
   }
 
-  /* 7. Barnets vy tar också en vuxens e-post, och den vuxne hamnar i sin
-     egen vy. Inte genom en länk: det krävs den vuxnes lösenord. */
+  /* 7. Elev-läget tar också en vuxens e-post, och den vuxne hamnar i sin
+     egen vy, utan läget i adressen. */
   {
     const { context, page, S } = await öppna(webb, { rpc: Object.assign(barnRpc(), { mina_barnkonton: () => [] }) });
-    await page.goto(BAS + '/barn');
-    await page.waitForSelector('#view-auth:not([hidden])');
-    await page.fill('#bv-anv', 'anna@example.se');
+    await page.goto(BAS + '/foralder#elev');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.fill('#a-email', 'anna@example.se');
     await page.fill('#a-pass', 'fel');
-    await page.click('#bv-logga-in');
+    await page.click('#auth-submit');
     await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
     prova('barn: en vuxens e-post med fel lösenord får vuxnas besked',
-      (await text(page, '#auth-msg')).trim() === 'Fel e-post eller lösenord.' && (await page.inputValue('#a-pass')) === '',
-      await text(page, '#auth-msg'));
+      (await text(page, '#auth-msg')).trim() === 'Fel e-post eller lösenord.', await text(page, '#auth-msg'));
     await page.fill('#a-pass', 'anna-losen');
-    await page.click('#bv-logga-in');
+    await page.click('#auth-submit');
     await page.waitForURL(/\/foralder$/, { timeout: 5000 }).catch(() => {});
     prova('barn: en vuxens e-post leder till den vuxnes vy', /\/foralder$/.test(page.url()), page.url());
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
@@ -1389,7 +1460,7 @@ async function provaBarnetsEpost(webb) {
     if (utfall === 'tak') return [429, { error: 'För många försök. Vänta en stund och försök igen.' }];
     return [400, { error: 'Fel e-post eller lösenord.' }];
   };
-  for (const [vy, fält, knapp] of [['/barn', '#bv-anv', '#bv-logga-in'], ['/foralder', '#a-email', '#auth-submit']]) {
+  for (const [vy, fält, knapp] of [['/foralder#elev', '#a-email', '#auth-submit'], ['/foralder', '#a-email', '#auth-submit']]) {
     const ref = { anrop: [] };
     const o = { rpc: Object.assign(barnRpc(), { mina_barnkonton: () => [] }), funktioner: { 'barn-inloggning': barnInlogg(ref, 'ok') } };
     const { context, page, S } = await öppna(webb, o);
@@ -1413,11 +1484,11 @@ async function provaBarnetsEpost(webb) {
     const ref = { anrop: [] };
     const { context, page, S } = await öppna(webb, { rpc: barnRpc(), funktioner: { 'barn-inloggning': barnInlogg(ref, utfall) } });
     ref.S = S;
-    await page.goto(BAS + '/barn');
-    await page.waitForSelector('#view-auth:not([hidden])');
-    await page.fill('#bv-anv', 'alva@example.org');
+    await page.goto(BAS + '/foralder#elev');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await page.fill('#a-email', 'alva@example.org');
     await page.fill('#a-pass', 'fel');
-    await page.click('#bv-logga-in');
+    await page.click('#auth-submit');
     await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
     prova('e-post inloggning, ' + utfall + ': ' + besked,
       (await text(page, '#auth-msg')).trim() === besked && (await synlig(page, '#view-auth')), await text(page, '#auth-msg'));
@@ -1447,6 +1518,95 @@ async function provaBarnetsEpost(webb) {
 }
 
 /* ============ körningen ============ */
+/* ============ barnets chatt hos de vuxna (barnets_chatt, 2026-10-06) ============
+   Studiehjälparen läser och skriver i elevens tråd, under familjens.
+   Föräldern läser den utan skrivruta. Admin läser den i chattpanelen,
+   genom barnchatt_las. */
+async function provaBarnetsChattHosDeVuxna(webb) {
+  {
+    const tråd = [{ id: 'bm-1', fran: 'barn', text: ELAK + 'Kan vi ta procent?', skapad: nu(-30), last: null }];
+    const rpc = {
+      barnchatt_tradar: () => [{ elev: 'barn-1', namn: 'Alva', inloggning: true, kan_skriva: true,
+        olasta: tråd.filter(m => m.fran === 'barn' && !m.last).length, senaste: nu(-30) }],
+      barnchatt_trad: k => {
+        if (k.p_elev !== 'barn-1') return { lage: 'ingen' };
+        tråd.forEach(m => { if (m.fran === 'barn') m.last = nu(0); });
+        return { lage: 'ok', namn: 'Alva', kan_skriva: true, meddelanden: tråd.slice() };
+      },
+      barnchatt_skriv: k => { tråd.push({ id: 'bm-' + (tråd.length + 1), fran: 'studiehjalpare', text: k.p_text, skapad: nu(0), last: null }); return { lage: 'ok' }; }
+    };
+    const { context, page, S, riktiga, konsol } = await öppna(webb, { inloggad: 'handledare-1', rpc });
+    await page.goto(BAS + '/larare#meddelanden');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+    prova('studiehjälparen: vyn laddar', await synlig(page, '#view-app'));
+    await page.waitForSelector('#bc-ruta:not([hidden])', { timeout: 5000 }).catch(() => {});
+    prova('studiehjälparen: elevernas trådar står under familjens', await synlig(page, '#bc-ruta')
+      && (await text(page, '#bc-lista')).includes('Alva'), await text(page, '#bc-lista'));
+    await page.waitForFunction(() => /procent/.test(document.querySelector('#bc-trad').textContent), null, { timeout: 5000 }).catch(() => {});
+    prova('studiehjälparen: tråden öppnas när Meddelanden visas', S.logg.some(r => r.väg === '/rest/v1/rpc/barnchatt_trad'
+      && r.kropp && r.kropp.p_elev === 'barn-1') && (await text(page, '#bc-trad')).includes('<img src=x data-elak=1>Kan vi ta procent?')
+      && (await page.locator('#bc-trad img[data-elak]').count()) === 0, await text(page, '#bc-trad'));
+    prova('studiehjälparen: rutan säger att föräldern och Nextrum kan läsa', (await text(page, '#bc-ruta .bc-not')).includes('förälder'));
+    await page.fill('#bc-text', 'Ja, vi tar procent!');
+    await page.click('#bc-skicka');
+    await page.waitForFunction(() => /vi tar procent/.test(document.querySelector('#bc-trad').textContent), null, { timeout: 5000 }).catch(() => {});
+    const skrivet = S.logg.filter(r => r.väg === '/rest/v1/rpc/barnchatt_skriv').pop();
+    prova('studiehjälparen: skriver till eleven', skrivet && skrivet.kropp && skrivet.kropp.p_elev === 'barn-1'
+      && skrivet.kropp.p_text === 'Ja, vi tar procent!', JSON.stringify(skrivet && skrivet.kropp));
+    prova('studiehjälparen: familjens tråd står kvar', await synlig(page, '#trad'));
+    await page.locator('#bc-ruta').scrollIntoViewIfNeeded().catch(() => {});
+    await bild(page, 'studiehjalparen-elevens-trad', '#bc-ruta');
+    prova('studiehjälparen: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    await context.close();
+  }
+  {
+    const { context, page, S } = await öppna(webb, { inloggad: 'foralder-1', rpc: { mina_barnkonton: () => [] } });
+    await page.goto(BAS + '/foralder#meddelanden');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+    await page.waitForSelector('#bc-foralder:not([hidden])', { timeout: 5000 }).catch(() => {});
+    prova('föräldern: barnets tråd med studiehjälparen syns', await synlig(page, '#bc-foralder')
+      && (await text(page, '#bc-foralder')).includes('Kan vi ta procent?'), await text(page, '#bc-foralder'));
+    /* Landar man direkt på Meddelanden ritas tråden först när barnens
+       och studiehjälparens namn finns, inte med "Barnet". */
+    prova('föräldern: barnets och studiehjälparens namn står i tråden', (await text(page, '#bc-foralder .bc-barn-namn')) === 'Alva'
+      && (await text(page, '#bc-foralder')).includes('Sara'), await text(page, '#bc-foralder'));
+    prova('föräldern: läser utan skrivruta', (await page.locator('#bc-foralder textarea, #bc-foralder button').count()) === 0);
+    prova('föräldern: text ur databasen ritas som text', (await page.locator('#bc-foralder img[data-elak]').count()) === 0
+      && (await text(page, '#bc-foralder')).includes('<img src=x data-elak=1>Hej Alva!'));
+    prova('föräldern: ingenting markeras som läst', !S.logg.some(r => r.väg.startsWith('/rest/v1/barn_meddelanden') && r.metod !== 'GET'
+      && r.metod !== 'HEAD'));
+    await page.locator('#bc-foralder').scrollIntoViewIfNeeded().catch(() => {});
+    await bild(page, 'foraldern-barnets-trad', '#bc-foralder');
+    await context.close();
+  }
+  {
+    const rpc = adminRpc({ admin: true, superadmin: true, behorigheter: ALLA });
+    rpc.chatt_las = () => [];
+    rpc.barnchatt_las = () => [
+      { id: 'bm-2', student_id: 'barn-1', fran: 'barn', body: 'Kan vi ta procent?', read_at: null, created_at: '2026-10-05T18:30:00Z', totalt: 2 },
+      { id: 'bm-1', student_id: 'barn-1', fran: 'studiehjalpare', body: ELAK + 'Hej Alva!', read_at: '2026-10-05T18:00:00Z', created_at: '2026-10-05T17:00:00Z', totalt: 2 }
+    ];
+    const { context, page, S } = await öppna(webb, { inloggad: 'admin-1', rpc });
+    await page.goto(BAS + '/admin');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+    await page.evaluate(() => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.dp = 'chatt:foralder-1|handledare-1'; b.id = 'prov-oppna-chatt';
+      document.querySelector('#view-app').appendChild(b);
+      b.click();
+    });
+    await page.waitForFunction(() => /procent/.test(document.body.textContent), null, { timeout: 5000 }).catch(() => {});
+    const läst = S.logg.find(r => r.väg === '/rest/v1/rpc/barnchatt_las');
+    prova('admin: barnens trådar läses genom barnchatt_las', läst && läst.kropp && läst.kropp.p_parent === 'foralder-1'
+      && läst.kropp.p_tutor === 'handledare-1', JSON.stringify(läst && läst.kropp));
+    const panel = await page.locator('body').innerText();
+    prova('admin: barnets tråd står i chattpanelen', /Barnens trådar/i.test(panel) && panel.includes('Kan vi ta procent?')
+      && (await page.locator('img[data-elak]').count()) === 0, panel.slice(0, 200));
+    await bild(page, 'admin-barnens-tradar');
+    await context.close();
+  }
+}
+
 (async function () {
   const server = spawn('python3', [path.join(ROT, '.claude', 'serve.py'), String(PORT)], { stdio: 'ignore' });
   let klar = false;
@@ -1461,6 +1621,7 @@ async function provaBarnetsEpost(webb) {
     await provaBarnpanelen(webb);
     await provaBarnetsEpost(webb);
     await provaAdminvyn(webb);
+    await provaBarnetsChattHosDeVuxna(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);
   } finally {

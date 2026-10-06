@@ -695,10 +695,14 @@ senare sida ger felet, aldrig en halv lista.
 - `barn.html`: samma kort och rader som studievyn (`.vy-kort`, `.vy-rad`,
   `.lage`), och `.bv-*` i `nextrum-arbetsyta.css`, bara tokens. Ingen länk
   till föräldervyn. Sedan 2026-10-06 samma skal som studievyn: hälsningen
-  (`NXArbete.hero`) och sidomenyn (`NXStudie.sidomeny`) med fyra delar,
-  Översikt, NexLäx, Meddelanden och Profil (se "Hälsningen, en bild per
-  veckodag" nedan och `minne/barnkonton-och-admin.md`). Förut en spalt utan
-  meny och utan bild.
+  (`NXArbete.hero`) och sidomenyn (`NXStudie.sidomeny`) med fem delar,
+  Översikt, Mina lektioner, NexLäx, Meddelanden och Profil (se "Hälsningen,
+  en bild per veckodag" nedan och `minne/barnkonton-och-admin.md`). Förut en
+  spalt utan meny och utan bild. Mina lektioner har studievyns flikar (Pass,
+  Studieplan, Rapporter) men ingen betalning; Översikt räknar genomförda och
+  kommande pass (`.bv-antal`). Barnets tråd med studiehjälparen ritas av
+  `NXStudie.barnTråd` (`.bv-chatt` hos barnet, `.bc-*` hos studiehjälparen
+  och föräldern), med familjens trådklasser (`.tr`, `.ch`).
 - Föräldrarnas ruta Barnens inloggning heter `bi-*` (`#bi-ruta`,
   `data-bi-*`), för `bk-*` och `#bk-msg` är bokningens och stod redan i
   samma sida.

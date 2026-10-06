@@ -75,7 +75,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-ljud.js` | `NXLjud` (Fas 23.4): ljuden i NexLäx, räknade fram med Web Audio, och vibrationen (`navigator.vibrate`, och switch-tricket på iPhone). Av och på sparas i webbläsaren. Laddas före `nextrum-uppgifter.js` i de tre vyerna; modulvakten prövar `NXLjud.känn` |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
-| `nextrum-barn-vy.js` | Bara `barn.html`, barnets egen vy, elevvyn (barnkonton_och_admin). Laddar NX, NXStudie, NXUppgifter (NexLäx, 2026-10-01) och NXArbete, bara för hälsningen (2026-10-06), och ritar det `barn_oversikt()`, `barn_notiser()` och `barn_nexlax()` svarar, med `textContent` utom NexLäx, som NXUppgifter ritar med `esc()`. Se `minne/barnkonton-och-admin.md` |
+| `nextrum-barn-vy.js` | Bara `barn.html`, barnets egen vy, elevvyn (barnkonton_och_admin). Laddar NX, NXStudie, NXUppgifter (NexLäx, 2026-10-01) och NXArbete, bara för hälsningen (2026-10-06), och ritar det `barn_oversikt()`, `barn_notiser()`, `barn_nexlax()` och `barn_chatt()` svarar, med `textContent` utom NexLäx, som NXUppgifter ritar med `esc()`, och tråden med studiehjälparen, som `NXStudie.barnTråd` ritar med `esc()` (2026-10-06). Se `minne/barnkonton-och-admin.md` |
 | `lank.html` + `nextrum-lank.js` | `/lank` (2026-10-01): knappen som kontomejlens länk leder till, så att ett mejlfilter som öppnar länken i förväg inte förbrukar den. Ingen Supabase-klient, skarp CSP. Se `minne/sakerhet.md`, Kontomejlen |
 | `nextrum-admin.js` | Adminvyns **skal**: inloggning, sidomeny, toppraden (sök, notiser, kontot), bevakning och `start()` |
 | `nextrum-admin-karna.js` | `NXAdmin`: tillståndet `S`, hjälparna och hämtningarna. **Laddas först** |

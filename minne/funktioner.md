@@ -143,6 +143,7 @@ Så här ser vägarna ut i dag:
 |---|---|---|
 | `bookings` | `bookings_notis` | `notis_vid_pass` — köar |
 | `messages` | `messages_notis` | `notis_vid_meddelande` — köar |
+| `barn_meddelanden` | `barn_meddelanden_notis` | `intern.notis_vid_barnmeddelande` — köar (bara barnets meddelanden, till studiehjälparen; barnets_chatt, 2026-10-06) |
 | `lesson_reports` | `lesson_reports_notis` | `notis_vid_rapport` — köar |
 | `leads` | `ny-intresseanmalan` | `http_request` → `lead-notis` |
 | `applications` | `ansokan_besked` | `intern.ansokan_besked` — köar i `ansokan_utskick` och väcker `ansokan-notis` (Fas 16.1) |
