@@ -372,24 +372,14 @@ utveckling som är roligare att följa, och ett quest-system.
 
 ---
 
-## Prova NexLäx på startsidan (2026-10-06)
+## Prova NexLäx på startsidan (2026-10-06, borttaget 2026-10-07)
 
-Ingen besökare såg NexLäx innan de var kunder. Startsidan har därför en
-ruta efter studievyn med tre frågor och fyra svar var, utan konto
-(`.nx-prova`, `provaNexlax()` i `nextrum-start.js`). Reglerna:
-
-- **Frågorna är egna**, skrivna för rutan, och står inte i banken.
-  Bankens frågor går ut utan facit och rättas i databasen; de här rättas
-  i webbläsaren, och rätt knapp står i `data-ratt` (räknat från 1).
-- **Inga XP och inget sparas.** XP:s regler står bara i
-  `intern.nexlax_*`, och en demo som räknade egna XP hade lovat något
-  NexLäx inte gör.
-- **All text står i markupen** på båda språken, också "Rätt!" och "Inte
-  riktigt": skriptet visar och döljer bara. Svaren på fråga två är
-  decimaltal, så de skiljer sig mellan språken (4,6 och 4.6).
-- `.nlp-klar[hidden]` och de andra `[hidden]` har en egen regel: rutornas
-  `display:grid` slog annars ut attributet, och "Nivån klar" syntes från
-  början.
+Startsidan hade en dag en ruta med tre egna frågor utan konto, rättade i
+webbläsaren och utan XP. Leo tog bort den efter att ha sett den i drift.
+Byggs något liknande igen gäller samma sak: egna frågor, aldrig bankens
+(de går ut utan facit och rättas i databasen), inga XP och ingen text i
+skriptet. Rutor med `display:grid` behöver en egen `[hidden]`-regel,
+annars syns det dolda.
 
 ## Ur avsnitt 11: banken, driftsättningen och det som är kvar
 

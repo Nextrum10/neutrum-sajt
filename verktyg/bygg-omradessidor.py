@@ -316,10 +316,10 @@ OMRADEN = [
              'Hammarbyhöjden strax intill. Om passet sker hemma hos er eller online avgörs av '
              'matchningen.'),
             ('Hur sent på kvällen går det att boka?',
-             'Ni föreslår en tid mellan elva och tio på kvällen på vardagar, och mellan nio '
-             'och tio på kvällen på helger, och studiehjälparen accepterar den eller föreslår '
-             'en annan. Eftersom studiehjälparna går i skolan eller pluggar själva blir det '
-             'oftast eftermiddagar och kvällar.'),
+             'Ni föreslår en tid mellan elva på förmiddagen och tio på kvällen på vardagar, '
+             'och mellan nio på morgonen och tio på kvällen på helger, och studiehjälparen '
+             'accepterar den eller föreslår en annan. Läxhjälp blir för det mesta efter '
+             'skolan, alltså eftermiddagar och kvällar.'),
             ('Hur vet vi vad som hände på passet?',
              'Studiehjälparen skriver en rapport efteråt: vad ni gick igenom, hur det gick och '
              'vad som är nästa steg. Ett pass räknas som genomfört först när rapporten är '
@@ -412,9 +412,9 @@ OMRADEN = [
              'Arenastaden, Frösunda och Skytteholm. Om passet sker hemma hos er avgörs av '
              'matchningen.'),
             ('Hjälper ni gymnasieelever?',
-             'Ja. Studiehjälparna går själva på gymnasiet eller högskolan och har läst kurserna '
-             'nyligen — det är särskilt märkbart på gymnasienivå, där den som läste kursen i '
-             'fjol minns vilket steg som är det svåra.'),
+             'Ja. Vi letar efter en studiehjälpare som har läst samma kurs nyligen, och det '
+             'märks särskilt på gymnasienivå, där den som läste kursen i fjol minns vilket '
+             'steg som är det svåra.'),
             ('Måste vi binda upp oss?',
              f'Nej. Ingen bindningstid, ingen månadsavgift. {PRIS} i timmen, och ni betalar varje '
              'pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. '
@@ -507,9 +507,8 @@ AMNEN = [
         ],
         'faq': [
             ('Hjälper ni med matte på gymnasiet?',
-             'Ja, från den första kursen till derivata och integraler. Studiehjälparna går '
-             'själva på gymnasiet eller högskolan och har läst kurserna nyligen. Skriv i '
-             'anmälan vilken kurs eleven läser, så letar vi efter någon som har läst just den.'),
+             'Ja, från den första kursen till derivata och integraler. Skriv i anmälan vilken '
+             'kurs eleven läser, så letar vi efter någon som har läst just den nyligen.'),
             ('Kan vi få hjälp inför ett nationellt prov i matte?',
              'Ja. Hör av er i god tid, gärna några veckor innan, så hinner vi matcha rätt '
              'person och studieplanen hinner gå igenom det som brukar komma.'),
@@ -892,9 +891,8 @@ STADIER = [
             'I den här åldern är det ofta lättare att hålla fokus när någon sitter bredvid, så '
             'ett pass hemma hos er eller på biblioteket passar många bättre än skärmen. Ni '
             'väljer för varje pass.',
-            'En studiehjälpare som själv går på gymnasiet eller högskolan är nära nog i ålder '
-            'för att vara någon eleven lyssnar på, och har sett vad som behöver sitta inför '
-            'högstadiet.',
+            'Studiehjälparen har själv gått igenom högstadiet och vet vad som behöver sitta '
+            'innan dess.',
             'Rapporten efter varje pass säger vad ni gjorde och hur det gick, så att ni hemma '
             'vet vad ni kan fråga om.',
         ],

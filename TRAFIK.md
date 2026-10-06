@@ -123,7 +123,7 @@ Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. 
 
 **Längre beskrivning (400 tecken):**
 ```
-Nextrum matchar elever i Stockholm med en studiehjälpare, en gymnasie- eller högskolestudent som nyligen läst samma kurser. Passen hålls hemma hos er eller online, och efter varje pass skriver studiehjälparen en rapport som både elev och förälder ser. Matte, svenska, engelska och NO från mellanstadiet till gymnasiet. Ett timpris oavsett ämne och ingen bindningstid.
+Nextrum matchar elever i Stockholm med en studiehjälpare som nyligen läst samma kurser. Passen hålls hemma hos er eller online, och efter varje pass skriver studiehjälparen en rapport som både elev och förälder ser. Matte, svenska, engelska och NO från mellanstadiet till gymnasiet. Ett timpris oavsett ämne och ingen bindningstid.
 ```
 
 ## 7. Länkar från andra sajter
@@ -160,8 +160,8 @@ tipsformulär på mitti.se. Vinkeln är människorna, inte tjänsten:
 Tips: Unga startade läxhjälp där unga hjälper unga
 
 Vi är [ålder] och [ålder] år och har startat Nextrum, en läxhjälp i
-Stockholm där gymnasie- och högskolestudenter hjälper yngre elever
-med ämnen de själva nyss läst. För många av våra studiehjälpare är det
+Stockholm där unga hjälper yngre elever med ämnen de själva nyss
+läst. För många av våra studiehjälpare är det
 första jobbet. Vi berättar gärna mer, och kan ställa upp med en
 studiehjälpare och en familj som vill vara med.
 
