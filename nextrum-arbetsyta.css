@@ -675,93 +675,98 @@
   background:var(--bl);color:var(--pap);border-color:var(--bl);font-weight:650;
 }
 
-/* Månadsväljaren (Fas 20.2, NXStudie.månadsval), ritad om 2026-09-29.
-   Ett spår som flikarna under det, men den valda månaden är mörk och
-   fliken ljus: i Betalningar står de två raderna direkt efter varandra
-   och ska inte se ut som samma rad två gånger. Varje knapp är lika hög
-   med eller utan märke, så raden står rak. Spåret rullar i sidled i
-   stället för att bryta om: tolv månader på tre rader är en vägg, inte
-   ett val. Kanten tonas med två stilla gradienter ovanpå, inte med
-   mask-image, som ritas om vid varje rullsteg i Safari (avsnitt 3,
-   startsidans punkt 3). */
-.nx-manader{
+/* Månadsväljaren i adminvyn (NXStudie.månadsval), sedan 2026-10-06 ett
+   fält: ‹ [Oktober 2026 ▾] ›. Fältet öppnar en ruta med året och dess
+   tolv månader. Förut en rad med en knapp per månad som man drog i
+   sidled, och som växte med en knapp i månaden; Leo ville se år och
+   månad på ett ställe och kunna gå flera månader och år framåt.
+
+   Fältet har fast bredd, så att pilen till höger står still när namnet
+   byter längd (fälla 4), och på en telefon fyller det bredden mellan
+   pilarna. Märket (Stängd, Utbetald) står under namnet, inne i fältets
+   44 px. Rutan ligger ovanpå sidan: inget under fältet flyttar sig när
+   den öppnas. Den valda månaden är mörk, som pillret i raden var, och
+   den innevarande har en dämpad prick, inte i lera: lera är ert drag
+   eller ett fel (INNEHÅLLET, regel 1). Pilarna är stegarens
+   (.nx-steg-pil, nedan), och TUMMEN ger dem 44 px på en telefon. */
+.nx-manadsval{
+  position:relative;
   display:flex;align-items:center;gap:6px;
   margin:0 0 18px;
 }
-.nx-manad-ram{
-  position:relative;flex:1 1 auto;min-width:0;
-  background:var(--pap-2);
-  border:1px solid var(--ln);
-  border-radius:100px;
-  overflow:hidden;
+.nx-manad-falt{
+  display:flex;align-items:center;gap:10px;
+  flex:0 0 auto;width:15rem;min-width:0;height:44px;
+  padding:0 14px 0 16px;
+  border:1px solid var(--ln);border-radius:100px;
+  background:var(--yta);color:var(--bl);
+  font:inherit;text-align:left;cursor:pointer;
+  transition:border-color .16s var(--e);
+  -webkit-tap-highlight-color:transparent;
 }
-.nx-manad-ram::before,.nx-manad-ram::after{
-  content:"";position:absolute;top:0;bottom:0;width:44px;z-index:1;
-  pointer-events:none;opacity:0;transition:opacity .2s var(--e);
+.nx-manad-falt:hover,.nx-manad-falt[aria-expanded="true"]{border-color:var(--bl-3)}
+.nx-manad-falt:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.nx-manad-falt svg{
+  flex:none;width:17px;height:17px;color:var(--bl-3);
+  fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
 }
-.nx-manad-ram::before{left:0;background:linear-gradient(90deg,var(--pap-2) 20%,transparent)}
-.nx-manad-ram::after{right:0;background:linear-gradient(270deg,var(--pap-2) 20%,transparent)}
-.nx-manad-ram.mer-vanster::before,.nx-manad-ram.mer-hoger::after{opacity:1}
-.nx-manad-spar{
+.nx-manad-falt > svg:last-child{width:15px;height:15px}
+.nx-manad-falt[aria-expanded="true"] > svg:last-child{rotate:180deg}
+.nx-manad-namn{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.15}
+.nx-manad-namn b{
+  font-size:.95rem;font-weight:650;color:var(--bl);
+  text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+@media (max-width:560px){
+  .nx-manad-falt{flex:1 1 auto;width:auto}
+}
+
+.nx-manad-ruta{
+  /* Under telefonens fasta sektionsrad (40) och toppraden (800), som
+     den annars hade lagt sig över när sidan rullas. */
+  position:absolute;z-index:30;left:0;top:calc(100% + 8px);
+  width:min(21rem,100%);
+  padding:12px 12px 6px;
+  background:var(--yta);
+  border:1px solid var(--ln);border-radius:22px;
+  box-shadow:var(--sk-2);
+}
+.nx-manad-ruta[hidden]{display:none}
+.nx-manad-arrad{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.nx-manad-aret{font-size:1.05rem;font-weight:650;color:var(--bl);font-variant-numeric:tabular-nums}
+.nx-manad-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.nx-manad-grid button{
   position:relative;
-  display:flex;align-items:center;gap:2px;
-  padding:4px;
-  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
-}
-.nx-manad-spar::-webkit-scrollbar{display:none}
-.nx-manad-spar button{
-  flex:0 0 auto;position:relative;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  height:44px;min-width:0;padding:0 16px;
-  border:none;border-radius:100px;
-  background:transparent;
-  font:inherit;font-size:.88rem;font-weight:550;line-height:1.15;color:var(--bl-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  height:52px;min-width:0;padding:0 6px;
+  border:0;border-radius:16px;
+  background:transparent;color:var(--bl-2);
+  font:inherit;font-size:.9rem;font-weight:550;line-height:1.15;
   cursor:pointer;
   transition:background .16s var(--e),color .16s var(--e);
+  -webkit-tap-highlight-color:transparent;
 }
-.nx-manad-spar button span{text-transform:capitalize;white-space:nowrap}
-.nx-manad-spar button:hover{background:var(--pap);color:var(--bl)}
-.nx-manad-spar button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-/* Den innevarande månaden: en dämpad prick i hörnet, inte en kant runt,
-   och inte i lera: lera är ert drag eller ett fel (INNEHÅLLET, regel 1).
-   På den valda syns den inte, där säger pillret redan var man är. */
-.nx-manad-spar button[data-denna]:not([aria-pressed="true"])::after{
-  content:"";position:absolute;top:6px;right:6px;
+.nx-manad-grid button span{text-transform:capitalize;white-space:nowrap}
+.nx-manad-grid button:hover:not(:disabled){background:var(--tint);color:var(--bl)}
+.nx-manad-grid button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.nx-manad-grid button:disabled{opacity:.35;cursor:default}
+.nx-manad-grid button[data-denna]:not([aria-pressed="true"])::after{
+  content:"";position:absolute;top:7px;right:9px;
   width:5px;height:5px;border-radius:50%;background:var(--bl-3);
 }
-.nx-manad-spar button[aria-pressed="true"]{
+.nx-manad-grid button[aria-pressed="true"]{
   background:var(--bl);color:var(--pap);font-weight:650;
-  box-shadow:0 1px 3px rgba(46,42,32,.18);
 }
-/* Årtalet står i raden där det byts, med ett streck före. */
-.nx-manad-ar{
-  flex:0 0 auto;align-self:stretch;
-  display:flex;align-items:center;
-  padding:0 6px 0 12px;
-  font-size:.7rem;font-weight:650;letter-spacing:.06em;color:var(--bl-3);
-}
-.nx-manad-ar:not(:first-child){border-left:1px solid var(--ln-2);margin-left:6px}
-.nx-manad-ar:first-child{padding-left:10px}
-.nx-manad-pil{
-  flex:0 0 auto;display:grid;place-items:center;
-  width:40px;height:40px;padding:0;
-  border:1px solid var(--ln);border-radius:50%;
-  background:var(--pap-2);color:var(--bl);
+.nx-manad-nu{
+  display:block;width:100%;min-height:44px;margin-top:6px;
+  border:0;border-top:1px solid var(--ln);background:none;
+  font:inherit;font-size:.86rem;font-weight:600;color:var(--acc-lugn);
   cursor:pointer;
-  transition:border-color .16s var(--e),opacity .16s var(--e);
 }
-.nx-manad-pil svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.nx-manad-pil:hover:not(:disabled){border-color:var(--bl-3)}
-.nx-manad-pil:disabled{opacity:.35;cursor:default}
-.nx-manad-stilla .nx-manad-pil{display:none}
-.nx-manad-stilla .nx-manad-ram{flex:0 1 auto}
-/* På en telefon drar man i spåret, och pilarna tar 90 px av 360. Den
-   tonade kanten säger fortfarande att det finns mer. */
-@media (max-width:560px), (pointer:coarse){
-  .nx-manad-pil{display:none}
-  .nx-manad-spar button{padding:0 13px}
-}
-/* Märket (t.ex. "Stängd" i adminvyn) står under namnet, i knappen. */
+.nx-manad-nu:hover{color:var(--acc)}
+.nx-manad-nu:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:12px}
+/* Märket (t.ex. "Stängd" i adminvyn) står under namnet, i fältet och i
+   rutans knappar. */
 .nx-manad-marke{
   font-style:normal;font-size:.6rem;font-weight:650;letter-spacing:.05em;
   text-transform:uppercase;opacity:.7;line-height:1;

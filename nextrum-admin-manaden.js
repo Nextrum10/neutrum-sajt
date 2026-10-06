@@ -74,7 +74,7 @@
     if (!host) return;
     MV = NXStudie.månadsval(host, {
       alla: true,
-      framåt: 2,
+      årFramåt: 1,
       märke: m => S.stangdaManader && S.stangdaManader.has(m) ? 'Stängd' : '',
       vidVal: () => ritaMånaden()
     });

@@ -402,7 +402,8 @@ AI:n, agenterna, tjänsterna och systemet, är superadminens.
 sektioner och flikar (`SEKTIONER`, `FLIKAR`), och det start() ritar och hen
 inte behöver byts mot en tom funktion i `NXAdmin.rita`, så att inget område
 frågar databasen om det hen ändå inte får läsa. `[data-bara-super]` tas
-bort (Tips och kampanjer under Intresseanmälningar). **Knapparna i en
+bort (Tips och kampanjer, som stod under Intresseanmälningar och sedan
+2026-10-06 står under Tjänster, som bara superadmin ser). **Knapparna i en
 sektion som syns är superadminens**: en admin med `bokningar_las` ser
 Avboka, och databasen säger nej. Det är med flit, reglerna står i RLS, men
 det är inte snyggt, och nästa steg är att vyn frågar `har()` före varje

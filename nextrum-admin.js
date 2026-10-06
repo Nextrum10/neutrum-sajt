@@ -61,6 +61,7 @@
   const ritaIntegrationer = (...a) => NXAdmin.rita.ritaIntegrationer(...a);
   const ritaKalender = (...a) => NXAdmin.rita.ritaKalender(...a);
   const ritaKontakt = (...a) => NXAdmin.rita.ritaKontakt(...a);
+  const ritaKoder = (...a) => NXAdmin.rita.ritaKoder(...a);
   const ritaLeads = (...a) => NXAdmin.rita.ritaLeads(...a);
   const ritaLektioner = (...a) => NXAdmin.rita.ritaLektioner(...a);
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
@@ -1081,6 +1082,7 @@
       ritaPris();
       ritaTjanster();
       ritaRabattkoder();
+      ritaKoder();
       ritaFel();
       ritaInstallningar();
       ritaNotisdrift();
