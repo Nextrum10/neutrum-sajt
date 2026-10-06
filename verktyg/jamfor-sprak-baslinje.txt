@@ -19,7 +19,7 @@
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
-  TEXTNODER: sv 430 vs en 428 — engelskan har inte följt med
+  TEXTNODER: sv 467 vs en 465 — engelskan har inte följt med
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
@@ -52,7 +52,8 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 23
+=== svenska sidor utan engelsk tvilling: 27
+  404.html
   admin.html
   affisch.html
   barn.html
@@ -65,8 +66,11 @@
   laxhjalp-bromma.html
   laxhjalp-engelska.html
   laxhjalp-farsta.html
+  laxhjalp-gymnasiet.html
   laxhjalp-hammarby-sjostad.html
+  laxhjalp-hogstadiet.html
   laxhjalp-matematik.html
+  laxhjalp-mellanstadiet.html
   laxhjalp-nacka.html
   laxhjalp-no.html
   laxhjalp-online.html

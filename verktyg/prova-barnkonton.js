@@ -1589,19 +1589,23 @@ async function provaBarnetsChattHosDeVuxna(webb) {
     const { context, page, S } = await öppna(webb, { inloggad: 'admin-1', rpc });
     await page.goto(BAS + '/admin');
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+    /* Vyn ritar färdigt sin första sektion efter att den blivit synlig;
+       ett tryck före det hann stängas av uppstarten. */
+    await page.waitForLoadState('networkidle').catch(() => {});
     await page.evaluate(() => {
       const b = document.createElement('button');
       b.type = 'button'; b.dataset.dp = 'chatt:foralder-1|handledare-1'; b.id = 'prov-oppna-chatt';
       document.querySelector('#view-app').appendChild(b);
       b.click();
     });
-    await page.waitForFunction(() => /procent/.test(document.body.textContent), null, { timeout: 5000 }).catch(() => {});
+    await page.waitForFunction(() => /Barnens trådar/i.test(document.body.innerText) && /procent/.test(document.body.innerText),
+      null, { timeout: 10000 }).catch(() => {});
     const läst = S.logg.find(r => r.väg === '/rest/v1/rpc/barnchatt_las');
     prova('admin: barnens trådar läses genom barnchatt_las', läst && läst.kropp && läst.kropp.p_parent === 'foralder-1'
       && läst.kropp.p_tutor === 'handledare-1', JSON.stringify(läst && läst.kropp));
     const panel = await page.locator('body').innerText();
     prova('admin: barnets tråd står i chattpanelen', /Barnens trådar/i.test(panel) && panel.includes('Kan vi ta procent?')
-      && (await page.locator('img[data-elak]').count()) === 0, panel.slice(0, 200));
+      && (await page.locator('img[data-elak]').count()) === 0, panel.slice(panel.indexOf('Chatt'), panel.indexOf('Chatt') + 300));
     await bild(page, 'admin-barnens-tradar');
     await context.close();
   }
