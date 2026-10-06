@@ -180,8 +180,8 @@
         den visar barnet, er och studiehjälparen vad som sitter</li>
       <li>Rapporter efter varje pass: vad ni gjorde, hur det gick, vad som behöver tränas</li>
       <li>Har ni gett barnet en egen inloggning: användarnamnet, när ni som vårdnadshavare
-        godkände den, när barnet senast loggade in och notiserna i barnets vy. Lösenordet ser vi
-        aldrig</li>
+        godkände den, när barnet senast loggade in, vad ni valt att barnet får se och göra, och
+        notiserna i barnets vy. Lösenordet ser vi aldrig</li>
       <li>Har ni lagt till barnets egen e-post: adressen, när barnet bekräftade den, om ni slagit
         på mejl till barnet och vilka mejl barnet själv valt bort. Adressen ser bara ni, barnet och
         vi, inte studiehjälparen. Försök att logga in med adressen räknas i ett dygn, för att
@@ -316,7 +316,7 @@
       <li><b>En familj</b> ser bara sina egna barn, pass, betalningar, meddelanden och de avtal vi
         delat med dem.</li>
       <li><b>Ett barn med egen inloggning</b> ser bara sina egna pass, timmar, studieplan,
-        notiser och NexLäx, och rapporterna om föräldern slagit på det. Aldrig priser, betalningar,
+        notiser och NexLäx, och rapporterna, av det föräldern valt. Aldrig priser, betalningar,
         erbjudanden, förälderns uppgifter eller något om andra familjer. Barnet kan göra sina
         nivåer i NexLäx och bocka av sina uppgifter, men inte boka, avboka eller ändra något annat.
         Spärren sitter i databasen: barnets inloggning når inga tabeller, bara det som är barnets
@@ -432,10 +432,12 @@
     <h2 id="barn">Barns uppgifter</h2>
     <p>Tjänsten handlar om barn, och deras uppgifter är därför det känsligaste vi hanterar.</p>
     <ul>
-      <li>Ett barn kan inte skapa ett konto själv. Det är föräldern som registrerar sig,
-        godkänner villkoren och lägger in uppgifterna om barnet.</li>
+      <li>Ett barn kan inte skapa ett konto själv. Kontot är förälderns: antingen registrerar
+        föräldern sig, eller så skapar vi det med adressen i intresseanmälan, och föräldern väljer
+        lösenordet. Uppgifterna om barnet kommer från föräldern.</li>
       <li>Föräldern kan ge barnet en egen inloggning till en enkel vy med NexLäx, pass, timmar,
-        studieplan och notiser, och pausa eller ta bort den när som helst. Inloggningen är ett
+        studieplan och notiser, välja vad av det barnet får se och göra, och pausa eller ta bort
+        inloggningen när som helst. Inloggningen är ett
         användarnamn och ett lösenord. Den tekniska adress den behöver (användarnamnet på
         barn.nextrum.se) tar aldrig emot något mejl.</li>
       <li>Föräldern kan också lägga till barnets egen e-post. Vi skickar en länk dit, och först när
@@ -640,7 +642,7 @@
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=fdfed591"></script>
-<script src="nextrum-images.js?v=c4a90ffa"></script>
+<script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=5a31edc0"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>

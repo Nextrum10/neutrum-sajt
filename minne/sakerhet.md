@@ -241,7 +241,8 @@ föräldern byter lösenordet.
   studiehjälparvyn, med inbjudans text (`nyttLösenord(…, { inbjuden })`),
   och en inbjudan som landar på startsidan skickas vidare till
   studievyn, som en återställning gör. Adminvyn behåller sin egen ruta
-  (`väljLösenord`).
+  (`väljLösenord`). Sedan 2026-10-06 går rutan inte att stänga för ett
+  konto vi skapat (Konton vi skapar, nedan).
 - **Samma besked oavsett konto.** Auth svarar likadant för en adress som
   inte finns, och rutan gör det också: "det finns inget konto med den
   adressen" hade svarat på vem som är kund hos oss, för vem som helst.
@@ -274,6 +275,53 @@ föräldern byter lösenordet.
   Settings.
 - **Mallen** (Reset password) står under Kontomejlen nedan.
 - Provas i `verktyg/prova-aterstallning.js` (`minne/genererat-och-ci.md`).
+
+### Konton vi skapar, och första inloggningen (2026-10-06)
+
+Leo: "när vi tar in anställde eller familjen till plattformen, används
+deras mail iställer och deras lösenord blir "12345678", sedan får de
+länk i mailet ... När de loggar in för första gången står det skapa nytt
+lösenord och bekräfta lösenordet." Och efter lösenordet en introduktion,
+med Fortsätt sist.
+
+- **Inget gemensamt startlösenord, med flit.** Ett lösenord som alla nya
+  konton delar kan vem som helst som hört talas om det använda före
+  personen själv, med bara adressen, och kontot är en familjs barn, pass
+  och betalningar. Att bytet krävs först avgör vyn, och en vy skyddar
+  ingenting (avsnitt 6). Det hade också gjort meningen "Ditt lösenord ser
+  vi aldrig" i integritetspolicyn osann. Personen gör samma steg med en
+  länk: mejlet, ett tryck, lösenordet två gånger. Länken gäller en gång
+  och bara för den som har inkorgen.
+- **Kontot skapas av `bjud-in`** (Ta in familjen på en anmälan, Ta in i
+  poolen på en ansökan; `minne/funktioner.md`) utan lösenord och med
+  `user_metadata.valkommen = 'losenord'`. Länken loggar in personen, och
+  `NXStudie.lösenordFörst()` öppnar rutan (`nyttLösenord` med `tvingad`):
+  inget Inte nu, Escape gör ingenting, och Logga ut står kvar så att den
+  som måste gå inte är fast. Lösenordet sparas med `valkommen: 'intro'` i
+  samma `updateUser`.
+- **Välkomsten följer kontot, inte webbläsaren**: den som stänger fliken
+  får rutan igen vid nästa inloggning, på vilken enhet som helst, och
+  `NX.inbjudan` ger den också utan metadatan. `'intro'` visar
+  introduktionen (`NXStudie.introduktion`, `NXIntro`), och Fortsätt tar
+  bort välkomsten. Den som registrerar sig själv får `'intro'` vid
+  registreringen. `user_metadata` skriver personen själv: välkomsten säger
+  bara vad vyn visar först, och får aldrig avgöra vad någon får.
+- **Skicka inbjudan igen** (personens panel i adminvyn, tills hen loggat
+  in): ett obekräftat konto får en ny inbjudan; ett bekräftat utan valt
+  lösenord får länken som Glömt lösenordet ger (Reset password-mallen,
+  vars sista mening "Ditt lösenord är detsamma som förut" inte passar
+  helt, men inte är fel); ett konto med lösenord får ingenting, för då är
+  det Glömt lösenordet? som gäller.
+- **Länkens livslängd** är Auths (Authentication → Providers → Email →
+  Email OTP Expiration, som mest ett dygn). En familj som tas in på
+  fredagen och läser mejlet på måndagen får ett utgånget-besked och en
+  väg till Glömt lösenordet; Skicka inbjudan igen ger en ny. Sätt ett
+  dygn.
+- **Villkoren**: ingen godkänner användarvillkoren när kontot skapas,
+  varken här eller i registreringen. Det var så före, och är inte byggt.
+- Provas i `verktyg/prova-intag.js` och `verktyg/prova-aterstallning.js`
+  (`minne/genererat-och-ci.md`), och vägarna i `bjud-in` i
+  `_delad/inbjudan_test.ts`.
 
 ### Kontomejlen från Supabase Auth (2026-10-01)
 

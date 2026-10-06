@@ -28,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=03f73911">
-<link rel="stylesheet" href="nextrum-vy.css?v=bb5869b5">
+<link rel="stylesheet" href="nextrum-vy.css?v=b4b12c20">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=70850ac7">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=bd5e3942">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=71cb53d7">
 </head>
 <body class="vy">
@@ -765,6 +765,19 @@
                     <p class="ok-msg" id="k-msg"></p>
                   </form>
                 </div>
+
+                <!-- ============ INTRODUKTIONEN (2026-10-06) ============
+                     Bildspelet som visas första gången, en gång till.
+                     Knappen öppnar det med NXIntro (nextrum-introduktion.js). -->
+                <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+                  <h5>Introduktionen <em>så fungerar studievyn</em></h5>
+                  <p class="xsmall" style="margin:-6px 0 14px;color:var(--bl-2);line-height:1.6">
+                    Bilderna och förklaringarna ni fick första gången ni loggade in, del för del.
+                  </p>
+                  <div class="vy-knapprad">
+                    <button class="btn btn-ghost btn-sm" type="button" data-intro="foralder">Visa introduktionen</button>
+                  </div>
+                </div>
         </div>
 
         <!-- ============ BARNEN ============
@@ -877,10 +890,10 @@
           <div class="dbox" id="bi-ruta" style="margin-top:clamp(16px,1.8vw,22px)" hidden>
             <h5>Barnens inloggning <em>egen vy på nextrum.se/barn</em></h5>
             <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
-              Ett barn kan få en egen inloggning. Barnet ser sina pass, sin studieplan,
-              sina timmar och sina notiser, men aldrig priser, betalningar eller era
-              uppgifter, och kan inte boka eller avboka något. Ni väljer själva om
-              barnet får läsa rapporterna.
+              Ett barn kan få en egen inloggning. Ni väljer vad barnet får se och göra:
+              passen, studieplanen, rapporterna, NexLäx och meddelandena. Priser,
+              betalningar och era uppgifter ser barnet aldrig, och kan inte boka eller
+              avboka något.
             </p>
             <div id="bi-lista"></div>
             <p class="ok-msg" id="bi-msg" role="status"></p>
@@ -1014,14 +1027,15 @@
 <script src="nextrum-app.js?v=5a31edc0"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=63957b13"></script>
-<script src="nextrum-studie.js?v=a84e2822"></script>
-<script src="nextrum-images.js?v=c4a90ffa"></script>
+<script src="nextrum-studie.js?v=01b4f157"></script>
+<script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-arbetsyta.js?v=35b67861"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=d7fc6340"></script>
 <script src="nextrum-ljud.js?v=af6ef39f"></script>
 <script src="nextrum-uppgifter.js?v=5c84b3cb"></script>
-<script src="nextrum-modulvakt.js?v=a30553e4"></script>
-<script src="nextrum-studie-vy.js?v=ff334ba0"></script>
+<script src="nextrum-introduktion.js?v=dd9604a0"></script>
+<script src="nextrum-modulvakt.js?v=099b1ee9"></script>
+<script src="nextrum-studie-vy.js?v=ed828469"></script>
 </body>
 </html>

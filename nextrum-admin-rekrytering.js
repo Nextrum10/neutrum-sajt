@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { ANS_LAGE, S, fråga, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
+  const { ANS_LAGE, S, fråga, funktionsFel, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
           kortDatum, läge, matchar, namnlista, närText, ritaPanelen, tomtText, visaRuta,
           ärNyNu, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
@@ -619,7 +619,7 @@
           + 'passet aldrig genomfört — varken fakturerat eller utbetalt. "Utbildningsmötet är '
           + 'hållet" öppnar provet i tre dagar och mejlar länken, med en påminnelse dagen efter '
           + 'och en sista dagen. 80 procent rätt är godkänt, och då markeras hen som utbildad av '
-          + 'sig själv och får mejlet om att skapa sitt konto.',
+          + 'sig själv och får mejlet om sista steget: att vi skapar hens konto.',
           a.utbildad_at,
           (utbLänk
             ? '<button type="button" class="btn btn-ghost btn-sm" data-ans-utb="' + id + '">'
@@ -649,8 +649,8 @@
 
       + spårSteg(4, 'In i poolen',
           'Profilen blir godkänd och dyker upp i matchningen, och hen får ett välkomstmejl. '
-          + 'Den sökande måste ha ett konto på nextrum.se först — annars finns ingen profil '
-          + 'att godkänna.',
+          + 'Har hen inget konto skapas det här, med adressen i ansökan, och hen får ett mejl '
+          + 'med en länk där hen väljer sitt lösenord.',
           a.status === 'approved' ? (a.utbildad_at || a.created_at) : null,
           '<button type="button" class="btn btn-primary btn-sm" data-ans-pool="' + id + '">'
           + 'Ta in i poolen</button>',
@@ -791,7 +791,21 @@
      frågar var pengarna blev av. Bättre att kräva talet i samma
      stund som personen släpps in.
      ============================================================ */
-  function tutorVal(valt) {
+  /* Kontot ansökan hör till. Har ingen adressen i ansökan står Skapa
+     kontot först och är valt (2026-10-06): Leo, "när man ska ta in en
+     anställd är det krångligt att skapa konto åt den". Kontot skapas av
+     bjud-in när knappen trycks, och hen får länken där hen väljer
+     lösenordet. Den som redan registrerat sig själv står i listan som
+     förut. */
+  const NYTT_KONTO = '__nytt';
+
+  function adressensKonto(ans) {
+    const epost = String(ans.email || '').trim().toLowerCase();
+    return epost ? Object.values(S.personer).find(p =>
+      !ärRaderad(p) && String(p.email || '').toLowerCase() === epost) || null : null;
+  }
+
+  function tutorVal(valt, ans) {
     /* Bara konton som INTE redan är i poolen. Att erbjuda en redan
        godkänd studiehjälpare i listan är att be om att någons ämnen
        skrivs över av en ansökan från en annan person. */
@@ -800,20 +814,37 @@
       .filter(p => (S.tutorProfiler[p.id] || {}).status !== 'approved')
       .sort((a, b) => String(a.full_name || a.email || '')
         .localeCompare(String(b.full_name || b.email || ''), 'sv'));
+    const epost = String(ans.email || '').trim();
+    const upptagen = adressensKonto(ans);
+    const kanSkapa = NX.epostOk(epost) && !upptagen;
 
-    if (!kandidater.length) {
+    if (!kandidater.length && !kanSkapa) {
       return '<p class="xsmall" style="color:var(--acc-text);margin:0">'
-        + 'Inga konton att koppla till. Den sökande måste registrera sig som '
-        + 'studiehjälpare på nextrum.se först — sedan dyker hen upp här.</p>';
+        + (upptagen
+          ? 'Adressen i ansökan har redan ett konto som inte går att ta in som studiehjälpare här. '
+            + 'Öppna kontot under Familjer eller Studiehjälpare.'
+          : 'Adressen i ansökan går inte att skicka till. Rätta den under Redigera uppgifterna, '
+            + 'så skapas kontot här.') + '</p>';
     }
 
     return '<select class="inp" id="ap-konto">'
-      + '<option value="">Välj konto…</option>'
+      + (kanSkapa
+        ? '<option value="' + NYTT_KONTO + '"' + (valt ? '' : ' selected') + '>Skapa kontot med '
+          + esc(epost.toLowerCase()) + '</option>'
+        : '<option value="">Välj konto…</option>')
       + kandidater.map(t => '<option value="' + esc(t.id) + '"'
           + (t.id === valt ? ' selected' : '') + '>'
           + esc(t.full_name || t.email || t.id) + (t.email ? ' · ' + esc(t.email) : '')
           + '</option>').join('')
       + '</select>';
+  }
+
+  /* Raden under kontovalet säger vad som händer med det valda. */
+  function kontoText(värde) {
+    return värde === NYTT_KONTO
+      ? 'Kontot skapas när du trycker, och hen får ett mejl från Nextrum med en länk där hen väljer sitt '
+        + 'lösenord. Efter lösenordet går hen igenom introduktionen.'
+      : 'Hen loggar in med kontot hen redan har.';
   }
 
   document.addEventListener('click', async e => {
@@ -866,7 +897,8 @@
       + '<h3 id="ap-t">Ta in ' + esc(ans.name || 'den sökande') + ' i poolen</h3>'
       + '<p>Profilen blir godkänd och dyker upp i matchningen direkt, och hen får ett '
       + 'välkomstmejl. Uppgifterna nedan kommer från ansökan — ändra det som behöver ändras.</p>'
-      + '<div class="fgroup"><label for="ap-konto">Konto</label>' + tutorVal(trolig && trolig.id) + '</div>'
+      + '<div class="fgroup"><label for="ap-konto">Konto</label>' + tutorVal(trolig && trolig.id, ans)
+      + '<p class="xsmall" id="ap-konto-text" style="color:var(--muted-2);margin-top:6px;line-height:1.6"></p></div>'
       + '<div class="ag-faltrad" style="margin-top:12px">'
       + '<div class="fgroup"><label for="ap-amnen">Ämnen (kommaseparerat)</label>'
       + '<input class="inp" id="ap-amnen" value="' + esc(ans.subjects || '') + '"></div>'
@@ -889,15 +921,38 @@
       if (ev.target === ruta || ev.target.closest('[data-ap-stang]')) stäng();
     });
 
+    const kontoFält = $('#ap-konto', ruta);
+    const visaKontoText = () => {
+      $('#ap-konto-text', ruta).textContent = kontoFält && kontoFält.value ? kontoText(kontoFält.value) : '';
+      $('#ap-godkann', ruta).textContent = kontoFält && kontoFält.value === NYTT_KONTO
+        ? 'Ta in och skicka inbjudan' : 'Ta in i poolen';
+    };
+    if (kontoFält) kontoFält.addEventListener('change', visaKontoText);
+    visaKontoText();
+
     $('#ap-godkann', ruta).addEventListener('click', async () => {
       const msg = $('#ap-msg', ruta);
       rensa(msg);
-      const konto = $('#ap-konto', ruta) ? $('#ap-konto', ruta).value : '';
+      let konto = kontoFält ? kontoFält.value : '';
+      const skapas = konto === NYTT_KONTO;
       const timpenning = Number($('#ap-timpenning', ruta).value);
       if (!konto) { säg(msg, 'Välj vilket konto ansökan hör till.', false); return; }
       if (!timpenning || timpenning < 1) { säg(msg, 'Fyll i timpenningen.', false); return; }
 
       await medan($('#ap-godkann', ruta), 'Tar in…', async () => {
+        /* Kontot först, när det ska skapas. bjud-in skapar det med
+           rollen tutor, och handle_new_user lägger profilen i väntläge;
+           godkännandet nedan är samma som för ett konto som fanns. */
+        if (skapas) {
+          const res = await supa.functions.invoke('bjud-in', {
+            body: { epost: ans.email, namn: ans.name || '', roll: 'tutor' }
+          });
+          const fel = res.error || (res.data && res.data.error);
+          if (fel) { säg(msg, 'Kontot gick inte att skapa: ' + await funktionsFel(fel), false); return; }
+          konto = res.data.id;
+          await hämtaAllt();
+        }
+
         /* Ämnena lagras som en array. Fritexten från ansökan delas på
            komma; tomma bitar bort, annars blir "matte, " till två ämnen
            varav ett heter ingenting. */
@@ -915,12 +970,31 @@
           tjanster: (ans.tjanster && ans.tjanster.length) ? ans.tjanster : [standardJobbtjanst()]
         }).eq('id', konto);
 
-        if (error) { säg(msg, 'Kunde inte ta in: ' + felText(error), false); return; }
+        if (error) {
+          säg(msg, (skapas
+            ? 'Kontot är skapat och inbjudan skickad, men profilen kunde inte godkännas: '
+              + felText(error) + '. Stäng rutan och tryck Ta in i poolen igen.'
+            : 'Kunde inte ta in: ' + felText(error)), false);
+          return;
+        }
 
         await supa.from('applications').update({ status: 'approved' }).eq('id', ans.id);
         ans.status = 'approved';
 
-        stäng();
+        /* Ett nytt konto får ett kvitto: två mejl går (länken från Auth
+           och välkomstmejlet), och admin ska veta vilket hen väntar på. */
+        if (skapas) {
+          ruta.querySelector('.nx-fraga-box').innerHTML =
+            '<h3>' + esc(ans.name || 'Hen') + ' är intagen</h3>'
+            + '<p>Profilen är godkänd och syns i matchningen. Ett mejl med en länk har gått till <b>'
+            + esc(String(ans.email || '').toLowerCase()) + '</b>: där väljer hen sitt lösenord och går sedan '
+            + 'igenom introduktionen. Välkomstmejlet går som vanligt.</p>'
+            + '<p class="xsmall" style="color:var(--muted-2)">Kommer inget fram: öppna hen under '
+            + 'Studiehjälpare och tryck Skicka inbjudan igen.</p>'
+            + '<div class="nx-fraga-knappar"><button type="button" class="btn btn-primary" data-ap-stang>Stäng</button></div>';
+        } else {
+          stäng();
+        }
         await hämtaAllt();
         ritaAnsokningar();
         ritaStudiehjalpare();

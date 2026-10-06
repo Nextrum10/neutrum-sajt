@@ -292,7 +292,8 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
   - Översikt: timmarna, kommande pass, studieplanen, genomförda pass och
     rapporterna, som förut.
   - NexLäx: som förut. Utan `barn_nexlax` i databasen står ett besked i
-    stället för flikarna, för delen finns alltid i menyn.
+    stället för flikarna, för delen finns alltid i menyn, och likadant när
+    föräldern stängt av NexLäx (`lage: 'avstangd'`, se Barnets behörigheter).
   - Meddelanden: barnets notiser (`barn_notiser`), med siffran för olästa i
     menyn och på hälsningens kort. **Ingen chatt, med flit**: familjens tråd
     med studiehjälparen är förälderns (barnet ser aldrig föräldern), och
@@ -321,7 +322,9 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
   adminvyn. Det är bara rätt sida; skyddet är rollen i databasen.
 - Föräldrarnas ruta: `mina_barnkonton()` (tål att migrationen saknas:
   PGRST202 döljer rutan), `visa_rapporter` skrivs direkt på `students`
-  och bara föräldern får ändra den (`skydda_studentfalt`). Klasserna heter
+  och bara föräldern får ändra den (`skydda_studentfalt`). Sedan
+  2026-10-06 är rapporterna ett av barnets fem val, och knappen för dem
+  står bara kvar när `mina_barns_behorigheter()` saknas. Klasserna heter
   `bi-*` och data-attributen `data-bi-*`; `bk-*` är bokningens. Barnets
   e-post är en egen del under inloggningens knappar (`.bi-epost`,
   `data-bi-epost-*`), ur `mina_barns_epost()`; utan den funktionen ritas
@@ -334,6 +337,77 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
 - Felrapporterna (`nextrum-fel.js`) når inte fram från ett inloggat barn:
   rollen får inte skriva i `klientfel`. Det är med flit (inga rättigheter),
   men det betyder att fel i barnets vy bara syns före inloggningen.
+
+### Barnets behörigheter (barnets_behorigheter, 2026-10-06)
+Leo: "familjen som skapar elev väljer vilka behörigheter barnet ska
+vara". Föräldern väljer vad barnet får se och göra med sin egen
+inloggning, när inloggningen skapas och när som helst efteråt:
+
+| Val | Släpper fram | Förval |
+|---|---|---|
+| `pass` | kommande och genomförda pass, och timmarna | på |
+| `studieplan` | studieplanen | på |
+| `rapporter` | rapporterna från passen (`visa_rapporter`, som fanns sedan förut) | av |
+| `nexlax` | NexLäx: banan, nivåerna, läget, bocken på en uppgift och rapportknappen | på |
+| `meddelanden` | Nextrums notiser till barnet (`barn_notiser`) | på |
+
+- **Förvalet är det som gällde före**: allt utom rapporterna, som redan
+  var av som förval. Barn som hade en inloggning behöll det de hade,
+  rapporterna inräknade. Det barnet aldrig får (boka, avboka, svara,
+  priser, betalningar, föräldern) står inte i listan, så det går inte att
+  slå på.
+- **Spärren ligger i databasen.** `students.barn_behorigheter` (text[],
+  villkoret `students_barn_behorigheter_kanda`) bär fyra av valen;
+  rapporterna står kvar i `visa_rapporter`, så att inget som redan läste
+  den behövde ändras. Barnets roll når inga tabeller, bara sina
+  funktioner, och de prövar valet:
+  - `barn_oversikt()` går genom `intern.barn_behorigt()`, som tar bort
+    `kommande`, `genomforda` och `timmar` utan pass och `studieplan` utan
+    studieplan, och lägger till `behorigheter`
+    (`intern.barnets_behorigheter()`, rapporterna medräknade).
+  - `barn_notiser()` och `barn_markera_last()` svarar som för ett pausat
+    barn när meddelandena är av. Notiserna skapas som förut; de lämnas
+    bara inte ut, och syns igen när föräldern slår på dem.
+  - `barn_nexlax()` svarar `{lage: 'avstangd'}`. `niva_starta`,
+    `niva_svara`, `niva_genomgang`, `nexlax_lage` och `barn_uppgift`
+    frågar `intern.mitt_nexlax_barn()` (aktiv inloggning och NexLäx på) i
+    stället för `intern.mitt_aktiva_barn()`, och `rapportera_fragefel`
+    nekar ett barn utan NexLäx: annars hade barnet kunnat spela genom att
+    anropa funktionerna själv.
+  - Familjens egen inloggning gör NexLäx åt barnet som förut; valet
+    gäller barnets inloggning.
+- **Bara föräldern ändrar valet**: `barn_behorigheter_satt(barn, lista)`
+  sparar hela listan (42501 för alla andra, också admin och barnet;
+  22023 för ett okänt val; 55000 utan inloggning), och
+  `skydda_studentfalt` håller kolumnen för alla andra, som
+  `visa_rapporter`. Tas inloggningen bort börjar valen om från förvalet.
+  Valen står i auditloggen (`students_barnkonto_audit`) med föräldern som
+  aktör. Föräldern läser med `mina_barns_behorigheter()`: alla val i
+  vyns ordning (`intern.barn_behorigheter_alla()`) och varje eget barns.
+- **Lapparna** gick på driftens text (`pg_get_functiondef` och en vakt som
+  räknar träffarna), och funktionerna var md5-lika lokalt och i driften
+  2026-10-06 innan de lappades. En lappad funktion bär ordet
+  `barnets_behorigheter` eller `mitt_nexlax_barn`, så filen går att köra
+  två gånger. Versionen `20261006230000` ligger efter
+  `nexlax_felrapporter` (`20261006220000`), som redan stod i driften och
+  vars `rapportera_fragefel` lappas.
+- **Studievyn**: valen står som kryssrutor i formuläret där inloggningen
+  skapas (`biFårVal`, förvalet ikryssat) och som på/av på barnets kort
+  (`biFår`, `data-bi-far`, minst 44 px höga). Valen i formuläret sparas
+  efter att `barn-konto` skapat inloggningen, och bara om de skiljer sig
+  från förvalet; ett tryck på kortet sparas direkt. Utan funktionerna
+  (PGRST202) ritas kortet som förut.
+- **Barnets vy** gömmer delarna i Översikt som är av (`data-bv-far`), och
+  en rad överst säger att föräldern valt det. Hälsningens första kort
+  pekar på NexLäx när passen är av, Meddelanden och NexLäx säger att de
+  är avstängda, och Profil säger vad barnet får. En tom lista hade sett
+  ut som ett fel. Utan `behorigheter` i svaret (en databas före
+  migrationen) är allt på, som förut.
+- **En ny behörighet** går in i `intern.barn_behorigheter_alla()`,
+  villkoret, förvalet (kolumnen och återställningarna i
+  `skydda_studentfalt` och `skydda_studentfalt_ny`), `BARN_FÅR` och
+  `BARN_FÅR_FÖRVAL` i studievyn och `FÅR` i barnets vy, i samma ändring
+  som funktionen den spärrar. `kolla-behorigheter.py` jämför listorna.
 
 ## Del 2: adminbehörigheterna
 
@@ -475,6 +549,11 @@ studiehjälparvyn till `/admin`.
   tabellen, koden, uppslaget och båda taken, barnets val, kön och
   omprövningen, avanmälan, gallringen och flaggan av; 1220 rader gröna
   lokalt, och de som ska falla föll när tabellen öppnades.
+- `rls-test.sql` avsnitt 21 (barnets behörigheter, 2026-10-06): 31 prov
+  för förvalet, förälderns läsning och sparande, auditloggen, varje
+  spärr i barnets funktioner (också rapportknappen), familjens NexLäx med
+  barnets av, och vem som inte får ändra valet. Hela filen 1385 av 1385
+  lokalt med alla migrationer; utan den här föll blocket.
 - Deno: `_delad/barnkonto_test.ts`, `_delad/adminbehorighet_test.ts`,
   `_delad/barninloggning_test.ts`, `notiser/barn_test.ts`, och barnets
   rader i `notiser/ko_test.ts`, `token_test.ts`, `avanmal_test.ts` och

@@ -663,6 +663,57 @@ body.betalar .hdr.bort{transform:none}
 .nx-fraga-box .nx-skal-not{margin-top:12px;font-size:.84rem;color:var(--bl-3)}
 /* Det nya lösenordet efter en återställningslänk (NXStudie.nyttLösenord). */
 .nx-fraga-box form[data-nylos]{margin-top:18px}
+
+/* ============================================================
+   INTRODUKTIONEN (2026-10-06)
+   NXIntro i nextrum-introduktion.js: en skärmdump ur vyn i taget, med
+   vad delen är till för, och Fortsätt sist. Samma ruta som
+   bekräftelserna (.nx-fraga). Bilden är tagen i en telefons bredd, så
+   att texten i den går att läsa också på en telefon; på en dator står
+   den till vänster om texten, så att rutan ryms på en bärbar.
+
+   KNAPPARNA STÅR STILLA mellan bilderna (fällan om det som står
+   ovanför det man trycker på): bilden har sina proportioner innan den
+   laddat, och texten har plats för den längsta. Raden Lösenordet är
+   sparat står i samma reserverade yta.
+   ============================================================ */
+.nx-intro-box{max-width:440px;padding:clamp(18px,2.4vw,28px)}
+.nx-intro-topp{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:32px;margin-bottom:10px;
+}
+.nx-intro-nr{font-size:.8rem;font-weight:600;letter-spacing:.02em;color:var(--bl-3);font-variant-numeric:tabular-nums}
+.nx-intro-bild{
+  margin:0;border-radius:16px;overflow:hidden;
+  border:1px solid var(--ln);background:var(--pap-2);
+  aspect-ratio:780/880;
+}
+.nx-intro-bild[hidden]{display:none}
+.nx-intro-bild picture,.nx-intro-bild img{display:block;width:100%;height:100%}
+.nx-intro-bild img{object-fit:cover;object-position:top center}
+.nx-intro-kropp{margin-top:16px;min-height:13em}
+/* Två klasser: .nx-fraga-box p (0,1,1) sätter storlek och färg på alla stycken i rutan. */
+.nx-intro-box .nx-intro-klar{margin:0 0 8px;font-size:.88rem;font-weight:600;color:var(--mossa)}
+.nx-intro-box h3{margin-bottom:6px}
+.nx-intro-box .nx-intro-vantar{margin-top:10px;font-size:.86rem;color:var(--bl-3)}
+.nx-intro-prickar{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.nx-intro-prickar span{width:7px;height:7px;border-radius:50%;background:var(--ln-2)}
+.nx-intro-prickar span.ar-sedd{background:var(--bl-3)}
+.nx-intro-prickar span.ar-nu{background:var(--bl)}
+.nx-intro-knappar{justify-content:space-between;margin-top:14px}
+/* Nästa och Fortsätt är lika breda: knappen flyttar sig inte när den byter ord. */
+.nx-intro-knappar [data-intro-fram]{min-width:8.6em}
+@media (min-width:760px){
+  .nx-intro-box{max-width:780px}
+  .nx-intro-mitt{
+    display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);
+    gap:clamp(22px,2.6vw,32px);align-items:start;
+  }
+  .nx-intro-kropp{margin-top:6px;min-height:0}
+}
+@media (max-width:520px){
+  .nx-fraga.nx-intro{padding:12px}
+}
 /* Svaret på en föreslagen tid (NXStudie.svarRuta, och flytta-rutan när
    studiehjälparen svarar med en annan tid, 2026-09-30). Räknaren står
    under fältet till höger och har tabelltal, så att den inte flyttar

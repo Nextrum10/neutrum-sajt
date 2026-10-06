@@ -114,9 +114,14 @@
       }
     }
   } else {
+    /* Första inloggningen (2026-10-06): båda vyerna frågar
+       lösenordFörst och introduktion när de startar, och introduktionen
+       står i en egen fil som bara de två laddar. */
     krav.push(
       [typeof NXKontakt !== 'undefined', 'nextrum-kontakt.js'],
-      [studieKlar, 'nextrum-studie.js'],
+      [studieKlar && typeof NXStudie.lösenordFörst === 'function' && typeof NXStudie.introduktion === 'function',
+       'nextrum-studie.js'],
+      [typeof NXIntro !== 'undefined' && typeof NXIntro.visa === 'function', 'nextrum-introduktion.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
       [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
       /* NexLäx (Fas 23.2): vägen och spelaren. En gammal fil i cachen,

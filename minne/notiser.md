@@ -158,8 +158,8 @@ applications (insert/update)
 | "Utbildningsmötet är hållet", eller Öppna provet i ansökans översikt | `prov`: länken till provet, öppet i tre dagar (Fas 22.1). Adminvyn frågar först |
 | dagen efter, och sista dagen, kl. 9 | `prov_paminnelse`, `prov_sista_dagen` (pg_cron `utbildningsprov-paminn`) |
 | "Öppna provet i tre dagar till" | `prov` igen, med den nya sista dagen |
-| provet klarat, eller "Markera utbildad" | `sista_steget`: skapa konto med samma e-post |
-| läget blir Godkänd | `valkommen` |
+| provet klarat, eller "Markera utbildad" | `sista_steget`: kontot skapar vi åt hen när profilen godkänns, och ingen knapp (2026-10-06; förut: skapa konto med samma e-post) |
+| läget blir Godkänd | `valkommen`, som sedan 2026-10-06 också säger att länken för lösenordet kommer i ett eget mejl. Tas hen in med ett nytt konto (Ta in i poolen) skickar Auth inbjudan samtidigt |
 | ansökan kommer in, under 18 med vårdnadshavarens e-post (2026-10-05) | `vardnadshavare`: till vårdnadshavaren, barnet har sökt och vi behöver ett skriftligt godkännande |
 | admin rättar eller lägger till vårdnadshavarens e-post, utan godkännande | `vardnadshavare` igen, en gång per adress |
 | läget blir Avböjd (2026-10-05) | `avbojd`: tack, vi har valt att gå vidare med andra sökande. Tidigast en halvtimme senare, aldrig 20–9, inte om läget hunnit bytas. Adminvyn visar mejlet innan |

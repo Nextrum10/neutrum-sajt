@@ -20,6 +20,13 @@ funktionen barn-konto, inloggningen (nextrum-studie.js, som alla fyra
 vyerna delar sedan 2026-10-01) och föräldrarnas ruta prövar dem var för
 sig.
 
+Och för vad ett barn får se och göra (barnets_behorigheter, 2026-10-06):
+listan står i intern.barn_behorigheter_alla() och, utan rapporterna, i
+villkoret på students; förvalet i kolumnen och i skydda_studentfalt;
+och i föräldrarnas ruta (BARN_FÅR och BARN_FÅR_FÖRVAL) och elevvyn
+(FÅR). En sak som vyn erbjuder och databasen nekar blir ett fel för
+föräldern; en som databasen har och vyn saknar går inte att slå av.
+
 Den nyaste migrationen som definierar något gäller.
 """
 import glob, io, os, re, sys
@@ -94,10 +101,40 @@ def main():
         if "'%%@%s'" % doman not in sql:
             fynd.append('Ingen migration spärrar domänen %s.' % doman)
 
+    # Vad barnet får (barnets_behorigheter).
+    alla = sista(r"create or replace function intern\.barn_behorigheter_alla\(\).*?array\[(.*?)\]")
+    kanda = sista(r"add constraint students_barn_behorigheter_kanda\s+check \(barn_behorigheter <@ array\[(.*?)\]")
+    forval = sista(r"add column if not exists barn_behorigheter text\[\] not null default '\{(.*?)\}'")
+    if not alla or not kanda or not forval:
+        fynd.append('Hittar inte barnets behörigheter i migrationerna.')
+        antal_far = 0
+    else:
+        lista = ord_i(alla[1])
+        antal_far = len(lista)
+        if sorted(ord_i(kanda[1])) != sorted(x for x in lista if x != 'rapporter'):
+            fynd.append('Villkoret students_barn_behorigheter_kanda (%s) och intern.barn_behorigheter_alla() (%s) '
+                        'har olika listor.' % (kanda[0], alla[0]))
+        forvalet = forval[1].split(',')
+        sql = '\n'.join(io.open(f, encoding='utf-8').read() for f in migrationer())
+        if sql.count("new.barn_behorigheter         := '{%s}';" % forval[1]) < 2:
+            fynd.append('skydda_studentfalt och skydda_studentfalt_ny börjar inte om från kolumnens förval {%s}.'
+                        % forval[1])
+        vy = las('nextrum-studie-vy.js')
+        m = re.search(r"const BARN_FÅR = \[(.*?)\n  \];", vy, re.S)
+        if not m or re.findall(r"\[\s*'([a-z_]+)',", m.group(1)) != lista:
+            fynd.append('nextrum-studie-vy.js (BARN_FÅR) har en annan lista än databasen: %s' % ', '.join(lista))
+        m = re.search(r"const BARN_FÅR_FÖRVAL = \[(.*?)\];", vy, re.S)
+        if not m or ord_i(m.group(1)) != forvalet:
+            fynd.append('nextrum-studie-vy.js (BARN_FÅR_FÖRVAL) har ett annat förval än kolumnen: {%s}' % forval[1])
+        m = re.search(r"const FÅR = \{(.*?)\};", las('nextrum-barn-vy.js'), re.S)
+        if not m or sorted(re.findall(r"^\s*([a-z_]+):", m.group(1), re.M)) != sorted(lista):
+            fynd.append('nextrum-barn-vy.js (FÅR) har en annan lista än databasen: %s' % ', '.join(lista))
+
     if fynd:
         print('\n'.join(fynd))
         return 1
-    print('ok   %d behörigheter på fyra ställen, användarnamnet på fyra, domänen %s' % (len(db), doman))
+    print('ok   %d behörigheter på fyra ställen, användarnamnet på fyra, domänen %s, och barnets %d val på fem'
+          % (len(db), doman, antal_far))
     return 0
 
 

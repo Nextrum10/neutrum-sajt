@@ -22,7 +22,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 ## 1. Affären, i ordning
 1. Familjen skickar **intresseanmälan** → rad i `leads` (Nextrum matchar; ingen katalog)
 2. Ni ringer och väljer studiehjälpare
-3. Familjen skapar konto på `foralder.html`
+3. Admin tar in familjen (**Ta in familjen** på anmälan, 2026-10-06): kontot skapas med anmälans
+   adress, eleven ur anmälan, och familjen väljer lösenordet genom länken i mejlet. Registrera sig
+   själv på `foralder.html` går också
 4. `admin.html` → **Familjer** → välj hjälpare: sätter `matched_tutor_id` och `match_status`
    **samtidigt**. Först då öppnas föräldravyn; före det väntläge
 5. Föräldern lägger in barnet, hjälparen skriver studieplanen
@@ -93,6 +95,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används
   (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad).
+- **Intaget** (2026-10-06): vi skapar familjens och studiehjälparens konto (Ta in familjen, Ta in i
+  poolen, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
+  ruta som inte går att stänga (`user_metadata.valkommen = 'losenord'`, `NXStudie.lösenordFörst`).
+  **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
+  ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
+  under Profil. Skicka inbjudan igen står i personens panel tills hen loggat in.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
   kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
@@ -107,6 +115,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   aldrig timbanken. NexLäx görs i barnets vy och i familjens inloggning, med samma rader.
   Elevvyn har fyra delar och inget mer (2026-10-06): Översikt, NexLäx, Meddelanden (Nextrums
   notiser, ingen chatt) och Profil; Elev i vyernas rollval och i sajtens Logga in leder till `/barn`.
+  **Föräldern väljer vad barnet får** (2026-10-06): pass, studieplan, rapporter, NexLäx och
+  meddelanden (`barn_behorigheter`, rapporterna i `visa_rapporter`). Barnets funktioner lämnar inte
+  ut det som är av; vyn säger bara det.
 - **Barnets egen e-post** (`barnets_epost`, 2026-10-01; flaggan `barn_epost` står AV tills
   juristen läst): föräldern lägger till den, barnet bekräftar den med en knapp, och först då
   används den, till inloggning (`barn-inloggning`) och, om föräldern slår på det, till mejl om
@@ -164,6 +175,8 @@ Detaljer: `minne/grunden.md`.
 - Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX,
   NXStudie, NXUppgifter och NXArbete för hälsningen) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
+  `nextrum-introduktion.js` (`NXIntro`) är introduktionen i studievyn och studiehjälparvyn; bilderna
+  står i `NEXTRUM_INTRO` och tas med `bygg-introbilder.js`.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
   sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar
   `theme-color` med sig, men mejlens `FARG` ändras för sig. Adminpaletten laddas sist.
@@ -280,7 +293,9 @@ Detaljer: `minne/grunden.md`.
   Reglerna står i triggern `admin_roller_vakt`, och `admin_logg` går inte att ändra.
 - **Barnets roll** `nextrum_barn` har inga tabellrättigheter; en ny tabell eller vy ger den
   ingenting, och en ny barnfunktion hittar barnet med `intern.mitt_barn()`, eller med
-  `intern.mitt_aktiva_barn()` när en pausad inloggning inte ska kunna göra den. **GoTrue skriver
+  `intern.mitt_aktiva_barn()` när en pausad inloggning inte ska kunna göra den, och i NexLäx med
+  `intern.mitt_nexlax_barn()`. En ny behörighet för barnet går in i `intern.barn_behorigheter_alla()`,
+  villkoret, förvalet och båda vyerna samtidigt (`kolla-behorigheter.py`). **GoTrue skriver
   raden i `auth.users` före `app_metadata`**: ett barnkonto skapas bara genom ett fönster som
   `barn-konto` öppnar för kontots eget id, och lösenordet byts bara i ett fönster
   (`barn_andringsfonster`). Databasen skriver tillbaka barnets `app_metadata`, spärrar adress
@@ -358,7 +373,9 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   "permission denied" eller tomma listor: titta i API-loggen först. **Glömt lösenordet**:
   länken leder tillbaka till vyn där man bad om den, `type=recovery` och `type=invite` läses
   innan klienten skapas, rutan för lösenord väntas in före rolldirigeringen (också för en
-  inbjudan, i alla tre vyerna), och beskedet är detsamma oavsett om kontot finns.
+  inbjudan, i alla tre vyerna), och beskedet är detsamma oavsett om kontot finns. Ett konto vi
+  skapat får rutan utan Inte nu vid varje inloggning tills lösenordet är valt; `valkommen` säger
+  bara vad vyn visar först, aldrig vad någon får.
   Kontomejlen skickas av Supabase Auth (Googles SMTP som info@), med mallarna i
   `minne/sakerhet.md`; deras länk går genom knappen på `/lank`, aldrig rakt till Auth.
 - **Samtycket**: öppna sidor sätter inga cookies; det som kräver samtycke går genom
@@ -389,6 +406,8 @@ Detaljer: `minne/sakerhet.md`.
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
   `barn-inloggning` 2026-10-01. Ingen skiljer i sak från main: en äldre kopia av en delad fil
   saknar bara tillägg som funktionen inte använder (`minne/funktioner.md`).
+- `bjud-in` (`_delad/inbjudan.ts`) skapar kontot och sätter aldrig ett lösenord. Igen skickar en ny
+  inbjudan, eller länken för lösenordet om kontot bekräftats utan att lösenordet valts.
 - `barn-konto` prövar föräldern och `admin-skapa` skriver rollen med anroparens token; bara det
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
   `barn-konto` väljer barnkontots id och ger Auth varken `app_metadata` eller roll: det skriver
@@ -411,7 +430,8 @@ Detaljer: `minne/funktioner.md`.
 ## 8. Genererade filer — ändra aldrig för hand
 Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessidor.py`
 (`laxhjalp-*`, guiderna, navets kort), `bygg-sitemap.py` (`lastmod` ur texten), `satt-logga.py`,
-`bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar) och
+`bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
+`bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras) och
 `bygg-uppgifter.py --sql` (alltid en ny migration). **`satt-version.py` körs SIST.** Sidorna
 säger bara det som är sant: inga antal, betyg, betygshöjningar, okontrollerade skolnamn eller
 kursnamn med årtal; en guide länkar det den påstår, och dess författare är Nextrum. En adress
@@ -478,6 +498,11 @@ Detaljer: `minne/grunden.md`.
   `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Inget riktigt
   nej eller mejl till en vårdnadshavare har gått än. Policytexten om vårdnadshavaren är inte läst av
   juristen.
+- **Intaget, introduktionen och barnets behörigheter** (2026-10-06) går ut efter merge: migrationen
+  `barnets_behorigheter` (efter `nexlax_felrapporter`), `bjud-in` och `ansokan-notis` från main;
+  vyerna tål att migrationen saknas (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller så länge
+  Auth säger (Email OTP Expiration, sätt ett dygn). Ingen godkänner villkoren när kontot skapas,
+  varken i inbjudan eller i registreringen: en lucka sedan förut.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

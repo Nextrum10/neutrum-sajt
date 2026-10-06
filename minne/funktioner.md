@@ -16,7 +16,7 @@ tillbaka en kopia.**
 |---|---|---|
 | `fakturering` | Månadskörningen: underlag per studiehjälpare, som är studiehjälparens lönespecifikation (2026-09-28), ett fakturautkast per familj som valt faktura (Fas 14.6), och en lista över pass som hölls utan att betalas. Utkastet läggs in i Fortnox för hand. Ett sent pass läggs på sin egen månads utkast (`malmanad`, 2026-10-01) | pg_cron `manadskorning` varje natt sedan 2026-10-01 (`x-nextrum-notis`, alltid förra månaden), admin, eller `x-fakturering-nyckel` |
 | `faktura-utskick` | Skickar underlaget till en studiehjälpare. **Mejlet först, statusen sedan.** Fakturor vägrar den sedan Fas 14.6: de skickas från Fortnox | Knapp under Löner |
-| `bjud-in` | Auth-inbjudan till en familj, eller med `roll: 'tutor'` en studiehjälpare, utan konto. Rollen vitlistas i funktionen: allt utom `tutor` blir förälder, och en inbjuden studiehjälpare hamnar i väntläge tills admin godkänner | Adminvyn (bara familjer än) |
+| `bjud-in` | Skapar kontot åt den som tas in (2026-10-06): en familj, eller med `roll: 'tutor'` en studiehjälpare, med en Auth-inbjudan och `valkommen: 'losenord'`, aldrig ett lösenord. Med `igen: true` en ny inbjudan, eller länken för lösenordet. Rollen vitlistas i funktionen: allt utom `tutor` blir förälder, och en inbjuden studiehjälpare hamnar i väntläge tills admin godkänner | Adminvyn: Ta in familjen, Ta in i poolen, Skicka inbjudan igen |
 | `lead-notis` | Avisering till ledningen **och kvitto till familjen** när en intresseanmälan kommer in | **Databaswebhook** `ny-intresseanmalan`, `verify_jwt` av, delad hemlighet i header |
 | `generate-feedback`, `generate-message` | Claude-utkast. Använder **inte** `service_role`, vidarebefordrar användarens token | Vyerna |
 | `material-forslag` | Övningsuppgifter **i klartext, aldrig som länk** | Adminvyn |
@@ -85,7 +85,8 @@ bjuda in en studiehjälpare (`roll: 'tutor'`, eget `TILLBAKA` per roll),
 och koden fanns inte i någon gren. Leo samma dag: behåll den. Driftens
 `index.ts` är hemtagen ordagrant; `_delad/auth.ts` är repots, för
 driftens kopia hade den opinnade `supabase-js@2`. Ingen vy skickar
-`roll` än, så i adminvyn bjuds bara familjer in.
+`roll` än, så i adminvyn bjuds bara familjer in. (Sedan 2026-10-06 gör
+Ta in i poolen det; se nedan.)
 **`fakturering` version 33, 2026-10-01**: driftsatt från main (7fa4286)
 efter PR #167, en månad skapas först när den är slut, och hämtad
 tillbaka och lika med main i alla sju filerna. Version 32 hade också den
@@ -308,6 +309,38 @@ Två funktioner, med det rena i `_delad/barnkonto.ts` och
   anroparens token. Nekas rollen tas kontot bort igen. En adress med konto
   får 409 och pekas mot Befintlig användare.
 Se `minne/barnkonton-och-admin.md`.
+
+### `bjud-in` tar in personen (2026-10-06)
+Leo: "när man ska ta in en anställd är det krångligt att skapa konto åt
+den, samma med familj in i poolen". Funktionen skrevs om så att adminvyn
+skapar kontot i samma tryck som personen tas in. Det rena står i
+`_delad/inbjudan.ts` med omvärlden som beroenden (profilen med adressen,
+kontot i Auth, inbjudan, lösenordslänken och anmälan), så att
+`inbjudan_test.ts` kör varje väg; `index.ts` är bara admin först
+(`kravAdmin`) och beroendena.
+- **Ny inbjudan**: 409 om adressen redan har ett konto (det ska användas,
+  inte bjudas in igen), annars `inviteUserByEmail` med `role`,
+  `full_name` och `valkommen: 'losenord'`, och länken till vyn för
+  rollen (`TILLBAKA`). Med `lead_id` blir anmälan kontaktad. Varför det är
+  en länk och inte ett gemensamt lösenord står i filens huvud och i
+  `minne/sakerhet.md`.
+- **Igen** (`igen: true`): rollen tas ur profilen, inte ur anropet; 404
+  utan konto och 409 för en roll som inte är förälder eller
+  studiehjälpare. Ett obekräftat konto får en ny inbjudan (Auth bjuder in
+  ett obekräftat konto en gång till och rör inte metadatan), ett
+  bekräftat med `valkommen = 'losenord'` får länken som Glömt lösenordet
+  ger, genom Auths öppna väg med den publika nyckeln (429 om ett mejl
+  gick nyss), och ett konto med lösenord får 409: då är det Glömt
+  lösenordet? som gäller.
+- En barnadress (`@barn.nextrum.se`) bjuds aldrig in. Loggen tar namn, kod
+  och status på felet, aldrig adressen.
+- Driftsätts efter merge, från main, ihop med `ansokan-notis` (vars
+  mejl om sista steget säger att vi skapar kontot) och migrationen
+  `barnets_behorigheter` (`DEPLOY-BARNKONTON.md` 9). Fram till dess
+  skapar den gamla `bjud-in` (v8) kontot utan välkomsten. Länken ger
+  ändå rutan utan Inte nu (`NX.inbjudan`), och introduktionen efter den,
+  men den som går därifrån utan att spara får den vanliga rutan nästa
+  gång, och Skicka inbjudan igen svarar 409 (v8 känner inte `igen`).
 
 ### `barn-inloggning` (barnets_epost, 2026-10-01)
 Ett barn loggar in med sin egen bekräftade e-post. Det rena i
