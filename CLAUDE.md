@@ -480,9 +480,8 @@ Detaljer: `minne/grunden.md`.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
-- **NexLäx Fas 23.4** (2026-10-06): migrationerna `nexlax_uppdrag_och_np` och banken körs efter
-  merge, i den ordningen och som de förra bankerna (`minne/nexlax.md`); vyerna tål att de saknas.
-  Juridiken, företagsekonomin och språken är skrivna med AI och inte lästa
+- **NexLäx Fas 23.4** (2026-10-06) är i drift sedan samma kväll: `nexlax_uppdrag_och_np` och banken,
+  körda efter merge som de förra bankerna (`minne/nexlax.md`). Juridiken, företagsekonomin och språken är skrivna med AI och inte lästa
   av någon som undervisar i ämnet.
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
