@@ -67,7 +67,7 @@ jobs:
       - name: Behörigheterna och barnkontona säger samma sak överallt
         run: python3 verktyg/kolla-behorigheter.py
 
-      # 2026-10-05: rullgardinen Avböjd visar nejet ord för ord innan det
+      # 2026-10-05: läget Avböjd visar nejet ord för ord innan det
       # köas, och mejlet byggs av edge-funktionen. Texten står på två
       # ställen; glider de isär har admin godkänt ett annat mejl än det
       # som går.

@@ -446,7 +446,8 @@ async function provaAdminvyn(webb) {
     await vänta(800);
     await page.click('[data-dp="ansokan:ans-gammal"]');
     await vänta(400);
-    await page.selectOption('select[data-ans="ans-gammal"]', 'rejected');
+    await bild(page, 'admin-ansokan-lage', '.dp');
+    await page.click('[data-ans="ans-gammal"] > button[value="rejected"]');
     await page.waitForSelector('.nx-fraga-prov', { timeout: 3000 }).catch(() => {});
     const prov = await text(page, '.nx-fraga-prov');
     prova('admin: Avböjd visar mejlet först', prov.includes('Ämne: Om din ansökan till Nextrum') && prov.includes('Hej Kalle,')
@@ -458,9 +459,10 @@ async function provaAdminvyn(webb) {
     await vänta(200);
     prova('admin: Avbryt sparar inget och lämnar läget',
       !S.logg.some(r => r.metod === 'PATCH' && r.kropp && r.kropp.status === 'rejected')
-      && (await page.inputValue('select[data-ans="ans-gammal"]')) === 'contacted');
+      && (await page.getAttribute('[data-ans="ans-gammal"] > button[value="contacted"]', 'aria-pressed')) === 'true'
+      && (await page.getAttribute('[data-ans="ans-gammal"] > button[value="rejected"]', 'aria-pressed')) === 'false');
 
-    await page.selectOption('select[data-ans="ans-gammal"]', 'rejected');
+    await page.click('[data-ans="ans-gammal"] > button[value="rejected"]');
     await page.waitForSelector('.nx-fraga-prov', { timeout: 3000 }).catch(() => {});
     S.W.ansokan_utskick.push({ id: 'u3', ansokan_id: 'ans-gammal', steg: 'avbojd', nyckel: 'avbojd', status: 'vantar',
       forsok: 0, fel: null, skapad: nu(0), uppdaterad: nu(0), skicka_efter: nu(30) });
@@ -489,7 +491,7 @@ async function provaAdminvyn(webb) {
     await vänta(400);
     const panel = await page.locator('.dp-fakta').first().innerText().catch(() => '');
     prova('admin utan migrationen: inga rader om vårdnadshavaren', !panel.includes('Vårdnadshavare'), panel);
-    await page.selectOption('select[data-ans="ans-ung"]', 'rejected');
+    await page.click('[data-ans="ans-ung"] > button[value="rejected"]');
     await vänta(300);
     prova('admin utan migrationen: ingen ruta som lovar ett mejl', (await page.locator('.nx-fraga-prov').count()) === 0);
     prova('admin utan migrationen: läget sparas', S.logg.some(r => r.metod === 'PATCH' && r.kropp && r.kropp.status === 'rejected'));

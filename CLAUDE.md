@@ -161,6 +161,8 @@ Detaljer: `minne/grunden.md`.
   sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar
   `theme-color` med sig, men mejlens `FARG` ändras för sig. Adminpaletten laddas sist.
 ### Startsidan efter hero
+De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
+delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
 Hero är orörd med flit; startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
@@ -202,7 +204,9 @@ ytor; ändras de andra vyerna oväntat är specificiteten första stället. Meny
 som `sidomeny()` drar, aldrig sidan, och en lång etikett får bryta; `täcktÖverst()` räknar
 toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är bara vårt drag. Siffran vid
 Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-10-05), och att visa
-sektionen är att se den; utan tabellen räknas läget Ny som förut.
+sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
+(`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
+lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka.
 Fällor: `h5` och `h6` har webbläsarens marginal; `--pap-2` och `--yta` är nästan samma i mörkt
 läge (`--tint`, `--bricka`); KÄNSLAN står sist och väger lika mycket; `nextrum-admin-konsol.css`
 vinner över arbetsytan. Headless Chromium döljer rullningslister; mät ett tryck med `el.click()`
@@ -305,9 +309,9 @@ Detaljer: `minne/grunden.md`.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
-  möteslänken är https, ett steg mejlas en gång, och Godkänd i rullgardinen är inte Ta in i poolen.
+  möteslänken är https, ett steg mejlas en gång, och Godkänd som läge är inte Ta in i poolen.
   Avböjd mejlar ett nej (2026-10-05) men inte genast: tidigast en halvtimme senare, aldrig 20–9,
-  och inte om läget hunnit bytas. Rullgardinen visar mejlet först, och texten står i mallen och i
+  och inte om läget hunnit bytas. Avböjd visar mejlet först, och texten står i mallen och i
   adminvyn (`kolla-mejltexter.py`).
   Provets facit finns bara i funktionen, resultatet visas per avsnitt, fel svar är lika
   utförliga som rätt, nyckeln hamnar aldrig i en logg, och ändras handboken läses frågorna om.

@@ -48,13 +48,14 @@
      den nytta vid varje återbesök i ett år. -->
 <link rel="stylesheet" href="../nextrum-typsnitt.css?v=c20ceeba">
 
-<!-- ordningen spelar roll: bas → startsida → cinema → start.
-     nextrum-start.css laddas här för studievyns illustration, samma
-     som på startsidan; resten av filen hittar inget att röra här. -->
+<!-- ordningen spelar roll: bas → startsida → cinema → start → sidor.
+     Menysidorna använder startsidans delar som de är (nextrum-start.css
+     och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=47a1da42">
-<link rel="stylesheet" href="../nextrum-start.css?v=fad78d90">
+<link rel="stylesheet" href="../nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="../nextrum-sidor.css?v=6a841016">
 </head>
 <body>
 
@@ -138,19 +139,30 @@
          srcset="../bilder/01-en-till-en-640.jpg 640w, ../bilder/01-en-till-en-960.jpg 960w, ../bilder/01-en-till-en-1280.jpg 1280w, ../bilder/01-en-till-en-1600.jpg 1600w, ../bilder/01-en-till-en-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
          style="object-position:68% 44%" alt="A tutor pointing with a pencil at a problem in the student’s maths book and explaining."></picture>
+    <ul class="sid-lappar" aria-hidden="true">
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>A report after every session</li>
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-5M12 19V8M17 19v-9"/></svg></span>An individual study plan</li>
+    </ul>
   </figure>
 </section>
 
-<section class="sec wrap">
-  <div class="nx-two">
-    <div class="nx-two-sticky rv">
-      <span class="nx-et acc">The student view</span>
-      <h2 class="nx-d2" style="margin-top:18px">Everything in one place.</h2>
+<section class="nx-wrap-bred nx-sek">
+  <!-- Tre stycken text blev tre blad, som manifestet på startsidan.
+       Texten är densamma. Illustrationen under är orörd. -->
+  <span class="nx-et acc" data-stig>The student view</span>
+  <h2 class="nx-d2 sid-rubrik" data-ordfyll>Everything in one place.</h2>
+  <div class="sid-kort">
+    <div class="nx-bubbla" data-stig data-fördröj="1">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 016.8-1.2"/></svg></span>
+      <p>Once the match is made, the student view unlocks. It holds the study plan, upcoming sessions, messages and the report from each session.</p>
     </div>
-    <div class="nx-text rv">
-        <p>Once the match is made, the student view unlocks. It holds the study plan, upcoming sessions, messages and the report from each session.</p>
-        <p>The report is written by the tutor after the session and describes what you went through and how it went. It is not a formality — a session counts as completed only once it has been written.</p>
-        <p>Student and parent see the same thing. Nobody has to ask how it went, and nobody has to remember to tell.</p>
+    <div class="nx-bubbla" data-stig data-fördröj="2">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+      <p>The report is written by the tutor after the session and describes what you went through and how it went. It is not a formality — a session counts as completed only once it has been written.</p>
+    </div>
+    <div class="nx-bubbla" data-stig data-fördröj="3">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8.5" cy="8.5" r="3"/><circle cx="16" cy="9.5" r="2.5"/><path d="M3.5 19c0-2.9 2.2-5.2 5-5.2s5 2.3 5 5.2"/><path d="M14 14.2c3 .1 5.5 2 5.5 4.8"/></svg></span>
+      <p>Student and parent see the same thing. Nobody has to ask how it went, and nobody has to remember to tell.</p>
     </div>
   </div>
 
@@ -359,58 +371,105 @@
   </div>
 </section>
 
-<section class="nx-surface">
-  <div class="sec wrap">
+<!-- Före, under och efter: ett foto överst i varje blad, som
+     bildväggen på startsidan (nextrum-sidor.css, FOTOKORTEN). -->
+<section class="nx-yta nx-sek">
+  <div class="nx-wrap-bred">
     <div class="nx-head split" data-stig>
       <div><span class="nx-et acc">In practice</span>
         <h2 class="nx-d2" style="margin-top:18px">What a session can look like.</h2></div>
       <div class="nx-head-aside"><p class="nx-lede">Sessions differ by subject and need, but the rhythm usually looks like this.</p></div>
     </div>
-    <div class="nx-trio">
-      <div class="nx-trio-kort" data-stig data-fördröj="1">
-        <span class="nx-trio-et">Before</span>
-        <b>You choose the time</b>
-        <p>Book within the tutor’s hours, online or in person, one to three hours.</p>
-      </div>
-      <div class="nx-trio-kort" data-stig data-fördröj="2">
-        <span class="nx-trio-et">During</span>
-        <b>The student works with their tutor</b>
-        <p>The tutor works from the study plan and from what was hard last time. The goal is not to finish the homework but to understand it.</p>
-      </div>
-      <div class="nx-trio-kort" data-stig data-fördröj="3">
-        <span class="nx-trio-et">After</span>
-        <b>The report is written</b>
-        <p>What you went through, how it went and what the next step is. You read it in the student view the same evening.</p>
-      </div>
-    </div>
+    <ul class="sid-bildkort">
+      <li class="nx-bubbla" data-stig data-fördröj="1">
+        <figure class="nx-fig" style="--tint:#73746C">
+          <picture><source type="image/webp" srcset="../bilder/12-pa-vag-640.webp 640w, ../bilder/12-pa-vag-960.webp 960w, ../bilder/12-pa-vag-1280.webp 1280w" sizes="(max-width:860px) 92vw, 30vw"><img class="nx-img" src="../bilder/12-pa-vag-960.jpg"
+               srcset="../bilder/12-pa-vag-640.jpg 640w, ../bilder/12-pa-vag-960.jpg 960w, ../bilder/12-pa-vag-1280.jpg 1280w"
+               sizes="(max-width:860px) 92vw, 30vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:34% 48%"
+               alt="Three students with backpacks walking together along a street in the afternoon sun, talking with each other."></picture>
+        </figure>
+        <div class="sid-bildkort-text">
+          <span class="sid-et">Before</span>
+          <h3>You choose the time</h3>
+          <p>Book within the tutor’s hours, online or in person, one to three hours.</p>
+        </div>
+      </li>
+      <li class="nx-bubbla" data-stig data-fördröj="2">
+        <figure class="nx-fig" style="--tint:#9A8E79">
+          <picture><source type="image/webp" srcset="../bilder/06-forklaringen-640.webp 640w, ../bilder/06-forklaringen-960.webp 960w, ../bilder/06-forklaringen-1280.webp 1280w" sizes="(max-width:860px) 92vw, 30vw"><img class="nx-img" src="../bilder/06-forklaringen-960.jpg"
+               srcset="../bilder/06-forklaringen-640.jpg 640w, ../bilder/06-forklaringen-960.jpg 960w, ../bilder/06-forklaringen-1280.jpg 1280w"
+               sizes="(max-width:860px) 92vw, 30vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:62% 44%"
+               alt="A young tutor explaining a problem to a student at a bright wooden table, with an open hand over the maths book."></picture>
+        </figure>
+        <div class="sid-bildkort-text">
+          <span class="sid-et">During</span>
+          <h3>The student works with their tutor</h3>
+          <p>The tutor works from the study plan and from what was hard last time. The goal is not to finish the homework but to understand it.</p>
+        </div>
+      </li>
+      <li class="nx-bubbla" data-stig data-fördröj="3">
+        <figure class="nx-fig" style="--tint:#8B846E">
+          <picture><source type="image/webp" srcset="../bilder/11-studiehjalparen-640.webp 640w, ../bilder/11-studiehjalparen-960.webp 960w, ../bilder/11-studiehjalparen-1280.webp 1280w" sizes="(max-width:860px) 92vw, 30vw"><img class="nx-img" src="../bilder/11-studiehjalparen-960.jpg"
+               srcset="../bilder/11-studiehjalparen-640.jpg 640w, ../bilder/11-studiehjalparen-960.jpg 960w, ../bilder/11-studiehjalparen-1280.jpg 1280w"
+               sizes="(max-width:860px) 92vw, 30vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:46% 44%"
+               alt="A young tutor sitting alone at a desk with a laptop and a notepad, concentrating on the page."></picture>
+        </figure>
+        <div class="sid-bildkort-text">
+          <span class="sid-et">After</span>
+          <h3>The report is written</h3>
+          <p>What you went through, how it went and what the next step is. You read it in the student view the same evening.</p>
+        </div>
+      </li>
+    </ul>
   </div>
 </section>
 
-<section class="nx-surface">
-  <div class="sec wrap">
+<!-- Vad ni får: förut ett dragspel man fick öppna, nu startsidans
+     hållpunkter 1–4 med texten framme. -->
+<section class="nx-sek">
+  <div class="nx-wrap-bred">
     <div class="nx-head split" data-stig>
       <div><span class="nx-et acc">What you get</span>
         <h2 class="nx-d2" style="margin-top:18px">Four things we stand behind.</h2></div>
       <div class="nx-head-aside"><p class="nx-lede">None of this is an add-on. It is included in the hourly price, whatever the subject.</p></div>
     </div>
-    <div class="nx-dragspel" style="margin-top:32px">
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Personal matching<span class="pm"></span></button>
-          <div class="faq-a"><p>We choose the tutor based on subject, level, need and personality — not on who happens to be free. If the match feels wrong, we redo it.</p></div>
+    <ul class="nx-holdpunkter" data-stig data-fördröj="1" style="margin-top:clamp(36px,4.6vw,64px)">
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="hp-nr" aria-hidden="true">1</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
         </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">An individual study plan<span class="pm"></span></button>
-          <div class="faq-a"><p>Written for the student, not for the year group. It starts from where the student actually is and is updated as you go.</p></div>
+        <h3>Personal matching</h3>
+        <p>We choose the tutor based on subject, level, need and personality — not on who happens to be free. If the match feels wrong, we redo it.</p>
+      </li>
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="hp-nr" aria-hidden="true">2</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-4.5M12 19V9M17 19v-7"/><path d="M6 10.5l5-4 3 2.2 4.5-4"/></svg></span>
         </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">A report after every session<span class="pm"></span></button>
-          <div class="faq-a"><p>So progress can be followed between sessions. The report is also what makes a session count as completed.</p></div>
+        <h3>An individual study plan</h3>
+        <p>Written for the student, not for the year group. It starts from where the student actually is and is updated as you go.</p>
+      </li>
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="hp-nr" aria-hidden="true">3</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
         </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Safety at every step<span class="pm"></span></button>
-          <div class="faq-a"><p>Verified tutors, with payment and communication gathered in the platform.</p></div>
+        <h3>A report after every session</h3>
+        <p>So progress can be followed between sessions. The report is also what makes a session count as completed.</p>
+      </li>
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="hp-nr" aria-hidden="true">4</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 7.5-7 8.8-4-1.3-7-4.2-7-8.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
         </div>
-    </div>
+        <h3>Safety at every step</h3>
+        <p>Verified tutors, with payment and communication gathered in the platform.</p>
+      </li>
+    </ul>
   </div>
 </section>
 
@@ -579,7 +638,7 @@
 <script src="../nextrum-app.js?v=371d3290"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
-<script src="../nextrum-start.js?v=1186dd6c"></script>
+<script src="../nextrum-start.js?v=c489fcd4"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

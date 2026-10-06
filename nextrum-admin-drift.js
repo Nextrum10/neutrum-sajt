@@ -18,7 +18,7 @@
 
   const { AVBOKNINGSSKAL, BOK_LAGE, S, elevNamn, hämtaMatchunderlag,
           kortDatum, läge, matchar, namnFör, pill, skriv, tabell, tomtText,
-          väljare } = NXAdmin;
+          lägesväljare, väljare } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaElever = (...a) => NXAdmin.rita.ritaElever(...a);
@@ -958,10 +958,7 @@
       + '<option value="">Ingen</option>' + adminer().map(p => '<option value="' + esc(p.id) + '"'
         + (p.id === u.ansvarig ? ' selected' : '') + '>' + esc(p.full_name || p.email) + '</option>').join('')
       + '</select>';
-    const lägeVal = u => '<select class="sel" style="min-width:120px;padding:7px 28px 7px 10px;font-size:.84rem"'
-      + ' data-uppg-status="' + esc(u.id) + '" aria-label="Läge">'
-      + Object.keys(UPPG_LAGE).map(k => '<option value="' + k + '"' + (k === u.status ? ' selected' : '') + '>'
-        + esc(UPPG_LAGE[k][0]) + '</option>').join('') + '</select>';
+    const lägeVal = u => lägesväljare(UPPG_LAGE, u.status, 'data-uppg-status="' + esc(u.id) + '"');
 
     host.innerHTML = tabell([
       { namn: 'Uppgift', rita: u => '<b>' + esc(u.titel) + '</b>'
@@ -1040,6 +1037,8 @@
       ritaAvvikelser();          // "Uppgift finns" följer uppgiftens läge
       ritaMaskinUppgifter();     // och Automationer räknar bara de öppna
       ritaÖversikt();
+    } else {
+      ritaUppgifter();           // raden visar det som är sparat, inte trycket
     }
   });
 
