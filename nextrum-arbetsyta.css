@@ -173,6 +173,10 @@
   color:rgba(239,230,214,.72);
   margin-bottom:12px;
 }
+/* Veckodagen (2026-10-06): bilden byts varje dag, och dagen står bredvid
+   etiketten, ljusare än den, så att den läses först. */
+.vy-hero-skilj{margin:0 .7em;color:rgba(239,230,214,.42)}
+.vy-hero-dag{color:#EFE6D6}
 .vy-hero h1{
   font-size:clamp(1.9rem,4.2vw,3rem);
   line-height:1.04;letter-spacing:-.04em;font-weight:800;
@@ -4622,12 +4626,13 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .kor-hand > summary{padding:12px 0}
 
 /* ============================================================
-   BARNETS VY (barn.html, barnkonton_och_admin)
-   En spalt, samma kort och rader som studievyn. Ingen sidomeny och
-   ingen hälsningsfilm: vyn har sju saker att visa och en av dem är
-   hälsningen. Bara tokens, så att mörkt läge följer med av sig självt.
+   BARNETS VY, ELEVVYN (barn.html, barnkonton_och_admin)
+   Samma skal som studievyn sedan 2026-10-06: hälsningen med dagens
+   bild överst och en sidomeny med fyra delar (Översikt, NexLäx,
+   Meddelanden och Profil). Förut en spalt utan meny och utan bild.
+   Samma kort och rader som studievyn, och bara tokens, så att mörkt
+   läge följer med av sig självt.
    ============================================================ */
-.vy-barn .bv{max-width:760px;margin-inline:auto}
 /* Ingen meny bakom tre streck här: namnet och Logga ut står kvar i
    sidhuvudet i alla bredder, längst till höger. På en smal telefon går
    namnet, för hälsningen säger det redan. */
@@ -4636,15 +4641,6 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 /* En grupp som står först i sin del har ingen luft ovanför sig
    (.vy-grupp:first-child); rapporterna ligger i en egen del. */
 .bv-del > .vy-grupp:first-child{margin-top:30px}
-.bv-hej{margin:0 0 clamp(22px,3vw,34px)}
-.bv-hej h1{
-  margin:14px 0 0;
-  font-size:clamp(2rem,5vw,3rem);line-height:1.04;letter-spacing:-.04em;font-weight:800;
-  color:var(--bl);
-}
-.bv-hej h1:focus{outline:none}
-.bv-lede{margin-top:10px;max-width:52ch;font-size:1rem;line-height:1.55;color:var(--bl-2)}
-.bv-lede:empty{display:none}
 
 /* Två tal bredvid varandra, under varandra på en smal telefon. */
 .bv-timmar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -4686,9 +4682,9 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 #bv-inst .nx-nval:first-of-type{border-top:1px solid var(--ln);padding-top:13px}
 #bv-inst-msg:empty{display:none}
 #bv-inst-msg{margin-top:12px}
-/* Länken "Ändra dina val" i ett mejl hoppar hit: rubriken ska hamna
-   under sidhuvudet (70 px, fast), inte bakom det. */
-.vy-barn #installningar{scroll-margin-top:86px}
+/* Länken "Ändra dina val" i ett mejl hoppar förbi hälsningen hit: menyn
+   och Profil ska hamna under sidhuvudet (fast), inte bakom det. */
+.vy-barn .vy-layout{scroll-margin-top:86px}
 /* Bekräftelsen av adressen: samma kort som inloggningen, utan formulär
    mellan texten och knappen. */
 #bv-bek-knapp{margin-top:24px}
@@ -4697,6 +4693,9 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   margin:clamp(30px,4vw,44px) 0 0;padding:16px 18px;border-radius:18px;
   background:var(--tint);color:var(--bl-2);font-size:.95rem;line-height:1.55;text-align:center;
 }
+/* Meddelanden har bara listan ovanför sig, och Profil sin knapp under. */
+#bv-skriva{margin-top:clamp(18px,2.4vw,26px)}
+.bv-ut{margin-top:18px;justify-content:center}
 
 /* ============================================================
    ADMINHANTERINGEN (System → Adminhantering, barnkonton_och_admin)

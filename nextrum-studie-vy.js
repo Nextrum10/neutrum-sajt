@@ -38,10 +38,11 @@
     NXStudie.inloggningsruta(läge, {
       titel: 'Studievyn',
       titelUpp: 'Skapa föräldrakonto',
-      under: 'För dig som är förälder eller elev: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.',
+      under: 'För dig som är förälder: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.',
       underUpp: 'Kontot är gratis. Vyn låses upp så fort vi matchat er med en studiehjälpare.',
-      /* Ett barn med egen inloggning kommer hit från Logga in på sajten
-         och loggar in med sitt användarnamn (NXStudie.loggaIn). */
+      /* Ett barn med egen inloggning har Elev i rollvalet, som leder
+         till /barn (2026-10-06). Den som ändå skriver sitt användarnamn
+         här kommer också dit (NXStudie.loggaIn). */
       etikett: 'E-post eller användarnamn'
     });
   }
@@ -4747,9 +4748,7 @@
       namn: S.profil.full_name,
       etikett: 'Studievy',
       lede: 'Planen, tiderna, kontakten och vad som hände på varje pass.',
-      video: 'bilder/hero-studievy.mp4',
-      bild: 'bilder/hero-nextrum-1280.webp',
-      marke: { text: 'Förälder eller elev', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>' },
+      marke: { text: 'Förälder', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>' },
       chatt: { href: '#meddelanden', text: 'Meddelanden', under: 'Skriv till er studiehjälpare' }
     });
     ritaNästaPass();

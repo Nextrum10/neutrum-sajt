@@ -588,9 +588,13 @@ senare sida ger felet, aldrig en halv lista.
   kapas.
 
 ### Barnets vy och adminvyn med behörigheter (barnkonton_och_admin, 2026-09-30)
-- `barn.html`: en spalt, samma kort och rader som studievyn (`.vy-kort`,
-  `.vy-rad`, `.lage`), och `.bv-*` i `nextrum-arbetsyta.css`, bara tokens.
-  Ingen hälsningsfilm, ingen meny, ingen länk till föräldervyn.
+- `barn.html`: samma kort och rader som studievyn (`.vy-kort`, `.vy-rad`,
+  `.lage`), och `.bv-*` i `nextrum-arbetsyta.css`, bara tokens. Ingen länk
+  till föräldervyn. Sedan 2026-10-06 samma skal som studievyn: hälsningen
+  (`NXArbete.hero`) och sidomenyn (`NXStudie.sidomeny`) med fyra delar,
+  Översikt, NexLäx, Meddelanden och Profil (se "Hälsningen, en bild per
+  veckodag" nedan och `minne/barnkonton-och-admin.md`). Förut en spalt utan
+  meny och utan bild.
 - Föräldrarnas ruta Barnens inloggning heter `bi-*` (`#bi-ruta`,
   `data-bi-*`), för `bk-*` och `#bk-msg` är bokningens och stod redan i
   samma sida.
@@ -599,3 +603,26 @@ senare sida ger felet, aldrig en halv lista.
   flikarna hen inte har tas bort ur DOM:en, och en rubrik utan synlig post
   göms (`städaMenyn`). Knapparna i en synlig sektion är fortfarande
   superadminens; databasen säger nej. Se `minne/barnkonton-och-admin.md`.
+
+### Hälsningen, en bild per veckodag (2026-10-06)
+Leo: "På studievyerna ska rullande heron ändras varje dag så de blir en ny
+bild, och de ska stå vilken dag på veckan de är också där", med sex bilder
+"för de andra dagarna". Alla sex fanns redan i `bilder/` (01, 03, 04, 02, 07
+och 09-online-v2, i den ordning de skickades), så inga nya filer.
+- Listan är `NEXTRUM_HERO_VECKA` i `nextrum-images.js`, måndag först; en
+  post pekar på en nyckel i `NEXTRUM_IMAGES`, så att `focal` följer med och
+  sätts som `object-position` på bilden. Ansiktena står olika i varje bild,
+  och på en telefon beskärs bilden hårt i sidled.
+- Måndagen är den gamla hälsningen: hero-bilden och filmen
+  (`hero-studievy.mp4`), som är filmad i samma scen. Filmen spelar bara den
+  dagen; annars hade den tonat in över dagens bild och gömt den. De andra
+  dagarna driver stillbilden som förut, och på en telefon spelas ingen film.
+- `NXArbete.dagensHero()` väljer posten (getDay() börjar på söndag) och
+  skriver dagen: "Tisdag 6 oktober", i etikettens rad, ljusare än etiketten.
+  Står vyn öppen över midnatt byts dagen, bilden och hälsningen (en timer,
+  och samma prövning när fliken kommer tillbaka); bara bildlagret ritas om.
+- Laddar inte bildregistret står hero-bilden kvar utan film, och dagen står
+  där ändå. Vyerna skickar inga bildvägar längre.
+- Provat med klockan ställd på varje veckodag, på dator och telefon, och i
+  `verktyg/prova-barnkonton.js` (`provaHälsningen`), som har listan en gång
+  till med flit: ändras den i registret blir provet rött.

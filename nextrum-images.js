@@ -173,6 +173,30 @@ window.NEXTRUM_IMAGES = {
 window.NEXTRUM_IMAGE_WIDTHS = [640, 960, 1280, 1600, 1920];
 
 /* ------------------------------------------------------------
+   HÄLSNINGEN I DE INLOGGADE VYERNA, EN BILD PER VECKODAG (2026-10-06)
+
+   Leo: "rullande heron ändras varje dag så de blir en ny bild, och de
+   ska stå vilken dag på veckan de är". Studievyn, studiehjälparvyn och
+   elevvyn (NXArbete.hero) tar dagens post; måndag först, som i en svensk
+   vecka. En post pekar på en bild ovan, så att focal följer med.
+
+   Filmen hör bara till måndagen: den är filmad i samma scen som
+   hero-bilden, och spelade den varje dag hade den legat ovanpå dagens
+   bild och gömt den. De andra dagarna driver stillbilden långsamt
+   (.vy-hero-still), som den alltid gjort när filmen inte spelar.
+   Bilderna är "för nu", sa Leo: byt en nyckel här, inget annat.
+   ------------------------------------------------------------ */
+window.NEXTRUM_HERO_VECKA = [
+  { bild: 'hero', film: 'hero-studievy.mp4' },  // måndag
+  { bild: 'entillEn' },                          // tisdag
+  { bild: 'digitalt' },                          // onsdag
+  { bild: 'sjalvfortroende' },                   // torsdag
+  { bild: 'anpassning' },                        // fredag
+  { bild: 'genombrottet' },                      // lördag
+  { bild: 'online' }                             // söndag
+];
+
+/* ------------------------------------------------------------
    Så här skapar du storlekarna för en ny bild (kör i bilder/):
 
      for w in 640 960 1280 1600 1920; do
