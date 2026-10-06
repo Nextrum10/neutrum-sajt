@@ -500,9 +500,9 @@ Detaljer: `minne/grunden.md`.
   juristen.
 - **Intaget, introduktionen och barnets behörigheter** (2026-10-06) går ut efter merge: migrationen
   `barnets_behorigheter` (efter `nexlax_felrapporter`), `bjud-in` och `ansokan-notis` från main;
-  vyerna tål att migrationen saknas (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller så länge
-  Auth säger (Email OTP Expiration, sätt ett dygn). Ingen godkänner villkoren när kontot skapas,
-  varken i inbjudan eller i registreringen: en lucka sedan förut.
+  vyerna tål att migrationen saknas (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller en timme
+  (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny. Ingen
+  godkänner villkoren när kontot skapas, varken i inbjudan eller i registreringen: en lucka sedan förut.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

@@ -313,10 +313,17 @@ med Fortsätt sist.
   helt, men inte är fel); ett konto med lösenord får ingenting, för då är
   det Glömt lösenordet? som gäller.
 - **Länkens livslängd** är Auths (Authentication → Providers → Email →
-  Email OTP Expiration, som mest ett dygn). En familj som tas in på
-  fredagen och läser mejlet på måndagen får ett utgånget-besked och en
-  väg till Glömt lösenordet; Skicka inbjudan igen ger en ny. Sätt ett
-  dygn.
+  Email OTP Expiration), och den ska stå kvar på förvalet, en timme.
+  Panelen går inte att läsa härifrån, så titta där. Inställningen gäller
+  varje mejllänk (registrering, inbjudan, återställning) och den
+  sexsiffriga kod som Auth skapar till varje länk och tar emot på
+  `/verify`, också när mallen bara har länken. Supabase skriver att en
+  längre tid ger mer tid att gissa koden, och tillåter som mest ett
+  dygn. En utgången inbjudan kostar familjen två tryck: vyn öppnar Glömt
+  lösenordet med förklaringen (`NX.länkfel`), den nya länken
+  (återställningen bekräftar också ett konto som aldrig bekräftats) ger
+  samma ruta utan Inte nu, och Skicka inbjudan igen finns i adminvyn.
+  Höj den inte för bekvämlighetens skull utan att väga det.
 - **Villkoren**: ingen godkänner användarvillkoren när kontot skapas,
   varken här eller i registreringen. Det var så före, och är inte byggt.
 - Provas i `verktyg/prova-intag.js` och `verktyg/prova-aterstallning.js`

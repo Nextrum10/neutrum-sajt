@@ -231,11 +231,12 @@ se och göra med sin inloggning. Varför det ser ut som det gör:
    main fil för fil. `bjud-in` utan admininloggning ska svara 401.
 4. **`verktyg/rls-test.sql` mot driften**, hela filen i en transaktion som
    rullas tillbaka: varje rad ok (1385 lokalt 2026-10-06).
-5. **Auth-inställningen**: Authentication → Providers → Email → Email OTP
-   Expiration till 86400 (ett dygn, det högsta), så att länken i en
-   inbjudan håller över en natt. Redirect URLs har redan `/foralder` och
-   `/larare`, och mallen Invite user (`minne/sakerhet.md`) ber redan om
-   ett lösenord.
+5. **Auth-inställningarna**: lämna Email OTP Expiration på förvalet, en
+   timme, med flit: en längre tid gäller alla mejllänkar och deras
+   koder, och en utgången inbjudan leder rakt till en ny länk
+   (`minne/sakerhet.md`, Konton vi skapar). Redirect URLs har redan
+   `/foralder` och `/larare`, och mallen Invite user ber redan om ett
+   lösenord.
 6. **Prova skarpt** med en egen plusadress: Ta in en provfamilj ur en
    provanmälan, tryck på länken, välj lösenordet, gå igenom
    introduktionen, logga ut och in med lösenordet. Prova Skicka inbjudan
