@@ -76,8 +76,6 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och barnets vy har inga länkar ut. Fel i en fråga rapporteras i spelaren (`rapportera_fragefel`,
   fyra skäl, ingen fritext, ingen person) och syns under Material i adminvyn. Ljuden räknas fram i webbläsaren (`nextrum-ljud.js`) och
   valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
-  **Prova NexLäx** på startsidan (2026-10-06) har tre egna frågor som rättas i webbläsaren,
-  aldrig bankens, räknar inga XP och sparar inget.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare (`mina_tips()`) och
   en kampanjkod per affisch; `leads.kod`. Koden syns i formuläret och lagras aldrig i
   webbläsaren, och en okänd kod fäller aldrig anmälan. Tipstimmen är `startrabatt` med

@@ -177,25 +177,27 @@ Den som betalar är en förälder. Ändrat, på båda språken:
   inline-block, för som flex fick priset och resten av meningen var sin
   cell med glapp emellan. Etiketten är mindre och `nowrap`: "Läxhjälp i
   Stockholm" är tre gånger så långt som "Nextrum" och bröts på en telefon.
-- **Ämnesraden** ersätter det ensamma kortet under manifestet: matte,
-  svenska, engelska, NO, online och priser som `.nx-omr-kort`, och
-  stadiesidorna som länkar i ingressen. Startsidan länkade förut till
-  ämnessidorna bara från sidfoten. `.nx-omr-kort > b` och `> span` är
-  barnselektorer sedan dess: Priser-kortets rad bär en egen span för
-  priset, och med `span{display:block}` hamnade den på en egen rad.
+- **Det ensamma kortet** under manifestet ("Så hjälper vi unga") är borta.
+  En dag stod en rad med ämnena, online och priset där; Leo tog bort den
+  2026-10-07, så manifestet slutar nu med knapparna. Startsidan länkar
+  till ämnes- och stadiesidorna bara från sidfoten och navet.
+  `.nx-omr-kort > b` och `> span` är barnselektorer sedan dess.
 - **Bort från startsidan:** de fyra numrerade hållpunkterna (de upprepade
   heron och bandet, och "Resultat som märks" lovade det FAQ:n säger att vi
   inte lovar) och "Vi bygger nästa generation tillsammans." Länken "Till
   föräldravyn" ledde en ny besökare till en låst vy; den är "Se priserna".
   `.nx-holdpunkter` och `.nx-statement` används kvar på menysidorna.
-- **Exempelkorten** står under "Så kan din studiehjälpare se ut." och
-  ingressen säger att korten med märket Exempel är exempel. Rubriken sa
-  "Möt några av våra studiehjälpare" medan databasen hade noll publika.
-  Ett fel i hämtningen visar inte längre `error.message` för en anonym
-  besökare (rå servertext bara i de inloggade vyerna).
-- **Prova NexLäx** står efter studievyn: se `minne/nexlax.md`.
-
-Startsidan är ungefär 700 px kortare på dator, trots NexLäx-rutan.
+- **Exempelkorten** står under "Möt några av våra studiehjälpare." igen
+  (Leo 2026-10-07; en dag stod "Så kan din studiehjälpare se ut."), med
+  märket Exempel kvar på korten. **Märket tas inte bort** medan korten är
+  påhittade: utan det står tre personer som inte finns, med AI-porträtt,
+  som "våra studiehjälpare" för föräldrar som ska släppa in någon i
+  hemmet. Vägen bort från märket är riktiga profiler (`visa_publikt`),
+  som ritas av sig själva, och då tas `EXEMPELKORT` bort. Ett fel i hämtningen visar inte längre
+  `error.message` för en anonym besökare (rå servertext bara i de
+  inloggade vyerna).
+- **Prova NexLäx** stod en dag efter studievyn och är borttaget
+  (`minne/nexlax.md`).
 
 ### Två fällor när en palett byts
 
