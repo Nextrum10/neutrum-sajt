@@ -167,9 +167,12 @@ om barnet i artikel 22:s mening: den ger stjärnor och en procentsats som
 barnet, familjen och studiehjälparen ser, och ingenting följer av den av
 sig själv. XP:n och serien i NexLäx (Fas 23.2) och uppdragen (Fas 23.4)
 räknas ur samma svar och rapporter när vyn frågar, sparas inte och visas
-för samma personer; en nivå som öppnas av dem är en spelregel, inget
-beslut. Valet att stänga av ljudet eller vibrationen sparas bara i
-webbläsaren (lagring.html). Svaren är korta (ett alternativ, ett tal, några ord) och går
+för samma personer; sedan 2026-10-06 är alla nivåer öppna, så inget
+låses av dem. Valet att stänga av ljudet eller vibrationen sparas bara i
+webbläsaren (lagring.html). En rapport om fel i en fråga
+(`niva_felrapporter`, 2026-10-06) är inga personuppgifter: frågan, ett
+av fyra skäl, vilken sorts konto (familj, barn, studiehjälpare, admin)
+och tiden, utan fritext och utan något som pekar på en person. Svaren är korta (ett alternativ, ett tal, några ord) och går
 inte till någon utanför oss. AI:n är frivillig för
 studiehjälparen, får förnamnet och maskad text, och en människa läser
 och skickar varje utkast.

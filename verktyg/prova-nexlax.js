@@ -117,6 +117,7 @@ function nexlaxRpc() {
                             timmar: { genomforda: 2, bokade: 0 }, studieplan: null, visa_rapporter: false, rapporter: null }),
     barn_notiser: () => [],
     barn_markera_last: () => true,
+    rapportera_fragefel: k => { anrop.push(['rapportera_fragefel', k]); return true; },
     barn_nexlax: () => {
       anrop.push(['barn_nexlax']);
       return { lage: 'ok', elev: 'barn-1', arskurs: 'Åk 6', amnen: ['Matematik'], katalog: KATALOG,
@@ -342,7 +343,8 @@ async function provaBarnet(webb) {
   prova('NP: sektionen visar provet och de egna uppgifterna', np.includes('Nationella provet i matematik, åk 6') && np.includes('Nextrums egna'), np.slice(0, 200));
   prova('NP: områdets namn utan NP-träning', np.includes('Blandad träning'), np.slice(0, 300));
   prova('NP: alla nivåer är öppna', (await page.locator('#bv-nl-vag .nl-np-niva:not(.mastare) [data-nl-starta]').count()) === 2);
-  prova('NP: provträningen väntar på områdets nivåer', (await page.locator('#bv-nl-vag .nl-np-niva.mastare.last').count()) === 1);
+  prova('NP: provträningen är också öppen', (await page.locator('#bv-nl-vag .nl-np-niva.mastare [data-nl-starta]').count()) === 1
+    && (await page.locator('#bv-nexlax .nl-np-niva.last, #bv-nexlax .nl-omr-last').count()) === 0);
   prova('NP: i barnets vy inga länkar ut', (await page.locator('#bv-nexlax a').count()) === 0,
     await page.locator('#bv-nexlax a').count());
   prova('NP: toppen räknar sektionen', (await text(page, '#bv-nl-vag .nl-bana')).includes('Inför NP'));
@@ -407,6 +409,15 @@ async function provaBarnet(webb) {
     && (await page.locator('.upg-spel .upg-fraga.skaka').count()) === 1 && (await page.locator('.upg-spel.het').count()) === 0,
     JSON.stringify(await känt(page)));
   await bild(page, 'nexlax-spelaren-fel', '.upg-spel');
+  /* Fel i frågan: fyra skäl, ett tryck skickar, och ett tack. */
+  await page.click('.upg-spel [data-fel-oppna]');
+  prova('fel i frågan: fyra skäl', (await page.locator('.upg-spel [data-fel-sort]').count()) === 4);
+  await page.click('.upg-spel [data-fel-sort="facit"]');
+  await page.waitForSelector('.upg-spel .upg-fel-tack', { timeout: 4000 }).catch(() => {});
+  const felAnrop = anrop.filter(a => a[0] === 'rapportera_fragefel');
+  prova('fel i frågan: skickas med frågan och skälet, och tackar',
+    felAnrop.length === 1 && felAnrop[0][1].p_sort === 'facit' && !!felAnrop[0][1].p_fraga
+    && (await text(page, '.upg-spel .upg-fel-tack')).includes('Tack'), JSON.stringify(felAnrop));
   await page.click('.upg-spel [data-spel="vidare"]');
   await svara(0);
   await page.click('.upg-spel [data-spel="vidare"]').catch(() => {});

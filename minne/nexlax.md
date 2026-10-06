@@ -50,12 +50,23 @@ Läxhjälp är fortfarande tjänstens namn; skolan ger läxor, vi ger uppgifter.
   familjen kunde förut peka om en läxa till vilket material som helst
   vars id de kände, och policyn "familj läser bibliotek via läxa" gav dem
   då läsrätt till det.
-- **Upplåsningen är en spelregel, inte ett skydd.** Den räknas i
-  `nextrum-uppgifter.js`: en nivå är öppen när den är först i banan, när
-  den före är klarad, när den redan är klarad eller påbörjad, eller när
-  studiehjälparen gett den. `niva_starta()` startar vilken nivå som helst
-  åt familjens eget barn; den som hoppar fram genom API:t hoppar i sitt
-  eget spel.
+- **Allt är öppet sedan 2026-10-06.** Leo: "hela nexläx ska också vara
+  upplåst så att man kan jobba med vad man vill och behöver". Varje nivå
+  och varje Mästarprov går att starta, på vägen och i NP-sektionen.
+  Vägen har kvar sin ordning och sitt aktuella steg, som ett förslag.
+  Förut öppnades nivåerna en i taget; det var en spelregel i
+  `nextrum-uppgifter.js`, inget skydd, och `niva_starta()` startade
+  redan vilken nivå som helst åt familjens eget barn.
+- **Fel i en fråga (2026-10-06, `nexlax_felrapporter`).** Leo: "gör knapp
+  rapportera fel, vi ska se det i admin då". Efter varje svar finns Fel i
+  frågan? med fyra skäl (facit, otydlig, språk, annat) och ingen fritext.
+  Rapporten bär ingen person: frågan, skälet, sortens konto och tiden,
+  så ingen gallring och ingen ändring i policyn. Tabellen har inga
+  policyer; `rapportera_fragefel` skriver (familj, barn, studiehjälpare,
+  med tak: 20 öppna per fråga och 500 per dygn), och admin läser med
+  `nexlax_felrapporter()` och stänger med `nexlax_felrapport_hanterad()`,
+  båda bara superadmin. Listan står under Material. En rättad fråga går
+  in som en ny bankmigration, aldrig för hand.
 - **Stjärnorna, serien och märkena räknas ur försöken** och sparas
   inte, så de kan aldrig säga något annat än raderna. Stjärnorna i banan
   är det BÄSTA försöket per nivå (det är spelet). Rättningen i Din

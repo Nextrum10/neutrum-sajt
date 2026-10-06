@@ -9550,6 +9550,8 @@ select 'Barn: kör bara sina egna funktioner bland SECURITY DEFINER', r = 'inga'
                                       -- i bekräftelsemejlet (den är öppen för alla).
                                       'barn_installningar', 'barn_notisval', 'barn_epost_bekrafta',
                                       'niva_starta', 'niva_svara', 'niva_genomgang', 'nexlax_lage',
+                                      -- Fel i en fråga (nexlax_felrapporter, 2026-10-06).
+                                      'rapportera_fragefel',
                                       'ar_matchade', 'ar_min_elev', 'is_admin', 'is_matched_tutor_of',
                                       'is_my_matched_tutor', 'is_my_student')$q$) r) x;
 
@@ -11732,6 +11734,94 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('19 Uppdragen och NP-spåret', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 20. NexLäx: fel i en fråga (nexlax_felrapporter, 2026-10-06)
+--
+-- Familjen, barnet och studiehjälparen rapporterar genom
+-- rapportera_fragefel. Ingen inloggad läser tabellen, bara admin ser
+-- rapporterna och stänger dem, och rapporten bär ingen person.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  kod  text;
+  r    jsonb;
+  n    int;
+  F    uuid := gen_random_uuid();
+  E   constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  KE  constant uuid := '00000000-0000-4000-8000-0000000bc0c1';
+  P   constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  AD  constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  NV  constant uuid := '00000000-0000-4000-8000-00000000c9b1';
+begin
+  begin
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning)
+    values (NV, 'rls-felrapportens-niva', 'Matematik', 'ak5', 'RLS-felrapporten', 'RLS-felrapportens nivå', 1);
+    insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt)
+    values (F, NV, 1, 'val', 'RLS-felrapportens fråga', '["rätt","fel"]', '0');
+
+    perform pg_temp.bli(null);
+    begin perform public.rapportera_fragefel(F, 'facit'); kod := 'inget fel';
+    exception when others then kod := sqlstate; end;
+    ut := ut || jsonb_build_object('t', '20 anon rapporterar inte', 'ok', kod = '42501', 'd', kod);
+
+    perform pg_temp.bli(P);
+    ut := ut || jsonb_build_object('t', '20 familjen rapporterar', 'ok', public.rapportera_fragefel(F, 'facit'), 'd', null);
+    begin perform public.rapportera_fragefel(F, 'tråkig'); kod := 'inget fel';
+    exception when others then kod := sqlstate; end;
+    ut := ut || jsonb_build_object('t', '20 ett okänt skäl nekas', 'ok', kod = '22023', 'd', kod);
+    begin perform public.rapportera_fragefel(gen_random_uuid(), 'facit'); kod := 'inget fel';
+    exception when others then kod := sqlstate; end;
+    ut := ut || jsonb_build_object('t', '20 en okänd fråga nekas', 'ok', kod = 'P0002', 'd', kod);
+    begin select count(*) into n from public.niva_felrapporter; kod := 'inget fel';
+    exception when others then kod := sqlstate; end;
+    ut := ut || jsonb_build_object('t', '20 familjen läser inte tabellen', 'ok', kod = '42501', 'd', kod);
+    begin r := public.nexlax_felrapporter(); kod := 'inget fel';
+    exception when others then kod := sqlstate; end;
+    ut := ut || jsonb_build_object('t', '20 familjen ser inte listan', 'ok', kod = '42501', 'd', kod);
+    begin perform public.nexlax_felrapport_hanterad(F); kod := 'inget fel';
+    exception when others then kod := sqlstate; end;
+    ut := ut || jsonb_build_object('t', '20 familjen stänger inget', 'ok', kod = '42501', 'd', kod);
+
+    perform pg_temp.bli_barn(KE, E, P);
+    ut := ut || jsonb_build_object('t', '20 barnet rapporterar', 'ok', public.rapportera_fragefel(F, 'otydlig'), 'd', null);
+
+    perform pg_temp.bli(AD);
+    r := (select x from jsonb_array_elements(public.nexlax_felrapporter()) x where x ->> 'fraga_id' = F::text);
+    ut := ut || jsonb_build_object('t', '20 admin ser frågan med skälen och facit', 'ok',
+            (r ->> 'antal')::int = 2 and (r ->> 'facit')::int = 1 and (r ->> 'otydlig')::int = 1 and r ->> 'ratt' = '0',
+            'd', left(coalesce(r::text, 'ingen rad'), 300));
+
+    -- Taket: tjugo öppna per fråga, och svaret är detsamma över taket.
+    perform pg_temp.bli(P);
+    for n in 1 .. 25 loop perform public.rapportera_fragefel(F, 'annat'); end loop;
+    perform pg_temp.bli(AD);
+    r := (select x from jsonb_array_elements(public.nexlax_felrapporter()) x where x ->> 'fraga_id' = F::text);
+    ut := ut || jsonb_build_object('t', '20 högst tjugo öppna per fråga', 'ok', (r ->> 'antal')::int = 20, 'd', r ->> 'antal');
+    n := public.nexlax_felrapport_hanterad(F);
+    ut := ut || jsonb_build_object('t', '20 admin stänger frågans rapporter', 'ok', n = 20, 'd', n::text);
+    r := (select x from jsonb_array_elements(public.nexlax_felrapporter()) x where x ->> 'fraga_id' = F::text);
+    ut := ut || jsonb_build_object('t', '20 en stängd fråga står inte kvar', 'ok', r is null, 'd', left(coalesce(r::text, ''), 200));
+
+    execute 'reset role';
+    perform set_config('request.jwt.claims', null, true);
+    select count(*) into n from public.niva_felrapporter where fraga_id = F and konto = 'barn';
+    ut := ut || jsonb_build_object('t', '20 barnets rapport står som barn', 'ok', n = 1, 'd', n::text);
+    select count(*) into n from public.niva_felrapporter where fraga_id = F and konto = 'familj';
+    ut := ut || jsonb_build_object('t', '20 familjens rapporter står som familj', 'ok', n = 19, 'd', n::text);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('20 Felrapporterna', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
