@@ -860,7 +860,7 @@ BANOR = [
                 % (tal(KONTANT), heltal(KONTANT_UTAN), heltal(KONTANT_MOMS)),
                 'Kassan ökar med hela beloppet, alltså debet. Av det är %s kr försäljning och %s kr moms som ska '
                 'betalas till staten, båda i kredit.' % (heltal(KONTANT_UTAN), heltal(KONTANT_MOMS))),
-        ], beskrivning='Moms med den allmänna skattesatsen 25 procent: utgående och ingående moms, vad som ska '
+        ], beskrivning='Moms räknad med 25 procent i exemplen: utgående och ingående moms, vad som ska '
                        'betalas och hur en försäljning bokförs.'),
     ]),
 
@@ -1321,8 +1321,8 @@ BANOR = [
                 'Räntan är en kostnad för lånet. Amorteringen minskar skulden och är ingen kostnad, men pengarna '
                 'går ändå ut från företaget.'),
             sant('Vid leasing äger leasingbolaget maskinen, och företaget betalar en avgift för att använda den.', True,
-                 'Företaget slipper binda mycket pengar på en gång. I gengäld blir det totalt ofta dyrare än att '
-                 'köpa.'),
+                 'Så fungerar leasing: leasingbolaget äger maskinen och företaget hyr den. Företaget slipper binda '
+                 'mycket pengar på en gång, men i gengäld blir det totalt ofta dyrare än att köpa.'),
             val('Vilken är en fördel med att leasa en maskin i stället för att köpa den kontant?',
                 ['Företaget behöver inte betala hela priset på en gång',
                  'Företaget blir ägare till maskinen från första dagen',
@@ -1392,7 +1392,7 @@ BANOR = [
             skriv('Vad kallas bilden som visar ett företags avdelningar och vem som är chef över vem? Svara med ett '
                   'ord.',
                   ['organisationsschema', 'organisationsschemat', 'organisationsscheman', 'organigram',
-                   'organigrammet'],
+                   'organigrammet', 'organisationskarta', 'organisationskartan'],
                   'Organisationsschemat visar den formella organisationen: avdelningarna, cheferna och vem som '
                   'svarar inför vem.'),
         ], beskrivning='Linjeorganisation, linje-stab, matrisorganisation och platt organisation: hur ett företag '

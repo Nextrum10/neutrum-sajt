@@ -286,7 +286,7 @@ BANOR = [
                  'En reflex har inget eget ljus. Den kastar tillbaka ljuset från bilens lampor.'),
             val('Vad ska du alltid göra när du åker bil?',
                 ['Ha bältet på dig', 'Sitta i en vuxens knä', 'Ha fönstret öppet'], 'Ha bältet på dig',
-                'Bältet håller kvar dig på platsen om bilen bromsar hårt. Barn behöver också en bilbarnstol '
+                'Bältet håller kvar dig på platsen om bilen bromsar hårt. Små barn behöver också en bilbarnstol '
                 'eller en bälteskudde.'),
             sant('I Sverige kör bilarna på höger sida av vägen.', True,
                  'Sverige har högertrafik. Därför kommer bilarna i körfältet närmast dig från vänster när du ska gå över.'),

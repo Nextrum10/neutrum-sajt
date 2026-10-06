@@ -340,7 +340,7 @@ BANOR = [
 
         niva('fr-ak7-etre-avoir-1', 'Je suis, tu es', 'Être och avoir', [
             para('Para ihop adjektivet med det svenska.',
-                 [('content', 'glad'), ('fatigué', 'trött'), ('grand', 'lång'), ('petit', 'liten'),
+                 [('content', 'glad'), ('fatigué', 'trött'), ('grand', 'stor eller lång'), ('petit', 'liten'),
                   ('malade', 'sjuk')],
                  'Adjektiven står ofta efter être: je suis content, il est fatigué. En flicka skriver contente '
                  'och fatiguée.'),
