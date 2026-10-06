@@ -474,7 +474,7 @@ Detaljer: `minne/grunden.md`.
   länken (`minne/sakerhet.md`).
 - **NexLäx Fas 23.4** (2026-10-06): migrationerna `nexlax_uppdrag_och_np` och banken körs efter
   merge, i den ordningen och som de förra bankerna (`minne/nexlax.md`); vyerna tål att de saknas.
-  Juridiken, företagsekonomin, psykologin, filosofin och språken är skrivna med AI och inte lästa
+  Juridiken, företagsekonomin och språken är skrivna med AI och inte lästa
   av någon som undervisar i ämnet.
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen

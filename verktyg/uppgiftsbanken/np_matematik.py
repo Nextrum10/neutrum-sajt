@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-"""NP-träning i matematik (2026-10-06): nya områden i spåret «Inför nationella
-provet» i åk 3, åk 6, åk 9, gy1 och gy2.
+"""NP-träning i matematik (2026-10-06): åk 3 i spåret «Inför nationella provet».
+Åk 6, åk 9, gy1 och gy2 har sina NP-nivåer i blad_matematik_*.py.
 
 Bygger på de NP-nivåer som redan finns (området NP-träning och genomgångarna i
 blad_matematik_lag_mellan.py, blad_matematik_hog.py och blad_matematik_gy.py)
 och på materialbankens NP-blad (verktyg/bladen/np_ak6.py, np_ak9.py och
-np_gymnasiet.py), och skriver det som saknas: åk 3 hade ingen NP-del alls, och
-de andra årskurserna får områden som de befintliga nivåerna bara snuddar vid.
+np_gymnasiet.py), och skriver det som saknades: åk 3 hade ingen NP-del alls.
 Inga frågor därifrån upprepas. Allt är Nextrums egna uppgifter, skrivna mot
 Lgr22:s centrala innehåll och ämnesplanen i matematik, i provens stil men
 aldrig provens egna: korta svar och uppgifter i flera steg.
@@ -396,3 +395,8 @@ AK3_PROBLEM_2 = niva('ma-ak3-np-problemlosning-2', 'Mönster och talföljder', '
          'Jämför två tal som står bredvid varandra. Ändras de lika mycket varje gång, eller blir de dubbelt så stora?'),
 ], beskrivning='Tränar mönster inför nationella provet i åk 3: talföljder som ökar eller minskar lika mycket, '
                'upprepade mönster och att räkna ut ett steg längre fram.')
+
+
+TILLAGG = [
+    bana(MA, 'ak3', [AK3_TAL_1, AK3_TAL_2, AK3_MATA_1, AK3_MATA_2, AK3_PROBLEM_1, AK3_PROBLEM_2]),
+]

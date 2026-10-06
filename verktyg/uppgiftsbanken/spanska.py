@@ -249,7 +249,7 @@ BANOR = [
             val("Vilket tal är 'cinco'?", ['5', '4', '6', '15'], str(TAL.index('cinco')),
                 'Cinco är fem. Femton heter quince, och de två orden är lätta att blanda ihop.'),
             skriv('Skriv talet 8 med bokstäver på spanska.', svar(TAL[8]),
-                  'Åtta heter ocho. Samma ord finns i oktober, som en gång var årets åttonde månad.'),
+                  'Åtta heter ocho. Ordet är släkt med oktober, som en gång var årets åttonde månad.'),
             val("Vad heter 'noll' på spanska?", ['cero', 'nada', 'nulo', 'once'], TAL[0],
                 'Noll heter cero. Nada betyder ingenting, men som tal säger man cero.'),
             sant("'Once' betyder en gång, som på engelska.", False,
@@ -273,7 +273,7 @@ BANOR = [
             ordna('Bygg frågan: Hur gammal är du?', ['¿Cuántos', 'años', 'tienes?'], extra=['eres?'],
                   forklaring='¿Cuántos años tienes? betyder ordagrant hur många år har du? Åldern säger man med '
                              'tener, inte med ser.'),
-            skriv('Fyll i talet med bokstäver: Mi hermano tiene ___ años. (Min bror är sexton år.)', svar(TAL[16]),
+            skriv('Fyll i talet med bokstäver: Mi hermano tiene ___ años. (Min bror är sexton år.)', svar(TAL[16]) + ['diez y seis'],
                   'Sexton heter dieciséis, med accent på é. Det är diez y seis, tio och sex, skrivet som ett ord.'),
             val("Vilket tal är 'diecisiete'?", ['17', '7', '70', '16'], str(TAL.index('diecisiete')),
                 'Diecisiete är diez y siete, tio och sju, alltså 17.'),

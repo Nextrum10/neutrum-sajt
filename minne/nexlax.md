@@ -306,7 +306,8 @@ utveckling som är roligare att följa, och ett quest-system.
   siffror och den bästa dagen.
 - **Ämnen som bara finns i NexLäx** står i `NX.NEXLAX_AMNEN`, inte i
   `NX.AMNEN`: spanska, tyska, franska, juridik, företagsekonomi,
-  psykologi och filosofi. `NX.AMNEN` är vad familjen ber om hjälp med,
+  psykologi och filosofi (de två sista har färg och ikon men ännu ingen
+  bana, och ett ämne utan bana syns inte i väljaren). `NX.AMNEN` är vad familjen ber om hjälp med,
   vad studiehjälparen undervisar i och vad biblioteket märks med, och att
   erbjuda pass i juridik är ett beslut om affären. Språken har moderna
   språkens färg och sin kod (ES, DE, FR) i stället för en flagga, för en

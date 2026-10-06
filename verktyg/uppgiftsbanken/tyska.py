@@ -823,7 +823,7 @@ BANOR = [
                  'Infinitiven står sist i alla fyra: gehen, kommen, mitkommen och warten. Nicht står före '
                  'infinitiven.'),
             skriv('Skriv verbet som saknas sist: Ich muss heute Deutsch ___. (Jag måste plugga tyska i dag.)',
-                  godtas('lernen'),
+                  godtas('lernen', 'üben', 'pauken'),
                   'Plugga heter lernen. Efter muss står det i infinitiv och sist i meningen.'),
         ], beskrivning='Meningar med modalverb: modalverbet på andra plats och infinitiven sist.'),
 
@@ -889,7 +889,7 @@ BANOR = [
                   'ich bin gegangen.'),
             skriv('Skriv rätt form av sein: Wann ___ du nach Hause gekommen?', godtas(hjalpverb('kommen')['du']),
                   'Kommen får sein i perfekt. Till du hör bist: Wann bist du nach Hause gekommen?'),
-            ordna('Bygg meningen: I somras åkte vi till Österrike.',
+            ordna('Bygg meningen: Förra sommaren åkte vi till Österrike.',
                   ['Letzten', 'Sommer', hjalpverb('fahren')['wir'], 'wir', 'nach', 'Österreich',
                    particip('fahren') + '.'],
                   forklaring='Letzten Sommer står först, så sind kommer på andra plats. Fahren får sein, och '
