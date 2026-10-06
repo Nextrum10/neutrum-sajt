@@ -73,7 +73,11 @@ en vakt som jämför md5 för de fem funktioner den skriver om mot driften
 2026-10-05, och stannar om någon av dem ändrats sedan: läs driften och skriv
 om den hellre än att skriva över någon annans ändring. Den har ett `drop
 constraint` (villkoret på steg går inte att vidga annars), som verktygen ber
-om en bekräftelse för.
+om en bekräftelse för. Båda kördes 2026-10-06 avsnitt för avsnitt med
+`execute_sql` och registrerades sedan med filens text (md5 som filen); varje
+funktion och trigger jämfördes med en lokal databas byggd ur filen. Fram till
+dess sparade Avböjd bara läget: koden låg i main men ingenting i driften, och
+ett nej som klickats före migrationen köas aldrig i efterhand.
 Lönespecifikationen (2026-09-28) la till pg_cron-jobbet `manadskorning`,
 den 1:a klockan 04:17 UTC, och `notis_konfig.fakturering_url`. Sedan
 2026-10-01 går det varje natt 04:17 (`manadskorningen_gar_varje_natt`),

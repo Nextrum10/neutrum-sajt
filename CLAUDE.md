@@ -458,9 +458,9 @@ Detaljer: `minne/grunden.md`.
   funktionerna gick ut samma dag, och flaggan `barn_epost` står av tills juristen läst policyn,
   registrets rad 22 och konsekvensbedömningen; sedan ett prov i sandlådan
   (`DEPLOY-BARNKONTON.md` 8). Adminvyn visar inte barnens inloggningar, och inte adressen.
-- **Under 18, nejet och det admin sett** (2026-10-05): inte i drift förrän migrationerna
-  `ansokan_vardnadshavare_och_nej` och `admin_sett` körts och `ansokan-notis` driftsatts, efter
-  merge. Vyerna och formuläret tål att de saknas. Policytexten om vårdnadshavaren är inte läst av
+- **Under 18, nejet och det admin sett** (2026-10-05) är i drift sedan 2026-10-06: migrationerna
+  `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Inget riktigt
+  nej eller mejl till en vårdnadshavare har gått än. Policytexten om vårdnadshavaren är inte läst av
   juristen.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
