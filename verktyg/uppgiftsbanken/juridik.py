@@ -30,6 +30,10 @@ FÖRENKLAT, och värt en juristlärares blick:
 - Rättegången: brottmålets steg, utan strafföreläggande och ordningsbot.
 - Den offentliga försvararen "betalas av staten"; att den dömde kan få betala
   tillbaka står inte här.
+- Nämndemän: "många brottmål", för att en lagfaren domare dömer ensam i
+  enklare mål. Lockout, fredsplikt och turordning står som huvudregler.
+- LAS (provanställningen sex månader, turordningen som huvudregel) ändrades
+  senast 2022: ändras lagen igen, läs om de frågorna först.
 """
 from grund import bana, niva, val, skriv, ordna, sant, para, tal
 
@@ -109,12 +113,12 @@ BANOR = [
                 ['Förvaltningsrätten', 'Tingsrätten', 'Hovrätten', 'Kammarrätten'], 'Förvaltningsrätten',
                 'En myndighets beslut överklagas till förvaltningsrätten. Därefter kan det gå till kammarrätten '
                 'och Högsta förvaltningsdomstolen.'),
-            sant('I ett brottmål i tingsrätten dömer en lagfaren domare tillsammans med nämndemän.', True,
-                 'Nämndemännen är vanliga medborgare, valda av kommunen. De dömer tillsammans med domaren och '
-                 'har varsin röst.'),
+            sant('Vanliga medborgare, så kallade nämndemän, är med och dömer i många brottmål i tingsrätten.', True,
+                 'Nämndemännen är valda av kommunen och dömer tillsammans med en lagfaren domare. De har varsin '
+                 'röst. I enklare mål dömer domaren ensam.'),
             val('Vad gör Justitieombudsmannen, JO?',
-                ['Granskar att myndigheterna följer lagarna', 'Leder polisens utredningar av brott',
-                 'Dömer i tvister om hyror och lån', 'Skriver förslagen till nya lagar'],
+                ['Granskar att myndigheterna följer lagarna', 'Leder polisens utredningar av grova brott',
+                 'Dömer i tvister om hyror, lån och skulder', 'Skriver förslagen till nya lagar åt riksdagen'],
                 'Granskar att myndigheterna följer lagarna',
                 'JO väljs av riksdagen. Vem som helst kan anmäla en myndighet till JO, som kan kritisera den som '
                 'har gjort fel.'),
@@ -142,12 +146,12 @@ BANOR = [
                 'Svaret är ett nytt anbud, och avtal finns inte än',
                 'Ett ja med ändringar kallas en oren accept. Den räknas som ett nytt anbud, som den andra kan '
                 'anta eller avböja.'),
-            val('Ett anbud i ett brev säger: "Svar senast den 1 maj." Ditt ja kommer fram den 3 maj. Vad gäller?',
+            val('Ett anbud i ett brev säger: "Svar senast den 1 maj." Du skickar ditt ja först den 3 maj. Vad gäller?',
                 ['Svaret är för sent och räknas som ett nytt anbud', 'Avtalet gäller ändå, för svaret var ja',
-                 'Avtalet gäller, eftersom du hann posta det i april', 'Säljaren måste sälja till det första priset'],
+                 'Avtalet gäller, för en tidsfrist är bara ett önskemål', 'Säljaren måste sälja till det första priset'],
                 'Svaret är för sent och räknas som ett nytt anbud',
-                'Svaret måste komma fram i tid. Ett för sent svar blir ett nytt anbud, som säljaren kan anta '
-                'eller låta bli.'),
+                'Anbudet gällde bara till den 1 maj. Ett svar efter tidsfristen blir ett nytt anbud, som säljaren '
+                'kan anta eller låta bli.'),
             para('Para ihop begreppet med vad det betyder.', [
                 ('Anbud', 'ett erbjudande om att ingå ett avtal'),
                 ('Accept', 'ett ja till ett anbud'),
@@ -173,8 +177,8 @@ BANOR = [
                 ('Ocker', 'någon utnyttjar en annans nöd för att få ett orimligt pris'),
                 ('Tvång', 'någon hotas till att skriva under'),
                 ('Oskäligt villkor', 'ett villkor är så orimligt att det kan jämkas')],
-                'Svek, ocker och tvång gör ett avtal ogiltigt. Ett oskäligt villkor kan jämkas, ändras, eller '
-                'lämnas utan avseende.'),
+                'Svek, ocker och tvång gör ett avtal ogiltigt. Ett oskäligt villkor kan jämkas, alltså ändras, '
+                'eller lämnas utan avseende.'),
             sant('Ett avtal som en 15-åring har ingått utan vårdnadshavarens ja kan bli ogiltigt.', True,
                  'En omyndig kan som regel inte ingå bindande avtal på egen hand. Vårdnadshavaren kan godkänna '
                  'avtalet i efterhand, och då gäller det.'),
@@ -216,13 +220,13 @@ BANOR = [
             sant('En reklamation som görs inom två månader efter att du upptäckte felet är alltid gjord i tid.', True,
                  'Du ska reklamera inom skälig tid efter att du märkt felet, och två månader räknas alltid som '
                  'skälig tid.'),
-            skriv('Om varan inte har någon garanti: hur många år efter att du fick varan kan du som längst '
-                  'reklamera ett fel enligt konsumentköplagen? Svara med ett tal.', tal(3),
-                  'Efter tre år kan du inte längre reklamera, om inte en garanti eller ett avtal säger något '
-                  'annat.'),
+            skriv('Säljaren svarar för fel som visar sig inom en viss tid efter att du fick varan. Hur många år är '
+                  'den tiden som huvudregel enligt konsumentköplagen? Svara med ett tal.', tal(3),
+                  'Säljaren svarar för fel som visar sig inom tre år. Efter det är det som regel för sent, om inte '
+                  'en garanti eller ett avtal ger längre tid.'),
             val('Vad betyder det att reklamera?',
-                ['Att säga till säljaren att varan har ett fel', 'Att lämna tillbaka en vara man ångrar',
-                 'Att be om pengarna tillbaka utan skäl', 'Att anmäla säljaren till polisen'],
+                ['Att säga till säljaren att varan har ett fel', 'Att lämna tillbaka en vara man har ångrat köpet av',
+                 'Att be om pengarna tillbaka utan att ange skäl', 'Att anmäla säljaren till polisen'],
                 'Att säga till säljaren att varan har ett fel',
                 'En reklamation är ett klagomål på ett fel. Den kan vara muntlig, men skriftlig är lättare att '
                 'bevisa.'),
@@ -234,7 +238,7 @@ BANOR = [
                 'prisavdrag eller häva köpet.'),
             sant('Ett fel som visar sig inom två år efter att du fick varan antas ha funnits redan vid köpet.', True,
                  'Då är det butiken som ska visa att felet inte fanns från början, till exempel att varan har '
-                 'tappats. Tiden var sex månader före den nya lagen 2022.'),
+                 'tappats. I den äldre konsumentköplagen var tiden sex månader.'),
             para('Para ihop påföljden med vad den innebär.', [
                 ('Avhjälpande', 'felet lagas'),
                 ('Omleverans', 'du får en ny, felfri vara'),
@@ -265,13 +269,13 @@ BANOR = [
                  'ARN ger rekommendationer. De flesta företag följer dem, men den som vill tvinga fram ett beslut '
                  'måste gå till domstol.'),
             val('Du köper en jacka i en butik och ångrar dig dagen efter. Jackan är hel. Vad gäller?',
-                ['Bara om butiken lovar öppet köp får du lämna den', 'Du har 14 dagars ångerrätt enligt lag',
-                 'Butiken måste byta den mot en annan vara', 'Du får tillbaka pengarna inom 30 dagar'],
-                'Bara om butiken lovar öppet köp får du lämna den',
+                ['Det avgörs av butikens egna regler om öppet köp', 'Du har 14 dagars ångerrätt enligt lag, som på nätet',
+                 'Butiken måste byta den mot en annan vara om du vill', 'Du får tillbaka pengarna inom 30 dagar'],
+                'Det avgörs av butikens egna regler om öppet köp',
                 'I en butik finns ingen ångerrätt i lagen. Öppet köp är frivilligt, så det beror på butiken.'),
             val('Vem räknas som konsument enligt lagen?',
-                ['En privatperson som köper för eget bruk', 'Ett företag som köper in varor',
-                 'Den som säljer begagnat på nätet', 'Alla som betalar med kort'],
+                ['En privatperson som köper för eget bruk', 'Ett företag som köper in varor till sin verksamhet',
+                 'Den som säljer varor i sin egen firma', 'Alla som betalar sina köp med kort'],
                 'En privatperson som köper för eget bruk',
                 'En konsument köper främst för privat bruk, inte i sitt företag. Konsumentlagarna skyddar just '
                 'henne eller honom.'),
@@ -287,11 +291,12 @@ BANOR = [
         # -------------------------------------------------- Familj och arv
         niva('ju-gy1-familj-1', 'Äktenskap och samboende', 'Familj och arv', [
             val('Vad är giftorättsgods?',
-                ['Egendom som ska delas vid en bodelning', 'Egendom som bara den ena maken äger',
-                 'Presenter som paret fick på bröllopet', 'En bostad som makarna hyr tillsammans'],
+                ['Egendom som ska delas vid en bodelning', 'Egendom som inte ska delas vid en bodelning',
+                 'Skulder som makarna har tillsammans', 'Bostad och bohag som sambor har skaffat ihop'],
                 'Egendom som ska delas vid en bodelning',
-                'Det mesta makarna äger är giftorättsgods. När äktenskapet tar slut delas värdet lika, efter '
-                'att skulderna har dragits av.'),
+                'Det mesta makarna äger är giftorättsgods, också det som bara den ena står som ägare till. När '
+                'äktenskapet tar slut delas värdet lika, efter att skulderna har dragits av. Det som inte delas '
+                'kallas enskild egendom.'),
             val('Hur kan makar göra så att viss egendom blir enskild egendom?',
                 ['Genom ett äktenskapsförord', 'Genom ett testamente till sig själva',
                  'Genom att låta en bank värdera den', 'Genom att lägga den i ett bankfack'],
@@ -311,9 +316,9 @@ BANOR = [
                 'Med ett skriftligt samboavtal kan samborna avtala bort delningen. Äktenskapsförord är makarnas '
                 'motsvarighet.'),
             val('Vad är en bodelning?',
-                ['När egendomen delas upp efter att ett förhållande har tagit slut', 'När ett arv delas mellan syskon',
-                 'När ett hus delas upp i två lägenheter', 'När en skuld delas upp i flera betalningar'],
-                'När egendomen delas upp efter att ett förhållande har tagit slut',
+                ['När egendom delas efter ett avslutat förhållande', 'När ett arv delas mellan den avlidnes barn',
+                 'När ett hus delas upp i flera separata lägenheter', 'När en skuld betalas av i flera delbetalningar'],
+                'När egendom delas efter ett avslutat förhållande',
                 'Bodelning görs vid skilsmässa, när ett samboförhållande tar slut och när en make dör. När ett '
                 'arv delas heter det arvskifte.'),
             sant('Vårdnadshavare har ansvar för att barnet får omvårdnad, trygghet och en god fostran.', True,
@@ -342,31 +347,33 @@ BANOR = [
                 'Hälften av arvslotten',
                 'Laglotten är den del av arvet som ett barn alltid har rätt till, även om ett testamente säger '
                 'något annat.'),
-            sant('En förälder kan med ett testamente göra så att ett barn inte får något arv alls.', False,
+            sant('Ett testamente kan ta ifrån ett barn rätten till laglotten.', False,
                  'Barnet har rätt till sin laglott, hälften av arvslotten, och kan kräva den även om testamentet '
                  'säger något annat.'),
-            val('Vem ärver den som inte har några släktingar som kan ärva och inte har skrivit något testamente?',
+            val('Vem får arvet efter en person som inte har någon make, inga släktingar som kan ärva och inget '
+                'testamente?',
                 ['Allmänna arvsfonden', 'Kommunen där personen bodde', 'Den närmaste grannen', 'Svenska kyrkan'],
                 'Allmänna arvsfonden',
-                'Allmänna arvsfonden stöttar projekt för barn, unga och personer med funktionsnedsättning.'),
+                'Då går arvet till Allmänna arvsfonden. Den stöttar projekt för barn, unga och personer med '
+                'funktionsnedsättning.'),
             val('En gift person dör. Paret har bara gemensamma barn. Vem ärver först?',
                 ['Den efterlevande maken', 'Barnen, direkt', 'Den avlidnes föräldrar', 'Barnen, när de fyllt 18'],
                 'Den efterlevande maken',
                 'Maken ärver först, och de gemensamma barnen får sitt arv när båda föräldrarna har dött. '
-                'Särkullbarn, som inte är makens barn, kan få ut sitt arv direkt.'),
+                'Särkullbarn, alltså den avlidnes barn som maken inte är förälder till, kan få ut sitt arv direkt.'),
             para('Para ihop ordet med vad det betyder.', [
                 ('Testamente', 'ett skriftligt besked om vem som ska få ens egendom'),
                 ('Arvslott', 'det arv en arvinge skulle få enligt lag'),
                 ('Dödsbo', 'den avlidnes egendom och skulder innan arvet är fördelat'),
-                ('Särkullbarn', 'ett barn som bara den ena maken är förälder till')],
+                ('Särkullbarn', 'ett barn som den ena maken har med någon annan')],
                 'Ett testamente ska vara skriftligt och skrivas under inför två vittnen.'),
         ], beskrivning='Bröstarvingar, arvsklasserna, laglotten, testamente och makens arv.'),
 
         # -------------------------------------------------- Brott och straff
         niva('ju-gy1-brott-1', 'Vad är ett brott?', 'Brott och straff', [
             val('Vad krävs för att en handling ska vara ett brott i Sverige?',
-                ['Att den står beskriven i lag och har ett straff', 'Att de flesta tycker att den är fel',
-                 'Att någon har blivit ledsen av den', 'Att polisen har sett när den hände'],
+                ['Att den står beskriven i lag och har ett straff', 'Att de flesta människor anser att den är moraliskt fel',
+                 'Att någon har blivit ledsen eller arg på grund av den', 'Att polisen själv har sett när den hände'],
                 'Att den står beskriven i lag och har ett straff',
                 'Ett brott är en handling som står beskriven i brottsbalken eller en annan lag, med ett straff.'),
             val('Vad kallas principen att ingen får straffas för något som inte var ett brott när det hände?',
@@ -379,19 +386,20 @@ BANOR = [
                 ('Oaktsamhet', 'att vara slarvig eller vårdslös'),
                 ('Försök', 'att påbörja ett brott som inte fullbordas'),
                 ('Medhjälp', 'att hjälpa någon annan att begå ett brott')],
-                'Uppsåt och oaktsamhet säger hur skyldig någon är. Försök och medhjälp kan vara straffbara även '
-                'när brottet aldrig fullbordas av en själv.'),
+                'Uppsåt och oaktsamhet är två slags skuld: med flit eller av slarv. Försök och medhjälp kan vara '
+                'straffbara även om man inte själv fullbordar brottet.'),
             sant('Huvudregeln i brottsbalken är att en gärning bara är ett brott om den görs med uppsåt.', True,
                  'Bara när lagen säger det räcker oaktsamhet, som vid vållande till annans död.'),
-            val('Vilken av de här påföljderna betalas med pengar?',
-                ['Böter', 'Fängelse', 'Fotboja', 'Utvisning'], 'Böter',
-                'Böter betalas till staten. Skadestånd är något annat: det betalas till den som har skadats.'),
+            val('Vilket av de här är ett straff som betalas med pengar?',
+                ['Böter', 'Fängelse', 'Skadestånd', 'Gripande'], 'Böter',
+                'Böter är ett straff och betalas till staten. Skadestånd är inget straff: det betalas till den som '
+                'har skadats.'),
             sant('Den som är misstänkt för ett brott ska behandlas som oskyldig tills en dom har vunnit laga kraft.',
                  True,
                  'Det kallas oskuldspresumtionen. Det är åklagaren som ska bevisa att den misstänkte är skyldig.'),
             val('Vad är nödvärn?',
-                ['Rätten att försvara sig mot ett pågående angrepp', 'Rätten att straffa den som har skadat en',
-                 'Polisens rätt att gripa en misstänkt', 'Rätten att vägra vittna mot en släkting'],
+                ['Rätten att försvara sig mot ett pågående angrepp', 'Rätten att straffa den som tidigare har skadat en',
+                 'Polisens rätt att gripa en person som är misstänkt', 'Rätten att vägra vittna mot en släkting'],
                 'Rätten att försvara sig mot ett pågående angrepp',
                 'Den som angrips får försvara sig, och andra får hjälpa till. Försvaret får inte vara uppenbart '
                 'oförsvarligt.'),
@@ -415,13 +423,14 @@ BANOR = [
                 ('Försvararen', 'hjälper den tilltalade'),
                 ('Domaren', 'leder förhandlingen och dömer'),
                 ('Vittnet', 'berättar vad hon eller han har sett')],
-                'I tingsrätten dömer domaren tillsammans med nämndemännen.'),
+                'Åklagaren och försvararen företräder varsin sida, vittnet berättar och domaren leder förhandlingen. '
+                'I tingsrätten dömer domaren oftast tillsammans med nämndemän.'),
             sant('För att någon ska dömas måste det vara ställt utom rimligt tvivel att personen har begått brottet.',
                  True,
                  'Beviskravet i brottmål är högt: det är bättre att en skyldig går fri än att en oskyldig döms.'),
             val('Vad gör en offentlig försvarare?',
-                ['Försvarar den misstänkte, betald av staten', 'Utreder brottet åt polisen',
-                 'Företräder brottsoffret i rätten', 'Bestämmer straffet med domaren'],
+                ['Försvarar den misstänkte, betald av staten', 'Utreder brottet åt polisen och åklagaren',
+                 'Företräder brottsoffret i rätten, betald av staten', 'Bestämmer straffet tillsammans med domaren'],
                 'Försvarar den misstänkte, betald av staten',
                 'Den som misstänks för ett allvarligt brott har rätt till en offentlig försvarare. Brottsoffret '
                 'kan få ett målsägandebiträde.'),
@@ -449,8 +458,10 @@ BANOR = [
                  'Myndigheten får som huvudregel inte fråga. Bara när den måste pröva om handlingen är hemlig får '
                  'den fråga, och då kan man låta bli att svara.'),
             val('Vad innebär censurförbudet?',
-                ['Myndigheter får inte granska en skrift innan den ges ut', 'Ingen får skriva något som är osant',
-                 'Tidningar måste visa texter för polisen först', 'Det är förbjudet att kritisera regeringen'],
+                ['Myndigheter får inte granska en skrift innan den ges ut',
+                 'Ingen får skriva eller publicera något som är osant',
+                 'Tidningar måste visa sina texter för polisen före tryckning',
+                 'Det är förbjudet att kritisera regeringen i tidningar'],
                 'Myndigheter får inte granska en skrift innan den ges ut',
                 'Det som har publicerats kan prövas i efterhand, men ingen myndighet får stoppa det i förväg.'),
             para('Para ihop begreppet med vad det betyder.', [
@@ -461,8 +472,8 @@ BANOR = [
                 'Allmänna handlingar är offentliga om de inte omfattas av sekretess. Meddelarfriheten och '
                 'efterforskningsförbudet skyddar den som tipsar medierna.'),
             val('Vilka friheter skyddas i regeringsformens andra kapitel?',
-                ['Yttrandefrihet, mötesfrihet och religionsfrihet', 'Rätten att äga ett eget hus och en egen bil',
-                 'Rätten att slippa betala skatt på sin lön', 'Rätten att alltid få det jobb man söker'],
+                ['Yttrandefrihet, mötesfrihet och religionsfrihet', 'Rätten att få en gratis bostad av sin kommun',
+                 'Rätten att slippa betala någon skatt på sin lön', 'Rätten att alltid få det jobb som man har sökt'],
                 'Yttrandefrihet, mötesfrihet och religionsfrihet',
                 'Fri- och rättigheterna skyddar den enskilde mot det allmänna. Några av dem går att begränsa '
                 'genom lag, men bara på vissa villkor.'),
@@ -472,15 +483,18 @@ BANOR = [
             val('Vad kallas det när en domstol låter bli att tillämpa en lag för att den strider mot grundlag?',
                 ['Lagprövning', 'Misstroendeförklaring', 'Folkomröstning', 'Prövningstillstånd'], 'Lagprövning',
                 'Regeringsformen säger att en domstol eller myndighet inte får tillämpa en regel som strider mot '
-                'grundlag. Det kallas lagprövning eller normprövning.'),
+                'grundlag. När det gäller en lag ska domstolen särskilt tänka på att riksdagen är folkets främsta '
+                'företrädare. Det kallas lagprövning eller normprövning.'),
             sant('Europakonventionen om de mänskliga rättigheterna gäller som lag i Sverige.', True,
                  'Konventionen har varit svensk lag sedan 1995, och enligt regeringsformen får ingen lag eller '
                  'annan föreskrift strida mot den.'),
         ], beskrivning='Offentlighetsprincipen, censurförbudet, meddelarfriheten och fri- och rättigheterna.'),
         niva('ju-gy2-grundlagar-2', 'Riksdagen, lagarna och EU', 'Grundlagarna', [
             val('Vad säger regeringsformen om domstolarnas självständighet?',
-                ['Ingen får styra hur en domstol dömer i ett visst mål', 'Regeringen får tala om hur domstolen ska döma',
-                 'Riksdagen avgör de mål som har överklagats', 'Domstolarna lyder under polisen och åklagaren'],
+                ['Ingen får styra hur en domstol dömer i ett visst mål',
+                 'Regeringen får tala om hur en domstol ska döma i ett visst mål',
+                 'Riksdagen avgör de mål som har överklagats till Högsta domstolen',
+                 'Domstolarna lyder under polisen och åklagaren'],
                 'Ingen får styra hur en domstol dömer i ett visst mål',
                 'Inte heller riksdagen eller regeringen får bestämma hur en domstol ska döma i ett enskilt fall.'),
             sant('All offentlig makt i Sverige utgår från folket.', True,
@@ -506,8 +520,8 @@ BANOR = [
                  'EU-rätten har företräde framför medlemsländernas lagar. En EU-förordning gäller direkt, medan '
                  'ett direktiv först ska föras in i svensk lag.'),
             val('Vilken uppgift har Lagrådet?',
-                ['Att granska lagförslag innan riksdagen beslutar', 'Att döma i mål om grundlagen',
-                 'Att välja domare till domstolarna', 'Att skriva propositionerna åt regeringen'],
+                ['Att granska lagförslag innan riksdagen beslutar', 'Att döma i mål där någon har brutit mot grundlagen',
+                 'Att välja ut domare till landets domstolar', 'Att skriva propositionerna åt regeringen'],
                 'Att granska lagförslag innan riksdagen beslutar',
                 'Lagrådet består av domare från de högsta domstolarna. Det granskar bland annat att förslaget '
                 'stämmer med grundlagarna.'),
@@ -522,21 +536,24 @@ BANOR = [
                 'kollektivavtal tillåter dem.'),
             skriv('Hur många månader får en provanställning som längst vara enligt lagen om anställningsskydd? '
                   'Svara med ett tal.', tal(6),
-                  'Under provanställningen kan båda avsluta den. Annars går den över i en tillsvidareanställning.'),
+                  'Under prövotiden kan både arbetsgivaren och den anställde avsluta anställningen. Ges inget besked '
+                  'i tid om att den ska upphöra går den över i en tillsvidareanställning.'),
             val('Vilka två slags skäl kan en arbetsgivare ha för att säga upp en tillsvidareanställd?',
                 ['Arbetsbrist och personliga skäl', 'Ålder och kön', 'Politisk åsikt och religion',
                  'Facklig tillhörighet och graviditet'],
                 'Arbetsbrist och personliga skäl',
-                'Arbetsbrist betyder att arbetet inte räcker till. Personliga skäl gäller hur den anställde sköter '
-                'sig. De andra skälen är förbjudna.'),
+                'Arbetsbrist betyder att arbetet inte räcker till. Personliga skäl gäller den anställdes egen '
+                'person, till exempel misskötsel. De andra är inga godtagbara skäl, och flera av dem är förbjuden '
+                'diskriminering.'),
             sant('Vid uppsägning på grund av arbetsbrist gäller som huvudregel turordning: den som har arbetat längst '
                  'hos arbetsgivaren har bäst skydd.', True,
                  'Sist in, först ut. Arbetsgivaren får göra vissa undantag, och ett kollektivavtal kan ha andra '
                  'regler.'),
             val('Vad är ett kollektivavtal?',
-                ['Ett avtal mellan en arbetsgivare och en facklig organisation', 'Ett avtal mellan två anställda om arbetet',
-                 'En lag om arbetstider som riksdagen har beslutat', 'Ett avtal mellan staten och kommunerna'],
-                'Ett avtal mellan en arbetsgivare och en facklig organisation',
+                ['Ett avtal mellan en arbetsgivare och ett fackförbund',
+                 'Ett avtal mellan två anställda om hur de ska dela på arbetet',
+                 'En lag om arbetstider som riksdagen har beslutat', 'Ett avtal mellan staten och kommunerna om skatten'],
+                'Ett avtal mellan en arbetsgivare och ett fackförbund',
                 'Kollektivavtalet reglerar till exempel löner, arbetstider och försäkringar för många anställda '
                 'på en gång.'),
             skriv('Hur många semesterdagar per år har en anställd rätt till enligt semesterlagen? Svara med ett tal.',
@@ -570,9 +587,10 @@ BANOR = [
                  'lockout.', True,
                  'Fredsplikten gäller frågor som avtalet reglerar, så länge avtalet gäller.'),
             val('Vad är en lockout?',
-                ['Att arbetsgivaren stänger ute de anställda från arbetet', 'Att de anställda vägrar att arbeta',
-                 'Att en anställd blir avskedad', 'Att facket bojkottar ett företag'],
-                'Att arbetsgivaren stänger ute de anställda från arbetet',
+                ['Att arbetsgivaren stänger ute de anställda från jobbet', 'Att de anställda vägrar att arbeta för högre lön',
+                 'Att en anställd blir avskedad på grund av misskötsel',
+                 'Att facket bojkottar ett företag som bryter mot avtalet'],
+                'Att arbetsgivaren stänger ute de anställda från jobbet',
                 'Lockout är arbetsgivarens stridsåtgärd. När de anställda lägger ner arbetet kallas det strejk.'),
             val('Vem har huvudansvaret för arbetsmiljön på en arbetsplats?',
                 ['Arbetsgivaren', 'Varje anställd själv', 'Skyddsombudet', 'Arbetsmiljöverket'], 'Arbetsgivaren',
@@ -588,22 +606,23 @@ BANOR = [
 
         # -------------------------------------------------- Hyra och skulder
         niva('ju-gy2-skulder-1', 'Hyra en bostad', 'Hyra och skulder', [
-            sant('Den som hyr en lägenhet i första hand har som huvudregel besittningsskydd: rätt att bo kvar när '
-                 'hyresvärden säger upp avtalet.', True,
+            sant('Den som har ett förstahandskontrakt på en hyreslägenhet har som huvudregel besittningsskydd: rätt '
+                 'att bo kvar när hyresvärden säger upp avtalet.', True,
                  'Hyresvärden behöver ett godtagbart skäl, till exempel att hyran inte betalas eller att '
                  'hyresgästen stör grannarna allvarligt.'),
             val('Vad krävs för att få hyra ut sin hyresrätt i andra hand?',
-                ['Hyresvärdens samtycke eller hyresnämndens tillstånd', 'Att man bor kvar i samma stad',
-                 'Att grannarna godkänner det', 'Ingenting, det får man alltid'],
+                ['Hyresvärdens samtycke eller hyresnämndens tillstånd',
+                 'Att man har haft hyreskontraktet i minst fem år i följd',
+                 'Att grannarna i trappuppgången godkänner det', 'Ingenting, det får man alltid göra som hyresgäst'],
                 'Hyresvärdens samtycke eller hyresnämndens tillstånd',
                 'Den som hyr ut i andra hand utan lov kan förlora sitt eget hyreskontrakt.'),
             skriv('En hyresgäst säger upp sitt hyresavtal för en lägenhet som hyrs tills vidare. Hur många månaders '
                   'uppsägningstid gäller som huvudregel? Svara med ett tal.', tal(3),
                   'Hyresgästens uppsägningstid är tre månader, räknat från månadsskiftet efter uppsägningen.'),
             val('Vad är hyresnämnden?',
-                ['En nämnd som medlar i tvister om hyra', 'Den styrelse som leder ett bostadsbolag',
-                 'En förening som alla hyresgäster är med i', 'Kontoret som betalar ut bostadsbidrag'],
-                'En nämnd som medlar i tvister om hyra',
+                ['En nämnd som medlar och avgör tvister om hyra', 'Den styrelse som leder ett kommunalt bostadsbolag',
+                 'En förening som alla hyresgäster är medlemmar i', 'Kontoret som betalar ut bostadsbidrag till hyresgäster'],
+                'En nämnd som medlar och avgör tvister om hyra',
                 'Hyresnämnden medlar och avgör vissa tvister, till exempel om andrahandsuthyrning och om en '
                 'hyresgäst får bo kvar.'),
             sant('Hyresvärden får gå in i lägenheten när som helst utan att säga till.', False,
@@ -624,20 +643,22 @@ BANOR = [
         ], beskrivning='Besittningsskydd, andrahandsuthyrning, uppsägning, hyresnämnden och deposition.'),
         niva('ju-gy2-skulder-2', 'Lån, borgen och Kronofogden', 'Hyra och skulder', [
             val('Vad är ett skuldebrev?',
-                ['Ett skriftligt löfte att betala tillbaka en skuld', 'Ett brev från Kronofogden om en skuld',
-                 'En faktura som en butik skickar', 'Ett bevis på att en skuld är betald'],
+                ['Ett skriftligt löfte att betala tillbaka en skuld',
+                 'Ett brev från Kronofogden som kräver betalning av en skuld',
+                 'En faktura som en butik skickar för en vara som köpts',
+                 'Ett bevis på att en skuld redan har blivit betald'],
                 'Ett skriftligt löfte att betala tillbaka en skuld',
                 'Den som lånar skriver under ett skuldebrev. Det bevisar skulden och hur den ska betalas.'),
             val('Vad innebär det att gå i borgen för någons lån?',
-                ['Att lova att betala om låntagaren inte gör det', 'Att låna ut egna pengar till banken',
-                 'Att få en del av lånet själv', 'Att bli delägare i banken'],
+                ['Att lova att betala om låntagaren inte gör det', 'Att låna ut sina egna pengar till banken i stället',
+                 'Att få en del av pengarna i lånet själv', 'Att bli delägare i den bank som ger lånet'],
                 'Att lova att betala om låntagaren inte gör det',
                 'Borgensmannen kan få betala hela skulden. Därför ska man tänka sig för innan man går i borgen.'),
             sant('En bank måste göra en kreditprövning innan den lånar ut pengar till en konsument.', True,
                  'Konsumentkreditlagen kräver att banken prövar om låntagaren har råd att betala tillbaka.'),
             val('Vad gör Kronofogden?',
-                ['Hjälper den som ska ha betalt att driva in skulder', 'Ger lån till den som inte får lån i banken',
-                 'Dömer i brottmål om skulder', 'Bestämmer räntan på lån'],
+                ['Hjälper den som ska ha betalt att driva in skulder', 'Ger lån till den som inte får något lån i en bank',
+                 'Dömer i brottmål mot den som har skulder', 'Bestämmer vilken ränta alla banker ska ta ut på sina lån'],
                 'Hjälper den som ska ha betalt att driva in skulder',
                 'Kronofogden kan besluta om betalningsföreläggande och utmätning, och hjälper också den som har '
                 'skulder med skuldsanering.'),
@@ -681,18 +702,20 @@ BANOR = [
                 ('Ren förmögenhetsskada', 'en ekonomisk förlust utan att någon person eller sak skadats'),
                 ('Kränkning', 'ett brott mot någons frihet, frid eller ära')],
                 'Skadeståndslagen skiljer på de här slagen av skada, och reglerna för dem är olika.'),
-            sant('Den som själv har varit vårdslös kan få ett lägre skadestånd.', True,
+            sant('Den som blir skadad men själv har bidragit till skadan genom vårdslöshet kan få ett lägre '
+                 'skadestånd.', True,
                  'Har den skadade själv bidragit till skadan kan skadeståndet jämkas, alltså sättas ned.'),
             val('Vad menas med adekvat kausalitet?',
-                ['Att skadan var en rimligt väntad följd av handlingen', 'Att skadan var ovanligt stor och dyr',
-                 'Att två personer orsakade skadan tillsammans', 'Att skadan hände i ett annat land'],
+                ['Att skadan var en rimligt väntad följd av handlingen',
+                 'Att skadan var ovanligt stor och mycket dyr att reparera',
+                 'Att två personer orsakade skadan tillsammans', 'Att skadan hände i ett annat land än där man bor'],
                 'Att skadan var en rimligt väntad följd av handlingen',
                 'Ett långsökt orsakssamband räcker inte. Skadan ska vara en följd man kunde räkna med.'),
             val('Vilken försäkring betalar för personskador i en trafikolycka, oavsett vem som var vållande?',
                 ['Trafikförsäkringen', 'Hemförsäkringen', 'Reseförsäkringen', 'Livförsäkringen'],
                 'Trafikförsäkringen',
-                'Trafikförsäkringen ersätter personskador för alla som skadas, också föraren, utan att någon '
-                'behöver vara vållande.'),
+                'Trafikförsäkringen ersätter personskador, också för föraren, utan att någon behöver vara '
+                'vållande.'),
             sant('Hemförsäkringens ansvarsdel kan betala när du blir skadeståndsskyldig för att du skadat någon annans '
                  'sak.', True,
                  'Ansvarsförsäkringen i hemförsäkringen gäller när du är skadeståndsskyldig, med en självrisk.'),
@@ -704,8 +727,8 @@ BANOR = [
                 'Den del av skadan som du själv betalar',
                 'Försäkringen betalar det som blir över självrisken. En högre självrisk ger ofta en lägre premie.'),
             val('Vad kan rättsskyddet i en hemförsäkring betala?',
-                ['En del av kostnaden för ombud i vissa tvister', 'Böter som du har dömts till',
-                 'Hyran om du blir arbetslös', 'Skatten på ett arv'],
+                ['En del av kostnaden för ombud i vissa tvister', 'Böter som du har dömts att betala till staten för brott',
+                 'Hyran under tiden som du är arbetslös', 'Skatten som du ska betala på ett arv'],
                 'En del av kostnaden för ombud i vissa tvister',
                 'Rättsskyddet hjälper med ombudskostnader i tvister, med en självrisk. Böter betalar ingen '
                 'försäkring.'),

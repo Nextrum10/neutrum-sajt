@@ -317,6 +317,34 @@ utveckling som är roligare att följa, och ett quest-system.
   accenter ("Être och avoir"); utfallet för å, ä, ö, é och ü är detsamma
   som förut, så ingen befintlig nyckel byttes.
 
+- **Banken i Fas 23.4** (`20261006120100_uppgiftsbanken_nya_amnen_och_np`,
+  körs efter `20261006120000_nexlax_uppdrag_och_np`): 71 banor, 1 148
+  nivåer (392 av dem Mästarprov och repetitioner, 122 i NP-spåret) och
+  6 485 frågor. Nytt: spanska, tyska och franska i åk 7 och 9,
+  företagsekonomi och juridik i gy1 och gy2, engelska i åk 1–2, SO och NO
+  i åk 1–3, och NP-träning i svenska (åk 3, 6, 9, gy1, gy3), engelska
+  (åk 6, 9, gy1, gy2) och matematik åk 3. Lokalt 2026-10-06: rls-test
+  1 340 av 1 340, och facitprovet (varje aktiv fråga lämnas ut, facit
+  rättas som rätt och inget fel alternativ godtas) 6 485 frågor utan fel.
+- **Skrivet och granskat med AI.** Skribenter skrev språken,
+  företagsekonomin, lågstadiet, engelskan och NP-träningen; juridiken
+  skrevs i huvudsessionen. En granskare per ämnesgrupp läste sedan varje
+  fråga i språken, företagsekonomin, lågstadiet och juridiken: inget
+  facit var fel, men ett femtiotal formuleringar, fel alternativ och
+  godtagna svar ändrades, flest i juridiken (alternativ som en jurist
+  kunde försvara, och rätt alternativ som oftast var längst). En
+  granskares rättelse var själv fel (att ett grundlagsfel måste vara
+  uppenbart, ett krav som togs bort 2011) och rättades tillbaka. NP
+  svenska, NP engelska, engelska åk 1–2 och NP matematik åk 3 har bara
+  skribentens egen granskning; matematiken räknades om i huvudsessionen.
+  En andra omgång skribenter (psykologi, filosofi, SO för gymnasiet och
+  mer NP-matematik) stoppades utan resultat, så de ämnena finns inte.
+- **Det en lärare bör läsa först:** juridikens arbetsrätt (provanställning,
+  turordning, uppsägningsskäl), konsumentköplagens tider, arvet med
+  särkullbarn och laglott; företagsekonomins nyckeltal och BAS-klasser;
+  lågstadiets trafikregler och hälsoråd; språkens förenklingar (ser och
+  estar, perfekt med sein, partitiv och passé composé med être).
+
 ---
 
 ## Ur avsnitt 11: banken, driftsättningen och det som är kvar
