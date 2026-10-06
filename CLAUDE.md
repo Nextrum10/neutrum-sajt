@@ -99,7 +99,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade pass,
   aldrig timbanken. NexLäx görs i barnets vy och i familjens inloggning, med samma rader.
   Elevvyn har fyra delar och inget mer (2026-10-06): Översikt, NexLäx, Meddelanden (Nextrums
-  notiser, ingen chatt) och Profil; Elev i inloggningens rollval leder till `/barn`.
+  notiser, ingen chatt) och Profil; Elev i vyernas rollval och i sajtens Logga in leder till `/barn`.
 - **Barnets egen e-post** (`barnets_epost`, 2026-10-01; flaggan `barn_epost` står AV tills
   juristen läst): föräldern lägger till den, barnet bekräftar den med en knapp, och först då
   används den, till inloggning (`barn-inloggning`) och, om föräldern slår på det, till mejl om

@@ -309,9 +309,11 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
   leder till `/barn`, barnets egen inloggning; det förra "Förälder eller
   elev" heter Förälder. Fältet i studievyn heter fortfarande "E-post eller
   användarnamn", så ett barn som skriver sitt användarnamn där kommer
-  också fram. Från `/barn` finns fortfarande ingen länk tillbaka. De öppna
-  sidornas Logga in-ruta säger "Förälder eller elev" och leder till
-  studievyn, där valet står.
+  också fram. Från `/barn` finns fortfarande ingen länk tillbaka. Samma
+  dag fick de öppna sidornas Logga in-ruta (`.nx-vagval-val`, alla 41
+  sidor på båda språken; `var-ide.html` är skalet för de genererade)
+  samma tre val, Förälder, Elev och Studiehjälpare, i stället för
+  "Förälder eller elev".
 - En vuxen som är inloggad i samma webbläsare och öppnar `/barn` ser bara
   "Någon annan är inloggad" och Logga ut, aldrig sin egen vy därifrån.
 - Rolldirigeringen: `NX.ärBarn(user)` läser `app_metadata`, aldrig
