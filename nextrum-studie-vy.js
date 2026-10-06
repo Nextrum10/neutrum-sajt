@@ -40,9 +40,9 @@
       titelUpp: 'Skapa föräldrakonto',
       under: 'För dig som är förälder: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.',
       underUpp: 'Kontot är gratis. Vyn låses upp så fort vi matchat er med en studiehjälpare.',
-      /* Ett barn med egen inloggning har Elev i rollvalet, som leder
-         till /barn (2026-10-06). Den som ändå skriver sitt användarnamn
-         här kommer också dit (NXStudie.loggaIn). */
+      /* Ett barn med egen inloggning väljer Elev i rollvalet, i samma
+         ruta (2026-10-06), och hamnar på /barn. Den som skriver sitt
+         användarnamn i förälderns läge kommer också dit (NXStudie.loggaIn). */
       etikett: 'E-post eller användarnamn'
     });
   }
@@ -50,6 +50,9 @@
   /* Glömt lösenordet? är ett tredje läge i samma ruta (NXStudie). */
   function sättLäge(l) { läge = l; ritaAuth(); }
   NXStudie.glömtLänkar(sättLäge);
+  /* Elev i rollvalet är ett läge i samma ruta (2026-10-06), och
+     sajtens Logga in öppnar det med #elev. */
+  läge = NXStudie.elevLänk(sättLäge);
 
   $('#auth-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -63,13 +66,14 @@
     const namn = $('#a-name').value.trim();
 
     if (!epost || !lösen) {
-      säg(msg, läge === 'in' ? 'Fyll i e-post eller användarnamn och lösenord.' : 'Fyll i e-post och lösenord.', false);
+      säg(msg, läge === 'elev' ? 'Fyll i användarnamn och lösenord.'
+        : läge === 'in' ? 'Fyll i e-post eller användarnamn och lösenord.' : 'Fyll i e-post och lösenord.', false);
       return;
     }
 
     /* E-post eller användarnamn: ett barn skickas till /barn, en vuxen
        laddar om vyn (NXStudie.loggaInHär). */
-    if (läge === 'in') { await NXStudie.loggaInHär(supa, epost, lösen); return; }
+    if (läge === 'in' || läge === 'elev') { await NXStudie.loggaInHär(supa, epost, lösen); return; }
 
     if (!namn) { säg(msg, 'Fyll i ditt namn.', false); return; }
     if (lösen.length < 6) { säg(msg, 'Lösenordet måste vara minst 6 tecken.', false); return; }
@@ -4187,9 +4191,63 @@
   /* Sektionsbytet. Passets sida är en egen sektion utan egen post i
      menyn: den hör till där man kom ifrån. */
   const SEKTIONSNAMN = { oversikt: 'Översikt', lektioner: 'Mina lektioner', betalning: 'Betalning', boka: 'Boka pass', bekrafta: 'Bekräfta rapport' };
+  /* ============================================================
+     BARNENS TRÅDAR (barnets_chatt, 2026-10-06)
+
+     Barnet och studiehjälparen skriver till varandra i barnets egen
+     inloggning (barn_meddelanden), och valet var "egen tråd, föräldern
+     läser": här läser föräldern dem, direkt i tabellen (policyn
+     "föräldern läser barnens trådar"), utan skrivruta och utan att något
+     markeras som läst. Hämtas när Meddelanden visas. Utan tabellen i
+     databasen står rutan dold. De 500 senaste per familj, och rutan
+     säger det om det finns fler.
+     ============================================================ */
+  const BC_MAX = 500;
+  async function laddaBarnensTradar() {
+    const ruta = $('#bc-foralder'), host = $('#bc-foralder-lista');
+    if (!ruta || !S.user) return;
+    const res = await supa.from('barn_meddelanden')
+      .select('id, student_id, tutor_id, fran, body, read_at, created_at')
+      .eq('parent_id', S.user.id)
+      .order('created_at', { ascending: false }).order('id', { ascending: false })
+      .limit(BC_MAX);
+    if (res.error) {
+      if (!/barn_meddelanden/.test(String(res.error.message)) && res.error.code !== '42P01') {
+        console.warn('barn_meddelanden:', res.error.message);
+      }
+      ruta.hidden = true;
+      return;
+    }
+    const rader = (res.data || []).slice().reverse();
+    ruta.hidden = !rader.length;
+    if (!rader.length) { host.replaceChildren(); return; }
+    const perBarn = {};
+    rader.forEach(m => { (perBarn[m.student_id] = perBarn[m.student_id] || []).push(m); });
+    const hjälpare = id => (S.tutor && S.tutor.id === id && S.tutor.full_name)
+      ? S.tutor.full_name.split(' ')[0] : 'Studiehjälparen';
+    host.innerHTML = Object.keys(perBarn).map(id => {
+      const b = (S.barn || []).find(x => x.id === id);
+      const namn = b ? String(b.name || '').split(' ')[0] : 'Barnet';
+      return '<div class="bc-barn"><p class="bc-barn-namn">' + esc(namn) + '</p>'
+        + '<div class="tr" data-bc-barn="' + esc(id) + '"></div></div>';
+    }).join('') + (rader.length >= BC_MAX
+      ? '<p class="xsmall bc-not">Visar de ' + BC_MAX + ' senaste meddelandena.</p>' : '');
+    Object.keys(perBarn).forEach(id => {
+      const b = (S.barn || []).find(x => x.id === id);
+      const lista = perBarn[id];
+      NXStudie.barnTråd({
+        host: host.querySelector('[data-bc-barn="' + CSS.escape(id) + '"]'), jag: null,
+        namn: { barn: b ? String(b.name || '').split(' ')[0] : 'Barnet', studiehjalpare: hjälpare(lista[lista.length - 1].tutor_id) }
+      }).rita(lista.map(m => ({ id: m.id, fran: m.fran, text: m.body, skapad: m.created_at, last: m.read_at })));
+    });
+  }
+
   function bytteSektion(vald) {
     const förra = S.aktivSek;
     S.aktivSek = vald;
+    /* Barnens trådar bär barnets och studiehjälparens namn, så de
+       hämtas först när båda finns (S.namnKlara). */
+    if (vald === 'meddelanden' && S.namnKlara) laddaBarnensTradar();
     if (vald === 'pass') {
       if (förra && förra !== 'pass') S.passFrån = förra;
       ritaPassSida();
@@ -4807,6 +4865,8 @@
     /* Erbjudandena före passen: knappen Betala med timmar ritas ur dem. */
     await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden(), laddaTips()]);
     await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaNexlax(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor(), laddaBekrafta()]);
+    S.namnKlara = true;
+    if (S.aktivSek === 'meddelanden') laddaBarnensTradar();
     /* Uppgifterna hämtas först, så märket ritas om när de finns. */
     ritaÖvLaxor();
     ritaNotiser();

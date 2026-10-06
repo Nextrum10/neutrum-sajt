@@ -53,7 +53,8 @@
   var studieKlar = typeof NXStudie !== 'undefined' && !!NXStudie.vaktaInloggningen
     && typeof NXStudie.hämtaAlla === 'function' && typeof NXStudie.passMedSvar === 'function'
     && typeof NXStudie.tipsa === 'function' && typeof NXStudie.glömtLänkar === 'function'
-    && typeof NXStudie.loggaIn === 'function' && typeof NXStudie.loggaInHär === 'function';
+    && typeof NXStudie.loggaIn === 'function' && typeof NXStudie.loggaInHär === 'function'
+    && typeof NXStudie.elevLänk === 'function';
 
   if (ärBarn) {
     /* Barnets vy (barn.html) laddar NX, NXStudie och, sedan 2026-10-01,
