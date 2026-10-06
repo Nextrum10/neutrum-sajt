@@ -145,8 +145,10 @@
       if (krav ? !har(krav) : BARA_SUPER.indexOf(namn) !== -1) NXAdmin.rita[namn] = () => {};
     });
 
-    /* Rutor i en sektion som syns, men som läser det bara en superadmin
-       får läsa (Tips och kampanjer under Intresseanmälningar). */
+    /* Rutor som läser det bara en superadmin får läsa. Tips och
+       kampanjer stod under Intresseanmälningar, som en admin med
+       behörigheten leads ser; sedan 2026-10-06 står den under Tjänster,
+       som bara superadmin ser, och attributet är en andra spärr. */
     $$('[data-bara-super]').forEach(el => el.remove());
 
     document.body.classList.add('adm-begransad');

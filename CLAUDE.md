@@ -189,9 +189,10 @@ Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, 
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
 ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knappen
 Betala i förväg. Ett drag överst, en knapp per listrad, tid och plats genom
-`NXKontakt.passRad`, betalvalen i `.vy-betalval`. En månadsrad i en dold sektion har bredden
-noll; adminvyns rader har varje månad. **Tummen**: tryckytor minst 44 px, och `::after` provas
-med `elementFromPoint`.
+`NXKontakt.passRad`, betalvalen i `.vy-betalval`. Adminvyns månadsväljare är ett fält med en
+ruta för år och månad (2026-10-06), från september 2026 till och med december nästa år; märket
+står i fältet och i rutan, och Lektioner räknar upp andra månader utan rapport under det.
+**Tummen**: tryckytor minst 44 px, och `::after` provas med `elementFromPoint`.
 ### Adminvyns skal
 Samma hus som de andra vyerna: KÄNSLAN och INNEHÅLLET står på `.vy` och adminvyn har inga egna
 ytor; ändras de andra vyerna oväntat är specificiteten första stället. Menyn är en egen rullyta

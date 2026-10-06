@@ -131,8 +131,12 @@
     const host = $('#lon-manader');
     if (!host) return;
     const nu = new Date();
+    /* Utbetalningsmånaden, en efter passens: hela nästa år och januari
+       året efter, så att länken från Månadens ekonomi alltid har sin
+       månad här (2026-10-06). */
     MV = NXStudie.månadsval(host, {
       alla: true,
+      årFramåt: 1,
       framåt: 1,
       vald: önskad || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() + (nu.getDate() > 25 ? 1 : 0), 1, 12)),
       /* Utbetald när varje underlag för passen är det. Stängd (Fas 20.2)

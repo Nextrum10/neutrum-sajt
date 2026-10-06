@@ -464,7 +464,8 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
 - **En kod, två sorter.** `tipskoder` har en rad per kod: `familj` och
   `studiehjalpare` hör till en person och skapas av `mina_tips()` första
   gången personen öppnar Profil → Tipsa en familj; `kampanj` har ett namn
-  och skapas av admin under Intresseanmälningar → Tips och kampanjer.
+  och skapas av admin under Tjänster & priser → Tips och kampanjer (fram till
+  2026-10-06 under Intresseanmälningar).
   `leads.kod` pekar på raden (främmande nyckel, on delete set null).
   Personkoden är sex tecken utan I, O, 0 och 1, slumpad och utan namn:
   den delas öppet.
