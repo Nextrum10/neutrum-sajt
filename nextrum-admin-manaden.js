@@ -398,7 +398,7 @@
       + tavla({ till: 'man-fakturor', rubrik: fakt.attSkapa.length + fakt.utkast === 1 ? 'Faktura att skicka' : 'Fakturor att skicka',
         tal: String(fakt.attSkapa.length + fakt.utkast),
         under: fakt.attSkapa.length + fakt.utkast === 0 ? 'inga som väntar'
-          : [fakt.attSkapa.length ? fakt.attSkapa.length + ' att skapa' + (läge.slut ? '' : ' när månaden är slut') : null,
+          : [fakt.attSkapa.length ? fakt.attSkapa.length + (läge.slut ? ' utan utkast än' : ' samlas till månadens slut') : null,
              fakt.utkast ? fakt.utkast + ' att lägga in i Fortnox' : null].filter(Boolean).join(' · '),
         gör: attGöra > 0 });
   }
@@ -517,39 +517,39 @@
     host.innerHTML = visa.map(f => familjRad(f, läge.slut)).join('');
   }
 
-  function ritaFakturorna(fakt, läge) {
+  /* Fakturorna (omgjord 2026-10-06): en rad per familj och faktura,
+     samma rad som under Betalningar → Fakturor (familjefakturaRad), och
+     familjens namn fäller ut passen med dag, klocka och studiehjälpare.
+     Under månaden samlas fakturan på raden, och natten mot den 1:a blir
+     den ett utkast av sig själv. Med står fakturor som bär ett av
+     månadens pass, och månadens egna. Förut var det fakturapass utan
+     faktura en rad och fakturan de hamnade på en annan, och körningen
+     skulle torrköras här under. */
+  const FAKT_ORDNING = { utkast: 0, skapas: 0, forfallen: 1, samlas: 2, rapport: 3, skickad: 4, betald: 5, makulerad: 6 };
+  function ritaFakturorna() {
     const host = $('#man-fakt-lista');
     if (!host) return;
+    const m = valdMånad();
+    const g = NXStudie.månadsGräns(m);
+    const iMånaden = d => { const s = String(d || '').slice(0, 10); return s >= g.från && s < g.till; };
+    const rad = NXAdmin.rita.familjefakturaRad;
+    const alla = typeof NXAdmin.rita.familjefakturor === 'function' ? NXAdmin.rita.familjefakturor() : [];
+    const lista = alla.filter(x => x.period === m || x.pass.some(p => iMånaden(p.datum)))
+      .sort((a, b) => ((FAKT_ORDNING[a.läge] == null ? 9 : FAKT_ORDNING[a.läge]) - (FAKT_ORDNING[b.läge] == null ? 9 : FAKT_ORDNING[b.läge]))
+        || a.familj.localeCompare(b.familj, 'sv'));
     const antal = $('#man-fakturor-antal');
     if (antal) {
-      antal.textContent = String(fakt.attSkapa.length + fakt.fakturor.length);
-      antal.classList.toggle('ar-gor', fakt.utkast > 0 || fakt.förfallna > 0 || (läge.slut && fakt.attSkapa.length > 0));
+      antal.textContent = String(lista.length);
+      antal.classList.toggle('ar-gor', lista.some(x => x.läge === 'utkast' || x.läge === 'skapas' || x.läge === 'forfallen'));
     }
-    const g = NXStudie.månadsGräns(valdMånad());
-    const nästa = NXStudie.månadsNamn(g.till, false);
-    const fakturaRad = NXAdmin.rita.fakturaRad;
-    const skapa = fakt.attSkapa.map(post => '<div class="eko-rad">'
-      + '<span class="eko-dag ar-period" aria-hidden="true"><b>' + esc(NX.MANADER[Number(valdMånad().slice(5, 7)) - 1].slice(0, 3))
-      + '</b><small>' + esc(valdMånad().slice(0, 4)) + '</small></span>'
-      + '<span class="eko-mitt"><button type="button" class="eko-titel" data-dp="familj:' + esc(post.id) + '">'
-      + esc(namnFör(post.id)) + '</button>'
-      + '<span class="eko-meta"><span>' + esc(plural(post.pass, 'fakturapass', 'fakturapass') + ' utan faktura') + '</span>'
-      + '<span>' + esc('senast ' + kortDatum(post.sista)) + '</span></span></span>'
-      + '<span class="eko-atg"></span>'
-      + '<span class="eko-lage">' + (läge.slut ? pill('Ingen faktura än', 'ar-ny') : pill('Faktureras 1 ' + nästa, 'ar-vantar')) + '</span>'
-      + '<span class="eko-belopp"><b>' + esc(kronor(post.öre)) + '</b>'
-      + (post.utanPris ? '<small>' + esc(plural(post.utanPris, 'pass utan pris', 'pass utan pris')) + '</small>' : '') + '</span>'
-      + '</div>').join('');
-    const fakturor = typeof fakturaRad === 'function' ? fakt.fakturor.map(x => fakturaRad(x)).join('') : '';
-
-    host.innerHTML = skapa || fakturor ? skapa + fakturor
+    host.innerHTML = lista.length && typeof rad === 'function' ? lista.map(x => rad(x)).join('')
       : tomt('Inga fakturapass i ' + månadText(),
-        'Familjen väljer faktura när de bekräftar rapporten, och passen samlas på en faktura i början av nästa månad.');
+        'Familjen väljer faktura när de bekräftar rapporten. Passen samlas på en faktura per familj, som blir ett utkast när månaden är slut.');
 
     const körning = $('#man-korning');
     if (körning && NXAdmin.rita.sättKörningsperiod) NXAdmin.rita.sättKörningsperiod(körning, valdMånad());
     const rubrik = $('#man-korning-rubrik');
-    if (rubrik) rubrik.textContent = 'Månadskörningen för ' + månadNamn();
+    if (rubrik) rubrik.textContent = 'Månadskörningen för ' + månadNamn() + ', för hand';
   }
 
   /* Det som inte räknas in någonstans, så att ett tal som ser lågt ut
@@ -591,7 +591,7 @@
     ritaTalen(p, fakt, läge);
     ritaPengarna(pengarna(rader));
     ritaFamiljerna(rader, läge);
-    ritaFakturorna(fakt, läge);
+    ritaFakturorna();
     ritaFoten(rader);
   }
 

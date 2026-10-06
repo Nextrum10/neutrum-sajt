@@ -2302,6 +2302,11 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
   font-size:.8rem;line-height:1.45;color:var(--bl-2);
 }
 .dp-rad-hoger{text-align:right;flex:none;white-space:nowrap}
+/* En faktura i familjens Ekonomi (2026-10-06): fakturans rad, och
+   passen på den i en tonad ruta under. */
+.dp-faktura + .dp-faktura{border-top:1px solid var(--ln)}
+.dp-faktura-pass{margin:0 0 12px;padding:0 12px;border-radius:14px;background:var(--tint)}
+.dp-faktura-pass .dp-rad{padding:9px 0}
 
 /* Formulären i panelen: materialrutan och AI-förslagen.
 
@@ -4440,6 +4445,7 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .eko-mer-rader{border-top:1px solid var(--ln)}
 .eko-mer-rader > summary{cursor:pointer;padding:12px clamp(14px,2vw,20px);font-size:.86rem;font-weight:600;color:var(--bl-2)}
 .eko-mer-rader > .eko-rad{border-top:1px solid var(--ln)}
+.eko-mer-rader > .fakt-fam{border-top:1px solid var(--ln)}
 
 /* ============================================================
    MÅNADENS EKONOMI (omgjord 2026-09-29)
@@ -4579,8 +4585,41 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 }
 
 /* ---------- fakturorna och körningen ---------- */
-.man-korning-rubrik{margin:0 0 6px;font-size:.95rem;font-weight:650;letter-spacing:-.01em;color:var(--bl)}
 .man-korning .adm-verktyg{margin-top:4px}
+
+/* ---------- familjens faktura (2026-10-06) ----------
+   En rad per familj och månad under Betalningar → Fakturor och Månadens
+   ekonomi. Raden är en .eko-rad; passen fälls ut under den, med namnet
+   eller med länken under, i samma ruta som familjernas pass under
+   Månadens ekonomi (.man-fam-rader). Länken står i linje med namnet,
+   bredvid månadens ruta (48 px och mellanrummet). */
+.vy-lista > * + .fakt-fam{border-top:1px solid var(--ln)}
+.fakt-fam > .eko-rad{padding-bottom:0}
+.fakt-fam-pass{padding:0 clamp(14px,2vw,20px) 6px calc(clamp(14px,2vw,20px) + 62px)}
+.fakt-fam-pass > summary{
+  padding:12px 0;cursor:pointer;
+  font-size:.82rem;font-weight:600;color:var(--bl-3);
+}
+.fakt-fam-pass > summary:hover{color:var(--bl)}
+.fakt-fam-pass > summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.fakt-fam-pass[open]{padding-bottom:14px}
+.fakt-fam-kontakt{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0;font-size:.84rem;line-height:1.5;color:var(--bl-2)}
+.fakt-fam-kontakt a{color:var(--bl);overflow-wrap:anywhere}
+.fakt-fam-pass .man-fam-rader{margin-top:10px}
+@media (max-width:760px){
+  .fakt-fam-pass{padding-left:calc(clamp(14px,2vw,20px) + 58px)}
+}
+/* Passen får hela kortets bredd på en telefon; bara länken står i
+   linje med namnet. */
+@media (max-width:560px){
+  .fakt-fam-pass{padding-left:clamp(14px,2vw,20px)}
+  .fakt-fam-pass > summary{margin-left:58px}
+}
+
+/* Körningen för hand (2026-10-06): schemat gör den varje natt, så den
+   står hopfälld under schemats rad. */
+.kor-hand{margin-top:0}
+.kor-hand > summary{padding:12px 0}
 
 /* ============================================================
    BARNETS VY (barn.html, barnkonton_och_admin)

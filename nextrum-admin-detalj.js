@@ -762,6 +762,36 @@
           + (ärFamilj ? 'Ingen studiehjälpare och ingen tråd än.' : 'Inga elever och ingen tråd än.') + '</p>');
   }
 
+  /* En faktura i familjens Ekonomi (2026-10-06): månaden, beloppet och
+     läget, och passen på den med dag, klocka och studiehjälpare. Posterna
+     är Betalningar → Fakturors (familjefakturor), så fakturan som samlas
+     under månaden står här också, med passen som läggs på den. */
+  function dpFaktura(x) {
+    const f = x.f;
+    const månad = NX.MANADER[Number(String(x.period).slice(5, 7)) - 1] || '';
+    const period = månad.charAt(0).toUpperCase() + månad.slice(1) + ' ' + String(x.period).slice(0, 4);
+    const läget = x.läge === 'samlas' ? pill('Samlas', 'ar-vantar')
+      : x.läge === 'skapas' ? pill('Ingen faktura än', 'ar-ny')
+      : x.läge === 'rapport' ? pill('Väntar på rapport', 'ar-vantar')
+      : läge(FAKT_LAGE, x.läge);
+    const passen = (x.pass || []).map(q => {
+      const b = q.b;
+      return dpRad((q.datum ? kortDatum(q.datum) : '—') + (b && b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
+        [b ? (b.tutor_id ? 'med ' + namnFör(b.tutor_id) : 'ingen studiehjälpare') : q.beskrivning,
+          b ? b.subject : null, b ? elevNamn(b.student_id) : null,
+          q.öre == null ? 'utan pris' : kronor(q.öre),
+          q.läge === 'rapport' ? 'ingen rapport än' : q.läge === 'natt' ? 'inte på fakturan än' : null]
+          .filter(v => v && v !== '—').join(' · '),
+        b ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="pass:' + esc(b.id) + '">Öppna</button>' : '');
+    }).join('');
+    return '<div class="dp-faktura">'
+      + dpRad(period, [kronor(x.belopp), x.antal === 1 ? '1 pass' : x.antal + ' pass',
+          f && f.fortnox_fakturanummer ? 'faktura ' + f.fortnox_fakturanummer : null,
+          f && f.forfaller ? 'förfaller ' + kortDatum(f.forfaller) : null].filter(Boolean).join(' · '), läget)
+      + (passen ? '<div class="dp-faktura-pass">' + passen + '</div>' : '')
+      + '</div>';
+  }
+
   function dpFamilj(p, d) {
     const barn = S.elever[p.id] || [];
     const pass = passFör(b => b.parent_id === p.id);
@@ -788,13 +818,23 @@
       }).join('');
     }
 
-    if (DP.flik === 'pass') return passLista(pass, b => elevNamn(b.student_id) || '');
+    /* Med vem (2026-10-06): Leo ville se när och med vem familjen hade
+       sina pass, och raden sa bara vilket barn. */
+    if (DP.flik === 'pass') return passLista(pass, b => [elevNamn(b.student_id),
+      b.tutor_id ? 'med ' + namnFör(b.tutor_id) : null].filter(v => v && v !== '—').join(' · '));
 
     if (DP.flik === 'ekonomi') {
       /* Fakturavalet (Fas 14.6). När strömbrytaren är på får alla
          familjer välja faktura; det här är bromsen för en enda. En
          familj som redan valt faktura behåller sina fakturapass. */
       const spärrad = S.fakturaSparr && S.fakturaSparr.has(p.id);
+      /* Samma poster som Betalningar → Fakturor, också fakturan som
+         samlas under månaden. Utan ekonomifilen: fakturorna som de är. */
+      const fam = kör('familjefakturor');
+      const familjens = (Array.isArray(fam) ? fam.filter(x => x.parent === p.id)
+        : fakturor.map(f => ({ f, period: String(f.period).slice(0, 7) + '-01', läge: NXBetalning.fakturaLage(f),
+          belopp: f.belopp_ore, antal: (f.invoice_lines || []).length, pass: [] })))
+        .sort((a, b) => b.period.localeCompare(a.period));
       const fakturapass = pass.filter(b => b.betalning_status === 'faktura' && b.status !== 'cancelled').length;
       return dpTal([
         [kronor(obetalt), 'Utestående'],
@@ -808,14 +848,9 @@
               : 'Faktura är avstängt för alla just nu, under Betalningar → Inställningar.'),
           '<button class="btn btn-ghost btn-sm" type="button" data-fakturasparr="' + esc(p.id) + '" data-sparra="'
             + (spärrad ? '0' : '1') + '">' + (spärrad ? 'Tillåt faktura' : 'Stäng av faktura') + '</button>')
-      + dpRubrik('Fakturor')
-      + (fakturor.length
-        ? fakturor.map(f => dpRad(
-            NX.MANADER[Number(String(f.period).slice(5, 7)) - 1] + ' ' + String(f.period).slice(0, 4),
-            kronor(f.belopp_ore) + (f.fortnox_fakturanummer ? ' · faktura ' + f.fortnox_fakturanummer : '')
-              + (f.forfaller ? ' · förfaller ' + kortDatum(f.forfaller) : ''),
-            läge(FAKT_LAGE, NXBetalning.fakturaLage(f)))).join('')
-        : tomt('Inga fakturor', 'Familjen betalar med kort, eller har inga fakturapass från en avslutad månad än.'));
+      + dpRubrik('Fakturor', 'en per månad')
+      + (familjens.length ? familjens.map(dpFaktura).join('')
+        : tomt('Inga fakturor', 'Familjen betalar med kort, eller har inte valt faktura på något pass än.'));
     }
 
     if (DP.flik === 'tidslinje') return dpTidslinje(p, d);
@@ -843,6 +878,15 @@
             .filter(Boolean).join(' · '),
           läge(BOK_LAGE, nästa.status))
       : tomt('Inget pass inbokat', 'Familjen bokar i studievyn.'))
+    /* När och med vem (2026-10-06): de senaste hållna passen. */
+    + dpRubrik('Senaste passen', genomförda.length > 5 ? 'alla under Pass' : '')
+    + (genomförda.length
+      ? genomförda.slice(0, 5).map(b => dpRad(kortDatum(b.wanted_date)
+          + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
+          [b.tutor_id ? 'med ' + namnFör(b.tutor_id) : 'ingen studiehjälpare', b.subject, elevNamn(b.student_id)]
+            .filter(v => v && v !== '—').join(' · '),
+          '<button class="btn btn-ghost btn-sm" type="button" data-dp="pass:' + esc(b.id) + '">Öppna</button>')).join('')
+      : tomt('Inga hållna pass än', 'Ett pass står här när det är genomfört.'))
     + dpChattar(p, d, 'familj')
     + dpDokument(p)
     + dpHantera('familj', p, {
