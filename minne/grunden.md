@@ -71,7 +71,8 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `nextrum-images.js` | **Enda stället bildvägar står skrivna.** Aldrig i HTML |
 | `nextrum-motion.js` | `NXImg` (bildmarkup), `NXMotion` (scrollmotor), `NXStory`. Tre lägen: full / lite / still |
 | `nextrum-studie.js`, `-arbetsyta.js`, `-kontakt.js`, `-betalning.js`, `-media.js`, `-tjanster.js` | Delat mellan vyerna |
-| `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1, NexLäx sedan Fas 23.2): vägen, spelaren, XP:n och serien ur `nexlax_lage()`, Din utveckling, stjärnorna, märkena, rättningen per område och genomgången. Studievyn och studiehjälparvyn, CSS:en efter arbetsytan. Rättar ingenting själv, räknar ingen XP och skriver inget resultat; det gör `niva_svara()` |
+| `nextrum-uppgifter.js` + `nextrum-uppgifter.css` | `NXUppgifter` (Fas 23.1, NexLäx sedan Fas 23.2): vägen, spelaren, XP:n och serien ur `nexlax_lage()`, Din utveckling, stjärnorna, märkena, rättningen per område och genomgången. Sedan Fas 23.4 också väljaren, NP-sektionen, uppdragen, rangen och firandena. Studievyn, studiehjälparvyn och barnets vy, CSS:en efter arbetsytan. Rättar ingenting själv, räknar ingen XP och skriver inget resultat; det gör `niva_svara()` |
+| `nextrum-ljud.js` | `NXLjud` (Fas 23.4): ljuden i NexLäx, räknade fram med Web Audio, och vibrationen (`navigator.vibrate`, och switch-tricket på iPhone). Av och på sparas i webbläsaren. Laddas före `nextrum-uppgifter.js` i de tre vyerna; modulvakten prövar `NXLjud.känn` |
 | `nextrum-studie-vy.js` | Bara `foralder.html` |
 | `nextrum-larare-vy.js` | Bara `larare.html` (2 800 rader) |
 | `nextrum-barn-vy.js` | Bara `barn.html`, barnets egen vy (barnkonton_och_admin). Laddar NX, NXStudie och NXUppgifter (NexLäx, 2026-10-01) och ritar det `barn_oversikt()`, `barn_notiser()` och `barn_nexlax()` svarar, med `textContent` utom NexLäx, som NXUppgifter ritar med `esc()`. Se `minne/barnkonton-och-admin.md` |

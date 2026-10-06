@@ -11589,6 +11589,155 @@ begin
   end if;
 end $$;
 
+-- ------------------------------------------------------------
+-- 19. NexLäx: uppdragen och NP-spåret (nexlax_uppdrag_och_np, 2026-10-06)
+--
+-- Uppdragen räknas ur svaren och försöken och sparas aldrig. Provet
+-- spelar en nivå med sex frågor, allt rätt direkt, och prövar att varje
+-- uppdrag som valdes står med rätt tal, vilket det än blev: valet är
+-- elevens id och dagen, och det ska provet inte bero på. NP-spåret är
+-- en kolumn med ett villkor, och banken sätter den ur områdets namn.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut     jsonb := '[]'::jsonb;
+  fel    text;
+  kod    text;
+  r      jsonb;
+  r2     jsonb;
+  u      jsonb;
+  forsok uuid;
+  n      int;
+  varde  int;
+  E   constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  KE  constant uuid := '00000000-0000-4000-8000-0000000bc0c1';
+  P   constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  NV  constant uuid := '00000000-0000-4000-8000-00000000c9a1';
+  -- Talen efter en nivå med sex valfrågor, allt rätt direkt, ensam i sitt
+  -- område: 6 · 10 XP för frågorna, 50 för nivån och 100 för området.
+  XP  constant int := 6 * 10 + 50 + 100;
+begin
+  begin
+    -- Spåret: förval vägen, och bara vag och np går att skriva.
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning)
+    values (NV, 'rls-uppdragens-niva', 'Matematik', 'ak5', 'RLS-uppdragen', 'RLS-uppdragens nivå', 1);
+    select count(*) into n from public.nivaer where id = NV and spar = 'vag';
+    ut := ut || jsonb_build_object('t', '19 en ny nivå står på vägen', 'ok', n = 1, 'd', n::text);
+    begin
+      update public.nivaer set spar = 'prov' where id = NV;
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', '19 spåret är vag eller np', 'ok', kod = '23514', 'd', kod);
+
+    -- Banken: NP-spåret är NP-träningens områden och inga andra. Faller
+    -- innan banken med spåret är inläst.
+    select count(*) into n from public.nivaer
+     where aktiv and nyckel not like 'rls-%'
+       and (spar = 'np') is distinct from (omrade ~ '(NP-träning|inför NP\M)');
+    ut := ut || jsonb_build_object('t', '19 banken: NP-spåret är NP-träningens områden', 'ok', n = 0, 'd', 'avvikande: ' || n);
+    select count(*) into n from public.nivaer where aktiv and spar = 'np';
+    ut := ut || jsonb_build_object('t', '19 banken har ett NP-spår', 'ok', n > 0, 'd', 'nivåer: ' || n);
+
+    insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt)
+    select gen_random_uuid(), NV, g, 'val', 'RLS-uppdragsfråga ' || g, '["rätt","fel"]', '0'
+      from generate_series(1, 6) g;
+
+    -- Det interna räknas inte av en inloggad.
+    perform pg_temp.bli(P);
+    begin
+      r := intern.nexlax_uppdrag(E, current_date);
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', '19 uppdragen räknas inte av en inloggad direkt', 'ok', kod = '42501', 'd', kod);
+
+    -- Före: tre uppdrag, ett per grupp, och samma tre vid nästa läsning.
+    r := public.nexlax_lage(E) -> 'uppdrag';
+    ut := ut || jsonb_build_object('t', '19 dagens tre: ett per grupp', 'ok',
+            jsonb_array_length(r -> 'idag') = 3
+            and (select array_agg(x ->> 'grupp' order by x ->> 'grupp') from jsonb_array_elements(r -> 'idag') x)
+                = array['kunna', 'nivaer', 'xp'],
+            'd', left((r -> 'idag')::text, 300));
+    r2 := public.nexlax_lage(E) -> 'uppdrag';
+    ut := ut || jsonb_build_object('t', '19 samma tre vid nästa läsning', 'ok',
+            (select array_agg(x ->> 'id') from jsonb_array_elements(r -> 'idag') x)
+            = (select array_agg(x ->> 'id') from jsonb_array_elements(r2 -> 'idag') x), 'd', null);
+    ut := ut || jsonb_build_object('t', '19 veckans och månadens finns', 'ok',
+            r -> 'vecka' ->> 'id' like 'v-%' and (r -> 'manad' ->> 'mal')::int = 20
+            and (r -> 'manad' ->> 'manad') = to_char((now() at time zone 'Europe/Stockholm')::date, 'YYYY-MM'),
+            'd', (r -> 'vecka')::text || ' ' || (r -> 'manad')::text);
+
+    -- Spela nivån: sex rätt i följd.
+    r2 := public.niva_starta(NV, E);
+    forsok := (r2 ->> 'forsok')::uuid;
+    perform public.niva_svara(forsok, (x ->> 'id')::uuid, '{"val":0}')
+       from jsonb_array_elements(r2 -> 'fragor') x;
+    select count(*) into n from public.niva_forsok where id = forsok and godkand and stjarnor = 3;
+    ut := ut || jsonb_build_object('t', '19 nivån klarad med tre stjärnor', 'ok', n = 1, 'd', n::text);
+
+    r := public.nexlax_lage(E) -> 'uppdrag';
+    -- Varje valt uppdrag har rätt tal, vilket det än är.
+    select count(*) into n from jsonb_array_elements(r -> 'idag') u2
+     where (u2 ->> 'har')::int is distinct from least((u2 ->> 'mal')::int,
+             case split_part(u2 ->> 'id', '-', 1)
+               when 'xp' then XP when 'nivaer' then 1 when 'direkt' then 6 when 'rad' then 6
+               when 'tre' then 1 when 'amnen' then 1 end)
+        or (u2 ->> 'klart')::boolean is distinct from ((u2 ->> 'har')::int >= (u2 ->> 'mal')::int);
+    ut := ut || jsonb_build_object('t', '19 dagens uppdrag räknas ur svaren', 'ok', n = 0, 'd', left((r -> 'idag')::text, 400));
+    ut := ut || jsonb_build_object('t', '19 kistan är öppen bara när alla tre är klara', 'ok',
+            (r ->> 'kista')::boolean = (select bool_and((x ->> 'klart')::boolean) from jsonb_array_elements(r -> 'idag') x),
+            'd', r ->> 'kista');
+    u := r -> 'vecka';
+    varde := case u ->> 'id' when 'v-dagar-3' then 1 when 'v-nivaer-6' then 1 when 'v-omrade-1' then 1
+                             when 'v-xp-400' then XP end;
+    ut := ut || jsonb_build_object('t', '19 veckans uppdrag räknas ur veckan', 'ok',
+            (u ->> 'har')::int = least(varde, (u ->> 'mal')::int)
+            and (u ->> 'klart')::boolean = (varde >= (u ->> 'mal')::int), 'd', u::text);
+    select count(*) into n from jsonb_array_elements(r -> 'idag') x where (x ->> 'klart')::boolean;
+    ut := ut || jsonb_build_object('t', '19 månaden och totalen räknar de klara', 'ok',
+            (r -> 'manad' ->> 'har')::int >= n
+            and (r ->> 'totalt')::int = n + case when (u ->> 'klart')::boolean then 1 else 0 end
+                                          + (select count(*) from jsonb_array_elements('[]'::jsonb))::int,
+            'd', 'klara i dag: ' || n || ', ' || (r -> 'manad')::text || ', totalt ' || (r ->> 'totalt'));
+    -- XP ändras inte av uppdragen.
+    ut := ut || jsonb_build_object('t', '19 uppdragen ger inga XP', 'ok',
+            (public.nexlax_lage(E) ->> 'xp_idag')::int = XP, 'd', public.nexlax_lage(E) ->> 'xp_idag');
+
+    -- En annan familj läser inte uppdragen.
+    perform pg_temp.bli(Q);
+    begin
+      r := public.nexlax_lage(E);
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', '19 en annan familj läser inte uppdragen', 'ok', kod = '42501', 'd', kod);
+
+    -- Barnet ser sina egna, och spåret i sin katalog.
+    reset role;
+    perform pg_temp.bli_barn(KE, E, P);
+    r := public.nexlax_lage(E) -> 'uppdrag';
+    ut := ut || jsonb_build_object('t', '19 barnet ser sina uppdrag', 'ok', jsonb_array_length(r -> 'idag') = 3, 'd', null);
+    r := public.barn_nexlax();
+    ut := ut || jsonb_build_object('t', '19 barnets katalog bär spåret', 'ok',
+            (select x ->> 'spar' from jsonb_array_elements(r -> 'katalog') x where (x ->> 'id')::uuid = NV) = 'vag',
+            'd', null);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('19 Uppdragen och NP-spåret', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
 reset role;
 select set_config('request.jwt.claims', null, true);
 

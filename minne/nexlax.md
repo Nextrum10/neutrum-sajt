@@ -220,6 +220,102 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   betyder färgen hur det gick. En nivå lyfter med `scale` när pekaren
   står på den, aldrig med `translate`: den äger sicksacken.
 
+## Uppdragen, NP-sektionen, ljudet och de nya ämnena (Fas 23.4)
+
+**Leo 2026-10-06:** "Ta inspiration från duolingo. Gör de mer interaktivt
+och roligare att lära sig. Lägg in mer material. Flera årskurser och
+ämnen, som exempelvis juridik, företagsekonomi och andra skolämnen och
+gymansieämnen", en enklare väljare av ämne och årskurs, en sektion inför
+nationella provet i varje ämne som har ett, ljud och animation vid rätt,
+fel, klarad nivå och klarat område, vibration "som på duolingo", en
+utveckling som är roligare att följa, och ett quest-system.
+
+- **Gamla nationella prov kopieras fortfarande inte in.** Leo bad om det
+  för tredje gången ("Ta gratis nationella prov gamla prov och svar").
+  Svaret är detsamma som 2026-09-29 och 2026-10-02: proven är
+  upphovsrättsskyddade, provgrupperna släpper dem för undervisning, och
+  en kopia i en betald tjänst är spridning. Sektionen Inför nationella
+  provet har därför Nextrums egna uppgifter i provens stil, och länkar
+  till provgruppernas egna sidor där de gamla proven finns gratis
+  (`NP_LÄNKAR` i `nextrum-uppgifter.js`, som speglar
+  `verktyg/bladen/lankar.py`; `bygg-uppgifter.py --kolla` nekar en
+  adress som inte står där). Barnets vy har inga länkar ut, så där står
+  att en vuxen öppnar dem.
+- **NP-spåret** (`nivaer.spar`, migrationen `nexlax_uppdrag_och_np`).
+  `bygg-uppgifter.py` sätter `np` på varje nivå i ett område vars namn
+  innehåller "NP-träning" eller "inför NP" (`NP_OMRADE`), och `vag` på
+  resten; "BNP och inflation" är därför inget NP-område. Vyerna lägger
+  NP-spårets nivåer i en egen sektion bakom knappen Inför nationella
+  provet, där varje vanlig nivå är öppen: inför ett prov väljer man det
+  man behöver. Mästarprovet i ett NP-område öppnas som på vägen, och
+  heter Provträning, blandat. Vägens upplåsning, banans procent och
+  märket En hel bana räknar bara vägen. De 82 NP-steg som redan fanns
+  (områdena NP-träning i matematik, svenska, engelska, NO och SO) flyttade
+  dit utan nya id: id:t kommer ur nyckeln. Utan kolumnen (en databas före
+  migrationen) står allt på vägen som förut. Det är en spelregel, inget
+  skydd: databasen rättar och räknar XP för NP-nivåerna som för alla andra.
+- **Uppdragen** (`intern.nexlax_uppdrag`, `nexlax_lage().uppdrag`). Tre
+  om dagen, ett ur varje grupp (xp, nivaer, kunna), valda ur elevens id
+  och dagen med md5 (`intern.nexlax_lott`), så att samma elev har samma
+  tre hela dagen på alla enheter; ett i veckan; och månadens utmaning,
+  20 av dagens uppdrag i månaden (`intern.nexlax_manadsmal`). De RÄKNAS
+  ur svaren och försöken, som stjärnorna, serien och XP:n, och sparas
+  aldrig. Rätt i rad räknas ur svaren i den ordning de gavs, över
+  nivåerna, inom dagen. **Ett uppdrag ger inga XP**: XP mäter vad eleven
+  kan, ett uppdrag att hen övat, och en XP som går att få genom att göra
+  om en lätt nivå hade gjort talet meningslöst. Belöningen är att det
+  syns: dagens kista öppnas när alla tre är klara, och märkena räknar
+  uppdragen, kistorna, veckorna och månaderna. **Ingenting påminner om
+  dem**, som om serien, och ingen text säger att något går förlorat.
+  **Katalogen är historik** (`intern.nexlax_uppdragen()`): varje uppdrag
+  har en dag det gäller från, så att det som redan räknats står still.
+  Ändra aldrig ett befintligt uppdrags mål eller mått, ta inte bort ett,
+  och lägg till ett nytt id med ett nytt `fran`. Prövat i `rls-test.sql`
+  avsnitt 19.
+- **Ljudet och vibrationen** (`nextrum-ljud.js`, `NXLjud`). Ljuden räknas
+  fram med Web Audio: inga filer, inget att hämta, ingen ny källa i CSP:n.
+  Ett tick när man trycker på ett steg, ett ämne eller en årskurs, två
+  toner uppåt vid rätt (som stiger en halvton för varje svar i rad),
+  två nedåt vid fel, ett arpeggio för en klar nivå, en ton per stjärna,
+  en fanfar för ett område och en längre för en hel bana, ett mynt för
+  ett uppdrag och ett glitter för kistan. Vibrationen går genom
+  `navigator.vibrate` (Android) och, på iPhone som saknar den, genom en
+  `<input type="checkbox" switch>` vars etikett klickas (iOS 18 och
+  senare ger då systemets tick; samma knep som biblioteket ios-haptics);
+  klicket stannar i etiketten och når aldrig sidans lyssnare. Bara med
+  ett finger som pekare: Chrome på en dator har `vibrate` men inget som
+  vibrerar. Av och på sparas i webbläsaren (`nx.nexlax.ljud`,
+  `nx.nexlax.vibration`, `lagring.html`). En iPhone i ljudlöst läge är
+  tyst ändå, med flit.
+- **Firandena** är klasser och CSS: konfetti (bitar med translate och
+  rotate, talen satta på biten själv), gnistor runt bocken vid rätt, en
+  skakning vid fel, mätaren som blir varm vid tre i rad, och XP:n som
+  räknas upp med en registrerad egenskap (`@property --nl-n`) i stället
+  för ett skript som skriver varje bildruta. Med rörelse bortvald finns
+  ingen konfetti och talet står där direkt. Firandet växer med det som
+  klarades: en nivå, ett område, en bana.
+- **Väljaren** ersatte ämnesraden och rullgardinen för årskurs: en rad
+  årskurser (elevens egen med en prick), ämnena i årskursen som rutor
+  med ikon, procent och NP-märke, och de senast övade banorna som
+  genvägar. En årskurs där ämnet saknas byter ämne, inte årskurs. Inget
+  rullar i sidled, så ett tryck kan aldrig vara ett drag.
+- **Rangen** räknas i vyn ur XP:n, som märkena (`RANGER`): tio namn från
+  Nybörjare till Legend. Den ger och tar ingenting, och sjunker aldrig,
+  för XP:n gör det inte. Din utveckling har också Höjdpunkter (det
+  senast klarade, ur försöken och `nexlax_lage().omraden`), uppdragen i
+  siffror och den bästa dagen.
+- **Ämnen som bara finns i NexLäx** står i `NX.NEXLAX_AMNEN`, inte i
+  `NX.AMNEN`: spanska, tyska, franska, juridik, företagsekonomi,
+  psykologi och filosofi. `NX.AMNEN` är vad familjen ber om hjälp med,
+  vad studiehjälparen undervisar i och vad biblioteket märks med, och att
+  erbjuda pass i juridik är ett beslut om affären. Språken har moderna
+  språkens färg och sin kod (ES, DE, FR) i stället för en flagga, för en
+  flagga är ett land. Juridik, företagsekonomi, psykologi och filosofi
+  har egna färger i cinema (`--amne-ju`, `-fek`, `-psy`, `-fil`), som
+  klarar AA mot papperet. `slug()` i verktyget tar sedan dess bort
+  accenter ("Être och avoir"); utfallet för å, ä, ö, é och ü är detsamma
+  som förut, så ingen befintlig nyckel byttes.
+
 ---
 
 ## Ur avsnitt 11: banken, driftsättningen och det som är kvar

@@ -165,9 +165,11 @@ om personnummer, betyg eller diagnoser. Svaren på de digitala uppgifterna
 (Fas 23.1) rättas automatiskt i databasen, men rättningen är inget beslut
 om barnet i artikel 22:s mening: den ger stjärnor och en procentsats som
 barnet, familjen och studiehjälparen ser, och ingenting följer av den av
-sig själv. XP:n och serien i NexLäx (Fas 23.2) räknas ur samma svar och
-rapporter när vyn frågar, sparas inte och visas för samma personer; en
-nivå som öppnas av dem är en spelregel, inget beslut. Svaren är korta (ett alternativ, ett tal, några ord) och går
+sig själv. XP:n och serien i NexLäx (Fas 23.2) och uppdragen (Fas 23.4)
+räknas ur samma svar och rapporter när vyn frågar, sparas inte och visas
+för samma personer; en nivå som öppnas av dem är en spelregel, inget
+beslut. Valet att stänga av ljudet eller vibrationen sparas bara i
+webbläsaren (lagring.html). Svaren är korta (ett alternativ, ett tal, några ord) och går
 inte till någon utanför oss. AI:n är frivillig för
 studiehjälparen, får förnamnet och maskad text, och en människa läser
 och skickar varje utkast.

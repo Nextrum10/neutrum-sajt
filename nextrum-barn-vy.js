@@ -403,7 +403,7 @@
      står under Rapporter, och "Från passet" på vägen, när föräldern slagit
      på rapporterna. */
   const U = NXUppgifter;
-  S.nl = { data: null, läge: null, öppen: null, nyss: null, alla: false, val: { amne: '', arskurs: '' } };
+  S.nl = { data: null, läge: null, öppen: null, nyss: null, alla: false, val: { amne: '', arskurs: '', spar: 'vag' } };
 
   async function laddaNexlax() {
     const sek = $('#bv-nexlax');
@@ -454,7 +454,7 @@
       : (d.amnen || []).find(a => finns[a])
         || (given && finns[given.nivaer.amne] ? given.nivaer.amne : null)
         || (finns.Matematik ? 'Matematik' : null);
-    return { amne, arskurs: S.nl.val.arskurs || '' };
+    return { amne, arskurs: S.nl.val.arskurs || '', spar: S.nl.val.spar || 'vag' };
   }
 
   function ritaVägen() {
@@ -462,11 +462,11 @@
     if (!host || !S.nl.data) return;
     const b = nlBana();
     const ut = U.ritaVäg(Object.assign(nlUnderlag(), {
-      host, amne: b.amne, arskurs: b.arskurs, öppen: S.nl.öppen, nyss: S.nl.nyss,
+      host, amne: b.amne, arskurs: b.arskurs, spar: b.spar, öppen: S.nl.öppen, nyss: S.nl.nyss, barnvy: true,
       hjälpare: S.data && S.data.studiehjalpare ? { namn: S.data.studiehjalpare } : null
     }));
     S.nl.nyss = null;
-    if (ut && ut.amne && !S.nl.val.amne) S.nl.val = { amne: ut.amne, arskurs: '' };
+    if (ut && ut.amne && !S.nl.val.amne) S.nl.val = { amne: ut.amne, arskurs: '', spar: 'vag' };
   }
 
   function ritaUtveckling() {
@@ -504,7 +504,7 @@
 
   /* Vägen ritas om, så knappen man tryckte på är en ny: den mäts före
      och efter och sidan flyttas med skillnaden (som i studievyn). */
-  function ritaOchHåll(sel, fn) {
+  function ritaOchHåll(sel, fn, fokus) {
     const före = $(sel);
     const y = före ? före.getBoundingClientRect().top : null;
     fn();
@@ -512,7 +512,8 @@
     if (ny && y !== null) {
       const efter = ny.getBoundingClientRect().top;
       if (Math.abs(efter - y) > 1) NXStudie.scrollaTill(window.scrollY + efter - y);
-      ny.focus({ preventScroll: true });
+      const f = fokus ? $(fokus) : ny;
+      if (f) f.focus({ preventScroll: true });
     }
   }
 
@@ -535,11 +536,29 @@
 
   document.addEventListener('click', async e => {
     if (!S.nl.data) return;
-    const amne = e.target.closest('[data-nl-amne]');
+    /* Väljaren och NP-knappen, som i studievyn: väljaren hålls still. */
+    const host = $('#bv-nl-vag');
+    const amne = e.target.closest('#bv-nl-vag [data-nl-amne]');
     if (amne) {
-      S.nl.val = { amne: amne.dataset.nlAmne, arskurs: '' };
+      const ak = amne.dataset.nlAk || '';
+      S.nl.val = { amne: amne.dataset.nlAmne, arskurs: ak, spar: S.nl.val.spar || 'vag' };
       S.nl.öppen = null;
-      ritaOchHåll('[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]', ritaVägen);
+      ritaOchHåll('#bv-nl-vag .nl-valj', ritaVägen,
+        '#bv-nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"][data-nl-ak="' + CSS.escape(ak) + '"]');
+      return;
+    }
+    const ak = e.target.closest('#bv-nl-vag [data-nl-ak]');
+    if (ak) {
+      S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: ak.dataset.nlAk, spar: S.nl.val.spar || 'vag' };
+      S.nl.öppen = null;
+      ritaOchHåll('#bv-nl-vag .nl-valj', ritaVägen, '#bv-nl-vag .nl-ak-knapp[data-nl-ak="' + CSS.escape(ak.dataset.nlAk) + '"]');
+      return;
+    }
+    const spar = e.target.closest('#bv-nl-vag [data-nl-spar]');
+    if (spar) {
+      S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: host ? host.dataset.arskurs : '', spar: spar.dataset.nlSpar };
+      S.nl.öppen = null;
+      ritaOchHåll('#bv-nl-vag .nl-spar', ritaVägen, '#bv-nl-vag [data-nl-spar="' + CSS.escape(spar.dataset.nlSpar) + '"]');
       return;
     }
     const nod = e.target.closest('[data-nl-nod]');
@@ -592,14 +611,6 @@
         await laddaNexlax();
       });
     }
-  });
-  document.addEventListener('change', e => {
-    const sel = e.target.closest('[data-nl-arskurs]');
-    if (!sel || !S.nl.data) return;
-    const host = $('#bv-nl-vag');
-    S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: sel.value };
-    S.nl.öppen = null;
-    ritaVägen();
   });
 
   /* Den som låter fliken stå öppen ska se nya pass och notiser när den

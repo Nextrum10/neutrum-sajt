@@ -47,6 +47,7 @@ import importlib.util
 import os
 import re
 import sys
+import unicodedata
 import uuid
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -66,7 +67,11 @@ NAMNRYMD = 'https://nextrum.se/uppgifter/'
 # rad här får en nyckel ur sitt namn.
 AMNESKORT = {'Matematik': 'ma', 'Svenska': 'sv', 'Engelska': 'en',
              'NO / Fysik / Kemi / Biologi': 'no', 'SO / Historia / Samhällskunskap': 'so',
-             'Moderna språk': 'ms', 'Programmering': 'prog'}
+             'Moderna språk': 'ms', 'Programmering': 'prog',
+             # Ämnena som bara finns i NexLäx (NX.NEXLAX_AMNEN, 2026-10-06).
+             # Språken har sina språkkoder.
+             'Spanska': 'es', 'Tyska': 'de', 'Franska': 'fr', 'Juridik': 'ju',
+             'Företagsekonomi': 'fek', 'Psykologi': 'psy', 'Filosofi': 'fil'}
 # Området repetitionen står i. Upptaget: en handskriven nivå får inte heta så.
 REPETITION = 'Repetition'
 MASTARPROV = 'Mästarprov'
@@ -74,12 +79,28 @@ MASTARPROV = 'Mästarprov'
 # nivå hade det varit samma frågor i ny ordning, och 50 XP för att göra om
 # nivån: området får inget prov förrän det har två nivåer att dra ur.
 MASTARPROV_MINST = 2
+# NP-spåret (2026-10-06). Ett område vars namn säger NP-träning eller
+# "inför NP" står i spåret inför nationella provet, inte på vägen: där är
+# varje nivå öppen och väljs efter vad provet frågar efter, och vägens
+# upplåsning går förbi dem. Leo: "gör en inför nationella prov-sektion i
+# varje ämne som har nationella prov". Regeln står bara här; databasen
+# får spåret i nivaer.spar och vyerna läser det därifrån. "BNP och
+# inflation" är inget NP-område, därav ordet och inte bokstäverna.
+NP_OMRADE = re.compile(r'NP-träning|inför NP\b')
+
+
+def spar(omrade):
+    return 'np' if NP_OMRADE.search(omrade or '') else 'vag'
 
 
 def slug(t):
+    """Bokstäverna utan accenter (2026-10-06, med språken: "Être och
+    avoir" blev förut "tre-och-avoir"). Samma utfall som förut för å, ä,
+    ö, é och ü, så ingen befintlig nyckel byts."""
     t = t.lower()
-    for fran, till in (('å', 'a'), ('ä', 'a'), ('ö', 'o'), ('é', 'e'), ('ü', 'u')):
+    for fran, till in (('ß', 'ss'), ('œ', 'oe'), ('æ', 'ae'), ('ø', 'o')):
         t = t.replace(fran, till)
+    t = ''.join(c for c in unicodedata.normalize('NFKD', t) if not unicodedata.combining(c))
     return re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', t)).strip('-')
 
 
@@ -105,26 +126,41 @@ def stegen(b):
     ut = []
     for omrade, nivaer in omradena(b):
         for n in nivaer:
-            ut.append(dict(n, sort='vanlig'))
+            ut.append(dict(n, sort='vanlig', spar=spar(omrade)))
         if sum(1 for n in nivaer if not n.get('lastext')) >= MASTARPROV_MINST:
             ut.append(dict(nyckel='%s-mastare-%s' % (prefix(b), slug(omrade)),
                            titel='%s: %s' % (MASTARPROV, omrade), omrade=omrade, fragor=[],
                            beskrivning='Blandade frågor ur hela området, i ny ordning varje gång. '
                                        'Klarar du det med minst två stjärnor sitter området.',
-                           lastext=None, sort='mastare'))
+                           lastext=None, sort='mastare', spar=spar(omrade)))
     if any(not n.get('lastext') for n in b['nivaer']):
         ut.append(dict(nyckel='%s-repetition' % prefix(b), titel=REPETITION, omrade=REPETITION,
-                       fragor=[], lastext=None, sort='repetition',
+                       fragor=[], lastext=None, sort='repetition', spar='vag',
                        beskrivning='Det du svarat fel på förut, blandat med sådant du redan klarat.'))
     return ut
 
 
 def amnen_i_appen():
-    """Ämnena ur NX.AMNEN i nextrum-app.js, så att en bana aldrig får
-    ett ämne som vyernas filter inte känner till."""
+    """Ämnena ur NX.AMNEN och NX.NEXLAX_AMNEN i nextrum-app.js, så att en
+    bana aldrig får ett ämne som vyerna inte känner till. NEXLAX_AMNEN är
+    ämnen som bara finns i NexLäx (2026-10-06): juridik och de andra."""
     with open(os.path.join(ROT, 'nextrum-app.js'), encoding='utf-8') as f:
-        m = re.search(r'const AMNEN = \[(.*?)\];', f.read(), re.S)
-    return re.findall(r"'([^']+)'", m.group(1)) if m else []
+        text = f.read()
+    ut = []
+    for namn in ('AMNEN', 'NEXLAX_AMNEN'):
+        m = re.search(r'const %s = \[(.*?)\];' % namn, text, re.S)
+        if m:
+            ut += re.findall(r"'([^']+)'", m.group(1))
+    return ut
+
+
+def np_lankar_i_vyn():
+    """Adresserna i NP_LÄNKAR i nextrum-uppgifter.js (2026-10-06). De ska
+    stå i verktyg/bladen/lankar.py: det är där en länk till provgrupperna
+    granskas och rättas, och vyn får inte ha en egen som ingen sett."""
+    with open(os.path.join(ROT, 'nextrum-uppgifter.js'), encoding='utf-8') as f:
+        m = re.search(r'const NP_LÄNKAR = \{(.*?)\n  \};', f.read(), re.S)
+    return re.findall(r"'(https://[^']+)'", m.group(1)) if m else None
 
 
 def las_banken():
@@ -148,6 +184,11 @@ def las_banken():
         for b in getattr(modul, 'TILLAGG', []):
             b['fil'] = namn
             tillagg.append(b)
+        # Varje nivå minns sin fil, så att --visa <fil> visar just den
+        # filens nivåer också i en bana som fått tillägg ur flera filer.
+        for b in getattr(modul, 'BANOR', []) + getattr(modul, 'TILLAGG', []):
+            for n in b['nivaer']:
+                n.setdefault('fil', namn)
     # TILLAGG är nivåer som läggs SIST i en bana som står i en annan fil
     # (2026-10-03, nivåerna ur materialbanken). Sist, för en nivå mitt i
     # vägen låser nästa nivå för den som redan gått förbi (CLAUDE.md
@@ -305,9 +346,10 @@ def sql(banor):
             nid = niva_id(n)
             niva_ids.append(nid)
             genererade += n['sort'] != 'vanlig'
-            nivarader.append('  (%s, %s, %s, %s, %s, %s, %s, %d, %s, %s)' % (
+            nivarader.append('  (%s, %s, %s, %s, %s, %s, %s, %d, %s, %s, %s)' % (
                 q(nid), q(n['nyckel']), q(b['amne']), q(b['arskurs']), q(n['omrade'].strip()),
-                q(n['titel'].strip()), q(n.get('beskrivning')), ordning, q(n['sort']), q(n.get('lastext'))))
+                q(n['titel'].strip()), q(n.get('beskrivning')), ordning, q(n['sort']), q(n.get('lastext')),
+                q(n['spar'])))
             for fnr, fr in enumerate(n['fragor'], 1):
                 fid = fraga_id(n, fr)
                 fraga_ids.append(fid)
@@ -326,16 +368,17 @@ def sql(banor):
     ut.append('--')
     ut.append('-- %d banor, %d nivåer (varav %d Mästarprov och repetitioner), %d frågor.'
               % (len(banor), len(nivarader), genererade, antal_fragor))
-    ut.append('-- Kräver fas23_1_uppgifterna_blir_digitala och fas23_2_nexlax.')
+    ut.append('-- Kräver fas23_1_uppgifterna_blir_digitala, fas23_2_nexlax och')
+    ut.append('-- nexlax_uppdrag_och_np (nivaer.spar).')
     ut.append('-- ============================================================')
     ut.append('')
-    ut.append('insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, beskrivning, ordning, sort, lastext) values')
+    ut.append('insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, beskrivning, ordning, sort, lastext, spar) values')
     ut.append(',\n'.join(nivarader))
     ut.append('on conflict (id) do update set')
     ut.append('  nyckel = excluded.nyckel, amne = excluded.amne, arskurs = excluded.arskurs,')
     ut.append('  omrade = excluded.omrade, titel = excluded.titel, beskrivning = excluded.beskrivning,')
     ut.append('  ordning = excluded.ordning, sort = excluded.sort, lastext = excluded.lastext,')
-    ut.append('  aktiv = true, updated_at = now();')
+    ut.append('  spar = excluded.spar, aktiv = true, updated_at = now();')
     ut.append('')
     ut.append('-- Nivåer som inte längre står i banken stängs av. Försöken pekar på dem.')
     ut.append('update public.nivaer set aktiv = false, updated_at = now()')
@@ -358,14 +401,19 @@ def visa(banor, bara=None):
     läsa igenom en bana innan den går ut: ett facit som räknats fram i
     kod syns först här."""
     for b in banor:
-        if bara and b['fil'] != bara:
+        if bara and bara not in b['fil'].split(' + '):
             continue
         print('=' * 72)
         print('%s %s  (%s)' % (b['amne'], b['arskurs'], b['fil']))
+        # Med en fil: bara dess nivåer, och de prov som drar ur dem.
+        egna = {n['omrade'] for n in b['nivaer'] if n.get('fil') == bara} if bara else None
         for n in stegen(b):
+            if egna is not None and (n['omrade'] not in egna or (n['sort'] == 'vanlig' and n.get('fil') != bara)):
+                continue
             print('-' * 72)
-            print('%s  %s  [%s]%s' % (n['nyckel'], n['titel'], n['omrade'],
-                                      '' if n['sort'] == 'vanlig' else '  (%s, dras ur nivåerna)' % n['sort']))
+            print('%s  %s  [%s]%s%s' % (n['nyckel'], n['titel'], n['omrade'],
+                                        '' if n['sort'] == 'vanlig' else '  (%s, dras ur nivåerna)' % n['sort'],
+                                        '  (NP-spåret)' if n['spar'] == 'np' else ''))
             if n.get('lastext'):
                 print('  TEXT: %s' % n['lastext'])
             for i, q in enumerate(n['fragor'], 1):
@@ -408,6 +456,15 @@ def main():
         return 1 if fel else 0
 
     if '--kolla' in sys.argv:
+        lankar = np_lankar_i_vyn()
+        if lankar is None:
+            fel.append('Hittar inte NP_LÄNKAR i nextrum-uppgifter.js')
+        else:
+            with open(os.path.join(ROT, 'verktyg', 'bladen', 'lankar.py'), encoding='utf-8') as f:
+                granskade = f.read()
+            for lank in lankar:
+                if "'" + lank + "'" not in granskade:
+                    fel.append('NP-länken %s i nextrum-uppgifter.js står inte i verktyg/bladen/lankar.py' % lank)
         senast = senaste_migrationen()
         if not senast:
             fel.append('Ingen migration *_uppgiftsbanken*.sql. Skriv en med --sql.')

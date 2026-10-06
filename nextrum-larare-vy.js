@@ -660,7 +660,11 @@
     if (!S.katalog || !S.katalog.length) { ruta.hidden = true; return; }
     ruta.hidden = false;
     const finns = U.banor(S.katalog);
-    const ämnen = Object.keys(finns).sort((a, b) => NX.AMNEN.indexOf(a) - NX.AMNEN.indexOf(b));
+    /* Skolans ämnen först, sedan de som bara finns i NexLäx (juridiken
+       och de andra, 2026-10-06), i samma ordning som familjen ser dem. */
+    const ordning = U.ämnesOrdning ? U.ämnesOrdning() : NX.AMNEN;
+    const plats = a => { const i = ordning.indexOf(a); return i < 0 ? 999 : i; };
+    const ämnen = Object.keys(finns).sort((a, b) => plats(a) - plats(b));
     const e = elev();
     const förval = (lx.amne && finns[lx.amne]) ? lx.amne
       : ((e && e.subjects) || []).find(a => finns[a]) || ämnen[0];
@@ -688,7 +692,9 @@
     $('#lx-niva').innerHTML = '<option value="">Ingen, en vanlig uppgift</option>' + nivåer.map(n => {
       const g = gjort[n.id];
       const sort = n.sort || 'vanlig';
-      return '<option value="' + esc(n.id) + '">' + esc(n.ordning + '. ' + U.stegTitel(n)
+      /* En nivå i NP-sektionen (2026-10-06) säger det: familjen hittar
+         den under Inför nationella provet, inte på vägen. */
+      return '<option value="' + esc(n.id) + '">' + esc(n.ordning + '. ' + (n.spar === 'np' ? 'Inför NP: ' : '') + U.stegTitel(n)
         + (sort === 'vanlig' ? ' (' + n.omrade + ')' : sort === 'repetition' ? ' av det eleven missat' : '')
         + (g && g.klar ? ', klarad med ' + g.stjarnor + ' av 3' : '')) + '</option>';
     }).join('');

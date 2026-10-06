@@ -68,7 +68,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
   sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. Upplåsningen
   är en spelregel. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
-  beslut. `.nl-hopp` går med flit inte att trycka på.
+  beslut. `.nl-hopp` går med flit inte att trycka på. **Uppdragen** (Fas 23.4) räknas av
+  `intern.nexlax_uppdrag`, sparas aldrig, ger inga XP och påminns aldrig om; katalogen är
+  historik, så ett nytt uppdrag får ett nytt id och ett `fran`. **NP-spåret** är `nivaer.spar`,
+  satt av verktyget ur områdets namn, och där är varje nivå öppen. Gamla nationella prov
+  kopieras aldrig in: NP-sektionen länkar till provgrupperna (`NP_LÄNKAR` speglar `lankar.py`),
+  och barnets vy har inga länkar ut. Ljuden räknas fram i webbläsaren (`nextrum-ljud.js`) och
+  valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare (`mina_tips()`) och
   en kampanjkod per affisch; `leads.kod`. Koden syns i formuläret och lagras aldrig i
   webbläsaren, och en okänd kod fäller aldrig anmälan. Tipstimmen är `startrabatt` med
@@ -466,6 +472,10 @@ Detaljer: `minne/grunden.md`.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
+- **NexLäx Fas 23.4** (2026-10-06): migrationerna `nexlax_uppdrag_och_np` och banken körs efter
+  merge, i den ordningen och som de förra bankerna (`minne/nexlax.md`); vyerna tål att de saknas.
+  Juridiken, företagsekonomin, psykologin, filosofin och språken är skrivna med AI och inte lästa
+  av någon som undervisar i ämnet.
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14
