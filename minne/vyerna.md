@@ -105,6 +105,58 @@ FÖRSTA strukturskillnaden, och på startsidan är den språkväljaren —
 en skillnad längre ner syns alltså inte i verktyget. Jämför
 taggsekvenserna med `difflib` när du ändrar i sektionen.
 
+### Menysidorna i startsidans form (2026-10-06)
+
+Leo: sidorna i menyn (de tre strecken) var "typ bara text och ingen nice
+animation", och skulle ta efter startsidan efter hero och vyerna. De sex
+är Vår idé, Så fungerar Nextrum, För elever & föräldrar, Bli
+studiehjälpare, Priser och FAQ, på båda språken. De laddar
+`nextrum-start.css` och `nextrum-start.js` och använder startsidans
+delar som de är, med `nextrum-sidor.css` sist för det startsidan inte
+har. **Texten är densamma ord för ord**; bara formen är ny. Det som
+tillkom är etiketter (Nästa steg), lapparna på fotot och hoppen på FAQ:n.
+
+- **Rubrik och tre stycken** (`nx-two`) blev manifestet: rubriken med
+  `data-ordfyll` och styckena som `.nx-bubbla` med var sin figur i
+  `.sid-kort` (två, tre eller fyra spalter). Ett blad med en enda mening
+  som bär poängen är `.sid-stor`.
+- **Listor med 01–04** blev hållpunkterna (`.nx-holdpunkter`, i tre med
+  `.sid-tre`), och Före/Under/Efter och Först/Sedan/Löpande står som ord
+  i `.sid-et` i stället för en siffra. Före, under och efter på För
+  elever & föräldrar är fotokort (`.sid-bildkort`).
+- **Stegen till första passet** på Så fungerar Nextrum är startsidans
+  pinnade scen. Fotona står i markupen, inte i skriptet: registret har
+  bara svensk alt-text, och startsidans skript bygger sina foton därur,
+  så den engelska startsidan har svensk alt-text i den scenen (kvar,
+  inte rörd här). `stegFoton` rör bara en scen som redan har foton, och
+  startsidans ruta är tom när den körs.
+- **Text bredvid ett foto** (Priset på Vår idé, Vem kan söka, Varför
+  priset ser ut så här) är cinemas `.nx-split` på ljus botten.
+- **Lapparna** på sidhuvudets foto är vyernas notiser: två korta
+  sanningar ur sidans egen text, `aria-hidden`, och bara den första på en
+  telefon. De fjädrar in när `sidhuvud` satt `.sid-framme`, två
+  bildrutor efter start så att startläget hinner ritas.
+- **FAQ:n är kort**, på alla sex sidorna: varje fråga ett blad med kant
+  i lera när den är öppen. Utfällningen är `NX.initFaq` som förut.
+  Markupen i `.faq-item` är orörd, för `bygg-faq-schema.py` och
+  `bygg-maskotsvar.py` läser den med reguljära uttryck. FAQ-sidans
+  grupper har en klistrad spalt med rubrik och figur, och piller under
+  ingressen hoppar till dem.
+- **Slutet** är `nx-final-cinema` på alla sex, med `.nx-framme` från
+  `mörkaYtor`; Bli studiehjälpare och Priser hade kvar den gamla
+  `nx-final`.
+
+Betalningsmeningen står kvar på sina ställen (`kolla-betalningsvillkor.py`),
+och priserna på Priser skrivs fortfarande av `initPris` och
+`initErbjudanden`. En lapp med ett pris ska ha `data-stat="pris-inline"`,
+aldrig `"pris"`: `initPris` räknar upp den FÖRSTA `"pris"` på sidan, och
+det ska vara det stora priset.
+
+`jamfor-sprak.py` ser bara första skillnaden, så sidparen jämfördes med
+`difflib` över hela taggsekvensen: lika många taggar och textnoder, samma
+attributnamn, och den enda skillnaden är språkväljaren. Baslinjen flyttade
+sig två taggar (de nya `<link>` i huvudet), inget annat.
+
 ### Två fällor när en palett byts
 
 Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11

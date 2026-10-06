@@ -48,10 +48,14 @@
      den nytta vid varje återbesök i ett år. -->
 <link rel="stylesheet" href="../nextrum-typsnitt.css?v=c20ceeba">
 
-<!-- ordningen spelar roll: bas → startsida → cinema -->
+<!-- ordningen spelar roll: bas → startsida → cinema → start → sidor.
+     Menysidorna använder startsidans delar som de är (nextrum-start.css
+     och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=47a1da42">
+<link rel="stylesheet" href="../nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="../nextrum-sidor.css?v=6a841016">
 <!-- GENERERAD av verktyg/bygg-faq-schema.py. Ändra inte för hand:
      kör om verktyget när en fråga ändras, annars säger märkningen
      och sidan olika saker och då är den ett fel, inte en bonus. -->
@@ -383,6 +387,13 @@
   <span class="nx-et acc" data-stig style="margin-top:22px">FAQ</span>
   <h1 class="nx-d1" data-avslöj>Frequently asked questions</h1>
   <p class="nx-lede" data-stig data-fördröj="1">The things people usually ask, collected. If you cannot find the answer — <a href="#kontakt" style="color:var(--fg);text-decoration:underline;text-underline-offset:3px">write to us</a> and we will reply.</p>
+  <nav class="sid-hopp" aria-label="The questions" data-stig data-fördröj="2">
+    <a href="#hur-det-fungerar">How it works</a>
+    <a href="#vad-det-kostar">What it costs</a>
+    <a href="#att-vara-studiehjalpare">Being a tutor</a>
+    <a href="#trygghet">Safety and privacy</a>
+    <a href="#kontakt">Contact</a>
+  </nav>
   <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#897D6A">
     <picture><source type="image/webp" srcset="../bilder/04-sjalvfortroende-640.webp 640w, ../bilder/04-sjalvfortroende-960.webp 960w, ../bilder/04-sjalvfortroende-1280.webp 1280w, ../bilder/04-sjalvfortroende-1600.webp 1600w, ../bilder/04-sjalvfortroende-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="../bilder/04-sjalvfortroende-1280.jpg"
          srcset="../bilder/04-sjalvfortroende-640.jpg 640w, ../bilder/04-sjalvfortroende-960.jpg 960w, ../bilder/04-sjalvfortroende-1280.jpg 1280w, ../bilder/04-sjalvfortroende-1600.jpg 1600w, ../bilder/04-sjalvfortroende-1920.jpg 1920w"
@@ -394,10 +405,13 @@
 </section>
 
 <section class="sec wrap" style="padding-top:clamp(24px,3vw,40px)">
-  <div class="rv">
-      <div class="nx-faq-group">
-        <span class="eyebrow acc">About Nextrum</span>
-        <h2 class="d3" style="margin:0 0 22px">How it works</h2>
+  <div class="sid-faq">
+      <div class="nx-faq-group sid-faq-grupp" id="hur-det-fungerar">
+        <div class="sid-faq-sida" data-stig>
+          <span class="sid-faq-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
+          <span class="nx-et acc">About Nextrum</span>
+          <h2 class="d3">How it works</h2>
+        </div>
         <div class="faq">
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">How does the matching work?<span class="pm"></span></button>
@@ -446,9 +460,12 @@
         </div>
       </div>
 
-      <div class="nx-faq-group">
-        <span class="eyebrow acc">Price and payment</span>
-        <h2 class="d3" style="margin:0 0 22px">What it costs</h2>
+      <div class="nx-faq-group sid-faq-grupp" id="vad-det-kostar">
+        <div class="sid-faq-sida" data-stig>
+          <span class="sid-faq-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg></span>
+          <span class="nx-et acc">Price and payment</span>
+          <h2 class="d3">What it costs</h2>
+        </div>
         <div class="faq">
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">What does Nextrum cost?<span class="pm"></span></button>
@@ -481,9 +498,12 @@
         </div>
       </div>
 
-      <div class="nx-faq-group">
-        <span class="eyebrow acc">If you want to work with us</span>
-        <h2 class="d3" style="margin:0 0 22px">Being a tutor</h2>
+      <div class="nx-faq-group sid-faq-grupp" id="att-vara-studiehjalpare">
+        <div class="sid-faq-sida" data-stig>
+          <span class="sid-faq-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 9.5L12 5l9.5 4.5L12 14z"/><path d="M6.5 11.6v4.1c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3v-4.1"/></svg></span>
+          <span class="nx-et acc">If you want to work with us</span>
+          <h2 class="d3">Being a tutor</h2>
+        </div>
         <div class="faq">
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Who can become a tutor?<span class="pm"></span></button>
@@ -516,9 +536,12 @@
         </div>
       </div>
 
-      <div class="nx-faq-group">
-        <span class="eyebrow acc">Safety</span>
-        <h2 class="d3" style="margin:0 0 22px">Safety and privacy</h2>
+      <div class="nx-faq-group sid-faq-grupp" id="trygghet">
+        <div class="sid-faq-sida" data-stig>
+          <span class="sid-faq-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 7.5-7 8.8-4-1.3-7-4.2-7-8.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
+          <span class="nx-et acc">Safety</span>
+          <h2 class="d3">Safety and privacy</h2>
+        </div>
         <div class="faq">
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Is it safe?<span class="pm"></span></button>
@@ -717,6 +740,7 @@
 <script src="../nextrum-app.js?v=371d3290"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
+<script src="../nextrum-start.js?v=c489fcd4"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
