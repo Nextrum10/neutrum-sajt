@@ -95,6 +95,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används
   (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad).
+- **Vem som får bli studiehjälpare** (2026-10-06, Leo): alla som får jobba. Ingen sida kräver
+  att man pluggar; "nyligen läst samma kurser" är vad matchningen letar efter, inget krav för att söka.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
   kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i

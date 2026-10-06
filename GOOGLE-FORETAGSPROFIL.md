@@ -100,8 +100,8 @@ kategorin och tjänsteområdet.
 sant idag:
 
 ```
-Nextrum matchar elever i Stockholm med unga studiehjälpare — gymnasie-
-och högskolestudenter som själva nyligen läst samma kurser. Varje elev
+Nextrum matchar elever i Stockholm med studiehjälpare som själva
+nyligen läst samma kurser. Varje elev
 får en personlig matchning, en individuell studieplan och en rapport
 efter varje pass, så att både elev och förälder ser vad som hände och
 vad som är nästa steg.
