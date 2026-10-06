@@ -184,7 +184,8 @@ har sex flikar, med adressen `#ekonomi/<flik>`:
 - **Fakturor**: flödet från fakturapass till betald faktura, oberoende av
   månad, med månadskörningen längst ner. Förut filtrerades fakturorna på
   sin period, och augustis utkast syntes inte i september förrän någon
-  valde augusti.
+  valde augusti. Sedan 2026-10-06 en rad per familj och månad (Familjens
+  faktura nedan).
 - **Bokslut**: vad som krävs för att stänga månaden, talen i tre kort, och
   larmen med samma rader och knappar som under Att göra.
 - **Köpta timmar** och **Inställningar** (strömbrytarna `faktura`,
@@ -203,6 +204,58 @@ i `nextrum-admin.js`): `#ekonomi/kortbetalningar`, `/avvikelser`,
 som förut ändrar något. **Raden i listorna heter `.eko-rad`**, och alla
 dess delar börjar på `eko-`: `.bet-atg` fanns redan i familjens
 Betalning, och den första versionen flyttade knapparna där.
+
+## Familjens faktura
+
+**En rad per familj och månad, och samma rad hela vägen (2026-10-06).**
+Leo: "det ska inte vara 4 st olika underlag för en familj och sen köra
+torrkörning, utan familjen ska samla på sig siffran på en stor faktura
+som i slutet av månaden blir till underlag för fortnox, sedan när man
+trycker på familjen ska man kunna se info och när och med vem de hade
+lektionen". Databasen hade redan en faktura per familj och period
+(`unique(parent_id, period)`); det som var splittrat var vyn. Fakturapass
+utan faktura stod som en rad per MÅNAD med familjerna som länkar, utkastet
+de skulle läggas på som en rad till, och knappen ledde till körningens
+ruta, där det skulle torrköras innan något skapades.
+
+- **Under Betalningar → Fakturor och Månadens ekonomi** är varje faktura
+  en rad (`familjefakturor()` och `familjefakturaRad()` i
+  `nextrum-admin-ekonomi.js`): Samlas, Lägg in i Fortnox, Hos familjen,
+  Betalda. Under månaden finns fakturan bara i vyn, räknad ur passen med
+  `NXBetalning.passpris`; summan står med "hittills". **Databasen skapar
+  den fortfarande först när månaden är slut** (409 i `fakturering`, avsnitt
+  Månadens ekonomi och Löner): att skapa raden i `invoices` mitt i månaden
+  hade tagit tillbaka septemberfelet, där passet som rapporterades den
+  sista kvällen inte fick plats. Natten mot den 1:a gör schemat utkastet,
+  och varje natt efter det lägger det till sena pass så länge fakturan är
+  ett utkast.
+- **Passet hamnar där körningen lägger det**: `NXBetalning.lonemanad` med
+  familjens fakturor, samma regel som `malmanad`. Ett sent septemberpass
+  står alltså på septembers rad med "Läggs på i natt" (eller "Inte på
+  fakturan än" när schemat är av, `S.körschemaPå` ur
+  `manadskorning_lage`), och summan säger "varav … i natt". Ett pass utan
+  rapport tar körningen inte: det står på raden, i lera, utanför summan.
+- **Familjens namn fäller ut passen**: dag, veckodag och klocka, "Med"
+  studiehjälparen först, ämnet, barnet, tiden och beloppet, och familjens
+  e-post och telefon. Hela familjen öppnar panelen. Det utfällda står kvar
+  när listan ritas om (`UTFÄLLDA`).
+- **Skapa nu** (en avslutad månad utan utkast) och **Lägg till nu** (ett
+  utkast med sena pass) gör nattens körning direkt, alltid för FÖRRA
+  månaden som schemat: en körning för en äldre månad hade kunnat skapa
+  dokument där som natten aldrig skapat. Torrkörningen görs ändå, i
+  bakgrunden, och rutan som frågar visar fakturorna och studiehjälparnas
+  underlag den skulle skapa. Den som trycker ser alltså vad som skapas
+  innan något skrivs, utan ett eget steg. Samma knapp står under Att göra
+  på `faktura_saknas` i stället för den gamla "Kör månadskörningen", som
+  ledde till rutan.
+- **Körningen för hand står hopfälld** under Fakturor och Månadens
+  ekonomi, under schemats rad. Löners ruta står kvar som den var.
+- **Familjens panel** säger med vem: Pass har studiehjälparen på raden,
+  Översikt de fem senaste hållna passen, och Ekonomi varje faktura med
+  passen på den, också den som samlas.
+- Inget nytt i databasen eller i en edge function: en merge är hela
+  driftsättningen. Provet är `verktyg/prova-fakturor.js` (Playwright mot en
+  falsk Supabase, inte i CI).
 
 ## Månadens ekonomi och Löner
 

@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=47a1da42">
 <link rel="stylesheet" href="nextrum-vy.css?v=9c77621b">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=d63ebae0">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=e01a20bc">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -1031,20 +1031,24 @@
           <div class="vy-kort"><div class="vy-lista" id="man-lista" aria-live="polite"><div class="loading">Hämtar</div></div></div>
 
           <div class="vy-grupp" id="man-fakturor"><h3>Fakturorna</h3><span class="vy-antal" id="man-fakturor-antal"></span></div>
-          <p class="eko-grupptext">Pass där familjen valt faktura. Månadskörningen skapar ett utkast per familj, och det läggs in i Fortnox för hand: Underlag, skapa fakturan i Fortnox, och Lagd i Fortnox med numret, OCR och förfallodagen. Fortnox skickar den.</p>
+          <p class="eko-grupptext">En faktura per familj, som samlar varje pass de väljer faktura på. När månaden är slut blir den ett utkast av sig själv, natten mot den 1:a, och läggs in i Fortnox för hand: Underlag, skapa fakturan i Fortnox, och Lagd i Fortnox med numret, OCR och förfallodagen. Fortnox skickar den. Tryck på familjen för att se passen.</p>
+          <p class="kor-not" data-fakt-svar aria-live="polite" hidden></p>
           <div class="vy-kort"><div class="vy-lista" id="man-fakt-lista"></div></div>
-          <!-- Månadskörningen för sidans månad. Rutan ritas inte om när
-               sidan gör det, så en torrkörning står kvar tills någon
-               byter månad (sättKörningsperiod). -->
+          <!-- Månadskörningen för sidans månad, hopfälld sedan 2026-10-06:
+               schemat gör den varje natt. Rutan ritas inte om när sidan
+               gör det, så en torrkörning står kvar tills någon byter
+               månad (sättKörningsperiod). -->
           <div class="vy-kort"><div class="vy-kort-kropp man-korning" id="man-korning" data-kor-ruta>
-            <h4 class="man-korning-rubrik" id="man-korning-rubrik">Månadskörningen</h4>
-            <p class="eko-text">Samma körning som under Betalningar → Fakturor och Löner: den skapar fakturautkasten och studiehjälparnas underlag för månaden i samma steg. Torrkör först, den visar vad som skulle skapas utan att skriva något.</p>
-            <div class="adm-verktyg">
-              <button class="btn btn-ghost btn-sm" type="button" data-kor-torr>Torrkör</button>
-              <button class="btn btn-primary btn-sm" type="button" data-kor-skapa disabled>Skapa utkast</button>
-            </div>
-            <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
-            <div data-kor-resultat aria-live="polite"></div>
+            <details class="eko-mer kor-hand">
+              <summary id="man-korning-rubrik">Månadskörningen för hand</summary>
+              <p class="eko-text">Samma körning som under Betalningar → Fakturor och Löner, och den som går av sig själv varje natt: den skapar fakturautkasten och studiehjälparnas underlag för månaden i samma steg. Behövs bara för en natt som inte gick. Torrkör visar vad som skulle skapas utan att skriva något.</p>
+              <div class="adm-verktyg">
+                <button class="btn btn-ghost btn-sm" type="button" data-kor-torr>Torrkör</button>
+                <button class="btn btn-primary btn-sm" type="button" data-kor-skapa disabled>Skapa utkast</button>
+              </div>
+              <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
+              <div data-kor-resultat aria-live="polite"></div>
+            </details>
           </div></div>
 
           <p class="vy-finstilt" id="man-fot"></p>
@@ -1126,28 +1130,35 @@
             <div class="eko-verktyg">
               <input class="inp eko-sok" id="fakt-sok" type="search" placeholder="Sök familj eller fakturanummer" aria-label="Sök faktura" autocomplete="off">
             </div>
+            <!-- Svaret från Skapa nu på en rad (2026-10-06). -->
+            <p class="kor-not" data-fakt-svar aria-live="polite" hidden></p>
+            <!-- En rad per familj och månad (2026-10-06): fakturan samlas
+                 under månaden och blir ett utkast av sig själv natten mot
+                 den 1:a. Familjens namn fäller ut passen. -->
             <div id="fakt-lista"><div class="loading">Hämtar</div></div>
 
             <!-- data-kor-*: samma körning står under Löner och Månadens
                  ekonomi (2026-09-28), och en lyssnare i
-                 nextrum-admin-ekonomi.js sköter alla tre rutorna. -->
+                 nextrum-admin-ekonomi.js sköter alla tre rutorna. Sedan
+                 2026-10-06 hopfälld: schemat gör den varje natt, och
+                 raderna har Skapa nu. -->
             <div class="vy-grupp" id="kor-rubrik"><h3>Månadskörningen</h3></div>
             <div class="vy-kort"><div class="vy-kort-kropp" data-kor-ruta>
-              <p class="eko-text">Skapar ett fakturautkast per familj som valt faktura, och studiehjälparnas underlag, för en månad. Kör torrt först: den visar vad som skulle skapas utan att skriva något.</p>
               <!-- Schemat står i cron.job, inte här: rutan frågar databasen
                    (manadskorning_lage) om det är på. -->
               <div id="kor-schema" class="kor-schema" aria-live="polite"><div class="loading">Hämtar</div></div>
-              <div class="adm-verktyg">
-                <select class="sel" id="kor-period" data-kor-period aria-label="Vilken månad körningen gäller"></select>
-                <button class="btn btn-ghost btn-sm" type="button" id="kor-torr" data-kor-torr>Torrkör</button>
-                <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" data-kor-skapa disabled>Skapa utkast</button>
-              </div>
-              <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
-              <div id="kor-resultat" data-kor-resultat aria-live="polite"></div>
-              <details class="eko-mer">
-                <summary>Så fungerar den</summary>
-                <p class="eko-text">Alla genomförda och rapporterade pass samlas till ett underlag per studiehjälpare, det som betalas ut den 25:e, och familjer som valt faktura får ett fakturautkast. Andra pass betalas med kort, i förväg eller när familjen bekräftar rapporten, och pass som hölls utan betalning räknas upp i körningen i stället för att faktureras. Ett pass som rapporteras efter körningen kommer med nästa månad.</p>
-                <p class="eko-text">Med schemat på går den av sig själv den 1:a varje månad, tidigt på morgonen, för förra månaden: underlaget är studiehjälparens lönespecifikation. Här körs den med din inloggning, för en månad som aldrig kördes eller en körning som inte gick. Gick körningen den 1:a inte står det under System → Fel i sex timmar, och en halvtimme efter körningen blir allt utom ett helt lyckat svar en uppgift.</p>
+              <details class="eko-mer kor-hand">
+                <summary>Köra den för hand</summary>
+                <p class="eko-text">Behövs bara för en natt som inte gick, eller en äldre månad som aldrig kördes. Skapa nu på en faktura gör samma sak för förra månaden. Torrkör visar vad som skulle skapas utan att skriva något, och Skapa utkast går bara efter den.</p>
+                <div class="adm-verktyg">
+                  <select class="sel" id="kor-period" data-kor-period aria-label="Vilken månad körningen gäller"></select>
+                  <button class="btn btn-ghost btn-sm" type="button" id="kor-torr" data-kor-torr>Torrkör</button>
+                  <button class="btn btn-primary btn-sm" type="button" id="kor-skapa" data-kor-skapa disabled>Skapa utkast</button>
+                </div>
+                <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
+                <div id="kor-resultat" data-kor-resultat aria-live="polite"></div>
+                <p class="eko-text">Alla genomförda och rapporterade pass samlas till ett underlag per studiehjälpare, det som betalas ut den 25:e, och varje familj som valt faktura får ett fakturautkast för månaden. Andra pass betalas med kort, i förväg eller när familjen bekräftar rapporten, och pass som hölls utan betalning räknas upp i körningen i stället för att faktureras. Ett pass som rapporteras efter körningen läggs på sin månads utkast natten efter, så länge det är ett utkast.</p>
+                <p class="eko-text">Med schemat på går den av sig själv varje natt för förra månaden: den 1:a skapar den underlagen och fakturautkasten, och resten av månaden lägger den till sena pass. Här körs den med din inloggning. Gick körningen inte står det under System → Fel i sex timmar, och en halvtimme efter körningen blir allt utom ett helt lyckat svar en uppgift.</p>
                 <p class="eko-text"><b>Skapa utkast</b> skriver underlagen och fakturorna som utkast. Ingenting skickas och ingenting betalas ut härifrån: underlaget skickas per studiehjälpare under Löner, och fakturan skickas från Fortnox.</p>
                 <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
                 <div class="sum-line"><span>Utbetalning</span><span class="adm-tal">den 25:e, från banken</span></div>
@@ -1243,7 +1254,8 @@
                 <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
                   Samlar månadens genomförda och rapporterade pass till ett underlag per
                   studiehjälpare, och skapar fakturautkasten för familjer som valt faktura.
-                  Kör alltid torrt först: den visar vad som skulle skapas utan att skriva något.
+                  Den går av sig själv varje natt för förra månaden; här behövs den bara för en
+                  natt som inte gick. Torrkör visar vad som skulle skapas utan att skriva något.
                   Ingenting skickas och ingenting betalas ut härifrån.
                 </p>
                 <div class="adm-verktyg">
@@ -2322,15 +2334,15 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=6d40e41d"></script>
-<script src="nextrum-admin-detalj.js?v=26bcc330"></script>
+<script src="nextrum-admin-detalj.js?v=01571fb4"></script>
 <script src="nextrum-admin-oversikt.js?v=dc6cbd26"></script>
 <script src="nextrum-admin-kunder.js?v=ca7c9b1f"></script>
 <script src="nextrum-admin-rekrytering.js?v=55f7755a"></script>
 <script src="nextrum-admin-bibliotek.js?v=cd94f16a"></script>
 <script src="nextrum-admin-kommunikation.js?v=a0deff07"></script>
 <script src="nextrum-admin-drift.js?v=a4c6e085"></script>
-<script src="nextrum-admin-ekonomi.js?v=85be2445"></script>
-<script src="nextrum-admin-manaden.js?v=7c5c8380"></script>
+<script src="nextrum-admin-ekonomi.js?v=02a67520"></script>
+<script src="nextrum-admin-manaden.js?v=445d6df4"></script>
 <script src="nextrum-admin-loner.js?v=d691f1a8"></script>
 <script src="nextrum-admin-tjanster.js?v=997de096"></script>
 <script src="nextrum-admin-system.js?v=850d4673"></script>

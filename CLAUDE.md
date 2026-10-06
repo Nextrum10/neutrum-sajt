@@ -50,7 +50,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Betalningar, Månadens ekonomi och Löner** räknar på `betalningsrader()` och
   `NXBetalning.passpris`, så en månad har ett belopp; testbetalningar räknas aldrig. En månad
   skapas först när den är slut: `fakturering` nekar en som pågår med 409, och rutan låter bara
-  torrköra den (2026-10-01). Ett pass hör till EN lönemånad och EN faktura: sin egen månads
+  torrköra den (2026-10-01). En faktura är en rad per familj och månad (2026-10-06): månadens
+  samlas bara i vyn, natten gör utkastet, och Skapa nu kör förra månaden, aldrig en annan. Ett pass hör till EN lönemånad och EN faktura: sin egen månads
   så länge den är ett utkast, och körningen går varje natt och lägger sena pass där
   (`malmanad`, `NXBetalning.lonemanad`); Godkänd och Lagd i Fortnox sparas bara om beloppet är
   det som visades. PAXml tar bara godkända, inte

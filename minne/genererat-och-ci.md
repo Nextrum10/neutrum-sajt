@@ -255,6 +255,15 @@ b6c1 från Fas 14.6 står bekräftat och obetalt, så sex prov för
 timmarna (22.1–22.3) föll i varje hel körning. Fixturerna ställs nu
 tillbaka överst i avsnittet för 22.1.
 
+### Webbläsarprovet för familjens faktura (2026-10-06)
+`verktyg/prova-fakturor.js` är byggt som de nedan (egen port, 8964), med
+klockan fast på 6 oktober 2026 (`page.clock.setFixedTime`): en rad per
+familj och månad under Betalningar → Fakturor, oktobers faktura som
+samlas och septembers utkast med det sena passet, att familjens namn
+fäller ut passen med dag, klocka och studiehjälpare, att Skapa nu torrkör
+i bakgrunden och visar vad innan det skarpa anropet, familjens panel,
+Månadens ekonomi, en telefon, och samma rader med schemat av.
+
 ### Webbläsarprovet för ansökan under 18, nejet och det admin sett (2026-10-05)
 `verktyg/prova-ansokningar.js` är byggt som de två nedan (egen port, 8963):
 vårdnadshavarens fält i formuläret på båda språken och vad som skickas,
