@@ -454,6 +454,23 @@ Driftsättningen och det som är kvar, ur avsnitt 11:
   till studiehjälparna och familjerna med konto att vi kan läsa chatten
   (DATASKYDD.md avsnitt 8).
 
+## Det sajten lovar om studiehjälparna och formatet (2026-10-06)
+
+- **"Kontrollerade" och "verifierade" studiehjälpare** stod på fyra sidor
+  utan att säga vad kontrollen är, och en förälder läser in
+  belastningsregister i ordet. Bakgrundskontroller är inte byggda. Sidorna
+  säger nu det som sker: intervju, utbildning och ett prov.
+  Börjar ni begära utdrag ur belastningsregistret får sidorna säga det.
+- **Vem som får söka:** startsidan sa "du behöver inte studera för att
+  jobba här", medan Bli studiehjälpare, FAQ:n och formuläret säger
+  gymnasie- och högskolestudenter. Startsidan följer nu de andra. Ska
+  även den som tagit studenten och inte pluggar få söka är det ett
+  beslut, och då ändras alla ställena.
+- **Hemma eller online:** familjen väljer för varje pass; att ses hemma
+  förutsätter att matchningen ger någon som kan ta sig dit varje vecka,
+  annars börjar man online. Områdessidorna sa att formatet "avgörs av
+  matchningen, inte av adressen", och ämnessidorna att ni väljer.
+
 ## Tipsa en familj och affischerna (2026-09-30)
 
 Leo 2026-09-30, ur analysen samma dag: en värvningslänk för familjer och

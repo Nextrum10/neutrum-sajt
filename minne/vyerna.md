@@ -13,6 +13,9 @@ Hero är orörd med flit. Allt annat på startsidan bor i
 ingenting utan `html.nx-sr` — klassen sätts av skriptet, så en fil som
 inte laddar lämnar sidan i slutläget.
 
+Hero var orörd med flit fram till 2026-10-06; sedan dess är bara filmen
+och rubriken det (se Startsidan talar till föräldern nedan).
+
 **Hero-filmen spelar också på telefon** (2026-09-29, Leo: "heron rullar
 ej automatisk på mobil vy"). `heroVideo()` i `nextrum-motion.js` avstod
 förut på skärmar under 641 px för att spara data, och heron stod då
@@ -156,6 +159,43 @@ det ska vara det stora priset.
 `difflib` över hela taggsekvensen: lika många taggar och textnoder, samma
 attributnamn, och den enda skillnaden är språkväljaren. Baslinjen flyttade
 sig två taggar (de nya `<link>` i huvudet), inget annat.
+
+### Startsidan talar till föräldern (2026-10-06)
+
+En genomgång av sajten (Leo: "gör allt") visade att startsidan talade till
+den som söker jobb först: ingressen började med "första steg in i
+arbetslivet", nästa block var ett ensamt kort till blivande
+studiehjälpare, och priset och första timmen stod bara inne i demovyn.
+Den som betalar är en förälder. Ändrat, på båda språken:
+
+- **Heron.** Filmen och rubriken "Av unga, för unga." är orörda. Etiketten
+  säger "Läxhjälp i Stockholm" i stället för namnet (sökordet först på
+  sidan), ingressen börjar med läxhjälpen, och under knapparna står pris,
+  första timmen, svar inom 24 timmar och ingen bindningstid. Priset är en
+  `data-stat="pris-inline"`, så startsidan anropar nu `NX.initPris()`.
+  Raden är `.nx-hero-fakta`: `li` är ett block och pricken en
+  inline-block, för som flex fick priset och resten av meningen var sin
+  cell med glapp emellan. Etiketten är mindre och `nowrap`: "Läxhjälp i
+  Stockholm" är tre gånger så långt som "Nextrum" och bröts på en telefon.
+- **Ämnesraden** ersätter det ensamma kortet under manifestet: matte,
+  svenska, engelska, NO, online och priser som `.nx-omr-kort`, och
+  stadiesidorna som länkar i ingressen. Startsidan länkade förut till
+  ämnessidorna bara från sidfoten. `.nx-omr-kort > b` och `> span` är
+  barnselektorer sedan dess: Priser-kortets rad bär en egen span för
+  priset, och med `span{display:block}` hamnade den på en egen rad.
+- **Bort från startsidan:** de fyra numrerade hållpunkterna (de upprepade
+  heron och bandet, och "Resultat som märks" lovade det FAQ:n säger att vi
+  inte lovar) och "Vi bygger nästa generation tillsammans." Länken "Till
+  föräldravyn" ledde en ny besökare till en låst vy; den är "Se priserna".
+  `.nx-holdpunkter` och `.nx-statement` används kvar på menysidorna.
+- **Exempelkorten** står under "Så kan din studiehjälpare se ut." och
+  ingressen säger att korten med märket Exempel är exempel. Rubriken sa
+  "Möt några av våra studiehjälpare" medan databasen hade noll publika.
+  Ett fel i hämtningen visar inte längre `error.message` för en anonym
+  besökare (rå servertext bara i de inloggade vyerna).
+- **Prova NexLäx** står efter studievyn: se `minne/nexlax.md`.
+
+Startsidan är ungefär 700 px kortare på dator, trots NexLäx-rutan.
 
 ### Två fällor när en palett byts
 

@@ -636,6 +636,7 @@ const NX = (function () {
       const r = perKod[el.getAttribute('data-erb')];
       if (!r) { el.hidden = true; return; }
       const m = Number(r.giltig_manader);
+      el.setAttribute('data-erb-timmar', String(r.timmar));
       skriv(el, '[data-erb-pris]', kr(r.pris_ore / 100));
       skriv(el, '[data-erb-timpris]', kr(r.timpris_ore / 100));
       skriv(el, '[data-erb-rabatterat]', kr(r.rabatterat_timpris_ore / 100));
@@ -664,6 +665,58 @@ const NX = (function () {
       if (rabatter.size === 1) rabatt.textContent = [...rabatter][0];
       else rabatt.closest('.pr-erb-rabatt').hidden = true;
     });
+    document.dispatchEvent(new Event('nx:erbjudanden'));
+  }
+
+  /* ---------- räkna själv (2026-10-06) ----------
+     Prissidans kalkylator: barn i passet och timmar i veckan, fyra
+     veckor. Timpriset och tillägget är samma som initPris() skriver
+     (CFG), och planpriset läses ur planens eget kort, som
+     initErbjudanden() skriver om ur erbjudanden_pris. Den räknar alltså
+     aldrig fram ett planpris själv: en andra räkning här hade kunnat
+     lova en krona som kassan inte drar. Planerna gäller ett barn per
+     pass, så tipset visas bara för ett barn och bara när en plan har
+     just det antalet timmar i månaden. Texten står i sidan, inte här. */
+  function initKalkyl() {
+    const box = $('[data-kalk]');
+    if (!box) return;
+    const pris = Number(CFG.PRIS_PER_TIMME) || 0;
+    const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
+    const val = { barn: 1, tim: 1 };
+    const sätt = (sel, text) => $$(sel, box).forEach(x => { x.textContent = text; });
+
+    function räkna() {
+      const timmar = val.tim * 4;
+      const timpris = val.barn > 1 ? pris + extra : pris;
+      sätt('[data-kalk-summa]', kr(timmar * timpris));
+      sätt('[data-kalk-timmar]', String(timmar));
+      sätt('[data-kalk-timpris]', kr(timpris));
+
+      const plan = val.barn === 1 && $$('.pr-erb-planer [data-erb]')
+        .find(el => !el.closest('[hidden]') && Number(el.getAttribute('data-erb-timmar')) === timmar);
+      const planTips = $('[data-kalk-tips="plan"]', box);
+      if (plan) {
+        const namn = $('.eyebrow', plan), planpris = $('[data-erb-pris]', plan), spar = $('[data-erb-spar]', plan);
+        sätt('[data-kalk-plannamn]', namn ? namn.textContent : '');
+        sätt('[data-kalk-planpris]', planpris ? planpris.textContent : '');
+        sätt('[data-kalk-planspar]', spar ? spar.textContent : '');
+      }
+      if (planTips) planTips.hidden = !plan;
+      const syskon = $('[data-kalk-tips="syskon"]', box);
+      if (syskon) syskon.hidden = val.barn < 2;
+    }
+
+    $$('[data-kalk-val]', box).forEach(grupp => {
+      grupp.addEventListener('click', e => {
+        const knapp = e.target.closest('button[data-v]');
+        if (!knapp) return;
+        val[grupp.getAttribute('data-kalk-val')] = Number(knapp.getAttribute('data-v'));
+        $$('button[data-v]', grupp).forEach(b => b.setAttribute('aria-pressed', String(b === knapp)));
+        räkna();
+      });
+    });
+    document.addEventListener('nx:erbjudanden', räkna);
+    räkna();
   }
 
   /* ============================================================
@@ -1244,7 +1297,7 @@ const NX = (function () {
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
-    initFaq, initPris, initErbjudanden, kopplaAnsökan, läsÅlder, märkInloggad,
+    initFaq, initPris, initErbjudanden, initKalkyl, kopplaAnsökan, läsÅlder, märkInloggad,
     källa, händelse, uppstart,
     bildIntoning, initVagval,
     /* hämtaTillganglighet stod här i Fas 14.0-grenen. Main tog bort

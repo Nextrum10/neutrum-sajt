@@ -51,8 +51,8 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=03f73911">
-<link rel="stylesheet" href="../nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=abbf3691">
+<link rel="stylesheet" href="../nextrum-start.css?v=0bd1e6f4">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -227,11 +227,10 @@
   </div>
 
   <div class="nx-hero-inne">
-    <span class="nx-et nx-hero-et">Nextrum</span>
+    <span class="nx-et nx-hero-et">Tutoring in Stockholm</span>
     <h1 class="nx-hero-rubrik">By young people,<br>for young people.</h1>
-    <p class="nx-hero-lede">We create opportunities for young people to take their first steps into working life. At
-      Nextrum you get the chance to work, grow and build experience — and at the same time we
-      offer personal tutoring for students who want to develop and reach their goals.</p>
+    <p class="nx-hero-lede">Personal tutoring at home or online, with a tutor who recently took the
+      same courses. And for the tutor: a first real job.</p>
 
     <!-- Två knappar, en per publik: familjen som vill ha läxhjälp och
          den unga som vill jobba. De ska inte behöva leta efter sin väg. -->
@@ -244,6 +243,14 @@
       </span>
       <a class="btn btn-hero-ghost btn-lg" href="/en/bli-studiehjalpare">Become a tutor</a>
     </div>
+    <!-- Det en förälder kom för, direkt under knapparna (2026-10-06).
+         Priset skrivs av initPris() ur nextrum-config.js. -->
+    <ul class="nx-hero-trust nx-hero-fakta">
+      <li><span data-stat="pris-inline">379 kr</span> an hour</li>
+      <li>The first hour on us</li>
+      <li>Reply within 24 hours</li>
+      <li>No minimum term</li>
+    </ul>
   </div>
 </section>
 
@@ -283,22 +290,20 @@
       </a>
     </div>
 
-    <!-- Samma tjänst sedd från andra hållet: varje pass är också ett
-         jobb. En spalt: nextrum.se visar bara läxhjälp tills en annan
-         tjänst är lanserad och aktiv i katalogen. -->
+    <!-- Ämnena, stadierna och priset (2026-10-06). Här stod ett kort
+         till den som söker jobb, ensamt i ett rutnät för flera; jobbet
+         har sitt eget mörka block längre ner. Startsidan länkade förut
+         till ämnessidorna bara från sidfoten. -->
     <div class="nx-ide-fot">
-      <span class="nx-et acc" data-stig>How we help young people</span>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:18px;max-width:54ch">Every session is also someone’s first job. At Nextrum, tutoring is a way into working life —
-        with pay, responsibility and experience that counts.</p>
-
-      <div class="nx-ide tva">
-        <div class="nx-ide-sp nx-bubbla" data-stig data-fördröj="2">
-          <span class="id-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg></span>
-          <h3>Tutoring</h3>
-          <p>As a tutor you help younger students with school. You decide when and how much you work,
-            and build experience in explaining, planning and taking responsibility for someone
-            else’s progress.</p>
-        </div>
+      <span class="nx-et acc" data-stig>We help with</span>
+      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:18px;max-width:58ch">For <a href="/laxhjalp-mellanstadiet" style="color:inherit;text-decoration:underline;text-underline-offset:3px">years 4–6</a>, <a href="/laxhjalp-hogstadiet" style="color:inherit;text-decoration:underline;text-underline-offset:3px">years 7–9</a> and <a href="/laxhjalp-gymnasiet" style="color:inherit;text-decoration:underline;text-underline-offset:3px">upper secondary</a>, at home in Stockholm or online. The same price whatever the subject.</p>
+      <div class="nx-omr-rutnat nx-amnesrad" data-stig data-fördröj="2" style="margin-top:clamp(24px,3vw,34px)">
+        <a class="nx-omr-kort" href="/laxhjalp-matematik"><b>Maths</b><span>Fractions, equations, functions and derivatives</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <a class="nx-omr-kort" href="/laxhjalp-svenska"><b>Swedish</b><span>Reading, essays and Swedish as a second language</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <a class="nx-omr-kort" href="/laxhjalp-engelska"><b>English</b><span>Vocabulary, grammar, essays and speaking</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <a class="nx-omr-kort" href="/laxhjalp-no"><b>Physics, chemistry and biology</b><span>Formulas, concepts and lab reports</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <a class="nx-omr-kort" href="/laxhjalp-online"><b>Online</b><span>The same tutor, plan and report through the screen</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <a class="nx-omr-kort" href="/en/priser"><b>Pricing</b><span><span data-stat="pris-inline">379 kr</span> an hour, the first hour on us</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
       </div>
     </div>
   </div>
@@ -376,45 +381,6 @@
   </div>
 </section>
 
-<!-- Fyra hållpunkter, numrerade 1–4 sedan 2026-09-25. Se den
-     svenska sidan. -->
-<section class="nx-wrap-bred nx-sek-s" aria-label="What Nextrum is built on">
-  <ul class="nx-holdpunkter" data-stig>
-    <li class="nx-bubbla">
-      <div class="hp-topp">
-        <span class="hp-nr" aria-hidden="true">1</span>
-        <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/></svg></span>
-      </div>
-      <h3>By young people, for young people</h3>
-      <p>Our tutors are young themselves and know what school is like today.</p>
-    </li>
-    <li class="nx-bubbla">
-      <div class="hp-topp">
-        <span class="hp-nr" aria-hidden="true">2</span>
-        <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h6M14 12h6"/><circle cx="12" cy="12" r="2.2"/><path d="M7 7.5v9M17 7.5v9"/></svg></span>
-      </div>
-      <h3>Personal matching</h3>
-      <p>We match the student on subject, level, need and personality.</p>
-    </li>
-    <li class="nx-bubbla">
-      <div class="hp-topp">
-        <span class="hp-nr" aria-hidden="true">3</span>
-        <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 7.5-7 8.8-4-1.3-7-4.2-7-8.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
-      </div>
-      <h3>Safe and simple</h3>
-      <p>We handle matching, booking, payment and follow-up.</p>
-    </li>
-    <li class="nx-bubbla">
-      <div class="hp-topp">
-        <span class="hp-nr" aria-hidden="true">4</span>
-        <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-5M12 19V8M17 19v-9"/></svg></span>
-      </div>
-      <h3>Results you notice</h3>
-      <p>The student gains understanding, confidence and study habits — not just help with today’s homework.</p>
-    </li>
-  </ul>
-</section>
-
 <!-- ==========================================================
      4 — STUDIEHJÄLPARNA (hämtas från Supabase)
      ========================================================== -->
@@ -428,11 +394,12 @@
   <div class="nx-wrap-bred">
   <div class="nx-head split" data-stig>
     <div>
-      <span class="nx-et acc">Some of the people who help</span>
-      <h2 class="nx-d2" style="margin-top:20px">Meet some of our tutors.</h2>
+      <span class="nx-et acc">What a card looks like</span>
+      <h2 class="nx-d2" style="margin-top:20px">What your tutor could look like.</h2>
     </div>
     <div class="nx-head-aside">
-      <p class="nx-lede">Our tutors are young, committed and recently took the same courses themselves. They know
+      <p class="nx-lede">The cards marked Example are just that: the real tutors appear here once they
+        are approved. All of them are young and recently took the same courses themselves. They know
         what it feels like to revise for a test, get stuck on a problem and try to understand
         something for the first time.</p>
     </div>
@@ -516,17 +483,13 @@
         <div class="dr-kort">
           <span class="dr-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M12 9.5v3.2M12 15.4v.1"/></svg></span>
           <b>Safety at every step</b>
-          <p>Vetted tutors, payment through Nextrum and follow-up after sessions.</p>
+          <p>Interviewed and trained tutors, payment through Nextrum and follow-up after sessions.</p>
         </div>
       </li>
     </ul>
   </div>
 
   <div class="nx-wrap-bred">
-    <div class="nx-statement">
-      <p data-ordfyll>We are building the next generation <em>together.</em></p>
-    </div>
-
     <div class="nx-cta-rad nx-cta-mitt" data-stig>
       <span class="nx-magnet">
         <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
@@ -534,7 +497,7 @@
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
       </span>
-      <a class="nx-lank" href="/foralder">To the parent view
+      <a class="nx-lank" href="/en/priser">See pricing
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
     </div>
@@ -778,6 +741,49 @@
 </section>
 
 <!-- ==========================================================
+     6b — PROVA NEXLÄX (2026-10-06)
+     Tre frågor ur ingenting: de är skrivna för just den här rutan och
+     står inte i banken. Bankens frågor går ut utan facit och rättas i
+     databasen; de här rättas i webbläsaren, och svaret står i
+     data-ratt (vilken knapp, räknat från 1). Inga XP räknas och
+     inget sparas, för XP:s regler står bara i intern.nexlax_*. All
+     text står här och inte i nextrum-start.js (provaNexlax), så den
+     följer med till /en/.
+     ========================================================== -->
+<section class="nx-wrap-bred nx-sek nx-prova" aria-labelledby="prova-t">
+  <div class="nx-head split" data-stig>
+    <div>
+      <span class="nx-et acc">Try NexLäx</span>
+      <h2 class="nx-d2" id="prova-t" style="margin-top:20px">Three questions,<br>no <em>account.</em></h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="nx-lede">Between sessions the student practises in NexLäx: short levels in every subject, with XP and badges. This is what a level feels like. The questions here are examples, and nothing is saved.</p>
+    </div>
+  </div>
+
+  <div class="nlp" data-nlp data-stig data-fördröj="1">
+    <div class="nlp-topp">
+      <span class="nlp-nr">Question <b data-nlp-nr>1</b> of 3</span>
+      <span class="nlp-bar" aria-hidden="true"><i data-nlp-bar></i></span>
+    </div>
+    <ol class="nlp-fragor">
+      <li class="nlp-fraga" data-ratt="2"><p class="nlp-q">What is 3/4 of 20?</p><div class="nlp-alt"><button type="button">12</button><button type="button">15</button><button type="button">16</button><button type="button">5</button></div></li>
+      <li class="nlp-fraga" data-ratt="2" hidden><p class="nlp-q">Round 4.56 to one decimal place.</p><div class="nlp-alt"><button type="button">4.5</button><button type="button">4.6</button><button type="button">5.0</button><button type="button">4.56</button></div></li>
+      <li class="nlp-fraga" data-ratt="1" hidden><p class="nlp-q">x + 7 = 12. What is x?</p><div class="nlp-alt"><button type="button">5</button><button type="button">19</button><button type="button">7</button><button type="button">12</button></div></li>
+    </ol>
+    <p class="nlp-besked" aria-live="polite"><span data-nlp-besked="ratt" hidden>Correct!</span><span data-nlp-besked="fel" hidden>Not quite. Try again.</span></p>
+    <div class="nlp-klar" data-nlp-klar hidden>
+      <b class="nlp-klar-rubrik">Level complete.</b>
+      <p>In NexLäx this unlocks the next level. The student gets their own track once you have been matched.</p>
+      <div class="nx-cta-rad">
+        <a class="btn btn-primary" href="/en/intresseanmalan">Get tutoring</a>
+        <button type="button" class="nlp-igen" data-nlp-igen>Start again</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
      7 — BILDVÄGGEN
      Redaktionell komposition, inte ett galleri. Bilderna
      förskjuts olika mycket när man scrollar förbi.
@@ -867,9 +873,8 @@
     <div class="nx-split-text">
       <span class="nx-et" data-stig>If you want to work with us</span>
       <h2 class="nx-d2" data-avslöj style="margin-top:20px">Want to help someone<br>else succeed?</h2>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:22px">If you are at upper-secondary school or university you can become a tutor with us — and you
-        do not have to be studying to work here. If you have finished school and are looking for
-        work you are just as welcome. You help younger students with school, earn your own money
+      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:22px">If you are at upper-secondary school or university you can become a tutor with us. You help
+        younger students with school, earn your own money
         and build experience that genuinely belongs on a CV.</p>
 
       <ul class="nx-punkter" data-stig data-fördröj="2">
@@ -1120,16 +1125,16 @@
 <script src="../nextrum-config.js?v=fdfed591"></script>
 <script src="../nextrum-images.js?v=c4a90ffa"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=5a31edc0"></script>
+<script src="../nextrum-app.js?v=e2e42d6b"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
 <!-- Startsidans rörelse. Startar av sig självt, så att inget
      anrop här nere kan kasta om filen saknas. -->
-<script src="../nextrum-start.js?v=c489fcd4"></script>
+<script src="../nextrum-start.js?v=1deb6831"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=3ac82b1c"></script>
+<script src="../nextrum-maskot-svar.js?v=a6de3c2d"></script>
 <script src="../nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {
@@ -1146,6 +1151,7 @@
   NXFin.allt();         /* header, radavslöjning, magnetknappar, parallax, markör */
   NX.initVagval();      /* vyväljaren bakom "Logga in" */
   NX.bildIntoning();    /* de foton som ligger i markupen */
+  NX.initPris();        /* priset i heron och i ämnesraden */
 
   /* ==========================================================
      SÅ FUNGERAR NEXTRUM
@@ -1318,7 +1324,7 @@
     if (error) {
       host.innerHTML = '<div class="nx-empty" style="grid-column:1/-1">'
         + '<b>Could not load tutors right now.</b>'
-        + '<p class="xsmall" style="margin-top:8px">' + esc(error.message) + '</p></div>';
+        + '<p class="xsmall" style="margin-top:8px">Try again in a moment, or email info@nextrum.se.</p></div>';
       return;
     }
 

@@ -17,6 +17,7 @@
      sidhuvud       lapparna på menysidornas foto fjädrar in
      stegFoton      Så fungerar Nextrum på menysidan: samma pinnade
                     scen som startsidans, med fotona i markupen
+     provaNexlax    Prova NexLäx: tre frågor utan konto, rättas här
 
    MENYSIDORNA LADDAR OCKSÅ FILEN (2026-10-06): Vår idé, Så fungerar
    Nextrum, För elever & föräldrar, Bli studiehjälpare, Priser och
@@ -729,6 +730,58 @@ const NXStart = (function () {
     });
   }
 
+  /* ============================================================
+     PROVA NEXLÄX (2026-10-06)
+     Tre frågor på startsidan, utan konto. Rätt knapp står i
+     data-ratt (räknat från 1) på frågan; ett rätt svar visar beskedet,
+     fyller stapeln och går vidare, ett fel låser den knappen. Inget
+     sparas och inga XP räknas: XP:s regler står bara i
+     intern.nexlax_*. Texten står i sidan, på båda språken.
+     ============================================================ */
+  function provaNexlax() {
+    $$('[data-nlp]').forEach(box => {
+      const frågor = $$('.nlp-fraga', box);
+      const nr = $('[data-nlp-nr]', box), stapel = $('[data-nlp-bar]', box);
+      const klar = $('[data-nlp-klar]', box), igen = $('[data-nlp-igen]', box);
+      const besked = typ => $$('[data-nlp-besked]', box)
+        .forEach(el => { el.hidden = el.getAttribute('data-nlp-besked') !== typ; });
+      const fyll = andel => { if (stapel) stapel.style.transform = 'scaleX(' + andel + ')'; };
+      let låst = false;
+
+      function visa(n) {
+        låst = false;
+        frågor.forEach((f, k) => { f.hidden = k !== n; });
+        $$('.nlp-alt button', box).forEach(b => { b.classList.remove('ratt', 'fel'); b.disabled = false; });
+        if (nr) nr.textContent = String(n + 1);
+        besked(null);
+      }
+
+      frågor.forEach((f, k) => {
+        const rätt = Number(f.getAttribute('data-ratt'));
+        $$('.nlp-alt button', f).forEach((b, j) => b.addEventListener('click', () => {
+          if (låst || b.disabled) return;
+          if (j + 1 !== rätt) { b.classList.add('fel'); b.disabled = true; besked('fel'); return; }
+          låst = true;
+          b.classList.add('ratt');
+          besked('ratt');
+          fyll((k + 1) / frågor.length);
+          setTimeout(() => {
+            if (k + 1 < frågor.length) { visa(k + 1); return; }
+            f.hidden = true;
+            besked(null);
+            if (klar) klar.hidden = false;
+          }, 750);
+        }));
+      });
+
+      if (igen) igen.addEventListener('click', () => {
+        if (klar) klar.hidden = true;
+        fyll(0);
+        visa(0);
+      });
+    });
+  }
+
   function allt() {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
@@ -740,6 +793,7 @@ const NXStart = (function () {
     prova('studievy', studievy);
     prova('sidhuvud', sidhuvud);
     prova('stegFoton', stegFoton);
+    prova('provaNexlax', provaNexlax);
   }
 
   allt();
