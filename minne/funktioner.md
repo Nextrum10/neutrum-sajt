@@ -117,12 +117,14 @@ en barntoken med fel signatur; `notis-ko` svarar 401 utan hemlighet, så
 hela dess modulgraf laddar. En molnsession når inte `*.supabase.co`
 (nätpolicyn), så anropen gick från databasen med tillägget `http` i en
 transaktion som rullades tillbaka.
-Kvar i driften, utan betydelse i sak: `ansokan-notis`, `faktura-utskick`,
+Kvar i driften, utan betydelse i sak: `faktura-utskick`,
 `generate-feedback`, `generate-message` och `lead-notis` bär
 `notiser/typer.ts` från 2026-09-30, utan barnets typer och `kod`, och
 `stripe-checkout` bär `_delad/pris.ts` utan faktureringens tillägg (den
 importerar bara prisfunktionerna). Driftsätts de av annat skäl följer
-mains kopior med.
+mains kopior med. `ansokan-notis` driftsattes 2026-10-06 som v7 från main
+(c5e5fe1), med nejet och mejlet till vårdnadshavaren, och lästes tillbaka:
+alla tretton filer är byte för byte som main.
 
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
