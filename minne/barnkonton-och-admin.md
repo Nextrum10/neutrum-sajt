@@ -352,6 +352,13 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
     klickbara länkar. Det står i barnets och studiehjälparens ruta att
     föräldern och Nextrum kan läsa; ta inte bort det.
   - Prövat i `rls-test.sql` avsnitt 21 och i `prova-barnkonton.js`.
+  - I drift 2026-10-06, samma kväll som PR #203 mergades: migrationen kördes
+    avsnitt för avsnitt med `execute_sql`, filens text hämtades till
+    `schema_migrations` med `http` från merge-commiten (samma md5 som i git),
+    de elva funktionskropparna har samma md5 som filen, och hela
+    `rls-test.sql` från merge-commiten gick igenom mot driften, 1393 av
+    1393, i ett block som slutade med ett avsiktligt fel så att allt
+    rullades tillbaka (resultatet står i felmeddelandet). Inget blev kvar.
 - **Elev i rollvalet (2026-10-06).** Inloggningen i studievyn och i
   studiehjälparvyn har tre kort: Förälder, Elev och Studiehjälpare; det
   förra "Förälder eller elev" heter Förälder. Först ledde Elev till `/barn`;
