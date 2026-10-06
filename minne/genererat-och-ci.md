@@ -274,6 +274,12 @@ md5, tar bort raden `begin;`, slutraden och `rollback;`, och kör dem
 med `execute`. Sist `select … from utfall` och `rollback;`, som tar
 tillägget med sig. Så provades Fas 22.4: hela filen med migrationen,
 och utan den, mot driften, utan att något blev kvar.
+Enklare sedan 2026-10-06 (barnets_chatt): ett enda do-block utan `begin;`
+och `rollback;`, som hämtar filen med `extensions.http_get`, prövar md5,
+tar bort filens `begin;`, slutraden och `rollback;`, kör den med
+`execute`, räknar `utfall` och slutar med `raise exception 'RESULTAT % av
+% gröna. FEL: %'`. Felet rullar tillbaka allt, tillägget behöver inte
+skapas (det står i `extensions`), och svaret står i felmeddelandet.
 
 **Kör hela filen, inte bara ditt eget avsnitt.** 2026-09-27 hade den
 varit röd sedan förmiddagen utan att någon sett det, för varje session

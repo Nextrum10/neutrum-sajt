@@ -485,9 +485,11 @@ Detaljer: `minne/grunden.md`.
   funktionerna gick ut samma dag, och flaggan `barn_epost` står av tills juristen läst policyn,
   registrets rad 22 och konsekvensbedömningen; sedan ett prov i sandlådan
   (`DEPLOY-BARNKONTON.md` 8). Adminvyn visar inte barnens inloggningar, och inte adressen.
-- **Barnets chatt och elevvyns fem delar** (2026-10-06): migrationen `barnets_chatt` körs efter
-  merge och är då på, utan flagga (Leos val). Juristen har inte läst rad 23 i `DATASKYDD.md`, och
-  familjerna med barnkonto och studiehjälparna har inte fått veta (avsnitt 8 där).
+- **Barnets chatt och elevvyns fem delar** (2026-10-06) är i drift och på sedan samma kväll, utan
+  flagga (Leos val): `barnets_chatt` kördes efter merge av PR #203, med filens version och md5, och
+  hela `rls-test.sql` gick igenom mot driften (1393 av 1393, tillbakarullat). Juristen har inte läst
+  rad 23 i `DATASKYDD.md`, och familjerna med barnkonto och studiehjälparna har inte fått veta
+  (avsnitt 8 där).
 - **Under 18, nejet och det admin sett** (2026-10-05) är i drift sedan 2026-10-06: migrationerna
   `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Inget riktigt
   nej eller mejl till en vårdnadshavare har gått än. Policytexten om vårdnadshavaren är inte läst av
