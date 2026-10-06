@@ -876,6 +876,16 @@ body .mobile-menu{display:block}
 .nx-hero-et::before,.nx-hero-et::after{
   content:"";width:clamp(26px,3vw,42px);height:1px;background:currentColor;opacity:.55;flex:none;
 }
+/* Sedan 2026-10-06 står "Läxhjälp i Stockholm" här i stället för namnet:
+   sökordet först på sidan. Tre gånger så många tecken som "Nextrum", så
+   etiketten är mindre och bryts aldrig på en telefon (mätt på 320 px). */
+.nx-hero-film .nx-hero-et{font-size:clamp(12px,1.9vw,24px);letter-spacing:.18em;white-space:nowrap}
+.nx-hero-fakta{justify-content:center;margin-top:clamp(22px,2.6vw,30px);color:var(--nt-mut)}
+/* Raden bär ett pris i en egen span, så li är ett block och pricken
+   en inline-block: som flex fick priset och resten av meningen var sin
+   cell med glapp emellan. */
+.nx-hero-fakta li{display:block}
+.nx-hero-fakta li::before{display:inline-block;vertical-align:middle;margin:-2px 8px 0 0;background:var(--ockra-l)}
 .nx-hero-rubrik{
   margin-top:clamp(20px,2.6vw,30px);
   font-size:clamp(3rem,9.2vw,7.4rem);
@@ -3087,8 +3097,11 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   grid-template-columns:repeat(auto-fit,minmax(255px,1fr));
   gap:12px;
 }
+/* Rubriken ovanför raden, pilen i en egen spalt. Som flex stod <b> och
+   <span> bredvid varandra, och "Läxhjälp i svenska" bröts i tre rader
+   bredvid sin egen beskrivning på en dator. */
 .nx-omr-kort{
-  display:flex;align-items:center;gap:14px;
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:14px;
   padding:18px 20px;
   border:1px solid var(--line);border-radius:18px;
   background:var(--surface);
@@ -3100,15 +3113,18 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   background:var(--surface-2);
   transform:translateY(-2px);
 }
-.nx-omr-kort b{
+.nx-omr-kort > b{
   display:block;font-size:.98rem;font-weight:700;letter-spacing:-.015em;
 }
-.nx-omr-kort span{
+/* Barnet, inte varje span: ett pris i raden är en egen span
+   (data-stat), och den ska stå kvar i meningen. */
+.nx-omr-kort > span{
   display:block;margin-top:4px;
   font-size:.79rem;line-height:1.45;color:var(--muted-2);
 }
 .nx-omr-kort > svg{
-  flex:none;width:16px;height:16px;margin-left:auto;
+  grid-column:2;grid-row:1 / span 2;
+  width:16px;height:16px;
   color:var(--muted-2);
 }
 .nx-omr-kort:hover > svg{color:var(--acc)}
@@ -3116,8 +3132,8 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 /* Pilen ska inte glida ut ur kortet på en telefon, och rubriken
    ska få hela bredden. */
 @media (max-width:420px){
-  .nx-omr-kort{padding:16px 17px;gap:11px}
-  .nx-omr-kort b{font-size:.92rem}
+  .nx-omr-kort{padding:16px 17px;column-gap:11px}
+  .nx-omr-kort > b{font-size:.92rem}
 }
 
 /* ============================================================
@@ -3323,3 +3339,34 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-kakor-panel .nx-kakor-knappar .nx-kakor-val{background:var(--pap)}
 .nx-kakor-panel .nx-kakor-syfte{background:var(--pap)}
 .nx-kakor-panel .nx-kakor-knappar .nx-kakor-val:hover{background:var(--pap-3)}
+
+/* ============================================================
+   RÄKNA SJÄLV (prissidan, 2026-10-06)
+
+   Valen till vänster, svaret till höger, en spalt på en telefon.
+   Märkena är knappar med aria-pressed; det tryckta läget animeras
+   inte, bara trycket (scale), som i vyerna. Tryckytorna är minst
+   48 px höga.
+   ============================================================ */
+.pr-kalk-kort{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:clamp(26px,4vw,56px);align-items:start;margin-top:clamp(24px,3vw,34px);
+}
+.pr-kalk-val{display:grid;gap:26px}
+.pr-kalk-falt{display:grid;gap:10px}
+.pr-kalk-etikett{font-size:.86rem;font-weight:600}
+.pr-kalk-chips{display:flex;flex-wrap:wrap;gap:8px}
+.pr-kalk-chips button{
+  font:inherit;font-weight:600;min-width:56px;min-height:48px;padding:0 18px;
+  border-radius:999px;border:1px solid var(--ln);background:transparent;color:inherit;
+  cursor:pointer;transition:scale .15s var(--ease);
+}
+.pr-kalk-chips button:hover{border-color:var(--acc)}
+.pr-kalk-chips button:active{scale:.96}
+.pr-kalk-chips button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.pr-kalk-svar{display:grid;gap:10px;min-width:0}
+.pr-kalk-summa{font-size:clamp(2.4rem,5vw,3.4rem);font-weight:800;letter-spacing:-.04em;line-height:1}
+.pr-kalk-rad{color:var(--muted-2);font-size:.92rem}
+.pr-kalk-tips{font-size:.92rem;background:var(--mossa-soft);color:var(--mossa-text);border-radius:14px;padding:11px 14px}
+.pr-kalk-not{font-size:.84rem;color:var(--muted-2)}
+@media (max-width:760px){.pr-kalk-kort{grid-template-columns:minmax(0,1fr)}}

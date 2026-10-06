@@ -437,6 +437,33 @@ då ska lönespecen här säga var det finns i stället för att räkna själv.
 
 ---
 
+## Prissidans kalkylator och finstilen (2026-10-06)
+
+**Räkna själv** på prissidan: barn i passet (1–3) och timmar i veckan
+(1–3), fyra veckor. Timpriset och tillägget kommer ur `CFG` som i
+`initPris()`, och två och tre barn kostar lika mycket. Planens pris räknas
+ALDRIG här: `initKalkyl()` läser det ur planens eget kort, som
+`initErbjudanden()` skriver om ur `erbjudanden_pris`, och hittar planen
+genom `data-erb-timmar` (står i HTML som reserv, skrivs om ur svaret).
+Tipset visas bara för ett barn, för timmarna betalar ett barn per pass,
+och bara när en plan har just så många timmar i månaden. När svaret
+kommit skickar `initErbjudanden()` händelsen `nx:erbjudanden`, och
+kalkylatorn räknar om. Är erbjudandena avstängda (tomt svar) döljs
+sektionen, och då visas inget tips.
+
+Samma dag i finstilen och FAQ:n:
+
+- **"Får vi en faktura?"** svarade "Nej, i dag betalar ni med kort", i
+  FAQ-märkningen också, fast fakturan är på. Svaret säger nu ja och hänvisar
+  till betalningssvaret ovan för betalningstiden: att skriva
+  fakturameningen en gång till hade gett `kolla-betalningsvillkor.py` fler
+  fakturameningar än kortmeningar på sidan.
+- **Ångerrätten** står i erbjudandenas finstil: ångrar man köpet inom 14
+  dagar räknas de använda timmarna till det pris man betalade, inte till
+  ordinarie.
+- "priset du ser är hela kostnaden" krockade med att tiden debiteras per
+  påbörjad kvart; nu "ni betalar bara timpriset för den tid passen pågår".
+
 ## 11. Vad som inte är byggt: betalningen
 
 - **Obetalda pass på månadens faktura av sig själva** (beslutat

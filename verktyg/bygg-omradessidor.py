@@ -2,8 +2,9 @@
 """Bygger områdessidorna och ämnessidorna.
 
 Sex stadsdelssidor (/laxhjalp-farsta …), fyra ämnessidor
-(/laxhjalp-matematik, -svenska, -engelska, -no), /laxhjalp-online och
-guiderna. Navet,
+(/laxhjalp-matematik, -svenska, -engelska, -no), tre stadiesidor
+(/laxhjalp-mellanstadiet, -hogstadiet, -gymnasiet), /laxhjalp-online,
+guiderna och 404.html. Navet,
 /laxhjalp-stockholm, är handskrivet men får sina ämneskort härifrån.
 Kör verktyg/bygg-sitemap.py och sist verktyg/satt-version.py efteråt.
 
@@ -136,14 +137,15 @@ OMRADEN = [
         'nav': 'Södermalm',
         'titel': 'Läxhjälp på Södermalm — hemma hos er eller online | Nextrum',
         'beskrivning': (
-            'Läxhjälp på Södermalm med unga studiehjälpare som nyligen läst samma kurser. '
-            f'Hemma hos er eller online, {PRIS} i timmen, ingen bindningstid.'
+            'Läxhjälp på Södermalm, från Hornstull till Skanstull: hemma hos er, på biblioteket '
+            f'eller online. Unga studiehjälpare, {PRIS} i timmen, ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp på Södermalm',
         'h1': 'Läxhjälp på<br><em>Södermalm.</em>',
         'lede': (
-            'Vi matchar elever på Södermalm med en studiehjälpare som nyligen läst samma '
-            'kurser själv. Passen sker hemma hos er eller online.'
+            'Från Hornstull till Skanstull. Vi matchar elever på Södermalm med en '
+            'studiehjälpare som nyligen läst samma kurser själv, och passen hålls hemma hos er, '
+            'på biblioteket eller online.'
         ),
         'bild': '01-en-till-en',
         'tint': '#ACA193',
@@ -153,22 +155,28 @@ OMRADEN = [
             'Slussen', 'Katarina', 'Sofia', 'Åsö', 'Tanto', 'Reimersholme', 'Långholmen',
         ],
         'transport': (
-            'Södermalm är den enklaste delen av stan att ta sig till: röda och gröna linjen '
-            'går genom hela ön, och de flesta adresser ligger inom tio minuters promenad från '
-            'Slussen, Medborgarplatsen, Mariatorget, Zinkensdamm, Hornstull eller Skanstull. '
-            'Det gör att ett pass hemma hos er sällan är en resefråga.'
+            'Röda och gröna linjen går genom hela ön, med stationer vid Slussen, Mariatorget, '
+            'Zinkensdamm och Hornstull på den röda och Medborgarplatsen och Skanstull på den '
+            'gröna. En studiehjälpare som bor längs någon av linjerna når er utan byten, och '
+            'då blir ett pass hemma hos er sällan en resefråga.'
         ),
+        'bibliotek': ['Hornstulls bibliotek', 'Tranströmerbiblioteket vid Medborgarplatsen'],
         'faq': [
             ('Kommer ni hem till oss på Södermalm?',
-             'Ja, när matchningen ger en studiehjälpare som kan ta sig hit. Södermalm är väl '
-             'täckt av tunnelbanan, så det brukar gå. Kan vi inte lösa det börjar ni online.'),
+             'Ja, när matchningen ger en studiehjälpare som kan ta sig hit varje vecka. '
+             'Södermalm har tunnelbana på båda linjerna, så restiden är sällan problemet. Går '
+             'det inte börjar ni online.'),
             ('Vilka ämnen och årskurser gäller det?',
-             'Grundskola och gymnasium, och samma timpris oavsett ämne. Matematik är det '
-             'vanligaste, men studiehjälparen väljs efter ämnet eleven behöver hjälp med — '
-             'inte tvärtom.'),
+             'Hela grundskolan och gymnasiet, och samma timpris oavsett ämne. Studiehjälparen '
+             'väljs efter ämnet och nivån eleven behöver hjälp med, inte tvärtom.'),
             ('Hur snabbt kan vi komma igång?',
-             'Ni skickar en intresseanmälan, vi går igenom behovet med er och väljer sedan ut '
-             'en studiehjälpare. Att fråga kostar ingenting och binder er inte till något.'),
+             'Vi hör av oss inom 24 timmar efter intresseanmälan och går igenom behovet. Hur '
+             'snart första passet blir av beror på när vi hittar rätt person, och det säger vi '
+             'när vi har pratats vid. Att fråga kostar ingenting.'),
+            ('Kan vi ses på biblioteket i stället för hemma?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Hornstulls bibliotek eller '
+             'Tranströmerbiblioteket vid Medborgarplatsen. Det passar den som vill ha lugn och '
+             'ro men inte besök hemma.'),
         ],
     },
     {
@@ -178,14 +186,15 @@ OMRADEN = [
         'nav': 'Farsta',
         'titel': 'Läxhjälp i Farsta — hemma hos er eller online | Nextrum',
         'beskrivning': (
-            'Läxhjälp i Farsta med unga studiehjälpare som nyligen läst samma kurser. '
-            f'Hemma hos er eller online, {PRIS} i timmen, ingen bindningstid.'
+            'Läxhjälp i Farsta, Hökarängen och Gubbängen: hemma hos er, på Farsta bibliotek '
+            f'eller online. Unga studiehjälpare, {PRIS} i timmen, ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Farsta',
         'h1': 'Läxhjälp i<br><em>Farsta.</em>',
         'lede': (
-            'Vi matchar elever i Farsta med en studiehjälpare som nyligen läst samma kurser '
-            'själv. Passen sker hemma hos er eller online.'
+            'Längs gröna linjen från Gubbängen till Farsta strand. Vi matchar elever i Farsta '
+            'med en studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på '
+            'biblioteket eller online.'
         ),
         'bild': '06-forklaringen',
         'tint': '#9A8E79',
@@ -201,6 +210,7 @@ OMRADEN = [
             'byten, vilket är skillnaden mellan ett pass som blir av varje vecka och ett som '
             'inte gör det.'
         ),
+        'bibliotek': ['Farsta bibliotek i Kulturhuset Fanfaren i Farsta centrum'],
         'faq': [
             ('Täcker ni hela Farsta?',
              'Vi matchar elever i Farsta centrum, Farsta strand, Hökarängen, Gubbängen, '
@@ -214,6 +224,9 @@ OMRADEN = [
              f'{PRIS} i timmen, plus {EXTRA_BARN} i timmen om syskon sitter med i samma pass — '
              'samma tillägg upp till tre barn. Ingen bindningstid och ingen månadsavgift. '
              'Se prissidan för vad som ingår.'),
+            ('Kan passen hållas på Farsta bibliotek?',
+             'Ja. Skriv platsen när ni föreslår tiden. Biblioteket ligger i Kulturhuset Fanfaren '
+             'i Farsta centrum, så en studiehjälpare som åker gröna linjen har inte långt dit.'),
         ],
     },
     {
@@ -223,14 +236,15 @@ OMRADEN = [
         'nav': 'Nacka',
         'titel': 'Läxhjälp i Nacka — hemma hos er eller online | Nextrum',
         'beskrivning': (
-            'Läxhjälp i Nacka med unga studiehjälpare som nyligen läst samma kurser. '
-            f'Hemma hos er eller online, {PRIS} i timmen, ingen bindningstid.'
+            'Läxhjälp i Nacka, från Sickla till Orminge och Saltsjöbaden: hemma hos er, på '
+            f'biblioteket eller online. {PRIS} i timmen, ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Nacka',
         'h1': 'Läxhjälp i<br><em>Nacka.</em>',
         'lede': (
-            'Vi matchar elever i Nacka med en studiehjälpare som nyligen läst samma kurser '
-            'själv. Passen sker hemma hos er eller online.'
+            'Från Sickla till Orminge. Vi matchar elever i Nacka med en studiehjälpare som '
+            'nyligen läst samma kurser själv, och längre ut är online ofta det som gör att '
+            'passen blir av varje vecka.'
         ),
         'bild': '12-pa-vag',
         'tint': '#73746C',
@@ -240,12 +254,13 @@ OMRADEN = [
             'Saltsjöbaden', 'Fisksätra', 'Älta', 'Saltsjö-Duvnäs',
         ],
         'transport': (
-            'Nacka nås med Saltsjöbanan från Slussen, med tvärbanan till Sickla, och med '
-            'bussarna över Danvikstull. Sickla, Finntorp och Järla ligger nära nog att räknas '
+            'Nacka nås med tvärbanan till Sickla och med bussarna från Slussen över '
+            'Danvikstull. Sickla, Finntorp och Järla ligger nära nog att räknas '
             'som en förlängning av Södermalm restidsmässigt; Orminge, Boo och Saltsjöbaden är '
             'en längre resa, och där är online ofta det som gör att passen blir av varje vecka '
             'i stället för ibland.'
         ),
+        'bibliotek': ['Nacka Forum bibliotek', 'Dieselverkstadens bibliotek i Sickla'],
         'faq': [
             ('Tar ni pass i hela Nacka kommun?',
              'Vi matchar elever i Sickla, Finntorp, Järla, Ektorp, Orminge, Boo, Saltsjöbaden, '
@@ -259,6 +274,9 @@ OMRADEN = [
              f'Ja. Tillägget är {EXTRA_BARN} i timmen totalt och gäller upp till tre barn, så två '
              f'barn en timme blir {FLERA_BARN} — och tre barn kostar lika mycket. Det förutsätter '
              'att de kan arbeta med ungefär samma sak.'),
+            ('Kan vi ses på biblioteket i stället?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Nacka Forum bibliotek eller '
+             'Dieselverkstadens bibliotek i Sickla, som båda ligger nära tvärbanan eller bussarna.'),
         ],
     },
     {
@@ -268,14 +286,15 @@ OMRADEN = [
         'nav': 'Hammarby Sjöstad',
         'titel': 'Läxhjälp i Hammarby Sjöstad — hemma hos er eller online | Nextrum',
         'beskrivning': (
-            'Läxhjälp i Hammarby Sjöstad med unga studiehjälpare som nyligen läst samma kurser. '
-            f'Hemma hos er eller online, {PRIS} i timmen, ingen bindningstid.'
+            'Läxhjälp i Hammarby Sjöstad, Sickla och Hammarbyhöjden: hemma hos er, på '
+            f'LUMA-biblioteket eller online. {PRIS} i timmen, ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Hammarby Sjöstad',
         'h1': 'Läxhjälp i<br><em>Hammarby Sjöstad.</em>',
         'lede': (
-            'Vi matchar elever i Hammarby Sjöstad med en studiehjälpare som nyligen läst samma '
-            'kurser själv. Passen sker hemma hos er eller online.'
+            'Längs tvärbanan från Luma till Sickla udde. Vi matchar elever i Hammarby Sjöstad '
+            'med en studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på '
+            'biblioteket eller online.'
         ),
         'bild': '13-kvallsplugg',
         'tint': '#453B28',
@@ -285,24 +304,29 @@ OMRADEN = [
             'Sjöstadsparterren', 'Hammarbyhöjden', 'Hammarby Allé',
         ],
         'transport': (
-            'Tvärbanan går genom hela Sjöstaden, och till Södermalm är det Hammarbyslussen '
-            'eller bussen. Det gör området till ett av de enklare att ta sig till på kvällstid, '
-            'vilket är när läxhjälp faktiskt sker — efter skolan, före middagen.'
+            'Tvärbanan går genom hela Sjöstaden, från Gullmarsplan, där gröna linjen stannar, '
+            'via Luma och Sickla kaj till Sickla udde. En studiehjälpare som åker gröna linjen '
+            'byter alltså en gång och är framme, också en vardagseftermiddag när läxhjälpen '
+            'faktiskt sker.'
         ),
+        'bibliotek': ['LUMA-biblioteket'],
         'faq': [
             ('Vilka delar av Sjöstaden gäller det?',
              'Sickla Udde, Sickla Kaj, Lumaparken, Lugnet, Henriksdal och Sjöstadsparterren, och '
              'Hammarbyhöjden strax intill. Om passet sker hemma hos er eller online avgörs av '
              'matchningen.'),
             ('Hur sent på kvällen går det att boka?',
-             'Ni föreslår en tid mellan sju på morgonen och tio på kvällen, och '
-             'studiehjälparen accepterar den eller föreslår en annan. Eftersom '
-             'studiehjälparna är gymnasie- och högskolestudenter blir det oftast '
-             'eftermiddagar och kvällar.'),
+             'Ni föreslår en tid mellan elva och tio på kvällen på vardagar, och mellan nio '
+             'och tio på kvällen på helger, och studiehjälparen accepterar den eller föreslår '
+             'en annan. Eftersom studiehjälparna går i skolan eller pluggar själva blir det '
+             'oftast eftermiddagar och kvällar.'),
             ('Hur vet vi vad som hände på passet?',
              'Studiehjälparen skriver en rapport efteråt: vad ni gick igenom, hur det gick och '
              'vad som är nästa steg. Ett pass räknas som genomfört först när rapporten är '
              'skriven. Både elev och förälder ser samma rapport i studievyn.'),
+            ('Kan vi ses på LUMA-biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden. Biblioteket ligger mitt i Sjöstaden, '
+             'nära tvärbanans hållplats Luma.'),
         ],
     },
     {
@@ -312,14 +336,14 @@ OMRADEN = [
         'nav': 'Bromma',
         'titel': 'Läxhjälp i Bromma — hemma hos er eller online | Nextrum',
         'beskrivning': (
-            'Läxhjälp i Bromma med unga studiehjälpare som nyligen läst samma kurser. '
-            f'Hemma hos er eller online, {PRIS} i timmen, ingen bindningstid.'
+            'Läxhjälp i Bromma, från Alvik till Nockeby: hemma hos er, på Brommaplans '
+            f'bibliotek eller online. {PRIS} i timmen, ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Bromma',
         'h1': 'Läxhjälp i<br><em>Bromma.</em>',
         'lede': (
-            'Vi matchar elever i Bromma med en studiehjälpare som nyligen läst samma kurser '
-            'själv. Passen sker hemma hos er eller online.'
+            'Från Alvik till Nockeby. Vi matchar elever i Bromma med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
         'bild': '10-forsta-motet',
         'tint': '#948979',
@@ -329,11 +353,12 @@ OMRADEN = [
             'Höglandet', 'Nockeby', 'Bromma Kyrka', 'Riksby', 'Ulvsunda', 'Mariehäll',
         ],
         'transport': (
-            'Gröna linjen går till Alvik, Abrahamsberg, Åkeshov och Brommaplan, och därifrån '
+            'Gröna linjen går till Alvik, Abrahamsberg, Åkeshov och Brommaplan, och från Alvik '
             'tar Nockebybanan vid ut mot Ålsten, Höglandet och Nockeby. Villaområdena västerut '
             'är alltså närmare än de ser ut på kartan, så länge man åker kollektivt och inte '
             'räknar i kilometer.'
         ),
+        'bibliotek': ['Brommaplans bibliotek', 'Alviks bibliotek'],
         'faq': [
             ('Vilka delar av Bromma?',
              'Alvik, Traneberg, Abrahamsberg, Åkeshov, Brommaplan, Ålsten, Höglandet, Nockeby, '
@@ -346,6 +371,9 @@ OMRADEN = [
              'Säg till oss. Fel match är värre än ingen match, och det är därför vi gör '
              'matchningen åt er i stället för att låta er bläddra i en katalog. Det finns ingen '
              'bindningstid som gör det krångligt att byta.'),
+            ('Kan vi ses på Brommaplans bibliotek?',
+             'Ja, eller på Alviks bibliotek. Skriv platsen när ni föreslår tiden. Båda ligger vid '
+             'gröna linjen, så det är lätt för studiehjälparen att ta sig dit.'),
         ],
     },
     {
@@ -355,14 +383,14 @@ OMRADEN = [
         'nav': 'Solna',
         'titel': 'Läxhjälp i Solna — hemma hos er eller online | Nextrum',
         'beskrivning': (
-            'Läxhjälp i Solna med unga studiehjälpare som nyligen läst samma kurser. '
-            f'Hemma hos er eller online, {PRIS} i timmen, ingen bindningstid.'
+            'Läxhjälp i Solna, Råsunda, Hagalund och Bergshamra: hemma hos er, på biblioteket '
+            f'eller online. {PRIS} i timmen, ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Solna',
         'h1': 'Läxhjälp i<br><em>Solna.</em>',
         'lede': (
-            'Vi matchar elever i Solna med en studiehjälpare som nyligen läst samma kurser '
-            'själv. Passen sker hemma hos er eller online.'
+            'Från Råsunda till Bergshamra. Vi matchar elever i Solna med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
         'bild': '07-genombrottet',
         'tint': '#898268',
@@ -377,6 +405,7 @@ OMRADEN = [
             'Alvik. Få områden i Stockholm har fler sätt att ta sig till, vilket gör att en '
             'studiehjälpare sällan behöver bo i Solna för att kunna komma hit varje vecka.'
         ),
+        'bibliotek': ['Solna stadsbibliotek', 'Bergshamra bibliotek'],
         'faq': [
             ('Vilka delar av Solna?',
              'Solna centrum, Råsunda, Hagalund, Huvudsta, Bergshamra, Ulriksdal, Järvastaden, '
@@ -391,6 +420,9 @@ OMRADEN = [
              'pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. '
              'Efter passet kan ni i stället välja faktura, som kommer i början av nästa månad '
              'med tio dagars betalningstid och utan avgift. Betalningen går till Nextrum.'),
+            ('Kan vi ses på biblioteket i stället för hemma?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Solna stadsbibliotek eller '
+             'Bergshamra bibliotek.'),
         ],
     },
 ]
@@ -430,8 +462,9 @@ AMNEN = [
         'etikett': 'Läxhjälp i matematik',
         'h1': 'Läxhjälp i<br><em>matte.</em>',
         'lede': (
-            'Matematik är vårt vanligaste ämne. Vi matchar eleven med en studiehjälpare som '
-            'nyligen läst samma kurs och som minns vilket steg som var det svåra.'
+            'Från multiplikationstabellen till derivatan. Vi matchar eleven med en '
+            'studiehjälpare som nyligen läst samma kurs och som minns vilket steg som var det '
+            'svåra.'
         ),
         'kort': 'Bråk, ekvationer, funktioner och derivata',
         'bild': '01-en-till-en',
@@ -668,7 +701,7 @@ AMNEN = [
              'gymnasiet substansmängd och reaktionsformler. Kemin bygger på sig själv: den som '
              'inte förstått atomen har svårt med bindningarna.'),
             ('Biologi',
-             'Cellen, kroppen, ekologi, genetik och evolution. Biologin är mindre formler och '
+             'Cellen, kroppen, ekologi, genetik och evolution. Biologin har färre formler och '
              'fler begrepp, och det som hjälper är ofta att förklara med egna ord tills det '
              'sitter.'),
             ('Labbrapporter',
@@ -796,6 +829,224 @@ ONLINE = {
          'oftast bättre. Skriv vad ni tror i anmälan, så pratar vi om det när vi hör av oss.'),
     ],
 }
+
+
+# ============================================================
+# STADIERNA (2026-10-06)
+#
+# Föräldrar söker på stadium lika ofta som på ämne: "läxhjälp
+# högstadiet", "läxhjälp gymnasiet". Sidorna byggs med amnessida() och
+# följer samma regel: inga betyg eller betygshöjningar, inga kursnamn
+# med årtal (gymnasiet bytte till ämnen och nivåer), och inga
+# påståenden om hur familjerna brukar göra, för de är inte många än.
+# Ingen av dem har betalningsmeningen: priset står kort och länkar till
+# prissidan, så kolla-betalningsvillkor.py behöver inte bevaka dem.
+# ============================================================
+
+STADIER = [
+    {
+        'slug': 'laxhjalp-mellanstadiet',
+        'i_namn': 'för mellanstadiet',
+        'plats': 'Stockholm',
+        'titel': 'Läxhjälp för mellanstadiet i Stockholm, åk 4–6 | Nextrum',
+        'beskrivning': (
+            'Läxhjälp för åk 4–6: läsförståelse, tabellerna, bråk och engelska, och lugn inför '
+            f'proven i sexan. Hemma hos er i Stockholm eller online, {PRIS} i timmen.'
+        ),
+        'etikett': 'Läxhjälp för mellanstadiet',
+        'h1': 'Läxhjälp för<br><em>mellanstadiet.</em>',
+        'lede': (
+            'I mellanstadiet ska läsningen och räknandet börja bära resten av skolan. Vi '
+            'matchar eleven med en studiehjälpare som tar det i elevens takt.'
+        ),
+        'kort': 'Åk 4–6: läsning, tabellerna, bråk och engelska',
+        'bild': '10-forsta-motet',
+        'tint': '#948979',
+        'focal': '50% 42%',
+        'lista_etikett': 'Vad passen går ut på',
+        'lista_rubrik': 'Grunden som<br>allt <em>vilar på.</em>',
+        'lista_ingress': (
+            'I fyran, femman och sexan blir läxorna längre och kraven tydligare. Det som inte '
+            'sitter nu följer med upp i högstadiet, så studieplanen börjar med det eleven '
+            'faktiskt fastnar på.'
+        ),
+        'lista': [
+            ('Svenska',
+             'Läsflyt och läsförståelse, att berätta i ordning och att skriva en faktatext. '
+             'Passen kan vara att läsa tillsammans och prata om texten, så att eleven märker '
+             'vad hen har förstått.'),
+            ('Matte',
+             'Multiplikationstabellen, division, bråk och decimaltal och de första '
+             'textuppgifterna. Här lönar det sig att räkna i lugn takt tills det sitter, i '
+             'stället för att hinna med kapitlet.'),
+            ('Engelska',
+             'Ordförråd, att våga säga något och att förstå en text utan att översätta varje '
+             'ord.'),
+            ('Proven i sexan',
+             'I sexan skrivs nationella prov. Studieplanen kan byggas bakåt från dem: det som '
+             'brukar komma, och det eleven själv känner sig osäker på.'),
+        ],
+        'vinkel_etikett': 'Hemma eller online',
+        'vinkel_rubrik': 'Någon som<br>sitter <em>bredvid.</em>',
+        'vinkel': [
+            'I den här åldern är det ofta lättare att hålla fokus när någon sitter bredvid, så '
+            'ett pass hemma hos er eller på biblioteket passar många bättre än skärmen. Ni '
+            'väljer för varje pass.',
+            'En studiehjälpare som själv går på gymnasiet eller högskolan är nära nog i ålder '
+            'för att vara någon eleven lyssnar på, och har sett vad som behöver sitta inför '
+            'högstadiet.',
+            'Rapporten efter varje pass säger vad ni gjorde och hur det gick, så att ni hemma '
+            'vet vad ni kan fråga om.',
+        ],
+        'faq_rubrik': 'Mellanstadiet, det ni brukar undra',
+        'faq': [
+            ('Hjälper ni yngre barn, i lågstadiet?',
+             'Ja, från årskurs ett. Skriv årskursen i anmälan, så tar vi med det när vi väljer '
+             'studiehjälpare.'),
+            ('Kan vi få hjälp inför de nationella proven i sexan?',
+             'Ja. Hör av er några veckor innan, så hinner vi matcha rätt person och '
+             'studieplanen hinner gå igenom det som brukar komma.'),
+            ('Gör studiehjälparen läxan åt barnet?',
+             'Nej. Studiehjälparen frågar, förklarar och låter barnet räkna och skriva själv. '
+             'Målet är att nästa läxa går lättare också när ingen sitter bredvid.'),
+            ('Vad kostar det?',
+             f'{PRIS} i timmen, samma för alla årskurser och ämnen. Sitter ett syskon med i '
+             f'samma pass kostar det {EXTRA_BARN} extra i timmen totalt. Ingen bindningstid och '
+             'ingen månadsavgift, och hur betalningen går till står på prissidan.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-hogstadiet',
+        'i_namn': 'för högstadiet',
+        'plats': 'Stockholm',
+        'titel': 'Läxhjälp för högstadiet i Stockholm, åk 7–9 | Nextrum',
+        'beskrivning': (
+            'Läxhjälp för åk 7–9 med en studiehjälpare som själv gått ut nian för inte så länge '
+            f'sedan. Matte, svenska, engelska och NO, hemma eller online. {PRIS} i timmen.'
+        ),
+        'etikett': 'Läxhjälp för högstadiet',
+        'h1': 'Läxhjälp för<br><em>högstadiet.</em>',
+        'lede': (
+            'I högstadiet blir ämnena fler och betygen räknas inför gymnasievalet. Vi matchar '
+            'eleven med en studiehjälpare som själv gått igenom samma år för inte så länge sedan.'
+        ),
+        'kort': 'Åk 7–9: ekvationer, NO, texterna och proven i nian',
+        'bild': '02-personlig-anpassning',
+        'tint': '#8E8C84',
+        'focal': '50% 40%',
+        'lista_etikett': 'Vad passen går ut på',
+        'lista_rubrik': 'Fler ämnen,<br>högre <em>tempo.</em>',
+        'lista_ingress': (
+            'Det som gick av sig självt i mellanstadiet räcker inte alltid i sjuan. '
+            'Studieplanen börjar med det som tar stopp nu och med det som kommer på nästa prov.'
+        ),
+        'lista': [
+            ('Matte',
+             'Negativa tal, procent, algebra och ekvationer, linjära funktioner, geometri och '
+             'sannolikhet. Den som tappar tråden i sjuan märker det ofta i nian, så det lönar '
+             'sig att täppa till luckan tidigt.'),
+            ('NO',
+             'Fysik, kemi och biologi med fler begrepp, formler och laborationsrapporter. Passen '
+             'går ut på att förstå sambanden, inte bara att lära sig orden utantill.'),
+            ('Svenska och engelska',
+             'Argumenterande och utredande texter, novellanalys, muntliga redovisningar och '
+             'engelska texter som blir längre för varje termin.'),
+            ('Proven i nian',
+             'I nian skrivs nationella prov, och betygen avgör vilket gymnasieprogram eleven '
+             'kommer in på. Studieplanen kan byggas bakåt från proven, i god tid.'),
+        ],
+        'vinkel_etikett': 'Varför någon som nyss gått där',
+        'vinkel_rubrik': 'Nära i ålder,<br>en bit <em>före.</em>',
+        'vinkel': [
+            'En tonåring lyssnar ofta lättare på någon som är några år äldre än på en vuxen. '
+            'Studiehjälparen har själv suttit med samma sorts prov och minns vilka knep som '
+            'fungerade.',
+            'Online passar ofta bra i den här åldern, särskilt när eleven har något konkret att '
+            'jobba med: en uppgift, ett kapitel eller ett prov på fredag. Ni väljer hemma eller '
+            'online för varje pass.',
+        ],
+        'faq_rubrik': 'Högstadiet, det ni brukar undra',
+        'faq': [
+            ('Kan vi få hjälp inför de nationella proven i nian?',
+             'Ja. Hör av er i god tid, gärna några veckor innan, så hinner vi matcha rätt person '
+             'och gå igenom det som brukar komma.'),
+            ('Kan studiehjälparen hjälpa till i flera ämnen?',
+             'Ofta, ja. Skriv i anmälan vilka ämnen det gäller, så letar vi efter någon som kan '
+             'dem. Behövs två olika personer säger vi det.'),
+            ('Hjälper ni med studieteknik och planering?',
+             'Ja. Att planera veckan, plugga inför prov och komma igång med läxorna kan vara en '
+             'del av studieplanen, och det går att ha som mål på samma sätt som ett ämne.'),
+            ('Vad kostar det?',
+             f'{PRIS} i timmen, samma för alla årskurser och ämnen. Ingen bindningstid och ingen '
+             'månadsavgift, och hur betalningen går till står på prissidan.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-gymnasiet',
+        'i_namn': 'för gymnasiet',
+        'plats': 'Stockholm',
+        'titel': 'Läxhjälp för gymnasiet i Stockholm, hemma eller online | Nextrum',
+        'beskrivning': (
+            'Läxhjälp på gymnasiet i matte, fysik, kemi, svenska och engelska, med en '
+            f'studiehjälpare som läst samma ämne nyligen. I Stockholm eller online, {PRIS} i timmen.'
+        ),
+        'etikett': 'Läxhjälp för gymnasiet',
+        'h1': 'Läxhjälp för<br><em>gymnasiet.</em>',
+        'lede': (
+            'På gymnasiet räcker det sällan med vilken hjälp som helst: det ska vara någon som '
+            'läst just det ämnet och den nivån. Skriv vad eleven läser, så letar vi efter den '
+            'personen.'
+        ),
+        'kort': 'Matte, NO och skrivandet, nivå för nivå',
+        'bild': '09-online-v2',
+        'tint': '#948A78',
+        'focal': '58% 42%',
+        'lista_etikett': 'Vad passen går ut på',
+        'lista_rubrik': 'Rätt ämne,<br>rätt <em>nivå.</em>',
+        'lista_ingress': (
+            'Gymnasiet går fortare än högstadiet, och en lucka hinner bli stor på en termin. '
+            'Studieplanen utgår från elevens egna uppgifter och prov.'
+        ),
+        'lista': [
+            ('Matte',
+             'Från algebra och funktioner till andragradsekvationer, logaritmer, derivata, '
+             'integraler och trigonometri, beroende på program och nivå.'),
+            ('Fysik, kemi och biologi',
+             'Formler, beräkningar, begrepp och laborationsrapporter. Ofta handlar det om att se '
+             'vilket samband en uppgift egentligen frågar efter.'),
+            ('Svenska och engelska',
+             'Litteraturanalys, utredande och vetenskapligt skrivande, källhänvisningar och '
+             'muntliga framföranden.'),
+            ('Inför provet',
+             'Ett prov är ett tydligt mål, och studieplanen kan byggas bakåt från det: det som '
+             'brukar komma, och det eleven själv känner sig osäker på.'),
+        ],
+        'vinkel_etikett': 'Varför någon som nyss läst ämnet',
+        'vinkel_rubrik': 'Minns var<br>det tog <em>stopp.</em>',
+        'vinkel': [
+            'För en gymnasieelev letar vi efter en studiehjälpare som pluggar på högskolan eller '
+            'själv har läst samma ämne och nivå nyligen. Hen minns var det tog stopp, och vilken '
+            'förklaring som till slut fungerade.',
+            'Online fungerar ofta bra på gymnasiet. Det gör det lättare att hitta någon som läst '
+            'just den nivån, eftersom studiehjälparen inte behöver bo nära er.',
+        ],
+        'faq_rubrik': 'Gymnasiet, det ni brukar undra',
+        'faq': [
+            ('Vilka ämnen hjälper ni med på gymnasiet?',
+             'Framför allt matte, fysik, kemi, biologi, svenska och engelska. Skriv i anmälan vad '
+             'eleven läser, så säger vi om vi har rätt person.'),
+            ('Kan vi få hjälp med ett enda prov?',
+             'Ja. Det finns ingen bindningstid, och ett pass eller två inför ett prov går bra. '
+             'Hör av er i god tid, så hinner vi matcha rätt person.'),
+            ('Gör studiehjälparen uppgifterna åt eleven?',
+             'Nej. Studiehjälparen förklarar, ställer frågor och visar hur en text eller en '
+             'lösning kan byggas upp, men det är eleven som gör uppgiften.'),
+            ('Vad kostar det?',
+             f'{PRIS} i timmen, samma för alla ämnen och nivåer. Ingen bindningstid och ingen '
+             'månadsavgift, och hur betalningen går till står på prissidan.'),
+        ],
+    },
+]
 
 
 # ============================================================
@@ -1413,6 +1664,18 @@ def kortsektion(etikett, rubrik, kort):
 """
 
 
+def stadiekort(stadier):
+    return '\n'.join(kort(a['slug'], 'Läxhjälp ' + a['i_namn'], a['kort'])
+                     for a in stadier)
+
+
+def stadier_sektion(o):
+    """Stadiesidorna från ämnessidorna och från varandra."""
+    andra = [a for a in STADIER if a['slug'] != o['slug']]
+    rubrik = 'Andra stadier' if o in STADIER else 'Läxhjälp per stadium'
+    return kortsektion('Stadier', rubrik, stadiekort(andra))
+
+
 def amnen_sektion(o):
     """Ämnessidorna från en områdessida, och de andra ämnena från en
     ämnessida. Utan länkarna hittar Google ämnessidorna bara genom
@@ -1479,6 +1742,38 @@ def prissektion():
 </section>"""
 
 
+def prissektion_kort():
+    """Områdessidornas pris. Samma sak som prissektion(), men kort: den
+    stod ord för ord på alla tolv läxhjälpssidorna och var en stor del
+    av det som gjorde stadsdelssidorna lika varandra."""
+    return f"""<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">Priset</span>
+      <h2 class="nx-d2" style="margin-top:18px">{PRIS}<br>i timmen.</h2>
+    </div>
+    <div class="nx-text rv">
+      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift. <a href="/priser">Se hela prissidan</a>.</p>
+    </div>
+  </div>
+</section>"""
+
+
+def bibliotek_text(o):
+    """Biblioteken i området, som neutral plats för ett pass.
+
+    Namnen är kontrollerade mot bibliotekens egna sidor i sökträffarna
+    2026-10-06 (Stockholms stadsbibliotek, Solna och Nacka), inte genom
+    att öppna dem: nätet där de skrevs släppte inte fram sidorna. Ett
+    bibliotek som flyttar eller stänger ska bort härifrån."""
+    b = o.get('bibliotek') or []
+    if not b:
+        return ''
+    lista = b[0] if len(b) == 1 else ', '.join(b[:-1]) + ' eller ' + b[-1]
+    return (f'Vill ni hellre ses på en neutral plats går det bra att hålla passet på {lista}. '
+            'Skriv platsen när ni föreslår tiden.')
+
+
 NASTA_STEG = """<section class="nx-mork nx-final-cinema">
   <div class="nx-wrap-bred">
     <div class="nx-final-inner">
@@ -1524,13 +1819,13 @@ def sida(o):
 <section class="sec wrap">
   <div class="nx-two">
     <div class="nx-two-sticky rv">
-      <span class="nx-et acc">Så går det till</span>
-      <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
+      <span class="nx-et acc">Var passen hålls</span>
+      <h2 class="nx-d2" style="margin-top:18px">Hemma, på biblioteket<br>eller <em>online.</em></h2>
     </div>
     <div class="nx-text rv">
-      <p>Ni skickar in en intresseanmälan och berättar vad eleven behöver hjälp med. Vi går igenom behovet tillsammans med er och väljer sedan ut den studiehjälpare som passar bäst — utifrån ämne, nivå och person. Ni bläddrar alltså inte bland profiler: fel match är värre än ingen match.</p>
-      <p>När matchningen är klar låses studievyn upp. Där ligger studieplanen, kommande pass, meddelanden och rapporten från varje tillfälle. Rapporten skrivs av studiehjälparen efteråt och beskriver vad ni gick igenom och hur det gick — ett pass räknas som genomfört först när den är skriven.</p>
       <p>{esc(o['transport'])}</p>
+      <p>{esc(bibliotek_text(o))}</p>
+      <p>Ni väljer hemma eller online för varje pass. Att ses hemma förutsätter att matchningen ger en studiehjälpare som kan ta sig till er varje vecka; går det inte börjar ni online, med samma person, studieplan och rapport.</p>
     </div>
   </div>
 </section>
@@ -1540,15 +1835,22 @@ def sida(o):
     <span class="nx-et acc">Området</span>
     <h2 class="nx-d2" style="margin-top:18px">Var vi matchar elever</h2>
     <div class="nx-omr-chips" style="margin-top:clamp(20px,2.4vw,28px)">{delar}</div>
-    <p class="xsmall" style="margin-top:22px;max-width:62ch">
-      Om ett pass sker hemma hos er eller online avgörs av matchningen, inte av adressen.
-      Hittar vi ingen studiehjälpare som kan ta sig till er varje vecka börjar ni online —
-      samma person, samma studieplan, samma rapport efteråt.
-    </p>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">Så går det till</span>
+      <h2 class="nx-d2" style="margin-top:18px">En person,<br>inte en katalog.</h2>
+    </div>
+    <div class="nx-text rv">
+      <p>Ni skickar en intresseanmälan, vi hör av oss inom 24 timmar och väljer sedan den studiehjälpare som passar eleven bäst. När matchningen är klar låses studievyn upp, med studieplanen, bokningen och en rapport efter varje pass. <a href="/sa-fungerar-nextrum">Så fungerar det, steg för steg</a>.</p>
+    </div>
   </div>
 </section>
 {amnen_sektion(o)}
-{prissektion()}
+{prissektion_kort()}
 {faq_sektion(o)}{andra_omraden(o)}
 {NASTA_STEG}
 
@@ -1620,7 +1922,7 @@ def amnessida(o):
 </section>
 
 {prissektion()}
-{faq_sektion(o)}{kortsektion('Områden', o.get('omraden_rubrik', 'Hemma hos er i Stockholm, eller online'), omrkort)}{amnen_sektion(o)}{kortsektion('Guider', 'För er som hjälper till hemma', guidekort(GUIDER))}
+{faq_sektion(o)}{kortsektion('Områden', o.get('omraden_rubrik', 'Hemma hos er i Stockholm, eller online'), omrkort)}{amnen_sektion(o)}{stadier_sektion(o)}{kortsektion('Guider', 'För er som hjälper till hemma', guidekort(GUIDER))}
 {NASTA_STEG}
 
 </main>{fot}{jsonld(o, OMRADEN)}
@@ -1751,6 +2053,65 @@ def guidesida(o):
 # varit osynlig från navet tills någon kom ihåg att lägga in den.
 # ============================================================
 
+# ============================================================
+# 404 (2026-10-06)
+#
+# Vercel visar 404.html för varje adress som inte finns, också
+# /en/nagot/annat. Därför <base href="/">: skalets länkar till css och
+# skript är relativa, och utan base hade de pekat in i en mapp som inte
+# finns. Sidan byggs här för att få samma skal som resten, och den är
+# noindex utan canonical, så kartan tar inte med den.
+# ============================================================
+
+def sida404():
+    huvud, fot = skal()
+    huvud = sprakvaxlare(huvud, '404')
+    vidare = '\n'.join(kort(slug, rubrik, rad) for slug, rubrik, rad in [
+        ('laxhjalp-stockholm', 'Läxhjälp i Stockholm', 'Hemma hos er, på biblioteket eller online'),
+        ('priser', 'Priser', f'{PRIS} i timmen, första timmen på köpet'),
+        ('sa-fungerar-nextrum', 'Så fungerar Nextrum', 'Från intresseanmälan till första passet'),
+        ('intresseanmalan', 'Intresseanmälan', 'Berätta vad ni behöver hjälp med'),
+        ('faq', 'Vanliga frågor', 'Svar om pris, betalning och trygghet'),
+        ('bli-studiehjalpare', 'Bli studiehjälpare', 'Ett första jobb för dig som pluggar'),
+    ])
+    return f"""<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Visas på vilken adress som helst som inte finns; se sida404() i
+     verktyg/bygg-omradessidor.py. Byggs därifrån, ändra inte för hand. -->
+<base href="/">
+
+{ikoner()}
+<title>Sidan finns inte | Nextrum</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<link rel="stylesheet" href="nextrum-typsnitt.css">
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css">
+<link rel="stylesheet" href="nextrum-cinema.css">
+</head>
+<body>{huvud}<main id="innehall">
+
+<section class="wrap nx-page-hero">
+  <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
+  <span class="nx-et acc" data-stig style="margin-top:22px">Sidan finns inte</span>
+  <h1 class="nx-d1" data-avslöj>Den här sidan har<br>inte gjort <em>läxan.</em></h1>
+  <p class="nx-lede" data-stig data-fördröj="1">Adressen finns inte, eller så har sidan flyttat. Kanske letar du efter något av det här.</p>
+  <p class="xsmall" data-stig data-fördröj="2" style="margin-top:18px" lang="en">Looking for English? <a href="/en/">Go to the English site</a>.</p>
+</section>
+{kortsektion('Vidare', 'Vanliga vägar vidare', vidare)}
+
+</main>{fot}
+</body>
+</html>
+"""
+
+
 NAV_START = '<!-- ämneskort: skrivs av verktyg/bygg-omradessidor.py, ändra inte för hand -->'
 NAV_SLUT = '<!-- /ämneskort -->'
 
@@ -1763,6 +2124,7 @@ def skriv_navet():
     fore = s[:s.index(NAV_START) + len(NAV_START)]
     efter = s[s.index(NAV_SLUT):]
     block = (kortsektion('Ämnen', 'Läxhjälp per ämne', amneskort(AMNEN))
+             + kortsektion('Stadier', 'Läxhjälp per stadium', stadiekort(STADIER))
              + kortsektion('Guider', 'För er som hjälper till hemma', guidekort(GUIDER)))
     open(p, 'w', encoding='utf-8').write(fore + block + efter)
 
@@ -1770,9 +2132,9 @@ def skriv_navet():
 def main():
     if not os.path.exists(SKAL):
         sys.exit(f'hittar inte skalsidan {SKAL}')
-    satt_bildtexter(OMRADEN + AMNEN + GUIDER + [ONLINE])
+    satt_bildtexter(OMRADEN + AMNEN + STADIER + GUIDER + [ONLINE])
     delar = [a['namn'] for a in OMRADEN if not a.get('hub')]
-    for o in AMNEN + [ONLINE]:
+    for o in AMNEN + STADIER + [ONLINE]:
         o['delar'] = delar
     for o in OMRADEN:
         if o.get('handskriven'):
@@ -1785,6 +2147,10 @@ def main():
         p = os.path.join(ROT, o['slug'] + '.html')
         open(p, 'w', encoding='utf-8').write(amnessida(o))
         print(f'  skrev {o["slug"]}.html')
+    for o in STADIER:
+        p = os.path.join(ROT, o['slug'] + '.html')
+        open(p, 'w', encoding='utf-8').write(amnessida(o))
+        print(f'  skrev {o["slug"]}.html')
     for o in GUIDER:
         p = os.path.join(ROT, o['slug'] + '.html')
         open(p, 'w', encoding='utf-8').write(guidesida(o))
@@ -1792,9 +2158,11 @@ def main():
     p = os.path.join(ROT, ONLINE['slug'] + '.html')
     open(p, 'w', encoding='utf-8').write(amnessida(ONLINE))
     print(f'  skrev {ONLINE["slug"]}.html')
+    open(os.path.join(ROT, '404.html'), 'w', encoding='utf-8').write(sida404())
+    print('  skrev 404.html')
     skriv_navet()
     print('  skrev ämneskorten i laxhjalp-stockholm.html')
-    print(f'{len(OMRADEN)} områdessidor, {len(AMNEN)} ämnessidor, onlinesidan och {len(GUIDER)} guider byggda.')
+    print(f'{len(OMRADEN)} områdessidor, {len(AMNEN)} ämnessidor, {len(STADIER)} stadiesidor, onlinesidan och {len(GUIDER)} guider byggda.')
     print('Kör sedan verktyg/bygg-sitemap.py och sist verktyg/satt-version.py.')
 
 

@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Visas på vilken adress som helst som inte finns; se sida404() i
+     verktyg/bygg-omradessidor.py. Byggs därifrån, ändra inte för hand. -->
+<base href="/">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
@@ -10,41 +13,13 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
-<title>Så hjälper du ditt barn med matteläxan | Nextrum</title>
-<meta name="description" content="Konkreta råd för föräldrar: fråga innan du förklarar, låt barnet hålla pennan och gå tillbaka ett steg när det tar stopp. Och vad ni gör när det inte går hemma.">
-<link rel="canonical" href="https://nextrum.se/hjalpa-barn-med-matte">
-<!-- Sidan finns bara på svenska. Ingen hreflang="en" här: att peka ut
-     en engelsk version som inte finns är sämre än att inte peka alls. -->
-<link rel="alternate" hreflang="sv" href="https://nextrum.se/hjalpa-barn-med-matte">
-<link rel="alternate" hreflang="x-default" href="https://nextrum.se/hjalpa-barn-med-matte">
+<title>Sidan finns inte | Nextrum</title>
+<meta name="robots" content="noindex">
 <meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
-<meta name="geo.region" content="SE-AB">
-<meta name="geo.placename" content="Stockholm">
 
-<!-- delning -->
-<meta property="og:type" content="article">
-<meta property="og:site_name" content="Nextrum">
-<meta property="og:locale" content="sv_SE">
-<meta property="og:title" content="Så hjälper du ditt barn med matteläxan | Nextrum">
-<meta property="og:description" content="Konkreta råd för föräldrar: fråga innan du förklarar, låt barnet hålla pennan och gå tillbaka ett steg när det tar stopp. Och vad ni gör när det inte går hemma.">
-<meta property="og:url" content="https://nextrum.se/hjalpa-barn-med-matte">
-<meta property="og:image" content="https://nextrum.se/bilder/06-forklaringen-1280.jpg">
-<meta property="og:image:width" content="1280">
-<meta property="og:image:height" content="720">
-<meta property="og:image:alt" content="En ung studiehjälpare förklarar en uppgift för en elev vid ett ljust träbord, med handen öppen över räkneboken.">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Så hjälper du ditt barn med matteläxan | Nextrum">
-<meta name="twitter:description" content="Konkreta råd för föräldrar: fråga innan du förklarar, låt barnet hålla pennan och gå tillbaka ett steg när det tar stopp. Och vad ni gör när det inte går hemma.">
-<meta name="twitter:image" content="https://nextrum.se/bilder/06-forklaringen-1280.jpg">
-
-<!-- Förladdad: utan den kommer typsnittet efter första ritningen, långa rubriker
-     bryts om och allt under dem hoppar (CLS 0,2 på /laxhjalp-stockholm). -->
-<link rel="preload" href="/typsnitt/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
-
-<!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=abbf3691">
@@ -122,155 +97,52 @@
 <main id="innehall">
 
 <section class="wrap nx-page-hero">
-  <a class="nx-back" href="/laxhjalp-stockholm"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Läxhjälp i Stockholm</a>
-  <span class="nx-et acc" data-stig style="margin-top:22px">Guide för föräldrar</span>
-  <h1 class="nx-d1" data-avslöj>Hjälpa barnet med<br><em>matteläxan.</em></h1>
-  <p class="nx-lede" data-stig data-fördröj="1">Många föräldrar kan matten men märker att hjälpen ändå inte går fram. Oftast handlar det om hur hjälpen ges, inte om vad man kan. Här är det som brukar fungera.</p>
-  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#9A8E79">
-    <picture><source type="image/webp" srcset="bilder/06-forklaringen-640.webp 640w, bilder/06-forklaringen-960.webp 960w, bilder/06-forklaringen-1280.webp 1280w, bilder/06-forklaringen-1600.webp 1600w, bilder/06-forklaringen-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/06-forklaringen-1280.jpg"
-         srcset="bilder/06-forklaringen-640.jpg 640w, bilder/06-forklaringen-960.jpg 960w, bilder/06-forklaringen-1280.jpg 1280w, bilder/06-forklaringen-1600.jpg 1600w, bilder/06-forklaringen-1920.jpg 1920w"
-         sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
-         style="object-position:62% 44%" alt="En ung studiehjälpare förklarar en uppgift för en elev vid ett ljust träbord, med handen öppen över räkneboken."></picture>
-  </figure>
-</section>
-
-<section class="sec wrap">
-  <div class="nx-head split" data-stig>
-    <div><span class="nx-et acc">Det som brukar fungera</span>
-      <h2 class="nx-d2" style="margin-top:18px">Sex saker<br>att <em>prova.</em></h2></div>
-    <div class="nx-head-aside"><p class="nx-lede">Inget av det kräver att du kan matten själv. Det mesta handlar om att låta barnet göra jobbet och om att sluta i tid.</p></div>
-  </div>
-  <ul class="nx-list rv">
-      <li><em>01</em><div><b>Fråga innan du förklarar</b><p>&quot;Vad frågar uppgiften efter?&quot; och &quot;vad har du provat?&quot; säger mer om var det tar stopp än en förklaring från början. Ofta räcker frågan.</p></div></li>
-      <li><em>02</em><div><b>Låt barnet hålla pennan</b><p>Den som skriver är den som tänker. Räknar du själv på ett papper bredvid blir det din lösning, inte barnets.</p></div></li>
-      <li><em>03</em><div><b>Gå tillbaka ett steg</b><p>Tar det stopp på ekvationer är problemet ofta bråk eller negativa tal. Hitta steget före och öva det en stund, så brukar resten lossna.</p></div></li>
-      <li><em>04</em><div><b>Använd bokens sätt</b><p>Uträkningar skrivs ibland annorlunda än när du gick i skolan. Be barnet visa hur läraren gjorde och utgå från det, även om du själv räknar på ett annat sätt.</p></div></li>
-      <li><em>05</em><div><b>Kort och ofta</b><p>En kvart varje dag gör mer än en lång kväll före provet. Sluta medan det fortfarande går bra, inte när någon har gett upp.</p></div></li>
-      <li><em>06</em><div><b>Beröm det barnet gör</b><p>&quot;Du provade tre sätt innan det lossnade&quot; bygger mer än &quot;du är ju duktig på matte&quot;. Det första går att göra om nästa gång, det andra går inte att påverka.</p></div></li>
-  </ul>
-  <p class="nx-note" style="margin-top:22px">Länkar: <a href="https://www.matteboken.se/" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Matteboken från Mattecentrum</a></p>
-</section>
-
-<section class="sec wrap">
-  <div class="nx-two">
-    <div class="nx-two-sticky rv">
-      <span class="nx-et acc">När det inte går hemma</span>
-      <h2 class="nx-d2" style="margin-top:18px">Ibland är det<br>fel <em>person.</em></h2>
-    </div>
-    <div class="nx-text rv">
-      <p>Det är vanligt att det låser sig just mellan förälder och barn. Tålamodet tar slut på båda sidor, och läxan blir ett gräl om något annat än matte. Det säger ingenting om vare sig barnet eller föräldern.</p>
-      <p>En studiehjälpare som nyligen läst samma kurs är en annan sorts person att fråga: nära i ålder och utan förväntningar från middagsbordet. Hos Nextrum är det samma person varje gång, med en studieplan och en rapport efter varje pass, så att ni ser vad som händer utan att behöva sitta med.</p>
-      <p><a href="/intresseanmalan" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Skicka en intresseanmälan</a>. Det kostar ingenting att fråga och binder er inte till något.</p>
-    </div>
-  </div>
-</section>
-
-
-<section class="sec wrap">
-  <div class="rv">
-    <span class="nx-et acc">Vanliga frågor</span>
-    <h2 class="nx-d2" style="margin-top:18px">Matteläxan hemma, det ni brukar undra</h2>
-    <div class="faq" style="margin-top:clamp(24px,3vw,34px)">
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Jag kan inte den matte mitt barn läser. Kan jag ändå hjälpa till?<span class="pm"></span></button>
-          <div class="faq-a"><p>Ja. Att fråga, lyssna och låta barnet förklara för dig hjälper även när du inte kan svaret. Mattecentrums Matteboken har gratis genomgångar med video om ni vill läsa på tillsammans.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Hur länge ska vi sitta?<span class="pm"></span></button>
-          <div class="faq-a"><p>Hellre kort och ofta. Märker ni att ingen av er orkar längre är det bättre att sluta och ta det dagen efter än att fortsätta.</p></div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">När är det dags att ta in hjälp?<span class="pm"></span></button>
-          <div class="faq-a"><p>När samma sak tar stopp vecka efter vecka, när läxan blir ett gräl, eller när ett prov närmar sig och ni inte vet var ni ska börja. Då hjälper det att någon utanför familjen tar över en del av jobbet.</p></div>
-        </div>
-    </div>
-    <p class="xsmall" style="margin-top:26px">
-      Fler frågor och svar finns på <a href="/faq">FAQ-sidan</a>.
-    </p>
-  </div>
+  <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
+  <span class="nx-et acc" data-stig style="margin-top:22px">Sidan finns inte</span>
+  <h1 class="nx-d1" data-avslöj>Den här sidan har<br>inte gjort <em>läxan.</em></h1>
+  <p class="nx-lede" data-stig data-fördröj="1">Adressen finns inte, eller så har sidan flyttat. Kanske letar du efter något av det här.</p>
+  <p class="xsmall" data-stig data-fördröj="2" style="margin-top:18px" lang="en">Looking for English? <a href="/en/">Go to the English site</a>.</p>
 </section>
 
 <section class="sec wrap">
   <div class="rv">
-    <span class="nx-et acc">Ämnen</span>
-    <h2 class="nx-d2" style="margin-top:18px">Läxhjälp per ämne</h2>
+    <span class="nx-et acc">Vidare</span>
+    <h2 class="nx-d2" style="margin-top:18px">Vanliga vägar vidare</h2>
     <div class="nx-omr-rutnat" style="margin-top:clamp(24px,3vw,34px)">
-      <a class="nx-omr-kort" href="/laxhjalp-matematik">
-        <b>Läxhjälp i matte</b>
-        <span>Bråk, ekvationer, funktioner och derivata</span>
+      <a class="nx-omr-kort" href="/laxhjalp-stockholm">
+        <b>Läxhjälp i Stockholm</b>
+        <span>Hemma hos er, på biblioteket eller online</span>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
-      <a class="nx-omr-kort" href="/laxhjalp-svenska">
-        <b>Läxhjälp i svenska</b>
-        <span>Läsförståelse, uppsatser och svenska som andraspråk</span>
+      <a class="nx-omr-kort" href="/priser">
+        <b>Priser</b>
+        <span>379 kr i timmen, första timmen på köpet</span>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
-      <a class="nx-omr-kort" href="/laxhjalp-engelska">
-        <b>Läxhjälp i engelska</b>
-        <span>Ordförråd, grammatik, uppsatser och muntligt</span>
+      <a class="nx-omr-kort" href="/sa-fungerar-nextrum">
+        <b>Så fungerar Nextrum</b>
+        <span>Från intresseanmälan till första passet</span>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
-      <a class="nx-omr-kort" href="/laxhjalp-no">
-        <b>Läxhjälp i fysik, kemi och biologi</b>
-        <span>Formler, begrepp och labbrapporter</span>
+      <a class="nx-omr-kort" href="/intresseanmalan">
+        <b>Intresseanmälan</b>
+        <span>Berätta vad ni behöver hjälp med</span>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
-    </div>
-  </div>
-</section>
-
-<section class="sec wrap">
-  <div class="rv">
-    <span class="nx-et acc">Guider</span>
-    <h2 class="nx-d2" style="margin-top:18px">Fler guider</h2>
-    <div class="nx-omr-rutnat" style="margin-top:clamp(24px,3vw,34px)">
-      <a class="nx-omr-kort" href="/hjalpa-barn-med-lasforstaelse">
-        <b>Hjälpa barnet med läsförståelsen</b>
-        <span>Högläsning, ord och skolans faktatexter</span>
+      <a class="nx-omr-kort" href="/faq">
+        <b>Vanliga frågor</b>
+        <span>Svar om pris, betalning och trygghet</span>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
-      <a class="nx-omr-kort" href="/plugga-infor-prov">
-        <b>Plugga inför provet</b>
-        <span>Testa i stället för att läsa om</span>
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
-      <a class="nx-omr-kort" href="/barnet-vill-inte-gora-laxorna">
-        <b>När barnet inte vill göra läxorna</b>
-        <span>Rutiner, motstånd och vad det kan betyda</span>
+      <a class="nx-omr-kort" href="/bli-studiehjalpare">
+        <b>Bli studiehjälpare</b>
+        <span>Ett första jobb för dig som pluggar</span>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
     </div>
   </div>
 </section>
 
-<section class="nx-mork nx-final-cinema">
-  <div class="nx-wrap-bred">
-    <div class="nx-final-inner">
-      <span class="nx-et" data-stig>Nästa steg</span>
-      <h2 class="nx-final-rubrik" data-avslöj>Redo att ta nästa <em>steg</em>?</h2>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">För dig som vill lära dig mer.
-        För dig som vill hjälpa andra.</p>
-
-      <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
-        <span class="nx-magnet">
-          <a class="btn btn-primary btn-lg" href="/intresseanmalan">
-            Skicka intresseanmälan
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
-        </span>
-        <a class="btn btn-ghost btn-lg" href="/bli-studiehjalpare">
-          Bli studiehjälpare
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </div>
-
-      <ul class="nx-hero-trust" data-stig data-fördröj="3">
-        <li>Ingen bindningstid</li>
-        <li>Kostar ingenting att fråga</li>
-      </ul>
-    </div>
-  </div>
-</section>
 
 </main>
 
@@ -427,40 +299,6 @@
   NX.märkInloggad();
 })();
 </script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "@id": "https://nextrum.se/hjalpa-barn-med-matte#artikel",
-      "headline": "Hjälpa barnet med matteläxan",
-      "description": "Konkreta råd för föräldrar: fråga innan du förklarar, låt barnet hålla pennan och gå tillbaka ett steg när det tar stopp. Och vad ni gör när det inte går hemma.",
-      "image": "https://nextrum.se/bilder/06-forklaringen-1280.jpg",
-      "inLanguage": "sv",
-      "author": { "@id": "https://nextrum.se/#org" },
-      "publisher": { "@id": "https://nextrum.se/#org" },
-      "mainEntityOfPage": "https://nextrum.se/hjalpa-barn-med-matte"
-    },
-    {
-      "@type": "FAQPage",
-      "@id": "https://nextrum.se/hjalpa-barn-med-matte#faq",
-      "mainEntity": [
-        {"@type":"Question","name":"Jag kan inte den matte mitt barn läser. Kan jag ändå hjälpa till?","acceptedAnswer":{"@type":"Answer","text":"Ja. Att fråga, lyssna och låta barnet förklara för dig hjälper även när du inte kan svaret. Mattecentrums Matteboken har gratis genomgångar med video om ni vill läsa på tillsammans."}},
-        {"@type":"Question","name":"Hur länge ska vi sitta?","acceptedAnswer":{"@type":"Answer","text":"Hellre kort och ofta. Märker ni att ingen av er orkar längre är det bättre att sluta och ta det dagen efter än att fortsätta."}},
-        {"@type":"Question","name":"När är det dags att ta in hjälp?","acceptedAnswer":{"@type":"Answer","text":"När samma sak tar stopp vecka efter vecka, när läxan blir ett gräl, eller när ett prov närmar sig och ni inte vet var ni ska börja. Då hjälper det att någon utanför familjen tar över en del av jobbet."}}
-      ]
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type":"ListItem","position":1,"name":"Nextrum","item":"https://nextrum.se/"},
-        {"@type":"ListItem","position":2,"name":"Läxhjälp i Stockholm","item":"https://nextrum.se/laxhjalp-stockholm"},
-        {"@type":"ListItem","position":3,"name":"Hjälpa barnet med matteläxan","item":"https://nextrum.se/hjalpa-barn-med-matte"}
-      ]
-    }
-  ]
-}
-</script>
+
 </body>
 </html>

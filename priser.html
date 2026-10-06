@@ -53,8 +53,8 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=03f73911">
-<link rel="stylesheet" href="nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="nextrum-cinema.css?v=abbf3691">
+<link rel="stylesheet" href="nextrum-start.css?v=0bd1e6f4">
 <link rel="stylesheet" href="nextrum-sidor.css?v=6a841016">
 
 <!-- Strukturerad data för tjänsten och timpriset. Ger Google en
@@ -182,7 +182,7 @@
   <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
   <span class="nx-et acc" data-stig style="margin-top:22px">Priser</span>
   <h1 class="nx-d1" data-avslöj>Enkelt pris. Inga överraskningar.</h1>
-  <p class="nx-lede" data-stig data-fördröj="1">Samma timpris oavsett ämne. Du ser hela kostnaden innan ni bokar, och ni binder er inte till något.</p>
+  <p class="nx-lede" data-stig data-fördröj="1">Samma timpris oavsett ämne. Ni ser hela kostnaden innan ni bokar, och ni binder er inte till något.</p>
   <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#9E8F79">
     <picture><source type="image/webp" srcset="bilder/02-personlig-anpassning-640.webp 640w, bilder/02-personlig-anpassning-960.webp 960w, bilder/02-personlig-anpassning-1280.webp 1280w, bilder/02-personlig-anpassning-1600.webp 1600w, bilder/02-personlig-anpassning-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/02-personlig-anpassning-1280.jpg"
          srcset="bilder/02-personlig-anpassning-640.jpg 640w, bilder/02-personlig-anpassning-960.jpg 960w, bilder/02-personlig-anpassning-1280.jpg 1280w, bilder/02-personlig-anpassning-1600.jpg 1600w, bilder/02-personlig-anpassning-1920.jpg 1920w"
@@ -218,7 +218,7 @@
       </ul>
 
       <a class="btn btn-primary btn-lg" href="/intresseanmalan">Skicka intresseanmälan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-      <p class="nx-terms">Ingen bindningstid · Avsluta när du vill · Flexibla tider. Hur ofta ni bokar bestämmer ni själva.</p>
+      <p class="nx-terms">Ingen bindningstid · Avsluta när ni vill · Flexibla tider. Hur ofta ni bokar bestämmer ni själva.</p>
     </div>
 
     <div class="nx-offer rv">
@@ -250,7 +250,7 @@
   </div>
 
   <div class="pr-erb-planer">
-    <div class="nx-price-card pr-erb-plan rv" data-erb="standard">
+    <div class="nx-price-card pr-erb-plan rv" data-erb="standard" data-erb-timmar="4">
       <div class="pr-erb-topp"><span class="eyebrow">Standardplan</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>10</span> %</span></div>
       <p class="pr-erb-vad">Ett pass i veckan, fyra timmar på en månad.</p>
       <div class="nx-amount">
@@ -260,7 +260,7 @@
       <p class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>341 kr</b> / timme · Ni sparar <b data-erb-spar>152 kr</b></p>
     </div>
 
-    <div class="nx-price-card pr-erb-plan ar-framhavd rv" data-erb="intensiv">
+    <div class="nx-price-card pr-erb-plan ar-framhavd rv" data-erb="intensiv" data-erb-timmar="8">
       <div class="pr-erb-topp"><span class="eyebrow">Intensiv</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>10</span> %</span></div>
       <p class="pr-erb-vad">Två pass i veckan, åtta timmar på en månad.</p>
       <div class="nx-amount">
@@ -326,12 +326,54 @@
          blir klippkortens kolumn lång, och de hade då tryckts ner
          under den och lämnat två tomma kolumner. -->
     <div class="pr-erb-fot">
-      <p class="pr-erb-fin">Timmarna betalar passen av sig själva redan när ni föreslår dem, ett barn per pass, och säger studiehjälparen nej kommer de tillbaka. Slutar ni innan de är använda får ni tillbaka det som är kvar, med de använda timmarna räknade till ordinarie pris. <a href="/anvandarvillkor#erbjudanden">Villkoren för erbjudandena</a></p>
+      <p class="pr-erb-fin">Timmarna dras när ni föreslår ett pass, för ett barn per pass, och säger studiehjälparen nej kommer de tillbaka. Slutar ni innan de är använda får ni tillbaka det som är kvar, med de använda timmarna räknade till ordinarie pris. Ångrar ni köpet inom 14 dagar räknas de använda timmarna i stället till det pris ni betalade. <a href="/anvandarvillkor#erbjudanden">Villkoren för erbjudandena</a></p>
       <p class="pr-erb-fin"><a href="/anvandarvillkor#prisgaranti">Se våra villkor för prisgaranti</a></p>
       <div class="pr-erb-cta rv">
         <a class="btn btn-primary btn-lg" href="/intresseanmalan">Kom igång <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
         <p class="nx-terms">Har ni redan ett konto köper ni under <a href="/foralder#erbjudanden">Erbjudanden i er vy</a>. Vill ni ha ett eget upplägg? <a href="mailto:info@nextrum.se" data-mailtext="keep">Skriv till oss</a>.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     RÄKNA SJÄLV (2026-10-06)
+     Månadskostnaden för barn och timmar i veckan. Timpriset och
+     tillägget läses ur nextrum-config.js som initPris() gör, och
+     planens pris ur samma kort som initErbjudanden() skriver om ur
+     erbjudanden_pris: kalkylatorn räknar aldrig fram ett eget
+     planpris. Planerna gäller ett barn per pass, så tipset visas bara
+     för ett barn. All text står här, inte i skriptet, så att den
+     följer med till /en/.
+     ========================================================== -->
+<section class="sec wrap pr-kalk" id="rakna" aria-labelledby="kalk-t">
+  <div class="nx-head split" data-stig>
+    <div><span class="nx-et acc">Räkna själv</span>
+      <h2 class="nx-d2" id="kalk-t" style="margin-top:18px">Vad blir det<br>i <em>månaden?</em></h2></div>
+    <div class="nx-head-aside"><p class="nx-lede">Välj hur många barn som sitter med och hur många timmar i veckan, så ser ni vad fyra veckor kostar.</p></div>
+  </div>
+  <div class="nx-price-card pr-kalk-kort rv" data-kalk>
+    <div class="pr-kalk-val">
+      <div class="pr-kalk-falt">
+        <span class="pr-kalk-etikett" id="kalk-barn">Barn i passet</span>
+        <div class="pr-kalk-chips" role="group" aria-labelledby="kalk-barn" data-kalk-val="barn">
+          <button type="button" aria-pressed="true" data-v="1">1</button><button type="button" aria-pressed="false" data-v="2">2</button><button type="button" aria-pressed="false" data-v="3">3</button>
+        </div>
+      </div>
+      <div class="pr-kalk-falt">
+        <span class="pr-kalk-etikett" id="kalk-tim">Timmar i veckan</span>
+        <div class="pr-kalk-chips" role="group" aria-labelledby="kalk-tim" data-kalk-val="tim">
+          <button type="button" aria-pressed="true" data-v="1">1</button><button type="button" aria-pressed="false" data-v="2">2</button><button type="button" aria-pressed="false" data-v="3">3</button>
+        </div>
+      </div>
+    </div>
+    <div class="pr-kalk-svar" aria-live="polite">
+      <span class="eyebrow">Fyra veckor</span>
+      <b class="pr-kalk-summa tnum" data-kalk-summa>1 516 kr</b>
+      <p class="pr-kalk-rad"><span data-kalk-timmar>4</span> timmar × <span data-kalk-timpris>379 kr</span></p>
+      <p class="pr-kalk-tips" data-kalk-tips="plan">Med <span data-kalk-plannamn>Standardplan</span> blir samma timmar <b data-kalk-planpris>1 364 kr</b>, och ni sparar <span data-kalk-planspar>152 kr</span>.</p>
+      <p class="pr-kalk-tips" data-kalk-tips="syskon" hidden>Två och tre barn kostar lika mycket: <span data-stat="extra-barn">69 kr</span> extra i timmen totalt.</p>
+      <p class="pr-kalk-not">Första timmen bjuder vi på för nya familjer, så den första månaden blir en timme billigare.</p>
     </div>
   </div>
 </section>
@@ -356,7 +398,7 @@
       <span class="eyebrow">Extra barn</span>
       <div class="nx-amount">
         <b class="tnum" data-stat="extra-barn">69 kr</b>
-        <span class="per">/ i timmen, upp till tre barn</span>
+        <span class="per">/ timme, upp till tre barn</span>
       </div>
       <p class="nx-price-sub">Ett fast tillägg när fler än ett barn sitter med. Tre barn kostar lika mycket som två.</p>
     </div>
@@ -462,11 +504,11 @@
       <div class="faq rv">
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">Vad ingår i timpriset?<span class="pm"></span></button>
-        <div class="faq-a"><p>Matchningen, den individuella studieplanen, bokningen, rapporten efter varje pass och all betalningshantering. Det tillkommer ingen anmälningsavgift och inget startpaket — priset du ser är hela kostnaden.</p></div>
+        <div class="faq-a"><p>Matchningen, den individuella studieplanen, bokningen, rapporten efter varje pass och all betalningshantering. Det tillkommer ingen anmälningsavgift och inget startpaket, och ni betalar bara timpriset för den tid passen pågår.</p></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">Hur ofta måste vi boka?<span class="pm"></span></button>
-        <div class="faq-a"><p>Ni bestämmer själva. Vissa familjer bokar ett pass i veckan, andra bara inför ett prov. Det finns ingen miniminivå ni måste upp i.</p></div>
+        <div class="faq-a"><p>Ni bestämmer själva. Ni kan boka ett pass i veckan eller bara inför ett prov. Det finns ingen miniminivå ni måste upp i.</p></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">När betalar vi?<span class="pm"></span></button>
@@ -646,14 +688,14 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=5a31edc0"></script>
+<script src="nextrum-app.js?v=e2e42d6b"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=f1ce069c"></script>
-<script src="nextrum-start.js?v=c489fcd4"></script>
+<script src="nextrum-start.js?v=1deb6831"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=3ac82b1c"></script>
+<script src="nextrum-maskot-svar.js?v=a6de3c2d"></script>
 <script src="nextrum-maskot.js?v=07a42dba" defer></script>
 <script>
 (function () {
@@ -666,6 +708,7 @@
   NX.initFaq();
   NX.initPris();
   NX.initErbjudanden();
+  NX.initKalkyl();
   NX.märkInloggad();
 })();
 </script>

@@ -78,6 +78,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och barnets vy har inga länkar ut. Fel i en fråga rapporteras i spelaren (`rapportera_fragefel`,
   fyra skäl, ingen fritext, ingen person) och syns under Material i adminvyn. Ljuden räknas fram i webbläsaren (`nextrum-ljud.js`) och
   valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
+  **Prova NexLäx** på startsidan (2026-10-06) har tre egna frågor som rättas i webbläsaren,
+  aldrig bankens, räknar inga XP och sparar inget.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare (`mina_tips()`) och
   en kampanjkod per affisch; `leads.kod`. Koden syns i formuläret och lagras aldrig i
   webbläsaren, och en okänd kod fäller aldrig anmälan. Tipstimmen är `startrabatt` med
@@ -151,7 +153,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
   samtidigt. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
-  `erbjudanden_pris`. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
+  `erbjudanden_pris`; prissidans kalkylator (2026-10-06) läser planpriset ur planens kort och
+  räknar bara timpris och tillägg ur `CFG`. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
   och tipstimmen är samma rabatt); ett pass på noll kronor är INTE betalt. Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
@@ -183,7 +186,8 @@ Detaljer: `minne/grunden.md`.
 ### Startsidan efter hero
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
 delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
-Hero är orörd med flit; startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
+Herons film och rubrik är orörda med flit; etiketten (Läxhjälp i Stockholm), ingressen och raden med pris, första timmen
+och 24 timmar talar till föräldern sedan 2026-10-06. Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
 första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
@@ -429,12 +433,12 @@ Detaljer: `minne/funktioner.md`.
 
 ## 8. Genererade filer — ändra aldrig för hand
 Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessidor.py`
-(`laxhjalp-*`, guiderna, navets kort), `bygg-sitemap.py` (`lastmod` ur texten), `satt-logga.py`,
+(`laxhjalp-*` med stadiesidorna, guiderna, navets kort och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `satt-logga.py`,
 `bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
 `bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras) och
 `bygg-uppgifter.py --sql` (alltid en ny migration). **`satt-version.py` körs SIST.** Sidorna
-säger bara det som är sant: inga antal, betyg, betygshöjningar, okontrollerade skolnamn eller
-kursnamn med årtal; en guide länkar det den påstår, och dess författare är Nextrum. En adress
+säger bara det som är sant: inga antal, betyg, betygshöjningar, okontrollerade skolnamn,
+kursnamn med årtal eller vad familjerna brukar göra (de är för få, 2026-10-06); en guide länkar det den påstår, och dess författare är Nextrum. En adress
 som stått i kartan blir aldrig en 404. Förladda inte typsnittet utan att mäta.
 
 Detaljer: `minne/genererat-och-ci.md`.

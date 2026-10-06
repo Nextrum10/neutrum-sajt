@@ -11,7 +11,7 @@ Arkivet för avsnitt 8 och 9 i `CLAUDE.md`, ordagrant. Reglerna står i kärnan,
 |---|---|---|
 | `nextrum-maskot-svar.js` | `verktyg/bygg-maskotsvar.py` | `faq.html`, `en/faq.html` |
 | FAQPage-märkningen i `faq.html` och `en/faq.html` | `verktyg/bygg-faq-schema.py` | frågorna på sidan |
-| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, online), de fyra guiderna och ämnes- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
+| `laxhjalp-*.html` (6 stadsdelar, 4 ämnen, 3 stadier, online), de fyra guiderna, `404.html` och ämnes-, stadie- och guidekorten i `laxhjalp-stockholm.html` | `verktyg/bygg-omradessidor.py` | skalet läses ur `var-ide.html`, alt-texten ur `nextrum-images.js` |
 | `sitemap.xml` | `verktyg/bygg-sitemap.py` | sidornas canonical, hreflang och noindex |
 | Ikonlänkar och storlekar | `verktyg/satt-logga.py` | `bilder/nextrum-logo.png` — finns inte i dag; PNG:erna är renderade ur `favicon.svg`, se `GOOGLE.md` |
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i `verktyg/bladen/` (en modul per stadium, en per NP-serie: `np_ak6.py`, `np_ak9.py`, `np_gymnasiet.py`, figurerna i `figurer.py`). Körs för hand (kräver Chromium), inte i CI; verktyget mäter varje sida och vägrar ett blad som inte ryms. `python3 verktyg/bygg-banken.py ak4-` ritar bara de bladen. `--sql <mönster>` ger raderna till `biblioteksmaterial`, och ett nytt blad är en NY migration med bara de nya raderna; `--kolla` visar vad som saknar bild, facit eller migration. Facit står i `verktyg/bladen/facit_<modul>.py` (ett svar per uppgift) och ritas med `--facit` till `bank/facit/*.png`, en sida per blad; ryms inte frågorna tas de bort, sedan blir stilen mindre. Länkarna till andras material (provgruppernas sidor) står i `verktyg/bladen/lankar.py`, ritas inte, och kommer med i `--sql` när namnet matchar. Ett blads id kommer ur filnamnet: ändra aldrig `fil` på ett befintligt blad, en rättelse är en ny PNG och ingen ny rad |
@@ -96,6 +96,41 @@ på mobil, 0,007 efter). På startsidan och prissidan gjorde samma rad
 LCP 0,3–0,4 s sämre, eftersom den konkurrerar med herobilden om
 bandbredden, och de hade ingen förskjutning att laga. Lägg den inte på
 fler sidor utan att mäta.
+
+**Områdessidorna har eget innehåll först** (2026-10-06). En genomgång
+mätte dem med ortnamnet utbytt: 53–68 % av meningarna och 289 ord stod
+likadant på alla sex, och titel och beskrivning skilde sig bara i
+namnet. Nu börjar varje sida med det som bara gäller där: en ingress med
+områdets ändpunkter, trafiken, biblioteken som neutral plats och en
+fjärde fråga om just dem, och beskrivningen nämner delområden och
+bibliotek. Det delade är kort: en mening om hur det går till med länk
+till Så fungerar Nextrum, och priset i ett stycke (`prissektion_kort()`;
+ämnes- och stadiesidorna har kvar den långa). Efter: 41–55 % av
+meningarna och 193 ord gemensamt, nästan bara knappar, kort och
+rubriker. Lägg inte till Kungsholmen, Vasastan eller Östermalm förrän de
+har lika mycket eget att säga.
+
+Biblioteken (`bibliotek` per område) är kontrollerade mot bibliotekens
+egna sidor i sökträffarna 2026-10-06, inte öppnade: nätet släppte inte
+fram dem. Saltsjöbanan har inte gått från Slussen sedan 2016 (sträckan
+väntas öppna igen tidigast 2028), så Nackas text nämner den inte, och
+Nockebybanan går från Alvik, inte Brommaplan. Hammarbys fråga om
+kvällstider sa sju till tio; vyn tillåter 11–22 på vardagar och 9–22 på
+helger (`HELA_DAGEN`).
+
+**Stadiesidorna** (2026-10-06), `/laxhjalp-mellanstadiet`, `-hogstadiet`
+och `-gymnasiet`, byggs med `amnessida()` ur `STADIER`. Samma regler som
+ämnessidorna, och ingen betalningsmening: priset står kort och länkar
+till prissidan, så `kolla-betalningsvillkor.py` behöver inte bevaka dem.
+Navet, ämnessidorna och startsidan länkar dit.
+
+**`404.html`** (2026-10-06) byggs också här, för att få skalet. Vercel
+visar den för varje adress som inte finns, också `/en/x/y`, så den har
+`<base href="/">`: skalets länkar till css och skript är relativa.
+`satt-version.py` stämplar bara relativa adresser, så en absolut
+`/nextrum.css` hade blivit ostämplad. Den är noindex utan canonical och
+står inte i kartan; i språkbaslinjen står den bland sidorna utan
+engelsk tvilling, som stadiesidorna.
 
 **Footern har en egen spalt Läxhjälp** med navet, de fyra ämnena och
 onlinesidan, på
