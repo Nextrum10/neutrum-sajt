@@ -197,6 +197,10 @@ en text. `innehall` står INTE i auditloggens vitlista.
 tråden mellan en familj och en studiehjälpare för admin, SECURITY
 DEFINER med `is_admin()` på första raden, VOLATILE för att den skriver
 `chatt.oppnad` i `audit_logg`. Den rör aldrig `messages`.
+`barnets_chatt` (2026-10-06) la till `barn_meddelanden`, barnets tråd med
+studiehjälparen, och `barnchatt_las()` på samma sätt: `chatt.oppnad` med
+`tabell = 'barn_meddelanden'`, och raden skrivs bara när det finns något
+att läsa. Ingen inloggad skriver i tabellen; se `minne/barnkonton-och-admin.md`.
 `avbokningar_och_svar` (2026-09-30, avsnitt 1) la till
 `bookings.avbokad_fran`, `motforslag_at` och `svar_meddelande`,
 `intern.svar_gallra()` med pg_cron-jobbet `svar-gallring`, och gör

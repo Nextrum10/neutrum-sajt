@@ -17,15 +17,17 @@
 
    Barnet kan inte boka, avboka, svara på ett förslag, byta lösenord eller
    ändra något om sig själv. Allt sådant gör föräldern, och vyn säger det.
-   Det barnet gör själv är NexLäx och bocken på en vanlig uppgift.
+   Det barnet gör själv är NexLäx, bocken på en vanlig uppgift och, sedan
+   2026-10-06, att skriva till sin studiehjälpare i en egen tråd.
 
    ELEVVYN (2026-10-06). Samma skal som studievyn: hälsningen överst
    (NXArbete.hero, med dagens bild och veckodagen) och en sidomeny med
-   fyra delar och inget mer: Översikt (timmarna, passen, studieplanen och
-   rapporterna), NexLäx, Meddelanden (det Nextrum berättar om passen,
-   barn_notiser; ingen chatt) och Profil (inställningarna). Leo: "På
-   elevvyn ska bara Översikt, nexläx, meddelanden, och profil för barnet
-   finnas."
+   fem delar och inget mer: Översikt (antalet pass och de närmaste), Mina
+   lektioner (passen, studieplanen och rapporterna, utan betalning),
+   NexLäx, Meddelanden (tråden med studiehjälparen och det Nextrum
+   berättar om passen) och Profil (inställningarna). Leo: "På elevvyn ska
+   bara Översikt, nexläx, meddelanden, och profil för barnet finnas", och
+   samma kväll Mina lektioner och chatten.
 
    BARNETS EGEN E-POST (barnets_epost). Under Profil ser barnet
    sitt användarnamn och sin adress, och väljer bort mejl det inte vill
@@ -37,8 +39,9 @@
   'use strict';
   const { $, datumText } = NX;
 
-  const VYER = ['view-loading', 'view-auth', 'view-bekrafta', 'view-annan', 'view-stopp', 'view-app', 'view-fel'];
-  const S = { user: null, data: null, notiser: [], inst: null, hämtad: 0, laddar: false, hero: null, sido: null, tillVal: false };
+  const VYER = ['view-loading', 'view-bekrafta', 'view-annan', 'view-stopp', 'view-app', 'view-fel'];
+  const S = { user: null, data: null, notiser: [], inst: null, hämtad: 0, laddar: false, hero: null, sido: null, tillVal: false,
+    aktiv: null, chatt: { data: null, ritare: null } };
 
   function visa(id) { NXStudie.visaVy(VYER, id); }
 
@@ -95,33 +98,12 @@
   });
 
   /* ============ inloggningen ============
-     E-post eller användarnamn, som i alla vyer (NXStudie.loggaIn). Barnet
-     loggar in med användarnamnet: adressen i Auth byggs i webbläsaren,
-     barnet ser den aldrig, och den tar aldrig emot något mejl (notis-ko
-     hoppar över domänen, och i Auth kan den inte bytas). Har föräldern
-     lagt till barnets egen e-post, och barnet bekräftat den, går den
-     också (barn-inloggning). En vuxen som skriver sin e-post här kommer
-     till sin egen vy. Det är ingen länk dit: det krävs den vuxnes
-     lösenord. */
-  $('#bv-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const msg = $('#auth-msg'), knapp = $('#bv-logga-in'), lösenfält = $('#a-pass');
-    NX.rensa(msg);
-    if (!supa) { NX.säg(msg, 'Inloggningen fungerar inte just nu. Försök igen senare.', false); return; }
-
-    const anv = $('#bv-anv').value.trim();
-    const lösen = lösenfält.value;
-    if (!anv || !lösen) { NX.säg(msg, 'Fyll i användarnamn eller e-post, och lösenord.', false); return; }
-
-    await NXStudie.medan(knapp, 'Loggar in…', async () => {
-      const svar = await NXStudie.loggaIn(supa, anv, lösen);
-      lösenfält.value = '';
-      if (svar.fel) { NX.säg(msg, svar.fel, false); lösenfält.focus(); return; }
-      if (svar.barn) { await starta(svar.user); return; }
-      const profil = await NX.hämtaProfil(svar.user.id);
-      location.replace(NX.vyFör(svar.user, profil));
-    });
-  });
+     Står inte här sedan 2026-10-06. Leo: "när man väljer att logga in som
+     elev ska man inte komma till en separat sida". Elev är ett läge i
+     studievyns inloggning (/foralder#elev, NXStudie.elevLänk), som loggar
+     in med samma loggaIn och skickar barnet hit. Den som öppnar /barn utan
+     att vara inloggad, eller loggar ut härifrån, skickas dit. */
+  const INLOGGNINGEN = '/foralder#elev';
 
   /* ============ start ============ */
   async function starta(user) {
@@ -135,7 +117,7 @@
     }
     NXStudie.vaktaInloggningen({
       supa, user,
-      utloggad: () => { S.user = null; S.data = null; ritaHuvud(null); visa('view-auth'); }
+      utloggad: () => { S.user = null; S.data = null; location.replace(INLOGGNINGEN); }
     });
     ritaHuvud(null);
     await ladda();
@@ -174,8 +156,10 @@
         S.tillVal = false;
         $('#view-app .vy-layout').scrollIntoView({ block: 'start' });
       }
-      /* NexLäx väntar inte resten av vyn in: banan ritas när den kommer. */
+      /* NexLäx och tråden väntar inte resten av vyn in: de ritas när de
+         kommer. */
       laddaNexlax();
+      laddaChatt();
     } catch (fel) {
       NXStudie.felvy(visa, fel, 'din vy skulle hämtas');
     } finally {
@@ -196,7 +180,7 @@
   function ritaAllt() {
     ritaSkalet();
     ritaHej();
-    ritaTimmar();
+    ritaAntal();
     ritaKommande();
     ritaNotiser();
     ritaPlan();
@@ -293,7 +277,11 @@
       S.tillVal = true;
       history.replaceState(history.state, '', '#profil');
     }
-    S.sido = NXStudie.sidomeny({ nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt' });
+    S.sido = NXStudie.sidomeny({
+      nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
+      /* Att öppna Meddelanden är att läsa det studiehjälparen skrivit. */
+      onByt: sek => { S.aktiv = sek; if (sek === 'meddelanden') markeraChatt(); }
+    });
     const d = S.data;
     S.hero = NXArbete.hero({
       host: $('#vy-hero'),
@@ -305,11 +293,14 @@
     });
   }
 
-  /* Korten i hälsningen: nästa pass och meddelandena. */
+  /* Korten i hälsningen: nästa pass och meddelandena. Siffran är nya
+     notiser och det studiehjälparen skrivit som barnet inte läst. */
   function ritaHej() {
     const d = S.data;
+    if (!d) return;
     const nästa = (d.kommande || [])[0];
-    const olästa = (S.notiser || []).filter(n => !n.last_at).length;
+    const c = S.chatt.data;
+    const olästa = (S.notiser || []).filter(n => !n.last_at).length + ((c && c.olasta) || 0);
     if (S.sido) S.sido.märke('meddelanden', olästa);
     if (!S.hero) return;
     S.hero.uppdatera({
@@ -319,43 +310,48 @@
             under: [nästa.amne, nästa.status === 'confirmed' ? 'Bekräftat' : 'Väntar på svar'].filter(Boolean).join(' · ') }
         : { href: '#oversikt', text: 'Inga pass bokade just nu', under: 'När din förälder bokat ett pass står det här' },
       chatt: { href: '#meddelanden', text: 'Meddelanden',
-        under: olästa ? olästa + ' ny' + (olästa > 1 ? 'a' : '') : 'Från Nextrum om dina pass' }
+        under: olästa ? olästa + ' ny' + (olästa > 1 ? 'a' : '')
+          : c ? 'Skriv till ' + (c.studiehjalpare || 'din studiehjälpare') : 'Från Nextrum om dina pass' }
     });
   }
 
-  /* Timmarna räknas ur passen: genomförda är pass med en rapport där
-     barnet var med, bokade är bekräftade pass framåt. Inga köpta timmar
-     och inga saldon, för de är familjens pengar. */
-  function ritaTimmar() {
-    const t = S.data.timmar || {};
-    const ruta = (antal, text) => el('div', { class: 'bv-tal' },
-      el('b', {}, tal(antal)),
-      el('span', {}, (Number(antal) === 1 ? 'timme ' : 'timmar ') + text));
-    $('#bv-timmar').replaceChildren(
-      ruta(t.genomforda, 'genomförda'),
-      ruta(t.bokade, 'bokade framåt'));
+  /* Antalet pass, inte timmar (2026-10-06, Leo: "antal genomförda
+     lektioner. och kommande lektioner istället för timmar genomförda").
+     Genomförda är pass med en rapport där barnet var med, kommande är
+     bokade och föreslagna pass framåt, samma som listan under Mina
+     lektioner. Talen räknas i databasen (barn_oversikt, antal), för
+     listan över genomförda stannar vid 50; utan dem räknas listorna. */
+  function ritaAntal() {
+    const d = S.data, a = d.antal || {};
+    const genomförda = a.genomforda != null ? Number(a.genomforda) : (d.genomforda || []).length;
+    const kommande = a.kommande != null ? Number(a.kommande) : (d.kommande || []).length;
+    const ruta = (antal, ett, flera) => el('div', { class: 'bv-tal' },
+      el('b', {}, String(antal)), el('span', {}, antal === 1 ? ett : flera));
+    $('#bv-antal').replaceChildren(
+      ruta(genomförda, 'genomfört pass', 'genomförda pass'),
+      ruta(kommande, 'kommande pass', 'kommande pass'));
   }
 
+  function kommandeRad(p) {
+    const bekräftat = p.status === 'confirmed';
+    return el('div', { class: 'vy-rad' },
+      el('span', { class: 'vy-rad-ik' + (bekräftat ? ' ar-mossa' : ' ar-ockra') }, ikon('dag')),
+      el('span', { class: 'vy-rad-mitt' },
+        el('span', { class: 'vy-rad-titel' }, dag(p.datum, p.tid)),
+        el('span', { class: 'vy-rad-meta' },
+          p.amne ? el('span', {}, p.amne) : null,
+          p.langd_min ? el('span', {}, NXStudie.längdText(p.langd_min)) : null)),
+      el('span', { class: 'vy-rad-hoger' },
+        el('span', { class: 'lage' + (bekräftat ? ' klar' : ' vantar') }, bekräftat ? 'Bekräftat' : 'Väntar på svar')));
+  }
+
+  /* Alla kommande under Mina lektioner, de tre närmaste på Översikt. */
   function ritaKommande() {
     const lista = S.data.kommande || [];
-    const host = $('#bv-kommande');
     $('#bv-kommande-antal').textContent = lista.length ? String(lista.length) : '';
-    if (!lista.length) {
-      host.replaceChildren(tomt('Inga pass bokade just nu', 'När din förälder bokat ett pass står det här.'));
-      return;
-    }
-    host.replaceChildren(...lista.map(p => {
-      const bekräftat = p.status === 'confirmed';
-      return el('div', { class: 'vy-rad' },
-        el('span', { class: 'vy-rad-ik' + (bekräftat ? ' ar-mossa' : ' ar-ockra') }, ikon('dag')),
-        el('span', { class: 'vy-rad-mitt' },
-          el('span', { class: 'vy-rad-titel' }, dag(p.datum, p.tid)),
-          el('span', { class: 'vy-rad-meta' },
-            p.amne ? el('span', {}, p.amne) : null,
-            p.langd_min ? el('span', {}, NXStudie.längdText(p.langd_min)) : null)),
-        el('span', { class: 'vy-rad-hoger' },
-          el('span', { class: 'lage' + (bekräftat ? ' klar' : ' vantar') }, bekräftat ? 'Bekräftat' : 'Väntar på svar')));
-    }));
+    const tom = () => tomt('Inga pass bokade just nu', 'När din förälder bokat ett pass står det här.');
+    $('#bv-kommande').replaceChildren(...(lista.length ? lista.map(kommandeRad) : [tom()]));
+    $('#bv-narmast').replaceChildren(...(lista.length ? lista.slice(0, 3).map(kommandeRad) : [tom()]));
   }
 
   function ritaNotiser() {
@@ -416,6 +412,9 @@
   function ritaGenomförda() {
     const lista = S.data.genomforda || [];
     const host = $('#bv-genomforda');
+    const a = S.data.antal || {};
+    const antal = a.genomforda != null ? Number(a.genomforda) : lista.length;
+    $('#bv-genomforda-antal').textContent = antal ? String(antal) : '';
     if (!lista.length) {
       host.replaceChildren(tomt('Inga genomförda pass än', 'Efter ditt första pass står det här.'));
       return;
@@ -429,11 +428,17 @@
           p.langd_min ? el('span', {}, NXStudie.längdText(p.langd_min)) : null)))));
   }
 
+  /* Efter passen är en flik under Mina lektioner, bara när föräldern
+     slagit på rapporterna. */
   function ritaRapporter() {
-    const del = $('#bv-rapporter-del');
+    const flik = $('#bv-flik-rapporter');
     const lista = S.data.visa_rapporter ? (S.data.rapporter || []) : null;
-    del.hidden = !lista;
-    if (!lista) { $('#bv-rapporter').replaceChildren(); return; }
+    flik.hidden = !lista;
+    if (!lista) {
+      if (flik.getAttribute('aria-selected') === 'true') visaFlik('section[data-sek="lektioner"]', 'pass');
+      $('#bv-rapporter').replaceChildren();
+      return;
+    }
     if (!lista.length) {
       $('#bv-rapporter').replaceChildren(tomt('Inga rapporter än', 'Efter varje pass skriver din studiehjälpare vad ni gjorde.'));
       return;
@@ -544,25 +549,30 @@
     ritaUtveckling();
   }
 
-  /* Flikarna, utan arbetsytan: barnets vy laddar bara NX, NXStudie och
-     NXUppgifter. Pilarna flyttar mellan flikarna, som en flikrad lovar. */
-  function visaFlik(namn) {
-    NX.$$('#bv-nexlax .vy-flik').forEach(k => {
+  /* Flikarna, under Mina lektioner och i NexLäx. Arbetsytan laddas bara
+     för hälsningen, så flikarna sköts här. Pilarna flyttar mellan de
+     flikar som syns, som en flikrad lovar. */
+  function visaFlik(rot, namn) {
+    NX.$$(rot + ' .vy-flik').forEach(k => {
       const vald = k.dataset.flik === namn;
       k.setAttribute('aria-selected', vald ? 'true' : 'false');
       k.tabIndex = vald ? 0 : -1;
     });
-    NX.$$('#bv-nexlax .vy-flik-panel').forEach(p => { p.hidden = p.dataset.flik !== namn; });
+    NX.$$(rot + ' .vy-flik-panel').forEach(p => { p.hidden = p.dataset.flik !== namn; });
   }
-  NX.$$('#bv-nexlax .vy-flik').forEach((k, i, alla) => {
-    k.addEventListener('click', () => visaFlik(k.dataset.flik));
-    k.addEventListener('keydown', e => {
-      const steg = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (!steg) return;
-      e.preventDefault();
-      const nästa = alla[(i + steg + alla.length) % alla.length];
-      visaFlik(nästa.dataset.flik);
-      nästa.focus();
+  ['#bv-nexlax', 'section[data-sek="lektioner"]'].forEach(rot => {
+    NX.$$(rot + ' .vy-flik').forEach(k => {
+      k.addEventListener('click', () => visaFlik(rot, k.dataset.flik));
+      k.addEventListener('keydown', e => {
+        const steg = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!steg) return;
+        e.preventDefault();
+        const alla = NX.$$(rot + ' .vy-flik').filter(x => !x.hidden);
+        const i = alla.indexOf(k);
+        const nästa = alla[(i + steg + alla.length) % alla.length];
+        visaFlik(rot, nästa.dataset.flik);
+        nästa.focus();
+      });
     });
   });
 
@@ -686,13 +696,92 @@
     ladda();
   });
 
+  /* ============ tråden med studiehjälparen (barn_meddelanden, 2026-10-06) ============
+     Leo: "Man ska kunna skriva till sin studiehjälpare på barn vyn".
+     Barnets egen tråd, inte familjens: föräldern kan läsa den i studievyn
+     men skriver inte i den, och vi kan läsa den, som familjens. Rutan
+     säger båda. Barnets roll når ingen tabell, så allt går genom
+     barn_chatt(), barn_chatt_last() och barn_chatt_skriv(), som prövar
+     att inloggningen är aktiv och att barnet har en studiehjälpare.
+     Utan funktionerna i databasen (PGRST202) står Meddelanden som förut,
+     med notiserna. Ingen Realtime: tråden hämtas när vyn laddas, efter
+     varje meddelande och var trettionde sekund medan Meddelanden står
+     öppen. */
+  async function laddaChatt() {
+    const ruta = $('#bv-chatt'), ingen = $('#bv-skriva');
+    const { data, error } = await supa.rpc('barn_chatt');
+    if (error) {
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.warn('barn_chatt:', error.message);
+      /* En tråd som redan står byts inte mot ingenting. */
+      if (!S.chatt.data) { ruta.hidden = true; ingen.hidden = true; }
+      return;
+    }
+    const d = data || {};
+    if (d.lage !== 'ok') {
+      S.chatt.data = null;
+      ruta.hidden = true;
+      ingen.hidden = d.lage !== 'ingen';
+      ritaHej();
+      return;
+    }
+    S.chatt.data = d;
+    ingen.hidden = true;
+    ruta.hidden = false;
+    $('#bv-chatt-vem').textContent = d.studiehjalpare || '';
+    if (!S.chatt.ritare) {
+      S.chatt.ritare = NXStudie.barnTråd({
+        host: $('#bv-trad'), jag: 'barn',
+        namn: { barn: 'Du', studiehjalpare: d.studiehjalpare || 'Studiehjälparen' },
+        tom: 'Inga meddelanden än. Skriv första raden till ' + (d.studiehjalpare || 'din studiehjälpare') + ' här.',
+        skriv: $('#bv-tr-text'), knapp: $('#bv-tr-skicka'), skicka: skickaChatt
+      });
+    }
+    S.chatt.ritare.rita(d.meddelanden || []);
+    ritaHej();
+    if (S.aktiv === 'meddelanden') markeraChatt();
+  }
+
+  async function markeraChatt() {
+    const c = S.chatt.data;
+    if (!c || !c.olasta) return;
+    const { error } = await supa.rpc('barn_chatt_last');
+    if (error) { console.warn('barn_chatt_last:', error.message); return; }
+    c.olasta = 0;
+    ritaHej();
+  }
+
+  const SKRIV_FEL = {
+    tak: 'Du har skrivit många meddelanden på kort tid. Vänta en stund och försök igen.',
+    ingen: 'Du har ingen studiehjälpare just nu, så meddelandet gick inte iväg.',
+    saknas: 'Din inloggning är pausad, så meddelandet gick inte iväg.',
+    tom: 'Skriv något först.',
+    lang: 'Meddelandet är för långt. Dela upp det i två.'
+  };
+
+  async function skickaChatt(text) {
+    const msg = $('#bv-tr-msg');
+    NX.rensa(msg);
+    const { data, error } = await supa.rpc('barn_chatt_skriv', { p_text: text });
+    const läge = data && data.lage;
+    if (error || läge !== 'ok') {
+      NX.säg(msg, SKRIV_FEL[läge] || 'Meddelandet gick inte iväg. Försök igen om en stund.', false);
+      return { fel: true };
+    }
+    await laddaChatt();
+    return {};
+  }
+
+  setInterval(() => {
+    if (S.user && S.chatt.data && S.aktiv === 'meddelanden' && document.visibilityState === 'visible') laddaChatt();
+  }, 30000);
+
   /* ============ bekräftelsen av barnets e-post (barnets_epost) ============
      Koden tas ur adressen direkt, så att den inte står kvar i historiken
      eller följer med om sidan delas. Knappen skickar den; ett ord kommer
      tillbaka. Samma vy oavsett vem som är inloggad i webbläsaren. */
   const BEKRÄFTAT = {
-    ok: ['Klart, din e-post är bekräftad', 'Nu kan du logga in med den på nextrum.se/barn, med lösenordet du fått av din förälder.'],
-    redan: ['Adressen är redan bekräftad', 'Du kan logga in med den på nextrum.se/barn.'],
+    ok: ['Klart, din e-post är bekräftad', 'Nu kan du logga in med den på nextrum.se, under Logga in och Elev, med lösenordet du fått av din förälder.'],
+    redan: ['Adressen är redan bekräftad', 'Du kan logga in med den på nextrum.se, under Logga in och Elev.'],
     gammal: ['Länken har gått ut', 'Den gällde i sju dagar. Be din förälder skicka en ny från Nextrum.'],
     upptagen: ['Adressen används redan', 'Den hör redan till ett annat barnkonto hos Nextrum. Be din förälder om hjälp.'],
     av: ['Det går inte just nu', 'Adresser går inte att bekräfta just nu. Försök igen senare.'],
@@ -728,12 +817,12 @@
       if (supa) { visaBekräftelse(kod.slice(0, 200)); return; }
     }
     if (!supa) {
-      visa('view-auth');
-      NX.säg($('#auth-msg'), 'Inloggningen fungerar inte just nu. Försök igen senare.', false);
+      $('#fel-text').textContent = 'Inloggningen fungerar inte just nu. Försök igen senare.';
+      visa('view-fel');
       return;
     }
     const user = await NX.hämtaSession();
-    if (!user) { visa('view-auth'); return; }
+    if (!user) { location.replace(INLOGGNINGEN); return; }
     await starta(user);
   })();
 

@@ -24,7 +24,9 @@ som står i `supabase_migrations.schema_migrations` i driften.
   adressen `<användarnamn>@barn.nextrum.se` och `email_confirm`. Rollen,
   `app_metadata {roll: 'barn', forald_id, barn_id}` och kopplingen till
   barnet skriver databasen (se Auth nedan).
-- Barnet loggar in på `/barn` med användarnamnet. Adressen byggs i
+- Barnet loggar in med användarnamnet under Elev i studievyns eller
+  studiehjälparvyns inloggning (`/foralder#elev`, sedan 2026-10-06; före
+  det på `/barn`, som nu inte har någon egen inloggning). Adressen byggs i
   webbläsaren och barnet ser den aldrig. Felet är alltid "Fel användarnamn
   eller lösenord", utom när nätet inte svarar eller Supabase säger 429 för
   många försök; inget av dem säger något om vilka användarnamn som finns.
@@ -51,7 +53,8 @@ som står i `supabase_migrations.schema_migrations` i driften.
   på `/barn` Användarnamn. Familjens uppgifter hämtas aldrig med
   barnets inloggning, och barnets funktioner aldrig med en vuxens.
   Glömt lösenordet ger ett användarnamn och den tekniska adressen
-  beskedet att föräldern byter lösenordet, i alla vyer.
+  beskedet att föräldern byter lösenordet, i alla vyer. (Det som sägs om
+  `/barn` som inloggning här gällde till 2026-10-06; se Elev i rollvalet.)
 - **Varför den tekniska adressen finns.** Supabase Auth tar ett lösenord
   bara ihop med en e-postadress eller ett telefonnummer ("sign in with a
   password connected to their email or phone number", dokumentationen
@@ -276,11 +279,12 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
 
 ### Vyerna
 - `barn.html` + `nextrum-barn-vy.js`: NX, NXStudie och, sedan
-  2026-10-01, NXUppgifter för NexLäx (ingen kontakt, ingen betalning,
-  ingen bokning), skarp CSP (`/barn` i `vercel.json`), `noindex` och
-  `Disallow` i `robots.txt`. Ingen länk till föräldervyn och ingen
-  kontoinställning; "Vill du ändra något? Fråga din förälder." Allt utom
-  NexLäx ritas med `textContent`; NexLäx ritas av NXUppgifter med `esc()`,
+  2026-10-01, NXUppgifter för NexLäx (ingen betalning, ingen bokning, och
+  kontakt bara i barnets egen tråd, nedan), skarp CSP (`/barn` i `vercel.json`),
+  `noindex` och `Disallow` i `robots.txt`. Ingen länk till föräldervyn och
+  ingen kontoinställning; "Vill du ändra något? Fråga din förälder." Allt
+  utom NexLäx och tråden ritas med `textContent`; tråden ritas av
+  `NXStudie.barnTråd` och NexLäx av NXUppgifter, båda med `esc()`,
   som i studievyn, i läget `barnvy` (ingen bedömning, inga pass i Din
   utveckling). Se `minne/nexlax.md`.
 - **Elevvyn (2026-10-06).** Leo: "På elevvyn ska bara Översikt, nexläx,
@@ -288,32 +292,84 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
   logga in på elev, på logga in på studievyn". Vyn har nu studievyns skal:
   hälsningen med dagens bild (`NXArbete.hero`, se `minne/vyerna.md`; NXArbete
   laddas bara för den, och modulvakten prövar `dagensHero`) och sidomenyn
-  (`NXStudie.sidomeny`) med fyra delar:
-  - Översikt: timmarna, kommande pass, studieplanen, genomförda pass och
-    rapporterna, som förut.
+  (`NXStudie.sidomeny`). Först fyra delar; samma kväll fem (nedan).
+- **Fem delar (2026-10-06, kvällen).** Leo: "Lägg också till mina lektioner
+  sektionen på elev vyn bara att ingen betalning syns utan bara lektionerna,
+  rapporter osv. På översikt på barn vyn ha antal genomförda lektioner. och
+  kommande lektioner istället för timmar genomförda. Man ska kunna skriva
+  till sin studiehjälpare på barn vyn".
+  - Översikt: två siffror, genomförda och kommande pass (`antal` i
+    `barn_oversikt`, räknat i databasen; utan nyckeln räknas listorna),
+    det närmaste passet och en länk till Mina lektioner. Timmarna visas
+    inte längre, men `timmar` står kvar i svaret.
+  - Mina lektioner: flikarna Pass (kommande och genomförda), Studieplan
+    och Rapporter, som studievyns sektion men utan betalning, pris,
+    bokning eller avbokning. Fliken Rapporter göms när föräldern inte slagit
+    på `visa_rapporter`.
   - NexLäx: som förut. Utan `barn_nexlax` i databasen står ett besked i
     stället för flikarna, för delen finns alltid i menyn.
-  - Meddelanden: barnets notiser (`barn_notiser`), med siffran för olästa i
-    menyn och på hälsningens kort. **Ingen chatt, med flit**: familjens tråd
-    med studiehjälparen är förälderns (barnet ser aldrig föräldern), och
-    barnet svarar inte på något. En egen tråd mellan barn och studiehjälpare
-    är ett beslut (vuxen och barn i enrum, registret, policyn, juristen),
-    inte byggt. Rutan säger hur barnet frågar: på passet, eller genom
-    föräldern.
+  - Meddelanden: tråden med studiehjälparen överst (nedan), sedan Från
+    Nextrum, barnets notiser (`barn_notiser`). Siffran i menyn och på
+    hälsningens kort är olästa notiser plus olästa meddelanden.
   - Profil: inställningarna (`barn_installningar`), frågan till föräldern
     och Logga ut. Länken "Ändra dina val" i mejlen pekar på
     `#installningar`; vyn byter den mot `#profil` och hoppar förbi
     hälsningen, så att `barn.ts` inte behöver ändras.
+- **Barnets chatt (barnets_chatt, 2026-10-06).** Förut "ingen chatt, med
+  flit": familjens tråd är förälderns, och vuxen och barn i enrum är ett
+  beslut. Leo tog det: en egen tråd mellan barnet och studiehjälparen, som
+  föräldern läser men inte skriver i, i drift direkt efter merge (ingen
+  flagga). Därför:
+  - En egen tabell, `barn_meddelanden`, inte `messages`: barnet har ingen
+    rad i `profiles`, så `sender_id` går inte, och familjens tråd har
+    realtid, agenter och notisflöden som inte ska se barnet. `fran` är
+    `barn` eller `studiehjalpare`; `parent_id` och `tutor_id` står på varje
+    rad, så föräldern läser med en policy och raderingen hittar raderna.
+  - Ingen skriver i tabellen: barnet genom `barn_chatt_skriv()`, studie-
+    hjälparen genom `barnchatt_skriv()`; båda prövar relationen
+    (`intern.barnchatt_hjalpare`: matchad eller pausad, inte raderad) och
+    har ett tak (20 respektive 30 på tio minuter). Barnet läser med
+    `barn_chatt()` och markerar läst med `barn_chatt_last()` när delen
+    visas; en pausad inloggning läser men skriver inte. Studiehjälparen ser
+    bara sina nuvarande elever med inloggning (`barnchatt_tradar()`,
+    `barnchatt_trad()`, som markerar barnets meddelanden lästa); byts
+    studiehjälparen står den gamla tråden kvar för föräldern, inte för den
+    gamla studiehjälparen.
+  - Föräldern läser direkt i tabellen (policyn "föräldern läser barnens
+    trådar"), utan att något markeras som läst, i rutan Barnens trådar
+    under Meddelanden. Rutan ritas först när barnens och studiehjälparens
+    namn finns (`S.namnKlara`).
+  - Admin läser genom `barnchatt_las()` i familjens Öppna chatt, som loggar
+    `chatt.oppnad` med tabellen `barn_meddelanden`, aldrig texten; aldrig
+    direkt i tabellen från vyn.
+  - Studiehjälparen får en notis av typen `meddelande` med barnets förnamn,
+    aldrig texten, så kedjan och mallarna står som de är. Barnet får ingen
+    notis och inget mejl om chatten.
+  - Raderingen: raderna går med barnet (cascade), och triggern
+    `profiles_barnchatt_rensa` tar familjens eller studiehjälparens rader
+    när `raderad_at` sätts. De står kvar när bara inloggningen tas bort.
+  - Ritas av `NXStudie.barnTråd` i alla tre vyerna, med `esc()` och utan
+    klickbara länkar. Det står i barnets och studiehjälparens ruta att
+    föräldern och Nextrum kan läsa; ta inte bort det.
+  - Prövat i `rls-test.sql` avsnitt 21 och i `prova-barnkonton.js`.
 - **Elev i rollvalet (2026-10-06).** Inloggningen i studievyn och i
-  studiehjälparvyn har tre kort: Förälder, Elev och Studiehjälpare. Elev
-  leder till `/barn`, barnets egen inloggning; det förra "Förälder eller
-  elev" heter Förälder. Fältet i studievyn heter fortfarande "E-post eller
-  användarnamn", så ett barn som skriver sitt användarnamn där kommer
-  också fram. Från `/barn` finns fortfarande ingen länk tillbaka. Samma
-  dag fick de öppna sidornas Logga in-ruta (`.nx-vagval-val`, alla 41
-  sidor på båda språken; `var-ide.html` är skalet för de genererade)
-  samma tre val, Förälder, Elev och Studiehjälpare, i stället för
-  "Förälder eller elev".
+  studiehjälparvyn har tre kort: Förälder, Elev och Studiehjälpare; det
+  förra "Förälder eller elev" heter Förälder. Först ledde Elev till `/barn`;
+  samma kväll, Leo: "när man väljer att logga in som elev ska man inte komma
+  till en separat sida de ska vara på samma sida där man loggar in som
+  förälder och lärare". Nu är Elev ett läge i samma ruta
+  (`NXStudie.elevLänk`, adressen `#elev`): rubriken Elevvyn, fältet
+  Användarnamn, inga flikar för konto, och glömt lösenordet säger att
+  föräldern byter det. Barnet hamnar på `/barn` efter inloggningen
+  (`NXStudie.loggaInHär`), och en vuxen som loggar in i läget Elev laddar
+  om sin egen vy utan `#elev`. `/barn` har ingen inloggning längre: utan
+  session skickas man till `/foralder#elev`, och bara bekräftelselänken
+  (`?bekrafta=`) visas utan inloggning. Fältet i förälderns läge heter
+  fortfarande "E-post eller användarnamn", så ett barn som skriver sitt
+  användarnamn där kommer också fram. De öppna sidornas Logga in-ruta
+  (`.nx-vagval-val`, alla 41 sidor på båda språken; `var-ide.html` är
+  skalet för de genererade) har samma tre val, och Elev pekar på
+  `/foralder#elev`.
 - En vuxen som är inloggad i samma webbläsare och öppnar `/barn` ser bara
   "Någon annan är inloggad" och Logga ut, aldrig sin egen vy därifrån.
 - Rolldirigeringen: `NX.ärBarn(user)` läser `app_metadata`, aldrig

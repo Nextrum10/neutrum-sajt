@@ -152,6 +152,9 @@
          öppningen i auditloggen i samma transaktion som den läser. */
       const [förälder, hjälpare] = String(id).split('|');
       lägg('chatt', supa.rpc('chatt_las', { p_parent: förälder, p_tutor: hjälpare }));
+      /* Barnens trådar med samma studiehjälpare (barnets_chatt,
+         2026-10-06), genom barnchatt_las(), som också skriver öppningen. */
+      lägg('barnchatt', supa.rpc('barnchatt_las', { p_parent: förälder, p_tutor: hjälpare }));
     } else if (typ === 'studiehjalpare') {
       lägg('rapporter', supa.from('lesson_reports')
         .select('id, student_id, lesson_date, created_at').eq('tutor_id', id)
@@ -719,12 +722,48 @@
       h += '</div>';
     }
 
+    h += dpBarnchatt(t, d);
+
     return h + '<div class="dp-atgard" style="margin-top:22px">'
       + '<button class="btn btn-ghost btn-sm" type="button" data-dp="familj:' + esc(t.förälder) + '">'
       + esc(namn(t.förälder, 'Familjen')) + '</button>'
       + '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(t.hjälpare) + '">'
       + esc(namn(t.hjälpare, 'Studiehjälparen')) + '</button>'
       + '</div>';
+  }
+
+  /* Barnens trådar med studiehjälparen (barnets_chatt, 2026-10-06): en
+     per barn med egen inloggning, under familjens. Samma läsning som
+     ovan: ingenting markeras som läst, och öppningen står i loggen.
+     Utan funktionen i databasen, eller utan trådar, står ingenting. */
+  function dpBarnchatt(t, d) {
+    if (d.barnchattSaknas) return '';
+    if (d.barnchattFel) return '<div style="margin-top:20px">' + tomt('Barnens trådar gick inte att hämta', d.barnchattFel) + '</div>';
+    const rader = (d.barnchatt || []).slice().reverse();
+    if (!rader.length) return '';
+    const totalt = Number(rader[0].totalt) || rader.length;
+    const perBarn = {};
+    rader.forEach(m => { (perBarn[m.student_id] = perBarn[m.student_id] || []).push(m); });
+    const hjälpare = (namnFör(t.hjälpare) || 'Studiehjälparen').split(' ')[0];
+    let h = dpRubrik('Barnens trådar', totalt > rader.length ? 'de ' + rader.length + ' senaste av ' + totalt : '');
+    Object.keys(perBarn).forEach(id => {
+      const e = (S.elevlista || []).find(x => x.id === id);
+      const barn = e ? String(e.name || 'Barnet').split(' ')[0] : 'Barnet';
+      h += '<p class="bc-barn-namn" style="margin-top:12px">' + esc(barn) + ', i sin egen inloggning</p><div class="tr">';
+      let förraDagen = '';
+      perBarn[id].forEach(m => {
+        const dag = chattDag(m.created_at);
+        if (dag !== förraDagen) { h += '<div class="tr-dag">' + esc(dag) + '</div>'; förraDagen = dag; }
+        /* Barnet till vänster, studiehjälparen till höger, som ovan. */
+        h += '<div class="tr-rad ' + (m.fran === 'studiehjalpare' ? 'min' : 'deras') + '">'
+          + '<div class="tr-bubbla">' + esc(m.body) + '</div>'
+          + '<span class="tr-tid">' + esc((m.fran === 'studiehjalpare' ? hjälpare : barn) + ' · ' + klockslag(m.created_at))
+          + (m.read_at ? '' : ' · <span class="oläst" title="Mottagaren har inte öppnat det än">oläst</span>')
+          + '</span></div>';
+      });
+      h += '</div>';
+    });
+    return '<div style="margin-top:20px">' + h + '</div>';
   }
 
   /* Trådarna på en familjs eller en studiehjälpares Översikt, med Öppna
