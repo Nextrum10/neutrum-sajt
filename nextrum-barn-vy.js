@@ -608,7 +608,7 @@
       S.nl.val = { amne: amne.dataset.nlAmne, arskurs: ak, spar: S.nl.val.spar || 'vag' };
       S.nl.öppen = null;
       ritaOchHåll('#bv-nl-vag .nl-valj', ritaVägen,
-        '#bv-nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"][data-nl-ak="' + CSS.escape(ak) + '"]');
+        '#bv-nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]');
       return;
     }
     const ak = e.target.closest('#bv-nl-vag [data-nl-ak]');

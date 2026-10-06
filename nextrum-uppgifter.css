@@ -195,22 +195,6 @@
   display:flex;flex-direction:column;gap:12px;min-width:0;
   padding:14px;border-radius:24px;background:var(--yta);border:1px solid var(--ln);box-shadow:var(--sk-1);
 }
-.nl-senast{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
-.nl-senast-et{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3);margin-right:4px}
-.nl-senast-knapp{
-  display:inline-flex;align-items:center;gap:7px;min-height:46px;padding:4px 14px 4px 5px;border-radius:100px;cursor:pointer;
-  border:1.5px solid color-mix(in srgb,var(--nl-f,var(--acc)) 30%,var(--ln));
-  background:color-mix(in srgb,var(--nl-f,var(--acc)) 6%,var(--yta));color:var(--bl);
-  font:inherit;font-size:.84rem;font-weight:600;white-space:nowrap;
-  transition:scale .45s var(--vy-fjader,ease), border-color .15s var(--e);
-  -webkit-tap-highlight-color:transparent;
-}
-.nl-senast-knapp:active{scale:.95;transition-duration:.09s}
-.nl-senast-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.nl-senast-ik{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:color-mix(in srgb,var(--nl-f,var(--acc)) 16%,var(--yta));color:var(--nl-f,var(--acc))}
-.nl-senast-ik svg{width:17px;height:17px}
-.nl-senast-ik .nl-sprakkod{font-size:.66rem}
-
 .nl-ak{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
 .nl-ak-knapp{
   position:relative;min-width:54px;min-height:44px;padding:0 12px;border-radius:100px;cursor:pointer;
@@ -1467,3 +1451,21 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 .upg-fel-knapp:active{scale:.97}
 .upg-fel-knapp:disabled{opacity:.6;cursor:default}
 .upg-fel-tack{margin:0;min-height:44px;display:flex;align-items:center;font-size:.92rem;font-weight:600}
+
+/* Väljaren (2026-10-06, igen): årskurserna under ämnena. */
+.nl-ak-rubrik{margin:2px 0 -4px;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3)}
+
+/* Alla ranker (2026-10-06). */
+.nl-ranker{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:8px}
+.nl-ranker li{
+  display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;column-gap:10px;
+  min-height:44px;padding:7px 12px;border-radius:14px;border:1px solid var(--ln);background:var(--yta);
+}
+.nl-ranker-nr{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--pap);font-weight:700;font-size:.85rem;color:var(--bl-2)}
+.nl-ranker-nr svg{width:16px;height:16px}
+.nl-ranker b{font-weight:650;min-width:0}
+.nl-ranker small{color:var(--bl-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.nl-ranker li.klar .nl-ranker-nr{background:var(--mossa,var(--acc));color:var(--yta)}
+.nl-ranker li.nu{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,var(--yta))}
+.nl-ranker li.nu .nl-ranker-nr{background:var(--acc);color:var(--yta)}
+.nl-ranker em{grid-column:2 / -1;font-style:normal;font-size:.8rem;font-weight:650;color:var(--acc-text)}
