@@ -523,6 +523,33 @@ tabellerna och listorna, inte ytorna.
 - NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
   vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
 
+### Läget sätts med märkena (2026-10-06)
+
+Leo: "en grej jag inte gillar på admin är hur man trycker in läge. Gör de
+mer modernt de ser ut som att de är för 20 år sedan". Läget var en
+`<select>` (`väljare()` i kärnan): två tryck, och listan som fälls ut är
+operativsystemets. Nu är det `lägesväljare(karta, värde, attribut)`: alla
+lägen i rad som knappar, det valda ser ut som `.adm-status` i listan, och
+de andra är tomma ringar med en blek prick i sin färg. Ett tryck byter.
+
+- **Var:** anmälan, ansökan och studiehjälparen i panelen (under rubriken
+  Läge, knapparna under raden), underlaget i Löner och uppgifterna under
+  Att göra. Avbokningsskälen och Ansvarig är kvar som rullgardiner: de är
+  inga lägen, och sju val eller en lista med personer är ingen rad.
+  Filtren överst i listorna är också rullgardiner, med flit orörda.
+- **Lyssnarna är desamma.** Gruppen bär samma `data-*` som rullgardinen,
+  och kärnans klicklyssnare skickar `change` från gruppen med `value` som
+  det tryckta läget. Att sätta `value` visar ett läge, så `el.value =
+  gammal` efter ett nej på frågan (Godkänd, Avböjd, Utbetald) sätter
+  tillbaka det. Ett tryck på det valda gör ingenting.
+- **Knappar, inte radioknappar:** piltangenterna i en radiogrupp byter för
+  varje steg, och här skriver varje byte till databasen och Avböjd köar
+  ett nej. En knapp byter bara när den trycks (Tab och Enter).
+- **Ett fel visar det sparade:** nekas skrivningen sätts läget tillbaka
+  (anmälan, ansökan, studiehjälparen) eller ritas uppgiftslistan om.
+- `verktyg/prova-ansokningar.js` trycker på Avböjd i den riktiga panelen
+  och provar att Avbryt lämnar Kontaktad vald.
+
 ### Siffran vid Intresseanmälningar och Ansökningar är det du inte sett (2026-10-05)
 
 Leo: "notiserna ska försvinna efter vi klickat på områden och exempelvis sett

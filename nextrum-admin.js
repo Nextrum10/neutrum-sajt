@@ -92,7 +92,7 @@
       const l = S.leads.find(x => x.id === el.dataset.lead);
       const gammal = l.status;
       l.status = el.value;
-      if (!await skriv('leads', l.id, { status: el.value })) l.status = gammal;
+      if (!await skriv('leads', l.id, { status: el.value })) { l.status = gammal; el.value = gammal; }
       ritaLeads(); ritaÖversikt();
       return;
     }
@@ -141,7 +141,7 @@
         if (!ja) { el.value = gammal; return; }
       }
       a.status = el.value;
-      if (!await skriv('applications', a.id, { status: el.value })) a.status = gammal;
+      if (!await skriv('applications', a.id, { status: el.value })) { a.status = gammal; el.value = gammal; }
       /* Databasen köar nejet, eller låter det gå förbi när läget byts
          tillbaka. Rekryteringen visar när det går, så raden hämtas om. */
       if ((a.status === 'rejected') !== (gammal === 'rejected') && NXAdmin.rita.hämtaBesked) {
@@ -155,7 +155,7 @@
       const t = S.tutorProfiler[el.dataset.sh];
       const gammal = t.status;
       t.status = el.value;
-      if (!await skriv('tutor_profiles', t.id, { status: el.value })) t.status = gammal;
+      if (!await skriv('tutor_profiles', t.id, { status: el.value })) { t.status = gammal; el.value = gammal; }
       ritaStudiehjalpare(); ritaFamiljer(); ritaÖversikt();
       return;
     }

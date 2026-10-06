@@ -300,6 +300,46 @@ const NXAdmin = (function () {
       + '</select>';
   }
 
+  /* LÄGET SOM KNAPPAR (2026-10-06)
+     Leo: "en grej jag inte gillar på admin är hur man trycker in läge
+     ... de ser ut som att de är för 20 år sedan". Läget var en väljare()
+     ovan: två tryck, och listan som fälls ut är operativsystemets. Nu
+     står lägena bredvid varandra som märkena i listorna, i samma färger,
+     och ett tryck byter. Knappen ÄR fortfarande handlingen.
+
+     Knappar och inte radioknappar: piltangenterna i en radiogrupp byter
+     läge för varje steg, och här skriver varje byte till databasen, och
+     Avböjd köar ett nej. En knapp byter bara när den trycks.
+
+     Gruppen svarar som rullgardinen gjorde, så lyssnarna i
+     nextrum-admin.js och nextrum-admin-drift.js är desamma: ett tryck
+     skickar 'change' från gruppen, value är det tryckta läget, och att
+     sätta value (när frågan före ett byte besvaras med nej) visar det
+     gamla igen. väljare() står kvar för det som inte är ett läge, som
+     avbokningsskälen: sju val är en rullgardin, inte en rad. */
+  function lägesväljare(karta, värde, attribut) {
+    return '<div class="adm-lage" role="group" aria-label="Läge" ' + attribut + '>'
+      + Object.keys(karta).map(k => '<button type="button" value="' + esc(k) + '"'
+        + (karta[k][1] ? ' class="' + karta[k][1] + '"' : '')
+        + ' aria-pressed="' + (k === värde) + '">' + esc(karta[k][0]) + '</button>').join('')
+      + '</div>';
+  }
+
+  document.addEventListener('click', e => {
+    const knapp = e.target.closest('.adm-lage > button');
+    if (!knapp || knapp.getAttribute('aria-pressed') === 'true') return;
+    const grupp = knapp.parentElement;
+    if (!Object.getOwnPropertyDescriptor(grupp, 'value')) {
+      Object.defineProperty(grupp, 'value', {
+        get: () => (grupp.querySelector(':scope > [aria-pressed="true"]') || {}).value || '',
+        set: v => grupp.querySelectorAll(':scope > button').forEach(b =>
+          b.setAttribute('aria-pressed', String(b.value === v)))
+      });
+    }
+    grupp.value = knapp.value;
+    grupp.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+
   function namnFör(id) {
     const p = S.personer[id];
     return p ? (p.full_name || p.email || '—') : '—';
@@ -951,6 +991,7 @@ const NXAdmin = (function () {
     hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
+    lägesväljare,
     ärNyNu, ärRaderad, rita
   };
 })();
