@@ -876,10 +876,6 @@ body .mobile-menu{display:block}
 .nx-hero-et::before,.nx-hero-et::after{
   content:"";width:clamp(26px,3vw,42px);height:1px;background:currentColor;opacity:.55;flex:none;
 }
-/* Sedan 2026-10-06 står "Läxhjälp i Stockholm" här i stället för namnet:
-   sökordet först på sidan. Tre gånger så många tecken som "Nextrum", så
-   etiketten är mindre och bryts aldrig på en telefon (mätt på 320 px). */
-.nx-hero-film .nx-hero-et{font-size:clamp(12px,1.9vw,24px);letter-spacing:.18em;white-space:nowrap}
 .nx-hero-fakta{justify-content:center;margin-top:clamp(22px,2.6vw,30px);color:var(--nt-mut)}
 /* Raden bär ett pris i en egen span, så li är ett block och pricken
    en inline-block: som flex fick priset och resten av meningen var sin

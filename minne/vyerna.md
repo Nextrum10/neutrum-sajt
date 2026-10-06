@@ -13,8 +13,10 @@ Hero är orörd med flit. Allt annat på startsidan bor i
 ingenting utan `html.nx-sr` — klassen sätts av skriptet, så en fil som
 inte laddar lämnar sidan i slutläget.
 
-Hero var orörd med flit fram till 2026-10-06; sedan dess är bara filmen
-och rubriken det (se Startsidan talar till föräldern nedan).
+Hero är orörd med flit. En dag (2026-10-06) stod "Läxhjälp i Stockholm"
+som etikett och en ingress till föräldern; Leo tog tillbaka "Nextrum" och
+den gamla ingressen 2026-10-07. Kvar av den dagen är raden under knapparna
+(se Startsidan talar till föräldern nedan).
 
 **Hero-filmen spelar också på telefon** (2026-09-29, Leo: "heron rullar
 ej automatisk på mobil vy"). `heroVideo()` i `nextrum-motion.js` avstod
@@ -168,15 +170,13 @@ arbetslivet", nästa block var ett ensamt kort till blivande
 studiehjälpare, och priset och första timmen stod bara inne i demovyn.
 Den som betalar är en förälder. Ändrat, på båda språken:
 
-- **Heron.** Filmen och rubriken "Av unga, för unga." är orörda. Etiketten
-  säger "Läxhjälp i Stockholm" i stället för namnet (sökordet först på
-  sidan), ingressen börjar med läxhjälpen, och under knapparna står pris,
-  första timmen, svar inom 24 timmar och ingen bindningstid. Priset är en
-  `data-stat="pris-inline"`, så startsidan anropar nu `NX.initPris()`.
-  Raden är `.nx-hero-fakta`: `li` är ett block och pricken en
-  inline-block, för som flex fick priset och resten av meningen var sin
-  cell med glapp emellan. Etiketten är mindre och `nowrap`: "Läxhjälp i
-  Stockholm" är tre gånger så långt som "Nextrum" och bröts på en telefon.
+- **Heron.** Under knapparna står pris, första timmen, svar inom 24
+  timmar och ingen bindningstid. Priset är en `data-stat="pris-inline"`, så
+  startsidan anropar nu `NX.initPris()`. Raden är `.nx-hero-fakta`: `li`
+  är ett block och pricken en inline-block, för som flex fick priset och
+  resten av meningen var sin cell med glapp emellan. Etiketten
+  "Läxhjälp i Stockholm" och en ingress till föräldern stod där en dag;
+  Leo tog tillbaka "Nextrum" och den gamla ingressen 2026-10-07.
 - **Det ensamma kortet** under manifestet ("Så hjälper vi unga") är borta.
   En dag stod en rad med ämnena, online och priset där; Leo tog bort den
   2026-10-07, så manifestet slutar nu med knapparna. Startsidan länkar

@@ -173,8 +173,8 @@ Detaljer: `minne/grunden.md`.
 ### Startsidan efter hero
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
 delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
-Herons film och rubrik är orörda med flit; etiketten (Läxhjälp i Stockholm), ingressen och raden med pris, första timmen
-och 24 timmar talar till föräldern sedan 2026-10-06. Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
+Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
+under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
 första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
