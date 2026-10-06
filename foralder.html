@@ -28,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=47a1da42">
-<link rel="stylesheet" href="nextrum-vy.css?v=9c77621b">
+<link rel="stylesheet" href="nextrum-vy.css?v=bb5869b5">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=ec4e6af6">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=70850ac7">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=5e3e3bc2">
 </head>
 <body class="vy">
@@ -79,12 +79,16 @@
       <div class="auth-card">
         <span class="nx-et acc">Logga in</span>
         <h1 id="auth-title" style="margin-top:16px">Studievyn</h1>
-        <p class="nx-lede" id="auth-sub">För dig som är förälder eller elev: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.</p>
+        <p class="nx-lede" id="auth-sub">För dig som är förälder: studieplanen, bokningen, kontakten med er studiehjälpare och rapporten efter varje pass.</p>
 
         <div class="vy-roller">
           <a class="vy-roll" href="/foralder" aria-current="page">
-            <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>Förälder eller elev</b>
+            <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>Förälder</b>
             <span>Studieplan, bokning, meddelanden och rapporter.</span>
+          </a>
+          <a class="vy-roll" href="/barn">
+            <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/><path d="M6.5 11v4.3c0 1.5 2.5 2.9 5.5 2.9s5.5-1.4 5.5-2.9V11"/><path d="M21.5 9v5"/></svg>Elev</b>
+            <span>NexLäx, dina pass och meddelanden, med ditt användarnamn.</span>
           </a>
           <a class="vy-roll" href="/larare">
             <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>Studiehjälpare</b>
@@ -176,10 +180,9 @@
          när profilen kommit hem — markupen är tom med flit, för
          "Hej." som sedan byter till "Godkväll, Alma." blinkar.
 
-         Bakgrunden är bilder/hero-studievy.mp4 om filen finns, annars
-         hero-fotot. <video poster> gör det av sig självt: postern står
-         kvar om videon aldrig kan spela. Filmen kan alltså läggas till
-         senare utan att någon rad här ändras.
+         Bakgrunden är en bild per veckodag, och dagen står bredvid
+         etiketten (2026-10-06). Vilken bild som hör till vilken dag står
+         i NEXTRUM_HERO_VECKA i nextrum-images.js; måndagen har filmen.
          ============================================================ -->
     <section class="vy-hero" id="vy-hero" aria-labelledby="hej"></section>
 
@@ -1012,11 +1015,12 @@
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=63957b13"></script>
 <script src="nextrum-studie.js?v=a84e2822"></script>
-<script src="nextrum-arbetsyta.js?v=6c1e8e1a"></script>
+<script src="nextrum-images.js?v=c4a90ffa"></script>
+<script src="nextrum-arbetsyta.js?v=35b67861"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=d7fc6340"></script>
 <script src="nextrum-uppgifter.js?v=d8af91ab"></script>
-<script src="nextrum-modulvakt.js?v=6e3aa765"></script>
-<script src="nextrum-studie-vy.js?v=1ac98fdf"></script>
+<script src="nextrum-modulvakt.js?v=0e42eac2"></script>
+<script src="nextrum-studie-vy.js?v=ee25e037"></script>
 </body>
 </html>

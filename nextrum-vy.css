@@ -304,11 +304,24 @@ html:has(> body.vy){scroll-behavior:auto}
    stod i finstilt text under formuläret. Nu står valet först, och
    den vy man faktiskt är på är markerad.
    ============================================================ */
+/* Tre roller sedan 2026-10-06: Elev leder till barnets egen inloggning
+   (/barn). På en telefon står de som tre rader utan beskrivning, annars
+   hade valet ensamt varit en skärm högt före formuläret. */
 .vy-roller{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
   margin-bottom:clamp(22px,2.6vw,30px);
 }
-@media (max-width:520px){.vy-roller{grid-template-columns:1fr}}
+/* I tre spalter är ett kort 150 px brett, och "Studiehjälpare" med ikonen
+   bredvid gick ut i kanten: ikonen står ovanför rubriken. */
+@media (min-width:521px){
+  .vy-roller .vy-roll{padding:14px 13px}
+  .vy-roller .vy-roll b{flex-direction:column;align-items:flex-start;gap:8px}
+}
+@media (max-width:520px){
+  .vy-roller{grid-template-columns:minmax(0,1fr);gap:8px}
+  .vy-roller .vy-roll{padding:12px 14px;min-height:44px}
+  .vy-roller .vy-roll span{display:none}
+}
 .vy-roll{
   display:block;text-align:left;
   border:1px solid var(--ln);border-radius:14px;
@@ -984,6 +997,9 @@ body.betalar .hdr.bort{transform:none}
   border-radius:100px;padding:3px 7px;
 }
 @media (max-width:899px){.vy-sido-mark{margin-left:2px}}
+/* Raden man drar i på en telefon är tummens: posterna var 41 px höga
+   (2026-10-06, mätt när elevvyn fick samma meny). */
+@media (max-width:899px){.vy-sido a{min-height:44px}}
 .vy-sido a.ar-har .vy-sido-mark{background:var(--pap);color:var(--bl)}
 
 /* ------------------------------------------------------------

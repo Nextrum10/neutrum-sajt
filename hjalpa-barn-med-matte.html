@@ -350,8 +350,8 @@
 
 <!-- ==========================================================
      VYVÄLJARE — dörren in till inloggningen.
-     Själva inloggningen ligger kvar i foralder.html och
-     larare.html och är orörd.
+     Själva inloggningen ligger kvar i foralder.html, barn.html
+     (Elev, 2026-10-06) och larare.html och är orörd.
      ========================================================== -->
 <div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
   <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
@@ -363,8 +363,15 @@
     <div class="nx-vagval-val">
       <a href="/foralder">
         <span>
-          <b>Förälder eller elev</b>
+          <b>Förälder</b>
           <span>Studieplan, bokning, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/barn">
+        <span>
+          <b>Elev</b>
+          <span>NexLäx, dina pass och meddelanden, med ditt användarnamn.</span>
         </span>
         <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
@@ -396,11 +403,12 @@
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=fdfed591"></script>
-<script src="nextrum-images.js?v=50260f9d"></script>
+<script src="nextrum-images.js?v=c4a90ffa"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=371d3290"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=f1ce069c"></script>
+<script src="nextrum-start.js?v=c489fcd4"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

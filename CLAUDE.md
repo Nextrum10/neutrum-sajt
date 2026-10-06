@@ -98,6 +98,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   NexLäx och bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01), och ser aldrig
   priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade pass,
   aldrig timbanken. NexLäx görs i barnets vy och i familjens inloggning, med samma rader.
+  Elevvyn har fyra delar och inget mer (2026-10-06): Översikt, NexLäx, Meddelanden (Nextrums
+  notiser, ingen chatt) och Profil; Elev i vyernas rollval och i sajtens Logga in leder till `/barn`.
 - **Barnets egen e-post** (`barnets_epost`, 2026-10-01; flaggan `barn_epost` står AV tills
   juristen läst): föräldern lägger till den, barnet bekräftar den med en knapp, och först då
   används den, till inloggning (`barn-inloggning`) och, om föräldern slår på det, till mejl om
@@ -148,11 +150,12 @@ Detaljer: `minne/grunden.md`.
 
 ## 3. Filkartan
 - `nextrum-config.js` är enda filen som ändras vid uppsättning; `nextrum-fel.js` laddas före
-  `nextrum-app.js` (`NX`); bildvägar står bara i `nextrum-images.js`; `nextrum-samtycke.js` bara
+  `nextrum-app.js` (`NX`); bildvägar står bara i `nextrum-images.js`, också vyernas bild per
+  veckodag (`NEXTRUM_HERO_VECKA`; filmen bara på måndagen); `nextrum-samtycke.js` bara
   på öppna sidor. `nextrum-modulvakt.js` prövar en funktion per fil i alla fyra vyerna, moduler
   nås som identifierare (aldrig `window[...]`), och en ny `nextrum-admin-*.js` ska in där.
 - Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX,
-  NXStudie och NXUppgifter) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
+  NXStudie, NXUppgifter och NXArbete för hälsningen) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
   sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar

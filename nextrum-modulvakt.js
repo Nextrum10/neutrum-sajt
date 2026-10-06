@@ -59,8 +59,10 @@
     /* Barnets vy (barn.html) laddar NX, NXStudie och, sedan 2026-10-01,
        NXUppgifter för NexLäx: inga betalningar, ingen kontakt, ingen
        bokning. adminroll kom samma dag som vyn och är ett tecken på att
-       filen är ny nog. */
+       filen är ny nog. NXArbete kom 2026-10-06 för hälsningen och bara
+       för den; dagensHero kom samma dag. */
     krav.push([studieKlar && typeof NXStudie.adminroll === 'function', 'nextrum-studie.js'],
+              [typeof NXArbete !== 'undefined' && typeof NXArbete.dagensHero === 'function', 'nextrum-arbetsyta.js'],
               [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg, 'nextrum-uppgifter.js']);
   } else if (ärAdmin) {
     krav.push(

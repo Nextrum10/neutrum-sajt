@@ -283,6 +283,37 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
   NexLäx ritas med `textContent`; NexLäx ritas av NXUppgifter med `esc()`,
   som i studievyn, i läget `barnvy` (ingen bedömning, inga pass i Din
   utveckling). Se `minne/nexlax.md`.
+- **Elevvyn (2026-10-06).** Leo: "På elevvyn ska bara Översikt, nexläx,
+  meddelanden, och profil för barnet finnas", och "man ska också kunna
+  logga in på elev, på logga in på studievyn". Vyn har nu studievyns skal:
+  hälsningen med dagens bild (`NXArbete.hero`, se `minne/vyerna.md`; NXArbete
+  laddas bara för den, och modulvakten prövar `dagensHero`) och sidomenyn
+  (`NXStudie.sidomeny`) med fyra delar:
+  - Översikt: timmarna, kommande pass, studieplanen, genomförda pass och
+    rapporterna, som förut.
+  - NexLäx: som förut. Utan `barn_nexlax` i databasen står ett besked i
+    stället för flikarna, för delen finns alltid i menyn.
+  - Meddelanden: barnets notiser (`barn_notiser`), med siffran för olästa i
+    menyn och på hälsningens kort. **Ingen chatt, med flit**: familjens tråd
+    med studiehjälparen är förälderns (barnet ser aldrig föräldern), och
+    barnet svarar inte på något. En egen tråd mellan barn och studiehjälpare
+    är ett beslut (vuxen och barn i enrum, registret, policyn, juristen),
+    inte byggt. Rutan säger hur barnet frågar: på passet, eller genom
+    föräldern.
+  - Profil: inställningarna (`barn_installningar`), frågan till föräldern
+    och Logga ut. Länken "Ändra dina val" i mejlen pekar på
+    `#installningar`; vyn byter den mot `#profil` och hoppar förbi
+    hälsningen, så att `barn.ts` inte behöver ändras.
+- **Elev i rollvalet (2026-10-06).** Inloggningen i studievyn och i
+  studiehjälparvyn har tre kort: Förälder, Elev och Studiehjälpare. Elev
+  leder till `/barn`, barnets egen inloggning; det förra "Förälder eller
+  elev" heter Förälder. Fältet i studievyn heter fortfarande "E-post eller
+  användarnamn", så ett barn som skriver sitt användarnamn där kommer
+  också fram. Från `/barn` finns fortfarande ingen länk tillbaka. Samma
+  dag fick de öppna sidornas Logga in-ruta (`.nx-vagval-val`, alla 41
+  sidor på båda språken; `var-ide.html` är skalet för de genererade)
+  samma tre val, Förälder, Elev och Studiehjälpare, i stället för
+  "Förälder eller elev".
 - En vuxen som är inloggad i samma webbläsare och öppnar `/barn` ser bara
   "Någon annan är inloggad" och Logga ut, aldrig sin egen vy därifrån.
 - Rolldirigeringen: `NX.ärBarn(user)` läser `app_metadata`, aldrig
