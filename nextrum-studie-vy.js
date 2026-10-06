@@ -1194,7 +1194,7 @@
     if (amne) {
       const ak = amne.dataset.nlAk || '';
       väljBana({ amne: amne.dataset.nlAmne, arskurs: ak, spar: nu.spar || 'vag' },
-        '#nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"][data-nl-ak="' + CSS.escape(ak) + '"]');
+        '#nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]');
       return;
     }
     const ak = e.target.closest('#nl-vag [data-nl-ak]');
