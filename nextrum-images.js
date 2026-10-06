@@ -197,6 +197,58 @@ window.NEXTRUM_HERO_VECKA = [
 ];
 
 /* ------------------------------------------------------------
+   INTRODUKTIONEN I STUDIEVYN OCH STUDIEHJÄLPARVYN (2026-10-06)
+
+   Skärmdumpar av vyerna i en telefons bredd, med påhittade familjer,
+   som NXIntro (nextrum-introduktion.js) visar en i taget efter första
+   inloggningen och under Profil & inställningar. Nyckeln är delen i
+   vyn, och NXIntro.STEG bär texten till varje bild. Bilderna ritas av
+   verktyg/bygg-introbilder.js (jpg och webp, 780 × 880, dubbel
+   upplösning); ändras en del i vyn som en bild visar, kör det igen.
+   ------------------------------------------------------------ */
+window.NEXTRUM_INTRO = (function () {
+  function introbild(roll, del, alt) {
+    return { file: 'intro-' + roll + '-' + del, w: 780, h: 880, alt: alt };
+  }
+  return {
+  foralder: {
+    oversikt: introbild('foralder', 'oversikt', 'Översikt i studievyn på en telefon: under Att göra en ny tid som '
+      + 'studiehjälparen föreslagit, med knapparna Acceptera ny tid och Avböj, och en rapport att bekräfta.'),
+    boka: introbild('foralder', 'boka', 'Boka pass på en telefon: stegen Välj dag, Ämne, tid och plats och '
+      + 'Föreslå tiden, och kalendern för oktober med dagens datum markerat.'),
+    lektioner: introbild('foralder', 'lektioner', 'Mina lektioner på en telefon: flikarna Pass, Studieplan och '
+      + 'Efter passen, och passen i matematik med dag, tid, plats och om de är betalda.'),
+    bekrafta: introbild('foralder', 'bekrafta', 'Bekräfta rapport på en telefon: rapporten efter ett pass i '
+      + 'matematik, med hur det gick, vad de gjorde och vad som behöver tränas.'),
+    nexlax: introbild('foralder', 'nexlax', 'NexLäx på en telefon: dagar i rad, XP och märket, hur långt barnet '
+      + 'kommit i matematik åk 6, och nästa steg på vägen.'),
+    meddelanden: introbild('foralder', 'meddelanden', 'Meddelanden på en telefon: en tråd mellan föräldern och '
+      + 'studiehjälparen om läxan och om att flytta ett pass.'),
+    profil: introbild('foralder', 'profil', 'Barnens inloggning på en telefon: vad barnet får se och göra, med en '
+      + 'knapp för på eller av för passen, studieplanen och rapporterna.')
+  },
+  studiehjalpare: {
+    oversikt: introbild('studiehjalpare', 'oversikt', 'Översikt i studiehjälparvyn på en telefon: under Att göra '
+      + 'två tider att svara på och en rapport att skriva.'),
+    tider: introbild('studiehjalpare', 'tider', 'Föreslagna tider på en telefon: en tid som familjen föreslagit, med '
+      + 'knapparna Acceptera, Avslå och Föreslå annan tid.'),
+    lektioner: introbild('studiehjalpare', 'lektioner', 'Lektioner och elever på en telefon: flikarna för passen, '
+      + 'eleverna och planen, och de kommande passen med dag, tid och plats.'),
+    rapporter: introbild('studiehjalpare', 'rapporter', 'Skriv rapport på en telefon: ett pass i engelska som väntar '
+      + 'på sin rapport, med knappen Skriv rapport.'),
+    laxor: introbild('studiehjalpare', 'laxor', 'Uppgifter och material på en telefon: knapparna Ny uppgift och '
+      + 'Hämta ur materialet, och elevens öppna uppgifter.'),
+    meddelanden: introbild('studiehjalpare', 'meddelanden', 'Meddelanden på en telefon: en tråd per familj, med det '
+      + 'senaste meddelandet i varje.'),
+    statistik: introbild('studiehjalpare', 'statistik', 'Statistik och ersättning på en telefon: genomförda pass och '
+      + 'undervisade timmar i siffror.'),
+    profil: introbild('studiehjalpare', 'profil', 'Profil och inställningar på en telefon: din profil, det familjerna '
+      + 'och Nextrum ser, med bild och namn.')
+  }
+  };
+})();
+
+/* ------------------------------------------------------------
    Så här skapar du storlekarna för en ny bild (kör i bilder/):
 
      for w in 640 960 1280 1600 1920; do

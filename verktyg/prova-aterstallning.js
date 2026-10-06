@@ -70,6 +70,10 @@ const PROFILER = [
   { id: 'adminkonto-1', role: 'admin', full_name: 'Nina Admin', email: 'nina@example.se', is_admin: false }
 ];
 
+/* En inbjuden studiehjälpare har en profil i väntläge (handle_new_user). */
+const TUTORPROFILER = [{ id: 'handledare-1', status: 'pending', school: null, city: null, subjects: [],
+  grade_levels: [], formats: [], bio: null, age: null, hourly_rate: null }];
+
 function falskSupabase(o) {
   const logg = [];
   const svar = (route, status, kropp, extra) => route.fulfill({
@@ -134,7 +138,7 @@ function falskSupabase(o) {
     if (p.startsWith('/rest/v1/rpc/')) return svar(route, 404, { code: 'PGRST202', message: 'Ingen sådan funktion i provet.' });
     if (p.startsWith('/rest/v1/')) {
       if (metod !== 'GET' && metod !== 'HEAD') return svar(route, 201, []);
-      let rader = p === '/rest/v1/profiles' ? PROFILER : [];
+      let rader = p === '/rest/v1/profiles' ? PROFILER : p === '/rest/v1/tutor_profiles' ? TUTORPROFILER : [];
       const id = url.searchParams.get('id');
       if (id && id.startsWith('eq.')) rader = rader.filter(r => r.id === id.slice(3));
       return svar(route, 200, rader, { 'content-range': rader.length ? '0-' + (rader.length - 1) + '/' + rader.length : '*/0' });
@@ -443,26 +447,36 @@ async function provaLänken(webb) {
     await context.close();
   }
 
-  /* En inbjudan från bjud-in (2026-10-01): studievyn och studiehjälparvyn ber om ett lösenord. */
-  for (const [väg, id, sedan] of [['/foralder', 'foralder-1', '#view-locked'], ['/larare', 'handledare-1', '#view-pending']]) {
+  /* En inbjudan från bjud-in (2026-10-01): studievyn och studiehjälparvyn ber om ett lösenord.
+     Sedan 2026-10-06 går rutan inte att hoppa över, och introduktionen följer
+     (verktyg/prova-introduktion.js provar den i detalj). */
+  for (const [väg, id, sedan, steg] of [['/foralder', 'foralder-1', '#view-locked', 7], ['/larare', 'handledare-1', '#view-pending', 8]]) {
     const v = väg.slice(1);
     const { context, page, S, konsol } = await öppna(webb, {});
     await page.goto(BAS + väg + länk(id, 'invite'));
     await page.waitForSelector('.nx-fraga.open #nylos-t', { timeout: 8000 }).catch(() => {});
-    prova(v + ' inbjudan: rutan ber om ett lösenord', (await text(page, '#nylos-t')) === 'Välj ditt lösenord', await text(page, '#nylos-t'));
+    prova(v + ' inbjudan: rutan ber om ett lösenord', (await text(page, '#nylos-t')) === 'Skapa ditt lösenord', await text(page, '#nylos-t'));
     prova(v + ' inbjudan: rutan välkomnar', (await text(page, '#nylos-t + p')).startsWith('Välkommen till Nextrum!'), await text(page, '#nylos-t + p'));
-    prova(v + ' inbjudan: fältet heter Lösenord', (await text(page, 'label[for="nylos-1"]')) === 'Lösenord');
+    prova(v + ' inbjudan: nytt lösenord och bekräfta det',
+      (await text(page, 'label[for="nylos-1"]')) === 'Nytt lösenord' && (await text(page, 'label[for="nylos-2"]')) === 'Bekräfta lösenordet');
+    prova(v + ' inbjudan: inget Inte nu, men Logga ut',
+      (await page.locator('[data-nylos-nej]').count()) === 0 && (await page.locator('[data-nylos-ut]').count()) === 1);
+    await page.keyboard.press('Escape');
+    prova(v + ' inbjudan: Escape stänger inte rutan', await synlig(page, '.nx-fraga.open #nylos-t'));
     if (väg === '/foralder') await bild(page, 'foralder-inbjudan');
     await page.fill('#nylos-1', 'mitt-forsta-losen');
     await page.fill('#nylos-2', 'mitt-forsta-losen');
     await page.click('form[data-nylos] [type="submit"]');
-    await page.waitForSelector('[data-nylos-klar]', { timeout: 6000 }).catch(() => {});
-    prova(v + ' inbjudan: lösenordet sparas med inbjudans inloggning',
-      S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT' && r.vem === id && r.kropp && r.kropp.password === 'mitt-forsta-losen'));
-    prova(v + ' inbjudan: Lösenordet är sparat', (await text(page, '#nylos-t')) === 'Lösenordet är sparat', await text(page, '#nylos-t'));
-    await page.click('[data-nylos-klar]');
+    await page.waitForSelector('.nx-intro.open', { timeout: 6000 }).catch(() => {});
+    prova(v + ' inbjudan: lösenordet sparas med inbjudans inloggning, och välkomsten går till introduktionen',
+      S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT' && r.vem === id && r.kropp
+        && r.kropp.password === 'mitt-forsta-losen' && r.kropp.data && r.kropp.data.valkommen === 'intro'));
+    prova(v + ' inbjudan: introduktionen tar vid', (await text(page, '.nx-intro-nr')) === '1 av ' + steg, await text(page, '.nx-intro-nr'));
+    for (let i = 0; i < steg; i++) await page.click('[data-intro-fram]');
     await page.waitForSelector(sedan + ':not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova(v + ' inbjudan: vyn fortsätter efter rutan', await synlig(page, sedan));
+    prova(v + ' inbjudan: vyn fortsätter efter Fortsätt', await synlig(page, sedan) && !(await synlig(page, '.nx-intro')));
+    prova(v + ' inbjudan: välkomsten tas bort', S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT'
+      && r.kropp && r.kropp.data && r.kropp.data.valkommen === null && !r.kropp.password));
     prova(v + ' inbjudan: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }
@@ -485,7 +499,7 @@ async function provaLänken(webb) {
     await page.waitForURL(u => new URL(u).pathname === '/foralder', { timeout: 8000 }).catch(() => {});
     await page.waitForSelector('.nx-fraga.open #nylos-t', { timeout: 8000 }).catch(() => {});
     prova('startsidan: en inbjudan går vidare till studievyn och ber om ett lösenord',
-      new URL(page.url()).pathname === '/foralder' && (await text(page, '#nylos-t')) === 'Välj ditt lösenord', page.url());
+      new URL(page.url()).pathname === '/foralder' && (await text(page, '#nylos-t')) === 'Skapa ditt lösenord', page.url());
     prova('startsidan: inbjudan rörde inte inloggningen där', frånStartsidan.length === 0, frånStartsidan.join(', '));
     await context.close();
   }
@@ -574,7 +588,7 @@ async function provaMellansidan(webb) {
       && (await text(page, '#lank-knapp')) === 'Välj lösenord', await text(page, '#lank-titel'));
     await page.click('#lank-knapp');
     await page.waitForSelector('.nx-fraga.open #nylos-t', { timeout: 8000 }).catch(() => {});
-    prova('lank okodad: vidare till rutan för inbjudan', (await text(page, '#nylos-t')) === 'Välj ditt lösenord', await text(page, '#nylos-t'));
+    prova('lank okodad: vidare till rutan för inbjudan', (await text(page, '#nylos-t')) === 'Skapa ditt lösenord', await text(page, '#nylos-t'));
     await context.close();
   }
   {

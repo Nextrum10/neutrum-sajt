@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett och barnets chatt)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt och barnets behörigheter)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -49,7 +49,8 @@
 -- Fas 23.2 (NexLäx, fas23_2_nexlax, med sin bank), admin_oppnar_chatten,
 -- avbokningar_och_svar, tipskoder_och_kampanjkoder,
 -- barnkonton_och_admin, manadskorningen_gar_varje_natt, admin_paminnelser,
--- ansokan_vardnadshavare_och_nej, admin_sett och barnets_chatt är körda.
+-- ansokan_vardnadshavare_och_nej, admin_sett, nexlax_uppdrag_och_np,
+-- nexlax_felrapporter, barnets_chatt och barnets_behorigheter är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -12041,6 +12042,296 @@ begin
   end;
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('21 Barnets chatt', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- ------------------------------------------------------------
+-- 22. Barnets behörigheter (barnets_behorigheter, 2026-10-06)
+--
+-- Föräldern väljer vad barnet får se och göra: pass, studieplan,
+-- rapporter, nexlax, meddelanden och chatt. Valet hålls i databasen:
+-- barnets funktioner lämnar inte ut det som är av, NexLäx-funktionerna
+-- släpper inte in ett barn utan NexLäx, och i en avstängd tråd skriver
+-- varken barnet eller studiehjälparen. Bara föräldern ändrar valet.
+-- Allt i ett block som rullas tillbaka; utfallet samlas i en variabel.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  r    jsonb;
+  t    text;
+  kod  text;
+  E    constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  EY   constant uuid := '00000000-0000-4000-8000-0000000005b1';
+  EQ   constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  KE   constant uuid := '00000000-0000-4000-8000-0000000bc0c1';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  N    constant uuid := '00000000-0000-4000-8000-00000000cb01';
+  F    constant uuid := '00000000-0000-4000-8000-00000000cb02';
+  HV   constant uuid := '00000000-0000-4000-8000-00000000cb03';
+  NO   constant uuid := '00000000-0000-4000-8000-00000000cb04';
+begin
+  begin
+    -- Fixturen, som postgres: en nivå, en vanlig uppgift och en notis.
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning)
+    values (N, 'rls-behorighetens-niva', 'Matematik', 'ak6', 'Bråk', 'RLS-behörighetens nivå', 1);
+    insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, alternativ, ratt, forklaring)
+    values (F, N, 1, 'val', 'Vilket är störst?', '["1/2","1/3"]', '0', 'Halva är mest.');
+    insert into public.homework (id, student_id, tutor_id, title) values (HV, E, A, 'RLS behörighetens uppgift');
+    insert into public.barn_notiser (id, barn_id, typ, text) values (NO, E, 'avbokat', 'Prov');
+    -- Barnet har en aktiv inloggning och studiehjälparen A, som i avsnitt 21.
+    update public.students set barn_aktiv = true, match_status = 'matched', matched_tutor_id = A where id = E;
+
+    select array_to_string(barn_behorigheter, ',') || '|' || visa_rapporter::text into t
+      from public.students where id = E;
+    ut := ut || jsonb_build_object('t', 'BB förvalet: allt utom rapporterna', 'ok',
+            t = 'chatt,meddelanden,nexlax,pass,studieplan|false', 'd', t);
+
+    -- Föräldern läser.
+    perform pg_temp.bli(P);
+    r := public.mina_barns_behorigheter();
+    ut := ut || jsonb_build_object('t', 'BB föräldern läser sina barns val, och alla val i ordning', 'ok',
+            r -> 'alla' = '["pass","studieplan","rapporter","nexlax","meddelanden","chatt"]'::jsonb
+            and exists (select 1 from jsonb_array_elements(r -> 'barn') x where (x ->> 'barn_id')::uuid = E
+                          and x -> 'behorigheter' = '["chatt","meddelanden","nexlax","pass","studieplan"]'::jsonb)
+            and not exists (select 1 from jsonb_array_elements(r -> 'barn') x where (x ->> 'barn_id')::uuid = EQ),
+            'd', left(r::text, 200));
+    reset role;
+    perform pg_temp.bli(Q);
+    r := public.mina_barns_behorigheter();
+    ut := ut || jsonb_build_object('t', 'BB en annan förälder ser inte barnets val', 'ok',
+            not exists (select 1 from jsonb_array_elements(r -> 'barn') x where (x ->> 'barn_id')::uuid = E),
+            'd', left(r::text, 200));
+
+    -- Föräldern stänger av NexLäx, notiserna och tråden.
+    reset role;
+    perform pg_temp.bli(P);
+    r := public.barn_behorigheter_satt(E, array['pass', 'studieplan']);
+    ut := ut || jsonb_build_object('t', 'BB föräldern stänger av NexLäx, notiserna och tråden', 'ok',
+            r -> 'behorigheter' = '["pass","studieplan"]'::jsonb, 'd', r::text);
+
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*)::text into t from public.audit_logg
+     where tabell = 'students' and objekt_id = E::text and handling = 'barnkonto.andrad'
+       and efter ? 'barn_behorigheter' and aktor = P;
+    ut := ut || jsonb_build_object('t', 'BB valet skrivs i auditloggen med föräldern som aktör', 'ok', t = '1', 'd', t);
+
+    perform pg_temp.bli_barn(KE, E, P);
+    r := public.barn_nexlax();
+    ut := ut || jsonb_build_object('t', 'BB barnet utan NexLäx får ingen bana', 'ok',
+            r = '{"lage": "avstangd"}'::jsonb, 'd', left(r::text, 200));
+    begin
+      perform public.niva_starta(N, E);
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB barnet utan NexLäx startar ingen nivå', 'ok', kod = '42501', 'd', kod);
+    begin
+      perform public.nexlax_lage(E);
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB barnet utan NexLäx läser inte sitt läge', 'ok', kod = '42501', 'd', kod);
+    begin
+      perform public.barn_uppgift(HV, 'klar');
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB barnet utan NexLäx bockar inte av en uppgift', 'ok', kod = '42501', 'd', kod);
+    begin
+      perform public.rapportera_fragefel(F, 'facit');
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB barnet utan NexLäx rapporterar inget fel i en fråga', 'ok', kod = '42501', 'd', kod);
+    select count(*)::text into t from public.barn_notiser();
+    ut := ut || jsonb_build_object('t', 'BB barnet utan meddelanden ser inga notiser', 'ok', t = '0', 'd', t);
+    ut := ut || jsonb_build_object('t', 'BB barnet utan meddelanden markerar ingenting', 'ok',
+            public.barn_markera_last(NO) = false, 'd', null);
+    r := public.barn_oversikt();
+    ut := ut || jsonb_build_object('t', 'BB översikten säger vad som är på', 'ok',
+            r ->> 'lage' = 'ok' and r -> 'behorigheter' = '["pass","studieplan"]'::jsonb
+            and r ? 'kommande' and r ? 'timmar' and r ? 'antal' and r ? 'studieplan', 'd', left(r::text, 200));
+
+    -- Tråden av: barnet läser och skriver inte.
+    r := public.barn_chatt();
+    ut := ut || jsonb_build_object('t', 'BB barnet utan tråden läser den inte', 'ok',
+            r = '{"lage": "avstangd"}'::jsonb, 'd', left(r::text, 200));
+    r := public.barn_chatt_skriv('Hej, får jag skriva?');
+    ut := ut || jsonb_build_object('t', 'BB barnet utan tråden skriver inte', 'ok',
+            r ->> 'lage' = 'avstangd', 'd', r::text);
+    ut := ut || jsonb_build_object('t', 'BB barnet utan tråden markerar ingenting', 'ok',
+            public.barn_chatt_last() = 0, 'd', null);
+
+    -- Studiehjälparen skriver inte heller, och ser varför.
+    reset role;
+    perform pg_temp.bli(A);
+    r := public.barnchatt_skriv(E, 'Hej från studiehjälparen');
+    ut := ut || jsonb_build_object('t', 'BB studiehjälparen skriver inte i en avstängd tråd', 'ok',
+            r ->> 'lage' = 'avstangd', 'd', r::text);
+    r := public.barnchatt_trad(E);
+    ut := ut || jsonb_build_object('t', 'BB studiehjälparen läser tråden och ser att den är avstängd', 'ok',
+            r ->> 'lage' = 'ok' and not (r ->> 'kan_skriva')::boolean and (r ->> 'avstangd')::boolean,
+            'd', left(r::text, 200));
+    r := public.barnchatt_tradar();
+    ut := ut || jsonb_build_object('t', 'BB studiehjälparens lista säger att tråden är avstängd', 'ok',
+            exists (select 1 from jsonb_array_elements(r) x where (x ->> 'elev')::uuid = E
+                      and (x ->> 'avstangd')::boolean and not (x ->> 'kan_skriva')::boolean),
+            'd', left(r::text, 200));
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*)::text into t from public.barn_meddelanden where student_id = E;
+    ut := ut || jsonb_build_object('t', 'BB ingenting skrevs i den avstängda tråden', 'ok', t = '0', 'd', t);
+    perform pg_temp.bli_barn(KE, E, P);
+
+    -- Familjens egen inloggning gör NexLäx som förut.
+    reset role;
+    perform pg_temp.bli(P);
+    begin
+      perform public.niva_starta(N, E);
+      kod := 'ok';
+    exception when others then kod := sqlstate || ' ' || sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB familjen gör NexLäx åt barnet också med barnets NexLäx av', 'ok', kod = 'ok', 'd', kod);
+
+    -- Passen och studieplanen av, NexLäx, notiserna och tråden på igen.
+    r := public.barn_behorigheter_satt(E, array['nexlax', 'meddelanden', 'chatt']);
+    reset role;
+    perform pg_temp.bli_barn(KE, E, P);
+    r := public.barn_oversikt();
+    ut := ut || jsonb_build_object('t', 'BB utan passen och studieplanen lämnas de inte ut', 'ok',
+            r ->> 'lage' = 'ok' and r ->> 'fornamn' = 'Äldst'
+            and not (r ? 'kommande') and not (r ? 'genomforda') and not (r ? 'timmar') and not (r ? 'antal')
+            and not (r ? 'studieplan')
+            and r -> 'behorigheter' = '["chatt","meddelanden","nexlax"]'::jsonb, 'd', left(r::text, 200));
+    r := public.barn_nexlax();
+    ut := ut || jsonb_build_object('t', 'BB med NexLäx på igen får barnet sin bana', 'ok', r ->> 'lage' = 'ok', 'd', r ->> 'lage');
+    ut := ut || jsonb_build_object('t', 'BB med NexLäx på igen rapporterar barnet ett fel i en fråga', 'ok',
+            public.rapportera_fragefel(F, 'otydlig'), 'd', null);
+    select count(*)::text into t from public.barn_notiser();
+    ut := ut || jsonb_build_object('t', 'BB med meddelandena på igen ser barnet notisen', 'ok', t::integer >= 1, 'd', t);
+    r := public.barn_chatt();
+    ut := ut || jsonb_build_object('t', 'BB med tråden på igen läser barnet den', 'ok',
+            r ->> 'lage' = 'ok' and (r ->> 'kan_skriva')::boolean, 'd', left(r::text, 200));
+    r := public.barn_chatt_skriv('Nu går det');
+    ut := ut || jsonb_build_object('t', 'BB med tråden på igen skriver barnet', 'ok', r ->> 'lage' = 'ok', 'd', r::text);
+
+    -- Rapporterna går genom listan, till visa_rapporter.
+    reset role;
+    perform pg_temp.bli(P);
+    r := public.barn_behorigheter_satt(E, array['rapporter', 'pass', 'pass']);
+    ut := ut || jsonb_build_object('t', 'BB rapporterna sparas i visa_rapporter, och dubbletter försvinner', 'ok',
+            r -> 'behorigheter' = '["pass","rapporter"]'::jsonb
+            and (select visa_rapporter and barn_behorigheter = '{pass}' from public.students where id = E),
+            'd', r::text);
+    reset role;
+    perform pg_temp.bli_barn(KE, E, P);
+    r := public.barn_oversikt();
+    ut := ut || jsonb_build_object('t', 'BB barnet ser rapporterna när de är på', 'ok',
+            r ->> 'visa_rapporter' = 'true' and r -> 'behorigheter' = '["pass","rapporter"]'::jsonb, 'd', left(r::text, 200));
+
+    -- Ingen annan ändrar valet.
+    reset role;
+    perform pg_temp.bli(Q);
+    begin
+      perform public.barn_behorigheter_satt(E, '{}');
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB en annan förälder ändrar inte valet', 'ok', kod = '42501', 'd', kod);
+    reset role;
+    perform pg_temp.bli(A);
+    begin
+      perform public.barn_behorigheter_satt(E, '{}');
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB studiehjälparen ändrar inte valet', 'ok', kod = '42501', 'd', kod);
+    update public.students set barn_behorigheter = '{}' where id = E;
+    reset role;
+    perform pg_temp.bli(AD);
+    begin
+      perform public.barn_behorigheter_satt(E, '{}');
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB admin ändrar inte valet genom funktionen', 'ok', kod = '42501', 'd', kod);
+    update public.students set barn_behorigheter = '{}' where id = E;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select array_to_string(barn_behorigheter, ',') into t from public.students where id = E;
+    ut := ut || jsonb_build_object('t', 'BB studiehjälparen och admin ändrar inte kolumnen direkt', 'ok', t = 'pass', 'd', t);
+
+    perform pg_temp.bli_barn(KE, E, P);
+    begin
+      perform public.barn_behorigheter_satt(E, array['nexlax']);
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB barnet ändrar inte sitt eget val', 'ok', kod = '42501', 'd', kod);
+    begin
+      perform public.mina_barns_behorigheter();
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB barnet läser inte förälderns lista', 'ok', kod = '42501', 'd', kod);
+
+    -- Det som inte går.
+    reset role;
+    perform pg_temp.bli(P);
+    begin
+      perform public.barn_behorigheter_satt(E, array['boka']);
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB en okänd behörighet nekas', 'ok', kod = '22023', 'd', kod);
+    begin
+      perform public.barn_behorigheter_satt(EY, array['pass']);
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB ett barn utan inloggning får inga val', 'ok', kod = '55000', 'd', kod);
+    begin
+      update public.students set barn_behorigheter = '{boka}' where id = E;
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BB villkoret nekar en okänd behörighet i kolumnen', 'ok', kod = '23514', 'd', kod);
+
+    -- En inloggning som tas bort tar valen med sig.
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    delete from auth.users where id = KE;
+    select array_to_string(barn_behorigheter, ',') || '|' || visa_rapporter::text into t
+      from public.students where id = E;
+    ut := ut || jsonb_build_object('t', 'BB utan inloggning börjar valen om från förvalet', 'ok',
+            t = 'chatt,meddelanden,nexlax,pass,studieplan|false', 'd', t);
+
+    ut := ut || jsonb_build_object('t', 'BB anon når inte funktionerna', 'ok',
+            not has_function_privilege('anon', 'public.mina_barns_behorigheter()', 'execute')
+            and not has_function_privilege('anon', 'public.barn_behorigheter_satt(uuid, text[])', 'execute')
+            and not has_function_privilege('nextrum_barn', 'public.barn_behorigheter_satt(uuid, text[])', 'execute'),
+            'd', null);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('BB Barnets behörigheter', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

@@ -477,10 +477,11 @@
      någon registrerar ett konto. Adminvyn kan alltså inte trolla
      fram en familj — kontot måste finnas.
 
-     Har familjen inget konto kan den bjudas in härifrån (Fas 2.8).
+     Har familjen inget konto skapas det härifrån (Fas 2.8, och sedan
+     2026-10-06 i samma tryck som eleven: Ta in familjen).
      Edge-funktionen bjud-in kör auth.admin.inviteUserByEmail med
-     service_role; familjen får ett mejl, väljer lösenord, och då
-     finns kontot. Eleven skapas efter det, i samma ruta.
+     service_role; kontot finns direkt, och familjen får ett mejl med
+     en länk där de väljer sitt lösenord.
      ============================================================ */
   /* FAMILJEN ÄR DEN SOM SKICKADE ANMÄLAN
 
@@ -521,14 +522,27 @@
     return '<div class="le-familj le-familj-saknas">'
       + '<span class="le-familj-et">Familj, ur anmälan</span>'
       + '<b>' + esc(lead.parent_name || lead.email || 'Okänd') + '</b>'
-      + '<span>Inget konto har adressen ' + esc(lead.email || '—') + ' än. '
-      + 'Bjud in familjen, så skapas kontot och eleven kan läggas till direkt.</span>'
       + (NX.epostOk(lead.email || '')
-        ? '<button type="button" class="btn btn-ghost btn-sm" id="le-bjud">Bjud in familjen</button>'
-        : '<span class="xsmall" style="color:var(--acc-text)">Adressen i anmälan går inte att skicka till. Rätta den först.</span>')
+        ? '<span>Inget konto har adressen ' + esc(lead.email) + ' än. Det skapas när du tar in familjen, '
+          + 'och de får ett mejl från Nextrum med en länk där de väljer sitt lösenord.</span>'
+        : '<span class="xsmall" style="color:var(--acc-text)">Adressen i anmälan går inte att skicka till. '
+          + 'Rätta den först.</span>')
       + '</div>';
   }
 
+  /* TA IN FAMILJEN (2026-10-06)
+
+     Leo: "när vi tar in ... familjen till plattformen används deras
+     mail", utan att familjen själv skapar ett konto. Förut stod
+     inbjudan som en egen knapp mitt i rutan, Skapa elev var låst tills
+     den tryckts, och rutan sa åt admin att vänta. Nu är det ett tryck:
+     kontot skapas (bjud-in, som mejlar länken), anmälan kopplas till
+     det, och eleven skapas ur anmälan. Har familjen redan ett konto är
+     rutan som förut, Skapa elev.
+
+     Mejlet är riktigt, och rutan säger det innan knappen trycks: det är
+     frågan. Går eleven inte att skapa efter att kontot skapats står
+     familjen kvar i rutan, och knappen blir Skapa elev. */
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-lead-elev]');
     if (!knapp) return;
@@ -537,13 +551,18 @@
     if (!lead) return;
 
     let familj = anmälansFamilj(lead);
+    let inbjuden = false;
+    const kanBjuda = NX.epostOk(lead.email || '');
 
     const ruta = document.createElement('div');
     ruta.className = 'nx-fraga';
     ruta.innerHTML =
       '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="le-t">'
-      + '<h3 id="le-t">Skapa elev ur anmälan</h3>'
-      + '<p>Eleven hamnar under Elever och i matchningskön så fort den finns.</p>'
+      + '<h3 id="le-t">' + (familj ? 'Skapa elev ur anmälan' : 'Ta in familjen') + '</h3>'
+      + '<p>' + (familj
+        ? 'Eleven hamnar under Elever och i matchningskön så fort den finns.'
+        : 'Familjen får ett konto med adressen i anmälan, och eleven hamnar under Elever och i '
+          + 'matchningskön. Allt i ett tryck.') + '</p>'
       + '<div id="le-familj-rad">' + familjRad(familj, lead) + '</div>'
       + '<div class="ag-faltrad" style="margin-top:12px">'
       + '<div class="fgroup"><label for="le-namn">Elevens namn</label>'
@@ -556,7 +575,8 @@
       + '<p class="ok-msg" id="le-msg"></p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-le-stang>Avbryt</button>'
-      + '<button type="button" class="btn btn-primary" id="le-skapa"' + (familj ? '' : ' disabled') + '>Skapa elev</button>'
+      + '<button type="button" class="btn btn-primary" id="le-skapa"' + (familj || kanBjuda ? '' : ' disabled') + '>'
+      + (familj ? 'Skapa elev' : 'Ta in familjen') + '</button>'
       + '</div></div>';
 
     visaRuta(ruta);
@@ -566,24 +586,16 @@
       if (ev.target.closest('[data-le-match]')) { stäng(); location.hash = '#matchning'; }
     });
 
-    /* Delegerat: knappen ritas om när familjen hittats. */
-    ruta.addEventListener('click', async ev => {
-      const bjud = ev.target.closest('#le-bjud');
-      if (!bjud) return;
-      const msg = $('#le-msg', ruta);
-      rensa(msg);
-      const ja = await bekräfta({
-        titel: 'Bjud in ' + lead.email + '?',
-        text: 'Ett mejl från Nextrum går till adressen, med en länk där familjen väljer lösenord.',
-        knapp: 'Skicka inbjudan'
-      });
-      if (!ja) return;
-      const res = await medan(bjud, 'Skickar…', () => supa.functions.invoke('bjud-in', {
+    /* Kontot först, när familjen inte har något. Svarar false när
+       inbjudan inte gick, och har då sagt varför. */
+    async function bjudIn(msg) {
+      const res = await supa.functions.invoke('bjud-in', {
         body: { epost: lead.email, namn: lead.parent_name || '', lead_id: lead.id }
-      }));
+      });
       const fel = res.error || (res.data && res.data.error);
-      if (fel) { säg(msg, await funktionsFel(fel), false); return; }
+      if (fel) { säg(msg, await funktionsFel(fel), false); return false; }
       if (lead.status === 'new') lead.status = 'contacted';
+      inbjuden = true;
 
       /* Kontot som just skapades ÄR kunden anmälan blev. Kopplingen
          skrivs nu, för när familjen väl valt lösenord finns det
@@ -595,37 +607,35 @@
         if (!k.error) lead.kund_id = res.data.id;
       }
 
-      /* HÄMTA OM, OCH BYGG OM RULLGARDINEN.
-
-         Familjens profilrad finns REDAN när inbjudan gått iväg:
-         triggern handle_new_user är AFTER INSERT on auth.users, inte
-         "efter att lösenordet valts". Förut sa rutan åt admin att
-         vänta på något som redan hänt, och eftersom S.personer inte
-         hämtades om stod familjen ändå inte i rullgardinen — så den
-         som följde instruktionen och öppnade rutan igen såg samma
-         tomma lista. Det var därför Skapa elev såg trasig ut.
-
-         hämtaAllt() fyller bara S, den ritar ingenting, så rutan
-         överlever anropet. */
+      /* HÄMTA OM. Familjens profilrad finns REDAN när inbjudan gått
+         iväg: triggern handle_new_user är AFTER INSERT on auth.users,
+         inte "efter att lösenordet valts". hämtaAllt() fyller bara S,
+         den ritar ingenting, så rutan överlever anropet. */
       await hämtaAllt();
       familj = (res.data.id && S.personer[res.data.id]) || anmälansFamilj(lead);
       $('#le-familj-rad', ruta).innerHTML = familjRad(familj, lead);
-      $('#le-skapa', ruta).disabled = !familj;
-
-      säg(msg, '✓ Inbjudan skickad till ' + res.data.till
-        + '. Du kan skapa eleven nu — lösenordet väljer familjen själv via mejlet.', true);
+      $('#le-t', ruta).textContent = 'Skapa elev ur anmälan';
       ritaLeads();
-    });
+      /* Profilen skapas av handle_new_user i samma stund som kontot, så
+         den ska finnas. Gör den inte det ska inget tryck skicka en
+         inbjudan till: kontot finns redan (knappen stängs nedan). */
+      if (!familj) {
+        säg(msg, 'Kontot är skapat och mejlet skickat, men det syns inte här än. Ladda om sidan och '
+          + 'öppna anmälan igen för att skapa eleven.', false);
+      }
+      return !!familj;
+    }
 
     $('#le-skapa', ruta).addEventListener('click', async () => {
       const msg = $('#le-msg', ruta);
       rensa(msg);
-      const parent = familj && familj.id;
       const namn = $('#le-namn', ruta).value.trim();
-      if (!parent) { säg(msg, 'Familjen har inget konto än. Bjud in dem först.', false); return; }
       if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); return; }
 
-      await medan($('#le-skapa', ruta), 'Skapar…', async () => {
+      await medan($('#le-skapa', ruta), familj ? 'Skapar…' : 'Tar in…', async () => {
+        if (!familj && !(await bjudIn(msg))) return;
+        const parent = familj.id;
+
         /* Ämnena är en text[] som inte får vara null (förvalet är en
            tom array). Fritexten ur anmälan delas på komma, tomma bitar
            bort — samma regel som när en ansökan tas in i poolen. Förut
@@ -641,7 +651,11 @@
           grade: $('#le-arskurs', ruta).value.trim() || null,
           subjects: ämnen
         }).select('id, uppdrag_id').single();
-        if (error) { säg(msg, 'Kunde inte skapa: ' + felText(error), false); return; }
+        if (error) {
+          säg(msg, (inbjuden ? 'Familjen har fått sitt konto och mejlet, men eleven kunde inte skapas: '
+            : 'Kunde inte skapa: ') + felText(error), false);
+          return;
+        }
 
         /* Uppdraget skapas av triggern elevens_uppdrag, som sätter
            standardtjänsten — den tittar aldrig på anmälan. Anmälan
@@ -699,8 +713,13 @@
            Nu står det i rutan vad som gjordes och var eleven finns.
            Vidare till matchningen är ett val, inte en följd. */
         ruta.querySelector('.nx-fraga-box').innerHTML =
-          '<h3>' + esc(namn) + ' är skapad</h3>'
-          + '<p><b>' + esc(namn) + '</b> ligger nu under <b>Elever</b> och i matchningskön. '
+          '<h3>' + (inbjuden ? 'Familjen är intagen' : esc(namn) + ' är skapad') + '</h3>'
+          + (inbjuden
+            ? '<p>' + esc(lead.parent_name || 'Familjen') + ' har fått ett mejl till <b>' + esc(lead.email)
+              + '</b> med en länk där de väljer sitt lösenord. Efter lösenordet går de igenom introduktionen, '
+              + 'och tills du valt studiehjälpare ser de att ni matchar dem.</p>'
+            : '')
+          + '<p' + (inbjuden ? ' style="margin-top:10px"' : '') + '><b>' + esc(namn) + '</b> ligger nu under <b>Elever</b> och i matchningskön. '
           + 'Anmälan från ' + esc(lead.parent_name || lead.email || 'familjen')
           + ' är markerad som klar.</p>'
           + '<div class="nx-fraga-knappar">'
@@ -708,6 +727,16 @@
           + '<button type="button" class="btn btn-primary" data-le-match>Välj studiehjälpare</button>'
           + '</div>';
       });
+
+      /* medan() ställer tillbaka knappens text och läge när den är klar.
+         Gick inbjudan men inte eleven heter knappen nu Skapa elev, och
+         utan familjen går den inte att trycka (då hade den bjudit in en
+         gång till). Efter kvittot finns ingen knapp. */
+      const kvar = $('#le-skapa', ruta);
+      if (kvar && inbjuden) {
+        kvar.textContent = 'Skapa elev';
+        kvar.disabled = !familj;
+      }
     });
   });
 

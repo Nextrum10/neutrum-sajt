@@ -12,7 +12,10 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
 
 1. Familjen skickar **intresseanmälan** → rad i `leads`
 2. Ni ringer och väljer studiehjälpare
-3. Familjen skapar konto på `foralder.html`
+3. Admin tar in familjen: **Ta in familjen** på anmälan (2026-10-06).
+   Kontot skapas med anmälans adress, eleven ur anmälan, och familjen
+   väljer lösenordet genom länken i mejlet. Den som hellre registrerar
+   sig själv gör det på `foralder.html`
 4. `admin.html` → **Familjer** → välj hjälpare i rullgardinen. Sätter
    `matched_tutor_id` och `match_status` **samtidigt** — förr var det
    två kolumner i Table Editor och satte man bara den ena såg familjen
@@ -50,6 +53,33 @@ och efternamn, och admin lägger in svaret i ansökan. Hela kedjan står i
 
 **Avböjd mejlar ett nej** (2026-10-05), tidigast en halvtimme senare och
 aldrig på kvällen. Se `minne/notiser.md`, regel 4.
+
+**Intaget** (2026-10-06). Leo: "när man ska ta in en anställd är det
+krångligt att skapa konto åt den, samma med familj in i poolen. de
+behöver skapa konto och allt skit". Nu skapar adminvyn kontot i samma
+tryck som personen tas in, med personens egen adress:
+- **Ta in familjen** (rutan på en intresseanmälan, `nextrum-admin-kunder.js`):
+  `bjud-in` med `lead_id` skapar kontot och mejlar länken, `leads.kund_id`
+  kopplar anmälan till kontot, eleven skapas ur anmälan, och anmälan blir
+  matchad. Kvittot säger vad som hände och var eleven finns; Välj
+  studiehjälpare är steg 4. Har familjen redan ett konto är rutan Skapa
+  elev, som förut. Går eleven inte att skapa efter kontot står familjen
+  kvar i rutan och knappen blir Skapa elev.
+- **Ta in i poolen** (ansökan, `nextrum-admin-rekrytering.js`): har
+  adressen i ansökan inget konto står "Skapa kontot med <adressen>" först
+  i kontolistan och är valt, och knappen heter Ta in och skicka inbjudan.
+  Kontot skapas med `roll: 'tutor'` före godkännandet, som sedan är
+  detsamma som för ett konto som fanns; kvittot säger att två mejl går
+  (länken och välkomstmejlet).
+- Personen trycker på länken, väljer lösenordet två gånger, går igenom
+  introduktionen och trycker Fortsätt (`minne/sakerhet.md`, Konton vi
+  skapar). Väntar familjen på sin matchning, eller studiehjälparens
+  profil på att godkännas, säger introduktionens sista bild det.
+- **Skicka inbjudan igen** står i personens panel (`nextrum-admin-detalj.js`)
+  för en förälder eller studiehjälpare som aldrig loggat in.
+- Leo bad om lösenordet 12345678 för alla nya konton. Det blev en länk i
+  stället, för samma steg för personen; varför står i
+  `minne/sakerhet.md`.
 
 ## Uppstarten
 

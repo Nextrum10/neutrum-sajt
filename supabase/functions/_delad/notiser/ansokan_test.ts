@@ -123,12 +123,15 @@ Deno.test('bara en riktig https-adress blir en knapp', () => {
   assertStringIncludes(m.text, 'Länken kommer innan mötet');
 });
 
-Deno.test('sista steget skickar till kontot, välkomsten till vyn', () => {
-  // Utan ett konto finns ingen profil att godkänna (adminvyns "Ta in i
-  // poolen"), så det här steget är det enda som ber om en åtgärd.
-  assertStringIncludes(mejl('sista_steget').text, `${SAJT}/larare`);
-  assertStringIncludes(mejl('sista_steget').text, 'samma e-postadress');
+Deno.test('sista steget ber inte om ett konto, välkomsten leder till vyn', () => {
+  // Kontot skapas av oss när hen tas in i poolen (2026-10-06): sista
+  // steget säger det och har ingen knapp, och välkomsten säger var
+  // länken till lösenordet kommer.
+  assertEquals(mejl('sista_steget').text.includes(`${SAJT}/larare`), false);
+  assertEquals(mejl('sista_steget').html.includes(`${SAJT}/larare`), false);
+  assertStringIncludes(mejl('sista_steget').text, 'det skapar vi åt dig');
   assertStringIncludes(mejl('valkommen').text, `${SAJT}/larare`);
+  assertStringIncludes(mejl('valkommen').text, 'lösenord');
   assertEquals(mejl('valkommen').amne, 'Välkommen till Nextrum!');
 });
 

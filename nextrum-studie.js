@@ -3194,29 +3194,40 @@ window.NXStudie = (function () {
      Ett tryck utanför stänger inte rutan, till skillnad från de andra:
      länken går bara att använda en gång, och ett snett tryck på
      telefonen hade krävt ett nytt mejl. Inte nu stänger; lösenordet går
-     att byta i profilen eller med Glömt lösenordet senare. */
+     att byta i profilen eller med Glömt lösenordet senare.
+
+     FÖRSTA INLOGGNINGEN (2026-10-06, o.tvingad). Den som tagits in har
+     inget lösenord alls, och Leo: "När de loggar in för första gången
+     står det skapa nytt lösenord och bekräfta lösenordet." Då finns
+     inget Inte nu och Escape gör ingenting: vyn öppnas först när
+     lösenordet är sparat. Logga ut står kvar, så att den som ändå måste
+     gå inte är fast. Rutan stängs direkt när lösenordet sparats, för
+     introduktionen tar vid och säger att det gick. o.data följer med i
+     samma anrop till user_metadata (välkomsten, lösenordFörst). */
   function nyttLösenord(supa, o) {
-    var minsta = (o && o.minsta) || 6, inbjuden = !!(o && o.inbjuden);
+    var minsta = (o && o.minsta) || 6, inbjuden = !!(o && o.inbjuden), tvingad = !!(o && o.tvingad);
     return new Promise(function (klar) {
       var ruta = document.createElement('div');
       ruta.className = 'nx-fraga';
       ruta.innerHTML =
         '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="nylos-t">'
-        + '<h3 id="nylos-t">' + (inbjuden ? 'Välj ditt lösenord' : 'Välj ett nytt lösenord') + '</h3>'
+        + '<h3 id="nylos-t">' + (inbjuden ? 'Skapa ditt lösenord' : 'Välj ett nytt lösenord') + '</h3>'
         + '<p>' + (inbjuden
-          ? 'Välkommen till Nextrum! Du loggade in med länken i inbjudan. Välj ett lösenord med minst ' + minsta
-            + ' tecken, så loggar du in med din e-postadress och det nästa gång.'
+          ? 'Välkommen till Nextrum! Du loggade in med länken i mejlet. Skapa ett lösenord med minst ' + minsta
+            + ' tecken och bekräfta det, så loggar du in med din e-postadress och lösenordet nästa gång.'
           : 'Du är inloggad med länken i mejlet. Välj ett nytt lösenord med minst ' + minsta
             + ' tecken, så loggar du in med det nästa gång.') + '</p>'
         + '<form data-nylos novalidate>'
         + '<input type="email" autocomplete="username" value="' + esc((o && o.epost) || '') + '" hidden readonly>'
-        + '<div class="fgroup"><label for="nylos-1">' + (inbjuden ? 'Lösenord' : 'Nytt lösenord') + '</label>'
+        + '<div class="fgroup"><label for="nylos-1">Nytt lösenord</label>'
         + '<input class="inp" id="nylos-1" type="password" autocomplete="new-password" minlength="' + minsta + '"></div>'
-        + '<div class="fgroup"><label for="nylos-2">Upprepa lösenordet</label>'
+        + '<div class="fgroup"><label for="nylos-2">' + (inbjuden ? 'Bekräfta lösenordet' : 'Upprepa lösenordet') + '</label>'
         + '<input class="inp" id="nylos-2" type="password" autocomplete="new-password"></div>'
         + '<p class="ok-msg" id="nylos-msg" role="alert"></p>'
         + '<div class="nx-fraga-knappar">'
-        + '<button type="button" class="btn btn-ghost" data-nylos-nej>Inte nu</button>'
+        + (tvingad
+          ? '<button type="button" class="btn btn-ghost" data-nylos-ut>Logga ut</button>'
+          : '<button type="button" class="btn btn-ghost" data-nylos-nej>Inte nu</button>')
         + '<button type="submit" class="btn btn-primary">Spara lösenordet</button>'
         + '</div></form></div>';
 
@@ -3230,7 +3241,7 @@ window.NXStudie = (function () {
         klar(sparat);
       }
       function tangent(e) {
-        if (e.key === 'Escape') stäng();
+        if (e.key === 'Escape' && !tvingad) stäng();
         if (e.key === 'Tab') {
           var kan = ruta.querySelectorAll('.inp, button');
           var f = kan[0], s = kan[kan.length - 1];
@@ -3252,9 +3263,12 @@ window.NXStudie = (function () {
         if (ett.value !== två.value) { NX.säg(msg, 'Lösenorden är inte lika.', false); två.focus(); return; }
         await medan(form.querySelector('[type="submit"]'), 'Sparar…', async function () {
           var svar;
-          try { svar = await supa.auth.updateUser({ password: ett.value }); } catch (err) { svar = { error: err }; }
+          var ändra = { password: ett.value };
+          if (o && o.data) ändra.data = o.data;
+          try { svar = await supa.auth.updateUser(ändra); } catch (err) { svar = { error: err }; }
           if (svar && svar.error) { NX.säg(msg, lösenordsfel(svar.error), false); return; }
           sparat = true;
+          if (tvingad) { stäng(); return; }
           ruta.querySelector('.nx-fraga-box').innerHTML =
             '<h3 id="nylos-t">' + (inbjuden ? 'Lösenordet är sparat' : 'Lösenordet är bytt') + '</h3>'
             + '<p>Nästa gång loggar du in med din e-postadress och '
@@ -3265,6 +3279,7 @@ window.NXStudie = (function () {
       });
       ruta.addEventListener('click', function (e) {
         if (e.target.closest('[data-nylos-nej], [data-nylos-klar]')) stäng();
+        if (e.target.closest('[data-nylos-ut]')) loggaUt(supa);
       });
       document.addEventListener('keydown', tangent);
 
@@ -3274,6 +3289,62 @@ window.NXStudie = (function () {
       ruta.classList.add('open');
       ett.focus();
     });
+  }
+
+  /* ============================================================
+     FÖRSTA INLOGGNINGEN (2026-10-06)
+
+     Leo: "när vi tar in anställda eller familjen till plattformen
+     används deras mail ... sedan får de länk i mailet ... När de loggar
+     in för första gången står det skapa nytt lösenord och bekräfta
+     lösenordet", och sedan introduktionen, och sist Fortsätt in.
+
+     Kontot skapas av bjud-in (adminvyn: Ta in i poolen, Ta in familjen)
+     utan lösenord, och med user_metadata.valkommen = 'losenord'. Länken
+     i mejlet loggar in personen. Det ett gemensamt startlösenord hade
+     skyddat finns därför inte: ingen annan än den som har inkorgen kan
+     logga in på kontot. Varför det inte blev 12345678 står i
+     supabase/functions/_delad/inbjudan.ts.
+
+     Välkomsten står i user_metadata och följer kontot, inte webbläsaren:
+     den som stänger fliken mitt i får rutan igen nästa gång, på vilken
+     enhet som helst, tills lösenordet är sparat ('losenord') och
+     introduktionen genomgången ('intro'). Den som registrerat sig själv
+     får 'intro' vid registreringen. user_metadata skriver personen
+     själv, så det här säger bara vad vyn visar först; det skyddar
+     ingenting och ska aldrig göra det.
+
+     lösenordFörst anropas när sessionen är känd och före rollen, som
+     rutan för återställningen alltid gjort; introduktion anropas när
+     vyn vet att personen hör hemma i den (en förälder i studievyn, en
+     studiehjälpare i studiehjälparvyn), och innan vyn visas.
+     ============================================================ */
+  function välkomstläge(user) {
+    var v = user && user.user_metadata && user.user_metadata.valkommen;
+    return v === 'losenord' || v === 'intro' ? v : null;
+  }
+
+  /* Svarar true när ett lösenord sparades nyss. */
+  async function lösenordFörst(supa, user) {
+    if (NX.inbjudan || välkomstläge(user) === 'losenord') {
+      var sparat = await nyttLösenord(supa, { inbjuden: true, tvingad: true, epost: user.email,
+                                              data: { valkommen: 'intro' } });
+      if (sparat) user.user_metadata = Object.assign({}, user.user_metadata, { valkommen: 'intro' });
+      return sparat;
+    }
+    if (NX.återställning) return nyttLösenord(supa, { epost: user.email });
+    return false;
+  }
+
+  /* roll är 'foralder' eller 'studiehjalpare'. o.sparat och o.väntar
+     går till NXIntro. Välkomsten tas bort när Fortsätt tryckts; går det
+     inte visas introduktionen en gång till nästa gång, vilket är bättre
+     än att vyn väntar på det. */
+  async function introduktion(supa, user, roll, o) {
+    if (välkomstläge(user) !== 'intro' || typeof NXIntro === 'undefined') return;
+    await NXIntro.visa({ roll: roll, sparat: !!(o && o.sparat), väntar: !!(o && o.väntar) });
+    user.user_metadata = Object.assign({}, user.user_metadata, { valkommen: null });
+    supa.auth.updateUser({ data: { valkommen: null } }).then(function () {}, function () {});
   }
 
   /* ============================================================
@@ -3927,6 +3998,7 @@ window.NXStudie = (function () {
     visaVy: visaVy, felvy: felvy, kortTid: kortTid, vyHuvud: vyHuvud,
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     glömtLänkar: glömtLänkar, elevLänk: elevLänk, länkenGickInte: länkenGickInte, glömtSkicka: glömtSkicka, nyttLösenord: nyttLösenord,
+    välkomstläge: välkomstläge, lösenordFörst: lösenordFörst, introduktion: introduktion,
     loggaIn: loggaIn, loggaInHär: loggaInHär,
     adminroll: adminroll,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,

@@ -776,3 +776,44 @@ och 09-online-v2, i den ordning de skickades), så inga nya filer.
 - Provat med klockan ställd på varje veckodag, på dator och telefon, och i
   `verktyg/prova-barnkonton.js` (`provaHälsningen`), som har listan en gång
   till med flit: ändras den i registret blir provet rött.
+
+### Introduktionen (2026-10-06)
+Leo: "skapa också en introduktion med skärmdump och förklaringar som
+finns som en funktion i både anställdas och familjernas plattform ... sist
+så är det fortsätt vilket låter en komma in på plattformen och börja boka
+lektioner, detta ska ske efter att man bekräftat sitt nya lösenord."
+- `nextrum-introduktion.js` (`NXIntro.visa`): en skärmdump ur vyn i taget,
+  rubriken och vad delen är till för, prickar och Tillbaka och Nästa;
+  sista bilden har Fortsätt. Sju bilder i studievyn och åtta i
+  studiehjälparvyn (`STEG`). Samma ruta som bekräftelserna (`.nx-fraga`),
+  stilen i `nextrum-vy.css` utan hexkoder.
+- **När**: av sig själv när `user_metadata.valkommen` står på `'intro'`,
+  alltså efter lösenordet för den som tagits in och efter första
+  inloggningen för den som registrerat sig (`NXStudie.introduktion`,
+  `minne/sakerhet.md`). Första gången går den bara framåt och bakåt, för
+  Fortsätt är vägen in; öppnad igen (Visa introduktionen under Profil,
+  `data-intro="<roll>"`) har den Stäng, och Escape stänger. Väntar
+  familjen på sin matchning, eller studiehjälparens profil på att
+  godkännas, säger sista bilden det (`VÄNTAR`), för Fortsätt leder då till
+  väntläget och inte till bokningen.
+- **Texterna säger bara det vyn själv säger.** Betalningen beskrivs inte:
+  villkoren står på de ställen `kolla-betalningsvillkor.py` räknar, och en
+  mening till vore ett ställe till att glömma. Ändras en del som en bild
+  visar: ta om bilderna och läs texten igen. NexLäx-bilden visar Din väg,
+  som Fas 23.5 inte ändrade (bilderna togs om efter den och blev byte för
+  byte desamma).
+- **Bilderna** är tagna i en telefons bredd (390 punkter, dubbel
+  upplösning, 780 × 880) så att texten i dem går att läsa på en telefon;
+  på en dator står bilden till vänster om texten (från 760 px). Vägarna
+  står i `NEXTRUM_INTRO` i `nextrum-images.js`, webp med jpg som reserv.
+  `verktyg/bygg-introbilder.js` tar dem mot en falsk Supabase med
+  påhittade familjer, aldrig mot driften (`minne/genererat-och-ci.md`).
+- **Knapparna står stilla** mellan bilderna (fälla 4 ovan): bilden har sina
+  proportioner innan den laddat (`aspect-ratio`), texten har plats för den
+  längsta (`min-height: 13em` på en telefon), och Nästa och Fortsätt är
+  lika breda. Provat på 390 × 844, 360 × 740, 800 × 700 och 1280 × 900:
+  Nästa står på samma punkt på varje bild. En längre text kan flytta den;
+  `prova-introduktion.js` mäter.
+- **Barnets vy har ingen introduktion**: barnet kommer in med ett
+  användarnamn föräldern gett det, och vyn har fyra delar. Den
+  behövs inte, och ingen bad om den.

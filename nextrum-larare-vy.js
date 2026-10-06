@@ -83,7 +83,9 @@
 
     await medan(knapp, 'Skapar…', async () => {
       const res = await supa.auth.signUp({ email: epost, password: lösen, options: {
-            data: { full_name: namn, role: 'tutor' },
+            /* valkommen: introduktionen visas efter första inloggningen
+               (NXStudie.introduktion, 2026-10-06). */
+            data: { full_name: namn, role: 'tutor', valkommen: 'intro' },
             /* Utan den här landar bekräftelselänken på Site URL i
                Supabase — alltså startsidan, eller värre: localhost.
                Nu kommer man tillbaka hit, till vyn man skapade
@@ -616,7 +618,8 @@
         + '<span class="ch-rad-text">'
         + '<span class="ch-rad-topp"><b>' + esc(t.namn || 'Elev') + '</b>'
         + (t.senaste ? '<time>' + esc(NXKontakt.dagText(t.senaste)) + '</time>' : '') + '</span>'
-        + '<span class="ch-rad-barn">' + esc(t.inloggning ? 'Egen inloggning' : 'Inloggningen är pausad') + '</span>'
+        + '<span class="ch-rad-barn">' + esc(t.avstangd ? 'Tråden är avstängd av föräldern'
+          : t.inloggning ? 'Egen inloggning' : 'Inloggningen är pausad') + '</span>'
         + '</span>'
         + (oläst ? '<span class="ch-rad-larm">' + oläst + '</span>' : '')
         + '</button>';
@@ -637,7 +640,11 @@
       + '<span class="ch-topp-text"><b>' + esc(namn) + '</b><span>Eleven, i sin egen inloggning</span></span>';
     const ruta = $('#bc-text'), knapp = $('#bc-skicka');
     ruta.disabled = knapp.disabled = !data.kan_skriva;
-    ruta.placeholder = data.kan_skriva ? 'Skriv till ' + namn + '…' : 'Elevens inloggning är pausad, eller relationen vilar.';
+    /* avstangd: föräldern har stängt av tråden (barnets_behorigheter). Den
+       går att läsa, men ingen skriver i den. */
+    ruta.placeholder = data.kan_skriva ? 'Skriv till ' + namn + '…'
+      : data.avstangd ? 'Elevens förälder har stängt av tråden. Den går att läsa.'
+      : 'Elevens inloggning är pausad, eller relationen vilar.';
     if (!S.bc.ritare) {
       S.bc.ritare = NXStudie.barnTråd({
         host: $('#bc-trad'), jag: 'studiehjalpare',
@@ -656,6 +663,7 @@
     tak: 'Du har skrivit många meddelanden på kort tid. Vänta en stund.',
     ingen_inloggning: 'Eleven har ingen egen inloggning just nu, så meddelandet gick inte iväg.',
     ingen: 'Du är inte elevens studiehjälpare just nu, eller relationen vilar.',
+    avstangd: 'Elevens förälder har stängt av tråden, så meddelandet gick inte iväg.',
     lang: 'Meddelandet är för långt. Dela upp det i två.'
   };
 
@@ -4216,10 +4224,10 @@
       utloggad: () => { läge = 'in'; ritaAuth(); visa('view-auth'); } });
     /* Från länken i ett återställningsmejl eller en inbjudan från
        bjud-in: lösenordet först. Rutan väntas in, så att dirigeringen
-       nedan inte byter sida under den. */
-    if (NX.återställning || NX.inbjudan) {
-      await NXStudie.nyttLösenord(supa, { inbjuden: NX.inbjudan, epost: S.user.email });
-    }
+       nedan inte byter sida under den. Den som tagits in och inte valt
+       sitt lösenord än får rutan utan Inte nu, också utan länken
+       (NXStudie.lösenordFörst, 2026-10-06). */
+    const nyttLösen = await NXStudie.lösenordFörst(supa, S.user);
 
     /* Katalogen hämtas medan profilen hämtas, inte efter. Den behövs
        först när vyn ritas, och en fråga i kö är en fråga för mycket. */
@@ -4239,6 +4247,16 @@
        Adminvy i sidhuvudet. */
     if (S.profil.role === 'admin') { location.replace('/admin'); return; }
     NXStudie.adminroll(supa, S, ritaHeader);
+
+    /* Senast inloggad (adminvyn) skrivs innan vyn kan stanna i
+       väntläget, som i studievyn: en studiehjälpare som valt lösenord
+       men inte är godkänd har loggat in, och Skicka inbjudan igen ska
+       inte stå kvar för hen. Förut stämplades besöket sist, "för
+       notiserna räknas mot den förra", men ingenting i vyn läser
+       kolumnen; bara adminvyn gör det. then() är det som skickar
+       frågan. */
+    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id)
+      .then(() => {}, () => {});
 
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
 
@@ -4263,6 +4281,12 @@
       $('#pending-text').textContent = 'Ditt konto saknar en studiehjälparprofil i databasen. Det brukar betyda att kontot skapades innan schema.sql kördes. Hör av dig så fixar vi det.';
       return;
     }
+
+    /* Introduktionen första gången, och Fortsätt sist leder in i vyn
+       (NXStudie.introduktion). En profil som inte är godkänd än får veta
+       att vyn öppnas när den är det. */
+    await NXStudie.introduktion(supa, S.user, 'studiehjalpare',
+      { sparat: nyttLösen, väntar: S.tutorProfil.status !== 'approved' });
 
     if (S.tutorProfil.status !== 'approved') {
       visa('view-pending');
@@ -4416,10 +4440,6 @@
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaUpptagna()]);
     ritaNotiser();
     await Promise.all([ritaÖvSamtal(), laddaErsattning(), laddaBarnchatt()]);
-    /* Stämpla besöket sist — notiserna räknas mot den förra. */
-    /* then() är det som skickar frågan: utan den skrevs last_seen_at aldrig. */
-    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id)
-      .then(() => {}, () => {});
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

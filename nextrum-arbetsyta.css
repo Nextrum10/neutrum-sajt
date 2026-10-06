@@ -3136,6 +3136,18 @@ a:has(> .adm-status){
 }
 .bi-ja input{flex:none;width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc)}
 .bi-ja a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+/* Vad barnet får se och göra (barnets_behorigheter, 2026-10-06):
+   kryssrutorna när inloggningen skapas, och på och av i barnets kort,
+   med en linje ovanför som barnets e-post. */
+.bi-far-val{border:0;padding:0;margin:14px 0 0;min-width:0}
+.bi-far-val legend{padding:0;margin-bottom:2px;font-size:.88rem;font-weight:650;color:var(--bl)}
+.bi-far-val .bi-ja{margin-top:4px;min-height:44px}
+.bi-far-val .bi-ja b{font-weight:650}
+.bi-far-val > .bi-hjalp{margin-top:8px}
+.bi-far{margin:0 0 14px;padding-top:14px;border-top:1px solid var(--ln)}
+.bi-far .nx-nval:first-of-type{border-top:1px solid var(--ln);padding-top:13px}
+/* På och av i barnets kort är tryckytor för tummen (44 px), som allt i vyerna. */
+.bi-kort .nx-nval .chip{min-height:44px}
 /* Barnets egen e-post (barnets_epost): en egen del under inloggningens
    knappar, med en linje emellan, så att dess knappar inte läses som
    inloggningens. */
@@ -4752,6 +4764,8 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 /* Tråden med studiehjälparen står överst i Meddelanden, notiserna under. */
 .bv-chatt{margin-bottom:clamp(16px,1.8vw,22px)}
 #bv-skriva{margin:0 0 clamp(18px,2.4vw,26px)}
+/* Det föräldern stängt av (barnets_behorigheter) står överst i delen. */
+.bv-avstangt{margin:0 0 clamp(16px,1.8vw,22px);text-align:left}
 .bv-ut{margin-top:18px;justify-content:center}
 
 /* ============================================================

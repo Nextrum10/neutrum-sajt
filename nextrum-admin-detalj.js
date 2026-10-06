@@ -17,7 +17,7 @@
   const M = NXMedia;
 
   const { ANS_LAGE, BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
-          UTB_LAGE, elevHjälpare, elevNamn, hämtaMatchunderlag, kortDatum, läge, namnFör, närText,
+          UTB_LAGE, elevHjälpare, elevNamn, funktionsFel, hämtaMatchunderlag, kortDatum, läge, namnFör, närText,
           lägesväljare, pill, rad, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden, nådda när de anropas. En som
      saknas hoppas över: panelen ska inte dö för att en lista inte
@@ -318,6 +318,19 @@
        skrevs in och städas bara i länkens adress. */
     return '<a href="tel:' + esc(String(nummer).replace(/[^\d+]/g, '')) + '">'
       + esc(nummer) + '</a>';
+  }
+
+  /* Senast inloggad, och för den som aldrig loggat in en knapp som
+     skickar länken igen (2026-10-06). Kontot skapas när personen tas in,
+     och länken i mejlet går att missa eller låta bli gammal. bjud-in
+     avgör vad som går: en ny inbjudan, en länk för att välja lösenord,
+     eller ingenting för ett konto i bruk. */
+  function dpSenast(p) {
+    if (p.last_seen_at) return esc(kortDatum(p.last_seen_at));
+    return 'aldrig' + (p.email && (p.role === 'parent' || p.role === 'tutor')
+      ? ' <button class="btn btn-ghost btn-sm" type="button" data-dp-bjud-igen="' + esc(p.id) + '">'
+        + 'Skicka inbjudan igen</button>'
+      : '');
   }
 
   function dpRubrik(text, extra) {
@@ -906,7 +919,7 @@
       ['E-post', dpMejl(p.email)],
       ['Telefon', dpTelefon(p.phone)],
       ['Konto skapat', p.created_at ? esc(kortDatum(p.created_at)) : null],
-      ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig'],
+      ['Senast inloggad', dpSenast(p)],
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
     + dpRubrik('Nästa pass')
@@ -1091,7 +1104,7 @@
       ['Årskurser', (tp.grade_levels || []).length ? esc(tp.grade_levels.join(', ')) : null],
       ['Format', (tp.formats || []).length ? esc(tp.formats.join(', ')) : null],
       ['Timpenning', tp.hourly_rate ? esc(NX.kr(tp.hourly_rate)) : null, 'ej satt'],
-      ['Senast inloggad', p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : null, 'aldrig']
+      ['Senast inloggad', dpSenast(p)]
     ])
     + (tp.bio ? dpRubrik('Om hen') + '<div class="dp-text">' + esc(tp.bio) + '</div>' : '')
     /* Läget och startsidan stod förut i listan. Publiceringen är ett
@@ -1186,14 +1199,17 @@
         : tomt('Inget meddelande', 'Familjen skrev ingenting i rutan.'))
       + (l.notering ? dpRubrik('Vår notering') + '<div class="dp-text">' + esc(l.notering) + '</div>' : '')
       /* Vägen vidare. Matchningskön arbetar på elever, inte på
-         anmälningar, så utan Skapa elev når ingen familj fram. */
+         anmälningar, så utan Skapa elev når ingen familj fram. Utan
+         konto heter knappen Ta in familjen: kontot skapas i samma
+         tryck (2026-10-06). */
       + dpRubrik('Läge')
       + lägesväljare(LEAD_LAGE, l.status, 'data-lead="' + esc(l.id) + '"')
       + '<div class="dp-atgard">'
       + '<button class="btn btn-ghost btn-sm" type="button" data-lead-kontakt="' + esc(l.id) + '">'
       + (l.kontaktad_at ? 'Skriv igen' : 'Kontakta') + '</button>'
       + (l.status !== 'matched'
-        ? '<button class="btn btn-primary btn-sm" type="button" data-lead-elev="' + esc(l.id) + '">Skapa elev</button>'
+        ? '<button class="btn btn-primary btn-sm" type="button" data-lead-elev="' + esc(l.id) + '">'
+          + (familj ? 'Skapa elev' : 'Ta in familjen') + '</button>'
         : '')
       + '</div>'
       + dpHantera('anmalan', l, {
@@ -1233,7 +1249,7 @@
         ['Konto', konto
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
             + esc(konto.full_name || konto.email) + '</button>'
-          : null, 'inget konto med adressen än'],
+          : null, 'inget än: det skapas när hen tas in i poolen'],
         ['Provet', esc(kör('provKort', a) || '') + (provKnapp ? ' ' + provKnapp : '')]
       ])
       + dpRubrik('Varför hen söker')
@@ -1933,6 +1949,30 @@
       else { nyKropp.scrollTop = nyKropp.scrollHeight; DP.chattRitad = DP.id; }
     }
   }
+
+  /* Skicka inbjudan igen (dpSenast). Mejlet är riktigt, så frågan
+     kommer först; svaret säger vad som gick. */
+  document.addEventListener('click', async ev => {
+    const k = ev.target.closest('[data-dp-bjud-igen]');
+    if (!k) return;
+    const p = S.personer[k.dataset.dpBjudIgen];
+    if (!p || !p.email) return;
+    const ja = await bekräfta({
+      titel: 'Skicka länken igen till ' + (p.full_name || p.email) + '?',
+      text: 'Har hen inte tryckt på länken i inbjudan går en ny till ' + p.email + '. Har hen tryckt men inte '
+        + 'valt lösenord går en länk för att välja det. Har hen redan valt sitt lösenord skickas ingenting.',
+      knapp: 'Skicka'
+    });
+    if (!ja) return;
+    await medan(k, 'Skickar…', async () => {
+      const res = await supa.functions.invoke('bjud-in', { body: { epost: p.email, igen: true } });
+      const fel = res.error || (res.data && res.data.error);
+      if (fel) { alert(await funktionsFel(fel)); return; }
+      alert(res.data.skickat === 'losenord'
+        ? 'En länk för att välja lösenord har gått till ' + res.data.till + '.'
+        : 'En ny inbjudan har gått till ' + res.data.till + '.');
+    });
+  });
 
   /* Öppnas från vilken lista som helst, och från panelen själv:
      en elev leder till sin familj, en familj till sina barn. */

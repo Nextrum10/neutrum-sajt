@@ -82,7 +82,9 @@
     const res = await supa.auth.signUp({
       email: epost, password: lösen,
       options: {
-          data: { full_name: namn, role: 'parent' },
+          /* valkommen: introduktionen visas efter första inloggningen
+             (NXStudie.introduktion, 2026-10-06). */
+          data: { full_name: namn, role: 'parent', valkommen: 'intro' },
           /* Utan den här landar bekräftelselänken på Site URL i
              Supabase — alltså startsidan, eller värre: localhost.
              Nu kommer man tillbaka hit, till vyn man skapade
@@ -504,17 +506,38 @@
      _skicka_igen, _ta_bort, _notiser), som prövar att den inloggade är
      barnets förälder. Med flaggan barn_epost av syns rutan bara för den
      som redan har en adress, och då bara för att ta bort den.
+
+     VAD BARNET FÅR (barnets_behorigheter, 2026-10-06). Leo: "familjen
+     som skapar elev väljer vilka behörigheter barnet ska vara". När
+     inloggningen skapas kryssar föräldern i vad barnet får se och göra,
+     och efteråt slås varje sak på och av i barnets kort. Rapporterna,
+     som förut var ett eget val, är en av dem. Spärren ligger i
+     databasen: barnets funktioner lämnar inte ut det som är av. Listan
+     (BARN_FÅR) står i samma ordning som intern.barn_behorigheter_alla()
+     och förvalet som kolumnens; verktyg/kolla-behorigheter.py jämför
+     dem. Utan mina_barns_behorigheter() i databasen ritas rapportvalet
+     som förut.
      ============================================================ */
   const BI_NAMN = /^[a-z0-9._-]{3,20}$/;
+  const BARN_FÅR = [
+    ['pass', 'Se sina pass', 'Kommande och genomförda pass, och hur många.'],
+    ['studieplan', 'Se studieplanen', 'Planen som studiehjälparen skriver.'],
+    ['rapporter', 'Läsa rapporterna', 'Vad studiehjälparen skrev efter varje pass.'],
+    ['nexlax', 'Göra NexLäx', 'Nivåerna och uppgifterna mellan passen, och bocken på en uppgift.'],
+    ['meddelanden', 'Se notiserna från Nextrum', 'När ett pass bekräftas, flyttas, avbokas eller är klart.'],
+    ['chatt', 'Skriva till studiehjälparen', 'En egen tråd, som ni kan läsa under Meddelanden.']
+  ];
+  const BARN_FÅR_FÖRVAL = ['chatt', 'meddelanden', 'nexlax', 'pass', 'studieplan'];
   S.barnkonton = null;
   S.barnEpost = null;
+  S.barnFår = null;
   S.biÖppen = {};
 
   async function laddaBarnkonton() {
     const ruta = $('#bi-ruta');
     if (!ruta) return;
-    const [{ data, error }, epost] = await Promise.all([
-      supa.rpc('mina_barnkonton'), supa.rpc('mina_barns_epost')]);
+    const [{ data, error }, epost, får] = await Promise.all([
+      supa.rpc('mina_barnkonton'), supa.rpc('mina_barns_epost'), supa.rpc('mina_barns_behorigheter')]);
     if (error) {
       /* PGRST202: funktionen finns inte, migrationen är inte körd. Då
          står rutan dold i stället för att visa ett fel. */
@@ -535,6 +558,17 @@
     } else {
       S.barnEpost = { pa: !!epost.data.pa, per: {} };
       (epost.data.barn || []).forEach(r => { S.barnEpost.per[r.barn_id] = r; });
+    }
+    /* Vad barnen får, likaså ett tillägg: utan funktionen
+       (barnets_behorigheter inte körd) står rapportvalet som förut. */
+    if (får.error || !får.data) {
+      if (får.error && får.error.code !== 'PGRST202' && får.error.code !== '42883') {
+        console.warn('mina_barns_behorigheter:', får.error.message);
+      }
+      S.barnFår = null;
+    } else {
+      S.barnFår = {};
+      (får.data.barn || []).forEach(r => { S.barnFår[r.barn_id] = r.behorigheter || []; });
     }
     ruta.hidden = !S.barn.length;
     ritaBarnkonton();
@@ -583,6 +617,7 @@
       biFält('bi-los2-' + b.id, 'Upprepa lösenordet',
         biEl('input', { class: 'inp', id: 'bi-los2-' + b.id, 'data-bi-los2': true, type: 'password',
           autocomplete: 'new-password' })),
+      biFårVal(b),
       biEl('label', { class: 'bi-ja' },
         biEl('input', { type: 'checkbox', 'data-bi-ja': true }),
         biEl('span', {},
@@ -591,6 +626,34 @@
             'Så hanterar vi barnens uppgifter'))),
       biEl('div', { class: 'vy-knapprad' },
         biEl('button', { class: 'btn btn-primary btn-sm', type: 'submit' }, 'Skapa inloggning')));
+  }
+
+  /* Kryssrutorna när inloggningen skapas: förvalet ikryssat. Bara när
+     databasen kan spara dem. */
+  function biFårVal(b) {
+    if (!S.barnFår) return null;
+    return biEl('fieldset', { class: 'bi-far-val' },
+      biEl('legend', {}, 'Vad får ' + b.name + ' se och göra?'),
+      ...BARN_FÅR.map(([sak, rubrik, under]) => biEl('label', { class: 'bi-ja bi-far-ny' },
+        biEl('input', { type: 'checkbox', 'data-bi-far-ny': sak, checked: BARN_FÅR_FÖRVAL.includes(sak) }),
+        biEl('span', {}, biEl('b', {}, rubrik), ' ', under))),
+      biEl('p', { class: 'xsmall bi-hjalp' },
+        b.name + ' kan aldrig boka, avboka eller se priser och betalningar. Ni kan ändra valen när ni vill.'));
+  }
+
+  /* På och av för varje sak, i barnets kort. */
+  function biFår(b) {
+    const har = S.barnFår[b.id] || [];
+    return biEl('div', { class: 'bi-far' },
+      biEl('p', { class: 'bi-epost-rubrik' }, 'Vad ' + b.name + ' får se och göra'),
+      ...BARN_FÅR.map(([sak, rubrik, under]) => {
+        const på = har.includes(sak);
+        return biEl('div', { class: 'nx-nval' },
+          biEl('div', { class: 'nx-nval-text' }, biEl('b', {}, rubrik), biEl('span', { class: 'xsmall' }, under)),
+          biEl('button', { class: 'chip', type: 'button', 'data-bi-far': b.id + ':' + sak,
+            'aria-pressed': på ? 'true' : 'false', 'aria-label': rubrik + ': ' + (på ? 'på' : 'av') },
+            på ? 'På' : 'Av'));
+      }));
   }
 
   function biLösenForm(b) {
@@ -617,7 +680,7 @@
         biEl('dt', {}, 'Användarnamn'), biEl('dd', {}, k.anvandarnamn),
         biEl('dt', {}, 'Loggar in på'), biEl('dd', {}, 'nextrum.se/barn'),
         biEl('dt', {}, 'Senast inloggad'), biEl('dd', {}, biNär(k.senast_inloggad))),
-      biEl('div', { class: 'nx-nval bi-rapporter' },
+      S.barnFår ? biFår(b) : biEl('div', { class: 'nx-nval bi-rapporter' },
         biEl('div', { class: 'nx-nval-text' },
           biEl('b', {}, 'Visa lektionsrapporter för ' + b.name),
           biEl('span', { class: 'xsmall' }, rapporter
@@ -775,11 +838,24 @@
           return;
         }
         await medan(form.querySelector('button[type="submit"]'), 'Skapar…', async () => {
+          /* Valen läses innan formuläret ritas om. */
+          const valda = S.barnFår ? NX.$$('[data-bi-far-ny]', form).filter(x => x.checked).map(x => x.dataset.biFarNy) : null;
           const svar = await barnkontoAnrop({ atgard: 'skapa', barn_id: barn.id, anvandarnamn,
             losenord: k.lösen, vardnadshavare_godkand: true });
           if (!svar.ok) { säg(msg, svar.text, false); return; }
+          /* Vad barnet får sparas när inloggningen finns: utan den har
+             barnet inga val (barn_behorigheter_satt svarar 55000). Bara
+             när föräldern ändrat förvalet. */
+          let valFel = null;
+          if (valda && valda.slice().sort().join() !== BARN_FÅR_FÖRVAL.join()) {
+            const { error } = await supa.rpc('barn_behorigheter_satt', { p_barn: barn.id, p_lista: valda });
+            if (error) valFel = biEpostFel(error);
+          }
           await laddaBarnkonton();
-          säg(msg, '✓ ' + barn.name + ' loggar nu in som ' + anvandarnamn + ' på nextrum.se/barn.', true);
+          säg(msg, valFel
+            ? 'Inloggningen är skapad, men valen om vad ' + barn.name + ' får sparades inte: ' + valFel
+              + ' Ändra dem i ' + barn.name + 's kort nedan.'
+            : '✓ ' + barn.name + ' loggar nu in som ' + anvandarnamn + ' på nextrum.se/barn.', !valFel);
         });
         return;
       }
@@ -895,6 +971,24 @@
           delete S.biÖppen[barn.id];
           await laddaBarnkonton();
           säg(msg, '✓ Adressen är borttagen.', true);
+        });
+        return;
+      }
+
+      const fårKnapp = e.target.closest('[data-bi-far]');
+      if (fårKnapp && S.barnFår) {
+        const [id, sak] = fårKnapp.dataset.biFar.split(':');
+        const barn = biBarn(id);
+        if (!barn) return;
+        const på = fårKnapp.getAttribute('aria-pressed') !== 'true';
+        const nu = S.barnFår[id] || [];
+        const lista = på ? nu.concat(sak) : nu.filter(x => x !== sak);
+        rensa(msg);
+        await medan(fårKnapp, 'Sparar…', async () => {
+          const { data, error } = await supa.rpc('barn_behorigheter_satt', { p_barn: id, p_lista: lista });
+          if (error) { säg(msg, biEpostFel(error), false); return; }
+          S.barnFår[id] = (data && data.behorigheter) || lista;
+          ritaBarnkonton();
         });
         return;
       }
@@ -4708,10 +4802,10 @@
       utloggad: () => { läge = 'in'; ritaAuth(); visa('view-auth'); } });
     /* Från länken i ett återställningsmejl eller en inbjudan från
        bjud-in: lösenordet först. Rutan väntas in, så att dirigeringen
-       nedan inte byter sida under den. */
-    if (NX.återställning || NX.inbjudan) {
-      await NXStudie.nyttLösenord(supa, { inbjuden: NX.inbjudan, epost: S.user.email });
-    }
+       nedan inte byter sida under den. Den som tagits in och inte valt
+       sitt lösenord än får rutan utan Inte nu, också utan länken
+       (NXStudie.lösenordFörst, 2026-10-06). */
+    const nyttLösen = await NXStudie.lösenordFörst(supa, S.user);
 
     /* Katalogen hämtas medan profilen hämtas, inte efter. Den behövs
        först när vyn ritas, och en fråga i kö är en fråga för mycket. */
@@ -4732,7 +4826,20 @@
     if (S.profil.role === 'admin') { location.replace('/admin'); return; }
     NXStudie.adminroll(supa, S, ritaHeader);
 
+    /* Senast inloggad (adminvyn) skrivs innan vyn kan stanna i
+       väntläget: en familj som valt lösenord men inte är matchad har
+       loggat in, och Skicka inbjudan igen ska inte stå kvar för den.
+       then() är det som skickar frågan: supabase-js bygger bara anropet
+       tills någon väntar på det. */
+    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id)
+      .then(() => {}, () => {});
+
     if (S.profil.role === 'tutor') { visa('view-wrongrole'); return; }
+    /* Introduktionen första gången, och Fortsätt sist leder in i vyn
+       (NXStudie.introduktion). Den som inte är matchad än får veta att
+       vyn öppnas när vi matchat dem. */
+    await NXStudie.introduktion(supa, S.user, 'foralder',
+      { sparat: nyttLösen, väntar: S.profil.match_status !== 'matched' });
     if (S.profil.match_status !== 'matched') { visa('view-locked'); return; }
 
     visa('view-app');
@@ -4872,10 +4979,6 @@
     ritaNotiser();
     await ritaÖvSamtal();
     visaBetalsvar(betalsvar);
-    /* then() är det som skickar frågan: supabase-js bygger bara anropet
-       tills någon väntar på det. Utan den skrevs last_seen_at aldrig. */
-    supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id)
-      .then(() => {}, () => {});
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

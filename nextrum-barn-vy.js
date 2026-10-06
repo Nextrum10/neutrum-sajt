@@ -29,6 +29,15 @@
    bara Översikt, nexläx, meddelanden, och profil för barnet finnas", och
    samma kväll Mina lektioner och chatten.
 
+   BARNETS BEHÖRIGHETER (barnets_behorigheter, 2026-10-06). Föräldern
+   väljer vad barnet får se och göra: passen, studieplanen, rapporterna,
+   NexLäx, notiserna från Nextrum och tråden med studiehjälparen.
+   Databasen lämnar inte ut det som är av, och NexLäx- och
+   chattfunktionerna släpper inte in barnet; vyn gömmer delen och säger
+   att föräldern valt det, i stället för att visa en tom lista som ser ut
+   som ett fel. barn_oversikt() säger vad som är på (behorigheter); utan
+   listan (en databas före migrationen) är allt på, som förut.
+
    BARNETS EGEN E-POST (barnets_epost). Under Profil ser barnet
    sitt användarnamn och sin adress, och väljer bort mejl det inte vill
    ha (barn_installningar, barn_notisval), när föräldern slagit på dem.
@@ -176,6 +185,56 @@
     visa('view-stopp');
   }
 
+  /* ============ behörigheterna ============ */
+  const FÅR = {
+    pass: 'se dina pass',
+    studieplan: 'se studieplanen',
+    rapporter: 'läsa rapporterna',
+    nexlax: 'göra NexLäx',
+    meddelanden: 'se notiserna från Nextrum',
+    chatt: 'skriva till din studiehjälpare'
+  };
+
+  /* Rapporterna står också i visa_rapporter, som de alltid gjort. */
+  function får(sak) {
+    const lista = S.data && S.data.behorigheter;
+    if (sak === 'rapporter') return !!(S.data && S.data.visa_rapporter);
+    return !Array.isArray(lista) || lista.indexOf(sak) !== -1;
+  }
+
+  /* Det föräldern stängt av göms, och en rad överst i delen säger vad.
+     Översikt: antalet pass och de närmaste (data-bv-far="pass"). Mina
+     lektioner: flikarna Pass och Studieplan; Efter passen sköts av
+     ritaRapporter, som körs före. Står ingen flik kvar säger raden det,
+     och flikraden går. */
+  function ritaBehörigheter() {
+    NX.$$('[data-bv-far]').forEach(d => { d.hidden = !får(d.dataset.bvFar); });
+    const rad = (id, text) => {
+      const p = $(id);
+      if (!p) return;
+      p.hidden = !text;
+      p.textContent = text ? text + ' Undrar du något? Fråga din förälder.' : '';
+    };
+    rad('#bv-avstangt-oversikt', får('pass') ? '' : 'Din förälder har valt att du inte ser dina pass här.');
+
+    const rot = 'section[data-sek="lektioner"]';
+    const pass = $('#bv-flik-pass'), plan = $('#bv-flik-plan'), rapporter = $('#bv-flik-rapporter');
+    if (!pass || !plan) return;
+    pass.hidden = !får('pass');
+    plan.hidden = !får('studieplan');
+    const synliga = [pass, plan, rapporter].filter(k => k && !k.hidden);
+    const flikar = pass.closest('.vy-flikar');
+    if (flikar) flikar.hidden = !synliga.length;
+    if (!synliga.length) {
+      NX.$$(rot + ' .vy-flik-panel').forEach(p => { p.hidden = true; });
+      rad('#bv-avstangt-lektioner', 'Din förälder har valt att du inte ser dina pass, studieplanen eller rapporterna här.');
+      return;
+    }
+    rad('#bv-avstangt-lektioner', '');
+    const vald = synliga.find(k => k.getAttribute('aria-selected') === 'true');
+    visaFlik(rot, (vald || synliga[0]).dataset.flik);
+  }
+
   /* ============ vyn ============ */
   function ritaAllt() {
     ritaSkalet();
@@ -186,6 +245,7 @@
     ritaPlan();
     ritaGenomförda();
     ritaRapporter();
+    ritaBehörigheter();
     ritaInställningar();
   }
 
@@ -208,12 +268,14 @@
        och resten av Profil som förut. */
     if (!i) {
       host.replaceChildren(el('dl', { class: 'bi-fakta' },
-        el('dt', {}, 'Inloggad som'), el('dd', {}, (S.data && S.data.fornamn) || 'Elev')));
+        el('dt', {}, 'Inloggad som'), el('dd', {}, (S.data && S.data.fornamn) || 'Elev')), vadDuFår());
       return;
     }
 
     const fakta = el('dl', { class: 'bi-fakta' },
       el('dt', {}, 'Användarnamn'), el('dd', {}, i.anvandarnamn || ''));
+    const får_ = vadDuFår();
+    if (får_) fakta.append(får_.firstChild, får_.lastChild);
     if (i.pa) {
       fakta.append(el('dt', {}, 'E-post'), el('dd', {},
         !i.epost ? 'Ingen. Din förälder kan lägga till din e-post.'
@@ -241,6 +303,18 @@
       });
     }
     host.replaceChildren(...delar);
+  }
+
+  /* Vad föräldern valt att barnet får, i ord (barnets_behorigheter). Två
+     rader i faktalistan; null utan listan från databasen. */
+  function vadDuFår() {
+    if (!S.data || !Array.isArray(S.data.behorigheter)) return null;
+    const på = Object.keys(FÅR).filter(får).map(s => FÅR[s]);
+    const text = på.length
+      ? stor(på.length > 1 ? på.slice(0, -1).join(', ') + ' och ' + på[på.length - 1] : på[0]) + '.'
+      : 'Bara din profil. Fråga din förälder om du vill se mer.';
+    const dl = el('dl', { class: 'bi-fakta' }, el('dt', {}, 'Du får'), el('dd', {}, text));
+    return dl;
   }
 
   document.addEventListener('click', async e => {
@@ -300,18 +374,27 @@
     if (!d) return;
     const nästa = (d.kommande || [])[0];
     const c = S.chatt.data;
-    const olästa = (S.notiser || []).filter(n => !n.last_at).length + ((c && c.olasta) || 0);
+    /* Det föräldern stängt av räknas inte (barnets_behorigheter): utan
+       tråden är c null. */
+    const olästa = (får('meddelanden') ? (S.notiser || []).filter(n => !n.last_at).length : 0)
+      + ((c && c.olasta) || 0);
     if (S.sido) S.sido.märke('meddelanden', olästa);
     if (!S.hero) return;
     S.hero.uppdatera({
       namn: d.fornamn,
-      nasta: nästa
-        ? { href: '#oversikt', text: 'Nästa pass · ' + dag(nästa.datum, nästa.tid),
-            under: [nästa.amne, nästa.status === 'confirmed' ? 'Bekräftat' : 'Väntar på svar'].filter(Boolean).join(' · ') }
-        : { href: '#oversikt', text: 'Inga pass bokade just nu', under: 'När din förälder bokat ett pass står det här' },
+      /* Utan passen pekar första kortet på NexLäx, om det är på. */
+      nasta: !får('pass')
+        ? (får('nexlax')
+          ? { href: '#nexlax', text: 'NexLäx', under: 'Välj ämne och öva i din egen takt' }
+          : { href: '#oversikt', text: 'Översikt', under: 'Det din förälder valt att du ser' })
+        : nästa
+          ? { href: '#oversikt', text: 'Nästa pass · ' + dag(nästa.datum, nästa.tid),
+              under: [nästa.amne, nästa.status === 'confirmed' ? 'Bekräftat' : 'Väntar på svar'].filter(Boolean).join(' · ') }
+          : { href: '#oversikt', text: 'Inga pass bokade just nu', under: 'När din förälder bokat ett pass står det här' },
       chatt: { href: '#meddelanden', text: 'Meddelanden',
         under: olästa ? olästa + ' ny' + (olästa > 1 ? 'a' : '')
-          : c ? 'Skriv till ' + (c.studiehjalpare || 'din studiehjälpare') : 'Från Nextrum om dina pass' }
+          : c ? 'Skriv till ' + (c.studiehjalpare || 'din studiehjälpare')
+          : får('meddelanden') ? 'Från Nextrum om dina pass' : 'Avstängda av din förälder' }
     });
   }
 
@@ -357,6 +440,11 @@
   function ritaNotiser() {
     const host = $('#bv-notiser');
     const antal = $('#bv-notiser-antal');
+    if (!får('meddelanden')) {
+      antal.textContent = '';
+      host.replaceChildren(tomt('Notiserna är avstängda', 'Din förälder har valt att du inte får dem här.'));
+      return;
+    }
     if (S.notiser === null) {
       antal.textContent = '';
       host.replaceChildren(tomt('Notiserna gick inte att hämta', 'Ladda om sidan om en stund.'));
@@ -485,6 +573,15 @@
       return;
     }
     const d = data || {};
+    /* Föräldern har stängt av NexLäx (barnets_behorigheter). */
+    if (d.lage === 'avstangd') {
+      S.nl.data = null;
+      sek.hidden = true;
+      tom.replaceChildren(tomt('NexLäx är avstängt', 'Din förälder har valt att du inte gör NexLäx här. '
+        + 'Fråga din förälder om du vill.'));
+      tom.hidden = false;
+      return;
+    }
     if (d.lage !== 'ok') { saknas(); return; }
     S.nl.data = d;
     /* XP och serien är ett tillägg: utan dem ritas vägen ändå. */
@@ -717,14 +814,18 @@
       return;
     }
     const d = data || {};
+    const av = $('#bv-chatt-av');
     if (d.lage !== 'ok') {
       S.chatt.data = null;
       ruta.hidden = true;
       ingen.hidden = d.lage !== 'ingen';
+      /* Föräldern har stängt av tråden (barnets_behorigheter). */
+      if (av) av.hidden = d.lage !== 'avstangd';
       ritaHej();
       return;
     }
     S.chatt.data = d;
+    if (av) av.hidden = true;
     ingen.hidden = true;
     ruta.hidden = false;
     $('#bv-chatt-vem').textContent = d.studiehjalpare || '';
@@ -754,6 +855,7 @@
     tak: 'Du har skrivit många meddelanden på kort tid. Vänta en stund och försök igen.',
     ingen: 'Du har ingen studiehjälpare just nu, så meddelandet gick inte iväg.',
     saknas: 'Din inloggning är pausad, så meddelandet gick inte iväg.',
+    avstangd: 'Din förälder har stängt av tråden, så meddelandet gick inte iväg.',
     tom: 'Skriv något först.',
     lang: 'Meddelandet är för långt. Dela upp det i två.'
   };

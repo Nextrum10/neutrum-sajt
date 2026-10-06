@@ -332,16 +332,17 @@ function texten(a: AnsokanIn): Text {
       };
     }
 
+    // Kontot skapas av oss när profilen godkänns (Ta in i poolen,
+    // 2026-10-06): mejlet ber inte längre den som sökt att registrera sig,
+    // och har därför ingen knapp. Länken där lösenordet väljs kommer i
+    // ett eget mejl från Auth, samtidigt som välkomstmejlet.
     case 'sista_steget':
       return {
         amne: 'Sista steget innan du börjar hos Nextrum',
         rubrik: 'Introduktionen är klar',
-        mening: 'Sista steget är ditt konto. Skapa det på nextrum.se med samma e-postadress '
-          + 'som i ansökan, så godkänner vi din profil och du kan börja få uppdrag.',
-        knapp: 'Skapa ditt konto',
-        knappAdress: `${SAJT}/larare`,
-        avslutning: 'Har du redan ett konto behöver du inte göra något mer. '
-          + 'Vi hör av oss när profilen är godkänd.',
+        mening: 'Sista steget är ditt konto, och det skapar vi åt dig. När din profil är godkänd '
+          + 'får du ett mejl med en länk där du väljer ditt lösenord. Du behöver inte göra något innan dess.',
+        avslutning: 'Har du redan ett konto hos oss använder vi det. Undrar du något? Svara på det här mejlet.',
       };
 
     case 'valkommen':
@@ -352,7 +353,8 @@ function texten(a: AnsokanIn): Text {
           + 'i dina ämnen, och du ser dina uppdrag när du loggar in.',
         knapp: 'Till din sida',
         knappAdress: `${SAJT}/larare`,
-        avslutning: 'Undrar du något inför ditt första pass? Svara på det här mejlet.',
+        avslutning: 'Har du inte valt ett lösenord än kommer ett eget mejl med en länk där du gör det. '
+          + 'Undrar du något inför ditt första pass? Svara på det här mejlet.',
       };
   }
 }

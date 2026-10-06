@@ -1517,6 +1517,232 @@ async function provaBarnetsEpost(webb) {
   }
 }
 
+/* ============ vad barnet får (barnets_behorigheter, 2026-10-06) ============
+   Föräldern kryssar i vad barnet får se och göra när inloggningen skapas,
+   och slår på och av efteråt. Elevvyn göms det som är av och säger varför.
+   Spärren i databasen provas i rls-test.sql (avsnitt 22); här vyerna. */
+const ALLA_FÅR = ['pass', 'studieplan', 'rapporter', 'nexlax', 'meddelanden', 'chatt'];
+const FÖRVAL_FÅR = ['chatt', 'meddelanden', 'nexlax', 'pass', 'studieplan'];
+
+async function provaBarnetsBehörigheter(webb) {
+  /* 1. Förälderns ruta. */
+  {
+    const konton = [
+      { barn_id: 'barn-1', anvandarnamn: 'alva.a', barn_aktiv: true, visa_rapporter: false,
+        vardnadshavare_godkand_at: '2026-09-30T10:00:00Z', senast_inloggad: '2026-09-30T15:30:00Z' },
+      { barn_id: 'barn-2', anvandarnamn: null, barn_aktiv: true, visa_rapporter: false,
+        vardnadshavare_godkand_at: null, senast_inloggad: null }
+    ];
+    const får = { 'barn-1': FÖRVAL_FÅR.slice(), 'barn-2': FÖRVAL_FÅR.slice() };
+    const sparat = [];
+    const anrop = [];
+    const { context, page, S, riktiga, konsol } = await öppna(webb, {
+      inloggad: 'foralder-1',
+      rpc: {
+        mina_barnkonton: () => konton,
+        mina_barns_behorigheter: () => ({ alla: ALLA_FÅR,
+          barn: Object.keys(får).map(id => ({ barn_id: id, behorigheter: får[id] })) }),
+        barn_behorigheter_satt: k => {
+          sparat.push(k);
+          får[k.p_barn] = Array.from(new Set(k.p_lista || [])).sort();
+          return { barn_id: k.p_barn, behorigheter: får[k.p_barn] };
+        }
+      },
+      funktioner: {
+        'barn-konto': kropp => {
+          anrop.push(kropp);
+          if (kropp.atgard === 'skapa') {
+            Object.assign(konton[1], { anvandarnamn: kropp.anvandarnamn, vardnadshavare_godkand_at: new Date().toISOString() });
+          }
+          return [200, { ok: true }];
+        }
+      }
+    });
+    await page.goto(BAS + '/foralder#profil/barn');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    const flik = page.locator('section[data-sek="profil"] .vy-flik[data-flik="barn"]');
+    if (await flik.count()) await flik.click();
+    await page.waitForSelector('#bi-ruta:not([hidden]) .bi-far', { timeout: 5000 }).catch(() => {});
+    prova('behörigheter: rutan säger att föräldern väljer', (await text(page, '#bi-ruta > p')).includes('Ni väljer vad barnet får se och göra'),
+      await text(page, '#bi-ruta > p'));
+    const alva = '.bi-kort[data-bi="barn-1"]';
+    const läge = () => page.$$eval(alva + ' [data-bi-far]', k => k.map(x => x.dataset.biFar.split(':')[1] + '=' + x.getAttribute('aria-pressed')));
+    prova('behörigheter: Alva har sex val, förvalet på och rapporterna av', JSON.stringify(await läge()) === JSON.stringify(
+      ['pass=true', 'studieplan=true', 'rapporter=false', 'nexlax=true', 'meddelanden=true', 'chatt=true']), JSON.stringify(await läge()));
+    prova('behörigheter: det gamla rapportvalet står inte bredvid', (await page.locator(alva + ' [data-bi-rapporter]').count()) === 0);
+    const höjd = await page.$$eval(alva + ' [data-bi-far]', k => Math.min(...k.map(x => x.getBoundingClientRect().height)));
+    prova('behörigheter: knapparna är minst 44 px', höjd >= 43.5, höjd);
+    await bild(page, 'behorigheter-foralder', '#bi-ruta');
+
+    await page.click(alva + ' [data-bi-far="barn-1:studieplan"]');
+    await page.waitForFunction(() => document.querySelector('[data-bi-far="barn-1:studieplan"]')
+      && document.querySelector('[data-bi-far="barn-1:studieplan"]').getAttribute('aria-pressed') === 'false', null, { timeout: 4000 }).catch(() => {});
+    const s1 = sparat[sparat.length - 1];
+    prova('behörigheter: av sparar hela listan utan studieplanen', s1 && s1.p_barn === 'barn-1'
+      && JSON.stringify(s1.p_lista.slice().sort()) === JSON.stringify(['chatt', 'meddelanden', 'nexlax', 'pass']), JSON.stringify(s1));
+    prova('behörigheter: knappen säger Av efteråt', (await text(page, '[data-bi-far="barn-1:studieplan"]')) === 'Av');
+    await page.click(alva + ' [data-bi-far="barn-1:rapporter"]');
+    await vänta(300);
+    const s2 = sparat[sparat.length - 1];
+    prova('behörigheter: rapporterna på går genom samma lista', s2 && s2.p_lista.includes('rapporter'), JSON.stringify(s2));
+
+    /* Bo har ingen inloggning: kryssrutorna i formuläret. */
+    const bo = '.bi-kort[data-bi="barn-2"]';
+    const kryss = () => page.$$eval(bo + ' [data-bi-far-ny]', k => k.map(x => x.dataset.biFarNy + '=' + x.checked));
+    prova('behörigheter: formuläret har sex kryssrutor med förvalet', JSON.stringify(await kryss()) === JSON.stringify(
+      ['pass=true', 'studieplan=true', 'rapporter=false', 'nexlax=true', 'meddelanden=true', 'chatt=true']), JSON.stringify(await kryss()));
+    prova('behörigheter: formuläret säger vad barnet aldrig kan', (await text(page, bo + ' .bi-far-val')).includes('aldrig boka'));
+    await page.uncheck(bo + ' [data-bi-far-ny="nexlax"]');
+    await page.fill(bo + ' [data-bi-anv]', 'bo.b');
+    await page.fill(bo + ' [data-bi-los]', 'hemligt-1');
+    await page.fill(bo + ' [data-bi-los2]', 'hemligt-1');
+    await page.check(bo + ' [data-bi-ja]');
+    await page.click(bo + ' button[type="submit"]');
+    await page.waitForFunction(() => /loggar nu in|valen/.test(document.querySelector('#bi-msg').textContent), null, { timeout: 5000 }).catch(() => {});
+    const skapa = anrop.find(a => a.atgard === 'skapa');
+    const s3 = sparat.find(s => s.p_barn === 'barn-2');
+    prova('behörigheter: inloggningen skapas först, valen sedan', skapa && s3
+      && S.logg.findIndex(r => r.väg === '/functions/v1/barn-konto') < S.logg.findIndex(r => r.väg === '/rest/v1/rpc/barn_behorigheter_satt'
+        && r.kropp && r.kropp.p_barn === 'barn-2'), JSON.stringify(s3));
+    prova('behörigheter: Bo får det föräldern kryssade i', s3
+      && JSON.stringify(s3.p_lista.slice().sort()) === JSON.stringify(['chatt', 'meddelanden', 'pass', 'studieplan']), JSON.stringify(s3));
+    prova('behörigheter: Bos kort visar valen efteråt', (await page.getAttribute('[data-bi-far="barn-2:nexlax"]', 'aria-pressed')) === 'false');
+    prova('behörigheter: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    prova('behörigheter: inga fel i konsolen', konsol.filter(k => !/Failed to load resource/.test(k)).length === 0, konsol.join(' | '));
+    await context.close();
+  }
+
+  /* 2. Förvalet orört: inget andra anrop. Valen går inte att spara: beskedet säger det. */
+  for (const fall of ['förval', 'fel']) {
+    const konton = [{ barn_id: 'barn-2', anvandarnamn: null, barn_aktiv: true, visa_rapporter: false,
+      vardnadshavare_godkand_at: null, senast_inloggad: null }];
+    const { context, page, S } = await öppna(webb, {
+      inloggad: 'foralder-1',
+      rpc: {
+        mina_barnkonton: () => konton,
+        mina_barns_behorigheter: () => ({ alla: ALLA_FÅR, barn: [{ barn_id: 'barn-2', behorigheter: FÖRVAL_FÅR }] }),
+        barn_behorigheter_satt: () => ({ __fel: { code: '55000', message: 'Skapa barnets inloggning först.' } })
+      },
+      funktioner: { 'barn-konto': kropp => {
+        if (kropp.atgard === 'skapa') Object.assign(konton[0], { anvandarnamn: kropp.anvandarnamn, vardnadshavare_godkand_at: 'nu' });
+        return [200, { ok: true }];
+      } }
+    });
+    await page.goto(BAS + '/foralder#profil/barn');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    const flik = page.locator('section[data-sek="profil"] .vy-flik[data-flik="barn"]');
+    if (await flik.count()) await flik.click();
+    await page.waitForSelector('#bi-ruta:not([hidden]) .bi-far-val', { timeout: 5000 }).catch(() => {});
+    const bo = '.bi-kort[data-bi="barn-2"]';
+    if (fall === 'fel') await page.check(bo + ' [data-bi-far-ny="rapporter"]');
+    await page.fill(bo + ' [data-bi-anv]', 'bo.b');
+    await page.fill(bo + ' [data-bi-los]', 'hemligt-1');
+    await page.fill(bo + ' [data-bi-los2]', 'hemligt-1');
+    await page.check(bo + ' [data-bi-ja]');
+    await page.click(bo + ' button[type="submit"]');
+    await page.waitForFunction(() => /loggar nu in|valen/.test(document.querySelector('#bi-msg').textContent), null, { timeout: 5000 }).catch(() => {});
+    const satt = S.logg.filter(r => r.väg === '/rest/v1/rpc/barn_behorigheter_satt');
+    if (fall === 'förval') {
+      prova('behörigheter: förvalet orört sparar inget mer', satt.length === 0 && (await text(page, '#bi-msg')).includes('loggar nu in'),
+        await text(page, '#bi-msg'));
+    } else {
+      prova('behörigheter: när valen inte sparas säger beskedet det, och inloggningen finns', satt.length === 1
+        && (await text(page, '#bi-msg')).includes('Inloggningen är skapad, men valen') && (await text(page, '#bi-msg')).includes('Skapa barnets inloggning först'),
+        await text(page, '#bi-msg'));
+    }
+    await context.close();
+  }
+
+  /* 3. Elevvyn: bara NexLäx på. Databasen svarar avstangd för tråden. */
+  {
+    const rpc = barnRpc({
+      barn_oversikt: () => ({ lage: 'ok', fornamn: 'Alva', studiehjalpare: 'Sara', visa_rapporter: false, rapporter: null,
+        behorigheter: ['nexlax'] }),
+      barn_chatt: () => ({ lage: 'avstangd' }),
+      barn_nexlax: () => ({ lage: 'ok', elev: 'barn-1', arskurs: 'Åk 6', amnen: ['Matematik'], katalog: [], forsok: [],
+        pagaende: {}, uppgifter: [] })
+    });
+    const { context, page, S, konsol } = await öppna(webb, { rpc, inloggad: 'barnkonto-1' });
+    await page.goto(BAS + '/barn');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await vänta(300);
+    const dolda = await page.$$eval('[data-bv-far]', d => d.map(x => x.dataset.bvFar + '=' + x.hidden));
+    prova('barn med bara NexLäx: passen i Översikt är dolda', JSON.stringify(dolda) === JSON.stringify(['pass=true']),
+      JSON.stringify(dolda));
+    prova('barn med bara NexLäx: raden i Översikt säger att föräldern valt det', await synlig(page, '#bv-avstangt-oversikt')
+      && (await text(page, '#bv-avstangt-oversikt')).includes('inte ser dina pass här'), await text(page, '#bv-avstangt-oversikt'));
+    prova('barn med bara NexLäx: hälsningens kort leder till NexLäx', (await text(page, '#vy-hero .vy-hero-kort a')).includes('NexLäx'),
+      await text(page, '#vy-hero .vy-hero-kort a'));
+    prova('barn med bara NexLäx: hälsningens kort säger att meddelandena är avstängda',
+      (await text(page, '#vy-hero')).includes('Avstängda av din förälder'), await text(page, '#vy-hero'));
+    await bild(page, 'behorigheter-barn-oversikt');
+    await page.click('#vy-sido a[data-sek="lektioner"]');
+    await vänta(200);
+    prova('barn med bara NexLäx: Mina lektioner har inga flikar och säger varför',
+      (await page.$eval('section[data-sek="lektioner"] .vy-flikar', e => e.hidden))
+      && (await page.$$eval('section[data-sek="lektioner"] .vy-flik-panel', p => p.every(x => x.hidden)))
+      && (await synlig(page, '#bv-avstangt-lektioner'))
+      && (await text(page, '#bv-avstangt-lektioner')).includes('inte ser dina pass, studieplanen eller rapporterna'),
+      await text(page, '#bv-avstangt-lektioner'));
+    await page.click('#vy-sido a[data-sek="meddelanden"]');
+    await vänta(200);
+    prova('barn med bara NexLäx: notiserna säger att de är avstängda', (await text(page, '#bv-notiser')).includes('Notiserna är avstängda'),
+      await text(page, '#bv-notiser'));
+    prova('barn med bara NexLäx: tråden är dold och raden säger varför', !(await synlig(page, '#bv-chatt'))
+      && (await synlig(page, '#bv-chatt-av')) && !(await synlig(page, '#bv-skriva')), await text(page, '#bv-chatt-av'));
+    prova('barn med bara NexLäx: tråden markeras aldrig som läst', !S.logg.some(r => r.väg === '/rest/v1/rpc/barn_chatt_last'));
+    prova('barn med bara NexLäx: ingen siffra för olästa', (await page.evaluate(() => {
+      const m = document.querySelector('#vy-sido a[data-sek="meddelanden"] .vy-sido-mark');
+      return m ? m.textContent : '';
+    })) === '');
+    await page.click('#vy-sido a[data-sek="profil"]');
+    await vänta(200);
+    prova('barn med bara NexLäx: Profil säger vad barnet får', (await text(page, '#bv-inst')).includes('Göra NexLäx.'), await text(page, '#bv-inst'));
+    prova('barn med bara NexLäx: bara barnets egna funktioner',
+      S.logg.filter(r => r.väg.startsWith('/rest/')).every(r => BARNETS_FUNKTIONER.test(r.väg)),
+      S.logg.filter(r => r.väg.startsWith('/rest/')).map(r => r.väg).join(', '));
+    prova('barn med bara NexLäx: inga fel i konsolen', konsol.filter(k => !/Failed to load resource/.test(k)).length === 0, konsol.join(' | '));
+    await context.close();
+  }
+
+  /* 4. Elevvyn: NexLäx avstängt. */
+  {
+    const rpc = barnRpc({
+      barn_oversikt: Object.assign(() => Object.assign(barnRpc().barn_oversikt(), {
+        behorigheter: ['chatt', 'meddelanden', 'pass', 'studieplan'] })),
+      barn_nexlax: () => ({ lage: 'avstangd' })
+    });
+    const { context, page, S, konsol } = await öppna(webb, { rpc, inloggad: 'barnkonto-1' });
+    await page.goto(BAS + '/barn#nexlax');
+    await page.waitForSelector('#bv-nl-tom:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('barn utan NexLäx: NexLäx säger att föräldern stängt av det', (await text(page, '#bv-nl-tom')).includes('NexLäx är avstängt')
+      && !(await synlig(page, '#bv-nexlax')), await text(page, '#bv-nl-tom'));
+    prova('barn utan NexLäx: läget frågas inte', !S.logg.some(r => r.väg === '/rest/v1/rpc/nexlax_lage'));
+    await page.click('#vy-sido a[data-sek="oversikt"]');
+    await vänta(200);
+    prova('barn utan NexLäx: passen syns som förut', !(await synlig(page, '#bv-avstangt-oversikt'))
+      && (await synlig(page, '#bv-narmast')));
+    await page.click('#vy-sido a[data-sek="lektioner"]');
+    await vänta(200);
+    prova('barn utan NexLäx: Mina lektioner har Pass och Studieplan', !(await synlig(page, '#bv-avstangt-lektioner'))
+      && (await synlig(page, '#bv-flik-pass')) && (await synlig(page, '#bv-flik-plan')) && (await synlig(page, '#bv-kommande')));
+    prova('barn utan NexLäx: inga fel i konsolen', konsol.filter(k => !/Failed to load resource/.test(k)).length === 0, konsol.join(' | '));
+    await context.close();
+  }
+
+  /* 5. Utan listan, som före migrationen: allt som förut. */
+  {
+    const { context, page } = await öppna(webb, { rpc: barnRpc(), inloggad: 'barnkonto-1' });
+    await page.goto(BAS + '/barn');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    await vänta(300);
+    prova('barn före migrationen: inget är dolt, ingen rad om föräldern',
+      (await page.$$eval('[data-bv-far]', d => d.every(x => !x.hidden))) && !(await synlig(page, '#bv-avstangt-oversikt'))
+      && !(await page.$eval('#bv-flik-pass', e => e.hidden)) && !(await page.$eval('#bv-flik-plan', e => e.hidden)));
+    await context.close();
+  }
+}
+
 /* ============ körningen ============ */
 /* ============ barnets chatt hos de vuxna (barnets_chatt, 2026-10-06) ============
    Studiehjälparen läser och skriver i elevens tråd, under familjens.
@@ -1624,6 +1850,7 @@ async function provaBarnetsChattHosDeVuxna(webb) {
     await provaFamiljensInloggning(webb);
     await provaBarnpanelen(webb);
     await provaBarnetsEpost(webb);
+    await provaBarnetsBehörigheter(webb);
     await provaAdminvyn(webb);
     await provaBarnetsChattHosDeVuxna(webb);
   } catch (e) {

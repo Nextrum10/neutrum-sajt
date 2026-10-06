@@ -9,7 +9,7 @@ hittar de inte varandra.
 | `foralder.html` | Studievyn. Elev och förälder. Låst tills ni matchat familjen. |
 | `larare.html` | Studiehjälparvyn. Låst tills ni godkänt personen. |
 | `admin.html` | **Adminvyn.** Ledningens arbetsyta. Kräver en adminroll: superadmin, eller de behörigheter någon gett dig under System → Adminhantering. |
-| `barn.html` | Barnets egen vy. Föräldern skapar inloggningen i studievyn; barnet ser sina pass, timmar, studieplan och notiser. Se `DEPLOY-BARNKONTON.md`. |
+| `barn.html` | Barnets egen vy. Föräldern skapar inloggningen i studievyn och väljer vad barnet ser: pass, timmar, studieplan, rapporter, NexLäx och notiser. Se `DEPLOY-BARNKONTON.md`. |
 | `nextrum-config.js` | **Den enda filen du behöver ändra i.** Nycklarna hit. |
 | `nextrum.css` | Utseendet. Delas av alla sidor. |
 | `nextrum-app.js` | Delad kod (inloggning, kalender, felmeddelanden). |
@@ -85,7 +85,10 @@ Det här är själva affärsmodellen, så det är värt att kunna utantill.
 
 1. Familjen skickar **intresseanmälan** på huvudsidan → hamnar i tabellen `leads`
 2. Ni ringer eller mejlar och väljer ut en studiehjälpare
-3. Familjen skapar konto på `foralder.html`
+3. `admin.html` → anmälan → **Ta in familjen**: kontot skapas med
+   adressen i anmälan och eleven ur anmälan, och familjen får ett mejl
+   med en länk där de väljer sitt lösenord. (De kan också registrera sig
+   själva på `foralder.html`.)
 4. `admin.html` → **Familjer** → välj studiehjälpare i rullgardinen på
    familjens rad. Det sätter `matched_tutor_id` och `match_status`
    samtidigt — förr var det två kolumner i Table Editor, och satte man
@@ -97,8 +100,12 @@ Först efter steg 4 låses föräldravyn upp. Innan dess ser familjen ett väntl
 
 ## Så här godkänner ni en studiehjälpare
 
-`admin.html` → **Studiehjälpare** → sätt läget till *Godkänd*. Först då
-syns personen på huvudsidan och kommer in i sin egen vy.
+`admin.html` → **Ansökningar** → ansökan → **Ta in i poolen**. Har
+personen inget konto skapas det där, med adressen i ansökan, och hen får
+ett mejl med en länk där hen väljer sitt lösenord. Profilen blir godkänd i
+samma tryck. Först då syns personen på huvudsidan och kommer in i sin
+egen vy. (En studiehjälpare som redan har ett konto godkänns också under
+**Studiehjälpare**, med läget *Godkänd*.)
 
 ## Så här gör du dig själv till admin
 

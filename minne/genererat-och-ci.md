@@ -17,6 +17,7 @@ Arkivet för avsnitt 8 och 9 i `CLAUDE.md`, ordagrant. Reglerna står i kärnan,
 | `bank/*.png` (övningsbladen) | `verktyg/bygg-banken.py` | bladen står i klartext i `verktyg/bladen/` (en modul per stadium, en per NP-serie: `np_ak6.py`, `np_ak9.py`, `np_gymnasiet.py`, figurerna i `figurer.py`). Körs för hand (kräver Chromium), inte i CI; verktyget mäter varje sida och vägrar ett blad som inte ryms. `python3 verktyg/bygg-banken.py ak4-` ritar bara de bladen. `--sql <mönster>` ger raderna till `biblioteksmaterial`, och ett nytt blad är en NY migration med bara de nya raderna; `--kolla` visar vad som saknar bild, facit eller migration. Facit står i `verktyg/bladen/facit_<modul>.py` (ett svar per uppgift) och ritas med `--facit` till `bank/facit/*.png`, en sida per blad; ryms inte frågorna tas de bort, sedan blir stilen mindre. Länkarna till andras material (provgruppernas sidor) står i `verktyg/bladen/lankar.py`, ritas inte, och kommer med i `--sql` när namnet matchar. Ett blads id kommer ur filnamnet: ändra aldrig `fil` på ett befintligt blad, en rättelse är en ny PNG och ingen ny rad |
 | `?v=`-stämplarna på alla script- och link-taggar | `verktyg/satt-version.py` | filernas egen md5 |
 | `bilder/*.webp` | `verktyg/bygg-webp.py` | `bilder/*.jpg` |
+| `bilder/intro-*.jpg` och `.webp` (introduktionens skärmdumpar, 2026-10-06) | `verktyg/bygg-introbilder.js` | studievyn och studiehjälparvyn, i Chromium mot en falsk Supabase med påhittade familjer (Anna och Alva Andersson, Karin och Kim Karlsson, studiehjälparen Sara Svensson) och klockan på tisdag 13 oktober 2026 kl. 15.30. Körs för hand när en del som en bild visar ändras, inte i CI (Chromium och Pillow, och en kodare ger inte samma bytes mellan versioner). Ett anrop till driften stoppar verktyget. `--mapp` sparar PNG:erna för den som vill titta först; utan Pillow blir det inga bilder. `kolla-webp.py` vaktar att varje jpg har sin webp |
 | `supabase/migrations/*_uppgiftsbanken_*.sql` (nivåerna och frågorna) | `verktyg/bygg-uppgifter.py --sql` | `verktyg/uppgiftsbanken/*.py`. Ändras banken skrivs en NY migration, den gamla står kvar. `--kolla` (CI) jämför den senaste med vad verktyget skriver nu, och `--visa` skriver ut frågorna med facit för den som ska läsa igenom dem. Sedan Fas 23.2 skriver verktyget också ett Mästarprov sist i varje område med minst två nivåer (`<prefix>-mastare-<område>`) och repetitionen sist i banan (`<prefix>-repetition`); områdena Mästarprov och Repetition är upptagna för handskrivna nivåer |
 
 CI kör om maskotsvaren, FAQ-schemat och kartan och gör `git diff
@@ -155,7 +156,11 @@ Körs på varje push och PR. Ska vara grön före merge.
    `_delad/adminbehorighet.ts` och i `nextrum-admin-behorighet.js`, och
    barnens användarnamn och domän prövas lika i databasen, `barn-konto`,
    inloggningen (`nextrum-studie.js` sedan 2026-10-01, delad av alla
-   fyra vyerna) och föräldrarnas ruta (barnkonton_och_admin)
+   fyra vyerna) och föräldrarnas ruta (barnkonton_och_admin), och
+   barnets sex behörigheter (2026-10-06) står lika i migrationen
+   (`intern.barn_behorigheter_alla()`, villkoret, förvalet och
+   återställningarna), i studievyn (`BARN_FÅR`, `BARN_FÅR_FÖRVAL`) och i
+   barnets vy (`FÅR`)
 6. `verktyg/kolla-webp.py`, och `verktyg/kolla-mejltexter.py` (2026-10-05):
    nejet som läget Avböjd visar (`NEJ_MEJLET` i
    `nextrum-admin-rekrytering.js`) är samma som mejlet (`NEJ` i
@@ -295,6 +300,36 @@ huvudtransaktionen syns för allt som kommer efter den i filen.
 b6c1 från Fas 14.6 står bekräftat och obetalt, så sex prov för
 timmarna (22.1–22.3) föll i varje hel körning. Fixturerna ställs nu
 tillbaka överst i avsnittet för 22.1.
+
+### Webbläsarproven för intaget och introduktionen (2026-10-06)
+Byggda som de nedan, med egna portar. `verktyg/prova-intag.js` (8969):
+Ta in familjen på en anmälan (knappen och rutan heter så när kontot
+saknas, rutan säger att ett mejl går, `bjud-in` får anmälans adress, namn
+och anmälan, och sedan kopplas anmälan och eleven skapas på det nya
+kontot, i den ordningen, och kvittot; och när eleven inte gick att skapa
+efter kontot heter knappen Skapa elev och bjuder inte in igen, för
+`medan()` ställer annars tillbaka den gamla texten), Ta in i poolen med Skapa kontot
+förvalt (`roll: 'tutor'` före godkännandet, kvittot) och med ett konto som
+fanns (ingen inbjudan, som förut), och Skicka inbjudan igen i personens
+panel (bara för den som aldrig loggat in; en ny inbjudan och en länk för
+lösenordet). `verktyg/prova-introduktion.js` (8967): rutan för
+lösenordet utan Inte nu efter en inbjudan och med `valkommen =
+'losenord'`, att lösenordet sparas med `valkommen: 'intro'`,
+introduktionen i studievyn (sju bilder) och studiehjälparvyn (åtta),
+med och utan väntläge, att Fortsätt leder in och tar bort välkomsten,
+Visa introduktionen under Profil (med Stäng), reserven utan
+bildregistret, att knappen står still mellan bilderna på dator, telefon
+och liten telefon (360 × 740), och mörkt läge. `prova-aterstallning.js`
+följde med: rutan för en inbjudan heter Skapa ditt lösenord och har inget
+Inte nu. `prova-barnkonton.js` har `provaBarnetsBehörigheter`: rutorna
+när inloggningen skapas, på och av i kortet, och barnets vy med varje del
+av, med main:s fem delar (Översikt, flikarna under Mina lektioner, tråden
+och notiserna under Meddelanden).
+
+Kör inte alla webbläsarprov samtidigt: under den lasten hann
+ansökningsformulärets animation inte stanna innan `prova-ansokningar.js`
+klickade, och provet kraschade på ett val som inte bytte läge (2026-10-06;
+ensamt gröna två gånger av två, både på main och på grenen).
 
 ### Webbläsarprovet för familjens faktura (2026-10-06)
 `verktyg/prova-fakturor.js` är byggt som de nedan (egen port, 8964), med

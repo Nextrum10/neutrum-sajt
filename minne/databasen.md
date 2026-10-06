@@ -819,3 +819,25 @@ träffarna: `notis_utskick_ta` (två lappar), `intern.barnnotis_vid_pass`,
 filen, och hela `rls-test.sql` (1220 rader) gick igenom mot driften före
 och efter, i en transaktion som rullades tillbaka. Se
 `minne/barnkonton-och-admin.md`.
+
+### Barnets behörigheter (barnets_behorigheter, 2026-10-06)
+Kolumnen `students.barn_behorigheter` (text[], förval
+`{chatt,meddelanden,nexlax,pass,studieplan}`, villkoret
+`students_barn_behorigheter_kanda`), fyra hjälpare i `intern`
+(`barn_behorigheter_alla`, `barnets_behorigheter`, `barn_behorigt`,
+`mitt_nexlax_barn`), två funktioner för föräldern
+(`mina_barns_behorigheter`, `barn_behorigheter_satt`), och
+`students_barnkonto_audit` med kolumnen i listan. Arton funktioner
+lappades med `replace()` på `pg_get_functiondef()` och en vakt som räknar
+träffarna: `barn_oversikt` (två lappar), `barn_notiser`,
+`barn_markera_last`, `barn_nexlax`, `niva_starta` (två träffar),
+`niva_svara`, `niva_genomgang`, `nexlax_lage`, `barn_uppgift`,
+`rapportera_fragefel`, barnets tre chattfunktioner, `barnchatt_skriv`,
+`barnchatt_trad`, `barnchatt_tradar` (två lappar), `skydda_studentfalt`
+(två lappar) och `skydda_studentfalt_ny`. Ingen `drop` och ingen
+`delete`, så filen går att köra avsnitt för avsnitt utan bekräftelser.
+Versionen `20261006233000` ligger efter `barnets_chatt`
+(`20261006230000`, en annan session samma kväll), vars funktioner lappas;
+första avsnittet stannar om den inte är körd. `rls-test.sql` avsnitt 22.
+Körs efter merge (`DEPLOY-BARNKONTON.md` 9). Se
+`minne/barnkonton-och-admin.md`.
