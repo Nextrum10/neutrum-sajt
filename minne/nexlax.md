@@ -305,14 +305,19 @@ utveckling som är roligare att följa, och ett quest-system.
   för ett skript som skriver varje bildruta. Med rörelse bortvald finns
   ingen konfetti och talet står där direkt. Firandet växer med det som
   klarades: en nivå, ett område, en bana.
-- **Väljaren** ersatte ämnesraden och rullgardinen för årskurs: en rad
-  årskurser (elevens egen med en prick), ämnena i årskursen som rutor
-  med ikon, procent och NP-märke, och de senast övade banorna som
-  genvägar. En årskurs där ämnet saknas byter ämne, inte årskurs. Inget
-  rullar i sidled, så ett tryck kan aldrig vara ett drag.
-- **Rangen** räknas i vyn ur XP:n, som märkena (`RANGER`): tio namn från
-  Nybörjare till Legend. Den ger och tar ingenting, och sjunker aldrig,
-  för XP:n gör det inte. Din utveckling har också Höjdpunkter (det
+- **Väljaren** ersatte ämnesraden och rullgardinen för årskurs. Samma
+  kväll vändes den (Leo: "när man trycker på ett ämne ska årskurserna
+  komma upp", och "ta bort senaste de tar bara plats"): först alla ämnen
+  som rutor med ikon, årskurser och NP-märke, och under dem årskurserna
+  i det valda ämnet (elevens egen med en prick). Ett nytt ämne börjar i
+  elevens årskurs om ämnet har den. Inga genvägar. Inget rullar i
+  sidled, så ett tryck kan aldrig vara ett drag.
+- **Ranken** (i koden `rang`, `RANGER`; Leo ville att den heter rank i
+  vyn) räknas ur XP:n, som märkena: tio namn från Nybörjare till Legend,
+  och Din utveckling visar alla tio med XP:n som behövs och var eleven
+  står. Den ger och tar ingenting, och sjunker aldrig, för XP:n gör det
+  inte. (Ordet "krävs" i en text i barnets vy fäller
+  `prova-barnkonton.js`: prisfiltret läser "kr" före ett ä som kronor.) Din utveckling har också Höjdpunkter (det
   senast klarade, ur försöken och `nexlax_lage().omraden`), uppdragen i
   siffror och den bästa dagen.
 - **Ämnen som bara finns i NexLäx** står i `NX.NEXLAX_AMNEN`, inte i

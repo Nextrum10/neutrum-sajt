@@ -298,40 +298,46 @@ async function provaBarnet(webb) {
   await tillBarnetsVag(page);
   await lyssna(page);
 
-  /* Väljaren. */
+  /* Väljaren: först ämnena, sedan årskurserna i det valda ämnet. */
+  const rutor = await page.$$eval('#bv-nl-vag .nl-amne', b => b.map(x => x.querySelector('b').textContent));
+  prova('väljaren: alla ämnen med en bana', JSON.stringify(rutor) === JSON.stringify(['Matematik', 'Svenska', 'Engelska', 'Spanska', 'Juridik']), JSON.stringify(rutor));
   const ak = await page.$$eval('#bv-nl-vag .nl-ak-knapp', b => b.map(x => x.textContent.trim()));
-  prova('väljaren: årskurserna som har en bana', JSON.stringify(ak) === JSON.stringify(['Åk 6', 'Åk 7', 'Gy 1']), JSON.stringify(ak));
+  prova('väljaren: årskurserna i det valda ämnet', JSON.stringify(ak) === JSON.stringify(['Åk 6', 'Åk 7']), JSON.stringify(ak));
   prova('väljaren: elevens egen årskurs är vald och märkt',
     (await page.getAttribute('#bv-nl-vag .nl-ak-knapp[data-nl-ak="ak6"]', 'aria-pressed')) === 'true'
     && (await page.locator('#bv-nl-vag .nl-ak-knapp.egen[data-nl-ak="ak6"]').count()) === 1);
-  const rutor = await page.$$eval('#bv-nl-vag .nl-amne', b => b.map(x => x.querySelector('b').textContent));
-  prova('väljaren: ämnena i åk 6', JSON.stringify(rutor) === JSON.stringify(['Matematik', 'Svenska', 'Engelska']), JSON.stringify(rutor));
+  prova('väljaren: ämnet säger sina årskurser', (await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]')).includes('Åk 6–7'),
+    await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]'));
   prova('väljaren: NP syns på ämnen med NP-träning', (await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]')).includes('NP')
     && !(await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Svenska"]')).includes('NP'));
-  const senast = await page.$$eval('#bv-nl-vag .nl-senast-knapp', b => b.map(x => x.textContent.trim()));
-  prova('väljaren: senast övade som genvägar, utan banan man står i', JSON.stringify(senast) === JSON.stringify(['Juridik · Gy 1']), JSON.stringify(senast));
-  prova('väljaren: rangen står i toppen', (await text(page, '#bv-nl-vag .nl-rang')).includes('Utforskare'), await text(page, '#bv-nl-vag .nl-stat'));
+  prova('väljaren: inga genvägar', (await page.locator('#bv-nl-vag .nl-senast, #bv-nl-vag .nl-senast-knapp').count()) === 0);
+  prova('väljaren: ranken står i toppen', (await text(page, '#bv-nl-vag .nl-rang')).includes('Utforskare')
+    && /^Rank /.test(await page.getAttribute('#bv-nl-vag .nl-rang', 'aria-label') || ''), await text(page, '#bv-nl-vag .nl-stat'));
   await bild(page, 'nexlax-barn-vag', '#bv-nexlax');
 
   /* Vägen har inte NP-nivåerna, och procenten räknar bara vägen. */
   const väg = await text(page, '#bv-nl-vag .nl-vag');
   prova('vägen: NP-träningen står inte på vägen', !väg.includes('Utan räknare') && väg.includes('Jämför bråk'), väg.slice(0, 200));
 
-  /* Byt årskurs: Gy 1 har bara juridik. */
-  await page.click('#bv-nl-vag .nl-ak-knapp[data-nl-ak="gy1"]');
+  /* Ett tryck på juridiken: dess årskurs kommer upp, och banan byts. */
+  await page.click('#bv-nl-vag .nl-amne[data-nl-amne="Juridik"]');
   await vänta(150);
-  prova('väljaren: en årskurs byter till ett ämne som finns där',
-    (await page.getAttribute('#bv-nl-vag', 'data-amne')) === 'Juridik' && (await page.getAttribute('#bv-nl-vag', 'data-arskurs')) === 'gy1',
+  prova('väljaren: ett ämne visar sina årskurser och öppnar banan',
+    (await page.getAttribute('#bv-nl-vag', 'data-amne')) === 'Juridik' && (await page.getAttribute('#bv-nl-vag', 'data-arskurs')) === 'gy1'
+    && JSON.stringify(await page.$$eval('#bv-nl-vag .nl-ak-knapp', b => b.map(x => x.textContent.trim()))) === JSON.stringify(['Gy 1']),
     (await page.getAttribute('#bv-nl-vag', 'data-amne')) + ' ' + (await page.getAttribute('#bv-nl-vag', 'data-arskurs')));
   prova('väljaren: juridiken har sin färg och ikon', (await page.getAttribute('#bv-nl-vag', 'data-nl-f')) === 'ju'
     && (await page.locator('#bv-nl-vag .nl-amne[data-nl-amne="Juridik"] svg').count()) === 1);
   prova('väljaren: trycket tickar', (await känt(page)).includes('tryck'), JSON.stringify(await känt(page)));
-  /* Genvägen tillbaka till matematiken är borta, för den är vald nu; tillbaka med årskursen. */
+  prova('väljaren: språket har sin kod i stället för en flagga', (await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Spanska"] .nl-sprakkod')) === 'ES');
+  /* Tillbaka till matematiken: elevens årskurs, och åk 7 med en knapp. */
+  await page.click('#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]');
+  await vänta(150);
+  prova('väljaren: tillbaka i ämnet står elevens årskurs', (await page.getAttribute('#bv-nl-vag', 'data-arskurs')) === 'ak6');
   await page.click('#bv-nl-vag .nl-ak-knapp[data-nl-ak="ak7"]');
   await vänta(150);
-  prova('väljaren: åk 7 har matematik och spanska', JSON.stringify(await page.$$eval('#bv-nl-vag .nl-amne b', b => b.map(x => x.textContent)))
-    === JSON.stringify(['Matematik', 'Spanska']));
-  prova('väljaren: språket har sin kod i stället för en flagga', (await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Spanska"] .nl-sprakkod')) === 'ES');
+  prova('väljaren: en årskurs byter bana i ämnet', (await page.getAttribute('#bv-nl-vag', 'data-amne')) === 'Matematik'
+    && (await page.getAttribute('#bv-nl-vag', 'data-arskurs')) === 'ak7');
   await page.click('#bv-nl-vag .nl-ak-knapp[data-nl-ak="ak6"]');
   await vänta(150);
 
@@ -450,7 +456,9 @@ async function provaBarnet(webb) {
   await page.click('#bv-flik-utveckling');
   await vänta(200);
   const utv = await text(page, '#bv-nl-utveckling');
-  prova('utveckling: rangen med vad som är kvar', utv.includes('Din rang') && /XP kvar till/.test(utv), utv.slice(0, 200));
+  prova('utveckling: ranken med vad som är kvar', utv.includes('Din rank') && /XP kvar till/.test(utv), utv.slice(0, 200));
+  prova('utveckling: alla ranker syns, med den nuvarande', (await page.locator('.nl-ranker li').count()) === 10
+    && (await page.locator('.nl-ranker li.nu').count()) === 1 && (await page.locator('.nl-ranker li.klar').count()) === 2);
   prova('utveckling: uppdragen i siffror', utv.includes('Uppdrag klara') && utv.includes('Kistor öppnade'));
   prova('utveckling: höjdpunkterna', utv.includes('Höjdpunkter') && utv.includes('Hela området Bråk klart'), utv.slice(0, 400));
   prova('utveckling: märkena för uppdragen', utv.includes('Första uppdraget') && utv.includes('Dagens kista'));

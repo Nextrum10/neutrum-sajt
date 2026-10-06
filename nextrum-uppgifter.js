@@ -833,7 +833,7 @@ window.NXUppgifter = (function () {
           + IKON.låga + '<b>' + (s ? s.nu : 0) + '</b><span>' + (s && s.nu === 1 ? 'dag' : 'dagar') + '</span></span>'
         + '<span class="nl-stat-pill nl-xp" role="listitem" aria-label="' + esc(xpText(l.xp)) + '">'
           + IKON.blixt + '<b>' + tusen(l.xp) + '</b><span>XP</span></span>'
-        + '<span class="nl-stat-pill nl-rang" role="listitem" aria-label="' + esc('Rang ' + r.nr + ' av ' + r.av + ': ' + r.namn) + '">'
+        + '<span class="nl-stat-pill nl-rang" role="listitem" aria-label="' + esc('Rank ' + r.nr + ' av ' + r.av + ': ' + r.namn) + '">'
           + IKON.medalj + '<b>' + esc(r.namn) + '</b></span>'
         + '</div>'
       : '';
@@ -963,57 +963,59 @@ window.NXUppgifter = (function () {
   /* ============================================================
      VÄLJAREN (2026-10-06)
      Leo: "gör så att man kan välja från olika ämnen och årskurser lite
-     enklare och mer effektivt". Årskursen är en rad knappar (elevens
-     egen märkt), ämnena i den årskursen rutor med ikon och procent, och
-     de banor eleven senast övat står överst som genvägar. Ett tryck
-     byter bana; förut krävdes ett ämneskort och en rullgardin.
+     enklare och mer effektivt". Samma kväll vändes den: först alla
+     ämnen som rutor med ikon och årskurser, och när ett ämne trycks
+     kommer dess årskurser upp under rutorna (elevens egen märkt).
+     Genvägarna till de senast övade banorna togs bort: de tog bara plats.
      ============================================================ */
   function kortÅrskurs(k) { return /^gy/.test(k) ? 'Gy ' + k.slice(2) : 'Åk ' + k.slice(2); }
-  function senasteBanor(o) {
-    const n = efterId(o.katalog);
-    const sett = new Set(), ut = [];
-    (o.forsok || []).slice().sort((a, b) => String(b.startad_at).localeCompare(String(a.startad_at))).forEach(f => {
-      const niva = n[f.niva_id];
-      if (!niva || !niva.aktiv) return;
-      const k = niva.amne + '|' + niva.arskurs;
-      if (sett.has(k)) return;
-      sett.add(k);
-      ut.push({ amne: niva.amne, arskurs: niva.arskurs });
-    });
-    return ut;
+  /* Ett ämnes årskurser i ord: "Åk 1–9 · Gy 1–3". */
+  function årskursSpann(lista) {
+    const spann = (pre, tal) => {
+      if (!tal.length) return '';
+      const delar = [];
+      let start = tal[0], förra = tal[0];
+      tal.slice(1).concat([null]).forEach(t => {
+        if (t === förra + 1) { förra = t; return; }
+        delar.push(start === förra ? String(start) : start + '–' + förra);
+        start = förra = t;
+      });
+      return pre + ' ' + delar.join(', ');
+    };
+    const nr = re => lista.filter(k => re.test(k)).map(k => Number(k.slice(2))).sort((x, y) => x - y);
+    return [spann('Åk', nr(/^ak/)), spann('Gy', nr(/^gy/))].filter(Boolean).join(' · ');
   }
+  /* Leo, samma kväll igen: "Välj ämne och kurs är fortfarande konstig ta
+     bort senaste de tar bara plats. Och när man trycker på ett ämne ska
+     årskurserna komma upp". Först ämnena, vart och ett med sina
+     årskurser; under dem årskurserna i det valda ämnet. Ett nytt ämne
+     börjar i elevens årskurs om ämnet har den, annars i den förvalda. */
   function väljareHtml(o, finns, ämnen, amne, arskurs) {
-    const ordning = NX.ARSKURSER.map(a => a.kod);
-    const allaÅk = ordning.filter(k => ämnen.some(a => finns[a].includes(k)));
-    const senast = senasteBanor(o).filter(b => finns[b.amne] && finns[b.amne].includes(b.arskurs)
-      && !(b.amne === amne && b.arskurs === arskurs)).slice(0, 4);
-    const ak = '<div class="nl-ak" role="group" aria-label="Årskurs">' + allaÅk.map(k =>
-      '<button type="button" class="nl-ak-knapp' + (k === o.elevKod ? ' egen' : '') + '" data-nl-ak="' + k + '"'
-      + ' aria-pressed="' + (k === arskurs ? 'true' : 'false') + '"'
-      + ' aria-label="' + esc(NX.årskursText(k) + (k === o.elevKod ? ', din årskurs' : '')) + '">' + esc(kortÅrskurs(k)) + '</button>').join('')
-      + '</div>';
-    const iÅk = ämnen.filter(a => finns[a].includes(arskurs));
-    const rutor = '<div class="nl-amnen" role="group" aria-label="' + esc('Ämnen i ' + NX.årskursText(arskurs)) + '">' + iÅk.map(a => {
-      let v = vägen(Object.assign({}, o, { amne: a, arskurs }));
-      if (!v.totalt) v = npSpår(Object.assign({}, o, { amne: a, arskurs })) || v;
-      const np = harNp(o.katalog, a, arskurs);
-      return '<button type="button" class="nl-amne" data-nl-f="' + ämnesKod(a) + '" data-nl-amne="' + esc(a) + '" data-nl-ak="' + arskurs + '"'
+    const rutor = '<div class="nl-amnen" role="group" aria-label="Ämne">' + ämnen.map(a => {
+      const ak = a === amne ? arskurs : förvaldÅrskurs(finns[a], o.elevKod);
+      let v = vägen(Object.assign({}, o, { amne: a, arskurs: ak }));
+      if (!v.totalt) v = npSpår(Object.assign({}, o, { amne: a, arskurs: ak })) || v;
+      const np = finns[a].some(k => harNp(o.katalog, a, k));
+      const spann = årskursSpann(finns[a]);
+      return '<button type="button" class="nl-amne" data-nl-f="' + ämnesKod(a) + '" data-nl-amne="' + esc(a) + '"'
         + ' aria-pressed="' + (a === amne ? 'true' : 'false') + '"'
-        + ' aria-label="' + esc(kortÄmne(a) + ', ' + v.procent + ' procent' + (np ? ', med träning inför nationella provet' : '')) + '">'
+        + ' aria-label="' + esc(kortÄmne(a) + ', ' + spann + (np ? ', med träning inför nationella provet' : '')) + '">'
         + '<span class="nl-amne-ik">' + ämnesIkon(a) + '</span>'
         + '<span class="nl-amne-text"><b>' + esc(kortÄmne(a)) + '</b>'
         + '<span class="nl-amne-mat" aria-hidden="true"><i style="width:' + v.procent + '%"></i></span>'
-        + '<span class="nl-amne-not">' + v.procent + ' %' + (np ? '<em>NP</em>' : '') + '</span></span>'
+        + '<span class="nl-amne-not">' + esc(spann) + (np ? '<em>NP</em>' : '') + '</span></span>'
         + '</button>';
     }).join('') + '</div>';
-    const genvägar = senast.length
-      ? '<div class="nl-senast" role="group" aria-label="Senast övade"><span class="nl-senast-et">Senast</span>' + senast.map(b =>
-          '<button type="button" class="nl-senast-knapp" data-nl-f="' + ämnesKod(b.amne) + '" data-nl-amne="' + esc(b.amne) + '" data-nl-ak="' + b.arskurs + '">'
-          + '<span class="nl-senast-ik">' + ämnesIkon(b.amne) + '</span>' + esc(kortÄmne(b.amne) + ' · ' + kortÅrskurs(b.arskurs)) + '</button>').join('')
+    const ak = amne
+      ? '<p class="nl-ak-rubrik">' + esc('Årskurs i ' + kortÄmne(amne)) + '</p>'
+        + '<div class="nl-ak" role="group" aria-label="' + esc('Årskurs i ' + kortÄmne(amne)) + '">' + (finns[amne] || []).map(k =>
+          '<button type="button" class="nl-ak-knapp' + (k === o.elevKod ? ' egen' : '') + '" data-nl-ak="' + k + '"'
+          + ' aria-pressed="' + (k === arskurs ? 'true' : 'false') + '"'
+          + ' aria-label="' + esc(NX.årskursText(k) + (k === o.elevKod ? ', din årskurs' : '')) + '">' + esc(kortÅrskurs(k)) + '</button>').join('')
         + '</div>'
       : '';
-    return '<div class="nl-grupp"><h3>Välj ämne och årskurs</h3></div>'
-      + '<div class="nl-valj">' + genvägar + ak + rutor + '</div>';
+    return '<div class="nl-grupp"><h3>Välj ämne</h3></div>'
+      + '<div class="nl-valj">' + rutor + ak + '</div>';
   }
 
   /* Vägen eller NP-sektionen, när banan har båda. */
@@ -1461,6 +1463,7 @@ window.NXUppgifter = (function () {
 
     host.innerHTML =
       rangHtml(l)
+      + rankerHtml(l)
       + block('I siffror', null, tal + (l
         /* Reglerna fälls ihop: de läses en gång, talen varje dag. */
         ? '<details class="nl-skala nl-regler"><summary>Så får du XP</summary><p>'
@@ -1498,18 +1501,33 @@ window.NXUppgifter = (function () {
     if (!l) return '';
     const r = rang(l.xp);
     const steg = RANGER.map((x, i) => '<i class="' + (i < r.nr ? 'klar' : '') + (i === r.nr - 1 ? ' nu' : '') + '"></i>').join('');
-    return '<section class="nl-rangkort" aria-label="' + esc('Din rang: ' + r.namn + ', ' + r.nr + ' av ' + r.av) + '">'
+    return '<section class="nl-rangkort" aria-label="' + esc('Din rank: ' + r.namn + ', ' + r.nr + ' av ' + r.av) + '">'
       + '<span class="nl-rang-ik" aria-hidden="true">' + IKON.medalj + '<b>' + r.nr + '</b></span>'
-      + '<div class="nl-rang-text"><span class="nl-rang-et">Din rang · ' + r.nr + ' av ' + r.av + '</span>'
+      + '<div class="nl-rang-text"><span class="nl-rang-et">Din rank · ' + r.nr + ' av ' + r.av + '</span>'
       + '<b>' + esc(r.namn) + '</b>'
       + (r.nästa
           ? '<span class="nl-mat nl-rang-mat" role="progressbar" aria-label="' + esc('Till ' + r.nästa) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'
             + Math.round(r.andel * 100) + '"><i style="width:' + Math.round(r.andel * 100) + '%"></i></span>'
-            + '<small>' + esc(tusen(r.kvar) + ' XP kvar till ' + r.nästa + '. Rangen följer XP:n och sjunker aldrig.') + '</small>'
-          : '<small>Den högsta rangen. Varje ny XP räknas ändå.</small>')
+            + '<small>' + esc(tusen(r.kvar) + ' XP kvar till ' + r.nästa + '. Ranken följer XP:n och sjunker aldrig.') + '</small>'
+          : '<small>Den högsta ranken. Varje ny XP räknas ändå.</small>')
       + '</div>'
       + '<span class="nl-rang-steg" aria-hidden="true">' + steg + '</span>'
       + '</section>';
+  }
+
+  /* Alla ranker (Leo 2026-10-06: "man ska kunna se olika ranker som
+     finns"), med XP:n som krävs och var eleven står. */
+  function rankerHtml(l) {
+    if (!l) return '';
+    const r = rang(l.xp);
+    return block('Alla ranker', 'Ranken följer XP:n. Så här många XP totalt behövs för varje rank.',
+      '<ol class="nl-ranker">' + RANGER.map((x, i) => {
+        const läge = i < r.nr - 1 ? 'klar' : i === r.nr - 1 ? 'nu' : '';
+        return '<li class="' + läge + '"' + (läge === 'nu' ? ' aria-current="true"' : '') + '>'
+          + '<span class="nl-ranker-nr" aria-hidden="true">' + (läge === 'klar' ? IKON.bock : String(i + 1)) + '</span>'
+          + '<b>' + esc(x.namn) + '</b><small>' + tusen(x.xp) + ' XP</small>'
+          + (läge === 'nu' ? '<em>Din rank nu</em>' : '') + '</li>';
+      }).join('') + '</ol>');
   }
 
   /* Uppdragen i Din utveckling: hur många som klarats, och veckans och
@@ -2803,7 +2821,7 @@ window.NXUppgifter = (function () {
       visaVal();
       return;
     }
-    if (mål.closest('.upg-nod-knapp, .nl-amne, .nl-ak-knapp, .nl-senast-knapp, .nl-spar-knapp, .nl-cta-knapp, [data-nl-starta], [data-lax-starta]')) {
+    if (mål.closest('.upg-nod-knapp, .nl-amne, .nl-ak-knapp, .nl-spar-knapp, .nl-cta-knapp, [data-nl-starta], [data-lax-starta]')) {
       känn('tryck');
     }
   });
