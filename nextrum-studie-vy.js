@@ -1105,7 +1105,8 @@
   /* Banan vägen öppnar i: den familjen valt för barnet, annars det
      första av barnets ämnen som har en bana, sedan ämnet i en öppen
      digital uppgift, annars matematik. Årskursen väljer NXUppgifter ur
-     barnets årskurs när ingen är vald. */
+     barnets årskurs när ingen är vald. spar är vägen eller sektionen
+     inför nationella provet (2026-10-06). */
   function nlBana() {
     const val = S.banaVal[S.valtBarn] || {};
     const finns = U.banor(S.katalog || []);
@@ -1115,7 +1116,7 @@
       : ((barn && barn.subjects) || []).find(a => finns[a])
         || (given && finns[given.nivaer.amne] ? given.nivaer.amne : null)
         || (finns.Matematik ? 'Matematik' : null);
-    return { amne, arskurs: val.arskurs || '' };
+    return { amne, arskurs: val.arskurs || '', spar: val.spar || 'vag' };
   }
 
   function nlUnderlag() {
@@ -1140,12 +1141,12 @@
     if (!S.nl.laddad || !S.laxorLaddade) return;
     const b = nlBana();
     const ut = U.ritaVäg(Object.assign(nlUnderlag(), {
-      host, amne: b.amne, arskurs: b.arskurs, öppen: S.nl.öppen, nyss: S.nl.nyss,
+      host, amne: b.amne, arskurs: b.arskurs, spar: b.spar, öppen: S.nl.öppen, nyss: S.nl.nyss,
       hjälpare: S.tutor ? { namn: S.tutor.full_name } : null
     }));
     /* Det som just klarades eller öppnades rör sig en gång, sedan inte. */
     S.nl.nyss = null;
-    if (ut && ut.amne && !(S.banaVal[S.valtBarn] || {}).amne) S.banaVal[S.valtBarn] = { amne: ut.amne, arskurs: '' };
+    if (ut && ut.amne && !(S.banaVal[S.valtBarn] || {}).amne) S.banaVal[S.valtBarn] = { amne: ut.amne, arskurs: '', spar: 'vag' };
   }
 
   function ritaNexlaxUtveckling() {
@@ -1161,7 +1162,7 @@
      med skillnaden, som NXStudie.håll gör för ett element som står
      kvar. Annars hade ett kort som stängs ovanför flyttat noden under
      fingret. */
-  function ritaOchHåll(sel, fn) {
+  function ritaOchHåll(sel, fn, fokus) {
     const före = $(sel);
     const y = före ? före.getBoundingClientRect().top : null;
     fn();
@@ -1169,15 +1170,40 @@
     if (ny && y !== null) {
       const efter = ny.getBoundingClientRect().top;
       if (Math.abs(efter - y) > 1) NXStudie.scrollaTill(window.scrollY + efter - y);
-      ny.focus({ preventScroll: true });
+      const f = fokus ? $(fokus) : ny;
+      if (f) f.focus({ preventScroll: true });
     }
   }
+  /* Väljaren (2026-10-06): ett ämne, en årskurs eller en genväg byter
+     bana, och NP-knappen byter mellan vägen och sektionen inför
+     provet. Väljaren hålls still, inte knappen: en genväg till en annan
+     bana finns inte kvar när den banan är vald. */
+  function väljBana(val, fokus) {
+    S.banaVal[S.valtBarn] = val;
+    S.nl.öppen = null;
+    ritaOchHåll('#nl-vag .nl-valj', ritaVägen, fokus);
+  }
   document.addEventListener('click', e => {
-    const amne = e.target.closest('[data-nl-amne]');
+    const host = $('#nl-vag');
+    const nu = S.banaVal[S.valtBarn] || {};
+    const amne = e.target.closest('#nl-vag [data-nl-amne]');
     if (amne) {
-      S.banaVal[S.valtBarn] = { amne: amne.dataset.nlAmne, arskurs: '' };
+      const ak = amne.dataset.nlAk || '';
+      väljBana({ amne: amne.dataset.nlAmne, arskurs: ak, spar: nu.spar || 'vag' },
+        '#nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"][data-nl-ak="' + CSS.escape(ak) + '"]');
+      return;
+    }
+    const ak = e.target.closest('#nl-vag [data-nl-ak]');
+    if (ak) {
+      väljBana({ amne: host ? host.dataset.amne : '', arskurs: ak.dataset.nlAk, spar: nu.spar || 'vag' },
+        '#nl-vag .nl-ak-knapp[data-nl-ak="' + CSS.escape(ak.dataset.nlAk) + '"]');
+      return;
+    }
+    const spar = e.target.closest('#nl-vag [data-nl-spar]');
+    if (spar) {
+      S.banaVal[S.valtBarn] = { amne: host ? host.dataset.amne : '', arskurs: host ? host.dataset.arskurs : '', spar: spar.dataset.nlSpar };
       S.nl.öppen = null;
-      ritaOchHåll('[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]', ritaVägen);
+      ritaOchHåll('#nl-vag .nl-spar', ritaVägen, '#nl-vag [data-nl-spar="' + CSS.escape(spar.dataset.nlSpar) + '"]');
       return;
     }
     const nod = e.target.closest('[data-nl-nod]');
@@ -1193,14 +1219,6 @@
       if (öppnar) { S.nl.alla = true; ritaNexlaxUtveckling(); }
       else ritaOchHåll('[data-nl-alla]', () => { S.nl.alla = false; ritaNexlaxUtveckling(); });
     }
-  });
-  document.addEventListener('change', e => {
-    const sel = e.target.closest('[data-nl-arskurs]');
-    if (!sel) return;
-    const host = $('#nl-vag');
-    S.banaVal[S.valtBarn] = { amne: host ? host.dataset.amne : '', arskurs: sel.value };
-    S.nl.öppen = null;
-    ritaVägen();
   });
 
   /* Starta en nivå, ur vägen, ur det primära steget eller ur en

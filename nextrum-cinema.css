@@ -162,6 +162,13 @@
   --amne-so:#8A5C12; --amne-so-l:#DDB266;
   --amne-prog:#1D6F75; --amne-prog-l:#78C8CD;
   --amne-ms:#9E4468; --amne-ms-l:#E4A0BD;
+  /* Ämnena som bara finns i NexLäx (2026-10-06). Språken har moderna
+     språkens rosa; de skiljs åt av sina koder. Alla klarar AA mot
+     papperet, och -l mot barken. */
+  --amne-ju:#3F4A93; --amne-ju-l:#A7B0EC;
+  --amne-fek:#5F6B12; --amne-fek-l:#BFCB6E;
+  --amne-psy:#8A3C8C; --amne-psy-l:#DFA3E0;
+  --amne-fil:#4D5C6B; --amne-fil-l:#AFC0CF;
 
   /* --- rytm --- */
   --w-text:1180px;        /* text och formulär */
@@ -248,6 +255,7 @@
     --bricka:#2C2921;
     --amne-ma:#8DB9E0; --amne-sv:#E7978F; --amne-en:#B9A1E0; --amne-no:#93CBA0;
     --amne-so:#DDB266; --amne-prog:#78C8CD; --amne-ms:#E4A0BD;
+    --amne-ju:#A7B0EC; --amne-fek:#BFCB6E; --amne-psy:#DFA3E0; --amne-fil:#AFC0CF;
 
     /* Bastokens måste skrivas om HÄR, inte i det vanliga :root-blocket
        längre ner. nextrum.css sätter sina mörka färger med
@@ -295,6 +303,7 @@
   --bricka:#2C2921;
   --amne-ma:#8DB9E0; --amne-sv:#E7978F; --amne-en:#B9A1E0; --amne-no:#93CBA0;
   --amne-so:#DDB266; --amne-prog:#78C8CD; --amne-ms:#E4A0BD;
+  --amne-ju:#A7B0EC; --amne-fek:#BFCB6E; --amne-psy:#DFA3E0; --amne-fil:#AFC0CF;
   --bg:var(--pap-2); --fg:var(--bl); --muted:var(--bl-2); --muted-2:var(--bl-3);
   --line:var(--ln); --line-2:var(--ln-2); --surface:var(--pap-3); --surface-2:var(--pap-3);
   --btn-bg:var(--bl); --btn-fg:var(--pap); --focus:var(--bl);

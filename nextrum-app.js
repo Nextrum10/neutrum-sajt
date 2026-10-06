@@ -256,6 +256,17 @@ const NX = (function () {
     'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap',
     'Moderna språk', 'Programmering'];
 
+  /* Ämnen som bara finns i NexLäx (2026-10-06). Leo: "Flera årskurser
+     och ämnen, som exempelvis juridik, företagsekonomi och andra
+     skolämnen och gymnasieämnen". De står INTE i AMNEN: den listan är
+     vad familjen ber om hjälp med, vad studiehjälparen undervisar i och
+     vad biblioteket märks med, och att erbjuda pass i juridik är ett
+     beslut om affären. Här är de bara banor. Moderna språk är uppdelat
+     per språk, för en bana som blandar spanska och tyska går inte att
+     göra (minne/nexlax.md). bygg-uppgifter.py läser båda listorna. */
+  const NEXLAX_AMNEN = ['Spanska', 'Tyska', 'Franska',
+    'Juridik', 'Företagsekonomi', 'Psykologi', 'Filosofi'];
+
   const ARSKURSER = [
     { kod: 'ak1', text: 'Åk 1' }, { kod: 'ak2', text: 'Åk 2' },
     { kod: 'ak3', text: 'Åk 3' }, { kod: 'ak4', text: 'Åk 4' },
@@ -1244,6 +1255,6 @@ const NX = (function () {
     hämtaSession, hämtaProfil, vyFörRoll, vyFör, ärBarn, skickaBarnHem,
     inbjudan: INBJUDAN, återställning: ÅTERSTÄLLNING, länkfel: LÄNKFEL,
     hämtaUpptagna, tiderFörDatum,
-    MANADER, DAGAR, CFG, AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod, facitLänk
+    MANADER, DAGAR, CFG, AMNEN, NEXLAX_AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod, facitLänk
   };
 })();

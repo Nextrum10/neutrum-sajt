@@ -61,9 +61,14 @@
        bokning. adminroll kom samma dag som vyn och är ett tecken på att
        filen är ny nog. NXArbete kom 2026-10-06 för hälsningen och bara
        för den; dagensHero kom samma dag. */
+    /* nextrum-ljud.js (2026-10-06): ljudet och vibrationen i NexLäx.
+       En gammal nextrum-uppgifter.js utan uppdragen ritar inte
+       NP-sektionen, och det syns inte förrän någon letar efter den. */
     krav.push([studieKlar && typeof NXStudie.adminroll === 'function', 'nextrum-studie.js'],
               [typeof NXArbete !== 'undefined' && typeof NXArbete.dagensHero === 'function', 'nextrum-arbetsyta.js'],
-              [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg, 'nextrum-uppgifter.js']);
+              [typeof NXLjud !== 'undefined' && typeof NXLjud.känn === 'function', 'nextrum-ljud.js'],
+              [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg && typeof NXUppgifter.uppdragHtml === 'function',
+               'nextrum-uppgifter.js']);
   } else if (ärAdmin) {
     krav.push(
       [typeof NXTjanster !== 'undefined', 'nextrum-tjanster.js'],
@@ -115,8 +120,12 @@
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
       [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
       /* NexLäx (Fas 23.2): vägen och spelaren. En gammal fil i cachen,
-         från när sektionen hette Uppgifter, saknar vägen. */
-      [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg, 'nextrum-uppgifter.js']
+         från när sektionen hette Uppgifter, saknar vägen, och en från
+         före 2026-10-06 uppdragen och NP-sektionen. Ljudet och
+         vibrationen står i en egen fil, laddad i båda vyerna. */
+      [typeof NXLjud !== 'undefined' && typeof NXLjud.känn === 'function', 'nextrum-ljud.js'],
+      [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg && typeof NXUppgifter.uppdragHtml === 'function',
+       'nextrum-uppgifter.js']
     );
   }
 
