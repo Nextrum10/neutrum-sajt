@@ -1453,3 +1453,17 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
   .upg-gnistor,.upg-konfetti{display:none}
   .nl-raknare{animation:none;counter-reset:nl-n var(--till)}
 }
+
+/* Fel i frågan (2026-10-06): en länk under förklaringen och skälen som
+   knappar. Länken är en tryckyta på minst 44 px, som allt annat. */
+.upg-felrapport{margin-top:8px}
+.upg-fel-oppna{min-height:44px;display:inline-flex;align-items:center;font-weight:500;font-size:.9rem}
+.upg-fel-rubrik{margin:0 0 8px;font-size:.92rem;font-weight:600}
+.upg-fel-val{display:flex;flex-wrap:wrap;gap:8px}
+.upg-fel-knapp{
+  min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--acc-line);
+  background:var(--pap);color:var(--bl);font:inherit;font-size:.9rem;cursor:pointer;
+}
+.upg-fel-knapp:active{scale:.97}
+.upg-fel-knapp:disabled{opacity:.6;cursor:default}
+.upg-fel-tack{margin:0;min-height:44px;display:flex;align-items:center;font-size:.92rem;font-weight:600}

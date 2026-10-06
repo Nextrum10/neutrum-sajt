@@ -66,7 +66,56 @@
     S.bibliotek = data || [];
   }
 
+  /* ============================================================
+     FEL I NEXLÄX (2026-10-06)
+     Frågorna som rapporterats i spelaren, en rad per fråga med skälen
+     räknade (nexlax_felrapporter, bara superadmin). Rättelsen görs i
+     verktyg/uppgiftsbanken och går in som en ny migration; Hanterad
+     stänger frågans rapporter. Rapporterna säger inte vem som skickat.
+     ============================================================ */
+  const FELSKÄL = [['facit', 'Facit fel'], ['otydlig', 'Otydlig'], ['sprak', 'Språkfel'], ['annat', 'Annat']];
+  let felHämtat = false;
+
+  function facitText(q) {
+    const r = q.ratt;
+    if (q.typ === 'val') { const a = (q.alternativ || [])[Number(r)]; return a == null ? '' : String(a); }
+    if (q.typ === 'para') return (r || []).map(p => p[0] + ' ↔ ' + p[1]).join(', ');
+    if (q.typ === 'ordna') return (r || []).join(' → ');
+    return Array.isArray(r) ? r.join(' / ') : String(r == null ? '' : r);
+  }
+
+  async function ritaFelrapporter(omIgen) {
+    const host = $('#fel-nexlax');
+    if (!host || (felHämtat && !omIgen)) return;
+    felHämtat = true;
+    const { data, error } = await supa.rpc('nexlax_felrapporter');
+    if (error) {
+      host.innerHTML = '<p class="small">Rapporterna gick inte att hämta: ' + esc(felText(error)) + '</p>';
+      return;
+    }
+    host.innerHTML = tabell([
+      { namn: 'Fråga', rita: q => '<b>' + esc(q.fraga) + '</b><div class="small">'
+          + esc([q.amne, NX.årskursText(q.arskurs), q.omrade, q.niva].filter(Boolean).join(' · ')) + '</div>' },
+      { namn: 'Facit', rita: q => esc(facitText(q)) },
+      { namn: 'Skäl', rita: q => FELSKÄL.filter(([k]) => Number(q[k])).map(([k, t]) => pill(t + ' ' + q[k])).join(' ') },
+      { namn: 'Senast', rita: q => esc(kortDatum(q.senast)) },
+      { namn: '', höger: true, rita: q => '<button type="button" class="btn btn-ghost btn-sm" data-fel-hanterad="'
+          + esc(q.fraga_id) + '">Hanterad</button>' }
+    ], data || [], 'Inga rapporterade fel just nu');
+  }
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-fel-hanterad]');
+    if (!k) return;
+    await medan(k, 'Sparar', async () => {
+      const { error } = await supa.rpc('nexlax_felrapport_hanterad', { p_fraga: k.dataset.felHanterad });
+      if (error) { säg($('#fel-msg'), felText(error), false); return; }
+      await ritaFelrapporter(true);
+    });
+  });
+
   function ritaBibliotek() {
+    ritaFelrapporter();
     fyllVäljare();
     const host = $('#bib-tabell');
     if (!host) return;

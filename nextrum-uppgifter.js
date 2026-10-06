@@ -47,9 +47,9 @@
    sektion inför nationella provet i varje ämne som har ett.
      · Uppdragen räknas av databasen (nexlax_lage().uppdrag) och ritas
        här. De ger inga XP och påminns aldrig om, som serien.
-     · NP-spåret (nivaer.spar = 'np') står i en egen sektion där varje
-       nivå är öppen; vägens upplåsning går förbi dem. Spelregel, inget
-       skydd, som upplåsningen.
+     · NP-spåret (nivaer.spar = 'np') står i en egen sektion bredvid
+       vägen. Sedan samma kväll är allt i NexLäx öppet, på vägen och i
+       sektionen: eleven väljer själv vad den behöver öva på.
      · Rangen räknas här ur XP:n, som märkena: ett namn på hur långt
        eleven kommit, inget som ger eller tar något.
      · Ljudet och vibrationen står i nextrum-ljud.js (NXLjud). Här sägs
@@ -468,17 +468,15 @@ window.NXUppgifter = (function () {
       if (x.sort === 'mastare') a.mästare = x; else a.nivåer.push(x);
     });
 
-    /* De vanliga nivåerna öppnas en i taget, genom hela banan. */
-    let förraKlar = true;
-    områden.forEach(a => a.nivåer.forEach(x => {
-      x.öppen = förraKlar || x.klar || x.pågår || !!x.given;
-      förraKlar = x.klar;
-    }));
+    /* Allt är öppet (Leo 2026-10-06: "hela nexläx ska också vara upplåst
+       så att man kan jobba med vad man vill och behöver"). Vägen har
+       kvar sin ordning och sitt aktuella steg, som ett förslag. */
+    områden.forEach(a => a.nivåer.forEach(x => { x.öppen = true; }));
     områden.forEach(a => {
       a.klara = a.nivåer.filter(x => x.klar).length;
       a.klart = a.nivåer.length > 0 && a.klara === a.nivåer.length;
       const m = a.mästare;
-      if (m) m.öppen = a.klart || m.klar || m.pågår || !!m.given;
+      if (m) m.öppen = true;
       a.bemästrat = !!(m && m.klar && m.stjarnor >= BEMÄSTRAD);
     });
 
@@ -553,9 +551,8 @@ window.NXUppgifter = (function () {
   /* ============================================================
      NP-SPÅRET (2026-10-06)
      Banans områden inför nationella provet, med samma noder som
-     vägen. Varje vanlig nivå är öppen: inför ett prov väljer man det
-     man behöver, inte nästa i ordningen. Mästarprovet öppnas som på
-     vägen, när områdets nivåer är klarade. Spelregel, som upplåsningen.
+     vägen. Allt är öppet, också Mästarprovet: inför ett prov väljer
+     man det man behöver, inte nästa i ordningen.
      ============================================================ */
   function npSpår(o) {
     const alla = banansSteg(o.katalog, o.amne, o.arskurs, 'np');
@@ -584,7 +581,7 @@ window.NXUppgifter = (function () {
     områden.forEach(a => {
       a.klara = a.nivåer.filter(x => x.klar).length;
       a.klart = a.nivåer.length > 0 && a.klara === a.nivåer.length;
-      if (a.mästare) a.mästare.öppen = a.klart || a.mästare.klar || a.mästare.pågår || !!a.mästare.given;
+      if (a.mästare) a.mästare.öppen = true;
       a.bemästrat = !!(a.mästare && a.mästare.klar && a.mästare.stjarnor >= BEMÄSTRAD);
     });
     const vanliga = [];
@@ -1873,6 +1870,10 @@ window.NXUppgifter = (function () {
       if (e.target.closest('[data-spel-stang]')) { stäng(); return; }
       if (e.target.closest('[data-spel-text]')) { T && T.textÖppen ? stängText() : visaText(); return; }
       if (e.target.closest('[data-text-stang]')) { stängText(); return; }
+      const felÖppna = e.target.closest('[data-fel-oppna]');
+      if (felÖppna) { visaFelval(felÖppna.closest('.upg-felrapport')); return; }
+      const felSort = e.target.closest('[data-fel-sort]');
+      if (felSort) { skickaFel(felSort); return; }
       if (Date.now() - draSlut < 350) return;
       const alt = e.target.closest('[data-alt]');
       if (alt && T && T.läge === 'svara') { väljAlt(Number(alt.dataset.alt)); return; }
@@ -2355,13 +2356,39 @@ window.NXUppgifter = (function () {
         + (xp ? '<span class="upg-besked-xp">+' + xp + ' XP</span>' : '') + '</div>'
         + (!rätt ? '<p class="upg-besked-facit">Rätt svar: <span>' + esc(facitText(f, svar.facit)) + '</span></p>' : '')
         + (svar.forklaring ? '<p class="upg-besked-varfor">' + esc(svar.forklaring) + '</p>' : '')
-        + (!rätt ? '<p class="upg-besked-igen">Uppgiften kommer tillbaka i slutet.</p>' : '');
+        + (!rätt ? '<p class="upg-besked-igen">Uppgiften kommer tillbaka i slutet.</p>' : '')
+        + '<div class="upg-felrapport" data-fel-fraga="' + esc(f.id) + '">'
+          + '<button type="button" class="upg-lank upg-fel-oppna" data-fel-oppna>Fel i frågan?</button></div>';
 
       if (svar.klar && svar.resultat) T.resultat = svar.resultat;
       knappar.innerHTML = '<button type="button" class="btn btn-primary btn-block" data-spel="vidare">'
         + (T.resultat ? 'Se resultatet' : 'Fortsätt') + '</button>';
       const k = knappar.querySelector('button');
       if (k) k.focus({ preventScroll: true });
+    }
+
+    /* Fel i frågan (2026-10-06): fyra skäl och ingen fritext, och
+       rapporten bär ingen person (nexlax_felrapporter). Admin ser dem
+       under Material. Utan migrationen säger svaret att det inte gick. */
+    const FELSKÄL = [['facit', 'Facit är fel'], ['otydlig', 'Frågan är otydlig'],
+      ['sprak', 'Stavfel eller språkfel'], ['annat', 'Något annat']];
+    function visaFelval(ruta) {
+      if (!ruta) return;
+      ruta.innerHTML = '<p class="upg-fel-rubrik">Vad är fel i frågan?</p>'
+        + '<div class="upg-fel-val" role="group" aria-label="Vad är fel i frågan?">'
+        + FELSKÄL.map(([kod, text]) => '<button type="button" class="upg-fel-knapp" data-fel-sort="' + kod + '">'
+          + esc(text) + '</button>').join('') + '</div>';
+      const första = ruta.querySelector('button');
+      if (första) första.focus({ preventScroll: true });
+    }
+    async function skickaFel(knapp) {
+      const ruta = knapp.closest('.upg-felrapport');
+      if (!ruta || ruta.dataset.skickar) return;
+      ruta.dataset.skickar = '1';
+      ruta.querySelectorAll('button').forEach(b => { b.disabled = true; });
+      const { error } = await supa.rpc('rapportera_fragefel', { p_fraga: ruta.dataset.felFraga, p_sort: knapp.dataset.felSort });
+      ruta.innerHTML = '<p class="upg-fel-tack" role="status">'
+        + (error ? 'Det gick inte att skicka just nu. Försök igen senare.' : 'Tack! Vi tittar på frågan.') + '</p>';
     }
 
     function vidare() {
