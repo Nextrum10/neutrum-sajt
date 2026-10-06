@@ -340,7 +340,7 @@
 
     /* TIPS är ingen kod någon skriver in, utan markeringen på ett pass
        med en timme på köpet för ett tips (2026-09-30). Den kan aldrig
-       slås på, och står under Intresseanmälningar → Tips och kampanjer. */
+       slås på, och står under fliken Tips och kampanjer här bredvid. */
     const koder = S.rabattkoder.filter(r => r.kod !== 'TIPS');
     $('#rk-antal').textContent = koder.length ? koder.length + ' st' : '';
 

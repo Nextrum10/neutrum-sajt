@@ -192,7 +192,8 @@ har sex flikar, med adressen `#ekonomi/<flik>`:
   `erbjudanden` och `kortsparr`, och Stripe: Kontrollera Stripe och Hämta
   från Stripe).
 
-Månadsraden gäller Alla betalningar och Bokslut och syns bara där.
+Månadsväljaren (en rad till 2026-10-06, sedan ett fält med en ruta för år och månad,
+`minne/vyerna.md`) gäller Alla betalningar och Bokslut och syns bara där.
 **Påminn skriver ett utkast** i ert eget mejlprogram (`kontaktaRuta`),
 med det som inte är betalt och länken till passet eller till Bekräfta
 rapport; servern skickar ingenting. Fakturan nämns bara när flaggan är

@@ -79,12 +79,14 @@
         + gallrade + (gallrade === 1 ? ' anmälan är avidentifierad' : ' anmälningar är avidentifierade')
         + ' och räknas bara i statistiken.</p>'
       : '');
-    ritaKoder();
     ritaPanelen();
   }
 
   /* ============================================================
      TIPS OCH KAMPANJER (2026-09-30)
+
+     Står under Tjänster & priser sedan 2026-10-06 (låg under
+     Intresseanmälningar), och ritas med rabattkoderna i start().
 
      Koderna i intresseanmälan: familjernas och studiehjälparnas egna,
      och en per affisch. Talen räknas i databasen (tipskoder_lage) med
