@@ -69,7 +69,7 @@
   const { $, esc, säg, felText, isoFor } = NX;
   const { bekräfta, medan, tomt } = NXStudie;
   const kronor = NXBetalning.kronor;
-  const { S, UTB_LAGE, fråga, hämtaAlla, lönemånad, namnFör, pill, tabell, underlagslägen, väljare } = NXAdmin;
+  const { S, UTB_LAGE, fråga, hämtaAlla, lönemånad, namnFör, pill, tabell, underlagslägen, lägesväljare } = NXAdmin;
 
   /* Anställningsnumren och bolagsfakta. Hämtas när sidan ritas första
      gången, och om efter varje ändring härifrån. */
@@ -131,8 +131,12 @@
     const host = $('#lon-manader');
     if (!host) return;
     const nu = new Date();
+    /* Utbetalningsmånaden, en efter passens: hela nästa år och januari
+       året efter, så att länken från Månadens ekonomi alltid har sin
+       månad här (2026-10-06). */
     MV = NXStudie.månadsval(host, {
       alla: true,
+      årFramåt: 1,
       framåt: 1,
       vald: önskad || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() + (nu.getDate() > 25 ? 1 : 0), 1, 12)),
       /* Utbetald när varje underlag för passen är det. Stängd (Fas 20.2)
@@ -369,10 +373,9 @@
           + (r.beräknat.utanTimpenning ? '<span class="adm-und" style="color:var(--acc-text)">'
             + r.beräknat.utanTimpenning + ' pass utan timpenning</span>' : '');
       } },
-      /* Rullgardinen och Skicka underlag är samma som under Ekonomi →
-         Utbetalningar, och sköts av lyssnarna i nextrum-admin.js. */
+      /* Läget och Skicka underlag sköts av lyssnarna i nextrum-admin.js. */
       { namn: 'Underlag', höger: true, rita: r => r.underlag
-        ? väljare('utb', UTB_LAGE, r.underlag.status, 'data-utb="' + esc(r.underlag.id) + '"')
+        ? lägesväljare(UTB_LAGE, r.underlag.status, 'data-utb="' + esc(r.underlag.id) + '"')
           + (r.underlag.status !== 'utbetald'
             ? ' <button class="btn btn-ghost btn-sm" type="button" data-skicka="utbetalning" data-id="'
               + esc(r.underlag.id) + '">Skicka underlag</button>' : '')

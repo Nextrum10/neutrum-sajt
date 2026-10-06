@@ -104,6 +104,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   NexLäx och bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01), och ser aldrig
   priser, betalningar, erbjudanden eller föräldern; timmarna är genomförda och bokade pass,
   aldrig timbanken. NexLäx görs i barnets vy och i familjens inloggning, med samma rader.
+  Elevvyn har fyra delar och inget mer (2026-10-06): Översikt, NexLäx, Meddelanden (Nextrums
+  notiser, ingen chatt) och Profil; Elev i vyernas rollval och i sajtens Logga in leder till `/barn`.
 - **Barnets egen e-post** (`barnets_epost`, 2026-10-01; flaggan `barn_epost` står AV tills
   juristen läst): föräldern lägger till den, barnet bekräftar den med en knapp, och först då
   används den, till inloggning (`barn-inloggning`) och, om föräldern slår på det, till mejl om
@@ -154,16 +156,19 @@ Detaljer: `minne/grunden.md`.
 
 ## 3. Filkartan
 - `nextrum-config.js` är enda filen som ändras vid uppsättning; `nextrum-fel.js` laddas före
-  `nextrum-app.js` (`NX`); bildvägar står bara i `nextrum-images.js`; `nextrum-samtycke.js` bara
+  `nextrum-app.js` (`NX`); bildvägar står bara i `nextrum-images.js`, också vyernas bild per
+  veckodag (`NEXTRUM_HERO_VECKA`; filmen bara på måndagen); `nextrum-samtycke.js` bara
   på öppna sidor. `nextrum-modulvakt.js` prövar en funktion per fil i alla fyra vyerna, moduler
   nås som identifierare (aldrig `window[...]`), och en ny `nextrum-admin-*.js` ska in där.
 - Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX,
-  NXStudie och NXUppgifter) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
+  NXStudie, NXUppgifter och NXArbete för hälsningen) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
   sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar
   `theme-color` med sig, men mejlens `FARG` ändras för sig. Adminpaletten laddas sist.
 ### Startsidan efter hero
+De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
+delar som de är; deras text följer inte med formen, och `.faq-item` är orörd (generatorerna läser den).
 Hero är orörd med flit; startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
@@ -195,16 +200,19 @@ Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, 
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
 ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knappen
 Betala i förväg. Ett drag överst, en knapp per listrad, tid och plats genom
-`NXKontakt.passRad`, betalvalen i `.vy-betalval`. En månadsrad i en dold sektion har bredden
-noll; adminvyns rader har varje månad. **Tummen**: tryckytor minst 44 px, och `::after` provas
-med `elementFromPoint`.
+`NXKontakt.passRad`, betalvalen i `.vy-betalval`. Adminvyns månadsväljare är ett fält med en
+ruta för år och månad (2026-10-06), från september 2026 till och med december nästa år; märket
+står i fältet och i rutan, och Lektioner räknar upp andra månader utan rapport under det.
+**Tummen**: tryckytor minst 44 px, och `::after` provas med `elementFromPoint`.
 ### Adminvyns skal
 Samma hus som de andra vyerna: KÄNSLAN och INNEHÅLLET står på `.vy` och adminvyn har inga egna
 ytor; ändras de andra vyerna oväntat är specificiteten första stället. Menyn är en egen rullyta
 som `sidomeny()` drar, aldrig sidan, och en lång etikett får bryta; `täcktÖverst()` räknar
 toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är bara vårt drag. Siffran vid
 Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-10-05), och att visa
-sektionen är att se den; utan tabellen räknas läget Ny som förut.
+sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
+(`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
+lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka.
 Fällor: `h5` och `h6` har webbläsarens marginal; `--pap-2` och `--yta` är nästan samma i mörkt
 läge (`--tint`, `--bricka`); KÄNSLAN står sist och väger lika mycket; `nextrum-admin-konsol.css`
 vinner över arbetsytan. Headless Chromium döljer rullningslister; mät ett tryck med `el.click()`
@@ -307,9 +315,9 @@ Detaljer: `minne/grunden.md`.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
-  möteslänken är https, ett steg mejlas en gång, och Godkänd i rullgardinen är inte Ta in i poolen.
+  möteslänken är https, ett steg mejlas en gång, och Godkänd som läge är inte Ta in i poolen.
   Avböjd mejlar ett nej (2026-10-05) men inte genast: tidigast en halvtimme senare, aldrig 20–9,
-  och inte om läget hunnit bytas. Rullgardinen visar mejlet först, och texten står i mallen och i
+  och inte om läget hunnit bytas. Avböjd visar mejlet först, och texten står i mallen och i
   adminvyn (`kolla-mejltexter.py`).
   Provets facit finns bara i funktionen, resultatet visas per avsnitt, fel svar är lika
   utförliga som rätt, nyckeln hamnar aldrig i en logg, och ändras handboken läses frågorna om.

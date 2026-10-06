@@ -48,10 +48,14 @@
      den nytta vid varje återbesök i ett år. -->
 <link rel="stylesheet" href="../nextrum-typsnitt.css?v=c20ceeba">
 
-<!-- ordningen spelar roll: bas → startsida → cinema -->
+<!-- ordningen spelar roll: bas → startsida → cinema → start → sidor.
+     Menysidorna använder startsidans delar som de är (nextrum-start.css
+     och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=03f73911">
+<link rel="stylesheet" href="../nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="../nextrum-sidor.css?v=6a841016">
 </head>
 <body>
 
@@ -135,78 +139,158 @@
          srcset="../bilder/10-forsta-motet-640.jpg 640w, ../bilder/10-forsta-motet-960.jpg 960w, ../bilder/10-forsta-motet-1280.jpg 1280w, ../bilder/10-forsta-motet-1600.jpg 1600w, ../bilder/10-forsta-motet-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
          style="object-position:50% 42%" alt="A student and a tutor sitting opposite each other at a table, introducing themselves."></picture>
+    <ul class="sid-lappar" aria-hidden="true">
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>We get in touch within 24 hours</li>
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 016.8-1.2"/></svg></span>No minimum term</li>
+    </ul>
   </figure>
 </section>
 
-<section class="nx-surface">
-  <div class="sec wrap">
+<!-- Vägen in: samma pinnade scen som "Så fungerar Nextrum" på
+     startsidan. Stegen tänds medan man scrollar och fotot byts med dem
+     (nextrum-start.js, stegFoton). Fotona står här och inte i skriptet,
+     så att alt-texten är på sidans språk. Samma fem foton som på
+     startsidan, i samma ordning. -->
+<section class="nx-hur nx-yta" data-hur>
+  <div class="nx-hur-fast">
+    <div class="nx-hur-grid">
+
+      <div>
+        <span class="nx-et acc">The way in</span>
+        <h2 class="nx-d2">How it works.</h2>
+        <p class="nx-lede sid-hur-lede">You take the first step. We handle the rest — you never have to search, compare or negotiate.</p>
+
+        <ol class="nx-hur-steg">
+          <li class="pa">
+            <em>01</em>
+            <div>
+              <h3>Enquiry</h3>
+              <p>Tell us what the student needs help with, which year group and which subjects. It takes about two minutes.</p>
+            </div>
+          </li>
+          <li>
+            <em>02</em>
+            <div>
+              <h3>We get in touch within 24 hours</h3>
+              <p>We go through the need together with you before any matching is done.</p>
+            </div>
+          </li>
+          <li>
+            <em>03</em>
+            <div>
+              <h3>Matching</h3>
+              <p>We select the tutor who suits the student best — based on subject, level, need and personality.</p>
+            </div>
+          </li>
+          <li>
+            <em>04</em>
+            <div>
+              <h3>Study plan and booking</h3>
+              <p>We draw up an individual study plan and you book your sessions.</p>
+            </div>
+          </li>
+          <li>
+            <em>05</em>
+            <div>
+              <h3>Follow-up</h3>
+              <p>After each session you get a report and access to extra digital exercises.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="nx-hur-bild">
+        <figure class="nx-fig pa" style="--tint:#A0978E">
+          <picture><source type="image/webp" srcset="../bilder/hero-nextrum-640.webp 640w, ../bilder/hero-nextrum-960.webp 960w, ../bilder/hero-nextrum-1280.webp 1280w, ../bilder/hero-nextrum-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/hero-nextrum-960.jpg"
+               srcset="../bilder/hero-nextrum-640.jpg 640w, ../bilder/hero-nextrum-960.jpg 960w, ../bilder/hero-nextrum-1280.jpg 1280w, ../bilder/hero-nextrum-1600.jpg 1600w"
+               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:70% 46%"
+               alt="A young tutor and a student sitting at a bright wooden table, working through maths together. Both are smiling and looking down at the student’s notepad."></picture>
+        </figure>
+        <figure class="nx-fig" style="--tint:#8B846E">
+          <picture><source type="image/webp" srcset="../bilder/11-studiehjalparen-640.webp 640w, ../bilder/11-studiehjalparen-960.webp 960w, ../bilder/11-studiehjalparen-1280.webp 1280w, ../bilder/11-studiehjalparen-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/11-studiehjalparen-960.jpg"
+               srcset="../bilder/11-studiehjalparen-640.jpg 640w, ../bilder/11-studiehjalparen-960.jpg 960w, ../bilder/11-studiehjalparen-1280.jpg 1280w, ../bilder/11-studiehjalparen-1600.jpg 1600w"
+               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:46% 44%"
+               alt="A young tutor sitting alone at a desk with a laptop and a notepad, concentrating on the page."></picture>
+        </figure>
+        <figure class="nx-fig" style="--tint:#8E8C84">
+          <picture><source type="image/webp" srcset="../bilder/05-av-unga-for-unga-640.webp 640w, ../bilder/05-av-unga-for-unga-960.webp 960w, ../bilder/05-av-unga-for-unga-1280.webp 1280w, ../bilder/05-av-unga-for-unga-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/05-av-unga-for-unga-960.jpg"
+               srcset="../bilder/05-av-unga-for-unga-640.jpg 640w, ../bilder/05-av-unga-for-unga-960.jpg 960w, ../bilder/05-av-unga-for-unga-1280.jpg 1280w, ../bilder/05-av-unga-for-unga-1600.jpg 1600w"
+               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:60% 42%"
+               alt="Five young tutors standing and talking with each other in front of a bookshelf in a library."></picture>
+        </figure>
+        <figure class="nx-fig" style="--tint:#9A8E79">
+          <picture><source type="image/webp" srcset="../bilder/06-forklaringen-640.webp 640w, ../bilder/06-forklaringen-960.webp 960w, ../bilder/06-forklaringen-1280.webp 1280w, ../bilder/06-forklaringen-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/06-forklaringen-960.jpg"
+               srcset="../bilder/06-forklaringen-640.jpg 640w, ../bilder/06-forklaringen-960.jpg 960w, ../bilder/06-forklaringen-1280.jpg 1280w, ../bilder/06-forklaringen-1600.jpg 1600w"
+               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:62% 44%"
+               alt="A young tutor explaining a problem to a student at a bright wooden table, with an open hand over the maths book."></picture>
+        </figure>
+        <figure class="nx-fig" style="--tint:#898268">
+          <picture><source type="image/webp" srcset="../bilder/07-genombrottet-640.webp 640w, ../bilder/07-genombrottet-960.webp 960w, ../bilder/07-genombrottet-1280.webp 1280w, ../bilder/07-genombrottet-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/07-genombrottet-960.jpg"
+               srcset="../bilder/07-genombrottet-640.jpg 640w, ../bilder/07-genombrottet-960.jpg 960w, ../bilder/07-genombrottet-1280.jpg 1280w, ../bilder/07-genombrottet-1600.jpg 1600w"
+               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               style="object-position:38% 40%"
+               alt="A student smiling to themselves over their notepad after understanding something difficult, with the tutor beside them."></picture>
+        </figure>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Bokningen: tre stycken blev tre blad, som manifestet på
+     startsidan. Texten är densamma. -->
+<section class="nx-wrap-bred nx-sek">
+  <span class="nx-et acc" data-stig>Booking</span>
+  <h2 class="nx-d2 sid-rubrik" data-ordfyll>You set the pace.</h2>
+  <div class="sid-kort">
+    <div class="nx-bubbla" data-stig data-fördröj="1">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg></span>
+      <p>Sessions are whole hours — one, two or three. You suggest the day, time and length, and the tutor accepts it or suggests another. The length can differ from one session to the next.</p>
+    </div>
+    <div class="nx-bubbla" data-stig data-fördröj="2">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8.5h14.5l-3.5-3.5M20 15.5H5.5L9 19"/></svg></span>
+      <p>Both you and the tutor can move a session, and the other party sees the change immediately. A session that is not paid yet you cancel yourselves; a paid session we cancel for you and refund.</p>
+    </div>
+    <div class="nx-bubbla" data-stig data-fördröj="3">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+      <p>A session counts as completed only once the tutor has written the report. The report is the record that the session took place, and it is what you read in the student view afterwards.</p>
+    </div>
+  </div>
+</section>
+
+<section class="nx-yta nx-sek">
+  <div class="nx-wrap-bred">
     <div class="nx-head split" data-stig>
-      <div><span class="nx-et acc">The way in</span>
-        <h2 class="nx-d2" style="margin-top:18px">How it works.</h2></div>
-      <div class="nx-head-aside"><p class="nx-lede">You take the first step. We handle the rest — you never have to search, compare or negotiate.</p></div>
+      <div><span class="nx-et acc">Why everything goes through the platform</span>
+        <h2 class="nx-d2" style="margin-top:18px">Safety at every step.</h2></div>
+      <div class="nx-head-aside"><p class="nx-lede">This is not admin for its own sake. Each part exists because someone would otherwise have had to trust a promise.</p></div>
     </div>
-    <ol class="nx-forlopp" data-stig data-fördröj="1">
-      <li>
-        <span class="nx-forlopp-nr">01</span>
-        <div><b>Enquiry</b><p>Tell us what the student needs help with, which year group and which subjects. It takes about two minutes.</p></div>
-      </li>
-      <li>
-        <span class="nx-forlopp-nr">02</span>
-        <div><b>We get in touch within 24 hours</b><p>We go through the need together with you before any matching is done.</p></div>
-      </li>
-      <li>
-        <span class="nx-forlopp-nr">03</span>
-        <div><b>Matching</b><p>We select the tutor who suits the student best — based on subject, level, need and personality.</p></div>
-      </li>
-      <li>
-        <span class="nx-forlopp-nr">04</span>
-        <div><b>Study plan and booking</b><p>We draw up an individual study plan and you book your sessions.</p></div>
-      </li>
-      <li>
-        <span class="nx-forlopp-nr">05</span>
-        <div><b>Follow-up</b><p>After each session you get a report and access to extra digital exercises.</p></div>
-      </li>
-    </ol>
-  </div>
-</section>
-
-<section class="sec wrap">
-  <div class="nx-two">
-    <div class="nx-two-sticky rv">
-      <span class="nx-et acc">Booking</span>
-      <h2 class="nx-d2" style="margin-top:18px">You set the pace.</h2>
-    </div>
-    <div class="nx-text rv">
-        <p>Sessions are whole hours — one, two or three. You suggest the day, time and length, and the tutor accepts it or suggests another. The length can differ from one session to the next.</p>
-        <p>Both you and the tutor can move a session, and the other party sees the change immediately. A session that is not paid yet you cancel yourselves; a paid session we cancel for you and refund.</p>
-        <p>A session counts as completed only once the tutor has written the report. The report is the record that the session took place, and it is what you read in the student view afterwards.</p>
-    </div>
-  </div>
-</section>
-
-<section class="sec wrap">
-  <div class="nx-head split" data-stig>
-    <div><span class="nx-et acc">Why everything goes through the platform</span>
-      <h2 class="nx-d2" style="margin-top:18px">Safety at every step.</h2></div>
-    <div class="nx-head-aside"><p class="nx-lede">This is not admin for its own sake. Each part exists because someone would otherwise have had to trust a promise.</p></div>
-  </div>
-  <div class="nx-safe" style="margin-top:36px">
-      <div class="nx-safe-card" data-stig data-fördröj="1">
-        <b>Verified tutors</b>
+    <div class="sid-kort tva">
+      <div class="nx-bubbla" data-stig data-fördröj="1">
+        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 7.5-7 8.8-4-1.3-7-4.2-7-8.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
+        <h3>Verified tutors</h3>
         <p>Everyone goes through Nextrum’s selection and vetting process before they are visible to a family.</p>
       </div>
-      <div class="nx-safe-card" data-stig data-fördröj="2">
-        <b>Secure payment</b>
+      <div class="nx-bubbla" data-stig data-fördröj="2">
+        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg></span>
+        <h3>Secure payment</h3>
         <p>Payment goes through Nextrum, by card, either in advance or after the session when you confirm the report. After the session you can choose an invoice instead, which comes at the start of the following month with ten days to pay and no fee. Booking, payment and session all connect, so what took place is always visible.</p>
       </div>
-      <div class="nx-safe-card" data-stig data-fördröj="3">
-        <b>Safe communication</b>
+      <div class="nx-bubbla" data-stig data-fördröj="3">
+        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10.5L6 20v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span>
+        <h3>Safe communication</h3>
         <p>Communication happens through the platform, so there is a record of what was said and booked.</p>
       </div>
-      <div class="nx-safe-card" data-stig data-fördröj="4">
-        <b>Quality assurance</b>
+      <div class="nx-bubbla" data-stig data-fördröj="4">
+        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-5M12 19V8M17 19v-9"/></svg></span>
+        <h3>Quality assurance</h3>
         <p>We follow up on sessions and collect feedback.</p>
       </div>
+    </div>
   </div>
 </section>
 
@@ -317,8 +401,8 @@
 
 <!-- ==========================================================
      VYVÄLJARE — dörren in till inloggningen.
-     Själva inloggningen ligger kvar i foralder.html och
-     larare.html och är orörd.
+     Själva inloggningen ligger kvar i foralder.html, barn.html
+     (Elev, 2026-10-06) och larare.html och är orörd.
      ========================================================== -->
 <div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
   <button class="nx-vagval-stang" data-vagval-stang aria-label="Close"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
@@ -330,8 +414,15 @@
     <div class="nx-vagval-val">
       <a href="/foralder">
         <span>
-          <b>Parent or student</b>
+          <b>Parent</b>
           <span>Study plan, booking, messages and reports.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/barn">
+        <span>
+          <b>Student</b>
+          <span>NexLäx, your sessions and messages, with your username.</span>
         </span>
         <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
@@ -363,11 +454,12 @@
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
 <script src="../nextrum-config.js?v=fdfed591"></script>
-<script src="../nextrum-images.js?v=50260f9d"></script>
+<script src="../nextrum-images.js?v=c4a90ffa"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
 <script src="../nextrum-app.js?v=5a31edc0"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
+<script src="../nextrum-start.js?v=c489fcd4"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

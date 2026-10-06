@@ -81,9 +81,11 @@
     if (MV) return;
     const host = $('#eko-manader');
     if (!host) return;
+    /* Hela nästa år (2026-10-06, Leo: "flera månader framåt och år"):
+       ett pass som bokats och betalats i förväg hör till sin egen månad. */
     MV = NXStudie.månadsval(host, {
       alla: true,
-      framåt: 2,
+      årFramåt: 1,
       märke: m => S.stangdaManader && S.stangdaManader.has(m) ? 'Stängd' : '',
       vidVal: bytMånad
     });
@@ -109,15 +111,12 @@
   const månadText = () => NXStudie.månadsNamn(valdMånad());
   const stor = s => String(s).charAt(0).toUpperCase() + String(s).slice(1);
 
-  /* Väljaren har varje månad sedan september 2026
-     (NXStudie.FÖRSTA_MÅNAD). En månad utanför den står som text i
-     stället för knapp. Utan konstanten (en äldre nextrum-studie.js ur
-     cachen) har raden de tolv senaste. */
+  /* Väljaren har varje månad från september 2026
+     (NXStudie.FÖRSTA_MÅNAD) till och med december nästa år. En månad
+     utanför den står som text i stället för knapp. */
   function iVäljaren(m) {
-    const nu = new Date();
-    const först = NXStudie.FÖRSTA_MÅNAD
-      || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - 11, 1, 12));
-    return m >= först && m <= NXStudie.månadIso(nu);
+    startaMånadsval();
+    return !!(MV && MV.finns && MV.finns(m));
   }
 
   function andraMånader(lista, datum) {
@@ -1963,14 +1962,20 @@
     const utbetalda = u.betalda != null ? Number(u.betalda)
       : (S.utbetalningar || []).filter(x => månadFör(x.period) === månad && x.status === 'utbetald').length;
     const sista = new Date(Date.parse(NXStudie.månadsGräns(månad).till + 'T12:00:00') - DAG);
+    /* manad_lage säger pagar om varje månad från den innevarande och
+       framåt. Väljaren når hela nästa år (2026-10-06), och december
+       nästa år pågår inte, den har inte börjat. */
+    const kommande = månad > NXStudie.månadIso(new Date());
 
     const läge = stängd ? pill('Stängd', 'ar-klar')
+      : kommande ? pill('Har inte börjat', '')
       : d.pagar ? pill('Pågår', 'ar-vantar')
       : larm.length ? pill(larm.length + (larm.length === 1 ? ' larm kvar' : ' larm kvar'), 'ar-ny')
       : pill('Kan stängas', 'ar-ny');
 
     let h = '<div class="bs-topp"><div><h3>' + esc(stor(namn)) + '</h3>'
       + '<p>' + esc(stängd ? 'Månaden är stängd och låst. Pass och rapporter i den går inte att ändra.'
+        : kommande ? 'Månaden har inte börjat. Talen visar det som är bokat hittills.'
         : d.pagar ? 'Månaden pågår. Talen ändras tills den är slut.'
         : larm.length ? 'Månaden är slut. Lös larmen, sedan kan den stängas.'
         : 'Månaden är slut och allt går ihop. Stäng den, så låses den.') + '</p></div>' + läge + '</div>';

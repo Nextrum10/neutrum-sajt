@@ -105,6 +105,58 @@ FÖRSTA strukturskillnaden, och på startsidan är den språkväljaren —
 en skillnad längre ner syns alltså inte i verktyget. Jämför
 taggsekvenserna med `difflib` när du ändrar i sektionen.
 
+### Menysidorna i startsidans form (2026-10-06)
+
+Leo: sidorna i menyn (de tre strecken) var "typ bara text och ingen nice
+animation", och skulle ta efter startsidan efter hero och vyerna. De sex
+är Vår idé, Så fungerar Nextrum, För elever & föräldrar, Bli
+studiehjälpare, Priser och FAQ, på båda språken. De laddar
+`nextrum-start.css` och `nextrum-start.js` och använder startsidans
+delar som de är, med `nextrum-sidor.css` sist för det startsidan inte
+har. **Texten är densamma ord för ord**; bara formen är ny. Det som
+tillkom är etiketter (Nästa steg), lapparna på fotot och hoppen på FAQ:n.
+
+- **Rubrik och tre stycken** (`nx-two`) blev manifestet: rubriken med
+  `data-ordfyll` och styckena som `.nx-bubbla` med var sin figur i
+  `.sid-kort` (två, tre eller fyra spalter). Ett blad med en enda mening
+  som bär poängen är `.sid-stor`.
+- **Listor med 01–04** blev hållpunkterna (`.nx-holdpunkter`, i tre med
+  `.sid-tre`), och Före/Under/Efter och Först/Sedan/Löpande står som ord
+  i `.sid-et` i stället för en siffra. Före, under och efter på För
+  elever & föräldrar är fotokort (`.sid-bildkort`).
+- **Stegen till första passet** på Så fungerar Nextrum är startsidans
+  pinnade scen. Fotona står i markupen, inte i skriptet: registret har
+  bara svensk alt-text, och startsidans skript bygger sina foton därur,
+  så den engelska startsidan har svensk alt-text i den scenen (kvar,
+  inte rörd här). `stegFoton` rör bara en scen som redan har foton, och
+  startsidans ruta är tom när den körs.
+- **Text bredvid ett foto** (Priset på Vår idé, Vem kan söka, Varför
+  priset ser ut så här) är cinemas `.nx-split` på ljus botten.
+- **Lapparna** på sidhuvudets foto är vyernas notiser: två korta
+  sanningar ur sidans egen text, `aria-hidden`, och bara den första på en
+  telefon. De fjädrar in när `sidhuvud` satt `.sid-framme`, två
+  bildrutor efter start så att startläget hinner ritas.
+- **FAQ:n är kort**, på alla sex sidorna: varje fråga ett blad med kant
+  i lera när den är öppen. Utfällningen är `NX.initFaq` som förut.
+  Markupen i `.faq-item` är orörd, för `bygg-faq-schema.py` och
+  `bygg-maskotsvar.py` läser den med reguljära uttryck. FAQ-sidans
+  grupper har en klistrad spalt med rubrik och figur, och piller under
+  ingressen hoppar till dem.
+- **Slutet** är `nx-final-cinema` på alla sex, med `.nx-framme` från
+  `mörkaYtor`; Bli studiehjälpare och Priser hade kvar den gamla
+  `nx-final`.
+
+Betalningsmeningen står kvar på sina ställen (`kolla-betalningsvillkor.py`),
+och priserna på Priser skrivs fortfarande av `initPris` och
+`initErbjudanden`. En lapp med ett pris ska ha `data-stat="pris-inline"`,
+aldrig `"pris"`: `initPris` räknar upp den FÖRSTA `"pris"` på sidan, och
+det ska vara det stora priset.
+
+`jamfor-sprak.py` ser bara första skillnaden, så sidparen jämfördes med
+`difflib` över hela taggsekvensen: lika många taggar och textnoder, samma
+attributnamn, och den enda skillnaden är språkväljaren. Baslinjen flyttade
+sig två taggar (de nya `<link>` i huvudet), inget annat.
+
 ### Två fällor när en palett byts
 
 Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11
@@ -256,6 +308,31 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    till ett eget dokument: ett dokument är en andra sanning som slutar
    stämma, och det gallras inte (avsnitt 5, Gallringen). Bokföringen
    som ska sparas i sju år är Fortnox, inte adminvyn.
+   **Adminvyns rad är ett fält sedan 2026-10-06** (Leo: "en kolumnen
+   där man ser år och månad just nu och om man trycker på den kan man
+   ändra månad och år", och att man måste kunna se flera månader framåt
+   och år, i ekonomin, betalningarna, lönerna och lektionerna). Det är
+   grupperingen per år som stycket ovan pekade på. `‹ [Oktober 2026 ▾] ›`:
+   pilarna stegar en månad, fältet öppnar en ruta med året (pilar mellan
+   åren), dess tolv månader och Den här månaden. Väljaren går från
+   september 2026 till och med december nästa år (`årFramåt: 1`), och
+   Löner en månad till: där är månaden utbetalningsmånaden, en efter
+   passens, och länken från Månadens ekonomi ska alltid hitta sin
+   månad. En månad utanför väljaren står grå i rutan. Fältet har fast
+   bredd, annars flyttade sig pilen till höger under fingret när namnet
+   bytte längd (fälla 4); på en telefon fyller det bredden mellan
+   pilarna. Rutan ligger ovanpå sidan, så inget flyttar sig när den
+   öppnas, och byggs om bara när året byts. Märkena (Stängd, Utbetald,
+   2 saknas) står under namnet i fältet och på varje månad i rutan.
+   Det raden gav som fältet inte ger är alla märken på en gång. I
+   Ekonomi och Löner är de upplysningar, men i Lektioner är "saknas"
+   sektionens larm, så där räknar en rad under väljaren upp de andra
+   månaderna med pass utan rapport, med en knapp dit
+   (`ritaSaknasAndra`). En månad som inte börjat är tom i Lektioner,
+   som tittar bakåt, och tomraden pekar på Bokningar; bokslutet säger
+   Har inte börjat om den, inte Pågår, för `manad_lage` säger `pagar`
+   om varje månad från den innevarande. Felet med en rad i en dold
+   sektion (bredden noll) finns inte längre: fältet rullar inte.
 
 Och några saker som kostade en omgång: basrubriken `h5` bär en
 `margin-top` i em, som med den större rubriken blev 27 px luft överst i
@@ -498,6 +575,33 @@ tabellerna och listorna, inte ytorna.
 - NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
   vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
 
+### Läget sätts med märkena (2026-10-06)
+
+Leo: "en grej jag inte gillar på admin är hur man trycker in läge. Gör de
+mer modernt de ser ut som att de är för 20 år sedan". Läget var en
+`<select>` (`väljare()` i kärnan): två tryck, och listan som fälls ut är
+operativsystemets. Nu är det `lägesväljare(karta, värde, attribut)`: alla
+lägen i rad som knappar, det valda ser ut som `.adm-status` i listan, och
+de andra är tomma ringar med en blek prick i sin färg. Ett tryck byter.
+
+- **Var:** anmälan, ansökan och studiehjälparen i panelen (under rubriken
+  Läge, knapparna under raden), underlaget i Löner och uppgifterna under
+  Att göra. Avbokningsskälen och Ansvarig är kvar som rullgardiner: de är
+  inga lägen, och sju val eller en lista med personer är ingen rad.
+  Filtren överst i listorna är också rullgardiner, med flit orörda.
+- **Lyssnarna är desamma.** Gruppen bär samma `data-*` som rullgardinen,
+  och kärnans klicklyssnare skickar `change` från gruppen med `value` som
+  det tryckta läget. Att sätta `value` visar ett läge, så `el.value =
+  gammal` efter ett nej på frågan (Godkänd, Avböjd, Utbetald) sätter
+  tillbaka det. Ett tryck på det valda gör ingenting.
+- **Knappar, inte radioknappar:** piltangenterna i en radiogrupp byter för
+  varje steg, och här skriver varje byte till databasen och Avböjd köar
+  ett nej. En knapp byter bara när den trycks (Tab och Enter).
+- **Ett fel visar det sparade:** nekas skrivningen sätts läget tillbaka
+  (anmälan, ansökan, studiehjälparen) eller ritas uppgiftslistan om.
+- `verktyg/prova-ansokningar.js` trycker på Avböjd i den riktiga panelen
+  och provar att Avbryt lämnar Kontaktad vald.
+
 ### Siffran vid Intresseanmälningar och Ansökningar är det du inte sett (2026-10-05)
 
 Leo: "notiserna ska försvinna efter vi klickat på områden och exempelvis sett
@@ -588,9 +692,13 @@ senare sida ger felet, aldrig en halv lista.
   kapas.
 
 ### Barnets vy och adminvyn med behörigheter (barnkonton_och_admin, 2026-09-30)
-- `barn.html`: en spalt, samma kort och rader som studievyn (`.vy-kort`,
-  `.vy-rad`, `.lage`), och `.bv-*` i `nextrum-arbetsyta.css`, bara tokens.
-  Ingen hälsningsfilm, ingen meny, ingen länk till föräldervyn.
+- `barn.html`: samma kort och rader som studievyn (`.vy-kort`, `.vy-rad`,
+  `.lage`), och `.bv-*` i `nextrum-arbetsyta.css`, bara tokens. Ingen länk
+  till föräldervyn. Sedan 2026-10-06 samma skal som studievyn: hälsningen
+  (`NXArbete.hero`) och sidomenyn (`NXStudie.sidomeny`) med fyra delar,
+  Översikt, NexLäx, Meddelanden och Profil (se "Hälsningen, en bild per
+  veckodag" nedan och `minne/barnkonton-och-admin.md`). Förut en spalt utan
+  meny och utan bild.
 - Föräldrarnas ruta Barnens inloggning heter `bi-*` (`#bi-ruta`,
   `data-bi-*`), för `bk-*` och `#bk-msg` är bokningens och stod redan i
   samma sida.
@@ -599,3 +707,26 @@ senare sida ger felet, aldrig en halv lista.
   flikarna hen inte har tas bort ur DOM:en, och en rubrik utan synlig post
   göms (`städaMenyn`). Knapparna i en synlig sektion är fortfarande
   superadminens; databasen säger nej. Se `minne/barnkonton-och-admin.md`.
+
+### Hälsningen, en bild per veckodag (2026-10-06)
+Leo: "På studievyerna ska rullande heron ändras varje dag så de blir en ny
+bild, och de ska stå vilken dag på veckan de är också där", med sex bilder
+"för de andra dagarna". Alla sex fanns redan i `bilder/` (01, 03, 04, 02, 07
+och 09-online-v2, i den ordning de skickades), så inga nya filer.
+- Listan är `NEXTRUM_HERO_VECKA` i `nextrum-images.js`, måndag först; en
+  post pekar på en nyckel i `NEXTRUM_IMAGES`, så att `focal` följer med och
+  sätts som `object-position` på bilden. Ansiktena står olika i varje bild,
+  och på en telefon beskärs bilden hårt i sidled.
+- Måndagen är den gamla hälsningen: hero-bilden och filmen
+  (`hero-studievy.mp4`), som är filmad i samma scen. Filmen spelar bara den
+  dagen; annars hade den tonat in över dagens bild och gömt den. De andra
+  dagarna driver stillbilden som förut, och på en telefon spelas ingen film.
+- `NXArbete.dagensHero()` väljer posten (getDay() börjar på söndag) och
+  skriver dagen: "Tisdag 6 oktober", i etikettens rad, ljusare än etiketten.
+  Står vyn öppen över midnatt byts dagen, bilden och hälsningen (en timer,
+  och samma prövning när fliken kommer tillbaka); bara bildlagret ritas om.
+- Laddar inte bildregistret står hero-bilden kvar utan film, och dagen står
+  där ändå. Vyerna skickar inga bildvägar längre.
+- Provat med klockan ställd på varje veckodag, på dator och telefon, och i
+  `verktyg/prova-barnkonton.js` (`provaHälsningen`), som har listan en gång
+  till med flit: ändras den i registret blir provet rött.

@@ -18,7 +18,7 @@
 
   const { AVBOKNINGSSKAL, BOK_LAGE, S, elevNamn, hämtaMatchunderlag,
           kortDatum, läge, matchar, namnFör, pill, skriv, tabell, tomtText,
-          väljare } = NXAdmin;
+          lägesväljare, väljare } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaElever = (...a) => NXAdmin.rita.ritaElever(...a);
@@ -576,22 +576,24 @@
 
      Leo: "lektioner, där ska man kunna filtrera för månader, i admin.
      lättare att se över en mängd lektioner under en specifik tid".
-     Talen och listan gäller den månad som är vald i raden, på passets
-     datum. Raden är samma som i Ekonomi, Månadens ekonomi och Löner
+     Talen och listan gäller den månad som är vald, på passets datum.
+     Väljaren är samma som i Ekonomi, Månadens ekonomi och Löner
      (NXStudie.månadsval), men en egen: sidorna läses var för sig, och
      en månad vald här ska inte flytta de andra.
 
-     Raden ersatte väljaren 30 dagar, tre månader, hela tiden, och två
-     saker den gav får inte försvinna med den:
-       1. Larmet räknade hela tiden. Nu räknar talet månaden, och varje
-          månad med pass utan rapport är märkt i raden: en rapport som
-          saknas i augusti ska inte se borta ut för att september är
-          vald.
+     Månaderna ersatte väljaren 30 dagar, tre månader, hela tiden, och
+     två saker den gav får inte försvinna med den:
+       1. Larmet räknade hela tiden. Nu räknar talet månaden, varje
+          månad med pass utan rapport är märkt i väljaren, och raden
+          under den räknar upp de andra (ritaSaknasAndra): en rapport
+          som saknas i augusti ska inte se borta ut för att september
+          är vald.
        2. Hela tiden gick att söka i. Ett sök räknar upp de andra
           månader det har träffar i, med en knapp dit.
-     Raden börjar i september 2026, när de första passen hölls, och
+     Väljaren börjar i september 2026, när de första passen hölls, och
      har varje månad sedan dess: Lektioner är historiken, och hela
-     tiden nådde varje pass.
+     tiden nådde varje pass. Sedan 2026-10-06 (ett fält i stället för en
+     rad) når den också hela nästa år.
      ============================================================ */
 
   /* Pass som redan varit, oavsett om någon rapporterat dem.
@@ -606,32 +608,42 @@
   const passetsMånad = b => String(b.wanted_date).slice(0, 7) + '-01';
 
   let MV = null;
-  let förstaMånad = null;
   /* Pass utan rapport per månad, räknat en gång per uppritning och läst
-     av märket i raden. */
+     av märket i väljaren och raden under den. */
   let saknasPer = {};
 
-  function startaMånadsval(hållna) {
+  function startaMånadsval() {
     if (MV) return;
     const host = $('#lekt-manader');
     if (!host) return;
-    /* Varje månad sedan september 2026 (alla), som Betalningar,
-       Månadens ekonomi och Löner. Utan konstanten (en äldre
-       nextrum-studie.js ur cachen) räknas raden från det äldsta hållna
-       passet, som förut. */
-    const nu = new Date();
-    const äldsta = hållna.map(passetsMånad)
-      .reduce((a, m) => m < a ? m : a, NXStudie.månadIso(nu));
-    const antal = Math.max(12, (nu.getFullYear() - Number(äldsta.slice(0, 4))) * 12
-      + nu.getMonth() + 1 - Number(äldsta.slice(5, 7)) + 1);
-    förstaMånad = NXStudie.FÖRSTA_MÅNAD
-      || NXStudie.månadIso(new Date(nu.getFullYear(), nu.getMonth() - antal + 1, 1, 12));
+    /* Varje månad från september 2026 till och med december nästa år,
+       som Betalningar, Månadens ekonomi och Löner (2026-10-06). En
+       månad som inte börjat är tom här, för Lektioner tittar bakåt;
+       tomraden säger det och pekar på Bokningar. */
     MV = NXStudie.månadsval(host, {
       alla: true,
-      antal,
+      årFramåt: 1,
       märke: m => saknasPer[m] ? saknasPer[m] + ' saknas' : '',
       vidVal: () => ritaLektioner()
     });
+  }
+
+  /* Rapporter som saknas i en annan månad (2026-10-06). Raden med en
+     knapp per månad märkte varje sådan månad, och fältet som ersatte
+     den visar bara den valda: utan den här raden hade en rapport som
+     saknas i augusti sett borta ut när oktober är vald (punkt 1 ovan). */
+  function ritaSaknasAndra(månad) {
+    const host = $('#lekt-larm');
+    if (!host) return;
+    const månader = Object.keys(saknasPer).filter(m => m !== månad).sort();
+    host.innerHTML = månader.length
+      ? '<p class="eko-andra">Rapport saknas också i ' + månader.map(m => {
+        const text = esc(NXStudie.månadsNamn(m)) + ' (' + saknasPer[m] + ')';
+        return MV && MV.finns && MV.finns(m)
+          ? '<button type="button" class="eko-lank" data-lekt-manad="' + m + '">' + text + '</button>'
+          : text;
+      }).join(', ') + '.</p>'
+      : '';
   }
 
   function ritaLektionstal(iMånaden, månad) {
@@ -669,10 +681,11 @@
       const m = passetsMånad(b);
       saknasPer[m] = (saknasPer[m] || 0) + 1;
     });
-    startaMånadsval(hållna);
+    startaMånadsval();
     if (MV) MV.märk();
     const månad = MV ? MV.vald() : NXStudie.månadIso(new Date());
     const namn = NXStudie.månadsNamn(månad);
+    ritaSaknasAndra(månad);
 
     const alla = hållna.filter(b => passetsMånad(b) === månad);
     alla.sort((a, b) => String(b.wanted_date + (b.wanted_time || ''))
@@ -707,7 +720,7 @@
       andra.innerHTML = månader.length
         ? '<p class="eko-andra">Träffar i andra månader: ' + månader.map(m => {
           const text = esc(NXStudie.månadsNamn(m)) + ' (' + per[m] + ')';
-          return MV && m >= förstaMånad
+          return MV && MV.finns && MV.finns(m)
             ? '<button type="button" class="eko-lank" data-lekt-manad="' + m + '">' + text + '</button>'
             : text;
         }).join(', ') + '.</p>'
@@ -747,7 +760,8 @@
        sanningen som ska stå. */
     ], rader, tomtText(alla.length && (sök || rapportFilter),
       'Ingen lektion i ' + namn + ' matchar filtret',
-      !hållna.length ? 'Inga pass har hållits än'
+      månad > NXStudie.månadIso(new Date()) ? 'Inga pass i ' + namn + ' än: månaden har inte börjat. Bokade pass står under Bokningar'
+        : !hållna.length ? 'Inga pass har hållits än'
         : månad === NXStudie.månadIso(new Date()) ? 'Inga pass har hållits i ' + namn + ' än'
         : 'Inga pass hölls i ' + namn));
   }
@@ -757,16 +771,17 @@
     if (el) el.addEventListener('input', ritaLektioner);
   });
 
-  /* En månad i söket. Talen ovanför kan byta höjd när månaden byts (en
-     text under ett tal som bryter om i den ena månaden men inte i den
-     andra: 17 px på en dator i provbänken), och då hade raden man
-     tryckte i flyttat sig under fingret. håll() håller den still. Raden
-     med månaderna behöver det inte: inget ovanför den ändras. */
+  /* En månad i söket eller i raden om rapporter som saknas. Talen
+     ovanför söket kan byta höjd när månaden byts (en text under ett tal
+     som bryter om i den ena månaden men inte i den andra: 17 px på en
+     dator i provbänken), och då hade raden man tryckte i flyttat sig
+     under fingret. håll() håller den still. Väljaren behöver det inte:
+     inget ovanför den ändras. */
   document.addEventListener('click', e => {
     const k = e.target.closest('[data-lekt-manad]');
     if (!k || !MV) return;
     MV.sätt(k.dataset.lektManad);     // tyst: vidVal körs inte av sätt()
-    NXStudie.håll($('#lekt-andra'), ritaLektioner);
+    NXStudie.håll(k.closest('#lekt-larm') || $('#lekt-andra'), ritaLektioner);
   });
 
 
@@ -943,10 +958,7 @@
       + '<option value="">Ingen</option>' + adminer().map(p => '<option value="' + esc(p.id) + '"'
         + (p.id === u.ansvarig ? ' selected' : '') + '>' + esc(p.full_name || p.email) + '</option>').join('')
       + '</select>';
-    const lägeVal = u => '<select class="sel" style="min-width:120px;padding:7px 28px 7px 10px;font-size:.84rem"'
-      + ' data-uppg-status="' + esc(u.id) + '" aria-label="Läge">'
-      + Object.keys(UPPG_LAGE).map(k => '<option value="' + k + '"' + (k === u.status ? ' selected' : '') + '>'
-        + esc(UPPG_LAGE[k][0]) + '</option>').join('') + '</select>';
+    const lägeVal = u => lägesväljare(UPPG_LAGE, u.status, 'data-uppg-status="' + esc(u.id) + '"');
 
     host.innerHTML = tabell([
       { namn: 'Uppgift', rita: u => '<b>' + esc(u.titel) + '</b>'
@@ -1025,6 +1037,8 @@
       ritaAvvikelser();          // "Uppgift finns" följer uppgiftens läge
       ritaMaskinUppgifter();     // och Automationer räknar bara de öppna
       ritaÖversikt();
+    } else {
+      ritaUppgifter();           // raden visar det som är sparat, inte trycket
     }
   });
 

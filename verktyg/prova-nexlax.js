@@ -282,8 +282,10 @@ async function lyssna(page) {
 }
 const känt = page => page.evaluate(() => window.__känt.slice());
 
+/* Elevvyn har sedan 2026-10-06 en del i taget i sidomenyn (Översikt,
+   NexLäx, Meddelanden, Profil): NexLäx öppnas med #nexlax. */
 async function tillBarnetsVag(page) {
-  await page.goto(BAS + '/barn');
+  await page.goto(BAS + '/barn#nexlax');
   await page.waitForSelector('#bv-nexlax:not([hidden])', { timeout: 8000 }).catch(() => {});
   await page.waitForFunction(() => document.querySelector('#bv-nl-vag .nl-valj'), null, { timeout: 5000 }).catch(() => {});
 }

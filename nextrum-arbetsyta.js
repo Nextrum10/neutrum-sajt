@@ -56,6 +56,30 @@ window.NXArbete = (function () {
   }
 
   /* ============================================================
+     DAGENS BILD (2026-10-06)
+
+     En bild per veckodag ur NEXTRUM_HERO_VECKA i nextrum-images.js,
+     den enda filen där bildvägar står, och dagen i ord. Måndag är 0:
+     getDay() börjar på söndag, en svensk vecka på måndag. Har
+     bildregistret inte laddat står vyns egen bild kvar, utan film, och
+     dagen står där ändå.
+     ============================================================ */
+  function dagensHero(nu) {
+    var d = nu || new Date();
+    var i = (d.getDay() + 6) % 7;
+    var vecka = window.NEXTRUM_HERO_VECKA, bilder = window.NEXTRUM_IMAGES;
+    var post = vecka && vecka[i];
+    var bild = post && bilder && bilder[post.bild];
+    return {
+      index: i,
+      text: DAGAR_LANGA[i] + ' ' + d.getDate() + ' ' + NX.MANADER[d.getMonth()],
+      bild: bild ? 'bilder/' + bild.file + '-1280.webp' : null,
+      focal: bild ? bild.focal : null,
+      film: bild && post.film ? 'bilder/' + post.film : null
+    };
+  }
+
+  /* ============================================================
      HERO-BLOCKET
 
      Bakgrunden är en video om filen finns, annars stillbilden. Det
@@ -71,8 +95,10 @@ window.NXArbete = (function () {
        lede      — en mening under rubriken
        nasta     — { text, under, href } eller null
        chatt     — { href, text, under, olasta }
-       video     — sökväg till mp4, valfritt
-       bild      — poster/fallback, krävs
+       bild      — reserven om bildregistret inte laddat, valfritt
+
+     Bilden och filmen väljs efter veckodagen (dagensHero), och dagen
+     står bredvid etiketten.
      ============================================================ */
   function hero(opts) {
     var o = opts || {};
@@ -110,7 +136,6 @@ window.NXArbete = (function () {
           arbetsyta.css) så att blocket lever även utan film — och
           rörelsen tas över av videon i samma sekund den spelar,
           i stället för att ligga kvar ovanpå den. */
-    var bild = o.bild || 'bilder/hero-nextrum-1280.jpg';
 
     /* INGEN FILM PÅ TELEFONEN, och ingen för den som bett om mindre
        rörelse eller mindre data. Leo 2026-09-24: "det är fortfarande
@@ -127,21 +152,31 @@ window.NXArbete = (function () {
         || window.matchMedia('(prefers-reduced-motion: reduce)').matches
         || !!(navigator.connection && navigator.connection.saveData);
     } catch (e) { sparsam = true; }
-    if (sparsam) o.video = null;
 
-    var media = '<img class="vy-hero-still" src="' + esc(bild) + '" alt="" aria-hidden="true">'
-      + (o.video
-        ? '<video autoplay muted loop playsinline preload="auto"'
-          + ' aria-hidden="true" tabindex="-1"><source src="' + esc(o.video)
-          + '" type="video/mp4"></video>'
-        : '');
+    /* Dagens bild, med sin egen focal: ansiktena står inte på samma
+       ställe i varje bild, och på en telefon beskärs bilden hårt i
+       sidled. Filmen bara den dag den hör till, och aldrig när det är
+       sparsamt. */
+    function media(dag) {
+      var bild = dag.bild || o.bild || 'bilder/hero-nextrum-1280.jpg';
+      var video = sparsam ? null : dag.film;
+      return '<img class="vy-hero-still" src="' + esc(bild) + '" alt="" aria-hidden="true"'
+        + (dag.focal ? ' style="object-position:' + esc(dag.focal) + '"' : '') + '>'
+        + (video
+          ? '<video autoplay muted loop playsinline preload="auto"'
+            + ' aria-hidden="true" tabindex="-1"><source src="' + esc(video)
+            + '" type="video/mp4"></video>'
+          : '');
+    }
+
+    var dagen = dagensHero();
 
     /* Blocket går kant i kant med skärmen, men texten ska ändå stå
        i linje med sidomenyn under. Därför en inre yta med samma
        maxbredd och samma sidmarginal som resten av sidan: sektionen
        bär bilden, ytan bär innehållet. */
     host.innerHTML =
-      '<div class="vy-hero-media">' + media + '</div>'
+      '<div class="vy-hero-media">' + media(dagen) + '</div>'
       + '<span class="vy-hero-sloja" aria-hidden="true"></span>'
       + '<div class="vy-hero-yta">'
       + (o.marke
@@ -149,17 +184,17 @@ window.NXArbete = (function () {
           + esc(o.marke.text) + '</span>'
         : '')
       + '<div class="vy-hero-inne">'
-      + (o.etikett ? '<span class="vy-hero-et">' + esc(o.etikett) + '</span>' : '')
+      + '<span class="vy-hero-et">'
+      + (o.etikett ? esc(o.etikett) + '<span class="vy-hero-skilj" aria-hidden="true">·</span>' : '')
+      + '<time class="vy-hero-dag" datetime="' + NX.isoFor(new Date()) + '">' + esc(dagen.text) + '</time>'
+      + '</span>'
       + '<h1>' + esc(hälsningsrad(o.namn)) + '</h1>'
       + (o.lede ? '<p class="vy-hero-lede">' + esc(o.lede) + '</p>' : '')
       + '</div>'
       + '<div class="vy-hero-kort">' + kort() + '</div>'
       + '</div>';
 
-    /* "playing", inte "canplay": canplay lovar att den KAN spela.
-       Tonar vi in där och filen sedan stannar står vi med en svart
-       ruta över bilden. */
-    var film = host.querySelector('video');
+    var film = null;
 
     /* Allt som rör sig står still när blocket inte syns: filmen
        pausas och bildens drift fryses. Ingen ser den när man
@@ -179,11 +214,20 @@ window.NXArbete = (function () {
         uppdateraRörelse();
       }).observe(host);
     }
-    document.addEventListener('visibilitychange', uppdateraRörelse);
+    document.addEventListener('visibilitychange', function () {
+      bytDag();
+      uppdateraRörelse();
+    });
 
-    if (film) {
-      film.addEventListener('playing', function () {
-        film.classList.add('spelar');
+    function kopplaFilm() {
+      film = host.querySelector('video');
+      if (!film) return;
+      var f = film;
+      /* "playing", inte "canplay": canplay lovar att den KAN spela.
+         Tonar vi in där och filen sedan stannar står vi med en svart
+         ruta över bilden. */
+      f.addEventListener('playing', function () {
+        f.classList.add('spelar');
         /* Filmen ligger ovanpå bilden. Att låta bilden zooma bakom den
            är att rita något ingen ser, varje bildruta. */
         host.classList.add('vy-hero-film');
@@ -194,9 +238,36 @@ window.NXArbete = (function () {
          webbläsare kräver ett anrop även för en ljudlös film.
          Avvisas löftet händer ingenting: bilden står kvar, vilket är
          precis rätt beteende. */
-      var försök = film.play();
+      var försök = f.play();
       if (försök && försök.catch) försök.catch(function () {});
     }
+    kopplaFilm();
+
+    /* Står vyn öppen över midnatt byts dagen, bilden och hälsningen.
+       En timer till strax efter midnatt, och samma prövning när fliken
+       kommer tillbaka: en dator som sovit har inte kört timern. Bara
+       bildlagret ritas om, så korten och texten står kvar. */
+    function bytDag() {
+      var ny = dagensHero();
+      if (ny.text === dagen.text) return;
+      dagen = ny;
+      var tid = host.querySelector('.vy-hero-dag');
+      if (tid) { tid.textContent = ny.text; tid.setAttribute('datetime', NX.isoFor(new Date())); }
+      var h1 = host.querySelector('h1');
+      if (h1) h1.textContent = hälsningsrad(o.namn);
+      var lager = host.querySelector('.vy-hero-media');
+      if (!lager) return;
+      if (film) film.pause();
+      host.classList.remove('vy-hero-film');
+      lager.innerHTML = media(ny);
+      kopplaFilm();
+      uppdateraRörelse();
+    }
+    (function vidMidnatt() {
+      var nu = new Date();
+      var sedan = new Date(nu.getFullYear(), nu.getMonth(), nu.getDate() + 1, 0, 0, 5);
+      setTimeout(function () { bytDag(); vidMidnatt(); }, sedan - nu);
+    })();
 
     return {
       /* Nästa pass och olästa ändras medan vyn står öppen. Att rita
@@ -1199,7 +1270,7 @@ window.NXArbete = (function () {
     hälsning: hälsning,
     hälsningsrad: hälsningsrad,
     förnamn: förnamn,
-    hero: hero,
+    hero: hero, dagensHero: dagensHero,
     flikar: flikar,
     visaFör: visaFör,
     bokning: bokning,

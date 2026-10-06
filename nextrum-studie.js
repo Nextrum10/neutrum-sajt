@@ -529,26 +529,24 @@ window.NXStudie = (function () {
   /* ---------- månadsväljaren (Fas 20.2) ----------
      Leo 2026-09-27: "man ska inte kunna se rapporter från juli idag i
      september ... gör det snyggt så man kan välja den månaden man vill
-     kolla för." En rad med månader, den innevarande förvald, och den
-     man trycker på är den som visas. Samma rad i studiehjälparvyn
-     (rapporterna och lönen) och i adminvyn (ekonomin och bokslutet).
-
-     RADEN RITAS EN GÅNG. Ett tryck byter bara aria-pressed: en rad som
-     ritades om vid varje tryck hoppade tillbaka till början i sidled
-     (samma fälla som ämnesraden i bokningen, CLAUDE.md avsnitt 3).
-     Den valda månaden förs in i bild med scrollLeft, inte med
-     scrollIntoView, som rullar hela sidan i en rad som klipps.
+     kolla för." Den innevarande månaden är förvald, och den man väljer
+     är den som visas. Två former: stegaren (o.stegare) i studievyn och
+     studiehjälparvyn, och fältet med en ruta för år och månad i
+     adminvyn (sedan 2026-10-06; förut en rad med en knapp per månad).
 
      Månaden skickas som 'ÅÅÅÅ-MM-01'. månadsGräns() ger första dagen i
      månaden och första dagen i nästa, att fråga med gte och lt.
 
      o.antal     hur många månader bakåt, med den innevarande (12)
      o.alla      true: alla månader från FÖRSTA_MÅNAD, i stället för antal
-     o.framåt    hur många månader efter den innevarande (0)
+     o.årFramåt  till och med december så många år efter det
+                 innevarande (1 = hela nästa år), i stället för till
+                 och med den innevarande månaden
+     o.framåt    så många månader till efter det (0)
      o.vald      förvald månad, 'ÅÅÅÅ-MM-01' (den innevarande)
-     o.märke     fn(månad) → '' | text: ett litet märke på knappen,
+     o.märke     fn(månad) → '' | text: ett litet märke på månaden,
                  t.ex. "Stängd" i adminvyn
-     o.vidVal    fn(månad): anropas när en annan månad trycks */
+     o.vidVal    fn(månad): anropas när en annan månad väljs */
   function månadIso(d) {
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01';
   }
@@ -566,9 +564,8 @@ window.NXStudie = (function () {
      tolv knappar i en rad man drar i sidled. I studiehjälparvyn låg
      raden i en flik som var dold när den ritades, så den innevarande
      månaden hamnade utanför kanten till höger, och på en telefon syntes
-     tre månader av tolv. Samma svar utåt (vald, sätt, märk) som raden,
-     så att anroparen inte märker skillnaden. Adminvyn har kvar raden:
-     där jämför man månader bredvid varandra. */
+     tre månader av tolv. Samma svar utåt (vald, sätt, märk) som
+     adminvyns fält, så att anroparen inte märker skillnaden. */
   function månadsstegare(host, o, lista, vald, denna) {
     host.classList.add('nx-manad-stegare');
     host.setAttribute('role', 'group');
@@ -619,13 +616,12 @@ window.NXStudie = (function () {
     };
   }
 
-  /* Ingen rad börjar före september 2026 (Leo 2026-09-29: "ta bort
+  /* Ingen väljare börjar före september 2026 (Leo 2026-09-29: "ta bort
      allt som inte är från september 2026 och framåt"). Det är månaden
      de första passen hölls, och varje månad före den var tom i varje
-     vy: elva knappar man inte hade någon nytta av. Kontrollerat i
-     driften samma dag: inget pass, underlag, faktura eller köp ligger
-     före den, så gränsen döljer ingenting. En rad kan fortfarande få
-     månader framåt (o.framåt). */
+     vy. Kontrollerat i driften samma dag: inget pass, underlag, faktura
+     eller köp ligger före den, så gränsen döljer ingenting. En väljare
+     kan fortfarande få månader framåt (o.framåt, o.årFramåt). */
   var FÖRSTA_MÅNAD = '2026-09-01';
 
   function månadsval(host, o) {
@@ -634,138 +630,190 @@ window.NXStudie = (function () {
     var nu = new Date();
     var denna = månadIso(nu);
     var vald = o.vald || denna;
-    var lista = [];
-    /* framåt: månader efter den innevarande. Adminvyn visar två, för
-       ett pass som bokats och betalats i förväg hör till sin egen månad. */
-    /* alla (2026-09-29): adminvyns bokföringsrader visar varje månad
-       sedan starten. Med tolv hade september 2026 fallit ur Betalningar,
+    /* alla (2026-09-29): adminvyns väljare har varje månad sedan
+       starten. Med tolv hade september 2026 fallit ur Betalningar,
        Månadens ekonomi och Löner i september 2027, och en månad som ska
-       gå att visa i sju år hade inte gått att välja. */
-    var bakåt = o.alla
-      ? (nu.getFullYear() - Number(FÖRSTA_MÅNAD.slice(0, 4))) * 12
-        + nu.getMonth() + 1 - Number(FÖRSTA_MÅNAD.slice(5, 7)) + 1
-      : (o.antal || 12);
-    for (var i = bakåt - 1; i >= -(o.framåt || 0); i--) {
-      var m = månadIso(new Date(nu.getFullYear(), nu.getMonth() - i, 1, 12));
-      if (m >= FÖRSTA_MÅNAD) lista.push(m);
+       gå att visa i sju år hade inte gått att välja.
+       årFramåt (2026-10-06): till och med december så många år fram.
+       Leo: "man måste kunna se flera månader framåt och år". */
+    var start = o.alla ? FÖRSTA_MÅNAD
+      : månadIso(new Date(nu.getFullYear(), nu.getMonth() - (o.antal || 12) + 1, 1, 12));
+    if (start < FÖRSTA_MÅNAD) start = FÖRSTA_MÅNAD;
+    var bas = o.årFramåt != null ? new Date(nu.getFullYear() + o.årFramåt, 11, 1, 12) : nu;
+    var slut = månadIso(new Date(bas.getFullYear(), bas.getMonth() + (o.framåt || 0), 1, 12));
+    var lista = [];
+    for (var d = new Date(start + 'T12:00:00'); månadIso(d) <= slut; d = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12)) {
+      lista.push(månadIso(d));
     }
-    if (lista.indexOf(vald) === -1) vald = denna;
+    if (!lista.length) lista.push(denna);
+    if (lista.indexOf(vald) === -1) vald = lista.indexOf(denna) !== -1 ? denna : lista[lista.length - 1];
     if (o.stegare) return månadsstegare(host, o, lista, vald, denna);
+    return månadsfält(host, o, lista, vald, denna);
+  }
 
-    /* Raden (2026-09-29, Leo: "ändra månaderna där så de ser bättre
-       ut"). Förut var varje månad ett eget piller med kant, och ett
-       piller med märke blev högre än de andra, så raden hackade.
-       Årtalet svävade ovanför och klipptes i kanten, och raden slutade
-       mitt i en månad utan att säga att det fanns fler. Nu står
-       månaderna i ett spår, lika höga med eller utan märke, årtalet står
-       i raden där det byts, och pilarna och den tonade kanten säger att
-       det går att rulla. Spåret är det som rullar, inte host. */
-    host.classList.add('nx-manader');
+  /* Fältet (2026-10-06). Adminvyns väljare var en rad med en knapp per
+     månad sedan september 2026, som man drog i sidled, och den växte
+     med en knapp i månaden. Leo: "en kolumn där man ser år och månad
+     just nu, och om man trycker på den kan man ändra månad och år", och
+     att man ska kunna se flera månader framåt och år. Nu står den valda
+     månaden i ett fält med pilar till månaden före och efter, och
+     fältet öppnar en ruta med året och dess tolv månader. En månad
+     utanför väljaren står grå i rutan: augusti 2026 finns, men inget
+     ligger där.
+
+     Märket (Stängd, Utbetald, 2 saknas) står under namnet i fältet och
+     på varje månad i rutan. Fältet har fast bredd: pilen till höger hade
+     annars flyttat sig under fingret när namnet byter längd (CLAUDE.md
+     avsnitt 3, fälla 4). Rutan ligger ovanpå sidan, så inget under
+     fältet flyttar sig när den öppnas, och den byggs om bara när året
+     byts; märkena skrivs i de knappar som står.
+
+     Samma svar utåt som stegaren (vald, sätt, märk), och finns(m) för
+     länkarna till en annan månad. */
+  var månadsfältNr = 0;
+
+  function månadsfält(host, o, lista, vald, denna) {
+    var nr = ++månadsfältNr;
+    var årAv = function (m) { return Number(String(m).slice(0, 4)); };
+    var förstaÅr = årAv(lista[0]);
+    var sistaÅr = årAv(lista[lista.length - 1]);
+    var visatÅr = årAv(vald);
+    var märkeFör = function (m) { return o.märke && lista.indexOf(m) !== -1 ? (o.märke(m) || '') : ''; };
+
+    host.classList.add('nx-manadsval');
     host.setAttribute('role', 'group');
     if (!host.getAttribute('aria-label')) host.setAttribute('aria-label', 'Välj månad');
     host.innerHTML =
-      '<button type="button" class="nx-manad-pil" data-rull="-1" aria-label="Tidigare månader" tabindex="-1">' + IKON.tillbaka + '</button>'
-      + '<div class="nx-manad-ram"><div class="nx-manad-spar">'
-      + lista.map(function (m, n) {
-        var år = m.slice(0, 4);
-        /* Året står där det byts, och först: tolv knappar med "2026" på
-           varje är brus. Knappens namn bär året ändå, för en skärmläsare
-           hör inte att årtalet stod tre knappar tidigare. */
-        var visaÅr = n === 0 || år !== lista[n - 1].slice(0, 4);
-        return (visaÅr ? '<span class="nx-manad-ar" aria-hidden="true">' + år + '</span>' : '')
-          + '<button type="button" data-manad="' + m + '" aria-pressed="' + (m === vald) + '"'
-          + ' aria-label="' + esc(månadsNamn(m)) + '"'
-          + (m === denna ? ' data-denna' : '') + '>'
-          + '<span>' + esc(månadsNamn(m, false)) + '</span>'
-          + '<i class="nx-manad-marke" hidden></i></button>';
-      }).join('')
-      + '</div></div>'
-      + '<button type="button" class="nx-manad-pil" data-rull="1" aria-label="Senare månader" tabindex="-1">' + IKON.pil + '</button>';
-    var spår = host.querySelector('.nx-manad-spar');
-    var ram = host.querySelector('.nx-manad-ram');
+      '<button type="button" class="nx-steg-pil" data-steg="-1" aria-label="Förra månaden">' + IKON.tillbaka + '</button>'
+      + '<button type="button" class="nx-manad-falt" aria-haspopup="dialog" aria-expanded="false"'
+      + ' aria-controls="nx-manad-ruta-' + nr + '">' + IKON.dag
+      + '<span class="nx-manad-namn"><b></b><small class="nx-manad-marke" hidden></small></span>'
+      + IKON.ner + '</button>'
+      + '<button type="button" class="nx-steg-pil" data-steg="1" aria-label="Nästa månad">' + IKON.pil + '</button>'
+      + '<div class="nx-manad-ruta" id="nx-manad-ruta-' + nr + '" role="dialog" aria-label="Välj månad och år" hidden>'
+      + '<div class="nx-manad-arrad">'
+      + '<button type="button" class="nx-steg-pil" data-ar="-1" aria-label="Förra året">' + IKON.tillbaka + '</button>'
+      + '<b class="nx-manad-aret" aria-live="polite"></b>'
+      + '<button type="button" class="nx-steg-pil" data-ar="1" aria-label="Nästa år">' + IKON.pil + '</button>'
+      + '</div>'
+      + '<div class="nx-manad-grid"></div>'
+      + (lista.indexOf(denna) !== -1
+        ? '<button type="button" class="nx-manad-nu" data-manad="' + denna + '">Den här månaden</button>' : '')
+      + '</div>';
+    var fält = host.querySelector('.nx-manad-falt');
+    var ruta = host.querySelector('.nx-manad-ruta');
+    var grid = ruta.querySelector('.nx-manad-grid');
 
-    function märk() {
-      if (!o.märke) return;
-      Array.prototype.forEach.call(host.querySelectorAll('[data-manad]'), function (b) {
-        var text = o.märke(b.dataset.manad) || '';
+    function ritaFält() {
+      var text = märkeFör(vald);
+      fält.querySelector('b').textContent = månadsNamn(vald);
+      var i = fält.querySelector('.nx-manad-marke');
+      i.textContent = text;
+      i.hidden = !text;
+      fält.setAttribute('aria-label', månadsNamn(vald) + (text ? ', ' + text : '') + '. Välj en annan månad');
+      var n = lista.indexOf(vald);
+      host.querySelector('[data-steg="-1"]').disabled = n <= 0;
+      host.querySelector('[data-steg="1"]').disabled = n >= lista.length - 1;
+    }
+    /* Årets tolv knappar. Byggs när rutan öppnas och när året byts. */
+    function ritaÅret() {
+      ruta.querySelector('.nx-manad-aret').textContent = visatÅr;
+      ruta.querySelector('[data-ar="-1"]').disabled = visatÅr <= förstaÅr;
+      ruta.querySelector('[data-ar="1"]').disabled = visatÅr >= sistaÅr;
+      var h = '';
+      for (var i = 0; i < 12; i++) {
+        var m = visatÅr + '-' + String(i + 1).padStart(2, '0') + '-01';
+        h += '<button type="button" data-manad="' + m + '"' + (m === denna ? ' data-denna' : '') + '>'
+          + '<span>' + esc(NX.MANADER[i]) + '</span><i class="nx-manad-marke" hidden></i></button>';
+      }
+      grid.innerHTML = h;
+      märkRutan();
+    }
+    function märkRutan() {
+      Array.prototype.forEach.call(grid.querySelectorAll('[data-manad]'), function (b) {
+        var m = b.dataset.manad;
+        var text = märkeFör(m);
         var i = b.querySelector('.nx-manad-marke');
         i.textContent = text;
         i.hidden = !text;
-        b.setAttribute('aria-label', månadsNamn(b.dataset.manad) + (text ? ', ' + text : ''));
+        b.disabled = lista.indexOf(m) === -1;
+        b.setAttribute('aria-pressed', m === vald ? 'true' : 'false');
+        b.setAttribute('aria-label', månadsNamn(m) + (text ? ', ' + text : '') + (b.disabled ? ', finns inte' : ''));
       });
     }
-    /* Pilarna och kanten följer var spåret står. Två attribut per
-       rullsteg och ingen stil: raden ritas inte om. */
-    function kanter() {
-      var max = spår.scrollWidth - spår.clientWidth;
-      var vänster = spår.scrollLeft > 2;
-      var höger = spår.scrollLeft < max - 2;
-      ram.classList.toggle('mer-vanster', vänster);
-      ram.classList.toggle('mer-hoger', höger);
-      host.querySelector('[data-rull="-1"]').disabled = !vänster;
-      host.querySelector('[data-rull="1"]').disabled = !höger;
-      /* Ryms hela raden står den utan pilar, bara så bred som månaderna. */
-      host.classList.toggle('nx-manad-stilla', max <= 2);
+
+    function öppen() { return !ruta.hidden; }
+    function utanför(e) { if (!host.contains(e.target)) stäng(false); }
+    function öppna() {
+      visatÅr = årAv(vald);
+      ritaÅret();
+      ruta.hidden = false;
+      fält.setAttribute('aria-expanded', 'true');
+      document.addEventListener('pointerdown', utanför, true);
+      /* Står fältet långt ned på skärmen syns rutan inte. Sidan flyttas
+         precis så mycket att den gör det, utan animering (avsnitt 3,
+         fälla 3: ingen mjuk scrollning i vyerna). */
+      var r = ruta.getBoundingClientRect();
+      if (r.bottom > window.innerHeight - 8) window.scrollBy(0, Math.min(r.bottom - window.innerHeight + 16, r.top - 72));
+      var k = grid.querySelector('[aria-pressed="true"]') || grid.querySelector('button:not(:disabled)');
+      if (k) k.focus({ preventScroll: true });
     }
-    function iBild() {
-      var b = spår.querySelector('[aria-pressed="true"]');
-      if (!b) return;
-      var vänster = b.offsetLeft;
-      if (vänster < spår.scrollLeft || vänster + b.offsetWidth > spår.scrollLeft + spår.clientWidth) {
-        spår.scrollLeft = Math.max(0, vänster - (spår.clientWidth - b.offsetWidth) / 2);
-      }
-      kanter();
+    function stäng(fokus) {
+      if (!öppen()) return;
+      ruta.hidden = true;
+      fält.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('pointerdown', utanför, true);
+      if (fokus) fält.focus({ preventScroll: true });
     }
     function sätt(m, tyst) {
       if (lista.indexOf(m) === -1 || m === vald) return;
       vald = m;
-      Array.prototype.forEach.call(host.querySelectorAll('[data-manad]'), function (b) {
-        b.setAttribute('aria-pressed', b.dataset.manad === vald ? 'true' : 'false');
-      });
-      iBild();
+      ritaFält();
+      if (öppen()) märkRutan();
       if (!tyst && o.vidVal) o.vidVal(vald);
     }
 
     host.addEventListener('click', function (e) {
-      var pil = e.target.closest('[data-rull]');
-      if (pil) {
-        spår.scrollBy({ left: Number(pil.dataset.rull) * spår.clientWidth * 0.75, behavior: 'smooth' });
+      if (e.target.closest('.nx-manad-falt')) { if (öppen()) stäng(true); else öppna(); return; }
+      var steg = e.target.closest('[data-steg]');
+      if (steg) { stäng(false); sätt(lista[lista.indexOf(vald) + Number(steg.dataset.steg)]); return; }
+      var år = e.target.closest('[data-ar]');
+      if (år) {
+        visatÅr = Math.min(sistaÅr, Math.max(förstaÅr, visatÅr + Number(år.dataset.ar)));
+        ritaÅret();
+        /* Vid första eller sista året blir pilen grå och tappar fokus. */
+        if (år.disabled) {
+          var andra = ruta.querySelector('[data-ar]:not(:disabled)');
+          if (andra) andra.focus();
+        }
         return;
       }
       var b = e.target.closest('[data-manad]');
-      if (b) sätt(b.dataset.manad);
+      if (b && !b.disabled) { stäng(true); sätt(b.dataset.manad); }
     });
-    var väntar = false;
-    spår.addEventListener('scroll', function () {
-      if (väntar) return;
-      väntar = true;
-      requestAnimationFrame(function () { väntar = false; kanter(); });
-    }, { passive: true });
-    märk();
-    /* Efter layout: offsetLeft är 0 innan raden syns. */
-    requestAnimationFrame(iBild);
-    /* Och igen när den börjar synas. Vyerna hämtar allt vid start, men
-       bara en sektion syns, så de flesta rader skapas dolda. Där har
-       raden bredden noll och iBild() gör ingenting: när sektionen
-       öppnades stod raden längst till vänster, med den valda månaden
-       (den innevarande, sist i raden) utanför. Mätt i provbänken
-       2026-09-28: 935 px in i en rad som var 308 px bred på en telefon
-       och 759 px på en dator. Bara när bredden går från noll: en rad man
-       själv dragit i sidled ska inte hoppa tillbaka när fönstret ändras.
-       Pilarna följer med vid varje storlek. */
-    if (typeof ResizeObserver === 'function') {
-      var bredd = spår.clientWidth;
-      new ResizeObserver(function () {
-        var ny = spår.clientWidth;
-        if (!bredd && ny) iBild(); else kanter();
-        bredd = ny;
-      }).observe(spår);
-    }
+    host.addEventListener('keydown', function (e) {
+      if (!öppen()) return;
+      if (e.key === 'Escape') { e.preventDefault(); stäng(true); return; }
+      /* Pilarna flyttar i rutnätet, tre månader per rad. */
+      var b = e.target.closest('.nx-manad-grid [data-manad]');
+      var steg = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 }[e.key];
+      if (!b || !steg) return;
+      var knappar = Array.prototype.slice.call(grid.querySelectorAll('[data-manad]'));
+      var mål = knappar[knappar.indexOf(b) + steg];
+      e.preventDefault();
+      if (mål && !mål.disabled) mål.focus();
+    });
+    /* Tabbar man ut ur rutan stängs den. */
+    host.addEventListener('focusout', function (e) {
+      if (öppen() && e.relatedTarget && !host.contains(e.relatedTarget)) stäng(false);
+    });
 
+    ritaFält();
     return {
       vald: function () { return vald; },
       sätt: function (m) { sätt(m, true); },
-      märk: märk
+      märk: function () { ritaFält(); if (öppen()) märkRutan(); },
+      finns: function (m) { return lista.indexOf(m) !== -1; }
     };
   }
 

@@ -48,10 +48,14 @@
      den nytta vid varje återbesök i ett år. -->
 <link rel="stylesheet" href="../nextrum-typsnitt.css?v=c20ceeba">
 
-<!-- ordningen spelar roll: bas → startsida → cinema -->
+<!-- ordningen spelar roll: bas → startsida → cinema → start → sidor.
+     Menysidorna använder startsidans delar som de är (nextrum-start.css
+     och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=03f73911">
+<link rel="stylesheet" href="../nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="../nextrum-sidor.css?v=6a841016">
 </head>
 <body>
 
@@ -142,66 +146,86 @@
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
          style="object-position:60% 42%"
          alt="Five young tutors standing and talking with each other in front of a bookshelf in a library."></picture>
+    <ul class="sid-lappar" aria-hidden="true">
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Choose when you want to work</li>
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6a3 3 0 010 6H9a3 3 0 000 6h7"/></svg></span>Get paid for your time</li>
+    </ul>
   </figure>
 
 </section>
 
+<!-- Fördelarna och stegen: fem blad och startsidans 1–4, som
+     glider fram ett i taget (nextrum-sidor.css, FÖRDELARNA). -->
 <section class="band on-band" style="border-top:none">
   <div class="sec wrap" style="padding-top:clamp(24px,3vw,40px)">
-    <div class="nx-perks rv">
-      <div class="nx-perk">
+    <div class="nx-perks">
+      <div class="nx-perk" data-stig data-fördröj="1">
         <span class="i"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
         <b>Flexible</b>
         <p>Choose when you want to work.</p>
       </div>
-      <div class="nx-perk">
+      <div class="nx-perk" data-stig data-fördröj="2">
         <span class="i"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7h6a3 3 0 010 6H9a3 3 0 000 6h7"/></svg></span>
         <b>Earn money</b>
         <p>Get paid for your time and knowledge.</p>
       </div>
-      <div class="nx-perk">
+      <div class="nx-perk" data-stig data-fördröj="3">
         <span class="i"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
         <b>Work experience</b>
         <p>Experience that genuinely belongs on your CV.</p>
       </div>
-      <div class="nx-perk">
+      <div class="nx-perk" data-stig data-fördröj="4">
         <span class="i"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-6M22 19V3"/></svg></span>
         <b>Grow</b>
         <p>Get better at communication, leadership and teaching.</p>
       </div>
-      <div class="nx-perk">
+      <div class="nx-perk" data-stig data-fördröj="5">
         <span class="i"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.5-7 9-7 9z"/></svg></span>
         <b>Make a difference</b>
         <p>Help a younger student succeed.</p>
       </div>
     </div>
 
-    <div style="margin-top:clamp(40px,5vw,64px)" class="rv">
-      <span class="eyebrow" style="margin-bottom:20px;display:inline-flex">How applying works</span>
-      <div class="nx-apply-flow">
-      <div class="nx-apply-step"><em>01</em><b>Apply</b><p>Fill in the application with subjects, year groups and times that suit you. Takes a few minutes.</p></div>
-      <div class="nx-apply-step"><em>02</em><b>Interview</b><p>A short conversation where we get to know you and how you explain things.</p></div>
-      <div class="nx-apply-step"><em>03</em><b>Get approved</b><p>We run our checks and you get your tutor profile.</p></div>
-      <div class="nx-apply-step"><em>04</em><b>Start working</b><p>Accept requests and hold your first session.</p></div>
+    <div style="margin-top:clamp(56px,7vw,96px)">
+      <span class="nx-et" data-stig style="margin-bottom:22px;display:inline-flex">How applying works</span>
+      <div class="nx-apply-flow" data-stig data-fördröj="1">
+        <div class="nx-apply-step"><em>1</em><b>Apply</b><p>Fill in the application with subjects, year groups and times that suit you. Takes a few minutes.</p></div>
+        <div class="nx-apply-step"><em>2</em><b>Interview</b><p>A short conversation where we get to know you and how you explain things.</p></div>
+        <div class="nx-apply-step"><em>3</em><b>Get approved</b><p>We run our checks and you get your tutor profile.</p></div>
+        <div class="nx-apply-step"><em>4</em><b>Start working</b><p>Accept requests and hold your first session.</p></div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="sec wrap">
-  <div class="nx-two">
-    <div class="nx-two-sticky rv">
-      <span class="eyebrow acc">Who can apply</span>
-      <h2 class="d2" style="margin-top:18px">You do not need to be a teacher. You need to be able to explain.</h2>
+<!-- Vem kan söka: fotot bredvid listan, som "Vill du hjälpa någon
+     annan att lyckas?" på startsidan men på ljus botten. -->
+<section class="nx-sek">
+  <div class="nx-split sid-split">
+    <div class="nx-split-bild" data-stig>
+      <figure class="nx-fig" style="--tint:#7E725A">
+        <picture><source type="image/webp" srcset="../bilder/09-online-v2-640.webp 640w, ../bilder/09-online-v2-960.webp 960w, ../bilder/09-online-v2-1280.webp 1280w, ../bilder/09-online-v2-1600.webp 1600w" sizes="(max-width:900px) 92vw, 44vw"><img class="nx-img" src="../bilder/09-online-v2-960.jpg"
+             srcset="../bilder/09-online-v2-640.jpg 640w, ../bilder/09-online-v2-960.jpg 960w, ../bilder/09-online-v2-1280.jpg 1280w, ../bilder/09-online-v2-1600.jpg 1600w"
+             sizes="(max-width:900px) 92vw, 44vw" width="2048" height="1152" loading="lazy" decoding="async"
+             style="object-position:58% 42%"
+             alt="A tutor sitting at a desk with a laptop and a notepad, holding a tutoring session remotely."></picture>
+      </figure>
     </div>
-    <div class="rv">
-      <ul class="nx-list">
-        <li><em>01</em><div><b>You are at upper-secondary school or university</b><p>Both upper-secondary and university students are welcome to apply.</p></div></li>
-        <li><em>02</em><div><b>You are confident in your subjects</b><p>You do not have to be top of the class in everything — just sure of what you want to help with.</p></div></li>
-        <li><em>03</em><div><b>You can explain so that someone understands</b><p>That is the most important quality, and the one we look at most in the interview.</p></div></li>
-        <li><em>04</em><div><b>You keep your word</b><p>The student does best with the same person week after week. If you say yes to a session, you turn up.</p></div></li>
+
+    <div class="nx-split-text">
+      <span class="nx-et acc" data-stig>Who can apply</span>
+      <h2 class="nx-d2" data-avslöj style="margin-top:20px">You do not need to be a teacher.<br>You need to be able to explain.</h2>
+      <ul class="nx-punkter" data-stig data-fördröj="1">
+        <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
+          <span><b>You are at upper-secondary school or university</b><span>Both upper-secondary and university students are welcome to apply.</span></span></li>
+        <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
+          <span><b>You are confident in your subjects</b><span>You do not have to be top of the class in everything — just sure of what you want to help with.</span></span></li>
+        <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
+          <span><b>You can explain so that someone understands</b><span>That is the most important quality, and the one we look at most in the interview.</span></span></li>
+        <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
+          <span><b>You keep your word</b><span>The student does best with the same person week after week. If you say yes to a session, you turn up.</span></span></li>
       </ul>
-      <p class="small" style="margin-top:22px">If you are under 18 we may need a guardian’s consent before your first session. We will get in touch if that applies to you.</p>
+      <p class="sid-fot" data-stig data-fördröj="2" style="margin-top:22px">If you are under 18 we may need a guardian’s consent before your first session. We will get in touch if that applies to you.</p>
     </div>
   </div>
 </section>
@@ -214,7 +238,7 @@
   <div class="sec wrap">
     <div class="nx-form-section">
       <div class="rv">
-        <span class="eyebrow acc">Application</span>
+        <span class="nx-et acc">Application</span>
         <h2 class="d2" style="margin-top:18px">Send in your application.</h2>
         <p class="lede" style="margin-top:20px">We read every application and get back to you within 24 hours. Applying costs nothing and commits you to nothing.</p>
         <ul class="nx-steplist">
@@ -296,7 +320,7 @@
 <section class="sec wrap">
   <div class="nx-faq-grid">
     <div class="nx-faq-aside rv">
-      <span class="eyebrow acc">FAQ</span>
+      <span class="nx-et acc">FAQ</span>
       <h2 class="d2" style="margin-top:18px">Questions about the job</h2>
       <p class="lede" style="margin-top:20px">More questions are answered in our <a href="/en/faq" style="color:var(--fg);text-decoration:underline;text-underline-offset:3px">FAQ</a>.</p>
     </div>
@@ -325,14 +349,24 @@
   </div>
 </section>
 
-<section class="nx-final on-band">
-  <div class="sec wrap">
-    <div class="inner">
-      <h2 class="d1 rv">We are building the next generation together.</h2>
-      <p class="rv">Every session helps a younger student — and gives you your first real work experience.</p>
-      <div class="nx-hero-ctas rv">
-        <a class="btn btn-primary btn-lg" href="#ansok">Send application <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-        <a class="btn btn-ghost btn-lg" href="/en/">Read more about Nextrum</a>
+<section class="nx-mork nx-final-cinema">
+  <div class="nx-wrap-bred">
+    <div class="nx-final-inner">
+      <span class="nx-et" data-stig>Next step</span>
+      <h2 class="nx-final-rubrik" data-avslöj>We are building the next generation <em>together.</em></h2>
+      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">Every session helps a younger student — and gives you your first real work experience.</p>
+
+      <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="#ansok">
+            Send application
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="btn btn-ghost btn-lg" href="/en/">
+          Read more about Nextrum
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
       </div>
     </div>
   </div>
@@ -416,8 +450,8 @@
 
 <!-- ==========================================================
      VYVÄLJARE — dörren in till inloggningen.
-     Själva inloggningen ligger kvar i foralder.html och
-     larare.html och är orörd.
+     Själva inloggningen ligger kvar i foralder.html, barn.html
+     (Elev, 2026-10-06) och larare.html och är orörd.
      ========================================================== -->
 <div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
   <button class="nx-vagval-stang" data-vagval-stang aria-label="Close"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
@@ -429,8 +463,15 @@
     <div class="nx-vagval-val">
       <a href="/foralder">
         <span>
-          <b>Parent or student</b>
+          <b>Parent</b>
           <span>Study plan, booking, messages and reports.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/barn">
+        <span>
+          <b>Student</b>
+          <span>NexLäx, your sessions and messages, with your username.</span>
         </span>
         <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
@@ -462,12 +503,13 @@
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
 <script src="../nextrum-config.js?v=fdfed591"></script>
-<script src="../nextrum-images.js?v=50260f9d"></script>
+<script src="../nextrum-images.js?v=c4a90ffa"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
 <script src="../nextrum-app.js?v=5a31edc0"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
+<script src="../nextrum-start.js?v=c489fcd4"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

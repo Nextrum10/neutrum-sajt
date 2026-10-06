@@ -270,8 +270,35 @@ async function bild(page, namn, sel) {
 }
 
 const synlig = (page, sel) => page.locator(sel).first().isVisible().catch(() => false);
+
+/* Hälsningen byter bild varje veckodag (2026-10-06). Listan står här
+   en gång till, med flit: provet ska se om nextrum-images.js ändrats. */
+const VECKODAGAR = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'];
+const DAGENS_BILD = ['hero-nextrum', '01-en-till-en', '03-digital-laxhjalp', '04-sjalvfortroende',
+  '02-personlig-anpassning', '07-genombrottet', '09-online-v2'];
+async function provaHälsningen(page, vem) {
+  const i = (new Date().getDay() + 6) % 7;
+  await page.waitForFunction(() => {
+    const b = document.querySelector('#vy-hero .vy-hero-still');
+    return b && b.complete;
+  }, null, { timeout: 5000 }).catch(() => {});
+  const dag = (await text(page, '#vy-hero .vy-hero-dag')).trim();
+  prova(vem + ': hälsningen säger veckodagen', dag.startsWith(VECKODAGAR[i] + ' '), dag);
+  const b = await page.evaluate(() => {
+    const el = document.querySelector('#vy-hero .vy-hero-still');
+    return el ? { src: el.getAttribute('src'), w: el.naturalWidth, pos: el.style.objectPosition } : null;
+  });
+  prova(vem + ': dagens bild, och den finns', b && b.src === 'bilder/' + DAGENS_BILD[i] + '-1280.webp' && b.w > 0 && !!b.pos,
+    JSON.stringify(b));
+  const film = await page.locator('#vy-hero video').count();
+  prova(vem + ': filmen bara på måndagen', i === 0 ? true : film === 0, film + ' filmer');
+}
 const text = (page, sel) => page.locator(sel).first().textContent().catch(() => '');
 const vänta = ms => new Promise(r => setTimeout(r, ms));
+
+/* Tummens 44 px mäts i hela pixlar: en sektion som just visats glider in
+   (vy-in), och under tiden kan rektangeln bli 43,9999 px för en knapp som
+   är 44. */
 
 /* ============ barnets vy ============ */
 /* Det enda barnets vy får fråga databasen om (nexlax_for_barnet lade
@@ -343,8 +370,17 @@ async function provaBarnvyn(webb) {
     await page.click('#bv-logga-in');
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
     prova('barn: rätt lösenord öppnar vyn', await synlig(page, '#view-app'));
-    prova('barn: hälsningen', (await text(page, '#bv-rubrik')) === 'Hej, Alva!', await text(page, '#bv-rubrik'));
-    prova('barn: studiehjälparens förnamn', (await text(page, '#bv-lede')).includes('Du pluggar med Sara.'));
+    prova('barn: hälsningen', /^(Godmorgon|Goddag|Godkväll), Alva\.$/.test(await text(page, '#vy-hero h1')), await text(page, '#vy-hero h1'));
+    prova('barn: studiehjälparens förnamn', (await text(page, '#vy-hero .vy-hero-lede')).includes('Du pluggar med Sara.'));
+    await provaHälsningen(page, 'barn');
+    prova('barn: hälsningens kort visar nästa pass', (await text(page, '#vy-hero .vy-hero-kort')).includes('Nästa pass'),
+      await text(page, '#vy-hero .vy-hero-kort'));
+    const meny = await page.$$eval('#vy-sido a', a => a.filter(x => !x.hidden).map(x => x.textContent.replace(/\d+/g, '').trim()));
+    prova('barn: menyn har Översikt, NexLäx, Meddelanden och Profil och inget mer',
+      meny.join(',') === 'Översikt,NexLäx,Meddelanden,Profil', meny.join(','));
+    prova('barn: Översikt är framme', await synlig(page, 'section[data-sek="oversikt"]'));
+    prova('barn: en ny i Meddelanden står i menyn', (await text(page, '#vy-sido a[data-sek="meddelanden"] .vy-sido-mark')) === '1',
+      await text(page, '#vy-sido a[data-sek="meddelanden"]'));
     prova('barn: två kommande pass', (await page.locator('#bv-kommande .vy-rad').count()) === 2);
     prova('barn: ett önskat pass väntar på svar', (await text(page, '#bv-kommande')).includes('Väntar på svar'));
     prova('barn: timmarna', (await text(page, '#bv-timmar')).includes('12') && (await text(page, '#bv-timmar')).includes('timme bokade framåt'),
@@ -352,26 +388,39 @@ async function provaBarnvyn(webb) {
     prova('barn: studieplanen', (await text(page, '#bv-plan')).includes('Klara bråk inför provet'));
     prova('barn: genomförda pass', (await page.locator('#bv-genomforda .vy-rad').count()) === 1);
     prova('barn: rapporterna syns inte när föräldern inte slagit på dem', !(await synlig(page, '#bv-rapporter-del')));
-    prova('barn: frågan till föräldern står kvar', (await text(page, '.bv-fraga')).trim() === 'Vill du ändra något? Fråga din förälder.');
+    prova('barn: frågan till föräldern står kvar', (await text(page, 'section[data-sek="profil"] .bv-fraga')).trim() === 'Vill du ändra något? Fråga din förälder.');
     prova('barn: text ur databasen ritas som text, inte som html',
       (await page.locator('#view-app img[data-elak]').count()) === 0
       && (await text(page, '#bv-notiser')).includes('<img src=x data-elak=1>'));
-    const hela = await page.locator('#view-app').innerText();
+    const hela = await page.locator('#view-app').textContent();
     prova('barn: inga priser, inga betalningar, inga länkar ut',
       !/\bkr\b|betal|faktura|erbjud|klippkort|timbank/i.test(hela)
-      && (await page.locator('#view-app a').count()) === 0, hela.slice(0, 200));
+      && (await page.locator('#view-app a:not([href^="#"])').count()) === 0, hela.slice(0, 200));
     prova('barn: bara barnets egna funktioner och Auth frågades',
       S.logg.filter(r => r.väg.startsWith('/rest/')).every(r => BARNETS_FUNKTIONER.test(r.väg)),
       S.logg.filter(r => r.väg.startsWith('/rest/')).map(r => r.väg).join(', '));
-    prova('barn: utan barn_nexlax i databasen står NexLäx dold', !(await synlig(page, '#bv-nexlax')));
     await bild(page, 'barn-vyn-ljus');
+    await page.click('#vy-sido a[data-sek="nexlax"]');
+    await page.waitForSelector('section[data-sek="nexlax"]:not([hidden])', { timeout: 3000 }).catch(() => {});
+    prova('barn: utan barn_nexlax i databasen säger NexLäx det', !(await synlig(page, '#bv-nexlax'))
+      && (await text(page, '#bv-nl-tom')).includes('går inte att öppna'), await text(page, '#bv-nl-tom'));
 
-    /* 3. Läst. */
+    /* 3. Meddelanden och Läst. */
+    await page.click('#vy-sido a[data-sek="meddelanden"]');
+    await page.waitForSelector('section[data-sek="meddelanden"]:not([hidden])', { timeout: 3000 }).catch(() => {});
+    prova('barn: Meddelanden visar notiserna', await synlig(page, '#bv-notiser .bv-notis'));
+    prova('barn: Meddelanden säger hur man frågar studiehjälparen', (await text(page, '#bv-skriva')).includes('be din förälder'));
+    await bild(page, 'barn-vyn-meddelanden');
     await page.click('[data-bv-last="notis-1"]');
     await vänta(300);
     const läst = S.logg.find(r => r.väg === '/rest/v1/rpc/barn_markera_last');
     prova('barn: Läst skickar notisens id', läst && läst.kropp && läst.kropp.p_id === 'notis-1', JSON.stringify(läst && läst.kropp));
     prova('barn: den lästa notisen har ingen knapp längre', (await page.locator('[data-bv-last]').count()) === 0);
+    prova('barn: siffran i menyn går när den är läst', (await page.locator('#vy-sido .vy-sido-mark').count()) === 0);
+    await page.click('#vy-sido a[data-sek="profil"]');
+    await page.waitForSelector('section[data-sek="profil"]:not([hidden])', { timeout: 3000 }).catch(() => {});
+    prova('barn: Profil utan barn_installningar visar namnet', (await text(page, '#bv-inst')).includes('Alva'), await text(page, '#bv-inst'));
+    prova('barn: Profil har Logga ut', await synlig(page, 'section[data-sek="profil"] [data-logout]'));
     prova('barn: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
     await context.close();
   }
@@ -399,8 +448,10 @@ async function provaBarnvyn(webb) {
     prova(namn + ': ingen sidledsscroll', bredd <= 0, bredd + ' px');
     if (namn.includes('telefon')) {
       const små = await page.evaluate(() => Array.from(document.querySelectorAll('#view-app button, #nav-actions button'))
-        .filter(b => b.offsetParent).map(b => b.getBoundingClientRect()).filter(r => r.height < 44).length);
+        .filter(b => b.offsetParent).map(b => b.getBoundingClientRect()).filter(r => Math.round(r.height) < 44).length);
       prova(namn + ': tryckytorna är minst 44 px', små === 0, små + ' knappar lägre än 44 px');
+      const meny = await page.$$eval('#vy-sido a', a => a.map(x => x.getBoundingClientRect().height).filter(h => Math.round(h) < 44).length);
+      prova(namn + ': menyns poster är minst 44 px', meny === 0, meny + ' lägre');
     }
     if (namn.includes('mork')) {
       const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -482,6 +533,7 @@ async function provaBarnpanelen(webb) {
   await page.goto(BAS + '/foralder#profil/barn');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
   prova('förälder: vyn laddar', await synlig(page, '#view-app'));
+  await provaHälsningen(page, 'förälder');
   const flik = page.locator('section[data-sek="profil"] .vy-flik[data-flik="barn"]');
   if (await flik.count()) await flik.click();
   await page.waitForSelector('#bi-ruta:not([hidden])', { timeout: 5000 }).catch(() => {});
@@ -605,7 +657,7 @@ async function provaBarnetsNexlax(webb) {
   {
     const { rpc, anrop } = nexlaxRpc();
     const { context, page, S, riktiga, konsol } = await öppna(webb, { rpc, inloggad: 'barnkonto-1' });
-    await page.goto(BAS + '/barn');
+    await page.goto(BAS + '/barn#nexlax');
     await page.waitForSelector('#bv-nexlax:not([hidden])', { timeout: 8000 }).catch(() => {});
     prova('barn nexlax: sektionen syns', await synlig(page, '#bv-nexlax'));
     await page.waitForFunction(() => /Jämför bråk/.test(document.querySelector('#bv-nl-vag').textContent), null, { timeout: 5000 }).catch(() => {});
@@ -662,9 +714,9 @@ async function provaBarnetsNexlax(webb) {
       && (await page.getAttribute('#bv-flik-vag', 'aria-selected')) === 'false' && !(await synlig(page, '#bv-panel-vag')));
     await bild(page, 'barn-nexlax-utveckling');
 
-    const hela = await page.locator('#view-app').innerText();
+    const hela = await page.locator('#view-app').textContent();
     prova('barn nexlax: inga priser, inga betalningar, inga länkar ut',
-      !/\bkr\b|betal|faktura|erbjud|klippkort|timbank/i.test(hela) && (await page.locator('#view-app a').count()) === 0,
+      !/\bkr\b|betal|faktura|erbjud|klippkort|timbank/i.test(hela) && (await page.locator('#view-app a:not([href^="#"])').count()) === 0,
       hela.slice(0, 160));
     prova('barn nexlax: bara barnets egna funktioner frågades',
       S.logg.filter(r => r.väg.startsWith('/rest/')).every(r => BARNETS_FUNKTIONER.test(r.väg)),
@@ -682,14 +734,14 @@ async function provaBarnetsNexlax(webb) {
   ]) {
     const { rpc } = nexlaxRpc();
     const { context: c, page } = await öppna(webb, { rpc, inloggad: 'barnkonto-1', context });
-    await page.goto(BAS + '/barn');
+    await page.goto(BAS + '/barn#nexlax');
     await page.waitForSelector('#bv-nexlax:not([hidden])', { timeout: 8000 }).catch(() => {});
     await page.waitForFunction(() => /Jämför bråk/.test(document.querySelector('#bv-nl-vag').textContent), null, { timeout: 5000 }).catch(() => {});
     const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     prova(namn + ': ingen sidledsscroll', bredd <= 0, bredd + ' px');
     const små = await page.evaluate(() => Array.from(document.querySelectorAll('#bv-nexlax button'))
       .filter(b => b.offsetParent).map(b => ({ t: b.textContent.trim().slice(0, 20), h: b.getBoundingClientRect().height }))
-      .filter(r => r.h < 44));
+      .filter(r => Math.round(r.h) < 44));
     prova(namn + ': tryckytorna i NexLäx är minst 44 px', små.length === 0, JSON.stringify(små).slice(0, 200));
     await bild(page, namn);
     await c.close();
@@ -713,6 +765,9 @@ async function provaFamiljensInloggning(webb) {
     await page.click('[data-auth="up"]');
     prova('familjen: och E-post när man skapar konto', (await etikett()) === 'E-post', await etikett());
     await page.click('[data-auth="in"]');
+    const roller = await page.$$eval('.vy-roll b', b => b.map(x => x.textContent.trim()));
+    prova('familjen: rollvalet är Förälder, Elev och Studiehjälpare', roller.join(',') === 'Förälder,Elev,Studiehjälpare', roller.join(','));
+    prova('familjen: Elev leder till barnets inloggning', (await page.getAttribute('.vy-roll:nth-child(2)', 'href')) === '/barn');
     await bild(page, 'familjen-inloggning');
 
     await page.click('#auth-submit');
@@ -739,7 +794,7 @@ async function provaFamiljensInloggning(webb) {
     await page.waitForURL(/\/barn$/, { timeout: 5000 }).catch(() => {});
     prova('familjen: barnets användarnamn leder till /barn', /\/barn$/.test(page.url()), page.url());
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
-    prova('familjen: barnets vy öppnas inloggad', (await text(page, '#bv-rubrik')) === 'Hej, Alva!', await text(page, '#bv-rubrik'));
+    prova('familjen: barnets vy öppnas inloggad', /, Alva\.$/.test(await text(page, '#vy-hero h1')), await text(page, '#vy-hero h1'));
     const familjens = S.logg.filter(r => /^\/rest\/v1\/(profiles|students|bookings|lesson_reports)/.test(r.väg));
     prova('familjen: inget av familjens hämtades', familjens.length === 0, familjens.map(r => r.väg).join(', '));
     prova('familjen: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
@@ -1188,7 +1243,7 @@ async function provaBarnetsEpost(webb) {
     const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     prova('e-post förälder telefon: ingen sidledsscroll', bredd <= 0, bredd + ' px');
     const små = await page.evaluate(() => Array.from(document.querySelectorAll('.bi-epost button'))
-      .filter(b => b.offsetParent).map(b => b.getBoundingClientRect()).filter(r => r.height < 44).length);
+      .filter(b => b.offsetParent).map(b => b.getBoundingClientRect()).filter(r => Math.round(r.height) < 44).length);
     prova('e-post förälder telefon: knapparna är minst 44 px', små === 0, små + ' lägre');
     await page.locator('.bi-epost').first().scrollIntoViewIfNeeded().catch(() => {});
     await bild(page, 'epost-foralder-telefon', '.bi-kort[data-bi="barn-1"]');
@@ -1233,7 +1288,7 @@ async function provaBarnetsEpost(webb) {
       })
     });
     await page.goto(BAS + '/barn#installningar');
-    await page.waitForSelector('#installningar:not([hidden])', { timeout: 5000 }).catch(() => {});
+    await page.waitForSelector('section[data-sek="profil"]:not([hidden])', { timeout: 5000 }).catch(() => {});
     prova('e-post barnet: Inställningar syns, med användarnamnet och adressen',
       (await text(page, '#bv-inst')).includes('alva.a') && (await text(page, '#bv-inst')).includes('alva@example.org'),
       await text(page, '#bv-inst'));
@@ -1243,7 +1298,8 @@ async function provaBarnetsEpost(webb) {
        och rubriken ska inte ligga under sidhuvudet. */
     const [topp, rullat, höjd] = await page.evaluate(() =>
       [document.querySelector('#installningar').getBoundingClientRect().top, window.scrollY, window.innerHeight]);
-    prova('e-post barnet: länken Ändra dina val går till inställningarna', rullat > 0 && topp >= 70 && topp < höjd - 100,
+    prova('e-post barnet: länken Ändra dina val går till inställningarna', rullat > 0 && topp >= 70 && topp < höjd - 100
+      && await synlig(page, 'section[data-sek="profil"]') && (await page.evaluate(() => location.hash)) === '#profil',
       topp + ' px, rullat ' + rullat);
     await page.click('#bv-inst [data-bv-val="barn_pass_bokat"]');
     await page.waitForFunction(() => document.querySelector('#bv-inst [data-bv-val="barn_pass_bokat"]').getAttribute('aria-pressed') === 'false',
@@ -1268,8 +1324,8 @@ async function provaBarnetsEpost(webb) {
         && (await page.$$eval('#bv-inst [data-bv-val]', b => b.every(x => !x.disabled)))]
   ]) {
     const { context, page } = await öppna(webb, { inloggad: 'barnkonto-1', rpc: barnRpc({ barn_installningar: () => inst(o) }) });
-    await page.goto(BAS + '/barn');
-    await page.waitForSelector('#installningar:not([hidden])', { timeout: 5000 }).catch(() => {});
+    await page.goto(BAS + '/barn#profil');
+    await page.waitForSelector('section[data-sek="profil"]:not([hidden])', { timeout: 5000 }).catch(() => {});
     prova('e-post barnet, ' + namn, await koll(page), await text(page, '#bv-inst'));
     await context.close();
   }
@@ -1278,13 +1334,14 @@ async function provaBarnetsEpost(webb) {
     ['epost-barnet-telefon-mork', { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, colorScheme: 'dark' }]
   ]) {
     const { context: c, page } = await öppna(webb, { inloggad: 'barnkonto-1', context, rpc: barnRpc({ barn_installningar: () => inst() }) });
-    await page.goto(BAS + '/barn');
-    await page.waitForSelector('#installningar:not([hidden])', { timeout: 5000 }).catch(() => {});
+    await page.goto(BAS + '/barn#profil');
+    await page.waitForSelector('section[data-sek="profil"]:not([hidden])', { timeout: 5000 }).catch(() => {});
     const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     prova(namn + ': ingen sidledsscroll', bredd <= 0, bredd + ' px');
     const små = await page.evaluate(() => Array.from(document.querySelectorAll('#installningar button'))
-      .filter(b => b.offsetParent).map(b => b.getBoundingClientRect()).filter(r => r.height < 44).length);
-    prova(namn + ': valen är minst 44 px', små === 0, små + ' lägre');
+      .filter(b => b.offsetParent).map(b => ({ t: b.textContent.trim(), h: b.getBoundingClientRect().height,
+        o: b.offsetHeight })).filter(r => Math.round(r.h) < 44));
+    prova(namn + ': valen är minst 44 px', små.length === 0, JSON.stringify(små));
     await page.locator('#installningar').scrollIntoViewIfNeeded().catch(() => {});
     await bild(page, namn, '#installningar');
     await c.close();
@@ -1345,7 +1402,7 @@ async function provaBarnetsEpost(webb) {
     await page.waitForURL(/\/barn$/, { timeout: 5000 }).catch(() => {});
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 5000 }).catch(() => {});
     prova('e-post inloggning ' + vy + ': barnets adress öppnar barnets vy',
-      /\/barn$/.test(page.url()) && (await text(page, '#bv-rubrik')) === 'Hej, Alva!', page.url() + ' ' + await text(page, '#bv-rubrik'));
+      /\/barn$/.test(page.url()) && /, Alva\.$/.test(await text(page, '#vy-hero h1')), page.url() + ' ' + await text(page, '#vy-hero h1'));
     prova('e-post inloggning ' + vy + ': Auth först, sedan barn-inloggning med adressen och lösenordet',
       ref.anrop.length === 1 && ref.anrop[0].epost === 'Alva@Example.org' && ref.anrop[0].losenord === 'alva-losen-1'
       && S.logg.some(r => r.väg === '/auth/v1/token' && r.kropp && r.kropp.email === 'Alva@Example.org'),

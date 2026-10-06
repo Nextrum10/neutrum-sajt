@@ -173,6 +173,10 @@
   color:rgba(239,230,214,.72);
   margin-bottom:12px;
 }
+/* Veckodagen (2026-10-06): bilden byts varje dag, och dagen står bredvid
+   etiketten, ljusare än den, så att den läses först. */
+.vy-hero-skilj{margin:0 .7em;color:rgba(239,230,214,.42)}
+.vy-hero-dag{color:#EFE6D6}
 .vy-hero h1{
   font-size:clamp(1.9rem,4.2vw,3rem);
   line-height:1.04;letter-spacing:-.04em;font-weight:800;
@@ -671,93 +675,98 @@
   background:var(--bl);color:var(--pap);border-color:var(--bl);font-weight:650;
 }
 
-/* Månadsväljaren (Fas 20.2, NXStudie.månadsval), ritad om 2026-09-29.
-   Ett spår som flikarna under det, men den valda månaden är mörk och
-   fliken ljus: i Betalningar står de två raderna direkt efter varandra
-   och ska inte se ut som samma rad två gånger. Varje knapp är lika hög
-   med eller utan märke, så raden står rak. Spåret rullar i sidled i
-   stället för att bryta om: tolv månader på tre rader är en vägg, inte
-   ett val. Kanten tonas med två stilla gradienter ovanpå, inte med
-   mask-image, som ritas om vid varje rullsteg i Safari (avsnitt 3,
-   startsidans punkt 3). */
-.nx-manader{
+/* Månadsväljaren i adminvyn (NXStudie.månadsval), sedan 2026-10-06 ett
+   fält: ‹ [Oktober 2026 ▾] ›. Fältet öppnar en ruta med året och dess
+   tolv månader. Förut en rad med en knapp per månad som man drog i
+   sidled, och som växte med en knapp i månaden; Leo ville se år och
+   månad på ett ställe och kunna gå flera månader och år framåt.
+
+   Fältet har fast bredd, så att pilen till höger står still när namnet
+   byter längd (fälla 4), och på en telefon fyller det bredden mellan
+   pilarna. Märket (Stängd, Utbetald) står under namnet, inne i fältets
+   44 px. Rutan ligger ovanpå sidan: inget under fältet flyttar sig när
+   den öppnas. Den valda månaden är mörk, som pillret i raden var, och
+   den innevarande har en dämpad prick, inte i lera: lera är ert drag
+   eller ett fel (INNEHÅLLET, regel 1). Pilarna är stegarens
+   (.nx-steg-pil, nedan), och TUMMEN ger dem 44 px på en telefon. */
+.nx-manadsval{
+  position:relative;
   display:flex;align-items:center;gap:6px;
   margin:0 0 18px;
 }
-.nx-manad-ram{
-  position:relative;flex:1 1 auto;min-width:0;
-  background:var(--pap-2);
-  border:1px solid var(--ln);
-  border-radius:100px;
-  overflow:hidden;
+.nx-manad-falt{
+  display:flex;align-items:center;gap:10px;
+  flex:0 0 auto;width:15rem;min-width:0;height:44px;
+  padding:0 14px 0 16px;
+  border:1px solid var(--ln);border-radius:100px;
+  background:var(--yta);color:var(--bl);
+  font:inherit;text-align:left;cursor:pointer;
+  transition:border-color .16s var(--e);
+  -webkit-tap-highlight-color:transparent;
 }
-.nx-manad-ram::before,.nx-manad-ram::after{
-  content:"";position:absolute;top:0;bottom:0;width:44px;z-index:1;
-  pointer-events:none;opacity:0;transition:opacity .2s var(--e);
+.nx-manad-falt:hover,.nx-manad-falt[aria-expanded="true"]{border-color:var(--bl-3)}
+.nx-manad-falt:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.nx-manad-falt svg{
+  flex:none;width:17px;height:17px;color:var(--bl-3);
+  fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
 }
-.nx-manad-ram::before{left:0;background:linear-gradient(90deg,var(--pap-2) 20%,transparent)}
-.nx-manad-ram::after{right:0;background:linear-gradient(270deg,var(--pap-2) 20%,transparent)}
-.nx-manad-ram.mer-vanster::before,.nx-manad-ram.mer-hoger::after{opacity:1}
-.nx-manad-spar{
+.nx-manad-falt > svg:last-child{width:15px;height:15px}
+.nx-manad-falt[aria-expanded="true"] > svg:last-child{rotate:180deg}
+.nx-manad-namn{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.15}
+.nx-manad-namn b{
+  font-size:.95rem;font-weight:650;color:var(--bl);
+  text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+@media (max-width:560px){
+  .nx-manad-falt{flex:1 1 auto;width:auto}
+}
+
+.nx-manad-ruta{
+  /* Under telefonens fasta sektionsrad (40) och toppraden (800), som
+     den annars hade lagt sig över när sidan rullas. */
+  position:absolute;z-index:30;left:0;top:calc(100% + 8px);
+  width:min(21rem,100%);
+  padding:12px 12px 6px;
+  background:var(--yta);
+  border:1px solid var(--ln);border-radius:22px;
+  box-shadow:var(--sk-2);
+}
+.nx-manad-ruta[hidden]{display:none}
+.nx-manad-arrad{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.nx-manad-aret{font-size:1.05rem;font-weight:650;color:var(--bl);font-variant-numeric:tabular-nums}
+.nx-manad-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.nx-manad-grid button{
   position:relative;
-  display:flex;align-items:center;gap:2px;
-  padding:4px;
-  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
-}
-.nx-manad-spar::-webkit-scrollbar{display:none}
-.nx-manad-spar button{
-  flex:0 0 auto;position:relative;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  height:44px;min-width:0;padding:0 16px;
-  border:none;border-radius:100px;
-  background:transparent;
-  font:inherit;font-size:.88rem;font-weight:550;line-height:1.15;color:var(--bl-2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  height:52px;min-width:0;padding:0 6px;
+  border:0;border-radius:16px;
+  background:transparent;color:var(--bl-2);
+  font:inherit;font-size:.9rem;font-weight:550;line-height:1.15;
   cursor:pointer;
   transition:background .16s var(--e),color .16s var(--e);
+  -webkit-tap-highlight-color:transparent;
 }
-.nx-manad-spar button span{text-transform:capitalize;white-space:nowrap}
-.nx-manad-spar button:hover{background:var(--pap);color:var(--bl)}
-.nx-manad-spar button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-/* Den innevarande månaden: en dämpad prick i hörnet, inte en kant runt,
-   och inte i lera: lera är ert drag eller ett fel (INNEHÅLLET, regel 1).
-   På den valda syns den inte, där säger pillret redan var man är. */
-.nx-manad-spar button[data-denna]:not([aria-pressed="true"])::after{
-  content:"";position:absolute;top:6px;right:6px;
+.nx-manad-grid button span{text-transform:capitalize;white-space:nowrap}
+.nx-manad-grid button:hover:not(:disabled){background:var(--tint);color:var(--bl)}
+.nx-manad-grid button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.nx-manad-grid button:disabled{opacity:.35;cursor:default}
+.nx-manad-grid button[data-denna]:not([aria-pressed="true"])::after{
+  content:"";position:absolute;top:7px;right:9px;
   width:5px;height:5px;border-radius:50%;background:var(--bl-3);
 }
-.nx-manad-spar button[aria-pressed="true"]{
+.nx-manad-grid button[aria-pressed="true"]{
   background:var(--bl);color:var(--pap);font-weight:650;
-  box-shadow:0 1px 3px rgba(46,42,32,.18);
 }
-/* Årtalet står i raden där det byts, med ett streck före. */
-.nx-manad-ar{
-  flex:0 0 auto;align-self:stretch;
-  display:flex;align-items:center;
-  padding:0 6px 0 12px;
-  font-size:.7rem;font-weight:650;letter-spacing:.06em;color:var(--bl-3);
-}
-.nx-manad-ar:not(:first-child){border-left:1px solid var(--ln-2);margin-left:6px}
-.nx-manad-ar:first-child{padding-left:10px}
-.nx-manad-pil{
-  flex:0 0 auto;display:grid;place-items:center;
-  width:40px;height:40px;padding:0;
-  border:1px solid var(--ln);border-radius:50%;
-  background:var(--pap-2);color:var(--bl);
+.nx-manad-nu{
+  display:block;width:100%;min-height:44px;margin-top:6px;
+  border:0;border-top:1px solid var(--ln);background:none;
+  font:inherit;font-size:.86rem;font-weight:600;color:var(--acc-lugn);
   cursor:pointer;
-  transition:border-color .16s var(--e),opacity .16s var(--e);
 }
-.nx-manad-pil svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.nx-manad-pil:hover:not(:disabled){border-color:var(--bl-3)}
-.nx-manad-pil:disabled{opacity:.35;cursor:default}
-.nx-manad-stilla .nx-manad-pil{display:none}
-.nx-manad-stilla .nx-manad-ram{flex:0 1 auto}
-/* På en telefon drar man i spåret, och pilarna tar 90 px av 360. Den
-   tonade kanten säger fortfarande att det finns mer. */
-@media (max-width:560px), (pointer:coarse){
-  .nx-manad-pil{display:none}
-  .nx-manad-spar button{padding:0 13px}
-}
-/* Märket (t.ex. "Stängd" i adminvyn) står under namnet, i knappen. */
+.nx-manad-nu:hover{color:var(--acc)}
+.nx-manad-nu:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:12px}
+/* Märket (t.ex. "Stängd" i adminvyn) står under namnet, i fältet och i
+   rutans knappar. */
 .nx-manad-marke{
   font-style:normal;font-size:.6rem;font-weight:650;letter-spacing:.05em;
   text-transform:uppercase;opacity:.7;line-height:1;
@@ -957,6 +966,49 @@ table.adm .adm-tal{
 .adm-status.ar-vantar::before{background:var(--ockra,#C08A2E);opacity:1}
 .adm-status.ar-klar{background:var(--mossa-soft);color:var(--mossa-text)}
 .adm-status.ar-klar::before{background:var(--mossa,#9DAD86);opacity:1}
+
+/* Lägesväljaren (2026-10-06, lägesväljare i nextrum-admin-karna.js).
+   Läget sätts med märkena själva: det valda ser ut som .adm-status i
+   listan, de andra är tomma ringar med en blek prick i sin egen färg,
+   så att man ser vad man får innan man trycker. Rörelsen står i
+   KÄNSLAN och tryckytan i TUMMEN, bredvid .vy-val. */
+.adm-lage{display:flex;flex-wrap:wrap;gap:6px}
+.adm-lage > button{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 13px 7px 11px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  background:transparent;
+  font:inherit;font-size:.8rem;font-weight:600;line-height:1.1;
+  color:var(--bl-3);
+  cursor:pointer;white-space:nowrap;
+}
+.adm-lage > button::before{
+  content:"";width:7px;height:7px;border-radius:50%;flex:none;
+  background:var(--bl-3);opacity:.4;
+}
+.adm-lage > .ar-ny::before{background:var(--acc)}
+.adm-lage > .ar-vantar::before{background:var(--ockra,#C08A2E)}
+.adm-lage > .ar-klar::before{background:var(--mossa,#9DAD86)}
+.adm-lage > button:hover{border-color:var(--bl-3);color:var(--bl)}
+.adm-lage > button:hover::before{opacity:1}
+.adm-lage > button[aria-pressed="true"]{
+  background:var(--bricka);border-color:transparent;color:var(--bl);cursor:default;
+}
+.adm-lage > button[aria-pressed="true"]::before{opacity:1}
+/* Det valda läget är ingen knapp att trycka på: ett tryck gör ingenting,
+   så det sjunker inte heller (trycket i KÄNSLAN väger 0,4,1). */
+.vy .adm-lage > button[aria-pressed="true"]:active:not(:disabled){scale:none}
+.adm-lage > .ar-ny[aria-pressed="true"]{background:var(--acc-soft);color:var(--acc-lugn)}
+.adm-lage > .ar-vantar[aria-pressed="true"]{background:var(--ockra-soft);color:var(--ockra-text)}
+.adm-lage > .ar-klar[aria-pressed="true"]{background:var(--mossa-soft);color:var(--mossa-text)}
+/* I panelen står knapparna under läget, inte bredvid: fyra märken och
+   två knappar på en rad bröts mitt i lägena. */
+.adm-lage + .dp-atgard{margin-top:12px}
+/* I en tabell på en rad och tätare, och Skicka underlag under läget. */
+table.adm .adm-lage{flex-wrap:nowrap;gap:4px}
+table.adm .adm-lage > button{padding:5px 10px 5px 9px;font-size:.76rem}
+table.adm td.adm-atg .adm-lage{justify-content:flex-end}
+table.adm td.adm-atg .adm-lage + .btn{margin-top:8px}
 
 /* Nyckeltalen överst. Samma idé som .kpi i vy-lagret, men de får
    vara fler och smalare — ledningen läser åtta tal, familjen tre. */
@@ -3456,7 +3508,7 @@ a:has(> .adm-status){
    tillbaka när det släpper. Nedtrycket är snabbt (90 ms), släppet
    långsamt och studsande — det är skillnaden mellan en knapp som
    känns och en som bara byter färg. */
-.vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
+.vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .adm-lage > button, .mv-dag, .bk-slot,
                        .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a){
   transition:
     background-color .22s var(--e), color .22s var(--e),
@@ -3472,7 +3524,7 @@ a:has(> .adm-status){
 /* Små runda saker trycks djupare: 96 % av en dag i kalendern syns
    knappt, och en knapp över halva skärmen hade rört sig en centimeter
    på 92 %. */
-.vy :is(.mv-dag, .bk-slot, .bk-pil, .chip, .vy-val button):active:not(:disabled){
+.vy :is(.mv-dag, .bk-slot, .bk-pil, .chip, .vy-val button, .adm-lage > button):active:not(:disabled){
   scale:.9;
   transition-duration:.09s;
 }
@@ -3493,7 +3545,7 @@ a:has(> .adm-status){
 }
 
 @media (prefers-reduced-motion:reduce){
-  .vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
+  .vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .adm-lage > button, .mv-dag, .bk-slot,
                          .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang]):active{scale:none}
   .vy :is(.vy-sek, .vy-flik-panel){animation:none !important}
 }
@@ -4164,7 +4216,7 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    ytorna rätt.
    ============================================================ */
 @media (max-width:560px), (pointer:coarse){
-  .vy :is(.btn-sm, .sel-sm, .vy-flik, .bk-slot, .vy-val button, .sch-val button, .chip, .pl-mer){min-height:44px}
+  .vy :is(.btn-sm, .sel-sm, .vy-flik, .bk-slot, .vy-val button, .adm-lage > button, .sch-val button, .chip, .pl-mer){min-height:44px}
   .vy :is(.btn-sm, .bk-slot, .vy-val button, .sch-val button, .chip){display:inline-flex;align-items:center;justify-content:center}
 
   /* Länkar i löptext och rubrikrader: ytan växer, raden står kvar. */
@@ -4622,12 +4674,13 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .kor-hand > summary{padding:12px 0}
 
 /* ============================================================
-   BARNETS VY (barn.html, barnkonton_och_admin)
-   En spalt, samma kort och rader som studievyn. Ingen sidomeny och
-   ingen hälsningsfilm: vyn har sju saker att visa och en av dem är
-   hälsningen. Bara tokens, så att mörkt läge följer med av sig självt.
+   BARNETS VY, ELEVVYN (barn.html, barnkonton_och_admin)
+   Samma skal som studievyn sedan 2026-10-06: hälsningen med dagens
+   bild överst och en sidomeny med fyra delar (Översikt, NexLäx,
+   Meddelanden och Profil). Förut en spalt utan meny och utan bild.
+   Samma kort och rader som studievyn, och bara tokens, så att mörkt
+   läge följer med av sig självt.
    ============================================================ */
-.vy-barn .bv{max-width:760px;margin-inline:auto}
 /* Ingen meny bakom tre streck här: namnet och Logga ut står kvar i
    sidhuvudet i alla bredder, längst till höger. På en smal telefon går
    namnet, för hälsningen säger det redan. */
@@ -4636,15 +4689,6 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 /* En grupp som står först i sin del har ingen luft ovanför sig
    (.vy-grupp:first-child); rapporterna ligger i en egen del. */
 .bv-del > .vy-grupp:first-child{margin-top:30px}
-.bv-hej{margin:0 0 clamp(22px,3vw,34px)}
-.bv-hej h1{
-  margin:14px 0 0;
-  font-size:clamp(2rem,5vw,3rem);line-height:1.04;letter-spacing:-.04em;font-weight:800;
-  color:var(--bl);
-}
-.bv-hej h1:focus{outline:none}
-.bv-lede{margin-top:10px;max-width:52ch;font-size:1rem;line-height:1.55;color:var(--bl-2)}
-.bv-lede:empty{display:none}
 
 /* Två tal bredvid varandra, under varandra på en smal telefon. */
 .bv-timmar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -4686,9 +4730,9 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 #bv-inst .nx-nval:first-of-type{border-top:1px solid var(--ln);padding-top:13px}
 #bv-inst-msg:empty{display:none}
 #bv-inst-msg{margin-top:12px}
-/* Länken "Ändra dina val" i ett mejl hoppar hit: rubriken ska hamna
-   under sidhuvudet (70 px, fast), inte bakom det. */
-.vy-barn #installningar{scroll-margin-top:86px}
+/* Länken "Ändra dina val" i ett mejl hoppar förbi hälsningen hit: menyn
+   och Profil ska hamna under sidhuvudet (fast), inte bakom det. */
+.vy-barn .vy-layout{scroll-margin-top:86px}
 /* Bekräftelsen av adressen: samma kort som inloggningen, utan formulär
    mellan texten och knappen. */
 #bv-bek-knapp{margin-top:24px}
@@ -4697,6 +4741,9 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   margin:clamp(30px,4vw,44px) 0 0;padding:16px 18px;border-radius:18px;
   background:var(--tint);color:var(--bl-2);font-size:.95rem;line-height:1.55;text-align:center;
 }
+/* Meddelanden har bara listan ovanför sig, och Profil sin knapp under. */
+#bv-skriva{margin-top:clamp(18px,2.4vw,26px)}
+.bv-ut{margin-top:18px;justify-content:center}
 
 /* ============================================================
    ADMINHANTERINGEN (System → Adminhantering, barnkonton_och_admin)

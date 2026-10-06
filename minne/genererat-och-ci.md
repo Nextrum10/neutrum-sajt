@@ -122,7 +122,7 @@ Körs på varje push och PR. Ska vara grön före merge.
    inloggningen (`nextrum-studie.js` sedan 2026-10-01, delad av alla
    fyra vyerna) och föräldrarnas ruta (barnkonton_och_admin)
 6. `verktyg/kolla-webp.py`, och `verktyg/kolla-mejltexter.py` (2026-10-05):
-   nejet som rullgardinen Avböjd visar (`NEJ_MEJLET` i
+   nejet som läget Avböjd visar (`NEJ_MEJLET` i
    `nextrum-admin-rekrytering.js`) är samma som mejlet (`NEJ` i
    `_delad/notiser/ansokan.ts`), fält för fält
 7. `verktyg/satt-version.py --kolla`

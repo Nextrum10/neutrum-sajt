@@ -9,17 +9,17 @@
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
 
 === bli-studiehjalpare.html  ->  en/bli-studiehjalpare.html
-  STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
 
 === faq.html  ->  en/faq.html
-  STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
 
 === for-elever-och-foraldrar.html  ->  en/for-elever-och-foraldrar.html
-  STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
-  TEXTNODER: sv 428 vs en 426 — engelskan har inte följt med
+  TEXTNODER: sv 430 vs en 428 — engelskan har inte följt med
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
@@ -42,13 +42,13 @@
       __stripe_sid
 
 === priser.html  ->  en/priser.html
-  STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
 
 === sa-fungerar-nextrum.html  ->  en/sa-fungerar-nextrum.html
-  STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
 
 === var-ide.html  ->  en/var-ide.html
-  STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
+  STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
 
 12 av 12 sidpar har avvikelser.
 

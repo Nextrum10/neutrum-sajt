@@ -19,7 +19,15 @@
    ändra något om sig själv. Allt sådant gör föräldern, och vyn säger det.
    Det barnet gör själv är NexLäx och bocken på en vanlig uppgift.
 
-   BARNETS EGEN E-POST (barnets_epost). Under Inställningar ser barnet
+   ELEVVYN (2026-10-06). Samma skal som studievyn: hälsningen överst
+   (NXArbete.hero, med dagens bild och veckodagen) och en sidomeny med
+   fyra delar och inget mer: Översikt (timmarna, passen, studieplanen och
+   rapporterna), NexLäx, Meddelanden (det Nextrum berättar om passen,
+   barn_notiser; ingen chatt) och Profil (inställningarna). Leo: "På
+   elevvyn ska bara Översikt, nexläx, meddelanden, och profil för barnet
+   finnas."
+
+   BARNETS EGEN E-POST (barnets_epost). Under Profil ser barnet
    sitt användarnamn och sin adress, och väljer bort mejl det inte vill
    ha (barn_installningar, barn_notisval), när föräldern slagit på dem.
    Länken i bekräftelsemejlet öppnar vyn med ?bekrafta=, och då visas
@@ -30,7 +38,7 @@
   const { $, datumText } = NX;
 
   const VYER = ['view-loading', 'view-auth', 'view-bekrafta', 'view-annan', 'view-stopp', 'view-app', 'view-fel'];
-  const S = { user: null, data: null, notiser: [], inst: null, hämtad: 0, laddar: false, tillVal: false };
+  const S = { user: null, data: null, notiser: [], inst: null, hämtad: 0, laddar: false, hero: null, sido: null, tillVal: false };
 
   function visa(id) { NXStudie.visaVy(VYER, id); }
 
@@ -160,11 +168,11 @@
       ritaHuvud(d.fornamn || null);
       ritaAllt();
       visa('view-app');
-      /* Länken "Ändra dina val" i ett mejl: rakt till inställningarna,
-         en gång, utan mjuk scrollning. */
-      if (S.tillVal && S.inst) {
+      /* Länken "Ändra dina val" i ett mejl: förbi hälsningen, rakt till
+         Profil, en gång och utan mjuk scrollning. */
+      if (S.tillVal) {
         S.tillVal = false;
-        $('#installningar').scrollIntoView({ block: 'start' });
+        $('#view-app .vy-layout').scrollIntoView({ block: 'start' });
       }
       /* NexLäx väntar inte resten av vyn in: banan ritas när den kommer. */
       laddaNexlax();
@@ -186,6 +194,7 @@
 
   /* ============ vyn ============ */
   function ritaAllt() {
+    ritaSkalet();
     ritaHej();
     ritaTimmar();
     ritaKommande();
@@ -208,11 +217,16 @@
   };
 
   function ritaInställningar() {
-    const del = $('#installningar'), host = $('#bv-inst');
+    const host = $('#bv-inst');
     const i = S.inst;
-    if (!del || !host) return;
-    if (!i) { del.hidden = true; return; }
-    del.hidden = false;
+    if (!host) return;
+    /* Utan barn_installningar i databasen står namnet ur översikten,
+       och resten av Profil som förut. */
+    if (!i) {
+      host.replaceChildren(el('dl', { class: 'bi-fakta' },
+        el('dt', {}, 'Inloggad som'), el('dd', {}, (S.data && S.data.fornamn) || 'Elev')));
+      return;
+    }
 
     const fakta = el('dl', { class: 'bi-fakta' },
       el('dt', {}, 'Användarnamn'), el('dd', {}, i.anvandarnamn || ''));
@@ -262,11 +276,51 @@
     ritaInställningar();
   });
 
+  /* ============ skalet ============
+     Hälsningen och sidomenyn ritas en gång, när namnet har kommit: att
+     rita hälsningen om vid varje hämtning hade startat om dagens bild.
+     Det som ändras (nästa pass, nya meddelanden) går genom
+     S.hero.uppdatera() i ritaHej(). */
+  const IKON_ELEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/>'
+    + '<path d="M6.5 11v4.3c0 1.5 2.5 2.9 5.5 2.9s5.5-1.4 5.5-2.9V11"/><path d="M21.5 9v5"/></svg>';
+
+  function ritaSkalet() {
+    if (S.sido) return;
+    /* Länken "Ändra dina val" i mejlen pekar på #installningar, som
+       står under Profil. replaceState utlöser ingen hashchange, och
+       sidomenyn läser adressen först när den skapas nedan. */
+    if (location.hash === '#installningar') {
+      S.tillVal = true;
+      history.replaceState(history.state, '', '#profil');
+    }
+    S.sido = NXStudie.sidomeny({ nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt' });
+    const d = S.data;
+    S.hero = NXArbete.hero({
+      host: $('#vy-hero'),
+      namn: d.fornamn,
+      etikett: 'Elevvy',
+      lede: (d.studiehjalpare ? 'Du pluggar med ' + d.studiehjalpare + '. ' : '')
+        + 'Här gör du NexLäx och ser dina pass och vad som hänt.',
+      marke: { text: 'Elev', ikon: IKON_ELEV }
+    });
+  }
+
+  /* Korten i hälsningen: nästa pass och meddelandena. */
   function ritaHej() {
     const d = S.data;
-    $('#bv-rubrik').textContent = d.fornamn ? 'Hej, ' + d.fornamn + '!' : 'Hej!';
-    $('#bv-lede').textContent = (d.studiehjalpare ? 'Du pluggar med ' + d.studiehjalpare + '. ' : '')
-      + 'Här gör du NexLäx och ser dina pass, din studieplan och vad som hänt.';
+    const nästa = (d.kommande || [])[0];
+    const olästa = (S.notiser || []).filter(n => !n.last_at).length;
+    if (S.sido) S.sido.märke('meddelanden', olästa);
+    if (!S.hero) return;
+    S.hero.uppdatera({
+      namn: d.fornamn,
+      nasta: nästa
+        ? { href: '#oversikt', text: 'Nästa pass · ' + dag(nästa.datum, nästa.tid),
+            under: [nästa.amne, nästa.status === 'confirmed' ? 'Bekräftat' : 'Väntar på svar'].filter(Boolean).join(' · ') }
+        : { href: '#oversikt', text: 'Inga pass bokade just nu', under: 'När din förälder bokat ett pass står det här' },
+      chatt: { href: '#meddelanden', text: 'Meddelanden',
+        under: olästa ? olästa + ' ny' + (olästa > 1 ? 'a' : '') : 'Från Nextrum om dina pass' }
+    });
   }
 
   /* Timmarna räknas ur passen: genomförda är pass med en rapport där
@@ -342,6 +396,7 @@
       if (n) n.last_at = new Date().toISOString();
     });
     ritaNotiser();
+    ritaHej();
   });
 
   function ritaPlan() {
@@ -406,21 +461,30 @@
   S.nl = { data: null, läge: null, öppen: null, nyss: null, alla: false, val: { amne: '', arskurs: '', spar: 'vag' } };
 
   async function laddaNexlax() {
-    const sek = $('#bv-nexlax');
+    const sek = $('#bv-nexlax'), tom = $('#bv-nl-tom');
     if (!sek) return;
+    /* NexLäx är en del i menyn, så den står aldrig tom: går banan inte att
+       hämta säger rutan det. Ett fel efter att banan väl kommit lämnar
+       den som den var: listan byts aldrig mot ett besked. */
+    const saknas = () => {
+      if (S.nl.data) return;
+      sek.hidden = true;
+      tom.replaceChildren(tomt('NexLäx går inte att öppna just nu', 'Försök igen om en stund.'));
+      tom.hidden = false;
+    };
     const { data, error } = await supa.rpc('barn_nexlax');
     if (error) {
-      /* PGRST202: funktionen finns inte, migrationen är inte körd. Då står
-         NexLäx dold och resten av vyn som förut. */
+      /* PGRST202: funktionen finns inte, migrationen är inte körd. */
       if (error.code !== 'PGRST202' && error.code !== '42883') console.warn('barn_nexlax:', error.message);
-      sek.hidden = true;
+      saknas();
       return;
     }
     const d = data || {};
-    if (d.lage !== 'ok') { sek.hidden = true; return; }
+    if (d.lage !== 'ok') { saknas(); return; }
     S.nl.data = d;
     /* XP och serien är ett tillägg: utan dem ritas vägen ändå. */
     S.nl.läge = await U.laddaLäge(supa, d.elev);
+    tom.hidden = true;
     sek.hidden = false;
     ritaNexlax();
   }
@@ -663,7 +727,6 @@
       history.replaceState(history.state, '', location.pathname);
       if (supa) { visaBekräftelse(kod.slice(0, 200)); return; }
     }
-    S.tillVal = location.hash === '#installningar';
     if (!supa) {
       visa('view-auth');
       NX.säg($('#auth-msg'), 'Inloggningen fungerar inte just nu. Försök igen senare.', false);
