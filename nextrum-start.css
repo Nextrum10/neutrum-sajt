@@ -1,8 +1,11 @@
 /* ============================================================
    NEXTRUM — STARTSIDAN
 
-   Laddas bara av index.html och en/index.html, och SIST:
+   Laddas av index.html och en/index.html, och SIST:
      nextrum.css → home → cinema → start
+   Sedan 2026-10-06 också av de sex sidorna i menyn, på båda språken,
+   med nextrum-sidor.css efter sig: de använder startsidans delar som
+   de är (Leo: "följ samma design"). Ändras en del här ändras den där.
 
    Allt här gäller startsidans scroll, från manifestet och nedåt.
    Hero är orörd med flit — Leo 2026-09-25: "jag vill bevara heron

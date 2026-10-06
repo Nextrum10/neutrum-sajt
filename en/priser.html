@@ -48,10 +48,14 @@
      den nytta vid varje återbesök i ett år. -->
 <link rel="stylesheet" href="../nextrum-typsnitt.css?v=c20ceeba">
 
-<!-- ordningen spelar roll: bas → startsida → cinema -->
+<!-- ordningen spelar roll: bas → startsida → cinema → start → sidor.
+     Menysidorna använder startsidans delar som de är (nextrum-start.css
+     och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=47a1da42">
+<link rel="stylesheet" href="../nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="../nextrum-sidor.css?v=6a841016">
 
 <!-- Strukturerad data för tjänsten och timpriset. Ger Google en
      chans att visa priset direkt i träffen på "vad kostar läxhjälp".
@@ -185,6 +189,10 @@
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
          style="object-position:50% 40%"
          alt="A tutor leaning over a table where two students each work on their own task."></picture>
+    <ul class="sid-lappar" aria-hidden="true">
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><path d="M5 9.5h14M5 14.5h14"/></svg></span>The same price whatever the subject</li>
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 016.8-1.2"/></svg></span>No minimum term</li>
+    </ul>
   </figure>
 
 </section>
@@ -366,38 +374,79 @@
   </div>
 </section>
 
-<section class="nx-surface">
-  <div class="sec wrap">
-    <div class="nx-head split rv">
+<!-- Betalningen i fyra punkter, som hållpunkterna på startsidan.
+     Meningen om betalningen står ordagrant (kolla-betalningsvillkor.py). -->
+<section class="nx-yta nx-sek">
+  <div class="nx-wrap-bred">
+    <div class="nx-head split" data-stig>
       <div>
-        <span class="eyebrow acc">How payment works</span>
-        <h2 class="d2">Everything goes through Nextrum.</h2>
+        <span class="nx-et acc">How payment works</span>
+        <h2 class="nx-d2" style="margin-top:18px">Everything goes through Nextrum.</h2>
       </div>
       <div class="nx-head-aside">
-        <p class="lede">Booking, payment and completed session all connect in one place. You see what was booked, what was paid and what took place.</p>
+        <p class="nx-lede">Booking, payment and completed session all connect in one place. You see what was booked, what was paid and what took place.</p>
       </div>
     </div>
 
-    <ul class="nx-list rv">
-      <li><em>01</em><div><b>You pay per session</b><p>You pay for each session by card, either in advance or after the session when you confirm the report. After the session you can choose an invoice instead, which comes at the start of the following month with ten days to pay and no fee. If you only need help before a test, you book that session and nothing more.</p></div></li>
-      <li><em>02</em><div><b>The same price whatever the subject</b><p>Maths, Swedish, physics or programming all cost the same. You do not have to work out a new price every time the need changes.</p></div></li>
-      <li><em>03</em><div><b>No lock-in</b><p>You can pause between terms, change tutor or stop altogether, with no notice period.</p></div></li>
-      <li><em>04</em><div><b>The report is included</b><p>After each session you get a report on what was covered and how it went, plus access to extra digital exercises.</p></div></li>
+    <ul class="nx-holdpunkter" data-stig data-fördröj="1" style="margin-top:clamp(36px,4.6vw,64px)">
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="hp-nr" aria-hidden="true">1</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg></span>
+        </div>
+        <h3>You pay per session</h3>
+        <p>You pay for each session by card, either in advance or after the session when you confirm the report. After the session you can choose an invoice instead, which comes at the start of the following month with ten days to pay and no fee. If you only need help before a test, you book that session and nothing more.</p>
+      </li>
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="hp-nr" aria-hidden="true">2</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 9.5h14M5 14.5h14"/></svg></span>
+        </div>
+        <h3>The same price whatever the subject</h3>
+        <p>Maths, Swedish, physics or programming all cost the same. You do not have to work out a new price every time the need changes.</p>
+      </li>
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="hp-nr" aria-hidden="true">3</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 016.8-1.2"/></svg></span>
+        </div>
+        <h3>No lock-in</h3>
+        <p>You can pause between terms, change tutor or stop altogether, with no notice period.</p>
+      </li>
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="hp-nr" aria-hidden="true">4</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+        </div>
+        <h3>The report is included</h3>
+        <p>After each session you get a report on what was covered and how it went, plus access to extra digital exercises.</p>
+      </li>
     </ul>
   </div>
 </section>
 
-<section class="sec wrap">
-  <div class="nx-two">
-    <div class="nx-two-sticky rv">
-      <span class="eyebrow acc">Why the price looks like this</span>
-      <h2 class="d2" style="margin-top:18px">Young people helping young people — you can see it in the price.</h2>
+<!-- Varför priset ser ut så här: texten bredvid ett foto. -->
+<section class="nx-sek">
+  <div class="nx-split sid-split omvand">
+    <div class="nx-split-bild" data-stig>
+      <figure class="nx-fig" style="--tint:#453B28">
+        <picture><source type="image/webp" srcset="../bilder/13-kvallsplugg-640.webp 640w, ../bilder/13-kvallsplugg-960.webp 960w, ../bilder/13-kvallsplugg-1280.webp 1280w, ../bilder/13-kvallsplugg-1600.webp 1600w" sizes="(max-width:900px) 92vw, 44vw"><img class="nx-img" src="../bilder/13-kvallsplugg-960.jpg"
+             srcset="../bilder/13-kvallsplugg-640.jpg 640w, ../bilder/13-kvallsplugg-960.jpg 960w, ../bilder/13-kvallsplugg-1280.jpg 1280w, ../bilder/13-kvallsplugg-1600.jpg 1600w"
+             sizes="(max-width:900px) 92vw, 44vw" width="2048" height="1152" loading="lazy" decoding="async"
+             style="object-position:46% 44%"
+             alt="A student working on a problem in the light of a desk lamp while the tutor beside them calmly explains."></picture>
+      </figure>
     </div>
-    <div class="rv">
-      <p class="lede-lg">Traditional private tuition is built on qualified teachers on a teacher’s salary. Nextrum is built on upper-secondary and university students who recently took the same course.</p>
-      <p style="margin-top:20px;color:var(--muted);max-width:56ch">That makes the help cheaper — but above all it often makes it easier to follow. A tutor who sat with the same chapter two years ago remembers exactly where it tends to go wrong, and can explain it in words the student recognises.</p>
-      <p style="margin-top:20px;color:var(--muted);max-width:56ch">At the same time it means the money goes to someone getting their first job and their first work experience. That is the whole point of Nextrum.</p>
-      <a class="link-arrow" href="/en/bli-studiehjalpare" style="margin-top:26px;display:inline-flex">Read about working with us <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+
+    <div class="nx-split-text">
+      <span class="nx-et acc" data-stig>Why the price looks like this</span>
+      <h2 class="nx-d2" data-avslöj style="margin-top:20px">Young people helping young people —<br>you can see it in the price.</h2>
+      <div data-stig data-fördröj="1">
+        <p class="lede-lg">Traditional private tuition is built on qualified teachers on a teacher’s salary. Nextrum is built on upper-secondary and university students who recently took the same course.</p>
+        <p>That makes the help cheaper — but above all it often makes it easier to follow. A tutor who sat with the same chapter two years ago remembers exactly where it tends to go wrong, and can explain it in words the student recognises.</p>
+        <p>At the same time it means the money goes to someone getting their first job and their first work experience. That is the whole point of Nextrum.</p>
+      </div>
+      <a class="nx-lank" href="/en/bli-studiehjalpare" data-stig data-fördröj="2">Read about working with us <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
     </div>
   </div>
 </section>
@@ -406,7 +455,7 @@
   <div class="sec wrap">
     <div class="nx-faq-grid">
       <div class="nx-faq-aside rv">
-        <span class="eyebrow acc">Questions about price</span>
+        <span class="nx-et acc">Questions about price</span>
         <h2 class="d2" style="margin-top:18px">The things people usually ask.</h2>
         <p class="lede" style="margin-top:20px">More questions are answered in our <a href="/en/faq" style="color:var(--fg);text-decoration:underline;text-underline-offset:3px">FAQ</a>.</p>
       </div>
@@ -436,17 +485,27 @@
   </div>
 </section>
 
-<!-- FINAL CTA -->
-<section class="nx-final on-band">
-  <div class="sec wrap">
-    <div class="inner">
-      <h2 class="d1 rv">Ready to take the next step?</h2>
-      <p class="rv">For those who want to learn more. For those who want to help others.</p>
-      <div class="nx-story-ctas" data-stig data-fördröj="2">
-        <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">Get started <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-        <a class="btn btn-ghost btn-lg" href="/en/bli-studiehjalpare">Become a tutor <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+<section class="nx-mork nx-final-cinema">
+  <div class="nx-wrap-bred">
+    <div class="nx-final-inner">
+      <span class="nx-et" data-stig>Next step</span>
+      <h2 class="nx-final-rubrik" data-avslöj>Ready to take the next <em>step</em>?</h2>
+      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">For those who want to learn more. For those who want to help others.</p>
+
+      <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
+            Get started
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="btn btn-ghost btn-lg" href="/en/bli-studiehjalpare">
+          Become a tutor
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
       </div>
-      <ul class="nx-hero-trust rv">
+
+      <ul class="nx-hero-trust" data-stig data-fördröj="3">
         <li>No minimum term</li>
         <li>Costs nothing to ask</li>
       </ul>
@@ -583,6 +642,7 @@
 <script src="../nextrum-app.js?v=371d3290"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
+<script src="../nextrum-start.js?v=c489fcd4"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

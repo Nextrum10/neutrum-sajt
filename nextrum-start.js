@@ -13,8 +13,16 @@
      vägg           Så kan ett pass se ut: fotona stiger fram
      studievy       illustrationen av föräldravyn, som klickar sig igenom
                     sig själv. Samma illustration står på För elever &
-                    föräldrar, och den sidan laddar filen för den delens
-                    skull: de andra delarna hittar inget att röra där.
+                    föräldrar.
+     sidhuvud       lapparna på menysidornas foto fjädrar in
+     stegFoton      Så fungerar Nextrum på menysidan: samma pinnade
+                    scen som startsidans, med fotona i markupen
+
+   MENYSIDORNA LADDAR OCKSÅ FILEN (2026-10-06): Vår idé, Så fungerar
+   Nextrum, För elever & föräldrar, Bli studiehjälpare, Priser och
+   FAQ, på båda språken. De använder startsidans delar som de är, och
+   varje del letar upp sina egna element: en del som inte hittar
+   något på en sida gör ingenting där.
 
    SKRIPTET SÄTTER KLASSER, CSS RÖR SIG. Första versionen räknade om
    korten, orden och ett blad för varje bildruta medan man scrollade.
@@ -661,6 +669,66 @@ const NXStart = (function () {
     }
   }
 
+  /* ============================================================
+     MENYSIDORNAS SIDHUVUD
+     Lapparna på fotot fjädrar in när sidan laddat, som notiserna i
+     studievyn. Sidhuvudet står i vyn från början, så det finns
+     ingenting att vänta på — men startläget måste hinna ritas en
+     gång, annars hoppar lapparna direkt till sitt slutläge. Därav
+     två bildrutor.
+     ============================================================ */
+  function sidhuvud() {
+    if (!rörelse) return;
+    const hdr = $$('.nx-page-hero').filter(h => $('.sid-lappar', h));
+    if (!hdr.length) return;
+    requestAnimationFrame(() => requestAnimationFrame(() =>
+      hdr.forEach(h => h.classList.add('sid-framme'))));
+  }
+
+  /* ============================================================
+     SÅ FUNGERAR NEXTRUM, PÅ MENYSIDAN
+     Samma pinnade scen som på startsidan: medan man scrollar tänds
+     steget, och dess foto glider fram. Formen är cinemas .nx-hur.
+
+     Startsidan bygger sina foton i sitt eget skript, ur bildregistret,
+     och rutan är tom när det här körs. Den lämnas därför ifred här.
+     På menysidan står fotona i markupen, med alt-text på sidans
+     språk: registret har bara svenska, och en bild som byggs här
+     hade fått en svensk beskrivning på den engelska sidan.
+
+     På pekskärm och smal skärm finns ingen pinning (cinema): alla
+     steg står öppna under fotot, och det man trycker på tänds.
+     ============================================================ */
+  function stegFoton() {
+    $$('[data-hur]').forEach(rot => {
+      const fig = $$('.nx-hur-bild .nx-fig', rot);
+      const steg = $$('.nx-hur-steg > li', rot);
+      if (!fig.length || !steg.length) return;
+
+      let senaste = -1;
+      const sätt = i => {
+        if (i === senaste) return;
+        senaste = i;
+        steg.forEach((li, n) => li.classList.toggle('pa', n === i));
+        fig.forEach((f, n) => f.classList.toggle('pa', n === Math.min(i, fig.length - 1)));
+      };
+
+      if (!rörelse || M.tier === 'lite') {
+        steg.forEach((li, i) => li.addEventListener('click', () => sätt(i)));
+        return;
+      }
+      M.scene(rot, {
+        läge: 'pin',
+        run: p => {
+          /* Lite marginal i början och slutet, så att första och
+             sista steget hinner läsas innan det byter. */
+          sätt(Math.min(steg.length - 1,
+            Math.max(0, Math.floor(M.span(p, 0.04, 0.96) * steg.length))));
+        }
+      });
+    });
+  }
+
   function allt() {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
@@ -670,6 +738,8 @@ const NXStart = (function () {
     prova('band', band);
     prova('vägg', vägg);
     prova('studievy', studievy);
+    prova('sidhuvud', sidhuvud);
+    prova('stegFoton', stegFoton);
   }
 
   allt();

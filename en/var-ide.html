@@ -48,10 +48,14 @@
      den nytta vid varje återbesök i ett år. -->
 <link rel="stylesheet" href="../nextrum-typsnitt.css?v=c20ceeba">
 
-<!-- ordningen spelar roll: bas → startsida → cinema -->
+<!-- ordningen spelar roll: bas → startsida → cinema → start → sidor.
+     Menysidorna använder startsidans delar som de är (nextrum-start.css
+     och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="../nextrum-cinema.css?v=47a1da42">
+<link rel="stylesheet" href="../nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="../nextrum-sidor.css?v=6a841016">
 </head>
 <body>
 
@@ -135,61 +139,96 @@
          srcset="../bilder/08-teamet-640.jpg 640w, ../bilder/08-teamet-960.jpg 960w, ../bilder/08-teamet-1280.jpg 1280w, ../bilder/08-teamet-1600.jpg 1600w, ../bilder/08-teamet-1920.jpg 1920w"
          sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
          style="object-position:46% 46%" alt="Six young tutors standing and talking with each other in a bright Scandinavian workspace."></picture>
+    <ul class="sid-lappar" aria-hidden="true">
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/></svg></span>By young people, for young people</li>
+      <li class="sid-lapp"><span class="sid-lapp-ikon"><svg viewBox="0 0 24 24"><path d="M5 9.5h14M5 14.5h14"/></svg></span>One hourly price, no hidden fees</li>
+    </ul>
   </figure>
 </section>
 
-<section class="sec wrap">
-  <div class="nx-two">
-    <div class="nx-two-sticky rv">
-      <span class="nx-et acc">The background</span>
-      <h2 class="nx-d2" style="margin-top:18px">Whoever just understood it<br>explains it best.</h2>
+<!-- Tre stycken text blev tre blad, som manifestet på startsidan:
+     rubriken med orden som fylls i, och styckena bredvid varandra.
+     Texten är densamma, ord för ord. -->
+<section class="nx-wrap-bred nx-sek">
+  <span class="nx-et acc" data-stig>The background</span>
+  <h2 class="nx-d2 sid-rubrik" data-ordfyll>Whoever just understood it<br>explains it best.</h2>
+  <div class="sid-kort">
+    <div class="nx-bubbla" data-stig data-fördröj="1">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 014.8 1c0 1.7-2.4 2.2-2.4 3.6M12 17v.1"/></svg></span>
+      <p>A student who is stuck rarely needs more facts. They need someone who remembers what it felt like not to understand — and who can say where it usually goes wrong, because it went wrong for them last year.</p>
     </div>
-    <div class="nx-text rv">
-        <p>A student who is stuck rarely needs more facts. They need someone who remembers what it felt like not to understand — and who can say where it usually goes wrong, because it went wrong for them last year.</p>
-        <p>That is why our tutors are young. They are at upper-secondary school or university and sat the same courses recently. They remember which step in the working is the hard one, not just what the answer is.</p>
-        <p>This is not a way to keep the price down. It is the reason we exist.</p>
+    <div class="nx-bubbla" data-stig data-fördröj="2">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.5 9.5L12 5l9.5 4.5L12 14z"/><path d="M6.5 11.6v4.1c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3v-4.1"/></svg></span>
+      <p>That is why our tutors are young. They are at upper-secondary school or university and sat the same courses recently. They remember which step in the working is the hard one, not just what the answer is.</p>
+    </div>
+    <div class="nx-bubbla sid-stor" data-stig data-fördröj="3">
+      <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.5-7 9-7 9z"/></svg></span>
+      <p>This is not a way to keep the price down. It is the reason we exist.</p>
     </div>
   </div>
 </section>
 
-<section class="nx-surface">
-  <div class="sec wrap">
+<!-- Urvalet i tre steg, som hållpunkterna på startsidan: den man för
+     musen över kommer fram. Ordningen är ord, inte siffror. -->
+<section class="nx-yta nx-sek">
+  <div class="nx-wrap-bred">
     <div class="nx-head split" data-stig>
       <div><span class="nx-et acc">Our tutors</span>
         <h2 class="nx-d2" style="margin-top:18px">Selected, interviewed<br>and <em>prepared.</em></h2></div>
       <div class="nx-head-aside"><p class="nx-lede">We put the time into the selection so you do not have to. It is one of the things you are paying us for.</p></div>
     </div>
-    <div class="nx-trio">
-      <div class="nx-trio-kort" data-stig data-fördröj="1">
-        <span class="nx-trio-et">First</span>
-        <b>Application and interview</b>
+    <ul class="nx-holdpunkter sid-tre" data-stig data-fördröj="1" style="margin-top:clamp(36px,4.6vw,64px)">
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="sid-et">First</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H10.5L6 20v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span>
+        </div>
+        <h3>Application and interview</h3>
         <p>Subjects, year groups and hours — and a conversation where we get to know the person behind the application.</p>
-      </div>
-      <div class="nx-trio-kort" data-stig data-fördröj="2">
-        <span class="nx-trio-et">Then</span>
-        <b>Approval and preparation</b>
+      </li>
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="sid-et">Then</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 7.5-7 8.8-4-1.3-7-4.2-7-8.8V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span>
+        </div>
+        <h3>Approval and preparation</h3>
         <p>Only after approval are you visible to a family. We go through how a session is structured and how the report is written.</p>
-      </div>
-      <div class="nx-trio-kort" data-stig data-fördröj="3">
-        <span class="nx-trio-et">Ongoing</span>
-        <b>Follow-up</b>
+      </li>
+      <li class="nx-bubbla">
+        <div class="hp-topp">
+          <span class="sid-et">Ongoing</span>
+          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 19v-5M12 19V8M17 19v-9"/></svg></span>
+        </div>
+        <h3>Follow-up</h3>
         <p>We follow up on sessions and collect feedback. The work does not stop at the match.</p>
-      </div>
-    </div>
+      </li>
+    </ul>
   </div>
 </section>
 
-<section class="sec wrap">
-  <div class="nx-two">
-    <div class="nx-two-sticky rv">
-      <span class="nx-et acc">Price</span>
-      <h2 class="nx-d2" style="margin-top:18px">One hourly price. No hidden fees.</h2>
+<!-- Priset bredvid ett foto, som Bli studiehjälpare på startsidan men
+     på ljus botten: Nästa steg under är redan mörk. -->
+<section class="nx-sek">
+  <div class="nx-split sid-split">
+    <div class="nx-split-bild" data-stig>
+      <figure class="nx-fig" style="--tint:#898268">
+        <picture><source type="image/webp" srcset="../bilder/07-genombrottet-640.webp 640w, ../bilder/07-genombrottet-960.webp 960w, ../bilder/07-genombrottet-1280.webp 1280w, ../bilder/07-genombrottet-1600.webp 1600w" sizes="(max-width:900px) 92vw, 44vw"><img class="nx-img" src="../bilder/07-genombrottet-1280.jpg"
+             srcset="../bilder/07-genombrottet-640.jpg 640w, ../bilder/07-genombrottet-960.jpg 960w, ../bilder/07-genombrottet-1280.jpg 1280w, ../bilder/07-genombrottet-1600.jpg 1600w"
+             sizes="(max-width:900px) 92vw, 44vw" width="2048" height="1152" loading="lazy" decoding="async"
+             style="object-position:38% 40%"
+             alt="A student smiling to themselves over their notepad after understanding something difficult, with the tutor beside them."></picture>
+      </figure>
     </div>
-    <div class="nx-text rv">
-        <p>The same price whatever the subject. Maths costs the same as Swedish, and a hard course does not cost more than an easy one.</p>
+
+    <div class="nx-split-text">
+      <span class="nx-et acc" data-stig>Price</span>
+      <h2 class="nx-d2" data-avslöj style="margin-top:20px">One hourly price.<br>No hidden fees.</h2>
+      <div data-stig data-fördröj="1">
+        <p class="lede-lg">The same price whatever the subject. Maths costs the same as Swedish, and a hard course does not cost more than an easy one.</p>
         <p>No registration fee, no monthly fee and no minimum term. You pay for each session by card, either in advance or after the session when you confirm the report — and if you paid for a session that never happened, it is refunded. After the session you can choose an invoice instead, which comes at the start of the following month with ten days to pay and no fee.</p>
         <p>All payment goes through Nextrum. That is the basis for you being able to see what was booked, what was paid and what took place — gathered in one place.</p>
-        <a class="nx-lank" href="/priser">See the pricing <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      </div>
+      <a class="nx-lank" href="/en/priser" data-stig data-fördröj="2">See the pricing <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
     </div>
   </div>
 </section>
@@ -352,6 +391,7 @@
 <script src="../nextrum-app.js?v=371d3290"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=f1ce069c"></script>
+<script src="../nextrum-start.js?v=c489fcd4"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
