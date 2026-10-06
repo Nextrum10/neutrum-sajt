@@ -958,6 +958,49 @@ table.adm .adm-tal{
 .adm-status.ar-klar{background:var(--mossa-soft);color:var(--mossa-text)}
 .adm-status.ar-klar::before{background:var(--mossa,#9DAD86);opacity:1}
 
+/* Lägesväljaren (2026-10-06, lägesväljare i nextrum-admin-karna.js).
+   Läget sätts med märkena själva: det valda ser ut som .adm-status i
+   listan, de andra är tomma ringar med en blek prick i sin egen färg,
+   så att man ser vad man får innan man trycker. Rörelsen står i
+   KÄNSLAN och tryckytan i TUMMEN, bredvid .vy-val. */
+.adm-lage{display:flex;flex-wrap:wrap;gap:6px}
+.adm-lage > button{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 13px 7px 11px;
+  border:1px solid var(--ln-2);border-radius:100px;
+  background:transparent;
+  font:inherit;font-size:.8rem;font-weight:600;line-height:1.1;
+  color:var(--bl-3);
+  cursor:pointer;white-space:nowrap;
+}
+.adm-lage > button::before{
+  content:"";width:7px;height:7px;border-radius:50%;flex:none;
+  background:var(--bl-3);opacity:.4;
+}
+.adm-lage > .ar-ny::before{background:var(--acc)}
+.adm-lage > .ar-vantar::before{background:var(--ockra,#C08A2E)}
+.adm-lage > .ar-klar::before{background:var(--mossa,#9DAD86)}
+.adm-lage > button:hover{border-color:var(--bl-3);color:var(--bl)}
+.adm-lage > button:hover::before{opacity:1}
+.adm-lage > button[aria-pressed="true"]{
+  background:var(--bricka);border-color:transparent;color:var(--bl);cursor:default;
+}
+.adm-lage > button[aria-pressed="true"]::before{opacity:1}
+/* Det valda läget är ingen knapp att trycka på: ett tryck gör ingenting,
+   så det sjunker inte heller (trycket i KÄNSLAN väger 0,4,1). */
+.vy .adm-lage > button[aria-pressed="true"]:active:not(:disabled){scale:none}
+.adm-lage > .ar-ny[aria-pressed="true"]{background:var(--acc-soft);color:var(--acc-lugn)}
+.adm-lage > .ar-vantar[aria-pressed="true"]{background:var(--ockra-soft);color:var(--ockra-text)}
+.adm-lage > .ar-klar[aria-pressed="true"]{background:var(--mossa-soft);color:var(--mossa-text)}
+/* I panelen står knapparna under läget, inte bredvid: fyra märken och
+   två knappar på en rad bröts mitt i lägena. */
+.adm-lage + .dp-atgard{margin-top:12px}
+/* I en tabell på en rad och tätare, och Skicka underlag under läget. */
+table.adm .adm-lage{flex-wrap:nowrap;gap:4px}
+table.adm .adm-lage > button{padding:5px 10px 5px 9px;font-size:.76rem}
+table.adm td.adm-atg .adm-lage{justify-content:flex-end}
+table.adm td.adm-atg .adm-lage + .btn{margin-top:8px}
+
 /* Nyckeltalen överst. Samma idé som .kpi i vy-lagret, men de får
    vara fler och smalare — ledningen läser åtta tal, familjen tre. */
 .adm-tal-rad{
@@ -3456,7 +3499,7 @@ a:has(> .adm-status){
    tillbaka när det släpper. Nedtrycket är snabbt (90 ms), släppet
    långsamt och studsande — det är skillnaden mellan en knapp som
    känns och en som bara byter färg. */
-.vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
+.vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .adm-lage > button, .mv-dag, .bk-slot,
                        .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a){
   transition:
     background-color .22s var(--e), color .22s var(--e),
@@ -3472,7 +3515,7 @@ a:has(> .adm-status){
 /* Små runda saker trycks djupare: 96 % av en dag i kalendern syns
    knappt, och en knapp över halva skärmen hade rört sig en centimeter
    på 92 %. */
-.vy :is(.mv-dag, .bk-slot, .bk-pil, .chip, .vy-val button):active:not(:disabled){
+.vy :is(.mv-dag, .bk-slot, .bk-pil, .chip, .vy-val button, .adm-lage > button):active:not(:disabled){
   scale:.9;
   transition-duration:.09s;
 }
@@ -3493,7 +3536,7 @@ a:has(> .adm-status){
 }
 
 @media (prefers-reduced-motion:reduce){
-  .vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .mv-dag, .bk-slot,
+  .vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .adm-lage > button, .mv-dag, .bk-slot,
                          .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang]):active{scale:none}
   .vy :is(.vy-sek, .vy-flik-panel){animation:none !important}
 }
@@ -4164,7 +4207,7 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    ytorna rätt.
    ============================================================ */
 @media (max-width:560px), (pointer:coarse){
-  .vy :is(.btn-sm, .sel-sm, .vy-flik, .bk-slot, .vy-val button, .sch-val button, .chip, .pl-mer){min-height:44px}
+  .vy :is(.btn-sm, .sel-sm, .vy-flik, .bk-slot, .vy-val button, .adm-lage > button, .sch-val button, .chip, .pl-mer){min-height:44px}
   .vy :is(.btn-sm, .bk-slot, .vy-val button, .sch-val button, .chip){display:inline-flex;align-items:center;justify-content:center}
 
   /* Länkar i löptext och rubrikrader: ytan växer, raden står kvar. */

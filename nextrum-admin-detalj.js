@@ -18,7 +18,7 @@
 
   const { ANS_LAGE, BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
           UTB_LAGE, elevHjälpare, elevNamn, hämtaMatchunderlag, kortDatum, läge, namnFör, närText,
-          pill, rad, väljare, ärRaderad } = NXAdmin;
+          lägesväljare, pill, rad, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden, nådda när de anropas. En som
      saknas hoppas över: panelen ska inte dö för att en lista inte
      laddade. */
@@ -1059,8 +1059,8 @@
        eget beslut, inte en följd av att vara godkänd (schema-v23), och
        knappen står därför bara när hen är godkänd. */
     + dpRubrik('Läge')
+    + (tp.id ? lägesväljare(SH_LAGE, tp.status, 'data-sh="' + esc(p.id) + '"') : '')
     + '<div class="dp-atgard">'
-    + (tp.id ? väljare('sh', SH_LAGE, tp.status, 'data-sh="' + esc(p.id) + '"') : '')
     + (tp.status === 'approved'
       ? '<button class="btn btn-ghost btn-sm" type="button" data-sh-publik="' + esc(p.id) + '">'
         + (tp.visa_publikt ? 'Syns på startsidan: dölj' : 'Visa på startsidan') + '</button>'
@@ -1149,8 +1149,8 @@
       /* Vägen vidare. Matchningskön arbetar på elever, inte på
          anmälningar, så utan Skapa elev når ingen familj fram. */
       + dpRubrik('Läge')
+      + lägesväljare(LEAD_LAGE, l.status, 'data-lead="' + esc(l.id) + '"')
       + '<div class="dp-atgard">'
-      + väljare('lead', LEAD_LAGE, l.status, 'data-lead="' + esc(l.id) + '"')
       + '<button class="btn btn-ghost btn-sm" type="button" data-lead-kontakt="' + esc(l.id) + '">'
       + (l.kontaktad_at ? 'Skriv igen' : 'Kontakta') + '</button>'
       + (l.status !== 'matched'
@@ -1204,8 +1204,8 @@
         ? dpRubrik('Vårdnadshavarens svar', 'inlagt ' + kortDatum(a.vardnadshavare_godkand_at)) + (kör('vhSvar', a) || '')
         : '')
       + dpRubrik('Läge')
+      + lägesväljare(ANS_LAGE, a.status, 'data-ans="' + esc(a.id) + '"')
       + '<div class="dp-atgard">'
-      + väljare('ans', ANS_LAGE, a.status, 'data-ans="' + esc(a.id) + '"')
       + '<button class="btn btn-ghost btn-sm" type="button" data-dp-flik="rekrytering">Rekryteringens steg</button>'
       + (a.status !== 'approved'
         ? '<button class="btn btn-primary btn-sm" type="button" data-ans-pool="' + esc(a.id) + '">Ta in i poolen</button>'

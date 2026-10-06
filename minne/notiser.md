@@ -193,7 +193,7 @@ Sex regler bär det:
    sin tid, omförsöksjobbet (`ansokan-besked`) väcker den när tiden kommit,
    och `ansokan_besked_ta` hoppar över den om läget inte längre är Avböjd.
    Avböjd igen köar samma rad om; ett nej som gått mejlas aldrig igen.
-   Rullgardinen frågar först och visar mejlet ord för ord (`bekräftaNej`),
+   Läget Avböjd frågar först och visar mejlet ord för ord (`bekräftaNej`),
    och texten står på två ställen: `NEJ` i `_delad/notiser/ansokan.ts` och
    `NEJ_MEJLET` i `nextrum-admin-rekrytering.js`.
    `verktyg/kolla-mejltexter.py` håller dem lika i CI. Raderas ansökan
@@ -212,8 +212,8 @@ Sex regler bär det:
    `lead_kvitto_broms()` (bara `service_role`). Förut räknade
    `lead-notis` själv med ilike på den exakta adressen, och ett
    plustecken räckte för att få ett kvitto till.
-6. **Godkänd i rullgardinen är inte "Ta in i poolen".** Båda mejlar
-   välkomsten, men bara den senare godkänner profilen. Rullgardinen
+6. **Godkänd som läge är inte "Ta in i poolen".** Båda mejlar
+   välkomsten, men bara den senare godkänner profilen. Lägesväljaren
    frågar därför först.
 
 ### Vårdnadshavarens godkännande (2026-10-05)
