@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=47a1da42">
 <link rel="stylesheet" href="nextrum-vy.css?v=9c77621b">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=e01a20bc">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=c076556f">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -445,25 +445,6 @@
             </div>
             <div id="leads-tabell"><div class="loading">Hämtar</div></div>
           </div>
-
-          <!-- TIPS OCH KAMPANJER (2026-09-30). Koderna i intresseanmälan:
-               familjernas och studiehjälparnas egna och en per affisch.
-               Ritas av ritaKoder() i nextrum-admin-kunder.js ur
-               tipskoder_lage(). Affischen skrivs ut från /affisch. -->
-          <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)" data-bara-super>
-            <div class="adm-verktyg">
-              <h5 style="margin:0">Tips och kampanjer</h5>
-              <span class="small" id="koder-antal" style="margin-left:auto;color:var(--bl-3)"></span>
-            </div>
-            <p class="xsmall" style="margin:4px 0 14px;color:var(--bl-3);line-height:1.6">Varje familj och studiehjälpare har en egen kod under Profil i sin vy, och en affisch har en kampanjkod. Kunder är familjer som anmält sig med koden och inte hade haft pass förut; första pass är de av dem som haft ett. En familj som tipsat får en timme på köpet för varje sådan.</p>
-            <div id="koder-tabell"><div class="loading">Hämtar</div></div>
-            <form id="koder-form" class="adm-verktyg" style="margin-top:16px;flex-wrap:wrap">
-              <input class="inp" id="koder-kod" maxlength="24" placeholder="Kod, t.ex. FARSTA-BIB" aria-label="Kampanjkod" autocomplete="off" style="max-width:15rem">
-              <input class="inp" id="koder-namn" maxlength="80" placeholder="Var den sitter, t.ex. Affisch Farsta bibliotek" aria-label="Var koden sitter" autocomplete="off" style="flex:1;min-width:14rem">
-              <button class="btn btn-primary btn-sm" type="submit" id="koder-spara">Skapa kampanjkod</button>
-            </form>
-            <p class="ok-msg" id="koder-msg"></p>
-          </div>
         </section>
 
         <!-- ============================================================
@@ -801,6 +782,8 @@
           </div>
 
           <div id="lekt-manader" aria-label="Välj månad för lektionerna"></div>
+          <!-- Andra månader med pass utan rapport (ritaSaknasAndra). -->
+          <div id="lekt-larm"></div>
           <div class="adm-tal-rad" id="lekt-tal"><div class="loading">Hämtar</div></div>
 
           <div class="dbox">
@@ -1704,21 +1687,25 @@
              Tjänstekatalogen och rabattkoderna låg under System. De
              har fått ett eget område: det är affären, inte driften av
              sajten. #system/tjanster och #system/rabattkoder skickas
-             hit (följHash i nextrum-admin.js).
+             hit (följHash i nextrum-admin.js). Tips och kampanjer
+             flyttade hit från Intresseanmälningar 2026-10-06
+             (#katalog/tips).
              ============================================================ -->
         <section class="vy-sek" data-sek="katalog" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Tjänster</h2>
-              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor — och rabattkoderna.</p>
+              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor, och koderna: rabattkoder, tipskoder och kampanjkoder.</p>
             </div>
           </div>
 
-          <div class="vy-flikar" role="tablist" aria-label="Tjänster och rabattkoder">
+          <div class="vy-flikar" role="tablist" aria-label="Tjänster, rabattkoder och kampanjer">
             <button class="vy-flik" type="button" role="tab" data-flik="tjanster"
                     id="flik-tjanster" aria-controls="panel-tjanster">Tjänster &amp; priser</button>
             <button class="vy-flik" type="button" role="tab" data-flik="rabattkoder"
                     id="flik-rabattkoder" aria-controls="panel-rabattkoder">Rabattkoder</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="tips"
+                    id="flik-tips" aria-controls="panel-tips">Tips och kampanjer</button>
           </div>
 
           <!-- ============ TJÄNSTER & PRISER ============
@@ -1817,6 +1804,34 @@
             <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
               <h5>Koder <em id="rk-antal"></em></h5>
               <div id="rk-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ TIPS OCH KAMPANJER ============
+               (2026-09-30; här sedan 2026-10-06, låg under
+               Intresseanmälningar. Leo: "Tips och kampanjer som finns nu i
+               intresseanmälningar lägg den i tjänster och priser".)
+               Koderna i intresseanmälan: familjernas och studiehjälparnas
+               egna och en per affisch. Ritas av ritaKoder() i
+               nextrum-admin-kunder.js ur tipskoder_lage(). Affischen skrivs
+               ut från /affisch. data-bara-super står kvar på rutan: hela
+               sektionen är superadminens, och rutan läser det bara en
+               superadmin får läsa, också om sektionen en dag öppnas. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="tips"
+               id="panel-tips" aria-labelledby="flik-tips" hidden>
+            <div class="dbox" data-bara-super>
+              <div class="adm-verktyg">
+                <h5 style="margin:0">Tips och kampanjer</h5>
+                <span class="small" id="koder-antal" style="margin-left:auto;color:var(--bl-3)"></span>
+              </div>
+              <p class="xsmall" style="margin:4px 0 14px;color:var(--bl-3);line-height:1.6">Varje familj och studiehjälpare har en egen kod under Profil i sin vy, och en affisch har en kampanjkod. Kunder är familjer som anmält sig med koden och inte hade haft pass förut; första pass är de av dem som haft ett. En familj som tipsat får en timme på köpet för varje sådan.</p>
+              <div id="koder-tabell"><div class="loading">Hämtar</div></div>
+              <form id="koder-form" class="adm-verktyg" style="margin-top:16px;flex-wrap:wrap">
+                <input class="inp" id="koder-kod" maxlength="24" placeholder="Kod, t.ex. FARSTA-BIB" aria-label="Kampanjkod" autocomplete="off" style="max-width:15rem">
+                <input class="inp" id="koder-namn" maxlength="80" placeholder="Var den sitter, t.ex. Affisch Farsta bibliotek" aria-label="Var koden sitter" autocomplete="off" style="flex:1;min-width:14rem">
+                <button class="btn btn-primary btn-sm" type="submit" id="koder-spara">Skapa kampanjkod</button>
+              </form>
+              <p class="ok-msg" id="koder-msg"></p>
             </div>
           </div>
 
@@ -2327,7 +2342,7 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=371d3290"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=528b75ed"></script>
+<script src="nextrum-studie.js?v=a84e2822"></script>
 <script src="nextrum-arbetsyta.js?v=6c1e8e1a"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=d7fc6340"></script>
@@ -2336,17 +2351,17 @@
 <script src="nextrum-admin-karna.js?v=6d40e41d"></script>
 <script src="nextrum-admin-detalj.js?v=01571fb4"></script>
 <script src="nextrum-admin-oversikt.js?v=dc6cbd26"></script>
-<script src="nextrum-admin-kunder.js?v=ca7c9b1f"></script>
+<script src="nextrum-admin-kunder.js?v=f57bfe42"></script>
 <script src="nextrum-admin-rekrytering.js?v=55f7755a"></script>
 <script src="nextrum-admin-bibliotek.js?v=cd94f16a"></script>
 <script src="nextrum-admin-kommunikation.js?v=a0deff07"></script>
-<script src="nextrum-admin-drift.js?v=a4c6e085"></script>
-<script src="nextrum-admin-ekonomi.js?v=02a67520"></script>
-<script src="nextrum-admin-manaden.js?v=445d6df4"></script>
-<script src="nextrum-admin-loner.js?v=d691f1a8"></script>
-<script src="nextrum-admin-tjanster.js?v=997de096"></script>
+<script src="nextrum-admin-drift.js?v=252c44d8"></script>
+<script src="nextrum-admin-ekonomi.js?v=4199b927"></script>
+<script src="nextrum-admin-manaden.js?v=9f67830e"></script>
+<script src="nextrum-admin-loner.js?v=49fc82ba"></script>
+<script src="nextrum-admin-tjanster.js?v=20b4a52d"></script>
 <script src="nextrum-admin-system.js?v=850d4673"></script>
-<script src="nextrum-admin-behorighet.js?v=4e952a41"></script>
+<script src="nextrum-admin-behorighet.js?v=0b1783bf"></script>
 <script src="nextrum-admin-automationer.js?v=0fb655ba"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2356,6 +2371,6 @@
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
 <script src="nextrum-modulvakt.js?v=6e3aa765"></script>
-<script src="nextrum-admin.js?v=f5871f04"></script>
+<script src="nextrum-admin.js?v=92e33af1"></script>
 </body>
 </html>

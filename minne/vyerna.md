@@ -256,6 +256,31 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    till ett eget dokument: ett dokument är en andra sanning som slutar
    stämma, och det gallras inte (avsnitt 5, Gallringen). Bokföringen
    som ska sparas i sju år är Fortnox, inte adminvyn.
+   **Adminvyns rad är ett fält sedan 2026-10-06** (Leo: "en kolumnen
+   där man ser år och månad just nu och om man trycker på den kan man
+   ändra månad och år", och att man måste kunna se flera månader framåt
+   och år, i ekonomin, betalningarna, lönerna och lektionerna). Det är
+   grupperingen per år som stycket ovan pekade på. `‹ [Oktober 2026 ▾] ›`:
+   pilarna stegar en månad, fältet öppnar en ruta med året (pilar mellan
+   åren), dess tolv månader och Den här månaden. Väljaren går från
+   september 2026 till och med december nästa år (`årFramåt: 1`), och
+   Löner en månad till: där är månaden utbetalningsmånaden, en efter
+   passens, och länken från Månadens ekonomi ska alltid hitta sin
+   månad. En månad utanför väljaren står grå i rutan. Fältet har fast
+   bredd, annars flyttade sig pilen till höger under fingret när namnet
+   bytte längd (fälla 4); på en telefon fyller det bredden mellan
+   pilarna. Rutan ligger ovanpå sidan, så inget flyttar sig när den
+   öppnas, och byggs om bara när året byts. Märkena (Stängd, Utbetald,
+   2 saknas) står under namnet i fältet och på varje månad i rutan.
+   Det raden gav som fältet inte ger är alla märken på en gång. I
+   Ekonomi och Löner är de upplysningar, men i Lektioner är "saknas"
+   sektionens larm, så där räknar en rad under väljaren upp de andra
+   månaderna med pass utan rapport, med en knapp dit
+   (`ritaSaknasAndra`). En månad som inte börjat är tom i Lektioner,
+   som tittar bakåt, och tomraden pekar på Bokningar; bokslutet säger
+   Har inte börjat om den, inte Pågår, för `manad_lage` säger `pagar`
+   om varje månad från den innevarande. Felet med en rad i en dold
+   sektion (bredden noll) finns inte längre: fältet rullar inte.
 
 Och några saker som kostade en omgång: basrubriken `h5` bär en
 `margin-top` i em, som med den större rubriken blev 27 px luft överst i

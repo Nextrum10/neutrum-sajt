@@ -8,7 +8,7 @@ adminvyn sedan 2026-09-30.
 
 1. **Välj fyra ställen** (nedan). Ett ställe = en kod, annars går det
    inte att se vilket som fungerar.
-2. **Skapa en kampanjkod per ställe** i adminvyn: Intresseanmälningar →
+2. **Skapa en kampanjkod per ställe** i adminvyn: Tjänster & priser →
    Tips och kampanjer. Koden med versaler, till exempel `FARSTA-BIB`,
    och namnet med platsen: "Affisch Farsta bibliotek".
 3. **Tryck Affisch** på kodens rad. Välj område, skriv ut på A4
