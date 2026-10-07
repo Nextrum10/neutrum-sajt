@@ -133,21 +133,107 @@ html.nx-sr [data-ordfyll] .nx-ord{
 }
 html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
 
-/* De två kolumnerna runt texten. Samma bredd och samma mellanrum som
-   läxhjälpskortet under, så att de tre bladen står i en och samma
-   rutnätslinje. */
-.nx-manifest-fot,
+/* Läxhjälpskortets två kolumner (används inte längre av någon sida,
+   men står kvar tills någon tar bort .nx-ide överallt). */
 .nx-ide.tva{
   max-width:1000px;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:clamp(14px,1.6vw,22px);
 }
-.nx-manifest-fot{margin-top:clamp(44px,6vw,84px)}
-.nx-manifest-fot .nx-bubbla p{max-width:none;font-size:1.02rem;line-height:1.6}
 @media (max-width:760px){
-  .nx-manifest-fot,
   .nx-ide,.nx-ide.tva{grid-template-columns:minmax(0,1fr)}
 }
+
+/* DE TVÅ BLADEN (2026-10-07). Leo: "På mobil vyn ska de kolumnerna
+   under rätt person kan göra stor skillnad bredvid varandra." De står
+   bredvid varandra i alla bredder ner till 340 px. På dator tar de hela
+   bredden: förut slutade de vid 1000 px, och en tredjedel av raden
+   stod tom till höger om dem under en rubrik som går kant i kant.
+
+   Varje blad har en kort fet rubrik. I en spalt på 140 px är det den
+   som ger ögat ett fäste; utan den är bladet en grå textvägg.
+
+   subgrid: bladens rader (rubrik, text och på telefon figuren) delas
+   mellan de två bladen, så att båda texterna börjar på samma höjd också
+   när den ena rubriken bryts i två rader ("Allt på ett ställe" på
+   340 px, "The right match" på engelska). Utan subgrid (Safari före
+   16) är bladet ett vanligt rutnät och linjen saknas, inget annat.
+
+   På dator står figuren i bladets övre högra hörn, mittemot rubriken;
+   på telefon står den vid bladets fot (nedan). */
+.nx-manifest-fot{
+  max-width:none;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(14px,1.6vw,22px);
+  margin-top:clamp(44px,5.4vw,80px);
+}
+.nx-manifest-fot .nx-bubbla{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"rubrik fig" "text text";
+  grid-row:span 2;
+  grid-template-rows:subgrid;
+  column-gap:16px;row-gap:clamp(16px,1.8vw,24px);
+  padding:clamp(26px,3.1vw,46px);
+}
+.nx-manifest-fot .bu-fig{
+  grid-area:fig;align-self:start;
+  width:46px;height:46px;border-radius:15px;margin:0;
+}
+.nx-manifest-fot .bu-fig svg{width:21px;height:21px}
+.nx-manifest-fot .nx-bubbla h3{
+  grid-area:rubrik;align-self:center;
+  font-size:clamp(1.3rem,2.05vw,1.9rem);font-weight:800;
+  letter-spacing:-.04em;line-height:1.02;color:var(--bl);
+}
+/* Avstavningen tar de långa svenska orden i en smal spalt, och
+   overflow-wrap är reserven där webbläsaren saknar svensk ordlista
+   (Chromium på Linux): ett ord bryts hellre än trycker ut bladet. */
+.nx-manifest-fot .nx-bubbla p{
+  grid-area:text;max-width:64ch;
+  font-size:clamp(1rem,1.25vw,1.2rem);line-height:1.62;
+  color:var(--bl-2);
+  text-wrap:pretty;
+  -webkit-hyphens:auto;hyphens:auto;hyphenate-limit-chars:8 4 3;
+  overflow-wrap:break-word;
+}
+/* Telefonen: tätt men läsbart. Luften inne i bladet krymper mer än
+   texten, och figuren krymper mest: det är texten som ska få bredden.
+   Figuren flyttar till bladets fot. Då får rubriken hela spaltens
+   bredd ("Allt på ett ställe" ryms på en rad på 390 px), och det
+   första, kortare bladet får en botten i stället för ett tomt hål:
+   texterna är olika långa, och bladen är lika höga. */
+@media (max-width:760px){
+  .nx-manifest-fot{gap:10px;margin-top:34px}
+  .nx-manifest-fot .nx-bubbla{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"rubrik" "text" "fig";
+    grid-row:span 3;
+    row-gap:10px;
+    padding:16px 13px 15px;border-radius:20px;
+  }
+  .nx-manifest-fot .bu-fig{align-self:end;width:30px;height:30px;border-radius:10px;margin-top:6px}
+  .nx-manifest-fot .bu-fig svg{width:15px;height:15px}
+  .nx-manifest-fot .nx-bubbla h3{
+    align-self:start;
+    font-size:1.02rem;line-height:1.12;letter-spacing:-.03em;
+  }
+  .nx-manifest-fot .nx-bubbla p{font-size:.875rem;line-height:1.48}
+}
+/* De smalaste telefonerna (360, 375): varje pixel luft går till
+   texten, inte till storleken. */
+@media (max-width:379px){
+  .nx-manifest-fot{gap:8px}
+  .nx-manifest-fot .nx-bubbla{padding-inline:11px}
+}
+/* Under 340 px (gamla iPhone SE och smalare) räcker bredden inte till
+   två: en spalt, och bladen står under varandra som förut. */
+@media (max-width:339px){
+  .nx-manifest-fot{grid-template-columns:minmax(0,1fr)}
+}
+/* Mindre luft under manifestet (2026-10-07, "mindre luft mellan
+   sektionerna"): botten var 240 px tomt papper på dator. */
+.nx-manifest{padding-bottom:var(--luft)}
 
 /* Läxhjälpskortet. cinemas regler väger (0,2,0) i sina media-
    frågor — :last-child och paddingen — så båda klasserna står med. */
@@ -240,38 +326,164 @@ html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
 .nx-holdpunkter.har-pa > li.pa .hp-nr{color:var(--acc)}
 
 /* ============================================================
-   5. STUDIEHJÄLPARNA — kommer in i bild
+   5. STUDIEHJÄLPARNA — en rad man sveper i
 
-   Korten stiger upp ett i taget när raden kommer in i bild: en
-   rörelse, en kurva, ingen vridning och inget porträtt som poppar.
-   Leo: "Bilderna på möt våra studiehjälpare ska in ploppa ser
-   konstigt ut". Porträttets studs är borta; kortet och allt i det
-   kommer som en enhet.
+   Leo 2026-10-07: "Möt några av våra studiehjälpare ska vara bredvid
+   varandra på mobil vyn så att man swipar som ett inlägg". EN modell i
+   alla bredder, en flexrad som snäpper, i stället för ett rutnät som
+   byts mot en karusell vid en brytpunkt: telefonen visar ett kort och
+   en kant av nästa, plattan två och en kant, datorn tre som fyller
+   raden. Rutnätet förut hade fyra spalter på dator för tre kort, och
+   en fjärdedel av raden stod tom.
 
-   transform, inte translate: hovern i cinema äger translate, och
-   två system på samma egenskap slåss (se TRYCKBARA YTOR där). Hela
-   övergångslistan står här, för den här regeln väger mer än cinemas
-   och ersätter den.
+   Inget kopieras och inget spelar av sig självt: korten är påhittade
+   (märket Exempel), och samma påhittade person två gånger i raden
+   vore värre än en rad som tar slut.
+
+   overflow-y:hidden står med flit. overflow-x:auto gör annars y till
+   auto, och inträdets förskjutning och lyftet blev en lodrät scroll
+   i raden som slukade svepet uppåt på iPhone.
+
+   Paddingen i raden är plats för lyftet och kortets skugga, som
+   annars klipps av overflow. Den negativa marginalen låter raden gå
+   kant i kant, och scroll-padding håller första kortet i linje med
+   rubriken.
    ============================================================ */
-.sc-card{
-  border-radius:clamp(24px,2.2vw,30px);
-  background:var(--kort);
-  border-color:var(--kort-kant);
-  box-shadow:var(--kort-sk);
+.showcase{
+  display:flex;
+  gap:clamp(14px,1.8vw,24px);
+  overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none;
+  margin-inline:calc(var(--m) * -1);
+  padding:14px var(--m) 52px;
+  scroll-padding-inline:var(--m);
 }
+.showcase::-webkit-scrollbar{display:none}
+/* Radens nedre padding är mest skugga och navrad. Sektionens egen
+   luft under den krymper lika mycket, så avståndet till nästa kapitel
+   blir detsamma som förut och inte 52 px längre. */
+#studiehjalpare{padding-bottom:max(32px,calc(var(--luft) - 40px))}
+/* Hämtar, .nx-empty och kollaKopplings .empty tar hela raden. */
+.showcase > :not(.sc-card){flex:1 0 100%}
+
+/* Kortet. homes .showcase .sc-card väger lika mycket och står före,
+   så allt det satte och som ska bort står här: kanten i --line, den
+   lilla radien, overflow:hidden (den klippte hovringsskuggan nedan)
+   och en övergångslista med box-shadow. */
+.showcase .sc-card{
+  position:relative;isolation:isolate;
+  flex:0 0 calc(100% - 44px);min-width:0;
+  scroll-snap-align:start;scroll-snap-stop:always;   /* ett svep, ett kort */
+  overflow:visible;
+  border-radius:clamp(24px,2.2vw,30px);
+  background:var(--kort);border-color:var(--kort-kant);
+  box-shadow:var(--kort-sk);
+  transition:
+    translate var(--tryck-tid,.38s) var(--e-ut),
+    border-color var(--tryck-tid,.38s) var(--e),
+    background-color var(--tryck-tid,.38s) var(--e);
+}
+@media (min-width:640px){
+  .showcase .sc-card{flex-basis:calc((100% - clamp(14px,1.8vw,24px)) / 2 - 28px)}
+}
+@media (min-width:1000px){
+  .showcase .sc-card{flex-basis:calc((100% - 2 * clamp(14px,1.8vw,24px)) / 3)}
+}
+
+/* Lyftet: bara med mus, och skuggan är ett färdigt lager som tonas,
+   inte en box-shadow som ritas om varje bildruta. homes hovring stod
+   utan hover-fråga och fastnade efter ett tryck på pekskärm; den
+   nollas här. */
+.showcase .sc-card::after{
+  content:"";position:absolute;inset:-1px;z-index:-1;
+  border-radius:inherit;pointer-events:none;
+  box-shadow:0 34px 64px -38px rgba(46,42,32,.42);
+  opacity:0;
+  transition:opacity .45s var(--e-ut);
+}
+.showcase .sc-card:hover{translate:none;box-shadow:var(--kort-sk);border-color:var(--kort-kant)}
+@media (hover:hover) and (pointer:fine){
+  .showcase .sc-card:hover{translate:0 -5px;border-color:var(--ln-2)}
+  .showcase .sc-card:hover::after{opacity:1}
+}
+/* Trycket: cinemas .sc-card:active väger lika mycket som bakgrunden
+   ovan men står före, så det upprepas här för att synas. */
+.showcase .sc-card:active{background-color:var(--tryck-yta);border-color:var(--ln-2)}
+
+/* Inträdet. Skriptet observerar RADEN, inte varje kort: ett kort
+   utanför raden i sidled är osynligt för en IntersectionObserver och
+   hade tonat upp först när man svept dit, mitt i svepet. --n är
+   kortets plats bland de fyra första.
+
+   Korten stiger UPP, aldrig in från sidan, och krymper kring sin
+   vänstra kant. Snäppet räknar med kortets ritade läge: ett kort som
+   sköts in från höger flyttade snäppunkten, och raden rullade 75 px
+   av sig själv medan korten kom (uppmätt i Chromium). En förskjutning
+   i höjdled och en vänsterkant som står still rör inte snäppet.
+   transform, inte translate: lyftet och trycket äger translate
+   (TRYCKBARA YTOR i cinema). */
 html.nx-sr .showcase .sc-card{
   opacity:0;
-  transform:translate3d(0,56px,0) scale(.965);
+  transform:translate3d(0,40px,0) scale(.97);
+  transform-origin:0 100%;
   transition:
     opacity .8s var(--e-mjuk),
     transform 1.1s var(--e-ut),
     translate var(--tryck-tid,.38s) var(--e-ut),
-    box-shadow var(--tryck-tid,.38s) var(--e-ut),
     border-color var(--tryck-tid,.38s) var(--e),
     background-color var(--tryck-tid,.38s) var(--e);
-  transition-delay:calc(var(--n,0) * 120ms),calc(var(--n,0) * 120ms),0s,0s,0s,0s;
+  transition-delay:calc(var(--n,0) * 110ms),calc(var(--n,0) * 110ms),0s,0s,0s;
 }
 html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
+
+/* Navraden under korten. Den lägger sig i radens nedre padding
+   (margin-top lika med sin höjd), så sidan byter inte höjd när
+   skriptet visar eller döljer den: Safari har ingen scroll anchoring.
+   Den släpper igenom pekaren, så ett svep som börjar under korten
+   fortfarande rullar raden; bara pilarna tar emot tryck. */
+.sc-nav{
+  position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  height:44px;margin-top:-44px;
+  pointer-events:none;
+}
+.sc-nav[hidden]{display:none}
+.sc-prickar{display:flex;align-items:center;gap:8px}
+.sc-prickar i{
+  display:block;width:7px;height:7px;border-radius:99px;
+  background:var(--bl-3);opacity:.3;
+  transition:opacity .3s var(--e),scale .45s var(--fjader),background-color .3s var(--e);
+}
+.sc-prickar i.pa{opacity:1;background:var(--acc);scale:1.45}
+.sc-pil{
+  pointer-events:auto;
+  display:none;place-items:center;
+  width:44px;height:44px;border-radius:999px;padding:0;
+  border:1px solid var(--ln-2);background:var(--kort);color:var(--bl);
+  cursor:pointer;
+  transition:scale .35s var(--fjader),opacity .25s var(--e),border-color .25s var(--e);
+}
+.sc-pil svg{width:16px;height:16px}
+.sc-pil:disabled{opacity:.32;cursor:default}
+/* Prickarna står i navraden så fort den visas. Pilarna bara med mus:
+   där har svepet ingen självklar gest, och på pekskärm är svepet
+   gesten. Raden står i mitten: i högra kanten hamnade pilarna under
+   Hjälp-knappen när korten låg längst ned i fönstret.
+
+   Ett svep, ett kort gäller pekskärmen. Med mus bläddrar pilarna en
+   sida i taget, och scroll-snap-stop:always hade stannat dem vid
+   nästa kort. */
+@media (hover:hover) and (pointer:fine){
+  .sc-pil{display:grid}
+  .sc-pil:not(:disabled):hover{scale:1.07;border-color:var(--bl-3)}
+  .sc-pil:not(:disabled):active{scale:.94}
+  .showcase .sc-card{scroll-snap-stop:normal}
+}
+@media (prefers-reduced-motion:reduce){
+  .sc-prickar i,.sc-pil,.showcase .sc-card::after{transition:none}
+}
 
 /* ============================================================
    6. TRYGG HJÄLP — det rullande bandet

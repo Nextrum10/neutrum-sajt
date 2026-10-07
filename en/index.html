@@ -267,12 +267,14 @@
     <div class="nx-manifest-fot">
       <div class="nx-bubbla" data-stig data-fördröj="1">
         <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
+        <h3>The right match</h3>
         <p>At Nextrum we match every student with one of our tutors, based on what the student needs
           and the subjects where support is wanted. Together they build better understanding, more
           motivation and greater confidence at school.</p>
       </div>
       <div class="nx-bubbla" data-stig data-fördröj="2">
         <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+        <h3>All in one place</h3>
         <p>You get a personal study plan, can book sessions online or in person, and receive a structured
           report after every one. That way you can easily follow the student’s progress between sessions.
           We take care of matching, booking and planning — with no registration fee and no minimum term.</p>
@@ -449,6 +451,13 @@
 
   <div class="showcase" id="showcase" data-needs-db>
     <div class="loading">Loading tutors</div>
+  </div>
+  <!-- Svepet: samma rad som på svenska, tagg för tagg. Etiketterna
+       står här, för nextrum-start.js skriver ingen text. -->
+  <div class="sc-nav" data-sc-nav hidden>
+    <button type="button" class="sc-pil" data-sc-steg="-1" aria-controls="showcase" aria-label="Previous tutor"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"/></svg></button>
+    <div class="sc-prickar" aria-hidden="true"></div>
+    <button type="button" class="sc-pil" data-sc-steg="1" aria-controls="showcase" aria-label="Next tutor"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
   </div>
   </div>
 </section>

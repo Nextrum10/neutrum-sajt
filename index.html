@@ -286,18 +286,22 @@
          (nextrum-start.js). Rubriken är fortfarande vanlig text. -->
     <h2 data-ordfyll style="margin-top:clamp(24px,3vw,38px)">Rätt person kan göra<br><em>stor skillnad.</em></h2>
 
-    <!-- Två kolumner runt texten, som blad med mjuk kant. Samma blad
-         som läxhjälpskortet längre ner och hållpunkterna under
-         stegen — sidans kort ser likadana ut överallt. -->
+    <!-- Två blad bredvid varandra, också på telefon (Leo 2026-10-07:
+         "kolumnerna under rätt person kan göra stor skillnad bredvid
+         varandra"). Rubriken överst i varje blad ger ögat ett fäste när
+         spalten är smal; samma rubriker står i engelskan, tagg för tagg.
+         Samma blad som hållpunkterna under stegen. -->
     <div class="nx-manifest-fot">
       <div class="nx-bubbla" data-stig data-fördröj="1">
         <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
+        <h3>Rätt match</h3>
         <p>Hos Nextrum matchar vi varje elev med en av våra
           studiehjälpare, utifrån elevens behov och de ämnen där stöd behövs. Tillsammans skapar de
           bättre förståelse, mer motivation och större självförtroende i skolan.</p>
       </div>
       <div class="nx-bubbla" data-stig data-fördröj="2">
         <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+        <h3>Allt på ett ställe</h3>
         <p>Ni får en personlig studieplan, kan boka pass online eller på
           plats och får en strukturerad rapport efter varje tillfälle. På så sätt kan ni enkelt följa
           elevens utveckling mellan passen. Vi tar hand om matchning, bokning och planering — utan
@@ -474,6 +478,16 @@
 
   <div class="showcase" id="showcase" data-needs-db>
     <div class="loading">Hämtar studiehjälpare</div>
+  </div>
+  <!-- Svepet (Leo 2026-10-07: "bredvid varandra på mobil så att man
+       swipar som ett inlägg"). Prickarna visar var i raden man står och
+       är inga knappar; pilarna finns bara med mus. Skriptet fyller
+       prickarna och visar raden först när korten inte får plats.
+       Etiketterna står här, för nextrum-start.js skriver ingen text. -->
+  <div class="sc-nav" data-sc-nav hidden>
+    <button type="button" class="sc-pil" data-sc-steg="-1" aria-controls="showcase" aria-label="Föregående studiehjälpare"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"/></svg></button>
+    <div class="sc-prickar" aria-hidden="true"></div>
+    <button type="button" class="sc-pil" data-sc-steg="1" aria-controls="showcase" aria-label="Nästa studiehjälpare"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
   </div>
   </div>
 </section>
