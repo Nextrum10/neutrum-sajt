@@ -793,12 +793,19 @@ Det som fungerade, i ordning:
    `insert into supabase_migrations.schema_migrations (version, name, statements) values ('<version>', '<namn>', array[$mig$<texten>$mig$])`.
    Raderna för tidigare migrationer ser ut så. Kontrollera sedan `md5(statements[1])` mot `md5sum` på filen:
    samma summa betyder att det som driftsatts är det som ligger i git.
+   En fil som varken har `drop` eller `delete` kan i stället köras hel (barnets_behorigheter, 2026-10-07):
+   hämta den från merge-commiten med `extensions.http_get`, pröva `md5` mot filens, vägra om versionen redan
+   står i `schema_migrations`, och `execute` texten och registrera den i samma `do`-block. Allt eller inget,
+   och raden är filen. Står `drop` eller `delete` i filen är det att runda spärren: då gäller punkt 2.
 4. Bevisa funktionerna: `md5(prosrc)` i `pg_proc` mot samma text mellan `as $$` och `$$;` i filen. Ett byte
    fel syns direkt, och det är det enda som visar att en edge-funktion eller en kropp inte skrivits av fel.
 5. Röktesta en edge-funktion utan att skicka något: `select intern.natanrop('<mål>', url := k.<kolumn>,
    headers := jsonb_build_object('Content-Type', 'application/json', 'x-nextrum-notis', k.hemlighet), body :=
    jsonb_build_object('id', gen_random_uuid())) from notis_konfig k`, och läs `net._http_response` för id:t.
-   Hemligheten lämnar aldrig databasen.
+   Hemligheten lämnar aldrig databasen. En funktion med `verify_jwt` får den publika anon-nyckeln som token:
+   funktionen själv ska svara 401, och utan token grinden (`sb-error-code`). Ett prov som ska ge 401 syns
+   under System → Fel och på Översikt (`notisfel()`, med målet som källa) tills pg_net rensar svaret efter
+   sex timmar (`pg_net.ttl`): döp målet `rokprov:<funktion>` och säg till den som läser adminvyn.
 6. Kör Supabases säkerhetskontroll (`get_advisors`) efteråt. Den fångade en `SECURITY DEFINER`-funktion i `public`
    som anon kunde anropa: ett provobjekt får `revoke execute … from public, anon, authenticated` direkt.
 
@@ -839,5 +846,9 @@ träffarna: `barn_oversikt` (två lappar), `barn_notiser`,
 Versionen `20261006233000` ligger efter `barnets_chatt`
 (`20261006230000`, en annan session samma kväll), vars funktioner lappas;
 första avsnittet stannar om den inte är körd. `rls-test.sql` avsnitt 22.
-Körs efter merge (`DEPLOY-BARNKONTON.md` 9). Se
-`minne/barnkonton-och-admin.md`.
+Kördes 2026-10-07 efter merge av PR #204 (`DEPLOY-BARNKONTON.md` 9): filen
+hämtad från merge-commiten (43d2ef4), prövad mot sin md5 och körd och
+registrerad i ett `do`-block (punkt 3 i receptet ovan), med de arton
+funktionerna md5-lika med 2026-10-06 innan. `rls-test.sql` mot driften gav
+1393 av 1394 före (avsnitt 22 stannade på att kolumnen saknades) och 1433
+av 1433 efter. Se `minne/barnkonton-och-admin.md`.

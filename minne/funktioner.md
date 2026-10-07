@@ -125,7 +125,11 @@ Kvar i driften, utan betydelse i sak: `faktura-utskick`,
 importerar bara prisfunktionerna). Driftsätts de av annat skäl följer
 mains kopior med. `ansokan-notis` driftsattes 2026-10-06 som v7 från main
 (c5e5fe1), med nejet och mejlet till vårdnadshavaren, och lästes tillbaka:
-alla tretton filer är byte för byte som main.
+alla tretton filer är byte för byte som main. 2026-10-07 gick v8 ut från
+main (43d2ef4), där bara `notiser/ansokan.ts` skilde (sista steget och
+välkomsten säger att vi skapar kontot), och lästes tillbaka på samma
+sätt. Röktest genom `intern.natanrop`: med hemligheten och ett okänt id
+200 utan att något skickades, utan hemligheten 401 från funktionen.
 
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
@@ -335,13 +339,16 @@ kontot i Auth, inbjudan, lösenordslänken och anmälan), så att
   lösenordet? som gäller.
 - En barnadress (`@barn.nextrum.se`) bjuds aldrig in. Loggen tar namn, kod
   och status på felet, aldrig adressen.
-- Driftsätts efter merge, från main, ihop med `ansokan-notis` (vars
-  mejl om sista steget säger att vi skapar kontot) och migrationen
-  `barnets_behorigheter` (`DEPLOY-BARNKONTON.md` 9). Fram till dess
-  skapar den gamla `bjud-in` (v8) kontot utan välkomsten. Länken ger
-  ändå rutan utan Inte nu (`NX.inbjudan`), och introduktionen efter den,
-  men den som går därifrån utan att spara får den vanliga rutan nästa
-  gång, och Skicka inbjudan igen svarar 409 (v8 känner inte `igen`).
+- **I drift sedan 2026-10-07** som v9, från main (43d2ef4, PR #204),
+  ihop med `ansokan-notis` v8 (vars mejl om sista steget säger att vi
+  skapar kontot) och migrationen `barnets_behorigheter`
+  (`DEPLOY-BARNKONTON.md` 9). Båda hämtades tillbaka och jämfördes fil
+  för fil med main: lika. Röktest genom `intern.natanrop`: med den
+  publika anon-nyckeln som token svarar funktionen själv 401
+  (Inloggningen gick inte att verifiera), och utan token svarar grinden
+  `UNAUTHORIZED_NO_AUTH_HEADER`, så `verify_jwt` står på. Före det skapade
+  v8 kontot utan välkomsten, och Skicka inbjudan igen svarade 409 (v8
+  kände inte `igen`).
 
 ### `barn-inloggning` (barnets_epost, 2026-10-01)
 Ett barn loggar in med sin egen bekräftade e-post. Det rena i

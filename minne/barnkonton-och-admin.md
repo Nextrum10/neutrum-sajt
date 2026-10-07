@@ -470,6 +470,11 @@ inloggning, när inloggningen skapas och när som helst efteråt:
   just `20261006230000`: den skapar chattfunktionerna som lappas här, och
   hade den körts efter hade den skrivit över lapparna. Filens första
   avsnitt stannar därför om `barn_chatt()` inte finns.
+- **I drift sedan 2026-10-07**, efter merge av PR #204: migrationen från
+  merge-commiten (md5 prövad, `minne/databasen.md`), och hela
+  `rls-test.sql` mot driften 1433 av 1433. Barnkontona som fanns fick
+  förvalet, alltså samma som innan. Vyerna gick ut med Vercel vid
+  merge (00.58) och klarade natten utan migrationen (körd 08.30).
 - **Studievyn**: valen står som kryssrutor i formuläret där inloggningen
   skapas (`biFårVal`, förvalet ikryssat) och som på/av på barnets kort
   (`biFår`, `data-bi-far`, minst 44 px höga). Valen i formuläret sparas

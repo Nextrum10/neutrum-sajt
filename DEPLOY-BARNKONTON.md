@@ -212,39 +212,39 @@ se och göra med sin inloggning. Varför det ser ut som det gör:
 `minne/vyerna.md` (Introduktionen) och `minne/barnkonton-och-admin.md`
 (Barnets behörigheter). I ordning:
 
-1. **Merga.** Vyerna går ut med Vercel direkt och tål att migrationen
-   saknas: utan `mina_barns_behorigheter()` ritas barnets kort som förut,
-   och barnets vy visar allt. Ta in familjen och Ta in i poolen fungerar
-   med den gamla `bjud-in` (v8), men Skicka inbjudan igen svarar 409 tills
-   steg 3.
-2. **Kör migrationen** efter `barnets_chatt` (`20261006230000`, som
-   måste vara körd först: filen stannar annars i första avsnittet):
-   `supabase/migrations/20261006233000_barnets_behorigheter.sql` avsnitt
-   för avsnitt med `execute_sql` (ingen `drop`, ingen `delete`, så inga
-   bekräftelser), och registrera hela filens text som version
-   `20261006233000`, namn `barnets_behorigheter`, och pröva md5
-   (`minne/databasen.md`, Att köra en migration i driften). Lapparna
-   stannar med "texten som ska bytas hittades N gånger" om någon av de arton
-   funktionerna ändrats i driften sedan 2026-10-06: läs driften och lappa
-   om, gissa inte.
-3. **Driftsätt från main** `bjud-in` och `ansokan-notis` (mejlet om sista
-   steget säger nu att vi skapar kontot). Hämta tillbaka och jämför med
-   main fil för fil. `bjud-in` utan admininloggning ska svara 401.
-4. **`verktyg/rls-test.sql` mot driften**, hela filen i en transaktion som
-   rullas tillbaka: varje rad ok (1433 lokalt 2026-10-06).
-5. **Auth-inställningarna**: lämna Email OTP Expiration på förvalet, en
-   timme, med flit: en längre tid gäller alla mejllänkar och deras
-   koder, och en utgången inbjudan leder rakt till en ny länk
+1. **Gjort 2026-10-07: mergat.** PR #204 (43d2ef4), med main:s #203,
+   #205 och #206 intagna, klockan 00.58. Vyerna gick ut med Vercel och
+   klarade natten utan migrationen, som kördes 08.30.
+2. **Gjort 2026-10-07: migrationen körd** efter `barnets_chatt`. Driftens
+   arton funktioner var md5-lika med 2026-10-06 innan, så inga lappar
+   stannade. Filen hämtades från merge-commiten, prövades mot sin md5
+   (`a39edcf6…`) och kördes och registrerades som version
+   `20261006233000`, namn `barnets_behorigheter`, i ett `do`-block: allt
+   eller inget (`minne/databasen.md`, Att köra en migration i driften,
+   punkt 3; det går bara för en fil utan `drop` och `delete`).
+3. **Gjort 2026-10-07: driftsatt från main.** `bjud-in` v9 och
+   `ansokan-notis` v8, hämtade tillbaka och lika med main fil för fil (5
+   och 13 filer). Röktest genom `intern.natanrop`: `bjud-in` med den
+   publika anon-nyckeln svarar 401 från funktionen, och utan token 401
+   från grinden; `ansokan-notis` med hemligheten och ett okänt id svarar
+   200 utan att skicka något, och utan hemligheten 401.
+4. **Gjort 2026-10-07: `verktyg/rls-test.sql` mot driften**, hela filen
+   från merge-commiten i en transaktion som rullades tillbaka: 1393 av
+   1394 före migrationen (avsnitt 22 stannade på att kolumnen saknades)
+   och 1433 av 1433 efter.
+5. **Auth-inställningarna**: inget ändrat. Lämna Email OTP Expiration
+   på förvalet, en timme, med flit: en längre tid gäller alla mejllänkar
+   och deras koder, och en utgången inbjudan leder rakt till en ny länk
    (`minne/sakerhet.md`, Konton vi skapar). Redirect URLs har redan
    `/foralder` och `/larare`, och mallen Invite user ber redan om ett
    lösenord.
-6. **Prova skarpt** med en egen plusadress: Ta in en provfamilj ur en
+6. **Kvar: prova skarpt** med en egen plusadress: Ta in en provfamilj ur en
    provanmälan, tryck på länken, välj lösenordet, gå igenom
    introduktionen, logga ut och in med lösenordet. Prova Skicka inbjudan
    igen på ett konto som inte tryckt på länken. Ta bort provfamiljen i
    adminvyns panel (`radera_person()`), aldrig i dashboarden.
-7. **Säg till familjerna** att de kan välja vad barnet ser (det står i
-   integritetspolicyn), i samma mejl som steg 7.
+7. **Kvar: säg till familjerna** att de kan välja vad barnet ser (det står
+   i integritetspolicyn), i samma mejl som avsnitt 7.
 
 ---
 
