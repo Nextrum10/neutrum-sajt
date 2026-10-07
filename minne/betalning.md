@@ -51,7 +51,10 @@ texten är kärnans.
   (avsnitt 11).
 - **Erbjudandenas priser står i `erbjudanden_pris` och ingen
   annanstans.** Timpriset med rabatt avrundas nedåt till hel krona och
-  summan är timpris gånger timmar (Fas 16.1d) — förut avrundades
+  summan är timpris gånger de BETALDA timmarna (Fas 16.1d; sedan
+  2026-10-07 `timmar − timmar_pa_kopet`, och ordinarie är alla timmarna,
+  så visa aldrig ett snittpris för en plan med en timme på köpet:
+  2 653 / 8 = 331,63 kr; skriv "8 timmar för priset av 7") — förut avrundades
   summan, och 20 timmar kostade 7 201 kr bredvid texten "360 kr per
   timme". Prissidans siffror är en reserv för den som läser utan
   javascript; `NX.initErbjudanden()` skriver över dem ur vyn med ett

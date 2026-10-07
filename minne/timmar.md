@@ -8,8 +8,9 @@ kortbetalningen i `betalning.md`. "Avsnitt N" i texten är kärnans.
 
 ## Köpta timmar (Fas 16.1 och 21)
 
-**Timmar kan köpas i förväg (Fas 16.1).** Två planer för en månad
-(4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
+**Timmar kan köpas i förväg (Fas 16.1).** Tre planer för en månad sedan
+2026-10-07 (Basic 4 timmar −5 %, Standard 8 timmar med en timme på köpet,
+Intensiv 12 timmar −5 %; till dess två, 4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
 6–18 månader). Köpet är ett engångsköp med kort, inget abonnemang.
 Timmarna betalar sedan ett bekräftat pass med ett barn i stället för
 kortet, av sig själva sedan Fas 22.2 (nedan). Flaggan `erbjudanden` är PÅ sedan 2026-09-27: Leo slog på den
@@ -17,6 +18,40 @@ innan provköpet i DEPLOY-BETALNING.md 9.12 var gjort. Står den av syns
 priserna men inget går att köpa. Klippkorten står i studievyn och på prissidan som en kolumn
 bredvid planerna som fälls ut (2026-09-27). De var borta ur
 studievyn en förmiddag samma dag och kom tillbaka i den formen.
+
+**Planerna heter Basic, Standard och Intensiv (2026-10-07).** Leo: "Ändra
+namnet på standard planen till basic planen och namnet på intensiv planen
+till standard planen. Och skapa en intensiv plan med 12 timmars läxhjälp
+varje månad. Basic planen kan ha 5% rabbat, standard planen en timme på
+köpet och intensiv planen 5% rabbat." På frågan svarade han att Standard är
+8 timmar där familjen betalar för 7, och att Intensiv ska ha 5 % fast den då
+blir dyrare per timme än Standard (360 mot i snitt 332 kr, och Basic +
+Standard ger 12 timmar för 4 093 kr mot Intensivs 4 320). Med 379 kr i
+timmen: 1 440, 2 653 och 4 320 kr. Basic blev dyrare än gamla Standard
+(1 440 mot 1 364).
+- Nya koder `plan_basic`, `plan_standard` och `plan_intensiv`. `standard`
+  och `intensiv` stängdes (`aktiv = false`) och står kvar: Leos testköp
+  pekar på `standard` med en FK utan ON UPDATE, och en kod som bytt innehåll
+  hade låtit prissidan visa fyratimmarspriset i åttatimmarskortet mellan
+  merge och migration. Katalogen är historik, som uppdragen i NexLäx.
+- En timme på köpet är `erbjudanden.timmar_pa_kopet` (villkoret
+  0 <= x < timmar), fryst i `klippkort.timmar_pa_kopet` och loggad i
+  auditen. Aldrig en procent: en åttondel är 12,5 %, som inte ryms i
+  heltalet `rabatt_procent`, och med timpriset nedåt till hel krona hade
+  det blivit 2 648 kr i stället för 7 × 379.
+- `timmar` är fortfarande alla timmar på kortet. Därför ändrades varken
+  `klippkort_saldo`, `klippkort_dra`, ångerrätten (betalt / timmar) eller
+  uppsägningen (använda timmar till ordinarie timpris).
+- Kassans rad är "8 timmar läxhjälp för priset av 7 (1 timme på köpet)",
+  och den säger aldrig "0 % rabatt" (`SESSIONSFORM` 7 i stripe-checkout).
+- Studievyn läser vyn med `*` (tål att migrationen saknas: då ritas den
+  gamla katalogen, som kassan då tar betalt efter) och lyfter fram planen
+  med timmar på köpet; märket är "1 timme på köpet" och raden "8 timmar för
+  priset av 7 · ni sparar 379 kr", aldrig ett snittpris.
+- Ordet "på köpet" betyder också startrabatten och tipstimmen. Villkoren
+  säger att köpta timmar inte betalar "ett pass där en timme är på köpet"
+  (startrabatten); ett förtydligande kräver en ny version av villkoren.
+- `rls-test.sql` avsnitt 25 (Planerna) och det omskrivna provet 16.1d.
 
 **Ett pass betalt med timmar avbokar familjen själv** (Fas 21.1), och
 studiehjälparen kan också. Det har inga pengar på sig, och

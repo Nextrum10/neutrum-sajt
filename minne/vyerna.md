@@ -199,6 +199,64 @@ Den som betalar är en förälder. Ändrat, på båda språken:
 - **Prova NexLäx** stod en dag efter studievyn och är borttaget
   (`minne/nexlax.md`).
 
+### Startsidan och prissidan i ny form (2026-10-07)
+
+Leo: "Du får göra sidan lite moderna generellt och coolare", med en lista
+över delarna. Designspråket som delarna delar: papperet bär allt (inga nya
+mörka block), stora tunga siffror (800, −.06em, tabular-nums, lera när de
+är aktiva) i stegscenen, garantin och betalningen, flöden med en linje som
+fylls med `scale` i stället för kolumner, och mobilen som en app: rader man
+sveper i, med snäpp och prickar.
+
+**Menyn bakom de tre strecken** har inga pilar ("ta bort pilarna när man
+trycker på tre strecken"). De togs bort på de 30 handskrivna sidorna och i
+skalet i `var-ide.html`, som `bygg-omradessidor.py` kopierar till de 28
+genererade.
+
+**Garantiflödet.** `#betygsgaranti` lämnade `.nx-mork` och `.nx-apply-flow`
+(som är kvar i #bli och på Bli studiehjälpare, och sköts av
+`hållpunkter()` och `mörkaYtor()`). Markupen är `section.nx-sek-s.nx-gar >
+.nx-gar-in` med `.nx-gar-head`, `ol.nx-gar-flode[data-gar-flode]` (li >
+`span.nx-gar-nr` + `div.nx-gar-steg`) och `.nx-gar-cta`, på startsidan och
+prissidan (där i `.wrap`, för att linjera med priskorten). CSS i
+nextrum-start.css avsnitt 15, JS i `garantiflöde()`. Skriptet sätter `.pa`
+(tänt) och `.fylld` (sträckan nedåt fylld; på sista steget svansen när alla
+är tända) när en siffra passerar en linje 62 % ned i fönstret, och läser
+då om alla fyra siffrornas läge, så att ett ankarhopp ger rätt läge.
+Första läget räknas innan `.i-gang` sätts. Fällor:
+- Startläget kräver `.i-gang`, annars fastnar stegen nedtonade där
+  IntersectionObserver saknas.
+- `data-stig` får aldrig sitta på listan eller stegen: (0,3,1) slår ut
+  nedtoningen.
+- Linjen fylls med `scale`, aldrig `height`. Nästa siffra tänds .3 s efter
+  att linjen börjat, bara på vägen in.
+- `.nx-flode`, `[data-flode]` och `.pr-flode` hör till prissidans
+  betalflöde, inte garantin.
+
+**Manifestets blad bredvid varandra.** Leo: "På mobil vyn ska de
+kolumnerna under rätt person kan göra stor skillnad bredvid varandra." Två
+spalter ner till 340 px (under det en). Varje blad har en h3, Rätt match
+och Allt på ett ställe (The right match, All in one place). Bladet är ett
+rutnät med `grid-template-rows:subgrid`, så texterna börjar på samma höjd.
+På dator tar bladen hela bredden (förut slutade de vid 1000 px). På
+telefon är det 14–21 tecken per rad, långt under bekväma 45–75: det är
+vad två spalter på en telefon ger, och Leo bad om det. Safari avstavar
+svenska (`hyphens:auto`), Chromium på Linux gör det inte.
+
+**Studiehjälparna i en rad man sveper i.** Leo: "bredvid varandra på
+mobil vyn så att man swipar som ett inlägg". En flexrad med scroll-snap i
+alla bredder: ett kort och en kant på telefon, två på platta, tre som
+fyller raden på dator. `overflow-y:hidden` står med flit, annars tar raden
+det lodräta svepet på iPhone. Prickarna är inga knappar; pilarna finns bara
+med mus och när korten inte ryms, och etiketterna står i markupen. Korten
+stiger upp med `transform-origin:0 100%`: ett kort som sköts in från sidan
+flyttade snäppunkten, och raden rullade 75 px av sig själv. En
+`focusin`-lyssnare rullar raden till ett kort man tabbar till. Märket
+Exempel står kvar, och `EXEMPELKORT` och `laddaShowcase()` är orörda.
+Prova: en elementbild som är högre än vyn byter fönstrets mått i
+Playwright och tappar pekskärmsemuleringen; ta bilden med
+`page.screenshot({clip})`.
+
 ### Två fällor när en palett byts
 
 Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11
