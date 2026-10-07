@@ -531,18 +531,20 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   marknadsföring, och troligen ett oskäligt villkor. Våra läses ur det som
   redan finns: hållen tid, `bookings.attendance = 'franvarande'`,
   `homework.status` mot `due_date`, och betalningarna.
-- **Läsårets betyg** (Leo samma dag, efter ett varv med 40 och 30
-  veckor): betyget som räknas är det skolan sätter när läsåret slutar, i
-  åk 9 slutbetyget. Texten säger inte bara "slutbetyg", för i åk 6-8
-  heter vårens betyg terminsbetyg och ordet hade uteslutit dem. Ett
+- **Årskursens betyg** (Leo samma dag, efter ett varv med 40 och 30
+  veckor): betyget som räknas är årskursens sista, det skolan sätter när
+  läsåret slutar, i varje årskurs. Texten säger inte bara "slutbetyg", för
+  i åk 6-8 heter vårens betyg terminsbetyg och ordet hade uteslutit dem;
+  "i åk 9 slutbetyget" lästes som bara nian, så texten säger nu rakt ut
+  "varje årskurs, inte bara årskurs 9". Ett
   terminsbetyg till jul räknas inte, och därför är kopiorna betyget före
   anmälan och det som räknas, inte "de två senaste".
 - **Inget veckoräknande, men ett golv:** garantin ska vara anmäld och
   passen ha börjat före vårterminen. Utan golvet börjar någon i maj, när
   betyget i praktiken är satt, köper ett par timmar och får tio.
-- **Högst tre ämnen per elev och läsår**, två timmar varje skolvecka i
-  varje (tre ämnen är sex timmar i veckan), 10 timmar per ämne som inte
-  gick upp.
+- **Högst tre ämnen per elev och läsår**, två timmar varje skolvecka
+  sammanlagt, inte per ämne (Leo: inte sex timmar i veckan), och 10 timmar
+  per ämne som inte gick upp.
 - **Hårdare än förlagan:** ämnen som anmäls i förväg och inte byts,
   två timmar varje skolvecka till läsårets slut, missade timmar igen inom
   14 dagar, inga uteblivna pass, 90 procent av uppgifterna i tid, allt
