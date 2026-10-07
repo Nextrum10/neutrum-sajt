@@ -267,6 +267,16 @@ const NX = (function () {
   const NEXLAX_AMNEN = ['Spanska', 'Tyska', 'Franska',
     'Juridik', 'Företagsekonomi', 'Psykologi', 'Filosofi'];
 
+  /* Betygsgarantin (2026-10-07) jämför två betyg, så den gäller ämnen som
+     har ett eget betyg i skolan, inte grupperna i AMNEN ("NO / Fysik /
+     Kemi / Biologi" har inget betyg att jämföra med): ämnena vi hjälper
+     till med, uppdelade per betyg. Föräldravyn anmäler ur listan och
+     adminvyn rättar ur den. Den står också i intern.betygsgaranti_amnen(),
+     som är det databasen prövar, och de ändras tillsammans. */
+  const GARANTI_AMNEN = ['Matematik', 'Svenska', 'Svenska som andraspråk', 'Engelska',
+    'Biologi', 'Fysik', 'Kemi', 'Historia', 'Samhällskunskap',
+    'Spanska', 'Tyska', 'Franska', 'Programmering'];
+
   const ARSKURSER = [
     { kod: 'ak1', text: 'Åk 1' }, { kod: 'ak2', text: 'Åk 2' },
     { kod: 'ak3', text: 'Åk 3' }, { kod: 'ak4', text: 'Åk 4' },
@@ -1308,6 +1318,6 @@ const NX = (function () {
     hämtaSession, hämtaProfil, vyFörRoll, vyFör, ärBarn, skickaBarnHem,
     inbjudan: INBJUDAN, återställning: ÅTERSTÄLLNING, länkfel: LÄNKFEL,
     hämtaUpptagna, tiderFörDatum,
-    MANADER, DAGAR, CFG, AMNEN, NEXLAX_AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod, facitLänk
+    MANADER, DAGAR, CFG, AMNEN, NEXLAX_AMNEN, GARANTI_AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod, facitLänk
   };
 })();

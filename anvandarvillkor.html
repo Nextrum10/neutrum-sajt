@@ -152,7 +152,8 @@
       plattformen där passen bokas och följs upp, och sköter betalning och ersättning.</p>
     <p>Vi är inte en skola och lovar inte ett visst betyg eller resultat. Det vi lovar är att
       studiehjälparen är utvald av oss, att ni ser vad som händer mellan passen, och att ni kan
-      byta eller sluta när ni vill.</p>
+      byta eller sluta när ni vill. Med betygsgarantin lovar vi också vad vi gör om betyget inte
+      går upp.</p>
 
     <h2>Konto</h2>
     <ul>
@@ -257,6 +258,83 @@
       mellanskillnad. Slutar ni räknas de använda timmarna till det ordinarie timpris som gällde
       när ni köpte, inte till ett senare och högre.</p>
 
+    <!-- 2026-10-07. Garantin är svår att få med flit, och utom en regel nedan
+         genom villkor som går att räkna ur det som redan finns: hållen tid,
+         rapporterna, uteblivna pass (bookings.attendance), uppgifterna
+         (homework.status och due_date) och betalningarna. Inget om att eleven
+         varit engagerad: ett villkor som bara vi bedömer gör garantin till ett
+         löfte vi själva kan säga nej till, och då är den vilseledande.
+         Anmälan görs i föräldravyn (anmal_betygsgaranti, Leo samma dag), med
+         elevens nuvarande betyg som föräldern anger; vid anspråket gäller
+         kopian. Anmälan är låst för familjen, och bara vi rättar den
+         (andra_betygsgaranti), med "senast ändrad" i familjens vy. Databasen prövar de tre ämnena och den 31 december. Passen
+         har inget ämnesfält, så ämnet läses ur rapporten.
+         Betyget som räknas är årskursens sista, i varje årskurs; ordet
+         slutbetyg ensamt hade uteslutit åk 6-8, där vårens betyg heter
+         terminsbetyg. Två timmar i veckan och 10 timmar sammanlagt, inte per
+         ämne. Går betyget inte upp i ett ämne för att familjen fokuserat mer
+         på ett annat, gäller den inte för det ämnet (Leo, med hans ord; att
+         räkna det som hälften av tiden sa han nej till). Hjälp i andra ämnen
+         påverkar inte garantin (Leo), så regeln gäller mellan ämnena med
+         garanti. Inget veckoräknande: golvet är den 31 december, annars
+         börjar någon i maj och får tio timmar för ett par köpta. Sidorna
+         säljer garantin utan villkor och siffror och länkar hit. -->
+    <h2 id="betygsgaranti">Betygsgaranti</h2>
+    <p>Gör eleven sin del så gör vi vår. Är villkoren nedan uppfyllda och blir betyget som räknas i
+      ett ämne inte högre än det eleven hade när ni anmälde garantin, får ni 10 timmar läxhjälp
+      utan kostnad, sammanlagt för de ämnen det gäller. Garantin lovar inget betyg, för betyget
+      sätts av elevens lärare. Den lovar vad vi gör om betyget inte går upp.</p>
+    <ul>
+      <li><b>Anmälan.</b> Ni anmäler garantin i er vy, under Profil: ni väljer ämnena och anger
+        elevens nuvarande betyg i varje. Den gäller från anmälan, för högst tre ämnen per elev och
+        läsår. Anmälan är låst när den är gjord: ni kan inte ändra den, och ett anmält ämne kan
+        inte bytas mot ett annat. Har något blivit fel rättar vi det när ni skriver till oss, och då
+        står det i er vy när anmälan senast ändrades.</li>
+      <li><b>Senast 31 december.</b> Garantin ska vara anmäld, och eleven ha haft sitt första pass
+        i ämnet efter anmälan, senast den 31 december. Anmälan till ett läsår öppnar den 1 juli.
+        Anmäler ni senare, eller börjar passen senare, gäller garantin inte det läsåret.</li>
+      <li><b>Betyget som räknas</b> är årskursens sista betyg: det skolan sätter i ämnet när
+        läsåret slutar. Det gäller varje årskurs, inte bara årskurs 9. Betyget till jul räknas
+        inte, och sätter skolan inget betyg i ämnet när läsåret slutar gäller garantin inte det
+        läsåret.</li>
+      <li><b>Ett betyg att jämföra med.</b> Betyget ni anger vid anmälan ska vara elevens senaste
+        betyg i ämnet från skolan. Är det A går ämnet inte att anmäla. Vid anspråket visar ni en
+        kopia av det, och det är betyget på kopian som gäller.</li>
+      <li><b>Två timmar i veckan.</b> Från det första passet efter anmälan till läsårets slut har
+        eleven läxhjälp minst två timmar varje skolvecka, sammanlagt i de ämnen garantin gäller,
+        räknat på den hållna tiden. Lovveckor räknas inte. Vilket ämne passet gällde ser vi i
+        rapporten.</li>
+      <li><b>Tiden i varje ämne.</b> Går betyget inte upp i ett ämne för att ni har fokuserat mer
+        på ett annat av ämnena med garanti, gäller garantin inte för det ämnet. Hur tiden fördelats
+        mellan ämnena ser vi i rapporterna.</li>
+      <li><b>Andra ämnen.</b> Vi hjälper självklart till med andra ämnen och med läxorna i stort när
+        ni behöver det, och det påverkar inte garantin. De timmarna räknas bara inte in i de två
+        timmarna i veckan.</li>
+      <li><b>Missade timmar.</b> En vecka med färre än två timmar tas igen inom 14 dagar, vem som
+        än avbokade. Avbokar vi eller studiehjälparen räcker det att ni tar den nya tid vi
+        föreslår.</li>
+      <li><b>Inga uteblivna pass.</b> Uteblir eleven från ett pass utan att ha avbokat det gäller
+        garantin inte längre.</li>
+      <li><b>Uppgifterna.</b> Minst 90 procent av uppgifterna som studiehjälparen lagt i ämnet
+        under perioden är klara senast sitt slutdatum, så som det står i er vy. En uppgift i
+        NexLäx är klar när nivån är klar.</li>
+      <li><b>Betalningen.</b> Alla pass under perioden är betalda, och ingen faktura har betalats
+        efter förfallodagen.</li>
+      <li><b>Anspråket.</b> Skriv till oss inom 30 dagar efter att betyget som räknas satts, med en
+        kopia av det och av det senaste betyget före anmälan, för varje ämne. Vi prövar bara det
+        som står här, ur det som står i er vy: hållen tid, rapporterna, uteblivna pass,
+        uppgifterna och betalningarna. Ni ser samma siffror som vi, och vi bedömer inte om eleven
+        har varit engagerad. Ni får svar inom 14 dagar. Kopiorna av betygen sparar vi tills
+        anspråket är avgjort, och sedan raderar vi dem.</li>
+      <li><b>Timmarna.</b> Ni får 10 timmar sammanlagt, också om betyget inte gick upp i flera
+        ämnen. De gäller samma elev och de ämnen där betyget inte gick upp, och ska användas inom
+        sex månader från vårt svar. De bokas som vanliga pass, och ni betalar inget för dem. De är
+        inte pengar: de går inte att växla in, betalas inte tillbaka om ni slutar och kan inte ges
+        till någon annan.</li>
+      <li>Garantin kan användas en gång per elev och ämne. Vi kan ändra betygsgarantin eller
+        sluta erbjuda den, men en garanti ni redan har anmält gäller fram till betyget som räknas.</li>
+    </ul>
+
     <!-- 2026-09-30. Timmen ges av forsta_timmen_bjuds i databasen och
          räknas ur raderna (intern.tipstimmar_intjanade): en per ny familj
          som anmält sig med familjens kod och haft sitt första pass.
@@ -344,8 +422,9 @@
       hotfullt eller olämpligt beteende leder till att kontot stängs av. Det gäller åt båda hållen.</p>
 
     <h2>Vårt ansvar</h2>
-    <p>Vi ansvarar för att förmedla och driva tjänsten. Vi ansvarar inte för studieresultat, och
-      inte för sådant som ligger utanför vår kontroll — som avbrott hos våra leverantörer.</p>
+    <p>Vi ansvarar för att förmedla och driva tjänsten. Vi ansvarar inte för studieresultat utöver
+      det betygsgarantin lovar, och inte för sådant som ligger utanför vår kontroll — som avbrott
+      hos våra leverantörer.</p>
     <p>Går något fel på grund av oss ersätter vi högst det ni betalat de senaste tre månaderna.
       Den begränsningen gäller inte om vi orsakat skadan uppsåtligen eller genom grov vårdslöshet.</p>
     <p>Är du konsument gäller alltid konsumentlagstiftningens tvingande regler före det som står
@@ -366,7 +445,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 30 september 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 7 oktober 2026.</p>
   </div>
 </section>
 
@@ -504,13 +583,13 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=e2e42d6b"></script>
+<script src="nextrum-app.js?v=bcd72688"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=f1ce069c"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=c20069a1"></script>
+<script src="nextrum-maskot-svar.js?v=cdeffe66"></script>
 <script src="nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {

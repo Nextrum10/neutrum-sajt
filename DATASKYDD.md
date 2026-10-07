@@ -64,6 +64,7 @@ finnas. Det här är det.
 | 22 | Barnets egen e-post (`barn_epost`; barnets rader i `notis_utskick`; `intern.barn_inloggning_forsok`; barnets_epost, 2026-10-01). **Flaggan `barn_epost` står av tills juristen läst (avsnitt 8)** | barn; föräldern (lägger till och styr) | barnets e-postadress, när den bekräftades och när länken skickades, förälderns val (mejl till barnet på eller av), barnets egna val (vilka sorters mejl); mejlen till barnet i kön (förnamn, passets datum, tid, ämne och studiehjälparens förnamn, aldrig adressen, aldrig priser eller betalning); inloggningsförsök med adressen, sparade som en HMAC av adressen och av IP-numret, aldrig i klartext | 6.1 b för adressen och mejlen: föräldern ber om det, lägger till adressen, slår på mejlen och kan ta bort allt; barnet bekräftar adressen och väljer själv bort mejl. 6.1 f för försöken: att skydda barnets inloggning mot gissning | Supabase; Resend (bekräftelsen och mejlen till barnet). Adressen når aldrig Auth, och Auth mejlar aldrig ett barn. Studiehjälparen ser den inte: tabellen har inga rättigheter för någon inloggad | så länge föräldern låter den finnas och inloggningen finns; tas bort direkt när föräldern tar bort den eller inloggningen, eller när barnet raderas eller avidentifieras; en adress som aldrig bekräftats 30 dagar efter att länken skickades; försöken ett dygn; mejlen i kön 90 dagar (rad 7); händelserna i `audit_logg` (tillagd, bekräftad, borttagen, mejlen på eller av, aldrig adressen) så länge verksamheten finns |
 | 23 | Barnets chatt med studiehjälparen (`barn_meddelanden`; barnets_chatt, 2026-10-06) | barn, studiehjälpare; föräldern (läser) | meddelandetexten (högst 2000 tecken), vem av de två som skrev, när, och när den andra läste. Att någon av oss öppnat tråden står i `audit_logg` (`chatt.oppnad` med tabellen `barn_meddelanden`: vem, när, familjen, studiehjälparen, antalet, aldrig texten) | 6.1 b genom föräldern, som en del av barnets inloggning (rad 20); att föräldern och vi kan läsa: 6.1 f (barnens trygghet) | Supabase. Studiehjälparen får en notis med barnets förnamn, aldrig texten; inget går till en AI, och barnet får inget mejl om chatten | som kontot: står kvar när inloggningen tas bort, så att föräldern kan läsa; tas bort med barnet, och med familjens eller studiehjälparens radering eller avidentifiering (`profiles_barnchatt_rensa`); loggraden så länge verksamheten finns (rad 13) |
 | 24 | Godkända användarvillkor (`villkor_godkannanden`; villkoren_godkanns, 2026-10-07) | förälder, studiehjälpare | vilken version av användarvillkoren kontot godkänt (datumet sist på sidan), när (tiden sätts av databasen) och var: kryssrutan i Skapa konto eller rutan vid inloggningen. Inget namn, ingen adress, bara kontots id | 6.1 b: att visa att avtalet ingåtts på de villkor som stod, och att den som bokar eller köper timmar har godkänt dem (databasen kräver det) | Supabase. Admin med rätt att läsa personer ser när villkoren godkändes | som kontot: tas bort med kontot när det raderas helt; står kvar med ett avidentifierat konto, eftersom passen och betalningarna gör det (rad 5 och 8) |
+| 25 | Betygsgarantin (`betygsgarantier`, `anmal_betygsgaranti()`; `anvandarvillkor.html#betygsgaranti`, 2026-10-07; anmälan i föräldravyn, anspråket med e-post till info@) | förälder, barn | anmälan: barnet, ämnena (högst tre per läsår ur `intern.betygsgaranti_amnen()`), barnets nuvarande betyg i dem som föräldern anger (F till B), läsåret och tiden, satt av databasen; en rättelse, som bara vi gör (`andra_betygsgaranti()`): när (`andrad_at`, som familjen ser) och vem hos oss (`andrad_av`, som ingen inloggad läser); anspråket: en kopia av betyget före anmälan och av det som räknas (årskursens sista betyg) i varje ämne det gäller, och vårt svar. Prövningen läser det som redan finns (hållen tid, rapporterna, `bookings.attendance`, `homework`, betalningarna); de 10 timmarna ges som vanliga pass | 6.1 b: familjen anmäler garantin och gör anspråket, och betygen är det som visar om villkoren är uppfyllda | Supabase (anmälan); Google (Workspace: inkorgen info@nextrum.se, anspråket). Studiehjälparen ser inte betygen: bara föräldern och den av oss som läser personer (`anvandare_las`, `anvandare_redigera`) | anmälan (ämne, läsår, tid) som kontot, och med barnet; betyget i anmälan gallras den 1 oktober efter läsåret (`betygsgaranti-gallring`) och direkt när barnet raderas eller avidentifieras (`students_betygsgarantier_raderas`); kopiorna raderas ur inkorgen för hand när anspråket är avgjort |
 
 **Känsliga uppgifter (art. 9) samlas inte in.** Vi ber aldrig om hälsa
 eller diagnoser, men fritexten kan få dem ändå ("Elsa har ADHD"). Därför
@@ -95,7 +96,7 @@ avsnitt 8).
 | Resend | mejl | USA | standardavtalsklausuler, DPF | ingår i villkoren, länkad från resend.com/legal |
 | Anthropic | rapportutkast, hälsningar, agenterna | USA | standardavtalsklausuler | ingår i Commercial Terms för API:t |
 | Stripe | kortbetalningar | EU och USA | standardavtalsklausuler, DPF | ingår i Stripes villkor; Stripe är självt ansvarigt för bedrägerikontroll |
-| Google | Meet-rum (inte kopplat än) | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console |
+| Google | Meet-rum (inte kopplat än); inkorgen info@nextrum.se (Workspace), där bland annat betygsgarantins anmälningar och betygskopior kommer in | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console |
 | Fortnox | bokföring, fakturor, lön (för hand, lönen som fil) | Sverige | ingen överföring | Fortnox villkor; fakturorna står i policyn sedan 2026-09-28, lönen inte än, se avsnitt 8 |
 
 **Data Privacy Framework (DPF).** EU-kommissionens beslut från 2023
@@ -125,6 +126,7 @@ adminvyn under System → Automationer med sin senaste körning.
 | `notis-stada` | varje natt 03.17 UTC | notiser 180 dagar, utskick och fel 90 dagar, körningar 30 dagar |
 | `ai-och-uppgifter-gallring` | varje natt 03.51 UTC | agentloggens text efter 90 dagar, AI-förslagens motivering 90 dagar efter beslut, klara och avbrutna uppgifter efter 1 år |
 | `svar-gallring` | varje natt 03.53 UTC | tömmer studiehjälparens svar på en föreslagen tid 30 dagar efter avslaget, eller 30 dagar efter passet; passet står kvar |
+| `betygsgaranti-gallring` | varje natt 03.56 UTC | tömmer betyget föräldern angav i betygsgarantins anmälningar den 1 oktober efter läsåret, svensk tid; raden (ämne, läsår, tid) står kvar. Ett barn som raderas tar betyget med sig direkt (`students_betygsgarantier_raderas`) |
 | `barnkonton-gallring` | varje natt 03.59 UTC | notiserna i barnens vy efter 180 dagar, och ändringsfönster som gått ut, för ett lösenordsbyte eller ett nytt konto (barnkonton_och_admin); en barnadress som inte bekräftats på 30 dagar, och inloggningsförsöken med barnadresser efter ett dygn (barnets_epost) |
 | `konton-oanvanda` | den 1:a varje månad | gör varje konto som inte använts på 2 år till en uppgift i adminvyn |
 | `cron-stada` | varje natt | jobbens egen logg efter 7 dagar |
@@ -163,8 +165,16 @@ pass, och AI kan formulera om studiehjälparens anteckningar.
 
 **Nödvändighet och proportionalitet.** Uppgifterna om barnet är de som
 undervisningen kräver: årskurs, ämnen, mål, vad man gjorde. Vi ber inte
-om personnummer, betyg eller diagnoser. Svaren på de digitala uppgifterna
-(Fas 23.1) rättas automatiskt i databasen, men rättningen är inget beslut
+om personnummer eller diagnoser. Betyg får vi bara genom betygsgarantin
+(rad 25, 2026-10-07), och bara för den som anmäler den: föräldern anger
+barnets nuvarande betyg i ämnena, högst tre, och vid ett anspråk kommer
+en kopia av betyget före anmälan och av det som räknas. Betyget i
+anmälan läser föräldern och den av oss som läser personer, aldrig
+studiehjälparen, och det gallras den 1 oktober efter läsåret; kopiorna
+raderas när anspråket är avgjort. Först skulle betygen komma bara med
+anspråket, men Leo valde samma dag att föräldern anger dem vid anmälan.
+Prövningen räknar bara ur det som redan finns. Svaren på de digitala
+uppgifterna (Fas 23.1) rättas automatiskt i databasen, men rättningen är inget beslut
 om barnet i artikel 22:s mening: den ger stjärnor och en procentsats som
 barnet, familjen och studiehjälparen ser, och ingenting följer av den av
 sig själv. XP:n och serien i NexLäx (Fas 23.2) och uppdragen (Fas 23.4)
@@ -197,6 +207,8 @@ och skickar varje utkast.
 | Ett barn får mejl som det, eller föräldern, inte vill att det ska få (2026-10-01) | låg | låg | föräldern slår på mejlen, barnet väljer bort sorter i sin vy och i varje mejl, och föräldern kan stänga av och ta bort adressen när som helst, också med flaggan av; mejlen bär bara datum, tid, ämne och förnamn, aldrig priser, betalning, avbokningsskäl eller förälderns uppgifter; en pausad inloggning får inga mejl, och kön prövar det igen när mejlet ska gå | låg |
 | Ett barn och en studiehjälpare (ofta sexton) skriver till varandra utan att en vuxen ser det (barnets chatt, 2026-10-06) | låg | hög | föräldern läser hela tråden i sin vy, och det står i barnets och studiehjälparens ruta; bara den studiehjälpare barnet är matchat med, och bara medan matchningen och inloggningen gäller (pausad inloggning läser men skriver inte); bara text, inga filer eller bilder, och en länk är inte klickbar; tak i databasen (barnet 20, studiehjälparen 30 meddelanden på tio minuter); vi kan läsa genom `barnchatt_las()`, som loggar varje öppning utan texten; ingen kan skriva direkt i tabellen, bara genom funktionerna; föräldern kan stänga av tråden för sitt barn, och då skriver varken barnet eller studiehjälparen i den (barnets_behorigheter, `rls-test.sql` avsnitt 22). Prövat i `rls-test.sql` avsnitt 21 | låg till medel: vi läser inte av oss själva, så det är föräldern som ser det först |
 | Någon tar över ett barns inloggning, genom att gissa lösenordet eller genom att byta adress eller återställa lösenordet (2026-09-30) | låg | medel | minst 8 tecken; lösenordet byts bara av föräldern genom `barn-konto`, i ett fönster på 60 sekunder; adress, återställning och telefon spärras i `auth.users` av en trigger; föräldern kan pausa, vilket loggar ut barnet överallt; barnet får aldrig ett mejl | låg till medel: mot gissning finns bara Supabases egna gränser för inloggningsförsök |
+| Kopior av ett barns betyg ligger kvar i inkorgen efter att anspråket avgjorts (betygsgarantin, 2026-10-07) | medel | låg | kopiorna kommer bara med ett anspråk; bara vi läser inkorgen; villkoren och policyn lovar att de raderas, och raden i avsnitt 8 säger när | låg till medel: det är en rutin för hand, inget jobb |
+| Ett barns betyg i betygsgarantins anmälan läses av någon som inte ska (betygsgarantin, 2026-10-07) | låg | medel | RLS: föräldern till barnet och den av oss som läser personer; studiehjälparen och barnet når inte tabellen, och ingen inloggad skriver i den, bara `anmal_betygsgaranti()`; betyget gallras den 1 oktober efter läsåret och när barnet raderas | låg |
 | En admin med begränsad behörighet ser mer än uppgiften kräver (2026-09-30) | låg | medel | behörigheterna gäller i RLS, inte bara i vyn; ingen kan ge det den inte har, och varje ändring står i `admin_logg`, som inte går att ändra | låg |
 
 **Slutsats.** Restrisken är acceptabel och kräver inget förhandssamråd
@@ -381,6 +393,16 @@ Inget av det här går att göra i koden.
   och i avtalet, inte bara i policyn (2026-09-29). För dem är chatten en
   arbetsplats, och en arbetsgivare som läser det anställda skriver ska ha
   sagt det i förväg. Handboken finns inte i repot.
+- [ ] **Betygsgarantin (2026-10-07):** står i villkoren från merge, och
+  alla får frågan när migrationen `betygsgarantin` körts; den skapar också
+  anmälan i föräldravyn (`betygsgarantier`). Startsidan och prissidan säljer
+  garantin utan villkor och siffror, men länkar till villkoren och säger att
+  de gäller. Låt juristen läsa villkoret och marknadsföringen ihop (en
+  garanti som är svår att få får inte säljas som om den vore lätt), rad
+  25, raden i konsekvensbedömningen och ändringen i integritetspolicyn på
+  båda språken. Säg till familjerna i samma mejl som villkorsändringen.
+  Radera kopiorna av betygen ur inkorgen samma dag som svaret på ett
+  anspråk skickas.
 - [ ] **Fortnox i policyn** innan första fakturan eller lönen går dit
   (CLAUDE.md avsnitt 11).
 - [ ] **Meta- eller Google-pixel:** innan ett id sätts, gör om
