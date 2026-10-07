@@ -1070,6 +1070,7 @@ STADIER = [
 GUIDER = [
     {
         'slug': 'hjalpa-barn-med-matte',
+        'grupp': 'hemma',
         'i_namn': 'i matte hemma',
         'plats': 'Stockholm',
         'og_typ': 'article',
@@ -1146,6 +1147,7 @@ GUIDER = [
     },
     {
         'slug': 'hjalpa-barn-med-lasforstaelse',
+        'grupp': 'hemma',
         'i_namn': 'i läsförståelse hemma',
         'plats': 'Stockholm',
         'og_typ': 'article',
@@ -1227,6 +1229,7 @@ GUIDER = [
     },
     {
         'slug': 'plugga-infor-prov',
+        'grupp': 'hemma',
         'i_namn': 'inför prov',
         'plats': 'Stockholm',
         'og_typ': 'article',
@@ -1318,6 +1321,7 @@ GUIDER = [
     },
     {
         'slug': 'barnet-vill-inte-gora-laxorna',
+        'grupp': 'hemma',
         'i_namn': 'när läxorna tar emot',
         'plats': 'Stockholm',
         'og_typ': 'article',
@@ -1394,6 +1398,514 @@ GUIDER = [
              'Fråga skolan var läxorna står. Många skolor lägger ut dem i en app eller på en '
              'lärplattform, och då går det att se själv i stället för att det blir ett förhör vid '
              'middagen.'),
+        ],
+    },
+# ---- Under läsåret (2026-10-07): proven, betygen och terminsstarten ----
+    {
+        'slug': 'nationella-prov-ak-9',
+        'grupp': 'aret',
+        'i_namn': 'inför nationella proven i nian',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Nationella proven i åk 9: så förbereder ni er | Nextrum',
+        'beskrivning': (
+            'Vilka prov nian skriver, när på året de kommer, vad de betyder för betyget och hur '
+            'ni förbereder er. Med länkar till provgruppernas egna övningar.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Nationella proven i nian',
+        'kort': 'Vilka prov, när och hur ni förbereder er',
+        'h1': 'Nationella proven<br>i <em>nian.</em>',
+        'lede': (
+            'I nian skriver eleverna nationella prov i svenska, engelska och matematik och i ett '
+            'NO-ämne och ett SO-ämne, och läraren ska särskilt beakta resultatet när betyget '
+            'sätts. Här är vad proven prövar, när de kommer och hur ni förbereder er utan att '
+            'hela vårterminen handlar om dem.'
+        ),
+        'bild': '13-kvallsplugg',
+        'tint': '#453B28',
+        'focal': '46% 44%',
+        'lista_etikett': 'Proven',
+        'lista_rubrik': 'Fem prov,<br>två <em>terminer.</em>',
+        'lista_ingress': (
+            'De muntliga delarna görs på hösten och de skriftliga på våren. Datumen bestämmer '
+            'Skolverket, och skolan säger vilka dagar som gäller för er.'
+        ),
+        'lista': [
+            ('Svenska eller svenska som andraspråk',
+             'Provet prövar att tala, läsa och skriva. Läsdelen har flera texter kring ett tema, '
+             'och i skrivdelen skriver eleven en egen text utifrån ett tema.'),
+            ('Engelska',
+             'Tre delar: en muntlig, en där eleven läser och lyssnar, och en där eleven skriver.'),
+            ('Matematik',
+             'En muntlig del och skriftliga delar med och utan miniräknare: korta svar och '
+             'uppgifter där eleven redovisar hur den löst dem, på nivåerna E, C och A.'),
+            ('Ett NO-ämne',
+             'Ett av ämnena biologi, fysik och kemi. Provet prövar begreppen, att förklara '
+             'samband och att planera och värdera undersökningar.'),
+            ('Ett SO-ämne',
+             'Ett av ämnena geografi, historia, religionskunskap och samhällskunskap.'),
+            ('Vad provet betyder för betyget',
+             'Läraren ska särskilt beakta resultatet när betyget sätts. Det väger alltså tyngre '
+             'än ett vanligt prov, men det sätter inte betyget ensamt: läraren väger in allt '
+             'eleven visat i ämnet.'),
+        ],
+        'kallor': [
+            ('Skolverket: provdatum för grundskolan',
+             'https://www.skolverket.se/prov-och-bedomning/nationella-prov/provdatum/provdatum-for-grundskola-sameskola-specialskola'),
+            ('Skolverket: nationella provets betydelse för betyget',
+             'https://www.skolverket.se/prov-och-bedomning/nationella-prov/genomforande-och-anpassningar/nationella-provets-betydelse-for-betyget'),
+            ('PRIM-gruppen: tidigare prov i matematik, åk 9',
+             'https://www.su.se/enheter/prim-gruppen/nationella-prov/arskurs-9'),
+            ('Göteborgs universitet: provet i engelska, åk 9',
+             'https://www.gu.se/nationella-prov-frammande-sprak/prov-och-bedomningsstod-i-engelska/engelska-arskurs-7-9/nationella-prov-i-engelska-for-arskurs-9'),
+            ('Uppsala universitet: provet i svenska, åk 9',
+             'https://www.uu.se/nationella-prov/svenska-och-svenska-som-andrasprak/grundskolan/ak9/upplagg'),
+            ('Umeå universitet: förberedelsematerial i NO, åk 9',
+             'https://arkiv.edusci.umu.se/npno9/webbmaterial/F%C3%B6rberedelsematerial%20f%C3%B6r%20nationella%20prov%20i%20NO%C3%A4mnen%20%C3%A5k%209.pdf'),
+        ],
+        'vinkel_etikett': 'Att förbereda sig',
+        'vinkel_rubrik': 'Börja med det som<br>redan är <em>svajigt.</em>',
+        'vinkel': [
+            'Proven prövar det eleven lärt sig under flera år, inte ett kapitel, och därför går '
+            'de inte att plugga in veckan innan. Det som gör skillnad är att hitta luckorna i god '
+            'tid och öva på det sätt proven frågar. Provgrupperna lägger ut gamla prov och '
+            'exempeluppgifter gratis, och närmare provet än så kommer man inte: länkarna står '
+            'ovanför.',
+            'Inför proven kan studieplanen hos Nextrum byggas bakåt från provdagarna: först det '
+            'som är svajigt, sedan uppgifter i provens stil och tid att repetera på slutet. Vi '
+            'letar efter en studiehjälpare som själv skrivit proven nyligen och minns hur '
+            'uppgifterna var formulerade. I NexLäx finns övningar i provens stil, skrivna av oss '
+            'och inte kopierade ur proven, och rapporten efter varje pass visar hur långt ni har '
+            'kommit.',
+        ],
+        'faq_rubrik': 'Nationella proven i nian, det ni brukar undra',
+        'faq': [
+            ('När skrivs proven?',
+             'De muntliga delarna görs under hösten och de skriftliga under våren, från mars till '
+             'maj. Skolverket bestämmer datumen för varje läsår, och skolan säger vilka dagar som '
+             'gäller för er klass.'),
+            ('Går det att plugga in ett nationellt prov?',
+             'Inte på en vecka. Proven prövar sådant som byggts upp under flera år, som att läsa '
+             'en text och resonera om den eller lösa ett problem i flera steg. Det som går är att '
+             'öva på provens sorts uppgifter och ta itu med luckorna i god tid.'),
+            ('Hur mycket betyder provet för slutbetyget?',
+             'Läraren ska särskilt beakta resultatet, så det väger tyngre än ett vanligt prov. '
+             'Men det sätter inte betyget ensamt, och ett prov som gick sämre än vanligt behöver '
+             'inte avgöra det.'),
+            ('När ska vi börja förbereda oss?',
+             'Gärna redan på hösten i nian, när de muntliga delarna görs. Då finns det tid att '
+             'hitta det som är svajigt före de skriftliga proven på våren, utan att allt hamnar i '
+             'samma veckor.'),
+        ],
+    },
+    {
+        'slug': 'nationella-prov-ak-6',
+        'grupp': 'aret',
+        'i_namn': 'inför nationella proven i sexan',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Nationella proven i åk 6: så förbereder ni er | Nextrum',
+        'beskrivning': (
+            'Sexan skriver nationella prov i svenska, engelska och matematik, samma år som de '
+            'första betygen kommer. Vad proven prövar och hur ni förbereder er.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Nationella proven i sexan',
+        'kort': 'Svenska, engelska och matte, och de första betygen',
+        'h1': 'Nationella proven<br>i <em>sexan.</em>',
+        'lede': (
+            'I sexan kommer de första betygen och de första nationella proven, i svenska, '
+            'engelska och matematik. Proven finns för att betygen ska bli rättvisa, och det går '
+            'att förbereda sig lugnt och i god tid.'
+        ),
+        'bild': '06-forklaringen',
+        'tint': '#9A8E79',
+        'focal': '62% 44%',
+        'lista_etikett': 'Proven',
+        'lista_rubrik': 'Tre ämnen<br>och de första <em>betygen.</em>',
+        'lista_ingress': (
+            'De muntliga delarna görs på hösten och de skriftliga på våren. Datumen bestämmer '
+            'Skolverket, och skolan säger vilka dagar som gäller för er.'
+        ),
+        'lista': [
+            ('Svenska eller svenska som andraspråk',
+             'Provet prövar tre saker: att tala, att läsa och förstå texter och att skriva.'),
+            ('Engelska',
+             'Provet prövar fyra förmågor: att tala, läsa, lyssna och skriva på engelska.'),
+            ('Matematik',
+             'En muntlig del och skriftliga delar med och utan miniräknare. Provet prövar tal, '
+             'algebra, geometri, sannolikhet, statistik och problemlösning.'),
+            ('Betygen börjar samtidigt',
+             'Från hösten i sexan får eleven betyg i slutet av varje termin. Provresultatet ska '
+             'läraren särskilt beakta, men betyget bygger på allt eleven visat i ämnet.'),
+        ],
+        'kallor': [
+            ('Skolverket: provdatum för grundskolan',
+             'https://www.skolverket.se/prov-och-bedomning/nationella-prov/provdatum/provdatum-for-grundskola-sameskola-specialskola'),
+            ('Skolverket: nationella provets betydelse för betyget',
+             'https://www.skolverket.se/prov-och-bedomning/nationella-prov/genomforande-och-anpassningar/nationella-provets-betydelse-for-betyget'),
+            ('Skolverket: terminsbetyg',
+             'https://www.skolverket.se/prov-och-bedomning/betyg/fran-bedomningar-till-betyg/terminsbetyg'),
+            ('PRIM-gruppen: proven i matematik',
+             'https://www.su.se/enheter/prim-gruppen/nationella-prov'),
+            ('Göteborgs universitet: exempel på uppgifter i engelska, åk 6',
+             'https://www.gu.se/nationella-prov-frammande-sprak/prov-och-bedomningsstod-i-engelska/engelska-arskurs-1-6/exempel-pa-uppgiftstyper-for-engelska-for-arskurs-6'),
+        ],
+        'vinkel_etikett': 'Att förbereda sig',
+        'vinkel_rubrik': 'Lugnt, i god tid<br>och i <em>provets stil.</em>',
+        'vinkel': [
+            'Det mesta en sexa behöver inför proven är det vanliga skolarbetet, gjort ordentligt: '
+            'läsa, skriva hela texter och räkna utan att gissa. Det som skiljer provet från en '
+            'vanlig lektion är formen, med tidsgräns och uppgifter som ska lösas utan hjälp. '
+            'Därför är provgruppernas exempeluppgifter bra att prova hemma några gånger, så att '
+            'formen inte är ny på provdagen.',
+            'Hos Nextrum kan studieplanen inför proven bygga på det läraren redan sett: det som '
+            'är svajigt först, sedan uppgifter i provens stil. Vi letar efter en studiehjälpare '
+            'som minns hur det var att skriva proven, och rapporten efter varje pass visar vad ni '
+            'har gått igenom.',
+        ],
+        'faq_rubrik': 'Nationella proven i sexan, det ni brukar undra',
+        'faq': [
+            ('Är provresultatet betyget?',
+             'Nej. Eleven får ett resultat på provet, men betyget i ämnet sätter läraren. '
+             'Resultatet ska läraren särskilt beakta, tillsammans med allt annat eleven visat.'),
+            ('Behöver en sexa plugga hemma inför proven?',
+             'Lite, och helst utspritt. Korta stunder med exempeluppgifter några veckor innan '
+             'räcker långt, och det viktigaste är att barnet känner igen formen. Mycket plugg den '
+             'sista veckan ger mindre än samma tid utspridd.'),
+            ('Mitt barn är nervöst inför proven. Vad gör jag?',
+             'Berätta vad provet är till för: att lärarens bedömning ska bli rättvis, inte att '
+             'pröva barnet som person. Gör gärna en exempeluppgift tillsammans hemma, med klockan '
+             'på, så att provdagen känns som något man har gjort förut.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-efter-sommarlovet',
+        'grupp': 'aret',
+        'i_namn': 'efter sommarlovet',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Kom igång efter sommarlovet: läxor och rutiner | Nextrum',
+        'beskrivning': (
+            'De första veckorna efter sommarlovet sätter rutinen för terminen. Så kommer ni igång '
+            'med läxorna igen, och vad hösten har i sig.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Kom igång efter sommarlovet',
+        'kort': 'Rutinen sätts de första veckorna',
+        'h1': 'Kom igång efter<br><em>sommarlovet.</em>',
+        'lede': (
+            'Efter ett sommarlov utan läxor börjar ingen på samma ställe som i juni. Det gör '
+            'inget, men de första veckorna sätter ofta tonen för resten av terminen. Här är hur '
+            'ni kommer igång utan att läxan blir ett bråk.'
+        ),
+        'bild': '12-pa-vag',
+        'tint': '#73746C',
+        'focal': '34% 48%',
+        'lista_etikett': 'De första veckorna',
+        'lista_rubrik': 'Rutinen först,<br>läxorna <em>sedan.</em>',
+        'lista_ingress': (
+            'Det mesta handlar om att hitta tillbaka till en vardag där läxan har en tid och en '
+            'plats.'
+        ),
+        'lista': [
+            ('Bestäm en tid och en plats',
+             'Samma tid de flesta dagar och samma bord. När läxan har en självklar plats i veckan '
+             'behöver ingen förhandla om den varje kväll.'),
+            ('Börja smått',
+             'Tjugo minuter de första dagarna är bättre än en timme som slutar i gråt. Öka när '
+             'rutinen sitter.'),
+            ('Ta reda på vad terminen har i sig',
+             'Vilka ämnen är nya, när kommer de första proven, och sa läraren något i våras om '
+             'vad som var svajigt? Det brukar stå i veckobrevet eller i skolans plattform.'),
+            ('Repetera det som var svårt i våras',
+             'Det som inte satt före sommaren sitter sällan bättre efter. Ta det tidigt, innan '
+             'nya kapitel bygger vidare på det.'),
+            ('Prata med läraren tidigt',
+             'Utvecklingssamtalet kommer under läsåret, men det går att fråga mentorn redan nu om '
+             'det finns något ni kan göra hemma. Ju tidigare, desto mer tid finns det.'),
+            ('Börjar barnet sexan eller nian?',
+             'Då kommer betyg i slutet av terminen, och de muntliga delarna av de nationella '
+             'proven görs under hösten. Det är bra att veta i augusti, inte i november.'),
+        ],
+        'kallor': [
+            ('Skolverket: terminsbetyg',
+             'https://www.skolverket.se/prov-och-bedomning/betyg/fran-bedomningar-till-betyg/terminsbetyg'),
+            ('Skolverket: utvecklingssamtal och IUP',
+             'https://www.skolverket.se/styrning-och-ansvar/regler-och-ansvar/ansvar-i-skolfragor/utvecklingssamtal-och-skriftlig-individuell-utvecklingsplan-iup'),
+            ('Skolverket: provdatum för grundskolan',
+             'https://www.skolverket.se/prov-och-bedomning/nationella-prov/provdatum/provdatum-for-grundskola-sameskola-specialskola'),
+        ],
+        'vinkel_etikett': 'Varför i augusti',
+        'vinkel_rubrik': 'Lättare att börja<br>än att <em>komma ikapp.</em>',
+        'vinkel': [
+            'Det är frestande att vänta och se hur terminen börjar. Men på det som var svajigt i '
+            'våras bygger skolan vidare redan i september, och en lucka som får vänta till '
+            'november är större då. Att börja tidigt kräver inte mycket: en tid i veckan, ett '
+            'ämne och någon som ser till att det blir av.',
+            'Hos Nextrum kan läxhjälpen börja med det som var svårt i våras, och studieplanen tar '
+            'sedan terminen i den ordning skolan gör det. Det är samma studiehjälpare från vecka '
+            'till vecka, och rapporten efter varje pass visar vad ni har gått igenom.',
+        ],
+        'faq_rubrik': 'Efter sommarlovet, det ni brukar undra',
+        'faq': [
+            ('När ska vi börja med läxhjälp på hösten?',
+             'Gärna de första veckorna, innan något hunnit bli en lucka. Det går att börja när som '
+             'helst, men det är lättare att hålla en rutin än att komma ikapp.'),
+            ('Barnet verkar ha glömt mycket över sommaren. Är det ett problem?',
+             'Det brukar ta lite tid att komma in i det igen. Repetera det som var svårt i våras i '
+             'stället för att börja om från början, och fråga läraren om något behöver tas om.'),
+            ('Kan vi börja med ett pass i veckan?',
+             'Ja. Hur ofta ni bokar bestämmer ni själva, och det finns ingen bindningstid.'),
+        ],
+    },
+    {
+        'slug': 'infor-terminsbetyget',
+        'grupp': 'aret',
+        'i_namn': 'inför terminsbetyget',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Inför terminsbetyget: så använder ni veckorna kvar | Nextrum',
+        'beskrivning': (
+            'Från sexan sätts betyg i slutet av varje termin. Vad betyget bygger på, vad som går '
+            'att göra de sista veckorna och vad som inte går.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Inför terminsbetyget',
+        'kort': 'Vad som går att göra de sista veckorna',
+        'h1': 'Inför<br><em>terminsbetyget.</em>',
+        'lede': (
+            'Från hösten i sexan sätts betyg i slutet av varje termin. Ett betyg går inte att '
+            'plugga upp på en helg, men de sista veckorna är inte heller förlorade. Här är vad '
+            'betyget bygger på och vad som faktiskt går att göra.'
+        ),
+        'bild': '07-genombrottet',
+        'tint': '#898268',
+        'focal': '38% 40%',
+        'lista_etikett': 'Det som går att göra',
+        'lista_rubrik': 'Fråga först,<br>plugga <em>sedan.</em>',
+        'lista_ingress': (
+            'Det viktigaste är att veta vad som saknas, och det vet läraren bättre än någon '
+            'annan.'
+        ),
+        'lista': [
+            ('Fråga läraren vad som saknas',
+             'Inte "vilket betyg blir det" utan "vad behöver hen visa mer av". Svaret gör de '
+             'sista veckorna konkreta: en uppgift att göra om, ett område att visa, ett moment som '
+             'fattas.'),
+            ('Lämna in det som saknas',
+             'En inlämning som aldrig kom in går inte att bedöma. Börja med det som är försenat '
+             'innan ni lägger tid på något nytt.'),
+            ('Öva på det betyget bygger på',
+             'Betyget sätts efter betygskriterierna i ämnet, och de står i kursplanen. Läraren kan '
+             'visa vilka delar som är svagast.'),
+            ('Var realistisk',
+             'Det som inte satt på länge hinner sällan sätta sig på några veckor. Det som går är '
+             'att visa det som nästan sitter, och att börja tidigare nästa termin.'),
+            ('Prata om betyget efteråt',
+             'Ett terminsbetyg är en lägesbild. Fram till nian kommer ett nytt varje termin, och '
+             'det som saknas nu kan eleven visa nästa termin.'),
+        ],
+        'kallor': [
+            ('Skolverket: terminsbetyg',
+             'https://www.skolverket.se/prov-och-bedomning/betyg/fran-bedomningar-till-betyg/terminsbetyg'),
+            ('Skolverket: hur lärare sätter betyg (lättläst)',
+             'https://www.skolverket.se/lattlast/lattlast-information-fran-skolverket/hur-satter-larare-betyg-pa-lattlast-svenska'),
+        ],
+        'vinkel_etikett': 'Inget löfte om betyg',
+        'vinkel_rubrik': 'Vi lovar inget betyg.<br>Vi lovar <em>passen.</em>',
+        'vinkel': [
+            'Ingen läxhjälp kan lova ett betyg, och den som gör det lovar något den inte styr '
+            'över. Betyget sätter läraren, utifrån allt eleven visat. Det vi kan göra är att se '
+            'till att veckorna som är kvar används till det läraren sagt saknas.',
+            'Hos Nextrum kan studieplanen byggas på lärarens besked: det som saknas först, sedan '
+            'det som nästan sitter. Rapporten efter varje pass visar vad ni har gått igenom, så '
+            'att ni vet var ni står, och nästa termin kan börja där.',
+        ],
+        'faq_rubrik': 'Inför terminsbetyget, det ni brukar undra',
+        'faq': [
+            ('När sätts terminsbetyget?',
+             'I slutet av varje termin, från hösten i sexan till hösten i nian. På våren i nian '
+             'kommer slutbetyget i stället.'),
+            ('Går det att höja ett betyg på några veckor?',
+             'Ibland går det att visa något som saknats, till exempel en inlämning eller ett '
+             'moment eleven inte hunnit med. Men betyget bygger på allt läraren vet om elevens '
+             'kunskaper, och det som inte satt på länge hinner sällan sätta sig på några veckor.'),
+            ('Vad gör vi om betyget blev lägre än väntat?',
+             'Fråga läraren vad som saknades, och börja där nästa termin. Ett terminsbetyg är en '
+             'lägesbild, och fram till slutbetyget i nian kommer ett nytt varje termin.'),
+        ],
+    },
+# ---- Att välja läxhjälp (2026-10-07) ----
+    {
+        'slug': 'vad-kostar-laxhjalp',
+        'grupp': 'valja',
+        'i_namn': 'och vad den kostar',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Vad kostar läxhjälp? Det här styr priset | Nextrum',
+        'beskrivning': (
+            'Vad som gör läxhjälp dyr eller billig, vad ni ska fråga innan ni bokar, varför '
+            'rutavdraget inte gäller och vad vi tar, rakt ut.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Vad kostar läxhjälp?',
+        'kort': 'Det här styr priset, och vad vi tar',
+        'h1': 'Vad kostar<br><em>läxhjälp?</em>',
+        'lede': (
+            'Timpriset säger mindre än det ser ut. Vem som håller passet, var det hålls och vilka '
+            'avgifter som ligger runt omkring avgör vad en termin faktiskt kostar. Här är det som '
+            'styr priset, frågorna att ställa och vårt pris, rakt ut.'
+        ),
+        'bild': '02-personlig-anpassning',
+        'tint': '#8E8C84',
+        'focal': '50% 40%',
+        'lista_etikett': 'Det som styr priset',
+        'lista_rubrik': 'Mer än<br><em>timpriset.</em>',
+        'lista_ingress': (
+            'Två timpriser går inte att jämföra förrän ni vet vad som ingår i dem och vad som '
+            'läggs på.'
+        ),
+        'lista': [
+            ('Vem som håller passet',
+             'En legitimerad lärare kostar mer än en student eller en ung studiehjälpare. Läraren '
+             'har utbildningen, och den yngre har ofta läst samma kurs nyligen och minns var den '
+             'tog stopp. Vad som är värt mest beror på vad barnet behöver.'),
+            ('Hemma eller online',
+             'Kommer någon hem till er kan resan ligga i priset, som en avgift eller som ett högre '
+             'timpris. Online finns ingen resa att betala för.'),
+            ('Avgifterna runt omkring',
+             'Anmälningsavgift, startavgift, administrationsavgift. Räkna in dem i det första '
+             'passets pris, så syns vad den första månaden faktiskt kostar.'),
+            ('Bindningstid och minsta antal timmar',
+             'Ett lågt timpris med krav på tjugo timmar är ett paket, inte ett timpris. Fråga vad '
+             'det kostar att sluta efter två pass.'),
+            ('Avbokning och tid som blir över',
+             'Vad kostar ett pass ni avbokar dagen innan? Betalar ni för en hel timme om passet '
+             'slutar efter fyrtio minuter, eller för den tid det höll?'),
+            ('Rutavdraget',
+             'Läxhjälp ger inte rätt till rutavdrag sedan 2015. Barnpassning kan ge det, men bara '
+             'om läxhjälpen är en liten del av tiden. Den som lovar rutavdrag på läxhjälp bör '
+             'kunna visa varför.'),
+        ],
+        'kallor': [
+            ('Skatteverket: vilka arbeten som ger rutavdrag',
+             'https://www.skatteverket.se/privat/fastigheterochbostad/rotochrutarbete/listaoverrutarbeten.106.5c1163881590be297b53de7.html'),
+        ],
+        'vinkel_etikett': 'Vårt pris',
+        'vinkel_rubrik': f'{PRIS} i timmen,<br>rakt <em>ut.</em>',
+        'vinkel': [
+            f'Hos Nextrum kostar läxhjälp {PRIS} i timmen, samma pris i alla ämnen och var passet '
+            f'än hålls, hemma hos er eller online. Sitter syskon med i samma pass tillkommer '
+            f'{EXTRA_BARN} i timmen totalt, lika mycket för tre barn som för två. Det finns ingen '
+            f'anmälningsavgift, ingen bindningstid och inget minsta antal timmar, och för nya '
+            f'familjer är första timmen på köpet när ni har bokat två timmar.',
+            'Ni betalar för den tid passet faktiskt höll, räknat per påbörjad kvart, och ser '
+            'tiden i rapporten innan ni bekräftar den. Matchningen, studieplanen och rapporten '
+            'efter varje pass ingår i timpriset. Hela prisbilden står på prissidan.',
+        ],
+        'faq_rubrik': 'Vad läxhjälp kostar, det ni brukar undra',
+        'faq': [
+            ('Gäller rutavdraget för läxhjälp?',
+             'Nej, inte sedan 2015. Barnpassning kan fortfarande ge rutavdrag, men bara om '
+             'läxhjälpen är en liten del av tiden. Skatteverkets lista över vad som ger '
+             'rutavdrag är länkad ovanför.'),
+            ('Varför är läxhjälp med en lärare dyrare?',
+             'Läraren har en lång utbildning, och priset speglar den. Det kan vara värt det när '
+             'barnet behöver någon som undervisar från grunden. För den som behöver komma igång '
+             'med läxorna och få saker förklarade på sin egen nivå räcker ofta någon som nyss '
+             'läst samma kurs.'),
+            ('Vad kostar det för syskon hos er?',
+             f'Sitter syskonen i samma pass kostar det {PRIS} i timmen plus {EXTRA_BARN} i timmen '
+             f'totalt, alltså {FLERA_BARN} i timmen för två eller tre barn.'),
+            ('Kostar det något att fråga?',
+             'Nej. Intresseanmälan är gratis, och ni binder er inte till något förrän ni bokar '
+             'ett pass.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-eller-privatlarare',
+        'grupp': 'valja',
+        'i_namn': 'eller privatlärare',
+        'plats': 'Stockholm',
+        'og_typ': 'article',
+        'titel': 'Läxhjälp eller privatlärare? Skillnaden förklarad | Nextrum',
+        'beskrivning': (
+            'Legitimerad lärare, student eller ung studiehjälpare: vad ni får för pengarna och '
+            'när vilken passar bäst. En jämförelse där vi inte alltid vinner.'
+        ),
+        'etikett': 'Guide för föräldrar',
+        'kort_titel': 'Läxhjälp eller privatlärare?',
+        'kort': 'Vem som passar ert barn, och när',
+        'h1': 'Läxhjälp eller<br><em>privatlärare?</em>',
+        'lede': (
+            'Orden används om varandra, men det är olika saker. En privatlärare undervisar, och '
+            'en läxhjälpare hjälper eleven med det skolan redan tagit upp. Här är skillnaden, och '
+            'när vilken passar bäst, också när svaret inte är vi.'
+        ),
+        'bild': '10-forsta-motet',
+        'tint': '#948979',
+        'focal': '50% 42%',
+        'lista_etikett': 'Tre sorters hjälp',
+        'lista_rubrik': 'Vem som<br>passar <em>när.</em>',
+        'lista_ingress': (
+            'Ingen av dem är bäst för alla. Det avgörs av vad barnet behöver, inte av vem som har '
+            'längst utbildning.'
+        ),
+        'lista': [
+            ('Legitimerad lärare',
+             'Har en lärarutbildning och kan undervisa ett område från grunden, och en '
+             'speciallärare kan dessutom arbeta med läs-, skriv- och räknesvårigheter. Passar när '
+             'barnet behöver undervisning och inte bara hjälp. Kostar mest.'),
+            ('Student eller ung studiehjälpare',
+             'Har ofta läst samma kurser nyligen och minns var de tog stopp. Förklarar på elevens '
+             'nivå och är nära i ålder, vilket kan göra det lättare att fråga det man tycker är '
+             'pinsamt att inte kunna. Passar när barnet behöver förstå läxan, komma igång och få '
+             'en rutin. Det är det Nextrum gör.'),
+            ('Någon i familjen',
+             'Gratis och nära till hands, och för mycket räcker det långt. Men den som sitter vid '
+             'samma köksbord har sällan tid varje vecka, och läxan blir lätt ett bråk i stället '
+             'för ett pass.'),
+            ('Vad legitimationen betyder',
+             'Legitimation krävs för att undervisa och sätta betyg i skolan. För läxhjälp utanför '
+             'skolan finns inget sådant krav, varken för en privatlärare eller för en läxhjälpare. '
+             'Fråga därför vad personen har gjort, inte bara vad den kallar sig.'),
+            ('Det ni ska fråga, oavsett vem',
+             'Håller samma person passen varje gång? Hur följs de upp? Vad händer om det inte '
+             'fungerar mellan barnet och personen? Svaren säger mer än titeln.'),
+        ],
+        'kallor': [
+            ('Skolverket: krav för att få undervisa',
+             'https://www.skolverket.se/kompetensutveckling/legitimation/regler-och-krav-for-legitimation/krav-for-att-fa-undervisa'),
+            ('Skolverket: extra anpassningar och särskilt stöd',
+             'https://www.skolverket.se/styrning-och-ansvar/regler-och-ansvar/ansvar-i-skolfragor/extra-anpassningar-sarskilt-stod-och-atgardsprogram'),
+        ],
+        'vinkel_etikett': 'När vi inte är rätt val',
+        'vinkel_rubrik': 'Ibland är svaret<br>en <em>lärare.</em>',
+        'vinkel': [
+            'Har barnet svårt att läsa, skriva eller räkna på ett sätt som inte går över, eller '
+            'ligger det långt efter i ett ämne, behövs någon som kan undervisa och inte bara '
+            'förklara läxan. Då är en speciallärare eller en legitimerad lärare ett bättre val än '
+            'vi. Skolan ska också ge stöd när en elev riskerar att inte klara ett ämne, så börja '
+            'med att prata med mentorn.',
+            'Behöver barnet hjälp att förstå läxan, någon som förklarar på dess nivå och en '
+            'rutin varje vecka, är det det vi gör. Vi letar efter en studiehjälpare som nyligen '
+            'läst samma kurser, ni får en rapport efter varje pass, och det finns ingen '
+            'bindningstid om det inte blir rätt.',
+        ],
+        'faq_rubrik': 'Läxhjälp eller privatlärare, det ni brukar undra',
+        'faq': [
+            ('Är era studiehjälpare lärare?',
+             'Nej, och vi kallar dem inte det. De är intervjuade och utbildade av oss och har '
+             'klarat vårt prov, men de har ingen lärarlegitimation. Det vi letar efter i '
+             'matchningen är någon som nyligen läst samma kurser som eleven.'),
+            ('Kan vi byta till en lärare senare?',
+             'Ja. Det finns ingen bindningstid hos oss, och rapporterna ni fått efter varje pass '
+             'är bra att visa en ny lärare.'),
+            ('Vad kostar en privatlärare jämfört med er?',
+             'Det varierar för mycket för att vi ska sätta en siffra på andras priser. Fråga '
+             'efter timpriset och avgifterna runt omkring, och jämför med vårt på prissidan.'),
         ],
     },
 ]
@@ -1560,8 +2072,17 @@ def plats(o):
     return o.get('plats', o.get('namn'))
 
 
+def rubriktext(h1):
+    """Rubriken utan taggar, som delningsbilden skriver den
+    (verktyg/bygg-delningsbilder.js, kolla-delningsbilder.py)."""
+    return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', re.sub(r'<br\s*/?>', ' ', h1))).strip()
+
+
 def head(o):
-    bild = f"https://nextrum.se/bilder/{o['bild']}-1280.jpg"
+    # Delningsbilden, inte fotot (2026-10-07): sidans foto med rubriken
+    # och priset ovanpå, byggd av verktyg/bygg-delningsbilder.js.
+    bild = f"https://nextrum.se/delning/{o['slug']}.jpg"
+    bild_alt = 'Nextrum: ' + rubriktext(o['h1'])
     return f"""<!doctype html>
 <html lang="sv">
 <head>
@@ -1590,9 +2111,9 @@ def head(o):
 <meta property="og:description" content="{esc(o['beskrivning'])}">
 <meta property="og:url" content="https://nextrum.se/{o['slug']}">
 <meta property="og:image" content="{bild}">
-<meta property="og:image:width" content="1280">
-<meta property="og:image:height" content="720">
-<meta property="og:image:alt" content="{esc(o['alt'])}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{esc(bild_alt)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(o['titel'])}">
 <meta name="twitter:description" content="{esc(o['beskrivning'])}">
@@ -1933,8 +2454,23 @@ def amnessida(o):
 UNDERSTRUKEN = 'color:inherit;text-decoration:underline;text-underline-offset:3px'
 
 
+GUIDEGRUPPER = [
+    ('hemma', 'För er som hjälper till hemma'),
+    ('aret', 'Under läsåret'),
+    ('valja', 'Att välja läxhjälp'),
+]
+
+
 def guidekort(guider):
     return '\n'.join(kort(g['slug'], g['kort_titel'], g['kort']) for g in guider)
+
+
+def guidesektioner():
+    """En kortsektion per grupp. Tio guider i ett enda rutnät gick inte
+    att överblicka, och de svarar på tre olika frågor."""
+    return ''.join(kortsektion('Guider', rubrik,
+                               guidekort([g for g in GUIDER if g['grupp'] == grupp]))
+                   for grupp, rubrik in GUIDEGRUPPER)
 
 
 def kallor_rad(o):
@@ -2001,7 +2537,9 @@ def guidesida(o):
         f'      <li><em>{i:02d}</em><div><b>{esc(r)}</b><p>{esc(t)}</p></div></li>'
         for i, (r, t) in enumerate(o['lista'], 1))
     vinkel = '\n'.join(f'      <p>{esc(p)}</p>' for p in o['vinkel'])
-    andra = [g for g in GUIDER if g['slug'] != o['slug']]
+    samma = [g for g in GUIDER if g['slug'] != o['slug'] and g['grupp'] == o['grupp']]
+    ovriga = [g for g in GUIDER if g['grupp'] != o['grupp']]
+    andra = (samma + ovriga)[:6]
     fler = kortsektion('Guider', 'Fler guider', guidekort(andra)) if andra else ''
 
     return f"""{head(o)}{huvud}<main id="innehall">
@@ -2068,7 +2606,7 @@ def sida404():
         ('sa-fungerar-nextrum', 'Så fungerar Nextrum', 'Från intresseanmälan till första passet'),
         ('intresseanmalan', 'Intresseanmälan', 'Berätta vad ni behöver hjälp med'),
         ('faq', 'Vanliga frågor', 'Svar om pris, betalning och trygghet'),
-        ('bli-studiehjalpare', 'Bli studiehjälpare', 'Ett första jobb för dig som pluggar'),
+        ('bli-studiehjalpare', 'Bli studiehjälpare', 'Hjälp yngre elever och få betalt för det'),
     ])
     return f"""<!doctype html>
 <html lang="sv">
@@ -2121,7 +2659,7 @@ def skriv_navet():
     efter = s[s.index(NAV_SLUT):]
     block = (kortsektion('Ämnen', 'Läxhjälp per ämne', amneskort(AMNEN))
              + kortsektion('Stadier', 'Läxhjälp per stadium', stadiekort(STADIER))
-             + kortsektion('Guider', 'För er som hjälper till hemma', guidekort(GUIDER)))
+             + guidesektioner())
     open(p, 'w', encoding='utf-8').write(fore + block + efter)
 
 

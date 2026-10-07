@@ -81,6 +81,12 @@ jobs:
       - name: Användarvillkorens version är sidans datum
         run: python3 verktyg/kolla-villkor.py
 
+      # 2026-10-07: varje öppen sida delas med en bild med sin rubrik och
+      # priset. Bilderna byggs för hand (bygg-delningsbilder.js), så det
+      # här säger ifrån när en rubrik eller priset ändrats utan dem.
+      - name: Delningsbilderna är aktuella
+        run: python3 verktyg/kolla-delningsbilder.py
+
       # Varje bilder/*.jpg ska ha en .webp bredvid sig. Sidorna
       # serverar dem genom <picture>, så en saknad webp går inte
       # sönder — den gör bara den bilden tre gånger tyngre, tyst.

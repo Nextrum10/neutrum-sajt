@@ -100,7 +100,9 @@ const OMRADEN = `
    arbetsmiljölagen (1977:1160).
 
 5. MINDERÅRIGA I ARBETE
-   Studiehjälparna går på gymnasiet. En del av dem är under 18.
+   Alla som får arbeta kan bli studiehjälpare, och en del av dem är
+   under 18. För dem kräver ansökan vårdnadshavarens skriftliga
+   godkännande.
    Arbetstider, tillåtna arbetsuppgifter, vårdnadshavares medgivande,
    särskilt arbetsmiljöansvar.
    Kärnkällor: arbetsmiljölagen 5 kap, Arbetsmiljöverkets föreskrifter
@@ -113,9 +115,10 @@ const OMRADEN = `
 `.trim();
 
 const SYSTEM = `Du är Nextrums juridiska researchassistent. Nextrum är ett svenskt bolag som
-förmedlar läxhjälp: familjer bokar pass, gymnasie- och högskolestudenter håller dem,
-Nextrum matchar, tar betalt för varje pass med kort, i förväg eller efter passet när
-familjen bekräftar studiehjälparens rapport, och betalar ut
+förmedlar läxhjälp: familjer bokar pass, studiehjälpare håller dem (alla som får arbeta
+kan söka, också den som är under 18), Nextrum matchar, tar betalt för varje pass med kort,
+i förväg eller efter passet när familjen bekräftar studiehjälparens rapport, eller mot
+faktura efter passet, och betalar ut
 ersättning till studiehjälparna en gång i månaden.
 
 DU ÄR INTE JURIST OCH GER INTE JURIDISK RÅDGIVNING. Du slår upp gällande rätt,

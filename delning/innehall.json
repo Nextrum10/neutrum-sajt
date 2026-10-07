@@ -1,0 +1,293 @@
+{
+  "pris": 379,
+  "sidor": {
+    "index.html": {
+      "bild": "delning/index.jpg",
+      "rubrik": "Av unga, för unga.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "hero-nextrum"
+    },
+    "en/index.html": {
+      "bild": "delning/en-index.jpg",
+      "rubrik": "By young people, for young people.",
+      "rad": "Tutoring in Stockholm · SEK 379 an hour",
+      "foto": "hero-nextrum"
+    },
+    "anvandarvillkor.html": {
+      "bild": "delning/anvandarvillkor.jpg",
+      "rubrik": "Användarvillkor",
+      "rad": "Nextrum · läxhjälp i Stockholm",
+      "foto": "04-sjalvfortroende"
+    },
+    "en/anvandarvillkor.html": {
+      "bild": "delning/en-anvandarvillkor.jpg",
+      "rubrik": "Terms of use",
+      "rad": "Nextrum · tutoring in Stockholm",
+      "foto": "04-sjalvfortroende"
+    },
+    "barnet-vill-inte-gora-laxorna.html": {
+      "bild": "delning/barnet-vill-inte-gora-laxorna.jpg",
+      "rubrik": "När barnet inte vill göra läxorna.",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "04-sjalvfortroende"
+    },
+    "bli-studiehjalpare.html": {
+      "bild": "delning/bli-studiehjalpare.jpg",
+      "rubrik": "Ditt första jobb kan börja här.",
+      "rad": "Jobba som studiehjälpare · Nextrum",
+      "foto": "05-av-unga-for-unga"
+    },
+    "en/bli-studiehjalpare.html": {
+      "bild": "delning/en-bli-studiehjalpare.jpg",
+      "rubrik": "Your first job can start here.",
+      "rad": "Work as a tutor · Nextrum",
+      "foto": "05-av-unga-for-unga"
+    },
+    "faq.html": {
+      "bild": "delning/faq.jpg",
+      "rubrik": "Vanliga frågor",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "04-sjalvfortroende"
+    },
+    "en/faq.html": {
+      "bild": "delning/en-faq.jpg",
+      "rubrik": "Frequently asked questions",
+      "rad": "Tutoring in Stockholm · SEK 379 an hour",
+      "foto": "04-sjalvfortroende"
+    },
+    "for-elever-och-foraldrar.html": {
+      "bild": "delning/for-elever-och-foraldrar.jpg",
+      "rubrik": "Utveckling ni kan följa.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "02-personlig-anpassning"
+    },
+    "en/for-elever-och-foraldrar.html": {
+      "bild": "delning/en-for-elever-och-foraldrar.jpg",
+      "rubrik": "Progress you can follow.",
+      "rad": "Tutoring in Stockholm · SEK 379 an hour",
+      "foto": "02-personlig-anpassning"
+    },
+    "hjalpa-barn-med-lasforstaelse.html": {
+      "bild": "delning/hjalpa-barn-med-lasforstaelse.jpg",
+      "rubrik": "Hjälpa barnet med läsförståelsen.",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "07-genombrottet"
+    },
+    "hjalpa-barn-med-matte.html": {
+      "bild": "delning/hjalpa-barn-med-matte.jpg",
+      "rubrik": "Hjälpa barnet med matteläxan.",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "06-forklaringen"
+    },
+    "infor-terminsbetyget.html": {
+      "bild": "delning/infor-terminsbetyget.jpg",
+      "rubrik": "Inför terminsbetyget.",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "07-genombrottet"
+    },
+    "integritetspolicy.html": {
+      "bild": "delning/integritetspolicy.jpg",
+      "rubrik": "Integritetspolicy",
+      "rad": "Nextrum · läxhjälp i Stockholm",
+      "foto": "04-sjalvfortroende"
+    },
+    "en/integritetspolicy.html": {
+      "bild": "delning/en-integritetspolicy.jpg",
+      "rubrik": "Privacy policy",
+      "rad": "Nextrum · tutoring in Stockholm",
+      "foto": "04-sjalvfortroende"
+    },
+    "intresseanmalan.html": {
+      "bild": "delning/intresseanmalan.jpg",
+      "rubrik": "Berätta vad ni behöver hjälp med.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "02-personlig-anpassning"
+    },
+    "en/intresseanmalan.html": {
+      "bild": "delning/en-intresseanmalan.jpg",
+      "rubrik": "Tell us what you need help with.",
+      "rad": "Tutoring in Stockholm · SEK 379 an hour",
+      "foto": "02-personlig-anpassning"
+    },
+    "lagring.html": {
+      "bild": "delning/lagring.jpg",
+      "rubrik": "Cookies och lagring",
+      "rad": "Nextrum · läxhjälp i Stockholm",
+      "foto": "04-sjalvfortroende"
+    },
+    "en/lagring.html": {
+      "bild": "delning/en-lagring.jpg",
+      "rubrik": "Cookies and storage",
+      "rad": "Nextrum · tutoring in Stockholm",
+      "foto": "04-sjalvfortroende"
+    },
+    "laxhjalp-bromma.html": {
+      "bild": "delning/laxhjalp-bromma.jpg",
+      "rubrik": "Läxhjälp i Bromma.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "10-forsta-motet"
+    },
+    "laxhjalp-efter-sommarlovet.html": {
+      "bild": "delning/laxhjalp-efter-sommarlovet.jpg",
+      "rubrik": "Kom igång efter sommarlovet.",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "12-pa-vag"
+    },
+    "laxhjalp-eller-privatlarare.html": {
+      "bild": "delning/laxhjalp-eller-privatlarare.jpg",
+      "rubrik": "Läxhjälp eller privatlärare?",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "10-forsta-motet"
+    },
+    "laxhjalp-engelska.html": {
+      "bild": "delning/laxhjalp-engelska.jpg",
+      "rubrik": "Läxhjälp i engelska.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "04-sjalvfortroende"
+    },
+    "laxhjalp-farsta.html": {
+      "bild": "delning/laxhjalp-farsta.jpg",
+      "rubrik": "Läxhjälp i Farsta.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "06-forklaringen"
+    },
+    "laxhjalp-gymnasiet.html": {
+      "bild": "delning/laxhjalp-gymnasiet.jpg",
+      "rubrik": "Läxhjälp för gymnasiet.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "09-online-v2"
+    },
+    "laxhjalp-hammarby-sjostad.html": {
+      "bild": "delning/laxhjalp-hammarby-sjostad.jpg",
+      "rubrik": "Läxhjälp i Hammarby Sjöstad.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "13-kvallsplugg"
+    },
+    "laxhjalp-hogstadiet.html": {
+      "bild": "delning/laxhjalp-hogstadiet.jpg",
+      "rubrik": "Läxhjälp för högstadiet.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "02-personlig-anpassning"
+    },
+    "laxhjalp-matematik.html": {
+      "bild": "delning/laxhjalp-matematik.jpg",
+      "rubrik": "Läxhjälp i matte.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "01-en-till-en"
+    },
+    "laxhjalp-mellanstadiet.html": {
+      "bild": "delning/laxhjalp-mellanstadiet.jpg",
+      "rubrik": "Läxhjälp för mellanstadiet.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "10-forsta-motet"
+    },
+    "laxhjalp-nacka.html": {
+      "bild": "delning/laxhjalp-nacka.jpg",
+      "rubrik": "Läxhjälp i Nacka.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "12-pa-vag"
+    },
+    "laxhjalp-no.html": {
+      "bild": "delning/laxhjalp-no.jpg",
+      "rubrik": "Läxhjälp i fysik, kemi och biologi.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "13-kvallsplugg"
+    },
+    "laxhjalp-online.html": {
+      "bild": "delning/laxhjalp-online.jpg",
+      "rubrik": "Läxhjälp online.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "03-digital-laxhjalp"
+    },
+    "laxhjalp-sodermalm.html": {
+      "bild": "delning/laxhjalp-sodermalm.jpg",
+      "rubrik": "Läxhjälp på Södermalm.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "01-en-till-en"
+    },
+    "laxhjalp-solna.html": {
+      "bild": "delning/laxhjalp-solna.jpg",
+      "rubrik": "Läxhjälp i Solna.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "07-genombrottet"
+    },
+    "laxhjalp-stockholm.html": {
+      "bild": "delning/laxhjalp-stockholm.jpg",
+      "rubrik": "Läxhjälp i Stockholm, av någon som nyss satt där.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "01-en-till-en"
+    },
+    "laxhjalp-svenska.html": {
+      "bild": "delning/laxhjalp-svenska.jpg",
+      "rubrik": "Läxhjälp i svenska.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "07-genombrottet"
+    },
+    "nationella-prov-ak-6.html": {
+      "bild": "delning/nationella-prov-ak-6.jpg",
+      "rubrik": "Nationella proven i sexan.",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "06-forklaringen"
+    },
+    "nationella-prov-ak-9.html": {
+      "bild": "delning/nationella-prov-ak-9.jpg",
+      "rubrik": "Nationella proven i nian.",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "13-kvallsplugg"
+    },
+    "plugga-infor-prov.html": {
+      "bild": "delning/plugga-infor-prov.jpg",
+      "rubrik": "Plugga inför provet.",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "13-kvallsplugg"
+    },
+    "priser.html": {
+      "bild": "delning/priser.jpg",
+      "rubrik": "Enkelt pris. Inga överraskningar.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "02-personlig-anpassning"
+    },
+    "en/priser.html": {
+      "bild": "delning/en-priser.jpg",
+      "rubrik": "Simple pricing. No surprises.",
+      "rad": "Tutoring in Stockholm · SEK 379 an hour",
+      "foto": "02-personlig-anpassning"
+    },
+    "sa-fungerar-nextrum.html": {
+      "bild": "delning/sa-fungerar-nextrum.jpg",
+      "rubrik": "Från intresseanmälan till första passet.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "02-personlig-anpassning"
+    },
+    "en/sa-fungerar-nextrum.html": {
+      "bild": "delning/en-sa-fungerar-nextrum.jpg",
+      "rubrik": "From enquiry to the first session.",
+      "rad": "Tutoring in Stockholm · SEK 379 an hour",
+      "foto": "02-personlig-anpassning"
+    },
+    "en/tutoring-stockholm.html": {
+      "bild": "delning/en-tutoring-stockholm.jpg",
+      "rubrik": "Swedish school, English at home?",
+      "rad": "Tutoring in Stockholm · SEK 379 an hour",
+      "foto": "01-en-till-en"
+    },
+    "vad-kostar-laxhjalp.html": {
+      "bild": "delning/vad-kostar-laxhjalp.jpg",
+      "rubrik": "Vad kostar läxhjälp?",
+      "rad": "Guide för föräldrar · Nextrum",
+      "foto": "02-personlig-anpassning"
+    },
+    "var-ide.html": {
+      "bild": "delning/var-ide.jpg",
+      "rubrik": "Rätt person kan göra stor skillnad.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "02-personlig-anpassning"
+    },
+    "en/var-ide.html": {
+      "bild": "delning/en-var-ide.jpg",
+      "rubrik": "The right person can make a real difference.",
+      "rad": "Tutoring in Stockholm · SEK 379 an hour",
+      "foto": "02-personlig-anpassning"
+    }
+  }
+}
