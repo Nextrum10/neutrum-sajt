@@ -324,7 +324,8 @@ inloggning). I ordning:
    och panelen den, och den ska stå som i `minne/sakerhet.md`. Ändras den
    någon gång: klistra in hela mallen, aldrig en rad. En mall med bara en
    mening är ett mejl utan länk.
-5. **Merga och driftsätt `bjud-in` v11 från main.** Inbjudan och Skicka
+5. **Gjort 2026-10-07: `bjud-in` v11 från main** (merge-commiten av PR
+   #222, hämtad tillbaka och byte för byte lika). Inbjudan och Skicka
    igen mejlas då av funktionen själv, genom Resend och med tiden i ämnet
    (`minne/sakerhet.md`, Gmail gömde det senaste mejlet). Filerna:
    `bjud-in/index.ts` och ur `_delad/` `http.ts`, `auth.ts`, `inbjudan.ts`,

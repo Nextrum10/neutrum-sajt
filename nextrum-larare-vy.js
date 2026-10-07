@@ -4224,7 +4224,7 @@
     NXStudie.adminroll(supa, S, ritaHeader);
 
     /* Senast inloggad (adminvyn) skrivs innan vyn kan stanna i
-       väntläget, som i studievyn: en studiehjälpare som valt lösenord
+       väntläget (studievyn stämplar lika tidigt): en studiehjälpare som valt lösenord
        men inte är godkänd har loggat in, och Skicka inbjudan igen ska
        inte stå kvar för hen. Förut stämplades besöket sist, "för
        notiserna räknas mot den förra", men ingenting i vyn läser

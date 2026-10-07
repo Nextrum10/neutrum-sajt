@@ -387,7 +387,9 @@ lösenordet utan Inte nu efter en inbjudan och med `valkommen =
 'losenord'`, att lösenordet sparas med `valkommen: 'intro'`,
 introduktionen i studievyn (sju bilder) och studiehjälparvyn (åtta),
 med och utan väntläge, att sista bilden säger var man loggar in nästa
-gång (2026-10-07), att Fortsätt leder in och tar bort välkomsten,
+gång (2026-10-07), att Fortsätt leder in och tar bort välkomsten, att en
+familj som inte är matchad kommer in men inte kan boka eller köpa (och en
+matchad kan köpa, 2026-10-07),
 Visa introduktionen under Profil (med Stäng), reserven utan
 bildregistret, att knappen står still mellan bilderna på dator, telefon
 och liten telefon (360 × 740), och mörkt läge. `prova-aterstallning.js`

@@ -367,7 +367,9 @@ varje väg; `index.ts` är bara admin först (`kravAdmin`) och beroendena.
   lösenordet redan är valt (2026-10-07, Leo: "i admin ska vi kunna skicka
   inbjudningslänk när vi vill efter, ifall de missar den"). Hann kontot
   bekräftas mellan frågan och länken blir det recovery. Till v10 fick ett
-  konto med lösenord 409, och till v11 mejlade Auth.
+  konto med lösenord 409, och till v11 mejlade Auth. v11 är i drift sedan
+  2026-10-07 kväll, från merge-commiten av PR #222, hämtad tillbaka och
+  byte för byte lika (12 av 12 filer).
 - En barnadress (`@barn.nextrum.se`) bjuds aldrig in. Loggen tar namn, kod
   och status på felet, aldrig adressen.
 - **I drift sedan 2026-10-07** som v9, från main (43d2ef4, PR #204),

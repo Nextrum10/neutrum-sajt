@@ -794,8 +794,9 @@ lektioner, detta ska ske efter att man bekräftat sitt nya lösenord."
   Fortsätt är vägen in; öppnad igen (Visa introduktionen under Profil,
   `data-intro="<roll>"`) har den Stäng, och Escape stänger. Väntar
   familjen på sin matchning, eller studiehjälparens profil på att
-  godkännas, säger sista bilden det (`VÄNTAR`), för Fortsätt leder då till
-  väntläget och inte till bokningen.
+  godkännas, säger sista bilden det (`VÄNTAR`): familjen kommer in men
+  kan inte boka än (2026-10-07, `minne/affaren.md`), och studiehjälparen
+  hamnar i väntläget.
 - **Texterna säger bara det vyn själv säger.** Betalningen beskrivs inte:
   villkoren står på de ställen `kolla-betalningsvillkor.py` räknar, och en
   mening till vore ett ställe till att glömma. Ändras en del som en bild

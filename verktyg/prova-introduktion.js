@@ -16,8 +16,8 @@
    att Logga ut finns, introduktionen efter lösenordet och dess Fortsätt,
    att välkomsten tas bort, introduktionen igen från Profil, knapparna
    som står stilla mellan bilderna (dator och telefon), bilderna, att en
-   vy som inte är öppen än säger varför, och att Senast inloggad
-   stämplas också i väntläget. Att kontot skapas utan lösenord provas i
+   familj som inte är matchad än kommer in och får veta varför bokningen
+   och köpen väntar, och att Senast inloggad stämplas också då. Att kontot skapas utan lösenord provas i
    _delad/inbjudan_test.ts; adminvyns del i prova-intag.js.
    ============================================================ */
 'use strict';
@@ -59,7 +59,7 @@ function subUr(huvud) {
 
 /* ============ den falska Supabase ============
    o.metadata: user_metadata för den inloggade, som Auth minns den.
-   o.matchad: familjen är matchad (vyn öppen) eller inte (väntläget).
+   o.matchad: familjen är matchad eller inte (bokningen och köpen väntar).
    o.godkand: studiehjälparens profil är godkänd eller väntar. */
 function falskSupabase(o) {
   const logg = [];
@@ -78,7 +78,12 @@ function falskSupabase(o) {
       { id: 'handledare-1', role: 'tutor', full_name: 'Sara Svensson', email: 'sara@example.se', is_admin: false }
     ],
     tutor_profiles: [{ id: 'handledare-1', status: o.godkand ? 'approved' : 'pending', school: null, city: null,
-      subjects: ['Matematik'], grade_levels: [], formats: [], bio: null, age: 22, hourly_rate: 180 }]
+      subjects: ['Matematik'], grade_levels: [], formats: [], bio: null, age: 22, hourly_rate: 180 }],
+    /* Erbjudandena på, med ett klippkort: en matchad familj får Köp, en
+       som inte är matchad än inte (2026-10-07). */
+    flaggor: [{ kod: 'erbjudanden', aktiv: true }],
+    erbjudanden_pris: [{ kod: 'klipp10', sort: 'klippkort', namn: 'Klippkort 10', timmar: 10, rabatt_procent: 5,
+      giltig_manader: 6, timpris_ore: 37900, ordinarie_ore: 379000, pris_ore: 360000, rabatterat_timpris_ore: 36000 }]
   };
   const svar = (route, status, kropp, extra) => route.fulfill({
     status,
@@ -126,6 +131,8 @@ function falskSupabase(o) {
       let rader = W[tabell] || [];
       const id = url.searchParams.get('id');
       if (id && id.startsWith('eq.')) rader = rader.filter(r => r.id === id.slice(3));
+      const kod = url.searchParams.get('kod');
+      if (kod && kod.startsWith('eq.')) rader = rader.filter(r => r.kod === kod.slice(3));
       const ett = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
       const cr = rader.length ? '0-' + (rader.length - 1) + '/' + rader.length : '*/0';
       if (ett) return rader.length ? svar(route, 200, rader[0], { 'content-range': cr }) : svar(route, 406, { code: 'PGRST116', message: 'no rows' });
@@ -252,7 +259,7 @@ async function provaFamiljenTagenIn(webb) {
     && put.kropp.data && put.kropp.data.valkommen === 'intro', JSON.stringify(put && put.kropp));
   prova('familj: lösenordsrutan är borta och introduktionen öppen', !(await synlig(page, '#nylos-t'))
     && (await synlig(page, '.nx-intro.open')));
-  prova('familj: vyn är inte framme bakom introduktionen', !(await synlig(page, '#view-locked')) && !(await synlig(page, '#view-app')));
+  prova('familj: vyn är inte framme bakom introduktionen', !(await synlig(page, '#view-app')));
   await bild(page, 'familj-intro-1');
   await page.keyboard.press('Escape');
   prova('familj: Escape stänger inte introduktionen första gången', await synlig(page, '.nx-intro.open'));
@@ -277,11 +284,34 @@ async function provaFamiljenTagenIn(webb) {
   prova('familj: sista bilden säger var familjen och barnet loggar in nästa gång',
     /Logga in på nextrum\.se/.test(sett[6].text) && /barnet på samma ställe med sitt användarnamn/.test(sett[6].text),
     sett[6].text);
-  await page.waitForSelector('#view-locked:not([hidden])', { timeout: 6000 }).catch(() => {});
-  prova('familj: Fortsätt leder in i vyn, här väntläget', await synlig(page, '#view-locked') && !(await synlig(page, '.nx-intro')));
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 6000 }).catch(() => {});
+  /* Före matchningen är vyn öppen (2026-10-07): inget väntläge, men
+     bokningen och köpen väntar på studiehjälparen. */
+  prova('familj: Fortsätt leder in i vyn, också före matchningen', await synlig(page, '#view-app') && !(await synlig(page, '.nx-intro')));
+  await page.waitForSelector('#ov-gora .vy-rad', { timeout: 6000 }).catch(() => {});
+  prova('familj: Översikt säger att vi letar studiehjälpare, och leder till barnen',
+    /Vi letar studiehjälpare åt er/.test(await text(page, '#ov-gora'))
+    && (await page.locator('#ov-gora a[href="#profil/barn"]').count()) === 1, await text(page, '#ov-gora'));
+  await bild(page, 'familj-oversikt-fore-matchning');
+  await page.goto(BAS + '/foralder#boka');
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 6000 }).catch(() => {});
+  await page.waitForFunction(() => /Bokningen öppnas när ni är matchade/.test(document.querySelector('#boka-inner').textContent),
+    null, { timeout: 6000 }).catch(() => {});
+  prova('familj: Boka pass säger att bokningen öppnas när de är matchade',
+    /Bokningen öppnas när ni är matchade/.test(await text(page, '#boka-inner')), await text(page, '#boka-inner'));
+  await bild(page, 'familj-boka-fore-matchning');
+  await page.goto(BAS + '/foralder#erbjudanden');
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 6000 }).catch(() => {});
+  await page.waitForFunction(() => /matchat er/.test(document.querySelector('#erb-msg').textContent), null, { timeout: 6000 }).catch(() => {});
+  prova('familj: inget går att köpa före matchningen, och raden säger varför',
+    (await page.locator('[data-kop]').count()) === 0 && /Timmarna köper ni när vi matchat er/.test(await text(page, '#erb-msg')),
+    await text(page, '#erb-msg'));
+  await bild(page, 'familj-erbjudanden-fore-matchning');
+  prova('familj: ingen bokning eller kassa skickades', !S.logg.some(r => r.metod === 'POST'
+    && (r.väg === '/rest/v1/bookings' || /\/functions\/v1\//.test(r.väg))), S.logg.filter(r => r.metod === 'POST').map(r => r.väg).join(', '));
   await vänta(300);
   prova('familj: välkomsten tas bort efter Fortsätt', sattes(S, 'valkommen', null));
-  prova('familj: Senast inloggad stämplas också i väntläget', S.logg.some(r => r.metod === 'PATCH'
+  prova('familj: Senast inloggad stämplas också före matchningen', S.logg.some(r => r.metod === 'PATCH'
     && r.väg === '/rest/v1/profiles' && r.kropp && r.kropp.last_seen_at));
   prova('familj: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   prova('familj: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
@@ -323,6 +353,10 @@ async function provaUtanLänken(webb) {
     prova('intro kvar: välkomsten tas bort, och inget lösenord skickas', sattes(S, 'valkommen', null)
       && !S.logg.some(r => r.metod === 'PUT' && r.kropp && r.kropp.password));
     prova('intro kvar: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    /* Motprovet till familjen före matchningen: här går det att köpa. */
+    await page.goto(BAS + '/foralder#erbjudanden');
+    await page.waitForSelector('[data-kop]', { timeout: 6000 }).catch(() => {});
+    prova('intro kvar: en matchad familj kan köpa timmar', (await page.locator('[data-kop]').count()) === 1);
 
     /* Igen från Profil: Stäng finns, Escape stänger, inget sparas. */
     const före = S.logg.filter(r => r.metod === 'PUT').length;

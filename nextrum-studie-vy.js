@@ -22,7 +22,7 @@
     katalog: null, forsok: [], banaVal: {},
     nl: { öppen: null, nyss: null, pågående: {}, läge: null, laddad: false, alla: false } };
 
-  const VYER = ['view-loading', 'view-auth', 'view-locked', 'view-wrongrole', 'view-app', 'view-fel'];
+  const VYER = ['view-loading', 'view-auth', 'view-wrongrole', 'view-app', 'view-fel'];
   function visa(id) { NXStudie.visaVy(VYER, id); }
 
   /* ============ header ============ */
@@ -118,8 +118,8 @@
   /* ============ kontakt ============ */
   function startaTråd() {
     if (!S.profil.matched_tutor_id) {
-      $('#trad').innerHTML = '<div class="empty">Ni är inte kopplade till någon studiehjälpare än, '
-        + 'så det finns ingen att skriva till.</div>';
+      $('#trad').innerHTML = '<div class="empty">Ni är inte matchade med någon studiehjälpare än, '
+        + 'så det finns ingen att skriva till. När vi matchat er står tråden här.</div>';
       $('#tr-text').disabled = $('#tr-skicka').disabled = true;
       return;
     }
@@ -174,6 +174,8 @@
     laddaBokning();
     laddaBarnkonton();
     laddaGaranti();
+    // Raden före matchningen leder till barnen tills det finns ett.
+    if (S.väntar) ritaÖvGöra();
   }
 
   /* Listan över barnen. Visar det som faktiskt är ifyllt — ett tomt
@@ -1698,10 +1700,26 @@
       }));
     }
 
+    /* Före matchningen (2026-10-07): vårt drag, men det första man ska
+       se, och vägen till det som går att göra så länge. Utan barn är
+       det att lägga till barnet. Räknas inte i siffran: det är inget
+       familjen ska göra något åt. */
+    if (S.väntar) {
+      const barn = (S.barn || []).length;
+      rader.unshift(NXStudie.radLank({
+        href: barn ? '#nexlax' : '#profil/barn', ikon: 'vem', ton: 'ockra',
+        titel: 'Vi letar studiehjälpare åt er',
+        meta: ['Vi hör av oss när det är klart, och då öppnas bokningen',
+          barn ? 'under tiden kan ni prova NexLäx' : 'under tiden kan ni lägga till barnet'],
+        lank: barn ? 'Till NexLäx' : 'Lägg till barnet'
+      }));
+    }
+
     /* Dold, inte tom: en ruta som står kvar och säger "inget att
        göra" tar plats överst varje gång man öppnar vyn. */
     grupp.hidden = !rader.length;
-    $('#ov-gora-antal').textContent = rader.length ? String(föreslagna.length + avslagna.length + att.length + sena.length) : '';
+    const antal = föreslagna.length + avslagna.length + att.length + sena.length;
+    $('#ov-gora-antal').textContent = antal ? String(antal) : '';
     host.innerHTML = rader.join('');
   }
 
@@ -1723,7 +1741,9 @@
           nu: b.wanted_date === idag,
           märke: NXKontakt.betalMärke(b)
         })).join('')
-      : tomt('Inga kommande pass', 'Boka en tid under Boka pass, så står passet här.');
+      : tomt('Inga kommande pass', S.väntar
+        ? 'När vi matchat er med en studiehjälpare bokar ni under Boka pass, och passet står här.'
+        : 'Boka en tid under Boka pass, så står passet här.');
   }
 
   /* ============================================================
@@ -3078,7 +3098,7 @@
 
   async function köpErbjudande(knapp, kod) {
     const e = S.erb.katalog.find(x => x.kod === kod);
-    if (!e || !S.erb.aktiv) return;
+    if (!e || !S.erb.aktiv || S.väntar) return;
     await medan(knapp, 'Öppnar…', async () => {
       const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
       const svar = await startaKöp(kod, 'inbaddad');
@@ -3132,10 +3152,12 @@
       + '</div>';
   }
 
-  /* Köpknappen, lika på planerna och klippkorten. */
-  const köpKnapp = e => S.erb.aktiv
+  /* Köpknappen, lika på planerna och klippkorten. Före matchningen
+     (2026-10-07) köps inga timmar: ingen vet än vem som ska hålla dem,
+     och raden ovanför korten säger det. */
+  const köpKnapp = e => S.erb.aktiv && !S.väntar
     ? '<button type="button" class="btn btn-primary btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>'
-    : '<button type="button" class="btn btn-ghost btn-sm" disabled>Snart</button>';
+    : '<button type="button" class="btn btn-ghost btn-sm" disabled>' + (S.väntar ? 'Köp' : 'Snart') + '</button>';
 
   /* Klippkorten som EN kolumn bredvid planerna, som fälls ut
      (2026-09-27, som på prissidan). Fem kort i en egen ruta var en
@@ -3198,7 +3220,9 @@
       || tomt('Inga erbjudanden just nu', 'Skriv till oss om ni vill ha ett upplägg.');
 
     const msg = $('#erb-msg');
-    if (msg && !S.erb.aktiv && !msg.classList.contains('show')) {
+    if (msg && S.väntar && !msg.classList.contains('show')) {
+      säg(msg, 'Timmarna köper ni när vi matchat er med en studiehjälpare. Vi hör av oss när det är klart.', true);
+    } else if (msg && !S.erb.aktiv && !msg.classList.contains('show')) {
       säg(msg, 'Erbjudandena går att köpa här inom kort. Vill ni ha ett redan nu, skriv till oss så ordnar vi det.', true);
     }
 
@@ -3857,6 +3881,14 @@
     /* Spärren förr yttrade sig som en avstängd knapp utan
        förklaring. Nu står skälet där kalendern skulle ha stått. */
     ladda: async () => {
+      /* Utan studiehjälpare finns ingen som kan svara på förslaget.
+         Policyn på bookings släpper igenom tutor_id null, så det är här
+         det stannar. */
+      if (S.väntar) {
+        return { spärr: NXStudie.tomt('Bokningen öppnas när ni är matchade',
+          'Vi letar rätt studiehjälpare åt er och hör av oss när det är klart. Under tiden kan ni lägga till barnet '
+          + 'under Profil & inställningar och prova NexLäx.') };
+      }
       if (!S.valtBarn) {
         return { spärr: NXStudie.tomt('Lägg till ditt barn först',
           'Förslaget behöver veta vem passet gäller. Barnen läggs till under Profil & inställningar.') };
@@ -3988,7 +4020,7 @@
              redan står på — ett klick som inte gör något. */
           href: '#boka',
           text: 'Inga pass inbokade',
-          under: 'Boka en tid hos er studiehjälpare'
+          under: S.väntar ? 'Bokningen öppnas när ni är matchade' : 'Boka en tid hos er studiehjälpare'
         }
       });
     }
@@ -4017,7 +4049,7 @@
           href: '#meddelanden', text: 'Meddelanden',
           under: S.olästaAntal
             ? S.olästaAntal + ' oläst' + (S.olästaAntal > 1 ? 'a' : '')
-            : 'Skriv till er studiehjälpare'
+            : S.väntar ? 'Öppnas när ni är matchade' : 'Skriv till er studiehjälpare'
         }
       });
     }
@@ -4954,12 +4986,18 @@
        Databasen kräver godkännandet för att ett pass ska bokas
        (NXStudie.villkorFörst). */
     await NXStudie.villkorFörst(supa, S.user, 'foralder');
+    /* Före matchningen är vyn öppen (2026-10-07, Leo: "han kommer inte in
+       på plattformen, det är låst. ta bort så att det inte är låst").
+       Förut stannade en familj utan studiehjälpare i ett väntläge, och
+       sedan intaget är det varje ny familj: lösenordet, villkoren och
+       introduktionen, och sedan ett lås. Nu kommer de in med barnen,
+       NexLäx och profilen; Boka pass och köpen väntar på
+       studiehjälparen (S.väntar), och tråden har ingen att skriva till. */
+    S.väntar = S.profil.match_status !== 'matched' || !S.profil.matched_tutor_id;
     /* Introduktionen första gången, och Fortsätt sist leder in i vyn
-       (NXStudie.introduktion). Den som inte är matchad än får veta att
-       vyn öppnas när vi matchat dem. */
-    await NXStudie.introduktion(supa, S.user, 'foralder',
-      { sparat: nyttLösen, väntar: S.profil.match_status !== 'matched' });
-    if (S.profil.match_status !== 'matched') { visa('view-locked'); return; }
+       (NXStudie.introduktion). Den som inte är matchad än får veta vad
+       som öppnas när vi matchat dem. */
+    await NXStudie.introduktion(supa, S.user, 'foralder', { sparat: nyttLösen, väntar: S.väntar });
 
     visa('view-app');
 
@@ -5051,7 +5089,8 @@
       etikett: 'Studievy',
       lede: 'Planen, tiderna, kontakten och vad som hände på varje pass.',
       marke: { text: 'Förälder', ikon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>' },
-      chatt: { href: '#meddelanden', text: 'Meddelanden', under: 'Skriv till er studiehjälpare' }
+      chatt: { href: '#meddelanden', text: 'Meddelanden',
+        under: S.väntar ? 'Öppnas när ni är matchade' : 'Skriv till er studiehjälpare' }
     });
     ritaNästaPass();
 

@@ -96,7 +96,7 @@ Det här är själva affärsmodellen, så det är värt att kunna utantill.
 5. Föräldern lägger in sitt barn i sin vy (eller ni gör det i `students`)
 6. Studiehjälparen skriver studieplanen i sin vy
 
-Först efter steg 4 låses föräldravyn upp. Innan dess ser familjen ett väntläge, inte en trasig sida.
+Före steg 4 är föräldravyn öppen med barnen, NexLäx och profilen, men bokningen, köpen och meddelandena väntar, och vyn säger att vi letar studiehjälpare (2026-10-07).
 
 ## Så här godkänner ni en studiehjälpare
 

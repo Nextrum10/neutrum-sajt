@@ -83,10 +83,12 @@
     ]
   };
 
-  /* Sista raden när vyn inte är öppen än: familjen är inte matchad, eller
+  /* Sista raden när något väntar på oss: familjen är inte matchad (vyn är
+     öppen, men bokningen och köpen väntar, 2026-10-07), eller
      studiehjälparens profil väntar på att godkännas. */
   var VÄNTAR = {
-    foralder: 'Först matchar vi er med en studiehjälpare. Vi hör av oss när det är klart.',
+    foralder: 'Boka pass och Meddelanden öppnas när vi matchat er med en studiehjälpare, och vi hör av oss när det är klart. '
+      + 'Barnen, NexLäx och profilen kan ni använda redan nu.',
     studiehjalpare: 'Din profil väntar på att vi godkänner den. Vi hör av oss när det är klart.'
   };
 

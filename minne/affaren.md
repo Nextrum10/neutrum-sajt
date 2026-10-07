@@ -22,8 +22,30 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
    en låst vy utan att förstå varför
 5. Föräldern lägger in barnet, hjälparen skriver studieplanen
 
-Föräldravyn låses upp först efter steg 4. Innan dess: väntläge, inte
-trasig sida.
+Före steg 4 är föräldravyn öppen (2026-10-07, Leo: "han kommer inte in
+på plattformen, det är låst. ta bort så att det inte är låst"). Förut
+stannade en omatchad familj i ett väntläge, och sedan intaget är det
+varje ny familj: lösenordet, villkoren och introduktionen, och sedan ett
+lås som dessutom bad dem skicka en intresseanmälan de redan skickat. Nu
+kommer de in med barnen, NexLäx och profilen, och `S.väntar` i
+`nextrum-studie-vy.js` håller det som kräver en studiehjälpare:
+
+- **Boka pass** visar en spärr i stället för kalendern. Policyn på
+  `bookings` släpper igenom `tutor_id` null, så det är vyn som stoppar
+  förslaget; ingen studiehjälpare kan svara på det.
+- **Erbjudanden**: Köp är avstängt, och raden ovanför korten säger att
+  timmarna köps när vi matchat dem. Ingen ska betala för timmar innan vi
+  vet vem som håller dem.
+- **Meddelanden**: tråden har ingen att skriva till och säger det;
+  hälsningens kort säger Öppnas när ni är matchade.
+- **Översikt**: Att göra börjar med Vi letar studiehjälpare åt er, som
+  leder till barnen tills det finns ett och sedan till NexLäx. Raden
+  räknas inte i siffran.
+- Introduktionens sista bild säger vad som öppnas när vi matchat dem
+  (`VÄNTAR` i `nextrum-introduktion.js`).
+
+Matchningen öppnar resten vid nästa laddning, utan att något annat
+ändras.
 
 **Kontaktvalet** (2026-10-03): familjen väljer i intresseanmälan om vi
 ska ringa eller mejla först. Inget förval, och Ring kräver telefon.
