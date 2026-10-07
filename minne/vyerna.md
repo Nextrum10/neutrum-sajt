@@ -130,11 +130,10 @@ tillkom är etiketter (Nästa steg), lapparna på fotot och hoppen på FAQ:n.
   i `.sid-et` i stället för en siffra. Före, under och efter på För
   elever & föräldrar är fotokort (`.sid-bildkort`).
 - **Stegen till första passet** på Så fungerar Nextrum är startsidans
-  pinnade scen. Fotona står i markupen, inte i skriptet: registret har
-  bara svensk alt-text, och startsidans skript bygger sina foton därur,
-  så den engelska startsidan har svensk alt-text i den scenen (kvar,
-  inte rörd här). `stegFoton` rör bara en scen som redan har foton, och
-  startsidans ruta är tom när den körs.
+  scen. Fotona står i markupen där, och sedan 2026-10-07 bygger
+  `stegFoton` startsidans foton ur registret med alt-texten ur stegets
+  `data-alt`, så den engelska startsidan har engelsk alt (se Stegscenen
+  under Startsidan och prissidan i ny form).
 - **Text bredvid ett foto** (Priset på Vår idé, Vem kan söka, Varför
   priset ser ut så här) är cinemas `.nx-split` på ljus botten.
 - **Lapparna** på sidhuvudets foto är vyernas notiser: två korta
@@ -212,6 +211,49 @@ sveper i, med snäpp och prickar.
 trycker på tre strecken"). De togs bort på de 30 handskrivna sidorna och i
 skalet i `var-ide.html`, som `bygg-omradessidor.py` kopierar till de 28
 genererade.
+
+**NexLäx under heron.** Leo: "Under heron ska vi nu sälja in Nexläx gör
+en cool genomgång av nexläx som är lika stor som hero bilden." Första
+sektionen efter heron säljer in NexLäx med en telefon som visar sig själv
+och en stig med fyra delar som följer med; papperet bär den, och
+ämnesfärgerna får synas här men i ingen annan sektion. Allt som byter läge
+ligger i fasta rutor: skärmarna i samma cell och, på mobil, delarnas text
+i samma cell. Rundturen ändrar aldrig någon höjd (uppmätt: 1257 px på
+1440×900 före och efter). Detaljer i `minne/nexlax.md`.
+
+**Stegscenen** (Från intresseanmälan till första passet, startsidan och Så
+fungerar Nextrum, sv och en; Leo: "bättre animation mellan bilderna på
+datorvy och mobil ska även få den animation. Stegen ska visas bredvid
+bilderna. 01 osv ska vara större. Och svepningen ska fungera på
+mobilen"). En markup och en kod: `stegFoton()` i `nextrum-start.js`, grunden
+i cinema och formen i `nextrum-start.css` avsnitt 14.
+- Lägena läses ur `html[data-motion]` vid varje händelse (`M.tier`, aldrig
+  en `const` från laddningen). `full` (mus, över 900 px) är den pinnade
+  scenen, 230svh. `lite` (pekskärm eller högst 900 px) är samma `ol` som
+  scroll-snap-rad i samma rutnätscell som fotot (`container-type`, `cqi`,
+  `display:contents` på `.nx-hur-text`, aldrig på ol eller li). På en
+  platta liggande står texten till vänster och raden till höger.
+- Allt rörligt kräver `html.nx-sr` och `.igang` på sektionen. Grunden i
+  cinema har alla steg öppna; det är läget utan JS och med reducerad
+  rörelse. Förut fastnade en platta i en scen som aldrig bytte steg, och
+  steg 2–5 var dolda utan JS.
+- Fotots övergång står i klasserna `.pa`, `.forbi` och `.tyst`: det nya
+  glider in över det gamla, som sjunker bakåt i mörkret, och bilden landar
+  med Ken Burns. Bara translate, scale och opacity; clip-path är bortvalt
+  (avsnitt 9). `.tyst` sätts på fotona emellan när man hoppar över steg,
+  så att de inte far genom ramen.
+- Siffrorna 01–05 är stora (800, −.06em) och växer med fjädern till lera;
+  en linje fylls ner till steget man står på; ett märke på fotot
+  (`.nx-hur-mark`, aria-hidden) kopieras ur stegets `em` och `h3`.
+- Fällor: (1) `.nx-hur-bild` måste vara en egen staplingskontext
+  (`isolation:isolate`), annars hamnar fotot över raden och svepet når den
+  aldrig. (2) Fråga `intersectionRatio >= .6`, inte `isIntersecting`. (3)
+  Rulla raden med `scrollTo`, aldrig `scrollIntoView`. (4) Det mörka bakom
+  fotot ligger 1 px innanför ramen, annars blöder det fram i de rundade
+  hörnen som en hårlinje i ljust läge. (5) `sizes` räknar med att 16:9
+  ritas i ett högt format: `(max-width: 900px) 180vw, 100vw`. (6) Den
+  öppna texten är 46ch i det pinnade läget, så att rubriken inte glider
+  när steget byts (på 1024×768 glider den fortfarande 12 px, mjukt).
 
 **Garantiflödet.** `#betygsgaranti` lämnade `.nx-mork` och `.nx-apply-flow`
 (som är kvar i #bli och på Bli studiehjälpare, och sköts av

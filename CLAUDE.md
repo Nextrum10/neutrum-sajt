@@ -84,7 +84,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **NexLäx**: rättningen sker i databasen; frågorna går ut utan facit, försök och svar har ingen
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
   sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. Allt i NexLäx är
-  öppet (2026-10-06): ingen nivå låses, vägen är bara ett förslag. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
+  öppet (2026-10-06): ingen nivå låses, vägen är bara ett förslag. Startsidan visar NexLäx bara som en
+  illustration (2026-10-07): exempelfrågan finns inte i banken, och XP, rank, märke och uppdrag i den
+  följer `intern.nexlax_*` och ändras med dem. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
   beslut. `.nl-hopp` går med flit inte att trycka på. **Uppdragen** (Fas 23.4) räknas av
   `intern.nexlax_uppdrag`, sparas aldrig, ger inga XP och påminns aldrig om; katalogen är
   historik, så ett nytt uppdrag får ett nytt id och ett `fran`. **NP-spåret** är `nivaer.spar`,
@@ -234,7 +236,12 @@ delar som de är; deras text följer inte med formen, och `.faq-item` är orörd
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
-Betygsgarantin (2026-10-07) är ingen mörk yta: den står på papperet som ett flöde (`.nx-gar`,
+Under heron står NexLäx (2026-10-07, `#nexlax`, avsnitt 13, `nexlax()`): en telefon som visar sig själv
+i fyra skärmar och en stig som följer med, på papperet; en illustration (`role="img"`), inget att svara
+i, högst tre varv och pausad utanför bild. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
+`html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
+kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
+(`data-bild`), och alt-texten står på steget (`data-alt`). Betygsgarantin (2026-10-07) är ingen mörk yta: den står på papperet som ett flöde (`.nx-gar`,
 `garantiflöde()`), också på prissidan, och dess släckta läge hänger på `.i-gang`, aldrig bara på
 `html.nx-sr`. Manifestets blad står bredvid varandra ner till 340 px, och studiehjälparna i en rad
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
