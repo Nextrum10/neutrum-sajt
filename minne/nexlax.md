@@ -358,7 +358,14 @@ utveckling som är roligare att följa, och ett quest-system.
   stänger av de 36 nivåerna och deras frågor, som banken gör med allt som
   tagits bort ur filerna. Inget raderas: gamla försök pekar på nivåerna.
   Efter den är 1 112 nivåer och 6 298 frågor aktiva. Färgen och ikonen
-  för ämnet står kvar i `nextrum-uppgifter.js`, för gamla försök.
+  för ämnet står kvar i `nextrum-uppgifter.js`, för gamla försök, och
+  likaså kodblocket i frågan: ingen aktiv fråga har längre flera rader.
+  Verktygens rester gick samtidigt (`figurer.kod`, `kodrad` och nyckeln
+  `prog`). **I drift sedan 2026-10-07**: båda migrationerna kördes efter
+  merge av PR #219, hämtade från merge-commiten (`b82ab12`) med md5
+  prövad, och räkningen efteråt stämde (1 112 och 6 298, ingen nivå eller
+  fråga i programmering aktiv). Hela `rls-test.sql` 1 490 av 1 490 mot
+  driften, tillbakarullat.
 - **Skrivet och granskat med AI.** Skribenter skrev språken,
   företagsekonomin, lågstadiet, engelskan och NP-träningen; juridiken
   skrevs i huvudsessionen. En granskare per ämnesgrupp läste sedan varje

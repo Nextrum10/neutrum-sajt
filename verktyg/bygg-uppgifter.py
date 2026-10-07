@@ -67,7 +67,7 @@ NAMNRYMD = 'https://nextrum.se/uppgifter/'
 # rad här får en nyckel ur sitt namn.
 AMNESKORT = {'Matematik': 'ma', 'Svenska': 'sv', 'Engelska': 'en',
              'NO / Fysik / Kemi / Biologi': 'no', 'SO / Historia / Samhällskunskap': 'so',
-             'Moderna språk': 'ms', 'Programmering': 'prog',
+             'Moderna språk': 'ms',
              # Ämnena som bara finns i NexLäx (NX.NEXLAX_AMNEN, 2026-10-06).
              # Språken har sina språkkoder.
              'Spanska': 'es', 'Tyska': 'de', 'Franska': 'fr', 'Juridik': 'ju',

@@ -439,9 +439,11 @@ OMRADEN = [
 # betyg eller betygshöjningar, inga antal studiehjälpare per ämne,
 # inga kursnamn med årtal. Det som står om ämnena är vad kursplanen
 # faktiskt innehåller, och det som står om Nextrum är samma löfte som
-# resten av sajten ger. Moderna språk, SO och programmering har ingen
-# sida: hubben säger "fråga i anmälan så säger vi om vi har rätt
-# person", och en egen sida hade lovat mer än så.
+# resten av sajten ger. Moderna språk och SO hade länge ingen sida,
+# för hubben sa "fråga i anmälan så säger vi om vi har rätt person";
+# sedan 2026-10-07 har de det, och sidorna säger att vi letar efter
+# en studiehjälpare som läst samma, inte att vi har en. Programmering
+# erbjuds inte och har ingen sida (Leo, 2026-10-07).
 #
 # `lista` är sidans kärna och det som skiljer den från syskonen. Håll
 # den konkret: det eleven faktiskt fastnar på, stadium för stadium
