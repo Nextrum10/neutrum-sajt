@@ -878,7 +878,29 @@ I drift 2026-10-07 efter merge av PR #208: filen från merge-commiten
 `rls-test.sql` mot driften: 1433 av 1434 före (avsnitt 23 stannade på att
 `intern.villkor_version()` saknades) och 1459 av 1459 efter.
 
-### Provobjekten togs bort (provobjekten_tas_bort, 2026-10-07)
+### Betygsgarantin (betygsgarantin, 2026-10-07)
+Tabellen `betygsgarantier` (elev, läsår, ämne, betyget föräldern angav,
+tiden, och rättelsens `andrad_at` och `andrad_av`; unik på elev, läsår och
+ämne, `on delete cascade` från `students`). Ingen inloggad skriver i den:
+`anmal_betygsgaranti()` skapar raden och `andra_betygsgaranti()` rättar den,
+bara för den som har `anvandare_redigera`. RLS: föräldern läser sina barns
+rader, och den som läser personer läser alla. RLS begränsar inte kolumner,
+så authenticated har SELECT på en kolumnlista utan `andrad_av`. Ämnena står
+i `intern.betygsgaranti_amnen()` och i `NX.GARANTI_AMNEN`. Triggern
+`students_betygsgarantier_raderas` (AFTER, utan `UPDATE OF`) tömmer betyget
+när barnet raderas, och jobbet `betygsgaranti-gallring` (03.56 UTC) den 1
+oktober efter läsåret. Filen bytte också `intern.villkor_version()` till
+`2026-10-07`; `create or replace` behöll rättigheten för authenticated.
+Reglerna står i `minne/affaren.md`, Betygsgarantin.
+I drift 2026-10-07 efter merge av PR #212: filen från merge-commiten
+(d4adcc3), prövad mot sin md5 och körd och registrerad i ett `do`-block,
+och alla sex funktionskroppar har filens md5. `rls-test.sql` mot driften,
+från samma commit: 1490 av 1490. Säkerhetskontrollen efteråt hade inget
+nytt utom de två RPC:erna i listan över vad inloggade får anropa, som
+med flit. Driften är Postgres 17.6 och den lokala bilden 15.8; provet mot
+driften är det som räknas.
+
+### Provobjekten ska bort (provobjekten_tas_bort, 2026-10-07)
 Tio funktioner `public.zz_prov_*` och tabellen `public.zz_prov_ddl` låg kvar
 i driften efter ett prov 2026-10-02 av vilka satser verktygen ber om en
 bekräftelse för. De skapades utan fil och gav nio varningar i

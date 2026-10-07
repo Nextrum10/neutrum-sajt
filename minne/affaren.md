@@ -621,7 +621,8 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
 - **Versionen byttes** (`betygsgarantin`), så alla får frågan igen.
   Inget är byggt för att pröva ett anspråk: admin räknar ur vyerna.
   `rls-test.sql` avsnitt 24 prövar anmälan, läsrätten, gallringen och
-  raderingen (1490 av 1490 lokalt).
+  raderingen (1490 av 1490 lokalt, och mot driften när migrationen
+  kördes efter merge av PR #212 samma dag; `minne/databasen.md`).
 
 ## Tipsa en familj och affischerna (2026-09-30)
 

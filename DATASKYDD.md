@@ -393,11 +393,11 @@ Inget av det här går att göra i koden.
   och i avtalet, inte bara i policyn (2026-09-29). För dem är chatten en
   arbetsplats, och en arbetsgivare som läser det anställda skriver ska ha
   sagt det i förväg. Handboken finns inte i repot.
-- [ ] **Betygsgarantin (2026-10-07):** står i villkoren från merge, och
-  alla får frågan när migrationen `betygsgarantin` körts; den skapar också
-  anmälan i föräldravyn (`betygsgarantier`). Startsidan och prissidan säljer
-  garantin utan villkor och siffror, men länkar till villkoren och säger att
-  de gäller. Låt juristen läsa villkoret och marknadsföringen ihop (en
+- [ ] **Betygsgarantin (2026-10-07):** står i villkoren och är i drift
+  sedan samma dag, med anmälan i föräldravyn (`betygsgarantier`), och alla
+  får frågan om villkoren igen. Startsidan, prissidan och FAQ säljer
+  garantin utan villkor och siffror, utom sista dagen (31 december) i
+  FAQ-svaren, men länkar till villkoren och säger att de gäller. Låt juristen läsa villkoret och marknadsföringen ihop (en
   garanti som är svår att få får inte säljas som om den vore lätt), rad
   25, raden i konsekvensbedömningen och ändringen i integritetspolicyn på
   båda språken. Säg till familjerna i samma mejl som villkorsändringen.
