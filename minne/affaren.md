@@ -514,10 +514,6 @@ Driftsättningen och det som är kvar, ur avsnitt 11:
   godkännande. "Nyligen läst samma kurser" står kvar som det matchningen
   letar efter, och "Av unga, för unga" som namnet på idén. Fältet Skola &
   program i ansökan var aldrig obligatoriskt och säger nu "om du pluggar".
-  Juridik- och ekonomiagenternas beskrivning av affären
-  (`supabase/functions/juridik`, `ekonomi`) sa gymnasie- och
-  högskolestudenter till 2026-10-07; nu säger de alla som får arbeta, också
-  under 18 (`minne/funktioner.md`).
 - **Hemma eller online:** familjen väljer för varje pass; att ses hemma
   förutsätter att matchningen ger någon som kan ta sig dit varje vecka,
   annars börjar man online. Områdessidorna sa att formatet "avgörs av
