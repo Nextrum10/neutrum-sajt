@@ -235,38 +235,46 @@
 <!-- ==========================================================
      BETYGSGARANTIN (2026-10-07)
      Samma regler som sektionen på startsidan: inga villkor och inga
-     tal, aldrig ett löfte om ett betyg, och länken och raden under
-     knapparna säger att villkor gäller. Här är vinkeln priset: garantin
+     tal, aldrig ett löfte om ett betyg, och länken och raden intill
+     knappen säger att villkor gäller. Här är vinkeln priset: garantin
      kostar inget utöver passen.
+     Samma komponent som på startsidan, med sidans egna texter: på
+     papperet och som ett flöde som fylls när man scrollar (Leo
+     2026-10-07; garantiflöde() i nextrum-start.js, avsnitt 15 i
+     nextrum-start.css). Utan skript står allt tänt. Här i .wrap och
+     inte .nx-wrap-bred, så att vänsterkanten står i linje med
+     priskorten ovanför och erbjudandena under.
      ========================================================== -->
-<section class="nx-mork nx-sek" id="betygsgaranti">
-  <div class="nx-wrap-bred">
-    <div class="nx-mitt-head">
-      <span class="nx-et" data-stig>Betygsgaranti</span>
-      <h2 class="nx-d2" data-avslöj style="margin-top:20px">Mer än ett timpris.<br><em>Ett löfte.</em></h2>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:22px">Betygsgarantin kostar ingenting extra. Väljer ni ämnena, kör läsåret ut och gör er del, och
+<section class="nx-sek-s nx-gar" id="betygsgaranti">
+  <div class="wrap nx-gar-in">
+    <div class="nx-gar-head">
+      <span class="nx-et acc" data-stig>Betygsgaranti</span>
+      <h2 class="nx-d2" data-avslöj>Mer än ett timpris.<br><em>Ett löfte.</em></h2>
+      <p class="nx-lede" data-stig data-fördröj="1">Betygsgarantin kostar ingenting extra. Väljer ni ämnena, kör läsåret ut och gör er del, och
         betyget ändå inte går upp, fortsätter vi hjälpa till utan att ni betalar.</p>
     </div>
 
-    <div class="nx-apply-flow" data-stig data-fördröj="2" style="margin-top:clamp(40px,5vw,64px)">
-      <div class="nx-apply-step"><em>1</em><b>Ingår i priset</b><p>Ni betalar för passen precis som vanligt. Garantin kostar inget utöver dem.</p></div>
-      <div class="nx-apply-step"><em>2</em><b>Era viktigaste ämnen</b><p>Garantin följer de ämnen som betyder mest för er det här läsåret.</p></div>
-      <div class="nx-apply-step"><em>3</em><b>Allt syns i er vy</b><p>Pass, rapporter och uppgifter står i studievyn, så ni ser samma sak som vi.</p></div>
-      <div class="nx-apply-step"><em>4</em><b>Mer hjälp, inte mer kostnad</b><p>Går betyget inte upp trots att ni gjort er del, fortsätter vi utan att ni betalar.</p></div>
-    </div>
+    <ol class="nx-gar-flode" data-gar-flode>
+      <li><span class="nx-gar-nr" aria-hidden="true">01</span><div class="nx-gar-steg"><b>Ingår i priset</b><p>Ni betalar för passen precis som vanligt. Garantin kostar inget utöver dem.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">02</span><div class="nx-gar-steg"><b>Era viktigaste ämnen</b><p>Garantin följer de ämnen som betyder mest för er det här läsåret.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">03</span><div class="nx-gar-steg"><b>Allt syns i er vy</b><p>Pass, rapporter och uppgifter står i studievyn, så ni ser samma sak som vi.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">04</span><div class="nx-gar-steg"><b>Mer hjälp, inte mer kostnad</b><p>Går betyget inte upp trots att ni gjort er del, fortsätter vi utan att ni betalar.</p></div></li>
+    </ol>
 
-    <div class="nx-cta-rad nx-cta-mitt" data-stig data-fördröj="3">
-      <span class="nx-magnet">
-        <a class="btn btn-primary btn-lg" href="/intresseanmalan">
-          Skicka intresseanmälan
+    <div class="nx-gar-cta" data-stig data-fördröj="2">
+      <div class="nx-cta-rad">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="/intresseanmalan">
+            Skicka intresseanmälan
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
-      </span>
-      <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
+      </div>
+      <p class="nx-fineprint">Villkor gäller. Hjälp med andra ämnen och läxorna i stort ingår som vanligt och påverkar inte garantin.</p>
     </div>
-    <p class="nx-fineprint" data-stig data-fördröj="4" style="margin-top:22px;text-align:center">Villkor gäller. Hjälp med andra ämnen och läxorna i stort ingår som vanligt och påverkar inte garantin.</p>
   </div>
 </section>
 
