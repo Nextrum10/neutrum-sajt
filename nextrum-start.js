@@ -5,6 +5,8 @@
    inte (Leo 2026-09-25: "jag vill bevara heron").
 
      ordfyll        rubrikernas ord tonar fram ett i taget
+     nexlax         NexLäx under hero: telefonen visar sig själv, och stigen
+                    bredvid följer med
      hållpunkter    1–4: den man pekar på kommer fram — både hållpunkterna
                     och stegen i ansökan
      mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
@@ -130,6 +132,160 @@ const NXStart = (function () {
       ord.forEach((o, i) => o.style.setProperty('--n', String(i)));
       närSyns(el, () => el.classList.add('nx-fylld'), '0px 0px -22% 0px');
     });
+  }
+
+  /* ============================================================
+     NEXLÄX UNDER HERO (2026-10-07)
+     Telefonen visar sig själv: vägen, en fråga som rättas, nivån
+     klar, och en nivå från studiehjälparen med dagens uppdrag. Stigen
+     bredvid tänder sin del, och delarna före den har fyllt sin bit av
+     linjen. Högst tre varv varje gång telefonen kommer in i bild; sedan
+     står den på vägen, som i markupen.
+
+     Väntan räknas bara medan telefonen syns och fliken är framme, som
+     i studievyn, och det som rör sig av sig självt (omloppet,
+     svävandet, ringarna) står still när den inte syns (.nlx-paus). Ett
+     tryck på en del visar dess skärm, låter den stå en stund och går
+     sedan vidare därifrån; varven räknas vidare, så ett tryck efter
+     det tredje varvet spelar bara klart det varvet. Under rundturen
+     visar en linje under delens blad hur länge skärmen står kvar. Utan
+     rörelse (tier still) finns ingen rundtur, men trycket fungerar och
+     visar skärmen i sitt slutläge.
+
+     Det är en illustration: inget här rättar, räknar XP eller skriver
+     text. Talen står i markupen, och skriptet sätter bara klasser.
+     ============================================================ */
+  function nexlax() {
+    const rot = $('[data-nexlax]');
+    if (!rot) return;
+    const scen = $('[data-nlx-scen]', rot);
+    const lista = $('[data-nlx-delar]', rot);
+    const vyer = $$('[data-nlx-vy]', rot);
+    const delar = $$('[data-nlx-del]', rot);
+    const lappar = $$('[data-nlx-lapp]', rot);
+    if (!scen || !vyer.length) return;
+
+    const LÄGEN = ['valt', 'ratt', 'fylld'];
+    let nu = 0;
+
+    /* En skärm åt gången. Den som visas nollställs innan den kommer
+       fram, inte när den går: då hinner ingen se den byta tillbaka.
+       `tid` är hur länge skärmen står i rundturen, för linjen under
+       delens blad (--nlx-tid sätts på bladet, där linjen läser den);
+       utan tid ingen linje. */
+    function sätt(i, tid) {
+      const förra = nu;
+      nu = i;
+      vyer.forEach((v, n) => {
+        if (n === i && !v.classList.contains('pa')) v.classList.remove(...LÄGEN);
+        v.classList.toggle('ut', n === förra && n !== i);
+        v.classList.toggle('pa', n === i);
+      });
+      delar.forEach((d, n) => {
+        d.classList.toggle('pa', n === i);
+        d.classList.toggle('forbi', n < i);
+        d.classList.remove('nlx-tur');
+      });
+      lappar.forEach((l, n) => l.classList.toggle('syns', n === i));
+      const del = delar[i], blad = del && $('.nlx-del-text', del);
+      if (!tid || !blad) return;
+      blad.style.setProperty('--nlx-tid', tid + 'ms');
+      /* En läsning, så att linjen börjar om också när samma del
+         väljs igen: en gång per skärm, aldrig per bildruta. */
+      void blad.offsetWidth;
+      del.classList.add('nlx-tur');
+    }
+    const läge = (i, k) => vyer[i] && vyer[i].classList.add(k);
+
+    /* Varje skärm: väntan i ms och det som händer på den. Summan är
+       ett varv på ungefär sjutton sekunder. */
+    const SKÄRMAR = [
+      [3600],
+      [1100, () => läge(1, 'valt'), 700, () => läge(1, 'ratt'), 2600],
+      [4400],
+      [900, () => läge(3, 'fylld'), 3800]
+    ];
+    const SLUT = [[], ['valt', 'ratt'], [], ['fylld']];
+    const VARV = 3;
+
+    if (lista) lista.classList.add('nlx-klick');
+
+    if (!rörelse) {
+      sätt(0);
+      delar.forEach((d, n) => d.addEventListener('click', () => {
+        sätt(n);
+        SLUT[n].forEach(k => läge(n, k));
+      }));
+      return;
+    }
+
+    let synlig = false, tur = null, klar = false, varv = 0;
+    const paus = () => rot.classList.toggle('nlx-paus', !synlig || document.hidden);
+    paus();
+
+    function vänta(ms, tok) {
+      return new Promise(svar => {
+        let kvar = ms;
+        const tick = () => {
+          if (tok.stopp) return svar(false);
+          if (synlig && !document.hidden) kvar -= 100;
+          if (kvar <= 0) return svar(true);
+          tok.t = setTimeout(tick, 100);
+        };
+        tick();
+      });
+    }
+    function stoppa() {
+      if (!tur) return;
+      tur.stopp = true;
+      clearTimeout(tur.t);
+      tur = null;
+    }
+
+    /* Från skärm `från`, med `extra` ms på den första (efter ett tryck).
+       Ett varv räknas när rundturen kommer tillbaka till vägen. */
+    async function kör(från, extra) {
+      stoppa();
+      const tok = tur = { stopp: false };
+      let i = från;
+      while (!tok.stopp) {
+        const steg = SKÄRMAR[i], e = extra;
+        extra = 0;
+        sätt(i, steg.reduce((sum, s) => typeof s === 'number' ? sum + s : sum, e));
+        for (const s of steg) {
+          if (tok.stopp) break;
+          if (typeof s !== 'number') { s(); continue; }
+          if (!(await vänta(s, tok))) break;
+        }
+        if (tok.stopp) break;
+        if (e && !(await vänta(e, tok))) break;
+        i = (i + 1) % SKÄRMAR.length;
+        if (i === 0 && ++varv >= VARV) { sätt(0); klar = true; break; }
+      }
+      if (tur === tok) tur = null;
+    }
+
+    delar.forEach((d, n) => d.addEventListener('click', () => {
+      klar = false;
+      kör(n, 6000);
+    }));
+
+    närSyns(scen, () => scen.classList.add('nlx-in'), '0px 0px -10% 0px');
+    if (lista) närSyns(lista, () => lista.classList.add('nlx-in'), '0px 0px -8% 0px');
+    document.addEventListener('visibilitychange', paus);
+
+    /* Första gången reser sig telefonen i en och en halv sekund, så
+       vägen får stå lika mycket längre. */
+    let först = 1500;
+    if (!('IntersectionObserver' in window)) { synlig = true; paus(); kör(0, först); return; }
+    new IntersectionObserver(poster => {
+      synlig = poster[poster.length - 1].isIntersecting;
+      paus();
+      /* Tre varv per gång den kommer in i bild. Har den gått klart
+         börjar den om först när den varit utanför. */
+      if (!synlig) { if (klar && !tur) { klar = false; varv = 0; } return; }
+      if (!tur && !klar) { kör(nu, först); först = 0; }
+    }, { threshold: 0.35 }).observe(scen);
   }
 
   /* ============================================================
@@ -905,6 +1061,7 @@ const NXStart = (function () {
   function allt() {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
+    prova('nexlax', nexlax);
     prova('hållpunkter', hållpunkter);
     prova('mörkaYtor', mörkaYtor);
     prova('garantiflöde', garantiflöde);
