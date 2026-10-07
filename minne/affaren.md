@@ -531,15 +531,20 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   marknadsföring, och troligen ett oskäligt villkor. Våra läses ur det som
   redan finns: hållen tid, `bookings.attendance = 'franvarande'`,
   `homework.status` mot `due_date`, och betalningarna.
-- **Ett läsår** (Leo samma dag): betyget som räknas är det första efter
-  40 veckor från anmälan, eller 30 om det sätts vid sommarlovet.
-  Kalenderveckor, för ett läsår har bara runt 36 skolveckor och 40 skolveckor hade
-  ingen klarat. Från anmälan, inte från att familjen blev kund: annars
-  anmäls garantin veckan före betyget. Ett terminsbetyg mitt i perioden
-  räknas inte, och därför är kopiorna betyget före anmälan och det som
-  räknas, inte "de två senaste".
-- **Hårdare än förlagan:** ett ämne som anmäls i förväg och inte flyttas,
-  ett läsår med två timmar varje skolvecka, missade timmar igen inom
+- **Läsårets betyg** (Leo samma dag, efter ett varv med 40 och 30
+  veckor): betyget som räknas är det skolan sätter när läsåret slutar, i
+  åk 9 slutbetyget. Texten säger inte bara "slutbetyg", för i åk 6-8
+  heter vårens betyg terminsbetyg och ordet hade uteslutit dem. Ett
+  terminsbetyg till jul räknas inte, och därför är kopiorna betyget före
+  anmälan och det som räknas, inte "de två senaste".
+- **Inget veckoräknande, men ett golv:** garantin ska vara anmäld och
+  passen ha börjat före vårterminen. Utan golvet börjar någon i maj, när
+  betyget i praktiken är satt, köper ett par timmar och får tio.
+- **Högst tre ämnen per elev och läsår**, två timmar varje skolvecka i
+  varje (tre ämnen är sex timmar i veckan), 10 timmar per ämne som inte
+  gick upp.
+- **Hårdare än förlagan:** ämnen som anmäls i förväg och inte byts,
+  två timmar varje skolvecka till läsårets slut, missade timmar igen inom
   14 dagar, inga uteblivna pass, 90 procent av uppgifterna i tid, allt
   betalt och ingen faktura sen, en gång per elev och ämne, och 10 timmar
   i stället för 20.
@@ -548,7 +553,7 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   den som inte gjort jobbet.
 - **Betygen först vid anspråket.** Integritetspolicyn sa att vi aldrig ber
   om betyg, och konsekvensbedömningen vilade på det. Anmälan bär bara elev
-  och ämne; det förra betyget visas vid anspråket, med betygsdokumentets
+  och ämnen; det förra betyget visas vid anspråket, med betygsdokumentets
   datum, och kopiorna raderas för hand när det är avgjort (`DATASKYDD.md`
   rad 25). Inkorgen info@ ligger i Google Workspace, och policyn säger det
   sedan samma dag.

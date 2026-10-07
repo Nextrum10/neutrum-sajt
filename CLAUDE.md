@@ -40,8 +40,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   två rapporter får samma Google-fråga, och `tutor_reviews` blir aldrig publik.
 - **Betygsgarantin** (2026-10-07, `#betygsgaranti`): svår att få bara genom villkor som går att
   räkna (hållen tid, uteblivna pass, uppgifterna i tid, betalningarna), aldrig genom att vi
-  bedömer engagemang. Anmälan bär bara elev och ämne; betyg ser vi först vid anspråket och
-  raderar dem för hand när det är avgjort. Ersättningen är timmar, aldrig pengar. Den står bara i
+  bedömer engagemang. Den gäller läsårets sista betyg, högst tre ämnen, och bara om den är
+  anmäld och passen börjat före vårterminen. Anmälan bär bara elev och ämnen; betyg ser vi först
+  vid anspråket och raderar dem för hand när det är avgjort. Ersättningen är timmar, aldrig pengar. Den står bara i
   villkoren: sidorna säljer den inte och lovar inga betygshöjningar.
 - **Chatten** läser admin med `chatt_las()` (loggat, aldrig cachat), aldrig `NXKontakt.tråd()`;
   att vi kan läsa står i policyn och chatten och tas inte bort.
