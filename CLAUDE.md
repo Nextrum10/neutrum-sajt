@@ -41,7 +41,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Betygsgarantin** (2026-10-07, `#betygsgaranti`): svår att få bara genom villkor som går att
   räkna (hållen tid, uteblivna pass, uppgifterna i tid, betalningarna), aldrig genom att vi
   bedömer engagemang. Den gäller årskursens sista betyg (varje årskurs), högst tre ämnen och två
-  timmar i veckan sammanlagt, och bara om den är anmäld och passen börjat före vårterminen. Anmälan bär bara elev och ämnen; betyg ser vi först
+  timmar i veckan sammanlagt (ett ämne med under hälften av det största ämnets tid omfattas inte), och bara om den är anmäld och passen börjat före vårterminen. Anmälan bär bara elev och ämnen; betyg ser vi först
   vid anspråket och raderar dem för hand när det är avgjort. Ersättningen är 10 timmar sammanlagt,
   aldrig pengar. Den står bara i
   villkoren: sidorna säljer den inte och lovar inga betygshöjningar.

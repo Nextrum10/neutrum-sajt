@@ -544,9 +544,13 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   betyget i praktiken är satt, köper ett par timmar och får tio.
 - **Högst tre ämnen per elev och läsår**, två timmar varje skolvecka
   sammanlagt, inte per ämne (Leo: inte sex timmar i veckan), och 10 timmar
-  sammanlagt, inte per ämne som inte gick upp (Leo). Tre anmälda ämnen och
-  all tid i ett av dem går fortfarande att göra; taket på 10 timmar gör
-  det billigare, men ingen regel säger att varje ämne ska få tid.
+  sammanlagt, inte per ämne som inte gick upp (Leo). Ett ämne som fått under
+  hälften så mycket tid som det som fått mest omfattas inte (Leo: lägger
+  man tiden på matte gäller garantin inte SO). Leos regel var ett orsaks-
+  samband, och det kan bara vi bedöma; hälften är den räknebara formen,
+  för "mindre än något annat ämne" hade gjort minsta obalans till ett nej.
+  Tiden per ämne står i rapportens fritext, så regeln vilar på att
+  studiehjälparen skriver ämnet, och tiden när ett pass delas.
 - **Hårdare än förlagan:** ämnen som anmäls i förväg och inte byts,
   två timmar varje skolvecka till läsårets slut, missade timmar igen inom
   14 dagar, inga uteblivna pass, 90 procent av uppgifterna i tid, allt
