@@ -298,10 +298,11 @@ längre, aldrig Glömt lösenordet. Varför: `minne/sakerhet.md` (Bara det
 senaste mejlet fungerar) och `minne/barnkonton-och-admin.md` (En
 inloggning). I ordning:
 
-1. **Merga.** Vyerna går ut med Vercel; ingen migration.
-2. **Driftsätt `bjud-in` från main.** Skicka igen till ett konto i bruk
-   svarade 409; nu går en länk för lösenord. Till dess svarar knappen
-   Skicka länk för lösenord med det felet, och inget annat går sönder.
+1. **Gjort 2026-10-07: mergat.** PR #218 (46d49fe), och Vercel driftsatte
+   samma commit. Ingen migration.
+2. **Gjort 2026-10-07: driftsatt från main.** `bjud-in` v10, hämtad
+   tillbaka och byte för byte lika med main. Skicka igen till ett konto i
+   bruk svarade 409 med v9; nu går en länk för lösenord.
 3. **Stäng av Allow new users to sign up** (Authentication → Sign In /
    Providers → User Signups). Sajten har ingen registrering längre, men
    Auths öppna `/signup` tar emot en tills inställningen är av, med den

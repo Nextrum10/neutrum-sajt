@@ -451,7 +451,7 @@ Detaljer: `minne/sakerhet.md`.
   `barn-inloggning` 2026-10-01, och `juridik`, `ekonomi` och `drift` 2026-10-07. Ingen skiljer i sak från main: en äldre kopia av en delad fil
   saknar bara tillägg som funktionen inte använder (`minne/funktioner.md`).
 - `bjud-in` (`_delad/inbjudan.ts`) skapar kontot och sätter aldrig ett lösenord. Igen skickar en ny
-  inbjudan, eller länken för lösenordet om kontot bekräftats utan att lösenordet valts.
+  inbjudan om länken inte använts, annars länken för lösenordet, också till ett konto i bruk (v10).
 - `barn-konto` prövar föräldern och `admin-skapa` skriver rollen med anroparens token; bara det
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
   `barn-konto` väljer barnkontots id och ger Auth varken `app_metadata` eller roll: det skriver
@@ -555,10 +555,10 @@ Detaljer: `minne/grunden.md`.
   driften. De första skarpa inbjudningarna gick 2026-10-07 (Alexandar som studiehjälpare: länken
   fungerade; sedan som familj, där det gamla mejlet trycktes, `minne/sakerhet.md`). Länken i inbjudan
   gäller en timme (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny.
-- **En inloggning, inget Skapa konto och Skicka igen när som helst** (2026-10-07): vyerna går ut vid
-  merge; `bjud-in` driftsätts från main efter den. Kvar i Supabases panel: stäng av Allow new users to
-  sign up, så att Auths öppna `/signup` inte tar emot någon, och de två mallarna
-  (`DEPLOY-BARNKONTON.md` 11).
+- **En inloggning, inget Skapa konto och Skicka igen när som helst** (2026-10-07) är i drift sedan samma
+  dag: vyerna från merge-commiten av PR #218, och `bjud-in` v10 från main, hämtad tillbaka och byte för
+  byte lika. Kvar i Supabases panel: stäng av Allow new users to sign up, så att Auths öppna `/signup`
+  inte tar emot någon, och de två mallarna (`DEPLOY-BARNKONTON.md` 11).
 - **Användarvillkoren** (2026-10-07) är i drift sedan samma dag: `villkoren_godkanns` från
   merge-commiten (md5 prövad), och hela `rls-test.sql` 1459 av 1459 mot driften. Alla konton i driften
   får frågan vid nästa inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i
