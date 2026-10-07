@@ -745,7 +745,7 @@ window.NXArbete = (function () {
         + (st.amne === ANNAT
           ? '<div class="bk-valrad bk-faltrad"><label class="bk-valrad-et" for="bk-annat">Vilket ämne?</label>'
             + '<input class="inp" id="bk-annat" maxlength="40" autocomplete="off"'
-            + ' placeholder="T.ex. spanska, programmering, ekonomi" value="' + esc(st.annat) + '"></div>'
+            + ' placeholder="T.ex. spanska, geografi, ekonomi" value="' + esc(st.annat) + '"></div>'
           : '')
         + rad('Längd', chips('bk-langder', LANGDER.map(function (l) { return [String(l[0]), l[1]]; }),
             String(st.minuter), 'Längd'))

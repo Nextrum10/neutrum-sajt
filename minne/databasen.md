@@ -372,9 +372,11 @@ sökvägen.
   "Material sidan har väldigt lite material". De är VÅRA blad, ritade
   till `bank/*.png` av `verktyg/bygg-banken.py` och inga andras sidor,
   och de ger inget facit varken på bladet eller i beskrivningen: vyn
-  fyller läxans text med beskrivningen, och den läser eleven. Alla sju
+  fyller läxans text med beskrivningen, och den läser eleven. Alla sex
   ämnena i `NX.AMNEN` har blad, också Moderna språk (tyska, spanska,
-  franska) och Programmering. **Bladen är skrivna med AI och granskade
+  franska). De två programmeringsbladen togs bort 2026-10-07, när
+  programmering slutade erbjudas: raderna är avstängda (`aktiv = false`,
+  `20261007150100_programmering_erbjuds_inte`), inte raderade. **Bladen är skrivna med AI och granskade
   av andra AI-granskare, inte lästa av en lärare**; sägs inte något
   annat utåt än att de är Nextrums egna. Ett blad som rättas ritas om
   och raden rörs inte (id:t är ett uuid5 ur filnamnet); ett nytt blad

@@ -82,14 +82,6 @@ FACIT = {
         '4,0 mol H₂O och 2,0 mol O₂ (förhållandet H₂ : O₂ : H₂O = 2 : 1 : 2)',
     ],
 
-    'gy1-programmering-listor-och-funktioner': [
-        'a) 8 (index 1 är det andra elementet)\nb) 4 (listan blir [2, 4, 6, 8])',
-        'c) 11 (dubbla(5) = 10, plus 1)\nd) KAL, BA och LO, en på varje rad',
-        'e) 2 (x blir 6, sedan 2; 2 > 3 är falskt)\nf) 3 1 (7 // 2 = 3 och 7 % 2 = 1)',
-        'def kvadrat(x): return x ** 2\n(på två rader med indrag, eller x * x, går lika bra)',
-        'tal = [3, 5, 9]\nsumma = 0\nfor t in tal: summa = summa + t\nprint(summa)\nSkriver ut 17. Raden i loopen kan också stå indragen på en egen rad.',
-    ],
-
     'gy2-matematik-exponentialfunktioner': [
         '2⁵ = 32 och 5⁻² = 1/25 = 0,04',
         'lg 100 = 2 och lg 0,01 = −2',

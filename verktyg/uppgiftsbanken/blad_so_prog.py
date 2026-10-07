@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Nivåer ur materialbankens övningsblad (2026-10-03): alla SO-blad och de två
-programmeringsbladen. Varje nivå tränar det ett blad tränar, med bladets
-uppgifter och facit omskrivna till frågor som en maskin kan rätta.
+"""Nivåer ur materialbankens övningsblad (2026-10-03): alla SO-blad. Varje nivå
+tränar det ett blad tränar, med bladets uppgifter och facit omskrivna till
+frågor som en maskin kan rätta.
+
+Programmeringen stod här till 2026-10-07: Nextrum erbjuder inte programmering
+(Leo), så bladen och banorna togs bort, och nivåerna stängdes av i databasen
+av nästa bank. Filnamnet står kvar, för nivåerna minns det.
 
 Källan är verktyg/bladen/ (mellanstadiet, hogstadiet, gymnasiet, np_ak9) och
 facit_*.py bredvid dem. Bladen är Nextrums egna: inget här är kopierat ur ett
 nationellt prov eller en lärobok.
 
-SO ak4, ak7 och ak9 och Programmering ak9 finns redan (so.py, programmering.py):
-nivåerna står i TILLAGG och läggs sist i banan. SO ak5, ak8 och gy3 och
-Programmering gy1 är nya banor (BANOR), med fler nivåer än bladet ensamt ger,
-skrivna ur säker kunskap: inga osäkra årtal eller siffror, hellre "ungefär".
-
-Programmeringens facit räknas ut genom att köra koden, med samma verktyg som
-programmering.py (visa, kor, vad_skrivs, vilket_skrivs). De felaktiga
-alternativen i ett val prövas mot samma körning.
+SO ak4, ak7 och ak9 finns redan (so.py): nivåerna står i TILLAGG och läggs sist
+i banan. SO ak5, ak8 och gy3 är nya banor (BANOR), med fler nivåer än bladet
+ensamt ger, skrivna ur säker kunskap: inga osäkra årtal eller siffror, hellre
+"ungefär".
 """
 from fractions import Fraction as F
 
 from grund import bana, niva, val, skriv, ordna, sant, para, tal, lika
-from programmering import kor, rader, utskrift, felet, fraga_kod, vad_skrivs, vilket_skrivs
 
 SO = 'SO / Historia / Samhällskunskap'
-PROG = 'Programmering'
 
 
 def bygger(mening, titel):
@@ -67,8 +65,6 @@ T_G_REL = 'Genomgång: världsreligionerna och etik'
 T_G_DEM = 'Genomgång: demokrati, rättsstat och ekonomi'
 T_G_KLIM = 'Genomgång: klimat, befolkning och hållbarhet'
 T_BNP = 'Ekonomi: BNP, inflation och Riksbanken'
-T_PY9 = 'Python: variabler, villkor och loopar'
-T_PYGY = 'Python: listor, funktioner och loopar'
 
 # Lästexterna, som de står på bladen.
 TEXT_VIKING = lastext(
@@ -184,297 +180,6 @@ assert VARA_EFTER.denominator == 1
 SKATT_GRANS, SKATT_LAG, SKATT_HOG, INKOMST = 600000, 30, 50, 700000
 SKATT = F(SKATT_LAG, 100) * SKATT_GRANS + F(SKATT_HOG, 100) * (INKOMST - SKATT_GRANS)
 assert SKATT.denominator == 1
-
-
-# ---------------------------------------------------------------------------
-# Programmeringens kod, körd för facit.
-
-K_A = '''
-x = 4
-y = x * 3
-print(y)
-'''
-K_B = '''
-namn = "Alva"
-print("Hej " + namn)
-'''
-K_C = '''
-x = 7
-if x > 5:
-    print("stort")
-else:
-    print("litet")
-'''
-K_D = '''
-for i in range(4):
-    print(i * 2)
-'''
-K_E = '''
-summa = 0
-for i in range(1, 4):
-    summa = summa + i
-print(summa)
-'''
-K_F_FEL = '''
-x = 5
-if x = 5:
-    print("fem")
-'''
-F_ERSATT = ['==', '!=', '=>', '+=']
-assert felet(K_F_FEL) == 'SyntaxError'
-assert [kor(K_F_FEL.replace('x = 5:', 'x %s 5:' % e)) if felet(K_F_FEL.replace('x = 5:', 'x %s 5:' % e)) is None
-        else None for e in F_ERSATT].count('fem\n') == 1
-assert kor(K_F_FEL.replace('x = 5:', 'x == 5:')) == 'fem\n'
-
-ETT_TILL_FEM = ['for i in range(1, 6): print(i)', 'for i in range(5): print(i)',
-                'for i in range(1, 5): print(i)', 'for i in range(6): print(i)']
-assert [rader(k) for k in ETT_TILL_FEM].count(['1', '2', '3', '4', '5']) == 1
-assert rader(ETT_TILL_FEM[0]) == ['1', '2', '3', '4', '5']
-
-K_MINUS = '''
-x = 10
-x = x - 3
-print(x)
-'''
-K_HEJ_I = '''
-for i in range(1, 4):
-    print("Hej", i)
-'''
-K_JA = '''
-a = 3
-b = 4
-if a + b == 7:
-    print("ja")
-else:
-    print("nej")
-'''
-K_PRODUKT = '''
-p = 1
-for i in range(1, 5):
-    p = p * i
-print(p)
-'''
-K_JAMNA = '''
-antal = 0
-for i in range(10):
-    if i % 2 == 0:
-        antal = antal + 1
-print(antal)
-'''
-K_KOLON = '''
-for i in range(3)
-    print(i)
-'''
-assert felet(K_KOLON) == 'SyntaxError'
-assert felet(K_KOLON.replace('range(3)', 'range(3):')) is None
-K_INTE_STORRE = '''
-x = 5
-if x > 5:
-    print("större")
-else:
-    print("inte större")
-'''
-K_PRINT_X = '''
-x = 8
-print("x")
-'''
-K_RANGE_2_8 = '''
-for i in range(2, 8):
-    print(i)
-'''
-
-# Gymnasiet 1
-K_INDEX = '''
-tal = [4, 8, 15]
-print(tal[1])
-'''
-K_APPEND_LEN = '''
-tal = [2, 4, 6]
-tal.append(8)
-print(len(tal))
-'''
-K_INDEX_SUMMA = '''
-tal = [4, 8, 15]
-print(tal[0] + tal[2])
-'''
-K_SISTA = '''
-tal = [4, 8, 15, 16]
-print(tal[-1])
-'''
-K_UTANFOR = '''
-tal = [4, 8, 15]
-print(tal[3])
-'''
-assert felet(K_UTANFOR) == 'IndexError'
-K_APPEND_LISTA = '''
-tal = [2, 4]
-tal.append(6)
-print(tal)
-'''
-K_NAMN_LEN = '''
-namn = ["Ali", "Bea", "Cem"]
-print(len(namn))
-'''
-K_BYT_ELEMENT = '''
-tal = [5, 3, 9]
-tal[1] = 7
-print(tal[1] + tal[2])
-'''
-K_UPPER = '''
-orden = ["kal", "ba", "lo"]
-for o in orden:
-    print(o.upper())
-'''
-K_SUMMERA = '''
-tal = [3, 5, 9]
-summa = 0
-for t in tal:
-    summa = summa + t
-print(summa)
-'''
-K_RAKNA_STORA = '''
-tal = [3, 7, 1, 9, 4]
-antal = 0
-for t in tal:
-    if t > 4:
-        antal = antal + 1
-print(antal)
-'''
-K_STORST = '''
-tal = [3, 7, 1, 9, 4]
-storst = tal[0]
-for t in tal:
-    if t > storst:
-        storst = t
-print(storst)
-'''
-K_SATT_IHOP = '''
-delar = ["sol", "is"]
-text = ""
-for d in delar:
-    text = text + d
-print(text)
-'''
-K_BYGG_LISTA = '''
-dubbel = []
-for t in [1, 2, 3]:
-    dubbel.append(t * 2)
-print(len(dubbel), dubbel[2])
-'''
-K_MEDEL = '''
-tal = [3, 5, 10]
-print(sum(tal) / len(tal))
-'''
-LAGG_TILL = ['tal.append(10)', 'tal.add(10)', 'append(tal, 10)', 'tal = tal + 10']
-
-
-def _lagger_till(rad):
-    kod = 'tal = [1, 2]\n%s\nprint(tal == [1, 2, 10])' % rad
-    return felet(kod) is None and utskrift(kod) == 'True'
-
-
-assert [_lagger_till(r) for r in LAGG_TILL] == [True, False, False, False]
-K_INDEXLOOP = '''
-tal = [6, 2, 8, 1]
-for i in range(len(tal)):
-    print(i)
-'''
-K_DUBBLA = '''
-def dubbla(x):
-    return x * 2
-print(dubbla(5) + 1)
-'''
-KVADRAT = ['def kvadrat(x): return x ** 2', 'def kvadrat(x): return x * 2',
-           'def kvadrat(x): print(x ** 2)', 'def kvadrat(x): return x ^ 2']
-
-
-def _kvadrerar(rad):
-    kod = '%s\nsvar = kvadrat(3)\nprint(svar == 9 and kvadrat(5) == 25)' % rad
-    return rader(kod)[-1] == 'True'
-
-
-assert [_kvadrerar(r) for r in KVADRAT] == [True, False, False, False]
-K_SUMMA_F = '''
-def summa(a, b):
-    return a + b
-print(summa(3, 4) * 2)
-'''
-K_HALSA = '''
-def halsa(namn):
-    return "Hej " + namn + "!"
-print(halsa("Mo"))
-'''
-K_STORRE = '''
-def storre(a, b):
-    if a > b:
-        return a
-    return b
-print(storre(4, 9))
-'''
-K_F_X = '''
-def f(x):
-    return x * x
-print(f(3) + f(2))
-'''
-K_BARA_DEF = '''
-def f():
-    print("hej")
-'''
-assert kor(K_BARA_DEF) == ''
-K_DUBBLA_DUBBLA = '''
-def dubbla(x):
-    return x * 2
-print(dubbla(dubbla(3)))
-'''
-K_WHILE = '''
-x = 10
-while x > 3:
-    x = x - 4
-print(x)
-'''
-K_DIV_REST = '''
-a = 7
-b = 2
-print(a // b, a % b)
-'''
-K_HELTAL = '''
-print(23 // 4)
-'''
-K_REST = '''
-print(23 % 4)
-'''
-K_GANGER_TRE = '''
-n = 1
-antal = 0
-while n < 100:
-    n = n * 3
-    antal = antal + 1
-print(antal)
-'''
-K_SIFFERSUMMA = '''
-tal = 472
-summa = 0
-while tal > 0:
-    summa = summa + tal % 10
-    tal = tal // 10
-print(summa)
-'''
-K_EVIG = '''
-x = 5
-while x > 0:
-    print(x)
-'''
-K_MINUTER = '''
-minuter = 125
-print(minuter // 60, minuter % 60)
-'''
-K_SEX_STEG = '''
-x = 20
-while x > 0:
-    print(x)
-    x = x - 6
-'''
-assert all((t % 2 == 0) == (t in range(-10, 11, 2)) for t in range(-10, 11))
 
 
 # ---------------------------------------------------------------------------
@@ -1132,52 +837,6 @@ TILLAGG = [
         ], beskrivning=bygger('Läsförståelse om andra världskriget: början och slut, de båda sidorna, '
                               'Förintelsen och Sveriges neutralitet.', T_AVK), text=TEXT_AVK),
     ]),
-
-    # ------------------------------------------------------------------ Programmering åk 9
-    bana(PROG, 'ak9', [
-        niva('prog-ak9-blad-python-1', 'Läs koden som datorn', 'Python-grunder', [
-            vad_skrivs(K_A, 'x är 4, så y blir 4 · 3 = %s. print(y) skriver värdet i y.' % utskrift(K_A)),
-            vad_skrivs(K_B, '+ sätter ihop texterna "Hej " och "Alva". Mellanslaget står i "Hej ".'),
-            vilket_skrivs(K_C, ['litet', 'stort, litet', 'Ett fel'],
-                          '7 > 5 är sant, så raden under if körs. else-delen hoppas över.'),
-            vilket_skrivs(K_D, ['2, 4, 6, 8', '0, 1, 2, 3', '0, 2, 4, 6, 8'],
-                          'range(4) ger 0, 1, 2 och 3. Varje tal gånger 2 blir 0, 2, 4 och 6.'),
-            vad_skrivs(K_E, 'range(1, 4) ger 1, 2 och 3. summa blir 0 + 1 + 2 + 3 = %s.' % utskrift(K_E)),
-            val(fraga_kod('Programmet ger ett fel. Vad ska stå i stället för = på rad 2, så att det skriver fem?',
-                          K_F_FEL), F_ERSATT, '==',
-                'Ett = sparar ett värde i en variabel. Två, ==, jämför två värden, och det är det if behöver.'),
-            sant('range(1, 4) ger talen 1, 2, 3 och 4.', list(range(1, 4)) == [1, 2, 3, 4],
-                 'range slutar alltid före det sista talet. range(1, 4) ger 1, 2 och 3.'),
-            val('Vilket program skriver ut talen 1 till 5, ett på varje rad?', ETT_TILL_FEM, ETT_TILL_FEM[0],
-                'range(1, 6) börjar på 1 och slutar före 6. range(5) börjar på 0, och range(1, 5) slutar på 4.'),
-            val('Vad är en variabel?',
-                ['Ett namn som sparar ett värde som kan ändras', 'Ett kommando som skriver ut text på skärmen',
-                 'En loop som upprepar samma rader flera gånger', 'Ett fel som gör att programmet stannar'],
-                'Ett namn som sparar ett värde som kan ändras',
-                'x = 5 sparar 5 i variabeln x. Sedan kan programmet räkna med x eller ge det ett nytt värde.'),
-        ], beskrivning=bygger('Läs korta Python-program rad för rad: variabler, if och else, for-loopar och = '
-                              'mot ==.', T_PY9)),
-
-        niva('prog-ak9-blad-python-2', 'Variabler, villkor och loopar', 'Python-grunder', [
-            vad_skrivs(K_MINUS, 'x är först 10. x = x − 3 räknar 10 − 3 och sparar %s i x.' % utskrift(K_MINUS)),
-            vilket_skrivs(K_HEJ_I, ['Hej 0, Hej 1, Hej 2', 'Hej 1, Hej 2, Hej 3, Hej 4', 'Hej i, Hej i, Hej i'],
-                          'range(1, 4) ger 1, 2 och 3. print med komma skriver ut båda med ett mellanslag emellan.'),
-            vad_skrivs(K_JA, 'a + b är 3 + 4 = 7, och 7 == 7 är sant. Därför körs raden under if.'),
-            vad_skrivs(K_PRODUKT, 'p multipliceras med 1, 2, 3 och 4: 1 · 2 · 3 · 4 = %s.' % utskrift(K_PRODUKT)),
-            vad_skrivs(K_JAMNA, 'i %% 2 == 0 är sant för de jämna talen 0, 2, 4, 6 och 8. Det är %s stycken.'
-                       % utskrift(K_JAMNA)),
-            val(fraga_kod('Programmet ger ett fel. Vad fattas?', K_KOLON),
-                ['Ett kolon efter range(3)', 'Ett likhetstecken efter for', 'Citattecken runt i',
-                 'En punkt efter print(i)'], 'Ett kolon efter range(3)',
-                'En rad som börjar med for, if, else eller while slutar med kolon. Raden efter är indragen.'),
-            vad_skrivs(K_INTE_STORRE, '5 > 5 är falskt, för 5 är inte större än sig själv. Då körs else.'),
-            sant(fraga_kod('Programmet skriver ut 8.', K_PRINT_X), utskrift(K_PRINT_X) == '8',
-                 'Citattecknen gör "x" till text. print skriver bokstaven x. Utan citattecken, print(x), blir det 8.'),
-            skriv(fraga_kod('Hur många rader skriver programmet ut?', K_RANGE_2_8), tal(len(rader(K_RANGE_2_8))),
-                  'range(2, 8) ger 2, 3, 4, 5, 6 och 7. Det är 8 − 2 = %d tal.' % len(rader(K_RANGE_2_8))),
-        ], beskrivning=bygger('Fler program att läsa och felsöka: räkna med variabler, villkor med == och else, '
-                              'och loopar som räknar.', T_PY9)),
-    ]),
 ]
 
 
@@ -1697,96 +1356,5 @@ BANOR = [
                 'Avgifterna betalar bland annat pensioner och sjukförsäkring.'),
         ], beskrivning=bygger('Statens budget, direkt och indirekt skatt, progressiv skatt och argument för och emot.',
                               T_BNP)),
-    ]),
-
-    # ------------------------------------------------------------------ Programmering gy1
-    bana(PROG, 'gy1', [
-        niva('prog-gy1-blad-listor-1', 'Index och len', 'Listor', [
-            vad_skrivs(K_INDEX, 'Index börjar på 0. tal[0] är 4, och tal[1], det andra elementet, är %s.'
-                       % utskrift(K_INDEX)),
-            vad_skrivs(K_APPEND_LEN, 'append lägger till 8 sist, så listan blir [2, 4, 6, 8]. len ger antalet: %s.'
-                       % utskrift(K_APPEND_LEN)),
-            vad_skrivs(K_INDEX_SUMMA, 'tal[0] är 4 och tal[2] är 15. 4 + 15 = %s.' % utskrift(K_INDEX_SUMMA)),
-            vad_skrivs(K_SISTA, 'Ett negativt index räknar bakifrån. tal[-1] är det sista elementet, %s.'
-                       % utskrift(K_SISTA)),
-            val(fraga_kod('Vad händer när programmet körs?', K_UTANFOR),
-                ['Ett fel: listan har inget element med index 3', '15', '4', 'None'],
-                'Ett fel: listan har inget element med index 3',
-                'Listan har tre element med index 0, 1 och 2. Index 3 finns inte, och Python ger ett IndexError.'),
-            val(fraga_kod('Vad skrivs ut?', K_APPEND_LISTA), [utskrift(K_APPEND_LISTA), '[6, 2, 4]', '[2, 4]', '[2, 4, 6, 6]'],
-                utskrift(K_APPEND_LISTA), 'append lägger till 6 sist i listan, och print skriver hela listan.'),
-            vad_skrivs(K_NAMN_LEN, 'len räknar elementen i listan: Ali, Bea och Cem är %s.' % utskrift(K_NAMN_LEN)),
-            vad_skrivs(K_BYT_ELEMENT, 'tal[1] = 7 byter 3 mot 7, så listan blir [5, 7, 9]. 7 + 9 = %s.'
-                       % utskrift(K_BYT_ELEMENT)),
-            sant('Det första elementet i en lista har index 1.', [4, 8, 15][1] == 4,
-                 'I Python har det första elementet index 0. tal[1] är det andra.'),
-        ], beskrivning=bygger('Listor i Python: index från 0, negativt index, len, append och att byta ett element.',
-                              T_PYGY)),
-
-        niva('prog-gy1-blad-listor-2', 'Gå igenom en lista', 'Listor', [
-            vilket_skrivs(K_UPPER, ['KALBALO', 'LO, BA, KAL', 'KAL, KAL, KAL'],
-                          'Loopen tar ett ord i taget, och upper() gör om det till versaler. print skriver en rad per varv.'),
-            vad_skrivs(K_SUMMERA, 'summa börjar på 0 och får 3, 5 och 9 i tur och ordning: 3 + 5 + 9 = %s.'
-                       % utskrift(K_SUMMERA)),
-            vad_skrivs(K_RAKNA_STORA, 'Bara 7 och 9 är större än 4, så antal ökar två gånger.'),
-            vad_skrivs(K_STORST, 'storst börjar på 3. Den byts mot 7 och sedan mot 9. 1 och 4 är mindre.'),
-            vad_skrivs(K_SATT_IHOP, 'text börjar tom. Först läggs "sol" till och sedan "is", så det blir %s.'
-                       % utskrift(K_SATT_IHOP)),
-            vilket_skrivs(K_BYGG_LISTA, ['3 4', '2 6', '3 3'],
-                          'Listan blir [2, 4, 6]. len är 3, och dubbel[2], det tredje elementet, är 6.'),
-            vad_skrivs(K_MEDEL, 'sum ger 18 och len ger 3. / ger alltid ett decimaltal i Python: 18 / 3 = 6.0.'),
-            val('Listan heter tal. Vilken rad lägger till talet 10 sist i listan?', LAGG_TILL, LAGG_TILL[0],
-                'append är listans metod för att lägga till sist. Listor har ingen add, och en lista plus ett tal ger ett fel.'),
-            vilket_skrivs(K_INDEXLOOP, ['6, 2, 8, 1', '1, 2, 3, 4', '0, 1, 2, 3, 4'],
-                          'len(tal) är 4, så range(4) ger index 0, 1, 2 och 3. Loopen skriver index, inte talen.'),
-        ], beskrivning=bygger('Gå igenom en lista med for: summera, räkna, hitta det största och bygga en ny lista.',
-                              T_PYGY)),
-
-        niva('prog-gy1-blad-funktioner-1', 'def och return', 'Funktioner och loopar', [
-            vad_skrivs(K_DUBBLA, 'dubbla(5) lämnar tillbaka 10, och 10 + 1 = %s.' % utskrift(K_DUBBLA)),
-            val('Vilken funktion lämnar tillbaka x upphöjt till 2?', KVADRAT, KVADRAT[0],
-                '** är upphöjt till. * 2 dubblar, ^ är något annat i Python, och print visar svaret men lämnar inte '
-                'tillbaka det.'),
-            vad_skrivs(K_SUMMA_F, 'summa(3, 4) lämnar tillbaka 7, och 7 · 2 = %s.' % utskrift(K_SUMMA_F)),
-            vad_skrivs(K_HALSA, 'Funktionen sätter ihop "Hej ", namnet och "!" till en text, som print skriver.'),
-            vad_skrivs(K_STORRE, '4 > 9 är falskt, så return a hoppas över, och funktionen lämnar tillbaka b, %s.'
-                       % utskrift(K_STORRE)),
-            val('Vad är skillnaden mellan return och print i en funktion?',
-                ['return lämnar tillbaka värdet så att koden kan räkna vidare, print visar det bara på skärmen',
-                 'print lämnar tillbaka värdet så att koden kan räkna vidare, return visar det bara på skärmen',
-                 'return och print gör exakt samma sak, men return går lite snabbare att köra i Python',
-                 'return används bara i loopar, och print används bara i funktioner med två parametrar'],
-                'return lämnar tillbaka värdet så att koden kan räkna vidare, print visar det bara på skärmen',
-                'Med return kan man skriva dubbla(5) + 1. En funktion som bara skriver ut lämnar tillbaka None.'),
-            vad_skrivs(K_F_X, 'f(3) är 3 · 3 = 9 och f(2) är 2 · 2 = 4. 9 + 4 = %s.' % utskrift(K_F_X)),
-            sant(fraga_kod('Programmet skriver ut hej.', K_BARA_DEF), kor(K_BARA_DEF) == 'hej\n',
-                 'def bara definierar funktionen. Den körs först när någon anropar den, med f().'),
-            vad_skrivs(K_DUBBLA_DUBBLA, 'Det inre anropet körs först: dubbla(3) är 6, och dubbla(6) är %s.'
-                       % utskrift(K_DUBBLA_DUBBLA)),
-        ], beskrivning=bygger('Funktioner med def och return: anropa, räkna vidare med svaret och skilja return från '
-                              'print.', T_PYGY)),
-
-        niva('prog-gy1-blad-loopar-1', 'while, // och %', 'Funktioner och loopar', [
-            vad_skrivs(K_WHILE, 'x blir 10 − 4 = 6 och sedan 6 − 4 = 2. Då är 2 > 3 falskt, och loopen slutar.'),
-            vilket_skrivs(K_DIV_REST, ['3.5 1', '3 0', '1 3'],
-                          '7 // 2 är heltalsdivision: 3. 7 % 2 är resten: 1, eftersom 2 · 3 = 6 och 7 − 6 = 1.'),
-            vad_skrivs(K_HELTAL, '// delar och stryker decimalerna. 23 / 4 = 5,75, så 23 // 4 är %s.' % utskrift(K_HELTAL)),
-            vad_skrivs(K_REST, '%% ger resten. 4 · 5 = 20, och 23 − 20 = %s.' % utskrift(K_REST)),
-            vad_skrivs(K_GANGER_TRE, 'n blir 3, 9, 27, 81 och 243. Efter fem varv är n inte längre mindre än 100.'),
-            sant('tal % 2 == 0 är sant precis när tal är ett jämnt tal.', True,
-                 'Ett jämnt tal går att dela med 2 utan rest. Ett udda tal ger resten 1.'),
-            vad_skrivs(K_SIFFERSUMMA, 'tal %% 10 tar sista siffran och tal // 10 stryker den. 2 + 7 + 4 = %s.'
-                       % utskrift(K_SIFFERSUMMA)),
-            val(fraga_kod('Vad händer när programmet körs?', K_EVIG),
-                ['Det skriver 5 om och om igen, utan slut', 'Det skriver 5, 4, 3, 2 och 1',
-                 'Det skriver ingenting alls', 'Det skriver 5 en gång och slutar'],
-                'Det skriver 5 om och om igen, utan slut',
-                'x ändras aldrig i loopen, så x > 0 är alltid sant. Det behövs en rad som x = x - 1.'),
-            vilket_skrivs(K_MINUTER, ['2 25', '2.08 5', '1 65'],
-                          '125 // 60 = 2 hela timmar, och 125 % 60 = 5 minuter kvar.'),
-            skriv(fraga_kod('Hur många rader skriver programmet ut?', K_SEX_STEG), tal(len(rader(K_SEX_STEG))),
-                  'x är 20, 14, 8 och 2 när det skrivs ut. Sedan blir x −4, och loopen slutar.'),
-        ], beskrivning=bygger('while-loopar, heltalsdivision med // och rest med %: läsa och följa programmen.',
-                              T_PYGY)),
     ]),
 ]

@@ -252,9 +252,11 @@ const NX = (function () {
      "Åk 7": etiketten ska gå att skriva om utan att raderna i
      databasen byter betydelse. Check-villkoret på
      biblioteksmaterial.arskurs listar exakt de här koderna. */
+  /* Programmering stod här till 2026-10-07. Nextrum erbjuder det inte
+     (Leo), så det går inte att be om, undervisa i eller märka material med. */
   const AMNEN = ['Matematik', 'Svenska', 'Engelska',
     'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap',
-    'Moderna språk', 'Programmering'];
+    'Moderna språk'];
 
   /* Ämnen som bara finns i NexLäx (2026-10-06). Leo: "Flera årskurser
      och ämnen, som exempelvis juridik, företagsekonomi och andra
@@ -275,7 +277,7 @@ const NX = (function () {
      som är det databasen prövar, och de ändras tillsammans. */
   const GARANTI_AMNEN = ['Matematik', 'Svenska', 'Svenska som andraspråk', 'Engelska',
     'Biologi', 'Fysik', 'Kemi', 'Historia', 'Samhällskunskap',
-    'Spanska', 'Tyska', 'Franska', 'Programmering'];
+    'Spanska', 'Tyska', 'Franska'];
 
   const ARSKURSER = [
     { kod: 'ak1', text: 'Åk 1' }, { kod: 'ak2', text: 'Åk 2' },

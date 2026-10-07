@@ -240,16 +240,6 @@ FACIT = {
         't.ex. "I have never been to London. I have already finished my homework."',
     ],
 
-    'ak9-programmering-python-grunder': [
-        'a) 12\nb) Hej Alva',
-        'c) stort\nd) 0, 2, 4, 6 (på var sin rad)',
-        'e) 6 (summan 0 + 1 + 2 + 3)\nf) == (if x == 5:). Ett = sparar ett värde, == jämför; som koden står '
-        'ger Python SyntaxError.',
-        'for i in range(1, 6):\n\u00a0\u00a0\u00a0\u00a0print(i)\n(Fem print-rader godtas också.)',
-        'Eget svar. En variabel är ett namn som sparar ett värde i datorns minne, och värdet kan ändras, '
-        't.ex. x = 5.',
-    ],
-
     'ak9-franska-etre-et-avoir': [
         "Je m'appelle Léa.",
         "J'ai quinze ans.",

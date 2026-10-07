@@ -73,7 +73,7 @@ ARSKURS_TEXT = {
 # står där blir osynligt i filtret, och ett filter som tyst tappar rader
 # ser ut som ett tomt bibliotek.
 AMNEN = ['Matematik', 'Svenska', 'Engelska', 'NO / Fysik / Kemi / Biologi',
-         'SO / Historia / Samhällskunskap', 'Moderna språk', 'Programmering']
+         'SO / Historia / Samhällskunskap', 'Moderna språk']
 
 # Bladen står i verktyg/bladen/, en fil per stadium och en per NP-serie (np_ak6, np_ak9, np_gymnasiet). Ordningen här är
 # ordningen i --sql, och ett blads id kommer ur filnamnet, så en ny rad

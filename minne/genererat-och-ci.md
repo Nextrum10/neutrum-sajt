@@ -56,9 +56,10 @@ och "läxhjälp kemi", som ingen områdessida svarar på. Samma regel, och
 två till: inga betygshöjningar, och inga kursnamn med årtal (gymnasiet
 bytte till ämnesbetyg och nivåer, och "Matte 2c" är fel för en del av
 eleverna). Det som står om ämnet är vad kursplanen innehåller; det som
-står om Nextrum är samma löfte som resten av sajten. Moderna språk, SO
-och programmering har ingen sida, för navet säger "fråga i anmälan så
-säger vi om vi har rätt person" och en egen sida hade lovat mer.
+står om Nextrum är samma löfte som resten av sajten. Moderna språk och
+SO hade ingen sida, för navet sa "fråga i anmälan så säger vi om vi har
+rätt person" och en egen sida hade lovat mer; sedan 2026-10-07 har de
+det (nedan). Programmering erbjuds inte alls (Leo, 2026-10-07).
 
 **Onlinesidan** (2026-09-28, `laxhjalp-online`) svarar på "läxhjälp
 online", som ingen sida hade ett ord om fast tjänsten finns. Den byggs
@@ -124,10 +125,13 @@ och `-gymnasiet`, byggs med `amnessida()` ur `STADIER`. Samma regler som
 till prissidan, så `kolla-betalningsvillkor.py` behöver inte bevaka dem.
 Navet, ämnessidorna och startsidan länkar dit.
 
-**Tre ämnessidor och lågstadiet till** (2026-10-07): `/laxhjalp-so`,
-`-moderna-sprak`, `-programmering` och `-lagstadiet`. Ämnena stod i
-`NX.AMNEN` (det familjen kan be om i anmälan) men hade ingen sida, och
-sajten lovade redan hjälp "från ettan" utan en sida för lågstadiet. Prisfrågan
+**Två ämnessidor och lågstadiet till** (2026-10-07): `/laxhjalp-so`,
+`-moderna-sprak` och `-lagstadiet`. Ämnena stod i `NX.AMNEN` (det
+familjen kan be om i anmälan) men hade ingen sida, och sajten lovade
+redan hjälp "från ettan" utan en sida för lågstadiet. `/laxhjalp-programmering`
+byggdes samma dag och togs bort samma eftermiddag: Nextrum erbjuder inte
+programmering (Leo). Adressen hade stått i kartan, så den omdirigeras
+till navet i `vercel.json`. Prisfrågan
 länkar till prissidan som stadiesidornas, så betalningsmeningen och
 `kolla-betalningsvillkor.py` berörs inte. Footern har kvar de fyra första
 ämnena; de nya nås från navet och från ämneskorten på varje landningssida,

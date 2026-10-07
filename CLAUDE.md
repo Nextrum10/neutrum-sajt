@@ -126,6 +126,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `klippkort_kraver_villkor`). Avbokningar, databasens egna vägar och admin stoppas aldrig, och barnet
   godkänner inget. Versionen är sidans datum och `intern.villkor_version()`; de ändras tillsammans
   (`kolla-villkor.py`), och då får alla frågan igen.
+- **Programmering erbjuds inte** (2026-10-07, Leo): inte i `NX.AMNEN`, NexLäx, materialbanken
+  eller betygsgarantin, och ingen sida; `/laxhjalp-programmering` omdirigeras till navet.
 - **Vem som får bli studiehjälpare** (2026-10-06, Leo): alla som får jobba. Ingen sida kräver
   att man pluggar; "nyligen läst samma kurser" är vad matchningen letar efter, inget krav för att söka.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och

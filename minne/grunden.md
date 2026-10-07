@@ -90,7 +90,7 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
-Sex stadsdelssidor, sju ämnessidor (`laxhjalp-*.html`), fyra stadiesidor,
+Sex stadsdelssidor, sex ämnessidor (`laxhjalp-*.html`), fyra stadiesidor,
 onlinesidan (`laxhjalp-online`) och tio guider i tre grupper genereras
 (`minne/genererat-och-ci.md`); navet `laxhjalp-stockholm.html` är
 handskrivet. `/en/` är tolv översatta sidor och `en/tutoring-stockholm`,
