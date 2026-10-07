@@ -2020,6 +2020,54 @@ a.pass-lank:hover{color:var(--acc)}
    den till kort som mest är tom yta. */
 .erb-grid:has(> .erb-klippkol[open]){align-items:start}
 
+/* Planerna (2026-10-07, Leo: Basic, Standard och Intensiv). Tre planer
+   och klippkorten är fyra kort.
+
+   Märkena: ett för timmen på köpet, ett för rabatten, eller båda, och
+   aldrig "−0 %". Timmen på köpet är fylld, som på prissidan: det är vad
+   Standard säljs med, och på det framhävda kortets ton hade ett märke
+   med bara en kant försvunnit. Den står i brödtextens typsnitt, så att
+   "1 timme på köpet" ryms bredvid namnet på en rad; bryts raden ändå
+   hamnar märket under namnet, aldrig i två rader. */
+.erb-topp{flex-wrap:wrap;row-gap:6px}
+.erb-rabatt{white-space:nowrap}
+.erb-marken{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.erb-rabatt.ar-pa-kopet{
+  font-family:inherit;font-size:11.5px;font-weight:650;letter-spacing:0;line-height:1.37;
+  background:var(--acc);border-color:var(--acc);color:var(--acc-ink);
+}
+/* "ni sparar 379 kr" bryts som en helhet, aldrig med "kr" ensamt. */
+.erb-spar{white-space:nowrap}
+/* Köp står längst ned i kortet, så att knapparna står på en linje när
+   raderna ovanför är olika långa. */
+.erb-kort > .erb-tim{margin-bottom:10px}
+.erb-kort > .btn{margin-top:auto}
+
+/* Tre i bredd när rutan rymmer det. Med tre planer hamnar klippkorten
+   ensamma på andra raden, och en tredjedel med tom yta bredvid ser ut
+   som något som saknas: där tar de hela bredden som en rad, med
+   sammanfattningen bredvid knappen och alternativen i ett rutnät när de
+   fälls ut. nth-child(3n+1): bara när de faktiskt står först på en rad
+   (med två planer, före migrationen, står de som förut). */
+@container (min-width:594px){
+  .erb-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .erb-grid > .erb-klippkol:nth-child(3n+1){grid-column:1/-1}
+  .erb-grid:has(> .erb-klippkol:nth-child(3n+1)){align-items:stretch}
+  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary{
+    display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+    grid-template-areas:"topp pris visa" "vad tim visa";
+    column-gap:28px;row-gap:4px;align-items:center;
+  }
+  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-topp{grid-area:topp;justify-content:flex-start}
+  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-vad{grid-area:vad}
+  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-pris{grid-area:pris;margin-top:0;justify-content:flex-end}
+  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-tim{grid-area:tim;text-align:right}
+  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-visa{grid-area:visa;margin-top:0}
+  .erb-grid > .erb-klippkol:nth-child(3n+1) .erb-klipp{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));column-gap:28px;
+  }
+}
+
 .erb-eget p{font-size:.92rem;line-height:1.6;color:var(--bl-2);margin:6px 0 14px;max-width:60ch}
 .erb-finstilt{font-size:.78rem;line-height:1.55;color:var(--muted-2);margin:2px 4px 0}
 .erb-finstilt a{color:inherit;text-decoration:underline;text-underline-offset:2px}

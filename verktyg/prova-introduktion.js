@@ -83,7 +83,8 @@ function falskSupabase(o) {
        som inte är matchad än inte (2026-10-07). */
     flaggor: [{ kod: 'erbjudanden', aktiv: true }],
     erbjudanden_pris: [{ kod: 'klipp10', sort: 'klippkort', namn: 'Klippkort 10', timmar: 10, rabatt_procent: 5,
-      giltig_manader: 6, timpris_ore: 37900, ordinarie_ore: 379000, pris_ore: 360000, rabatterat_timpris_ore: 36000 }]
+      giltig_manader: 6, timpris_ore: 37900, ordinarie_ore: 379000, pris_ore: 360000, rabatterat_timpris_ore: 36000,
+      timmar_pa_kopet: 0 }]
   };
   const svar = (route, status, kropp, extra) => route.fulfill({
     status,

@@ -74,8 +74,12 @@ const CORS = cors();
    3: Managed Payments uttryckligen av (Fas 14.4).
    4: kassan kan bäddas in i föräldravyn (Fas 14.5).
    5: raden säger när första timmen är på köpet (Fas 19.5).
-   6: minuterna betalningen avser står i metadata (Fas 20.1). */
-const SESSIONSFORM = 6;
+   6: minuterna betalningen avser står i metadata (Fas 20.1).
+   7: planerna (2026-10-07): raden säger timmen på köpet ("8 timmar
+      läxhjälp för priset av 7") och aldrig "0 % rabatt". Ett väntande
+      köp som återanvänds får annars en ny beskrivning under samma
+      nyckel, och Stripe nekar. */
+const SESSIONSFORM = 7;
 
 /* DEN INBÄDDADE KASSAN (Fas 14.5)
 
@@ -178,9 +182,13 @@ async function köpErbjudande(
   if (!prof || prof.role !== 'parent') {
     return json({ error: 'Erbjudandena köps av familjen.' }, 403, CORS);
   }
+  /* timmar_pa_kopet finns först efter migrationen
+     planerna_basic_standard_intensiv (2026-10-07). Utan den nekar
+     PostgREST kolumnen och köpet svarar "finns inte" innan något dras:
+     driftsätt den här efter migrationen. */
   const { data: e } = await vem.klient
     .from('erbjudanden_pris')
-    .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, pris_ore')
+    .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, pris_ore, timmar_pa_kopet')
     .eq('kod', kod)
     .maybeSingle();
   if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
@@ -204,6 +212,9 @@ async function köpErbjudande(
         namn: e.namn,
         sort: e.sort,
         timmar: e.timmar,
+        // Planerna (2026-10-07): fryst som rabatten. Timmarna på köpet
+        // ingår i timmar och dras som de andra.
+        timmar_pa_kopet: Number(e.timmar_pa_kopet) || 0,
         giltig_manader: e.giltig_manader,
         rabatt_procent: e.rabatt_procent,
         timpris_ore: e.timpris_ore,
