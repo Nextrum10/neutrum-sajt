@@ -931,5 +931,14 @@ driftsätts FÖRE den**: kassan läser hela raden med `*` och skriver
 kolumnen bara när vyn har den, så den tål att migrationen saknas, och
 inget glapp uppstår där en gammal kassa säljer Standard med "0 % rabatt"
 (granskningen 2026-10-07). Ett väntande köp återanvänds bara med samma
-innehåll (`sammaInnehall`), inte bara samma pris. Inte i drift 2026-10-07
-när PR:en skrevs.
+innehåll (`sammaInnehall`), inte bara samma pris. **I drift 2026-10-07**,
+efter merge av PR #224: först `stripe-checkout` v18 från main (2f12977),
+hämtad tillbaka och byte för byte lika i alla sju filer, sedan filen från
+merge-commiten genom `extensions.http_get`, prövad mot sin md5
+(`f4835f34…`), körd och registrerad i samma do-block (`$kor$`). Raden i
+`schema_migrations` har filens md5. Efteråt: `plan_basic` 144000 öre
+(ordinarie 151600), `plan_standard` 265300 (303200, en timme på köpet),
+`plan_intensiv` 432000 (454800), `standard` och `intensiv` av, vyns tolv
+kolumner med `timmar_pa_kopet` sist, och `bookings_timmarna_tillbaka` sist
+bland triggrarna på `bookings`. Hela `rls-test.sql` mot driften: 1505 av
+1505, tillbakarullat. Advisorn larmade inte om något nytt.
