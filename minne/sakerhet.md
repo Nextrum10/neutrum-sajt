@@ -370,7 +370,9 @@ villkoren beskriver det (ångerrätten, betalningen, avbokningen).
 - **Admin** ser i personens panel när villkoren godkändes, eller att de
   inte är det (samma behörigheter som läser personer). Saknas tabellen
   står "okänt", aldrig "inte godkända".
-- Provas i `rls-test.sql` avsnitt 23 och `verktyg/prova-villkor.js`.
+- Provas i `rls-test.sql` avsnitt 23 och `verktyg/prova-villkor.js`. I drift
+  sedan 2026-10-07 (PR #208); när migrationen kördes hade ingen godkänt
+  något, så alla konton får frågan vid nästa inloggning.
 
 ### Kontomejlen från Supabase Auth (2026-10-01)
 

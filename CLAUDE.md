@@ -529,10 +529,11 @@ Detaljer: `minne/grunden.md`.
   v8 från main, hämtade tillbaka och byte för byte lika, och hela `rls-test.sql` 1433 av 1433 mot
   driften. Ingen skarp inbjudan har gått än (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller en timme
   (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny.
-- **Användarvillkoren och provobjekten** (2026-10-07) går ut efter merge: migrationerna
-  `villkoren_godkanns` och `provobjekten_tas_bort` (`DEPLOY-BARNKONTON.md` 10; den andra har `drop` och
-  ber om en bekräftelse). Vyerna tål att den första saknas. Alla konton i driften får frågan vid nästa
-  inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i `DATASKYDD.md`.
+- **Användarvillkoren** (2026-10-07) är i drift sedan samma dag: `villkoren_godkanns` från
+  merge-commiten (md5 prövad), och hela `rls-test.sql` 1459 av 1459 mot driften. Alla konton i driften
+  får frågan vid nästa inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i
+  `DATASKYDD.md`. **Provobjekten** (`provobjekten_tas_bort`, med `drop`) väntar på en bekräftelse: verktyget
+  hängde sig i 60 sekunder utan svar, och inget hände (`DEPLOY-BARNKONTON.md` 10).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
