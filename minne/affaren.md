@@ -531,8 +531,15 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   marknadsföring, och troligen ett oskäligt villkor. Våra läses ur det som
   redan finns: hållen tid, `bookings.attendance = 'franvarande'`,
   `homework.status` mot `due_date`, och betalningarna.
+- **Ett läsår** (Leo samma dag): betyget som räknas är det första efter
+  40 veckor från anmälan, eller 30 om det sätts vid sommarlovet.
+  Kalenderveckor, för ett läsår har bara runt 36 skolveckor och 40 skolveckor hade
+  ingen klarat. Från anmälan, inte från att familjen blev kund: annars
+  anmäls garantin veckan före betyget. Ett terminsbetyg mitt i perioden
+  räknas inte, och därför är kopiorna betyget före anmälan och det som
+  räknas, inte "de två senaste".
 - **Hårdare än förlagan:** ett ämne som anmäls i förväg och inte flyttas,
-  två timmar varje skolvecka och minst 30 timmar, missade timmar igen inom
+  ett läsår med två timmar varje skolvecka, missade timmar igen inom
   14 dagar, inga uteblivna pass, 90 procent av uppgifterna i tid, allt
   betalt och ingen faktura sen, en gång per elev och ämne, och 10 timmar
   i stället för 20.
