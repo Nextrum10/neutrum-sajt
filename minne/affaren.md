@@ -520,6 +520,39 @@ Driftsättningen och det som är kvar, ur avsnitt 11:
   annars börjar man online. Områdessidorna sa att formatet "avgörs av
   matchningen, inte av adressen", och ämnessidorna att ni väljer.
 
+## Betygsgarantin (2026-10-07)
+
+Leo ville ha en betygsgaranti som Studybuddys, men svårare att få. Den
+blev svårare genom villkor som går att räkna, inte genom luddiga
+(`anvandarvillkor.html#betygsgaranti`, båda språken).
+- **Inget om engagemang.** Förlagan hänger på att eleven "visar intresse"
+  och att bolaget bedömer det. Ett villkor som bara vi bedömer gör
+  garantin till ett löfte vi själva kan säga nej till: vilseledande
+  marknadsföring, och troligen ett oskäligt villkor. Våra läses ur det som
+  redan finns: hållen tid, `bookings.attendance = 'franvarande'`,
+  `homework.status` mot `due_date`, och betalningarna.
+- **Hårdare än förlagan:** ett ämne som anmäls i förväg och inte flyttas,
+  två timmar varje skolvecka och minst 30 timmar, missade timmar igen inom
+  14 dagar, inga uteblivna pass, 90 procent av uppgifterna i tid, allt
+  betalt och ingen faktura sen, en gång per elev och ämne, och 10 timmar
+  i stället för 20.
+- **30 dagar för anspråket, med flit inte kortare:** betygen sätts före
+  sommarlovet, och en kortare frist slår mot den som är bortrest, inte mot
+  den som inte gjort jobbet.
+- **Betygen först vid anspråket.** Integritetspolicyn sa att vi aldrig ber
+  om betyg, och konsekvensbedömningen vilade på det. Anmälan bär bara elev
+  och ämne; det förra betyget visas vid anspråket, med betygsdokumentets
+  datum, och kopiorna raderas för hand när det är avgjort (`DATASKYDD.md`
+  rad 25). Inkorgen info@ ligger i Google Workspace, och policyn säger det
+  sedan samma dag.
+- **Timmar, aldrig pengar**, som tipstimmen.
+- **Passen har inget ämnesfält.** Ämnet läses ur rapportens fritext; ett
+  fält på passet vore en egen ändring.
+- **Bara i villkoren.** Sidorna säljer den inte och lovar fortfarande inga
+  betygshöjningar (avsnitt 8 i kärnan). Ska den säljas: juristen först.
+- **Versionen byttes** (`betygsgarantin`), så alla får frågan igen.
+  Inget är byggt för att pröva ett anspråk: admin räknar ur vyerna.
+
 ## Tipsa en familj och affischerna (2026-09-30)
 
 Leo 2026-09-30, ur analysen samma dag: en värvningslänk för familjer och
