@@ -222,12 +222,32 @@
       <p class="nx-terms">No minimum term · Stop whenever you like · Flexible hours. How often you book is up to you.</p>
     </div>
 
-    <div class="nx-offer rv">
-      <span class="tagline">Introductory offer</span>
-      <h3>The first hour on us</h3>
-      <p>Book two hours of tutoring and we cover one of them.</p>
-      <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">Get started <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-      <p class="nx-terms">The offer applies to new families, once. The hour comes off the session that brings your bookings to two hours, and it shows on the session.</p>
+    <!-- Högerkolumnen är två kort: starterbjudandet och under det
+         Standard (Leo 2026-10-07: "Visa standard planens erbjudande på
+         sidan och sälj in de inbakat någonstans där de passar").
+         Lyftet har inga egna siffror. initErbjudanden() skriver antalet,
+         timmarna ni betalar för och priset ur samma svar som planernas
+         kort, och döljer lyftet om planen inte finns i erbjudanden_pris.
+         "För priset av" och inte "på köpet": starterbjudandet ovanför
+         heter redan Första timmen på köpet, och det är en annan sak. -->
+    <div class="pr-topp-stapel">
+      <div class="nx-offer rv">
+        <span class="tagline">Introductory offer</span>
+        <h3>The first hour on us</h3>
+        <p>Book two hours of tutoring and we cover one of them.</p>
+        <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">Get started <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <p class="nx-terms">The offer applies to new families, once. The hour comes off the session that brings your bookings to two hours, and it shows on the session.</p>
+      </div>
+
+      <a class="pr-lyft rv" href="#erbjudanden" data-erb="plan_standard" data-erb-timmar="8" data-erb-ore="265300">
+        <span class="pr-lyft-topp"><span class="pr-lyft-tips">Our pick</span><span class="eyebrow">The Standard plan</span></span>
+        <span class="pr-lyft-rubrik"><span data-erb-antal>8</span> hours a month <em>for the price of <span data-erb-betalda>7</span>.</em></span>
+        <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="pa"></i></span>
+        <span class="pr-lyft-fot">
+          <span class="pr-lyft-pris"><b class="tnum" data-erb-pris>2 653 kr</b> for the month · you save <span data-erb-spar>379 kr</span></span>
+          <span class="pr-lyft-mer">See the plans <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+        </span>
+      </a>
     </div>
   </div>
 </section>
@@ -279,13 +299,27 @@
 </section>
 
 <!-- ==========================================================
-     ERBJUDANDEN (Fas 16.1)
+     ERBJUDANDEN (Fas 16.1, planerna 2026-10-07)
      Siffrorna här är en reserv för den som läser utan javascript.
      Källan är vyn erbjudanden_pris, som stripe-checkout tar betalt
      efter; initErbjudanden() i nextrum-app.js skriver om dem, och
      döljer ett erbjudande som inte längre finns. Ett pris på den
      här sidan som inte är det kassan drar är en tvist, inte ett
      skrivfel.
+
+     Tre planer sedan 2026-10-07 (Leo): Basic 4 timmar −5 %, Standard
+     8 timmar med en timme på köpet och Intensiv 12 timmar −5 %. Koderna
+     är nya (plan_*), så före migrationen finns de inte i svaret och
+     korten döljs, i stället för att visa ett pris kassan inte drar.
+     Standard har inget timpris: 2 653 kr för 8 timmar är inget helt
+     timpris, och ett timpris som inte går ihop med summan bredvid
+     visas aldrig. Den säger "8 timmar för priset av 7". "Vårt tips"
+     är en åsikt och sann; "populärast" vet vi inte.
+
+     Rutorna under beskrivningen är timmarna, en per timme, och den som
+     är på köpet är i lera. initErbjudanden() ritar dem om antalet ändras.
+     På en telefon är planerna en rad man sveper i, som ett inlägg, och
+     raden börjar med Standard i mitten.
      ========================================================== -->
 <section class="sec wrap pr-erb" id="erbjudanden" aria-labelledby="erb-t">
   <div class="nx-head split" data-stig>
@@ -293,134 +327,182 @@
       <span class="nx-et acc">Offers</span>
       <h2 class="d2" id="erb-t" style="margin-top:18px">Buy the hours in advance. Pay less.</h2>
     </div>
-    <div class="nx-head-aside"><p class="nx-lede">A plan for one month with a set number of sessions, or prepaid hours you use whenever it suits you. Both are one-off purchases. No subscription, no minimum term.</p></div>
+    <div class="nx-head-aside"><p class="nx-lede">Three plans for one month, or prepaid hours you use whenever it suits you. Everything is a one-off purchase. No subscription, no minimum term.</p></div>
   </div>
 
-  <div class="pr-erb-planer">
-    <div class="nx-price-card pr-erb-plan rv" data-erb="standard" data-erb-timmar="4">
-      <div class="pr-erb-topp"><span class="eyebrow">Standard plan</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>10</span>%</span></div>
-      <p class="pr-erb-vad">One session a week, four hours in a month.</p>
+  <div class="pr-erb-planer" data-erb-rad data-stig>
+    <div class="nx-price-card pr-erb-plan" data-erb="plan_basic" data-erb-timmar="4" data-erb-ore="144000">
+      <div class="pr-erb-topp"><span class="eyebrow" data-erb-namn>Basic</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>5</span>%</span></div>
+      <p class="pr-erb-vad">One session a week, <span data-erb-antal>4</span> hours in a month.</p>
+      <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       <div class="nx-amount">
-        <b class="tnum" data-erb-pris>1 364 kr</b>
+        <b class="tnum" data-erb-pris>1 440 kr</b>
         <span class="per">for the month</span>
       </div>
-      <p class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>341 kr</b> / hour · You save <b data-erb-spar>152 kr</b></p>
+      <p class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour · You save <b data-erb-spar>76 kr</b></p>
     </div>
 
-    <div class="nx-price-card pr-erb-plan ar-framhavd rv" data-erb="intensiv" data-erb-timmar="8">
-      <div class="pr-erb-topp"><span class="eyebrow">Intensive</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>10</span>%</span></div>
-      <p class="pr-erb-vad">Two sessions a week, eight hours in a month.</p>
+    <div class="nx-price-card pr-erb-plan ar-framhavd" data-erb="plan_standard" data-erb-timmar="8" data-erb-ore="265300">
+      <span class="pr-erb-band">Our pick</span>
+      <div class="pr-erb-topp"><span class="eyebrow" data-erb-namn>Standard</span><span class="pr-erb-paket" data-erb-paket>1 hour free</span></div>
+      <p class="pr-erb-vad">Two sessions a week, <span data-erb-antal>8</span> hours in a month.</p>
+      <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="pa"></i></span>
       <div class="nx-amount">
-        <b class="tnum" data-erb-pris>2 728 kr</b>
+        <b class="tnum" data-erb-pris>2 653 kr</b>
         <span class="per">for the month</span>
       </div>
-      <p class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>341 kr</b> / hour · You save <b data-erb-spar>304 kr</b></p>
+      <p class="pr-erb-tim"><span data-erb-antal>8</span> hours for the price of <b data-erb-betalda>7</b> · You save <b data-erb-spar>379 kr</b></p>
     </div>
 
-    <!-- Klippkorten är EN kolumn som fälls ut (2026-09-26). Fem kort
-         i en egen rad var en vägg under två planer. <details>, inte en
-         knapp med skript: kolumnen öppnas också utan javascript, och
-         siffrorna står i sidan för den som aldrig öppnar den. "Från",
-         spannet och rabatten i rubriken skriver initErbjudanden() ur
-         de kort som finns kvar i databasen. -->
-    <details class="nx-price-card pr-erb-plan pr-erb-klippkol rv" data-erb-grupp>
-      <summary>
-        <span class="pr-erb-topp"><span class="eyebrow">Prepaid hours</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>5</span>%</span></span>
-        <span class="pr-erb-vad">Hours you use whenever it suits you, from <span data-erb-min>10</span> to <span data-erb-max>100</span> hours.</span>
-        <span class="nx-amount"><span class="per">from</span> <b class="tnum" data-erb-fran>3 600 kr</b></span>
-        <span class="pr-erb-visa"><span class="pr-erb-visa-stangd">See the options</span><span class="pr-erb-visa-oppen">Hide the options</span> <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></span>
-      </summary>
-      <ul class="pr-erb-klipp">
-        <li class="pr-erb-kort" data-erb="klipp10">
-          <b class="pr-erb-namn">10 hours</b>
-          <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
-          <b class="pr-erb-summa tnum" data-erb-pris>3 600 kr</b>
-          <span class="pr-erb-spar">You save <span data-erb-spar>190 kr</span></span>
-          <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
-        </li>
-        <li class="pr-erb-kort ar-framhavd" data-erb="klipp20">
-          <b class="pr-erb-namn">20 hours</b>
-          <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
-          <b class="pr-erb-summa tnum" data-erb-pris>7 200 kr</b>
-          <span class="pr-erb-spar">You save <span data-erb-spar>380 kr</span></span>
-          <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
-        </li>
-        <li class="pr-erb-kort" data-erb="klipp30">
-          <b class="pr-erb-namn">30 hours</b>
-          <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
-          <b class="pr-erb-summa tnum" data-erb-pris>10 800 kr</b>
-          <span class="pr-erb-spar">You save <span data-erb-spar>570 kr</span></span>
-          <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
-        </li>
-        <li class="pr-erb-kort" data-erb="klipp60">
-          <b class="pr-erb-namn">60 hours</b>
-          <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
-          <b class="pr-erb-summa tnum" data-erb-pris>21 600 kr</b>
-          <span class="pr-erb-spar">You save <span data-erb-spar>1 140 kr</span></span>
-          <span class="pr-erb-giltig">Valid for <span data-erb-giltig>12 months</span></span>
-        </li>
-        <li class="pr-erb-kort" data-erb="klipp100">
-          <b class="pr-erb-namn">100 hours</b>
-          <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
-          <b class="pr-erb-summa tnum" data-erb-pris>36 000 kr</b>
-          <span class="pr-erb-spar">You save <span data-erb-spar>1 900 kr</span></span>
-          <span class="pr-erb-giltig">Valid for <span data-erb-giltig>18 months</span></span>
-        </li>
-      </ul>
-    </details>
+    <div class="nx-price-card pr-erb-plan" data-erb="plan_intensiv" data-erb-timmar="12" data-erb-ore="432000">
+      <div class="pr-erb-topp"><span class="eyebrow" data-erb-namn>Intensive</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>5</span>%</span></div>
+      <p class="pr-erb-vad">Three sessions a week, <span data-erb-antal>12</span> hours in a month.</p>
+      <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <div class="nx-amount">
+        <b class="tnum" data-erb-pris>4 320 kr</b>
+        <span class="per">for the month</span>
+      </div>
+      <p class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour · You save <b data-erb-spar>228 kr</b></p>
+    </div>
+  </div>
+  <!-- Prickarna under raden på en telefon: vilket kort som står i
+       mitten. Bara en bild av läget, som sätts med en klass; man sveper
+       i raden, inte på prickarna. -->
+  <div class="pr-erb-prickar" data-erb-prickar aria-hidden="true"><i></i><i></i><i></i></div>
 
-    <!-- Villkoren och knappen står i griden, inte under den: utfälld
-         blir klippkortens kolumn lång, och de hade då tryckts ner
-         under den och lämnat två tomma kolumner. -->
-    <div class="pr-erb-fot">
+  <!-- Klippkorten är en egen bred rad under planerna sedan 2026-10-07,
+       och fälls ut som förut (2026-09-26). <details>, inte en knapp med
+       skript: raden öppnas också utan javascript, och siffrorna står i
+       sidan för den som aldrig öppnar den. "Från", spannet och rabatten
+       i rubriken skriver initErbjudanden() ur de kort som finns kvar i
+       databasen. -->
+  <details class="nx-price-card pr-erb-klippkol" data-erb-grupp data-stig>
+    <summary>
+      <span class="pr-erb-topp"><span class="eyebrow">Prepaid hours</span><span class="pr-erb-rabatt">−<span data-erb-rabatt>5</span>%</span></span>
+      <span class="pr-erb-vad">Hours you use whenever it suits you, from <span data-erb-min>10</span> to <span data-erb-max>100</span> hours.</span>
+      <span class="nx-amount"><span class="per">from</span> <b class="tnum" data-erb-fran>3 600 kr</b></span>
+      <span class="pr-erb-visa"><span class="pr-erb-visa-stangd">See the options</span><span class="pr-erb-visa-oppen">Hide the options</span> <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></span>
+    </summary>
+    <ul class="pr-erb-klipp">
+      <li class="pr-erb-kort" data-erb="klipp10">
+        <b class="pr-erb-namn">10 hours</b>
+        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>3 600 kr</b>
+        <span class="pr-erb-spar">You save <span data-erb-spar>190 kr</span></span>
+        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
+      </li>
+      <li class="pr-erb-kort ar-framhavd" data-erb="klipp20">
+        <b class="pr-erb-namn">20 hours</b>
+        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>7 200 kr</b>
+        <span class="pr-erb-spar">You save <span data-erb-spar>380 kr</span></span>
+        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
+      </li>
+      <li class="pr-erb-kort" data-erb="klipp30">
+        <b class="pr-erb-namn">30 hours</b>
+        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>10 800 kr</b>
+        <span class="pr-erb-spar">You save <span data-erb-spar>570 kr</span></span>
+        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
+      </li>
+      <li class="pr-erb-kort" data-erb="klipp60">
+        <b class="pr-erb-namn">60 hours</b>
+        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>21 600 kr</b>
+        <span class="pr-erb-spar">You save <span data-erb-spar>1 140 kr</span></span>
+        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>12 months</span></span>
+      </li>
+      <li class="pr-erb-kort" data-erb="klipp100">
+        <b class="pr-erb-namn">100 hours</b>
+        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>379 kr</span></s> <b data-erb-rabatterat>360 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>36 000 kr</b>
+        <span class="pr-erb-spar">You save <span data-erb-spar>1 900 kr</span></span>
+        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>18 months</span></span>
+      </li>
+    </ul>
+  </details>
+
+  <div class="pr-erb-fot" data-stig>
+    <div>
       <p class="pr-erb-fin">The hours are drawn when you propose a session, for one child per session, and if the tutor declines they come back. If you stop before they are used, you get back what is left, with the hours used counted at the regular price. If you withdraw from the purchase within 14 days, the hours used are counted at the price you paid instead. <a href="/en/anvandarvillkor#erbjudanden">Terms for the offers</a></p>
       <p class="pr-erb-fin"><a href="/en/anvandarvillkor#prisgaranti">See our terms for the price guarantee</a></p>
-      <div class="pr-erb-cta rv">
-        <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">Get started <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-        <p class="nx-terms">Already have an account? Buy under <a href="/foralder#erbjudanden">Offers in your view</a>. Want a plan of your own? <a href="mailto:info@nextrum.se" data-mailtext="keep">Write to us</a>.</p>
-      </div>
+    </div>
+    <div class="pr-erb-cta">
+      <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">Get started <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <p class="nx-terms">Already have an account? Buy under <a href="/foralder#erbjudanden">Offers in your view</a>. Want a plan of your own? <a href="mailto:info@nextrum.se" data-mailtext="keep">Write to us</a>.</p>
     </div>
   </div>
 </section>
 
 <!-- ==========================================================
-     RÄKNA SJÄLV (2026-10-06)
+     RÄKNA SJÄLV (2026-10-06, omgjord 2026-10-07)
      Månadskostnaden för barn och timmar i veckan. Timpriset och
      tillägget läses ur nextrum-config.js som initPris() gör, och
      planens pris ur samma kort som initErbjudanden() skriver om ur
      erbjudanden_pris: kalkylatorn räknar aldrig fram ett eget
-     planpris. Planerna gäller ett barn per pass, så tipset visas bara
-     för ett barn. All text står här, inte i skriptet, så att den
+     planpris. Planerna gäller ett barn per pass, så planen visas bara
+     för ett barn, och med 4, 8 och 12 timmar har varje val för ett
+     barn en plan. All text står här, inte i skriptet, så att den
      följer med till /en/.
+
+     Leo 2026-10-07: "Räkna själv på hemsidan gör de lite moderna och
+     bättre." Valen är en reglage-rad där en tumme glider till det man
+     valt, och svaret är två rutor bredvid varandra: per pass, och med
+     planen. Stapeln i varje ruta är andelen av det man betalar per
+     pass, så skillnaden syns innan man läst siffran. Rutan till höger
+     har tre lägen (planen, flera barn, ingen plan) i samma cell, och
+     den högsta bestämmer höjden: inget hoppar när läget byts.
      ========================================================== -->
 <section class="sec wrap pr-kalk" id="rakna" aria-labelledby="kalk-t">
   <div class="nx-head split" data-stig>
     <div><span class="nx-et acc">Work it out</span>
       <h2 class="nx-d2" id="kalk-t" style="margin-top:18px">What does a month<br>come <em>to?</em></h2></div>
-    <div class="nx-head-aside"><p class="nx-lede">Choose how many children take part and how many hours a week, and you see what four weeks cost.</p></div>
+    <div class="nx-head-aside"><p class="nx-lede">Choose how many children take part and how many hours a week, and you see what four weeks cost, per session and with a plan.</p></div>
   </div>
-  <div class="nx-price-card pr-kalk-kort rv" data-kalk>
+  <div class="nx-price-card pr-kalk-kort" data-kalk data-stig>
     <div class="pr-kalk-val">
       <div class="pr-kalk-falt">
         <span class="pr-kalk-etikett" id="kalk-barn">Children in the session</span>
-        <div class="pr-kalk-chips" role="group" aria-labelledby="kalk-barn" data-kalk-val="barn">
+        <div class="pr-kalk-seg" role="group" aria-labelledby="kalk-barn" data-kalk-val="barn" data-v="1">
+          <span class="pr-kalk-tumme" aria-hidden="true"><span><b>1</b><b>2</b><b>3</b></span></span>
           <button type="button" aria-pressed="true" data-v="1">1</button><button type="button" aria-pressed="false" data-v="2">2</button><button type="button" aria-pressed="false" data-v="3">3</button>
         </div>
       </div>
       <div class="pr-kalk-falt">
         <span class="pr-kalk-etikett" id="kalk-tim">Hours a week</span>
-        <div class="pr-kalk-chips" role="group" aria-labelledby="kalk-tim" data-kalk-val="tim">
+        <div class="pr-kalk-seg" role="group" aria-labelledby="kalk-tim" data-kalk-val="tim" data-v="1">
+          <span class="pr-kalk-tumme" aria-hidden="true"><span><b>1</b><b>2</b><b>3</b></span></span>
           <button type="button" aria-pressed="true" data-v="1">1</button><button type="button" aria-pressed="false" data-v="2">2</button><button type="button" aria-pressed="false" data-v="3">3</button>
         </div>
       </div>
+      <p class="pr-kalk-not">The first hour is on us for new families, so the first month is one hour cheaper.</p>
     </div>
     <div class="pr-kalk-svar" aria-live="polite">
-      <span class="eyebrow">Four weeks</span>
-      <b class="pr-kalk-summa tnum" data-kalk-summa>1 516 kr</b>
-      <p class="pr-kalk-rad"><span data-kalk-timmar>4</span> hours × <span data-kalk-timpris>379 kr</span></p>
-      <p class="pr-kalk-tips" data-kalk-tips="plan">With <span data-kalk-plannamn>Standard plan</span> the same hours come to <b data-kalk-planpris>1 364 kr</b>, and you save <span data-kalk-planspar>152 kr</span>.</p>
-      <p class="pr-kalk-tips" data-kalk-tips="syskon" hidden>Two and three children cost the same: <span data-stat="extra-barn">69 kr</span> extra an hour in total.</p>
-      <p class="pr-kalk-not">The first hour is on us for new families, so the first month is one hour cheaper.</p>
+      <div class="pr-kalk-alt">
+        <span class="eyebrow">Per session, four weeks</span>
+        <b class="pr-kalk-summa tnum" data-kalk-summa>1 516 kr</b>
+        <p class="pr-kalk-rad"><span data-kalk-timmar>4</span> hours × <span data-kalk-timpris>379 kr</span></p>
+        <span class="pr-kalk-stapel" aria-hidden="true"><i></i></span>
+      </div>
+      <div class="pr-kalk-alt pr-kalk-med">
+        <div class="pr-kalk-lage" data-kalk-tips="plan">
+          <span class="eyebrow">With <span data-kalk-plannamn>Basic</span></span>
+          <b class="pr-kalk-summa tnum" data-kalk-planpris>1 440 kr</b>
+          <p class="pr-kalk-rad">You save <b data-kalk-planspar>76 kr</b><span class="pr-erb-paket" data-kalk-paket hidden></span></p>
+          <span class="pr-kalk-stapel" aria-hidden="true"><i data-kalk-andel style="--andel:.95"></i></span>
+          <a class="nx-lank" href="#erbjudanden">See the plans <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        </div>
+        <div class="pr-kalk-lage" data-kalk-tips="syskon" hidden>
+          <span class="eyebrow">More children in the session</span>
+          <p class="pr-kalk-text">Two and three children cost the same: <span data-stat="extra-barn">69 kr</span> extra an hour in total.</p>
+          <p class="pr-kalk-rad">The plans are for one child per session, so with more children you pay per session.</p>
+        </div>
+        <div class="pr-kalk-lage" data-kalk-tips="ingen" hidden>
+          <span class="eyebrow">Buy the hours in advance</span>
+          <p class="pr-kalk-text">With prepaid hours every hour costs less, and you use them whenever it suits you.</p>
+          <a class="nx-lank" href="#erbjudanden">See the offers <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -463,53 +545,75 @@
   </div>
 </section>
 
-<!-- Betalningen i fyra punkter, som hållpunkterna på startsidan.
-     Meningen om betalningen står ordagrant (kolla-betalningsvillkor.py). -->
-<section class="nx-yta nx-sek">
+<!-- ==========================================================
+     SÅ FUNGERAR BETALNINGEN (2026-10-07)
+     Leo: "Så fungerar betalning gör de ej i kolumner utan pilar mellan
+     varje steg modernt och snyggt." Fyra steg i den ordning de händer,
+     med en pil mellan varje: vågrätt på en dator, lodrätt på en telefon.
+     Stegen och pilarna tänds i tur när listan syns (betalflöde() i
+     nextrum-start.js sätter klasserna, CSS rör sig), och på en telefon
+     tänds varje steg när man scrollar förbi det.
+
+     Betalningsmeningen och fakturameningen står ordagrant, EN gång var
+     här och en gång i FAQ:n "När betalar vi?" (kolla-betalningsvillkor.py
+     räknar dem). Det som förut var tre blad bredvid betalningen står
+     nu som korta fakta under flödet.
+     ========================================================== -->
+<section class="nx-yta nx-sek" aria-labelledby="betal-t">
   <div class="nx-wrap-bred">
     <div class="nx-head split" data-stig>
       <div>
         <span class="nx-et acc">How payment works</span>
-        <h2 class="nx-d2" style="margin-top:18px">Everything goes through Nextrum.</h2>
+        <h2 class="nx-d2" id="betal-t" style="margin-top:18px">Everything goes through Nextrum.</h2>
       </div>
       <div class="nx-head-aside">
         <p class="nx-lede">Booking, payment and completed session all connect in one place. You see what was booked, what was paid and what took place.</p>
       </div>
     </div>
 
-    <ul class="nx-holdpunkter" data-stig data-fördröj="1" style="margin-top:clamp(36px,4.6vw,64px)">
-      <li class="nx-bubbla">
-        <div class="hp-topp">
-          <span class="hp-nr" aria-hidden="true">1</span>
-          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg></span>
+    <ol class="pr-flode" data-betalflode>
+      <li class="pr-flode-steg">
+        <div class="pr-flode-topp">
+          <span class="pr-flode-nr" aria-hidden="true">01</span>
+          <span class="pr-flode-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>
+          <span class="pr-flode-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 1.5 8.5 6 4 10.5"/></svg></span>
         </div>
-        <h3>You pay per session</h3>
-        <p>You pay for each session by card, either in advance or after the session when you confirm the report. After the session you can choose an invoice instead, which comes at the start of the following month with ten days to pay and no fee. If you only need help before a test, you book that session and nothing more.</p>
+        <h3>You book a session</h3>
+        <p>You suggest a time in your view and the tutor confirms it. If you only need help before a test, you book that session and nothing more.</p>
       </li>
-      <li class="nx-bubbla">
-        <div class="hp-topp">
-          <span class="hp-nr" aria-hidden="true">2</span>
-          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 9.5h14M5 14.5h14"/></svg></span>
+      <li class="pr-flode-steg">
+        <div class="pr-flode-topp">
+          <span class="pr-flode-nr" aria-hidden="true">02</span>
+          <span class="pr-flode-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg></span>
+          <span class="pr-flode-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 1.5 8.5 6 4 10.5"/></svg></span>
         </div>
-        <h3>The same price whatever the subject</h3>
-        <p>Maths, Swedish, physics or Spanish all cost the same. You do not have to work out a new price every time the need changes.</p>
+        <h3>Pay in advance if you like</h3>
+        <p>You pay for each session by card, either in advance or after the session when you confirm the report. In advance works as soon as the time is confirmed, and if you have bought hours, for example with <a href="#erbjudanden">Standard</a>, they pay for the session by themselves.</p>
       </li>
-      <li class="nx-bubbla">
-        <div class="hp-topp">
-          <span class="hp-nr" aria-hidden="true">3</span>
-          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8.5 11V8a3.5 3.5 0 016.8-1.2"/></svg></span>
+      <li class="pr-flode-steg">
+        <div class="pr-flode-topp">
+          <span class="pr-flode-nr" aria-hidden="true">03</span>
+          <span class="pr-flode-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12.5" r="8.5"/><path d="M12 8v4.5l3 2"/></svg></span>
+          <span class="pr-flode-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 1.5 8.5 6 4 10.5"/></svg></span>
         </div>
-        <h3>No lock-in</h3>
-        <p>You can pause between terms, change tutor or stop altogether, with no notice period.</p>
+        <h3>The session takes place</h3>
+        <p>You pay for the time the session actually lasted. Afterwards the tutor writes a report on what you covered and how it went.</p>
       </li>
-      <li class="nx-bubbla">
-        <div class="hp-topp">
-          <span class="hp-nr" aria-hidden="true">4</span>
-          <span class="hp-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+      <li class="pr-flode-steg">
+        <div class="pr-flode-topp">
+          <span class="pr-flode-nr" aria-hidden="true">04</span>
+          <span class="pr-flode-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
         </div>
-        <h3>The report is included</h3>
-        <p>After each session you get a report on what was covered and how it went, plus access to extra digital exercises.</p>
+        <h3>Confirm and pay</h3>
+        <p>You read the report in your view and confirm it, and pay by card if the session is not already paid. After the session you can choose an invoice instead, which comes at the start of the following month with ten days to pay and no fee.</p>
       </li>
+    </ol>
+
+    <ul class="pr-flode-fakta" data-stig>
+      <li><span class="ck" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>The same price whatever the subject</li>
+      <li><span class="ck" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>No minimum term</li>
+      <li><span class="ck" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>The report is included</li>
+      <li><span class="ck" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>No hidden fees</li>
     </ul>
   </div>
 </section>
