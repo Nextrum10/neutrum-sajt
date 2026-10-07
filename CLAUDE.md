@@ -117,7 +117,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   under Profil. Skicka inbjudan igen står alltid i personens panel (2026-10-07): före första
   inloggningen en ny inbjudan, sedan en länk för lösenord (`bjud-in` med `igen`). Bara det senaste
   mejlet fungerar, och en trasig länk ger rutan Länken fungerar inte längre (`'lankfel'`), aldrig
-  Glömt lösenordet.
+  Glömt lösenordet. Mejlen skickar `bjud-in` själv med tiden i ämnet, så att Gmail aldrig lägger
+  två i samma tråd och gömmer det senaste (2026-10-07).
 - **Användarvillkoren** (2026-10-07): ett godkännande per konto och version (`villkor_godkannanden`),
   med databasens tid och aldrig anropets: rutan vid inloggningen (`NXStudie.villkorFörst`, efter
   lösenordet och före introduktionen, och den går inte att stänga). Kryssrutan i Skapa konto
@@ -420,8 +421,9 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   inbjudan, i alla tre vyerna), och beskedet är detsamma oavsett om kontot finns. Ett konto vi
   skapat får rutan utan Inte nu vid varje inloggning tills lösenordet är valt; `valkommen` säger
   bara vad vyn visar först, aldrig vad någon får.
-  Kontomejlen skickas av Supabase Auth (Googles SMTP som info@), med mallarna i
-  `minne/sakerhet.md`; deras länk går genom knappen på `/lank`, aldrig rakt till Auth.
+  Inbjudan och Skicka igen mejlar `bjud-in` själv genom Resend (2026-10-07); Glömt lösenordet och
+  `admin-skapa` mejlar Supabase Auth (Googles SMTP som info@), med mallarna i `minne/sakerhet.md`.
+  Länken går alltid genom knappen på `/lank`, aldrig rakt till Auth.
 - **Samtycket**: öppna sidor sätter inga cookies; det som kräver samtycke går genom
   `NXSamtycke`, och rutan visas bara när något i `SAMTYCKE` är på (av sedan 2026-09-29). Dölj
   den aldrig med CSS medan skripten går. Vercels statistik laddas först efter ja, aldrig med
@@ -450,8 +452,10 @@ Detaljer: `minne/sakerhet.md`.
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
   `barn-inloggning` 2026-10-01, och `juridik`, `ekonomi` och `drift` 2026-10-07. Ingen skiljer i sak från main: en äldre kopia av en delad fil
   saknar bara tillägg som funktionen inte använder (`minne/funktioner.md`).
-- `bjud-in` (`_delad/inbjudan.ts`) skapar kontot och sätter aldrig ett lösenord. Igen skickar en ny
-  inbjudan om länken inte använts, annars länken för lösenordet, också till ett konto i bruk (v10).
+- `bjud-in` (`_delad/inbjudan.ts`) skapar kontot och länken med `generateLink` och sätter aldrig ett
+  lösenord; mejlet skickar den själv genom Resend med tiden i ämnet (`notiser/konto.ts`), och länken
+  prövas som `/lank` prövar den innan den mejlas. Igen skickar en ny inbjudan om länken inte använts,
+  annars länken för lösenordet, också till ett konto i bruk, och högst ett mejl i minuten.
 - `barn-konto` prövar föräldern och `admin-skapa` skriver rollen med anroparens token; bara det
   Auth kräver görs med `service_role`, och ett barnkonto skapas aldrig utan vårdnadshavarens ja.
   `barn-konto` väljer barnkontots id och ger Auth varken `app_metadata` eller roll: det skriver
@@ -553,12 +557,15 @@ Detaljer: `minne/grunden.md`.
   migrationen `barnets_behorigheter` från merge-commiten (md5 prövad), `bjud-in` v9 och `ansokan-notis`
   v8 från main, hämtade tillbaka och byte för byte lika, och hela `rls-test.sql` 1433 av 1433 mot
   driften. De första skarpa inbjudningarna gick 2026-10-07 (Alexandar som studiehjälpare: länken
-  fungerade; sedan som familj, där det gamla mejlet trycktes, `minne/sakerhet.md`). Länken i inbjudan
+  fungerade; sedan som familj, där det gamla mejlet trycktes två gånger, för Gmail gömde det nya,
+  `minne/sakerhet.md`). 16:08 kom han in som familj: länken, lösenordet, villkoren och introduktionen
+  gick i drift, i den ordningen. Länken i inbjudan
   gäller en timme (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny.
 - **En inloggning, inget Skapa konto och Skicka igen när som helst** (2026-10-07) är i drift sedan samma
   dag: vyerna från merge-commiten av PR #218, och `bjud-in` v10 från main, hämtad tillbaka och byte för
-  byte lika. Kvar i Supabases panel: stäng av Allow new users to sign up, så att Auths öppna `/signup`
-  inte tar emot någon, och de två mallarna (`DEPLOY-BARNKONTON.md` 11).
+  byte lika. Inbjudan som `bjud-in` mejlar själv (v11) driftsätts från main efter merge. Kvar i
+  Supabases panel: stäng av Allow new users to sign up, så att Auths öppna `/signup` inte tar emot
+  någon, och de två mallarna, hela (`DEPLOY-BARNKONTON.md` 11).
 - **Användarvillkoren** (2026-10-07) är i drift sedan samma dag: `villkoren_godkanns` från
   merge-commiten (md5 prövad), och hela `rls-test.sql` 1459 av 1459 mot driften. Alla konton i driften
   får frågan vid nästa inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i

@@ -479,9 +479,9 @@
 
      Har familjen inget konto skapas det härifrån (Fas 2.8, och sedan
      2026-10-06 i samma tryck som eleven: Ta in familjen).
-     Edge-funktionen bjud-in kör auth.admin.inviteUserByEmail med
-     service_role; kontot finns direkt, och familjen får ett mejl med
-     en länk där de väljer sitt lösenord.
+     Edge-funktionen bjud-in skapar kontot och länken med service_role
+     (generateLink); kontot finns direkt, och familjen får ett mejl från
+     oss med en länk där de väljer sitt lösenord.
      ============================================================ */
   /* FAMILJEN ÄR DEN SOM SKICKADE ANMÄLAN
 

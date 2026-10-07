@@ -310,21 +310,30 @@ med Fortsätt sist.
   2026-10-07; efter första inloggningen heter knappen Skicka länk för
   lösenord. Leo: "i admin ska vi kunna skicka inbjudningslänk när vi vill
   efter, ifall de missar den"): ett obekräftat konto får en ny inbjudan,
-  och ett bekräftat får länken som Glömt lösenordet ger (Reset
-  password-mallen), också när lösenordet redan är valt. Lösenordet byts
-  först när personen väljer ett nytt, och länken går bara till personens
-  egen inkorg.
+  och ett bekräftat får en länk för att välja lösenord, samma sorts länk
+  som Glömt lösenordet ger, också när lösenordet redan är valt.
+  Lösenordet byts först när personen väljer ett nytt, och länken går bara
+  till personens egen inkorg. Högst ett mejl i minuten till samma konto.
 - **Bara det senaste mejlet fungerar.** Varje ny länk gör den förra
-  oanvändbar, och mejlen hamnar i samma tråd, med samma ämne. 2026-10-07
-  bjöds Alexandar in som studiehjälpare (länken fungerade), kontot
-  raderades, och samma adress bjöds in som familj; han tryckte på det
-  första mejlet, Auth svarade "One-time token not found" med `/larare` som
-  mål, och vyn visade Glömt lösenordet. Familjens länk var orörd. Därför
-  heter rutan efter en trasig länk Länken fungerar inte längre (läget
-  `'lankfel'`) och säger att bara länken i det senaste mejlet fungerar.
-  Auths logg skriver `referer` som den adress Auth skickar tillbaka till
-  (`redirect_to`), inte webbläsarens: den säger vilken sorts länk som
-  trycktes.
+  oanvändbar. 2026-10-07 bjöds Alexandar in som studiehjälpare (länken
+  fungerade), kontot raderades, och samma adress bjöds in som familj; han
+  tryckte på det första mejlet, Auth svarade "One-time token not found"
+  med `/larare` som mål, och vyn visade Glömt lösenordet. Familjens länk
+  var orörd. Därför heter rutan efter en trasig länk Länken fungerar inte
+  längre (läget `'lankfel'`) och säger att bara länken i det senaste
+  mejlet fungerar. Auths logg skriver `referer` som den adress Auth
+  skickar tillbaka till (`redirect_to`), inte webbläsarens: den säger
+  vilken sorts länk som trycktes.
+- **Gmail gömde det senaste mejlet** (2026-10-07). Auths inbjudan hade
+  samma ämne och samma text varje gång, så Gmail lade alla i en tråd och
+  gömde det som upprepades bakom tre prickar: det senaste mejlet såg tomt
+  ut ("mailet skickas blankt"), och länken som syntes var den i det första
+  mejlet. Loggen visar det: 16:07:28 gick en ny inbjudan, 16:07:41 trycktes
+  studiehjälparlänken från 14:36 (nekad, mål `/larare`), och 16:08:13 den
+  nya. Sedan dess mejlar `bjud-in` själv genom Resend med tiden i ämnet och
+  i mejlet (`_delad/notiser/konto.ts`), så varje utskick blir en egen tråd.
+  Auths mallar kan inte göra det: det enda som skiljer två utskick åt där
+  är koden och dess hash, och ingen av dem hör hemma i ett ämne.
 - **Länkens livslängd** är Auths (Authentication → Providers → Email →
   Email OTP Expiration), och den ska stå kvar på förvalet, en timme.
   Panelen går inte att läsa härifrån, så titta där. Inställningen gäller
@@ -398,12 +407,15 @@ Templates), inte av `notis-ko`, och har inte mejlens skal
 (`minne/notiser.md`). Panelen saknar historik, så texterna står här, och
 förvalen är engelska. Ändras en mall i panelen ändras den här också.
 
-- **Två mallar skickas av sajten** sedan 2026-10-07: Invite user (`bjud-in`
-  till `/foralder` och `/larare`, `admin-skapa` till `/admin`) och Reset
-  password (Glömt lösenordet, en länk som inte fungerade, och Skicka länk
-  för lösenord i adminvyn). Confirm sign up skickades av Skapa konto, som
-  är borta; med Allow new users to sign up av i panelen skickas den aldrig
-  (`DEPLOY-BARNKONTON.md` 11).
+- **Inbjudan och Skicka igen skickar `bjud-in` själv** sedan 2026-10-07,
+  genom Resend och med tiden i ämnet (`_delad/notiser/konto.ts`; varför:
+  Gmail gömde det senaste mejlet, ovan). Auth gör bara kontot och länken
+  (`generateLink`), och mallarna i panelen används inte för dem.
+- **Två mallar i panelen skickas fortfarande**: Invite user (`admin-skapa`
+  till `/admin`, och en inbjudan från panelen) och Reset password (Glömt
+  lösenordet och en länk som inte fungerade). Confirm sign up skickades av
+  Skapa konto, som är borta; med Allow new users to sign up av i panelen
+  skickas den aldrig (`DEPLOY-BARNKONTON.md` 11).
 - **Inget Skapa konto** (2026-10-07). Vyerna har ingen registrering, men
   Auths öppna `/signup` tar emot en tills Allow new users to sign up
   stängs av (Authentication → Sign In / Providers). Inbjudan (`bjud-in`,

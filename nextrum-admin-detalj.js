@@ -2042,8 +2042,9 @@
     if (!k) return;
     const p = S.personer[k.dataset.dpBjudIgen];
     if (!p || !p.email) return;
-    /* Varje ny länk gör den förra oanvändbar, och mejlen hamnar i samma
-       tråd: frågan säger att det är det senaste mejlet som gäller. */
+    /* Varje ny länk gör den förra oanvändbar: frågan säger att det är det
+       senaste mejlet som gäller. Mejlet har tiden i ämnet, så Gmail lägger
+       det inte i samma tråd som de förra (_delad/notiser/konto.ts). */
     const ja = await bekräfta({
       titel: 'Skicka länken igen till ' + (p.full_name || p.email) + '?',
       text: (p.last_seen_at
