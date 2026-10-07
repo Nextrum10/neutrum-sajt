@@ -827,10 +827,16 @@ const NX = (function () {
         sätt('[data-kalk-plannamn]', namn ? namn.textContent : '');
         sätt('[data-kalk-planpris]', planpris ? planpris.textContent : '');
         sätt('[data-kalk-planspar]', spar ? spar.textContent : '');
-        const paket = $('[data-erb-paket]', plan);
+        /* En plan med timmar på köpet visar samma rad som sitt kort,
+           "8 timmar för priset av 7", och aldrig bara märket "1 timme på
+           köpet": bredvid noten om första timmen hade de lästs som samma
+           sak (granskningen 2026-10-07). Texten kopieras ur kortet, som
+           står på sidans språk. */
+        const paket = $('[data-erb-paket]', plan), tim = $('.pr-erb-tim', plan);
+        const rad = tim ? tim.textContent.split('·')[0].replace(/\s+/g, ' ').trim() : '';
         $$('[data-kalk-paket]', box).forEach(x => {
-          x.hidden = !paket || paket.hidden;
-          x.textContent = x.hidden ? '' : paket.textContent;
+          x.hidden = !paket || paket.hidden || !rad;
+          x.textContent = x.hidden ? '' : rad + ' · ';
         });
         const ore = Number(plan.getAttribute('data-erb-ore'));
         const andel = ore > 0 && perPass > 0 ? Math.min(1, ore / (perPass * 100)) : 1;
@@ -841,6 +847,9 @@ const NX = (function () {
       const klipp = $$('[data-erb-grupp]').some(g => !g.closest('[hidden]'));
       const läge = val.barn > 1 ? 'syskon' : plan ? 'plan' : klipp ? 'ingen' : '';
       $$('[data-kalk-tips]', box).forEach(el => { el.hidden = el.getAttribute('data-kalk-tips') !== läge; });
+      /* Syskonrutans mening om planerna gäller bara när planer syns. */
+      const planerSyns = $$('.pr-erb-plan[data-erb]').some(el => !el.closest('[hidden]'));
+      $$('[data-kalk-planrad]', box).forEach(el => { el.hidden = !planerSyns; });
       /* Inget läge alls (databasen har inga erbjudanden): rutan går hellre
          än står tom. */
       $$('.pr-kalk-med', box).forEach(el => { el.hidden = !läge; });

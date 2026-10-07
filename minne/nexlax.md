@@ -428,8 +428,23 @@ Reglerna:
   varvet (varven räknas vidare); en linje under delens blad visar skärmens
   tid (`--nlx-tid`, `.nlx-tur`); reducerad rörelse ger ingen rundtur; på
   mobil går samma rundtur.
-- Omloppet är dolt under 760 px och står stilla vid reducerad rörelse.
-  Lapparna visas från 1360 px och står där skärmen är tom.
+- Omloppet är dolt under 760 px och mellan 1000 och 1199 px (där klipptes
+  brickorna vid kanten), och står stilla vid reducerad rörelse. Lapparna
+  visas från 1360 px och står där skärmen är tom.
+- Delarnas noder är knappar (`button.nlx-del-nod`, `aria-labelledby` på
+  delens rubrik, `aria-current` på den som visas), så att Enter och
+  tangentbordet når skärmarna. På telefon döljs de delar som inte visas
+  bara för ögat (opacity), aldrig med visibility: en skärmläsare ska höra
+  alla fyra (granskningen 2026-10-07).
+- Står rundturen still (utanför bild, dold flik) går ingen timer: väntan
+  parkerar sig och väcks av `paus()`. Samma sak i studievyns rundtur.
+  `.nlx-paus` har en egen regel med högre vikt för de fyra animationer
+  som sätts med shorthand i tyngre regler.
+- På dator staplar spalterna var för sig (`.nlx-spalt`, `display:contents`
+  på telefon), så att ämnena står under telefonen och inte som en egen rad
+  under allt; sektionen är cirka 1,2 gånger heron på 1440×900. Telefonen
+  på mobil följer också höjden, så att den och delens text ryms på en
+  skärm.
 - Ingen text i skriptet, ingen `nextrum-uppgifter.css` och ingen
   `nextrum-ljud.js` på startsidan.
 - Markupen byggdes ur samma mall på båda språken; ändras texten för hand

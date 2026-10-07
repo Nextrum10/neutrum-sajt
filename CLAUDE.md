@@ -85,8 +85,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
   sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. Allt i NexLäx är
   öppet (2026-10-06): ingen nivå låses, vägen är bara ett förslag. Startsidan visar NexLäx bara som en
-  illustration (2026-10-07): exempelfrågan finns inte i banken, och XP, rank, märke och uppdrag i den
-  följer `intern.nexlax_*` och ändras med dem. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
+  illustration (2026-10-07): exempelfrågan finns inte i banken; XP och uppdrag i den följer
+  `intern.nexlax_*`, rank och märke `RANGER` och `MÄRKEN` i `nextrum-uppgifter.js`, och den ändras med dem. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
   beslut. `.nl-hopp` går med flit inte att trycka på. **Uppdragen** (Fas 23.4) räknas av
   `intern.nexlax_uppdrag`, sparas aldrig, ger inga XP och påminns aldrig om; katalogen är
   historik, så ett nytt uppdrag får ett nytt id och ett `fran`. **NP-spåret** är `nivaer.spar`,
@@ -598,10 +598,10 @@ Detaljer: `minne/grunden.md`.
   Inget är byggt för att pröva ett anspråk (admin räknar ur vyerna; anmälningarna står i elevens
   panel), passen har inget ämnesfält, studiehjälparen ser inte vilka ämnen som har garanti, och
   juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`.
-- **Planerna Basic, Standard och Intensiv** (2026-10-07) är INTE i drift förrän migrationen
-  `planerna_basic_standard_intensiv` (20261007210000) körts efter merge och `stripe-checkout`
-  (SESSIONSFORM 7) driftsatts från main minuterna efter, i den ordningen: en kassa som väljer
-  `timmar_pa_kopet` före migrationen svarar 404 på alla köp, utan att något dras. Tills dess döljer
+- **Planerna Basic, Standard och Intensiv** (2026-10-07) är INTE i drift förrän `stripe-checkout`
+  (SESSIONSFORM 7) driftsatts från main och migrationen `planerna_basic_standard_intensiv`
+  (20261007210000) körts efter merge, i den ordningen: kassan läser hela raden och tål att kolumnen
+  saknas, och driftsatt först säljer ingen gammal kassa Standard med "0 % rabatt". Tills dess döljer
   prissidan och startsidan de nya planerna, och studievyn visar den gamla katalogen. Intensiv är dyrare
   per timme än Standard (Leos val). Juristen har inte läst "1 timme på köpet" och "ni sparar" mot
   ordinarie pris, och villkoren säger "ett pass där en timme är på köpet" om startrabatten; ett

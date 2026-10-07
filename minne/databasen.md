@@ -926,5 +926,10 @@ gamla planerna stängdes med `aktiv = false`, och de nya lades in med `on
 conflict do nothing`. Ingen drop och ingen delete, så filen körs hel i ett
 do-block med en annan dollartagg än `$$` (filen har ett eget `do $$`).
 Lokalt: 1505 av 1505, och 1489 av 1491 utan migrationen, där exakt 16.1d
-och avsnitt 25 föll. **Körs efter merge och före `stripe-checkout` från
-main**, som väljer kolumnen. Inte i drift 2026-10-07 när PR:en skrevs.
+och avsnitt 25 föll. **Körs efter merge, och `stripe-checkout` från main
+driftsätts FÖRE den**: kassan läser hela raden med `*` och skriver
+kolumnen bara när vyn har den, så den tål att migrationen saknas, och
+inget glapp uppstår där en gammal kassa säljer Standard med "0 % rabatt"
+(granskningen 2026-10-07). Ett väntande köp återanvänds bara med samma
+innehåll (`sammaInnehall`), inte bara samma pris. Inte i drift 2026-10-07
+när PR:en skrevs.

@@ -65,7 +65,7 @@ import { type Inloggad, kravInloggad, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import { StripeError, v1, VALUTA } from '../_delad/stripe.ts';
 import { familjebelopp, passpris, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
-import { arErbjudandekod, type ErbjudandePris, kanAteranvandas, kassarad } from '../_delad/erbjudanden.ts';
+import { arErbjudandekod, type ErbjudandePris, kanAteranvandas, kassarad, sammaInnehall } from '../_delad/erbjudanden.ts';
 
 const CORS = cors();
 
@@ -182,13 +182,15 @@ async function köpErbjudande(
   if (!prof || prof.role !== 'parent') {
     return json({ error: 'Erbjudandena köps av familjen.' }, 403, CORS);
   }
-  /* timmar_pa_kopet finns först efter migrationen
-     planerna_basic_standard_intensiv (2026-10-07). Utan den nekar
-     PostgREST kolumnen och köpet svarar "finns inte" innan något dras:
-     driftsätt den här efter migrationen. */
+  /* Hela raden, inte en uttrycklig lista: timmar_pa_kopet finns först
+     efter migrationen planerna_basic_standard_intensiv (2026-10-07), och
+     en lista som nämner den hade nekats av PostgREST före den. Så tål
+     kassan att migrationen saknas och kan driftsättas före den, och inget
+     glapp uppstår där den gamla kassan säljer Standard med "0 % rabatt"
+     (granskningen 2026-10-07). Priset läses ur vyn, som förut. */
   const { data: e } = await vem.klient
     .from('erbjudanden_pris')
-    .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, pris_ore, timmar_pa_kopet')
+    .select('*')
     .eq('kod', kod)
     .maybeSingle();
   if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
@@ -197,13 +199,18 @@ async function köpErbjudande(
     /* Trycker familjen Köp två gånger ska det bli ETT köp. Ett väntande
        köp av samma erbjudande, till samma pris och yngre än ett dygn,
        återanvänds — och därmed samma idempotensnyckel hos Stripe. */
+    /* Hela raden av samma skäl som ovan; sammaInnehall prövar att det
+       väntande köpet också har samma timmar, timmar på köpet, rabatt och
+       giltighet som katalogen nu, inte bara samma pris. En katalog som
+       ändrats till samma pris (9 för 7 i stället för 8 för 7) hade annars
+       gett samma idempotensnyckel med en annan kassarad. */
     const { data: forut } = await db.from('klippkort')
-      .select('id, begart_ore, created_at')
+      .select('*')
       .eq('parent_id', vem.anvandare).eq('erbjudande', kod).eq('status', 'vantar')
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
     let kopId: string;
-    if (kanAteranvandas(forut, Number(e.pris_ore))) {
+    if (kanAteranvandas(forut, Number(e.pris_ore)) && sammaInnehall(forut, e as ErbjudandePris)) {
       kopId = String(forut!.id);
     } else {
       const { data: ny, error: nyfel } = await db.from('klippkort').insert({
@@ -213,8 +220,9 @@ async function köpErbjudande(
         sort: e.sort,
         timmar: e.timmar,
         // Planerna (2026-10-07): fryst som rabatten. Timmarna på köpet
-        // ingår i timmar och dras som de andra.
-        timmar_pa_kopet: Number(e.timmar_pa_kopet) || 0,
+        // ingår i timmar och dras som de andra. Bara när vyn har kolumnen:
+        // före migrationen finns den inte i klippkort heller.
+        ...(e.timmar_pa_kopet != null ? { timmar_pa_kopet: Number(e.timmar_pa_kopet) || 0 } : {}),
         giltig_manader: e.giltig_manader,
         rabatt_procent: e.rabatt_procent,
         timpris_ore: e.timpris_ore,

@@ -1,5 +1,5 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { arErbjudandekod, kanAteranvandas, kassarad } from './erbjudanden.ts';
+import { arErbjudandekod, kanAteranvandas, kassarad, sammaInnehall } from './erbjudanden.ts';
 
 Deno.test('erbjudandekoden: bara katalogens form släpps in', () => {
   assertEquals(arErbjudandekod('klipp10'), true);
@@ -51,4 +51,17 @@ Deno.test('ett väntande köp återanvänds bara med samma pris och inom ett dyg
   // för gammalt: kassan hos Stripe har gått ut
   assertEquals(kanAteranvandas({ ...kop, created_at: '2026-09-24T12:00:00Z' }, 360000, nu), false);
   assertEquals(kanAteranvandas(null, 360000, nu), false);
+});
+
+Deno.test('ett väntande köp återanvänds bara med samma innehåll, inte bara samma pris (2026-10-07)', () => {
+  const std = { timmar: 8, timmar_pa_kopet: 1, rabatt_procent: 0, giltig_manader: 1 };
+  assertEquals(sammaInnehall({ ...std }, std), true);
+  // 9 för 7 kostar lika mycket som 8 för 7, men är inte samma köp.
+  assertEquals(sammaInnehall({ ...std }, { ...std, timmar: 9, timmar_pa_kopet: 2 }), false);
+  assertEquals(sammaInnehall({ ...std, rabatt_procent: 5 }, std), false);
+  assertEquals(sammaInnehall({ ...std, giltig_manader: 6 }, std), false);
+  // Före migrationen saknas kolumnen på båda sidor och räknas som 0.
+  assertEquals(sammaInnehall({ timmar: 4, rabatt_procent: 10, giltig_manader: 1 },
+    { timmar: 4, rabatt_procent: 10, giltig_manader: 1 }), true);
+  assertEquals(sammaInnehall(null, std), false);
 });

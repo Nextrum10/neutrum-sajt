@@ -576,7 +576,11 @@ const NXFin = (function () {
 
       /* Behåll originalet för skärmläsare, animera en kopia. */
       const rader = el.innerHTML.split(/<br\s*\/?>/i);
-      el.setAttribute('aria-label', el.textContent.trim());
+      /* Namnet byggs ur raderna med mellanslag: textContent tappar <br>,
+         och "känns<br>som" lästes som "kännssom" (2026-10-07). */
+      const tmp = document.createElement('div');
+      el.setAttribute('aria-label', rader.map(r => { tmp.innerHTML = r; return tmp.textContent.trim(); })
+        .filter(Boolean).join(' '));
       el.innerHTML = rader.map(r =>
         '<span class="nx-rad" aria-hidden="true"><span class="nx-rad-i">' + r.trim() + '</span></span>'
       ).join('');

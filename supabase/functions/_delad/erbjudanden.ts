@@ -67,3 +67,21 @@ export function kanAteranvandas(
   const alder = nu.getTime() - new Date(kop.created_at).getTime();
   return alder >= 0 && alder < ATERANVAND_TIMMAR * 3600_000;
 }
+
+/**
+ * Har ett väntande köp samma innehåll som katalogens rad nu? Priset
+ * räcker inte sedan planerna fick timmar på köpet (2026-10-07): 8 för 7
+ * och 9 för 7 kostar lika mycket. En kolumn som saknas (före migrationen)
+ * räknas som 0, på båda sidor.
+ */
+export function sammaInnehall(
+  kop: { timmar?: unknown; timmar_pa_kopet?: unknown; rabatt_procent?: unknown; giltig_manader?: unknown } | null | undefined,
+  e: Pick<ErbjudandePris, 'timmar' | 'rabatt_procent' | 'giltig_manader'> & { timmar_pa_kopet?: number | null },
+): boolean {
+  if (!kop) return false;
+  const tal = (v: unknown) => Number(v) || 0;
+  return tal(kop.timmar) === tal(e.timmar)
+    && tal(kop.timmar_pa_kopet) === tal(e.timmar_pa_kopet)
+    && tal(kop.rabatt_procent) === tal(e.rabatt_procent)
+    && tal(kop.giltig_manader) === tal(e.giltig_manader);
+}

@@ -3385,7 +3385,7 @@
       + 'ett pass dras timmarna från det kort som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
       + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
       + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
-      + 'Ett pass med fler barn, och ett pass där en timme är på köpet, '
+      + 'Ett pass med fler barn, och ett pass där första timmen eller tipstimmen är på köpet, '
       + 'betalas med kort. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
       + kort.map(k => kortRad(k, kortetsPass(k))).join('');
   }

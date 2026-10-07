@@ -635,14 +635,20 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
   position:relative;width:100%;
   display:grid;
   grid-template-columns:minmax(0,1.06fr) minmax(0,1fr);
-  grid-template-areas:
-    "huvud    scen"
-    "delar    scen"
-    "handling bild"
-    "fot      fot";
+  /* Två spalter som staplar var för sig (.nlx-spalt): texten, stigen
+     och knapparna till vänster, telefonen, bildtexten och ämnena till
+     höger. Förut delade de rader, och ämnena stod som en egen rad under
+     allt, så att sektionen blev 1,3 gånger så hög som heron på en dator
+     (granskningen 2026-10-07). På telefon blir spalterna display:contents
+     och delarna ställs i ordning med grid-template-areas nedan. */
+  grid-template-areas:"vanster hoger";
   column-gap:clamp(40px,6vw,104px);
   align-items:start;
 }
+.nlx-spalt{display:flex;flex-direction:column;min-width:0}
+.nlx-spalt-text{grid-area:vanster}
+.nlx-spalt-bild{grid-area:hoger}
+.nlx-spalt-bild .nlx-bild{align-self:center}
 .nlx-huvud{grid-area:huvud}
 .nlx-scen{grid-area:scen}
 .nlx-delar{grid-area:delar}
@@ -715,6 +721,11 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
   transition:background-color .45s var(--e),border-color .45s var(--e),color .45s var(--e),scale .6s var(--fjader);
 }
 .nlx-del-nod svg{width:20px;height:20px}
+/* Noden är en knapp (granskningen 2026-10-07): ett tryck och Enter
+   visar delens skärm, och namnet är delens rubrik (aria-labelledby). */
+button.nlx-del-nod{appearance:none;padding:0;font:inherit;cursor:pointer}
+/* "Se studievyn" är en fristående länk: tryckytan minst 44 px. */
+.nlx-handling .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
 /* Ringen runt noden som visas: ett eget lager som tonas och skalas,
    aldrig en skugga som växer. */
 .nlx-del-nod::after{
@@ -784,13 +795,12 @@ html.nx-sr .nlx-delar.nlx-in .nlx-del{opacity:1;translate:0 0}
    blev texten bredvid en smal stapel med ett par ord per rad, och en
    rad som bryter lämnar ett ensamt ämne kvar. */
 .nlx-fot{
-  margin-top:clamp(36px,3.8vw,56px);
+  margin-top:clamp(20px,2.2vw,32px);
   padding-top:clamp(22px,2.4vw,30px);
   border-top:1px solid var(--ln);
   display:grid;grid-template-columns:minmax(0,1fr);
   gap:18px clamp(32px,4vw,64px);align-items:center;
 }
-@media (min-width:1360px){.nlx-fot{grid-template-columns:auto minmax(0,1fr)}}
 .nlx-amnen{display:flex;flex-wrap:wrap;gap:8px}
 .nlx-amnen li{
   display:inline-flex;align-items:center;gap:8px;
@@ -1430,6 +1440,14 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
 .nlx-paus .nlx-del-nod::after,
 .nlx-paus .nlx-del-text::before,
 .nlx-paus .nlx-stjarnor::before{animation-play-state:paused}
+/* Fyra animationer sätts med shorthand i regler som väger mer (0,3,1
+   och 0,4,1), och shorthand sätter play-state till running igen. Här
+   samma vikt plus en klass, så att pausen alltid vinner (granskningen
+   2026-10-07). */
+.nx-nexlax.nlx-paus .nlx-nod.aktuell .nlx-nod-knapp::after,
+.nx-nexlax.nlx-paus .nlx-del.pa .nlx-del-nod::after,
+.nx-nexlax.nlx-paus .nlx-vy.pa .nlx-stjarnor::before,
+.nx-nexlax.nlx-paus .nlx-del.pa.nlx-tur .nlx-del-text::before{animation-play-state:paused}
 
 /* ---------- smalare skärmar ----------
    En spalt: rubriken, telefonen, stigen, bildtexten, knapparna och
@@ -1439,11 +1457,16 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
    inget byter höjd. Utan rörelse (ingen nx-sr) står den som en vanlig
    lista, fullt utskriven. */
 @media (max-width:999px){
+  .nlx-spalt{display:contents}
   .nlx-grid{
     grid-template-columns:minmax(0,1fr);
     grid-template-areas:"huvud" "scen" "delar" "bild" "handling" "fot";
   }
-  .nlx-scen{--tw:min(76vw,312px);margin-top:clamp(36px,7vw,56px)}
+  /* Telefonen följer också höjden, så att den, noderna och den visade
+     delens text ryms på en telefonskärm samtidigt (granskningen
+     2026-10-07: 860 px från telefonens överkant till textens underkant
+     på 390×844). 315 px är sidhuvudet, noderna, texten och luften. */
+  .nlx-scen{--tw:clamp(220px,calc((100svh - 315px) * 9 / 19),min(76vw,312px));margin-top:clamp(36px,7vw,56px)}
   .nlx-delar{margin-top:clamp(26px,5vw,40px)}
   .nlx-bild{justify-self:start}
   .nlx-dekor{
@@ -1475,17 +1498,23 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   }
   html.nx-sr .nlx-del:not(:last-child)::after{transform-origin:0 50%;scale:0 1}
   html.nx-sr .nlx-del.forbi::after{scale:1 1}
+  /* De delar som inte visas döljs bara för ögat, aldrig med
+     visibility: en skärmläsare ska höra alla fyra i listans ordning,
+     också på telefon (granskningen 2026-10-07). */
   html.nx-sr .nlx-del-text{
-    opacity:0;visibility:hidden;translate:0 8px;
-    transition:opacity .25s var(--e),translate .35s var(--e),visibility 0s linear .25s,
+    opacity:0;translate:0 8px;pointer-events:none;
+    transition:opacity .25s var(--e),translate .35s var(--e),
                background-color .45s var(--e),border-color .45s var(--e);
   }
   html.nx-sr .nlx-del.pa .nlx-del-text{
-    opacity:1;visibility:visible;translate:0 0;
-    transition:opacity .45s var(--e) .1s,translate .6s var(--e-ut) .1s,visibility 0s,
+    opacity:1;translate:0 0;
+    transition:opacity .45s var(--e) .1s,translate .6s var(--e-ut) .1s,
                background-color .45s var(--e),border-color .45s var(--e);
   }
 }
+/* Mellan 1000 och 1199 px är högra spalten för smal för omloppet:
+   brickorna längst ut hamnade utanför sektionen och klipptes. */
+@media (min-width:1000px) and (max-width:1199px){.nlx-omlopp{display:none}}
 @media (max-width:760px){
   .nx-nexlax{padding-block:64px 56px;min-height:0}
   .nlx-omlopp{display:none}
@@ -2297,13 +2326,21 @@ html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.pa .nx-
      på två rader på en vanlig skärm, så att spalten inte byter höjd,
      och rubriken ovanför inte glider, när steget byts (den engelska
      första texten tog tre rader och flyttade rubriken 12 px). */
+  /* Höjden är FAST, inte max-height (granskningen 2026-10-07): med
+     max-height stod ett öppet steg på en, två eller tre rader, och
+     rubriken flyttade sig 12 px på 1024×768 och på menysidan. Nu
+     reserverar det öppna steget lika många rader oavsett texten, och
+     de två stegen som byts växer och krymper med samma kurva och tid,
+     så att spaltens höjd står still också under övergången. --hur-rader
+     är det antal rader den längsta texten tar i den bredden. */
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg{--hur-rader:2}
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg p{
-    max-width:46ch;
-    max-height:0;margin-top:0;opacity:0;overflow:hidden;translate:0 8px;
-    transition:max-height .55s var(--e-ut),margin-top .55s var(--e-ut),opacity .3s var(--e),translate .55s var(--e-ut);
+    max-width:46ch;line-height:1.55;
+    height:0;margin-top:0;opacity:0;overflow:hidden;translate:0 8px;
+    transition:height .55s var(--e-ut),margin-top .55s var(--e-ut),opacity .3s var(--e),translate .55s var(--e-ut);
   }
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li.pa p{
-    max-height:8em;margin-top:9px;opacity:1;translate:0 0;
+    height:calc(var(--hur-rader) * 1.55em);margin-top:9px;opacity:1;translate:0 0;
     transition-delay:0s,0s,.12s,.12s;
   }
 
@@ -2360,13 +2397,18 @@ html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.pa .nx-
   }
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg h3{font-size:clamp(1.15rem,min(2.5vw,3.6svh),2.05rem)}
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg p{font-size:clamp(.92rem,2.1svh,1rem)}
+  @media (max-width:1240px){html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg{--hur-rader:3}}
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-cta{margin-top:clamp(16px,min(3.4vw,4.4svh),42px)}
   /* Fotot är 4:5 av spaltbredden och blir högre än rutan på en kort
      skärm. Där tar höjden slut först, och bredden står kvar: ett
      rutnätsobjekt med bildformat ställer sig annars till vänster i sin
      spalt (justify-self:normal är start för det) och lämnar ett hål
      till höger. */
-  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-bild{justify-self:stretch;max-height:min(88svh,820px)}
+  /* Kortare skugga i den fastnålade rutan: den klipper med
+     overflow:hidden och ligger över .nx-yta::after, så --sk-foto (cirka
+     90 px) klipptes i en rak kant under fotot när scenen rullade ut.
+     --sk-2 ryms i den minsta luften (43 px på 1280×720). */
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-bild{justify-self:stretch;max-height:min(88svh,820px);box-shadow:var(--sk-2)}
 }
 
 /* ---------- lite: den svepbara raden ---------- */
@@ -2708,17 +2750,25 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   margin-top:8px;max-width:50ch;
   font-size:clamp(.96rem,1.05vw,1.03rem);line-height:1.55;color:var(--bl-2);text-wrap:pretty;
 }
-.nx-gar-steg{transition:opacity .55s var(--e-mjuk),translate .7s var(--e-ut)}
+.nx-gar-steg{transition:translate .7s var(--e-ut)}
+.nx-gar-steg b,.nx-gar-steg p{transition:color .55s var(--e-mjuk)}
 
-/* Släckt: ett steg man inte scrollat fram till än. Texten går att
-   läsa, men den står tillbaka. */
+/* Släckt: ett steg man inte scrollat fram till än. Siffran och linjen
+   tonas, texten byter bara till --bl-3, som klarar AA på papperet i
+   båda lägena. Förut tonades hela texten med opacity .4, som gav
+   ungefär 2:1, och själva löftet i steg 04 var grått medan sektionen
+   stod mitt i fönstret (granskningen 2026-10-07). */
 html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-nr{color:var(--ln-2);scale:.86}
-html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-steg{opacity:.4;translate:0 8px}
+html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-steg{translate:0 8px}
+html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-steg b,
+html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-steg p{color:var(--bl-3)}
 html.nx-sr .nx-gar-flode.i-gang > li:not(.fylld)::after{scale:1 0}
 /* Linjen hinner fram innan siffran tänds. Bara på vägen in: släcks
    ett steg för att man scrollar tillbaka går det direkt. */
 html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-nr{transition-delay:.3s}
-html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-steg{transition-delay:.2s}
+html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-steg,
+html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-steg b,
+html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-steg p{transition-delay:.2s}
 html.nx-sr .nx-gar-flode.i-gang > li.fylld:last-child::after{transition-delay:.45s}
 
 @media (max-width:900px){
@@ -2734,7 +2784,7 @@ html.nx-sr .nx-gar-flode.i-gang > li.fylld:last-child::after{transition-delay:.4
   .nx-gar-steg p{margin-top:6px;font-size:.95rem;line-height:1.52}
 }
 @media (prefers-reduced-motion:reduce){
-  .nx-gar-flode > li::after,.nx-gar-nr,.nx-gar-steg{transition:none}
+  .nx-gar-flode > li::after,.nx-gar-nr,.nx-gar-steg,.nx-gar-steg b,.nx-gar-steg p{transition:none}
 }
 
 /* ============================================================

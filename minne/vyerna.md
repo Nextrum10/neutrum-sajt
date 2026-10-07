@@ -218,8 +218,20 @@ sektionen efter heron säljer in NexLäx med en telefon som visar sig själv
 och en stig med fyra delar som följer med; papperet bär den, och
 ämnesfärgerna får synas här men i ingen annan sektion. Allt som byter läge
 ligger i fasta rutor: skärmarna i samma cell och, på mobil, delarnas text
-i samma cell. Rundturen ändrar aldrig någon höjd (uppmätt: 1257 px på
+i samma cell. Rundturen ändrar aldrig någon höjd (uppmätt: 1156 px på
 1440×900 före och efter). Detaljer i `minne/nexlax.md`.
+
+**Efter granskningen (2026-10-07):** stegscenens öppna steg har en fast
+höjd (`--hur-rader`, 2 rader, 3 under 1241 px) i stället för max-height,
+så att rubriken står helt stilla; den fastnålade rutans foto har `--sk-2`
+(`--sk-foto` klipptes i en rak kant). Garantins släckta text byter till
+`--bl-3` i stället för opacity .4 (ungefär 2:1), och linjen ligger 78 %
+ned. Prisraden överst på prissidan tänds med `data-stig`, inte `.rv`,
+som var osynlig utan JS. `radAvslöj()` bygger rubrikens namn med
+mellanslag mellan raderna. Kalkylatorn visar "8 timmar för priset av 7"
+i stället för märket bredvid noten om första timmen, och ingressen och
+betalflödets steg 2 nämner inget antal planer eller planens namn, för de
+står kvar när planerna saknas i svaret.
 
 **Stegscenen** (Från intresseanmälan till första passet, startsidan och Så
 fungerar Nextrum, sv och en; Leo: "bättre animation mellan bilderna på

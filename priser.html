@@ -53,8 +53,8 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=23842036">
-<link rel="stylesheet" href="nextrum-start.css?v=ceb25f4f">
+<link rel="stylesheet" href="nextrum-cinema.css?v=f251a550">
+<link rel="stylesheet" href="nextrum-start.css?v=fbf644f6">
 <link rel="stylesheet" href="nextrum-sidor.css?v=da085ac4">
 
 <!-- Strukturerad data för tjänsten och timpriset. Ger Google en
@@ -200,7 +200,7 @@
 <section class="sec wrap" style="padding-top:clamp(24px,3vw,40px)" aria-labelledby="pris-t">
   <h2 class="nx-dold" id="pris-t">Vad läxhjälpen kostar</h2>
   <div class="nx-price-grid">
-    <div class="nx-price-card rv">
+    <div class="nx-price-card" data-stig>
       <span class="eyebrow">Läxhjälp</span>
       <div class="nx-amount">
         <b class="tnum" data-stat="pris">379 kr</b>
@@ -231,7 +231,7 @@
          "För priset av" och inte "på köpet": starterbjudandet ovanför
          heter redan Första timmen på köpet, och det är en annan sak. -->
     <div class="pr-topp-stapel">
-      <div class="nx-offer rv">
+      <div class="nx-offer" data-stig data-fördröj="1">
         <span class="tagline">Starterbjudande</span>
         <h3>Första timmen på köpet</h3>
         <p>Boka två timmar läxhjälp, så bjuder vi på den ena.</p>
@@ -239,7 +239,7 @@
         <p class="nx-terms">Erbjudandet gäller nya familjer, en gång. Timmen dras av på det pass som gör att ni har bokat två timmar, och det syns på passet.</p>
       </div>
 
-      <a class="pr-lyft rv" href="#erbjudanden" data-erb="plan_standard" data-erb-timmar="8" data-erb-ore="265300">
+      <a class="pr-lyft" data-stig data-fördröj="2" href="#erbjudanden" data-erb="plan_standard" data-erb-timmar="8" data-erb-ore="265300">
         <span class="pr-lyft-topp"><span class="pr-lyft-tips">Vårt tips</span><span class="eyebrow">Planen Standard</span></span>
         <span class="pr-lyft-rubrik"><span data-erb-antal>8</span> timmar i månaden <em>för priset av <span data-erb-betalda>7</span>.</em></span>
         <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="pa"></i></span>
@@ -327,7 +327,7 @@
       <span class="nx-et acc">Erbjudanden</span>
       <h2 class="d2" id="erb-t" style="margin-top:18px">Köp timmarna i förväg. Betala mindre.</h2>
     </div>
-    <div class="nx-head-aside"><p class="nx-lede">Tre planer för en månad, eller ett klippkort med timmar ni använder när det passar. Allt köps en gång. Inget abonnemang, ingen bindningstid.</p></div>
+    <div class="nx-head-aside"><p class="nx-lede">Planer för en månad, eller ett klippkort med timmar ni använder när det passar. Allt köps en gång. Inget abonnemang, ingen bindningstid.</p></div>
   </div>
 
   <div class="pr-erb-planer" data-erb-rad data-stig>
@@ -475,7 +475,7 @@
           <button type="button" aria-pressed="true" data-v="1">1</button><button type="button" aria-pressed="false" data-v="2">2</button><button type="button" aria-pressed="false" data-v="3">3</button>
         </div>
       </div>
-      <p class="pr-kalk-not">Första timmen bjuder vi på för nya familjer, så den första månaden blir en timme billigare.</p>
+      <p class="pr-kalk-not">Första timmen bjuder vi på för nya familjer.</p>
     </div>
     <div class="pr-kalk-svar" aria-live="polite">
       <div class="pr-kalk-alt">
@@ -488,14 +488,14 @@
         <div class="pr-kalk-lage" data-kalk-tips="plan">
           <span class="eyebrow">Med <span data-kalk-plannamn>Basic</span></span>
           <b class="pr-kalk-summa tnum" data-kalk-planpris>1 440 kr</b>
-          <p class="pr-kalk-rad">Ni sparar <b data-kalk-planspar>76 kr</b><span class="pr-erb-paket" data-kalk-paket hidden></span></p>
+          <p class="pr-kalk-rad"><span data-kalk-paket hidden></span>Ni sparar <b data-kalk-planspar>76 kr</b></p>
           <span class="pr-kalk-stapel" aria-hidden="true"><i data-kalk-andel style="--andel:.95"></i></span>
           <a class="nx-lank" href="#erbjudanden">Se planerna <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
         </div>
         <div class="pr-kalk-lage" data-kalk-tips="syskon" hidden>
           <span class="eyebrow">Fler barn i passet</span>
           <p class="pr-kalk-text">Två och tre barn kostar lika mycket: <span data-stat="extra-barn">69 kr</span> extra i timmen totalt.</p>
-          <p class="pr-kalk-rad">Planerna gäller ett barn per pass, så med flera barn betalar ni per pass.</p>
+          <p class="pr-kalk-rad" data-kalk-planrad>Planerna gäller ett barn per pass, så med flera barn betalar ni per pass.</p>
         </div>
         <div class="pr-kalk-lage" data-kalk-tips="ingen" hidden>
           <span class="eyebrow">Köp timmarna i förväg</span>
@@ -588,7 +588,7 @@
           <span class="pr-flode-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 1.5 8.5 6 4 10.5"/></svg></span>
         </div>
         <h3>Betala i förväg, om ni vill</h3>
-        <p>Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. I förväg går det så fort tiden är bekräftad, och har ni köpt timmar, till exempel med <a href="#erbjudanden">Standard</a>, betalar de passet av sig själva.</p>
+        <p>Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. I förväg går det så fort tiden är bekräftad, och har ni köpt timmar i en <a href="#erbjudanden">plan eller ett klippkort</a>, betalar de passet av sig själva.</p>
       </li>
       <li class="pr-flode-steg">
         <div class="pr-flode-topp">
@@ -837,10 +837,10 @@
 <script src="nextrum-config.js?v=fdfed591"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=3c4defbb"></script>
+<script src="nextrum-app.js?v=32805aea"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
-<script src="nextrum-motion.js?v=f1ce069c"></script>
-<script src="nextrum-start.js?v=a83ceff4"></script>
+<script src="nextrum-motion.js?v=b1a2a211"></script>
+<script src="nextrum-start.js?v=94494d65"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

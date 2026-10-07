@@ -670,7 +670,10 @@ window.NXUppgifter = (function () {
 
   /* Märken som bygger på XP eller serien visas bara när databasen
      räknat dem (mät svarar null annars): ett märke som ser ouppnått ut
-     för att funktionen inte är körd än är fel, inte ett läge. */
+     för att funktionen inte är körd än är fel, inte ett läge.
+     Startsidans illustration av NexLäx (index.html och en/index.html,
+     avsnitt 1b) visar "En vecka i rad" vid 7 dagar: ändras märket här
+     ändras illustrationen också. */
   const MÄRKEN = [
     { id: 'forsta', namn: 'Första nivån', text: 'Klara en nivå.', ikon: 'flagga', mål: 1, mät: d => d.klaradeNivåer },
     { id: 'xp-100', namn: '100 XP', text: 'Samla 100 XP.', ikon: 'blixt', mål: 100, mät: d => d.xp },
@@ -701,7 +704,9 @@ window.NXUppgifter = (function () {
      RANGEN (2026-10-06)
      Ett namn på hur långt eleven kommit, ur XP:n. Räknas här, som
      märkena, och ger och tar ingenting: XP:n är det som räknas, och den
-     minskar aldrig, så rangen gör det inte heller.
+     minskar aldrig, så rangen gör det inte heller. Startsidans
+     illustration av NexLäx visar Utforskare vid 520 XP: ändras gränsen
+     ändras illustrationen också.
      ============================================================ */
   const RANGER = [
     { xp: 0, namn: 'Nybörjare' }, { xp: 150, namn: 'Upptäckare' }, { xp: 400, namn: 'Utforskare' },

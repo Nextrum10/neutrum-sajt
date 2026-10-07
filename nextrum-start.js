@@ -186,6 +186,8 @@ const NXStart = (function () {
         d.classList.toggle('pa', n === i);
         d.classList.toggle('forbi', n < i);
         d.classList.remove('nlx-tur');
+        const knapp = $('.nlx-del-nod', d);
+        if (knapp) { if (n === i) knapp.setAttribute('aria-current', 'true'); else knapp.removeAttribute('aria-current'); }
       });
       lappar.forEach((l, n) => l.classList.toggle('syns', n === i));
       const del = delar[i], blad = del && $('.nlx-del-text', del);
@@ -221,7 +223,19 @@ const NXStart = (function () {
     }
 
     let synlig = false, tur = null, klar = false, varv = 0;
-    const paus = () => rot.classList.toggle('nlx-paus', !synlig || document.hidden);
+    /* Står rundturen still (utanför bild, dold flik) går ingen timer:
+       väntan parkerar sig i tur.vidare, och paus() väcker den när
+       telefonen syns igen. Förut tickade den tio gånger i sekunden resten
+       av besöket (granskningen 2026-10-07). */
+    const paus = () => {
+      const stilla = !synlig || document.hidden;
+      rot.classList.toggle('nlx-paus', stilla);
+      if (!stilla && tur && tur.vidare) {
+        const vidare = tur.vidare;
+        tur.vidare = null;
+        tur.t = setTimeout(vidare, 100);
+      }
+    };
     paus();
 
     function vänta(ms, tok) {
@@ -229,7 +243,8 @@ const NXStart = (function () {
         let kvar = ms;
         const tick = () => {
           if (tok.stopp) return svar(false);
-          if (synlig && !document.hidden) kvar -= 100;
+          if (!synlig || document.hidden) { tok.vidare = tick; return; }
+          kvar -= 100;
           if (kvar <= 0) return svar(true);
           tok.t = setTimeout(tick, 100);
         };
@@ -238,9 +253,12 @@ const NXStart = (function () {
     }
     function stoppa() {
       if (!tur) return;
+      const vidare = tur.vidare;
       tur.stopp = true;
+      tur.vidare = null;
       clearTimeout(tur.t);
       tur = null;
+      if (vidare) vidare();   // en parkerad väntan svarar false och släpps
     }
 
     /* Från skärm `från`, med `extra` ms på den första (efter ett tryck).
@@ -648,7 +666,9 @@ const NXStart = (function () {
      ============================================================ */
   function garantiflöde() {
     if (!rörelse || !('IntersectionObserver' in window)) return;
-    const LINJE = 0.62;  /* andel av fönstrets höjd, uppifrån */
+    /* Andel av fönstrets höjd, uppifrån. 0,62 lät steg 04, själva
+       löftet, stå släckt medan hela sektionen syntes på 1440×900. */
+    const LINJE = 0.78;
     $$('[data-gar-flode]').forEach(ol => {
       const steg = $$(':scope > li', ol);
       if (!steg.length) return;
@@ -902,18 +922,29 @@ const NXStart = (function () {
     ];
     let tur = null, turSynlig = false;
 
+    /* Utanför bild och i en dold flik går ingen timer: väntan parkerar
+       sig i tur.vidare och väcks när fönstret syns igen (2026-10-07; förut
+       tickade den tio gånger i sekunden resten av besöket). */
     function vänta(ms, tok) {
       return new Promise(klar => {
         let kvar = ms;
         const tick = () => {
           if (tok.stopp) return klar(false);
-          if (turSynlig && !document.hidden) kvar -= 100;
+          if (!turSynlig || document.hidden) { tok.vidare = tick; return; }
+          kvar -= 100;
           if (kvar <= 0) return klar(true);
           tok.t = setTimeout(tick, 100);
         };
         tick();
       });
     }
+    function väck() {
+      if (!tur || !tur.vidare || !turSynlig || document.hidden) return;
+      const vidare = tur.vidare;
+      tur.vidare = null;
+      tur.t = setTimeout(vidare, 100);
+    }
+    document.addEventListener('visibilitychange', väck);
 
     /* Var ett element står i fönstrets egna koordinater. offsetLeft
        och offsetTop, inte getBoundingClientRect: fönstret lutar i 3D,
@@ -994,6 +1025,7 @@ const NXStart = (function () {
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(e => {
         turSynlig = e[0].isIntersecting;
+        väck();
         if (turSynlig && !tur && rörelse) körTur();
       }, { threshold: 0.4 }).observe(fönster);
     }

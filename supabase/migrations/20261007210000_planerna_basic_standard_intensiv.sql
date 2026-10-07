@@ -57,8 +57,10 @@
 -- kolumner i slutet, och de elva som fanns står kvar i samma ordning,
 -- med samma namn och typer (lästa i driften 2026-10-07).
 --
--- Körs efter merge och FÖRE stripe-checkout från main, som väljer
--- kolumnen. Ingen drop och ingen delete. Går att köra två gånger.
+-- Körs efter merge. stripe-checkout från main läser hela raden och tål
+-- att kolumnen saknas, så driftsätt den FÖRE migrationen: då säljer
+-- ingen gammal kassa Standard med "0 % rabatt" i glappet. Ingen drop och
+-- ingen delete. Går att köra två gånger.
 -- ============================================================
 
 -- ---------- kolumnerna ----------

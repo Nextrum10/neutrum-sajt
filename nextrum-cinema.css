@@ -3643,6 +3643,8 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
 .pr-kalk-med .pr-kalk-stapel{background:color-mix(in srgb,var(--mossa) 22%,transparent)}
 .pr-kalk-med .pr-kalk-stapel i{background:var(--mossa)}
 .pr-kalk-med .nx-lank{margin-top:auto;padding-top:8px;align-self:flex-start;color:var(--mossa-text)}
+/* Fristående länk: tryckytan minst 44 px (granskningen 2026-10-07). */
+.pr-kalk-med .nx-lank::before{content:"";position:absolute;inset:-6px -8px}
 
 /* Utan något erbjudande alls (ett tomt svar) finns ingen plan att
    jämföra med: rutan går, och svaret per pass tar hela bredden. */
