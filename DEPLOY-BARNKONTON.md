@@ -246,6 +246,35 @@ se och göra med sin inloggning. Varför det ser ut som det gör:
 7. **Kvar: säg till familjerna** att de kan välja vad barnet ser (det står
    i integritetspolicyn), i samma mejl som avsnitt 7.
 
+## 10. Användarvillkoren och provobjekten (2026-10-07)
+
+Leo: "Fixa den gamla luckan och skräp i databasen". Ingen godkände
+användarvillkoren när kontot skapades. Nu kryssar den som registrerar sig
+i en ruta, och alla andra godkänner villkoren i en ruta vid inloggningen
+(efter lösenordet, före introduktionen). Databasen sparar godkännandet med
+sin egen tid och kräver det för att ett pass ska föreslås eller bekräftas
+och för att timmar ska köpas. Varför det ser ut som det gör:
+`minne/sakerhet.md` (Användarvillkoren) och `minne/databasen.md`. I ordning:
+
+1. **Merga.** Vyerna går ut med Vercel och tål att migrationen saknas:
+   utan `mitt_villkorslage()` visas ingen ruta, och adminpanelen säger
+   "okänt" om villkoren.
+2. **Kör `20261007120000_villkoren_godkanns.sql`.** Ingen `drop` och ingen
+   `delete`, så den kan hämtas från merge-commiten, prövas mot sin md5 och
+   köras och registreras i ett `do`-block (`minne/databasen.md`, punkt 3).
+   Från och med nu kräver databasen godkännandet: de konton som finns får
+   frågan vid nästa inloggning och kan inte boka innan dess.
+3. **`verktyg/rls-test.sql` mot driften**, hela filen i en transaktion som
+   rullas tillbaka: varje rad ok (1459 lokalt 2026-10-07).
+4. **Kör `20261007120100_provobjekten_tas_bort.sql`.** Den har `drop`, så
+   verktyget ber om en bekräftelse; säg ja. Registrera filens text och
+   pröva md5 som för de andra. Säkerhetskontrollen ska efteråt sakna de
+   nio varningarna om `zz_prov_*`.
+5. **Prova skarpt**: logga in som dig själv i studievyn (rutan kommer,
+   godkänn) och se raden under Användarvillkoren i adminvyns panel.
+6. **Kvar: juristen läser** rad 24 i `DATASKYDD.md` och meningen i
+   integritetspolicyn.
+
 ---
 
 ## Stänga av barnkontona snabbt

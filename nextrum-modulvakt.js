@@ -117,10 +117,12 @@
   } else {
     /* Första inloggningen (2026-10-06): båda vyerna frågar
        lösenordFörst och introduktion när de startar, och introduktionen
-       står i en egen fil som bara de två laddar. */
+       står i en egen fil som bara de två laddar. Användarvillkoren
+       (villkorFörst, 2026-10-07) frågas mellan dem. */
     krav.push(
       [typeof NXKontakt !== 'undefined', 'nextrum-kontakt.js'],
-      [studieKlar && typeof NXStudie.lösenordFörst === 'function' && typeof NXStudie.introduktion === 'function',
+      [studieKlar && typeof NXStudie.lösenordFörst === 'function' && typeof NXStudie.introduktion === 'function'
+         && typeof NXStudie.villkorFörst === 'function',
        'nextrum-studie.js'],
       [typeof NXIntro !== 'undefined' && typeof NXIntro.visa === 'function', 'nextrum-introduktion.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],

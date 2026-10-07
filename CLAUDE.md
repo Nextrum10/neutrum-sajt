@@ -101,6 +101,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
   ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
   under Profil. Skicka inbjudan igen står i personens panel tills hen loggat in.
+- **Användarvillkoren** (2026-10-07): ett godkännande per konto och version (`villkor_godkannanden`),
+  med databasens tid och aldrig anropets: kryssrutan i Skapa konto (`villkor: true`, triggern på
+  `auth.users`) eller rutan vid inloggningen (`NXStudie.villkorFörst`, efter lösenordet och före
+  introduktionen, och den går inte att stänga). Databasen kräver det: den som föreslår eller bekräftar
+  ett pass och den som köper timmar har godkänt den gällande versionen (`bookings_kraver_villkor`,
+  `klippkort_kraver_villkor`). Avbokningar, databasens egna vägar och admin stoppas aldrig, och barnet
+  godkänner inget. Versionen är sidans datum och `intern.villkor_version()`; de ändras tillsammans
+  (`kolla-villkor.py`), och då får alla frågan igen.
 - **Vem som får bli studiehjälpare** (2026-10-06, Leo): alla som får jobba. Ingen sida kräver
   att man pluggar; "nyligen läst samma kurser" är vad matchningen letar efter, inget krav för att söka.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
@@ -271,7 +279,8 @@ Detaljer: `minne/grunden.md`.
   och för en funktion med två `delete`, och hänger sig i 60 sekunder om ingen svarar: inget har hänt, och
   `apply_migration` gör likadant. Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en
   rensning per funktion), kör dem avsnitt för avsnitt med `execute_sql` och registrera filens text sedan i
-  `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL.
+  `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL,
+  och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*`, borttagna 2026-10-07).
 - `arkiv/` ändras aldrig; en rättelse är en ny migration. `schema-v22.sql` kördes aldrig, kör
   den inte. `schema.sql` rensar tabellerna.
 - **Flera sessioner** kör mot samma databas: läs driften, inte grenen. Lappa en funktion med
@@ -454,7 +463,7 @@ Detaljer: `minne/genererat-och-ci.md`.
 ## 9. CI — `.github/workflows/kontroll.yml`
 Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
 `kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`,
-`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `satt-version.py --kolla`, de genererade filerna
+`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `satt-version.py --kolla`, de genererade filerna
 (`git diff --exit-code`), språkdiffen (också attributnamn), `deno check` och `deno test`.
 - `node --check` ser bara syntax; ett namn som inte hämtats ur `NXAdmin` smäller vid körning.
 - `indexnow.yml` är ingen kontroll. Nyckeln står i roten och i `verktyg/indexnow.py`: byt båda.
@@ -519,8 +528,11 @@ Detaljer: `minne/grunden.md`.
   migrationen `barnets_behorigheter` från merge-commiten (md5 prövad), `bjud-in` v9 och `ansokan-notis`
   v8 från main, hämtade tillbaka och byte för byte lika, och hela `rls-test.sql` 1433 av 1433 mot
   driften. Ingen skarp inbjudan har gått än (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller en timme
-  (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny. Ingen
-  godkänner villkoren när kontot skapas, varken i inbjudan eller i registreringen: en lucka sedan förut.
+  (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny.
+- **Användarvillkoren och provobjekten** (2026-10-07) går ut efter merge: migrationerna
+  `villkoren_godkanns` och `provobjekten_tas_bort` (`DEPLOY-BARNKONTON.md` 10; den andra har `drop` och
+  ber om en bekräftelse). Vyerna tål att den första saknas. Alla konton i driften får frågan vid nästa
+  inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i `DATASKYDD.md`.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

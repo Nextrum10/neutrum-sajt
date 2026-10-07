@@ -328,8 +328,10 @@
     ruta.innerHTML = PROVA ? provlagetsResultat(d, lista) : d.godkant
       ? '<h2>Grattis, du klarade provet!</h2>'
         + '<p class="prov-poang">' + d.ratt + ' av ' + d.antal + '</p>'
-        + '<p>Introduktionen är klar. Nu kommer ett mejl om sista steget: att skapa ditt konto på '
-        + 'nextrum.se med samma e-postadress som i ansökan. Sedan godkänner vi din profil.</p>'
+        /* Kontot skapar vi när profilen godkänns (Ta in i poolen,
+           2026-10-06), som mejlet om sista steget säger. */
+        + '<p>Introduktionen är klar. Nu kommer ett mejl om sista steget, ditt konto: det skapar vi åt dig. '
+        + 'När din profil är godkänd får du ett mejl med en länk där du väljer ditt lösenord.</p>'
         + lista
       : '<h2>Inte godkänt den här gången</h2>'
         + '<p class="prov-poang">' + d.ratt + ' av ' + d.antal + '</p>'

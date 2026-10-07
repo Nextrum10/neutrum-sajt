@@ -115,6 +115,15 @@
     const namn = [];
 
     function lägg(n, q) { namn.push(n); frågor.push(q); }
+    /* Användarvillkoren (villkoren_godkanns, 2026-10-07): personens
+       godkännanden, och den gällande versionen ur mitt_villkorslage(),
+       som säger den för vem som helst som frågar. */
+    function läggVillkor(vem) {
+      lägg('villkor', supa.from('villkor_godkannanden')
+        .select('version, godkant_at, kalla').eq('anvandare', vem)
+        .order('godkant_at', { ascending: false }).limit(5));
+      lägg('villkorslage', supa.rpc('mitt_villkorslage'));
+    }
 
     if (typ === 'elev') {
       lägg('plan', supa.from('study_plans')
@@ -167,6 +176,7 @@
       lägg('tradar', supa.from('messages')
         .select('parent_id, created_at').eq('tutor_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
+      läggVillkor(id);
     } else {
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
@@ -189,6 +199,7 @@
       lägg('tradar', supa.from('messages')
         .select('tutor_id, created_at').eq('parent_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
+      läggVillkor(id);
     }
 
     /* Varje fråga fångas var för sig.
@@ -331,6 +342,25 @@
       ? ' <button class="btn btn-ghost btn-sm" type="button" data-dp-bjud-igen="' + esc(p.id) + '">'
         + 'Skicka inbjudan igen</button>'
       : '');
+  }
+
+  /* Har personen godkänt användarvillkoren (2026-10-07)? Den gällande
+     versionen, en äldre, eller inga alls. Utan tabellen eller funktionen
+     (en databas före migrationen) står raden som okänd, aldrig som "inte
+     godkända": det hade varit fel om personen. */
+  function dpVillkor(d) {
+    if (d.villkorFel || d.villkorslageFel) return null;
+    const version = d.villkorslage && d.villkorslage.version;
+    const rader = Array.isArray(d.villkor) ? d.villkor : [];
+    if (!version) return null;
+    const gällande = rader.find(r => r.version === version);
+    if (gällande) {
+      return esc('godkända ' + kortDatum(gällande.godkant_at)
+        + (gällande.kalla === 'registrering' ? ', när kontot skapades' : ''));
+    }
+    return rader.length
+      ? esc('inte de nya; en äldre version godkändes ' + kortDatum(rader[0].godkant_at))
+      : 'inte godkända än';
   }
 
   function dpRubrik(text, extra) {
@@ -920,6 +950,7 @@
       ['Telefon', dpTelefon(p.phone)],
       ['Konto skapat', p.created_at ? esc(kortDatum(p.created_at)) : null],
       ['Senast inloggad', dpSenast(p)],
+      ['Användarvillkoren', dpVillkor(d), 'okänt'],
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
     + dpRubrik('Nästa pass')
@@ -1104,7 +1135,8 @@
       ['Årskurser', (tp.grade_levels || []).length ? esc(tp.grade_levels.join(', ')) : null],
       ['Format', (tp.formats || []).length ? esc(tp.formats.join(', ')) : null],
       ['Timpenning', tp.hourly_rate ? esc(NX.kr(tp.hourly_rate)) : null, 'ej satt'],
-      ['Senast inloggad', dpSenast(p)]
+      ['Senast inloggad', dpSenast(p)],
+      ['Användarvillkoren', dpVillkor(d), 'okänt']
     ])
     + (tp.bio ? dpRubrik('Om hen') + '<div class="dp-text">' + esc(tp.bio) + '</div>' : '')
     /* Läget och startsidan stod förut i listan. Publiceringen är ett
