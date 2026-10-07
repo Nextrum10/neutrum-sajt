@@ -572,15 +572,23 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   till 31 december svensk tid, ett ämne ur `intern.betygsgaranti_amnen()`,
   betyg F till B, högst tre och samma ämne en gång (med ett lås, så att
   två tryck samtidigt inte blir fyra). Tiden och läsåret sätter databasen;
-  läsåret är året det börjar. Ingen inloggad skriver i `betygsgarantier`,
-  och ett anmält ämne går inte att ändra eller ta bort, så rättar admin
-  det med en migration. Föräldern och admin med `anvandare_las` eller
-  `anvandare_redigera` läser; studiehjälparen, en annan familj och barnet
-  inte. Elevens panel i adminvyn visar anmälningarna.
+  läsåret är året det börjar. Ingen inloggad skriver i `betygsgarantier`.
+  Föräldern och admin med `anvandare_las` eller `anvandare_redigera`
+  läser; studiehjälparen, en annan familj och barnet inte. Elevens panel
+  i adminvyn visar anmälningarna.
+- **Låst för familjen, bara vi rättar** (Leo samma dag: "spärr, bara vi
+  kan ändra den och då står det senast ändrad"). Den som får redigera
+  personer rättar ämnet eller betyget i elevens panel (Rätta,
+  `andra_betygsgaranti()`), med samma prövningar som anmälan utom datumet,
+  och aldrig ett gallrat betyg. Raden får `andrad_at`, som familjen ser
+  ("senast ändrad av oss"), och `andrad_av`, som ingen inloggad läser:
+  RLS begränsar inte kolumner, så tabellen har kolumnrättigheter, som
+  `tjanster`. Ingen väg tar bort en rad.
 - **Ämnena har ett eget betyg**, till skillnad från vyns grupper ("NO /
   Fysik / Kemi / Biologi" har inget betyg att jämföra med). Listan står i
-  `GARANTI_AMNEN` i `nextrum-studie-vy.js` och i
-  `intern.betygsgaranti_amnen()`, och de ändras tillsammans. Den är en
+  `NX.GARANTI_AMNEN` i `nextrum-app.js` (föräldravyn anmäler och adminvyn
+  rättar ur den) och i `intern.betygsgaranti_amnen()`, och de ändras
+  tillsammans. Den är en
   funktion och inget villkor på tabellen, så den byts utan drop.
 - **Betyget i anmälan.** Först skulle vi se betyg bara vid anspråket,
   eftersom policyn lovade att vi aldrig ber om dem; Leo valde samma dag

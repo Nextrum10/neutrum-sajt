@@ -144,7 +144,7 @@
       /* Betygsgarantin (2026-10-07): vad föräldern anmält, med betyget
          hen angav. Policyn ger bara den som läser personer raderna. */
       lägg('garantier', supa.from('betygsgarantier')
-        .select('lasar, amne, betyg, anmald_at').eq('student_id', id)
+        .select('id, lasar, amne, betyg, anmald_at, andrad_at').eq('student_id', id)
         .order('lasar', { ascending: false }).order('anmald_at'));
     } else if (typ === 'pass') {
       /* Fas 20.1: tiden står på rapporten, inte på passet. Passet bär
@@ -989,15 +989,44 @@
      läsår för läsår, med betyget hen angav. Vid ett anspråk är det
      kopian som gäller. Ett fel (tabellen saknas, eller policyn ger inte
      den här admin raderna) ger ingen rubrik alls i stället för ett fel
-     mitt i eleven. */
+     mitt i eleven.
+
+     Familjen kan inte ändra en anmälan; vi rättar den här (Leo: "bara vi
+     kan ändra den och då står det senast ändrad"). Knappen står för den
+     som får redigera personer, och databasen prövar det igen
+     (andra_betygsgaranti). Ett gallrat betyg rättas inte. */
+  function kanRättaGaranti() {
+    const b = S.behorighet;
+    return !b || b.superadmin || (b.behorigheter || []).indexOf('anvandare_redigera') !== -1;
+  }
+
   function dpGaranti(d) {
     if (d.garantierFel) return '';
     const g = d.garantier || [];
     const läsår = år => år + '/' + String((år + 1) % 100).padStart(2, '0');
-    return dpRubrik('Betygsgaranti')
+    const får = kanRättaGaranti();
+    const val = (lista, nu) => lista.map(v => '<option' + (v === nu ? ' selected' : '') + '>' + esc(v) + '</option>').join('');
+    return dpRubrik('Betygsgaranti', g.length ? 'låst för familjen' : '')
       + (g.length
-        ? g.map(x => dpRad(x.amne, 'läsåret ' + läsår(x.lasar) + ' · anmäld ' + kortDatum(x.anmald_at),
-            pill(x.betyg ? 'Betyg ' + x.betyg : 'Betyget gallrat', ''))).join('')
+        ? g.map(x => dpRad(x.amne,
+            'läsåret ' + läsår(x.lasar) + ' · anmäld ' + kortDatum(x.anmald_at)
+              + (x.andrad_at ? ' · senast ändrad ' + kortDatum(x.andrad_at) : ''),
+            pill(x.betyg ? 'Betyg ' + x.betyg : 'Betyget gallrat', '')
+              + (får && x.betyg ? ' <button class="btn btn-ghost btn-sm" type="button" data-dp-garanti-ratta="'
+                + esc(x.id) + '">Rätta</button>' : ''))
+            + (får && x.betyg
+              ? '<form data-dp-garanti="' + esc(x.id) + '" hidden style="margin:4px 0 14px">'
+                + '<div class="vy-form-rad">'
+                + '<div class="fgroup"><label for="dpg-a-' + esc(x.id) + '">Ämne</label>'
+                + '<select class="sel" id="dpg-a-' + esc(x.id) + '" name="amne">' + val(NX.GARANTI_AMNEN, x.amne) + '</select></div>'
+                + '<div class="fgroup"><label for="dpg-b-' + esc(x.id) + '">Betyg vid anmälan</label>'
+                + '<select class="sel" id="dpg-b-' + esc(x.id) + '" name="betyg">' + val(['F', 'E', 'D', 'C', 'B'], x.betyg) + '</select></div>'
+                + '</div>'
+                + '<p class="xsmall" style="margin:6px 0 0;color:var(--muted-2);line-height:1.5">Familjen ser att '
+                + 'anmälan är ändrad och när, men inte av vem.</p>'
+                + '<button class="btn btn-primary btn-sm" type="submit" style="margin-top:9px">Spara rättelsen</button>'
+                + '<p class="ok-msg" data-dp-garanti-msg></p></form>'
+              : '')).join('')
         : tomt('Ingen anmäld', 'Föräldern anmäler den under Profil i studievyn, senast den 31 december.'));
   }
 
@@ -2035,6 +2064,32 @@
     if (!k) return;
     const [typ, id] = String(k.dataset.dp).split(':');
     öppnaDetalj(typ, id, k.dataset.dpStart);
+  });
+
+  /* Rättelsen av en anmälan till betygsgarantin: knappen fäller ut
+     formuläret under raden, och efter sparandet hämtas eleven om. */
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-dp-garanti-ratta]');
+    if (!k) return;
+    const f = document.querySelector('form[data-dp-garanti="' + k.dataset.dpGarantiRatta + '"]');
+    if (f) f.hidden = !f.hidden;
+  });
+
+  document.addEventListener('submit', async e => {
+    const f = e.target.closest('form[data-dp-garanti]');
+    if (!f) return;
+    e.preventDefault();
+    const msg = f.querySelector('[data-dp-garanti-msg]');
+    rensa(msg);
+    const elev = DP.id;
+    await medan(f.querySelector('button[type="submit"]'), 'Sparar…', async () => {
+      const { error } = await supa.rpc('andra_betygsgaranti',
+        { p_id: f.dataset.dpGaranti, p_amne: f.amne.value, p_betyg: f.betyg.value });
+      if (error) { säg(msg, '⚠️ ' + felText(error), false); return; }
+      delete S.detaljCache['elev:' + elev];
+      await hämtaDetalj('elev', elev);
+      if (DP.typ === 'elev' && DP.id === elev) ritaDetalj();
+    });
   });
 
   document.addEventListener('submit', async e => {

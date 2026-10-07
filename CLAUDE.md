@@ -44,8 +44,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   tiden lagts på ett annat av ämnena med garanti inte omfattas, och hjälp i andra ämnen påverkar
   den inte. Årskursens sista betyg (varje årskurs), högst tre ämnen, två timmar i veckan och 10
   timmar sammanlagt, och bara anmäld och påbörjad senast 31 december. Föräldern anmäler i vyn
-  med barnets nuvarande betyg, och bara `anmal_betygsgaranti()` skriver och prövar; ämnena står i
-  `GARANTI_AMNEN` och `intern.betygsgaranti_amnen()` och ändras tillsammans, betyget gallras den 1
+  med barnets nuvarande betyg, och bara `anmal_betygsgaranti()` skriver och prövar; anmälan är låst
+  för familjen, och bara admin rättar den (`andra_betygsgaranti()`), med "senast ändrad" i familjens vy
+  och vem i `andrad_av`, som ingen inloggad läser; ämnena står i `NX.GARANTI_AMNEN` och
+  `intern.betygsgaranti_amnen()` och ändras tillsammans, betyget gallras den 1
   oktober efter läsåret, och kopiorna vid anspråket raderas för hand. Ersättningen är timmar,
   aldrig pengar. Startsidan och prissidan säljer den utan villkor och siffror, men länkar alltid
   till villkoren, säger att de gäller och lovar aldrig ett betyg.

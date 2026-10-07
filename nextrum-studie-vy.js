@@ -2257,12 +2257,14 @@
      Läsåret är året det börjar, svensk tid: anmälan är öppen 1 juli till
      31 december och gäller läsåret som börjar den hösten.
 
-     Ämnena har ett eget betyg i skolan, till skillnad från vyns grupper,
-     och står också i intern.betygsgaranti_amnen(); de ändras tillsammans.
+     Ämnena har ett eget betyg i skolan, till skillnad från vyns grupper
+     (NX.GARANTI_AMNEN och intern.betygsgaranti_amnen() ändras tillsammans).
+
+     En anmälan är låst när den är gjord (Leo: "spärr, bara vi kan ändra
+     den"): rutan har ingen knapp för att ändra, och databasen ingen väg
+     för familjen. Har vi rättat den står det när, ur andrad_at; vem hos
+     oss som gjorde det läser ingen inloggad.
      ============================================================ */
-  const GARANTI_AMNEN = ['Matematik', 'Svenska', 'Svenska som andraspråk', 'Engelska',
-    'Biologi', 'Fysik', 'Kemi', 'Historia', 'Samhällskunskap',
-    'Spanska', 'Tyska', 'Franska', 'Programmering'];
   const GARANTI_BETYG = ['F', 'E', 'D', 'C', 'B'];
   const GARANTI_MAX = 3;
 
@@ -2279,7 +2281,7 @@
     const ids = (S.barn || []).map(b => b.id);
     if (!ids.length) { S.garanti = []; ritaGaranti(); return; }
     const { data, error } = await supa.from('betygsgarantier')
-      .select('id, student_id, lasar, amne, betyg, anmald_at')
+      .select('id, student_id, lasar, amne, betyg, anmald_at, andrad_at')
       .in('student_id', ids).order('anmald_at');
     if (error) {
       if (error.code !== 'PGRST205' && error.code !== '42P01') console.warn('betygsgarantier:', error.message);
@@ -2317,10 +2319,13 @@
     const rader = S.garanti.filter(g => g.student_id === b.id && g.lasar === nu.läsår);
     let h = '<div class="garanti-barn"><p class="garanti-namn"><b>' + esc(b.name) + '</b>, läsåret '
       + läsårText(nu.läsår) + '</p>';
+    const dagen = ts => esc(datumText(isoFor(new Date(ts))));
     if (rader.length) {
       h += '<ul class="tb-rorelser">' + rader.map(g => '<li><span>' + esc(g.amne) + '</span><span>'
-        + (g.betyg ? 'betyg ' + esc(g.betyg) + ' vid anmälan, ' : 'anmält ')
-        + esc(datumText(isoFor(new Date(g.anmald_at)))) + '</span></li>').join('') + '</ul>';
+        + (g.betyg ? 'betyg ' + esc(g.betyg) + ', ' : '')
+        + (g.andrad_at ? 'senast ändrad av oss ' + dagen(g.andrad_at) : 'anmäld ' + dagen(g.anmald_at))
+        + '</span></li>').join('') + '</ul>'
+        + '<p class="erb-bank-text">Anmälan är låst. Har något blivit fel, skriv till oss så rättar vi det.</p>';
     }
     if (!nu.öppen) {
       h += '<p class="erb-bank-text">' + (rader.length ? '' : 'Inga ämnen anmäldes för läsåret. ')
@@ -2338,7 +2343,7 @@
   function garantiForm(b, rader) {
     const tagna = rader.map(g => g.amne.toLowerCase());
     const nämnt = a => (b.subjects || []).some(s => String(s).includes(a));
-    const kvar = GARANTI_AMNEN.filter(a => !tagna.includes(a.toLowerCase()));
+    const kvar = NX.GARANTI_AMNEN.filter(a => !tagna.includes(a.toLowerCase()));
     const ordning = kvar.filter(nämnt).concat(kvar.filter(a => !nämnt(a)));
     const id = 'garanti-' + b.id;
     return '<form class="garanti-form" data-garanti="' + esc(b.id) + '" novalidate>'
@@ -2353,7 +2358,7 @@
       + '<p class="xsmall bi-hjalp">Det senaste betyget från skolan i ämnet. Har eleven redan A går ämnet inte att anmäla.</p>'
       + '<label class="bi-ja"><input type="checkbox" data-garanti-ja><span>Jag har läst '
       + '<a href="/anvandarvillkor#betygsgaranti" target="_blank" rel="noopener">villkoren för betygsgarantin</a>'
-      + ' och vet att ett anmält ämne inte går att byta.</span></label>'
+      + ' och vet att anmälan är låst när den är gjord.</span></label>'
       + '<div class="vy-knapprad"><button class="btn btn-primary btn-sm" type="submit">Anmäl ämnet</button></div>'
       + '</form>';
   }

@@ -12625,8 +12625,10 @@ select set_config('request.jwt.claims', null, true);
 -- listan, betyget F till B, högst tre per elev och läsår, samma ämne en
 -- gång, med databasens tid, och bara med godkända villkor. Ingen
 -- inloggad skriver i tabellen; föräldern och den som läser personer
--- läser, aldrig studiehjälparen, en annan familj eller barnet. Betyget
--- gallras den 1 oktober efter läsåret och när barnet raderas.
+-- läser, aldrig studiehjälparen, en annan familj eller barnet. Anmälan är
+-- låst för familjen, och bara den som får redigera personer rättar den
+-- (andra_betygsgaranti); familjen ser när, aldrig vem. Betyget gallras
+-- den 1 oktober efter läsåret och när barnet raderas.
 --
 -- Anmälan är öppen 1 juli till 31 december, och klockan i databasen går
 -- inte att flytta i ett prov: körs sviten under våren prövas att anmälan
@@ -12777,6 +12779,90 @@ begin
     end;
     ut := ut || jsonb_build_object('t', 'BG barnet läser inte tabellen', 'ok', kod = '42501', 'd', kod);
 
+    -- Låst för familjen, bara vi rättar (andra_betygsgaranti). Raderna
+    -- skrivs som postgres, så att proven går året runt, och allt rullas
+    -- tillbaka innan gallringen nedan, som räknar barnets rader.
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    declare
+      G1 uuid;
+      G2 uuid;
+      G3 uuid;
+      vem uuid;
+    begin
+      insert into public.betygsgarantier (student_id, lasar, amne, betyg) values (E2, lasaret, 'Fysik', 'C')
+        returning id into G1;
+      insert into public.betygsgarantier (student_id, lasar, amne, betyg) values (E2, lasaret, 'Kemi', 'D')
+        returning id into G2;
+      insert into public.betygsgarantier (student_id, lasar, amne, betyg, betyg_gallrat_at)
+        values (E2, lasaret - 2, 'Biologi', null, now()) returning id into G3;
+
+      perform pg_temp.bli(P);
+      begin
+        perform public.andra_betygsgaranti(G1, 'Fysik', 'B');
+        kod := 'inget fel';
+      exception when others then kod := sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'BG föräldern ändrar inte en anmälan', 'ok', kod = '42501', 'd', kod);
+      reset role;
+      perform pg_temp.bli(L3);
+      begin
+        perform public.andra_betygsgaranti(G1, 'Fysik', 'B');
+        kod := 'inget fel';
+      exception when others then kod := sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'BG admin som bara läser personer rättar inte en anmälan', 'ok',
+              kod = '42501', 'd', kod);
+
+      reset role;
+      perform pg_temp.bli(AD);
+      r := public.andra_betygsgaranti(G1, 'Historia', 'B');
+      ut := ut || jsonb_build_object('t', 'BG admin rättar ämnet och betyget, och tiden sparas', 'ok',
+              r ->> 'amne' = 'Historia' and r ->> 'betyg' = 'B'
+              and (r ->> 'andrad_at')::timestamptz > now() - interval '1 minute', 'd', r::text);
+      begin
+        perform public.andra_betygsgaranti(G1, 'Kemi', 'B');
+        kod := 'inget fel';
+      exception when others then kod := sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'BG en rättelse ger inte eleven samma ämne två gånger', 'ok',
+              kod = '23505', 'd', kod);
+      begin
+        perform public.andra_betygsgaranti(G2, 'Kemi', 'A');
+        kod := 'inget fel';
+      exception when others then kod := sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'BG en rättelse sätter inte A', 'ok', kod = '22023', 'd', kod);
+      begin
+        perform public.andra_betygsgaranti(G3, 'Biologi', 'C');
+        kod := 'inget fel';
+      exception when others then kod := sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'BG ett gallrat betyg rättas inte tillbaka', 'ok', kod = 'P0001', 'd', kod);
+
+      reset role;
+      perform set_config('request.jwt.claims', null, true);
+      select andrad_av into vem from public.betygsgarantier where id = G1;
+      ut := ut || jsonb_build_object('t', 'BG databasen sparar vem hos oss som rättade', 'ok',
+              vem = AD, 'd', vem::text);
+
+      perform pg_temp.bli(P);
+      select (andrad_at is not null)::text into t from public.betygsgarantier where id = G1;
+      ut := ut || jsonb_build_object('t', 'BG föräldern ser att anmälan är ändrad och när', 'ok', t = 'true', 'd', t);
+      begin
+        select andrad_av::text into t from public.betygsgarantier where id = G1;
+        kod := 'inget fel';
+      exception when others then kod := sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'BG föräldern ser inte vem hos oss som rättade', 'ok', kod = '42501', 'd', kod);
+
+      raise exception 'tillbaka';
+    exception when others then
+      if sqlerrm <> 'tillbaka' then
+        ut := ut || jsonb_build_object('t', 'BG rättelsen', 'ok', false, 'd', sqlerrm);
+      end if;
+    end;
+
     -- Gallringen och raderingen, som databasen gör dem.
     reset role;
     perform set_config('request.jwt.claims', null, true);
@@ -12797,6 +12883,8 @@ begin
     ut := ut || jsonb_build_object('t', 'BG anon och barnets roll når varken funktionen eller tabellen', 'ok',
             not has_function_privilege('anon', 'public.anmal_betygsgaranti(uuid, text, text)', 'execute')
             and not has_function_privilege('nextrum_barn', 'public.anmal_betygsgaranti(uuid, text, text)', 'execute')
+            and not has_function_privilege('anon', 'public.andra_betygsgaranti(uuid, text, text)', 'execute')
+            and not has_function_privilege('nextrum_barn', 'public.andra_betygsgaranti(uuid, text, text)', 'execute')
             and not has_table_privilege('anon', 'public.betygsgarantier', 'select')
             and not has_table_privilege('nextrum_barn', 'public.betygsgarantier', 'select'), 'd', null);
     ut := ut || jsonb_build_object('t', 'BG ingen inloggad skriver i tabellen eller når funktionerna i intern', 'ok',
