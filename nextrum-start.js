@@ -11,6 +11,8 @@
      studiehjälpare korten stiger upp när raden syns
      band           Trygg hjälp: det rullande bandet
      vägg           Så kan ett pass se ut: fotona stiger fram
+     betalflöde     Så fungerar betalningen på prissidan: stegen och
+                    pilarna tänds i tur
      studievy       illustrationen av föräldravyn, som klickar sig igenom
                     sig själv. Samma illustration står på För elever &
                     föräldrar.
@@ -382,6 +384,36 @@ const NXStart = (function () {
   }
 
   /* ============================================================
+     BETALFLÖDET PÅ PRISSIDAN (2026-10-07)
+     Leo: "Så fungerar betalning gör de ej i kolumner utan pilar mellan
+     varje steg modernt och snyggt." Två klasser, och CSS (nextrum-
+     sidor.css) väljer vilken som gäller för bredden:
+       .ar-igang på listan när den syns: på en dator tänds stegen och
+                 pilarna i tur, med en fördröjning per steg.
+       .ar-nadd  på varje steg som passerat strax under mitten av
+                 skärmen: på en telefon, där stegen står under varandra,
+                 tänds numret och skenan ner till nästa steg följer
+                 scrollen, åt båda hållen.
+     Utan rörelse sätts ingenting, och allt står tänt (inget nx-sr).
+     ============================================================ */
+  function betalflöde() {
+    if (!rörelse) return;
+    $$('[data-betalflode]').forEach(ol => {
+      närSyns(ol, () => ol.classList.add('ar-igang'), '0px 0px -18% 0px');
+      const steg = $$(':scope > li', ol);
+      if (!('IntersectionObserver' in window)) {
+        steg.forEach(li => li.classList.add('ar-nadd'));
+        return;
+      }
+      const io = new IntersectionObserver(poster => {
+        poster.forEach(p => p.target.classList.toggle('ar-nadd',
+          p.isIntersecting || p.boundingClientRect.top < 0));
+      }, { rootMargin: '0px 0px -42% 0px' });
+      steg.forEach(li => io.observe(li));
+    });
+  }
+
+  /* ============================================================
      STUDIEVYN
 
      En illustration som visar sig själv. Besökaren kan inte klicka i
@@ -737,6 +769,7 @@ const NXStart = (function () {
     prova('studiehjälpare', studiehjälpare);
     prova('band', band);
     prova('vägg', vägg);
+    prova('betalflöde', betalflöde);
     prova('studievy', studievy);
     prova('sidhuvud', sidhuvud);
     prova('stegFoton', stegFoton);

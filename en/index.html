@@ -527,6 +527,20 @@
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
     </div>
+    <!-- Standard, inbakat (2026-10-07). Leo: "Visa standard planens
+         erbjudande på sidan och sälj in de inbakat någonstans där de
+         passar." Inga kronor här: priset står bara på prissidan, som
+         läser det ur erbjudanden_pris. Antalet timmar och timmarna man
+         betalar för skriver NX.initErbjudanden() ur samma svar, och finns
+         planen inte döljs lappen. -->
+    <div class="pr-std-rad" data-stig data-fördröj="1">
+      <a class="pr-std-lapp" href="/en/priser#erbjudanden" data-erb="plan_standard" data-erb-timmar="8">
+        <span class="pr-std-namn">Standard</span>
+        <span class="pr-std-text"><span data-erb-antal>8</span> hours a month for the price of <span data-erb-betalda>7</span></span>
+        <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="pa"></i></span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
   </div>
 </section>
 
@@ -1130,6 +1144,7 @@
   NX.initVagval();      /* vyväljaren bakom "Logga in" */
   NX.bildIntoning();    /* de foton som ligger i markupen */
   NX.initPris();        /* priset i heron */
+  NX.initErbjudanden(); /* Standard i Trygg hjälp, ur erbjudanden_pris */
 
   /* ==========================================================
      SÅ FUNGERAR NEXTRUM
