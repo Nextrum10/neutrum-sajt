@@ -396,40 +396,56 @@
      Leo: "sälj in det utan konkreta villkor eller siffror". Här står
      inga villkor och inga tal, men aldrig ett löfte om ett betyg:
      garantin lovar vad vi gör om betyget inte går upp (CLAUDE.md,
-     avsnitt 8). Länken och raden under knapparna säger att villkor
-     gäller och var de står, för en garanti som säljs utan att det syns
-     att den har villkor är vilseledande (marknadsföringslagen). Mörk
-     för att stegen (.nx-apply-flow) är ritade för mörk botten, som i
-     Bli studiehjälpare. Samma ändring i en/index.html, tagg för tagg.
+     avsnitt 1 och 8). Länken och raden intill knappen säger att
+     villkor gäller och var de står, för en garanti som säljs utan att
+     det syns att den har villkor är vilseledande
+     (marknadsföringslagen). De står bredvid knappen, aldrig bakom en
+     utfällning.
+
+     På papperet och som ett flöde (2026-10-07). Leo: "samma färg som
+     resten av sidan" i båda lägena, "inte samma kolumner som finns
+     överallt", "en mindre sektion" som "ser ut som att den följer ett
+     flow när man scrollar". Linjen mellan siffrorna fylls och stegen
+     tänds när de passerar en linje i fönstret: garantiflöde() i
+     nextrum-start.js och avsnitt 15 i nextrum-start.css. Utan skript
+     står allt tänt. Siffrorna är aria-hidden, för listan ger
+     ordningen. Inget data-stig på stegen: den regeln äger opacity och
+     transform och hade slagit ut nedtoningen. På dator står rubriken
+     och knappen till vänster och flödet till höger, på telefon
+     rubrik, flöde, knapp (ordningen i markupen). Prissidan har samma
+     komponent med sina egna texter. Samma ändring i en/index.html,
+     tagg för tagg.
      ========================================================== -->
-<section class="nx-mork nx-sek" id="betygsgaranti">
-  <div class="nx-wrap-bred">
-    <div class="nx-mitt-head">
-      <span class="nx-et" data-stig>Betygsgaranti</span>
-      <h2 class="nx-d2" data-avslöj style="margin-top:20px">Går betyget inte upp,<br><em>fortsätter vi.</em></h2>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:22px">Vi tror på rätt match och ett läsår av riktigt arbete, så mycket att vi står för det. Gör
+<section class="nx-sek-s nx-gar" id="betygsgaranti">
+  <div class="nx-wrap-bred nx-gar-in">
+    <div class="nx-gar-head">
+      <span class="nx-et acc" data-stig>Betygsgaranti</span>
+      <h2 class="nx-d2" data-avslöj>Går betyget inte upp,<br><em>fortsätter vi.</em></h2>
+      <p class="nx-lede" data-stig data-fördröj="1">Vi tror på rätt match och ett läsår av riktigt arbete, så mycket att vi står för det. Gör
         eleven sin del och går betyget ändå inte upp, fortsätter vi hjälpa till utan att ni betalar något.</p>
     </div>
 
-    <div class="nx-apply-flow" data-stig data-fördröj="2" style="margin-top:clamp(40px,5vw,64px)">
-      <div class="nx-apply-step"><em>1</em><b>Välj ämnena</b><p>Ni väljer de ämnen som ska lyfta, och vi lägger upp planen mot årets betyg.</p></div>
-      <div class="nx-apply-step"><em>2</em><b>Kör hela läsåret</b><p>Regelbundna pass, uppgifter mellan gångerna och en studiehjälpare som håller i trådarna.</p></div>
-      <div class="nx-apply-step"><em>3</em><b>Se allt i er vy</b><p>Varje pass, rapport och uppgift syns för er, och garantin prövas på det ni själva kan se.</p></div>
-      <div class="nx-apply-step"><em>4</em><b>Vi står kvar</b><p>Går betyget inte upp trots att ni gjort er del, får ni extra läxhjälp av oss utan kostnad.</p></div>
-    </div>
+    <ol class="nx-gar-flode" data-gar-flode>
+      <li><span class="nx-gar-nr" aria-hidden="true">01</span><div class="nx-gar-steg"><b>Välj ämnena</b><p>Ni väljer de ämnen som ska lyfta, och vi lägger upp planen mot årets betyg.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">02</span><div class="nx-gar-steg"><b>Kör hela läsåret</b><p>Regelbundna pass, uppgifter mellan gångerna och en studiehjälpare som håller i trådarna.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">03</span><div class="nx-gar-steg"><b>Se allt i er vy</b><p>Varje pass, rapport och uppgift syns för er, och garantin prövas på det ni själva kan se.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">04</span><div class="nx-gar-steg"><b>Vi står kvar</b><p>Går betyget inte upp trots att ni gjort er del, får ni extra läxhjälp av oss utan kostnad.</p></div></li>
+    </ol>
 
-    <div class="nx-cta-rad nx-cta-mitt" data-stig data-fördröj="3">
-      <span class="nx-magnet">
-        <a class="btn btn-primary btn-lg" href="/intresseanmalan">
-          Skicka intresseanmälan
+    <div class="nx-gar-cta" data-stig data-fördröj="2">
+      <div class="nx-cta-rad">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="/intresseanmalan">
+            Skicka intresseanmälan
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
-      </span>
-      <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
+      </div>
+      <p class="nx-fineprint">Villkor gäller. Hjälp med andra ämnen och läxorna i stort ingår som vanligt och påverkar inte garantin.</p>
     </div>
-    <p class="nx-fineprint" data-stig data-fördröj="4" style="margin-top:22px;text-align:center">Villkor gäller. Hjälp med andra ämnen och läxorna i stort ingår som vanligt och påverkar inte garantin.</p>
   </div>
 </section>
 

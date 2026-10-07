@@ -8,6 +8,8 @@
      hållpunkter    1–4: den man pekar på kommer fram — både hållpunkterna
                     och stegen i ansökan
      mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
+     garantiflöde   betygsgarantin: linjen fylls och stegen tänds när
+                    man scrollar förbi, på startsidan och prissidan
      studiehjälpare korten stiger upp när raden syns
      band           Trygg hjälp: det rullande bandet
      vägg           Så kan ett pass se ut: fotona stiger fram
@@ -369,6 +371,57 @@ const NXStart = (function () {
     };
     rot.addEventListener('pointerup', släpp);
     rot.addEventListener('pointercancel', släpp);
+  }
+
+  /* ============================================================
+     GARANTIFLÖDET (2026-10-07)
+     Betygsgarantins fyra steg står som ett flöde på papperet (Leo:
+     "se ut som att de följer ett flow när man scrollar"). Ett steg
+     tänds när dess siffra har passerat en linje en bit under mitten
+     av fönstret, och sträckan ovanför det fylls: skriptet sätter .pa
+     (tänt) och .fylld (sträckan nedåt är fylld; på sista steget
+     svansen, när alla är tända), och linjen, siffran och texten är
+     övergångar i nextrum-start.css (avsnitt 15).
+     Scrollar man tillbaka släcks stegen igen.
+
+     Observatören säger till när en siffra korsar linjen, och först då
+     läses de fyra siffrornas läge, en gång. Inget mäts medan man
+     scrollar. Att läsa alla fyra och inte bara den som korsade gör
+     att ett hopp förbi flera steg (länken till #betygsgaranti längre
+     ner, End-tangenten) ger rätt läge direkt.
+
+     .i-gang sätts när observatören är kopplad, och startläget hänger
+     på den: utan skript, utan IntersectionObserver och med rörelse
+     bortvald står flödet tänt. Första läget räknas innan klassen
+     sätts, så att ett steg man redan scrollat förbi (omladdning mitt
+     på sidan) aldrig syns släckt.
+
+     Egna namn med flit, inte .nx-apply-flow: den är kvar i Bli
+     studiehjälpare och sköts av hållpunkter() och mörkaYtor().
+     ============================================================ */
+  function garantiflöde() {
+    if (!rörelse || !('IntersectionObserver' in window)) return;
+    const LINJE = 0.62;  /* andel av fönstrets höjd, uppifrån */
+    $$('[data-gar-flode]').forEach(ol => {
+      const steg = $$(':scope > li', ol);
+      if (!steg.length) return;
+      const nr = steg.map(li => $('.nx-gar-nr', li) || li);
+      const rita = gräns => {
+        let n = 0;
+        while (n < nr.length && nr[n].getBoundingClientRect().top < gräns) n++;
+        steg.forEach((li, i) => {
+          li.classList.toggle('pa', i < n);
+          li.classList.toggle('fylld', i < n - 1 || n === steg.length);
+        });
+      };
+      const io = new IntersectionObserver(poster => {
+        const rot = poster[0] && poster[0].rootBounds;
+        rita(rot ? rot.bottom : window.innerHeight * LINJE);
+      }, { rootMargin: '0px 0px -' + Math.round((1 - LINJE) * 100) + '% 0px' });
+      rita(window.innerHeight * LINJE);
+      nr.forEach(el => io.observe(el));
+      ol.classList.add('i-gang');
+    });
   }
 
   /* ============================================================
@@ -734,6 +787,7 @@ const NXStart = (function () {
     prova('ordfyll', ordfyll);
     prova('hållpunkter', hållpunkter);
     prova('mörkaYtor', mörkaYtor);
+    prova('garantiflöde', garantiflöde);
     prova('studiehjälpare', studiehjälpare);
     prova('band', band);
     prova('vägg', vägg);
