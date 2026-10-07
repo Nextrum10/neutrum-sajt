@@ -214,8 +214,8 @@ OMRADEN = [
         'faq': [
             ('Täcker ni hela Farsta?',
              'Vi matchar elever i Farsta centrum, Farsta strand, Hökarängen, Gubbängen, '
-             'Sköndal, Fagersjö och Larsboda. Om passet kan ske hemma hos er avgörs av '
-             'matchningen; annars börjar ni online.'),
+             'Sköndal, Fagersjö och Larsboda. Hemma hos er går när matchningen ger en '
+             'studiehjälpare som kan ta sig dit varje vecka; annars börjar ni online.'),
             ('Går det att få hjälp inför ett nationellt prov?',
              'Ja. Studieplanen skrivs utifrån vad eleven behöver, och ett mål som "trygg med '
              'ekvationer inför provet" är precis den sortens mål den är gjord för. Efter varje '
@@ -313,8 +313,8 @@ OMRADEN = [
         'faq': [
             ('Vilka delar av Sjöstaden gäller det?',
              'Sickla Udde, Sickla Kaj, Lumaparken, Lugnet, Henriksdal och Sjöstadsparterren, och '
-             'Hammarbyhöjden strax intill. Om passet sker hemma hos er eller online avgörs av '
-             'matchningen.'),
+             'Hammarbyhöjden strax intill. Hemma hos er eller online väljer ni för varje pass, '
+             'och hemma går när studiehjälparen kan ta sig hit varje vecka.'),
             ('Hur sent på kvällen går det att boka?',
              'Ni föreslår en tid mellan elva på förmiddagen och tio på kvällen på vardagar, '
              'och mellan nio på morgonen och tio på kvällen på helger, och studiehjälparen '
@@ -361,8 +361,8 @@ OMRADEN = [
         'faq': [
             ('Vilka delar av Bromma?',
              'Alvik, Traneberg, Abrahamsberg, Åkeshov, Brommaplan, Ålsten, Höglandet, Nockeby, '
-             'Bromma Kyrka, Riksby, Ulvsunda och Mariehäll. Om passet sker hemma hos er avgörs '
-             'av matchningen.'),
+             'Bromma Kyrka, Riksby, Ulvsunda och Mariehäll. Hemma hos er går när studiehjälparen '
+             'ni matchas med kan ta sig dit varje vecka, och annars börjar ni online.'),
             ('Kan vi få samma studiehjälpare varje gång?',
              'Ja, det är hela poängen. Matchningen är en person, inte en pool — den som kommer '
              'nästa vecka vet vad som var svårt förra veckan, för hen var där.'),
@@ -408,8 +408,8 @@ OMRADEN = [
         'faq': [
             ('Vilka delar av Solna?',
              'Solna centrum, Råsunda, Hagalund, Huvudsta, Bergshamra, Ulriksdal, Järvastaden, '
-             'Arenastaden, Frösunda och Skytteholm. Om passet sker hemma hos er avgörs av '
-             'matchningen.'),
+             'Arenastaden, Frösunda och Skytteholm. Ni väljer hemma eller online för varje pass; '
+             'hemma går när studiehjälparen kan ta sig till er varje vecka.'),
             ('Hjälper ni gymnasieelever?',
              'Ja. Vi letar efter en studiehjälpare som har läst samma kurs nyligen, och det '
              'märks särskilt på gymnasienivå, där den som läste kursen i fjol minns vilket '

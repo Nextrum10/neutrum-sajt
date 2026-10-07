@@ -148,7 +148,10 @@ tabell, API, databasen. Regeln att ett pass är genomfört först när
 rapporten finns är vår; den står i villkoren och där rapporten förklaras
 (Så fungerar Nextrum, För elever och föräldrar), inte i generatorns svar.
 Starterbjudandet står på prissidan, i FAQ:n och i generatorns prisdelar,
-alltid med villkoret bokade timmar (`minne/betalning.md`).
+alltid med villkoret bokade timmar (`minne/betalning.md`). Hemma eller
+online väljer familjen för varje pass; matchningen avgör bara om någon
+kan ta sig hem till dem. Priset gäller den tid passet höll, per påbörjad
+kvart, så ingen sida lovar hela kostnaden innan ni bokar.
 
 ---
 
