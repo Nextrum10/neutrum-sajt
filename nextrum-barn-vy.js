@@ -108,11 +108,12 @@
 
   /* ============ inloggningen ============
      Står inte här sedan 2026-10-06. Leo: "när man väljer att logga in som
-     elev ska man inte komma till en separat sida". Elev är ett läge i
-     studievyns inloggning (/foralder#elev, NXStudie.elevLänk), som loggar
-     in med samma loggaIn och skickar barnet hit. Den som öppnar /barn utan
-     att vara inloggad, eller loggar ut härifrån, skickas dit. */
-  const INLOGGNINGEN = '/foralder#elev';
+     elev ska man inte komma till en separat sida". Sedan 2026-10-07 är
+     inloggningen en och densamma för förälder och elev ("föräldrar och
+     elev ska vara en knapp"): användarnamnet i studievyns inloggning
+     loggar in med samma loggaIn och skickar barnet hit. Den som öppnar
+     /barn utan att vara inloggad, eller loggar ut härifrån, skickas dit. */
+  const INLOGGNINGEN = '/foralder';
 
   /* ============ start ============ */
   async function starta(user) {

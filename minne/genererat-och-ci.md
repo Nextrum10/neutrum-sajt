@@ -377,8 +377,8 @@ efter kontot heter knappen Skapa elev och bjuder inte in igen, för
 `medan()` ställer annars tillbaka den gamla texten), Ta in i poolen med Skapa kontot
 förvalt (`roll: 'tutor'` före godkännandet, kvittot) och med ett konto som
 fanns (ingen inbjudan, som förut), och Skicka inbjudan igen i personens
-panel (bara för den som aldrig loggat in; en ny inbjudan och en länk för
-lösenordet). `verktyg/prova-introduktion.js` (8967): rutan för
+panel (en ny inbjudan och en länk för lösenordet; sedan 2026-10-07 också
+Skicka länk för lösenord för den som loggat in). `verktyg/prova-introduktion.js` (8967): rutan för
 lösenordet utan Inte nu efter en inbjudan och med `valkommen =
 'losenord'`, att lösenordet sparas med `valkommen: 'intro'`,
 introduktionen i studievyn (sju bilder) och studiehjälparvyn (åtta),
@@ -405,8 +405,10 @@ tagit in (familj och studiehjälpare), att den inte går att stänga men att
 Logga ut finns, att inget sparas utan kryss och att versionen skickas, att
 länkarna ser ut som länkar och öppnas i en ny flik, rubriken för ändrade
 villkor, ingen ruta för den som godkänt eller när funktionen saknas, och
-kryssrutan i Skapa konto i båda vyerna (bara där, `villkor: true` och rätt
-roll). Tryckytorna mäts med `offsetHeight`: rutan glider fram med en skala.
+(sedan 2026-10-07) att Skapa konto är borta i båda vyerna, att inloggningen
+är densamma där, och att kontot avgör vyn: en studiehjälpare på
+`/foralder` hamnar på `/larare` och en förälder på `/larare` på
+`/foralder`, utan att studsa. Tryckytorna mäts med `offsetHeight`: rutan glider fram med en skala.
 `prova-intag.js` provar raden i adminvyns panel.
 
 ### Webbläsarprovet för familjens faktura (2026-10-06)

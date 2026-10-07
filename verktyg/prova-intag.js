@@ -7,7 +7,8 @@
    åt den, samma med familj". Ta in i poolen skapar nu kontot med
    adressen i ansökan när ingen har den, Ta in familjen gör konto,
    inbjudan och elev i ett tryck, och Skicka inbjudan igen står vid den
-   som aldrig loggat in. Edge-funktionen bjud-in svarar här som den gör
+   som aldrig loggat in. Sedan 2026-10-07 står knappen också vid den som
+   loggat in, som Skicka länk för lösenord. Edge-funktionen bjud-in svarar här som den gör
    (_delad/inbjudan.ts, provad i inbjudan_test.ts), och skapar profilen
    som handle_new_user gör, så att vyn hittar kontot efteråt.
 
@@ -386,7 +387,8 @@ async function provaIgen(webb) {
     page.on('dialog', d => { dialoger.push(d.message()); d.dismiss(); });
     await page.click('[data-dp-bjud-igen="familj-1"]');
     await page.waitForSelector('.nx-fraga.open', { timeout: 3000 }).catch(() => {});
-    prova('igen (' + igenSvar + '): frågar först, och säger vad som kan hända', (await text(page, '.nx-fraga-box')).includes('Har hen redan valt sitt lösenord skickas ingenting'));
+    prova('igen (' + igenSvar + '): frågar först, och säger att bara det nya mejlet fungerar sedan',
+      (await text(page, '.nx-fraga-box')).includes('Bara länken i det nya mejlet fungerar sedan'));
     await page.click('.nx-fraga [data-svar="ja"]');
     await page.waitForFunction(n => window.__x || true, null);
     await vänta(700);
@@ -396,13 +398,28 @@ async function provaIgen(webb) {
     prova('igen (' + igenSvar + '): inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }
-  /* Den som loggat in har ingen knapp. */
+  /* Den som loggat in får knappen också (2026-10-07: "när vi vill"), men
+     den heter Skicka länk för lösenord, och frågan säger att det nuvarande
+     lösenordet fungerar tills ett nytt är valt. */
   {
-    const { context, page } = await öppna(webb, {});
+    const { context, page, S } = await öppna(webb, { igenSvar: 'losenord' });
     await tillAdmin(page, 'studiehjalpare');
     await page.click('[data-dp="studiehjalpare:sh-1"]');
     await vänta(400);
-    prova('igen: den som loggat in har ingen knapp', (await page.locator('[data-dp-bjud-igen]').count()) === 0);
+    const knapp = page.locator('[data-dp-bjud-igen="sh-1"]');
+    prova('igen: den som loggat in har knappen Skicka länk för lösenord',
+      (await knapp.count()) === 1 && (await knapp.innerText()).trim() === 'Skicka länk för lösenord',
+      (await knapp.count()) ? await knapp.innerText() : 'ingen knapp');
+    page.removeAllListeners('dialog');
+    page.on('dialog', d => d.dismiss());
+    await knapp.click();
+    await page.waitForSelector('.nx-fraga.open', { timeout: 3000 }).catch(() => {});
+    prova('igen: frågan säger att det nuvarande lösenordet fungerar tills ett nytt är valt',
+      (await text(page, '.nx-fraga-box')).includes('Det nuvarande lösenordet fungerar tills hen valt ett nytt'));
+    await page.click('.nx-fraga [data-svar="ja"]');
+    await vänta(700);
+    prova('igen: bjud-in får adressen och igen, för den som loggat in också',
+      S.bjudIn.length === 1 && S.bjudIn[0].igen === true, JSON.stringify(S.bjudIn));
     const fakta = await page.locator('.dp-fakta').first().innerText();
     prova('villkor: panelen säger när studiehjälparen godkände dem', /Användarvillkoren\s*godkända 3 oktober, när kontot skapades/.test(fakta),
       fakta);

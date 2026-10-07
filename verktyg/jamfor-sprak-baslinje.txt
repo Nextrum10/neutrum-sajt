@@ -19,7 +19,7 @@
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
-  TEXTNODER: sv 438 vs en 436 — engelskan har inte följt med
+  TEXTNODER: sv 436 vs en 434 — engelskan har inte följt med
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>

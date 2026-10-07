@@ -202,11 +202,16 @@ const länk = (id, typ) => '#access_token=' + jwt(id, 'authenticated')
   + '&expires_in=3600&refresh_token=prov-' + id + '&sb=&token_type=bearer&type=' + (typ || 'recovery');
 const UTGÅNGEN = '#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired&sb=';
 
+/* Studievyn och studiehjälparvyn har samma inloggning sedan 2026-10-07,
+   utan flikar och utan Skapa konto. */
 const VYER = [
-  { väg: '/foralder', titel: 'Studievyn', flikar: true },
-  { väg: '/larare', titel: 'Studiehjälparvyn', flikar: true },
-  { väg: '/admin', titel: 'Adminvyn', flikar: false }
+  { väg: '/foralder', titel: 'Välkommen tillbaka' },
+  { väg: '/larare', titel: 'Välkommen tillbaka' },
+  { väg: '/admin', titel: 'Adminvyn' }
 ];
+/* Rutan efter en länk som inte gick att använda (läget 'lankfel'). */
+const LÄNKFEL_TITEL = 'Länken fungerar inte längre';
+const LÄNKFEL_BÖRJAN = 'Varje länk i våra mejl går att använda en gång';
 
 /* ============ 1. Glömt lösenordet? vid inloggningen ============ */
 async function provaInloggningen(webb) {
@@ -261,11 +266,7 @@ async function provaInloggningen(webb) {
     prova(v + ': tillbaka: beskedet är borta', !(await synlig(page, '#auth-msg')));
     prova(v + ': tillbaka: fokus på lösenordet', (await fokus(page)) === 'a-pass', await fokus(page));
     prova(v + ': tillbaka: lösenordet krävs igen', await page.locator('#a-pass').evaluate(i => i.required));
-    if (vy.flikar) {
-      prova(v + ': tillbaka: flikarna syns', await synlig(page, '.auth-tabs'));
-      await page.click('[data-auth="up"]');
-      prova(v + ': ingen Glömt lösenordet? när kontot skapas', !(await synlig(page, '[data-glomt] button')));
-    }
+    prova(v + ': tillbaka: ingen flik Skapa konto', (await page.locator('[data-auth="up"], .auth-tabs').count()) === 0);
     prova(v + ': inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     prova(v + ': inget anrop till den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
     await context.close();
@@ -423,15 +424,29 @@ async function provaLänken(webb) {
     await context.close();
   }
 
-  /* En länk som gått ut: rakt till Glömt lösenordet, med förklaringen. */
+  /* En länk som gått ut: rakt till rutan för en ny länk (läget 'lankfel'),
+     inte till Glömt lösenordet, som den som tagits in inte har något att
+     glömma (2026-10-07). */
   for (const vy of VYER) {
     const v = vy.väg.slice(1);
-    const { context, page, konsol } = await öppna(webb, {});
+    const { context, page, S, konsol } = await öppna(webb, {});
     await page.goto(BAS + vy.väg + UTGÅNGEN);
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova(v + ' utgången länk: rubriken är Glömt lösenordet?', (await text(page, '#auth-title')) === 'Glömt lösenordet?', await text(page, '#auth-title'));
-    prova(v + ' utgången länk: förklaringen står överst', (await text(page, '#auth-sub')).startsWith('Länken i mejlet gick inte att använda'),
+    prova(v + ' utgången länk: rubriken säger att länken inte fungerar längre', (await text(page, '#auth-title')) === LÄNKFEL_TITEL,
+      await text(page, '#auth-title'));
+    prova(v + ' utgången länk: förklaringen står överst, med att bara det senaste mejlet fungerar',
+      (await text(page, '#auth-sub')).startsWith(LÄNKFEL_BÖRJAN) && (await text(page, '#auth-sub')).includes('bara länken i det senaste'),
       await text(page, '#auth-sub'));
+    prova(v + ' utgången länk: knappen heter Skicka en ny länk', (await text(page, '#auth-submit')) === 'Skicka en ny länk',
+      await text(page, '#auth-submit'));
+    prova(v + ' utgången länk: inget lösenordsfält, men Tillbaka', !(await synlig(page, '#a-pass'))
+      && await synlig(page, '[data-glomt-tillbaka] button'));
+    await page.fill('#a-email', 'anna@example.se');
+    await page.click('#auth-submit');
+    await väntaText(page, '#auth-msg', '^Om adressen');
+    const nya = S.logg.filter(r => r.väg === '/auth/v1/recover');
+    prova(v + ' utgången länk: Skicka en ny länk ber Auth om en länk tillbaka till vyn', nya.length === 1
+      && nya[0].sök.get('redirect_to') === BAS + vy.väg, nya.map(r => r.sök.get('redirect_to')).join(', '));
     prova(v + ' utgången länk: felet är borta ur adressen', !/error/.test(page.url()), page.url());
     prova(v + ' utgången länk: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     if (vy.väg === '/foralder') await bild(page, 'foralder-utgangen-lank');
@@ -443,9 +458,9 @@ async function provaLänken(webb) {
     const { context, page, konsol } = await öppna(webb, {});
     await page.goto(BAS + '/foralder' + länk('okand-1'));
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova('token som inte godtas: Glömt lösenordet med förklaringen',
-      (await text(page, '#auth-title')) === 'Glömt lösenordet?'
-      && (await text(page, '#auth-sub')).startsWith('Länken i mejlet gick inte att använda'), await text(page, '#auth-sub'));
+    prova('token som inte godtas: rutan för en ny länk, med förklaringen',
+      (await text(page, '#auth-title')) === LÄNKFEL_TITEL
+      && (await text(page, '#auth-sub')).startsWith(LÄNKFEL_BÖRJAN), await text(page, '#auth-sub'));
     prova('token som inte godtas: ingen ruta för nytt lösenord', (await page.locator('#nylos-t').count()) === 0);
     prova('token som inte godtas: token är borta ur adressen', !/access_token/.test(page.url()), page.url());
     const övriga = konsol.filter(k => !/status of 401/.test(k));
@@ -490,8 +505,9 @@ async function provaLänken(webb) {
     const { context, page } = await öppna(webb, {});
     await page.goto(BAS + '/foralder' + länk('okand-1', 'invite'));
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova('inbjudan som inte godtas: Glömt lösenordet med förklaringen',
-      (await text(page, '#auth-sub')).startsWith('Länken i mejlet gick inte att använda'), await text(page, '#auth-sub'));
+    prova('inbjudan som inte godtas: rutan för en ny länk, inte Glömt lösenordet',
+      (await text(page, '#auth-title')) === LÄNKFEL_TITEL
+      && (await text(page, '#auth-sub')).startsWith(LÄNKFEL_BÖRJAN), await text(page, '#auth-title'));
     prova('inbjudan som inte godtas: token är borta ur adressen', !/access_token/.test(page.url()), page.url());
     await context.close();
   }
@@ -531,8 +547,8 @@ async function provaLänken(webb) {
     await page.goto(BAS + '/' + UTGÅNGEN);
     await page.waitForURL(u => new URL(u).pathname === '/foralder', { timeout: 8000 }).catch(() => {});
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova('startsidan: en utgången länk går vidare till Glömt lösenordet',
-      (await text(page, '#auth-title')) === 'Glömt lösenordet?' && new URL(page.url()).pathname === '/foralder', page.url());
+    prova('startsidan: en utgången länk går vidare till rutan för en ny länk',
+      (await text(page, '#auth-title')) === LÄNKFEL_TITEL && new URL(page.url()).pathname === '/foralder', page.url());
     await context.close();
   }
 
@@ -619,7 +635,7 @@ async function provaMellansidan(webb) {
     await page.click('#lank-knapp');
     await page.waitForURL(u => new URL(u).pathname === '/foralder', { timeout: 8000 }).catch(() => {});
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova('lank förbrukad: Glömt lösenordet med förklaringen', (await text(page, '#auth-sub')).startsWith('Länken i mejlet gick inte att använda'),
+    prova('lank förbrukad: rutan för en ny länk med förklaringen', (await text(page, '#auth-sub')).startsWith(LÄNKFEL_BÖRJAN),
       await text(page, '#auth-sub'));
     await context.close();
   }

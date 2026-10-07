@@ -54,7 +54,8 @@ som står i `supabase_migrations.schema_migrations` i driften.
   barnets inloggning, och barnets funktioner aldrig med en vuxens.
   Glömt lösenordet ger ett användarnamn och den tekniska adressen
   beskedet att föräldern byter lösenordet, i alla vyer. (Det som sägs om
-  `/barn` som inloggning här gällde till 2026-10-06; se Elev i rollvalet.)
+  `/barn` som inloggning här gällde till 2026-10-06; se Elev i rollvalet och
+  En inloggning.)
 - **Varför den tekniska adressen finns.** Supabase Auth tar ett lösenord
   bara ihop med en e-postadress eller ett telefonnummer ("sign in with a
   password connected to their email or phone number", dokumentationen
@@ -379,6 +380,23 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
   (`.nx-vagval-val`, alla 41 sidor på båda språken; `var-ide.html` är
   skalet för de genererade) har samma tre val, och Elev pekar på
   `/foralder#elev`.
+- **En inloggning (2026-10-07), som ersätter läget Elev.** Leo: "föräldrar
+  och elev ska vara en knapp när man loggar in, spelar egentligen ingen roll
+  vart man klickar i inlogg, är man studiehjälpare loggas man in dit", och
+  "ta bort att man skapa konto på vår sida, vi gör det genom inbjudan".
+  Rutan på `/foralder` och `/larare` är densamma: rubriken Välkommen
+  tillbaka, fältet E-post eller användarnamn (typen text), Glömt
+  lösenordet?, inga flikar och inget Skapa konto. Korten är två, Familj och
+  elev (`/foralder`) och Studiehjälpare (`/larare`), och de säger bara
+  vilken sida det är: kontot avgör vyn. Studievyn skickar en studiehjälpare
+  till `/larare` och studiehjälparvyn en förälder till `/foralder`
+  (`location.replace` i `start()`), ett barn hamnar på `/barn` som förut,
+  och bara admin på `/admin`; ingen roll kan studsa mellan två vyer.
+  `NXStudie.elevLänk` finns kvar för modulvaktens skull men tar bara bort
+  `#elev` ur en gammal länk. `/barn` skickar en utloggad till `/foralder`.
+  Vägvalet på de öppna sidorna har två val (52 sidor på båda språken,
+  `var-ide.html` som skal för de genererade). Lägena i
+  `NXStudie.inloggningsruta` är `'in'`, `'glomt'` och `'lankfel'`.
 - En vuxen som är inloggad i samma webbläsare och öppnar `/barn` ser bara
   "Någon annan är inloggad" och Logga ut, aldrig sin egen vy därifrån.
 - Rolldirigeringen: `NX.ärBarn(user)` läser `app_metadata`, aldrig

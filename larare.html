@@ -25,7 +25,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=ed943542">
-<link rel="stylesheet" href="nextrum-vy.css?v=1b1eb517">
+<link rel="stylesheet" href="nextrum-vy.css?v=58d2f083">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      veckorutnätet för tider. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=6695d126">
@@ -69,17 +69,18 @@
     <div class="auth-wrap">
       <div class="auth-card">
         <span class="nx-et acc">Logga in</span>
-        <h1 id="auth-title" style="margin-top:16px">Studiehjälparvyn</h1>
-        <p class="nx-lede" id="auth-sub">För dig som jobbar hos oss: dina elever, ditt schema, kontakten med familjerna och dina rapporter.</p>
+        <h1 id="auth-title" style="margin-top:16px">Välkommen tillbaka</h1>
+        <p class="nx-lede" id="auth-sub">Med din e-post eller ditt användarnamn. Kontot avgör vilken vy du hamnar i.</p>
 
+        <!-- EN INLOGGNING (2026-10-07). Leo: "föräldrar och elev ska vara en
+             knapp när man loggar in, spelar egentligen ingen roll vart man
+             klickar i inlogg, är man studiehjälpare loggas man in dit". Korten
+             säger vilken sida det här är, men inloggningen är densamma på båda,
+             och vyn skickar vidare efter kontots roll. -->
         <div class="vy-roller">
           <a class="vy-roll" href="/foralder">
-            <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>Förälder</b>
-            <span>Studieplan, bokning, meddelanden och rapporter.</span>
-          </a>
-          <a class="vy-roll" href="#elev" data-roll="elev">
-            <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/><path d="M6.5 11v4.3c0 1.5 2.5 2.9 5.5 2.9s5.5-1.4 5.5-2.9V11"/><path d="M21.5 9v5"/></svg>Elev</b>
-            <span>NexLäx, dina pass och meddelanden, med ditt användarnamn.</span>
+            <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4"/><path d="M16.5 7.5h5M19 5v5"/></svg>Familj och elev</b>
+            <span>Föräldrar med sin e-post, elever med sitt användarnamn.</span>
           </a>
           <a class="vy-roll" href="/larare" aria-current="page">
             <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg>Studiehjälpare</b>
@@ -87,44 +88,28 @@
           </a>
         </div>
 
-        <div class="auth-tabs" role="tablist">
-          <button type="button" role="tab" data-auth="in" aria-selected="true">Logga in</button>
-          <button type="button" role="tab" data-auth="up" aria-selected="false">Skapa konto</button>
-        </div>
-
         <form id="auth-form" novalidate>
-          <div class="fgroup" id="namn-grupp" hidden>
-            <label for="a-name">Ditt namn</label>
-            <input class="inp" id="a-name" autocomplete="name" placeholder="För- och efternamn">
-          </div>
           <div class="fgroup">
-            <label for="a-email">E-post</label>
-            <input class="inp" id="a-email" type="email" autocomplete="email" required>
+            <label for="a-email">E-post eller användarnamn</label>
+            <input class="inp" id="a-email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
           </div>
           <div class="fgroup">
             <label for="a-pass">Lösenord</label>
             <input class="inp" id="a-pass" type="password" autocomplete="current-password" required minlength="6">
           </div>
           <p class="auth-glomt" data-glomt><button type="button" class="auth-lank">Glömt lösenordet?</button></p>
-          <!-- Användarvillkoren godkänns när kontot skapas (2026-10-07).
-               Kryssrutan syns bara i Skapa konto, och databasen sparar
-               godkännandet när kontot skapas (villkoren_godkanns). -->
-          <label class="nx-ja auth-villkor" id="villkor-grupp" hidden>
-            <input type="checkbox" id="a-villkor">
-            <span>Jag har läst och godkänner <a href="/anvandarvillkor" target="_blank" rel="noopener">användarvillkoren</a>.
-              <a href="/integritetspolicy" target="_blank" rel="noopener">Så hanterar vi dina uppgifter</a></span>
-          </label>
           <button class="btn btn-primary btn-block" type="submit" id="auth-submit">Logga in</button>
           <p class="ok-msg" id="auth-msg" style="margin-top:16px"></p>
           <p class="auth-glomt" data-glomt-tillbaka hidden><button type="button" class="auth-lank">Tillbaka till inloggningen</button></p>
         </form>
 
-        <p class="auth-alt" data-ej-elev>
-          Kontot du skapar här blir ett <b>studiehjälparkonto</b>, och vyn öppnas först när vi godkänt dig.<br>
-          Har du inte ansökt om att jobba hos oss än? <a href="/bli-studiehjalpare">Gör det här</a>.
+        <!-- Inget Skapa konto (2026-10-07). Leo: "ta bort att man skapa konto på
+             vår sida, vi gör det genom inbjudan". Studiehjälparens konto skapar
+             vi när hen tas in i poolen (bjud-in). -->
+        <p class="auth-alt">
+          Kontot skapar vi när du börjar jobba hos oss, och länken kommer med e-post.<br>
+          Vill du jobba hos oss? <a href="/bli-studiehjalpare">Sök här</a>.
         </p>
-        <!-- Elev-läget (2026-10-06): barnets lösenord byter föräldern. -->
-        <p class="auth-alt" data-bara-elev hidden>Har du glömt lösenordet? Fråga din förälder, så kan de byta det.</p>
       </div>
     </div>
   </div>
@@ -1305,7 +1290,7 @@
 <script src="nextrum-app.js?v=bcd72688"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=63957b13"></script>
-<script src="nextrum-studie.js?v=1ce75013"></script>
+<script src="nextrum-studie.js?v=28092501"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-arbetsyta.js?v=35b67861"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
@@ -1314,6 +1299,6 @@
 <script src="nextrum-uppgifter.js?v=5c84b3cb"></script>
 <script src="nextrum-introduktion.js?v=dd9604a0"></script>
 <script src="nextrum-modulvakt.js?v=568e1d7e"></script>
-<script src="nextrum-larare-vy.js?v=cfacb304"></script>
+<script src="nextrum-larare-vy.js?v=cc5b398f"></script>
 </body>
 </html>
