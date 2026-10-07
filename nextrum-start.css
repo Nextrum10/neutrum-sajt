@@ -339,6 +339,974 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
 }
 
 /* ============================================================
+   13. NEXLÄX — under hero (2026-10-07)
+
+   Leo 2026-10-07: "Under heron ska vi nu sälja in Nexläx gör en cool
+   genomgång av nexläx som är lika stor som hero bilden. Den ska vara
+   välutvecklad och du ska vara som en webdesigner."
+
+   En telefon som visar sig själv i fyra skärmar (vägen, en fråga som
+   rättas, nivån klar, en nivå från studiehjälparen med dagens
+   uppdrag), och bredvid en stig med fyra delar som följer med. Det är
+   en ILLUSTRATION och inget quiz: Prova NexLäx togs bort samma dag,
+   och inget i telefonen går att svara i (role="img" i markupen).
+   Skriptet (nexlax() i nextrum-start.js) sätter klasser; allt som rör
+   sig står här.
+
+   Papperet bär sektionen i båda lägena, som resten av sidan. Barken
+   finns bara inne i telefonen, som i den riktiga vyn. Ämnesfärgerna
+   (--amne-*) får synas här och ingen annanstans på startsidan: de är
+   NexLäx egna.
+
+   Det som byter läge ligger i fasta rutor: skärmarna i samma
+   rutnätscell, så telefonens höjd byts aldrig, och stigens text står
+   alltid utskriven (fälla 4: det ovanför det man läser får inte byta
+   höjd). Telefonens alla mått är em ur dess bredd (--tw), så den ser
+   likadan ut i 280 och 320 px. Inget här har en hexkod; de två egna
+   färgerna står som tokens överst, i alla tre blocken.
+   ============================================================ */
+:root{
+  /* Telefonens skugga: kort och tät närmast. Den långa skuggan under
+     är en gradient på papperet (.nlx-lyft::after), inte en box-shadow
+     med stor oskärpa: en sådan på ett lager som svävar ritades med
+     raka kanter i Chromium på telefon. Ingen av dem animeras. */
+  --nlx-skugga:0 2px 6px rgba(28,24,18,.08),0 30px 50px -26px rgba(28,24,18,.38);
+  --nlx-golv:rgba(28,24,18,.3);
+  --nlx-o:#0F0C0A;                 /* ön överst i skärmen */
+  --nlx-spar:var(--pap-2);         /* flikarnas skena i telefonen */
+  --nlx-vald:var(--yta);           /* den valda fliken */
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --nlx-skugga:0 2px 6px rgba(0,0,0,.45),0 30px 50px -26px rgba(0,0,0,.7);
+    --nlx-golv:rgba(0,0,0,.62);
+    --nlx-o:#0B0A08;
+    /* --pap-2 och --yta är nästan samma i mörkt läge (CLAUDE.md,
+       Adminvyns skal): fliken måste lyfta ur skenan, inte sjunka. */
+    --nlx-spar:var(--pap-2);
+    --nlx-vald:var(--pap-3);
+  }
+}
+:root[data-theme="dark"]{
+  --nlx-skugga:0 2px 6px rgba(0,0,0,.45),0 30px 50px -26px rgba(0,0,0,.7);
+  --nlx-golv:rgba(0,0,0,.62);
+  --nlx-o:#0B0A08;
+  --nlx-spar:var(--pap-2);
+  --nlx-vald:var(--pap-3);
+}
+
+/* ---------- sektionen ----------
+   Ungefär lika hög som heron på en dator, aldrig en pinnad scen på
+   flera skärmhöjder: rundturen gör jobbet, inte scrollen. overflow:clip
+   och inte hidden, så att omloppet och skenet klipps utan att sektionen
+   blir en rullbar behållare. */
+.nx-nexlax{
+  position:relative;isolation:isolate;overflow:clip;
+  background:var(--pap);
+  min-height:100vh;min-height:min(100svh,1000px);
+  display:grid;align-content:center;
+  padding-block:clamp(64px,6vw,96px) clamp(52px,5vw,80px);
+}
+/* Ett prickrutnät som tonas ut mot kanterna med en gradient i
+   papperets färg ovanpå, inte med mask-image (Safari, och inget
+   ovanpå det får röra sig genom en mask). */
+.nlx-dekor{
+  position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(64% 62% at 72% 48%,transparent 0 34%,var(--pap) 76%),
+    radial-gradient(circle,color-mix(in srgb,var(--bl) 14%,transparent) 1.1px,transparent 1.7px) 0 0/26px 26px;
+}
+
+/* width:100%, för .nx-wrap-bred har margin-inline:auto, och auto-
+   marginaler gör ett rutnätsbarn bara så brett som sitt innehåll. */
+.nlx-grid{
+  position:relative;width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1.06fr) minmax(0,1fr);
+  grid-template-areas:
+    "huvud    scen"
+    "delar    scen"
+    "handling bild"
+    "fot      fot";
+  column-gap:clamp(40px,6vw,104px);
+  align-items:start;
+}
+.nlx-huvud{grid-area:huvud}
+.nlx-scen{grid-area:scen}
+.nlx-delar{grid-area:delar}
+.nlx-handling{grid-area:handling}
+.nlx-bild{grid-area:bild;justify-self:center;margin-top:clamp(18px,2vw,26px)}
+.nlx-fot{grid-area:fot}
+
+/* ---------- rubriken ----------
+   Störst på sidan efter heron. Ordet "spel." bär NexLäx ämnesfärger
+   som en gradient i texten; utan stöd för background-clip:text står
+   det i matematikens blå, som klarar AA i båda lägena. */
+.nlx-rubrik{
+  margin-top:clamp(22px,2.6vw,32px);
+  font-size:clamp(2.6rem,4.75vw,4.6rem);
+  line-height:.98;letter-spacing:-.048em;font-weight:800;
+  color:var(--bl);
+}
+.nlx-rubrik em{font-style:normal;color:var(--amne-ma)}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .nlx-rubrik em{
+    background:linear-gradient(96deg,var(--amne-ma) 8%,var(--amne-en) 58%,var(--amne-ms) 96%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+    padding-right:.05em;
+  }
+}
+.nlx-lede{margin-top:clamp(20px,2.2vw,28px);max-width:50ch}
+
+/* ---------- stigen: fyra delar som följer telefonen ----------
+   En lodrät bana med runda noder, som vägen i NexLäx, och inte ännu
+   en rad kort i kolumner (Leo samma dag: "De ska inte ha samma
+   kolumner som de finns överallt"). Den del telefonen visar har sin
+   färg i noden och ett blad bakom texten; delarna före den har fyllt
+   sin bit av linjen. Texten står alltid utskriven och byter bara
+   färg, så listan byter aldrig höjd. */
+.nlx-delar{
+  --nod:46px;
+  position:relative;display:grid;gap:8px;
+  margin-top:clamp(34px,3.8vw,52px);
+}
+.nlx-del{
+  position:relative;
+  display:grid;grid-template-columns:var(--nod) minmax(0,1fr);
+  column-gap:clamp(12px,1.3vw,18px);
+  align-items:start;
+}
+/* Linjen mellan noderna: ett spår och en fyllnad per del, från noden
+   ner till nästa. Fyllnaden skalas, den ritas aldrig om. */
+.nlx-del:not(:last-child)::before,
+.nlx-del:not(:last-child)::after{
+  content:"";position:absolute;
+  left:calc(var(--nod) / 2 - 1px);width:2px;
+  top:calc(var(--nod) + 10px);bottom:-6px;
+  border-radius:2px;
+  background:var(--ln-2);
+}
+.nlx-del:not(:last-child)::after{
+  background:var(--f);
+  transform-origin:50% 0;scale:1 0;
+  transition:scale .7s var(--e-ut);
+}
+.nlx-del.forbi::after{scale:1 1}
+
+.nlx-del-nod{
+  position:relative;z-index:1;
+  width:var(--nod);height:var(--nod);margin-top:6px;border-radius:50%;
+  display:grid;place-items:center;
+  background:var(--yta);color:var(--bl-3);
+  border:2px solid var(--ln-2);
+  transition:background-color .45s var(--e),border-color .45s var(--e),color .45s var(--e),scale .6s var(--fjader);
+}
+.nlx-del-nod svg{width:20px;height:20px}
+/* Ringen runt noden som visas: ett eget lager som tonas och skalas,
+   aldrig en skugga som växer. */
+.nlx-del-nod::after{
+  content:"";position:absolute;inset:-7px;border-radius:50%;
+  border:2px solid var(--f);opacity:0;pointer-events:none;
+}
+.nlx-del.forbi .nlx-del-nod{border-color:var(--f);color:var(--f)}
+.nlx-del.pa .nlx-del-nod{background:var(--f);border-color:var(--f);color:var(--pap);scale:1.08}
+.nlx-del.pa .nlx-del-nod::after{animation:nlx-puls 2.4s var(--e-mjuk) infinite}
+
+/* Bladet bakom texten: samma blad som sidans kort, och skuggan i ett
+   eget lager vars opacitet tonas (nx-bubbla, avsnitt 2). */
+.nlx-del-text{
+  position:relative;isolation:isolate;
+  padding:12px clamp(16px,1.6vw,22px) 14px;
+  border-radius:22px;border:1px solid transparent;
+  transition:background-color .45s var(--e),border-color .45s var(--e);
+}
+.nlx-del-text::after{
+  content:"";position:absolute;inset:-1px;z-index:-1;border-radius:inherit;
+  box-shadow:var(--kort-sk);opacity:0;pointer-events:none;
+  transition:opacity .45s var(--e);
+}
+.nlx-del.pa .nlx-del-text{background:var(--kort);border-color:var(--kort-kant)}
+.nlx-del.pa .nlx-del-text::after{opacity:1}
+/* Tiden kvar på skärmen, som en linje i delens färg längs bladets
+   underkant: den säger att telefonen går vidare av sig själv och att
+   man kan välja själv. Bara under rundturen (.nlx-tur); skriptet sätter
+   skärmens tid i --nlx-tid på bladet, en gång per skärm, och linjen
+   står still med allt annat när telefonen inte syns (.nlx-paus). */
+.nlx-del-text::before{
+  content:"";position:absolute;bottom:-1px;height:2px;
+  left:clamp(16px,1.6vw,22px);right:clamp(16px,1.6vw,22px);
+  border-radius:2px;background:var(--f);
+  transform-origin:0 50%;scale:0 1;opacity:0;pointer-events:none;
+  transition:opacity .3s var(--e);
+}
+.nlx-del.pa.nlx-tur .nlx-del-text::before{opacity:.85;animation:nlx-tid var(--nlx-tid,4s) linear both}
+@keyframes nlx-tid{from{scale:0 1}to{scale:1 1}}
+.nlx-del h3{
+  font-size:clamp(1.12rem,1.35vw,1.3rem);font-weight:700;letter-spacing:-.022em;line-height:1.25;
+  color:var(--bl-2);transition:color .45s var(--e);
+}
+.nlx-del p{
+  margin-top:4px;font-size:.97rem;line-height:1.5;max-width:52ch;
+  color:var(--bl-3);transition:color .45s var(--e);
+}
+.nlx-del.pa h3{color:var(--bl)}
+.nlx-del.pa p{color:var(--bl-2)}
+/* Trycket finns bara när skriptet lyssnar (.nlx-klick). */
+.nlx-delar.nlx-klick .nlx-del{cursor:pointer;-webkit-tap-highlight-color:transparent}
+@media (hover:hover) and (pointer:fine){
+  .nlx-delar.nlx-klick .nlx-del:not(.pa):hover .nlx-del-nod{scale:1.06;border-color:var(--f);color:var(--f)}
+  .nlx-delar.nlx-klick .nlx-del:not(.pa):hover h3{color:var(--bl)}
+}
+/* Delarna stiger fram i tur när listan kommer in i bild. */
+html.nx-sr .nlx-del{
+  opacity:0;translate:0 18px;
+  transition:opacity .6s var(--e-ut),translate .8s var(--e-ut);
+  transition-delay:calc(var(--i) * 90ms + 120ms);
+}
+html.nx-sr .nlx-delar.nlx-in .nlx-del{opacity:1;translate:0 0}
+
+/* ---------- foten: ämnena och vad som ingår ----------
+   Ämnena på en rad och texten under. Bredvid varandra bara när hela
+   raden får plats och texten ändå får en riktig spalt: vid 1024 px
+   blev texten bredvid en smal stapel med ett par ord per rad, och en
+   rad som bryter lämnar ett ensamt ämne kvar. */
+.nlx-fot{
+  margin-top:clamp(36px,3.8vw,56px);
+  padding-top:clamp(22px,2.4vw,30px);
+  border-top:1px solid var(--ln);
+  display:grid;grid-template-columns:minmax(0,1fr);
+  gap:18px clamp(32px,4vw,64px);align-items:center;
+}
+@media (min-width:1360px){.nlx-fot{grid-template-columns:auto minmax(0,1fr)}}
+.nlx-amnen{display:flex;flex-wrap:wrap;gap:8px}
+.nlx-amnen li{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 14px 8px 11px;border-radius:100px;
+  background:color-mix(in srgb,var(--f) 7%,var(--kort));
+  border:1px solid color-mix(in srgb,var(--f) 24%,transparent);
+  font-size:.9rem;font-weight:600;letter-spacing:-.01em;color:var(--bl);
+}
+.nlx-amnen li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--f);flex:none}
+.nlx-not{font-size:.96rem;line-height:1.55;color:var(--bl-2);max-width:54ch}
+
+/* ---------- scenen: telefonen, omloppet och lapparna ----------
+   --tw är telefonens bredd, och allt runt den räknas ur den. Den sätts
+   här en gång och ändras aldrig medan sidan står. INTE
+   transform-style:preserve-3d: perspektivet räcker för telefonens
+   entré, och 3D-kontexten ger fel träffytor (avsnitt 8). */
+.nlx-scen{
+  --tw:clamp(270px,22vw,320px);
+  position:relative;
+  display:grid;place-items:center;
+  padding-block:clamp(10px,1.6vw,24px);
+  perspective:1600px;perspective-origin:50% 18%;
+}
+/* Skenet bakom telefonen, i ämnenas färger. Statiskt. */
+.nlx-sken{
+  position:absolute;left:50%;top:50%;z-index:0;
+  width:calc(var(--tw) * 2.6);aspect-ratio:1;translate:-50% -50%;
+  border-radius:50%;pointer-events:none;
+  background:
+    radial-gradient(closest-side at 50% 45%,color-mix(in srgb,var(--amne-ma) 17%,transparent),transparent 72%),
+    radial-gradient(closest-side at 78% 22%,color-mix(in srgb,var(--amne-en) 14%,transparent),transparent 70%),
+    radial-gradient(closest-side at 24% 80%,color-mix(in srgb,var(--amne-no) 13%,transparent),transparent 70%);
+}
+
+/* Omloppet: åtta ämnesbrickor på en ring som vrider sig ett varv på
+   två minuter. Brickan vrider sig lika mycket tillbaka, så den står
+   upprätt. Bara rotate, på två lager. Bakom telefonen, så att en
+   bricka går in bakom den och kommer ut på andra sidan. */
+.nlx-omlopp{
+  position:absolute;inset:0;z-index:0;
+  display:grid;place-items:center;pointer-events:none;
+}
+.nlx-ring{
+  grid-area:1/1;
+  width:calc(var(--tw) * 1.84);aspect-ratio:1;border-radius:50%;
+  border:1.5px dashed color-mix(in srgb,var(--bl) 17%,transparent);
+  outline:1px solid color-mix(in srgb,var(--bl) 7%,transparent);
+  outline-offset:calc(var(--tw) * .17);
+}
+.nlx-varv{grid-area:1/1;position:relative;width:0;height:0;animation:nlx-varv 140s linear infinite}
+.nlx-bricka{
+  position:absolute;left:0;top:0;
+  width:54px;height:54px;margin:-27px 0 0 -27px;
+  transform:rotate(var(--v)) translateX(calc(var(--tw) * .92)) rotate(calc(var(--v) * -1));
+}
+.nlx-bricka i{
+  display:grid;place-items:center;width:100%;height:100%;
+  border-radius:17px;
+  background:color-mix(in srgb,var(--f) 11%,var(--kort));
+  border:1px solid color-mix(in srgb,var(--f) 30%,transparent);
+  box-shadow:var(--sk-1);
+  color:var(--f);
+  font-style:normal;font-family:var(--f-mono);font-size:.84rem;font-weight:600;letter-spacing:.06em;
+  animation:nlx-motvarv 140s linear infinite;
+}
+.nlx-bricka svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@keyframes nlx-varv{to{rotate:360deg}}
+@keyframes nlx-motvarv{to{rotate:-360deg}}
+
+/* Telefonens entré: den reser sig ur papperet, som studievyns fönster
+   (avsnitt 8). Lyftet ligger på ett eget lager, så att svävandet på
+   telefonen och entrén aldrig skriver samma egenskap. */
+.nlx-lyft{position:relative;z-index:2}
+/* Skuggan på papperet under telefonen. Den krymper och ljusnar när
+   telefonen stiger, i samma takt som svävandet. */
+.nlx-lyft::after{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  left:8%;right:8%;bottom:-6%;height:10%;border-radius:50%;
+  background:radial-gradient(closest-side,var(--nlx-golv),transparent);
+  animation:nlx-golv 8s var(--e-mjuk) infinite;
+}
+@keyframes nlx-golv{0%,100%{scale:1;opacity:1}50%{scale:.88;opacity:.72}}
+html.nx-sr .nlx-lyft{
+  opacity:0;
+  transform:translate3d(0,90px,0) rotateX(18deg) rotateZ(-4deg) scale(.92);
+  transform-origin:50% 0;
+  transition:opacity .9s var(--e-mjuk),transform 1.4s var(--e-ut);
+}
+html.nx-sr .nlx-scen.nlx-in .nlx-lyft{opacity:1;transform:none}
+html.nx-sr .nlx-omlopp,html.nx-sr .nlx-sken{
+  opacity:0;scale:.86;
+  transition:opacity 1.2s var(--e-mjuk) .25s,scale 1.6s var(--e-ut) .25s;
+}
+html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{opacity:1;scale:1}
+
+.nlx-telefon{
+  position:relative;
+  width:var(--tw);aspect-ratio:9/19;
+  padding:calc(var(--tw) * .032);
+  border-radius:calc(var(--tw) * .165);
+  background:linear-gradient(150deg,
+    color-mix(in srgb,var(--nt) 72%,var(--nt-fg)) 0%,var(--nt) 8%,var(--nt-2) 58%,var(--nt) 100%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb,var(--nt-fg) 16%,transparent),
+    0 0 0 1px var(--ln-2),
+    var(--nlx-skugga);
+  animation:nlx-svava 8s var(--e-mjuk) infinite;
+}
+@keyframes nlx-svava{0%,100%{translate:0 0}50%{translate:0 -10px}}
+/* Knapparna i kanten. */
+.nlx-telefon::before,.nlx-telefon::after{
+  content:"";position:absolute;width:3px;border-radius:3px;background:var(--nt-2);
+}
+.nlx-telefon::before{left:-3px;top:21%;height:6.5%;box-shadow:0 calc(var(--tw) * .2) 0 var(--nt-2)}
+.nlx-telefon::after{right:-3px;top:27%;height:11%}
+.nlx-o{
+  position:absolute;z-index:4;left:50%;translate:-50% 0;
+  top:calc(var(--tw) * .062);
+  width:30%;height:calc(var(--tw) * .085);border-radius:100px;
+  background:var(--nlx-o);
+}
+
+/* Skärmen. Typsnittets storlek följer telefonens bredd, och allt inne
+   i skärmen är em: telefonen är samma bild i alla storlekar. */
+.nlx-skarm{
+  position:relative;height:100%;overflow:hidden;
+  border-radius:calc(var(--tw) * .135);
+  background:var(--pap);color:var(--bl);
+  display:grid;grid-template-rows:auto minmax(0,1fr);
+  font-size:calc(var(--tw) * .042);line-height:1.35;
+  text-align:left;
+}
+/* Hemlinjen längst ner. */
+.nlx-skarm::after{
+  content:"";position:absolute;z-index:4;left:50%;bottom:.55em;translate:-50% 0;
+  width:34%;height:.3em;border-radius:1em;background:var(--bl);opacity:.28;
+}
+.nlx-scen svg,.nlx-delar svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nlx-scen svg.nlx-fyll,.nlx-delar svg.nlx-fyll{fill:currentColor;stroke:none}
+.nlx-status{
+  display:flex;align-items:center;justify-content:space-between;
+  height:3.4em;padding:0 2.1em 0 2.3em;
+  font-size:.92em;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums;
+}
+.nlx-status > span{display:flex;align-items:center;gap:.4em}
+.nlx-status svg{height:.85em;width:auto}
+
+.nlx-vyer{position:relative;display:grid;min-height:0}
+.nlx-vy{
+  position:relative;grid-area:1/1;min-height:0;min-width:0;
+  display:flex;flex-direction:column;gap:.75em;
+  padding:.35em 1.1em 1.5em;
+  opacity:0;visibility:hidden;translate:1.6em 0;
+  transition:opacity .3s var(--e),translate .45s var(--e),visibility 0s linear .3s;
+}
+.nlx-vy.ut{translate:-1.6em 0}
+.nlx-vy.pa{
+  opacity:1;visibility:visible;translate:0 0;
+  transition:opacity .5s var(--e) .1s,translate .7s var(--e-ut) .1s,visibility 0s;
+}
+/* .fore står tills händelsen kommit, .efter sedan. Båda texterna står
+   i markupen, så att engelskan är engelsk (som studievyns data-sd-byt). */
+.nlx-vy .efter{display:none}
+
+/* Flikarna överst, som i studievyn. */
+.nlx-flikar{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  padding:.25em;border-radius:1.2em;background:var(--nlx-spar);
+  font-size:.84em;font-weight:600;color:var(--bl-3);text-align:center;
+}
+.nlx-flikar span{padding:.5em .4em;border-radius:1em;white-space:nowrap}
+.nlx-flikar span.pa{background:var(--nlx-vald);color:var(--bl);box-shadow:var(--sk-1)}
+
+/* --- skärm 0: vägen ---
+   Barken i toppen är den riktiga vyns .nl-topp i mindre skala, med
+   matematikens sken uppe till höger och mätaren i ämnets färg. På bark
+   gäller bara -l-syskonen och --nt-*: de mörka faller under AA där. */
+.nlx-topp{
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:.7em;
+  padding:.95em 1.05em 1.1em;border-radius:1.35em;
+  background:
+    radial-gradient(70% 60% at 100% 0%,color-mix(in srgb,var(--amne-ma-l) 26%,transparent),transparent 60%),
+    radial-gradient(110% 70% at 6% 0%,var(--nt-glod),transparent 55%),
+    linear-gradient(180deg,var(--nt),var(--nt-2));
+  color:var(--nt-fg);
+}
+.nlx-piller{display:flex;flex-wrap:wrap;gap:.4em}
+.nlx-pill{
+  display:inline-flex;align-items:center;gap:.3em;
+  padding:.3em .62em .3em .42em;border-radius:2em;
+  background:color-mix(in srgb,var(--nt-fg) 7%,transparent);border:1px solid var(--nt-ln);
+  font-size:.8em;color:var(--nt-mut);white-space:nowrap;
+}
+.nlx-pill b{font-weight:750;color:var(--nt-fg);font-variant-numeric:tabular-nums}
+.nlx-pill svg{width:1.25em;height:1.25em}
+.nlx-pill-laga svg{color:var(--lera-l)}
+.nlx-pill-xp svg,.nlx-pill-rang svg{color:var(--ockra-l)}
+.nlx-bana{display:flex;justify-content:space-between;align-items:baseline;gap:.6em}
+.nlx-bana b{font-size:1.06em;font-weight:700;letter-spacing:-.02em}
+.nlx-bana strong{
+  font-size:1.75em;font-weight:750;letter-spacing:-.03em;line-height:1;
+  color:var(--amne-ma-l);font-variant-numeric:tabular-nums;
+}
+.nlx-bana strong i{font-style:normal;font-size:.5em;color:var(--nt-mut);margin-left:.12em}
+.nlx-mat{display:block;height:.62em;border-radius:1em;background:color-mix(in srgb,var(--nt-fg) 12%,transparent);overflow:hidden}
+.nlx-mat i{
+  display:block;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,var(--amne-ma-l),color-mix(in srgb,var(--amne-ma-l) 55%,var(--nt-fg)));
+  transform-origin:left;scale:.64 1;
+}
+.nlx-vy.pa .nlx-mat i{animation:nlx-mat-in 1.2s var(--e-ut) .35s both}
+@keyframes nlx-mat-in{from{scale:0 1}}
+
+.nlx-omr{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.05em .6em;
+  padding:.7em .9em .75em;border-radius:1.1em;
+  border:1px solid var(--ln);border-top:.32em solid var(--amne-ma);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--amne-ma) 9%,var(--yta)),var(--yta));
+}
+.nlx-omr > span{font-family:var(--f-mono);font-size:.66em;letter-spacing:.14em;text-transform:uppercase;color:var(--amne-ma)}
+.nlx-omr b{grid-column:1;font-size:1.06em;font-weight:700;letter-spacing:-.015em}
+.nlx-omr em{
+  grid-column:2;grid-row:1 / span 2;
+  font-style:normal;font-size:.74em;font-weight:650;
+  padding:.38em .75em;border-radius:2em;
+  background:color-mix(in srgb,var(--amne-ma) 14%,var(--yta));color:var(--amne-ma);
+}
+/* Noderna i sicksack, som vägen: --x på noden flyttar barnen med
+   translate, så att radernas höjd aldrig ändras. INGET lås: allt är
+   öppet sedan 2026-10-06, och vägen föreslår bara nästa steg. */
+.nlx-stig{display:flex;flex-direction:column;align-items:center;gap:.55em;padding-top:.6em}
+.nlx-nod{display:flex;flex-direction:column;align-items:center;gap:.32em}
+.nlx-nod.aktuell{padding-top:2.3em}
+.nlx-nod > *{translate:calc(var(--x) * 2.8em) 0}
+.nlx-nod-knapp{
+  position:relative;display:grid;place-items:center;
+  width:3.5em;height:3.5em;border-radius:50%;
+  background:var(--pap-3);color:var(--bl-3);
+  box-shadow:0 .36em 0 0 color-mix(in srgb,var(--bl) 14%,transparent);
+  font-size:1em;font-weight:750;
+}
+.nlx-nod-knapp svg{width:1.55em;height:1.55em;stroke-width:2.6}
+.nlx-nod.klar .nlx-nod-knapp{background:var(--mossa);color:var(--pap);box-shadow:0 .36em 0 0 color-mix(in srgb,var(--mossa) 60%,var(--bl))}
+.nlx-nod.klar .nlx-nod-knapp svg{stroke-width:3}
+.nlx-nod.aktuell .nlx-nod-knapp{background:var(--amne-ma);color:var(--yta);box-shadow:0 .36em 0 0 color-mix(in srgb,var(--amne-ma) 60%,var(--bl))}
+.nlx-nod.oppen .nlx-nod-knapp{
+  background:color-mix(in srgb,var(--amne-ma) 9%,var(--yta));color:var(--amne-ma);
+  border:2px solid color-mix(in srgb,var(--amne-ma) 45%,transparent);
+  box-shadow:0 .36em 0 0 color-mix(in srgb,var(--amne-ma) 20%,transparent);
+}
+/* Mästarprovet: en avrundad kvadrat med en krona, i ockra. */
+.nlx-nod.mastare .nlx-nod-knapp{
+  width:3.75em;height:3.75em;border-radius:1.15em;
+  background:color-mix(in srgb,var(--ockra) 12%,var(--yta));color:var(--ockra);
+  border:2px solid color-mix(in srgb,var(--ockra) 42%,transparent);
+  box-shadow:0 .36em 0 0 color-mix(in srgb,var(--ockra) 22%,transparent);
+}
+.nlx-nod.aktuell .nlx-nod-knapp::after{
+  content:"";position:absolute;inset:-.5em;border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--amne-ma) 55%,transparent);
+  animation:nlx-puls 2.2s var(--e-mjuk) infinite;
+}
+.nlx-bubbla{
+  position:absolute;bottom:calc(100% + .75em);left:50%;
+  padding:.36em .8em;border-radius:.7em;white-space:nowrap;
+  font-size:.8em;font-weight:750;letter-spacing:.02em;
+  background:var(--amne-ma);color:var(--yta);
+  transform:translateX(-50%);
+  animation:nlx-gunga 2.4s var(--e-mjuk) infinite;
+}
+.nlx-bubbla::after{
+  content:"";position:absolute;top:100%;left:50%;margin-left:-.4em;
+  border:.4em solid transparent;border-top-color:var(--amne-ma);
+}
+@keyframes nlx-gunga{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-.3em)}}
+.nlx-nod-stj{display:flex;gap:.12em;margin-top:.15em;color:var(--ockra)}
+.nlx-nod-stj svg{width:.85em;height:.85em}
+.nlx-nod-namn{font-size:.8em;font-weight:600;line-height:1.25;color:var(--bl);text-align:center;max-width:15em}
+.nlx-nod.oppen .nlx-nod-namn,.nlx-nod.mastare .nlx-nod-namn{color:var(--bl-2)}
+
+/* --- skärm 1: en fråga som rättas ---
+   Spelarens form i liten skala (nextrum-uppgifter.css, .upg-alt och
+   .upg-spel-fot): alternativen har en djupkant, och foten blir mossa
+   när svaret är rätt. Frågan är påhittad och finns inte i banken. */
+.nlx-spel-topp{display:flex;align-items:center;gap:.65em;padding-top:.15em}
+.nlx-kryss{display:grid;place-items:center;width:1.8em;height:1.8em;color:var(--bl-3)}
+.nlx-kryss svg{width:1.2em;height:1.2em}
+.nlx-spel-mat{flex:1;height:.8em;border-radius:1em;background:var(--pap-3);overflow:hidden}
+.nlx-spel-mat i{
+  display:block;height:100%;border-radius:inherit;background:var(--mossa);
+  transform-origin:left;scale:.4 1;transition:scale .8s var(--e-ut) .1s;
+}
+.nlx-fraga.ratt .nlx-spel-mat i{scale:.6 1}
+.nlx-xp{
+  display:inline-flex;align-items:center;gap:.22em;
+  padding:.3em .62em .3em .42em;border-radius:2em;
+  background:var(--ockra-soft);color:var(--ockra-text);
+  font-size:.84em;font-weight:750;font-variant-numeric:tabular-nums;
+}
+.nlx-xp svg{width:1.15em;height:1.15em;color:var(--ockra)}
+.nlx-fraga.ratt .nlx-xp .fore{display:none}
+.nlx-fraga.ratt .nlx-xp .efter{display:inline-block;animation:nlx-pop .5s var(--fjader) .25s both}
+.nlx-typ{margin-top:.9em;font-family:var(--f-mono);font-size:.68em;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3)}
+.nlx-q{font-size:1.2em;font-weight:600;letter-spacing:-.012em;line-height:1.3;color:var(--bl-2)}
+.nlx-q b{
+  display:block;margin-bottom:.12em;
+  font-size:1.75em;font-weight:800;letter-spacing:-.03em;line-height:1.1;color:var(--bl);
+  font-variant-numeric:tabular-nums;
+}
+.nlx-alts{display:flex;flex-direction:column;gap:.7em;margin-top:.7em}
+.nlx-alt{
+  position:relative;
+  display:flex;align-items:center;gap:.8em;
+  min-height:3.9em;padding:.6em .95em;border-radius:1.15em;
+  border:2px solid var(--ln-2);background:var(--yta);
+  box-shadow:0 .28em 0 0 var(--ln-2);
+  font-size:1.04em;font-weight:650;font-variant-numeric:tabular-nums;
+  transition:border-color .2s var(--e),background-color .2s var(--e);
+}
+.nlx-alt i{
+  flex:none;display:grid;place-items:center;
+  width:1.8em;height:1.8em;border-radius:.55em;border:1.5px solid var(--ln-2);
+  font-style:normal;font-family:var(--f-mono);font-size:.72em;font-weight:500;color:var(--bl-3);
+}
+/* Trycket: en ring som tonas ut över det valda svaret. */
+.nlx-ratt::after{
+  content:"";position:absolute;left:62%;top:50%;
+  width:2.8em;height:2.8em;margin:-1.4em 0 0 -1.4em;border-radius:50%;
+  background:color-mix(in srgb,var(--acc) 32%,transparent);
+  opacity:0;pointer-events:none;
+}
+.nlx-fraga.valt .nlx-ratt{border-color:var(--acc);background:var(--acc-soft);box-shadow:0 .28em 0 0 var(--acc-line)}
+.nlx-fraga.valt .nlx-ratt i{border-color:var(--acc);color:var(--acc-text)}
+.nlx-fraga.valt .nlx-ratt::after{animation:nlx-tryck .6s var(--e-ut) both}
+.nlx-fraga.ratt .nlx-ratt{
+  border-color:var(--mossa);background:color-mix(in srgb,var(--mossa) 14%,var(--pap));
+  box-shadow:0 .28em 0 0 color-mix(in srgb,var(--mossa) 45%,transparent);
+  animation:nlx-studs .45s var(--fjader) both;
+}
+.nlx-fraga.ratt .nlx-ratt i{border-color:var(--mossa);color:var(--mossa)}
+.nlx-spel-fot{
+  display:grid;gap:.8em;
+  margin:auto -1.1em -1.5em;padding:.9em 1.1em 2em;
+  border-top:1px solid var(--ln);
+  transition:background-color .3s var(--e),border-color .3s var(--e);
+}
+.nlx-fraga.ratt .nlx-spel-fot{background:color-mix(in srgb,var(--mossa) 14%,var(--pap));border-top-color:transparent}
+/* Beskedet har sin plats i foten hela tiden och tonas bara in, så
+   att foten aldrig byter höjd. */
+.nlx-besked{
+  display:flex;align-items:center;gap:.6em;
+  opacity:0;translate:0 .6em;
+  transition:opacity .3s var(--e-ut),translate .45s var(--e-ut);
+}
+.nlx-fraga.ratt .nlx-besked{opacity:1;translate:0 0}
+.nlx-besked b{font-size:1.25em;font-weight:750;color:var(--mossa)}
+.nlx-besked-ik{
+  position:relative;display:grid;place-items:center;
+  width:2.2em;height:2.2em;border-radius:50%;
+  background:var(--mossa);color:var(--pap);
+}
+.nlx-besked-ik svg{width:1.25em;height:1.25em;stroke-width:3}
+.nlx-fraga.ratt .nlx-besked-ik{animation:nlx-pop .5s var(--fjader) both}
+.nlx-besked-xp{
+  margin-left:auto;padding:.3em .75em;border-radius:2em;
+  background:var(--ockra);color:var(--pap);
+  font-size:.88em;font-weight:750;font-variant-numeric:tabular-nums;
+}
+.nlx-fraga.ratt .nlx-besked-xp{animation:nlx-xp-in .55s var(--fjader) .12s both}
+/* Gnistorna runt bocken: sex prickar som far ut och tonas bort. */
+.nlx-gnistor{position:absolute;inset:0;pointer-events:none}
+.nlx-gnistor i{
+  position:absolute;left:50%;top:50%;width:.45em;height:.45em;margin:-.225em 0 0 -.225em;
+  border-radius:50%;background:var(--mossa);opacity:0;
+}
+.nlx-gnistor i:nth-child(2n){background:var(--ockra)}
+.nlx-gnistor i:nth-child(1){--g:0deg}
+.nlx-gnistor i:nth-child(2){--g:60deg}
+.nlx-gnistor i:nth-child(3){--g:120deg}
+.nlx-gnistor i:nth-child(4){--g:180deg}
+.nlx-gnistor i:nth-child(5){--g:240deg}
+.nlx-gnistor i:nth-child(6){--g:300deg}
+.nlx-fraga.ratt .nlx-gnistor i{animation:nlx-gnista .65s var(--e-ut) .1s both}
+.nlx-knapp{
+  display:flex;align-items:center;justify-content:center;gap:.45em;
+  min-height:3.3em;padding:0 1.2em;border-radius:1.1em;
+  background:var(--acc);color:var(--acc-ink);
+  font-size:1em;font-weight:700;letter-spacing:-.005em;
+  transition:background-color .3s var(--e),color .3s var(--e),opacity .3s var(--e);
+}
+.nlx-fraga:not(.valt):not(.ratt) .nlx-knapp{opacity:.42}
+.nlx-fraga.ratt .nlx-knapp{background:var(--mossa);color:var(--pap)}
+.nlx-fraga.ratt .nlx-knapp .fore{display:none}
+.nlx-fraga.ratt .nlx-knapp .efter{display:inline}
+
+/* --- skärm 2: nivån klar ---
+   Konfettin, stjärnorna och XP:n som räknas upp startar när skärmen får
+   .pa; en animation börjar om av sig själv när klassen sätts igen. */
+.nlx-klar{align-items:center;text-align:center}
+.nlx-klar .nlx-stjarnor{margin-top:auto}
+/* Solen bakom stjärnorna är större än stjärnorna och ligger i deras
+   lager; det som står under dem läggs ovanpå i samma ordning. */
+.nlx-klar > :not(.nlx-konfetti):not(.nlx-stjarnor){position:relative}
+.nlx-konfetti{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}
+.nlx-konfetti i{
+  position:absolute;top:-1.2em;left:var(--x);
+  width:.62em;height:1em;border-radius:.14em;opacity:0;
+}
+.nlx-konfetti i.t0{background:var(--ockra)}
+.nlx-konfetti i.t1{background:var(--mossa)}
+.nlx-konfetti i.t2{background:var(--acc);border-radius:50%;width:.7em;height:.7em}
+.nlx-konfetti i.t3{background:var(--amne-ma)}
+.nlx-konfetti i.t4{background:var(--amne-en);height:.6em}
+.nlx-konfetti i.t5{background:var(--amne-ms);border-radius:50%;width:.55em;height:.55em}
+.nlx-vy.pa .nlx-konfetti i{animation:nlx-konfetti 2.3s cubic-bezier(.22,.62,.36,1) var(--d) both}
+.nlx-stjarnor{position:relative;isolation:isolate;display:flex;align-items:flex-end;gap:.45em}
+/* Solen bakom stjärnorna: strålar i ockra som tonas ut mot papperet
+   med en gradient ovanpå (ingen mask-image), och som vrider sig sakta
+   medan skärmen visas. Bara opacity, scale och rotate. */
+.nlx-stjarnor::before{
+  content:"";position:absolute;z-index:-1;left:50%;top:55%;
+  width:16em;aspect-ratio:1;margin:-8em 0 0 -8em;border-radius:50%;
+  background:
+    radial-gradient(closest-side,color-mix(in srgb,var(--ockra) 20%,transparent),transparent 58%),
+    radial-gradient(closest-side,transparent 26%,var(--pap) 92%),
+    repeating-conic-gradient(color-mix(in srgb,var(--ockra) 15%,transparent) 0 8deg,transparent 8deg 30deg);
+  opacity:0;scale:.4;pointer-events:none;
+}
+.nlx-vy.pa .nlx-stjarnor::before{animation:nlx-sol-in 1s var(--e-ut) .2s both,nlx-sol 40s linear infinite}
+@keyframes nlx-sol-in{from{opacity:0;scale:.4}to{opacity:1;scale:1}}
+@keyframes nlx-sol{to{rotate:360deg}}
+.nlx-stjarnor i{display:block;width:3.4em;height:3.4em;color:var(--ockra)}
+.nlx-stjarnor i:nth-child(2){width:4.4em;height:4.4em}
+.nlx-stjarnor svg{width:100%;height:100%}
+.nlx-vy.pa .nlx-stjarnor i{animation:nlx-stjarna .7s var(--fjader) both;animation-delay:calc(var(--i) * .22s + .3s)}
+.nlx-klar-rubrik{display:block;margin-top:.35em;font-size:1.7em;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.nlx-klar-niva{font-size:.9em;color:var(--bl-2)}
+.nlx-xp-ruta{
+  align-self:stretch;display:grid;gap:.42em;margin-top:.3em;
+  padding:.8em 1em;border-radius:1.2em;
+  background:var(--ockra-soft);color:var(--ockra-text);font-size:.9em;
+}
+.nlx-xp-ruta > span{display:flex;justify-content:space-between;align-items:center;gap:.6em}
+.nlx-xp-ruta em{font-style:normal}
+.nlx-xp-ruta b{font-variant-numeric:tabular-nums}
+.nlx-summa{padding-top:.5em;border-top:1px solid color-mix(in srgb,var(--ockra) 30%,transparent);font-weight:750}
+.nlx-summa b{font-size:1.1em}
+.nlx-vy.pa .nlx-xp-ruta{animation:nlx-in .5s var(--e-ut) .85s both}
+/* XP:n räknas upp med en registrerad egenskap och en räknare, inte med
+   ett skript som skriver varje bildruta. Talet står i --till på
+   elementet självt. */
+@property --nlx-n{syntax:'<integer>';inherits:false;initial-value:0}
+.nlx-raknare{counter-reset:nlx-n var(--nlx-n)}
+.nlx-raknare::after{content:"+" counter(nlx-n) " "}
+.nlx-vy.pa .nlx-raknare{animation:nlx-rakna 1.1s var(--e-ut) 1.05s both}
+.nlx-serie{
+  align-self:stretch;display:flex;align-items:center;gap:.75em;
+  padding:.7em 1em;border-radius:1.2em;background:var(--acc-soft);text-align:left;
+}
+.nlx-serie-ik{flex:none;display:grid;place-items:center;width:2.5em;height:2.5em;border-radius:50%;background:var(--yta);color:var(--acc)}
+.nlx-serie-ik svg{width:1.45em;height:1.45em}
+.nlx-serie b{display:block;font-size:1em;font-weight:700}
+.nlx-serie small{display:block;font-size:.8em;color:var(--bl-2)}
+.nlx-vy.pa .nlx-serie{animation:nlx-in .5s var(--e-ut) 1.3s both}
+.nlx-vy.pa .nlx-serie-ik svg{animation:nlx-pop .6s var(--fjader) 1.5s both}
+.nlx-klar .nlx-knapp{align-self:stretch;margin-top:auto;background:var(--mossa);color:var(--pap)}
+
+/* --- skärm 3: från studiehjälparen, och dagens uppdrag ---
+   Raderna fylls i tur när skärmen får .fylld, och kistan öppnas sist.
+   Det som byter läge efter en stund står ovanpå varandra och tonas
+   med en fördröjning, för display går inte att fördröja. */
+.nlx-rek-kort{
+  display:grid;gap:.28em;justify-items:start;
+  padding:.95em 1.05em 1.05em;border-radius:1.35em;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--amne-en) 10%,var(--yta)),var(--yta) 72%);
+  border:1px solid color-mix(in srgb,var(--amne-en) 28%,transparent);
+}
+.nlx-rek-et{display:flex;align-items:center;gap:.5em;margin-bottom:.35em}
+.nlx-rek-et picture,.nlx-rek-et img{display:block;width:2.1em;height:2.1em;border-radius:50%;object-fit:cover}
+.nlx-rek-et span{font-family:var(--f-mono);font-size:.66em;letter-spacing:.12em;text-transform:uppercase;color:var(--amne-en)}
+.nlx-rek-kort > b{font-size:1.14em;font-weight:700;letter-spacing:-.015em;line-height:1.25}
+.nlx-rek-fakta{font-size:.78em;color:var(--bl-3)}
+.nlx-rek-kort .nlx-knapp{margin-top:.55em;min-height:2.7em;border-radius:2em}
+.nlx-rek-kort .nlx-knapp svg{width:.95em;height:.95em}
+.nlx-uppdrag{
+  display:grid;gap:.5em;
+  padding:.85em .85em .8em;border-radius:1.35em;
+  background:var(--yta);border:1px solid var(--ln);
+}
+.nlx-uppdrag-huvud{display:flex;align-items:center;gap:.7em;margin-bottom:.1em}
+.nlx-uppdrag-huvud > span:first-child{flex:1;min-width:0;display:grid}
+.nlx-uppdrag-huvud b{font-size:1.02em;font-weight:700;letter-spacing:-.01em}
+.nlx-uppdrag-huvud small{font-size:.76em;color:var(--bl-3)}
+.nlx-kista{
+  position:relative;flex:none;display:grid;place-items:center;
+  width:3em;height:3em;border-radius:1em;
+  background:var(--ockra-soft);color:var(--ockra-text);
+  transition:background-color .3s var(--e),color .3s var(--e);
+}
+.nlx-kista > span{grid-area:1/1;display:grid;transition:opacity .25s var(--e),scale .5s var(--fjader)}
+.nlx-kista svg{width:1.75em;height:1.75em;stroke-width:1.9}
+.nlx-kista::after{
+  content:"";position:absolute;inset:-.4em;border-radius:1.3em;
+  border:2px solid var(--ockra);opacity:0;pointer-events:none;
+}
+.nlx-vy .nlx-kista .efter{display:grid;opacity:0;scale:.5}
+.nlx-rek.fylld .nlx-kista{background:var(--ockra);color:var(--pap);transition-delay:1.55s}
+.nlx-rek.fylld .nlx-kista .fore{opacity:0;transition-delay:1.55s}
+.nlx-rek.fylld .nlx-kista .efter{opacity:1;scale:1;transition-delay:1.55s}
+.nlx-rek.fylld .nlx-kista{animation:nlx-kista .9s var(--fjader) 1.5s both}
+.nlx-rek.fylld .nlx-kista::after{animation:nlx-ring 1.3s var(--e-ut) 1.8s both}
+.nlx-upp{
+  display:flex;align-items:center;gap:.65em;
+  padding:.45em .6em .45em .45em;border-radius:1em;background:var(--tint);
+}
+.nlx-upp-ik{
+  position:relative;flex:none;display:grid;place-items:center;
+  width:2.3em;height:2.3em;border-radius:50%;
+  background:color-mix(in srgb,var(--f) 16%,var(--yta));color:var(--f);
+  transition:background-color .3s var(--e),color .3s var(--e);
+  transition-delay:calc(var(--i) * .35s + .55s);
+}
+.nlx-upp-ik > span{grid-area:1/1;display:grid;transition:opacity .25s var(--e),scale .45s var(--fjader);transition-delay:calc(var(--i) * .35s + .55s)}
+.nlx-upp-ik svg{width:1.2em;height:1.2em}
+.nlx-vy .nlx-upp-ik .efter{display:grid;opacity:0;scale:.4}
+.nlx-upp-text{flex:1;min-width:0;display:grid;gap:.35em}
+.nlx-upp-text b{font-size:.84em;font-weight:600;line-height:1.25}
+.nlx-upp-mat{display:block;height:.5em;border-radius:1em;background:color-mix(in srgb,var(--f) 14%,var(--pap-3));overflow:hidden}
+.nlx-upp-mat i{
+  display:block;height:100%;border-radius:inherit;background:var(--f);
+  transform-origin:left;scale:var(--fran) 1;
+  transition:scale .7s var(--e-ut),background-color .3s var(--e);
+  transition-delay:calc(var(--i) * .35s + .2s);
+}
+.nlx-upp em{
+  flex:none;min-width:3.3em;text-align:right;
+  font-style:normal;font-family:var(--f-mono);font-size:.72em;color:var(--bl-2);font-variant-numeric:tabular-nums;
+}
+.nlx-tal{display:inline-grid;text-align:right}
+.nlx-tal > span{grid-area:1/1;transition:opacity .2s var(--e);transition-delay:calc(var(--i) * .35s + .55s)}
+.nlx-vy .nlx-tal .efter{display:block;opacity:0}
+.nlx-rek.fylld .nlx-upp-ik{background:var(--mossa);color:var(--pap)}
+.nlx-rek.fylld .nlx-upp-ik .fore,.nlx-rek.fylld .nlx-tal .fore{opacity:0}
+.nlx-rek.fylld .nlx-upp-ik .efter{opacity:1;scale:1}
+.nlx-rek.fylld .nlx-tal .efter{opacity:1}
+.nlx-rek.fylld .nlx-upp-mat i{scale:1 1;background:var(--mossa)}
+.nlx-rek.fylld .nlx-upp em{color:var(--mossa-text)}
+/* Den senaste rapporten med Öva mer på, som på vägen i den riktiga
+   vyn: passet och NexLäx hänger ihop. */
+.nlx-pass{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.2em .6em;
+  padding:.75em .9em .8em 1em;border-radius:1.2em;
+  background:var(--acc-soft);
+}
+.nlx-pass > span{grid-column:1 / -1;font-family:var(--f-mono);font-size:.64em;letter-spacing:.13em;text-transform:uppercase;color:var(--acc-text)}
+.nlx-pass b{font-size:.9em;font-weight:650}
+.nlx-pass em{
+  display:inline-flex;align-items:center;gap:.2em;
+  padding:.32em .5em .32em .75em;border-radius:2em;
+  background:var(--yta);color:var(--amne-ma);
+  font-style:normal;font-size:.8em;font-weight:700;
+}
+.nlx-pass em svg{width:1.1em;height:1.1em;stroke-width:2.4}
+
+/* ---------- lapparna som svävar vid telefonen ----------
+   En per skärm, framför telefonens kant. Bara från 1360 px: där får de
+   plats mellan textspalten och sidans kant också på engelska, som har
+   de längsta raderna; vid 1240 px nådde den engelska lappen ända fram
+   till stigens blad. Skuggan är fast; lappen tonas och skalas. */
+.nlx-lapp{
+  position:absolute;z-index:3;
+  display:none;align-items:center;gap:12px;
+  width:max-content;max-width:244px;padding:12px 18px 12px 12px;border-radius:20px;
+  background:var(--kort);border:1px solid var(--kort-kant);
+  box-shadow:var(--sk-2);
+  font-size:.86rem;line-height:1.3;color:var(--bl);
+  opacity:0;translate:0 14px;scale:.88;
+  transition:opacity .3s var(--e),translate .45s var(--e-ut),scale .45s var(--e-ut);
+}
+.nlx-lapp.syns{
+  opacity:1;translate:0 0;scale:1;
+  transition:opacity .45s var(--e) .4s,translate .8s var(--fjader) .4s,scale .8s var(--fjader) .4s;
+}
+.nlx-lapp b{display:block;font-size:.92rem;font-weight:700;letter-spacing:-.012em}
+/* En rad som bryter delas jämnt, så att inget ord blir ensamt kvar. */
+.nlx-lapp small{display:block;margin-top:2px;font-size:.78rem;color:var(--bl-3);text-wrap:balance}
+.nlx-lapp-ik{
+  flex:none;display:grid;place-items:center;
+  width:38px;height:38px;border-radius:12px;
+  background:color-mix(in srgb,var(--f) 14%,var(--yta));color:var(--f);
+}
+.nlx-lapp-ik svg{width:19px;height:19px}
+.nlx-lapp-ik svg.nlx-fyll{width:20px;height:20px}
+/* Var lappen står räknas ur telefonens mitt (scenen är lika hög som
+   telefonen, som är 2,11 bredder hög), och varje lapp ligger där dess
+   skärm är tom: bredvid noden till höger på vägen, till höger om
+   frågan, under seriekortet och under passets ruta. En lapp som täckte
+   ett piller eller ett svar såg ut som ett fel i bilden. */
+.nlx-lapp-0{right:calc(50% + var(--tw) * .24);top:calc(50% + var(--tw) * .2);transform-origin:100% 50%}
+.nlx-lapp-1{left:calc(50% + var(--tw) * .24);top:calc(50% - var(--tw) * .66);transform-origin:0 50%}
+.nlx-lapp-2{right:calc(50% + var(--tw) * .24);top:calc(50% + var(--tw) * .48);transform-origin:100% 50%}
+.nlx-lapp-3{left:calc(50% + var(--tw) * .24);top:calc(50% + var(--tw) * .7);transform-origin:0 50%}
+@media (min-width:1360px){.nlx-lapp{display:flex}}
+
+/* ---------- rörelserna ---------- */
+@keyframes nlx-puls{0%{opacity:.75;scale:.92}70%,100%{opacity:0;scale:1.22}}
+@keyframes nlx-pop{0%{opacity:0;scale:.3}55%{opacity:1;scale:1.18}100%{scale:1}}
+@keyframes nlx-xp-in{0%{opacity:0;scale:.4;translate:0 .5em}70%{opacity:1;scale:1.1;translate:0 0}100%{scale:1}}
+@keyframes nlx-tryck{0%{opacity:.95;scale:.3}100%{opacity:0;scale:1.6}}
+@keyframes nlx-studs{0%{scale:1}40%{scale:1.04}100%{scale:1}}
+@keyframes nlx-gnista{
+  0%{opacity:1;transform:rotate(var(--g)) translateX(.3em) scale(1)}
+  100%{opacity:0;transform:rotate(var(--g)) translateX(2.2em) scale(.4)}
+}
+@keyframes nlx-konfetti{
+  0%{opacity:0;translate:0 0;rotate:0deg}
+  8%{opacity:1}
+  80%{opacity:1}
+  100%{opacity:0;translate:var(--dx) var(--fall);rotate:var(--r)}
+}
+@keyframes nlx-stjarna{from{opacity:0;scale:.2;rotate:-40deg}to{opacity:1;scale:1;rotate:0deg}}
+@keyframes nlx-in{from{opacity:0;translate:0 .8em}}
+@keyframes nlx-rakna{from{--nlx-n:0}to{--nlx-n:var(--till)}}
+@keyframes nlx-kista{0%{scale:.7;rotate:-10deg}55%{scale:1.16;rotate:6deg}100%{scale:1;rotate:0deg}}
+@keyframes nlx-ring{0%{opacity:.9;scale:.9}100%{opacity:0;scale:1.4}}
+
+/* Utanför bild och i en dold flik står det som rör sig av sig självt
+   still (.nlx-paus sätts av skriptet): omloppet, svävandet och
+   ringarna kostar annars batteri för något ingen ser. */
+.nlx-paus .nlx-varv,
+.nlx-paus .nlx-bricka i,
+.nlx-paus .nlx-telefon,
+.nlx-paus .nlx-lyft::after,
+.nlx-paus .nlx-bubbla,
+.nlx-paus .nlx-nod-knapp::after,
+.nlx-paus .nlx-del-nod::after,
+.nlx-paus .nlx-del-text::before,
+.nlx-paus .nlx-stjarnor::before{animation-play-state:paused}
+
+/* ---------- smalare skärmar ----------
+   En spalt: rubriken, telefonen, stigen, bildtexten, knapparna och
+   foten. Med rörelse blir stigen en rad med fyra noder under
+   telefonen och texten för den del som visas under dem, alla fyra i
+   samma rutnätscell, så att telefonen och delen syns samtidigt och
+   inget byter höjd. Utan rörelse (ingen nx-sr) står den som en vanlig
+   lista, fullt utskriven. */
+@media (max-width:999px){
+  .nlx-grid{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"huvud" "scen" "delar" "bild" "handling" "fot";
+  }
+  .nlx-scen{--tw:min(76vw,312px);margin-top:clamp(36px,7vw,56px)}
+  .nlx-delar{margin-top:clamp(26px,5vw,40px)}
+  .nlx-bild{justify-self:start}
+  .nlx-dekor{
+    background:
+      radial-gradient(90% 46% at 50% 46%,transparent 0 30%,var(--pap) 74%),
+      radial-gradient(circle,color-mix(in srgb,var(--bl) 14%,transparent) 1.1px,transparent 1.7px) 0 0/24px 24px;
+  }
+
+  html.nx-sr .nlx-delar{
+    --nod:44px;
+    gap:0;padding-top:calc(var(--nod) + 16px);
+    max-width:560px;width:100%;justify-self:center;
+  }
+  /* Delen får ingen translate här: en translate gör den till
+     noden ruta att placeras i, och noderna ska stå i listans. Den
+     tonas bara in. */
+  html.nx-sr .nlx-del{grid-area:1/1;display:block;position:static;pointer-events:none}
+  html.nx-sr .nlx-delar .nlx-del,html.nx-sr .nlx-delar.nlx-in .nlx-del{translate:none}
+  html.nx-sr .nlx-del-nod{
+    position:absolute;top:0;margin:0;
+    left:calc((100% - var(--nod)) * var(--i) / 3);
+    pointer-events:auto;
+  }
+  html.nx-sr .nlx-del:not(:last-child)::before,
+  html.nx-sr .nlx-del:not(:last-child)::after{
+    top:calc(var(--nod) / 2 - 1px);bottom:auto;height:2px;width:auto;
+    left:calc((100% - var(--nod)) * var(--i) / 3 + var(--nod) + 6px);
+    right:calc(100% - (100% - var(--nod)) * (var(--i) + 1) / 3 + 6px);
+  }
+  html.nx-sr .nlx-del:not(:last-child)::after{transform-origin:0 50%;scale:0 1}
+  html.nx-sr .nlx-del.forbi::after{scale:1 1}
+  html.nx-sr .nlx-del-text{
+    opacity:0;visibility:hidden;translate:0 8px;
+    transition:opacity .25s var(--e),translate .35s var(--e),visibility 0s linear .25s,
+               background-color .45s var(--e),border-color .45s var(--e);
+  }
+  html.nx-sr .nlx-del.pa .nlx-del-text{
+    opacity:1;visibility:visible;translate:0 0;
+    transition:opacity .45s var(--e) .1s,translate .6s var(--e-ut) .1s,visibility 0s,
+               background-color .45s var(--e),border-color .45s var(--e);
+  }
+}
+@media (max-width:760px){
+  .nx-nexlax{padding-block:64px 56px;min-height:0}
+  .nlx-omlopp{display:none}
+  .nlx-sken{width:calc(var(--tw) * 2)}
+  .nlx-konfetti i:nth-child(n+11){display:none}
+  .nlx-handling .nx-magnet{width:100%}
+  .nlx-handling .btn{width:100%;justify-content:center}
+  .nlx-amnen li{padding:7px 12px 7px 10px;font-size:.86rem}
+}
+
+/* ---------- reducerad rörelse ----------
+   nx-sr sätts aldrig då, så entréerna ovan gäller inte. Här stannar
+   det som rör sig av sig självt, och det som byter läge byter direkt.
+   Skriptet kör ingen rundtur; ett tryck på en del visar dess skärm i
+   sitt slutläge. */
+@media (prefers-reduced-motion:reduce){
+  .nlx-varv,.nlx-bricka i,.nlx-telefon,.nlx-lyft::after,.nlx-bubbla,
+  .nlx-nod-knapp::after,.nlx-del-nod::after,
+  .nlx-vy.pa .nlx-mat i,.nlx-vy.pa .nlx-stjarnor i,.nlx-vy.pa .nlx-xp-ruta,.nlx-vy.pa .nlx-serie,
+  .nlx-vy.pa .nlx-serie-ik svg,.nlx-fraga.ratt .nlx-ratt,.nlx-fraga.ratt .nlx-besked-ik,
+  .nlx-fraga.ratt .nlx-besked-xp,.nlx-fraga.ratt .nlx-xp .efter,.nlx-fraga.valt .nlx-ratt::after,
+  .nlx-rek.fylld .nlx-kista,.nlx-rek.fylld .nlx-kista::after,
+  .nlx-del.pa.nlx-tur .nlx-del-text::before{animation:none}
+  .nlx-konfetti,.nlx-gnistor,.nlx-del-text::before{display:none}
+  .nlx-vy.pa .nlx-stjarnor::before{animation:none;opacity:1;scale:1}
+  .nlx-vy.pa .nlx-raknare{animation:none}
+  .nlx-raknare{counter-reset:nlx-n var(--till)}
+  .nlx-vy,.nlx-vy.pa,.nlx-lapp,.nlx-lapp.syns,.nlx-del-nod,.nlx-del-text,.nlx-del-text::after,
+  .nlx-del h3,.nlx-del p,.nlx-del::after,.nlx-besked,.nlx-spel-fot,.nlx-spel-mat i,.nlx-alt,.nlx-knapp,
+  .nlx-kista,.nlx-kista > span,.nlx-upp-ik,.nlx-upp-ik > span,.nlx-upp-mat i,.nlx-tal > span{transition:none}
+}
+
+/* ============================================================
    7. "VI BYGGER NÄSTA GENERATION TILLSAMMANS" — större
 
    Sidans största mening efter manifestets. Samma ordfyllnad som där,
@@ -817,7 +1785,10 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
 .sd-nl-omr.aktuellt.bytt > i svg{fill:none;stroke:currentColor}
 .sd-nl-omr.klart em,.sd-nl-omr.aktuellt.bytt em{color:var(--mossa);font-weight:600}
 .sd-nl-omr.aktuellt em,.sd-nl-omr.nasta.bytt em{color:var(--acc);font-weight:600}
-.sd-nl-omr.last{opacity:.6}
+/* Ett område längre fram är öppet, inte låst (allt är öppet sedan
+   2026-10-06): spela-ikonen i panelens accent, som Pågår, och ingen
+   nedtoning. I den riktiga vägen har en öppen nod accentens färg. */
+.sd-nl-omr.oppen > i{color:var(--acc)}
 
 /* --- chatten --- */
 .sd-chatt{display:flex;flex-direction:column;height:100%;min-height:0}
