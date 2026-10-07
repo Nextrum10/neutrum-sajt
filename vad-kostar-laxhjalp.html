@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
+
+<title>Vad kostar läxhjälp? Det här styr priset | Nextrum</title>
+<meta name="description" content="Vad som gör läxhjälp dyr eller billig, vad ni ska fråga innan ni bokar, varför rutavdraget inte gäller och vad vi tar, rakt ut.">
+<link rel="canonical" href="https://nextrum.se/vad-kostar-laxhjalp">
+<!-- Sidan finns bara på svenska. Ingen hreflang="en" här: att peka ut
+     en engelsk version som inte finns är sämre än att inte peka alls. -->
+<link rel="alternate" hreflang="sv" href="https://nextrum.se/vad-kostar-laxhjalp">
+<link rel="alternate" hreflang="x-default" href="https://nextrum.se/vad-kostar-laxhjalp">
+<meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<meta name="geo.region" content="SE-AB">
+<meta name="geo.placename" content="Stockholm">
+
+<!-- delning -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="Vad kostar läxhjälp? Det här styr priset | Nextrum">
+<meta property="og:description" content="Vad som gör läxhjälp dyr eller billig, vad ni ska fråga innan ni bokar, varför rutavdraget inte gäller och vad vi tar, rakt ut.">
+<meta property="og:url" content="https://nextrum.se/vad-kostar-laxhjalp">
+<meta property="og:image" content="https://nextrum.se/delning/vad-kostar-laxhjalp.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Nextrum: Vad kostar läxhjälp?">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Vad kostar läxhjälp? Det här styr priset | Nextrum">
+<meta name="twitter:description" content="Vad som gör läxhjälp dyr eller billig, vad ni ska fråga innan ni bokar, varför rutavdraget inte gäller och vad vi tar, rakt ut.">
+<meta name="twitter:image" content="https://nextrum.se/delning/vad-kostar-laxhjalp.jpg">
+
+<!-- Förladdad: utan den kommer typsnittet efter första ritningen, långa rubriker
+     bryts om och allt under dem hoppar (CLS 0,2 på /laxhjalp-stockholm). -->
+<link rel="preload" href="/typsnitt/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
+
+<!-- ordningen spelar roll: bas → startsida → cinema -->
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
+<link rel="stylesheet" href="nextrum-cinema.css?v=ed943542">
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk markup på alla fyra publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <!-- Språkval, övre vänstra hörnet. Det aktiva språket är ett
+         <b>, inte en länk: en länk till sidan man redan står på ser
+         ut som ett val men gör ingenting. -->
+    <div class="sprakval" role="group" aria-label="Språk / Language">
+      <b lang="sv" aria-current="true">SV</b>
+      <i aria-hidden="true"></i>
+      <a lang="en" hreflang="en" href="/en/">ENG</a>
+    </div>
+
+    <a href="/" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="7"/>
+        <path d="M8 18.5V7.5L18 18.5V7.5"/>
+      </svg>
+      <span class="logo-text">Nextrum</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Huvudmeny">
+      <a href="/sa-fungerar-nextrum" data-nav>Så fungerar Nextrum</a>
+      <a href="/for-elever-och-foraldrar" data-nav>För elever &amp; föräldrar</a>
+      <a href="/bli-studiehjalpare" data-nav>Bli studiehjälpare</a>
+      <a href="/priser" data-nav>Priser</a>
+    </nav>
+
+    <div class="nav-actions">
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="/foralder" id="login-link" data-vagval>Logga in</a>
+      <span class="nx-magnet">
+        <a class="btn btn-primary btn-sm" href="/intresseanmalan">Intresseanmälan</a>
+      </span>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="/var-ide">Vår idé <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/sa-fungerar-nextrum">Så fungerar Nextrum <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/for-elever-och-foraldrar">För elever &amp; föräldrar <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/bli-studiehjalpare">Bli studiehjälpare <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/priser">Priser <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/faq">FAQ / Kontakt <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="/intresseanmalan">Skicka intresseanmälan</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="/foralder">Logga in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">Av unga, för unga.</span>
+    <a class="xsmall" href="mailto:info@nextrum.se">info@nextrum.se</a>
+  </div>
+</div>
+
+<main id="innehall">
+
+<section class="wrap nx-page-hero">
+  <a class="nx-back" href="/laxhjalp-stockholm"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Läxhjälp i Stockholm</a>
+  <span class="nx-et acc" data-stig style="margin-top:22px">Guide för föräldrar</span>
+  <h1 class="nx-d1" data-avslöj>Vad kostar<br><em>läxhjälp?</em></h1>
+  <p class="nx-lede" data-stig data-fördröj="1">Timpriset säger mindre än det ser ut. Vem som håller passet, var det hålls och vilka avgifter som ligger runt omkring avgör vad en termin faktiskt kostar. Här är det som styr priset, frågorna att ställa och vårt pris, rakt ut.</p>
+  <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:#8E8C84">
+    <picture><source type="image/webp" srcset="bilder/02-personlig-anpassning-640.webp 640w, bilder/02-personlig-anpassning-960.webp 960w, bilder/02-personlig-anpassning-1280.webp 1280w, bilder/02-personlig-anpassning-1600.webp 1600w, bilder/02-personlig-anpassning-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/02-personlig-anpassning-1280.jpg"
+         srcset="bilder/02-personlig-anpassning-640.jpg 640w, bilder/02-personlig-anpassning-960.jpg 960w, bilder/02-personlig-anpassning-1280.jpg 1280w, bilder/02-personlig-anpassning-1600.jpg 1600w, bilder/02-personlig-anpassning-1920.jpg 1920w"
+         sizes="(max-width: 900px) 100vw, 92vw" width="2048" height="1152" fetchpriority="high" decoding="async"
+         style="object-position:50% 40%" alt="En studiehjälpare står lutad över ett bord där två elever arbetar med varsin uppgift i ett ljust klassrum."></picture>
+  </figure>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-head split" data-stig>
+    <div><span class="nx-et acc">Det som styr priset</span>
+      <h2 class="nx-d2" style="margin-top:18px">Mer än<br><em>timpriset.</em></h2></div>
+    <div class="nx-head-aside"><p class="nx-lede">Två timpriser går inte att jämföra förrän ni vet vad som ingår i dem och vad som läggs på.</p></div>
+  </div>
+  <ul class="nx-list rv">
+      <li><em>01</em><div><b>Vem som håller passet</b><p>En legitimerad lärare kostar mer än en student eller en ung studiehjälpare. Läraren har utbildningen, och den yngre har ofta läst samma kurs nyligen och minns var den tog stopp. Vad som är värt mest beror på vad barnet behöver.</p></div></li>
+      <li><em>02</em><div><b>Hemma eller online</b><p>Kommer någon hem till er kan resan ligga i priset, som en avgift eller som ett högre timpris. Online finns ingen resa att betala för.</p></div></li>
+      <li><em>03</em><div><b>Avgifterna runt omkring</b><p>Anmälningsavgift, startavgift, administrationsavgift. Räkna in dem i det första passets pris, så syns vad den första månaden faktiskt kostar.</p></div></li>
+      <li><em>04</em><div><b>Bindningstid och minsta antal timmar</b><p>Ett lågt timpris med krav på tjugo timmar är ett paket, inte ett timpris. Fråga vad det kostar att sluta efter två pass.</p></div></li>
+      <li><em>05</em><div><b>Avbokning och tid som blir över</b><p>Vad kostar ett pass ni avbokar dagen innan? Betalar ni för en hel timme om passet slutar efter fyrtio minuter, eller för den tid det höll?</p></div></li>
+      <li><em>06</em><div><b>Rutavdraget</b><p>Läxhjälp ger inte rätt till rutavdrag sedan 2015. Barnpassning kan ge det, men bara om läxhjälpen är en liten del av tiden. Den som lovar rutavdrag på läxhjälp bör kunna visa varför.</p></div></li>
+  </ul>
+  <p class="nx-note" style="margin-top:22px">Länkar: <a href="https://www.skatteverket.se/privat/fastigheterochbostad/rotochrutarbete/listaoverrutarbeten.106.5c1163881590be297b53de7.html" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Skatteverket: vilka arbeten som ger rutavdrag</a></p>
+</section>
+
+<section class="sec wrap">
+  <div class="nx-two">
+    <div class="nx-two-sticky rv">
+      <span class="nx-et acc">Vårt pris</span>
+      <h2 class="nx-d2" style="margin-top:18px">379 kr i timmen,<br>rakt <em>ut.</em></h2>
+    </div>
+    <div class="nx-text rv">
+      <p>Hos Nextrum kostar läxhjälp 379 kr i timmen, samma pris i alla ämnen och var passet än hålls, hemma hos er eller online. Sitter syskon med i samma pass tillkommer 69 kr i timmen totalt, lika mycket för tre barn som för två. Det finns ingen anmälningsavgift, ingen bindningstid och inget minsta antal timmar, och för nya familjer är första timmen på köpet när ni har bokat två timmar.</p>
+      <p>Ni betalar för den tid passet faktiskt höll, räknat per påbörjad kvart, och ser tiden i rapporten innan ni bekräftar den. Matchningen, studieplanen och rapporten efter varje pass ingår i timpriset. Hela prisbilden står på prissidan.</p>
+      <p><a href="/intresseanmalan" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Skicka en intresseanmälan</a>. Det kostar ingenting att fråga och binder er inte till något.</p>
+    </div>
+  </div>
+</section>
+
+
+<section class="sec wrap">
+  <div class="rv">
+    <span class="nx-et acc">Vanliga frågor</span>
+    <h2 class="nx-d2" style="margin-top:18px">Vad läxhjälp kostar, det ni brukar undra</h2>
+    <div class="faq" style="margin-top:clamp(24px,3vw,34px)">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Gäller rutavdraget för läxhjälp?<span class="pm"></span></button>
+          <div class="faq-a"><p>Nej, inte sedan 2015. Barnpassning kan fortfarande ge rutavdrag, men bara om läxhjälpen är en liten del av tiden. Skatteverkets lista över vad som ger rutavdrag är länkad ovanför.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Varför är läxhjälp med en lärare dyrare?<span class="pm"></span></button>
+          <div class="faq-a"><p>Läraren har en lång utbildning, och priset speglar den. Det kan vara värt det när barnet behöver någon som undervisar från grunden. För den som behöver komma igång med läxorna och få saker förklarade på sin egen nivå räcker ofta någon som nyss läst samma kurs.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Vad kostar det för syskon hos er?<span class="pm"></span></button>
+          <div class="faq-a"><p>Sitter syskonen i samma pass kostar det 379 kr i timmen plus 69 kr i timmen totalt, alltså 448 kr i timmen för två eller tre barn.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Kostar det något att fråga?<span class="pm"></span></button>
+          <div class="faq-a"><p>Nej. Intresseanmälan är gratis, och ni binder er inte till något förrän ni bokar ett pass.</p></div>
+        </div>
+    </div>
+    <p class="xsmall" style="margin-top:26px">
+      Fler frågor och svar finns på <a href="/faq">FAQ-sidan</a>.
+    </p>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="rv">
+    <span class="nx-et acc">Ämnen</span>
+    <h2 class="nx-d2" style="margin-top:18px">Läxhjälp per ämne</h2>
+    <div class="nx-omr-rutnat" style="margin-top:clamp(24px,3vw,34px)">
+      <a class="nx-omr-kort" href="/laxhjalp-matematik">
+        <b>Läxhjälp i matte</b>
+        <span>Bråk, ekvationer, funktioner och derivata</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/laxhjalp-svenska">
+        <b>Läxhjälp i svenska</b>
+        <span>Läsförståelse, uppsatser och svenska som andraspråk</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/laxhjalp-engelska">
+        <b>Läxhjälp i engelska</b>
+        <span>Ordförråd, grammatik, uppsatser och muntligt</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/laxhjalp-no">
+        <b>Läxhjälp i fysik, kemi och biologi</b>
+        <span>Formler, begrepp och labbrapporter</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="sec wrap">
+  <div class="rv">
+    <span class="nx-et acc">Guider</span>
+    <h2 class="nx-d2" style="margin-top:18px">Fler guider</h2>
+    <div class="nx-omr-rutnat" style="margin-top:clamp(24px,3vw,34px)">
+      <a class="nx-omr-kort" href="/laxhjalp-eller-privatlarare">
+        <b>Läxhjälp eller privatlärare?</b>
+        <span>Vem som passar ert barn, och när</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/hjalpa-barn-med-matte">
+        <b>Hjälpa barnet med matteläxan</b>
+        <span>Sex saker som brukar fungera vid köksbordet</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/hjalpa-barn-med-lasforstaelse">
+        <b>Hjälpa barnet med läsförståelsen</b>
+        <span>Högläsning, ord och skolans faktatexter</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/plugga-infor-prov">
+        <b>Plugga inför provet</b>
+        <span>Testa i stället för att läsa om</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/barnet-vill-inte-gora-laxorna">
+        <b>När barnet inte vill göra läxorna</b>
+        <span>Rutiner, motstånd och vad det kan betyda</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a class="nx-omr-kort" href="/nationella-prov-ak-9">
+        <b>Nationella proven i nian</b>
+        <span>Vilka prov, när och hur ni förbereder er</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="nx-mork nx-final-cinema">
+  <div class="nx-wrap-bred">
+    <div class="nx-final-inner">
+      <span class="nx-et" data-stig>Nästa steg</span>
+      <h2 class="nx-final-rubrik" data-avslöj>Redo att ta nästa <em>steg</em>?</h2>
+      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:24px">För dig som vill lära dig mer.
+        För dig som vill hjälpa andra.</p>
+
+      <div class="nx-story-ctas" data-stig data-fördröj="2" style="margin-top:clamp(32px,4vw,46px)">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="/intresseanmalan">
+            Skicka intresseanmälan
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="btn btn-ghost btn-lg" href="/bli-studiehjalpare">
+          Bli studiehjälpare
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+
+      <ul class="nx-hero-trust" data-stig data-fördröj="3">
+        <li>Ingen bindningstid</li>
+        <li>Kostar ingenting att fråga</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="/" class="logo">
+          <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7"/><path d="M8 18.5V7.5L18 18.5V7.5"/></svg>
+          <span class="logo-text">Nextrum</span>
+        </a>
+        <p>Av unga, för unga.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/nextrum.se" aria-label="Nextrum på Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="https://www.tiktok.com/@nextrum.ab" aria-label="Nextrum på TikTok" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="https://www.facebook.com/share/1DuLomKfy8/" aria-label="Nextrum på Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg></a>
+          <a href="https://www.linkedin.com/company/nextrum-se/" aria-label="Nextrum på LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
+        <ul>
+          <li><a href="/var-ide">Vår idé</a></li>
+          <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
+          <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
+          <li><a href="/priser">Priser</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-laxhjalp">
+        <h2 class="ftr-rubrik" id="ftr-laxhjalp">Läxhjälp</h2>
+        <ul>
+          <li><a href="/laxhjalp-stockholm">I Stockholm</a></li>
+          <li><a href="/laxhjalp-matematik">Matte</a></li>
+          <li><a href="/laxhjalp-svenska">Svenska</a></li>
+          <li><a href="/laxhjalp-engelska">Engelska</a></li>
+          <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
+          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
+        <ul>
+          <li><a href="/for-elever-och-foraldrar">För elever &amp; föräldrar</a></li>
+          <li><a href="/bli-studiehjalpare">Bli studiehjälpare</a></li>
+          <li><a href="/intresseanmalan">Intresseanmälan</a></li>
+          <li><a href="/foralder" data-vagval>Logga in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Hjälp</h2>
+        <ul>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/faq#kontakt">Kontakt</a></li>
+          <li><a href="/integritetspolicy">Integritetspolicy</a></li>
+          <li><a href="/anvandarvillkor">Användarvillkor</a></li>
+          <li><a href="/lagring">Cookies och lagring</a></li>
+          <li><a href="/lagring#ditt-val" data-samtycke-oppna>Cookieinställningar</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Byggd i Sverige.</span>
+    </div>
+  </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
+</footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Själva inloggningen ligger kvar i foralder.html (också Elev,
+     #elev, 2026-10-06) och larare.html och är orörd.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Logga in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Välkommen tillbaka.</h2>
+    <p class="nx-lede-s">Vilken vy vill du till?</p>
+
+    <div class="nx-vagval-val">
+      <a href="/foralder">
+        <span>
+          <b>Förälder</b>
+          <span>Studieplan, bokning, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/foralder#elev">
+        <span>
+          <b>Elev</b>
+          <span>NexLäx, dina pass och meddelanden, med ditt användarnamn.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/larare">
+        <span>
+          <b>Studiehjälpare</b>
+          <span>Dina elever, ditt schema, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Har ni inte skickat intresseanmälan än? <a href="/intresseanmalan">Gör det här</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord och ett barns
+     namn och anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
+<script src="nextrum-config.js?v=fdfed591"></script>
+<script src="nextrum-images.js?v=d1aa8fea"></script>
+<script src="nextrum-fel.js?v=eae02b10"></script>
+<script src="nextrum-app.js?v=e2e42d6b"></script>
+<script src="nextrum-samtycke.js?v=39371f0b"></script>
+<script src="nextrum-motion.js?v=f1ce069c"></script>
+<script src="nextrum-start.js?v=c489fcd4"></script>
+<!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
+     bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
+     Inga nätverksanrop. -->
+<script src="nextrum-maskot-svar.js?v=c20069a1"></script>
+<script src="nextrum-maskot.js?v=ce98f31d" defer></script>
+<script>
+(function () {
+  'use strict';
+  NX.initHeader();
+  NX.initReveal();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
+  NX.initFaq();
+  NX.initPris();
+  NX.märkInloggad();
+})();
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "@id": "https://nextrum.se/vad-kostar-laxhjalp#artikel",
+      "headline": "Vad kostar läxhjälp?",
+      "description": "Vad som gör läxhjälp dyr eller billig, vad ni ska fråga innan ni bokar, varför rutavdraget inte gäller och vad vi tar, rakt ut.",
+      "image": "https://nextrum.se/bilder/02-personlig-anpassning-1280.jpg",
+      "inLanguage": "sv",
+      "author": { "@id": "https://nextrum.se/#org" },
+      "publisher": { "@id": "https://nextrum.se/#org" },
+      "mainEntityOfPage": "https://nextrum.se/vad-kostar-laxhjalp"
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://nextrum.se/vad-kostar-laxhjalp#faq",
+      "mainEntity": [
+        {"@type":"Question","name":"Gäller rutavdraget för läxhjälp?","acceptedAnswer":{"@type":"Answer","text":"Nej, inte sedan 2015. Barnpassning kan fortfarande ge rutavdrag, men bara om läxhjälpen är en liten del av tiden. Skatteverkets lista över vad som ger rutavdrag är länkad ovanför."}},
+        {"@type":"Question","name":"Varför är läxhjälp med en lärare dyrare?","acceptedAnswer":{"@type":"Answer","text":"Läraren har en lång utbildning, och priset speglar den. Det kan vara värt det när barnet behöver någon som undervisar från grunden. För den som behöver komma igång med läxorna och få saker förklarade på sin egen nivå räcker ofta någon som nyss läst samma kurs."}},
+        {"@type":"Question","name":"Vad kostar det för syskon hos er?","acceptedAnswer":{"@type":"Answer","text":"Sitter syskonen i samma pass kostar det 379 kr i timmen plus 69 kr i timmen totalt, alltså 448 kr i timmen för två eller tre barn."}},
+        {"@type":"Question","name":"Kostar det något att fråga?","acceptedAnswer":{"@type":"Answer","text":"Nej. Intresseanmälan är gratis, och ni binder er inte till något förrän ni bokar ett pass."}}
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"Nextrum","item":"https://nextrum.se/"},
+        {"@type":"ListItem","position":2,"name":"Läxhjälp i Stockholm","item":"https://nextrum.se/laxhjalp-stockholm"},
+        {"@type":"ListItem","position":3,"name":"Vad kostar läxhjälp?","item":"https://nextrum.se/vad-kostar-laxhjalp"}
+      ]
+    }
+  ]
+}
+</script>
+</body>
+</html>

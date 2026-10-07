@@ -69,7 +69,7 @@ VAGAR = {
   {"n": "kontakt",
    "o": ["kontakt", "kontakta", "mejl", "mejla", "ringa", "prata", "fråga er", "nå er", "support"],
    "t": "Kontakta oss", "h": "faq.html#kontakt",
-   "b": "Skriv till oss så svarar vi på mejlen du anger."},
+   "b": "Skriv till oss så svarar vi till e-postadressen du anger."},
   {"n": "logga",
    "o": ["logga in", "inloggning", "mitt konto", "studievy", "studiehjälparvy", "konto"],
    "t": "Logga in", "h": "foralder.html",

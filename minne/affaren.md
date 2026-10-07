@@ -246,7 +246,9 @@ Ur avsnitt 11:
   kräver stegen hos Google i `INTEGRATIONER.md` och ett klick på
   Koppla Google, inloggad som `info@nextrum.se`. Tills dess står den
   gamla texten om meddelanden kvar på passen. Kalendern, inbjudningarna
-  och rekryteringsmötets länk valdes bort. Fortnox stod här som en
+  och rekryteringsmötets länk valdes bort. Integritetspolicyn säger
+  samma sak sedan 2026-10-07 (den lovade Meet innan något var kopplat)
+  och ändras samma dag som kopplingen, `INTEGRATIONER.md` steg 9. Fortnox stod här som en
   ogjord koppling till Fas 14.8. Sedan Fas 14.9 sköts bokföringen,
   fakturorna och lönen i Fortnox, med flit utan koppling hit.
 

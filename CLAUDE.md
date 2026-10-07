@@ -260,7 +260,8 @@ Detaljer: `minne/grunden.md` (filkartan), `minne/vyerna.md`.
 
 ## 4. Språk
 **Koden är svensk**: identifierare, kommentarer, commits, filnamn, kolumner. `/en/` är genererad
-ur de svenska sidorna, textnod för textnod.
+ur de svenska sidorna, textnod för textnod. Undantaget är `en/tutoring-stockholm` (2026-10-07),
+sidan för utlandsfamiljer, som bara finns på engelska och lovar pass på engelska bara när vi har rätt person.
 1. Generatorn översätter aldrig `<script>`: text från JavaScript ligger som par i `ORD`
    (`NX.t()`, `ord()`), med språket ur `<html lang>`.
 2. Det som skrivs till databasen förblir svenska.
@@ -452,7 +453,9 @@ Detaljer: `minne/funktioner.md`.
 Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessidor.py`
 (`laxhjalp-*` med stadiesidorna, guiderna, navets kort och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `satt-logga.py`,
 `bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
-`bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras) och
+`bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras),
+`bygg-delningsbilder.js` (för hand: en delningsbild per sida i kartan, `delning/`, med rubriken och
+priset; körs när en rubrik eller priset ändras, och `kolla-delningsbilder.py` vaktar) och
 `bygg-uppgifter.py --sql` (alltid en ny migration). **`satt-version.py` körs SIST.** Sidorna
 säger bara det som är sant: inga antal, betyg, betygshöjningar, okontrollerade skolnamn,
 kursnamn med årtal eller vad familjerna brukar göra (de är för få, 2026-10-06); en guide länkar det den påstår, och dess författare är Nextrum. En adress
@@ -463,7 +466,7 @@ Detaljer: `minne/genererat-och-ci.md`.
 ## 9. CI — `.github/workflows/kontroll.yml`
 Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
 `kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`,
-`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `satt-version.py --kolla`, de genererade filerna
+`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `kolla-delningsbilder.py`, `satt-version.py --kolla`, de genererade filerna
 (`git diff --exit-code`), språkdiffen (också attributnamn), `deno check` och `deno test`.
 - `node --check` ser bara syntax; ett namn som inte hämtats ur `NXAdmin` smäller vid körning.
 - `indexnow.yml` är ingen kontroll. Nyckeln står i roten och i `verktyg/indexnow.py`: byt båda.

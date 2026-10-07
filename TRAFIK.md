@@ -68,7 +68,20 @@ första månaden.
    https://nextrum.se/plugga-infor-prov
    https://nextrum.se/hjalpa-barn-med-lasforstaelse
    https://nextrum.se/barnet-vill-inte-gora-laxorna
+   https://nextrum.se/vad-kostar-laxhjalp
+   https://nextrum.se/laxhjalp-hogstadiet
+   https://nextrum.se/nationella-prov-ak-9
+   https://nextrum.se/laxhjalp-eller-privatlarare
+   https://nextrum.se/laxhjalp-mellanstadiet
+   https://nextrum.se/nationella-prov-ak-6
+   https://nextrum.se/laxhjalp-gymnasiet
+   https://nextrum.se/en/tutoring-stockholm
+   https://nextrum.se/infor-terminsbetyget
+   https://nextrum.se/laxhjalp-efter-sommarlovet
    ```
+   Säsongsguiderna (efter sommarlovet, inför terminsbetyget och
+   proven) har samma adress varje år: be om indexering igen när
+   säsongen närmar sig, i juli, oktober och januari.
 3. **Bing Webmaster Tools** (bing.com/webmasters): logga in och välj
    *Importera från Google Search Console*. Det är ett klick. Bing
    matar ChatGPT:s sökning, Copilot och DuckDuckGo, och sajten skickar

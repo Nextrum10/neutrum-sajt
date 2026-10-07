@@ -90,11 +90,12 @@ med flit; `http.server` rakt av svarar 404 på varenda länk.
 | `verktyg/` | Kontroller och generatorer. Körs i CI |
 | `supabase/migrations/` | Databasen. `arkiv/` är historik |
 
-Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan
-(`laxhjalp-online`) och fyra guider (`hjalpa-barn-med-matte`,
-`hjalpa-barn-med-lasforstaelse`, `plugga-infor-prov`,
-`barnet-vill-inte-gora-laxorna`) genereras; navet
-`laxhjalp-stockholm.html` är handskrivet. `/en/` är elva översatta sidor.
+Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), tre stadiesidor,
+onlinesidan (`laxhjalp-online`) och tio guider i tre grupper genereras
+(`minne/genererat-och-ci.md`); navet `laxhjalp-stockholm.html` är
+handskrivet. `/en/` är tolv översatta sidor och `en/tutoring-stockholm`,
+som bara finns på engelska (2026-10-07). Delningsbilderna står i
+`delning/`, en per sida i kartan, byggda av `verktyg/bygg-delningsbilder.js`.
 
 ---
 

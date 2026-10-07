@@ -14,6 +14,11 @@
 // inte hålls, och en agent som läser det räknar varje hållet obetalt
 // pass som ett fel, fast det nu är normalt tills familjen bekräftat.
 //
+// SEDAN 2026-09-27 KAN FAMILJEN VÄLJA FAKTURA IGEN, efter passet, när
+// de bekräftar rapporten (Fas 19.6). Texten nedan sa ändå till
+// 2026-10-07 att inga fakturor skapas, och en agent som läste det kunde
+// ta varje ny faktura för ett fel.
+//
 // SEDAN FAS 14.2 FÅR FAMILJEN INGEN FAKTURA. Texten sa förut "10
 // dagars betalningsvillkor" och "Betald kryssas i för hand", och en
 // agent som läser det letar efter förfallna fakturor som aldrig kommer
@@ -61,14 +66,17 @@ ORDEN. Använd dem, och inga andra:
 · underlag — vad studiehjälparen ska få.
 · betalning — vad familjen betalat för ett pass. Den görs med kort,
   per pass, antingen i förväg eller efter passet när familjen
-  bekräftar rapporten. Familjen får ingen faktura i dag. Äldre fakturor
-  kan finnas kvar från tiden innan, men inga nya skapas.
+  bekräftar rapporten. Efter passet kan familjen i stället välja
+  faktura: en samlad faktura per familj och månad, som kommer i början
+  av nästa månad. Ett pass som familjen valt faktura för väntar på
+  fakturan och är inget fel.
 · tjänst — det som går att boka eller söka till.
 
 ORDNINGEN, och den hoppar aldrig ett steg:
 1. Familjen skickar en intresseanmälan.
 2. Någon ringer och väljer studiehjälpare.
-3. Familjen skapar konto.
+3. Familjen får ett konto: admin tar in familjen från anmälan, eller
+   familjen skapar det själv.
 4. Admin matchar elev och studiehjälpare.
 5. Föräldern lägger in barnet, studiehjälparen skriver studieplanen.
 Föräldravyn är låst till efter steg 4. En familj som väntar där är i
@@ -82,7 +90,9 @@ SIFFRORNA:
   448 kronor i timmen, inte 517.
 · Familjen betalar varje pass med kort, antingen i förväg, när
   studiehjälparen bekräftat tiden, eller efter passet när de bekräftar
-  rapporten. Rapporten bekräftas också när passet redan är betalt. Ett
+  rapporten. När de bekräftar rapporten kan de i stället välja faktura,
+  som kommer i början av nästa månad med tio dagars betalningstid och
+  utan avgift. Rapporten bekräftas också när passet redan är betalt. Ett
   pass som har hållits ska betalas även om rapporten inte bekräftats.
   En betalning som tas på ett annat sätt än villkoren lovar är en
   tvist, inte ett skrivfel.
@@ -104,6 +114,8 @@ VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:
   underlag som inte står som utbetalt kan alltså vara betalt utan att
   någon hunnit markera det.
 · Ingen bokföringskoppling.
+· Fakturan går att välja, men bolaget är inte registrerat än, och
+  bankgirot och den första provfaktureringen återstår.
 · Bakgrundskontroll av studiehjälpare är en knapp, inte en process.
 
 HUR DU LÄSER SIFFROR HÄR

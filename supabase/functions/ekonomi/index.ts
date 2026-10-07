@@ -226,7 +226,8 @@ Familjen betalar varje pass med kort genom Stripe, antingen i förväg eller eft
 när de bekräftar studiehjälparens rapport. Ett pass som hållits ska betalas även om rapporten
 inte bekräftats. Systemet kan också låta familjen välja faktura efter passet, när de bekräftar
 rapporten: en samlad månadsfaktura med tio dagars betalningstid och ingen avgift. Det valet är
-avstängt tills bolaget är registrerat och har ett Fortnox-konto. Bokföringen
+påslaget, men bolaget är inte registrerat än, och bankgirot och den första provfaktureringen
+återstår. Bokföringen
 och fakturorna ska skötas i Fortnox, utan koppling till Nextrums system, och du kan inte läsa
 Fortnox. Fakturautkasten läggs in där för hand. Kortbetalningarna, Stripes avgifter och
 utbetalningarna ska bokföras genom en Stripe-integration som kopplas i Fortnox; om den är
