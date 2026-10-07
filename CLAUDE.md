@@ -295,7 +295,8 @@ Detaljer: `minne/grunden.md`.
   `apply_migration` gör likadant. Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en
   rensning per funktion), kör dem avsnitt för avsnitt med `execute_sql` och registrera filens text sedan i
   `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL,
-  och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*`, borttagna 2026-10-07).
+  och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*` från 2026-10-02 står kvar och väntar
+  på ett ja, avsnitt 11).
 - `arkiv/` ändras aldrig; en rättelse är en ny migration. `schema-v22.sql` kördes aldrig, kör
   den inte. `schema.sql` rensar tabellerna.
 - **Flera sessioner** kör mot samma databas: läs driften, inte grenen. Lappa en funktion med
@@ -551,9 +552,9 @@ Detaljer: `minne/grunden.md`.
   får frågan vid nästa inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i
   `DATASKYDD.md`. **Provobjekten** (`provobjekten_tas_bort`, med `drop`) väntar på en bekräftelse: verktyget
   hängde sig i 60 sekunder utan svar, och inget hände (`DEPLOY-BARNKONTON.md` 10).
-- **Betygsgarantin** (2026-10-07) står i villkoren och säljs på startsidan, prissidan och i FAQ
-  från merge; migrationen `betygsgarantin` byter versionen och skapar anmälan i vyn efter merge, och
-  då får alla frågan. Hela `rls-test.sql` gick igenom lokalt (1490 av 1490), inte mot driften.
+- **Betygsgarantin** (2026-10-07) är i drift sedan samma dag och säljs på startsidan, prissidan och i
+  FAQ: `betygsgarantin` från merge-commiten (md5 prövad, också de sex funktionskropparna), och hela
+  `rls-test.sql` 1490 av 1490 mot driften. Versionen är `2026-10-07`, så alla får frågan om villkoren igen.
   Inget är byggt för att pröva ett anspråk (admin räknar ur vyerna; anmälningarna står i elevens
   panel), passen har inget ämnesfält, studiehjälparen ser inte vilka ämnen som har garanti, och
   juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`.
