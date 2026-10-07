@@ -961,6 +961,361 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
 }
 
 /* ============================================================
+   14. STEGSCENEN (2026-10-07) — Från intresseanmälan till första passet
+
+   Leo 2026-10-07: "Från intresseanmälan till första passet ska ha
+   bättre animation mellan bilderna på datorvy och mobil ska även få
+   den animation. Stegen ska visas bredvid bilderna. 01 osv ska vara
+   större. Och svepningen ska fungera på mobilen."
+
+   Startsidan och Så fungerar Nextrum, på båda språken. Grunden (alla
+   steg öppna, siffrorna, fotot bredvid) står i cinema och är läget
+   utan skript och med reducerad rörelse. Allt här kräver html.nx-sr
+   OCH .igang på sektionen, som stegFoton i nextrum-start.js sätter
+   först när fotona finns och scenen är kopplad. Laddar skriptet
+   inte, eller kastar det, står scenen kvar i grunden i stället för
+   att sitta fast med steg 2–5 hopfällda.
+
+   Två lägen ur html[data-motion], inte ur bredden:
+     full  mus och bredare än 900 px: den pinnade scenen. Stegen
+           tänds medan man scrollar, en linje fylls ner genom dem,
+           och fotot byts med en riktad djupövergång.
+     lite  pekskärm eller smalare: samma lista som en svepbar rad.
+           Varje kort är ett genomskinligt fönster över fotot med
+           sitt steg under, så ett svep på bilden flyttar raden och
+           steget står vid sin bild. Fotot byts med samma övergång,
+           i svepets riktning. En platta liggande hamnade förut i
+           den pinnade scenen utan att något bytte steg.
+
+   FOTOTS ÖVERGÅNG. Tre lägen ur klasserna, och riktningen följer av
+   dem: .pa är steget, .forbi de som passerats, resten kommer. Det
+   nya fotot glider in från det håll man är på väg mot och landar
+   från lite för nära; det gamla sjunker bakåt och tonar bort en
+   stund efter att det nya börjat, så att papperet aldrig syns
+   igenom. Baklänges går allt åt andra hållet utan att skriptet vet
+   om riktningen. Bilden i ramen glider sakta från för nära till
+   rätt avstånd (Ken Burns, som bildväggen i avsnitt 9). Bara
+   opacity, translate och scale: inget clip-path, som ritas om
+   bildruta för bildruta på ett stort foto.
+
+   Specificiteten är densamma i alla tre prefixen nedan (0,4,1), så
+   ordningen avgör: det gemensamma först, sedan full, sedan lite.
+   ============================================================ */
+
+/* ---------- fotona, båda lägena ---------- */
+/* Ramen klipper och bär skuggan, så att fotot som glider in syns
+   bara inuti den. Djupet bakom är mörkt, och det gamla fotot sjunker
+   ner i det. Det mörka ligger en pixel innanför ramens kant: låg det
+   som ramens bakgrund blödde det fram i de rundade hörnens
+   kantutjämning, en mörk hårlinje runt fotot i ljust läge. */
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild{
+  overflow:hidden;border-radius:22px;box-shadow:var(--sk-foto);
+}
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild::before{
+  content:"";position:absolute;inset:1px;z-index:0;
+  border-radius:21px;background:var(--nt-2);
+}
+/* Det som kommer väntar utanför ramen, helt synligt: det täcker det
+   gamla när det glider in, i stället för att tona över det (en
+   toning visar två halvgenomskinliga foton på varandra halvvägs).
+   Det som lämnar baklänges ligger kvar överst (z-index) tills det
+   gled ut, och avslöjar fotot under sig. */
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig{
+  opacity:1;translate:0 100%;scale:1;box-shadow:none;z-index:1;
+  transition:translate .9s var(--e-ut),scale .9s var(--e-ut),opacity 0s linear,z-index 0s linear .9s;
+  will-change:translate,scale;
+}
+/* Det som passerats sjunker bakåt och mörknar under det nya, och
+   göms när det är helt täckt. */
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.forbi{
+  opacity:0;translate:0 -7%;scale:.9;z-index:1;
+  transition:translate .9s var(--e-ut),scale .9s var(--e-ut),opacity 0s linear .9s,z-index 0s linear;
+}
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.pa{
+  translate:0 0;z-index:2;
+  transition:translate .9s var(--e-ut),scale .9s var(--e-ut),opacity 0s linear,z-index 0s linear;
+}
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig::before{
+  content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:var(--nt-2);opacity:0;
+  transition:opacity .9s var(--e-ut);
+}
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.forbi::before{opacity:.5}
+/* Fotona mellan det gamla och det nya när man hoppar över steg
+   (skriptet sätter .tyst): de byter läge direkt, bakom de två som rör
+   sig, i stället för att fara genom ramen. */
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.tyst,
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.tyst::before{transition:none}
+/* Ken Burns. Bilden som lämnar håller sitt läge tills ramen tonat
+   bort och hoppar sedan tillbaka osynligt; annars zoomar den ut
+   medan man ser den gå. Varannan bild driver åt andra hållet. */
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig .nx-img{
+  --hur-kb:2.2%;
+  scale:1.16;translate:var(--hur-kb) 1.2%;
+  transition:opacity .7s var(--e-mjuk),scale 0s linear 1.2s,translate 0s linear 1.2s;
+}
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig:nth-child(even) .nx-img{--hur-kb:-2.2%}
+html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.pa .nx-img{
+  scale:1.03;translate:0 0;
+  transition:opacity .7s var(--e-mjuk),scale 5s cubic-bezier(.2,.6,.3,1),translate 5s cubic-bezier(.2,.6,.3,1);
+}
+
+/* ---------- full: den pinnade scenen ---------- */
+@media (min-width:901px){
+  /* Sträckan är hur länge scenen sitter fast: 100svh är själva vyn,
+     resten (130svh) delas på de fem stegen. Högre = långsammare. */
+  html.nx-sr[data-motion="full"] .nx-hur.igang{height:230svh}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-fast{
+    position:sticky;top:0;height:100svh;min-height:600px;padding-block:0;
+  }
+
+  /* Stegen. Inga linjer mellan raderna: en linje genom dem i
+     stället, mellan siffran och texten, som fylls ner till steget
+     man står på. */
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li{
+    position:relative;border:0;cursor:pointer;
+    padding-block:clamp(11px,1.25vw,17px);
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li::before,
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li::after{
+    content:"";position:absolute;top:0;bottom:0;width:2px;
+    left:calc(var(--hur-tal) * 1.12 + var(--hur-glapp) / 2 - 1px);
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li:first-child::before,
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li:first-child::after{border-radius:2px 2px 0 0}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li:last-child::before,
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li:last-child::after{border-radius:0 0 2px 2px}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li::before{background:var(--ln-2)}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li::after{
+    background:var(--acc);
+    scale:1 0;transform-origin:50% 0;
+    transition:scale .6s var(--e-ut),opacity .4s var(--e);
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li.forbi::after{scale:1 1;opacity:.32}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li.pa::after{scale:1 1}
+
+  /* Siffran vilar liten och ljus och växer fram i leran när steget
+     tänds. Storleken rör sig bara med scale. */
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg em{
+    color:var(--ln-2);
+    scale:.7;transform-origin:0 58%;
+    transition:color .4s var(--e),scale .6s var(--fjader);
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li.pa em{color:var(--acc);scale:1}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg h3{
+    opacity:.4;transition:opacity .45s var(--e);
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li.pa h3{opacity:1}
+  /* Dragspelet: bara det tända steget visar sin text. Höjden är det
+     enda här som inte är opacity eller transform; den rör bara den
+     vänstra spalten i en fastnålad ruta, och de två stegen som byts
+     fälls ihop och ut samtidigt, så att resten nästan står still.
+     Raden är bredare än i grunden (46ch mot 40ch): då ryms varje text
+     på två rader på en vanlig skärm, så att spalten inte byter höjd,
+     och rubriken ovanför inte glider, när steget byts (den engelska
+     första texten tog tre rader och flyttade rubriken 12 px). */
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg p{
+    max-width:46ch;
+    max-height:0;margin-top:0;opacity:0;overflow:hidden;translate:0 8px;
+    transition:max-height .55s var(--e-ut),margin-top .55s var(--e-ut),opacity .3s var(--e),translate .55s var(--e-ut);
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li.pa p{
+    max-height:8em;margin-top:9px;opacity:1;translate:0 0;
+    transition-delay:0s,0s,.12s,.12s;
+  }
+
+  /* Märket på fotot: stegets nummer och namn, så att man ser vilket
+     steg bilden hör till utan att flytta blicken. Skriptet kopierar
+     det ur steget (aria-hidden; steget läses redan i listan). */
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-mark{
+    position:absolute;z-index:1;
+    left:clamp(14px,1.5vw,22px);bottom:clamp(14px,1.5vw,22px);
+    max-width:calc(100% - 2 * clamp(14px,1.5vw,22px));
+    display:flex;align-items:center;gap:11px;
+    padding:6px 18px 6px 6px;border-radius:100px;
+    background:var(--pap);color:var(--bl);
+    box-shadow:var(--kort-sk);
+    font-size:.9rem;font-weight:600;letter-spacing:-.012em;line-height:1.2;
+    opacity:0;translate:0 14px;
+    transition:opacity .25s var(--e),translate .4s var(--e-ut);
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-fig.pa .nx-hur-mark{
+    opacity:1;translate:0 0;
+    transition:opacity .45s var(--e) .5s,translate .7s var(--fjader) .5s;
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-mark b{
+    flex:none;display:grid;place-items:center;
+    min-width:34px;height:34px;padding-inline:7px;border-radius:100px;
+    background:var(--acc);color:var(--acc-ink);
+    font-size:.92rem;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-mark span{
+    min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+}
+@media (min-width:901px) and (hover:hover) and (pointer:fine){
+  /* Ett steg man pekar på går att trycka på (scrollen förs dit), och
+     klarnar en aning. Bara det som inte redan är tänt. */
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li:not(.pa):hover h3{opacity:.72;transition-duration:.15s}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li:not(.pa):hover em{color:var(--bl-3);transition-duration:.15s}
+}
+/* Kort skärm. En bärbar med bokmärkesrad ligger ofta på 700–780 px,
+   och den pinnade rutan har overflow:hidden: sista steget och
+   knapparna klipptes bort utan att något såg trasigt ut. Förut
+   krympte två brytpunkter (880 och 720 px) allt i två hopp, och på
+   1280×720 blev scenen liten och tom. Nu följer rubriken, siffrorna,
+   stegen och luften både bredden och höjden (svh), det som är minst,
+   så att scenen fyller rutan på varje skärm (prövat på 1440×900,
+   1366×768, 1280×720 och 1024×768). */
+@media (min-width:901px){
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-fast{min-height:0}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-d2{font-size:clamp(1.8rem,min(3.9vw,6.3svh),3.6rem)}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-d2:not(:has(+ .sid-hur-lede)){margin-bottom:clamp(16px,min(3.4vw,4.4svh),44px)}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li{
+    --hur-tal:clamp(2.3rem,min(4vw,6.3svh),3.6rem);
+    padding-block:clamp(7px,1.75svh,17px);
+  }
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg h3{font-size:clamp(1.15rem,min(2.5vw,3.6svh),2.05rem)}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg p{font-size:clamp(.92rem,2.1svh,1rem)}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-cta{margin-top:clamp(16px,min(3.4vw,4.4svh),42px)}
+  /* Fotot är 4:5 av spaltbredden och blir högre än rutan på en kort
+     skärm. Där tar höjden slut först, och bredden står kvar: ett
+     rutnätsobjekt med bildformat ställer sig annars till vänster i sin
+     spalt (justify-self:normal är start för det) och lämnar ett hål
+     till höger. */
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-bild{justify-self:stretch;max-height:min(88svh,820px)}
+}
+
+/* ---------- lite: den svepbara raden ---------- */
+/* Rutnätet är en container, så att fotot och fönstren räknas ur
+   samma bredd (cqi) och blir exakt lika höga, oberoende av 100vw och
+   rullningslister. Texten i spalten blir rutnätets egna rader
+   (display:contents på en div utan semantik, aldrig på ol eller li). */
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-grid{
+  container-type:inline-size;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"et" "rubrik" "lede" "scen" "prickar" "cta";
+  gap:0;align-items:start;
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-text{display:contents}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-et{grid-area:et;justify-self:start}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-d2{grid-area:rubrik}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .sid-hur-lede{grid-area:lede}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-cta{grid-area:cta;margin-top:clamp(20px,6cqi,30px)}
+
+/* Fotot och fönstren: samma höjd, i en och samma regel. Högst halva
+   skärmen, så att fotot och sitt steg syns samtidigt också på en kort
+   telefon (360×640 gav annars ett foto som tog hela vyn, och siffran
+   hamnade under kanten). */
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-bild,
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg > li::before{height:min(112cqi,50svh)}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-bild{grid-area:scen;order:0;aspect-ratio:auto;margin:0}
+
+/* Raden ligger ovanpå fotot (z-index 1 mot fotots 0) och går kant i
+   kant, så att nästa kort tittar fram vid skärmens kant. Korten är
+   86 % av spalten; procenten i flex-basis räknas mot radens inre
+   bredd, som är spalten plus marginalen till höger. Den tomma
+   ::after i slutet gör att sista kortet kan snäppa till början. */
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg{
+  grid-area:scen;position:relative;z-index:1;
+  display:flex;gap:14px;
+  margin-inline:calc(var(--m) * -1);
+  padding:0 0 0 var(--m);scroll-padding-inline:var(--m);
+  overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg::-webkit-scrollbar{display:none}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg::after{
+  content:"";flex:0 0 calc(100% - (100% - var(--m)) * .86 - 14px);
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg > li{
+  --hur-tal:clamp(3.4rem,17cqi,4.8rem);
+  flex:0 0 calc((100% - var(--m)) * .86);
+  scroll-snap-align:start;scroll-snap-stop:always;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"fonster" "tal" "text";
+  align-content:start;
+  border:0;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg > li::before{
+  content:"";display:block;grid-area:fonster;
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg em{
+  grid-area:tal;margin-top:clamp(18px,5cqi,26px);
+  color:var(--ln-2);
+  translate:0 .14em;
+  transition:color .45s var(--e),translate .7s var(--e-ut);
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg li.pa em{color:var(--acc);translate:0 0}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg li > div{
+  grid-area:text;padding-top:clamp(12px,3.4cqi,18px);
+  opacity:.38;transition:opacity .45s var(--e);
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg li.pa > div{opacity:1}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg h3{font-size:clamp(1.3rem,6.2cqi,1.75rem)}
+
+/* Fotot byts i svepets riktning: det nya glider in från höger över
+   det gamla, som sjunker bakåt åt vänster. Baklänges glider fotot ut
+   åt höger och avslöjar det förra. */
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-bild .nx-fig{translate:100% 0}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-bild .nx-fig.forbi{translate:-7% 0}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-bild .nx-fig.pa{translate:0 0}
+
+/* Stegstaplarna: knappar med 44 px yta, stapeln är ::before. Den
+   första står i linje med spaltens kant. */
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-prickar{
+  grid-area:prickar;display:flex;
+  margin:clamp(8px,2.6cqi,14px) 0 0 -9px;
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-prickar button{
+  width:44px;height:44px;padding:0;border:0;background:none;
+  display:grid;place-items:center;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-prickar button::before{
+  content:"";width:26px;height:4px;border-radius:4px;
+  background:var(--bl-3);opacity:.32;scale:.46 1;
+  transition:background-color .3s var(--e),opacity .3s var(--e),scale .5s var(--fjader);
+}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-prickar button[aria-current="step"]::before{
+  background:var(--acc);opacity:1;scale:1;
+}
+
+/* En platta liggande: texten till vänster och raden till höger, som
+   scenen på dator men utan pinning. Den vänstra spalten står mitt för
+   raden. Stående (iPad Pro, 1024×1366) blev den vänstra spalten för
+   smal för rubriken och knapparna; där gäller telefonens spalt. */
+@media (min-width:901px) and (orientation:landscape){
+  html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-grid{
+    grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);
+    grid-template-rows:1fr repeat(4,auto) 1fr auto;
+    grid-template-areas:". scen" "et scen" "rubrik scen" "lede scen" "cta scen" ". scen" ". prickar";
+    column-gap:clamp(32px,5vw,72px);
+  }
+  html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-bild,
+  html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg > li::before{height:min(62cqi,60svh)}
+  html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg{
+    margin-inline:0 calc(var(--m) * -1);padding:0;scroll-padding-inline:0;
+  }
+  html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-d2{font-size:clamp(2rem,3.5vw,3.2rem)}
+  html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg > li{--hur-tal:clamp(3.4rem,6cqi,4.6rem)}
+  html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg h3{font-size:clamp(1.3rem,2.6cqi,1.9rem)}
+}
+
+/* Reducerad rörelse: nx-sr sätts aldrig i det läget, så inget av det
+   ovan gäller från början. Slår någon på det med sidan öppen står
+   scenen kvar men byter utan att något glider. */
+@media (prefers-reduced-motion:reduce){
+  html.nx-sr .nx-hur.igang .nx-hur-bild .nx-fig,
+  html.nx-sr .nx-hur.igang .nx-hur-bild .nx-fig .nx-img,
+  html.nx-sr .nx-hur.igang .nx-hur-mark,
+  html.nx-sr .nx-hur.igang .nx-hur-steg em,
+  html.nx-sr .nx-hur.igang .nx-hur-steg p{translate:none !important;scale:none !important}
+}
+
+/* ============================================================
    9. SÅ KAN ETT PASS SE UT — bilderna kommer in
 
    Varje foto stiger upp och tonar fram, och bilden inuti glider från
