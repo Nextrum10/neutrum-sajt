@@ -521,9 +521,9 @@ Detaljer: `minne/grunden.md`.
   rad 23 i `DATASKYDD.md`, och familjerna med barnkonto och studiehjälparna har inte fått veta
   (avsnitt 8 där).
 - **Under 18, nejet och det admin sett** (2026-10-05) är i drift sedan 2026-10-06: migrationerna
-  `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Inget riktigt
-  nej eller mejl till en vårdnadshavare har gått än. Policytexten om vårdnadshavaren är inte läst av
-  juristen.
+  `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Det första
+  mejlet till en vårdnadshavare gick 2026-10-06; inget riktigt nej har gått än. Policytexten om
+  vårdnadshavaren är inte läst av juristen (underlaget: `DATASKYDD.md` avsnitt 8).
 - **Intaget, introduktionen och barnets behörigheter** (2026-10-06) är i drift sedan 2026-10-07:
   migrationen `barnets_behorigheter` från merge-commiten (md5 prövad), `bjud-in` v9 och `ansokan-notis`
   v8 från main, hämtade tillbaka och byte för byte lika, och hela `rls-test.sql` 1433 av 1433 mot
