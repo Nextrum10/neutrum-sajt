@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=ed943542">
-<link rel="stylesheet" href="nextrum-vy.css?v=8ff1caaa">
+<link rel="stylesheet" href="nextrum-vy.css?v=1b1eb517">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=6695d126">
@@ -708,7 +708,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Profil &amp; inställningar</h2>
-            <p>Ditt konto, barnen, timbanken, vad passen kostar, dokumenten vi
+            <p>Ditt konto, barnen, timbanken, vad passen kostar, betygsgarantin, dokumenten vi
                delat med er och er kod att tipsa andra familjer med. Kontot här är ditt som förälder: det är du som
                står för betalningen, oavsett hur många barn som pluggar.</p>
           </div>
@@ -723,6 +723,8 @@
                   id="flik-timbank" aria-controls="panel-timbank">Timbanken</button>
           <button class="vy-flik" type="button" role="tab" data-flik="pris"
                   id="flik-pris" aria-controls="panel-pris">Pris &amp; villkor</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="garanti"
+                  id="flik-garanti" aria-controls="panel-garanti">Betygsgaranti</button>
           <button class="vy-flik" type="button" role="tab" data-flik="dokument"
                   id="flik-dokument" aria-controls="panel-dokument">Dokument</button>
           <button class="vy-flik" type="button" role="tab" data-flik="tips"
@@ -964,6 +966,21 @@
           </div>
         </div>
 
+        <!-- ============ BETYGSGARANTIN (2026-10-07) ============
+             Föräldern anmäler garantin här i stället för i ett mejl:
+             ämnena, högst tre per elev och läsår, och elevens nuvarande
+             betyg i varje. Databasen prövar allt, också 31 december, och
+             sätter tiden (anmal_betygsgaranti); vyn visar bara vad den
+             svarar. Ritas av ritaGaranti() ur betygsgarantier. -->
+        <div class="vy-flik-panel" role="tabpanel" data-flik="garanti"
+             id="panel-garanti" aria-labelledby="flik-garanti" hidden>
+          <div class="dbox">
+            <h5>Betygsgaranti <em>högst tre ämnen per elev och läsår</em></h5>
+            <div id="garanti-ruta"><div class="loading">Hämtar</div></div>
+            <p class="ok-msg" id="garanti-msg" role="status"></p>
+          </div>
+        </div>
+
         <!-- ============ TIPSA EN FAMILJ (2026-09-30) ============
              Familjens egen kod och länken till intresseanmälan, och
              timmarna på köpet för familjer som anmält sig med den.
@@ -1056,6 +1073,6 @@
 <script src="nextrum-uppgifter.js?v=5c84b3cb"></script>
 <script src="nextrum-introduktion.js?v=dd9604a0"></script>
 <script src="nextrum-modulvakt.js?v=568e1d7e"></script>
-<script src="nextrum-studie-vy.js?v=98e61273"></script>
+<script src="nextrum-studie-vy.js?v=4ce35d07"></script>
 </body>
 </html>

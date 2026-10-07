@@ -41,11 +41,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Betygsgarantin** (2026-10-07, `#betygsgaranti`): svår att få genom villkor som går att
   räkna (hållen tid, uteblivna pass, uppgifterna i tid, betalningarna), aldrig genom att vi
   bedömer engagemang; den enda bedömningen är Leos regel att ett ämne som inte gick upp för att
-  tiden lagts på ett annat inte omfattas. Den gäller årskursens sista betyg (varje årskurs), högst tre ämnen och två
-  timmar i veckan sammanlagt, och bara om den är anmäld och passen börjat före vårterminen. Anmälan bär bara elev och ämnen; betyg ser vi först
-  vid anspråket och raderar dem för hand när det är avgjort. Ersättningen är 10 timmar sammanlagt,
-  aldrig pengar. Den står bara i
-  villkoren: sidorna säljer den inte och lovar inga betygshöjningar.
+  tiden lagts på ett annat av ämnena med garanti inte omfattas, och hjälp i andra ämnen påverkar
+  den inte. Årskursens sista betyg (varje årskurs), högst tre ämnen, två timmar i veckan och 10
+  timmar sammanlagt, och bara anmäld och påbörjad senast 31 december. Föräldern anmäler i vyn
+  med barnets nuvarande betyg, och bara `anmal_betygsgaranti()` skriver och prövar; ämnena står i
+  `GARANTI_AMNEN` och `intern.betygsgaranti_amnen()` och ändras tillsammans, betyget gallras den 1
+  oktober efter läsåret, och kopiorna vid anspråket raderas för hand. Ersättningen är timmar,
+  aldrig pengar. Startsidan och prissidan säljer den utan villkor och siffror, men länkar alltid
+  till villkoren, säger att de gäller och lovar aldrig ett betyg.
 - **Chatten** läser admin med `chatt_las()` (loggat, aldrig cachat), aldrig `NXKontakt.tråd()`;
   att vi kan läsa står i policyn och chatten och tas inte bort.
 - **Månader** väljs på passets månad, och ingen väljare börjar före september 2026.
@@ -545,10 +548,12 @@ Detaljer: `minne/grunden.md`.
   får frågan vid nästa inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i
   `DATASKYDD.md`. **Provobjekten** (`provobjekten_tas_bort`, med `drop`) väntar på en bekräftelse: verktyget
   hängde sig i 60 sekunder utan svar, och inget hände (`DEPLOY-BARNKONTON.md` 10).
-- **Betygsgarantin** (2026-10-07) står i villkoren från merge; migrationen `betygsgarantin`
-  byter versionen efter merge, och då får alla frågan. Inget är byggt för att pröva ett anspråk
-  (admin räknar ur vyerna), passen har inget ämnesfält, och juristen har inte läst villkoret
-  eller rad 25 i `DATASKYDD.md`.
+- **Betygsgarantin** (2026-10-07) står i villkoren och säljs på startsidan och prissidan från
+  merge; migrationen `betygsgarantin` byter versionen och skapar anmälan i vyn efter merge, och
+  då får alla frågan. Hela `rls-test.sql` gick igenom lokalt (1481 av 1481), inte mot driften.
+  Inget är byggt för att pröva ett anspråk (admin räknar ur vyerna; anmälningarna står i elevens
+  panel), passen har inget ämnesfält, studiehjälparen ser inte vilka ämnen som har garanti, och
+  juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

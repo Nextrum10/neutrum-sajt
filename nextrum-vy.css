@@ -2052,6 +2052,13 @@ a.pass-lank:hover{color:var(--acc)}
    betalat under mätaren. Förklaringen står över korten, inte mellan dem. */
 .tb-forklaring{margin:0 0 16px}
 .erb-mitt .tb-rorelser{margin-top:10px}
+/* Betygsgarantin under Profil (2026-10-07): ett block per barn, med en
+   linje emellan som mellan barnens kort, och de anmälda ämnena som
+   timbankens rader. */
+.garanti-barn{margin-top:18px;padding-top:14px;border-top:1px solid var(--ln)}
+.garanti-namn{margin:0;font-size:.92rem;line-height:1.45;color:var(--bl)}
+.garanti-namn b{font-weight:650}
+.garanti-form{margin-top:12px}
 /* Fas 21.2: tio dagar före sista dagen, samma dag som mejlet går. */
 .erb-snart{margin:10px 0 0;font-size:.84rem;line-height:1.5;color:var(--bl)}
 .erb-snart a{color:var(--acc);font-weight:600}

@@ -528,28 +528,35 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   och att bolaget bedömer det. Ett villkor som bara vi bedömer gör
   garantin till ett löfte vi själva kan säga nej till: vilseledande
   marknadsföring, och troligen ett oskäligt villkor. Våra läses ur det som
-  redan finns: hållen tid, `bookings.attendance = 'franvarande'`,
-  `homework.status` mot `due_date`, och betalningarna.
+  redan finns: hållen tid, rapporterna, `bookings.attendance =
+  'franvarande'`, `homework.status` mot `due_date`, och betalningarna.
 - **Årskursens betyg** (Leo samma dag, efter ett varv med 40 och 30
   veckor): betyget som räknas är årskursens sista, det skolan sätter när
   läsåret slutar, i varje årskurs. Texten säger inte bara "slutbetyg", för
   i åk 6-8 heter vårens betyg terminsbetyg och ordet hade uteslutit dem;
   "i åk 9 slutbetyget" lästes som bara nian, så texten säger nu rakt ut
-  "varje årskurs, inte bara årskurs 9". Ett
-  terminsbetyg till jul räknas inte, och därför är kopiorna betyget före
-  anmälan och det som räknas, inte "de två senaste".
-- **Inget veckoräknande, men ett golv:** garantin ska vara anmäld och
-  passen ha börjat före vårterminen. Utan golvet börjar någon i maj, när
-  betyget i praktiken är satt, köper ett par timmar och får tio.
+  "varje årskurs, inte bara årskurs 9". Ett terminsbetyg till jul räknas
+  inte, och därför är kopiorna betyget före anmälan och det som räknas,
+  inte "de två senaste".
+- **Inget veckoräknande, men ett golv: 31 december** (Leo). Garantin ska
+  vara anmäld och passen ha börjat senast då. Utan golvet börjar någon i
+  maj, när betyget i praktiken är satt, köper ett par timmar och får tio.
+  Först stod det "före vårterminen", men vårterminen börjar olika dagar
+  i olika kommuner och skolor, och det kan ingen databas pröva.
 - **Högst tre ämnen per elev och läsår**, två timmar varje skolvecka
   sammanlagt, inte per ämne (Leo: inte sex timmar i veckan), och 10 timmar
   sammanlagt, inte per ämne som inte gick upp (Leo). Går betyget inte upp i
-  ett ämne för att familjen fokuserat mer på ett annat, gäller garantin
-  inte för det (Leo, med hans ord). En räknebar form, under hälften av det
-  största ämnets tid, sa han nej till samma dag. Regeln är alltså den enda
-  i garantin som är en bedömning och inte går att räkna, och den görs ur
-  rapporternas fritext, så den vilar på att studiehjälparen skriver ämnet
-  och tiden när ett pass delas.
+  ett ämne för att familjen fokuserat mer på ett annat av ämnena med
+  garanti, gäller garantin inte för det (Leo, med hans ord). En räknebar
+  form, under hälften av det största ämnets tid, sa han nej till samma
+  dag. Regeln är alltså den enda i garantin som är en bedömning och inte
+  går att räkna, och den görs ur rapporternas fritext, så den vilar på att
+  studiehjälparen skriver ämnet och tiden när ett pass delas.
+- **Andra ämnen påverkar den inte** (Leo): vi hjälper med andra ämnen och
+  läxorna i stort som vanligt, och de timmarna räknas bara inte in i de
+  två. Därför gäller fokusregeln mellan ämnena med garanti; med "ett annat
+  ämne" hade de två meningarna sagt emot varandra, och i ett
+  konsumentavtal vinner då den läsning som är bäst för familjen ändå.
 - **Hårdare än förlagan:** ämnen som anmäls i förväg och inte byts,
   två timmar varje skolvecka till läsårets slut, missade timmar igen inom
   14 dagar, inga uteblivna pass, 90 procent av uppgifterna i tid, allt
@@ -558,19 +565,48 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
 - **30 dagar för anspråket, med flit inte kortare:** betygen sätts före
   sommarlovet, och en kortare frist slår mot den som är bortrest, inte mot
   den som inte gjort jobbet.
-- **Betygen först vid anspråket.** Integritetspolicyn sa att vi aldrig ber
-  om betyg, och konsekvensbedömningen vilade på det. Anmälan bär bara elev
-  och ämnen; det förra betyget visas vid anspråket, med betygsdokumentets
-  datum, och kopiorna raderas för hand när det är avgjort (`DATASKYDD.md`
-  rad 25). Inkorgen info@ ligger i Google Workspace, och policyn säger det
-  sedan samma dag.
+- **Anmälan i föräldravyn** (Leo samma dag: "smidigare"), under Profil →
+  Betygsgaranti, i stället för ett mejl. Föräldern väljer ämnet och anger
+  barnets nuvarande betyg, ett ämne per tryck, och `anmal_betygsgaranti()`
+  prövar allt: vuxen och barnets förälder, godkända villkor, öppet 1 juli
+  till 31 december svensk tid, ett ämne ur `intern.betygsgaranti_amnen()`,
+  betyg F till B, högst tre och samma ämne en gång (med ett lås, så att
+  två tryck samtidigt inte blir fyra). Tiden och läsåret sätter databasen;
+  läsåret är året det börjar. Ingen inloggad skriver i `betygsgarantier`,
+  och ett anmält ämne går inte att ändra eller ta bort, så rättar admin
+  det med en migration. Föräldern och admin med `anvandare_las` eller
+  `anvandare_redigera` läser; studiehjälparen, en annan familj och barnet
+  inte. Elevens panel i adminvyn visar anmälningarna.
+- **Ämnena har ett eget betyg**, till skillnad från vyns grupper ("NO /
+  Fysik / Kemi / Biologi" har inget betyg att jämföra med). Listan står i
+  `GARANTI_AMNEN` i `nextrum-studie-vy.js` och i
+  `intern.betygsgaranti_amnen()`, och de ändras tillsammans. Den är en
+  funktion och inget villkor på tabellen, så den byts utan drop.
+- **Betyget i anmälan.** Först skulle vi se betyg bara vid anspråket,
+  eftersom policyn lovade att vi aldrig ber om dem; Leo valde samma dag
+  att föräldern anger det vid anmälan. Policyn och registret (rad 25)
+  säger det nu. Betyget gallras den 1 oktober efter läsåret
+  (`betygsgaranti-gallring`, 03.56 UTC) och direkt när barnet raderas
+  eller avidentifieras (`students_betygsgarantier_raderas`); raden står
+  kvar utan betyg, för en garanti används en gång per elev och ämne. Vid
+  anspråket gäller kopian, inte det föräldern angav. Kopiorna kommer med
+  e-post till info@, som ligger i Google Workspace, och raderas för hand.
 - **Timmar, aldrig pengar**, som tipstimmen.
 - **Passen har inget ämnesfält.** Ämnet läses ur rapportens fritext; ett
-  fält på passet vore en egen ändring.
-- **Bara i villkoren.** Sidorna säljer den inte och lovar fortfarande inga
-  betygshöjningar (avsnitt 8 i kärnan). Ska den säljas: juristen först.
+  fält på passet vore en egen ändring. Studiehjälparen ser inte heller
+  vilka ämnen som har garanti; familjen får säga det.
+- **Sidorna säljer den** (Leo samma dag: "sälj in det utan konkreta villkor
+  eller siffror"): en mörk sektion på startsidan efter Så fungerar
+  Nextrum och på prissidan efter priskorten, och en fråga i prissidans
+  FAQ, som maskoten därför också svarar på. Inga villkor och inga tal,
+  men aldrig ett löfte om ett betyg (avsnitt 8 i kärnan): garantin lovar
+  vad vi gör om betyget inte går upp. Varje ställe länkar till villkoren
+  och säger att de gäller, för en garanti som säljs utan att det syns att
+  den har villkor är vilseledande. Hero är orörd.
 - **Versionen byttes** (`betygsgarantin`), så alla får frågan igen.
   Inget är byggt för att pröva ett anspråk: admin räknar ur vyerna.
+  `rls-test.sql` avsnitt 24 prövar anmälan, läsrätten, gallringen och
+  raderingen (1481 av 1481 lokalt).
 
 ## Tipsa en familj och affischerna (2026-09-30)
 

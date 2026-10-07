@@ -141,6 +141,11 @@
       lägg('rapporter', supa.from('lesson_reports')
         .select('id, lesson_date, went_well, needs_practice, next_focus, ai_feedback, created_at')
         .eq('student_id', id).order('lesson_date', { ascending: false }).limit(30));
+      /* Betygsgarantin (2026-10-07): vad föräldern anmält, med betyget
+         hen angav. Policyn ger bara den som läser personer raderna. */
+      lägg('garantier', supa.from('betygsgarantier')
+        .select('lasar, amne, betyg, anmald_at').eq('student_id', id)
+        .order('lasar', { ascending: false }).order('anmald_at'));
     } else if (typ === 'pass') {
       /* Fas 20.1: tiden står på rapporten, inte på passet. Passet bär
          det som bokades; rapporten säger vad som hände. Tillägget för
@@ -980,6 +985,22 @@
       });
   }
 
+  /* Betygsgarantin (2026-10-07): ämnena föräldern anmält under Profil,
+     läsår för läsår, med betyget hen angav. Vid ett anspråk är det
+     kopian som gäller. Ett fel (tabellen saknas, eller policyn ger inte
+     den här admin raderna) ger ingen rubrik alls i stället för ett fel
+     mitt i eleven. */
+  function dpGaranti(d) {
+    if (d.garantierFel) return '';
+    const g = d.garantier || [];
+    const läsår = år => år + '/' + String((år + 1) % 100).padStart(2, '0');
+    return dpRubrik('Betygsgaranti')
+      + (g.length
+        ? g.map(x => dpRad(x.amne, 'läsåret ' + läsår(x.lasar) + ' · anmäld ' + kortDatum(x.anmald_at),
+            pill(x.betyg ? 'Betyg ' + x.betyg : 'Betyget gallrat', ''))).join('')
+        : tomt('Ingen anmäld', 'Föräldern anmäler den under Profil i studievyn, senast den 31 december.'));
+  }
+
   function dpElev(e, d) {
     const f = S.personer[e.parent_id];
     const t = elevHjälpare(e);
@@ -1063,6 +1084,7 @@
     + (plan && (plan.plan_text || plan.goals)
       ? '<div class="dp-text">' + esc(plan.plan_text || plan.goals) + '</div>'
       : tomt('Ingen studieplan', 'Studiehjälparen skriver den efter första passet.'))
+    + dpGaranti(d)
     + dpHantera('elev', e, {
         /* Matchningen görs under Matchning, med eleven redan vald. */
         knappar: '<a class="btn btn-ghost btn-sm" href="#matchning" data-mt-hoppa="' + esc(e.id)
