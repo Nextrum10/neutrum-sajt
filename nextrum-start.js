@@ -8,7 +8,8 @@
      hållpunkter    1–4: den man pekar på kommer fram — både hållpunkterna
                     och stegen i ansökan
      mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
-     studiehjälpare korten stiger upp när raden syns
+     studiehjälpare raden man sveper i: korten kommer in när raden
+                    syns, prickarna och pilarna följer svepet
      band           Trygg hjälp: det rullande bandet
      vägg           Så kan ett pass se ut: fotona stiger fram
      studievy       illustrationen av föräldravyn, som klickar sig igenom
@@ -172,26 +173,113 @@ const NXStart = (function () {
   }
 
   /* ============================================================
-     STUDIEHJÄLPARNA
-     Varje kort stiger upp när det kommer in i bild, med en fördröjning
-     per kolumn (--n) så att en rad kommer från vänster till höger.
+     STUDIEHJÄLPARNA — raden man sveper i (2026-10-07)
+     Korten står i en snäppande rad i alla bredder (Leo: "bredvid
+     varandra på mobil så att man swipar som ett inlägg"). Svepet och
+     snäppet är webbläsarens egna, scroll-snap i nextrum-start.css;
+     här sätts bara klasser.
+
+     INTRÄDET observerar RADEN, inte varje kort. Ett kort utanför
+     raden i sidled är osynligt för en IntersectionObserver och hade
+     tonat upp först när man svept dit. När raden syns får alla nya
+     kort .nx-in, och --n (plats bland de fyra första) gör att de
+     kommer ett i taget.
+
+     PRICKARNA OCH PILARNA. En observatör med raden som rot säger hur
+     mycket av varje kort som syns, och bara när det korsar en gräns:
+     ingen mätning medan man sveper. En prick tänds för varje kort som
+     syns till mer än hälften, så plattan, som visar två kort, tänder
+     två. Pilarna stängs i radens ändar, och hela navraden döljs när
+     alla kort får plats (tre exempelkort på dator). Prickarna är inga
+     knappar (som i ett inlägg), och pilarnas etiketter står i markupen.
+
+     scrollBy på raden, aldrig scrollIntoView: det rullar sidan också
+     (CLAUDE.md, startsidan efter hero, fälla 3).
 
      Korten ritas när Supabase svarat, så en MutationObserver fångar
-     dem. Callbacken körs före nästa bildruta, och startläget står i
-     CSS, så inget kort hinner synas på sin slutplats först.
+     dem. Navigeringen fungerar också med rörelse bortvald; bara
+     inträdet hoppas över.
      ============================================================ */
   function studiehjälpare() {
     const host = $('#showcase');
-    if (!host || !rörelse) return;
-    function nya() {
-      const kol = kolumner(host);
-      $$('.sc-card', host).forEach((k, i) => {
-        if (k.dataset.delad) return;
-        k.dataset.delad = '1';
-        k.style.setProperty('--n', String(i % kol));
-        närSyns(k, () => k.classList.add('nx-in'), '0px 0px -8% 0px');
+    if (!host) return;
+    const nav = $('[data-sc-nav]');
+    const prickar = nav && $('.sc-prickar', nav);
+    const pilar = nav ? $$('[data-sc-steg]', nav) : [];
+    const andel = new Map();
+    let kort = [];
+    let io = null;
+
+    const syns = (k, gräns) => (andel.get(k) || 0) >= gräns;
+
+    function läge() {
+      if (!kort.length) return;
+      const förstHel = syns(kort[0], 0.97);
+      const sistHel = syns(kort[kort.length - 1], 0.97);
+      nav.hidden = kort.length < 2 || (förstHel && sistHel);
+      pilar.forEach(b => {
+        b.disabled = Number(b.dataset.scSteg) < 0 ? förstHel : sistHel;
       });
+      if (prickar) {
+        Array.from(prickar.children).forEach((p, i) =>
+          p.classList.toggle('pa', syns(kort[i], 0.55)));
+      }
     }
+
+    function nya() {
+      const alla = $$('.sc-card', host);
+      const nyKort = alla.filter(k => !k.dataset.delad);
+      kort = alla;
+      if (!alla.length) {
+        /* Hämtar, ett fel eller ingen koppling: inget att svepa i. */
+        if (io) io.disconnect();
+        if (nav) nav.hidden = true;
+        return;
+      }
+      if (!nyKort.length) return;
+      nyKort.forEach(k => {
+        k.dataset.delad = '1';
+        k.style.setProperty('--n', String(Math.min(alla.indexOf(k), 3)));
+      });
+      /* En ny observatör per sats: dess första svar kommer efter nästa
+         bildruta, så startläget hinner ritas innan .nx-in sätts. */
+      if (rörelse) närSyns(host, () => nyKort.forEach(k => k.classList.add('nx-in')), '0px 0px -8% 0px');
+
+      if (!nav || !('IntersectionObserver' in window)) return;
+      if (prickar) prickar.replaceChildren(...alla.map(() => document.createElement('i')));
+      if (io) io.disconnect();
+      andel.clear();
+      io = new IntersectionObserver(poster => {
+        poster.forEach(p => andel.set(p.target, p.intersectionRatio));
+        läge();
+      }, { root: host, threshold: [0, 0.55, 0.97, 1] });
+      alla.forEach(k => io.observe(k));
+    }
+
+    /* Ett tryck flyttar så många kort som syns hela, minst ett: med
+       nio kort och tre i bild bläddrar man en sida i taget. */
+    pilar.forEach(b => b.addEventListener('click', () => {
+      if (kort.length < 2) return;
+      const steg = kort[1].offsetLeft - kort[0].offsetLeft;
+      const hela = Math.max(1, kort.filter(k => syns(k, 0.97)).length);
+      host.scrollBy({
+        left: Number(b.dataset.scSteg) * hela * steg,
+        behavior: M.reducerad ? 'auto' : 'smooth'
+      });
+    }));
+
+    /* Tabbar man till länken i ett kort som bara syns till en kant
+       rullar Chromium inte raden (en del av kortet syns ju), och
+       fokus hamnar utanför bild. Raden flyttas då själv till kortet. */
+    host.addEventListener('focusin', e => {
+      const k = e.target.closest('.sc-card');
+      if (!k || !kort.length || syns(k, 0.97)) return;
+      host.scrollTo({
+        left: k.offsetLeft - kort[0].offsetLeft,
+        behavior: M.reducerad ? 'auto' : 'smooth'
+      });
+    });
+
     new MutationObserver(nya).observe(host, { childList: true });
     nya();
   }
