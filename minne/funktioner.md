@@ -352,11 +352,12 @@ kontot i Auth, inbjudan, lösenordslänken och anmälan), så att
 - **Igen** (`igen: true`): rollen tas ur profilen, inte ur anropet; 404
   utan konto och 409 för en roll som inte är förälder eller
   studiehjälpare. Ett obekräftat konto får en ny inbjudan (Auth bjuder in
-  ett obekräftat konto en gång till och rör inte metadatan), ett
-  bekräftat med `valkommen = 'losenord'` får länken som Glömt lösenordet
-  ger, genom Auths öppna väg med den publika nyckeln (429 om ett mejl
-  gick nyss), och ett konto med lösenord får 409: då är det Glömt
-  lösenordet? som gäller.
+  ett obekräftat konto en gång till och rör inte metadatan), och ett
+  bekräftat får länken som Glömt lösenordet ger, genom Auths öppna väg
+  med den publika nyckeln (429 om ett mejl gick nyss), också när
+  lösenordet redan är valt (2026-10-07, Leo: "i admin ska vi kunna skicka
+  inbjudningslänk när vi vill efter, ifall de missar den"). Till dess fick
+  ett konto med lösenord 409.
 - En barnadress (`@barn.nextrum.se`) bjuds aldrig in. Loggen tar namn, kod
   och status på felet, aldrig adressen.
 - **I drift sedan 2026-10-07** som v9, från main (43d2ef4, PR #204),
@@ -369,6 +370,9 @@ kontot i Auth, inbjudan, lösenordslänken och anmälan), så att
   `UNAUTHORIZED_NO_AUTH_HEADER`, så `verify_jwt` står på. Före det skapade
   v8 kontot utan välkomsten, och Skicka inbjudan igen svarade 409 (v8
   kände inte `igen`).
+- **v10 sedan 2026-10-07**, från main efter merge av PR #218 (46d49fe):
+  bara `_delad/inbjudan.ts` skilde från v9. Alla fem filerna hämtades
+  tillbaka och var byte för byte lika med main.
 
 ### `barn-inloggning` (barnets_epost, 2026-10-01)
 Ett barn loggar in med sin egen bekräftade e-post. Det rena i

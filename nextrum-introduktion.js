@@ -10,9 +10,11 @@
    En bild i taget ur vyn, med vad delen är till för, och Fortsätt sist.
    Den visas av sig själv första gången (NXStudie.introduktion, när
    user_metadata.valkommen står på 'intro': efter lösenordet för den som
-   tagits in, och efter första inloggningen för den som registrerat
-   sig), och går att öppna igen under Profil & inställningar
-   (data-intro="<roll>").
+   tagits in), och går att öppna igen under Profil & inställningar
+   (data-intro="<roll>"). Sista bilden säger var man loggar in nästa gång
+   (2026-10-07, Leo: "onboarding och bilduppvisning av plattform för att
+   visa vad som är vad och inlogg"): inloggningen är en för alla, och
+   kontot avgör vyn.
 
    Bilderna är skärmdumpar av vyerna med påhittade familjer, tagna i en
    telefons bredd mot en falsk Supabase (verktyg/bygg-introbilder.js).
@@ -52,7 +54,8 @@
           + 'passen.' },
       { bild: 'profil', rubrik: 'Profil & inställningar',
         text: 'Ert konto, barnen och notiserna. Under Barn skapar ni barnets egen inloggning och väljer vad '
-          + 'barnet får se och göra. Introduktionen finns kvar under Konto & inloggning.' }
+          + 'barnet får se och göra. Nästa gång loggar ni in under Logga in på nextrum.se, och barnet på samma '
+          + 'ställe med sitt användarnamn. Introduktionen finns kvar under Konto & inloggning.' }
     ],
     studiehjalpare: [
       { bild: 'oversikt', rubrik: 'Översikt',
@@ -75,8 +78,8 @@
       { bild: 'statistik', rubrik: 'Statistik & ersättning',
         text: 'Genomförda pass, timmar och vad de gav. Ett pass räknas när rapporten är skriven.' },
       { bild: 'profil', rubrik: 'Profil & inställningar',
-        text: 'Det familjer ser om dig, din inloggning, dokumenten och vilka mejl du vill ha. Introduktionen '
-          + 'finns kvar här, under Min profil.' }
+        text: 'Det familjer ser om dig, din inloggning, dokumenten och vilka mejl du vill ha. Nästa gång loggar '
+          + 'du in under Logga in på nextrum.se. Introduktionen finns kvar här, under Min profil.' }
     ]
   };
 

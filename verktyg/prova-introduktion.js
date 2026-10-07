@@ -195,6 +195,7 @@ async function genomIntro(page) {
       return {
         nr: document.querySelector('.nx-intro-nr').textContent,
         rubrik: document.querySelector('#nx-intro-t').textContent,
+        text: document.querySelector('#nx-intro-text').textContent,
         knapp: document.querySelector('[data-intro-fram]').textContent,
         bak: document.querySelector('[data-intro-bak]').disabled,
         topp: Math.round(k.top), höger: Math.round(k.right), bredd: Math.round(k.width),
@@ -273,6 +274,9 @@ async function provaFamiljenTagenIn(webb) {
     new Set(sett.map(s => s.topp + ':' + s.höger + ':' + s.bredd)).size === 1,
     sett.map(s => s.topp + '/' + s.höger + '/' + s.bredd).join(', '));
   prova('familj: sista bilden säger att vi matchar dem först', sett[6].väntar && sett.slice(0, 6).every(s => !s.väntar));
+  prova('familj: sista bilden säger var familjen och barnet loggar in nästa gång',
+    /Logga in på nextrum\.se/.test(sett[6].text) && /barnet på samma ställe med sitt användarnamn/.test(sett[6].text),
+    sett[6].text);
   await page.waitForSelector('#view-locked:not([hidden])', { timeout: 6000 }).catch(() => {});
   prova('familj: Fortsätt leder in i vyn, här väntläget', await synlig(page, '#view-locked') && !(await synlig(page, '.nx-intro')));
   await vänta(300);
@@ -384,6 +388,7 @@ async function provaStudiehjälparen(webb) {
        'Statistik & ersättning', 'Profil & inställningar']), sett.map(s => s.rubrik).join(', '));
     prova(v + ': varje bild kom fram', sett.every(s => s.bild && s.bild.w === 780), JSON.stringify(sett.map(s => s.bild && s.bild.w)));
     prova(v + ': sista bilden säger att profilen väntar bara när den gör det', sett[7].väntar === !godkand);
+    prova(v + ': sista bilden säger var du loggar in nästa gång', /Logga in på nextrum\.se/.test(sett[7].text), sett[7].text);
     const vy = godkand ? '#view-app' : '#view-pending';
     await page.waitForSelector(vy + ':not([hidden])', { timeout: 8000 }).catch(() => {});
     prova(v + ': Fortsätt leder in i vyn', await synlig(page, vy));
