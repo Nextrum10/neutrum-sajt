@@ -233,7 +233,7 @@ ekonomi var byte för byte som main, drift hade "uppörande" i två
 kommentarer. **En fil som skrivs in i driftsättningsverktyget för hand kan
 tappa en bokstav**, så jämför byte för byte, inte med ögat.
 Samma dag fick ekonomins frågor och drifts `analys` säga vad siffrorna är
-(PR #212): `fakturor` räknar utkasten för sig och makulerade i ingen summa,
+(PR #214): `fakturor` räknar utkasten för sig och makulerade i ingen summa,
 `kortbetalningar` räknar aldrig en testbetalning, som Betalningar i
 adminvyn, och `analys` säger att betalt varken har köpta timmar eller
 betald övertid och inte sorterar bort testbetalningarna. Analysvyn räknar
