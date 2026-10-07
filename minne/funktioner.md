@@ -238,7 +238,10 @@ Samma dag fick ekonomins frågor och drifts `analys` säga vad siffrorna är
 adminvyn, och `analys` säger att betalt varken har köpta timmar eller
 betald övertid och inte sorterar bort testbetalningarna. Analysvyn räknar
 inte som Betalningar (`minne/betalning.md`); rättas den ändras texten i
-`analys` samtidigt.
+`analys` samtidigt. ekonomi v24 och drift v13 gick ut från main
+(6c23394) efter merge av PR #214 och lästes tillbaka: alla filer byte för
+byte som main, också de två kommentarerna i drift. juridik står kvar på
+v22, som inte skiljer från main.
 
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —

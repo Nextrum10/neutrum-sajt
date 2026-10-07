@@ -426,7 +426,7 @@ Detaljer: `minne/sakerhet.md`.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
-  `barn-inloggning` 2026-10-01. Ingen skiljer i sak från main: en äldre kopia av en delad fil
+  `barn-inloggning` 2026-10-01, och `juridik`, `ekonomi` och `drift` 2026-10-07. Ingen skiljer i sak från main: en äldre kopia av en delad fil
   saknar bara tillägg som funktionen inte använder (`minne/funktioner.md`).
 - `bjud-in` (`_delad/inbjudan.ts`) skapar kontot och sätter aldrig ett lösenord. Igen skickar en ny
   inbjudan, eller länken för lösenordet om kontot bekräftats utan att lösenordet valts.
