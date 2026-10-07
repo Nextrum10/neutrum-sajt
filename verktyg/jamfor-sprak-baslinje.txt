@@ -52,7 +52,7 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 33
+=== svenska sidor utan engelsk tvilling: 37
   404.html
   admin.html
   affisch.html
@@ -72,11 +72,15 @@
   laxhjalp-gymnasiet.html
   laxhjalp-hammarby-sjostad.html
   laxhjalp-hogstadiet.html
+  laxhjalp-lagstadiet.html
   laxhjalp-matematik.html
   laxhjalp-mellanstadiet.html
+  laxhjalp-moderna-sprak.html
   laxhjalp-nacka.html
   laxhjalp-no.html
   laxhjalp-online.html
+  laxhjalp-programmering.html
+  laxhjalp-so.html
   laxhjalp-sodermalm.html
   laxhjalp-solna.html
   laxhjalp-stockholm.html

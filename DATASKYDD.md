@@ -364,7 +364,11 @@ Inget av det här går att göra i koden.
 - [ ] **Slå på kontroll av läckta lösenord** i Supabase: Authentication
   → Policies (HaveIBeenPwned).
 - [ ] **Låt en jurist läsa** integritetspolicyn, villkoren och den här
-  filen innan bolaget registreras.
+  filen innan bolaget registreras. Underlaget (2026-10-07) är Leos
+  dokument [Underlag till juristen](https://claude.ai/artifact/Sff6Z2BnB3x35nUgoaa4R7):
+  rad 20, 22, 23 och 24 och vårdnadshavaren vid ansökan, ordagrant ur
+  registret, policyn och konsekvensbedömningen, med frågorna. Ändras
+  någon av texterna innan juristen läst, ändra underlaget också.
 - [ ] **Barnens inloggning (2026-09-30):** låt juristen läsa grunden
   (6.1 b med vårdnadshavarens ja, rad 20) och raderna i
   konsekvensbedömningen innan det första barnkontot skapas, och säg till

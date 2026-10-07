@@ -440,7 +440,7 @@ Detaljer: `minne/sakerhet.md`.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
-  `barn-inloggning` 2026-10-01. Ingen skiljer i sak från main: en äldre kopia av en delad fil
+  `barn-inloggning` 2026-10-01, och `juridik`, `ekonomi` och `drift` 2026-10-07. Ingen skiljer i sak från main: en äldre kopia av en delad fil
   saknar bara tillägg som funktionen inte använder (`minne/funktioner.md`).
 - `bjud-in` (`_delad/inbjudan.ts`) skapar kontot och sätter aldrig ett lösenord. Igen skickar en ny
   inbjudan, eller länken för lösenordet om kontot bekräftats utan att lösenordet valts.
@@ -538,9 +538,9 @@ Detaljer: `minne/grunden.md`.
   rad 23 i `DATASKYDD.md`, och familjerna med barnkonto och studiehjälparna har inte fått veta
   (avsnitt 8 där).
 - **Under 18, nejet och det admin sett** (2026-10-05) är i drift sedan 2026-10-06: migrationerna
-  `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Inget riktigt
-  nej eller mejl till en vårdnadshavare har gått än. Policytexten om vårdnadshavaren är inte läst av
-  juristen.
+  `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Det första
+  mejlet till en vårdnadshavare gick 2026-10-06; inget riktigt nej har gått än. Policytexten om
+  vårdnadshavaren är inte läst av juristen (underlaget: `DATASKYDD.md` avsnitt 8).
 - **Intaget, introduktionen och barnets behörigheter** (2026-10-06) är i drift sedan 2026-10-07:
   migrationen `barnets_behorigheter` från merge-commiten (md5 prövad), `bjud-in` v9 och `ansokan-notis`
   v8 från main, hämtade tillbaka och byte för byte lika, och hela `rls-test.sql` 1433 av 1433 mot

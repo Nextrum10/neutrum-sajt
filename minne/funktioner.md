@@ -227,8 +227,21 @@ står kvar för att det är så en naiv `indexOf` går sönder.
 att studiehjälparna är gymnasie- och högskolestudenter (rättat i PR #210),
 ekonomi att fakturan var avstängd, juridik ingenting om den, och
 `_delad/nextrum-fakta.ts` (drift) att inga fakturor skapas. Fakturan är på
-sedan 2026-09-27 (flaggan `faktura`). De tre driftsätts från main efter
-merge; tills dess svarar agenterna med den gamla bilden.
+sedan 2026-09-27 (flaggan `faktura`). juridik v22, ekonomi v23 och drift
+v12 gick ut från main (556028f) samma dag och lästes tillbaka: juridik och
+ekonomi var byte för byte som main, drift hade "uppörande" i två
+kommentarer. **En fil som skrivs in i driftsättningsverktyget för hand kan
+tappa en bokstav**, så jämför byte för byte, inte med ögat.
+Samma dag fick ekonomins frågor och drifts `analys` säga vad siffrorna är
+(PR #214): `fakturor` räknar utkasten för sig och makulerade i ingen summa,
+`kortbetalningar` räknar aldrig en testbetalning, som Betalningar i
+adminvyn, och `analys` säger att betalt varken har köpta timmar eller
+betald övertid och inte sorterar bort testbetalningarna. Analysvyn räknar
+inte som Betalningar (`minne/betalning.md`); rättas den ändras texten i
+`analys` samtidigt. ekonomi v24 och drift v13 gick ut från main
+(6c23394) efter merge av PR #214 och lästes tillbaka: alla filer byte för
+byte som main, också de två kommentarerna i drift. juridik står kvar på
+v22, som inte skiljer från main.
 
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —

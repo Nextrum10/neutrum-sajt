@@ -15,16 +15,17 @@
 // pass som ett fel, fast det nu är normalt tills familjen bekräftat.
 //
 // SEDAN 2026-09-27 KAN FAMILJEN VÄLJA FAKTURA IGEN, efter passet, när
-// de bekräftar rapporten (Fas 19.6). Texten nedan sa ändå till
-// 2026-10-07 att inga fakturor skapas, och en agent som läste det kunde
-// ta varje ny faktura för ett fel.
+// de bekräftar rapporten (Fas 19.6), med tio dagars betalningstid.
+// Texten nedan sa ändå till 2026-10-07 att inga fakturor skapas och att
+// fakturerat alltid var noll, och en agent som läste det kunde ta
+// månadens faktura för ett fel.
 //
-// SEDAN FAS 14.2 FÅR FAMILJEN INGEN FAKTURA. Texten sa förut "10
-// dagars betalningsvillkor" och "Betald kryssas i för hand", och en
-// agent som läser det letar efter förfallna fakturor som aldrig kommer
-// att finnas, och läser en månad utan fakturor som en månad utan
-// intäkt. Priset står kvar här. Betalningssättet står här. Villkoret i
-// dagar gör det inte, för det finns inget sådant längre.
+// FRÅN FAS 14.2 TILL DESS FICK FAMILJEN INGEN FAKTURA. Texten sa då
+// fortfarande "10 dagars betalningsvillkor" och "Betald kryssas i för
+// hand", och en agent som läste det letade efter förfallna fakturor som
+// inte fanns, och läste en månad utan fakturor som en månad utan
+// intäkt. Samma fel åt andra hållet är lika lätt att göra: ändras
+// betalsätten ändras texten här samma dag.
 //
 // VAD SOM FÅR STÅ HÄR, OCH VAD SOM ALDRIG FÅR DET
 //
@@ -126,9 +127,11 @@ räknas för sig. Ingen av dem har bakfyllts, med flit — en gissad
 siffra syns inte som gissad när den väl ligger i ett medelvärde. Är
 en lucka stor är talet bredvid den för lågt, och det ska du skriva.
 
-Betalt räknas på den dag betalningen kom in, inte på passets dag.
-Familjen betalar i förväg eller efter passet, så en månads
-betalningar och samma månads genomförda pass hör inte ihop rad för
-rad. Fakturerat gäller
-bara de äldre fakturorna och är noll för varje månad efter dem; en
-nolla där betyder inte att ingenting betalats.`;
+Ett kortbelopp räknas på den dag betalningen kom in, inte på passets
+dag. Familjen betalar i förväg, efter passet eller mot faktura, så en
+månads betalningar och samma månads genomförda pass hör inte ihop rad
+för rad. En faktura räknas på den månad den gäller men skickas först
+i början av nästa: ett fakturerat belopp är inte betalt förrän
+fakturan är det, och ett utkast är inte skickat. Köpta timmar betalas
+i förväg och är en skuld till familjen tills timmarna använts; de är
+inte intäkt för något pass än. Och en testbetalning är inga pengar.`;

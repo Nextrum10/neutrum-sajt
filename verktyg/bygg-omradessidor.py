@@ -734,6 +734,208 @@ AMNEN = [
              'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
         ],
     },
+    {
+        'slug': 'laxhjalp-so',
+        'i_namn': 'i SO',
+        'plats': 'Stockholm',
+        'titel': 'Läxhjälp i SO i Stockholm: historia och samhällskunskap | Nextrum',
+        'beskrivning': (
+            'Läxhjälp i historia, samhällskunskap, geografi och religionskunskap, med en '
+            f'studiehjälpare som nyss läst kursen. I Stockholm eller online, {PRIS} i timmen.'
+        ),
+        'etikett': 'Läxhjälp i SO',
+        'h1': 'Läxhjälp i<br><em>SO.</em>',
+        'lede': (
+            'Historia, samhällskunskap, geografi och religionskunskap. I SO räcker det sällan att '
+            'kunna fakta: eleven ska kunna förklara varför något hände och vad det ledde till. Vi '
+            'matchar eleven med en studiehjälpare som nyligen läst samma kurs.'
+        ),
+        'kort': 'Historia, samhällskunskap, geografi och religion',
+        'bild': '05-av-unga-for-unga',
+        'tint': '#8E8C84',
+        'focal': '60% 42%',
+        'lista_etikett': 'Vad passen går ut på',
+        'lista_rubrik': 'Fyra ämnen,<br>ett sätt att <em>tänka.</em>',
+        'lista_ingress': (
+            'Från mellanstadiet till gymnasiet. Skriv i anmälan vilket ämne och vilken kurs det '
+            'gäller, så letar vi efter en studiehjälpare som läst just den.'
+        ),
+        'lista': [
+            ('Historia',
+             'Perioder, orsaker och följder: varför något hände, vad det ledde till och hur vi vet '
+             'det. Passen går ofta ut på att få ordning på tidslinjen och sedan öva på att förklara '
+             'sambanden med egna ord.'),
+            ('Samhällskunskap',
+             'Demokrati och hur samhället styrs, ekonomi, lagar och rättigheter, och nyheter och '
+             'källor. Det hjälper att ta exemplen ur verkligheten, så att begreppen får något att '
+             'hänga på.'),
+            ('Geografi',
+             'Kartan, klimatet, befolkning och resurser, och hur människan och naturen påverkar '
+             'varandra. Mycket handlar om att läsa kartor, diagram och tabeller och säga vad de '
+             'visar.'),
+            ('Religionskunskap',
+             'Världsreligionerna och andra livsåskådningar, och etik: att resonera om rätt och fel '
+             'utifrån olika synsätt, där det inte finns ett facit.'),
+        ],
+        'vinkel_etikett': 'Så lägger vi upp det',
+        'vinkel_rubrik': 'Mer än att<br>kunna <em>årtalen.</em>',
+        'vinkel': [
+            'Ett prov i SO frågar ofta inte bara vad som hände, utan varför, och vad det fick för '
+            'följder. Det går att öva: att ta ett exempel, förklara det och jämföra med ett annat, '
+            'tills eleven kan göra det själv på provet.',
+            'Studiehjälparen har läst kursen nyligen och minns hur frågorna var ställda. '
+            'Studieplanen utgår från elevens egna uppgifter och prov, och rapporten efter varje '
+            'pass säger vad ni hann och vad som är nästa steg.',
+        ],
+        'faq': [
+            ('Hjälper ni med alla SO-ämnena?',
+             'Ja, historia, samhällskunskap, geografi och religionskunskap, från mellanstadiet till '
+             'gymnasiet. Skriv i anmälan vilket ämne och vilken kurs det gäller, så letar vi efter '
+             'en studiehjälpare som läst just den.'),
+            ('Kan vi få hjälp med en inlämning eller ett grupparbete?',
+             'Ja. Studiehjälparen hjälper eleven att hitta och granska källor, lägga upp texten och '
+             'läsa utkastet, men det är eleven som skriver.'),
+            ('Går det att plugga inför ett prov på kort tid?',
+             'Ja, men ju tidigare desto bättre. Med en vecka kvar hinner ni det viktigaste; med tre '
+             'veckor hinner eleven öva på att förklara och resonera, inte bara känna igen orden.'),
+            ('Vad kostar det?',
+             f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
+             'månadsavgift, och hur betalningen går till står på prissidan.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-moderna-sprak',
+        'i_namn': 'i spanska, tyska och franska',
+        'plats': 'Stockholm',
+        'titel': 'Läxhjälp i spanska, tyska och franska i Stockholm | Nextrum',
+        'beskrivning': (
+            'Läxhjälp i moderna språk: glosor, grammatik, hörförståelse och att våga prata. '
+            f'Spanska, tyska och franska, hemma i Stockholm eller online. {PRIS} i timmen.'
+        ),
+        'etikett': 'Läxhjälp i moderna språk',
+        'h1': 'Läxhjälp i spanska,<br>tyska och <em>franska.</em>',
+        'lede': (
+            'Ett nytt språk bygger på sig självt: den som tappar verbformerna i början har svårt '
+            'med allt som kommer sedan. Vi matchar eleven med en studiehjälpare som nyligen läst '
+            'samma språk.'
+        ),
+        'kort': 'Glosor, grammatik och att våga prata',
+        'bild': '04-sjalvfortroende',
+        'tint': '#897D6A',
+        'focal': '56% 36%',
+        'lista_etikett': 'Vad passen går ut på',
+        'lista_rubrik': 'Från glosorna<br>till <em>samtalet.</em>',
+        'lista_ingress': (
+            'Som språkval i grundskolan och på gymnasiet. Skriv i anmälan vilket språk det gäller '
+            'och hur länge eleven har läst det, så letar vi efter en studiehjälpare som läst samma.'
+        ),
+        'lista': [
+            ('Glosor och ordförråd',
+             'Att lära sig orden så att de sitter kvar efter förhöret: att öva i omgångar, säga dem '
+             'högt och använda dem i meningar, i stället för att läsa listan många gånger samma '
+             'kväll.'),
+            ('Grammatik',
+             'Verbens böjning, genus, ordföljd och, i tyskan, kasus. Grammatiken är det som gör att '
+             'eleven kan bygga egna meningar, och den går att ta ett steg i taget.'),
+            ('Hörförståelse och läsning',
+             'Att förstå en text eller en inspelning utan att översätta varje ord, och att gissa '
+             'rätt utifrån sammanhanget.'),
+            ('Att prata och skriva',
+             'Muntliga prov och skrivuppgifter. Det svåraste är ofta att våga säga något högt, och '
+             'det är lättare att öva med någon som är nära i ålder.'),
+        ],
+        'vinkel_etikett': 'Varför någon som nyss läst språket',
+        'vinkel_rubrik': 'Samma glosor,<br>samma <em>verbformer.</em>',
+        'vinkel': [
+            'Studiehjälparen har själv läst språket i skolan nyligen och minns vilka verbformer och '
+            'regler som var svårast att få att sitta, och vad som till slut fungerade.',
+            'Passen hålls på språket så mycket eleven klarar, och på svenska när något behöver '
+            'förklaras. Studieplanen följer elevens egna glosor och prov, och rapporten efter varje '
+            'pass säger vad som är nästa steg.',
+        ],
+        'faq': [
+            ('Vilka språk hjälper ni med?',
+             'Spanska, tyska och franska. Skriv i anmälan vilket språk det gäller och hur länge '
+             'eleven har läst det, så letar vi efter en studiehjälpare som läst samma.'),
+            ('Kan passen hållas på språket?',
+             'Ja, så mycket eleven vill och klarar, med förklaringarna på svenska när det behövs. '
+             'Säg vad ni föredrar i anmälan.'),
+            ('Hjälper ni inför ett muntligt prov?',
+             'Ja. Studiehjälparen övar samtalet med eleven, med de ämnen och frågor som kan komma, '
+             'hemma hos er eller online.'),
+            ('Vad kostar det?',
+             f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
+             'månadsavgift, och hur betalningen går till står på prissidan.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-programmering',
+        'i_namn': 'i programmering',
+        'plats': 'Stockholm',
+        'titel': 'Läxhjälp i programmering i Stockholm | Nextrum',
+        'beskrivning': (
+            'Läxhjälp i programmering: från de första looparna i skolan till gymnasiets kurser, '
+            f'felsökning och projekt. Hemma i Stockholm eller online, {PRIS} i timmen.'
+        ),
+        'etikett': 'Läxhjälp i programmering',
+        'h1': 'Läxhjälp i<br><em>programmering.</em>',
+        'lede': (
+            'Programmering är att lösa ett problem i små steg, och det är lätt att fastna på ett '
+            'fel man inte hittar. Vi matchar eleven med en studiehjälpare som nyligen läst samma '
+            'kurs och som felsöker tillsammans med eleven.'
+        ),
+        'kort': 'Loopar, villkor, felsökning och projekt',
+        'bild': '11-studiehjalparen',
+        'tint': '#8B846E',
+        'focal': '46% 44%',
+        'lista_etikett': 'Vad passen går ut på',
+        'lista_rubrik': 'Ett problem,<br>i små <em>steg.</em>',
+        'lista_ingress': (
+            'I grundskolan ingår programmering i matten och tekniken, och på gymnasiet finns egna '
+            'kurser. Skriv i anmälan vilken kurs och vilket språk det gäller, så letar vi efter en '
+            'studiehjälpare som kan just det.'
+        ),
+        'lista': [
+            ('Grundskolan',
+             'Algoritmer, villkor och loopar, först med block och sedan med kod, ofta som en del av '
+             'matten eller tekniken. Här lönar det sig att förstå varför programmet gör som det gör, '
+             'inte bara att få det att fungera.'),
+            ('Gymnasiet',
+             'Variabler, funktioner, listor och objekt, i det språk skolan använder, till exempel '
+             'Python, JavaScript, Java eller C#. Studiehjälparen har läst samma sorts kurs nyligen.'),
+            ('Felsökning',
+             'Att läsa ett felmeddelande, pröva en del i taget och hitta felet själv. Det är det som '
+             'skiljer den som kommer vidare från den som fastnar, och det går att öva.'),
+            ('Projekt och inlämningar',
+             'Att dela upp en större uppgift i delar och planera arbetet, och att kunna förklara sin '
+             'kod när läraren frågar hur den fungerar.'),
+        ],
+        'vinkel_etikett': 'Så lägger vi upp det',
+        'vinkel_rubrik': 'Eleven skriver<br>koden, <em>inte vi.</em>',
+        'vinkel': [
+            'Studiehjälparen förklarar, ställer frågor och felsöker tillsammans med eleven, men '
+            'skriver inte lösningen. Kod som eleven inte själv förstår hjälper inte på nästa '
+            'uppgift, och inte när läraren ber eleven förklara den.',
+            'Programmering passar bra online: eleven kan visa sin skärm i samtalet, och '
+            'studiehjälparen följer koden rad för rad. Studieplanen och rapporten efter varje pass '
+            'följer hur det går.',
+        ],
+        'faq': [
+            ('Vilka programmeringsspråk hjälper ni med?',
+             'Det språk skolan använder, till exempel Python, JavaScript, Java eller C#. Skriv i '
+             'anmälan vilket språk och vilken kurs det gäller, så letar vi efter en studiehjälpare '
+             'som kan just det.'),
+            ('Gör studiehjälparen uppgiften åt eleven?',
+             'Nej. Studiehjälparen förklarar och felsöker tillsammans med eleven, men det är eleven '
+             'som skriver koden.'),
+            ('Fungerar det online?',
+             'Ja. Eleven visar sin skärm i samtalet, så att ni tittar på samma kod, och det är samma '
+             'studieplan och samma rapport efteråt som när ni ses hemma.'),
+            ('Vad kostar det?',
+             f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
+             'månadsavgift, och hur betalningen går till står på prissidan.'),
+        ],
+    },
 ]
 
 
@@ -841,6 +1043,76 @@ ONLINE = {
 # ============================================================
 
 STADIER = [
+    {
+        'slug': 'laxhjalp-lagstadiet',
+        'i_namn': 'för lågstadiet',
+        'plats': 'Stockholm',
+        'titel': 'Läxhjälp för lågstadiet i Stockholm, åk 1–3 | Nextrum',
+        'beskrivning': (
+            'Läxhjälp för åk 1–3: läsa, skriva och räkna i barnets egen takt. Hemma hos er i '
+            f'Stockholm, på biblioteket eller online, {PRIS} i timmen och ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp för lågstadiet',
+        'h1': 'Läxhjälp för<br><em>lågstadiet.</em>',
+        'lede': (
+            'I ettan, tvåan och trean lär sig barnet läsa, skriva och räkna, och resten av skolan '
+            'bygger på det. Vi matchar barnet med en studiehjälpare som tar det lugnt och i '
+            'barnets takt.'
+        ),
+        'kort': 'Åk 1–3: läsa, skriva och räkna',
+        'bild': '06-forklaringen',
+        'tint': '#9A8E79',
+        'focal': '62% 44%',
+        'lista_etikett': 'Vad passen går ut på',
+        'lista_rubrik': 'Läsa, skriva<br>och <em>räkna.</em>',
+        'lista_ingress': (
+            'Det som sitter i trean bär resten av skolan. Studieplanen börjar med det barnet '
+            'faktiskt fastnar på, och tar ett steg i taget.'
+        ),
+        'lista': [
+            ('Läsa',
+             'Bokstäverna och ljuden, att ljuda ihop ord och att läsa med flyt. Passen kan vara att '
+             'läsa högt tillsammans och prata om det man läst, så att barnet märker att det '
+             'förstår.'),
+            ('Skriva',
+             'Att forma bokstäverna, stava vanliga ord och skriva några meningar i rätt ordning: '
+             'först det som hände, sedan det som hände sedan.'),
+            ('Räkna',
+             'Talen och positionssystemet, plus och minus, de första gångertabellerna, klockan och '
+             'enkla problem i ord. Gärna med saker att räkna med, inte bara siffror på papper.'),
+            ('Läxan och lusten',
+             'En stund med läxan som inte slutar i gråt. En rutin och en takt som fungerar är lika '
+             'mycket värd som själva uppgiften.'),
+        ],
+        'vinkel_etikett': 'Hemma, i lugn takt',
+        'vinkel_rubrik': 'En stund som<br>känns <em>lätt.</em>',
+        'vinkel': [
+            'För de yngsta passar ett pass hemma hos er eller på biblioteket ofta bättre än en '
+            'skärm. Ett pass är minst en timme, och för ett barn i ettan blir den lagom med en '
+            'paus i mitten och omväxling mellan att läsa, skriva och räkna.',
+            'Studiehjälparen tar det i barnets takt och låter barnet göra jobbet själv. Rapporten '
+            'efter varje pass säger vad ni gjorde och hur det gick, så att ni vet vad ni kan '
+            'fortsätta med hemma.',
+        ],
+        'faq_rubrik': 'Lågstadiet, det ni brukar undra',
+        'faq': [
+            ('Från vilken årskurs hjälper ni?',
+             'Från årskurs ett. Skriv årskursen i anmälan, så tar vi med det när vi väljer '
+             'studiehjälpare.'),
+            ('Är en timme för länge för ett litet barn?',
+             'Ett pass är minst en timme. Med en paus i mitten och omväxling mellan att läsa, '
+             'skriva och räkna blir timmen inte lång, och studiehjälparen anpassar takten efter '
+             'barnet.'),
+            ('Gör studiehjälparen läxan åt barnet?',
+             'Nej. Studiehjälparen läser med barnet, frågar och förklarar, men det är barnet som '
+             'läser, skriver och räknar. Målet är att nästa läxa går lättare också när ingen sitter '
+             'bredvid.'),
+            ('Vad kostar det?',
+             f'{PRIS} i timmen, samma för alla årskurser och ämnen. Sitter ett syskon med i samma '
+             f'pass kostar det {EXTRA_BARN} extra i timmen totalt. Ingen bindningstid och ingen '
+             'månadsavgift, och hur betalningen går till står på prissidan.'),
+        ],
+    },
     {
         'slug': 'laxhjalp-mellanstadiet',
         'i_namn': 'för mellanstadiet',

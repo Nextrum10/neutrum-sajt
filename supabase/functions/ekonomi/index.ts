@@ -78,21 +78,30 @@ const KALLOR = [
 // och det är hela skyddet.
 // ============================================================
 
-/* SEDAN FAS 14.2 FÅR FAMILJEN INGEN FAKTURA. Familjen betalar varje
-   pass med kort, i förväg eller efter passet när de bekräftar
-   rapporten (Fas 19.2), och studiehjälparen får sitt underlag
-   den 25:e som förut.
+/* FAKTURAN ÄR ETT VAL IGEN, SEDAN 2026-09-27 (Fas 19.6). Familjen
+   betalar varje pass med kort, i förväg eller efter passet när de
+   bekräftar rapporten (Fas 19.2), eller väljer faktura när de
+   bekräftar rapporten. Månadskörningen gör då en faktura per familj
+   och månad, ett utkast tills admin lagt det i Fortnox.
+   Studiehjälparen får sitt underlag den 25:e som förut.
 
-   Frågan ofakturerade_pass fanns för att hitta intäkt som glidit
-   förbi fakturan. Efter omställningen hade den svarat med VARJE pass,
-   för inget pass hamnar längre på en fakturarad — och agenten hade
-   läst det som en växande hög pengar ingen skickat räkning på. Den
-   heter nu obetalda_pass och frågar det som betyder samma sak i dag:
-   pass som hållits och rapporterats utan att familjen betalat.
+   Från Fas 14.2 till dess fick familjen ingen faktura. Frågan
+   ofakturerade_pass fanns för att hitta intäkt som glidit förbi
+   fakturan, och efter omställningen hade den svarat med VARJE pass —
+   agenten hade läst det som en växande hög pengar ingen skickat
+   räkning på. Den heter sedan dess obetalda_pass och frågar det som
+   betyder samma sak i dag: pass som hållits och rapporterats utan att
+   familjen betalat dem eller valt faktura för dem.
 
-   fakturor och obetalt står kvar för de äldre fakturorna. Det fanns
-   noll sådana när omställningen gjordes, men frågorna kostar ingenting
-   och ett tomt svar är också ett svar. */
+   fakturor och obetalt sa till 2026-10-07 att inga nya fakturor
+   skapas, och en agent som läste det kunde ta månadens faktura för en
+   rest från förr. Ett utkast räknas för sig i fakturor: det är inte
+   skickat, och en summa med utkasten i hade sett ut som pengar
+   familjerna är skyldiga.
+
+   kortbetalningar räknar aldrig en testbetalning, som Betalningar i
+   adminvyn. Kortbetalningen är i testläge, så förut hade varje prov
+   av kassan stått som intäkt i agentens svar. */
 
 // Dagen i Stockholm, inte i UTC. En betalning strax efter midnatt den
 // första hör till den nya månaden, och det är så analysvyerna räknar.
@@ -104,21 +113,26 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
     beskrivning:
       'Kortbetalningar per pass, med betalningsdag mellan från och till. Belopp i ören: betalt, ' +
       'återbetalt, Stripes avgift och netto när de finns, samt passets datum och längd. Stripe ' +
-      'betalar ut till banken i klumpar netto efter avgift, så ingen bankrad motsvarar ett pass.',
+      'betalar ut till banken i klumpar netto efter avgift, så ingen bankrad motsvarar ett pass. ' +
+      'Testbetalningar räknas inte, bara hur många de är. Köpta timmar och betald övertid är ' +
+      'inte med här, så summan är inte allt som kommit in på kort.',
     koer: async (db, fran, till) => {
       const { data, error } = await db
         .from('bookings')
-        .select('betald_at, betalt_ore, aterbetald_ore, stripe_avgift_ore, stripe_netto_ore, betalning_status, wanted_date, duration_min')
+        .select('betald_at, betalt_ore, aterbetald_ore, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, betalning_status, wanted_date, duration_min')
         .not('betald_at', 'is', null)
         .order('betald_at');
       if (error) throw new Error(error.message);
-      const rader = (data ?? [])
+      const iPerioden = (data ?? [])
         .map((b) => ({ ...b, betaldag: stockholmsdag(b.betald_at) }))
         .filter((b) => b.betaldag >= fran && b.betaldag <= till);
+      // Okänt läge räknas, som i adminvyn: bara det Stripe sagt är test är det.
+      const rader = iPerioden.filter((b) => b.stripe_skarp !== false);
       const summa = (f: 'betalt_ore' | 'aterbetald_ore' | 'stripe_avgift_ore') =>
         rader.reduce((s, r) => s + Number(r[f] ?? 0), 0);
       return {
         antal: rader.length,
+        testbetalningar: iPerioden.length - rader.length,
         betalt_ore: summa('betalt_ore'),
         aterbetalt_ore: summa('aterbetald_ore'),
         // Avgiften hämtas när betalningen kommer in och finns inte
@@ -140,7 +154,8 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
     beskrivning:
       'Pass som hållits och rapporterats men som familjen inte betalat. Intäkt som borde ha ' +
       'kommit in men inte har det. Ingen periodavgränsning — poängen är att hitta gamla pass ' +
-      'som glidit förbi.',
+      'som glidit förbi. Ett pass som familjen valt att betala mot faktura är inte med: det ' +
+      'väntar på fakturan, som syns i fakturor och obetalt.',
     koer: async (db) => {
       const { data, error } = await db
         .from('passunderlag')
@@ -163,8 +178,10 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
   },
 
   fakturor: {
-    beskrivning: 'Äldre fakturor till familjer, från tiden före kortbetalningen. Inga nya skapas. ' +
-      'Period mellan från och till, belopp i ören, status, förfallodatum.',
+    beskrivning: 'Fakturor till familjer: en per familj och månad, för de pass familjen valt att ' +
+      'betala mot faktura. Period mellan från och till, belopp i ören, status, förfallodatum. ' +
+      'summa_ore är de skickade, förfallna och betalda; ett utkast är inte skickat än och står ' +
+      'i utkast_ore, och en makulerad faktura är inte med i någon summa.',
     koer: async (db, fran, till) => {
       const { data, error } = await db
         .from('invoices')
@@ -172,13 +189,21 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
         .gte('period', fran).lte('period', till)
         .order('period');
       if (error) throw new Error(error.message);
-      return { antal: data?.length ?? 0, summa_ore: (data ?? []).reduce((s, r) => s + Number(r.belopp_ore), 0), rader: data };
+      const rader = data ?? [];
+      const summa = (lagen: string[]) =>
+        rader.filter((r) => lagen.includes(r.status)).reduce((s, r) => s + Number(r.belopp_ore), 0);
+      return {
+        antal: rader.length,
+        summa_ore: summa(['skickad', 'forfallen', 'betald']),
+        utkast_ore: summa(['utkast']),
+        rader,
+      };
     },
   },
 
   obetalt: {
-    beskrivning: 'Äldre fakturor som är skickade eller förfallna men inte betalda. Ingen ' +
-      'periodavgränsning. Obetalda pass efter omställningen finns i obetalda_pass.',
+    beskrivning: 'Fakturor som är skickade eller förfallna men inte betalda. Ingen ' +
+      'periodavgränsning. Pass som familjen varken betalat eller valt faktura för finns i obetalda_pass.',
     koer: async (db) => {
       const { data, error } = await db
         .from('invoices')

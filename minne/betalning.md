@@ -623,6 +623,17 @@ Samma dag i finstilen och FAQ:n:
   - **Analysvyerna räknar fortfarande det bokade** (`analys_ekonomi`
     m.fl., Fas 9.6). `passunderlag.debiterade_min` och `lon_min` finns;
     vyerna läser dem inte än.
+  - **Analysvyn räknar inte pengarna som Betalningar** (sett 2026-10-07).
+    `analys_ekonomi`, som Analys-grafen Betalt och drift-agentens `analys`
+    läser, tar kortbetalningar för pass utan att sortera bort
+    testbetalningarna (`stripe_skarp = false`), har inte köpta timmar eller
+    betald övertid, räknar en betald faktura på fakturans månad fast grafen
+    säger "den månad pengarna kom in", och räknar ett utkast och en
+    makulerad faktura som fakturerat. I driften gjorde det liten skillnad
+    2026-10-07: inga kortbelopp, och ett utkast på 1 516 kr som stod som
+    fakturerat i september. Rättelsen är en migration,
+    grafens text och `analys`-beskrivningen i `drift` samtidigt, och om
+    köpta timmar och fakturans betaldag ska räknas är ett beslut.
   - **Villkoren om den hållna tiden (2026-09-27) är ett nytt villkor**
     för den som redan har konto: att betala för mer tid än det bokade
     har ingen godkänt förut. Villkoren har 30 dagar för väsentliga
