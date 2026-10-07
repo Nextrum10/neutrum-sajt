@@ -444,6 +444,20 @@ då ska lönespecen här säga var det finns i stället för att räkna själv.
 
 ## Prissidans kalkylator och finstilen (2026-10-06)
 
+**Omgjord 2026-10-07** (Leo: "Räkna själv på hemsidan gör de lite moderna
+och bättre"). Reglagen är segmenterade väljare med en tumme i lera som
+följer `data-v` på gruppen (siffrorna i tummen är motförskjutna, och
+`[aria-pressed]` animeras inte). Svaret är två paneler, per pass och med
+planen, med en stapel för andelen (`--andel` sätts på stapeln, där den
+läses; den jämför bara två belopp som redan visas). Summor som byts glider
+in med en Web Animation, aldrig vid första räkningen eller med reducerad
+rörelse. Panelen med planen har tre lägen i samma cell (plan, syskon,
+ingen), och den högsta bestämmer höjden, så inget hoppar. Med 4, 8 och 12
+timmar (Basic, Standard, Intensiv) har varje val för ett barn en plan; vid
+3 timmar i veckan visar den Intensiv, fast Basic + Standard är billigare
+(Leos val). Planen hittas i `.pr-erb-plan[data-erb]`, aldrig i lyftet.
+Texten nedan gäller fortfarande för hur priset läses.
+
 **Räkna själv** på prissidan: barn i passet (1–3) och timmar i veckan
 (1–3), fyra veckor. Timpriset och tillägget kommer ur `CFG` som i
 `initPris()`, och två och tre barn kostar lika mycket. Planens pris räknas

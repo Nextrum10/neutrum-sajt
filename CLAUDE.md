@@ -192,8 +192,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
   samtidigt. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
-  `erbjudanden_pris`; prissidans kalkylator (2026-10-06) läser planpriset ur planens kort och
-  räknar bara timpris och tillägg ur `CFG`. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar −5 %),
+  `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
+  och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`. Allt med
+  `data-erb` (planerna, lyftet `.pr-lyft`, startsidans `.pr-std-lapp`) tar siffrorna ur samma svar från
+  `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar −5 %),
   Standard (`plan_standard`, 8 timmar för priset av 7) och Intensiv (`plan_intensiv`, 12 timmar −5 %);
   `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
   `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och Standard visar

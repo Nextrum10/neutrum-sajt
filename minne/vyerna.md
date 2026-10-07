@@ -257,6 +257,29 @@ Prova: en elementbild som är högre än vyn byter fönstrets mått i
 Playwright och tappar pekskärmsemuleringen; ta bilden med
 `page.screenshot({clip})`.
 
+**Prissidan** (2026-10-07):
+- Planerna: tre kort i en rad, Standard i mitten med bandet Vårt tips
+  ovanför. Varje plan har en rad rutor, en per timme, och timmen på köpet
+  är i lera (dekor, `aria-hidden`). Klippkorten är en egen bred rad
+  (`<details>`).
+- På telefon (högst 760 px) är planerna en rad man sveper i, som börjar
+  med Standard i mitten: `svepraden()` i nextrum-app.js sätter `scrollLeft`
+  en gång och aldrig medan någon rört raden. Prickarna sätts av en
+  IntersectionObserver med raden som rot.
+- Lyftet `.pr-lyft` under starterbjudandet säljer Standard med siffrorna
+  ur samma svar; toppens priskort sträcks bara när lyftet syns.
+- Startsidans lapp `.pr-std-lapp` i #plattformen säljer Standard utan
+  kronor ("8 timmar i månaden för priset av 7") och leder till
+  /priser#erbjudanden; "på köpet" står inte där, för hero säger redan
+  "Första timmen på köpet".
+- Så fungerar betalningen är ett flöde med pilar (`ol.pr-flode
+  [data-betalflode]`, `betalflöde()`, CSS i nextrum-sidor.css): vågrätt
+  på dator, där stegen och pilarna tänds i tur (`.ar-igang`), och lodrätt
+  med pilen nedåt från 1100 px, där varje steg tänds när det passerat
+  mitten (`.ar-nadd`). Betalnings- och fakturameningen står en gång var i
+  flödet och en gång i FAQ:n. `.nx-holdpunkter` är kvar på Vår idé och För
+  elever & föräldrar.
+
 ### Två fällor när en palett byts
 
 Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11

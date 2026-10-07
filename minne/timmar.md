@@ -52,6 +52,10 @@ timmen: 1 440, 2 653 och 4 320 kr. Basic blev dyrare än gamla Standard
   säger att köpta timmar inte betalar "ett pass där en timme är på köpet"
   (startrabatten); ett förtydligande kräver en ny version av villkoren.
 - `rls-test.sql` avsnitt 25 (Planerna) och det omskrivna provet 16.1d.
+- Prissidans plankort, lyftet bredvid starterbjudandet och startsidans lapp
+  i #plattformen döljs tills migrationen kört (koderna saknas i svaret).
+  Startsidans lapp har inga kronor i HTML. Leos testköp "Standardplan"
+  syns bara i hans vy.
 
 **Ett pass betalt med timmar avbokar familjen själv** (Fas 21.1), och
 studiehjälparen kan också. Det har inga pengar på sig, och
