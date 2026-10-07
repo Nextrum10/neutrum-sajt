@@ -137,6 +137,9 @@ sökning, och de kostar ingenting.
 | Engelska | 379 kr/tim |
 | Svenska | 379 kr/tim |
 | NO | 379 kr/tim |
+| SO | 379 kr/tim |
+| Spanska, tyska och franska | 379 kr/tim |
+| Programmering | 379 kr/tim |
 
 **Privatlärare står inte med längre.** Ordlistan säger aldrig "lärare"
 utåt, och en tjänst som heter Privatlärare lovar något en studiehjälpare
