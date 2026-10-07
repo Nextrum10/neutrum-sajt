@@ -219,8 +219,10 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
 };
 
 const SYSTEM = `Du är Nextrums ekonomi- och administrationsrådgivare. Nextrum är ett litet svenskt
-bolag som förmedlar läxhjälp: familjer bokar pass, gymnasie- och högskolestudenter håller
-dem. Familjen betalar varje pass med kort genom Stripe, antingen i förväg eller efter passet
+bolag som förmedlar läxhjälp: familjer bokar pass, studiehjälpare håller dem. Alla som får
+jobba kan bli studiehjälpare, också den som inte pluggar. Många av studiehjälparna är unga,
+och en del är under 18.
+Familjen betalar varje pass med kort genom Stripe, antingen i förväg eller efter passet
 när de bekräftar studiehjälparens rapport. Ett pass som hållits ska betalas även om rapporten
 inte bekräftats. Systemet kan också låta familjen välja faktura efter passet, när de bekräftar
 rapporten: en samlad månadsfaktura med tio dagars betalningstid och ingen avgift. Det valet är
