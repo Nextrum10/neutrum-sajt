@@ -3129,13 +3129,20 @@ a:has(> .adm-status){
 .bi-kort > .bi-form:not(:first-child){margin-top:14px}
 .bi-hjalp{margin:6px 0 0;color:var(--bl-2);line-height:1.5}
 .bi-form > .bi-hjalp{margin-top:10px}
-/* Kryssrutan är ett ja från vårdnadshavaren. Hela raden är tryckytan. */
-.bi-ja{
+/* Kryssrutan är ett ja från vårdnadshavaren. Hela raden är tryckytan.
+   Samma rad bär ja:t till användarvillkoren (.nx-ja, 2026-10-07), i
+   Skapa konto och i rutan vid inloggningen; den är flex, och hidden
+   räcker inte mot en display-regel. */
+.bi-ja,.nx-ja{
   display:flex;align-items:flex-start;gap:10px;margin-top:14px;min-height:44px;
   font-size:.86rem;line-height:1.55;color:var(--bl);cursor:pointer;
 }
-.bi-ja input{flex:none;width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc)}
-.bi-ja a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.bi-ja input,.nx-ja input{flex:none;width:20px;height:20px;margin:1px 0 0;accent-color:var(--acc)}
+.bi-ja a,.nx-ja a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.nx-ja[hidden]{display:none}
+/* label:has(> input[type="checkbox"]) ovan sätter 24 px och väger mer än
+   klassen; ja:t till villkoren är en tryckyta för tummen. */
+.nx-ja:has(> input[type="checkbox"]){min-height:44px}
 /* Vad barnet får se och göra (barnets_behorigheter, 2026-10-06):
    kryssrutorna när inloggningen skapas, och på och av i barnets kort,
    med en linje ovanför som barnets e-post. */

@@ -324,11 +324,53 @@ med Fortsätt sist.
   (återställningen bekräftar också ett konto som aldrig bekräftats) ger
   samma ruta utan Inte nu, och Skicka inbjudan igen finns i adminvyn.
   Höj den inte för bekvämlighetens skull utan att väga det.
-- **Villkoren**: ingen godkänner användarvillkoren när kontot skapas,
-  varken här eller i registreringen. Det var så före, och är inte byggt.
+- **Villkoren**: godkänns sedan 2026-10-07 i en egen ruta efter
+  lösenordet, före introduktionen; se Användarvillkoren nedan.
 - Provas i `verktyg/prova-intag.js` och `verktyg/prova-aterstallning.js`
   (`minne/genererat-och-ci.md`), och vägarna i `bjud-in` i
   `_delad/inbjudan_test.ts`.
+
+### Användarvillkoren (villkoren_godkanns, 2026-10-07)
+Leo: "Fixa den gamla luckan". Ingen godkände användarvillkoren när kontot
+skapades, varken den som registrerade sig eller den vi tog in. Villkoren
+gällde på pappret, men ingenting visade att någon sagt ja till dem, och
+en konsument som aldrig fått frågan har inte ingått avtalet så som
+villkoren beskriver det (ångerrätten, betalningen, avbokningen).
+- **Ett godkännande är en rad** i `villkor_godkannanden`: kontot, versionen,
+  tiden och var (`registrering` eller `inloggning`). Tiden och versionen
+  sätts av databasen, aldrig av anropet. Ingen inloggad skriver i tabellen;
+  raden kommer från triggern på `auth.users` eller från `godkann_villkor()`,
+  som tar `auth.uid()` och prövar att versionen är den gällande (22023
+  annars, så att ingen godkänner en version hen inte sett).
+- **Registreringen**: kryssrutan i Skapa konto, i studievyn och
+  studiehjälparvyn, skickar `villkor: true` i `user_metadata`, och triggern
+  skriver raden när kontot skapas, med den version som gäller då. Det är
+  user_metadata, som personen skriver själv, men det enda det kan
+  åstadkomma är personens eget godkännande. Ett barnkonto får aldrig en
+  rad (`app_metadata.roll = 'barn'`): barnet är ingen avtalspart.
+- **Alla andra** får rutan vid inloggningen (`NXStudie.villkorFörst`): den
+  vi tagit in, efter lösenordet och före introduktionen; den som
+  registrerade sig före 2026-10-07; och alla när villkoren ändras, med
+  rubriken Användarvillkoren har ändrats. Rutan går inte att stänga, men
+  Logga ut finns, och länkarna öppnas i en ny flik så att rutan står kvar.
+  Kryssrutan är aldrig ikryssad från början.
+- **Databasen kräver det**, för vyn går att gå förbi: `bookings_kraver_villkor`
+  nekar den inloggade (familj eller studiehjälpare) som föreslår ett pass
+  eller bekräftar en tid utan godkännande, och `klippkort_kraver_villkor`
+  ett köp av timmar åt en familj utan (kassan skriver med service_role,
+  så det är familjen på raden som prövas). Felet är P0001 med ledtråden
+  `villkor` och en mening som vyerna visar som den är. En avbokning, ett
+  betalt pass, en rapport, databasens egna jobb och admin stoppas aldrig:
+  en familj ska alltid kunna lämna, också den som inte godkänt nya villkor.
+- **Versionen** är datumet sist i `anvandarvillkor.html` och står i
+  `intern.villkor_version()`. `kolla-villkor.py` håller dem lika (och den
+  engelska sidans datum). Ändras villkoren skrivs en migration som byter
+  datumet; då får alla frågan igen, och ingen bokar innan den svarat.
+  Därför byts datumet bara när villkoren ändras i sak.
+- **Admin** ser i personens panel när villkoren godkändes, eller att de
+  inte är det (samma behörigheter som läser personer). Saknas tabellen
+  står "okänt", aldrig "inte godkända".
+- Provas i `rls-test.sql` avsnitt 23 och `verktyg/prova-villkor.js`.
 
 ### Kontomejlen från Supabase Auth (2026-10-01)
 

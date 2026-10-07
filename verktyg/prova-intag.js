@@ -79,7 +79,11 @@ function värld() {
     ansokan_utskick: [],
     admin_sett: [{ omrade: 'leads', sett_till: nu(-1) }, { omrade: 'ansokningar', sett_till: nu(-1) }],
     tjanster: [{ kod: 'laxhjalp', namn: 'Läxhjälp', aktiv: true, for_jobb: true, for_kund: true, ordning: 1 }],
-    flaggor: []
+    flaggor: [],
+    /* Användarvillkoren (2026-10-07): Tove kryssade i när hon registrerade
+       sig, familjen vi bjudit in har inte loggat in och inte godkänt. */
+    villkor_godkannanden: [{ anvandare: 'sh-1', version: '2026-09-30', godkant_at: '2026-10-03T10:00:00+00:00',
+                             kalla: 'registrering' }]
   };
 }
 
@@ -136,7 +140,9 @@ function falskSupabase(o) {
   const RPC = {
     mina_behorigheter: () => ({ admin: true, superadmin: true, behorigheter: [] }),
     notisfel: () => [], ekonomiska_avvikelser: () => [], tipskoder_lage: () => [],
-    admin_sett_markera: k => k.p_till
+    admin_sett_markera: k => k.p_till,
+    /* Adminens eget läge: panelen läser bara den gällande versionen ur det. */
+    mitt_villkorslage: () => ({ version: '2026-09-30', godkant_at: '2026-10-01T09:00:00+00:00', tidigare: false })
   };
   async function hantera(route) {
     const req = route.request();
@@ -373,6 +379,9 @@ async function provaIgen(webb) {
     await vänta(400);
     prova('igen (' + igenSvar + '): Senast inloggad aldrig, med knappen', (await page.locator('.dp-fakta').first().innerText()).includes('aldrig')
       && (await synlig(page, '[data-dp-bjud-igen="familj-1"]')));
+    prova('igen (' + igenSvar + '): panelen säger att villkoren inte är godkända än',
+      /Användarvillkoren\s*inte godkända än/.test(await page.locator('.dp-fakta').first().innerText()),
+      await page.locator('.dp-fakta').first().innerText());
     page.removeAllListeners('dialog');
     page.on('dialog', d => { dialoger.push(d.message()); d.dismiss(); });
     await page.click('[data-dp-bjud-igen="familj-1"]');
@@ -394,6 +403,9 @@ async function provaIgen(webb) {
     await page.click('[data-dp="studiehjalpare:sh-1"]');
     await vänta(400);
     prova('igen: den som loggat in har ingen knapp', (await page.locator('[data-dp-bjud-igen]').count()) === 0);
+    const fakta = await page.locator('.dp-fakta').first().innerText();
+    prova('villkor: panelen säger när studiehjälparen godkände dem', /Användarvillkoren\s*godkända 3 oktober, när kontot skapades/.test(fakta),
+      fakta);
     await context.close();
   }
 }

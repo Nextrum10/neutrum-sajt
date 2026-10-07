@@ -381,6 +381,8 @@ html:has(> body.vy){scroll-behavior:auto}
 .vy .auth-glomt{display:flex;justify-content:flex-end;margin:-8px 0 6px}
 .vy .auth-glomt[data-glomt-tillbaka]{justify-content:center;margin:6px 0 0}
 .vy .auth-glomt[hidden]{display:none}
+/* Ja:t till användarvillkoren i Skapa konto (2026-10-07), ovanför knappen. */
+.vy .auth-villkor{margin:0 0 16px}
 .vy .auth-lank{
   display:inline-flex;align-items:center;min-height:44px;padding:0 4px;
   font-size:.86rem;color:var(--acc-lugn);
@@ -663,6 +665,15 @@ body.betalar .hdr.bort{transform:none}
 .nx-fraga-box .nx-skal-not{margin-top:12px;font-size:.84rem;color:var(--bl-3)}
 /* Det nya lösenordet efter en återställningslänk (NXStudie.nyttLösenord). */
 .nx-fraga-box form[data-nylos]{margin-top:18px}
+/* Användarvillkoren (NXStudie.villkorFörst, 2026-10-07). Länkarna är det
+   rutan ber om att man läser, så de ska se ut som länkar, som i
+   inloggningsrutans fot, och vara en tryckyta för tummen. */
+.nx-fraga-box .nx-villkor-lankar{display:flex;flex-wrap:wrap;gap:0 20px;margin-top:6px}
+.nx-villkor-lankar a{
+  display:inline-flex;align-items:center;min-height:44px;
+  font-weight:600;color:var(--acc-lugn);text-decoration:underline;text-underline-offset:3px;
+}
+.nx-fraga-box form[data-villkor]{margin-top:4px}
 
 /* ============================================================
    INTRODUKTIONEN (2026-10-06)

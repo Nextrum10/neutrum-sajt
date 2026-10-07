@@ -77,6 +77,14 @@
 
     if (!namn) { säg(msg, 'Fyll i ditt namn.', false); return; }
     if (lösen.length < 6) { säg(msg, 'Lösenordet måste vara minst 6 tecken.', false); return; }
+    /* Användarvillkoren godkänns när kontot skapas (2026-10-07):
+       databasen sparar godkännandet ur villkor: true nedan. */
+    const villkorJa = $('#a-villkor');
+    if (villkorJa && !villkorJa.checked) {
+      säg(msg, 'Kryssa i att du godkänner användarvillkoren.', false);
+      villkorJa.focus();
+      return;
+    }
 
     knapp.setAttribute('aria-busy', 'true');
     const res = await supa.auth.signUp({
@@ -84,7 +92,7 @@
       options: {
           /* valkommen: introduktionen visas efter första inloggningen
              (NXStudie.introduktion, 2026-10-06). */
-          data: { full_name: namn, role: 'parent', valkommen: 'intro' },
+          data: { full_name: namn, role: 'parent', valkommen: 'intro', villkor: true },
           /* Utan den här landar bekräftelselänken på Site URL i
              Supabase — alltså startsidan, eller värre: localhost.
              Nu kommer man tillbaka hit, till vyn man skapade
@@ -4835,6 +4843,11 @@
       .then(() => {}, () => {});
 
     if (S.profil.role === 'tutor') { visa('view-wrongrole'); return; }
+    /* Användarvillkoren (2026-10-07): den som inte godkänt den gällande
+       versionen får rutan här, efter lösenordet och före introduktionen.
+       Databasen kräver godkännandet för att ett pass ska bokas
+       (NXStudie.villkorFörst). */
+    await NXStudie.villkorFörst(supa, S.user, 'foralder');
     /* Introduktionen första gången, och Fortsätt sist leder in i vyn
        (NXStudie.introduktion). Den som inte är matchad än får veta att
        vyn öppnas när vi matchat dem. */

@@ -102,6 +102,11 @@ integritetspolicyn säger redan att Nextrum AB är under bildande; de
 
 ## Bokningen
 
+**Användarvillkoren först** (2026-10-07): den som föreslår ett pass och den
+som bekräftar en tid har godkänt den gällande versionen, annars nekar
+databasen (`bookings_kraver_villkor`), och timmar köps bara åt en familj
+som gjort det. Avbokningen stoppas aldrig. Se `minne/sakerhet.md`.
+
 **Ett pass bokas i två steg (Fas 15.1).** Familjen trycker på en dag i
 en tom kalender, väljer ämne, tid och antal barn och FÖRESLÅR tiden.
 Studiehjälparen accepterar eller föreslår en annan under Föreslagna

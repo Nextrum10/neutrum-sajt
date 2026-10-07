@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt och barnets behörigheter)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter och villkoren)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -50,7 +50,8 @@
 -- avbokningar_och_svar, tipskoder_och_kampanjkoder,
 -- barnkonton_och_admin, manadskorningen_gar_varje_natt, admin_paminnelser,
 -- ansokan_vardnadshavare_och_nej, admin_sett, nexlax_uppdrag_och_np,
--- nexlax_felrapporter, barnets_chatt och barnets_behorigheter är körda.
+-- nexlax_felrapporter, barnets_chatt, barnets_behorigheter och
+-- villkoren_godkanns är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -288,6 +289,19 @@ insert into auth.users (id, email, raw_user_meta_data) values
 
 update public.profiles set is_admin = true
 where id = '00000000-0000-4000-8000-0000000000ad';
+
+-- Villkoren (villkoren_godkanns, 2026-10-07): den som föreslår eller
+-- bekräftar ett pass och den som köper timmar har godkänt den gällande
+-- versionen, så fixturernas vuxna har gjort det. Avsnitt 23 tar bort
+-- godkännandet där det prövar spärren. Utan migrationen hoppas det över.
+do $$
+begin
+  if to_regclass('public.villkor_godkannanden') is not null then
+    insert into public.villkor_godkannanden (anvandare, version, kalla)
+    select u.id, intern.villkor_version(), 'registrering' from auth.users u
+     where u.email like 'rls-%@example.invalid';
+  end if;
+end $$;
 
 update public.tutor_profiles
 set status = 'approved', hourly_rate = 150, school = 'Testskolan', age = 17, city = 'Teststad',
@@ -12332,6 +12346,269 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('BB Barnets behörigheter', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- ------------------------------------------------------------
+-- 23. Villkoren (villkoren_godkanns, 2026-10-07)
+--
+-- Ett godkännande per konto och version, med databasens tid: från
+-- kryssrutan när kontot skapas, eller från godkann_villkor() i rutan vid
+-- inloggningen. Den som föreslår eller bekräftar ett pass och den som
+-- köper timmar ska ha godkänt den gällande versionen; avbokningen,
+-- databasens egna vägar och admin stoppas aldrig. Ingen inloggad skriver
+-- i tabellen, och barnet godkänner inget.
+-- Allt i ett block som rullas tillbaka; utfallet samlas i en variabel.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  r     jsonb;
+  t     text;
+  kod   text;
+  ledtr text;
+  V     text;
+  dag   date := (now() at time zone 'Europe/Stockholm')::date;
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q     constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  E     constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  NY1   constant uuid := '00000000-0000-4000-8000-0000000c1e01';
+  NY2   constant uuid := '00000000-0000-4000-8000-0000000c1e02';
+  KE    constant uuid := '00000000-0000-4000-8000-0000000c1ebe';
+  B1    constant uuid := '00000000-0000-4000-8000-0000000c1eb1';
+  B2    constant uuid := '00000000-0000-4000-8000-0000000c1eb2';
+  B3    constant uuid := '00000000-0000-4000-8000-0000000c1eb3';
+  B4    constant uuid := '00000000-0000-4000-8000-0000000c1eb4';
+  B5    constant uuid := '00000000-0000-4000-8000-0000000c1eb5';
+  K1    constant uuid := '00000000-0000-4000-8000-0000000c1ec1';
+  K2    constant uuid := '00000000-0000-4000-8000-0000000c1ec2';
+begin
+  begin
+    V := intern.villkor_version();
+
+    -- Registreringen: kryssrutan skickar villkor: true i user_metadata.
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (NY1, 'villkor-ja@example.invalid', '{"role":"parent","full_name":"Villkor Ja","villkor":true}'),
+      (NY2, 'villkor-nej@example.invalid', '{"role":"tutor","full_name":"Villkor Nej"}');
+    select string_agg(g.kalla || ':' || (g.version = V)::text, ',') into t
+      from public.villkor_godkannanden g where g.anvandare in (NY1, NY2);
+    ut := ut || jsonb_build_object('t', 'VG kryssrutan i registreringen blir ett godkännande, utan den inget', 'ok',
+            t = 'registrering:true'
+            and exists (select 1 from public.villkor_godkannanden where anvandare = NY1), 'd', t);
+
+    -- Läget, som vyn läser det.
+    perform pg_temp.bli(P);
+    r := public.mitt_villkorslage();
+    ut := ut || jsonb_build_object('t', 'VG fixturfamiljen har godkänt den gällande versionen', 'ok',
+            r ->> 'version' = V and r ->> 'godkant_at' is not null and (r ->> 'tidigare')::boolean = false,
+            'd', r::text);
+
+    -- Ingen inloggad skriver i tabellen, inte ens sitt eget.
+    begin
+      insert into public.villkor_godkannanden (anvandare, version, kalla) values (P, '2026-01-01', 'inloggning');
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG ingen inloggad lägger till ett godkännande', 'ok', kod = '42501', 'd', kod);
+    begin
+      update public.villkor_godkannanden set godkant_at = now() - interval '1 year' where anvandare = P;
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG ingen inloggad flyttar tiden', 'ok', kod = '42501', 'd', kod);
+
+    -- Vem som läser.
+    reset role;
+    perform pg_temp.bli(Q);
+    select count(*)::text into t from public.villkor_godkannanden where anvandare = P;
+    ut := ut || jsonb_build_object('t', 'VG en annan familj ser inte godkännandet', 'ok', t = '0', 'd', t);
+    reset role;
+    perform pg_temp.bli(AD);
+    select count(*)::text into t from public.villkor_godkannanden where anvandare = P;
+    ut := ut || jsonb_build_object('t', 'VG admin ser godkännandet', 'ok', t = '1', 'd', t);
+
+    -- Utan godkännande: P, A och AD tas bort ur tabellen, som postgres.
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    delete from public.villkor_godkannanden where anvandare in (P, A, AD);
+
+    perform pg_temp.bli(P);
+    r := public.mitt_villkorslage();
+    ut := ut || jsonb_build_object('t', 'VG utan godkännande säger läget det, och rutan visas', 'ok',
+            r ->> 'godkant_at' is null and (r ->> 'tidigare')::boolean = false, 'd', r::text);
+
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B1, P, A, E, P, dag + 20, '19:00', 60, 'requested');
+      kod := 'inget fel'; ledtr := null;
+    exception when others then get stacked diagnostics kod = returned_sqlstate, ledtr = pg_exception_hint;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG en familj utan godkännande föreslår inget pass', 'ok',
+            kod = 'P0001' and ledtr = 'villkor', 'd', kod || ' ' || coalesce(ledtr, '-'));
+
+    begin
+      update public.bookings set status = 'cancelled', avbokningsskal = 'forhinder'
+       where id = '00000000-0000-4000-8000-00000000b0d1';
+      get diagnostics t = row_count;
+    exception when others then t := 'fel ' || sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG en familj utan godkännande kan alltid avboka', 'ok', t = '1', 'd', t);
+
+    -- Studiehjälparens förslag, som databasen skriver (ingen inloggad).
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (B2, P, A, E, A, dag + 21, '19:00', 60, 'requested');
+    ut := ut || jsonb_build_object('t', 'VG databasens egna vägar går förbi spärren', 'ok',
+            exists (select 1 from public.bookings where id = B2), 'd', null);
+
+    perform pg_temp.bli(P);
+    begin
+      update public.bookings set status = 'confirmed' where id = B2;
+      kod := 'inget fel'; ledtr := null;
+    exception when others then get stacked diagnostics kod = returned_sqlstate, ledtr = pg_exception_hint;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG en familj utan godkännande bekräftar inte studiehjälparens förslag', 'ok',
+            kod = 'P0001' and ledtr = 'villkor', 'd', kod || ' ' || coalesce(ledtr, '-'));
+
+    -- Rutan: fel version nekas, rätt version skrivs med databasens tid.
+    begin
+      perform public.godkann_villkor('2000-01-01');
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG en annan version än den gällande godkänns inte', 'ok', kod = '22023', 'd', kod);
+    r := public.godkann_villkor(V);
+    ut := ut || jsonb_build_object('t', 'VG familjen godkänner den gällande versionen i rutan', 'ok',
+            r ->> 'godkant_at' is not null, 'd', r::text);
+    perform public.godkann_villkor(V);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*)::text || ':' || min(kalla) || ':' || (max(godkant_at) > now() - interval '1 minute')::text into t
+      from public.villkor_godkannanden where anvandare = P;
+    ut := ut || jsonb_build_object('t', 'VG en rad per version, från inloggningen, med databasens tid', 'ok',
+            t = '1:inloggning:true', 'd', t);
+
+    -- Med godkännandet går förslaget och bekräftelsen.
+    perform pg_temp.bli(P);
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B3, P, A, E, P, dag + 22, '19:00', 60, 'requested');
+      get diagnostics t = row_count;
+    exception when others then t := 'fel ' || sqlstate || ' ' || sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG med godkännandet föreslår familjen passet', 'ok', t = '1', 'd', t);
+    begin
+      update public.bookings set status = 'confirmed' where id = B2;
+      get diagnostics t = row_count;
+    exception when others then t := 'fel ' || sqlstate || ' ' || sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG med godkännandet bekräftar familjen studiehjälparens förslag', 'ok',
+            t = '1', 'd', t);
+
+    -- Studiehjälparen A har inte godkänt.
+    reset role;
+    perform pg_temp.bli(A);
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B4, P, A, E, A, dag + 23, '19:00', 60, 'requested');
+      kod := 'inget fel'; ledtr := null;
+    exception when others then get stacked diagnostics kod = returned_sqlstate, ledtr = pg_exception_hint;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG en studiehjälpare utan godkännande föreslår inget pass', 'ok',
+            kod = 'P0001' and ledtr = 'villkor', 'd', kod || ' ' || coalesce(ledtr, '-'));
+    begin
+      update public.bookings set status = 'confirmed' where id = B3;
+      kod := 'inget fel'; ledtr := null;
+    exception when others then get stacked diagnostics kod = returned_sqlstate, ledtr = pg_exception_hint;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG en studiehjälpare utan godkännande bekräftar inte familjens förslag', 'ok',
+            kod = 'P0001' and ledtr = 'villkor', 'd', kod || ' ' || coalesce(ledtr, '-'));
+
+    -- Admin bokar åt familjen utan eget godkännande.
+    reset role;
+    perform pg_temp.bli(AD);
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B5, P, A, E, AD, dag + 24, '19:00', 60, 'confirmed');
+      get diagnostics t = row_count;
+    exception when others then t := 'fel ' || sqlstate || ' ' || sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG admin går förbi spärren', 'ok', t = '1', 'd', t);
+
+    -- Köpet: kassan skriver med service_role, och familjen på raden prövas.
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    delete from public.villkor_godkannanden where anvandare = Q;
+    begin
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status)
+      values (K1, Q, 'klipp10', 'Prov 5 timmar', 'klippkort', 5, 6, 5, 37900, 180000, 'vantar');
+      kod := 'inget fel'; ledtr := null;
+    exception when others then get stacked diagnostics kod = returned_sqlstate, ledtr = pg_exception_hint;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG timmar köps inte åt en familj utan godkännande', 'ok',
+            kod = 'P0001' and ledtr = 'villkor', 'd', kod || ' ' || coalesce(ledtr, '-'));
+    begin
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status)
+      values (K2, P, 'klipp10', 'Prov 5 timmar', 'klippkort', 5, 6, 5, 37900, 180000, 'vantar');
+      get diagnostics t = row_count;
+    exception when others then t := 'fel ' || sqlstate || ' ' || sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG med godkännandet går köpet', 'ok', t = '1', 'd', t);
+
+    -- Barnet godkänner inget.
+    perform pg_temp.bli_barn(KE, E, P);
+    begin
+      perform public.godkann_villkor(V);
+      kod := 'inget fel';
+    exception when others then kod := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'VG ett barn godkänner inga villkor', 'ok', kod = '42501', 'd', kod);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    -- Rättigheterna och ordningen.
+    ut := ut || jsonb_build_object('t', 'VG anon når varken funktionerna eller tabellen', 'ok',
+            not has_function_privilege('anon', 'public.godkann_villkor(text)', 'execute')
+            and not has_function_privilege('anon', 'public.mitt_villkorslage()', 'execute')
+            and not has_table_privilege('anon', 'public.villkor_godkannanden', 'select'), 'd', null);
+    ut := ut || jsonb_build_object('t', 'VG hjälparen och triggrarna i intern nås inte av någon inloggad', 'ok',
+            not has_function_privilege('authenticated', 'intern.villkoren_godkanda(uuid)', 'execute')
+            and not has_function_privilege('authenticated', 'intern.pass_kraver_villkor()', 'execute')
+            and not has_function_privilege('authenticated', 'intern.kop_kraver_villkor()', 'execute')
+            and not has_function_privilege('authenticated', 'intern.villkor_vid_registrering()', 'execute'),
+            'd', null);
+    select max(tgname) into t from pg_trigger
+     where tgrelid = 'public.bookings'::regclass and not tgisinternal and tgtype & 2 = 2;
+    ut := ut || jsonb_build_object('t', 'VG spärren står före bookings_timmarna_tillbaka, som fortfarande är sist', 'ok',
+            t = 'bookings_timmarna_tillbaka'
+            and exists (select 1 from pg_trigger where tgrelid = 'public.bookings'::regclass
+                         and tgname = 'bookings_kraver_villkor'), 'd', t);
+
+    -- Godkännandet följer kontot när det tas bort.
+    delete from auth.users where id = NY1;
+    select count(*)::text into t from public.villkor_godkannanden where anvandare = NY1;
+    ut := ut || jsonb_build_object('t', 'VG godkännandet går med kontot när det tas bort', 'ok', t = '0', 'd', t);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('VG Villkoren', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

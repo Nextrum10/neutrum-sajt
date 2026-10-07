@@ -69,11 +69,16 @@
     const lösen = $('#a-pass').value;
     const namn = $('#a-name').value.trim();
 
+    /* Användarvillkoren godkänns när kontot skapas (2026-10-07):
+       databasen sparar godkännandet ur villkor: true nedan. */
+    const villkorJa = $('#a-villkor');
     const fel = kolla([
       { fel: !epost, text: läge === 'elev' ? 'Fyll i ditt användarnamn.' : 'Fyll i din e-postadress.', falt: $('#a-email') },
       { fel: !lösen, text: 'Fyll i ditt lösenord.', falt: $('#a-pass') },
       { fel: läge === 'up' && !namn, text: 'Fyll i ditt namn.', falt: $('#a-name') },
-      { fel: läge === 'up' && lösen.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#a-pass') }
+      { fel: läge === 'up' && lösen.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#a-pass') },
+      { fel: läge === 'up' && !!villkorJa && !villkorJa.checked, text: 'Kryssa i att du godkänner användarvillkoren.',
+        falt: villkorJa }
     ]);
     if (fel) { säg(msg, fel, false); return; }
 
@@ -85,7 +90,7 @@
       const res = await supa.auth.signUp({ email: epost, password: lösen, options: {
             /* valkommen: introduktionen visas efter första inloggningen
                (NXStudie.introduktion, 2026-10-06). */
-            data: { full_name: namn, role: 'tutor', valkommen: 'intro' },
+            data: { full_name: namn, role: 'tutor', valkommen: 'intro', villkor: true },
             /* Utan den här landar bekräftelselänken på Site URL i
                Supabase — alltså startsidan, eller värre: localhost.
                Nu kommer man tillbaka hit, till vyn man skapade
@@ -4259,6 +4264,11 @@
       .then(() => {}, () => {});
 
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
+    /* Användarvillkoren (2026-10-07): den som inte godkänt den gällande
+       versionen får rutan här, efter lösenordet och före introduktionen.
+       Databasen kräver godkännandet för att ett pass ska föreslås eller
+       bekräftas (NXStudie.villkorFörst). */
+    await NXStudie.villkorFörst(supa, S.user, 'studiehjalpare');
 
     const tp = await supa.from('tutor_profiles')
       .select('status, school, city, subjects, grade_levels, formats, bio, age, hourly_rate')

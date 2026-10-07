@@ -74,6 +74,13 @@ jobs:
       - name: Nejet i adminvyn är samma som mejlet
         run: python3 verktyg/kolla-mejltexter.py
 
+      # 2026-10-07: den som inte godkänt den gällande versionen av
+      # användarvillkoren får frågan vid inloggningen och kan inte boka.
+      # Versionen är sidans datum och står också i databasen; ändras
+      # sidan utan databasen får ingen frågan om de nya villkoren.
+      - name: Användarvillkorens version är sidans datum
+        run: python3 verktyg/kolla-villkor.py
+
       # Varje bilder/*.jpg ska ha en .webp bredvid sig. Sidorna
       # serverar dem genom <picture>, så en saknad webp går inte
       # sönder — den gör bara den bilden tre gånger tyngre, tyst.

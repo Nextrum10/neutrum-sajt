@@ -852,3 +852,34 @@ registrerad i ett `do`-block (punkt 3 i receptet ovan), med de arton
 funktionerna md5-lika med 2026-10-06 innan. `rls-test.sql` mot driften gav
 1393 av 1394 före (avsnitt 22 stannade på att kolumnen saknades) och 1433
 av 1433 efter. Se `minne/barnkonton-och-admin.md`.
+
+### Användarvillkoren (villkoren_godkanns, 2026-10-07)
+Tabellen `villkor_godkannanden` (kontot, versionen, tiden, källan;
+primärnyckel konto och version, `on delete cascade` från `auth.users`, så
+den går med kontot när det raderas helt och står kvar med ett
+avidentifierat). RLS: kontot läser sina rader, och den som läser personer
+i adminvyn läser alla (samma `har_nagon_behorighet`-lista som policyn på
+`profiles`). Inga skrivpolicyer, och anon och authenticated har inga
+skrivrättigheter. Fyra funktioner i `intern`: `villkor_version()` (sidans
+datum; authenticated kör den, för `mitt_villkorslage()` läser som
+anroparen), `villkoren_godkanda(uuid)` (svarar om en person och nås bara
+av triggrarna), `villkor_vid_registrering()` (triggern
+`auth_villkor_vid_registrering` på `auth.users`) och två triggerfunktioner
+(`pass_kraver_villkor`, `kop_kraver_villkor`). Två i `public`:
+`mitt_villkorslage()` (invoker) och `godkann_villkor(text)`, bara för
+authenticated. Triggrarna skapas med `create or replace trigger`, så filen
+har varken `drop` eller `delete`. `bookings_kraver_villkor` sorterar före
+`bookings_timmarna_tillbaka`, som fortfarande är sist; den ändrar inget i
+raden. Fixturerna i `rls-test.sql` har godkänt villkoren överst (de som
+bokar och köper måste ha gjort det), och avsnitt 23 tar bort godkännandet
+där det prövar spärren. Se `minne/sakerhet.md`, Användarvillkoren.
+
+### Provobjekten togs bort (provobjekten_tas_bort, 2026-10-07)
+Tio funktioner `public.zz_prov_*` och tabellen `public.zz_prov_ddl` låg kvar
+i driften efter ett prov 2026-10-02 av vilka satser verktygen ber om en
+bekräftelse för. De skapades utan fil och gav nio varningar i
+säkerhetskontrollen. Ingen roll utom ägaren nådde dem, men `zz_prov_k1` var
+en kopia av morgonmejlets körning med SECURITY DEFINER och hade skickat mejl
+om någon kört den. Migrationen tar bort dem med `drop` och ber därför om en
+bekräftelse. **Ett sådant prov görs i en transaktion som rullas tillbaka,
+aldrig med objekt som blir kvar.**

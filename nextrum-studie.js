@@ -2861,6 +2861,10 @@ window.NXStudie = (function () {
     if (flikar) flikar.hidden = glömt || elev;
     if (namn) namn.hidden = !upp;
     if (namnfält) namnfält.required = upp;
+    /* Användarvillkoren godkänns när kontot skapas (2026-10-07). */
+    var villkor = NX.$('#villkor-grupp'), villkorRuta = NX.$('#a-villkor');
+    if (villkor) villkor.hidden = !upp;
+    if (villkorRuta) villkorRuta.required = upp;
     var lösen = NX.$('#a-pass');
     lösen.autocomplete = upp ? 'new-password' : 'current-password';
     lösen.required = !glömt;
@@ -3345,6 +3349,109 @@ window.NXStudie = (function () {
     await NXIntro.visa({ roll: roll, sparat: !!(o && o.sparat), väntar: !!(o && o.väntar) });
     user.user_metadata = Object.assign({}, user.user_metadata, { valkommen: null });
     supa.auth.updateUser({ data: { valkommen: null } }).then(function () {}, function () {});
+  }
+
+  /* ============================================================
+     ANVÄNDARVILLKOREN (2026-10-07)
+
+     Leo: "Fixa den gamla luckan". Ingen godkände användarvillkoren när
+     kontot skapades. Den som registrerar sig gör det nu med kryssrutan
+     i Skapa konto, och alla andra här: den vi tagit in (efter
+     lösenordet, före introduktionen), den som registrerade sig före
+     2026-10-07, och alla igen när villkoren ändras.
+
+     Databasen säger om rutan ska visas (mitt_villkorslage), skriver
+     godkännandet med sin egen tid (godkann_villkor) och kräver det: ett
+     pass föreslås och bekräftas, och timmar köps, bara av den som
+     godkänt den gällande versionen. Rutan går därför inte att stänga.
+     Logga ut står kvar, så att den som vill läsa i lugn och ro inte är
+     fast, och länkarna öppnas i en ny flik, så att rutan står kvar.
+
+     Svarar databasen inte, eller saknas funktionen (en databas före
+     migrationen), visas ingen ruta: vyn ska gå att använda, och spärren
+     i databasen säger själv till om ett pass kräver ett godkännande.
+     roll är 'foralder' eller 'studiehjalpare'.
+     ============================================================ */
+  async function villkorFörst(supa, user, roll) {
+    if (!supa || !user) return;
+    var läge;
+    try {
+      var svar = await supa.rpc('mitt_villkorslage');
+      if (svar.error || !svar.data) return;
+      läge = svar.data;
+    } catch (e) { return; }
+    if (!läge.version || läge.godkant_at) return;
+    await villkorsruta(supa, läge, roll);
+  }
+
+  function villkorsruta(supa, läge, roll) {
+    return new Promise(function (klar) {
+      var ändrade = !!läge.tidigare;
+      var ruta = document.createElement('div');
+      ruta.className = 'nx-fraga';
+      ruta.innerHTML =
+        '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="villkor-t" aria-describedby="villkor-d">'
+        + '<h3 id="villkor-t">' + (ändrade ? 'Användarvillkoren har ändrats' : 'Godkänn användarvillkoren') + '</h3>'
+        + '<p id="villkor-d">' + (ändrade
+          ? 'Vi har ändrat användarvillkoren, senast ' + esc(datumText(läge.version))
+            + '. Läs dem och godkänn dem, så går du vidare.'
+          : roll === 'studiehjalpare'
+            ? 'Innan du börjar: läs användarvillkoren och godkänn dem. Där står vad som gäller för dig som '
+              + 'studiehjälpare, och vad familjerna kan räkna med.'
+            : 'Innan du börjar: läs användarvillkoren och godkänn dem. Där står hur bokning, betalning och '
+              + 'avbokning går till, vad ångerrätten innebär och vad som gäller om ni vill sluta.') + '</p>'
+        + '<p class="nx-villkor-lankar"><a href="/anvandarvillkor" target="_blank" rel="noopener">Läs användarvillkoren</a>'
+        + '<a href="/integritetspolicy" target="_blank" rel="noopener">Så hanterar vi dina uppgifter</a></p>'
+        + '<form data-villkor novalidate>'
+        + '<label class="nx-ja"><input type="checkbox" id="villkor-ja">'
+        + '<span>Jag har läst och godkänner användarvillkoren.</span></label>'
+        + '<p class="ok-msg" id="villkor-msg" role="alert"></p>'
+        + '<div class="nx-fraga-knappar">'
+        + '<button type="button" class="btn btn-ghost" data-villkor-ut>Logga ut</button>'
+        + '<button type="submit" class="btn btn-primary">Godkänn och fortsätt</button>'
+        + '</div></form></div>';
+
+      var sistaFokus = document.activeElement;
+      function stäng() {
+        ruta.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', tangent);
+        if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
+        klar(true);
+      }
+      /* Escape stänger inte: utan ett godkännande går det inte att boka. */
+      function tangent(e) {
+        if (e.key !== 'Tab') return;
+        var kan = ruta.querySelectorAll('a[href], input, button');
+        var f = kan[0], s = kan[kan.length - 1];
+        if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
+        else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+      }
+
+      var form = ruta.querySelector('form'), msg = ruta.querySelector('#villkor-msg');
+      var ja = ruta.querySelector('#villkor-ja');
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        NX.rensa(msg);
+        if (!ja.checked) { NX.säg(msg, 'Kryssa i rutan för att godkänna villkoren.', false); ja.focus(); return; }
+        await medan(form.querySelector('[type="submit"]'), 'Sparar…', async function () {
+          var svar;
+          try { svar = await supa.rpc('godkann_villkor', { p_version: läge.version }); } catch (err) { svar = { error: err }; }
+          if (svar && svar.error) { NX.säg(msg, NX.felText(svar.error), false); return; }
+          stäng();
+        });
+      });
+      ruta.addEventListener('click', function (e) {
+        if (e.target.closest('[data-villkor-ut]')) loggaUt(supa);
+      });
+      document.addEventListener('keydown', tangent);
+
+      document.body.appendChild(ruta);
+      document.body.style.overflow = 'hidden';
+      void ruta.offsetWidth;
+      ruta.classList.add('open');
+      ja.focus();
+    });
   }
 
   /* ============================================================
@@ -3999,6 +4106,7 @@ window.NXStudie = (function () {
     inloggningsruta: inloggningsruta, loggaUt: loggaUt, vaktaInloggningen: vaktaInloggningen, schemaI: schemaI,
     glömtLänkar: glömtLänkar, elevLänk: elevLänk, länkenGickInte: länkenGickInte, glömtSkicka: glömtSkicka, nyttLösenord: nyttLösenord,
     välkomstläge: välkomstläge, lösenordFörst: lösenordFörst, introduktion: introduktion,
+    villkorFörst: villkorFörst,
     loggaIn: loggaIn, loggaInHär: loggaInHär,
     adminroll: adminroll,
     flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,

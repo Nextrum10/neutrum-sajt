@@ -164,7 +164,9 @@ Körs på varje push och PR. Ska vara grön före merge.
 6. `verktyg/kolla-webp.py`, och `verktyg/kolla-mejltexter.py` (2026-10-05):
    nejet som läget Avböjd visar (`NEJ_MEJLET` i
    `nextrum-admin-rekrytering.js`) är samma som mejlet (`NEJ` i
-   `_delad/notiser/ansokan.ts`), fält för fält
+   `_delad/notiser/ansokan.ts`), fält för fält, och `verktyg/kolla-villkor.py`
+   (2026-10-07): användarvillkorens datum, på båda språken, är versionen i
+   `intern.villkor_version()` i den senaste migrationen som skriver den
 7. `verktyg/satt-version.py --kolla`
 8. Genererade filer är aktuella (bygg om + `git diff --exit-code`):
    maskotsvaren, FAQ-schemat och `sitemap.xml`
@@ -330,6 +332,18 @@ Kör inte alla webbläsarprov samtidigt: under den lasten hann
 ansökningsformulärets animation inte stanna innan `prova-ansokningar.js`
 klickade, och provet kraschade på ett val som inte bytte läge (2026-10-06;
 ensamt gröna två gånger av två, både på main och på grenen).
+
+### Webbläsarprovet för användarvillkoren (2026-10-07)
+`verktyg/prova-villkor.js` (8971), byggt som provet för introduktionen,
+mot en falsk Supabase som kan `mitt_villkorslage`, `godkann_villkor` och
+registreringen: rutan efter lösenordet och före introduktionen för den vi
+tagit in (familj och studiehjälpare), att den inte går att stänga men att
+Logga ut finns, att inget sparas utan kryss och att versionen skickas, att
+länkarna ser ut som länkar och öppnas i en ny flik, rubriken för ändrade
+villkor, ingen ruta för den som godkänt eller när funktionen saknas, och
+kryssrutan i Skapa konto i båda vyerna (bara där, `villkor: true` och rätt
+roll). Tryckytorna mäts med `offsetHeight`: rutan glider fram med en skala.
+`prova-intag.js` provar raden i adminvyns panel.
 
 ### Webbläsarprovet för familjens faktura (2026-10-06)
 `verktyg/prova-fakturor.js` är byggt som de nedan (egen port, 8964), med
