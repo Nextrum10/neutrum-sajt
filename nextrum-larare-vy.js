@@ -42,69 +42,39 @@
   });
 
   /* ============ inloggning ============ */
+  /* En inloggning för alla (2026-10-07), som i studievyn: e-post eller
+     användarnamn, och inget Skapa konto. Ett barn hamnar på /barn
+     (NXStudie.loggaIn), och en förälder skickas till studievyn av start()
+     nedan. */
   let läge = 'in';
   function ritaAuth() {
     NXStudie.inloggningsruta(läge, {
-      titel: 'Studiehjälparvyn',
-      titelUpp: 'Skapa studiehjälparkonto',
-      under: 'För dig som jobbar hos oss: dina elever, ditt schema, kontakten med familjerna och dina rapporter.',
-      underUpp: 'Skapa kontot här. Vyn öppnas när vi gått igenom din ansökan och godkänt dig.'
+      titel: 'Välkommen tillbaka',
+      under: 'Med din e-post eller ditt användarnamn. Kontot avgör vilken vy du hamnar i.',
+      etikett: 'E-post eller användarnamn'
     });
   }
-  $$('[data-auth]').forEach(b => b.addEventListener('click', () => { läge = b.dataset.auth; ritaAuth(); }));
-  /* Glömt lösenordet? är ett tredje läge i samma ruta (NXStudie). */
+  /* Glömt lösenordet? och en länk som inte fungerade är egna lägen i
+     samma ruta (NXStudie). */
   function sättLäge(l) { läge = l; ritaAuth(); }
   NXStudie.glömtLänkar(sättLäge);
-  /* Elev i rollvalet är ett läge i samma ruta (2026-10-06). */
   läge = NXStudie.elevLänk(sättLäge);
 
   $('#auth-form').addEventListener('submit', async e => {
     e.preventDefault();
-    const msg = $('#auth-msg'), knapp = $('#auth-submit');
+    const msg = $('#auth-msg');
     rensa(msg);
     if (!supa) { säg(msg, 'Databasen är inte kopplad. Fyll i nextrum-config.js.', false); return; }
-    if (läge === 'glomt') { await NXStudie.glömtSkicka(supa); return; }
+    if (läge === 'glomt' || läge === 'lankfel') { await NXStudie.glömtSkicka(supa); return; }
 
     const epost = $('#a-email').value.trim();
     const lösen = $('#a-pass').value;
-    const namn = $('#a-name').value.trim();
-
-    /* Användarvillkoren godkänns när kontot skapas (2026-10-07):
-       databasen sparar godkännandet ur villkor: true nedan. */
-    const villkorJa = $('#a-villkor');
     const fel = kolla([
-      { fel: !epost, text: läge === 'elev' ? 'Fyll i ditt användarnamn.' : 'Fyll i din e-postadress.', falt: $('#a-email') },
-      { fel: !lösen, text: 'Fyll i ditt lösenord.', falt: $('#a-pass') },
-      { fel: läge === 'up' && !namn, text: 'Fyll i ditt namn.', falt: $('#a-name') },
-      { fel: läge === 'up' && lösen.length < 6, text: 'Lösenordet måste vara minst 6 tecken.', falt: $('#a-pass') },
-      { fel: läge === 'up' && !!villkorJa && !villkorJa.checked, text: 'Kryssa i att du godkänner användarvillkoren.',
-        falt: villkorJa }
+      { fel: !epost, text: 'Fyll i din e-post eller ditt användarnamn.', falt: $('#a-email') },
+      { fel: !lösen, text: 'Fyll i ditt lösenord.', falt: $('#a-pass') }
     ]);
     if (fel) { säg(msg, fel, false); return; }
-
-    /* E-post eller användarnamn, som i alla vyer: ett barn som loggar in
-       här skickas till /barn (NXStudie.loggaInHär). */
-    if (läge === 'in' || läge === 'elev') { await NXStudie.loggaInHär(supa, epost, lösen); return; }
-
-    await medan(knapp, 'Skapar…', async () => {
-      const res = await supa.auth.signUp({ email: epost, password: lösen, options: {
-            /* valkommen: introduktionen visas efter första inloggningen
-               (NXStudie.introduktion, 2026-10-06). */
-            data: { full_name: namn, role: 'tutor', valkommen: 'intro', villkor: true },
-            /* Utan den här landar bekräftelselänken på Site URL i
-               Supabase — alltså startsidan, eller värre: localhost.
-               Nu kommer man tillbaka hit, till vyn man skapade
-               kontot i, oavsett var sajten körs. */
-            emailRedirectTo: location.origin + location.pathname
-          } });
-
-      if (res.error) { säg(msg, felText(res.error), false); return; }
-      if (res.data && res.data.session === null) {
-        säg(msg, 'Kontot är skapat. Vi har skickat en bekräftelse till ' + epost + '. Klicka på länken i mejlet och logga sedan in här.', true);
-        return;
-      }
-      location.reload();
-    });
+    await NXStudie.loggaInHär(supa, epost, lösen);
   });
 
   /* ============================================================
@@ -4263,6 +4233,11 @@
     supa.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', S.user.id)
       .then(() => {}, () => {});
 
+    /* En förälder som loggat in här hör hemma i studievyn (2026-10-07):
+       inloggningen är densamma, och kontot avgör vyn. Studievyn skickar
+       en studiehjälpare hit, så ingen roll kan studsa mellan dem; en
+       okänd roll får beskedet som förut. */
+    if (S.profil.role === 'parent') { location.replace('/foralder'); return; }
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
     /* Användarvillkoren (2026-10-07): den som inte godkänt den gällande
        versionen får rutan här, efter lösenordet och före introduktionen.

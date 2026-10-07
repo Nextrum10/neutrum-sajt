@@ -23,8 +23,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 1. Familjen skickar **intresseanmälan** → rad i `leads` (Nextrum matchar; ingen katalog)
 2. Ni ringer och väljer studiehjälpare
 3. Admin tar in familjen (**Ta in familjen** på anmälan, 2026-10-06): kontot skapas med anmälans
-   adress, eleven ur anmälan, och familjen väljer lösenordet genom länken i mejlet. Registrera sig
-   själv på `foralder.html` går också
+   adress, eleven ur anmälan, och familjen väljer lösenordet genom länken i mejlet. **Inget Skapa
+   konto** på sajten (2026-10-07): konton skapar bara vi (`bjud-in`) och föräldern (barnets inloggning)
 4. `admin.html` → **Familjer** → välj hjälpare: sätter `matched_tutor_id` och `match_status`
    **samtidigt**. Först då öppnas föräldravyn; före det väntläge
 5. Föräldern lägger in barnet, hjälparen skriver studieplanen
@@ -114,11 +114,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   ruta som inte går att stänga (`user_metadata.valkommen = 'losenord'`, `NXStudie.lösenordFörst`).
   **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
   ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
-  under Profil. Skicka inbjudan igen står i personens panel tills hen loggat in.
+  under Profil. Skicka inbjudan igen står alltid i personens panel (2026-10-07): före första
+  inloggningen en ny inbjudan, sedan en länk för lösenord (`bjud-in` med `igen`). Bara det senaste
+  mejlet fungerar, och en trasig länk ger rutan Länken fungerar inte längre (`'lankfel'`), aldrig
+  Glömt lösenordet.
 - **Användarvillkoren** (2026-10-07): ett godkännande per konto och version (`villkor_godkannanden`),
-  med databasens tid och aldrig anropets: kryssrutan i Skapa konto (`villkor: true`, triggern på
-  `auth.users`) eller rutan vid inloggningen (`NXStudie.villkorFörst`, efter lösenordet och före
-  introduktionen, och den går inte att stänga). Databasen kräver det: den som föreslår eller bekräftar
+  med databasens tid och aldrig anropets: rutan vid inloggningen (`NXStudie.villkorFörst`, efter
+  lösenordet och före introduktionen, och den går inte att stänga). Kryssrutan i Skapa konto
+  (`villkor: true`, triggern på `auth.users`) gick med Skapa konto samma dag; triggern står kvar. Databasen kräver det: den som föreslår eller bekräftar
   ett pass och den som köper timmar har godkänt den gällande versionen (`bookings_kraver_villkor`,
   `klippkort_kraver_villkor`). Avbokningar, databasens egna vägar och admin stoppas aldrig, och barnet
   godkänner inget. Versionen är sidans datum och `intern.villkor_version()`; de ändras tillsammans
@@ -141,8 +144,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   genomförda och bokade pass, aldrig timbanken. NexLäx görs i barnets vy och i familjens
   inloggning, med samma rader. Elevvyn har fem delar och inget mer (2026-10-06): Översikt
   (antal genomförda och kommande pass), Mina lektioner (utan betalning), NexLäx, Meddelanden och
-  Profil. Elev är ett läge i samma inloggningsruta (`/foralder#elev`, `NXStudie.elevLänk`), också
-  från sajtens Logga in, och `/barn` har ingen egen inloggning.
+  Profil. **En inloggning** för förälder, elev och studiehjälpare (2026-10-07): samma ruta på
+  `/foralder` och `/larare`, två kort (Familj och elev, Studiehjälpare), och kontot avgör vyn:
+  studievyn skickar en studiehjälpare till `/larare`, studiehjälparvyn en förälder till `/foralder`,
+  och ett barn hamnar på `/barn`. `#elev` tas bort ur adressen, och `/barn` har ingen egen inloggning.
   **Föräldern väljer vad barnet får** (2026-10-06): pass, studieplan, rapporter, NexLäx, notiserna
   och tråden med studiehjälparen (`barn_behorigheter`, rapporterna i `visa_rapporter`). Barnets
   funktioner lämnar inte ut det som är av; vyn säger bara det.
@@ -297,7 +302,8 @@ Detaljer: `minne/grunden.md`.
   `apply_migration` gör likadant. Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en
   rensning per funktion), kör dem avsnitt för avsnitt med `execute_sql` och registrera filens text sedan i
   `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL,
-  och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*`, borttagna 2026-10-07).
+  och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*` från 2026-10-02 står kvar och väntar
+  på ett ja, avsnitt 11).
 - `arkiv/` ändras aldrig; en rättelse är en ny migration. `schema-v22.sql` kördes aldrig, kör
   den inte. `schema.sql` rensar tabellerna.
 - **Flera sessioner** kör mot samma databas: läs driften, inte grenen. Lappa en funktion med
@@ -546,16 +552,21 @@ Detaljer: `minne/grunden.md`.
 - **Intaget, introduktionen och barnets behörigheter** (2026-10-06) är i drift sedan 2026-10-07:
   migrationen `barnets_behorigheter` från merge-commiten (md5 prövad), `bjud-in` v9 och `ansokan-notis`
   v8 från main, hämtade tillbaka och byte för byte lika, och hela `rls-test.sql` 1433 av 1433 mot
-  driften. Ingen skarp inbjudan har gått än (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller en timme
-  (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny.
+  driften. De första skarpa inbjudningarna gick 2026-10-07 (Alexandar som studiehjälpare: länken
+  fungerade; sedan som familj, där det gamla mejlet trycktes, `minne/sakerhet.md`). Länken i inbjudan
+  gäller en timme (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny.
+- **En inloggning, inget Skapa konto och Skicka igen när som helst** (2026-10-07): vyerna går ut vid
+  merge; `bjud-in` driftsätts från main efter den. Kvar i Supabases panel: stäng av Allow new users to
+  sign up, så att Auths öppna `/signup` inte tar emot någon, och de två mallarna
+  (`DEPLOY-BARNKONTON.md` 11).
 - **Användarvillkoren** (2026-10-07) är i drift sedan samma dag: `villkoren_godkanns` från
   merge-commiten (md5 prövad), och hela `rls-test.sql` 1459 av 1459 mot driften. Alla konton i driften
   får frågan vid nästa inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i
   `DATASKYDD.md`. **Provobjekten** (`provobjekten_tas_bort`, med `drop`) väntar på en bekräftelse: verktyget
   hängde sig i 60 sekunder utan svar, och inget hände (`DEPLOY-BARNKONTON.md` 10).
-- **Betygsgarantin** (2026-10-07) står i villkoren och säljs på startsidan, prissidan och i FAQ
-  från merge; migrationen `betygsgarantin` byter versionen och skapar anmälan i vyn efter merge, och
-  då får alla frågan. Hela `rls-test.sql` gick igenom lokalt (1490 av 1490), inte mot driften.
+- **Betygsgarantin** (2026-10-07) är i drift sedan samma dag och säljs på startsidan, prissidan och i
+  FAQ: `betygsgarantin` från merge-commiten (md5 prövad, också de sex funktionskropparna), och hela
+  `rls-test.sql` 1490 av 1490 mot driften. Versionen är `2026-10-07`, så alla får frågan om villkoren igen.
   Inget är byggt för att pröva ett anspråk (admin räknar ur vyerna; anmälningarna står i elevens
   panel), passen har inget ämnesfält, studiehjälparen ser inte vilka ämnen som har garanti, och
   juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`.

@@ -250,7 +250,8 @@ se och göra med sin inloggning. Varför det ser ut som det gör:
 
 Leo: "Fixa den gamla luckan och skräp i databasen". Ingen godkände
 användarvillkoren när kontot skapades. Nu kryssar den som registrerar sig
-i en ruta, och alla andra godkänner villkoren i en ruta vid inloggningen
+i en ruta (Skapa konto togs bort samma dag, avsnitt 11), och alla andra
+godkänner villkoren i en ruta vid inloggningen
 (efter lösenordet, före introduktionen). Databasen sparar godkännandet med
 sin egen tid och kräver det för att ett pass ska föreslås eller bekräftas
 och för att timmar ska köpas. Varför det ser ut som det gör:
@@ -282,6 +283,49 @@ och för att timmar ska köpas. Varför det ser ut som det gör:
    godkänn) och se raden under Användarvillkoren i adminvyns panel.
 6. **Kvar: juristen läser** rad 24 i `DATASKYDD.md` och meningen i
    integritetspolicyn.
+
+## 11. En inloggning, inget Skapa konto, och Skicka igen när som helst (2026-10-07)
+
+Leo: "ta bort att man skapa konto på vår sida, vi gör det genom
+inbjudan", "föräldrar och elev ska vara en knapp när man loggar in,
+spelar egentligen ingen roll vart man klickar i inlogg, är man
+studiehjälpare loggas man in dit", och "i admin ska vi kunna skicka
+inbjudningslänk när vi vill efter, ifall de missar den". Inloggningen på
+`/foralder` och `/larare` är densamma, med två kort (Familj och elev,
+Studiehjälpare), och kontot avgör vyn. Skicka inbjudan igen står alltid i
+personens panel. En länk som inte fungerar ger rutan Länken fungerar inte
+längre, aldrig Glömt lösenordet. Varför: `minne/sakerhet.md` (Bara det
+senaste mejlet fungerar) och `minne/barnkonton-och-admin.md` (En
+inloggning). I ordning:
+
+1. **Merga.** Vyerna går ut med Vercel; ingen migration.
+2. **Driftsätt `bjud-in` från main.** Skicka igen till ett konto i bruk
+   svarade 409; nu går en länk för lösenord. Till dess svarar knappen
+   Skicka länk för lösenord med det felet, och inget annat går sönder.
+3. **Stäng av Allow new users to sign up** (Authentication → Sign In /
+   Providers → User Signups). Sajten har ingen registrering längre, men
+   Auths öppna `/signup` tar emot en tills inställningen är av, med den
+   publika anon-nyckeln. Inbjudan (`bjud-in`, `admin-skapa`) och
+   barnkontot (`barn-konto`) går genom admin-API:t och påverkas inte.
+4. **Mallarna i panelen** (Authentication → Emails → Templates), eftersom
+   samma Reset password-mall nu också går till den som tagits in men inte
+   fått sin länk att fungera. Klistra in och ändra sedan
+   `minne/sakerhet.md` (Kontomejlen) till samma text:
+   - **Invite user**, lägg till före "Väntade du dig inte det här
+     mejlet": `<p>Har du fått flera mejl från oss fungerar bara länken i det senaste.</p>`
+   - **Reset password**, ämne `Välj ditt lösenord hos Nextrum`:
+     ```html
+     <h2>Välj ditt lösenord</h2>
+     <p>Klicka på länken och välj ditt lösenord.</p>
+     <p><a href="https://nextrum.se/lank#{{ .ConfirmationURL }}">Välj lösenord</a></p>
+     <p>Har du inte bett om det här kan du strunta i mejlet. Ditt nuvarande lösenord fungerar som förut.</p>
+     <p>Nextrum</p>
+     ```
+5. **Prova skarpt**: bjud in en provfamilj med en plusadress, tryck på
+   länken i det senaste mejlet, välj lösenordet, gå igenom villkoren och
+   introduktionen, logga ut och in. Logga in som studiehjälpare på
+   `/foralder` och se att du hamnar på `/larare`. Tryck Skicka länk för
+   lösenord på ett konto i bruk. Radera provfamiljen i adminvyns panel.
 
 ---
 

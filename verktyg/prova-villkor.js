@@ -4,13 +4,13 @@
        NODE_PATH="$(npm root -g)" node verktyg/prova-villkor.js [mapp för bilder]
 
    Leo: "Fixa den gamla luckan". Ingen godkände användarvillkoren när
-   kontot skapades. Nu kräver Skapa konto en kryssruta, och den som saknar
-   ett godkännande av den gällande versionen får en ruta vid inloggningen
-   som inte går att stänga: efter lösenordet, före introduktionen.
+   kontot skapades. Den som saknar ett godkännande av den gällande
+   versionen får en ruta vid inloggningen som inte går att stänga: efter
+   lösenordet, före introduktionen. Skapa konto, med sin kryssruta, finns
+   inte sedan 2026-10-07: konton skapar vi genom en inbjudan.
 
    Byggt som verktyg/prova-introduktion.js (egen port, 8971), mot en
-   falsk Supabase som kan mitt_villkorslage, godkann_villkor och
-   registreringen. Ett anrop till den riktiga adressen fäller provet.
+   falsk Supabase som kan mitt_villkorslage och godkann_villkor. Ett anrop till den riktiga adressen fäller provet.
    Spärren i databasen provas i rls-test.sql, avsnitt 23.
    ============================================================ */
 'use strict';
@@ -321,37 +321,45 @@ async function provaStudiehjälparen(webb) {
   await context.close();
 }
 
-/* ============ 4. Skapa konto ============ */
-async function provaSkapaKonto(webb) {
-  for (const [vy, roll] of [['/foralder', 'parent'], ['/larare', 'tutor']]) {
+/* ============ 4. Inget Skapa konto (2026-10-07) ============
+   Leo: "ta bort att man skapa konto på vår sida, vi gör det genom
+   inbjudan", och "föräldrar och elev ska vara en knapp". Varje konto
+   godkänner villkoren i rutan vid inloggningen; kryssrutan i Skapa konto
+   finns inte längre, och inloggningen är densamma på båda sidorna. */
+async function provaIngetSkapaKonto(webb) {
+  for (const vy of ['/foralder', '/larare']) {
     const { context, page, S, konsol } = await öppna(webb, { inloggad: null });
     await page.goto(BAS + vy);
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova(vy + ': kryssrutan syns inte i Logga in', !(await synlig(page, '#villkor-grupp')));
-    await page.click('[data-auth="up"]');
-    prova(vy + ': kryssrutan syns i Skapa konto, inte ikryssad', (await synlig(page, '#villkor-grupp'))
-      && !(await page.isChecked('#a-villkor')));
-    const länkar = await page.$$eval('#villkor-grupp a', as => as.map(a => [a.getAttribute('href'), a.target]));
-    prova(vy + ': länkarna går till villkoren och policyn, i en ny flik', JSON.stringify(länkar) === JSON.stringify(
-      [['/anvandarvillkor', '_blank'], ['/integritetspolicy', '_blank']]), JSON.stringify(länkar));
-    await page.fill('#a-name', 'Kim Karlsson');
-    await page.fill('#a-email', 'kim@example.se');
-    await page.fill('#a-pass', 'ett-langt-losen');
-    await page.click('#auth-submit');
-    await vänta(300);
-    prova(vy + ': utan kryss skapas inget konto', (await text(page, '#auth-msg')) === 'Kryssa i att du godkänner användarvillkoren.'
-      && !S.logg.some(r => r.väg === '/auth/v1/signup'), await text(page, '#auth-msg'));
-    await bild(page, 'villkor-skapa-konto' + vy.replace('/', '-'));
-    await page.check('#a-villkor');
-    await page.click('#auth-submit');
-    await page.waitForFunction(() => /Kontot är skapat/.test(document.querySelector('#auth-msg').textContent), null,
-      { timeout: 6000 }).catch(() => {});
-    const reg = S.logg.find(r => r.väg === '/auth/v1/signup');
-    prova(vy + ': kontot skapas med villkor: true och rätt roll', reg && reg.kropp && reg.kropp.data
-      && reg.kropp.data.villkor === true && reg.kropp.data.role === roll, JSON.stringify(reg && reg.kropp && reg.kropp.data));
-    await page.click('[data-auth="in"]');
-    prova(vy + ': tillbaka i Logga in är kryssrutan borta igen', !(await synlig(page, '#villkor-grupp')));
+    prova(vy + ': ingen flik Skapa konto, inget namnfält och ingen kryssruta',
+      (await page.locator('[data-auth="up"], .auth-tabs, #a-name, #villkor-grupp, #a-villkor').count()) === 0);
+    prova(vy + ': fältet tar e-post eller användarnamn',
+      (await text(page, 'label[for="a-email"]')).trim() === 'E-post eller användarnamn'
+      && (await page.getAttribute('#a-email', 'type')) === 'text');
+    const kort = await page.$$eval('.vy-roll', k => k.map(a => [a.querySelector('b').textContent.trim(), a.getAttribute('href')]));
+    prova(vy + ': två kort, Familj och elev och Studiehjälpare', JSON.stringify(kort)
+      === JSON.stringify([['Familj och elev', '/foralder'], ['Studiehjälpare', '/larare']]), JSON.stringify(kort));
+    prova(vy + ': knappen heter Logga in', (await text(page, '#auth-submit')).trim() === 'Logga in');
+    await bild(page, 'inloggning' + vy.replace('/', '-'));
+    prova(vy + ': ingen registrering skickas', !S.logg.some(r => r.väg === '/auth/v1/signup'));
     prova(vy + ': inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    await context.close();
+  }
+  /* Kontot avgör vyn: "spelar egentligen ingen roll vart man klickar i
+     inlogg, är man studiehjälpare loggas man in dit". En studiehjälpare
+     på /foralder hamnar på /larare, och en förälder på /larare på
+     /foralder, utan att studsa tillbaka. */
+  for (const [inloggad, från, till, vyn] of [['handledare-1', '/foralder', '/larare', '#view-pending'],
+                                              ['foralder-1', '/larare', '/foralder', '#view-app']]) {
+    const { context, page, konsol } = await öppna(webb, { inloggad, matchad: true, villkor: 'ja' });
+    await page.goto(BAS + från);
+    await page.waitForURL(u => new URL(u).pathname === till, { timeout: 8000 }).catch(() => {});
+    await page.waitForSelector(vyn + ':not([hidden])', { timeout: 8000 }).catch(() => {});
+    await vänta(800);
+    prova(inloggad + ' på ' + från + ': hamnar på ' + till + ' och stannar där',
+      new URL(page.url()).pathname === till && await synlig(page, vyn), page.url());
+    prova(inloggad + ' på ' + från + ': inte beskedet om fel vy', !(await synlig(page, '#view-wrongrole')));
+    prova(inloggad + ' på ' + från + ': inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }
 }
@@ -391,7 +399,7 @@ async function provaTelefonen(webb) {
     await provaFamiljenTagenIn(webb);
     await provaKontoIBruk(webb);
     await provaStudiehjälparen(webb);
-    await provaSkapaKonto(webb);
+    await provaIngetSkapaKonto(webb);
     await provaTelefonen(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);
