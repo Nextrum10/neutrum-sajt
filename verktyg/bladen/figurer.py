@@ -315,21 +315,6 @@ def kompassros(givna=('N',), storlek=130):
     return _svg(2 * c + 20, 2 * c + 20, ''.join(d))
 
 
-def kod(text, storlek=19):
-    """Kodblock i monospace, för programmeringsbladen. Radbrytningar och indrag bevaras."""
-    return ('<pre style="margin:10px 0 0;padding:12px 20px;background:#F7F2E8;border-left:4px solid #C9B492;'
-            "border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:%dpx;line-height:1.5;color:%s;"
-            'display:inline-block;min-width:360px">%s</pre>' % (storlek, SVART, html.escape(text)))
-
-
-def kodrad(*poster, mellanrum=40):
-    """Flera kodblock bredvid varandra. En post är (bokstav, kodtext), och bokstaven står över blocket."""
-    delar = []
-    for (bokstav, text) in poster:
-        delar.append('<div><b style="display:block;font-size:20px">%s</b>%s</div>' % (html.escape(bokstav), kod(text).replace('margin:10px 0 0', 'margin:4px 0 0')))
-    return '<div style="display:flex;gap:%dpx;align-items:flex-start;flex-wrap:wrap;margin-top:10px">%s</div>' % (mellanrum, ''.join(delar))
-
-
 def stickfigurer(*antal, sida=50):
     """Mönster av tändstickor: figur n är en rad med antal[n-1] kvadrater som delar sidor.
     Varje sticka ritas för sig, så att det går att räkna dem på bladet."""

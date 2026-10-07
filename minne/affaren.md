@@ -596,6 +596,10 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   rättar ur den) och i `intern.betygsgaranti_amnen()`, och de ändras
   tillsammans. Den är en
   funktion och inget villkor på tabellen, så den byts utan drop.
+  Programmering togs ur båda 2026-10-07, samma dag som listan kom
+  (`20261007150100_programmering_erbjuds_inte`, i drift samma dag och
+  `prosrc` prövad mot filen): Nextrum erbjuder det inte, och ingen
+  anmälan fanns i ämnet.
 - **Betyget i anmälan.** Först skulle vi se betyg bara vid anspråket,
   eftersom policyn lovade att vi aldrig ber om dem; Leo valde samma dag
   att föräldern anger det vid anmälan. Policyn och registret (rad 25)

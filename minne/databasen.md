@@ -376,7 +376,7 @@ sökvägen.
   ämnena i `NX.AMNEN` har blad, också Moderna språk (tyska, spanska,
   franska). De två programmeringsbladen togs bort 2026-10-07, när
   programmering slutade erbjudas: raderna är avstängda (`aktiv = false`,
-  `20261007150100_programmering_erbjuds_inte`), inte raderade. **Bladen är skrivna med AI och granskade
+  `20261007150100_programmering_erbjuds_inte`, i drift samma dag), inte raderade. **Bladen är skrivna med AI och granskade
   av andra AI-granskare, inte lästa av en lärare**; sägs inte något
   annat utåt än att de är Nextrums egna. Ett blad som rättas ritas om
   och raden rörs inte (id:t är ett uuid5 ur filnamnet); ett nytt blad
