@@ -3059,9 +3059,10 @@ window.NXStudie = (function () {
   var GLÖMT_UNDER = 'Skriv e-postadressen du loggar in med, så skickar vi en länk där du väljer ett nytt lösenord.';
   /* Varje länk i kontomejlen går att använda en gång och gäller en timme
      (Email OTP Expiration). Den som fått flera mejl, till exempel en
-     inbjudan och sedan Skicka inbjudan igen, har dem i samma tråd, och
-     bara den senaste länken fungerar: det var så familjelänken såg ut att
-     inte fungera 2026-10-07. Därför säger rutan det först. */
+     inbjudan och sedan Skicka inbjudan igen, hade dem i samma tråd, där
+     Gmail gömde det senaste, och bara den senaste länken fungerar: det
+     var så familjelänken såg ut att inte fungera 2026-10-07. Inbjudan har
+     sedan dess tiden i ämnet, men rutan säger det ändå först. */
   var LÄNKFEL_UNDER = 'Varje länk i våra mejl går att använda en gång och gäller i en timme. Har du fått flera '
     + 'mejl från oss fungerar bara länken i det senaste. Skriv din e-postadress, så skickar vi en ny länk där du '
     + 'väljer lösenord.';

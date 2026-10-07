@@ -308,25 +308,37 @@ inloggning). I ordning:
    Auths öppna `/signup` tar emot en tills inställningen är av, med den
    publika anon-nyckeln. Inbjudan (`bjud-in`, `admin-skapa`) och
    barnkontot (`barn-konto`) går genom admin-API:t och påverkas inte.
-4. **Mallarna i panelen** (Authentication → Emails → Templates), eftersom
-   samma Reset password-mall nu också går till den som tagits in men inte
-   fått sin länk att fungera. Klistra in och ändra sedan
-   `minne/sakerhet.md` (Kontomejlen) till samma text:
-   - **Invite user**, lägg till före "Väntade du dig inte det här
-     mejlet": `<p>Har du fått flera mejl från oss fungerar bara länken i det senaste.</p>`
-   - **Reset password**, ämne `Välj ditt lösenord hos Nextrum`:
-     ```html
-     <h2>Välj ditt lösenord</h2>
-     <p>Klicka på länken och välj ditt lösenord.</p>
-     <p><a href="https://nextrum.se/lank#{{ .ConfirmationURL }}">Välj lösenord</a></p>
-     <p>Har du inte bett om det här kan du strunta i mejlet. Ditt nuvarande lösenord fungerar som förut.</p>
-     <p>Nextrum</p>
-     ```
-5. **Prova skarpt**: bjud in en provfamilj med en plusadress, tryck på
-   länken i det senaste mejlet, välj lösenordet, gå igenom villkoren och
-   introduktionen, logga ut och in. Logga in som studiehjälpare på
-   `/foralder` och se att du hamnar på `/larare`. Tryck Skicka länk för
-   lösenord på ett konto i bruk. Radera provfamiljen i adminvyns panel.
+4. **Reset password-mallen i panelen** (Authentication → Emails →
+   Templates), eftersom den nu också går till den som fått en länk som inte
+   fungerade. Klistra in HELA mallen, ersätt allt som står där, och ändra
+   sedan `minne/sakerhet.md` (Kontomejlen) till samma text. Ämne
+   `Välj ditt lösenord hos Nextrum`:
+   ```html
+   <h2>Välj ditt lösenord</h2>
+   <p>Klicka på länken och välj ditt lösenord.</p>
+   <p><a href="https://nextrum.se/lank#{{ .ConfirmationURL }}">Välj lösenord</a></p>
+   <p>Har du inte bett om det här kan du strunta i mejlet. Ditt nuvarande lösenord fungerar som förut.</p>
+   <p>Nextrum</p>
+   ```
+   Invite user rörs inte: sedan v11 (steg 5) använder bara `admin-skapa`
+   och panelen den, och den ska stå som i `minne/sakerhet.md`. Ändras den
+   någon gång: klistra in hela mallen, aldrig en rad. En mall med bara en
+   mening är ett mejl utan länk.
+5. **Merga och driftsätt `bjud-in` v11 från main.** Inbjudan och Skicka
+   igen mejlas då av funktionen själv, genom Resend och med tiden i ämnet
+   (`minne/sakerhet.md`, Gmail gömde det senaste mejlet). Filerna:
+   `bjud-in/index.ts` och ur `_delad/` `http.ts`, `auth.ts`, `inbjudan.ts`,
+   `barnkonto.ts`, `mejl.ts`, `konstanter.ts` och ur `_delad/notiser/`
+   `konto.ts`, `rendera.ts`, `mallar.ts`, `typer.ts` och `tid.ts`.
+   `RESEND_API_KEY` finns redan som secret (notis-ko använder den).
+6. **Prova skarpt**: familjens kedja gick i drift 2026-10-07 16:08
+   (Alexandar): länken, lösenordet, villkoren och introduktionen. Kvar
+   efter v11: bjud in en provfamilj med en plusadress, tryck Skicka
+   inbjudan igen två gånger med en minut emellan och se två trådar med
+   tiden i ämnet, tryck på länken i det senaste. Logga in som
+   studiehjälpare på `/foralder` och se att du hamnar på `/larare`. Tryck
+   Skicka länk för lösenord på ett konto i bruk. Radera provfamiljen i
+   adminvyns panel.
 
 ---
 

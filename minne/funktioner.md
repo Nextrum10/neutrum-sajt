@@ -340,24 +340,34 @@ Leo: "när man ska ta in en anställd är det krångligt att skapa konto åt
 den, samma med familj in i poolen". Funktionen skrevs om så att adminvyn
 skapar kontot i samma tryck som personen tas in. Det rena står i
 `_delad/inbjudan.ts` med omvärlden som beroenden (profilen med adressen,
-kontot i Auth, inbjudan, lösenordslänken och anmälan), så att
-`inbjudan_test.ts` kör varje väg; `index.ts` är bara admin först
-(`kravAdmin`) och beroendena.
+kontot i Auth, länken, mejlet och anmälan), så att `inbjudan_test.ts` kör
+varje väg; `index.ts` är bara admin först (`kravAdmin`) och beroendena.
+- **Mejlet skickar funktionen själv** (2026-10-07): Auth gör kontot och
+  länken med `generateLink` och mejlar inget, och mejlet går genom Resend
+  från info@ med tiden i ämnet (`_delad/notiser/konto.ts`, prov i
+  `konto_test.ts`). Förut mejlade Auth med Invite user-mallen, och Gmail
+  lade tre inbjudningar i en tråd där det senaste mejlet såg tomt ut
+  (`minne/sakerhet.md`). Länken prövas som `/lank` prövar den
+  (`godLank`: verify hos vårt Supabase, med en token) innan den mejlas.
+  Länken passerar Resend i stället för Googles SMTP; mejlet och Resends
+  svar loggas aldrig, bara statusen.
 - **Ny inbjudan**: 409 om adressen redan har ett konto (det ska användas,
-  inte bjudas in igen), annars `inviteUserByEmail` med `role`,
+  inte bjudas in igen), annars `generateLink` av sorten invite med `role`,
   `full_name` och `valkommen: 'losenord'`, och länken till vyn för
-  rollen (`TILLBAKA`). Med `lead_id` blir anmälan kontaktad. Varför det är
-  en länk och inte ett gemensamt lösenord står i filens huvud och i
-  `minne/sakerhet.md`.
+  rollen (`TILLBAKA`). Med `lead_id` blir anmälan kontaktad, först när
+  mejlet gått. Går mejlet inte iväg finns kontot ändå, och svaret (502)
+  säger att Skicka inbjudan igen gör resten. Varför det är en länk och
+  inte ett gemensamt lösenord står i filens huvud och i `minne/sakerhet.md`.
 - **Igen** (`igen: true`): rollen tas ur profilen, inte ur anropet; 404
   utan konto och 409 för en roll som inte är förälder eller
-  studiehjälpare. Ett obekräftat konto får en ny inbjudan (Auth bjuder in
-  ett obekräftat konto en gång till och rör inte metadatan), och ett
-  bekräftat får länken som Glömt lösenordet ger, genom Auths öppna väg
-  med den publika nyckeln (429 om ett mejl gick nyss), också när
+  studiehjälpare; 429 om Auth gjort en länk till kontot den senaste
+  minuten (`MELLAN_MEJL_MS`, som Auths egen spärr för Glömt lösenordet).
+  Ett obekräftat konto får en ny inbjudan (invite, metadatan rörs inte),
+  och ett bekräftat en länk för att välja lösenord (recovery), också när
   lösenordet redan är valt (2026-10-07, Leo: "i admin ska vi kunna skicka
-  inbjudningslänk när vi vill efter, ifall de missar den"). Till dess fick
-  ett konto med lösenord 409.
+  inbjudningslänk när vi vill efter, ifall de missar den"). Hann kontot
+  bekräftas mellan frågan och länken blir det recovery. Till v10 fick ett
+  konto med lösenord 409, och till v11 mejlade Auth.
 - En barnadress (`@barn.nextrum.se`) bjuds aldrig in. Loggen tar namn, kod
   och status på felet, aldrig adressen.
 - **I drift sedan 2026-10-07** som v9, från main (43d2ef4, PR #204),

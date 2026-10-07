@@ -4,10 +4,13 @@
 // Skapar kontot åt den som tas in på plattformen: en familj ur en
 // intresseanmälan (Ta in familjen) och en studiehjälpare ur en ansökan
 // (Ta in i poolen), eller någon som aldrig gått de vägarna. Personen får
-// ett mejl från Supabase Auth med en länk, trycker, väljer sitt lösenord
-// två gånger och går igenom introduktionen (studievyn och
-// studiehjälparvyn). Varför det är en länk och inte ett lösenord står i
-// _delad/inbjudan.ts.
+// ett mejl med en länk, trycker, väljer sitt lösenord två gånger och går
+// igenom introduktionen (studievyn och studiehjälparvyn). Varför det är
+// en länk och inte ett lösenord står i _delad/inbjudan.ts.
+//
+// Auth gör kontot och länken (generateLink) och mejlar inget; mejlet
+// skickar funktionen själv genom Resend, med tiden i ämnet
+// (_delad/notiser/konto.ts). Varför: _delad/inbjudan.ts.
 //
 // VARFÖR DEN FINNS
 // En elev hänger på ett parent_id, och ett parent_id är en rad i
@@ -41,10 +44,11 @@
 // Funktionen skickar ett riktigt mejl. Adminvyn frågar därför först.
 // ============================================================
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import { json, preflight } from '../_delad/http.ts';
 import { kravAdmin, serviceklient } from '../_delad/auth.ts';
 import { hanteraInbjudan } from '../_delad/inbjudan.ts';
+import { skickaViaResend } from '../_delad/mejl.ts';
+import { KONTO_FRAN } from '../_delad/notiser/konto.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -72,9 +76,10 @@ Deno.serve(async (req) => {
     const db = serviceklient();
     const svar = await hanteraInbjudan(await req.json().catch(() => ({})), {
       kontoMedAdress: async (epost) => {
-        const { data, error } = await db.from('profiles').select('id, role').eq('email', epost).maybeSingle();
+        const { data, error } = await db.from('profiles').select('id, role, full_name').eq('email', epost)
+          .maybeSingle();
         if (error) throw new Error('profiles ' + (error.code ?? ''));
-        return data ? { id: String(data.id), roll: String(data.role ?? '') } : null;
+        return data ? { id: String(data.id), roll: String(data.role ?? ''), namn: data.full_name ?? null } : null;
       },
       authKonto: async (id) => {
         const { data, error } = await db.auth.admin.getUserById(id);
@@ -82,20 +87,39 @@ Deno.serve(async (req) => {
           if (error) logga('konto', error);
           return null;
         }
-        return { bekraftad: !!data.user.email_confirmed_at, valkommen: data.user.user_metadata?.valkommen };
+        const u = data.user;
+        // Den senaste länken av vilket slag som helst: spärren gäller alla.
+        const tider = [u.invited_at, u.confirmation_sent_at, u.recovery_sent_at]
+          .map((t) => (t ? Date.parse(t) : NaN)).filter((t) => !Number.isNaN(t));
+        return {
+          bekraftad: !!u.email_confirmed_at,
+          valkommen: u.user_metadata?.valkommen,
+          senast: tider.length ? new Date(Math.max(...tider)).toISOString() : null,
+        };
       },
-      bjudIn: async (epost, data, tillbaka) => {
-        const { data: ny, error } = await db.auth.admin.inviteUserByEmail(epost, { data, redirectTo: tillbaka });
-        if (error) return { id: null, fel: logga('inbjudan', error) };
-        return { id: ny?.user?.id ?? null, fel: null };
+      skapaLank: async (typ, epost, data, tillbaka) => {
+        const { data: gjord, error } = typ === 'invite'
+          ? await db.auth.admin.generateLink({ type: 'invite', email: epost, options: { data, redirectTo: tillbaka } })
+          : await db.auth.admin.generateLink({ type: 'recovery', email: epost, options: { redirectTo: tillbaka } });
+        if (error) return { id: null, lank: null, fel: logga('länk', error) };
+        return { id: gjord?.user?.id ?? null, lank: gjord?.properties?.action_link ?? null, fel: null };
       },
-      // Samma länk som Glömt lösenordet ger, genom Auths öppna väg: den
-      // skickas med Reset password-mallen och har samma tak per adress.
-      losenordslank: async (epost, tillbaka) => {
-        const anon = createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: false } });
-        const { error } = await anon.auth.resetPasswordForEmail(epost, { redirectTo: tillbaka });
-        return error ? logga('lösenordslänk', error) : null;
+      // Länken står i mejlet, så varken mejlet eller Resends svar loggas:
+      // bara statusen när Resend säger nej.
+      skicka: async (till, m) => {
+        try {
+          const resend = await skickaViaResend({
+            fran: KONTO_FRAN, till: [till], amne: m.amne, text: m.text, html: m.html, tidsgransMs: 15_000,
+          });
+          if (resend.ok) return null;
+          console.error('bjud-in mejl:', resend.status);
+          return `Resend ${resend.status}`;
+        } catch (e) {
+          return logga('mejl', e);
+        }
       },
+      supabaseUrl: SUPABASE_URL,
+      nu: () => new Date(),
       kontaktad: async (leadId) => {
         const { error } = await db.from('leads')
           .update({ status: 'contacted', kontaktad_at: new Date().toISOString() })
