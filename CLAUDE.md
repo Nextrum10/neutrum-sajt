@@ -49,8 +49,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och vem i `andrad_av`, som ingen inloggad läser; ämnena står i `NX.GARANTI_AMNEN` och
   `intern.betygsgaranti_amnen()` och ändras tillsammans, betyget gallras den 1
   oktober efter läsåret, och kopiorna vid anspråket raderas för hand. Ersättningen är timmar,
-  aldrig pengar. Startsidan och prissidan säljer den utan villkor och siffror, men länkar alltid
-  till villkoren, säger att de gäller och lovar aldrig ett betyg.
+  aldrig pengar. Startsidan, prissidan och FAQ säljer den utan villkor och siffror (utom sista
+  dagen i FAQ-svaren, som annars missas), men länkar alltid till villkoren, säger att de gäller
+  och lovar aldrig ett betyg.
 - **Chatten** läser admin med `chatt_las()` (loggat, aldrig cachat), aldrig `NXKontakt.tråd()`;
   att vi kan läsa står i policyn och chatten och tas inte bort.
 - **Månader** väljs på passets månad, och ingen väljare börjar före september 2026.
@@ -550,9 +551,9 @@ Detaljer: `minne/grunden.md`.
   får frågan vid nästa inloggning, och ingen bokar innan dess. Juristen har inte läst rad 24 i
   `DATASKYDD.md`. **Provobjekten** (`provobjekten_tas_bort`, med `drop`) väntar på en bekräftelse: verktyget
   hängde sig i 60 sekunder utan svar, och inget hände (`DEPLOY-BARNKONTON.md` 10).
-- **Betygsgarantin** (2026-10-07) står i villkoren och säljs på startsidan och prissidan från
-  merge; migrationen `betygsgarantin` byter versionen och skapar anmälan i vyn efter merge, och
-  då får alla frågan. Hela `rls-test.sql` gick igenom lokalt (1481 av 1481), inte mot driften.
+- **Betygsgarantin** (2026-10-07) står i villkoren och säljs på startsidan, prissidan och i FAQ
+  från merge; migrationen `betygsgarantin` byter versionen och skapar anmälan i vyn efter merge, och
+  då får alla frågan. Hela `rls-test.sql` gick igenom lokalt (1490 av 1490), inte mot driften.
   Inget är byggt för att pröva ett anspråk (admin räknar ur vyerna; anmälningarna står i elevens
   panel), passen har inget ämnesfält, studiehjälparen ser inte vilka ämnen som har garanti, och
   juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`.

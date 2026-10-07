@@ -604,17 +604,24 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   fält på passet vore en egen ändring. Studiehjälparen ser inte heller
   vilka ämnen som har garanti; familjen får säga det.
 - **Sidorna säljer den** (Leo samma dag: "sälj in det utan konkreta villkor
-  eller siffror"): en mörk sektion på startsidan efter Så fungerar
-  Nextrum och på prissidan efter priskorten, och en fråga i prissidans
-  FAQ, som maskoten därför också svarar på. Inga villkor och inga tal,
-  men aldrig ett löfte om ett betyg (avsnitt 8 i kärnan): garantin lovar
-  vad vi gör om betyget inte går upp. Varje ställe länkar till villkoren
-  och säger att de gäller, för en garanti som säljs utan att det syns att
-  den har villkor är vilseledande. Hero är orörd.
+  eller siffror", och sedan "effektivt, inte överdrivet"): en mörk sektion
+  på startsidan efter Så fungerar Nextrum och på prissidan efter
+  priskorten, en rad i priskortet ("Betygsgaranti, utan extra kostnad"),
+  en punkt i startsidans sista ruta, prissidans och FAQ-sidans
+  beskrivning, och samma fråga i prissidans FAQ och på `/faq`, som
+  maskoten och FAQ-schemat därför också svarar med. Inga villkor och inga
+  tal, men aldrig ett löfte om ett betyg (avsnitt 8 i kärnan): garantin
+  lovar vad vi gör om betyget inte går upp. Varje ställe länkar till
+  villkoren eller till sektionen som gör det och säger att de gäller, för
+  en garanti som säljs utan att det syns att den har villkor är
+  vilseledande. Undantaget är sista dagen, 31 december, i FAQ-svaren: den
+  som missar den har ingen garanti, och det ska inte stå bara i
+  villkoren. Hero är orörd, och startsidans beskrivning likaså (den är
+  redan vid gränsen för vad sökmotorerna visar).
 - **Versionen byttes** (`betygsgarantin`), så alla får frågan igen.
   Inget är byggt för att pröva ett anspråk: admin räknar ur vyerna.
   `rls-test.sql` avsnitt 24 prövar anmälan, läsrätten, gallringen och
-  raderingen (1481 av 1481 lokalt).
+  raderingen (1490 av 1490 lokalt).
 
 ## Tipsa en familj och affischerna (2026-09-30)
 
