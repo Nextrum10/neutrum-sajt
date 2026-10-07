@@ -331,17 +331,19 @@
       + esc(nummer) + '</a>';
   }
 
-  /* Senast inloggad, och för den som aldrig loggat in en knapp som
-     skickar länken igen (2026-10-06). Kontot skapas när personen tas in,
-     och länken i mejlet går att missa eller låta bli gammal. bjud-in
-     avgör vad som går: en ny inbjudan, en länk för att välja lösenord,
-     eller ingenting för ett konto i bruk. */
+  /* Senast inloggad, och en knapp som skickar länken igen (2026-10-06).
+     Kontot skapas när personen tas in, och länken i mejlet går att missa
+     eller låta bli gammal. Sedan 2026-10-07 står knappen alltid för en
+     familj och en studiehjälpare (Leo: "i admin ska vi kunna skicka
+     inbjudningslänk när vi vill efter, ifall de missar den"): före första
+     inloggningen heter den Skicka inbjudan igen, sedan Skicka länk för
+     lösenord. bjud-in avgör vad som går: en ny inbjudan till den som inte
+     tryckt på länken, annars en länk för att välja lösenord. */
   function dpSenast(p) {
-    if (p.last_seen_at) return esc(kortDatum(p.last_seen_at));
-    return 'aldrig' + (p.email && (p.role === 'parent' || p.role === 'tutor')
-      ? ' <button class="btn btn-ghost btn-sm" type="button" data-dp-bjud-igen="' + esc(p.id) + '">'
-        + 'Skicka inbjudan igen</button>'
-      : '');
+    const när = p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : 'aldrig';
+    if (!p.email || (p.role !== 'parent' && p.role !== 'tutor')) return när;
+    return när + ' <button class="btn btn-ghost btn-sm" type="button" data-dp-bjud-igen="' + esc(p.id) + '">'
+      + (p.last_seen_at ? 'Skicka länk för lösenord' : 'Skicka inbjudan igen') + '</button>';
   }
 
   /* Har personen godkänt användarvillkoren (2026-10-07)? Den gällande
@@ -1989,10 +1991,16 @@
     if (!k) return;
     const p = S.personer[k.dataset.dpBjudIgen];
     if (!p || !p.email) return;
+    /* Varje ny länk gör den förra oanvändbar, och mejlen hamnar i samma
+       tråd: frågan säger att det är det senaste mejlet som gäller. */
     const ja = await bekräfta({
       titel: 'Skicka länken igen till ' + (p.full_name || p.email) + '?',
-      text: 'Har hen inte tryckt på länken i inbjudan går en ny till ' + p.email + '. Har hen tryckt men inte '
-        + 'valt lösenord går en länk för att välja det. Har hen redan valt sitt lösenord skickas ingenting.',
+      text: (p.last_seen_at
+        ? 'En länk där hen väljer ett nytt lösenord går till ' + p.email + ', samma som Glömt lösenordet. '
+          + 'Det nuvarande lösenordet fungerar tills hen valt ett nytt.'
+        : 'Har hen inte tryckt på länken i inbjudan går en ny inbjudan till ' + p.email + '. Har hen tryckt '
+          + 'men inte valt lösenord går en länk för att välja det.')
+        + ' Bara länken i det nya mejlet fungerar sedan.',
       knapp: 'Skicka'
     });
     if (!ja) return;

@@ -304,18 +304,14 @@ html:has(> body.vy){scroll-behavior:auto}
    stod i finstilt text under formuläret. Nu står valet först, och
    den vy man faktiskt är på är markerad.
    ============================================================ */
-/* Tre roller sedan 2026-10-06: Elev leder till barnets egen inloggning
-   (/barn). På en telefon står de som tre rader utan beskrivning, annars
-   hade valet ensamt varit en skärm högt före formuläret. */
+/* Två kort sedan 2026-10-07: Familj och elev, och Studiehjälpare. Leo:
+   "föräldrar och elev ska vara en knapp när man loggar in". Inloggningen
+   är densamma på båda sidorna, och kontot avgör vyn. På en telefon står
+   de som två rader utan beskrivning, annars hade valet ensamt varit en
+   skärm högt före formuläret. */
 .vy-roller{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
   margin-bottom:clamp(22px,2.6vw,30px);
-}
-/* I tre spalter är ett kort 150 px brett, och "Studiehjälpare" med ikonen
-   bredvid gick ut i kanten: ikonen står ovanför rubriken. */
-@media (min-width:521px){
-  .vy-roller .vy-roll{padding:14px 13px}
-  .vy-roller .vy-roll b{flex-direction:column;align-items:flex-start;gap:8px}
 }
 @media (max-width:520px){
   .vy-roller{grid-template-columns:minmax(0,1fr);gap:8px}

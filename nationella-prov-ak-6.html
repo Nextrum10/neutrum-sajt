@@ -364,28 +364,21 @@
 
 <!-- ==========================================================
      VYVÄLJARE — dörren in till inloggningen.
-     Själva inloggningen ligger kvar i foralder.html (också Elev,
-     #elev, 2026-10-06) och larare.html och är orörd.
+     Inloggningen ligger i foralder.html och larare.html och är
+     densamma på båda (2026-10-07): kontot avgör vyn.
      ========================================================== -->
 <div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
   <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
   <div class="nx-vagval-box">
     <span class="nx-et">Logga in</span>
     <h2 id="vagval-t" style="margin-top:18px">Välkommen tillbaka.</h2>
-    <p class="nx-lede-s">Vilken vy vill du till?</p>
+    <p class="nx-lede-s">Du hamnar i din egen vy, vilket du än väljer.</p>
 
     <div class="nx-vagval-val">
       <a href="/foralder">
         <span>
-          <b>Förälder</b>
-          <span>Studieplan, bokning, meddelanden och rapporter.</span>
-        </span>
-        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
-      <a href="/foralder#elev">
-        <span>
-          <b>Elev</b>
-          <span>NexLäx, dina pass och meddelanden, med ditt användarnamn.</span>
+          <b>Familj och elev</b>
+          <span>Föräldrar med sin e-post, elever med sitt användarnamn.</span>
         </span>
         <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>

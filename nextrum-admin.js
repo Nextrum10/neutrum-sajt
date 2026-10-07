@@ -361,10 +361,11 @@
   /* ============ inloggning ============ */
   /* Glömt lösenordet? (NXStudie). Adminvyn har inga flikar och inget
      konto att skapa, så rutan byter bara mellan inloggningen och det
-     läget. */
+     läget, eller 'lankfel' efter en länk som inte fungerade (samma
+     formulär, egen rubrik). */
   let glömt = false;
   function sättLäge(l) {
-    glömt = l === 'glomt';
+    glömt = l === 'glomt' || l === 'lankfel';
     NXStudie.inloggningsruta(l, {
       titel: 'Adminvyn',
       under: 'För dig som jobbar på Nextrum. Intresseanmälningar, matchning, bokningar, betalningar och utbetalningar.'

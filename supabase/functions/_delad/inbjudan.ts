@@ -26,10 +26,13 @@
 //
 // SKICKA IGEN
 // Har personen inte tryckt på länken skickas inbjudan igen (Auth bjuder
-// in ett obekräftat konto en gång till). Har hen tryckt men inte valt
-// lösenord går en länk för att välja det, samma som Glömt lösenordet.
-// Har hen valt sitt lösenord skickas ingenting: då är det Glömt
-// lösenordet? vid inloggningen som gäller, och den väljer personen själv.
+// in ett obekräftat konto en gång till). Har hen tryckt går en länk för
+// att välja lösenord, samma som Glömt lösenordet, också när hen redan
+// valt ett och loggat in (2026-10-07, Leo: "i admin ska vi kunna skicka
+// inbjudningslänk när vi vill efter, ifall de missar den"). Länken går
+// bara till personens egen inkorg, och lösenordet byts först när hen
+// väljer ett nytt. Varje ny länk gör den förra oanvändbar: det är bara
+// det senaste mejlet som fungerar.
 // ============================================================
 
 import { epostOk } from './http.ts';
@@ -123,27 +126,20 @@ export async function hanteraInbjudan(kropp: unknown, b: Beroenden): Promise<Sva
       }
       return { status: 200, kropp: { ok: true, id: finns.id, till: i.epost, roll: finns.roll, skickat: 'inbjudan' } };
     }
-    if (auth.valkommen === VALKOMMEN_LOSENORD) {
-      const fel = await b.losenordslank(i.epost, tillbaka);
-      if (fel) {
-        return {
-          status: /after|rate|too many/i.test(fel) ? 429 : 502,
-          kropp: {
-            error: /after|rate|too many/i.test(fel)
-              ? 'Ett mejl gick nyss till adressen. Vänta en minut och försök igen.'
-              : 'Länken gick inte att skicka. Försök igen om en stund.',
-          },
-        };
-      }
-      return { status: 200, kropp: { ok: true, id: finns.id, till: i.epost, roll: finns.roll, skickat: 'losenord' } };
+    // Länken är använd: en länk för att välja lösenord, oavsett om hen
+    // valt ett än (auth.valkommen säger bara vad vyn visar först).
+    const fel = await b.losenordslank(i.epost, tillbaka);
+    if (fel) {
+      return {
+        status: /after|rate|too many/i.test(fel) ? 429 : 502,
+        kropp: {
+          error: /after|rate|too many/i.test(fel)
+            ? 'Ett mejl gick nyss till adressen. Vänta en minut och försök igen.'
+            : 'Länken gick inte att skicka. Försök igen om en stund.',
+        },
+      };
     }
-    return {
-      status: 409,
-      kropp: {
-        error: 'Hen har redan valt sitt lösenord och loggat in. Har hen glömt det trycker hen på '
-          + 'Glömt lösenordet? vid inloggningen, så kommer en länk.',
-      },
-    };
+    return { status: 200, kropp: { ok: true, id: finns.id, till: i.epost, roll: finns.roll, skickat: 'losenord' } };
   }
 
   // Finns kontot redan ska det användas, inte bjudas in en gång till.

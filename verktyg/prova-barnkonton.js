@@ -355,20 +355,23 @@ function barnRpc(extra) {
 }
 
 async function provaBarnvyn(webb) {
-  /* 1. Utloggad: /barn skickar till Elev i studievyns inloggning
-        (2026-10-06), och samma besked för allt som är fel. */
+  /* 1. Utloggad: /barn skickar till studievyns inloggning, som sedan
+        2026-10-07 är en och densamma för förälder och elev, och samma
+        besked för allt som är fel. */
   {
     const { context, page, S, riktiga } = await öppna(webb, { rpc: barnRpc() });
     await page.goto(BAS + '/barn');
-    await page.waitForURL(/\/foralder#elev$/, { timeout: 5000 }).catch(() => {});
-    prova('barn: utloggad skickas till Elev i studievyns inloggning', /\/foralder#elev$/.test(page.url()), page.url());
+    await page.waitForURL(u => new URL(u).pathname === '/foralder', { timeout: 5000 }).catch(() => {});
+    prova('barn: utloggad skickas till studievyns inloggning', new URL(page.url()).pathname === '/foralder'
+      && !/#elev/.test(page.url()), page.url());
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova('barn: rutan står i Elev-läget', (await text(page, '#auth-title')) === 'Elevvyn'
-      && (await text(page, 'label[for="a-email"]')) === 'Användarnamn'
-      && (await page.getAttribute('.vy-roll[data-roll="elev"]', 'aria-current')) === 'page',
+    prova('barn: rutan tar e-post eller användarnamn, med Familj och elev valt',
+      (await text(page, 'label[for="a-email"]')) === 'E-post eller användarnamn'
+      && (await page.getAttribute('.vy-roll[href="/foralder"]', 'aria-current')) === 'page',
       (await text(page, '#auth-title')) + ' / ' + (await text(page, 'label[for="a-email"]')));
-    prova('barn: Elev-läget har varken Skapa konto eller Glömt lösenordet',
-      !(await synlig(page, '.auth-tabs')) && !(await synlig(page, '[data-glomt]')) && await synlig(page, '[data-bara-elev]'));
+    prova('barn: inget Skapa konto, och texten säger att eleven frågar föräldern om lösenordet',
+      (await page.locator('[data-auth="up"], .auth-tabs').count()) === 0
+      && /Elev som glömt lösenordet: fråga din förälder/.test(await text(page, '.auth-alt')));
     await bild(page, 'barn-inloggning');
 
     const fält = '#a-email', knapp = '#auth-submit';
@@ -823,21 +826,19 @@ async function provaFamiljensInloggning(webb) {
     const etikett = () => text(page, 'label[for="a-email"]');
     prova('familjen: fältet heter E-post eller användarnamn när man loggar in',
       (await etikett()) === 'E-post eller användarnamn', await etikett());
-    await page.click('[data-auth="up"]');
-    prova('familjen: och E-post när man skapar konto', (await etikett()) === 'E-post', await etikett());
-    await page.click('[data-auth="in"]');
+    /* Förälder och elev är ett kort sedan 2026-10-07 (Leo: "föräldrar och
+       elev ska vara en knapp"), och inget Skapa konto finns. */
     const roller = await page.$$eval('.vy-roll b', b => b.map(x => x.textContent.trim()));
-    prova('familjen: rollvalet är Förälder, Elev och Studiehjälpare', roller.join(',') === 'Förälder,Elev,Studiehjälpare', roller.join(','));
-    /* Elev byter läge i samma ruta, i stället för sida (2026-10-06). */
-    await page.click('.vy-roll[data-roll="elev"]');
-    prova('familjen: Elev byter läge i samma ruta', /\/foralder#elev$/.test(page.url())
-      && (await text(page, '#auth-title')) === 'Elevvyn' && (await text(page, 'label[for="a-email"]')) === 'Användarnamn'
-      && (await page.getAttribute('#a-email', 'type')) === 'text' && !(await synlig(page, '.auth-tabs')),
-      page.url() + ' ' + (await text(page, '#auth-title')));
-    prova('familjen: i Elev-läget är Elev valt, inte Förälder',
-      (await page.getAttribute('.vy-roll[data-roll="elev"]', 'aria-current')) === 'page'
-      && (await page.getAttribute('.vy-roll[href="/foralder"]', 'aria-current')) === null);
-    await bild(page, 'familjen-elevlage');
+    prova('familjen: rollvalet är Familj och elev och Studiehjälpare', roller.join(',') === 'Familj och elev,Studiehjälpare', roller.join(','));
+    prova('familjen: inget Skapa konto', (await page.locator('[data-auth="up"]').count()) === 0);
+    /* En gammal länk med #elev öppnar samma ruta, och märket försvinner ur
+       adressen. Från en annan sida: ett byte av bara # laddar inte om. */
+    await page.goto('about:blank');
+    await page.goto(BAS + '/foralder#elev');
+    await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('familjen: #elev ur en gammal länk öppnar samma inloggning', !/#elev/.test(page.url())
+      && (await etikett()) === 'E-post eller användarnamn' && (await page.getAttribute('#a-email', 'type')) === 'text',
+      page.url() + ' ' + (await etikett()));
     await page.goto(BAS + '/foralder');
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
     await bild(page, 'familjen-inloggning');
@@ -884,8 +885,10 @@ async function provaFamiljensInloggning(webb) {
     await page.fill('#a-pass', 'alva-losen-1');
     await page.click(knapp);
     await page.waitForFunction(() => document.querySelector('#auth-msg').textContent.length > 0, null, { timeout: 5000 }).catch(() => {});
+    /* #elev tas bort ur adressen sedan 2026-10-07; sidan ska vara densamma. */
     prova(vy.slice(1) + ': barnkontots tekniska adress nekas',
-      (await text(page, '#auth-msg')).trim() === 'Fel e-post eller lösenord.' && page.url().endsWith(vy),
+      (await text(page, '#auth-msg')).trim() === 'Fel e-post eller lösenord.'
+      && new URL(page.url()).pathname === new URL(BAS + vy).pathname,
       (await text(page, '#auth-msg')) + ' ' + page.url());
     prova(vy.slice(1) + ': och Auth tillfrågas inte', !S.logg.some(r => r.väg === '/auth/v1/token'));
     await context.close();
@@ -928,13 +931,16 @@ async function provaFamiljensInloggning(webb) {
     await context.close();
   }
 
-  /* 6. Studiehjälparvyn och adminvyn tar också ett användarnamn, fast
-     fältet heter E-post där: ingen vuxen har ett. Barnet hamnar på /barn. */
-  for (const vy of ['/larare', '/admin']) {
+  /* 6. Studiehjälparvyn och adminvyn tar också ett användarnamn. Sedan
+     2026-10-07 är studiehjälparvyns inloggning densamma som studievyns,
+     så fältet heter E-post eller användarnamn där; i adminvyn heter det
+     E-post, för ingen admin har ett. Barnet hamnar på /barn. */
+  for (const [vy, väntad] of [['/larare', 'E-post eller användarnamn'], ['/admin', 'E-post']]) {
     const { context, page, S } = await öppna(webb, { rpc: barnRpc() });
     await page.goto(BAS + vy);
     await page.waitForSelector('#view-auth:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova(vy.slice(1) + ': fältet heter E-post', (await text(page, 'label[for="a-email"]')) === 'E-post');
+    prova(vy.slice(1) + ': fältet heter ' + väntad, (await text(page, 'label[for="a-email"]')) === väntad,
+      await text(page, 'label[for="a-email"]'));
     await page.fill('#a-email', 'alva.a');
     await page.fill('#a-pass', 'alva-losen-1');
     await page.click('#auth-submit');

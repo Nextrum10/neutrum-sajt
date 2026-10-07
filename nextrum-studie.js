@@ -2835,61 +2835,46 @@ window.NXStudie = (function () {
   /* Inloggningsrutan i läge 'in', 'up' eller 'glomt'. t har titel,
      titelUpp, under och underUpp. Adminvyn har inga flikar och inget
      namnfält, och byter bara mellan 'in' och 'glomt'. */
-  /* ELEV I SAMMA RUTA (2026-10-06). Leo: "när man väljer att logga in som
-     elev ska man inte komma till en separat sida". Elev i rollvalet är ett
-     läge i samma formulär, i studievyn och studiehjälparvyn: användarnamn
-     och lösenord, inget Skapa konto och ingen länk för ett glömt lösenord,
-     för barnets lösenord byter föräldern. Inloggningen är densamma
-     (loggaIn), och barnet hamnar i sin vy på /barn. Kortet som var valt
-     när sidan öppnades minns rutan, så att det blir valt igen. */
-  var ELEV_UNDER = 'Logga in med användarnamnet och lösenordet du fått av din förälder.';
+  /* EN INLOGGNING (2026-10-07). Leo: "ta bort att man skapa konto på vår
+     sida, vi gör det genom inbjudan", och "föräldrar och elev ska vara en
+     knapp när man loggar in, spelar egentligen ingen roll vart man klickar
+     i inlogg, är man studiehjälpare loggas man in dit". Rutan är densamma
+     i studievyn och studiehjälparvyn: e-post eller användarnamn och
+     lösenord (loggaIn), och kontot avgör vyn. Ett barn hamnar på /barn,
+     och vyerna skickar en vuxen vidare efter rollen. Konton skapar bara
+     vi (bjud-in) och föräldern (barnets inloggning, barn-konto).
 
+     Lägena är 'in', 'glomt' (Glömt lösenordet?) och 'lankfel': samma
+     formulär som Glömt lösenordet, efter en länk i ett mejl som inte gick
+     att använda. Den som tagits in har inget lösenord att ha glömt, och
+     sidan hette förut Glömt lösenordet också för hen (Leo, 2026-10-07:
+     "kommer jag som familj som fått inbjudan till glömt lösenord sida"). */
   function inloggningsruta(läge, t) {
-    var upp = läge === 'up', glömt = läge === 'glomt', elev = läge === 'elev';
-    NX.$$('[data-auth]').forEach(function (b) {
-      b.setAttribute('aria-selected', String(b.dataset.auth === läge));
-    });
-    NX.$$('.vy-roll').forEach(function (k) {
-      if (k.dataset.forvald == null) k.dataset.forvald = k.getAttribute('aria-current') === 'page' ? '1' : '0';
-      var vald = elev ? k.dataset.roll === 'elev' : k.dataset.forvald === '1';
-      if (vald) k.setAttribute('aria-current', 'page');
-      else k.removeAttribute('aria-current');
-    });
-    NX.$$('[data-ej-elev]').forEach(function (el) { el.hidden = elev; });
-    NX.$$('[data-bara-elev]').forEach(function (el) { el.hidden = !elev; });
-    var flikar = NX.$('.auth-tabs'), namn = NX.$('#namn-grupp'), namnfält = NX.$('#a-name');
-    if (flikar) flikar.hidden = glömt || elev;
-    if (namn) namn.hidden = !upp;
-    if (namnfält) namnfält.required = upp;
-    /* Användarvillkoren godkänns när kontot skapas (2026-10-07). */
-    var villkor = NX.$('#villkor-grupp'), villkorRuta = NX.$('#a-villkor');
-    if (villkor) villkor.hidden = !upp;
-    if (villkorRuta) villkorRuta.required = upp;
+    var länkfel = läge === 'lankfel', glömt = läge === 'glomt' || länkfel;
     var lösen = NX.$('#a-pass');
-    lösen.autocomplete = upp ? 'new-password' : 'current-password';
+    lösen.autocomplete = 'current-password';
     lösen.required = !glömt;
     lösen.closest('.fgroup').hidden = glömt;
     NX.$$('[data-glomt]').forEach(function (el) { el.hidden = läge !== 'in'; });
     NX.$$('[data-glomt-tillbaka]').forEach(function (el) { el.hidden = !glömt; });
-    /* Varje inloggning tar e-post eller användarnamn (loggaIn), men
-       etiketten säger det bara i studievyn (t.etikett), dit både barn
-       och vuxna kommer; i studiehjälparvyn och adminvyn har ingen ett
-       användarnamn. Ett konto skapas och en länk skickas alltid till en
-       e-postadress. */
+    /* Inloggningen tar e-post eller användarnamn (loggaIn); etiketten
+       säger det där barn kan logga in (t.etikett: studievyn och
+       studiehjälparvyn), men inte i adminvyn. En länk skickas alltid
+       till en e-postadress. Ett användarnamn är ingen adress: utan typen
+       email får telefonen ett vanligt tangentbord, utan versal först. */
+    var namn = läge === 'in' && !!t.etikett;
     var etikett = NX.$('label[for="a-email"]');
-    if (etikett) etikett.textContent = elev ? 'Användarnamn' : (läge === 'in' && t.etikett) || 'E-post';
-    /* Ett användarnamn är ingen adress: utan typen email får telefonen
-       ett vanligt tangentbord, utan versal först. */
+    if (etikett) etikett.textContent = namn ? t.etikett : 'E-post';
     var fält = NX.$('#a-email');
     if (fält) {
-      fält.type = elev ? 'text' : 'email';
-      fält.autocomplete = elev ? 'username' : 'email';
-      fält.setAttribute('autocapitalize', elev ? 'none' : 'off');
+      fält.type = namn ? 'text' : 'email';
+      fält.autocomplete = namn ? 'username' : 'email';
+      fält.setAttribute('autocapitalize', 'none');
       fält.spellcheck = false;
     }
-    NX.$('#auth-title').textContent = elev ? 'Elevvyn' : glömt ? 'Glömt lösenordet?' : upp ? t.titelUpp : t.titel;
-    NX.$('#auth-sub').textContent = elev ? ELEV_UNDER : glömt ? GLÖMT_UNDER : upp ? t.underUpp : t.under;
-    NX.$('#auth-submit').textContent = glömt ? 'Skicka länken' : upp ? 'Skapa konto' : 'Logga in';
+    NX.$('#auth-title').textContent = länkfel ? 'Länken fungerar inte längre' : glömt ? 'Glömt lösenordet?' : t.titel;
+    NX.$('#auth-sub').textContent = länkfel ? LÄNKFEL_UNDER : glömt ? GLÖMT_UNDER : t.under;
+    NX.$('#auth-submit').textContent = länkfel ? 'Skicka en ny länk' : glömt ? 'Skicka länken' : 'Logga in';
     NX.rensa(NX.$('#auth-msg'));
   }
 
@@ -3044,7 +3029,9 @@ window.NXStudie = (function () {
       }
       if (svar.barn) location.replace('/barn');
       else {
-        /* En vuxen som loggade in i Elev-läget: vyn laddas om utan läget. */
+        /* En gammal länk till Elev-läget (#elev) laddas om utan det. Vyn
+           skickar sedan vidare efter rollen, om kontot hör hemma i en
+           annan vy. */
         if (location.hash === '#elev') history.replaceState(history.state, '', location.pathname + location.search);
         location.reload();
       }
@@ -3070,8 +3057,14 @@ window.NXStudie = (function () {
      barnadress får ett besked om att föräldern byter lösenordet.
      ============================================================ */
   var GLÖMT_UNDER = 'Skriv e-postadressen du loggar in med, så skickar vi en länk där du väljer ett nytt lösenord.';
-  var LÄNKFEL_UNDER = 'Länken i mejlet gick inte att använda. Den kan ha gått ut eller redan ha använts. '
-    + 'Skriv e-postadressen du loggar in med, så skickar vi en ny.';
+  /* Varje länk i kontomejlen går att använda en gång och gäller en timme
+     (Email OTP Expiration). Den som fått flera mejl, till exempel en
+     inbjudan och sedan Skicka inbjudan igen, har dem i samma tråd, och
+     bara den senaste länken fungerar: det var så familjelänken såg ut att
+     inte fungera 2026-10-07. Därför säger rutan det först. */
+  var LÄNKFEL_UNDER = 'Varje länk i våra mejl går att använda en gång och gäller i en timme. Har du fått flera '
+    + 'mejl från oss fungerar bara länken i det senaste. Skriv din e-postadress, så skickar vi en ny länk där du '
+    + 'väljer lösenord.';
 
   function ossAdress() { return (NX.CFG && NX.CFG.EPOST) || 'info@nextrum.se'; }
 
@@ -3080,20 +3073,14 @@ window.NXStudie = (function () {
      man tryckte på döljs. Inget byte medan inloggningen eller länken
      skickas: svaret hade hamnat i fel läge, och medan() hade satt
      tillbaka fel text på knappen. */
-  /* Elev i rollvalet byter läge i stället för sida, och en adress som
-     slutar på #elev (sajtens Logga in) öppnar rutan i det läget. Svarar
-     läget rutan ska börja i. */
+  /* Elev var ett eget läge i rutan (2026-10-06) och nåddes med #elev.
+     Sedan 2026-10-07 är inloggningen en och densamma för förälder och
+     elev, och #elev i en gammal länk eller ett bokmärke tas bort här.
+     Svarar läget rutan ska börja i. sätt tas emot som förut, så att
+     vyerna och modulvakten inte behöver ändras om läget kommer tillbaka. */
   function elevLänk(sätt) {
-    document.addEventListener('click', function (e) {
-      var k = e.target.closest('.vy-roll[data-roll="elev"]');
-      if (!k) return;
-      e.preventDefault();
-      if (NX.$('#auth-submit').hasAttribute('aria-busy')) return;
-      history.replaceState(history.state, '', location.pathname + location.search + '#elev');
-      sätt('elev');
-      NX.$('#a-email').focus();
-    });
-    return location.hash === '#elev' ? 'elev' : 'in';
+    if (location.hash === '#elev') history.replaceState(history.state, '', location.pathname + location.search);
+    return 'in';
   }
 
   function glömtLänkar(sätt) {
@@ -3109,15 +3096,14 @@ window.NXStudie = (function () {
 
   /* Vyn öppnades från en länk i ett mejl men ingen är inloggad: länken
      har gått ut, använts, eller gick inte att logga in med
-     (NX.länkfel, NX.återställning, NX.inbjudan). Rutan går rakt till Glömt
-     lösenordet med förklaringen överst. Svarar true om den gjorde det.
-     En token som supabase-js inte kunde använda står kvar i adressen,
-     och tas bort här. */
+     (NX.länkfel, NX.återställning, NX.inbjudan). Rutan går rakt till
+     läget 'lankfel', som skickar en ny länk. Svarar true om den gjorde
+     det. En token som supabase-js inte kunde använda står kvar i
+     adressen, och tas bort här. */
   function länkenGickInte(sätt) {
     if (!NX.länkfel && !NX.återställning && !NX.inbjudan) return false;
     if (/access_token=/.test(location.hash)) history.replaceState(history.state, '', location.pathname + location.search);
-    sätt('glomt');
-    NX.$('#auth-sub').textContent = LÄNKFEL_UNDER;
+    sätt('lankfel');
     return true;
   }
 
@@ -3152,7 +3138,7 @@ window.NXStudie = (function () {
       /* "For security purposes, you can only request this after N
          seconds": adressen fick en länk för mindre än en minut sedan. */
       if (!fel || /only request this after|for security purposes/i.test(m)) {
-        NX.säg(msg, 'Om adressen hör till ett konto hos oss har vi skickat en länk dit. Öppna den och välj ett nytt lösenord. '
+        NX.säg(msg, 'Om adressen hör till ett konto hos oss har vi skickat en länk dit. Öppna den och välj ditt lösenord. '
           + 'Hittar du inget mejl inom några minuter, titta i skräpposten eller mejla oss på ' + ossAdress() + '.', true);
         return;
       }

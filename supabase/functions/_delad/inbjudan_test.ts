@@ -103,12 +103,15 @@ Deno.test('skicka igen: länken är använd men lösenordet inte valt, så en l�
   assertEquals(nyss.status, 429);
 });
 
-Deno.test('skicka igen: ett konto i bruk får ingenting, och svaret pekar på Glömt lösenordet', async () => {
-  for (const valkommen of ['intro', undefined, null]) {
-    const v = varld({ konto: { id: 'k1', roll: 'parent' }, auth: { bekraftad: true, valkommen } });
+// 2026-10-07: Skicka igen går när som helst. Ett konto i bruk får en länk
+// för att välja lösenord, som Glömt lösenordet, till sin egen inkorg.
+Deno.test('skicka igen: ett konto i bruk får en länk för att välja lösenord, till rollens vy', async () => {
+  for (const [valkommen, roll, vy] of [['intro', 'parent', '/foralder'], [undefined, 'tutor', '/larare'],
+    [null, 'parent', '/foralder']] as const) {
+    const v = varld({ konto: { id: 'k1', roll }, auth: { bekraftad: true, valkommen } });
     const s = await hanteraInbjudan({ epost: 'anna@example.se', igen: true }, v.b);
-    assertEquals(s.status, 409);
-    assertEquals(String(s.kropp.error).includes('Glömt lösenordet'), true);
-    assertEquals(v.logg, ['finns anna@example.se', 'auth k1']);
+    assertEquals(s.status, 200);
+    assertEquals(s.kropp.skickat, 'losenord');
+    assertEquals(v.logg, ['finns anna@example.se', 'auth k1', 'länk anna@example.se https://nextrum.se' + vy]);
   }
 });

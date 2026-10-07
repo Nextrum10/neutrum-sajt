@@ -76,7 +76,13 @@ tryck som personen tas in, med personens egen adress:
   skapar). Väntar familjen på sin matchning, eller studiehjälparens
   profil på att godkännas, säger introduktionens sista bild det.
 - **Skicka inbjudan igen** står i personens panel (`nextrum-admin-detalj.js`)
-  för en förälder eller studiehjälpare som aldrig loggat in.
+  för en förälder eller studiehjälpare, alltid sedan 2026-10-07: före första
+  inloggningen en ny inbjudan, sedan Skicka länk för lösenord. Bara det
+  senaste mejlet fungerar (`minne/sakerhet.md`).
+- **Inget Skapa konto** (2026-10-07, Leo: "ta bort att man skapa konto på vår
+  sida, vi gör det genom inbjudan"): familjer kommer in genom Ta in familjen,
+  studiehjälpare genom Ta in i poolen, och inloggningen är en för alla, där
+  kontot avgör vyn (`minne/barnkonton-och-admin.md`, En inloggning).
 - Leo bad om lösenordet 12345678 för alla nya konton. Det blev en länk i
   stället, för samma steg för personen; varför står i
   `minne/sakerhet.md`.

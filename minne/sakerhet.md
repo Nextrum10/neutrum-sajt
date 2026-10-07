@@ -303,15 +303,28 @@ med Fortsätt sist.
   får rutan igen vid nästa inloggning, på vilken enhet som helst, och
   `NX.inbjudan` ger den också utan metadatan. `'intro'` visar
   introduktionen (`NXStudie.introduktion`, `NXIntro`), och Fortsätt tar
-  bort välkomsten. Den som registrerar sig själv får `'intro'` vid
-  registreringen. `user_metadata` skriver personen själv: välkomsten säger
+  bort välkomsten. Den som registrerade sig själv, fram till 2026-10-07,
+  fick `'intro'` vid registreringen. `user_metadata` skriver personen själv: välkomsten säger
   bara vad vyn visar först, och får aldrig avgöra vad någon får.
-- **Skicka inbjudan igen** (personens panel i adminvyn, tills hen loggat
-  in): ett obekräftat konto får en ny inbjudan; ett bekräftat utan valt
-  lösenord får länken som Glömt lösenordet ger (Reset password-mallen,
-  vars sista mening "Ditt lösenord är detsamma som förut" inte passar
-  helt, men inte är fel); ett konto med lösenord får ingenting, för då är
-  det Glömt lösenordet? som gäller.
+- **Skicka inbjudan igen** (personens panel i adminvyn, alltid sedan
+  2026-10-07; efter första inloggningen heter knappen Skicka länk för
+  lösenord. Leo: "i admin ska vi kunna skicka inbjudningslänk när vi vill
+  efter, ifall de missar den"): ett obekräftat konto får en ny inbjudan,
+  och ett bekräftat får länken som Glömt lösenordet ger (Reset
+  password-mallen), också när lösenordet redan är valt. Lösenordet byts
+  först när personen väljer ett nytt, och länken går bara till personens
+  egen inkorg.
+- **Bara det senaste mejlet fungerar.** Varje ny länk gör den förra
+  oanvändbar, och mejlen hamnar i samma tråd, med samma ämne. 2026-10-07
+  bjöds Alexandar in som studiehjälpare (länken fungerade), kontot
+  raderades, och samma adress bjöds in som familj; han tryckte på det
+  första mejlet, Auth svarade "One-time token not found" med `/larare` som
+  mål, och vyn visade Glömt lösenordet. Familjens länk var orörd. Därför
+  heter rutan efter en trasig länk Länken fungerar inte längre (läget
+  `'lankfel'`) och säger att bara länken i det senaste mejlet fungerar.
+  Auths logg skriver `referer` som den adress Auth skickar tillbaka till
+  (`redirect_to`), inte webbläsarens: den säger vilken sorts länk som
+  trycktes.
 - **Länkens livslängd** är Auths (Authentication → Providers → Email →
   Email OTP Expiration), och den ska stå kvar på förvalet, en timme.
   Panelen går inte att läsa härifrån, så titta där. Inställningen gäller
@@ -319,8 +332,9 @@ med Fortsätt sist.
   sexsiffriga kod som Auth skapar till varje länk och tar emot på
   `/verify`, också när mallen bara har länken. Supabase skriver att en
   längre tid ger mer tid att gissa koden, och tillåter som mest ett
-  dygn. En utgången inbjudan kostar familjen två tryck: vyn öppnar Glömt
-  lösenordet med förklaringen (`NX.länkfel`), den nya länken
+  dygn. En utgången inbjudan kostar familjen två tryck: vyn öppnar rutan
+  Länken fungerar inte längre (läget `'lankfel'`, samma formulär som
+  Glömt lösenordet) med förklaringen (`NX.länkfel`), den nya länken
   (återställningen bekräftar också ett konto som aldrig bekräftats) ger
   samma ruta utan Inte nu, och Skicka inbjudan igen finns i adminvyn.
   Höj den inte för bekvämlighetens skull utan att väga det.
@@ -342,8 +356,10 @@ villkoren beskriver det (ångerrätten, betalningen, avbokningen).
   raden kommer från triggern på `auth.users` eller från `godkann_villkor()`,
   som tar `auth.uid()` och prövar att versionen är den gällande (22023
   annars, så att ingen godkänner en version hen inte sett).
-- **Registreringen**: kryssrutan i Skapa konto, i studievyn och
-  studiehjälparvyn, skickar `villkor: true` i `user_metadata`, och triggern
+- **Registreringen** (bara 2026-10-07: Skapa konto togs bort samma dag, och
+  triggern står kvar utan något som skickar `villkor: true`): kryssrutan i
+  Skapa konto, i studievyn och studiehjälparvyn, skickade `villkor: true`
+  i `user_metadata`, och triggern
   skriver raden när kontot skapas, med den version som gäller då. Det är
   user_metadata, som personen skriver själv, men det enda det kan
   åstadkomma är personens eget godkännande. Ett barnkonto får aldrig en
@@ -382,10 +398,17 @@ Templates), inte av `notis-ko`, och har inte mejlens skal
 (`minne/notiser.md`). Panelen saknar historik, så texterna står här, och
 förvalen är engelska. Ändras en mall i panelen ändras den här också.
 
-- **Tre mallar skickas av sajten**: Confirm sign up (`signUp` i
-  studievyn och studiehjälparvyn), Invite user (`bjud-in` till
-  `/foralder` och `/larare`, `admin-skapa` till `/admin`) och Reset
-  password (Glömt lösenordet). Magic link, Change email address och
+- **Två mallar skickas av sajten** sedan 2026-10-07: Invite user (`bjud-in`
+  till `/foralder` och `/larare`, `admin-skapa` till `/admin`) och Reset
+  password (Glömt lösenordet, en länk som inte fungerade, och Skicka länk
+  för lösenord i adminvyn). Confirm sign up skickades av Skapa konto, som
+  är borta; med Allow new users to sign up av i panelen skickas den aldrig
+  (`DEPLOY-BARNKONTON.md` 11).
+- **Inget Skapa konto** (2026-10-07). Vyerna har ingen registrering, men
+  Auths öppna `/signup` tar emot en tills Allow new users to sign up
+  stängs av (Authentication → Sign In / Providers). Inbjudan (`bjud-in`,
+  `admin-skapa`) och barnkontot (`barn-konto`) går genom admin-API:t och
+  påverkas inte. Magic link, Change email address och
   Reauthentication skickas bara från panelen eller API:t; texterna står
   ändå här, så att inget i panelen är på engelska.
 - **Länken går genom `/lank`**: `https://nextrum.se/lank#{{ .ConfirmationURL }}`.
