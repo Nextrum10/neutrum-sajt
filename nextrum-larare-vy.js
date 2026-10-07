@@ -2261,7 +2261,7 @@
      Biologi". Ämnet i en rapport är fritext i databasen. */
   const RAPPORT_AMNEN = ['Matematik', 'Svenska', 'Svenska som andraspråk', 'Engelska',
     'Fysik', 'Kemi', 'Biologi', 'Teknik', 'Historia', 'Samhällskunskap', 'Geografi',
-    'Religion', 'Spanska', 'Tyska', 'Franska', 'Programmering', 'Studieteknik'];
+    'Religion', 'Spanska', 'Tyska', 'Franska', 'Studieteknik'];
   const ANNAT = '__annat';
 
   function ämnesFörslag() {
@@ -3029,7 +3029,7 @@
      ============================================================ */
   const PR_AMNEN = ['Matematik', 'Svenska', 'Engelska',
     'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap',
-    'Moderna språk', 'Programmering'];
+    'Moderna språk'];
   const PR_ARSKURSER = ['Åk 1–3', 'Åk 4–6', 'Åk 7–9', 'Gymnasiet'];
   const PR_FORMAT = ['Online', 'På plats'];
 

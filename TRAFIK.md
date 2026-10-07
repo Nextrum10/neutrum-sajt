@@ -81,7 +81,6 @@ första månaden.
    https://nextrum.se/laxhjalp-lagstadiet
    https://nextrum.se/laxhjalp-so
    https://nextrum.se/laxhjalp-moderna-sprak
-   https://nextrum.se/laxhjalp-programmering
    ```
    Säsongsguiderna (efter sommarlovet, inför terminsbetyget och
    proven) har samma adress varje år: be om indexering igen när
@@ -322,8 +321,8 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
 
 ## Det som redan är gjort i koden
 
-- Sju ämnessidor (matte, svenska, engelska, NO, SO, moderna språk och
-  programmering), fyra stadiesidor (från lågstadiet) och tio guider i
+- Sex ämnessidor (matte, svenska, engelska, NO, SO och moderna språk),
+  fyra stadiesidor (från lågstadiet) och tio guider i
   tre grupper, byggda av `verktyg/bygg-omradessidor.py`.
   Guiderna länkar det de påstår till myndigheternas och provgruppernas
   egna sidor

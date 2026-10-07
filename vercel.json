@@ -5,6 +5,11 @@
       "source": "/gratis-laxhjalp-stockholm",
       "destination": "/laxhjalp-stockholm",
       "permanent": true
+    },
+    {
+      "source": "/laxhjalp-programmering",
+      "destination": "/laxhjalp-stockholm",
+      "permanent": true
     }
   ],
   "headers": [

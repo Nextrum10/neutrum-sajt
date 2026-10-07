@@ -351,6 +351,14 @@ utveckling som är roligare att följa, och ett quest-system.
   `rls-test.sql` före, i en transaktion som rullades tillbaka med båda
   migrationerna inlästa, och efter: 1 340 av 1 340. Tillägget `http`
   stod redan installerat i driften och står kvar.
+- **Programmering är avstängd sedan 2026-10-07** (Leo: Nextrum erbjuder
+  det inte). Banorna i åk 6, åk 9 och gy1 togs bort ur
+  `verktyg/uppgiftsbanken/` (`programmering.py` och delarna i
+  `blad_so_prog.py`), och `20261007150000_uppgiftsbanken_utan_programmering`
+  stänger av de 36 nivåerna och deras frågor, som banken gör med allt som
+  tagits bort ur filerna. Inget raderas: gamla försök pekar på nivåerna.
+  Efter den är 1 112 nivåer och 6 298 frågor aktiva. Färgen och ikonen
+  för ämnet står kvar i `nextrum-uppgifter.js`, för gamla försök.
 - **Skrivet och granskat med AI.** Skribenter skrev språken,
   företagsekonomin, lågstadiet, engelskan och NP-träningen; juridiken
   skrevs i huvudsessionen. En granskare per ämnesgrupp läste sedan varje
