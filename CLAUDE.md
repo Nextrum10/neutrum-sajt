@@ -515,9 +515,10 @@ Detaljer: `minne/grunden.md`.
   `ansokan_vardnadshavare_och_nej` och `admin_sett` och `ansokan-notis` v7, från main. Inget riktigt
   nej eller mejl till en vårdnadshavare har gått än. Policytexten om vårdnadshavaren är inte läst av
   juristen.
-- **Intaget, introduktionen och barnets behörigheter** (2026-10-06) går ut efter merge: migrationen
-  `barnets_behorigheter` (efter `barnets_chatt`), `bjud-in` och `ansokan-notis` från main;
-  vyerna tål att migrationen saknas (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller en timme
+- **Intaget, introduktionen och barnets behörigheter** (2026-10-06) är i drift sedan 2026-10-07:
+  migrationen `barnets_behorigheter` från merge-commiten (md5 prövad), `bjud-in` v9 och `ansokan-notis`
+  v8 från main, hämtade tillbaka och byte för byte lika, och hela `rls-test.sql` 1433 av 1433 mot
+  driften. Ingen skarp inbjudan har gått än (`DEPLOY-BARNKONTON.md` 9). Länken i inbjudan gäller en timme
   (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny. Ingen
   godkänner villkoren när kontot skapas, varken i inbjudan eller i registreringen: en lucka sedan förut.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
