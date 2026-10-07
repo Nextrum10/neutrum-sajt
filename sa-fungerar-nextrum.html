@@ -146,16 +146,18 @@
   </figure>
 </section>
 
-<!-- Vägen in: samma pinnade scen som "Så fungerar Nextrum" på
-     startsidan. Stegen tänds medan man scrollar och fotot byts med dem
-     (nextrum-start.js, stegFoton). Fotona står här och inte i skriptet,
-     så att alt-texten är på sidans språk. Samma fem foton som på
-     startsidan, i samma ordning. -->
+<!-- Vägen in: samma stegscen som "Så fungerar Nextrum" på
+     startsidan (nextrum-start.js, stegFoton; nextrum-start.css,
+     avsnitt 14). På dator tänds stegen medan man scrollar och fotot
+     byts med dem; på pekskärm sveper man mellan stegen, och varje steg
+     står under sitt foto. Fotona står här och inte i skriptet, så att
+     alt-texten är på sidans språk. Samma fem foton som på startsidan,
+     i samma ordning. -->
 <section class="nx-hur nx-yta" data-hur>
   <div class="nx-hur-fast">
     <div class="nx-hur-grid">
 
-      <div>
+      <div class="nx-hur-text">
         <span class="nx-et acc">Vägen in</span>
         <h2 class="nx-d2">Så går det till.</h2>
         <p class="nx-lede sid-hur-lede">Ni gör det första steget. Resten sköter vi — ni behöver aldrig leta, jämföra eller förhandla.</p>
@@ -197,41 +199,49 @@
             </div>
           </li>
         </ol>
+
+        <div class="nx-hur-prickar">
+          <button type="button" aria-label="Steg 1"></button>
+          <button type="button" aria-label="Steg 2"></button>
+          <button type="button" aria-label="Steg 3"></button>
+          <button type="button" aria-label="Steg 4"></button>
+          <button type="button" aria-label="Steg 5"></button>
+        </div>
       </div>
 
       <div class="nx-hur-bild">
         <figure class="nx-fig pa" style="--tint:#A0978E">
-          <picture><source type="image/webp" srcset="bilder/hero-nextrum-640.webp 640w, bilder/hero-nextrum-960.webp 960w, bilder/hero-nextrum-1280.webp 1280w, bilder/hero-nextrum-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="bilder/hero-nextrum-960.jpg"
+          <picture><source type="image/webp" srcset="bilder/hero-nextrum-640.webp 640w, bilder/hero-nextrum-960.webp 960w, bilder/hero-nextrum-1280.webp 1280w, bilder/hero-nextrum-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="bilder/hero-nextrum-960.jpg"
                srcset="bilder/hero-nextrum-640.jpg 640w, bilder/hero-nextrum-960.jpg 960w, bilder/hero-nextrum-1280.jpg 1280w, bilder/hero-nextrum-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:70% 46%"
                alt="En ung studiehjälpare och en elev sitter vid ett ljust träbord och räknar tillsammans. Båda ler och tittar ner i elevens block."></picture>
         </figure>
         <figure class="nx-fig" style="--tint:#8B846E">
-          <picture><source type="image/webp" srcset="bilder/11-studiehjalparen-640.webp 640w, bilder/11-studiehjalparen-960.webp 960w, bilder/11-studiehjalparen-1280.webp 1280w, bilder/11-studiehjalparen-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="bilder/11-studiehjalparen-960.jpg"
+          <picture><source type="image/webp" srcset="bilder/11-studiehjalparen-640.webp 640w, bilder/11-studiehjalparen-960.webp 960w, bilder/11-studiehjalparen-1280.webp 1280w, bilder/11-studiehjalparen-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="bilder/11-studiehjalparen-960.jpg"
                srcset="bilder/11-studiehjalparen-640.jpg 640w, bilder/11-studiehjalparen-960.jpg 960w, bilder/11-studiehjalparen-1280.jpg 1280w, bilder/11-studiehjalparen-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:46% 44%"
                alt="En ung studiehjälpare sitter ensam vid ett skrivbord med laptop och anteckningsblock, koncentrerad på sidan."></picture>
         </figure>
         <figure class="nx-fig" style="--tint:#8E8C84">
-          <picture><source type="image/webp" srcset="bilder/05-av-unga-for-unga-640.webp 640w, bilder/05-av-unga-for-unga-960.webp 960w, bilder/05-av-unga-for-unga-1280.webp 1280w, bilder/05-av-unga-for-unga-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="bilder/05-av-unga-for-unga-960.jpg"
+          <picture><source type="image/webp" srcset="bilder/05-av-unga-for-unga-640.webp 640w, bilder/05-av-unga-for-unga-960.webp 960w, bilder/05-av-unga-for-unga-1280.webp 1280w, bilder/05-av-unga-for-unga-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="bilder/05-av-unga-for-unga-960.jpg"
                srcset="bilder/05-av-unga-for-unga-640.jpg 640w, bilder/05-av-unga-for-unga-960.jpg 960w, bilder/05-av-unga-for-unga-1280.jpg 1280w, bilder/05-av-unga-for-unga-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:60% 42%"
                alt="Fem unga studiehjälpare står och pratar med varandra framför en bokhylla i ett bibliotek."></picture>
         </figure>
         <figure class="nx-fig" style="--tint:#9A8E79">
-          <picture><source type="image/webp" srcset="bilder/06-forklaringen-640.webp 640w, bilder/06-forklaringen-960.webp 960w, bilder/06-forklaringen-1280.webp 1280w, bilder/06-forklaringen-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="bilder/06-forklaringen-960.jpg"
+          <picture><source type="image/webp" srcset="bilder/06-forklaringen-640.webp 640w, bilder/06-forklaringen-960.webp 960w, bilder/06-forklaringen-1280.webp 1280w, bilder/06-forklaringen-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="bilder/06-forklaringen-960.jpg"
                srcset="bilder/06-forklaringen-640.jpg 640w, bilder/06-forklaringen-960.jpg 960w, bilder/06-forklaringen-1280.jpg 1280w, bilder/06-forklaringen-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:62% 44%"
                alt="En ung studiehjälpare förklarar en uppgift för en elev vid ett ljust träbord, med handen öppen över räkneboken."></picture>
         </figure>
         <figure class="nx-fig" style="--tint:#898268">
-          <picture><source type="image/webp" srcset="bilder/07-genombrottet-640.webp 640w, bilder/07-genombrottet-960.webp 960w, bilder/07-genombrottet-1280.webp 1280w, bilder/07-genombrottet-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="bilder/07-genombrottet-960.jpg"
+          <picture><source type="image/webp" srcset="bilder/07-genombrottet-640.webp 640w, bilder/07-genombrottet-960.webp 960w, bilder/07-genombrottet-1280.webp 1280w, bilder/07-genombrottet-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="bilder/07-genombrottet-960.jpg"
                srcset="bilder/07-genombrottet-640.jpg 640w, bilder/07-genombrottet-960.jpg 960w, bilder/07-genombrottet-1280.jpg 1280w, bilder/07-genombrottet-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:38% 40%"
                alt="En elev ler för sig själv över sitt skrivblock efter att ha förstått något svårt, med studiehjälparen bredvid."></picture>
         </figure>

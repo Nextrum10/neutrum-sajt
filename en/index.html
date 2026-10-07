@@ -507,48 +507,53 @@
 
 
 <!-- ==========================================================
-     3 — SÅ FUNGERAR NEXTRUM
-     Pinnad. Stegen till vänster tänds ett i taget medan fotot
-     till höger byts. Stegen är de fem som faktiskt sker.
+     3 — SÅ FUNGERAR NEXTRUM (stegscenen, 2026-10-07)
+     Stegen är de fem som faktiskt sker. På dator är scenen pinnad:
+     stegen till vänster tänds ett i taget medan fotot till höger
+     byts. På pekskärm och smal skärm är samma lista en svepbar rad,
+     där varje steg står under sitt foto. Formen står i cinema och
+     i nextrum-start.css (avsnitt 14), rörelsen i nextrum-start.js
+     (stegFoton). Utan skript och med reducerad rörelse står alla
+     steg öppna.
      ========================================================== -->
 <section class="nx-hur nx-yta" id="hur" data-hur>
   <div class="nx-hur-fast">
     <div class="nx-hur-grid">
 
-      <div>
+      <div class="nx-hur-text">
         <span class="nx-et acc">How Nextrum works</span>
         <h2 class="nx-d2">From first contact<br>to the first session.</h2>
 
         <ol class="nx-hur-steg" id="hur-steg">
-          <li class="pa" data-steg="0">
+          <li class="pa" data-steg="0" data-bild="hero" data-alt="A young tutor and a student sitting at a bright wooden table, working through maths together. Both are smiling and looking down at the student’s notepad.">
             <em>01</em>
             <div>
               <h3>Get started</h3>
               <p>Tell us what the student needs help with, which year group and which subjects. It takes about two minutes.</p>
             </div>
           </li>
-          <li data-steg="1">
+          <li data-steg="1" data-bild="studiehjalparen" data-alt="A young tutor sitting alone at a desk with a laptop and a notepad, concentrating on the page.">
             <em>02</em>
             <div>
               <h3>We get in touch within 24 hours</h3>
               <p>We go through the need together with you before any matching is done.</p>
             </div>
           </li>
-          <li data-steg="2">
+          <li data-steg="2" data-bild="laget" data-alt="Five young tutors standing and talking with each other in front of a bookshelf in a library.">
             <em>03</em>
             <div>
               <h3>Matching</h3>
               <p>We select the tutor who suits the student best — based on subject, level, need and personality.</p>
             </div>
           </li>
-          <li data-steg="3">
+          <li data-steg="3" data-bild="forklaringen" data-alt="A young tutor explaining a problem to a student at a bright wooden table, with an open hand over the maths book.">
             <em>04</em>
             <div>
               <h3>Study plan and booking</h3>
               <p>We draw up an individual study plan for the student and you book your sessions.</p>
             </div>
           </li>
-          <li data-steg="4">
+          <li data-steg="4" data-bild="genombrottet" data-alt="A student smiling to themselves over their notepad after understanding something difficult, with the tutor beside them.">
             <em>05</em>
             <div>
               <h3>Follow-up</h3>
@@ -556,6 +561,14 @@
             </div>
           </li>
         </ol>
+
+        <div class="nx-hur-prickar">
+          <button type="button" aria-label="Step 1"></button>
+          <button type="button" aria-label="Step 2"></button>
+          <button type="button" aria-label="Step 3"></button>
+          <button type="button" aria-label="Step 4"></button>
+          <button type="button" aria-label="Step 5"></button>
+        </div>
 
         <div class="nx-hur-cta">
           <span class="nx-magnet">
@@ -568,7 +581,14 @@
         </div>
       </div>
 
-      <!-- fotona byggs av JS ur bildregistret, se skriptet längst ned -->
+      <!-- Fotona byggs av nextrum-start.js (stegFoton) ur bildregistret,
+           ett per steg (data-bild), och alt-texten läses ur stegets
+           data-alt, så att den är på sidans språk. Fem unika bilder:
+           ingen av dem får förekomma i bildväggen längre ner (den
+           använder entillEn, digitalt, sjalvfortroende, anpassning) och
+           ingen får vara teamet, det motivet är redan hero-videon. Ser
+           man samma foto två gånger på samma sida läser det som att
+           bildspelet hängt sig. -->
       <div class="nx-hur-bild" id="hur-bild"></div>
 
     </div>
@@ -1378,53 +1398,6 @@
   NX.bildIntoning();    /* de foton som ligger i markupen */
   NX.initPris();        /* priset i heron */
   NX.initErbjudanden(); /* Standard i Trygg hjälp, ur erbjudanden_pris */
-
-  /* ==========================================================
-     SÅ FUNGERAR NEXTRUM
-     Fem steg, fem foton. Steget som är aktivt tänds och dess
-     foto glider in. Samma princip som ovan: listan styr.
-     ========================================================== */
-  const hurBild = $('#hur-bild'), hurSteg = $$('#hur-steg li');
-  /* Fem unika bilder. Ingen av dem får förekomma i bildväggen längre ner
-     (den använder entillEn, digitalt, sjalvfortroende, anpassning) och ingen
-     får vara teamet — det motivet är redan hero-videon. Ser man samma foto
-     två gånger på samma sida läser det som att bildspelet hängt sig. */
-  const HUR_BILDER = ['hero', 'studiehjalparen', 'laget', 'forklaringen', 'genombrottet'];
-
-  if (hurBild && hurSteg.length) {
-    hurBild.innerHTML = HUR_BILDER.map((k, i) =>
-      NXImg.platta(k, {
-        sizes: '(max-width: 900px) 92vw, 46vw',
-        attrs: ' data-hur-bild="' + i + '"' + (i === 0 ? ' data-pa' : '')
-      })
-    ).join('');
-    const hurFig = $$('#hur-bild .nx-fig');
-    hurFig[0] && hurFig[0].classList.add('pa');
-    NX.bildIntoning();
-
-    const sätt = i => {
-      hurSteg.forEach((li, n) => li.classList.toggle('pa', n === i));
-      hurFig.forEach((f, n) => f.classList.toggle('pa', n === i));
-    };
-
-    if (NXMotion.reducerad || NXMotion.tier === 'lite') {
-      /* utan pinning: steget tänds när man klickar eller tabbar dit */
-      hurSteg.forEach((li, i) => {
-        li.addEventListener('click', () => sätt(i));
-      });
-    } else {
-      NXMotion.scene($('[data-hur]'), {
-        läge: 'pin',
-        run: p => {
-          /* lite marginal i början och slutet så att första och
-             sista steget hinner läsas innan det byter */
-          const j = Math.min(hurSteg.length - 1,
-                    Math.max(0, Math.floor(NXMotion.span(p, 0.04, 0.96) * hurSteg.length)));
-          if (j !== sätt.senaste) { sätt(j); sätt.senaste = j; }
-        }
-      });
-    }
-  }
 
   /* ==========================================================
      SCROLLSPY

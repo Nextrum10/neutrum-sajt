@@ -22,8 +22,9 @@
                     sig själv. Samma illustration står på För elever &
                     föräldrar.
      sidhuvud       lapparna på menysidornas foto fjädrar in
-     stegFoton      Så fungerar Nextrum på menysidan: samma pinnade
-                    scen som startsidans, med fotona i markupen
+     stegFoton      Så fungerar Nextrum, på startsidan och menysidan:
+                    den pinnade scenen på dator och den svepbara
+                    raden på pekskärm (2026-10-07)
 
    MENYSIDORNA LADDAR OCKSÅ FILEN (2026-10-06): Vår idé, Så fungerar
    Nextrum, För elever & föräldrar, Bli studiehjälpare, Priser och
@@ -1015,46 +1016,166 @@ const NXStart = (function () {
   }
 
   /* ============================================================
-     SÅ FUNGERAR NEXTRUM, PÅ MENYSIDAN
-     Samma pinnade scen som på startsidan: medan man scrollar tänds
-     steget, och dess foto glider fram. Formen är cinemas .nx-hur.
+     STEGSCENEN — Så fungerar Nextrum (2026-10-07)
+     Startsidan och menysidan Så fungerar Nextrum, på båda språken.
+     Formen står i cinema (grunden) och i nextrum-start.css, avsnitt
+     14. Här sätts klasser: .pa på steget, fotot och märket som
+     gäller, .forbi på det som passerats, .tyst på de foton som ett
+     hopp över flera steg passerar, aria-current på stapeln, och
+     .igang på sektionen när allt är kopplat. Först då slår CSS:en om
+     till den pinnade scenen eller den svepbara raden.
 
-     Startsidan bygger sina foton i sitt eget skript, ur bildregistret,
-     och rutan är tom när det här körs. Den lämnas därför ifred här.
-     På menysidan står fotona i markupen, med alt-text på sidans
-     språk: registret har bara svenska, och en bild som byggs här
-     hade fått en svensk beskrivning på den engelska sidan.
+     Leo 2026-10-07: "Från intresseanmälan till första passet ska ha
+     bättre animation mellan bilderna på datorvy och mobil ska även få
+     den animation. Stegen ska visas bredvid bilderna. 01 osv ska vara
+     större. Och svepningen ska fungera på mobilen."
 
-     På pekskärm och smal skärm finns ingen pinning (cinema): alla
-     steg står öppna under fotot, och det man trycker på tänds.
+     FOTONA. På menysidan står de i markupen. På startsidan byggs de
+     här ur bildregistret, ett per steg (data-bild), och alt-texten
+     läses ur stegets data-alt: registret har bara svenska, och en
+     bild som byggs här hade annars fått en svensk beskrivning på den
+     engelska sidan. Förut byggde startsidan fotona i ett eget skript
+     med svensk alt och en egen kopia av scenen (2026-10-07).
+
+     LÄGET LÄSES VID VARJE HÄNDELSE. M.tier byts när fönstret ändrar
+     storlek (räknaTier i nextrum-motion.js), och CSS:en följer med
+     direkt. Ett läge som lästes en gång vid laddningen hade lämnat
+     skriptet i fel läge när en dator dras smalare än 900 px.
+
+       full  den pinnade scenen. NXMotion.scene räknar ut steget ur
+             scrollen; ett tryck på ett steg för scrollen dit.
+       lite  den svepbara raden. En IntersectionObserver med raden som
+             rot säger vilket kort som täcker mer än 60 % av den
+             (intersectionRatio, inte isIntersecting: den är sann också
+             när ett kort är på väg ut). Staplarna och ett tryck på ett
+             kort rullar raden med scrollTo, aldrig scrollIntoView, som
+             också rullar sidan.
+
+     Med reducerad rörelse kopplas inget: scenen står i sin grund med
+     alla steg öppna och det första fotot.
      ============================================================ */
   function stegFoton() {
+    /* Fotot är 16:9 och visas i en ruta som är högre än bred, så det
+       ritas mycket bredare än rutan: på telefonen nästan dubbelt så
+       brett som skärmen, på dator ungefär lika brett som fönstret. */
+    const STORLEK = '(max-width: 900px) 180vw, 100vw';
+    const mjukt = () => (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+
     $$('[data-hur]').forEach(rot => {
-      const fig = $$('.nx-hur-bild .nx-fig', rot);
-      const steg = $$('.nx-hur-steg > li', rot);
-      if (!fig.length || !steg.length) return;
+      const bild = $('.nx-hur-bild', rot), lista = $('.nx-hur-steg', rot);
+      const steg = lista ? $$(':scope > li', lista) : [];
+      if (!bild || !steg.length) return;
 
-      let senaste = -1;
-      const sätt = i => {
-        if (i === senaste) return;
-        senaste = i;
-        steg.forEach((li, n) => li.classList.toggle('pa', n === i));
-        fig.forEach((f, n) => f.classList.toggle('pa', n === Math.min(i, fig.length - 1)));
-      };
-
-      if (!rörelse || M.tier === 'lite') {
-        steg.forEach((li, i) => li.addEventListener('click', () => sätt(i)));
-        return;
+      if (!$('.nx-fig', bild) && typeof NXImg !== 'undefined') {
+        bild.innerHTML = steg.map(li =>
+          (li.dataset.bild && NXImg.platta(li.dataset.bild, { sizes: STORLEK })) || '<figure class="nx-fig"></figure>'
+        ).join('');
+        $$(':scope > .nx-fig', bild).forEach((f, n) => {
+          const img = $('img', f);
+          if (img && steg[n].dataset.alt) img.alt = steg[n].dataset.alt;
+        });
+        if (typeof NX !== 'undefined' && NX.bildIntoning) NX.bildIntoning(bild);
       }
+      const fig = $$(':scope > .nx-fig', bild);
+      if (!fig.length) return;
+
+      /* Märket på fotot: stegets nummer och namn, kopierat ur steget,
+         som redan står på sidans språk. Det syns bara i den pinnade
+         scenen och är aria-hidden: steget läses redan i listan. */
+      fig.forEach((f, n) => {
+        const li = steg[n];
+        if (!li || $('.nx-hur-mark', f)) return;
+        const tal = $('em', li), namn = $('h3', li);
+        if (!tal || !namn) return;
+        const m = document.createElement('span');
+        m.className = 'nx-hur-mark';
+        m.setAttribute('aria-hidden', 'true');
+        const b = document.createElement('b'), s = document.createElement('span');
+        b.textContent = tal.textContent.trim();
+        s.textContent = namn.textContent.trim();
+        m.append(b, s);
+        f.appendChild(m);
+      });
+
+      const prickar = $$('.nx-hur-prickar button', rot);
+      let nu = -1, nuFoto = -1;
+      const sätt = i => {
+        i = Math.max(0, Math.min(steg.length - 1, i));
+        if (i === nu) return;
+        nu = i;
+        const k = Math.min(i, fig.length - 1), förra = nuFoto;
+        nuFoto = k;
+        steg.forEach((li, n) => { li.classList.toggle('pa', n === i); li.classList.toggle('forbi', n < i); });
+        /* Hoppar man över steg (en stapel långt bort, en snabb scroll)
+           byter fotona emellan läge utan att glida: .tyst. Annars far
+           de genom ramen bredvid det nya och det blir ett bläddrande
+           i stället för ett byte. Bara det gamla och det nya rör sig. */
+        fig.forEach((f, n) => {
+          f.classList.toggle('tyst', n !== k && n !== förra);
+          f.classList.toggle('pa', n === k);
+          f.classList.toggle('forbi', n < k);
+        });
+        prickar.forEach((b, n) => {
+          if (n === i) b.setAttribute('aria-current', 'step');
+          else b.removeAttribute('aria-current');
+        });
+      };
+      sätt(Math.max(0, steg.findIndex(li => li.classList.contains('pa'))));
+      if (!rörelse) return;
+
+      /* Före scenen: NXMotion.scene mäter sektionen när den skapas,
+         och höjden (230svh) kommer med klassen. */
+      rot.classList.add('igang');
+
+      const kortLäge = i => steg[i].offsetLeft - steg[0].offsetLeft;
+      const gåTill = i => lista.scrollTo({ left: kortLäge(i), behavior: mjukt() });
+
       M.scene(rot, {
         läge: 'pin',
         run: p => {
+          if (M.tier !== 'full') return;
           /* Lite marginal i början och slutet, så att första och
              sista steget hinner läsas innan det byter. */
-          sätt(Math.min(steg.length - 1,
-            Math.max(0, Math.floor(M.span(p, 0.04, 0.96) * steg.length))));
+          sätt(Math.floor(M.span(p, 0.04, 0.96) * steg.length));
         }
       });
+
+      steg.forEach((li, i) => li.addEventListener('click', () => {
+        if (M.tier === 'full') {
+          /* Till mitten av stegets bit av sträckan, samma räkning som
+             run() ovan baklänges. */
+          const r = rot.getBoundingClientRect();
+          const sträcka = r.height - document.documentElement.clientHeight;
+          if (sträcka > 0) {
+            window.scrollTo({ top: r.top + window.scrollY + (0.04 + (i + 0.5) / steg.length * 0.92) * sträcka, behavior: mjukt() });
+          }
+        } else if (M.tier === 'lite' && i !== nu) {
+          gåTill(i);
+        }
+      }));
+      prickar.forEach((b, i) => b.addEventListener('click', () => gåTill(i)));
+
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(poster => {
+          if (M.tier !== 'lite') return;
+          poster.forEach(p => { if (p.intersectionRatio >= 0.6) sätt(steg.indexOf(p.target)); });
+        }, { root: lista, threshold: [0.6] });
+        steg.forEach(li => io.observe(li));
+      }
+
+      /* Byts läget till raden (en dator som dras smal) står den på
+         första kortet medan steget kan vara ett annat. Rulla dit, så
+         att kortet och fotot är samma. NXMotion byter läget efter
+         120 ms, så det här väntar längre. */
+      let förra = M.tier, väntar = 0;
+      window.addEventListener('resize', () => {
+        clearTimeout(väntar);
+        väntar = setTimeout(() => {
+          if (M.tier === förra) return;
+          förra = M.tier;
+          if (M.tier === 'lite' && nu > 0) lista.scrollTo({ left: kortLäge(nu), behavior: 'auto' });
+        }, 260);
+      }, { passive: true });
     });
   }
 

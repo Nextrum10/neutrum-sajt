@@ -175,7 +175,8 @@ html.nx-sr .sid-framme .sid-lapp{opacity:1;translate:0 0;scale:1}
 /* Ingressen i den pinnade stegscenen (Så fungerar Nextrum). Startsidans
    scen har ingen; här står den mellan rubriken och stegen, och rubrikens
    luft nedåt flyttas till den. På en kort skärm krymper den med resten
-   (cinema, .nx-hur på max-height:880px), annars klipps sista steget. */
+   (nextrum-start.css, avsnitt 14, sedan 2026-10-07), annars klipps
+   sista steget. */
 .nx-hur .nx-d2:has(+ .sid-hur-lede){margin-bottom:0}
 .sid-hur-lede{
   margin:clamp(14px,1.6vw,20px) 0 clamp(24px,3vw,38px);

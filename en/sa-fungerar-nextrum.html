@@ -146,16 +146,18 @@
   </figure>
 </section>
 
-<!-- Vägen in: samma pinnade scen som "Så fungerar Nextrum" på
-     startsidan. Stegen tänds medan man scrollar och fotot byts med dem
-     (nextrum-start.js, stegFoton). Fotona står här och inte i skriptet,
-     så att alt-texten är på sidans språk. Samma fem foton som på
-     startsidan, i samma ordning. -->
+<!-- Vägen in: samma stegscen som "Så fungerar Nextrum" på
+     startsidan (nextrum-start.js, stegFoton; nextrum-start.css,
+     avsnitt 14). På dator tänds stegen medan man scrollar och fotot
+     byts med dem; på pekskärm sveper man mellan stegen, och varje steg
+     står under sitt foto. Fotona står här och inte i skriptet, så att
+     alt-texten är på sidans språk. Samma fem foton som på startsidan,
+     i samma ordning. -->
 <section class="nx-hur nx-yta" data-hur>
   <div class="nx-hur-fast">
     <div class="nx-hur-grid">
 
-      <div>
+      <div class="nx-hur-text">
         <span class="nx-et acc">The way in</span>
         <h2 class="nx-d2">How it works.</h2>
         <p class="nx-lede sid-hur-lede">You take the first step. We handle the rest — you never have to search, compare or negotiate.</p>
@@ -197,41 +199,49 @@
             </div>
           </li>
         </ol>
+
+        <div class="nx-hur-prickar">
+          <button type="button" aria-label="Step 1"></button>
+          <button type="button" aria-label="Step 2"></button>
+          <button type="button" aria-label="Step 3"></button>
+          <button type="button" aria-label="Step 4"></button>
+          <button type="button" aria-label="Step 5"></button>
+        </div>
       </div>
 
       <div class="nx-hur-bild">
         <figure class="nx-fig pa" style="--tint:#A0978E">
-          <picture><source type="image/webp" srcset="../bilder/hero-nextrum-640.webp 640w, ../bilder/hero-nextrum-960.webp 960w, ../bilder/hero-nextrum-1280.webp 1280w, ../bilder/hero-nextrum-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/hero-nextrum-960.jpg"
+          <picture><source type="image/webp" srcset="../bilder/hero-nextrum-640.webp 640w, ../bilder/hero-nextrum-960.webp 960w, ../bilder/hero-nextrum-1280.webp 1280w, ../bilder/hero-nextrum-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="../bilder/hero-nextrum-960.jpg"
                srcset="../bilder/hero-nextrum-640.jpg 640w, ../bilder/hero-nextrum-960.jpg 960w, ../bilder/hero-nextrum-1280.jpg 1280w, ../bilder/hero-nextrum-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:70% 46%"
                alt="A young tutor and a student sitting at a bright wooden table, working through maths together. Both are smiling and looking down at the student’s notepad."></picture>
         </figure>
         <figure class="nx-fig" style="--tint:#8B846E">
-          <picture><source type="image/webp" srcset="../bilder/11-studiehjalparen-640.webp 640w, ../bilder/11-studiehjalparen-960.webp 960w, ../bilder/11-studiehjalparen-1280.webp 1280w, ../bilder/11-studiehjalparen-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/11-studiehjalparen-960.jpg"
+          <picture><source type="image/webp" srcset="../bilder/11-studiehjalparen-640.webp 640w, ../bilder/11-studiehjalparen-960.webp 960w, ../bilder/11-studiehjalparen-1280.webp 1280w, ../bilder/11-studiehjalparen-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="../bilder/11-studiehjalparen-960.jpg"
                srcset="../bilder/11-studiehjalparen-640.jpg 640w, ../bilder/11-studiehjalparen-960.jpg 960w, ../bilder/11-studiehjalparen-1280.jpg 1280w, ../bilder/11-studiehjalparen-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:46% 44%"
                alt="A young tutor sitting alone at a desk with a laptop and a notepad, concentrating on the page."></picture>
         </figure>
         <figure class="nx-fig" style="--tint:#8E8C84">
-          <picture><source type="image/webp" srcset="../bilder/05-av-unga-for-unga-640.webp 640w, ../bilder/05-av-unga-for-unga-960.webp 960w, ../bilder/05-av-unga-for-unga-1280.webp 1280w, ../bilder/05-av-unga-for-unga-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/05-av-unga-for-unga-960.jpg"
+          <picture><source type="image/webp" srcset="../bilder/05-av-unga-for-unga-640.webp 640w, ../bilder/05-av-unga-for-unga-960.webp 960w, ../bilder/05-av-unga-for-unga-1280.webp 1280w, ../bilder/05-av-unga-for-unga-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="../bilder/05-av-unga-for-unga-960.jpg"
                srcset="../bilder/05-av-unga-for-unga-640.jpg 640w, ../bilder/05-av-unga-for-unga-960.jpg 960w, ../bilder/05-av-unga-for-unga-1280.jpg 1280w, ../bilder/05-av-unga-for-unga-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:60% 42%"
                alt="Five young tutors standing and talking with each other in front of a bookshelf in a library."></picture>
         </figure>
         <figure class="nx-fig" style="--tint:#9A8E79">
-          <picture><source type="image/webp" srcset="../bilder/06-forklaringen-640.webp 640w, ../bilder/06-forklaringen-960.webp 960w, ../bilder/06-forklaringen-1280.webp 1280w, ../bilder/06-forklaringen-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/06-forklaringen-960.jpg"
+          <picture><source type="image/webp" srcset="../bilder/06-forklaringen-640.webp 640w, ../bilder/06-forklaringen-960.webp 960w, ../bilder/06-forklaringen-1280.webp 1280w, ../bilder/06-forklaringen-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="../bilder/06-forklaringen-960.jpg"
                srcset="../bilder/06-forklaringen-640.jpg 640w, ../bilder/06-forklaringen-960.jpg 960w, ../bilder/06-forklaringen-1280.jpg 1280w, ../bilder/06-forklaringen-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:62% 44%"
                alt="A young tutor explaining a problem to a student at a bright wooden table, with an open hand over the maths book."></picture>
         </figure>
         <figure class="nx-fig" style="--tint:#898268">
-          <picture><source type="image/webp" srcset="../bilder/07-genombrottet-640.webp 640w, ../bilder/07-genombrottet-960.webp 960w, ../bilder/07-genombrottet-1280.webp 1280w, ../bilder/07-genombrottet-1600.webp 1600w" sizes="(max-width: 900px) 92vw, 46vw"><img class="nx-img" src="../bilder/07-genombrottet-960.jpg"
+          <picture><source type="image/webp" srcset="../bilder/07-genombrottet-640.webp 640w, ../bilder/07-genombrottet-960.webp 960w, ../bilder/07-genombrottet-1280.webp 1280w, ../bilder/07-genombrottet-1600.webp 1600w" sizes="(max-width: 900px) 180vw, 100vw"><img class="nx-img" src="../bilder/07-genombrottet-960.jpg"
                srcset="../bilder/07-genombrottet-640.jpg 640w, ../bilder/07-genombrottet-960.jpg 960w, ../bilder/07-genombrottet-1280.jpg 1280w, ../bilder/07-genombrottet-1600.jpg 1600w"
-               sizes="(max-width: 900px) 92vw, 46vw" width="2048" height="1152" loading="lazy" decoding="async"
+               sizes="(max-width: 900px) 180vw, 100vw" width="2048" height="1152" loading="lazy" decoding="async"
                style="object-position:38% 40%"
                alt="A student smiling to themselves over their notepad after understanding something difficult, with the tutor beside them."></picture>
         </figure>
