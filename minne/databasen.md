@@ -793,7 +793,7 @@ Det som fungerade, i ordning:
    `insert into supabase_migrations.schema_migrations (version, name, statements) values ('<version>', '<namn>', array[$mig$<texten>$mig$])`.
    Raderna för tidigare migrationer ser ut så. Kontrollera sedan `md5(statements[1])` mot `md5sum` på filen:
    samma summa betyder att det som driftsatts är det som ligger i git.
-   En fil som varken har `drop` eller `delete` kan i stället köras hel (barnets_behorigheter, 2026-10-07):
+   En fil utan `drop`- och `delete`-satser kan i stället köras hel (barnets_behorigheter, 2026-10-07):
    hämta den från merge-commiten med `extensions.http_get`, pröva `md5` mot filens, vägra om versionen redan
    står i `schema_migrations`, och `execute` texten och registrera den i samma `do`-block. Allt eller inget,
    och raden är filen. Står `drop` eller `delete` i filen är det att runda spärren: då gäller punkt 2.
@@ -873,6 +873,10 @@ har varken `drop` eller `delete`. `bookings_kraver_villkor` sorterar före
 raden. Fixturerna i `rls-test.sql` har godkänt villkoren överst (de som
 bokar och köper måste ha gjort det), och avsnitt 23 tar bort godkännandet
 där det prövar spärren. Se `minne/sakerhet.md`, Användarvillkoren.
+I drift 2026-10-07 efter merge av PR #208: filen från merge-commiten
+(6286fc3), prövad mot sin md5 och körd och registrerad i ett `do`-block.
+`rls-test.sql` mot driften: 1433 av 1434 före (avsnitt 23 stannade på att
+`intern.villkor_version()` saknades) och 1459 av 1459 efter.
 
 ### Provobjekten togs bort (provobjekten_tas_bort, 2026-10-07)
 Tio funktioner `public.zz_prov_*` och tabellen `public.zz_prov_ddl` låg kvar
@@ -883,3 +887,5 @@ en kopia av morgonmejlets körning med SECURITY DEFINER och hade skickat mejl
 om någon kört den. Migrationen tar bort dem med `drop` och ber därför om en
 bekräftelse. **Ett sådant prov görs i en transaktion som rullas tillbaka,
 aldrig med objekt som blir kvar.**
+Första körningen 2026-10-07 hängde sig i 60 sekunder utan svar på
+bekräftelsen; inget hände, och migrationen väntar (`DEPLOY-BARNKONTON.md` 10).

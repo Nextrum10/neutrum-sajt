@@ -256,20 +256,28 @@ sin egen tid och kräver det för att ett pass ska föreslås eller bekräftas
 och för att timmar ska köpas. Varför det ser ut som det gör:
 `minne/sakerhet.md` (Användarvillkoren) och `minne/databasen.md`. I ordning:
 
-1. **Merga.** Vyerna går ut med Vercel och tål att migrationen saknas:
-   utan `mitt_villkorslage()` visas ingen ruta, och adminpanelen säger
-   "okänt" om villkoren.
-2. **Kör `20261007120000_villkoren_godkanns.sql`.** Ingen `drop` och ingen
-   `delete`, så den kan hämtas från merge-commiten, prövas mot sin md5 och
-   köras och registreras i ett `do`-block (`minne/databasen.md`, punkt 3).
-   Från och med nu kräver databasen godkännandet: de konton som finns får
-   frågan vid nästa inloggning och kan inte boka innan dess.
-3. **`verktyg/rls-test.sql` mot driften**, hela filen i en transaktion som
-   rullas tillbaka: varje rad ok (1459 lokalt 2026-10-07).
-4. **Kör `20261007120100_provobjekten_tas_bort.sql`.** Den har `drop`, så
-   verktyget ber om en bekräftelse; säg ja. Registrera filens text och
-   pröva md5 som för de andra. Säkerhetskontrollen ska efteråt sakna de
-   nio varningarna om `zz_prov_*`.
+1. **Gjort 2026-10-07: mergat.** PR #208 (6286fc3). Vyerna gick ut med
+   Vercel och tål att migrationen saknas: utan `mitt_villkorslage()` visas
+   ingen ruta, och adminpanelen säger "okänt" om villkoren.
+2. **Gjort 2026-10-07: `20261007120000_villkoren_godkanns.sql` körd.** Ingen
+   `drop`- och ingen `delete`-sats, så den hämtades från merge-commiten,
+   prövades mot sin md5 (`0e5c26c9…`) och kördes och registrerades i ett
+   `do`-block (`minne/databasen.md`, punkt 3). Från och med nu kräver
+   databasen godkännandet: kontona som finns får frågan vid nästa
+   inloggning och kan inte boka innan dess. Ingen hade godkänt något när
+   den kördes. Säkerhetskontrollen efteråt: bara `godkann_villkor` ny bland
+   det inloggade kan anropa, som tänkt, och inget nytt för anon.
+3. **Gjort 2026-10-07: `verktyg/rls-test.sql` mot driften**, hela filen från
+   merge-commiten i en transaktion som rullades tillbaka: 1433 av 1434 före
+   migrationen (avsnitt 23 stannade på att funktionen saknades) och 1459 av
+   1459 efter.
+4. **Kvar: kör `20261007120100_provobjekten_tas_bort.sql`.** Den har `drop`,
+   så verktyget ber om en bekräftelse. Första försöket 2026-10-07 hängde sig
+   i 60 sekunder utan svar, och inget hände (provobjekten och registret
+   oförändrade). Skicka filens satser som de står, med registreringen av
+   filens text i samma anrop, när någon kan säga ja; runda aldrig spärren
+   med dynamisk SQL. Säkerhetskontrollen ska efteråt sakna de nio
+   varningarna om `zz_prov_*`.
 5. **Prova skarpt**: logga in som dig själv i studievyn (rutan kommer,
    godkänn) och se raden under Användarvillkoren i adminvyns panel.
 6. **Kvar: juristen läser** rad 24 i `DATASKYDD.md` och meningen i
