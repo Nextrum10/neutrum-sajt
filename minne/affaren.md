@@ -246,7 +246,9 @@ Ur avsnitt 11:
   kräver stegen hos Google i `INTEGRATIONER.md` och ett klick på
   Koppla Google, inloggad som `info@nextrum.se`. Tills dess står den
   gamla texten om meddelanden kvar på passen. Kalendern, inbjudningarna
-  och rekryteringsmötets länk valdes bort. Fortnox stod här som en
+  och rekryteringsmötets länk valdes bort. Integritetspolicyn säger
+  samma sak sedan 2026-10-07 (den lovade Meet innan något var kopplat)
+  och ändras samma dag som kopplingen, `INTEGRATIONER.md` steg 9. Fortnox stod här som en
   ogjord koppling till Fas 14.8. Sedan Fas 14.9 sköts bokföringen,
   fakturorna och lönen i Fortnox, med flit utan koppling hit.
 
@@ -512,9 +514,6 @@ Driftsättningen och det som är kvar, ur avsnitt 11:
   godkännande. "Nyligen läst samma kurser" står kvar som det matchningen
   letar efter, och "Av unga, för unga" som namnet på idén. Fältet Skola &
   program i ansökan var aldrig obligatoriskt och säger nu "om du pluggar".
-  Juridik- och ekonomiagenternas beskrivning av affären
-  (`supabase/functions/juridik`, `ekonomi`) säger fortfarande gymnasie- och
-  högskolestudenter; den ändras när funktionerna ändå driftsätts.
 - **Hemma eller online:** familjen väljer för varje pass; att ses hemma
   förutsätter att matchningen ger någon som kan ta sig dit varje vecka,
   annars börjar man online. Områdessidorna sa att formatet "avgörs av

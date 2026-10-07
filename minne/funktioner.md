@@ -223,6 +223,13 @@ står kvar för att det är så en naiv `indexOf` går sönder.
 
 ### AI-lagret (Fas 8)
 
+**Agenternas bild av affären rättades 2026-10-07**: juridik och ekonomi sa
+att studiehjälparna är gymnasie- och högskolestudenter (rättat i PR #210),
+ekonomi att fakturan var avstängd, juridik ingenting om den, och
+`_delad/nextrum-fakta.ts` (drift) att inga fakturor skapas. Fakturan är på
+sedan 2026-09-27 (flaggan `faktura`). De tre driftsätts från main efter
+merge; tills dess svarar agenterna med den gamla bilden.
+
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —
 anmälningar, omatchade elever, kommande pass, saknade rapporter — och

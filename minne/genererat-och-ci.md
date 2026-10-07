@@ -138,6 +138,61 @@ alla publika sidor och på båda språken. Den ersatte en länk till navet
 som stod två gånger i den svenska footern, vilket också var skälet till
 nästan alla TEXTNODER-avvikelser i språkbaslinjen.
 
+**Guiderna är tio, i tre grupper** (2026-10-07): För er som hjälper till
+hemma (de fyra första), Under läsåret (nationella proven i sexan och i
+nian, efter sommarlovet och inför terminsbetyget) och Att välja läxhjälp
+(vad läxhjälp kostar, läxhjälp eller privatlärare). `grupp` i `GUIDER`;
+navet visar en sektion per grupp, och en guide visar sin egen grupp
+först bland Fler guider, högst sex. Samma regler som förut: det en guide
+påstår om skolan, proven eller skatten är länkat i `kallor`, och tider
+står inte med. Provguiderna säger att de muntliga delarna görs på hösten
+och de skriftliga på våren och länkar Skolverkets provdatum, aldrig
+datumen; deras beskrivning av proven är densamma som i NexLäx
+(`NP_INFO`), och länkarna till provgrupperna är materialbankens
+(`lankar.py`). Rutavdraget för läxhjälp togs bort 2015 (den 1 augusti
+enligt sökträffarna; guiden säger bara året och länkar Skatteverkets
+lista), utvecklingssamtalet
+nämns utan hur ofta det hålls (en gång per termin blir en gång per läsår
+2028), och ingen guide lovar ett betyg. Källorna är kontrollerade mot
+sökträffarna 2026-10-07, inte öppnade: nätet släppte inte fram
+Skolverket eller Skatteverket.
+
+**Sidan för utlandsfamiljer** (2026-10-07, `en/tutoring-stockholm`) finns
+bara på engelska, är byggd på den engelska Vår idé:s skal och har ingen
+hreflang="sv". Den lovar inte pass på engelska, bara att vi säger före
+bokningen om vi har någon som kan hålla dem på engelska, och säger att
+familjens vy är på svenska. Sidfoten länkar dit, "In English", på alla
+öppna sidor och på båda språken, i samma tagg, så språkdiffen inte ser
+någon skillnad. De engelska sidorna har `og:locale` `en_GB` (de hade
+`sv_SE`).
+
+**Delningsbilderna** (2026-10-07, `delning/`, `verktyg/bygg-delningsbilder.js`):
+en bild per sida i kartan, 1200 × 630, med sidans foto, rubriken och en
+rad med priset (en guide säger Guide för föräldrar, jobbsidan och
+villkoren inget pris). Fotot är det sidan delade förut och står sedan
+kvar i `delning/innehall.json`. Generatorn och de handskrivna sidorna
+pekar `og:image` och `twitter:image` dit. Byggs för hand med Chromium;
+mallen serveras från samma origin som typsnittet, annars ritas bilden
+med reservtypsnittet. `kolla-delningsbilder.py` fäller CI om en sida i
+kartan saknar sin bild, om rubriken i bilden inte är sidans `<h1>` eller
+om priset inte är `PRIS_PER_TIMME`: en delningsbild med fel pris är
+samma sak som en sida med fel pris.
+
+**Orden på de öppna sidorna** (2026-10-07, resten av genomgången av
+nextrum.se). Knappen till intresseanmälan heter Skicka intresseanmälan
+överallt utom i heron, där den står bredvid Bli studiehjälpare och
+därför heter Intresseanmälan för läxhjälp (Get started och Get tutoring
+på engelska); i menyn och sidfoten heter den bara Intresseanmälan. Vårt
+eget språk står inte där en familj eller en sökande läser: underlag,
+tabell, API, databasen. Regeln att ett pass är genomfört först när
+rapporten finns är vår; den står i villkoren och där rapporten förklaras
+(Så fungerar Nextrum, För elever och föräldrar), inte i generatorns svar.
+Starterbjudandet står på prissidan, i FAQ:n och i generatorns prisdelar,
+alltid med villkoret bokade timmar (`minne/betalning.md`). Hemma eller
+online väljer familjen för varje pass; matchningen avgör bara om någon
+kan ta sig hem till dem. Priset gäller den tid passet höll, per påbörjad
+kvart, så ingen sida lovar hela kostnaden innan ni bokar.
+
 ---
 
 ## 9. CI — `.github/workflows/kontroll.yml`

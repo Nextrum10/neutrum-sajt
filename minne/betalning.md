@@ -71,7 +71,9 @@ texten är kärnans.
   passets eget timpris, och märker det `startrabatt`. En gång per
   familj; avbokade pass räknas inte, och avbokas passet med rabatten
   får nästa pass som når två timmar den. Två pass på en timme gör alltså
-  det andra gratis. Ett pass på noll kronor är INTE betalt (ett betalt
+  det andra gratis. Utåt är villkoret **bokade** timmar, aldrig köpta
+  (2026-10-07): prissidan sa "när ni köper två timmar", men köpta
+  timmar betalar aldrig passet med rabatten. Ett pass på noll kronor är INTE betalt (ett betalt
   pass går inte att avboka), det står kvar som `ingen`, och varken
   `ej_betalt`, `obetalda` eller fakturan räknar det. Klippkortet betalar
   inte ett pass med startrabatt. Triggern heter `bookings_startrabatt`

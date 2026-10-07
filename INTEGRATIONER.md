@@ -160,6 +160,11 @@ flyttat, men stegen är desamma.
 8. **Prova.** Knappen skapar ett rum och visar länken. Öppna den i ett
    privat fönster, utloggad från Google. Kommer du in utan att knacka
    kommer familjerna också in.
+9. **Integritetspolicyn samma dag**, på båda språken: Google-punkten
+   under vilka vi delar med säger att Meet inte är kopplat än och att
+   länken kommer i meddelanden (2026-10-07). Stryk det, så att punkten
+   säger att onlinepassen hålls i Meet, och ändra raden om Google i
+   `DATASKYDD.md` (inte kopplat än) och sidans datum samtidigt.
 
 Inga tjänstekonton och inga nyckelfiler. Ett tjänstekonto med domänvid
 delegering, som den här filen föreslog förut, hade kunnat uppträda som
