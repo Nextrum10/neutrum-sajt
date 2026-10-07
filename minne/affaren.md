@@ -544,7 +544,9 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   betyget i praktiken är satt, köper ett par timmar och får tio.
 - **Högst tre ämnen per elev och läsår**, två timmar varje skolvecka
   sammanlagt, inte per ämne (Leo: inte sex timmar i veckan), och 10 timmar
-  per ämne som inte gick upp.
+  sammanlagt, inte per ämne som inte gick upp (Leo). Tre anmälda ämnen och
+  all tid i ett av dem går fortfarande att göra; taket på 10 timmar gör
+  det billigare, men ingen regel säger att varje ämne ska få tid.
 - **Hårdare än förlagan:** ämnen som anmäls i förväg och inte byts,
   två timmar varje skolvecka till läsårets slut, missade timmar igen inom
   14 dagar, inga uteblivna pass, 90 procent av uppgifterna i tid, allt

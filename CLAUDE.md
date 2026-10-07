@@ -42,7 +42,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   räkna (hållen tid, uteblivna pass, uppgifterna i tid, betalningarna), aldrig genom att vi
   bedömer engagemang. Den gäller årskursens sista betyg (varje årskurs), högst tre ämnen och två
   timmar i veckan sammanlagt, och bara om den är anmäld och passen börjat före vårterminen. Anmälan bär bara elev och ämnen; betyg ser vi först
-  vid anspråket och raderar dem för hand när det är avgjort. Ersättningen är timmar, aldrig pengar. Den står bara i
+  vid anspråket och raderar dem för hand när det är avgjort. Ersättningen är 10 timmar sammanlagt,
+  aldrig pengar. Den står bara i
   villkoren: sidorna säljer den inte och lovar inga betygshöjningar.
 - **Chatten** läser admin med `chatt_las()` (loggat, aldrig cachat), aldrig `NXKontakt.tråd()`;
   att vi kan läsa står i policyn och chatten och tas inte bort.
