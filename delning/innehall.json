@@ -169,6 +169,12 @@
       "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
       "foto": "02-personlig-anpassning"
     },
+    "laxhjalp-lagstadiet.html": {
+      "bild": "delning/laxhjalp-lagstadiet.jpg",
+      "rubrik": "Läxhjälp för lågstadiet.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "06-forklaringen"
+    },
     "laxhjalp-matematik.html": {
       "bild": "delning/laxhjalp-matematik.jpg",
       "rubrik": "Läxhjälp i matte.",
@@ -180,6 +186,12 @@
       "rubrik": "Läxhjälp för mellanstadiet.",
       "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
       "foto": "10-forsta-motet"
+    },
+    "laxhjalp-moderna-sprak.html": {
+      "bild": "delning/laxhjalp-moderna-sprak.jpg",
+      "rubrik": "Läxhjälp i spanska, tyska och franska.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "04-sjalvfortroende"
     },
     "laxhjalp-nacka.html": {
       "bild": "delning/laxhjalp-nacka.jpg",
@@ -198,6 +210,18 @@
       "rubrik": "Läxhjälp online.",
       "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
       "foto": "03-digital-laxhjalp"
+    },
+    "laxhjalp-programmering.html": {
+      "bild": "delning/laxhjalp-programmering.jpg",
+      "rubrik": "Läxhjälp i programmering.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "11-studiehjalparen"
+    },
+    "laxhjalp-so.html": {
+      "bild": "delning/laxhjalp-so.jpg",
+      "rubrik": "Läxhjälp i SO.",
+      "rad": "Läxhjälp i Stockholm · 379 kr i timmen",
+      "foto": "05-av-unga-for-unga"
     },
     "laxhjalp-sodermalm.html": {
       "bild": "delning/laxhjalp-sodermalm.jpg",

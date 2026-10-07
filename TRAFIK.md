@@ -78,6 +78,10 @@ första månaden.
    https://nextrum.se/en/tutoring-stockholm
    https://nextrum.se/infor-terminsbetyget
    https://nextrum.se/laxhjalp-efter-sommarlovet
+   https://nextrum.se/laxhjalp-lagstadiet
+   https://nextrum.se/laxhjalp-so
+   https://nextrum.se/laxhjalp-moderna-sprak
+   https://nextrum.se/laxhjalp-programmering
    ```
    Säsongsguiderna (efter sommarlovet, inför terminsbetyget och
    proven) har samma adress varje år: be om indexering igen när
@@ -318,8 +322,9 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
 
 ## Det som redan är gjort i koden
 
-- Fyra ämnessidor (matte, svenska, engelska, NO), tre stadiesidor och
-  tio guider i tre grupper, byggda av `verktyg/bygg-omradessidor.py`.
+- Sju ämnessidor (matte, svenska, engelska, NO, SO, moderna språk och
+  programmering), fyra stadiesidor (från lågstadiet) och tio guider i
+  tre grupper, byggda av `verktyg/bygg-omradessidor.py`.
   Guiderna länkar det de påstår till myndigheternas och provgruppernas
   egna sidor
 - `/en/tutoring-stockholm` för familjer som inte läser svenska, länkad
@@ -329,7 +334,7 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
 - `/laxhjalp-online`: hur ett onlinepass går till, när hemma är bättre,
   och samma pris. Länkad från footern, navet och ämnessidorna
 - FAQ-frågan om privatlärare, på båda språken
-- Footern länkar till alla ämnessidor och onlinesidan från varje sida,
+- Footern länkar till de fyra första ämnessidorna och onlinesidan från varje sida,
   och ämnessidorna länkar till guiderna
 - `sitemap.xml` byggs ur sidorna, med `lastmod` som bara flyttas när
   texten ändras (`verktyg/bygg-sitemap.py`, kontrolleras i CI)
