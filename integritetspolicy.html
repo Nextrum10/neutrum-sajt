@@ -189,11 +189,11 @@
         vi, inte studiehjälparen. Försök att logga in med adressen räknas i ett dygn, för att
         skydda barnets inloggning, utan att adressen eller IP-numret sparas i klartext</li>
     </ul>
-    <p class="jur-vikt">Era egna anteckningar om barnet är privata även för oss. De ligger i en
-      egen tabell där varken studiehjälpare eller administratör har läsrätt — det är en teknisk
-      spärr i databasen, inte ett löfte om att låta bli att titta. Vi flyttade dem dit just
-      därför: så länge de låg i samma rad som resten av elevuppgifterna hade en studiehjälpare
-      kunnat läsa dem via API:t, trots att ingen vy visade dem.</p>
+    <p class="jur-vikt">Era egna anteckningar om barnet är privata även för oss. De sparas för
+      sig, och databasen låter varken studiehjälpare eller administratörer läsa dem. Det är en
+      teknisk spärr, inte ett löfte om att låta bli att titta. Vi skilde dem från resten av
+      elevuppgifterna just därför: när de låg ihop med dem hade en studiehjälpare med lite
+      teknisk kunskap kunnat läsa dem, trots att ingen sida visade dem.</p>
 
     <h3>Om dig som söker jobb som studiehjälpare</h3>
     <ul>
@@ -327,8 +327,8 @@
         erbjudanden, förälderns uppgifter eller något om andra familjer. Barnet kan göra sina
         nivåer i NexLäx, bocka av sina uppgifter och skriva till sin studiehjälpare, men inte boka,
         avboka eller ändra något annat.
-        Spärren sitter i databasen: barnets inloggning når inga tabeller, bara det som är barnets
-        eget.</li>
+        Spärren sitter i databasen, inte i sidan: barnets inloggning kommer bara åt det som är
+        barnets eget.</li>
       <li><b>Vi</b> kommer åt det som behövs för att driva tjänsten och lösa problem — med
         undantag för era privata anteckningar, som beskrivs ovan. Var och en hos oss ser bara det
         den egna behörigheten täcker, och ingen av oss kan se eller byta ett barns lösenord.</li>
@@ -382,10 +382,10 @@
       <li><b>Fortnox</b> (Sverige): vår bokföring, och fakturorna när ni valt att betala mot
         faktura. Fortnox får ert namn och er e-postadress, vilka pass fakturan gäller och
         beloppet, och skickar fakturan till er.</li>
-      <li><b>Google</b>: onlinepassen hålls i Google Meet. Varje bekräftat onlinepass får ett eget
-        rum, och länken står på passets sida. Under passet går bild och ljud genom Google, och
-        Google ser det namn var och en anger när hen går in. Vi spelar inte in passen. Hur Google
-        hanterar uppgifterna står i
+      <li><b>Google</b>, men inte än: i dag kommer länken till ett onlinepass i meddelanden. När
+        vi har kopplat Google Meet får varje bekräftat onlinepass ett eget rum där, och länken står
+        på passets sida. Under passet går då bild och ljud genom Google, och Google ser det namn var
+        och en anger när hen går in. Vi spelar inte in passen. Hur Google hanterar uppgifterna står i
         <a href="https://policies.google.com/privacy?hl=sv" target="_blank" rel="noopener noreferrer">Googles integritetspolicy</a>.</li>
     </ul>
     <p>Utöver dem hämtas ingenting från någon annan. Typsnitten och programbiblioteket som
@@ -664,8 +664,8 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=5d820aa8"></script>
-<script src="nextrum-maskot.js?v=07a42dba" defer></script>
+<script src="nextrum-maskot-svar.js?v=c20069a1"></script>
+<script src="nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {
   'use strict';

@@ -322,8 +322,7 @@ OMRADEN = [
              'skolan, alltså eftermiddagar och kvällar.'),
             ('Hur vet vi vad som hände på passet?',
              'Studiehjälparen skriver en rapport efteråt: vad ni gick igenom, hur det gick och '
-             'vad som är nästa steg. Ett pass räknas som genomfört först när rapporten är '
-             'skriven. Både elev och förälder ser samma rapport i studievyn.'),
+             'vad som är nästa steg. Både elev och förälder ser samma rapport i studievyn.'),
             ('Kan vi ses på LUMA-biblioteket?',
              'Ja. Skriv platsen när ni föreslår tiden. Biblioteket ligger mitt i Sjöstaden, '
              'nära tvärbanans hållplats Luma.'),
@@ -793,8 +792,7 @@ ONLINE = {
          'är svårt att beskriva i ord går att hålla upp framför kameran.'),
         ('Rapporten',
          'Efter passet skriver studiehjälparen en rapport om vad ni gick igenom och hur det '
-         'gick. Den hamnar i studievyn precis som efter ett pass hemma, och passet räknas som '
-         'genomfört först när den finns.'),
+         'gick. Den hamnar i studievyn precis som efter ett pass hemma.'),
     ],
     'vinkel_etikett': 'Online eller hemma',
     'vinkel_rubrik': 'Skärmen eller<br><em>köksbordet?</em>',
@@ -1734,7 +1732,7 @@ def prissektion():
     <div class="nx-text rv">
       <p>Samma timpris oavsett ämne och oavsett var i Stockholm passet hålls. Sitter syskon med i samma pass kostar det {EXTRA_BARN} extra i timmen totalt — lika mycket för tre barn som för två. Två eller tre barn en timme blir alltså {FLERA_BARN}.</p>
       <p>Ingen bindningstid och ingen månadsavgift. Studieplanen, matchningen och rapporten efter varje pass ingår i timpriset — det är inga tillval. All betalning går genom Nextrum, samlat på ett ställe.</p>
-      <p><a href="/priser">Se hela prissidan</a> för vad som ingår och hur betalningen fungerar.</p>
+      <p>För nya familjer är första timmen på köpet: det pass som gör att ni har bokat två timmar får en timme avdragen. <a href="/priser">Se hela prissidan</a> för vad som ingår och hur betalningen fungerar.</p>
     </div>
   </div>
 </section>"""
@@ -1751,7 +1749,7 @@ def prissektion_kort():
       <h2 class="nx-d2" style="margin-top:18px">{PRIS}<br>i timmen.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift. <a href="/priser">Se hela prissidan</a>.</p>
+      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift, och för nya familjer är första timmen på köpet när ni bokat två timmar. <a href="/priser">Se hela prissidan</a>.</p>
     </div>
   </div>
 </section>"""

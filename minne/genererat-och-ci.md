@@ -138,6 +138,18 @@ alla publika sidor och på båda språken. Den ersatte en länk till navet
 som stod två gånger i den svenska footern, vilket också var skälet till
 nästan alla TEXTNODER-avvikelser i språkbaslinjen.
 
+**Orden på de öppna sidorna** (2026-10-07, resten av genomgången av
+nextrum.se). Knappen till intresseanmälan heter Skicka intresseanmälan
+överallt utom i heron, där den står bredvid Bli studiehjälpare och
+därför heter Intresseanmälan för läxhjälp (Get started och Get tutoring
+på engelska); i menyn och sidfoten heter den bara Intresseanmälan. Vårt
+eget språk står inte där en familj eller en sökande läser: underlag,
+tabell, API, databasen. Regeln att ett pass är genomfört först när
+rapporten finns är vår; den står i villkoren och där rapporten förklaras
+(Så fungerar Nextrum, För elever och föräldrar), inte i generatorns svar.
+Starterbjudandet står på prissidan, i FAQ:n och i generatorns prisdelar,
+alltid med villkoret bokade timmar (`minne/betalning.md`).
+
 ---
 
 ## 9. CI — `.github/workflows/kontroll.yml`

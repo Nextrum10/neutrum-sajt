@@ -37,14 +37,14 @@
     knapp: 'Help', rubrik: 'What do you need help with?',
     ingress: 'Ask a question, or pick one below. I answer with what is written on this site.',
     falt: 'Write your question…', skicka: 'Ask', stang: 'Close',
-    inget: 'I could not find an answer to that here. The quickest way is to ask us directly — we reply to the email address you give.',
+    inget: 'I could not find an answer to that here. The quickest way is to ask us directly, and we reply to the email address you give.',
     relaterat: 'Related', las: 'Read more in the FAQ',
     snabb: ['How does the matching work?', 'What does it cost?', 'How do I become a tutor?']
   } : {
     knapp: 'Hjälp', rubrik: 'Vad behöver du hjälp med?',
     ingress: 'Ställ en fråga, eller välj en nedan. Jag svarar med det som står på sidan.',
     falt: 'Skriv din fråga…', skicka: 'Fråga', stang: 'Stäng',
-    inget: 'Jag hittar inget svar på det här. Snabbaste vägen är att fråga oss direkt — vi svarar på mejlen du anger.',
+    inget: 'Jag hittar inget svar på det här. Snabbaste vägen är att fråga oss direkt, så svarar vi till e-postadressen du anger.',
     relaterat: 'Relaterat', las: 'Läs mer i FAQ',
     snabb: ['Hur fungerar matchningen?', 'Vad kostar det?', 'Hur blir jag studiehjälpare?']
   };
