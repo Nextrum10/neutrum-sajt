@@ -5,18 +5,26 @@
    inte (Leo 2026-09-25: "jag vill bevara heron").
 
      ordfyll        rubrikernas ord tonar fram ett i taget
+     nexlax         NexLäx under hero: telefonen visar sig själv, och stigen
+                    bredvid följer med
      hållpunkter    1–4: den man pekar på kommer fram — både hållpunkterna
                     och stegen i ansökan
      mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
-     studiehjälpare korten stiger upp när raden syns
+     garantiflöde   betygsgarantin: linjen fylls och stegen tänds när
+                    man scrollar förbi, på startsidan och prissidan
+     studiehjälpare raden man sveper i: korten kommer in när raden
+                    syns, prickarna och pilarna följer svepet
      band           Trygg hjälp: det rullande bandet
      vägg           Så kan ett pass se ut: fotona stiger fram
+     betalflöde     Så fungerar betalningen på prissidan: stegen och
+                    pilarna tänds i tur
      studievy       illustrationen av föräldravyn, som klickar sig igenom
                     sig själv. Samma illustration står på För elever &
                     föräldrar.
      sidhuvud       lapparna på menysidornas foto fjädrar in
-     stegFoton      Så fungerar Nextrum på menysidan: samma pinnade
-                    scen som startsidans, med fotona i markupen
+     stegFoton      Så fungerar Nextrum, på startsidan och menysidan:
+                    den pinnade scenen på dator och den svepbara
+                    raden på pekskärm (2026-10-07)
 
    MENYSIDORNA LADDAR OCKSÅ FILEN (2026-10-06): Vår idé, Så fungerar
    Nextrum, För elever & föräldrar, Bli studiehjälpare, Priser och
@@ -128,6 +136,178 @@ const NXStart = (function () {
   }
 
   /* ============================================================
+     NEXLÄX UNDER HERO (2026-10-07)
+     Telefonen visar sig själv: vägen, en fråga som rättas, nivån
+     klar, och en nivå från studiehjälparen med dagens uppdrag. Stigen
+     bredvid tänder sin del, och delarna före den har fyllt sin bit av
+     linjen. Högst tre varv varje gång telefonen kommer in i bild; sedan
+     står den på vägen, som i markupen.
+
+     Väntan räknas bara medan telefonen syns och fliken är framme, som
+     i studievyn, och det som rör sig av sig självt (omloppet,
+     svävandet, ringarna) står still när den inte syns (.nlx-paus). Ett
+     tryck på en del visar dess skärm, låter den stå en stund och går
+     sedan vidare därifrån; varven räknas vidare, så ett tryck efter
+     det tredje varvet spelar bara klart det varvet. Under rundturen
+     visar en linje under delens blad hur länge skärmen står kvar. Utan
+     rörelse (tier still) finns ingen rundtur, men trycket fungerar och
+     visar skärmen i sitt slutläge.
+
+     Det är en illustration: inget här rättar, räknar XP eller skriver
+     text. Talen står i markupen, och skriptet sätter bara klasser.
+     ============================================================ */
+  function nexlax() {
+    const rot = $('[data-nexlax]');
+    if (!rot) return;
+    const scen = $('[data-nlx-scen]', rot);
+    const lista = $('[data-nlx-delar]', rot);
+    const vyer = $$('[data-nlx-vy]', rot);
+    const delar = $$('[data-nlx-del]', rot);
+    const lappar = $$('[data-nlx-lapp]', rot);
+    if (!scen || !vyer.length) return;
+
+    const LÄGEN = ['valt', 'ratt', 'fylld'];
+    let nu = 0;
+
+    /* En skärm åt gången. Den som visas nollställs innan den kommer
+       fram, inte när den går: då hinner ingen se den byta tillbaka.
+       `tid` är hur länge skärmen står i rundturen, för linjen under
+       delens blad (--nlx-tid sätts på bladet, där linjen läser den);
+       utan tid ingen linje. */
+    function sätt(i, tid) {
+      const förra = nu;
+      nu = i;
+      vyer.forEach((v, n) => {
+        if (n === i && !v.classList.contains('pa')) v.classList.remove(...LÄGEN);
+        v.classList.toggle('ut', n === förra && n !== i);
+        v.classList.toggle('pa', n === i);
+      });
+      delar.forEach((d, n) => {
+        d.classList.toggle('pa', n === i);
+        d.classList.toggle('forbi', n < i);
+        d.classList.remove('nlx-tur');
+        const knapp = $('.nlx-del-nod', d);
+        if (knapp) { if (n === i) knapp.setAttribute('aria-current', 'true'); else knapp.removeAttribute('aria-current'); }
+      });
+      lappar.forEach((l, n) => l.classList.toggle('syns', n === i));
+      const del = delar[i], blad = del && $('.nlx-del-text', del);
+      if (!tid || !blad) return;
+      blad.style.setProperty('--nlx-tid', tid + 'ms');
+      /* En läsning, så att linjen börjar om också när samma del
+         väljs igen: en gång per skärm, aldrig per bildruta. */
+      void blad.offsetWidth;
+      del.classList.add('nlx-tur');
+    }
+    const läge = (i, k) => vyer[i] && vyer[i].classList.add(k);
+
+    /* Varje skärm: väntan i ms och det som händer på den. Summan är
+       ett varv på ungefär sjutton sekunder. */
+    const SKÄRMAR = [
+      [3600],
+      [1100, () => läge(1, 'valt'), 700, () => läge(1, 'ratt'), 2600],
+      [4400],
+      [900, () => läge(3, 'fylld'), 3800]
+    ];
+    const SLUT = [[], ['valt', 'ratt'], [], ['fylld']];
+    const VARV = 3;
+
+    if (lista) lista.classList.add('nlx-klick');
+
+    if (!rörelse) {
+      sätt(0);
+      delar.forEach((d, n) => d.addEventListener('click', () => {
+        sätt(n);
+        SLUT[n].forEach(k => läge(n, k));
+      }));
+      return;
+    }
+
+    let synlig = false, tur = null, klar = false, varv = 0;
+    /* Står rundturen still (utanför bild, dold flik) går ingen timer:
+       väntan parkerar sig i tur.vidare, och paus() väcker den när
+       telefonen syns igen. Förut tickade den tio gånger i sekunden resten
+       av besöket (granskningen 2026-10-07). */
+    const paus = () => {
+      const stilla = !synlig || document.hidden;
+      rot.classList.toggle('nlx-paus', stilla);
+      if (!stilla && tur && tur.vidare) {
+        const vidare = tur.vidare;
+        tur.vidare = null;
+        tur.t = setTimeout(vidare, 100);
+      }
+    };
+    paus();
+
+    function vänta(ms, tok) {
+      return new Promise(svar => {
+        let kvar = ms;
+        const tick = () => {
+          if (tok.stopp) return svar(false);
+          if (!synlig || document.hidden) { tok.vidare = tick; return; }
+          kvar -= 100;
+          if (kvar <= 0) return svar(true);
+          tok.t = setTimeout(tick, 100);
+        };
+        tick();
+      });
+    }
+    function stoppa() {
+      if (!tur) return;
+      const vidare = tur.vidare;
+      tur.stopp = true;
+      tur.vidare = null;
+      clearTimeout(tur.t);
+      tur = null;
+      if (vidare) vidare();   // en parkerad väntan svarar false och släpps
+    }
+
+    /* Från skärm `från`, med `extra` ms på den första (efter ett tryck).
+       Ett varv räknas när rundturen kommer tillbaka till vägen. */
+    async function kör(från, extra) {
+      stoppa();
+      const tok = tur = { stopp: false };
+      let i = från;
+      while (!tok.stopp) {
+        const steg = SKÄRMAR[i], e = extra;
+        extra = 0;
+        sätt(i, steg.reduce((sum, s) => typeof s === 'number' ? sum + s : sum, e));
+        for (const s of steg) {
+          if (tok.stopp) break;
+          if (typeof s !== 'number') { s(); continue; }
+          if (!(await vänta(s, tok))) break;
+        }
+        if (tok.stopp) break;
+        if (e && !(await vänta(e, tok))) break;
+        i = (i + 1) % SKÄRMAR.length;
+        if (i === 0 && ++varv >= VARV) { sätt(0); klar = true; break; }
+      }
+      if (tur === tok) tur = null;
+    }
+
+    delar.forEach((d, n) => d.addEventListener('click', () => {
+      klar = false;
+      kör(n, 6000);
+    }));
+
+    närSyns(scen, () => scen.classList.add('nlx-in'), '0px 0px -10% 0px');
+    if (lista) närSyns(lista, () => lista.classList.add('nlx-in'), '0px 0px -8% 0px');
+    document.addEventListener('visibilitychange', paus);
+
+    /* Första gången reser sig telefonen i en och en halv sekund, så
+       vägen får stå lika mycket längre. */
+    let först = 1500;
+    if (!('IntersectionObserver' in window)) { synlig = true; paus(); kör(0, först); return; }
+    new IntersectionObserver(poster => {
+      synlig = poster[poster.length - 1].isIntersecting;
+      paus();
+      /* Tre varv per gång den kommer in i bild. Har den gått klart
+         börjar den om först när den varit utanför. */
+      if (!synlig) { if (klar && !tur) { klar = false; varv = 0; } return; }
+      if (!tur && !klar) { kör(nu, först); först = 0; }
+    }, { threshold: 0.35 }).observe(scen);
+  }
+
+  /* ============================================================
      HÅLLPUNKTERNA
      Med mus sköter CSS allt (:has + :hover). På pekskärm finns ingen
      pekare, så där tänds punkten mitt i skärmen när listan står i en
@@ -172,26 +352,113 @@ const NXStart = (function () {
   }
 
   /* ============================================================
-     STUDIEHJÄLPARNA
-     Varje kort stiger upp när det kommer in i bild, med en fördröjning
-     per kolumn (--n) så att en rad kommer från vänster till höger.
+     STUDIEHJÄLPARNA — raden man sveper i (2026-10-07)
+     Korten står i en snäppande rad i alla bredder (Leo: "bredvid
+     varandra på mobil så att man swipar som ett inlägg"). Svepet och
+     snäppet är webbläsarens egna, scroll-snap i nextrum-start.css;
+     här sätts bara klasser.
+
+     INTRÄDET observerar RADEN, inte varje kort. Ett kort utanför
+     raden i sidled är osynligt för en IntersectionObserver och hade
+     tonat upp först när man svept dit. När raden syns får alla nya
+     kort .nx-in, och --n (plats bland de fyra första) gör att de
+     kommer ett i taget.
+
+     PRICKARNA OCH PILARNA. En observatör med raden som rot säger hur
+     mycket av varje kort som syns, och bara när det korsar en gräns:
+     ingen mätning medan man sveper. En prick tänds för varje kort som
+     syns till mer än hälften, så plattan, som visar två kort, tänder
+     två. Pilarna stängs i radens ändar, och hela navraden döljs när
+     alla kort får plats (tre exempelkort på dator). Prickarna är inga
+     knappar (som i ett inlägg), och pilarnas etiketter står i markupen.
+
+     scrollBy på raden, aldrig scrollIntoView: det rullar sidan också
+     (CLAUDE.md, startsidan efter hero, fälla 3).
 
      Korten ritas när Supabase svarat, så en MutationObserver fångar
-     dem. Callbacken körs före nästa bildruta, och startläget står i
-     CSS, så inget kort hinner synas på sin slutplats först.
+     dem. Navigeringen fungerar också med rörelse bortvald; bara
+     inträdet hoppas över.
      ============================================================ */
   function studiehjälpare() {
     const host = $('#showcase');
-    if (!host || !rörelse) return;
-    function nya() {
-      const kol = kolumner(host);
-      $$('.sc-card', host).forEach((k, i) => {
-        if (k.dataset.delad) return;
-        k.dataset.delad = '1';
-        k.style.setProperty('--n', String(i % kol));
-        närSyns(k, () => k.classList.add('nx-in'), '0px 0px -8% 0px');
+    if (!host) return;
+    const nav = $('[data-sc-nav]');
+    const prickar = nav && $('.sc-prickar', nav);
+    const pilar = nav ? $$('[data-sc-steg]', nav) : [];
+    const andel = new Map();
+    let kort = [];
+    let io = null;
+
+    const syns = (k, gräns) => (andel.get(k) || 0) >= gräns;
+
+    function läge() {
+      if (!kort.length) return;
+      const förstHel = syns(kort[0], 0.97);
+      const sistHel = syns(kort[kort.length - 1], 0.97);
+      nav.hidden = kort.length < 2 || (förstHel && sistHel);
+      pilar.forEach(b => {
+        b.disabled = Number(b.dataset.scSteg) < 0 ? förstHel : sistHel;
       });
+      if (prickar) {
+        Array.from(prickar.children).forEach((p, i) =>
+          p.classList.toggle('pa', syns(kort[i], 0.55)));
+      }
     }
+
+    function nya() {
+      const alla = $$('.sc-card', host);
+      const nyKort = alla.filter(k => !k.dataset.delad);
+      kort = alla;
+      if (!alla.length) {
+        /* Hämtar, ett fel eller ingen koppling: inget att svepa i. */
+        if (io) io.disconnect();
+        if (nav) nav.hidden = true;
+        return;
+      }
+      if (!nyKort.length) return;
+      nyKort.forEach(k => {
+        k.dataset.delad = '1';
+        k.style.setProperty('--n', String(Math.min(alla.indexOf(k), 3)));
+      });
+      /* En ny observatör per sats: dess första svar kommer efter nästa
+         bildruta, så startläget hinner ritas innan .nx-in sätts. */
+      if (rörelse) närSyns(host, () => nyKort.forEach(k => k.classList.add('nx-in')), '0px 0px -8% 0px');
+
+      if (!nav || !('IntersectionObserver' in window)) return;
+      if (prickar) prickar.replaceChildren(...alla.map(() => document.createElement('i')));
+      if (io) io.disconnect();
+      andel.clear();
+      io = new IntersectionObserver(poster => {
+        poster.forEach(p => andel.set(p.target, p.intersectionRatio));
+        läge();
+      }, { root: host, threshold: [0, 0.55, 0.97, 1] });
+      alla.forEach(k => io.observe(k));
+    }
+
+    /* Ett tryck flyttar så många kort som syns hela, minst ett: med
+       nio kort och tre i bild bläddrar man en sida i taget. */
+    pilar.forEach(b => b.addEventListener('click', () => {
+      if (kort.length < 2) return;
+      const steg = kort[1].offsetLeft - kort[0].offsetLeft;
+      const hela = Math.max(1, kort.filter(k => syns(k, 0.97)).length);
+      host.scrollBy({
+        left: Number(b.dataset.scSteg) * hela * steg,
+        behavior: M.reducerad ? 'auto' : 'smooth'
+      });
+    }));
+
+    /* Tabbar man till länken i ett kort som bara syns till en kant
+       rullar Chromium inte raden (en del av kortet syns ju), och
+       fokus hamnar utanför bild. Raden flyttas då själv till kortet. */
+    host.addEventListener('focusin', e => {
+      const k = e.target.closest('.sc-card');
+      if (!k || !kort.length || syns(k, 0.97)) return;
+      host.scrollTo({
+        left: k.offsetLeft - kort[0].offsetLeft,
+        behavior: M.reducerad ? 'auto' : 'smooth'
+      });
+    });
+
     new MutationObserver(nya).observe(host, { childList: true });
     nya();
   }
@@ -372,6 +639,59 @@ const NXStart = (function () {
   }
 
   /* ============================================================
+     GARANTIFLÖDET (2026-10-07)
+     Betygsgarantins fyra steg står som ett flöde på papperet (Leo:
+     "se ut som att de följer ett flow när man scrollar"). Ett steg
+     tänds när dess siffra har passerat en linje en bit under mitten
+     av fönstret, och sträckan ovanför det fylls: skriptet sätter .pa
+     (tänt) och .fylld (sträckan nedåt är fylld; på sista steget
+     svansen, när alla är tända), och linjen, siffran och texten är
+     övergångar i nextrum-start.css (avsnitt 15).
+     Scrollar man tillbaka släcks stegen igen.
+
+     Observatören säger till när en siffra korsar linjen, och först då
+     läses de fyra siffrornas läge, en gång. Inget mäts medan man
+     scrollar. Att läsa alla fyra och inte bara den som korsade gör
+     att ett hopp förbi flera steg (länken till #betygsgaranti längre
+     ner, End-tangenten) ger rätt läge direkt.
+
+     .i-gang sätts när observatören är kopplad, och startläget hänger
+     på den: utan skript, utan IntersectionObserver och med rörelse
+     bortvald står flödet tänt. Första läget räknas innan klassen
+     sätts, så att ett steg man redan scrollat förbi (omladdning mitt
+     på sidan) aldrig syns släckt.
+
+     Egna namn med flit, inte .nx-apply-flow: den är kvar i Bli
+     studiehjälpare och sköts av hållpunkter() och mörkaYtor().
+     ============================================================ */
+  function garantiflöde() {
+    if (!rörelse || !('IntersectionObserver' in window)) return;
+    /* Andel av fönstrets höjd, uppifrån. 0,62 lät steg 04, själva
+       löftet, stå släckt medan hela sektionen syntes på 1440×900. */
+    const LINJE = 0.78;
+    $$('[data-gar-flode]').forEach(ol => {
+      const steg = $$(':scope > li', ol);
+      if (!steg.length) return;
+      const nr = steg.map(li => $('.nx-gar-nr', li) || li);
+      const rita = gräns => {
+        let n = 0;
+        while (n < nr.length && nr[n].getBoundingClientRect().top < gräns) n++;
+        steg.forEach((li, i) => {
+          li.classList.toggle('pa', i < n);
+          li.classList.toggle('fylld', i < n - 1 || n === steg.length);
+        });
+      };
+      const io = new IntersectionObserver(poster => {
+        const rot = poster[0] && poster[0].rootBounds;
+        rita(rot ? rot.bottom : window.innerHeight * LINJE);
+      }, { rootMargin: '0px 0px -' + Math.round((1 - LINJE) * 100) + '% 0px' });
+      rita(window.innerHeight * LINJE);
+      nr.forEach(el => io.observe(el));
+      ol.classList.add('i-gang');
+    });
+  }
+
+  /* ============================================================
      BILDVÄGGEN
      Varje foto stiger fram när det kommer en bit in i bild, en gång.
      ============================================================ */
@@ -379,6 +699,36 @@ const NXStart = (function () {
     if (!rörelse) return;
     $$('.nx-vagg-grid figure').forEach(f =>
       närSyns(f, () => f.classList.add('nx-in'), '0px 0px -12% 0px'));
+  }
+
+  /* ============================================================
+     BETALFLÖDET PÅ PRISSIDAN (2026-10-07)
+     Leo: "Så fungerar betalning gör de ej i kolumner utan pilar mellan
+     varje steg modernt och snyggt." Två klasser, och CSS (nextrum-
+     sidor.css) väljer vilken som gäller för bredden:
+       .ar-igang på listan när den syns: på en dator tänds stegen och
+                 pilarna i tur, med en fördröjning per steg.
+       .ar-nadd  på varje steg som passerat strax under mitten av
+                 skärmen: på en telefon, där stegen står under varandra,
+                 tänds numret och skenan ner till nästa steg följer
+                 scrollen, åt båda hållen.
+     Utan rörelse sätts ingenting, och allt står tänt (inget nx-sr).
+     ============================================================ */
+  function betalflöde() {
+    if (!rörelse) return;
+    $$('[data-betalflode]').forEach(ol => {
+      närSyns(ol, () => ol.classList.add('ar-igang'), '0px 0px -18% 0px');
+      const steg = $$(':scope > li', ol);
+      if (!('IntersectionObserver' in window)) {
+        steg.forEach(li => li.classList.add('ar-nadd'));
+        return;
+      }
+      const io = new IntersectionObserver(poster => {
+        poster.forEach(p => p.target.classList.toggle('ar-nadd',
+          p.isIntersecting || p.boundingClientRect.top < 0));
+      }, { rootMargin: '0px 0px -42% 0px' });
+      steg.forEach(li => io.observe(li));
+    });
   }
 
   /* ============================================================
@@ -572,18 +922,29 @@ const NXStart = (function () {
     ];
     let tur = null, turSynlig = false;
 
+    /* Utanför bild och i en dold flik går ingen timer: väntan parkerar
+       sig i tur.vidare och väcks när fönstret syns igen (2026-10-07; förut
+       tickade den tio gånger i sekunden resten av besöket). */
     function vänta(ms, tok) {
       return new Promise(klar => {
         let kvar = ms;
         const tick = () => {
           if (tok.stopp) return klar(false);
-          if (turSynlig && !document.hidden) kvar -= 100;
+          if (!turSynlig || document.hidden) { tok.vidare = tick; return; }
+          kvar -= 100;
           if (kvar <= 0) return klar(true);
           tok.t = setTimeout(tick, 100);
         };
         tick();
       });
     }
+    function väck() {
+      if (!tur || !tur.vidare || !turSynlig || document.hidden) return;
+      const vidare = tur.vidare;
+      tur.vidare = null;
+      tur.t = setTimeout(vidare, 100);
+    }
+    document.addEventListener('visibilitychange', väck);
 
     /* Var ett element står i fönstrets egna koordinater. offsetLeft
        och offsetTop, inte getBoundingClientRect: fönstret lutar i 3D,
@@ -664,6 +1025,7 @@ const NXStart = (function () {
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(e => {
         turSynlig = e[0].isIntersecting;
+        väck();
         if (turSynlig && !tur && rörelse) körTur();
       }, { threshold: 0.4 }).observe(fönster);
     }
@@ -686,57 +1048,180 @@ const NXStart = (function () {
   }
 
   /* ============================================================
-     SÅ FUNGERAR NEXTRUM, PÅ MENYSIDAN
-     Samma pinnade scen som på startsidan: medan man scrollar tänds
-     steget, och dess foto glider fram. Formen är cinemas .nx-hur.
+     STEGSCENEN — Så fungerar Nextrum (2026-10-07)
+     Startsidan och menysidan Så fungerar Nextrum, på båda språken.
+     Formen står i cinema (grunden) och i nextrum-start.css, avsnitt
+     14. Här sätts klasser: .pa på steget, fotot och märket som
+     gäller, .forbi på det som passerats, .tyst på de foton som ett
+     hopp över flera steg passerar, aria-current på stapeln, och
+     .igang på sektionen när allt är kopplat. Först då slår CSS:en om
+     till den pinnade scenen eller den svepbara raden.
 
-     Startsidan bygger sina foton i sitt eget skript, ur bildregistret,
-     och rutan är tom när det här körs. Den lämnas därför ifred här.
-     På menysidan står fotona i markupen, med alt-text på sidans
-     språk: registret har bara svenska, och en bild som byggs här
-     hade fått en svensk beskrivning på den engelska sidan.
+     Leo 2026-10-07: "Från intresseanmälan till första passet ska ha
+     bättre animation mellan bilderna på datorvy och mobil ska även få
+     den animation. Stegen ska visas bredvid bilderna. 01 osv ska vara
+     större. Och svepningen ska fungera på mobilen."
 
-     På pekskärm och smal skärm finns ingen pinning (cinema): alla
-     steg står öppna under fotot, och det man trycker på tänds.
+     FOTONA. På menysidan står de i markupen. På startsidan byggs de
+     här ur bildregistret, ett per steg (data-bild), och alt-texten
+     läses ur stegets data-alt: registret har bara svenska, och en
+     bild som byggs här hade annars fått en svensk beskrivning på den
+     engelska sidan. Förut byggde startsidan fotona i ett eget skript
+     med svensk alt och en egen kopia av scenen (2026-10-07).
+
+     LÄGET LÄSES VID VARJE HÄNDELSE. M.tier byts när fönstret ändrar
+     storlek (räknaTier i nextrum-motion.js), och CSS:en följer med
+     direkt. Ett läge som lästes en gång vid laddningen hade lämnat
+     skriptet i fel läge när en dator dras smalare än 900 px.
+
+       full  den pinnade scenen. NXMotion.scene räknar ut steget ur
+             scrollen; ett tryck på ett steg för scrollen dit.
+       lite  den svepbara raden. En IntersectionObserver med raden som
+             rot säger vilket kort som täcker mer än 60 % av den
+             (intersectionRatio, inte isIntersecting: den är sann också
+             när ett kort är på väg ut). Staplarna och ett tryck på ett
+             kort rullar raden med scrollTo, aldrig scrollIntoView, som
+             också rullar sidan.
+
+     Med reducerad rörelse kopplas inget: scenen står i sin grund med
+     alla steg öppna och det första fotot.
      ============================================================ */
   function stegFoton() {
+    /* Fotot är 16:9 och visas i en ruta som är högre än bred, så det
+       ritas mycket bredare än rutan: på telefonen nästan dubbelt så
+       brett som skärmen, på dator ungefär lika brett som fönstret. */
+    const STORLEK = '(max-width: 900px) 180vw, 100vw';
+    const mjukt = () => (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+
     $$('[data-hur]').forEach(rot => {
-      const fig = $$('.nx-hur-bild .nx-fig', rot);
-      const steg = $$('.nx-hur-steg > li', rot);
-      if (!fig.length || !steg.length) return;
+      const bild = $('.nx-hur-bild', rot), lista = $('.nx-hur-steg', rot);
+      const steg = lista ? $$(':scope > li', lista) : [];
+      if (!bild || !steg.length) return;
 
-      let senaste = -1;
-      const sätt = i => {
-        if (i === senaste) return;
-        senaste = i;
-        steg.forEach((li, n) => li.classList.toggle('pa', n === i));
-        fig.forEach((f, n) => f.classList.toggle('pa', n === Math.min(i, fig.length - 1)));
-      };
-
-      if (!rörelse || M.tier === 'lite') {
-        steg.forEach((li, i) => li.addEventListener('click', () => sätt(i)));
-        return;
+      if (!$('.nx-fig', bild) && typeof NXImg !== 'undefined') {
+        bild.innerHTML = steg.map(li =>
+          (li.dataset.bild && NXImg.platta(li.dataset.bild, { sizes: STORLEK })) || '<figure class="nx-fig"></figure>'
+        ).join('');
+        $$(':scope > .nx-fig', bild).forEach((f, n) => {
+          const img = $('img', f);
+          if (img && steg[n].dataset.alt) img.alt = steg[n].dataset.alt;
+        });
+        if (typeof NX !== 'undefined' && NX.bildIntoning) NX.bildIntoning(bild);
       }
+      const fig = $$(':scope > .nx-fig', bild);
+      if (!fig.length) return;
+
+      /* Märket på fotot: stegets nummer och namn, kopierat ur steget,
+         som redan står på sidans språk. Det syns bara i den pinnade
+         scenen och är aria-hidden: steget läses redan i listan. */
+      fig.forEach((f, n) => {
+        const li = steg[n];
+        if (!li || $('.nx-hur-mark', f)) return;
+        const tal = $('em', li), namn = $('h3', li);
+        if (!tal || !namn) return;
+        const m = document.createElement('span');
+        m.className = 'nx-hur-mark';
+        m.setAttribute('aria-hidden', 'true');
+        const b = document.createElement('b'), s = document.createElement('span');
+        b.textContent = tal.textContent.trim();
+        s.textContent = namn.textContent.trim();
+        m.append(b, s);
+        f.appendChild(m);
+      });
+
+      const prickar = $$('.nx-hur-prickar button', rot);
+      let nu = -1, nuFoto = -1;
+      const sätt = i => {
+        i = Math.max(0, Math.min(steg.length - 1, i));
+        if (i === nu) return;
+        nu = i;
+        const k = Math.min(i, fig.length - 1), förra = nuFoto;
+        nuFoto = k;
+        steg.forEach((li, n) => { li.classList.toggle('pa', n === i); li.classList.toggle('forbi', n < i); });
+        /* Hoppar man över steg (en stapel långt bort, en snabb scroll)
+           byter fotona emellan läge utan att glida: .tyst. Annars far
+           de genom ramen bredvid det nya och det blir ett bläddrande
+           i stället för ett byte. Bara det gamla och det nya rör sig. */
+        fig.forEach((f, n) => {
+          f.classList.toggle('tyst', n !== k && n !== förra);
+          f.classList.toggle('pa', n === k);
+          f.classList.toggle('forbi', n < k);
+        });
+        prickar.forEach((b, n) => {
+          if (n === i) b.setAttribute('aria-current', 'step');
+          else b.removeAttribute('aria-current');
+        });
+      };
+      sätt(Math.max(0, steg.findIndex(li => li.classList.contains('pa'))));
+      if (!rörelse) return;
+
+      /* Före scenen: NXMotion.scene mäter sektionen när den skapas,
+         och höjden (230svh) kommer med klassen. */
+      rot.classList.add('igang');
+
+      const kortLäge = i => steg[i].offsetLeft - steg[0].offsetLeft;
+      const gåTill = i => lista.scrollTo({ left: kortLäge(i), behavior: mjukt() });
+
       M.scene(rot, {
         läge: 'pin',
         run: p => {
+          if (M.tier !== 'full') return;
           /* Lite marginal i början och slutet, så att första och
              sista steget hinner läsas innan det byter. */
-          sätt(Math.min(steg.length - 1,
-            Math.max(0, Math.floor(M.span(p, 0.04, 0.96) * steg.length))));
+          sätt(Math.floor(M.span(p, 0.04, 0.96) * steg.length));
         }
       });
+
+      steg.forEach((li, i) => li.addEventListener('click', () => {
+        if (M.tier === 'full') {
+          /* Till mitten av stegets bit av sträckan, samma räkning som
+             run() ovan baklänges. */
+          const r = rot.getBoundingClientRect();
+          const sträcka = r.height - document.documentElement.clientHeight;
+          if (sträcka > 0) {
+            window.scrollTo({ top: r.top + window.scrollY + (0.04 + (i + 0.5) / steg.length * 0.92) * sträcka, behavior: mjukt() });
+          }
+        } else if (M.tier === 'lite' && i !== nu) {
+          gåTill(i);
+        }
+      }));
+      prickar.forEach((b, i) => b.addEventListener('click', () => gåTill(i)));
+
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(poster => {
+          if (M.tier !== 'lite') return;
+          poster.forEach(p => { if (p.intersectionRatio >= 0.6) sätt(steg.indexOf(p.target)); });
+        }, { root: lista, threshold: [0.6] });
+        steg.forEach(li => io.observe(li));
+      }
+
+      /* Byts läget till raden (en dator som dras smal) står den på
+         första kortet medan steget kan vara ett annat. Rulla dit, så
+         att kortet och fotot är samma. NXMotion byter läget efter
+         120 ms, så det här väntar längre. */
+      let förra = M.tier, väntar = 0;
+      window.addEventListener('resize', () => {
+        clearTimeout(väntar);
+        väntar = setTimeout(() => {
+          if (M.tier === förra) return;
+          förra = M.tier;
+          if (M.tier === 'lite' && nu > 0) lista.scrollTo({ left: kortLäge(nu), behavior: 'auto' });
+        }, 260);
+      }, { passive: true });
     });
   }
 
   function allt() {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
+    prova('nexlax', nexlax);
     prova('hållpunkter', hållpunkter);
     prova('mörkaYtor', mörkaYtor);
+    prova('garantiflöde', garantiflöde);
     prova('studiehjälpare', studiehjälpare);
     prova('band', band);
     prova('vägg', vägg);
+    prova('betalflöde', betalflöde);
     prova('studievy', studievy);
     prova('sidhuvud', sidhuvud);
     prova('stegFoton', stegFoton);

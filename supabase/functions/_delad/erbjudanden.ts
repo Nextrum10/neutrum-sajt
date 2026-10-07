@@ -22,19 +22,32 @@ export type ErbjudandePris = {
   giltig_manader: number;
   timpris_ore: number;
   pris_ore: number;
+  /** Planerna 2026-10-07: timmar som inte kostar något (Standard, 8 för 7). */
+  timmar_pa_kopet?: number;
 };
+
+const timmarText = (n: number) => (n === 1 ? '1 timme' : `${n} timmar`);
 
 /**
  * Raden i kassan och på kvittot. Säger vad familjen köper och hur länge
  * det gäller — det är de två sakerna som står i villkoren, och de ska
  * stå likadant på kvittot.
+ *
+ * Planerna (2026-10-07): Standard har ingen rabatt utan en timme på
+ * köpet, och kvittot ska säga det i stället för "0 % rabatt". Timmen
+ * står som "för priset av 7", samma ord som på sidan, så att den inte
+ * blandas ihop med första timmen som bjuds på ett pass (startrabatten).
+ * Ett klippkort får exakt samma rad som förut.
  */
 export function kassarad(e: ErbjudandePris): { name: string; description: string } {
   const man = e.giltig_manader === 1 ? '1 månad' : `${e.giltig_manader} månader`;
-  return {
-    name: e.namn,
-    description: `${e.timmar} timmar läxhjälp, ${e.rabatt_procent} % rabatt. Gäller i ${man} från köpet.`,
-  };
+  const timmar = Number(e.timmar);
+  const pa = Math.max(0, Math.min(Number(e.timmar_pa_kopet) || 0, timmar - 1));
+  const rabatt = Number(e.rabatt_procent) || 0;
+  let vad = `${timmarText(timmar)} läxhjälp`;
+  if (pa > 0) vad += ` för priset av ${timmar - pa} (${timmarText(pa)} på köpet)`;
+  if (rabatt > 0) vad += `, ${rabatt} % rabatt`;
+  return { name: e.namn, description: `${vad}. Gäller i ${man} från köpet.` };
 }
 
 /**
@@ -53,4 +66,22 @@ export function kanAteranvandas(
   if (!kop || kop.begart_ore !== prisOre) return false;
   const alder = nu.getTime() - new Date(kop.created_at).getTime();
   return alder >= 0 && alder < ATERANVAND_TIMMAR * 3600_000;
+}
+
+/**
+ * Har ett väntande köp samma innehåll som katalogens rad nu? Priset
+ * räcker inte sedan planerna fick timmar på köpet (2026-10-07): 8 för 7
+ * och 9 för 7 kostar lika mycket. En kolumn som saknas (före migrationen)
+ * räknas som 0, på båda sidor.
+ */
+export function sammaInnehall(
+  kop: { timmar?: unknown; timmar_pa_kopet?: unknown; rabatt_procent?: unknown; giltig_manader?: unknown } | null | undefined,
+  e: Pick<ErbjudandePris, 'timmar' | 'rabatt_procent' | 'giltig_manader'> & { timmar_pa_kopet?: number | null },
+): boolean {
+  if (!kop) return false;
+  const tal = (v: unknown) => Number(v) || 0;
+  return tal(kop.timmar) === tal(e.timmar)
+    && tal(kop.timmar_pa_kopet) === tal(e.timmar_pa_kopet)
+    && tal(kop.rabatt_procent) === tal(e.rabatt_procent)
+    && tal(kop.giltig_manader) === tal(e.giltig_manader);
 }

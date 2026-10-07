@@ -51,8 +51,8 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=ed943542">
-<link rel="stylesheet" href="../nextrum-start.css?v=ebc48941">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=f251a550">
+<link rel="stylesheet" href="../nextrum-start.css?v=fbf644f6">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -184,12 +184,12 @@
 </header>
 
 <div class="mobile-menu" id="mobile-menu">
-  <a class="m-link" href="/en/var-ide">Our idea <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="/en/sa-fungerar-nextrum">How Nextrum works <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="/en/for-elever-och-foraldrar">For students &amp; parents <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="/en/bli-studiehjalpare">Become a tutor <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="/en/priser">Pricing <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
-  <a class="m-link" href="/en/faq">FAQ / Contact <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 12 12 4M6 4h6v6"/></svg></a>
+  <a class="m-link" href="/en/var-ide">Our idea</a>
+  <a class="m-link" href="/en/sa-fungerar-nextrum">How Nextrum works</a>
+  <a class="m-link" href="/en/for-elever-och-foraldrar">For students &amp; parents</a>
+  <a class="m-link" href="/en/bli-studiehjalpare">Become a tutor</a>
+  <a class="m-link" href="/en/priser">Pricing</a>
+  <a class="m-link" href="/en/faq">FAQ / Contact</a>
   <div class="m-actions">
     <a class="btn btn-primary btn-block btn-lg" href="/en/intresseanmalan">Get started</a>
     <a class="btn btn-ghost btn-block btn-lg" href="/foralder">Log in</a>
@@ -256,6 +256,219 @@
 </section>
 
 <!-- ==========================================================
+     1b — NEXLÄX (2026-10-07)
+     Leo: "Under heron ska vi nu sälja in Nexläx gör en cool genomgång
+     av nexläx som är lika stor som hero bilden." En telefon som visar
+     sig själv i fyra skärmar, och en stig med fyra delar bredvid som
+     följer med. Ett tryck på en del visar dess skärm.
+
+     Det är en ILLUSTRATION och inget att svara i: Prova NexLäx (tre
+     frågor utan konto) togs bort 2026-10-07 och ska inte tillbaka.
+     Scenen är role="img" med en beskrivning, och inget i den tar
+     fokus. Frågan är påhittad och finns inte i banken (dess frågor går
+     ut utan facit och rättas i databasen), och talen följer reglerna i
+     intern.nexlax_*: ett val ger 10 XP och en nivå som klaras första
+     gången 50, så fem rätt direkt och nivån blir 100. Ranken Utforskare
+     gäller från 400 XP, märket En vecka i rad vid sju dagar, och de tre
+     uppdragen är ett ur var grupp i katalogen. Inget lås: allt är öppet
+     sedan 2026-10-06. Inga antal frågor eller nivåer, inget om lärare,
+     ingen programmering och inte juridiken eller företagsekonomin.
+
+     Beteendet står i nextrum-start.js (nexlax), formen i
+     nextrum-start.css avsnitt 13. Markupen är byggd ur samma mall på
+     båda språken: samma taggar, samma attribut och lika många
+     textnoder (jamfor-sprak.py ser bara den första skillnaden).
+     ========================================================== -->
+<section class="nx-nexlax" id="nexlax" aria-labelledby="nexlax-t" data-nexlax>
+  <span class="nlx-dekor" aria-hidden="true"></span>
+  <div class="nx-wrap-bred nlx-grid">
+
+    <div class="nlx-spalt nlx-spalt-text">
+
+      <div class="nlx-huvud">
+        <span class="nx-et acc" data-stig>NexLäx</span>
+        <h2 class="nlx-rubrik" id="nexlax-t" data-avslöj>Practice that<br>feels like a <em>game.</em></h2>
+        <p class="nx-lede nlx-lede" data-stig data-fördröj="1">NexLäx is Nextrum’s own digital practice between sessions: short levels in school subjects, where every answer is marked straight away. Students collect XP and badges, the tutor sees what has stuck, and you see the same in your view.</p>
+      </div>
+
+      <ol class="nlx-delar" data-nlx-delar>
+        <li class="nlx-del pa" data-nlx-del="0" style="--i:0;--f:var(--amne-ma)">
+          <button type="button" class="nlx-del-nod" aria-labelledby="nlx-del-0" aria-current="true"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></button>
+          <div class="nlx-del-text">
+            <h3 id="nlx-del-0">A path through the subject</h3>
+            <p>Topics in order, level by level, with a suggested next step. Everything is open, so students can practise exactly what they need.</p>
+          </div>
+        </li>
+        <li class="nlx-del" data-nlx-del="1" style="--i:1;--f:var(--mossa)">
+          <button type="button" class="nlx-del-nod" aria-labelledby="nlx-del-1"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+          <div class="nlx-del-text">
+            <h3 id="nlx-del-1">Marked on the spot</h3>
+            <p>Choose, type, match or put in order. A wrong answer shows the right one and why, and the question comes back.</p>
+          </div>
+        </li>
+        <li class="nlx-del" data-nlx-del="2" style="--i:2;--f:var(--ockra)">
+          <button type="button" class="nlx-del-nod" aria-labelledby="nlx-del-2"><svg aria-hidden="true" class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg></button>
+          <div class="nlx-del-text">
+            <h3 id="nlx-del-2">Stars, XP and badges</h3>
+            <p>Days in a row, today’s challenges and badges to collect. What shows is what the student has actually done.</p>
+          </div>
+        </li>
+        <li class="nlx-del" data-nlx-del="3" style="--i:3;--f:var(--amne-en)">
+          <button type="button" class="nlx-del-nod" aria-labelledby="nlx-del-3"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg></button>
+          <div class="nlx-del-text">
+            <h3 id="nlx-del-3">Tied to the sessions</h3>
+            <p>The tutor sets levels that go with the session and sees how they went before the next one.</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="nlx-handling nx-cta-rad" data-stig data-fördröj="2">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
+            Get tutoring
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="nx-lank" href="#studievy-t">See the student view
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="nlx-spalt nlx-spalt-bild">
+
+      <div class="nlx-scen" data-nlx-scen role="img" aria-label="Illustration of NexLäx on a phone: the path through maths, a question marked straight away, a completed level with stars and XP, and a level from the tutor with today’s challenges. The content is an example.">
+        <span class="nlx-sken"></span>
+        <div class="nlx-omlopp">
+          <span class="nlx-ring"></span>
+          <div class="nlx-varv">
+            <span class="nlx-bricka" style="--v:0deg;--f:var(--amne-ma)"><i><svg viewBox="0 0 24 24"><path d="M4.5 7h6M7.5 4v6M13.5 7h6M5 15l5 5M10 15l-5 5M13.5 15.5h6M13.5 19.5h6"/></svg></i></span>
+            <span class="nlx-bricka" style="--v:45deg;--f:var(--amne-sv)"><i><svg viewBox="0 0 24 24"><path d="M5 20 11.2 6.5h1.6L19 20M7.6 14.6h8.8"/><circle cx="12" cy="3.4" r="1.6"/></svg></i></span>
+            <span class="nlx-bricka" style="--v:90deg;--f:var(--amne-ms)"><i>ES</i></span>
+            <span class="nlx-bricka" style="--v:135deg;--f:var(--amne-en)"><i><svg viewBox="0 0 24 24"><path d="M4.5 5.5h15v10h-8l-4.5 3.8v-3.8H4.5z"/><path d="M9 9.5h6M9 12.3h4"/></svg></i></span>
+            <span class="nlx-bricka" style="--v:180deg;--f:var(--amne-no)"><i><svg viewBox="0 0 24 24"><path d="M9.5 3.5h5M10.3 3.5v5.4L5 18.4A1.6 1.6 0 0 0 6.4 20.8h11.2A1.6 1.6 0 0 0 19 18.4l-5.3-9.5V3.5"/><path d="M7.4 14.5h9.2"/></svg></i></span>
+            <span class="nlx-bricka" style="--v:225deg;--f:var(--amne-ms)"><i>DE</i></span>
+            <span class="nlx-bricka" style="--v:270deg;--f:var(--amne-so)"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.2 3.6 8.5S14.4 18.1 12 20.5M12 3.5C9.6 5.9 8.4 8.7 8.4 12s1.2 6.1 3.6 8.5"/></svg></i></span>
+            <span class="nlx-bricka" style="--v:315deg;--f:var(--amne-ms)"><i>FR</i></span>
+          </div>
+        </div>
+        <div class="nlx-lapp nlx-lapp-0" data-nlx-lapp="0"><span class="nlx-lapp-ik" style="--f:var(--amne-ma)"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span><span><b>Everything is open</b><small>The path suggests the next step</small></span></div>
+        <div class="nlx-lapp nlx-lapp-1" data-nlx-lapp="1"><span class="nlx-lapp-ik" style="--f:var(--ockra)"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4h6.1l-1.1 8.1 8.4-10.9h-6.1z"/></svg></span><span><b>Three in a row!</b><small>Every answer is marked at once</small></span></div>
+        <div class="nlx-lapp nlx-lapp-2" data-nlx-lapp="2"><span class="nlx-lapp-ik" style="--f:var(--acc)"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 21.2c-3.9 0-6.6-2.6-6.6-6.2 0-3.2 2.1-5.3 3.7-7.1.4 1.9 1.4 3.1 2.6 3.7-.3-3.1 1.1-6 3.7-8.6.3 3.1 2.4 5 3.8 7.1a8 8 0 0 1 1.4 4.7c0 3.6-3 6.4-8.6 6.4z"/></svg></span><span><b>New badge</b><small>A week in a row</small></span></div>
+        <div class="nlx-lapp nlx-lapp-3" data-nlx-lapp="3"><span class="nlx-lapp-ik" style="--f:var(--amne-en)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg></span><span><b>Elsa sees how it went</b><small>Before the next session</small></span></div>
+        <div class="nlx-lyft">
+          <div class="nlx-telefon">
+            <span class="nlx-o"></span>
+            <div class="nlx-skarm">
+              <div class="nlx-status"><b>16:41</b><span><svg class="nlx-fyll" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.6" y="4.8" width="3" height="6.2" rx="1"/><rect x="9.2" y="2.4" width="3" height="8.6" rx="1"/><rect x="13.8" y="0" width="3" height="11" rx="1"/></svg><svg viewBox="0 0 25 12"><rect x=".75" y=".75" width="20.5" height="10.5" rx="3" stroke-width="1.3" opacity=".45"/><rect x="2.6" y="2.6" width="15" height="6.8" rx="1.6" fill="currentColor" stroke="none"/><path d="M23.4 4.3v3.4" stroke-width="1.6" opacity=".45"/></svg></span></div>
+              <div class="nlx-vyer">
+
+                <div class="nlx-vy nlx-vag pa" data-nlx-vy="0">
+                  <div class="nlx-flikar"><span class="pa">Your path</span><span>Your progress</span></div>
+                  <div class="nlx-topp">
+                    <div class="nlx-piller"><span class="nlx-pill nlx-pill-laga"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 21.2c-3.9 0-6.6-2.6-6.6-6.2 0-3.2 2.1-5.3 3.7-7.1.4 1.9 1.4 3.1 2.6 3.7-.3-3.1 1.1-6 3.7-8.6.3 3.1 2.4 5 3.8 7.1a8 8 0 0 1 1.4 4.7c0 3.6-3 6.4-8.6 6.4z"/></svg><b>6</b>days</span><span class="nlx-pill nlx-pill-xp"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4h6.1l-1.1 8.1 8.4-10.9h-6.1z"/></svg><b>520</b>XP</span><span class="nlx-pill nlx-pill-rang"><svg viewBox="0 0 24 24"><circle cx="12" cy="14.5" r="6"/><path d="M8.6 9.6 6 3.5h4l2 4.2 2-4.2h4l-2.6 6.1"/><path d="m12 11.8.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg><b>Explorer</b></span></div>
+                    <div class="nlx-bana"><b>Maths · Year 8</b><strong>64<i>%</i></strong></div>
+                    <span class="nlx-mat"><i></i></span>
+                  </div>
+                  <div class="nlx-omr"><span>Topic 2</span><b>Equations</b><em>In progress</em></div>
+                  <div class="nlx-stig">
+                    <div class="nlx-nod klar" style="--x:0"><span class="nlx-nod-knapp"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="nlx-nod-stj"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg></span><span class="nlx-nod-namn">One-step equations</span></div>
+                    <div class="nlx-nod aktuell" style="--x:1"><span class="nlx-nod-knapp"><span class="nlx-bubbla">Start</span><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M8.5 5.5v13l10-6.5z"/></svg></span><span class="nlx-nod-namn">Equations with one unknown</span></div>
+                    <div class="nlx-nod oppen" style="--x:0"><span class="nlx-nod-knapp">3</span><span class="nlx-nod-namn">Equations with brackets</span></div>
+                    <div class="nlx-nod mastare" style="--x:-1"><span class="nlx-nod-knapp"><svg viewBox="0 0 24 24"><path d="M3.8 8.2l4.4 3.6L12 5.5l3.8 6.3 4.4-3.6-1.7 9.8H5.5z"/><path d="M5.5 20.3h13"/></svg></span><span class="nlx-nod-namn">Master test</span></div>
+                  </div>
+                </div>
+
+                <div class="nlx-vy nlx-fraga" data-nlx-vy="1">
+                  <div class="nlx-spel-topp"><span class="nlx-kryss"><svg viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></span><span class="nlx-spel-mat"><i></i></span><span class="nlx-xp"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4h6.1l-1.1 8.1 8.4-10.9h-6.1z"/></svg><b><span class="fore">20</span><span class="efter">30</span></b></span></div>
+                  <span class="nlx-typ">Choose the right answer</span>
+                  <p class="nlx-q"><b>x + 9 = 23</b>What is x?</p>
+                  <div class="nlx-alts">
+                    <span class="nlx-alt"><i>1</i>32</span>
+                    <span class="nlx-alt nlx-ratt"><i>2</i>14</span>
+                    <span class="nlx-alt"><i>3</i>13</span>
+                    <span class="nlx-alt"><i>4</i>9</span>
+                  </div>
+                  <div class="nlx-spel-fot">
+                    <div class="nlx-besked"><span class="nlx-besked-ik"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="nlx-gnistor"><i></i><i></i><i></i><i></i><i></i><i></i></span></span><b>Correct!</b><span class="nlx-besked-xp">+10 XP</span></div>
+                    <span class="nlx-knapp"><span class="fore">Check</span><span class="efter">Continue</span></span>
+                  </div>
+                </div>
+
+                <div class="nlx-vy nlx-klar" data-nlx-vy="2">
+                  <span class="nlx-konfetti">
+                    <i class="t0" style="--x:6%;--d:.05s;--dx:-1.2em;--fall:38em;--r:260deg"></i>
+                    <i class="t3" style="--x:14%;--d:.25s;--dx:1em;--fall:34em;--r:-200deg"></i>
+                    <i class="t1" style="--x:22%;--d:.12s;--dx:-.6em;--fall:40em;--r:320deg"></i>
+                    <i class="t5" style="--x:30%;--d:.4s;--dx:1.4em;--fall:33em;--r:180deg"></i>
+                    <i class="t2" style="--x:38%;--d:.08s;--dx:-1.4em;--fall:37em;--r:-280deg"></i>
+                    <i class="t4" style="--x:46%;--d:.3s;--dx:.8em;--fall:41em;--r:240deg"></i>
+                    <i class="t0" style="--x:54%;--d:.18s;--dx:-.9em;--fall:35em;--r:-220deg"></i>
+                    <i class="t3" style="--x:62%;--d:.45s;--dx:1.2em;--fall:39em;--r:300deg"></i>
+                    <i class="t1" style="--x:70%;--d:.1s;--dx:-1.1em;--fall:36em;--r:-260deg"></i>
+                    <i class="t5" style="--x:78%;--d:.35s;--dx:.7em;--fall:42em;--r:200deg"></i>
+                    <i class="t2" style="--x:86%;--d:.2s;--dx:-.8em;--fall:34em;--r:-180deg"></i>
+                    <i class="t4" style="--x:93%;--d:.5s;--dx:1em;--fall:38em;--r:280deg"></i>
+                    <i class="t1" style="--x:10%;--d:.6s;--dx:.9em;--fall:30em;--r:-240deg"></i>
+                    <i class="t0" style="--x:34%;--d:.7s;--dx:-1em;--fall:32em;--r:220deg"></i>
+                    <i class="t3" style="--x:58%;--d:.65s;--dx:1.1em;--fall:31em;--r:-300deg"></i>
+                    <i class="t5" style="--x:82%;--d:.75s;--dx:-.7em;--fall:33em;--r:260deg"></i>
+                  </span>
+                  <div class="nlx-stjarnor"><i style="--i:0"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg></i><i style="--i:1"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg></i><i style="--i:2"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 2.6l2.85 5.95 6.45.83-4.72 4.47 1.2 6.4L12 17.1l-5.78 3.15 1.2-6.4L2.7 9.38l6.45-.83z"/></svg></i></div>
+                  <b class="nlx-klar-rubrik">All right first time!</b>
+                  <span class="nlx-klar-niva">Equations with one unknown</span>
+                  <div class="nlx-xp-ruta">
+                    <span><em>Correct answers</em><b>+50</b></span>
+                    <span><em>Level complete</em><b>+50</b></span>
+                    <span class="nlx-summa"><em>Total</em><b><span class="nlx-raknare" style="--till:100"></span>XP</b></span>
+                  </div>
+                  <div class="nlx-serie"><span class="nlx-serie-ik"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M12 21.2c-3.9 0-6.6-2.6-6.6-6.2 0-3.2 2.1-5.3 3.7-7.1.4 1.9 1.4 3.1 2.6 3.7-.3-3.1 1.1-6 3.7-8.6.3 3.1 2.4 5 3.8 7.1a8 8 0 0 1 1.4 4.7c0 3.6-3 6.4-8.6 6.4z"/></svg></span><span><b>7 days in a row</b><small>A session counts too</small></span></div>
+                  <span class="nlx-knapp">Continue</span>
+                </div>
+
+                <div class="nlx-vy nlx-rek" data-nlx-vy="3">
+                  <div class="nlx-flikar"><span class="pa">Your path</span><span>Your progress</span></div>
+                  <div class="nlx-rek-kort">
+                    <span class="nlx-rek-et"><picture><source type="image/webp" srcset="/bilder/studiehjalpare-1-200.webp"><img src="/bilder/studiehjalpare-1-200.jpg" width="28" height="28" alt="" loading="lazy" decoding="async"></picture><span>Recommended by Elsa</span></span>
+                    <b>Equations with brackets</b>
+                    <span class="nlx-rek-fakta">Level in NexLäx · 8 questions · about 4 min</span>
+                    <span class="nlx-knapp"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M8.5 5.5v13l10-6.5z"/></svg>Start</span>
+                  </div>
+                  <div class="nlx-uppdrag">
+                    <div class="nlx-uppdrag-huvud"><span><b>Today’s challenges</b><small>Three a day</small></span><span class="nlx-kista"><span class="fore"><svg viewBox="0 0 24 24"><path d="M3.5 10.5h17v8.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M3.5 10.5V8a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4v2.5"/><path d="M10.5 10.5v3h3v-3"/></svg></span><span class="efter"><svg viewBox="0 0 24 24"><path d="M3.5 12.5h17v6.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M3.5 12.5 5.1 6a3 3 0 0 1 3.3-2.3l9.3 1.6a3 3 0 0 1 2.4 2.7l.4 4.5"/><path d="M10.5 12.5v3h3v-3"/><path d="M12 9.6V7.8M8.6 10.1l-.9-1.3M15.4 10.1l.9-1.3"/></svg></span></span></div>
+                    <div class="nlx-upp" style="--i:0;--f:var(--ockra)"><span class="nlx-upp-ik"><span class="fore"><svg viewBox="0 0 24 24"><path d="M6 21V4M6 4.5h11l-2.2 4 2.2 4H6"/></svg></span><span class="efter"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span><span class="nlx-upp-text"><b>Clear a level</b><span class="nlx-upp-mat"><i style="--fran:0"></i></span></span><em><span class="nlx-tal"><span class="fore">0</span><span class="efter">1</span></span>/1</em></div>
+                    <div class="nlx-upp" style="--i:1;--f:var(--amne-ma)"><span class="nlx-upp-ik"><span class="fore"><svg class="nlx-fyll" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4h6.1l-1.1 8.1 8.4-10.9h-6.1z"/></svg></span><span class="efter"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span><span class="nlx-upp-text"><b>Five right answers in a row</b><span class="nlx-upp-mat"><i style="--fran:.6"></i></span></span><em><span class="nlx-tal"><span class="fore">3</span><span class="efter">5</span></span>/5</em></div>
+                    <div class="nlx-upp" style="--i:2;--f:var(--amne-en)"><span class="nlx-upp-ik"><span class="fore"><svg viewBox="0 0 24 24"><circle cx="12" cy="14.5" r="6"/><path d="M8.6 9.6 6 3.5h4l2 4.2 2-4.2h4l-2.6 6.1"/><path d="m12 11.8.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z"/></svg></span><span class="efter"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></span><span class="nlx-upp-text"><b>Collect 50 XP</b><span class="nlx-upp-mat"><i style="--fran:.6"></i></span></span><em><span class="nlx-tal"><span class="fore">30</span><span class="efter">50</span></span>/50</em></div>
+                  </div>
+                  <div class="nlx-pass"><span>From the session on 1 Oct</span><b>Practise more</b><em>Equations<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></em></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="nx-bildtext nlx-bild">Illustration of NexLäx. The question and the numbers are examples.</p>
+
+      <div class="nlx-fot" data-stig>
+        <ul class="nlx-amnen" aria-label="Subjects in NexLäx">
+          <li style="--f:var(--amne-ma)">Maths</li>
+          <li style="--f:var(--amne-sv)">Swedish</li>
+          <li style="--f:var(--amne-en)">English</li>
+          <li style="--f:var(--amne-no)">Science</li>
+          <li style="--f:var(--amne-so)">Social studies</li>
+          <li style="--f:var(--amne-ms)">Spanish</li>
+          <li style="--f:var(--amne-ms)">German</li>
+          <li style="--f:var(--amne-ms)">French</li>
+        </ul>
+        <p class="nlx-not">From year 1 to upper secondary, plus Spanish, German and French in years 7–9. Before the national tests there is our own practice in the style of the tests. NexLäx is included with tutoring.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
      2 — VÅR IDÉ
      Manifestet, och läxhjälpen sedd som ett första jobb.
      ========================================================== -->
@@ -267,12 +480,14 @@
     <div class="nx-manifest-fot">
       <div class="nx-bubbla" data-stig data-fördröj="1">
         <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
+        <h3>The right match</h3>
         <p>At Nextrum we match every student with one of our tutors, based on what the student needs
           and the subjects where support is wanted. Together they build better understanding, more
           motivation and greater confidence at school.</p>
       </div>
       <div class="nx-bubbla" data-stig data-fördröj="2">
         <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+        <h3>All in one place</h3>
         <p>You get a personal study plan, can book sessions online or in person, and receive a structured
           report after every one. That way you can easily follow the student’s progress between sessions.
           We take care of matching, booking and planning — with no registration fee and no minimum term.</p>
@@ -297,48 +512,53 @@
 
 
 <!-- ==========================================================
-     3 — SÅ FUNGERAR NEXTRUM
-     Pinnad. Stegen till vänster tänds ett i taget medan fotot
-     till höger byts. Stegen är de fem som faktiskt sker.
+     3 — SÅ FUNGERAR NEXTRUM (stegscenen, 2026-10-07)
+     Stegen är de fem som faktiskt sker. På dator är scenen pinnad:
+     stegen till vänster tänds ett i taget medan fotot till höger
+     byts. På pekskärm och smal skärm är samma lista en svepbar rad,
+     där varje steg står under sitt foto. Formen står i cinema och
+     i nextrum-start.css (avsnitt 14), rörelsen i nextrum-start.js
+     (stegFoton). Utan skript och med reducerad rörelse står alla
+     steg öppna.
      ========================================================== -->
 <section class="nx-hur nx-yta" id="hur" data-hur>
   <div class="nx-hur-fast">
     <div class="nx-hur-grid">
 
-      <div>
+      <div class="nx-hur-text">
         <span class="nx-et acc">How Nextrum works</span>
         <h2 class="nx-d2">From first contact<br>to the first session.</h2>
 
         <ol class="nx-hur-steg" id="hur-steg">
-          <li class="pa" data-steg="0">
+          <li class="pa" data-steg="0" data-bild="hero" data-alt="A young tutor and a student sitting at a bright wooden table, working through maths together. Both are smiling and looking down at the student’s notepad.">
             <em>01</em>
             <div>
               <h3>Get started</h3>
               <p>Tell us what the student needs help with, which year group and which subjects. It takes about two minutes.</p>
             </div>
           </li>
-          <li data-steg="1">
+          <li data-steg="1" data-bild="studiehjalparen" data-alt="A young tutor sitting alone at a desk with a laptop and a notepad, concentrating on the page.">
             <em>02</em>
             <div>
               <h3>We get in touch within 24 hours</h3>
               <p>We go through the need together with you before any matching is done.</p>
             </div>
           </li>
-          <li data-steg="2">
+          <li data-steg="2" data-bild="laget" data-alt="Five young tutors standing and talking with each other in front of a bookshelf in a library.">
             <em>03</em>
             <div>
               <h3>Matching</h3>
               <p>We select the tutor who suits the student best — based on subject, level, need and personality.</p>
             </div>
           </li>
-          <li data-steg="3">
+          <li data-steg="3" data-bild="forklaringen" data-alt="A young tutor explaining a problem to a student at a bright wooden table, with an open hand over the maths book.">
             <em>04</em>
             <div>
               <h3>Study plan and booking</h3>
               <p>We draw up an individual study plan for the student and you book your sessions.</p>
             </div>
           </li>
-          <li data-steg="4">
+          <li data-steg="4" data-bild="genombrottet" data-alt="A student smiling to themselves over their notepad after understanding something difficult, with the tutor beside them.">
             <em>05</em>
             <div>
               <h3>Follow-up</h3>
@@ -346,6 +566,14 @@
             </div>
           </li>
         </ol>
+
+        <div class="nx-hur-prickar">
+          <button type="button" aria-label="Step 1"></button>
+          <button type="button" aria-label="Step 2"></button>
+          <button type="button" aria-label="Step 3"></button>
+          <button type="button" aria-label="Step 4"></button>
+          <button type="button" aria-label="Step 5"></button>
+        </div>
 
         <div class="nx-hur-cta">
           <span class="nx-magnet">
@@ -358,7 +586,14 @@
         </div>
       </div>
 
-      <!-- fotona byggs av JS ur bildregistret, se skriptet längst ned -->
+      <!-- Fotona byggs av nextrum-start.js (stegFoton) ur bildregistret,
+           ett per steg (data-bild), och alt-texten läses ur stegets
+           data-alt, så att den är på sidans språk. Fem unika bilder:
+           ingen av dem får förekomma i bildväggen längre ner (den
+           använder entillEn, digitalt, sjalvfortroende, anpassning) och
+           ingen får vara teamet, det motivet är redan hero-videon. Ser
+           man samma foto två gånger på samma sida läser det som att
+           bildspelet hängt sig. -->
       <div class="nx-hur-bild" id="hur-bild"></div>
 
     </div>
@@ -370,41 +605,57 @@
      Leo: "sälj in det utan konkreta villkor eller siffror". Här står
      inga villkor och inga tal, men aldrig ett löfte om ett betyg:
      garantin lovar vad vi gör om betyget inte går upp (CLAUDE.md,
-     avsnitt 8). Länken och raden under knapparna säger att villkor
-     gäller och var de står, för en garanti som säljs utan att det syns
-     att den har villkor är vilseledande (marknadsföringslagen). Mörk
-     för att stegen (.nx-apply-flow) är ritade för mörk botten, som i
-     Bli studiehjälpare. Samma ändring i en/index.html, tagg för tagg.
+     avsnitt 1 och 8). Länken och raden intill knappen säger att
+     villkor gäller och var de står, för en garanti som säljs utan att
+     det syns att den har villkor är vilseledande
+     (marknadsföringslagen). De står bredvid knappen, aldrig bakom en
+     utfällning.
+
+     På papperet och som ett flöde (2026-10-07). Leo: "samma färg som
+     resten av sidan" i båda lägena, "inte samma kolumner som finns
+     överallt", "en mindre sektion" som "ser ut som att den följer ett
+     flow när man scrollar". Linjen mellan siffrorna fylls och stegen
+     tänds när de passerar en linje i fönstret: garantiflöde() i
+     nextrum-start.js och avsnitt 15 i nextrum-start.css. Utan skript
+     står allt tänt. Siffrorna är aria-hidden, för listan ger
+     ordningen. Inget data-stig på stegen: den regeln äger opacity och
+     transform och hade slagit ut nedtoningen. På dator står rubriken
+     och knappen till vänster och flödet till höger, på telefon
+     rubrik, flöde, knapp (ordningen i markupen). Prissidan har samma
+     komponent med sina egna texter. Samma ändring i en/index.html,
+     tagg för tagg.
      ========================================================== -->
-<section class="nx-mork nx-sek" id="betygsgaranti">
-  <div class="nx-wrap-bred">
-    <div class="nx-mitt-head">
-      <span class="nx-et" data-stig>Grade guarantee</span>
-      <h2 class="nx-d2" data-avslöj style="margin-top:20px">If the grade doesn’t go up,<br><em>we keep going.</em></h2>
-      <p class="nx-lede" data-stig data-fördröj="1" style="margin-top:22px">We believe in the right match and a school year of real work, so much that we stand behind
+<section class="nx-sek-s nx-gar" id="betygsgaranti">
+  <div class="nx-wrap-bred nx-gar-in">
+    <div class="nx-gar-head">
+      <span class="nx-et acc" data-stig>Grade guarantee</span>
+      <h2 class="nx-d2" data-avslöj>If the grade doesn’t go up,<br><em>we keep going.</em></h2>
+      <p class="nx-lede" data-stig data-fördröj="1">We believe in the right match and a school year of real work, so much that we stand behind
         it. If the student does their part and the grade still doesn’t go up, we keep helping without you
         paying anything.</p>
     </div>
 
-    <div class="nx-apply-flow" data-stig data-fördröj="2" style="margin-top:clamp(40px,5vw,64px)">
-      <div class="nx-apply-step"><em>1</em><b>Choose the subjects</b><p>You choose the subjects that need a lift, and we build the plan towards this year’s grade.</p></div>
-      <div class="nx-apply-step"><em>2</em><b>Keep it up all year</b><p>Regular sessions, tasks in between and a tutor who keeps it all together.</p></div>
-      <div class="nx-apply-step"><em>3</em><b>See it all in your view</b><p>Every session, report and task is visible to you, and the guarantee is judged on what you can see for yourselves.</p></div>
-      <div class="nx-apply-step"><em>4</em><b>We stay with you</b><p>If the grade doesn’t go up even though you did your part, you get extra homework help from us free of charge.</p></div>
-    </div>
+    <ol class="nx-gar-flode" data-gar-flode>
+      <li><span class="nx-gar-nr" aria-hidden="true">01</span><div class="nx-gar-steg"><b>Choose the subjects</b><p>You choose the subjects that need a lift, and we build the plan towards this year’s grade.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">02</span><div class="nx-gar-steg"><b>Keep it up all year</b><p>Regular sessions, tasks in between and a tutor who keeps it all together.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">03</span><div class="nx-gar-steg"><b>See it all in your view</b><p>Every session, report and task is visible to you, and the guarantee is judged on what you can see for yourselves.</p></div></li>
+      <li><span class="nx-gar-nr" aria-hidden="true">04</span><div class="nx-gar-steg"><b>We stay with you</b><p>If the grade doesn’t go up even though you did your part, you get extra homework help from us free of charge.</p></div></li>
+    </ol>
 
-    <div class="nx-cta-rad nx-cta-mitt" data-stig data-fördröj="3">
-      <span class="nx-magnet">
-        <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
-          Get started
+    <div class="nx-gar-cta" data-stig data-fördröj="2">
+      <div class="nx-cta-rad">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
+            Get started
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="nx-lank" href="/en/anvandarvillkor#betygsgaranti">Read the guarantee terms
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
-      </span>
-      <a class="nx-lank" href="/en/anvandarvillkor#betygsgaranti">Read the guarantee terms
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
+      </div>
+      <p class="nx-fineprint">Terms apply. Help with other subjects and homework in general is included as usual and does not affect the guarantee.</p>
     </div>
-    <p class="nx-fineprint" data-stig data-fördröj="4" style="margin-top:22px;text-align:center">Terms apply. Help with other subjects and homework in general is included as usual and does not affect the guarantee.</p>
   </div>
 </section>
 
@@ -433,6 +684,13 @@
 
   <div class="showcase" id="showcase" data-needs-db>
     <div class="loading">Loading tutors</div>
+  </div>
+  <!-- Svepet: samma rad som på svenska, tagg för tagg. Etiketterna
+       står här, för nextrum-start.js skriver ingen text. -->
+  <div class="sc-nav" data-sc-nav hidden>
+    <button type="button" class="sc-pil" data-sc-steg="-1" aria-controls="showcase" aria-label="Previous tutor"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4 3 8l4 4"/></svg></button>
+    <div class="sc-prickar" aria-hidden="true"></div>
+    <button type="button" class="sc-pil" data-sc-steg="1" aria-controls="showcase" aria-label="Next tutor"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
   </div>
   </div>
 </section>
@@ -525,6 +783,20 @@
       </span>
       <a class="nx-lank" href="/en/priser">See pricing
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+    <!-- Standard, inbakat (2026-10-07). Leo: "Visa standard planens
+         erbjudande på sidan och sälj in de inbakat någonstans där de
+         passar." Inga kronor här: priset står bara på prissidan, som
+         läser det ur erbjudanden_pris. Antalet timmar och timmarna man
+         betalar för skriver NX.initErbjudanden() ur samma svar, och finns
+         planen inte döljs lappen. -->
+    <div class="pr-std-rad" data-stig data-fördröj="1">
+      <a class="pr-std-lapp" href="/en/priser#erbjudanden" data-erb="plan_standard" data-erb-timmar="8">
+        <span class="pr-std-namn">Standard</span>
+        <span class="pr-std-text"><span data-erb-antal>8</span> hours a month for the price of <span data-erb-betalda>7</span></span>
+        <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="pa"></i></span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
     </div>
   </div>
@@ -696,14 +968,14 @@
                   <span>8 questions · about 4 min</span>
                   <button type="button" class="sd-knapp" data-sd-niva><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Continue</button>
                 </div>
-                <p class="sd-nl-klar"><span class="sd-bock liten"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Equations is done, +270 XP. Percentages is now open.</p>
+                <p class="sd-nl-klar"><span class="sd-bock liten"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Equations is done, +270 XP. Next step: Percentages.</p>
               </div>
               <div class="sd-box sd-in" style="--i:2">
                 <h5>Your path <em>Maths</em></h5>
                 <div class="sd-nl-omr klart"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></i><b>Algebra</b><em>Done</em></div>
                 <div class="sd-nl-omr aktuellt" data-sd-byt="niva"><i><span class="fore"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span><span class="efter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></span></i><b>Equations</b><em><span class="fore">In progress</span><span class="efter">Done</span></em></div>
                 <div class="sd-nl-omr nasta" data-sd-byt="niva"><i><span class="fore"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg></span><span class="efter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></i><b>Percentages</b><em><span class="fore">Next</span><span class="efter">In progress</span></em></div>
-                <div class="sd-nl-omr last"><i><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="10.5" width="13" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></i><b>Geometry</b><em>Locked</em></div>
+                <div class="sd-nl-omr oppen"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></i><b>Geometry</b><em>Open</em></div>
               </div>
             </div>
           </div>
@@ -1103,12 +1375,12 @@
 <script src="../nextrum-config.js?v=fdfed591"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=130de79a"></script>
+<script src="../nextrum-app.js?v=32805aea"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
-<script src="../nextrum-motion.js?v=f1ce069c"></script>
+<script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Startsidans rörelse. Startar av sig självt, så att inget
      anrop här nere kan kasta om filen saknas. -->
-<script src="../nextrum-start.js?v=c489fcd4"></script>
+<script src="../nextrum-start.js?v=94494d65"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
@@ -1130,53 +1402,7 @@
   NX.initVagval();      /* vyväljaren bakom "Logga in" */
   NX.bildIntoning();    /* de foton som ligger i markupen */
   NX.initPris();        /* priset i heron */
-
-  /* ==========================================================
-     SÅ FUNGERAR NEXTRUM
-     Fem steg, fem foton. Steget som är aktivt tänds och dess
-     foto glider in. Samma princip som ovan: listan styr.
-     ========================================================== */
-  const hurBild = $('#hur-bild'), hurSteg = $$('#hur-steg li');
-  /* Fem unika bilder. Ingen av dem får förekomma i bildväggen längre ner
-     (den använder entillEn, digitalt, sjalvfortroende, anpassning) och ingen
-     får vara teamet — det motivet är redan hero-videon. Ser man samma foto
-     två gånger på samma sida läser det som att bildspelet hängt sig. */
-  const HUR_BILDER = ['hero', 'studiehjalparen', 'laget', 'forklaringen', 'genombrottet'];
-
-  if (hurBild && hurSteg.length) {
-    hurBild.innerHTML = HUR_BILDER.map((k, i) =>
-      NXImg.platta(k, {
-        sizes: '(max-width: 900px) 92vw, 46vw',
-        attrs: ' data-hur-bild="' + i + '"' + (i === 0 ? ' data-pa' : '')
-      })
-    ).join('');
-    const hurFig = $$('#hur-bild .nx-fig');
-    hurFig[0] && hurFig[0].classList.add('pa');
-    NX.bildIntoning();
-
-    const sätt = i => {
-      hurSteg.forEach((li, n) => li.classList.toggle('pa', n === i));
-      hurFig.forEach((f, n) => f.classList.toggle('pa', n === i));
-    };
-
-    if (NXMotion.reducerad || NXMotion.tier === 'lite') {
-      /* utan pinning: steget tänds när man klickar eller tabbar dit */
-      hurSteg.forEach((li, i) => {
-        li.addEventListener('click', () => sätt(i));
-      });
-    } else {
-      NXMotion.scene($('[data-hur]'), {
-        läge: 'pin',
-        run: p => {
-          /* lite marginal i början och slutet så att första och
-             sista steget hinner läsas innan det byter */
-          const j = Math.min(hurSteg.length - 1,
-                    Math.max(0, Math.floor(NXMotion.span(p, 0.04, 0.96) * hurSteg.length)));
-          if (j !== sätt.senaste) { sätt(j); sätt.senaste = j; }
-        }
-      });
-    }
-  }
+  NX.initErbjudanden(); /* Standard i Trygg hjälp, ur erbjudanden_pris */
 
   /* ==========================================================
      SCROLLSPY

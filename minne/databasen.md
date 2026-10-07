@@ -913,3 +913,23 @@ bekräftelse. **Ett sådant prov görs i en transaktion som rullas tillbaka,
 aldrig med objekt som blir kvar.**
 Första körningen 2026-10-07 hängde sig i 60 sekunder utan svar på
 bekräftelsen; inget hände, och migrationen väntar (`DEPLOY-BARNKONTON.md` 10).
+
+### Planerna (planerna_basic_standard_intensiv, 2026-10-07)
+Kolumnen `timmar_pa_kopet` (int, förval 0, villkoren
+`erbjudanden_timmar_pa_kopet_check` och `klippkort_timmar_pa_kopet_check`,
+0 <= x < timmar, lagda i ett do-block efter en kontroll i `pg_constraint`)
+i `erbjudanden` och `klippkort`. `erbjudanden_audit` och `klippkort_audit`
+skapades om med `create or replace trigger` och har kolumnen i listorna.
+Vyn `erbjudanden_pris` skapades om med de elva kolumnerna i samma ordning
+och `timmar_pa_kopet` sist, och `pris_ore` räknar de betalda timmarna. De
+gamla planerna stängdes med `aktiv = false`, och de nya lades in med `on
+conflict do nothing`. Ingen drop och ingen delete, så filen körs hel i ett
+do-block med en annan dollartagg än `$$` (filen har ett eget `do $$`).
+Lokalt: 1505 av 1505, och 1489 av 1491 utan migrationen, där exakt 16.1d
+och avsnitt 25 föll. **Körs efter merge, och `stripe-checkout` från main
+driftsätts FÖRE den**: kassan läser hela raden med `*` och skriver
+kolumnen bara när vyn har den, så den tål att migrationen saknas, och
+inget glapp uppstår där en gammal kassa säljer Standard med "0 % rabatt"
+(granskningen 2026-10-07). Ett väntande köp återanvänds bara med samma
+innehåll (`sammaInnehall`), inte bara samma pris. Inte i drift 2026-10-07
+när PR:en skrevs.

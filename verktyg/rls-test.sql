@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren och betygsgarantin)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin och planerna)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -51,7 +51,8 @@
 -- barnkonton_och_admin, manadskorningen_gar_varje_natt, admin_paminnelser,
 -- ansokan_vardnadshavare_och_nej, admin_sett, nexlax_uppdrag_och_np,
 -- nexlax_felrapporter, barnets_chatt, barnets_behorigheter,
--- villkoren_godkanns och betygsgarantin är körda.
+-- villkoren_godkanns, betygsgarantin och
+-- planerna_basic_standard_intensiv (2026-10-07) är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -3524,8 +3525,10 @@ select pg_temp.rakna('16.1 anon läser samma priser som databasen', null,
 select pg_temp.rakna('16.1 anon ser minst en plan och ett klippkort', null,
   $q$select count(distinct sort) from public.erbjudanden_pris$q$, 2);
 
-select pg_temp.rakna('16.1d summan är timpriset gånger timmarna', null,
-  'select count(*) from public.erbjudanden_pris where pris_ore <> timmar * rabatterat_timpris_ore', 0);
+-- Planerna (2026-10-07): en timme på köpet kostar ingenting, så summan
+-- är timpriset gånger de BETALDA timmarna. Avsnitt 25 provar planerna.
+select pg_temp.rakna('16.1d summan är timpriset gånger de betalda timmarna', null,
+  'select count(*) from public.erbjudanden_pris where pris_ore <> (timmar - timmar_pa_kopet) * rabatterat_timpris_ore', 0);
 
 select pg_temp.prova('16.1 familjen ändrar inte katalogen', '00000000-0000-4000-8000-0000000000f1',
   array[$q$update public.erbjudanden set rabatt_procent = 50 where kod = 'klipp10'$q$],
@@ -12906,6 +12909,182 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('BG Betygsgarantin', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 25. Planerna (planerna_basic_standard_intensiv, 2026-10-07)
+--
+-- Leo: Basic (4 timmar, 5 %), Standard (8 timmar, en timme på köpet) och
+-- Intensiv (12 timmar, 5 %), med nya koder; 'standard' och 'intensiv'
+-- står kvar avstängda, för ett köp pekar på dem. En timme på köpet är
+-- timmar, aldrig en procent: priset är de betalda timmarna, ordinarie är
+-- alla, och timmen dras ur kortet som de andra. Kolumnen fryses i köpet,
+-- står i auditen, och bara admin ändrar katalogen.
+-- Allt i ett block som rullas tillbaka; utfallet samlas i en variabel.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  n    bigint;
+  sk   text;
+  tp   bigint;
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  K1   constant uuid := '00000000-0000-4000-8000-00000000a1a1';
+  K2   constant uuid := '00000000-0000-4000-8000-00000000a1a2';
+  K3   constant uuid := '00000000-0000-4000-8000-00000000a1a3';
+begin
+  begin
+    -- Katalogen, som prissidan läser den: utan inloggning.
+    perform pg_temp.bli(null);
+    select count(*) into n from public.erbjudanden_pris
+     where (kod, sort, timmar, timmar_pa_kopet, rabatt_procent, giltig_manader) in
+           (('plan_basic', 'plan', 4, 0, 5, 1), ('plan_standard', 'plan', 8, 1, 0, 1),
+            ('plan_intensiv', 'plan', 12, 0, 5, 1));
+    ut := ut || jsonb_build_object('t', 'PL anon ser Basic, Standard och Intensiv med timmarna, timmen på köpet och rabatten',
+            'ok', n = 3, 'd', n::text);
+
+    select count(*) into n from public.erbjudanden_pris where kod in ('standard', 'intensiv');
+    ut := ut || jsonb_build_object('t', 'PL de gamla planerna säljs inte längre', 'ok', n = 0, 'd', n::text);
+
+    select count(*) into n from public.erbjudanden_pris
+     where pris_ore <> (timmar - timmar_pa_kopet) * rabatterat_timpris_ore
+        or ordinarie_ore <> timmar * timpris_ore;
+    ut := ut || jsonb_build_object('t', 'PL priset är de betalda timmarna och ordinarie är alla timmarna', 'ok',
+            n = 0, 'd', n::text);
+
+    select count(*) into n from public.erbjudanden_pris
+     where kod = 'plan_standard' and pris_ore = 7 * timpris_ore and ordinarie_ore - pris_ore = timpris_ore;
+    ut := ut || jsonb_build_object('t', 'PL Standard är 8 timmar för priset av 7, och ni sparar en hel timme', 'ok',
+            n = 1, 'd', n::text);
+
+    -- Siffrorna i beställningen, så länge timpriset är 379 kr.
+    select timpris_ore into tp from public.erbjudanden_pris where kod = 'plan_standard';
+    select string_agg(kod || ':' || pris_ore || ':' || ordinarie_ore, ',' order by kod) into t
+      from public.erbjudanden_pris where kod in ('plan_basic', 'plan_standard', 'plan_intensiv');
+    ut := ut || jsonb_build_object('t', 'PL med 379 kr i timmen: 1 440, 2 653 och 4 320 kr', 'ok',
+            case when tp = 37900
+                 then t = 'plan_basic:144000:151600,plan_intensiv:432000:454800,plan_standard:265300:303200'
+                 else tp is not null end,
+            'd', coalesce(t, 'inga') || case when tp is distinct from 37900
+                                             then ' (timpriset är ' || coalesce(tp::text, '?') || ', siffrorna provas inte)'
+                                             else '' end);
+
+    -- Bara admin ändrar katalogen. Anon först, sedan familjen.
+    begin
+      update public.erbjudanden set timmar_pa_kopet = 7 where kod = 'plan_standard';
+      get diagnostics n = row_count;
+      sk := 'rader ' || n;
+    exception when others then sk := sqlstate;
+    end;
+    t := sk;
+    perform pg_temp.bli(P);
+    begin
+      update public.erbjudanden set timmar_pa_kopet = 7 where kod = 'plan_standard';
+      get diagnostics n = row_count;
+      sk := 'rader ' || n;
+    exception when others then sk := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select timmar_pa_kopet into n from public.erbjudanden where kod = 'plan_standard';
+    ut := ut || jsonb_build_object('t', 'PL varken anon eller familjen ändrar timmen på köpet', 'ok',
+            t in ('rader 0', '42501') and sk in ('rader 0', '42501') and n = 1,
+            'd', 'anon ' || t || ', familjen ' || sk || ', kvar ' || n);
+
+    -- Köpet, som kassan skriver det med service_role: kolumnen fryses.
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, timmar_pa_kopet, giltig_manader,
+                                  rabatt_procent, timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at,
+                                  stripe_charge_id)
+    values (K1, P, 'plan_standard', 'Standard', 'plan', 8, 1, 1, 0, 37900, 265300, 265300, 'betald',
+            (now() at time zone 'Europe/Stockholm')::date + 30, now(), 'ch_rlsprov_planerna');
+    select count(*) into n from public.audit_logg
+     where tabell = 'klippkort' and objekt_id = K1::text and handling = 'klippkort.skapad'
+       and efter ->> 'timmar_pa_kopet' = '1' and not (efter ? 'namn');
+    ut := ut || jsonb_build_object('t', 'PL köpet loggas med timmen på köpet, utan namnet', 'ok', n = 1, 'd', n::text);
+
+    perform pg_temp.bli(P);
+    select string_agg(k.timmar_pa_kopet || ':' || s.timmar || ':' || s.kvar || ':' || s.brukbar, ',') into t
+      from public.klippkort k join public.klippkort_saldo s on s.id = k.id where k.id = K1;
+    ut := ut || jsonb_build_object('t', 'PL timmen på köpet är en timme på kortet: familjen har alla 8 kvar', 'ok',
+            t = '1:8:8:true', 'd', coalesce(t, 'ingen rad'));
+    perform pg_temp.bli(Q);
+    select count(*) into n from public.klippkort where id = K1;
+    ut := ut || jsonb_build_object('t', 'PL en annan familj ser inte köpet', 'ok', n = 0, 'd', n::text);
+
+    -- Admin ändrar katalogen: det loggas, vyn räknar om, och köpet står fast.
+    perform pg_temp.bli(AD);
+    update public.erbjudanden set timmar_pa_kopet = 2 where kod = 'plan_standard';
+    get diagnostics n = row_count;
+    sk := n::text;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*) into n from public.audit_logg
+     where tabell = 'erbjudanden' and objekt_id = 'plan_standard' and handling = 'erbjudande.andrad'
+       and fore ->> 'timmar_pa_kopet' = '1' and efter ->> 'timmar_pa_kopet' = '2' and aktor = AD;
+    ut := ut || jsonb_build_object('t', 'PL admin ändrar timmen på köpet, och auditen säger före och efter', 'ok',
+            sk = '1' and n = 1, 'd', 'rader ' || sk || ', i auditen ' || n);
+    select count(*) into n from public.erbjudanden_pris
+     where kod = 'plan_standard' and pris_ore = 6 * rabatterat_timpris_ore;
+    ut := ut || jsonb_build_object('t', 'PL vyn räknar om priset ur katalogen', 'ok', n = 1, 'd', n::text);
+    select timmar_pa_kopet || ':' || begart_ore into t from public.klippkort where id = K1;
+    ut := ut || jsonb_build_object('t', 'PL ett köp står fast när katalogen ändras', 'ok', t = '1:265300', 'd', t);
+
+    -- Villkoren: aldrig allt på köpet, aldrig under noll.
+    begin
+      update public.erbjudanden set timmar_pa_kopet = 8 where kod = 'plan_standard';
+      sk := 'inget fel';
+    exception when others then sk := sqlstate;
+    end;
+    t := sk;
+    begin
+      update public.erbjudanden set timmar_pa_kopet = -1 where kod = 'plan_basic';
+      sk := 'inget fel';
+    exception when others then sk := sqlstate;
+    end;
+    t := t || ' ' || sk;
+    begin
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, timmar_pa_kopet, giltig_manader,
+                                    rabatt_procent, timpris_ore, begart_ore, status)
+      values (K2, P, 'plan_basic', 'Basic', 'plan', 4, 4, 1, 5, 37900, 144000, 'vantar');
+      sk := 'inget fel';
+    exception when others then sk := sqlstate;
+    end;
+    t := t || ' ' || sk;
+    ut := ut || jsonb_build_object('t', 'PL katalogen och köpen nekar lika många timmar på köpet som timmar, och under noll', 'ok',
+            t = '23514 23514 23514', 'd', t);
+
+    -- Köpen före planerna: ingen timme på köpet, och ett köp av en
+    -- avstängd plan står kvar och syns för familjen (som Leos testköp).
+    select count(*) into n from public.klippkort
+     where id = '00000000-0000-4000-8000-00000000c16a' and timmar_pa_kopet = 0;
+    ut := ut || jsonb_build_object('t', 'PL ett köp utan kolumnen har ingen timme på köpet', 'ok', n = 1, 'd', n::text);
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at)
+    values (K3, P, 'standard', 'Standardplan', 'plan', 4, 1, 10, 37900, 136400, 136400, 'betald',
+            (now() at time zone 'Europe/Stockholm')::date + 20, now());
+    perform pg_temp.bli(P);
+    select string_agg(namn || ':' || kvar || ':' || brukbar, ',') into t from public.klippkort_saldo where id = K3;
+    ut := ut || jsonb_build_object('t', 'PL ett köp av en avstängd plan står kvar och syns för familjen', 'ok',
+            t = 'Standardplan:4:true', 'd', coalesce(t, 'ingen rad'));
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('PL Planerna', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

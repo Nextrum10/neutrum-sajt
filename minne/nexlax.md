@@ -396,6 +396,63 @@ Byggs något liknande igen gäller samma sak: egna frågor, aldrig bankens
 skriptet. Rutor med `display:grid` behöver en egen `[hidden]`-regel,
 annars syns det dolda.
 
+## NexLäx på startsidan (2026-10-07)
+
+Leo: "Under heron ska vi nu sälja in Nexläx gör en cool genomgång av
+nexläx som är lika stor som hero bilden. Den ska vara välutvecklad och du
+ska vara som en webdesigner." Sektionen `#nexlax` står direkt efter `#hem`,
+på papperet i båda lägena, ungefär en skärm hög på datorn: rubrik i h2
+(aldrig h1, delningsbilden läser första h1), ingress, en lodrät stig med
+fyra delar, en telefon i HTML/CSS med fyra skärmar i samma rutnätscell
+(vägen, frågan x + 9 = 23 som rättas, nivån klar, en nivå från
+studiehjälparen med dagens uppdrag), ämnena i `--amne-*` (utan juridik,
+företagsekonomi och programmering), en rad om stadierna och NP och att
+NexLäx ingår, knapparna och bildtexten "Frågan och talen är exempel".
+
+Reglerna:
+- Det är en illustration och inget quiz. Scenen är `role="img"` med en
+  beskrivning, och inget i den tar fokus. Prova NexLäx kommer inte
+  tillbaka.
+- Exempelfrågan är vår egen och grep:as mot `verktyg/uppgiftsbanken` och
+  `supabase/migrations`. Talen står i markupen och räknas aldrig av
+  skriptet: +10 XP för ett val, 50 för en nivå som klaras första gången
+  (alltså +100 för nivån), 520 XP ger Utforskare, märket En vecka i rad
+  vid 7 dagar, uppdragen xp-50, nivaer-1 och rad-5 (ett ur var grupp),
+  "Tre i rad!" ur RAD_HEJA. Ändras XP-reglerna, ranken, märkena eller
+  uppdragen ändras illustrationen samtidigt.
+- Inget lås, inga antal frågor eller nivåer, inget om lärare.
+- Rundturen, `nexlax()` i `nextrum-start.js`: högst tre varv varje gång
+  telefonen kommer in i bild; väntan räknas bara medan den syns och fliken
+  är framme; `.nlx-paus` stoppar omloppet, svävandet och ringarna; ett tryck
+  på en del visar dess skärm i sex sekunder till och spelar sedan klart
+  varvet (varven räknas vidare); en linje under delens blad visar skärmens
+  tid (`--nlx-tid`, `.nlx-tur`); reducerad rörelse ger ingen rundtur; på
+  mobil går samma rundtur.
+- Omloppet är dolt under 760 px och mellan 1000 och 1199 px (där klipptes
+  brickorna vid kanten), och står stilla vid reducerad rörelse. Lapparna
+  visas från 1360 px och står där skärmen är tom.
+- Delarnas noder är knappar (`button.nlx-del-nod`, `aria-labelledby` på
+  delens rubrik, `aria-current` på den som visas), så att Enter och
+  tangentbordet når skärmarna. På telefon döljs de delar som inte visas
+  bara för ögat (opacity), aldrig med visibility: en skärmläsare ska höra
+  alla fyra (granskningen 2026-10-07).
+- Står rundturen still (utanför bild, dold flik) går ingen timer: väntan
+  parkerar sig och väcks av `paus()`. Samma sak i studievyns rundtur.
+  `.nlx-paus` har en egen regel med högre vikt för de fyra animationer
+  som sätts med shorthand i tyngre regler.
+- På dator staplar spalterna var för sig (`.nlx-spalt`, `display:contents`
+  på telefon), så att ämnena står under telefonen och inte som en egen rad
+  under allt; sektionen är cirka 1,2 gånger heron på 1440×900. Telefonen
+  på mobil följer också höjden, så att den och delens text ryms på en
+  skärm.
+- Ingen text i skriptet, ingen `nextrum-uppgifter.css` och ingen
+  `nextrum-ljud.js` på startsidan.
+- Markupen byggdes ur samma mall på båda språken; ändras texten för hand
+  ska taggföljden hållas lika och jämföras med difflib.
+- Studievyns NexLäx-panel (startsidan och För elever och föräldrar, båda
+  språken) säger "Öppet" och "Nästa steg: Procent" sedan samma dag, inte
+  "Låst" och "Nu är Procent öppet".
+
 ## Ur avsnitt 11: banken, driftsättningen och det som är kvar
 
 - **Uppgifterna (Fas 23.1) har en bank, inte en kursplan.** Se

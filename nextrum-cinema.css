@@ -1184,13 +1184,28 @@ html[lang="en"] .nx-hero-rubrik{
 }
 
 /* ============================================================
-   SÅ FUNGERAR NEXTRUM — pinnad stegberättelse
-   Stegen till vänster, fotot till höger byts när steget byts.
+   SÅ FUNGERAR NEXTRUM — stegscenen, grunden (2026-10-07)
+   Det här är scenen utan rörelse: alla fem steg står öppna med sina
+   stora siffror, och det första fotot står bredvid. Så ser den ut
+   utan skript och med reducerad rörelse, och därför gömmer inget
+   här något.
+
+   Pinningen och dragspelet på dator, den svepbara raden på pekskärm
+   och fotots övergång är rörelse. De står i nextrum-start.css,
+   avsnitt 14, under html.nx-sr och .igang, som stegFoton i
+   nextrum-start.js sätter först när scenen är kopplad. Förut stod
+   pinningen här och gällde så fort fönstret var brett: en platta
+   liggande fick en fastnålad scen som aldrig bytte steg, och utan
+   skript låg steg 2–5 hopfällda med texten dold.
    ============================================================ */
 .nx-hur{position:relative}
+/* Över sektionens toningar (.nx-yta::before och ::after). De ligger
+   annars ovanpå den fastnålade rutan i slutet av sträckan och tonade
+   bort knapparna och fotots underkant. */
 .nx-hur-fast{
-  position:sticky;top:0;height:100svh;min-height:600px;
+  position:relative;z-index:1;
   display:flex;align-items:center;overflow:hidden;
+  padding-block:var(--luft-s);
 }
 .nx-hur-grid{
   width:100%;max-width:var(--w-bred);
@@ -1198,24 +1213,29 @@ html[lang="en"] .nx-hero-rubrik{
   display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
   gap:clamp(32px,5vw,80px);align-items:center;
 }
-.nx-hur-steg{list-style:none;margin:0;padding:0;display:grid;gap:clamp(6px,1vw,12px)}
+.nx-hur-steg{list-style:none;margin:0;padding:0;display:grid}
+/* --hur-tal är siffrans storlek och --hur-glapp luften till texten.
+   Spalten siffran står i räknas ur dem, så att rubrikerna står i linje
+   oavsett vilken siffra som är bredast, och linjen mellan siffra och
+   text på dator (nextrum-start.css, avsnitt 14) hittar sin plats. */
 .nx-hur-steg li{
-  display:grid;grid-template-columns:auto 1fr;gap:clamp(16px,2vw,26px);
-  align-items:start;
+  --hur-tal:clamp(2.6rem,4vw,3.6rem);
+  --hur-glapp:clamp(16px,1.8vw,26px);
+  display:grid;grid-template-columns:calc(var(--hur-tal) * 1.12) minmax(0,1fr);
+  column-gap:var(--hur-glapp);align-items:start;
   padding:clamp(16px,2vw,24px) 0;
   border-top:1px solid var(--ln);
-  transition:opacity .5s var(--e),translate .38s var(--e-ut);
-  opacity:.32;
 }
 .nx-hur-steg li:last-child{border-bottom:1px solid var(--ln)}
-.nx-hur-steg li.pa{opacity:1}
+/* Siffran är scenens signatur (Leo 2026-10-07: "01 osv ska vara
+   större"), i samma form som hållpunkternas .hp-nr. Med line-height
+   .8 blir raden inte högre än rubriken bredvid. */
 .nx-hur-steg em{
-  font-family:var(--f-mono);font-style:normal;
-  font-size:11px;letter-spacing:.14em;color:var(--bl-3);
-  padding-top:.45em;
-  transition:color .4s var(--e);
+  display:block;font-style:normal;
+  font-size:var(--hur-tal);font-weight:800;line-height:.8;
+  letter-spacing:-.06em;font-variant-numeric:tabular-nums;
+  color:var(--acc);
 }
-.nx-hur-steg li.pa em{color:var(--acc-lugn)}
 .nx-hur-steg h3{
   font-size:clamp(1.3rem,2.5vw,2.05rem);
   letter-spacing:-.032em;line-height:1.08;font-weight:700;
@@ -1223,12 +1243,7 @@ html[lang="en"] .nx-hero-rubrik{
 .nx-hur-steg p{
   margin-top:9px;color:var(--bl-2);
   font-size:1rem;line-height:1.55;max-width:40ch;
-  /* stängda steg visar bara rubriken — texten fälls ut */
-  max-height:0;opacity:0;overflow:hidden;
-  transition:max-height .55s var(--e-ut),opacity .4s var(--e),margin-top .55s var(--e-ut);
-  margin-top:0;
 }
-.nx-hur-steg li.pa p{max-height:9em;opacity:1;margin-top:9px}
 
 .nx-hur .nx-d2{margin-top:20px;margin-bottom:clamp(28px,3.4vw,44px)}
 /* Två knappar sedan prislänken flyttades hit. Samma flex, samma
@@ -1239,51 +1254,45 @@ html[lang="en"] .nx-hero-rubrik{
   margin-top:clamp(28px,3.4vw,42px);
   display:flex;flex-wrap:wrap;gap:13px;align-items:center;
 }
+/* Prickarna hör till den svepbara raden och finns bara där. */
+.nx-hur-prickar{display:none}
 
-/* Kort skärm — en bärbar med bokmärkesrad ligger ofta på 700–780px.
-   Den pinnade spalten är ~830px hög och .nx-hur-fast har
-   overflow:hidden, så sista stegen och knappen klipptes bort utan
-   att något såg trasigt ut: det läste som att scrollen hängt sig.
-   Här krymper rubrik, luft och radavstånd tills det ryms igen. */
-@media (min-width:901px) and (max-height:880px){
-  .nx-hur-fast{min-height:0}
-  .nx-hur .nx-d2{
-    font-size:clamp(1.7rem,2.6vw,2.3rem);
-    margin-top:14px;margin-bottom:clamp(16px,2vw,24px);
-  }
-  .nx-hur-steg li{padding:11px 0}
-  .nx-hur-steg li.pa p{max-height:7em}
-  .nx-hur-cta{margin-top:clamp(18px,2.2vw,26px)}
-  .nx-hur .nx-et{font-size:10px}
-  /* Fotot är 4:5 av spaltbredden och blir därmed högre än rutan på
-     en kort skärm. Fast höjd i stället, så att över- och underkant
-     inte hamnar utanför och klipps. */
-  .nx-hur-bild{aspect-ratio:auto;height:min(76svh,780px)}
-}
-@media (min-width:901px) and (max-height:720px){
-  .nx-hur .nx-d2{font-size:clamp(1.5rem,2.2vw,1.95rem)}
-  .nx-hur-steg li{padding:8px 0}
-  .nx-hur-steg h3{font-size:1.05rem}
-  .nx-hur-steg li.pa p{max-height:6em}
-}
-
-.nx-hur-bild{position:relative;aspect-ratio:4/5;perspective:1400px}
+/* Fotona ligger på varandra. Rutan är en egen staplingskontext: utan
+   den lägger sig det tända fotot (z-index 2) över raden som ligger
+   ovanpå på pekskärm, och ett svep på bilden når aldrig raden. */
+.nx-hur-bild{position:relative;aspect-ratio:4/5;isolation:isolate;z-index:0}
 .nx-hur-bild .nx-fig{
   position:absolute;inset:0;--fig-r:22px;
-  opacity:0;
-  transform:scale(1.04) translateZ(-40px);
-  transition:opacity .8s var(--e-ut),transform 1.1s var(--e-ut);
-  will-change:transform,opacity;
+  opacity:0;transform-style:flat;
 }
-.nx-hur-bild .nx-fig.pa{opacity:1;transform:none;z-index:2}
+.nx-hur-bild .nx-fig.pa{opacity:1;z-index:2}
 .nx-hur-bild .nx-img{height:100%}
+/* Märket på fotot (stegets nummer och namn) visas bara i den
+   pinnade scenen, där steget och fotot står isär. */
+.nx-hur-mark{display:none}
+/* Startsidans foton byggs av skriptet. Utan skript är rutan tom, och
+   då tar stegen hela bredden i stället för att stå bredvid ett hål. */
+.nx-hur-bild:empty{display:none}
+.nx-hur-grid:has(> .nx-hur-bild:empty){grid-template-columns:minmax(0,1fr)}
 
+/* En spalt: etiketten och rubriken först, sedan fotot och stegen
+   under det. Texten i spalten blir rutnätets egna rader
+   (display:contents på en div utan semantik, aldrig på ol eller li),
+   så att fotot kan stå mellan rubriken och stegen. Förut stod fotot
+   överst, före etiketten, och läste som slutet på sektionen ovanför. */
 @media (max-width:900px){
-  .nx-hur-fast{position:static;height:auto;min-height:0;padding-block:var(--luft-s)}
-  .nx-hur-grid{grid-template-columns:1fr;gap:32px}
-  .nx-hur-bild{aspect-ratio:16/11;order:-1}
-  .nx-hur-steg li{opacity:1}
-  .nx-hur-steg li p{max-height:none;opacity:1;margin-top:9px}
+  .nx-hur-grid{
+    grid-template-columns:minmax(0,1fr);gap:0;
+    grid-template-areas:"et" "rubrik" "lede" "bild" "steg" "cta";
+  }
+  .nx-hur-text{display:contents}
+  .nx-hur .nx-et{grid-area:et;justify-self:start}
+  .nx-hur .nx-d2{grid-area:rubrik}
+  .nx-hur .sid-hur-lede{grid-area:lede}
+  .nx-hur-bild{grid-area:bild;aspect-ratio:16/11;margin-bottom:clamp(20px,6vw,32px)}
+  .nx-hur-steg{grid-area:steg}
+  .nx-hur-cta{grid-area:cta}
+  .nx-hur-steg li{--hur-tal:clamp(2.4rem,11vw,3.2rem)}
 }
 
 /* ============================================================
@@ -1710,26 +1719,25 @@ html[lang="en"] .nx-hero-rubrik{
 
   /* Den pinnade scenen släpper — man scrollar igenom en vanlig,
      lugn sida där varje budskap står för sig med sin bild. */
-  .nx-story-fast,.nx-hur-fast{
+  .nx-story-fast{
     position:static;height:auto;min-height:0;
     padding-block:var(--luft-s);align-items:flex-start;
   }
-  .nx-story-grid,.nx-hur-grid{grid-template-columns:1fr;gap:34px}
+  .nx-story-grid{grid-template-columns:1fr;gap:34px}
   .nx-story-text{min-height:0}
   .nx-story-kort{position:relative;inset:auto}
   .nx-story-scen{aspect-ratio:16/10}
   .nx-story-lager{position:absolute}
-  .nx-hur-steg li{opacity:1}
-  .nx-hur-steg li p{max-height:none;opacity:1;margin-top:9px}
+  /* Stegscenen står redan stilla i sin grund (ovan). Kvar är fotot:
+     det första, även om ett annat steg hunnit tändas. */
   .nx-hur-bild .nx-fig{opacity:0}
-  .nx-hur-bild .nx-fig:first-child{opacity:1;transform:none}
+  .nx-hur-bild .nx-fig:first-child{opacity:1}
   .nx-vagg-grid figure{transform:none !important}
 }
 
 /* Samma sak när JS inte kört ännu eller inte alls: sidan ska
    fungera utan skript. Berättelsens text ligger då i flödet. */
-html:not([data-motion]) .nx-story-fast,
-html:not([data-motion]) .nx-hur-fast{position:static;height:auto;min-height:0}
+html:not([data-motion]) .nx-story-fast{position:static;height:auto;min-height:0}
 html:not([data-motion]) .nx-story-kort{position:relative;inset:auto}
 
 /* ============================================================
@@ -1771,17 +1779,16 @@ html:not([data-motion]) .nx-story-kort{position:relative;inset:auto}
    du tempot: högre = långsammare.
    ============================================================ */
 .nx-story{height:200svh}
-.nx-hur{height:230svh}
+/* Stegscenens sträcka (230svh) står i nextrum-start.css, avsnitt 14:
+   den gäller bara när scenen är kopplad (2026-10-07). */
 
 @media (max-width:900px){
   .nx-story{height:190svh}
-  .nx-hur{height:auto}
 }
 @media (prefers-reduced-motion:reduce){
-  .nx-story,.nx-hur{height:auto}
+  .nx-story{height:auto}
 }
-html:not([data-motion]) .nx-story,
-html:not([data-motion]) .nx-hur{height:auto}
+html:not([data-motion]) .nx-story{height:auto}
 
 /* ============================================================
    DEN STILLA BERÄTTELSEN
@@ -2220,26 +2227,8 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   }
 }
 
-/* Stegen i "Så fungerar Nextrum" är inga kolumner utan ett dragspel
-   som scrollen styr: det aktiva steget står på full opacitet med sin
-   text utfälld, resten ligger nedtonade på .32. Ett lyft ensamt syns
-   knappt på något som är genomskinligt till en tredjedel, så det
-   nedtonade steget klarnar också en aning. Det säger "du når mig"
-   utan att ta över den roll scrollen delar ut.
-
-   Bara det som INTE är aktivt. Samma regel på .pa hade dämpat det
-   tända steget när man förde musen över det, alltså precis tvärtemot.
-
-   Opaciteten byter snabbt in och långsamt ut. Övergången i hover-
-   regeln gäller vägen in; på vägen ut gäller grundregelns halva
-   sekund, som är scrollkoreografins egen takt och inte ska röras. */
-@media (hover:hover) and (pointer:fine){
-  .nx-hur-steg li:hover{translate:0 -3px}
-  .nx-hur-steg li:not(.pa):hover{
-    opacity:.62;
-    transition:opacity .12s var(--e),translate .12s var(--e-ut);
-  }
-}
+/* Stegen i "Så fungerar Nextrum" svarar på musen i nextrum-start.css,
+   avsnitt 14: bara i den pinnade scenen finns något att tända. */
 
 .nx-holdpunkter li:active,
 .nx-drag li:active{--tryck-tid:.09s}
@@ -2251,8 +2240,7 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 @media (prefers-reduced-motion:reduce){
   .sc-card:hover,.nx-safe-card:hover,
   .sc-card:active,.nx-safe-card:active,
-  .nx-holdpunkter li:hover,.nx-drag li:hover,
-  .nx-hur-steg li:hover{translate:none}
+  .nx-holdpunkter li:hover,.nx-drag li:hover{translate:none}
 }
 
 .nx-price-grid{
@@ -2779,85 +2767,185 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-rakne li:first-child b{color:var(--acc-text)}
 
 /* ============================================================
-   ERBJUDANDEN PÅ PRISSIDAN (Fas 16.1, kolumnerna 2026-09-26)
-   Tre kolumner: de två planerna och klippkorten. Klippkorten var
-   förut en egen rad med fem kort under planerna, och på en telefon
-   en vägg på två skärmar. Nu är de EN kolumn som fälls ut, och de
-   fem korten står i den som rader. Det överstrukna timpriset och
-   "ni sparar" står på varje rad, för det är skillnaden mot 379 kr
-   man jämför — inte procentsatsen.
+   ERBJUDANDEN PÅ PRISSIDAN (Fas 16.1, planerna 2026-10-07)
+
+   Tre planer i en rad och klippkorten som en egen bred rad under
+   dem, som fälls ut. Leo 2026-10-07: Basic, Standard och Intensiv,
+   och Standard ska säljas in. Standard står i mitten med ett band
+   ovanför ("Vårt tips"), och bandet ligger OVANFÖR raden i stället
+   för att trycka ner kortets innehåll: priserna i de tre korten står
+   på samma höjd, och det enda som skiljer Standard är det som ska
+   skilja. På en telefon är planerna en rad man sveper i, som ett
+   inlägg, med prickar under, och raden börjar med Standard i mitten
+   (initErbjudanden() sätter scrollLeft en gång, aldrig scrollIntoView).
+
+   Det överstrukna timpriset och "ni sparar" står på varje kort med
+   rabatt, för det är skillnaden mot 379 kr man jämför. Standard har
+   inget timpris (2 653 kr för 8 timmar är inget helt timpris) utan
+   "8 timmar för priset av 7", och rutorna under beskrivningen visar
+   samma sak: en ruta per timme, timmen på köpet i lera.
 
    [hidden] måste skrivas ut: korten har egen display, och
    initErbjudanden() döljer ett erbjudande som stängts av i
    databasen. Utan regeln hade det stått kvar med gamla siffror.
    ============================================================ */
-.pr-erb [hidden]{display:none}
+.pr-erb [hidden],
+[data-erb][hidden],
+[data-erb] [hidden]{display:none}
 
+/* Bandet över Standard är 38 px, och raden har den luften överst.
+   Står på tre ställen nedan: raden, kortet och bandet. Kolumnerna
+   skapas av korten (grid-auto-flow:column): en plan som stängts av i
+   databasen är display:none och lämnar inget hål. */
 .pr-erb-planer{
-  margin-top:clamp(34px,4vw,52px);
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2vw,26px);
+  position:relative;
+  margin-top:clamp(34px,4vw,52px);padding-top:38px;
+  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  gap:clamp(14px,1.8vw,24px);align-items:stretch;
 }
-/* Tre kolumner i bredd. Villkoren och knappen (.pr-erb-fot) står i
-   andra raden under planerna. Utfälld sträcker sig klippkortens
-   kolumn ner genom den raden i stället för att göra den första
-   högre: planerna och knappen står kvar där de stod, och det enda
-   som rör sig är det man tryckte fram. Raden är 1fr för att det
-   bara är flexibla spår som tar emot överskottet från ett element
-   som spänner över flera; med auto hade det delats på båda raderna
-   och planerna hade sträckts. */
-@media (min-width:1001px){
-  .pr-erb-planer{grid-template-rows:auto 1fr}
-  .pr-erb-klippkol{grid-column:3;grid-row:1}
-  .pr-erb-klippkol[open]{grid-row:1 / span 2}
-  .pr-erb-fot{grid-column:1 / 3;grid-row:2}
-  /* Alla klippkort avstängda i databasen: två kolumner, som förut,
-     inte två planer och ett hål. */
-  .pr-erb-planer:has(> .pr-erb-klippkol[hidden]){grid-template-columns:repeat(2,minmax(0,1fr))}
+.pr-erb-plan{
+  display:flex;flex-direction:column;
+  padding:clamp(24px,2.6vw,34px);border-radius:28px;
 }
-/* Mellanbredd: planerna bredvid varandra och klippkorten under dem
-   över hela bredden. Tre smala kolumner hade brutit summorna. */
-@media (max-width:1000px){
-  .pr-erb-planer{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .pr-erb-klippkol,.pr-erb-fot{grid-column:1 / -1}
-}
-@media (max-width:760px){.pr-erb-planer{grid-template-columns:minmax(0,1fr)}}
-.pr-erb-plan{padding:clamp(24px,2.8vw,36px)}
-.pr-erb-topp{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.pr-erb-rabatt,.pr-erb-spar{
+.pr-erb-topp{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.pr-erb-rabatt,.pr-erb-spar,.pr-erb-paket{
   font-size:.8rem;font-weight:700;padding:4px 11px;border-radius:999px;white-space:nowrap;
   background:var(--acc-soft);color:var(--acc-text);
 }
-.pr-erb-vad{display:block;margin:14px 0 18px;color:var(--muted);font-size:.98rem;line-height:1.5}
-.pr-erb-plan .nx-amount b{font-size:clamp(2.1rem,4vw,3rem)}
-.pr-erb-plan > .pr-erb-tim{margin-top:16px}
+/* Timmen på köpet är det enda märket med full lera: det är det som
+   säljer Standard, och det ska läsas före procenten på de andra. */
+.pr-erb-paket{background:var(--acc);color:var(--acc-ink)}
+.pr-erb-vad{display:block;margin:14px 0 0;color:var(--muted);font-size:.98rem;line-height:1.5}
+.pr-erb-plan .nx-amount{margin:22px 0 6px}
+.pr-erb-plan .nx-amount b{font-size:clamp(2.2rem,3.6vw,3.1rem)}
+.pr-erb-plan > .pr-erb-tim{margin-top:auto;padding-top:14px}
 .pr-erb-tim{font-size:.9rem;color:var(--muted);line-height:1.5}
 .pr-erb-tim s{color:var(--muted-2)}
 .pr-erb-tim b{color:var(--bl);font-weight:700}
 
-/* Klippkortens kolumn. Hela rubriken är det man trycker på, så
-   kortets luft ligger i summary och inte i kortet: ett tryck i
-   kanten ska också fälla ut. Kortet har overflow:hidden (glöden i
-   hörnet), därför ligger fokusringen innanför kanten. */
-.pr-erb-klippkol{padding:0}
+/* Timmarna som rutor: fyra, åtta eller tolv, i veckor (en, två eller
+   tre per vecka). Rutan på köpet är lera. initErbjudanden() ritar om
+   rutorna om antalet i databasen inte är det som står i sidan; de är
+   dekor (aria-hidden), det de säger står i texten bredvid. */
+.pr-erb-rutor{display:flex;gap:4px;margin-top:18px;max-width:100%}
+.pr-erb-rutor i{
+  flex:1 1 0;min-width:0;max-width:26px;height:10px;border-radius:3px;
+  background:color-mix(in srgb,var(--bl) 15%,transparent);
+}
+.pr-erb-rutor i.pa{background:var(--acc)}
+[data-erb-timmar="8"] .pr-erb-rutor i:nth-child(2n+3),
+[data-erb-timmar="12"] .pr-erb-rutor i:nth-child(3n+4){margin-left:6px}
+
+/* Standard. Kortet går upp i luften ovanför raden (marginalen), och
+   bandet fyller den biten, så att innehållet står i höjd med de andra
+   korten. Bandet ligger i kortet, och kortets overflow:hidden klipper
+   det efter hörnen. */
+.pr-erb-plan.ar-framhavd{
+  margin-top:-38px;
+  border-color:var(--acc-line);box-shadow:var(--sk-2);
+}
+.pr-erb-band{
+  display:flex;align-items:center;justify-content:center;
+  height:38px;flex:none;
+  margin:calc(clamp(24px,2.6vw,34px) * -1) calc(clamp(24px,2.6vw,34px) * -1) clamp(24px,2.6vw,34px);
+  background:var(--acc);color:var(--acc-ink);
+  font-family:var(--f-mono);font-size:10.5px;font-weight:500;
+  letter-spacing:.18em;text-transform:uppercase;
+}
+
+/* Korten stiger in i tur när raden syns. Raden bär data-stig och får
+   .nx-in; det är RADEN som observeras, inte korten, för i svepraden på
+   en telefon står två av tre utanför bild i sidled och hade aldrig
+   räknats som synliga. */
+html.nx-sr .pr-erb-planer > .pr-erb-plan{
+  opacity:0;translate:0 26px;
+  transition:opacity .55s var(--e-mjuk),translate .8s var(--fjader);
+}
+html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan{opacity:1;translate:0 0}
+html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(2){transition-delay:.09s}
+html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18s}
+
+/* Prickarna hör till svepraden och syns bara med den. */
+.pr-erb-prickar{display:none}
+
+/* Mellanbredd: tre kort bredvid varandra med lite mindre luft, så att
+   summorna inte bryts. */
+@media (max-width:1000px){
+  .pr-erb-planer{gap:12px}
+  .pr-erb-plan{padding:22px}
+  .pr-erb-band{margin:-22px -22px 22px}
+  .pr-erb-plan .nx-amount b{font-size:clamp(1.9rem,3.6vw,2.3rem)}
+}
+/* Telefonen: en rad man sveper i, som ett inlägg. Nästa kort tittar
+   fram i kanten, och prickarna under säger var man är. */
+@media (max-width:760px){
+  .pr-erb-planer{
+    display:flex;gap:12px;
+    overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x mandatory;overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    /* Kant i kant: raden går ut i sidans marginal, och marginalen
+       blir rullningens luft. Paddingen över och under är skuggans och
+       bandets plats; en rullande ruta klipper allt utanför den. */
+    margin-inline:calc(var(--pad) * -1);
+    padding:52px var(--pad) 30px;
+    scroll-padding-inline:var(--pad);
+    margin-top:clamp(18px,3vw,30px);
+  }
+  .pr-erb-planer::-webkit-scrollbar{display:none}
+  .pr-erb-plan{flex:0 0 min(84%,400px);padding:clamp(22px,6vw,28px);scroll-snap-align:center;scroll-snap-stop:always}
+  .pr-erb-band{margin:calc(clamp(22px,6vw,28px) * -1) calc(clamp(22px,6vw,28px) * -1) clamp(22px,6vw,28px)}
+  .pr-erb-plan .nx-amount b{font-size:clamp(2.1rem,10vw,2.6rem)}
+  .pr-erb-prickar{
+    display:flex;justify-content:center;gap:10px;margin-top:-8px;
+  }
+  .pr-erb-prickar i{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--ln-2);opacity:.75;
+    transition:scale .45s var(--fjader),background-color .3s var(--e),opacity .3s var(--e);
+  }
+  .pr-erb-prickar i.pa{background:var(--acc);opacity:1;scale:1.35}
+}
+
+/* Klippkorten: en bred rad under planerna. Stängd är rubriken en
+   vågrät rad (namnet och rabatten, timmarna, priset, knappen); öppen
+   står korten under den, fem bredvid varandra i full bredd. Hela
+   rubriken är det man trycker på, så kortets luft ligger i summary och
+   inte i kortet: ett tryck i kanten ska också fälla ut. Kortet har
+   overflow:hidden (glöden i hörnet), därför ligger fokusringen innanför
+   kanten. */
+.pr-erb-klippkol{margin-top:clamp(18px,2.2vw,28px);padding:0;border-radius:28px}
 .pr-erb-klippkol > summary{
-  display:block;list-style:none;cursor:pointer;
-  padding:clamp(24px,2.8vw,36px);border-radius:inherit;
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;
+  align-items:center;gap:12px clamp(20px,3vw,44px);
+  list-style:none;cursor:pointer;
+  padding:clamp(20px,2.4vw,28px) clamp(24px,2.6vw,34px);border-radius:inherit;
   -webkit-tap-highlight-color:transparent;
 }
 .pr-erb-klippkol > summary::-webkit-details-marker{display:none}
 .pr-erb-klippkol > summary:focus-visible{outline-offset:-4px;border-radius:inherit}
-/* Raden tar ungefär planernas timprisrad i höjd. Blir rubriken
-   högre än planerna blir första raden i griden det också, och då
-   krymper planerna när kolumnen fälls ut och första raden går
-   tillbaka till deras höjd. */
+.pr-erb-klippkol .pr-erb-topp{justify-content:flex-start}
+.pr-erb-klippkol .pr-erb-vad{margin:0;max-width:44ch}
+.pr-erb-klippkol .nx-amount{margin:0;flex-wrap:nowrap}
+.pr-erb-klippkol .nx-amount b{font-size:clamp(1.7rem,2.6vw,2.3rem);white-space:nowrap}
+@media (max-width:900px){
+  .pr-erb-klippkol > summary{grid-template-columns:minmax(0,1fr) auto}
+  .pr-erb-klippkol .pr-erb-topp,
+  .pr-erb-klippkol .pr-erb-vad{grid-column:1 / -1}
+}
+/* Smalast får knappen en egen rad, med pilen i högerkanten. */
+@media (max-width:520px){
+  .pr-erb-klippkol > summary{grid-template-columns:minmax(0,1fr);row-gap:8px}
+  .pr-erb-klippkol .pr-erb-visa svg{margin-left:auto}
+}
 .pr-erb-visa{
-  display:flex;align-items:center;gap:10px;margin-top:12px;
+  display:flex;align-items:center;gap:10px;min-height:44px;
   font-size:.92rem;font-weight:700;color:var(--bl);
 }
 /* Pilen står i högerkanten, där den inte flyttar sig när texten
    byts mellan "Se" och "Dölj". */
 .pr-erb-visa svg{
-  flex:none;margin-left:auto;width:28px;height:28px;padding:6px;
+  flex:none;width:30px;height:30px;padding:6px;
   border:1px solid var(--ln);border-radius:50%;
   transition:transform .35s var(--ease),border-color .2s,background-color .2s;
 }
@@ -2866,23 +2954,20 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .pr-erb-klippkol:not([open]) .pr-erb-visa-oppen,
 .pr-erb-klippkol[open] .pr-erb-visa-stangd{display:none}
 
-/* Korten i kolumnen. Kolumnerna i listan skapas av korten, inte av
-   ett fast antal: ett avstängt kort är display:none och ska inte
-   lämna ett hål. I den smala kolumnen blir det en rad per kort, över
-   hela bredden två bredvid varandra. */
+/* Korten i raden. Kolumnerna skapas av korten, inte av ett fast antal:
+   ett avstängt kort är display:none och ska inte lämna ett hål. */
 .pr-erb-klipp{
   list-style:none;margin:0;
   padding:0 clamp(12px,1.8vw,20px) clamp(12px,1.8vw,20px);
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,226px),1fr));gap:10px;
 }
-/* Timmarna och summan överst, där ögat jämför dem uppifrån och ner.
-   Timpriset har en egen rad: bredvid "ni sparar 1 900 kr" bröts det
-   i den smala kolumnen. Ytan är kortets egen: på papperet håller
-   kanten isär raderna, och i mörkt läge hade en egen yta varit samma
-   ton som kortet. */
+/* Timmarna och summan överst, där ögat jämför dem. Timpriset har en
+   egen rad, och giltigheten och besparingen delar den sista. Ytan är
+   kortets egen: på papperet håller kanten isär raderna, och i mörkt
+   läge hade en egen yta varit samma ton som kortet. */
 .pr-erb-kort{
   display:grid;grid-template-columns:minmax(0,1fr) auto;
-  align-items:baseline;gap:4px 12px;
+  align-items:baseline;gap:4px 10px;
   padding:16px 16px 14px;border:1px solid var(--ln);border-radius:18px;
 }
 .pr-erb-namn{grid-area:1 / 1;font-size:1.05rem;font-weight:700;letter-spacing:-.02em;color:var(--bl)}
@@ -2893,9 +2978,20 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .pr-erb-kort .pr-erb-tim{grid-area:2 / 1 / 3 / 3}
 .pr-erb-giltig{grid-area:3 / 1;align-self:center;font-size:.82rem;color:var(--muted)}
 .pr-erb-spar{grid-area:3 / 2;justify-self:end;margin-top:4px}
-/* Korten glider fram när kolumnen fälls ut. Bara opacity och
-   translate, och bara i öppningsögonblicket: stängd finns inget
-   att animera. */
+/* I full bredd står de fem korten bredvid varandra, och då är varje
+   kort för smalt för två spalter: allt står under varandra, med
+   summan störst. */
+@media (min-width:1001px){
+  .pr-erb-klipp{grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr))}
+  .pr-erb-kort{grid-template-columns:minmax(0,1fr);align-items:start;gap:6px;padding:18px 18px 16px}
+  .pr-erb-kort .pr-erb-namn{grid-area:1 / 1;font-size:.98rem}
+  .pr-erb-kort .pr-erb-summa{grid-area:2 / 1;justify-self:start;font-size:1.6rem}
+  .pr-erb-kort .pr-erb-tim{grid-area:3 / 1}
+  .pr-erb-kort .pr-erb-giltig{grid-area:4 / 1;margin-top:4px}
+  .pr-erb-kort .pr-erb-spar{grid-area:5 / 1;justify-self:start;margin-top:6px}
+}
+/* Korten glider fram när raden fälls ut. Bara opacity och translate,
+   och bara i öppningsögonblicket: stängd finns inget att animera. */
 @media (prefers-reduced-motion:no-preference){
   .pr-erb-klippkol[open] .pr-erb-kort{animation:pr-erb-fram .4s var(--ease) both}
   .pr-erb-klippkol[open] .pr-erb-kort:nth-child(2){animation-delay:.04s}
@@ -2904,23 +3000,133 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   .pr-erb-klippkol[open] .pr-erb-kort:nth-child(n+5){animation-delay:.16s}
 }
 @keyframes pr-erb-fram{from{opacity:0;translate:0 -8px}}
-
-/* Det mest köpta lyfts med kanten och skuggan, inte med en färgad
-   yta: priset ska vara det man läser först, på alla kort. Inne i
-   klippkortens kolumn bara med kanten — en skugga i ett kort som
-   redan har skugga blir grumlig. */
-.pr-erb-plan.ar-framhavd{border-color:var(--acc-line);box-shadow:var(--sk-2)}
 .pr-erb-kort.ar-framhavd{border-color:var(--acc-line)}
 
-/* "Pyttelitet", som Leo sa. Länken ska finnas, inte konkurrera. */
+/* Finstilen till vänster och knappen till höger, under allt. "Pyttelitet",
+   som Leo sa: länken ska finnas, inte konkurrera. */
+.pr-erb-fot{
+  margin-top:clamp(30px,3.6vw,48px);
+  display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  gap:26px clamp(32px,5vw,88px);align-items:start;
+}
+@media (max-width:900px){.pr-erb-fot{grid-template-columns:minmax(0,1fr)}}
 .pr-erb-fin{margin-top:4px;max-width:70ch;font-size:.76rem;line-height:1.55;color:var(--muted-2)}
-.pr-erb-fot > .pr-erb-fin:first-child{margin-top:0}
+.pr-erb-fot .pr-erb-fin:first-child{margin-top:0}
 .pr-erb-fin a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .pr-erb-fin a:hover{color:var(--bl)}
-
-.pr-erb-cta{margin-top:clamp(28px,3.4vw,44px);display:flex;flex-wrap:wrap;align-items:center;gap:14px 26px}
+.pr-erb-cta{display:flex;flex-wrap:wrap;align-items:center;gap:14px 26px}
 .pr-erb-cta .nx-terms{margin:0;padding:0;border:0;max-width:52ch}
 .pr-erb-cta .nx-terms a{text-decoration:underline;text-underline-offset:3px}
+
+/* ------------------------------------------------------------
+   STANDARD, INBAKAT (2026-10-07)
+   Leo: "Visa standard planens erbjudande på sidan och sälj in de
+   inbakat någonstans där de passar." Två ställen utanför raden ovan:
+   lyftet under starterbjudandet överst på prissidan, och lappen under
+   knapparna i Trygg hjälp på startsidan. Båda tar sina siffror ur samma
+   svar som korten (initErbjudanden), och lappen har inga kronor alls.
+   ------------------------------------------------------------ */
+/* Högerkolumnen överst: starterbjudandet och lyftet. Priskortet till
+   vänster blir lika högt som de två, och knappen och raden under den
+   står i dess botten, så att ingen kolumn slutar med en tom yta. Bara
+   prissidan har .nx-price-grid. Är lyftet dolt (planen finns inte i
+   databasen, till exempel före migrationen) står korten som förut, var
+   och ett i sin egen höjd. */
+.nx-price-grid:has(.pr-lyft:not([hidden])) > .nx-price-card{align-self:stretch;display:flex;flex-direction:column}
+.nx-price-grid:has(.pr-lyft:not([hidden])) > .nx-price-card > .btn{align-self:flex-start;margin-top:auto}
+.pr-topp-stapel{
+  display:grid;grid-template-rows:auto minmax(0,1fr);
+  gap:clamp(14px,1.8vw,22px);align-self:stretch;min-width:0;
+}
+.pr-lyft{
+  position:relative;isolation:isolate;
+  display:flex;flex-direction:column;gap:16px;justify-content:flex-end;
+  padding:clamp(24px,3vw,36px);border-radius:26px;
+  background:var(--kort);border:1px solid var(--kort-kant);box-shadow:var(--kort-sk);
+  color:var(--bl);text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+  /* .rv (nextrum.css) har sin övergång på opacity och transform, och
+     den här regeln står senare: båda måste stå med här. */
+  transition:opacity .7s var(--ease),transform .7s var(--ease),
+             scale .5s var(--fjader),border-color .3s var(--e);
+}
+/* Lyftets skugga är ett eget lager som tonas in, aldrig en animerad
+   box-shadow. */
+.pr-lyft::after{
+  content:"";position:absolute;inset:-1px;z-index:-1;
+  border-radius:inherit;pointer-events:none;
+  box-shadow:var(--sk-3);
+  opacity:0;transition:opacity .45s var(--e-ut);
+}
+.pr-lyft-topp{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pr-lyft-tips{
+  display:inline-flex;align-items:center;
+  font-family:var(--f-mono);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  padding:6px 12px;border-radius:100px;background:var(--acc);color:var(--acc-ink);
+}
+/* Mindre än starterbjudandets rubrik ovanför: lyftet är det andra
+   kortet i kolumnen, och på en rad blir kolumnen inte högre än
+   priskortet bredvid. */
+.pr-lyft-rubrik{
+  display:block;
+  font-size:clamp(1.3rem,1.9vw,1.6rem);font-weight:700;line-height:1.15;letter-spacing:-.03em;
+  text-wrap:balance;
+}
+.pr-lyft-rubrik em{font-style:normal;color:var(--acc-lugn)}
+.pr-lyft .pr-erb-rutor{margin-top:2px}
+.pr-lyft .pr-erb-rutor i{height:12px;max-width:34px}
+.pr-lyft-fot{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:10px 20px;padding-top:16px;border-top:1px solid var(--ln);
+}
+.pr-lyft-pris{font-size:.92rem;color:var(--muted)}
+.pr-lyft-pris b{font-size:1.25rem;font-weight:800;letter-spacing:-.035em;color:var(--bl);margin-right:4px}
+.pr-lyft-mer{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:.95rem;letter-spacing:-.014em}
+.pr-lyft-mer svg{width:14px;height:14px}
+@media (hover:hover) and (pointer:fine){
+  .pr-lyft:hover{border-color:var(--acc-line);scale:1.012}
+  .pr-lyft:hover::after{opacity:1}
+}
+.pr-lyft:active{scale:.985}
+
+/* Lappen på startsidan, under knapparna i Trygg hjälp. Ett runt kort
+   som lapparna på menysidornas foto, med planens namn och timmarna.
+   Inga kronor: priset bor på prissidan. */
+.pr-std-lapp{
+  display:flex;align-items:center;gap:12px;
+  width:fit-content;max-width:100%;min-height:48px;
+  margin:clamp(18px,2.2vw,26px) auto 0;
+  padding:7px 18px 7px 7px;border-radius:999px;
+  background:var(--kort);border:1px solid var(--kort-kant);box-shadow:var(--kort-sk);
+  color:var(--bl);font-size:.93rem;font-weight:600;letter-spacing:-.014em;line-height:1.25;
+  text-decoration:none;-webkit-tap-highlight-color:transparent;
+  transition:scale .45s var(--fjader),border-color .3s var(--e);
+}
+.pr-std-namn{
+  flex:none;display:inline-flex;align-items:center;min-height:34px;
+  font-family:var(--f-mono);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  padding:0 13px;border-radius:999px;background:var(--acc);color:var(--acc-ink);
+}
+.pr-std-text{text-wrap:balance}
+.pr-std-lapp .pr-erb-rutor{flex:none;width:92px;margin:0;gap:3px}
+.pr-std-lapp .pr-erb-rutor i{height:8px;border-radius:2px}
+.pr-std-lapp > svg{flex:none;width:14px;height:14px;color:var(--acc-lugn)}
+@media (hover:hover) and (pointer:fine){
+  .pr-std-lapp:hover{border-color:var(--acc-line);scale:1.02}
+}
+.pr-std-lapp:active{scale:.97}
+@media (max-width:520px){.pr-std-lapp .pr-erb-rutor{display:none}}
+/* På ytan (Trygg hjälp ligger på --pap-2) är kortets ton i mörkt läge
+   samma som ytan. Lappen lyfter därför till --pap-3 där, som korten i
+   blocken högst upp i filen. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .pr-std-lapp{background:var(--pap-3)}
+}
+:root[data-theme="dark"] .pr-std-lapp{background:var(--pap-3)}
+
+@media (prefers-reduced-motion:reduce){
+  .pr-lyft:hover,.pr-lyft:active,.pr-std-lapp:hover,.pr-std-lapp:active{scale:none}
+}
 
 /* Foto i stället för initial på studiehjälparkortet. Bilden fyller
    samma ruta som bokstaven, så raden håller sin rytm oavsett vilka
@@ -3337,32 +3543,136 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .nx-kakor-panel .nx-kakor-knappar .nx-kakor-val:hover{background:var(--pap-3)}
 
 /* ============================================================
-   RÄKNA SJÄLV (prissidan, 2026-10-06)
+   RÄKNA SJÄLV (prissidan, 2026-10-06, omgjord 2026-10-07)
 
-   Valen till vänster, svaret till höger, en spalt på en telefon.
-   Märkena är knappar med aria-pressed; det tryckta läget animeras
-   inte, bara trycket (scale), som i vyerna. Tryckytorna är minst
-   48 px höga.
+   Leo 2026-10-07: "Räkna själv på hemsidan gör de lite moderna och
+   bättre." Valen till vänster och svaret som två rutor till höger:
+   vad fyra veckor kostar per pass, och vad samma timmar kostar med
+   planen. På en telefon en spalt.
+
+   Valen är en reglage-rad med en tumme i lera som glider till det man
+   valt. Siffrorna på tummen är en egen rad i tummen, förskjuten åt
+   andra hållet lika mycket som tummen, så att de står still medan
+   tummen glider under dem: texten byter färg exakt där lera täcker,
+   och ingen siffra är krämvit på beige på vägen dit. Knapparna själva
+   byter ingenting när de trycks (aria-pressed animeras inte); det som
+   rör sig är tummen, med translate, och dess scale medan man håller.
+
+   Stapeln i varje ruta är beloppet som en andel av det man betalar
+   per pass, satt i --andel på stapeln själv. Rutan till höger har tre
+   lägen i samma cell; ett läge som inte gäller är osynligt men tar sin
+   plats, så att den högsta bestämmer höjden och inget hoppar när man
+   byter. Siffrorna som byts glider in med en Web Animation (initKalkyl).
    ============================================================ */
 .pr-kalk-kort{
-  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  gap:clamp(26px,4vw,56px);align-items:start;margin-top:clamp(24px,3vw,34px);
+  display:grid;grid-template-columns:minmax(0,.74fr) minmax(0,1.76fr);
+  gap:clamp(26px,4vw,56px);align-items:stretch;margin-top:clamp(24px,3vw,34px);
 }
-.pr-kalk-val{display:grid;gap:26px}
+.pr-kalk-val{display:flex;flex-direction:column;gap:26px;min-width:0}
 .pr-kalk-falt{display:grid;gap:10px}
 .pr-kalk-etikett{font-size:.86rem;font-weight:600}
-.pr-kalk-chips{display:flex;flex-wrap:wrap;gap:8px}
-.pr-kalk-chips button{
-  font:inherit;font-weight:600;min-width:56px;min-height:48px;padding:0 18px;
-  border-radius:999px;border:1px solid var(--ln);background:transparent;color:inherit;
-  cursor:pointer;transition:scale .15s var(--ease);
+.pr-kalk-not{margin-top:auto;font-size:.84rem;line-height:1.55;color:var(--muted-2);max-width:34ch}
+
+.pr-kalk-seg{
+  position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  width:100%;max-width:264px;padding:4px;border-radius:999px;
+  background:var(--tryck-yta);border:1px solid var(--ln);
 }
-.pr-kalk-chips button:hover{border-color:var(--acc)}
-.pr-kalk-chips button:active{scale:.96}
-.pr-kalk-chips button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-.pr-kalk-svar{display:grid;gap:10px;min-width:0}
-.pr-kalk-summa{font-size:clamp(2.4rem,5vw,3.4rem);font-weight:800;letter-spacing:-.04em;line-height:1}
-.pr-kalk-rad{color:var(--muted-2);font-size:.92rem}
-.pr-kalk-tips{font-size:.92rem;background:var(--mossa-soft);color:var(--mossa-text);border-radius:14px;padding:11px 14px}
-.pr-kalk-not{font-size:.84rem;color:var(--muted-2)}
-@media (max-width:760px){.pr-kalk-kort{grid-template-columns:minmax(0,1fr)}}
+.pr-kalk-seg button{
+  min-height:48px;padding:0;border:0;border-radius:999px;background:none;
+  font:inherit;font-size:1.05rem;font-weight:700;color:var(--bl-2);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pr-kalk-seg button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.pr-kalk-tumme{
+  position:absolute;z-index:1;top:4px;bottom:4px;left:4px;
+  width:calc((100% - 8px) / 3);
+  border-radius:999px;background:var(--acc);overflow:hidden;pointer-events:none;
+  box-shadow:var(--sk-1);
+  transition:translate .44s var(--fjader),scale .16s var(--e);
+}
+.pr-kalk-tumme > span{
+  position:absolute;top:0;bottom:0;left:0;width:300%;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));place-items:center;
+  transition:translate .44s var(--fjader);
+}
+.pr-kalk-tumme b{font-size:1.05rem;font-weight:700;color:var(--acc-ink)}
+.pr-kalk-seg[data-v="2"] .pr-kalk-tumme{translate:100% 0}
+.pr-kalk-seg[data-v="2"] .pr-kalk-tumme > span{translate:-33.3333% 0}
+.pr-kalk-seg[data-v="3"] .pr-kalk-tumme{translate:200% 0}
+.pr-kalk-seg[data-v="3"] .pr-kalk-tumme > span{translate:-66.6667% 0}
+.pr-kalk-seg:active .pr-kalk-tumme{scale:.96}
+
+.pr-kalk-svar{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(12px,1.4vw,16px);min-width:0;
+}
+.pr-kalk-alt{
+  display:flex;flex-direction:column;gap:10px;min-width:0;
+  padding:clamp(20px,2.2vw,28px);border-radius:22px;border:1px solid var(--ln);
+}
+.pr-kalk-med{display:grid;background:var(--mossa-soft);border-color:transparent;color:var(--mossa-text)}
+.pr-kalk-lage{
+  grid-area:1 / 1;display:flex;flex-direction:column;gap:10px;min-width:0;
+  transition:opacity .35s var(--e-mjuk),visibility 0s;
+}
+.pr-kalk-lage[hidden]{
+  display:flex;visibility:hidden;opacity:0;
+  transition:opacity .2s var(--e-mjuk),visibility 0s .2s;
+}
+.pr-kalk-med .eyebrow{color:var(--mossa-text)}
+.pr-kalk-summa{
+  display:block;margin-top:4px;
+  font-size:clamp(2.3rem,3.8vw,3.3rem);font-weight:800;letter-spacing:-.045em;line-height:1;
+}
+.pr-kalk-rad{min-height:28px;color:var(--muted-2);font-size:.92rem;line-height:1.75}
+.pr-kalk-rad .pr-erb-paket{display:inline-block;margin-left:10px;line-height:1.4;vertical-align:1px}
+.pr-kalk-rad .pr-erb-paket[hidden]{display:none}
+.pr-kalk-med .pr-kalk-rad,.pr-kalk-med .pr-kalk-text{color:var(--mossa-text)}
+.pr-kalk-rad b{font-weight:700}
+.pr-kalk-text{font-size:1rem;line-height:1.5;color:var(--bl-2);max-width:34ch}
+.pr-kalk-stapel{
+  display:block;height:8px;margin-top:6px;border-radius:99px;overflow:hidden;
+  background:var(--ln);
+}
+.pr-kalk-stapel i{
+  display:block;height:100%;border-radius:inherit;background:var(--bl-3);
+  transform-origin:0 50%;scale:var(--andel,1) 1;
+  transition:scale .7s var(--e-ut);
+}
+.pr-kalk-med .pr-kalk-stapel{background:color-mix(in srgb,var(--mossa) 22%,transparent)}
+.pr-kalk-med .pr-kalk-stapel i{background:var(--mossa)}
+.pr-kalk-med .nx-lank{margin-top:auto;padding-top:8px;align-self:flex-start;color:var(--mossa-text)}
+/* Fristående länk: tryckytan minst 44 px (granskningen 2026-10-07). */
+.pr-kalk-med .nx-lank::before{content:"";position:absolute;inset:-6px -8px}
+
+/* Utan något erbjudande alls (ett tomt svar) finns ingen plan att
+   jämföra med: rutan går, och svaret per pass tar hela bredden. */
+.pr-kalk-med[hidden]{display:none}
+.pr-kalk-svar:has(> .pr-kalk-med[hidden]){grid-template-columns:minmax(0,1fr)}
+
+/* Mellanbredd och telefon: valen överst, svaret direkt under dem och
+   noten sist, så att det man trycker fram står närmast trycket. Valens
+   låda löses upp (display:contents) och dess delar ställs i kortets
+   rutnät i den ordningen: två val bredvid varandra, svaret, noten. */
+@media (max-width:1000px){
+  .pr-kalk-kort{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px clamp(20px,4vw,36px)}
+  .pr-kalk-val{display:contents}
+  .pr-kalk-svar{grid-column:1 / -1;order:1}
+  .pr-kalk-not{grid-column:1 / -1;order:2;margin-top:0;max-width:60ch}
+}
+/* Telefonen: valen och rutorna under varandra, rutorna tätare. Två
+   rutor bredvid varandra provades och föll: texten om fler barn blev
+   tio rader i en halv bredd, och den högsta texten bestämmer höjden. */
+@media (max-width:600px){
+  .pr-kalk-kort{grid-template-columns:minmax(0,1fr);gap:18px}
+  .pr-kalk-seg{max-width:none}
+  .pr-kalk-svar{grid-template-columns:minmax(0,1fr);gap:10px}
+  .pr-kalk-alt{padding:18px 20px;border-radius:20px;gap:8px}
+  .pr-kalk-lage{gap:8px}
+  .pr-kalk-summa{font-size:clamp(2.1rem,10vw,2.5rem);margin-top:2px}
+  .pr-kalk-rad{min-height:0;line-height:1.6}
+}
+@media (prefers-reduced-motion:reduce){
+  .pr-kalk-seg:active .pr-kalk-tumme{scale:none}
+}

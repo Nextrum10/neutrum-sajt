@@ -2385,9 +2385,12 @@
   async function laddaErbjudanden() {
     const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
-      supa.from('erbjudanden_pris')
-        .select('kod, sort, namn, timmar, rabatt_procent, giltig_manader, timpris_ore, ordinarie_ore, pris_ore, rabatterat_timpris_ore')
-        .order('ordning'),
+      /* Alla kolumner (planerna, 2026-10-07): timmar_pa_kopet finns först
+         efter migrationen, och en uttrycklig lista med den hade gett ett
+         fel och "Inga erbjudanden just nu" tills dess. Med * ritas den
+         gamla katalogen som förut, och den är vad kassan då tar betalt
+         efter. Vyn har inga kolumner som inte ska visas. */
+      supa.from('erbjudanden_pris').select('*').order('ordning'),
       supa.from('klippkort_saldo')
         .select('id, erbjudande, namn, sort, timmar, anvanda, kvar, giltigt_till, status, brukbar, created_at')
         .eq('parent_id', S.user.id).in('status', ['betald', 'tvist', 'aterbetald'])
@@ -3109,7 +3112,7 @@
           try {
             await öppnaKassa(knapp, null, svar, Stripe, {
               titel: 'Köp ' + e.namn,
-              vad: e.timmar + ' timmar · ' + NXBetalning.kronor(e.pris_ore),
+              vad: erbTimmar(e) + ' · ' + NXBetalning.kronor(e.pris_ore),
               kod: kod,
               klar: köpKlart
             });
@@ -3127,27 +3130,59 @@
     });
   }
 
+  /* Planerna (2026-10-07, Leo): Standard har en timme på köpet i stället
+     för en rabatt. Timmarna på köpet räknas i databasen
+     (erbjudanden_pris.timmar_pa_kopet); före migrationen saknas fältet,
+     och då är det noll. */
+  const erbPåKöpet = e => Math.max(Number(e.timmar_pa_kopet) || 0, 0);
+  const timmarOrd = n => n === 1 ? '1 timme' : n + ' timmar';
+  /* "8 timmar för priset av 7", samma ord som på prissidan och i kassan.
+     Inte "en timme på köpet" ensamt: så heter också första timmen som
+     bjuds på ett pass, och det är en annan sak. */
+  const erbTimmar = e => erbPåKöpet(e)
+    ? timmarOrd(Number(e.timmar)) + ' för priset av ' + (Number(e.timmar) - erbPåKöpet(e))
+    : timmarOrd(Number(e.timmar));
+
   /* Ett erbjudande som ett kort. Det överstrukna är ordinarie pris för
      samma timmar, och skillnaden står i kronor: "ni sparar" är ett
      belopp, inte en procentsats man ska räkna om själv. */
   function erbKort(e) {
     const kr = NXBetalning.kronor;
     const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
-    /* Timpriset räknas i vyn, och summan är timpriset gånger timmarna
-       (Fas 16.1d). En egen division här hade kunnat visa ett timpris
-       som inte går ihop med summan bredvid. */
+    const pa = erbPåKöpet(e);
+    const rabatt = Number(e.rabatt_procent) || 0;
+    /* Timpriset räknas i vyn, och summan är timpriset gånger de betalda
+       timmarna (Fas 16.1d, planerna). En egen division här hade kunnat
+       visa ett timpris som inte går ihop med summan bredvid, och med en
+       timme på köpet hade den blivit ett snittpris (331,63 kr) som ingen
+       betalar. Standard visar därför inget timpris; en plan med både
+       timmar på köpet och rabatt visar det rabatterade timpriset, som är
+       vad varje betald timme kostar. */
     const perTimme = Number(e.rabatterat_timpris_ore);
     const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
     /* Ur raden, inte ur koden (Fas 21.3): ändras timmarna eller
        giltigheten i katalogen ska kortet säga det nya av sig självt. */
-    const vad = e.timmar + ' timmar · gäller i ' + mån;
-    return '<div class="erb-kort' + (e.kod === 'intensiv' ? ' ar-framhavd' : '') + '">'
+    const vad = timmarOrd(Number(e.timmar)) + ' · gäller i ' + mån;
+    /* Märket säger vad erbjudandet ger: timmen på köpet, rabatten, eller
+       båda. Aldrig "−0 %". */
+    const märken = (pa ? '<span class="erb-rabatt ar-pa-kopet">' + esc(timmarOrd(pa)) + ' på köpet</span>' : '')
+      + (rabatt ? '<span class="erb-rabatt">−' + esc(String(rabatt)) + ' %</span>' : '');
+    const timrad = pa
+      ? esc(erbTimmar(e))
+        + (rabatt ? ', <s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme' : '')
+      : (rabatt ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '') + esc(kr(perTimme)) + ' per timme';
+    /* Standard lyfts fram (Leo 2026-10-07: "Visa standard planens
+       erbjudande"): planen med timmar på köpet, eller koden om katalogen
+       skulle ändras. Före migrationen lyfts ingen. */
+    const lyft = pa > 0 || e.kod === 'plan_standard';
+    return '<div class="erb-kort' + (lyft ? ' ar-framhavd' : '') + '">'
       + '<div class="erb-topp"><b class="erb-namn">' + esc(e.namn) + '</b>'
-      + '<span class="erb-rabatt">−' + esc(String(e.rabatt_procent)) + ' %</span></div>'
+      + (märken ? '<span class="erb-marken">' + märken + '</span>' : '') + '</div>'
       + '<span class="erb-vad">' + esc(vad) + '</span>'
-      + '<span class="erb-pris"><s>' + esc(kr(e.ordinarie_ore)) + '</s><b>' + esc(kr(e.pris_ore)) + '</b></span>'
-      + '<span class="erb-tim"><s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme · ni sparar '
-      + esc(kr(spar)) + '</span>'
+      + '<span class="erb-pris">' + (spar > 0 ? '<s>' + esc(kr(e.ordinarie_ore)) + '</s>' : '')
+      + '<b>' + esc(kr(e.pris_ore)) + '</b></span>'
+      + '<span class="erb-tim">' + timrad
+      + (spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>'
       + köpKnapp(e)
       + '</div>';
   }
@@ -3184,14 +3219,14 @@
         + '<div class="erb-topp"><b class="erb-namn">' + esc(e.timmar + ' timmar') + '</b>'
         + '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b></div>'
         + '<span class="erb-tim"><s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(e.rabatterat_timpris_ore))
-        + ' per timme · ni sparar ' + esc(kr(spar)) + '</span>'
+        + ' per timme · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span></span>'
         + '<div class="erb-klipp-fot"><span class="erb-vad">Gäller i ' + esc(mån) + '</span>' + köpKnapp(e) + '</div>'
         + '</div>';
     }).join('');
     return '<details class="erb-kort erb-klippkol"' + (öppen ? ' open' : '') + '>'
       + '<summary>'
       + '<span class="erb-topp"><b class="erb-namn">Klippkort</b>'
-      + (lika('rabatt_procent') ? '<span class="erb-rabatt">−' + esc(String(kort[0].rabatt_procent)) + ' %</span>' : '')
+      + (lika('rabatt_procent') && Number(kort[0].rabatt_procent) ? '<span class="erb-rabatt">−' + esc(String(kort[0].rabatt_procent)) + ' %</span>' : '')
       + '</span>'
       + '<span class="erb-vad">' + esc(spann) + ', när det passar er</span>'
       + '<span class="erb-pris"><span class="erb-fran">från</span><b>' + esc(kr(billigast.pris_ore)) + '</b></span>'
@@ -3350,7 +3385,7 @@
       + 'ett pass dras timmarna från det kort som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
       + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
       + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
-      + 'Ett pass med fler barn, och ett pass där en timme är på köpet, '
+      + 'Ett pass med fler barn, och ett pass där första timmen eller tipstimmen är på köpet, '
       + 'betalas med kort. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
       + kort.map(k => kortRad(k, kortetsPass(k))).join('');
   }

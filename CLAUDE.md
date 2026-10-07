@@ -84,7 +84,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **NexLäx**: rättningen sker i databasen; frågorna går ut utan facit, försök och svar har ingen
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
   sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. Allt i NexLäx är
-  öppet (2026-10-06): ingen nivå låses, vägen är bara ett förslag. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
+  öppet (2026-10-06): ingen nivå låses, vägen är bara ett förslag. Startsidan visar NexLäx bara som en
+  illustration (2026-10-07): exempelfrågan finns inte i banken; XP och uppdrag i den följer
+  `intern.nexlax_*`, rank och märke `RANGER` och `MÄRKEN` i `nextrum-uppgifter.js`, och den ändras med dem. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
   beslut. `.nl-hopp` går med flit inte att trycka på. **Uppdragen** (Fas 23.4) räknas av
   `intern.nexlax_uppdrag`, sparas aldrig, ger inga XP och påminns aldrig om; katalogen är
   historik, så ett nytt uppdrag får ett nytt id och ett `fran`. **NP-spåret** är `nivaer.spar`,
@@ -192,8 +194,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
   samtidigt. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
-  `erbjudanden_pris`; prissidans kalkylator (2026-10-06) läser planpriset ur planens kort och
-  räknar bara timpris och tillägg ur `CFG`. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
+  `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
+  och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`. Allt med
+  `data-erb` (planerna, lyftet `.pr-lyft`, startsidans `.pr-std-lapp`) tar siffrorna ur samma svar från
+  `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar −5 %),
+  Standard (`plan_standard`, 8 timmar för priset av 7) och Intensiv (`plan_intensiv`, 12 timmar −5 %);
+  `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
+  `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och Standard visar
+  aldrig ett timpris, bara "8 timmar för priset av 7". Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
   och tipstimmen är samma rabatt); ett pass på noll kronor är INTE betalt. Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
@@ -228,6 +236,15 @@ delar som de är; deras text följer inte med formen, och `.faq-item` är orörd
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
+Under heron står NexLäx (2026-10-07, `#nexlax`, avsnitt 13, `nexlax()`): en telefon som visar sig själv
+i fyra skärmar och en stig som följer med, på papperet; en illustration (`role="img"`), inget att svara
+i, högst tre varv och pausad utanför bild. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
+`html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
+kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
+(`data-bild`), och alt-texten står på steget (`data-alt`). Betygsgarantin (2026-10-07) är ingen mörk yta: den står på papperet som ett flöde (`.nx-gar`,
+`garantiflöde()`), också på prissidan, och dess släckta läge hänger på `.i-gang`, aldrig bara på
+`html.nx-sr`. Manifestets blad står bredvid varandra ner till 340 px, och studiehjälparna i en rad
+man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
 Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
 första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
 animerad `box-shadow`, och en custom property sätts där den läses, för den ärvs.
@@ -236,6 +253,8 @@ animerad `box-shadow`, och en custom property sätts där den läses, för den �
 3. `scrollIntoView` i en rad som flyttas med transform rullar sidan; bandet är `overflow:clip`,
    och kanterna tonas med gradienter, aldrig `mask-image` (Safari).
 4. Det som fälls ut i bandet klipps.
+5. En snäppande rad (2026-10-07): inträdet observerar RADEN, aldrig korten, raden har
+   `overflow-y:hidden`, och den rullas bara med `scrollBy`/`scrollTo` på raden.
 ### Två fällor när en palett byts
 Den dag någon sätter `--pap`, `--bl` eller `--acc` på en vy: (1) en alias-token på `:root`
 fryser rotens värde, så hela mängden aliaser upprepas; (2) mörkerreglerna väger (0,4,0).
@@ -579,6 +598,14 @@ Detaljer: `minne/grunden.md`.
   Inget är byggt för att pröva ett anspråk (admin räknar ur vyerna; anmälningarna står i elevens
   panel), passen har inget ämnesfält, studiehjälparen ser inte vilka ämnen som har garanti, och
   juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`.
+- **Planerna Basic, Standard och Intensiv** (2026-10-07) är INTE i drift förrän `stripe-checkout`
+  (SESSIONSFORM 7) driftsatts från main och migrationen `planerna_basic_standard_intensiv`
+  (20261007210000) körts efter merge, i den ordningen: kassan läser hela raden och tål att kolumnen
+  saknas, och driftsatt först säljer ingen gammal kassa Standard med "0 % rabatt". Tills dess döljer
+  prissidan och startsidan de nya planerna, och studievyn visar den gamla katalogen. Intensiv är dyrare
+  per timme än Standard (Leos val). Juristen har inte läst "1 timme på köpet" och "ni sparar" mot
+  ordinarie pris, och villkoren säger "ett pass där en timme är på köpet" om startrabatten; ett
+  förtydligande kräver en ny version, tidigast 2026-10-08.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

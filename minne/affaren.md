@@ -636,9 +636,14 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   fält på passet vore en egen ändring. Studiehjälparen ser inte heller
   vilka ämnen som har garanti; familjen får säga det.
 - **Sidorna säljer den** (Leo samma dag: "sälj in det utan konkreta villkor
-  eller siffror", och sedan "effektivt, inte överdrivet"): en mörk sektion
+  eller siffror", och sedan "effektivt, inte överdrivet"): en sektion
   på startsidan efter Så fungerar Nextrum och på prissidan efter
-  priskorten, en rad i priskortet ("Betygsgaranti, utan extra kostnad"),
+  priskorten (sedan 2026-10-07 på papperet som ett flöde, inte mörk: Leo
+  ville ha "samma färg som resten av sidan", "inte samma kolumner som
+  finns överallt" och "en mindre sektion" som "följer ett flow när man
+  scrollar"; fyra steg med stora siffror och en linje som fylls i lera,
+  och länken till villkoren och raden "Villkor gäller" intill knappen,
+  aldrig bakom en utfällning), en rad i priskortet ("Betygsgaranti, utan extra kostnad"),
   en punkt i startsidans sista ruta, prissidans och FAQ-sidans
   beskrivning, och samma fråga i prissidans FAQ och på `/faq`, som
   maskoten och FAQ-schemat därför också svarar med. Inga villkor och inga

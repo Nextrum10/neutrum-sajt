@@ -310,6 +310,10 @@ null visas som false sedan 2026-09-28: tre prov stod null i en lista
 över ok utan att någon såg det. Kör den efter varje ändring i en policy
 eller en trigger.
 
+**Docker Hub kan svara 429** på `supabase/postgres`; samma bild finns som
+`public.ecr.aws/supabase/postgres:15.8.1.085` (samma id), och `PORT=… NAMN=…`
+låter två sessioner bygga var sin databas samtidigt (2026-10-07).
+
 **Sviten går att köra lokalt** (2026-09-30): `verktyg/lokal-databas.sh`
 bygger databasen i Docker (`supabase/postgres`) ur arkivet och alla
 migrationer, i README:ns ordning, och kör hela `rls-test.sql` mot den, på

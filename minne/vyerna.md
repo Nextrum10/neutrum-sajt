@@ -130,11 +130,10 @@ tillkom är etiketter (Nästa steg), lapparna på fotot och hoppen på FAQ:n.
   i `.sid-et` i stället för en siffra. Före, under och efter på För
   elever & föräldrar är fotokort (`.sid-bildkort`).
 - **Stegen till första passet** på Så fungerar Nextrum är startsidans
-  pinnade scen. Fotona står i markupen, inte i skriptet: registret har
-  bara svensk alt-text, och startsidans skript bygger sina foton därur,
-  så den engelska startsidan har svensk alt-text i den scenen (kvar,
-  inte rörd här). `stegFoton` rör bara en scen som redan har foton, och
-  startsidans ruta är tom när den körs.
+  scen. Fotona står i markupen där, och sedan 2026-10-07 bygger
+  `stegFoton` startsidans foton ur registret med alt-texten ur stegets
+  `data-alt`, så den engelska startsidan har engelsk alt (se Stegscenen
+  under Startsidan och prissidan i ny form).
 - **Text bredvid ett foto** (Priset på Vår idé, Vem kan söka, Varför
   priset ser ut så här) är cinemas `.nx-split` på ljus botten.
 - **Lapparna** på sidhuvudets foto är vyernas notiser: två korta
@@ -198,6 +197,142 @@ Den som betalar är en förälder. Ändrat, på båda språken:
   inloggade vyerna).
 - **Prova NexLäx** stod en dag efter studievyn och är borttaget
   (`minne/nexlax.md`).
+
+### Startsidan och prissidan i ny form (2026-10-07)
+
+Leo: "Du får göra sidan lite moderna generellt och coolare", med en lista
+över delarna. Designspråket som delarna delar: papperet bär allt (inga nya
+mörka block), stora tunga siffror (800, −.06em, tabular-nums, lera när de
+är aktiva) i stegscenen, garantin och betalningen, flöden med en linje som
+fylls med `scale` i stället för kolumner, och mobilen som en app: rader man
+sveper i, med snäpp och prickar.
+
+**Menyn bakom de tre strecken** har inga pilar ("ta bort pilarna när man
+trycker på tre strecken"). De togs bort på de 30 handskrivna sidorna och i
+skalet i `var-ide.html`, som `bygg-omradessidor.py` kopierar till de 28
+genererade.
+
+**NexLäx under heron.** Leo: "Under heron ska vi nu sälja in Nexläx gör
+en cool genomgång av nexläx som är lika stor som hero bilden." Första
+sektionen efter heron säljer in NexLäx med en telefon som visar sig själv
+och en stig med fyra delar som följer med; papperet bär den, och
+ämnesfärgerna får synas här men i ingen annan sektion. Allt som byter läge
+ligger i fasta rutor: skärmarna i samma cell och, på mobil, delarnas text
+i samma cell. Rundturen ändrar aldrig någon höjd (uppmätt: 1156 px på
+1440×900 före och efter). Detaljer i `minne/nexlax.md`.
+
+**Efter granskningen (2026-10-07):** stegscenens öppna steg har en fast
+höjd (`--hur-rader`, 2 rader, 3 under 1241 px) i stället för max-height,
+så att rubriken står helt stilla; den fastnålade rutans foto har `--sk-2`
+(`--sk-foto` klipptes i en rak kant). Garantins släckta text byter till
+`--bl-3` i stället för opacity .4 (ungefär 2:1), och linjen ligger 78 %
+ned. Prisraden överst på prissidan tänds med `data-stig`, inte `.rv`,
+som var osynlig utan JS. `radAvslöj()` bygger rubrikens namn med
+mellanslag mellan raderna. Kalkylatorn visar "8 timmar för priset av 7"
+i stället för märket bredvid noten om första timmen, och ingressen och
+betalflödets steg 2 nämner inget antal planer eller planens namn, för de
+står kvar när planerna saknas i svaret.
+
+**Stegscenen** (Från intresseanmälan till första passet, startsidan och Så
+fungerar Nextrum, sv och en; Leo: "bättre animation mellan bilderna på
+datorvy och mobil ska även få den animation. Stegen ska visas bredvid
+bilderna. 01 osv ska vara större. Och svepningen ska fungera på
+mobilen"). En markup och en kod: `stegFoton()` i `nextrum-start.js`, grunden
+i cinema och formen i `nextrum-start.css` avsnitt 14.
+- Lägena läses ur `html[data-motion]` vid varje händelse (`M.tier`, aldrig
+  en `const` från laddningen). `full` (mus, över 900 px) är den pinnade
+  scenen, 230svh. `lite` (pekskärm eller högst 900 px) är samma `ol` som
+  scroll-snap-rad i samma rutnätscell som fotot (`container-type`, `cqi`,
+  `display:contents` på `.nx-hur-text`, aldrig på ol eller li). På en
+  platta liggande står texten till vänster och raden till höger.
+- Allt rörligt kräver `html.nx-sr` och `.igang` på sektionen. Grunden i
+  cinema har alla steg öppna; det är läget utan JS och med reducerad
+  rörelse. Förut fastnade en platta i en scen som aldrig bytte steg, och
+  steg 2–5 var dolda utan JS.
+- Fotots övergång står i klasserna `.pa`, `.forbi` och `.tyst`: det nya
+  glider in över det gamla, som sjunker bakåt i mörkret, och bilden landar
+  med Ken Burns. Bara translate, scale och opacity; clip-path är bortvalt
+  (avsnitt 9). `.tyst` sätts på fotona emellan när man hoppar över steg,
+  så att de inte far genom ramen.
+- Siffrorna 01–05 är stora (800, −.06em) och växer med fjädern till lera;
+  en linje fylls ner till steget man står på; ett märke på fotot
+  (`.nx-hur-mark`, aria-hidden) kopieras ur stegets `em` och `h3`.
+- Fällor: (1) `.nx-hur-bild` måste vara en egen staplingskontext
+  (`isolation:isolate`), annars hamnar fotot över raden och svepet når den
+  aldrig. (2) Fråga `intersectionRatio >= .6`, inte `isIntersecting`. (3)
+  Rulla raden med `scrollTo`, aldrig `scrollIntoView`. (4) Det mörka bakom
+  fotot ligger 1 px innanför ramen, annars blöder det fram i de rundade
+  hörnen som en hårlinje i ljust läge. (5) `sizes` räknar med att 16:9
+  ritas i ett högt format: `(max-width: 900px) 180vw, 100vw`. (6) Den
+  öppna texten är 46ch i det pinnade läget, så att rubriken inte glider
+  när steget byts (på 1024×768 glider den fortfarande 12 px, mjukt).
+
+**Garantiflödet.** `#betygsgaranti` lämnade `.nx-mork` och `.nx-apply-flow`
+(som är kvar i #bli och på Bli studiehjälpare, och sköts av
+`hållpunkter()` och `mörkaYtor()`). Markupen är `section.nx-sek-s.nx-gar >
+.nx-gar-in` med `.nx-gar-head`, `ol.nx-gar-flode[data-gar-flode]` (li >
+`span.nx-gar-nr` + `div.nx-gar-steg`) och `.nx-gar-cta`, på startsidan och
+prissidan (där i `.wrap`, för att linjera med priskorten). CSS i
+nextrum-start.css avsnitt 15, JS i `garantiflöde()`. Skriptet sätter `.pa`
+(tänt) och `.fylld` (sträckan nedåt fylld; på sista steget svansen när alla
+är tända) när en siffra passerar en linje 62 % ned i fönstret, och läser
+då om alla fyra siffrornas läge, så att ett ankarhopp ger rätt läge.
+Första läget räknas innan `.i-gang` sätts. Fällor:
+- Startläget kräver `.i-gang`, annars fastnar stegen nedtonade där
+  IntersectionObserver saknas.
+- `data-stig` får aldrig sitta på listan eller stegen: (0,3,1) slår ut
+  nedtoningen.
+- Linjen fylls med `scale`, aldrig `height`. Nästa siffra tänds .3 s efter
+  att linjen börjat, bara på vägen in.
+- `.nx-flode`, `[data-flode]` och `.pr-flode` hör till prissidans
+  betalflöde, inte garantin.
+
+**Manifestets blad bredvid varandra.** Leo: "På mobil vyn ska de
+kolumnerna under rätt person kan göra stor skillnad bredvid varandra." Två
+spalter ner till 340 px (under det en). Varje blad har en h3, Rätt match
+och Allt på ett ställe (The right match, All in one place). Bladet är ett
+rutnät med `grid-template-rows:subgrid`, så texterna börjar på samma höjd.
+På dator tar bladen hela bredden (förut slutade de vid 1000 px). På
+telefon är det 14–21 tecken per rad, långt under bekväma 45–75: det är
+vad två spalter på en telefon ger, och Leo bad om det. Safari avstavar
+svenska (`hyphens:auto`), Chromium på Linux gör det inte.
+
+**Studiehjälparna i en rad man sveper i.** Leo: "bredvid varandra på
+mobil vyn så att man swipar som ett inlägg". En flexrad med scroll-snap i
+alla bredder: ett kort och en kant på telefon, två på platta, tre som
+fyller raden på dator. `overflow-y:hidden` står med flit, annars tar raden
+det lodräta svepet på iPhone. Prickarna är inga knappar; pilarna finns bara
+med mus och när korten inte ryms, och etiketterna står i markupen. Korten
+stiger upp med `transform-origin:0 100%`: ett kort som sköts in från sidan
+flyttade snäppunkten, och raden rullade 75 px av sig själv. En
+`focusin`-lyssnare rullar raden till ett kort man tabbar till. Märket
+Exempel står kvar, och `EXEMPELKORT` och `laddaShowcase()` är orörda.
+Prova: en elementbild som är högre än vyn byter fönstrets mått i
+Playwright och tappar pekskärmsemuleringen; ta bilden med
+`page.screenshot({clip})`.
+
+**Prissidan** (2026-10-07):
+- Planerna: tre kort i en rad, Standard i mitten med bandet Vårt tips
+  ovanför. Varje plan har en rad rutor, en per timme, och timmen på köpet
+  är i lera (dekor, `aria-hidden`). Klippkorten är en egen bred rad
+  (`<details>`).
+- På telefon (högst 760 px) är planerna en rad man sveper i, som börjar
+  med Standard i mitten: `svepraden()` i nextrum-app.js sätter `scrollLeft`
+  en gång och aldrig medan någon rört raden. Prickarna sätts av en
+  IntersectionObserver med raden som rot.
+- Lyftet `.pr-lyft` under starterbjudandet säljer Standard med siffrorna
+  ur samma svar; toppens priskort sträcks bara när lyftet syns.
+- Startsidans lapp `.pr-std-lapp` i #plattformen säljer Standard utan
+  kronor ("8 timmar i månaden för priset av 7") och leder till
+  /priser#erbjudanden; "på köpet" står inte där, för hero säger redan
+  "Första timmen på köpet".
+- Så fungerar betalningen är ett flöde med pilar (`ol.pr-flode
+  [data-betalflode]`, `betalflöde()`, CSS i nextrum-sidor.css): vågrätt
+  på dator, där stegen och pilarna tänds i tur (`.ar-igang`), och lodrätt
+  med pilen nedåt från 1100 px, där varje steg tänds när det passerat
+  mitten (`.ar-nadd`). Betalnings- och fakturameningen står en gång var i
+  flödet och en gång i FAQ:n. `.nx-holdpunkter` är kvar på Vår idé och För
+  elever & föräldrar.
 
 ### Två fällor när en palett byts
 

@@ -209,12 +209,13 @@ blockquote,figure{margin:0}
   transition:opacity .25s var(--ease),transform .25s var(--ease);
 }
 .mobile-menu.open{opacity:1;transform:none;pointer-events:auto}
+/* Ingen pil bredvid länkarna sedan 2026-10-07 (Leo: "ta bort pilarna
+   när man trycker på tre strecken"). Raden är bara ordet. */
 .mobile-menu a.m-link{
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:center;
   font-size:1.5rem;font-weight:700;letter-spacing:-.03em;
   padding:16px 0;border-bottom:1px solid var(--line);
 }
-.mobile-menu a.m-link svg{width:16px;height:16px;color:var(--muted-2)}
 .mobile-menu .m-actions{margin-top:32px;display:grid;gap:12px}
 /* Regeln som stod här dolde .mobile-menu över 1160px. Den var död:
    nextrum-cinema.css:484 sätter `body .mobile-menu{display:block}`,

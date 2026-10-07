@@ -147,7 +147,11 @@ const NX = (function () {
     felEpost:        ['Kontrollera e-postadressen — den ser inte ut som en adress.',
                       'Please check the email address — it does not look like an address.'],
     enManad:         ['1 månad', '1 month'],
-    flerManader:     ['{n} månader', '{n} months']
+    flerManader:     ['{n} månader', '{n} months'],
+    /* Märket på en plan med timmar på köpet (2026-10-07). Skrivs av
+       initErbjudanden() för pluralens skull: antalet kommer ur databasen. */
+    timmePaKopet:    ['1 timme på köpet', '1 hour free'],
+    timmarPaKopet:   ['{n} timmar på köpet', '{n} hours free']
   };
   /* {oss} fylls alltid, utan att anroparen behöver veta om det. Varje
      mall som slutar i en återvändsgränd ska kunna peka på en adress,
@@ -611,25 +615,40 @@ const NX = (function () {
     io.observe(stor);
   }
 
-  /* ---------- erbjudandena (Fas 16.1) ----------
-     Priserna på prissidan läses ur vyn erbjudanden_pris, den som
-     stripe-checkout tar betalt efter. Timpriset i CFG räcker inte:
-     rabatten och avrundningen räknas i databasen, och en andra räkning
-     här hade kunnat lova en krona som kassan inte drar.
+  /* ---------- erbjudandena (Fas 16.1, planerna 2026-10-07) ----------
+     Priserna läses ur vyn erbjudanden_pris, den som stripe-checkout tar
+     betalt efter. Timpriset i CFG räcker inte: rabatten, timmarna på
+     köpet och avrundningen räknas i databasen, och en andra räkning här
+     hade kunnat lova en krona som kassan inte drar.
 
      Supabase-klienten laddas inte på de publika sidorna — den är
      tvåhundra kilobyte för en fråga — så det här är ett rått anrop mot
      PostgREST med anon-nyckeln. Svarar det inte står siffrorna i HTML
      kvar; de är skrivna efter samma vy. Ett erbjudande som inte finns
      i svaret är avstängt och döljs, och kommer inget alls tillbaka
-     döljs hela sektionen: en plan utan pris går inte att köpa. */
+     döljs hela sektionen: en plan utan pris går inte att köpa.
+
+     select=* sedan 2026-10-07: timmar_pa_kopet kom med planerna, och en
+     kolumn som inte finns får PostgREST att neka hela frågan. Med *
+     tål sidan att migrationen inte körts. Då saknas de nya koderna i
+     svaret och deras kort döljs, och inget pris som kassan inte drar
+     visas.
+
+     Alla [data-erb] i dokumentet, inte bara prissidans sektion: lyftet
+     överst på prissidan och lappen på startsidan (Leo 2026-10-07: "sälj
+     in de inbakat") tar sina siffror ur samma svar. Ett kort vars text
+     inte går ihop med raden döljs hellre än visas fel: ett timpris när
+     timmar är på köpet (summan är då inte timpriset gånger timmarna),
+     eller "för priset av" när inga timmar är på köpet. */
   async function initErbjudanden() {
-    const sek = $('.pr-erb');
-    if (!sek || !String(CFG.SUPABASE_URL || '').startsWith('https://')) return;
+    const alla = $$('[data-erb]');
+    if (!alla.length) return;
+    const rad = $('[data-erb-rad]');
+    const svep = rad ? svepraden(rad) : null;
+    if (!String(CFG.SUPABASE_URL || '').startsWith('https://')) return;
     let rader;
     try {
-      const svar = await fetch(CFG.SUPABASE_URL + '/rest/v1/erbjudanden_pris'
-        + '?select=kod,timmar,rabatt_procent,giltig_manader,timpris_ore,ordinarie_ore,pris_ore,rabatterat_timpris_ore', {
+      const svar = await fetch(CFG.SUPABASE_URL + '/rest/v1/erbjudanden_pris?select=*', {
         headers: { apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY }
       });
       if (!svar.ok) throw new Error('HTTP ' + svar.status);
@@ -639,31 +658,55 @@ const NX = (function () {
       return;
     }
     if (!Array.isArray(rader)) return;
-    if (!rader.length) { sek.hidden = true; return; }
+    const sek = $('.pr-erb');
+    if (!rader.length) {
+      alla.forEach(el => { el.hidden = true; });
+      if (sek) sek.hidden = true;
+      document.dispatchEvent(new Event('nx:erbjudanden'));
+      return;
+    }
 
     const perKod = {};
     rader.forEach(r => { perKod[r.kod] = r; });
     const skriv = (el, sel, text) => $$(sel, el).forEach(x => { x.textContent = text; });
-    $$('[data-erb]', sek).forEach(el => {
+    alla.forEach(el => {
       const r = perKod[el.getAttribute('data-erb')];
-      if (!r) { el.hidden = true; return; }
+      const timmar = r ? Number(r.timmar) : 0;
+      const pa = r ? Number(r.timmar_pa_kopet) || 0 : 0;
+      const rabatt = r ? Number(r.rabatt_procent) || 0 : 0;
+      if (!r || (pa > 0 && $('[data-erb-rabatterat]', el)) || (pa === 0 && $('[data-erb-betalda]', el))) {
+        el.hidden = true;
+        return;
+      }
       const m = Number(r.giltig_manader);
-      el.setAttribute('data-erb-timmar', String(r.timmar));
+      el.setAttribute('data-erb-timmar', String(timmar));
+      el.setAttribute('data-erb-ore', String(r.pris_ore));
       skriv(el, '[data-erb-pris]', kr(r.pris_ore / 100));
       skriv(el, '[data-erb-timpris]', kr(r.timpris_ore / 100));
       skriv(el, '[data-erb-rabatterat]', kr(r.rabatterat_timpris_ore / 100));
       skriv(el, '[data-erb-spar]', kr((r.ordinarie_ore - r.pris_ore) / 100));
-      skriv(el, '[data-erb-rabatt]', String(r.rabatt_procent));
+      skriv(el, '[data-erb-rabatt]', String(rabatt));
       skriv(el, '[data-erb-giltig]', m === 1 ? t('enManad') : t('flerManader', { n: m }));
+      skriv(el, '[data-erb-antal]', String(timmar));
+      skriv(el, '[data-erb-pa-kopet]', String(pa));
+      skriv(el, '[data-erb-betalda]', String(timmar - pa));
+      /* Märkena: procenten bara när det finns en rabatt, och timmarna på
+         köpet bara när det finns sådana, med pluralen ur ORD. */
+      $$('.pr-erb-rabatt', el).forEach(x => { x.hidden = rabatt === 0; });
+      $$('[data-erb-paket]', el).forEach(x => {
+        x.hidden = pa === 0;
+        if (pa) x.textContent = pa === 1 ? t('timmePaKopet') : t('timmarPaKopet', { n: pa });
+      });
+      $$('.pr-erb-rutor', el).forEach(x => rutor(x, timmar, pa));
     });
 
-    /* Klippkortens kolumn sammanfattar korten i den, och sammanfattningen
+    /* Klippkortens rad sammanfattar korten i den, och sammanfattningen
        ska gälla de kort som finns KVAR: "från" det billigaste och spannet
        i timmar. Rabatten skrivs bara om den är densamma på alla — en
        procentsats som stämmer för ett av korten är ett pris som inte är
-       det kassan drar. Finns inget kort kvar döljs kolumnen, annars står
+       det kassan drar. Finns inget kort kvar döljs raden, annars står
        den där med gamla siffror och fälls ut till ingenting. */
-    $$('[data-erb-grupp]', sek).forEach(g => {
+    $$('[data-erb-grupp]').forEach(g => {
       const kvar = $$('[data-erb]', g).filter(el => !el.hidden)
         .map(el => perKod[el.getAttribute('data-erb')]);
       if (!kvar.length) { g.hidden = true; return; }
@@ -677,52 +720,149 @@ const NX = (function () {
       if (rabatter.size === 1) rabatt.textContent = [...rabatter][0];
       else rabatt.closest('.pr-erb-rabatt').hidden = true;
     });
+    if (svep) svep.ordna();
     document.dispatchEvent(new Event('nx:erbjudanden'));
   }
 
-  /* ---------- räkna själv (2026-10-06) ----------
+  /* Timmarna som rutor, en per timme, och de sista timmar_pa_kopet i
+     lera. Dekor utan text (aria-hidden i sidan): rutorna står i HTML som
+     reserv och ritas om bara när antalet i databasen är ett annat. */
+  function rutor(el, timmar, pa) {
+    if (!(timmar > 0 && timmar <= 24)) { el.hidden = true; return; }
+    if ($$('i', el).length !== timmar) el.innerHTML = '<i></i>'.repeat(timmar);
+    $$('i', el).forEach((x, n) => x.classList.toggle('pa', n >= timmar - pa));
+  }
+
+  /* ---------- svepraden (2026-10-07) ----------
+     På en telefon är planerna en rad man sveper i, som ett inlägg (CSS).
+     Raden börjar med Standard i mitten: scrollLeft sätts när sidan
+     laddats, och en gång till när svaret kommit, om ingen hunnit röra
+     raden. Aldrig scrollIntoView, som rullar hela sidan. Prickarna under
+     raden säger vilket kort som står i mitten: en IntersectionObserver
+     med raden som rot sätter en klass, ingen mätning medan man sveper.
+     På en dator är raden inget rullfönster, och då gör mitt() ingenting. */
+  function svepraden(rad) {
+    const kort = $$(':scope > [data-erb]', rad);
+    const låda = $('[data-erb-prickar]');
+    const prickar = låda ? $$('i', låda) : [];
+    let rörd = false;
+    const rör = () => { rörd = true; };
+    ['pointerdown', 'wheel', 'keydown'].forEach(h =>
+      rad.addEventListener(h, rör, { passive: true, once: true }));
+
+    function mitt() {
+      if (rörd || rad.scrollWidth <= rad.clientWidth + 1) return;
+      const synliga = kort.filter(k => !k.hidden);
+      const mål = synliga.find(k => k.classList.contains('ar-framhavd')) || synliga[0];
+      if (mål) rad.scrollLeft = mål.offsetLeft - (rad.clientWidth - mål.offsetWidth) / 2;
+    }
+    function ordna() {
+      const synliga = kort.filter(k => !k.hidden);
+      rad.hidden = !synliga.length;
+      if (låda) låda.hidden = synliga.length < 2;
+      prickar.forEach((p, i) => { p.hidden = !kort[i] || kort[i].hidden; });
+      mitt();
+    }
+    if ('IntersectionObserver' in window && prickar.length) {
+      const io = new IntersectionObserver(poster => {
+        poster.forEach(p => {
+          if (p.intersectionRatio < 0.6) return;
+          const i = kort.indexOf(p.target);
+          prickar.forEach((x, n) => x.classList.toggle('pa', n === i));
+        });
+      }, { root: rad, threshold: [0.6] });
+      kort.forEach(k => io.observe(k));
+    }
+    mitt();
+    return { ordna };
+  }
+
+  /* ---------- räkna själv (2026-10-06, omgjord 2026-10-07) ----------
      Prissidans kalkylator: barn i passet och timmar i veckan, fyra
      veckor. Timpriset och tillägget är samma som initPris() skriver
      (CFG), och planpriset läses ur planens eget kort, som
      initErbjudanden() skriver om ur erbjudanden_pris. Den räknar alltså
      aldrig fram ett planpris själv: en andra räkning här hade kunnat
      lova en krona som kassan inte drar. Planerna gäller ett barn per
-     pass, så tipset visas bara för ett barn och bara när en plan har
-     just det antalet timmar i månaden. Texten står i sidan, inte här. */
+     pass, så planen visas bara för ett barn och bara när en plan har
+     just det antalet timmar i månaden; med 4, 8 och 12 timmar har varje
+     val en. Texten står i sidan, inte här: det som kopieras (planens
+     namn, märket) läses ur kortet, som står på sidans språk.
+
+     Stapelns andel jämför bara två belopp som redan visas, planens och
+     det per pass, och sätts i --andel på stapeln som läser den. Reglagets
+     tumme följer data-v på gruppen (CSS). */
   function initKalkyl() {
     const box = $('[data-kalk]');
     if (!box) return;
     const pris = Number(CFG.PRIS_PER_TIMME) || 0;
     const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
     const val = { barn: 1, tim: 1 };
-    const sätt = (sel, text) => $$(sel, box).forEach(x => { x.textContent = text; });
+    const lugnt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let först = true;
+    /* Skriver bara det som ändrats. En summa som byts glider in med en
+       Web Animation, som bandet på startsidan: ingen stil per bildruta,
+       inte vid första räkningen och inte med reducerad rörelse. */
+    const sätt = (sel, text) => $$(sel, box).forEach(x => {
+      if (x.textContent === text) return;
+      x.textContent = text;
+      if (först || lugnt || !x.animate || !x.classList.contains('pr-kalk-summa')) return;
+      x.animate([{ opacity: 0.2, translate: '0 .24em' }, { opacity: 1, translate: '0 0' }],
+        { duration: 340, easing: 'cubic-bezier(.16,1,.3,1)' });
+    });
 
     function räkna() {
       const timmar = val.tim * 4;
       const timpris = val.barn > 1 ? pris + extra : pris;
-      sätt('[data-kalk-summa]', kr(timmar * timpris));
+      const perPass = timmar * timpris;
+      sätt('[data-kalk-summa]', kr(perPass));
       sätt('[data-kalk-timmar]', String(timmar));
       sätt('[data-kalk-timpris]', kr(timpris));
 
-      const plan = val.barn === 1 && $$('.pr-erb-planer [data-erb]')
+      const plan = val.barn === 1 && $$('.pr-erb-plan[data-erb]')
         .find(el => !el.closest('[hidden]') && Number(el.getAttribute('data-erb-timmar')) === timmar);
-      const planTips = $('[data-kalk-tips="plan"]', box);
       if (plan) {
-        const namn = $('.eyebrow', plan), planpris = $('[data-erb-pris]', plan), spar = $('[data-erb-spar]', plan);
+        const namn = $('[data-erb-namn]', plan) || $('.eyebrow', plan);
+        const planpris = $('[data-erb-pris]', plan), spar = $('[data-erb-spar]', plan);
         sätt('[data-kalk-plannamn]', namn ? namn.textContent : '');
         sätt('[data-kalk-planpris]', planpris ? planpris.textContent : '');
         sätt('[data-kalk-planspar]', spar ? spar.textContent : '');
+        /* En plan med timmar på köpet visar samma rad som sitt kort,
+           "8 timmar för priset av 7", och aldrig bara märket "1 timme på
+           köpet": bredvid noten om första timmen hade de lästs som samma
+           sak (granskningen 2026-10-07). Texten kopieras ur kortet, som
+           står på sidans språk. */
+        const paket = $('[data-erb-paket]', plan), tim = $('.pr-erb-tim', plan);
+        const rad = tim ? tim.textContent.split('·')[0].replace(/\s+/g, ' ').trim() : '';
+        $$('[data-kalk-paket]', box).forEach(x => {
+          x.hidden = !paket || paket.hidden || !rad;
+          x.textContent = x.hidden ? '' : rad + ' · ';
+        });
+        const ore = Number(plan.getAttribute('data-erb-ore'));
+        const andel = ore > 0 && perPass > 0 ? Math.min(1, ore / (perPass * 100)) : 1;
+        $$('[data-kalk-andel]', box).forEach(i => i.style.setProperty('--andel', andel.toFixed(3)));
       }
-      if (planTips) planTips.hidden = !plan;
-      const syskon = $('[data-kalk-tips="syskon"]', box);
-      if (syskon) syskon.hidden = val.barn < 2;
+      /* Utan plan: med flera barn tillägget, med ett barn klippkorten om
+         de finns kvar, och annars inget alls. Rutan behåller sin höjd. */
+      const klipp = $$('[data-erb-grupp]').some(g => !g.closest('[hidden]'));
+      const läge = val.barn > 1 ? 'syskon' : plan ? 'plan' : klipp ? 'ingen' : '';
+      $$('[data-kalk-tips]', box).forEach(el => { el.hidden = el.getAttribute('data-kalk-tips') !== läge; });
+      /* Syskonrutans mening om planerna gäller bara när planer syns. */
+      const planerSyns = $$('.pr-erb-plan[data-erb]').some(el => !el.closest('[hidden]'));
+      $$('[data-kalk-planrad]', box).forEach(el => { el.hidden = !planerSyns; });
+      /* Inget läge alls (databasen har inga erbjudanden): rutan går hellre
+         än står tom. */
+      $$('.pr-kalk-med', box).forEach(el => { el.hidden = !läge; });
+      först = false;
     }
 
     $$('[data-kalk-val]', box).forEach(grupp => {
       grupp.addEventListener('click', e => {
         const knapp = e.target.closest('button[data-v]');
         if (!knapp) return;
-        val[grupp.getAttribute('data-kalk-val')] = Number(knapp.getAttribute('data-v'));
+        const v = knapp.getAttribute('data-v');
+        val[grupp.getAttribute('data-kalk-val')] = Number(v);
+        grupp.setAttribute('data-v', v);
         $$('button[data-v]', grupp).forEach(b => b.setAttribute('aria-pressed', String(b === knapp)));
         räkna();
       });
