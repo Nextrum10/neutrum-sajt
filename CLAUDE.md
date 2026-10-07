@@ -26,7 +26,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
    adress, eleven ur anmälan, och familjen väljer lösenordet genom länken i mejlet. **Inget Skapa
    konto** på sajten (2026-10-07): konton skapar bara vi (`bjud-in`) och föräldern (barnets inloggning)
 4. `admin.html` → **Familjer** → välj hjälpare: sätter `matched_tutor_id` och `match_status`
-   **samtidigt**. Först då öppnas föräldravyn; före det väntläge
+   **samtidigt**. Först då öppnas bokningen, köpen och tråden; före det är vyn öppen med barnen,
+   NexLäx och profilen, och säger att vi letar studiehjälpare (`S.väntar`, 2026-10-07; inget väntläge)
 5. Föräldern lägger in barnet, hjälparen skriver studieplanen
 - **Uppstartsrutan**: `data-uppstart` och banans vecka byts tillsammans, på båda sidorna; när
   passen börjat går rutan, `nx-har-uppstart` och `nextrum-uppstart.css` bort.
@@ -563,7 +564,8 @@ Detaljer: `minne/grunden.md`.
   gäller en timme (Email OTP Expiration, med flit på förvalet), och en utgången länk leder rakt till en ny.
 - **En inloggning, inget Skapa konto och Skicka igen när som helst** (2026-10-07) är i drift sedan samma
   dag: vyerna från merge-commiten av PR #218, och `bjud-in` v10 från main, hämtad tillbaka och byte för
-  byte lika. Inbjudan som `bjud-in` mejlar själv (v11) driftsätts från main efter merge. Kvar i
+  byte lika. Inbjudan som `bjud-in` mejlar själv är i drift sedan samma kväll (v11 från merge-commiten av
+  PR #222, hämtad tillbaka och byte för byte lika, 12 av 12 filer). Kvar i
   Supabases panel: stäng av Allow new users to sign up, så att Auths öppna `/signup` inte tar emot
   någon, och de två mallarna, hela (`DEPLOY-BARNKONTON.md` 11).
 - **Användarvillkoren** (2026-10-07) är i drift sedan samma dag: `villkoren_godkanns` från

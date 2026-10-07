@@ -124,19 +124,10 @@
     </div>
   </div>
 
-  <!-- ============ VÄNTAR PÅ MATCHNING ============ -->
-  <div id="view-locked" hidden>
-    <div class="locked">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-      <h2>Vi jobbar på er matchning</h2>
-      <p>Ditt konto är skapat, men ni är inte matchade med en studiehjälpare än. Så fort vi hittat rätt person låses vyn upp med studieplan, bokning, meddelanden och rapporter.</p>
-      <p style="margin-top:16px">Har ni inte skickat in en intresseanmälan än är det steget som saknas.</p>
-      <div class="nx-cta-rad" style="justify-content:center;margin-top:28px">
-        <a class="btn btn-primary" href="/intresseanmalan">Skicka intresseanmälan</a>
-        <a class="btn btn-ghost" href="mailto:info@nextrum.se" data-mailtext="keep">Hör av dig till oss</a>
-      </div>
-    </div>
-  </div>
+  <!-- Väntläget före matchningen är borta (2026-10-07, Leo: "ta bort så att
+       det inte är låst"). En familj utan studiehjälpare kommer in i vyn, och
+       Boka pass och köpen säger att de öppnas när vi matchat dem
+       (S.väntar i nextrum-studie-vy.js). -->
 
   <!-- ============ FEL ROLL ============ -->
   <div id="view-wrongrole" hidden>
@@ -1057,8 +1048,8 @@
 <script src="nextrum-betalning.js?v=d7fc6340"></script>
 <script src="nextrum-ljud.js?v=af6ef39f"></script>
 <script src="nextrum-uppgifter.js?v=5c84b3cb"></script>
-<script src="nextrum-introduktion.js?v=8a3ef484"></script>
+<script src="nextrum-introduktion.js?v=2f3aa58e"></script>
 <script src="nextrum-modulvakt.js?v=568e1d7e"></script>
-<script src="nextrum-studie-vy.js?v=ad8e59f4"></script>
+<script src="nextrum-studie-vy.js?v=ce1bc050"></script>
 </body>
 </html>

@@ -236,7 +236,7 @@ async function provaFamiljenTagenIn(webb) {
   prova('familj: godkännandet skickas en gång, med den gällande versionen', g.length === 1 && g[0].kropp
     && g[0].kropp.p_version === VERSION && g[0].vem === 'foralder-1', JSON.stringify(g.map(r => r.kropp)));
   prova('familj: rutan stängs och introduktionen tar vid', !(await synlig(page, '#villkor-t')) && (await synlig(page, '.nx-intro.open')));
-  prova('familj: vyn är inte framme bakom introduktionen', !(await synlig(page, '#view-locked')) && !(await synlig(page, '#view-app')));
+  prova('familj: vyn är inte framme bakom introduktionen', !(await synlig(page, '#view-app')));
   prova('familj: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   prova('familj: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();

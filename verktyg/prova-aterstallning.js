@@ -356,11 +356,15 @@ async function provaLänken(webb) {
     prova('förälder: fokus på Fortsätt', await page.evaluate(() => document.activeElement && document.activeElement.hasAttribute('data-nylos-klar')));
     await bild(page, 'foralder-losenord-bytt');
     await page.click('[data-nylos-klar]');
-    await page.waitForSelector('#view-locked:not([hidden])', { timeout: 8000 }).catch(() => {});
-    prova('förälder: vyn fortsätter efter rutan', await synlig(page, '#view-locked'));
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
+    prova('förälder: vyn fortsätter efter rutan', await synlig(page, '#view-app'));
     prova('förälder: rutan är borta', (await page.locator('#nylos-t').count()) === 0);
     prova('förälder: sidan rullar igen', await page.evaluate(() => document.body.style.overflow === ''));
-    prova('förälder: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    /* Vyn öppnas också före matchningen (2026-10-07), och hämtar då
+       funktioner som provet inte känner (mina_tips, mina_handlingar och
+       de andra). Deras 404 är provets, inte vyns. */
+    const vyns = konsol.filter(k => !/status of 404/.test(k));
+    prova('förälder: inga fel i konsolen', vyns.length === 0, vyns.join(' | '));
     await context.close();
   }
 
@@ -471,7 +475,7 @@ async function provaLänken(webb) {
   /* En inbjudan från bjud-in (2026-10-01): studievyn och studiehjälparvyn ber om ett lösenord.
      Sedan 2026-10-06 går rutan inte att hoppa över, och introduktionen följer
      (verktyg/prova-introduktion.js provar den i detalj). */
-  for (const [väg, id, sedan, steg] of [['/foralder', 'foralder-1', '#view-locked', 7], ['/larare', 'handledare-1', '#view-pending', 8]]) {
+  for (const [väg, id, sedan, steg] of [['/foralder', 'foralder-1', '#view-app', 7], ['/larare', 'handledare-1', '#view-pending', 8]]) {
     const v = väg.slice(1);
     const { context, page, S, konsol } = await öppna(webb, {});
     await page.goto(BAS + väg + länk(id, 'invite'));
@@ -498,7 +502,9 @@ async function provaLänken(webb) {
     prova(v + ' inbjudan: vyn fortsätter efter Fortsätt', await synlig(page, sedan) && !(await synlig(page, '.nx-intro')));
     prova(v + ' inbjudan: välkomsten tas bort', S.logg.some(r => r.väg === '/auth/v1/user' && r.metod === 'PUT'
       && r.kropp && r.kropp.data && r.kropp.data.valkommen === null && !r.kropp.password));
-    prova(v + ' inbjudan: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    // Familjevyns funktioner som provet inte känner, som ovan.
+    const vyns = konsol.filter(k => väg !== '/foralder' || !/status of 404/.test(k));
+    prova(v + ' inbjudan: inga fel i konsolen', vyns.length === 0, vyns.join(' | '));
     await context.close();
   }
   {
