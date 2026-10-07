@@ -135,6 +135,12 @@ function falskSupabase(o) {
     if (p.startsWith('/auth/v1/')) return svar(route, 200, {});
 
     if (p === '/rest/v1/rpc/mina_behorigheter') return svar(route, 200, { admin: false, superadmin: false, behorigheter: [] });
+    /* Villkorsrutan (2026-10-07) frågar efter inloggningen. Här är villkoren
+       redan godkända: rutan har sitt eget prov (prova-villkor.js), och en
+       funktion provet inte känner ger ett 404 i konsolen. */
+    if (p === '/rest/v1/rpc/mitt_villkorslage') {
+      return svar(route, 200, { version: '2026-09-30', godkant_at: '2026-10-01T09:00:00+00:00', tidigare: false });
+    }
     if (p.startsWith('/rest/v1/rpc/')) return svar(route, 404, { code: 'PGRST202', message: 'Ingen sådan funktion i provet.' });
     if (p.startsWith('/rest/v1/')) {
       if (metod !== 'GET' && metod !== 'HEAD') return svar(route, 201, []);
