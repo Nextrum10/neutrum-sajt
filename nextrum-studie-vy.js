@@ -173,6 +173,7 @@
     ritaBarnväxel();
     laddaBokning();
     laddaBarnkonton();
+    laddaGaranti();
   }
 
   /* Listan över barnen. Visar det som faktiskt är ifyllt — ett tomt
@@ -2194,6 +2195,155 @@
     S.tips = await NXStudie.tipsa({ host: $('#tips-ruta'), supa: supa, roll: 'parent' });
   }
   const påKöpet = b => b && b.rabattkod === 'TIPS' ? 'en timme på köpet för ert tips' : 'första timmen på köpet';
+
+  /* ============================================================
+     BETYGSGARANTIN UNDER PROFIL (2026-10-07)
+
+     Leo: anmälan ska vara smidigare än ett mejl. Föräldern väljer
+     ämnena, högst tre per elev och läsår, och anger elevens nuvarande
+     betyg i varje. Allt prövas i databasen (anmal_betygsgaranti): de tre
+     ämnena, den 31 december, villkoren och att ämnet inte är anmält; vyn
+     ritar bara det som finns och visar databasens svar. Saknas tabellen
+     (migrationen inte körd) säger rutan att anmälan inte gick att hämta.
+
+     Läsåret är året det börjar, svensk tid: anmälan är öppen 1 juli till
+     31 december och gäller läsåret som börjar den hösten.
+
+     Ämnena har ett eget betyg i skolan, till skillnad från vyns grupper
+     (NX.GARANTI_AMNEN och intern.betygsgaranti_amnen() ändras tillsammans).
+
+     En anmälan är låst när den är gjord (Leo: "spärr, bara vi kan ändra
+     den"): rutan har ingen knapp för att ändra, och databasen ingen väg
+     för familjen. Har vi rättat den står det när, ur andrad_at; vem hos
+     oss som gjorde det läser ingen inloggad.
+     ============================================================ */
+  const GARANTI_BETYG = ['F', 'E', 'D', 'C', 'B'];
+  const GARANTI_MAX = 3;
+
+  function garantiNu() {
+    const delar = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Stockholm', year: 'numeric', month: 'numeric' })
+      .formatToParts(new Date());
+    const år = Number(delar.find(d => d.type === 'year').value);
+    const månad = Number(delar.find(d => d.type === 'month').value);
+    return { öppen: månad >= 7, läsår: månad >= 7 ? år : år - 1 };
+  }
+  const läsårText = år => år + '/' + String((år + 1) % 100).padStart(2, '0');
+
+  async function laddaGaranti() {
+    const ids = (S.barn || []).map(b => b.id);
+    if (!ids.length) { S.garanti = []; ritaGaranti(); return; }
+    const { data, error } = await supa.from('betygsgarantier')
+      .select('id, student_id, lasar, amne, betyg, anmald_at, andrad_at')
+      .in('student_id', ids).order('anmald_at');
+    if (error) {
+      if (error.code !== 'PGRST205' && error.code !== '42P01') console.warn('betygsgarantier:', error.message);
+      S.garanti = null;
+    } else {
+      S.garanti = data || [];
+    }
+    ritaGaranti();
+  }
+
+  function ritaGaranti() {
+    const host = $('#garanti-ruta');
+    if (!host || S.garanti === undefined) return;
+    if (S.garanti === null) {
+      host.innerHTML = '<p class="erb-bank-text">Anmälan gick inte att hämta. Ladda om sidan, eller skriv till oss på '
+        + '<a href="mailto:info@nextrum.se">info@nextrum.se</a>.</p>';
+      return;
+    }
+    const intro = '<p class="erb-bank-text">Välj de ämnen ni vill ha garantin i och ange elevens nuvarande betyg i '
+      + 'varje. Är villkoren uppfyllda och går betyget inte upp när läsåret slutar, får ni 10 timmar läxhjälp utan '
+      + 'kostnad. Anmälan är öppen till och med den 31 december. '
+      + '<a href="/anvandarvillkor#betygsgaranti" target="_blank" rel="noopener">Villkoren för betygsgarantin</a></p>'
+      + '<p class="erb-bank-text">Vi hjälper självklart till med andra ämnen och med läxorna i stort när ni behöver '
+      + 'det, och det påverkar inte garantin. Det är bara tiden i ämnena med garanti som räknas mot garantins två '
+      + 'timmar i veckan.</p>';
+    if (!(S.barn || []).length) {
+      host.innerHTML = intro + '<p class="erb-bank-text">Lägg till ert barn under Barn först.</p>';
+      return;
+    }
+    const nu = garantiNu();
+    host.innerHTML = intro + S.barn.map(b => garantiBarn(b, nu)).join('');
+  }
+
+  function garantiBarn(b, nu) {
+    const rader = S.garanti.filter(g => g.student_id === b.id && g.lasar === nu.läsår);
+    let h = '<div class="garanti-barn"><p class="garanti-namn"><b>' + esc(b.name) + '</b>, läsåret '
+      + läsårText(nu.läsår) + '</p>';
+    const dagen = ts => esc(datumText(isoFor(new Date(ts))));
+    if (rader.length) {
+      h += '<ul class="tb-rorelser">' + rader.map(g => '<li><span>' + esc(g.amne) + '</span><span>'
+        + (g.betyg ? 'betyg ' + esc(g.betyg) + ', ' : '')
+        + (g.andrad_at ? 'senast ändrad av oss ' + dagen(g.andrad_at) : 'anmäld ' + dagen(g.anmald_at))
+        + '</span></li>').join('') + '</ul>'
+        + '<p class="erb-bank-text">Anmälan är låst. Har något blivit fel, skriv till oss så rättar vi det.</p>';
+    }
+    if (!nu.öppen) {
+      h += '<p class="erb-bank-text">' + (rader.length ? '' : 'Inga ämnen anmäldes för läsåret. ')
+        + 'Anmälan stängde den 31 december. Från den 1 juli kan ni anmäla till nästa läsår.</p>';
+    } else if (rader.length >= GARANTI_MAX) {
+      h += '<p class="erb-bank-text">Tre ämnen är anmälda, och det är det högsta för ett läsår.</p>';
+    } else {
+      h += garantiForm(b, rader);
+    }
+    return h + '</div>';
+  }
+
+  /* Ämnena barnet redan har hjälp med står först: "NO / Fysik / Kemi /
+     Biologi" i barnets ämnen lyfter Fysik, Kemi och Biologi. */
+  function garantiForm(b, rader) {
+    const tagna = rader.map(g => g.amne.toLowerCase());
+    const nämnt = a => (b.subjects || []).some(s => String(s).includes(a));
+    const kvar = NX.GARANTI_AMNEN.filter(a => !tagna.includes(a.toLowerCase()));
+    const ordning = kvar.filter(nämnt).concat(kvar.filter(a => !nämnt(a)));
+    const id = 'garanti-' + b.id;
+    return '<form class="garanti-form" data-garanti="' + esc(b.id) + '" novalidate>'
+      + '<div class="vy-form-rad">'
+      + '<div class="fgroup"><label for="' + id + '-amne">Ämne</label>'
+      + '<select class="sel" id="' + id + '-amne" data-garanti-amne><option value="">Välj ämne</option>'
+      + ordning.map(a => '<option>' + esc(a) + '</option>').join('') + '</select></div>'
+      + '<div class="fgroup"><label for="' + id + '-betyg">Nuvarande betyg</label>'
+      + '<select class="sel" id="' + id + '-betyg" data-garanti-betyg><option value="">Välj betyg</option>'
+      + GARANTI_BETYG.map(x => '<option>' + x + '</option>').join('') + '</select></div>'
+      + '</div>'
+      + '<p class="xsmall bi-hjalp">Det senaste betyget från skolan i ämnet. Har eleven redan A går ämnet inte att anmäla.</p>'
+      + '<label class="bi-ja"><input type="checkbox" data-garanti-ja><span>Jag har läst '
+      + '<a href="/anvandarvillkor#betygsgaranti" target="_blank" rel="noopener">villkoren för betygsgarantin</a>'
+      + ' och vet att anmälan är låst när den är gjord.</span></label>'
+      + '<div class="vy-knapprad"><button class="btn btn-primary btn-sm" type="submit">Anmäl ämnet</button></div>'
+      + '</form>';
+  }
+
+  const garantiRuta = $('#garanti-ruta');
+  if (garantiRuta) {
+    garantiRuta.addEventListener('submit', async e => {
+      const form = e.target.closest('form[data-garanti]');
+      if (!form) return;
+      e.preventDefault();
+      const msg = $('#garanti-msg');
+      rensa(msg);
+      const barn = (S.barn || []).find(b => b.id === form.dataset.garanti);
+      if (!barn) return;
+      const amneFält = $('[data-garanti-amne]', form);
+      const betygFält = $('[data-garanti-betyg]', form);
+      const amne = amneFält.value;
+      const betyg = betygFält.value;
+      if (!amne) { säg(msg, '⚠️ Välj ett ämne.', false); amneFält.focus(); return; }
+      if (!betyg) { säg(msg, '⚠️ Ange ' + barn.name + 's nuvarande betyg i ' + amne + '.', false); betygFält.focus(); return; }
+      if (!$('[data-garanti-ja]', form).checked) {
+        säg(msg, '⚠️ Kryssa i att du har läst villkoren för betygsgarantin.', false);
+        $('[data-garanti-ja]', form).focus();
+        return;
+      }
+      await medan(form.querySelector('button[type="submit"]'), 'Anmäler…', async () => {
+        const { error } = await supa.rpc('anmal_betygsgaranti', { p_elev: barn.id, p_amne: amne, p_betyg: betyg });
+        if (error) { säg(msg, felText(error), false); return; }
+        await laddaGaranti();
+        säg(msg, '✓ ' + amne + ' har betygsgaranti för ' + barn.name + ', läsåret ' + läsårText(garantiNu().läsår) + '.', true);
+      });
+    });
+  }
 
   /* ============================================================
      ERBJUDANDEN (Fas 16.1)

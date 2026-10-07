@@ -124,6 +124,15 @@ och `-gymnasiet`, byggs med `amnessida()` ur `STADIER`. Samma regler som
 till prissidan, så `kolla-betalningsvillkor.py` behöver inte bevaka dem.
 Navet, ämnessidorna och startsidan länkar dit.
 
+**Tre ämnessidor och lågstadiet till** (2026-10-07): `/laxhjalp-so`,
+`-moderna-sprak`, `-programmering` och `-lagstadiet`. Ämnena stod i
+`NX.AMNEN` (det familjen kan be om i anmälan) men hade ingen sida, och
+sajten lovade redan hjälp "från ettan" utan en sida för lågstadiet. Prisfrågan
+länkar till prissidan som stadiesidornas, så betalningsmeningen och
+`kolla-betalningsvillkor.py` berörs inte. Footern har kvar de fyra första
+ämnena; de nya nås från navet och från ämneskorten på varje landningssida,
+som generatorn lägger till av sig själv.
+
 **`404.html`** (2026-10-06) byggs också här, för att få skalet. Vercel
 visar den för varje adress som inte finns, också `/en/x/y`, så den har
 `<base href="/">`: skalets länkar till css och skript är relativa.
