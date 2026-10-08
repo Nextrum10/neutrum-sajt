@@ -651,8 +651,8 @@ Detaljer: `minne/grunden.md`.
   `tjanster` (läxhjälpen 39900, triggern speglar `prissattning`, och dess förval), och Standard till 5 % utan
   timme på köpet; inget köp pekar på `plan_standard`, och frysta pris på pass och kort rörs inte. Lokalt
   1505 av 1505 i `rls-test.sql` med migrationen. Ingen funktion behöver driftsättas för priset; `drift`
-  (`_delad/nextrum-fakta.ts`, agentens siffror) driftsätts från main efter merge av PR #228, som rättar
-  "binder en månad" där. Ingen familj hade bokat
+  (`_delad/nextrum-fakta.ts`, agentens siffror) är driftsatt som v14 från main efter PR #228 (som rättade
+  "binder en månad" där), hämtad tillbaka och byte för byte lika i alla fem filer. Ingen familj hade bokat
   när priset ändrades (Leo 2026-10-08), så ingen behöver få veta. Kvar:
   profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5). Leos "bunden i 1 månad" blev "en månad i taget"
   på sajten, för villkoren säger ingen bindningstid och att den som slutar med en plan får tillbaka det som
