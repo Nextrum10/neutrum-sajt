@@ -501,7 +501,7 @@ sak alltid har samma färg):
   annars spänner gradienten över hela raden). Övriga rubrikers `<em>` står i
   leran.
 
-Garantin har leran (bladet, prissidans flöde), och erbjudandena på
+Garantin har leran (remsan i Hur hjälper vi; prissidans flöde gick samma kväll), och erbjudandena på
 prissidan och Just nu är orörda (en annan byggare arbetade där samma dag);
 prissidan fick färgerna bara genom `nextrum-sidor.css` (betalflödet och Nästa
 steg), `priser.html` är orörd. På bark (`.nx-mork`, `.band`, `.on-band`)
@@ -600,16 +600,22 @@ de står läs mer om betygsgarantin".
   där det nu bara står en gravsten) och grenen i `garantiflöde()` som
   följde scrollen. Funktionen tänder bara remsans steg i tur
   (`[data-gar-flode="tur"]`).
-- I 399-kortet står raden "Betygsgaranti, utan extra kostnad" kvar, utan
-  länk (den gick till sektionen), och under knappen Skicka
+- I 399-kortet står raden "Betygsgaranti, utan extra kostnad (villkor
+  gäller)", utan länk (den gick till sektionen), och under knappen Skicka
   intresseanmälan står länken "Läs mer om betygsgarantin"
   (`a.nx-lank.pr-gar-lank`, cinema efter priskortets flexregler) till
   `/anvandarvillkor#betygsgaranti`. Villkoren och inte startsidans remsa,
-  för remsan säger mindre än raden man just läst, och prissidan länkar då
-  fortfarande till villkoren (avsnitt 1). FAQ-svaret längre ner står kvar.
-- Länken är ett eget block med `width:fit-content`: i kortets flexkolumn
-  (när lyftet syns) hade den annars sträckts, och utan flex hade den
-  hamnat bredvid knappen. Tryckytan är 44 px med `::before`.
+  för remsan säger mindre än raden man just läst. "(villkor gäller)" står
+  på raden med löftet, för sektionens "Villkor gäller." gick med den, och
+  avsnitt 1 kräver att prissidan säger att villkoren gäller, inte bara
+  länkar till dem (granskningen samma kväll; FAQ-svaret ligger i en
+  utfällning). FAQ-svaret längre ner står kvar.
+- Länken är ett eget block (`display:block`, `width:fit-content`): i
+  kortets flexkolumn (när lyftet syns) hade den annars sträckts, och som
+  inline hade den hamnat bredvid knappen. Inte flex: den engelska texten
+  bryts under 390 px, och i en flexrad stod pilen då ensam i högerkanten;
+  pilen är inline och följer sista ordet. Tryckytan är 44 px med
+  `::before`.
 
 ### Två fällor när en palett byts
 

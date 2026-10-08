@@ -636,20 +636,26 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   fält på passet vore en egen ändring. Studiehjälparen ser inte heller
   vilka ämnen som har garanti; familjen får säga det.
 - **Sidorna säljer den** (Leo samma dag: "sälj in det utan konkreta villkor
-  eller siffror", och sedan "effektivt, inte överdrivet"): en sektion
-  på startsidan efter Så fungerar Nextrum och på prissidan efter
-  priskorten (sedan 2026-10-07 på papperet som ett flöde, inte mörk: Leo
+  eller siffror", och sedan "effektivt, inte överdrivet"). I dag (2026-10-08):
+  på startsidan och Vår idé en platt remsa under Hur hjälper vi ditt barn
+  (`.hj-gar`, meningen, stegen 01–04 och "Villkor gäller." med länken till
+  villkoren); på prissidan ingen sektion (Leo: "öndödigt stor"), bara raden
+  "Betygsgaranti, utan extra kostnad (villkor gäller)" i 399-kortet och
+  länken "Läs mer om betygsgarantin" till villkoren under dess knapp
+  (`minne/vyerna.md`, Prissidan utan garantisektion). Förut, som historik:
+  en sektion på startsidan efter Så fungerar Nextrum och på prissidan efter
+  priskorten (2026-10-07 på papperet som ett flöde, inte mörk: Leo
   ville ha "samma färg som resten av sidan", "inte samma kolumner som
   finns överallt" och "en mindre sektion" som "följer ett flow när man
   scrollar"; fyra steg med stora siffror och en linje som fylls i lera,
   och länken till villkoren och raden "Villkor gäller" intill knappen,
-  aldrig bakom en utfällning), en rad i priskortet ("Betygsgaranti, utan extra kostnad"),
+  aldrig bakom en utfällning). Dessutom
   en punkt i startsidans sista ruta, prissidans och FAQ-sidans
   beskrivning, och samma fråga i prissidans FAQ och på `/faq`, som
   maskoten och FAQ-schemat därför också svarar med. Inga villkor och inga
   tal, men aldrig ett löfte om ett betyg (avsnitt 8 i kärnan): garantin
   lovar vad vi gör om betyget inte går upp. Varje ställe länkar till
-  villkoren eller till sektionen som gör det och säger att de gäller, för
+  villkoren eller till ett ställe som gör det och säger att de gäller, för
   en garanti som säljs utan att det syns att den har villkor är
   vilseledande. Undantaget är sista dagen, 31 december, i FAQ-svaren: den
   som missar den har ingen garanti, och det ska inte stå bara i

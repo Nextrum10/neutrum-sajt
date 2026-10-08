@@ -3142,8 +3142,12 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
    läs mer om betygsgarantin"); prissidan har ingen garantisektion.
    Ett eget block med sin egen bredd, så att den aldrig hamnar bredvid
    knappen eller sträcks i kortets flexkolumn, och strecket under den
-   blir bara så långt som texten. Tryckytan minst 44 px. */
-.pr-gar-lank{display:flex;width:fit-content;align-self:flex-start;margin-top:16px}
+   blir bara så långt som texten. Block och inte flex: den engelska
+   texten bryts under 390 px, och i en flexrad hamnade pilen då ensam i
+   högerkanten mellan raderna; inline följer den sista ordet. Tryckytan
+   minst 44 px. */
+.pr-gar-lank{display:block;width:fit-content;align-self:flex-start;margin-top:16px}
+.pr-gar-lank svg{display:inline;vertical-align:-2px;margin-left:6px}
 .pr-gar-lank::before{content:"";position:absolute;inset:-11px -8px}
 .pr-topp-stapel{
   display:grid;grid-template-rows:auto minmax(0,1fr);

@@ -261,13 +261,14 @@ platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gö
 meningen "Vi erbjuder betygsgarantin för att vi är säkra på våra metoder." över, de fyra stegen 01–04 (siffra och
 rubrik) i en rad med streck emellan, varje steg under sitt blad (`.hj-gar-steg`, `data-gar-flode="tur"`, tänds i tur
 när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa står på Vår idé. Det släckta läget
-hänger på `.i-gang`, aldrig bara på `html.nx-sr`. **Prissidan har ingen garantisektion** (2026-10-08, Leo: "öndödigt
-stor"): raden i 399-kortet, länken "Läs mer om betygsgarantin" under dess knapp (`.pr-gar-lank`, till villkoren) och
-FAQ-svaret; det stora flödet (`.nx-gar`) är borta, och `garantiflöde()` sköter bara remsan. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
+hänger på `.i-gang`, aldrig bara på `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under Hur hjälper vi: "för" timpriset utan bindning (`data-stat`),
 paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
 Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
 pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
-8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. NexLäx (`#nexlax`, avsnitt
+8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. **Prissidan har ingen
+garantisektion** (2026-10-08, Leo: "öndödigt stor"): där står bara raden "Betygsgaranti, utan extra kostnad (villkor
+gäller)" i 399-kortet, länken "Läs mer om betygsgarantin" under dess knapp (`.pr-gar-lank`, till villkoren) och
+FAQ-svaret; det stora flödet (`.nx-gar`) är borta, och `garantiflöde()` sköter bara remsan. NexLäx (`#nexlax`, avsnitt
 13, `nexlax()`): en telefon som visar sig själv i fyra skärmar och en stig som följer med, på papperet; en
 illustration (`role="img"`), inget att svara i, högst tre varv och pausad utanför bild; varje skärm står lika
 länge. **Ämnesfärgerna är den röda tråden** på startsidan och menysidorna (2026-10-08, avsnitt 18 i
