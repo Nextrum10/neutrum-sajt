@@ -9,7 +9,8 @@
                     bredvid följer med
      mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
      garantiflöde   betygsgarantin: linjen fylls och stegen tänds när
-                    man scrollar förbi, på startsidan och prissidan
+                    man scrollar förbi på prissidan, och i tur när det
+                    lilla flödet i Hur hjälper vi ditt barn syns
      studiehjälpare raden man sveper i: korten kommer in när raden
                     syns, prickarna och pilarna följer svepet
      band           Trygg hjälp: det rullande bandet
@@ -634,6 +635,15 @@ const NXStart = (function () {
 
      Egna namn med flit, inte .nx-apply-flow: den är kvar i Bli
      studiehjälpare och sköts av mörkaYtor().
+
+     I TUR (2026-10-08). På startsidan står flödet litet, inne i
+     garantins del av Hur hjälper vi ditt barn (Leo: "använd bilden som
+     jag skicka för den animation men gör de litet"). Där står stegen så
+     tätt att de hade tänts nästan samtidigt av linjen, så
+     data-gar-flode="tur" tänder dem i stället ett i taget när flödet
+     kommer in i bild, en gång: alla fyra får .pa och .fylld på en gång,
+     och fördröjningen per steg står i CSS (avsnitt 17). Har man redan
+     scrollat förbi när sidan laddas står flödet tänt utan .i-gang.
      ============================================================ */
   function garantiflöde() {
     if (!rörelse || !('IntersectionObserver' in window)) return;
@@ -643,6 +653,12 @@ const NXStart = (function () {
     $$('[data-gar-flode]').forEach(ol => {
       const steg = $$(':scope > li', ol);
       if (!steg.length) return;
+      if (ol.getAttribute('data-gar-flode') === 'tur') {
+        if (ol.getBoundingClientRect().bottom < 0) return;
+        ol.classList.add('i-gang');
+        närSyns(ol, () => steg.forEach(li => li.classList.add('pa', 'fylld')), '0px 0px -12% 0px');
+        return;
+      }
       const nr = steg.map(li => $('.nx-gar-nr', li) || li);
       const rita = gräns => {
         let n = 0;

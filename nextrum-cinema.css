@@ -24,15 +24,23 @@
      Leo ville ha det ljusare men beige, provade det först på
      startsidan och ville sedan ha samma färg överallt. Bläcket och
      leran är orörda; mot det ljusare papperet har all text fått MER
-     kontrast, inte mindre. Mörkt läge är orört. */
-  --pap:#F2EDE3;          /* papper — botten. Ljust, men beige, INTE off-white */
-  --pap-2:#E9E2D4;        /* lugn yta */
-  --pap-3:#DBD2BF;        /* djupare yta, kant mot foto */
+     kontrast, inte mindre. Mörkt läge är orört.
+
+     2026-10-08 blev det "lite mindre beige, väldigt lite" (Leo): #F2EDE3
+     → #F1EDE6. Mättnaden (kroma i OKLCH) är 30 % lägre och luminansen
+     densamma, så varje kontrast mot bläcket står kvar på decimalen. Den
+     lugna ytan, den djupa och linjerna följde med lika mycket, så att
+     skillnaden mellan ytorna är som förut (papper mot lugn yta 1,11:1)
+     och ingen av dem står beigare än papperet. theme-color i sidorna
+     följer papperet; mejlens FARG ändras för sig. */
+  --pap:#F1EDE6;          /* papper — botten. Ljust, en aning beige, INTE off-white */
+  --pap-2:#E7E2D8;        /* lugn yta */
+  --pap-3:#D9D2C5;        /* djupare yta, kant mot foto */
   --bl:#2E2A20;           /* bark — mörk gröngrå-brun, INTE svart */
   --bl-2:#4F4738;         /* brödtext på papperet (7,9:1) */
   --bl-3:#665C49;         /* dämpat, klarar AA även mot --pap-2 (5,1:1) */
-  --ln:#E2DACB;           /* linjer */
-  --ln-2:#CDC2AC;
+  --ln:#E0DAD0;           /* linjer */
+  --ln-2:#CAC2B3;
 
   /* --- nedtryckt yta ---
      I LJUST sjunker den nedtryckta ytan, i MÖRKT stiger den. Det är
@@ -78,6 +86,21 @@
   --nt-glod:rgba(217,129,79,.2);
   --nt-mossa:rgba(122,139,98,.16);
   --nt-film:#2E2A20;
+
+  /* --- För dig som vill jobba (2026-10-08) ---
+     Leo: "ändra färg till den svarta som är på mörksidan", och i mörkt
+     läge "samma färg och inte en gråare". Ytan är alltså mörka lägets
+     papper, #1A1813, i BÅDA lägena, och därför samma värde i alla tre
+     blocken. I mörkt läge står den i ett med sidan, och det är leran
+     runt kolumnerna och skenet som avgränsar den ("lite mer orange runt
+     olika kolumner"): ljus lera #D9814F, som är accenten på bark.
+       kräm #EFE6D6 på ytan → 14,3:1, dämpat #B3A88F → 7,5:1 (mörkt läge
+       #A99E88 → 6,7:1),
+       ljus lera #D9814F → 6,1:1 */
+  --bli-bg:#1A1813;
+  --bli-glod:rgba(217,129,79,.17);
+  --bli-kant:rgba(217,129,79,.5);
+  --bli-linje:rgba(217,129,79,.3);
 
   /* --- jordpaletten ---
      Tre färger, inte en accent på neutralt. Det var felet förra
@@ -156,12 +179,13 @@
   --mossa-text:#3D4930;
   --ockra-soft:#F0E4C9;
   --ockra-text:#664510;
-  --bricka:#E9E2D4;       /* datumrutan och ikonrutan i ett kort */
+  --bricka:#E7E2D8;       /* datumrutan och ikonrutan i ett kort (= --pap-2) */
   /* Ämnenas färger i NexLäx (2026-09-29, Leo: "lite mer färgig för att
      navigera enklare"). En per ämne, så att man ser vilket ämne man är i
      utan att läsa. Alla klarar AA mot papperet och --yta som text; -l är
-     syskonen för barken, som --lera-l. Resten av sajten använder dem
-     inte: lera, mossa och ockra säger fortfarande vems drag det är. */
+     syskonen för barken, som --lera-l. I vyerna står de bara i NexLäx;
+     utanför säger lera, mossa och ockra vems drag det är. Startsidan bär dem
+     som en röd tråd sedan 2026-10-08 (nextrum-start.css, avsnitt 13). */
   --amne-ma:#2F6690; --amne-ma-l:#8DB9E0;
   --amne-sv:#A63D3A; --amne-sv-l:#E7978F;
   --amne-en:#6A4A99; --amne-en-l:#B9A1E0;
@@ -232,6 +256,11 @@
     --nt-glod:rgba(217,129,79,.09);
     --nt-mossa:rgba(157,173,134,.07);
     --nt-film:#262319;
+    /* För dig som vill jobba: samma svarta som sidan, inte --nt */
+    --bli-bg:#1A1813;
+    --bli-glod:rgba(217,129,79,.17);
+    --bli-kant:rgba(217,129,79,.5);
+    --bli-linje:rgba(217,129,79,.3);
 
     /* accenterna pekar om till sina ljusa syskon */
     --acc:#D9814F;
@@ -302,6 +331,7 @@
   --tryck-yta:var(--pap-3); --tryck-tvatt:rgba(239,230,214,.05);
   --nt:#262319; --nt-fg:#EFE6D6; --nt-mut:#A99E88; --nt-ln:rgba(239,230,214,.16);
   --nt-2:#262319; --nt-glod:rgba(217,129,79,.09); --nt-mossa:rgba(157,173,134,.07); --nt-film:#262319;
+  --bli-bg:#1A1813; --bli-glod:rgba(217,129,79,.17); --bli-kant:rgba(217,129,79,.5); --bli-linje:rgba(217,129,79,.3);
   --acc:#D9814F; --acc-lugn:#E89A6D; --mossa:#9DAD86; --ockra:#C08A2E;
   --orange:#F28A2E; --orange-lugn:#F9A055; --orange-ink:#1A1813;
   --tejp:rgba(222,152,72,.94); --tejp-ink:#1A1813; --tejp-fiber:rgba(255,240,210,.12);
@@ -1246,7 +1276,7 @@ html[lang="en"] .nx-hero-rubrik{
   display:block;font-style:normal;
   font-size:var(--hur-tal);font-weight:800;line-height:.8;
   letter-spacing:-.06em;font-variant-numeric:tabular-nums;
-  color:var(--acc);
+  color:var(--f,var(--acc));
 }
 .nx-hur-steg h3{
   font-size:clamp(1.3rem,2.5vw,2.05rem);
@@ -2438,9 +2468,9 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]) .nx-panel,
   :root:not([data-theme="light"]) .nx-form-yta{
-    --pap:#F2EDE3; --pap-2:#E9E2D4; --pap-3:#DBD2BF;
+    --pap:#F1EDE6; --pap-2:#E7E2D8; --pap-3:#D9D2C5;
     --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
-    --ln:#E2DACB; --ln-2:#CDC2AC;
+    --ln:#E0DAD0; --ln-2:#CAC2B3;
     --nt:#2B221C; --nt-fg:#EFE6D6; --nt-mut:#B3A88F;
     --acc:#9C4520; --acc-lugn:#7A3417;
     --mossa:#546343; --ockra:#7E5714;
@@ -2461,9 +2491,9 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 }
 :root[data-theme="dark"] .nx-panel,
 :root[data-theme="dark"] .nx-form-yta{
-  --pap:#F2EDE3; --pap-2:#E9E2D4; --pap-3:#DBD2BF;
+  --pap:#F1EDE6; --pap-2:#E7E2D8; --pap-3:#D9D2C5;
   --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
-  --ln:#E2DACB; --ln-2:#CDC2AC;
+  --ln:#E0DAD0; --ln-2:#CAC2B3;
   --nt:#2B221C; --nt-fg:#EFE6D6; --nt-mut:#B3A88F;
   --acc:#9C4520; --acc-lugn:#7A3417;
   --mossa:#546343; --ockra:#7E5714;

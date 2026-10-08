@@ -232,7 +232,7 @@ Detaljer: `minne/grunden.md`.
   `nextrum-introduktion.js` (`NXIntro`) är introduktionen i studievyn och studiehjälparvyn; bilderna
   står i `NEXTRUM_INTRO` och tas med `bygg-introbilder.js`.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
-  sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar
+  sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F1EDE6` sedan 2026-10-08) tar
   `theme-color` med sig, men mejlens `FARG` ändras för sig. Adminpaletten laddas sist.
 ### Startsidan efter hero
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
@@ -240,17 +240,29 @@ delar som de är; deras text följer inte med formen, och `.faq-item` är orörd
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
-Under heron står NexLäx (2026-10-07, `#nexlax`, avsnitt 13, `nexlax()`): en telefon som visar sig själv
-i fyra skärmar och en stig som följer med, på papperet; en illustration (`role="img"`), inget att svara
-i, högst tre varv och pausad utanför bild; varje skärm står lika länge. Under den står **Just nu** (2026-10-08,
-`#just-nu`, avsnitt 16): Standard mot "Andra aktörer" 5 000 kr för 8 timmar (`data-erb-jamfor-ore`). Vårt
-pris står aldrig i HTML, procenten räknas ur priset och avrundas nedåt till fem, och sektionen syns bara
-när planen har 8 timmar och är minst 5 % billigare. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
+**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ditt barn, Just nu, Vår idé, studievyn, NexLäx,
+Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
+som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ditt barn** (`#sa-hjalper-vi`, avsnitt 17): fem blad,
+läxhjälpen, expertisen, erfarenheten, betygsgarantin och NexLäx, var och en med en NexLäx-ämnesfärg i `--f`;
+erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är ett
+blad där med `id="betygsgaranti"` kvar, den gamla textens villkorslänk och "Villkor gäller", och de fyra stegen
+som ett litet flöde (`.nx-gar-liten`, `data-gar-flode="tur"`) som tänds i tur när det syns; det stora flödet
+(`.nx-gar`, `garantiflöde()`) står bara på prissidan, och det släckta läget hänger på `.i-gang`, aldrig bara på
+`html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
+paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till" (`data-erb-spara`), och jämförelsen
+Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
+pris står aldrig i HTML, procenten avrundas nedåt till hel procent, figuren och tejpen döljs om planen inte har
+8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. NexLäx (`#nexlax`, avsnitt
+13, `nexlax()`): en telefon som visar sig själv i fyra skärmar och en stig som följer med, på papperet; en
+illustration (`role="img"`), inget att svara i, högst tre varv och pausad utanför bild; varje skärm står lika
+länge. **Ämnesfärgerna är startsidans röda tråd** (2026-10-08): bladen, gradienten i "ditt barn?" och sloganen,
+och stegens siffror i `#hur` (`var(--f,var(--acc))`); i vyerna står de bara i NexLäx. **`#bli` står på mörka
+lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`), och Nästa steg
+efter den börjar i samma svarta. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
-(`data-bild`), och alt-texten står på steget (`data-alt`). Betygsgarantin (2026-10-07) är ingen mörk yta: den står på papperet som ett flöde (`.nx-gar`,
-`garantiflöde()`), också på prissidan, och dess släckta läge hänger på `.i-gang`, aldrig bara på
-`html.nx-sr`. Manifestets blad står bredvid varandra ner till 340 px, och studiehjälparna i en rad
+(`data-bild`), och alt-texten står på steget (`data-alt`). Manifestets blad står bredvid varandra ner till
+340 px, och "Allt på ett ställe" blir aldrig längre än "Rätt match" (2026-10-08). Studiehjälparna står i en rad
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
 Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på telefon och har ingen fokuseffekt
 (2026-10-08: `hållpunkter()` är borta, inget kort tonar ned grannarna), och `.sid-kort` är en lista under 861 px.
@@ -628,8 +640,9 @@ Detaljer: `minne/grunden.md`.
   och att den som slutar med en plan får tillbaka det som är kvar, så "en månads bindning" på sidorna
   har ingen motsvarighet där. En riktig bindning kräver en ny version av villkoren (alla får frågan igen), och
   juristen har inte läst något av det.
-- **Just nu-jämförelsen** (2026-10-08): "upp till 45 % lägre pris än jämförbara paket hos flera större
-  aktörer" och "Andra aktörer 5 000 kr" bygger på Leos underlag (Studybuddy, 5 000 kr för samma paket),
+- **Just nu-jämförelsen** (2026-10-08): "upp till 39 % lägre pris än jämförbara paket hos flera större
+  aktörer" (talet räknas) och "Andra aktörer 5 000 kr+" (plustecknet sedan samma dag, Leo) bygger på Leos
+  underlag (Studybuddy, 5 000 kr för samma paket),
   som inte står i repot. "Flera" kräver underlag från minst två aktörer till; Leo valde att behålla ordet.
   Underlaget (skärmbilder med adress och datum) ska sparas och göras om när ett pris ändras, för
   bevisbördan är vår (18 och 10 §§ marknadsföringslagen). Juristen har inte läst texten.
