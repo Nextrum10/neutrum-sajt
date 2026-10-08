@@ -18,8 +18,12 @@ window.NEXTRUM_CONFIG = {
   SUPABASE_URL: 'https://ddkfiuvcppalutfulvbi.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_GNm2Tsgy2vFTL2BsRyIRPQ_Cu9YkZVw',
 
-  // Pris per timme i kronor, visas på sidan och i bokningen.
-  PRIS_PER_TIMME: 379,
+  /* Pris per timme i kronor utan bindning, visas på sidan och i
+     bokningen. 399 sedan 2026-10-08 (Leo): det är priset, aldrig ett
+     "från"-pris. Paketen (planerna) kostar mindre i timmen, och det
+     priset står bara i erbjudanden_pris. Samma tal som läxhjälpens
+     pris_per_timme_ore i tjanster: ändras de, ändras båda. */
+  PRIS_PER_TIMME: 399,
 
   /* Länken familjen skickas till för att lämna en Google-recension.
      Hämtas i Google Business Profile → "Be om recensioner", och ser

@@ -9,9 +9,13 @@ texten är kärnans.
 
 ### Siffror som måste stämma överallt
 
-- **379 kr/tim** (`nextrum-config.js: PRIS_PER_TIMME`)
+- **399 kr/tim** utan bindning (`nextrum-config.js: PRIS_PER_TIMME`, och
+  läxhjälpens `pris_per_timme_ore` i `tjanster`), sedan 2026-10-08; till
+  dess 379. Det är priset, aldrig ett "från"-pris. Paketen kostar 379 kr i
+  timmen med en månads bindning (nedan, och `timmar.md`).
 - **69 kr/tim** tillägg för fler än ett barn — **fast, inte per barn**,
-  tak tre barn (`tjanster.extra_personer_max`). Tre barn kostar 448, inte 517
+  tak tre barn (`tjanster.extra_personer_max`). Tre barn kostar 468, inte 537
+  (448 och 517 med 379 kr i timmen)
 - **Kort per pass, i förväg eller efter passet** (Fas 19.2). Familjen
   betalar varje pass med kort, **antingen i förväg eller efter passet
   när de bekräftar rapporten**, och ett pass som har hållits ska betalas
@@ -54,7 +58,8 @@ texten är kärnans.
   summan är timpris gånger de BETALDA timmarna (Fas 16.1d; sedan
   2026-10-07 `timmar − timmar_pa_kopet`, och ordinarie är alla timmarna,
   så visa aldrig ett snittpris för en plan med en timme på köpet:
-  2 653 / 8 = 331,63 kr; skriv "8 timmar för priset av 7") — förut avrundades
+  2 653 / 8 = 331,63 kr; skriv "8 timmar för priset av 7", som Standard
+  sa 2026-10-07–08) — förut avrundades
   summan, och 20 timmar kostade 7 201 kr bredvid texten "360 kr per
   timme". Prissidans siffror är en reserv för den som läser utan
   javascript; `NX.initErbjudanden()` skriver över dem ur vyn med ett
@@ -760,3 +765,49 @@ Samma dag i finstilen och FAQ:n:
   Fortnox Lön den dag frågan är avgjord. Den 25 oktober 2026, första
   utbetalningsdagen efter att lönespecen kom, är en söndag; vilken
   bankdag lönen går då är inte bestämt, och lönespecen visar den 25:e.
+
+---
+
+## Timpriset 399 och paketen 379 (2026-10-08)
+
+Leo: "Läxhjälpen ska kosta 399kr standard obundet. Sen på våra paket blir
+man bunden i 1 månad och de kostar 379kr per [timme]", "inte från utan för,
+detta är vårt takpris utan tillägg", och om jämförelsen med de andra
+aktörerna: "spara upp till 1200kr vid 6 månader" och "Upp till 45 % lägre
+pris ... som en tejp bit som tejpas fast på erbjudandet".
+
+- **Databasen** (`20261008100000_timpris_399_paketen_379`): läxhjälpens
+  `pris_per_timme_ore` blir 39900, `prissattning` följer med genom
+  triggern (och dess förval), och `plan_standard` får `rabatt_procent` 5
+  och `timmar_pa_kopet` 0. `erbjudanden_pris` har inget eget tal, så vyn
+  står orörd: 399 × 0,95 = 379,05, nedåt till hel krona 379 kr. Paketen blir
+  1 516, 3 032 och 4 548 kr, klippkorten 379 kr i timmen (3 790 kr för 10).
+  Frysta priser på pass (`bookings.timpris_ore`) och köpta kort rörs inte:
+  en prishöjning gäller pass som bokas efter den, och prisgarantin gäller
+  köpta timmar. Inget köp pekade på `plan_standard`, så koden fick nytt
+  innehåll i stället för en ny kod.
+- **Startrabatten och tipstimmen** är oförändrade: en timme till passets
+  frysta pris, alltså 399 kr för pass som bokas efter migrationen.
+- **Inget från-pris**: sajten säger "för 399 kr", och klippkortens rubrik
+  på prissidan och i studievyn säger timpriset (379 kr) i stället för
+  "från" det billigaste kortet, när alla kort har samma timpris.
+- **Jämförelsen** (`data-erb-lagre`) avrundas nedåt till hel procent i
+  stället för till fem: 3 032 mot 5 000 kr är 39,4 %, alltså 39 %.
+  **Spara-raden** (`data-erb-spara="6"`) är den största skillnaden mellan
+  ordinarie (399 kr gånger timmarna) och planens pris bland planerna,
+  gånger sex: Intensiv, 12 × 20 kr × 6 = 1 440 kr. Leo sa 1 200; talet
+  räknas ur svaret, så sidan säger det som är sant för katalogen.
+- **Tejpen** (`.nx-tejp` i `nextrum-cinema.css`) är en allmän komponent:
+  en remsa i ockra mot orange (`--tejp`, `--tejp-ink`, `--tejp-fiber`,
+  på tre ställen), sågtandade kortändar med `clip-path`, `rotate` för
+  lutningen, och `.nx-tejp-pa` lägger den över ett korts överkant. På
+  prissidan sitter den på lyftet (Standard) med jämförelsen.
+- **Bindningen** står på prissidan, i studievyn ("4 timmar · 1 månads
+  bindning"), i FAQ:n och i agentens fakta, men **villkoren säger det
+  inte**: de säger "ingen bindningstid" och att den som slutar med en plan
+  får tillbaka det som är kvar, med de använda timmarna till ordinarie
+  pris. FAQ:n förklarar bindningen med just den regeln. En bindning som
+  betyder mer än så kräver en ny version av villkoren (CLAUDE.md avsnitt 11).
+- **`rls-test.sql`**: avsnitt 25 provar de nya planerna och siffrorna med
+  399 kr, och 19.5 och 20.1 räknar på passets eget frysta pris i stället
+  för 379 kr, så att de inte beror på katalogen.

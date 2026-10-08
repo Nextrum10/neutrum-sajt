@@ -187,8 +187,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
 ### Siffror som måste stämma överallt
-- **379 kr/tim** (`PRIS_PER_TIMME`); **69 kr/tim** för fler barn, fast (tre barn: 448, inte
-  517).
+- **399 kr/tim** utan bindning (`PRIS_PER_TIMME` och läxhjälpens rad i `tjanster`, 2026-10-08), och
+  det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537).
+  **Paketen** (planerna) binder en månad och kostar 379 kr i timmen: 5 % av 399 nedåt till hel krona.
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
@@ -196,12 +197,15 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
   och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`. Allt med
-  `data-erb` (planerna, lyftet `.pr-lyft`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
-  `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar −5 %),
-  Standard (`plan_standard`, 8 timmar för priset av 7) och Intensiv (`plan_intensiv`, 12 timmar −5 %);
+  `data-erb` (planerna, lyftet `.pr-lyft` med tejpen `.nx-tejp`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
+  `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar),
+  Standard (`plan_standard`, 8) och Intensiv (`plan_intensiv`, 12), alla −5 % och en månads bindning sedan
+  2026-10-08, då Standard förlorade "8 timmar för priset av 7";
   `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
-  `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och Standard visar
-  aldrig ett timpris, bara "8 timmar för priset av 7". Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
+  `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och ett kort med
+  timmar på köpet visar aldrig ett timpris. Jämförelsen med andra aktörer (`data-erb-lagre`) avrundas nedåt till
+  hel procent (2026-10-08; förut till fem), och "Spara upp till N kr på 6 månader" (`data-erb-spara`) är den
+  största skillnaden mellan ordinarie och planens pris gånger månaderna, båda ur svaret. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
   och tipstimmen är samma rabatt); ett pass på noll kronor är INTE betalt. Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
@@ -611,6 +615,19 @@ Detaljer: `minne/grunden.md`.
   per timme än Standard (Leos val). Juristen har inte läst "1 timme på köpet" och "ni sparar" mot
   ordinarie pris, och villkoren säger "ett pass där en timme är på köpet" om startrabatten; ett
   förtydligande kräver en ny version, tidigast 2026-10-08.
+- **Timpriset 399 och paketen 379** (2026-10-08, Leo: "Läxhjälpen ska kosta 399kr standard obundet. Sen på
+  våra paket blir man bunden i 1 månad och de kostar 379kr") är INTE i drift förrän
+  `timpris_399_paketen_379` (20261008100000) körts efter merge, och den ska köras direkt: från merge säger
+  sajten 399 (`nextrum-config.js`) medan kassan tar 379 och Standard döljs. Migrationen ändrar bara
+  `tjanster` (läxhjälpen 39900, triggern speglar `prissattning`, och dess förval), och Standard till 5 % utan
+  timme på köpet; inget köp pekar på `plan_standard`, och frysta pris på pass och kort rörs inte. Lokalt
+  1505 av 1505 i `rls-test.sql` med migrationen. Ingen funktion behöver driftsättas för priset; `drift`
+  (`_delad/nextrum-fakta.ts`, agentens siffror) ska driftsättas från main efter merge. Kvar: befintliga
+  familjer ska få veta om det nya priset (det gäller pass som bokas efter migrationen och köp efter den),
+  profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5), och **villkoren**: de säger "ingen bindningstid"
+  och att den som slutar med en plan får tillbaka det som är kvar, så "en månads bindning" på sidorna
+  har ingen motsvarighet där. En riktig bindning kräver en ny version av villkoren (alla får frågan igen), och
+  juristen har inte läst något av det.
 - **Just nu-jämförelsen** (2026-10-08): "upp till 45 % lägre pris än jämförbara paket hos flera större
   aktörer" och "Andra aktörer 5 000 kr" bygger på Leos underlag (Studybuddy, 5 000 kr för samma paket),
   som inte står i repot. "Flera" kräver underlag från minst två aktörer till; Leo valde att behålla ordet.

@@ -3,8 +3,8 @@
 //
 // Drift-agenten läste förut bara rader. Den kunde säga att fem pass
 // saknar rapport, men inte att ett pass därmed inte RÄKNAS som
-// genomfört, och inte att tre barn kostar 448 kronor i timmen och
-// inte 517. Utan det blir svaren formellt riktiga och praktiskt
+// genomfört, och inte att tre barn kostar 468 kronor i timmen och
+// inte 537. Utan det blir svaren formellt riktiga och praktiskt
 // värdelösa: "fem pass saknar rapport" är en observation, "fem pass
 // är alltså inte genomförda och ingen av dem går att betala ut
 // ersättning för" är ett besked.
@@ -85,10 +85,13 @@ väntläge, inte i ett fel. En studiehjälpare syns publikt först när
 admin godkänt hen.
 
 SIFFRORNA:
-· 379 kronor i timmen.
+· 399 kronor i timmen, utan bindning. Det är priset, inget från-pris.
+· Planerna Basic, Standard och Intensiv (4, 8 och 12 timmar) binder
+  familjen en månad och kostar 379 kronor i timmen. De köps en gång,
+  i förväg, och priserna räknas i databasen, inte här.
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
-  448 kronor i timmen, inte 517.
+  468 kronor i timmen, inte 537.
 · Familjen betalar varje pass med kort, antingen i förväg, när
   studiehjälparen bekräftat tiden, eller efter passet när de bekräftar
   rapporten. När de bekräftar rapporten kan de i stället välja faktura,

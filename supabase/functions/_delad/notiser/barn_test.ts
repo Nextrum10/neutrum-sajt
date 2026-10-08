@@ -39,7 +39,7 @@ Deno.test('inget om betalning, skäl, efternamn eller annat ur raden', () => {
   for (const typ of ['barn_pass_bokat', 'barn_pass_avbokat', 'barn_paminnelse']) {
     const m = renderaBarnMejl({ typ, fornamn: 'Alva Berg', data: { ...PASS, timmar: 24 }, token: TOKEN, prov: 'nej', nu: NU });
     const allt = m.amne + m.text + m.html;
-    for (const fel of ['betala', 'Betala', 'faktura', 'Faktura', ' kr', 'kronor', '379', 'timmar ni', 'avslutar', 'Skäl',
+    for (const fel of ['betala', 'Betala', 'faktura', 'Faktura', ' kr', 'kronor', '379', '399', 'timmar ni', 'avslutar', 'Skäl',
                        'Berg', 'Lind', '070', 'Ring mamma', '/foralder', '/larare']) {
       assertEquals(allt.includes(fel), false, `${typ}: "${fel}" fanns i mejlet`);
     }

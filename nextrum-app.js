@@ -553,7 +553,7 @@ const NX = (function () {
      Skrivs in från nextrum-config.js så att det bara finns på ett
      ställe, och räknas upp när siffran kommer in i vyn. */
   function initPris() {
-    const pris = Number(CFG.PRIS_PER_TIMME) || 349;
+    const pris = Number(CFG.PRIS_PER_TIMME) || 399;
     $$('[data-stat="pris"], [data-stat="pris-inline"]').forEach(el => el.textContent = kr(pris));
 
     /* Tillägget bor i samma konfiguration som timpriset. Räkne-
@@ -644,7 +644,7 @@ const NX = (function () {
      eller "för priset av" när inga timmar är på köpet. */
   async function initErbjudanden() {
     const alla = $$('[data-erb]');
-    if (!alla.length) return;
+    if (!alla.length && !$('[data-erb-spara]')) return;
     const rad = $('[data-erb-rad]');
     const svep = rad ? svepraden(rad) : null;
     if (!String(CFG.SUPABASE_URL || '').startsWith('https://')) return;
@@ -663,6 +663,7 @@ const NX = (function () {
     const sek = $('.pr-erb');
     if (!rader.length) {
       alla.forEach(el => { el.hidden = true; });
+      $$('[data-erb-spara]').forEach(el => { el.hidden = true; });
       if (sek) sek.hidden = true;
       document.dispatchEvent(new Event('nx:erbjudanden'));
       return;
@@ -700,16 +701,20 @@ const NX = (function () {
         if (pa) x.textContent = pa === 1 ? t('timmePaKopet') : t('timmarPaKopet', { n: pa });
       });
       $$('.pr-erb-rutor', el).forEach(x => rutor(x, timmar, pa));
-      /* Jämförelsen i Just nu: ett annat pris för samma antal timmar
-         står på elementet (data-erb-jamfor-ore), och procenten räknas
-         här i heltal, nedåt till närmaste fem, så att "upp till" aldrig
-         lovar mer än skillnaden. Gäller jämförelsen andra timmar än
-         planens, eller är planen inte minst fem procent billigare, är
-         påståendet inte sant längre, och elementet döljs. --andel är
-         vår stapels längd mot deras och läses på stapeln. */
+      /* Jämförelsen (Just nu på startsidan, tejpen på prissidan): ett
+         annat pris för samma antal timmar står på elementet
+         (data-erb-jamfor-ore), och procenten räknas här i heltal, nedåt
+         till hel procent, så att "upp till" aldrig lovar mer än
+         skillnaden. Till 2026-10-08 nedåt till närmaste fem; sedan dess
+         till hel procent, så nära skillnaden det går utan att lova mer
+         (3 032 mot 5 000 kr är 39,4 %, alltså 39, där fem hade gett 35).
+         Gäller jämförelsen andra timmar än planens, eller är planen inte
+         minst fem procent billigare, är påståendet inte sant längre, och
+         elementet döljs. --andel är vår stapels längd mot deras och läses
+         på stapeln. */
       const jämför = Number(el.getAttribute('data-erb-jamfor-ore')) || 0;
       if (jämför) {
-        const lägre = Math.floor((jämför - Number(r.pris_ore)) * 20 / jämför) * 5;
+        const lägre = Math.floor((jämför - Number(r.pris_ore)) * 100 / jämför);
         if (Number(el.getAttribute('data-erb-jamfor-timmar')) !== timmar || !(lägre >= 5)) {
           el.hidden = true;
           return;
@@ -733,6 +738,15 @@ const NX = (function () {
       const timmar = kvar.map(r => Number(r.timmar));
       const rabatter = new Set(kvar.map(r => String(r.rabatt_procent)));
       skriv(g, '[data-erb-fran]', kr(Math.min(...kvar.map(r => r.pris_ore)) / 100));
+      /* Timpriset i stället för "från" det billigaste kortet (Leo
+         2026-10-08: "inte från utan för"): bara när det är detsamma på
+         alla kort, annars göms beloppet hellre än står för ett av dem. */
+      const timpriser = new Set(kvar.map(r => String(r.rabatterat_timpris_ore)));
+      $$('[data-erb-grupp-tim]', g).forEach(x => {
+        const ram = x.closest('.nx-amount') || x;
+        ram.hidden = timpriser.size !== 1;
+        if (timpriser.size === 1) x.textContent = kr(Number(kvar[0].rabatterat_timpris_ore) / 100);
+      });
       skriv(g, '[data-erb-min]', String(Math.min(...timmar)));
       skriv(g, '[data-erb-max]', String(Math.max(...timmar)));
       const rabatt = $('summary [data-erb-rabatt]', g);
@@ -740,6 +754,32 @@ const NX = (function () {
       if (rabatter.size === 1) rabatt.textContent = [...rabatter][0];
       else rabatt.closest('.pr-erb-rabatt').hidden = true;
     });
+    /* "Spara upp till N kr på 6 månader" (Leo 2026-10-08). Talet i
+       data-erb-spara är antalet månader, och N är den största skillnaden
+       mellan ordinarie pris och planens pris bland planerna, gånger
+       månaderna, i hela kronor. Ordinarie är timpriset utan bindning
+       gånger alla timmarna, så N är vad en familj sparar på att köpa den
+       planen varje månad i stället för att betala per pass: med 399 och
+       379 kr i timmen är det Intensiv, 12 × 20 kr × 6 = 1 440 kr.
+       Beloppet skrivs i [data-erb-spara-kr], eller i elementet självt om
+       det saknas. Ingen plan eller ingen besparing: elementet döljs, för
+       "spara upp till 0 kr" är inget erbjudande. Står det dolt i sidan
+       (som data-erb-vantar) visas det först här. */
+    const spara = $$('[data-erb-spara]');
+    if (spara.length) {
+      const per = Math.max(0, ...rader.filter(r => r.sort === 'plan')
+        .map(r => Number(r.ordinarie_ore) - Number(r.pris_ore)).filter(n => n > 0));
+      spara.forEach(el => {
+        const mån = Number(el.getAttribute('data-erb-spara')) || 0;
+        const öre = per * mån;
+        el.hidden = !(öre > 0);
+        if (öre > 0) {
+          const mål = $$('[data-erb-spara-kr]', el);
+          (mål.length ? mål : [el]).forEach(x => { x.textContent = kr(Math.floor(öre / 100)); });
+        }
+      });
+    }
+
     if (svep) svep.ordna();
     document.dispatchEvent(new Event('nx:erbjudanden'));
   }

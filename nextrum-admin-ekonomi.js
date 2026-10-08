@@ -3203,7 +3203,7 @@
      läxhjälpens pris. Läser man tjanster här i stället skulle rutan
      visa vad någon nyss skrev medan funktionen räknade på något annat. */
   function ritaPris() {
-    const öre = S.pris ? S.pris.pris_per_timme_ore : (NX.CFG.PRIS_PER_TIMME || 379) * 100;
+    const öre = S.pris ? S.pris.pris_per_timme_ore : (NX.CFG.PRIS_PER_TIMME || 399) * 100;
     const ruta = $('#kor-pris');
     if (ruta) ruta.textContent = kronor(öre);
   }

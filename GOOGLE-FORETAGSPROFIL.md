@@ -124,21 +124,26 @@ för att säga något om det (samma regel som för sidorna).
 Lägg upp dem som egna poster. Varje post är en egen chans att matcha en
 sökning, och de kostar ingenting.
 
+399 kr i timmen sedan 2026-10-08 (utan bindning; planerna med en månads
+bindning kostar 379 kr i timmen och står på prissidan). Ändra posterna i
+profilen när priset ändras: ett gammalt pris där är samma sak som ett
+gammalt pris på sidan.
+
 | Tjänst | Pris |
 |---|---|
-| Läxhjälp | 379 kr/tim |
-| Mattehjälp | 379 kr/tim |
-| Läxhjälp gymnasiet | 379 kr/tim |
-| Läxhjälp högstadiet | 379 kr/tim |
-| Läxhjälp mellanstadiet | 379 kr/tim |
-| Läxhjälp lågstadiet | 379 kr/tim |
-| Onlineläxhjälp | 379 kr/tim |
-| Provplugg och nationella prov | 379 kr/tim |
-| Engelska | 379 kr/tim |
-| Svenska | 379 kr/tim |
-| NO | 379 kr/tim |
-| SO | 379 kr/tim |
-| Spanska, tyska och franska | 379 kr/tim |
+| Läxhjälp | 399 kr/tim |
+| Mattehjälp | 399 kr/tim |
+| Läxhjälp gymnasiet | 399 kr/tim |
+| Läxhjälp högstadiet | 399 kr/tim |
+| Läxhjälp mellanstadiet | 399 kr/tim |
+| Läxhjälp lågstadiet | 399 kr/tim |
+| Onlineläxhjälp | 399 kr/tim |
+| Provplugg och nationella prov | 399 kr/tim |
+| Engelska | 399 kr/tim |
+| Svenska | 399 kr/tim |
+| NO | 399 kr/tim |
+| SO | 399 kr/tim |
+| Spanska, tyska och franska | 399 kr/tim |
 
 **Privatlärare står inte med längre.** Ordlistan säger aldrig "lärare"
 utåt, och en tjänst som heter Privatlärare lovar något en studiehjälpare

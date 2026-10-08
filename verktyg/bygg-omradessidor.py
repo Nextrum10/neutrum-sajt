@@ -44,7 +44,11 @@ import sys
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKAL = os.path.join(ROT, 'var-ide.html')
 
-PRIS_KR = 379
+# Timpriset utan bindning (399 sedan 2026-10-08, Leo). Samma tal som
+# PRIS_PER_TIMME i nextrum-config.js och läxhjälpens pris i tjanster.
+# Paketens pris (379 kr i timmen med en månads bindning) står bara i
+# erbjudanden_pris och skrivs aldrig in i sidorna härifrån.
+PRIS_KR = 399
 EXTRA_KR = 69
 
 PRIS = f'{PRIS_KR} kr'
@@ -2006,7 +2010,8 @@ GUIDER = [
             f'än hålls, hemma hos er eller online. Sitter syskon med i samma pass tillkommer '
             f'{EXTRA_BARN} i timmen totalt, lika mycket för tre barn som för två. Det finns ingen '
             f'anmälningsavgift, ingen bindningstid och inget minsta antal timmar, och för nya '
-            f'familjer är första timmen på köpet när ni har bokat två timmar.',
+            f'familjer är första timmen på köpet när ni har bokat två timmar. Vill ni betala mindre '
+            f'för varje timme kan ni välja en plan med en månads bindning.',
             'Ni betalar för den tid passet faktiskt höll, räknat per påbörjad kvart, och ser '
             'tiden i rapporten innan ni bekräftar den. Matchningen, studieplanen och rapporten '
             'efter varje pass ingår i timpriset. Hela prisbilden står på prissidan.',
