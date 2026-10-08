@@ -623,20 +623,23 @@ de står läs mer om betygsgarantin".
   pilen är inline och följer sista ordet. Tryckytan är 44 px med
   `::before`.
 
-### Vad är Nextrum? (2026-10-08, fjärde varvet)
+### Vad är Nextrum (2026-10-08, fjärde varvet)
 
 Leo: "första sektionen så hjälper vi ska heta vad är Nextrum, och under i
 korta beskrivningen skriver du detta: Nextrum erbjuder prisvärd läxhjälp
 där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper
 elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid."
-Samma kväll: "skriv där ditt barn istället för elever", så ingressen säger
-"där ditt barn matchas med en studiehjälpare som passar barnets behov. Vi
-hjälper ditt barn att förstå mer ..." ("barnets", inte "deras" eller "hens").
-Bara rubriken (`h2.hj-rubrik`, "Vad är *Nextrum?*", betoningen i leran som
-förut) och ingressen i `.nx-head-aside` på startsidan, båda språken
-("What is *Nextrum?*", med "tutor" som resten av engelskan). Etiketten
-"Så hjälper vi", ankaret `#sa-hjalper-vi`, bladen och remsan är orörda, och
-Vår idé har kvar "Hur hjälper vi ditt barn?" med den gamla ingressen.
+Sedan "skriv där ditt barn istället för elever", och till sist "Så hjälper
+vi ska vara vad är Nextrum och behåll så hjälper vi ditt barn som rubrik".
+Så på startsidan, båda språken: etiketten (`.nx-et`) är "Vad är Nextrum"
+("What is Nextrum"), rubriken är kvar "Hur hjälper vi *ditt barn?*", och
+ingressen i `.nx-head-aside` är "Nextrum erbjuder prisvärd läxhjälp där ditt
+barn matchas med en studiehjälpare som passar barnets behov. Vi hjälper
+ditt barn att förstå mer, känna sig tryggare i skolan och utvecklas över
+tid." ("barnets", inte "deras" eller "hens"; engelskan säger "your child"
+och "tutor" som resten av den). Ankaret `#sa-hjalper-vi`, bladen och remsan
+är orörda, och Vår idé har kvar etiketten "Så hjälper vi" och den gamla
+ingressen.
 
 ### Två fällor när en palett byts
 
