@@ -53,7 +53,8 @@ timmen: 1 440, 2 653 och 4 320 kr. Basic blev dyrare än gamla Standard
   (startrabatten); ett förtydligande kräver en ny version av villkoren.
 - `rls-test.sql` avsnitt 25 (Planerna) och det omskrivna provet 16.1d.
 - Prissidans plankort, lyftet bredvid starterbjudandet och startsidans lapp
-  i #plattformen döljs tills migrationen kört (koderna saknas i svaret).
+  i #plattformen döljs när koderna saknas i svaret (som före migrationen,
+  som kördes 2026-10-07 efter `stripe-checkout` v18; `minne/databasen.md`).
   Startsidans lapp har inga kronor i HTML. Leos testköp "Standardplan"
   syns bara i hans vy.
 
