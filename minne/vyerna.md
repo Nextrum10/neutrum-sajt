@@ -90,8 +90,12 @@ sken av lera och mossa ur `--nt-glod` och `--nt-mossa`, i cinemas DE
 MÖRKA YTORNA. Skenet tonar ut före nederkanten, och det som följer
 direkt på en mörk yta — footern, bandet under sidhuvudet — börjar i
 `--nt-2` utan lera i överkanten: annars syns en ljusare rand där två
-mörka block möts. Footern är därför `--nt-2` på alla sidor. I mörkt
-läge är `--nt-2` samma som `--nt`, och där är allt som förut. **Hero behåller den gamla tonen**
+mörka block möts. Footern var därför `--nt-2` på alla sidor, och i mörkt
+läge, där `--nt-2` är samma som `--nt`, barken. Sedan 2026-10-08 står
+footern i `--ftr-bg` (`#1F1915`, ljusa lägets `--nt-2`) i båda lägena
+(Leo, med en skärmbild av footern i ljust läge: "Ha denna färg på denna
+sektion på både ljus och mörk vy"); i mörkt läge möter den Nästa steg på
+`--pap` (`#1A1813`), nästan samma ton, så ingen rand. **Hero behåller den gamla tonen**
 (`--nt-film`), för hero är orörd med flit.
 
 Ytorna går kant i kant. En första version lade Bli studiehjälpare och

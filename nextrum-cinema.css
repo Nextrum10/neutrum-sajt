@@ -83,6 +83,11 @@
   --nt-mut:#B3A88F;
   --nt-ln:rgba(239,230,214,.15);
   --nt-2:#1F1915;
+  /* Footern har samma mörka ton i båda lägena (2026-10-08, Leo, med en
+     skärmbild av footern i ljust läge: "Ha denna färg på denna sektion
+     på både ljus och mörk vy"). Den står bara här och skrivs aldrig
+     över i de mörka blocken, där --nt-2 blir barken. */
+  --ftr-bg:#1F1915;
   --nt-glod:rgba(217,129,79,.2);
   --nt-mossa:rgba(122,139,98,.16);
   --nt-film:#2E2A20;
@@ -1154,7 +1159,8 @@ html[lang="en"] .nx-hero-rubrik{
    sidans eget papper, --pap (#1A1813), inte på barken (#262319), och
    skenet är ett svagt ljus av lera mitt bakom rubriken som aldrig når
    kanterna: ingen annan mörk ton, och ingen skarv mot sektionen ovanför.
-   Footern under står kvar i barken och är det som avgränsar. I ljust
+   Footern under står i sin egen mörka ton (--ftr-bg, #1F1915, samma i
+   båda lägena sedan samma dag) och är det som avgränsar. I ljust
    läge är ytan som förut. Efter #bli på startsidan: nextrum-start.css,
    avsnitt 10. */
 @media (prefers-color-scheme:dark){
@@ -1538,7 +1544,7 @@ html[lang="en"] .nx-hero-rubrik{
    "Nästa steg", som mörknar ner mot samma ton, och då möts de utan
    skarv. Se DE MÖRKA YTORNA.
    ============================================================ */
-.ftr{background:var(--nt-2);color:var(--nt-fg);padding-block:clamp(64px,8vw,110px) clamp(28px,3vw,40px)}
+.ftr{background:var(--ftr-bg);color:var(--nt-fg);padding-block:clamp(64px,8vw,110px) clamp(28px,3vw,40px)}
 .ftr .wrap{max-width:var(--w-bred)}
 .ftr-brand p{color:var(--nt-mut)}
 /* Kolumnrubrikerna i foten är h2 för rubrikordningens skull, men
