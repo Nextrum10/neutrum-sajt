@@ -120,10 +120,12 @@ hela dess modulgraf laddar. En molnsession når inte `*.supabase.co`
 transaktion som rullades tillbaka.
 Kvar i driften, utan betydelse i sak: `faktura-utskick`,
 `generate-feedback`, `generate-message` och `lead-notis` bär
-`notiser/typer.ts` från 2026-09-30, utan barnets typer och `kod`, och
-`stripe-checkout` bär `_delad/pris.ts` utan faktureringens tillägg (den
-importerar bara prisfunktionerna). Driftsätts de av annat skäl följer
-mains kopior med. `ansokan-notis` driftsattes 2026-10-06 som v7 från main
+`notiser/typer.ts` från 2026-09-30, utan barnets typer och `kod`.
+Driftsätts de av annat skäl följer mains kopior med. `stripe-checkout`
+gick ut som v18 från main (2f12977) 2026-10-07, före migrationen
+`planerna_basic_standard_intensiv`, med kassaraden för en timme på köpet
+och `sammaInnehall`; hämtad tillbaka är den byte för byte som main i alla
+sju filer, också `_delad/pris.ts`. `ansokan-notis` driftsattes 2026-10-06 som v7 från main
 (c5e5fe1), med nejet och mejlet till vårdnadshavaren, och lästes tillbaka:
 alla tretton filer är byte för byte som main. 2026-10-07 gick v8 ut från
 main (43d2ef4), där bara `notiser/ansokan.ts` skilde (sista steget och

@@ -598,11 +598,11 @@ Detaljer: `minne/grunden.md`.
   Inget är byggt för att pröva ett anspråk (admin räknar ur vyerna; anmälningarna står i elevens
   panel), passen har inget ämnesfält, studiehjälparen ser inte vilka ämnen som har garanti, och
   juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`.
-- **Planerna Basic, Standard och Intensiv** (2026-10-07) är INTE i drift förrän `stripe-checkout`
-  (SESSIONSFORM 7) driftsatts från main och migrationen `planerna_basic_standard_intensiv`
-  (20261007210000) körts efter merge, i den ordningen: kassan läser hela raden och tål att kolumnen
-  saknas, och driftsatt först säljer ingen gammal kassa Standard med "0 % rabatt". Tills dess döljer
-  prissidan och startsidan de nya planerna, och studievyn visar den gamla katalogen. Intensiv är dyrare
+- **Planerna Basic, Standard och Intensiv** (2026-10-07) är i drift sedan samma kväll, i den ordningen:
+  `stripe-checkout` v18 (SESSIONSFORM 7) från main (2f12977), hämtad tillbaka och byte för byte lika
+  (7 av 7 filer), och sedan `planerna_basic_standard_intensiv` (20261007210000) från merge-commiten
+  (md5 prövad); priserna i `erbjudanden_pris` är 1 440, 2 653 och 4 320 kr, och hela `rls-test.sql`
+  1505 av 1505 mot driften. Inget provköp av en ny plan är gjort. Intensiv är dyrare
   per timme än Standard (Leos val). Juristen har inte läst "1 timme på köpet" och "ni sparar" mot
   ordinarie pris, och villkoren säger "ett pass där en timme är på köpet" om startrabatten; ett
   förtydligande kräver en ny version, tidigast 2026-10-08.
