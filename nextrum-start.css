@@ -257,32 +257,34 @@ html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
 /* ============================================================
    4. HÅLLPUNKTERNA — fyra kolumner, 1 till 4
 
-   Den man för musen över kommer fram, de andra drar sig tillbaka,
-   krymper och blir grå. :has() gör det utan en rad skript: listan
-   vet att något i den är under pekaren.
+   Två och två på telefonen, fyra i rad på bred skärm (2026-10-07).
+   Leo: "De kolumnerna 1-4 de ska vara bredvid varandra", och fokuset
+   som lät kortet mitt i skärmen växa medan de andra krympte och blev
+   grå var en "slide funktion som inte är clean". Det är borttaget,
+   skriptet också: korten står stilla, och bara musen får en diskret
+   hovring (kantens skugga och siffran i lera), utan att grannarna
+   tonas ned.
 
-   Nedtoningen är filter:opacity(), inte egenskapen opacity. Listan
-   bar förut data-stig på varje punkt, och den regeln väger (0,3,1)
-   på opacity och transform — en nedtoning där hade aldrig syntes.
-   data-stig sitter nu på listan i stället, och punkterna har inget
-   annat system som slåss om samma egenskaper.
+   Raderna i rutnätet sträcker korten, så två kort bredvid varandra är
+   lika höga. Ett udda antal: det sista kortet tar hela raden, i
+   stället för att lämna ett hål bredvid sig. Under 340 px räcker
+   bredden inte till två.
    ============================================================ */
 .nx-holdpunkter{
   border-top:0;
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:clamp(14px,1.6vw,22px);
 }
-@media (max-width:1100px){.nx-holdpunkter{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.nx-holdpunkter{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:1100px){
+  .nx-holdpunkter{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nx-holdpunkter > li:last-child:nth-child(odd){grid-column:1 / -1}
+}
+@media (max-width:339px){.nx-holdpunkter{grid-template-columns:minmax(0,1fr)}}
 
 .nx-holdpunkter > li{
   border-bottom:1px solid transparent;
   padding:clamp(24px,2.4vw,32px);
-  transform-origin:50% 60%;
-  transition:
-    scale .55s var(--fjader),
-    filter .4s var(--e),
-    translate var(--tryck-tid) var(--e-ut);
+  transition:translate var(--tryck-tid) var(--e-ut);
 }
 /* Tvätten i cinema är till kolumner UTAN egen yta. De här är blad,
    och en tvätt som bleder ut runt ett blad blir en gloria. */
@@ -302,28 +304,32 @@ html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
 }
 
 @media (hover:hover) and (pointer:fine){
-  .nx-holdpunkter:has(> li:hover) > li{
-    scale:.955;
-    filter:grayscale(1) opacity(.5);
-  }
-  .nx-holdpunkter:has(> li:hover) > li:hover{
-    scale:1.055;
-    filter:none;
-    z-index:2;
-  }
   .nx-holdpunkter > li:hover::after{opacity:1}
   .nx-holdpunkter > li:hover .hp-nr{color:var(--acc)}
 }
-/* På pekskärm finns ingen pekare. Där tänds den punkt man har mitt
-   i skärmen (en spalt) eller den man tryckt på (två spalter), och
-   skriptet sätter .har-pa på listan när det gäller. */
-.nx-holdpunkter.har-pa > li:not(.pa){
-  scale:.965;
-  filter:grayscale(1) opacity(.55);
+
+/* Telefonen: två kort på 170 px var. Luften inne i kortet krymper mer
+   än texten, och siffran och figuren mest, så att bredden går till
+   orden. Avstavningen tar de långa svenska orden i den smala spalten,
+   och overflow-wrap är reserven där webbläsaren saknar ordlista. */
+@media (max-width:760px){
+  .nx-holdpunkter{gap:10px}
+  .nx-holdpunkter > li{padding:16px 14px 18px;border-radius:20px}
+  .nx-holdpunkter .hp-topp{margin-bottom:14px;gap:8px}
+  .nx-holdpunkter .hp-nr{font-size:2.1rem}
+  .nx-holdpunkter .hp-mark{width:30px;height:30px;border-radius:10px}
+  .nx-holdpunkter .hp-mark svg{width:15px;height:15px}
+  .nx-holdpunkter h3{font-size:1rem;line-height:1.16;letter-spacing:-.024em}
+  .nx-holdpunkter p{
+    margin-top:7px;font-size:.875rem;line-height:1.48;
+    -webkit-hyphens:auto;hyphens:auto;hyphenate-limit-chars:8 4 3;
+    overflow-wrap:break-word;
+  }
 }
-.nx-holdpunkter.har-pa > li.pa{scale:1.02}
-.nx-holdpunkter.har-pa > li.pa::after{opacity:1}
-.nx-holdpunkter.har-pa > li.pa .hp-nr{color:var(--acc)}
+@media (max-width:379px){
+  .nx-holdpunkter{gap:8px}
+  .nx-holdpunkter > li{padding-inline:11px}
+}
 
 /* ============================================================
    5. STUDIEHJÄLPARNA — en rad man sveper i
@@ -2722,20 +2728,21 @@ html.nx-sr .nx-mork.nx-final-cinema > *{
 html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 
 /* ---------- stegen i ansökan: samma 1–4 som hållpunkterna ----------
-   Leo: "stegen 1,2,3,4 ska ha samma funktion som de andra 1,2,3,4
-   lite högre upp". Samma regler, samma fjäder, samma skript
-   (hållpunkter() i nextrum-start.js tar båda listorna). */
-.nx-apply-flow{gap:clamp(12px,1.4vw,18px)}
+   Samma form som hållpunkterna, och samma beslut (2026-10-07): fyra i
+   rad på bred skärm, två och två på telefonen, inget fokus som tonar
+   ned grannarna. Musen tänder bara kortet den står på.
+   Startsidans Bli studiehjälpare har samma lista och får det här med. */
+.nx-apply-flow{
+  gap:clamp(12px,1.4vw,18px);
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
 .nx-apply-flow > .nx-apply-step{
-  position:relative;
+  position:relative;min-width:0;
   border-radius:clamp(20px,2vw,26px);
   padding:clamp(22px,2.2vw,30px);
   background:rgba(239,230,214,.05);
   border-color:rgba(239,230,214,.12);
-  transform-origin:50% 60%;
   transition:
-    scale .55s var(--fjader),
-    filter .4s var(--e),
     background-color .35s var(--e),
     border-color .35s var(--e);
 }
@@ -2748,29 +2755,29 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   transition:color .35s var(--e);
 }
 @media (hover:hover) and (pointer:fine){
-  .nx-apply-flow:has(> .nx-apply-step:hover) > .nx-apply-step{
-    scale:.955;
-    filter:grayscale(1) opacity(.5);
-  }
-  .nx-apply-flow:has(> .nx-apply-step:hover) > .nx-apply-step:hover{
-    scale:1.055;
-    filter:none;
-    z-index:2;
+  .nx-apply-flow > .nx-apply-step:hover{
     background-color:rgba(239,230,214,.09);
     border-color:rgba(239,230,214,.22);
   }
   .nx-apply-step:hover em{color:var(--lera-l)}
 }
-.nx-apply-flow.har-pa > .nx-apply-step:not(.pa){
-  scale:.965;
-  filter:grayscale(1) opacity(.55);
+@media (max-width:760px){
+  .nx-apply-flow{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .nx-apply-flow > .nx-apply-step{padding:16px 14px 18px;border-radius:20px}
+  .nx-apply-flow > .nx-apply-step:last-child:nth-child(odd){grid-column:1 / -1}
+  .nx-apply-step em{font-size:2.1rem;margin-bottom:14px}
+  .nx-apply-step b{font-size:.98rem;line-height:1.2}
+  .nx-apply-step p{
+    font-size:.84rem;line-height:1.48;
+    -webkit-hyphens:auto;hyphens:auto;hyphenate-limit-chars:8 4 3;
+    overflow-wrap:break-word;
+  }
 }
-.nx-apply-flow.har-pa > .nx-apply-step.pa{
-  scale:1.02;
-  background-color:rgba(239,230,214,.09);
-  border-color:rgba(239,230,214,.22);
+@media (max-width:379px){
+  .nx-apply-flow{gap:8px}
+  .nx-apply-flow > .nx-apply-step{padding-inline:11px}
 }
-.nx-apply-flow.har-pa > .nx-apply-step.pa em{color:var(--lera-l)}
+@media (max-width:339px){.nx-apply-flow{grid-template-columns:minmax(0,1fr)}}
 
 /* ============================================================
    15. GARANTIFLÖDET (2026-10-07) — betygsgarantin på papperet
@@ -2986,10 +2993,6 @@ html.nx-sr .nx-gar-flode.i-gang > li.fylld:last-child::after{transition-delay:.4
    Det som är kvar är det som rör sig av sig självt.
    ============================================================ */
 @media (prefers-reduced-motion:reduce){
-  .nx-holdpunkter > li,
-  .nx-holdpunkter:has(> li:hover) > li,
-  .nx-apply-flow > .nx-apply-step,
-  .nx-apply-flow:has(> .nx-apply-step:hover) > .nx-apply-step{scale:none !important}
   .sd-rum,.sd-fonster{transform:none !important}
   .sd-nl-mat i{transition:none}
 }
