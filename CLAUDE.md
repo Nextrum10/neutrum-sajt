@@ -630,13 +630,15 @@ Detaljer: `minne/grunden.md`.
   ordinarie pris, och villkoren säger "ett pass där en timme är på köpet" om startrabatten; ett
   förtydligande kräver en ny version, tidigast 2026-10-08.
 - **Timpriset 399 och paketen 379** (2026-10-08, Leo: "Läxhjälpen ska kosta 399kr standard obundet. Sen på
-  våra paket blir man bunden i 1 månad och de kostar 379kr") är INTE i drift förrän
-  `timpris_399_paketen_379` (20261008100000) körts efter merge, och den ska köras direkt: från merge säger
-  sajten 399 (`nextrum-config.js`) medan kassan tar 379 och Standard döljs. Migrationen ändrar bara
+  våra paket blir man bunden i 1 månad och de kostar 379kr") är i drift sedan samma dag: PR #227 mergades
+  (6d65312) och `timpris_399_paketen_379` (20261008100000) kördes direkt efter från merge-commiten, md5
+  prövad; `erbjudanden_pris` visar 1 516, 3 032 och 4 548 kr och klippkorten 379 kr/tim, och hela
+  `rls-test.sql` gick 1505 av 1505 mot driften, tillbakarullat. Migrationen ändrar bara
   `tjanster` (läxhjälpen 39900, triggern speglar `prissattning`, och dess förval), och Standard till 5 % utan
   timme på köpet; inget köp pekar på `plan_standard`, och frysta pris på pass och kort rörs inte. Lokalt
   1505 av 1505 i `rls-test.sql` med migrationen. Ingen funktion behöver driftsättas för priset; `drift`
-  (`_delad/nextrum-fakta.ts`, agentens siffror) ska driftsättas från main efter merge. Ingen familj hade bokat
+  (`_delad/nextrum-fakta.ts`, agentens siffror) driftsätts från main efter merge av PR #228, som rättar
+  "binder en månad" där. Ingen familj hade bokat
   när priset ändrades (Leo 2026-10-08), så ingen behöver få veta. Kvar:
   profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5). Leos "bunden i 1 månad" blev "en månad i taget"
   på sajten, för villkoren säger ingen bindningstid och att den som slutar med en plan får tillbaka det som
