@@ -205,8 +205,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   2026-10-08, då Standard förlorade "8 timmar för priset av 7";
   `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
   `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och ett kort med
-  timmar på köpet visar aldrig ett timpris. Jämförelsen med andra aktörer (`data-erb-lagre`) avrundas nedåt till
-  hel procent (2026-10-08; förut till fem), och "Spara upp till N kr på 6 månader" (`data-erb-spara`) är den
+  timmar på köpet visar aldrig ett timpris. Jämförelsen med andra aktörer (`data-erb-lagre`) avrundas till närmaste
+  fem (Leo 2026-10-08: "upp till 40 %"; exakt är 3 032 mot 5 000 kr 39,4 %), och "Spara upp till N kr på 6 månader" (`data-erb-spara`) är den
   största skillnaden mellan ordinarie och planens pris gånger månaderna, båda ur svaret. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
   och tipstimmen är samma rabatt); ett pass på noll kronor är INTE betalt. Belopp i **ören**, kronor först vid visning.
 
@@ -253,7 +253,7 @@ som ett litet flöde (`.nx-gar-liten`, `data-gar-flode="tur"`) som tänds i tur 
 `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
 paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till" (`data-erb-spara`), och jämförelsen
 Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
-pris står aldrig i HTML, procenten avrundas nedåt till hel procent, figuren och tejpen döljs om planen inte har
+pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
 8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. NexLäx (`#nexlax`, avsnitt
 13, `nexlax()`): en telefon som visar sig själv i fyra skärmar och en stig som följer med, på papperet; en
 illustration (`role="img"`), inget att svara i, högst tre varv och pausad utanför bild; varje skärm står lika
@@ -641,8 +641,8 @@ Detaljer: `minne/grunden.md`.
   profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5). Leos "bunden i 1 månad" blev "en månad i taget"
   på sajten, för villkoren säger ingen bindningstid och att den som slutar med en plan får tillbaka det som
   är kvar; en riktig bindning kräver en ny version av villkoren (alla får frågan igen) och juristen.
-- **Just nu-jämförelsen** (2026-10-08): "upp till 39 % lägre pris än jämförbara paket hos flera större
-  aktörer" (talet räknas) och "Andra aktörer 5 000 kr+" (plustecknet sedan samma dag, Leo) bygger på Leos
+- **Just nu-jämförelsen** (2026-10-08): "upp till 40 % lägre pris än jämförbara paket hos flera större
+  aktörer" (talet räknas och avrundas till närmaste fem; exakt 39,4 %, Leos val) och "Andra aktörer 5 000 kr+" (plustecknet sedan samma dag, Leo) bygger på Leos
   underlag (Studybuddy, 5 000 kr för samma paket),
   som inte står i repot. "Flera" kräver underlag från minst två aktörer till; Leo valde att behålla ordet.
   Underlaget (skärmbilder med adress och datum) ska sparas och göras om när ett pris ändras, för

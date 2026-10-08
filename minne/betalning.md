@@ -791,8 +791,10 @@ pris ... som en tejp bit som tejpas fast på erbjudandet".
 - **Inget från-pris**: sajten säger "för 399 kr", och klippkortens rubrik
   på prissidan och i studievyn säger timpriset (379 kr) i stället för
   "från" det billigaste kortet, när alla kort har samma timpris.
-- **Jämförelsen** (`data-erb-lagre`) avrundas nedåt till hel procent i
-  stället för till fem: 3 032 mot 5 000 kr är 39,4 %, alltså 39 %.
+- **Jämförelsen** (`data-erb-lagre`) avrundas till närmaste fem: 3 032 mot
+  5 000 kr är 39,4 %, och sidan säger "upp till 40 %". Först samma dag
+  nedåt till hel procent (39); Leo: "upp till 40% billigare är det, inte
+  39%", och han valde 40 efter att ha fått uträkningen.
   **Spara-raden** (`data-erb-spara="6"`) är den största skillnaden mellan
   ordinarie (399 kr gånger timmarna) och planens pris bland planerna,
   gånger sex: Intensiv, 12 × 20 kr × 6 = 1 440 kr. Leo sa 1 200; talet

@@ -703,18 +703,18 @@ const NX = (function () {
       $$('.pr-erb-rutor', el).forEach(x => rutor(x, timmar, pa));
       /* Jämförelsen (Just nu på startsidan, tejpen på prissidan): ett
          annat pris för samma antal timmar står på elementet
-         (data-erb-jamfor-ore), och procenten räknas här i heltal, nedåt
-         till hel procent, så att "upp till" aldrig lovar mer än
-         skillnaden. Till 2026-10-08 nedåt till närmaste fem; sedan dess
-         till hel procent, så nära skillnaden det går utan att lova mer
-         (3 032 mot 5 000 kr är 39,4 %, alltså 39, där fem hade gett 35).
-         Gäller jämförelsen andra timmar än planens, eller är planen inte
+         (data-erb-jamfor-ore), och procenten räknas här ur priserna och
+         avrundas till närmaste fem. Leos beslut 2026-10-08: "upp till 40 %",
+         fast 3 032 mot 5 000 kr exakt är 39,4 % (avrundat nedåt till hel
+         procent, som det stod först samma dag, blev det 39). Avrundningen
+         kan alltså lova upp till 2,5 procentenheter mer än skillnaden mot
+         5 000 kr; jämförelsepriset står som "5 000 kr+". Gäller jämförelsen andra timmar än planens, eller är planen inte
          minst fem procent billigare, är påståendet inte sant längre, och
          elementet döljs. --andel är vår stapels längd mot deras och läses
          på stapeln. */
       const jämför = Number(el.getAttribute('data-erb-jamfor-ore')) || 0;
       if (jämför) {
-        const lägre = Math.floor((jämför - Number(r.pris_ore)) * 100 / jämför);
+        const lägre = Math.round((jämför - Number(r.pris_ore)) * 100 / jämför / 5) * 5;
         if (Number(el.getAttribute('data-erb-jamfor-timmar')) !== timmar || !(lägre >= 5)) {
           el.hidden = true;
           return;
