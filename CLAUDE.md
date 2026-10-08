@@ -257,7 +257,7 @@ när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`,
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ditt barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
 som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ditt barn** (`#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
-"Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för ditt barn sedan 2026-10-08, på Vår idé som förut): fyra blad i
+"Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
 en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
 i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
 platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gör betygsgarantin mindre"), med bara
