@@ -634,8 +634,8 @@ Detaljer: `minne/grunden.md`.
   `tjanster` (läxhjälpen 39900, triggern speglar `prissattning`, och dess förval), och Standard till 5 % utan
   timme på köpet; inget köp pekar på `plan_standard`, och frysta pris på pass och kort rörs inte. Lokalt
   1505 av 1505 i `rls-test.sql` med migrationen. Ingen funktion behöver driftsättas för priset; `drift`
-  (`_delad/nextrum-fakta.ts`, agentens siffror) ska driftsättas från main efter merge. Kvar: befintliga
-  familjer ska få veta om det nya priset (det gäller pass som bokas efter migrationen och köp efter den),
+  (`_delad/nextrum-fakta.ts`, agentens siffror) ska driftsättas från main efter merge. Ingen familj hade bokat
+  när priset ändrades (Leo 2026-10-08), så ingen behöver få veta. Kvar:
   profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5), och **villkoren**: de säger "ingen bindningstid"
   och att den som slutar med en plan får tillbaka det som är kvar, så "en månads bindning" på sidorna
   har ingen motsvarighet där. En riktig bindning kräver en ny version av villkoren (alla får frågan igen), och
