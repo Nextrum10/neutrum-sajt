@@ -88,7 +88,7 @@
       color-mix(in srgb,var(--f,var(--acc)) 38%,transparent),
       color-mix(in srgb,var(--bl) 9%,transparent) 38%,
       color-mix(in srgb,var(--bl) 6%,transparent)) border-box;
-  box-shadow:var(--kort-sk),var(--glod);
+  box-shadow:var(--kort-sk);
 }
 /* Lyftets skugga ligger i ett eget lager som bara tonas in. En
    box-shadow som animeras ritas om för varje bildruta; opaciteten på
@@ -388,7 +388,7 @@ html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
   overflow:visible;
   border-radius:clamp(24px,2.2vw,30px);
   background:var(--kort);border-color:var(--kort-kant);
-  box-shadow:var(--kort-sk),var(--glod);
+  box-shadow:var(--kort-sk);
   transition:
     translate var(--tryck-tid,.38s) var(--e-ut),
     border-color var(--tryck-tid,.38s) var(--e),
@@ -412,7 +412,7 @@ html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
   opacity:0;
   transition:opacity .45s var(--e-ut);
 }
-.showcase .sc-card:hover{translate:none;box-shadow:var(--kort-sk),var(--glod);border-color:var(--kort-kant)}
+.showcase .sc-card:hover{translate:none;box-shadow:var(--kort-sk);border-color:var(--kort-kant)}
 @media (hover:hover) and (pointer:fine){
   .showcase .sc-card:hover{translate:0 -5px;border-color:var(--ln-2)}
   .showcase .sc-card:hover::after{opacity:1}
@@ -552,7 +552,7 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
   border-radius:clamp(22px,2vw,28px);
   border-color:var(--kort-kant);
   background:var(--kort);
-  box-shadow:var(--kort-sk),var(--glod);
+  box-shadow:var(--kort-sk);
   transition:border-color .25s var(--e),background .25s var(--e),translate .45s var(--fjader);
 }
 @media (hover:hover) and (pointer:fine){
@@ -1614,7 +1614,7 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
     radial-gradient(70% 90% at 0% 0%,color-mix(in srgb,var(--acc) 9%,transparent),transparent 72%),
     var(--kort);
   border:1px solid var(--kort-kant);
-  box-shadow:var(--kort-sk),var(--glod);
+  box-shadow:var(--kort-sk);
 }
 .jn-text{grid-area:text;min-width:0}
 .jn-rubrik{
@@ -1794,8 +1794,8 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
    varvet; förut ett brett blad med ett litet lodrätt flöde): nedan.
 
    RÖD TRÅD. Varje blad bär en av NexLäx ämnesfärger i --f (satt i
-   markupen): figuren, etiketten, listen i överkant, ljuset i hörnet
-   och skenet runt bladet (--glod, cinema). Garantins remsa har leran,
+   markupen): figuren, etiketten, listen i överkant och ljuset i
+   hörnet. Garantins remsa har leran,
    knapparnas färg. Rubrikens "ditt barn?" har samma gradient som
    NexLäx rubrik. Ämnesfärgerna klarar AA mot papperet och --kort i
    båda lägena (cinema), och etiketten är text i den färgen.
@@ -1831,7 +1831,7 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
     radial-gradient(90% 70% at 0% 0%,color-mix(in srgb,var(--f) 10%,transparent),transparent 70%),
     var(--kort);
   border:1px solid var(--kort-kant);
-  box-shadow:var(--kort-sk),var(--glod);
+  box-shadow:var(--kort-sk);
   transition:translate .45s var(--fjader);
 }
 /* En kort list i delens färg på bladets överkant. */
@@ -1927,7 +1927,7 @@ html.nx-sr .hj-nex .hj-nex-bild circle:nth-of-type(4){transition-delay:.8s}
     radial-gradient(50% 140% at 0% 0%,color-mix(in srgb,var(--acc) 8%,transparent),transparent 70%),
     var(--kort);
   border:1px solid var(--acc-line);
-  box-shadow:var(--kort-sk),var(--glod);
+  box-shadow:var(--kort-sk);
   /* Ett hopp hit (#betygsgaranti) ska inte landa under sidhuvudet. */
   scroll-margin-top:110px;
 }
@@ -3195,8 +3195,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    av lera i två hörn i stället för barkens lera och mossa. I mörkt läge
    står den i ett med sidan, så en linje av lera markerar överkanten.
    Kolumnerna (fotot, punkterna, ansökans fyra steg) har kanter av lera,
-   och stegens siffror står i den. Skenet runt kolumnerna (--glod,
-   cinema) är också lera här: --glod-ytfarg går före stegens färger.
+   och stegens siffror står i den.
 
    BLI STUDIEHJÄLPARE-SIDAN (2026-10-08, andra varvet). Leo: "På bli
    studiehjälpare på landningsidan ska den ha samma färg som main sidan
@@ -3264,7 +3263,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   content:"";position:absolute;inset:auto 0 0;height:1px;pointer-events:none;
   background:linear-gradient(90deg,transparent,var(--bli-kant) 22%,var(--bli-kant) 78%,transparent);
 }
-:is(#bli,.bli-svart){--glod-ytfarg:var(--lera-l)}
 :is(#bli,.bli-svart) .nx-et{color:var(--lera-l)}
 #bli .nx-split-bild .nx-fig,
 .bli-svart .nx-page-hero-foto{

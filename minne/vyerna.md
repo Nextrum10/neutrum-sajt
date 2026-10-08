@@ -513,7 +513,7 @@ sig (`color-mix`), vilket höjer kontrasten i båda lägena. Mät ett blad med
 `--kort` som bakgrund: bladet målar den som en gradient, inte som
 `background-color`.
 
-### Garantin som en remsa, Bli studiehjälpare i svart, Nästa steg i mörkt läge och skenet runt korten (2026-10-08, andra varvet)
+### Garantin som en remsa, Bli studiehjälpare i svart och Nästa steg i mörkt läge (2026-10-08, andra varvet)
 
 Leo: "Gör betygsgarantin mindre skriv Vi erbjuder betygsgarantin för att vi
 är säkra på våra metoder. 01 - 02 - 03- 04 ska stå under de fyra kolumner
@@ -582,31 +582,11 @@ gränsen, i båda lägena: samma bredd (70 %) och mitten i hörnet på båda
 sidor om gränsen ger samma färg längs gränsen, så skenet klipps inte av
 (förut syntes en kant där det tog slut).
 
-**Skenet runt korten** (cinema, SKENET RUNT KORTEN). Kort, blad och
-kolumner på de publika sidorna har `var(--glod)` sist i sin box-shadow: en
-ring kant i kant och ett mjukt sken nedåt runt, i `--glod-ytfarg` (lera på
-`#bli` och `.bli-svart`), annars kortets `--f` (bladen i Hur hjälper vi,
-raderna med ordningen, FAQ:ns frågor i gruppens färg), annars
-`--glod-farg` (#D9814F, samma orange som kanterna i `#bli`). Styrkan är två
-procentsatser i cinemas tre block: `--glod-kant` 12 % och `--glod-styrka`
-22 % i ljust läge, 24 % och 30 % i mörkt.
-- **`--glod` räknas på kortet**, i en lista i cinema
-  (`.nx-bubbla`, `.hj-del`, `.hj-gar`, `.jn-kort`, `.jn-pris`, `.jn-jamfor`,
-  `.sc-card`, `.dr-kort`, `.nx-apply-step`, `.nx-perk`, `.faq-item`,
-  `.nx-contact-card`, `.nx-price-card`, `.nx-offer`, `.pr-lyft`,
-  `.pr-erb-kort`, `.nx-omr-kort`, `.nx-trio-kort`): en custom property som
-  räknas på `:root` har redan bytt `var(--f)` mot rotens värde när den
-  ärvs. På `:root` står ett tomt sken (`0 0 #0000`), så att `var(--glod)` i
-  en skugga aldrig gör den ogiltig. Korten med egen skugga har `,var(--glod)`
-  i sin egen regel (i sin fil, också i hovrings- och tryckläget, så att
-  skenet aldrig ändras); de utan får bara skenet i cinema.
-- **Skenet står still**: ingen ny regel animerar en box-shadow. Lyften är
-  som förut (translate och `::after` med opacitet). `.sc-card` och
-  `.nx-trio-kort` hade redan en övergång på box-shadow i hovringen (sk-1
-  till sk-2); den står kvar, och skenet är detsamma i båda lägena.
-- Menysidornas blad blir rader på telefon (`box-shadow:none`) och får inget
-  sken där; FAQ:ns frågor på de genererade sidorna är rader utan skugga och
-  får inget heller. Vyerna har inga av klasserna och är orörda.
+**Inget sken runt korten** (Leo samma dag: "skit i de oranga osv runt
+kolumner de blir för mycket och tror de kommer göra sidan svår"). Ett sken
+av lera runt alla kort byggdes och visades som jämförelse; det ligger inte
+i sajten. Korten skiljs från botten med `--kort`, `--kort-kant` och
+skuggan, som förut.
 
 ### Två fällor när en palett byts
 

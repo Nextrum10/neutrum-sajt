@@ -278,11 +278,7 @@ lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna
 efter den börjar i samma svarta; Bli studiehjälpare-sidans sidhuvud och band (`.bli-svart`) står i samma svarta
 med samma lera (2026-10-08). **Nästa steg i mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på
 barken (cinema, DE MÖRKA YTORNA; efter `#bli` fortsätter dess sken över gränsen), och i ljust läge som förut.
-**Skenet runt korten** (2026-10-08, Leo: "en liten orange skuggad runt kolumner osv"): kort, blad och kolumner på de
-publika sidorna har `var(--glod)` sist i sin box-shadow, i `--glod-ytfarg` (lera på de svarta ytorna), annars kortets
-`--f`, annars `--glod-farg` (ljus lera); styrkan är `--glod-kant` och `--glod-styrka` i cinemas tre block. `--glod`
-räknas på kortet (listan i cinema, SKENET RUNT KORTEN), aldrig på `:root`, för `var(--f)` ska läsas där; skenet är
-detsamma i alla lägen, så ingen box-shadow animeras. Ett nytt kort går in i listan och får `var(--glod)`. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
+Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
 (`data-bild`), och alt-texten står på steget (`data-alt`). Manifestets blad står bredvid varandra ner till
