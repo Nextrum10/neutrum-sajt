@@ -3,13 +3,16 @@
 
    Nextrum AB är under bildande, och kampanjen ska samla in
    anmälningar innan läxhjälpen kan börja. Den som anmäler sig ska
-   veta det innan hen fyllt i något, så rutan står i sidhuvudet:
-   under ingressen på en telefon, och bredvid rubriken på en dator,
-   där det annars stod tomt.
+   veta det innan hen fyllt i något, så rutan står överst, ovanför
+   formuläret. Sedan 2026-10-08 är den en låg remsa och inte en ruta i
+   ett sidhuvud (Leo: "så som den ser ut nu men mindre och smalare så
+   man ser anmälningsformuläret direkt"): ikonen, en mening med
+   rubriken i fetstil och banan, på en rad på en dator, och banan
+   under meningen på en telefon.
 
    Tas bort när passen har börjat: rutan i intresseanmalan.html och
-   en/intresseanmalan.html, klassen nx-har-uppstart och länken hit
-   på båda, och den här filen. Tacket efter anmälan följer med av
+   en/intresseanmalan.html, länken hit på båda, och den här filen.
+   Sidans form (.nx-anm, formuläret överst) står i cinema och blir kvar. Tacket efter anmälan följer med av
    sig självt, för NX.uppstart() svarar tomt när rutan saknas.
 
    Laddas efter cinema och bara på de två sidorna. Inga egna
@@ -17,37 +20,37 @@
    ============================================================ */
 
 .nx-uppstart{
-  margin-top:clamp(28px,3.4vw,40px);
-  max-width:560px;
-  padding:clamp(22px,2.6vw,30px);
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-areas:"ikon text" "bana bana";
+  align-items:center;
+  column-gap:14px;row-gap:14px;
+  max-width:980px;
+  padding:14px 18px;
   border:1px solid var(--ln);
-  border-radius:24px;
-  background:var(--yta);
-  box-shadow:var(--sk-2);
+  border-radius:18px;
+  background:var(--pap);
+  box-shadow:var(--sk-1);
 }
 
-.nx-uppstart-topp{display:flex;align-items:center;gap:14px}
 .nx-uppstart-ikon{
-  flex:none;display:grid;place-items:center;
-  width:44px;height:44px;border-radius:14px;
+  grid-area:ikon;align-self:start;
+  display:grid;place-items:center;
+  width:36px;height:36px;border-radius:11px;
   background:var(--mossa-soft);color:var(--mossa-text);
 }
 .nx-uppstart-ikon svg{
-  width:22px;height:22px;
+  width:18px;height:18px;
   fill:none;stroke:currentColor;stroke-width:1.6;
   stroke-linecap:round;stroke-linejoin:round;
 }
-.nx-uppstart-rubrik{
-  font-size:clamp(1.28rem,1.9vw,1.55rem);
-  line-height:1.14;letter-spacing:-.028em;
-  color:var(--bl);
-}
-.nx-uppstart p{
-  margin-top:14px;
-  font-size:.98rem;line-height:1.58;
+.nx-uppstart-text{
+  grid-area:text;margin:0;
+  font-size:.92rem;line-height:1.5;
   color:var(--bl-2);
   text-wrap:pretty;
 }
+.nx-uppstart-rubrik{font-weight:650;letter-spacing:-.012em;color:var(--bl)}
 
 /* ------------------------------------------------------------
    Banan: från i dag till första passen. Två punkter på en
@@ -55,41 +58,41 @@
    pseudoelement, så en skärmläsare hör en lista med två rader.
    ------------------------------------------------------------ */
 .nx-uppstart-bana{
+  grid-area:bana;
   position:relative;
-  display:flex;justify-content:space-between;gap:18px;
-  margin-top:clamp(20px,2.4vw,26px);
-  padding-top:24px;
+  display:flex;justify-content:space-between;gap:14px;
+  margin:0;padding:18px 0 0;
   list-style:none;
 }
 .nx-uppstart-bana::before{
-  content:"";position:absolute;top:6px;left:7px;right:7px;height:2px;
-  background:repeating-linear-gradient(90deg,var(--ln-2) 0 7px,transparent 7px 13px);
+  content:"";position:absolute;top:4px;left:5px;right:5px;height:2px;
+  background:repeating-linear-gradient(90deg,var(--ln-2) 0 6px,transparent 6px 11px);
 }
-.nx-uppstart-bana li{position:relative;display:grid;gap:4px;min-width:0}
+.nx-uppstart-bana li{position:relative;display:grid;gap:2px;min-width:0}
 .nx-uppstart-bana li:last-child{text-align:right}
 
 /* Punkten. Skuggan i ytans färg klipper linjen runt den, och
    border-box håller ringen till höger lika stor som punkten. */
 .nx-uppstart-bana li::before{
-  content:"";position:absolute;top:-24px;left:0;
+  content:"";position:absolute;top:-18px;left:0;
   box-sizing:border-box;
-  width:14px;height:14px;border-radius:50%;
+  width:10px;height:10px;border-radius:50%;
   background:var(--mossa);
-  box-shadow:0 0 0 4px var(--yta);
+  box-shadow:0 0 0 3px var(--pap);
 }
 .nx-uppstart-bana li:last-child::before{
   left:auto;right:0;
-  background:var(--yta);
+  background:var(--pap);
   border:2px solid var(--acc);
 }
 
-/* Pulsen på "nu". Bara transform och opacitet på en punkt på
-   fjorton pixlar: grafikkortet sköter den, och ingenting annat
-   ritas om. Vilolaget är osynligt, så när reducerad rörelse kortar
-   animationen till ingenting (cinema) står punkten helt stilla. */
+/* Pulsen på "nu". Bara transform och opacitet på en punkt på tio
+   pixlar: grafikkortet sköter den, och ingenting annat ritas om.
+   Vilolaget är osynligt, så när reducerad rörelse kortar animationen
+   till ingenting (cinema) står punkten helt stilla. */
 .nx-uppstart-bana li:first-child::after{
-  content:"";position:absolute;top:-24px;left:0;
-  width:14px;height:14px;border-radius:50%;
+  content:"";position:absolute;top:-18px;left:0;
+  width:10px;height:10px;border-radius:50%;
   background:var(--mossa);
   opacity:0;
   /* Inte --e-ut: den är klar på en tiondel av tiden, och ringen
@@ -102,36 +105,32 @@
 }
 
 .nx-uppstart-bana b{
-  font-family:var(--f-mono);font-size:10.5px;font-weight:500;
-  letter-spacing:.16em;text-transform:uppercase;
+  font-family:var(--f-mono);font-size:10px;font-weight:500;
+  letter-spacing:.14em;text-transform:uppercase;
   color:var(--mossa-text);
 }
 .nx-uppstart-bana li:last-child b{color:var(--acc-text)}
 .nx-uppstart-bana span{
-  font-size:.93rem;font-weight:600;letter-spacing:-.012em;
+  font-size:.82rem;font-weight:600;letter-spacing:-.01em;
   color:var(--bl);
-  text-wrap:balance;
 }
 
 /* ------------------------------------------------------------
-   På en dator står rutan bredvid rubriken. Sidhuvudet blir ett
-   rutnät där de fyra första raderna är den vänstra spalten och
-   rutan spänner över dem i den högra, nederkant mot ingressen.
-   Under brytpunkten står allt i en spalt som förut.
+   Från 760 px står banan till höger om meningen, och remsan blir en
+   enda låg rad.
    ------------------------------------------------------------ */
-@media (min-width:1200px){
-  .nx-page-hero.nx-har-uppstart{
-    display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(0,440px);
-    column-gap:clamp(48px,5vw,96px);
+@media (min-width:760px){
+  .nx-uppstart{
+    grid-template-columns:auto minmax(0,1fr) minmax(0,250px);
+    grid-template-areas:"ikon text bana";
+    column-gap:22px;
   }
-  .nx-har-uppstart > *{grid-column:1}
-  /* Tillbakalänken är inline-flex och hade annars dragits ut över
-     hela spalten, och med den ytan man träffar. */
-  .nx-har-uppstart > .nx-back{justify-self:start}
-  .nx-har-uppstart > .nx-uppstart{
-    grid-column:2;grid-row:1 / span 4;
-    align-self:end;
-    margin-top:0;
-  }
+  .nx-uppstart-ikon{align-self:center}
+  /* En rad per punkt, så att remsan inte blir högre av banan. */
+  .nx-uppstart-bana span{white-space:nowrap}
+}
+/* På en telefon tätare, så att formuläret börjar högre upp. */
+@media (max-width:520px){
+  .nx-uppstart{padding:12px 14px;column-gap:12px;row-gap:10px}
+  .nx-uppstart-text{font-size:.88rem}
 }

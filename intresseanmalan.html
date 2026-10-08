@@ -51,9 +51,9 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=cf4c7bc3">
+<link rel="stylesheet" href="nextrum-cinema.css?v=5bea2273">
 <!-- rutan om att Nextrum bildas; bara här och på den engelska sidan -->
-<link rel="stylesheet" href="nextrum-uppstart.css?v=f10d1d31">
+<link rel="stylesheet" href="nextrum-uppstart.css?v=da0bb413">
 </head>
 <body>
 
@@ -127,12 +127,19 @@
 
 <main id="innehall">
 
-<section class="wrap nx-page-hero nx-har-uppstart">
-  <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
-  <span class="nx-et acc" data-stig style="margin-top:22px">Intresseanmälan</span>
-  <h1 class="nx-d1" data-avslöj>Berätta vad ni<br>behöver hjälp med.</h1>
-  <p class="nx-lede" data-stig data-fördröj="1">Fyll i några enkla uppgifter
-          så hör vi av oss inom 24 timmar. Att skicka in kostar ingenting och binder er inte vid något.</p>
+<!-- ==========================================================
+     INTRESSEANMÄLAN, FORMULÄRET ÖVERST (2026-10-08)
+     Leo: "När jag går in på intresseanmälan knappen vill jag direkt
+     komma till ansöknings formuläret nu måste jag scrolla för komma
+     dit. Ha formuläret högst upp." Sidhuvudet (tillbakalänken,
+     etiketten, den stora rubriken och ingressen) gick: rubriken och
+     ingressen står i formulärets yta, och rutan om uppstarten är en
+     låg remsa ovanför. Formuläret står först i markupen, så att det
+     kommer först också på en telefon; stegen och svaren står bredvid
+     på en dator och under på en telefon. Inget data-stig överst: det
+     man kommer för ska synas direkt, inte glida in.
+     ========================================================== -->
+<section class="wrap nx-anm" id="intresse" aria-labelledby="anm-t">
 
   <!-- UPPSTARTEN (Leo 2026-09-29). Nextrum AB är under bildande, och
        den som anmäler sig ska veta när läxhjälpen kan börja.
@@ -141,59 +148,27 @@
        skrivet för hand hade det varit fel efter en vecka. Texten här är
        bara det som står innan skriptet hunnit. Flyttas starten: byt
        datumet OCH veckan i banan, här och i en/intresseanmalan.html.
-       Tas bort när passen har börjat (se nextrum-uppstart.css). -->
-  <div class="nx-uppstart" data-uppstart="2026-10-19" data-stig data-fördröj="2">
-    <div class="nx-uppstart-topp">
-      <span class="nx-uppstart-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5v-8"/><path d="M12 12.5c0-3.4-2.4-5.8-6-5.8 0 3.4 2.4 5.8 6 5.8z"/><path d="M12 10.2c0-3.6 2.5-6 6.2-6 0 3.6-2.5 6-6.2 6z"/><path d="M7.5 20.5h9"/></svg></span>
-      <h2 class="nx-uppstart-rubrik">Just nu bildas Nextrum.</h2>
-    </div>
-    <p>Vi kan börja med läxhjälpen <span data-uppstart-om>om ungefär tre veckor</span>.
-      Skicka in anmälan redan nu, så hör vi av oss inom 24 timmar och planerar ert första
-      pass till starten.</p>
+       Sedan 2026-10-08 en låg remsa ovanför formuläret, inte en ruta i
+       ett sidhuvud (Leo: "så som den ser ut nu men mindre och smalare så
+       man ser anmälningsformuläret direkt"). Tas bort när passen har
+       börjat (se nextrum-uppstart.css). -->
+  <div class="nx-uppstart" data-uppstart="2026-10-19">
+    <span class="nx-uppstart-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5v-8"/><path d="M12 12.5c0-3.4-2.4-5.8-6-5.8 0 3.4 2.4 5.8 6 5.8z"/><path d="M12 10.2c0-3.6 2.5-6 6.2-6 0 3.6-2.5 6-6.2 6z"/><path d="M7.5 20.5h9"/></svg></span>
+    <p class="nx-uppstart-text"><b class="nx-uppstart-rubrik">Just nu bildas Nextrum.</b> Vi kan börja med läxhjälpen <span data-uppstart-om>om ungefär tre veckor</span>. Anmäl er redan nu, så planerar vi ert första pass till starten.</p>
     <ol class="nx-uppstart-bana">
       <li><b>Nu</b><span>Anmälan är öppen</span></li>
       <li><b>Vecka 43</b><span>Första passen</span></li>
     </ol>
   </div>
-</section>
 
-<section class="nx-yta nx-sek" id="intresse">
-  <div class="nx-wrap-bred">
-    <div class="nx-lead-grid">
+  <div class="nx-lead-grid nx-anm-grid">
 
-      <div>
+      <div class="nx-form-yta">
 
-        <ul class="nx-steplist" data-stig data-fördröj="2">
-          <li class="on"><em>01</em><div><b>Du skickar in formuläret</b><span>Tar ungefär två minuter.</span></div></li>
-          <li><em>02</em><div><b>Vi hör av oss inom 24 timmar</b><span>Vi går igenom behovet tillsammans med er.</span></div></li>
-          <li><em>03</em><div><b>Ni blir matchade</b><span>Studieplanen skrivs och bokningen öppnas i studievyn.</span></div></li>
-        </ul>
+        <h1 class="nx-anm-rubrik" id="anm-t">Berätta vad ni behöver hjälp med.</h1>
+        <p class="nx-anm-lede">Fyll i några enkla uppgifter så hör vi av oss inom 24 timmar. Att skicka in kostar ingenting och binder er inte vid något.</p>
 
-        <!-- Fyller spalten under stegen: det stod tomt hela vägen ner
-             bredvid formuläret. Svaren här är de frågor folk annars
-             mejlar om innan de vågar skicka in. -->
-        <div class="nx-lead-svar" data-stig data-fördröj="3">
-          <div>
-            <b>Kostar det något att skicka in?</b>
-            <p>Nej. Intresseanmälan är gratis och binder er inte vid något. Ni betalar
-              först när ni bokat ett pass.</p>
-          </div>
-          <div>
-            <b>Hur snabbt hör ni av er?</b>
-            <p>Inom 24 timmar från att ni skickat in. Vet ni inte exakt vad ni behöver
-              hjälp med går det bra att skriva ungefär — vi reder ut det tillsammans.</p>
-          </div>
-          <div>
-            <b>Vad händer med uppgifterna?</b>
-            <p>De används bara för att kunna kontakta er om anmälan, och säljs eller lämnas aldrig ut för något annat.
-              <a class="nx-lank-in" href="/integritetspolicy">Så hanterar vi uppgifter</a>.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="nx-form-yta" data-stig data-fördröj="1">
-
-        <p class="nx-fineprint" style="margin:0 0 22px">Det här formuläret är för elever och
+        <p class="nx-fineprint nx-anm-for">Det här formuläret är för elever och
           föräldrar. Vill du i stället bli studiehjälpare —
           <a class="nx-lank-stark" href="/bli-studiehjalpare#ansok">ansök här</a>.</p>
 
@@ -290,7 +265,37 @@
           </form>
 
       </div>
-    </div>
+
+      <div class="nx-anm-sida">
+
+        <ul class="nx-steplist" data-stig data-fördröj="2">
+          <li class="on"><em>01</em><div><b>Du skickar in formuläret</b><span>Tar ungefär två minuter.</span></div></li>
+          <li><em>02</em><div><b>Vi hör av oss inom 24 timmar</b><span>Vi går igenom behovet tillsammans med er.</span></div></li>
+          <li><em>03</em><div><b>Ni blir matchade</b><span>Studieplanen skrivs och bokningen öppnas i studievyn.</span></div></li>
+        </ul>
+
+        <!-- Fyller spalten under stegen: det stod tomt hela vägen ner
+             bredvid formuläret. Svaren här är de frågor folk annars
+             mejlar om innan de vågar skicka in. -->
+        <div class="nx-lead-svar" data-stig data-fördröj="3">
+          <div>
+            <b>Kostar det något att skicka in?</b>
+            <p>Nej. Intresseanmälan är gratis och binder er inte vid något. Ni betalar
+              först när ni bokat ett pass.</p>
+          </div>
+          <div>
+            <b>Hur snabbt hör ni av er?</b>
+            <p>Inom 24 timmar från att ni skickat in. Vet ni inte exakt vad ni behöver
+              hjälp med går det bra att skriva ungefär — vi reder ut det tillsammans.</p>
+          </div>
+          <div>
+            <b>Vad händer med uppgifterna?</b>
+            <p>De används bara för att kunna kontakta er om anmälan, och säljs eller lämnas aldrig ut för något annat.
+              <a class="nx-lank-in" href="/integritetspolicy">Så hanterar vi uppgifter</a>.</p>
+          </div>
+        </div>
+      </div>
+
   </div>
 </section>
 

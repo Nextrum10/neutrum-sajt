@@ -122,9 +122,23 @@ för hand hade det varit fel efter en vecka, mitt i kampanjen. När dagen
 passerat står "inom kort", aldrig en dag bakåt i tiden. Tacket efter
 anmälan säger detsamma (`tackIntresseUppstart`) så länge rutan finns.
 Flyttas starten: byt `data-uppstart` OCH veckan i banan, på båda
-sidorna. **Rutan ska bort när passen har börjat**: den och klassen
-`nx-har-uppstart` på båda sidorna, och länken till och filen
-`nextrum-uppstart.css`. Tacket går tillbaka av sig självt. Villkoren och
+sidorna. **Rutan ska bort när passen har börjat**: den på båda sidorna,
+och länken till och filen `nextrum-uppstart.css`. Tacket går tillbaka av
+sig självt.
+
+**Formuläret överst (2026-10-08).** Leo: "När jag går in på
+intresseanmälan knappen vill jag direkt komma till ansöknings formuläret
+nu måste jag scrolla för komma dit. Ha formuläret högst upp. Och ovan en
+liten text där de står just nu bildas Nextrum ... så som den ser ut nu men
+mindre och smalare". Sidhuvudet (tillbakalänken, etiketten, den stora
+rubriken och ingressen) gick, och klassen `nx-har-uppstart` med det.
+Sidan är en sektion (`section.nx-anm#intresse`, cinema): rutan om
+uppstarten som en låg remsa (ikonen, rubriken i fetstil i meningen och
+banan; en rad från 760 px), och under den formulärets yta med `h1` och
+ingressen överst, före stegen och svaren i markupen, så att formuläret
+kommer först också på en telefon. Inget `data-stig` på remsan och
+formuläret: det man kommer för ska synas direkt. Rubriken och
+ingressen är desamma som förut, så delningsbilden står kvar. Villkoren och
 integritetspolicyn säger redan att Nextrum AB är under bildande; de
 ändras när bolaget är registrerat, vilket inte behöver vara samma dag.
 

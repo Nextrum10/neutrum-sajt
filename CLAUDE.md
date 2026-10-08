@@ -30,7 +30,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
    NexLäx och profilen, och säger att vi letar studiehjälpare (`S.väntar`, 2026-10-07; inget väntläge)
 5. Föräldern lägger in barnet, hjälparen skriver studieplanen
 - **Uppstartsrutan**: `data-uppstart` och banans vecka byts tillsammans, på båda sidorna; när
-  passen börjat går rutan, `nx-har-uppstart` och `nextrum-uppstart.css` bort.
+  passen börjat går rutan och `nextrum-uppstart.css` bort. Den är en låg remsa ovanför formuläret, och
+  intresseanmälan har inget sidhuvud: formuläret står överst med rubriken i sin yta (`.nx-anm`, 2026-10-08,
+  Leo: "Ha formuläret högst upp").
 - **Förslag**: inga nya statusar, inga raderade pass, avbokning med fast skäl; en vy ändrar bara
   tid, status och skäl. Tider 11–22 på vardagar och 9–22 på helger (`HELA_DAGEN`), bara i vyn.
   `svar_meddelande` hålls utanför audit, notiser och AI.
@@ -254,7 +256,8 @@ under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ditt barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ditt barn** (`#sa-hjalper-vi`, avsnitt 17): fyra blad i
+som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ditt barn** (`#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
+"Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för ditt barn sedan 2026-10-08, på Vår idé som förut): fyra blad i
 en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
 i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
 platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gör betygsgarantin mindre"), med bara
