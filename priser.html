@@ -53,8 +53,8 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=640abfcd">
-<link rel="stylesheet" href="nextrum-start.css?v=0f13dad5">
+<link rel="stylesheet" href="nextrum-cinema.css?v=f6268c2a">
+<link rel="stylesheet" href="nextrum-start.css?v=1403819e">
 <link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
 
 <!-- Strukturerad data för tjänsten och timpriset. Ger Google en
@@ -215,10 +215,16 @@
         <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Online eller på plats</span></li>
         <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Rapport efter varje pass</span></li>
         <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Bokning och betalning via Nextrum</span></li>
-        <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span><a href="#betygsgaranti" style="text-decoration:underline;text-underline-offset:3px">Betygsgaranti</a>, utan extra kostnad</span></li>
+        <li><span class="ck"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span><span>Betygsgaranti, utan extra kostnad</span></li>
       </ul>
 
       <a class="btn btn-primary btn-lg" href="/intresseanmalan">Skicka intresseanmälan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <!-- Prissidan har ingen garantisektion sedan 2026-10-08 (Leo: "ta
+           bort betygsgarantin som är öndödigt stor på pris sidan ... Ha
+           bara en länk under Intresseanmälan på 399kr/h"). Länken går till
+           villkoren, som säger vad som gäller; raden ovanför och FAQ-svaret
+           längre ner säljer den. -->
+      <a class="nx-lank pr-gar-lank" href="/anvandarvillkor#betygsgaranti">Läs mer om betygsgarantin <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
       <p class="nx-terms">Ingen bindning · Avsluta när ni vill · Flexibla tider. Hur ofta ni bokar bestämmer ni själva.</p>
     </div>
 
@@ -260,52 +266,6 @@
           <span class="pr-lyft-mer">Se planerna <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
         </span>
       </a>
-    </div>
-  </div>
-</section>
-
-<!-- ==========================================================
-     BETYGSGARANTIN (2026-10-07)
-     Samma regler som sektionen på startsidan: inga villkor och inga
-     tal, aldrig ett löfte om ett betyg, och länken och raden intill
-     knappen säger att villkor gäller. Här är vinkeln priset: garantin
-     kostar inget utöver passen.
-     Samma komponent som på startsidan, med sidans egna texter: på
-     papperet och som ett flöde som fylls när man scrollar (Leo
-     2026-10-07; garantiflöde() i nextrum-start.js, avsnitt 15 i
-     nextrum-start.css). Utan skript står allt tänt. Här i .wrap och
-     inte .nx-wrap-bred, så att vänsterkanten står i linje med
-     priskorten ovanför och erbjudandena under.
-     ========================================================== -->
-<section class="nx-sek-s nx-gar" id="betygsgaranti">
-  <div class="wrap nx-gar-in">
-    <div class="nx-gar-head">
-      <span class="nx-et acc" data-stig>Betygsgaranti</span>
-      <h2 class="nx-d2" data-avslöj>Mer än ett timpris.<br><em>Ett löfte.</em></h2>
-      <p class="nx-lede" data-stig data-fördröj="1">Betygsgarantin kostar ingenting extra. Väljer ni ämnena, kör läsåret ut och gör er del, och
-        betyget ändå inte går upp, fortsätter vi hjälpa till utan att ni betalar.</p>
-    </div>
-
-    <ol class="nx-gar-flode" data-gar-flode>
-      <li><span class="nx-gar-nr" aria-hidden="true">01</span><div class="nx-gar-steg"><b>Ingår i priset</b><p>Ni betalar för passen precis som vanligt. Garantin kostar inget utöver dem.</p></div></li>
-      <li><span class="nx-gar-nr" aria-hidden="true">02</span><div class="nx-gar-steg"><b>Era viktigaste ämnen</b><p>Garantin följer de ämnen som betyder mest för er det här läsåret.</p></div></li>
-      <li><span class="nx-gar-nr" aria-hidden="true">03</span><div class="nx-gar-steg"><b>Allt syns i er vy</b><p>Pass, rapporter och uppgifter står i studievyn, så ni ser samma sak som vi.</p></div></li>
-      <li><span class="nx-gar-nr" aria-hidden="true">04</span><div class="nx-gar-steg"><b>Mer hjälp, inte mer kostnad</b><p>Går betyget inte upp trots att ni gjort er del, fortsätter vi utan att ni betalar.</p></div></li>
-    </ol>
-
-    <div class="nx-gar-cta" data-stig data-fördröj="2">
-      <div class="nx-cta-rad">
-        <span class="nx-magnet">
-          <a class="btn btn-primary btn-lg" href="/intresseanmalan">
-            Skicka intresseanmälan
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
-        </span>
-        <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </div>
-      <p class="nx-fineprint">Villkor gäller. Hjälp med andra ämnen och läxorna i stort ingår som vanligt och påverkar inte garantin.</p>
     </div>
   </div>
 </section>
@@ -897,7 +857,7 @@
 <script src="nextrum-app.js?v=6fef4527"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
-<script src="nextrum-start.js?v=5e71728a"></script>
+<script src="nextrum-start.js?v=c809c1c0"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

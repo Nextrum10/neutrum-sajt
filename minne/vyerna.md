@@ -272,7 +272,8 @@ i cinema och formen i `nextrum-start.css` avsnitt 14.
   öppna texten är 46ch i det pinnade läget, så att rubriken inte glider
   när steget byts (på 1024×768 glider den fortfarande 12 px, mjukt).
 
-**Garantiflödet.** `#betygsgaranti` lämnade `.nx-mork` och `.nx-apply-flow`
+**Garantiflödet** (borta sedan 2026-10-08, se Prissidan utan garantisektion
+nedan; står kvar här som historik). `#betygsgaranti` lämnade `.nx-mork` och `.nx-apply-flow`
 (som är kvar i #bli och på Bli studiehjälpare, och sköts av
 `mörkaYtor()`). Markupen är `section.nx-sek-s.nx-gar >
 .nx-gar-in` med `.nx-gar-head`, `ol.nx-gar-flode[data-gar-flode]` (li >
@@ -555,7 +556,7 @@ betyg (CLAUDE.md, avsnitt 1).
   provat med rörelse på 1280 och 390 (01 tänd och strecket på väg mot 02
   efter 0,7 s, alla fyra tända efter 3 s).
 - `.nx-gar-liten` och dess fällor är borta; det stora flödet (`.nx-gar`)
-  står kvar på prissidan.
+  stod kvar på prissidan till samma kväll (nästa avsnitt).
 
 **Bli studiehjälpare i svart** (avsnitt 10). Sidhuvudet och bandet under
 det har klassen `bli-svart` (båda språken) och står i `--bli-bg` i båda
@@ -587,6 +588,28 @@ kolumner de blir för mycket och tror de kommer göra sidan svår"). Ett sken
 av lera runt alla kort byggdes och visades som jämförelse; det ligger inte
 i sajten. Korten skiljs från botten med `--kort`, `--kort-kant` och
 skuggan, som förut.
+
+### Prissidan utan garantisektion (2026-10-08, tredje varvet)
+
+Leo: "ta bort betygsgarantin som är öndödigt stor på pris sidan. Den finns
+redan på andra sidor. Ha bara en länk under Intresseanmälan på 399kr/h där
+de står läs mer om betygsgarantin".
+
+- Sektionen `#betygsgaranti` på prissidan är borta, på båda språken, och
+  med den det stora flödet: `.nx-gar*` (avsnitt 15 i nextrum-start.css,
+  där det nu bara står en gravsten) och grenen i `garantiflöde()` som
+  följde scrollen. Funktionen tänder bara remsans steg i tur
+  (`[data-gar-flode="tur"]`).
+- I 399-kortet står raden "Betygsgaranti, utan extra kostnad" kvar, utan
+  länk (den gick till sektionen), och under knappen Skicka
+  intresseanmälan står länken "Läs mer om betygsgarantin"
+  (`a.nx-lank.pr-gar-lank`, cinema efter priskortets flexregler) till
+  `/anvandarvillkor#betygsgaranti`. Villkoren och inte startsidans remsa,
+  för remsan säger mindre än raden man just läst, och prissidan länkar då
+  fortfarande till villkoren (avsnitt 1). FAQ-svaret längre ner står kvar.
+- Länken är ett eget block med `width:fit-content`: i kortets flexkolumn
+  (när lyftet syns) hade den annars sträckts, och utan flex hade den
+  hamnat bredvid knappen. Tryckytan är 44 px med `::before`.
 
 ### Två fällor när en palett byts
 

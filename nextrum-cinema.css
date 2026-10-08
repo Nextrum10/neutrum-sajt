@@ -3134,6 +3134,14 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
    och ett i sin egen höjd. */
 .nx-price-grid:has(.pr-lyft:not([hidden])) > .nx-price-card{align-self:stretch;display:flex;flex-direction:column}
 .nx-price-grid:has(.pr-lyft:not([hidden])) > .nx-price-card > .btn{align-self:flex-start;margin-top:auto}
+/* Länken till betygsgarantin under knappen i 399-kortet (2026-10-08,
+   Leo: "Ha bara en länk under Intresseanmälan på 399kr/h där de står
+   läs mer om betygsgarantin"); prissidan har ingen garantisektion.
+   Ett eget block med sin egen bredd, så att den aldrig hamnar bredvid
+   knappen eller sträcks i kortets flexkolumn, och strecket under den
+   blir bara så långt som texten. Tryckytan minst 44 px. */
+.pr-gar-lank{display:flex;width:fit-content;align-self:flex-start;margin-top:16px}
+.pr-gar-lank::before{content:"";position:absolute;inset:-11px -8px}
 .pr-topp-stapel{
   display:grid;grid-template-rows:auto minmax(0,1fr);
   gap:clamp(14px,1.8vw,22px);align-self:stretch;min-width:0;

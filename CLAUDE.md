@@ -258,9 +258,10 @@ i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgaran
 platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gör betygsgarantin mindre"), med bara
 meningen "Vi erbjuder betygsgarantin för att vi är säkra på våra metoder." över, de fyra stegen 01–04 (siffra och
 rubrik) i en rad med streck emellan, varje steg under sitt blad (`.hj-gar-steg`, `data-gar-flode="tur"`, tänds i tur
-när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa står på Vår idé. Det stora flödet
-(`.nx-gar`, `garantiflöde()`) står bara på prissidan, och det släckta läget hänger på `.i-gang`, aldrig bara på
-`html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
+när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa står på Vår idé. Det släckta läget
+hänger på `.i-gang`, aldrig bara på `html.nx-sr`. **Prissidan har ingen garantisektion** (2026-10-08, Leo: "öndödigt
+stor"): raden i 399-kortet, länken "Läs mer om betygsgarantin" under dess knapp (`.pr-gar-lank`, till villkoren) och
+FAQ-svaret; det stora flödet (`.nx-gar`) är borta, och `garantiflöde()` sköter bara remsan. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
 paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
 Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
 pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
