@@ -629,6 +629,9 @@ Leo: "första sektionen så hjälper vi ska heta vad är Nextrum, och under i
 korta beskrivningen skriver du detta: Nextrum erbjuder prisvärd läxhjälp
 där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper
 elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid."
+Samma kväll: "skriv där ditt barn istället för elever", så ingressen säger
+"där ditt barn matchas med en studiehjälpare som passar barnets behov. Vi
+hjälper ditt barn att förstå mer ..." ("barnets", inte "deras" eller "hens").
 Bara rubriken (`h2.hj-rubrik`, "Vad är *Nextrum?*", betoningen i leran som
 förut) och ingressen i `.nx-head-aside` på startsidan, båda språken
 ("What is *Nextrum?*", med "tutor" som resten av engelskan). Etiketten
