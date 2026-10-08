@@ -11093,11 +11093,13 @@ select pg_temp.prova_med('AP studiehjälparen läser inte listan', array['select
 select pg_temp.prova('AP anon läser inte listan', null,
   array['select * from public.admin_paminnelser'], 'nekad');
 
+-- Fasta datum före funktionen fanns (2026-10-02): ett morgonmejl per dag, och efter kl. 9 har
+-- driften redan dagens rad, så en rad med dagens datum föll på indexet (2026-10-08).
 select pg_temp.prova_med('AP superadmin läser utskicken',
-  array['insert into public.admin_paminnelse_utskick (antal) values (''{"ny_lead": 1}'')'],
+  array['insert into public.admin_paminnelse_utskick (antal, skapad) values (''{"ny_lead": 1}'', ''2026-09-01 07:00:00+00'')'],
   '00000000-0000-4000-8000-0000000000ad', array['select * from public.admin_paminnelse_utskick'], 'ok');
 select pg_temp.prova_med('AP familjen läser inte utskicken',
-  array['insert into public.admin_paminnelse_utskick (antal) values (''{"ny_lead": 1}'')'],
+  array['insert into public.admin_paminnelse_utskick (antal, skapad) values (''{"ny_lead": 1}'', ''2026-09-02 07:00:00+00'')'],
   '00000000-0000-4000-8000-0000000000f1', array['select * from public.admin_paminnelse_utskick'], 'nekad');
 select pg_temp.prova('AP anon läser inte utskicken', null,
   array['select * from public.admin_paminnelse_utskick'], 'nekad');
