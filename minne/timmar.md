@@ -72,6 +72,18 @@ köp med en timme på köpet kan finnas. Bindningen står på sidorna men inte i
 villkoren (`betalning.md`, sista avsnittet). Siffrorna i stycket ovan är
 de som gällde 2026-10-07.
 
+**Märket och tejperna på paketen (2026-10-08, samma kväll).** Leo: "Ta bort
+-5% på erbjudande skriv istället 399 streck över de, 379", och "på basic
+upp till 2000kr mindre [än] liknande jämförbara paket från andra aktörer
+... då allakando tar 3540", Standard 2 800 och Intensiv 3 800 kr, "som tejp
+på erbjudanden". Märket på planerna och klippkorten, på prissidan och i
+studievyn, är nu 399 kr överstruket och 379 kr, ur svaret, och varje
+plankort på prissidan har en tejp med skillnaden i kronor mot ett
+jämförelsepris, nedåt till hundratal, och en liten rad under om när
+jämförelserna gjordes. Spara-raden säger planen ("med Intensivplanen":
+Leo trodde att 1 440 kr var Basics). Hur det räknas och vad underlaget
+är: `betalning.md`, Kronortejperna.
+
 **Ett pass betalt med timmar avbokar familjen själv** (Fas 21.1), och
 studiehjälparen kan också. Det har inga pengar på sig, och
 `klippkort_saldo` räknar bara pass som inte är avbokade, så timmarna

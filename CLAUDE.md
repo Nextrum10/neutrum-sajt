@@ -206,8 +206,16 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
   `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och ett kort med
   timmar på köpet visar aldrig ett timpris. Jämförelsen med andra aktörer (`data-erb-lagre`) avrundas till närmaste
-  fem (Leo 2026-10-08: "upp till 40 %"; exakt är 3 032 mot 5 000 kr 39,4 %), och "Spara upp till N kr på 6 månader" (`data-erb-spara`) är den
-  största skillnaden mellan ordinarie och planens pris gånger månaderna, båda ur svaret. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
+  fem (Leo 2026-10-08: "upp till 40 %"; exakt är 3 032 mot 5 000 kr 39,4 %). **Kronortejpen** på varje plankort
+  (`.nx-tejp-kort`, 2026-10-08) säger "upp till N kr mindre" (`data-erb-mindre`): skillnaden mot jämförelsepriset på
+  tejpen (`data-erb-jamfor-ore`: Basic 3 540, Standard 5 832, Intensiv 8 348 kr; avsnitt 11) avrundad NEDÅT till
+  hundratal, så att den aldrig lovar mer; tejpen har eget `data-erb` och döljs ensam vid fel timmar eller under 100 kr,
+  och raden "Jämförelserna gjordes med en elev i årskurs 9 i oktober 2026" (`data-erb-jamfor-not`) står bara när en
+  tejp syns. "Spara upp till N kr på 6 månader med Xplanen" (`data-erb-spara`, `data-erb-spara-plan`) är den
+  största skillnaden mellan ordinarie och planens pris gånger månaderna, båda ur svaret, och planens namn är den planens
+  (i dag Intensiv, inte Basic som Leo trodde). Märket på planerna och klippkorten, på prissidan och i studievyn, är
+  timpriset utan bindning överstruket och det rabatterade bredvid, aldrig en procent (Leo 2026-10-08), och döljs när de
+  är lika. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
   och tipstimmen är samma rabatt); ett pass på noll kronor är INTE betalt. Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
@@ -251,14 +259,19 @@ blad där med `id="betygsgaranti"` kvar, den gamla textens villkorslänk och "Vi
 som ett litet flöde (`.nx-gar-liten`, `data-gar-flode="tur"`) som tänds i tur när det syns; det stora flödet
 (`.nx-gar`, `garantiflöde()`) står bara på prissidan, och det släckta läget hänger på `.i-gang`, aldrig bara på
 `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
-paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till" (`data-erb-spara`), och jämförelsen
+paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
 Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
 pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
 8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. NexLäx (`#nexlax`, avsnitt
 13, `nexlax()`): en telefon som visar sig själv i fyra skärmar och en stig som följer med, på papperet; en
 illustration (`role="img"`), inget att svara i, högst tre varv och pausad utanför bild; varje skärm står lika
-länge. **Ämnesfärgerna är startsidans röda tråd** (2026-10-08): bladen, gradienten i "ditt barn?" och sloganen,
-och stegens siffror i `#hur` (`var(--f,var(--acc))`); i vyerna står de bara i NexLäx. **`#bli` står på mörka
+länge. **Ämnesfärgerna är den röda tråden** på startsidan och menysidorna (2026-10-08, avsnitt 18 i
+nextrum-start.css), efter tre regler: **ordningen** (i en rad blad eller steg får det n:te färg n, blå, lila, grön,
+lera, rosa, och SO:s ockra som sjätte i bandet; `--f` sätts på ett ställe, och siffran, figuren eller etiketten
+läser `var(--f, sin gamla färg)`, aldrig texten), **ämnet** (studiehjälparnas ämnen, `data-amne`) och
+**betoningen** (gradienten i "ditt barn?" på menysidornas `<em>` överst, Nästa stegs `<em>` och citattecknen).
+Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu har sina egna, och i vyerna står
+de bara i NexLäx. **`#bli` står på mörka
 lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`), och Nästa steg
 efter den börjar i samma svarta. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
@@ -268,8 +281,9 @@ kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton b
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
 Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på telefon och har ingen fokuseffekt
 (2026-10-08: `hållpunkter()` är borta, inget kort tonar ned grannarna), och `.sid-kort` är en lista under 861 px.
-Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
-första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
+Studievyns och NexLäx markup kopieras till `for-elever-och-foraldrar.html`, NexLäx direkt under studievyn och
+utan Se studievyn, och Hur hjälper vi till `var-ide.html` i stället för Bakgrunden, med NexLäx-länken till
+`/for-elever-och-foraldrar#nexlax` (2026-10-08; `jamfor-sprak.py` ser bara första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
 animerad `box-shadow`, och en custom property sätts där den läses, för den ärvs.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
@@ -637,8 +651,8 @@ Detaljer: `minne/grunden.md`.
   `tjanster` (läxhjälpen 39900, triggern speglar `prissattning`, och dess förval), och Standard till 5 % utan
   timme på köpet; inget köp pekar på `plan_standard`, och frysta pris på pass och kort rörs inte. Lokalt
   1505 av 1505 i `rls-test.sql` med migrationen. Ingen funktion behöver driftsättas för priset; `drift`
-  (`_delad/nextrum-fakta.ts`, agentens siffror) driftsätts från main efter merge av PR #228, som rättar
-  "binder en månad" där. Ingen familj hade bokat
+  (`_delad/nextrum-fakta.ts`, agentens siffror) är driftsatt som v14 från main efter PR #228 (som rättade
+  "binder en månad" där), hämtad tillbaka och byte för byte lika i alla fem filer. Ingen familj hade bokat
   när priset ändrades (Leo 2026-10-08), så ingen behöver få veta. Kvar:
   profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5). Leos "bunden i 1 månad" blev "en månad i taget"
   på sajten, för villkoren säger ingen bindningstid och att den som slutar med en plan får tillbaka det som
@@ -649,6 +663,13 @@ Detaljer: `minne/grunden.md`.
   som inte står i repot. "Flera" kräver underlag från minst två aktörer till; Leo valde att behålla ordet.
   Underlaget (skärmbilder med adress och datum) ska sparas och göras om när ett pris ändras, för
   bevisbördan är vår (18 och 10 §§ marknadsföringslagen). Juristen har inte läst texten.
+  **Kronortejperna** på plankorten (2026-10-08, Leo: "på basic upp till 2000kr mindre [än] liknande jämförbara
+  paket från andra aktörer ... då allakando tar 3540, på [Standard] upp till 2800kr ... Och på intensiv upp till
+  3800kr") har bara ett namngivet underlag: Basic mot Allakandos 3 540 kr. Standards 5 832 och Intensivs 8 348 kr är
+  räknade baklänges ur Leos belopp mot våra 3 032 och 4 548 kr och är inga uppmätta priser; de behöver ett underlag
+  som Basics. Standards 5 832 är inte samma pris som lyftets och Just nus 5 000 kr+: samma plan jämförs med två
+  priser på samma sida (40 % mot 5 000, 2 800 kr mot 5 832, som vore 48 %). Raden "Jämförelserna gjordes med en elev i
+  årskurs 9 i oktober 2026" är Leos ord om underlaget. Juristen har inte läst tejperna, och ingen aktör nämns på sajten.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

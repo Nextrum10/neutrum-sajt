@@ -5,12 +5,14 @@
    inte (Leo 2026-09-25: "jag vill bevara heron").
 
      ordfyll        rubrikernas ord tonar fram ett i taget
-     nexlax         NexLäx under hero: telefonen visar sig själv, och stigen
-                    bredvid följer med
+     nexlax         NexLäx efter studievyn: telefonen visar sig själv, och
+                    stigen bredvid följer med. Samma illustration står på
+                    För elever & föräldrar (2026-10-08).
      mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
      garantiflöde   betygsgarantin: linjen fylls och stegen tänds när
                     man scrollar förbi på prissidan, och i tur när det
-                    lilla flödet i Hur hjälper vi ditt barn syns
+                    lilla flödet i Hur hjälper vi ditt barn syns (på
+                    startsidan och, sedan 2026-10-08, på Vår idé)
      studiehjälpare raden man sveper i: korten kommer in när raden
                     syns, prickarna och pilarna följer svepet
      band           Trygg hjälp: det rullande bandet

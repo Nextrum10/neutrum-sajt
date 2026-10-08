@@ -51,8 +51,8 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=c0133623">
-<link rel="stylesheet" href="../nextrum-start.css?v=962e6e4e">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=0d47d525">
+<link rel="stylesheet" href="../nextrum-start.css?v=e1615653">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -404,7 +404,7 @@
           <div class="jn-pris jn-paket">
             <dt>Plans, one month at a time</dt>
             <dd class="jn-pris-tal"><span class="jn-for">for</span> <b class="tnum" data-erb-rabatterat></b> <span>an hour</span></dd>
-            <dd class="jn-pris-not jn-spara" data-erb-spara="6" hidden>Save up to <b class="tnum" data-erb-spara-kr></b> over 6 months</dd>
+            <dd class="jn-pris-not jn-spara" data-erb-spara="6" hidden>Save up to <b class="tnum" data-erb-spara-kr></b> over 6 months with the <span data-erb-spara-plan></span> plan</dd>
           </div>
         </dl>
       </div>
@@ -1494,12 +1494,12 @@
 <script src="../nextrum-config.js?v=04a5c427"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=05356e85"></script>
+<script src="../nextrum-app.js?v=6fef4527"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Startsidans rörelse. Startar av sig självt, så att inget
      anrop här nere kan kasta om filen saknas. -->
-<script src="../nextrum-start.js?v=8e7d1cc4"></script>
+<script src="../nextrum-start.js?v=0786b696"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
@@ -1546,6 +1546,27 @@
   function initial(namn) {
     const n = String(namn || '').trim();
     return n ? n[0].toUpperCase() : 'N';
+  }
+
+  /* Ämnets färg på studiehjälparens taggar (2026-10-08), samma färger
+     som i NexLäx: nextrum-start.css, avsnitt 18. Bara ett attribut,
+     ingen text. Namnet kommer ur databasen, alltid på svenska (NX.AMNEN:
+     "NO / Fysik / Kemi / Biologi" och de andra), eller ur exempelkorten,
+     som på den engelska sidan är engelska; därför båda språken här, och
+     samma funktion i index.html och en/index.html. Ett ämne utan färg
+     (Studieteknik) får inget attribut och står kvar grått. */
+  const ÄMNESFÄRG = [
+    [/^(matematik|matte|math)/, 'ma'],
+    [/^(svenska|swedish)/, 'sv'],
+    [/^(engelska|english)/, 'en'],
+    [/^(no\b|fysik|kemi|biologi|naturkunskap|physics|chemistry|biology|science)/, 'no'],
+    [/^(so\b|samhäll|historia|geografi|religion|social|history|geography)/, 'so'],
+    [/^(moderna språk|spanska|tyska|franska|modern lang|spanish|german|french)/, 'ms']
+  ];
+  function ämneFärg(namn) {
+    const n = String(namn || '').trim().toLowerCase();
+    const träff = ÄMNESFÄRG.find(([mönster]) => mönster.test(n));
+    return träff ? ' data-amne="' + träff[1] + '"' : '';
   }
 
   function tomState() {
@@ -1616,7 +1637,7 @@
       + '</div>'
       + '<div class="sc-body">'
       + '<p>' + esc(t.bio) + '</p>'
-      + '<div class="tutor-meta">' + t.ämnen.map(ä => '<span class="tag">' + esc(ä) + '</span>').join('') + '</div>'
+      + '<div class="tutor-meta">' + t.ämnen.map(ä => '<span class="tag"' + ämneFärg(ä) + '>' + esc(ä) + '</span>').join('') + '</div>'
       + '<a class="btn btn-ghost btn-sm sc-cta" href="/en/intresseanmalan">Find your tutor</a>'
       + '</div>'
       + '</article>').join('');
@@ -1661,7 +1682,7 @@
       const namn = t.fornamn || 'Tutor';
       const bio = t.bio || 'A young tutor who helps younger students understand, not just get the homework done.';
       const rad = ['Tutor', t.city].filter(Boolean).map(esc).join(' · ');
-      const ämnen = (t.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>').join('');
+      const ämnen = (t.subjects || []).map(s => '<span class="tag"' + ämneFärg(s) + '>' + esc(s) + '</span>').join('');
       return '<article class="sc-card">'
         + '<div class="sc-top">'
         + '<span class="sc-face" aria-hidden="true">' + esc(initial(namn)) + '</span>'

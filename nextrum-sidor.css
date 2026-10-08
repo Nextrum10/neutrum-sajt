@@ -21,6 +21,10 @@
      4. fördelarna på mörk botten
      5. FAQ:n som kort, och hoppen till grupperna
 
+   Ämnesfärgerna (2026-10-08) står i nextrum-start.css, avsnitt 18:
+   ordningen sätter --f på bladen och stegen, och här läser
+   etiketterna, figurerna, FAQ:ns grupper och betalflödet den.
+
    Samma regel som i start: skriptet sätter klasser, CSS rör sig.
    Inget startläge här gömmer något utan html.nx-sr, som
    nextrum-start.js sätter. Laddar skriptet inte står sidan i sitt
@@ -237,11 +241,13 @@ html.nx-sr .sid-framme .sid-lapp{opacity:1;translate:0 0;scale:1}
 }
 
 /* Etiketten i ett kort där ordningen är ett ord (Först, Sedan,
-   Löpande) och inte en siffra. */
+   Löpande) och inte en siffra. I bladets färg sedan 2026-10-08
+   (nextrum-start.css, avsnitt 18): ordet står där siffran annars hade
+   stått, och siffrorna har färgen. */
 .sid-et{
   font-family:var(--f-mono);font-size:11px;font-weight:500;
   letter-spacing:.16em;text-transform:uppercase;
-  color:var(--acc-lugn);
+  color:var(--f,var(--acc-lugn));
   padding-top:.4em;
 }
 
@@ -322,8 +328,8 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
 }
 .nx-perk .i{
   width:42px;height:42px;border-radius:14px;
-  background:color-mix(in srgb,var(--lera-l) 14%,transparent);
-  border:0;color:var(--lera-l);
+  background:color-mix(in srgb,var(--f,var(--lera-l)) 14%,transparent);
+  border:0;color:var(--f,var(--lera-l));
   margin-bottom:6px;
 }
 .nx-perk .i svg{width:19px;height:19px}
@@ -389,12 +395,12 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
 .sid-faq-ikon{
   display:grid;place-items:center;
   width:52px;height:52px;border-radius:17px;
-  background:color-mix(in srgb,var(--acc) 10%,transparent);
+  background:color-mix(in srgb,var(--f,var(--acc)) 10%,transparent);
   margin-bottom:clamp(18px,2vw,24px);
 }
 .sid-faq-ikon svg{
   width:24px;height:24px;
-  fill:none;stroke:var(--acc-lugn);stroke-width:1.7;
+  fill:none;stroke:var(--f,var(--acc-lugn));stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round;
 }
 .sid-faq-sida .nx-et{display:flex;width:fit-content}
@@ -415,7 +421,9 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
    nedåt till nästa nummer.
 
    Numren har startsidans form (.hp-nr): tunga, tätt spärrade och
-   tabellsiffror. De vilar i --ln-2 och tänds i lera. På en dator tänds
+   tabellsiffror. De vilar i --ln-2 och tänds i stegets färg (--f,
+   ordningen i nextrum-start.css avsnitt 18, sedan 2026-10-08; lera
+   förut), och figuren och pilen till nästa steg har samma färg. På en dator tänds
    stegen i tur när listan syns (.ar-igang på listan, en fördröjning per
    steg): numret, sedan pilen som ritas fram till nästa, sedan nästa
    nummer. På en telefon tänds varje steg när det passerat mitten av
@@ -441,28 +449,28 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
   font-size:clamp(3rem,4.6vw,4.6rem);font-weight:800;
   letter-spacing:-.06em;line-height:.8;
   font-variant-numeric:tabular-nums;
-  color:var(--acc);
+  color:var(--f,var(--acc));
   transition:color .45s var(--e);
 }
 .pr-flode-ikon{
   flex:none;display:grid;place-items:center;
   width:42px;height:42px;border-radius:14px;
-  background:color-mix(in srgb,var(--acc) 11%,transparent);
+  background:color-mix(in srgb,var(--f,var(--acc)) 11%,transparent);
   transition:opacity .4s var(--e),scale .6s var(--fjader);
 }
 .pr-flode-ikon svg{
   width:20px;height:20px;
-  fill:none;stroke:var(--acc-lugn);stroke-width:1.7;
+  fill:none;stroke:var(--f,var(--acc-lugn));stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round;
 }
-/* Pilen: en skena i --ln-2 och en fyllnad i lera ovanpå, som växer
+/* Pilen: en skena i --ln-2 och en fyllnad i stegets färg ovanpå, som växer
    med scale från stegets håll, och spetsen sist. Den går ut i
    mellanrummet till nästa steg. */
 .pr-flode-pil{
   position:relative;flex:1 1 auto;align-self:center;
   min-width:28px;height:12px;
   margin-left:2px;margin-right:calc(clamp(40px,4.2vw,68px) * -1 + 12px);
-  color:var(--acc);
+  color:var(--f,var(--acc));
 }
 .pr-flode-pil::before,
 .pr-flode-pil::after{
@@ -531,7 +539,7 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
   html.nx-sr .pr-flode-steg h3,
   html.nx-sr .pr-flode-steg p{opacity:0;translate:0 14px}
 
-  html.nx-sr .pr-flode.ar-igang .pr-flode-nr{color:var(--acc);transition-delay:var(--d,0s)}
+  html.nx-sr .pr-flode.ar-igang .pr-flode-nr{color:var(--f,var(--acc));transition-delay:var(--d,0s)}
   html.nx-sr .pr-flode.ar-igang .pr-flode-ikon{opacity:1;scale:1;transition-delay:calc(var(--d,0s) + .08s)}
   html.nx-sr .pr-flode.ar-igang .pr-flode-steg h3{opacity:1;translate:0 0;transition-delay:calc(var(--d,0s) + .06s)}
   html.nx-sr .pr-flode.ar-igang .pr-flode-steg p{opacity:1;translate:0 0;transition-delay:calc(var(--d,0s) + .12s)}
@@ -574,7 +582,7 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
   html.nx-sr .pr-flode-ikon{opacity:.4;scale:.88}
   html.nx-sr .pr-flode-pil::after{scale:1 0;transition-duration:.7s}
   html.nx-sr .pr-flode-pil svg{opacity:0;translate:0 -8px}
-  html.nx-sr .pr-flode-steg.ar-nadd .pr-flode-nr{color:var(--acc)}
+  html.nx-sr .pr-flode-steg.ar-nadd .pr-flode-nr{color:var(--f,var(--acc))}
   html.nx-sr .pr-flode-steg.ar-nadd .pr-flode-ikon{opacity:1;scale:1}
   html.nx-sr .pr-flode-steg.ar-nadd .pr-flode-pil::after{scale:1 1;transition-delay:.12s}
   html.nx-sr .pr-flode-steg.ar-nadd .pr-flode-pil svg{opacity:1;translate:0 0;transition-delay:.6s}

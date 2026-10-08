@@ -798,7 +798,8 @@ pris ... som en tejp bit som tejpas fast på erbjudandet".
   **Spara-raden** (`data-erb-spara="6"`) är den största skillnaden mellan
   ordinarie (399 kr gånger timmarna) och planens pris bland planerna,
   gånger sex: Intensiv, 12 × 20 kr × 6 = 1 440 kr. Leo sa 1 200; talet
-  räknas ur svaret, så sidan säger det som är sant för katalogen.
+  räknas ur svaret, så sidan säger det som är sant för katalogen. Sedan
+  samma kväll säger raden också planens namn (nedan).
 - **Tejpen** (`.nx-tejp` i `nextrum-cinema.css`) är en allmän komponent:
   en remsa i ockra mot orange (`--tejp`, `--tejp-ink`, `--tejp-fiber`,
   på tre ställen), sågtandade kortändar med `clip-path`, `rotate` för
@@ -813,3 +814,49 @@ pris ... som en tejp bit som tejpas fast på erbjudandet".
 - **`rls-test.sql`**: avsnitt 25 provar de nya planerna och siffrorna med
   399 kr, och 19.5 och 20.1 räknar på passets eget frysta pris i stället
   för 379 kr, så att de inte beror på katalogen.
+
+## Kronortejperna, spara-raden och märket (2026-10-08)
+
+Leo samma kväll: "På dessa erbjudanden ska de stå på basic upp till 2000kr
+mindre [än] liknande jämförbara paket från andra aktörer konkurrent då
+allakando tar 3540, på [Standard] upp till 2800kr mindre än liknande
+jämförbara paket från andra aktörer. Och på intensiv upp till 3800kr. Och
+detta ska synas som tejp på erbjudanden", "Under erbjudanden ska de stå
+litet ... jämförelserna gjordes med en årskurs 9 elev i oktober", "Ha
+intensiv paketets besparing som standard för 6 månader så skriv spara upp
+till … på 6månader med intensivplanen" och "Ta bort -5% på erbjudande skriv
+istället 399 streck över de, 379". (Han skrev "basic" två gånger; den andra
+är Standard, för 2 800 kr är Standards belopp.)
+
+- **Kronortejperna** (`.nx-tejp.nx-tejp-kort` i varje plankort på
+  prissidan, efter priset): "Upp till N kr mindre än liknande paket hos andra
+  aktörer". Jämförelsepriset står på tejpen (`data-erb-jamfor-ore`, med
+  `data-erb-jamfor-timmar`), och `initErbjudanden()` räknar skillnaden mot
+  planens pris i svaret och avrundar den NEDÅT till hundratal kronor
+  (`data-erb-mindre`): "upp till" får aldrig lova mer än skillnaden, så
+  procentens avrundning till närmaste fem gäller inte här. Tejpen har eget
+  `data-erb` och står dold (`data-erb-vantar`) tills talet är skrivet; den
+  döljs ensam, aldrig kortet, vid fel antal timmar eller under 100 kr.
+  Priserna: Basic 354000 öre (Allakandos 3 540 kr, Leos underlag), Standard
+  583200 och Intensiv 834800, som är räknade baklänges ur Leos 2 800 och
+  3 800 kr mot våra 3 032 och 4 548 kr: de är inga uppmätta priser, och
+  Standards 5 832 är ett annat pris än lyftets och Just nus 5 000 kr+
+  (CLAUDE.md avsnitt 11). Ingen aktör nämns på sajten. Tejpen ligger i
+  flödet och inte över kortets kant, för korten har `overflow:hidden`
+  (bandet över Standard) och telefonens svepraden klipper det som sticker upp;
+  varje remsa lutar åt sitt håll och sätts fast i tur när raden glider in.
+- **Raden under planerna** (`data-erb-jamfor-not`): "Jämförelserna gjordes
+  med en elev i årskurs 9 i oktober 2026", liten, och bara när en tejp i
+  sektionen syns.
+- **Spara-raden** säger planen: "Spara upp till 1 440 kr på 6 månader med
+  Intensivplanen" (`data-erb-spara-plan`, på prissidan och i Just nu).
+  Leo trodde att 1 440 kr var Basics; Basics är 480 kr (4 × 20 × 6).
+  Namnet är den plan som ger den största besparingen, ur planens kort på
+  sidan (sidans språk), annars ur svaret, så engelska startsidan säger
+  "Intensiv" där prissidan säger "Intensive".
+- **Märket** på planerna och klippkortsraden, på prissidan och i
+  studievyn, är timpriset utan bindning överstruket och det rabatterade
+  bredvid (399 kr överstruket, 379 kr), båda ur svaret, i stället för
+  "−5 %". Det döljs när de är lika, och studievyn visar det aldrig på ett
+  kort med timmar på köpet. Plankortets rad längst ned säger samma timpris
+  en gång till, med "ni sparar".

@@ -184,8 +184,9 @@
      navigera enklare"). En per ämne, så att man ser vilket ämne man är i
      utan att läsa. Alla klarar AA mot papperet och --yta som text; -l är
      syskonen för barken, som --lera-l. I vyerna står de bara i NexLäx;
-     utanför säger lera, mossa och ockra vems drag det är. Startsidan bär dem
-     som en röd tråd sedan 2026-10-08 (nextrum-start.css, avsnitt 13). */
+     utanför säger lera, mossa och ockra vems drag det är. Startsidan och
+     menysidorna bär dem som en röd tråd sedan 2026-10-08, efter tre regler
+     (ordningen, ämnet, betoningen) i nextrum-start.css, avsnitt 18. */
   --amne-ma:#2F6690; --amne-ma-l:#8DB9E0;
   --amne-sv:#A63D3A; --amne-sv-l:#E7978F;
   --amne-en:#6A4A99; --amne-en-l:#B9A1E0;
@@ -2857,6 +2858,12 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 /* Timmen på köpet är det enda märket med full lera: det är det som
    säljer Standard, och det ska läsas före procenten på de andra. */
 .pr-erb-paket{background:var(--acc);color:var(--acc-ink)}
+/* Märket är timpriset utan bindning överstruket och planens bredvid
+   sedan 2026-10-08 (Leo: "Ta bort -5% ... skriv istället 399 streck
+   över de, 379"). Det överstrukna står tunnare och svagare, så att
+   ögat landar på priset man betalar. */
+.pr-erb-rabatt s{font-weight:500;opacity:.75;margin-right:3px;text-decoration-thickness:1.5px}
+.pr-erb-rabatt b{font-weight:800}
 .pr-erb-vad{display:block;margin:14px 0 0;color:var(--muted);font-size:.98rem;line-height:1.5}
 .pr-erb-plan .nx-amount{margin:22px 0 6px}
 .pr-erb-plan .nx-amount b{font-size:clamp(2.2rem,3.6vw,3.1rem)}
@@ -2922,8 +2929,20 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
   font-size:1.02rem;font-weight:600;line-height:1.35;letter-spacing:-.01em;
 }
 .pr-erb-spara b{font-size:1.3rem;font-weight:800;letter-spacing:-.03em;color:var(--bl)}
-.pr-erb-spara span{font-size:.86rem;font-weight:500;color:var(--muted)}
+/* "på 6 månader med Intensivplanen" är en enda bit i flexraden: namnet
+   (data-erb-spara-plan) och "planen" hade annars fått radens mellanrum
+   emellan. Den sista biten, "mot priset utan bindning", är tillägget. */
+.pr-erb-spara > span:last-child{font-size:.86rem;font-weight:500;color:var(--muted)}
 .pr-erb-spara[hidden]{display:none}
+
+/* "Jämförelserna gjordes med en elev i årskurs 9 i oktober 2026" (Leo
+   2026-10-08): liten, under planerna, och bara när en tejp syns
+   (initErbjudanden()). */
+.pr-erb-jamfor-not{
+  margin:16px 0 0;text-align:center;
+  font-size:.8rem;line-height:1.45;color:var(--muted);text-wrap:balance;
+}
+@media (max-width:760px){.pr-erb-jamfor-not{margin-top:12px}}
 
 /* Mellanbredd: tre kort bredvid varandra med lite mindre luft, så att
    summorna inte bryts. */
@@ -3236,6 +3255,31 @@ html.nx-sr [data-stig].nx-in > .nx-tejp{animation:nx-tejp-fast .62s var(--e-ut) 
   .pr-lyft:has(> .nx-tejp:not([hidden])){margin-top:46px;padding-top:calc(clamp(24px,3vw,36px) + 40px)}
 }
 .pr-lyft-bind{white-space:nowrap}
+
+/* Tejpen på plankorten (2026-10-08, Leo: "detta ska synas som tejp på
+   erbjudanden"): jämförelsen i kronor, en per plan. Mindre än lyftets
+   och i flödet, under priset: korten klipper allt utanför sin kant
+   (overflow:hidden, för bandet över Standard), och på en telefon är
+   raden ett rullfönster som klipper det som sticker upp. Varje remsa
+   lutar åt sitt håll, som tejp som satts dit för hand.
+
+   Tejpen sätts fast när raden glider in (raden är det som observeras,
+   se korten ovanför), en efter en, eller när den visas efter att svaret
+   kommit. Startläget bara under html.nx-sr. */
+.nx-tejp-kort{
+  --tejp-tand:6px;
+  align-self:center;
+  margin:16px 0 2px;
+  padding:9px calc(var(--tejp-tand) + 16px) 10px;gap:2px;
+}
+.nx-tejp-kort .nx-tejp-stor{font-size:clamp(1.12rem,1.55vw,1.32rem);white-space:nowrap}
+.nx-tejp-kort .nx-tejp-liten{font-size:.76rem;max-width:36ch}
+.pr-erb-plan:nth-child(2) .nx-tejp-kort{--tejp-vrid:1.6deg}
+.pr-erb-plan:nth-child(3) .nx-tejp-kort{--tejp-vrid:-1.4deg}
+html.nx-sr .pr-erb-planer:not(.nx-in) .nx-tejp-kort{opacity:0}
+html.nx-sr .pr-erb-planer.nx-in .nx-tejp-kort{animation:nx-tejp-fast .62s var(--e-ut) .5s both}
+html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(2) .nx-tejp-kort{animation-delay:.62s}
+html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animation-delay:.74s}
 
 /* Foto i stället för initial på studiehjälparkortet. Bilden fyller
    samma ruta som bokstaven, så raden håller sin rytm oavsett vilka
