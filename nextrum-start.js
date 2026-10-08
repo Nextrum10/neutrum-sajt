@@ -200,13 +200,18 @@ const NXStart = (function () {
     }
     const läge = (i, k) => vyer[i] && vyer[i].classList.add(k);
 
-    /* Varje skärm: väntan i ms och det som händer på den. Summan är
-       ett varv på ungefär sjutton sekunder. */
+    /* Varje skärm: väntan i ms och det som händer på den. Alla fyra
+       står lika länge, fyra sekunder, och ett varv är sexton. Vägen stod
+       längst förut (Leo 2026-10-07: "På väg genom ämnet tar längre tid
+       än resten"): första gången fick den en och en halv sekund extra
+       medan telefonen reste sig, och linjen under bladet gick då i över
+       fem sekunder. Telefonen reser sig nu medan vägen står sin vanliga
+       tid. */
     const SKÄRMAR = [
-      [3600],
-      [1100, () => läge(1, 'valt'), 700, () => läge(1, 'ratt'), 2600],
-      [4400],
-      [900, () => läge(3, 'fylld'), 3800]
+      [4000],
+      [1000, () => läge(1, 'valt'), 700, () => läge(1, 'ratt'), 2300],
+      [4000],
+      [900, () => läge(3, 'fylld'), 3100]
     ];
     const SLUT = [[], ['valt', 'ratt'], [], ['fylld']];
     const VARV = 3;
@@ -293,17 +298,14 @@ const NXStart = (function () {
     if (lista) närSyns(lista, () => lista.classList.add('nlx-in'), '0px 0px -8% 0px');
     document.addEventListener('visibilitychange', paus);
 
-    /* Första gången reser sig telefonen i en och en halv sekund, så
-       vägen får stå lika mycket längre. */
-    let först = 1500;
-    if (!('IntersectionObserver' in window)) { synlig = true; paus(); kör(0, först); return; }
+    if (!('IntersectionObserver' in window)) { synlig = true; paus(); kör(0, 0); return; }
     new IntersectionObserver(poster => {
       synlig = poster[poster.length - 1].isIntersecting;
       paus();
       /* Tre varv per gång den kommer in i bild. Har den gått klart
          börjar den om först när den varit utanför. */
       if (!synlig) { if (klar && !tur) { klar = false; varv = 0; } return; }
-      if (!tur && !klar) { kör(nu, först); först = 0; }
+      if (!tur && !klar) kör(nu, 0);
     }, { threshold: 0.35 }).observe(scen);
   }
 

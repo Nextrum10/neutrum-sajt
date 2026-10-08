@@ -3021,10 +3021,11 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
 /* ------------------------------------------------------------
    STANDARD, INBAKAT (2026-10-07)
    Leo: "Visa standard planens erbjudande på sidan och sälj in de
-   inbakat någonstans där de passar." Två ställen utanför raden ovan:
-   lyftet under starterbjudandet överst på prissidan, och lappen under
-   knapparna i Trygg hjälp på startsidan. Båda tar sina siffror ur samma
-   svar som korten (initErbjudanden), och lappen har inga kronor alls.
+   inbakat någonstans där de passar." Lyftet under starterbjudandet
+   överst på prissidan tar sina siffror ur samma svar som korten
+   (initErbjudanden). Lappen under knapparna i Trygg hjälp på startsidan
+   togs bort samma kväll (Leo: "den passar ej in där"); startsidans
+   erbjudande är Just nu under NexLäx (nextrum-start.css avsnitt 16).
    ------------------------------------------------------------ */
 /* Högerkolumnen överst: starterbjudandet och lyftet. Priskortet till
    vänster blir lika högt som de två, och knappen och raden under den
@@ -3089,43 +3090,8 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
 }
 .pr-lyft:active{scale:.985}
 
-/* Lappen på startsidan, under knapparna i Trygg hjälp. Ett runt kort
-   som lapparna på menysidornas foto, med planens namn och timmarna.
-   Inga kronor: priset bor på prissidan. */
-.pr-std-lapp{
-  display:flex;align-items:center;gap:12px;
-  width:fit-content;max-width:100%;min-height:48px;
-  margin:clamp(18px,2.2vw,26px) auto 0;
-  padding:7px 18px 7px 7px;border-radius:999px;
-  background:var(--kort);border:1px solid var(--kort-kant);box-shadow:var(--kort-sk);
-  color:var(--bl);font-size:.93rem;font-weight:600;letter-spacing:-.014em;line-height:1.25;
-  text-decoration:none;-webkit-tap-highlight-color:transparent;
-  transition:scale .45s var(--fjader),border-color .3s var(--e);
-}
-.pr-std-namn{
-  flex:none;display:inline-flex;align-items:center;min-height:34px;
-  font-family:var(--f-mono);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
-  padding:0 13px;border-radius:999px;background:var(--acc);color:var(--acc-ink);
-}
-.pr-std-text{text-wrap:balance}
-.pr-std-lapp .pr-erb-rutor{flex:none;width:92px;margin:0;gap:3px}
-.pr-std-lapp .pr-erb-rutor i{height:8px;border-radius:2px}
-.pr-std-lapp > svg{flex:none;width:14px;height:14px;color:var(--acc-lugn)}
-@media (hover:hover) and (pointer:fine){
-  .pr-std-lapp:hover{border-color:var(--acc-line);scale:1.02}
-}
-.pr-std-lapp:active{scale:.97}
-@media (max-width:520px){.pr-std-lapp .pr-erb-rutor{display:none}}
-/* På ytan (Trygg hjälp ligger på --pap-2) är kortets ton i mörkt läge
-   samma som ytan. Lappen lyfter därför till --pap-3 där, som korten i
-   blocken högst upp i filen. */
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) .pr-std-lapp{background:var(--pap-3)}
-}
-:root[data-theme="dark"] .pr-std-lapp{background:var(--pap-3)}
-
 @media (prefers-reduced-motion:reduce){
-  .pr-lyft:hover,.pr-lyft:active,.pr-std-lapp:hover,.pr-std-lapp:active{scale:none}
+  .pr-lyft:hover,.pr-lyft:active{scale:none}
 }
 
 /* Foto i stället för initial på studiehjälparkortet. Bilden fyller
