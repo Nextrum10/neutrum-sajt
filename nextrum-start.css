@@ -73,6 +73,9 @@
    Två bakgrunder på samma element — ytan klippt till padding-box och
    gradienten till border-box — så att kanten är en riktig kant och
    inte ett pseudoelement som måste hållas i takt med radien.
+
+   Ljuset i hörnet och figuren (.bu-fig) tar bladets färg, --f, där
+   ordningen har satt en (avsnitt 18), och annars leran.
    ============================================================ */
 .nx-bubbla{
   position:relative;
@@ -82,7 +85,7 @@
   background:
     linear-gradient(var(--kort),var(--kort)) padding-box,
     linear-gradient(145deg,
-      color-mix(in srgb,var(--acc) 38%,transparent),
+      color-mix(in srgb,var(--f,var(--acc)) 38%,transparent),
       color-mix(in srgb,var(--bl) 9%,transparent) 38%,
       color-mix(in srgb,var(--bl) 6%,transparent)) border-box;
   box-shadow:var(--kort-sk);
@@ -102,12 +105,12 @@
 .bu-fig{
   display:grid;place-items:center;
   width:42px;height:42px;border-radius:14px;
-  background:color-mix(in srgb,var(--acc) 10%,transparent);
+  background:color-mix(in srgb,var(--f,var(--acc)) 10%,transparent);
   margin-bottom:clamp(16px,1.8vw,22px);
 }
 .bu-fig svg{
   width:20px;height:20px;
-  fill:none;stroke:var(--acc-lugn);stroke-width:1.7;
+  fill:none;stroke:var(--f,var(--acc-lugn));stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round;
 }
 
@@ -298,14 +301,14 @@ html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
 .hp-nr{
   font-size:clamp(2.8rem,4.2vw,4rem);
   font-weight:800;letter-spacing:-.06em;line-height:.8;
-  color:var(--ln-2);
+  color:var(--f,var(--ln-2));
   font-variant-numeric:tabular-nums;
   transition:color .35s var(--e);
 }
 
 @media (hover:hover) and (pointer:fine){
   .nx-holdpunkter > li:hover::after{opacity:1}
-  .nx-holdpunkter > li:hover .hp-nr{color:var(--acc)}
+  .nx-holdpunkter > li:hover .hp-nr{color:var(--f,var(--acc))}
 }
 
 /* Telefonen: två kort på 170 px var. Luften inne i kortet krymper mer
@@ -577,10 +580,14 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
    tråd genom startsidan (Leo: "implementera några färger från nexläx
    sektionen till resten av sidan där färgerna passar in"): delarna i
    Hur hjälper vi ditt barn (avsnitt 17), sloganen i Just nu och
-   stegens siffror i Så fungerar Nextrum (#hur, avsnitt 14).
+   stegens siffror i Så fungerar Nextrum (#hur, avsnitt 14), och samma
+   dag genom resten av startsidan och menysidorna (avsnitt 18).
 
    Flyttad ner 2026-10-08: sektionen står efter studievyn, inte under
-   heron längre. Det är fortfarande ungefär en skärmhöjd.
+   heron längre. Det är fortfarande ungefär en skärmhöjd. Samma dag
+   kopierad till För elever & föräldrar, direkt under studievyn där
+   (Leo: "lägg in nexläx illustration under illustration av studie
+   vyn"); nexlax() letar upp den första [data-nexlax] på sidan.
 
    Det som byter läge ligger i fasta rutor: skärmarna i samma
    rutnätscell, så telefonens höjd byts aldrig, och stigens text står
@@ -2639,21 +2646,22 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
    Specificiteten är densamma i alla tre prefixen nedan (0,4,1), så
    ordningen avgör: det gemensamma först, sedan full, sedan lite.
 
-   STEGENS FÄRGER (2026-10-08). På startsidan (#hur) tänds varje siffra,
-   linjen under den och märket på fotot i en av NexLäx ämnesfärger,
-   samma ordning som delarna i Hur hjälper vi ditt barn (Leo: "en röd
-   tråd", "implementera några färger från nexläx sektionen"). Reglerna
-   läser var(--f,var(--acc)), så Så fungerar Nextrum, som inte sätter
-   --f, står kvar i leran.
+   STEGENS FÄRGER (2026-10-08). Varje siffra, linjen under den och
+   märket på fotot tänds i en av NexLäx ämnesfärger, samma ordning som
+   delarna i Hur hjälper vi ditt barn (Leo: "en röd tråd", "implementera
+   några färger från nexläx sektionen"). Först bara på startsidan (#hur);
+   samma dag också på menysidan Så fungerar Nextrum (Leo: "gör de på
+   flera delar på sidan och de separata sidorna ockps"), därför .nx-hur.
+   Ordningen är densamma som i avsnitt 18.
    ============================================================ */
-#hur .nx-hur-steg > li:nth-child(1),#hur .nx-hur-bild > .nx-fig:nth-child(1){--f:var(--amne-ma)}
-#hur .nx-hur-steg > li:nth-child(2),#hur .nx-hur-bild > .nx-fig:nth-child(2){--f:var(--amne-en)}
-#hur .nx-hur-steg > li:nth-child(3),#hur .nx-hur-bild > .nx-fig:nth-child(3){--f:var(--amne-no)}
-#hur .nx-hur-steg > li:nth-child(4),#hur .nx-hur-bild > .nx-fig:nth-child(4){--f:var(--acc)}
-#hur .nx-hur-steg > li:nth-child(5),#hur .nx-hur-bild > .nx-fig:nth-child(5){--f:var(--amne-ms)}
+.nx-hur .nx-hur-steg > li:nth-child(1),.nx-hur .nx-hur-bild > .nx-fig:nth-child(1){--f:var(--amne-ma)}
+.nx-hur .nx-hur-steg > li:nth-child(2),.nx-hur .nx-hur-bild > .nx-fig:nth-child(2){--f:var(--amne-en)}
+.nx-hur .nx-hur-steg > li:nth-child(3),.nx-hur .nx-hur-bild > .nx-fig:nth-child(3){--f:var(--amne-no)}
+.nx-hur .nx-hur-steg > li:nth-child(4),.nx-hur .nx-hur-bild > .nx-fig:nth-child(4){--f:var(--acc)}
+.nx-hur .nx-hur-steg > li:nth-child(5),.nx-hur .nx-hur-bild > .nx-fig:nth-child(5){--f:var(--amne-ms)}
 /* Siffran på fotots märke står på färgen: kortets ljusa ton i ljust
    läge (minst 5,2:1, mossans grön är mörkast) och dess mörka i mörkt. */
-#hur .nx-hur-bild > .nx-fig{--f-ink:var(--kort)}
+.nx-hur .nx-hur-bild > .nx-fig{--f-ink:var(--kort)}
 
 /* ---------- fotona, båda lägena ---------- */
 /* Ramen klipper och bär skuggan, så att fotot som glider in syns
@@ -3053,7 +3061,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .nx-apply-step em{
   font-family:inherit;font-size:clamp(2.6rem,3.8vw,3.6rem);
   font-weight:800;letter-spacing:-.06em;line-height:.8;
-  color:rgba(239,230,214,.22);
+  color:var(--f,rgba(239,230,214,.22));
   margin-bottom:clamp(16px,1.8vw,22px);
   font-variant-numeric:tabular-nums;
   transition:color .35s var(--e);
@@ -3063,7 +3071,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
     background-color:rgba(239,230,214,.09);
     border-color:rgba(239,230,214,.22);
   }
-  .nx-apply-step:hover em{color:var(--lera-l)}
+  .nx-apply-step:hover em{color:var(--f,var(--lera-l))}
 }
 @media (max-width:760px){
   .nx-apply-flow{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -3128,7 +3136,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
     rgba(239,230,214,.03);
   border-color:var(--bli-kant);
 }
-#bli .nx-apply-step em{color:var(--lera-l)}
+#bli .nx-apply-step em{color:var(--f,var(--lera-l))}
 @media (hover:hover) and (pointer:fine){
   #bli .nx-apply-flow > .nx-apply-step:hover{
     background-color:rgba(239,230,214,.07);
@@ -3344,6 +3352,122 @@ html.nx-sr .nx-gar-flode.i-gang > li.fylld:last-child::after{transition-delay:.4
   font-size:clamp(1.14rem,1.9vw,1.5rem);
   line-height:1.46;letter-spacing:-.02em;font-weight:500;
   max-width:58ch;
+}
+
+/* ============================================================
+   18. ÄMNESFÄRGERNA SOM RÖD TRÅD (2026-10-08) — startsidan och
+       menysidorna
+
+   Leo: "De var bra med de nexläx färgerna du implementera, gör de på
+   flera delar på sidan och de separata sidorna ockps." NexLäx
+   ämnesfärger (--amne-* i cinema) bar redan delarna i Hur hjälper vi
+   ditt barn (avsnitt 17), "ditt barn?", sloganen i Just nu och stegen
+   i #hur (avsnitt 14). Nu bär de resten också, efter tre regler, så att
+   samma sorts sak alltid har samma färg:
+
+     ORDNINGEN. I en rad blad eller steg får det n:te bladet färg n:
+       matematikens blå, engelskans lila, NO:s gröna, leran och moderna
+       språkens rosa, och i bandet, som har sex kort, SO:s ockra som
+       sjätte. Samma ordning som delarna i Hur hjälper vi och stegen i
+       #hur. Färgen sitter på EN sak i bladet (siffran, figuren eller
+       etiketten, och ljuset i bladets hörn), aldrig på texten. Raderna
+       nedan sätter --f, och delarna läser var(--f, sin gamla färg), så
+       ett blad utanför en rad står kvar i leran.
+     ÄMNET. Det som namnger ett ämne har ämnets färg: studiehjälparnas
+       ämnen på startsidan (data-amne, satt av sidans skript ur ämnets
+       namn).
+     BETONINGEN. Gradienten i "ditt barn?" (blå, lila, rosa) bär sidans
+       första och sista betoning: <em> i menysidornas rubrik överst och
+       i Nästa steg längst ned, och citattecknen i bildväggen och
+       brevet. Andra rubrikers <em> står kvar i leran.
+
+   Garantin har leran överallt (bladet i Hur hjälper vi, prissidans
+   flöde), och erbjudandena på prissidan (.pr-erb-*, tejperna) och Just
+   nu har sina egna färger: de rörs inte här. I de inloggade vyerna står
+   ämnesfärgerna bara i NexLäx; den här filen laddas inte där.
+
+   KONTRASTEN (mätt 2026-10-08). Ämnesfärgerna klarar AA som text mot
+   papperet, --kort och --yta i ljust läge (lägst NO:s gröna: 4,71 mot
+   papperet, 5,19 mot --kort), och de ljusa syskonen (-l) mot barken
+   (lägst 6,4). Mot --pap-2 (ytorna) går NO:s gröna ner till 4,26, så
+   där står färgerna bara som stora siffror och figurer, och liten text
+   i färg står i ett blad (--kort). De mörka ytorna har barken i båda
+   lägena, och där byts färgerna mot -l, som cinema byter leran.
+   ============================================================ */
+.nx-mork,.band,.on-band{
+  --amne-ma:var(--amne-ma-l);--amne-sv:var(--amne-sv-l);--amne-en:var(--amne-en-l);
+  --amne-no:var(--amne-no-l);--amne-so:var(--amne-so-l);--amne-ms:var(--amne-ms-l);
+}
+
+/* ---------- ordningen ----------
+   Raderna på startsidan och menysidorna. --acc är leran, och på de
+   mörka ytorna dess ljusa syskon (cinema). */
+:is(.nx-manifest-fot,.nx-holdpunkter,.sid-kort,.sid-bildkort,.nx-apply-flow,.nx-perks,.pr-flode,.sid-faq) > :nth-child(5n+1){--f:var(--amne-ma)}
+:is(.nx-manifest-fot,.nx-holdpunkter,.sid-kort,.sid-bildkort,.nx-apply-flow,.nx-perks,.pr-flode,.sid-faq) > :nth-child(5n+2){--f:var(--amne-en)}
+:is(.nx-manifest-fot,.nx-holdpunkter,.sid-kort,.sid-bildkort,.nx-apply-flow,.nx-perks,.pr-flode,.sid-faq) > :nth-child(5n+3){--f:var(--amne-no)}
+:is(.nx-manifest-fot,.nx-holdpunkter,.sid-kort,.sid-bildkort,.nx-apply-flow,.nx-perks,.pr-flode,.sid-faq) > :nth-child(5n+4){--f:var(--acc)}
+:is(.nx-manifest-fot,.nx-holdpunkter,.sid-kort,.sid-bildkort,.nx-apply-flow,.nx-perks,.pr-flode,.sid-faq) > :nth-child(5n+5){--f:var(--amne-ms)}
+/* Bandet i Trygg hjälp: sex kort, och band() lägger till hela
+   uppsättningar om sex, så att varje kopia får sitt originals färg. */
+.nx-drag > li:nth-child(6n+1){--f:var(--amne-ma)}
+.nx-drag > li:nth-child(6n+2){--f:var(--amne-en)}
+.nx-drag > li:nth-child(6n+3){--f:var(--amne-no)}
+.nx-drag > li:nth-child(6n+4){--f:var(--acc)}
+.nx-drag > li:nth-child(6n+5){--f:var(--amne-ms)}
+.nx-drag > li:nth-child(6n+6){--f:var(--amne-so)}
+
+/* Delarna som läser --f och inte har en egen regel i sitt avsnitt:
+   figuren i bandet (cinema) och märket i hållpunkterna (cinema, i
+   mossan förut). Bladets kant och figur: avsnitt 2; siffrorna:
+   avsnitt 4 och 10; menysidornas etiketter, figurer och flöden:
+   nextrum-sidor.css. */
+.nx-drag .dr-fig{
+  background:color-mix(in srgb,var(--f,var(--acc)) 11%,transparent);
+  border-color:color-mix(in srgb,var(--f,var(--acc)) 26%,transparent);
+}
+.nx-drag .dr-fig svg{stroke:var(--f,var(--acc-lugn))}
+.nx-holdpunkter .hp-mark{
+  background:color-mix(in srgb,var(--f,var(--mossa)) 12%,transparent);
+  border-color:color-mix(in srgb,var(--f,var(--mossa)) 28%,transparent);
+}
+.nx-holdpunkter .hp-mark svg{stroke:var(--f,var(--mossa))}
+
+/* ---------- ämnet ----------
+   Studiehjälparnas ämnen. Skriptet i index.html sätter data-amne ur
+   ämnets namn; ett ämne utan färg (Studieteknik) står kvar grått.
+   Taggens text är 9,5 px, och på sin egen ton tappade NO:s gröna AA
+   (4,44:1). En sjättedel bläck i färgen ger tillbaka det i båda lägena,
+   för --bl är den mörkaste tonen i ljust läge och den ljusaste i mörkt. */
+.showcase .tag[data-amne="ma"]{--f:var(--amne-ma)}
+.showcase .tag[data-amne="sv"]{--f:var(--amne-sv)}
+.showcase .tag[data-amne="en"]{--f:var(--amne-en)}
+.showcase .tag[data-amne="no"]{--f:var(--amne-no)}
+.showcase .tag[data-amne="so"]{--f:var(--amne-so)}
+.showcase .tag[data-amne="ms"]{--f:var(--amne-ms)}
+.showcase .tag[data-amne]{
+  color:color-mix(in srgb,var(--f) 84%,var(--bl));
+  border-color:color-mix(in srgb,var(--f) 30%,transparent);
+  background:color-mix(in srgb,var(--f) 6%,transparent);
+}
+
+/* ---------- betoningen ----------
+   Samma gradient som "ditt barn?" (avsnitt 17). Citattecknen är block
+   i cinema och här; fit-content gör att gradienten spänner över
+   tecknet och inte över hela raden. Utan background-clip:text står
+   allt kvar i leran. */
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .nx-page-hero .nx-d1 em,
+  .nx-final-cinema .nx-final-rubrik em,
+  .nx-vagg-ord::before,
+  .nx-rost::before{
+    background:linear-gradient(96deg,var(--amne-ma) 8%,var(--amne-en) 58%,var(--amne-ms) 96%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
+  .nx-page-hero .nx-d1 em,
+  .nx-final-cinema .nx-final-rubrik em{padding-right:.05em}
+  .nx-vagg-ord::before,
+  .nx-rost::before{width:fit-content}
 }
 
 /* ============================================================

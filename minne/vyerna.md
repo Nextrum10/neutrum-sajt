@@ -433,10 +433,10 @@ Bli studiehjälpare-sidan har samma lista och står kvar.
 **Den röda tråden**: ämnesfärgerna står på bladen i Hur hjälper vi ditt
 barn, i rubrikens "ditt barn?" och sloganens andra mening (samma gradient som
 NexLäx rubrik), och på stegens siffror, linjen och fotots märke i `#hur`
-(`--f` per `:nth-child`, reglerna läser `var(--f,var(--acc))`, så Så fungerar
-Nextrum står kvar i leran). Märkets siffra står i `--kort` på färgen, för
-krämen på NO:s gröna var 4,4:1. I vyerna står ämnesfärgerna fortfarande bara
-i NexLäx.
+(`--f` per `:nth-child`, reglerna läser `var(--f,var(--acc))`). Märkets siffra
+står i `--kort` på färgen, för krämen på NO:s gröna var 4,4:1. Samma kväll
+fördes de ut på resten av startsidan och menysidorna, också Så fungerar
+Nextrum (nästa avsnitt). I vyerna står ämnesfärgerna fortfarande bara i NexLäx.
 
 **Papperet** ("en liten mindre beige nyans på bakgrunden [...] väldigt lite"):
 `--pap` #F2EDE3 → #F1EDE6, 30 % lägre kroma i OKLCH och samma luminans, så
@@ -446,6 +446,69 @@ förut), också i formulärens ljusa öar i mörkt läge. `theme-color` i alla
 sidor och i `bygg-omradessidor.py` följer; mejlens `FARG` och
 delningsbildernas textfärg i `bygg-delningsbilder.js` (#F2EDE3 som text på
 foto) är orörda.
+
+### Ämnesfärgerna överallt, NexLäx och Hur hjälper vi på menysidorna (2026-10-08)
+
+Leo: "De var bra med de nexläx färgerna du implementera, gör de på flera
+delar på sidan och de separata sidorna ockps." Och: "På föräldrar och elever
+sidan lägg in nexläx illustration under illustration av studie vyn", och "Så
+hjälper vi ska också in på vår idé sidan så ta bort bakrunden där som jag
+skicka bild på och ersätt."
+
+**NexLäx på För elever & föräldrar**: startsidans `section#nexlax`, ordagrant,
+direkt efter studievyns sektion, på båda språken. `nexlax()` tar den första
+`[data-nexlax]` på sidan och kör samma rundtur. Länken Se studievyn är borta
+där (studievyn står direkt ovanför, så den hade bara rullat en skärm upp).
+Id:na (`nexlax`, `nexlax-t`, `nlx-del-0`–`3`) finns inte annars på sidan.
+Ändras sektionen på startsidan ska den kopieras hit.
+
+**Hur hjälper vi på Vår idé**: Bakgrunden ("Den som nyss förstått något
+förklarar det bäst.", två blad) är borta, och startsidans
+`section#sa-hjalper-vi` står i dess ställe, ordagrant utom NexLäx-bladets länk,
+som går till `/for-elever-och-foraldrar#nexlax` (`/en/...` på engelska), för
+sidan har ingen egen NexLäx. Tanken i Bakgrunden bär Erfarenheten ("Från
+samma skolbänk"). Garantins blad har `id="betygsgaranti"`, som inget annat på
+sidan har; länkarna till `/#betygsgaranti` från andra sidor går till
+startsidan som förut. Det lilla flödet tänds i tur (`garantiflöde()`), och
+villkorslänken och "Villkor gäller" följer med.
+
+**Färgerna, tre regler** (avsnitt 18 i nextrum-start.css, så att samma sorts
+sak alltid har samma färg):
+- **Ordningen**: i en rad blad eller steg får det n:te bladet färg n,
+  matematikens blå, engelskans lila, NO:s gröna, leran, moderna språkens rosa
+  (samma ordning som Hur hjälper vi och `#hur`), och SO:s ockra som sjätte i
+  Trygg hjälps band (sex kort; `band()` kopierar hela uppsättningar om sex, så
+  `:nth-child(6n+k)` håller). En regel sätter `--f` på barnen i
+  `.nx-manifest-fot`, `.nx-holdpunkter`, `.sid-kort`, `.sid-bildkort`,
+  `.nx-apply-flow`, `.nx-perks`, `.pr-flode` och `.sid-faq`, och `.nx-hur`
+  (förut bara `#hur`) har sina egna. Delarna läser `var(--f, sin gamla
+  färg)`: siffrorna (`.hp-nr` står i färg också i vila nu, `.nx-apply-step
+  em`, `.pr-flode-nr`), figurerna (`.bu-fig`, `.dr-fig`, `.hp-mark`,
+  `.nx-perk .i`, `.sid-faq-ikon`, `.pr-flode-ikon` och pilen),
+  etiketterna (`.sid-et`: Först/Sedan/Löpande, Före/Under/Efter) och ljuset i
+  `.nx-bubbla`s hörn. Aldrig texten, och en färg per blad.
+- **Ämnet**: studiehjälparnas ämnen på startsidan får ämnets färg.
+  Skriptet i `index.html` (och `en/index.html`, samma funktion) sätter
+  `data-amne` ur namnet, på svenska ur databasen eller på sidans språk ur
+  exempelkorten; Studieteknik har ingen färg och står kvar grått.
+- **Betoningen**: gradienten i "ditt barn?" står på menysidornas `<em>` i
+  rubriken överst (`.nx-page-hero .nx-d1 em`), på Nästa stegs `<em>` på alla
+  sidor, och på citattecknen i bildväggen och brevet (`width:fit-content`,
+  annars spänner gradienten över hela raden). Övriga rubrikers `<em>` står i
+  leran.
+
+Garantin har leran (bladet, prissidans flöde), och erbjudandena på
+prissidan och Just nu är orörda (en annan byggare arbetade där samma dag);
+prissidan fick färgerna bara genom `nextrum-sidor.css` (betalflödet och Nästa
+steg), `priser.html` är orörd. På bark (`.nx-mork`, `.band`, `.on-band`)
+byts `--amne-*` mot `-l` på ytan, som cinema byter leran. **Kontrasten**,
+mätt i Chromium på 360 px i båda lägena: all liten text i färg klarar 4,5:1
+(lägst 5,19, NO:s gröna mot `--kort`); NO:s gröna mot `--pap-2` är 4,26, så
+där står bara stora siffror och figurer. Studiehjälparnas taggar (9,5 px)
+tappade AA på sin egen ton (4,44), så deras text har en sjättedel `--bl` i
+sig (`color-mix`), vilket höjer kontrasten i båda lägena. Mät ett blad med
+`--kort` som bakgrund: bladet målar den som en gradient, inte som
+`background-color`.
 
 ### Två fällor när en palett byts
 
