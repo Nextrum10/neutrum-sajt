@@ -171,7 +171,7 @@ Tas meningen bort faller undantaget. Planer och klippkort (Fas 16.1)
 har samma ångerrätt, räknad från köpet, och den går inte att avtala
 bort. Inom fristen får vi bara behålla en andel av det AVTALADE priset
 för de timmar som använts (2 kap. 15 §), alltså det rabatterade.
-Regeln att använda timmar räknas till 379 kr när en familj slutar
+Regeln att använda timmar räknas till ordinarie pris vid köpet (379 kr till 2026-10-08, sedan 399) när en familj slutar
 gäller först efter fristen — adminvyn visar rätt belopp efter datumet
 (`vid_anger_ore` och `vid_uppsagning_ore`, Fas 16.1e).
 

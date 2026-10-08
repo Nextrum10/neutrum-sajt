@@ -44,7 +44,11 @@ import sys
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKAL = os.path.join(ROT, 'var-ide.html')
 
-PRIS_KR = 379
+# Timpriset utan bindning (399 sedan 2026-10-08, Leo). Samma tal som
+# PRIS_PER_TIMME i nextrum-config.js och läxhjälpens pris i tjanster.
+# Paketens pris (379 kr i timmen, en månad i taget) står bara i
+# erbjudanden_pris och skrivs aldrig in i sidorna härifrån.
+PRIS_KR = 399
 EXTRA_KR = 69
 
 PRIS = f'{PRIS_KR} kr'
@@ -2006,7 +2010,8 @@ GUIDER = [
             f'än hålls, hemma hos er eller online. Sitter syskon med i samma pass tillkommer '
             f'{EXTRA_BARN} i timmen totalt, lika mycket för tre barn som för två. Det finns ingen '
             f'anmälningsavgift, ingen bindningstid och inget minsta antal timmar, och för nya '
-            f'familjer är första timmen på köpet när ni har bokat två timmar.',
+            f'familjer är första timmen på köpet när ni har bokat två timmar. Vill ni betala mindre '
+            f'för varje timme kan ni välja en plan, en månad i taget.',
             'Ni betalar för den tid passet faktiskt höll, räknat per påbörjad kvart, och ser '
             'tiden i rapporten innan ni bekräftar den. Matchningen, studieplanen och rapporten '
             'efter varje pass ingår i timpriset. Hela prisbilden står på prissidan.',
@@ -2303,7 +2308,7 @@ def head(o):
      en engelsk version som inte finns är sämre än att inte peka alls. -->
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/{o['slug']}">
 <link rel="alternate" hreflang="x-default" href="https://nextrum.se/{o['slug']}">
-<meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F1EDE6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 <meta name="geo.region" content="SE-AB">
@@ -2826,7 +2831,7 @@ def sida404():
 {ikoner()}
 <title>Sidan finns inte | Nextrum</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F1EDE6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 

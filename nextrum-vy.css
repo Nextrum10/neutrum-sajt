@@ -2036,7 +2036,7 @@ a.pass-lank:hover{color:var(--acc)}
   font-family:inherit;font-size:11.5px;font-weight:650;letter-spacing:0;line-height:1.37;
   background:var(--acc);border-color:var(--acc);color:var(--acc-ink);
 }
-/* "ni sparar 379 kr" bryts som en helhet, aldrig med "kr" ensamt. */
+/* "ni sparar 160 kr" bryts som en helhet, aldrig med "kr" ensamt. */
 .erb-spar{white-space:nowrap}
 /* Köp står längst ned i kortet, så att knapparna står på en linje när
    raderna ovanför är olika långa. */

@@ -187,8 +187,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
 ### Siffror som måste stämma överallt
-- **379 kr/tim** (`PRIS_PER_TIMME`); **69 kr/tim** för fler barn, fast (tre barn: 448, inte
-  517).
+- **399 kr/tim** utan bindning (`PRIS_PER_TIMME` och läxhjälpens rad i `tjanster`, 2026-10-08), och
+  det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537).
+  **Paketen** (planerna) kostar 379 kr i timmen, en månad i taget: 5 % av 399 nedåt till hel krona. De
+  binder inte: villkoren säger ingen bindningstid och att det som är kvar betalas tillbaka, så sajten säger
+  "en månad i taget", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
@@ -196,12 +199,15 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
   och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`. Allt med
-  `data-erb` (planerna, lyftet `.pr-lyft`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
-  `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar −5 %),
-  Standard (`plan_standard`, 8 timmar för priset av 7) och Intensiv (`plan_intensiv`, 12 timmar −5 %);
+  `data-erb` (planerna, lyftet `.pr-lyft` med tejpen `.nx-tejp`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
+  `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar),
+  Standard (`plan_standard`, 8) och Intensiv (`plan_intensiv`, 12), alla −5 % och en månad i taget sedan
+  2026-10-08, då Standard förlorade "8 timmar för priset av 7";
   `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
-  `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och Standard visar
-  aldrig ett timpris, bara "8 timmar för priset av 7". Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
+  `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och ett kort med
+  timmar på köpet visar aldrig ett timpris. Jämförelsen med andra aktörer (`data-erb-lagre`) avrundas till närmaste
+  fem (Leo 2026-10-08: "upp till 40 %"; exakt är 3 032 mot 5 000 kr 39,4 %), och "Spara upp till N kr på 6 månader" (`data-erb-spara`) är den
+  största skillnaden mellan ordinarie och planens pris gånger månaderna, båda ur svaret. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
   och tipstimmen är samma rabatt); ett pass på noll kronor är INTE betalt. Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
@@ -228,7 +234,7 @@ Detaljer: `minne/grunden.md`.
   `nextrum-introduktion.js` (`NXIntro`) är introduktionen i studievyn och studiehjälparvyn; bilderna
   står i `NEXTRUM_INTRO` och tas med `bygg-introbilder.js`.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
-  sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F2EDE3`) tar
+  sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F1EDE6` sedan 2026-10-08) tar
   `theme-color` med sig, men mejlens `FARG` ändras för sig. Adminpaletten laddas sist.
 ### Startsidan efter hero
 De sex menysidorna (2026-10-06) laddar start och sist `nextrum-sidor.css` och använder startsidans
@@ -236,17 +242,29 @@ delar som de är; deras text följer inte med formen, och `.faq-item` är orörd
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
-Under heron står NexLäx (2026-10-07, `#nexlax`, avsnitt 13, `nexlax()`): en telefon som visar sig själv
-i fyra skärmar och en stig som följer med, på papperet; en illustration (`role="img"`), inget att svara
-i, högst tre varv och pausad utanför bild; varje skärm står lika länge. Under den står **Just nu** (2026-10-08,
-`#just-nu`, avsnitt 16): Standard mot "Andra aktörer" 5 000 kr för 8 timmar (`data-erb-jamfor-ore`). Vårt
-pris står aldrig i HTML, procenten räknas ur priset och avrundas nedåt till fem, och sektionen syns bara
-när planen har 8 timmar och är minst 5 % billigare. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
+**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ditt barn, Just nu, Vår idé, studievyn, NexLäx,
+Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
+som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ditt barn** (`#sa-hjalper-vi`, avsnitt 17): fem blad,
+läxhjälpen, expertisen, erfarenheten, betygsgarantin och NexLäx, var och en med en NexLäx-ämnesfärg i `--f`;
+erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är ett
+blad där med `id="betygsgaranti"` kvar, den gamla textens villkorslänk och "Villkor gäller", och de fyra stegen
+som ett litet flöde (`.nx-gar-liten`, `data-gar-flode="tur"`) som tänds i tur när det syns; det stora flödet
+(`.nx-gar`, `garantiflöde()`) står bara på prissidan, och det släckta läget hänger på `.i-gang`, aldrig bara på
+`html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
+paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till" (`data-erb-spara`), och jämförelsen
+Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
+pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
+8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. NexLäx (`#nexlax`, avsnitt
+13, `nexlax()`): en telefon som visar sig själv i fyra skärmar och en stig som följer med, på papperet; en
+illustration (`role="img"`), inget att svara i, högst tre varv och pausad utanför bild; varje skärm står lika
+länge. **Ämnesfärgerna är startsidans röda tråd** (2026-10-08): bladen, gradienten i "ditt barn?" och sloganen,
+och stegens siffror i `#hur` (`var(--f,var(--acc))`); i vyerna står de bara i NexLäx. **`#bli` står på mörka
+lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`), och Nästa steg
+efter den börjar i samma svarta. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
-(`data-bild`), och alt-texten står på steget (`data-alt`). Betygsgarantin (2026-10-07) är ingen mörk yta: den står på papperet som ett flöde (`.nx-gar`,
-`garantiflöde()`), också på prissidan, och dess släckta läge hänger på `.i-gang`, aldrig bara på
-`html.nx-sr`. Manifestets blad står bredvid varandra ner till 340 px, och studiehjälparna i en rad
+(`data-bild`), och alt-texten står på steget (`data-alt`). Manifestets blad står bredvid varandra ner till
+340 px, och "Allt på ett ställe" blir aldrig längre än "Rätt match" (2026-10-08). Studiehjälparna står i en rad
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
 Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på telefon och har ingen fokuseffekt
 (2026-10-08: `hållpunkter()` är borta, inget kort tonar ned grannarna), och `.sid-kort` är en lista under 861 px.
@@ -611,8 +629,21 @@ Detaljer: `minne/grunden.md`.
   per timme än Standard (Leos val). Juristen har inte läst "1 timme på köpet" och "ni sparar" mot
   ordinarie pris, och villkoren säger "ett pass där en timme är på köpet" om startrabatten; ett
   förtydligande kräver en ny version, tidigast 2026-10-08.
-- **Just nu-jämförelsen** (2026-10-08): "upp till 45 % lägre pris än jämförbara paket hos flera större
-  aktörer" och "Andra aktörer 5 000 kr" bygger på Leos underlag (Studybuddy, 5 000 kr för samma paket),
+- **Timpriset 399 och paketen 379** (2026-10-08, Leo: "Läxhjälpen ska kosta 399kr standard obundet. Sen på
+  våra paket blir man bunden i 1 månad och de kostar 379kr") är INTE i drift förrän
+  `timpris_399_paketen_379` (20261008100000) körts efter merge, och den ska köras direkt: från merge säger
+  sajten 399 (`nextrum-config.js`) medan kassan tar 379 och Standard döljs. Migrationen ändrar bara
+  `tjanster` (läxhjälpen 39900, triggern speglar `prissattning`, och dess förval), och Standard till 5 % utan
+  timme på köpet; inget köp pekar på `plan_standard`, och frysta pris på pass och kort rörs inte. Lokalt
+  1505 av 1505 i `rls-test.sql` med migrationen. Ingen funktion behöver driftsättas för priset; `drift`
+  (`_delad/nextrum-fakta.ts`, agentens siffror) ska driftsättas från main efter merge. Ingen familj hade bokat
+  när priset ändrades (Leo 2026-10-08), så ingen behöver få veta. Kvar:
+  profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5). Leos "bunden i 1 månad" blev "en månad i taget"
+  på sajten, för villkoren säger ingen bindningstid och att den som slutar med en plan får tillbaka det som
+  är kvar; en riktig bindning kräver en ny version av villkoren (alla får frågan igen) och juristen.
+- **Just nu-jämförelsen** (2026-10-08): "upp till 40 % lägre pris än jämförbara paket hos flera större
+  aktörer" (talet räknas och avrundas till närmaste fem; exakt 39,4 %, Leos val) och "Andra aktörer 5 000 kr+" (plustecknet sedan samma dag, Leo) bygger på Leos
+  underlag (Studybuddy, 5 000 kr för samma paket),
   som inte står i repot. "Flera" kräver underlag från minst två aktörer till; Leo valde att behålla ordet.
   Underlaget (skärmbilder med adress och datum) ska sparas och göras om när ett pris ändras, för
   bevisbördan är vår (18 och 10 §§ marknadsföringslagen). Juristen har inte läst texten.

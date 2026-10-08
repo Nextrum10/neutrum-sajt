@@ -14,17 +14,22 @@ Deno.test('erbjudandekoden: bara katalogens form släpps in', () => {
 
 Deno.test('kassaraden säger timmar, rabatt och hur länge det gäller', () => {
   const basic = { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5,
-    giltig_manader: 1, timpris_ore: 37900, pris_ore: 144000, timmar_pa_kopet: 0 };
+    giltig_manader: 1, timpris_ore: 39900, pris_ore: 151600, timmar_pa_kopet: 0 };
   assertEquals(kassarad(basic).name, 'Basic');
   assertEquals(kassarad(basic).description, '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet.');
   assertEquals(kassarad({ ...basic, namn: 'Klippkort 100 timmar', timmar: 100, rabatt_procent: 5, giltig_manader: 18 })
     .description, '100 timmar läxhjälp, 5 % rabatt. Gäller i 18 månader från köpet.');
+  // Standard sedan 2026-10-08: 5 % som de andra, ingen timme på köpet.
+  assertEquals(kassarad({ ...basic, kod: 'plan_standard', namn: 'Standard', timmar: 8, pris_ore: 303200 }).description,
+    '8 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet.');
   // Före planerna (2026-10-07) fanns ingen kolumn: raden är densamma som förut.
   const utan = { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5,
     giltig_manader: 1, timpris_ore: 37900, pris_ore: 144000 };
   assertEquals(kassarad(utan).description, '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet.');
 });
 
+// Standard hade en timme på köpet 2026-10-07–08. Katalogen har ingen i dag,
+// men kassan ska fortfarande säga det rätt om en plan får en igen.
 Deno.test('kassaraden säger timmen på köpet och aldrig 0 % rabatt (planerna, 2026-10-07)', () => {
   const standard = { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, rabatt_procent: 0,
     giltig_manader: 1, timpris_ore: 37900, pris_ore: 265300, timmar_pa_kopet: 1 };

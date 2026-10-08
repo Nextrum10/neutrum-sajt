@@ -276,7 +276,8 @@ i cinema och formen i `nextrum-start.css` avsnitt 14.
 (som är kvar i #bli och på Bli studiehjälpare, och sköts av
 `mörkaYtor()`). Markupen är `section.nx-sek-s.nx-gar >
 .nx-gar-in` med `.nx-gar-head`, `ol.nx-gar-flode[data-gar-flode]` (li >
-`span.nx-gar-nr` + `div.nx-gar-steg`) och `.nx-gar-cta`, på startsidan och
+`span.nx-gar-nr` + `div.nx-gar-steg`) och `.nx-gar-cta`, på startsidan (till
+2026-10-08, då sektionen bakades in i Hur hjälper vi ditt barn) och
 prissidan (där i `.wrap`, för att linjera med priskorten). CSS i
 nextrum-start.css avsnitt 15, JS i `garantiflöde()`. Skriptet sätter `.pa`
 (tänt) och `.fylld` (sträckan nedåt fylld; på sista steget svansen när alla
@@ -335,6 +336,8 @@ Playwright och tappar pekskärmsemuleringen; ta bilden med
   `data-erb-vantar` i `initErbjudanden()`). Procenten avrundas nedåt till
   fem, och sektionen döljs om planen inte har 8 timmar eller inte är minst
   5 % billigare, så att påståendet inte blir osant när ett pris ändras.
+  Sedan 2026-10-08 står Just nu under Hur hjälper vi ditt barn, procenten
+  avrundas till hel procent, och bara jämförelsen döljs (se nedan).
 - Så fungerar betalningen är ett flöde med pilar (`ol.pr-flode
   [data-betalflode]`, `betalflöde()`, CSS i nextrum-sidor.css): vågrätt
   på dator, där stegen och pilarna tänds i tur (`.ar-igang`), och lodrätt
@@ -342,6 +345,107 @@ Playwright och tappar pekskärmsemuleringen; ta bilden med
   mitten (`.ar-nadd`). Betalnings- och fakturameningen står en gång var i
   flödet och en gång i FAQ:n. `.nx-holdpunkter` är kvar på Vår idé och För
   elever & föräldrar.
+
+### Startsidan med en röd tråd (2026-10-08)
+
+Leo, kortfattat: "flytta ner nexläx, första sidan hur hjälper vi ditt barn.
+Sen efter de erbjudande som vi gör om som jag förklara. Sen vår ide, sen
+under de flytta upp illustration av studievyn. Sen illusion av nexläx
+sektionen. Sen intresseanmälan till första passet. Betygsgarantin ska inte
+ha en egen sektion, den ska bakas in i första sektionen [...] Omdömen flytta
+upp de över för dig som vill jobba." Och: "Hela sidan ska enkelt sagt ha en
+röd tråd. Implementerar några färger från nexläx sektionen till resten av
+sidan där färgerna passar in."
+
+**Ordningen**: hero, Hur hjälper vi ditt barn (`#sa-hjalper-vi`), Just nu
+(`#just-nu`), Vår idé (`#om`), studievyn, NexLäx (`#nexlax`), Från
+intresseanmälan till första passet (`#hur`), studiehjälparna, Trygg hjälp
+(`#plattformen`), bildväggen, omdömena (`#rost`, brevet), För dig som vill
+jobba (`#bli`) och Nästa steg. Sektionerna flyttades som hela block mellan
+kommentarsbanderollerna, likadant på /en/; numren i banderollerna är gamla.
+Hero är orörd utom priset (399 kr, `data-stat` ur `nextrum-config.js`).
+Studievyns exempelpass står också på 399 (`data-sd-pris` skrivs ur `CFG`).
+
+**Hur hjälper vi ditt barn** ("genom våran läxhjälp, exeperitsi,
+årserfarnhet inom läxhjälp, betygsgarantin och nexläx"): fem blad i ett
+rutnät (avsnitt 17 i nextrum-start.css), tre i första raden och garantin
+bred bredvid NexLäx på dator, två och två på platta (`grid-auto-flow:dense`,
+garantin över hela raden), en spalt med figuren till vänster på telefon.
+Varje blad har en ämnesfärg ur NexLäx i `--f` (läxhjälpen matematikens blå,
+expertisen engelskans lila, erfarenheten NO:s gröna, NexLäx moderna språkens
+rosa; garantin leran). **Erfarenheten är studiehjälparnas**, aldrig bolagets:
+Nextrum startade hösten 2026, och sidan säger inga år (CLAUDE.md, avsnitt 8).
+Alla påståenden fanns redan på sajten (intervjuade och utbildade, nyligen
+läst samma kurser, matchning efter ämne, nivå, behov och personlighet).
+- **Betygsgarantin** har ingen egen sektion längre. Bladet bär
+  `id="betygsgaranti"` (länken i Nästa steg landar där, `scroll-margin-top`),
+  den gamla sektionens text, länken till villkoren och "Villkor gäller ..."
+  ordagrant, och de fyra stegen (01 Välj ämnena ... 04 Vi står kvar) som ett
+  litet flöde: `ol.nx-gar-flode.nx-gar-liten[data-gar-flode="tur"]`.
+  `garantiflöde()` sätter `.i-gang`, och när flödet syns `.pa` och `.fylld`
+  på alla fyra på en gång; fördröjningen per steg (`--d`) står i CSS.
+  Fällor: avsnitt 15 lägger `.nx-gar-flode` i ytan `flode`, som inte finns i
+  bladets rutnät (då hamnar flödet i en implicit cell och texten i en
+  spalt på 100 px), så det lilla flödet har `grid-area:auto`; och regeln som
+  fördröjer två tända steg i rad väger (0,6,3), så de små stegens regler bär
+  `.nx-gar-flode.nx-gar-liten` och `:nth-child(n)`.
+- NexLäx-bladet har en liten väg med fyra noder i ämnesfärgerna (SVG,
+  `aria-hidden`), som poppar fram när bladet stigit in.
+
+**Just nu, omgjort** (Leo: "Läxhjälpen ska kosta 399kr standard obundet. Sen
+på våra paket blir man bunden i 1 månad och de kostar 379kr [...] spara upp
+till 1200kr vid 6 månader", "Pris ska ändras andra aktörer 5000kr +", "inte
+från utan för", "en lite rolig slogan", och tejpen "som tejpas fast på
+erbjudandet, så förstora det"). Vänster: "Just nu", sloganen ("Läxorna får
+vara kluriga. Priset behöver inte vara det.", andra meningen i NexLäx
+gradient) och två prisrutor: "Läxhjälp utan bindning för 399 kr i timmen"
+(`data-stat="pris-inline"`, "Det är priset, inte ett från-pris") och "Paket,
+en månad i taget, för 379 kr i timmen" (`data-erb-rabatterat`, Standards
+timpris; alla tre planerna kostar lika i timmen, och gör de det inte längre
+ska raden skrivas om) med lappen "Spara upp till 1 440 kr på 6 månader"
+(`data-erb-spara="6"`; beloppet räknas ur databasen, inte Leos 1 200).
+Höger: jämförelsen "Andra aktörer 5 000 kr+" mot "Nextrum Standard" med
+staplarna, och tejpen `.nx-tejp.nx-tejp-pa` över rutans överkant, större än
+på prissidan och tillåten att sticka ut 14 px på var sida. Figuren har
+eget `data-erb` med `data-erb-jamfor-ore`, så om jämförelsen inte håller
+döljs bara den (och tejpen), och erbjudandet står kvar; sektionen döljs
+bara om Standard saknas. Inget av våra priser står i HTML.
+
+**Manifestet**: "Allt på ett ställe" trycker på plattformen ("Allt finns i
+en och samma plattform: studieplan, bokning, rapporter, NexLäx och
+betalning ...", Leo: "överstig ej så att texten blir längre än den
+bredvid"): 141 tecken mot Rätt matchs 155 (144 mot 167 på engelska).
+Bindningstiden står inte där längre. Leos "bunden i 1 månad" blev "en
+månad i taget" överallt, för villkoren säger ingen bindningstid (2026-10-08).
+
+**För dig som vill jobba** ("ändra färg till den svarta som är på
+mörksidan. Och på mörksids ska för dig som vill jobba ha samma färg och inte
+en gråare", "lite mer orange runt olika kolumner"): `#bli` står på
+`--bli-bg` (#1A1813, mörka lägets papper) i båda lägena, med ett sken av
+lera i två hörn och en linje av lera i överkanten (i mörkt läge står ytan i
+ett med sidan, och det är linjen och kolumnerna som avgränsar). Fotot har en
+ram av lera (`outline`), punkterna och ansökans fyra steg kanter i
+`--bli-kant`, och stegens siffror står i ljus lera. Nästa steg följer direkt
+efter sedan omdömena flyttade upp; `#bli + .nx-mork` börjar i samma svarta
+och mörknar mot `--nt-2`, så att ingen skarv syns mot footern. Bara `#bli`:
+Bli studiehjälpare-sidan har samma lista och står kvar.
+
+**Den röda tråden**: ämnesfärgerna står på bladen i Hur hjälper vi ditt
+barn, i rubrikens "ditt barn?" och sloganens andra mening (samma gradient som
+NexLäx rubrik), och på stegens siffror, linjen och fotots märke i `#hur`
+(`--f` per `:nth-child`, reglerna läser `var(--f,var(--acc))`, så Så fungerar
+Nextrum står kvar i leran). Märkets siffra står i `--kort` på färgen, för
+krämen på NO:s gröna var 4,4:1. I vyerna står ämnesfärgerna fortfarande bara
+i NexLäx.
+
+**Papperet** ("en liten mindre beige nyans på bakgrunden [...] väldigt lite"):
+`--pap` #F2EDE3 → #F1EDE6, 30 % lägre kroma i OKLCH och samma luminans, så
+varje kontrast mot bläcket är oförändrad. `--pap-2`, `--pap-3`, `--bricka`,
+`--ln` och `--ln-2` följde med lika mycket (papper mot lugn yta 1,11:1 som
+förut), också i formulärens ljusa öar i mörkt läge. `theme-color` i alla
+sidor och i `bygg-omradessidor.py` följer; mejlens `FARG` och
+delningsbildernas textfärg i `bygg-delningsbilder.js` (#F2EDE3 som text på
+foto) är orörda.
 
 ### Två fällor när en palett byts
 

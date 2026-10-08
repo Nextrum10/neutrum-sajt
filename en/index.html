@@ -16,7 +16,7 @@
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/">
 <link rel="alternate" hreflang="x-default" href="https://nextrum.se/">
-<meta name="theme-color" content="#F2EDE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F1EDE6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
 <meta name="color-scheme" content="light dark">
 
@@ -51,8 +51,8 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=aa262f6a">
-<link rel="stylesheet" href="../nextrum-start.css?v=3e5a2e30">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=c0133623">
+<link rel="stylesheet" href="../nextrum-start.css?v=962e6e4e">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -202,6 +202,16 @@
 
 <main id="innehall">
 
+<!-- ORDNINGEN EFTER HERO (2026-10-08). Leo: "flytta ner nexläx, första
+     sidan hur hjälper vi ditt barn. Sen efter de erbjudande som vi gör om
+     som jag förklara. Sen vår ide, sen under de flytta upp illustration av
+     studievyn. Sen illusion av nexläx sektionen. Sen intresseanmälan till
+     första passet." och "Omdömen flytta upp de över för dig som vill
+     jobba". Alltså: hero, Hur hjälper vi ditt barn (med betygsgarantin
+     inbakad, #betygsgaranti), Just nu, Vår idé, studievyn, NexLäx, Från
+     intresseanmälan till första passet, studiehjälparna, Trygg hjälp,
+     bildväggen, omdömena (brevet), För dig som vill jobba och Nästa steg.
+     Numren i rubrikerna nedan är gamla och följer inte ordningen. -->
 <!-- ==========================================================
      1 — HERO
      En tyst, loopande video i full bredd med budskapet ovanpå.
@@ -247,7 +257,7 @@
     <!-- Det en förälder kom för, direkt under knapparna (2026-10-06).
          Priset skrivs av initPris() ur nextrum-config.js. -->
     <ul class="nx-hero-trust nx-hero-fakta">
-      <li><span data-stat="pris-inline">379 kr</span> an hour</li>
+      <li><span data-stat="pris-inline">399 kr</span> an hour</li>
       <li>The first hour on us</li>
       <li>Reply within 24 hours</li>
       <li>No minimum term</li>
@@ -256,7 +266,461 @@
 </section>
 
 <!-- ==========================================================
+     1c — HUR HJÄLPER VI DITT BARN (2026-10-08)
+     Leo: "Under heron ska vi ha en ny sektion, hur hjälper vi ditt
+     barn, genom våran läxhjälp, expertis, årserfarenhet inom
+     läxhjälp, betygsgarantin och nexläx. Betygets garantin ska vara
+     inbakad." Fem delar, och betygsgarantin är en av dem: den har
+     ingen egen sektion längre. Id:t #betygsgaranti sitter på dess del,
+     så att länkarna hit (Nästa steg längst ner) landar på garantin.
+
+     Erfarenheten är studiehjälparnas, inte bolagets: Nextrum startade
+     hösten 2026, och sidan säger inga antal år (CLAUDE.md, avsnitt 8).
+     Varje påstående här står redan på sajten: intervjuade och
+     utbildade, nyligen läst samma kurser, matchning efter ämne, nivå,
+     behov och personlighet, NexLäx rättar direkt.
+
+     Garantins del följer reglerna i CLAUDE.md, avsnitt 1: inga villkor
+     och inga tal, aldrig ett löfte om ett betyg, länken till villkoren
+     och "Villkor gäller" intill texten, aldrig bakom en utfällning.
+     Formuleringarna är den gamla sektionens. Flödet är samma fyra steg
+     som förut (Leo skickade en bild av just det), litet: .nx-gar-liten
+     i nextrum-start.css (avsnitt 17), och data-gar-flode="tur" gör att
+     stegen tänds ett i taget när delen kommer in i bild i stället för
+     att följa scrollen (garantiflöde() i nextrum-start.js). Utan skript
+     står allt tänt.
+
+     Varje del har en av NexLäx ämnesfärger i --f (Leo: "implementera
+     några färger från nexläx sektionen till resten av sidan"); garantin
+     har leran, knapparnas färg. Formen: nextrum-start.css avsnitt 17.
+     Samma markup som index.html, tagg för tagg.
+     ========================================================== -->
+<section class="nx-sek nx-hj" id="sa-hjalper-vi" aria-labelledby="hj-t">
+  <div class="nx-wrap-bred">
+    <div class="nx-head split" data-stig>
+      <div>
+        <span class="nx-et acc">How we help</span>
+        <h2 class="nx-d2 hj-rubrik" id="hj-t">How do we help<br><em>your child?</em></h2>
+      </div>
+      <div class="nx-head-aside">
+        <p class="nx-lede">With the right person, a plan, practice between sessions and a guarantee we stand behind. All on one and the same platform.</p>
+      </div>
+    </div>
+
+    <ul class="hj-grid">
+      <li class="hj-del" data-stig style="--f:var(--amne-ma)">
+        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8.5" r="3"/><circle cx="16.6" cy="9.6" r="2.4"/><path d="M2.8 19.2c0-2.9 2.3-5.1 5.2-5.1s5.2 2.2 5.2 5.1"/><path d="M14 14.7a4.6 4.6 0 0 1 2.6-.8c2.5 0 4.6 1.9 4.6 4.5"/></svg></span>
+        <span class="hj-et">Tutoring</span>
+        <h3>One to one, at home or online</h3>
+        <p>Your child gets their own tutor, a study plan and sessions at home, at the library or online. After every session you get a report.</p>
+      </li>
+      <li class="hj-del" data-stig data-fördröj="1" style="--f:var(--amne-en)">
+        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4.5 2.5 9 12 13.5 21.5 9z"/><path d="M6.5 11v4.3c1.4 1.4 3.3 2.2 5.5 2.2s4.1-.8 5.5-2.2V11"/><path d="M21.5 9v5"/></svg></span>
+        <span class="hj-et">Expertise</span>
+        <h3>Selected and interviewed</h3>
+        <p>Our tutors recently took the same courses themselves. We interview and train them, and match on subject, level, needs and personality.</p>
+      </li>
+      <li class="hj-del" data-stig data-fördröj="2" style="--f:var(--amne-no)">
+        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6.6c-1.8-1.3-4.3-2-7.5-2v13c3.2 0 5.7.7 7.5 2 1.8-1.3 4.3-2 7.5-2v-13c-3.2 0-5.7.7-7.5 2z"/><path d="M12 6.6v13"/></svg></span>
+        <span class="hj-et">Experience</span>
+        <h3>From the same school desk</h3>
+        <p>They know what it is like to study for a test, get stuck on a task and understand something for the first time, because they did it themselves not long ago.</p>
+      </li>
+      <li class="hj-del hj-gar" id="betygsgaranti" data-stig style="--f:var(--acc)">
+        <div class="hj-gar-text">
+          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span>
+          <span class="hj-et">Grade guarantee</span>
+          <h3>If the grade doesn’t go up, <em>we keep going.</em></h3>
+          <p>We believe in the right match and a school year of real work, so much that we stand behind it. If the student does their part and the grade still doesn’t go up, we keep helping without you paying anything.</p>
+          <a class="nx-lank" href="/en/anvandarvillkor#betygsgaranti">Read the guarantee terms
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+          <p class="nx-fineprint">Terms apply. Help with other subjects and homework in general is included as usual and does not affect the guarantee.</p>
+        </div>
+        <ol class="nx-gar-flode nx-gar-liten" data-gar-flode="tur">
+          <li><span class="nx-gar-nr" aria-hidden="true">01</span><div class="nx-gar-steg"><b>Choose the subjects</b><p>You choose the subjects that need a lift, and we build the plan towards this year’s grade.</p></div></li>
+          <li><span class="nx-gar-nr" aria-hidden="true">02</span><div class="nx-gar-steg"><b>Keep it up all year</b><p>Regular sessions, tasks in between and a tutor who keeps it all together.</p></div></li>
+          <li><span class="nx-gar-nr" aria-hidden="true">03</span><div class="nx-gar-steg"><b>See it all in your view</b><p>Every session, report and task is visible to you, and the guarantee is judged on what you can see for yourselves.</p></div></li>
+          <li><span class="nx-gar-nr" aria-hidden="true">04</span><div class="nx-gar-steg"><b>We stay with you</b><p>If the grade doesn’t go up even though you did your part, you get extra homework help from us free of charge.</p></div></li>
+        </ol>
+      </li>
+      <li class="hj-del hj-nex" data-stig data-fördröj="1" style="--f:var(--amne-ms)">
+        <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span>
+        <span class="hj-et">NexLäx</span>
+        <h3>Practice between sessions</h3>
+        <p>Nextrum’s own digital practice: short levels where every answer is marked straight away, with XP and badges. The tutor sees what has stuck.</p>
+        <svg class="hj-nex-bild" viewBox="0 0 240 72" aria-hidden="true"><path d="M16 54C56 54 58 22 98 22s46 32 84 32 42-28 42-28"/><circle cx="16" cy="54" r="10" style="--c:var(--amne-ma)"/><circle cx="98" cy="22" r="10" style="--c:var(--amne-no)"/><circle cx="182" cy="54" r="10" style="--c:var(--amne-en)"/><circle cx="224" cy="26" r="10" style="--c:var(--amne-ms)"/></svg>
+        <a class="nx-lank" href="#nexlax">How NexLäx works
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ==========================================================
+     13b — JUST NU (2026-10-07, omgjort 2026-10-08)
+     Leo 2026-10-08: "Läxhjälpen ska kosta 399kr standard obundet. Sen
+     på våra paket blir man bunden i 1 månad och de kostar 379kr", "spara
+     upp till 1200kr vid 6 månader", "Andra aktörer 5000kr +", och
+     jämförelsen "ska vara typ som en tejp bit som tejpas fast på
+     erbjudandet, så förstora det". Och: "inte från utan för", och "en
+     lite rolig slogan". Direkt under Hur hjälper vi ditt barn.
+
+     Inget av våra priser står här. Timpriset utan bindning skriver
+     initPris() ur nextrum-config.js (data-stat), och resten skriver
+     NX.initErbjudanden() ur erbjudanden_pris: paketets timpris och
+     Standards pris ur planen, procenten på tejpen, och "spara upp till"
+     ur den största skillnaden mellan ordinarie pris och en plans pris,
+     gånger sex (data-erb-spara; i dag 1 440 kr, inte Leos 1 200, för
+     beloppet räknas ur databasen). Paketets timpris är Standards: alla
+     tre planerna kostar lika mycket i timmen sedan 2026-10-08, och gör
+     de det inte längre ska raden skrivas om. Sektionen är dold (hidden)
+     tills svaret kommit, och finns inte Standard står den dold.
+
+     Jämförelsen (figuren med tejpen) har ett eget data-erb med de andra
+     aktörernas pris (Leos uppgift, 5 000 kr för åtta timmar). Procenten
+     räknas ur det och vårt pris och avrundas nedåt till hel procent, så
+     att "upp till" aldrig blir osant om priset ändras. Gäller planen
+     andra timmar än jämförelsen, eller är den inte minst fem procent
+     billigare, döljs figuren och tejpen med den, och resten av
+     erbjudandet står kvar. Underlaget för jämförelsen står i CLAUDE.md,
+     avsnitt 11. Sloganen lovar inget som går att mäta. Formen:
+     nextrum-start.css avsnitt 16. Samma markup som index.html.
+     ========================================================== -->
+<section class="nx-jn" id="just-nu" aria-labelledby="just-nu-t" data-erb="plan_standard" data-erb-vantar hidden>
+  <div class="nx-wrap-bred">
+    <div class="jn-kort" data-stig>
+      <div class="jn-text">
+        <span class="nx-et acc">Offer</span>
+        <h2 class="jn-rubrik" id="just-nu-t" data-avslöj>Right <em>now</em></h2>
+        <p class="jn-slogan">Homework can be tricky. <em>The price doesn’t have to be.</em></p>
+        <dl class="jn-priser">
+          <div class="jn-pris">
+            <dt>Tutoring with no commitment</dt>
+            <dd class="jn-pris-tal"><span class="jn-for">for</span> <b class="tnum" data-stat="pris-inline"></b> <span>an hour</span></dd>
+            <dd class="jn-pris-not">That is the price, not a starting price.</dd>
+          </div>
+          <div class="jn-pris jn-paket">
+            <dt>Plans, one month at a time</dt>
+            <dd class="jn-pris-tal"><span class="jn-for">for</span> <b class="tnum" data-erb-rabatterat></b> <span>an hour</span></dd>
+            <dd class="jn-pris-not jn-spara" data-erb-spara="6" hidden>Save up to <b class="tnum" data-erb-spara-kr></b> over 6 months</dd>
+          </div>
+        </dl>
+      </div>
+      <figure class="jn-jamfor" data-erb="plan_standard" data-erb-jamfor-ore="500000" data-erb-jamfor-timmar="8">
+        <span class="nx-tejp nx-tejp-pa jn-tejp">
+          <span class="nx-tejp-stor">Up to <span data-erb-lagre></span>% lower price</span>
+          <span class="nx-tejp-liten">than comparable packages at several larger providers on the market</span>
+        </span>
+        <div class="jn-rad jn-andra">
+          <span class="jn-vem">Other providers</span>
+          <b class="jn-belopp">5 000 kr+</b>
+          <span class="jn-stapel" aria-hidden="true"><i></i></span>
+        </div>
+        <div class="jn-rad jn-vi">
+          <span class="jn-vem">Nextrum <span class="jn-plannamn">Standard</span></span>
+          <b class="jn-belopp" data-erb-pris></b>
+          <span class="jn-stapel" aria-hidden="true"><i data-erb-andel></i></span>
+        </div>
+        <figcaption class="jn-not">The comparison applies to <span data-erb-antal>8</span> hours of tutoring per month.</figcaption>
+      </figure>
+      <div class="nx-cta-rad jn-cta">
+        <span class="nx-magnet">
+          <a class="btn btn-primary btn-lg" href="/en/priser#erbjudanden">
+            See the plans
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </span>
+        <a class="nx-lank" href="/en/intresseanmalan">Get started
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     2 — VÅR IDÉ
+     Manifestet, och läxhjälpen sedd som ett första jobb.
+     ========================================================== -->
+<section class="nx-manifest" id="om">
+  <div class="nx-manifest-inner">
+    <span class="nx-et" data-stig>Our idea</span>
+    <h2 data-ordfyll style="margin-top:clamp(24px,3vw,38px)">The right person can make<br><em>all the difference.</em></h2>
+
+    <div class="nx-manifest-fot">
+      <div class="nx-bubbla" data-stig data-fördröj="1">
+        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
+        <h3>The right match</h3>
+        <p>We match every student with one of our tutors, based on their needs and the
+          subjects where support is wanted, for better understanding, more motivation and confidence.</p>
+      </div>
+      <div class="nx-bubbla" data-stig data-fördröj="2">
+        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
+        <h3>All in one place</h3>
+        <p>Everything is on one and the same platform: study plan, booking, reports, NexLäx and
+          payment. Sessions online or in person, no registration fee.</p>
+      </div>
+    </div>
+
+    <div class="nx-cta-rad" data-stig data-fördröj="3">
+      <span class="nx-magnet">
+        <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
+          Get tutoring
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </span>
+      <a class="nx-lank" href="#hur">See how it works
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+
+</section>
+
+
+
+<!-- ==========================================================
+     6 — STUDIEVYN
+     Flyttad upp 2026-10-08, direkt efter Vår idé.
+     En illustration av föräldravyn som den ser ut i dag: menyn,
+     bokningen som ett förslag, passlistan, betalningen, läxorna,
+     femstegsskalan och chatten. Den visar sig själv — en rundtur
+     klickar sig igenom den när den syns — men besökaren kan inte
+     klicka i den (Leo 2026-09-25: "du ska inte kunna interagera med
+     den"). Fönstret är inert, och för skärmläsare är det en bild
+     med en beskrivning. Ingenting här pratar med Supabase — allt är
+     exempel och märks upp så.
+     Beteendet står i nextrum-start.js (studievy), formen i
+     nextrum-start.css avsnitt 8.
+
+     Markupen är byggd ur en och samma mall för båda språken, så att
+     taggsekvensen är identisk. Ändras den här ska /en/ ändras
+     likadant — jamfor-sprak.py rapporterar bara FÖRSTA skillnaden i
+     struktur, och den är språkväljaren längst upp.
+     ========================================================== -->
+<section class="nx-wrap-bred nx-sek" aria-labelledby="studievy-t">
+  <div class="nx-head split" data-stig>
+    <div>
+      <span class="nx-et acc">The student view</span>
+      <h2 class="nx-d2" id="studievy-t" style="margin-top:20px">You see what is happening.</h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="nx-lede">Through Nextrum’s student view, student and parent can follow progress, see the study plan,
+        book sessions and read the feedback — all in one place.</p>
+    </div>
+  </div>
+
+  <div class="nx-sd" data-studievy role="img" aria-label="Illustration of Nextrum’s student view: a family accepts a time, suggests a session, replies to the tutor, pays and clears a level in NexLäx. The content is an example.">
+    <div class="sd-rum">
+      <div class="sd-fonster" inert>
+        <div class="sd-bar" aria-hidden="true"><i></i><i></i><i></i><span>nextrum.se/foralder</span></div>
+        <div class="sd-app">
+        <nav class="sd-sido" aria-label="Student view menu, example">
+          <button type="button" data-sd-visa="oversikt" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Overview</button>
+          <span class="sd-sido-rubrik" aria-hidden="true">Studies</span>
+          <button type="button" data-sd-visa="boka" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M12 13v4M10 15h4"/></svg>Book a session</button>
+          <button type="button" data-sd-visa="lektioner" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>My sessions</button>
+          <button type="button" data-sd-visa="nexlax" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg>NexLäx</button>
+          <span class="sd-sido-rubrik" aria-hidden="true">Contact</span>
+          <button type="button" data-sd-visa="meddelanden" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Messages<b class="sd-bricka" data-sd-byt="last">2</b></button>
+          <span class="sd-sido-rubrik" aria-hidden="true">Account</span>
+          <button type="button" data-sd-visa="betalning" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg>Payment<b class="sd-bricka" data-sd-byt="betalt">1</b></button>
+        </nav>
+        <div class="sd-yta">
+
+          <!-- Översikt: hälsningen, det som väntar på familjen, siffrorna -->
+          <div class="sd-sek pa" data-sd-sek="oversikt">
+            <div class="sd-stack">
+              <div class="sd-hej sd-in" style="--i:0">
+                <div><small>Student view</small><b>Good evening, Alma.</b><p>The next session is tomorrow at four.</p></div>
+                <div class="sd-hej-kort"><span><b>Tue 6 Oct, 16:00</b>Maths with Elsa</span><span><b>Messages</b>2 unread</span></div>
+              </div>
+              <div class="sd-box sd-in" style="--i:1">
+                <h5>Times to reply to <em data-sd-byt="godkant"><span class="fore">1</span><span class="efter">0</span></em></h5>
+                <div class="sd-svara" data-sd-byt="godkant"><div>
+                  <div class="sd-svar-rad">
+                    <p><b>Elsa suggests Thu 8 Oct, 17:00–18:00.</b> Swedish, in person.</p>
+                    <div class="sd-svar-knappar"><button type="button" class="sd-knapp" data-sd-godkann>Accept</button><button type="button" class="sd-knapp spok" data-sd-visa="boka">Suggest another</button></div>
+                  </div>
+                </div></div>
+                <p class="sd-klart-rad" data-sd-byt="godkant"><span class="sd-bock liten"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Done. The session is under My sessions.</p>
+              </div>
+              <div class="sd-box sd-in" style="--i:2">
+                <h5>In numbers</h5>
+                <div class="sd-tal">
+                  <div><b data-sd-tal="12">12</b><span>Completed sessions</span></div>
+                  <div><b data-sd-tal="15">15<small>h</small></b><span>Study time</span></div>
+                  <div><b data-sd-tal="2">2</b><span>Upcoming sessions</span></div>
+                  <div><b data-sd-tal="9">9</b><span>Tasks done</span></div>
+                  <div><b data-sd-tal="6">6</b><span>Knowledge areas</span></div>
+                </div>
+              </div>
+              <div class="sd-tva">
+                <div class="sd-box sd-in" style="--i:3">
+                  <h5>Sessions over time <em>6 months</em></h5>
+                  <div class="sd-staplar">
+                    <div><i style="--h:0;--n:0"></i><span>Apr</span></div>
+                    <div><i style="--h:17;--n:1"></i><span>May</span></div>
+                    <div><i style="--h:17;--n:2"></i><span>Jun</span></div>
+                    <div><i style="--h:0;--n:3"></i><span>Jul</span></div>
+                    <div><i style="--h:67;--n:4"></i><span>Aug</span></div>
+                    <div><i style="--h:100;--n:5"></i><span>Sep</span></div>
+                  </div>
+                </div>
+                <div class="sd-box sd-in" style="--i:4">
+                  <h5>How the sessions went <em>12 reports</em></h5>
+                  <div class="sd-fordelning"><i class="sd-f-bra" style="--v:7;--n:0"></i><i class="sd-f-mitt" style="--v:4;--n:1"></i><i class="sd-f-folj" style="--v:1;--n:2"></i></div>
+                  <div class="sd-legend">
+                    <span><i class="sd-f-bra"></i>Very good<b>7</b></span>
+                    <span><i class="sd-f-mitt"></i>Good<b>4</b></span>
+                    <span><i class="sd-f-folj"></i>Needs follow-up<b>1</b></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Boka pass: ett FÖRSLAG, som i vyn sedan 2026-09-24 -->
+          <div class="sd-sek" data-sd-sek="boka">
+            <div class="sd-topp sd-in" style="--i:0"><h4>Book a session</h4><p>Tap a day and suggest a time. Your tutor accepts it or suggests another.</p></div>
+            <div class="sd-boka">
+              <div class="sd-box sd-in" style="--i:1">
+                <div class="sd-kal-topp"><b>October</b><span aria-hidden="true">‹ ›</span></div>
+                <div class="sd-kal-v" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+                <div class="sd-kal-dagar">
+                  <span></span><span></span><span></span>
+                  <button type="button" data-sd-dag="1" disabled>1</button><button type="button" data-sd-dag="2" disabled>2</button><button type="button" data-sd-dag="3" disabled>3</button><button type="button" data-sd-dag="4" disabled>4</button><button type="button" class="idag" data-sd-dag="5" aria-pressed="false">5</button><button type="button" class="pass" data-sd-dag="6" aria-pressed="false">6</button><button type="button" data-sd-dag="7" aria-pressed="false">7</button>
+                  <button type="button" class="pass" data-sd-dag="8" aria-pressed="false">8</button><button type="button" data-sd-dag="9" aria-pressed="false">9</button><button type="button" data-sd-dag="10" aria-pressed="false">10</button><button type="button" data-sd-dag="11" aria-pressed="false">11</button><button type="button" data-sd-dag="12" aria-pressed="false">12</button><button type="button" data-sd-dag="13" aria-pressed="false">13</button><button type="button" data-sd-dag="14" aria-pressed="false">14</button>
+                  <button type="button" data-sd-dag="15" aria-pressed="false">15</button><button type="button" data-sd-dag="16" aria-pressed="false">16</button><button type="button" data-sd-dag="17" aria-pressed="false">17</button><button type="button" data-sd-dag="18" aria-pressed="false">18</button><button type="button" data-sd-dag="19" aria-pressed="false">19</button><button type="button" data-sd-dag="20" aria-pressed="false">20</button><button type="button" data-sd-dag="21" aria-pressed="false">21</button>
+                  <button type="button" data-sd-dag="22" aria-pressed="false">22</button><button type="button" data-sd-dag="23" aria-pressed="false">23</button><button type="button" data-sd-dag="24" aria-pressed="false">24</button><button type="button" data-sd-dag="25" aria-pressed="false">25</button><button type="button" data-sd-dag="26" aria-pressed="false">26</button><button type="button" data-sd-dag="27" aria-pressed="false">27</button><button type="button" data-sd-dag="28" aria-pressed="false">28</button>
+                  <button type="button" data-sd-dag="29" aria-pressed="false">29</button><button type="button" data-sd-dag="30" aria-pressed="false">30</button><button type="button" data-sd-dag="31" aria-pressed="false">31</button>
+                </div>
+              </div>
+              <div class="sd-box sd-form sd-in" style="--i:2" data-sd-byt="dag">
+                <h5>Your suggestion</h5>
+                <p class="sd-form-dag"><span class="fore">Pick a day in the calendar</span><span class="efter"><span data-sd-kopia="dag"></span> Oct · <span data-sd-kopia="tid">15:00</span> · <span data-sd-kopia="amne">Maths</span></span></p>
+                <div class="sd-grupp"><span>Subject</span><div class="sd-chips" role="group" aria-label="Subject"><button type="button" data-sd-val="amne" aria-pressed="true">Maths</button><button type="button" data-sd-val="amne" aria-pressed="false">Swedish</button><button type="button" data-sd-val="amne" aria-pressed="false">English</button></div></div>
+                <div class="sd-grupp"><span>Time</span><div class="sd-chips" role="group" aria-label="Time"><button type="button" data-sd-val="tid" aria-pressed="true">15:00</button><button type="button" data-sd-val="tid" aria-pressed="false">16:00</button><button type="button" data-sd-val="tid" aria-pressed="false">17:00</button></div></div>
+                <div class="sd-grupp"><span>Where</span><div class="sd-chips" role="group" aria-label="Where"><button type="button" data-sd-val="var" aria-pressed="true">Online</button><button type="button" data-sd-val="var" aria-pressed="false">In person</button></div></div>
+                <button type="button" class="sd-knapp" data-sd-foresla>Suggest the time</button>
+                <div class="sd-skickat" data-sd-byt="foreslaget"><span class="sd-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span><b>Your suggestion is sent</b><p>Elsa replies under Suggested times. Until then the session is under My sessions.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mina lektioner: pass, studieplan och rapporter i tre flikar -->
+          <div class="sd-sek" data-sd-sek="lektioner">
+            <div class="sd-topp sd-in" style="--i:0"><h4>My sessions</h4><p>Your sessions, the plan behind them and what happened in each one.</p></div>
+            <div class="sd-flikar sd-in" style="--i:1"><button type="button" data-sd-flik="pass" aria-pressed="true">Sessions</button><button type="button" data-sd-flik="plan" aria-pressed="false">Study plan</button><button type="button" data-sd-flik="rapporter" aria-pressed="false">Reports</button></div>
+            <div class="sd-box sd-in" style="--i:2">
+              <div class="sd-panel pa" data-sd-panel="pass">
+                <div class="sd-rad sd-ny" data-sd-byt="foreslaget"><span class="sd-datum"><b data-sd-kopia="dag">15</b><small>Oct</small></span><span class="sd-rad-text"><b><span data-sd-kopia="amne">Maths</span> · <span data-sd-kopia="tid">15:00</span></b><small>Your suggestion</small></span><span class="sd-lage varm">Awaiting reply</span></div>
+                <div class="sd-rad"><span class="sd-datum"><b>6</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 16:00–17:00</b><small>Online with Elsa</small></span><span class="sd-lage varm" data-sd-byt="betalt"><span class="fore">To pay</span><span class="efter">Paid</span></span></div>
+                <div class="sd-rad"><span class="sd-datum"><b>8</b><small>Oct</small></span><span class="sd-rad-text"><b>Swedish · 17:00–18:00</b><small>In person with Elsa</small></span><span class="sd-lage varm" data-sd-byt="godkant"><span class="fore">Awaiting you</span><span class="efter">Confirmed</span></span></div>
+                <div class="sd-rad"><span class="sd-datum"><b>1</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 16:00–17:00</b><small>The report is ready</small></span><span class="sd-lage gron">Completed</span></div>
+              </div>
+              <div class="sd-panel" data-sd-panel="plan">
+                <p class="sd-mal"><b>Goal:</b> confident with equations before the test in week 44.</p>
+                <div class="sd-plansteg"><span class="gjort"><i></i>Simplifying expressions</span><span class="gjort"><i></i>Equations with one unknown</span><span class="gjort"><i></i>Equations with brackets</span><span><i></i>Word problems as equations</span><span><i></i>Revision before the test</span></div>
+              </div>
+              <div class="sd-panel sd-rapport" data-sd-panel="rapporter">
+                <span class="sd-lage gron">Very good · 1 Oct</span>
+                <p>We revised equations with brackets. It was slow going at first but clicked towards the end, and they solved the last three problems on their own. For next time: problems 12–18 in the book.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- NexLäx (Fas 23.2): serien, XP, banan och vägen. Rundturen
+               trycker Fortsätt och klarar en nivå: allt med data-sd-byt="niva"
+               byter läge, och XP, serien och procenten räknas upp. -->
+          <div class="sd-sek" data-sd-sek="nexlax">
+            <div class="sd-topp sd-in" style="--i:0"><h4>NexLäx</h4><p>The path through the subject, one level at a time. Every answer is marked straight away and gives XP.</p></div>
+            <div class="sd-stack">
+              <div class="sd-nl sd-in" style="--i:1" data-sd-byt="niva">
+                <div class="sd-nl-stat"><span class="sd-nl-pill sd-nl-laga"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2c-3.9 0-6.6-2.6-6.6-6.2 0-3.2 2.1-5.3 3.7-7.1.4 1.9 1.4 3.1 2.6 3.7-.3-3.1 1.1-6 3.7-8.6.3 3.1 2.4 5 3.8 7.1a8 8 0 0 1 1.4 4.7c0 3.6-3 6.4-8.6 6.4z"/></svg><b><span class="fore">6</span><span class="efter">7</span></b>days</span><span class="sd-nl-pill sd-nl-xp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5 5 13.6h6.2l-1.1 7.9 8.4-11.3h-6.3z"/></svg><b><span class="fore">1,240</span><span class="efter">1,510</span></b>XP</span></div>
+                <div class="sd-nl-bana"><b>Maths · Year 8</b><strong><span class="fore">42</span><span class="efter">50</span>%</strong></div>
+                <span class="sd-nl-mat" aria-hidden="true"><i></i></span>
+                <div class="sd-nl-cta">
+                  <small>Recommended by Elsa</small>
+                  <b>Equations with brackets</b>
+                  <span>8 questions · about 4 min</span>
+                  <button type="button" class="sd-knapp" data-sd-niva><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Continue</button>
+                </div>
+                <p class="sd-nl-klar"><span class="sd-bock liten"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Equations is done, +270 XP. Next step: Percentages.</p>
+              </div>
+              <div class="sd-box sd-in" style="--i:2">
+                <h5>Your path <em>Maths</em></h5>
+                <div class="sd-nl-omr klart"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></i><b>Algebra</b><em>Done</em></div>
+                <div class="sd-nl-omr aktuellt" data-sd-byt="niva"><i><span class="fore"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span><span class="efter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></span></i><b>Equations</b><em><span class="fore">In progress</span><span class="efter">Done</span></em></div>
+                <div class="sd-nl-omr nasta" data-sd-byt="niva"><i><span class="fore"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg></span><span class="efter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></i><b>Percentages</b><em><span class="fore">Next</span><span class="efter">In progress</span></em></div>
+                <div class="sd-nl-omr oppen"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></i><b>Geometry</b><em>Open</em></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Meddelanden: chatten med studiehjälparen -->
+          <div class="sd-sek" data-sd-sek="meddelanden">
+            <div class="sd-chatt">
+              <div class="sd-chatt-topp"><picture><source type="image/webp" srcset="/bilder/studiehjalpare-1-200.webp"><img src="/bilder/studiehjalpare-1-200.jpg" width="36" height="36" alt="" loading="lazy" decoding="async"></picture><div><b>Elsa</b><small><i></i>Your tutor</small></div></div>
+              <div class="sd-trad">
+                <p class="sd-bubbla" style="--i:0">Hi! Great work today, the equations went much better.</p>
+                <p class="sd-bubbla" style="--i:1">I have put problems 12–18 in NexLäx. Let me know if anything feels tricky.</p>
+                <p class="sd-bubbla egen" style="--i:2">Thanks! They actually enjoyed it for once.</p>
+                <p class="sd-bubbla" style="--i:3">Great to hear! Then we carry on on Tuesday.</p>
+                <p class="sd-bubbla egen sd-sen" data-sd-byt="svarat"></p>
+                <p class="sd-skriver svar" aria-hidden="true"><i></i><i></i><i></i></p>
+                <p class="sd-bubbla sd-sen" data-sd-byt="svar1">See you! Bring the maths book if you can.</p>
+                <p class="sd-bubbla sd-sen" data-sd-byt="svar2">Absolutely, I will add percentages to the study plan.</p>
+              </div>
+              <div class="sd-snabb" data-sd-byt="svarat"><button type="button" data-sd-svar="1">Thanks, see you on Tuesday!</button><button type="button" data-sd-svar="2">Could you do percentages next time?</button></div>
+              <div class="sd-skrivfalt" aria-hidden="true">Write to Elsa<i><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></i></div>
+            </div>
+          </div>
+
+          <!-- Betalning: med kort, per pass, i förväg eller när rapporten bekräftas (Fas 19.2), eller mot faktura efter passet (2026-09-28) -->
+          <div class="sd-sek" data-sd-sek="betalning">
+            <div class="sd-topp sd-in" style="--i:0"><h4>Payment</h4><p>You pay for each session by card, either in advance or after the session when you confirm the report. After the session you can choose an invoice instead, which comes at the start of the following month with ten days to pay and no fee.</p></div>
+            <div class="sd-stack">
+              <div class="sd-box sd-in" style="--i:1">
+                <h5>To pay <em data-sd-byt="betalt"><span class="fore">1 session</span><span class="efter">Nothing left</span></em></h5>
+                <div class="sd-betala" data-sd-byt="betalt"><span class="sd-datum"><b>6</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 1 hour</b><small>Online with Elsa</small></span><span class="sd-belopp"><span data-sd-pris>399</span> kr</span><button type="button" class="sd-knapp" data-sd-betala>Pay by card</button></div>
+                <p class="sd-betald" data-sd-byt="betalt"><span class="sd-bock liten"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Paid. The receipt comes by email.</p>
+                <p class="sd-kortrad"><svg viewBox="0 0 26 18" aria-hidden="true"><rect x=".75" y=".75" width="24.5" height="16.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1 6h24" stroke="currentColor" stroke-width="2.5"/></svg>The card is entered with Stripe. We never store it.</p>
+              </div>
+              <div class="sd-box sd-in" style="--i:2">
+                <h5>Paid sessions</h5>
+                <div class="sd-rad sd-ny" data-sd-byt="betalt"><span class="sd-datum"><b>6</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 1 hour</b><small>Online with Elsa</small></span><span class="sd-belopp"><span data-sd-pris>399</span> kr</span></div>
+                <div class="sd-rad"><span class="sd-datum"><b>1</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 1 hour</b><small>Online with Elsa</small></span><span class="sd-belopp"><span data-sd-pris>399</span> kr</span></div>
+                <div class="sd-rad"><span class="sd-datum"><b>29</b><small>Sep</small></span><span class="sd-rad-text"><b>Maths · 1 hour</b><small>Online with Elsa</small></span><span class="sd-belopp"><span data-sd-pris>399</span> kr</span></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        </div>
+        <span class="sd-pekare" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3l14 8.2-6.3 1.5L9.6 19z"/></svg></span>
+      </div>
+
+      <!-- Notiserna som svävar framför fönstret. Dekor: det som hänt
+           syns redan i vyn, så de är dolda för skärmläsare. -->
+      <div class="sd-flyt sd-flyt-h" data-sd-notis="rapport" aria-hidden="true"><span class="sd-flyt-ikon"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 12h6M9 15.5h4"/></svg></span><span><b>New report from Elsa</b><small>Maths, 1 Oct · Very good</small></span></div>
+      <div class="sd-flyt sd-flyt-h" data-sd-notis="foreslaget" aria-hidden="true"><span class="sd-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span><span><b>Your suggestion is sent</b><small>Elsa has been notified</small></span></div>
+      <div class="sd-flyt sd-flyt-v" data-sd-notis="godkant" aria-hidden="true"><span class="sd-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span><span><b>The session is confirmed</b><small>Thu 8 Oct, 17:00</small></span></div>
+      <div class="sd-flyt sd-flyt-v" data-sd-notis="betalt" aria-hidden="true"><span class="sd-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span><span><b>Paid</b><small><span data-sd-pris>399</span> kr · Maths, 6 Oct</small></span></div>
+      <div class="sd-flyt sd-flyt-h" data-sd-notis="niva" aria-hidden="true"><span class="sd-flyt-ikon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5 5 13.6h6.2l-1.1 7.9 8.4-11.3h-6.3z"/></svg></span><span><b>+270 XP</b><small>Area done · 7 days in a row</small></span></div>
+    </div>
+  </div>
+
+  <div class="sd-under">
+    <p class="nx-bildtext">Illustration of the student view — the content is an example</p>
+  </div>
+</section>
+
+<!-- ==========================================================
      1b — NEXLÄX (2026-10-07)
+     Flyttad ner 2026-10-08, efter studievyn (Leo: "flytta ner nexläx").
      Leo: "Under heron ska vi nu sälja in Nexläx gör en cool genomgång
      av nexläx som är lika stor som hero bilden." En telefon som visar
      sig själv i fyra skärmar, och en stig med fyra delar bredvid som
@@ -472,99 +936,6 @@
 </section>
 
 <!-- ==========================================================
-     13b — JUST NU (2026-10-07)
-     Leo: "Under nexläx ska vi teasa med våra erbjudanden: skriv stort
-     Just nu, erbjudandet och upp till 45 % lägre pris än jämförbara
-     paket hos flera större aktörer på marknaden." Standardplanen ur
-     erbjudanden_pris: priset, timmarna och procenten skriver
-     NX.initErbjudanden(), och inget av våra priser står här. Sektionen
-     är dold (hidden) tills svaret kommit, och finns inte planen står
-     den dold. De andra aktörernas pris (Leos uppgift, 5 000 kr för åtta
-     timmar) står på sektionen; procenten räknas ur det och vårt pris och
-     avrundas nedåt till fem, så att "upp till" aldrig blir osant om
-     priset ändras. Gäller planen andra timmar än jämförelsen, eller är
-     den inte billigare, döljs sektionen. Formen: nextrum-start.css
-     avsnitt 16.
-     ========================================================== -->
-<section class="nx-jn" id="just-nu" aria-labelledby="just-nu-t" data-erb="plan_standard" data-erb-vantar data-erb-jamfor-ore="500000" data-erb-jamfor-timmar="8" hidden>
-  <div class="nx-wrap-bred">
-    <div class="jn-kort" data-stig>
-      <div class="jn-text">
-        <span class="nx-et acc">Offer</span>
-        <h2 class="jn-rubrik" id="just-nu-t" data-avslöj>Right <em>now</em></h2>
-        <p class="jn-plan"><span class="jn-namn">Standard</span><span><span data-erb-antal>8</span> hours for the price of <span data-erb-betalda>7</span></span></p>
-        <p class="jn-lede">Up to <b><span data-erb-lagre>45</span>%</b> lower price than comparable packages at several larger providers on the market.</p>
-      </div>
-      <figure class="jn-jamfor">
-        <div class="jn-rad jn-andra">
-          <span class="jn-vem">Other providers</span>
-          <b class="jn-belopp">5 000 kr</b>
-          <span class="jn-stapel" aria-hidden="true"><i></i></span>
-        </div>
-        <div class="jn-rad jn-vi">
-          <span class="jn-vem">Nextrum <span class="jn-plannamn">Standard</span></span>
-          <b class="jn-belopp" data-erb-pris></b>
-          <span class="jn-stapel" aria-hidden="true"><i data-erb-andel></i></span>
-        </div>
-        <figcaption class="jn-not">The comparison applies to <span data-erb-antal>8</span> hours of tutoring per month.</figcaption>
-      </figure>
-      <div class="nx-cta-rad jn-cta">
-        <span class="nx-magnet">
-          <a class="btn btn-primary btn-lg" href="/en/priser#erbjudanden">
-            See the plans
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
-        </span>
-        <a class="nx-lank" href="/en/intresseanmalan">Get started
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ==========================================================
-     2 — VÅR IDÉ
-     Manifestet, och läxhjälpen sedd som ett första jobb.
-     ========================================================== -->
-<section class="nx-manifest" id="om">
-  <div class="nx-manifest-inner">
-    <span class="nx-et" data-stig>Our idea</span>
-    <h2 data-ordfyll style="margin-top:clamp(24px,3vw,38px)">The right person can make<br><em>all the difference.</em></h2>
-
-    <div class="nx-manifest-fot">
-      <div class="nx-bubbla" data-stig data-fördröj="1">
-        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.8"/><circle cx="17" cy="16" r="2.8"/><path d="M9.6 9.6l4.8 4.8"/></svg></span>
-        <h3>The right match</h3>
-        <p>We match every student with one of our tutors, based on their needs and the
-          subjects where support is wanted, for better understanding, more motivation and confidence.</p>
-      </div>
-      <div class="nx-bubbla" data-stig data-fördröj="2">
-        <span class="bu-fig" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 13l2 2 4-4"/></svg></span>
-        <h3>All in one place</h3>
-        <p>A personal study plan, sessions online or in person, and a report after every
-          one. We handle matching and booking, with no registration fee and no minimum term.</p>
-      </div>
-    </div>
-
-    <div class="nx-cta-rad" data-stig data-fördröj="3">
-      <span class="nx-magnet">
-        <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
-          Get tutoring
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </span>
-      <a class="nx-lank" href="#hur">See how it works
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
-    </div>
-  </div>
-
-</section>
-
-
-
-<!-- ==========================================================
      3 — SÅ FUNGERAR NEXTRUM (stegscenen, 2026-10-07)
      Stegen är de fem som faktiskt sker. På dator är scenen pinnad:
      stegen till vänster tänds ett i taget medan fotot till höger
@@ -649,65 +1020,6 @@
            bildspelet hängt sig. -->
       <div class="nx-hur-bild" id="hur-bild"></div>
 
-    </div>
-  </div>
-</section>
-
-<!-- ==========================================================
-     3b — BETYGSGARANTIN (2026-10-07)
-     Leo: "sälj in det utan konkreta villkor eller siffror". Här står
-     inga villkor och inga tal, men aldrig ett löfte om ett betyg:
-     garantin lovar vad vi gör om betyget inte går upp (CLAUDE.md,
-     avsnitt 1 och 8). Länken och raden intill knappen säger att
-     villkor gäller och var de står, för en garanti som säljs utan att
-     det syns att den har villkor är vilseledande
-     (marknadsföringslagen). De står bredvid knappen, aldrig bakom en
-     utfällning.
-
-     På papperet och som ett flöde (2026-10-07). Leo: "samma färg som
-     resten av sidan" i båda lägena, "inte samma kolumner som finns
-     överallt", "en mindre sektion" som "ser ut som att den följer ett
-     flow när man scrollar". Linjen mellan siffrorna fylls och stegen
-     tänds när de passerar en linje i fönstret: garantiflöde() i
-     nextrum-start.js och avsnitt 15 i nextrum-start.css. Utan skript
-     står allt tänt. Siffrorna är aria-hidden, för listan ger
-     ordningen. Inget data-stig på stegen: den regeln äger opacity och
-     transform och hade slagit ut nedtoningen. På dator står rubriken
-     och knappen till vänster och flödet till höger, på telefon
-     rubrik, flöde, knapp (ordningen i markupen). Prissidan har samma
-     komponent med sina egna texter. Samma ändring i en/index.html,
-     tagg för tagg.
-     ========================================================== -->
-<section class="nx-sek-s nx-gar" id="betygsgaranti">
-  <div class="nx-wrap-bred nx-gar-in">
-    <div class="nx-gar-head">
-      <span class="nx-et acc" data-stig>Grade guarantee</span>
-      <h2 class="nx-d2" data-avslöj>If the grade doesn’t go up,<br><em>we keep going.</em></h2>
-      <p class="nx-lede" data-stig data-fördröj="1">We believe in the right match and a school year of real work, so much that we stand behind
-        it. If the student does their part and the grade still doesn’t go up, we keep helping without you
-        paying anything.</p>
-    </div>
-
-    <ol class="nx-gar-flode" data-gar-flode>
-      <li><span class="nx-gar-nr" aria-hidden="true">01</span><div class="nx-gar-steg"><b>Choose the subjects</b><p>You choose the subjects that need a lift, and we build the plan towards this year’s grade.</p></div></li>
-      <li><span class="nx-gar-nr" aria-hidden="true">02</span><div class="nx-gar-steg"><b>Keep it up all year</b><p>Regular sessions, tasks in between and a tutor who keeps it all together.</p></div></li>
-      <li><span class="nx-gar-nr" aria-hidden="true">03</span><div class="nx-gar-steg"><b>See it all in your view</b><p>Every session, report and task is visible to you, and the guarantee is judged on what you can see for yourselves.</p></div></li>
-      <li><span class="nx-gar-nr" aria-hidden="true">04</span><div class="nx-gar-steg"><b>We stay with you</b><p>If the grade doesn’t go up even though you did your part, you get extra homework help from us free of charge.</p></div></li>
-    </ol>
-
-    <div class="nx-gar-cta" data-stig data-fördröj="2">
-      <div class="nx-cta-rad">
-        <span class="nx-magnet">
-          <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">
-            Get started
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
-        </span>
-        <a class="nx-lank" href="/en/anvandarvillkor#betygsgaranti">Read the guarantee terms
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </div>
-      <p class="nx-fineprint">Terms apply. Help with other subjects and homework in general is included as usual and does not affect the guarantee.</p>
     </div>
   </div>
 </section>
@@ -842,242 +1154,6 @@
 </section>
 
 <!-- ==========================================================
-     6 — STUDIEVYN
-     En illustration av föräldravyn som den ser ut i dag: menyn,
-     bokningen som ett förslag, passlistan, betalningen, läxorna,
-     femstegsskalan och chatten. Den visar sig själv — en rundtur
-     klickar sig igenom den när den syns — men besökaren kan inte
-     klicka i den (Leo 2026-09-25: "du ska inte kunna interagera med
-     den"). Fönstret är inert, och för skärmläsare är det en bild
-     med en beskrivning. Ingenting här pratar med Supabase — allt är
-     exempel och märks upp så.
-     Beteendet står i nextrum-start.js (studievy), formen i
-     nextrum-start.css avsnitt 8.
-
-     Markupen är byggd ur en och samma mall för båda språken, så att
-     taggsekvensen är identisk. Ändras den här ska /en/ ändras
-     likadant — jamfor-sprak.py rapporterar bara FÖRSTA skillnaden i
-     struktur, och den är språkväljaren längst upp.
-     ========================================================== -->
-<section class="nx-wrap-bred nx-sek" aria-labelledby="studievy-t">
-  <div class="nx-head split" data-stig>
-    <div>
-      <span class="nx-et acc">The student view</span>
-      <h2 class="nx-d2" id="studievy-t" style="margin-top:20px">You see what is happening.</h2>
-    </div>
-    <div class="nx-head-aside">
-      <p class="nx-lede">Through Nextrum’s student view, student and parent can follow progress, see the study plan,
-        book sessions and read the feedback — all in one place.</p>
-    </div>
-  </div>
-
-  <div class="nx-sd" data-studievy role="img" aria-label="Illustration of Nextrum’s student view: a family accepts a time, suggests a session, replies to the tutor, pays and clears a level in NexLäx. The content is an example.">
-    <div class="sd-rum">
-      <div class="sd-fonster" inert>
-        <div class="sd-bar" aria-hidden="true"><i></i><i></i><i></i><span>nextrum.se/foralder</span></div>
-        <div class="sd-app">
-        <nav class="sd-sido" aria-label="Student view menu, example">
-          <button type="button" data-sd-visa="oversikt" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Overview</button>
-          <span class="sd-sido-rubrik" aria-hidden="true">Studies</span>
-          <button type="button" data-sd-visa="boka" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M12 13v4M10 15h4"/></svg>Book a session</button>
-          <button type="button" data-sd-visa="lektioner" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>My sessions</button>
-          <button type="button" data-sd-visa="nexlax" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg>NexLäx</button>
-          <span class="sd-sido-rubrik" aria-hidden="true">Contact</span>
-          <button type="button" data-sd-visa="meddelanden" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Messages<b class="sd-bricka" data-sd-byt="last">2</b></button>
-          <span class="sd-sido-rubrik" aria-hidden="true">Account</span>
-          <button type="button" data-sd-visa="betalning" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg>Payment<b class="sd-bricka" data-sd-byt="betalt">1</b></button>
-        </nav>
-        <div class="sd-yta">
-
-          <!-- Översikt: hälsningen, det som väntar på familjen, siffrorna -->
-          <div class="sd-sek pa" data-sd-sek="oversikt">
-            <div class="sd-stack">
-              <div class="sd-hej sd-in" style="--i:0">
-                <div><small>Student view</small><b>Good evening, Alma.</b><p>The next session is tomorrow at four.</p></div>
-                <div class="sd-hej-kort"><span><b>Tue 6 Oct, 16:00</b>Maths with Elsa</span><span><b>Messages</b>2 unread</span></div>
-              </div>
-              <div class="sd-box sd-in" style="--i:1">
-                <h5>Times to reply to <em data-sd-byt="godkant"><span class="fore">1</span><span class="efter">0</span></em></h5>
-                <div class="sd-svara" data-sd-byt="godkant"><div>
-                  <div class="sd-svar-rad">
-                    <p><b>Elsa suggests Thu 8 Oct, 17:00–18:00.</b> Swedish, in person.</p>
-                    <div class="sd-svar-knappar"><button type="button" class="sd-knapp" data-sd-godkann>Accept</button><button type="button" class="sd-knapp spok" data-sd-visa="boka">Suggest another</button></div>
-                  </div>
-                </div></div>
-                <p class="sd-klart-rad" data-sd-byt="godkant"><span class="sd-bock liten"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Done. The session is under My sessions.</p>
-              </div>
-              <div class="sd-box sd-in" style="--i:2">
-                <h5>In numbers</h5>
-                <div class="sd-tal">
-                  <div><b data-sd-tal="12">12</b><span>Completed sessions</span></div>
-                  <div><b data-sd-tal="15">15<small>h</small></b><span>Study time</span></div>
-                  <div><b data-sd-tal="2">2</b><span>Upcoming sessions</span></div>
-                  <div><b data-sd-tal="9">9</b><span>Tasks done</span></div>
-                  <div><b data-sd-tal="6">6</b><span>Knowledge areas</span></div>
-                </div>
-              </div>
-              <div class="sd-tva">
-                <div class="sd-box sd-in" style="--i:3">
-                  <h5>Sessions over time <em>6 months</em></h5>
-                  <div class="sd-staplar">
-                    <div><i style="--h:0;--n:0"></i><span>Apr</span></div>
-                    <div><i style="--h:17;--n:1"></i><span>May</span></div>
-                    <div><i style="--h:17;--n:2"></i><span>Jun</span></div>
-                    <div><i style="--h:0;--n:3"></i><span>Jul</span></div>
-                    <div><i style="--h:67;--n:4"></i><span>Aug</span></div>
-                    <div><i style="--h:100;--n:5"></i><span>Sep</span></div>
-                  </div>
-                </div>
-                <div class="sd-box sd-in" style="--i:4">
-                  <h5>How the sessions went <em>12 reports</em></h5>
-                  <div class="sd-fordelning"><i class="sd-f-bra" style="--v:7;--n:0"></i><i class="sd-f-mitt" style="--v:4;--n:1"></i><i class="sd-f-folj" style="--v:1;--n:2"></i></div>
-                  <div class="sd-legend">
-                    <span><i class="sd-f-bra"></i>Very good<b>7</b></span>
-                    <span><i class="sd-f-mitt"></i>Good<b>4</b></span>
-                    <span><i class="sd-f-folj"></i>Needs follow-up<b>1</b></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Boka pass: ett FÖRSLAG, som i vyn sedan 2026-09-24 -->
-          <div class="sd-sek" data-sd-sek="boka">
-            <div class="sd-topp sd-in" style="--i:0"><h4>Book a session</h4><p>Tap a day and suggest a time. Your tutor accepts it or suggests another.</p></div>
-            <div class="sd-boka">
-              <div class="sd-box sd-in" style="--i:1">
-                <div class="sd-kal-topp"><b>October</b><span aria-hidden="true">‹ ›</span></div>
-                <div class="sd-kal-v" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
-                <div class="sd-kal-dagar">
-                  <span></span><span></span><span></span>
-                  <button type="button" data-sd-dag="1" disabled>1</button><button type="button" data-sd-dag="2" disabled>2</button><button type="button" data-sd-dag="3" disabled>3</button><button type="button" data-sd-dag="4" disabled>4</button><button type="button" class="idag" data-sd-dag="5" aria-pressed="false">5</button><button type="button" class="pass" data-sd-dag="6" aria-pressed="false">6</button><button type="button" data-sd-dag="7" aria-pressed="false">7</button>
-                  <button type="button" class="pass" data-sd-dag="8" aria-pressed="false">8</button><button type="button" data-sd-dag="9" aria-pressed="false">9</button><button type="button" data-sd-dag="10" aria-pressed="false">10</button><button type="button" data-sd-dag="11" aria-pressed="false">11</button><button type="button" data-sd-dag="12" aria-pressed="false">12</button><button type="button" data-sd-dag="13" aria-pressed="false">13</button><button type="button" data-sd-dag="14" aria-pressed="false">14</button>
-                  <button type="button" data-sd-dag="15" aria-pressed="false">15</button><button type="button" data-sd-dag="16" aria-pressed="false">16</button><button type="button" data-sd-dag="17" aria-pressed="false">17</button><button type="button" data-sd-dag="18" aria-pressed="false">18</button><button type="button" data-sd-dag="19" aria-pressed="false">19</button><button type="button" data-sd-dag="20" aria-pressed="false">20</button><button type="button" data-sd-dag="21" aria-pressed="false">21</button>
-                  <button type="button" data-sd-dag="22" aria-pressed="false">22</button><button type="button" data-sd-dag="23" aria-pressed="false">23</button><button type="button" data-sd-dag="24" aria-pressed="false">24</button><button type="button" data-sd-dag="25" aria-pressed="false">25</button><button type="button" data-sd-dag="26" aria-pressed="false">26</button><button type="button" data-sd-dag="27" aria-pressed="false">27</button><button type="button" data-sd-dag="28" aria-pressed="false">28</button>
-                  <button type="button" data-sd-dag="29" aria-pressed="false">29</button><button type="button" data-sd-dag="30" aria-pressed="false">30</button><button type="button" data-sd-dag="31" aria-pressed="false">31</button>
-                </div>
-              </div>
-              <div class="sd-box sd-form sd-in" style="--i:2" data-sd-byt="dag">
-                <h5>Your suggestion</h5>
-                <p class="sd-form-dag"><span class="fore">Pick a day in the calendar</span><span class="efter"><span data-sd-kopia="dag"></span> Oct · <span data-sd-kopia="tid">15:00</span> · <span data-sd-kopia="amne">Maths</span></span></p>
-                <div class="sd-grupp"><span>Subject</span><div class="sd-chips" role="group" aria-label="Subject"><button type="button" data-sd-val="amne" aria-pressed="true">Maths</button><button type="button" data-sd-val="amne" aria-pressed="false">Swedish</button><button type="button" data-sd-val="amne" aria-pressed="false">English</button></div></div>
-                <div class="sd-grupp"><span>Time</span><div class="sd-chips" role="group" aria-label="Time"><button type="button" data-sd-val="tid" aria-pressed="true">15:00</button><button type="button" data-sd-val="tid" aria-pressed="false">16:00</button><button type="button" data-sd-val="tid" aria-pressed="false">17:00</button></div></div>
-                <div class="sd-grupp"><span>Where</span><div class="sd-chips" role="group" aria-label="Where"><button type="button" data-sd-val="var" aria-pressed="true">Online</button><button type="button" data-sd-val="var" aria-pressed="false">In person</button></div></div>
-                <button type="button" class="sd-knapp" data-sd-foresla>Suggest the time</button>
-                <div class="sd-skickat" data-sd-byt="foreslaget"><span class="sd-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span><b>Your suggestion is sent</b><p>Elsa replies under Suggested times. Until then the session is under My sessions.</p></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mina lektioner: pass, studieplan och rapporter i tre flikar -->
-          <div class="sd-sek" data-sd-sek="lektioner">
-            <div class="sd-topp sd-in" style="--i:0"><h4>My sessions</h4><p>Your sessions, the plan behind them and what happened in each one.</p></div>
-            <div class="sd-flikar sd-in" style="--i:1"><button type="button" data-sd-flik="pass" aria-pressed="true">Sessions</button><button type="button" data-sd-flik="plan" aria-pressed="false">Study plan</button><button type="button" data-sd-flik="rapporter" aria-pressed="false">Reports</button></div>
-            <div class="sd-box sd-in" style="--i:2">
-              <div class="sd-panel pa" data-sd-panel="pass">
-                <div class="sd-rad sd-ny" data-sd-byt="foreslaget"><span class="sd-datum"><b data-sd-kopia="dag">15</b><small>Oct</small></span><span class="sd-rad-text"><b><span data-sd-kopia="amne">Maths</span> · <span data-sd-kopia="tid">15:00</span></b><small>Your suggestion</small></span><span class="sd-lage varm">Awaiting reply</span></div>
-                <div class="sd-rad"><span class="sd-datum"><b>6</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 16:00–17:00</b><small>Online with Elsa</small></span><span class="sd-lage varm" data-sd-byt="betalt"><span class="fore">To pay</span><span class="efter">Paid</span></span></div>
-                <div class="sd-rad"><span class="sd-datum"><b>8</b><small>Oct</small></span><span class="sd-rad-text"><b>Swedish · 17:00–18:00</b><small>In person with Elsa</small></span><span class="sd-lage varm" data-sd-byt="godkant"><span class="fore">Awaiting you</span><span class="efter">Confirmed</span></span></div>
-                <div class="sd-rad"><span class="sd-datum"><b>1</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 16:00–17:00</b><small>The report is ready</small></span><span class="sd-lage gron">Completed</span></div>
-              </div>
-              <div class="sd-panel" data-sd-panel="plan">
-                <p class="sd-mal"><b>Goal:</b> confident with equations before the test in week 44.</p>
-                <div class="sd-plansteg"><span class="gjort"><i></i>Simplifying expressions</span><span class="gjort"><i></i>Equations with one unknown</span><span class="gjort"><i></i>Equations with brackets</span><span><i></i>Word problems as equations</span><span><i></i>Revision before the test</span></div>
-              </div>
-              <div class="sd-panel sd-rapport" data-sd-panel="rapporter">
-                <span class="sd-lage gron">Very good · 1 Oct</span>
-                <p>We revised equations with brackets. It was slow going at first but clicked towards the end, and they solved the last three problems on their own. For next time: problems 12–18 in the book.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- NexLäx (Fas 23.2): serien, XP, banan och vägen. Rundturen
-               trycker Fortsätt och klarar en nivå: allt med data-sd-byt="niva"
-               byter läge, och XP, serien och procenten räknas upp. -->
-          <div class="sd-sek" data-sd-sek="nexlax">
-            <div class="sd-topp sd-in" style="--i:0"><h4>NexLäx</h4><p>The path through the subject, one level at a time. Every answer is marked straight away and gives XP.</p></div>
-            <div class="sd-stack">
-              <div class="sd-nl sd-in" style="--i:1" data-sd-byt="niva">
-                <div class="sd-nl-stat"><span class="sd-nl-pill sd-nl-laga"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.2c-3.9 0-6.6-2.6-6.6-6.2 0-3.2 2.1-5.3 3.7-7.1.4 1.9 1.4 3.1 2.6 3.7-.3-3.1 1.1-6 3.7-8.6.3 3.1 2.4 5 3.8 7.1a8 8 0 0 1 1.4 4.7c0 3.6-3 6.4-8.6 6.4z"/></svg><b><span class="fore">6</span><span class="efter">7</span></b>days</span><span class="sd-nl-pill sd-nl-xp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5 5 13.6h6.2l-1.1 7.9 8.4-11.3h-6.3z"/></svg><b><span class="fore">1,240</span><span class="efter">1,510</span></b>XP</span></div>
-                <div class="sd-nl-bana"><b>Maths · Year 8</b><strong><span class="fore">42</span><span class="efter">50</span>%</strong></div>
-                <span class="sd-nl-mat" aria-hidden="true"><i></i></span>
-                <div class="sd-nl-cta">
-                  <small>Recommended by Elsa</small>
-                  <b>Equations with brackets</b>
-                  <span>8 questions · about 4 min</span>
-                  <button type="button" class="sd-knapp" data-sd-niva><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Continue</button>
-                </div>
-                <p class="sd-nl-klar"><span class="sd-bock liten"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Equations is done, +270 XP. Next step: Percentages.</p>
-              </div>
-              <div class="sd-box sd-in" style="--i:2">
-                <h5>Your path <em>Maths</em></h5>
-                <div class="sd-nl-omr klart"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></i><b>Algebra</b><em>Done</em></div>
-                <div class="sd-nl-omr aktuellt" data-sd-byt="niva"><i><span class="fore"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span><span class="efter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9"/></svg></span></i><b>Equations</b><em><span class="fore">In progress</span><span class="efter">Done</span></em></div>
-                <div class="sd-nl-omr nasta" data-sd-byt="niva"><i><span class="fore"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg></span><span class="efter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></i><b>Percentages</b><em><span class="fore">Next</span><span class="efter">In progress</span></em></div>
-                <div class="sd-nl-omr oppen"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></i><b>Geometry</b><em>Open</em></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Meddelanden: chatten med studiehjälparen -->
-          <div class="sd-sek" data-sd-sek="meddelanden">
-            <div class="sd-chatt">
-              <div class="sd-chatt-topp"><picture><source type="image/webp" srcset="/bilder/studiehjalpare-1-200.webp"><img src="/bilder/studiehjalpare-1-200.jpg" width="36" height="36" alt="" loading="lazy" decoding="async"></picture><div><b>Elsa</b><small><i></i>Your tutor</small></div></div>
-              <div class="sd-trad">
-                <p class="sd-bubbla" style="--i:0">Hi! Great work today, the equations went much better.</p>
-                <p class="sd-bubbla" style="--i:1">I have put problems 12–18 in NexLäx. Let me know if anything feels tricky.</p>
-                <p class="sd-bubbla egen" style="--i:2">Thanks! They actually enjoyed it for once.</p>
-                <p class="sd-bubbla" style="--i:3">Great to hear! Then we carry on on Tuesday.</p>
-                <p class="sd-bubbla egen sd-sen" data-sd-byt="svarat"></p>
-                <p class="sd-skriver svar" aria-hidden="true"><i></i><i></i><i></i></p>
-                <p class="sd-bubbla sd-sen" data-sd-byt="svar1">See you! Bring the maths book if you can.</p>
-                <p class="sd-bubbla sd-sen" data-sd-byt="svar2">Absolutely, I will add percentages to the study plan.</p>
-              </div>
-              <div class="sd-snabb" data-sd-byt="svarat"><button type="button" data-sd-svar="1">Thanks, see you on Tuesday!</button><button type="button" data-sd-svar="2">Could you do percentages next time?</button></div>
-              <div class="sd-skrivfalt" aria-hidden="true">Write to Elsa<i><svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg></i></div>
-            </div>
-          </div>
-
-          <!-- Betalning: med kort, per pass, i förväg eller när rapporten bekräftas (Fas 19.2), eller mot faktura efter passet (2026-09-28) -->
-          <div class="sd-sek" data-sd-sek="betalning">
-            <div class="sd-topp sd-in" style="--i:0"><h4>Payment</h4><p>You pay for each session by card, either in advance or after the session when you confirm the report. After the session you can choose an invoice instead, which comes at the start of the following month with ten days to pay and no fee.</p></div>
-            <div class="sd-stack">
-              <div class="sd-box sd-in" style="--i:1">
-                <h5>To pay <em data-sd-byt="betalt"><span class="fore">1 session</span><span class="efter">Nothing left</span></em></h5>
-                <div class="sd-betala" data-sd-byt="betalt"><span class="sd-datum"><b>6</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 1 hour</b><small>Online with Elsa</small></span><span class="sd-belopp"><span data-sd-pris>379</span> kr</span><button type="button" class="sd-knapp" data-sd-betala>Pay by card</button></div>
-                <p class="sd-betald" data-sd-byt="betalt"><span class="sd-bock liten"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span>Paid. The receipt comes by email.</p>
-                <p class="sd-kortrad"><svg viewBox="0 0 26 18" aria-hidden="true"><rect x=".75" y=".75" width="24.5" height="16.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1 6h24" stroke="currentColor" stroke-width="2.5"/></svg>The card is entered with Stripe. We never store it.</p>
-              </div>
-              <div class="sd-box sd-in" style="--i:2">
-                <h5>Paid sessions</h5>
-                <div class="sd-rad sd-ny" data-sd-byt="betalt"><span class="sd-datum"><b>6</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 1 hour</b><small>Online with Elsa</small></span><span class="sd-belopp"><span data-sd-pris>379</span> kr</span></div>
-                <div class="sd-rad"><span class="sd-datum"><b>1</b><small>Oct</small></span><span class="sd-rad-text"><b>Maths · 1 hour</b><small>Online with Elsa</small></span><span class="sd-belopp"><span data-sd-pris>379</span> kr</span></div>
-                <div class="sd-rad"><span class="sd-datum"><b>29</b><small>Sep</small></span><span class="sd-rad-text"><b>Maths · 1 hour</b><small>Online with Elsa</small></span><span class="sd-belopp"><span data-sd-pris>379</span> kr</span></div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-        </div>
-        <span class="sd-pekare" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3l14 8.2-6.3 1.5L9.6 19z"/></svg></span>
-      </div>
-
-      <!-- Notiserna som svävar framför fönstret. Dekor: det som hänt
-           syns redan i vyn, så de är dolda för skärmläsare. -->
-      <div class="sd-flyt sd-flyt-h" data-sd-notis="rapport" aria-hidden="true"><span class="sd-flyt-ikon"><svg viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H6v-17z"/><path d="M9 12h6M9 15.5h4"/></svg></span><span><b>New report from Elsa</b><small>Maths, 1 Oct · Very good</small></span></div>
-      <div class="sd-flyt sd-flyt-h" data-sd-notis="foreslaget" aria-hidden="true"><span class="sd-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span><span><b>Your suggestion is sent</b><small>Elsa has been notified</small></span></div>
-      <div class="sd-flyt sd-flyt-v" data-sd-notis="godkant" aria-hidden="true"><span class="sd-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span><span><b>The session is confirmed</b><small>Thu 8 Oct, 17:00</small></span></div>
-      <div class="sd-flyt sd-flyt-v" data-sd-notis="betalt" aria-hidden="true"><span class="sd-bock"><svg viewBox="0 0 24 24"><path pathLength="1" d="M6 12.5l4 4 8-9"/></svg></span><span><b>Paid</b><small><span data-sd-pris>379</span> kr · Maths, 6 Oct</small></span></div>
-      <div class="sd-flyt sd-flyt-h" data-sd-notis="niva" aria-hidden="true"><span class="sd-flyt-ikon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5 5 13.6h6.2l-1.1 7.9 8.4-11.3h-6.3z"/></svg></span><span><b>+270 XP</b><small>Area done · 7 days in a row</small></span></div>
-    </div>
-  </div>
-
-  <div class="sd-under">
-    <p class="nx-bildtext">Illustration of the student view — the content is an example</p>
-  </div>
-</section>
-
-<!-- ==========================================================
      7 — BILDVÄGGEN
      Redaktionell komposition, inte ett galleri. Bilderna
      förskjuts olika mycket när man scrollar förbi.
@@ -1148,7 +1224,46 @@
 
 
 <!-- ==========================================================
+     12 — RÖSTER
+     Flyttad upp 2026-10-08, över För dig som vill jobba (Leo:
+     "Omdömen flytta upp de över för dig som vill jobba").
+     Tvilling till index.html. Kommentaren där säger varför det står
+     ett brev här och inga omdömen, och vad som gäller för ett riktigt
+     omdöme. Ändras sektionen: samma taggar på båda språken.
+     ========================================================== -->
+<section class="nx-wrap-bred nx-sek" id="rost">
+  <div class="nx-head split" data-stig>
+    <div>
+      <span class="nx-et acc">From us</span>
+      <h2 class="nx-d2" style="margin-top:20px">Before the first reviews.</h2>
+    </div>
+    <div class="nx-head-aside">
+      <p class="nx-lede">We are right at the beginning and have no reviews to show yet. The first
+        ones will come from real families and appear here once they exist, with their permission.
+        Until then, you will hear it from us, by name.</p>
+    </div>
+  </div>
+
+  <div class="nx-roster" id="reviews">
+    <blockquote class="nx-rost nx-rost-brev nx-bubbla" data-stig data-fördröj="1">
+      <p>We started Nextrum to make it easier for young people to take their first step into
+        working life – while helping other young people reach their goals. To us, Nextrum is about
+        creating opportunities that actually make a difference.</p>
+      <cite><b>Leo &amp; Alex</b> <span>founders of Nextrum</span></cite>
+    </blockquote>
+  </div>
+
+  <div class="nx-cta-rad" data-stig data-fördröj="2">
+    <a class="nx-lank" href="/en/intresseanmalan">Be one of the first
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ==========================================================
      10 — BLI STUDIEHJÄLPARE
+     Sedan 2026-10-08 på mörka lägets svarta, i båda lägena, med lera
+     runt kolumnerna (nextrum-start.css avsnitt 10, #bli).
      ========================================================== -->
 <section class="nx-mork nx-sek" id="bli" style="scroll-margin-top:74px">
   <span id="unga" aria-hidden="true"></span>
@@ -1205,41 +1320,6 @@
       <div class="nx-apply-step"><em>3</em><b>Get approved</b><p>We run our checks and you get your tutor profile.</p></div>
       <div class="nx-apply-step"><em>4</em><b>Start working</b><p>Accept requests and hold your first session.</p></div>
     </div>
-  </div>
-</section>
-
-<!-- ==========================================================
-     12 — RÖSTER
-     Tvilling till index.html. Kommentaren där säger varför det står
-     ett brev här och inga omdömen, och vad som gäller för ett riktigt
-     omdöme. Ändras sektionen: samma taggar på båda språken.
-     ========================================================== -->
-<section class="nx-wrap-bred nx-sek" id="rost">
-  <div class="nx-head split" data-stig>
-    <div>
-      <span class="nx-et acc">From us</span>
-      <h2 class="nx-d2" style="margin-top:20px">Before the first reviews.</h2>
-    </div>
-    <div class="nx-head-aside">
-      <p class="nx-lede">We are right at the beginning and have no reviews to show yet. The first
-        ones will come from real families and appear here once they exist, with their permission.
-        Until then, you will hear it from us, by name.</p>
-    </div>
-  </div>
-
-  <div class="nx-roster" id="reviews">
-    <blockquote class="nx-rost nx-rost-brev nx-bubbla" data-stig data-fördröj="1">
-      <p>We started Nextrum to make it easier for young people to take their first step into
-        working life – while helping other young people reach their goals. To us, Nextrum is about
-        creating opportunities that actually make a difference.</p>
-      <cite><b>Leo &amp; Alex</b> <span>founders of Nextrum</span></cite>
-    </blockquote>
-  </div>
-
-  <div class="nx-cta-rad" data-stig data-fördröj="2">
-    <a class="nx-lank" href="/en/intresseanmalan">Be one of the first
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-    </a>
   </div>
 </section>
 
@@ -1411,19 +1491,19 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<script src="../nextrum-config.js?v=fdfed591"></script>
+<script src="../nextrum-config.js?v=04a5c427"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=83b9d6a2"></script>
+<script src="../nextrum-app.js?v=05356e85"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Startsidans rörelse. Startar av sig självt, så att inget
      anrop här nere kan kasta om filen saknas. -->
-<script src="../nextrum-start.js?v=d9502d81"></script>
+<script src="../nextrum-start.js?v=8e7d1cc4"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=73bf0c97"></script>
+<script src="../nextrum-maskot-svar.js?v=223aa660"></script>
 <script src="../nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {

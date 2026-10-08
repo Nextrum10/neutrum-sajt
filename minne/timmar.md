@@ -9,8 +9,9 @@ kortbetalningen i `betalning.md`. "Avsnitt N" i texten är kärnans.
 ## Köpta timmar (Fas 16.1 och 21)
 
 **Timmar kan köpas i förväg (Fas 16.1).** Tre planer för en månad sedan
-2026-10-07 (Basic 4 timmar −5 %, Standard 8 timmar med en timme på köpet,
-Intensiv 12 timmar −5 %; till dess två, 4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
+2026-10-07 (Basic 4 timmar, Standard 8 och Intensiv 12, alla −5 %, en månad i
+taget, sedan 2026-10-08 (ingen bindning: villkoren säger ingen bindningstid), då Standard förlorade sin timme på köpet;
+till 2026-10-07 två, 4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
 6–18 månader). Köpet är ett engångsköp med kort, inget abonnemang.
 Timmarna betalar sedan ett bekräftat pass med ett barn i stället för
 kortet, av sig själva sedan Fas 22.2 (nedan). Flaggan `erbjudanden` är PÅ sedan 2026-09-27: Leo slog på den
@@ -58,6 +59,18 @@ timmen: 1 440, 2 653 och 4 320 kr. Basic blev dyrare än gamla Standard
   `stripe-checkout` v18; `minne/databasen.md`). Just nu har inga av våra
   kronor i HTML, bara konkurrentpriset 5 000 kr. Leos testköp "Standardplan"
   syns bara i hans vy.
+
+**Paketen kostar 379 kr i timmen (2026-10-08).** Leo: "Läxhjälpen ska
+kosta 399kr standard obundet. Sen på våra paket blir man bunden i 1 månad
+och de kostar 379kr". Timpriset blev 399 kr och rabatten stod kvar på 5 %
+(399 × 0,95 nedåt till hel krona är 379), så paketen och klippkorten
+kostar 379 kr i timmen: 1 516, 3 032 och 4 548 kr, och 3 790 kr för tio
+timmar. Standard fick 5 % i stället för "8 timmar för priset av 7" och
+lyfts fram på koden (Vårt tips) i stället för på timmen på köpet. Allt
+som räknar en timme på köpet står kvar, för katalogen är historik och ett
+köp med en timme på köpet kan finnas. Bindningen står på sidorna men inte i
+villkoren (`betalning.md`, sista avsnittet). Siffrorna i stycket ovan är
+de som gällde 2026-10-07.
 
 **Ett pass betalt med timmar avbokar familjen själv** (Fas 21.1), och
 studiehjälparen kan också. Det har inga pengar på sig, och

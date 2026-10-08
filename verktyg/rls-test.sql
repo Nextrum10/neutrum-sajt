@@ -3991,6 +3991,7 @@ do $$
 declare
   deb int; betalda int; lon int; larm int; larm2 int; belopp bigint; fel text;
   deb_p int; lon_a int; syns_q int; syns_p int; kvar1 int; kvar2 int; lon_k int; ej int;
+  halv bigint;
 begin
   -- 1. Betalt i förväg för en timme, höll 80 minuter.
   begin
@@ -4044,18 +4045,22 @@ begin
        'betalda_min ' || betalda || ', lon_min ' || lon_k);
   end if;
 
-  -- 2. Betalt i förväg för en timme, höll en halv.
+  -- 2. Betalt i förväg för en timme, höll en halv. Betalt och halva
+  -- beloppet räknas ur passets eget frysta pris (2026-10-08): fixturen
+  -- får katalogens timpris när den bokas, och det är inte alltid 379 kr.
   fel := null;
   begin
-    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = 37900, stripe_minuter = 60
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = timpris_ore, stripe_minuter = 60
      where id = '00000000-0000-4000-8000-00000000b0c1';
+    select timpris_ore - round(timpris_ore * 30 / 60.0) into halv
+      from public.bookings where id = '00000000-0000-4000-8000-00000000b0c1';
     insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
     values ('00000000-0000-4000-8000-0000000005a1', '00000000-0000-4000-8000-0000000000a1',
             '00000000-0000-4000-8000-00000000b0c1', 'x', current_date, 'narvarande', '15:00', '15:30', 'prov');
     select lon_min into lon from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
     select sum(a.belopp_ore) into belopp from public.avvikelser_rader() a
      where a.typ = 'betalt_for_lange' and a.objekt_id = '00000000-0000-4000-8000-00000000b0c1';
-    update public.bookings set aterbetald_ore = 18950 where id = '00000000-0000-4000-8000-00000000b0c1';
+    update public.bookings set aterbetald_ore = halv where id = '00000000-0000-4000-8000-00000000b0c1';
     select count(*) into larm from public.avvikelser_rader()
      where typ = 'betalt_for_lange' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
     raise exception 'rulla tillbaka';
@@ -4066,7 +4071,8 @@ begin
   else
     insert into utfall (test, ok, detalj) values
       ('20.1 kortare pass sänker lönen', lon = 30, 'lon_min ' || lon),
-      ('20.1 kortare pass larmar med halva beloppet', belopp = 18950, 'belopp ' || coalesce(belopp::text, 'null')),
+      ('20.1 kortare pass larmar med halva beloppet', belopp = halv,
+       'belopp ' || coalesce(belopp::text, 'null') || ', väntat ' || coalesce(halv::text, 'null')),
       ('20.1 återbetalt: larmet går', larm = 0, 'rader: ' || larm);
   end if;
 
@@ -4415,11 +4421,12 @@ begin
     return;
   end if;
   insert into utfall (test, ok, detalj) values
-    ('19.5 familjens eget pris skrivs över med tjänstens', r1.timpris_ore = 37900 and r1.extra_ore = 6900,
+    ('19.5 familjens eget pris skrivs över med tjänstens',
+     r1.timpris_ore = (select pris_per_timme_ore from public.tjanster where kod = 'laxhjalp') and r1.extra_ore = 6900,
      r1.timpris_ore || '/' || r1.extra_ore),
     ('19.5 första timmen har fullt pris', not r1.startrabatt and r1.rabatt_ore is null,
      r1.startrabatt || '/' || coalesce(r1.rabatt_ore::text, 'null')),
-    ('19.5 andra timmen bjuds, också när studiehjälparen föreslår', r2.startrabatt and r2.rabatt_ore = 37900,
+    ('19.5 andra timmen bjuds, också när studiehjälparen föreslår', r2.startrabatt and r2.rabatt_ore = r2.timpris_ore,
      r2.startrabatt || '/' || coalesce(r2.rabatt_ore::text, 'null')),
     ('19.5 tredje passet har fullt pris', not r3.startrabatt and r3.rabatt_ore is null,
      r3.startrabatt || '/' || coalesce(r3.rabatt_ore::text, 'null')),
@@ -11086,11 +11093,13 @@ select pg_temp.prova_med('AP studiehjälparen läser inte listan', array['select
 select pg_temp.prova('AP anon läser inte listan', null,
   array['select * from public.admin_paminnelser'], 'nekad');
 
+-- Fasta datum före funktionen fanns (2026-10-02): ett morgonmejl per dag, och efter kl. 9 har
+-- driften redan dagens rad, så en rad med dagens datum föll på indexet (2026-10-08).
 select pg_temp.prova_med('AP superadmin läser utskicken',
-  array['insert into public.admin_paminnelse_utskick (antal) values (''{"ny_lead": 1}'')'],
+  array['insert into public.admin_paminnelse_utskick (antal, skapad) values (''{"ny_lead": 1}'', ''2026-09-01 07:00:00+00'')'],
   '00000000-0000-4000-8000-0000000000ad', array['select * from public.admin_paminnelse_utskick'], 'ok');
 select pg_temp.prova_med('AP familjen läser inte utskicken',
-  array['insert into public.admin_paminnelse_utskick (antal) values (''{"ny_lead": 1}'')'],
+  array['insert into public.admin_paminnelse_utskick (antal, skapad) values (''{"ny_lead": 1}'', ''2026-09-02 07:00:00+00'')'],
   '00000000-0000-4000-8000-0000000000f1', array['select * from public.admin_paminnelse_utskick'], 'nekad');
 select pg_temp.prova('AP anon läser inte utskicken', null,
   array['select * from public.admin_paminnelse_utskick'], 'nekad');
@@ -12916,14 +12925,17 @@ begin
 end $$;
 
 -- ------------------------------------------------------------
--- 25. Planerna (planerna_basic_standard_intensiv, 2026-10-07)
+-- 25. Planerna (planerna_basic_standard_intensiv, 2026-10-07, och
+--     timpris_399_paketen_379, 2026-10-08)
 --
--- Leo: Basic (4 timmar, 5 %), Standard (8 timmar, en timme på köpet) och
--- Intensiv (12 timmar, 5 %), med nya koder; 'standard' och 'intensiv'
--- står kvar avstängda, för ett köp pekar på dem. En timme på köpet är
--- timmar, aldrig en procent: priset är de betalda timmarna, ordinarie är
--- alla, och timmen dras ur kortet som de andra. Kolumnen fryses i köpet,
--- står i auditen, och bara admin ändrar katalogen.
+-- Leo: Basic (4 timmar), Standard (8 timmar) och Intensiv (12 timmar),
+-- med nya koder; 'standard' och 'intensiv' står kvar avstängda, för ett
+-- köp pekar på dem. Sedan 2026-10-08 har alla tre 5 %, och ingen har en
+-- timme på köpet: med 399 kr i timmen kostar paketen 379 kr i timmen.
+-- En timme på köpet är fortfarande timmar, aldrig en procent: priset är
+-- de betalda timmarna, ordinarie är alla, och timmen dras ur kortet som
+-- de andra (köpet K1 nedan har en, som köpen från före 2026-10-08).
+-- Kolumnen fryses i köpet, står i auditen, och bara admin ändrar katalogen.
 -- Allt i ett block som rullas tillbaka; utfallet samlas i en variabel.
 -- ------------------------------------------------------------
 do $$
@@ -12946,9 +12958,9 @@ begin
     perform pg_temp.bli(null);
     select count(*) into n from public.erbjudanden_pris
      where (kod, sort, timmar, timmar_pa_kopet, rabatt_procent, giltig_manader) in
-           (('plan_basic', 'plan', 4, 0, 5, 1), ('plan_standard', 'plan', 8, 1, 0, 1),
+           (('plan_basic', 'plan', 4, 0, 5, 1), ('plan_standard', 'plan', 8, 0, 5, 1),
             ('plan_intensiv', 'plan', 12, 0, 5, 1));
-    ut := ut || jsonb_build_object('t', 'PL anon ser Basic, Standard och Intensiv med timmarna, timmen på köpet och rabatten',
+    ut := ut || jsonb_build_object('t', 'PL anon ser Basic, Standard och Intensiv med timmarna och 5 %, utan timmar på köpet',
             'ok', n = 3, 'd', n::text);
 
     select count(*) into n from public.erbjudanden_pris where kod in ('standard', 'intensiv');
@@ -12960,20 +12972,25 @@ begin
     ut := ut || jsonb_build_object('t', 'PL priset är de betalda timmarna och ordinarie är alla timmarna', 'ok',
             n = 0, 'd', n::text);
 
-    select count(*) into n from public.erbjudanden_pris
-     where kod = 'plan_standard' and pris_ore = 7 * timpris_ore and ordinarie_ore - pris_ore = timpris_ore;
-    ut := ut || jsonb_build_object('t', 'PL Standard är 8 timmar för priset av 7, och ni sparar en hel timme', 'ok',
-            n = 1, 'd', n::text);
+    -- Paketen har ETT timpris (2026-10-08): 5 % under det utan bindning,
+    -- nedåt till hel krona, och samma på alla tre.
+    select count(*) || ':' || count(distinct rabatterat_timpris_ore) into t from public.erbjudanden_pris
+     where sort = 'plan'
+       and rabatterat_timpris_ore = (floor(timpris_ore * 0.95 / 100) * 100)::int
+       and pris_ore = timmar * rabatterat_timpris_ore;
+    ut := ut || jsonb_build_object('t', 'PL paketen kostar samma timpris, 5 % under det utan bindning nedåt till hel krona',
+            'ok', t = '3:1', 'd', t);
 
-    -- Siffrorna i beställningen, så länge timpriset är 379 kr.
+    -- Siffrorna i beställningen, så länge timpriset är 399 kr.
     select timpris_ore into tp from public.erbjudanden_pris where kod = 'plan_standard';
-    select string_agg(kod || ':' || pris_ore || ':' || ordinarie_ore, ',' order by kod) into t
-      from public.erbjudanden_pris where kod in ('plan_basic', 'plan_standard', 'plan_intensiv');
-    ut := ut || jsonb_build_object('t', 'PL med 379 kr i timmen: 1 440, 2 653 och 4 320 kr', 'ok',
-            case when tp = 37900
-                 then t = 'plan_basic:144000:151600,plan_intensiv:432000:454800,plan_standard:265300:303200'
+    select string_agg(kod || ':' || pris_ore || ':' || ordinarie_ore || ':' || rabatterat_timpris_ore, ',' order by kod) into t
+      from public.erbjudanden_pris where kod in ('plan_basic', 'plan_standard', 'plan_intensiv', 'klipp10');
+    ut := ut || jsonb_build_object('t', 'PL med 399 kr i timmen: paketen 1 516, 3 032 och 4 548 kr, och 379 kr i timmen', 'ok',
+            case when tp = 39900
+                 then t = 'klipp10:379000:399000:37900,plan_basic:151600:159600:37900,'
+                          'plan_intensiv:454800:478800:37900,plan_standard:303200:319200:37900'
                  else tp is not null end,
-            'd', coalesce(t, 'inga') || case when tp is distinct from 37900
+            'd', coalesce(t, 'inga') || case when tp is distinct from 39900
                                              then ' (timpriset är ' || coalesce(tp::text, '?') || ', siffrorna provas inte)'
                                              else '' end);
 
@@ -12996,10 +13013,11 @@ begin
     perform set_config('request.jwt.claims', null, true);
     select timmar_pa_kopet into n from public.erbjudanden where kod = 'plan_standard';
     ut := ut || jsonb_build_object('t', 'PL varken anon eller familjen ändrar timmen på köpet', 'ok',
-            t in ('rader 0', '42501') and sk in ('rader 0', '42501') and n = 1,
+            t in ('rader 0', '42501') and sk in ('rader 0', '42501') and n = 0,
             'd', 'anon ' || t || ', familjen ' || sk || ', kvar ' || n);
 
-    -- Köpet, som kassan skriver det med service_role: kolumnen fryses.
+    -- Ett köp med en timme på köpet, som kassan skrev Standard före
+    -- 2026-10-08, med service_role: kolumnen fryses.
     insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, timmar_pa_kopet, giltig_manader,
                                   rabatt_procent, timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at,
                                   stripe_charge_id)
@@ -13028,7 +13046,7 @@ begin
     perform set_config('request.jwt.claims', null, true);
     select count(*) into n from public.audit_logg
      where tabell = 'erbjudanden' and objekt_id = 'plan_standard' and handling = 'erbjudande.andrad'
-       and fore ->> 'timmar_pa_kopet' = '1' and efter ->> 'timmar_pa_kopet' = '2' and aktor = AD;
+       and fore ->> 'timmar_pa_kopet' = '0' and efter ->> 'timmar_pa_kopet' = '2' and aktor = AD;
     ut := ut || jsonb_build_object('t', 'PL admin ändrar timmen på köpet, och auditen säger före och efter', 'ok',
             sk = '1' and n = 1, 'd', 'rader ' || sk || ', i auditen ' || n);
     select count(*) into n from public.erbjudanden_pris

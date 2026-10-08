@@ -24,15 +24,23 @@
      Leo ville ha det ljusare men beige, provade det först på
      startsidan och ville sedan ha samma färg överallt. Bläcket och
      leran är orörda; mot det ljusare papperet har all text fått MER
-     kontrast, inte mindre. Mörkt läge är orört. */
-  --pap:#F2EDE3;          /* papper — botten. Ljust, men beige, INTE off-white */
-  --pap-2:#E9E2D4;        /* lugn yta */
-  --pap-3:#DBD2BF;        /* djupare yta, kant mot foto */
+     kontrast, inte mindre. Mörkt läge är orört.
+
+     2026-10-08 blev det "lite mindre beige, väldigt lite" (Leo): #F2EDE3
+     → #F1EDE6. Mättnaden (kroma i OKLCH) är 30 % lägre och luminansen
+     densamma, så varje kontrast mot bläcket står kvar på decimalen. Den
+     lugna ytan, den djupa och linjerna följde med lika mycket, så att
+     skillnaden mellan ytorna är som förut (papper mot lugn yta 1,11:1)
+     och ingen av dem står beigare än papperet. theme-color i sidorna
+     följer papperet; mejlens FARG ändras för sig. */
+  --pap:#F1EDE6;          /* papper — botten. Ljust, en aning beige, INTE off-white */
+  --pap-2:#E7E2D8;        /* lugn yta */
+  --pap-3:#D9D2C5;        /* djupare yta, kant mot foto */
   --bl:#2E2A20;           /* bark — mörk gröngrå-brun, INTE svart */
   --bl-2:#4F4738;         /* brödtext på papperet (7,9:1) */
   --bl-3:#665C49;         /* dämpat, klarar AA även mot --pap-2 (5,1:1) */
-  --ln:#E2DACB;           /* linjer */
-  --ln-2:#CDC2AC;
+  --ln:#E0DAD0;           /* linjer */
+  --ln-2:#CAC2B3;
 
   /* --- nedtryckt yta ---
      I LJUST sjunker den nedtryckta ytan, i MÖRKT stiger den. Det är
@@ -79,6 +87,21 @@
   --nt-mossa:rgba(122,139,98,.16);
   --nt-film:#2E2A20;
 
+  /* --- För dig som vill jobba (2026-10-08) ---
+     Leo: "ändra färg till den svarta som är på mörksidan", och i mörkt
+     läge "samma färg och inte en gråare". Ytan är alltså mörka lägets
+     papper, #1A1813, i BÅDA lägena, och därför samma värde i alla tre
+     blocken. I mörkt läge står den i ett med sidan, och det är leran
+     runt kolumnerna och skenet som avgränsar den ("lite mer orange runt
+     olika kolumner"): ljus lera #D9814F, som är accenten på bark.
+       kräm #EFE6D6 på ytan → 14,3:1, dämpat #B3A88F → 7,5:1 (mörkt läge
+       #A99E88 → 6,7:1),
+       ljus lera #D9814F → 6,1:1 */
+  --bli-bg:#1A1813;
+  --bli-glod:rgba(217,129,79,.17);
+  --bli-kant:rgba(217,129,79,.5);
+  --bli-linje:rgba(217,129,79,.3);
+
   /* --- jordpaletten ---
      Tre färger, inte en accent på neutralt. Det var felet förra
      gången: terrakotta bara i knappar gav fortfarande ett svart/vitt
@@ -106,6 +129,13 @@
   --orange:#F07A1E;
   --orange-lugn:#D9650F;
   --orange-ink:#1A1813;
+
+  /* tejpen (2026-10-08) — en remsa washi-tejp i varm ockra, nästan
+     täckande, med bark som bläck. Ränderna är tejpens fibrer.
+       bark #2E2A20 på tejpen över papperet → 7,1:1 */
+  --tejp:rgba(238,168,84,.92);
+  --tejp-ink:#2E2A20;
+  --tejp-fiber:rgba(255,250,240,.2);
 
   /* --- de mörka banden ---
      Banden låg kvar i det gamla schemat: kallsvart botten, rent vitt
@@ -149,12 +179,13 @@
   --mossa-text:#3D4930;
   --ockra-soft:#F0E4C9;
   --ockra-text:#664510;
-  --bricka:#E9E2D4;       /* datumrutan och ikonrutan i ett kort */
+  --bricka:#E7E2D8;       /* datumrutan och ikonrutan i ett kort (= --pap-2) */
   /* Ämnenas färger i NexLäx (2026-09-29, Leo: "lite mer färgig för att
      navigera enklare"). En per ämne, så att man ser vilket ämne man är i
      utan att läsa. Alla klarar AA mot papperet och --yta som text; -l är
-     syskonen för barken, som --lera-l. Resten av sajten använder dem
-     inte: lera, mossa och ockra säger fortfarande vems drag det är. */
+     syskonen för barken, som --lera-l. I vyerna står de bara i NexLäx;
+     utanför säger lera, mossa och ockra vems drag det är. Startsidan bär dem
+     som en röd tråd sedan 2026-10-08 (nextrum-start.css, avsnitt 13). */
   --amne-ma:#2F6690; --amne-ma-l:#8DB9E0;
   --amne-sv:#A63D3A; --amne-sv-l:#E7978F;
   --amne-en:#6A4A99; --amne-en-l:#B9A1E0;
@@ -225,6 +256,11 @@
     --nt-glod:rgba(217,129,79,.09);
     --nt-mossa:rgba(157,173,134,.07);
     --nt-film:#262319;
+    /* För dig som vill jobba: samma svarta som sidan, inte --nt */
+    --bli-bg:#1A1813;
+    --bli-glod:rgba(217,129,79,.17);
+    --bli-kant:rgba(217,129,79,.5);
+    --bli-linje:rgba(217,129,79,.3);
 
     /* accenterna pekar om till sina ljusa syskon */
     --acc:#D9814F;
@@ -235,6 +271,10 @@
     --orange:#F28A2E;
     --orange-lugn:#F9A055;
     --orange-ink:#1A1813;
+    /* tejpen i ljus ockra mot orange: bark på den över barken → 6,8:1 */
+    --tejp:rgba(222,152,72,.94);
+    --tejp-ink:#1A1813;
+    --tejp-fiber:rgba(255,240,210,.12);
 
 
 
@@ -291,8 +331,10 @@
   --tryck-yta:var(--pap-3); --tryck-tvatt:rgba(239,230,214,.05);
   --nt:#262319; --nt-fg:#EFE6D6; --nt-mut:#A99E88; --nt-ln:rgba(239,230,214,.16);
   --nt-2:#262319; --nt-glod:rgba(217,129,79,.09); --nt-mossa:rgba(157,173,134,.07); --nt-film:#262319;
+  --bli-bg:#1A1813; --bli-glod:rgba(217,129,79,.17); --bli-kant:rgba(217,129,79,.5); --bli-linje:rgba(217,129,79,.3);
   --acc:#D9814F; --acc-lugn:#E89A6D; --mossa:#9DAD86; --ockra:#C08A2E;
   --orange:#F28A2E; --orange-lugn:#F9A055; --orange-ink:#1A1813;
+  --tejp:rgba(222,152,72,.94); --tejp-ink:#1A1813; --tejp-fiber:rgba(255,240,210,.12);
   --band-bg:#22201A; --band-fg:#EFE6D6; --band-muted:#A99E88;
   --band-line:rgba(239,230,214,.14); --band-surface:rgba(239,230,214,.05);
   --acc-ink:#1A1813; --acc-text:#D9814F;
@@ -1234,7 +1276,7 @@ html[lang="en"] .nx-hero-rubrik{
   display:block;font-style:normal;
   font-size:var(--hur-tal);font-weight:800;line-height:.8;
   letter-spacing:-.06em;font-variant-numeric:tabular-nums;
-  color:var(--acc);
+  color:var(--f,var(--acc));
 }
 .nx-hur-steg h3{
   font-size:clamp(1.3rem,2.5vw,2.05rem);
@@ -2426,9 +2468,9 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]) .nx-panel,
   :root:not([data-theme="light"]) .nx-form-yta{
-    --pap:#F2EDE3; --pap-2:#E9E2D4; --pap-3:#DBD2BF;
+    --pap:#F1EDE6; --pap-2:#E7E2D8; --pap-3:#D9D2C5;
     --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
-    --ln:#E2DACB; --ln-2:#CDC2AC;
+    --ln:#E0DAD0; --ln-2:#CAC2B3;
     --nt:#2B221C; --nt-fg:#EFE6D6; --nt-mut:#B3A88F;
     --acc:#9C4520; --acc-lugn:#7A3417;
     --mossa:#546343; --ockra:#7E5714;
@@ -2449,9 +2491,9 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 }
 :root[data-theme="dark"] .nx-panel,
 :root[data-theme="dark"] .nx-form-yta{
-  --pap:#F2EDE3; --pap-2:#E9E2D4; --pap-3:#DBD2BF;
+  --pap:#F1EDE6; --pap-2:#E7E2D8; --pap-3:#D9D2C5;
   --bl:#2E2A20; --bl-2:#4F4738; --bl-3:#665C49;
-  --ln:#E2DACB; --ln-2:#CDC2AC;
+  --ln:#E0DAD0; --ln-2:#CAC2B3;
   --nt:#2B221C; --nt-fg:#EFE6D6; --nt-mut:#B3A88F;
   --acc:#9C4520; --acc-lugn:#7A3417;
   --mossa:#546343; --ockra:#7E5714;
@@ -2780,10 +2822,10 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    (initErbjudanden() sätter scrollLeft en gång, aldrig scrollIntoView).
 
    Det överstrukna timpriset och "ni sparar" står på varje kort med
-   rabatt, för det är skillnaden mot 379 kr man jämför. Standard har
-   inget timpris (2 653 kr för 8 timmar är inget helt timpris) utan
-   "8 timmar för priset av 7", och rutorna under beskrivningen visar
-   samma sak: en ruta per timme, timmen på köpet i lera.
+   rabatt, för det är skillnaden mot 399 kr utan bindning man jämför
+   (2026-10-08: alla tre planerna 379 kr i timmen, och Standards
+   "8 timmar för priset av 7" är borta). Rutorna under beskrivningen
+   är en ruta per timme; en timme på köpet är i lera.
 
    [hidden] måste skrivas ut: korten har egen display, och
    initErbjudanden() döljer ett erbjudande som stängts av i
@@ -2867,6 +2909,21 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
 
 /* Prickarna hör till svepraden och syns bara med den. */
 .pr-erb-prickar{display:none}
+
+/* "Spara upp till N kr på 6 månader" (2026-10-08). Beloppet skrivs av
+   initErbjudanden() ur planerna; raden göms när det inte finns något
+   att spara. En lapp i ockra under rubriken, före korten, och samma
+   ockra som tejpen ovanför: det är samma sak som säljs. */
+.pr-erb-spara{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;
+  width:fit-content;max-width:100%;
+  margin:clamp(22px,2.6vw,32px) 0 0;padding:12px 20px;border-radius:16px;
+  background:var(--ockra-soft);color:var(--ockra-text);
+  font-size:1.02rem;font-weight:600;line-height:1.35;letter-spacing:-.01em;
+}
+.pr-erb-spara b{font-size:1.3rem;font-weight:800;letter-spacing:-.03em;color:var(--bl)}
+.pr-erb-spara span{font-size:.86rem;font-weight:500;color:var(--muted)}
+.pr-erb-spara[hidden]{display:none}
 
 /* Mellanbredd: tre kort bredvid varandra med lite mindre luft, så att
    summorna inte bryts. */
@@ -3093,6 +3150,92 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
 @media (prefers-reduced-motion:reduce){
   .pr-lyft:hover,.pr-lyft:active{scale:none}
 }
+
+/* ------------------------------------------------------------
+   TEJPEN (2026-10-08)
+   Leo: jämförelsen med de andra aktörerna "ska vara typ som en tejp
+   bit som tejpas fast på erbjudandet, så förstora det". En remsa
+   washi-tejp, lätt snett, med stor fet text: det första ögat fastnar
+   på. Komponenten är allmän och laddas på alla öppna sidor (cinema);
+   startsidan använder samma klass.
+
+   Formen: kortändarna är sågtandade med clip-path (aldrig mask-image,
+   som Safari ritar fel), och fibrerna är en randig gradient på
+   bakgrunden. Ingen skugga: clip-path klipper den, och tejp ligger
+   platt. Lutningen är --tejp-vrid och läses på tejpen själv, med
+   rotate, så att den inte krockar med transform från data-stig.
+
+   .nx-tejp-pa lägger den över överkanten på kortet den står i (kortet
+   måste ha position). Kortet ger plats med :has, så att ett kort utan
+   synlig tejp står som förut.
+
+   Rörelsen: tejpen "sätts fast" när kortet den sitter på glider in
+   (.nx-in från NXMotion) eller när den visas efter att svaret kommit,
+   en gång, som en CSS-animation. Startläget finns bara under html.nx-sr
+   (nextrum-start.js), och med reducerad rörelse står den direkt i
+   slutläget.
+   ------------------------------------------------------------ */
+.nx-tejp{
+  --tejp-vrid:-2.4deg;
+  --tejp-tand:7px;
+  position:relative;z-index:2;
+  display:inline-flex;flex-direction:column;align-items:center;gap:3px;
+  width:max-content;max-width:100%;
+  padding:12px calc(var(--tejp-tand) + 22px) 13px;
+  background:
+    repeating-linear-gradient(97deg,transparent 0 11px,var(--tejp-fiber) 11px 12px,transparent 12px 23px),
+    var(--tejp);
+  color:var(--tejp-ink);text-align:center;
+  rotate:var(--tejp-vrid);
+  clip-path:polygon(
+    var(--tejp-tand) 0,calc(100% - var(--tejp-tand)) 0,
+    100% 12.5%,calc(100% - var(--tejp-tand)) 25%,100% 37.5%,calc(100% - var(--tejp-tand)) 50%,
+    100% 62.5%,calc(100% - var(--tejp-tand)) 75%,100% 87.5%,calc(100% - var(--tejp-tand)) 100%,
+    var(--tejp-tand) 100%,
+    0 87.5%,var(--tejp-tand) 75%,0 62.5%,var(--tejp-tand) 50%,
+    0 37.5%,var(--tejp-tand) 25%,0 12.5%);
+  pointer-events:none;
+}
+.nx-tejp[hidden]{display:none}
+.nx-tejp-stor{
+  display:block;
+  font-size:clamp(1.5rem,2.7vw,2.05rem);font-weight:800;line-height:1.06;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;
+}
+.nx-tejp-liten{
+  display:block;max-width:38ch;
+  font-size:.86rem;font-weight:600;line-height:1.3;letter-spacing:-.005em;
+  text-wrap:balance;
+}
+
+/* Över kortets överkant, centrerad. translate och rotate är var sin
+   egenskap och läggs ihop av webbläsaren. */
+.nx-tejp-pa{
+  position:absolute;top:0;left:50%;
+  translate:-50% -46%;
+  max-width:calc(100% - 28px);
+}
+
+@keyframes nx-tejp-fast{
+  0%  {opacity:0;scale:1.22;rotate:-7deg}
+  55% {opacity:1;scale:.97}
+  100%{opacity:1;scale:1;rotate:var(--tejp-vrid)}
+}
+html.nx-sr [data-stig]:not(.nx-in) > .nx-tejp{opacity:0}
+html.nx-sr [data-stig].nx-in > .nx-tejp{animation:nx-tejp-fast .62s var(--e-ut) .28s both}
+
+/* Lyftet på prissidan: tejpen sitter på kortets överkant, och kortet
+   får luft ovanför (mot starterbjudandet) och innanför (mot sin rubrik). */
+.pr-lyft:has(> .nx-tejp:not([hidden])){
+  margin-top:clamp(34px,3vw,40px);
+  padding-top:calc(clamp(24px,3vw,36px) + 36px);
+}
+/* På en telefon bryts tejpens text på fler rader, och den sticker upp
+   högre över kortet. */
+@media (max-width:700px){
+  .pr-lyft:has(> .nx-tejp:not([hidden])){margin-top:46px;padding-top:calc(clamp(24px,3vw,36px) + 40px)}
+}
+.pr-lyft-bind{white-space:nowrap}
 
 /* Foto i stället för initial på studiehjälparkortet. Bilden fyller
    samma ruta som bokstaven, så raden håller sin rytm oavsett vilka

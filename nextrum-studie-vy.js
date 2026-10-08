@@ -3130,10 +3130,11 @@
     });
   }
 
-  /* Planerna (2026-10-07, Leo): Standard har en timme på köpet i stället
-     för en rabatt. Timmarna på köpet räknas i databasen
-     (erbjudanden_pris.timmar_pa_kopet); före migrationen saknas fältet,
-     och då är det noll. */
+  /* Planerna (2026-10-07, Leo): Standard hade en timme på köpet i stället
+     för en rabatt till 2026-10-08, då alla tre fick 5 % mot 399 kr, alltså
+     379 kr i timmen, en månad i taget. Timmarna på köpet räknas i
+     databasen (erbjudanden_pris.timmar_pa_kopet) och visas om katalogen
+     får dem igen; saknas fältet är det noll. */
   const erbPåKöpet = e => Math.max(Number(e.timmar_pa_kopet) || 0, 0);
   const timmarOrd = n => n === 1 ? '1 timme' : n + ' timmar';
   /* "8 timmar för priset av 7", samma ord som på prissidan och i kassan.
@@ -3159,10 +3160,14 @@
        timmar på köpet och rabatt visar det rabatterade timpriset, som är
        vad varje betald timme kostar. */
     const perTimme = Number(e.rabatterat_timpris_ore);
-    const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
     /* Ur raden, inte ur koden (Fas 21.3): ändras timmarna eller
-       giltigheten i katalogen ska kortet säga det nya av sig självt. */
-    const vad = timmarOrd(Number(e.timmar)) + ' · gäller i ' + mån;
+       giltigheten i katalogen ska kortet säga det nya av sig självt.
+       En plan är ingen bindning: villkoren säger ingen bindningstid, och
+       den som slutar får tillbaka det som är kvar. Planen gäller en månad
+       i taget, och kortet säger det med samma ord som prissidan (Leo
+       2026-10-08 valde de orden framför "bindning"). */
+    const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
+    const vad = timmarOrd(Number(e.timmar)) + ' · ' + (e.sort === 'plan' && Number(e.giltig_manader) === 1 ? 'en månad i taget' : 'gäller i ' + mån);
     /* Märket säger vad erbjudandet ger: timmen på köpet, rabatten, eller
        båda. Aldrig "−0 %". */
     const märken = (pa ? '<span class="erb-rabatt ar-pa-kopet">' + esc(timmarOrd(pa)) + ' på köpet</span>' : '')
@@ -3172,8 +3177,8 @@
         + (rabatt ? ', <s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme' : '')
       : (rabatt ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '') + esc(kr(perTimme)) + ' per timme';
     /* Standard lyfts fram (Leo 2026-10-07: "Visa standard planens
-       erbjudande"): planen med timmar på köpet, eller koden om katalogen
-       skulle ändras. Före migrationen lyfts ingen. */
+       erbjudande"), på koden sedan den 2026-10-08 slutade ha en timme på
+       köpet, och en plan med timmar på köpet, om katalogen får en igen. */
     const lyft = pa > 0 || e.kod === 'plan_standard';
     return '<div class="erb-kort' + (lyft ? ' ar-framhavd' : '') + '">'
       + '<div class="erb-topp"><b class="erb-namn">' + esc(e.namn) + '</b>'
@@ -3198,10 +3203,12 @@
      (2026-09-27, som på prissidan). Fem kort i en egen ruta var en
      vägg under planerna.
 
-     Rubriken sammanfattar korten som finns: "från" det billigaste och
-     spannet i timmar. Rabatten och timpriset står bara där om de är
-     desamma på alla kort — ett tal som stämmer för ett av dem är ett
-     pris som inte är det kassan drar. <details>, så att kolumnen går
+     Rubriken sammanfattar korten som finns: timpriset och spannet i
+     timmar. Rabatten och timpriset står bara där om de är desamma på
+     alla kort — ett tal som stämmer för ett av dem är ett pris som inte
+     är det kassan drar — och annars "från" det billigaste kortet. Leo
+     2026-10-08: "inte från utan för", så timpriset står först när det
+     finns ett. <details>, så att kolumnen går
      att öppna med tangentbordet utan en rad skript. */
   function klippKolumn(kort, öppen) {
     if (!kort.length) return '';
@@ -3229,11 +3236,10 @@
       + (lika('rabatt_procent') && Number(kort[0].rabatt_procent) ? '<span class="erb-rabatt">−' + esc(String(kort[0].rabatt_procent)) + ' %</span>' : '')
       + '</span>'
       + '<span class="erb-vad">' + esc(spann) + ', när det passar er</span>'
-      + '<span class="erb-pris"><span class="erb-fran">från</span><b>' + esc(kr(billigast.pris_ore)) + '</b></span>'
       + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
-        ? '<span class="erb-tim"><s>' + esc(kr(kort[0].timpris_ore)) + '</s> ' + esc(kr(kort[0].rabatterat_timpris_ore))
-          + ' per timme</span>'
-        : '')
+        ? '<span class="erb-pris"><s>' + esc(kr(kort[0].timpris_ore)) + '</s><b>' + esc(kr(kort[0].rabatterat_timpris_ore))
+          + '</b></span><span class="erb-tim">per timme</span>'
+        : '<span class="erb-pris"><span class="erb-fran">från</span><b>' + esc(kr(billigast.pris_ore)) + '</b></span>')
       + '<span class="erb-visa"><span class="erb-visa-stangd">Se alternativen</span>'
       + '<span class="erb-visa-oppen">Dölj alternativen</span>'
       + '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"'
@@ -3887,7 +3893,7 @@
   S.boka = NXArbete.bokning({
     host: $('#boka-inner'),
     amnen: BOKA_AMNEN,
-    pris: NX.CFG.PRIS_PER_TIMME || 379,
+    pris: NX.CFG.PRIS_PER_TIMME || 399,
     /* Vilken tjänst förslaget gäller. Styr priset och tillägget för
        flera barn. En funktion, inte ett värde: ytan skapas innan
        katalogen laddats. */
@@ -4959,7 +4965,7 @@
   /* ============ start ============ */
   async function start() {
    try {
-    $$('[data-pris]').forEach(el => el.textContent = kr(NX.CFG.PRIS_PER_TIMME || 379));
+    $$('[data-pris]').forEach(el => el.textContent = kr(NX.CFG.PRIS_PER_TIMME || 399));
 
     if (!supa) {
       visa('view-auth');

@@ -675,7 +675,7 @@ window.NXArbete = (function () {
     function timprisOre() {
       var t = tjanstRad();
       if (t && t.pris_per_timme_ore) return Number(t.pris_per_timme_ore);
-      return (o.pris || 379) * 100;
+      return (o.pris || 399) * 100;
     }
     function bruttoOre() {
       var perTimme = timprisOre() + (st.barn > 1 ? extraOre() : 0);

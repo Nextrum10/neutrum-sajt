@@ -32,7 +32,7 @@
 /* ============================================================
    1. KORTEN
 
-   Papperet (#F2EDE3) bodde här medan det bara gällde startsidan.
+   Papperet (#F2EDE3, sedan 2026-10-08 #F1EDE6) bodde här medan det bara gällde startsidan.
    Sedan 2026-09-25 är det hela sajtens och står i nextrum-cinema.css.
    Kvar här är det som bara startsidan använder.
    ============================================================ */
@@ -557,7 +557,7 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
 }
 
 /* ============================================================
-   13. NEXLÄX — under hero (2026-10-07)
+   13. NEXLÄX (2026-10-07, under studievyn sedan 2026-10-08)
 
    Leo 2026-10-07: "Under heron ska vi nu sälja in Nexläx gör en cool
    genomgång av nexläx som är lika stor som hero bilden. Den ska vara
@@ -573,8 +573,14 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
 
    Papperet bär sektionen i båda lägena, som resten av sidan. Barken
    finns bara inne i telefonen, som i den riktiga vyn. Ämnesfärgerna
-   (--amne-*) får synas här och ingen annanstans på startsidan: de är
-   NexLäx egna.
+   (--amne-*) är NexLäx egna, men sedan 2026-10-08 går de som en röd
+   tråd genom startsidan (Leo: "implementera några färger från nexläx
+   sektionen till resten av sidan där färgerna passar in"): delarna i
+   Hur hjälper vi ditt barn (avsnitt 17), sloganen i Just nu och
+   stegens siffror i Så fungerar Nextrum (#hur, avsnitt 14).
+
+   Flyttad ner 2026-10-08: sektionen står efter studievyn, inte under
+   heron längre. Det är fortfarande ungefär en skärmhöjd.
 
    Det som byter läge ligger i fasta rutor: skärmarna i samma
    rutnätscell, så telefonens höjd byts aldrig, och stigens text står
@@ -1561,23 +1567,31 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
 }
 
 /* ============================================================
-   16. JUST NU (2026-10-07) — erbjudandet under NexLäx
+   16. JUST NU (2026-10-07, omgjort 2026-10-08) — erbjudandet
 
-   Leo: "Under nexläx ska vi teasa med våra erbjudanden: skriv stort
-   Just nu, erbjudandet och upp till 45 % lägre pris än jämförbara
-   paket hos flera större aktörer." Ett blad på papperet, aldrig en
-   mörk yta: rubriken, planen och påståendet till vänster, jämförelsen
-   till höger i en inbäddad ruta, knapparna under texten. På telefon
-   står allt i en spalt och knappen tar hela bredden.
+   Direkt under Hur hjälper vi ditt barn sedan 2026-10-08. Leo: stort
+   "Just nu", läxhjälpen "för" 399 kr utan bindning ("inte från utan
+   för"), paketen 379 kr en månad i taget, "spara upp till ... vid
+   6 månader", och jämförelsen med de andra aktörerna "som en tejp bit
+   som tejpas fast på erbjudandet, så förstora det". Ett blad på
+   papperet, aldrig en mörk yta: rubriken, sloganen och de två priserna
+   till vänster, jämförelsen med tejpen över sin överkant till höger,
+   knapparna under texten. På telefon står allt i en spalt och knappen
+   tar hela bredden; de två priserna står bredvid varandra ner till
+   340 px.
 
-   Siffrorna skriver initErbjudanden() ur erbjudanden_pris, och
-   sektionen är dold (hidden) tills de kommit; startläget här gäller
-   alltså bara staplarna. De växer ur vänsterkanten när bladet stigit
-   in (data-stig ger .nx-in): längden är en bredd som räknas en gång ur
-   --andel, och det som rör sig är bara scale. Utan rörelse står de i
-   sin längd direkt (inget nx-sr).
+   Siffrorna skriver initPris() och initErbjudanden(), och sektionen är
+   dold (hidden) tills de kommit; startlägena här gäller alltså bara
+   staplarna och tejpen. Staplarna växer ur vänsterkanten när bladet
+   stigit in (data-stig ger .nx-in): längden är en bredd som räknas en
+   gång ur --andel, och det som rör sig är bara scale. Tejpen sätts fast
+   med cinemas nx-tejp-fast, en gång. Utan rörelse står allt i sitt
+   slutläge direkt (inget nx-sr).
+
+   Sloganens andra mening bär NexLäx ämnesfärger som en gradient i
+   texten, samma som NexLäx rubrik: sidans röda tråd (Leo 2026-10-08).
    ============================================================ */
-.nx-jn{padding-top:clamp(20px,3vw,48px)}
+.nx-jn{padding-top:clamp(8px,1.6vw,24px)}
 /* Ett ljus av leran i det övre vänstra hörnet, bakom "Just nu". Det
    är en gradient i bladets egen bakgrund, så den följer med i mörkt
    läge (--acc byts där) och kostar ingenting. */
@@ -1586,7 +1600,7 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);
   grid-template-areas:"text jamfor" "cta jamfor";
   grid-template-rows:auto minmax(0,1fr);
-  column-gap:clamp(32px,5.4vw,96px);
+  column-gap:clamp(32px,5vw,88px);
   padding:clamp(28px,4.6vw,68px);
   border-radius:clamp(26px,2.8vw,38px);
   background:
@@ -1602,36 +1616,96 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   line-height:.9;letter-spacing:-.055em;font-weight:800;color:var(--bl);
 }
 .jn-rubrik em{font-style:normal;color:var(--acc-lugn)}
-.jn-plan{
-  margin-top:clamp(18px,2.2vw,28px);
-  display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;
-  font-size:clamp(1.15rem,1.75vw,1.55rem);font-weight:700;
-  letter-spacing:-.026em;line-height:1.2;color:var(--bl);
+.jn-slogan{
+  margin-top:clamp(14px,1.6vw,20px);max-width:30ch;
+  font-size:clamp(1.12rem,1.6vw,1.4rem);font-weight:600;
+  letter-spacing:-.024em;line-height:1.3;color:var(--bl-2);text-wrap:balance;
 }
-.jn-namn{
-  flex:none;display:inline-flex;align-items:center;min-height:30px;
-  font-family:var(--f-mono);font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
-  padding:0 12px;border-radius:999px;background:var(--acc);color:var(--acc-ink);
+.jn-slogan em{font-style:normal;color:var(--amne-ma)}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .jn-slogan em{
+    background:linear-gradient(96deg,var(--amne-ma) 8%,var(--amne-en) 58%,var(--amne-ms) 96%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+  }
 }
-.jn-lede{
-  margin-top:clamp(12px,1.4vw,18px);max-width:40ch;
-  font-size:clamp(1rem,1.25vw,1.15rem);line-height:1.5;color:var(--bl-2);
-  letter-spacing:-.011em;text-wrap:pretty;
+
+/* De två priserna: utan bindning och paketen, sida vid sida. Rutorna
+   ligger på papperet inne i bladet, en nivå lägre, och paketets ruta
+   har leran i kanten: det är den vi vill att man väljer. */
+.jn-priser{
+  margin:clamp(22px,2.6vw,34px) 0 0;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(10px,1.2vw,16px);
 }
-.jn-lede b{font-weight:800;color:var(--bl)}
+.jn-pris{
+  min-width:0;display:flex;flex-direction:column;
+  padding:clamp(16px,1.6vw,22px);
+  border-radius:clamp(16px,1.6vw,22px);
+  background:var(--pap);border:1px solid var(--ln);
+}
+.jn-pris dt{
+  font-size:.84rem;font-weight:600;line-height:1.3;letter-spacing:-.008em;color:var(--bl-3);
+}
+.jn-pris dd{margin:0}
+.jn-pris .jn-pris-tal{
+  margin:8px 0 10px;
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:0 7px;
+  font-size:.95rem;font-weight:600;color:var(--bl-2);letter-spacing:-.012em;
+}
+.jn-pris-tal b{
+  font-size:clamp(1.9rem,3.1vw,2.7rem);font-weight:800;
+  letter-spacing:-.045em;line-height:1.02;color:var(--bl);white-space:nowrap;
+}
+.jn-for{color:var(--bl-3)}
+.jn-pris .jn-pris-not{
+  margin-top:auto;
+  font-size:.82rem;line-height:1.4;color:var(--bl-3);text-wrap:pretty;
+}
+.jn-paket{
+  background:color-mix(in srgb,var(--acc) 6%,var(--pap));
+  border-color:var(--acc-line);
+}
+.jn-paket .jn-pris-tal b{color:var(--acc-lugn)}
+/* Spara-raden är en lapp i ockra, samma ton som tejpen: det är samma
+   sak som säljs. Den skrivs och visas av initErbjudanden(). */
+.jn-pris .jn-spara{
+  align-self:flex-start;
+  padding:6px 11px;border-radius:10px;
+  background:var(--ockra-soft);color:var(--ockra-text);
+  font-weight:600;line-height:1.3;
+}
+.jn-spara b{font-weight:800;color:inherit;white-space:nowrap}
+.jn-spara[hidden]{display:none}
+
 .jn-kort .jn-cta{grid-area:cta;align-self:end;margin-top:clamp(26px,3vw,38px)}
 /* "Skicka intresseanmälan" är en fristående länk: tryckytan minst 44 px. */
 .jn-cta .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
 
 /* Jämförelsen: papperet inne i bladet, så att rutan ligger en nivå
-   lägre än bladet, i båda lägena. */
+   lägre än bladet, i båda lägena. Tejpen (cinemas .nx-tejp-pa) sitter
+   över rutans överkant, och rutan ger plats för den ovanför och
+   innanför. */
 .jn-jamfor{
-  grid-area:jamfor;align-self:center;min-width:0;margin:0;
+  position:relative;
+  grid-area:jamfor;align-self:center;min-width:0;
+  margin:clamp(40px,4vw,52px) 0 0;
   display:grid;gap:clamp(20px,2.2vw,28px);
   padding:clamp(20px,2.6vw,34px);
+  padding-top:calc(clamp(20px,2.6vw,34px) + clamp(44px,4.4vw,58px));
   border-radius:clamp(20px,2vw,26px);
   background:var(--pap);border:1px solid var(--ln);
 }
+.jn-jamfor[hidden]{display:none}
+/* Större än på prissidan (Leo: "förstora det"), och lite mer snett. */
+/* Tejpen får sticka ut en bit över rutans sidor, som en riktig tejp,
+   så att det stora påståendet ryms på en rad på dator. */
+.jn-tejp{--tejp-vrid:-3deg;padding-block:14px 15px;max-width:calc(100% + 28px)}
+.jn-tejp .nx-tejp-stor{font-size:clamp(1.55rem,2.75vw,2.35rem)}
+.jn-tejp .nx-tejp-liten{font-size:clamp(.84rem,1vw,.95rem);max-width:34ch}
+html.nx-sr .jn-kort:not(.nx-in) .jn-tejp{opacity:0}
+html.nx-sr .jn-kort.nx-in .jn-tejp{animation:nx-tejp-fast .62s var(--e-ut) .5s both}
+
 .jn-rad{
   display:grid;grid-template-columns:minmax(0,1fr) auto;
   grid-template-areas:"vem belopp" "stapel stapel";
@@ -1669,12 +1743,20 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
     grid-template-areas:"text" "jamfor" "cta";
     grid-template-rows:none;
     row-gap:24px;
-    padding:26px 18px 22px;border-radius:24px;
+    padding:26px 16px 22px;border-radius:24px;
   }
   .jn-kort .jn-cta{margin-top:0}
   .jn-cta .nx-magnet{width:100%}
   .jn-cta .btn{width:100%;justify-content:center}
-  .jn-jamfor{padding:18px 16px}
+  .jn-jamfor{margin-top:48px;padding:18px 16px;padding-top:calc(18px + 54px)}
+  .jn-priser{gap:8px}
+  .jn-pris{padding:14px 12px 13px;border-radius:16px}
+  .jn-pris dt{font-size:.78rem}
+  .jn-pris .jn-pris-tal{gap:0 5px;font-size:.84rem}
+  .jn-pris-tal b{font-size:1.75rem}
+  .jn-pris .jn-pris-not{font-size:.76rem}
+  .jn-pris .jn-spara{padding:5px 8px}
+  .jn-tejp{padding-inline:calc(var(--tejp-tand) + 14px);max-width:calc(100% - 8px)}
 }
 /* 360–400 px: "Nextrum Standard" och priset ryms på en rad bara när
    priset krymper en aning; annars bryts namnet i två. */
@@ -1682,6 +1764,213 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
   .jn-rad{column-gap:10px}
   .jn-vem{font-size:.9rem}
   .jn-vi .jn-belopp{font-size:1.85rem}
+  .jn-pris-tal b{font-size:1.55rem}
+}
+/* Under 340 px räcker bredden inte till två priser bredvid varandra. */
+@media (max-width:339px){
+  .jn-priser{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){
+  .jn-tejp{animation:none}
+}
+
+/* ============================================================
+   17. HUR HJÄLPER VI DITT BARN (2026-10-08) — direkt under heron
+
+   Leo: "Under heron ska vi ha en ny sektion, hur hjälper vi dit barn,
+   genom våran läxhjälp, exeperitsi, årserfarnhet inom läxhjälp,
+   betygsgarantin och nexläx", med betygsgarantin "inbakad" och dess
+   flöde "litet" här. Fem delar i ett rutnät av blad: på dator tre i
+   första raden och garantin (bred) bredvid NexLäx i den andra, på en
+   platta två och två med garantin över hela raden, på telefon en
+   spalt där figuren står till vänster om texten.
+
+   RÖD TRÅD. Varje del bär en av NexLäx ämnesfärger i --f (satt i
+   markupen): figuren, etiketten, listen i överkant och ljuset i
+   hörnet. Garantin har leran, knapparnas färg. Rubrikens "ditt barn?"
+   har samma gradient som NexLäx rubrik. Ämnesfärgerna klarar AA mot
+   papperet och --kort i båda lägena (cinema), och etiketten är text i
+   den färgen.
+
+   Bladen är startsidans kort (--kort, --kort-kant, --kort-sk) och
+   stiger in med data-stig. Hovringen lyfter med translate, aldrig
+   transform: data-stig äger transform.
+   ============================================================ */
+.nx-hj{padding-block:clamp(72px,9vw,136px) clamp(36px,4.6vw,68px)}
+.hj-rubrik{margin-top:20px}
+.hj-rubrik em{font-style:normal;color:var(--amne-ma)}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .hj-rubrik em{
+    background:linear-gradient(96deg,var(--amne-ma) 8%,var(--amne-en) 58%,var(--amne-ms) 96%);
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+    padding-right:.05em;
+  }
+}
+
+.hj-grid{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(12,minmax(0,1fr));
+  gap:clamp(12px,1.4vw,20px);
+}
+.hj-del{
+  --pad:clamp(22px,2.4vw,32px);
+  grid-column:span 4;
+  position:relative;isolation:isolate;min-width:0;
+  display:flex;flex-direction:column;align-items:flex-start;
+  padding:var(--pad);
+  border-radius:clamp(22px,2.2vw,30px);
+  background:
+    radial-gradient(90% 70% at 0% 0%,color-mix(in srgb,var(--f) 10%,transparent),transparent 70%),
+    var(--kort);
+  border:1px solid var(--kort-kant);
+  box-shadow:var(--kort-sk);
+  transition:translate .45s var(--fjader);
+}
+/* En kort list i delens färg på bladets överkant. */
+.hj-del::before{
+  content:"";position:absolute;top:-1px;left:var(--pad);
+  width:46px;height:3px;border-radius:0 0 3px 3px;
+  background:var(--f);
+}
+.hj-ikon{
+  display:grid;place-items:center;flex:none;
+  width:46px;height:46px;border-radius:15px;
+  background:color-mix(in srgb,var(--f) 13%,transparent);
+}
+.hj-ikon svg{
+  width:22px;height:22px;
+  fill:none;stroke:var(--f);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.hj-et{
+  margin-top:clamp(16px,1.8vw,22px);
+  font-family:var(--f-mono);font-size:11px;font-weight:500;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--f);
+}
+.hj-del h3{
+  margin-top:8px;
+  font-size:clamp(1.2rem,1.65vw,1.5rem);font-weight:700;
+  letter-spacing:-.03em;line-height:1.14;color:var(--bl);text-wrap:balance;
+}
+.hj-del p{
+  margin-top:10px;max-width:46ch;
+  font-size:clamp(.95rem,1.05vw,1.02rem);line-height:1.56;color:var(--bl-2);text-wrap:pretty;
+}
+.hj-del .nx-lank{margin-top:18px}
+/* Länkarna är korta rader text: trycket får 44 px i ett eget lager,
+   så att strecket under dem (::after) står kvar. */
+.hj-del .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
+@media (hover:hover) and (pointer:fine){
+  .hj-del:hover{translate:0 -4px}
+}
+
+/* ---------- garantin: texten och det lilla flödet ---------- */
+.hj-gar{
+  grid-column:span 8;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  column-gap:clamp(22px,3vw,44px);align-items:start;
+}
+.hj-gar-text{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.hj-gar h3{font-size:clamp(1.45rem,2.2vw,2rem);letter-spacing:-.035em;line-height:1.06}
+.hj-gar h3 em{font-style:normal;color:var(--acc-lugn)}
+.hj-gar .nx-fineprint{margin-top:12px;max-width:44ch}
+/* Id:t #betygsgaranti sitter på den här delen: ett hopp hit ska inte
+   landa under sidhuvudet. */
+.hj-gar{scroll-margin-top:96px}
+
+/* Det lilla flödet: samma komponent som garantiflödet (avsnitt 15),
+   mindre, i en ruta av papper inne i bladet. Siffran, linjen och
+   rubriken krymper; steget står i samma ordning och med samma text. */
+.nx-gar-flode.nx-gar-liten{
+  grid-area:auto;          /* avsnitt 15 lägger flödet i ytan "flode", som inte finns här */
+  --nr:1.55rem;
+  --nr-b:calc(var(--nr) * 1.4);
+  --mellan:14px;
+  align-self:stretch;
+  padding:clamp(16px,1.8vw,22px) clamp(14px,1.6vw,20px);
+  border-radius:clamp(16px,1.6vw,22px);
+  background:var(--pap);border:1px solid var(--ln);
+}
+.nx-gar-flode.nx-gar-liten > li{column-gap:10px}
+.nx-gar-liten .nx-gar-steg b{font-size:1rem;letter-spacing:-.02em}
+.nx-gar-liten .nx-gar-steg p{margin-top:3px;font-size:.86rem;line-height:1.45}
+
+/* Stegen tänds ett i taget när delen kommer in i bild: skriptet sätter
+   .pa och .fylld på alla fyra på en gång (data-gar-flode="tur"), och
+   fördröjningen per steg (--d) gör turordningen. Siffran tänds, sedan
+   rinner linjen ner till nästa. :nth-child(n) väger upp regeln i
+   avsnitt 15 som fördröjer två tända steg i rad. */
+.nx-gar-liten > li:nth-child(1){--d:0s}
+.nx-gar-liten > li:nth-child(2){--d:.55s}
+.nx-gar-liten > li:nth-child(3){--d:1.1s}
+.nx-gar-liten > li:nth-child(4){--d:1.65s}
+html.nx-sr .nx-gar-flode.nx-gar-liten.i-gang > li::after{transition:scale .5s var(--e-mjuk)}
+html.nx-sr .nx-gar-flode.nx-gar-liten.i-gang > li.pa:nth-child(n) .nx-gar-nr{transition-delay:var(--d)}
+html.nx-sr .nx-gar-flode.nx-gar-liten.i-gang > li.pa:nth-child(n) .nx-gar-steg,
+html.nx-sr .nx-gar-flode.nx-gar-liten.i-gang > li.pa:nth-child(n) .nx-gar-steg b,
+html.nx-sr .nx-gar-flode.nx-gar-liten.i-gang > li.pa:nth-child(n) .nx-gar-steg p{transition-delay:calc(var(--d) + .08s)}
+html.nx-sr .nx-gar-flode.nx-gar-liten.i-gang > li.fylld:nth-child(n)::after{transition-delay:calc(var(--d) + .1s)}
+
+/* ---------- NexLäx: vägen i liten skala ----------
+   Fyra noder i ämnenas färger på en streckad stig, samma bild som
+   vägen i NexLäx. Dekor (aria-hidden). Noderna poppar fram när bladet
+   stigit in, en i taget; utan rörelse står de där. */
+.hj-nex-bild{
+  display:block;width:min(100%,240px);height:auto;
+  margin-top:clamp(18px,2vw,26px);overflow:visible;
+}
+.hj-nex-bild path{fill:none;stroke:var(--ln-2);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:1 8}
+.hj-nex-bild circle{fill:var(--c);transform-box:fill-box;transform-origin:center}
+html.nx-sr .hj-nex .hj-nex-bild circle{transition:scale .6s var(--fjader)}
+html.nx-sr .hj-nex:not(.nx-in) .hj-nex-bild circle{scale:0}
+html.nx-sr .hj-nex .hj-nex-bild circle:nth-of-type(1){transition-delay:.35s}
+html.nx-sr .hj-nex .hj-nex-bild circle:nth-of-type(2){transition-delay:.5s}
+html.nx-sr .hj-nex .hj-nex-bild circle:nth-of-type(3){transition-delay:.65s}
+html.nx-sr .hj-nex .hj-nex-bild circle:nth-of-type(4){transition-delay:.8s}
+.hj-nex .nx-lank{margin-top:auto;padding-top:18px}
+.hj-nex .nx-lank::after{bottom:0}
+
+/* Platta: två och två, garantin över hela raden sist. dense låter
+   NexLäx fylla hålet bredvid Erfarenheten; ordningen i markupen (och
+   för skärmläsare) är densamma. */
+@media (max-width:1100px){
+  .hj-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:dense}
+  .hj-del{grid-column:span 1}
+  .hj-gar{grid-column:1 / -1}
+}
+/* Telefon: en spalt. Figuren står till vänster om texten, så att fem
+   delar inte blir fem skärmhöjder. */
+@media (max-width:760px){
+  .nx-hj{padding-top:clamp(56px,14vw,72px)}
+  .hj-grid{grid-template-columns:minmax(0,1fr);gap:10px}
+  .hj-del{
+    --pad:16px;
+    display:grid;grid-template-columns:40px minmax(0,1fr);
+    column-gap:14px;align-items:start;
+    padding:18px 16px 18px;border-radius:20px;
+  }
+  .hj-del > *{grid-column:2}
+  .hj-del > .hj-ikon{grid-column:1;grid-row:1 / span 4;width:40px;height:40px;border-radius:13px}
+  .hj-ikon svg{width:19px;height:19px}
+  .hj-et{margin-top:2px}
+  .hj-del h3{margin-top:6px;font-size:1.12rem}
+  .hj-del p{margin-top:6px;font-size:.92rem;line-height:1.5}
+  .hj-del .nx-lank{margin-top:14px;justify-self:start}
+  .hj-nex .nx-lank{padding-top:0}
+  .hj-nex-bild{margin-top:14px;width:min(100%,210px)}
+  /* Garantin: texten (med figuren) överst och flödet under, över hela
+     bladets bredd. */
+  .hj-gar{display:flex;flex-direction:column;align-items:stretch}
+  .hj-gar-text{display:grid;grid-template-columns:40px minmax(0,1fr);column-gap:14px}
+  .hj-gar-text > *{grid-column:2}
+  .hj-gar-text > .hj-ikon{grid-column:1;grid-row:1 / span 6}
+  .hj-gar-text .nx-lank{justify-self:start}
+  .hj-gar h3{font-size:1.32rem}
+  .nx-gar-flode.nx-gar-liten{margin-top:16px;padding:14px 12px}
+}
+@media (prefers-reduced-motion:reduce){
+  .hj-del{transition:none}
+  .nx-gar-liten > li::after,.nx-gar-liten .nx-gar-nr,.nx-gar-liten .nx-gar-steg{transition:none}
 }
 
 /* ============================================================
@@ -2349,7 +2638,22 @@ html.nx-sr .nx-sd.nx-in .sd-rum{opacity:1;transform:none}
 
    Specificiteten är densamma i alla tre prefixen nedan (0,4,1), så
    ordningen avgör: det gemensamma först, sedan full, sedan lite.
+
+   STEGENS FÄRGER (2026-10-08). På startsidan (#hur) tänds varje siffra,
+   linjen under den och märket på fotot i en av NexLäx ämnesfärger,
+   samma ordning som delarna i Hur hjälper vi ditt barn (Leo: "en röd
+   tråd", "implementera några färger från nexläx sektionen"). Reglerna
+   läser var(--f,var(--acc)), så Så fungerar Nextrum, som inte sätter
+   --f, står kvar i leran.
    ============================================================ */
+#hur .nx-hur-steg > li:nth-child(1),#hur .nx-hur-bild > .nx-fig:nth-child(1){--f:var(--amne-ma)}
+#hur .nx-hur-steg > li:nth-child(2),#hur .nx-hur-bild > .nx-fig:nth-child(2){--f:var(--amne-en)}
+#hur .nx-hur-steg > li:nth-child(3),#hur .nx-hur-bild > .nx-fig:nth-child(3){--f:var(--amne-no)}
+#hur .nx-hur-steg > li:nth-child(4),#hur .nx-hur-bild > .nx-fig:nth-child(4){--f:var(--acc)}
+#hur .nx-hur-steg > li:nth-child(5),#hur .nx-hur-bild > .nx-fig:nth-child(5){--f:var(--amne-ms)}
+/* Siffran på fotots märke står på färgen: kortets ljusa ton i ljust
+   läge (minst 5,2:1, mossans grön är mörkast) och dess mörka i mörkt. */
+#hur .nx-hur-bild > .nx-fig{--f-ink:var(--kort)}
 
 /* ---------- fotona, båda lägena ---------- */
 /* Ramen klipper och bär skuggan, så att fotot som glider in syns
@@ -2436,7 +2740,7 @@ html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.pa .nx-
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li:last-child::after{border-radius:0 0 2px 2px}
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li::before{background:var(--ln-2)}
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li::after{
-    background:var(--acc);
+    background:var(--f,var(--acc));
     scale:1 0;transform-origin:50% 0;
     transition:scale .6s var(--e-ut),opacity .4s var(--e);
   }
@@ -2450,7 +2754,7 @@ html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.pa .nx-
     scale:.7;transform-origin:0 58%;
     transition:color .4s var(--e),scale .6s var(--fjader);
   }
-  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li.pa em{color:var(--acc);scale:1}
+  html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg li.pa em{color:var(--f,var(--acc));scale:1}
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-steg h3{
     opacity:.4;transition:opacity .45s var(--e);
   }
@@ -2503,7 +2807,7 @@ html.nx-sr:not([data-motion="still"]) .nx-hur.igang .nx-hur-bild .nx-fig.pa .nx-
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-mark b{
     flex:none;display:grid;place-items:center;
     min-width:34px;height:34px;padding-inline:7px;border-radius:100px;
-    background:var(--acc);color:var(--acc-ink);
+    background:var(--f,var(--acc));color:var(--f-ink,var(--acc-ink));
     font-size:.92rem;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
   }
   html.nx-sr[data-motion="full"] .nx-hur.igang .nx-hur-mark span{
@@ -2610,7 +2914,7 @@ html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg em{
   translate:0 .14em;
   transition:color .45s var(--e),translate .7s var(--e-ut);
 }
-html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg li.pa em{color:var(--acc);translate:0 0}
+html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg li.pa em{color:var(--f,var(--acc));translate:0 0}
 html.nx-sr[data-motion="lite"] .nx-hur.igang .nx-hur-steg li > div{
   grid-area:text;padding-top:clamp(12px,3.4cqi,18px);
   opacity:.38;transition:opacity .45s var(--e);
@@ -2779,6 +3083,59 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 }
 @media (max-width:339px){.nx-apply-flow{grid-template-columns:minmax(0,1fr)}}
 
+/* ---------- För dig som vill jobba: svart och lera (2026-10-08) ----------
+   Leo: "ändra färg till den svarta som är på mörksidan", i mörkt läge
+   "samma färg och inte en gråare", och "lite mer orange runt olika
+   kolumner osv så de passar in snyggare och gör de moderna". Ytan är
+   --bli-bg (mörka lägets papper, #1A1813) i båda lägena, med ett sken
+   av lera i två hörn i stället för barkens lera och mossa. I mörkt läge
+   står den i ett med sidan, så en linje av lera markerar överkanten.
+   Kolumnerna (fotot, punkterna, ansökans fyra steg) har kanter av lera,
+   och stegens siffror står i den.
+
+   Bara startsidan: #bli. Bli studiehjälpare-sidan har samma lista i sitt
+   band och står kvar. Nästa steg, som följer direkt efter sedan
+   omdömena flyttade upp, börjar i samma svarta och mörknar mot footern,
+   så att det inte blir en skarv mellan två mörka ytor. */
+#bli{
+  background:
+    radial-gradient(80% 60% at 100% 0%,var(--bli-glod),transparent 58%),
+    radial-gradient(70% 55% at 0% 100%,color-mix(in srgb,var(--bli-glod) 70%,transparent),transparent 60%),
+    var(--bli-bg);
+}
+#bli::before{
+  content:"";position:absolute;inset:0 0 auto;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--bli-kant) 22%,var(--bli-kant) 78%,transparent);
+}
+#bli + .nx-mork{
+  background:
+    radial-gradient(60% 45% at 100% 55%,var(--nt-mossa),transparent 62%),
+    linear-gradient(180deg,var(--bli-bg),var(--nt-2));
+}
+#bli .nx-et{color:var(--lera-l)}
+#bli .nx-split-bild .nx-fig{
+  outline:1px solid var(--bli-kant);outline-offset:7px;
+}
+#bli .nx-punkter li{border-color:var(--bli-linje)}
+#bli .nx-punkter .pk{
+  border-color:var(--bli-kant);
+  background:color-mix(in srgb,var(--lera-l) 12%,transparent);
+}
+#bli .nx-punkter .pk svg{stroke:var(--lera-l)}
+#bli .nx-apply-flow > .nx-apply-step{
+  background:
+    linear-gradient(160deg,color-mix(in srgb,var(--lera-l) 13%,transparent),transparent 62%),
+    rgba(239,230,214,.03);
+  border-color:var(--bli-kant);
+}
+#bli .nx-apply-step em{color:var(--lera-l)}
+@media (hover:hover) and (pointer:fine){
+  #bli .nx-apply-flow > .nx-apply-step:hover{
+    background-color:rgba(239,230,214,.07);
+    border-color:color-mix(in srgb,var(--lera-l) 70%,transparent);
+  }
+}
+
 /* ============================================================
    15. GARANTIFLÖDET (2026-10-07) — betygsgarantin på papperet
 
@@ -2793,7 +3150,9 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 
    Egna namn med flit. .nx-apply-flow är kvar i Bli studiehjälpare och
    sköts av hållpunkter() och mörkaYtor(), och prissidans betalflöde
-   är .pr-flode. Startsidan och prissidan har samma komponent.
+   är .pr-flode. Prissidan har sektionen; startsidan har sedan
+   2026-10-08 samma flöde, litet, inne i Hur hjälper vi ditt barn
+   (.nx-gar-liten, avsnitt 17), och ingen egen garantisektion.
 
    Linjen fylls med scale, aldrig height: scale körs på grafikkortet,
    height räknar om layouten för varje bildruta. Ett steg som tänds
@@ -2807,7 +3166,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    stegen: den regeln väger (0,3,1) på opacity och transform och hade
    slagit ut nedtoningen.
    ============================================================ */
-/* Mindre luft under än över: sektionen under (studiehjälparna på
+/* Mindre luft under än över: sektionen under (på prissidan; förr på
    startsidan) har sin egen stora luft ovanför sig, och två fulla
    luftmått i rad läses som att sidan tagit slut. */
 .nx-gar{padding-bottom:clamp(32px,4.4vw,64px)}
