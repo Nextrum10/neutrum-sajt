@@ -20,6 +20,19 @@ priserna men inget går att köpa. Klippkorten står i studievyn och på prissid
 bredvid planerna som fälls ut (2026-09-27). De var borta ur
 studievyn en förmiddag samma dag och kom tillbaka i den formen.
 
+**Plankortens text på prissidan (2026-10-08).** Leo: "på erbjudanden texten
+ovanför priset ska de stå exempelvis på basic 4 timmar per månad, sen på
+standard 8 timmar per månad och intensiv 12 timmar per månad, obundet för de
+betalas som förköp där timmarna samlas som man sedan själv distruberrar ut
+på lektioner under en månad". Raden ovanför priset är "**4 timmar per
+månad**, obundet. Ni betalar timmarna i förväg och fördelar dem själva på
+pass under månaden." (Hours per month, no commitment, på engelska), med
+antalet i `data-erb-antal`; "Ett pass i veckan" och "en månad i taget" gick ur
+korten. Obundet är sant mot villkoren: en plan är ett engångsköp som gäller
+en månad från köpet, förnyas inte, och har ingen bindningstid. Studievyns kort
+säger fortfarande "4 timmar · en månad i taget" (`erbKort`), som inte bad om
+att ändras.
+
 **Planerna heter Basic, Standard och Intensiv (2026-10-07).** Leo: "Ändra
 namnet på standard planen till basic planen och namnet på intensiv planen
 till standard planen. Och skapa en intensiv plan med 12 timmars läxhjälp

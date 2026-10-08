@@ -191,7 +191,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537).
   **Paketen** (planerna) kostar 379 kr i timmen, en månad i taget: 5 % av 399 nedåt till hel krona. De
   binder inte: villkoren säger ingen bindningstid och att det som är kvar betalas tillbaka, så sajten säger
-  "en månad i taget", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
+  "en månad i taget" eller "obundet", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
+  Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
+  pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`

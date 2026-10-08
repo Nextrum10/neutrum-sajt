@@ -53,7 +53,7 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=f6268c2a">
+<link rel="stylesheet" href="nextrum-cinema.css?v=0255dbfd">
 <link rel="stylesheet" href="nextrum-start.css?v=1403819e">
 <link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
 
@@ -315,6 +315,14 @@
      jämförelserna gjordes, och visas bara när en tejp syns. Ändras ett
      pris, här eller hos dem, ska underlaget göras om.
 
+     Texten ovanför priset (2026-10-08, Leo: "på basic 4 timmar per
+     månad, sen på standard 8 timmar per månad och intensiv 12 timmar per
+     månad, obundet för de betalas som förköp där timmarna samlas som man
+     sedan själv distribuerar ut på lektioner under en månad"): antalet
+     i fetstil, "obundet" och hur timmarna används. Obundet stämmer med
+     villkoren (ingen bindningstid, en plan gäller en månad från köpet och
+     förnyas inte); "bindning" står aldrig om en plan.
+
      Rutorna under beskrivningen är timmarna, en per timme; en timme på
      köpet hade varit i lera. initErbjudanden() ritar dem om antalet ändras.
      På en telefon är planerna en rad man sveper i, som ett inlägg, och
@@ -334,7 +342,7 @@
   <div class="pr-erb-planer" data-erb-rad data-stig>
     <div class="nx-price-card pr-erb-plan" data-erb="plan_basic" data-erb-timmar="4" data-erb-ore="151600">
       <div class="pr-erb-topp"><span class="eyebrow" data-erb-namn>Basic</span><span class="pr-erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b></span></div>
-      <p class="pr-erb-vad">Ett pass i veckan, <span data-erb-antal>4</span> timmar på en månad, en månad i taget.</p>
+      <p class="pr-erb-vad"><b><span data-erb-antal>4</span> timmar per månad</b>, obundet. Ni betalar timmarna i förväg och fördelar dem själva på pass under månaden.</p>
       <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       <div class="nx-amount">
         <b class="tnum" data-erb-pris>1 516 kr</b>
@@ -350,7 +358,7 @@
     <div class="nx-price-card pr-erb-plan ar-framhavd" data-erb="plan_standard" data-erb-timmar="8" data-erb-ore="303200">
       <span class="pr-erb-band">Vårt tips</span>
       <div class="pr-erb-topp"><span class="eyebrow" data-erb-namn>Standard</span><span class="pr-erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b></span></div>
-      <p class="pr-erb-vad">Två pass i veckan, <span data-erb-antal>8</span> timmar på en månad, en månad i taget.</p>
+      <p class="pr-erb-vad"><b><span data-erb-antal>8</span> timmar per månad</b>, obundet. Ni betalar timmarna i förväg och fördelar dem själva på pass under månaden.</p>
       <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <div class="nx-amount">
         <b class="tnum" data-erb-pris>3 032 kr</b>
@@ -365,7 +373,7 @@
 
     <div class="nx-price-card pr-erb-plan" data-erb="plan_intensiv" data-erb-timmar="12" data-erb-ore="454800">
       <div class="pr-erb-topp"><span class="eyebrow" data-erb-namn>Intensiv</span><span class="pr-erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b></span></div>
-      <p class="pr-erb-vad">Tre pass i veckan, <span data-erb-antal>12</span> timmar på en månad, en månad i taget.</p>
+      <p class="pr-erb-vad"><b><span data-erb-antal>12</span> timmar per månad</b>, obundet. Ni betalar timmarna i förväg och fördelar dem själva på pass under månaden.</p>
       <span class="pr-erb-rutor" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
       <div class="nx-amount">
         <b class="tnum" data-erb-pris>4 548 kr</b>
