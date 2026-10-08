@@ -86,8 +86,10 @@ admin godkänt hen.
 
 SIFFRORNA:
 · 399 kronor i timmen, utan bindning. Det är priset, inget från-pris.
-· Planerna Basic, Standard och Intensiv (4, 8 och 12 timmar) binder
-  familjen en månad och kostar 379 kronor i timmen. De köps en gång,
+· Planerna Basic, Standard och Intensiv (4, 8 och 12 timmar) gäller
+  en månad i taget och kostar 379 kronor i timmen. De binder inte:
+  villkoren har ingen bindningstid, och den som slutar får tillbaka
+  det som är kvar. De köps en gång,
   i förväg, och priserna räknas i databasen, inte här.
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
