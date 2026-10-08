@@ -155,11 +155,12 @@
      sanningen, och ändras den där ska den kopieras hit, på båda
      språken. Formen: nextrum-start.css avsnitt 17.
 
-     Garantins del följer reglerna i CLAUDE.md, avsnitt 1: länken till
-     villkoren och "Villkor gäller" står intill texten. Id:t
-     #betygsgaranti finns bara här på sidan; länkarna till /#betygsgaranti
-     från andra sidor går till startsidan som förut. Det lilla flödet
-     tänds i tur (garantiflöde() i nextrum-start.js).
+     Garantin är startsidans platta remsa under de fyra bladen (index.html,
+     1c), och reglerna i CLAUDE.md, avsnitt 1, gäller: länken till
+     villkoren och "Villkor gäller" står i remsan. Id:t #betygsgaranti
+     finns bara här på sidan; länkarna till /#betygsgaranti från andra
+     sidor går till startsidan som förut. Stegen tänds i tur
+     (garantiflöde() i nextrum-start.js).
 
      En skillnad med flit: NexLäx-delens länk går till NexLäx på För
      elever & föräldrar, för sidan har ingen egen #nexlax.
@@ -195,25 +196,7 @@
         <h3>Från samma skolbänk</h3>
         <p>De vet hur det känns att plugga inför prov, fastna på en uppgift och förstå något för första gången, för de gjorde det själva nyligen.</p>
       </li>
-      <li class="hj-del hj-gar" id="betygsgaranti" data-stig style="--f:var(--acc)">
-        <div class="hj-gar-text">
-          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span>
-          <span class="hj-et">Betygsgarantin</span>
-          <h3>Går betyget inte upp, <em>fortsätter vi.</em></h3>
-          <p>Vi tror på rätt match och ett läsår av riktigt arbete, så mycket att vi står för det. Gör eleven sin del och går betyget ändå inte upp, fortsätter vi hjälpa till utan att ni betalar något.</p>
-          <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
-          <p class="nx-fineprint">Villkor gäller. Hjälp med andra ämnen och läxorna i stort ingår som vanligt och påverkar inte garantin.</p>
-        </div>
-        <ol class="nx-gar-flode nx-gar-liten" data-gar-flode="tur">
-          <li><span class="nx-gar-nr" aria-hidden="true">01</span><div class="nx-gar-steg"><b>Välj ämnena</b><p>Ni väljer de ämnen som ska lyfta, och vi lägger upp planen mot årets betyg.</p></div></li>
-          <li><span class="nx-gar-nr" aria-hidden="true">02</span><div class="nx-gar-steg"><b>Kör hela läsåret</b><p>Regelbundna pass, uppgifter mellan gångerna och en studiehjälpare som håller i trådarna.</p></div></li>
-          <li><span class="nx-gar-nr" aria-hidden="true">03</span><div class="nx-gar-steg"><b>Se allt i er vy</b><p>Varje pass, rapport och uppgift syns för er, och garantin prövas på det ni själva kan se.</p></div></li>
-          <li><span class="nx-gar-nr" aria-hidden="true">04</span><div class="nx-gar-steg"><b>Vi står kvar</b><p>Går betyget inte upp trots att ni gjort er del, får ni extra läxhjälp av oss utan kostnad.</p></div></li>
-        </ol>
-      </li>
-      <li class="hj-del hj-nex" data-stig data-fördröj="1" style="--f:var(--amne-ms)">
+      <li class="hj-del hj-nex" data-stig data-fördröj="3" style="--f:var(--amne-ms)">
         <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span>
         <span class="hj-et">NexLäx</span>
         <h3>Övning mellan passen</h3>
@@ -224,6 +207,19 @@
         </a>
       </li>
     </ul>
+
+    <div class="hj-gar" id="betygsgaranti" data-stig>
+      <p class="hj-gar-mening"><span class="hj-gar-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span><span>Vi erbjuder <em>betygsgarantin</em> för att vi är säkra på våra metoder.</span></p>
+      <ol class="hj-gar-steg" data-gar-flode="tur">
+        <li><span class="hj-gar-nr" aria-hidden="true">01</span><b>Välj ämnena</b></li>
+        <li><span class="hj-gar-nr" aria-hidden="true">02</span><b>Kör hela läsåret</b></li>
+        <li><span class="hj-gar-nr" aria-hidden="true">03</span><b>Se allt i er vy</b></li>
+        <li><span class="hj-gar-nr" aria-hidden="true">04</span><b>Vi står kvar</b></li>
+      </ol>
+      <p class="hj-gar-villkor">Villkor gäller. <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a></p>
+    </div>
   </div>
 </section>
 
