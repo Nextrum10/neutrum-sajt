@@ -124,8 +124,8 @@ för att säga något om det (samma regel som för sidorna).
 Lägg upp dem som egna poster. Varje post är en egen chans att matcha en
 sökning, och de kostar ingenting.
 
-399 kr i timmen sedan 2026-10-08 (utan bindning; planerna med en månads
-bindning kostar 379 kr i timmen och står på prissidan). Ändra posterna i
+399 kr i timmen sedan 2026-10-08 (utan bindning; planerna, en månad i
+taget, kostar 379 kr i timmen och står på prissidan). Ändra posterna i
 profilen när priset ändras: ett gammalt pris där är samma sak som ett
 gammalt pris på sidan.
 

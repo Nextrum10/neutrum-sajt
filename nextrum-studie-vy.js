@@ -3132,7 +3132,7 @@
 
   /* Planerna (2026-10-07, Leo): Standard hade en timme på köpet i stället
      för en rabatt till 2026-10-08, då alla tre fick 5 % mot 399 kr, alltså
-     379 kr i timmen, och en månads bindning. Timmarna på köpet räknas i
+     379 kr i timmen, en månad i taget. Timmarna på köpet räknas i
      databasen (erbjudanden_pris.timmar_pa_kopet) och visas om katalogen
      får dem igen; saknas fältet är det noll. */
   const erbPåKöpet = e => Math.max(Number(e.timmar_pa_kopet) || 0, 0);
@@ -3162,11 +3162,12 @@
     const perTimme = Number(e.rabatterat_timpris_ore);
     /* Ur raden, inte ur koden (Fas 21.3): ändras timmarna eller
        giltigheten i katalogen ska kortet säga det nya av sig självt.
-       En plan är en bindning för den tid den gäller (Leo 2026-10-08:
-       "på våra paket blir man bunden i 1 månad"), och kortet säger det
-       före köpet, med samma ord som prissidan. */
-    const bindning = Number(e.giltig_manader) === 1 ? '1 månads bindning' : e.giltig_manader + ' månaders bindning';
-    const vad = timmarOrd(Number(e.timmar)) + ' · ' + bindning;
+       En plan är ingen bindning: villkoren säger ingen bindningstid, och
+       den som slutar får tillbaka det som är kvar. Planen gäller en månad
+       i taget, och kortet säger det med samma ord som prissidan (Leo
+       2026-10-08 valde de orden framför "bindning"). */
+    const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
+    const vad = timmarOrd(Number(e.timmar)) + ' · ' + (e.sort === 'plan' && Number(e.giltig_manader) === 1 ? 'en månad i taget' : 'gäller i ' + mån);
     /* Märket säger vad erbjudandet ger: timmen på köpet, rabatten, eller
        båda. Aldrig "−0 %". */
     const märken = (pa ? '<span class="erb-rabatt ar-pa-kopet">' + esc(timmarOrd(pa)) + ' på köpet</span>' : '')

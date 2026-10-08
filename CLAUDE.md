@@ -189,7 +189,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 ### Siffror som måste stämma överallt
 - **399 kr/tim** utan bindning (`PRIS_PER_TIMME` och läxhjälpens rad i `tjanster`, 2026-10-08), och
   det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537).
-  **Paketen** (planerna) binder en månad och kostar 379 kr i timmen: 5 % av 399 nedåt till hel krona.
+  **Paketen** (planerna) kostar 379 kr i timmen, en månad i taget: 5 % av 399 nedåt till hel krona. De
+  binder inte: villkoren säger ingen bindningstid och att det som är kvar betalas tillbaka, så sajten säger
+  "en månad i taget", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
@@ -199,7 +201,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`. Allt med
   `data-erb` (planerna, lyftet `.pr-lyft` med tejpen `.nx-tejp`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
   `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar),
-  Standard (`plan_standard`, 8) och Intensiv (`plan_intensiv`, 12), alla −5 % och en månads bindning sedan
+  Standard (`plan_standard`, 8) och Intensiv (`plan_intensiv`, 12), alla −5 % och en månad i taget sedan
   2026-10-08, då Standard förlorade "8 timmar för priset av 7";
   `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
   `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och ett kort med
@@ -636,10 +638,9 @@ Detaljer: `minne/grunden.md`.
   1505 av 1505 i `rls-test.sql` med migrationen. Ingen funktion behöver driftsättas för priset; `drift`
   (`_delad/nextrum-fakta.ts`, agentens siffror) ska driftsättas från main efter merge. Ingen familj hade bokat
   när priset ändrades (Leo 2026-10-08), så ingen behöver få veta. Kvar:
-  profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5), och **villkoren**: de säger "ingen bindningstid"
-  och att den som slutar med en plan får tillbaka det som är kvar, så "en månads bindning" på sidorna
-  har ingen motsvarighet där. En riktig bindning kräver en ny version av villkoren (alla får frågan igen), och
-  juristen har inte läst något av det.
+  profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5). Leos "bunden i 1 månad" blev "en månad i taget"
+  på sajten, för villkoren säger ingen bindningstid och att den som slutar med en plan får tillbaka det som
+  är kvar; en riktig bindning kräver en ny version av villkoren (alla får frågan igen) och juristen.
 - **Just nu-jämförelsen** (2026-10-08): "upp till 39 % lägre pris än jämförbara paket hos flera större
   aktörer" (talet räknas) och "Andra aktörer 5 000 kr+" (plustecknet sedan samma dag, Leo) bygger på Leos
   underlag (Studybuddy, 5 000 kr för samma paket),

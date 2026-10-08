@@ -64,8 +64,8 @@ välja per pass, efter passet. Flaggan `faktura` är på sedan 2026-09-27,
 och texterna säger det sedan dagen efter.
 
 Två siffror och ett löfte står på många ställen samtidigt: 399 kr/tim
-utan bindning (sedan 2026-10-08; paketen 379 kr/tim med en månads
-bindning), 69 kr/tim fast tillägg för flera barn (tak tre, alltså 468 för
+utan bindning (sedan 2026-10-08; paketen 379 kr/tim, en månad i
+taget), 69 kr/tim fast tillägg för flera barn (tak tre, alltså 468 för
 tre barn, inte 537), och att familjen betalar varje pass med kort, antingen i
 förväg eller efter passet när de bekräftar rapporten (Fas 19.2; före
 passet sa Fas 14.2). Rapporten bekräftas också när passet redan är

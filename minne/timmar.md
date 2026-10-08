@@ -9,8 +9,8 @@ kortbetalningen i `betalning.md`. "Avsnitt N" i texten är kärnans.
 ## Köpta timmar (Fas 16.1 och 21)
 
 **Timmar kan köpas i förväg (Fas 16.1).** Tre planer för en månad sedan
-2026-10-07 (Basic 4 timmar, Standard 8 och Intensiv 12, alla −5 % och en
-månads bindning sedan 2026-10-08, då Standard förlorade sin timme på köpet;
+2026-10-07 (Basic 4 timmar, Standard 8 och Intensiv 12, alla −5 %, en månad i
+taget, sedan 2026-10-08 (ingen bindning: villkoren säger ingen bindningstid), då Standard förlorade sin timme på köpet;
 till 2026-10-07 två, 4 och 8 timmar, −10 %) och klippkort med 10–100 timmar (−5 %, gäller
 6–18 månader). Köpet är ett engångsköp med kort, inget abonnemang.
 Timmarna betalar sedan ett bekräftat pass med ett barn i stället för

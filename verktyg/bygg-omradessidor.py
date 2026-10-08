@@ -46,7 +46,7 @@ SKAL = os.path.join(ROT, 'var-ide.html')
 
 # Timpriset utan bindning (399 sedan 2026-10-08, Leo). Samma tal som
 # PRIS_PER_TIMME i nextrum-config.js och läxhjälpens pris i tjanster.
-# Paketens pris (379 kr i timmen med en månads bindning) står bara i
+# Paketens pris (379 kr i timmen, en månad i taget) står bara i
 # erbjudanden_pris och skrivs aldrig in i sidorna härifrån.
 PRIS_KR = 399
 EXTRA_KR = 69
@@ -2011,7 +2011,7 @@ GUIDER = [
             f'{EXTRA_BARN} i timmen totalt, lika mycket för tre barn som för två. Det finns ingen '
             f'anmälningsavgift, ingen bindningstid och inget minsta antal timmar, och för nya '
             f'familjer är första timmen på köpet när ni har bokat två timmar. Vill ni betala mindre '
-            f'för varje timme kan ni välja en plan med en månads bindning.',
+            f'för varje timme kan ni välja en plan, en månad i taget.',
             'Ni betalar för den tid passet faktiskt höll, räknat per påbörjad kvart, och ser '
             'tiden i rapporten innan ni bekräftar den. Matchningen, studieplanen och rapporten '
             'efter varje pass ingår i timpriset. Hela prisbilden står på prissidan.',

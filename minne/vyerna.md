@@ -399,8 +399,8 @@ från utan för", "en lite rolig slogan", och tejpen "som tejpas fast på
 erbjudandet, så förstora det"). Vänster: "Just nu", sloganen ("Läxorna får
 vara kluriga. Priset behöver inte vara det.", andra meningen i NexLäx
 gradient) och två prisrutor: "Läxhjälp utan bindning för 399 kr i timmen"
-(`data-stat="pris-inline"`, "Det är priset, inte ett från-pris") och "Paket
-med en månads bindning för 379 kr i timmen" (`data-erb-rabatterat`, Standards
+(`data-stat="pris-inline"`, "Det är priset, inte ett från-pris") och "Paket,
+en månad i taget, för 379 kr i timmen" (`data-erb-rabatterat`, Standards
 timpris; alla tre planerna kostar lika i timmen, och gör de det inte längre
 ska raden skrivas om) med lappen "Spara upp till 1 440 kr på 6 månader"
 (`data-erb-spara="6"`; beloppet räknas ur databasen, inte Leos 1 200).
@@ -415,7 +415,8 @@ bara om Standard saknas. Inget av våra priser står i HTML.
 en och samma plattform: studieplan, bokning, rapporter, NexLäx och
 betalning ...", Leo: "överstig ej så att texten blir längre än den
 bredvid"): 141 tecken mot Rätt matchs 155 (144 mot 167 på engelska).
-Bindningstiden står inte där längre, för paketen binder en månad.
+Bindningstiden står inte där längre. Leos "bunden i 1 månad" blev "en
+månad i taget" överallt, för villkoren säger ingen bindningstid (2026-10-08).
 
 **För dig som vill jobba** ("ändra färg till den svarta som är på
 mörksidan. Och på mörksids ska för dig som vill jobba ha samma färg och inte

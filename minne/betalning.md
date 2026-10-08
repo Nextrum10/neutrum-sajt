@@ -12,7 +12,7 @@ texten är kärnans.
 - **399 kr/tim** utan bindning (`nextrum-config.js: PRIS_PER_TIMME`, och
   läxhjälpens `pris_per_timme_ore` i `tjanster`), sedan 2026-10-08; till
   dess 379. Det är priset, aldrig ett "från"-pris. Paketen kostar 379 kr i
-  timmen med en månads bindning (nedan, och `timmar.md`).
+  timmen, en månad i taget, utan bindning (nedan, och `timmar.md`).
 - **69 kr/tim** tillägg för fler än ett barn — **fast, inte per barn**,
   tak tre barn (`tjanster.extra_personer_max`). Tre barn kostar 468, inte 537
   (448 och 517 med 379 kr i timmen)
