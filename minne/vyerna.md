@@ -630,14 +630,15 @@ korta beskrivningen skriver du detta: Nextrum erbjuder prisvärd läxhjälp
 där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper
 elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid."
 Sedan "skriv där ditt barn istället för elever", och till sist "Så hjälper
-vi ska vara vad är Nextrum och behåll så hjälper vi ditt barn som rubrik".
-Så på startsidan, båda språken: etiketten (`.nx-et`) är "Vad är Nextrum"
-("What is Nextrum"), rubriken är kvar "Hur hjälper vi *ditt barn?*", och
-ingressen i `.nx-head-aside` är "Nextrum erbjuder prisvärd läxhjälp där ditt
-barn matchas med en studiehjälpare som passar barnets behov. Vi hjälper
-ditt barn att förstå mer, känna sig tryggare i skolan och utvecklas över
-tid." ("barnets", inte "deras" eller "hens"; engelskan säger "your child"
-och "tutor" som resten av den). Ankaret `#sa-hjalper-vi`, bladen och remsan
+vi ska vara vad är Nextrum och behåll så hjälper vi ditt barn som rubrik",
+och sist "Ta bort ditt barn och skriv där elever" (rubriken säger redan
+ditt barn). Så på startsidan, båda språken: etiketten (`.nx-et`) är "Vad är
+Nextrum" ("What is Nextrum"), rubriken är kvar "Hur hjälper vi *ditt
+barn?*", och ingressen i `.nx-head-aside` är Leos första text, med elever:
+"Nextrum erbjuder prisvärd läxhjälp där elever matchas med en
+studiehjälpare som passar deras behov. Vi hjälper elever att förstå mer,
+känna sig tryggare i skolan och utvecklas över tid." (engelskan "students"
+och "tutor", som resten av den). Ankaret `#sa-hjalper-vi`, bladen och remsan
 är orörda, och Vår idé har kvar etiketten "Så hjälper vi" och den gamla
 ingressen.
 
