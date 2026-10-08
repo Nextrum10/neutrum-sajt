@@ -1628,14 +1628,9 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   font-size:clamp(1.12rem,1.6vw,1.4rem);font-weight:600;
   letter-spacing:-.024em;line-height:1.3;color:var(--bl-2);text-wrap:balance;
 }
-.jn-slogan em{font-style:normal;color:var(--amne-ma)}
-@supports ((-webkit-background-clip:text) or (background-clip:text)){
-  .jn-slogan em{
-    background:linear-gradient(96deg,var(--amne-ma) 8%,var(--amne-en) 58%,var(--amne-ms) 96%);
-    -webkit-background-clip:text;background-clip:text;
-    color:transparent;-webkit-text-fill-color:transparent;
-  }
-}
+/* Sloganens andra mening i leran, som rubrikens "nu". Gradienten i
+   NexLäx färger står bara i NexLäx rubrik (Leo 2026-10-08: "Överallt där rubriken är med den färgen när de inte gäller nexläx lägg de tillbaka till antingen vit eller orange som de har förut"). */
+.jn-slogan em{font-style:normal;color:var(--acc-lugn)}
 
 /* De två priserna: utan bindning och paketen, sida vid sida. Rutorna
    ligger på papperet inne i bladet, en nivå lägre, och paketets ruta
@@ -1796,8 +1791,8 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
    RÖD TRÅD. Varje blad bär en av NexLäx ämnesfärger i --f (satt i
    markupen): figuren, etiketten, listen i överkant och ljuset i
    hörnet. Garantins remsa har leran,
-   knapparnas färg. Rubrikens "ditt barn?" har samma gradient som
-   NexLäx rubrik. Ämnesfärgerna klarar AA mot papperet och --kort i
+   knapparnas färg. Rubrikens "ditt barn?" står i leran, som andra
+   rubrikers betoning (till 2026-10-08 i NexLäx gradient). Ämnesfärgerna klarar AA mot papperet och --kort i
    båda lägena (cinema), och etiketten är text i den färgen.
 
    Bladen är startsidans kort (--kort, --kort-kant, --kort-sk) och
@@ -1805,16 +1800,9 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
    transform: data-stig äger transform.
    ============================================================ */
 .nx-hj{padding-block:clamp(72px,9vw,136px) clamp(36px,4.6vw,68px)}
+/* "ditt barn?" står i leran som andra rubrikers betoning (.nx-d2 em i
+   cinema); gradienten står bara i NexLäx rubrik (2026-10-08). */
 .hj-rubrik{margin-top:20px}
-.hj-rubrik em{font-style:normal;color:var(--amne-ma)}
-@supports ((-webkit-background-clip:text) or (background-clip:text)){
-  .hj-rubrik em{
-    background:linear-gradient(96deg,var(--amne-ma) 8%,var(--amne-en) 58%,var(--amne-ms) 96%);
-    -webkit-background-clip:text;background-clip:text;
-    color:transparent;-webkit-text-fill-color:transparent;
-    padding-right:.05em;
-  }
-}
 
 .hj-grid{
   list-style:none;margin:0;padding:0;
@@ -3369,7 +3357,7 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    flera delar på sidan och de separata sidorna ockps." NexLäx
    ämnesfärger (--amne-* i cinema) bar redan delarna i Hur hjälper vi
    ditt barn (avsnitt 17), "ditt barn?", sloganen i Just nu och stegen
-   i #hur (avsnitt 14). Nu bär de resten också, efter tre regler, så att
+   i #hur (avsnitt 14). Nu bär de resten också, efter två regler, så att
    samma sorts sak alltid har samma färg:
 
      ORDNINGEN. I en rad blad eller steg får det n:te bladet färg n:
@@ -3383,10 +3371,12 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
      ÄMNET. Det som namnger ett ämne har ämnets färg: studiehjälparnas
        ämnen på startsidan (data-amne, satt av sidans skript ur ämnets
        namn).
-     BETONINGEN. Gradienten i "ditt barn?" (blå, lila, rosa) bär sidans
-       första och sista betoning: <em> i menysidornas rubrik överst och
-       i Nästa steg längst ned, och citattecknen i bildväggen och
-       brevet. Andra rubrikers <em> står kvar i leran.
+   En tredje regel, BETONINGEN, gav <em> i menysidornas rubrik överst,
+   i Nästa steg, "ditt barn?", sloganen i Just nu och citattecknen i
+   bildväggen och brevet NexLäx gradient (blå, lila, rosa). Den gick
+   samma kväll (Leo 2026-10-08: "Överallt där rubriken är med den färgen när de inte gäller nexläx lägg de tillbaka till antingen vit eller orange som de har förut"): gradienten står bara i NexLäx rubrik
+   (.nlx-rubrik em, avsnitt 13), och de andra står i leran som förut
+   (.nx-d1 em och .nx-d2 em i cinema, Nästa stegs --lera-l på barken).
 
    Garantin har leran överallt (remsan i Hur hjälper vi), och
    erbjudandena på prissidan (.pr-erb-*, tejperna) och Just
@@ -3455,26 +3445,6 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   color:color-mix(in srgb,var(--f) 84%,var(--bl));
   border-color:color-mix(in srgb,var(--f) 30%,transparent);
   background:color-mix(in srgb,var(--f) 6%,transparent);
-}
-
-/* ---------- betoningen ----------
-   Samma gradient som "ditt barn?" (avsnitt 17). Citattecknen är block
-   i cinema och här; fit-content gör att gradienten spänner över
-   tecknet och inte över hela raden. Utan background-clip:text står
-   allt kvar i leran. */
-@supports ((-webkit-background-clip:text) or (background-clip:text)){
-  .nx-page-hero .nx-d1 em,
-  .nx-final-cinema .nx-final-rubrik em,
-  .nx-vagg-ord::before,
-  .nx-rost::before{
-    background:linear-gradient(96deg,var(--amne-ma) 8%,var(--amne-en) 58%,var(--amne-ms) 96%);
-    -webkit-background-clip:text;background-clip:text;
-    color:transparent;-webkit-text-fill-color:transparent;
-  }
-  .nx-page-hero .nx-d1 em,
-  .nx-final-cinema .nx-final-rubrik em{padding-right:.05em}
-  .nx-vagg-ord::before,
-  .nx-rost::before{width:fit-content}
 }
 
 /* ============================================================

@@ -436,7 +436,7 @@ samma dag, se "Garantin som en remsa" nedan).
 
 **Den röda tråden**: ämnesfärgerna står på bladen i Hur hjälper vi ditt
 barn, i rubrikens "ditt barn?" och sloganens andra mening (samma gradient som
-NexLäx rubrik), och på stegens siffror, linjen och fotots märke i `#hur`
+NexLäx rubrik; de två står i leran sedan samma kväll), och på stegens siffror, linjen och fotots märke i `#hur`
 (`--f` per `:nth-child`, reglerna läser `var(--f,var(--acc))`). Märkets siffra
 står i `--kort` på färgen, för krämen på NO:s gröna var 4,4:1. Samma kväll
 fördes de ut på resten av startsidan och menysidorna, också Så fungerar
@@ -476,8 +476,8 @@ sidan har; länkarna till `/#betygsgaranti` från andra sidor går till
 startsidan som förut. Det lilla flödet tänds i tur (`garantiflöde()`), och
 villkorslänken och "Villkor gäller" följer med.
 
-**Färgerna, tre regler** (avsnitt 18 i nextrum-start.css, så att samma sorts
-sak alltid har samma färg):
+**Färgerna, två regler** (avsnitt 18 i nextrum-start.css, så att samma sorts
+sak alltid har samma färg; en tredje, betoningen, gick samma kväll, se sist):
 - **Ordningen**: i en rad blad eller steg får det n:te bladet färg n,
   matematikens blå, engelskans lila, NO:s gröna, leran, moderna språkens rosa
   (samma ordning som Hur hjälper vi och `#hur`), och SO:s ockra som sjätte i
@@ -495,11 +495,17 @@ sak alltid har samma färg):
   Skriptet i `index.html` (och `en/index.html`, samma funktion) sätter
   `data-amne` ur namnet, på svenska ur databasen eller på sidans språk ur
   exempelkorten; Studieteknik har ingen färg och står kvar grått.
-- **Betoningen**: gradienten i "ditt barn?" står på menysidornas `<em>` i
-  rubriken överst (`.nx-page-hero .nx-d1 em`), på Nästa stegs `<em>` på alla
-  sidor, och på citattecknen i bildväggen och brevet (`width:fit-content`,
-  annars spänner gradienten över hela raden). Övriga rubrikers `<em>` står i
-  leran.
+- **Betoningen** (borta sedan samma kväll): gradienten i "ditt barn?" stod
+  på menysidornas `<em>` i rubriken överst (`.nx-page-hero .nx-d1 em`), på
+  Nästa stegs `<em>` på alla sidor och på citattecknen i bildväggen och
+  brevet. Leo: "Överallt där rubriken är med den färgen när de inte gäller
+  nexläx lägg de tillbaka till antingen vit eller orange som de har förut".
+  Gradienten står nu bara i NexLäx rubrik (`.nlx-rubrik em`); "ditt barn?"
+  (`.hj-rubrik em`) och menysidornas rubriker föll tillbaka på `.nx-d1 em`
+  och `.nx-d2 em` (`--acc-lugn`), Nästa steg på `--lera-l`, citattecknen på
+  sin lera, och Just nus slogan fick `--acc-lugn` som rubrikens "nu".
+  Citattecknen är ingen rubrik, men samma gradient utanför NexLäx, så de
+  gick med.
 
 Garantin har leran (remsan i Hur hjälper vi; prissidans flöde gick samma kväll), och erbjudandena på
 prissidan och Just nu är orörda (en annan byggare arbetade där samma dag);
