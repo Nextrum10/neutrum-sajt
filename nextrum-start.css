@@ -257,32 +257,34 @@ html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
 /* ============================================================
    4. HÅLLPUNKTERNA — fyra kolumner, 1 till 4
 
-   Den man för musen över kommer fram, de andra drar sig tillbaka,
-   krymper och blir grå. :has() gör det utan en rad skript: listan
-   vet att något i den är under pekaren.
+   Två och två på telefonen, fyra i rad på bred skärm (2026-10-07).
+   Leo: "De kolumnerna 1-4 de ska vara bredvid varandra", och fokuset
+   som lät kortet mitt i skärmen växa medan de andra krympte och blev
+   grå var en "slide funktion som inte är clean". Det är borttaget,
+   skriptet också: korten står stilla, och bara musen får en diskret
+   hovring (kantens skugga och siffran i lera), utan att grannarna
+   tonas ned.
 
-   Nedtoningen är filter:opacity(), inte egenskapen opacity. Listan
-   bar förut data-stig på varje punkt, och den regeln väger (0,3,1)
-   på opacity och transform — en nedtoning där hade aldrig syntes.
-   data-stig sitter nu på listan i stället, och punkterna har inget
-   annat system som slåss om samma egenskaper.
+   Raderna i rutnätet sträcker korten, så två kort bredvid varandra är
+   lika höga. Ett udda antal: det sista kortet tar hela raden, i
+   stället för att lämna ett hål bredvid sig. Under 340 px räcker
+   bredden inte till två.
    ============================================================ */
 .nx-holdpunkter{
   border-top:0;
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:clamp(14px,1.6vw,22px);
 }
-@media (max-width:1100px){.nx-holdpunkter{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.nx-holdpunkter{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:1100px){
+  .nx-holdpunkter{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nx-holdpunkter > li:last-child:nth-child(odd){grid-column:1 / -1}
+}
+@media (max-width:339px){.nx-holdpunkter{grid-template-columns:minmax(0,1fr)}}
 
 .nx-holdpunkter > li{
   border-bottom:1px solid transparent;
   padding:clamp(24px,2.4vw,32px);
-  transform-origin:50% 60%;
-  transition:
-    scale .55s var(--fjader),
-    filter .4s var(--e),
-    translate var(--tryck-tid) var(--e-ut);
+  transition:translate var(--tryck-tid) var(--e-ut);
 }
 /* Tvätten i cinema är till kolumner UTAN egen yta. De här är blad,
    och en tvätt som bleder ut runt ett blad blir en gloria. */
@@ -302,28 +304,32 @@ html.nx-sr [data-ordfyll].nx-fylld .nx-ord{opacity:1}
 }
 
 @media (hover:hover) and (pointer:fine){
-  .nx-holdpunkter:has(> li:hover) > li{
-    scale:.955;
-    filter:grayscale(1) opacity(.5);
-  }
-  .nx-holdpunkter:has(> li:hover) > li:hover{
-    scale:1.055;
-    filter:none;
-    z-index:2;
-  }
   .nx-holdpunkter > li:hover::after{opacity:1}
   .nx-holdpunkter > li:hover .hp-nr{color:var(--acc)}
 }
-/* På pekskärm finns ingen pekare. Där tänds den punkt man har mitt
-   i skärmen (en spalt) eller den man tryckt på (två spalter), och
-   skriptet sätter .har-pa på listan när det gäller. */
-.nx-holdpunkter.har-pa > li:not(.pa){
-  scale:.965;
-  filter:grayscale(1) opacity(.55);
+
+/* Telefonen: två kort på 170 px var. Luften inne i kortet krymper mer
+   än texten, och siffran och figuren mest, så att bredden går till
+   orden. Avstavningen tar de långa svenska orden i den smala spalten,
+   och overflow-wrap är reserven där webbläsaren saknar ordlista. */
+@media (max-width:760px){
+  .nx-holdpunkter{gap:10px}
+  .nx-holdpunkter > li{padding:16px 14px 18px;border-radius:20px}
+  .nx-holdpunkter .hp-topp{margin-bottom:14px;gap:8px}
+  .nx-holdpunkter .hp-nr{font-size:2.1rem}
+  .nx-holdpunkter .hp-mark{width:30px;height:30px;border-radius:10px}
+  .nx-holdpunkter .hp-mark svg{width:15px;height:15px}
+  .nx-holdpunkter h3{font-size:1rem;line-height:1.16;letter-spacing:-.024em}
+  .nx-holdpunkter p{
+    margin-top:7px;font-size:.875rem;line-height:1.48;
+    -webkit-hyphens:auto;hyphens:auto;hyphenate-limit-chars:8 4 3;
+    overflow-wrap:break-word;
+  }
 }
-.nx-holdpunkter.har-pa > li.pa{scale:1.02}
-.nx-holdpunkter.har-pa > li.pa::after{opacity:1}
-.nx-holdpunkter.har-pa > li.pa .hp-nr{color:var(--acc)}
+@media (max-width:379px){
+  .nx-holdpunkter{gap:8px}
+  .nx-holdpunkter > li{padding-inline:11px}
+}
 
 /* ============================================================
    5. STUDIEHJÄLPARNA — en rad man sveper i
@@ -790,27 +796,31 @@ html.nx-sr .nlx-del{
 html.nx-sr .nlx-delar.nlx-in .nlx-del{opacity:1;translate:0 0}
 
 /* ---------- foten: ämnena och vad som ingår ----------
-   Ämnena på en rad och texten under. Bredvid varandra bara när hela
-   raden får plats och texten ändå får en riktig spalt: vid 1024 px
-   blev texten bredvid en smal stapel med ett par ord per rad, och en
-   rad som bryter lämnar ett ensamt ämne kvar. */
+   En inbäddad panel under bildtexten (Leo 2026-10-07: "gör den
+   sektionen lite inbäddad och clean"): papperet en nyans djupare, en
+   tunn linje och rundade hörn, så att ämnena och meningen läses som en
+   ruta i scenen och inte som en lös rad under den. Djupet blandas ur
+   bläcket, så att panelen följer med i mörkt läge utan egna värden.
+   Ämnena är små brickor i bladets ton med en prick i ämnets färg, i
+   en jämn rytm; de bryts hellre på två rader än krymper. */
 .nlx-fot{
-  margin-top:clamp(20px,2.2vw,32px);
-  padding-top:clamp(22px,2.4vw,30px);
-  border-top:1px solid var(--ln);
-  display:grid;grid-template-columns:minmax(0,1fr);
-  gap:18px clamp(32px,4vw,64px);align-items:center;
+  margin-top:clamp(18px,2vw,28px);
+  display:grid;grid-template-columns:minmax(0,1fr);gap:14px;
+  padding:clamp(16px,1.8vw,22px);
+  border-radius:22px;
+  background:color-mix(in srgb,var(--bl) 3.5%,var(--pap));
+  border:1px solid var(--ln);
 }
-.nlx-amnen{display:flex;flex-wrap:wrap;gap:8px}
+.nlx-amnen{display:flex;flex-wrap:wrap;gap:7px}
 .nlx-amnen li{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:8px 14px 8px 11px;border-radius:100px;
-  background:color-mix(in srgb,var(--f) 7%,var(--kort));
-  border:1px solid color-mix(in srgb,var(--f) 24%,transparent);
-  font-size:.9rem;font-weight:600;letter-spacing:-.01em;color:var(--bl);
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 12px 6px 10px;border-radius:100px;
+  background:var(--kort);
+  border:1px solid color-mix(in srgb,var(--f) 22%,var(--ln));
+  font-size:.84rem;font-weight:600;letter-spacing:-.01em;line-height:1.2;color:var(--bl);
 }
-.nlx-amnen li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--f);flex:none}
-.nlx-not{font-size:.96rem;line-height:1.55;color:var(--bl-2);max-width:54ch}
+.nlx-amnen li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--f);flex:none}
+.nlx-not{font-size:.92rem;line-height:1.55;color:var(--bl-2);max-width:60ch;text-wrap:pretty}
 
 /* ---------- scenen: telefonen, omloppet och lapparna ----------
    --tw är telefonens bredd, och allt runt den räknas ur den. Den sätts
@@ -1522,7 +1532,10 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   .nlx-konfetti i:nth-child(n+11){display:none}
   .nlx-handling .nx-magnet{width:100%}
   .nlx-handling .btn{width:100%;justify-content:center}
-  .nlx-amnen li{padding:7px 12px 7px 10px;font-size:.86rem}
+  .nlx-fot{padding:14px;border-radius:18px;gap:12px}
+  .nlx-amnen{gap:6px}
+  .nlx-amnen li{padding:5px 10px 5px 8px;font-size:.8rem;gap:6px}
+  .nlx-not{font-size:.88rem}
 }
 
 /* ---------- reducerad rörelse ----------
@@ -1545,6 +1558,130 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   .nlx-vy,.nlx-vy.pa,.nlx-lapp,.nlx-lapp.syns,.nlx-del-nod,.nlx-del-text,.nlx-del-text::after,
   .nlx-del h3,.nlx-del p,.nlx-del::after,.nlx-besked,.nlx-spel-fot,.nlx-spel-mat i,.nlx-alt,.nlx-knapp,
   .nlx-kista,.nlx-kista > span,.nlx-upp-ik,.nlx-upp-ik > span,.nlx-upp-mat i,.nlx-tal > span{transition:none}
+}
+
+/* ============================================================
+   16. JUST NU (2026-10-07) — erbjudandet under NexLäx
+
+   Leo: "Under nexläx ska vi teasa med våra erbjudanden: skriv stort
+   Just nu, erbjudandet och upp till 45 % lägre pris än jämförbara
+   paket hos flera större aktörer." Ett blad på papperet, aldrig en
+   mörk yta: rubriken, planen och påståendet till vänster, jämförelsen
+   till höger i en inbäddad ruta, knapparna under texten. På telefon
+   står allt i en spalt och knappen tar hela bredden.
+
+   Siffrorna skriver initErbjudanden() ur erbjudanden_pris, och
+   sektionen är dold (hidden) tills de kommit; startläget här gäller
+   alltså bara staplarna. De växer ur vänsterkanten när bladet stigit
+   in (data-stig ger .nx-in): längden är en bredd som räknas en gång ur
+   --andel, och det som rör sig är bara scale. Utan rörelse står de i
+   sin längd direkt (inget nx-sr).
+   ============================================================ */
+.nx-jn{padding-top:clamp(20px,3vw,48px)}
+/* Ett ljus av leran i det övre vänstra hörnet, bakom "Just nu". Det
+   är en gradient i bladets egen bakgrund, så den följer med i mörkt
+   läge (--acc byts där) och kostar ingenting. */
+.jn-kort{
+  display:grid;
+  grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);
+  grid-template-areas:"text jamfor" "cta jamfor";
+  grid-template-rows:auto minmax(0,1fr);
+  column-gap:clamp(32px,5.4vw,96px);
+  padding:clamp(28px,4.6vw,68px);
+  border-radius:clamp(26px,2.8vw,38px);
+  background:
+    radial-gradient(70% 90% at 0% 0%,color-mix(in srgb,var(--acc) 9%,transparent),transparent 72%),
+    var(--kort);
+  border:1px solid var(--kort-kant);
+  box-shadow:var(--kort-sk);
+}
+.jn-text{grid-area:text;min-width:0}
+.jn-rubrik{
+  margin-top:clamp(14px,1.6vw,22px);
+  font-size:clamp(3.6rem,9vw,7.6rem);
+  line-height:.9;letter-spacing:-.055em;font-weight:800;color:var(--bl);
+}
+.jn-rubrik em{font-style:normal;color:var(--acc-lugn)}
+.jn-plan{
+  margin-top:clamp(18px,2.2vw,28px);
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;
+  font-size:clamp(1.15rem,1.75vw,1.55rem);font-weight:700;
+  letter-spacing:-.026em;line-height:1.2;color:var(--bl);
+}
+.jn-namn{
+  flex:none;display:inline-flex;align-items:center;min-height:30px;
+  font-family:var(--f-mono);font-size:10.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  padding:0 12px;border-radius:999px;background:var(--acc);color:var(--acc-ink);
+}
+.jn-lede{
+  margin-top:clamp(12px,1.4vw,18px);max-width:40ch;
+  font-size:clamp(1rem,1.25vw,1.15rem);line-height:1.5;color:var(--bl-2);
+  letter-spacing:-.011em;text-wrap:pretty;
+}
+.jn-lede b{font-weight:800;color:var(--bl)}
+.jn-kort .jn-cta{grid-area:cta;align-self:end;margin-top:clamp(26px,3vw,38px)}
+/* "Skicka intresseanmälan" är en fristående länk: tryckytan minst 44 px. */
+.jn-cta .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
+
+/* Jämförelsen: papperet inne i bladet, så att rutan ligger en nivå
+   lägre än bladet, i båda lägena. */
+.jn-jamfor{
+  grid-area:jamfor;align-self:center;min-width:0;margin:0;
+  display:grid;gap:clamp(20px,2.2vw,28px);
+  padding:clamp(20px,2.6vw,34px);
+  border-radius:clamp(20px,2vw,26px);
+  background:var(--pap);border:1px solid var(--ln);
+}
+.jn-rad{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"vem belopp" "stapel stapel";
+  align-items:baseline;gap:10px 16px;
+}
+.jn-vem{grid-area:vem;font-size:.95rem;font-weight:600;letter-spacing:-.012em;color:var(--bl-2)}
+.jn-belopp{
+  grid-area:belopp;white-space:nowrap;font-variant-numeric:tabular-nums;
+  font-size:clamp(1.25rem,1.9vw,1.6rem);font-weight:700;letter-spacing:-.03em;color:var(--bl-3);
+}
+.jn-vi .jn-vem{color:var(--bl);font-weight:700}
+/* Planens namn i lerans ton, samma som vår stapel under. */
+.jn-plannamn{color:var(--acc-lugn)}
+.jn-vi .jn-belopp{font-size:clamp(2.1rem,3.8vw,3.3rem);font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--bl)}
+.jn-stapel{
+  grid-area:stapel;display:block;height:12px;border-radius:999px;overflow:hidden;
+  background:color-mix(in srgb,var(--bl) 7%,transparent);
+}
+.jn-stapel i{
+  display:block;height:100%;border-radius:inherit;
+  width:calc(var(--andel,1) * 100%);
+  transform-origin:0 50%;
+  background:color-mix(in srgb,var(--bl) 28%,transparent);
+}
+.jn-vi .jn-stapel{height:16px}
+.jn-vi .jn-stapel i{background:var(--acc)}
+.jn-not{font-size:.8rem;line-height:1.5;color:var(--bl-3)}
+html.nx-sr .jn-stapel i{scale:0 1;transition:scale 1.1s var(--e-ut) .3s}
+html.nx-sr .jn-kort.nx-in .jn-stapel i{scale:1 1}
+html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
+
+@media (max-width:760px){
+  .jn-kort{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"text" "jamfor" "cta";
+    grid-template-rows:none;
+    row-gap:24px;
+    padding:26px 18px 22px;border-radius:24px;
+  }
+  .jn-kort .jn-cta{margin-top:0}
+  .jn-cta .nx-magnet{width:100%}
+  .jn-cta .btn{width:100%;justify-content:center}
+  .jn-jamfor{padding:18px 16px}
+}
+/* 360–400 px: "Nextrum Standard" och priset ryms på en rad bara när
+   priset krymper en aning; annars bryts namnet i två. */
+@media (max-width:400px){
+  .jn-rad{column-gap:10px}
+  .jn-vem{font-size:.9rem}
+  .jn-vi .jn-belopp{font-size:1.85rem}
 }
 
 /* ============================================================
@@ -2591,20 +2728,21 @@ html.nx-sr .nx-mork.nx-final-cinema > *{
 html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 
 /* ---------- stegen i ansökan: samma 1–4 som hållpunkterna ----------
-   Leo: "stegen 1,2,3,4 ska ha samma funktion som de andra 1,2,3,4
-   lite högre upp". Samma regler, samma fjäder, samma skript
-   (hållpunkter() i nextrum-start.js tar båda listorna). */
-.nx-apply-flow{gap:clamp(12px,1.4vw,18px)}
+   Samma form som hållpunkterna, och samma beslut (2026-10-07): fyra i
+   rad på bred skärm, två och två på telefonen, inget fokus som tonar
+   ned grannarna. Musen tänder bara kortet den står på.
+   Startsidans Bli studiehjälpare har samma lista och får det här med. */
+.nx-apply-flow{
+  gap:clamp(12px,1.4vw,18px);
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
 .nx-apply-flow > .nx-apply-step{
-  position:relative;
+  position:relative;min-width:0;
   border-radius:clamp(20px,2vw,26px);
   padding:clamp(22px,2.2vw,30px);
   background:rgba(239,230,214,.05);
   border-color:rgba(239,230,214,.12);
-  transform-origin:50% 60%;
   transition:
-    scale .55s var(--fjader),
-    filter .4s var(--e),
     background-color .35s var(--e),
     border-color .35s var(--e);
 }
@@ -2617,29 +2755,29 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   transition:color .35s var(--e);
 }
 @media (hover:hover) and (pointer:fine){
-  .nx-apply-flow:has(> .nx-apply-step:hover) > .nx-apply-step{
-    scale:.955;
-    filter:grayscale(1) opacity(.5);
-  }
-  .nx-apply-flow:has(> .nx-apply-step:hover) > .nx-apply-step:hover{
-    scale:1.055;
-    filter:none;
-    z-index:2;
+  .nx-apply-flow > .nx-apply-step:hover{
     background-color:rgba(239,230,214,.09);
     border-color:rgba(239,230,214,.22);
   }
   .nx-apply-step:hover em{color:var(--lera-l)}
 }
-.nx-apply-flow.har-pa > .nx-apply-step:not(.pa){
-  scale:.965;
-  filter:grayscale(1) opacity(.55);
+@media (max-width:760px){
+  .nx-apply-flow{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .nx-apply-flow > .nx-apply-step{padding:16px 14px 18px;border-radius:20px}
+  .nx-apply-flow > .nx-apply-step:last-child:nth-child(odd){grid-column:1 / -1}
+  .nx-apply-step em{font-size:2.1rem;margin-bottom:14px}
+  .nx-apply-step b{font-size:.98rem;line-height:1.2}
+  .nx-apply-step p{
+    font-size:.84rem;line-height:1.48;
+    -webkit-hyphens:auto;hyphens:auto;hyphenate-limit-chars:8 4 3;
+    overflow-wrap:break-word;
+  }
 }
-.nx-apply-flow.har-pa > .nx-apply-step.pa{
-  scale:1.02;
-  background-color:rgba(239,230,214,.09);
-  border-color:rgba(239,230,214,.22);
+@media (max-width:379px){
+  .nx-apply-flow{gap:8px}
+  .nx-apply-flow > .nx-apply-step{padding-inline:11px}
 }
-.nx-apply-flow.har-pa > .nx-apply-step.pa em{color:var(--lera-l)}
+@media (max-width:339px){.nx-apply-flow{grid-template-columns:minmax(0,1fr)}}
 
 /* ============================================================
    15. GARANTIFLÖDET (2026-10-07) — betygsgarantin på papperet
@@ -2855,10 +2993,6 @@ html.nx-sr .nx-gar-flode.i-gang > li.fylld:last-child::after{transition-delay:.4
    Det som är kvar är det som rör sig av sig självt.
    ============================================================ */
 @media (prefers-reduced-motion:reduce){
-  .nx-holdpunkter > li,
-  .nx-holdpunkter:has(> li:hover) > li,
-  .nx-apply-flow > .nx-apply-step,
-  .nx-apply-flow:has(> .nx-apply-step:hover) > .nx-apply-step{scale:none !important}
   .sd-rum,.sd-fonster{transform:none !important}
   .sd-nl-mat i{transition:none}
 }

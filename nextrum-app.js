@@ -635,8 +635,10 @@ const NX = (function () {
      visas.
 
      Alla [data-erb] i dokumentet, inte bara prissidans sektion: lyftet
-     överst på prissidan och lappen på startsidan (Leo 2026-10-07: "sälj
-     in de inbakat") tar sina siffror ur samma svar. Ett kort vars text
+     överst på prissidan och Just nu på startsidan (Leo 2026-10-07: "sälj
+     in de inbakat", och "teasa med våra erbjudanden") tar sina siffror
+     ur samma svar. Ett element med data-erb-vantar står dolt i sidan
+     och visas först här, när siffrorna är skrivna. Ett kort vars text
      inte går ihop med raden döljs hellre än visas fel: ett timpris när
      timmar är på köpet (summan är då inte timpriset gånger timmarna),
      eller "för priset av" när inga timmar är på köpet. */
@@ -698,6 +700,24 @@ const NX = (function () {
         if (pa) x.textContent = pa === 1 ? t('timmePaKopet') : t('timmarPaKopet', { n: pa });
       });
       $$('.pr-erb-rutor', el).forEach(x => rutor(x, timmar, pa));
+      /* Jämförelsen i Just nu: ett annat pris för samma antal timmar
+         står på elementet (data-erb-jamfor-ore), och procenten räknas
+         här i heltal, nedåt till närmaste fem, så att "upp till" aldrig
+         lovar mer än skillnaden. Gäller jämförelsen andra timmar än
+         planens, eller är planen inte minst fem procent billigare, är
+         påståendet inte sant längre, och elementet döljs. --andel är
+         vår stapels längd mot deras och läses på stapeln. */
+      const jämför = Number(el.getAttribute('data-erb-jamfor-ore')) || 0;
+      if (jämför) {
+        const lägre = Math.floor((jämför - Number(r.pris_ore)) * 20 / jämför) * 5;
+        if (Number(el.getAttribute('data-erb-jamfor-timmar')) !== timmar || !(lägre >= 5)) {
+          el.hidden = true;
+          return;
+        }
+        skriv(el, '[data-erb-lagre]', String(lägre));
+        $$('[data-erb-andel]', el).forEach(x => x.style.setProperty('--andel', (r.pris_ore / jämför).toFixed(3)));
+      }
+      if (el.hasAttribute('data-erb-vantar')) el.hidden = false;
     });
 
     /* Klippkortens rad sammanfattar korten i den, och sammanfattningen

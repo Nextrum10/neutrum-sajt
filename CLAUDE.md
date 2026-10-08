@@ -196,7 +196,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
   och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`. Allt med
-  `data-erb` (planerna, lyftet `.pr-lyft`, startsidans `.pr-std-lapp`) tar siffrorna ur samma svar från
+  `data-erb` (planerna, lyftet `.pr-lyft`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
   `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar −5 %),
   Standard (`plan_standard`, 8 timmar för priset av 7) och Intensiv (`plan_intensiv`, 12 timmar −5 %);
   `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
@@ -238,13 +238,18 @@ under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 Under heron står NexLäx (2026-10-07, `#nexlax`, avsnitt 13, `nexlax()`): en telefon som visar sig själv
 i fyra skärmar och en stig som följer med, på papperet; en illustration (`role="img"`), inget att svara
-i, högst tre varv och pausad utanför bild. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
+i, högst tre varv och pausad utanför bild; varje skärm står lika länge. Under den står **Just nu** (2026-10-08,
+`#just-nu`, avsnitt 16): Standard mot "Andra aktörer" 5 000 kr för 8 timmar (`data-erb-jamfor-ore`). Vårt
+pris står aldrig i HTML, procenten räknas ur priset och avrundas nedåt till fem, och sektionen syns bara
+när planen har 8 timmar och är minst 5 % billigare. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
 (`data-bild`), och alt-texten står på steget (`data-alt`). Betygsgarantin (2026-10-07) är ingen mörk yta: den står på papperet som ett flöde (`.nx-gar`,
 `garantiflöde()`), också på prissidan, och dess släckta läge hänger på `.i-gang`, aldrig bara på
 `html.nx-sr`. Manifestets blad står bredvid varandra ner till 340 px, och studiehjälparna i en rad
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
+Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på telefon och har ingen fokuseffekt
+(2026-10-08: `hållpunkter()` är borta, inget kort tonar ned grannarna), och `.sid-kort` är en lista under 861 px.
 Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
 första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
 animerad `box-shadow`, och en custom property sätts där den läses, för den ärvs.
@@ -606,6 +611,11 @@ Detaljer: `minne/grunden.md`.
   per timme än Standard (Leos val). Juristen har inte läst "1 timme på köpet" och "ni sparar" mot
   ordinarie pris, och villkoren säger "ett pass där en timme är på köpet" om startrabatten; ett
   förtydligande kräver en ny version, tidigast 2026-10-08.
+- **Just nu-jämförelsen** (2026-10-08): "upp till 45 % lägre pris än jämförbara paket hos flera större
+  aktörer" och "Andra aktörer 5 000 kr" bygger på Leos underlag (Studybuddy, 5 000 kr för samma paket),
+  som inte står i repot. "Flera" kräver underlag från minst två aktörer till; Leo valde att behålla ordet.
+  Underlaget (skärmbilder med adress och datum) ska sparas och göras om när ett pris ändras, för
+  bevisbördan är vår (18 och 10 §§ marknadsföringslagen). Juristen har inte läst texten.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

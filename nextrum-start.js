@@ -7,8 +7,6 @@
      ordfyll        rubrikernas ord tonar fram ett i taget
      nexlax         NexLäx under hero: telefonen visar sig själv, och stigen
                     bredvid följer med
-     hållpunkter    1–4: den man pekar på kommer fram — både hållpunkterna
-                    och stegen i ansökan
      mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
      garantiflöde   betygsgarantin: linjen fylls och stegen tänds när
                     man scrollar förbi, på startsidan och prissidan
@@ -66,7 +64,6 @@ const NXStart = (function () {
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const rörelse = M.tier !== 'still';
   const full = M.tier === 'full';
-  const mus = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   /* Varje del för sig. En del som kastar ska inte ta de andra med
      sig — en trasig studievy är inget skäl att bandet står still. */
@@ -91,9 +88,6 @@ const NXStart = (function () {
     }, { rootMargin: marginal || '0px 0px -14% 0px' });
     io.observe(el);
   }
-
-  const kolumner = el =>
-    Math.max(1, getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length);
 
   /* ============================================================
      ORDFYLLNADEN
@@ -200,13 +194,18 @@ const NXStart = (function () {
     }
     const läge = (i, k) => vyer[i] && vyer[i].classList.add(k);
 
-    /* Varje skärm: väntan i ms och det som händer på den. Summan är
-       ett varv på ungefär sjutton sekunder. */
+    /* Varje skärm: väntan i ms och det som händer på den. Alla fyra
+       står lika länge, fyra sekunder, och ett varv är sexton. Vägen stod
+       längst förut (Leo 2026-10-07: "På väg genom ämnet tar längre tid
+       än resten"): första gången fick den en och en halv sekund extra
+       medan telefonen reste sig, och linjen under bladet gick då i över
+       fem sekunder. Telefonen reser sig nu medan vägen står sin vanliga
+       tid. */
     const SKÄRMAR = [
-      [3600],
-      [1100, () => läge(1, 'valt'), 700, () => läge(1, 'ratt'), 2600],
-      [4400],
-      [900, () => läge(3, 'fylld'), 3800]
+      [4000],
+      [1000, () => läge(1, 'valt'), 700, () => läge(1, 'ratt'), 2300],
+      [4000],
+      [900, () => läge(3, 'fylld'), 3100]
     ];
     const SLUT = [[], ['valt', 'ratt'], [], ['fylld']];
     const VARV = 3;
@@ -293,50 +292,22 @@ const NXStart = (function () {
     if (lista) närSyns(lista, () => lista.classList.add('nlx-in'), '0px 0px -8% 0px');
     document.addEventListener('visibilitychange', paus);
 
-    /* Första gången reser sig telefonen i en och en halv sekund, så
-       vägen får stå lika mycket längre. */
-    let först = 1500;
-    if (!('IntersectionObserver' in window)) { synlig = true; paus(); kör(0, först); return; }
+    if (!('IntersectionObserver' in window)) { synlig = true; paus(); kör(0, 0); return; }
     new IntersectionObserver(poster => {
       synlig = poster[poster.length - 1].isIntersecting;
       paus();
       /* Tre varv per gång den kommer in i bild. Har den gått klart
          börjar den om först när den varit utanför. */
       if (!synlig) { if (klar && !tur) { klar = false; varv = 0; } return; }
-      if (!tur && !klar) { kör(nu, först); först = 0; }
+      if (!tur && !klar) kör(nu, 0);
     }, { threshold: 0.35 }).observe(scen);
   }
 
-  /* ============================================================
-     HÅLLPUNKTERNA
-     Med mus sköter CSS allt (:has + :hover). På pekskärm finns ingen
-     pekare, så där tänds punkten mitt i skärmen när listan står i en
-     spalt, och den man trycker på annars. Två spalter och "mitt i
-     skärmen" går inte ihop: två punkter på samma rad står lika nära.
-
-     "Mitt i skärmen" är en IntersectionObserver vars rot är ett smalt
-     band över mitten — ingen mätning medan man scrollar.
-     ============================================================ */
-  /* Två listor med samma beteende: hållpunkterna och stegen i ansökan
-     (Leo 2026-09-25: "samma funktion som de andra 1,2,3,4"). */
-  function hållpunkter() {
-    if (mus) return;
-    $$('.nx-holdpunkter, .nx-apply-flow').forEach(ul => {
-      const li = $$(':scope > *', ul);
-      const välj = el => {
-        li.forEach(x => x.classList.toggle('pa', x === el));
-        ul.classList.add('har-pa');
-      };
-      li.forEach(x => x.addEventListener('click', () => välj(x)));
-
-      if (!rörelse || !('IntersectionObserver' in window)) return;
-      const io = new IntersectionObserver(poster => {
-        if (kolumner(ul) !== 1) return;
-        poster.forEach(p => { if (p.isIntersecting) välj(p.target); });
-      }, { rootMargin: '-46% 0px -46% 0px' });
-      li.forEach(x => io.observe(x));
-    });
-  }
+  /* HÅLLPUNKTERNA och stegen i ansökan har inget skript (2026-10-07).
+     Här stod hållpunkter(), som på pekskärm tände kortet mitt i
+     skärmen och lät de andra krympa och bli grå. Leo: "slide funktion
+     som inte är clean". Korten står nu två och två på telefonen, och
+     bara musen får en diskret hovring, i CSS. */
 
   /* ============================================================
      DE MÖRKA YTORNA
@@ -662,7 +633,7 @@ const NXStart = (function () {
      på sidan) aldrig syns släckt.
 
      Egna namn med flit, inte .nx-apply-flow: den är kvar i Bli
-     studiehjälpare och sköts av hållpunkter() och mörkaYtor().
+     studiehjälpare och sköts av mörkaYtor().
      ============================================================ */
   function garantiflöde() {
     if (!rörelse || !('IntersectionObserver' in window)) return;
@@ -1215,7 +1186,6 @@ const NXStart = (function () {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
     prova('nexlax', nexlax);
-    prova('hållpunkter', hållpunkter);
     prova('mörkaYtor', mörkaYtor);
     prova('garantiflöde', garantiflöde);
     prova('studiehjälpare', studiehjälpare);
