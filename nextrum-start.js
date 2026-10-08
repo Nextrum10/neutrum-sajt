@@ -9,10 +9,9 @@
                     stigen bredvid följer med. Samma illustration står på
                     För elever & föräldrar (2026-10-08).
      mörkaYtor      Bli studiehjälpare och Nästa steg glider upp
-     garantiflöde   betygsgarantin: linjen fylls och stegen tänds när
-                    man scrollar förbi på prissidan, och i tur när det
-                    lilla flödet i Hur hjälper vi ditt barn syns (på
-                    startsidan och, sedan 2026-10-08, på Vår idé)
+     garantiflöde   betygsgarantin: stegen i remsan under Hur hjälper vi
+                    ditt barn tänds i tur när remsan syns (startsidan
+                    och Vår idé)
      studiehjälpare raden man sveper i: korten kommer in när raden
                     syns, prickarna och pilarna följer svepet
      band           Trygg hjälp: det rullande bandet
@@ -613,72 +612,32 @@ const NXStart = (function () {
   }
 
   /* ============================================================
-     GARANTIFLÖDET (2026-10-07)
-     Betygsgarantins fyra steg står som ett flöde på papperet (Leo:
-     "se ut som att de följer ett flow när man scrollar"). Ett steg
-     tänds när dess siffra har passerat en linje en bit under mitten
-     av fönstret, och sträckan ovanför det fylls: skriptet sätter .pa
-     (tänt) och .fylld (sträckan nedåt är fylld; på sista steget
-     svansen, när alla är tända), och linjen, siffran och texten är
-     övergångar i nextrum-start.css (avsnitt 15).
-     Scrollar man tillbaka släcks stegen igen.
-
-     Observatören säger till när en siffra korsar linjen, och först då
-     läses de fyra siffrornas läge, en gång. Inget mäts medan man
-     scrollar. Att läsa alla fyra och inte bara den som korsade gör
-     att ett hopp förbi flera steg (länken till #betygsgaranti längre
-     ner, End-tangenten) ger rätt läge direkt.
+     GARANTIFLÖDET (2026-10-07, bara i tur sedan 2026-10-08)
+     Betygsgarantins fyra steg står i en platt remsa under bladen i Hur
+     hjälper vi ditt barn, på startsidan och Vår idé (.hj-gar-steg,
+     avsnitt 17 i nextrum-start.css; Leo: "01 - 02 - 03- 04 ska stå
+     under de fyra kolumner platt"). data-gar-flode="tur" tänder dem ett
+     i taget när remsan kommer in i bild, en gång: alla fyra får .pa och
+     .fylld på en gång, och fördröjningen per steg står i CSS. Har man
+     redan scrollat förbi när sidan laddas står stegen tända.
 
      .i-gang sätts när observatören är kopplad, och startläget hänger
      på den: utan skript, utan IntersectionObserver och med rörelse
-     bortvald står flödet tänt. Första läget räknas innan klassen
-     sätts, så att ett steg man redan scrollat förbi (omladdning mitt
-     på sidan) aldrig syns släckt.
+     bortvald står stegen tända.
 
-     Egna namn med flit, inte .nx-apply-flow: den är kvar i Bli
-     studiehjälpare och sköts av mörkaYtor().
-
-     I TUR (2026-10-08). På startsidan och Vår idé står stegen i en
-     platt remsa under bladen i Hur hjälper vi ditt barn (.hj-gar-steg,
-     andra varvet samma dag; Leo: "01 - 02 - 03- 04 ska stå under de
-     fyra kolumner platt"). Där står de på en rad och hade tänts
-     samtidigt av linjen, så data-gar-flode="tur" tänder dem i stället
-     ett i taget när remsan kommer in i bild, en gång: alla fyra får .pa
-     och .fylld på en gång, och fördröjningen per steg står i CSS
-     (avsnitt 17). Har man redan scrollat förbi när sidan laddas står
-     stegen tända utan .i-gang. Siffran söks bara i läget som följer
-     scrollen; i tur räcker stegen.
+     Prissidans stora flöde, som fylldes medan man scrollade, gick
+     2026-10-08 med prissidans garantisektion (Leo: "öndödigt stor på
+     pris sidan"), och med det läget som följde scrollen. Egna namn med
+     flit, inte .nx-apply-flow: den är kvar i Bli studiehjälpare och
+     sköts av mörkaYtor().
      ============================================================ */
   function garantiflöde() {
     if (!rörelse || !('IntersectionObserver' in window)) return;
-    /* Andel av fönstrets höjd, uppifrån. 0,62 lät steg 04, själva
-       löftet, stå släckt medan hela sektionen syntes på 1440×900. */
-    const LINJE = 0.78;
-    $$('[data-gar-flode]').forEach(ol => {
+    $$('[data-gar-flode="tur"]').forEach(ol => {
       const steg = $$(':scope > li', ol);
-      if (!steg.length) return;
-      if (ol.getAttribute('data-gar-flode') === 'tur') {
-        if (ol.getBoundingClientRect().bottom < 0) return;
-        ol.classList.add('i-gang');
-        närSyns(ol, () => steg.forEach(li => li.classList.add('pa', 'fylld')), '0px 0px -12% 0px');
-        return;
-      }
-      const nr = steg.map(li => $('.nx-gar-nr', li) || li);
-      const rita = gräns => {
-        let n = 0;
-        while (n < nr.length && nr[n].getBoundingClientRect().top < gräns) n++;
-        steg.forEach((li, i) => {
-          li.classList.toggle('pa', i < n);
-          li.classList.toggle('fylld', i < n - 1 || n === steg.length);
-        });
-      };
-      const io = new IntersectionObserver(poster => {
-        const rot = poster[0] && poster[0].rootBounds;
-        rita(rot ? rot.bottom : window.innerHeight * LINJE);
-      }, { rootMargin: '0px 0px -' + Math.round((1 - LINJE) * 100) + '% 0px' });
-      rita(window.innerHeight * LINJE);
-      nr.forEach(el => io.observe(el));
+      if (!steg.length || ol.getBoundingClientRect().bottom < 0) return;
       ol.classList.add('i-gang');
+      närSyns(ol, () => steg.forEach(li => li.classList.add('pa', 'fylld')), '0px 0px -12% 0px');
     });
   }
 

@@ -3291,153 +3291,13 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 }
 
 /* ============================================================
-   15. GARANTIFLÖDET (2026-10-07) — betygsgarantin på papperet
-
-   Leo: "samma färg som resten av sidan" i ljust och mörkt, "inte
-   samma kolumner som finns överallt", "en mindre sektion" som "ser ut
-   som att den följer ett flow när man scrollar". Sektionen lämnade
-   .nx-mork och .nx-apply-flow: den står på papperet, och stegen är ett
-   lodrätt flöde med de stora siffrorna (samma form som .hp-nr) och en
-   linje mellan dem som fylls i lera när man scrollar förbi. På dator
-   står rubriken, ingressen och knappen till vänster och flödet till
-   höger; på telefon rubrik, flöde, knapp, i markupens ordning.
-
-   Egna namn med flit. .nx-apply-flow är kvar i Bli studiehjälpare och
-   sköts av hållpunkter() och mörkaYtor(), och prissidans betalflöde
-   är .pr-flode. Prissidan har sektionen; startsidan har sedan
-   2026-10-08 samma fyra steg som en platt remsa under bladen i Hur
-   hjälper vi ditt barn (.hj-gar-steg, avsnitt 17), och ingen egen
-   garantisektion.
-
-   Linjen fylls med scale, aldrig height: scale körs på grafikkortet,
-   height räknar om layouten för varje bildruta. Ett steg som tänds
-   byter färg, opacitet och scale men aldrig höjd, så att inget under
-   det flyttar sig (Safari har ingen scroll anchoring).
-
-   Startläget (släckt) hänger på .i-gang, som garantiflöde() sätter
-   när observatören är kopplad, och inte bara på html.nx-sr: utan den
-   klassen står flödet tänt, utan skript, utan IntersectionObserver,
-   i rörelsenivån still och med reducerad rörelse. Inget data-stig på
-   stegen: den regeln väger (0,3,1) på opacity och transform och hade
-   slagit ut nedtoningen.
+   15. GARANTIFLÖDET gick 2026-10-08 med prissidans garantisektion
+   (Leo: "ta bort betygsgarantin som är öndödigt stor på pris sidan").
+   Garantins fyra steg står bara i remsan under Hur hjälper vi ditt
+   barn (.hj-gar-steg, avsnitt 17), på startsidan och Vår idé, och
+   prissidan har en länk till villkoren under knappen i 399-kortet
+   (.pr-gar-lank i cinema).
    ============================================================ */
-/* Mindre luft under än över: sektionen under (på prissidan; förr på
-   startsidan) har sin egen stora luft ovanför sig, och två fulla
-   luftmått i rad läses som att sidan tagit slut. */
-.nx-gar{padding-bottom:clamp(32px,4.4vw,64px)}
-.nx-gar-in{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);
-  grid-template-areas:"head flode" "cta flode";
-  grid-template-rows:auto 1fr;
-  column-gap:clamp(48px,7vw,120px);
-  align-items:start;
-}
-.nx-gar-head{grid-area:head}
-.nx-gar-head .nx-d2{margin-top:20px}
-.nx-gar-head .nx-lede{margin-top:22px;max-width:40ch}
-.nx-gar-flode{grid-area:flode}
-.nx-gar-cta{grid-area:cta}
-.nx-gar-cta .nx-cta-rad{margin-top:clamp(28px,3vw,40px)}
-.nx-gar-cta .nx-fineprint{margin-top:16px;max-width:52ch}
-/* Länken till villkoren är en kort rad text. Trycket får 44 px ändå,
-   i ett eget lager, så att strecket under den (::after) står kvar. */
-.nx-gar-cta .nx-lank::before{content:"";position:absolute;inset:-11px -8px}
-
-/* ---------- flödet ---------- */
-.nx-gar-flode{
-  --nr:clamp(2.2rem,3.1vw,2.9rem);    /* siffrans storlek */
-  --nr-b:calc(var(--nr) * 1.36);      /* spalten den står i */
-  --mellan:clamp(24px,2.6vw,36px);    /* luften mellan stegen */
-  list-style:none;margin:0;padding:0;
-  display:grid;gap:var(--mellan);
-}
-/* Siffran och rubriken står på samma baslinje: ett stort tal och ett
-   kort ord läses som ett par, inte som en ruta med en etikett. */
-.nx-gar-flode > li{
-  position:relative;
-  display:grid;grid-template-columns:var(--nr-b) minmax(0,1fr);
-  column-gap:clamp(12px,1.4vw,20px);
-  align-items:baseline;
-}
-/* Spåret och fyllningen: en sträcka från siffran ner till nästa.
-   Fyllningen är samma sträcka i lera, skalad från toppen, så att den
-   rinner nedåt och drar sig tillbaka uppåt. Efter sista steget går
-   linjen en bit till och tonar ut, för garantin slutar inte där
-   (rubrikens "fortsätter vi"). Toningen är en gradient, aldrig
-   mask-image (Safari). */
-.nx-gar-flode > li::before,
-.nx-gar-flode > li::after{
-  content:"";position:absolute;
-  left:calc(var(--nr-b) / 2 - 1px);width:2px;border-radius:2px;
-  top:calc(var(--nr) * .8 + 12px);
-  bottom:calc(12px - var(--mellan));
-}
-.nx-gar-flode > li:last-child::before,
-.nx-gar-flode > li:last-child::after{bottom:0}
-.nx-gar-flode > li::before{background:var(--ln-2)}
-.nx-gar-flode > li::after{
-  background:var(--acc);
-  transform-origin:50% 0;
-  transition:scale .8s var(--e-ut);
-}
-.nx-gar-flode > li:last-child::before{background:linear-gradient(var(--ln-2),transparent)}
-.nx-gar-flode > li:last-child::after{background:linear-gradient(var(--acc),transparent)}
-/* letter-spacing lägger luften efter sista siffran också; den tas
-   tillbaka med marginalen, så att talet står mitt över linjen. */
-.nx-gar-nr{
-  display:block;justify-self:center;
-  margin-right:-.06em;
-  font-size:var(--nr);font-weight:800;letter-spacing:-.06em;line-height:.8;
-  font-variant-numeric:tabular-nums;
-  color:var(--acc);
-  transition:color .45s var(--e),scale .6s var(--fjader);
-}
-.nx-gar-steg b{
-  display:block;
-  font-size:clamp(1.1rem,1.5vw,1.36rem);font-weight:700;
-  letter-spacing:-.026em;line-height:1.22;color:var(--bl);
-}
-.nx-gar-steg p{
-  margin-top:8px;max-width:50ch;
-  font-size:clamp(.96rem,1.05vw,1.03rem);line-height:1.55;color:var(--bl-2);text-wrap:pretty;
-}
-.nx-gar-steg{transition:translate .7s var(--e-ut)}
-.nx-gar-steg b,.nx-gar-steg p{transition:color .55s var(--e-mjuk)}
-
-/* Släckt: ett steg man inte scrollat fram till än. Siffran och linjen
-   tonas, texten byter bara till --bl-3, som klarar AA på papperet i
-   båda lägena. Förut tonades hela texten med opacity .4, som gav
-   ungefär 2:1, och själva löftet i steg 04 var grått medan sektionen
-   stod mitt i fönstret (granskningen 2026-10-07). */
-html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-nr{color:var(--ln-2);scale:.86}
-html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-steg{translate:0 8px}
-html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-steg b,
-html.nx-sr .nx-gar-flode.i-gang > li:not(.pa) .nx-gar-steg p{color:var(--bl-3)}
-html.nx-sr .nx-gar-flode.i-gang > li:not(.fylld)::after{scale:1 0}
-/* Linjen hinner fram innan siffran tänds. Bara på vägen in: släcks
-   ett steg för att man scrollar tillbaka går det direkt. */
-html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-nr{transition-delay:.3s}
-html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-steg,
-html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-steg b,
-html.nx-sr .nx-gar-flode.i-gang > li.pa + li.pa .nx-gar-steg p{transition-delay:.2s}
-html.nx-sr .nx-gar-flode.i-gang > li.fylld:last-child::after{transition-delay:.45s}
-
-@media (max-width:900px){
-  .nx-gar-in{
-    grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"head" "flode" "cta";
-    grid-template-rows:none;
-    row-gap:clamp(36px,7vw,48px);
-  }
-  .nx-gar-cta .nx-cta-rad{margin-top:0}
-}
-@media (max-width:560px){
-  .nx-gar-steg p{margin-top:6px;font-size:.95rem;line-height:1.52}
-}
-@media (prefers-reduced-motion:reduce){
-  .nx-gar-flode > li::after,.nx-gar-nr,.nx-gar-steg,.nx-gar-steg b,.nx-gar-steg p{transition:none}
-}
 
 /* ============================================================
    11. RÖSTER — brevet, tills det finns riktiga omdömen
@@ -3528,8 +3388,8 @@ html.nx-sr .nx-gar-flode.i-gang > li.fylld:last-child::after{transition-delay:.4
        i Nästa steg längst ned, och citattecknen i bildväggen och
        brevet. Andra rubrikers <em> står kvar i leran.
 
-   Garantin har leran överallt (bladet i Hur hjälper vi, prissidans
-   flöde), och erbjudandena på prissidan (.pr-erb-*, tejperna) och Just
+   Garantin har leran överallt (remsan i Hur hjälper vi), och
+   erbjudandena på prissidan (.pr-erb-*, tejperna) och Just
    nu har sina egna färger: de rörs inte här. I de inloggade vyerna står
    ämnesfärgerna bara i NexLäx; den här filen laddas inte där.
 

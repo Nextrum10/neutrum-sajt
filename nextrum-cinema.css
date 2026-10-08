@@ -2888,6 +2888,9 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 .pr-erb-rabatt s{font-weight:500;opacity:.75;margin-right:3px;text-decoration-thickness:1.5px}
 .pr-erb-rabatt b{font-weight:800}
 .pr-erb-vad{display:block;margin:14px 0 0;color:var(--muted);font-size:.98rem;line-height:1.5}
+/* Antalet timmar står först och i sidans textfärg (2026-10-08): det är
+   det man jämför planerna på, och resten av raden förklarar det. */
+.pr-erb-vad b{color:var(--bl);font-weight:650}
 .pr-erb-plan .nx-amount{margin:22px 0 6px}
 .pr-erb-plan .nx-amount b{font-size:clamp(2.2rem,3.6vw,3.1rem)}
 .pr-erb-plan > .pr-erb-tim{margin-top:auto;padding-top:14px}
@@ -3134,6 +3137,18 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
    och ett i sin egen höjd. */
 .nx-price-grid:has(.pr-lyft:not([hidden])) > .nx-price-card{align-self:stretch;display:flex;flex-direction:column}
 .nx-price-grid:has(.pr-lyft:not([hidden])) > .nx-price-card > .btn{align-self:flex-start;margin-top:auto}
+/* Länken till betygsgarantin under knappen i 399-kortet (2026-10-08,
+   Leo: "Ha bara en länk under Intresseanmälan på 399kr/h där de står
+   läs mer om betygsgarantin"); prissidan har ingen garantisektion.
+   Ett eget block med sin egen bredd, så att den aldrig hamnar bredvid
+   knappen eller sträcks i kortets flexkolumn, och strecket under den
+   blir bara så långt som texten. Block och inte flex: den engelska
+   texten bryts under 390 px, och i en flexrad hamnade pilen då ensam i
+   högerkanten mellan raderna; inline följer den sista ordet. Tryckytan
+   minst 44 px. */
+.pr-gar-lank{display:block;width:fit-content;align-self:flex-start;margin-top:16px}
+.pr-gar-lank svg{display:inline;vertical-align:-2px;margin-left:6px}
+.pr-gar-lank::before{content:"";position:absolute;inset:-11px -8px}
 .pr-topp-stapel{
   display:grid;grid-template-rows:auto minmax(0,1fr);
   gap:clamp(14px,1.8vw,22px);align-self:stretch;min-width:0;

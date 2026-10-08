@@ -191,7 +191,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537).
   **Paketen** (planerna) kostar 379 kr i timmen, en månad i taget: 5 % av 399 nedåt till hel krona. De
   binder inte: villkoren säger ingen bindningstid och att det som är kvar betalas tillbaka, så sajten säger
-  "en månad i taget", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
+  "en månad i taget" eller "obundet", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
+  Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
+  pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
@@ -258,13 +260,15 @@ i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgaran
 platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gör betygsgarantin mindre"), med bara
 meningen "Vi erbjuder betygsgarantin för att vi är säkra på våra metoder." över, de fyra stegen 01–04 (siffra och
 rubrik) i en rad med streck emellan, varje steg under sitt blad (`.hj-gar-steg`, `data-gar-flode="tur"`, tänds i tur
-när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa står på Vår idé. Det stora flödet
-(`.nx-gar`, `garantiflöde()`) står bara på prissidan, och det släckta läget hänger på `.i-gang`, aldrig bara på
-`html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
+när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa står på Vår idé. Det släckta läget
+hänger på `.i-gang`, aldrig bara på `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under Hur hjälper vi: "för" timpriset utan bindning (`data-stat`),
 paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
 Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
 pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
-8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. NexLäx (`#nexlax`, avsnitt
+8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. **Prissidan har ingen
+garantisektion** (2026-10-08, Leo: "öndödigt stor"): där står bara raden "Betygsgaranti, utan extra kostnad (villkor
+gäller)" i 399-kortet, länken "Läs mer om betygsgarantin" under dess knapp (`.pr-gar-lank`, till villkoren) och
+FAQ-svaret; det stora flödet (`.nx-gar`) är borta, och `garantiflöde()` sköter bara remsan. NexLäx (`#nexlax`, avsnitt
 13, `nexlax()`): en telefon som visar sig själv i fyra skärmar och en stig som följer med, på papperet; en
 illustration (`role="img"`), inget att svara i, högst tre varv och pausad utanför bild; varje skärm står lika
 länge. **Ämnesfärgerna är den röda tråden** på startsidan och menysidorna (2026-10-08, avsnitt 18 i
