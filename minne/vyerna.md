@@ -623,6 +623,18 @@ de står läs mer om betygsgarantin".
   pilen är inline och följer sista ordet. Tryckytan är 44 px med
   `::before`.
 
+### Vad är Nextrum? (2026-10-08, fjärde varvet)
+
+Leo: "första sektionen så hjälper vi ska heta vad är Nextrum, och under i
+korta beskrivningen skriver du detta: Nextrum erbjuder prisvärd läxhjälp
+där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper
+elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid."
+Bara rubriken (`h2.hj-rubrik`, "Vad är *Nextrum?*", betoningen i leran som
+förut) och ingressen i `.nx-head-aside` på startsidan, båda språken
+("What is *Nextrum?*", med "tutor" som resten av engelskan). Etiketten
+"Så hjälper vi", ankaret `#sa-hjalper-vi`, bladen och remsan är orörda, och
+Vår idé har kvar "Hur hjälper vi ditt barn?" med den gamla ingressen.
+
 ### Två fällor när en palett byts
 
 Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11
