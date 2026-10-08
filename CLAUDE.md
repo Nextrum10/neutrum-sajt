@@ -272,10 +272,11 @@ FAQ-svaret; det stora flödet (`.nx-gar`) är borta, och `garantiflöde()` sköt
 13, `nexlax()`): en telefon som visar sig själv i fyra skärmar och en stig som följer med, på papperet; en
 illustration (`role="img"`), inget att svara i, högst tre varv och pausad utanför bild; varje skärm står lika
 länge. **Ämnesfärgerna är den röda tråden** på startsidan och menysidorna (2026-10-08, avsnitt 18 i
-nextrum-start.css), efter tre regler: **ordningen** (i en rad blad eller steg får det n:te färg n, blå, lila, grön,
+nextrum-start.css), efter två regler: **ordningen** (i en rad blad eller steg får det n:te färg n, blå, lila, grön,
 lera, rosa, och SO:s ockra som sjätte i bandet; `--f` sätts på ett ställe, och siffran, figuren eller etiketten
-läser `var(--f, sin gamla färg)`, aldrig texten), **ämnet** (studiehjälparnas ämnen, `data-amne`) och
-**betoningen** (gradienten i "ditt barn?" på menysidornas `<em>` överst, Nästa stegs `<em>` och citattecknen).
+läser `var(--f, sin gamla färg)`, aldrig texten) och **ämnet** (studiehjälparnas ämnen, `data-amne`). **Gradienten**
+(blå, lila, rosa) står bara i NexLäx rubrik (`.nlx-rubrik em`); andra rubrikers `<em>` (också "ditt barn?", Just nus
+slogan och Nästa steg) och citattecknen är orange eller vita som förut (Leo 2026-10-08: "när de inte gäller nexläx").
 Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu har sina egna, och i vyerna står
 de bara i NexLäx. **`#bli` står på mörka
 lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`), och Nästa steg

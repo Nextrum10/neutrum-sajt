@@ -185,8 +185,10 @@
      utan att läsa. Alla klarar AA mot papperet och --yta som text; -l är
      syskonen för barken, som --lera-l. I vyerna står de bara i NexLäx;
      utanför säger lera, mossa och ockra vems drag det är. Startsidan och
-     menysidorna bär dem som en röd tråd sedan 2026-10-08, efter tre regler
-     (ordningen, ämnet, betoningen) i nextrum-start.css, avsnitt 18. */
+     menysidorna bär dem som en röd tråd sedan 2026-10-08, efter två regler
+     (ordningen och ämnet) i nextrum-start.css, avsnitt 18. Gradienten i
+     dem (blå, lila, rosa) står bara i NexLäx rubrik; andra rubrikers
+     betoning är orange eller vit. */
   --amne-ma:#2F6690; --amne-ma-l:#8DB9E0;
   --amne-sv:#A63D3A; --amne-sv-l:#E7978F;
   --amne-en:#6A4A99; --amne-en-l:#B9A1E0;
