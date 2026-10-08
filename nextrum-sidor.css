@@ -15,7 +15,8 @@
    inte har:
 
      1. lapparna på sidhuvudets foto, vyernas notiser
-     2. kolumnerna av blad och hållpunkterna i tre
+     2. kolumnerna av blad, och hållpunkterna i tre; på telefonen en
+        lista (bladen) och två och två (hållpunkterna)
      3. fotokorten
      4. fördelarna på mörk botten
      5. FAQ:n som kort, och hoppen till grupperna
@@ -132,12 +133,6 @@ html.nx-sr .sid-framme .sid-lapp{opacity:1;translate:0 0;scale:1}
 @media (max-width:1100px){
   .sid-kort.fyra{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media (max-width:860px){
-  .sid-kort,.sid-kort.tva{grid-template-columns:minmax(0,1fr)}
-}
-@media (max-width:640px){
-  .sid-kort.fyra{grid-template-columns:minmax(0,1fr)}
-}
 .sid-kort .nx-bubbla h3{
   font-size:clamp(1.08rem,1.4vw,1.2rem);font-weight:700;
   letter-spacing:-.022em;line-height:1.2;
@@ -164,10 +159,62 @@ html.nx-sr .sid-framme .sid-lapp{opacity:1;translate:0 0;scale:1}
   .sid-kort > .nx-bubbla:hover::after{opacity:1}
 }
 
-/* Hållpunkterna i tre, och i fem för stegen till första passet.
-   Startsidans fyra står kvar som de är. */
-.nx-holdpunkter.sid-tre{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* Telefonen och plattan: en lista, inte en stapel lådor (2026-10-07).
+   Leo om korten som stod under varandra: "Återkommande kolumner ...
+   som inte är clean". Bladens texter här är 30 ord och mer, för långa
+   för två kort i bredd på 390 px, så där bladen annars hade staplats
+   blir de rader: figuren liten till vänster, texten bredvid, och en
+   tunn linje mellan raderna i stället för en egen yta per blad.
+   Hållpunkterna, med korta texter, står i stället två och två
+   (nextrum-start.css, avsnitt 4). */
 @media (max-width:860px){
+  .sid-kort,.sid-kort.tva,.sid-kort.fyra{
+    grid-template-columns:minmax(0,1fr);
+    gap:0;
+    margin-top:clamp(26px,5vw,40px);
+    border-top:1px solid var(--ln);
+  }
+  .sid-kort > .nx-bubbla,
+  .sid-kort > .nx-bubbla.sid-stor{
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    column-gap:14px;align-content:start;
+    padding:18px 0 19px;
+    border:0;border-bottom:1px solid var(--ln);border-radius:0;
+    background:none;box-shadow:none;
+  }
+  .sid-kort > .nx-bubbla::after{content:none}
+  .sid-kort > .nx-bubbla:hover{translate:none}
+  .sid-kort .bu-fig{
+    grid-row:1 / span 4;
+    width:32px;height:32px;border-radius:10px;margin:0;
+  }
+  .sid-kort .bu-fig svg{width:16px;height:16px}
+  .sid-kort .nx-bubbla > :not(.bu-fig){grid-column:2}
+  /* Första raden text mitt för figuren: 32 px figur, raden ~24 px. */
+  .sid-kort .nx-bubbla > .bu-fig + *{padding-top:4px}
+  .sid-kort .nx-bubbla h3{font-size:1.04rem;margin-bottom:6px}
+  .sid-kort .nx-bubbla p{font-size:.95rem;line-height:1.56}
+  .sid-kort .nx-bubbla p + p{margin-top:8px}
+  .sid-kort .nx-lank{margin-top:12px}
+  .sid-kort .nx-bubbla.sid-stor p{
+    margin-top:0;
+    font-size:1.12rem;line-height:1.34;
+  }
+}
+
+/* Hållpunkterna i tre. Under 861 px två och två som startsidans
+   fyra, och det tredje kortet tar hela raden (regeln står i
+   nextrum-start.css); mellan 861 och 1100 px står de tre i rad, och
+   den regeln stängs av här. */
+.nx-holdpunkter.sid-tre{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (min-width:861px){
+  .nx-holdpunkter.sid-tre > li:last-child{grid-column:auto}
+}
+@media (max-width:860px){
+  .nx-holdpunkter.sid-tre{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:339px){
   .nx-holdpunkter.sid-tre{grid-template-columns:minmax(0,1fr)}
 }
 .nx-holdpunkter + .sid-fot{margin-top:clamp(22px,2.6vw,30px)}
@@ -251,14 +298,20 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
 /* ============================================================
    4. FÖRDELARNA PÅ MÖRK BOTTEN (Bli studiehjälpare)
 
-   Förut en remsa med hårfina linjer emellan. Nu fem blad i
-   stegens form från startsidans mörka yta (.nx-apply-step), så att
-   fördelarna och stegen under dem ser ut som en och samma sak.
+   Förut en remsa med hårfina linjer emellan. Nu blad i stegens form
+   från startsidans mörka yta (.nx-apply-step), så att fördelarna och
+   stegen under dem ser ut som en och samma sak.
+
+   Två blad sedan 2026-10-07 (de tre som ingressen redan sa togs bort),
+   bredvid varandra i alla bredder ner till 340 px. Startsidans fem
+   spalter hade lämnat tre tomma.
    ============================================================ */
 .nx-perks{
   background:none;border:0;border-radius:0;overflow:visible;
   gap:clamp(10px,1.2vw,16px);
+  grid-template-columns:repeat(2,minmax(0,1fr));
 }
+@media (max-width:339px){.nx-perks{grid-template-columns:minmax(0,1fr)}}
 .nx-perk{
   position:relative;
   border-radius:clamp(20px,2vw,26px);
@@ -282,6 +335,15 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
     background-color:color-mix(in srgb,var(--nt-fg) 9%,transparent);
     border-color:color-mix(in srgb,var(--nt-fg) 22%,transparent);
   }
+}
+/* Telefonen: samma täthet som stegen under (nextrum-start.css). */
+@media (max-width:760px){
+  .nx-perks{gap:10px}
+  .nx-perk{padding:16px 14px 18px;border-radius:20px;gap:6px}
+  .nx-perk .i{width:34px;height:34px;border-radius:11px;margin-bottom:4px}
+  .nx-perk .i svg{width:16px;height:16px}
+  .nx-perk b{font-size:.98rem}
+  .nx-perk p{font-size:.84rem;line-height:1.48}
 }
 
 /* ============================================================
