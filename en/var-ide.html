@@ -53,8 +53,8 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=0d47d525">
-<link rel="stylesheet" href="../nextrum-start.css?v=e1615653">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=640abfcd">
+<link rel="stylesheet" href="../nextrum-start.css?v=0f13dad5">
 <link rel="stylesheet" href="../nextrum-sidor.css?v=89c1fa67">
 </head>
 <body>
@@ -155,11 +155,12 @@
      sanningen, och ändras den där ska den kopieras hit, på båda
      språken. Formen: nextrum-start.css avsnitt 17.
 
-     Garantins del följer reglerna i CLAUDE.md, avsnitt 1: länken till
-     villkoren och "Villkor gäller" står intill texten. Id:t
-     #betygsgaranti finns bara här på sidan; länkarna till /#betygsgaranti
-     från andra sidor går till startsidan som förut. Det lilla flödet
-     tänds i tur (garantiflöde() i nextrum-start.js).
+     Garantin är startsidans platta remsa under de fyra bladen (index.html,
+     1c), och reglerna i CLAUDE.md, avsnitt 1, gäller: länken till
+     villkoren och "Villkor gäller" står i remsan. Id:t #betygsgaranti
+     finns bara här på sidan; länkarna till /#betygsgaranti från andra
+     sidor går till startsidan som förut. Stegen tänds i tur
+     (garantiflöde() i nextrum-start.js).
 
      En skillnad med flit: NexLäx-delens länk går till NexLäx på För
      elever & föräldrar, för sidan har ingen egen #nexlax.
@@ -195,25 +196,7 @@
         <h3>From the same school desk</h3>
         <p>They know what it is like to study for a test, get stuck on a task and understand something for the first time, because they did it themselves not long ago.</p>
       </li>
-      <li class="hj-del hj-gar" id="betygsgaranti" data-stig style="--f:var(--acc)">
-        <div class="hj-gar-text">
-          <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span>
-          <span class="hj-et">Grade guarantee</span>
-          <h3>If the grade doesn’t go up, <em>we keep going.</em></h3>
-          <p>We believe in the right match and a school year of real work, so much that we stand behind it. If the student does their part and the grade still doesn’t go up, we keep helping without you paying anything.</p>
-          <a class="nx-lank" href="/en/anvandarvillkor#betygsgaranti">Read the guarantee terms
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
-          <p class="nx-fineprint">Terms apply. Help with other subjects and homework in general is included as usual and does not affect the guarantee.</p>
-        </div>
-        <ol class="nx-gar-flode nx-gar-liten" data-gar-flode="tur">
-          <li><span class="nx-gar-nr" aria-hidden="true">01</span><div class="nx-gar-steg"><b>Choose the subjects</b><p>You choose the subjects that need a lift, and we build the plan towards this year’s grade.</p></div></li>
-          <li><span class="nx-gar-nr" aria-hidden="true">02</span><div class="nx-gar-steg"><b>Keep it up all year</b><p>Regular sessions, tasks in between and a tutor who keeps it all together.</p></div></li>
-          <li><span class="nx-gar-nr" aria-hidden="true">03</span><div class="nx-gar-steg"><b>See it all in your view</b><p>Every session, report and task is visible to you, and the guarantee is judged on what you can see for yourselves.</p></div></li>
-          <li><span class="nx-gar-nr" aria-hidden="true">04</span><div class="nx-gar-steg"><b>We stay with you</b><p>If the grade doesn’t go up even though you did your part, you get extra homework help from us free of charge.</p></div></li>
-        </ol>
-      </li>
-      <li class="hj-del hj-nex" data-stig data-fördröj="1" style="--f:var(--amne-ms)">
+      <li class="hj-del hj-nex" data-stig data-fördröj="3" style="--f:var(--amne-ms)">
         <span class="hj-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg></span>
         <span class="hj-et">NexLäx</span>
         <h3>Practice between sessions</h3>
@@ -224,6 +207,19 @@
         </a>
       </li>
     </ul>
+
+    <div class="hj-gar" id="betygsgaranti" data-stig>
+      <p class="hj-gar-mening"><span class="hj-gar-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span><span>We offer the <em>grade guarantee</em> because we are confident in our methods.</span></p>
+      <ol class="hj-gar-steg" data-gar-flode="tur">
+        <li><span class="hj-gar-nr" aria-hidden="true">01</span><b>Choose the subjects</b></li>
+        <li><span class="hj-gar-nr" aria-hidden="true">02</span><b>Keep it up all year</b></li>
+        <li><span class="hj-gar-nr" aria-hidden="true">03</span><b>See it all in your view</b></li>
+        <li><span class="hj-gar-nr" aria-hidden="true">04</span><b>We stay with you</b></li>
+      </ol>
+      <p class="hj-gar-villkor">Terms apply. <a class="nx-lank" href="/en/anvandarvillkor#betygsgaranti">Read the guarantee terms
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a></p>
+    </div>
   </div>
 </section>
 
@@ -451,7 +447,7 @@
 <script src="../nextrum-app.js?v=6fef4527"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
-<script src="../nextrum-start.js?v=0786b696"></script>
+<script src="../nextrum-start.js?v=5e71728a"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->

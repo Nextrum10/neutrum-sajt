@@ -1145,6 +1145,29 @@ html[lang="en"] .nx-hero-rubrik{
 .nx-mork h1,.nx-mork h2,.nx-mork h3{color:var(--nt-fg)}
 .nx-mork .nx-lede,.nx-mork .nx-lede-s,.nx-mork p{color:var(--nt-mut)}
 
+/* NÄSTA STEG I MÖRKT LÄGE (2026-10-08). Leo: "På mörkvy ska alla redo
+   att ta nästa steg matcha med den mörka färgen på sidan på main och
+   alla landingssidor." I mörkt läge står slutet på varje sida (startsidan,
+   menysidorna och de genererade sidorna, som alla har den här filen) på
+   sidans eget papper, --pap (#1A1813), inte på barken (#262319), och
+   skenet är ett svagt ljus av lera mitt bakom rubriken som aldrig når
+   kanterna: ingen annan mörk ton, och ingen skarv mot sektionen ovanför.
+   Footern under står kvar i barken och är det som avgränsar. I ljust
+   läge är ytan som förut. Efter #bli på startsidan: nextrum-start.css,
+   avsnitt 10. */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .nx-mork.nx-final-cinema{
+    background:
+      radial-gradient(48% 46% at 50% 48%,color-mix(in srgb,var(--lera-l) 7%,transparent),transparent 74%),
+      var(--pap);
+  }
+}
+:root[data-theme="dark"] .nx-mork.nx-final-cinema{
+  background:
+    radial-gradient(48% 46% at 50% 48%,color-mix(in srgb,var(--lera-l) 7%,transparent),transparent 74%),
+    var(--pap);
+}
+
 /* ============================================================
    MANIFEST — "Inte bara läxhjälp. Någon som förstår."
    Stor typografi som fotot glider bakom.
