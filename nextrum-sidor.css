@@ -364,7 +364,7 @@ html.nx-sr .sid-split .nx-split-bild.nx-in .nx-img{scale:1}
   border:1px solid var(--kort-kant);
   border-radius:clamp(18px,1.8vw,22px);
   background:var(--kort);
-  box-shadow:var(--kort-sk);
+  box-shadow:var(--kort-sk),var(--glod);
   transition:border-color .3s var(--e),translate .45s var(--fjader);
 }
 .faq-q{

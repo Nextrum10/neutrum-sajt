@@ -252,11 +252,13 @@ under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ditt barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ditt barn** (`#sa-hjalper-vi`, avsnitt 17): fem blad,
-läxhjälpen, expertisen, erfarenheten, betygsgarantin och NexLäx, var och en med en NexLäx-ämnesfärg i `--f`;
-erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är ett
-blad där med `id="betygsgaranti"` kvar, den gamla textens villkorslänk och "Villkor gäller", och de fyra stegen
-som ett litet flöde (`.nx-gar-liten`, `data-gar-flode="tur"`) som tänds i tur när det syns; det stora flödet
+som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ditt barn** (`#sa-hjalper-vi`, avsnitt 17): fyra blad i
+en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
+i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
+platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gör betygsgarantin mindre"), med bara
+meningen "Vi erbjuder betygsgarantin för att vi är säkra på våra metoder." över, de fyra stegen 01–04 (siffra och
+rubrik) i en rad med streck emellan, varje steg under sitt blad (`.hj-gar-steg`, `data-gar-flode="tur"`, tänds i tur
+när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa står på Vår idé. Det stora flödet
 (`.nx-gar`, `garantiflöde()`) står bara på prissidan, och det släckta läget hänger på `.i-gang`, aldrig bara på
 `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
 paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
@@ -273,7 +275,14 @@ läser `var(--f, sin gamla färg)`, aldrig texten), **ämnet** (studiehjälparna
 Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu har sina egna, och i vyerna står
 de bara i NexLäx. **`#bli` står på mörka
 lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`), och Nästa steg
-efter den börjar i samma svarta. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
+efter den börjar i samma svarta; Bli studiehjälpare-sidans sidhuvud och band (`.bli-svart`) står i samma svarta
+med samma lera (2026-10-08). **Nästa steg i mörkt läge** står på sidans papper (`--pap`) på alla sidor, aldrig på
+barken (cinema, DE MÖRKA YTORNA; efter `#bli` fortsätter dess sken över gränsen), och i ljust läge som förut.
+**Skenet runt korten** (2026-10-08, Leo: "en liten orange skuggad runt kolumner osv"): kort, blad och kolumner på de
+publika sidorna har `var(--glod)` sist i sin box-shadow, i `--glod-ytfarg` (lera på de svarta ytorna), annars kortets
+`--f`, annars `--glod-farg` (ljus lera); styrkan är `--glod-kant` och `--glod-styrka` i cinemas tre block. `--glod`
+räknas på kortet (listan i cinema, SKENET RUNT KORTEN), aldrig på `:root`, för `var(--f)` ska läsas där; skenet är
+detsamma i alla lägen, så ingen box-shadow animeras. Ett nytt kort går in i listan och får `var(--glod)`. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
 kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton byggs ur registret
 (`data-bild`), och alt-texten står på steget (`data-alt`). Manifestets blad står bredvid varandra ner till

@@ -638,14 +638,16 @@ const NXStart = (function () {
      Egna namn med flit, inte .nx-apply-flow: den är kvar i Bli
      studiehjälpare och sköts av mörkaYtor().
 
-     I TUR (2026-10-08). På startsidan står flödet litet, inne i
-     garantins del av Hur hjälper vi ditt barn (Leo: "använd bilden som
-     jag skicka för den animation men gör de litet"). Där står stegen så
-     tätt att de hade tänts nästan samtidigt av linjen, så
-     data-gar-flode="tur" tänder dem i stället ett i taget när flödet
-     kommer in i bild, en gång: alla fyra får .pa och .fylld på en gång,
-     och fördröjningen per steg står i CSS (avsnitt 17). Har man redan
-     scrollat förbi när sidan laddas står flödet tänt utan .i-gang.
+     I TUR (2026-10-08). På startsidan och Vår idé står stegen i en
+     platt remsa under bladen i Hur hjälper vi ditt barn (.hj-gar-steg,
+     andra varvet samma dag; Leo: "01 - 02 - 03- 04 ska stå under de
+     fyra kolumner platt"). Där står de på en rad och hade tänts
+     samtidigt av linjen, så data-gar-flode="tur" tänder dem i stället
+     ett i taget när remsan kommer in i bild, en gång: alla fyra får .pa
+     och .fylld på en gång, och fördröjningen per steg står i CSS
+     (avsnitt 17). Har man redan scrollat förbi när sidan laddas står
+     stegen tända utan .i-gang. Siffran söks bara i läget som följer
+     scrollen; i tur räcker stegen.
      ============================================================ */
   function garantiflöde() {
     if (!rörelse || !('IntersectionObserver' in window)) return;

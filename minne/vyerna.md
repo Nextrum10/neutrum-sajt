@@ -377,7 +377,9 @@ rosa; garantin leran). **Erfarenheten är studiehjälparnas**, aldrig bolagets:
 Nextrum startade hösten 2026, och sidan säger inga år (CLAUDE.md, avsnitt 8).
 Alla påståenden fanns redan på sajten (intervjuade och utbildade, nyligen
 läst samma kurser, matchning efter ämne, nivå, behov och personlighet).
-- **Betygsgarantin** har ingen egen sektion längre. Bladet bär
+- **Betygsgarantin** har ingen egen sektion längre (andra varvet samma dag
+  blev bladet en platt remsa under de fyra andra, se "Garantin som en
+  remsa" nedan; det här är hur det var). Bladet bar
   `id="betygsgaranti"` (länken i Nästa steg landar där, `scroll-margin-top`),
   den gamla sektionens text, länken till villkoren och "Villkor gäller ..."
   ordagrant, och de fyra stegen (01 Välj ämnena ... 04 Vi står kvar) som ett
@@ -428,7 +430,8 @@ ram av lera (`outline`), punkterna och ansökans fyra steg kanter i
 `--bli-kant`, och stegens siffror står i ljus lera. Nästa steg följer direkt
 efter sedan omdömena flyttade upp; `#bli + .nx-mork` börjar i samma svarta
 och mörknar mot `--nt-2`, så att ingen skarv syns mot footern. Bara `#bli`:
-Bli studiehjälpare-sidan har samma lista och står kvar.
+Bli studiehjälpare-sidan har samma lista och står kvar (till andra varvet
+samma dag, se "Garantin som en remsa" nedan).
 
 **Den röda tråden**: ämnesfärgerna står på bladen i Hur hjälper vi ditt
 barn, i rubrikens "ditt barn?" och sloganens andra mening (samma gradient som
@@ -509,6 +512,101 @@ tappade AA på sin egen ton (4,44), så deras text har en sjättedel `--bl` i
 sig (`color-mix`), vilket höjer kontrasten i båda lägena. Mät ett blad med
 `--kort` som bakgrund: bladet målar den som en gradient, inte som
 `background-color`.
+
+### Garantin som en remsa, Bli studiehjälpare i svart, Nästa steg i mörkt läge och skenet runt korten (2026-10-08, andra varvet)
+
+Leo: "Gör betygsgarantin mindre skriv Vi erbjuder betygsgarantin för att vi
+är säkra på våra metoder. 01 - 02 - 03- 04 ska stå under de fyra kolumner
+platt sådär - - - -. och bara meningen över och villkorl under. På bli
+studiehjälpare på landningsidan ska den ha samma färg som main sidan på
+mörkvy och ljus. På mörkvy ska alla redo att ta nästa steg matcha med den
+mörka färgen på sidan på main och alla landingssidor. De är lite svårt att
+särskilja färgen på mörk och ljus vy ibland när de finns kolumner osv. Gör en
+liten orange skuggad runt kolumner osv och andra färger där de färgerna
+finns redan."
+
+**Garantin som en remsa** (avsnitt 17, startsidan och Vår idé, båda
+språken). Hur hjälper vi ditt barn har fyra blad i en rad (läxhjälpen,
+expertisen, erfarenheten, NexLäx; två och två på platta och telefon, en
+spalt under 340 px), och under dem står garantin som en låg remsa med kant
+av lera (`div.hj-gar#betygsgaranti`, utanför `ul.hj-grid`): meningen "Vi
+erbjuder *betygsgarantin* för att vi är säkra på våra metoder." ("We offer
+the *grade guarantee* because we are confident in our methods.") med en
+liten sköld, de fyra stegen i en rad (`ol.hj-gar-steg`, bara siffra och
+rubrik: 01 Välj ämnena, 02 Kör hela läsåret, 03 Se allt i er vy, 04 Vi står
+kvar) och "Villkor gäller." med länken till villkoren (samma `href` som
+förut). Rubriken "Går betyget inte upp, fortsätter vi", stycket, raden om
+andra ämnen och stegens beskrivningar gick med bladet. Meningen lovar inget
+betyg (CLAUDE.md, avsnitt 1).
+- **Varje steg står under sitt blad** på bred skärm: remsan har ingen egen
+  luft i sidled, stegen har rutnätets kolumner och mellanrum (`--mellan`),
+  och siffran står bladens luft (`--pad`) in. På telefon står de fyra kvar
+  i en rad (Leo: "platt", aldrig staplade) med remsans egen luft
+  (`--steg-in:0`, rubrikerna 0,78 rem och två rader).
+- **Strecket** från siffra till siffra är `::before` (spåret, `--ln-2`) och
+  `::after` (fyllnaden, lera) som grid-celler bredvid siffran, med negativ
+  `margin-right` ut över mellanrummet och nästa stegs luft, som pilen i
+  prissidans betalflöde. Efter 04 tonar det ut mot kanten. Fälla: ett
+  steg med kort rubrik sträcks till radens höjd, och utan `align-content:
+  start` delade raderna i det på luften, så att siffran sjönk ur linje.
+- **I tur**: `data-gar-flode="tur"` som förut; `garantiflöde()` behövde
+  ingen ändring (i tur söker den inte siffran). Släckt: siffran i
+  `--ln-2` och `scale:.86`, rubriken i `--bl-3`, fyllnaden `scale:0 1`;
+  provat med rörelse på 1280 och 390 (01 tänd och strecket på väg mot 02
+  efter 0,7 s, alla fyra tända efter 3 s).
+- `.nx-gar-liten` och dess fällor är borta; det stora flödet (`.nx-gar`)
+  står kvar på prissidan.
+
+**Bli studiehjälpare i svart** (avsnitt 10). Sidhuvudet och bandet under
+det har klassen `bli-svart` (båda språken) och står i `--bli-bg` i båda
+lägena, som `#bli`: lerans sken uppe till höger i sidhuvudet och nere till
+vänster i bandet, en ram av lera runt fotot (`outline`), fördelarna och
+stegen med kanter i `--bli-kant`, etiketterna i ljus lera, och en linje av
+lera i bandets nederkant i stället för bandets grå kant (i mörkt läge möter
+bandet papperet i samma svarta). Väljarna har tre klasser
+(`.band.on-band.bli-svart`), för cinemas `.on-band + .on-band:not(.ftr)`
+väger (0,3,0); de gemensamma reglerna med `#bli` står som
+`:is(#bli,.bli-svart)`. **Kontrasten**, mätt i Chromium: kräm 14,3:1,
+dämpat 7,5:1 (mörkt läge 6,7:1), ljus lera 6,1:1, stegens blå siffra 8,6:1,
+knappen (kräm med barkens text) 12,6:1. Formuläret står på papperet under
+och är orört.
+
+**Nästa steg i mörkt läge** (cinema, DE MÖRKA YTORNA). På alla sidor med
+`.nx-mork.nx-final-cinema` (startsidan, menysidorna, de genererade sidorna)
+står ytan i mörkt läge på `--pap` (#1A1813) med ett svagt ljus av lera mitt
+bakom rubriken som inte når kanterna, i stället för barkens #262319; footern
+under står kvar i barken. Ljust läge som förut. Efter `#bli` (startsidan)
+väger `#bli + .nx-mork` (1,1,0), så den har egna regler för mörkt läge i
+avsnitt 10. Där fortsätter också `#bli`:s sken nere till vänster över
+gränsen, i båda lägena: samma bredd (70 %) och mitten i hörnet på båda
+sidor om gränsen ger samma färg längs gränsen, så skenet klipps inte av
+(förut syntes en kant där det tog slut).
+
+**Skenet runt korten** (cinema, SKENET RUNT KORTEN). Kort, blad och
+kolumner på de publika sidorna har `var(--glod)` sist i sin box-shadow: en
+ring kant i kant och ett mjukt sken nedåt runt, i `--glod-ytfarg` (lera på
+`#bli` och `.bli-svart`), annars kortets `--f` (bladen i Hur hjälper vi,
+raderna med ordningen, FAQ:ns frågor i gruppens färg), annars
+`--glod-farg` (#D9814F, samma orange som kanterna i `#bli`). Styrkan är två
+procentsatser i cinemas tre block: `--glod-kant` 12 % och `--glod-styrka`
+22 % i ljust läge, 24 % och 30 % i mörkt.
+- **`--glod` räknas på kortet**, i en lista i cinema
+  (`.nx-bubbla`, `.hj-del`, `.hj-gar`, `.jn-kort`, `.jn-pris`, `.jn-jamfor`,
+  `.sc-card`, `.dr-kort`, `.nx-apply-step`, `.nx-perk`, `.faq-item`,
+  `.nx-contact-card`, `.nx-price-card`, `.nx-offer`, `.pr-lyft`,
+  `.pr-erb-kort`, `.nx-omr-kort`, `.nx-trio-kort`): en custom property som
+  räknas på `:root` har redan bytt `var(--f)` mot rotens värde när den
+  ärvs. På `:root` står ett tomt sken (`0 0 #0000`), så att `var(--glod)` i
+  en skugga aldrig gör den ogiltig. Korten med egen skugga har `,var(--glod)`
+  i sin egen regel (i sin fil, också i hovrings- och tryckläget, så att
+  skenet aldrig ändras); de utan får bara skenet i cinema.
+- **Skenet står still**: ingen ny regel animerar en box-shadow. Lyften är
+  som förut (translate och `::after` med opacitet). `.sc-card` och
+  `.nx-trio-kort` hade redan en övergång på box-shadow i hovringen (sk-1
+  till sk-2); den står kvar, och skenet är detsamma i båda lägena.
+- Menysidornas blad blir rader på telefon (`box-shadow:none`) och får inget
+  sken där; FAQ:ns frågor på de genererade sidorna är rader utan skugga och
+  får inget heller. Vyerna har inga av klasserna och är orörda.
 
 ### Två fällor när en palett byts
 
