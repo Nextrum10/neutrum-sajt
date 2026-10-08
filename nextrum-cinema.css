@@ -184,8 +184,9 @@
      navigera enklare"). En per ämne, så att man ser vilket ämne man är i
      utan att läsa. Alla klarar AA mot papperet och --yta som text; -l är
      syskonen för barken, som --lera-l. I vyerna står de bara i NexLäx;
-     utanför säger lera, mossa och ockra vems drag det är. Startsidan bär dem
-     som en röd tråd sedan 2026-10-08 (nextrum-start.css, avsnitt 13). */
+     utanför säger lera, mossa och ockra vems drag det är. Startsidan och
+     menysidorna bär dem som en röd tråd sedan 2026-10-08, efter tre regler
+     (ordningen, ämnet, betoningen) i nextrum-start.css, avsnitt 18. */
   --amne-ma:#2F6690; --amne-ma-l:#8DB9E0;
   --amne-sv:#A63D3A; --amne-sv-l:#E7978F;
   --amne-en:#6A4A99; --amne-en-l:#B9A1E0;

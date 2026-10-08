@@ -1548,6 +1548,27 @@
     return n ? n[0].toUpperCase() : 'N';
   }
 
+  /* Ämnets färg på studiehjälparens taggar (2026-10-08), samma färger
+     som i NexLäx: nextrum-start.css, avsnitt 18. Bara ett attribut,
+     ingen text. Namnet kommer ur databasen, alltid på svenska (NX.AMNEN:
+     "NO / Fysik / Kemi / Biologi" och de andra), eller ur exempelkorten,
+     som på den engelska sidan är engelska; därför båda språken här, och
+     samma funktion i index.html och en/index.html. Ett ämne utan färg
+     (Studieteknik) får inget attribut och står kvar grått. */
+  const ÄMNESFÄRG = [
+    [/^(matematik|matte|math)/, 'ma'],
+    [/^(svenska|swedish)/, 'sv'],
+    [/^(engelska|english)/, 'en'],
+    [/^(no\b|fysik|kemi|biologi|naturkunskap|physics|chemistry|biology|science)/, 'no'],
+    [/^(so\b|samhäll|historia|geografi|religion|social|history|geography)/, 'so'],
+    [/^(moderna språk|spanska|tyska|franska|modern lang|spanish|german|french)/, 'ms']
+  ];
+  function ämneFärg(namn) {
+    const n = String(namn || '').trim().toLowerCase();
+    const träff = ÄMNESFÄRG.find(([mönster]) => mönster.test(n));
+    return träff ? ' data-amne="' + träff[1] + '"' : '';
+  }
+
   function tomState() {
     return '<div class="nx-empty" style="grid-column:1/-1">'
       + '<span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg></span>'
@@ -1616,7 +1637,7 @@
       + '</div>'
       + '<div class="sc-body">'
       + '<p>' + esc(t.bio) + '</p>'
-      + '<div class="tutor-meta">' + t.ämnen.map(ä => '<span class="tag">' + esc(ä) + '</span>').join('') + '</div>'
+      + '<div class="tutor-meta">' + t.ämnen.map(ä => '<span class="tag"' + ämneFärg(ä) + '>' + esc(ä) + '</span>').join('') + '</div>'
       + '<a class="btn btn-ghost btn-sm sc-cta" href="/en/intresseanmalan">Find your tutor</a>'
       + '</div>'
       + '</article>').join('');
@@ -1661,7 +1682,7 @@
       const namn = t.fornamn || 'Tutor';
       const bio = t.bio || 'A young tutor who helps younger students understand, not just get the homework done.';
       const rad = ['Tutor', t.city].filter(Boolean).map(esc).join(' · ');
-      const ämnen = (t.subjects || []).map(s => '<span class="tag">' + esc(s) + '</span>').join('');
+      const ämnen = (t.subjects || []).map(s => '<span class="tag"' + ämneFärg(s) + '>' + esc(s) + '</span>').join('');
       return '<article class="sc-card">'
         + '<div class="sc-top">'
         + '<span class="sc-face" aria-hidden="true">' + esc(initial(namn)) + '</span>'

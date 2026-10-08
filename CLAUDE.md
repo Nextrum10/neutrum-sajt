@@ -265,8 +265,13 @@ pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4)
 8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. NexLäx (`#nexlax`, avsnitt
 13, `nexlax()`): en telefon som visar sig själv i fyra skärmar och en stig som följer med, på papperet; en
 illustration (`role="img"`), inget att svara i, högst tre varv och pausad utanför bild; varje skärm står lika
-länge. **Ämnesfärgerna är startsidans röda tråd** (2026-10-08): bladen, gradienten i "ditt barn?" och sloganen,
-och stegens siffror i `#hur` (`var(--f,var(--acc))`); i vyerna står de bara i NexLäx. **`#bli` står på mörka
+länge. **Ämnesfärgerna är den röda tråden** på startsidan och menysidorna (2026-10-08, avsnitt 18 i
+nextrum-start.css), efter tre regler: **ordningen** (i en rad blad eller steg får det n:te färg n, blå, lila, grön,
+lera, rosa, och SO:s ockra som sjätte i bandet; `--f` sätts på ett ställe, och siffran, figuren eller etiketten
+läser `var(--f, sin gamla färg)`, aldrig texten), **ämnet** (studiehjälparnas ämnen, `data-amne`) och
+**betoningen** (gradienten i "ditt barn?" på menysidornas `<em>` överst, Nästa stegs `<em>` och citattecknen).
+Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu har sina egna, och i vyerna står
+de bara i NexLäx. **`#bli` står på mörka
 lägets svarta** (`--bli-bg`, #1A1813) i båda lägena, med lera runt kolumnerna (`--bli-kant`), och Nästa steg
 efter den börjar i samma svarta. Stegscenen (avsnitt 14, `stegFoton`) har två lägen ur
 `html[data-motion]`, inte ur bredden: pinnad på `full`, en svepbar rad ovanpå fotot på `lite`; båda
@@ -276,8 +281,9 @@ kräver `.igang`, och grunden i cinema har alla steg öppna. Startsidans foton b
 man sveper i, med märket Exempel kvar. Menyn bakom de tre strecken har inga pilar (2026-10-07).
 Listorna 1–4 (`.nx-holdpunkter`, `.nx-apply-flow`) står två och två på telefon och har ingen fokuseffekt
 (2026-10-08: `hållpunkter()` är borta, inget kort tonar ned grannarna), och `.sid-kort` är en lista under 861 px.
-Studievyns markup kopieras till `for-elever-och-foraldrar.html` (`jamfor-sprak.py` ser bara
-första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
+Studievyns och NexLäx markup kopieras till `for-elever-och-foraldrar.html`, NexLäx direkt under studievyn och
+utan Se studievyn, och Hur hjälper vi till `var-ide.html` i stället för Bakgrunden, med NexLäx-länken till
+`/for-elever-och-foraldrar#nexlax` (2026-10-08; `jamfor-sprak.py` ser bara första skillnaden). **Skriptet sätter klasser, CSS rör sig**: ingen stil per bildruta, ingen
 animerad `box-shadow`, och en custom property sätts där den läses, för den ärvs.
 1. En `once`-scen är klar först när `run()` svarar annat än `false`.
 2. `preserve-3d` i en rullbar behållare ger fel `elementFromPoint`.
