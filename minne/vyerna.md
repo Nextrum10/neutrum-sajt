@@ -646,6 +646,11 @@ och "tutor", som resten av den). Ankaret `#sa-hjalper-vi`, bladen och remsan
 är orörda, och Vår idé har kvar etiketten "Så hjälper vi" och den gamla
 ingressen.
 
+Läxhjälpens blad (samma kväll, Leo: "Där de står läxhjälpen skriv inte en
+till en, hemma eller online skriv Rätt studiehjälp, på rätt plats"): rubriken
+är "Rätt studiehjälp, på rätt plats" ("The right help, in the right place"),
+på startsidan och Vår idé, båda språken, för bladen är samma kopia.
+
 ### Två fällor när en palett byts
 
 Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11
