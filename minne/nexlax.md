@@ -405,8 +405,9 @@ på papperet i båda lägena, ungefär en skärm hög på datorn: rubrik i h2
 (aldrig h1, delningsbilden läser första h1), ingress, en lodrät stig med
 fyra delar, en telefon i HTML/CSS med fyra skärmar i samma rutnätscell
 (vägen, frågan x + 9 = 23 som rättas, nivån klar, en nivå från
-studiehjälparen med dagens uppdrag), ämnena i `--amne-*` (utan juridik,
-företagsekonomi och programmering), en rad om stadierna och NP och att
+studiehjälparen med dagens uppdrag), ämnena i `--amne-*` (utan programmering; juridik och
+företagsekonomi kom med 2026-10-08, i en inbäddad panel, och meningen
+säger att de finns på gymnasiet), en rad om stadierna och NP och att
 NexLäx ingår, knapparna och bildtexten "Frågan och talen är exempel".
 
 Reglerna:

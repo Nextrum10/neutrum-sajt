@@ -99,8 +99,13 @@ Nästa steg som rundade kort på papperet som växte in med `scale`; Leo
 ville inte ha papperet runt dem. Nu står ytan still och innehållet
 glider upp med klassen `.nx-framme` — aldrig `.nx-in`, för
 `.nx-in .nx-rad-i` i cinema tänder rubrikens rader på en gång. Stegen i
-ansökan har samma 1–4-beteende som hållpunkterna; `hållpunkter()` tar
-båda listorna.
+ansökan och hållpunkterna står två och två på telefon (2026-10-08). Leo:
+"Återkommande kolumner och slide funktion som inte är clean": fokuset som
+förstorade kortet mitt i skärmen och gråade grannarna (`hållpunkter()`,
+`.har-pa`/`.pa`, `:has(:hover)`) togs bort, och kort som sa samma sak som
+något annat på samma sida togs bort (ett blad på Vår idé, rapportbladen på
+För elever & föräldrar och Så fungerar Nextrum, tre fördelar och listan
+01–03 på Bli studiehjälpare). `.sid-kort` är en lista under 861 px.
 
 Studievyns markup byggs för båda språken ur samma mall, så att
 taggsekvensen är identisk. Samma markup står på `for-elever-och-foraldrar.html`
@@ -269,7 +274,7 @@ i cinema och formen i `nextrum-start.css` avsnitt 14.
 
 **Garantiflödet.** `#betygsgaranti` lämnade `.nx-mork` och `.nx-apply-flow`
 (som är kvar i #bli och på Bli studiehjälpare, och sköts av
-`hållpunkter()` och `mörkaYtor()`). Markupen är `section.nx-sek-s.nx-gar >
+`mörkaYtor()`). Markupen är `section.nx-sek-s.nx-gar >
 .nx-gar-in` med `.nx-gar-head`, `ol.nx-gar-flode[data-gar-flode]` (li >
 `span.nx-gar-nr` + `div.nx-gar-steg`) och `.nx-gar-cta`, på startsidan och
 prissidan (där i `.wrap`, för att linjera med priskorten). CSS i
@@ -322,10 +327,14 @@ Playwright och tappar pekskärmsemuleringen; ta bilden med
   IntersectionObserver med raden som rot.
 - Lyftet `.pr-lyft` under starterbjudandet säljer Standard med siffrorna
   ur samma svar; toppens priskort sträcks bara när lyftet syns.
-- Startsidans lapp `.pr-std-lapp` i #plattformen säljer Standard utan
-  kronor ("8 timmar i månaden för priset av 7") och leder till
-  /priser#erbjudanden; "på köpet" står inte där, för hero säger redan
-  "Första timmen på köpet".
+- Startsidans lapp `.pr-std-lapp` i #plattformen togs bort 2026-10-08
+  (Leo: "den passar ej in där"). Standard säljs i stället av Just nu
+  (`#just-nu`, avsnitt 16 i nextrum-start.css) under NexLäx: Standard mot
+  "Andra aktörer" 5 000 kr, med vårt pris och procenten ur samma svar
+  (`data-erb-jamfor-ore`, `data-erb-lagre`, `data-erb-andel`,
+  `data-erb-vantar` i `initErbjudanden()`). Procenten avrundas nedåt till
+  fem, och sektionen döljs om planen inte har 8 timmar eller inte är minst
+  5 % billigare, så att påståendet inte blir osant när ett pris ändras.
 - Så fungerar betalningen är ett flöde med pilar (`ol.pr-flode
   [data-betalflode]`, `betalflöde()`, CSS i nextrum-sidor.css): vågrätt
   på dator, där stegen och pilarna tänds i tur (`.ar-igang`), och lodrätt
