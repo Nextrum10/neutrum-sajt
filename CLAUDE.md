@@ -30,7 +30,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
    NexLäx och profilen, och säger att vi letar studiehjälpare (`S.väntar`, 2026-10-07; inget väntläge)
 5. Föräldern lägger in barnet, hjälparen skriver studieplanen
 - **Uppstartsrutan**: `data-uppstart` och banans vecka byts tillsammans, på båda sidorna; när
-  passen börjat går rutan, `nx-har-uppstart` och `nextrum-uppstart.css` bort.
+  passen börjat går rutan och `nextrum-uppstart.css` bort. Den är en låg remsa ovanför formuläret, och
+  intresseanmälan har inget sidhuvud: formuläret står överst med rubriken i sin yta (`.nx-anm`, 2026-10-08,
+  Leo: "Ha formuläret högst upp").
 - **Förslag**: inga nya statusar, inga raderade pass, avbokning med fast skäl; en vy ändrar bara
   tid, status och skäl. Tider 11–22 på vardagar och 9–22 på helger (`HELA_DAGEN`), bara i vyn.
   `svar_meddelande` hålls utanför audit, notiser och AI.

@@ -2173,6 +2173,24 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 }
 @media (max-width:900px){.nx-lead-grid{grid-template-columns:1fr;gap:36px}}
 
+/* INTRESSEANMÄLAN, FORMULÄRET ÖVERST (2026-10-08, Leo: "Ha formuläret
+   högst upp"). Inget sidhuvud: sektionen börjar en bit under
+   sidhuvudets 74 px, och rubriken står i formulärets yta. Formuläret
+   är först i markupen och står till vänster med den större spalten;
+   stegen och svaren till höger, och under det på en telefon. Rutan om
+   uppstarten (nextrum-uppstart.css) står överst så länge den finns. */
+.nx-anm{padding-top:clamp(92px,9vw,120px);padding-bottom:var(--luft)}
+.nx-anm > .nx-uppstart{margin-bottom:clamp(16px,2vw,24px)}
+.nx-anm-grid{grid-template-columns:minmax(0,1.32fr) minmax(0,.68fr)}
+@media (max-width:900px){.nx-anm-grid{grid-template-columns:1fr}}
+.nx-anm-rubrik{
+  font-size:clamp(1.55rem,2.5vw,2.1rem);line-height:1.08;
+  letter-spacing:-.035em;font-weight:750;color:var(--bl);
+  text-wrap:balance;
+}
+.nx-anm-lede{margin-top:10px;max-width:56ch;font-size:.98rem;line-height:1.55;color:var(--bl-2)}
+.nx-anm-for{margin:14px 0 22px}
+
 .showcase{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:clamp(14px,1.8vw,24px)}
 .sc-card{
   border:1px solid var(--ln);border-radius:20px;

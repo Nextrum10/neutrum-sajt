@@ -51,9 +51,9 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=cf4c7bc3">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=5bea2273">
 <!-- rutan om att Nextrum bildas; bara här och på den svenska sidan -->
-<link rel="stylesheet" href="../nextrum-uppstart.css?v=f10d1d31">
+<link rel="stylesheet" href="../nextrum-uppstart.css?v=da0bb413">
 </head>
 <body>
 
@@ -127,69 +127,34 @@
 
 <main id="innehall">
 
-<section class="wrap nx-page-hero nx-har-uppstart">
-  <a class="nx-back" href="/en/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
-  <span class="nx-et acc" data-stig style="margin-top:22px">Get started</span>
-  <h1 class="nx-d1" data-avslöj>Tell us what you<br>need help with.</h1>
-  <p class="nx-lede" data-stig data-fördröj="1">Fill in a few simple details and we will get in touch within 24 hours. Sending it costs nothing and commits
-          you to nothing.</p>
+<!-- ==========================================================
+     INTRESSEANMÄLAN, FORMULÄRET ÖVERST (2026-10-08). Se kommentaren
+     i den svenska sidan.
+     ========================================================== -->
+<section class="wrap nx-anm" id="intresse" aria-labelledby="anm-t">
 
   <!-- UPPSTARTEN (Leo 2026-09-29). Se kommentaren i den svenska sidan:
        data-uppstart är måndagen i veckan passen börjar, "in about three
        weeks" räknas om av NX.uppstart(), och flyttas starten ska datumet
-       OCH dagen i banan bytas på båda sidorna. -->
-  <div class="nx-uppstart" data-uppstart="2026-10-19" data-stig data-fördröj="2">
-    <div class="nx-uppstart-topp">
-      <span class="nx-uppstart-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5v-8"/><path d="M12 12.5c0-3.4-2.4-5.8-6-5.8 0 3.4 2.4 5.8 6 5.8z"/><path d="M12 10.2c0-3.6 2.5-6 6.2-6 0 3.6-2.5 6-6.2 6z"/><path d="M7.5 20.5h9"/></svg></span>
-      <h2 class="nx-uppstart-rubrik">Nextrum is starting up.</h2>
-    </div>
-    <p>We can start tutoring <span data-uppstart-om>in about three weeks</span>.
-      Send your enquiry now, and we will get back to you within 24 hours and plan your
-      first session for when we start.</p>
+       OCH dagen i banan bytas på båda sidorna. En låg remsa ovanför
+       formuläret sedan 2026-10-08. -->
+  <div class="nx-uppstart" data-uppstart="2026-10-19">
+    <span class="nx-uppstart-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5v-8"/><path d="M12 12.5c0-3.4-2.4-5.8-6-5.8 0 3.4 2.4 5.8 6 5.8z"/><path d="M12 10.2c0-3.6 2.5-6 6.2-6 0 3.6-2.5 6-6.2 6z"/><path d="M7.5 20.5h9"/></svg></span>
+    <p class="nx-uppstart-text"><b class="nx-uppstart-rubrik">Nextrum is starting up.</b> We can start tutoring <span data-uppstart-om>in about three weeks</span>. Send your enquiry now, and we will plan your first session for when we start.</p>
     <ol class="nx-uppstart-bana">
       <li><b>Now</b><span>Enquiries open</span></li>
       <li><b>19–25 Oct</b><span>First sessions</span></li>
     </ol>
   </div>
-</section>
 
-<section class="nx-yta nx-sek" id="intresse">
-  <div class="nx-wrap-bred">
-    <div class="nx-lead-grid">
+  <div class="nx-lead-grid nx-anm-grid">
 
-      <div>
+      <div class="nx-form-yta">
 
-        <ul class="nx-steplist" data-stig data-fördröj="2">
-          <li class="on"><em>01</em><div><b>You send the form</b><span>Takes about two minutes.</span></div></li>
-          <li><em>02</em><div><b>We get in touch within 24 hours</b><span>We go through the need together with you.</span></div></li>
-          <li><em>03</em><div><b>You get matched</b><span>The study plan is written and booking opens in the student view.</span></div></li>
-        </ul>
+        <h1 class="nx-anm-rubrik" id="anm-t">Tell us what you need help with.</h1>
+        <p class="nx-anm-lede">Fill in a few simple details and we will get in touch within 24 hours. Sending it costs nothing and commits you to nothing.</p>
 
-        <!-- Fyller spalten under stegen: det stod tomt hela vägen ner
-             bredvid formuläret. Svaren här är de frågor folk annars
-             mejlar om innan de vågar skicka in. -->
-        <div class="nx-lead-svar" data-stig data-fördröj="3">
-          <div>
-            <b>Does it cost anything to send?</b>
-            <p>No. Getting in touch is free and commits you to nothing. You only pay once you have booked
-              a session.</p>
-          </div>
-          <div>
-            <b>How quickly do you reply?</b>
-            <p>Within 24 hours of you sending the form. If you are not sure exactly what you need help
-              with, an approximate answer is fine — we work it out together.</p>
-          </div>
-          <div>
-            <b>What happens to the details?</b>
-            <p>They are used only to contact you about your enquiry, and are never sold or handed over for anything else.
-              <a class="nx-lank-in" href="/en/integritetspolicy">How we handle your data</a>.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="nx-form-yta" data-stig data-fördröj="1">
-
-        <p class="nx-fineprint" style="margin:0 0 22px">This form is for students and parents.
+        <p class="nx-fineprint nx-anm-for">This form is for students and parents.
           Would you rather become a tutor —
           <a class="nx-lank-stark" href="/en/bli-studiehjalpare#ansok">apply here</a>.</p>
 
@@ -279,7 +244,37 @@
           </form>
 
       </div>
-    </div>
+
+      <div class="nx-anm-sida">
+
+        <ul class="nx-steplist" data-stig data-fördröj="2">
+          <li class="on"><em>01</em><div><b>You send the form</b><span>Takes about two minutes.</span></div></li>
+          <li><em>02</em><div><b>We get in touch within 24 hours</b><span>We go through the need together with you.</span></div></li>
+          <li><em>03</em><div><b>You get matched</b><span>The study plan is written and booking opens in the student view.</span></div></li>
+        </ul>
+
+        <!-- Fyller spalten under stegen: det stod tomt hela vägen ner
+             bredvid formuläret. Svaren här är de frågor folk annars
+             mejlar om innan de vågar skicka in. -->
+        <div class="nx-lead-svar" data-stig data-fördröj="3">
+          <div>
+            <b>Does it cost anything to send?</b>
+            <p>No. Getting in touch is free and commits you to nothing. You only pay once you have booked
+              a session.</p>
+          </div>
+          <div>
+            <b>How quickly do you reply?</b>
+            <p>Within 24 hours of you sending the form. If you are not sure exactly what you need help
+              with, an approximate answer is fine — we work it out together.</p>
+          </div>
+          <div>
+            <b>What happens to the details?</b>
+            <p>They are used only to contact you about your enquiry, and are never sold or handed over for anything else.
+              <a class="nx-lank-in" href="/en/integritetspolicy">How we handle your data</a>.</p>
+          </div>
+        </div>
+      </div>
+
   </div>
 </section>
 
