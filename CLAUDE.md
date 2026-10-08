@@ -206,8 +206,16 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `standard` och `intensiv` står kvar avstängda, för ett köp pekar på dem. En timme på köpet i en plan är
   `timmar_pa_kopet`, aldrig en procent: priset är timpriset gånger de BETALDA timmarna, och ett kort med
   timmar på köpet visar aldrig ett timpris. Jämförelsen med andra aktörer (`data-erb-lagre`) avrundas till närmaste
-  fem (Leo 2026-10-08: "upp till 40 %"; exakt är 3 032 mot 5 000 kr 39,4 %), och "Spara upp till N kr på 6 månader" (`data-erb-spara`) är den
-  största skillnaden mellan ordinarie och planens pris gånger månaderna, båda ur svaret. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
+  fem (Leo 2026-10-08: "upp till 40 %"; exakt är 3 032 mot 5 000 kr 39,4 %). **Kronortejpen** på varje plankort
+  (`.nx-tejp-kort`, 2026-10-08) säger "upp till N kr mindre" (`data-erb-mindre`): skillnaden mot jämförelsepriset på
+  tejpen (`data-erb-jamfor-ore`: Basic 3 540, Standard 5 832, Intensiv 8 348 kr; avsnitt 11) avrundad NEDÅT till
+  hundratal, så att den aldrig lovar mer; tejpen har eget `data-erb` och döljs ensam vid fel timmar eller under 100 kr,
+  och raden "Jämförelserna gjordes med en elev i årskurs 9 i oktober 2026" (`data-erb-jamfor-not`) står bara när en
+  tejp syns. "Spara upp till N kr på 6 månader med Xplanen" (`data-erb-spara`, `data-erb-spara-plan`) är den
+  största skillnaden mellan ordinarie och planens pris gånger månaderna, båda ur svaret, och planens namn är den planens
+  (i dag Intensiv, inte Basic som Leo trodde). Märket på planerna och klippkorten, på prissidan och i studievyn, är
+  timpriset utan bindning överstruket och det rabatterade bredvid, aldrig en procent (Leo 2026-10-08), och döljs när de
+  är lika. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
   och tipstimmen är samma rabatt); ett pass på noll kronor är INTE betalt. Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
@@ -251,7 +259,7 @@ blad där med `id="betygsgaranti"` kvar, den gamla textens villkorslänk och "Vi
 som ett litet flöde (`.nx-gar-liten`, `data-gar-flode="tur"`) som tänds i tur när det syns; det stora flödet
 (`.nx-gar`, `garantiflöde()`) står bara på prissidan, och det släckta läget hänger på `.i-gang`, aldrig bara på
 `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under: "för" timpriset utan bindning (`data-stat`),
-paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till" (`data-erb-spara`), och jämförelsen
+paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
 Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
 pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
 8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. NexLäx (`#nexlax`, avsnitt
@@ -649,6 +657,13 @@ Detaljer: `minne/grunden.md`.
   som inte står i repot. "Flera" kräver underlag från minst två aktörer till; Leo valde att behålla ordet.
   Underlaget (skärmbilder med adress och datum) ska sparas och göras om när ett pris ändras, för
   bevisbördan är vår (18 och 10 §§ marknadsföringslagen). Juristen har inte läst texten.
+  **Kronortejperna** på plankorten (2026-10-08, Leo: "på basic upp till 2000kr mindre [än] liknande jämförbara
+  paket från andra aktörer ... då allakando tar 3540, på [Standard] upp till 2800kr ... Och på intensiv upp till
+  3800kr") har bara ett namngivet underlag: Basic mot Allakandos 3 540 kr. Standards 5 832 och Intensivs 8 348 kr är
+  räknade baklänges ur Leos belopp mot våra 3 032 och 4 548 kr och är inga uppmätta priser; de behöver ett underlag
+  som Basics. Standards 5 832 är inte samma pris som lyftets och Just nus 5 000 kr+: samma plan jämförs med två
+  priser på samma sida (40 % mot 5 000, 2 800 kr mot 5 832, som vore 48 %). Raden "Jämförelserna gjordes med en elev i
+  årskurs 9 i oktober 2026" är Leos ord om underlaget. Juristen har inte läst tejperna, och ingen aktör nämns på sajten.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

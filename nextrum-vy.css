@@ -2023,14 +2023,17 @@ a.pass-lank:hover{color:var(--acc)}
 /* Planerna (2026-10-07, Leo: Basic, Standard och Intensiv). Tre planer
    och klippkorten är fyra kort.
 
-   Märkena: ett för timmen på köpet, ett för rabatten, eller båda, och
-   aldrig "−0 %". Timmen på köpet är fylld, som på prissidan: det är vad
+   Märkena: ett för timmen på köpet eller ett med timpriset överstruket,
+   och aldrig ett lika pris överstruket. Timmen på köpet är fylld, som på prissidan: det är vad
    Standard säljs med, och på det framhävda kortets ton hade ett märke
    med bara en kant försvunnit. Den står i brödtextens typsnitt, så att
    "1 timme på köpet" ryms bredvid namnet på en rad; bryts raden ändå
    hamnar märket under namnet, aldrig i två rader. */
 .erb-topp{flex-wrap:wrap;row-gap:6px}
 .erb-rabatt{white-space:nowrap}
+/* Märket är timpriset utan bindning överstruket och planens bredvid
+   sedan 2026-10-08, som på prissidan (Leo: "Ta bort -5%"). */
+.erb-rabatt s{font-weight:500;opacity:.75;margin-right:2px}
 .erb-marken{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
 .erb-rabatt.ar-pa-kopet{
   font-family:inherit;font-size:11.5px;font-weight:650;letter-spacing:0;line-height:1.37;

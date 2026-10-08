@@ -3168,10 +3168,16 @@
        2026-10-08 valde de orden framför "bindning"). */
     const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
     const vad = timmarOrd(Number(e.timmar)) + ' · ' + (e.sort === 'plan' && Number(e.giltig_manader) === 1 ? 'en månad i taget' : 'gäller i ' + mån);
-    /* Märket säger vad erbjudandet ger: timmen på köpet, rabatten, eller
-       båda. Aldrig "−0 %". */
+    /* Märket säger vad erbjudandet ger: timmen på köpet, eller timpriset
+       utan bindning överstruket och planens bredvid, som på prissidan
+       (Leo 2026-10-08: "Ta bort -5% ... skriv istället 399 streck över
+       de, 379"). Aldrig ett lika pris överstruket, och aldrig ett timpris
+       i märket på ett kort med timmar på köpet: där är summan inte
+       timpriset gånger timmarna, och raden under säger hur det går ihop. */
+    const billigare = perTimme < Number(e.timpris_ore);
     const märken = (pa ? '<span class="erb-rabatt ar-pa-kopet">' + esc(timmarOrd(pa)) + ' på köpet</span>' : '')
-      + (rabatt ? '<span class="erb-rabatt">−' + esc(String(rabatt)) + ' %</span>' : '');
+      + (!pa && billigare ? '<span class="erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span>'
+        + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + '</span>' : '');
     const timrad = pa
       ? esc(erbTimmar(e))
         + (rabatt ? ', <s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme' : '')
@@ -3233,7 +3239,11 @@
     return '<details class="erb-kort erb-klippkol"' + (öppen ? ' open' : '') + '>'
       + '<summary>'
       + '<span class="erb-topp"><b class="erb-namn">Klippkort</b>'
-      + (lika('rabatt_procent') && Number(kort[0].rabatt_procent) ? '<span class="erb-rabatt">−' + esc(String(kort[0].rabatt_procent)) + ' %</span>' : '')
+      + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
+        && Number(kort[0].rabatterat_timpris_ore) < Number(kort[0].timpris_ore)
+        ? '<span class="erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span>' + esc(kr(kort[0].timpris_ore))
+          + '</s> ' + esc(kr(kort[0].rabatterat_timpris_ore)) + '</span>'
+        : '')
       + '</span>'
       + '<span class="erb-vad">' + esc(spann) + ', när det passar er</span>'
       + (lika('rabatterat_timpris_ore') && lika('timpris_ore')

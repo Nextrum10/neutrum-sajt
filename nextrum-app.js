@@ -676,7 +676,6 @@ const NX = (function () {
       const r = perKod[el.getAttribute('data-erb')];
       const timmar = r ? Number(r.timmar) : 0;
       const pa = r ? Number(r.timmar_pa_kopet) || 0 : 0;
-      const rabatt = r ? Number(r.rabatt_procent) || 0 : 0;
       if (!r || (pa > 0 && $('[data-erb-rabatterat]', el)) || (pa === 0 && $('[data-erb-betalda]', el))) {
         el.hidden = true;
         return;
@@ -688,14 +687,17 @@ const NX = (function () {
       skriv(el, '[data-erb-timpris]', kr(r.timpris_ore / 100));
       skriv(el, '[data-erb-rabatterat]', kr(r.rabatterat_timpris_ore / 100));
       skriv(el, '[data-erb-spar]', kr((r.ordinarie_ore - r.pris_ore) / 100));
-      skriv(el, '[data-erb-rabatt]', String(rabatt));
       skriv(el, '[data-erb-giltig]', m === 1 ? t('enManad') : t('flerManader', { n: m }));
       skriv(el, '[data-erb-antal]', String(timmar));
       skriv(el, '[data-erb-pa-kopet]', String(pa));
       skriv(el, '[data-erb-betalda]', String(timmar - pa));
-      /* Märkena: procenten bara när det finns en rabatt, och timmarna på
-         köpet bara när det finns sådana, med pluralen ur ORD. */
-      $$('.pr-erb-rabatt', el).forEach(x => { x.hidden = rabatt === 0; });
+      /* Märkena: timpriset utan bindning överstruket och planens bredvid
+         (Leo 2026-10-08: "Ta bort -5% ... skriv istället 399 streck över
+         de, 379"), bara när planens är lägre, och timmarna på köpet bara
+         när det finns sådana, med pluralen ur ORD. Ett kort med timmar på
+         köpet och ett timpris har redan dolts ovanför. */
+      const billigare = Number(r.rabatterat_timpris_ore) < Number(r.timpris_ore);
+      $$('.pr-erb-rabatt', el).forEach(x => { x.hidden = !billigare; });
       $$('[data-erb-paket]', el).forEach(x => {
         x.hidden = pa === 0;
         if (pa) x.textContent = pa === 1 ? t('timmePaKopet') : t('timmarPaKopet', { n: pa });
@@ -711,15 +713,27 @@ const NX = (function () {
          5 000 kr; jämförelsepriset står som "5 000 kr+". Gäller jämförelsen andra timmar än planens, eller är planen inte
          minst fem procent billigare, är påståendet inte sant längre, och
          elementet döljs. --andel är vår stapels längd mot deras och läses
-         på stapeln. */
+         på stapeln.
+
+         Tejperna på plankorten (Leo 2026-10-08: "på basic upp till 2000kr
+         mindre ... Och detta ska synas som tejp på erbjudanden") säger
+         skillnaden i kronor ([data-erb-mindre]), avrundad NEDÅT till
+         hundratal: "upp till" får aldrig lova mer än skillnaden mot
+         jämförelsepriset. Under 100 kr är det inget att säga, och tejpen
+         döljs. Bara tejpen: den är ett eget element med eget data-erb,
+         och kortet den sitter på står kvar. */
       const jämför = Number(el.getAttribute('data-erb-jamfor-ore')) || 0;
       if (jämför) {
-        const lägre = Math.round((jämför - Number(r.pris_ore)) * 100 / jämför / 5) * 5;
-        if (Number(el.getAttribute('data-erb-jamfor-timmar')) !== timmar || !(lägre >= 5)) {
+        const skillnad = jämför - Number(r.pris_ore);
+        const lägre = Math.round(skillnad * 100 / jämför / 5) * 5;
+        const mindre = Math.floor(skillnad / 10000) * 100;
+        const håller = $('[data-erb-mindre]', el) ? mindre >= 100 : lägre >= 5;
+        if (Number(el.getAttribute('data-erb-jamfor-timmar')) !== timmar || !håller) {
           el.hidden = true;
           return;
         }
         skriv(el, '[data-erb-lagre]', String(lägre));
+        skriv(el, '[data-erb-mindre]', kr(mindre));
         $$('[data-erb-andel]', el).forEach(x => x.style.setProperty('--andel', (r.pris_ore / jämför).toFixed(3)));
       }
       if (el.hasAttribute('data-erb-vantar')) el.hidden = false;
@@ -727,16 +741,18 @@ const NX = (function () {
 
     /* Klippkortens rad sammanfattar korten i den, och sammanfattningen
        ska gälla de kort som finns KVAR: "från" det billigaste och spannet
-       i timmar. Rabatten skrivs bara om den är densamma på alla — en
-       procentsats som stämmer för ett av korten är ett pris som inte är
-       det kassan drar. Finns inget kort kvar döljs raden, annars står
-       den där med gamla siffror och fälls ut till ingenting. */
+       i timmar. Märket (timpriset utan bindning överstruket och kortens
+       timpris, sedan 2026-10-08 i stället för procenten) skrivs bara om
+       båda är desamma på alla kort — ett timpris som stämmer för ett av
+       korten är ett pris som inte är det kassan drar. Finns inget kort
+       kvar döljs raden, annars står den där med gamla siffror och fälls
+       ut till ingenting. */
     $$('[data-erb-grupp]').forEach(g => {
       const kvar = $$('[data-erb]', g).filter(el => !el.hidden)
         .map(el => perKod[el.getAttribute('data-erb')]);
       if (!kvar.length) { g.hidden = true; return; }
       const timmar = kvar.map(r => Number(r.timmar));
-      const rabatter = new Set(kvar.map(r => String(r.rabatt_procent)));
+      const ordinarie = new Set(kvar.map(r => String(r.timpris_ore)));
       skriv(g, '[data-erb-fran]', kr(Math.min(...kvar.map(r => r.pris_ore)) / 100));
       /* Timpriset i stället för "från" det billigaste kortet (Leo
          2026-10-08: "inte från utan för"): bara när det är detsamma på
@@ -749,10 +765,14 @@ const NX = (function () {
       });
       skriv(g, '[data-erb-min]', String(Math.min(...timmar)));
       skriv(g, '[data-erb-max]', String(Math.max(...timmar)));
-      const rabatt = $('summary [data-erb-rabatt]', g);
-      if (!rabatt) return;
-      if (rabatter.size === 1) rabatt.textContent = [...rabatter][0];
-      else rabatt.closest('.pr-erb-rabatt').hidden = true;
+      $$('summary .pr-erb-rabatt', g).forEach(märke => {
+        const ett = timpriser.size === 1 && ordinarie.size === 1
+          && Number(kvar[0].rabatterat_timpris_ore) < Number(kvar[0].timpris_ore);
+        märke.hidden = !ett;
+        if (!ett) return;
+        skriv(märke, '[data-erb-timpris]', kr(Number(kvar[0].timpris_ore) / 100));
+        skriv(märke, '[data-erb-rabatterat]', kr(Number(kvar[0].rabatterat_timpris_ore) / 100));
+      });
     });
     /* "Spara upp till N kr på 6 månader" (Leo 2026-10-08). Talet i
        data-erb-spara är antalet månader, och N är den största skillnaden
@@ -764,21 +784,41 @@ const NX = (function () {
        Beloppet skrivs i [data-erb-spara-kr], eller i elementet självt om
        det saknas. Ingen plan eller ingen besparing: elementet döljs, för
        "spara upp till 0 kr" är inget erbjudande. Står det dolt i sidan
-       (som data-erb-vantar) visas det först här. */
+       (som data-erb-vantar) visas det först här.
+
+       Raden säger också vilken plan det är, i [data-erb-spara-plan] (Leo
+       2026-10-08 läste 1 440 kr som Basics och ville ha "spara upp till
+       … på 6 månader med intensivplanen"). Namnet tas ur planens kort på
+       sidan om det finns, för det står på sidans språk, och annars ur
+       svaret. */
     const spara = $$('[data-erb-spara]');
     if (spara.length) {
-      const per = Math.max(0, ...rader.filter(r => r.sort === 'plan')
-        .map(r => Number(r.ordinarie_ore) - Number(r.pris_ore)).filter(n => n > 0));
+      const bäst = rader.filter(r => r.sort === 'plan')
+        .map(r => ({ r, öre: Number(r.ordinarie_ore) - Number(r.pris_ore) }))
+        .filter(x => x.öre > 0)
+        .reduce((a, x) => (!a || x.öre > a.öre ? x : a), null);
+      const per = bäst ? bäst.öre : 0;
+      const kort = bäst && $$('[data-erb-namn]')
+        .find(x => (x.closest('[data-erb]') || x).getAttribute('data-erb') === bäst.r.kod);
+      const namn = bäst ? (kort ? kort.textContent.trim() : String(bäst.r.namn || '')) : '';
       spara.forEach(el => {
         const mån = Number(el.getAttribute('data-erb-spara')) || 0;
         const öre = per * mån;
-        el.hidden = !(öre > 0);
-        if (öre > 0) {
-          const mål = $$('[data-erb-spara-kr]', el);
-          (mål.length ? mål : [el]).forEach(x => { x.textContent = kr(Math.floor(öre / 100)); });
-        }
+        el.hidden = !(öre > 0) || (!namn && !!$('[data-erb-spara-plan]', el));
+        if (el.hidden) return;
+        const mål = $$('[data-erb-spara-kr]', el);
+        (mål.length ? mål : [el]).forEach(x => { x.textContent = kr(Math.floor(öre / 100)); });
+        skriv(el, '[data-erb-spara-plan]', namn);
       });
     }
+
+    /* "Jämförelserna gjordes med en elev i årskurs 9 i oktober 2026"
+       (Leo 2026-10-08) hör till tejperna och står bara när någon av dem
+       i samma sektion syns. */
+    $$('[data-erb-jamfor-not]').forEach(not => {
+      const sek = not.closest('section') || document;
+      not.hidden = !$$('[data-erb-jamfor-ore]', sek).some(x => !x.hidden && !x.closest('[hidden]'));
+    });
 
     if (svep) svep.ordna();
     document.dispatchEvent(new Event('nx:erbjudanden'));
