@@ -137,6 +137,16 @@ länkar till prissidan som stadiesidornas, så betalningsmeningen och
 ämnena; de nya nås från navet och från ämneskorten på varje landningssida,
 som generatorn lägger till av sig själv.
 
+**Intresseanmälan tre gånger på varje landningssida** (2026-10-09, Leo: "på
+alla landningssidor ska det finnas flera intresseanmälan knappar för
+läxhjälp"). Förut stod knappen i innehållet bara i Nästa steg längst ner,
+efter FAQ och korten. Nu står den också under ingressen (`hjalte()`) och
+mitt på sidan: efter priset (`prissektion()`, `prissektion_kort()`) och i
+guidernas textdel, där länken i löptexten blev en knapp (`ANMAL_KNAPP`,
+`ANMAL_MITT`). De två handskrivna, navet och `en/tutoring-stockholm`, har
+samma knapp i toppen och efter priset, och navet en till under de tre
+stegen. Ingen knapp per sektion: tre i innehållet och en i sidhuvudet räcker.
+
 **`404.html`** (2026-10-06) byggs också här, för att få skalet. Vercel
 visar den för varje adress som inte finns, också `/en/x/y`, så den har
 `<base href="/">`: skalets länkar till css och skript är relativa.

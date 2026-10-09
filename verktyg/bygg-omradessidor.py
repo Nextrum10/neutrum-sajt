@@ -2436,12 +2436,27 @@ def faq_sektion(o):
 """
 
 
+# Intresseanmälan står i toppen, mitt på sidan och i Nästa steg
+# (2026-10-09, Leo: "på alla landningssidor ska det finnas flera
+# intresseanmälan knappar för läxhjälp"). Förut fanns den i innehållet
+# bara längst ner, efter FAQ och korten, och i sidhuvudet.
+PIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>'
+ANMAL_KNAPP = f'<a class="btn btn-primary btn-lg" href="/intresseanmalan">Skicka intresseanmälan {PIL}</a>'
+ANMAL_MITT = f"""
+      <div class="nx-story-ctas" style="margin-top:clamp(22px,2.6vw,30px)">
+        {ANMAL_KNAPP}
+      </div>"""
+
+
 def hjalte(o, tillbaka):
     return f"""<section class="wrap nx-page-hero">
   {tillbaka}
   <span class="nx-et acc" data-stig style="margin-top:22px">{esc(o['etikett'])}</span>
   <h1 class="nx-d1" data-avslöj>{o['h1']}</h1>
   <p class="nx-lede" data-stig data-fördröj="1">{esc(o['lede'])}</p>
+  <div class="nx-story-ctas" data-stig data-fördröj="2">
+    {ANMAL_KNAPP}
+  </div>
   <figure class="nx-fig nx-page-hero-foto" data-parallax="-6" style="--tint:{o['tint']}">
     <picture><source type="image/webp" srcset="bilder/{o['bild']}-640.webp 640w, bilder/{o['bild']}-960.webp 960w, bilder/{o['bild']}-1280.webp 1280w, bilder/{o['bild']}-1600.webp 1600w, bilder/{o['bild']}-1920.webp 1920w" sizes="(max-width: 900px) 100vw, 92vw"><img class="nx-img" src="bilder/{o['bild']}-1280.jpg"
          srcset="bilder/{o['bild']}-640.jpg 640w, bilder/{o['bild']}-960.jpg 960w, bilder/{o['bild']}-1280.jpg 1280w, bilder/{o['bild']}-1600.jpg 1600w, bilder/{o['bild']}-1920.jpg 1920w"
@@ -2464,7 +2479,7 @@ def prissektion():
     <div class="nx-text rv">
       <p>Samma timpris oavsett ämne och oavsett var i Stockholm passet hålls. Sitter syskon med i samma pass kostar det {EXTRA_BARN} extra i timmen totalt — lika mycket för tre barn som för två. Två eller tre barn en timme blir alltså {FLERA_BARN}.</p>
       <p>Ingen bindningstid och ingen månadsavgift. Studieplanen, matchningen och rapporten efter varje pass ingår i timpriset — det är inga tillval. All betalning går genom Nextrum, samlat på ett ställe.</p>
-      <p>För nya familjer är första timmen på köpet: det pass som gör att ni har bokat två timmar får en timme avdragen. <a href="/priser">Se hela prissidan</a> för vad som ingår och hur betalningen fungerar.</p>
+      <p>För nya familjer är första timmen på köpet: det pass som gör att ni har bokat två timmar får en timme avdragen. <a href="/priser">Se hela prissidan</a> för vad som ingår och hur betalningen fungerar.</p>{ANMAL_MITT}
     </div>
   </div>
 </section>"""
@@ -2481,7 +2496,7 @@ def prissektion_kort():
       <h2 class="nx-d2" style="margin-top:18px">{PRIS}<br>i timmen.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift, och för nya familjer är första timmen på köpet när ni bokat två timmar. <a href="/priser">Se hela prissidan</a>.</p>
+      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift, och för nya familjer är första timmen på köpet när ni bokat två timmar. <a href="/priser">Se hela prissidan</a>.</p>{ANMAL_MITT}
     </div>
   </div>
 </section>"""
@@ -2776,7 +2791,7 @@ def guidesida(o):
     </div>
     <div class="nx-text rv">
 {vinkel}
-      <p><a href="/intresseanmalan" style="{UNDERSTRUKEN}">Skicka en intresseanmälan</a>. Det kostar ingenting att fråga och binder er inte till något.</p>
+      <p>Det kostar ingenting att fråga och binder er inte till något.</p>{ANMAL_MITT}
     </div>
   </div>
 </section>
