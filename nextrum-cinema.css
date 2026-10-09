@@ -1594,12 +1594,18 @@ html[lang="en"] .nx-hero-rubrik{
   background:color-mix(in srgb,var(--nt-fg) 4%,transparent);
   border-color:var(--nt-ln);
 }
+/* 1rem, aldrig mindre: en iPhone zoomar in hela sidan när man trycker i
+   ett fält med text under 16 px, och står kvar inzoomad tills man nyper
+   ut igen. Med .98rem (15,68 px) hände det i varje fält på sajten, från
+   intresseanmälan till chatten och rapporten (2026-10-09, Leo: "vyerna
+   på mobil är jätte jobbiga att använda"). Fält som är mindre med flit
+   får 1rem på en telefon (TUMMEN i nextrum-arbetsyta.css, .mk-falt). */
 .inp,.sel{
   border-radius:12px;
   border:1px solid var(--ln-2);
   background:var(--pap);
   padding:13px 15px;
-  font-size:.98rem;
+  font-size:1rem;
   transition:border-color .2s var(--e),box-shadow .2s var(--e);
 }
 .inp:focus,.sel:focus{
@@ -2800,6 +2806,8 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   background:var(--pap);color:var(--bl);font:inherit;font-size:.88rem;
 }
 .mk-falt:focus{outline:2px solid var(--acc);outline-offset:1px;border-color:transparent}
+/* 16 px på en telefon, annars zoomar en iPhone in sidan (.inp,.sel ovan). */
+@media (max-width:560px), (pointer:coarse){.mk-falt{font-size:1rem}}
 .mk-skicka{
   flex:none;padding:11px 16px;border:0;border-radius:11px;
   background:var(--acc);color:var(--acc-ink);cursor:pointer;

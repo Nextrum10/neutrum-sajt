@@ -198,6 +198,8 @@ html:has(> body.vy){scroll-behavior:auto}
   letter-spacing:.1em;text-transform:uppercase;
   color:var(--bl-2);margin-top:10px;
 }
+/* Med ett finger skickar Enter inte (NXKontakt.tråd), och tipset vore fel. */
+@media (pointer:coarse){.tr-tips{display:none}}
 
 /* hidden måste vinna över display-reglerna nedan: .tr-val sätts till
    display:flex, och då hade attributet hidden inte gjort någonting. */
