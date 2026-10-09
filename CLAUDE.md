@@ -693,8 +693,9 @@ Detaljer: `minne/grunden.md`.
   från merge-commiten (md5 `77916ceb…`), och alla nio funktionskroppar är byte för byte lika den lokala databasen byggd ur
   filen. Hela `rls-test.sql` 1518 av 1518 mot driften, tillbakarullat (13 nya prov), och advisorn larmade inte om
   något nytt utöver de två nya admin-RPC:erna, som skyddar sig själva. Villkorens version är 2026-10-09, så alla får
-  frågan igen. Kvar: `drift` (`_delad/nextrum-fakta.ts`, agentens siffror) är inte driftsatt från main och säger den
-  gamla regeln om första timmen. Juristen har inte läst villkoren för första timmen och tipstimmen.
+  frågan igen. `drift` (agentens fakta) är driftsatt som v15 från main (b6c6c1b) samma kväll, efter PR #242 (regeln,
+  utan tabell- och kolumnnamn) och #243 (inga egna konton, vyn öppen före matchningen), hämtad tillbaka och byte för
+  byte lika i alla fem filer. Kvar: juristen har inte läst villkoren för första timmen och tipstimmen.
 - **Just nu-jämförelsen** (2026-10-08): "upp till 40 % lägre pris än jämförbara paket hos flera större
   aktörer" (talet räknas och avrundas till närmaste fem; exakt 39,4 %, Leos val) och "Andra aktörer 5 000 kr+" (plustecknet sedan samma dag, Leo) bygger på Leos
   underlag (Studybuddy, 5 000 kr för samma paket),
