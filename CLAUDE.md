@@ -687,13 +687,14 @@ Detaljer: `minne/grunden.md`.
   profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5). Leos "bunden i 1 månad" blev "en månad i taget"
   på sajten, för villkoren säger ingen bindningstid och att den som slutar med en plan får tillbaka det som
   är kvar; en riktig bindning kräver en ny version av villkoren (alla får frågan igen) och juristen.
-- **Första timmen med planen, högst en per familj, och tipstimmen efter två timmar** (2026-10-09) är inte i drift:
-  `forsta_timmen_med_planen` (20261009120000) körs efter merge, och hela `rls-test.sql` gick 1518 av 1518 lokalt med
-  den (13 nya prov). Den byter villkorens version till 2026-10-09, så alla får frågan igen. `drift` (`_delad/nextrum-fakta.ts`,
-  agentens siffror) driftsätts från main efter merge. Före migrationen ger databasen alla nya familjer första timmen
-  på ett pass, som förut, och studievyn visar det; sidorna säger redan "med en plan". Juristen har inte läst villkoren
-  för första timmen och tipstimmen. Spararaden räknar in timmen (1 359 kr för Standard), vilket är sant först när
-  migrationen körts.
+- **Första timmen med planen, högst en per familj, och tipstimmen efter två timmar** (2026-10-09) är i drift sedan
+  samma kväll: PR #240 mergades (a9238a7) och `forsta_timmen_med_planen` (20261009120000) kördes direkt efter med
+  `execute_sql` (filen har ett `delete` i en funktion, så inte genom dynamisk SQL), registrerades med filens text hämtad
+  från merge-commiten (md5 `77916ceb…`), och alla nio funktionskroppar är byte för byte lika den lokala databasen byggd ur
+  filen. Hela `rls-test.sql` 1518 av 1518 mot driften, tillbakarullat (13 nya prov), och advisorn larmade inte om
+  något nytt utöver de två nya admin-RPC:erna, som skyddar sig själva. Villkorens version är 2026-10-09, så alla får
+  frågan igen. Kvar: `drift` (`_delad/nextrum-fakta.ts`, agentens siffror) är inte driftsatt från main och säger den
+  gamla regeln om första timmen. Juristen har inte läst villkoren för första timmen och tipstimmen.
 - **Just nu-jämförelsen** (2026-10-08): "upp till 40 % lägre pris än jämförbara paket hos flera större
   aktörer" (talet räknas och avrundas till närmaste fem; exakt 39,4 %, Leos val) och "Andra aktörer 5 000 kr+" (plustecknet sedan samma dag, Leo) bygger på Leos
   underlag (Studybuddy, 5 000 kr för samma paket),

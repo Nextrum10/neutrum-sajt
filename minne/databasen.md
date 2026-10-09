@@ -228,7 +228,13 @@ personer alla; ingen skrivpolicy, bara `ge_forsta_timmen()`),
 `forsta_timmen_bjuds`, `intern.tipstimmar_intjanade` och `tipskoder_lage`
 i sin helhet med en vakt på md5:erna lästa i driften samma dag. Den byter
 villkorens version till 2026-10-09. Ingen drop och ingen delete utanför en
-funktion; går att köra två gånger.
+funktion; går att köra två gånger. **I drift 2026-10-09**, efter merge av
+PR #240 (a9238a7): filen kördes som ett `execute_sql` (den har ett
+`delete` i `ge_forsta_timmen`, och då inte genom `http_get` och
+`execute`, punkt 3 ovan), registrerades i ett do-block med texten hämtad
+från merge-commiten och prövad mot sin md5 (`77916ceb…`), och de nio
+funktionskropparna jämfördes med en lokal databas byggd ur filen: lika.
+Hela `rls-test.sql` mot driften 1518 av 1518, tillbakarullat.
 Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.
