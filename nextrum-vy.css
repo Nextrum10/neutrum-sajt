@@ -1980,6 +1980,8 @@ a.pass-lank:hover{color:var(--acc)}
   color:var(--acc-text);border:1px solid var(--acc-line);border-radius:100px;padding:2px 8px;
 }
 .erb-vad{font-size:.84rem;color:var(--bl-2)}
+/* Första timmen i den första planen (2026-10-09). */
+.erb-forsta{font-size:.8rem;font-weight:600;line-height:1.4;color:var(--acc-text)}
 .erb-pris{display:flex;align-items:baseline;gap:8px;margin-top:6px;flex-wrap:wrap}
 .erb-pris s{font-size:.88rem;color:var(--muted-2)}
 .erb-pris b{font-size:1.45rem;letter-spacing:-.03em;color:var(--bl)}

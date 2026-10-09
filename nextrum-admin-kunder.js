@@ -92,7 +92,9 @@
      och en per affisch. Talen räknas i databasen (tipskoder_lage) med
      samma regler som timmen på köpet: en kund är en familj vars FÖRSTA
      anmälan med en kod bar den här, och som inte hade haft pass förut.
-     Första pass är de av dem som haft ett genomfört pass med rapport.
+     Två timmar är de av dem som haft två timmar läxhjälp i genomförda pass
+     med rapport (sedan 2026-10-09; förut det första passet): det är då en
+     familjs kod ger en timme på köpet.
 
      Personkoder utan anmälningar står inte med: varje familj som
      öppnat sin flik har en, och listan hade blivit en namnlista.
@@ -126,7 +128,7 @@
         { namn: 'Sort', rita: k => esc(KOD_SORT[k.sort] || k.sort) },
         { namn: 'Anmälda', rita: k => '<span class="adm-tal">' + (k.anmalda || 0) + '</span>' },
         { namn: 'Kunder', rita: k => '<span class="adm-tal">' + (k.kunder || 0) + '</span>' },
-        { namn: 'Första pass', rita: k => '<span class="adm-tal">' + (k.forsta_pass || 0) + '</span>'
+        { namn: 'Två timmar', rita: k => '<span class="adm-tal">' + (k.forsta_pass || 0) + '</span>'
             + (k.sort === 'familj' && k.forsta_pass
               ? '<span class="adm-und">' + (k.timmar_anvanda || 0) + ' av ' + k.forsta_pass + ' timmar på köpet använda</span>'
               : '') },
@@ -552,6 +554,7 @@
 
     let familj = anmälansFamilj(lead);
     let inbjuden = false;
+    let forstaVal = null;   // första timmen pass för pass: true, eller felet
     const kanBjuda = NX.epostOk(lead.email || '');
 
     const ruta = document.createElement('div');
@@ -572,6 +575,14 @@
       + '<div class="fgroup"><label for="le-amnen">Ämnen</label>'
       + '<input class="inp" id="le-amnen" value="' + esc(lead.subject || '') + '"></div>'
       + '</div>'
+      /* Första timmen gratis (2026-10-09, Leo: "när vi skapar konto åt en
+         kund ska de MAXIMALT få en timme gratis"). Familjen får den alltid
+         i sin första plan; rutan ger den också pass för pass. Av som
+         förval, och bara när kontot skapas här: för en familj som redan
+         finns väljs den i familjens panel. */
+      + (familj ? '' : '<label class="le-forsta"><input type="checkbox" id="le-forsta"> '
+        + 'Första timmen gratis även om familjen betalar pass för pass. Köper de en plan får de den '
+        + 'där ändå, och aldrig mer än en.</label>')
       + '<p class="ok-msg" id="le-msg"></p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-le-stang>Avbryt</button>'
@@ -633,8 +644,16 @@
       if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); return; }
 
       await medan($('#le-skapa', ruta), familj ? 'Skapar…' : 'Tar in…', async () => {
+        const forsta = $('#le-forsta', ruta);
         if (!familj && !(await bjudIn(msg))) return;
         const parent = familj.id;
+        /* Valet skrivs när kontot finns. Går det inte säger kvittot det,
+           och det går att göra i familjens panel. */
+        if (forsta && forsta.checked && inbjuden && forstaVal === null) {
+          const v = await supa.rpc('ge_forsta_timmen', { p_familj: parent, p_ja: true });
+          forstaVal = v.error ? felText(v.error) : true;
+          forsta.closest('label').hidden = true;
+        }
 
         /* Ämnena är en text[] som inte får vara null (förvalet är en
            tom array). Fritexten ur anmälan delas på komma, tomma bitar
@@ -719,6 +738,12 @@
               + '</b> med en länk där de väljer sitt lösenord. Efter lösenordet går de igenom introduktionen, '
               + 'och tills du valt studiehjälpare ser de att ni matchar dem.</p>'
             : '')
+          + (forstaVal === true
+            ? '<p style="margin-top:10px">Familjen får första timmen gratis även pass för pass.</p>'
+            : forstaVal
+              ? '<p style="margin-top:10px;color:var(--acc-text)">Första timmen kunde inte väljas (' + esc(forstaVal)
+                + '). Välj den i familjens panel.</p>'
+              : '')
           + '<p' + (inbjuden ? ' style="margin-top:10px"' : '') + '><b>' + esc(namn) + '</b> ligger nu under <b>Elever</b> och i matchningskön. '
           + 'Anmälan från ' + esc(lead.parent_name || lead.email || 'familjen')
           + ' är markerad som klar.</p>'

@@ -88,6 +88,37 @@ texten är kärnans.
   för att köras efter `bookings_skydda_rabatt`, som nollar
   `rabatt_ore` på varje ny rad från en vy: triggrar på samma händelse
   körs i namnordning.
+- **Första timmen med planen, högst en per familj** (2026-10-09,
+  `forsta_timmen_med_planen`). Leo: "bara folk som köper planen ska få
+  gratis första lektion, men när vi skapar konto åt en kund ska de
+  MAXIMALT få en timme gratis, aldrig mer än en timme gratis. de kan spara
+  genom timbanken men inte få gratis av oss", och "vi ska kunna välja om
+  vanliga kunder som köper timme för timme får gratis första lektion".
+  - Den första planen familjen betalar får en timme till: triggern
+    `klippkort_forsta_timmen` (BEFORE UPDATE OF status, när raden blir
+    betald, och `klippkort_betald` är vägen dit) sätter `timmar` och
+    `timmar_pa_kopet` ett steg upp och `forsta_timmen`. Timmen ges i planen
+    och inte som rabatt på ett pass, för planens timmar betalar aldrig ett
+    pass med `startrabatt` (Fas 22.2). `klippkort_saldo` räknar på
+    `timmar`, så återbetalningen tar timmen med av sig själv: efter
+    ångerfristen räknas den som använd till ordinarie timpris, inom
+    fristen till betalt delat med alla timmarna, och den betalas aldrig ut.
+    Ett köp som läggs in som redan betalt (fixturerna) får ingen timme.
+  - Pass för pass bara för en familj vi valt: `forsta_timmen_beviljad`
+    (ingen skrivpolicy; `ge_forsta_timmen()` med `is_admin()`, rutan i Ta
+    in familjen och knappen i familjens panel), med regeln ovan.
+  - Högst en: `intern.forsta_timmen_tagen` är sann när familjen har ett
+    icke avbokat pass med `startrabatt` utan `TIPS`, eller en plan med
+    `forsta_timmen` (också en återbetald, för timmen kan ha använts). Båda
+    vägarna tar samma rådgivande lås som förut. Tipstimmen står utanför
+    (Leo: "utan tips").
+  - `forsta_timmen_lage()` säger läget för familjen själv och för admin
+    (`beviljad`, `tagen`, `i_planen`, `pa_pass`, `plan_id`). Studievyns
+    `bjuden` visar timmen bara när den är `beviljad` och inte `tagen`;
+    utan funktionen gäller den gamla regeln, som databasen då har, och
+    innan svaret kommit visas ingen timme.
+  - Spararaden räknar in timmen (`data-erb-spara-forsta`): 879, 1 359 och
+    1 839 kr på 6 månader för Basic, Standard och Intensiv.
 - Belopp lagras i **ören** överallt. Kronor blir det först vid visning
   (`NXBetalning.kronor`). Enda stället ett avrundningsfel kan smyga in
   är omvandlingen — gör den en gång, på ett ställe.

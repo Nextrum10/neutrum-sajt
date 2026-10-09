@@ -1680,6 +1680,8 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
 }
 .jn-spara b{font-weight:800;color:inherit;white-space:nowrap}
 .jn-spara[hidden]{display:none}
+/* "Första timmen gratis ingår" (2026-10-09): beloppet räknar in den. */
+.jn-spara small{display:block;margin-top:2px;font-size:.86em;font-weight:500;opacity:.85}
 /* "Det är priset, inte ett från-pris" som en liten tejp på rutan
    (2026-10-09, Leo: "gör det snyggare ... liknande till gula tejpen"):
    cinemas .nx-tejp, i flödet längst ner i rutan som spara-lappen

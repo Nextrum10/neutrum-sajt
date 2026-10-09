@@ -100,8 +100,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare (`mina_tips()`) och
   en kampanjkod per affisch; `leads.kod`. Koden syns i formuläret och lagras aldrig i
   webbläsaren, och en okänd kod fäller aldrig anmälan. Tipstimmen är `startrabatt` med
-  `rabattkod = 'TIPS'` (raden i `rabattkoder` blir aldrig aktiv): en per ny familj som haft sitt
-  första pass, och intjänad ges den också med flaggan `tipstimme` av. Studiehjälpare får ingen
+  `rabattkod = 'TIPS'` (raden i `rabattkoder` blir aldrig aktiv): en per ny familj som haft två
+  timmar läxhjälp i hållna pass (sedan 2026-10-09; förut det första passet, `intern.tva_timmar_hallna`),
+  också om den familjen fått en av timmarna gratis, och intjänad ges den också med flaggan `tipstimme` av.
+  Den står utanför taket för första timmen. Studiehjälpare får ingen
   ersättning, med flit. Den som tipsat ser antal, aldrig vilka. `/affisch` tar ingen fritext ur
   adressen, och QR-koden går till formuläret, inte till en områdessida.
 - **Materialbanken** (2026-10-02): bladen är våra egna. Nationella prov och läromedel kopieras aldrig in,
@@ -217,12 +219,20 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   tejpen (`data-erb-jamfor-ore`: Basic 3 540, Standard 5 832, Intensiv 8 348 kr; avsnitt 11) avrundad NEDÅT till
   hundratal, så att den aldrig lovar mer; tejpen har eget `data-erb` och döljs ensam vid fel timmar eller under 100 kr,
   och raden "Jämförelserna gjordes med en elev i årskurs 9 i oktober 2026" (`data-erb-jamfor-not`) står bara när en
-  tejp syns. "Spara upp till N kr på 6 månader med Xplanen" (`data-erb-spara`, `data-erb-spara-plan`) är den
-  största skillnaden mellan ordinarie och planens pris gånger månaderna, båda ur svaret, och planens namn är den planens
-  (i dag Intensiv, inte Basic som Leo trodde). Märket på planerna och klippkorten, på prissidan och i studievyn, är
+  tejp syns. "Spara upp till N kr på 6 månader" (`data-erb-spara`) är skillnaden mellan ordinarie och planens pris
+  gånger månaderna, båda ur svaret, för planen i `data-erb-spara-kod`, annars kortet raden står i, annars den största;
+  med `data-erb-spara-forsta` räknas första timmen in en gång, till timpriset ur svaret, och texten säger det
+  (2026-10-09, Leo: "skriv spara upp 1359 på 6 månader med standard planen", med utropstecken). Startsidans Just nu och
+  prissidans rad är Standards (1 359 kr), och varje plankort har sin egen (879, 1 359, 1 839 kr). Märket på planerna och klippkorten, på prissidan och i studievyn, är
   timpriset utan bindning överstruket och det rabatterade bredvid, aldrig en procent (Leo 2026-10-08), och döljs när de
-  är lika. Priset fryses vid bokningen. Första timmen är på köpet (`startrabatt`,
-  och tipstimmen är samma rabatt); ett pass på noll kronor är INTE betalt. Belopp i **ören**, kronor först vid visning.
+  är lika. Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
+  gratis första lektion", "MAXIMALT ... en timme gratis"): högst en per familj, någonsin, utom tipstimmar
+  (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
+  `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald); pass för pass bara för
+  en familj vi valt (`forsta_timmen_beviljad`, `ge_forsta_timmen()` i Ta in familjen och familjens panel), då med Fas
+  19.5:s `startrabatt` på det pass som gör att familjen bokat två timmar. Studievyns `bjuden` speglar regeln ur
+  `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
+  Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
 
@@ -677,6 +687,13 @@ Detaljer: `minne/grunden.md`.
   profilen på Google (`GOOGLE-FORETAGSPROFIL.md` avsnitt 5). Leos "bunden i 1 månad" blev "en månad i taget"
   på sajten, för villkoren säger ingen bindningstid och att den som slutar med en plan får tillbaka det som
   är kvar; en riktig bindning kräver en ny version av villkoren (alla får frågan igen) och juristen.
+- **Första timmen med planen, högst en per familj, och tipstimmen efter två timmar** (2026-10-09) är inte i drift:
+  `forsta_timmen_med_planen` (20261009120000) körs efter merge, och hela `rls-test.sql` gick 1518 av 1518 lokalt med
+  den (13 nya prov). Den byter villkorens version till 2026-10-09, så alla får frågan igen. `drift` (`_delad/nextrum-fakta.ts`,
+  agentens siffror) driftsätts från main efter merge. Före migrationen ger databasen alla nya familjer första timmen
+  på ett pass, som förut, och studievyn visar det; sidorna säger redan "med en plan". Juristen har inte läst villkoren
+  för första timmen och tipstimmen. Spararaden räknar in timmen (1 359 kr för Standard), vilket är sant först när
+  migrationen körts.
 - **Just nu-jämförelsen** (2026-10-08): "upp till 40 % lägre pris än jämförbara paket hos flera större
   aktörer" (talet räknas och avrundas till närmaste fem; exakt 39,4 %, Leos val) och "Andra aktörer 5 000 kr+" (plustecknet sedan samma dag, Leo) bygger på Leos
   underlag (Studybuddy, 5 000 kr för samma paket),

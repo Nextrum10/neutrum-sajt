@@ -205,6 +205,9 @@
         .select('tutor_id, created_at').eq('parent_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
       läggVillkor(id);
+      /* Första timmen (2026-10-09): om vi valt familjen för den pass för
+         pass, och om den redan fått sin timme. */
+      lägg('forstaTimmen', supa.rpc('forsta_timmen_lage', { p_familj: id }));
     }
 
     /* Varje fråga fångas var för sig.
@@ -368,6 +371,24 @@
     return rader.length
       ? esc('inte de nya; en äldre version godkändes ' + kortDatum(rader[0].godkant_at))
       : 'inte godkända än';
+  }
+
+  /* Första timmen gratis (2026-10-09, Leo: "bara folk som köper planen
+     ska få gratis första lektion", "vi ska kunna välja om vanliga kunder
+     som köper timme för timme får gratis första lektion", och högst en
+     timme per familj). Den första planen familjen betalar får timmen av
+     sig själv; för en familj som betalar pass för pass väljer vi här, och
+     då ges den på det pass som gör att familjen bokat två timmar. Har
+     familjen fått den står det hur, och knappen är borta. Utan funktionen
+     (en databas före migrationen) står raden som okänd. */
+  function dpFörstaTimmen(p, d) {
+    if (d.forstaTimmenFel) return null;
+    const l = d.forstaTimmen || {};
+    if (l.i_planen) return 'given, i familjens första plan';
+    if (l.pa_pass) return 'given, på ett pass';
+    return esc(l.beviljad ? 'vald pass för pass, och annars i den första planen' : 'bara i den första planen')
+      + ' <button class="btn btn-ghost btn-sm" type="button" data-dp-forsta="' + esc(p.id) + '" data-ja="'
+      + (l.beviljad ? '0' : '1') + '">' + (l.beviljad ? 'Ta bort valet' : 'Ge den pass för pass') + '</button>';
   }
 
   function dpRubrik(text, extra) {
@@ -958,6 +979,7 @@
       ['Konto skapat', p.created_at ? esc(kortDatum(p.created_at)) : null],
       ['Senast inloggad', dpSenast(p)],
       ['Användarvillkoren', dpVillkor(d), 'okänt'],
+      ['Första timmen gratis', dpFörstaTimmen(p, d), 'okänt'],
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
     + dpRubrik('Nästa pass')
@@ -2063,6 +2085,21 @@
       alert(res.data.skickat === 'losenord'
         ? 'En länk för att välja lösenord har gått till ' + res.data.till + '.'
         : 'En ny inbjudan har gått till ' + res.data.till + '.');
+    });
+  });
+
+  /* Första timmen pass för pass (dpFörstaTimmen). Databasen avgör: bara
+     admin väljer, och har familjen fått timmen ges ingen till. */
+  document.addEventListener('click', async ev => {
+    const k = ev.target.closest('[data-dp-forsta]');
+    if (!k) return;
+    const id = k.dataset.dpForsta;
+    await medan(k, 'Sparar…', async () => {
+      const { error } = await supa.rpc('ge_forsta_timmen', { p_familj: id, p_ja: k.dataset.ja === '1' });
+      if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
+      delete S.detaljCache['familj:' + id];
+      await hämtaDetalj('familj', id);
+      if (DP.typ === 'familj' && DP.id === id) ritaDetalj();
     });
   });
 

@@ -718,8 +718,16 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   `rabattkoder_tips_aldrig_aktiv` hindrar att den slås på: då hade en
   familj kunnat skriva in den. `skydda_rabatt` skyddar kolumnen redan.
 - **Regeln** står i `forsta_timmen_bjuds` och `intern.tipstimmar_*`: en
-  timme per familj som anmält sig med familjens kod och haft sitt första
-  pass (genomfört med rapport, eleven inte frånvarande). Familjen måste
+  timme per familj som anmält sig med familjens kod och haft två timmar
+  läxhjälp i hållna pass (genomförda med rapport, eleven inte frånvarande;
+  `intern.tva_timmar_hallna`, passens bokade längd). Sedan 2026-10-09;
+  förut det första passet. Leo: "man kan tjäna en gratis timme genom att
+  ta in en annan familj och detta funkar om den andra familjen haft en
+  lektion på två timmar med oss, oavsett om de betalade för båda timmarna
+  eller bara en". Adminens kodlista (`tipskoder_lage`, kolumnen
+  `forsta_pass`, som heter så för att en ny returtyp hade krävt en drop)
+  räknar samma sak och heter Två timmar i vyn. Tipstimmen står utanför
+  taket för första timmen (Leo: "utan tips"). Familjen måste
   ha varit ny, utan hållet pass före anmälan, annars hade ett syskons
   anmälan med en väns kod gett en timme. Bara familjens FÖRSTA anmälan
   med en kod räknas. Prissidans första timme går först; tipstimmen dras

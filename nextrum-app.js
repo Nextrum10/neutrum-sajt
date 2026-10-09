@@ -778,35 +778,48 @@ const NX = (function () {
       });
     });
     /* "Spara upp till N kr på 6 månader" (Leo 2026-10-08). Talet i
-       data-erb-spara är antalet månader, och N är den största skillnaden
-       mellan ordinarie pris och planens pris bland planerna, gånger
-       månaderna, i hela kronor. Ordinarie är timpriset utan bindning
-       gånger alla timmarna, så N är vad en familj sparar på att köpa den
-       planen varje månad i stället för att betala per pass: med 399 och
-       379 kr i timmen är det Intensiv, 12 × 20 kr × 6 = 1 440 kr.
-       Beloppet skrivs i [data-erb-spara-kr], eller i elementet självt om
-       det saknas. Ingen plan eller ingen besparing: elementet döljs, för
-       "spara upp till 0 kr" är inget erbjudande. Står det dolt i sidan
-       (som data-erb-vantar) visas det först här.
+       data-erb-spara är antalet månader, och N är skillnaden mellan
+       ordinarie pris och planens pris, gånger månaderna, i hela kronor.
+       Ordinarie är timpriset gånger alla timmarna, så N är vad en familj
+       sparar på att köpa planen varje månad i stället för att betala per
+       pass. Beloppet skrivs i [data-erb-spara-kr], eller i elementet
+       självt om det saknas. Ingen besparing: elementet döljs, för "spara
+       upp till 0 kr" är inget erbjudande. Står det dolt i sidan (som
+       data-erb-vantar) visas det först här.
+
+       Vilken plan: data-erb-spara-kod, annars planen elementet står i
+       (data-erb på ett kort eller en sektion), annars den med störst
+       besparing. Sedan 2026-10-09 står Standard på startsidan och överst
+       på prissidan (Leo: "skriv spara upp 1359 på 6 månader med standard
+       planen"), och varje plankort har sin egen rad.
+
+       data-erb-spara-forsta räknar in första timmen, som den första planen
+       ger (2026-10-09, Leo: "räkna in ... 399kr extra för att första
+       lektion är gratis"): en gång, till timpriset ur svaret. Bara där
+       texten säger det, och den timmen får bara den som köper en plan, så
+       den är planens: med 399 och 379 kr i timmen 8 × 20 × 6 + 399 = 1 359
+       kr för Standard.
 
        Raden säger också vilken plan det är, i [data-erb-spara-plan] (Leo
-       2026-10-08 läste 1 440 kr som Basics och ville ha "spara upp till
-       … på 6 månader med intensivplanen"). Namnet tas ur planens kort på
-       sidan om det finns, för det står på sidans språk, och annars ur
-       svaret. */
+       2026-10-08 läste 1 440 kr som Basics och ville ha planens namn).
+       Namnet tas ur planens kort på sidan om det finns, för det står på
+       sidans språk, och annars ur svaret. */
     const spara = $$('[data-erb-spara]');
     if (spara.length) {
-      const bäst = rader.filter(r => r.sort === 'plan')
+      const planer = rader.filter(r => r.sort === 'plan')
         .map(r => ({ r, öre: Number(r.ordinarie_ore) - Number(r.pris_ore) }))
-        .filter(x => x.öre > 0)
-        .reduce((a, x) => (!a || x.öre > a.öre ? x : a), null);
-      const per = bäst ? bäst.öre : 0;
-      const kort = bäst && $$('[data-erb-namn]')
-        .find(x => (x.closest('[data-erb]') || x).getAttribute('data-erb') === bäst.r.kod);
-      const namn = bäst ? (kort ? kort.textContent.trim() : String(bäst.r.namn || '')) : '';
+        .filter(x => x.öre > 0);
+      const störst = planer.reduce((a, x) => (!a || x.öre > a.öre ? x : a), null);
       spara.forEach(el => {
+        const ägare = el.closest('[data-erb]');
+        const kod = el.getAttribute('data-erb-spara-kod') || (ägare && ägare.getAttribute('data-erb'));
+        const vald = kod ? planer.find(x => x.r.kod === kod) || null : störst;
+        const kort = vald && $$('[data-erb-namn]')
+          .find(x => (x.closest('[data-erb]') || x).getAttribute('data-erb') === vald.r.kod);
+        const namn = vald ? (kort ? kort.textContent.trim() : String(vald.r.namn || '')) : '';
         const mån = Number(el.getAttribute('data-erb-spara')) || 0;
-        const öre = per * mån;
+        const första = vald && el.hasAttribute('data-erb-spara-forsta') ? Math.max(Number(vald.r.timpris_ore) || 0, 0) : 0;
+        const öre = vald && mån > 0 ? vald.öre * mån + första : 0;
         el.hidden = !(öre > 0) || (!namn && !!$('[data-erb-spara-plan]', el));
         if (el.hidden) return;
         const mål = $$('[data-erb-spara-kr]', el);
