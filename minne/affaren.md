@@ -115,14 +115,18 @@ tryck som personen tas in, med personens egen adress:
 nu ska vi samla in kunder men vi är inte registrerade ännu ... ska det
 stå att just nu bildas vi och vi kan påbörja läxhjälpen om ungefär 3
 veckor". En ruta i sidhuvudet på `intresseanmalan.html` och `/en/`,
-stilad i `nextrum-uppstart.css`, med en bana från Nu till vecka 43.
-Dagen står i `data-uppstart` (måndagen 19 oktober), och "om ungefär tre
+stilad i `nextrum-uppstart.css`, med en bana från Nu till vecka 43 (45 sedan 2026-10-09).
+Dagen står i `data-uppstart` (måndagen 19 oktober, nu 2 november), och "om ungefär tre
 veckor" räknas om ur den av `NX.uppstart()` vid varje visning: skrivet
 för hand hade det varit fel efter en vecka, mitt i kampanjen. När dagen
 passerat står "inom kort", aldrig en dag bakåt i tiden. Tacket efter
 anmälan säger detsamma (`tackIntresseUppstart`) så länge rutan finns.
 Flyttas starten: byt `data-uppstart` OCH veckan i banan, på båda
-sidorna. **Rutan ska bort när passen har börjat**: den på båda sidorna,
+sidorna. **Flyttad till vecka 45** (2026-10-09, Leo: "vi kan börja läxhjälp
+om ungefär 1 vecka ändra de till ungefär 3 veckor"): måndagen 2 november,
+så att det räknade avståndet blir tre veckor; samma dag i
+`nextrum-affisch.js` och på affischen, och redan utskrivna affischer
+säger fortfarande vecka 43. **Rutan ska bort när passen har börjat**: den på båda sidorna,
 och länken till och filen `nextrum-uppstart.css`. Tacket går tillbaka av
 sig självt.
 
@@ -750,7 +754,7 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   Sidan är `noindex`, bara på svenska och tar ingen fritext ur adressen:
   koden prövas mot samma form som i databasen och området ur en fast
   lista, annars hade vem som helst kunnat skriva ut en affisch med vår
-  logga. Raden om vecka 43 försvinner efter `UPPSTART`. QR-koden lästes
+  logga. Raden om vecka 45 försvinner efter `UPPSTART`. QR-koden lästes
   av med OpenCV ur en skärmbild i provet. Planen står i
   `AFFISCHKAMPANJ.md`.
 - **Provat** lokalt: 1009 av 1009 i `rls-test.sql`; utan migrationen
