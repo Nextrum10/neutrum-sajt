@@ -418,6 +418,27 @@ eget `data-erb` med `data-erb-jamfor-ore`, så om jämförelsen inte håller
 döljs bara den (och tejpen), och erbjudandet står kvar; sektionen döljs
 bara om Standard saknas. Inget av våra priser står i HTML.
 
+**Just nu 2026-10-09** (Leo om "Det är priset, inte ett från-pris": "gör det
+snyggare på erbjudande liknande till gula tejpen"; om "Jämförelsen gäller 8
+timmar läxhjälp i månaden": att den "är gjord baserat på priser för åk 9
+läxhjälp"; och om bindningen, efter frågan om villkoren: "De är ingen
+bindning för man köper ett erbjudande som ska förbrukas på en månad ta bort
+bindningstid inget är de"):
+- Den vänstra rutan heter "Läxhjälp, pass för pass" (förut "Läxhjälp utan
+  bindning"): ingen av de två binder, så "utan bindning" ställs aldrig mot
+  paketen. Samma sak på prissidan (ingressen, spara-raden "mot att betala
+  pass för pass", kalkylatorns "Pass för pass, fyra veckor") och i båda
+  FAQ-svaren om att sluta ("varken pass för pass eller med en plan").
+  Paketen heter fortfarande "en månad i taget", som villkoren tål.
+- "Det är priset, inte ett från-pris" är en liten tejp (`dd.nx-tejp.jn-fast`,
+  avsnitt 16 i `nextrum-start.css`): "Det är priset" stort och "inte ett
+  från-pris" litet, i flödet längst ner i rutan som spara-lappen bredvid,
+  lutad 2° åt andra hållet än jämförelsens, och fastsatt med samma
+  `nx-tejp-fast`. Under 400 px står varje rad utan radbrytning och tejpen
+  får gå 10 px ut i rutans kant.
+- Figurens rad: "Jämförelsen gäller 8 timmar läxhjälp i månaden och bygger på
+  priser för läxhjälp i årskurs 9." Underlaget är Leos (CLAUDE.md avsnitt 11).
+
 **Manifestet**: "Allt på ett ställe" trycker på plattformen ("Allt finns i
 en och samma plattform: studieplan, bokning, rapporter, NexLäx och
 betalning ...", Leo: "överstig ej så att texten blir längre än den
@@ -537,15 +558,18 @@ liten orange skuggad runt kolumner osv och andra färger där de färgerna
 finns redan."
 
 **Garantin som en remsa** (avsnitt 17, startsidan och Vår idé, båda
-språken). Hur hjälper vi ditt barn har fyra blad i en rad (läxhjälpen,
+språken). Hur hjälper vi ert barn (rubriken "ert barn?" sedan 2026-10-09,
+Leo; förut "ditt barn?", och på engelska "your child?" som förut) har fyra blad i en rad (läxhjälpen,
 expertisen, erfarenheten, NexLäx; två och två på platta och telefon, en
 spalt under 340 px), och under dem står garantin som en låg remsa med kant
 av lera (`div.hj-gar#betygsgaranti`, utanför `ul.hj-grid`): meningen "Vi
 erbjuder *betygsgarantin* för att vi är säkra på våra metoder." ("We offer
 the *grade guarantee* because we are confident in our methods.") med en
 liten sköld, de fyra stegen i en rad (`ol.hj-gar-steg`, bara siffra och
-rubrik: 01 Välj ämnena, 02 Kör hela läsåret, 03 Se allt i er vy, 04 Vi står
-kvar) och "Villkor gäller." med länken till villkoren (samma `href` som
+rubrik: 01 Välj ämnena, 02 Håll takten, 03 Se allt i er vy, 04 Vi står
+kvar; 02 hette "Kör hela läsåret" till 2026-10-09, då Leo tyckte att det var
+"lite dåligt": "Håll takten", "Keep the pace", säger det villkoren kräver,
+jämna pass och uppgifterna i tid, utan en siffra) och "Villkor gäller." med länken till villkoren (samma `href` som
 förut). Rubriken "Går betyget inte upp, fortsätter vi", stycket, raden om
 andra ämnen och stegens beskrivningar gick med bladet. Meningen lovar inget
 betyg (CLAUDE.md, avsnitt 1).

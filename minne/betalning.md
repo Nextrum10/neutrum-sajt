@@ -811,6 +811,13 @@ pris ... som en tejp bit som tejpas fast på erbjudandet".
   får tillbaka det som är kvar, med de använda timmarna till ordinarie
   pris. FAQ:n förklarar bindningen med just den regeln. En bindning som
   betyder mer än så kräver en ny version av villkoren (CLAUDE.md avsnitt 11).
+  **2026-10-09** frågade Leo igen ("379kr är bindning för aktuella
+  månaden ... 399kr är lektion för lektion och är ingen bunden eller
+  uppsägningstid"), fick veta att villkoren säger annat, och svarade: "De är
+  ingen bindning för man köper ett erbjudande som ska förbrukas på en månad
+  ta bort bindningstid inget är de". Ingen av dem binder alltså, och sajten
+  ställer aldrig "utan bindning" mot paketen: 399 kr är "pass för pass"
+  (`minne/vyerna.md`, Just nu 2026-10-09).
 - **`rls-test.sql`**: avsnitt 25 provar de nya planerna och siffrorna med
   399 kr, och 19.5 och 20.1 räknar på passets eget frysta pris i stället
   för 379 kr, så att de inte beror på katalogen.

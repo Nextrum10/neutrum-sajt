@@ -1576,9 +1576,10 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
 /* ============================================================
    16. JUST NU (2026-10-07, omgjort 2026-10-08) — erbjudandet
 
-   Direkt under Hur hjälper vi ditt barn sedan 2026-10-08. Leo: stort
-   "Just nu", läxhjälpen "för" 399 kr utan bindning ("inte från utan
-   för"), paketen 379 kr en månad i taget, "spara upp till ... vid
+   Direkt under Hur hjälper vi ert barn sedan 2026-10-08. Leo: stort
+   "Just nu", läxhjälpen "för" 399 kr pass för pass ("inte från utan
+   för"; "utan bindning" sedan 2026-10-09 inte heller, för ingen av dem
+   binder), paketen 379 kr en månad i taget, "spara upp till ... vid
    6 månader", och jämförelsen med de andra aktörerna "som en tejp bit
    som tejpas fast på erbjudandet, så förstora det". Ett blad på
    papperet, aldrig en mörk yta: rubriken, sloganen och de två priserna
@@ -1632,7 +1633,7 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
    NexLäx färger står bara i NexLäx rubrik (Leo 2026-10-08: "Överallt där rubriken är med den färgen när de inte gäller nexläx lägg de tillbaka till antingen vit eller orange som de har förut"). */
 .jn-slogan em{font-style:normal;color:var(--acc-lugn)}
 
-/* De två priserna: utan bindning och paketen, sida vid sida. Rutorna
+/* De två priserna: pass för pass och paketen, sida vid sida. Rutorna
    ligger på papperet inne i bladet, en nivå lägre, och paketets ruta
    har leran i kanten: det är den vi vill att man väljer. */
 .jn-priser{
@@ -1679,6 +1680,19 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
 }
 .jn-spara b{font-weight:800;color:inherit;white-space:nowrap}
 .jn-spara[hidden]{display:none}
+/* "Det är priset, inte ett från-pris" som en liten tejp på rutan
+   (2026-10-09, Leo: "gör det snyggare ... liknande till gula tejpen"):
+   cinemas .nx-tejp, i flödet längst ner i rutan som spara-lappen
+   bredvid, och lutad åt andra hållet än jämförelsens. */
+.jn-pris .jn-fast{
+  --tejp-tand:5px;--tejp-vrid:2deg;
+  align-self:flex-start;margin:auto 0 0 4px;
+  padding:7px calc(var(--tejp-tand) + 13px) 8px;gap:1px;
+}
+.jn-fast .nx-tejp-stor{font-size:clamp(1rem,1.35vw,1.2rem)}
+.jn-fast .nx-tejp-liten{font-size:.74rem}
+html.nx-sr .jn-kort:not(.nx-in) .jn-fast{opacity:0}
+html.nx-sr .jn-kort.nx-in .jn-fast{animation:nx-tejp-fast .62s var(--e-ut) .3s both}
 
 .jn-kort .jn-cta{grid-area:cta;align-self:end;margin-top:clamp(26px,3vw,38px)}
 /* "Skicka intresseanmälan" är en fristående länk: tryckytan minst 44 px. */
@@ -1758,6 +1772,9 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
   .jn-pris-tal b{font-size:1.75rem}
   .jn-pris .jn-pris-not{font-size:.76rem}
   .jn-pris .jn-spara{padding:5px 8px}
+  .jn-pris .jn-fast{padding:5px calc(var(--tejp-tand) + 8px) 6px;margin-left:2px}
+  .jn-fast .nx-tejp-stor{font-size:.92rem}
+  .jn-fast .nx-tejp-liten{font-size:.68rem}
   .jn-tejp{padding-inline:calc(var(--tejp-tand) + 14px);max-width:calc(100% - 8px)}
 }
 /* 360–400 px: "Nextrum Standard" och priset ryms på en rad bara när
@@ -1767,17 +1784,22 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
   .jn-vem{font-size:.9rem}
   .jn-vi .jn-belopp{font-size:1.85rem}
   .jn-pris-tal b{font-size:1.55rem}
+  /* Tejpen på en rad var, och hellre en bit ut i rutans kant, som en
+     riktig tejp, än fyra rader. */
+  .jn-pris .jn-fast{max-width:calc(100% + 10px);padding-inline:calc(var(--tejp-tand) + 6px)}
+  .jn-fast .nx-tejp-stor{font-size:.84rem;white-space:nowrap}
+  .jn-fast .nx-tejp-liten{font-size:.64rem;white-space:nowrap}
 }
 /* Under 340 px räcker bredden inte till två priser bredvid varandra. */
 @media (max-width:339px){
   .jn-priser{grid-template-columns:minmax(0,1fr)}
 }
 @media (prefers-reduced-motion:reduce){
-  .jn-tejp{animation:none}
+  .jn-tejp,.jn-fast{animation:none}
 }
 
 /* ============================================================
-   17. HUR HJÄLPER VI DITT BARN (2026-10-08) — direkt under heron
+   17. HUR HJÄLPER VI ERT BARN (2026-10-08) — direkt under heron
 
    Leo: "Under heron ska vi ha en ny sektion, hur hjälper vi dit barn,
    genom våran läxhjälp, exeperitsi, årserfarnhet inom läxhjälp,
@@ -1791,7 +1813,8 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
    RÖD TRÅD. Varje blad bär en av NexLäx ämnesfärger i --f (satt i
    markupen): figuren, etiketten, listen i överkant och ljuset i
    hörnet. Garantins remsa har leran,
-   knapparnas färg. Rubrikens "ditt barn?" står i leran, som andra
+   knapparnas färg. Rubrikens "ert barn?" (2026-10-09, förut "ditt
+   barn?") står i leran, som andra
    rubrikers betoning (till 2026-10-08 i NexLäx gradient). Ämnesfärgerna klarar AA mot papperet och --kort i
    båda lägena (cinema), och etiketten är text i den färgen.
 
@@ -1800,7 +1823,7 @@ html.nx-sr .jn-kort.nx-in .jn-vi .jn-stapel i{transition-delay:.55s}
    transform: data-stig äger transform.
    ============================================================ */
 .nx-hj{padding-block:clamp(72px,9vw,136px) clamp(36px,4.6vw,68px)}
-/* "ditt barn?" står i leran som andra rubrikers betoning (.nx-d2 em i
+/* "ert barn?" står i leran som andra rubrikers betoning (.nx-d2 em i
    cinema); gradienten står bara i NexLäx rubrik (2026-10-08). */
 .hj-rubrik{margin-top:20px}
 

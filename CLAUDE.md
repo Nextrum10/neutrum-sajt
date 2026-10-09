@@ -194,6 +194,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   **Paketen** (planerna) kostar 379 kr i timmen, en månad i taget: 5 % av 399 nedåt till hel krona. De
   binder inte: villkoren säger ingen bindningstid och att det som är kvar betalas tillbaka, så sajten säger
   "en månad i taget" eller "obundet", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
+  **Ingen av dem binder** (Leo 2026-10-09: "De är ingen bindning för man köper ett erbjudande som ska förbrukas på
+  en månad"), så "utan bindning" ställs aldrig mot paketen: 399 kr är "pass för pass" där de står bredvid varandra.
   Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
   pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
@@ -254,9 +256,9 @@ delar som de är; deras text följer inte med formen, och `.faq-item` är orörd
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
-**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ditt barn, Just nu, Vår idé, studievyn, NexLäx,
+**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ditt barn** (`#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
+som vill jobba (`#bli`) och Nästa steg. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
 en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
 i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
@@ -264,9 +266,10 @@ platt remsa under bladen (`.hj-gar`, `id="betygsgaranti"`, 2026-10-08, Leo: "Gö
 meningen "Vi erbjuder betygsgarantin för att vi är säkra på våra metoder." över, de fyra stegen 01–04 (siffra och
 rubrik) i en rad med streck emellan, varje steg under sitt blad (`.hj-gar-steg`, `data-gar-flode="tur"`, tänds i tur
 när remsan syns), och "Villkor gäller." med villkorslänken under; samma remsa står på Vår idé. Det släckta läget
-hänger på `.i-gang`, aldrig bara på `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under Hur hjälper vi: "för" timpriset utan bindning (`data-stat`),
+hänger på `.i-gang`, aldrig bara på `html.nx-sr`. **Just nu** (`#just-nu`, avsnitt 16) står direkt under Hur hjälper vi: "för" timpriset pass för pass (`data-stat`) med den lilla tejpen "Det är priset, inte ett
+från-pris" (`.jn-fast`, 2026-10-09),
 paketens timpris (Standards `data-erb-rabatterat`) med "spara upp till … med Xplanen" (`data-erb-spara`), och jämförelsen
-Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan. Vårt
+Standard mot "Andra aktörer 5 000 kr+" (`data-erb-jamfor-ore` på figuren) med tejpen `.nx-tejp` över rutan och raden om att den bygger på priser för årskurs 9. Vårt
 pris står aldrig i HTML, procenten avrundas till närmaste fem (40, exakt 39,4), figuren och tejpen döljs om planen inte har
 8 timmar eller inte är minst 5 % billigare, och sektionen döljs om Standard saknas. **Prissidan har ingen
 garantisektion** (2026-10-08, Leo: "öndödigt stor"): där står bara raden "Betygsgaranti, utan extra kostnad (villkor
@@ -278,7 +281,7 @@ länge. **Ämnesfärgerna är den röda tråden** på startsidan och menysidorna
 nextrum-start.css), efter två regler: **ordningen** (i en rad blad eller steg får det n:te färg n, blå, lila, grön,
 lera, rosa, och SO:s ockra som sjätte i bandet; `--f` sätts på ett ställe, och siffran, figuren eller etiketten
 läser `var(--f, sin gamla färg)`, aldrig texten) och **ämnet** (studiehjälparnas ämnen, `data-amne`). **Gradienten**
-(blå, lila, rosa) står bara i NexLäx rubrik (`.nlx-rubrik em`); andra rubrikers `<em>` (också "ditt barn?", Just nus
+(blå, lila, rosa) står bara i NexLäx rubrik (`.nlx-rubrik em`); andra rubrikers `<em>` (också "ert barn?", Just nus
 slogan och Nästa steg) och citattecknen är orange eller vita som förut (Leo 2026-10-08: "när de inte gäller nexläx").
 Garantin har leran; på bark byts färgerna mot `-l`; erbjudandena och Just nu har sina egna, och i vyerna står
 de bara i NexLäx. **`#bli` står på mörka
@@ -676,7 +679,9 @@ Detaljer: `minne/grunden.md`.
   underlag (Studybuddy, 5 000 kr för samma paket),
   som inte står i repot. "Flera" kräver underlag från minst två aktörer till; Leo valde att behålla ordet.
   Underlaget (skärmbilder med adress och datum) ska sparas och göras om när ett pris ändras, för
-  bevisbördan är vår (18 och 10 §§ marknadsföringslagen). Juristen har inte läst texten.
+  bevisbördan är vår (18 och 10 §§ marknadsföringslagen). Juristen har inte läst texten. Startsidans figur säger sedan
+  2026-10-09 att jämförelsen "bygger på priser för läxhjälp i årskurs 9" (Leos ord om underlaget, som Studybuddys 5 000 kr
+  alltså ska gälla).
   **Kronortejperna** på plankorten (2026-10-08, Leo: "på basic upp till 2000kr mindre [än] liknande jämförbara
   paket från andra aktörer ... då allakando tar 3540, på [Standard] upp till 2800kr ... Och på intensiv upp till
   3800kr") har bara ett namngivet underlag: Basic mot Allakandos 3 540 kr. Standards 5 832 och Intensivs 8 348 kr är
