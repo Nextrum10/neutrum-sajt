@@ -245,6 +245,18 @@ inte som Betalningar (`minne/betalning.md`); rättas den ändras texten i
 byte som main, också de två kommentarerna i drift. juridik står kvar på
 v22, som inte skiljer från main.
 
+**drift v15, 2026-10-09**, från main (b6c6c1b) efter PR #242 och #243,
+hämtad tillbaka och byte för byte lika i alla fem filer. `nextrum-fakta.ts`
+fick regeln om första timmen (med den första planen, pass för pass bara
+om admin valt det, högst en per familj utom tipstimmar) och tipstimmen
+efter två timmar. Första utkastet av texten hade tabell- och kolumnnamn i
+sig, och listan i `testa-agent.js` såg dem inte: sedan dess underkänns
+varje ord med understreck. Vid genomläsningen före driftsättningen sa
+texten också att familjen kunde skapa kontot själv och att föräldravyn
+var låst i ett väntläge före matchningen, båda fel sedan 2026-10-07.
+**Läs hela faktatexten mot kärnan innan `drift` driftsätts**, inte bara
+stycket som ändrats.
+
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —
 anmälningar, omatchade elever, kommande pass, saknade rapporter — och
