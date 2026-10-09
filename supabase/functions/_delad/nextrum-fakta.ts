@@ -105,10 +105,9 @@ SIFFRORNA:
 · Priset är det som gällde när passet bokades. En prishöjning gäller
   bara pass som bokas efter den.
 · Första timmen är gratis med den första planen familjen köper: planen
-  får en timme till (klippkort.forsta_timmen). En familj som betalar
-  pass för pass får den bara om admin valt det för familjen
-  (forsta_timmen_beviljad), och då dras en timme av på det pass som gör
-  att familjen har bokat två timmar. Högst en gratis timme per familj,
+  får en timme till. En familj som betalar pass för pass får den bara
+  om admin valt det för familjen, och då dras en timme av på det pass
+  som gör att familjen har bokat två timmar. Högst en gratis timme per familj,
   utom timmar för tips. Ett pass på en timme kan alltså kosta noll
   kronor, och det är då inte obetalt.
 · En familj som tipsat får en timme på köpet när en ny familj som
