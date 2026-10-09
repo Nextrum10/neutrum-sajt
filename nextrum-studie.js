@@ -3891,7 +3891,7 @@ window.NXStudie = (function () {
     function delaText() {
       return familj
         ? 'Läxhjälp i Stockholm genom Nextrum. Skriv vår kod ' + data.kod
-          + ' i anmälan. Vi får en timme på köpet när ni haft ert första pass.'
+          + ' i anmälan. Vi får en timme på köpet när ni haft två timmar läxhjälp.'
         : 'Läxhjälp i Stockholm genom Nextrum, där jag är studiehjälpare. Skriv min kod '
           + data.kod + ' i anmälan.';
     }
@@ -3911,7 +3911,7 @@ window.NXStudie = (function () {
       var intro = familj
         ? 'Känner ni en familj som behöver hjälp med skolan? Dela er länk, eller be dem skriva koden i intresseanmälan.'
           + (data.timme_ges
-            ? ' När en ny familj som anmält sig med er kod har haft sitt första pass får ni en timme läxhjälp på köpet.'
+            ? ' När en ny familj som anmält sig med er kod har haft två timmar läxhjälp får ni en timme läxhjälp på köpet.'
             : '')
         : 'Känner du en familj som behöver läxhjälp? Dela din länk, eller be dem skriva koden i intresseanmälan. '
           + 'Då ser vi att tipset kom från dig.';

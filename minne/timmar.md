@@ -65,6 +65,12 @@ timmen: 1 440, 2 653 och 4 320 kr. Basic blev dyrare än gamla Standard
 - Ordet "på köpet" betyder också startrabatten och tipstimmen. Villkoren
   säger att köpta timmar inte betalar "ett pass där en timme är på köpet"
   (startrabatten); ett förtydligande kräver en ny version av villkoren.
+- **Första timmen i den första planen** (2026-10-09): den första plan en
+  familj betalar får en timme till, i `timmar` och `timmar_pa_kopet`, och
+  `forsta_timmen` sant (`minne/betalning.md`). Studievyns plankort säger
+  "Er första plan: en timme till, gratis" så länge familjen inte fått sin
+  timme, och det köpta kortet "första timmen gratis ingår". Klippkort får
+  den aldrig.
 - `rls-test.sql` avsnitt 25 (Planerna) och det omskrivna provet 16.1d.
 - Prissidans plankort, lyftet bredvid starterbjudandet och startsidans Just
   nu (`#just-nu`, som 2026-10-08 ersatte lappen i #plattformen) döljs när

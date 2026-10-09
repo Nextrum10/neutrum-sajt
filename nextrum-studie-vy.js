@@ -2383,7 +2383,7 @@
             rorelser: undefined, dragningar: undefined };
 
   async function laddaErbjudanden() {
-    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar] = await Promise.all([
+    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       /* Alla kolumner (planerna, 2026-10-07): timmar_pa_kopet finns först
          efter migrationen, och en uttrycklig lista med den hade gett ett
@@ -2405,8 +2405,14 @@
       /* Passen korten betalat (Fas 22.2), med timmarna räknade i databasen
          som i klippkort_saldo. Här räknas ingenting om. */
       supa.from('klippkort_rorelser').select('klippkort_id, booking_id, timmar, datum, status')
-        .eq('parent_id', S.user.id).order('datum', { ascending: true })
+        .eq('parent_id', S.user.id).order('datum', { ascending: true }),
+      /* Första timmen (2026-10-09): om vi valt familjen för den pass för
+         pass, och om den redan fått sin timme. Hämtas med köpen, för ett
+         planköp ändrar den. Utan funktionen (före migrationen) är den null,
+         och då gäller den gamla regeln, som databasen då också har. */
+      supa.rpc('forsta_timmen_lage')
     ]);
+    S.forstaTimmen = forsta.error ? null : (forsta.data || null);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
     S.erb.katalog = katalog.data || [];
     S.erb.kort = kort.data || [];
@@ -3186,10 +3192,17 @@
        erbjudande"), på koden sedan den 2026-10-08 slutade ha en timme på
        köpet, och en plan med timmar på köpet, om katalogen får en igen. */
     const lyft = pa > 0 || e.kod === 'plan_standard';
+    /* Första timmen (2026-10-09, Leo: "bara folk som köper planen ska få
+       gratis första lektion"): den första planen familjen betalar får en
+       timme till. Raden står bara för en familj som inte fått sin timme,
+       och bara när databasen kan säga det. */
+    const ft = S.forstaTimmen;
+    const första = e.sort === 'plan' && ft && !ft.tagen;
     return '<div class="erb-kort' + (lyft ? ' ar-framhavd' : '') + '">'
       + '<div class="erb-topp"><b class="erb-namn">' + esc(e.namn) + '</b>'
       + (märken ? '<span class="erb-marken">' + märken + '</span>' : '') + '</div>'
       + '<span class="erb-vad">' + esc(vad) + '</span>'
+      + (första ? '<span class="erb-forsta">Er första plan: en timme till, gratis</span>' : '')
       + '<span class="erb-pris">' + (spar > 0 ? '<s>' + esc(kr(e.ordinarie_ore)) + '</s>' : '')
       + '<b>' + esc(kr(e.pris_ore)) + '</b></span>'
       + '<span class="erb-tim">' + timrad
@@ -3316,7 +3329,8 @@
       + '<div class="erb-mitt-topp"><b>' + esc(k.namn) + '</b><span>' + esc(läge) + '</span></div>'
       + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
       + '<i style="width:' + andel + '%"></i></div>'
-      + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar</span>'
+      + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar'
+      + (S.forstaTimmen && S.forstaTimmen.plan_id === k.id ? ' · första timmen gratis ingår' : '') + '</span>'
       + (snart ? '<p class="erb-snart">'
         + esc(dagarKvar === 0 ? 'Sista dagen är i dag.' : dagarKvar === 1 ? 'Sista dagen är i morgon.' : 'Sista dagen är om ' + dagarKvar + ' dagar.')
         + ' Timmar som inte används förfaller. <a href="#boka">Boka ett pass</a></p>' : '')
@@ -3908,19 +3922,24 @@
        flera barn. En funktion, inte ett värde: ytan skapas innan
        katalogen laddats. */
     tjanst: () => NXTjanster.standard(),
-    /* Prissidans starterbjudande (Fas 19.5), samma regel som
-       forsta_timmen_bjuds() i databasen: det läxhjälpspass som gör att
-       familjen har bokat två timmar får en timme bjuden, en gång.
-       Avbokade pass räknas inte. Databasen avgör; här visas bara vad
-       förslaget kommer att kosta. */
+    /* Första timmen (Fas 19.5), samma regel som forsta_timmen_bjuds() i
+       databasen: det läxhjälpspass som gör att familjen har bokat två
+       timmar får en timme bjuden, en gång. Avbokade pass räknas inte.
+       Sedan 2026-10-09 bara för en familj vi valt, och aldrig när familjen
+       fått timmen i en plan (forsta_timmen_lage). Databasen avgör; här
+       visas bara vad förslaget kommer att kosta. */
     bjuden: minuter => {
       const aktiva = (S.bokningar || []).filter(b => b.status !== 'cancelled'
         && b.fakturerbar !== false && (b.tjanst || 'laxhjalp') === 'laxhjalp');
+      /* null: databasen saknar funktionen och har den gamla regeln.
+         Inte hämtat än: ingen timme visas, hellre fullt pris än ett löfte. */
+      const ft = S.forstaTimmen;
+      const kanFå = ft === null || !!(ft && ft.beviljad && !ft.tagen);
       /* Ett pass med tipstimmen (rabattkod TIPS) är inte prissidans
          första timme. Den går först; annars tipstimmen, om det finns en
          kvar (2026-09-30). kvar räknas i databasen och gäller också när
          erbjudandet stängts: det som tjänats in innan ges ändå. */
-      if (!aktiva.some(b => b.startrabatt && b.rabattkod !== 'TIPS')) {
+      if (kanFå && !aktiva.some(b => b.startrabatt && b.rabattkod !== 'TIPS')) {
         const före = aktiva.reduce((a, b) => a + (Number(b.duration_min) || 60), 0);
         if (före < 120 && före + minuter >= 120) return true;
       }

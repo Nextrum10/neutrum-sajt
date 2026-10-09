@@ -219,6 +219,16 @@ triggern `leads_tipskod`, `mina_tips()` och `tipskoder_lage()`,
 som aldrig kan slås på, och `profiles_tipskod_raderas`.
 `forsta_timmen_bjuds` skrivs om i sin helhet med en vakt på Fas 19.5:s
 md5, och migrationen går att köra två gånger.
+`forsta_timmen_med_planen` (2026-10-09, `minne/betalning.md`) la till
+`forsta_timmen_beviljad` (familjen läser sin rad, admin och den som läser
+personer alla; ingen skrivpolicy, bara `ge_forsta_timmen()`),
+`klippkort.forsta_timmen` och triggern `klippkort_forsta_timmen`,
+`intern.forsta_timmen_tagen`, `intern.planens_forsta_timme`,
+`intern.tva_timmar_hallna` och `forsta_timmen_lage()`, och skrev om
+`forsta_timmen_bjuds`, `intern.tipstimmar_intjanade` och `tipskoder_lage`
+i sin helhet med en vakt på md5:erna lästa i driften samma dag. Den byter
+villkorens version till 2026-10-09. Ingen drop och ingen delete utanför en
+funktion; går att köra två gånger.
 Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.

@@ -2319,7 +2319,7 @@
            ingen timme att stänga av: raden står inte med. */
         + (ti ? brytare({
           titel: 'En timme på köpet för ett tips', på: ti.aktiv, påText: ti.aktiv ? 'På' : 'Av',
-          text: ti.beskrivning || 'En familj får en timme på köpet för varje ny familj som anmält sig med familjens kod.',
+          text: ti.beskrivning || 'En familj får en timme på köpet för varje ny familj som anmält sig med familjens kod och haft två timmar läxhjälp.',
           krav: !ti.aktiv && ti.vantar_pa ? 'Ska vara avgjort först: ' + ti.vantar_pa : '',
           not: 'Står den av räknas koderna och anmälningarna som förut, och timmar som tjänats in innan ges ändå. Ändrad '
             + kortDatum(ti.uppdaterad) + '.',
@@ -2403,7 +2403,7 @@
       titel: på ? 'Slå på timmen för tips?' : 'Stäng av timmen för tips?',
       text: på
         ? 'Från och med nu får en familj en timme på köpet på nästa pass den föreslår, för varje ny familj som '
-          + 'anmält sig med familjens kod och haft sitt första pass. Villkoren ska säga det.'
+          + 'anmält sig med familjens kod och haft två timmar läxhjälp. Villkoren ska säga det.'
         : 'En familj som tipsats efter i dag ger ingen timme. Timmar som redan tjänats in ges ändå, '
           + 'för villkoren lovade dem. Villkoren ska ändras i samma veva.',
       knapp: på ? 'Slå på' : 'Stäng av'

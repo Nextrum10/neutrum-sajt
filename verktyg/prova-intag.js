@@ -143,7 +143,10 @@ function falskSupabase(o) {
     notisfel: () => [], ekonomiska_avvikelser: () => [], tipskoder_lage: () => [],
     admin_sett_markera: k => k.p_till,
     /* Adminens eget läge: panelen läser bara den gällande versionen ur det. */
-    mitt_villkorslage: () => ({ version: '2026-09-30', godkant_at: '2026-10-01T09:00:00+00:00', tidigare: false })
+    mitt_villkorslage: () => ({ version: '2026-09-30', godkant_at: '2026-10-01T09:00:00+00:00', tidigare: false }),
+    /* Första timmen pass för pass (2026-10-09): valet och läget. */
+    ge_forsta_timmen: k => ({ beviljad: !!k.p_ja, tagen: false, i_planen: false, pa_pass: false }),
+    forsta_timmen_lage: () => ({ beviljad: false, tagen: false, i_planen: false, pa_pass: false })
   };
   async function hantera(route) {
     const req = route.request();
@@ -318,6 +321,9 @@ async function provaFamiljen(webb) {
   prova('familj: rutan säger att kontot skapas och mejlet går', (await text(page, '#le-familj-rad')).includes('Det skapas när du tar in familjen'));
   prova('familj: ingen separat inbjudningsknapp', (await page.locator('#le-bjud').count()) === 0);
   prova('familj: eleven är ifylld ur anmälan', (await page.inputValue('#le-namn')) === 'Kim' && (await page.inputValue('#le-arskurs')) === 'Åk 8');
+  prova('familj: rutan för första timmen pass för pass finns och är av', (await page.locator('#le-forsta').count()) === 1
+    && !(await page.isChecked('#le-forsta')));
+  await page.check('#le-forsta');
   await bild(page, 'familj-ta-in', '.nx-fraga-box');
   await page.click('#le-skapa');
   await page.waitForFunction(() => /intagen/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
@@ -336,6 +342,13 @@ async function provaFamiljen(webb) {
   prova('familj: kvittot säger att familjen är intagen och vad som händer sedan', (await text(page, '.nx-fraga-box h3')) === 'Familjen är intagen'
     && (await text(page, '.nx-fraga-box')).includes('väljer sitt lösenord'), await text(page, '.nx-fraga-box'));
   prova('familj: vidare till matchningen finns', await synlig(page, '[data-le-match]'));
+  const ft = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_forsta_timmen');
+  prova('familj: första timmen väljs för det nya kontot', ft && ft.kropp.p_familj === 'ny-1' && ft.kropp.p_ja === true,
+    JSON.stringify(ft && ft.kropp));
+  prova('familj: valet görs efter kontot och före eleven', S.logg.indexOf(ft) > S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
+    && S.logg.indexOf(ft) < S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/students'));
+  prova('familj: kvittot säger att första timmen ges pass för pass', (await text(page, '.nx-fraga-box')).includes('första timmen gratis även pass för pass'),
+    await text(page, '.nx-fraga-box'));
   await bild(page, 'familj-kvitto', '.nx-fraga-box');
   prova('familj: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();

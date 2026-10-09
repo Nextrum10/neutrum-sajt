@@ -448,9 +448,10 @@ uppgift; att svara är en människas jobb (DEPLOY-BETALNING.md 9.10).
 Ett pass i tvist återbetalas inte, och en återbetalning skriver inte
 över `tvist`.
 Priset fryses på passet när det bokas (Fas 19.5, `timpris_ore`), och
-första timmen är på köpet för nya familjer: passet som gör två bokade
-timmar får en timme i `rabatt_ore` (`startrabatt`). Ett pass på noll
-kronor är inte obetalt. Bokföringen, fakturorna och lönen
+första timmen är gratis med den första planen (en timme till i planen,
+sedan 2026-10-09), och pass för pass bara för en familj vi valt: då får
+passet som gör två bokade timmar en timme i `rabatt_ore` (`startrabatt`).
+Högst en per familj. Ett pass på noll kronor är inte obetalt. Bokföringen, fakturorna och lönen
 sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
 Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28);
 fakturorna läggs in för hand, för Fortnox läser inte in kundfakturor från

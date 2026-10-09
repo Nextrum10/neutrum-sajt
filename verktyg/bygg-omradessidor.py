@@ -2009,9 +2009,9 @@ GUIDER = [
             f'Hos Nextrum kostar läxhjälp {PRIS} i timmen, samma pris i alla ämnen och var passet '
             f'än hålls, hemma hos er eller online. Sitter syskon med i samma pass tillkommer '
             f'{EXTRA_BARN} i timmen totalt, lika mycket för tre barn som för två. Det finns ingen '
-            f'anmälningsavgift, ingen bindningstid och inget minsta antal timmar, och för nya '
-            f'familjer är första timmen på köpet när ni har bokat två timmar. Vill ni betala mindre '
-            f'för varje timme kan ni välja en plan, en månad i taget.',
+            f'anmälningsavgift, ingen bindningstid och inget minsta antal timmar. Vill ni betala mindre '
+            f'för varje timme kan ni välja en plan, en månad i taget, och med den första planen är '
+            f'första timmen gratis.',
             'Ni betalar för den tid passet faktiskt höll, räknat per påbörjad kvart, och ser '
             'tiden i rapporten innan ni bekräftar den. Matchningen, studieplanen och rapporten '
             'efter varje pass ingår i timpriset. Hela prisbilden står på prissidan.',
@@ -2479,7 +2479,7 @@ def prissektion():
     <div class="nx-text rv">
       <p>Samma timpris oavsett ämne och oavsett var i Stockholm passet hålls. Sitter syskon med i samma pass kostar det {EXTRA_BARN} extra i timmen totalt — lika mycket för tre barn som för två. Två eller tre barn en timme blir alltså {FLERA_BARN}.</p>
       <p>Ingen bindningstid och ingen månadsavgift. Studieplanen, matchningen och rapporten efter varje pass ingår i timpriset — det är inga tillval. All betalning går genom Nextrum, samlat på ett ställe.</p>
-      <p>För nya familjer är första timmen på köpet: det pass som gör att ni har bokat två timmar får en timme avdragen. <a href="/priser">Se hela prissidan</a> för vad som ingår och hur betalningen fungerar.</p>{ANMAL_MITT}
+      <p>Köper ni en plan är första timmen gratis: den första planen får en timme till. <a href="/priser">Se hela prissidan</a> för vad som ingår och hur betalningen fungerar.</p>{ANMAL_MITT}
     </div>
   </div>
 </section>"""
@@ -2496,7 +2496,7 @@ def prissektion_kort():
       <h2 class="nx-d2" style="margin-top:18px">{PRIS}<br>i timmen.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift, och för nya familjer är första timmen på köpet när ni bokat två timmar. <a href="/priser">Se hela prissidan</a>.</p>{ANMAL_MITT}
+      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift, och med en plan är första timmen gratis. <a href="/priser">Se hela prissidan</a>.</p>{ANMAL_MITT}
     </div>
   </div>
 </section>"""
@@ -2828,7 +2828,7 @@ def sida404():
     huvud = sprakvaxlare(huvud, '404')
     vidare = '\n'.join(kort(slug, rubrik, rad) for slug, rubrik, rad in [
         ('laxhjalp-stockholm', 'Läxhjälp i Stockholm', 'Hemma hos er, på biblioteket eller online'),
-        ('priser', 'Priser', f'{PRIS} i timmen, första timmen på köpet'),
+        ('priser', 'Priser', f'{PRIS} i timmen, första timmen gratis med en plan'),
         ('sa-fungerar-nextrum', 'Så fungerar Nextrum', 'Från intresseanmälan till första passet'),
         ('intresseanmalan', 'Intresseanmälan', 'Berätta vad ni behöver hjälp med'),
         ('faq', 'Vanliga frågor', 'Svar om pris, betalning och trygghet'),

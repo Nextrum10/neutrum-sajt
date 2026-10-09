@@ -439,6 +439,27 @@ bindningstid inget är de"):
 - Figurens rad: "Jämförelsen gäller 8 timmar läxhjälp i månaden och bygger på
   priser för läxhjälp i årskurs 9." Underlaget är Leos (CLAUDE.md avsnitt 11).
 
+**Spararaden och första timmen 2026-10-09, andra varvet** (Leo: "skriv spara
+upp 1359 på 6 månader med standard planen", "gör samma beräkning för bas och
+intensiv och skriv de i sina platser, men under erbjudande på main front end så
+skriver du sparandet för 6 månader. gör med utropstecken också", "räkna in ...
+399kr extra för att första lektion är gratis"). Jag sa först nej till 1 359 kr,
+för då fick alla nya familjer första timmen, med eller utan plan, och en timme
+alla får är ingen besparing med planen. Leo bytte regeln samma kväll: första
+timmen ges bara med en plan (`minne/betalning.md`), och då är talet sant.
+- Just nu: "Spara upp till 1 359 kr på 6 månader med Standardplanen!" och under,
+  mindre, "Första timmen gratis ingår." (`data-erb-spara-kod`,
+  `data-erb-spara-forsta`, `.jn-spara small`).
+- Prissidan: raden överst är Standards, "... med Standardplanen! Mot att betala
+  pass för pass, med första timmen gratis.", och varje plankort har en lapp
+  längst ner (`.pr-erb-sex` i cinema): "Spara upp till 879 / 1 359 / 1 839 kr
+  på 6 månader!" och "Första timmen gratis ingår.". Talen räknas ur svaret;
+  de i HTML är reserven.
+- Första timmen står som "gratis med en plan" i heron, prissidans
+  starterbjudande ("Första timmen gratis", "Köp er första plan, så får ni en
+  timme till, gratis."), kalkylatorns not, FAQ:n, affischen,
+  områdessidornas generator och föräldravyn.
+
 **Manifestet**: "Allt på ett ställe" trycker på plattformen ("Allt finns i
 en och samma plattform: studieplan, bokning, rapporter, NexLäx och
 betalning ...", Leo: "överstig ej så att texten blir längre än den

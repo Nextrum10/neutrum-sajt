@@ -2986,6 +2986,17 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
    emellan. Den sista biten, "mot priset utan bindning", är tillägget. */
 .pr-erb-spara > span:last-child{font-size:.86rem;font-weight:500;color:var(--muted)}
 .pr-erb-spara[hidden]{display:none}
+/* Planens egen rad längst ner i kortet (2026-10-09, Leo: "gör samma
+   beräkning för bas och intensiv och skriv de i sina platser"): samma
+   lapp i ockra, mindre, och raden om första timmen under. */
+.pr-erb-sex{
+  align-self:flex-start;margin:12px 0 0;padding:8px 12px;border-radius:12px;
+  background:var(--ockra-soft);color:var(--ockra-text);
+  font-size:.86rem;font-weight:600;line-height:1.35;letter-spacing:-.01em;
+}
+.pr-erb-sex b{font-weight:800;color:var(--bl);white-space:nowrap}
+.pr-erb-sex span{display:block;margin-top:2px;font-size:.74rem;font-weight:500;color:var(--muted)}
+.pr-erb-sex[hidden]{display:none}
 
 /* "Jämförelserna gjordes med en elev i årskurs 9 i oktober 2026" (Leo
    2026-10-08): liten, under planerna, och bara när en tejp syns

@@ -4358,6 +4358,8 @@ select '19.4 ingen triggerfunktion går att anropa', count(*) = 0,
 -- matchas med A inne i blocket, och allt rullas tillbaka i slutet.
 -- Pass 1 (en timme) har fullt pris, pass 2 (en timme, föreslaget av
 -- studiehjälparen) når två timmar och blir gratis, pass 3 har fullt pris.
+-- Sedan 2026-10-09 får en familj som betalar pass för pass timmen bara
+-- om vi valt det (forsta_timmen_beviljad), så Q väljs här.
 -- ------------------------------------------------------------
 do $$
 declare
@@ -4370,6 +4372,7 @@ declare
 begin
   begin
     update public.students set matched_tutor_id = aid, match_status = 'matched' where id = sid;
+    insert into public.forsta_timmen_beviljad (parent_id) values (qid);
 
     perform pg_temp.bli(qid);
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, timpris_ore, extra_ore)
@@ -5191,9 +5194,11 @@ begin
     values ('00000000-0000-4000-8000-00000000c22d', p, 'klipp10', 'Prov plan 3 timmar', 'plan', 3, 1, 10, 37900, 102300, 'vantar'),
            ('00000000-0000-4000-8000-00000000c22e', p, 'klipp10', 'Prov 1 timme', 'klippkort', 1, 6, 5, 37900, 36000, 'vantar');
 
-    -- Planen har tre timmar och gäller en månad. 22d2 om tio dagar (en
-    -- påbörjad kassa) och 22d3 om tolv tar två av dem. 22d1 om fyrtio
-    -- dagar ligger efter sista dagen, och en timme blir kvar.
+    -- Planen har tre timmar och gäller en månad, och den är P:s första
+    -- plan, så den får en timme till när den blir betald (2026-10-09):
+    -- fyra. 22d2 om tio dagar (en påbörjad kassa) och 22d3 om tolv tar två
+    -- av dem. 22d1 om fyrtio dagar ligger efter sista dagen, och två
+    -- timmar blir kvar.
     perform public.klippkort_betald('00000000-0000-4000-8000-00000000c22d', 102300, 'pi_rlsprov_22_2d', 'ch_rlsprov_22_2d', null, null, null, false);
     select klippkort_id into kd1 from public.bookings where id = '00000000-0000-4000-8000-0000000022d1';
     select klippkort_id, betalning_status into kd2, std2 from public.bookings where id = '00000000-0000-4000-8000-0000000022d2';
@@ -5212,7 +5217,7 @@ begin
     return;
   end if;
   insert into utfall (test, ok, detalj) values
-    ('22.2 ett pass efter köpets sista dag betalas inte', kd1 is null and kvar = 1,
+    ('22.2 ett pass efter köpets sista dag betalas inte', kd1 is null and kvar = 2,
      coalesce(kd1::text, '-') || ', kvar ' || kvar),
     ('22.2 ett pass med en påbörjad kassa betalas när det ryms',
      kd2 = '00000000-0000-4000-8000-00000000c22d' and std2 = 'betald', coalesce(kd2::text, '-') || ', ' || std2),
@@ -5778,7 +5783,8 @@ end $$;
 --    bookings_startrabatt, före timmarna: familj Q:s första förslag på
 --    två timmar får timmen bjuden och betalas inte med timmarna, nästa
 --    gör det. Ett förslag med två barn betalas inte, och med flaggan av
---    betalar timmarna ingenting.
+--    betalar timmarna ingenting. Q är vald för första timmen pass för
+--    pass (2026-10-09); köpet är ett klippkort, inte en plan.
 do $$
 declare
   p    uuid := '00000000-0000-4000-8000-0000000000f1';
@@ -5797,6 +5803,7 @@ declare
 begin
   begin
     update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.forsta_timmen_beviljad (parent_id) values (q);
     insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
                                   timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
     values (cq, q, 'klipp10', 'Prov 5 timmar', 'klippkort', 5, 6, 5,
@@ -9167,9 +9174,10 @@ end $$;
 
 -- ---------- timmen på köpet ----------
 --
--- Familj Q anmäler sig med familj P:s kod, blir kund och har sitt
--- första pass. P:s nästa förslag får en timme bjuden och nästa pass
--- efter det fullt pris. Avböjs passet med timmen kommer den tillbaka.
+-- Familj Q anmäler sig med familj P:s kod, blir kund och har två
+-- timmar läxhjälp (sedan 2026-10-09; förut det första passet). P:s nästa
+-- förslag får en timme bjuden och nästa pass efter det fullt pris.
+-- Avböjs passet med timmen kommer den tillbaka.
 -- Q är ny i fixturerna (Fas 19.5 räknar med samma sak). Erbjudandena
 -- slås på, så att det syns att köpta timmar inte betalar passet.
 do $$
@@ -9187,7 +9195,8 @@ declare
   pb3 constant uuid := '00000000-0000-4000-8000-00000000d1c3';
   pb4 constant uuid := '00000000-0000-4000-8000-00000000d1c4';
   idag date := (now() at time zone 'Europe/Stockholm')::date;
-  jp jsonb; j1 jsonb; j2 jsonb; fore_ny int; efter_gammal int; efter_stangd int;
+  qb2 constant uuid := '00000000-0000-4000-8000-00000000d1b2';
+  jp jsonb; j1 jsonb; j2 jsonb; fore_ny int; efter_gammal int; efter_stangd int; en_timme int;
   r1 record; r2 record; r3 record; r4 record; fal record;
   k_forfalska text; k_andra text; kod_efter text; fel text;
 begin
@@ -9211,7 +9220,8 @@ begin
     select rabattkod, rabatt_ore, startrabatt into fal from public.bookings where id = pb0;
     delete from public.bookings where id = pb0;
 
-    -- Q anmäler sig med koden, blir kund och har ett hållet pass.
+    -- Q anmäler sig med koden, blir kund och har ett hållet pass på en
+    -- timme.
     perform pg_temp.bli(null);
     insert into public.leads (id, parent_name, email, kod)
     values (lq, 'Test Familj Q', 'rls-q@example.invalid', jp->>'kod');
@@ -9224,12 +9234,22 @@ begin
     insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
     values (sq, a, qb, 'fixtur', idag - 2, 'narvarande');
 
-    -- Anmälan står på i dag och passet hölls i förrgår: Q hade redan
-    -- haft pass när koden skickades, och det ger ingen timme.
-    efter_gammal := intern.tipstimmar_intjanade(p);
-    -- Anmälan kom före passet: Q var ny.
+    -- Anmälan kom före passet: Q var ny. En timme räcker inte.
     update public.leads set created_at = now() - interval '10 days' where id = lq;
+    en_timme := intern.tipstimmar_intjanade(p);
+
+    -- Ett pass till på en timme, och Q har haft två timmar.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (qb2, q, a, sq, q, idag - 3, '14:00', 60, 'confirmed');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (sq, a, qb2, 'fixtur', idag - 3, 'narvarande');
     fore_ny := intern.tipstimmar_intjanade(p);
+
+    -- Anmälan står på i dag och passen hölls före: Q hade redan haft pass
+    -- när koden skickades, och det ger ingen timme.
+    update public.leads set created_at = now() where id = lq;
+    efter_gammal := intern.tipstimmar_intjanade(p);
+    update public.leads set created_at = now() - interval '10 days' where id = lq;
 
     update public.flaggor set aktiv = true where kod = 'erbjudanden';
 
@@ -9290,7 +9310,8 @@ begin
       k_forfalska = 'ok' and fal.rabattkod is null and fal.rabatt_ore is null and not fal.startrabatt,
       k_forfalska || ' ' || coalesce(fal.rabattkod, 'null') || '/' || coalesce(fal.rabatt_ore::text, 'null')),
     ('Tips en familj som redan haft pass ger ingen timme', efter_gammal = 0, efter_gammal::text),
-    ('Tips en ny familj som haft sitt första pass ger en timme', fore_ny = 1, fore_ny::text),
+    ('Tips en ny familj som haft en timme ger ingen timme än', en_timme = 0, en_timme::text),
+    ('Tips en ny familj som haft två timmar ger en timme', fore_ny = 1, fore_ny::text),
     ('Tips nästa förslag får en timme bjuden',
       r1.startrabatt and r1.rabattkod = 'TIPS' and r1.rabatt_ore = r1.timpris_ore,
       r1.startrabatt || ' ' || coalesce(r1.rabattkod, 'null') || '/' || coalesce(r1.rabatt_ore::text, 'null')),
@@ -9310,6 +9331,160 @@ begin
     ('Tips med flaggan av räknas inte en familj vars första pass kom efter', efter_stangd = 0,
       efter_stangd::text),
     ('Tips en raderad familjs kod försvinner ur anmälan', kod_efter is null, coalesce(kod_efter, 'null'));
+end $$;
+
+-- ============================================================
+-- FÖRSTA TIMMEN MED PLANEN, HÖGST EN PER FAMILJ (2026-10-09)
+--
+-- Familj Q är ny. Utan plan och utan val får Q ingen timme på ett pass.
+-- Familjen väljer inte själv; admin gör det. Den första planen Q betalar
+-- får en timme till, nästa inte, och har Q fått timmen i planen ges den
+-- inte på ett pass, också om Q är vald. Åt andra hållet: har Q fått
+-- timmen på ett pass får planen ingen. Ett klippkort får aldrig timmen.
+-- Varje block rullas tillbaka.
+-- ============================================================
+do $$
+declare
+  q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  p   constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  a   constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  adm constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  sq  constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  k1  constant uuid := '00000000-0000-4000-8000-00000000f7a1';
+  k2  constant uuid := '00000000-0000-4000-8000-00000000f7a2';
+  b1  constant uuid := '00000000-0000-4000-8000-00000000f7b1';
+  b2  constant uuid := '00000000-0000-4000-8000-00000000f7b2';
+  b3  constant uuid := '00000000-0000-4000-8000-00000000f7b3';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  utan_val boolean; med_plan boolean; sjalv text; sjalv_rad text; lage_p text;
+  lage_adm jsonb; lage_q jsonb; r1 record; r2 record;
+  fel text;
+begin
+  begin
+    update public.students set matched_tutor_id = a, match_status = 'matched' where id = sq;
+
+    -- Utan plan och utan val: det andra passet når två timmar men får
+    -- ingen timme.
+    perform pg_temp.bli(q);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (b1, q, a, sq, q, idag + 80, '10:00', 60, 'requested'),
+           (b2, q, a, sq, q, idag + 81, '10:00', 60, 'requested');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select startrabatt into utan_val from public.bookings where id = b2;
+    update public.bookings set status = 'cancelled' where id in (b1, b2);
+
+    -- Familjen väljer inte själv, varken med funktionen eller i tabellen,
+    -- och ser inte en annan familjs läge.
+    sjalv := pg_temp.svar_som(q, format('select public.ge_forsta_timmen(%L, true)', q));
+    sjalv_rad := pg_temp.svar_som(q, format('insert into public.forsta_timmen_beviljad (parent_id) values (%L)', q));
+    lage_p := pg_temp.svar_som(q, format('select public.forsta_timmen_lage(%L)', p));
+
+    -- Admin väljer Q.
+    perform pg_temp.bli(adm);
+    lage_adm := public.ge_forsta_timmen(q, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Q köper en plan och sedan en till.
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status)
+    values (k1, q, 'plan_basic', 'Prov Basic', 'plan', 4, 1, 5, 39900, 151600, 'vantar'),
+           (k2, q, 'plan_basic', 'Prov Basic igen', 'plan', 4, 1, 5, 39900, 151600, 'vantar');
+    perform public.klippkort_betald(k1, 151600, 'pi_rlsprov_ft1', 'ch_rlsprov_ft1', null, null, null, false);
+    perform public.klippkort_betald(k2, 151600, 'pi_rlsprov_ft2', 'ch_rlsprov_ft2', null, null, null, false);
+    select timmar, timmar_pa_kopet, forsta_timmen into r1 from public.klippkort where id = k1;
+    select timmar, timmar_pa_kopet, forsta_timmen into r2 from public.klippkort where id = k2;
+
+    -- Q är vald men har fått timmen i planen: inget pass får den.
+    perform pg_temp.bli(q);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (b3, q, a, sq, q, idag + 82, '10:00', 120, 'requested');
+    lage_q := public.forsta_timmen_lage();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select startrabatt into med_plan from public.bookings where id = b3;
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Första timmen med planen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Första timmen: utan plan och utan val ger två timmar ingen timme', not utan_val, coalesce(utan_val::text, 'null')),
+    ('Första timmen: familjen väljer inte sig själv', sjalv = '42501', sjalv),
+    ('Första timmen: familjen skriver inte valet i tabellen', sjalv_rad = '42501', sjalv_rad),
+    ('Första timmen: familjen ser inte en annan familjs läge', lage_p = '42501', lage_p),
+    ('Första timmen: admin väljer familjen',
+     coalesce((lage_adm->>'beviljad')::boolean and not (lage_adm->>'tagen')::boolean, false), coalesce(lage_adm::text, 'null')),
+    ('Första timmen: den första planen får en timme till',
+     r1.timmar = 5 and r1.timmar_pa_kopet = 1 and r1.forsta_timmen,
+     r1.timmar || '/' || r1.timmar_pa_kopet || '/' || r1.forsta_timmen),
+    ('Första timmen: nästa plan får ingen',
+     r2.timmar = 4 and r2.timmar_pa_kopet = 0 and not r2.forsta_timmen,
+     r2.timmar || '/' || r2.timmar_pa_kopet || '/' || r2.forsta_timmen),
+    ('Första timmen: fått i planen, ingen timme på ett pass fast familjen är vald', not med_plan,
+     coalesce(med_plan::text, 'null')),
+    ('Första timmen: familjen ser sitt läge',
+     coalesce((lage_q->>'tagen')::boolean and (lage_q->>'i_planen')::boolean, false), coalesce(lage_q::text, 'null'));
+end $$;
+
+-- Åt andra hållet: Q är vald och får timmen på det pass som når två
+-- timmar. Ett klippkort får ingen timme, och inte heller planen efter.
+do $$
+declare
+  q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  a   constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  sq  constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  k1  constant uuid := '00000000-0000-4000-8000-00000000f7a1';
+  k3  constant uuid := '00000000-0000-4000-8000-00000000f7a3';
+  b1  constant uuid := '00000000-0000-4000-8000-00000000f7b1';
+  b2  constant uuid := '00000000-0000-4000-8000-00000000f7b2';
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  pass_fick boolean; r1 record; r3 record;
+  fel text;
+begin
+  begin
+    update public.students set matched_tutor_id = a, match_status = 'matched' where id = sq;
+    insert into public.forsta_timmen_beviljad (parent_id) values (q);
+
+    perform pg_temp.bli(q);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (b1, q, a, sq, q, idag + 80, '10:00', 60, 'requested'),
+           (b2, q, a, sq, q, idag + 81, '10:00', 60, 'requested');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select startrabatt into pass_fick from public.bookings where id = b2;
+
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status)
+    values (k3, q, 'klipp10', 'Prov 10 timmar', 'klippkort', 10, 6, 5, 39900, 379000, 'vantar'),
+           (k1, q, 'plan_basic', 'Prov Basic', 'plan', 4, 1, 5, 39900, 151600, 'vantar');
+    perform public.klippkort_betald(k3, 379000, 'pi_rlsprov_ft3', 'ch_rlsprov_ft3', null, null, null, false);
+    perform public.klippkort_betald(k1, 151600, 'pi_rlsprov_ft4', 'ch_rlsprov_ft4', null, null, null, false);
+    select timmar, forsta_timmen into r3 from public.klippkort where id = k3;
+    select timmar, forsta_timmen into r1 from public.klippkort where id = k1;
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Första timmen på ett pass', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Första timmen: en vald familj får timmen på det pass som når två timmar', coalesce(pass_fick, false),
+     coalesce(pass_fick::text, 'null')),
+    ('Första timmen: ett klippkort får ingen timme', r3.timmar = 10 and not r3.forsta_timmen,
+     r3.timmar || '/' || r3.forsta_timmen),
+    ('Första timmen: fått på ett pass, planen får ingen', r1.timmar = 4 and not r1.forsta_timmen,
+     r1.timmar || '/' || r1.forsta_timmen);
 end $$;
 
 -- ============================================================

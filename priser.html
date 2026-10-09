@@ -53,8 +53,8 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
-<link rel="stylesheet" href="nextrum-cinema.css?v=1d702e4c">
-<link rel="stylesheet" href="nextrum-start.css?v=501efaf6">
+<link rel="stylesheet" href="nextrum-cinema.css?v=2ae367ab">
+<link rel="stylesheet" href="nextrum-start.css?v=d9890cf8">
 <link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
 
 <!-- Strukturerad data för tjänsten och timpriset. Ger Google en
@@ -248,10 +248,10 @@
     <div class="pr-topp-stapel">
       <div class="nx-offer" data-stig data-fördröj="1">
         <span class="tagline">Starterbjudande</span>
-        <h3>Första timmen på köpet</h3>
-        <p>Boka två timmar läxhjälp, så bjuder vi på den ena.</p>
+        <h3>Första timmen gratis</h3>
+        <p>Köp er första plan, så får ni en timme till, gratis.</p>
         <a class="btn btn-primary btn-lg" href="/intresseanmalan">Skicka intresseanmälan <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-        <p class="nx-terms">Erbjudandet gäller nya familjer, en gång. Timmen dras av på det pass som gör att ni har bokat två timmar, och det syns på passet.</p>
+        <p class="nx-terms">Gäller en gång per familj. Timmen läggs till i planen och används som de andra timmarna.</p>
       </div>
 
       <a class="pr-lyft" data-stig data-fördröj="2" href="#erbjudanden" data-erb="plan_standard" data-erb-timmar="8" data-erb-ore="303200">
@@ -289,12 +289,16 @@
      döljs i stället för att visa ett pris kassan inte drar. "Vårt tips"
      är en åsikt och sann; "populärast" vet vi inte.
 
-     Spara-raden (data-erb-spara) är den största besparingen bland
-     planerna mot priset utan bindning, gånger sex månader, ur samma svar,
-     och säger vilken plan den gäller (data-erb-spara-plan). Leo trodde
-     2026-10-08 att 1 440 kr var Basics; det är Intensivs (12 × 20 kr × 6),
-     och han ville att raden säger det: "spara upp till … på 6 månader
-     med intensivplanen".
+     Spara-raden (data-erb-spara) är besparingen mot att betala pass för
+     pass, gånger sex månader, ur samma svar, och säger vilken plan den
+     gäller (data-erb-spara-plan). Leo trodde 2026-10-08 att 1 440 kr var
+     Basics; det var Intensivs (12 × 20 kr × 6). Sedan 2026-10-09 är raden
+     Standards (data-erb-spara-kod), med första timmen inräknad
+     (data-erb-spara-forsta), och varje plankort har sin egen rad (Leo:
+     "skriv spara upp 1359 på 6 månader med standard planen", "gör samma
+     beräkning för bas och intensiv och skriv de i sina platser", "med
+     utropstecken"): 879, 1 359 och 1 839 kr. Första timmen ges bara med
+     en plan sedan samma dag, så den är planens.
 
      Märket i kortets topp är timpriset utan bindning överstruket och
      planens timpris bredvid, båda ur svaret (Leo 2026-10-08: "Ta bort -5%
@@ -338,7 +342,7 @@
     <div class="nx-head-aside"><p class="nx-lede">En plan gäller en månad i taget och gör varje timme billigare. Ett klippkort är timmar ni använder när det passar. Allt köps en gång och förnyas inte av sig självt.</p></div>
   </div>
 
-  <p class="pr-erb-spara" data-erb-spara="6" data-stig>Spara upp till <b class="tnum" data-erb-spara-kr>1 440 kr</b> <span class="pr-erb-spara-med">på 6 månader med <span data-erb-spara-plan>Intensiv</span>planen</span> <span>mot att betala pass för pass</span></p>
+  <p class="pr-erb-spara" data-erb-spara="6" data-erb-spara-kod="plan_standard" data-erb-spara-forsta data-stig>Spara upp till <b class="tnum" data-erb-spara-kr>1 359 kr</b> <span class="pr-erb-spara-med">på 6 månader med <span data-erb-spara-plan>Standard</span>planen!</span> <span>Mot att betala pass för pass, med första timmen gratis.</span></p>
 
   <div class="pr-erb-planer" data-erb-rad data-stig>
     <div class="nx-price-card pr-erb-plan" data-erb="plan_basic" data-erb-timmar="4" data-erb-ore="151600">
@@ -354,6 +358,7 @@
         <span class="nx-tejp-liten">än liknande paket hos andra aktörer</span>
       </span>
       <p class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / timme · Ni sparar <b data-erb-spar>80 kr</b></p>
+      <p class="pr-erb-sex" data-erb-spara="6" data-erb-spara-forsta>Spara upp till <b class="tnum" data-erb-spara-kr>879 kr</b> på 6 månader! <span>Första timmen gratis ingår.</span></p>
     </div>
 
     <div class="nx-price-card pr-erb-plan ar-framhavd" data-erb="plan_standard" data-erb-timmar="8" data-erb-ore="303200">
@@ -370,6 +375,7 @@
         <span class="nx-tejp-liten">än liknande paket hos andra aktörer</span>
       </span>
       <p class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / timme · Ni sparar <b data-erb-spar>160 kr</b></p>
+      <p class="pr-erb-sex" data-erb-spara="6" data-erb-spara-forsta>Spara upp till <b class="tnum" data-erb-spara-kr>1 359 kr</b> på 6 månader! <span>Första timmen gratis ingår.</span></p>
     </div>
 
     <div class="nx-price-card pr-erb-plan" data-erb="plan_intensiv" data-erb-timmar="12" data-erb-ore="454800">
@@ -385,6 +391,7 @@
         <span class="nx-tejp-liten">än liknande paket hos andra aktörer</span>
       </span>
       <p class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / timme · Ni sparar <b data-erb-spar>240 kr</b></p>
+      <p class="pr-erb-sex" data-erb-spara="6" data-erb-spara-forsta>Spara upp till <b class="tnum" data-erb-spara-kr>1 839 kr</b> på 6 månader! <span>Första timmen gratis ingår.</span></p>
     </div>
   </div>
   <!-- Prickarna under raden på en telefon: vilket kort som står i
@@ -501,7 +508,7 @@
           <button type="button" aria-pressed="true" data-v="1">1</button><button type="button" aria-pressed="false" data-v="2">2</button><button type="button" aria-pressed="false" data-v="3">3</button>
         </div>
       </div>
-      <p class="pr-kalk-not">Första timmen bjuder vi på för nya familjer.</p>
+      <p class="pr-kalk-not">Köper ni en plan bjuder vi på första timmen.</p>
     </div>
     <div class="pr-kalk-svar" aria-live="polite">
       <div class="pr-kalk-alt">
@@ -863,14 +870,14 @@
 <script src="nextrum-config.js?v=04a5c427"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=6fef4527"></script>
+<script src="nextrum-app.js?v=0742e145"></script>
 <script src="nextrum-samtycke.js?v=39371f0b"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
 <script src="nextrum-start.js?v=c809c1c0"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=edd008df"></script>
+<script src="nextrum-maskot-svar.js?v=4d716470"></script>
 <script src="nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {
