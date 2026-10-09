@@ -911,6 +911,7 @@ Mätt på 360 och 390 px i varje sektion av båda vyerna: inget spillde
 Sidhuvudet i vyerna är helt täckande sedan dess: med 97 % syntes text
 som rullade under det. Hälsningen överst tar fortfarande 446 px av en
 844 px hög telefon, med flit: nästa pass och meddelandena står där.
+Sedan 2026-10-09 syns den bara när vyn öppnas (Telefonen, andra varvet).
 
 **Adminvyns rullning och design** (2026-09-28 och 2026-09-29). Leo skrev
 först "skroll funktion i admin är konstig", och sedan, när det första
@@ -1028,6 +1029,65 @@ som är scrollad (2026-09-29).
 Den mäter `scrollY`, inte vad som står stilla på skärmen, så fällan i
 punkt 4 syntes inte i den: sidan scrollade inte, innehållet flyttade
 sig. Mät ett element före och efter trycket (`getBoundingClientRect`).
+
+### Telefonen, andra varvet (2026-10-09)
+
+Leo: "vyerna på mobil är jätte jobbiga att använda", utan mer. Provat i
+en provbänk byggd på `verktyg/bygg-introbilder.js` (dess falska
+Supabase och påhittade familjer, 390 och 360 px, `isMobile` och
+`hasTouch`), i varje sektion av studievyn och studiehjälparvyn, och med
+att använda dem: boka, skriva, byta sektion, öppna ett pass. Tummen
+(ovan) höll: inget spillde, och tryckytorna var 44 px. Det som var fel
+var fyra andra saker.
+
+1. **Varje fält zoomade in sidan.** En iPhone zoomar när man trycker i
+   ett fält med text under 16 px, och står kvar inzoomad tills man nyper
+   ut. `.inp,.sel` var `.98rem` (15,68 px), och det var varje fält på
+   sajten: inloggningen, chatten, profilen, intresseanmälan,
+   jobbansökan. Rapportens kommentar (`.nx-fraga-bred textarea`) var
+   14 px, barnväljaren 13,6 och maskotens fält och adminvyns sök 14.
+   Nu är `.inp,.sel` 1rem, och de som är mindre med flit får 1rem
+   under TUMMEN (och `.mk-falt` i cinema). Uppmätt efteråt: inget fält
+   under 16 px på någon sida, med eller utan inloggning. `maximum-scale=1`
+   i viewport hade stoppat zoomen men också nypet på Android: nej.
+2. **Enter skickade chatten.** En telefons tangentbord har ingen Skift,
+   så varje radbyte var ett halvskrivet meddelande som gick iväg. Med
+   ett finger (`(pointer: coarse)`, prövat vid varje tangent) är Enter
+   en ny rad och Skicka knappen, i familjens tråd (`NXKontakt.tråd`) och
+   i barnens (`NXStudie`); tipset "Enter skickar" döljs där.
+3. **Varje sektion började under hälsningen.** Ett sektionsbyte flyttar
+   inte sidan när början syns (punkt 3 i Tummen), och högst upp syns den:
+   under hälsningen, 450 px av 844, med en tredjedel av skärmen kvar.
+   På en telefon (raden står fast, `fastRad()`) läggs sektionen nu alltid
+   direkt under raden; på en dator som förut. Samma fel gjorde att ett
+   pass som öppnades från Översikt flyttade sidan 6 px: `täcktÖverst()`
+   mätte raden där den låg, under hälsningen, och räknade allt ovanför
+   som täckt. Nu räknas den där den står när den klistrat, som adminvyns
+   topprad. Två följder: en kort sektion (Skriv rapport med ett pass)
+   gick inte att rulla upp till raden, så ytan med sektionerna är minst
+   en skärm minus sidhuvudet och raden på en telefon; och studiehjälparvyns
+   elevval står utanför sektionerna, före Uppgifter och Meddelanden, och
+   visades först efter mätningen. Den sätts nu i `innan` (före mätningen),
+   och sidan mäts från det första som syns i ytan (`början()`), så att
+   elevvalet inte hamnar bakom raden.
+4. **Sektionerna gick inte att hitta.** Raden är fyra skärmbredder lång
+   (nio poster i studievyn, åtta i studiehjälparvyn) med "Mina l" och
+   "Erbju" avklippta i kanten, och menyn bakom de tre strecken, där man
+   letar först, hade bara sajtens sidor. Nu står vyns delar överst där
+   (`sidomeny` med `mobilmeny: true`), med rubrikerna och siffrorna, och
+   sajtens sidor under, mindre. Kopiorna ligger i sidomenyns `länkar`, så
+   den valda och siffrorna följer med; menyn stänger sig med en lyssnare
+   på menyn i stället för en per länk (`nextrum-app.js`), för kopiorna
+   läggs dit efter inloggningen. Adminvy står också där för den som är
+   admin: sidhuvudets knappar syns inte på en telefon. Elevvyn har ingen
+   meny, med flit, och fem poster som ryms.
+
+Hälsningen står kvar när vyn öppnas; det är först vid ett byte den går
+undan. **Inte gjort**, sett i samma prov: Boka pass har en nålad
+summering på 165 px längst ned (med sidhuvudet och raden är 300 av 844
+px fasta medan man väljer tid), och studiehjälparvyns elevval är 520 px
+högt på en telefon, så Uppgifter och Meddelanden börjar en skärm ned.
+Båda är formfrågor att ta med Leo.
 
 ### Adminvyns skal (2026-09-29)
 

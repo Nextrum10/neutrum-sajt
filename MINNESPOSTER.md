@@ -424,6 +424,7 @@ använd `NXStudie.laddarFörsta`. Det som står ovanför det man trycker
 på får inte byta höjd av trycket; gör det det ändå, håll det man
 tryckte på med `NXStudie.håll`. `1fr` i ett grid ska vara
 `minmax(0,1fr)`. Inget som rör sig i onödan (video, zoom, oskärpa).
+Ett fält har minst 16 px text, annars zoomar en iPhone in sidan.
 Detaljen: `CLAUDE.md` avsnitt 3, "Fyra fällor som gör vyerna hackiga",
 och `minne/vyerna.md`.
 

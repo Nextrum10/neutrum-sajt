@@ -4144,8 +4144,10 @@
     if (vald === 'pass') {
       if (förra && förra !== 'pass') S.passFrån = förra;
       ritaPassSida();
-      const hem = $('#vy-sido a[data-sek="' + (SEKTIONSNAMN[S.passFrån] ? S.passFrån : 'lektioner') + '"]');
-      if (hem) hem.classList.add('ar-har');
+      /* Sektionen man kom ifrån står vald, i raden och i menyn bakom
+         de tre strecken (sidomeny, mobilmeny). */
+      const hem = SEKTIONSNAMN[S.passFrån] ? S.passFrån : 'lektioner';
+      $$('#vy-sido a[data-sek="' + hem + '"], .m-vy a[data-sek="' + hem + '"]').forEach(a => a.classList.add('ar-har'));
       const sek = $('section[data-sek="pass"]');
       if (sek) {
         const topp = sek.getBoundingClientRect().top;
@@ -4329,9 +4331,11 @@
     }, { passive: true });
     S.sido = NXStudie.sidomeny({
       fall: 'larare',
-      nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
+      nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt', mobilmeny: true,
+      /* Före sektionsbytets mätning: elevvalet står ovanför sektionen
+         och ska med när den läggs överst (sidomeny, början). */
+      innan: sek => { $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1; },
       onByt: sek => {
-        $('.vy-kontext').hidden = MED_KONTEXT.indexOf(sek) === -1;
         /* Elevernas trådar läses först när Meddelanden visas. */
         S.bc.synlig = sek === 'meddelanden';
         if (S.bc.synlig && S.bc.aktiv) öppnaBarnchatt(S.bc.aktiv);

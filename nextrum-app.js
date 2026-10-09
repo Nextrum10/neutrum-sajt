@@ -438,8 +438,11 @@ const NX = (function () {
       burger.addEventListener('click', () => setMenu(!öppen()));
       /* En länk som stänger menyn ska INTE ta tillbaka fokus till
          burgaren: webbläsaren är redan på väg till målet, och en
-         fokusflytt mitt i hoppet skickar skärmläsaren till fel ställe. */
-      $$('#mobile-menu a').forEach(a => a.addEventListener('click', () => setMenu(false, false)));
+         fokusflytt mitt i hoppet skickar skärmläsaren till fel ställe.
+         En lyssnare på menyn, inte en per länk: vyerna lägger sina
+         delar i menyn efter inloggningen (NXStudie.sidomeny), och
+         länkarna i den är ankare som inte laddar om sidan. */
+      mmenu.addEventListener('click', e => { if (e.target.closest('a')) setMenu(false, false); });
 
       document.addEventListener('keydown', e => {
         if (!öppen()) return;

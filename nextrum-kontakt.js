@@ -231,9 +231,15 @@ window.NXKontakt = (function () {
     if (skickaKnapp) skickaKnapp.addEventListener('click', skicka);
     if (skrivRuta) {
       /* Enter skickar, Skift+Enter ger ny rad — som i varje annat
-         meddelandefält någon använt. */
+         meddelandefält någon använt. Men inte med ett finger: en
+         telefons tangentbord har ingen Skift att hålla in, så där var
+         varje radbyte ett halvskrivet meddelande som gick iväg. Där är
+         Enter en ny rad och Skicka knappen, som i telefonens egna
+         meddelanden (2026-10-09). */
       skrivRuta.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); skicka(); }
+        if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+        if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
+        e.preventDefault(); skicka();
       });
       skrivRuta.addEventListener('input', function () {
         skrivRuta.style.height = 'auto';

@@ -363,11 +363,16 @@ window.NXStudie = (function () {
         nederkant = Math.max(nederkant, (parseFloat(ts.top) || 0) + topp.offsetHeight);
       }
     }
+    /* Sektionsraden räknas också där den STÅR när den klistrat, som
+       adminvyns topprad. Mätt där den låg räknades hela hälsningen
+       ovanför den som täckt, när man stod högst upp på sidan: ett pass
+       som öppnades från Översikt flyttade sidan 6 px, och passet låg
+       kvar under hälsningen (2026-10-09). */
     var sido = document.querySelector('.vy .vy-sido');
     if (sido) {
       var cs = window.getComputedStyle(sido);
       if (cs.position === 'sticky' && cs.flexDirection !== 'column') {
-        nederkant = Math.max(nederkant, sido.getBoundingClientRect().bottom);
+        nederkant = Math.max(nederkant, (parseFloat(cs.top) || 0) + sido.offsetHeight);
       }
     }
     return nederkant;
@@ -2180,6 +2185,25 @@ window.NXStudie = (function () {
 
     function giltig(n) { return namn.indexOf(n) !== -1 ? n : standard; }
 
+    /* Var sektionen börjar för ögat: det första som syns i ytan den
+       står i. Studiehjälparvyns elevval står före Uppgifter och
+       Meddelanden, utanför sektionerna, och hade annars hamnat bakom
+       raden när sektionen lades överst. */
+    function början(sektion) {
+      if (!sektion || !sektion.parentElement) return sektion;
+      var först = NX.$$(':scope > *', sektion.parentElement).filter(function (el) {
+        return el === sektion || el.getClientRects().length > 0;
+      })[0];
+      return först || sektion;
+    }
+
+    /* Står raden fast under sidhuvudet (en telefon), eller som en
+       kolumn bredvid innehållet (en dator)? */
+    function fastRad() {
+      var cs = window.getComputedStyle(nav);
+      return cs.position === 'sticky' && cs.flexDirection !== 'column';
+    }
+
     function visa(önskad) {
       var vald = giltig(önskad);
       /* Läses FÖRE bytet. Att gömma en sektion ändrar sidhöjden, och
@@ -2188,6 +2212,9 @@ window.NXStudie = (function () {
       var föreY = window.scrollY;
 
       sektioner.forEach(function (s) { s.hidden = s.dataset.sek !== vald; });
+      /* Det som står utanför sektionerna och följer dem, som
+         studiehjälparvyns elevval, sätts innan sidan mäts nedan. */
+      if (typeof o.innan === 'function') o.innan(vald);
       länkar.forEach(function (a) {
         var här = a.dataset.sek === vald;
         a.classList.toggle('ar-har', här);
@@ -2238,10 +2265,20 @@ window.NXStudie = (function () {
          rapport, med rubriken 1 000 px ovanför skärmen (2026-09-28).
          Syns början redan, som när man står överst, flyttas ingenting.
          Bara vid ett byte av sektion: en flik i samma sektion
-         (#lektioner/plan) ska inte skicka en uppåt. */
+         (#lektioner/plan) ska inte skicka en uppåt.
+
+         Utom på en telefon, där sektionsraden står fast under
+         sidhuvudet: där läggs den nya sektionen alltid direkt under
+         raden. Högst upp på sidan står hälsningen, 450 px av en 844 px
+         hög skärm, och varje sektion man valde började under den, med
+         en tredjedel av skärmen kvar till innehållet. Leo 2026-10-09:
+         "vyerna på mobil är jätte jobbiga att använda". Hälsningen står
+         kvar överst när vyn öppnas. */
       if (!första && vald !== aktiv) {
-        var sektion = rot.querySelector('section[data-sek="' + vald + '"]');
-        if (sektion && (window.scrollY < föreY || platsUtanInglidning(sektion) < täcktÖverst() + 12)) visaÖverst(sektion);
+        var sektion = början(rot.querySelector('section[data-sek="' + vald + '"]'));
+        var plats = sektion ? platsUtanInglidning(sektion) : 0;
+        if (sektion && (window.scrollY < föreY || plats < täcktÖverst() + 12
+            || (fastRad() && plats > täcktÖverst() + 24))) visaÖverst(sektion);
       }
       if (!första) {
         var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
@@ -2318,6 +2355,41 @@ window.NXStudie = (function () {
           sättFall(!layout.classList.contains('ar-hopfalld'));
         });
       }
+    }
+
+    /* ---------- menyn bakom de tre strecken ----------
+       På en telefon är sektionsraden fyra skärmbredder lång (nio
+       poster i studievyn, åtta i studiehjälparvyn), och den som letade
+       efter Profil fick svepa och läsa sig fram. Menyn bakom de tre
+       strecken, där man letar först, hade bara sajtens sidor. Nu står
+       vyns delar överst där, med rubrikerna och siffrorna, och sajtens
+       sidor under dem (2026-10-09).
+
+       Kopiorna läggs i länkar: visa() markerar den valda och märke()
+       sätter siffran i båda, och en sektion som inte är tillåten är
+       dold i båda. En länk är en vanlig ankarlänk; menyn stänger sig
+       själv vid ett tryck (nextrum-app.js). Bara för den som ber om
+       den med o.mobilmeny: adminvyn döljer sajtens meny, och elevvyn
+       har ingen. */
+    var mm = o.mobilmeny ? document.getElementById('mobile-menu') : null;
+    if (mm) {
+      /* En gammal grupp byggs om: dess länkar står inte i den här
+         menyns länkar och hade slutat följa med. */
+      var gammal = mm.querySelector('.m-vy');
+      if (gammal) gammal.remove();
+      var grupp = document.createElement('nav');
+      grupp.className = 'm-vy';
+      grupp.setAttribute('aria-label', nav.getAttribute('aria-label') || 'Vyn');
+      NX.$$('a[data-sek], .vy-sido-rubrik', nav).forEach(function (el) {
+        var kopia = el.cloneNode(true);
+        kopia.removeAttribute('id');
+        kopia.classList.remove('ar-har');
+        kopia.removeAttribute('aria-current');
+        grupp.appendChild(kopia);
+        if (kopia.matches('a[data-sek]')) länkar.push(kopia);
+      });
+      mm.insertBefore(grupp, mm.firstChild);
+      mm.classList.add('har-vy');
     }
 
     /* Sidhuvudets höjd, för sektionsraden som står fast under det på
@@ -2813,7 +2885,11 @@ window.NXStudie = (function () {
         ? '<a class="btn btn-ghost btn-sm" href="/admin">Adminvy</a>' : '')
       + '<button class="btn btn-ghost btn-sm" data-logout>Logga ut</button>';
     if (efter) efter();
-    ma.innerHTML = '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
+    /* Sidhuvudets knappar syns inte på en telefon, och menyn är vägen
+       dit: också till adminvyn (2026-10-09). */
+    ma.innerHTML = (S.profil && (S.profil.is_admin || S.adminroll)
+        ? '<a class="btn btn-ghost btn-block" href="/admin">Adminvy</a>' : '')
+      + '<button class="btn btn-ghost btn-block" data-logout>Logga ut</button>';
   }
 
   /* Är den inloggade admin med vissa behörigheter (barnkonton_och_admin)?
@@ -4074,9 +4150,12 @@ window.NXStudie = (function () {
 
     if (o.skriv && o.knapp && o.skicka) {
       o.knapp.addEventListener('click', skicka);
-      /* Enter skickar och Skift+Enter ger en ny rad, som i familjens tråd. */
+      /* Enter skickar och Skift+Enter ger en ny rad, som i familjens
+         tråd, och med ett finger är Enter en ny rad (NXKontakt.tråd). */
       o.skriv.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); skicka(); }
+        if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+        if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
+        e.preventDefault(); skicka();
       });
       o.skriv.addEventListener('input', function () {
         o.skriv.style.height = 'auto';

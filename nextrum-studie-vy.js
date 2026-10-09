@@ -4557,8 +4557,10 @@
     if (vald === 'pass') {
       if (förra && förra !== 'pass') S.passFrån = förra;
       ritaPassSida();
-      const hem = $('#vy-sido a[data-sek="' + (SEKTIONSNAMN[S.passFrån] ? S.passFrån : 'lektioner') + '"]');
-      if (hem) hem.classList.add('ar-har');
+      /* Sektionen man kom ifrån står vald, i raden och i menyn bakom
+         de tre strecken (sidomeny, mobilmeny). */
+      const hem = SEKTIONSNAMN[S.passFrån] ? S.passFrån : 'lektioner';
+      $$('#vy-sido a[data-sek="' + hem + '"], .m-vy a[data-sek="' + hem + '"]').forEach(a => a.classList.add('ar-har'));
       /* En ny sida börjar överst — men bara om man inte redan ser
          början. Utan animering: en glidning uppåt var precis det
          Leo menade med att skickas iväg. */
@@ -5102,7 +5104,7 @@
 
     S.sido = NXStudie.sidomeny({
       fall: 'foralder',
-      nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
+      nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt', mobilmeny: true,
       onByt: bytteSektion
     });
 
