@@ -31,9 +31,9 @@
   ];
 
   /* Samma dag som data-uppstart i intresseanmalan.html. Efter den står
-     raden om vecka 43 inte med: en affisch skriven i november ska inte
+     raden om vecka 45 inte med: en affisch skriven efter starten ska inte
      lova något som redan hänt. Flyttas starten, flytta den här också. */
-  var UPPSTART = '2026-10-19';
+  var UPPSTART = '2026-11-02';
 
   var FORM = /^[A-Z0-9][A-Z0-9-]{2,23}$/;
   var LAPPAR = 8;

@@ -1,6 +1,6 @@
 # Affischkampanjen, hösten 2026
 
-Mål: fler intresseanmälningar före första passen i vecka 43, och att
+Mål: fler intresseanmälningar före första passen i vecka 45, och att
 veta vilket ställe som ger dem. Allt som behövs för att mäta finns i
 adminvyn sedan 2026-09-30.
 
