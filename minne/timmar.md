@@ -82,7 +82,8 @@ timmar. Standard fick 5 % i stället för "8 timmar för priset av 7" och
 lyfts fram på koden (Vårt tips) i stället för på timmen på köpet. Allt
 som räknar en timme på köpet står kvar, för katalogen är historik och ett
 köp med en timme på köpet kan finnas. Bindningen står på sidorna men inte i
-villkoren (`betalning.md`, sista avsnittet). Siffrorna i stycket ovan är
+villkoren (`betalning.md`, sista avsnittet); sedan 2026-10-09 inte på
+sidorna heller (Leo: "inget är de"), och 399 kr heter "pass för pass". Siffrorna i stycket ovan är
 de som gällde 2026-10-07.
 
 **Märket och tejperna på paketen (2026-10-08, samma kväll).** Leo: "Ta bort

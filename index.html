@@ -55,7 +55,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=a3456ee6">
 <link rel="stylesheet" href="nextrum-cinema.css?v=1d702e4c">
-<link rel="stylesheet" href="nextrum-start.css?v=2c0f7ca8">
+<link rel="stylesheet" href="nextrum-start.css?v=501efaf6">
 
 <!-- hero-fotot ska vara på plats direkt, resten laddas lazy.
 
@@ -323,14 +323,16 @@
      på startsidan sedan 2026-10-08: etiketten "Vad är Nextrum" (Leo:
      "Så hjälper vi ska vara vad är Nextrum och behåll så hjälper vi
      ditt barn som rubrik") och Leos beskrivning i ingressen; Vår idé har
-     kvar etiketten "Så hjälper vi" och den gamla ingressen.
+     kvar etiketten "Så hjälper vi" och den gamla ingressen. Rubriken
+     säger "ert barn?" sedan 2026-10-09 (Leo), och garantins steg 02 "Håll
+     takten" i stället för "Kör hela läsåret".
      ========================================================== -->
 <section class="nx-sek nx-hj" id="sa-hjalper-vi" aria-labelledby="hj-t">
   <div class="nx-wrap-bred">
     <div class="nx-head split" data-stig>
       <div>
         <span class="nx-et acc">Vad är Nextrum</span>
-        <h2 class="nx-d2 hj-rubrik" id="hj-t">Hur hjälper vi<br><em>ditt barn?</em></h2>
+        <h2 class="nx-d2 hj-rubrik" id="hj-t">Hur hjälper vi<br><em>ert barn?</em></h2>
       </div>
       <div class="nx-head-aside">
         <p class="nx-lede">Nextrum erbjuder prisvärd läxhjälp där elever matchas med en studiehjälpare som passar deras behov. Vi hjälper elever att förstå mer, känna sig tryggare i skolan och utvecklas över tid.</p>
@@ -372,7 +374,7 @@
       <p class="hj-gar-mening"><span class="hj-gar-ikon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.8v5.4c0 4.4-2.7 7.2-6.5 8.4-3.8-1.2-6.5-4-6.5-8.4V6.3z"/><path d="M9 12l2.2 2.2 4.3-4.4"/></svg></span><span>Vi erbjuder <em>betygsgarantin</em> för att vi är säkra på våra metoder.</span></p>
       <ol class="hj-gar-steg" data-gar-flode="tur">
         <li><span class="hj-gar-nr" aria-hidden="true">01</span><b>Välj ämnena</b></li>
-        <li><span class="hj-gar-nr" aria-hidden="true">02</span><b>Kör hela läsåret</b></li>
+        <li><span class="hj-gar-nr" aria-hidden="true">02</span><b>Håll takten</b></li>
         <li><span class="hj-gar-nr" aria-hidden="true">03</span><b>Se allt i er vy</b></li>
         <li><span class="hj-gar-nr" aria-hidden="true">04</span><b>Vi står kvar</b></li>
       </ol>
@@ -390,7 +392,12 @@
      upp till 1200kr vid 6 månader", "Andra aktörer 5000kr +", och
      jämförelsen "ska vara typ som en tejp bit som tejpas fast på
      erbjudandet, så förstora det". Och: "inte från utan för", och "en
-     lite rolig slogan". Direkt under Hur hjälper vi ditt barn.
+     lite rolig slogan". Direkt under Hur hjälper vi ert barn.
+     2026-10-09, Leo: ingen av dem binder ("De är ingen bindning för man
+     köper ett erbjudande som ska förbrukas på en månad"), så 399 kr heter
+     "pass för pass" och "utan bindning" ställs aldrig mot paketen; "Det
+     är priset" är en liten tejp som jämförelsens; och jämförelsen säger
+     att den bygger på priser för årskurs 9.
 
      Inget av våra priser står här. Timpriset utan bindning skriver
      initPris() ur nextrum-config.js (data-stat), och resten skriver
@@ -422,9 +429,9 @@
         <p class="jn-slogan">Läxorna får vara kluriga. <em>Priset behöver inte vara det.</em></p>
         <dl class="jn-priser">
           <div class="jn-pris">
-            <dt>Läxhjälp utan bindning</dt>
+            <dt>Läxhjälp, pass för pass</dt>
             <dd class="jn-pris-tal"><span class="jn-for">för</span> <b class="tnum" data-stat="pris-inline"></b> <span>i timmen</span></dd>
-            <dd class="jn-pris-not">Det är priset, inte ett från-pris.</dd>
+            <dd class="nx-tejp jn-fast"><span class="nx-tejp-stor">Det är priset</span><span class="nx-tejp-liten">inte ett från-pris</span></dd>
           </div>
           <div class="jn-pris jn-paket">
             <dt>Paket, en månad i taget</dt>
@@ -448,7 +455,7 @@
           <b class="jn-belopp" data-erb-pris></b>
           <span class="jn-stapel" aria-hidden="true"><i data-erb-andel></i></span>
         </div>
-        <figcaption class="jn-not">Jämförelsen gäller <span data-erb-antal>8</span> timmar läxhjälp i månaden.</figcaption>
+        <figcaption class="jn-not">Jämförelsen gäller <span data-erb-antal>8</span> timmar läxhjälp i månaden och bygger på priser för läxhjälp i årskurs 9.</figcaption>
       </figure>
       <div class="nx-cta-rad jn-cta">
         <span class="nx-magnet">
@@ -1564,7 +1571,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=223aa660"></script>
+<script src="nextrum-maskot-svar.js?v=edd008df"></script>
 <script src="nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {
