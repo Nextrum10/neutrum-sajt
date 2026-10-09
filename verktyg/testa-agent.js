@@ -215,6 +215,14 @@ ok('fakta-texten nämner ingen infrastruktur',
   FORBJUDET.filter(o => new RegExp(o, 'i').test(faktaText)).join(' ') || 'inget',
   'inget');
 
+/* Listan ovan känner bara de namn den känner. Ett tabell-, kolumn- eller
+   funktionsnamn har nästan alltid ett understreck, och det har inget
+   svenskt ord (2026-10-09: forsta_timmen_beviljad stod i texten och
+   listan såg det inte). */
+ok('fakta-texten har inga namn med understreck',
+  (faktaText.match(/\b\w+_\w+\b/g) || []).join(' ') || 'inget',
+  'inget');
+
 /* Kunskapen ska faktiskt nå modellen, och cache-brytpunkten ska ligga
    SIST i systemlistan — ligger den först cachas bara det första
    blocket, och slingans fjorton anrop betalar resten varje gång. */
