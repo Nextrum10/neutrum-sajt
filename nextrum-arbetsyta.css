@@ -344,6 +344,32 @@
   .vy-sido-rubrik:first-child{display:none}
 }
 
+/* Vyns delar överst i menyn bakom de tre strecken (sidomeny,
+   o.mobilmeny, 2026-10-09). Raden ovan måste man svepa sig igenom, fyra
+   skärmbredder; här står allt på en gång. Rubrikerna är rubriker igen,
+   inte streck, och sajtens sidor står under, mindre: i vyn är de
+   sällan målet. */
+.m-vy{display:grid;gap:2px;margin:-12px 0 26px}
+.m-vy .vy-sido-rubrik{
+  display:block;width:auto;align-self:auto;overflow:visible;text-indent:0;background:none;
+  margin:16px 0 6px;padding:0 14px;
+}
+.m-vy .vy-sido-rubrik:first-child{display:none}
+.m-vy a{
+  display:flex;align-items:center;gap:14px;
+  min-height:52px;padding:0 14px;border-radius:14px;
+  font-size:1.06rem;font-weight:600;letter-spacing:-.015em;color:var(--bl);
+}
+.m-vy a.ar-har{background:var(--bl);color:var(--pap)}
+.m-vy svg{
+  width:20px;height:20px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;
+}
+.m-vy .vy-sido-mark{margin-left:auto}
+.m-vy a.ar-har .vy-sido-mark{background:var(--pap);color:var(--bl)}
+.mobile-menu.har-vy a.m-link{font-size:1rem;font-weight:500;letter-spacing:-.01em;padding:13px 14px;color:var(--bl-2)}
+.mobile-menu.har-vy .m-actions{margin-top:24px}
+
 /* ============================================================
    3. FLIKAR INNE I EN SEKTION
    När två gamla sektioner slås ihop måste båda fortfarande gå att
@@ -4248,6 +4274,11 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .vy .ps-tillbaka{min-height:44px}
   .vy .ps-fot-lank{min-height:44px}
 
+  /* Fälten som är mindre med flit får 16 px här. Under det zoomar en
+     iPhone in hela sidan när man trycker i fältet (.inp,.sel i
+     nextrum-cinema.css, 2026-10-09). */
+  .vy :is(.vy-barnvaxel .sel, .nx-fraga-bred textarea, .adm-topp .adm-sokfalt .inp){font-size:1rem}
+
   /* Kalendern i Boka pass: inget inre kort på en telefon, och inget
      mellanrum mellan dagarna. Dagen är 41 × 44 px och ytorna möter
      varandra, så ett tryck mellan två dagar träffar alltid en av dem. */
@@ -4284,6 +4315,12 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
     padding-top:8px;background:var(--pap);
     box-shadow:0 0 0 100vmax var(--pap);clip-path:inset(0 -100vmax);
   }
+  /* Ett sektionsbyte lägger sektionen direkt under raden (sidomeny,
+     2026-10-09). En kort sektion, som Skriv rapport med ett pass, gick
+     inte att rulla dit: sidan tog slut, och halva hälsningen stod kvar
+     ovanför. Sektionerna står i en yta som är minst en skärm minus
+     sidhuvudet och raden. */
+  .vy:not(.vy-admin) .vy-sido + div{min-height:calc(100svh - 150px)}
 }
 
 /* ============================================================
