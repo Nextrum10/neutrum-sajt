@@ -14,8 +14,9 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
 2. Ni ringer och väljer studiehjälpare
 3. Admin tar in familjen: **Ta in familjen** på anmälan (2026-10-06).
    Kontot skapas med anmälans adress, eleven ur anmälan, och familjen
-   väljer lösenordet genom länken i mejlet. Den som hellre registrerar
-   sig själv gör det på `foralder.html`
+   väljer lösenordet genom länken i mejlet. Inget Skapa konto på sajten
+   (2026-10-07): konton skapar bara vi (`bjud-in`) och föräldern (barnets
+   inloggning)
 4. `admin.html` → **Familjer** → välj hjälpare i rullgardinen. Sätter
    `matched_tutor_id` och `match_status` **samtidigt** — förr var det
    två kolumner i Table Editor och satte man bara den ena såg familjen

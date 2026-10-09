@@ -27,6 +27,11 @@
 // intäkt. Samma fel åt andra hållet är lika lätt att göra: ändras
 // betalsätten ändras texten här samma dag.
 //
+// TILL 2026-10-09 SA TEXTEN att familjen kunde skapa kontot själv och
+// att föräldravyn var låst i ett väntläge före matchningen. Båda
+// ändrades 2026-10-07, och en agent som läste det kunde föreslå att en
+// familj skulle registrera sig, eller kalla en öppen vy för låst.
+//
 // VAD SOM FÅR STÅ HÄR, OCH VAD SOM ALDRIG FÅR DET
 //
 // Texten går in i systemprompten på ett betalt modellanrop, och
@@ -76,13 +81,16 @@ ORDEN. Använd dem, och inga andra:
 ORDNINGEN, och den hoppar aldrig ett steg:
 1. Familjen skickar en intresseanmälan.
 2. Någon ringer och väljer studiehjälpare.
-3. Familjen får ett konto: admin tar in familjen från anmälan, eller
-   familjen skapar det själv.
+3. Admin tar in familjen från anmälan: kontot skapas med anmälans
+   adress, och familjen väljer lösenordet själv genom länken i mejlet.
+   Familjer skapar inga konton själva.
 4. Admin matchar elev och studiehjälpare.
 5. Föräldern lägger in barnet, studiehjälparen skriver studieplanen.
-Föräldravyn är låst till efter steg 4. En familj som väntar där är i
-väntläge, inte i ett fel. En studiehjälpare syns publikt först när
-admin godkänt hen.
+Före steg 4 är föräldravyn öppen med barnen, NexLäx och profilen, och
+säger att vi letar studiehjälpare. Att boka, köpa timmar och skriva
+till studiehjälparen öppnas först när admin matchat. En familj utan
+studiehjälpare är alltså inget fel, bara steg 4 som väntar. En
+studiehjälpare syns publikt först när admin godkänt hen.
 
 SIFFRORNA:
 · 399 kronor i timmen, utan bindning. Det är priset, inget från-pris.
