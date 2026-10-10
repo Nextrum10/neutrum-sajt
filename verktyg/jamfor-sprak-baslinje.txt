@@ -19,6 +19,8 @@
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
