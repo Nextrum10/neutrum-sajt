@@ -2496,7 +2496,7 @@ def prissektion_kort():
       <h2 class="nx-d2" style="margin-top:18px">{PRIS}<br>i timmen.</h2>
     </div>
     <div class="nx-text rv">
-      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift, och med en plan är första timmen gratis. <a href="/priser">Se hela prissidan</a>.</p>{ANMAL_MITT}
+      <p>Samma timpris oavsett ämne och var passet hålls, och {EXTRA_BARN} extra i timmen totalt om syskon sitter med. Ingen bindningstid och ingen månadsavgift, och med en plan är första timmen gratis. <a href="/priser">Se hela prissidan</a>, eller läs <a href="/vad-kostar-laxhjalp">vad läxhjälp kostar och vad ni får för pengarna</a>.</p>{ANMAL_MITT}
     </div>
   </div>
 </section>"""
