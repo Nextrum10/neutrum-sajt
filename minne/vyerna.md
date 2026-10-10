@@ -366,7 +366,7 @@ sidan där färgerna passar in."
 (`#just-nu`), Vår idé (`#om`), studievyn, NexLäx (`#nexlax`), Från
 intresseanmälan till första passet (`#hur`), studiehjälparna, Trygg hjälp
 (`#plattformen`), bildväggen, omdömena (`#rost`, brevet), För dig som vill
-jobba (`#bli`) och Nästa steg. Sektionerna flyttades som hela block mellan
+jobba (`#bli`) och Nästa steg, och sist före footern Läxhjälp för just ert barn (`#laxhjalp-oversikt`, 2026-10-10: fyra grupper med länkar till alla läxhjälps- och guidesidor, `<details open>`, ämnesfärgens prick i ordningen från avsnitt 18, CSS avsnitt 19, `laxhjälpsöversikt()` fäller ihop under 861 px; en ny sida i kartan läggs in där på båda språken). Sektionerna flyttades som hela block mellan
 kommentarsbanderollerna, likadant på /en/; numren i banderollerna är gamla.
 Hero är orörd utom priset (399 kr, `data-stat` ur `nextrum-config.js`).
 Studievyns exempelpass står också på 399 (`data-sd-pris` skrivs ur `CFG`).
