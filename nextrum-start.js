@@ -22,6 +22,8 @@
                     sig själv. Samma illustration står på För elever &
                     föräldrar.
      sidhuvud       lapparna på menysidornas foto fjädrar in
+     laxhjälpsöversikt  grupperna i Läxhjälp för just ert barn, sist på
+                    startsidan, fälls ihop på telefon (2026-10-10)
      stegFoton      Så fungerar Nextrum, på startsidan och menysidan:
                     den pinnade scenen på dator och den svepbara
                     raden på pekskärm (2026-10-07)
@@ -1161,6 +1163,18 @@ const NXStart = (function () {
     });
   }
 
+  /* Läxhjälp i översikt (avsnitt 19 i CSS): grupperna står öppna i HTML,
+     så att dator och sidan utan skript visar allt. Under 861 px fälls de
+     ihop; en dator som dras smal eller en telefon som vrids följer med. */
+  function laxhjälpsöversikt() {
+    const grupper = document.querySelectorAll('.nx-lo-g');
+    if (!grupper.length) return false;
+    const bred = window.matchMedia('(min-width: 861px)');
+    const sätt = () => grupper.forEach(g => { g.open = bred.matches; });
+    sätt();
+    bred.addEventListener('change', sätt);
+  }
+
   function allt() {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
@@ -1174,6 +1188,7 @@ const NXStart = (function () {
     prova('studievy', studievy);
     prova('sidhuvud', sidhuvud);
     prova('stegFoton', stegFoton);
+    prova('laxhjälpsöversikt', laxhjälpsöversikt);
   }
 
   allt();
