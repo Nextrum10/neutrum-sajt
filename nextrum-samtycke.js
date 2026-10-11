@@ -61,12 +61,33 @@ const NXSamtycke = (function () {
 
   /* Texten säger vad som mäts, av vem, hur länge och att nej fungerar
      lika bra: det ett giltigt samtycke kräver, i vanliga ord. Två
-     tidigare rubriker med ordlekar valdes bort samma dag. */
+     tidigare rubriker med ordlekar valdes bort samma dag, och "Du
+     bestämmer vad vi får mäta" blev "Vi värnar om din integritet" när
+     rutan fick Dribbbles form (2026-10-11). */
   const ORD = {
-    et:          ['Cookies och lagring', 'Cookies and storage'],
-    rubrik:      ['Du bestämmer vad vi får mäta', 'You decide what we may measure'],
+    rubrik:      ['Vi värnar om din integritet', 'We value your privacy'],
     intro:       ['Sajten fungerar likadant oavsett vad du väljer. Utan ditt ja sätts inga cookies.',
                   'The site works the same whatever you choose. Without your yes, no cookies are set.'],
+    /* Första lagret i rutan: syftena, vem som räknar och att nej
+       fungerar lika bra, i tre meningar. Detaljerna står bakom Anpassa
+       och på lagring.html. */
+    vadBåda:     ['Vi vill se hur sajten används och vilka annonser som leder hit, med hjälp av cookies och liknande tekniker.',
+                  'We would like to see how the site is used and which ads bring people here, using cookies and similar technologies.'],
+    vadStat:     ['Vi vill se hur sajten används, med hjälp av cookies och liknande tekniker.',
+                  'We would like to see how the site is used, using cookies and similar technologies.'],
+    vadAnnons:   ['Vi vill se vilka annonser som leder hit, med hjälp av cookies och liknande tekniker.',
+                  'We would like to see which ads bring people here, using cookies and similar technologies.'],
+    vem:         ['Besöken räknas av {lista}.', 'Visits are counted by {lista}.'],
+    och:         [' och ', ' and '],
+    föreJa:      ['Inget av det sätts igång innan du säger ja, och sajten fungerar likadant om du säger nej.',
+                  'None of it starts before you say yes, and the site works the same if you say no.'],
+    anpassa:     ['Anpassa', 'Customise'],
+    fotFöre:     ['Du kan ändra dig när som helst under Cookieinställningar längst ner. Läs mer i ',
+                  'You can change your mind any time under Cookie settings at the bottom. Read more in our '],
+    policy:      ['integritetspolicyn', 'privacy policy'],
+    fotMitt:     [' och under ', ' and under '],
+    lagring:     ['Cookies och lagring', 'Cookies and storage'],
+    fotEfter:    ['.', '.'],
     statistik:   ['Besöksstatistik', 'Visitor statistics'],
     statistikOm: ['Hur många som besöker sajten och vilka sidor som läses.',
                   'How many people visit and which pages are read.'],
@@ -83,9 +104,6 @@ const NXSamtycke = (function () {
     nekaAlla:    ['Neka alla', 'Reject all'],
     godkannAlla: ['Godkänn alla', 'Accept all'],
     sparaVal:    ['Spara mitt val', 'Save my choice'],
-    fot:         ['Ändra dig när som helst under Cookieinställningar längst ner.',
-                  'Change your mind any time under Cookie settings at the bottom.'],
-    läsMer:      ['Läs mer', 'Read more'],
     region:      ['Samtycke', 'Consent'],
     valt:        ['Ditt val sedan {d}: {lista}.', 'Your choice since {d}: {lista}.'],
     ja:          ['ja', 'yes'],
@@ -396,14 +414,23 @@ const NXSamtycke = (function () {
     return gpc() ? t('gpc') : t('ejValt');
   }
 
-  /* Ett val per syfte, inget förkryssat, och tre knappar som ser
-     likadana ut. Kryssrutorna visar det som gäller nu, så att den som
-     öppnar rutan igen ser vad hen ändrar från. */
+  /* Ett val per syfte, inget förkryssat. Kryssrutorna visar det som
+     gäller nu, så att den som öppnar rutan igen ser vad hen ändrar från.
+
+     Knapparna står under varandra i full bredd (2026-10-11, Leo: i
+     Dribbbles stil). Godkänn alla och Neka alla är SAMMA fyllda knapp,
+     inte en fylld och en med kant som hos förebilden: IMY:s reprimand
+     mot ATG 2025 gällde just en Acceptera som syntes tydligare än Neka.
+     Den tredje knappen är Anpassa så länge kryssrutorna är hopfällda
+     (`hopfälld`, första lagret i rutan) och Spara mitt val när de syns,
+     på samma plats, så att inget man tryckt på flyttar sig. */
   let löpnr = 0;
-  function valen(värd, efter) {
+  function valen(värd, efter, hopfälld) {
     const nu = nuvarande() || {};
     const lista = document.createElement('div');
     lista.className = 'nx-kakor-syften';
+    lista.id = 'nx-kakor-syften-' + (++löpnr);
+    if (hopfälld) lista.hidden = true;
     const rutor = {};
     syften().forEach(k => {
       const id = 'nx-kakor-' + k + '-' + (++löpnr);
@@ -428,10 +455,10 @@ const NXSamtycke = (function () {
 
     const rad = document.createElement('div');
     rad.className = 'nx-kakor-knappar';
-    const knapp = (ord, fn) => {
+    const knapp = (ord, sort, fn) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'btn nx-kakor-val';
+      b.className = 'btn nx-kakor-val nx-kakor-' + sort;
       b.textContent = t(ord);
       b.addEventListener('click', fn);
       rad.appendChild(b);
@@ -442,22 +469,70 @@ const NXSamtycke = (function () {
       syften().forEach(k => { val[k] = ja; rutor[k].checked = ja; });
       spara(val); efter();
     };
-    knapp('nekaAlla', alla(false));
-    knapp('godkannAlla', alla(true));
-    knapp('sparaVal', () => {
+    knapp('godkannAlla', 'fylld', alla(true));
+    knapp('nekaAlla', 'fylld', alla(false));
+    const sparaKnapp = knapp('sparaVal', 'kant', () => {
       const val = {};
       syften().forEach(k => { val[k] = rutor[k].checked; });
       spara(val); efter();
-    }).classList.add('nx-kakor-spara');
+    });
+    sparaKnapp.classList.add('nx-kakor-spara');
+    if (hopfälld) {
+      sparaKnapp.hidden = true;
+      /* Rutan växer uppåt från botten, så knapparna står kvar, utom
+         när den slår i skärmens topp och börjar rulla: då rullas den
+         så att Spara mitt val hamnar där Anpassa satt. Med tangentbord
+         (detail 0) går fokus till första kryssrutan, och rutan rullar
+         dit; med fingret stannar fokus på knappen under det. */
+      const anpassa = knapp('anpassa', 'kant', e => {
+        const förut = anpassa.getBoundingClientRect().top;
+        lista.hidden = false;
+        anpassa.hidden = true;
+        sparaKnapp.hidden = false;
+        värd.scrollTop += sparaKnapp.getBoundingClientRect().top - förut;
+        const första = lista.querySelector('input');
+        if (e.detail === 0 && första) första.focus();
+        else sparaKnapp.focus({ preventScroll: true });
+      });
+      anpassa.classList.add('nx-kakor-anpassa');
+      anpassa.setAttribute('aria-expanded', 'false');
+      anpassa.setAttribute('aria-controls', lista.id);
+      rad.insertBefore(anpassa, sparaKnapp);
+    }
     värd.appendChild(rad);
   }
 
-  /* Reglagen: tre linjer med var sin knopp. Statisk markup, aldrig
-     något ur en användare. */
-  const IKON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" '
-    + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
-    + '<path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/>'
-    + '<circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg>';
+  /* Vad rutan frågar om, i tre meningar ur det som är påslaget: syftet,
+     vem som räknar, och att nej fungerar lika bra. */
+  function inledning() {
+    const f = funktioner(), s = syften();
+    const vad = s.length > 1 ? 'vadBåda' : (s[0] === 'statistik' ? 'vadStat' : 'vadAnnons');
+    const vem = [];
+    if (f.indexOf('google') >= 0) vem.push('Google Analytics');
+    if (f.indexOf('statistik') >= 0) vem.push('Vercel');
+    return t(vad) + (vem.length ? ' ' + t('vem', { lista: vem.join(t('och')) }) : '') + ' ' + t('föreJa');
+  }
+
+  /* Raden under knapparna, med länkarna till policyn och till
+     lagring.html. Statiska ord, aldrig något ur en användare. */
+  function fotrad() {
+    const fot = document.createElement('p');
+    fot.className = 'nx-kakor-fot';
+    const länk = (ord, href) => {
+      const a = document.createElement('a');
+      a.href = href;
+      a.textContent = t(ord);
+      return a;
+    };
+    fot.append(
+      t('fotFöre'),
+      länk('policy', EN ? '/en/integritetspolicy' : '/integritetspolicy'),
+      t('fotMitt'),
+      länk('lagring', EN ? '/en/lagring' : '/lagring'),
+      t('fotEfter')
+    );
+    return fot;
+  }
 
   let ruta = null;
   function stäng() {
@@ -469,6 +544,9 @@ const NXSamtycke = (function () {
     setTimeout(() => r.remove(), 320);
   }
 
+  /* Rutan. Första gången står kryssrutorna bakom Anpassa; öppnas den
+     från Cookieinställningar (`fokus`) syns de direkt, med det som
+     gäller nu, för då är det dem besökaren kommit för. */
   function visa(fokus) {
     if (ruta) { if (fokus) ruta.querySelector('.nx-kakor-t').focus({ preventScroll: true }); return; }
     if (!syften().length) return;
@@ -476,25 +554,15 @@ const NXSamtycke = (function () {
     r.className = 'nx-kakor';
     r.setAttribute('aria-label', t('region'));
 
-    const topp = document.createElement('div');
-    topp.className = 'nx-kakor-topp';
-    const ikon = document.createElement('span');
-    ikon.className = 'nx-kakor-ikon';
-    ikon.innerHTML = IKON;
-    const rubriker = document.createElement('div');
-    const et = document.createElement('p');
-    et.className = 'nx-kakor-et';
-    et.textContent = t('et');
     const h = document.createElement('h2');
     h.className = 'nx-kakor-t';
     h.tabIndex = -1;
     h.textContent = t('rubrik');
-    rubriker.append(et, h);
-    topp.append(ikon, rubriker);
-    r.appendChild(topp);
+    r.appendChild(h);
 
     const intro = document.createElement('p');
-    intro.textContent = t('intro');
+    intro.className = 'nx-kakor-intro';
+    intro.textContent = inledning();
     r.appendChild(intro);
 
     const nu = lägesText(false);
@@ -504,16 +572,8 @@ const NXSamtycke = (function () {
       p.textContent = nu;
       r.appendChild(p);
     }
-    valen(r, stäng);
-
-    const fot = document.createElement('p');
-    fot.className = 'nx-kakor-fot';
-    fot.textContent = t('fot') + ' ';
-    const l = document.createElement('a');
-    l.href = EN ? '/en/lagring' : '/lagring';
-    l.textContent = t('läsMer');
-    fot.appendChild(l);
-    r.appendChild(fot);
+    valen(r, stäng, !fokus);
+    r.appendChild(fotrad());
 
     /* Tidigt i DOM:en, direkt efter hopplänken: en tangentbordsanvändare
        når rutan innan hela sidan, fast den ligger längst ner i bild.

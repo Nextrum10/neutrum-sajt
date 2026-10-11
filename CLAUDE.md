@@ -519,7 +519,8 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   uppdateras per syfte, `ad_personalization` aldrig. Adressen lämnar oss utan frågesträng utom
   utm (`renAdress`), och en sida med en nyckel i adressen (`avanmal`, `utbildningsprov`) laddar
   inte samtyckesrutan. Okänd källa är `null`, aldrig "direkt"; Global Privacy Control är nej; ja och
-  nej är samma sorts knapp; klasserna heter `nx-kakor-*`. Ändras lagringen följer `lagring.html`
+  nej är samma sorts knapp (Godkänn alla och Neka alla båda fyllda, kryssrutorna bakom Anpassa,
+  2026-10-11); klasserna heter `nx-kakor-*`. Ändras lagringen följer `lagring.html`
   med; före ett pixel-id, se `minne/sakerhet.md`.
 - **Advisorn** larmar om det som är med flit (listan i `minne/sakerhet.md`). Läckta lösenord
   kontrolleras inte, och `kolla_rabattkod` får ett tak med den första koden.
