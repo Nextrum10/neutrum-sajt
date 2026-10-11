@@ -716,9 +716,10 @@ Detaljer: `minne/grunden.md`.
   priser på samma sida (40 % mot 5 000, 2 800 kr mot 5 832, som vore 48 %). Raden "Jämförelserna gjordes med en elev i
   årskurs 9 i oktober 2026" är Leos ord om underlaget. Juristen har inte läst tejperna, och ingen aktör nämns på sajten.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
-  `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): godkänn
-  databehandlingsvillkoren (policyn säger att ett biträdesavtal finns), Google-signaler av, lagringstiden
-  (policyn lovar högst 14 månader), och ingen koppling till Google Ads. Vercels Web Analytics var inte
+  `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
+  (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
+  hand), datadelningen med Googles produkter och Google-signaler av, lagringstiden (policyn lovar högst 14
+  månader), och ingen koppling till Google Ads. Vercels Web Analytics var inte
   påslaget i projektet 2026-09-28 (`TRAFIK.md`). Juristen har inte läst texterna eller rad 14 i `DATASKYDD.md`.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för

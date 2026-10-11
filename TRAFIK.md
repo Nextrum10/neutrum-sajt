@@ -34,8 +34,11 @@ räknar sökträffarna oavsett rutan.
 
 **Google Analytics** (`G-V6Y6Q0SRXX`) är påslaget i koden sedan
 2026-10-11, under samma ja till statistik, och har samma underskattning.
-I Analytics, en gång: godkänn databehandlingsvillkoren
-(Administratör → Kontoinställningar), låt Google-signaler vara av, och
+I Analytics, en gång: kontrollera att kontots land är Sverige under
+Administratör → Kontoinformation (då ingår Googles biträdesavtal, Google
+Ads Data Processing Terms, utan att något godkänns), stäng av
+datadelningen med Googles produkter och tjänster på samma sida, låt
+Google-signaler vara av, och
 koppla inte egendomen till Google Ads (då blir statistiken annonsdata,
 som ingen sagt ja till). Anmälningarna kommer som händelsen
 `generate_lead`; markera den som nyckelhändelse om ni vill se den som

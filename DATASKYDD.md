@@ -96,7 +96,7 @@ avsnitt 8).
 | Resend | mejl | USA | standardavtalsklausuler, DPF | ingår i villkoren, länkad från resend.com/legal |
 | Anthropic | rapportutkast, hälsningar, agenterna | USA | standardavtalsklausuler | ingår i Commercial Terms för API:t |
 | Stripe | kortbetalningar | EU och USA | standardavtalsklausuler, DPF | ingår i Stripes villkor; Stripe är självt ansvarigt för bedrägerikontroll |
-| Google | Meet-rum (inte kopplat än); inkorgen info@nextrum.se (Workspace), där bland annat betygsgarantins anmälningar och betygskopior kommer in; Google Analytics, besöksstatistik efter ja (2026-10-11) | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console; för Analytics databehandlingsvillkoren, som godkänns i Analytics under Administratör → Kontoinställningar (inte kontrollerat) |
+| Google | Meet-rum (inte kopplat än); inkorgen info@nextrum.se (Workspace), där bland annat betygsgarantins anmälningar och betygskopior kommer in; Google Analytics, besöksstatistik efter ja (2026-10-11) | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console; för Analytics Google Ads Data Processing Terms, som ingår i villkoren för ett konto i EES (kontots land i Analytics ska vara Sverige; inte kontrollerat) |
 | Fortnox | bokföring, fakturor, lön (för hand, lönen som fil) | Sverige | ingen överföring | Fortnox villkor; fakturorna står i policyn sedan 2026-09-28, lönen inte än, se avsnitt 8 |
 
 **Data Privacy Framework (DPF).** EU-kommissionens beslut från 2023
@@ -405,9 +405,12 @@ Inget av det här går att göra i koden.
   anspråk skickas.
 - [ ] **Fortnox i policyn** innan första fakturan eller lönen går dit
   (CLAUDE.md avsnitt 11).
-- [ ] **Google Analytics (på 2026-10-11):** i Analytics, godkänn
-  databehandlingsvillkoren (Administratör → Kontoinställningar) och
-  spara en kopia, låt Google-signaler vara av, sätt lagringstiden
+- [ ] **Google Analytics (på 2026-10-11):** i Analytics, kontrollera
+  att kontots land är Sverige under Administratör → Kontoinformation
+  (då ingår Google Ads Data Processing Terms; spara en kopia från
+  business.safety.google/processorterms), stäng av datadelningen med
+  Googles produkter och tjänster, låt Google-signaler vara av, sätt
+  lagringstiden
   (policyn lovar högst 14 månader), och koppla inte egendomen till
   Google Ads. Låt juristen läsa rad 14, `lagring.html` och
   integritetspolicyn på båda språken. IMY bötfällde Tele2 och CDON för
