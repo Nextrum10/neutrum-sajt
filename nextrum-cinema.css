@@ -3476,6 +3476,9 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
    .on-band gör .btn-primary knappen gräddvit — accenten måste
    återställas här, annars ser den ut som spökknappen bredvid. */
 .nx-final-tat .sec{padding-block:clamp(52px,6vw,80px)}
+/* Korthyllorna (kortsektion i bygg-omradessidor.py) står i rad: med sektionens
+   144 px upp och ner blev det 288 px tomt mellan två hyllor på dator. */
+.sec.sec-kort{padding-block:clamp(40px,5vw,72px)}
 .nx-final-tat .inner h2{max-width:18ch}
 .nx-final-tat .nx-story-ctas{margin-top:30px;justify-content:center}
 .nx-final .btn-primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}

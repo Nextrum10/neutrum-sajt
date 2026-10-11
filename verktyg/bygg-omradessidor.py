@@ -2380,7 +2380,7 @@ def kort(slug, rubrik, rad):
 
 def kortsektion(etikett, rubrik, kort):
     return f"""
-<section class="sec wrap">
+<section class="sec sec-kort wrap">
   <div class="rv">
     <span class="nx-et acc">{etikett}</span>
     <h2 class="nx-d2" style="margin-top:18px">{rubrik}</h2>
