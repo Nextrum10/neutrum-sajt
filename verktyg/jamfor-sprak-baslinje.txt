@@ -24,18 +24,21 @@
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 4 stycken:
+  SVENSKA KVAR i engelskan, 5 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic
       Mönsteråsgränd 4
       122 42 Enskede
+      Google Analytics
 
 === intresseanmalan.html  ->  en/intresseanmalan.html
   STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
 
 === lagring.html  ->  en/lagring.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 5 stycken:
+  SVENSKA KVAR i engelskan, 7 stycken:
+      Google Analytics
+      _ga_V6Y6Q0SRXX
       sessionStorage
       localStorage
       localStorage

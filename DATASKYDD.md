@@ -53,8 +53,8 @@ finnas. Det här är det.
 | 11 | Kontaktformuläret (`contact_messages`) | vem som helst | namn, e-post, fritext | 6.1 f | Supabase | 6 mån efter inkommet eller besvarat |
 | 12 | Felrapporter (`klientfel`) | inloggade och besökare | felet, sidan, webbläsaren, konto-id | 6.1 f | Supabase | 90 dagar |
 | 13 | Ändringsloggen (`audit_logg`) | alla med konto | tillstånd, kopplingar, tid. Aldrig namn eller text | 6.1 f | Supabase | så länge verksamheten finns |
-| 14 | Besöksstatistik | besökare | sida, ungefärligt land, enhetstyp; unik besökare ur en hash som byts varje dygn | 6.1 a, samtycke (LEK 9:28) | Vercel | enligt Vercel |
-| 15 | Källspårning och annonsmätning | besökare som skickar anmälan | landningssida, hänvisare, UTM | 6.1 a, samtycke | ingen i dag; Meta och Google om ett id sätts | som anmälan |
+| 14 | Besöksstatistik | besökare | Vercel: sida, ungefärligt land, enhetstyp; unik besökare ur en hash som byts varje dygn. Google Analytics (2026-10-11): ett slumpat id i cookierna `_ga` och `_ga_V6Y6Q0SRXX`, sida, hänvisare, tid på sidan, skrollning, utgående klick, ungefärlig ort, språk, enhet, och om en anmälan skickades (aldrig innehållet). Adressen utan frågesträng utom utm | 6.1 a, samtycke (LEK 9:28) | Vercel; Google (Analytics) | Vercel: enligt Vercel. Google: högst 14 månader (lagringstiden i Analytics), cookierna ett år efter senaste besöket och bort vid nej |
+| 15 | Källspårning och annonsmätning | besökare som skickar anmälan | landningssida, hänvisare, UTM | 6.1 a, samtycke | ingen i dag; Meta och Google Ads om ett id sätts | som anmälan |
 | 16 | Vår AI-assistent (drift-agenten) | barn, förälder | initialer, årskurs, ämne, maskad fritext | 6.1 f | Anthropic | Anthropics villkor; frågor, svar och steg i `agent_korningar` och `agent_steg` töms efter 90 dagar, AI-förslagens motivering 90 dagar efter beslutet |
 | 17 | Handlingar om verksamheten (`handlingar`, hinken `dokument`) | studiehjälpare, förälder | avtal, intyg, som fil eller som inklistrad text (`handlingar.innehall`, 2026-10-05); en handling som delats med personen den gäller läser hen själv under Profil & inställningar (2026-09-29) | 6.1 b, 6.1 c | Supabase | så länge de gäller, sedan så länge lagen kräver |
 | 18 | Vårt arbetsunderlag (`uppgifter`, `admin_noteringar`) | alla | titel och text vi skriver själva, kan nämna namn | 6.1 f | Supabase | uppgifter: 1 år efter att de stängts; anteckningar om en person: med personens konto |
@@ -96,7 +96,7 @@ avsnitt 8).
 | Resend | mejl | USA | standardavtalsklausuler, DPF | ingår i villkoren, länkad från resend.com/legal |
 | Anthropic | rapportutkast, hälsningar, agenterna | USA | standardavtalsklausuler | ingår i Commercial Terms för API:t |
 | Stripe | kortbetalningar | EU och USA | standardavtalsklausuler, DPF | ingår i Stripes villkor; Stripe är självt ansvarigt för bedrägerikontroll |
-| Google | Meet-rum (inte kopplat än); inkorgen info@nextrum.se (Workspace), där bland annat betygsgarantins anmälningar och betygskopior kommer in | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console |
+| Google | Meet-rum (inte kopplat än); inkorgen info@nextrum.se (Workspace), där bland annat betygsgarantins anmälningar och betygskopior kommer in; Google Analytics, besöksstatistik efter ja (2026-10-11) | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console; för Analytics databehandlingsvillkoren, som godkänns i Analytics under Administratör → Kontoinställningar (inte kontrollerat) |
 | Fortnox | bokföring, fakturor, lön (för hand, lönen som fil) | Sverige | ingen överföring | Fortnox villkor; fakturorna står i policyn sedan 2026-09-28, lönen inte än, se avsnitt 8 |
 
 **Data Privacy Framework (DPF).** EU-kommissionens beslut från 2023
@@ -197,7 +197,7 @@ och skickar varje utkast.
 | Uppgifter sparas längre än lovat | var hög | medel | gallringsjobben i avsnitt 4, ett jobb som fastnar blir en uppgift | låg |
 | Intrång hos en leverantör | låg | hög | bara det som behövs går till var och en; incidentrutinen i avsnitt 7 | låg |
 | En sextonårings CV med personnummer sparas | medel | medel | hjälptext i formuläret, gallring efter 1 år, bara admin läser | låg |
-| Spårning utan samtycke | var säker (Vercel laddades direkt) | låg | inget skript som skickar data laddas före ja | låg |
+| Spårning utan samtycke | var säker (Vercel laddades direkt); Google Analytics hade börjat på `granted` om ett id satts före 2026-10-11 | låg | inget skript som skickar data laddas före ja; Consent Mode börjar på `denied`; adressen lämnar oss utan frågesträng, och sidorna med en nyckel i adressen laddar inte rutan | låg |
 | Vi läser chatten mellan en familj och en studiehjälpare (ofta sexton) utan att de märker det (2026-09-29) | säker när Öppna chatt används | medel | står i integritetspolicyn på båda språken och i chatten själv; bara admin, genom `chatt_las()`, som skriver varje öppning i auditloggen utan texten; syftena i policyn är de enda vi läser för | låg, så länge vi läser för syftena och inte för att det går |
 | Den som tipsat får veta att en familj hen tipsat anmält sig och blivit kund (tipskoderna, 2026-09-30) | säker, det är hur tipset fungerar | låg | bara antal, aldrig vilka; står under kodfältet i anmälan och i integritetspolicyn på båda språken; fältet går att tömma innan anmälan skickas; ingen belöning till studiehjälpare, som ofta är sexton | låg |
 | Ett barn med egen inloggning ser något det inte ska: priser, betalningar, förälderns uppgifter, andra barn (2026-09-30) | låg | medel | barnets roll i databasen (`nextrum_barn`) har inga tabellrättigheter alls, bara barnets egna funktioner, som svarar om barnet i token och prövar det mot `students.user_id`; prövat i `rls-test.sql` med en slinga över varje tabell och vy | låg |
@@ -405,7 +405,15 @@ Inget av det här går att göra i koden.
   anspråk skickas.
 - [ ] **Fortnox i policyn** innan första fakturan eller lönen går dit
   (CLAUDE.md avsnitt 11).
-- [ ] **Meta- eller Google-pixel:** innan ett id sätts, gör om
+- [ ] **Google Analytics (på 2026-10-11):** i Analytics, godkänn
+  databehandlingsvillkoren (Administratör → Kontoinställningar) och
+  spara en kopia, låt Google-signaler vara av, sätt lagringstiden
+  (policyn lovar högst 14 månader), och koppla inte egendomen till
+  Google Ads. Låt juristen läsa rad 14, `lagring.html` och
+  integritetspolicyn på båda språken. IMY bötfällde Tele2 och CDON för
+  Analytics 2023, före DPF; utan DPF står överföringen på
+  standardavtalsklausulerna ensamma.
+- [ ] **Meta-pixel eller Google Ads:** innan ett id sätts, gör om
   konsekvensbedömningen och följ listan i CLAUDE.md avsnitt 6,
   Samtycket. IMY bötfällde Apoteket och Avanza för Meta-pixeln 2024.
 - [ ] **När bolaget registreras:** byt personuppgiftsansvarig i

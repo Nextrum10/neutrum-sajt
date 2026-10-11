@@ -11,7 +11,7 @@
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
 <title>Cookies and storage — Nextrum</title>
-<meta name="description" content="Nextrum sets no cookies. This page explains what is actually stored in your browser, and why.">
+<meta name="description" content="Nextrum sets no cookies without your yes. This page explains what is actually stored in your browser, and why.">
 <link rel="canonical" href="https://nextrum.se/en/lagring">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/lagring">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/lagring">
@@ -25,7 +25,7 @@
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="en_GB">
 <meta property="og:title" content="Cookies and storage — Nextrum">
-<meta property="og:description" content="Nextrum sets no cookies. This page explains what is actually stored in your browser, and why.">
+<meta property="og:description" content="Nextrum sets no cookies without your yes. This page explains what is actually stored in your browser, and why.">
 <meta property="og:url" content="https://nextrum.se/en/lagring">
 <meta property="og:image" content="https://nextrum.se/delning/en-lagring.jpg">
 <meta property="og:image:width" content="1200">
@@ -33,7 +33,7 @@
 <meta property="og:image:alt" content="Nextrum: Cookies and storage">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Cookies and storage — Nextrum">
-<meta name="twitter:description" content="Nextrum sets no cookies. This page explains what is actually stored in your browser, and why.">
+<meta name="twitter:description" content="Nextrum sets no cookies without your yes. This page explains what is actually stored in your browser, and why.">
 <meta name="twitter:image" content="https://nextrum.se/delning/en-lagring.jpg">
 
 <!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
@@ -129,7 +129,7 @@
   <a class="nx-back" href="/en/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> To the home page</a>
   <span class="nx-et acc" style="margin-top:22px">Cookies</span>
   <h1 class="nx-d1">Cookies and storage</h1>
-  <p class="nx-lede">A short page, because there is little to report: the public pages set no cookies, and we only measure what you say yes to.</p>
+  <p class="nx-lede">A short page, because there is little to report: the public pages set no cookies without your yes, and we only measure what you say yes to.</p>
 </section>
 
 <section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
@@ -138,14 +138,15 @@
        för att ett skript inte laddade är värdelöst. -->
   <div class="juridisk">
     <div class="jur-ruta">
-      <h2>No cookies on the public pages</h2>
-      <p>We measured this rather than assumed it: the public pages set zero cookies. Without your
-        yes, nothing is stored in your browser, except the answer itself, until you log in.</p>
+      <h2>No cookies without your yes</h2>
+      <p>We measured this rather than assumed it: without your yes, the public pages set zero
+        cookies, and nothing is stored in your browser, except the answer itself, until you log in.</p>
       <p>The box that appears the first time asks about two things, and you choose each one
         separately: visitor statistics and ad measurement. Saying no to both works just as well.
         You change your choice below, or via Cookie settings at the bottom of every page.</p>
-      <p>The only place a cookie is set is when you pay for a session by card. Then it is Stripe
-        that sets it, and only for the payment.</p>
+      <p>If you say yes to visitor statistics, Google Analytics sets two cookies, described
+        below. Otherwise a cookie is only set when you pay for a session by card, and then it is
+        Stripe that sets it, only for the payment.</p>
     </div>
 
     <h2 id="ditt-val">Your choice</h2>
@@ -155,18 +156,47 @@
     </div>
 
     <h2>Visitor statistics</h2>
-    <p>If you say yes, Vercel Web Analytics counts how many people visit the site and which pages
-      are read, and Vercel Speed Insights measures how fast the pages load. Without a yes, none
-      of it is loaded.</p>
+    <p>If you say yes, Vercel Web Analytics and Google Analytics count how many people visit the
+      site and which pages are read, and Vercel Speed Insights measures how fast the pages load.
+      Google Analytics also sees whether the same browser comes back. Without a yes, none of it
+      is loaded.</p>
+    <ul>
+      <li>We ask because the scripts make your browser send the information below, and the Swedish
+        Electronic Communications Act requires your consent for that, even when no cookie is set.</li>
+      <li>The address is sent without what follows the question mark, except the tags we ourselves
+        put in it when we advertise. A code in the enquiry form or a link from an email therefore
+        reaches neither Vercel nor Google.</li>
+      <li>The student view and the tutor view are not measured at all.</li>
+    </ul>
+
+    <h3>Vercel</h3>
     <ul>
       <li>No cookie. Unique visitors are derived from a hash of the IP address and browser type,
         with a salt that changes every day. The raw IP address is not stored, and the same visitor
         gets a new value the next day.</li>
       <li>What is sent is which page was read, where you came from, country, operating system,
         browser, whether you are on a computer or a phone, and how long the page took to load.</li>
-      <li>We ask because the script makes your browser send that information, and the Swedish
-        Electronic Communications Act requires your consent for that, even without cookies.</li>
-      <li>The student view and the tutor view are not measured at all.</li>
+    </ul>
+
+    <h3>Google Analytics</h3>
+    <ul>
+      <li>Two cookies, <i>_ga</i> and <i>_ga_V6Y6Q0SRXX</i>. They carry a random number for your
+        browser, so that another visit is counted as the same visitor. They are kept for a year
+        after your latest visit. If you say no, or your yes has expired, we remove them the next
+        time you are here.</li>
+      <li>What is sent is which page was read, where you came from, how long you stayed, how far
+        down you read, which links to other sites you clicked, approximate location, language,
+        operating system, browser and screen size, and whether you sent an enquiry, but nothing of
+        what you wrote in it.</li>
+      <li>Google uses the IP address to work out the approximate location and does not store it,
+        according to Google. What belongs to the random number is kept by Google for at most 14
+        months.</li>
+      <li>Google signals and ad personalisation are turned off: the visits are not linked to a
+        Google account and are not used for advertising.</li>
+      <li>Google may process the data in the USA. The transfer is protected by the European
+        Commission’s standard contractual clauses and by the EU-US Data Privacy Framework, under
+        which Google is certified. How Google handles the data is described in
+        <a href="https://policies.google.com/privacy?hl=en" target="_blank" rel="noopener noreferrer">Google’s privacy policy</a>.</li>
     </ul>
 
     <h2>Ad measurement</h2>
@@ -179,8 +209,9 @@
         we ourselves put in the address when we advertise. Nothing about you.</li>
       <li>It does not leave your browser until you submit a form, and then only to us.</li>
       <li>If you say no, we only see the page where you sent the enquiry.</li>
-      <li>We do not currently use any advertising pixel from Meta, Google or anyone else. If we
-        turn one on, the box asks about it specifically, including people who already said yes,
+      <li>We do not currently use any advertising pixel from Meta, Google or anyone else; Google
+        Analytics above is statistics and is not used for advertising. If we turn on a pixel, the
+        box asks about it specifically, including people who already said yes,
         and this page is rewritten the same day.</li>
     </ul>
 
@@ -190,7 +221,8 @@
         ask on every page. That requires no consent: without it, we could not avoid asking.</li>
       <li>If your browser says you do not want to be tracked (Global Privacy Control), we treat it
         as no to everything, and the box is not shown.</li>
-      <li>If you withdraw a yes, the page reloads without what you said no to.</li>
+      <li>If you withdraw a yes, the page reloads without what you said no to, and the Google
+        Analytics cookies are removed.</li>
     </ul>
 
     <h2>What is stored when you log in</h2>
@@ -222,11 +254,12 @@
 
     <h2>What is not here</h2>
     <ul>
-      <li>No cookie on the public pages, not even for the statistics</li>
+      <li>No cookie on the public pages before you say yes</li>
       <li>No pixel from any social network or ad network</li>
-      <li>No third-party cookies on the public pages</li>
+      <li>No cookies from other domains on the public pages</li>
       <li>No profiling and no automated decisions about you</li>
-      <li>Nothing that follows you between sites, or between days</li>
+      <li>Nothing that follows you between sites. Between days only Google Analytics’ random
+        number, and only with your yes</li>
     </ul>
 
     <h2>The third parties that are still loaded</h2>
@@ -239,6 +272,8 @@
         The servers are within the EU.</li>
       <li><b>Stripe</b>: card payments. Only in the parent view, and only when you press
         “Betala med kort”.</li>
+      <li><b>Google</b>: Google Analytics, only if you said yes to visitor statistics. The script
+        is fetched from googletagmanager.com and the visits are sent to google-analytics.com.</li>
     </ul>
     <p>The fonts and the library the login needs are hosted by us, so that your IP address is
       not sent to anyone beyond that.</p>
@@ -249,7 +284,7 @@
       the same time. What is already here does not change quietly: this page has been rewritten
       every time something was added.</p>
 
-    <p class="jur-datum">Last updated 6 October 2026.</p>
+    <p class="jur-datum">Last updated 11 October 2026.</p>
   </div>
 </section>
 
@@ -377,11 +412,11 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<script src="../nextrum-config.js?v=04a5c427"></script>
+<script src="../nextrum-config.js?v=1b401ac9"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
 <script src="../nextrum-app.js?v=32941e3e"></script>
-<script src="../nextrum-samtycke.js?v=39371f0b"></script>
+<script src="../nextrum-samtycke.js?v=16869659"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

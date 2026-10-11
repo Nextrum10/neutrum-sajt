@@ -32,6 +32,15 @@ samtyckesrutan (sedan 2026-09-27). Siffrorna i Vercel visar alltså bara
 de som tackat ja och blir för låga. Jämför med Search Console, som
 räknar sökträffarna oavsett rutan.
 
+**Google Analytics** (`G-V6Y6Q0SRXX`) är påslaget i koden sedan
+2026-10-11, under samma ja till statistik, och har samma underskattning.
+I Analytics, en gång: godkänn databehandlingsvillkoren
+(Administratör → Kontoinställningar), låt Google-signaler vara av, och
+koppla inte egendomen till Google Ads (då blir statistiken annonsdata,
+som ingen sagt ja till). Anmälningarna kommer som händelsen
+`generate_lead`; markera den som nyckelhändelse om ni vill se den som
+ett mål.
+
 ## 2. Gör repot privat (2 minuter)
 
 En sökning på "nextrum läxhjälp stockholm" gav den 28 september en
@@ -280,8 +289,9 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
 - Sätt en dagsbudget ni klarar att förlora en månad, och läs
   sökordsrapporten varje vecka
 - **Klistra aldrig in Googles tagg i sidorna.** Konverteringsspårningen
-  skrivs som id:n i `NEXTRUM_CONFIG.SAMTYCKE` (`GOOGLE_TAG_ID`,
-  `GOOGLE_ADS_LEAD`) och laddas först när besökaren sagt ja. En tagg
+  skrivs som id i `NEXTRUM_CONFIG.SAMTYCKE` (`GOOGLE_ADS_LEAD`,
+  `AW-…/etikett`; `GOOGLE_TAG_ID` är Analytics och hör till statistiken)
+  och laddas först när besökaren sagt ja till annonser. En tagg
   direkt i sidan går förbi rutan, och då spårar sajten utan samtycke.
   Läs checklistan i `nextrum-config.js` först. Utan den spårningen
   syns annonsen ändå i anmälan som `google / cpc` (klick-id:t `gclid`
@@ -314,8 +324,8 @@ Det enda sättet att stå först på "läxhjälp stockholm" i morgon.
 
 - Search Console → *Resultat*: vilka sökningar ger visningar? Skriv
   mer om det som redan rör sig.
-- Vercel Analytics: varifrån kommer besöken, och vilka sidor leder
-  till en intresseanmälan?
+- Vercel Analytics och Google Analytics: varifrån kommer besöken, och
+  vilka sidor leder till en intresseanmälan?
 
 ---
 
