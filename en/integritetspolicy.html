@@ -153,7 +153,8 @@
       sessions, keep you informed about what is happening, and charge for the sessions.
       Nothing more.</p>
     <p>We do not sell data. We do not pass it on for marketing. The public pages set no
-      cookies, and visitor statistics and ad measurement only happen if you say yes. If you
+      cookies without your yes, and visitor statistics and ad measurement only happen if you
+      say yes. If you say yes to visitor statistics, Google Analytics sets two cookies. If you
       pay by card, Stripe sets two cookies to detect fraud.</p>
     <p>Further down you will find why we are allowed to do this, who handles the data for us,
       how long it is kept and what your rights are. If you are a student, there is a section
@@ -373,6 +374,15 @@
         visitor statistics. The counting happens without cookies: unique visitors are derived
         from a hash of IP and browser type with a salt that changes every day, and the raw IP
         address is not stored. The student view and the tutor view are not measured.</li>
+      <li><b>Google Analytics</b> (USA): also counts visits if you said yes to visitor
+        statistics. It sets two cookies with a random number for your browser, so that another
+        visit is counted as the same visitor, and gets which pages you read, where you came from,
+        approximate location, which device you use and whether you sent an enquiry, but never
+        what you wrote in it. The address is sent without what follows the question mark, except
+        the tags we ourselves put in it. Google signals and ad personalisation are turned off, so
+        the visits are not linked to a Google account and are not used for advertising. The
+        student view and the tutor view are not measured. The details are under
+        <a href="/en/lagring">Cookies and storage</a>.</li>
       <li><b>Resend</b> (USA): sends our emails, such as booking confirmations, reminders and
         notifications, the email with the link when we have created an account for you, the
         emails to a child’s own address when you have turned them on, and the messages to job
@@ -430,6 +440,9 @@
       <li><b>Contact messages</b>: deleted six months after they arrived or were answered.
         This happens automatically every night.</li>
       <li><b>Error reports</b>: deleted after 90 days, automatically.</li>
+      <li><b>Visitor statistics in Google Analytics</b>: the cookies are kept in your browser for
+        a year after your latest visit, and what belongs to them is kept by Google for at most 14
+        months. If you say no, we remove the cookies the next time you are here.</li>
       <li><b>The reply to a suggested time</b>: what the tutor writes when declining a time or
         suggesting another is deleted 30 days after the reply, or 30 days after the session.
         This happens automatically every night. The session itself remains.</li>
@@ -543,8 +556,9 @@
       you.</p>
 
     <h2>Cookies and browser storage</h2>
-    <p>The public pages set no cookies. Visitor statistics and ad measurement only happen if you
-      say yes, and Stripe sets two cookies when you pay by card. Everything stored, and why, is
+    <p>The public pages set no cookies without your yes. Visitor statistics and ad measurement
+      only happen if you say yes, and with a yes to visitor statistics Google Analytics sets two
+      cookies. Stripe sets two cookies when you pay by card. Everything stored, and why, is
       on its own page: <a href="/en/lagring">Cookies and storage</a>.</p>
 
     <h2>Changes</h2>
@@ -679,11 +693,11 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<script src="../nextrum-config.js?v=04a5c427"></script>
+<script src="../nextrum-config.js?v=1b401ac9"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
 <script src="../nextrum-app.js?v=32941e3e"></script>
-<script src="../nextrum-samtycke.js?v=39371f0b"></script>
+<script src="../nextrum-samtycke.js?v=16869659"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

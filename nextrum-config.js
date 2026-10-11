@@ -81,32 +81,36 @@ window.NEXTRUM_CONFIG = {
      det räknas som åtkomst i enheten (EDPB 2/2023). Laddas först
      efter ja till besöksstatistik.
 
+     GOOGLE_TAG_ID: Google Analytics 4 (bara G-…), också besöksstatistik
+     och laddad först efter ja till den (2026-10-11). Sätter _ga och
+     _ga_<id> i ett år, och Google kan behandla uppgifterna i USA; det
+     står i lagring.html och integritetspolicyn på båda språken. Koppla
+     inte egendomen till Google Ads: då blir statistiken annonsdata,
+     som ingen sagt ja till.
+
      KALLSPARNING: webbläsaren minns varifrån besökaren kom tills
      fliken stängs, så att en anmälan krediteras annonsen och inte
      sidan den skickades från. Hör till annonsmätningen.
 
-     META_PIXEL_ID, GOOGLE_TAG_ID (G-… eller AW-…) och GOOGLE_ADS_LEAD
-     (AW-…/etikett, konverteringen "Lead"): tomma = av. INNAN ett id
-     skrivs in: lagring.html och integritetspolicyn (båda språken) ska
-     säga vem som får vad och att uppgifterna går till USA, CSP:n i
-     vercel.json ska släppa in domänerna, och för Meta ska automatisk
-     avancerad matchning vara AV i Events Manager. IMY har bötfällt
-     svenska företag för Meta-pixeln 2024. Ett nytt id gör att rutan
-     frågar alla igen: ett ja till det gamla är inte ett ja till det.
+     META_PIXEL_ID och GOOGLE_ADS_LEAD (AW-…/etikett, konverteringen
+     "Lead"; Ads-kontot är delen före snedstrecket): annonsmätning,
+     tomma = av. INNAN ett id skrivs in: lagring.html och
+     integritetspolicyn (båda språken) ska säga vem som får vad och att
+     uppgifterna går till USA, CSP:n i vercel.json ska släppa in
+     domänerna, och för Meta ska automatisk avancerad matchning vara AV
+     i Events Manager. IMY har bötfällt svenska företag för Meta-pixeln
+     2024. Ett nytt id gör att rutan frågar alla igen: ett ja till det
+     gamla är inte ett ja till det.
 
-     AVSTÄNGT TILLS VIDARE (2026-09-29, Leo: "inaktivera cookie banner
-     tills vidare"). Rutan är inte ett eget reglage: den visas när något
-     här är på. Båda av betyder ingen ruta, ingen länk i footern och
-     ingenting lagrat, och det betyder också att Vercels statistik inte
-     laddas och att en anmälan inte kan krediteras en annons (källan blir
-     okänd i analysvyerna). Att bara dölja rutan och låta skripten gå
-     vore att mäta utan samtycke. Slå på igen: STATISTIK och
-     KALLSPARNING till true, sedan satt-version.py. */
+     Rutan är inte ett eget reglage: den visas när något här är på, och
+     står allt av finns ingen ruta och ingen länk i footern. Att dölja
+     den och låta skripten gå vore att mäta utan samtycke. Ändras något
+     här: kör satt-version.py. */
   SAMTYCKE: {
-    STATISTIK: false,
-    KALLSPARNING: false,
+    STATISTIK: true,
+    KALLSPARNING: true,
     META_PIXEL_ID: '',
-    GOOGLE_TAG_ID: '',
+    GOOGLE_TAG_ID: 'G-V6Y6Q0SRXX',
     GOOGLE_ADS_LEAD: '',
   },
 };

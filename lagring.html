@@ -11,7 +11,7 @@
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
 <title>Cookies och lagring — Nextrum</title>
-<meta name="description" content="Nextrum sätter inga cookies. Här står vad som faktiskt lagras i din webbläsare och varför.">
+<meta name="description" content="Nextrum sätter inga cookies utan ditt ja. Här står vad som faktiskt lagras i din webbläsare och varför.">
 <link rel="canonical" href="https://nextrum.se/lagring">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/lagring">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/lagring">
@@ -25,7 +25,7 @@
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
 <meta property="og:title" content="Cookies och lagring — Nextrum">
-<meta property="og:description" content="Nextrum sätter inga cookies. Här står vad som faktiskt lagras i din webbläsare och varför.">
+<meta property="og:description" content="Nextrum sätter inga cookies utan ditt ja. Här står vad som faktiskt lagras i din webbläsare och varför.">
 <meta property="og:url" content="https://nextrum.se/lagring">
 <meta property="og:image" content="https://nextrum.se/delning/lagring.jpg">
 <meta property="og:image:width" content="1200">
@@ -33,7 +33,7 @@
 <meta property="og:image:alt" content="Nextrum: Cookies och lagring">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Cookies och lagring — Nextrum">
-<meta name="twitter:description" content="Nextrum sätter inga cookies. Här står vad som faktiskt lagras i din webbläsare och varför.">
+<meta name="twitter:description" content="Nextrum sätter inga cookies utan ditt ja. Här står vad som faktiskt lagras i din webbläsare och varför.">
 <meta name="twitter:image" content="https://nextrum.se/delning/lagring.jpg">
 
 <!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
@@ -129,7 +129,7 @@
   <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
   <span class="nx-et acc" style="margin-top:22px">Cookies</span>
   <h1 class="nx-d1">Cookies och lagring</h1>
-  <p class="nx-lede">Kort sida, eftersom det finns lite att berätta: de öppna sidorna sätter inga cookies, och vi mäter bara det du säger ja till.</p>
+  <p class="nx-lede">Kort sida, eftersom det finns lite att berätta: de öppna sidorna sätter inga cookies utan ditt ja, och vi mäter bara det du säger ja till.</p>
 </section>
 
 <section class="sec wrap" style="padding-top:clamp(16px,2vw,28px)">
@@ -138,14 +138,15 @@
        för att ett skript inte laddade är värdelöst. -->
   <div class="juridisk">
     <div class="jur-ruta">
-      <h2>Inga cookies på de öppna sidorna</h2>
-      <p>Vi har mätt det, inte antagit det: på de öppna sidorna sätts noll cookies. Utan ditt ja
-        lagras ingenting i din webbläsare, utom själva svaret, förrän du loggar in.</p>
+      <h2>Inga cookies utan ditt ja</h2>
+      <p>Vi har mätt det, inte antagit det: utan ditt ja sätts noll cookies på de öppna sidorna,
+        och ingenting lagras i din webbläsare, utom själva svaret, förrän du loggar in.</p>
       <p>Rutan som dyker upp första gången frågar om två saker, och du väljer var för sig:
         besöksstatistik och annonsmätning. Nej till båda fungerar precis lika bra. Ditt val ändrar
         du här nedanför, eller via Cookieinställningar längst ner på varje sida.</p>
-      <p>Det enda stället där en cookie sätts är när du betalar ett pass med kort. Då är det
-        Stripe som sätter den, och bara för betalningens skull.</p>
+      <p>Säger du ja till besöksstatistik sätter Google Analytics två cookies, som står nedan.
+        Annars sätts en cookie bara när du betalar ett pass med kort, och då är det Stripe som
+        sätter den, bara för betalningens skull.</p>
     </div>
 
     <h2 id="ditt-val">Ditt val</h2>
@@ -155,18 +156,47 @@
     </div>
 
     <h2>Besöksstatistik</h2>
-    <p>Säger du ja räknar Vercel Web Analytics hur många som besöker sajten och vilka sidor som
-      läses, och Vercel Speed Insights mäter hur snabbt sidorna laddas. Utan ja laddas inget av
+    <p>Säger du ja räknar Vercel Web Analytics och Google Analytics hur många som besöker sajten
+      och vilka sidor som läses, och Vercel Speed Insights mäter hur snabbt sidorna laddas.
+      Google Analytics ser dessutom om samma webbläsare kommer tillbaka. Utan ja laddas inget av
       det.</p>
+    <ul>
+      <li>Vi frågar för att skripten får din webbläsare att skicka uppgifterna nedan, och lagen om
+        elektronisk kommunikation kräver ditt samtycke för det, också när ingen cookie sätts.</li>
+      <li>Adressen skickas utan det som står efter frågetecknet, utom de märkord vi själva lagt i
+        den när vi annonserat. En kod i intresseanmälan eller en länk ur ett mejl når alltså varken
+        Vercel eller Google.</li>
+      <li>Studievyn och studiehjälparvyn mäts inte alls.</li>
+    </ul>
+
+    <h3>Vercel</h3>
     <ul>
       <li>Ingen cookie. Unika besökare räknas fram ur en hash av IP-adressen och webbläsartypen,
         med ett salt som byts varje dygn. Den råa IP-adressen sparas inte, och samma besökare får
         ett nytt värde nästa dag.</li>
       <li>Det som skickas är vilken sida som lästes, varifrån du kom, land, operativsystem,
         webbläsare, om du sitter vid dator eller telefon, och hur lång tid sidan tog att ladda.</li>
-      <li>Vi frågar för att skriptet får din webbläsare att skicka de uppgifterna, och lagen om
-        elektronisk kommunikation kräver ditt samtycke för det, också utan cookies.</li>
-      <li>Studievyn och studiehjälparvyn mäts inte alls.</li>
+    </ul>
+
+    <h3>Google Analytics</h3>
+    <ul>
+      <li>Två cookies, <i>_ga</i> och <i>_ga_V6Y6Q0SRXX</i>. De bär ett slumpat nummer för din
+        webbläsare, så att ett besök till räknas som samma besökare. De sparas ett år efter ditt
+        senaste besök. Säger du nej, eller har ditt ja gått ut, tar vi bort dem nästa gång du är
+        här.</li>
+      <li>Det som skickas är vilken sida som lästes, varifrån du kom, hur länge du stannade, hur
+        långt ner du läste, vilka länkar till andra sajter du klickade på, ungefärlig ort, språk,
+        operativsystem, webbläsare och skärmstorlek, och om du skickade en intresseanmälan, men
+        inget av det du skrev i den.</li>
+      <li>Google använder IP-adressen för att räkna fram ungefärlig ort och sparar den inte,
+        enligt Google. Det som hör till det slumpade numret sparas hos Google i högst 14
+        månader.</li>
+      <li>Googles signaler och annonspersonalisering är avstängda: besöken kopplas inte till ett
+        Google-konto och används inte för annonser.</li>
+      <li>Google kan behandla uppgifterna i USA. Överföringen skyddas av EU-kommissionens
+        standardavtalsklausuler och av ramen för dataskydd mellan EU och USA, där Google är
+        certifierat. Hur Google hanterar uppgifterna står i
+        <a href="https://policies.google.com/privacy?hl=sv" target="_blank" rel="noopener noreferrer">Googles integritetspolicy</a>.</li>
     </ul>
 
     <h2>Annonsmätning</h2>
@@ -179,8 +209,9 @@
         själva lagt i adressen när vi annonserat. Inget om dig.</li>
       <li>Det lämnar inte din webbläsare förrän du skickar ett formulär, och då bara till oss.</li>
       <li>Säger du nej ser vi bara sidan där du skickade anmälan.</li>
-      <li>Vi använder i dag ingen annonspixel från Meta, Google eller någon annan. Slår vi på en
-        frågar rutan om den särskilt, också den som redan sagt ja, och den här sidan skrivs om
+      <li>Vi använder i dag ingen annonspixel från Meta, Google eller någon annan; Google
+        Analytics ovan är statistik och används inte för annonser. Slår vi på en pixel frågar
+        rutan om den särskilt, också den som redan sagt ja, och den här sidan skrivs om
         samma dag.</li>
     </ul>
 
@@ -190,7 +221,8 @@
         varje sidbyte. Det kräver inget samtycke: utan det går det inte att låta bli att fråga.</li>
       <li>Säger din webbläsare att du inte vill spåras (Global Privacy Control) räknar vi det som
         nej till allt, och rutan visas inte.</li>
-      <li>Drar du tillbaka ett ja laddas sidan om, utan det du sagt nej till.</li>
+      <li>Drar du tillbaka ett ja laddas sidan om, utan det du sagt nej till, och Google
+        Analytics cookies tas bort.</li>
     </ul>
 
     <h2>Vad som lagras när du loggar in</h2>
@@ -223,11 +255,12 @@
 
     <h2>Vad som inte finns här</h2>
     <ul>
-      <li>Ingen cookie på de öppna sidorna, inte heller för statistiken</li>
+      <li>Ingen cookie på de öppna sidorna innan du sagt ja</li>
       <li>Ingen pixel från något socialt nätverk eller annonsnätverk</li>
-      <li>Inga tredjepartscookies på de öppna sidorna</li>
+      <li>Inga cookies från andra domäner på de öppna sidorna</li>
       <li>Ingen profilering och inga automatiska beslut om dig</li>
-      <li>Ingenting som följer dig mellan sajter, eller mellan dagar</li>
+      <li>Ingenting som följer dig mellan sajter. Mellan dagar bara Google Analytics slumpade
+        nummer, och bara med ditt ja</li>
     </ul>
 
     <h2>De tredjeparter som ändå laddas</h2>
@@ -240,6 +273,8 @@
         eller loggar in. Servrarna står inom EU.</li>
       <li><b>Stripe</b>: kortbetalningen. Bara i föräldravyn, och först när du trycker på
         Betala med kort.</li>
+      <li><b>Google</b>: Google Analytics, bara om du sagt ja till besöksstatistik. Skriptet
+        hämtas från googletagmanager.com och besöken skickas till google-analytics.com.</li>
     </ul>
     <p>Typsnitten och programbiblioteket som inloggningen behöver ligger hos oss, så att din
       IP-adress inte skickas till fler än så.</p>
@@ -250,7 +285,7 @@
       samtidigt. Det som redan står här ändras inte i smyg: den här sidan har skrivits om varje
       gång något lagts till.</p>
 
-    <p class="jur-datum">Senast uppdaterad 6 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 11 oktober 2026.</p>
   </div>
 </section>
 
@@ -378,11 +413,11 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=04a5c427"></script>
+<script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=32941e3e"></script>
-<script src="nextrum-samtycke.js?v=39371f0b"></script>
+<script src="nextrum-samtycke.js?v=16869659"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

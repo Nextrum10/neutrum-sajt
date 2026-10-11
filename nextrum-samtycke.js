@@ -14,18 +14,22 @@
    TVÅ SYFTEN, OCH BESÖKAREN VÄLJER VARJE FÖR SIG. Ett samtycke ska
    vara specifikt (GDPR art. 4.11), och ett ja till statistik är inte
    ett ja till annonsmätning:
-   - statistik: Vercel Web Analytics och Speed Insights. De sätter
+   - statistik: Vercel Web Analytics och Speed Insights, och Google
+     Analytics om GOOGLE_TAG_ID är satt (2026-10-11). Vercel sätter
      ingen cookie, men skriptet får webbläsaren att skicka sidadress,
      hänvisare och enhet, och EDPB räknar det som "åtkomst" i
-     enheten (riktlinjer 2/2023). Sverige har inget undantag för
-     statistik, och PTS räknar statistik som inte nödvändigt. Därför
-     laddas skripten här, efter ja, och inte i sidorna. Före 27
-     september 2026 stod de i varje sida med en kommentar om att
-     inget samtycke krävdes.
+     enheten (riktlinjer 2/2023). Google Analytics sätter _ga och
+     _ga_<id>. Sverige har inget undantag för statistik, och PTS
+     räknar statistik som inte nödvändigt. Därför laddas skripten
+     här, efter ja, och inte i sidorna. Före 27 september 2026 stod
+     Vercels i varje sida med en kommentar om att inget samtycke
+     krävdes.
    - annonser: källspårningen (webbläsaren minns i sessionStorage
      'nx-kalla', skrivet av NX.källa(), varifrån besökaren kom tills
-     fliken stängs) och, om ett id står i konfigurationen, Metas och
-     Googles pixlar.
+     fliken stängs) och, om ett id står i konfigurationen, Metas
+     pixel och Google Ads konvertering. Google Analytics hör INTE
+     hit: fram till 2026-10-11 laddades den bara med ett ja till
+     annonser, och ett ja till statistik gav den ingenting.
    Ett svar gäller de funktioner rutan beskrev när det gavs
    (`omfattar`). Slås en ny på frågar rutan igen: ett ja till att
    minnas en länk är inte ett ja till Meta.
@@ -61,17 +65,20 @@ const NXSamtycke = (function () {
   const ORD = {
     et:          ['Cookies och lagring', 'Cookies and storage'],
     rubrik:      ['Du bestämmer vad vi får mäta', 'You decide what we may measure'],
-    intro:       ['Sajten fungerar likadant oavsett vad du väljer, och inget av det sätter cookies.',
-                  'The site works the same whatever you choose, and none of it sets cookies.'],
+    intro:       ['Sajten fungerar likadant oavsett vad du väljer. Utan ditt ja sätts inga cookies.',
+                  'The site works the same whatever you choose. Without your yes, no cookies are set.'],
     statistik:   ['Besöksstatistik', 'Visitor statistics'],
-    statistikOm: ['Hur många som besöker sajten och vilka sidor som läses. Vercel räknar åt oss.',
-                  'How many people visit and which pages are read. Vercel counts for us.'],
+    statistikOm: ['Hur många som besöker sajten och vilka sidor som läses.',
+                  'How many people visit and which pages are read.'],
+    vercel:      ['Vercel räknar utan cookies.', 'Vercel counts without cookies.'],
+    analytics:   ['Google Analytics räknar med två cookies som sparas ett år efter ditt senaste besök, och Google kan behandla uppgifterna i USA.',
+                  'Google Analytics counts using two cookies kept for a year after your latest visit, and Google may process the data in the USA.'],
     annonser:    ['Annonsmätning', 'Ad measurement'],
     kalla:       ['Om du kom hit via en annons eller en länk, så att vi ser vad som fungerar. Webbläsaren minns det tills du stänger fliken.',
                   'Whether you came through an ad or a link, so we can see what works. Your browser remembers it until you close the tab.'],
     meta:        ['Meta (Facebook och Instagram) får veta att du kom från deras annons och om du skickade en anmälan, och kan koppla det till ditt konto hos dem.',
                   'Meta (Facebook and Instagram) learns that you came from their ad and whether you sent an enquiry, and may link this to your account with them.'],
-    google:      ['Google får veta att du kom från deras annons och om du skickade en anmälan.',
+    googleads:   ['Google får veta att du kom från deras annons och om du skickade en anmälan.',
                   'Google learns that you came from their ad and whether you sent an enquiry.'],
     nekaAlla:    ['Neka alla', 'Reject all'],
     godkannAlla: ['Godkänn alla', 'Accept all'],
@@ -102,22 +109,32 @@ const NXSamtycke = (function () {
     const id = String(CFG.META_PIXEL_ID || '').trim();
     return /^\d{8,20}$/.test(id) ? id : '';
   }
+  /* GOOGLE_TAG_ID är Google Analytics och tar bara ett G-id. Google
+     Ads är annonser och har sitt konto i GOOGLE_ADS_LEAD; ett AW-id
+     här hade gett Ads ett ja som besökaren gav till statistik. */
   function googleId() {
     const id = String(CFG.GOOGLE_TAG_ID || '').trim();
-    return /^(G|AW)-[A-Z0-9]{4,20}$/.test(id) ? id : '';
+    return /^G-[A-Z0-9]{4,20}$/.test(id) ? id : '';
   }
   function adsMål() {
     const mål = String(CFG.GOOGLE_ADS_LEAD || '').trim();
     return /^AW-[A-Z0-9]+\/[\w-]+$/.test(mål) ? mål : '';
   }
-  /* Funktionerna, och vilket syfte var och en hör till. */
-  const SYFTE = { statistik: 'statistik', kallsparning: 'annonser', meta: 'annonser', google: 'annonser' };
+  function adsKonto() { return adsMål().split('/')[0]; }
+  /* Funktionerna, och vilket syfte var och en hör till. 'statistik'
+     är Vercel; namnet står kvar för att lagrade svar (`omfattar`)
+     bär det. */
+  const SYFTE = {
+    statistik: 'statistik', google: 'statistik',
+    kallsparning: 'annonser', meta: 'annonser', googleads: 'annonser'
+  };
   function funktioner() {
     const a = [];
     if (CFG.STATISTIK) a.push('statistik');
+    if (googleId()) a.push('google');
     if (CFG.KALLSPARNING) a.push('kallsparning');
     if (metaId()) a.push('meta');
-    if (googleId()) a.push('google');
+    if (adsMål()) a.push('googleads');
     return a;
   }
   function syften() {
@@ -172,8 +189,9 @@ const NXSamtycke = (function () {
 
     tillämpa();
     let laddaOm = false;
-    if (!s.val.annonser) { rensaAnnonser(); if (förut.annonser && laddat.annonser) laddaOm = true; }
-    if (!s.val.statistik && förut.statistik && laddat.statistik) laddaOm = true;
+    ['statistik', 'annonser'].forEach(k => {
+      if (!s.val[k] && förut[k] && laddat[k]) laddaOm = true;
+    });
     try {
       if (typeof NX !== 'undefined') NX.händelse('samtycke', {
         statistik: s.val.statistik ? 'ja' : 'nej', annonser: s.val.annonser ? 'ja' : 'nej'
@@ -185,8 +203,15 @@ const NXSamtycke = (function () {
   }
 
   /* ---------- ja: det som får köras ---------- */
+  /* Körs vid varje sidladdning, också utan svar: det som hör till ett
+     syfte utan ja rensas först, så att en cookie från ett ja som dragits
+     tillbaka eller gått ut inte blir kvar. */
+  let vercelLaddat = false;
   function tillämpa() {
-    if (har('statistik') && !laddat.statistik) { laddaVercel(); laddat.statistik = true; }
+    const nu = nuvarande() || {};
+    ['statistik', 'annonser'].forEach(k => { if (nu[k] !== true) rensa(k); });
+
+    if (har('statistik') && !vercelLaddat) { laddaVercel(); vercelLaddat = laddat.statistik = true; }
     /* Källan skrivs direkt, så att sidan besökaren landade på räknas
        också när ja kom först här. Kom ja på en senare sida är
        landningen redan borta; NX.källa() sparar då inget alls hellre
@@ -195,7 +220,7 @@ const NXSamtycke = (function () {
       try { NX.källa(); } catch (e) {}
     }
     if (har('meta')) { laddaMeta(metaId()); laddat.annonser = true; }
-    if (har('google')) { laddaGoogle(googleId()); laddat.annonser = true; }
+    if (har('google') || har('googleads')) laddaGoogle();
   }
 
   function skript(src) {
@@ -205,12 +230,33 @@ const NXSamtycke = (function () {
     document.head.appendChild(s);
   }
 
+  /* Adressen som den lämnar oss: utan frågesträng, utom våra egna
+     utm-taggar och det `behåll` släpper igenom, och utan #. En kod i
+     intresseanmälan (?kod=) eller en nyckel ur ett mejl hör inte
+     hemma i någon annans logg. Samma regel som landningen i
+     NX.källa(). Vercel sparar frågesträngen om den inte filtreras
+     bort, och Google likaså. */
+  function renAdress(href, behåll) {
+    try {
+      const u = new URL(href, location.href);
+      const egna = new URLSearchParams();
+      u.searchParams.forEach((v, n) => {
+        if (/^utm_/.test(n) || (behåll && behåll.test(n))) egna.append(n, v);
+      });
+      const sök = egna.toString();
+      return u.origin + u.pathname + (sök ? '?' + sök : '');
+    } catch (e) { return ''; }
+  }
+
   /* Vercels egna köer, så att NX.händelse() kan anropa window.va innan
      skriptet hunnit laddas. Sökvägarna serveras av Vercel; lokalt ger
      de 404, vilket är ofarligt. De inloggade vyerna mäts inte alls. */
   function laddaVercel() {
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    const ren = h => Object.assign({}, h, { url: renAdress(h.url) });
+    window.va('beforeSend', ren);
+    window.si('beforeSend', ren);
     skript('/_vercel/insights/script.js');
     skript('/_vercel/speed-insights/script.js');
   }
@@ -233,26 +279,54 @@ const NXSamtycke = (function () {
     window.fbq('track', 'PageView');
   }
 
-  /* Google-taggen laddas först efter ja, så Consent Mode sätts till
-     det besökaren faktiskt sagt: mätning av annonser, ingen
-     personalisering. Signals av av samma skäl. */
-  function laddaGoogle(id) {
-    if (window.gtag) return;
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function () { window.dataLayer.push(arguments); };
-    window.gtag('consent', 'default', {
-      ad_storage: 'granted', ad_user_data: 'granted',
-      ad_personalization: 'denied', analytics_storage: 'granted'
+  /* Google Analytics (statistik) och Google Ads (annonser) delar
+     gtag.js, och den laddas först när något av dem har sitt ja.
+     Consent Mode börjar på nej för allt och uppdateras sedan till det
+     besökaren sagt, syfte för syfte; förut började den på ja, innan
+     något svar fanns. ad_personalization står alltid på nej, för rutan
+     frågar inte om personliga annonser, och Google-signaler är av av
+     samma skäl. Ett id konfigureras bara med ja till sitt syfte: utan
+     det hade Analytics skickat cookiefria pingar ändå. Kopplas
+     Analytics-egendomen till Google Ads blir statistiken annonsdata,
+     och det har ingen sagt ja till. */
+  const konfad = { ga: false, ads: false };
+  function laddaGoogle() {
+    const stat = har('google'), ads = har('googleads');
+    if (!stat && !ads) return;
+    if (!window.gtag) {
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { window.dataLayer.push(arguments); };
+      window.gtag('consent', 'default', {
+        analytics_storage: 'denied', ad_storage: 'denied',
+        ad_user_data: 'denied', ad_personalization: 'denied'
+      });
+      window.gtag('set', 'ads_data_redaction', true);
+      skript('https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(stat ? googleId() : adsKonto()));
+      window.gtag('js', new Date());
+    }
+    window.gtag('consent', 'update', {
+      analytics_storage: stat ? 'granted' : 'denied',
+      ad_storage: ads ? 'granted' : 'denied',
+      ad_user_data: ads ? 'granted' : 'denied'
     });
-    skript('https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id));
-    window.gtag('js', new Date());
     const inst = { allow_google_signals: false, allow_ad_personalization_signals: false };
-    window.gtag('config', id, inst);
-    /* Konverteringen skickas till Ads-kontot i GOOGLE_ADS_LEAD. Är
-       taggen ovan en G- (Analytics) måste Ads-kontot konfigureras
-       för sig, annars kommer konverteringen aldrig fram. */
-    const aw = adsMål().split('/')[0];
-    if (aw && aw !== id) window.gtag('config', aw, inst);
+    if (stat && !konfad.ga) {
+      konfad.ga = laddat.statistik = true;
+      const ga = Object.assign({
+        page_location: renAdress(location.href),
+        cookie_expires: 365 * 24 * 3600   // som svaret: ett år, inte Googles två
+      }, inst);
+      if (document.referrer) ga.page_referrer = renAdress(document.referrer);
+      window.gtag('config', googleId(), ga);
+    }
+    /* Ads behöver klick-id:t för att koppla anmälan till annonsen,
+       och har ett ja till just det. */
+    if (ads && !konfad.ads) {
+      konfad.ads = laddat.annonser = true;
+      window.gtag('config', adsKonto(), Object.assign({
+        page_location: renAdress(location.href, /^(gclid|gbraid|wbraid)$/)
+      }, inst));
+    }
   }
 
   /* En händelse från NX.händelse(). Bara anmälan är en konvertering:
@@ -263,24 +337,30 @@ const NXSamtycke = (function () {
     if (namn !== 'intresseanmalan') return;
     try {
       if (har('meta') && window.fbq) window.fbq('track', 'Lead');
-      if (har('google') && window.gtag) {
-        window.gtag('event', 'generate_lead');
-        if (adsMål()) window.gtag('event', 'conversion', { send_to: adsMål() });
+      /* send_to på båda: utan det går en händelse till varje
+         konfigurerat id, och Analytics anmälan hade blivit en
+         Ads-händelse. */
+      if (window.gtag) {
+        if (har('google')) window.gtag('event', 'generate_lead', { send_to: googleId() });
+        if (har('googleads')) window.gtag('event', 'conversion', { send_to: adsMål() });
       }
     } catch (e) { /* mätning får aldrig stoppa något */ }
   }
 
   /* ---------- nej: det som ska bort ---------- */
-  /* Pixlarnas cookies sätts på vår domän och försvinner inte av sig
-     själva. */
-  const PIXELKAKOR = /^(_fbp|_fbc|_ga|_ga_[A-Z0-9]+|_gid|_gcl_au|_gcl_aw|_gcl_dc)$/;
-  function rensaAnnonser() {
-    try { sessionStorage.removeItem(KÄLL_NYCKEL); } catch (e) {}
+  /* Googles och Metas cookies sätts på vår domän och försvinner inte
+     av sig själva. */
+  const KAKOR = {
+    statistik: /^(_ga|_ga_[A-Z0-9]+|_gid)$/,
+    annonser: /^(_fbp|_fbc|_gcl_au|_gcl_aw|_gcl_dc)$/
+  };
+  function rensa(syfte) {
+    if (syfte === 'annonser') { try { sessionStorage.removeItem(KÄLL_NYCKEL); } catch (e) {} }
     const värd = location.hostname;
     const domäner = ['', värd, '.' + värd.replace(/^www\./, '')];
     String(document.cookie || '').split(';').forEach(p => {
       const namn = p.split('=')[0].trim();
-      if (!PIXELKAKOR.test(namn)) return;
+      if (!KAKOR[syfte].test(namn)) return;
       domäner.forEach(d => {
         document.cookie = namn + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : '');
       });
@@ -289,11 +369,17 @@ const NXSamtycke = (function () {
 
   /* ---------- rutan och panelen ---------- */
   function beskrivning(syfte) {
-    if (syfte === 'statistik') return t('statistikOm');
     const f = funktioner(), st = [];
-    if (f.indexOf('kallsparning') >= 0) st.push(t('kalla'));
-    if (f.indexOf('meta') >= 0) st.push(t('meta'));
-    if (f.indexOf('google') >= 0) st.push(t('google'));
+    const på = (namn, ord) => { if (f.indexOf(namn) >= 0) st.push(t(ord)); };
+    if (syfte === 'statistik') {
+      st.push(t('statistikOm'));
+      på('statistik', 'vercel');
+      på('google', 'analytics');
+    } else {
+      på('kallsparning', 'kalla');
+      på('meta', 'meta');
+      på('googleads', 'googleads');
+    }
     return st.join(' ');
   }
 
@@ -487,8 +573,8 @@ const NXSamtycke = (function () {
     const p = document.querySelector('[data-samtycke-panel]');
     if (p) panel(p);
 
-    if (!på) return;
-    if (giltigt(läs())) { tillämpa(); return; }
+    tillämpa();
+    if (!på || giltigt(läs())) return;
     if (p || gpc()) return;          // panelen frågar redan, eller GPC har svarat
     visa(false);
   }

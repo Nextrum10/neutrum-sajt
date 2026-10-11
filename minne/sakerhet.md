@@ -508,23 +508,22 @@ förvalen är engelska. Ändras en mall i panelen ändras den här också.
 
 ### Samtycket (2026-09-27)
 
-De öppna sidorna sätter inga cookies. Det som kräver samtycke
+De öppna sidorna sätter inga cookies utan ja. Det som kräver samtycke
 (LEK 9 kap. 28 §) går genom `NXSamtycke` i `nextrum-samtycke.js`, och
 vad som är påslaget står i `NEXTRUM_CONFIG.SAMTYCKE`. **Rutan visas
 bara när något där är på.** Är allt av finns ingen ruta, ingen länk i
 footern och ingenting lagras: en ruta som ber om lov till ingenting är
 brus.
 
-**Rutan är avstängd tills vidare sedan 2026-09-29** (Leo: "inaktivera
-cookie banner tills vidare"). `STATISTIK` och `KALLSPARNING` står på
-`false`, och det är hela avstängningen: rutan är inget eget reglage.
-Följden är att Vercels statistik inte laddas alls och att en anmälan
-inte kan krediteras en annons (källan blir `null`, alltså okänd i
-`analys_leads_per_kalla`). Dölj inte bara rutan med CSS och låt
-skripten gå: det är mätning utan samtycke. Slå på igen genom att sätta
-båda till `true` och köra `verktyg/satt-version.py`. `lagring.html`
-säger "det finns inget att samtycka till" så länge de står av, vilket
-är sant.
+**Rutan är på igen sedan 2026-10-11**, med Google Analytics. Den var
+avstängd 2026-09-29–10-11 (Leo: "inaktivera cookie banner tills
+vidare"), genom att `STATISTIK` och `KALLSPARNING` stod på `false`:
+rutan är inget eget reglage. Står allt av laddas ingen statistik, och
+en anmälan kan inte krediteras en annons (källan blir `null`, alltså
+okänd i `analys_leads_per_kalla`); `lagring.html` säger då "det finns
+inget att samtycka till". Dölj inte bara rutan med CSS och låt
+skripten gå: det är mätning utan samtycke. Ändras något i `SAMTYCKE`:
+kör `verktyg/satt-version.py`.
 
 - **Två syften, två val: statistik och annonser.** Rutan har Neka
   alla, Godkänn alla och en kryssruta per syfte (ingen förkryssad) med
@@ -539,6 +538,32 @@ säger "det finns inget att samtycka till" så länge de står av, vilket
   statistik som inte nödvändig. Nu lägger `laddaVercel()` in dem vid
   ja. **Lägg aldrig tillbaka en statisk tagg.** Dras ett ja tillbaka
   laddas sidan om, för ett skript som redan kört går inte att stänga av.
+- **Google Analytics hör till statistik** (2026-10-11, `G-V6Y6Q0SRXX`
+  i `GOOGLE_TAG_ID`, som bara tar ett G-id). Förut hörde Google till
+  annonser, så ett ja till statistik laddade aldrig Analytics, och
+  Consent Mode började på `granted` innan någon svarat. Nu laddas
+  gtag.js först efter ja till statistik (eller till annonser, om
+  `GOOGLE_ADS_LEAD` är satt), Consent Mode börjar på `denied` för
+  `analytics_storage`, `ad_storage`, `ad_user_data` och
+  `ad_personalization`, och uppdateras per syfte. `ad_personalization`
+  blir aldrig `granted`: rutan frågar inte om personliga annonser.
+  Ett id konfigureras bara med ja till sitt syfte, för utan det hade
+  Analytics skickat cookiefria pingar ändå (det Google kallar
+  avancerat läge). Google-signaler och annonspersonalisering är av i
+  koden, och cookierna lever ett år (`cookie_expires`), som svaret.
+  `_ga` och `_ga_*` rensas vid varje sidladdning utan ja till
+  statistik, så ett ja som gått ut lämnar inget kvar. **Koppla inte
+  egendomen till Google Ads**: då blir statistiken annonsdata. Bara
+  `intresseanmalan` skickas som händelse (`generate_lead`, med
+  `send_to`, så att den inte också går till Ads).
+- **Adressen lämnar oss utan frågesträng** (`renAdress`, 2026-10-11),
+  utom våra utm-taggar, till både Vercel (`beforeSend`) och Google
+  (`page_location`, `page_referrer`); Ads får dessutom klick-id:t.
+  `?kod=` i intresseanmälan är en familjs tipskod. **En sida med en
+  nyckel i adressen laddar inte `nextrum-samtycke.js` alls**:
+  `utbildningsprov` (`?t=`, provets nyckel) och `avanmal` (`?t=`,
+  avregistreringen, som aldrig går ut). `avanmal` sa i sin kommentar
+  att den inte mättes men laddade rutan ändå fram till 2026-10-11.
 - **Källspårningen hör till annonser.** Med ett ja minns
   webbläsaren landningen tills fliken stängs (sessionStorage
   `nx-kalla`, skrivs av `NX.källa()`), så att en anmälan krediteras
@@ -547,8 +572,9 @@ säger "det finns inget att samtycka till" så länge de står av, vilket
   hos oss vet vi inte var hen landade, och `analys_leads_per_kalla`
   räknar null som okänd (avsnitt 5, regel 3). Förut blev varje familj
   som läst två sidor före anmälan "direkt".
-- **Pixlarna (Meta, Google) är byggda och tomma.** Ett id i
-  konfigurationen slår på dem, och de laddas först efter ja. Innan ett
+- **Annonspixlarna (Meta, Google Ads) är byggda och tomma.** Ett id i
+  konfigurationen slår på dem, och de laddas först efter ja till
+  annonser. Innan ett
   id skrivs in: `lagring.html` och integritetspolicyn på båda språken
   (mottagare, överföring till USA), domänerna i CSP:n i `vercel.json`,
   och för Meta automatisk avancerad matchning AV i Events Manager. IMY

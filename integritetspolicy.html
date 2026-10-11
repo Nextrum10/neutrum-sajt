@@ -154,8 +154,9 @@
       genomföra passen, hålla er informerade om vad som händer, och ta betalt för passen.
       Inget mer än så.</p>
     <p>Vi säljer inte uppgifter. Vi lämnar dem inte vidare för marknadsföring. De öppna sidorna
-      sätter inga cookies, och besöksstatistik och annonsmätning sker bara om du säger ja.
-      Betalar du med kort sätter Stripe två cookies, för att upptäcka bedrägerier.</p>
+      sätter inga cookies utan ditt ja, och besöksstatistik och annonsmätning sker bara om du
+      säger ja. Säger du ja till besöksstatistik sätter Google Analytics två cookies. Betalar du
+      med kort sätter Stripe två cookies, för att upptäcka bedrägerier.</p>
     <p>Längre ner står varför vi får göra det, vilka som hanterar uppgifterna åt oss, hur länge
       de sparas och vad du har rätt till. Är du elev finns ett eget avsnitt för dig.</p>
 
@@ -368,6 +369,14 @@
         ja till besöksstatistik. Räkningen sker utan cookies: unika besökare härleds ur en hash av
         IP och webbläsartyp med ett salt som byts varje dygn, och den råa IP-adressen sparas
         inte. Studievyn och studiehjälparvyn mäts inte.</li>
+      <li><b>Google Analytics</b> (USA): räknar också besöken om du sagt ja till besöksstatistik.
+        Den sätter två cookies med ett slumpat nummer för din webbläsare, så att ett besök till
+        räknas som samma besökare, och får vilka sidor du läser, varifrån du kom, ungefärlig ort,
+        vilken enhet du använder och om du skickade en intresseanmälan, men aldrig det du skrev i
+        den. Adressen skickas utan det som står efter frågetecknet, utom de märkord vi själva lagt
+        i den. Googles signaler och annonspersonalisering är avstängda, så besöken kopplas inte
+        till ett Google-konto och används inte för annonser. Studievyn och studiehjälparvyn mäts
+        inte. Detaljerna står under <a href="/lagring">Cookies och lagring</a>.</li>
       <li><b>Resend</b> (USA): skickar våra mejl, som bokningsbekräftelser, påminnelser och
         notiser, mejlet med länken när vi skapat ett konto åt dig, mejlen till ett barns egen
         adress när ni slagit på dem, och beskeden till den som söker jobb och till hens
@@ -423,6 +432,9 @@
       <li><b>Kontaktmeddelanden</b>: tas bort sex månader efter att de kom in eller
         besvarades. Det sker automatiskt varje natt.</li>
       <li><b>Felrapporter</b>: tas bort efter 90 dagar, automatiskt.</li>
+      <li><b>Besöksstatistik i Google Analytics</b>: cookierna sparas i din webbläsare ett år
+        efter ditt senaste besök, och det som hör till dem sparas hos Google i högst 14 månader.
+        Säger du nej tar vi bort cookierna nästa gång du är här.</li>
       <li><b>Svaret på en föreslagen tid</b>: det studiehjälparen skriver när hen säger nej till
         en tid eller föreslår en annan tas bort 30 dagar efter svaret, eller 30 dagar efter
         passet. Det sker automatiskt varje natt. Passet står kvar.</li>
@@ -529,8 +541,9 @@
       inom 72 timmar, och berättar det för er som berörs om det innebär en risk för er.</p>
 
     <h2>Cookies och lagring i webbläsaren</h2>
-    <p>De öppna sidorna sätter inga cookies. Besöksstatistik och annonsmätning sker bara om du
-      säger ja, och Stripe sätter två cookies när du betalar med kort. Allt som lagras, och
+    <p>De öppna sidorna sätter inga cookies utan ditt ja. Besöksstatistik och annonsmätning sker
+      bara om du säger ja, och med ett ja till besöksstatistik sätter Google Analytics två
+      cookies. Stripe sätter två cookies när du betalar med kort. Allt som lagras, och
       varför, står på en egen sida: <a href="/lagring">Cookies och lagring</a>.</p>
 
     <h2>Ändringar</h2>
@@ -665,11 +678,11 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=04a5c427"></script>
+<script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=32941e3e"></script>
-<script src="nextrum-samtycke.js?v=39371f0b"></script>
+<script src="nextrum-samtycke.js?v=16869659"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.

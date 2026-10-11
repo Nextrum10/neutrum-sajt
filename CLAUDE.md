@@ -511,10 +511,14 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   Inbjudan och Skicka igen mejlar `bjud-in` själv genom Resend (2026-10-07); Glömt lösenordet och
   `admin-skapa` mejlar Supabase Auth (Googles SMTP som info@), med mallarna i `minne/sakerhet.md`.
   Länken går alltid genom knappen på `/lank`, aldrig rakt till Auth.
-- **Samtycket**: öppna sidor sätter inga cookies; det som kräver samtycke går genom
-  `NXSamtycke`, och rutan visas bara när något i `SAMTYCKE` är på (av sedan 2026-09-29). Dölj
-  den aldrig med CSS medan skripten går. Vercels statistik laddas först efter ja, aldrig med
-  statisk tagg; okänd källa är `null`, aldrig "direkt"; Global Privacy Control är nej; ja och
+- **Samtycket**: öppna sidor sätter inga cookies utan ja; det som kräver samtycke går genom
+  `NXSamtycke`, och rutan visas bara när något i `SAMTYCKE` är på (på igen sedan 2026-10-11). Dölj
+  den aldrig med CSS medan skripten går. Vercels statistik och **Google Analytics**
+  (`G-V6Y6Q0SRXX`, 2026-10-11) hör till syftet statistik och laddas först efter ja, aldrig med
+  statisk tagg; Google Ads hör till annonser. Consent Mode börjar på `denied` för alla fyra och
+  uppdateras per syfte, `ad_personalization` aldrig. Adressen lämnar oss utan frågesträng utom
+  utm (`renAdress`), och en sida med en nyckel i adressen (`avanmal`, `utbildningsprov`) laddar
+  inte samtyckesrutan. Okänd källa är `null`, aldrig "direkt"; Global Privacy Control är nej; ja och
   nej är samma sorts knapp; klasserna heter `nx-kakor-*`. Ändras lagringen följer `lagring.html`
   med; före ett pixel-id, se `minne/sakerhet.md`.
 - **Advisorn** larmar om det som är med flit (listan i `minne/sakerhet.md`). Läckta lösenord
@@ -711,6 +715,12 @@ Detaljer: `minne/grunden.md`.
   som Basics. Standards 5 832 är inte samma pris som lyftets och Just nus 5 000 kr+: samma plan jämförs med två
   priser på samma sida (40 % mot 5 000, 2 800 kr mot 5 832, som vore 48 %). Raden "Jämförelserna gjordes med en elev i
   årskurs 9 i oktober 2026" är Leos ord om underlaget. Juristen har inte läst tejperna, och ingen aktör nämns på sajten.
+- **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
+  `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
+  (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
+  hand), datadelningen med Googles produkter och Google-signaler av, lagringstiden (policyn lovar högst 14
+  månader), och ingen koppling till Google Ads. Vercels Web Analytics var inte
+  påslaget i projektet 2026-09-28 (`TRAFIK.md`). Juristen har inte läst texterna eller rad 14 i `DATASKYDD.md`.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
