@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { ANS_LAGE, S, fråga, funktionsFel, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
+  const { ANS_LAGE, S, fråga, funktionsFel, gmailAdress, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
           kortDatum, läge, matchar, namnlista, närText, ritaPanelen, tomtText, visaRuta,
           ärNyNu, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
@@ -590,7 +590,7 @@
 
       + spårSteg(1, 'Kontakt',
           'Kvittot på ansökan har redan gått av sig självt. Här föreslår du tider för mötet: '
-          + 'utkastet öppnas i ditt mejlprogram med din adress som avsändare, så att svaret '
+          + 'utkastet öppnas i Gmail med din adress som avsändare, så att svaret '
           + 'kommer till dig.',
           a.kontaktad_at,
           '<button type="button" class="btn btn-ghost btn-sm" data-ans-kontakt="' + id + '">'
@@ -1045,8 +1045,7 @@
     if (!ärUnder18(a) && !a.vardnadshavare_epost && !a.vardnadshavare_godkand_at) return [];
     const mejlat = vhMejlat(a);
     const adress = a.vardnadshavare_epost
-      ? '<a href="mailto:' + esc(a.vardnadshavare_epost) + '" data-mailtext="keep">'
-        + esc(a.vardnadshavare_epost) + '</a>'
+      ? gmailAdress(a.vardnadshavare_epost)
         + (mejlat ? esc(' · ' + mejlat) : '')
       : null;
     const godkänt = a.vardnadshavare_godkand_at

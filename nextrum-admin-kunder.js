@@ -420,7 +420,7 @@
      Ingen stämpel efteråt, till skillnad från leads och ansökningar.
      De två har kontaktad_at i databasen; tutor_profiles har det inte,
      och en kolumn ska inte läggas till för att en knapp ska kännas
-     färdig. Kontakten syns i mejlprogrammets skickat-mapp, där den
+     färdig. Kontakten syns under Skickat i Gmail, där den
      hör hemma. */
   document.addEventListener('click', e => {
     const knapp = e.target.closest('[data-sh-kontakt]');

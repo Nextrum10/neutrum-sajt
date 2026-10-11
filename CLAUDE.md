@@ -356,6 +356,9 @@ Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-1
 sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
 (`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
 lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka.
+**Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
+`gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
+Familjernas och studiehjälparnas sidor behåller `mailto:`.
 Fällor: `h5` och `h6` har webbläsarens marginal; `--pap-2` och `--yta` är nästan samma i mörkt
 läge (`--tint`, `--bricka`); KÄNSLAN står sist och väger lika mycket; `nextrum-admin-konsol.css`
 vinner över arbetsytan. Headless Chromium döljer rullningslister; mät ett tryck med `el.click()`

@@ -923,26 +923,47 @@ const NXAdmin = (function () {
      som hände där syntes aldrig i systemet — en anmälan såg
      obesvarad ut för alltid.
 
-     VARFÖR mailto: OCH INTE ETT UTSKICK HÄRIFRÅN
+     VARFÖR ETT UTKAST I GMAIL OCH INTE ETT UTSKICK HÄRIFRÅN
 
      Svaret ska komma från en riktig person och gå att svara på. Ett
      mejl skickat av servern har vår avsändare men ingen som läser
-     svaret, och det första en familj gör är att svara. Med mailto:
-     hamnar utkastet i ert eget mejlprogram, med er adress som
-     avsändare och hela tråden där ni sedan letar efter den.
+     svaret, och det första en familj gör är att svara. Utkastet
+     hamnar i er Gmail, med er adress som avsändare och hela tråden
+     där ni sedan letar efter den. Gmail och inte mailto: (2026-10-11,
+     Leo: "se till att det alltid görs i gmail och inte mail"):
+     mailto: öppnar datorns förvalda program, som på en Mac är Mail.
 
      Systemet stämplar kontaktad_at när utkastet öppnas. Det är inte
      bevis på att mejlet skickades — men "vi öppnade ett svar till
      den här personen" är oändligt mycket mer än vad som fanns förut,
      och stämpeln går att ta bort om man ångrar sig.
      ============================================================ */
+  /* Gmails skrivruta med mottagare, ämne och text ifyllda. Adminvyn
+     länkar hit i stället för till mailto:, både i kontaktrutan och i
+     varje adress som går att klicka på; sidorna familjerna och
+     studiehjälparna ser behåller mailto:, för vilket program de
+     skriver i är deras sak. Kontot är det Gmail öppnar först i
+     webbläsaren. encodeURIComponent på allt: ett svenskt tecken eller
+     en radbrytning i klartext kapar annars mejlet på vägen. */
+  function gmailLänk(till, ämne, text) {
+    return 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(till || '')
+      + (ämne ? '&su=' + encodeURIComponent(ämne) : '')
+      + (text ? '&body=' + encodeURIComponent(text) : '');
+  }
+
+  /* En adress som öppnar ett tomt utkast i Gmail, i en ny flik.
+     Texten är adressen själv, så att raden säger vems den är. */
+  function gmailAdress(adress) {
+    return '<a href="' + esc(gmailLänk(adress)) + '" target="_blank" rel="noopener">' + esc(adress) + '</a>';
+  }
+
   function kontaktaRuta(o) {
     const ruta = document.createElement('div');
     ruta.className = 'nx-fraga';
     ruta.innerHTML =
       '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="kt-t">'
       + '<h3 id="kt-t">' + esc(o.titel || 'Skriv till ' + (o.namn || '')) + '</h3>'
-      + '<p>Utkastet öppnas i ditt mejlprogram med din adress som avsändare, så att '
+      + '<p>Utkastet öppnas i Gmail i en ny flik, med din adress som avsändare, så att '
       + 'svaret kommer till dig. Ändra fritt innan du skickar.</p>'
       + '<div class="fgroup"><label for="kt-till">Till</label>'
       + '<input class="inp" id="kt-till" value="' + esc(o.till || '') + '"></div>'
@@ -953,7 +974,7 @@ const NXAdmin = (function () {
       + '<p class="ok-msg" id="kt-msg"></p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-kt-stang>Avbryt</button>'
-      + '<button type="button" class="btn btn-primary" id="kt-oppna">Öppna i mejl</button>'
+      + '<button type="button" class="btn btn-primary" id="kt-oppna">Öppna i Gmail</button>'
       + '</div></div>';
 
     visaRuta(ruta);
@@ -966,13 +987,10 @@ const NXAdmin = (function () {
       const till = $('#kt-till', ruta).value.trim();
       if (!till) { säg($('#kt-msg', ruta), 'Fyll i en adress.', false); return; }
 
-      /* encodeURIComponent på både ämne och kropp. Ett svenskt
-         tecken eller en radbrytning i klartext kapar annars mejlet
-         på vägen till mejlprogrammet. */
-      const url = 'mailto:' + encodeURIComponent(till)
-        + '?subject=' + encodeURIComponent($('#kt-amne', ruta).value)
-        + '&body=' + encodeURIComponent($('#kt-text', ruta).value);
-      window.location.href = url;
+      /* Fliken öppnas före varje await: Safari stoppar ett fönster som
+         öppnas efter en väntan. */
+      window.open(gmailLänk(till, $('#kt-amne', ruta).value, $('#kt-text', ruta).value),
+        '_blank', 'noopener');
 
       if (typeof o.efterat === 'function') await o.efterat();
       stäng();
@@ -988,7 +1006,7 @@ const NXAdmin = (function () {
   return {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
-    hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
+    gmailAdress, gmailLänk, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
     lägesväljare,
