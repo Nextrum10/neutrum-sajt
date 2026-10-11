@@ -487,8 +487,9 @@
 }
 .nx-steplist li:last-child{border-bottom:1px solid var(--line)}
 .nx-steplist em{
-  font-family:var(--f-mono);font-style:normal;font-size:.72rem;letter-spacing:.1em;
-  color:var(--muted-2);flex:none;padding-top:2px;width:26px;
+  font-style:normal;font-size:1.35rem;font-weight:800;line-height:.9;
+  letter-spacing:-.05em;font-variant-numeric:tabular-nums;
+  color:var(--muted-2);flex:none;width:2rem;
 }
 .nx-steplist b{display:block;font-size:.94rem;font-weight:600;letter-spacing:-.015em}
 .nx-steplist span{display:block;font-size:.85rem;color:var(--muted);margin-top:2px}
@@ -778,9 +779,12 @@
   padding:18px 0;border-top:1px solid var(--line);
 }
 .nx-list li:last-child{border-bottom:1px solid var(--line)}
+/* Siffran i samma form som stegen på startsidan och prissidan (.nx-hur-steg,
+   .pr-flode-nr): rubrikfonten, tjock och med lika breda siffror, inte mono. */
 .nx-list em{
-  font-family:var(--f-mono);font-style:normal;font-size:.72rem;letter-spacing:.1em;
-  color:var(--acc-text);flex:none;padding-top:3px;width:24px;
+  font-style:normal;font-size:1.5rem;font-weight:800;line-height:.9;
+  letter-spacing:-.05em;font-variant-numeric:tabular-nums;
+  color:var(--acc-text);flex:none;width:2.1rem;
 }
 .nx-list b{display:block;font-size:1rem;font-weight:600;letter-spacing:-.02em}
 .nx-list p{font-size:.9rem;color:var(--muted);margin-top:4px;line-height:1.55}
