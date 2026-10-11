@@ -87,22 +87,19 @@ const NX = (function () {
        väg vidare: ingen adress, ingen telefon, ingenting att göra.
        Anmälan var förlorad, och vi fick aldrig veta att den funnits.
 
-       {oss} och inte {e}: {e} är redan taget av tackIntresse, där det
-       betyder familjens EGEN adress. Två betydelser i samma symbol är
-       ett fel som väntar på att någon läser fel mall. */
+       {oss} och inte {e}: {e} var familjens EGEN adress i tacket för
+       intresseanmälan (till 2026-10-11). Två betydelser i samma symbol
+       är ett fel som väntar på att någon läser fel mall. */
     ingenDatabasForm:['Vi kan inte ta emot formuläret just nu. Mejla oss på {oss} så hör vi av oss.',
                       'We cannot receive the form right now. Email us at {oss} and we will get back to you.'],
     kundeInteSkicka: ['Kunde inte skicka: ', 'Could not send: '],
     tackAnsokan:     ['Tack för din ansökan. Vi läser alla och hör av oss inom 24 timmar.',
                       'Thank you for your application. We read every one and will be in touch within 24 hours.'],
-    tackIntresse:    ['Tack. Vi har tagit emot er intresseanmälan och hör av oss på {e} inom 24 timmar.',
-                      'Thank you. We have received your enquiry and will get back to you at {e} within 24 hours.'],
-    /* Medan Nextrum bildas (uppstart() nedan). {om} är det uppstart()
-       räknat fram, "om ungefär tre veckor" eller "inom kort". */
-    tackIntresseUppstart: ['Tack. Vi har tagit emot er intresseanmälan och hör av oss på {e} inom 24 timmar, så planerar vi ert första pass till starten {om}.',
-                           'Thank you. We have received your enquiry and will get back to you at {e} within 24 hours to plan your first session for when we start {om}.'],
-    /* Kontaktvalet i intresseanmälan (2026-10-03). {tel} och inte {e}:
-       se ingenDatabasForm ovan. */
+    /* Vi ringer alla som anmäler intresse (2026-10-11; kontaktvalet
+       Ring mig eller Mejla först, 2026-10-03, gick). {tel} och inte
+       {e}: se ingenDatabasForm ovan. Uppstart: medan Nextrum bildas
+       (uppstart() nedan); {om} är det uppstart() räknat fram, "om
+       ungefär tre veckor" eller "inom kort". */
     tackIntresseRing: ['Tack. Vi har tagit emot er intresseanmälan och ringer er på {tel} inom 24 timmar.',
                        'Thank you. We have received your enquiry and will call you on {tel} within 24 hours.'],
     tackIntresseRingUppstart: ['Tack. Vi har tagit emot er intresseanmälan och ringer er på {tel} inom 24 timmar, så planerar vi ert första pass till starten {om}.',
@@ -116,12 +113,10 @@ const NX = (function () {
                            'Please enter your parent or guardian’s own email, not yours.'],
     tackAnsokanUnder18:   ['Tack för din ansökan. Vi läser alla och hör av oss inom 24 timmar. Din vårdnadshavare får ett mejl från oss om att godkänna den.',
                            'Thank you for your application. We read every one and will be in touch within 24 hours. Your parent or guardian will get an email from us asking them to approve it.'],
-    valjKontakt:     ['Välj om ni vill att vi ringer eller mejlar först.',
-                      'Please choose whether you would like us to call or email first.'],
-    telefonForRing:  ['Behövs för att vi ska kunna ringa',
-                      'Needed so we can call you'],
-    felTelefonRing:  ['Skriv ett telefonnummer, eller välj att vi mejlar först.',
-                      'Please enter a phone number, or choose to be emailed first.'],
+    fyllTelefon:     ['Skriv ert telefonnummer, så ringer vi upp.',
+                      'Please enter your phone number so that we can call you.'],
+    felTelefon:      ['Telefonnumret ser inte komplett ut. Skriv hela numret, med riktnummer.',
+                      'The phone number does not look complete. Please enter the whole number, with the area code.'],
     omVeckor:        ['om ungefär {n} veckor', 'in about {n} weeks'],
     omEnVecka:       ['om ungefär en vecka', 'in about a week'],
     omNagraDagar:    ['om några dagar', 'in a few days'],

@@ -48,14 +48,19 @@ kommer de in med barnen, NexLäx och profilen, och `S.väntar` i
 Matchningen öppnar resten vid nästa laddning, utan att något annat
 ändras.
 
-**Kontaktvalet** (2026-10-03): familjen väljer i intresseanmälan om vi
-ska ringa eller mejla först. Inget förval, och Ring kräver telefon.
-Svaret står som första rad i `message` ("Kontakt först: ring" eller
-"mejl"), före familjens text, eftersom databasen kapar message
-bakifrån vid 4000 tecken. Ingen egen kolumn: då behövdes ingen
-migration, och `lead-notis` mejlar det redan i meddelandet. Tacket
-följer valet (`tackIntresseRing`). Steg 2 ovan gäller bara den som
-valt Ring; den som valt mejl får ett mejl först.
+**Vi ringer alla** (2026-10-11, Leo): intresseanmälan frågar inte längre
+om vi ska ringa eller mejla först. Kontaktvalet (2026-10-03) gick, för
+de som valde mejl svarade sedan inte på mejlen. Telefon och e-post är
+obligatoriska: telefonen för samtalet (minst sju siffror, så att "nej"
+inte tar sig förbi), e-posten för kvittot och sedan inbjudan till
+kontot. Familjen får skriva när ett kort samtal passar (valfritt), och
+"Tider för passen" heter så för att inte blandas ihop med det. Telefonen
+och tiden står som första rader i `message` ("Telefon: …", "Passar att
+ringa: …"), före familjens text, eftersom databasen kapar message
+bakifrån vid 4000 tecken; förut stod numret sist och kunde klippas bort.
+Ingen egen kolumn: då behövdes ingen migration, och `lead-notis` mejlar
+det redan i meddelandet. Tacket säger alltid att vi ringer
+(`tackIntresseRing`).
 
 **Timmarna i ansökan** (2026-10-03): den som söker svarar ja eller nej
 på om hen kan jobba minst 4 timmar i veckan. Inget förval. **Fyra timmar
@@ -63,9 +68,10 @@ på om hen kan jobba minst 4 timmar i veckan. Inget förval. **Fyra timmar
 ansökan, och raden under valet och svaret på "Hur mycket behöver jag
 jobba?" (`faq.html`, `bli-studiehjalpare.html`, båda språken) säger
 detsamma. Blir det ett krav ändras de tre samtidigt. Svaret står som första rad i `applications.why`
-("Minst 4 timmar i veckan: ja"), av samma skäl som kontaktvalet, genom
+("Minst 4 timmar i veckan: ja"), av samma skäl som telefonen i intresseanmälan, genom
 `kopplaAnsökan`s `överst()`; sidans kontroll går genom `kontroll()`.
-Kontrollen och valet delar stilen `.nx-val` med kontaktvalet.
+Kontrollen och valet delar stilen `.nx-val` (som kontaktvalet i
+intresseanmälan använde till 2026-10-11).
 
 **Under 18 i ansökan** (2026-10-05): åldern under 18 fäller ut
 vårdnadshavarens e-post, som krävs och inte får vara den egna. Den går som

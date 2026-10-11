@@ -152,7 +152,7 @@
       <div class="nx-form-yta">
 
         <h1 class="nx-anm-rubrik" id="anm-t">Tell us what you need help with.</h1>
-        <p class="nx-anm-lede">Fill in a few simple details and we will get in touch within 24 hours. Sending it costs nothing and commits you to nothing.</p>
+        <p class="nx-anm-lede">Fill in a few simple details and we will call you within 24 hours. Sending it costs nothing and commits you to nothing.</p>
 
         <p class="nx-fineprint nx-anm-for">This form is for students and parents.
           Would you rather become a tutor —
@@ -168,22 +168,14 @@
               <input class="inp" id="l-name" name="parent_name" required autocomplete="name"></div>
             <div class="pay-field"><label for="l-email">Email</label>
               <input class="inp" id="l-email" name="email" type="email" required autocomplete="email"></div>
-            <!-- KONTAKTVALET (2026-10-03). Ring eller mejl först, och
-                 inget är förvalt: ett förval väljer åt familjen. Ring
-                 kräver telefon, och skriptet längst ner säger till.
-                 Svaret står överst i message, så det är det första
-                 den som hör av sig läser. Samma fält står i
-                 intresseanmalan.html. -->
-            <fieldset class="nx-val full" id="l-kontakt">
-              <legend>How would you like us to contact you first?</legend>
-              <div class="nx-val-rad">
-                <label><input type="radio" name="kontakt" value="ring" required><span>Call me</span></label>
-                <label><input type="radio" name="kontakt" value="mejl" required><span>Email first</span></label>
-              </div>
-            </fieldset>
+            <!-- VI RINGER (2026-10-11). Se intresseanmalan.html. -->
             <div class="pay-field"><label for="l-phone">Phone</label>
-              <input class="inp" id="l-phone" name="phone" type="tel" autocomplete="tel" placeholder="Optional"></div>
-            <div class="pay-field"><label for="l-child">Student’s name</label>
+              <input class="inp" id="l-phone" name="phone" type="tel" required autocomplete="tel">
+              <p class="nx-fil-hjalp">We will call you on this number.</p></div>
+            <div class="pay-field"><label for="l-samtal">When suits a short call?</label>
+              <input class="inp" id="l-samtal" name="samtal" maxlength="120" placeholder="e.g. lunchtime or after 5pm"></div>
+            <!-- Hela raden: se intresseanmalan.html. -->
+            <div class="pay-field full"><label for="l-child">Student’s name</label>
               <input class="inp" id="l-child" name="child_name"></div>
             <div class="pay-field"><label for="l-grade">Year group</label>
               <select class="sel" id="l-grade" name="grade">
@@ -214,7 +206,7 @@
                 <option>Online</option><option>In person</option><option>A mix</option>
               </select>
             </div>
-            <div class="pay-field"><label for="l-tider">Times that suit you</label>
+            <div class="pay-field"><label for="l-tider">Times for the sessions</label>
               <input class="inp" id="l-tider" name="tider" placeholder="e.g. weekdays after 4pm"></div>
             <div class="pay-field full"><label for="l-msg">What the student needs help with</label>
               <textarea class="inp" id="l-msg" name="message" placeholder="What is hard going right now? Is there anything we should know to choose the right person?"></textarea>
@@ -239,7 +231,7 @@
                 </button>
               </span>
             </div>
-            <p class="nx-fineprint">We get back to you within 24 hours. No minimum term, and getting in touch costs nothing.</p>
+            <p class="nx-fineprint">We will call you within 24 hours. No minimum term, and getting in touch costs nothing.</p>
             <p class="ok-msg" id="lead-msg" role="status" aria-live="polite"></p>
           </form>
 
@@ -249,7 +241,7 @@
 
         <ul class="nx-steplist" data-stig data-fördröj="2">
           <li class="on"><em>01</em><div><b>You send the form</b><span>Takes about two minutes.</span></div></li>
-          <li><em>02</em><div><b>We get in touch within 24 hours</b><span>We go through the need together with you.</span></div></li>
+          <li><em>02</em><div><b>We call you within 24 hours</b><span>We go through the need together with you.</span></div></li>
           <li><em>03</em><div><b>You get matched</b><span>The study plan is written and booking opens in the student view.</span></div></li>
         </ul>
 
@@ -264,7 +256,7 @@
           </div>
           <div>
             <b>How quickly do you reply?</b>
-            <p>Within 24 hours of you sending the form. If you are not sure exactly what you need help
+            <p>We call within 24 hours of you sending the form. If you are not sure exactly what you need help
               with, an approximate answer is fine — we work it out together.</p>
           </div>
           <div>
@@ -404,14 +396,14 @@
 <script src="../nextrum-config.js?v=04a5c427"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=396985aa"></script>
+<script src="../nextrum-app.js?v=7a43a925"></script>
 <script src="../nextrum-samtycke.js?v=39371f0b"></script>
 <script src="../nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=4d716470"></script>
+<script src="../nextrum-maskot-svar.js?v=083fd688"></script>
 <script src="../nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {
@@ -491,11 +483,12 @@
 
   /* ==========================================================
      INTRESSEANMÄLAN → tabellen "leads"
-     De fält som inte har någon egen kolumn (telefon, upplägg,
-     tider, samtycke) läggs sist i "message" som märkta rader.
-     Då behöver schemat inte ändras och ingenting går förlorat.
-     Kontaktvalet står i stället ÖVERST: det är det första den som
-     hör av sig behöver, och databasen kapar message bakifrån.
+     De fält som inte har någon egen kolumn (upplägg, tider,
+     samtycke) läggs sist i "message" som märkta rader. Då behöver
+     schemat inte ändras och ingenting går förlorat. Telefonen och
+     när ett samtal passar står i stället ÖVERST: det är det
+     den som ringer behöver, och databasen kapar message bakifrån,
+     så en lång text får aldrig ta numret med sig.
      ========================================================== */
   const leadForm = $('#lead-form');
   if (leadForm) {
@@ -517,48 +510,26 @@
       gdpr.addEventListener('change', () => { if (gdpr.checked) märkSamtycke(false); });
     }
 
-    /* Kontaktvalet: Ring kräver telefon. Platshållaren säger det så
-       fort Ring väljs, i stället för först när knappen trycks. */
+    /* Telefonen är obligatorisk (2026-10-11): vi ringer alla. Sju
+       siffror är det kortaste nummer som går att ringa, så "nej" eller
+       "-" för att komma förbi fältet stoppas här, inte i samtalet. */
     const telInp = $('#l-phone');
-    const telValfri = telInp.placeholder;
-    const kontaktFält = $('#l-kontakt');
-    const kontaktVal = () => {
-      const v = leadForm.querySelector('input[name="kontakt"]:checked');
-      return v ? v.value : '';
-    };
-    const märkKontakt = på => { if (kontaktFält) kontaktFält.classList.toggle('fel', på); };
-    const telefonKrävs = ring => {
-      telInp.required = ring;
-      telInp.placeholder = ring ? t('telefonForRing') : telValfri;
-      if (!ring) telInp.removeAttribute('aria-invalid');
-    };
-    leadForm.querySelectorAll('input[name="kontakt"]').forEach(r =>
-      r.addEventListener('change', () => { märkKontakt(false); telefonKrävs(kontaktVal() === 'ring'); }));
-    telInp.addEventListener('input', () => { if (telInp.value.trim()) telInp.removeAttribute('aria-invalid'); });
+    const telOk = v => (v.match(/\d/g) || []).length >= 7;
+    telInp.addEventListener('input', () => { if (telOk(telInp.value)) telInp.removeAttribute('aria-invalid'); });
 
     leadForm.addEventListener('submit', async e => {
       e.preventDefault();
       const msg = $('#lead-msg'), knapp = $('#lead-submit');
       rensa(msg);
       märkSamtycke(false);
-      märkKontakt(false);
 
       const namn = $('#l-name').value.trim();
       const epost = $('#l-email').value.trim();
       if (!namn || !epost) { säg(msg, t('fyllNamnEpost'), false); return; }
       if (!epostOk(epost)) { säg(msg, t('felEpost'), false); return; }
-      const kontakt = kontaktVal();
-      if (!kontakt) {
-        säg(msg, t('valjKontakt'), false);
-        märkKontakt(true);
-        const första = leadForm.querySelector('input[name="kontakt"]');
-        första.focus({ preventScroll: true });
-        första.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        return;
-      }
       const tel = telInp.value.trim();
-      if (kontakt === 'ring' && !tel) {
-        säg(msg, t('felTelefonRing'), false);
+      if (!telOk(tel)) {
+        säg(msg, t(tel ? 'felTelefon' : 'fyllTelefon'), false);
         telInp.setAttribute('aria-invalid', 'true');
         telInp.focus({ preventScroll: true });
         telInp.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -576,14 +547,15 @@
       const extra = [];
       const format = $('#l-format').value;
       const tider = $('#l-tider').value.trim();
-      if (tel) extra.push('Telefon: ' + tel);
       if (format) extra.push('Önskat upplägg: ' + format);
-      if (tider) extra.push('Tider som passar: ' + tider);
+      if (tider) extra.push('Tider för passen: ' + tider);
       extra.push('Läst integritetspolicyn: ja (' + new Date().toISOString().slice(0, 10) + ')');
 
       const fritext = $('#l-msg').value.trim();
-      const kontaktRad = 'Kontakt först: ' + (kontakt === 'ring' ? 'ring' : 'mejl');
-      const message = [kontaktRad, fritext, extra.join('\n')].filter(Boolean).join('\n\n');
+      const samtal = $('#l-samtal').value.trim();
+      const överst = ['Telefon: ' + tel];
+      if (samtal) överst.push('Passar att ringa: ' + samtal);
+      const message = [överst.join('\n'), fritext, extra.join('\n')].filter(Boolean).join('\n\n');
 
       /* Valde de "Andra ämnen" är fritexten det som faktiskt betyder
          något — skriv den i subject-kolumnen i stället för etiketten. */
@@ -627,14 +599,8 @@
 
       if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }
       leadForm.reset();
-      telefonKrävs(false);
-      if (kontakt === 'ring') {
-        säg(msg, uppstartOm ? t('tackIntresseRingUppstart', { tel: tel, om: uppstartOm })
-                            : t('tackIntresseRing', { tel: tel }), true);
-      } else {
-        säg(msg, uppstartOm ? t('tackIntresseUppstart', { e: epost, om: uppstartOm })
-                            : t('tackIntresse', { e: epost }), true);
-      }
+      säg(msg, uppstartOm ? t('tackIntresseRingUppstart', { tel: tel, om: uppstartOm })
+                          : t('tackIntresseRing', { tel: tel }), true);
       NX.händelse('intresseanmalan', {
         kanal: NX.källa().kanal || 'okänd',
         kampanj: NX.källa().kampanj || 'ingen',
