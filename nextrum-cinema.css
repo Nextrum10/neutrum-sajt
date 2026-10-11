@@ -3479,6 +3479,13 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
 /* Korthyllorna (kortsektion i bygg-omradessidor.py) står i rad: med sektionens
    144 px upp och ner blev det 288 px tomt mellan två hyllor på dator. */
 .sec.sec-kort{padding-block:clamp(40px,5vw,72px)}
+/* Två vanliga sektioner i rad på samma botten: nedre luften räcker som avstånd,
+   annars blir det 288 px tomt på dator. Hyllor och band har egen luft. */
+@media (min-width:861px){
+  .sec:not(.sec-kort)+.sec,
+  .sec:not(.sec-kort)+.sec-kort{padding-top:0}
+  .sec-kort+.sec:not(.sec-kort){padding-top:clamp(40px,5vw,72px)}
+}
 .nx-final-tat .inner h2{max-width:18ch}
 .nx-final-tat .nx-story-ctas{margin-top:30px;justify-content:center}
 .nx-final .btn-primary{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
