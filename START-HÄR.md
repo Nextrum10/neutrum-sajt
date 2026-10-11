@@ -84,7 +84,7 @@ Supabase → **Project Settings → API**. Du behöver två saker:
 Det här är själva affärsmodellen, så det är värt att kunna utantill.
 
 1. Familjen skickar **intresseanmälan** på huvudsidan → hamnar i tabellen `leads`
-2. Ni ringer eller mejlar och väljer ut en studiehjälpare
+2. Ni ringer (numret och när det passar står överst i anmälan) och väljer ut en studiehjälpare
 3. `admin.html` → anmälan → **Ta in familjen**: kontot skapas med
    adressen i anmälan och eleven ur anmälan, och familjen får ett mejl
    med en länk där de väljer sitt lösenord. (De kan också registrera sig
