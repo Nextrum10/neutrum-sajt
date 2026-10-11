@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { S, kortDatum, matchar, namnFör, pill, tabell, tomtText } = NXAdmin;
+  const { S, gmailLänk, kortDatum, matchar, namnFör, pill, tabell, tomtText } = NXAdmin;
 
   /* ============================================================
      FRÅGOR
@@ -40,8 +40,8 @@
       { namn: 'Inkom', rita: m => '<span class="adm-tal">' + esc(kortDatum(m.created_at)) + '</span>' },
       { namn: '', höger: true, rita: m => (m.hanterad_at
         ? pill('Hanterad ' + kortDatum(m.hanterad_at), 'ar-klar')
-        : '<a class="btn btn-ghost btn-sm" href="mailto:' + esc(m.email)
-          + '" data-mailtext="keep" style="margin-right:7px">Svara</a>'
+        : '<a class="btn btn-ghost btn-sm" href="' + esc(gmailLänk(m.email))
+          + '" target="_blank" rel="noopener" style="margin-right:7px">Svara</a>'
           + '<button class="btn btn-primary btn-sm" data-hanterad="' + m.id + '">Klart</button>')
         /* 2026-09-28: en fråga bär ett namn, en adress och fritext, och
            tas bort ur våra system på samma väg som en person

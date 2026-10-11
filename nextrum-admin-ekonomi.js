@@ -34,7 +34,7 @@
    knapparna som ändrar något är samma lyssnare som förut (data-fakt-*,
    data-aterbetala, data-avv-*, data-bokslut-*, data-kor-*, flaggorna,
    data-timbank-ut). Det enda nya som gör något är Påminn, och det
-   skriver bara ett utkast i ert eget mejlprogram (kontaktaRuta).
+   skriver bara ett utkast i er Gmail (kontaktaRuta).
 
    FÄRGEN SÄGER VEMS DRAG DET ÄR, som i resten av vyerna: lera är ert
    drag eller ett fel, ockra väntar på någon annan (oftast familjen),
@@ -48,7 +48,7 @@
   const kronor = NXBetalning.kronor;
   const tim = m => NXBetalning.timmar(m);
 
-  const { DAG, FAKT_LAGE, S, TILLAGG_LAGE, elevNamn, fråga, funktionsFel, hämtaAllt,
+  const { DAG, FAKT_LAGE, S, TILLAGG_LAGE, elevNamn, fråga, funktionsFel, gmailAdress, hämtaAllt,
           hämtaEkonomiunderlag, kontaktaRuta, kortDatum, matchar, märkFlik, namnFör,
           pill, skriv, skrivOmOförändrad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
@@ -1428,7 +1428,7 @@
   function familjensUppgifter(x) {
     const p = (x.parent && S.personer[x.parent]) || {};
     const delar = [
-      p.email ? '<a href="mailto:' + esc(p.email) + '" data-mailtext="keep">' + esc(p.email) + '</a>' : '',
+      p.email ? gmailAdress(p.email) : '',
       p.phone ? '<a href="tel:' + esc(String(p.phone).replace(/[^\d+]/g, '')) + '">' + esc(p.phone) + '</a>' : '',
       x.parent ? '<button type="button" class="eko-lank" data-dp="familj:' + esc(x.parent) + '">Hela familjen</button>' : ''
     ].filter(Boolean);
@@ -1786,7 +1786,7 @@
 
      Ett pass som hållits utan betalning larmar direkt (ej_betalt), utan
      frist: Leo valde det, och det är en människa som följer upp.
-     Påminn skriver uppföljningen: ett utkast i ert eget mejlprogram,
+     Påminn skriver uppföljningen: ett utkast i er Gmail,
      med er adress som avsändare, som kontaktaRuta gör för anmälningar
      och ansökningar. Servern skickar ingenting, och utkastet går att
      ändra innan det skickas.

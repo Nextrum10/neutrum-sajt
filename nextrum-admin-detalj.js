@@ -17,7 +17,7 @@
   const M = NXMedia;
 
   const { ANS_LAGE, BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
-          UTB_LAGE, elevHjälpare, elevNamn, funktionsFel, hämtaMatchunderlag, kortDatum, läge, namnFör, närText,
+          UTB_LAGE, elevHjälpare, elevNamn, funktionsFel, gmailAdress, hämtaMatchunderlag, kortDatum, läge, namnFör, närText,
           lägesväljare, pill, rad, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden, nådda när de anropas. En som
      saknas hoppas över: panelen ska inte dö för att en lista inte
@@ -319,16 +319,11 @@
 
      Stod förut som ren text i faktarutan, och den som ville höra av
      sig fick markera adressen och klistra in den i sitt mejlprogram.
-     På en telefon gick det inte alls.
-
-     data-mailtext="keep" är inte valfritt: nextrum-app.js:189 byter
-     ut texten i VARJE mailto-länk mot husets egen adress, så att de
-     publika sidorna aldrig kan råka visa fel. Utan markeringen skulle
-     familjens adress skrivas över med info@nextrum.se och raden ljuga
-     om vems adress det är. */
+     På en telefon gick det inte alls. Adressen öppnar ett utkast i
+     Gmail (2026-10-11, KONTAKTRUTAN i nextrum-admin-karna.js). */
   function dpMejl(adress) {
     if (!adress) return null;
-    return '<a href="mailto:' + esc(adress) + '" data-mailtext="keep">' + esc(adress) + '</a>';
+    return gmailAdress(adress);
   }
 
   function dpTelefon(nummer) {

@@ -235,7 +235,7 @@ har sex flikar, med adressen `#ekonomi/<flik>`:
 
 Månadsväljaren (en rad till 2026-10-06, sedan ett fält med en ruta för år och månad,
 `minne/vyerna.md`) gäller Alla betalningar och Bokslut och syns bara där.
-**Påminn skriver ett utkast** i ert eget mejlprogram (`kontaktaRuta`),
+**Påminn skriver ett utkast** i er Gmail (`kontaktaRuta`, 2026-10-11),
 med det som inte är betalt och länken till passet eller till Bekräfta
 rapport; servern skickar ingenting. Fakturan nämns bara när flaggan är
 på, familjen inte är spärrad och brevet gäller ett pass: ett tillägg

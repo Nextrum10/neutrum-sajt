@@ -1174,6 +1174,29 @@ tabellerna och listorna, inte ytorna.
 - NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
   vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
 
+### Mejl från adminvyn skrivs i Gmail (2026-10-11)
+
+Leo: "när vi ska skicka mail från plattformen, se till att det alltid görs i
+gmail och inte mail". Adminvyn öppnade utkasten med `mailto:`, och det öppnar
+datorns förvalda program, som på en Mac är Mail. Nu öppnar allt Gmails
+skrivruta i en ny flik (`gmailLänk(till, ämne, text)` och `gmailAdress(adress)`
+i kärnan, `https://mail.google.com/mail/?view=cm&fs=1&to=…&su=…&body=…`):
+kontaktrutan (Öppna i Gmail, med anmälningarna, ansökningarna, Påminn,
+studiehjälparna och felgrupperna), Svara på en kontaktfråga, varje adress som
+går att klicka på i panelen, i Månadens ekonomi och vårdnadshavarens, och
+sidfoten. **Ingen `mailto:` i adminvyn.**
+
+- **Kontot är det Gmail öppnar först i webbläsaren** (`/u/0`). Länken väljer
+  inget konto: en `authuser` till ett konto som inte är inloggat skickar till
+  Googles inloggning i stället för utkastet.
+- **Fliken öppnas före varje `await`** i kontaktrutan, för Safari stoppar ett
+  fönster som öppnas efter en väntan; `kontaktad_at` stämplas efteråt, som förut.
+- **Utkasten är korta** (under 1 000 tecken). Gmail tar texten i adressen, och
+  en mycket lång text kan Google neka; en mall som växer mycket ska provas.
+- **Familjernas och studiehjälparnas sidor behåller `mailto:`**: vilket program
+  de skriver i är deras sak, och de flesta har inte Gmail. Regeln gäller det vi
+  skickar.
+
 ### Läget sätts med märkena (2026-10-06)
 
 Leo: "en grej jag inte gillar på admin är hur man trycker in läge. Gör de
