@@ -525,9 +525,11 @@ inget att samtycka till". Dölj inte bara rutan med CSS och låt
 skripten gå: det är mätning utan samtycke. Ändras något i `SAMTYCKE`:
 kör `verktyg/satt-version.py`.
 
-- **Två syften, två val: statistik och annonser.** Rutan har Neka
-  alla, Godkänn alla och en kryssruta per syfte (ingen förkryssad) med
-  Spara mitt val. Svaret är `{v:2, val:{statistik, annonser}}`; ett
+- **Två syften, två val: statistik och annonser.** Rutan har Godkänn
+  alla, Neka alla och Anpassa; Anpassa fäller ut en kryssruta per syfte
+  (ingen förkryssad) och blir Spara mitt val, på samma plats. Öppnas
+  rutan från Cookieinställningar syns kryssrutorna direkt, med det som
+  gäller nu. Panelen på `lagring.html` visar dem alltid. Svaret är `{v:2, val:{statistik, annonser}}`; ett
   svar i det gamla formatet räknas som inget svar. `SYFTE` i
   `nextrum-samtycke.js` säger vilket syfte varje reglage hör till.
 - **Vercels besöksstatistik laddas först efter ja** (2026-09-27).
@@ -583,8 +585,15 @@ kör `verktyg/satt-version.py`.
 - **Ett ja gäller det rutan beskrev** (`omfattar`). Slås ett nytt syfte
   på frågar rutan alla igen. Svaret (`localStorage` `nx-samtycke`)
   gäller ett år. Global Privacy Control räknas som nej.
-- **Ja och nej är samma knapp.** Samma storlek, samma stil, bredvid
-  varandra. Gör aldrig nej till en grå länk.
+- **Ja och nej är samma knapp.** Samma storlek, samma stil. Sedan
+  2026-10-11 har rutan Dribbbles form (Leo: "i den stilen"): ett ark kant
+  i kant längst ner på en telefon, ett kort nere till vänster på dator,
+  tre knappar i full bredd under varandra, Godkänn alla och Neka alla
+  båda fyllda i lera och Anpassa med lerkant. Förebilden har Accept All
+  fylld och Reject All med kant; den skillnaden är med flit inte tagen.
+  Gör aldrig nej till en kantknapp eller en grå länk. Arket växer uppåt
+  vid Anpassa, och slår det i skärmens topp rullas det så att knappen
+  under fingret står kvar.
 - **Klasserna heter `nx-kakor-*`.** `.nx-samtycke` är GDPR-kryssrutan
   under formulären; första versionen av rutan hette så och flyttade
   kryssrutan ut i hörnet med `position:fixed`.

@@ -3684,47 +3684,41 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
    Klasserna heter nx-kakor-*: .nx-samtycke är redan GDPR-rutan
    under formulären, och en ruta med position:fixed på den flyttade
    kryssrutan ut i hörnet.
-   Ett kort nere till vänster, inte ett band över sidan: den som
-   läser ska kunna fortsätta läsa. Ja och nej är samma knapp med
-   flit — se filhuvudet i skriptet. Rör sig bara med opacity och
-   transform, och på en telefon göms hjälprutan (.mk) medan kortet
-   står framme, annars ligger de ovanpå varandra i samma hörn.
+   Formen är Dribbbles (2026-10-11, Leo: "i den stilen"): rubrik,
+   tre meningar och tre knappar i full bredd under varandra, med
+   kryssrutorna bakom Anpassa. På dator ett kort nere till vänster,
+   så att den som läser kan fortsätta läsa; på en telefon ett ark
+   kant i kant längst ner. Godkänn alla och Neka alla är samma fyllda
+   knapp med flit, inte en fylld och en med kant som hos förebilden:
+   se filhuvudet i skriptet. Rör sig bara med opacity och transform,
+   och på en telefon göms hjälprutan (.mk) medan rutan står framme,
+   annars ligger de ovanpå varandra.
    ============================================================ */
 .nx-kakor{
   position:fixed;z-index:860;
   left:clamp(12px,2.4vw,28px);bottom:max(clamp(12px,2.4vw,28px),env(safe-area-inset-bottom));
-  width:min(440px,calc(100vw - 24px));
-  padding:20px 20px 18px;border-radius:22px;
+  width:min(420px,calc(100vw - 24px));
+  max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;
+  padding:26px 24px 20px;border-radius:22px;
   background:var(--pap);color:var(--bl-2);
   border:1px solid var(--ln-2);box-shadow:var(--sk-3);
-  font-size:.9rem;line-height:1.55;
+  font-size:.95rem;line-height:1.55;
   opacity:0;transform:translateY(18px) scale(.985);transform-origin:bottom left;
   transition:opacity .32s var(--e),transform .55s var(--e-ut);
 }
 .nx-kakor.nx-kakor-in{opacity:1;transform:none}
-.nx-kakor-topp{
-  display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;align-items:center;
-  margin-bottom:12px;
-}
-.nx-kakor-ikon{
-  width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
-  background:var(--acc-soft);color:var(--acc-text);
-}
-.nx-kakor-ikon svg{width:22px;height:22px}
-.nx-kakor .nx-kakor-et{
-  margin:0 0 4px;font-family:var(--f-mono);font-size:10px;font-weight:500;
-  letter-spacing:.15em;text-transform:uppercase;color:var(--acc-text);
-}
 .nx-kakor-t{
-  margin:0;font-size:1.12rem;line-height:1.22;
-  font-weight:600;letter-spacing:-.02em;color:var(--bl);
+  margin:0 0 12px;font-size:1.45rem;line-height:1.18;
+  font-weight:700;letter-spacing:-.028em;color:var(--bl);
 }
 .nx-kakor-t:focus{outline:none}
 .nx-kakor p{margin:0 0 10px}
+.nx-kakor .nx-kakor-intro{color:var(--bl-2)}
 /* Ett val per syfte. Den inbyggda kryssrutan, i lerans färg: den
    känns igen, går att nå med tangentbordet och läses rätt av en
    skärmläsare utan att vi bygger något eget. */
-.nx-kakor-syften{display:grid;gap:8px;margin:12px 0 0}
+.nx-kakor-syften{display:grid;gap:8px;margin:14px 0 0}
+.nx-kakor-syften[hidden]{display:none}
 .nx-kakor-syfte{
   display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:start;
   padding:11px 12px;border-radius:12px;border:1px solid var(--ln);
@@ -3733,40 +3727,41 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
 .nx-kakor-syfte input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--acc);cursor:pointer}
 .nx-kakor-syfte b{display:block;color:var(--bl);font-weight:600;font-size:.9rem;margin-bottom:2px}
 .nx-kakor-syfte span span{display:block;font-size:.82rem;line-height:1.45;color:var(--bl-2)}
-.nx-kakor-knappar{
-  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;
-  margin:14px 0 12px;
-}
-/* Neka alla och Godkänn alla bredvid varandra, Spara mitt val under
-   dem. Samma knapp alla tre, så att ingen av dem är den "rätta". */
-.nx-kakor-knappar .nx-kakor-spara{grid-column:1 / -1}
-/* Samma knapp två gånger. Ingen av dem är primär. */
+/* Tre knappar i full bredd. Den tredje är Anpassa eller Spara mitt
+   val, på samma plats, så att inget man tryckt på flyttar sig. */
+.nx-kakor-knappar{display:grid;gap:10px;margin:18px 0 14px}
 .nx-kakor-knappar .nx-kakor-val{
-  justify-content:center;min-height:46px;padding:11px 14px;font-size:.92rem;
-  background:var(--pap-2);border:1px solid var(--ln-2);color:var(--bl);box-shadow:none;
+  justify-content:center;width:100%;min-height:50px;padding:12px 18px;
+  font-size:.98rem;box-shadow:none;
 }
-.nx-kakor-knappar .nx-kakor-val:hover{background:var(--pap-3);border-color:var(--bl)}
+.nx-kakor-knappar .nx-kakor-val[hidden]{display:none}
+.nx-kakor-knappar .nx-kakor-fylld{
+  background:var(--acc);color:var(--acc-ink);border:1.5px solid var(--acc);
+}
+.nx-kakor-knappar .nx-kakor-fylld:hover{background:var(--acc-lugn);border-color:var(--acc-lugn)}
+.nx-kakor-knappar .nx-kakor-kant{
+  background:transparent;color:var(--acc-text);border:1.5px solid var(--acc);
+}
+.nx-kakor-knappar .nx-kakor-kant:hover{background:color-mix(in srgb,var(--acc) 8%,transparent)}
 .nx-kakor .nx-kakor-fot{margin:0;font-size:.8rem;line-height:1.5;color:var(--bl-3)}
-.nx-kakor-fot a{color:var(--bl);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.nx-kakor-fot a{color:var(--bl);text-decoration:underline;text-underline-offset:3px}
 .nx-kakor-fot a:hover{color:var(--acc-text)}
 @media (max-width:560px){
   .nx-kakor{
-    left:10px;right:10px;width:auto;
-    bottom:max(10px,env(safe-area-inset-bottom));
-    padding:16px 16px 14px;border-radius:20px;transform-origin:bottom center;
-    font-size:.84rem;line-height:1.5;
+    left:0;right:0;bottom:0;width:auto;
+    max-height:calc(100dvh - 12px);
+    padding:24px 20px max(18px,env(safe-area-inset-bottom));
+    border-radius:20px 20px 0 0;border-width:1px 0 0;
+    transform:translateY(24px);transform-origin:bottom center;
+    font-size:.92rem;line-height:1.5;
   }
-  .nx-kakor-topp{grid-template-columns:38px minmax(0,1fr);gap:12px;margin-bottom:10px}
-  .nx-kakor-ikon{width:38px;height:38px;border-radius:12px}
-  .nx-kakor-ikon svg{width:19px;height:19px}
-  .nx-kakor-t{font-size:1rem}
-  .nx-kakor p{margin-bottom:8px}
-  .nx-kakor-knappar{margin:12px 0 10px}
-  .nx-kakor-syften{gap:6px;margin-top:8px}
+  .nx-kakor-t{font-size:1.3rem;margin-bottom:10px}
+  .nx-kakor-knappar{gap:10px;margin:16px 0 12px}
+  .nx-kakor-syften{gap:6px;margin-top:10px}
   .nx-kakor-syfte{padding:9px 10px;gap:9px}
   .nx-kakor-syfte b{font-size:.86rem}
   .nx-kakor-syfte span span{font-size:.78rem;line-height:1.4}
-  .nx-kakor-knappar .nx-kakor-val{min-height:44px;padding:10px 12px}
+  .nx-kakor-knappar .nx-kakor-val{min-height:48px}
   .nx-kakor .nx-kakor-fot{font-size:.76rem}
 }
 @media (max-width:720px){
@@ -3784,9 +3779,7 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
 .nx-kakor-panel p{margin:0 0 8px}
 .nx-kakor-lage{font-weight:600;color:var(--bl)}
 .nx-kakor-panel .nx-kakor-knappar{max-width:420px;margin-bottom:0}
-.nx-kakor-panel .nx-kakor-knappar .nx-kakor-val{background:var(--pap)}
 .nx-kakor-panel .nx-kakor-syfte{background:var(--pap)}
-.nx-kakor-panel .nx-kakor-knappar .nx-kakor-val:hover{background:var(--pap-3)}
 
 /* ============================================================
    RÄKNA SJÄLV (prissidan, 2026-10-06, omgjord 2026-10-07)
