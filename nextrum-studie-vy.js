@@ -1703,14 +1703,17 @@
     /* Före matchningen (2026-10-07): vårt drag, men det första man ska
        se, och vägen till det som går att göra så länge. Utan barn är
        det att lägga till barnet. Räknas inte i siffran: det är inget
-       familjen ska göra något åt. */
+       familjen ska göra något åt. Texten är EN meta-bit (2026-10-12):
+       som två stod halvorna av meningen bredvid varandra med ett glapp
+       på datorn och på var sin rad, den andra med liten bokstav, på en
+       telefon. */
     if (S.väntar) {
       const barn = (S.barn || []).length;
       rader.unshift(NXStudie.radLank({
         href: barn ? '#nexlax' : '#profil/barn', ikon: 'vem', ton: 'ockra',
         titel: 'Vi letar studiehjälpare åt er',
-        meta: ['Vi hör av oss när det är klart, och då öppnas bokningen',
-          barn ? 'under tiden kan ni prova NexLäx' : 'under tiden kan ni lägga till barnet'],
+        meta: ['Vi hör av oss när det är klart, och då öppnas bokningen. '
+          + (barn ? 'Under tiden kan ni prova NexLäx.' : 'Under tiden kan ni lägga till barnet.')],
         lank: barn ? 'Till NexLäx' : 'Lägg till barnet'
       }));
     }
