@@ -341,6 +341,35 @@ inloggning). I ordning:
    Skicka länk för lösenord på ett konto i bruk. Radera provfamiljen i
    adminvyns panel.
 
+## 12. Barnets förslag, förhandsvisningen och adminkontona i statistiken (2026-10-12)
+
+Vyerna går ut med Vercel vid merge och tål att migrationerna saknas:
+utan tabellen syns inga förslag, utan `boka` i listan inget val, och
+förhandsvisningen behöver ingen av dem. Efter merge, i den här ordningen:
+
+1. **`notis-ko` från main**, före migrationen: den känner mallen för
+   `barnforslag`. Ur `_delad/notiser/` ändrades `mallar.ts` och `typer.ts`.
+   Hämta tillbaka och jämför byte för byte, som förut.
+2. **`20261012120000_barnet_foreslar_pass`** från merge-commiten, md5
+   prövad, körd och registrerad som de förra (`minne/databasen.md`). Filen
+   har inget `drop`, inget `delete` utanför en funktion och ingen funktion
+   med två, och den går att köra två gånger.
+3. **`20261012120100_adminkonton_utanfor_statistiken`**, likadant.
+4. **Hela `rls-test.sql` mot driften**, i en transaktion som rullas
+   tillbaka: lokalt 1574 av 1574 (avsnitt 26 och 27 är nya).
+5. **Prova**: slå på Föreslå pass för ett provbarn under Profil → Barn,
+   föreslå ett pass i barnets vy, se mejlet och raden under Att göra,
+   granska, skicka och acceptera som studiehjälpare. Öppna Förhandsvisning
+   i adminvyn och prova samma sak där, utan att något hamnar i databasen.
+6. **Säg till** familjerna med barnkonto att valet finns, i samma mejl som
+   policyändringen (`DATASKYDD.md` avsnitt 8), och låt juristen läsa rad 26.
+7. **Adminkontots pass**: kontot som också är förälder har alla passen
+   från provandet. De räknas inte i statistiken efter steg 3, men står
+   kvar som pass och betalningar. Ett adminkonto raderas inte i panelen
+   (`radera_person()` vägrar), och `bookings.parent_id` är ON DELETE
+   CASCADE, så inget görs i dashboarden. Ska passen bort är det ett eget
+   beslut och en egen ändring.
+
 ---
 
 ## Stänga av barnkontona snabbt

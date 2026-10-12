@@ -481,3 +481,34 @@ som Supabase kodar den, knappen hela vägen genom en falsk `verify` till
 vyn, och att allt annat än vårt Supabase blir "Länken är inte hel".
 Samma körsätt, egen port (8962).
 
+
+### Webbläsarproven för barnets förslag och förhandsvisningen (2026-10-12)
+`verktyg/prova-barnforslag.js` (port 8973) kör barnets Boka pass (inget
+pris, de upptagna timmarna, förslaget, Ta tillbaka, databasens nej, av
+och avstängt, utan funktionerna, telefonen) och förälderns granskning
+(listan, Att göra, siffran, granskningen med allt ifyllt, rabattkoden
+fel och rätt, en annan längd som prövar koden igen, första timmen och
+tipstimmen med en kod, Skicka, Skicka inte, Tillbaka, adressen
+`#boka/forslag-<id>`, valet under Profil → Barn, en databas utan
+migrationen, telefonen) mot en falsk Supabase, som de andra.
+
+`verktyg/prova-forhandsvisning.js` (port 8974) provar förhandsvisningen
+mot den riktiga adressen, men svarar själv på den enda fråga den ställer
+dit (`mina_behorigheter`); varje annat anrop dit stoppas och fäller
+provet. Grinden (utloggad, inloggad utan roll, filen som inte kom fram,
+utan adressen), studievyn och studiehjälparvyn sektion för sektion (det
+vyerna frågar efter som världen saknar står som 404 i
+`NXForhandsvisning.logg`), barnets förslag, ett eget förslag, ett
+meddelande, en nivå i NexLäx hela vägen, ett köp, Logga ut, Acceptera,
+en rapport, elevens tråd, de två vyerna kopplade (föreslå, byt, acceptera,
+byt tillbaka, omladdningen, Börja om), telefonen och adminvyns sektion
+och tal utan adminens konto. När vyerna börjar fråga efter en ny tabell
+eller funktion säger provet det: lägg den i världen i
+`nextrum-forhandsvisning.js`.
+
+`prova-barnkonton.js` fick två ändringar samma dag: Boka pass är en dold
+menypost i barnets vy tills föräldern slagit på den, och Förhandsvisning
+står i menyn för varje admin.
+
+Flera prov samtidigt kan fälla `prova-ansokningar.js` på tid (den väntar
+800 ms på adminvyns siffror). Ensam går den igenom.

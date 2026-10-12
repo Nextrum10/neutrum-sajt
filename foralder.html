@@ -31,7 +31,7 @@
 <link rel="stylesheet" href="nextrum-vy.css?v=9be2b0cf">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=8bdc5001">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=6aba63a5">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=71cb53d7">
 </head>
 <body class="vy">
@@ -315,6 +315,16 @@
             <span>Bokar åt</span>
             <select class="sel sel-sm" aria-label="Byt barn"></select>
           </label>
+        </div>
+
+        <!-- Barnens förslag (barnet_foreslar_pass, 2026-10-12). Ett barn som
+             får föreslå pass skickar dem hit, och inget går till
+             studiehjälparen förrän ni skickat det. Granska öppnar förslaget
+             i ytan nedan. Dold utan förslag. -->
+        <div class="bf" id="bf-ruta" hidden>
+          <div class="vy-grupp"><h3>Förslag från barnen</h3><span class="vy-antal ar-gor" id="bf-antal"></span></div>
+          <div class="vy-kort vy-lista" id="bf-lista"></div>
+          <p class="ok-msg" id="bf-msg" role="status"></p>
         </div>
 
         <div class="dbox">
@@ -1038,18 +1048,19 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=32941e3e"></script>
+<script src="nextrum-forhandsvisning.js?v=80b6ee6a"></script>
+<script src="nextrum-app.js?v=361e3687"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=34b17c67"></script>
-<script src="nextrum-studie.js?v=8af0ddc7"></script>
+<script src="nextrum-studie.js?v=e840ba43"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
-<script src="nextrum-arbetsyta.js?v=a4d8c967"></script>
+<script src="nextrum-arbetsyta.js?v=823a0133"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=d7fc6340"></script>
 <script src="nextrum-ljud.js?v=af6ef39f"></script>
 <script src="nextrum-uppgifter.js?v=08b43cf0"></script>
 <script src="nextrum-introduktion.js?v=2f3aa58e"></script>
-<script src="nextrum-modulvakt.js?v=568e1d7e"></script>
-<script src="nextrum-studie-vy.js?v=c23406b4"></script>
+<script src="nextrum-modulvakt.js?v=7e006de6"></script>
+<script src="nextrum-studie-vy.js?v=f5ea44f0"></script>
 </body>
 </html>

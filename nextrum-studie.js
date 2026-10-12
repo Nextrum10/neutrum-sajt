@@ -3655,7 +3655,9 @@ window.NXStudie = (function () {
     { typ: 'paminnelse',     namn: 'Påminnelse före pass', om: 'Innan ett bokat pass.' },
     /* Fas 21.2. Bara familjen köper timmar, så bara föräldravyn visar
        raden: en strömbrytare för ett mejl man aldrig kan få är brus. */
-    { typ: 'timmar_gar_ut',  namn: 'Köpta timmar går ut',  om: 'Tio dagar innan köpta timmar går ut, om det finns timmar kvar.', bara: 'parent' }
+    { typ: 'timmar_gar_ut',  namn: 'Köpta timmar går ut',  om: 'Tio dagar innan köpta timmar går ut, om det finns timmar kvar.', bara: 'parent' },
+    /* barnet_foreslar_pass (2026-10-12). Bara familjen får förslagen. */
+    { typ: 'barnforslag',    namn: 'Barnens förslag',      om: 'När ett barn föreslår ett pass i sin vy. Inget går till studiehjälparen förrän ni skickat det.', bara: 'parent' }
   ];
 
   function notisval(o) {

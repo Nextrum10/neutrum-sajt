@@ -433,6 +433,7 @@ inloggning, när inloggningen skapas och när som helst efteråt:
 | `nexlax` | NexLäx: banan, nivåerna, läget, bocken på en uppgift och rapportknappen | på |
 | `meddelanden` | Nextrums notiser till barnet (`barn_notiser`) | på |
 | `chatt` | tråden med studiehjälparen (`barn_meddelanden`, barnets_chatt) | på |
+| `boka` | att föreslå pass, som går till föräldern först (`students.far_boka`, barnet_foreslar_pass, 2026-10-12) | av |
 
 - **Förvalet är det som gällde före**: allt utom rapporterna, som redan
   var av som förval. Barn som hade en inloggning behöll det de hade,
@@ -440,9 +441,10 @@ inloggning, när inloggningen skapas och när som helst efteråt:
   (barnets_chatt, Leo: "på direkt efter merge") och är på som förval av
   samma skäl; att den går att stänga av lades till när de två slogs
   ihop, för annars hade föräldern kunnat stänga av allt utom just
-  barnets direkta kontakt med en vuxen. Det barnet aldrig får (boka, avboka, svara,
+  barnets direkta kontakt med en vuxen. Det barnet aldrig får (boka själv, avboka, svara,
   priser, betalningar, föräldern) står inte i listan, så det går inte att
-  slå på.
+  slå på. `boka` (2026-10-12) är att föreslå: förslaget blir ett pass
+  först när föräldern skickat det (nedan).
 - **Spärren ligger i databasen.** `students.barn_behorigheter` (text[],
   villkoret `students_barn_behorigheter_kanda`) bär fem av valen;
   rapporterna står kvar i `visa_rapporter`, så att inget som redan läste
@@ -515,6 +517,79 @@ inloggning, när inloggningen skapas och när som helst efteråt:
   `skydda_studentfalt` och `skydda_studentfalt_ny`), `BARN_FÅR` och
   `BARN_FÅR_FÖRVAL` i studievyn och `FÅR` i barnets vy, i samma ändring
   som funktionen den spärrar. `kolla-behorigheter.py` jämför listorna.
+  En behörighet som står i en egen kolumn (`rapporter` i
+  `visa_rapporter`, `boka` i `far_boka`) står i `EGNA_KOLUMNER` där, och
+  dess återställning prövas för sig.
+
+### Barnets förslag på pass (barnet_foreslar_pass, 2026-10-12)
+Leo: "barn ska kunna boka pass med läxhjälparen själva, då är processen
+följande: barn skickar förslag, precis som förälder, men ser inte priset.
+förälder får förslaget och kan ändra i förslaget, samt ser pris och kan
+ange rabattkod om det finns. sedan godkänner föräldern förslaget och det
+går vidare till studiehjälparen som ska godkänna det. men om föräldern
+skickar förslaget ursprungligen så är det så som det är nu. förälder
+väljer också i sina inställningar om barnet ska kunna boka pass."
+
+- **Förslaget är inget pass.** Det står i `barn_passforslag` (dag, tid,
+  längd, ämne, var, en rad på högst 300 tecken, läget `vantar`,
+  `skickat`, `nej` eller `aterkallat`, och passet det blev) tills
+  föräldern skickat det. En femte status på `bookings` hade brutit mot
+  kärnan (inga nya statusar), upptagit studiehjälparens timme, dragit en
+  köpt timme och mejlat studiehjälparen innan föräldern sagt något.
+- **Behörigheten `boka`** står i en egen kolumn, `students.far_boka` (av
+  som förval), som rapporterna i `visa_rapporter`: att lägga den i
+  `barn_behorigheter` hade krävt att villkoret skrevs om, och det är ett
+  `drop`. `barn_behorigheter_satt()` tar den i listan som förut, och
+  `intern.barnets_behorigheter()` lägger tillbaka den i svaret.
+  `skydda_studentfalt` håller kolumnen för alla utom föräldern, och den
+  går tillbaka till av när inloggningen tas bort.
+- **Barnet** föreslår med `barn_foresla_pass()` (en dag till och med
+  tredje månaden framåt, en hel timme minst en timme fram, en till tre
+  timmar som slutar senast midnatt, högst fem som väntar och tio på ett
+  dygn; tiderna 11–22 och 9–22 är vyns, `HELA_DAGEN`, som för
+  föräldern), läser sina med
+  `barn_passforslag()`, de upptagna timmarna med `barn_upptagna_tider()`
+  (att timmen är tagen, aldrig av vem) och tar tillbaka ett som väntar
+  med `barn_aterkalla_forslag()`. Alla fyra prövar `far_boka`, och ingen
+  nämner pris, rabatt, timmar eller betalning. Barnets roll når
+  fortfarande ingen tabell.
+- **Barnets vy**: menyposten Boka pass syns bara när föräldern slagit på
+  det, och adressen `#boka` säger annars att föräldern valt bort det.
+  Ytan är förälderns (`NXArbete.bokning`) i barnets läge (`utanPris`):
+  inget pris, inget antal barn, ingen mening om ångerrätten (det är
+  föräldern som ber om passet), och knappen heter Skicka till din
+  förälder. Under ytan står Dina förslag, med vad föräldern gjort, och
+  ett som väntar går att ta tillbaka. Översikt och hälsningen pekar dit.
+- **Föräldern** ser förslagen överst under Boka pass (`#bf-ruta`), under
+  Att göra, som en siffra vid Boka pass och i notisklockan, och får ett
+  mejl (typen `barnforslag`, `minne/notiser.md`). Granska öppnar
+  förslaget i den vanliga ytan med allt ifyllt (en dag som varit eller en
+  tid som tagits står inte ifylld, och hjälpraden säger det), med priset
+  och en ruta för en rabattkod (`kolla_rabattkod`, prövad igen när
+  föräldern skickar). Skicka går genom `skicka_barnets_forslag()`, som är
+  SECURITY INVOKER: passet skrivs med förälderns egen inloggning, genom
+  policyn och alla triggrar på `bookings` (pris, rabattkod, första timmen
+  och tipstimmen, timmarna, villkoren, notisen till studiehjälparen), och
+  förslaget markeras i samma transaktion. Skicka inte
+  (`barnforslag_neka()`) svarar barnet utan pass; Tillbaka låter
+  förslaget vänta. Ett förslag föräldern själv gör har ingen rabattkod,
+  som förut.
+- **Priset vid knappen följer databasens ordning**: koden dras först
+  (`skydda_rabatt`), första timmen ovanpå (`forsta_timmen_bjuds`), och
+  tipstimmen går bara på ett pass utan en annan kod, så den försvinner
+  ur priset när en kod gäller. Räcker köpta timmar betalar de passet
+  också med en kod, och rutan säger att koden då inte ändrar priset. Ett
+  belopp med ören står med båda decimalerna ("359,10 kr").
+- **Barnet får ingen notis om förälderns svar**: `barn_notiser` har ett
+  villkor över typerna, och att skriva om det är ett `drop`. Svaret står i
+  Dina förslag, och när studiehjälparen bekräftar passet får barnet
+  notisen om det som förut.
+- **Gallringen och raderingen**: 30 dagar efter svaret, eller efter dagen
+  för ett som aldrig besvarades (`barnforslag-gallring`, 03.38 UTC), och
+  direkt med barnet eller familjen (`students_barnforslag_raderas`,
+  `profiles_barnforslag_raderas`). Registret: `DATASKYDD.md` rad 26.
+- **Proven**: avsnitt 26 i `rls-test.sql` och
+  `verktyg/prova-barnforslag.js` (barnets vy och förälderns granskning).
 
 ## Del 2: adminbehörigheterna
 

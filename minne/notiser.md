@@ -447,6 +447,21 @@ per dag), direktmejlet, bromsen, mottagarna och rättigheterna.
   resultatet av, men det prövar att hen läst handboken, inte vem hen
   är.
 
+### Barnets förslag till föräldern (barnet_foreslar_pass, 2026-10-12)
+Typen `barnforslag` går till föräldern när barnet föreslagit ett pass:
+en rad i `notiser` och ett mejl (`notis_typer()`, `notis_mejlbara()` och
+`typer.ts` ändrades tillsammans). Ett förslag har inget pass, så
+`notis_skapa` har en egen gren för typen, med samlingsnyckeln
+`barnforslag:<förälder>`: två förslag inom samlingsfönstret blir ett mejl
+("Alva har föreslagit 2 pass"). Mejlet bär barnets förnamn, dagen, tiden
+och ämnet, aldrig platsen eller barnets rad, och knappen går till Boka
+pass. Svarar föräldern i vyn, eller tar barnet tillbaka förslagen, innan
+mejlet gått, blir raden `hoppad` (`intern.barnforslag_post_hoppas`, som
+alla tre vägarna anropar). Barnet får ingen notis om förälderns svar:
+`barn_notiser` har ett villkor över typerna, och att skriva om det är ett
+`drop`. **`notis-ko` driftsätts från main FÖRE migrationen**: en rad av
+typen innan funktionen känner mallen hade blivit ett fel.
+
 ### Barnkontots tekniska adress får inga mejl (barnkonton_och_admin, 2026-09-30)
 Kontots adress, `<namn>@barn.nextrum.se`, får aldrig ett mejl. `notis_utskick_ta` hoppar över
 barnkonton och adresser på `barn.nextrum.se`, och `notis-ko` gör det en

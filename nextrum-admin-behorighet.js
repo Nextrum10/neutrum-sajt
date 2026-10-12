@@ -60,7 +60,10 @@
     studiehjalpare: ['anvandare_las', 'anvandare_redigera', 'matchning', 'studiehjalpare_godkann'],
     matchning: ['matchning'],
     bokningar: ['bokningar_las'],
-    system: ['admin_hantera', 'notiskonfig']
+    system: ['admin_hantera', 'notiskonfig'],
+    /* Förhandsvisningen (2026-10-12) är för varje admin: den visar bara
+       påhittade uppgifter och läser inget ur databasen. */
+    forhandsvisning: BEHORIGHETER.map(([kod]) => kod)
   };
   /* Flikarna i en sektion som en begränsad admin ser. En flik som inte
      står här är superadminens, också i en sektion som syns. */

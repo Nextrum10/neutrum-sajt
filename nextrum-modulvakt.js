@@ -66,7 +66,11 @@
        En gammal nextrum-uppgifter.js utan uppdragen ritar inte
        NP-sektionen, och det syns inte förrän någon letar efter den. */
     krav.push([studieKlar && typeof NXStudie.adminroll === 'function', 'nextrum-studie.js'],
-              [typeof NXArbete !== 'undefined' && typeof NXArbete.dagensHero === 'function', 'nextrum-arbetsyta.js'],
+              /* BOKA_AMNEN kom med barnets förslag (2026-10-12): en gammal
+                 yta utan den känner inte barnets läge, och hade visat
+                 priset för barnet. */
+              [typeof NXArbete !== 'undefined' && typeof NXArbete.dagensHero === 'function'
+                 && Array.isArray(NXArbete.BOKA_AMNEN), 'nextrum-arbetsyta.js'],
               [typeof NXLjud !== 'undefined' && typeof NXLjud.känn === 'function', 'nextrum-ljud.js'],
               [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg && typeof NXUppgifter.uppdragHtml === 'function',
                'nextrum-uppgifter.js']);
@@ -125,6 +129,9 @@
          && typeof NXStudie.villkorFörst === 'function',
        'nextrum-studie.js'],
       [typeof NXIntro !== 'undefined' && typeof NXIntro.visa === 'function', 'nextrum-introduktion.js'],
+      /* Bokningsytan: studievyn läser ämnena ur den sedan barnets förslag
+         (2026-10-12), och granskningen av ett förslag finns bara i den nya. */
+      [typeof NXArbete !== 'undefined' && Array.isArray(NXArbete.BOKA_AMNEN), 'nextrum-arbetsyta.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],
       [typeof NXBetalning !== 'undefined' && !!NXBetalning.passpris, 'nextrum-betalning.js'],
       /* NexLäx (Fas 23.2): vägen och spelaren. En gammal fil i cachen,
@@ -135,6 +142,13 @@
       [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg && typeof NXUppgifter.uppdragHtml === 'function',
        'nextrum-uppgifter.js']
     );
+    /* Förhandsvisningen (2026-10-12) prövas bara i förhandsvisningen:
+       för alla andra är filen tom. Kom den inte fram har nextrum-app.js
+       ingen klient alls, hellre än adminens riktiga konto. */
+    if (/(?:^\?|&)forhandsvisning(?:[=&]|$)/.test(String(location.search || ''))) {
+      krav.push([typeof NXForhandsvisning !== 'undefined' && NXForhandsvisning.på === true
+        && typeof NXForhandsvisning.klient === 'function', 'nextrum-forhandsvisning.js']);
+    }
   }
 
   var saknas = [];

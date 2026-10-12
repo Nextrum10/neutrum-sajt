@@ -207,6 +207,14 @@ plats alls. Förval ur förra passet och barnets `format_onskemal`.
 Platsen ändras inte när tiden flyttas — `skydda_bokningsfalt` släpper
 bara igenom tid och status på ett befintligt pass.
 
+**Barnet kan föreslå pass (barnet_foreslar_pass, 2026-10-12)**, när
+föräldern slagit på det för barnet (`boka`, av som förval). Förslaget
+går till föräldern, utan pris, och blir ett pass först när föräldern
+skickat det, kanske med en annan tid och en rabattkod, som sitt eget
+förslag (`skicka_barnets_forslag()`). Studiehjälparen svarar på passet
+som på vilket förslag som helst. Ett förslag föräldern själv gör går som
+förut, utan rabattkod. Allt om det i `minne/barnkonton-och-admin.md`.
+
 ## Svaret på en föreslagen tid och avbokade pass
 
 **Svaret på en föreslagen tid och avbokade pass (2026-09-30).** Leo bad

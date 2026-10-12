@@ -1319,7 +1319,9 @@ senare sida ger felet, aldrig en halv lista.
   till föräldervyn. Sedan 2026-10-06 samma skal som studievyn: hälsningen
   (`NXArbete.hero`) och sidomenyn (`NXStudie.sidomeny`) med fem delar,
   Översikt, Mina lektioner, NexLäx, Meddelanden och Profil (se "Hälsningen,
-  en bild per veckodag" nedan och `minne/barnkonton-och-admin.md`). Förut en
+  en bild per veckodag" nedan och `minne/barnkonton-och-admin.md`), och
+  sedan 2026-10-12 Boka pass som en sjätte, bara när föräldern låtit barnet
+  föreslå pass (`boka`; menyposten är dold annars). Förut en
   spalt utan meny och utan bild. Mina lektioner har studievyns flikar (Pass,
   Studieplan, Rapporter) men ingen betalning; Översikt räknar genomförda och
   kommande pass (`.bv-antal`). Barnets tråd med studiehjälparen ritas av
@@ -1398,3 +1400,54 @@ lektioner, detta ska ske efter att man bekräftat sitt nya lösenord."
 - **Barnets vy har ingen introduktion**: barnet kommer in med ett
   användarnamn föräldern gett det, och vyn har fyra delar. Den
   behövs inte, och ingen bad om den.
+
+### Förhandsvisningen i adminvyn (2026-10-12)
+Leo: "bygg två förhandsgranskningvyer där till vår admin vy, där ska vi
+med våra konton kunna se en förhandsgranskning av studievy och
+studielärarvyn", och samma kväll: "vyerna, studievy och studiecoachvyn
+ska vara kopplade med varandra i förhandsgranskningen, man ska kunna leka
+där och lätt kunna byta vy i admin. tex föreslå tid och byta vy och
+acceptera. detta ingår inte i riktig statistik eller underlag för lön
+eller faktura".
+
+- **Adminvyn**: sektionen Förhandsvisning (`data-sek="forhandsvisning"`,
+  under Inställningar, för varje admin: `SEKTIONER.forhandsvisning` är
+  alla behörigheter) med två rader och Öppna i en ny flik, till
+  `/foralder?forhandsvisning` (familjen Andersson: Anna, och Alva i
+  årskurs 6) och `/larare?forhandsvisning` (Sara Svensson, med Alva och
+  Kim). Ingen ritfunktion, bara länkarna och en ruta som säger hur den
+  fungerar.
+- **Vyerna** är de riktiga, med de riktiga filerna: bara klienten är en
+  annan (`nextrum-forhandsvisning.js`, laddad före `nextrum-app.js`, som
+  frågar den efter klienten). Världen är introduktionsbildernas familjer
+  (`verktyg/bygg-introbilder.js`) med dagens datum och dagens pris, ett
+  förslag från Alva, barnets tråd, en plan och NexLäx-nivåer med fyra
+  påhittade frågor var. Den svarar som PostgREST så långt vyerna frågar
+  (filtren, `or`, ordningen, `limit`, `count`, `.single()`, de inbäddade
+  `nivaer`, `biblioteksmaterial` och `invoice_lines`), med RLS i
+  `synlig()`: föräldern ser sin familj, studiehjälparen sina elever.
+  Triggrarna som vyerna ser efteråt står i `stämpla()` (motförslaget och
+  avbokningen, som `stampla_avbokningen`) och `efterSkrivning()` (en
+  rapport gör passet genomfört).
+- **De två vyerna delar världen.** Den sparas i `localStorage` efter
+  varje skrivning och läses om före varje fråga, så föräldern föreslår,
+  Byt till studiehjälparvyn i remsan, Acceptera, och tillbaka. En flik
+  som står öppen laddar om när man kommer tillbaka till den och världen
+  ändrats i en annan. Börja om tar bort den; den börjar också om en ny
+  dag och när världen i filen ändras (ett fingeravtryck av den nya
+  världen).
+- **Remsan** står överst i sidhuvudet (`.nx-fv`, ockra, i
+  `nextrum-arbetsyta.css`): vem man är, att det är påhittat och inte
+  räknas, och Byt, Börja om och Till adminvyn, 44 px höga. Fliken heter
+  "Förhandsvisning · …". I sidhuvudet och inte i innehållet: heron drar
+  sig upp under sidhuvudet och hade täckt den.
+- **Det som inte görs** säger det: edge-funktionerna (betalning, AI,
+  mejl, Meet) svarar 409 med "Det här görs inte i förhandsvisningen",
+  rabattkoderna prövas inte, betygsgarantin och barnets e-post sparas
+  inte, och Mästarprov och repetition startar inte.
+- **Statistiken.** Förhandsvisningen skriver aldrig i databasen. Konton
+  vi redan har (ett adminkonto som också är förälder hade 2026-10-12 alla
+  16 passen i driften) räknas inte i Översiktens tal (`räknas()`,
+  `ärAdminkonto()` i kärnan, ur `admin_roller`) eller i Statistik
+  (analysvyerna, `minne/databasen.md`). Listorna visar dem som förut.
+

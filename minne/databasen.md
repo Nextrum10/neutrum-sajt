@@ -958,3 +958,43 @@ merge-commiten genom `extensions.http_get`, prövad mot sin md5
 kolumner med `timmar_pa_kopet` sist, och `bookings_timmarna_tillbaka` sist
 bland triggrarna på `bookings`. Hela `rls-test.sql` mot driften: 1505 av
 1505, tillbakarullat. Advisorn larmade inte om något nytt.
+
+### Barnets förslag och adminkontona i statistiken (2026-10-12)
+**`20261012120000_barnet_foreslar_pass`**: kolumnen `students.far_boka`
+(boolean, av), tabellen `barn_passforslag` med RLS (föräldern läser sina
+barns; admin med `is_admin()` eller `bokningar_las`; inga skrivpolicyer,
+och `nextrum_barn` och `anon` har inga rättigheter), hjälpare i `intern`
+(`barnforslag_hjalpare`, `barnforslag_post_hoppas`, `barnforslag_las`,
+`barnforslag_skickat`, `barnforslag_gallra`, och de två
+raderingsfunktionerna), barnets fyra funktioner (bara `nextrum_barn`),
+förälderns två (`barnforslag_neka`, `skicka_barnets_forslag`, den senare
+SECURITY INVOKER så att policyn och alla triggrar på `bookings` gäller),
+typen `barnforslag`, jobbet `barnforslag-gallring` (03.38 UTC) och
+triggrarna `students_barnforslag_raderas` och
+`profiles_barnforslag_raderas`. Lappade med `replace()` på
+`pg_get_functiondef()` och en vakt som räknar träffarna:
+`intern.barnets_behorigheter`, `barn_behorigheter_satt`,
+`skydda_studentfalt`, `skydda_studentfalt_ny` och `intern.notis_skapa`;
+en lappad funktion bär `far_boka` (eller `barnforslag`) och hoppas över.
+`intern.barn_behorigheter_alla()` har `boka` på andra plats, i vyernas
+ordning. `students_barnkonto_audit` skapades om med `create or replace
+trigger` och har `far_boka` i listan. Ingen `drop`, inget `delete` utanför
+en funktion, och ingen funktion med två: filen går att köra två gånger.
+
+**`20261012120100_adminkonton_utanfor_statistiken`**:
+`intern.utanfor_statistiken(uid)` (sant när kontot har en rad i
+`admin_roller` och den som frågar är admin eller databasen själv; en
+familj eller studiehjälpare som läser en analysvy får aldrig veta vem som
+är admin) och de fem analysvyerna omskrivna med samma kolumner, i samma
+ordning, och `security_invoker = true` utskrivet igen: ett pass där
+familjen eller studiehjälparen är admin räknas inte, och en anmälan som
+blev ett adminkonto inte heller. `analys_ekonomi` räknar inte längre
+testbetalningar (`stripe_skarp = false`), som kärnan alltid sagt.
+Passen, betalningarna, fakturorna och lönerna rörs inte: Betalningar,
+Månadens ekonomi och Löner är bokföring och räknar som förut.
+
+Lokalt, byggd ur alla 183 migrationer: hela `rls-test.sql` 1574 av 1574
+(avsnitt 26 och 27 är nya). **Körs efter merge, i den ordningen, och
+`notis-ko` från main driftsätts FÖRE den första** (`minne/notiser.md`).
+Vyerna tål att båda saknas: utan tabellen syns inga förslag, utan `boka`
+i listan inget val, och adminvyns tal räknar ur `admin_roller` själv.

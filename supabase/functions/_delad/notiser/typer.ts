@@ -23,15 +23,17 @@
 
 export const NOTIS_TYPER = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
-  'meddelande', 'rapport', 'paminnelse', 'timmar_gar_ut',
+  'meddelande', 'rapport', 'paminnelse', 'timmar_gar_ut', 'barnforslag',
 ] as const;
 
 export type NotisTyp = typeof NOTIS_TYPER[number];
 
-/** Samma som notis_mejlbara(): allt utom rapport, som bara syns i appen. */
+/** Samma som notis_mejlbara(): allt utom rapport, som bara syns i appen.
+ *  barnforslag (barnet_foreslar_pass, 2026-10-12): ett barn har föreslagit
+ *  ett pass som väntar på föräldern. */
 export const MEJLBARA = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
-  'meddelande', 'paminnelse', 'timmar_gar_ut',
+  'meddelande', 'paminnelse', 'timmar_gar_ut', 'barnforslag',
 ] as const;
 
 export type MejlbarTyp = typeof MEJLBARA[number];

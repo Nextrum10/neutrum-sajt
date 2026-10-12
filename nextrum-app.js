@@ -36,9 +36,18 @@ if (TILL_VYN) location.replace('/foralder' + location.hash);
 else if (LÄNKFEL) history.replaceState(history.state, '', location.pathname + location.search);
 
 /* Supabase-klienten. null om nycklarna inte är ifyllda än, då visar
-   sidorna en tydlig ruta istället för att bara vara trasiga. */
+   sidorna en tydlig ruta istället för att bara vara trasiga. I
+   förhandsvisningen (/foralder?forhandsvisning, /larare?forhandsvisning)
+   är den nextrum-forhandsvisning.js klient, som svarar ur en påhittad
+   värld i webbläsaren. Kom den filen inte fram finns ingen klient alls:
+   den riktiga hade visat adminens eget konto i en vy som ser ut som
+   förhandsvisningen, och det som gjorts där hade hamnat i databasen. */
+const FÖRHANDSVISNING = /^\/(foralder|larare)(\.html)?\/?$/.test(location.pathname)
+  && /(?:^\?|&)forhandsvisning(?:[=&]|$)/.test(location.search);
 const supa = (!TILL_VYN && String(CFG.SUPABASE_URL || '').startsWith('https://') && window.supabase)
-  ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY)
+  ? (FÖRHANDSVISNING
+      ? (window.NXForhandsvisning && window.NXForhandsvisning.på ? window.NXForhandsvisning.klient(CFG) : null)
+      : window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY))
   : null;
 
 const NX = (function () {
