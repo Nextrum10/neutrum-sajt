@@ -4324,12 +4324,86 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
     padding-top:8px;background:var(--pap);
     box-shadow:0 0 0 100vmax var(--pap);clip-path:inset(0 -100vmax);
   }
-  /* Ett sektionsbyte lägger sektionen direkt under raden (sidomeny,
-     2026-10-09). En kort sektion, som Skriv rapport med ett pass, gick
-     inte att rulla dit: sidan tog slut, och halva hälsningen stod kvar
-     ovanför. Sektionerna står i en yta som är minst en skärm minus
-     sidhuvudet och raden. */
+  /* Står raden fast långt ned läggs den nya sektionen direkt under den
+     (sidomeny; högst upp på sidan flyttas ingenting sedan 2026-10-12).
+     En kort sektion, som Skriv rapport med ett pass, gick inte att rulla
+     dit: sidan tog slut, och halva hälsningen stod kvar ovanför.
+     Sektionerna står i en yta som är minst en skärm minus sidhuvudet och
+     raden. */
   .vy:not(.vy-admin) .vy-sido + div{min-height:calc(100svh - 150px)}
+}
+
+/* ---------- raden på en telefon (2026-10-12) ----------
+   Leo: "gör de också mer smooth när man trycker och de olika kolumnerna
+   mer moderna". Den valda posten är en pill som glider till den nya
+   (sidomeny, läggPil), och raden glider så att posten hamnar mitt i
+   den. Allt här gäller alla fyra vyerna; på en dator är menyn en kolumn
+   som förut.
+
+   · Pillen ligger under posterna (z-index -1 i radens egen stapel, som
+     sticky ger) och den valda posten är genomskinlig ovanpå den. Utan
+     har-pil, som sidomeny sätter först när pillen står rätt, är posten
+     fylld som förut: inget skript, ingen tom rad.
+   · Samma vikt på alla poster. En vald post i 600 var bredare, och
+     varje tryck flyttade grannarna några pixlar i sidled; pillen säger
+     redan vilken som är vald.
+   · Strecken mellan grupperna är korta (18 px). De står ovanpå pillen
+     när den glider förbi, och i hela radens höjd skar de tvärs genom den.
+   · Kanterna tonar ut: en post som sticker ut säger att raden
+     fortsätter. Gradienter, aldrig mask-image (Safari), som står fast
+     vid kanten (sticky). Den högra ligger sist i raden, så att den sista
+     posten står helt fram när man dragit hela vägen, och den vänstra
+     syns bara när raden är dragen (ar-dragen, sidomeny). */
+.vy-sido-pil{display:none}
+@media (max-width:899px){
+  .vy .vy-sido{gap:4px}
+  .vy .vy-sido a,
+  .vy .vy-sido a.ar-har,
+  .vy .vy-sido a.ar-har:hover{font-weight:500}
+  .vy .vy-sido-pil{
+    display:block;position:absolute;left:0;top:var(--y,0);z-index:-1;
+    width:var(--w,0);height:var(--h,0);
+    translate:var(--x,0) 0;
+    border-radius:100px;background:var(--bl);
+    /* Mörk i båda lägena: av --bl blev den ett ljust sken i mörkt. */
+    box-shadow:0 6px 14px -8px rgba(28,24,18,.55);
+    pointer-events:none;
+  }
+  /* En aning förbi och tillbaka, som trycket (--vy-fjader), men mindre:
+     en pill som studsar en hel post åt sidan läses som ett fel. */
+  .vy .vy-sido-pil.glider{
+    transition:translate .38s cubic-bezier(.3,1.18,.5,1), width .38s cubic-bezier(.3,1.18,.5,1);
+  }
+  .vy .vy-sido:not(.har-pil) > .vy-sido-pil{visibility:hidden}
+  .vy .vy-sido.har-pil a.ar-har,
+  .vy .vy-sido.har-pil a.ar-har:hover{background:transparent}
+  /* Texten byter färg i pillens takt; med knapparnas 0,22 s stod den
+     ljus på papperet innan pillen hunnit fram. */
+  .vy .vy-sido.har-pil a{
+    transition:background-color .22s var(--e), color .32s var(--e-ut),
+      opacity .22s var(--e), scale .5s var(--vy-fjader);
+  }
+  /* > : kopiorna i menyn bakom de tre strecken är rubriker där (.m-vy). */
+  .vy .vy-sido > .vy-sido-rubrik{align-self:center;height:18px;margin:0 4px}
+  .vy .vy-sido::after{
+    content:"";flex:none;width:32px;margin-left:-4px;
+    position:sticky;right:0;
+    background:linear-gradient(to left, var(--pap) 20%, color-mix(in srgb, var(--pap) 0%, transparent));
+    pointer-events:none;
+  }
+  /* Den vänstra tar ingen plats (marginalen äter bredden och mellanrummet),
+     och syns först när raden är dragen: överst står Översikt mot kanten. */
+  .vy .vy-sido::before{
+    content:"";flex:none;width:32px;margin-right:-36px;
+    position:sticky;left:0;z-index:1;
+    background:linear-gradient(to right, var(--pap) 20%, color-mix(in srgb, var(--pap) 0%, transparent));
+    pointer-events:none;
+    opacity:0;transition:opacity .2s var(--e);
+  }
+  .vy .vy-sido.ar-dragen::before{opacity:1}
+}
+@media (prefers-reduced-motion:reduce){
+  .vy .vy-sido-pil.glider{transition:none}
 }
 
 /* ============================================================
