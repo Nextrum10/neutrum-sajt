@@ -176,6 +176,9 @@ text vad timbanken är för något också".
   minuterna, köpen var för sig, och en länk till Profil & inställningar →
   Timbanken. Den långa texten om minuterna gick därifrån, och fliken under
   Profil fick en ruta överst, Vad är timbanken?, med villkorslänken.
+- **I drift 2026-10-12**, samma kväll: migrationen efter merge av PR #254,
+  hela `rls-test.sql` 1519 av 1519 mot driften och `drift` v16
+  (`minne/databasen.md` och `minne/funktioner.md`).
 
 ## Timbanken (Fas 22.1)
 
