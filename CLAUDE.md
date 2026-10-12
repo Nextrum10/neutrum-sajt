@@ -731,7 +731,7 @@ Detaljer: `minne/grunden.md`.
 - **Fyll timbanken** (2026-10-12): `fyll_timbanken` (20261012120000) körs efter merge, från merge-commiten: tills
   dess tar kassan 379 kr och skriver "Klippkort" på kvittot. Villkorens version är 2026-10-12, så alla får frågan igen.
   Inget klippkort var köpt. `drift` (agentens fakta, `_delad/nextrum-fakta.ts`) driftsätts från main efter merge.
-  Strömbrytarens beskrivning under System säger fortfarande "Planer och klippkort": `stampla_flaggan` låser texten.
+  Migrationen byter också strömbrytarens beskrivning, med `flaggor_stampla` av runt den raden.
   Juristen har inte läst de nya villkoren.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige

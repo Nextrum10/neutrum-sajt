@@ -19,7 +19,8 @@
 -- fortfarande 'klippkort' i databasen: det är samma sak som förut,
 -- förbetalda timmar med ett sista datum, under ett nytt namn utåt.
 --
--- Planerna rörs inte (379 kr i timmen, en månad).
+-- Planerna rörs inte (379 kr i timmen, en månad). Strömbrytarens
+-- beskrivning i flaggor säger Fyll timbanken i stället för klippkort.
 --
 --
 -- DET SOM INTE RÖRS
@@ -55,6 +56,31 @@ update public.erbjudanden
    and kod in ('klipp10', 'klipp20', 'klipp30', 'klipp60', 'klipp100')
    and (namn, rabatt_procent, giltig_manader)
        is distinct from ('Fyll timbanken, ' || timmar || ' timmar', 0, 6);
+
+-- ---------- strömbrytarens text ----------
+-- Adminvyn visar beskrivningen under Betalningar → Inställningar, och
+-- den sade "Planer och klippkort". flaggor_stampla fryser beskrivningen
+-- vid varje update, så den står av bara runt den här raden, som i
+-- fas14_9_bokforingen_i_fortnox. flaggor_audit rörs inte: den loggar
+-- bara när aktiv ändras, och det gör den inte här. vantar_pa är en
+-- anteckning om driftsättningen och står kvar som den skrevs.
+alter table public.flaggor disable trigger flaggor_stampla;
+
+update public.flaggor
+   set beskrivning = 'Planer och Fyll timbanken går att köpa i studievyn, och pass går att betala med köpta timmar. '
+                  || 'Av: erbjudandena syns men går inte att köpa.'
+ where kod = 'erbjudanden'
+   and beskrivning like 'Planer och klippkort%';
+
+alter table public.flaggor enable trigger flaggor_stampla;
+
+do $$
+begin
+  if (select tgenabled from pg_trigger
+       where tgrelid = 'public.flaggor'::regclass and tgname = 'flaggor_stampla') is distinct from 'O' then
+    raise exception 'flaggor_stampla är inte påslagen igen.';
+  end if;
+end $$;
 
 -- ---------- villkorens version ----------
 create or replace function intern.villkor_version()

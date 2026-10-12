@@ -151,10 +151,11 @@ text vad timbanken är för något också".
   strömbrytaren och raderingens hinder säger Fyll timbanken eller köpta
   timmar, och studievyn drar timmarna "från det köp som går ut först".
   Agentens fakta (`_delad/nextrum-fakta.ts`) har en rad om Fyll timbanken,
-  utan tabellnamn. Strömbrytarens beskrivning i `flaggor` säger fortfarande
-  "Planer och klippkort": `stampla_flaggan` skriver tillbaka den gamla
-  texten vid varje update, så den byts inte i en migration utan att
-  triggern ändras, och det är inte värt det för en rad bara admin ser.
+  utan tabellnamn. Strömbrytarens beskrivning i `flaggor` byts i migrationen
+  med `flaggor_stampla` av runt den raden, som i
+  `fas14_9_bokforingen_i_fortnox` (triggern skriver annars tillbaka den
+  gamla texten och stämplar om datumet), och en kontroll efteråt att den
+  är på igen.
   Koden, tabellerna, loggarna och `klippkort-betala` heter som förut.
 - **Timbanken fylls på två sätt** (Leo samma kväll: "timbanken fylls antingen
   med plan eller förköpta timmarna, frågan är bara om hur man betalar och vad
