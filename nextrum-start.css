@@ -3504,10 +3504,20 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 
    HOPFÄLLDA PÅ ALLA BREDDER (2026-10-12, Leo: "ha de inbäddade i ämne,
    årskurs, område och guider så man behöver trycka på de för att få upp
-   dem"). Grupperna är <details> utan open, och inget skript öppnar dem:
-   plus eller minus säger att det går att trycka. Länkarna står kvar i
-   HTML, och Google läser det som står i en stängd <details>, så
-   internlänkningen är densamma.
+   dem"). Grupperna är <details> utan open: plus eller minus säger att
+   det går att trycka. Länkarna står kvar i HTML, och Google läser det
+   som står i en stängd <details>, så internlänkningen är densamma.
+
+   DE GLIDER (samma kväll, Leo: "gör de lite mer smooth"). Listan står i
+   .nx-lo-l, en grid med en rad som växer från 0fr till 1fr och tonar
+   in; ingen höjd mäts eller skrivs. <details> visar och döljer på en
+   gång, så skriptet (laxhjälpsöversikt i nextrum-start.js) tar trycket:
+   det sätter .oppen och stänger open först när listan krympt klart.
+   0fr gäller bara under .nx-lo-glid, som skriptet sätter: utan skript
+   eller med rörelse bortvald är det webbläsarens egen <details>, och
+   CSS gömmer inget. Plustecknet är två streck, och det lodräta krymper
+   medan tecknet vrids ett halvt varv till ett minus. Listan klipps
+   medan den växer, så länkarnas fokusring står innanför.
 
    SVART I LJUST LÄGE (samma dag, Leo: "Gör den sektionen svart i ljus
    vy som färgen ovan och under"). Ytan är footerns --ftr-bg (#1F1915),
@@ -3537,14 +3547,31 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 }
 .nx-lo-g summary::-webkit-details-marker{display:none}
 .nx-lo-g summary::before{content:"";flex:none;width:.7em;height:.7em;border-radius:50%;background:var(--f,var(--lera-l))}
-.nx-lo-g summary::after{content:"+";margin-left:auto;font-size:1.25rem;letter-spacing:0;color:var(--nt-mut)}
-.nx-lo-g[open] summary::after{content:"\2212"}
-.nx-lo-g ul{list-style:none;margin:0;padding:0}
+.nx-lo-g summary::after{
+  content:"";flex:none;margin-left:auto;width:11px;height:11px;color:var(--nt-mut);
+  background:
+    linear-gradient(currentColor,currentColor) center/100% 1.5px no-repeat,
+    linear-gradient(currentColor,currentColor) center/1.5px 100% no-repeat;
+  transition:background-size .42s var(--e),rotate .42s var(--e),color .2s var(--e);
+}
+.nx-lo:not(.nx-lo-glid) .nx-lo-g[open] summary::after,
+.nx-lo-g.oppen summary::after{background-size:100% 1.5px,1.5px 0;rotate:180deg}
+@media (hover:hover){
+  .nx-lo-g summary:hover::after{color:var(--nt-fg)}
+}
+.nx-lo-l{display:grid;grid-template-rows:1fr}
+.nx-lo-glid .nx-lo-l{transition:grid-template-rows .42s var(--e),opacity .32s var(--e)}
+.nx-lo-glid .nx-lo-g:not(.oppen) .nx-lo-l{grid-template-rows:0fr;opacity:0}
+.nx-lo-g ul{list-style:none;margin:0;padding:0;min-height:0;overflow:hidden}
 .nx-lo-g li a{
   display:flex;align-items:center;min-height:44px;box-sizing:border-box;
   color:inherit;text-decoration:none;border-bottom:1px solid var(--nt-ln);
 }
 .nx-lo-g li a:hover{text-decoration:underline}
+.nx-lo-g li a:focus-visible{outline-offset:-3px}
 @media (max-width:860px){
   .nx-lo-grid{grid-template-columns:minmax(0,1fr);gap:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .nx-lo-g summary::after{transition:none}
 }
