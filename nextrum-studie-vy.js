@@ -3154,8 +3154,11 @@
     : timmarOrd(Number(e.timmar));
 
   /* Ett erbjudande som ett kort. Det överstrukna är ordinarie pris för
-     samma timmar, och skillnaden står i kronor: "ni sparar" är ett
-     belopp, inte en procentsats man ska räkna om själv. */
+     samma timmar. Raden "399 kr 379 kr per timme · ni sparar 160 kr"
+     under priset är borta sedan 2026-10-12 (Leo): märket säger timpriset
+     och den överstrukna summan besparingen. Den står bara kvar på ett
+     kort med timmar på köpet, där den är det enda som säger hur summan
+     går ihop ("8 timmar för priset av 7"). */
   function erbKort(e) {
     const kr = NXBetalning.kronor;
     const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
@@ -3190,7 +3193,7 @@
     const timrad = pa
       ? esc(erbTimmar(e))
         + (rabatt ? ', <s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme' : '')
-      : (rabatt ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '') + esc(kr(perTimme)) + ' per timme';
+      : '';
     /* Standard lyfts fram (Leo 2026-10-07: "Visa standard planens
        erbjudande"), på koden sedan den 2026-10-08 slutade ha en timme på
        köpet, och en plan med timmar på köpet, om katalogen får en igen. */
@@ -3208,8 +3211,7 @@
       + (första ? '<span class="erb-forsta">Er första plan: en timme till, gratis</span>' : '')
       + '<span class="erb-pris">' + (spar > 0 ? '<s>' + esc(kr(e.ordinarie_ore)) + '</s>' : '')
       + '<b>' + esc(kr(e.pris_ore)) + '</b></span>'
-      + '<span class="erb-tim">' + timrad
-      + (spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>'
+      + (timrad ? '<span class="erb-tim">' + timrad + '</span>' : '')
       + köpKnapp(e)
       + '</div>';
   }

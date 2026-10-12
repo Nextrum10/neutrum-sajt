@@ -684,7 +684,6 @@ const NX = (function () {
       skriv(el, '[data-erb-pris]', kr(r.pris_ore / 100));
       skriv(el, '[data-erb-timpris]', kr(r.timpris_ore / 100));
       skriv(el, '[data-erb-rabatterat]', kr(r.rabatterat_timpris_ore / 100));
-      skriv(el, '[data-erb-spar]', kr((r.ordinarie_ore - r.pris_ore) / 100));
       skriv(el, '[data-erb-giltig]', m === 1 ? t('enManad') : t('flerManader', { n: m }));
       skriv(el, '[data-erb-antal]', String(timmar));
       skriv(el, '[data-erb-pa-kopet]', String(pa));
@@ -900,6 +899,11 @@ const NX = (function () {
      val en. Texten står i sidan, inte här: det som kopieras (planens
      namn, märket) läses ur kortet, som står på sidans språk.
 
+     Svaret är månadskostnaden, och rutorna säger det (2026-10-12, Leo:
+     "ta bort månaderna, skriv att det är månadskostnaden"). Ett reglage
+     för 1, 3 eller 6 månader fanns samma kväll och togs bort. Rutan säger
+     heller inget "Ni sparar" (Leo samma kväll).
+
      Stapelns andel jämför bara två belopp som redan visas, planens och
      det per pass, och sätts i --andel på stapeln som läser den. Reglagets
      tumme följer data-v på gruppen (CSS). */
@@ -934,10 +938,9 @@ const NX = (function () {
         .find(el => !el.closest('[hidden]') && Number(el.getAttribute('data-erb-timmar')) === timmar);
       if (plan) {
         const namn = $('[data-erb-namn]', plan) || $('.eyebrow', plan);
-        const planpris = $('[data-erb-pris]', plan), spar = $('[data-erb-spar]', plan);
+        const planpris = $('[data-erb-pris]', plan);
         sätt('[data-kalk-plannamn]', namn ? namn.textContent : '');
         sätt('[data-kalk-planpris]', planpris ? planpris.textContent : '');
-        sätt('[data-kalk-planspar]', spar ? spar.textContent : '');
         /* En plan med timmar på köpet visar samma rad som sitt kort,
            "8 timmar för priset av 7", och aldrig bara märket "1 timme på
            köpet": bredvid noten om första timmen hade de lästs som samma

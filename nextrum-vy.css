@@ -2074,8 +2074,11 @@ a.pass-lank:hover{color:var(--acc)}
 /* "ni sparar 160 kr" bryts som en helhet, aldrig med "kr" ensamt. */
 .erb-spar{white-space:nowrap}
 /* Köp står längst ned i kortet, så att knapparna står på en linje när
-   raderna ovanför är olika långa. */
-.erb-kort > .erb-tim{margin-bottom:10px}
+   raderna ovanför är olika långa. Luften ovanför knappen är det sista
+   före den: priset, eller raden under det på ett kort med timmar på
+   köpet (2026-10-12). */
+.erb-kort > .erb-tim,
+.erb-kort > .erb-pris:nth-last-child(2){margin-bottom:10px}
 .erb-kort > .btn{margin-top:auto}
 
 /* Tre i bredd när rutan rymmer det. Med tre planer hamnar klippkorten

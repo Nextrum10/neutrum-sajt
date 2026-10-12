@@ -2879,11 +2879,13 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    inlägg, med prickar under, och raden börjar med Standard i mitten
    (initErbjudanden() sätter scrollLeft en gång, aldrig scrollIntoView).
 
-   Det överstrukna timpriset och "ni sparar" står på varje kort med
-   rabatt, för det är skillnaden mot 399 kr utan bindning man jämför
+   Timpriset står bara i märket överst, 399 kr överstruket och 379 kr
    (2026-10-08: alla tre planerna 379 kr i timmen, och Standards
-   "8 timmar för priset av 7" är borta). Rutorna under beskrivningen
-   är en ruta per timme; en timme på köpet är i lera.
+   "8 timmar för priset av 7" är borta). Raden "399 kr 379 kr / timme ·
+   Ni sparar 160 kr" längst ned är borta sedan 2026-10-12 (Leo): den
+   sade märket en gång till, och besparingen står i lappen under den.
+   Rutorna under beskrivningen är en ruta per timme; en timme på köpet
+   är i lera.
 
    [hidden] måste skrivas ut: korten har egen display, och
    initErbjudanden() döljer ett erbjudande som stängts av i
@@ -2925,9 +2927,12 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 /* Antalet timmar står först och i sidans textfärg (2026-10-08): det är
    det man jämför planerna på, och resten av raden förklarar det. */
 .pr-erb-vad b{color:var(--bl);font-weight:650}
-.pr-erb-plan .nx-amount{margin:22px 0 6px}
+.pr-erb-plan .nx-amount{margin:22px 0 18px}
 .pr-erb-plan .nx-amount b{font-size:clamp(2.2rem,3.6vw,3.1rem)}
-.pr-erb-plan > .pr-erb-tim{margin-top:auto;padding-top:14px}
+/* Lappen längst ned trycks ner av tomrummet, så att den står på samma
+   höjd i alla tre korten. Luften ovanför den är beloppets och tejpens
+   marginal under, för en auto-marginal har inget minsta mått. */
+.pr-erb-plan > .pr-erb-sex{margin-top:auto}
 .pr-erb-tim{font-size:.9rem;color:var(--muted);line-height:1.5}
 .pr-erb-tim s{color:var(--muted-2)}
 .pr-erb-tim b{color:var(--bl);font-weight:700}
@@ -3389,7 +3394,7 @@ html.nx-sr [data-stig].nx-in > .nx-tejp{animation:nx-tejp-fast .62s var(--e-ut) 
 .nx-tejp-kort{
   --tejp-tand:6px;
   align-self:center;
-  margin:16px 0 2px;
+  margin:4px 0 18px;
   padding:9px calc(var(--tejp-tand) + 16px) 10px;gap:2px;
 }
 .nx-tejp-kort .nx-tejp-stor{font-size:clamp(1.12rem,1.55vw,1.32rem);white-space:nowrap}
@@ -3897,6 +3902,9 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
   transition:opacity .2s var(--e-mjuk),visibility 0s .2s;
 }
 .pr-kalk-med .eyebrow{color:var(--mossa-text)}
+/* "Månadskostnad, pass för pass" bryts på en telefon; jämnt, så att
+   inte "pass" står ensamt på andra raden. */
+.pr-kalk-alt .eyebrow{text-wrap:balance}
 .pr-kalk-summa{
   display:block;margin-top:4px;
   font-size:clamp(2.3rem,3.8vw,3.3rem);font-weight:800;letter-spacing:-.045em;line-height:1;
@@ -3905,7 +3913,6 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
 .pr-kalk-rad .pr-erb-paket{display:inline-block;margin-left:10px;line-height:1.4;vertical-align:1px}
 .pr-kalk-rad .pr-erb-paket[hidden]{display:none}
 .pr-kalk-med .pr-kalk-rad,.pr-kalk-med .pr-kalk-text{color:var(--mossa-text)}
-.pr-kalk-rad b{font-weight:700}
 .pr-kalk-text{font-size:1rem;line-height:1.5;color:var(--bl-2);max-width:34ch}
 .pr-kalk-stapel{
   display:block;height:8px;margin-top:6px;border-radius:99px;overflow:hidden;
@@ -3930,9 +3937,13 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
 /* Mellanbredd och telefon: valen överst, svaret direkt under dem och
    noten sist, så att det man trycker fram står närmast trycket. Valens
    låda löses upp (display:contents) och dess delar ställs i kortets
-   rutnät i den ordningen: två val bredvid varandra, svaret, noten. */
+   rutnät i den ordningen: två val bredvid varandra, svaret, noten.
+   Utan lådan är valen och noten inte kortets barn, som lyfts över
+   skenet i hörnet (.nx-price-card>*), så de lyfts här; annars bleks
+   etiketten till höger (2026-10-12). */
 @media (max-width:1000px){
   .pr-kalk-kort{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px clamp(20px,4vw,36px)}
+  .pr-kalk-falt,.pr-kalk-val > .pr-kalk-not{position:relative}
   .pr-kalk-val{display:contents}
   .pr-kalk-svar{grid-column:1 / -1;order:1}
   .pr-kalk-not{grid-column:1 / -1;order:2;margin-top:0;max-width:60ch}

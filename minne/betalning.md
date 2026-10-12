@@ -495,7 +495,15 @@ timmar (Basic, Standard, Intensiv) har varje val för ett barn en plan; vid
 Texten nedan gäller fortfarande för hur priset läses.
 
 **Räkna själv** på prissidan: barn i passet (1–3) och timmar i veckan
-(1–3), fyra veckor. Timpriset och tillägget kommer ur `CFG` som i
+(1–3), fyra veckor. Svaret är månadskostnaden och säger det (2026-10-12):
+rutorna heter "Månadskostnad, pass för pass" och "Månadskostnad med
+Basic", och ingressen säger "så ser ni månadskostnaden" och att en månad
+räknas som fyra veckor. Samma kväll fanns ett reglage för 1, 3 eller 6
+månader (Leo: "lägg till i beräkning antal månader ... utgå alltid från 1
+månad"), som gick igen innan det mergades (Leo: "ta bort månaderna, skriv
+att det är månadskostnaden"). Det hade också visat två siffror för samma
+sak: sex månader med Basic var 480 kr mindre än pass för pass där och 879
+kr i plankortets Spara-lapp, som räknar in första timmen. Timpriset och tillägget kommer ur `CFG` som i
 `initPris()`, och två och tre barn kostar lika mycket. Planens pris räknas
 ALDRIG här: `initKalkyl()` läser det ur planens eget kort, som
 `initErbjudanden()` skriver om ur `erbjudanden_pris`, och hittar planen
@@ -896,5 +904,16 @@ istället 399 streck över de, 379". (Han skrev "basic" två gånger; den andra
   studievyn, är timpriset utan bindning överstruket och det rabatterade
   bredvid (399 kr överstruket, 379 kr), båda ur svaret, i stället för
   "−5 %". Det döljs när de är lika, och studievyn visar det aldrig på ett
-  kort med timmar på köpet. Plankortets rad längst ned säger samma timpris
-  en gång till, med "ni sparar".
+  kort med timmar på köpet. Plankortets rad längst ned, som sade samma
+  timpris en gång till med "ni sparar" ("399 kr 379 kr / timme · Ni
+  sparar 160 kr"), är borta sedan 2026-10-12, på prissidan, i studievyn
+  och på engelska (Leo: "de ska bort från standardplanen. de finns också
+  på intensiv och bas"). Märket säger timpriset, Spara-lappen och i
+  studievyn den överstrukna summan besparingen. Prissidans kalkylator
+  läste sitt "Ni sparar 80 kr · en månad i taget" ur raden; samma kväll
+  gick det också (Leo: "ta bort de där "spara 80kr" per månad också"), och
+  raden under planens summa säger bara "En månad i taget". Lappen längst
+  ned i plankortet är det som trycks ner, så att den står i linje i alla
+  tre korten. I
+  studievyn står raden bara kvar på ett kort med timmar på köpet, utan
+  "ni sparar", för där är den det enda som säger hur summan går ihop.
