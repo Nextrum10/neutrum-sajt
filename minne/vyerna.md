@@ -1411,12 +1411,18 @@ granska kommer en popup med notisen där. det går inte att stänga av".
   eller senare sagt något annat än klockan bredvid. Ingen post, ingen
   ruta. Tabellen `notiser` (händelserna, med `last_at`) läses fortfarande
   inte av vyerna: rutan visar det som väntar nu, inte det som hänt.
-- **Ett pass att betala** har en egen rad i familjens lista: en rapport
-  vars pass inte är betalt (`rbObetald`) eller har ett obetalt tillägg.
-  Förut stod det som "En rapport att bekräfta", och betalningen syntes
-  inte i notisen. Resten är som förut: föreslagna tider först, fakturor,
-  meddelanden och sena uppgifter, och inget pass att betala i förväg
-  (Fas 19.2: det är ett val, inte familjens drag).
+- **Raden säger vad som är kvar på passet** (Leo samma kväll: "ett pass
+  att bekräfta ska det heta om det redan är betalt. ett pass att betala
+  och bekräfta ska det heta om det inte är betalt än"): Ett pass att
+  betala och bekräfta (obetalt, `rbObetald`, eller ett obetalt tillägg,
+  och rapporten obekräftad), Ett pass att betala (rapporten bekräftad
+  men kassan avbröts) och Ett pass att bekräfta (inget att betala).
+  Förut stod alla som "En rapport att bekräfta", och betalningen syntes
+  inte i notisen. Att bekräfta säger aldrig "betalt": ett fakturapass och
+  ett pass på noll kronor har inget att betala i vyn men är inte betalda.
+  Resten är som förut: föreslagna tider först, fakturor, meddelanden och
+  sena uppgifter, och inget pass att betala i förväg (Fas 19.2: det är
+  ett val, inte familjens drag).
 - **En gång per inloggning**, och en inloggning är att vyn öppnas: en ny
   flik, efter att webbläsaren stängts, eller efter Logga ut och in igen.
   Inte när sidan laddas om. `sessionStorage` (`nx-notisruta`) bär bara

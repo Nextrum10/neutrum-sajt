@@ -3833,23 +3833,38 @@
        så den här raden och siffran i menyn är det enda som säger att
        den kommit.
 
-       Ett genomfört pass som inte är betalt får en egen rad (2026-10-12,
-       Leo: "att man måste betala ett pass"). Det är samma rapport och
-       samma lista, men det man ska göra är att betala, och raden säger
-       det. Ett obetalt tillägg (Fas 20.1) är också något att betala. */
+       Raden säger vad som är kvar på passet (2026-10-12, Leo: "ett pass
+       att bekräfta ska det heta om det redan är betalt. ett pass att
+       betala och bekräfta ska det heta om det inte är betalt än"). Ett
+       pass vars rapport redan är bekräftad men som inte är betalt (kassan
+       avbröts) har bara betalningen kvar, och heter Ett pass att betala.
+       Ett obetalt tillägg (Fas 20.1) är också något att betala. Att
+       bekräfta säger aldrig "betalt": ett fakturapass och ett pass på
+       noll kronor har inget att betala här, men är inte betalda. */
     const rapporterAtt = S.rb.laddat && S.laddatPass ? rbAttBekräfta() : [];
-    const passAttBetala = rapporterAtt.filter(r => rbObetald(r) || !!(rbPass(r) && tillägg(rbPass(r)))).length;
-    const baraLäsa = rapporterAtt.length - passAttBetala;
-    if (passAttBetala) {
+    const nåttAttBetala = r => rbObetald(r) || !!(rbPass(r) && tillägg(rbPass(r)));
+    const betalaOchBekräfta = rapporterAtt.filter(r => nåttAttBetala(r) && !S.rb.bekräftade[r.id]).length;
+    const baraBetala = rapporterAtt.filter(r => nåttAttBetala(r) && S.rb.bekräftade[r.id]).length;
+    const baraBekräfta = rapporterAtt.length - betalaOchBekräfta - baraBetala;
+    const passAtt = (n, vad) => (n === 1 ? 'Ett pass' : n + ' pass') + ' att ' + vad;
+    if (betalaOchBekräfta) {
       poster.push({
-        rubrik: passAttBetala === 1 ? 'Ett pass att betala' : passAttBetala + ' pass att betala',
-        text: 'Passet är genomfört. Läs rapporten och välj hur ni betalar.',
+        rubrik: passAtt(betalaOchBekräfta, 'betala och bekräfta'),
+        text: 'Läs vad ni gick igenom och välj hur ni betalar.',
         mål: '#rb-lista'
       });
     }
-    if (baraLäsa) {
+    if (baraBetala) {
       poster.push({
-        rubrik: baraLäsa === 1 ? 'En rapport att bekräfta' : baraLäsa + ' rapporter att bekräfta',
+        rubrik: passAtt(baraBetala, 'betala'),
+        text: (baraBetala === 1 ? 'Rapporten är bekräftad.' : 'Rapporterna är bekräftade.')
+          + ' Kvar är att välja hur ni betalar.',
+        mål: '#rb-lista'
+      });
+    }
+    if (baraBekräfta) {
+      poster.push({
+        rubrik: passAtt(baraBekräfta, 'bekräfta'),
         text: 'Läs vad ni gick igenom på passet och bekräfta rapporten.',
         mål: '#rb-lista'
       });
