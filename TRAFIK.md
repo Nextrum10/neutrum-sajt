@@ -97,6 +97,12 @@ första månaden.
    Säsongsguiderna (efter sommarlovet, inför terminsbetyget och
    proven) har samma adress varje år: be om indexering igen när
    säsongen närmar sig, i juli, oktober och januari.
+
+   Be också en gång om indexering av den gamla adressen
+   `https://nextrum.se/gratis-laxhjalp-stockholm`. Guiden är borta och
+   adressen går till `/vad-kostar-laxhjalp`, men Google visar den gamla
+   titeln tills den hämtat adressen igen (`GOOGLE.md`, "Om Gratis
+   läxhjälp i Stockholm fortfarande kommer upp").
 3. **Bing Webmaster Tools** (bing.com/webmasters): logga in och välj
    *Importera från Google Search Console*. Det är ett klick. Bing
    matar ChatGPT:s sökning, Copilot och DuckDuckGo, och sajten skickar

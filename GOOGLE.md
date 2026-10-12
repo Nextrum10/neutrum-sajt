@@ -5,7 +5,7 @@ Allt på sajtens sida är gjort och kontrollerat:
 | | |
 |---|---|
 | favicon | finns, svarar 200 |
-| sitemap.xml | 38 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` |
+| sitemap.xml | 51 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` |
 | robots.txt | pekar på sitemap, blockerar inget publikt |
 | strukturerad data | Organization + WebSite med namn, beskrivning, slogan, sociala konton |
 | verifieringspost i DNS | finns redan (`google-site-verification=5o3n…`) |
@@ -53,7 +53,7 @@ På smal skärm är menyn hopfälld bakom hamburgerikonen uppe till
 vänster.
 
 Väl inne: skriv `sitemap.xml` i rutan och klicka **Skicka**. Status
-ska bli *Lyckades* med 38 upptäckta adresser.
+ska bli *Lyckades* med 51 upptäckta adresser.
 
 Kartan är kontrollerad och fungerar — `https://nextrum.se/sitemap.xml`
 svarar 200 med giltig XML. Öppna den i webbläsaren om
@@ -217,6 +217,31 @@ träffen — det är omindexeringen ovan som löser det på riktigt.
 Vänta er inte att det går över en natt. Den gamla posten kan ligga kvar
 i veckor, och den försvinner snabbare ju fler gånger Google hämtar den
 riktiga sidan.
+
+---
+
+## Om "Gratis läxhjälp i Stockholm" fortfarande kommer upp
+
+Guiden på `/gratis-laxhjalp-stockholm` togs bort 2026-09-28, men Google
+kan visa den gamla träffen i veckor efteråt: titeln *"Gratis läxhjälp i
+Stockholm, och när den inte räcker"* och beskrivningen om biblioteken,
+Röda Korset och Mattecentrum. Det är samma sak som med one.com ovan:
+Google har inte tittat på adressen igen.
+
+**Adressen omdirigeras permanent till `/vad-kostar-laxhjalp`**
+(`vercel.json`, sedan 2026-10-12; förut till `/laxhjalp-stockholm`).
+Den som söker gratis läxhjälp undrar vad det kostar, och kostnadsguiden
+svarar på just det: timpriset rakt ut, vad som styr priset, att det är
+gratis att fråga och när första timmen är gratis. Navet hade gett en
+säljsida i stället för ett svar, och en omdirigering till en sida om
+något annat kan Google räkna som en sida som inte finns.
+
+**Så byts träffen ut.** I Search Console: **Inspektera URL** på
+`https://nextrum.se/gratis-laxhjalp-stockholm` → **Begär indexering**.
+Google följer omdirigeringen och ersätter den gamla titeln med
+kostnadsguidens. I Bing Webmaster Tools gör ni samma sak under
+**URL-inskickning**. En gång räcker; adressen ska inte in i kartan
+eller i listan i Steg 4, för den är ingen sida längre.
 
 ---
 
