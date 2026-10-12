@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=5d4c3399">
-<link rel="stylesheet" href="nextrum-cinema.css?v=2180f8ae">
+<link rel="stylesheet" href="nextrum-cinema.css?v=8dd30fdd">
 </head>
 <body>
 
@@ -197,10 +197,10 @@
         står det där, med skälet, innan ni bekräftar. Stämmer inte tiden, skriv till oss innan ni
         betalar. Väljer ni faktura är det den hållna tiden som kommer med på den. Har ni redan betalt och passet blev längre betalar ni tillägget när ni bekräftar
         rapporten. Blev det kortare betalar vi tillbaka mellanskillnaden. Var passet betalt med
-        timmar från en plan eller ett klippkort kommer timmar som inte påbörjades tillbaka av sig
+        timmar från en plan eller ur timbanken kommer timmar som inte påbörjades tillbaka av sig
         själva, och det som blev över av den sista timmen sparas i er <a href="#timbank">timbank</a>.</li>
-      <li>Har ni köpt timmar i förväg, i en plan eller ett klippkort, betalar timmarna passet i
-        stället, av sig själva, redan när ni föreslår det. Se <a href="#erbjudanden">Planer och klippkort</a> nedan.</li>
+      <li>Har ni köpt timmar i förväg, i en plan eller till timbanken, betalar timmarna passet i
+        stället, av sig själva, redan när ni föreslår det. Se <a href="#erbjudanden">Planer och timbanken</a> nedan.</li>
       <li>Kortbetalningen sköts av Stripe. Kortuppgifterna lämnar ni direkt till Stripe, aldrig
         till oss, och vi sparar dem inte.</li>
       <li>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar för de
@@ -214,17 +214,20 @@
          i klippkort_saldo: vid_uppsagning_ore efter ångerfristen och
          vid_anger_ore inom den, för inom fristen säger 2 kap. 15 §
          distansavtalslagen att bara en andel av det AVTALADE priset
-         får behållas (Fas 16.1e). -->
-    <h2 id="erbjudanden">Planer och klippkort</h2>
-    <p>Ni kan köpa timmar i förväg till ett lägre pris: en plan för en månad eller ett klippkort.
+         får behållas (Fas 16.1e).
+
+         2026-10-12: klippkorten heter Fyll timbanken, kostar ordinarie
+         timpris och gäller i sex månader, alla storlekar (Leo). -->
+    <h2 id="erbjudanden">Planer och timbanken</h2>
+    <p>Ni kan köpa timmar i förväg: en plan för en månad, till ett lägre timpris, eller timmar till
+      er timbank med Fyll timbanken, till ordinarie timpris.
       Vilka som finns och vad de kostar står på <a href="/priser#erbjudanden">prissidan</a>. Köpet
       görs en gång, med kort. Det är inget abonnemang och förnyas inte av sig självt.</p>
     <ul>
-      <li><b>Hur länge timmarna gäller.</b> En plan gäller i en månad från köpet. Ett klippkort
-        med 10, 20 eller 30 timmar gäller i 6 månader, med 60 timmar i 12 månader och med 100
-        timmar i 18 månader. Sista dagen står i er vy.</li>
+      <li><b>Hur länge timmarna gäller.</b> En plan gäller i en månad från köpet. Timmar ni köpt
+        till timbanken gäller i 6 månader från köpet, hur många ni än köpt. Sista dagen står i er vy.</li>
       <li><b>Hur timmarna används.</b> Timmarna betalar passen av sig själva. När ni föreslår
-        ett pass dras timmarna från den plan eller det klippkort som går ut först, och föreslår
+        ett pass dras timmarna från de köpta timmar som går ut först, och föreslår
         studiehjälparen en annan tid ligger de kvar på passet. Säger studiehjälparen nej, drar ni
         tillbaka förslaget eller går dagen utan att någon svarat, kommer timmarna tillbaka. Köper
         ni timmar, eller kommer timmar tillbaka, medan ni har förslag eller bokade pass framför er
@@ -232,12 +235,14 @@
         som blir över av den sista timmen sparas i er <a href="#timbank">timbank</a>.
         Timmarna gäller pass med ett barn; ett pass med fler barn betalas med kort, liksom ett pass
         där en timme är på köpet och ett pass som timmarna inte räcker till.</li>
-      <li id="timbank"><b>Timbanken.</b> Slutar ett pass som betalats med timmar före en hel timme
+      <li id="timbank"><b>Timbanken.</b> I timbanken står timmarna ni köpt med Fyll timbanken och
+        minuter som sparats. Slutar ett pass som betalats med timmar före en hel timme
         sparas resten i er timbank, räknat per påbörjad kvart: höll ett pass på två timmar i 1 timme
         och 45 minuter sparas 15 minuter. Drar ett senare pass över tas tiden ur timbanken först,
         utan kostnad, så långt minuterna räcker och när passet gäller ett barn. Räcker minuterna
         till ett helt pass betalar de nästa pass ni föreslår, om inga köpta timmar gör det. Timbanken är familjens,
-        syskon delar den, och minuterna går inte ut.</li>
+        syskon delar den, och de sparade minuterna går inte ut. De köpta timmarna gäller i 6 månader
+        (se ovan).</li>
       <!-- 2026-10-09 (Leo: "bara folk som köper planen ska få gratis första
            lektion", och "MAXIMALT ... en timme gratis"). Timmen läggs till
            av intern.planens_forsta_timme när planen blir betald; pass för
@@ -255,8 +260,8 @@
         Går en timme förlorad för att vi eller studiehjälparen avbokat för sent för att ni ska
         hinna använda den, betalar vi tillbaka den till det pris ni betalat.</li>
       <li><b>Att sluta.</b> Vill ni sluta innan timmarna är använda betalar vi tillbaka det som
-        är kvar. De timmar ni redan använt räknas då till ordinarie timpris, eftersom rabatten
-        gäller för att ni köper alla timmarna. De första 14 dagarna efter köpet gäller i stället
+        är kvar. De timmar ni redan använt räknas då till ordinarie timpris, eftersom en plans
+        rabatt gäller för att ni köper alla timmarna. De första 14 dagarna efter köpet gäller i stället
         <a href="#angerratt">ångerrätten</a>, och då räknas de använda timmarna till det pris ni
         betalat. Minuter i timbanken betalar vi tillbaka till ordinarie timpris.</li>
       <li><b>Timmar som inte hunnit användas.</b> Timmar som finns kvar när tiden gått ut
@@ -265,7 +270,7 @@
     </ul>
 
     <h2 id="prisgaranti">Prisgaranti</h2>
-    <p>Det ni betalat för en plan eller ett klippkort är priset för alla timmarna i den. Höjer vi
+    <p>Det ni betalat för en plan eller för timmar till timbanken är priset för alla timmarna i köpet. Höjer vi
       timpriset under tiden kostar timmarna ni redan köpt inte mer, och ni betalar aldrig någon
       mellanskillnad. Slutar ni räknas de använda timmarna till det ordinarie timpris som gällde
       när ni köpte, inte till ett senare och högre.</p>
@@ -403,9 +408,9 @@
         hålla passet även om fristen inte har gått ut. Ångrar ni er efter att passet har börjat
         betalar ni för den del som hunnit hållas. Ett pass som är helt genomfört går inte att
         ångra.</li>
-      <li>Köper ni en plan eller ett klippkort gäller samma ångerrätt, räknad från dagen för
+      <li>Köper ni en plan eller timmar till timbanken gäller samma ångerrätt, räknad från dagen för
         köpet. Ångrar ni er betalar vi tillbaka det ni betalat, utom för de timmar som redan
-        använts. De räknas till det timpris ni betalade för planen eller klippkortet, inte till
+        använts. De räknas till det timpris ni betalade för planen eller timmarna, inte till
         ordinarie pris.</li>
     </ul>
     <div class="jur-ruta">
@@ -448,8 +453,8 @@
 
     <h2>Att sluta</h2>
     <p>Ni kan sluta när ni vill. Betalda pass som inte hållits betalar vi tillbaka, och timmar som
-      finns kvar i en plan eller ett klippkort och minuter i timbanken betalar vi tillbaka enligt
-      <a href="#erbjudanden">Planer och klippkort</a>. Vi kan stänga av ett konto som bryter mot
+      finns kvar i en plan eller i timbanken och sparade minuter betalar vi tillbaka enligt
+      <a href="#erbjudanden">Planer och timbanken</a>. Vi kan stänga av ett konto som bryter mot
       villkoren, och säger då till varför.</p>
 
     <h2>Ändringar</h2>
@@ -461,7 +466,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 9 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 12 oktober 2026.</p>
   </div>
 </section>
 

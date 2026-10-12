@@ -53,7 +53,7 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=5d4c3399">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=2180f8ae">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=8dd30fdd">
 <link rel="stylesheet" href="../nextrum-start.css?v=e0ab6fb9">
 <link rel="stylesheet" href="../nextrum-sidor.css?v=89c1fa67">
 
@@ -339,7 +339,7 @@
       <span class="nx-et acc">Offers</span>
       <h2 class="d2" id="erb-t" style="margin-top:18px">Buy the hours in advance. Pay less.</h2>
     </div>
-    <div class="nx-head-aside"><p class="nx-lede">A plan runs one month at a time and makes every hour cheaper. Prepaid hours are hours you use whenever it suits you. Everything is a one-off purchase and never renews by itself.</p></div>
+    <div class="nx-head-aside"><p class="nx-lede">A plan runs one month at a time and makes every hour cheaper. With Fill the time bank you buy hours at the hourly rate and use them whenever it suits you. Everything is a one-off purchase and never renews by itself.</p></div>
   </div>
 
   <p class="pr-erb-spara" data-erb-spara="6" data-erb-spara-kod="plan_standard" data-erb-spara-forsta data-stig>Save up to <b class="tnum" data-erb-spara-kr>1 359 kr</b> <span class="pr-erb-spara-med">over 6 months with the <span data-erb-spara-plan>Standard</span> plan!</span> <span>Compared with paying session by session, with the first hour free.</span></p>
@@ -400,7 +400,13 @@
   <div class="pr-erb-prickar" data-erb-prickar aria-hidden="true"><i></i><i></i><i></i></div>
   <p class="pr-erb-jamfor-not" data-erb-jamfor-not hidden>The comparisons were made for a pupil in year 9 in October 2026.</p>
 
-  <!-- Klippkorten är en egen bred rad under planerna sedan 2026-10-07,
+  <!-- Fyll timbanken (2026-10-12, Leo: "klippkort ska heta köp timmar
+       till timbanken, de lägg ju in i timbanken", "de ska kosta 399kr",
+       och "6 månader, fyll timbanken ska det heta"): klippkorten under ett
+       nytt namn, till timpriset och utan märke, sex månader. I databasen
+       heter de fortfarande klippkort (klipp10–klipp100).
+
+       Klippkorten är en egen bred rad under planerna sedan 2026-10-07,
        och fälls ut som förut (2026-09-26). <details>, inte en knapp med
        skript: raden öppnas också utan javascript, och siffrorna står i
        sidan för den som aldrig öppnar den. Timpriset, spannet och
@@ -411,49 +417,91 @@
        döljer det om korten inte har samma. -->
   <details class="nx-price-card pr-erb-klippkol" data-erb-grupp data-stig>
     <summary>
-      <span class="pr-erb-topp"><span class="eyebrow">Prepaid hours</span><span class="pr-erb-rabatt"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b></span></span>
-      <span class="pr-erb-vad">Hours you use whenever it suits you, from <span data-erb-min>10</span> to <span data-erb-max>100</span> hours.</span>
-      <span class="nx-amount"><b class="tnum" data-erb-grupp-tim>379 kr</b> <span class="per">/ hour</span></span>
+      <span class="pr-erb-topp"><span class="eyebrow">Fill the time bank</span></span>
+      <span class="pr-erb-vad">Hours in your time bank that you use whenever it suits you, from <span data-erb-min>10</span> to <span data-erb-max>100</span> hours. They are valid for six months.</span>
+      <span class="nx-amount"><b class="tnum" data-erb-grupp-tim>399 kr</b> <span class="per">/ hour</span></span>
       <span class="pr-erb-visa"><span class="pr-erb-visa-stangd">See the options</span><span class="pr-erb-visa-oppen">Hide the options</span> <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></span>
     </summary>
     <ul class="pr-erb-klipp">
       <li class="pr-erb-kort" data-erb="klipp10">
         <b class="pr-erb-namn">10 hours</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>3 790 kr</b>
-        <span class="pr-erb-spar">You save <span data-erb-spar>200 kr</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>3 990 kr</b>
         <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
       </li>
       <li class="pr-erb-kort ar-framhavd" data-erb="klipp20">
         <b class="pr-erb-namn">20 hours</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>7 580 kr</b>
-        <span class="pr-erb-spar">You save <span data-erb-spar>400 kr</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>7 980 kr</b>
         <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
       </li>
       <li class="pr-erb-kort" data-erb="klipp30">
         <b class="pr-erb-namn">30 hours</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>11 370 kr</b>
-        <span class="pr-erb-spar">You save <span data-erb-spar>600 kr</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>11 970 kr</b>
         <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
       </li>
       <li class="pr-erb-kort" data-erb="klipp60">
         <b class="pr-erb-namn">60 hours</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>22 740 kr</b>
-        <span class="pr-erb-spar">You save <span data-erb-spar>1 200 kr</span></span>
-        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>12 months</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>23 940 kr</b>
+        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
       </li>
       <li class="pr-erb-kort" data-erb="klipp100">
         <b class="pr-erb-namn">100 hours</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Regular price </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>37 900 kr</b>
-        <span class="pr-erb-spar">You save <span data-erb-spar>2 000 kr</span></span>
-        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>18 months</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>39 900 kr</b>
+        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
       </li>
     </ul>
   </details>
+
+  <!-- Vad timbanken är (2026-10-12, Leo: "redovisa med en bild och en
+       liten text vad timbanken är för något också"). Bilden är en
+       illustration utan text, och stegen under den står i HTML, så att
+       de översätts och läses upp. Texten säger det villkoren säger
+       (#timbank och #erbjudanden): köpta timmar gäller i sex månader,
+       sparade minuter går aldrig ut. -->
+  <div class="pr-timbank" data-stig>
+    <figure class="pr-timbank-bild">
+      <svg viewBox="0 0 480 200" aria-hidden="true" focusable="false">
+        <defs>
+          <g id="tb-mynt"><circle r="15"/><path fill="none" d="M0-8V0l6 4"/></g>
+          <clipPath id="tb-burk"><rect x="186" y="58" width="108" height="118" rx="24"/></clipPath>
+        </defs>
+        <g class="tb-mynt">
+          <use href="#tb-mynt" x="66" y="78"/><use href="#tb-mynt" x="92" y="108"/><use href="#tb-mynt" x="60" y="134"/>
+        </g>
+        <g class="tb-plus"><circle cx="102" cy="62" r="11"/><path d="M102 56v12M96 62h12"/></g>
+        <path class="tb-pil" d="M124 116h48m-8-7 8 7-8 7"/>
+        <rect class="tb-burk-hals" x="208" y="40" width="64" height="20" rx="7"/>
+        <rect class="tb-burk" x="186" y="58" width="108" height="118" rx="24"/>
+        <g clip-path="url(#tb-burk)">
+          <rect class="tb-niva" x="186" y="104" width="108" height="72"/>
+          <g class="tb-mynt">
+            <use href="#tb-mynt" x="214" y="152"/><use href="#tb-mynt" x="246" y="156"/><use href="#tb-mynt" x="276" y="150"/>
+            <use href="#tb-mynt" x="230" y="124"/><use href="#tb-mynt" x="262" y="122"/>
+          </g>
+        </g>
+        <path class="tb-pil" d="M308 116h38m-8-7 8 7-8 7"/>
+        <rect class="tb-kal" x="354" y="66" width="92" height="92" rx="14"/>
+        <path class="tb-kal-topp" d="M354 86V80a14 14 0 0 1 14-14h64a14 14 0 0 1 14 14v6z"/>
+        <path class="tb-kal-ring" d="M378 58v16M422 58v16"/>
+        <path class="tb-bock" d="M380 120l14 14 28-30"/>
+      </svg>
+      <ol class="pr-timbank-steg">
+        <li><b>You top up</b> hours in advance</li>
+        <li><b>The hours wait</b> in your time bank</li>
+        <li><b>Sessions are paid</b> by themselves</li>
+      </ol>
+    </figure>
+    <div class="pr-timbank-text">
+      <span class="eyebrow">The time bank</span>
+      <h3 class="pr-timbank-rubrik">What is the time bank?</h3>
+      <p>The time bank is your family's account for tutoring hours. You fill it with hours in advance, and when you propose a session for one child the hours pay for it by themselves. If a session paid with hours ends before a full hour, the rest is saved in the time bank, and the minutes cover overtime on later sessions or pay for a whole session when there are enough of them.</p>
+      <p class="pr-timbank-not">Bought hours are valid for six months. Saved minutes never expire. Siblings share the time bank, and you find it under Profile in your view.</p>
+    </div>
+  </div>
 
   <div class="pr-erb-fot" data-stig>
     <div>
@@ -531,8 +579,8 @@
           <p class="pr-kalk-rad" data-kalk-planrad>The plans are for one child per session, so with more children you pay per session.</p>
         </div>
         <div class="pr-kalk-lage" data-kalk-tips="ingen" hidden>
-          <span class="eyebrow">Buy the hours in advance</span>
-          <p class="pr-kalk-text">With prepaid hours every hour costs less, and you use them whenever it suits you.</p>
+          <span class="eyebrow">Fill the time bank</span>
+          <p class="pr-kalk-text">Buy hours in advance at the hourly rate, and they pay for your sessions by themselves. You use them whenever it suits you, within six months.</p>
           <a class="nx-lank" href="#erbjudanden">See the offers <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
         </div>
       </div>
@@ -621,7 +669,7 @@
           <span class="pr-flode-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 1.5 8.5 6 4 10.5"/></svg></span>
         </div>
         <h3>Pay in advance if you like</h3>
-        <p>You pay for each session by card, either in advance or after the session when you confirm the report. In advance works as soon as the time is confirmed, and if you have bought hours in a <a href="#erbjudanden">plan or as prepaid hours</a>, they pay for the session by themselves.</p>
+        <p>You pay for each session by card, either in advance or after the session when you confirm the report. In advance works as soon as the time is confirmed, and if you have bought hours in a <a href="#erbjudanden">plan or in the time bank</a>, they pay for the session by themselves.</p>
       </li>
       <li class="pr-flode-steg">
         <div class="pr-flode-topp">

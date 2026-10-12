@@ -3228,7 +3228,12 @@
      är det kassan drar — och annars "från" det billigaste kortet. Leo
      2026-10-08: "inte från utan för", så timpriset står först när det
      finns ett. <details>, så att kolumnen går
-     att öppna med tangentbordet utan en rad skript. */
+     att öppna med tangentbordet utan en rad skript.
+
+     Sedan 2026-10-12 heter kolumnen Fyll timbanken (Leo), och korten
+     kostar timpriset: överstrykningen och "ni sparar" står bara på ett
+     kort som är billigare än timpriset, för "ni sparar 0 kr" är inget
+     erbjudande. */
   function klippKolumn(kort, öppen) {
     if (!kort.length) return '';
     const kr = NXBetalning.kronor;
@@ -3240,28 +3245,31 @@
       : Math.min(...tim) + ' till ' + Math.max(...tim) + ' timmar';
     const rader = kort.map(e => {
       const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
+      const billigare = Number(e.rabatterat_timpris_ore) < Number(e.timpris_ore);
       const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
       return '<div class="erb-klipp-rad">'
         + '<div class="erb-topp"><b class="erb-namn">' + esc(e.timmar + ' timmar') + '</b>'
         + '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b></div>'
-        + '<span class="erb-tim"><s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(e.rabatterat_timpris_ore))
-        + ' per timme · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span></span>'
+        + '<span class="erb-tim">' + (billigare ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
+        + esc(kr(e.rabatterat_timpris_ore)) + ' per timme'
+        + (billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>'
         + '<div class="erb-klipp-fot"><span class="erb-vad">Gäller i ' + esc(mån) + '</span>' + köpKnapp(e) + '</div>'
         + '</div>';
     }).join('');
     return '<details class="erb-kort erb-klippkol"' + (öppen ? ' open' : '') + '>'
       + '<summary>'
-      + '<span class="erb-topp"><b class="erb-namn">Klippkort</b>'
+      + '<span class="erb-topp"><b class="erb-namn">Fyll timbanken</b>'
       + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
         && Number(kort[0].rabatterat_timpris_ore) < Number(kort[0].timpris_ore)
         ? '<span class="erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span>' + esc(kr(kort[0].timpris_ore))
           + '</s> ' + esc(kr(kort[0].rabatterat_timpris_ore)) + '</span>'
         : '')
       + '</span>'
-      + '<span class="erb-vad">' + esc(spann) + ', när det passar er</span>'
+      + '<span class="erb-vad">' + esc(spann) + ' i er timbank, när det passar er</span>'
       + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
-        ? '<span class="erb-pris"><s>' + esc(kr(kort[0].timpris_ore)) + '</s><b>' + esc(kr(kort[0].rabatterat_timpris_ore))
-          + '</b></span><span class="erb-tim">per timme</span>'
+        ? '<span class="erb-pris">'
+          + (Number(kort[0].rabatterat_timpris_ore) < Number(kort[0].timpris_ore) ? '<s>' + esc(kr(kort[0].timpris_ore)) + '</s>' : '')
+          + '<b>' + esc(kr(kort[0].rabatterat_timpris_ore)) + '</b></span><span class="erb-tim">per timme</span>'
         : '<span class="erb-pris"><span class="erb-fran">från</span><b>' + esc(kr(billigast.pris_ore)) + '</b></span>')
       + '<span class="erb-visa"><span class="erb-visa-stangd">Se alternativen</span>'
       + '<span class="erb-visa-oppen">Dölj alternativen</span>'
@@ -3345,7 +3353,7 @@
     if (!bank.finns) return '';
     const saldo = bank.saldo;
     return '<div class="erb-mitt erb-bank">'
-      + '<div class="erb-mitt-topp"><b>Timbanken</b><span>Går inte ut</span></div>'
+      + '<div class="erb-mitt-topp"><b>Sparade minuter</b><span>Går inte ut</span></div>'
       + '<span class="erb-kvar"><b>' + esc(tidLängd(saldo)) + '</b> sparat</span>'
       + '<p class="erb-bank-text">Minuter som blev över när ett pass betalt med timmar slutade före en hel timme. '
       + 'Drar ett pass över tas tiden härifrån först, utan kostnad, och räcker minuterna till ett helt pass betalar de '
@@ -3406,8 +3414,8 @@
     const kort = S.erb.kort;
     if (!kort.length) {
       host.innerHTML = '<p class="erb-bank-text">Ni har inga köpta timmar.'
-        + (S.erb.aktiv ? ' Köper ni en plan eller ett klippkort betalar timmarna era pass av sig själva. '
-          + '<a href="#erbjudanden">Se planer och klippkort</a>' : '')
+        + (S.erb.aktiv ? ' Köper ni en plan eller fyller timbanken betalar timmarna era pass av sig själva. '
+          + '<a href="#erbjudanden">Se planer och Fyll timbanken</a>' : '')
         + '</p>';
       return;
     }
@@ -3435,7 +3443,7 @@
       lista = '<p class="erb-bank-text">Rörelserna gick inte att hämta. Ladda om sidan, eller skriv till oss.</p>';
     } else if (!rader.length) {
       lista = '<p class="erb-bank-text">Inga minuter har gått in eller ut än.'
-        + (S.erb.aktiv ? ' Minuterna kommer ur timmar ni köpt i förväg. <a href="#erbjudanden">Se planer och klippkort</a>' : '')
+        + (S.erb.aktiv ? ' Minuterna kommer ur timmar ni köpt i förväg. <a href="#erbjudanden">Se planer och Fyll timbanken</a>' : '')
         + '</p>';
     } else {
       lista = '<ul class="tb-rorelser">' + rader.map(r => {
@@ -4237,7 +4245,7 @@
       + ruta('', 'Kan betalas i förväg', iFörväg.length ? kronor(förvägKr) : '0 kr',
         iFörväg.length ? (iFörväg.length === 1 ? '1 bekräftat pass' : iFörväg.length + ' bekräftade pass') : 'Inget bekräftat pass')
       + ruta('', 'Betalt i ' + (NX.MANADER[new Date().getMonth()] || 'månaden'), kronor(betaltKr),
-        timmar ? 'och ' + (timmar === 1 ? '1 timme' : timmar + ' timmar') + ' ur klippkortet'
+        timmar ? 'och ' + (timmar === 1 ? '1 köpt timme' : timmar + ' köpta timmar')
           : iMånaden.length ? (iMånaden.length === 1 ? '1 pass' : iMånaden.length + ' pass') : 'Inget betalt än');
   }
 
@@ -4268,7 +4276,7 @@
             med: medBarn(b),
             tid: false,
             plats: false,
-            under: [b.klippkort_id && !betalt ? 'Timmar ur klippkortet' : medBanken(b) && !betalt ? 'Timbanken' : 'Kort',
+            under: [b.klippkort_id && !betalt ? 'Köpta timmar' : medBanken(b) && !betalt ? 'Sparade minuter' : 'Kort',
               'betalt ' + kortDatum(isoFor(new Date(b.betald_at)))].join(' · '),
             vem: !tillbaka ? null
               : tillbaka >= betalt ? 'Hela beloppet är återbetalt.'

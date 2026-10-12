@@ -13119,6 +13119,7 @@ declare
   fel  text;
   t    text;
   n    bigint;
+  m    bigint;
   sk   text;
   tp   bigint;
   P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
@@ -13160,14 +13161,24 @@ begin
     select timpris_ore into tp from public.erbjudanden_pris where kod = 'plan_standard';
     select string_agg(kod || ':' || pris_ore || ':' || ordinarie_ore || ':' || rabatterat_timpris_ore, ',' order by kod) into t
       from public.erbjudanden_pris where kod in ('plan_basic', 'plan_standard', 'plan_intensiv', 'klipp10');
-    ut := ut || jsonb_build_object('t', 'PL med 399 kr i timmen: paketen 1 516, 3 032 och 4 548 kr, och 379 kr i timmen', 'ok',
+    ut := ut || jsonb_build_object('t', 'PL med 399 kr i timmen: paketen 1 516, 3 032 och 4 548 kr, och Fyll timbanken 399 kr i timmen', 'ok',
             case when tp = 39900
-                 then t = 'klipp10:379000:399000:37900,plan_basic:151600:159600:37900,'
+                 then t = 'klipp10:399000:399000:39900,plan_basic:151600:159600:37900,'
                           'plan_intensiv:454800:478800:37900,plan_standard:303200:319200:37900'
                  else tp is not null end,
             'd', coalesce(t, 'inga') || case when tp is distinct from 39900
                                              then ' (timpriset är ' || coalesce(tp::text, '?') || ', siffrorna provas inte)'
                                              else '' end);
+
+    -- Fyll timbanken (2026-10-12): klippkorten kostar timpriset, utan
+    -- rabatt, gäller i sex månader och heter Fyll timbanken i kassan.
+    select count(*) into n from public.erbjudanden_pris
+     where sort = 'klippkort'
+       and (rabatt_procent <> 0 or giltig_manader <> 6 or rabatterat_timpris_ore <> timpris_ore
+            or namn <> 'Fyll timbanken, ' || timmar || ' timmar');
+    select count(*) into m from public.erbjudanden_pris where sort = 'klippkort';
+    ut := ut || jsonb_build_object('t', 'PL Fyll timbanken kostar timpriset, gäller i 6 månader och heter så i kassan',
+            'ok', n = 0 and m = 5, 'd', n || ' fel av ' || m);
 
     -- Bara admin ändrar katalogen. Anon först, sedan familjen.
     begin

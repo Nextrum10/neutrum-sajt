@@ -188,6 +188,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs eller studiehjälpares egen kod i intresseanmälan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
 ### Siffror som måste stämma överallt
@@ -200,6 +201,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   en månad"), så "utan bindning" ställs aldrig mot paketen: 399 kr är "pass för pass" där de står bredvid varandra.
   Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
   pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
+  **Fyll timbanken** (2026-10-12, Leo; klippkorten `klipp10`–`klipp100` i databasen) kostar timpriset, 399 kr, utan
+  rabatt och utan märke, och alla storlekar gäller i sex månader. Köpta timmar går ut, sparade minuter gör det inte:
+  sidan och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
@@ -719,6 +723,9 @@ Detaljer: `minne/grunden.md`.
   som Basics. Standards 5 832 är inte samma pris som lyftets och Just nus 5 000 kr+: samma plan jämförs med två
   priser på samma sida (40 % mot 5 000, 2 800 kr mot 5 832, som vore 48 %). Raden "Jämförelserna gjordes med en elev i
   årskurs 9 i oktober 2026" är Leos ord om underlaget. Juristen har inte läst tejperna, och ingen aktör nämns på sajten.
+- **Fyll timbanken** (2026-10-12): `fyll_timbanken` (20261012120000) körs efter merge, från merge-commiten: tills
+  dess tar kassan 379 kr och skriver "Klippkort" på kvittot. Villkorens version är 2026-10-12, så alla får frågan igen.
+  Inget klippkort var köpt. Adminvyn säger fortfarande Klippkort. Juristen har inte läst de nya villkoren.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för

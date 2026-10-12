@@ -118,6 +118,34 @@ förut `bookings_klippkortspass_avbokat` och gällde bara admin.
 timmar kvar (Fas 21.2, notistypen `timmar_gar_ut`), och rutan Era
 timmar säger samma sak från samma dag.
 
+**Klippkorten heter Fyll timbanken (2026-10-12).** Leo: "klippkort ska heta
+köp timmar till timbanken, de lägg ju in i timbanken. visa innan ändring de
+ska kosta 399kr". Han fick se prissidan före och efter, och två invändningar:
+till 399 kr är timmarna sämre än pass för pass (samma pris, betalt i förväg,
+och de går ut), och timbanken heter i villkoren det som "inte går ut", så ett
+namn med timbanken på timmar som förfaller lovar något de inte håller. Svaret:
+"6 månader, fyll timbanken ska det heta. redovisa med en bild och en liten
+text vad timbanken är för något också".
+- Katalogen: `klipp10`–`klipp100` har 0 % rabatt och `giltig_manader = 6`
+  (förut 5 %, och 12 och 18 månader för 60 och 100 timmar), och namnet
+  "Fyll timbanken, N timmar", som är raden i Stripes kassa och på kvittot.
+  Sorten heter fortfarande `klippkort`, och tabellen och koderna också.
+- Prissidan (båda språken): rubriken Fyll timbanken (Fill the time bank),
+  399 kr, ingen överstrykning och inget "Ni sparar", sex månader i alla
+  kort, och en ruta under raden (`.pr-timbank`) med en bild (påfyllningen,
+  burken, kalendern; ritad med sidans tokens, så den följer mörkt läge) och
+  texten om vad timbanken är. Den säger det som skiljer: köpta timmar gäller
+  i sex månader, sparade minuter går aldrig ut.
+- Studievyn: kolumnen Fyll timbanken, och överstrykningen och "ni sparar"
+  bara på ett kort som är billigare än timpriset. I Betalning heter ett pass
+  betalt med timmar "Köpta timmar" och ett betalt med minuter "Sparade
+  minuter" (förut "Timmar ur klippkortet" och "Timbanken", som nu hade
+  betytt samma sak).
+- Villkoren: "Planer och timbanken", timmarna till timbanken till ordinarie
+  timpris, sex månader för alla, och timbanken rymmer både de köpta timmarna
+  och de sparade minuterna. Version 2026-10-12, så alla får frågan igen.
+- Adminvyn säger fortfarande Klippkort; den bad ingen om.
+
 ## Timbanken (Fas 22.1)
 
 **Det som blir över på ett timpass sparas i timbanken** (Fas 22.1,

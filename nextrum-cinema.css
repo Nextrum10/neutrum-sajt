@@ -3149,6 +3149,43 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3){transition-delay:.18
 @keyframes pr-erb-fram{from{opacity:0;translate:0 -8px}}
 .pr-erb-kort.ar-framhavd{border-color:var(--acc-line)}
 
+/* Vad timbanken är (2026-10-12): bilden till vänster och texten till
+   höger, under varandra på en telefon. Bilden ritas med sidans tokens,
+   så den följer mörkt läge. Stegen under den har en kolumn per del av
+   bilden (påfyllningen, burken, kalendern), och bilden är ritad i
+   tredjedelar för att de ska stå under rätt del. */
+.pr-timbank{
+  margin-top:clamp(18px,2.2vw,28px);
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);
+  gap:clamp(18px,3vw,48px);align-items:center;
+  padding:clamp(22px,3vw,40px);
+  border:1px solid var(--ln);border-radius:28px;background:var(--pap);box-shadow:var(--sk-1);
+}
+@media (max-width:860px){.pr-timbank{grid-template-columns:minmax(0,1fr)}}
+.pr-timbank-bild{margin:0}
+.pr-timbank-bild svg{display:block;width:100%;height:auto;overflow:visible}
+.pr-timbank-bild svg *{vector-effect:non-scaling-stroke}
+/* Mynten är <use>, och en väljare når inte in i dem: färgen ärvs från
+   gruppen, och visarnas fill="none" står på stigen i <defs>. */
+.tb-mynt{fill:var(--ockra-soft);stroke:var(--ockra);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tb-plus circle{fill:var(--acc)}
+.tb-plus path{fill:none;stroke:var(--pap);stroke-width:2.4;stroke-linecap:round}
+.tb-pil{fill:none;stroke:var(--ln-2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tb-burk,.tb-burk-hals,.tb-kal{fill:var(--pap-2);stroke:var(--bl);stroke-width:2}
+.tb-niva{fill:var(--acc-soft)}
+.tb-kal-topp{fill:var(--mossa-soft);stroke:var(--bl);stroke-width:2}
+.tb-kal-ring{fill:none;stroke:var(--bl);stroke-width:2.4;stroke-linecap:round}
+.tb-bock{fill:none;stroke:var(--mossa);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.pr-timbank-steg{
+  list-style:none;margin:10px 0 0;padding:0;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+  text-align:center;font-size:.82rem;line-height:1.4;color:var(--muted);
+}
+.pr-timbank-steg b{display:block;font-weight:700;color:var(--bl)}
+.pr-timbank-rubrik{margin:10px 0 0;font-size:clamp(1.3rem,2.2vw,1.7rem);line-height:1.15;letter-spacing:-.025em;font-weight:700;color:var(--bl)}
+.pr-timbank-text p{margin:12px 0 0;max-width:56ch;line-height:1.55}
+.pr-timbank-text .pr-timbank-not{font-size:.88rem;color:var(--muted)}
+
 /* Finstilen till vänster och knappen till höger, under allt. "Pyttelitet",
    som Leo sa: länken ska finnas, inte konkurrera. */
 .pr-erb-fot{
