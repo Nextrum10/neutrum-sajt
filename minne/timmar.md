@@ -61,7 +61,8 @@ timmen: 1 440, 2 653 och 4 320 kr. Basic blev dyrare än gamla Standard
 - Studievyn läser vyn med `*` (tål att migrationen saknas: då ritas den
   gamla katalogen, som kassan då tar betalt efter) och lyfter fram planen
   med timmar på köpet; märket är "1 timme på köpet" och raden "8 timmar för
-  priset av 7 · ni sparar 379 kr", aldrig ett snittpris.
+  priset av 7", aldrig ett snittpris ("ni sparar" på raden är borta sedan
+  2026-10-12, `betalning.md`).
 - Ordet "på köpet" betyder också startrabatten och tipstimmen. Villkoren
   säger att köpta timmar inte betalar "ett pass där en timme är på köpet"
   (startrabatten); ett förtydligande kräver en ny version av villkoren.

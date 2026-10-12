@@ -684,7 +684,6 @@ const NX = (function () {
       skriv(el, '[data-erb-pris]', kr(r.pris_ore / 100));
       skriv(el, '[data-erb-timpris]', kr(r.timpris_ore / 100));
       skriv(el, '[data-erb-rabatterat]', kr(r.rabatterat_timpris_ore / 100));
-      skriv(el, '[data-erb-spar]', kr((r.ordinarie_ore - r.pris_ore) / 100));
       skriv(el, '[data-erb-giltig]', m === 1 ? t('enManad') : t('flerManader', { n: m }));
       skriv(el, '[data-erb-antal]', String(timmar));
       skriv(el, '[data-erb-pa-kopet]', String(pa));
@@ -934,10 +933,15 @@ const NX = (function () {
         .find(el => !el.closest('[hidden]') && Number(el.getAttribute('data-erb-timmar')) === timmar);
       if (plan) {
         const namn = $('[data-erb-namn]', plan) || $('.eyebrow', plan);
-        const planpris = $('[data-erb-pris]', plan), spar = $('[data-erb-spar]', plan);
+        const planpris = $('[data-erb-pris]', plan);
+        const ore = Number(plan.getAttribute('data-erb-ore'));
         sätt('[data-kalk-plannamn]', namn ? namn.textContent : '');
         sätt('[data-kalk-planpris]', planpris ? planpris.textContent : '');
-        sätt('[data-kalk-planspar]', spar ? spar.textContent : '');
+        /* Vad planen sparar är skillnaden mellan de två summorna rutan
+           visar. Den lästes förut ur kortets rad "Ni sparar", som togs
+           bort 2026-10-12 (Leo); räknad här går den alltid ihop med
+           siffrorna bredvid. */
+        sätt('[data-kalk-planspar]', ore > 0 ? kr(Math.max(0, perPass - ore / 100)) : '');
         /* En plan med timmar på köpet visar samma rad som sitt kort,
            "8 timmar för priset av 7", och aldrig bara märket "1 timme på
            köpet": bredvid noten om första timmen hade de lästs som samma
@@ -949,7 +953,6 @@ const NX = (function () {
           x.hidden = !paket || paket.hidden || !rad;
           x.textContent = x.hidden ? '' : rad + ' · ';
         });
-        const ore = Number(plan.getAttribute('data-erb-ore'));
         const andel = ore > 0 && perPass > 0 ? Math.min(1, ore / (perPass * 100)) : 1;
         $$('[data-kalk-andel]', box).forEach(i => i.style.setProperty('--andel', andel.toFixed(3)));
       }

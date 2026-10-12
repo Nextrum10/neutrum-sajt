@@ -236,7 +236,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (2026-10-09, Leo: "skriv spara upp 1359 på 6 månader med standard planen", med utropstecken). Startsidans Just nu och
   prissidans rad är Standards (1 359 kr), och varje plankort har sin egen (879, 1 359, 1 839 kr). Märket på planerna och klippkorten, på prissidan och i studievyn, är
   timpriset utan bindning överstruket och det rabatterade bredvid, aldrig en procent (Leo 2026-10-08), och döljs när de
-  är lika. Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
+  är lika. Plankorten har ingen rad med timpris och "ni sparar" under priset (2026-10-12, Leo: "de ska bort"), varken
+  på prissidan eller i studievyn; kalkylatorns "Ni sparar" räknas ur de två summorna den visar. Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
   gratis första lektion", "MAXIMALT ... en timme gratis"): högst en per familj, någonsin, utom tipstimmar
   (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
   `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald); pass för pass bara för

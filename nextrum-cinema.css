@@ -2879,11 +2879,13 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    inlägg, med prickar under, och raden börjar med Standard i mitten
    (initErbjudanden() sätter scrollLeft en gång, aldrig scrollIntoView).
 
-   Det överstrukna timpriset och "ni sparar" står på varje kort med
-   rabatt, för det är skillnaden mot 399 kr utan bindning man jämför
+   Timpriset står bara i märket överst, 399 kr överstruket och 379 kr
    (2026-10-08: alla tre planerna 379 kr i timmen, och Standards
-   "8 timmar för priset av 7" är borta). Rutorna under beskrivningen
-   är en ruta per timme; en timme på köpet är i lera.
+   "8 timmar för priset av 7" är borta). Raden "399 kr 379 kr / timme ·
+   Ni sparar 160 kr" längst ned är borta sedan 2026-10-12 (Leo): den
+   sade märket en gång till, och besparingen står i lappen under den.
+   Rutorna under beskrivningen är en ruta per timme; en timme på köpet
+   är i lera.
 
    [hidden] måste skrivas ut: korten har egen display, och
    initErbjudanden() döljer ett erbjudande som stängts av i
@@ -2925,9 +2927,12 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 /* Antalet timmar står först och i sidans textfärg (2026-10-08): det är
    det man jämför planerna på, och resten av raden förklarar det. */
 .pr-erb-vad b{color:var(--bl);font-weight:650}
-.pr-erb-plan .nx-amount{margin:22px 0 6px}
+.pr-erb-plan .nx-amount{margin:22px 0 18px}
 .pr-erb-plan .nx-amount b{font-size:clamp(2.2rem,3.6vw,3.1rem)}
-.pr-erb-plan > .pr-erb-tim{margin-top:auto;padding-top:14px}
+/* Lappen längst ned trycks ner av tomrummet, så att den står på samma
+   höjd i alla tre korten. Luften ovanför den är beloppets och tejpens
+   marginal under, för en auto-marginal har inget minsta mått. */
+.pr-erb-plan > .pr-erb-sex{margin-top:auto}
 .pr-erb-tim{font-size:.9rem;color:var(--muted);line-height:1.5}
 .pr-erb-tim s{color:var(--muted-2)}
 .pr-erb-tim b{color:var(--bl);font-weight:700}
@@ -3389,7 +3394,7 @@ html.nx-sr [data-stig].nx-in > .nx-tejp{animation:nx-tejp-fast .62s var(--e-ut) 
 .nx-tejp-kort{
   --tejp-tand:6px;
   align-self:center;
-  margin:16px 0 2px;
+  margin:4px 0 18px;
   padding:9px calc(var(--tejp-tand) + 16px) 10px;gap:2px;
 }
 .nx-tejp-kort .nx-tejp-stor{font-size:clamp(1.12rem,1.55vw,1.32rem);white-space:nowrap}

@@ -896,5 +896,14 @@ istället 399 streck över de, 379". (Han skrev "basic" två gånger; den andra
   studievyn, är timpriset utan bindning överstruket och det rabatterade
   bredvid (399 kr överstruket, 379 kr), båda ur svaret, i stället för
   "−5 %". Det döljs när de är lika, och studievyn visar det aldrig på ett
-  kort med timmar på köpet. Plankortets rad längst ned säger samma timpris
-  en gång till, med "ni sparar".
+  kort med timmar på köpet. Plankortets rad längst ned, som sade samma
+  timpris en gång till med "ni sparar" ("399 kr 379 kr / timme · Ni
+  sparar 160 kr"), är borta sedan 2026-10-12, på prissidan, i studievyn
+  och på engelska (Leo: "de ska bort från standardplanen. de finns också
+  på intensiv och bas"). Märket säger timpriset, Spara-lappen och i
+  studievyn den överstrukna summan besparingen. Prissidans kalkylator
+  läste sitt "Ni sparar" ur raden och räknar det nu själv, som skillnaden
+  mellan de två summorna den visar (`initKalkyl`), och lappen längst ned
+  är det som trycks ner så att den står i linje i alla tre korten. I
+  studievyn står raden bara kvar på ett kort med timmar på köpet, utan
+  "ni sparar", för där är den det enda som säger hur summan går ihop.
