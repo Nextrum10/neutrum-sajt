@@ -352,7 +352,7 @@ knappen stängs med `NXStudie.medan()`.
 Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, mossa klart (tokens i
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
 ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knappen
-Betala i förväg. Ett drag överst, en knapp per listrad, tid och plats genom
+Betala i förväg och Köp under Erbjudanden (2026-10-12). Ett drag överst, en knapp per listrad, tid och plats genom
 `NXKontakt.passRad`, betalvalen i `.vy-betalval`. Adminvyns månadsväljare är ett fält med en
 ruta för år och månad (2026-10-06), från september 2026 till och med december nästa år; märket
 står i fältet och i rutan, och Lektioner räknar upp andra månader utan rapport under det.

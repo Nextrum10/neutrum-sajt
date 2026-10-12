@@ -20,6 +20,28 @@ priserna men inget går att köpa. Klippkorten står i studievyn och på prissid
 bredvid planerna som fälls ut (2026-09-27). De var borta ur
 studievyn en förmiddag samma dag och kom tillbaka i den formen.
 
+**Inget abonnemang, och köpen väntar på matchningen (2026-10-12).** Leo:
+"på erbjudanden i studivyn ska man kunna köpa de med stripe. Eventuellt
+ska planerna även gå att ta på autogiro eller någon automatisk betalning
+varje månad med stripe. Köp knappen ska vara orange". Köpet fanns redan och
+flaggan stod på; det Leo såg var låset före matchningen, för båda
+föräldrakontona i driften, hans eget också, var omatchade (`S.väntar`, och
+knappen grå). På frågan valde han:
+- **Låset står kvar.** En plans månad börjar vid köpet, så en familj som
+  köper medan vi letar studiehjälpare bränner timmar den betalat för. Ett
+  provköp görs med ett konto som matchats under Familjer i adminvyn.
+  Databasen och `stripe-checkout` prövar inte matchningen; det gör bara vyn.
+- **Inget abonnemang nu**, bara engångsköp. Autogiro går inte genom Stripe
+  (Stripe har inte Bankgirots autogiro), så det enda vore ett
+  kortabonnemang. Ett abonnemang på timmar som går ut efter en månad är den
+  modell som ger tvister (familjen betalar av sig själv för timmar den inte
+  hunnit använda), och det kräver en ny version av villkoren på båda
+  språken, en Säg upp i vyn, sparade kort hos Stripe (dataskyddet och
+  policyn), juristen och skarp Stripe. Tas det upp igen: bestäm först om
+  outnyttjade timmar följer med till nästa månad.
+- **Köp är orange** (`.btn-orange` i `köpKnapp`), som Betala i förväg
+  (`minne/vyerna.md`, Orange är inget läge).
+
 **Plankortens text på prissidan (2026-10-08).** Leo: "på erbjudanden texten
 ovanför priset ska de stå exempelvis på basic 4 timmar per månad, sen på
 standard 8 timmar per månad och intensiv 12 timmar per månad, obundet för de
