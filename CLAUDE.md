@@ -97,6 +97,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och barnets vy har inga länkar ut. Fel i en fråga rapporteras i spelaren (`rapportera_fragefel`,
   fyra skäl, ingen fritext, ingen person) och syns under Material i adminvyn. Ljuden räknas fram i webbläsaren (`nextrum-ljud.js`) och
   valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
+  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
+  (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare (`mina_tips()`) och
   en kampanjkod per affisch; `leads.kod`. Koden syns i formuläret och lagras aldrig i
   webbläsaren, och en okänd kod fäller aldrig anmälan. Tipstimmen är `startrabatt` med
@@ -733,11 +735,13 @@ Detaljer: `minne/grunden.md`.
   som Basics. Standards 5 832 är inte samma pris som lyftets och Just nus 5 000 kr+: samma plan jämförs med två
   priser på samma sida (40 % mot 5 000, 2 800 kr mot 5 832, som vore 48 %). Raden "Jämförelserna gjordes med en elev i
   årskurs 9 i oktober 2026" är Leos ord om underlaget. Juristen har inte läst tejperna, och ingen aktör nämns på sajten.
-- **Fyll timbanken** (2026-10-12): `fyll_timbanken` (20261012120000) körs efter merge, från merge-commiten: tills
-  dess tar kassan 379 kr och skriver "Klippkort" på kvittot. Villkorens version är 2026-10-12, så alla får frågan igen.
-  Inget klippkort var köpt. `drift` (agentens fakta, `_delad/nextrum-fakta.ts`) driftsätts från main efter merge.
-  Migrationen byter också strömbrytarens beskrivning, med `flaggor_stampla` av runt den raden.
-  Juristen har inte läst de nya villkoren.
+- **Fyll timbanken** (2026-10-12) är i drift sedan samma kväll: PR #254 mergades (2c19183) och `fyll_timbanken`
+  (20261012120000) kördes direkt efter, hämtad från merge-commiten, prövad mot sin md5 (`e9a6025d…`) och körd och
+  registrerad i ett do-block. Katalogen säger 399 kr och sex månader, strömbrytarens beskrivning är bytt (med
+  `flaggor_stampla` av runt den raden och på igen efteråt), och hela `rls-test.sql` gick 1519 av 1519 mot driften,
+  tillbakarullat. `drift` (agentens fakta) är driftsatt som v16 från main, hämtad tillbaka och byte för byte lika i
+  alla fem filer. Villkorens version är 2026-10-12, så alla får frågan igen. Inget klippkort var köpt. Juristen har
+  inte läst de nya villkoren.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för

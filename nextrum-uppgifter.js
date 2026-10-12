@@ -1019,8 +1019,13 @@ window.NXUppgifter = (function () {
           + ' aria-label="' + esc(NX.årskursText(k) + (k === o.elevKod ? ', din årskurs' : '')) + '">' + esc(kortÅrskurs(k)) + '</button>').join('')
         + '</div>'
       : '';
+    /* Leo 2026-10-12: matematik, svenska och engelska är det vi bygger
+       mest på just nu, och resten kommer med tiden. Det står sist i
+       rutan, så att inget ovanför ämnena byter höjd. */
+    const bygger = '<p class="nl-valj-not"><b>Just nu bygger vi mest på matematik, svenska och engelska.</b>'
+      + ' De andra ämnena finns redan och får fler nivåer efter hand.</p>';
     return '<div class="nl-grupp"><h3>Välj ämne</h3></div>'
-      + '<div class="nl-valj">' + rutor + ak + '</div>';
+      + '<div class="nl-valj">' + rutor + ak + bygger + '</div>';
   }
 
   /* Vägen eller NP-sektionen, när banan har båda. */

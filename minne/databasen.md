@@ -958,3 +958,19 @@ merge-commiten genom `extensions.http_get`, prövad mot sin md5
 kolumner med `timmar_pa_kopet` sist, och `bookings_timmarna_tillbaka` sist
 bland triggrarna på `bookings`. Hela `rls-test.sql` mot driften: 1505 av
 1505, tillbakarullat. Advisorn larmade inte om något nytt.
+
+### Fyll timbanken (fyll_timbanken, 2026-10-12)
+Klippkorten `klipp10`–`klipp100` fick 0 % rabatt, `giltig_manader = 6` och
+namnet "Fyll timbanken, N timmar" (raden i Stripes kassa), och
+`intern.villkor_version()` blev 2026-10-12. Strömbrytarens beskrivning i
+`flaggor` byttes med `flaggor_stampla` av runt den enda raden, som i
+`fas14_9_bokforingen_i_fortnox`, och ett `do`-block efteråt prövar att
+triggern är på igen (`tgenabled = 'O'`). Ingen drop och ingen delete, så
+filen kördes hel. **I drift 2026-10-12**, direkt efter merge av PR #254:
+filen från merge-commiten (2c19183) genom `extensions.http_get`, prövad mot
+sin md5 (`e9a6025d…`), körd och registrerad i samma do-block (`$kor$`),
+med en vakt mot att versionen redan fanns. Efteråt: klippkorten 39900 öre i
+timmen och sex månader, villkoren 2026-10-12, strömbrytaren med ny text och
+oförändrat `uppdaterad`, och `flaggor_stampla` på. Hela `rls-test.sql` mot
+driften 1519 av 1519, tillbakarullat (ett nytt prov), och lokalt samma
+siffra före merge. Advisorn larmade inte om något nytt.

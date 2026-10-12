@@ -210,6 +210,12 @@
 .nl-ak-knapp.egen::after{content:"";position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
 .nl-ak-knapp.egen[aria-pressed="true"]::after{background:var(--lera-l)}
 @media (hover:hover){.nl-ak-knapp:hover{border-color:var(--bl-3)}}
+/* Vad vi bygger mest på just nu: en fotnot i rutan, under en tunn linje. */
+.nl-valj-not{
+  margin:2px 2px 0;padding-top:12px;border-top:1px solid var(--ln);
+  font-size:.84rem;line-height:1.5;color:var(--bl-3);text-wrap:pretty;
+}
+.nl-valj-not b{font-weight:650;color:var(--bl-2)}
 
 .nl-amnen{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;min-width:0}
 .nl-amne{
