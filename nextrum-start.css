@@ -834,6 +834,16 @@ html.nx-sr .nlx-delar.nlx-in .nlx-del{opacity:1;translate:0 0}
 }
 .nlx-amnen li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--f);flex:none}
 .nlx-not{font-size:.92rem;line-height:1.55;color:var(--bl-2);max-width:60ch;text-wrap:pretty}
+/* Matematik, svenska och engelska är det vi bygger mest på just nu
+   (Leo 2026-10-12): deras brickor står i ämnets ton, och raden under
+   dem säger det i ord, så att färgen aldrig bär beskedet ensam. De
+   andra ämnena finns redan och står som förut. */
+.nlx-amnen li.fokus{
+  background:color-mix(in srgb,var(--f) 10%,var(--kort));
+  border-color:color-mix(in srgb,var(--f) 45%,var(--ln));
+}
+.nlx-bygger{font-size:.92rem;line-height:1.55;color:var(--bl-2);max-width:60ch;text-wrap:pretty}
+.nlx-bygger b{font-weight:650;color:var(--bl)}
 
 /* ---------- scenen: telefonen, omloppet och lapparna ----------
    --tw är telefonens bredd, och allt runt den räknas ur den. Den sätts
@@ -1548,7 +1558,7 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   .nlx-fot{padding:14px;border-radius:18px;gap:12px}
   .nlx-amnen{gap:6px}
   .nlx-amnen li{padding:5px 10px 5px 8px;font-size:.8rem;gap:6px}
-  .nlx-not{font-size:.88rem}
+  .nlx-not,.nlx-bygger{font-size:.88rem}
 }
 
 /* ---------- reducerad rörelse ----------

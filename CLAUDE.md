@@ -97,6 +97,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och barnets vy har inga länkar ut. Fel i en fråga rapporteras i spelaren (`rapportera_fragefel`,
   fyra skäl, ingen fritext, ingen person) och syns under Material i adminvyn. Ljuden räknas fram i webbläsaren (`nextrum-ljud.js`) och
   valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
+  Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
+  (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare (`mina_tips()`) och
   en kampanjkod per affisch; `leads.kod`. Koden syns i formuläret och lagras aldrig i
   webbläsaren, och en okänd kod fäller aldrig anmälan. Tipstimmen är `startrabatt` med
@@ -196,6 +198,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs eller studiehjälpares egen kod i intresseanmälan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| timbanken | familjens köpta timmar (en plan eller Fyll timbanken) och sparade minuter; pass för pass går inte genom den |
+| Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
 ### Siffror som måste stämma överallt
@@ -208,13 +212,21 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   en månad"), så "utan bindning" ställs aldrig mot paketen: 399 kr är "pass för pass" där de står bredvid varandra.
   Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
   pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
+  **Timbanken** är familjens köpta timmar och sparade minuter, och den fylls på två sätt (Leo 2026-10-12: "timbanken
+  fylls antingen med plan eller förköpta timmarna"): med en plan, eller med **Fyll timbanken** (klippkorten
+  `klipp10`–`klipp100` i databasen), som kostar timpriset, 399 kr, utan rabatt och utan märke, och gäller i sex månader
+  i alla storlekar. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
+  och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
+  Studievyns Erbjudanden visar alltid Er timbank med de tillgängliga timmarna och hänvisar till Profil → Timbanken,
+  där förklaringen och villkoren står (Leo samma kväll).
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
   samtidigt. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
-  och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`. Allt med
+  och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`; svaret är månadskostnaden och
+  säger det, och den räknar aldrig på flera månader (2026-10-12, Leo: "ta bort månaderna"). Allt med
   `data-erb` (planerna, lyftet `.pr-lyft` med tejpen `.nx-tejp`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
   `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar),
   Standard (`plan_standard`, 8) och Intensiv (`plan_intensiv`, 12), alla −5 % och en månad i taget sedan
@@ -233,7 +245,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (2026-10-09, Leo: "skriv spara upp 1359 på 6 månader med standard planen", med utropstecken). Startsidans Just nu och
   prissidans rad är Standards (1 359 kr), och varje plankort har sin egen (879, 1 359, 1 839 kr). Märket på planerna och klippkorten, på prissidan och i studievyn, är
   timpriset utan bindning överstruket och det rabatterade bredvid, aldrig en procent (Leo 2026-10-08), och döljs när de
-  är lika. Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
+  är lika. Plankorten har ingen rad med timpris och "ni sparar" under priset (2026-10-12, Leo: "de ska bort"), varken
+  på prissidan eller i studievyn, och kalkylatorn säger inget "Ni sparar" heller (Leo samma kväll). Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
   gratis första lektion", "MAXIMALT ... en timme gratis"): högst en per familj, någonsin, utom tipstimmar
   (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
   `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald); pass för pass bara för
@@ -355,6 +368,11 @@ står i fältet och i rutan, och Lektioner räknar upp andra månader utan rappo
 minst 16 px text (`.inp,.sel` är 1rem), annars zoomar en iPhone in sidan vid tryck. **På en
 telefon** (2026-10-09) läggs en ny sektion direkt under sektionsraden (`sidomeny`, `början()`),
 vyns delar står i menyn bakom de tre strecken (`mobilmeny`), och Enter är en ny rad i chatten.
+**Notiserna vid inloggningen** (2026-10-12): det som väntar på en står i en ruta när vyn öppnas
+(`NXStudie.notisruta`), med samma poster som klockan i sidhuvudet (`notisposter()` i båda vyerna),
+och väntar inget kommer ingen ruta. En gång per inloggning (`sessionStorage`, som `loggaUt()` och
+vakten tömmer), aldrig på väg tillbaka från kassan, och inte i barnets vy. Den går inte att stänga
+av: inget val under Profil → Notiser. Stäng och Escape stänger rutan, ett tryck utanför gör det inte.
 ### Adminvyns skal
 Samma hus som de andra vyerna: KÄNSLAN och INNEHÅLLET står på `.vy` och adminvyn har inga egna
 ytor; ändras de andra vyerna oväntat är specificiteten första stället. Menyn är en egen rullyta
@@ -741,6 +759,13 @@ Detaljer: `minne/grunden.md`.
   som Basics. Standards 5 832 är inte samma pris som lyftets och Just nus 5 000 kr+: samma plan jämförs med två
   priser på samma sida (40 % mot 5 000, 2 800 kr mot 5 832, som vore 48 %). Raden "Jämförelserna gjordes med en elev i
   årskurs 9 i oktober 2026" är Leos ord om underlaget. Juristen har inte läst tejperna, och ingen aktör nämns på sajten.
+- **Fyll timbanken** (2026-10-12) är i drift sedan samma kväll: PR #254 mergades (2c19183) och `fyll_timbanken`
+  (20261012120000) kördes direkt efter, hämtad från merge-commiten, prövad mot sin md5 (`e9a6025d…`) och körd och
+  registrerad i ett do-block. Katalogen säger 399 kr och sex månader, strömbrytarens beskrivning är bytt (med
+  `flaggor_stampla` av runt den raden och på igen efteråt), och hela `rls-test.sql` gick 1519 av 1519 mot driften,
+  tillbakarullat. `drift` (agentens fakta) är driftsatt som v16 från main, hämtad tillbaka och byte för byte lika i
+  alla fem filer. Villkorens version är 2026-10-12, så alla får frågan igen. Inget klippkort var köpt. Juristen har
+  inte läst de nya villkoren.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
@@ -750,7 +775,8 @@ Detaljer: `minne/grunden.md`.
 - **Barnets förslag på pass, förhandsvisningen och adminkontona i statistiken** (2026-10-12) är
   byggda men inte i drift: migrationerna `barnet_foreslar_pass` och `adminkonton_utanfor_statistiken`
   körs efter merge, i den ordningen, och **`notis-ko` driftsätts från main FÖRE den första** (mallen för
-  `barnforslag`). Lokalt, byggd ur alla 183 migrationer, 1574 av 1574 i `rls-test.sql`. Vyerna tål att
+  `barnforslag`). Versionerna ligger efter `fyll_timbanken` (20261012120000, i drift), som de först krockade med.
+  Lokalt, byggd ur alla 184 migrationer, 1575 av 1575 i `rls-test.sql`. Vyerna tål att
   de saknas, och förhandsvisningen behöver ingen av dem. Ett adminkonto som också är förälder hade
   2026-10-12 alla 16 passen i driften; de räknas inte i statistiken när migrationen körts, men de står
   kvar som pass och betalningar. Ett adminkonto raderas inte i panelen; ska passen bort är det Leos beslut

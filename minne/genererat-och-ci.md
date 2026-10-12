@@ -84,9 +84,14 @@ guider ta bort gratis läxhjälp och skriv andra guider istället". Den
 räknade upp biblioteken, Röda Korset och Mattecentrums räknestugor. I
 stället kom tre: läsförståelsen, plugga inför prov och när barnet inte
 vill göra läxorna. `/gratis-laxhjalp-stockholm` omdirigeras permanent
-till navet (`redirects` i `vercel.json`): adressen stod i kartan och i
+(`redirects` i `vercel.json`): adressen stod i kartan och i
 `GOOGLE.md`:s lista att skicka in, och en adress som stått i kartan
-ska inte bli en 404. Provguidens tre källor (Umeå universitet,
+ska inte bli en 404. Först till navet, sedan 2026-10-12 till
+`/vad-kostar-laxhjalp`: Google visade fortfarande guidens gamla titel,
+och den som söker gratis läxhjälp undrar vad det kostar, vilket
+kostnadsguiden svarar på och navet inte gör. En omdirigering till en
+sida om något annat kan Google dessutom räkna som en sida som inte
+finns. Hur träffen byts ut står i `GOOGLE.md`. Provguidens tre källor (Umeå universitet,
 Dunlosky m.fl. 2013, SRCD om sömn) är kontrollerade mot sökträffarna,
 inte öppnade: nätet i sessionen som skrev dem släppte inte fram sidorna.
 

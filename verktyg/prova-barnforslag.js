@@ -234,6 +234,14 @@ async function öppna(webb, o) {
     await context.addInitScript(([nyckel, värde]) => {
       try { localStorage.setItem(nyckel, värde); } catch (e) { /* ingen lagring */ }
     }, [LAGRING, JSON.stringify(sess)]);
+    /* Rutan med det som väntar (NXStudie.notisruta, 2026-10-12) visas en
+       gång per flik och konto. Här är den redan visad, utom där provet
+       tittar på den (o.notisruta). */
+    if (!o.notisruta) {
+      await context.addInitScript(id => {
+        try { sessionStorage.setItem('nx-notisruta', id); } catch (e) { /* ingen lagring */ }
+      }, o.inloggad);
+    }
   }
 
   const page = await context.newPage();
@@ -558,9 +566,15 @@ async function provaFörälderns(webb) {
   /* 1. Listan, Att göra, siffran och granskningen med rabattkod. */
   {
     const R = foralderRpc({});
-    const { context, page, S, riktiga, konsol } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1' });
+    const { context, page, S, riktiga, konsol } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1', notisruta: true });
     await page.goto(BAS + '/foralder');
     await väntaPåListan(page);
+    /* Rutan vid inloggningen säger att förslagen väntar. */
+    await page.waitForSelector('.nx-notisruta', { timeout: 8000 }).catch(() => {});
+    prova('förälder: rutan vid inloggningen säger att barnens förslag väntar',
+      /3 förslag från barnen/.test(await text(page, '.nx-notisruta')), await text(page, '.nx-notisruta'));
+    await page.click('.nx-notisruta [data-notisruta-stang]').catch(() => {});
+    await page.waitForSelector('.nx-notisruta', { state: 'detached', timeout: 3000 }).catch(() => {});
     prova('förälder: Att göra har barnens förslag',
       (await text(page, '#ov-gora')).includes('Alva föreslår ett pass') && (await text(page, '#ov-gora')).includes('Bo föreslår ett pass'),
       await text(page, '#ov-gora'));

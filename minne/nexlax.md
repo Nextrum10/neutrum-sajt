@@ -453,6 +453,20 @@ Reglerna:
 - Studievyns NexLäx-panel (startsidan och För elever och föräldrar, båda
   språken) säger "Öppet" och "Nästa steg: Procent" sedan samma dag, inte
   "Låst" och "Nu är Procent öppet".
+- **Vad vi bygger mest på (2026-10-12).** Leo: "skriv att vi jobbar nu
+  mest med att bygga Matte, engelska och svenska delarna. Med tiden kommer
+  vi fixa resten av ämnena." Det stämmer med banken: de tre har flest
+  nivåer och frågor, NO och SO ungefär hälften, och språken, juridiken och
+  företagsekonomin två banor var. Under ämnesbrickorna står raden
+  `.nlx-bygger` (startsidan och För elever och föräldrar, båda språken),
+  och de tre brickorna har klassen `fokus`, i ämnets ton; raden säger det i
+  ord, så att färgen aldrig bär beskedet ensam. I NexLäx (studievyn och
+  barnets vy) står samma sak som fotnot sist i Välj ämne (`.nl-valj-not`
+  i `väljareHtml()`), under årskurserna så att inget ovanför ämnena byter
+  höjd. Texten säger att de andra ämnena redan finns, för det gör de.
+  Ändras fokus, eller har resten kommit ikapp, ändras eller tas alla tre
+  bort samtidigt. Inte på ämnessidorna (`laxhjalp-no` och de andra): där
+  säljer sidan ämnet.
 
 ## Ur avsnitt 11: banken, driftsättningen och det som är kvar
 

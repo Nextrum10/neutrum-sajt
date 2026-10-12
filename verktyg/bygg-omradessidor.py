@@ -1274,7 +1274,8 @@ STADIER = [
 # Guiden om gratis läxhjälp (biblioteken, Röda Korset, Mattecentrum)
 # togs bort 2026-09-28, Leos beslut: andra guider i stället. Adressen
 # stod i kartan och bland dem GOOGLE.md säger åt er att skicka in, så
-# den omdirigeras till navet i vercel.json i stället för att svara 404.
+# den omdirigeras i vercel.json i stället för att svara 404: sedan
+# 2026-10-12 till kostnadsguiden, inte navet (GOOGLE.md).
 # ============================================================
 
 GUIDER = [

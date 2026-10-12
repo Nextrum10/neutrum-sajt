@@ -275,11 +275,14 @@ window.NXKontakt = (function () {
 
     /* Första hämtningen. Utan den ritas tråden först när pollningen
        tickar, alltså upp till 20 sekunder efter att vyn öppnats — och
-       under tiden står det "Hämtar" över en tråd som redan finns. */
-    ladda();
+       under tiden står det "Hämtar" över en tråd som redan finns.
+       Löftet är klar nedan: studievyn väntar på det innan rutan med
+       notiserna, som räknar de nya meddelandena (2026-10-12). */
+    var första = ladda();
 
     return {
       ladda: ladda,
+      klar: första,
       byt: function (nytt) {
         läge.parentId = nytt.parentId != null ? nytt.parentId : läge.parentId;
         läge.tutorId = nytt.tutorId != null ? nytt.tutorId : läge.tutorId;

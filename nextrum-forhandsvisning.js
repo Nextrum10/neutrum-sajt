@@ -303,8 +303,12 @@ window.NXForhandsvisning = (function () {
         { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 10 },
         { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 20 },
         { kod: 'plan_intensiv', sort: 'plan', namn: 'Intensiv', timmar: 12, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 25 },
-        { kod: 'klipp10', sort: 'klippkort', namn: 'Klippkort 10 timmar', timmar: 10, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 6, ordning: 30 },
-        { kod: 'klipp20', sort: 'klippkort', namn: 'Klippkort 20 timmar', timmar: 20, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 6, ordning: 40 }
+        /* Fyll timbanken (fyll_timbanken, 2026-10-12): timpriset, sex månader. */
+        { kod: 'klipp10', sort: 'klippkort', namn: 'Fyll timbanken, 10 timmar', timmar: 10, timmar_pa_kopet: 0, rabatt_procent: 0, giltig_manader: 6, ordning: 30 },
+        { kod: 'klipp20', sort: 'klippkort', namn: 'Fyll timbanken, 20 timmar', timmar: 20, timmar_pa_kopet: 0, rabatt_procent: 0, giltig_manader: 6, ordning: 40 },
+        { kod: 'klipp30', sort: 'klippkort', namn: 'Fyll timbanken, 30 timmar', timmar: 30, timmar_pa_kopet: 0, rabatt_procent: 0, giltig_manader: 6, ordning: 50 },
+        { kod: 'klipp60', sort: 'klippkort', namn: 'Fyll timbanken, 60 timmar', timmar: 60, timmar_pa_kopet: 0, rabatt_procent: 0, giltig_manader: 6, ordning: 60 },
+        { kod: 'klipp100', sort: 'klippkort', namn: 'Fyll timbanken, 100 timmar', timmar: 100, timmar_pa_kopet: 0, rabatt_procent: 0, giltig_manader: 6, ordning: 70 }
       ],
       invoices: [],
       invoice_lines: [],
@@ -769,7 +773,7 @@ window.NXForhandsvisning = (function () {
 
   var RPC = {
     mina_behorigheter: function () { return { admin: false, superadmin: false, behorigheter: [] }; },
-    mitt_villkorslage: function () { return { version: '2026-10-09', godkant_at: tid(-3, '19:00'), tidigare: null }; },
+    mitt_villkorslage: function () { return { version: '2026-10-12', godkant_at: tid(0, '08:00'), tidigare: null }; },
     godkann_villkor: function () { return true; },
     mina_handlingar: function () { return []; },
     min_handling_text: function () { return null; },

@@ -1470,9 +1470,15 @@
      NOTISER
      Bara sådant som väntar på ett svar från dig.
      ============================================================ */
+  /* Samma poster står i klockan och i rutan vid inloggningen
+     (NXStudie.notisruta, 2026-10-12). */
   function ritaNotiser() {
     const hus = $('#notis-hus');
     if (!hus) return;
+    NXStudie.notiser(hus, notisposter());
+  }
+
+  function notisposter() {
     const poster = [];
 
     const olästa = Object.values(S.olästa || {}).reduce((a, b) => a + b, 0);
@@ -1524,7 +1530,7 @@
       });
     }
 
-    NXStudie.notiser(hus, poster);
+    return poster;
   }
 
   /* ============================================================
@@ -4428,6 +4434,9 @@
     await byggElev();
     await Promise.all([laddaMinaRapporter(), laddaTimmar(), laddaUpptagna()]);
     ritaNotiser();
+    /* Notiserna vid inloggningen (2026-10-12): passen, förslagen och de
+       olästa är hämtade, och det är allt klockan räknar. */
+    NXStudie.notisruta({ user: S.user, poster: notisposter(), rubrik: 'Det här väntar på dig' });
     await Promise.all([ritaÖvSamtal(), laddaErsattning(), laddaBarnchatt()]);
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');

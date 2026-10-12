@@ -959,8 +959,24 @@ kolumner med `timmar_pa_kopet` sist, och `bookings_timmarna_tillbaka` sist
 bland triggrarna på `bookings`. Hela `rls-test.sql` mot driften: 1505 av
 1505, tillbakarullat. Advisorn larmade inte om något nytt.
 
+### Fyll timbanken (fyll_timbanken, 2026-10-12)
+Klippkorten `klipp10`–`klipp100` fick 0 % rabatt, `giltig_manader = 6` och
+namnet "Fyll timbanken, N timmar" (raden i Stripes kassa), och
+`intern.villkor_version()` blev 2026-10-12. Strömbrytarens beskrivning i
+`flaggor` byttes med `flaggor_stampla` av runt den enda raden, som i
+`fas14_9_bokforingen_i_fortnox`, och ett `do`-block efteråt prövar att
+triggern är på igen (`tgenabled = 'O'`). Ingen drop och ingen delete, så
+filen kördes hel. **I drift 2026-10-12**, direkt efter merge av PR #254:
+filen från merge-commiten (2c19183) genom `extensions.http_get`, prövad mot
+sin md5 (`e9a6025d…`), körd och registrerad i samma do-block (`$kor$`),
+med en vakt mot att versionen redan fanns. Efteråt: klippkorten 39900 öre i
+timmen och sex månader, villkoren 2026-10-12, strömbrytaren med ny text och
+oförändrat `uppdaterad`, och `flaggor_stampla` på. Hela `rls-test.sql` mot
+driften 1519 av 1519, tillbakarullat (ett nytt prov), och lokalt samma
+siffra före merge. Advisorn larmade inte om något nytt.
+
 ### Barnets förslag och adminkontona i statistiken (2026-10-12)
-**`20261012120000_barnet_foreslar_pass`**: kolumnen `students.far_boka`
+**`20261012220000_barnet_foreslar_pass`**: kolumnen `students.far_boka`
 (boolean, av), tabellen `barn_passforslag` med RLS (föräldern läser sina
 barns; admin med `is_admin()` eller `bokningar_las`; inga skrivpolicyer,
 och `nextrum_barn` och `anon` har inga rättigheter), hjälpare i `intern`
@@ -981,7 +997,7 @@ ordning. `students_barnkonto_audit` skapades om med `create or replace
 trigger` och har `far_boka` i listan. Ingen `drop`, inget `delete` utanför
 en funktion, och ingen funktion med två: filen går att köra två gånger.
 
-**`20261012120100_adminkonton_utanfor_statistiken`**:
+**`20261012220100_adminkonton_utanfor_statistiken`**:
 `intern.utanfor_statistiken(uid)` (sant när kontot har en rad i
 `admin_roller` och den som frågar är admin eller databasen själv; en
 familj eller studiehjälpare som läser en analysvy får aldrig veta vem som
@@ -993,7 +1009,9 @@ testbetalningar (`stripe_skarp = false`), som kärnan alltid sagt.
 Passen, betalningarna, fakturorna och lönerna rörs inte: Betalningar,
 Månadens ekonomi och Löner är bokföring och räknar som förut.
 
-Lokalt, byggd ur alla 183 migrationer: hela `rls-test.sql` 1574 av 1574
+Versionerna var först `20261012120000` och `20261012120100`, men `fyll_timbanken`
+kördes i driften samma kväll med just `20261012120000`; de ligger nu efter
+den. Lokalt, byggd ur alla 184 migrationer: hela `rls-test.sql` 1575 av 1575
 (avsnitt 26 och 27 är nya). **Körs efter merge, i den ordningen, och
 `notis-ko` från main driftsätts FÖRE den första** (`minne/notiser.md`).
 Vyerna tål att båda saknas: utan tabellen syns inga förslag, utan `boka`

@@ -210,6 +210,12 @@
 .nl-ak-knapp.egen::after{content:"";position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
 .nl-ak-knapp.egen[aria-pressed="true"]::after{background:var(--lera-l)}
 @media (hover:hover){.nl-ak-knapp:hover{border-color:var(--bl-3)}}
+/* Vad vi bygger mest på just nu: en fotnot i rutan, under en tunn linje. */
+.nl-valj-not{
+  margin:2px 2px 0;padding-top:12px;border-top:1px solid var(--ln);
+  font-size:.84rem;line-height:1.5;color:var(--bl-3);text-wrap:pretty;
+}
+.nl-valj-not b{font-weight:650;color:var(--bl-2)}
 
 .nl-amnen{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;min-width:0}
 .nl-amne{
@@ -948,14 +954,20 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
    så den står ut i båda. Ikonen är ockra, XP:ns färg, och vald NexLäx
    får en ring i samma färg. Bara på en dator: på en telefon är menyn
    en rad piller man drar i sidled, och där läses en tonad post som
-   vald. */
+   vald.
+   2026-10-12, Leo: "nexläx knappen ser konstig ut". Den tonade plattan
+   såg ut som en hovring som fastnat, eller en andra vald post. Posten
+   står nu ut med en kontur, samma form som sidhuvudets knappar, och
+   tonas först vid hovring som de andra. Ikonen är 18 px, så att stigen
+   och flaggan går att läsa, men tar 16 px i raden: texten står i linje
+   med grannarnas. */
 @media (min-width:900px){
   .vy .vy-sido a[data-sek="nexlax"]{
-    background:color-mix(in srgb, var(--bl) 13%, var(--pap));
+    box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--bl) 22%, transparent);
     color:var(--bl);font-weight:600;
   }
-  .vy .vy-sido a[data-sek="nexlax"]:hover{background:color-mix(in srgb, var(--bl) 20%, var(--pap))}
-  .vy .vy-sido a[data-sek="nexlax"] svg{color:var(--ockra)}
+  .vy .vy-sido a[data-sek="nexlax"]:hover{background:var(--pap-2)}
+  .vy .vy-sido a[data-sek="nexlax"] svg{color:var(--ockra);width:18px;height:18px;margin:0 -1px;stroke-width:1.8}
   .vy .vy-sido a[data-sek="nexlax"].ar-har{
     background:var(--bl);color:var(--pap);
     box-shadow:inset 0 0 0 2px var(--ockra);

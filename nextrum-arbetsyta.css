@@ -3608,7 +3608,7 @@ a:has(> .adm-status){
    långsamt och studsande — det är skillnaden mellan en knapp som
    känns och en som bara byter färg. */
 .vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .adm-lage > button, .mv-dag, .bk-slot,
-                       .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a){
+                       .bk-pil, .chip, .pl-mer, .nx-notis-rad, .nx-notisruta-rad, [data-pass-stang], .vy-hero-kort > a){
   transition:
     background-color .22s var(--e), color .22s var(--e),
     border-color .22s var(--e), box-shadow .25s var(--e),
@@ -3616,7 +3616,7 @@ a:has(> .adm-status){
   -webkit-tap-highlight-color:transparent;
 }
 .vy .btn:active{transform:none}
-.vy :is(.btn, .vy-sido a, .vy-flik, .pl-mer, .nx-notis-rad, [data-pass-stang], .vy-hero-kort > a):active:not(:disabled){
+.vy :is(.btn, .vy-sido a, .vy-flik, .pl-mer, .nx-notis-rad, .nx-notisruta-rad, [data-pass-stang], .vy-hero-kort > a):active:not(:disabled){
   scale:.96;
   transition-duration:.09s;
 }
@@ -3645,7 +3645,7 @@ a:has(> .adm-status){
 
 @media (prefers-reduced-motion:reduce){
   .vy :is(.btn, .vy-sido a, .vy-flik, .vy-val button, .adm-lage > button, .mv-dag, .bk-slot,
-                         .bk-pil, .chip, .pl-mer, .nx-notis-rad, [data-pass-stang]):active{scale:none}
+                         .bk-pil, .chip, .pl-mer, .nx-notis-rad, .nx-notisruta-rad, [data-pass-stang]):active{scale:none}
   .vy :is(.vy-sek, .vy-flik-panel){animation:none !important}
 }
 

@@ -1090,7 +1090,7 @@
       typ: 'kop', datum: isoFor(new Date(k.betald_at)), tid: '', dp: 'familj:' + k.parent_id,
       titel: k.namn || 'Köpta timmar',
       meta: [familjLänk(k.parent_id), esc(k.kvar + ' av ' + k.timmar + ' timmar kvar')],
-      sätt: 'Kort', sök: [namnFör(k.parent_id), k.namn, 'klippkort plan timmar'].join(' '),
+      sätt: 'Kort', sök: [namnFör(k.parent_id), k.namn, 'klippkort fyll timbanken plan timmar'].join(' '),
       parent: k.parent_id
     });
     r.test = !!(S.klippkortTest && S.klippkortTest.has(k.id));
@@ -2172,9 +2172,9 @@
 
     if (sam) {
       sam.innerHTML = samKort('Timmar kvar hos familjerna', timmarKvar + ' h',
-          giltiga.length ? giltiga.length + (giltiga.length === 1 ? ' kort som gäller' : ' kort som gäller') : 'inga kort som gäller')
-        + samKort('Tillbaka om alla slutar i dag', kronor(tillbaka + bankVärde), 'klippkorten och timbanken, som villkoren räknar')
-        + samKort('Timbanken', minText(bankMin), bankMin ? kronor(bankVärde) + ' hos ' + banken.length
+          giltiga.length ? giltiga.length + ' köp som gäller' : 'inga köp som gäller')
+        + samKort('Tillbaka om alla slutar i dag', kronor(tillbaka + bankVärde), 'köpta timmar och sparade minuter, som villkoren räknar')
+        + samKort('Sparade minuter', minText(bankMin), bankMin ? kronor(bankVärde) + ' hos ' + banken.length
           + (banken.length === 1 ? ' familj' : ' familjer') : 'inga sparade minuter');
     }
 
@@ -2182,7 +2182,7 @@
     const not = $('#timmar-not');
     if (not) {
       not.hidden = !(f && !f.aktiv);
-      not.innerHTML = f && !f.aktiv ? 'Planer och klippkort är avstängda: inget går att köpa. Strömbrytaren står under '
+      not.innerHTML = f && !f.aktiv ? 'Planer och Fyll timbanken är avstängda: inget går att köpa. Strömbrytaren står under '
         + '<button type="button" class="eko-lank" data-eko-flik="installningar">Inställningar</button>.' : '';
     }
 
@@ -2191,7 +2191,7 @@
     if (S.klippkortFel) {
       kop.innerHTML = tomt('Köpen gick inte att läsa', S.klippkortFel);
     } else if (!köp.length) {
-      kop.innerHTML = tomt('Inga köpta timmar än', 'Familjerna köper planer och klippkort i studievyn, under Erbjudanden.');
+      kop.innerHTML = tomt('Inga köpta timmar än', 'Familjerna köper planer och Fyll timbanken i studievyn, under Erbjudanden.');
     } else {
       kop.innerHTML = köp.map(k => {
         const betald = k.status === 'betald';
@@ -2229,7 +2229,7 @@
       + '<span class="vy-rad-hoger">'
       + (r.varde_ore != null ? '<span class="eko-stack"><b>' + esc(kronor(r.varde_ore)) + '</b><small>tillbaka om de slutar i dag</small></span>' : '')
       + knapp('data-timbank-ut', r.parent_id, 'Markera utbetald') + '</span></div>').join('')
-      : tomt('Ingen familj har minuter i timbanken', 'Minuterna kommer när ett pass betalt med timmar slutar före en hel timme.');
+      : tomt('Ingen familj har sparade minuter', 'Minuterna kommer när ett pass betalt med timmar slutar före en hel timme.');
   }
 
   document.addEventListener('click', async e => {
@@ -2238,8 +2238,8 @@
     const id = knappen.dataset.timbankUt;
     const rad = (S.timbank || []).find(r => r.parent_id === id);
     const ja = await bekräfta({
-      titel: 'Markera timbanken som utbetald?',
-      text: 'Gör det först när pengarna är tillbaka hos ' + namnFör(id) + ' (Stripes dashboard, tillsammans med klippkortet). '
+      titel: 'Markera de sparade minuterna som utbetalda?',
+      text: 'Gör det först när pengarna är tillbaka hos ' + namnFör(id) + ' (Stripes dashboard, tillsammans med de köpta timmarna). '
         + 'Minuterna försvinner ur banken, och raden går inte att ångra.'
         + (rad && rad.varde_ore != null ? ' Värdet i dag: ' + kronor(rad.varde_ore) + '.' : ''),
       knapp: 'Markera utbetald'
@@ -2307,7 +2307,7 @@
             + (fa.aktiv ? '0' : '1') + '">' + (fa.aktiv ? 'Stäng av' : 'Slå på') + '</button>'
         }) : saknas('faktura'))
         + (er ? brytare({
-          titel: 'Planer och klippkort', på: er.aktiv, påText: er.aktiv ? 'Går att köpa' : 'Av',
+          titel: 'Planer och Fyll timbanken', på: er.aktiv, påText: er.aktiv ? 'Går att köpa' : 'Av',
           text: er.beskrivning || 'Familjerna kan köpa timmar i förväg i studievyn.',
           krav: !er.aktiv && er.vantar_pa ? 'Ska vara avgjort först: ' + er.vantar_pa : '',
           not: 'Ändrad ' + kortDatum(er.uppdaterad) + '.',
@@ -2377,7 +2377,7 @@
     if (på) {
       const ja = await bekräfta({
         titel: 'Öppna erbjudandena?',
-        text: 'Från och med nu kan familjerna köpa planer och klippkort i studievyn, och betala bekräftade pass med sina timmar. '
+        text: 'Från och med nu kan familjerna köpa planer och Fyll timbanken i studievyn, och betala bekräftade pass med sina timmar. '
           + 'Köpet går genom Stripe och blir betalt först när webhooken tagit emot det.',
         forhandsvisning: f.vantar_pa ? 'Det här skulle vara avgjort först:\n\n' + f.vantar_pa : null,
         knapp: 'Slå på'

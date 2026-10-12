@@ -1394,7 +1394,7 @@
       ? 'Namnet och allt familjen och studiehjälparen skrev om barnet är borta. Rapporterna står kvar utan text, för att studiehjälparens lön räknas på dem.'
       : typ === 'studiehjalpare'
         ? 'Namnet, kontaktuppgifterna, profilen och inloggningen är borta. Rapporterna och underlagen står kvar, för lönen och bokföringen.'
-        : 'Namnet, kontaktuppgifterna, inloggningen och barnens uppgifter är borta. Passen, fakturorna och klippkorten står kvar, för bokföringen.';
+        : 'Namnet, kontaktuppgifterna, inloggningen och barnens uppgifter är borta. Passen, fakturorna och köpen av timmar står kvar, för bokföringen.';
     return '<div class="dp-text">Raderad ' + esc(kortDatum(p.raderad_at)) + '. ' + esc(vad)
       + ' Det sparas i sju år (bokföringslagen).</div>'
       + dpRubrik('Pass', pass.length ? String(pass.length) : '')

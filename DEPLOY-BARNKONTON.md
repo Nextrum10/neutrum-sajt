@@ -350,13 +350,13 @@ förhandsvisningen behöver ingen av dem. Efter merge, i den här ordningen:
 1. **`notis-ko` från main**, före migrationen: den känner mallen för
    `barnforslag`. Ur `_delad/notiser/` ändrades `mallar.ts` och `typer.ts`.
    Hämta tillbaka och jämför byte för byte, som förut.
-2. **`20261012120000_barnet_foreslar_pass`** från merge-commiten, md5
+2. **`20261012220000_barnet_foreslar_pass`** från merge-commiten, md5
    prövad, körd och registrerad som de förra (`minne/databasen.md`). Filen
    har inget `drop`, inget `delete` utanför en funktion och ingen funktion
    med två, och den går att köra två gånger.
-3. **`20261012120100_adminkonton_utanfor_statistiken`**, likadant.
+3. **`20261012220100_adminkonton_utanfor_statistiken`**, likadant.
 4. **Hela `rls-test.sql` mot driften**, i en transaktion som rullas
-   tillbaka: lokalt 1574 av 1574 (avsnitt 26 och 27 är nya).
+   tillbaka: lokalt 1575 av 1575 (avsnitt 26 och 27 är nya).
 5. **Prova**: slå på Föreslå pass för ett provbarn under Profil → Barn,
    föreslå ett pass i barnets vy, se mejlet och raden under Att göra,
    granska, skicka och acceptera som studiehjälpare. Öppna Förhandsvisning

@@ -104,6 +104,18 @@ async function öppnaFörhandsvisning(webb, o) {
 }
 
 const logg = page => page.evaluate(() => (window.NXForhandsvisning && NXForhandsvisning.logg) || []);
+/* Rutan med det som väntar (NXStudie.notisruta) kommer när vyn öppnas,
+   en gång per flik och konto, och står över allt. Stängs, och texten
+   kommer tillbaka. */
+async function stängNotisrutan(page) {
+  await page.waitForSelector('.nx-notisruta', { timeout: 2500 }).catch(() => {});
+  const t = await text(page, '.nx-notisruta');
+  if (await synlig(page, '.nx-notisruta [data-notisruta-stang]')) {
+    await page.click('.nx-notisruta [data-notisruta-stang]');
+    await page.waitForSelector('.nx-notisruta', { state: 'detached', timeout: 3000 }).catch(() => {});
+  }
+  return t || '';
+}
 const värld = (page, f, arg) => page.evaluate(f, arg);
 
 /* Varje sektion i vyn, en i taget. Det vyerna frågade efter som världen
@@ -166,6 +178,9 @@ async function provaStudievyn(webb) {
   await page.goto(BAS + '/foralder?forhandsvisning');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
   prova('studievyn: vyn laddar', await synlig(page, '#view-app'));
+  const ruta = await stängNotisrutan(page);
+  prova('studievyn: rutan vid inloggningen visar det som väntar, också Alvas förslag',
+    /Alva föreslår ett pass/.test(ruta), ruta);
   prova('studievyn: hälsningen är till Anna', /Anna\.$/.test((await text(page, '#vy-hero h1')).trim()), await text(page, '#vy-hero h1'));
   prova('studievyn: remsan säger att det är en förhandsvisning, och vems',
     (await text(page, '.nx-fv')).includes('familjen Andersson')
@@ -271,6 +286,7 @@ async function provaStudiehjalparvyn(webb) {
   await page.goto(BAS + '/larare?forhandsvisning');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
   prova('studiehjälparvyn: vyn laddar', await synlig(page, '#view-app'));
+  await stängNotisrutan(page);
   prova('studiehjälparvyn: hälsningen är till Sara', /Sara\.$/.test((await text(page, '#vy-hero h1')).trim()), await text(page, '#vy-hero h1'));
   prova('studiehjälparvyn: remsan säger vems vyn är', (await text(page, '.nx-fv')).includes('Sara Svensson'));
   await bild(page, 'studiehjalparvyn-oversikt');
@@ -333,6 +349,7 @@ async function provaDelad(webb) {
   const { context, page, riktiga, konsol } = await öppnaFörhandsvisning(webb, { grind: 'admin' });
   await page.goto(BAS + '/foralder?forhandsvisning#boka');
   await page.waitForSelector('#boka-inner .mv-dag', { timeout: 15000 }).catch(() => {});
+  await stängNotisrutan(page);
   const dag = await page.$$eval('#boka-inner .mv-dag:not([disabled])', d => d.map(x => x.dataset.datum).slice(-1)[0]);
   await page.click('#boka-inner .mv-dag[data-datum="' + dag + '"]');
   await page.waitForSelector('#boka-inner .mv-tid', { timeout: 3000 }).catch(() => {});
@@ -348,12 +365,14 @@ async function provaDelad(webb) {
 
   await page.reload();
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  await stängNotisrutan(page);
   prova('delad: förslaget står kvar efter en omladdning',
     await page.evaluate(n => NXForhandsvisning.värld.bookings.some(b => b.id === n), nytt));
 
   await page.click('.nx-fv [data-fv-byt]');
   await page.waitForURL(u => new URL(u).pathname === '/larare', { timeout: 8000 }).catch(() => {});
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  await stängNotisrutan(page);
   prova('delad: remsan byter till studiehjälparvyn', new URL(page.url()).pathname === '/larare'
     && /Sara\.$/.test((await text(page, '#vy-hero h1')).trim()), page.url());
   await page.evaluate(() => { location.hash = '#tider'; });
@@ -367,6 +386,7 @@ async function provaDelad(webb) {
   await page.click('.nx-fv [data-fv-byt]');
   await page.waitForURL(u => new URL(u).pathname === '/foralder', { timeout: 8000 }).catch(() => {});
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  await stängNotisrutan(page);
   prova('delad: tillbaka hos familjen är passet bekräftat',
     (await page.evaluate(n => NXForhandsvisning.värld.bookings.find(b => b.id === n).status, nytt)) === 'confirmed');
   await page.evaluate(() => { location.hash = '#lektioner'; });
@@ -375,6 +395,7 @@ async function provaDelad(webb) {
 
   await page.click('.nx-fv [data-fv-om]');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  await stängNotisrutan(page);
   await vänta(300);
   const efter = await page.evaluate(n => ({
     finns: NXForhandsvisning.värld.bookings.some(b => b.id === n),
@@ -394,7 +415,8 @@ async function provaTelefonen(webb) {
         context: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, colorScheme: mörk ? 'dark' : 'light' } });
       await page.goto(BAS + sida + '?forhandsvisning');
       await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
-      await vänta(600);
+      await stängNotisrutan(page);
+      await vänta(300);
       const bredd = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       prova(namn + ': ingen sidledsscroll', bredd <= 0, bredd + ' px');
       const små = await page.evaluate(() => Array.from(document.querySelectorAll('.nx-fv a'))
