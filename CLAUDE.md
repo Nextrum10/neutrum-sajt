@@ -217,7 +217,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   samtidigt. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
-  och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`. Allt med
+  och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`, gånger månaderna (1, 3 eller 6,
+  förvalt 1, 2026-10-12; en plan gånger månaderna är samma plan köpt en gång i månaden). Allt med
   `data-erb` (planerna, lyftet `.pr-lyft` med tejpen `.nx-tejp`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
   `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar),
   Standard (`plan_standard`, 8) och Intensiv (`plan_intensiv`, 12), alla −5 % och en månad i taget sedan
@@ -237,7 +238,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   prissidans rad är Standards (1 359 kr), och varje plankort har sin egen (879, 1 359, 1 839 kr). Märket på planerna och klippkorten, på prissidan och i studievyn, är
   timpriset utan bindning överstruket och det rabatterade bredvid, aldrig en procent (Leo 2026-10-08), och döljs när de
   är lika. Plankorten har ingen rad med timpris och "ni sparar" under priset (2026-10-12, Leo: "de ska bort"), varken
-  på prissidan eller i studievyn; kalkylatorns "Ni sparar" räknas ur de två summorna den visar. Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
+  på prissidan eller i studievyn, och kalkylatorn säger inget "Ni sparar" heller (Leo samma kväll). Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
   gratis första lektion", "MAXIMALT ... en timme gratis"): högst en per familj, någonsin, utom tipstimmar
   (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
   `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald); pass för pass bara för

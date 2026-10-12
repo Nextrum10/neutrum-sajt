@@ -899,6 +899,12 @@ const NX = (function () {
      val en. Texten står i sidan, inte här: det som kopieras (planens
      namn, märket) läses ur kortet, som står på sidans språk.
 
+     Månaderna (1, 3 eller 6, förvalt 1; 2026-10-12, Leo: "utgå alltid
+     från 1 månad") multiplicerar båda summorna. En plan gäller en månad
+     i taget, så fler månader är samma plan köpt en gång i månaden: kortets
+     pris gånger månaderna, och raden under säger det ("3 × 1 516 kr").
+     Planen hittas fortfarande på timmarna i en månad.
+
      Stapelns andel jämför bara två belopp som redan visas, planens och
      det per pass, och sätts i --andel på stapeln som läser den. Reglagets
      tumme följer data-v på gruppen (CSS). */
@@ -907,7 +913,7 @@ const NX = (function () {
     if (!box) return;
     const pris = Number(CFG.PRIS_PER_TIMME) || 0;
     const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
-    const val = { barn: 1, tim: 1 };
+    const val = { barn: 1, tim: 1, man: 1 };
     const lugnt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let först = true;
     /* Skriver bara det som ändrats. En summa som byts glider in med en
@@ -921,27 +927,39 @@ const NX = (function () {
         { duration: 340, easing: 'cubic-bezier(.16,1,.3,1)' });
     });
 
+    /* "En månad i taget" står i sidan, på sidans språk. Med fler månader
+       står planens pris gånger dem före, och raden fortsätter med liten
+       bokstav efter punkten. */
+    const taget = $('[data-kalk-taget]', box);
+    const tagetText = taget ? taget.textContent : '';
+
     function räkna() {
-      const timmar = val.tim * 4;
+      const iMånaden = val.tim * 4;
+      const timmar = iMånaden * val.man;
       const timpris = val.barn > 1 ? pris + extra : pris;
       const perPass = timmar * timpris;
       sätt('[data-kalk-summa]', kr(perPass));
       sätt('[data-kalk-timmar]', String(timmar));
       sätt('[data-kalk-timpris]', kr(timpris));
+      sätt('[data-kalk-man]', val.man === 1 ? t('enManad') : t('flerManader', { n: val.man }));
 
       const plan = val.barn === 1 && $$('.pr-erb-plan[data-erb]')
-        .find(el => !el.closest('[hidden]') && Number(el.getAttribute('data-erb-timmar')) === timmar);
+        .find(el => !el.closest('[hidden]') && Number(el.getAttribute('data-erb-timmar')) === iMånaden);
       if (plan) {
         const namn = $('[data-erb-namn]', plan) || $('.eyebrow', plan);
         const planpris = $('[data-erb-pris]', plan);
         const ore = Number(plan.getAttribute('data-erb-ore'));
+        const flera = val.man > 1 && ore > 0 && !!planpris;
         sätt('[data-kalk-plannamn]', namn ? namn.textContent : '');
-        sätt('[data-kalk-planpris]', planpris ? planpris.textContent : '');
-        /* Vad planen sparar är skillnaden mellan de två summorna rutan
-           visar. Den lästes förut ur kortets rad "Ni sparar", som togs
-           bort 2026-10-12 (Leo); räknad här går den alltid ihop med
-           siffrorna bredvid. */
-        sätt('[data-kalk-planspar]', ore > 0 ? kr(Math.max(0, perPass - ore / 100)) : '');
+        sätt('[data-kalk-planpris]', flera ? kr(ore * val.man / 100) : planpris ? planpris.textContent : '');
+        $$('[data-kalk-gang]', box).forEach(x => {
+          x.hidden = !flera;
+          x.textContent = flera ? val.man + ' × ' + planpris.textContent + ' · ' : '';
+        });
+        if (taget) {
+          const text = flera ? tagetText.charAt(0).toLocaleLowerCase() + tagetText.slice(1) : tagetText;
+          if (taget.textContent !== text) taget.textContent = text;
+        }
         /* En plan med timmar på köpet visar samma rad som sitt kort,
            "8 timmar för priset av 7", och aldrig bara märket "1 timme på
            köpet": bredvid noten om första timmen hade de lästs som samma
@@ -953,7 +971,7 @@ const NX = (function () {
           x.hidden = !paket || paket.hidden || !rad;
           x.textContent = x.hidden ? '' : rad + ' · ';
         });
-        const andel = ore > 0 && perPass > 0 ? Math.min(1, ore / (perPass * 100)) : 1;
+        const andel = ore > 0 && perPass > 0 ? Math.min(1, ore * val.man / (perPass * 100)) : 1;
         $$('[data-kalk-andel]', box).forEach(i => i.style.setProperty('--andel', andel.toFixed(3)));
       }
       /* Utan plan: med flera barn tillägget, med ett barn klippkorten om
