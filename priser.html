@@ -53,7 +53,7 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=5d4c3399">
-<link rel="stylesheet" href="nextrum-cinema.css?v=2180f8ae">
+<link rel="stylesheet" href="nextrum-cinema.css?v=8dd30fdd">
 <link rel="stylesheet" href="nextrum-start.css?v=e0ab6fb9">
 <link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
 
@@ -339,7 +339,7 @@
       <span class="nx-et acc">Erbjudanden</span>
       <h2 class="d2" id="erb-t" style="margin-top:18px">Köp timmarna i förväg. Betala mindre.</h2>
     </div>
-    <div class="nx-head-aside"><p class="nx-lede">En plan gäller en månad i taget och gör varje timme billigare. Ett klippkort är timmar ni använder när det passar. Allt köps en gång och förnyas inte av sig självt.</p></div>
+    <div class="nx-head-aside"><p class="nx-lede">En plan och Fyll timbanken fyller båda er timbank. En plan gäller en månad i taget och gör varje timme billigare. Med Fyll timbanken köper ni timmar till timpriset och använder dem när det passar. Allt köps en gång och förnyas inte av sig självt.</p></div>
   </div>
 
   <p class="pr-erb-spara" data-erb-spara="6" data-erb-spara-kod="plan_standard" data-erb-spara-forsta data-stig>Spara upp till <b class="tnum" data-erb-spara-kr>1 359 kr</b> <span class="pr-erb-spara-med">på 6 månader med <span data-erb-spara-plan>Standard</span>planen!</span> <span>Mot att betala pass för pass, med första timmen gratis.</span></p>
@@ -400,7 +400,13 @@
   <div class="pr-erb-prickar" data-erb-prickar aria-hidden="true"><i></i><i></i><i></i></div>
   <p class="pr-erb-jamfor-not" data-erb-jamfor-not hidden>Jämförelserna gjordes med en elev i årskurs 9 i oktober 2026.</p>
 
-  <!-- Klippkorten är en egen bred rad under planerna sedan 2026-10-07,
+  <!-- Fyll timbanken (2026-10-12, Leo: "klippkort ska heta köp timmar
+       till timbanken, de lägg ju in i timbanken", "de ska kosta 399kr",
+       och "6 månader, fyll timbanken ska det heta"): klippkorten under ett
+       nytt namn, till timpriset och utan märke, sex månader. I databasen
+       heter de fortfarande klippkort (klipp10–klipp100).
+
+       Klippkorten är en egen bred rad under planerna sedan 2026-10-07,
        och fälls ut som förut (2026-09-26). <details>, inte en knapp med
        skript: raden öppnas också utan javascript, och siffrorna står i
        sidan för den som aldrig öppnar den. Timpriset, spannet och
@@ -411,49 +417,95 @@
        döljer det om korten inte har samma. -->
   <details class="nx-price-card pr-erb-klippkol" data-erb-grupp data-stig>
     <summary>
-      <span class="pr-erb-topp"><span class="eyebrow">Klippkort</span><span class="pr-erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b></span></span>
-      <span class="pr-erb-vad">Timmar ni använder när det passar, från <span data-erb-min>10</span> till <span data-erb-max>100</span> timmar.</span>
-      <span class="nx-amount"><b class="tnum" data-erb-grupp-tim>379 kr</b> <span class="per">/ timme</span></span>
+      <span class="pr-erb-topp"><span class="eyebrow">Fyll timbanken</span></span>
+      <span class="pr-erb-vad">Timmar i er timbank som ni använder när det passar, från <span data-erb-min>10</span> till <span data-erb-max>100</span> timmar. De gäller i sex månader.</span>
+      <span class="nx-amount"><b class="tnum" data-erb-grupp-tim>399 kr</b> <span class="per">/ timme</span></span>
       <span class="pr-erb-visa"><span class="pr-erb-visa-stangd">Se alternativen</span><span class="pr-erb-visa-oppen">Dölj alternativen</span> <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></span>
     </summary>
     <ul class="pr-erb-klipp">
       <li class="pr-erb-kort" data-erb="klipp10">
         <b class="pr-erb-namn">10 timmar</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / timme</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>3 790 kr</b>
-        <span class="pr-erb-spar">Ni sparar <span data-erb-spar>200 kr</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / timme</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>3 990 kr</b>
         <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
       </li>
       <li class="pr-erb-kort ar-framhavd" data-erb="klipp20">
         <b class="pr-erb-namn">20 timmar</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / timme</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>7 580 kr</b>
-        <span class="pr-erb-spar">Ni sparar <span data-erb-spar>400 kr</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / timme</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>7 980 kr</b>
         <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
       </li>
       <li class="pr-erb-kort" data-erb="klipp30">
         <b class="pr-erb-namn">30 timmar</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / timme</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>11 370 kr</b>
-        <span class="pr-erb-spar">Ni sparar <span data-erb-spar>600 kr</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / timme</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>11 970 kr</b>
         <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
       </li>
       <li class="pr-erb-kort" data-erb="klipp60">
         <b class="pr-erb-namn">60 timmar</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / timme</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>22 740 kr</b>
-        <span class="pr-erb-spar">Ni sparar <span data-erb-spar>1 200 kr</span></span>
-        <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>12 månader</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / timme</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>23 940 kr</b>
+        <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
       </li>
       <li class="pr-erb-kort" data-erb="klipp100">
         <b class="pr-erb-namn">100 timmar</b>
-        <span class="pr-erb-tim"><s><span class="nx-dold">Ordinarie pris </span><span data-erb-timpris>399 kr</span></s> <b data-erb-rabatterat>379 kr</b> / timme</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>37 900 kr</b>
-        <span class="pr-erb-spar">Ni sparar <span data-erb-spar>2 000 kr</span></span>
-        <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>18 månader</span></span>
+        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / timme</span>
+        <b class="pr-erb-summa tnum" data-erb-pris>39 900 kr</b>
+        <span class="pr-erb-giltig">Gäller i <span data-erb-giltig>6 månader</span></span>
       </li>
     </ul>
   </details>
+
+  <!-- Vad timbanken är (2026-10-12, Leo: "redovisa med en bild och en
+       liten text vad timbanken är för något också"). Bilden är en
+       illustration utan text, och stegen under den står i HTML, så att
+       de översätts och läses upp. Texten säger det villkoren säger
+       (#timbank och #erbjudanden): en plan och Fyll timbanken fyller
+       båda timbanken, en plans timmar gäller en månad och Fyll timbankens
+       sex, sparade minuter går aldrig ut, och pass för pass går inte genom
+       timbanken (Leo samma kväll: "timbanken fylls antingen med plan eller
+       förköpta timmarna ... om man köper lektion för lektion så betalas det
+       per lektion enligt de reglern som redan finns"). -->
+  <div class="pr-timbank" data-stig>
+    <figure class="pr-timbank-bild">
+      <svg viewBox="0 0 480 200" aria-hidden="true" focusable="false">
+        <defs>
+          <g id="tb-mynt"><circle r="15"/><path fill="none" d="M0-8V0l6 4"/></g>
+          <clipPath id="tb-burk"><rect x="186" y="58" width="108" height="118" rx="24"/></clipPath>
+        </defs>
+        <g class="tb-mynt">
+          <use href="#tb-mynt" x="66" y="78"/><use href="#tb-mynt" x="92" y="108"/><use href="#tb-mynt" x="60" y="134"/>
+        </g>
+        <g class="tb-plus"><circle cx="102" cy="62" r="11"/><path d="M102 56v12M96 62h12"/></g>
+        <path class="tb-pil" d="M124 116h48m-8-7 8 7-8 7"/>
+        <rect class="tb-burk-hals" x="208" y="40" width="64" height="20" rx="7"/>
+        <rect class="tb-burk" x="186" y="58" width="108" height="118" rx="24"/>
+        <g clip-path="url(#tb-burk)">
+          <rect class="tb-niva" x="186" y="104" width="108" height="72"/>
+          <g class="tb-mynt">
+            <use href="#tb-mynt" x="214" y="152"/><use href="#tb-mynt" x="246" y="156"/><use href="#tb-mynt" x="276" y="150"/>
+            <use href="#tb-mynt" x="230" y="124"/><use href="#tb-mynt" x="262" y="122"/>
+          </g>
+        </g>
+        <path class="tb-pil" d="M308 116h38m-8-7 8 7-8 7"/>
+        <rect class="tb-kal" x="354" y="66" width="92" height="92" rx="14"/>
+        <path class="tb-kal-topp" d="M354 86V80a14 14 0 0 1 14-14h64a14 14 0 0 1 14 14v6z"/>
+        <path class="tb-kal-ring" d="M378 58v16M422 58v16"/>
+        <path class="tb-bock" d="M380 120l14 14 28-30"/>
+      </svg>
+      <ol class="pr-timbank-steg">
+        <li><b>Ni fyller på</b> med en plan eller timmar</li>
+        <li><b>Timmarna står</b> i er timbank</li>
+        <li><b>Passen betalas</b> av sig själva</li>
+      </ol>
+    </figure>
+    <div class="pr-timbank-text">
+      <span class="eyebrow">Timbanken</span>
+      <h3 class="pr-timbank-rubrik">Vad är timbanken?</h3>
+      <p>Timbanken är familjens konto för läxhjälpstimmar. Ni fyller den på två sätt: med en plan, som gör timmen billigare och gäller en månad, eller med Fyll timbanken, till timpriset och i sex månader. När ni föreslår ett pass för ett barn betalar timmarna det av sig själva. Slutar ett pass som betalats med timmar före en hel timme sparas resten i timbanken, och minuterna tar övertid på senare pass eller betalar ett helt pass när de räcker.</p>
+      <p class="pr-timbank-not">Betalar ni pass för pass används inte timbanken: varje pass betalas för sig, som vanligt. Sparade minuter går aldrig ut. Syskon delar timbanken, och ni ser den under Profil i er vy.</p>
+    </div>
+  </div>
 
   <div class="pr-erb-fot" data-stig>
     <div>
@@ -531,8 +583,8 @@
           <p class="pr-kalk-rad" data-kalk-planrad>Planerna gäller ett barn per pass, så med flera barn betalar ni per pass.</p>
         </div>
         <div class="pr-kalk-lage" data-kalk-tips="ingen" hidden>
-          <span class="eyebrow">Köp timmarna i förväg</span>
-          <p class="pr-kalk-text">Med ett klippkort blir varje timme billigare, och ni använder timmarna när det passar.</p>
+          <span class="eyebrow">Fyll timbanken</span>
+          <p class="pr-kalk-text">Köp timmar i förväg till timpriset, så betalar de passen av sig själva. Ni använder dem när det passar, inom sex månader.</p>
           <a class="nx-lank" href="#erbjudanden">Se erbjudandena <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
         </div>
       </div>
@@ -621,7 +673,7 @@
           <span class="pr-flode-pil" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 1.5 8.5 6 4 10.5"/></svg></span>
         </div>
         <h3>Betala i förväg, om ni vill</h3>
-        <p>Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. I förväg går det så fort tiden är bekräftad, och har ni köpt timmar i en <a href="#erbjudanden">plan eller ett klippkort</a>, betalar de passet av sig själva.</p>
+        <p>Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. I förväg går det så fort tiden är bekräftad, och har ni köpt timmar i en <a href="#erbjudanden">plan eller i timbanken</a>, betalar de passet av sig själva.</p>
       </li>
       <li class="pr-flode-steg">
         <div class="pr-flode-topp">

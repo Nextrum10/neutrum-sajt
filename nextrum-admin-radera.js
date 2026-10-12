@@ -84,16 +84,16 @@
     betalt_ej_hallet: h => ['Betalt men inte hållet: ' + st(h.antal, 'pass', 'pass')
         + (h.belopp_ore ? ', ' + kronor(h.belopp_ore) : ''),
       'Pengarna är familjens tills passen hålls. Avboka passen under Bokningar och betala tillbaka '
-        + 'kortbetalningarna under Betalningar → Alla betalningar. Timmar som betalat ett pass går '
-        + 'tillbaka till klippkortet av sig själva när passet avbokas.'],
+        + 'kortbetalningarna under Betalningar → Alla betalningar. Köpta timmar som betalat ett pass går '
+        + 'tillbaka till familjen av sig själva när passet avbokas.'],
     timmar_kvar: h => ['Timmar kvar: ' + kronor(h.belopp_ore || 0) + ' tillbaka',
-      'Betala tillbaka det som är kvar på ' + (h.antal === 1 ? 'klippkortet' : 'klippkorten')
-        + ' i Stripes dashboard. Beloppet är det som står under Om de slutar i dag i Betalningar → '
+      'Betala tillbaka det som är kvar av ' + (h.antal === 1 ? 'köpet' : 'köpen')
+        + ' (planer och Fyll timbanken) i Stripes dashboard. Beloppet är det som står under Om de slutar i dag i Betalningar → '
         + 'Köpta timmar, och hindret försvinner när återbetalningen kommit fram.'],
     timbank_kvar: h => ['Minuter i timbanken: ' + (h.minuter || 0) + ' min, ' + kronor(h.belopp_ore || 0),
       'Betala tillbaka värdet i Stripes dashboard och markera banken utbetald under Betalningar → Köpta timmar.'],
     kassa_oppen: () => ['Ett köp av timmar står öppet i kassan',
-      'Familjen har öppnat Stripes kassa för ett klippkort det senaste dygnet. Vänta tills dygnet gått. '
+      'Familjen har öppnat Stripes kassa för en plan eller Fyll timbanken det senaste dygnet. Vänta tills dygnet gått. '
         + 'Betalas köpet under tiden ska det betalas tillbaka först.'],
     tvist_oppen: h => ['Korttvist som inte är avgjord' + (h.antal > 1 ? ' (' + h.antal + ')' : ''),
       'Passet och rapporten är beviset i tvisten. Vänta tills Stripe avgjort den, under Betalningar → Att göra.'],
@@ -127,7 +127,7 @@
 
   const STAR_KVAR = {
     pass: ['pass som hållits eller betalats', 'pass som hållits eller betalats'],
-    klippkort: ['klippkort', 'klippkort'],
+    klippkort: ['köp av timmar', 'köp av timmar'],
     fakturor: ['faktura', 'fakturor'],
     underlag: ['löneunderlag', 'löneunderlag'],
     elevernas_material: ['läxa, plan eller material hen skrivit åt en elev (eleven har det kvar)',
@@ -184,7 +184,7 @@
          Kortbetalda är ett hinder i båda fallen. */
       avbokas.push(esc(typ === 'studiehjalpare'
         ? st(läge.avbokas, 'kommande pass', 'kommande pass') + '. Familjerna får ett mejl om det, och '
-          + 'timmar som betalat ett pass går tillbaka till klippkortet.'
+          + 'köpta timmar som betalat ett pass går tillbaka till familjen.'
         : st(läge.avbokas, 'kommande pass', 'kommande pass') + ' som inte betalats. Studiehjälparen får '
           + 'ett mejl om det.'));
     }

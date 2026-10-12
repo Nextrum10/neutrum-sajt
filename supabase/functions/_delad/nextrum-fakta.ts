@@ -99,6 +99,13 @@ SIFFRORNA:
   villkoren har ingen bindningstid, och den som slutar får tillbaka
   det som är kvar. De köps en gång,
   i förväg, och priserna räknas i databasen, inte här.
+· Timbanken är familjens köpta timmar och sparade minuter. Den fylls
+  på två sätt: med en plan (ovan, en månad) eller med Fyll timbanken,
+  10 till 100 timmar till timpriset, 399 kronor, utan rabatt, som
+  gäller i sex månader från köpet. Minuter som sparas när ett pass
+  betalt med timmar slutar före en hel timme går aldrig ut. Pass för
+  pass går inte genom timbanken: varje pass betalas för sig. Utåt
+  heter det aldrig klippkort.
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
   468 kronor i timmen, inte 537.

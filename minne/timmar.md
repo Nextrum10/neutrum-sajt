@@ -118,6 +118,65 @@ förut `bookings_klippkortspass_avbokat` och gällde bara admin.
 timmar kvar (Fas 21.2, notistypen `timmar_gar_ut`), och rutan Era
 timmar säger samma sak från samma dag.
 
+**Klippkorten heter Fyll timbanken (2026-10-12).** Leo: "klippkort ska heta
+köp timmar till timbanken, de lägg ju in i timbanken. visa innan ändring de
+ska kosta 399kr". Han fick se prissidan före och efter, och två invändningar:
+till 399 kr är timmarna sämre än pass för pass (samma pris, betalt i förväg,
+och de går ut), och timbanken heter i villkoren det som "inte går ut", så ett
+namn med timbanken på timmar som förfaller lovar något de inte håller. Svaret:
+"6 månader, fyll timbanken ska det heta. redovisa med en bild och en liten
+text vad timbanken är för något också".
+- Katalogen: `klipp10`–`klipp100` har 0 % rabatt och `giltig_manader = 6`
+  (förut 5 %, och 12 och 18 månader för 60 och 100 timmar), och namnet
+  "Fyll timbanken, N timmar", som är raden i Stripes kassa och på kvittot.
+  Sorten heter fortfarande `klippkort`, och tabellen och koderna också.
+- Prissidan (båda språken): rubriken Fyll timbanken (Fill the time bank),
+  399 kr, ingen överstrykning och inget "Ni sparar", sex månader i alla
+  kort, och en ruta under raden (`.pr-timbank`) med en bild (påfyllningen,
+  burken, kalendern; ritad med sidans tokens, så den följer mörkt läge) och
+  texten om vad timbanken är. Den säger det som skiljer: köpta timmar gäller
+  i sex månader, sparade minuter går aldrig ut.
+- Studievyn: kolumnen Fyll timbanken, och överstrykningen och "ni sparar"
+  bara på ett kort som är billigare än timpriset. I Betalning heter ett pass
+  betalt med timmar "Köpta timmar" och ett betalt med minuter "Sparade
+  minuter" (förut "Timmar ur klippkortet" och "Timbanken", som nu hade
+  betytt samma sak).
+- Villkoren: "Planer och timbanken", timmarna till timbanken till ordinarie
+  timpris, sex månader för alla, och timbanken rymmer både de köpta timmarna
+  och de sparade minuterna. Version 2026-10-12, så alla får frågan igen.
+- Adminvyn och resten (Leo samma kväll: "fortsätt med arbetet i alla andra
+  ställen också ... anpassa de gamla grejerna om klippkort efter nya
+  saken"): Betalningar → Köpta timmar heter "Planer och Fyll timbanken" och
+  "Sparade minuter i timbanken", ett köp är ett köp och inte ett kort,
+  strömbrytaren och raderingens hinder säger Fyll timbanken eller köpta
+  timmar, och studievyn drar timmarna "från det köp som går ut först".
+  Agentens fakta (`_delad/nextrum-fakta.ts`) har en rad om Fyll timbanken,
+  utan tabellnamn. Strömbrytarens beskrivning i `flaggor` byts i migrationen
+  med `flaggor_stampla` av runt den raden, som i
+  `fas14_9_bokforingen_i_fortnox` (triggern skriver annars tillbaka den
+  gamla texten och stämplar om datumet), och en kontroll efteråt att den
+  är på igen.
+  Koden, tabellerna, loggarna och `klippkort-betala` heter som förut.
+- **Timbanken fylls på två sätt** (Leo samma kväll: "timbanken fylls antingen
+  med plan eller förköpta timmarna, frågan är bara om hur man betalar och vad
+  man klickar i. dvs om man köper plan eller lektion i förväg. om man köper
+  lektion för lektion så betalas det per lektion enligt de reglern som redan
+  finns"). Timbanken är alla köpta timmar, planernas och Fyll timbankens, och
+  de sparade minuterna; pass för pass går inte genom den. Det första utkastet
+  sade "köpta timmar gäller i sex månader", som inte stämmer för en plan.
+  Prissidans ruta, villkoren, studievyn ("Er timbank" i stället för "Era
+  timmar") och agentens fakta säger nu det, med en plans månad och Fyll
+  timbankens sex månader var för sig. Samma version av villkoren, 2026-10-12:
+  ingen hade hunnit godkänna den förra texten.
+- **Tillgängliga timmar under Erbjudanden** (Leo samma kväll: "lägg till de
+  även under erbjudanden, tillgängliga timmar och sedan ska man hänvisas till
+  inställningar för att läsa villkor eller liknande"). Rutan Er timbank står
+  alltid, också med noll timmar: summan av `kvar` på köpen som går att
+  använda (timmar på förslag och bokade pass är redan dragna), de sparade
+  minuterna, köpen var för sig, och en länk till Profil & inställningar →
+  Timbanken. Den långa texten om minuterna gick därifrån, och fliken under
+  Profil fick en ruta överst, Vad är timbanken?, med villkorslänken.
+
 ## Timbanken (Fas 22.1)
 
 **Det som blir över på ett timpass sparas i timbanken** (Fas 22.1,
