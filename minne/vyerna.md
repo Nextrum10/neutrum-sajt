@@ -366,7 +366,7 @@ sidan där färgerna passar in."
 (`#just-nu`), Vår idé (`#om`), studievyn, NexLäx (`#nexlax`), Från
 intresseanmälan till första passet (`#hur`), studiehjälparna, Trygg hjälp
 (`#plattformen`), bildväggen, omdömena (`#rost`, brevet), För dig som vill
-jobba (`#bli`) och Nästa steg, och sist före footern Läxhjälp för just ert barn (`#laxhjalp-oversikt`, 2026-10-10: fyra grupper med länkar till alla läxhjälps- och guidesidor, `<details open>`, ämnesfärgens prick i ordningen från avsnitt 18, CSS avsnitt 19, `laxhjälpsöversikt()` fäller ihop under 861 px; en ny sida i kartan läggs in där på båda språken). Sektionerna flyttades som hela block mellan
+jobba (`#bli`) och Nästa steg, och sist före footern Läxhjälp för just ert barn (`#laxhjalp-oversikt`, 2026-10-10: fyra grupper med länkar till alla läxhjälps- och guidesidor, `<details>`, ämnesfärgens prick i ordningen från avsnitt 18, CSS avsnitt 19; en ny sida i kartan läggs in där på båda språken). Sedan 2026-10-12 är grupperna stängda på alla bredder och öppnas med ett tryck (Leo: "ha de inbäddade i ämne, årskurs, område och guider så man behöver trycka på de för att få upp dem"): ingen `open`, plus och minus på alla bredder. Samma kväll fick de glida (Leo: "gör de lite mer smooth"): listan står i `.nx-lo-l`, en grid vars rad växer från 0fr till 1fr och tonar in, och `laxhjälpsöversikt()` tar trycket på rubriken, sätter `.oppen` och stänger `open` först när listan krympt klart. 0fr gäller bara under `.nx-lo-glid`, som skriptet sätter sist, så utan skript eller med rörelse bortvald är det webbläsarens egen `<details>`; plustecknet är två streck som vrids till ett minus. Länkarna står kvar i HTML, och Google läser en stängd `<details>`. Samma dag blev ytan svart i ljust läge (Leo: "Gör den sektionen svart i ljus vy som färgen ovan och under"): footerns `--ftr-bg` (`#1F1915`), där Nästa steg slutar i ljust läge, med barkens text och ämnesfärgernas `-l`; i mörkt läge står den kvar på `--pap`. Sektionerna flyttades som hela block mellan
 kommentarsbanderollerna, likadant på /en/; numren i banderollerna är gamla.
 Hero är orörd utom priset (399 kr, `data-stat` ur `nextrum-config.js`).
 Studievyns exempelpass står också på 399 (`data-sd-pris` skrivs ur `CFG`).
@@ -797,7 +797,11 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    **Orange är inget läge** (2026-10-01, Leo): `--orange`, `--orange-lugn`
    och `--orange-ink` bär bara knappen Betala i förväg (`.btn-orange`,
    `radBetala()`), ett val och inget drag. Bläcket är mörkt: kräm klarar
-   inte AA på en ren orange. Använd den inte som lägesfärg.
+   inte AA på en ren orange. Använd den inte som lägesfärg. Sedan
+   2026-10-12 (Leo: "Köp knappen ska vara orange") bär den också Köp på
+   planerna och Fyll timbanken under Erbjudanden (`köpKnapp`), av samma
+   skäl: ett val att betala med kort. Den låsta knappen före matchningen
+   och med flaggan av är ghost som förut.
 2. **Ett drag överst, resten längst ner.** Passets sida
    (`NXStudie.passSida`) tar `datum`, `val` (betalvalen), `belopp`,
    `fakta` och `fot`, och ett block med `forst` står direkt under

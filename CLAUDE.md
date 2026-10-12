@@ -289,7 +289,7 @@ under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg, och sist före footern **Läxhjälp för just ert barn** (`#laxhjalp-oversikt`, 2026-10-10: internlänkning till alla läxhjälps- och guidesidor i fyra grupper, `<details open>` som `laxhjälpsöversikt()` fäller ihop under 861 px; en ny sida i kartan läggs också in där, i `index.html` och `en/index.html`). **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
+som vill jobba (`#bli`) och Nästa steg, och sist före footern **Läxhjälp för just ert barn** (`#laxhjalp-oversikt`, 2026-10-10: internlänkning till alla läxhjälps- och guidesidor i fyra grupper, `<details>` som är stängda på alla bredder och glider upp med ett tryck (2026-10-12: `laxhjälpsöversikt()` sätter `.oppen` och `.nx-lo-glid`, CSS låter `.nx-lo-l` växa från 0fr; utan skript eller rörelse är det en vanlig `<details>`), på footerns `--ftr-bg` i ljust läge och `--pap` i mörkt; en ny sida i kartan läggs också in där, i `index.html` och `en/index.html`). **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
 en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
 i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
@@ -360,7 +360,7 @@ knappen stängs med `NXStudie.medan()`.
 Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, mossa klart (tokens i
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
 ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knappen
-Betala i förväg. Ett drag överst, en knapp per listrad, tid och plats genom
+Betala i förväg och Köp under Erbjudanden (2026-10-12). Ett drag överst, en knapp per listrad, tid och plats genom
 `NXKontakt.passRad`, betalvalen i `.vy-betalval`. Adminvyns månadsväljare är ett fält med en
 ruta för år och månad (2026-10-06), från september 2026 till och med december nästa år; märket
 står i fältet och i rutan, och Lektioner räknar upp andra månader utan rapport under det.

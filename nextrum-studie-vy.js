@@ -3239,9 +3239,11 @@
 
   /* Köpknappen, lika på planerna och klippkorten. Före matchningen
      (2026-10-07) köps inga timmar: ingen vet än vem som ska hålla dem,
-     och raden ovanför korten säger det. */
+     och raden ovanför korten säger det. Knappen är orange (2026-10-12,
+     Leo: "Köp knappen ska vara orange"), som Betala i förväg: båda är ett
+     val att betala med kort, inget drag. Den låsta står kvar som ghost. */
   const köpKnapp = e => S.erb.aktiv && !S.väntar
-    ? '<button type="button" class="btn btn-primary btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>'
+    ? '<button type="button" class="btn btn-orange btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>'
     : '<button type="button" class="btn btn-ghost btn-sm" disabled>' + (S.väntar ? 'Köp' : 'Snart') + '</button>';
 
   /* Klippkorten som EN kolumn bredvid planerna, som fälls ut

@@ -23,7 +23,7 @@
                     föräldrar.
      sidhuvud       lapparna på menysidornas foto fjädrar in
      laxhjälpsöversikt  grupperna i Läxhjälp för just ert barn, sist på
-                    startsidan, fälls ihop på telefon (2026-10-10)
+                    startsidan, glider upp och ner (2026-10-12)
      stegFoton      Så fungerar Nextrum, på startsidan och menysidan:
                     den pinnade scenen på dator och den svepbara
                     raden på pekskärm (2026-10-07)
@@ -1163,16 +1163,57 @@ const NXStart = (function () {
     });
   }
 
-  /* Läxhjälp i översikt (avsnitt 19 i CSS): grupperna står öppna i HTML,
-     så att dator och sidan utan skript visar allt. Under 861 px fälls de
-     ihop; en dator som dras smal eller en telefon som vrids följer med. */
+  /* ============================================================
+     LÄXHJÄLP I ÖVERSIKT (avsnitt 19 i CSS, 2026-10-12)
+     Grupperna glider upp och ner i stället för att hoppa (Leo: "gör
+     de lite mer smooth"). En <details> visar och döljer sitt innehåll
+     på en gång, så trycket på rubriken tas här: öppna sätter open och
+     sedan .oppen, så att listan växer från 0fr; stäng tar bort .oppen
+     och sätter open först när listan krympt klart, eller efter en
+     stund om ingen transition kom (en äldre Safari animerar inte
+     grid-template-rows). Ett nytt tryck mitt i vänder rörelsen.
+
+     .nx-lo-glid sätts sist och bara här, och utan den gömmer CSS
+     inget: utan skript eller med rörelse bortvald är det webbläsarens
+     egen <details>. Öppnar webbläsaren en grupp själv (sök på sidan)
+     följer klassen med.
+     ============================================================ */
   function laxhjälpsöversikt() {
-    const grupper = document.querySelectorAll('.nx-lo-g');
-    if (!grupper.length) return false;
-    const bred = window.matchMedia('(min-width: 861px)');
-    const sätt = () => grupper.forEach(g => { g.open = bred.matches; });
-    sätt();
-    bred.addEventListener('change', sätt);
+    const sek = $('#laxhjalp-oversikt');
+    if (!sek || !rörelse) return;
+    $$('.nx-lo-g', sek).forEach(g => {
+      const rubrik = $('summary', g);
+      const lista = $('.nx-lo-l', g);
+      if (!rubrik || !lista) return;
+      let väntar = 0;
+      const öppna = () => {
+        void lista.offsetHeight;
+        g.classList.add('oppen');
+      };
+      const stängd = () => {
+        clearTimeout(väntar);
+        if (!g.classList.contains('oppen')) g.open = false;
+      };
+      g.classList.toggle('oppen', g.open);
+      rubrik.addEventListener('click', e => {
+        e.preventDefault();
+        clearTimeout(väntar);
+        if (g.classList.contains('oppen')) {
+          g.classList.remove('oppen');
+          väntar = setTimeout(stängd, 700);
+        } else {
+          g.open = true;
+          öppna();
+        }
+      });
+      lista.addEventListener('transitionend', e => {
+        if (e.target === lista && e.propertyName === 'grid-template-rows') stängd();
+      });
+      g.addEventListener('toggle', () => {
+        if (g.open && !g.classList.contains('oppen')) öppna();
+      });
+    });
+    sek.classList.add('nx-lo-glid');
   }
 
   function allt() {
