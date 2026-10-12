@@ -725,7 +725,9 @@ Detaljer: `minne/grunden.md`.
   årskurs 9 i oktober 2026" är Leos ord om underlaget. Juristen har inte läst tejperna, och ingen aktör nämns på sajten.
 - **Fyll timbanken** (2026-10-12): `fyll_timbanken` (20261012120000) körs efter merge, från merge-commiten: tills
   dess tar kassan 379 kr och skriver "Klippkort" på kvittot. Villkorens version är 2026-10-12, så alla får frågan igen.
-  Inget klippkort var köpt. Adminvyn säger fortfarande Klippkort. Juristen har inte läst de nya villkoren.
+  Inget klippkort var köpt. `drift` (agentens fakta, `_delad/nextrum-fakta.ts`) driftsätts från main efter merge.
+  Strömbrytarens beskrivning under System säger fortfarande "Planer och klippkort": `stampla_flaggan` låser texten.
+  Juristen har inte läst de nya villkoren.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för

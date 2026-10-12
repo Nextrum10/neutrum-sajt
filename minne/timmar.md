@@ -144,7 +144,18 @@ text vad timbanken är för något också".
 - Villkoren: "Planer och timbanken", timmarna till timbanken till ordinarie
   timpris, sex månader för alla, och timbanken rymmer både de köpta timmarna
   och de sparade minuterna. Version 2026-10-12, så alla får frågan igen.
-- Adminvyn säger fortfarande Klippkort; den bad ingen om.
+- Adminvyn och resten (Leo samma kväll: "fortsätt med arbetet i alla andra
+  ställen också ... anpassa de gamla grejerna om klippkort efter nya
+  saken"): Betalningar → Köpta timmar heter "Planer och Fyll timbanken" och
+  "Sparade minuter i timbanken", ett köp är ett köp och inte ett kort,
+  strömbrytaren och raderingens hinder säger Fyll timbanken eller köpta
+  timmar, och studievyn drar timmarna "från det köp som går ut först".
+  Agentens fakta (`_delad/nextrum-fakta.ts`) har en rad om Fyll timbanken,
+  utan tabellnamn. Strömbrytarens beskrivning i `flaggor` säger fortfarande
+  "Planer och klippkort": `stampla_flaggan` skriver tillbaka den gamla
+  texten vid varje update, så den byts inte i en migration utan att
+  triggern ändras, och det är inte värt det för en rad bara admin ser.
+  Koden, tabellerna, loggarna och `klippkort-betala` heter som förut.
 
 ## Timbanken (Fas 22.1)
 

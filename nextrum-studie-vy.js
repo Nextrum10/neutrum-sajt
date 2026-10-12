@@ -3420,7 +3420,7 @@
       return;
     }
     host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När ni föreslår '
-      + 'ett pass dras timmarna från det kort som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
+      + 'ett pass dras timmarna från det köp som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
       + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
       + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
       + 'Ett pass med fler barn, och ett pass där första timmen eller tipstimmen är på köpet, '
