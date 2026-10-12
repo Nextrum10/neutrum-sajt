@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=5d4c3399">
 <link rel="stylesheet" href="nextrum-cinema.css?v=8dd30fdd">
-<link rel="stylesheet" href="nextrum-vy.css?v=9be2b0cf">
+<link rel="stylesheet" href="nextrum-vy.css?v=816a7772">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=8bdc5001">
@@ -589,14 +589,14 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Erbjudanden</h2>
-            <p>Köp timmar i förväg: en plan gör timmen billigare, och Fyll timbanken ger timmar till timpriset som gäller i sex månader. När ni föreslår ett pass betalar timmarna det av sig själva, i stället för kortet, och säger er studiehjälpare nej kommer de tillbaka.</p>
+            <p>Fyll er timbank i förväg: med en plan, som gör timmen billigare och gäller en månad, eller med Fyll timbanken, till timpriset och i sex månader. När ni föreslår ett pass betalar timmarna det av sig själva, i stället för kortet, och säger er studiehjälpare nej kommer de tillbaka. Betalar ni pass för pass används inte timbanken.</p>
           </div>
         </div>
         <div class="stack">
           <p class="ok-msg" id="erb-msg"></p>
 
           <div class="dbox" id="erb-mina-box" hidden>
-            <h5>Era timmar</h5>
+            <h5>Er timbank</h5>
             <div id="erb-mina"></div>
           </div>
 
@@ -660,7 +660,7 @@
              Syns bara när erbjudandena går att köpa och familjen
              inte redan har timmar att betala med; ritaErbjudanden()
              avgör det. -->
-        <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Köp timmar i förväg, så betalar de passen av sig själva, och med en plan blir timmen billigare. <a href="#erbjudanden">Se planer och Fyll timbanken</a></p>
+        <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Fyll er timbank i förväg, så betalar timmarna passen av sig själva, och med en plan blir timmen billigare. <a href="#erbjudanden">Se planer och Fyll timbanken</a></p>
 
         <!-- Faktura (Fas 14.6). Fakturorna som skickats, och passen
              som väntar på nästa månadsfaktura. Ritas av ritaFakturor()
@@ -915,6 +915,14 @@
              för kort med passen de betalat, och de sparade minuterna. -->
         <div class="vy-flik-panel" role="tabpanel" data-flik="timbank"
              id="panel-timbank" aria-labelledby="flik-timbank" hidden>
+          <!-- 2026-10-12: Erbjudanden visar bara de tillgängliga timmarna
+               och hänvisar hit (Leo: "sedan ska man hänvisas till
+               inställningar för att läsa villkor eller liknande"), så
+               förklaringen och villkoren står överst här. -->
+          <div class="dbox">
+            <h5>Vad är timbanken?</h5>
+            <p class="erb-bank-text">Timbanken är familjens konto för läxhjälpstimmar. Ni fyller den med en plan, som gör timmen billigare och gäller en månad, eller med Fyll timbanken, till timpriset och i sex månader. När ni föreslår ett pass för ett barn betalar timmarna det av sig själva, och det som blir över av ett pass sparas som minuter, som aldrig går ut. Betalar ni pass för pass används inte timbanken. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för planer och timbanken</a></p>
+          </div>
           <div class="dbox">
             <h5>Köpta timmar</h5>
             <div id="timbank-timmar"><div class="loading">Hämtar</div></div>
@@ -1051,6 +1059,6 @@
 <script src="nextrum-uppgifter.js?v=08b43cf0"></script>
 <script src="nextrum-introduktion.js?v=2f3aa58e"></script>
 <script src="nextrum-modulvakt.js?v=568e1d7e"></script>
-<script src="nextrum-studie-vy.js?v=f8152626"></script>
+<script src="nextrum-studie-vy.js?v=a9f1fb0e"></script>
 </body>
 </html>

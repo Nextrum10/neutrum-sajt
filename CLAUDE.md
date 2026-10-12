@@ -188,6 +188,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs eller studiehjälpares egen kod i intresseanmälan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| timbanken | familjens köpta timmar (en plan eller Fyll timbanken) och sparade minuter; pass för pass går inte genom den |
 | Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
@@ -201,9 +202,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   en månad"), så "utan bindning" ställs aldrig mot paketen: 399 kr är "pass för pass" där de står bredvid varandra.
   Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
   pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
-  **Fyll timbanken** (2026-10-12, Leo; klippkorten `klipp10`–`klipp100` i databasen) kostar timpriset, 399 kr, utan
-  rabatt och utan märke, och alla storlekar gäller i sex månader. Köpta timmar går ut, sparade minuter gör det inte:
-  sidan och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
+  **Timbanken** är familjens köpta timmar och sparade minuter, och den fylls på två sätt (Leo 2026-10-12: "timbanken
+  fylls antingen med plan eller förköpta timmarna"): med en plan, eller med **Fyll timbanken** (klippkorten
+  `klipp10`–`klipp100` i databasen), som kostar timpriset, 399 kr, utan rabatt och utan märke, och gäller i sex månader
+  i alla storlekar. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
+  och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
+  Studievyns Erbjudanden visar alltid Er timbank med de tillgängliga timmarna och hänvisar till Profil → Timbanken,
+  där förklaringen och villkoren står (Leo samma kväll).
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`

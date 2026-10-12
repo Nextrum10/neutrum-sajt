@@ -2496,7 +2496,7 @@
     const brukbara = S.erb.kort.filter(k => k.brukbar);
     if (brukbara.some(k => String(k.giltigt_till) >= String(datum) && Number(k.kvar) >= behov)) {
       const kvar = brukbara.reduce((a, k) => a + Number(k.kvar), 0);
-      return { titel: 'Era timmar', under: '−' + timText(behov) + ', ' + (kvar - behov) + ' kvar efter' };
+      return { titel: 'Er timbank', under: '−' + timText(behov) + ', ' + (kvar - behov) + ' kvar efter' };
     }
     if (S.erb.bank.saldo >= minuter) return { titel: 'Timbanken', under: '−' + tidLängd(minuter) };
     return null;
@@ -3098,7 +3098,7 @@
     /* Fas 22.2: köpet betalar passen framför familjen i samma stund som
        det blir betalt, så passen laddas om med timmarna. Sedan Fas 22.4
        också förslagen. */
-    p.besked.textContent = '✓ Tack! Köpet är klart. Timmarna syns under Era timmar om en liten stund, '
+    p.besked.textContent = '✓ Tack! Köpet är klart. Timmarna syns under Er timbank om en liten stund, '
       + 'och de betalar era pass av sig själva.';
     p.besked.hidden = false;
     setTimeout(() => { laddaErbjudanden().catch(() => {}); }, 2500);
@@ -3308,12 +3308,31 @@
     const tips = $('#bet-erb-tips');
     if (tips) tips.hidden = !(S.erb.aktiv && S.erb.katalog.length && !S.erb.kort.some(k => k.brukbar));
 
+    /* Tillgängliga timmar (2026-10-12, Leo: "lägg till de även under
+       erbjudanden, tillgängliga timmar och sedan ska man hänvisas till
+       inställningar för att läsa villkor eller liknande"). Rutan står
+       alltid, också tom: timmarna som går att använda i dag, de sparade
+       minuterna och varje köp som gäller. Förklaringen, passen timmarna
+       betalat och villkoren står under Profil → Timbanken, och rutan
+       hänvisar dit i stället för att upprepa dem. Timmar som redan ligger
+       på ett förslag eller ett bokat pass är inte tillgängliga: kvar
+       räknas i databasen (klippkort_saldo). */
     const box = $('#erb-mina-box'), mina = $('#erb-mina');
     if (!box || !mina) return;
-    box.hidden = !S.erb.kort.length && !S.erb.bank.finns;
-    mina.innerHTML = S.erb.kort.map(k => kortRad(k)).join('') + bankRad()
-      + (S.erb.kort.length && !S.erb.bank.finns
-        ? '<p class="erb-bank-text"><a href="#profil/timbank">Se vilka pass timmarna betalat</a></p>' : '');
+    const brukbara = S.erb.kort.filter(k => k.brukbar);
+    const timmar = brukbara.reduce((n, k) => n + Number(k.kvar || 0), 0);
+    const minuter = S.erb.bank.saldo;
+    box.hidden = false;
+    mina.innerHTML = '<div class="erb-mitt erb-tillg">'
+      + '<div class="erb-mitt-topp"><b>Tillgängliga timmar</b>'
+      + (minuter ? '<span>och ' + esc(tidLängd(minuter)) + ' sparat</span>' : '') + '</div>'
+      + '<span class="erb-kvar"><b>' + timmar + '</b> ' + (timmar === 1 ? 'timme' : 'timmar') + '</span>'
+      + (timmar || minuter ? ''
+        : '<p class="erb-bank-text">Fyll timbanken med en plan eller med timmar nedan, så betalar timmarna era pass av sig själva.</p>')
+      + '</div>'
+      + brukbara.map(k => kortRad(k)).join('')
+      + '<p class="erb-bank-text erb-tillg-lank">Hur timmarna används, hur länge de gäller och villkoren står under '
+      + '<a href="#profil/timbank">Profil &amp; inställningar → Timbanken</a>.</p>';
   }
 
   /* Ett köpt kort: timmarna kvar som en mätare, och sista dagen. Samma
@@ -3344,23 +3363,6 @@
         + ' Timmar som inte används förfaller. <a href="#boka">Boka ett pass</a></p>' : '')
       + (under || '')
       + '</div>';
-  }
-
-  /* Timbanken (Fas 22.1), under klippkorten. Minuterna går inte ut, och
-     raden säger vad de används till, i den ordning databasen tar dem. */
-  function bankRad() {
-    const bank = S.erb.bank;
-    if (!bank.finns) return '';
-    const saldo = bank.saldo;
-    return '<div class="erb-mitt erb-bank">'
-      + '<div class="erb-mitt-topp"><b>Sparade minuter</b><span>Går inte ut</span></div>'
-      + '<span class="erb-kvar"><b>' + esc(tidLängd(saldo)) + '</b> sparat</span>'
-      + '<p class="erb-bank-text">Minuter som blev över när ett pass betalt med timmar slutade före en hel timme. '
-      + 'Drar ett pass över tas tiden härifrån först, utan kostnad, och räcker minuterna till ett helt pass betalar de '
-      + 'nästa pass ni föreslår, om inga köpta timmar gör det.'
-      + (bank.varde ? ' Slutar ni betalar vi tillbaka dem, i dag ' + esc(NXBetalning.kronor(bank.varde)) + '.' : '')
-      + ' <a href="#profil/timbank">Se vad som gått in och ut</a>'
-      + '</p></div>';
   }
 
   /* ============================================================
@@ -4306,7 +4308,7 @@
   function visaBetalsvar(svar) {
     if (svar === 'kopt') {
       const em = $('#erb-msg');
-      if (em) säg(em, '✓ Tack! Köpet är klart. Timmarna syns under Era timmar om en liten stund.', true);
+      if (em) säg(em, '✓ Tack! Köpet är klart. Timmarna syns under Er timbank om en liten stund.', true);
       setTimeout(() => { Promise.all([laddaErbjudanden(), laddaPass()]).catch(() => {}); }, 5000);
       return;
     }

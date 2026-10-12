@@ -156,6 +156,25 @@ text vad timbanken är för något också".
   texten vid varje update, så den byts inte i en migration utan att
   triggern ändras, och det är inte värt det för en rad bara admin ser.
   Koden, tabellerna, loggarna och `klippkort-betala` heter som förut.
+- **Timbanken fylls på två sätt** (Leo samma kväll: "timbanken fylls antingen
+  med plan eller förköpta timmarna, frågan är bara om hur man betalar och vad
+  man klickar i. dvs om man köper plan eller lektion i förväg. om man köper
+  lektion för lektion så betalas det per lektion enligt de reglern som redan
+  finns"). Timbanken är alla köpta timmar, planernas och Fyll timbankens, och
+  de sparade minuterna; pass för pass går inte genom den. Det första utkastet
+  sade "köpta timmar gäller i sex månader", som inte stämmer för en plan.
+  Prissidans ruta, villkoren, studievyn ("Er timbank" i stället för "Era
+  timmar") och agentens fakta säger nu det, med en plans månad och Fyll
+  timbankens sex månader var för sig. Samma version av villkoren, 2026-10-12:
+  ingen hade hunnit godkänna den förra texten.
+- **Tillgängliga timmar under Erbjudanden** (Leo samma kväll: "lägg till de
+  även under erbjudanden, tillgängliga timmar och sedan ska man hänvisas till
+  inställningar för att läsa villkor eller liknande"). Rutan Er timbank står
+  alltid, också med noll timmar: summan av `kvar` på köpen som går att
+  använda (timmar på förslag och bokade pass är redan dragna), de sparade
+  minuterna, köpen var för sig, och en länk till Profil & inställningar →
+  Timbanken. Den långa texten om minuterna gick därifrån, och fliken under
+  Profil fick en ruta överst, Vad är timbanken?, med villkorslänken.
 
 ## Timbanken (Fas 22.1)
 

@@ -2088,6 +2088,10 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-kvar{font-size:.84rem;color:var(--bl-2)}
 .erb-kvar b{color:var(--bl);font-size:1rem}
 .erb-mitt.ar-slut{opacity:.6}
+/* Tillgängliga timmar överst i Er timbank (2026-10-12): summan står
+   störst, och länken till Profil → Timbanken sist, under köpen. */
+.erb-tillg .erb-kvar b{font-size:1.7rem;letter-spacing:-.03em;margin-right:2px}
+.erb-tillg-lank{margin-top:16px}
 /* Fas 22.1: timbanken, under klippkorten i Era timmar. */
 .erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
 .erb-bank-text a{color:var(--acc);font-weight:600}
