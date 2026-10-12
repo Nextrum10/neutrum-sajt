@@ -257,6 +257,13 @@ var låst i ett väntläge före matchningen, båda fel sedan 2026-10-07.
 **Läs hela faktatexten mot kärnan innan `drift` driftsätts**, inte bara
 stycket som ändrats.
 
+**drift v16, 2026-10-12**, från main (2c19183) efter PR #254, hämtad
+tillbaka och byte för byte lika i alla fem filer (`cmp` och md5).
+`nextrum-fakta.ts` fick timbanken: en plan eller Fyll timbanken fyller
+den, Fyll timbanken kostar timpriset och gäller i sex månader, sparade
+minuter går aldrig ut, och pass för pass går inte genom den. Utan
+tabellnamn, och `testa-agent.js` gick igenom.
+
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —
 anmälningar, omatchade elever, kommande pass, saknade rapporter — och
