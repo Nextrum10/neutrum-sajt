@@ -797,7 +797,11 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    **Orange är inget läge** (2026-10-01, Leo): `--orange`, `--orange-lugn`
    och `--orange-ink` bär bara knappen Betala i förväg (`.btn-orange`,
    `radBetala()`), ett val och inget drag. Bläcket är mörkt: kräm klarar
-   inte AA på en ren orange. Använd den inte som lägesfärg.
+   inte AA på en ren orange. Använd den inte som lägesfärg. Sedan
+   2026-10-12 (Leo: "Köp knappen ska vara orange") bär den också Köp på
+   planerna och Fyll timbanken under Erbjudanden (`köpKnapp`), av samma
+   skäl: ett val att betala med kort. Den låsta knappen före matchningen
+   och med flaggan av är ghost som förut.
 2. **Ett drag överst, resten längst ner.** Passets sida
    (`NXStudie.passSida`) tar `datum`, `val` (betalvalen), `belopp`,
    `fakta` och `fot`, och ett block med `forst` står direkt under
