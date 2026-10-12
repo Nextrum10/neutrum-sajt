@@ -360,6 +360,11 @@ står i fältet och i rutan, och Lektioner räknar upp andra månader utan rappo
 minst 16 px text (`.inp,.sel` är 1rem), annars zoomar en iPhone in sidan vid tryck. **På en
 telefon** (2026-10-09) läggs en ny sektion direkt under sektionsraden (`sidomeny`, `början()`),
 vyns delar står i menyn bakom de tre strecken (`mobilmeny`), och Enter är en ny rad i chatten.
+**Notiserna vid inloggningen** (2026-10-12): det som väntar på en står i en ruta när vyn öppnas
+(`NXStudie.notisruta`), med samma poster som klockan i sidhuvudet (`notisposter()` i båda vyerna),
+och väntar inget kommer ingen ruta. En gång per inloggning (`sessionStorage`, som `loggaUt()` och
+vakten tömmer), aldrig på väg tillbaka från kassan, och inte i barnets vy. Den går inte att stänga
+av: inget val under Profil → Notiser. Stäng och Escape stänger rutan, ett tryck utanför gör det inte.
 ### Adminvyns skal
 Samma hus som de andra vyerna: KÄNSLAN och INNEHÅLLET står på `.vy` och adminvyn har inga egna
 ytor; ändras de andra vyerna oväntat är specificiteten första stället. Menyn är en egen rullyta

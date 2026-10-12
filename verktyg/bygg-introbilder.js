@@ -385,9 +385,12 @@ async function öppna(webb, vem) {
   await context.route(/^https:\/\/supabase\.test\//, S.hantera);
   await context.routeWebSocket(/supabase\.test/, () => {});
   await context.route(url => !String(url).startsWith(BAS) && !/supabase\.test/.test(String(url)), route => route.abort());
-  await context.addInitScript(([nyckel, värde]) => {
+  /* Notiserna vid inloggningen (NXStudie.notisruta) står som redan
+     visade: rutan hade annars legat över varje bild. */
+  await context.addInitScript(([nyckel, värde, vem]) => {
     try { localStorage.setItem(nyckel, värde); } catch (e) { /* ingen lagring */ }
-  }, [LAGRING, JSON.stringify(S.session(vem))]);
+    try { sessionStorage.setItem('nx-notisruta', vem); } catch (e) { /* ingen lagring */ }
+  }, [LAGRING, JSON.stringify(S.session(vem)), vem]);
   const page = await context.newPage();
   await page.clock.setFixedTime(NU);
   const konsol = [];

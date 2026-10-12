@@ -929,6 +929,32 @@ body.betalar .hdr.bort{transform:none}
   .nx-notis-lista{right:auto;left:0}
 }
 
+/* Notiserna vid inloggningen (NXStudie.notisruta, 2026-10-12): klockans
+   rader i bekräftelserutan, som tryckytor för tummen. Pilen säger att
+   raden leder någonstans. */
+.nx-notisruta:focus{outline:none}
+.nx-notisruta-lista{display:grid;gap:8px}
+.nx-notisruta-rad{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:14px;
+  width:100%;min-height:44px;text-align:left;
+  padding:13px 16px;border:1px solid var(--ln);border-radius:14px;
+  background:var(--pap-2);
+  transition:border-color .2s var(--e),background .2s var(--e);
+}
+.nx-notisruta-rad:hover{border-color:var(--ln-2);background:var(--pap-3)}
+.nx-notisruta-rad b{
+  grid-column:1;font-size:.94rem;font-weight:600;
+  letter-spacing:-.018em;color:var(--bl);
+}
+.nx-notisruta-rad span{
+  grid-column:1;font-size:.84rem;line-height:1.5;
+  color:var(--bl-2);margin-top:3px;
+}
+.nx-notisruta-rad::after{
+  content:'→';grid-column:2;grid-row:1 / span 2;
+  font-weight:600;color:var(--bl-3);
+}
+
 /* ============================================================
    MÖRKT LÄGE I VYERNA
    Panelerna ligger på samma ton som bottnen i ljust läge och
@@ -948,6 +974,7 @@ body.betalar .hdr.bort{transform:none}
   :root:not([data-theme="light"]) .nx-fraga-box{background:var(--pap-2)}
   :root:not([data-theme="light"]) .nx-notis-lista{background:var(--pap-2)}
   :root:not([data-theme="light"]) .nx-notis{background:var(--pap-3)}
+  :root:not([data-theme="light"]) .nx-notisruta-rad{background:var(--pap-3)}
   /* :not() på det valda läget är nödvändigt: den här selektorn har
      högre specificitet än .tr-val button[aria-pressed="true"], så utan
      den skrev lyftet över den valda knappens botten och lämnade ljus
@@ -970,6 +997,7 @@ body.betalar .hdr.bort{transform:none}
 :root[data-theme="dark"] .vy-roll[aria-current="page"],
 :root[data-theme="dark"] .tr-rad.deras .tr-bubbla,
 :root[data-theme="dark"] .nx-notis,
+:root[data-theme="dark"] .nx-notisruta-rad,
 :root[data-theme="dark"] .nx-avatar{background:var(--pap-3)}
 
 /* Ridån bakom bekräftelserutan blandas av --bl, bläcket. I ljust är
