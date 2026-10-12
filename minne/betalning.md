@@ -495,15 +495,15 @@ timmar (Basic, Standard, Intensiv) har varje val för ett barn en plan; vid
 Texten nedan gäller fortfarande för hur priset läses.
 
 **Räkna själv** på prissidan: barn i passet (1–3) och timmar i veckan
-(1–3), fyra veckor. Sedan 2026-10-12 också månader (1, 3 eller 6, förvalt
-1; Leo: "lägg till i beräkning antal månader om man vill kolla det, utgå
-alltid från 1 månad"), och en månad är fortfarande fyra veckor, vilket
-ingressen säger. Båda summorna gångras med månaderna; planen är kortets
-pris gånger dem, för en plan gäller en månad i taget och köps en gång i
-månaden, och raden under säger "3 × 1 516 kr · en månad i taget". Planen
-hittas på timmarna i en månad, som förut. Första timmen räknas inte in
-(noten säger den), så sex månader med Basic är 480 kr mindre än pass för
-pass här och 879 kr i plankortets Spara-lapp, som räknar in den. Timpriset och tillägget kommer ur `CFG` som i
+(1–3), fyra veckor. Svaret är månadskostnaden och säger det (2026-10-12):
+rutorna heter "Månadskostnad, pass för pass" och "Månadskostnad med
+Basic", och ingressen säger "så ser ni månadskostnaden" och att en månad
+räknas som fyra veckor. Samma kväll fanns ett reglage för 1, 3 eller 6
+månader (Leo: "lägg till i beräkning antal månader ... utgå alltid från 1
+månad"), som gick igen innan det mergades (Leo: "ta bort månaderna, skriv
+att det är månadskostnaden"). Det hade också visat två siffror för samma
+sak: sex månader med Basic var 480 kr mindre än pass för pass där och 879
+kr i plankortets Spara-lapp, som räknar in första timmen. Timpriset och tillägget kommer ur `CFG` som i
 `initPris()`, och två och tre barn kostar lika mycket. Planens pris räknas
 ALDRIG här: `initKalkyl()` läser det ur planens eget kort, som
 `initErbjudanden()` skriver om ur `erbjudanden_pris`, och hittar planen

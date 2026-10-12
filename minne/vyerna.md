@@ -428,7 +428,7 @@ bindningstid inget är de"):
   bindning"): ingen av de två binder, så "utan bindning" ställs aldrig mot
   paketen. Samma sak på prissidan (ingressen, spara-raden "mot att betala
   pass för pass", kalkylatorns "Pass för pass, fyra veckor", sedan
-  2026-10-12 "Pass för pass, 1 månad" med månadsväljaren) och i båda
+  2026-10-12 "Månadskostnad, pass för pass") och i båda
   FAQ-svaren om att sluta ("varken pass för pass eller med en plan").
   Paketen heter fortfarande "en månad i taget", som villkoren tål.
 - "Det är priset, inte ett från-pris" är en liten tejp (`dd.nx-tejp.jn-fast`,

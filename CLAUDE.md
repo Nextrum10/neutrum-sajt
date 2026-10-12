@@ -217,8 +217,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   samtidigt. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
-  och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`, gånger månaderna (1, 3 eller 6,
-  förvalt 1, 2026-10-12; en plan gånger månaderna är samma plan köpt en gång i månaden). Allt med
+  och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`; svaret är månadskostnaden och
+  säger det, och den räknar aldrig på flera månader (2026-10-12, Leo: "ta bort månaderna"). Allt med
   `data-erb` (planerna, lyftet `.pr-lyft` med tejpen `.nx-tejp`, startsidans Just nu `#just-nu`) tar siffrorna ur samma svar från
   `initErbjudanden()` (`select=*`, hela dokumentet), och en kod som saknas i svaret döljs. **Planerna** (2026-10-07) är Basic (`plan_basic`, 4 timmar),
   Standard (`plan_standard`, 8) och Intensiv (`plan_intensiv`, 12), alla −5 % och en månad i taget sedan
