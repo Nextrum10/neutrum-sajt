@@ -118,11 +118,12 @@
     /* Första inloggningen (2026-10-06): båda vyerna frågar
        lösenordFörst och introduktion när de startar, och introduktionen
        står i en egen fil som bara de två laddar. Användarvillkoren
-       (villkorFörst, 2026-10-07) frågas mellan dem. */
+       (villkorFörst, 2026-10-07) frågas mellan dem. Notiserna vid
+       inloggningen (notisruta, 2026-10-12) visas när vyn hämtat allt. */
     krav.push(
       [typeof NXKontakt !== 'undefined', 'nextrum-kontakt.js'],
       [studieKlar && typeof NXStudie.lösenordFörst === 'function' && typeof NXStudie.introduktion === 'function'
-         && typeof NXStudie.villkorFörst === 'function',
+         && typeof NXStudie.villkorFörst === 'function' && typeof NXStudie.notisruta === 'function',
        'nextrum-studie.js'],
       [typeof NXIntro !== 'undefined' && typeof NXIntro.visa === 'function', 'nextrum-introduktion.js'],
       [typeof NXMedia !== 'undefined' && !!NXMedia.beskär, 'nextrum-media.js'],

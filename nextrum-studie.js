@@ -2473,28 +2473,7 @@ window.NXStudie = (function () {
       var rad = e.target.closest('[data-mal]');
       if (!rad) return;
       stäng();
-      var mål = document.querySelector(rad.dataset.mal);
-      if (!mål) return;
-
-      /* Målet kan ligga i en sektion som inte är framme. Byt dit
-         först — annars scrollar vi till något som är hidden och
-         ingenting händer. */
-      var sek = mål.closest('section[data-sek]');
-      if (sek && sek.hidden) {
-        location.hash = '#' + sek.dataset.sek;
-      }
-      /* Och i en flik som inte är framme. Efter sammanslagningen av
-         sektionerna ligger #rapport-form och #lax-lista i flikpaneler,
-         och en gömd panel är lika ogenomtränglig som en gömd sektion. */
-      if (window.NXArbete) NXArbete.visaFör(mål);
-
-      /* Sektionsbytet nollställer scrollen, så markeringen måste
-         vänta tills den bytt. */
-      requestAnimationFrame(function () {
-        mål.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        mål.classList.add('nx-blink');
-        setTimeout(function () { mål.classList.remove('nx-blink'); }, 1600);
-      });
+      tillNotis(rad.dataset.mal);
     });
 
     document.addEventListener('click', function (e) {
@@ -2503,6 +2482,134 @@ window.NXStudie = (function () {
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && öppen) stäng(); });
 
     sättTitel(poster.length);
+  }
+
+  /* Dit en notis pekar, från klockan och från rutan vid inloggningen. */
+  function tillNotis(väljare) {
+    var mål = väljare && document.querySelector(väljare);
+    if (!mål) return;
+
+    /* Målet kan ligga i en sektion som inte är framme. Byt dit
+       först — annars scrollar vi till något som är hidden och
+       ingenting händer. */
+    var sek = mål.closest('section[data-sek]');
+    if (sek && sek.hidden) {
+      location.hash = '#' + sek.dataset.sek;
+    }
+    /* Och i en flik som inte är framme. Efter sammanslagningen av
+       sektionerna ligger #rapport-form och #lax-lista i flikpaneler,
+       och en gömd panel är lika ogenomtränglig som en gömd sektion. */
+    if (window.NXArbete) NXArbete.visaFör(mål);
+
+    /* Sektionsbytet nollställer scrollen, så markeringen måste
+       vänta tills den bytt. */
+    requestAnimationFrame(function () {
+      mål.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      mål.classList.add('nx-blink');
+      setTimeout(function () { mål.classList.remove('nx-blink'); }, 1600);
+    });
+  }
+
+  /* ============================================================
+     NOTISERNA VID INLOGGNINGEN (2026-10-12)
+
+     Leo: "gör ett notissystem som kommer som en popup när man loggar
+     in. har man inga nya notiser kommer en popup inte upp, har man nya
+     notiser såsom att man måste betala ett pass eller att man har en
+     föreslagen tid att granska kommer en popup med notisen där. det går
+     inte att stänga av".
+
+     SAMMA POSTER SOM KLOCKAN. Vyn räknar dem en gång (notisposter() i
+     studievyn och studiehjälparvyn) och lämnar dem både till klockan
+     och hit. En ruta som räknade på sitt eget sätt hade förr eller
+     senare sagt något annat än klockan bredvid, och då litar man på
+     ingen av dem. Ingen post, ingen ruta.
+
+     EN GÅNG PER INLOGGNING, och en inloggning är att vyn öppnas: i en
+     ny flik, efter att webbläsaren stängts, eller efter Logga ut och in
+     igen. Inte när sidan laddas om, och inte när man kommer tillbaka
+     från kassan. Det minns sessionStorage, som hör till fliken och
+     försvinner med den, och loggaUt() och vakten tömmer det. Där står
+     bara vems rutan visats för, aldrig vad som väntade. Går lagringen
+     inte att läsa kommer rutan varje gång vyn laddas, hellre det än
+     aldrig.
+
+     DEN GÅR INTE ATT STÄNGA AV: inget val under Profil → Notiser, för
+     det rutan visar är det som väntar på en, och det slutar inte vänta
+     för att man slutat se det. Rutan stängs med Stäng eller Escape och
+     kommer tillbaka nästa inloggning, så länge något väntar. En rad
+     leder dit, som raden i klockan. Ett tryck utanför stänger inte: på
+     en telefon är det ett tryck som missade.
+
+     o: { user, poster, rubrik }. Står en annan ruta öppen (en fråga
+     man hann öppna medan vyn hämtade) går den först, och rutan kommer
+     nästa gång vyn laddas. Rapportrutan i studiehjälparvyn står alltid
+     i sidan, gömd med hidden, och räknas bara när den syns.
+     ============================================================ */
+  var NOTISRUTA = 'nx-notisruta';
+
+  function notisruta(o) {
+    var poster = (o && o.poster) || [];
+    if (!o || !o.user || !poster.length) return;
+    try { if (sessionStorage.getItem(NOTISRUTA) === o.user.id) return; } catch (e) { /* ingen lagring */ }
+    if (document.querySelector('.nx-fraga:not([hidden])')) return;
+    try { sessionStorage.setItem(NOTISRUTA, o.user.id); } catch (e) { /* ingen lagring */ }
+
+    var ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    ruta.innerHTML =
+      '<div class="nx-fraga-box nx-notisruta" role="dialog" aria-modal="true" aria-labelledby="notisruta-t" tabindex="-1">'
+      + '<h3 id="notisruta-t">' + esc(o.rubrik || 'Det här väntar på dig') + '</h3>'
+      + '<div class="nx-notisruta-lista">'
+      + poster.map(function (p) {
+          return '<button type="button" class="nx-notisruta-rad" data-mal="' + esc(p.mål || '') + '">'
+            + '<b>' + esc(p.rubrik) + '</b><span>' + esc(p.text) + '</span></button>';
+        }).join('')
+      + '</div>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-notisruta-stang>Stäng</button>'
+      + '</div></div>';
+
+    var sistaFokus = document.activeElement;
+    /* Fokus tillbaka utan att rulla: en rad har just rullat sidan dit
+       den pekar, och fokus på knappen man stod på hade rullat tillbaka. */
+    function stäng() {
+      ruta.remove();
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', tangent);
+      if (sistaFokus && sistaFokus.focus) sistaFokus.focus({ preventScroll: true });
+    }
+    var box = ruta.querySelector('.nx-notisruta');
+    function tangent(e) {
+      if (e.key === 'Escape') { e.preventDefault(); stäng(); return; }
+      if (e.key !== 'Tab') return;
+      var kan = ruta.querySelectorAll('button');
+      var f = kan[0], s = kan[kan.length - 1];
+      if (e.shiftKey && (document.activeElement === f || document.activeElement === box)) { e.preventDefault(); s.focus(); }
+      else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+    }
+
+    ruta.addEventListener('click', function (e) {
+      if (e.target.closest('[data-notisruta-stang]')) { stäng(); return; }
+      var rad = e.target.closest('[data-mal]');
+      if (!rad) return;
+      stäng();
+      tillNotis(rad.dataset.mal);
+    });
+    document.addEventListener('keydown', tangent);
+
+    document.body.appendChild(ruta);
+    document.body.style.overflow = 'hidden';
+    void ruta.offsetWidth;
+    ruta.classList.add('open');
+    /* Fokus på rutan, inte på första raden: skärmläsaren läser rubriken,
+       Tab går till raderna, och ingen rad ser vald ut innan man valt. */
+    box.focus();
+  }
+
+  /* Nästa inloggning ska få rutan igen. */
+  function glömNotisrutan() {
+    try { sessionStorage.removeItem(NOTISRUTA); } catch (e) { /* ingen lagring */ }
   }
 
   /* ============================================================
@@ -3550,6 +3657,7 @@ window.NXStudie = (function () {
      supa skickas in, som till notisval och vakten nedan. */
   async function loggaUt(supa) {
     loggarUt = true;
+    glömNotisrutan();
     if (supa) await supa.auth.signOut({ scope: 'local' });
     location.reload();
   }
@@ -3583,6 +3691,9 @@ window.NXStudie = (function () {
         return;
       }
       borta = true;
+      /* Den som loggar in igen i rutan har loggat in: notiserna visas
+         igen efter omladdningen. */
+      glömNotisrutan();
       setTimeout(function () {
         var na = NX.$('#nav-actions'), ma = NX.$('#m-actions');
         if (na) na.innerHTML = '';
@@ -4175,7 +4286,7 @@ window.NXStudie = (function () {
     villkorFörst: villkorFörst,
     loggaIn: loggaIn, loggaInHär: loggaInHär,
     adminroll: adminroll,
-    flyttaRuta: flyttaRuta, notiser: notiser, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
+    flyttaRuta: flyttaRuta, notiser: notiser, notisruta: notisruta, sidomeny: sidomeny, schema: schema, passRuta: passRuta,
     passLista: passLista, läxLista: läxLista,
     fordelning: fordelning,
     LAGE: LAGE, STEG: STEG, stegFör: stegFör, stegText: stegText, målFör: målFör,

@@ -3786,11 +3786,16 @@
 
   /* ============================================================
      NOTISER
-     Bara det som väntar på er.
+     Bara det som väntar på er. Samma poster står i klockan och i
+     rutan vid inloggningen (NXStudie.notisruta, 2026-10-12).
      ============================================================ */
   function ritaNotiser() {
     const hus = $('#notis-hus');
     if (!hus) return;
+    NXStudie.notiser(hus, notisposter());
+  }
+
+  function notisposter() {
     const poster = [];
 
     /* Föreslagen tid FÖRST. Det är den enda notisen som väntar på
@@ -3826,11 +3831,25 @@
 
     /* En ny rapport (Fas 19.1). Rapporten mejlas aldrig (notis_mejlbara),
        så den här raden och siffran i menyn är det enda som säger att
-       den kommit. */
-    const rapporterAtt = S.rb.laddat && S.laddatPass ? rbAttBekräfta().length : 0;
-    if (rapporterAtt) {
+       den kommit.
+
+       Ett genomfört pass som inte är betalt får en egen rad (2026-10-12,
+       Leo: "att man måste betala ett pass"). Det är samma rapport och
+       samma lista, men det man ska göra är att betala, och raden säger
+       det. Ett obetalt tillägg (Fas 20.1) är också något att betala. */
+    const rapporterAtt = S.rb.laddat && S.laddatPass ? rbAttBekräfta() : [];
+    const passAttBetala = rapporterAtt.filter(r => rbObetald(r) || !!(rbPass(r) && tillägg(rbPass(r)))).length;
+    const baraLäsa = rapporterAtt.length - passAttBetala;
+    if (passAttBetala) {
       poster.push({
-        rubrik: rapporterAtt === 1 ? 'En rapport att bekräfta' : rapporterAtt + ' rapporter att bekräfta',
+        rubrik: passAttBetala === 1 ? 'Ett pass att betala' : passAttBetala + ' pass att betala',
+        text: 'Passet är genomfört. Läs rapporten och välj hur ni betalar.',
+        mål: '#rb-lista'
+      });
+    }
+    if (baraLäsa) {
+      poster.push({
+        rubrik: baraLäsa === 1 ? 'En rapport att bekräfta' : baraLäsa + ' rapporter att bekräfta',
         text: 'Läs vad ni gick igenom på passet och bekräfta rapporten.',
         mål: '#rb-lista'
       });
@@ -3878,7 +3897,7 @@
       });
     }
 
-    NXStudie.notiser(hus, poster);
+    return poster;
   }
 
   /* Flytta ett pass — samma tider som bokningen lyder. */
@@ -5219,6 +5238,13 @@
     ritaNotiser();
     await ritaÖvSamtal();
     visaBetalsvar(betalsvar);
+    /* Notiserna vid inloggningen (2026-10-12), när allt är hämtat: också
+       tråden, som räknar de nya meddelandena när den hämtats första
+       gången. Inte på väg tillbaka från kassan: webhooken har kanske
+       inte hunnit, och då hade ett pass man just betalat stått som
+       ett pass att betala. */
+    if (S.trad && S.trad.klar) await S.trad.klar.catch(() => {});
+    if (!betalsvar) NXStudie.notisruta({ user: S.user, poster: notisposter(), rubrik: 'Det här väntar på er' });
    } catch (fel) {
      visaFel(fel, 'vyn skulle hämtas');
    }

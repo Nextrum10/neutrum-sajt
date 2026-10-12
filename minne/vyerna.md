@@ -1398,3 +1398,52 @@ lektioner, detta ska ske efter att man bekräftat sitt nya lösenord."
 - **Barnets vy har ingen introduktion**: barnet kommer in med ett
   användarnamn föräldern gett det, och vyn har fyra delar. Den
   behövs inte, och ingen bad om den.
+
+### Notiserna vid inloggningen (2026-10-12)
+Leo: "gör ett notissystem som kommer som en popup när man loggar in. har
+man inga nya notiser kommer en popup inte upp, har man nya notiser såsom
+att man måste betala ett pass eller att man har en föreslagen tid att
+granska kommer en popup med notisen där. det går inte att stänga av".
+- **Samma poster som klockan.** Studievyn och studiehjälparvyn räknar det
+  som väntar i `notisposter()`, och `ritaNotiser()` ger det till klockan
+  i sidhuvudet (`NXStudie.notiser`) och `start()` till rutan
+  (`NXStudie.notisruta`). En ruta som räknade på sitt eget sätt hade förr
+  eller senare sagt något annat än klockan bredvid. Ingen post, ingen
+  ruta. Tabellen `notiser` (händelserna, med `last_at`) läses fortfarande
+  inte av vyerna: rutan visar det som väntar nu, inte det som hänt.
+- **Ett pass att betala** har en egen rad i familjens lista: en rapport
+  vars pass inte är betalt (`rbObetald`) eller har ett obetalt tillägg.
+  Förut stod det som "En rapport att bekräfta", och betalningen syntes
+  inte i notisen. Resten är som förut: föreslagna tider först, fakturor,
+  meddelanden och sena uppgifter, och inget pass att betala i förväg
+  (Fas 19.2: det är ett val, inte familjens drag).
+- **En gång per inloggning**, och en inloggning är att vyn öppnas: en ny
+  flik, efter att webbläsaren stängts, eller efter Logga ut och in igen.
+  Inte när sidan laddas om. `sessionStorage` (`nx-notisruta`) bär bara
+  vems rutan visats för, aldrig vad som väntade; `loggaUt()` tömmer den,
+  och vakten gör det när någon blivit utloggad. Går lagringen inte att
+  läsa kommer rutan varje gång vyn laddas.
+- **När allt är hämtat**: familjens vy väntar också in trådens första
+  hämtning (`NXKontakt.tråd(...).klar`), för det är den som räknar de nya
+  meddelandena. Inte på väg tillbaka från kassan (`betalsvar`): webhooken
+  har kanske inte hunnit, och då hade passet man just betalat stått som
+  ett pass att betala. Står en annan `.nx-fraga` öppen går den först;
+  rapportrutan i studiehjälparvyn står alltid i sidan med `hidden` och
+  räknas inte.
+- **Den går inte att stänga av**: inget val under Profil → Notiser, för
+  det rutan visar slutar inte vänta för att man slutat se det. Rutan
+  stängs med Stäng eller Escape och kommer tillbaka nästa inloggning så
+  länge något väntar; ett tryck utanför stänger inte (på en telefon är
+  det ett tryck som missade). En rad leder dit, som raden i klockan
+  (`tillNotis`), och stänger rutan. Fokus på rutan, inte på första raden,
+  så att ingen rad ser vald ut.
+- **Barnets vy och adminvyn har ingen ruta**: barnet kan inte boka,
+  svara eller betala, och adminvyn har Att göra och morgonmejlet.
+- `verktyg/bygg-introbilder.js` sätter `nx-notisruta` innan sidan laddas,
+  annars hade rutan legat över varje bild.
+- Provat mot den falska Supabase-världen ur `bygg-introbilder.js`, i en
+  telefons bredd, ljust och mörkt: rutan med motförslaget och passet att
+  betala (familjen) och förslagen och passet utan rapport
+  (studiehjälparen), ett oläst meddelande, ingen ruta när inget väntar,
+  ingen efter omladdning, igen i en ny flik, Escape, Stäng, Tab och ett
+  tryck utanför.

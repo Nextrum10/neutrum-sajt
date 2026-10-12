@@ -127,6 +127,10 @@ syns bara när anropet görs.
   (`intern.manadskorning_svar()`, se `manadskorning` ovan), för den går
   en gång i månaden och ingen tittar när den går.
 
+Rutan med det som väntar när man loggar in (2026-10-12) är inte den här
+vägen: den räknas i vyn, som klockan i sidhuvudet, och står i
+`minne/vyerna.md` (Notiserna vid inloggningen).
+
 `DEPLOY-NOTISER.md` har resten: de tre konfigurationstabellerna, hur
 sandlådan slås på innan något provas, och de fem stegen för att lägga
 till en ny notistyp utan att den faller ut som `okänd notistyp` ur en
