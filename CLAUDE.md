@@ -673,6 +673,12 @@ Detaljer: `minne/grunden.md`.
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
 - **Obetalda pass på månadens faktura av sig själva** är beslutat (2026-10-01), inte byggt: en
   villkorsändring på alla 36 ställen och i mejlen, i en egen PR (`minne/betalning.md`).
+- **Gratistimmarna i timbanken** är beslutade (2026-10-13), inte byggda: en gratis timme är en timme
+  i timbanken och går ut 60 dagar efter att den lagts in, och en plan går ut en månad efter köpet,
+  som i dag (Leo: "gratis timmar går ut efter 60 dagar att de läggs in, planerna man köper går ut
+  samma månad"). I dag är första timmen och tipstimmen en rabatt på ett pass, och planens första
+  timme går ut med planen. Ordningen mellan gratis och köpta timmar, betygsgarantins sex månader och
+  en ny version av villkoren avgörs när det byggs (`minne/timmar.md`).
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten, och familjerna om barnens inloggning

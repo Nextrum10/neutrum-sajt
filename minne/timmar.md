@@ -376,6 +376,40 @@ förslagen, annars betalar förslagen sig själva. Blocken för 22.3 och
 
 ---
 
+## Gratistimmarna i timbanken (beslutat 2026-10-13, inte byggt)
+
+Leo 2026-10-13, efter `rabattkoden_krockar_inte`: "jag ska bygga nytt
+system för gratis timmarna. gratis timmarna räknas i timbanken", och samma
+kväll: "gratis timmar går ut efter 60 dagar att de läggs in, planerna man
+köper går ut samma månad".
+
+- **Beslutat**: en gratis timme är en timme i timbanken, och den går ut 60
+  dagar efter att den lagts in. En plan går ut en månad efter köpet, som i
+  dag: `giltig_manader = 1`, `giltigt_till` är köpdagen plus en månad, och
+  villkoren (#erbjudanden) säger "en månad från köpet". "Samma månad"
+  lästes så. Menade Leo kalendermånadens slut är det en ny version av
+  villkoren, och den som köper sent i månaden får nästan ingenting.
+- **I dag** är gratistimmarna något annat. Första timmen pass för pass och
+  tipstimmen är en rabatt på ett pass (`startrabatt`,
+  `forsta_timmen_bjuds`), som inte går ut. Första timmen med planen är en
+  timme till i planen (`klippkort.forsta_timmen`), som går ut med planen,
+  efter en månad och inte 60 dagar.
+- **Att avgöra när det byggs**:
+  1. Ordningen. Villkoren säger att timmarna dras från "de köpta timmar som
+     går ut först", och `intern.timmar_betala` väljer kortet som går ut
+     först. Med gratistimmar i banken behövs en regel för gratis mot
+     köpta. Det som går ut först dras först är den enda som aldrig låter
+     en timme gå ut i onödan, varken en betald eller en gratis.
+  2. Betygsgarantins timmar är också gratis, men villkoren lovar att de
+     används inom sex månader från svaret. 60 dagar för dem är en ändring
+     av garantins villkor.
+  3. Villkoren och prissidan ändras, och alla får frågan igen
+     (`kolla-villkor.py`). Juristen läser.
+  4. Rabattkoden behöver inget nytt: timbanken går redan före den
+     (`minne/betalning.md`).
+
+---
+
 ## Ur avsnitt 11: driftsättningen och testköpet
 
 - **Planer och klippkort (Fas 16.1) är öppna sedan 2026-09-27**, på
