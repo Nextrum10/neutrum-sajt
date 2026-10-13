@@ -13489,8 +13489,9 @@ begin
     ut := ut || jsonb_build_object('t', 'KB utbetald stämplas, och en betald bonus avidentifierar kontot i stället för att hindra',
             'ok', t = 'ok' and bon.utbetald_at is not null
                   and not exists (select 1 from jsonb_array_elements(lag -> 'hinder') h where h ->> 'kod' = 'tipsbonus')
-                  and lag ->> 'satt' = 'avidentifieras',
-            'd', t || ' ' || coalesce(lag ->> 'satt', 'inget'));
+                  and lag ->> 'satt' = 'avidentifieras'
+                  and (lag -> 'star_kvar' ->> 'tipsbonus')::int = 1,
+            'd', t || ' ' || coalesce(lag ->> 'satt', 'inget') || ' ' || coalesce((lag -> 'star_kvar')::text, ''));
 
     -- ---------- Koder i adminvyn ----------
     t := pg_temp.svar_som(P, $q$select * from public.koder_lage('familj')$q$);

@@ -876,7 +876,7 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
   intagna och bonusen. Familjens flik säger timmen i timbanken.
 - **Raderingen**: en studiehjälpare med en bonus som inte är utbetald eller
   struken raderas inte (hindret `tipsbonus`), och en med en bonus alls
-  avidentifieras i stället för att tas bort.
+  avidentifieras i stället för att tas bort; bonusen står under Står kvar.
 - **Villkoren** (#tips, båda språken) och policyn säger det; versionen är
   2026-10-13. Rad 19 och 26 i `DATASKYDD.md`.
 - **Vad Leo kan ändra**: "vi kan komma att ändra det" om familjens

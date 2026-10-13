@@ -249,7 +249,8 @@ med triggern `bookings_timmar_tips`, tabellen `tipsbonus` med
 `tipsbonus`, `intern.tipsbonus_ore`, `intern.ny_tipskod`, `koder_lage`,
 `foretagsfakta.lonart_tipsbonus` (med auditlistan) och villkorens version
 2026-10-13. `intern.radering_underlag` lappas med `replace()` och räknade
-träffar: hindret `tipsbonus` och avidentifiering för den som har en bonus.
+träffar: hindret `tipsbonus`, avidentifiering för den som har en bonus och
+`tipsbonus` under `star_kvar`.
 Ingen drop och ingen delete utanför en funktion.
 
 **Flera sessioner kör mot samma databas samtidigt.** Fas 19.5 och Fas

@@ -795,6 +795,11 @@ declare
   satt_gammal constant text := E'       or exists (select 1 from public.payouts u where u.tutor_id = p_id)\n';
   satt_ny     constant text := E'       or exists (select 1 from public.payouts u where u.tutor_id = p_id)\n'
     || E'       or exists (select 1 from public.tipsbonus t where t.studiehjalpare_id = p_id)\n';
+  -- Står kvar: annars säger rutan inget om varför kontot avidentifieras
+  -- när bonusen är det enda bokföringen behöver.
+  kvar_gammal constant text := E'        ''underlag'', (select count(*) from public.payouts u where u.tutor_id = p_id),\n';
+  kvar_ny     constant text := E'        ''underlag'', (select count(*) from public.payouts u where u.tutor_id = p_id),\n'
+    || E'        ''tipsbonus'', (select count(*) from public.tipsbonus t where t.studiehjalpare_id = p_id),\n';
 begin
   def := pg_get_functiondef('intern.radering_underlag(text, uuid)'::regprocedure);
   if position('public.tipsbonus' in def) > 0 then
@@ -809,7 +814,11 @@ begin
   if n <> 1 then
     raise exception 'radering_underlag: payouts-raden hittades % gånger, väntat en. Läs driften.', n;
   end if;
-  execute replace(replace(def, hinder_gammal, hinder_ny), satt_gammal, satt_ny);
+  n := (length(def) - length(replace(def, kvar_gammal, ''))) / length(kvar_gammal);
+  if n <> 1 then
+    raise exception 'radering_underlag: underlagsraden hittades % gånger, väntat en. Läs driften.', n;
+  end if;
+  execute replace(replace(replace(def, hinder_gammal, hinder_ny), satt_gammal, satt_ny), kvar_gammal, kvar_ny);
 end $$;
 
 

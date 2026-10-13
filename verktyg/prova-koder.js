@@ -173,6 +173,9 @@ function falskSupabase(o) {
       namn: null, aktiv: k.aktiv, created_at: k.kod_skapad, anmalda: 0, kunder: 0, forsta_pass: 0, timmar_anvanda: 0
     })),
     koder_lage: k => KODER[k.p_sort] || [],
+    /* Raderingsrutan för en studiehjälpare med en obetald och en betald bonus. */
+    radering_lage: k => ({ typ: k.p_typ, satt: 'avidentifieras', larm: [], avbokas: 0, tas_bort: {}, filer: [],
+      hinder: [{ kod: 'tipsbonus', antal: 1, belopp_ore: 30000 }], star_kvar: { tipsbonus: 1 } }),
     admin_sett_markera: k => k.p_till,
     mitt_villkorslage: () => ({ version: '2026-10-13', godkant_at: '2026-10-13T09:00:00+00:00', tidigare: false }),
     forsta_timmen_lage: () => ({ beviljad: false, tagen: false, i_planen: false, pa_pass: false })
@@ -394,6 +397,25 @@ async function provaLöner(webb) {
   prova('ansökan: panelen säger vem som tipsat och bonusen', /Tipsad av/.test(fakta) && /Sara Ahl/.test(fakta)
     && /Bonus för tipset/.test(fakta) && /300 kr/.test(fakta), fakta);
   await bild(page, 'ansokan-kod', '.dp-fakta');
+
+  /* Raderingsrutan: hindret har ord, och bonusen står kvar. */
+  await page.evaluate(() => {
+    const b = document.createElement('button');
+    b.id = 'prov-radera';
+    b.dataset.radera = 'studiehjalpare:sh-a';
+    document.body.appendChild(b);
+    b.click();
+  });
+  await page.waitForSelector('.rad-box', { timeout: 3000 }).catch(() => {});
+  const hindret = await text(page, '.rad-hinder');
+  prova('radera: hindret säger bonusen och vad som ska göras',
+    /1 bonus för tips som inte är utbetald: 300 kr/.test(hindret) && /markera den Utbetald under Löner/.test(hindret)
+      && !/tipsbonus/.test(hindret), hindret);
+  const kvar = await page.evaluate(() => Array.from(document.querySelectorAll('.rad-box .rad-grupp'))
+    .filter(g => /Står kvar/.test(g.textContent)).map(g => g.textContent).join(' '));
+  prova('radera: bonusen står under Står kvar', /1 bonus för tips/.test(kvar), kvar);
+  await bild(page, 'radera-bonus', '.rad-box');
+  await page.keyboard.press('Escape');
 
   prova('löner: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   prova('löner: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));

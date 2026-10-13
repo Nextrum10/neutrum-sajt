@@ -108,7 +108,12 @@
     kommande_betalda: h => [st(h.antal, 'kommande pass', 'kommande pass') + ' betalda med kort: '
         + kronor(h.belopp_ore || 0),
       'Familjerna har betalat för pass med hen. Låt passen hållas, eller avboka dem under Bokningar och '
-        + 'betala tillbaka under Betalningar → Alla betalningar.']
+        + 'betala tillbaka under Betalningar → Alla betalningar.'],
+    /* 2026-10-13: bonusen är lön som inte är betald än. */
+    tipsbonus: h => [st(h.antal, 'bonus för tips', 'bonusar för tips') + ' som inte är utbetald'
+        + (h.antal === 1 ? '' : 'a') + ': ' + kronor(h.belopp_ore || 0),
+      'Betala ut bonusen med nästa lön och markera den Utbetald under Löner, eller stryk den där om den '
+        + 'inte ska betalas.']
   };
 
   const TAS_BORT = {
@@ -130,6 +135,7 @@
     klippkort: ['köp av timmar', 'köp av timmar'],
     fakturor: ['faktura', 'fakturor'],
     underlag: ['löneunderlag', 'löneunderlag'],
+    tipsbonus: ['bonus för tips', 'bonusar för tips'],
     elevernas_material: ['läxa, plan eller material hen skrivit åt en elev (eleven har det kvar)',
       'läxor, planer och material hen skrivit åt elever (eleverna har dem kvar)'],
     handlingar: ['handling under System → Dokument. Ta bort den där om den inte ska sparas',
