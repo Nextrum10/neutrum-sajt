@@ -32,7 +32,7 @@
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=eb771e35">
-<link rel="stylesheet" href="nextrum-uppgifter.css?v=ad93496c">
+<link rel="stylesheet" href="nextrum-uppgifter.css?v=576562eb">
 </head>
 <body class="vy">
 
@@ -512,12 +512,29 @@
           </label>
         </div>
 
-        <div class="vy-flikar" role="tablist" aria-label="Delar av NexLäx">
+        <!-- Spelskalet (2026-10-13): NexLäx är en egen värld i studievyn. Ett
+             tryck på NexLäx döljer menyn och hälsningen (CSS, nextrum-uppgifter.css),
+             och här finns en rad med vägen tillbaka. Flikarna är spelets
+             meny: Din väg, Rank, Märken, Din utveckling och Studiehjälpare. -->
+        <div class="nl-spelrad">
+          <a class="nl-spelrad-ut" href="#oversikt" aria-label="Lämna NexLäx och gå till Översikt">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg><span>Nextrum</span></a>
+          <span class="nl-spelrad-namn">NexLäx</span>
+          <button type="button" class="nl-spelrad-ljud" data-nl-ljud aria-label="Ljud" aria-pressed="true"></button>
+        </div>
+
+        <div class="vy-flikar nl-flikar" role="tablist" aria-label="Delar av NexLäx">
           <button class="vy-flik" type="button" role="tab" data-flik="vag"
-                  id="flik-nl-vag" aria-controls="panel-nl-vag">Din väg
-            <span class="vy-flik-mark" id="flik-lax-mark" hidden></span></button>
+                  id="flik-nl-vag" aria-controls="panel-nl-vag">Din väg</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="rank"
+                  id="flik-nl-rank" aria-controls="panel-nl-rank">Rank</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="marken"
+                  id="flik-nl-marken" aria-controls="panel-nl-marken">Märken</button>
           <button class="vy-flik" type="button" role="tab" data-flik="utveckling"
                   id="flik-nl-utveckling" aria-controls="panel-nl-utveckling">Din utveckling</button>
+          <button class="vy-flik" type="button" role="tab" data-flik="hjalpare"
+                  id="flik-nl-hjalpare" aria-controls="panel-nl-hjalpare">Studiehjälparen
+            <span class="vy-flik-mark" id="flik-lax-mark" hidden></span></button>
         </div>
 
         <div class="vy-flik-panel" role="tabpanel" data-flik="vag"
@@ -526,9 +543,24 @@
           <div class="nl" id="nl-vag"><div class="loading">Hämtar</div></div>
         </div>
 
+        <div class="vy-flik-panel" role="tabpanel" data-flik="rank"
+             id="panel-nl-rank" aria-labelledby="flik-nl-rank" hidden>
+          <div class="nl stack" id="nl-rank"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="marken"
+             id="panel-nl-marken" aria-labelledby="flik-nl-marken" hidden>
+          <div class="nl stack" id="nl-marken"><div class="loading">Hämtar</div></div>
+        </div>
+
         <div class="vy-flik-panel" role="tabpanel" data-flik="utveckling"
              id="panel-nl-utveckling" aria-labelledby="flik-nl-utveckling" hidden>
           <div class="nl stack" id="nl-utveckling"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="hjalpare"
+             id="panel-nl-hjalpare" aria-labelledby="flik-nl-hjalpare" hidden>
+          <div class="nl stack" id="nl-hjalpare"><div class="loading">Hämtar</div></div>
         </div>
       </section>
       <!-- ============================================================
@@ -813,6 +845,11 @@
         <div class="vy-flik-panel" role="tabpanel" data-flik="barn"
              id="panel-barn" aria-labelledby="flik-barn" hidden>
 
+          <!-- Barnets rank, XP och märken (2026-10-13): det valda barnets
+               NexLäx-profil, ur samma data som NexLäx. Ritas av
+               ritaNexlaxProfil(). -->
+          <div class="nl" id="nl-profil"></div>
+
           <div class="dbox">
             <h5>Barnen <em id="barn-antal"></em></h5>
             <p class="xsmall" style="color:var(--bl-2);line-height:1.6;margin-bottom:16px">
@@ -1080,10 +1117,10 @@
 <script src="nextrum-arbetsyta.js?v=8354e990"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=b651d432"></script>
-<script src="nextrum-ljud.js?v=af6ef39f"></script>
-<script src="nextrum-uppgifter.js?v=e2b63c33"></script>
+<script src="nextrum-ljud.js?v=ddf66e2c"></script>
+<script src="nextrum-uppgifter.js?v=1790cff1"></script>
 <script src="nextrum-introduktion.js?v=2f3aa58e"></script>
 <script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-studie-vy.js?v=017c066e"></script>
+<script src="nextrum-studie-vy.js?v=3aa81c0e"></script>
 </body>
 </html>

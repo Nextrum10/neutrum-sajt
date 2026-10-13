@@ -298,33 +298,99 @@ async function provaBarnet(webb) {
   await tillBarnetsVag(page);
   await lyssna(page);
 
-  /* Väljaren: först ämnena, sedan årskurserna i det valda ämnet. */
-  const rutor = await page.$$eval('#bv-nl-vag .nl-amne', b => b.map(x => x.querySelector('b').textContent));
-  prova('väljaren: alla ämnen med en bana', JSON.stringify(rutor) === JSON.stringify(['Matematik', 'Svenska', 'Engelska', 'Spanska', 'Juridik']), JSON.stringify(rutor));
-  const ak = await page.$$eval('#bv-nl-vag .nl-ak-knapp', b => b.map(x => x.textContent.trim()));
-  prova('väljaren: årskurserna i det valda ämnet', JSON.stringify(ak) === JSON.stringify(['Åk 6', 'Åk 7']), JSON.stringify(ak));
+  /* Väljaren (2026-10-13): tre ämnen framme, resten bakom Visa fler
+     ämnen, och årskurserna som små siffror. */
+  const namnen = () => page.$$eval('#bv-nl-vag .nl-amne', b => b.map(x => x.querySelector('b').firstChild.textContent));
+  const rutor = await namnen();
+  prova('väljaren: tre ämnen framme', JSON.stringify(rutor) === JSON.stringify(['Matematik', 'Svenska', 'Engelska']), JSON.stringify(rutor));
+  prova('väljaren: Visa fler ämnen säger hur många som är gömda',
+    (await text(page, '#bv-nl-vag [data-nl-fler]')).replace(/\s+/g, ' ').trim() === 'Visa fler ämnen 2'
+    && (await page.getAttribute('#bv-nl-vag [data-nl-fler]', 'aria-expanded')) === 'false', await text(page, '#bv-nl-vag [data-nl-fler]'));
+  await page.click('#bv-nl-vag [data-nl-fler]');
+  await vänta(100);
+  const alla = await namnen();
+  prova('väljaren: fler ämnen visar alla med en bana', JSON.stringify(alla) === JSON.stringify(['Matematik', 'Svenska', 'Engelska', 'Spanska', 'Juridik']), JSON.stringify(alla));
+  prova('väljaren: knappen byter till Visa färre och urvalet står kvar',
+    (await text(page, '#bv-nl-vag [data-nl-fler]')).includes('Visa färre')
+    && (await page.getAttribute('#bv-nl-vag', 'data-amne')) === 'Matematik');
+  const ak = await page.$$eval('#bv-nl-vag .nl-ak-knapp', b => b.map(x => x.dataset.nlAk));
+  prova('väljaren: årskurserna i det valda ämnet', JSON.stringify(ak) === JSON.stringify(['ak6', 'ak7']), JSON.stringify(ak));
+  prova('väljaren: årskurserna är siffror', JSON.stringify(await page.$$eval('#bv-nl-vag .nl-ak-knapp', b => b.map(x => x.textContent.trim()))) === JSON.stringify(['6', '7'])
+    && (await text(page, '#bv-nl-vag .nl-ak-grupp > i')) === 'Åk');
   prova('väljaren: elevens egen årskurs är vald och märkt',
     (await page.getAttribute('#bv-nl-vag .nl-ak-knapp[data-nl-ak="ak6"]', 'aria-pressed')) === 'true'
     && (await page.locator('#bv-nl-vag .nl-ak-knapp.egen[data-nl-ak="ak6"]').count()) === 1);
-  prova('väljaren: ämnet säger sina årskurser', (await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]')).includes('Åk 6–7'),
-    await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]'));
-  prova('väljaren: NP syns på ämnen med NP-träning', (await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]')).includes('NP')
-    && !(await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Svenska"]')).includes('NP'));
+  prova('väljaren: ämnet säger sina årskurser', (await page.getAttribute('#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]', 'aria-label')).includes('Åk 6–7'),
+    await page.getAttribute('#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]', 'aria-label'));
+  prova('väljaren: NP syns på ämnen med NP-träning', (await page.locator('#bv-nl-vag .nl-amne[data-nl-amne="Matematik"] em').count()) === 1
+    && (await page.locator('#bv-nl-vag .nl-amne[data-nl-amne="Svenska"] em').count()) === 0);
   prova('väljaren: inga genvägar', (await page.locator('#bv-nl-vag .nl-senast, #bv-nl-vag .nl-senast-knapp').count()) === 0);
   prova('väljaren: ranken står i toppen', (await text(page, '#bv-nl-vag .nl-rang')).includes('Utforskare')
     && /^Rank /.test(await page.getAttribute('#bv-nl-vag .nl-rang', 'aria-label') || ''), await text(page, '#bv-nl-vag .nl-stat'));
+  await page.click('#bv-nl-vag [data-nl-fler]');
+  await vänta(100);
+  prova('väljaren: Visa färre gömmer dem igen', (await namnen()).length === 3);
   await bild(page, 'nexlax-barn-vag', '#bv-nexlax');
+
+  /* Spelets meny: Rank, Märken, Din utveckling och Studiehjälparen har
+     var sin flik. */
+  prova('flikarna: fem delar i spelets meny',
+    JSON.stringify(await page.$$eval('#bv-nexlax .nl-flikar .vy-flik', b => b.map(x => x.dataset.flik)))
+    === JSON.stringify(['vag', 'rank', 'marken', 'utveckling', 'hjalpare']));
+  await page.click('#bv-flik-rank');
+  await vänta(250);
+  const rk = await page.$$eval('#bv-nl-rank .nl-rk', b => b.map(x => x.className.replace('nl-rk ', '')));
+  prova('rank: tio kort i en rad, tre klara, en aktuell', rk.length === 10 && rk.filter(x => x === 'klar').length === 2 && rk.filter(x => x === 'nu').length === 1,
+    JSON.stringify(rk));
+  const mått = await page.evaluate(() => {
+    const rad = document.querySelector('#bv-nl-rank .nl-rank-rad'), nu = rad.querySelector('.nu');
+    const r = rad.getBoundingClientRect(), k = nu.getBoundingClientRect();
+    const cs = getComputedStyle(rad);
+    return { vänster: k.left - r.left, höger: r.right - k.right, scrollLeft: rad.scrollLeft, bredd: rad.clientWidth, innehåll: rad.scrollWidth,
+             overflowX: cs.overflowX, overflowY: cs.overflowY };
+  });
+  prova('rank: den nuvarande ranken syns i raden', mått.vänster >= -1 && mått.höger >= -1, JSON.stringify(mått));
+  prova('rank: raden går att svepa i sidled', mått.innehåll > mått.bredd && mått.overflowX === 'auto' && mått.overflowY === 'hidden', JSON.stringify(mått));
+  await bild(page, 'nexlax-barn-rank', '#bv-nexlax');
+  await page.click('#bv-flik-marken');
+  await vänta(150);
+  prova('märken: egen flik med de man har och de man kan få',
+    (await page.locator('#bv-nl-marken .upg-marke.klart').count()) > 0 && (await page.locator('#bv-nl-marken .upg-marke:not(.klart)').count()) > 0
+    && (await text(page, '#bv-nl-marken .nl-marken-topp')).includes(' av '));
+  await bild(page, 'nexlax-barn-marken', '#bv-nexlax');
+  await page.click('#bv-flik-utveckling');
+  await vänta(150);
+  prova('utveckling: fyra sidor, Översikt först', JSON.stringify(await page.$$eval('#bv-nl-utveckling [data-nl-sida]', b => b.map(x => x.dataset.nlSida)))
+    === JSON.stringify(['oversikt', 'amnen', 'veckor', 'rattat']) && (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="oversikt"]', 'aria-pressed')) === 'true');
+  prova('utveckling: ranken och märkena har flyttat ut', (await page.locator('#bv-nl-utveckling .nl-rangkort, #bv-nl-utveckling .upg-marken, #bv-nl-utveckling .nl-ranker').count()) === 0);
+  const sid1 = await text(page, '#bv-nl-utveckling .nl-sida-kropp');
+  await page.click('#bv-nl-utveckling [data-nl-sida="veckor"]');
+  await vänta(100);
+  prova('utveckling: en annan sida byter innehåll och knappen står kvar',
+    (await text(page, '#bv-nl-utveckling .nl-sida-kropp')) !== sid1 && (await text(page, '#bv-nl-utveckling .nl-sida-kropp')).includes('XP per vecka')
+    && (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="veckor"]', 'aria-pressed')) === 'true'
+    && (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="oversikt"]', 'aria-pressed')) === 'false');
+  await bild(page, 'nexlax-barn-utveckling', '#bv-nexlax');
+  await page.click('#bv-flik-hjalpare');
+  await vänta(150);
+  prova('studiehjälparen: egen flik, och barnets vy visar ingen bedömning', /studiehjälpar/i.test(await text(page, '#bv-nl-hjalpare'))
+    && (await page.locator('#bv-nl-hjalpare').getByText('Studiehjälparens bedömning').count()) === 0, await text(page, '#bv-nl-hjalpare'));
+  await page.click('#bv-flik-vag');
+  await vänta(100);
 
   /* Vägen har inte NP-nivåerna, och procenten räknar bara vägen. */
   const väg = await text(page, '#bv-nl-vag .nl-vag');
   prova('vägen: NP-träningen står inte på vägen', !väg.includes('Utan räknare') && väg.includes('Jämför bråk'), väg.slice(0, 200));
 
-  /* Ett tryck på juridiken: dess årskurs kommer upp, och banan byts. */
+  /* Ett tryck på juridiken: dess årskurs kommer upp, och banan byts. Hen
+     ligger bland de gömda, så Visa fler ämnen först. */
+  await page.click('#bv-nl-vag [data-nl-fler]');
+  await vänta(100);
   await page.click('#bv-nl-vag .nl-amne[data-nl-amne="Juridik"]');
   await vänta(150);
   prova('väljaren: ett ämne visar sina årskurser och öppnar banan',
     (await page.getAttribute('#bv-nl-vag', 'data-amne')) === 'Juridik' && (await page.getAttribute('#bv-nl-vag', 'data-arskurs')) === 'gy1'
-    && JSON.stringify(await page.$$eval('#bv-nl-vag .nl-ak-knapp', b => b.map(x => x.textContent.trim()))) === JSON.stringify(['Gy 1']),
+    && JSON.stringify(await page.$$eval('#bv-nl-vag .nl-ak-knapp', b => b.map(x => x.textContent.trim()))) === JSON.stringify(['1']),
     (await page.getAttribute('#bv-nl-vag', 'data-amne')) + ' ' + (await page.getAttribute('#bv-nl-vag', 'data-arskurs')));
   prova('väljaren: juridiken har sin färg och ikon', (await page.getAttribute('#bv-nl-vag', 'data-nl-f')) === 'ju'
     && (await page.locator('#bv-nl-vag .nl-amne[data-nl-amne="Juridik"] svg').count()) === 1);
@@ -351,8 +417,10 @@ async function provaBarnet(webb) {
   prova('NP: alla nivåer är öppna', (await page.locator('#bv-nl-vag .nl-np-niva:not(.mastare) [data-nl-starta]').count()) === 2);
   prova('NP: provträningen är också öppen', (await page.locator('#bv-nl-vag .nl-np-niva.mastare [data-nl-starta]').count()) === 1
     && (await page.locator('#bv-nexlax .nl-np-niva.last, #bv-nexlax .nl-omr-last').count()) === 0);
-  prova('NP: i barnets vy inga länkar ut', (await page.locator('#bv-nexlax a').count()) === 0,
-    await page.locator('#bv-nexlax a').count());
+  /* Länken ut ur spelet är den enda: tillbaka till Översikt, inom vyn. */
+  prova('NP: i barnets vy inga länkar ut', (await page.locator('#bv-nexlax a:not(.nl-spelrad-ut)').count()) === 0
+    && (await page.getAttribute('#bv-nexlax .nl-spelrad-ut', 'href')) === '#oversikt',
+    await page.locator('#bv-nexlax a:not(.nl-spelrad-ut)').count());
   prova('NP: toppen räknar sektionen', (await text(page, '#bv-nl-vag .nl-bana')).includes('Inför NP'));
   await bild(page, 'nexlax-barn-np', '#bv-nexlax');
   await page.click('#bv-nl-vag [data-nl-spar="vag"]');
@@ -452,17 +520,45 @@ async function provaBarnet(webb) {
   await page.waitForFunction(() => !document.querySelector('.upg-spel'), null, { timeout: 5000 }).catch(() => {});
   prova('spelaren: stängs, och inga ljud spelas efteråt', !(await synlig(page, '.upg-spel')));
 
-  /* Din utveckling. */
+  /* Din utveckling är fyra sidor, ranken och märkena har egna flikar. */
+  await page.click('#bv-flik-rank');
+  await vänta(200);
+  const rank = await text(page, '#bv-nl-rank');
+  prova('rank: ranken med vad som är kvar', rank.includes('Din rank') && /XP kvar till/.test(rank), rank.slice(0, 200));
+  prova('rank: alla ranker syns, med den nuvarande', (await page.locator('#bv-nl-rank .nl-rk').count()) === 10
+    && (await page.locator('#bv-nl-rank .nl-rk.nu').count()) === 1 && (await page.locator('#bv-nl-rank .nl-rk.klar').count()) === 2);
+  prova('rank: varje rank utom den första har ett märke', (await page.locator('#bv-nl-rank .nl-rk-pris:not(.nl-rk-start)').count()) === 9);
+  await page.click('#bv-flik-marken');
+  await vänta(150);
+  const märk = await text(page, '#bv-nl-marken');
+  prova('märken: märkena för uppdragen', märk.includes('Första uppdraget') && märk.includes('Dagens kista'));
+  prova('märken: rankmärkena har en egen grupp', märk.includes('Rankmärken') && märk.includes('Märket') === false
+    && (await page.locator('#bv-nl-marken .upg-marke').filter({ hasText: 'Upptäckare' }).count()) === 1);
   await page.click('#bv-flik-utveckling');
   await vänta(200);
+  prova('utveckling: sidan man stod på står kvar', (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="veckor"]', 'aria-pressed')) === 'true');
+  await page.click('#bv-nl-utveckling [data-nl-sida="oversikt"]');
+  await vänta(100);
   const utv = await text(page, '#bv-nl-utveckling');
-  prova('utveckling: ranken med vad som är kvar', utv.includes('Din rank') && /XP kvar till/.test(utv), utv.slice(0, 200));
-  prova('utveckling: alla ranker syns, med den nuvarande', (await page.locator('.nl-ranker li').count()) === 10
-    && (await page.locator('.nl-ranker li.nu').count()) === 1 && (await page.locator('.nl-ranker li.klar').count()) === 2);
-  prova('utveckling: uppdragen i siffror', utv.includes('Uppdrag klara') && utv.includes('Kistor öppnade'));
-  prova('utveckling: höjdpunkterna', utv.includes('Höjdpunkter') && utv.includes('Hela området Bråk klart'), utv.slice(0, 400));
-  prova('utveckling: märkena för uppdragen', utv.includes('Första uppdraget') && utv.includes('Dagens kista'));
+  prova('utveckling: siffrorna och höjdpunkterna på översikten', utv.includes('I siffror') && utv.includes('Höjdpunkter') && utv.includes('Hela området Bråk klart'), utv.slice(0, 400));
+  await page.click('#bv-nl-utveckling [data-nl-sida="veckor"]');
+  await vänta(100);
+  const veckor = await text(page, '#bv-nl-utveckling');
+  prova('utveckling: uppdragen i siffror', veckor.includes('Uppdrag klara') && veckor.includes('Kistor öppnade'));
+  await page.click('#bv-nl-utveckling [data-nl-sida="rattat"]');
+  await vänta(100);
+  prova('utveckling: Rättat har de rättade nivåerna', (await text(page, '#bv-nl-utveckling .nl-sida-kropp')).includes('Rättade nivåer'));
   await bild(page, 'nexlax-utveckling', '#bv-nexlax');
+  await page.click('#bv-flik-vag');
+  await vänta(100);
+
+  /* Profilen: rank, XP och märken att visa upp. */
+  await page.click('a[data-sek="profil"]').catch(() => {});
+  await vänta(250);
+  const prof = await text(page, '#bv-nl-profil');
+  prova('profilen: rank, XP och märken syns', prof.includes('Utforskare') && prof.includes('XP') && (await page.locator('#bv-nl-profil .nl-prof-marken li').count()) > 0
+    && !prof.includes('Rank:') , prof.slice(0, 200));
+  await bild(page, 'nexlax-barn-profil', 'section[data-sek="profil"]');
 
   prova('barnet: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   const fel = konsol.filter(t => !/Failed to load resource/.test(t));
