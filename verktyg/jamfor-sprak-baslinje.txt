@@ -1,21 +1,30 @@
 
 === anvandarvillkor.html  ->  en/anvandarvillkor.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 2 stycken:
+  SVENSKA KVAR i engelskan, 3 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic
+      Hammarby Sjöstad
 
 === avanmal.html  ->  en/avanmal.html
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 === bli-studiehjalpare.html  ->  en/bli-studiehjalpare.html
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 === faq.html  ->  en/faq.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 === for-elever-och-foraldrar.html  ->  en/for-elever-och-foraldrar.html
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 === index.html  ->  en/index.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
@@ -24,19 +33,22 @@
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 5 stycken:
+  SVENSKA KVAR i engelskan, 6 stycken:
       Leo Constantinos Thriskos
       Alexandar Jovanovic
       Mönsteråsgränd 4
       122 42 Enskede
       Google Analytics
+      Hammarby Sjöstad
 
 === intresseanmalan.html  ->  en/intresseanmalan.html
   STRUKTUR skiljer sig vid tagg 42: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 === lagring.html  ->  en/lagring.html
   STRUKTUR skiljer sig vid tagg 41: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 7 stycken:
+  SVENSKA KVAR i engelskan, 8 stycken:
       Google Analytics
       _ga_V6Y6Q0SRXX
       sessionStorage
@@ -44,15 +56,22 @@
       localStorage
       __stripe_mid
       __stripe_sid
+      Hammarby Sjöstad
 
 === priser.html  ->  en/priser.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 === sa-fungerar-nextrum.html  ->  en/sa-fungerar-nextrum.html
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 === var-ide.html  ->  en/var-ide.html
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
+      Hammarby Sjöstad
 
 12 av 12 sidpar har avvikelser.
 

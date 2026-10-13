@@ -138,9 +138,10 @@ byggdes samma dag och togs bort samma eftermiddag: Nextrum erbjuder inte
 programmering (Leo). Adressen hade stått i kartan, så den omdirigeras
 till navet i `vercel.json`. Prisfrågan
 länkar till prissidan som stadiesidornas, så betalningsmeningen och
-`kolla-betalningsvillkor.py` berörs inte. Footern har kvar de fyra första
-ämnena; de nya nås från navet och från ämneskorten på varje landningssida,
-som generatorn lägger till av sig själv.
+`kolla-betalningsvillkor.py` berörs inte. Sedan 2026-10-13 står alla
+ämnen, stadier, områden och guider i footerns block Läxhjälp (nedan); de
+nås också från navet och från ämneskorten på varje landningssida, som
+generatorn lägger till av sig själv.
 
 **Intresseanmälan tre gånger på varje landningssida** (2026-10-09, Leo: "på
 alla landningssidor ska det finnas flera intresseanmälan knappar för
@@ -160,11 +161,16 @@ visar den för varje adress som inte finns, också `/en/x/y`, så den har
 står inte i kartan; i språkbaslinjen står den bland sidorna utan
 engelsk tvilling, som stadiesidorna.
 
-**Footern har en egen spalt Läxhjälp** med navet, de fyra ämnena och
-onlinesidan, på
-alla publika sidor och på båda språken. Den ersatte en länk till navet
-som stod två gånger i den svenska footern, vilket också var skälet till
-nästan alla TEXTNODER-avvikelser i språkbaslinjen.
+**Footern har ett block Läxhjälp längst ner** (`.ftr-lax`, 2026-10-13) med
+alla läxhjälps- och guidesidor i fyra grupper, på alla publika sidor och på
+båda språken (`minne/vyerna.md`). Det ersatte spalten Läxhjälp (navet, fyra
+ämnen och onlinesidan), som i sin tur ersatte en länk till navet som stod två
+gånger i den svenska footern, vilket också var skälet till nästan alla
+TEXTNODER-avvikelser i språkbaslinjen. Generatorn läser blocket ur
+`var-ide.html`; de handskrivna sidorna ändras för hand, och
+`utbildningsprov.html`, som saknade två länkar, fick samma block. "Hammarby
+Sjöstad" står i baslinjen som svenska kvar i engelskan på varje engelsk sida:
+det är ett ortnamn.
 
 **Guiderna är tio, i tre grupper** (2026-10-07): För er som hjälper till
 hemma (de fyra första), Under läsåret (nationella proven i sexan och i

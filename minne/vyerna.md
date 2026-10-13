@@ -366,7 +366,7 @@ sidan där färgerna passar in."
 (`#just-nu`), Vår idé (`#om`), studievyn, NexLäx (`#nexlax`), Från
 intresseanmälan till första passet (`#hur`), studiehjälparna, Trygg hjälp
 (`#plattformen`), bildväggen, omdömena (`#rost`, brevet), För dig som vill
-jobba (`#bli`) och Nästa steg, och sist före footern Läxhjälp för just ert barn (`#laxhjalp-oversikt`, 2026-10-10: fyra grupper med länkar till alla läxhjälps- och guidesidor, `<details>`, ämnesfärgens prick i ordningen från avsnitt 18, CSS avsnitt 19; en ny sida i kartan läggs in där på båda språken). Sedan 2026-10-12 är grupperna stängda på alla bredder och öppnas med ett tryck (Leo: "ha de inbäddade i ämne, årskurs, område och guider så man behöver trycka på de för att få upp dem"): ingen `open`, plus och minus på alla bredder. Samma kväll fick de glida (Leo: "gör de lite mer smooth"): listan står i `.nx-lo-l`, en grid vars rad växer från 0fr till 1fr och tonar in, och `laxhjälpsöversikt()` tar trycket på rubriken, sätter `.oppen` och stänger `open` först när listan krympt klart. 0fr gäller bara under `.nx-lo-glid`, som skriptet sätter sist, så utan skript eller med rörelse bortvald är det webbläsarens egen `<details>`; plustecknet är två streck som vrids till ett minus. Länkarna står kvar i HTML, och Google läser en stängd `<details>`. Samma dag blev ytan svart i ljust läge (Leo: "Gör den sektionen svart i ljus vy som färgen ovan och under"): footerns `--ftr-bg` (`#1F1915`), där Nästa steg slutar i ljust läge, med barkens text och ämnesfärgernas `-l`; i mörkt läge står den kvar på `--pap`. Sektionerna flyttades som hela block mellan
+jobba (`#bli`) och Nästa steg. Sist före footern stod 2026-10-10 till 2026-10-13 Läxhjälp för just ert barn (`#laxhjalp-oversikt`): fyra grupper med länkar till alla läxhjälps- och guidesidor i `<details>`, för internlänkningens skull. 2026-10-12 blev grupperna stängda på alla bredder och fick glida upp med ett tryck (Leo: "ha de inbäddade i ämne, årskurs, område och guider så man behöver trycka på de för att få upp dem", "gör de lite mer smooth"), och ytan blev svart i ljust läge, footerns `--ftr-bg`. Dagen efter frågade Leo vart landningssidorna försvunnit: fyra hopfällda rubriker på samma svarta som footern direkt under såg ut som en del av footern. Först blev de öppna på datorn och stängda på telefonen, och samma kväll togs sektionen bort (Leo: "skit i att lägga tillbaka de, lägg in de längst ner vid de andra landingssidorna och gör de snyggt"). Länkarna står nu i footerns block Läxhjälp (`.ftr-lax`, cinemas FOTEN), på varje publik sida och båda språken, i stället för footerns gamla spalt Läxhjälp med sju länkar: rubriken och en rad till vänster, i första spalten (27 % över 1100 px, som märket i raden ovanför, så att grupperna börjar där Nextrum-spalten börjar), och de fyra grupperna med ämnesfärgens prick i ordningen från avsnitt 18, `-l`-syskonen eftersom footern är mörk i båda lägena. Guiderna har den bredare spalten (1,6 mot 1) så att de står på en rad på datorn, och "årskurs 6" och "årskurs 9" hålls ihop med `&nbsp;`. Under 820 px står grupperna två och två. Footerns länkar väger något mindre hos Google än en sektion i innehållet, men nu länkas varje landningssida från alla publika sidor i stället för från två. En ny sida i kartan läggs in i blocket på alla sidor (`var-ide.html` är `bygg-omradessidor.py`s källa till skalet). Sektionerna flyttades som hela block mellan
 kommentarsbanderollerna, likadant på /en/; numren i banderollerna är gamla.
 Hero är orörd utom priset (399 kr, `data-stat` ur `nextrum-config.js`).
 Studievyns exempelpass står också på 399 (`data-sd-pris` skrivs ur `CFG`).
@@ -1323,6 +1323,39 @@ vårdnadshavarens e-post i ansökan gjorde det tills `.pay-field[hidden]`
 kom till samma dag. Samma fälla som `.adm-panel[hidden]` och de andra i
 `nextrum-arbetsyta.css`: en klass med `display` behöver sin egen
 `[hidden]`-regel.
+
+### Ansökningarna skickas vidare, Bokningar filtreras på familj (2026-10-13)
+
+Leo: "i ansökningar, gör en knapp för att skicka vidare från alla
+ansökningar till intervju och sedan utbildningar så att man kan skicka runt
+anställd och hålla koll på de". Fliken Intervju tog förut varje ansökan som
+inte var avgjord, så Alla och Intervju var samma lista och ingen hade valt
+vem som gick vidare.
+
+- **Steget räknas ur raden, utan ny kolumn** (`ansSteg()` i
+  `nextrum-admin-rekrytering.js`): Avböjd och Godkänd först, sedan Utbildad
+  (`utbildad_at`, "Klar för poolen"), Utbildning (`intervju_at`, ett
+  utbildningsmöte eller ett öppnat prov), Intervju (läget Kontaktad,
+  `kontaktad_at` eller en bokad mötestid) och annars Ny. I driften var sex
+  ansökningar Kontaktad utan `kontaktad_at`: Leo hade redan använt läget så,
+  och ingen funktion i databasen läser `contacted`. Flikarna, listans märke,
+  panelens märke överst och filtret (som nu är steget) läser samma funktion.
+- **Knappen på raden** (`o.knapp` i `namnlista()`, bredvid namnknappen och
+  aldrig i den; under namnet under 560 px): Alla har Till intervju på en ny
+  (läget Kontaktad, inget mejl, ingen fråga; tillbaka är läget Ny i
+  panelen). Intervju har Till utbildning, som är "Mötet är hållet" och
+  därför frågar först: det mejlar tacket med introduktionen som nästa steg.
+  Utbildning har Öppna provet (`provKnapp`) eller, för den som är utbildad,
+  Ta in i poolen. Den utbildade stod förut varken under Intervju eller
+  Utbildning.
+- **Flikarna räknar** (`vy-flik-mark`), så att ett tryck i Alla syns flytta.
+- **Bokningar har en väljare för familjen** (`#bok-familj`, `familjeval()` i
+  `nextrum-admin-drift.js`): de familjer som har pass, med barnens namn
+  efter, och den gäller ihop med söket, läget och tiden. Passförfrågningarnas
+  Visa dem och ett pass i kalendern nollar den, annars hade de visat färre
+  än de lovar. Kalendern filtreras inte.
+- `verktyg/prova-ansokningar.js` provar stegen i Chromium: knapparna, frågan,
+  vad som sparas, flikarnas tal, filtret och telefonens rad.
 
 ### Tusen rader (2026-09-29)
 

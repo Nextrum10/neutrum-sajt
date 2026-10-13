@@ -20,10 +20,10 @@
 
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
-<link rel="stylesheet" href="nextrum-home.css?v=5d4c3399">
-<link rel="stylesheet" href="nextrum-cinema.css?v=a92f8e96">
+<link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
+<link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
 <link rel="stylesheet" href="nextrum-vy.css?v=7ebabb05">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=18bc6f02">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=978437cc">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -458,7 +458,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ansökningar</h2>
-              <p>Unga som vill jobba. Tryck på ett namn för ansökan, CV:t och rekryteringens steg. Kontot godkänns under Studiehjälpare, när personen har registrerat sig.</p>
+              <p>Unga som vill jobba. Skicka vidare med knappen på raden: från Alla ansökningar till Intervju, därifrån till Utbildning, och sedan in i poolen. Tryck på ett namn för ansökan, CV:t och rekryteringens steg.</p>
             </div>
             <!-- Provläget: admin gör utbildningsprovet själv, med facit
                  efteråt. Inget sparas (edge-funktionen prövar admin). -->
@@ -469,9 +469,11 @@
             <button class="vy-flik" type="button" role="tab" data-flik="alla"
                     id="flik-ans-alla" aria-controls="panel-ans-alla">Alla ansökningar</button>
             <button class="vy-flik" type="button" role="tab" data-flik="intervju"
-                    id="flik-ans-intervju" aria-controls="panel-ans-intervju">Intervju</button>
+                    id="flik-ans-intervju" aria-controls="panel-ans-intervju">Intervju
+              <span class="vy-flik-mark" id="flik-ans-intervju-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="utbildning"
-                    id="flik-ans-utbildning" aria-controls="panel-ans-utbildning">Utbildning</button>
+                    id="flik-ans-utbildning" aria-controls="panel-ans-utbildning">Utbildning
+              <span class="vy-flik-mark" id="flik-ans-utbildning-mark" hidden></span></button>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="alla"
@@ -479,12 +481,13 @@
           <div class="dbox">
             <div class="adm-verktyg">
               <input class="inp adm-sok" id="ans-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök ansökan" autocomplete="off">
-              <select class="sel" id="ans-status" aria-label="Filtrera på status">
-                <option value="">Alla lägen</option>
-                <option value="new">Nya</option>
-                <option value="contacted">Kontaktade</option>
-                <option value="approved">Godkända</option>
-                <option value="rejected">Avböjda</option>
+              <select class="sel" id="ans-status" aria-label="Filtrera på steg">
+                <option value="">Alla steg</option>
+                <option value="ny">Nya</option>
+                <option value="intervju">Intervju</option>
+                <option value="utbildning">Utbildning</option>
+                <option value="godkand">Godkända</option>
+                <option value="avbojd">Avböjda</option>
               </select>
               <span class="small" id="ans-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
@@ -493,18 +496,19 @@
           </div>
 
           <!-- Rekryteringens två steg som egna flikar (Fas 6): vem som
-               väntar på en intervju, och vem som ska utbildas. -->
+               gått vidare till en intervju, och vem som är i utbildningen.
+               Knappen på raden skickar vidare (2026-10-13). -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="intervju"
                id="panel-ans-intervju" aria-labelledby="flik-ans-intervju" hidden>
             <div class="dbox">
-              <h5>Väntar på intervju <em id="ans-intervju-antal"></em></h5>
+              <h5>Till intervju <em id="ans-intervju-antal"></em></h5>
               <div id="ans-intervju"><div class="loading">Hämtar</div></div>
             </div>
           </div>
           <div class="vy-flik-panel" role="tabpanel" data-flik="utbildning"
                id="panel-ans-utbildning" aria-labelledby="flik-ans-utbildning" hidden>
             <div class="dbox">
-              <h5>Ska utbildas <em id="ans-utbildning-antal"></em></h5>
+              <h5>I utbildningen <em id="ans-utbildning-antal"></em></h5>
               <div id="ans-utbildning"><div class="loading">Hämtar</div></div>
             </div>
           </div>
@@ -698,7 +702,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Bokningar</h2>
-              <p>Alla pass, alla familjer. Listan för att söka och ändra, kalendern för att se var de ligger.</p>
+              <p>Alla pass, alla familjer. Listan för att söka, välja en familj och ändra, kalendern för att se var de ligger.</p>
             </div>
             <!-- Hur många passförfrågningar som väntar på svar. De står
                  här och inte i Att göra på Översikt (2026-09-29): ett
@@ -730,6 +734,10 @@
                 <option value="framat">Framåt</option>
                 <option value="bakat">Bakåt</option>
                 <option value="alla">Alla</option>
+              </select>
+              <!-- Familjerna som har pass, fyllda av ritaBokningar() (2026-10-13). -->
+              <select class="sel" id="bok-familj" aria-label="Filtrera på familj">
+                <option value="">Alla familjer</option>
               </select>
               <span class="small" id="bok-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
@@ -2402,14 +2410,14 @@
 <script src="nextrum-betalning.js?v=d7fc6340"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=16097e01"></script>
-<script src="nextrum-admin-detalj.js?v=75aaad4c"></script>
+<script src="nextrum-admin-karna.js?v=970ac675"></script>
+<script src="nextrum-admin-detalj.js?v=fd5bfca5"></script>
 <script src="nextrum-admin-oversikt.js?v=58bec850"></script>
 <script src="nextrum-admin-kunder.js?v=111c020a"></script>
-<script src="nextrum-admin-rekrytering.js?v=6368bdac"></script>
+<script src="nextrum-admin-rekrytering.js?v=ce0dad1e"></script>
 <script src="nextrum-admin-bibliotek.js?v=c61fd760"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
-<script src="nextrum-admin-drift.js?v=12b420ba"></script>
+<script src="nextrum-admin-drift.js?v=f2e7d309"></script>
 <script src="nextrum-admin-ekonomi.js?v=5afe89c2"></script>
 <script src="nextrum-admin-manaden.js?v=9f67830e"></script>
 <script src="nextrum-admin-loner.js?v=658e30ed"></script>
@@ -2425,6 +2433,6 @@
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
 <script src="nextrum-modulvakt.js?v=3f42be2c"></script>
-<script src="nextrum-admin.js?v=87b9423a"></script>
+<script src="nextrum-admin.js?v=0bedd6c1"></script>
 </body>
 </html>

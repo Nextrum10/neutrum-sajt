@@ -320,7 +320,9 @@ den vars möte i steg 2 var avbockat. Nu står Öppna provet på raden
 Provet (`provKnapp`), stegens knappar står direkt under skälet,
 flikarna Intervju och Utbildning öppnar panelen på Rekryteringen
 (`data-dp-start`), och Utbildning tar också den som har ett
-utbildningsmöte utan att steg 2 är avbockat.
+utbildningsmöte utan att steg 2 är avbockat. Sedan 2026-10-13 står Öppna
+provet också på raden under fliken Utbildning, och Till utbildning under
+Intervju är "Mötet är hållet" med en fråga först (`minne/vyerna.md`).
 
 **Admin kan göra provet själv** (2026-10-02, Leo: "gör provet
 tillgängligt för admin genom admin vyn"). Prova utbildningsprovet i

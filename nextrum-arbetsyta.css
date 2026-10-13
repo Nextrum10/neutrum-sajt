@@ -1015,6 +1015,18 @@ table.adm .adm-tal{
   display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;
   flex:none;max-width:55%;
 }
+/* En rad med ett eget nästa steg (o.knapp, 2026-10-13): namnet är
+   fortfarande hela raden fram till knappen. På en smal ruta står knappen
+   under namnet, i linje med texten, för bredvid hade den tagit namnets
+   plats. */
+.adm-namnlista li.har-knapp{display:flex;align-items:center;gap:8px}
+.adm-namnlista li.har-knapp .adm-namn{flex:1;min-width:0}
+.adm-namn-knapp{flex:none;padding-right:14px}
+@media (max-width:560px){
+  .adm-namnlista li.har-knapp{flex-wrap:wrap;gap:0}
+  .adm-namnlista li.har-knapp .adm-namn{flex-basis:100%}
+  .adm-namn-knapp{padding:0 14px 12px 62px}
+}
 
 /* Statusprickar. Färgen är en genväg, aldrig hela beskedet — texten
    står alltid kvar bredvid, för färgen ensam funkar inte för alla. */
