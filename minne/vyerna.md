@@ -1324,6 +1324,39 @@ kom till samma dag. Samma fälla som `.adm-panel[hidden]` och de andra i
 `nextrum-arbetsyta.css`: en klass med `display` behöver sin egen
 `[hidden]`-regel.
 
+### Ansökningarna skickas vidare, Bokningar filtreras på familj (2026-10-13)
+
+Leo: "i ansökningar, gör en knapp för att skicka vidare från alla
+ansökningar till intervju och sedan utbildningar så att man kan skicka runt
+anställd och hålla koll på de". Fliken Intervju tog förut varje ansökan som
+inte var avgjord, så Alla och Intervju var samma lista och ingen hade valt
+vem som gick vidare.
+
+- **Steget räknas ur raden, utan ny kolumn** (`ansSteg()` i
+  `nextrum-admin-rekrytering.js`): Avböjd och Godkänd först, sedan Utbildad
+  (`utbildad_at`, "Klar för poolen"), Utbildning (`intervju_at`, ett
+  utbildningsmöte eller ett öppnat prov), Intervju (läget Kontaktad,
+  `kontaktad_at` eller en bokad mötestid) och annars Ny. I driften var sex
+  ansökningar Kontaktad utan `kontaktad_at`: Leo hade redan använt läget så,
+  och ingen funktion i databasen läser `contacted`. Flikarna, listans märke,
+  panelens märke överst och filtret (som nu är steget) läser samma funktion.
+- **Knappen på raden** (`o.knapp` i `namnlista()`, bredvid namnknappen och
+  aldrig i den; under namnet under 560 px): Alla har Till intervju på en ny
+  (läget Kontaktad, inget mejl, ingen fråga; tillbaka är läget Ny i
+  panelen). Intervju har Till utbildning, som är "Mötet är hållet" och
+  därför frågar först: det mejlar tacket med introduktionen som nästa steg.
+  Utbildning har Öppna provet (`provKnapp`) eller, för den som är utbildad,
+  Ta in i poolen. Den utbildade stod förut varken under Intervju eller
+  Utbildning.
+- **Flikarna räknar** (`vy-flik-mark`), så att ett tryck i Alla syns flytta.
+- **Bokningar har en väljare för familjen** (`#bok-familj`, `familjeval()` i
+  `nextrum-admin-drift.js`): de familjer som har pass, med barnens namn
+  efter, och den gäller ihop med söket, läget och tiden. Passförfrågningarnas
+  Visa dem och ett pass i kalendern nollar den, annars hade de visat färre
+  än de lovar. Kalendern filtreras inte.
+- `verktyg/prova-ansokningar.js` provar stegen i Chromium: knapparna, frågan,
+  vad som sparas, flikarnas tal, filtret och telefonens rad.
+
 ### Tusen rader (2026-09-29)
 
 Leo: "de raderna ska inte försvinna efter 1000st". PostgREST lämnar ut
