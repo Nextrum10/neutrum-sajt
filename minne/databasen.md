@@ -1009,10 +1009,25 @@ testbetalningar (`stripe_skarp = false`), som kärnan alltid sagt.
 Passen, betalningarna, fakturorna och lönerna rörs inte: Betalningar,
 Månadens ekonomi och Löner är bokföring och räknar som förut.
 
+**`20261013100000_rabattkoden_krockar_inte`** (2026-10-13, samma gren):
+`forsta_timmen_bjuds` lappad med `replace()` och en vakt som räknar
+träffarna (två lappar: första timmen tar bort koden och läggs inte
+ovanpå den, och tipstimmen ges också med en kod), och en ny trigger,
+`bookings_timmar_betalar_utan_kod` med `intern.timmar_betalar_utan_kod()`,
+som tar bort koden från ett pass som timmarna eller timbanken betalar
+(`minne/betalning.md`). Skapad med `create or replace trigger`; namnet
+lägger den mellan `bookings_timmar_betalar_forslaget` och
+`bookings_timmarna_tillbaka`, som förblir den sista. Funktionen var i
+driften 2026-10-13 byte för byte den lokala (md5 `570b7ccc…`). Lappen
+känner igen sig själv (`rabattkoden_krockar_inte` i texten), så filen går
+att köra två gånger.
+
 Versionerna var först `20261012120000` och `20261012120100`, men `fyll_timbanken`
 kördes i driften samma kväll med just `20261012120000`; de ligger nu efter
-den. Lokalt, byggd ur alla 184 migrationer: hela `rls-test.sql` 1575 av 1575
-(avsnitt 26 och 27 är nya). **Körs efter merge, i den ordningen, och
+den. Lokalt, byggd ur alla 185 migrationer: hela `rls-test.sql` 1586 av 1586
+(avsnitt 26, 27 och 28 är nya). **Körs efter merge, i den ordningen, och
 `notis-ko` från main driftsätts FÖRE den första** (`minne/notiser.md`).
-Vyerna tål att båda saknas: utan tabellen syns inga förslag, utan `boka`
-i listan inget val, och adminvyns tal räknar ur `admin_roller` själv.
+Vyerna tål att alla tre saknas: utan tabellen syns inga förslag, utan `boka`
+i listan inget val, adminvyns tal räknar ur `admin_roller` själv, och
+utan `rabattkoden_krockar_inte` gäller den gamla ordningen i databasen,
+vilket inte spelar någon roll så länge det inte finns någon kod.

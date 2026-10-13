@@ -203,6 +203,16 @@ function falskSupabase(o) {
         ut.forEach(r => Object.assign(r, kropp || {}));
         return svar(route, 204);
       }
+      /* Familjens eget förslag: raden som databasen skapade, med det
+         triggrarna gjort av den (o.bokat), som PostgREST svarar. */
+      if (metod === 'POST' && tabell === 'bookings') {
+        const rad = Object.assign({ id: 'pass-eget', status: 'requested', klippkort_id: null, betalning_status: null,
+                                    rabattkod: null, startrabatt: false }, kropp || {});
+        const ut = o.bokat ? o.bokat(rad) : rad;
+        W.bookings.push(ut);
+        const vill = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
+        return svar(route, 201, vill ? ut : [ut]);
+      }
       return svar(route, 201, []);
     }
     return svar(route, 404, {});
@@ -682,10 +692,11 @@ async function provaFörälderns(webb) {
       (await page.locator(host + ' .bk-forslag').count()) === 0 && !R.anrop.some(a => a[0] === 'barnforslag_neka' && a[1].p_id === F3)
       && (await page.locator('#bf-lista [data-bf-granska="' + F3 + '"]').count()) === 1);
 
-    /* Familjens eget förslag går som förut: ingen rabattkod. */
+    /* Familjens eget förslag har samma ruta för en rabattkod
+       (rabattkoden_krockar_inte, 2026-10-13). */
     await page.click(host + ' .mv-dag[data-datum="' + framåt(5) + '"]').catch(() => {});
     await page.waitForSelector(host + ' .mv-tid', { timeout: 3000 }).catch(() => {});
-    prova('förälder: familjens eget förslag har ingen rabattkod', (await page.locator(host + ' #bk-rabatt').count()) === 0);
+    prova('förälder: familjens eget förslag har rutan för en rabattkod', (await page.locator(host + ' #bk-rabatt').count()) === 1);
     prova('förälder: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
     prova('förälder: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
     await context.close();
@@ -733,9 +744,9 @@ async function provaFörälderns(webb) {
     await context.close();
   }
 
-  /* 3b. Första timmen och koden: databasen drar koden och sedan timmen
-         (skydda_rabatt, forsta_timmen_bjuds), och priset vid knappen är
-         detsamma. */
+  /* 3b. Första timmen och koden: timmen går före koden, och de läggs
+         inte ihop (rabattkoden_krockar_inte). Priset vid knappen är
+         detsamma som utan kod, och rutan säger varför. */
   {
     const R = foralderRpc({ forsta: { beviljad: true, tagen: false } });
     const { context, page } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1' });
@@ -745,16 +756,22 @@ async function provaFörälderns(webb) {
       && (await text(page, '#boka-inner .bk-sum-pris')).includes('Första timmen på köpet'), await text(page, '#boka-inner .bk-sum-pris'));
     await page.fill('#boka-inner #bk-rabatt', 'VAN10');
     await page.click('#boka-inner [data-bk-rabatt]');
-    await page.waitForFunction(() => /319,20/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 5000 }).catch(() => {});
-    prova('förälder med första timmen: koden dras först och timmen ovanpå',
-      /^319,20\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris'))
-      && (await text(page, '#boka-inner .bk-sum-pris')).includes('Första timmen på köpet och rabattkoden VAN10'),
+    await page.waitForFunction(() => /VAN10/.test(document.querySelector('#boka-inner .bk-rabatt-svar').textContent), null, { timeout: 5000 }).catch(() => {});
+    prova('förälder med första timmen: koden läggs inte ovanpå timmen',
+      /^399\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris'))
+      && (await text(page, '#boka-inner .bk-sum-pris')).includes('Första timmen på köpet')
+      && !(await text(page, '#boka-inner .bk-sum-pris')).includes('VAN10'),
       await text(page, '#boka-inner .bk-sum-pris'));
+    prova('förälder med första timmen: rutan säger att koden inte används här',
+      (await text(page, '#boka-inner .bk-rabatt-svar')).includes('VAN10 gäller, men inte på det här passet: första timmen är på köpet'),
+      await text(page, '#boka-inner .bk-rabatt-svar'));
+    await bild(page, 'foraldern-kod-och-forsta-timmen', '#boka-inner');
     await context.close();
   }
 
-  /* 3c. Tipstimmen går bara på ett pass utan annan kod: med en rabattkod
-         sparas den till ett senare pass. */
+  /* 3c. Tipstimmen går före koden, som första timmen
+         (rabattkoden_krockar_inte). Förut gick koden före, och timmen
+         sköts till ett senare pass. */
   {
     const R = foralderRpc({ tips: true });
     const { context, page } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1' });
@@ -765,10 +782,83 @@ async function provaFörälderns(webb) {
       && (await text(page, '#boka-inner .bk-sum-pris')).includes('En timme på köpet för ert tips'), await text(page, '#boka-inner .bk-sum-pris'));
     await page.fill('#boka-inner #bk-rabatt', 'VAN10');
     await page.click('#boka-inner [data-bk-rabatt]');
+    await page.waitForFunction(() => /VAN10/.test(document.querySelector('#boka-inner .bk-rabatt-svar').textContent), null, { timeout: 5000 }).catch(() => {});
+    prova('förälder med tipstimme: med en kod gäller tipstimmen, inte koden',
+      /^0\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris'))
+      && (await text(page, '#boka-inner .bk-sum-pris')).includes('En timme på köpet för ert tips'), await text(page, '#boka-inner .bk-sum-pris'));
+    prova('förälder med tipstimme: rutan säger att koden inte används här',
+      (await text(page, '#boka-inner .bk-rabatt-svar')).includes('passet får en timme på köpet för ert tips'),
+      await text(page, '#boka-inner .bk-rabatt-svar'));
+    await context.close();
+  }
+
+  /* 3d. Familjens eget förslag med en kod (2026-10-13): priset vid
+         knappen, koden i skrivningen och inget i kvittot om att den
+         inte gällde. */
+  {
+    const R = foralderRpc({});
+    const { context, page, S } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1' });
+    await page.goto(BAS + '/foralder#boka');
+    await page.waitForSelector('#boka-inner .mv-dag', { timeout: 10000 }).catch(() => {});
+    await tillMånaden(page, '#boka-inner', framåt(6));
+    await väljDagOchTid(page, '#boka-inner', framåt(6), '17:00');
+    await page.click('#boka-inner #bk-format button[data-v="Online"]').catch(() => {});
+    await page.fill('#boka-inner #bk-rabatt', 'van10');
+    await page.click('#boka-inner [data-bk-rabatt]');
     await page.waitForFunction(() => /359,10/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 5000 }).catch(() => {});
-    prova('förälder med tipstimme: med en kod gäller koden, inte tipstimmen',
+    prova('förälder, eget förslag: en kod som gäller ger priset vid knappen',
       /^359,10\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris'))
       && (await text(page, '#boka-inner .bk-sum-pris')).includes('Med rabattkoden VAN10'), await text(page, '#boka-inner .bk-sum-pris'));
+    await page.click('#boka-inner #bk-boka');
+    await page.waitForSelector('#boka-inner .bk-kvitto', { timeout: 5000 }).catch(() => {});
+    const post = S.logg.filter(r => r.metod === 'POST' && r.väg === '/rest/v1/bookings').pop();
+    prova('förälder, eget förslag: koden följer med passet, i versaler', post && post.kropp && post.kropp.rabattkod === 'VAN10',
+      JSON.stringify(post && post.kropp));
+    prova('förälder, eget förslag: kvittot säger inget om koden när den gällde',
+      (await text(page, '#boka-inner .bk-kvitto')).includes('Förslaget är skickat')
+      && !(await text(page, '#boka-inner .bk-kvitto')).includes('gällde inte'), await text(page, '#boka-inner .bk-kvitto'));
+    prova('förälder, eget förslag: rutan är tom igen efteråt', (await page.inputValue('#boka-inner #bk-rabatt').catch(() => '')) === '');
+    await context.close();
+  }
+
+  /* 3e. Timbanken går före koden: räcker timmarna står de vid knappen,
+         rutan säger att koden inte används, och kvittot säger att
+         timmarna betalade. Koden skickas ändå; databasen avgör. */
+  {
+    const R = foralderRpc({});
+    const { context, page, S } = await öppna(webb, {
+      rpc: R.rpc, inloggad: 'foralder-1',
+      värld: W => {
+        W.flaggor = [{ kod: 'erbjudanden', aktiv: true }];
+        W.klippkort_saldo = [{ id: 'kk-1', parent_id: 'foralder-1', erbjudande: 'klipp10', namn: 'Fyll timbanken, 10 timmar',
+          sort: 'klippkort', timmar: 10, anvanda: 0, kvar: 10, giltigt_till: dagar(150), status: 'betald', brukbar: true,
+          created_at: nu(-6000) }];
+      },
+      bokat: rad => Object.assign(rad, { klippkort_id: 'kk-1', betalning_status: 'betald', rabattkod: null })
+    });
+    await page.goto(BAS + '/foralder#boka');
+    await page.waitForSelector('#boka-inner .mv-dag', { timeout: 10000 }).catch(() => {});
+    await tillMånaden(page, '#boka-inner', framåt(6));
+    await väljDagOchTid(page, '#boka-inner', framåt(6), '17:00');
+    await page.click('#boka-inner #bk-format button[data-v="Online"]').catch(() => {});
+    await page.fill('#boka-inner #bk-rabatt', 'VAN10');
+    await page.click('#boka-inner [data-bk-rabatt]');
+    await page.waitForFunction(() => /VAN10/.test(document.querySelector('#boka-inner .bk-rabatt-svar').textContent), null, { timeout: 5000 }).catch(() => {});
+    prova('förälder med timmar: timmarna står vid knappen, inte koden',
+      (await text(page, '#boka-inner .bk-sum-pris')).includes('Er timbank')
+      && !(await text(page, '#boka-inner .bk-sum-pris')).includes('VAN10'), await text(page, '#boka-inner .bk-sum-pris'));
+    prova('förälder med timmar: rutan säger att timbanken betalar och koden inte används',
+      (await text(page, '#boka-inner .bk-rabatt-svar')).includes('passet betalas med timmar ur er timbank'),
+      await text(page, '#boka-inner .bk-rabatt-svar'));
+    await bild(page, 'foraldern-kod-och-timmar', '#boka-inner');
+    await page.click('#boka-inner #bk-boka');
+    await page.waitForSelector('#boka-inner .bk-kvitto', { timeout: 5000 }).catch(() => {});
+    const post = S.logg.filter(r => r.metod === 'POST' && r.väg === '/rest/v1/bookings').pop();
+    prova('förälder med timmar: koden skickas, och databasen avgör', post && post.kropp && post.kropp.rabattkod === 'VAN10',
+      JSON.stringify(post && post.kropp));
+    prova('förälder med timmar: kvittot säger att timmarna betalade, och inget om koden',
+      (await text(page, '#boka-inner .bk-kvitto')).includes('Passet är betalt med 1 timme av era timmar')
+      && !(await text(page, '#boka-inner .bk-kvitto')).includes('gällde inte'), await text(page, '#boka-inner .bk-kvitto'));
     await context.close();
   }
 

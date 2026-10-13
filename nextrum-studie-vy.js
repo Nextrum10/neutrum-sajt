@@ -4072,9 +4072,9 @@
       };
     },
 
-    /* Barnens förslag (barnet_foreslar_pass): rabattkoden prövas mot
-       databasen innan förslaget skickas, och Skicka inte och Tillbaka
-       ritar om listan ovanför ytan. */
+    /* Rabattkoden prövas mot databasen innan förslaget skickas, i
+       familjens egna förslag och i barnens (2026-10-13). Skicka inte och
+       Tillbaka i granskningen ritar om listan ovanför ytan. */
     rabattkod: async (kod, brutto) => {
       const { data, error } = await supa.rpc('kolla_rabattkod',
         { p_kod: kod, p_tjanst: NXTjanster.standard(), p_belopp_ore: brutto });
@@ -4100,8 +4100,11 @@
         format: v.format || null,
         location: v.plats || null,
         note: v.not || null,
+        /* Prövas igen av databasen (skydda_rabatt), och en gratis timme
+           eller timmarna går före den (rabattkoden_krockar_inte). */
+        rabattkod: v.rabattkod || null,
         status: 'requested'
-      }).select('id, status, klippkort_id, betalning_status, rabattkod').single();
+      }).select('id, status, klippkort_id, betalning_status, rabattkod, startrabatt').single();
       if (error) {
         /* 23505 = samma starttid, 23P01 = passet krockar med ett annat
            som redan ligger där. Samma sak för den som föreslår. */
@@ -4122,7 +4125,9 @@
       if (betalt) laddaErbjudanden().catch(() => {});
       /* Timmen på köpet för ett tips drogs i samma skrivning. */
       if (data && data.rabattkod === 'TIPS') laddaTips().catch(() => {});
-      return { status: data ? data.status : null, id: data ? data.id : null, betalt: betalt };
+      return { status: data ? data.status : null, id: data ? data.id : null, betalt: betalt,
+               rabatt: data && data.rabattkod !== 'TIPS' ? data.rabattkod : null,
+               gratis: !!(data && data.startrabatt) };
     }
   });
 
@@ -4150,7 +4155,8 @@
      (skicka_barnets_forslag), och studiehjälparen svarar som vanligt.
      Skicka inte svarar barnet utan pass (barnforslag_neka).
 
-     Ett förslag föräldern själv skickar går som förut, utan rabattkod.
+     Ett förslag föräldern själv skickar går som förut, och har samma
+     ruta för en rabattkod sedan 2026-10-13.
 
      Utan tabellen i databasen (migrationen inte körd) finns inga
      förslag, och inget av det här syns.
@@ -4269,7 +4275,8 @@
     if (betalt) laddaErbjudanden().catch(() => {});
     if (data && data.rabattkod === 'TIPS') laddaTips().catch(() => {});
     return { status: data ? data.status : null, id: data ? data.id : null, betalt,
-             rabatt: data && data.rabattkod !== 'TIPS' ? data.rabattkod : null };
+             rabatt: data && data.rabattkod !== 'TIPS' ? data.rabattkod : null,
+             gratis: !!(data && data.startrabatt) };
   }
 
   /* Skicka inte. null när det gick; annars felet, som ytan visar. */

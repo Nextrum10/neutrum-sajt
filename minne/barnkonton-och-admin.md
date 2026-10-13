@@ -572,14 +572,16 @@ väljer också i sina inställningar om barnet ska kunna boka pass."
   och tipstimmen, timmarna, villkoren, notisen till studiehjälparen), och
   förslaget markeras i samma transaktion. Skicka inte
   (`barnforslag_neka()`) svarar barnet utan pass; Tillbaka låter
-  förslaget vänta. Ett förslag föräldern själv gör har ingen rabattkod,
-  som förut.
-- **Priset vid knappen följer databasens ordning**: koden dras först
-  (`skydda_rabatt`), första timmen ovanpå (`forsta_timmen_bjuds`), och
-  tipstimmen går bara på ett pass utan en annan kod, så den försvinner
-  ur priset när en kod gäller. Räcker köpta timmar betalar de passet
-  också med en kod, och rutan säger att koden då inte ändrar priset. Ett
-  belopp med ören står med båda decimalerna ("359,10 kr").
+  förslaget vänta. Ett förslag föräldern själv gör har samma ruta för en
+  rabattkod sedan 2026-10-13 (förut ingen).
+- **Priset vid knappen följer databasens ordning** (sedan 2026-10-13,
+  `rabattkoden_krockar_inte`, `minne/betalning.md`): koden gäller bara det
+  familjen betalar med pengar. Första timmen och tipstimmen går före
+  koden (`forsta_timmen_bjuds`), och köpta timmar och timbanken går före
+  den (`bookings_timmar_betalar_utan_kod`); då tas koden bort och läggs
+  aldrig ihop med något, och rutan säger varför. Förut drogs koden först
+  och första timmen ovanpå, och en kod sköt tipstimmen till ett senare
+  pass. Ett belopp med ören står med båda decimalerna ("359,10 kr").
 - **Barnet får ingen notis om förälderns svar**: `barn_notiser` har ett
   villkor över typerna, och att skriva om det är ett `drop`. Svaret står i
   Dina förslag, och när studiehjälparen bekräftar passet får barnet

@@ -166,9 +166,16 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   inte priset"): förslaget står i `barn_passforslag`, aldrig i `bookings`, och är inget pass. Föräldern
   ser det (Boka pass, Att göra, mejlet `barnforslag`), granskar det i den vanliga ytan med priset och en
   rabattkod och skickar det som sitt eget (`skicka_barnets_forslag()`, SECURITY INVOKER, så policyn
-  och alla triggrar på `bookings` gäller), eller låter bli. Barnet ser aldrig ett pris, och ett
-  förslag föräldern själv gör har ingen rabattkod, som förut. Priset vid knappen följer databasens
-  ordning: koden först, första timmen ovanpå, tipstimmen bara utan kod.
+  och alla triggrar på `bookings` gäller), eller låter bli. Barnet ser aldrig ett pris, och priset
+  vid knappen följer databasens ordning (Rabattkoden, nedan).
+- **Rabattkoden** (2026-10-13, Leo: "koden får inte krocka med gratis timmar ... gratis timmarna
+  räknas i timbanken"): rutan står i förälderns egna förslag och i granskningen av ett barns, aldrig
+  i barnets vy. Koden gäller bara det familjen betalar med pengar. En gratis timme går före den
+  (`forsta_timmen_bjuds`, också tipstimmen), och köpta timmar och timbanken går före den, när passet
+  skapas och när de betalar det senare (`bookings_timmar_betalar_utan_kod`): då tas koden bort från
+  passet, och den läggs aldrig ihop med något. En kod som tas bort när passet skapas räknas inte som
+  använd. Rutan säger när koden inte används och varför, och koden skickas ändå: databasen avgör.
+  Skapa ingen kod förrän `kolla_rabattkod` har ett tak (avsnitt 6).
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -775,12 +782,14 @@ Detaljer: `minne/grunden.md`.
   hand), datadelningen med Googles produkter och Google-signaler av, lagringstiden (policyn lovar högst 14
   månader), och ingen koppling till Google Ads. Vercels Web Analytics var inte
   påslaget i projektet 2026-09-28 (`TRAFIK.md`). Juristen har inte läst texterna eller rad 14 i `DATASKYDD.md`.
-- **Barnets förslag på pass, förhandsvisningen och adminkontona i statistiken** (2026-10-12) är
-  byggda men inte i drift: migrationerna `barnet_foreslar_pass` och `adminkonton_utanfor_statistiken`
-  körs efter merge, i den ordningen, och **`notis-ko` driftsätts från main FÖRE den första** (mallen för
-  `barnforslag`). Versionerna ligger efter `fyll_timbanken` (20261012120000, i drift), som de först krockade med.
-  Lokalt, byggd ur alla 184 migrationer, 1575 av 1575 i `rls-test.sql`. Vyerna tål att
-  de saknas, och förhandsvisningen behöver ingen av dem. Ett adminkonto som också är förälder hade
+- **Barnets förslag på pass, förhandsvisningen, adminkontona i statistiken och rabattkoden** (2026-10-12
+  och 13) är byggda men inte i drift: migrationerna `barnet_foreslar_pass`, `adminkonton_utanfor_statistiken`
+  och `rabattkoden_krockar_inte` körs efter merge, i den ordningen, och **`notis-ko` driftsätts från main
+  FÖRE den första** (mallen för `barnforslag`). Versionerna ligger efter `fyll_timbanken` (20261012120000, i
+  drift), som de först krockade med. Lokalt, byggd ur alla 185 migrationer, 1586 av 1586 i `rls-test.sql`.
+  Vyerna tål att de saknas, och förhandsvisningen behöver ingen av dem. Rutan för en rabattkod står i
+  förälderns förslag direkt; utan migrationen gäller den gamla ordningen i databasen, men 2026-10-13 fanns
+  ingen kod utom `TIPS`, och ingen ska skapas förrän migrationen körts och `kolla_rabattkod` har ett tak. Ett adminkonto som också är förälder hade
   2026-10-12 alla 16 passen i driften; de räknas inte i statistiken när migrationen körts, men de står
   kvar som pass och betalningar. Ett adminkonto raderas inte i panelen; ska passen bort är det Leos beslut
   och en egen ändring (`DEPLOY-BARNKONTON.md` 12).

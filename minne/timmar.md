@@ -333,6 +333,11 @@ lovat timmar som databasen inte dragit.
   timmen är avgjord innan timmarna väljer. Timbankens uttag skrivs i
   samma BEFORE INSERT, innan passets rad finns, och därför är
   `timbank_uttag_booking_id_fkey` `deferrable initially deferred`.
+- **Timmarna går före en rabattkod** (2026-10-13,
+  `rabattkoden_krockar_inte`): `bookings_timmar_betalar_utan_kod` kör
+  efter de två triggrarna ovan och före `bookings_timmarna_tillbaka`, och
+  tar bort koden från ett pass som timmarna betalar, när det skapas och
+  senare. Allt om det i `minne/betalning.md`.
 - **Timmen följer passet.** Ett motförslag ändrar bara tid, status och
   `created_by` (`skydda_bokningsfalt`), så betalningen ligger kvar, också
   när tiden flyttas förbi kortets sista dag, som för ett bekräftat pass

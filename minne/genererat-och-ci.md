@@ -495,7 +495,12 @@ och avstängt, utan funktionerna, telefonen) och förälderns granskning
 fel och rätt, en annan längd som prövar koden igen, första timmen och
 tipstimmen med en kod, Skicka, Skicka inte, Tillbaka, adressen
 `#boka/forslag-<id>`, valet under Profil → Barn, en databas utan
-migrationen, telefonen) mot en falsk Supabase, som de andra.
+migrationen, telefonen) mot en falsk Supabase, som de andra. Sedan
+2026-10-13 (`rabattkoden_krockar_inte`) också familjens eget förslag med
+en kod, och med timbanken: den falska databasen svarar på ett nytt pass
+med raden, som PostgREST, och `bokat` säger vad triggrarna gjort av den.
+`rls-test.sql` avsnitt 28 provar samma ordning i databasen, och mot den
+gamla funktionen faller nio av dess elva rader.
 
 `verktyg/prova-forhandsvisning.js` (port 8974) provar förhandsvisningen
 mot den riktiga adressen, men svarar själv på den enda fråga den ställer

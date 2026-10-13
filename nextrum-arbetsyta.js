@@ -523,9 +523,10 @@ window.NXArbete = (function () {
          ändrar det, och ingen ska föreslå ett pass utan att se vad
          det kostar.
 
-     Borta: veckoschemats prickar, format och plats, rabattkoden och
-     "önska en annan tid" — det sista för att allt nu ÄR ett önskemål.
-     När betalningen sker står inte här: den vägen byggs om för sig.
+     Borta: veckoschemats prickar och "önska en annan tid" — det sista
+     för att allt nu ÄR ett önskemål. Format och plats kom tillbaka
+     2026-09-24, och rabattkoden 2026-10-13 (nedan). När betalningen sker
+     står inte här: den vägen byggs om för sig.
 
      Tidigare omgångar, för den som undrar: tre rullgardiner och en
      månadskalender; fyra numrerade steg; en veckovy; en kalender med
@@ -550,8 +551,9 @@ window.NXArbete = (function () {
                 pris, inget antal barn, ingen ångerrätt (barnet är inte
                 part i avtalet), och förslaget går till föräldern
        rabattkod — async (kod, bruttoOre) => { giltig, orsak, rabatt_ore }:
-                förälderns granskning av ett barns förslag har en ruta
-                för en rabattkod, som databasen prövar igen
+                förälderns förslag, och granskningen av ett barns, har
+                en ruta för en rabattkod, som databasen prövar igen.
+                Barnets läge har ingen
        neka   — async (förslagets id) => 'felmeddelande' | null: Skicka
                 inte, i granskningen
 
@@ -564,6 +566,16 @@ window.NXArbete = (function () {
      att ändra. Granskningen skickar med boka() som förut, med förslagets
      id och rabattkoden; vyn gör det till ett pass. Ångerrätten står kvar
      sist i panelen i granskningen: det är föräldern som ber om passet.
+
+     RABATTKODEN (rabattkoden_krockar_inte, 2026-10-13). Leo: "rabattkoden,
+     fixa det ... koden får inte krocka med gratis timmar ... gratis
+     timmarna räknas i timbanken". Rutan står i förälderns egna förslag
+     också, inte bara i granskningen. Koden gäller bara det familjen
+     betalar med pengar: en gratis timme (bjuden) och köpta timmar eller
+     timbanken (timmar) går före den, i databasen och vid knappen, och de
+     läggs aldrig ihop. Rutan säger när koden inte används och varför.
+     Koden skickas ändå: databasen avgör, och blev timmarna tagna någon
+     annanstans under tiden gäller koden.
      ============================================================ */
 
   /* Timmarna ett förslag kan ligga på, varje dag i veckan. Hela timmar,
@@ -640,13 +652,16 @@ window.NXArbete = (function () {
       /* Barnets förslag som föräldern granskar (barnet_foreslar_pass):
          { id, namn, skapad, tidBorta, dagBorta }, annars null. */
       granskar: null,
-      /* Rabattkoden i granskningen: det som står i rutan, och det
-         databasen sagt om den ({ kod, ore, brutto, text }). */
+      /* Rabattkoden: det som står i rutan, och det databasen sagt om
+         den ({ kod, ore, brutto, text }). */
       rabattText: '',
       rabatt: null,
       rabattFel: null,
       /* Kvittot efter en granskning säger mer än det vanliga. */
-      skickatFörslag: null
+      skickatFörslag: null,
+      /* En kod som databasen inte tog, utan att en gratis timme eller
+         timmarna förklarar det: kvittot säger det. */
+      kodTappad: null
     };
 
     /* Förra passet bestämmer förvalen. En familj som alltid tar matte
@@ -734,26 +749,26 @@ window.NXArbete = (function () {
     function bjudenOre() {
       var bjuds = o.bjuden ? o.bjuden(st.minuter) : false;
       if (!bjuds) return 0;
-      /* Tipstimmen går bara på ett pass utan en annan kod
-         (forsta_timmen_bjuds): med en rabattkod i granskningen sparas den
-         till ett senare pass. Första timmen går ovanpå koden. */
-      if (bjuds === 'tips' && kodPrövad()) return 0;
+      /* En gratis timme går före en rabattkod, också tipstimmen
+         (rabattkoden_krockar_inte, 2026-10-13). */
       return Math.min(timprisOre() + (st.barn > 1 ? extraOre() : 0), bruttoOre());
     }
-    /* Rabattkoden i granskningen. Databasen drar koden först
-       (skydda_rabatt) och första timmen ovanpå (forsta_timmen_bjuds),
-       aldrig under noll: samma ordning här, så att priset vid knappen
-       är det passet får. En kod prövad mot en annan längd gäller inte
-       förrän den prövats igen. */
+    /* Rabattkoden. Databasen prövar koden (skydda_rabatt), och sedan går
+       en gratis timme (forsta_timmen_bjuds) och köpta timmar eller
+       timbanken (bookings_timmar_betalar_utan_kod) före den: då tas
+       koden bort från passet, och den läggs aldrig ihop med timmen.
+       Samma ordning här, så att priset vid knappen är det passet får.
+       En kod prövad mot en annan längd gäller inte förrän den prövats
+       igen. */
     function kodPrövad() {
-      return !!(st.granskar && st.rabatt && st.rabatt.brutto === bruttoOre());
+      return !!(st.rabatt && st.rabatt.brutto === bruttoOre());
     }
     function rabattOre() {
-      if (!kodPrövad()) return 0;
-      return Math.max(0, Math.min(st.rabatt.ore, bruttoOre() - bjudenOre()));
+      if (!kodPrövad() || bjudenOre() || medTimmar()) return 0;
+      return Math.max(0, Math.min(st.rabatt.ore, bruttoOre()));
     }
-    /* Köpta timmar betalar passet när de räcker (Fas 22.4), också med en
-       rabattkod: bara första timmen och tipstimmen går före dem. */
+    /* Köpta timmar betalar passet när de räcker (Fas 22.4), och då
+       används ingen rabattkod. Bara en gratis timme går före dem. */
     function medTimmar() {
       return !bjudenOre() && o.timmar ? o.timmar(st.minuter, st.dag, st.barn) : null;
     }
@@ -839,7 +854,7 @@ window.NXArbete = (function () {
         + '<div class="bk-valrad bk-faltrad"><label class="bk-valrad-et" for="bk-not">Till studiehjälparen</label>'
         + '<input class="inp" id="bk-not" maxlength="300"'
         + ' placeholder="Valfritt — t.ex. provet på fredag, kapitel 4" value="' + esc(st.not) + '"></div>'
-        + (st.granskar && o.rabattkod ? rabattRad() : '')
+        + (o.rabattkod && !o.utanPris ? rabattRad() : '')
         + '</div>'
         /* Barnet ber inte om något: det är föräldern som föreslår passet
            när förslaget skickas, och där står meningen om ångerrätten. */
@@ -860,9 +875,10 @@ window.NXArbete = (function () {
             + '<a href="/anvandarvillkor#angerratt" target="_blank" rel="noopener">Om ångerrätten</a></p>');
     }
 
-    /* Rutan för en rabattkod, i granskningen av ett barns förslag. Koden
-       prövas med Använd (eller Enter) och en gång till när förslaget
-       skickas; databasen prövar den en tredje gång (skydda_rabatt). */
+    /* Rutan för en rabattkod, i förälderns förslag och i granskningen av
+       ett barns. Koden prövas med Använd (eller Enter) och en gång till
+       när förslaget skickas; databasen prövar den en tredje gång
+       (skydda_rabatt). */
     function rabattRad() {
       return '<div class="bk-valrad bk-faltrad bk-rabatt"><label class="bk-valrad-et" for="bk-rabatt">Rabattkod</label>'
         + '<input class="inp" id="bk-rabatt" maxlength="40" autocomplete="off" autocapitalize="characters"'
@@ -873,7 +889,13 @@ window.NXArbete = (function () {
     function rabattSvar() {
       if (st.rabattFel) return '<span class="is-err">' + esc(st.rabattFel) + '</span>';
       if (kodPrövad()) {
-        if (medTimmar()) return esc('✓ ' + st.rabatt.kod + ' gäller, men passet betalas med era timmar, så koden ändrar inte priset.');
+        /* En gratis timme eller timmarna går före koden, och de läggs
+           inte ihop. Rutan säger varför priset inte ändrades. */
+        var före = bjudenOre()
+          ? (o.bjuden(st.minuter) === 'tips' ? 'passet får en timme på köpet för ert tips' : 'första timmen är på köpet')
+          : medTimmar() ? 'passet betalas med timmar ur er timbank' : null;
+        if (före) return '<span class="bk-rabatt-inte">' + esc(st.rabatt.kod + ' gäller, men inte på det här passet: '
+          + före + '. Koden går att använda på ett pass ni betalar.') + '</span>';
         return esc('✓ ' + st.rabatt.kod + ': −' + kronorÖre(rabattOre()) + (st.rabatt.text ? ' · ' + st.rabatt.text : ''));
       }
       return '';
@@ -961,7 +983,7 @@ window.NXArbete = (function () {
         + '<p>' + esc(vem.charAt(0).toUpperCase() + vem.slice(1)) + ' accepterar tiden eller föreslår en annan. '
         + 'Ni får ett mejl när hen svarat, och passet står under Mina lektioner så länge.'
         + (sf ? ' ' + esc(sf.namn) + ' ser att ni skickat det.' : '') + '</p>'
-        + (sf && sf.rabattTappad ? '<p>' + esc('Rabattkoden ' + sf.rabattTappad + ' gällde inte när passet skapades, '
+        + (st.kodTappad ? '<p>' + esc('Rabattkoden ' + st.kodTappad + ' gällde inte när passet skapades, '
             + 'så passet har ordinarie pris. Hör av er till oss om koden borde ha gällt.') + '</p>' : '')
         + (betalt ? '<p>' + esc(betalt) + '</p>' : '')
         + '<div class="bk-kvitto-knappar">'
@@ -995,8 +1017,7 @@ window.NXArbete = (function () {
           ? '<b>' + esc(tim.titel) + '</b><span>' + esc(tim.under) + '</span>'
           : '<b>' + esc(kronorÖre(bruttoOre() - bjuden - rabatt)) + '</b>'
             + '<span>' + esc(!bjuden ? (rabatt ? 'Med rabattkoden ' + st.rabatt.kod : längdText())
-              : (o.bjuden(st.minuter) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet')
-                + (rabatt ? ' och rabattkoden ' + st.rabatt.kod : '')) + '</span>';
+              : o.bjuden(st.minuter) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + '</span>';
       var knapp = o.utanPris ? 'Skicka till din förälder'
         : st.granskar ? 'Skicka till ' + (o.hos || 'studiehjälparen') : 'Föreslå tiden';
       return '<div class="bk-sum' + (vald ? ' ar-vald' : '') + '">'
@@ -1171,12 +1192,13 @@ window.NXArbete = (function () {
       }
 
       if (e.target.closest('[data-bk-igen]')) {
-        st.besked = null; st.nyttId = null; st.skickatFörslag = null;
+        st.besked = null; st.nyttId = null; st.skickatFörslag = null; st.kodTappad = null;
         ritaDel();
         return;
       }
 
-      /* Granskningen av ett barns förslag (barnet_foreslar_pass). */
+      /* Rabattkoden, och granskningen av ett barns förslag
+         (barnet_foreslar_pass). */
       if (e.target.closest('[data-bk-rabatt]')) {
         var k = e.target.closest('[data-bk-rabatt]');
         NXStudie.medan(k, 'Prövar…', provaRabatt);
@@ -1215,7 +1237,7 @@ window.NXArbete = (function () {
         });
         /* En procentkod beror på passets pris: en annan längd eller fler
            barn prövar koden igen. */
-        if (st.granskar && st.rabatt && (grupp === 'bk-langder' || grupp === 'bk-barn')) provaRabatt();
+        if (st.rabatt && (grupp === 'bk-langder' || grupp === 'bk-barn')) provaRabatt();
         /* Annat är ett val som kräver ett ord till. Fältet får fokus
            direkt, utan att sidan rullar dit. */
         var fält = grupp === 'bk-amnen' && st.amne === ANNAT && !st.annat
@@ -1305,7 +1327,7 @@ window.NXArbete = (function () {
       st.granskar = null;
       st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
       st.dag = null; st.tid = null; st.barn = 1; st.not = ''; st.annat = '';
-      st.besked = null; st.fel = null; st.nyttId = null; st.skickatFörslag = null;
+      st.besked = null; st.fel = null; st.nyttId = null; st.skickatFörslag = null; st.kodTappad = null;
       st.formatValt = false;
       if (o.efterGranskning) o.efterGranskning();
       rita();
@@ -1313,12 +1335,13 @@ window.NXArbete = (function () {
 
     /* Svaret från o.boka: en sträng är ett fel, ett objekt med status
        säger vad databasen gjorde av förslaget. rabatt är koden passet
-       fick, när förslaget var ett barns. */
+       fick, och gratis att det fick en timme på köpet. */
     function tolka(svar) {
       if (typeof svar === 'string') return { fel: svar };
       return { status: svar && svar.status ? svar.status : null, id: svar && svar.id ? svar.id : null,
                betalt: svar && svar.betalt ? svar.betalt : null,
-               rabatt: svar && svar.rabatt ? svar.rabatt : null };
+               rabatt: svar && svar.rabatt ? svar.rabatt : null,
+               gratis: !!(svar && svar.gratis) };
     }
 
     function skicka() {
@@ -1329,13 +1352,13 @@ window.NXArbete = (function () {
         /* En kod i rutan som inte prövats mot det här priset prövas
            först. Gäller den inte skickas ingenting: passet hade fått
            ett annat pris än det som stod vid knappen. */
-        if (st.granskar && !rabattGäller() && !(await provaRabatt())) {
+        if (o.rabattkod && !o.utanPris && !rabattGäller() && !(await provaRabatt())) {
           st.fel = 'Rabattkoden gäller inte: ' + (st.rabattFel || 'pröva en annan, eller töm rutan.');
           ritaDel();
           return;
         }
         var g = st.granskar;
-        var kod = g && st.rabatt ? st.rabatt.kod : null;
+        var kod = !o.utanPris && st.rabatt && rabattGäller() ? st.rabatt.kod : null;
         var r = tolka(await o.boka({
           datum: st.dag, tid: st.tid, minuter: st.minuter, amne: ämnet(), barn: st.barn,
           format: st.format,
@@ -1358,12 +1381,18 @@ window.NXArbete = (function () {
         st.besked = true;
         st.nyttId = r.id;
         st.betalt = r.betalt ? { sort: r.betalt, minuter: st.minuter } : null;
-        st.skickatFörslag = g ? { namn: g.namn, rabattTappad: kod && r.rabatt !== kod ? kod : null } : null;
+        st.skickatFörslag = g ? { namn: g.namn } : null;
+        /* Koden som databasen tog bort. En gratis timme eller timmarna
+           har rutan redan förklarat; annars gällde koden inte längre,
+           och då säger kvittot det i stället för att priset tyst blev
+           ett annat än vid knappen. */
+        st.kodTappad = kod && r.rabatt !== kod && !r.betalt && !r.gratis ? kod : null;
         st.dag = null; st.tid = null; st.barn = 1; st.not = '';
+        st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
         if (g) {
           /* Granskningen är slut: överraden går, och nästa förslag i
              kalendern är familjens eget. */
-          st.granskar = null; st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
+          st.granskar = null;
           st.formatValt = false; st.annat = '';
           rita();
         } else {
@@ -1416,6 +1445,7 @@ window.NXArbete = (function () {
       st.granskar = { id: f.id, namn: f.namn || 'Barnet', skapad: f.skapad || null, datum: f.datum,
                       tidBorta: null, dagBorta: !!(f.datum && f.datum < idag) };
       st.besked = null; st.fel = null; st.nyttId = null; st.betalt = null; st.skickatFörslag = null;
+      st.kodTappad = null;
       st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
       st.ärvt = true;
       st.minuter = [60, 120, 180].indexOf(Number(f.langd_min)) !== -1 ? Number(f.langd_min) : 60;

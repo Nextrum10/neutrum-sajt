@@ -663,6 +663,11 @@ på en fråga om en PERSON ska ha is_admins vakt från första raden.**
    spelar det ingen roll: `rabattkoder` är TOM, så det finns ingenting
    att gissa. **Skapas den första koden återkommer frågan** — en
    inloggad kan då pröva koder i en slinga. Lägg ett tak då, inte nu.
+   Sedan 2026-10-13 står rutan i varje förälders förslag
+   (`rabattkoden_krockar_inte`), så koderna är en sak familjerna ser; den
+   2026-10-13 fanns fortfarande bara `TIPS`. Konton skapar bara vi, så de
+   som kan pröva är få, men taket ska finnas innan den första koden
+   delas ut.
 
 ### Content-Security-Policy
 

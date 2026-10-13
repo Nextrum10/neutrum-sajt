@@ -590,6 +590,10 @@
 .bk-rabatt-svar{flex:1 1 100%;font-size:.86rem;line-height:1.5;color:var(--mossa)}
 .bk-rabatt-svar:empty{display:none}
 .bk-rabatt-svar .is-err{color:var(--acc)}
+/* Koden gäller men används inte på passet: en gratis timme eller
+   timmarna går före den (rabattkoden_krockar_inte). Ingen lägesfärg,
+   för den är varken klar eller fel. */
+.bk-rabatt-svar .bk-rabatt-inte{color:var(--bl-2)}
 /* Där barnet hade sett ett pris står vem som ser förslaget först. */
 .bk-sum-pris > b.bk-sum-till{font-size:1rem;letter-spacing:0}
 /* Listan med barnens förslag över ytan, i förälderns Boka pass, och
