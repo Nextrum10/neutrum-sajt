@@ -26,7 +26,7 @@ try { pw = require('playwright'); } catch (e) {
 }
 
 const ROT = path.dirname(__dirname);
-const PORT = 8973;
+const PORT = 8975;
 const BAS = 'http://localhost:' + PORT;
 const FALSK = 'https://supabase.test';
 const RIKTIG = /ddkfiuvcppalutfulvbi\.supabase\.co/;
