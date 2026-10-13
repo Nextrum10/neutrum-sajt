@@ -752,10 +752,26 @@ window.NXUppgifter = (function () {
     return ut + '</span>';
   }
 
+  /* Märkena är medaljer (2026-10-13, Leo: "gör alla märken coolare och mer
+     färgglada"): en sexhörning med glans i märkets egen färg, en ring för
+     hur långt man kommit och en bock när man har det. Färgen följer ikonen
+     (en låga är eld, en blixt gul, en krona lila), och ett rankmärke har
+     sin rankens färg (data-rk). Ett märke man inte har är inte grått: det
+     står blekt i sin färg, så att man ser vad man kan få. */
+  const IKONFÄRG = { flagga: 'bla', blixt: 'gul', medalj: 'rosa', låga: 'eld', bock: 'gron', kista: 'lila', uppåt: 'turkos',
+    krona: 'lila', klocka: 'gron', kalender: 'bla', böcker: 'rod', pokal: 'gul', stjärna: 'gul' };
+  function märkesAttr(m) {
+    return m.grupp === 'rank'
+      ? ' data-rk="' + (Number(String(m.id).split('-')[1]) - 1) + '"'
+      : ' data-mk="' + (IKONFÄRG[m.ikon] || 'gul') + '"';
+  }
+  function medaljHtml(m) {
+    return '<span class="mk-medal" aria-hidden="true"><span class="upg-marke-ikon">' + IKON[m.ikon] + '</span></span>';
+  }
   function märkesHtml(m, opts) {
     const o = opts || {};
-    return '<div class="upg-marke' + (m.klart ? ' klart' : '') + (o.nytt ? ' nytt' : '') + '">'
-      + '<span class="upg-marke-ikon">' + IKON[m.ikon] + '</span>'
+    return '<div class="upg-marke' + (m.klart ? ' klart' : '') + (o.nytt ? ' nytt' : '') + '"' + märkesAttr(m) + '>'
+      + medaljHtml(m)
       + '<b>' + esc(m.namn) + '</b>'
       + '<span class="upg-marke-text">' + esc(m.klart ? m.text.replace(/\.$/, '') + ' ✓' : m.text) + '</span>'
       + (!m.klart && m.mål > 1
@@ -1503,7 +1519,7 @@ window.NXUppgifter = (function () {
      att svepa i sidled. Ranken, märkena och studiehjälparens bedömning
      och pass har egna flikar i NexLäx.
      ============================================================ */
-  const UTV_SIDOR = [['oversikt', 'Översikt'], ['amnen', 'Ämnen'], ['veckor', 'Veckor'], ['rattat', 'Rättat']];
+  const UTV_SIDOR = [['oversikt', 'Översikt'], ['amnen', 'Ämnen'], ['rattat', 'Rättat']];
 
   function utvSidor(o) {
     const l = o.läge;
@@ -1560,24 +1576,24 @@ window.NXUppgifter = (function () {
     };
 
     return {
-      oversikt: () => block('I siffror', null, tal() + (l
-        /* Reglerna fälls ihop: de läses en gång, talen varje dag. */
-        ? '<details class="nl-skala nl-regler"><summary>Så får du XP</summary><p>'
-          + esc('XP ger den som klarar något nytt: ' + regelText(l) + ' En uppgift ger XP en gång, första gången den sitter direkt. '
-            + 'Serien räknar dagar: en dag med en klar nivå, något klart från studiehjälparen eller ett pass räknas, och den bryts först när en hel dag gått utan något.')
-          + '</p></details>'
-        : ''))
-        + höjdpunkterHtml(o, l),
+      oversikt: () => {
+        const dagar = veckorOchDagar(l);
+        return block('I siffror', null, tal() + (l
+          /* Reglerna fälls ihop: de läses en gång, talen varje dag. */
+          ? '<details class="nl-skala nl-regler"><summary>Så får du XP</summary><p>'
+            + esc('XP ger den som klarar något nytt: ' + regelText(l) + ' En uppgift ger XP en gång, första gången den sitter direkt. '
+              + 'Serien räknar dagar: en dag med en klar nivå, något klart från studiehjälparen eller ett pass räknas, och den bryts först när en hel dag gått utan något.')
+            + '</p></details>'
+          : ''))
+          + höjdpunkterHtml(o, l)
+          + (l ? block('XP per vecka', 'De åtta senaste veckorna. Den sista är den här veckan.', dagar.veckor) : '')
+          + (l ? block('De fyra senaste veckorna', 'En låga för varje dag med en klar nivå, något från studiehjälparen eller ett pass.', dagar.kalender) : '')
+          + uppdragUtvHtml(l);
+      },
       amnen: () => block('Dina ämnen', 'Hur långt du kommit i varje bana du gjort något i, räknat i nivåer.' + (harProv ? ' Mästarproven är kronan ovanpå.' : ''),
           banRader() || NXStudie.tomt('Inget ämne än', 'Gör en nivå under Din väg så syns banan här.'))
         + block('Område för område', 'Hur stor del som var rätt första gången, per område.' + (o.barnvy ? '' : ' Har studiehjälparen bedömt samma område står bedömningen bredvid.'),
           områdesHtml(o.katalog, o.forsok, o.barnvy ? [] : o.progress) || NXStudie.tomt('Inget område än', 'Områdena fylls i när en nivå är klar.')),
-      veckor: () => {
-        const dagar = veckorOchDagar(l);
-        return (l ? block('XP per vecka', 'De åtta senaste veckorna. Den sista är den här veckan.', dagar.veckor) : '')
-          + (l ? block('De fyra senaste veckorna', 'En låga för varje dag med en klar nivå, något från studiehjälparen eller ett pass.', dagar.kalender) : '')
-          + uppdragUtvHtml(l);
-      },
       rattat: () => block('Rättade nivåer <em>' + (klara.length ? klara.length + ' st' : '') + '</em>',
           'Varje klar omgång, senaste först. Rättningen visar varje uppgift, vad som svarades och rätt svar.',
           klara.length
@@ -1748,7 +1764,7 @@ window.NXUppgifter = (function () {
     const kvar = alla.filter(m => !m.klart);
     const nära = kvar.filter(m => m.har > 0 && m.grupp !== 'rank').sort((a, b) => b.har / b.mål - a.har / a.mål).slice(0, 3);
     const nästaIds = new Set(nära.map(m => m.id));
-    const grid = lista => '<div class="upg-marken">' + lista.map(m => märkesHtml(m)).join('') + '</div>';
+    const grid = (lista, klass) => '<div class="upg-marken' + (klass ? ' ' + klass : '') + '">' + lista.map(m => märkesHtml(m)).join('') + '</div>';
     const procent = Math.round(klara.length / alla.length * 100);
     host.innerHTML =
       '<section class="nl-marken-topp"><div><span class="nl-marken-et">Dina märken</span>'
@@ -1756,7 +1772,7 @@ window.NXUppgifter = (function () {
       + '<small>Märkena räknas ur det du gjort och syns på din profil. De ger och tar ingenting.</small></div>'
       + '<span class="nl-mat" role="progressbar" aria-label="Märken du har" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + procent
         + '"><i style="width:' + procent + '%"></i></span></section>'
-      + (nära.length ? block('Nästan där', 'De tre som är närmast.', grid(nära)) : '')
+      + (nära.length ? block('Nästan där', 'De tre som är närmast.', grid(nära, 'nara')) : '')
       + (klara.some(m => m.grupp !== 'rank') ? block('Du har', null, grid(klara.filter(m => m.grupp !== 'rank'))) : '')
       + block('Att samla', 'Stjärnorna räknar det bästa försöket på varje nivå: en för minst 60 procent rätt på första försöket, två för minst 80 och tre för allt rätt.',
           grid(kvar.filter(m => !nästaIds.has(m.id) && m.grupp !== 'rank')))
@@ -1787,7 +1803,7 @@ window.NXUppgifter = (function () {
       + '<span class="nl-prof-siffror"><span>' + IKON.blixt + tusen(l.xp) + ' XP</span><span>' + IKON.låga + serie + ' ' + dagarText(serie) + '</span></span></div>'
       + '</div>'
       + (topp.length
-          ? '<ul class="nl-prof-marken">' + topp.map(m => '<li class="upg-marke klart"><span class="upg-marke-ikon">' + IKON[m.ikon] + '</span><b>' + esc(m.namn) + '</b></li>').join('') + '</ul>'
+          ? '<ul class="nl-prof-marken">' + topp.map(m => '<li class="upg-marke klart"' + märkesAttr(m) + '>' + medaljHtml(m) + '<b>' + esc(m.namn) + '</b></li>').join('') + '</ul>'
             + '<p class="nl-prof-not">' + klara.length + (klara.length === 1 ? ' märke' : ' märken') + ' hittills'
             + (o.länk ? '. <button type="button" class="nl-prof-lank" data-nl-till="marken">Se alla märken</button>' : '') + '</p>'
           : '<p class="nl-prof-not">Inga märken än. Klara din första nivå så får du det första.</p>')
