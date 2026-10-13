@@ -953,9 +953,12 @@
        timmarna köptes. De är betalda, men de är inga pengar i månaden.
        Gratistimmarna (2026-10-13) betalar passet utan några pengar alls. */
     if (b.klippkort_id && (st === 'betald' || st === 'tvist')) {
+      /* Ett pass med en timme på köpet drar en timme mindre, och ett pass
+         kan dras från två köp (timmarna_delas, 2026-10-14): det första är
+         då gratis, så ett gratis huvudkort betyder att hela passet var det. */
       const gratis = gratisKort(b.klippkort_id);
       r.sätt = gratis ? 'Gratistimmar' : 'Köpta timmar';
-      r.beloppText = tim(b.duration_min || 60);
+      r.beloppText = tim(Math.max(Math.ceil(Number(b.duration_min || 60) / 60) - (b.startrabatt ? 1 : 0), 0) * 60);
       r.läge = [gratis ? 'Betalt med gratistimmar' : 'Betalt med timmar', 'ar-klar'];
       r.filter.add('betalda');
       return r;

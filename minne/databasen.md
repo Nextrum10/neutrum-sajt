@@ -1102,8 +1102,10 @@ för rad, och skapades om ur filen från `extensions.http_get` (inget
 ett `delete` och två `update`, och verktyget frågade efter ett ja tre
 gånger utan svar (tabellen ovan); den tredje satt Leo vid skärmen och
 svarade "kör", men ingen ruta syntes i hans app. Inget kördes; allt annat i
-`gratistimmar` är inne och lika det lokala, och filen registreras när
-avsnitt 7 körts (md5 `079603c5e8d0566c0ebc086c4ff84d1f`). Hela
+`gratistimmar` är inne och lika det lokala. Avsnitt 7 körs aldrig:
+`timmarna_delas_och_kops_till` (nästa avsnitt) skriver funktionen utan
+`delete`, och `gratistimmar` registreras med filens text (md5
+`079603c5e8d0566c0ebc086c4ff84d1f`) när den körts. Hela
 `rls-test.sql` (24718559…) gick 1643 av 1643 mot driften i ett do-block
 som hämtade både den och `gratistimmar` ur merge-commiten, körde
 migrationen först (den går att köra två gånger) och slutade med `raise
@@ -1184,3 +1186,43 @@ reservation som håller pengar. Lokalt, ur 190 migrationer: hela
 `rls-test.sql` 1699 av 1699 (avsnitt 33 är nytt, 35 prov). **Körs inte
 förrän resten är byggd, och `notis-ko` från main driftsätts före den**
 (mallen `kort_nekat`).
+
+### Timmarna delas och köps till (timmarna_delas_och_kops_till, 2026-10-14)
+**`20261014100000_timmarna_delas_och_kops_till`**: kolumnerna
+`bookings.forsta_klippkort_id` (FK, `on delete set null`) och
+`forsta_klippkort_timmar`, `klippkort.aterkallad_at` och `till_plan` (FK,
+`restrict`), fem CHECK-villkor och ett index; katalograden `plan_extra`;
+hjälparna `intern.passets_korttimmar`, `intern.kortets_anvanda` och
+`intern.timmar_fordela` (bara `service_role` utöver ägaren) och rättigheten
+för `service_role` på `intern.kortets_timmar`, `intern.gratis_till` och
+`intern.kortets_sista_dag` (felet i driften, `minne/timmar.md`); vyerna
+`klippkort_saldo` (samma kolumner, och `aterkallad_at`, `till_plan` och
+`rabatterat_timpris_ore` sist) och `klippkort_rorelser` (samma kolumner, en
+rad per kort och pass); `intern.timmar_betala`, `klippkort_dra`,
+`intern.timmar_betalar_kommande`, `intern.timmar_betalar_obetalda`,
+`intern.timbank_in`, `skydda_klippkortet`, `ta_tillbaka_gratistimmar`,
+`klippkort_betald` och `intern.timmar_gar_ut_koa` omskrivna helt efter en
+md5-vakt (texten i en databas byggd ur alla migrationer 2026-10-13; en som
+bär `timmarna_delas` släpps igenom, så filen går att köra två gånger); den
+nya triggern `bookings_forsta_kortet_foljer`, `bookings_skydda_klippkortet`
+och `klippkort_audit` omskapade med `create or replace trigger`;
+`extra_timmar_erbjudande` (`authenticated` och `service_role`); bonusens
+text i `flaggor` med `flaggor_stampla` av runt raden; och
+`intern.villkor_version()` = 2026-10-14.
+
+**Ingen `drop` och ingen `delete`** (ordet står bara i två främmande nycklar
+och i auditens `or delete`, som körts i do-block förut), så filen kan köras
+hel i ett do-block ur merge-commiten, som `tipskoder_bonus_och_timbanken`.
+Det var skälet att återtagandet av gratistimmar blev en tidsstämpel: med
+ett `delete` och två `update` krävde verktyget ett ja som inte syntes.
+
+**Före körningen i driften**: pröva vakterna (md5 i avsnitt 0 mot driften,
+också `ta_tillbaka_gratistimmar`, som inte finns där), att inget pass med
+`startrabatt` redan har ett kort (`select count(*) from bookings where
+klippkort_id is not null and startrabatt` ska vara 0; ett sådant hade fått
+en timme tillbaka), och vem som mer kör mot driften. **Efter**: registrera
+`20261014100000` och `20261013140000` (med en anteckning om att avsnitt 7
+ersattes), driftsätt `stripe-checkout` och `drift` från main och hämta
+tillbaka dem, kör hela `rls-test.sql` mot driften tillbakarullat, och se att
+advisorn inte larmar om något nytt för `anon` (`extra_timmar_erbjudande` är
+nåbar för `authenticated` och svarar bara om den inloggade).

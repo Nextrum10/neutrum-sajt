@@ -768,9 +768,11 @@ window.NXArbete = (function () {
       return Math.max(0, Math.min(st.rabatt.ore, bruttoOre()));
     }
     /* Köpta timmar betalar passet när de räcker (Fas 22.4), och då
-       används ingen rabattkod. Bara en gratis timme går före dem. */
+       används ingen rabattkod. En gratis timme går före dem, och sedan
+       timmarna_delas (2026-10-14) betalar de resten av ett pass med en
+       timme på köpet: o.timmar får veta att en timme är gratis. */
     function medTimmar() {
-      return !bjudenOre() && o.timmar ? o.timmar(st.minuter, st.dag, st.barn) : null;
+      return o.timmar ? o.timmar(st.minuter, st.dag, st.barn, !!bjudenOre()) : null;
     }
     function rabattNyckel(kod) { return String(kod || '').trim().toUpperCase(); }
     /* Öre till kronor vid knappen. En procentkod ger ören (10 % av 399 kr
@@ -968,10 +970,12 @@ window.NXArbete = (function () {
       /* Fas 22.4: timmarna dras när förslaget skickas, och Leo ville att
          det är samma timme som betalar passet om studiehjälparen
          föreslår en annan tid. Kvittot säger båda. */
-      var h = st.betalt ? Math.max(1, Math.ceil(st.betalt.minuter / 60)) : 0;
+      /* Med en timme på köpet dras en timme mindre (2026-10-14). */
+      var h = st.betalt ? Math.max(1, Math.ceil(st.betalt.minuter / 60) - (st.betalt.gratis ? 1 : 0)) : 0;
       var betalt = !st.betalt ? ''
         : 'Passet är betalt med ' + (h === 1 ? '1 timme' : h + ' timmar')
-          + (st.betalt.sort === 'timbanken' ? ' ur timbanken' : ' av era timmar') + '. Föreslår ' + vem
+          + (st.betalt.sort === 'timbanken' ? ' ur timbanken' : ' av era timmar')
+          + (st.betalt.gratis ? ' och en timme på köpet' : '') + '. Föreslår ' + vem
           + ' en annan tid följer ' + (st.betalt.sort === 'timbanken' ? 'minuterna' : h === 1 ? 'timmen' : 'timmarna')
           + ' med, och säger hen nej kommer ' + (st.betalt.sort === 'timbanken' || h > 1 ? 'de' : 'den') + ' tillbaka.';
       /* Efter en granskning: barnets förslag gick vidare, och barnet ser
@@ -999,9 +1003,10 @@ window.NXArbete = (function () {
       var klar = vald && platsOk() && ämneOk();
       var vem = o.hos || 'Er studiehjälpare';
       /* Räcker köpta timmar står de där priset hade stått (Leo
-         2026-09-28). Passet med första timmen bjuden betalas inte med
-         timmar, så där står priset kvar. Samma två rader som priset,
-         så att summeringen inte byter höjd när längden ändras. */
+         2026-09-28). Med en timme på köpet betalar timmarna resten
+         (2026-10-14), och raden säger båda; räcker de inte står priset.
+         Samma två rader som priset, så att summeringen inte byter höjd
+         när längden ändras. */
       var bjuden = bjudenOre();
       var rabatt = rabattOre();
       var tim = medTimmar();
@@ -1014,7 +1019,8 @@ window.NXArbete = (function () {
       var pris = o.utanPris
         ? '<b class="bk-sum-till">Din förälder</b><span>ser förslaget först</span>'
         : tim
-          ? '<b>' + esc(tim.titel) + '</b><span>' + esc(tim.under) + '</span>'
+          ? '<b>' + esc(tim.titel) + '</b><span>' + esc((bjuden ? (o.bjuden(st.minuter, st.dag) === 'tips'
+              ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + ' · ' : '') + tim.under) + '</span>'
           : '<b>' + esc(kronorÖre(bruttoOre() - bjuden - rabatt)) + '</b>'
             + '<span>' + esc(!bjuden ? (rabatt ? 'Med rabattkoden ' + st.rabatt.kod : längdText())
               : o.bjuden(st.minuter, st.dag) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + '</span>';
@@ -1380,7 +1386,7 @@ window.NXArbete = (function () {
            förslaget redan låg i databasen. Omladdningen sker bakom. */
         st.besked = true;
         st.nyttId = r.id;
-        st.betalt = r.betalt ? { sort: r.betalt, minuter: st.minuter } : null;
+        st.betalt = r.betalt ? { sort: r.betalt, minuter: st.minuter, gratis: r.gratis } : null;
         st.skickatFörslag = g ? { namn: g.namn } : null;
         /* Koden som databasen tog bort. En gratis timme eller timmarna
            har rutan redan förklarat; annars gällde koden inte längre,

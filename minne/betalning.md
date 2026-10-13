@@ -664,9 +664,15 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   `lonetrans`: lönearten `foretagsfakta.lonart_tipsbonus`, datumet den
   tjänades in, antal 1 och apris lika med beloppet. Filen går att bygga
   med bara bonusar, och stoppas om lönearten saknas när en bonus är
-  godkänd. Om bonusen ska vara semestergrundande avgörs av lönearten i
-  Fortnox, med revisorn; timlönens regel (inklusive semesterersättning)
-  gäller inte den. `Skicka underlag` (mejlet) handlar om passen och bär
+  godkänd. Bonusen är inklusive semesterersättning (Leo 2026-10-13: "den
+  ska vara semestergrundande, men de ingår redan i de 300kr. så 300kr är
+  inklusive semesterersättning"), som timlönen: lönearten i Fortnox ska
+  därför inte vara markerad semestergrundande, annars lägger Fortnox på
+  semesterersättningen en gång till. Beloppet ändras inte
+  (`intern.tipsbonus_ore()` är 30000). Villkoren, studiehjälparvyn,
+  lönespecen och strömbrytarens text säger det sedan 2026-10-14. Att
+  semesterersättningen får ingå i lönen bekräftar revisorn med
+  `studiehjalpare_form`. `Skicka underlag` (mejlet) handlar om passen och bär
   inte bonusen.
 
 ## Lönespecen

@@ -65,7 +65,9 @@ import { type Inloggad, kravInloggad, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import { StripeError, v1, VALUTA } from '../_delad/stripe.ts';
 import { familjebelopp, passpris, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
-import { arErbjudandekod, type ErbjudandePris, kanAteranvandas, kassarad, sammaInnehall } from '../_delad/erbjudanden.ts';
+import {
+  arErbjudandekod, type ErbjudandePris, extraTimmar, kanAteranvandas, kassarad, kassaradTillPlanen, sammaInnehall,
+} from '../_delad/erbjudanden.ts';
 
 const CORS = cors();
 
@@ -177,7 +179,7 @@ function descriptor(s: string): string {
    ============================================================ */
 async function köpErbjudande(
   vem: Inloggad,
-  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: string },
+  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: string; timmar?: unknown },
 ): Promise<Response> {
   const kod = String(kropp.erbjudande ?? '').trim();
   if (!arErbjudandekod(kod)) return json({ error: 'Vilket erbjudande?' }, 400, CORS);
@@ -196,6 +198,8 @@ async function köpErbjudande(
   if (!prof || prof.role !== 'parent') {
     return json({ error: 'Erbjudandena köps av familjen.' }, 403, CORS);
   }
+  // Timmar till planen (2026-10-14) står inte i katalogen: priset är planens.
+  if (kod === 'plan_extra') return await köpTimmarTillPlanen(vem, kropp, String(prof.email ?? '') || undefined);
   /* Hela raden, inte en uttrycklig lista: timmar_pa_kopet finns först
      efter migrationen planerna_basic_standard_intensiv (2026-10-07), och
      en lista som nämner den hade nekats av PostgREST före den. Så tål
@@ -319,6 +323,134 @@ async function köpErbjudande(
       return json({ error: 'Stripe nekade: ' + fel.fel.meddelande, stripe: fel.fel }, 502, CORS);
     }
     console.error('stripe-checkout: fel i erbjudandet', JSON.stringify({ erbjudande: kod, fel: (fel as Error)?.message ?? String(fel) }));
+    return json({ error: (fel as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
+  }
+}
+
+/* ============================================================
+   TIMMAR TILL PLANEN (2026-10-14, timmarna_delas_och_kops_till)
+
+   Leo: "man kan köpa till timmar med plan men de går ut när månaden är
+   slut. man ska kunna välja hur många timmar man köper, det ska finnas
+   välj själv knapp och checkout för de specifika timmarna". Ett köp i
+   klippkort som de andra, med erbjudandet plan_extra och till_plan:
+
+   · PRISET RÄKNAS I DATABASEN, i extra_timmar_erbjudande() med den
+     inloggades token: planens eget timpris och rabatt gånger timmarna,
+     för den inloggades senaste plan som gäller minst en dag till.
+     Anropet säger bara hur många timmar (1–20).
+   · SISTA DAGEN ÄR PLANENS. klippkort_betald sätter den när köpet blir
+     betalt, och kassan är öppen i högst ett dygn.
+   · Ett väntande köp återanvänds bara för samma plan, samma timmar och
+     samma pris, och planens sista dag står i idempotensnyckeln: raden i
+     kassan säger den.
+   ============================================================ */
+async function köpTimmarTillPlanen(
+  vem: Inloggad,
+  kropp: { retur?: string; ui?: string; timmar?: unknown },
+  epost: string | undefined,
+): Promise<Response> {
+  const timmar = extraTimmar(kropp.timmar);
+  if (timmar === null) return json({ error: 'Välj mellan 1 och 20 timmar.' }, 400, CORS);
+
+  const { data: x, error: xfel } = await vem.klient.rpc('extra_timmar_erbjudande', { p_timmar: timmar });
+  if (xfel) {
+    console.error('stripe-checkout: extra_timmar_erbjudande', JSON.stringify({ fel: xfel.message }));
+    return json({ error: 'Priset gick inte att räkna. Försök igen om en stund.' }, 500, CORS);
+  }
+  const e = (x ?? {}) as {
+    ok?: boolean; fel?: string; plan?: string; plan_namn?: string; timmar?: number; timpris_ore?: number;
+    rabatt_procent?: number; rabatterat_timpris_ore?: number; pris_ore?: number; giltigt_till?: string;
+  };
+  // Ett besked från databasen, skrivet för familjen: visas som det är.
+  if (!e.ok) return json({ error: e.fel ?? 'Timmarna går inte att köpa just nu.' }, 409, CORS);
+  if (!(Number(e.pris_ore) > 0) || !e.plan || !e.giltigt_till) {
+    return json({ error: 'Timmarna går inte att köpa just nu.' }, 409, CORS);
+  }
+
+  const db = serviceklient();
+  try {
+    const { data: forut } = await db.from('klippkort')
+      .select('*')
+      .eq('parent_id', vem.anvandare).eq('erbjudande', 'plan_extra').eq('till_plan', e.plan)
+      .eq('timmar', timmar).eq('status', 'vantar')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    const rad = kassaradTillPlanen({
+      plan_namn: String(e.plan_namn ?? ''), timmar, rabatterat_timpris_ore: Number(e.rabatterat_timpris_ore),
+      giltigt_till: String(e.giltigt_till),
+    });
+
+    let kopId: string;
+    if (kanAteranvandas(forut, Number(e.pris_ore))
+        && Number(forut!.rabatt_procent) === Number(e.rabatt_procent)
+        && Number(forut!.timpris_ore) === Number(e.timpris_ore)) {
+      kopId = String(forut!.id);
+    } else {
+      const { data: ny, error: nyfel } = await db.from('klippkort').insert({
+        parent_id: vem.anvandare,
+        erbjudande: 'plan_extra',
+        namn: rad.name,
+        sort: 'klippkort',
+        timmar,
+        // Sista dagen sätts av klippkort_betald, ur planen.
+        giltig_manader: 1,
+        rabatt_procent: e.rabatt_procent,
+        timpris_ore: e.timpris_ore,
+        begart_ore: e.pris_ore,
+        till_plan: e.plan,
+      }).select('id').single();
+      if (nyfel || !ny) {
+        console.error('stripe-checkout: köpet till planen', JSON.stringify({ fel: nyfel?.message }));
+        return json({ error: 'Köpet gick inte att spara. Försök igen.' }, 500, CORS);
+      }
+      kopId = String(ny.id);
+    }
+
+    const bas = egenAdress(kropp.retur, 'https://nextrum.se');
+    const pk = kropp.ui === 'inbaddad' ? publicerbarNyckel() : null;
+    const inbaddad = pk !== null;
+    const efter = inbaddad
+      ? { ui_mode: 'embedded', redirect_on_completion: 'if_required',
+          return_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden` }
+      : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
+          cancel_url: `${bas}/foralder#erbjudanden` };
+
+    const session = await v1('POST', '/v1/checkout/sessions', {
+      mode: 'payment',
+      locale: 'sv',
+      ...efter,
+      // Samma två val som för ett pass, av samma skäl: se Deno.serve.
+      payment_method_types: ['card'],
+      managed_payments: { enabled: false },
+      customer_email: epost,
+      metadata: { klippkort_id: kopId, erbjudande: 'plan_extra' },
+      line_items: [{
+        quantity: 1,
+        price_data: { currency: VALUTA, unit_amount: e.pris_ore, product_data: rad },
+      }],
+      payment_intent_data: {
+        metadata: { klippkort_id: kopId, erbjudande: 'plan_extra' },
+        statement_descriptor_suffix: descriptor(String(e.plan_namn ?? 'TIMMAR')),
+        receipt_email: epost,
+      },
+    }, `nextrum-klippkort-${kopId}-${e.pris_ore}-${e.giltigt_till}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
+
+    await db.from('klippkort')
+      .update({ stripe_session_id: String((session as { id?: string }).id ?? '') })
+      .eq('id', kopId);
+
+    const svar = { session: (session as { id?: string }).id, belopp_ore: e.pris_ore, klippkort: kopId };
+    return inbaddad
+      ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
+               nyckel: pk, ...svar }, 200, CORS)
+      : json({ lage: 'sida', url: (session as { url?: string }).url ?? null, ...svar }, 200, CORS);
+  } catch (fel) {
+    if (fel instanceof StripeError) {
+      console.error('stripe-checkout: Stripe nekade timmarna till planen', JSON.stringify({ ...fel.fel }));
+      return json({ error: 'Stripe nekade: ' + fel.fel.meddelande, stripe: fel.fel }, 502, CORS);
+    }
+    console.error('stripe-checkout: fel i timmarna till planen', JSON.stringify({ fel: (fel as Error)?.message ?? String(fel) }));
     return json({ error: (fel as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
   }
 }
@@ -483,7 +615,7 @@ Deno.serve(async (req) => {
   const vem = await kravInloggad(req.headers.get('authorization'));
   if (!vem.ok) return vem.svar;
 
-  let kropp: { pass?: string; retur?: string; ui?: string; erbjudande?: string; tillagg?: boolean } = {};
+  let kropp: { pass?: string; retur?: string; ui?: string; erbjudande?: string; timmar?: unknown; tillagg?: boolean } = {};
   try {
     kropp = await req.json();
   } catch {

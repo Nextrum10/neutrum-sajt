@@ -4405,7 +4405,9 @@ begin
     select timpris_ore, extra_ore, startrabatt, rabatt_ore into r3 from public.bookings where id = '00000000-0000-4000-8000-0000000019b3';
 
     -- Pass 2 hålls: ett pass på noll kronor larmar inte som obetalt,
-    -- och klippkortet betalar det inte.
+    -- och klippkortet betalar det inte. Sedan timmarna_delas (2026-10-14)
+    -- drar ett längre pass med timmen på köpet resten ur timmarna, men ett
+    -- på en timme har inget att dra.
     -- Klockan 13: fixturen b4c1 (Fas 14.2) står redan i går klockan 10
     -- hos A, och på samma tid krockade passet med bookings_tutor_slot_unique.
     update public.bookings set status = 'confirmed', wanted_date = idag - 1, wanted_time = '13:00'
@@ -4439,7 +4441,8 @@ begin
     ('19.5 familjen ändrar inte priset', prisfel = '42501', prisfel),
     ('19.5 familjen tar inte bort rabatten', rabattfel = '42501', rabattfel),
     ('19.5 ett pass på noll kronor larmar inte som obetalt', larm_gratis = 0, larm_gratis::text),
-    ('19.5 klippkortet betalar inte ett pass med startrabatt', kk->>'fel' like 'Första timmen%', kk::text);
+    ('19.5 klippkortet drar inget för ett pass på en timme där timmen är på köpet',
+     kk->>'fel' like 'Timmen på köpet täcker hela passet%', kk::text);
 end $$;
 
 -- ============================================================
@@ -5109,8 +5112,10 @@ end $$;
 --    hoppas över, 22c3 (en timme, kortet nekades förra gången) och b16a.
 --    Sedan är de fem timmarna slut, och b0d1 står obetalt. Två barn,
 --    faktura, ett passerat pass och ett pass med första timmen bjuden
---    rörs inte. c16a har timmar kvar men betalar ingenting här: bara det
---    nya kortet gör det.
+--    (en timme, så inget att dra) rörs inte. c16a har timmar kvar men har
+--    gått ut i det här blocket: sedan timmarna_delas (2026-10-14) betalar
+--    alla kort i samma ordning, och c16a hade gått först. Ordningen
+--    mellan korten provas i avsnitt 34.
 do $$
 declare
   p    uuid := '00000000-0000-4000-8000-0000000000f1';
@@ -5125,6 +5130,7 @@ declare
 begin
   begin
     update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.klippkort set giltigt_till = idag - 1 where id = '00000000-0000-4000-8000-00000000c16a';
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn, betalning_status) values
       ('00000000-0000-4000-8000-0000000022c0', p, a, s, p, idag + 1, '10:00', 60, 'confirmed', 2, 'ingen'),
       ('00000000-0000-4000-8000-0000000022c5', p, a, s, p, idag + 1, '12:00', 60, 'confirmed', 1, 'faktura'),
@@ -5169,12 +5175,13 @@ begin
     ('22.2 två barn, faktura, första timmen och ett passerat pass rörs inte',
      k0 is null and k8 is null and kc1 is null and st5 = 'faktura',
      coalesce(k0::text, '-') || ', ' || coalesce(k8::text, '-') || ', ' || coalesce(kc1::text, '-') || ', ' || st5),
-    ('22.2 bara det nya kortet betalar', kvar16 = 10, 'c16a kvar ' || kvar16),
+    ('22.2 ett kort som gått ut betalar inget', kvar16 = 10, 'c16a kvar ' || kvar16),
     ('22.2 en andra leverans betalar ingenting', igen = false, coalesce(igen::text, 'null'));
 end $$;
 
 -- 5. Kortets giltighet, en påbörjad kassa som ryms, och flaggan. b16a och
---    b0d1 avbokas först, så att de inte tar timmarna.
+--    b0d1 avbokas först, så att de inte tar timmarna, och c16a har gått ut
+--    (som i 4), så att det inte betalar 22d1.
 do $$
 declare
   p    uuid := '00000000-0000-4000-8000-0000000000f1';
@@ -5186,6 +5193,7 @@ declare
 begin
   begin
     update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    update public.klippkort set giltigt_till = idag - 1 where id = '00000000-0000-4000-8000-00000000c16a';
     update public.bookings set status = 'cancelled'
      where id in ('00000000-0000-4000-8000-00000000b16a', '00000000-0000-4000-8000-00000000b0d1');
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn, betalning_status) values
@@ -5784,10 +5792,12 @@ end $$;
 
 -- 4. Samma undantag som bekräftelsen. Första timmen bjuden avgörs i
 --    bookings_startrabatt, före timmarna: familj Q:s första förslag på
---    två timmar får timmen bjuden och betalas inte med timmarna, nästa
---    gör det. Ett förslag med två barn betalas inte, och med flaggan av
---    betalar timmarna ingenting. Q är vald för första timmen pass för
---    pass (2026-10-09); köpet är ett klippkort, inte en plan.
+--    två timmar får timmen bjuden, och timmarna betalar den andra
+--    (timmarna_delas, 2026-10-14; förut betalades det förslaget inte med
+--    timmarna alls), och nästa förslag dras som vanligt. Ett förslag med
+--    två barn betalas inte, och med flaggan av betalar timmarna
+--    ingenting. Q är vald för första timmen pass för pass (2026-10-09);
+--    köpet är ett klippkort, inte en plan.
 do $$
 declare
   p    uuid := '00000000-0000-4000-8000-0000000000f1';
@@ -5801,7 +5811,7 @@ declare
   q2   uuid := '00000000-0000-4000-8000-0000000224e2';
   idag date := (now() at time zone 'Europe/Stockholm')::date;
   x2 uuid; x3 uuid;
-  rab1 boolean; st_q1 text; st_q2 text; kk_q2 uuid; st_x2 text; st_x3 text;
+  rab1 boolean; st_q1 text; kk_q1 uuid; st_q2 text; kk_q2 uuid; kvar_cq int; st_x2 text; st_x3 text;
   fel text;
 begin
   begin
@@ -5815,8 +5825,9 @@ begin
     values (q1, q, b, sq, q, idag + 3, '19:00', 120, 'requested', 1);
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status, antal_barn)
     values (q2, q, b, sq, q, idag + 4, '19:00', 60, 'requested', 1);
-    select startrabatt, betalning_status into rab1, st_q1 from public.bookings where id = q1;
+    select startrabatt, betalning_status, klippkort_id into rab1, st_q1, kk_q1 from public.bookings where id = q1;
     select betalning_status, klippkort_id into st_q2, kk_q2 from public.bookings where id = q2;
+    select k.kvar into kvar_cq from public.klippkort_saldo k where k.id = cq;
 
     perform pg_temp.bli(p);
     insert into public.bookings (parent_id, tutor_id, student_id, created_by, subject, tjanst, antal_barn,
@@ -5846,10 +5857,12 @@ begin
     return;
   end if;
   insert into utfall (test, ok, detalj) values
-    ('22.4 första timmen bjuden avgörs före timmarna, och det förslaget betalas inte med dem',
-     rab1 and st_q1 = 'ingen', coalesce(rab1::text, 'null') || ', ' || coalesce(st_q1, '-')),
-    ('22.4 nästa förslag från samma familj betalas med timmarna', st_q2 = 'betald' and kk_q2 = cq,
-     coalesce(st_q2, '-') || ', ' || coalesce(kk_q2::text, 'inget kort')),
+    ('22.4 första timmen bjuden avgörs före timmarna, och timmarna betalar resten av det förslaget',
+     rab1 and st_q1 = 'betald' and kk_q1 = cq,
+     coalesce(rab1::text, 'null') || ', ' || coalesce(st_q1, '-') || ', ' || coalesce(kk_q1::text, 'inget kort')),
+    ('22.4 nästa förslag från samma familj betalas med timmarna, och kortet drar en timme för vartdera',
+     st_q2 = 'betald' and kk_q2 = cq and kvar_cq = 3,
+     coalesce(st_q2, '-') || ', ' || coalesce(kk_q2::text, 'inget kort') || ', kvar ' || coalesce(kvar_cq::text, '-')),
     ('22.4 ett förslag med två barn betalas inte med timmarna', st_x2 = 'ingen', coalesce(st_x2, '-')),
     ('22.4 flaggan av: förslaget betalas inte', st_x3 = 'ingen', coalesce(st_x3, '-'));
 end $$;
@@ -9185,7 +9198,9 @@ end $$;
 -- förslag får en timme bjuden och nästa pass efter det fullt pris.
 -- Avböjs passet med timmen kommer den tillbaka.
 -- Q är ny i fixturerna (Fas 19.5 räknar med samma sak). Erbjudandena
--- slås på, så att det syns att köpta timmar inte betalar passet.
+-- slås på, så att det syns att köpta timmar betalar resten av passet med
+-- timmen, och bara resten (timmarna_delas, 2026-10-14; förut betalade de
+-- inte det passet alls).
 do $$
 declare
   p   constant uuid := '00000000-0000-4000-8000-0000000000f1';
@@ -9203,7 +9218,7 @@ declare
   idag date := (now() at time zone 'Europe/Stockholm')::date;
   qb2 constant uuid := '00000000-0000-4000-8000-00000000d1b2';
   jp jsonb; j1 jsonb; j2 jsonb; fore_ny int; efter_gammal int; efter_stangd int; en_timme int;
-  r1 record; r2 record; r3 record; r4 record; fal record;
+  r1 record; r2 record; r3 record; r4 record; fal record; pb1_timmar int;
   k_forfalska text; k_andra text; kod_efter text; fel text;
 begin
   begin
@@ -9271,6 +9286,7 @@ begin
     k_andra := pg_temp.svar_som(p, format($q$update public.bookings set rabattkod = null where id = %L$q$, pb1));
     select startrabatt, rabattkod, rabatt_ore, timpris_ore, klippkort_id into r1 from public.bookings where id = pb1;
     select startrabatt, rabattkod, rabatt_ore, klippkort_id into r2 from public.bookings where id = pb2;
+    select coalesce(sum(timmar), 0) into pb1_timmar from public.klippkort_rorelser where booking_id = pb1;
 
     -- Passet med timmen avböjs: timmen kommer tillbaka och går till nästa.
     update public.bookings set status = 'cancelled' where id = pb1;
@@ -9321,8 +9337,9 @@ begin
     ('Tips nästa förslag får en timme bjuden',
       r1.startrabatt and r1.rabattkod = 'TIPS' and r1.rabatt_ore = r1.timpris_ore,
       r1.startrabatt || ' ' || coalesce(r1.rabattkod, 'null') || '/' || coalesce(r1.rabatt_ore::text, 'null')),
-    ('Tips köpta timmar betalar inte passet med timmen', r1.klippkort_id is null,
-      coalesce(r1.klippkort_id::text, 'null')),
+    ('Tips köpta timmar betalar resten av passet med timmen, och bara resten',
+      r1.klippkort_id = '00000000-0000-4000-8000-00000000c16a' and pb1_timmar = 1,
+      coalesce(r1.klippkort_id::text, 'null') || ', ' || pb1_timmar || ' h'),
     ('Tips en timme per familj, och nästa pass betalas som vanligt',
       not r2.startrabatt and r2.rabattkod is null and r2.rabatt_ore is null and r2.klippkort_id is not null,
       r2.startrabatt || ' ' || coalesce(r2.rabattkod, 'null') || ' kort ' || coalesce(r2.klippkort_id::text, 'null')),
@@ -14148,8 +14165,10 @@ begin
     return;
   end if;
 
-  ut := ut || jsonb_build_object('t', 'GT villkorens version är 2026-10-13', 'ok',
-          intern.villkor_version() = '2026-10-13', 'd', intern.villkor_version());
+  -- Minst 2026-10-13: en senare ändring av villkoren (timmarna_delas,
+  -- 2026-10-14) ger en senare version.
+  ut := ut || jsonb_build_object('t', 'GT villkorens version är minst 2026-10-13', 'ok',
+          intern.villkor_version() >= '2026-10-13', 'd', intern.villkor_version());
 
   -- A. Planens gratis timme gäller efter planens månad, en timme, till
   --    60 dagar efter köpet.
@@ -14608,13 +14627,33 @@ begin
       select klippkort_id::text into t from public.bookings where id = B2;
       ut := ut || jsonb_build_object('t', 'GTB gratistimmarna betalar först, också när köpta timmar går ut tidigare',
               'ok', t = g::text, 'd', coalesce(t, 'null'));
-      select klippkort_id::text into t from public.bookings where id = B3;
-      ut := ut || jsonb_build_object('t', 'GTB ett pass som gratistimmarna inte räcker till betalas med köpta timmar',
-              'ok', t = KK::text, 'd', coalesce(t, 'null'));
+      -- timmarna_delas (2026-10-14): passet på tre timmar tar de två
+      -- gratistimmar som är kvar och en köpt timme. Förut betalades hela
+      -- passet med köpta timmar, och gratistimmarna blev stående.
+      select klippkort_id || ':' || coalesce(forsta_klippkort_id::text, 'null') || ':'
+             || coalesce(forsta_klippkort_timmar::text, 'null')
+        into t from public.bookings where id = B3;
+      ut := ut || jsonb_build_object('t', 'GTB ett pass som gratistimmarna inte räcker till tar det som är kvar av dem, och köpta timmar resten',
+              'ok', t = KK || ':' || g || ':2', 'd', coalesce(t, 'null'));
+      select string_agg(s.id || ':' || s.kvar, ',' order by s.id) into t
+        from public.klippkort_saldo s where s.id in (g, KK);
+      ut := ut || jsonb_build_object('t', 'GTB saldot räknar båda korten: gratistimmarna slut, en köpt timme använd',
+              'ok', t = (select string_agg(x, ',' order by x) from unnest(array[g || ':0', KK || ':3']) x),
+              'd', coalesce(t, 'null'));
 
       t := pg_temp.svar_som(Q, format('select public.ta_tillbaka_gratistimmar(%L)', g));
       ut := ut || jsonb_build_object('t', 'GTB familjen tar inte tillbaka gratistimmar', 'ok', t = '42501', 'd', t);
 
+      -- Alla tre ligger på pass, också de två där kortet drogs först.
+      perform pg_temp.bli(AD);
+      r := public.ta_tillbaka_gratistimmar(g);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'GTB Ta tillbaka räknar timmarna där kortet drogs först',
+              'ok', (r ->> 'tillbaka')::int = 0 and (r ->> 'pa_pass')::int = 3, 'd', r::text);
+
+      -- Det delade förslaget avböjs, och dess två gratistimmar blir lediga.
+      update public.bookings set status = 'cancelled' where id = B3;
       perform pg_temp.bli(AD);
       r := public.ta_tillbaka_gratistimmar(g);
       reset role;
@@ -14650,17 +14689,40 @@ begin
       -- Förslaget dras tillbaka: passet bär kortet, men inga timmar.
       update public.bookings set status = 'cancelled' where id = B4;
 
+      -- timmarna_delas (2026-10-14): kortet återkallas (aterkallad_at) i
+      -- stället för att raderas. Det står kvar utan timmar, och passet
+      -- som pekar på det rörs inte.
       perform pg_temp.bli(AD);
       r := public.ta_tillbaka_gratistimmar(g);
       reset role;
       perform set_config('request.jwt.claims', '', true);
-      select count(*) into n from public.klippkort where id = g;
+      select count(*) into n from public.klippkort where id = g and aterkallad_at is not null;
       select count(*) into m from public.audit_logg
-       where tabell = 'klippkort' and objekt_id = g::text and handling = 'klippkort.borttagen' and aktor = AD;
+       where tabell = 'klippkort' and objekt_id = g::text and handling = 'klippkort.andrad' and aktor = AD
+         and fore ->> 'aterkallad_at' is null and efter ->> 'aterkallad_at' is not null;
       select coalesce(klippkort_id::text, 'null') into t from public.bookings where id = B4;
-      ut := ut || jsonb_build_object('t', 'GTB utan timmar på något pass tas gratistimmarna bort helt, och auditen säger det',
-              'ok', n = 0 and m = 1 and t = 'null' and (r ->> 'borttagen')::boolean and (r ->> 'tillbaka')::int = 2,
-              'd', 'kvar ' || n || ', audit ' || m || ', passets kort ' || t || ' ' || r::text);
+      ut := ut || jsonb_build_object('t', 'GTB utan timmar på något pass återkallas gratistimmarna, kortet står kvar och auditen säger det',
+              'ok', n = 1 and m = 1 and t = g::text and (r ->> 'borttagen')::boolean and (r ->> 'tillbaka')::int = 2,
+              'd', 'återkallat ' || n || ', audit ' || m || ', passets kort ' || t || ' ' || r::text);
+      select s.kvar || ':' || s.gratis_kvar || ':' || s.brukbar into t from public.klippkort_saldo s where s.id = g;
+      ut := ut || jsonb_build_object('t', 'GTB ett återkallat kort har inget kvar och går inte att använda',
+              'ok', t = '0:0:false', 'd', coalesce(t, 'ingen rad'));
+
+      perform pg_temp.bli(AD);
+      r := public.ta_tillbaka_gratistimmar(g);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'GTB Ta tillbaka en gång till tar inget',
+              'ok', (r ->> 'tillbaka')::int = 0, 'd', r::text);
+
+      perform pg_temp.bli(Q);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B1, Q, A, SQ, Q, idag + 8, '08:00', 60, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select coalesce(klippkort_id::text, 'null') || ':' || betalning_status into t from public.bookings where id = B1;
+      ut := ut || jsonb_build_object('t', 'GTB ett återkallat kort betalar inget nytt förslag',
+              'ok', t = 'null:ingen', 'd', coalesce(t, 'null'));
 
       raise exception 'delblock';
     exception when others then
@@ -15672,6 +15734,570 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('KR Kortet reserveras', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- ------------------------------------------------------------
+-- 34. Timmarna delas, och timmar köps till planen
+--     (timmarna_delas_och_kops_till, 2026-10-14)
+--
+-- Leo 2026-10-13: tipstimmen och första timmen används före planen, och
+-- planen betalar resten; ett pass kan delas mellan gratistimmarna och
+-- planen; timmar köps till en plan, 1–20 åt gången, till planens
+-- timpris, och går ut med planen. Ett pass dras från högst två kort,
+-- gratis timmar först och sedan det som går ut först. Familj Q, med
+-- barnet matchat hos A och erbjudandena på. Varje delblock rullas
+-- tillbaka för sig (variablerna står kvar), och allt rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  t     text;
+  n     bigint;
+  m     bigint;
+  g     uuid;
+  g2    uuid;
+  r     jsonb;
+  tp    integer;
+  bok   public.bookings;
+  fore  text;
+  u     text;
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  mitt  timestamptz := ((now() at time zone 'Europe/Stockholm')::date + time '12:00') at time zone 'Europe/Stockholm';
+  Q     constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  SQ    constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  PL    constant uuid := '00000000-0000-4000-8000-0000000032a1';
+  KC    constant uuid := '00000000-0000-4000-8000-0000000032a2';
+  EX    constant uuid := '00000000-0000-4000-8000-0000000032a3';
+  EX2   constant uuid := '00000000-0000-4000-8000-0000000032a4';
+  K1    constant uuid := '00000000-0000-4000-8000-0000000032a5';
+  X1    constant uuid := '00000000-0000-4000-8000-0000000032b1';
+  X2    constant uuid := '00000000-0000-4000-8000-0000000032b2';
+  X3    constant uuid := '00000000-0000-4000-8000-0000000032b3';
+  X4    constant uuid := '00000000-0000-4000-8000-0000000032b4';
+begin
+  if to_regprocedure('intern.timmar_fordela(uuid, date, integer, uuid)') is null then
+    insert into utfall (test, ok, detalj) values ('TD Timmarna delas: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    select pris_per_timme_ore into tp from public.tjanster where kod = 'laxhjalp';
+    update public.students set matched_tutor_id = A, match_status = 'matched' where id = SQ;
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+
+    -- ---------- A. Två kort, i ordning, och saldot ----------
+    begin
+      perform pg_temp.bli(AD);
+      g := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (PL, Q, 'plan_standard', 'Prov Standard', 'plan', 4, 1, 5, tp, 4 * 37900, 4 * 37900, 'betald',
+              idag + 20, now(), 'ch_rlsprov_32_pl'),
+             (KC, Q, 'klipp10', 'Prov Fyll timbanken', 'klippkort', 10, 6, 0, tp, 10 * tp, 10 * tp, 'betald',
+              idag + 180, now(), 'ch_rlsprov_32_kc');
+
+      perform pg_temp.bli(Q);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (X1, Q, A, SQ, Q, idag + 8, '10:00', 180, 'requested');
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (X2, Q, A, SQ, Q, idag + 9, '10:00', 180, 'requested');
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (X3, Q, A, SQ, Q, idag + 10, '10:00', 120, 'requested');
+      select sum(timmar) into n from public.klippkort_rorelser;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+
+      select coalesce(klippkort_id::text, 'null') || ':' || coalesce(forsta_klippkort_id::text, 'null') || ':'
+             || coalesce(forsta_klippkort_timmar::text, 'null') || ':' || betalning_status
+        into t from public.bookings where id = X1;
+      ut := ut || jsonb_build_object('t', 'TD ett pass som gratistimmen inte räcker till tar den, och planen resten',
+              'ok', t = PL || ':' || g || ':1:betald', 'd', coalesce(t, 'null'));
+      select coalesce(klippkort_id::text, 'null') || ':' || coalesce(forsta_klippkort_id::text, 'null') || ':'
+             || coalesce(forsta_klippkort_timmar::text, 'null')
+        into t from public.bookings where id = X2;
+      ut := ut || jsonb_build_object('t', 'TD nästa pass tar det som är kvar av planen, och Fyll timbanken resten',
+              'ok', t = KC || ':' || PL || ':2', 'd', coalesce(t, 'null'));
+      select coalesce(klippkort_id::text, 'null') || ':' || coalesce(forsta_klippkort_id::text, 'null')
+        into t from public.bookings where id = X3;
+      ut := ut || jsonb_build_object('t', 'TD räcker ett kort till hela passet dras bara det',
+              'ok', t = KC || ':null', 'd', coalesce(t, 'null'));
+
+      select string_agg(case s.id when g then 'g' when PL then 'pl' when KC then 'kc' end || s.kvar, ' ' order by case s.id when g then 1 when g2 then 2 when PL then 3 when KC then 4 end)
+        into t from public.klippkort_saldo s where s.parent_id = Q;
+      select count(*) into m from public.klippkort_saldo s
+       where s.parent_id = Q and s.anvanda is distinct from intern.kortets_anvanda(s.id, null);
+      ut := ut || jsonb_build_object('t', 'TD saldot räknar båda korten på ett delat pass, och vyn räknar som hjälparen',
+              'ok', t = 'g0 pl0 kc7' and m = 0, 'd', coalesce(t, 'null') || ', olika ' || m);
+      ut := ut || jsonb_build_object('t', 'TD familjen ser en rad per kort och pass, också där kortet drogs först',
+              'ok', n = 8, 'd', coalesce(n::text, 'null'));
+
+      -- Familjen drar tillbaka det delade förslaget: båda korten får tillbaka sina timmar.
+      perform pg_temp.bli(Q);
+      update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = X1;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select string_agg(case s.id when g then 'g' when PL then 'pl' when KC then 'kc' end || s.kvar, ' ' order by case s.id when g then 1 when g2 then 2 when PL then 3 when KC then 4 end)
+        into t from public.klippkort_saldo s where s.parent_id = Q;
+      ut := ut || jsonb_build_object('t', 'TD ett avbokat delat pass lämnar tillbaka timmarna till båda korten',
+              'ok', t = 'g1 pl2 kc7', 'd', coalesce(t, 'null'));
+
+      -- Släpps huvudkortet (en kortbetalning vann, eller ett förslag ingen
+      -- svarat på) släpps det första kortet med.
+      update public.bookings set klippkort_id = null, betalning_status = 'ingen', betald_at = null where id = X2;
+      select coalesce(forsta_klippkort_id::text, 'null') || ':' || coalesce(forsta_klippkort_timmar::text, 'null')
+        into t from public.bookings where id = X2;
+      ut := ut || jsonb_build_object('t', 'TD släpps huvudkortet släpps det första kortet med',
+              'ok', t = 'null:null', 'd', t);
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- B. Timmen på köpet först, timmarna resten ----------
+    begin
+      insert into public.forsta_timmen_beviljad (parent_id) values (Q);
+      perform pg_temp.bli(AD);
+      g := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (KC, Q, 'klipp10', 'Prov Fyll timbanken', 'klippkort', 10, 6, 0, tp, 10 * tp, 10 * tp, 'betald',
+              idag + 180, now(), 'ch_rlsprov_32_kc');
+
+      -- Tre timmar, och första timmen bjuds: två timmar dras, gratistimmen
+      -- först och en köpt timme.
+      perform pg_temp.bli(Q);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (X1, Q, A, SQ, Q, idag + 8, '10:00', 180, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select startrabatt || ':' || coalesce(klippkort_id::text, 'null') || ':' || coalesce(forsta_klippkort_id::text, 'null')
+             || ':' || coalesce(forsta_klippkort_timmar::text, 'null') || ':' || betalning_status
+        into t from public.bookings where id = X1;
+      ut := ut || jsonb_build_object('t', 'TD ett pass med timmen på köpet drar resten ur timmarna, gratistimmen först',
+              'ok', t = 'true:' || KC || ':' || g || ':1:betald', 'd', coalesce(t, 'null'));
+      select string_agg(case s.id when g then 'g' when KC then 'kc' end || s.kvar, ' ' order by case s.id when g then 1 when g2 then 2 when PL then 3 when KC then 4 end)
+        into t from public.klippkort_saldo s where s.parent_id = Q;
+      ut := ut || jsonb_build_object('t', 'TD timmen på köpet dras inte ur korten',
+              'ok', t = 'g0 kc9', 'd', coalesce(t, 'null'));
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- C. Ett kortare pass lämnar tillbaka bakifrån, och de sparade minuterna ----------
+    begin
+      perform pg_temp.bli(AD);
+      g := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      g2 := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (KC, Q, 'klipp10', 'Prov Fyll timbanken', 'klippkort', 10, 6, 0, tp, 10 * tp, 10 * tp, 'betald',
+              idag + 180, now(), 'ch_rlsprov_32_kc');
+
+      -- I går: X1 och X2 på tre timmar, delade mellan en gratistimme och
+      -- Fyll timbanken, höll 45 minuter och 1 h 15. X3 och X4 på två
+      -- timmar med timmen på köpet höll lika länge.
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min,
+                                   status, klippkort_id, forsta_klippkort_id, forsta_klippkort_timmar,
+                                   betalning_status, betald_at, startrabatt, rabatt_ore)
+      values (X1, Q, A, SQ, Q, idag - 1, '06:00', 180, 'completed', KC, g, 1, 'betald', now(), false, null),
+             (X2, Q, A, SQ, Q, idag - 1, '10:00', 180, 'completed', KC, g2, 1, 'betald', now(), false, null),
+             (X3, Q, A, SQ, Q, idag - 1, '14:00', 120, 'completed', KC, null, null, 'betald', now(), true, tp),
+             (X4, Q, A, SQ, Q, idag - 1, '18:00', 120, 'completed', KC, null, null, 'betald', now(), true, tp);
+      insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, start_tid, slut_tid, avvikelse_skal)
+      values (SQ, A, X1, 'x', idag - 1, 'narvarande', '06:00', '06:45', 'prov'),
+             (SQ, A, X2, 'x', idag - 1, 'narvarande', '10:00', '11:15', 'prov'),
+             (SQ, A, X3, 'x', idag - 1, 'narvarande', '14:00', '14:45', 'prov'),
+             (SQ, A, X4, 'x', idag - 1, 'narvarande', '18:00', '19:15', 'prov');
+
+      select string_agg(case s.id when g then 'g' when g2 then 'g2' when KC then 'kc' end || s.kvar, ' ' order by case s.id when g then 1 when g2 then 2 when PL then 3 when KC then 4 end)
+        into t from public.klippkort_saldo s where s.parent_id = Q;
+      ut := ut || jsonb_build_object('t', 'TD ett delat pass som blev kortare lämnar tillbaka bakifrån: gratistimmen är den som använts',
+              'ok', t = 'g0 g20 kc8', 'd', coalesce(t, 'null'));
+      select count(*) into n from public.klippkort_rorelser where booking_id in (X1, X3);
+      ut := ut || jsonb_build_object('t', 'TD ett kort som inget drogs från står inte bland passets rörelser',
+              'ok', n = 1, 'd', n::text);
+
+      select * into bok from public.bookings where id = X1;
+      t := intern.timbank_in(bok)::text;
+      select * into bok from public.bookings where id = X2;
+      t := t || ' ' || intern.timbank_in(bok);
+      select * into bok from public.bookings where id = X3;
+      t := t || ' ' || intern.timbank_in(bok);
+      select * into bok from public.bookings where id = X4;
+      t := t || ' ' || intern.timbank_in(bok);
+      ut := ut || jsonb_build_object('t', 'TD minuterna sparas bara när den sista timmen var köpt, och timmen på köpet sparar inget',
+              'ok', t = '0 45 0 45' and intern.timbank_saldo(Q) = 90,
+              'd', t || ', saldo ' || coalesce(intern.timbank_saldo(Q)::text, 'null'));
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- D. Betala med timmar, som klippkort-betala kör den ----------
+    begin
+      perform pg_temp.bli(AD);
+      g := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (PL, Q, 'plan_standard', 'Prov Standard', 'plan', 4, 1, 5, tp, 4 * 37900, 4 * 37900, 'betald',
+              idag + 20, now(), 'ch_rlsprov_32_pl');
+      -- Bekräftade utan att ha betalats (flaggan stod av när de bokades).
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min,
+                                   status, betalning_status)
+      values (X1, Q, A, SQ, Q, idag + 3, '10:00', 180, 'confirmed', 'ingen'),
+             (X2, Q, A, SQ, Q, idag + 4, '10:00', 180, 'confirmed', 'ingen');
+
+      t := pg_temp.svar_som(Q, format('select public.klippkort_dra(%L, %L)', X1, Q));
+      ut := ut || jsonb_build_object('t', 'TD familjen anropar inte klippkort_dra själv', 'ok', t = '42501', 'd', t);
+
+      -- klippkort-betala kör funktionen med service_role, sedan gratistimmarna_60_dagar
+      -- utan rätt till intern.kortets_timmar (rättat här).
+      begin
+        perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+        execute 'set local role service_role';
+        r := public.klippkort_dra(X1, Q);
+      exception when others then r := jsonb_build_object('undantag', sqlerrm);
+      end;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'TD Betala med timmar går med service_role, och delar passet',
+              'ok', (r ->> 'ok')::boolean and r ->> 'klippkort' = PL::text and r ->> 'forsta' = g::text
+                    and (r ->> 'forsta_timmar')::int = 1 and (r ->> 'kvar')::int = 2,
+              'd', r::text);
+      select coalesce(klippkort_id::text, 'null') || ':' || coalesce(forsta_klippkort_id::text, 'null') || ':'
+             || coalesce(forsta_klippkort_timmar::text, 'null') || ':' || betalning_status
+        into t from public.bookings where id = X1;
+      ut := ut || jsonb_build_object('t', 'TD passet står betalt med båda korten',
+              'ok', t = PL || ':' || g || ':1:betald', 'd', coalesce(t, 'null'));
+
+      -- Tre kort med en timme var räcker inte till tre timmar: två kort per pass.
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (K1, Q, 'klipp10', 'Prov 1 timme', 'klippkort', 1, 6, 0, tp, tp, tp, 'betald',
+              idag + 180, now(), 'ch_rlsprov_32_k1');
+      -- Planen har en timme kvar (X1 tog två av fyra).
+      update public.klippkort set timmar = 3 where id = PL;
+      perform pg_temp.bli(AD);
+      g2 := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      begin
+        perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+        execute 'set local role service_role';
+        r := public.klippkort_dra(X2, Q);
+      exception when others then r := jsonb_build_object('undantag', sqlerrm);
+      end;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select coalesce(klippkort_id::text, 'null') || ':' || betalning_status into t from public.bookings where id = X2;
+      ut := ut || jsonb_build_object('t', 'TD ett pass dras från högst två kort',
+              'ok', r ->> 'fel' like 'Ni har inga timmar kvar som räcker%' and t = 'null:ingen',
+              'd', r::text || ' ' || coalesce(t, 'null'));
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- E. Köp till timmar: priset, kassan och webhooken ----------
+    begin
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (PL, Q, 'plan_standard', 'Prov Standard', 'plan', 2, 1, 5, tp, 2 * 37900, 2 * 37900, 'betald',
+              idag + 20, now(), 'ch_rlsprov_32_pl');
+
+      t := pg_temp.svar_som(null, 'select public.extra_timmar_erbjudande(3)');
+      ut := ut || jsonb_build_object('t', 'TD anon frågar inte efter priset på timmar till en plan', 'ok', t = '42501', 'd', t);
+      perform pg_temp.bli(A);
+      r := public.extra_timmar_erbjudande(3);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      t := r ->> 'fel';
+      perform pg_temp.bli(P);
+      r := public.extra_timmar_erbjudande(3);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'TD en studiehjälpare och en familj utan plan köper inte till timmar',
+              'ok', t like 'Timmar köps av familjen%' and r ->> 'fel' like 'Timmar köps till en plan%',
+              'd', coalesce(t, 'null') || ' / ' || r::text);
+
+      perform pg_temp.bli(Q);
+      r := public.extra_timmar_erbjudande(3);
+      t := coalesce(public.extra_timmar_erbjudande(0) ->> 'fel', 'inget fel') || ' / '
+           || coalesce(public.extra_timmar_erbjudande(21) ->> 'fel', 'inget fel');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'TD tre timmar till planen kostar planens timpris och går ut med planen',
+              'ok', (r ->> 'ok')::boolean and r ->> 'plan' = PL::text and (r ->> 'rabatterat_timpris_ore')::int = 37900
+                    and (r ->> 'pris_ore')::int = 3 * 37900 and (r ->> 'giltigt_till')::date = idag + 20,
+              'd', r::text);
+      ut := ut || jsonb_build_object('t', 'TD mellan 1 och 20 timmar åt gången',
+              'ok', t = 'Välj mellan 1 och 20 timmar. / Välj mellan 1 och 20 timmar.', 'd', t);
+
+      -- En plan köpt till ett äldre pris: timmarna kostar det.
+      update public.klippkort set timpris_ore = 36900 where id = PL;
+      perform pg_temp.bli(Q);
+      r := public.extra_timmar_erbjudande(2);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select s.rabatterat_timpris_ore::text into t from public.klippkort_saldo s where s.id = PL;
+      ut := ut || jsonb_build_object('t', 'TD priset är planens eget, och saldot visar det',
+              'ok', (r ->> 'rabatterat_timpris_ore')::int = 35000 and (r ->> 'pris_ore')::int = 70000 and t = '35000',
+              'd', r::text || ' saldo ' || coalesce(t, 'null'));
+      update public.klippkort set timpris_ore = tp where id = PL;
+
+      update public.klippkort set giltigt_till = idag where id = PL;
+      perform pg_temp.bli(Q);
+      r := public.extra_timmar_erbjudande(2);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'TD en plan som går ut i dag tar inte emot fler timmar',
+              'ok', r ->> 'fel' like 'Timmar köps till en plan%', 'd', r::text);
+      update public.klippkort set giltigt_till = idag + 20 where id = PL;
+
+      -- Planens två timmar betalar två förslag. Det tredje (tre timmar)
+      -- står obetalt tills timmarna köpts till.
+      perform pg_temp.bli(Q);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (X1, Q, A, SQ, Q, idag + 2, '10:00', 60, 'requested'),
+             (X2, Q, A, SQ, Q, idag + 3, '10:00', 60, 'requested'),
+             (X3, Q, A, SQ, Q, idag + 4, '10:00', 180, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select betalning_status into fore from public.bookings where id = X3;
+
+      -- Kassan skriver köpet med service_role (stripe-checkout), och webhooken betalar det.
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status, till_plan)
+      values (EX, Q, 'plan_extra', 'Extra timmar till planen', 'klippkort', 3, 1, 5, tp, 3 * 37900, 'vantar', PL);
+      perform public.klippkort_betald(EX, 3 * 37900, 'pi_rlsprov_32_ex', 'ch_rlsprov_32_ex', null, null, null, false);
+      select s.giltigt_till || ':' || s.timmar || ':' || s.kvar || ':' || coalesce(s.till_plan::text, 'null')
+        into t from public.klippkort_saldo s where s.id = EX;
+      ut := ut || jsonb_build_object('t', 'TD timmarna som köpts till gäller till planens sista dag, utan timme på köpet',
+              'ok', t = (idag + 20) || ':3:0:' || PL, 'd', coalesce(t, 'null'));
+      select coalesce(klippkort_id::text, 'null') || ':' || betalning_status into t from public.bookings where id = X3;
+      ut := ut || jsonb_build_object('t', 'TD de köpta timmarna betalar förslaget som väntade',
+              'ok', fore = 'ingen' and t = EX || ':betald', 'd', coalesce(fore, 'null') || ' -> ' || coalesce(t, 'null'));
+
+      -- Hann planen gå ut innan betalningen kom gäller timmarna i dag, och admin får en uppgift.
+      update public.klippkort set giltigt_till = idag - 1 where id = PL;
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status, till_plan)
+      values (EX2, Q, 'plan_extra', 'Extra timmar till planen', 'klippkort', 1, 1, 5, tp, 37900, 'vantar', PL);
+      perform public.klippkort_betald(EX2, 37900, 'pi_rlsprov_32_ex2', 'ch_rlsprov_32_ex2', null, null, null, false);
+      select giltigt_till::text into t from public.klippkort where id = EX2;
+      select count(*) into n from public.uppgifter where nyckel = 'extra_timmar_efter_planen:' || EX2;
+      ut := ut || jsonb_build_object('t', 'TD timmar till en plan som hunnit gå ut gäller i dag, och admin får en uppgift',
+              'ok', t = idag::text and n = 1, 'd', coalesce(t, 'null') || ', uppgifter ' || n);
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- F. Spärrarna ----------
+    begin
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (PL, Q, 'plan_standard', 'Prov Standard', 'plan', 4, 1, 5, tp, 4 * 37900, 4 * 37900, 'betald',
+              idag + 20, now(), 'ch_rlsprov_32_pl'),
+             (KC, Q, 'klipp10', 'Prov Fyll timbanken', 'klippkort', 10, 6, 0, tp, 10 * tp, 10 * tp, 'betald',
+              idag + 180, now(), 'ch_rlsprov_32_kc');
+
+      t := '';
+      begin
+        insert into public.klippkort (parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                      timpris_ore, begart_ore, status)
+        values (Q, 'plan_extra', 'Prov', 'klippkort', 1, 1, 5, tp, 37900, 'vantar');
+        t := t || 'inget fel';
+      exception when others then t := t || sqlstate;
+      end;
+      begin
+        insert into public.klippkort (parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                      timpris_ore, begart_ore, status, till_plan)
+        values (Q, 'klipp10', 'Prov', 'klippkort', 1, 6, 0, tp, tp, 'vantar', PL);
+        t := t || ' inget fel';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      begin
+        update public.klippkort set aterkallad_at = now() where id = KC;
+        t := t || ' inget fel';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'TD timmar till en plan pekar på planen, bara de, och bara gratistimmar återkallas',
+              'ok', t = '23514 23514 23514', 'd', t);
+
+      perform pg_temp.bli(null);
+      select count(*) into n from public.erbjudanden_pris where kod = 'plan_extra';
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      t := pg_temp.svar_som(AD, $q$update public.erbjudanden set aktiv = true where kod = 'plan_extra'$q$);
+      ut := ut || jsonb_build_object('t', 'TD katalograden för timmar till planen säljs inte och går inte att slå på',
+              'ok', n = 0 and t = '23514', 'd', n || ' ' || t);
+
+      perform pg_temp.bli(Q);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (X1, Q, A, SQ, Q, idag + 8, '10:00', 60, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      t := pg_temp.svar_som(Q, format('update public.bookings set forsta_klippkort_id = %L, forsta_klippkort_timmar = 1 where id = %L', KC, X1));
+      t := t || ' ' || pg_temp.svar_som(Q, format('update public.bookings set forsta_klippkort_timmar = 2 where id = %L', X1));
+      t := t || ' ' || pg_temp.svar_som(Q, format($q$insert into public.bookings (id, parent_id, tutor_id, student_id, created_by,
+                 wanted_date, wanted_time, duration_min, status, forsta_klippkort_id, forsta_klippkort_timmar)
+                 values (%L, %L, %L, %L, %L, %L, '12:00', 60, 'requested', %L, 1)$q$, X2, Q, A, SQ, Q, idag + 5, KC));
+      ut := ut || jsonb_build_object('t', 'TD familjen skriver inte det första kortet, varken på ett pass eller ett nytt',
+              'ok', t = '42501 42501 42501', 'd', t);
+
+      t := '';
+      begin
+        update public.bookings set forsta_klippkort_id = KC where id = X1;
+        t := t || 'inget fel';
+      exception when others then t := t || sqlstate;
+      end;
+      begin
+        update public.bookings set forsta_klippkort_id = PL, forsta_klippkort_timmar = 3 where id = X1;
+        t := t || ' inget fel';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      begin
+        update public.bookings set forsta_klippkort_id = klippkort_id, forsta_klippkort_timmar = 1 where id = X1;
+        t := t || ' inget fel';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      begin
+        update public.bookings set klippkort_id = null, forsta_klippkort_id = PL, forsta_klippkort_timmar = 1,
+                                   betalning_status = 'ingen', betald_at = null
+         where id = X1;
+        select coalesce(forsta_klippkort_id::text, 'null') into u from public.bookings where id = X1;
+        t := t || ' följer:' || u;
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'TD det första kortet står med sina timmar, bredvid ett annat huvudkort',
+              'ok', t = '23514 23514 23514 följer:null', 'd', t);
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- G. Köpet, gratistimmarna och jobbet betalar med alla kort ----------
+    begin
+      insert into public.forsta_timmen_beviljad (parent_id) values (Q);
+      -- Förslagen kommer innan det finns några timmar: X1 (två timmar) och
+      -- X2 (tre timmar, och första timmen bjuds på det som når två timmar,
+      -- alltså X1).
+      perform pg_temp.bli(Q);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (X1, Q, A, SQ, Q, idag + 8, '10:00', 120, 'requested'),
+             (X2, Q, A, SQ, Q, idag + 9, '10:00', 180, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+
+      -- En gratistimme räcker till X1:s andra timme (den första bjuds).
+      perform pg_temp.bli(AD);
+      r := public.ge_gratistimmar(Q, 1);
+      g := (r ->> 'id')::uuid;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select startrabatt || ':' || coalesce(klippkort_id::text, 'null') into t from public.bookings where id = X1;
+      ut := ut || jsonb_build_object('t', 'TD gratistimmar som sätts in betalar resten av ett pass med timmen på köpet',
+              'ok', t = 'true:' || g and (r ->> 'betalda_pass')::int = 1, 'd', coalesce(t, 'null') || ' ' || r::text);
+
+      -- Ett köp blir betalt: X2 betalas med det och ingenting annat finns kvar.
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status)
+      values (KC, Q, 'klipp10', 'Prov Fyll timbanken', 'klippkort', 2, 6, 0, tp, 2 * tp, 'vantar');
+      perform public.klippkort_betald(KC, 2 * tp, 'pi_rlsprov_32_kc', 'ch_rlsprov_32_kc', null, null, null, false);
+      select coalesce(klippkort_id::text, 'null') || ':' || betalning_status into t from public.bookings where id = X2;
+      ut := ut || jsonb_build_object('t', 'TD ett köp som inte räcker till ett pass betalar det inte',
+              'ok', t = 'null:ingen', 'd', coalesce(t, 'null'));
+
+      -- Gratistimmen och köpet tillsammans: X2 betalas när X1 avbokas och gratistimmen blir ledig.
+      perform pg_temp.bli(Q);
+      update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = X1;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      n := intern.timmar_betalar_obetalda(Q);
+      select coalesce(klippkort_id::text, 'null') || ':' || coalesce(forsta_klippkort_id::text, 'null') || ':'
+             || coalesce(forsta_klippkort_timmar::text, 'null') || ':' || betalning_status
+        into t from public.bookings where id = X2;
+      ut := ut || jsonb_build_object('t', 'TD jobbet betalar ett pass med två kort, gratistimmen först',
+              'ok', n = 1 and t = KC || ':' || g || ':1:betald', 'd', n || ' ' || coalesce(t, 'null'));
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- H. Påminnelsen räknar timmarna till planen med planen ----------
+    begin
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (PL, Q, 'plan_standard', 'Prov Standard', 'plan', 4, 1, 5, tp, 4 * 37900, 4 * 37900, 'betald',
+              idag + 5, now(), 'ch_rlsprov_32_pl');
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id,
+                                    till_plan)
+      values (EX, Q, 'plan_extra', 'Extra timmar till planen', 'klippkort', 2, 1, 5, tp, 2 * 37900, 2 * 37900, 'betald',
+              idag + 5, now(), 'ch_rlsprov_32_ex', PL);
+      perform intern.timmar_gar_ut_koa(mitt);
+      select count(*) into n from public.notiser
+       where typ = 'timmar_gar_ut' and mottagare = Q and data ->> 'klippkort' = PL::text and (data ->> 'kvar')::int = 6;
+      select count(*) into m from public.notiser
+       where typ = 'timmar_gar_ut' and mottagare = Q and data ->> 'klippkort' = EX::text;
+      ut := ut || jsonb_build_object('t', 'TD ett mejl om dagen: timmarna som köpts till räknas med planen',
+              'ok', n = 1 and m = 0, 'd', 'planen ' || n || ', köpet ' || m);
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('TD Timmarna delas och köps till', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

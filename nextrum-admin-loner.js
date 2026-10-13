@@ -70,8 +70,10 @@
    står inte på underlaget: den har ett eget läge (Utkast, Godkänd,
    Utbetald, Struken) i rutan Bonus för tips, räknas i Att betala ut,
    och lönefilen tar den godkända som en egen lönetransaktion på en
-   egen löneart (foretagsfakta.lonart_tipsbonus), antal 1. Om den är
-   semestergrundande avgör lönearten i Fortnox, med revisorn.
+   egen löneart (foretagsfakta.lonart_tipsbonus), antal 1. Beloppet är
+   inklusive semesterersättning (Leo 2026-10-13: "300kr är inklusive
+   semesterersättning"), som timpenningen, så lönearten ska inte vara
+   semestergrundande: annars lägger Fortnox på den en gång till.
    ============================================================ */
 (function () {
   'use strict';
@@ -837,7 +839,8 @@
       titel: bonus ? 'Löneart för bonus för tips' : 'Löneart för timlön',
       text: bonus
         ? 'Numret på lönearten för bonusen för tips i Fortnox Lön. Bonusen skrivs på den som ett belopp, '
-          + 'antal 1, och inte som timmar. Om den ska vara semestergrundande avgör ni i Fortnox, med revisorn.'
+          + 'antal 1, och inte som timmar. Bonusen är inklusive semesterersättning, som timpenningen, så lönearten '
+          + 'ska vara en som inte är semestergrundande. Annars lägger Fortnox på den en gång till.'
         : 'Numret på lönearten för timlön i Fortnox Lön. Alla timmar i lönefilen skrivs på den. '
         + 'Timpenningen är inklusive semesterersättning, så lönearten ska vara en som inte är '
         + 'semestergrundande, och personerna ska inte ha semesterersättning inställd i Fortnox. '

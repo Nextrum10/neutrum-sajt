@@ -240,9 +240,9 @@ blivit pengar).
   studievyns `harGratis` räknar ett kort med gratistimmar som gratis. Ett kort
   med gratistimmar har `timmar_pa_kopet` 0 (villkoret kräver färre än
   `timmar`), så den modellens `gratis_kvar` och `gratis_till` är 0 och null
-  för det: kortets egna `giltigt_till` är de 60 dagarna. Ett kort väljs fortfarande bara om det
-  räcker till hela passet, så ett pass på tre timmar betalas med köpta timmar
-  när två gratistimmar finns kvar. **Risken med ordningen**, som Leo valt: har
+  för det: kortets egna `giltigt_till` är de 60 dagarna. Ett kort valdes då bara om det
+  räckte till hela passet, så ett pass på tre timmar betalades med köpta timmar
+  när två gratistimmar fanns kvar; sedan 2026-10-14 delas passet (sist i filen). **Risken med ordningen**, som Leo valt: har
   familjen en plan (en månad) och gratistimmar samtidigt tar gratistimmarna
   passen först, och bokar familjen för lite kan planens timmar gå ut obrukade.
   Påminnelsen tio dagar före och villkorens "hör av er, så betalar vi tillbaka
@@ -264,9 +264,11 @@ blivit pengar).
   gäller som för köpta timmar: står den av betalar timmarna inget.
 - **Ta tillbaka**: `ta_tillbaka_gratistimmar(id)` tar det som inte ligger på
   ett förslag eller pass. Ligger timmar där krymper kortet till dem (och
-  avbokas passet kommer timmen tillbaka som förut); ligger inga där tas kortet
+  avbokas passet kommer timmen tillbaka som förut); ligger inga där togs kortet
   bort, efter att avbokade pass som bär det släppts. Auditen loggar nu också
-  `timmar` och borttagningen (`klippkort_audit`).
+  `timmar` och borttagningen (`klippkort_audit`). Den versionen kom aldrig in i
+  driften (verktygets fråga syntes inte), och sedan 2026-10-14 återkallas kortet
+  i stället (sist i filen).
 - **Vyerna**: Ta in familjen har ett fält Gratistimmar i timbanken (0 som
   förval, bara när kontot skapas där, som första timmen), och kvittot säger
   hur många och till vilken dag. Familjens panel har raden Timbanken under
@@ -637,3 +639,92 @@ pengar: den betalas inte tillbaka när familjen slutar och ingår inte i
   Timbanken har samma kort under Timmar, med passen timmen använts till, och
   Vad är timbanken? säger det. Boka pass visar timmen i förväg som förut
   (`bjuden(minuter, dag)`, inom `kvar_till`).
+
+## Timmarna delas, och timmar köps till planen (2026-10-14, `timmarna_delas_och_kops_till`)
+
+Leo 2026-10-13 kväll: "tipstimmen används också före planerna då den är
+gratis. man kan köpa till timmar med plan men de går ut när månaden är slut.
+man ska kunna välja hur många timmar man köper, det ska finnas välj själv
+knapp och checkout för de specifika timmarna". Fyra frågor, och han valde de
+rekommenderade svaren: timmarna till planen kostar planens timpris (379 kr),
+Välj själv finns bara för att köpa till en plan (inte för Fyll timbanken), 1–20
+timmar som går ut samma dag som planen; tipstimmen först och planen resten;
+och ett pass får delas mellan gratistimmarna och planen.
+
+- **Högst två köp per pass.** `bookings.forsta_klippkort_id` och
+  `forsta_klippkort_timmar` (1–2) är det som drogs först, och `klippkort_id`
+  resten, som förut. `intern.timmar_fordela(familj, dag, behov, utom)` väljer:
+  korten i samma ordning som förut (gratis först, sedan det som går ut först,
+  sedan köpdagen); räcker det första till hela passet dras bara det, annars
+  allt som är kvar på det och resten från det första kort i ordningen som
+  räcker till resten. Två kort räcker till tre timmar; behövs tre betalas passet
+  som förut. Villkoren `bookings_forsta_kortet_paret` och
+  `bookings_forsta_kortet_med_kort` håller paret ihop och skilt från
+  huvudkortet, och `intern.forsta_kortet_foljer` (BEFORE UPDATE) nollar det
+  första kortet när huvudkortet blir null (ett obesvarat förslag, kortet som
+  vann i webhooken). Skyddstriggern på `bookings` prövar alla tre kolumnerna.
+- **Bakifrån.** Blir passet kortare än bokat kommer timmarna tillbaka från
+  huvudkortet först: första kortet har använt `least(forsta_klippkort_timmar,
+  a)` och huvudkortet resten, där a är passets korttimmar. Samma uttryck står i
+  `intern.kortets_anvanda`, `klippkort_saldo` och `klippkort_rorelser` (vyerna
+  är security_invoker och läses av familjen, så uttrycket står i dem i stället
+  för hjälparen). Gratistimmarna är då de som använts.
+- **Timmen på köpet.** `intern.passets_korttimmar(b)` är varje påbörjad timme
+  minus en när `startrabatt` (tipstimmen eller första timmen pass för pass).
+  Ett pass på en timme med timmen på köpet drar inget, och `klippkort_dra`
+  säger "Timmen på köpet täcker hela passet". Timbanken (minuterna) betalar
+  fortfarande bara hela pass utan timme på köpet: en kortbetalning för resten
+  av ett pass med en gratis timme finns inte heller, så en familj som betalar
+  pass för pass betalar resten med kort som förut.
+- **De sparade minuterna.** `intern.timbank_in` räknar med korttimmarna: noll
+  när timmen på köpet täckte allt, och noll när den sista timmen kom från ett
+  kort med gratistimmar (det första kortet om passet inte drog längre än dess
+  timmar).
+- **Köpet betalar med alla kort.** `intern.timmar_betalar_kommande` (när ett köp
+  blir betalt) använder samma val som annars, också pass med en timme på
+  köpet, och inte längre bara det nya kortet. Rls-testets block 4 och 5 i
+  avsnitt 22.2 låter därför c16a ha gått ut.
+- **Gratistimmar återkallas.** `ta_tillbaka_gratistimmar` sätter
+  `klippkort.aterkallad_at` när inga timmar ligger på något pass, i stället för
+  att radera kortet: ett pass kan peka på kortet som första kort, historiken
+  ska stå kvar, och verktygets fråga för en funktion med `delete` syntes inte i
+  Leos app (`minne/databasen.md`). Ett återkallat kort har inget kvar, är inte
+  brukbart, och familjens vy visar det inte. Villkoret
+  `klippkort_aterkallad_bara_gratis`; auditen loggar `aterkallad_at`.
+- **Köp till timmar.** En rad i `klippkort` med erbjudandet `plan_extra` (en
+  katalograd som aldrig säljs, villkoret `erbjudanden_extra_saljs_inte`) och
+  `till_plan` (villkoret `klippkort_till_plan_bara_extra`). Priset räknas i
+  `extra_timmar_erbjudande(timmar)`, som den inloggade frågar själv (kassan med
+  familjens token): den senaste betalda planen som gäller minst en dag till,
+  dess eget timpris och rabatt (`floor(timpris × (100 − rabatt) / 10000) × 100`,
+  samma som `klippkort_saldo.rabatterat_timpris_ore`), aldrig katalogens, så en
+  prishöjning gäller inte en köpt plan. `stripe-checkout` skapar köpet med
+  `service_role` och samma kassa som de andra (`köpTimmarTillPlanen`, planens
+  sista dag i idempotensnyckeln), och `klippkort_betald` ger timmarna planens
+  sista dag; kom betalningen efter den gäller de i dag och admin får en
+  uppgift. De får ingen gratis timme (sorten är `klippkort`, så
+  `planens_forsta_timme` hoppar över dem), och påminnelsen tio dagar före
+  räknar dem med planen (ett mejl om dagen, inte ett per köp).
+- **Vyn.** Er timbank har rutan Köp till timmar när familjen har en plan som
+  gäller: Välj själv öppnar ett val av 1–20 timmar (två som förval) med stegknappar
+  på 44 px, priset och planens sista dag, och Till kassan (orange, ett köp)
+  öppnar samma inbäddade kassa som planerna (`köpIKassan`). Förslaget i Boka
+  pass speglar valet (`fördela` i `nextrum-studie-vy.js`, och `o.timmar` får
+  veta att en timme är gratis), Betala med timmar säger båda köpen, och
+  Betalning läser vilka köp ett pass drogs från ur `klippkort_rorelser`, för
+  passens kolumnlista får inte nämna en kolumn som saknas före migrationen.
+- **Rättelsen.** `gratistimmarna_60_dagar` gav inte `service_role` rätt att
+  köra `intern.kortets_timmar`, `intern.gratis_till` och
+  `intern.kortets_sista_dag`, och `klippkort_dra` körs med `service_role`
+  (`klippkort-betala`). Betala med timmar svarade därför "permission denied"
+  för varje riktigt pass sedan 2026-10-13. Hjälparna här får samma rätt, och
+  `rls-test.sql` avsnitt 34 kör funktionen som `service_role`.
+- **Prov.** `rls-test.sql` avsnitt 34 (33 prov, `TD`), och tolv äldre prov
+  skrivna om till den nya regeln (19.5, 22.2 block 4 och 5, 22.4, Tips, GT,
+  GTB B och C). Lokalt ur alla 191 migrationer: 1737 av 1737, och i ett driftlikt
+  läge (till och med `gratistimmar`, utan återtagandet, och filen ovanpå) 1683 av 1683. Webbläsarprovet
+  `prova-barnforslag.js` 3i (tio prov): timmen på köpet med timmar, två köp på
+  ett pass, Välj själv, telefonen och kassans kropp (erbjudandet och antalet,
+  aldrig ett pris).
+- **Kvar efter merge**: körningen i driften (`CLAUDE.md` avsnitt 11), och
+  att juristen läser villkoren.
