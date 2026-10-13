@@ -732,9 +732,10 @@ async function provaBarnetsNexlax(webb) {
     prova('barn nexlax: vägen visar banans nivåer', väg.includes('Jämför bråk'), väg.slice(0, 160));
     /* Studiehjälparens uppgifter har en egen flik (2026-10-13); vägen har en remsa dit. */
     prova('barn nexlax: vägen har en remsa till studiehjälparens uppgifter', väg.includes('Sara har gett dig 2'), väg.slice(0, 200));
-    await page.click('#bv-flik-hjalpare');
+    await page.click('#bv-flik-utveckling');
+    await page.click('#bv-nl-utveckling [data-nl-del="hjalpare"]');
     await vänta(200);
-    const hj = await text(page, '#bv-nl-hjalpare');
+    const hj = await text(page, '#bv-nl-utveckling');
     prova('barn nexlax: det studiehjälparen gett står under Studiehjälparen', hj.includes('Läs kapitel 3') && hj.includes('Rekommenderat av Sara'), hj.slice(0, 200));
     prova('barn nexlax: text ur databasen ritas som text',
       (await page.locator('#bv-nexlax img[data-elak]').count()) === 0 && hj.includes('<img src=x data-elak=1>'));
@@ -776,6 +777,7 @@ async function provaBarnetsNexlax(webb) {
     /* Din utveckling: talen, men ingen bedömning och inga pass. */
     await page.click('#bv-flik-utveckling');
     await page.waitForSelector('#bv-panel-utveckling:not([hidden])', { timeout: 3000 }).catch(() => {});
+    await page.click('#bv-nl-utveckling [data-nl-del="nexlax"]');
     const utv = await text(page, '#bv-nl-utveckling');
     prova('barn nexlax: Din utveckling visar XP', utv.includes('XP totalt'), utv.slice(0, 120));
     prova('barn nexlax: ingen bedömning och inga pass i Din utveckling',

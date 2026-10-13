@@ -25,7 +25,7 @@
 <link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
 <link rel="stylesheet" href="nextrum-vy.css?v=7c836d53">
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=eb771e35">
-<link rel="stylesheet" href="nextrum-uppgifter.css?v=576562eb">
+<link rel="stylesheet" href="nextrum-uppgifter.css?v=afe51def">
 </head>
 <body class="vy vy-barn">
 
@@ -243,23 +243,23 @@
         </div>
         <div class="vy-kort vy-lista" id="bv-nl-tom" hidden></div>
         <div class="bv-nexlax" id="bv-nexlax" hidden>
-          <div class="nl-spelrad">
-            <a class="nl-spelrad-ut" href="#oversikt" aria-label="Lämna NexLäx och gå till Översikt">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg><span>Nextrum</span></a>
-            <span class="nl-spelrad-namn">NexLäx</span>
-            <button type="button" class="nl-spelrad-ljud" data-nl-ljud aria-label="Ljud" aria-pressed="true"></button>
-          </div>
-          <div class="vy-flikar nl-flikar" role="tablist" aria-label="Delar av NexLäx">
-            <button class="vy-flik" type="button" role="tab" data-flik="vag" id="bv-flik-vag"
-                    aria-controls="bv-panel-vag" aria-selected="true">Din väg</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="rank" id="bv-flik-rank"
-                    aria-controls="bv-panel-rank" aria-selected="false" tabindex="-1">Rank</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="marken" id="bv-flik-marken"
-                    aria-controls="bv-panel-marken" aria-selected="false" tabindex="-1">Märken</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="utveckling" id="bv-flik-utveckling"
-                    aria-controls="bv-panel-utveckling" aria-selected="false" tabindex="-1">Din utveckling</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="hjalpare" id="bv-flik-hjalpare"
-                    aria-controls="bv-panel-hjalpare" aria-selected="false" tabindex="-1">Studiehjälparen</button>
+          <div class="nl-spelhuvud">
+            <div class="nl-spelrad">
+              <a class="nl-spelrad-ut" href="#oversikt" aria-label="Lämna NexLäx och gå tillbaka till Översikt">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg><span>Lämna</span></a>
+              <span class="nl-spelrad-namn">NexLäx</span>
+              <button type="button" class="nl-spelrad-ljud" data-nl-ljud aria-label="Ljud" aria-pressed="true"></button>
+            </div>
+            <div class="vy-flikar nl-flikar" role="tablist" aria-label="Delar av NexLäx">
+              <button class="vy-flik" type="button" role="tab" data-flik="vag" id="bv-flik-vag"
+                      aria-controls="bv-panel-vag" aria-selected="true"><span class="vy-flik-t">Din väg</span></button>
+              <button class="vy-flik" type="button" role="tab" data-flik="utveckling" id="bv-flik-utveckling"
+                      aria-controls="bv-panel-utveckling" aria-selected="false" tabindex="-1"><span class="vy-flik-t">Din utveckling</span></button>
+              <button class="vy-flik" type="button" role="tab" data-flik="rank" id="bv-flik-rank"
+                      aria-controls="bv-panel-rank" aria-selected="false" tabindex="-1"><span class="vy-flik-t">Rank</span></button>
+              <button class="vy-flik" type="button" role="tab" data-flik="marken" id="bv-flik-marken"
+                      aria-controls="bv-panel-marken" aria-selected="false" tabindex="-1"><span class="vy-flik-t">Märken</span></button>
+            </div>
           </div>
           <div class="vy-flik-panel" role="tabpanel" data-flik="vag" id="bv-panel-vag" aria-labelledby="bv-flik-vag">
             <p class="ok-msg" id="bv-nl-msg"></p>
@@ -276,10 +276,6 @@
           <div class="vy-flik-panel" role="tabpanel" data-flik="utveckling" id="bv-panel-utveckling"
                aria-labelledby="bv-flik-utveckling" hidden>
             <div class="nl stack" id="bv-nl-utveckling"><div class="loading">Hämtar</div></div>
-          </div>
-          <div class="vy-flik-panel" role="tabpanel" data-flik="hjalpare" id="bv-panel-hjalpare"
-               aria-labelledby="bv-flik-hjalpare" hidden>
-            <div class="nl stack" id="bv-nl-hjalpare"><div class="loading">Hämtar</div></div>
           </div>
         </div>
       </section>
@@ -351,8 +347,8 @@
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-arbetsyta.js?v=8354e990"></script>
 <script src="nextrum-ljud.js?v=ddf66e2c"></script>
-<script src="nextrum-uppgifter.js?v=1790cff1"></script>
+<script src="nextrum-uppgifter.js?v=d075cad3"></script>
 <script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-barn-vy.js?v=427d3fc4"></script>
+<script src="nextrum-barn-vy.js?v=b88e6367"></script>
 </body>
 </html>

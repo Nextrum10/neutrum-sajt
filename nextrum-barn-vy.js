@@ -364,7 +364,13 @@
     S.sido = NXStudie.sidomeny({
       nav: $('#vy-sido'), rot: $('#view-app'), standard: 'oversikt',
       /* Att öppna Meddelanden är att läsa det studiehjälparen skrivit. */
-      onByt: sek => { S.aktiv = sek; if (sek === 'meddelanden') markeraChatt(); }
+      onByt: sek => {
+        const förra = S.aktiv;
+        S.aktiv = sek;
+        if (sek === 'meddelanden') markeraChatt();
+        /* In i NexLäx: alltid på Din väg, utom när en länk bett om en annan flik. */
+        if (sek === 'nexlax' && förra !== 'nexlax') visaFlik('#bv-nexlax', U.tagFlik() || 'vag');
+      }
     });
     const d = S.data;
     S.hero = NXArbete.hero({
@@ -652,7 +658,13 @@
   function ritaUtveckling() {
     const host = $('#bv-nl-utveckling');
     if (!host || !S.nl.data) return;
-    U.ritaUtveckling(Object.assign(nlUnderlag(), { host, alla: S.nl.alla, barnvy: true }));
+    const b = nlBana();
+    const d = S.nl.data;
+    U.ritaUtveckling(Object.assign(nlUnderlag(), {
+      host, alla: S.nl.alla, barnvy: true, amne: b.amne, arskurs: b.arskurs,
+      väntar: !(S.data && S.data.studiehjalpare) && !(d.uppgifter || []).length,
+      hjälpare: S.data && S.data.studiehjalpare ? { namn: S.data.studiehjalpare } : null
+    }));
   }
 
   function ritaNexlax() {
@@ -667,16 +679,9 @@
   function ritaFlikar() {
     if (!S.nl.data) return;
     const u = nlUnderlag();
-    const b = nlBana();
-    const d = S.nl.data;
     const rita = (id, fn, extra) => { const host = $(id); if (host) fn(Object.assign({}, u, { host, barnvy: true }, extra || {})); };
     rita('#bv-nl-rank', U.ritaRank);
     rita('#bv-nl-marken', U.ritaMärken);
-    rita('#bv-nl-hjalpare', U.ritaHjälpare, {
-      amne: b.amne, arskurs: b.arskurs,
-      väntar: !(S.data && S.data.studiehjalpare) && !(d.uppgifter || []).length,
-      hjälpare: S.data && S.data.studiehjalpare ? { namn: S.data.studiehjalpare } : null
-    });
     rita('#bv-nl-profil', U.ritaProfil, { länk: true });
   }
 
@@ -748,7 +753,7 @@
       const ak = amne.dataset.nlAk || '';
       S.nl.val = { amne: amne.dataset.nlAmne, arskurs: ak, spar: S.nl.val.spar || 'vag' };
       S.nl.öppen = null;
-      ritaOchHåll('#bv-nl-vag .nl-valj', ritaVägen,
+      ritaOchHåll('#bv-nl-vag .nl-baner', ritaVägen,
         '#bv-nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]');
       return;
     }
@@ -756,7 +761,7 @@
     if (ak) {
       S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: ak.dataset.nlAk, spar: S.nl.val.spar || 'vag' };
       S.nl.öppen = null;
-      ritaOchHåll('#bv-nl-vag .nl-valj', ritaVägen, '#bv-nl-vag .nl-ak-knapp[data-nl-ak="' + CSS.escape(ak.dataset.nlAk) + '"]');
+      ritaOchHåll('#bv-nl-vag .nl-baner', ritaVägen, '#bv-nl-vag .nl-ak-knapp[data-nl-ak="' + CSS.escape(ak.dataset.nlAk) + '"]');
       return;
     }
     const spar = e.target.closest('#bv-nl-vag [data-nl-spar]');
