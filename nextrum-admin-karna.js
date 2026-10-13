@@ -64,7 +64,9 @@ const NXAdmin = (function () {
     bokslut: null, bokslutFel: null, stangdaManader: new Set(),
     /* 2026-09-28: Månadens ekonomi. Pass som timbanken betalat hela,
        och köp av timmar som var testbetalningar. */
-    timbankPass: new Set(), klippkortTest: new Set()
+    timbankPass: new Set(), klippkortTest: new Set(),
+    /* 2026-10-12: våra egna konton, som statistiken inte räknar. */
+    adminkonton: new Set()
   };
 
   /* Har modulvakten (nextrum-modulvakt.js) redan konstaterat att en
@@ -387,6 +389,16 @@ const NXAdmin = (function () {
     return NXBetalning.lonemanad(datum, (lägen || underlagslägen())[tutorId] || {});
   }
 
+  /* Ett av våra konton (adminkonton_utanfor_statistiken, 2026-10-12):
+     Leo: "våra adminkonton ska inte synas i statistik". Statistiken
+     räknar inte ett pass där familjen eller studiehjälparen är admin,
+     samma regel som analysvyerna i databasen. Listorna visar dem som
+     förut: de är registret, inte statistiken. */
+  function ärAdminkonto(id) {
+    return !!(id && S.adminkonton && S.adminkonton.has(id));
+  }
+  const räknas = b => !ärAdminkonto(b.parent_id) && !ärAdminkonto(b.tutor_id);
+
   /* Tom lista eller tomt filter är två olika besked. "Inga familjer
      matchar" i en databas utan familjer skickar folk på jakt efter
      ett filter som inte är satt. Alla listor nedan väljer därför
@@ -480,7 +492,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
-           bankPass, kkSkarp, tips, sett] = await Promise.all([
+           bankPass, kkSkarp, tips, sett, roller] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -574,7 +586,11 @@ const NXAdmin = (function () {
          ansökningarna. Bara de egna raderna (policyn), och för alla
          admins: den som bara har Intresseanmälningar ska också slippa
          siffran för det hen redan sett. */
-      supa.from('admin_sett').select('omrade, sett_till')
+      supa.from('admin_sett').select('omrade, sett_till'),
+      /* 2026-10-12: vilka konton som är våra (adminkonton_utanfor_statistiken).
+         De räknas inte i Översiktens och Statistikens tal. Bara den som
+         ser Översikt behöver dem, och bara den får läsa rollerna. */
+      bara(() => supa.from('admin_roller').select('user_id'))
     ]);
 
     S.leads = leads.data || [];
@@ -640,6 +656,11 @@ const NXAdmin = (function () {
     S.timbankFel = bank.error ? felText(bank.error) : null;
     S.timbankPass = new Set((bankPass.data || []).map(r => r.booking_id).filter(Boolean));
     S.klippkortTest = new Set((kkSkarp.data || []).filter(r => r.stripe_skarp === false).map(r => r.id));
+    /* Utan rollerna (ett läsfel) är superadminerna de med is_admin, som
+       profiles speglar. */
+    S.adminkonton = new Set(!roller.error && roller.data
+      ? roller.data.map(r => r.user_id)
+      : Object.values(S.personer).filter(p => p.is_admin).map(p => p.id));
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */
@@ -1015,7 +1036,7 @@ const NXAdmin = (function () {
     gmailAdress, gmailLänk, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
-    lägesväljare,
-    ärNyNu, ärRaderad, rita
+    lägesväljare, räknas,
+    ärAdminkonto, ärNyNu, ärRaderad, rita
   };
 })();

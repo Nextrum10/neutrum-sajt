@@ -21,11 +21,14 @@ vyerna delar sedan 2026-10-01) och föräldrarnas ruta prövar dem var för
 sig.
 
 Och för vad ett barn får se och göra (barnets_behorigheter, 2026-10-06):
-listan står i intern.barn_behorigheter_alla() och, utan rapporterna, i
-villkoret på students; förvalet i kolumnen och i skydda_studentfalt;
-och i föräldrarnas ruta (BARN_FÅR och BARN_FÅR_FÖRVAL) och elevvyn
-(FÅR). En sak som vyn erbjuder och databasen nekar blir ett fel för
-föräldern; en som databasen har och vyn saknar går inte att slå av.
+listan står i intern.barn_behorigheter_alla() och, utan rapporterna och
+boka, i villkoret på students; förvalet i kolumnen och i
+skydda_studentfalt; och i föräldrarnas ruta (BARN_FÅR och
+BARN_FÅR_FÖRVAL) och elevvyn (FÅR). En sak som vyn erbjuder och
+databasen nekar blir ett fel för föräldern; en som databasen har och vyn
+saknar går inte att slå av. Rapporterna står i visa_rapporter och boka
+(barnet_foreslar_pass, 2026-10-12) i far_boka, var sin kolumn, så de två
+står aldrig i villkoret.
 
 Den nyaste migrationen som definierar något gäller.
 """
@@ -53,6 +56,11 @@ def sista(monster, flaggor=re.S):
 
 def ord_i(text):
     return re.findall(r"'([a-z_]+)'", text)
+
+
+# Barnets val som står i en egen kolumn i stället för i barn_behorigheter,
+# och därför inte i villkoret students_barn_behorigheter_kanda.
+EGNA_KOLUMNER = ('rapporter', 'boka')
 
 
 def main():
@@ -111,7 +119,7 @@ def main():
     else:
         lista = ord_i(alla[1])
         antal_far = len(lista)
-        if sorted(ord_i(kanda[1])) != sorted(x for x in lista if x != 'rapporter'):
+        if sorted(ord_i(kanda[1])) != sorted(x for x in lista if x not in EGNA_KOLUMNER):
             fynd.append('Villkoret students_barn_behorigheter_kanda (%s) och intern.barn_behorigheter_alla() (%s) '
                         'har olika listor.' % (kanda[0], alla[0]))
         forvalet = forval[1].split(',')
@@ -119,6 +127,9 @@ def main():
         if sql.count("new.barn_behorigheter         := '{%s}';" % forval[1]) < 2:
             fynd.append('skydda_studentfalt och skydda_studentfalt_ny börjar inte om från kolumnens förval {%s}.'
                         % forval[1])
+        # boka är av som förval, och börjar om från av som rapporterna.
+        if 'boka' in lista and sql.count("new.far_boka                  := false;") < 2:
+            fynd.append('skydda_studentfalt och skydda_studentfalt_ny börjar inte om från av för boka (far_boka).')
         vy = las('nextrum-studie-vy.js')
         m = re.search(r"const BARN_FÅR = \[(.*?)\n  \];", vy, re.S)
         if not m or re.findall(r"\[\s*'([a-z_]+)',", m.group(1)) != lista:

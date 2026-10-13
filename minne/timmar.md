@@ -333,6 +333,11 @@ lovat timmar som databasen inte dragit.
   timmen är avgjord innan timmarna väljer. Timbankens uttag skrivs i
   samma BEFORE INSERT, innan passets rad finns, och därför är
   `timbank_uttag_booking_id_fkey` `deferrable initially deferred`.
+- **Timmarna går före en rabattkod** (2026-10-13,
+  `rabattkoden_krockar_inte`): `bookings_timmar_betalar_utan_kod` kör
+  efter de två triggrarna ovan och före `bookings_timmarna_tillbaka`, och
+  tar bort koden från ett pass som timmarna betalar, när det skapas och
+  senare. Allt om det i `minne/betalning.md`.
 - **Timmen följer passet.** Ett motförslag ändrar bara tid, status och
   `created_by` (`skydda_bokningsfalt`), så betalningen ligger kvar, också
   när tiden flyttas förbi kortets sista dag, som för ett bekräftat pass
@@ -368,6 +373,63 @@ obetalda pass inte får dem betalda, och på i blocken för 22.2, 22.3 och
 22.4. Blocken för 22.2 som provar bekräftelsen slår på den först efter
 förslagen, annars betalar förslagen sig själva. Blocken för 22.3 och
 22.4 kör jobbet för familj P direkt i stället för att vänta på schemat.
+
+---
+
+## Gratis timmar gäller i 60 dagar och dras först (2026-10-13, `gratistimmarna_60_dagar`)
+
+Leo 2026-10-13, efter `rabattkoden_krockar_inte`: "gratis timmar går ut
+efter 60 dagar att de läggs in, planerna man köper går ut samma månad",
+"gratis timmar går ut först sen planerna", om den första planen "så får
+man gratis timmen inkluderad, alltså 9h vid köp av 8 exempelvis", och om
+villkoren "fixa villkoren".
+
+- **Planens gratis timme står kvar i planen** (`timmar_pa_kopet`, som
+  `intern.planens_forsta_timme` lägger till när den första planen blir
+  betald). Den dras först, så den är oanvänd bara så länge planen använts
+  mindre än så. Planen går ut en månad efter köpet, som förut ("samma
+  månad" lästes så, och villkoren säger "en månad från köpet"); en gratis
+  timme som inte använts gäller sedan till 60 dagar efter köpet.
+  `intern.kortets_timmar(till, betald, timmar, gratis, anvanda, dag)` säger
+  hur många timmar ett kort räcker till en dag, och `klippkort_saldo` har
+  `gratis_kvar` och `gratis_till` sist, och `brukbar` räknar med dem.
+- **Gratis först.** `intern.timmar_betala` och `klippkort_dra` väljer först
+  ett kort med gratis timmar kvar som gäller passets dag, sedan kortet som
+  går ut först för den dagen (`intern.kortets_sista_dag`). Dagen är
+  passets, aldrig före i dag. Jobbets förurval (`timmar_betalar_obetalda`)
+  tar med en gratis timme efter planens månad. Vyn gör samma val
+  (`kortetsTimmar`, `harGratis`, `kortFör`, `timmarFörFörslag`).
+- **Tipstimmen och första timmen pass för pass** är fortfarande ett avdrag
+  på passet (`startrabatt`), inte en timme i timbanken, och gäller ett pass
+  inom 60 dagar: tipstimmen från dagen den nya familjen haft sina två
+  timmar (`intern.tipstimmar_oanvanda` ger sista dagen för var och en,
+  ett pass med timmen tar den äldsta som gällde, och
+  `intern.tipstimmar_kvar(familj, dag)` räknar), första timmen från
+  `forsta_timmen_beviljad.beviljad_at`. `mina_tips()` har `kvar_till` och
+  `forsta_timmen_lage()` `beviljad_till`, och priset vid knappen bjuder
+  bara för en dag inom dem (`bjuden(minuter, dag)`).
+- **Påminnelsen** (`timmar_gar_ut_koa`) räknar bara de timmar som går ut
+  med planen; en oanvänd gratis timme gör det inte. Ingen påminnelse om
+  gratistimmen själv: mejlet säger "köpta timmar" och att resten betalas
+  tillbaka, och en gratis timme betalas aldrig ut.
+- **Återbetalningen räknas som förut** (`vid_anger_ore`,
+  `vid_uppsagning_ore`): en använd timme kostar, också den gratis. Hade
+  den gratis timmen räknats först även där, hade en familj kunnat köpa
+  planen, använda timmen och ångra köpet utan att betala något. Leo har
+  inte bestämt det; frågan står öppen.
+- **Kvar som förut**: en gratis timme räcker bara till pass med ett barn,
+  som alla timmar, och ett pass på två timmar betalas av ett kort som
+  räcker till båda. Har en familj med plan en tipstimme betalas resten av
+  ett längre pass med kort, för timmarna betalar inte ett pass med
+  `startrabatt`.
+- **Villkoren** (#erbjudanden, #forsta-timmen, #tips) och prissidan och
+  FAQ på båda språken säger det, och versionen är 2026-10-13, så alla får
+  frågan igen. Agentens fakta (`_delad/nextrum-fakta.ts`) också, så `drift`
+  driftsätts efter merge. Betygsgarantins timmar (sex månader i villkoren)
+  rördes inte.
+- **Prov**: `rls-test.sql` avsnitt 29 (17 rader), och de pass i tips- och
+  första timmen-blocken som låg mer än 60 dagar fram flyttades inom dem.
+  `prova-barnforslag.js` 3f och 3g.
 
 ---
 

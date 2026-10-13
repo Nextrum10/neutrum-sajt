@@ -2163,8 +2163,12 @@
       .sort((a, b) => ((a.status === 'betald' ? 0 : 1) - (b.status === 'betald' ? 0 : 1))
         || String(b.betald_at || b.created_at).localeCompare(String(a.betald_at || a.created_at)));
     const aktiva = köp.filter(k => k.status === 'betald' && !test(k));
-    const giltiga = aktiva.filter(k => !k.giltigt_till || String(k.giltigt_till) >= idag);
-    const timmarKvar = giltiga.reduce((n, k) => n + Number(k.kvar || 0), 0);
+    /* En plan som gått ut med sin gratis timme kvar räknas med den timmen
+       (gratistimmarna_60_dagar, 2026-10-13: den gäller till gratis_till). */
+    const gratisKvar = k => k.gratis_till && String(k.gratis_till) >= idag ? Number(k.gratis_kvar || 0) : 0;
+    const giltiga = aktiva.filter(k => !k.giltigt_till || String(k.giltigt_till) >= idag || gratisKvar(k) > 0);
+    const timmarKvar = giltiga.reduce((n, k) => n + (!k.giltigt_till || String(k.giltigt_till) >= idag
+      ? Number(k.kvar || 0) : gratisKvar(k)), 0);
     const tillbaka = aktiva.reduce((n, k) => n + omDeSlutar(k), 0);
     const banken = (S.timbank || []).slice().sort((a, b) => Number(b.saldo_min) - Number(a.saldo_min));
     const bankMin = banken.reduce((n, r) => n + Number(r.saldo_min || 0), 0);

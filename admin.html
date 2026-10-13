@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
 <link rel="stylesheet" href="nextrum-vy.css?v=7ebabb05">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=9303fb86">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=978437cc">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -263,6 +263,10 @@
         <a href="#katalog" data-sek="katalog" title="Tjänster &amp; priser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.3V4.5a1 1 0 0 1 1-1h7.8l8.2 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg><span class="adm-etikett">Tjänster &amp; priser</span></a>
 
         <a href="#agenter" data-sek="agenter" title="Agenter"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7.5" width="16" height="11" rx="3"/><path d="M12 7.5V4M9 12.5h.01M15 12.5h.01M9.5 15.5h5"/></svg><span class="adm-etikett">Agenter</span></a>
+
+        <!-- Förhandsvisning (2026-10-12): studievyn och studiehjälparvyn
+             med påhittade uppgifter, utan ett riktigt konto. -->
+        <a href="#forhandsvisning" data-sek="forhandsvisning" title="Förhandsvisning"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="adm-etikett">Förhandsvisning</span></a>
 
         <a href="#system" data-sek="system" title="System"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h11M18 7.5h2.5M3.5 16.5h5M11.5 16.5h9"/><circle cx="16" cy="7.5" r="2.2"/><circle cx="10" cy="16.5" r="2.2"/></svg><span class="adm-etikett">System</span></a>
       </nav>
@@ -1852,6 +1856,49 @@
 
         </section>
 
+        <!-- ============================================================
+             FÖRHANDSVISNING (2026-10-12)
+             Leo: "där ska vi med våra konton kunna se en förhandsgranskning
+             av studievy och studielärarvyn ... så våra adminkonton ska inte
+             synas i statistik". Länkarna öppnar vyerna med
+             nextrum-forhandsvisning.js, som svarar ur en påhittad värld i
+             webbläsaren. Ingen ritfunktion: sektionen är bara länkarna.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="forhandsvisning" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Förhandsvisning</h2>
+              <p>Studievyn och studiehjälparvyn som de ser ut för en familj och en studiehjälpare, utan ett riktigt konto.</p>
+            </div>
+          </div>
+
+          <div class="vy-kort vy-lista">
+            <div class="vy-rad">
+              <span class="vy-rad-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/></svg></span>
+              <span class="vy-rad-mitt">
+                <span class="vy-rad-titel">Studievyn</span>
+                <span class="vy-rad-meta"><span>Som familjen Andersson, Anna och Alva i årskurs 6: pass, rapporter, NexLäx, ett förslag från Alva och meddelanden</span></span>
+              </span>
+              <span class="vy-rad-hoger"><a class="btn btn-primary btn-sm" href="/foralder?forhandsvisning" target="_blank" rel="noopener" data-fv="foralder">Öppna</a></span>
+            </div>
+            <div class="vy-rad">
+              <span class="vy-rad-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg></span>
+              <span class="vy-rad-mitt">
+                <span class="vy-rad-titel">Studiehjälparvyn</span>
+                <span class="vy-rad-meta"><span>Som Sara Svensson, med Alva och Kim: tider att svara på, ett pass att rapportera, läxor och meddelanden</span></span>
+              </span>
+              <span class="vy-rad-hoger"><a class="btn btn-primary btn-sm" href="/larare?forhandsvisning" target="_blank" rel="noopener" data-fv="studiehjalpare">Öppna</a></span>
+            </div>
+          </div>
+
+          <div class="dbox" style="margin-top:20px">
+            <h3>Så fungerar den</h3>
+            <p class="small">Vyn öppnas i en ny flik, med påhittade uppgifter, och båda vyerna delar samma värld: föreslå en tid som familjen, tryck på Byt till studiehjälparvyn i remsan överst och acceptera den som Sara, och byt tillbaka. Allt går att klicka på, men inget lämnar webbläsaren: inget mejl, ingen betalning och ingen AI går iväg, och inget räknas i statistiken, lönerna eller fakturorna. Världen står kvar i webbläsaren tills du trycker på Börja om, och börjar om av sig själv nästa dag.</p>
+            <p class="small" style="margin-top:10px">Den visas för den som är inloggad som admin i samma webbläsare.</p>
+            <p class="small" style="margin-top:10px">Våra egna konton räknas inte heller i statistiken: Översikt och Statistik här, och drift-agentens siffror, räknar inga pass där familjen eller studiehjälparen är admin. I listorna står de som förut, och betalningar, fakturor och löner räknas som vanligt.</p>
+          </div>
+        </section>
+
         <section class="vy-sek" data-sek="system" hidden>
           <div class="vy-sek-topp">
             <div>
@@ -2355,28 +2402,28 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=41e2f360"></script>
+<script src="nextrum-app.js?v=b827f810"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=ac03d6ba"></script>
-<script src="nextrum-arbetsyta.js?v=a4d8c967"></script>
+<script src="nextrum-studie.js?v=ba719a45"></script>
+<script src="nextrum-arbetsyta.js?v=8354e990"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=d7fc6340"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=c079a705"></script>
+<script src="nextrum-admin-karna.js?v=970ac675"></script>
 <script src="nextrum-admin-detalj.js?v=fd5bfca5"></script>
-<script src="nextrum-admin-oversikt.js?v=dc6cbd26"></script>
+<script src="nextrum-admin-oversikt.js?v=58bec850"></script>
 <script src="nextrum-admin-kunder.js?v=111c020a"></script>
 <script src="nextrum-admin-rekrytering.js?v=ce0dad1e"></script>
 <script src="nextrum-admin-bibliotek.js?v=c61fd760"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=f2e7d309"></script>
-<script src="nextrum-admin-ekonomi.js?v=a1a88584"></script>
+<script src="nextrum-admin-ekonomi.js?v=5afe89c2"></script>
 <script src="nextrum-admin-manaden.js?v=9f67830e"></script>
 <script src="nextrum-admin-loner.js?v=658e30ed"></script>
 <script src="nextrum-admin-tjanster.js?v=20b4a52d"></script>
 <script src="nextrum-admin-system.js?v=850d4673"></script>
-<script src="nextrum-admin-behorighet.js?v=0b1783bf"></script>
+<script src="nextrum-admin-behorighet.js?v=87b7b306"></script>
 <script src="nextrum-admin-automationer.js?v=0fb655ba"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2385,7 +2432,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
-<script src="nextrum-modulvakt.js?v=6a722889"></script>
+<script src="nextrum-modulvakt.js?v=3f42be2c"></script>
 <script src="nextrum-admin.js?v=0bedd6c1"></script>
 </body>
 </html>

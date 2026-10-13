@@ -78,6 +78,7 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
   meddelande: 'nya meddelanden',
   paminnelse: 'påminnelser före pass',
   timmar_gar_ut: 'köpta timmar som går ut',
+  barnforslag: 'barnens förslag på pass',
 };
 
 const SVARA = 'Svara ja eller nej i Nextrum.';
@@ -268,6 +269,28 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       knapp: 'Boka ett pass',
       mal: 'boka',
       fakta,
+    };
+  },
+
+  // barnet_foreslar_pass (2026-10-12). Ett barn med egen inloggning har
+  // föreslagit ett pass, och det går ingenstans förrän föräldern skickat
+  // det. Bara familjen får mejlet. Barnets förnamn, dagen, tiden och
+  // ämnet, aldrig platsen eller raden barnet skrev, och inget pris: det
+  // ser föräldern i vyn, där förslaget kan ändras. Flera förslag inom
+  // samma minuter blir ett mejl.
+  barnforslag(m) {
+    const nar = narText(m.d.datum, m.d.tid);
+    const vem = m.d.elev ?? 'Ert barn';
+    const flera = m.antal > 1;
+    return {
+      amne: flera ? `${vem} har föreslagit ${m.antal} pass` : medNar(`${vem} föreslår ett pass`, nar),
+      rubrik: flera ? `${m.antal} förslag väntar på er` : 'Ett förslag väntar på er',
+      mening: (flera ? `${vem} har föreslagit ${m.antal} pass i sin vy.` : `${vem} har föreslagit ett pass i sin vy.`)
+        + ' Det går inte till studiehjälparen förrän ni skickat det. I Nextrum ser ni priset, kan ändra tiden'
+        + ' och skicka det vidare, eller låta bli.',
+      knapp: flera ? 'Visa förslagen' : 'Visa förslaget',
+      mal: 'boka',
+      fakta: flera ? [] : passFakta(m, nar),
     };
   },
 };

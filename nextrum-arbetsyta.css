@@ -572,6 +572,55 @@
 .bk-kvitto-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .bk-kvitto-knappar .btn{text-decoration:none}
 
+/* Barnets förslag i förälderns granskning (barnet_foreslar_pass,
+   2026-10-12). Överst i ytan och i lera: det är förälderns drag. Raden
+   står still medan förslaget ändras, och knapparna under texten är de
+   två andra svaren. */
+.bk-forslag{
+  display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;
+  padding:14px 16px;border-radius:14px;
+  border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);background:var(--pap);
+}
+.bk-forslag-text{flex:1 1 280px;min-width:0;line-height:1.45}
+.bk-forslag-text b{display:block;font-size:1rem;color:var(--bl)}
+.bk-forslag-text span{display:block;font-size:.88rem;color:var(--bl-2)}
+.bk-forslag-knappar{display:flex;gap:8px;flex-wrap:wrap}
+/* Rabattkoden: rutan, knappen och svaret på en rad där det ryms. */
+.bk-rabatt .inp{flex:1 1 180px;text-transform:uppercase}
+.bk-rabatt-svar{flex:1 1 100%;font-size:.86rem;line-height:1.5;color:var(--mossa)}
+.bk-rabatt-svar:empty{display:none}
+.bk-rabatt-svar .is-err{color:var(--acc)}
+/* Koden gäller men används inte på passet: en gratis timme eller
+   timmarna går före den (rabattkoden_krockar_inte). Ingen lägesfärg,
+   för den är varken klar eller fel. */
+.bk-rabatt-svar .bk-rabatt-inte{color:var(--bl-2)}
+/* Där barnet hade sett ett pris står vem som ser förslaget först. */
+.bk-sum-pris > b.bk-sum-till{font-size:1rem;letter-spacing:0}
+/* Listan med barnens förslag över ytan, i förälderns Boka pass, och
+   barnets egna förslag under ytan i elevvyn. */
+.bf{margin-bottom:clamp(16px,2vw,22px)}
+.bf .vy-grupp:first-child{margin-top:0}
+.bf-egna{margin-top:clamp(18px,2.2vw,26px)}
+
+/* ---- förhandsvisningen (nextrum-forhandsvisning.js, 2026-10-12) ----
+   Remsan överst i sidhuvudet när admin förhandsvisar studievyn eller
+   studiehjälparvyn: det som står under är påhittat, och vägen tillbaka.
+   Ockra, som ett läge som väntar: inget är fel, men inget är heller på
+   riktigt. */
+.nx-fv{
+  display:flex;align-items:center;justify-content:center;gap:0 18px;flex-wrap:wrap;
+  padding:0 16px;
+  background:var(--ockra-soft);color:var(--ockra-text);
+  font-size:.86rem;line-height:1.4;text-align:center;
+}
+.nx-fv p{margin:0;padding:6px 0;min-width:0}
+.nx-fv b{font-weight:700;margin-right:4px}
+.nx-fv-knappar{display:flex;gap:0 18px;flex-wrap:wrap;justify-content:center}
+.nx-fv-knappar a{
+  display:inline-flex;align-items:center;min-height:44px;
+  color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px;
+}
+
 /* ---- kvittoraden ---- */
 
 .bk-sum{

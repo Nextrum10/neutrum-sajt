@@ -976,3 +976,78 @@ timmen och sex månader, villkoren 2026-10-12, strömbrytaren med ny text och
 oförändrat `uppdaterad`, och `flaggor_stampla` på. Hela `rls-test.sql` mot
 driften 1519 av 1519, tillbakarullat (ett nytt prov), och lokalt samma
 siffra före merge. Advisorn larmade inte om något nytt.
+
+### Barnets förslag och adminkontona i statistiken (2026-10-12)
+**`20261012220000_barnet_foreslar_pass`**: kolumnen `students.far_boka`
+(boolean, av), tabellen `barn_passforslag` med RLS (föräldern läser sina
+barns; admin med `is_admin()` eller `bokningar_las`; inga skrivpolicyer,
+och `nextrum_barn` och `anon` har inga rättigheter), hjälpare i `intern`
+(`barnforslag_hjalpare`, `barnforslag_post_hoppas`, `barnforslag_las`,
+`barnforslag_skickat`, `barnforslag_gallra`, och de två
+raderingsfunktionerna), barnets fyra funktioner (bara `nextrum_barn`),
+förälderns två (`barnforslag_neka`, `skicka_barnets_forslag`, den senare
+SECURITY INVOKER så att policyn och alla triggrar på `bookings` gäller),
+typen `barnforslag`, jobbet `barnforslag-gallring` (03.38 UTC) och
+triggrarna `students_barnforslag_raderas` och
+`profiles_barnforslag_raderas`. Lappade med `replace()` på
+`pg_get_functiondef()` och en vakt som räknar träffarna:
+`intern.barnets_behorigheter`, `barn_behorigheter_satt`,
+`skydda_studentfalt`, `skydda_studentfalt_ny` och `intern.notis_skapa`;
+en lappad funktion bär `far_boka` (eller `barnforslag`) och hoppas över.
+`intern.barn_behorigheter_alla()` har `boka` på andra plats, i vyernas
+ordning. `students_barnkonto_audit` skapades om med `create or replace
+trigger` och har `far_boka` i listan. Ingen `drop`, inget `delete` utanför
+en funktion, och ingen funktion med två: filen går att köra två gånger.
+
+**`20261012220100_adminkonton_utanfor_statistiken`**:
+`intern.utanfor_statistiken(uid)` (sant när kontot har en rad i
+`admin_roller` och den som frågar är admin eller databasen själv; en
+familj eller studiehjälpare som läser en analysvy får aldrig veta vem som
+är admin) och de fem analysvyerna omskrivna med samma kolumner, i samma
+ordning, och `security_invoker = true` utskrivet igen: ett pass där
+familjen eller studiehjälparen är admin räknas inte, och en anmälan som
+blev ett adminkonto inte heller. `analys_ekonomi` räknar inte längre
+testbetalningar (`stripe_skarp = false`), som kärnan alltid sagt.
+Passen, betalningarna, fakturorna och lönerna rörs inte: Betalningar,
+Månadens ekonomi och Löner är bokföring och räknar som förut.
+
+**`20261013100000_rabattkoden_krockar_inte`** (2026-10-13, samma gren):
+`forsta_timmen_bjuds` lappad med `replace()` och en vakt som räknar
+träffarna (två lappar: första timmen tar bort koden och läggs inte
+ovanpå den, och tipstimmen ges också med en kod), och en ny trigger,
+`bookings_timmar_betalar_utan_kod` med `intern.timmar_betalar_utan_kod()`,
+som tar bort koden från ett pass som timmarna eller timbanken betalar
+(`minne/betalning.md`). Skapad med `create or replace trigger`; namnet
+lägger den mellan `bookings_timmar_betalar_forslaget` och
+`bookings_timmarna_tillbaka`, som förblir den sista. Funktionen var i
+driften 2026-10-13 byte för byte den lokala (md5 `570b7ccc…`). Lappen
+känner igen sig själv (`rabattkoden_krockar_inte` i texten), så filen går
+att köra två gånger.
+
+**`20261013110000_gratistimmarna_60_dagar`** (2026-10-13, samma gren):
+hjälparna `intern.gratis_till`, `intern.kortets_timmar` och
+`intern.kortets_sista_dag`; `klippkort_saldo` omskriven med samma kolumner
+och `gratis_kvar` och `gratis_till` sist, och `brukbar` som räknar med
+dem (`security_invoker = true` utskrivet igen); `intern.timmar_betala` och
+`klippkort_dra` omskrivna helt efter en md5-vakt (driftens text
+2026-10-13: `ba9100a9…` och `282bdbd2…`), med gratis timmar först;
+`intern.tipstimmar_oanvanda` och `intern.tipstimmar_kvar`; lappar med
+`replace()` och en vakt som räknar träffarna i
+`intern.timmar_betalar_obetalda` (förurvalet), `intern.timmar_gar_ut_koa`,
+`forsta_timmen_bjuds` (två), `forsta_timmen_lage` (`beviljad_till`) och
+`mina_tips` (`kvar`, `kvar_till`); och `intern.villkor_version()` =
+2026-10-13. En funktion som redan bär `gratistimmarna_60_dagar` hoppas
+över, och vakten släpper igenom en som redan är omskriven, så filen går
+att köra två gånger. Allt i `minne/timmar.md`.
+
+Versionerna var först `20261012120000` och `20261012120100`, men `fyll_timbanken`
+kördes i driften samma kväll med just `20261012120000`; de ligger nu efter
+den. Lokalt, byggd ur alla 186 migrationer: hela `rls-test.sql` 1603 av 1603
+(avsnitt 26, 27, 28 och 29 är nya). **Körs efter merge, i den ordningen, och
+`notis-ko` från main driftsätts FÖRE den första** (`minne/notiser.md`).
+Vyerna tål att alla tre saknas: utan tabellen syns inga förslag, utan `boka`
+i listan inget val, adminvyns tal räknar ur `admin_roller` själv,
+utan `rabattkoden_krockar_inte` gäller den gamla ordningen i databasen,
+vilket inte spelar någon roll så länge det inte finns någon kod, och utan
+`gratistimmarna_60_dagar` saknas gratiskolumnerna, och vyn räknar då som
+förut (den läser `klippkort_saldo` med `*`).

@@ -482,8 +482,11 @@
      som förut.
      ============================================================ */
   const BI_NAMN = /^[a-z0-9._-]{3,20}$/;
+  /* boka (barnet_foreslar_pass, 2026-10-12): barnet föreslår pass, som
+     ni ser först, ändrar om ni vill och skickar vidare. Av som förval. */
   const BARN_FÅR = [
     ['pass', 'Se sina pass', 'Kommande och genomförda pass, och hur många.'],
+    ['boka', 'Föreslå pass', 'Förslagen kommer till er först. Ni ser priset, kan ändra tiden och skickar dem vidare, eller låter bli.'],
     ['studieplan', 'Se studieplanen', 'Planen som studiehjälparen skriver.'],
     ['rapporter', 'Läsa rapporterna', 'Vad studiehjälparen skrev efter varje pass.'],
     ['nexlax', 'Göra NexLäx', 'Nivåerna och uppgifterna mellan passen, och bocken på en uppgift.'],
@@ -532,6 +535,9 @@
     } else {
       S.barnFår = {};
       (får.data.barn || []).forEach(r => { S.barnFår[r.barn_id] = r.behorigheter || []; });
+      /* Bara de val databasen har: före barnet_foreslar_pass finns inte
+         boka, och en ruta databasen nekar är ett fel för föräldern. */
+      S.barnFårAlla = Array.isArray(får.data.alla) ? får.data.alla : null;
     }
     ruta.hidden = !S.barn.length;
     ritaBarnkonton();
@@ -591,17 +597,21 @@
         biEl('button', { class: 'btn btn-primary btn-sm', type: 'submit' }, 'Skapa inloggning')));
   }
 
+  /* De val databasen känner. */
+  const barnFårVal = () => BARN_FÅR.filter(([sak]) => !S.barnFårAlla || S.barnFårAlla.includes(sak));
+
   /* Kryssrutorna när inloggningen skapas: förvalet ikryssat. Bara när
      databasen kan spara dem. */
   function biFårVal(b) {
     if (!S.barnFår) return null;
     return biEl('fieldset', { class: 'bi-far-val' },
       biEl('legend', {}, 'Vad får ' + b.name + ' se och göra?'),
-      ...BARN_FÅR.map(([sak, rubrik, under]) => biEl('label', { class: 'bi-ja bi-far-ny' },
+      ...barnFårVal().map(([sak, rubrik, under]) => biEl('label', { class: 'bi-ja bi-far-ny' },
         biEl('input', { type: 'checkbox', 'data-bi-far-ny': sak, checked: BARN_FÅR_FÖRVAL.includes(sak) }),
         biEl('span', {}, biEl('b', {}, rubrik), ' ', under))),
       biEl('p', { class: 'xsmall bi-hjalp' },
-        b.name + ' kan aldrig boka, avboka eller se priser och betalningar. Ni kan ändra valen när ni vill.'));
+        b.name + ' kan aldrig avboka eller se priser och betalningar, och ett pass ' + b.name
+          + ' föreslår går till er först. Ni kan ändra valen när ni vill.'));
   }
 
   /* På och av för varje sak, i barnets kort. */
@@ -609,7 +619,7 @@
     const har = S.barnFår[b.id] || [];
     return biEl('div', { class: 'bi-far' },
       biEl('p', { class: 'bi-epost-rubrik' }, 'Vad ' + b.name + ' får se och göra'),
-      ...BARN_FÅR.map(([sak, rubrik, under]) => {
+      ...barnFårVal().map(([sak, rubrik, under]) => {
         const på = har.includes(sak);
         return biEl('div', { class: 'nx-nval' },
           biEl('div', { class: 'nx-nval-text' }, biEl('b', {}, rubrik), biEl('span', { class: 'xsmall' }, under)),
@@ -1654,6 +1664,17 @@
       atgarder: svarsKnappar(b, true)
     }));
 
+    /* Barnens förslag (barnet_foreslar_pass): familjens drag, för inget
+       går till studiehjälparen förrän föräldern skickat det. Raden leder
+       till förslaget i bokningen. */
+    const barnens = S.väntar ? [] : (S.bf.lista || []);
+    barnens.forEach(f => rader.push(NXStudie.radLank({
+      href: '#boka/forslag-' + f.id, ikon: 'forslag',
+      titel: barnetsNamn(f.barn_id) + ' föreslår ett pass',
+      meta: [bfNär(f), [f.amne, NXStudie.längdText(f.langd_min)].filter(Boolean).join(', ')],
+      lank: 'Granska'
+    })));
+
     /* En tid studiehjälparen avslagit den senaste veckan, som inte har
        passerat: nästa drag är familjens, att föreslå en ny. Utan raden
        stod avslaget bara i den hopfällda gruppen Avbokade pass, och
@@ -1721,7 +1742,7 @@
     /* Dold, inte tom: en ruta som står kvar och säger "inget att
        göra" tar plats överst varje gång man öppnar vyn. */
     grupp.hidden = !rader.length;
-    const antal = föreslagna.length + avslagna.length + att.length + sena.length;
+    const antal = föreslagna.length + barnens.length + avslagna.length + att.length + sena.length;
     $('#ov-gora-antal').textContent = antal ? String(antal) : '';
     host.innerHTML = rader.join('');
   }
@@ -2394,8 +2415,11 @@
          gamla katalogen som förut, och den är vad kassan då tar betalt
          efter. Vyn har inga kolumner som inte ska visas. */
       supa.from('erbjudanden_pris').select('*').order('ordning'),
+      /* Alla kolumner (gratistimmarna_60_dagar, 2026-10-13): gratis_kvar
+         och gratis_till finns först efter migrationen, och en uttrycklig
+         lista med dem hade gett ett fel och inga timmar tills dess. */
       supa.from('klippkort_saldo')
-        .select('id, erbjudande, namn, sort, timmar, anvanda, kvar, giltigt_till, status, brukbar, created_at')
+        .select('*')
         .eq('parent_id', S.user.id).in('status', ['betald', 'tvist', 'aterbetald'])
         .order('giltigt_till', { ascending: true }),
       /* Timbanken (Fas 22.1): saldot räknas i databasen, och uttagen
@@ -2456,19 +2480,33 @@
     return Math.max(1, Math.ceil(min / 60));
   };
 
-  /* Kortet timmarna dras från: det som går ut först och räcker. Samma
-     urval som klippkort_dra gör — funktionen väljer själv, det här
-     avgör bara om knappen ska stå där. Ett pass med fler barn betalas
-     med kort (villkoren, #erbjudanden). */
+  /* Hur många timmar ett kort räcker till för ett pass på dagen, som
+     databasen räknar (intern.kortets_timmar, gratistimmarna_60_dagar,
+     2026-10-13): alla som är kvar fram till kortets sista dag, och efter
+     den de gratis timmar som är kvar, till 60 dagar efter köpet. Utan
+     migrationen saknas gratis_till, och då gäller bara sista dagen.
+     Dagen är aldrig före i dag. */
+  const passetsDag = datum => { const idag = isoFor(new Date()); return datum && String(datum) > idag ? String(datum) : idag; };
+  const kortetsTimmar = (k, dag) => String(k.giltigt_till) >= dag ? Number(k.kvar) || 0
+    : k.gratis_till && String(k.gratis_till) >= dag ? Number(k.gratis_kvar) || 0 : 0;
+  const harGratis = (k, dag) => Number(k.gratis_kvar) > 0 && !!k.gratis_till && String(k.gratis_till) >= dag;
+  const kortetsSistaDag = (k, dag) => String(k.giltigt_till) >= dag ? String(k.giltigt_till) : String(k.gratis_till || '');
+
+  /* Kortet timmarna dras från. Samma urval som klippkort_dra gör:
+     gratis timmar först (Leo 2026-10-13: "gratis timmar går ut först sen
+     planerna"), sedan kortet som går ut först och räcker. Funktionen
+     väljer själv, det här avgör bara om knappen ska stå där. Ett pass
+     med fler barn betalas med kort (villkoren, #erbjudanden). */
   function kortFör(b) {
     /* Ett pass med första timmen bjuden betalas med kort (Fas 19.5):
        timmarna dras ur passets hela längd, och klippkort_dra nekar det. */
     if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1 || b.startrabatt) return null;
     const behov = passTimmar(b);
+    const dag = passetsDag(b.wanted_date);
     return S.erb.kort
-      .filter(k => k.brukbar && k.status === 'betald' && Number(k.kvar) >= behov
-        && String(k.giltigt_till) >= String(b.wanted_date))
-      .sort((a, c) => String(a.giltigt_till).localeCompare(String(c.giltigt_till)))[0] || null;
+      .filter(k => k.brukbar && k.status === 'betald' && kortetsTimmar(k, dag) >= behov)
+      .sort((a, c) => (harGratis(c, dag) - harGratis(a, dag))
+        || kortetsSistaDag(a, dag).localeCompare(kortetsSistaDag(c, dag)))[0] || null;
   }
 
   /* Timbanken betalar ett helt pass när minuterna räcker till det
@@ -2497,8 +2535,9 @@
     if (!S.erb.aktiv || Number(barn) > 1 || !datum) return null;
     const behov = passTimmar({ duration_min: minuter });
     const brukbara = S.erb.kort.filter(k => k.brukbar);
-    if (brukbara.some(k => String(k.giltigt_till) >= String(datum) && Number(k.kvar) >= behov)) {
-      const kvar = brukbara.reduce((a, k) => a + Number(k.kvar), 0);
+    const dag = passetsDag(datum), idag = isoFor(new Date());
+    if (brukbara.some(k => kortetsTimmar(k, dag) >= behov)) {
+      const kvar = brukbara.reduce((a, k) => a + kortetsTimmar(k, idag), 0);
       return { titel: 'Er timbank', under: '−' + timText(behov) + ', ' + (kvar - behov) + ' kvar efter' };
     }
     if (S.erb.bank.saldo >= minuter) return { titel: 'Timbanken', under: '−' + tidLängd(minuter) };
@@ -2514,11 +2553,18 @@
     const bank = S.erb.aktiv ? Number(S.erb.bank.saldo) || 0 : 0;
     el.hidden = !kort.length && !bank;
     if (el.hidden) { el.innerHTML = ''; return; }
-    el.innerHTML = kort.map(k => '<p><b>' + esc(k.kvar + ' av ' + k.timmar + ' timmar kvar') + '</b> på '
-        + esc(k.namn) + ', till ' + esc(datumText(k.giltigt_till)) + '.</p>').join('')
+    const idag = isoFor(new Date());
+    /* En plan som gått ut med en gratis timme kvar (gratistimmarna_60_dagar)
+       står med den timmen och dess sista dag. */
+    el.innerHTML = kort.map(k => String(k.giltigt_till) < idag
+        ? '<p><b>' + esc(kortetsTimmar(k, idag) === 1 ? '1 gratis timme kvar' : kortetsTimmar(k, idag) + ' gratis timmar kvar')
+          + '</b> på ' + esc(k.namn) + ', till ' + esc(datumText(k.gratis_till)) + '.</p>'
+        : '<p><b>' + esc(k.kvar + ' av ' + k.timmar + ' timmar kvar') + '</b> på '
+          + esc(k.namn) + ', till ' + esc(datumText(k.giltigt_till)) + '.</p>').join('')
       + (bank ? '<p><b>' + esc(tidLängd(bank)) + '</b> i timbanken.</p>' : '')
       + '<p class="bk-timmar-not">' + esc((kort.length ? 'Timmarna' : 'Minuterna')
-        + ' dras när ni föreslår ett pass, ett barn per pass. Föreslår er studiehjälpare en annan tid följer de med passet. '
+        + ' dras när ni föreslår ett pass, ett barn per pass' + (kort.some(k => harGratis(k, idag)) ? ', gratis timmar först' : '')
+        + '. Föreslår er studiehjälpare en annan tid följer de med passet. '
         + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka.') + '</p>';
   }
 
@@ -3051,7 +3097,8 @@
     const ord = n => n === 1 ? '1 timme' : n + ' timmar';
     const ok = await NXStudie.bekräfta({
       titel: 'Betala med timmar?',
-      text: ord(behov) + ' dras från ' + kort.namn + '. Kvar efteråt: ' + ord(Number(kort.kvar) - behov)
+      text: ord(behov) + ' dras från ' + kort.namn + '. Kvar efteråt: '
+        + ord(kortetsTimmar(kort, passetsDag(b.wanted_date)) - behov)
         + ' av ' + kort.timmar + '. Avbokas passet kommer timmarna tillbaka.',
       knapp: 'Dra ' + ord(behov)
     });
@@ -3327,7 +3374,8 @@
     const box = $('#erb-mina-box'), mina = $('#erb-mina');
     if (!box || !mina) return;
     const brukbara = S.erb.kort.filter(k => k.brukbar);
-    const timmar = brukbara.reduce((n, k) => n + Number(k.kvar || 0), 0);
+    const idagT = isoFor(new Date());
+    const timmar = brukbara.reduce((n, k) => n + kortetsTimmar(k, idagT), 0);
     const minuter = S.erb.bank.saldo;
     box.hidden = false;
     mina.innerHTML = '<div class="erb-mitt erb-tillg">'
@@ -3347,24 +3395,33 @@
      betalat står under den (under). */
   function kortRad(k, under) {
     const idag = isoFor(new Date());
-    const kvar = Number(k.kvar), tim = Number(k.timmar);
+    /* En plan som gått ut med sin gratis timme kvar (gratistimmarna_60_dagar,
+       2026-10-13): timmen gäller till 60 dagar efter köpet, och raden
+       visar den och dess sista dag. */
+    const baraGratis = k.brukbar && String(k.giltigt_till) < idag && harGratis(k, idag);
+    const kvar = baraGratis ? kortetsTimmar(k, idag) : Number(k.kvar), tim = Number(k.timmar);
+    const sista = baraGratis ? k.gratis_till : k.giltigt_till;
     /* Tio dagar före sista dagen går påminnelsemejlet (Fas 21.2), och
        vyn säger samma sak från samma dag: timmar som inte används
        förfaller. */
-    const dagarKvar = Math.round((Date.parse(String(k.giltigt_till)) - Date.parse(idag)) / 864e5);
+    const dagarKvar = Math.round((Date.parse(String(sista)) - Date.parse(idag)) / 864e5);
     const snart = k.brukbar && dagarKvar >= 0 && dagarKvar <= 10;
     const läge = k.status === 'aterbetald' ? 'Återbetalt'
       : k.status === 'tvist' ? 'Betalningen är ifrågasatt'
       : kvar === 0 ? 'Förbrukat'
+      : baraGratis ? 'Gratistimmen gäller till ' + datumText(k.gratis_till)
       : String(k.giltigt_till) < idag ? 'Gick ut ' + datumText(k.giltigt_till)
       : 'Gäller till ' + datumText(k.giltigt_till);
+    const gratis = !baraGratis && harGratis(k, idag) && String(k.giltigt_till) >= idag
+      ? ' · ' + (Number(k.gratis_kvar) === 1 ? '1 gratis timme' : k.gratis_kvar + ' gratis timmar')
+        + ', som dras först och gäller till ' + datumText(k.gratis_till)
+      : S.forstaTimmen && S.forstaTimmen.plan_id === k.id ? ' · första timmen gratis ingår' : '';
     const andel = tim ? Math.round(100 * kvar / tim) : 0;
     return '<div class="erb-mitt' + (k.brukbar ? '' : ' ar-slut') + '">'
       + '<div class="erb-mitt-topp"><b>' + esc(k.namn) + '</b><span>' + esc(läge) + '</span></div>'
       + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
       + '<i style="width:' + andel + '%"></i></div>'
-      + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar'
-      + (S.forstaTimmen && S.forstaTimmen.plan_id === k.id ? ' · första timmen gratis ingår' : '') + '</span>'
+      + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar' + esc(gratis) + '</span>'
       + (snart ? '<p class="erb-snart">'
         + esc(dagarKvar === 0 ? 'Sista dagen är i dag.' : dagarKvar === 1 ? 'Sista dagen är i morgon.' : 'Sista dagen är om ' + dagarKvar + ' dagar.')
         + ' Timmar som inte används förfaller. <a href="#boka">Boka ett pass</a></p>' : '')
@@ -3429,7 +3486,8 @@
       return;
     }
     host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När ni föreslår '
-      + 'ett pass dras timmarna från det köp som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
+      + 'ett pass dras först en gratis timme, sedan timmarna från det köp som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
+      + 'En gratis timme gäller i 60 dagar från köpet, också om planens andra timmar gått ut. '
       + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
       + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
       + 'Ett pass med fler barn, och ett pass där första timmen eller tipstimmen är på köpet, '
@@ -3831,6 +3889,19 @@
       });
     }
 
+    /* Barnens förslag (barnet_foreslar_pass) väntar också på familjen:
+       inget går till studiehjälparen förrän föräldern skickat det. */
+    const barnens = S.väntar ? [] : (S.bf.lista || []);
+    if (barnens.length) {
+      const f = barnens[0];
+      poster.push({
+        rubrik: barnens.length > 1 ? barnens.length + ' förslag från barnen' : barnetsNamn(f.barn_id) + ' föreslår ett pass',
+        text: barnens.length > 1 ? 'De väntar på er under Boka pass.'
+          : bfNär(f) + (f.amne ? ' · ' + f.amne : '') + ' — granska och skicka vidare.',
+        mål: '#bf-lista'
+      });
+    }
+
     /* Ingen notis om pass att betala i förväg (Fas 19.2). Sedan
        familjen får betala efter passet är ett bekräftat, obetalt pass
        inte deras drag: det är ett val. Det som faktiskt ska betalas, ett
@@ -3962,8 +4033,8 @@
      Det här är kopplingen till databasen: vad som hämtas, och vad
      som skrivs.
      ============================================================ */
-  const BOKA_AMNEN = ['Matematik', 'Svenska', 'Engelska',
-    'NO / Fysik / Kemi / Biologi', 'SO / Historia / Samhällskunskap', 'Annat'];
+  /* Samma ämnen som i barnets förslag (NXArbete, 2026-10-12). */
+  const BOKA_AMNEN = NXArbete.BOKA_AMNEN;
 
   S.boka = NXArbete.bokning({
     host: $('#boka-inner'),
@@ -3979,13 +4050,18 @@
        Sedan 2026-10-09 bara för en familj vi valt, och aldrig när familjen
        fått timmen i en plan (forsta_timmen_lage). Databasen avgör; här
        visas bara vad förslaget kommer att kosta. */
-    bjuden: minuter => {
+    bjuden: (minuter, datum) => {
       const aktiva = (S.bokningar || []).filter(b => b.status !== 'cancelled'
         && b.fakturerbar !== false && (b.tjanst || 'laxhjalp') === 'laxhjalp');
       /* null: databasen saknar funktionen och har den gamla regeln.
-         Inte hämtat än: ingen timme visas, hellre fullt pris än ett löfte. */
+         Inte hämtat än: ingen timme visas, hellre fullt pris än ett löfte.
+         En gratis timme gäller i 60 dagar (gratistimmarna_60_dagar,
+         2026-10-13): beviljad_till och tipstimmens kvar_till är sista
+         dagen, och passets dag ska ligga inom den. */
+      const dag = passetsDag(datum);
       const ft = S.forstaTimmen;
-      const kanFå = ft === null || !!(ft && ft.beviljad && !ft.tagen);
+      const kanFå = ft === null || !!(ft && ft.beviljad && !ft.tagen
+        && (!ft.beviljad_till || String(ft.beviljad_till) >= dag));
       /* Ett pass med tipstimmen (rabattkod TIPS) är inte prissidans
          första timme. Den går först; annars tipstimmen, om det finns en
          kvar (2026-09-30). kvar räknas i databasen och gäller också när
@@ -3994,7 +4070,8 @@
         const före = aktiva.reduce((a, b) => a + (Number(b.duration_min) || 60), 0);
         if (före < 120 && före + minuter >= 120) return true;
       }
-      return S.tips && Number(S.tips.kvar) > 0 ? 'tips' : false;
+      return S.tips && Number(S.tips.kvar) > 0
+        && (!S.tips.kvar_till || String(S.tips.kvar_till) >= dag) ? 'tips' : false;
     },
     /* Köpta timmar i stället för priset vid knappen (2026-09-28). */
     timmar: (minuter, datum, barn) => timmarFörFörslag(minuter, datum, barn),
@@ -4038,7 +4115,20 @@
       };
     },
 
+    /* Rabattkoden prövas mot databasen innan förslaget skickas, i
+       familjens egna förslag och i barnens (2026-10-13). Skicka inte och
+       Tillbaka i granskningen ritar om listan ovanför ytan. */
+    rabattkod: async (kod, brutto) => {
+      const { data, error } = await supa.rpc('kolla_rabattkod',
+        { p_kod: kod, p_tjanst: NXTjanster.standard(), p_belopp_ore: brutto });
+      if (error) return null;
+      return Array.isArray(data) ? data[0] || null : data;
+    },
+    neka: id => nekaBarnforslag(id),
+    efterGranskning: () => ritaBarnforslag(),
+
     boka: async v => {
+      if (v.forslag) return skickaBarnforslag(v);
       const { data, error } = await supa.from('bookings').insert({
         parent_id: S.user.id,
         tutor_id: S.profil.matched_tutor_id,
@@ -4053,8 +4143,11 @@
         format: v.format || null,
         location: v.plats || null,
         note: v.not || null,
+        /* Prövas igen av databasen (skydda_rabatt), och en gratis timme
+           eller timmarna går före den (rabattkoden_krockar_inte). */
+        rabattkod: v.rabattkod || null,
         status: 'requested'
-      }).select('id, status, klippkort_id, betalning_status, rabattkod').single();
+      }).select('id, status, klippkort_id, betalning_status, rabattkod, startrabatt').single();
       if (error) {
         /* 23505 = samma starttid, 23P01 = passet krockar med ett annat
            som redan ligger där. Samma sak för den som föreslår. */
@@ -4075,7 +4168,9 @@
       if (betalt) laddaErbjudanden().catch(() => {});
       /* Timmen på köpet för ett tips drogs i samma skrivning. */
       if (data && data.rabattkod === 'TIPS') laddaTips().catch(() => {});
-      return { status: data ? data.status : null, id: data ? data.id : null, betalt: betalt };
+      return { status: data ? data.status : null, id: data ? data.id : null, betalt: betalt,
+               rabatt: data && data.rabattkod !== 'TIPS' ? data.rabattkod : null,
+               gratis: !!(data && data.startrabatt) };
     }
   });
 
@@ -4084,6 +4179,160 @@
   async function laddaBokning() {
     if (!S.boka) return;
     await S.boka.ladda();
+  }
+
+  /* ============================================================
+     BARNENS FÖRSLAG (barnet_foreslar_pass, 2026-10-12)
+
+     Leo: "barn skickar förslag, precis som förälder, men ser inte
+     priset. förälder får förslaget och kan ändra i förslaget, samt ser
+     pris och kan ange rabattkod om det finns. sedan godkänner föräldern
+     förslaget och det går vidare till studiehjälparen".
+
+     Ett barn som får föreslå pass (boka, under Profil → Barn) skickar
+     dem hit. De står överst under Boka pass, under Att göra och som en
+     siffra i menyn, och föräldern får ett mejl. Granska öppnar
+     förslaget i den vanliga ytan, med allt barnet valt ifyllt: där syns
+     priset, allt går att ändra, och en rabattkod går att lägga till.
+     Skicka gör det till ett pass, som förälderns eget förslag
+     (skicka_barnets_forslag), och studiehjälparen svarar som vanligt.
+     Skicka inte svarar barnet utan pass (barnforslag_neka).
+
+     Ett förslag föräldern själv skickar går som förut, och har samma
+     ruta för en rabattkod sedan 2026-10-13.
+
+     Utan tabellen i databasen (migrationen inte körd) finns inga
+     förslag, och inget av det här syns.
+     ============================================================ */
+  S.bf = { lista: null, öppna: null };
+
+  async function laddaBarnforslag() {
+    const { data, error } = await supa.from('barn_passforslag')
+      .select('id, barn_id, datum, tid, langd_min, amne, format, plats, rad, skapad')
+      .eq('lage', 'vantar').order('skapad', { ascending: true });
+    if (error) {
+      /* PGRST205 (och 42P01 i en äldre PostgREST): tabellen finns inte. */
+      if (error.code !== 'PGRST205' && error.code !== '42P01') console.warn('barn_passforslag:', error.message);
+      S.bf.lista = null;
+    } else {
+      S.bf.lista = data || [];
+    }
+    /* Ett förslag som granskas men inte längre väntar (barnet tog
+       tillbaka det, eller det besvarades i en annan flik) lämnar ytan. */
+    const granskas = S.boka && S.boka.granskar ? S.boka.granskar() : null;
+    if (granskas && !(S.bf.lista || []).some(f => f.id === granskas)) S.boka.avbrytGranskning();
+    ritaBarnforslag();
+    ritaÖvGöra();
+    ritaNotiser();
+    if (S.bf.öppna) {
+      const id = S.bf.öppna;
+      S.bf.öppna = null;
+      öppnaBarnforslag(id);
+    }
+  }
+
+  function barnetsNamn(id) {
+    const b = (S.barn || []).find(x => x.id === id);
+    return b ? String(b.name || '').trim().split(/\s+/)[0] || 'Barnet' : 'Barnet';
+  }
+
+  function bfNär(f) {
+    const dag = String(NXStudie.dagMedVeckodag(f.datum) || '');
+    return dag.charAt(0).toUpperCase() + dag.slice(1) + (f.tid ? ' kl. ' + String(f.tid).slice(0, 5) : '');
+  }
+
+  function ritaBarnforslag() {
+    const ruta = $('#bf-ruta'), host = $('#bf-lista');
+    const lista = S.bf.lista || [];
+    if (S.sido) S.sido.märke('boka', lista.length);
+    if (!ruta || !host) return;
+    ruta.hidden = !lista.length;
+    $('#bf-antal').textContent = lista.length ? String(lista.length) : '';
+    const granskas = S.boka && S.boka.granskar ? S.boka.granskar() : null;
+    const idag = isoFor(new Date());
+    host.innerHTML = lista.map(f => '<div class="vy-rad">'
+      + '<span class="vy-rad-ik">' + NXStudie.IKON.forslag + '</span>'
+      + '<span class="vy-rad-mitt"><span class="vy-rad-titel">' + esc(barnetsNamn(f.barn_id)) + ' · ' + esc(bfNär(f)) + '</span>'
+      + '<span class="vy-rad-meta">'
+      + [f.amne, NXStudie.längdText(f.langd_min), f.format,
+         f.datum < idag ? 'dagen har varit' : null,
+         f.skapad ? 'skickat ' + NXStudie.kortTid(f.skapad) : null]
+        .filter(Boolean).map(m => '<span>' + esc(m) + '</span>').join('')
+      + '</span></span>'
+      + '<span class="vy-rad-hoger">' + (granskas === f.id
+        ? '<span class="lage">Öppet nedan</span>'
+        : '<button type="button" class="btn btn-primary btn-sm" data-bf-granska="' + esc(f.id) + '">Granska</button>')
+      + '</span></div>').join('');
+  }
+
+  /* Förslaget i ytan, för rätt barn. Ytan läggs i bild under raden. */
+  function öppnaBarnforslag(id) {
+    const f = (S.bf.lista || []).find(x => x.id === id);
+    if (!f || !S.boka) return;
+    if (S.väntar) return;
+    if (S.valtBarn !== f.barn_id && (S.barn || []).some(b => b.id === f.barn_id)) bytBarn(f.barn_id);
+    S.boka.granska(Object.assign({}, f, { namn: barnetsNamn(f.barn_id) }));
+    ritaBarnforslag();
+    rensa($('#bf-msg'));
+    if (String(location.hash || '').split('/')[0] !== '#boka') location.hash = '#boka';
+    requestAnimationFrame(() => {
+      const yta = $('#boka-inner');
+      if (yta) NXStudie.visaÖverst(yta);
+    });
+  }
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-bf-granska]');
+    if (k) öppnaBarnforslag(k.dataset.bfGranska);
+  });
+
+  /* Skicka: passet skapas av databasen som förälderns eget förslag,
+     med samma pris, villkor och timmar som när föräldern bokar själv.
+     Samma svar till ytan som boka(), och koden passet fick. */
+  async function skickaBarnforslag(v) {
+    const { data, error } = await supa.rpc('skicka_barnets_forslag', {
+      p_id: v.forslag,
+      p_pass: {
+        datum: v.datum, tid: v.tid, minuter: v.minuter, amne: v.amne, tjanst: NXTjanster.standard(),
+        barn: v.barn || 1, format: v.format || null, plats: v.plats || null, not: v.not || null,
+        rabattkod: v.rabattkod || null
+      }
+    });
+    if (error) {
+      if (error.code === '23505' || error.code === '23P01') {
+        return 'Den tiden hann bli bokad, eller krockar med ett annat pass. Kalendern är uppdaterad — välj en annan tid.';
+      }
+      /* Databasens egna besked (förslaget är redan besvarat, barnet har
+         ingen studiehjälpare) är skrivna för föräldern. */
+      if (error.code === 'P0001' && error.hint === 'barnforslag') {
+        laddaBarnforslag();
+        return String(error.message || '');
+      }
+      if (error.code === 'PGRST202') return 'Barnens förslag går inte att skicka än. Försök igen om en stund.';
+      return 'Kunde inte skicka förslaget: ' + felText(error);
+    }
+    const betalt = !data || data.betalning_status !== 'betald' ? null
+      : data.klippkort_id ? 'timmar' : 'timbanken';
+    laddaPass();
+    laddaBarnforslag();
+    if (betalt) laddaErbjudanden().catch(() => {});
+    if (data && data.rabattkod === 'TIPS') laddaTips().catch(() => {});
+    return { status: data ? data.status : null, id: data ? data.id : null, betalt,
+             rabatt: data && data.rabattkod !== 'TIPS' ? data.rabattkod : null,
+             gratis: !!(data && data.startrabatt) };
+  }
+
+  /* Skicka inte. null när det gick; annars felet, som ytan visar. */
+  async function nekaBarnforslag(id) {
+    const { data, error } = await supa.rpc('barnforslag_neka', { p_id: id });
+    if (error) return 'Kunde inte svara på förslaget: ' + felText(error);
+    const f = (S.bf.lista || []).find(x => x.id === id);
+    await laddaBarnforslag();
+    const namn = f ? barnetsNamn(f.barn_id) : 'Barnet';
+    säg($('#bf-msg'), data && data.lage === 'redan'
+      ? 'Förslaget var redan besvarat.'
+      : 'Förslaget skickades inte. ' + namn + ' ser det i sin vy.', true);
+    return null;
   }
 
   /* ============================================================
@@ -5183,6 +5432,16 @@
     };
     function följHash() {
       const [huvud, flik] = String(location.hash || '').replace(/^#/, '').split('/');
+      /* Ett barns förslag (barnet_foreslar_pass): raden under Att göra
+         leder hit. Förslaget öppnas när listan finns, och adressen blir
+         #boka, så att en omladdning inte öppnar det igen. */
+      const förslag = huvud === 'boka' && /^forslag-[0-9a-f-]{36}$/.test(flik || '') ? flik.slice(8) : null;
+      if (förslag) {
+        history.replaceState(history.state, '', '#boka');
+        if (S.bf.lista) öppnaBarnforslag(förslag);
+        else S.bf.öppna = förslag;
+        return;
+      }
       /* Märkena låg under Uppgifter; de står nu under Din utveckling. */
       const alias = huvud === 'uppgifter' && flik === 'marken' ? ['nexlax', 'utveckling'] : ALIAS[huvud];
       if (alias) {
@@ -5252,7 +5511,15 @@
        namnet finns. */
     /* Erbjudandena före passen: knappen Betala med timmar ritas ur dem. */
     await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden(), laddaTips()]);
-    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaNexlax(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor(), laddaBekrafta()]);
+    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaNexlax(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor(), laddaBekrafta(), laddaBarnforslag()]);
+    /* Barnens förslag kan komma medan fliken står öppen: de hämtas när
+       man kommer tillbaka till den, högst en gång i minuten. */
+    let förslagHämtade = Date.now();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible' || Date.now() - förslagHämtade < 60000) return;
+      förslagHämtade = Date.now();
+      laddaBarnforslag();
+    });
     S.namnKlara = true;
     if (S.aktivSek === 'meddelanden') laddaBarnensTradar();
     /* Uppgifterna hämtas först, så märket ritas om när de finns. */
