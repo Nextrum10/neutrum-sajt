@@ -1087,12 +1087,69 @@ var fyra andra saker.
    admin: sidhuvudets knappar syns inte på en telefon. Elevvyn har ingen
    meny, med flit, och fem poster som ryms.
 
-Hälsningen står kvar när vyn öppnas; det är först vid ett byte den går
-undan. **Inte gjort**, sett i samma prov: Boka pass har en nålad
+Hälsningen stod kvar när vyn öppnades och gick undan vid första bytet;
+sedan 2026-10-12 står den kvar (punkt 3 är ändrad, Raden på telefonen
+nedan). **Inte gjort**, sett i samma prov: Boka pass har en nålad
 summering på 165 px längst ned (med sidhuvudet och raden är 300 av 844
 px fasta medan man väljer tid), och studiehjälparvyns elevval är 520 px
 högt på en telefon, så Uppgifter och Meddelanden börjar en skärm ned.
 Båda är formfrågor att ta med Leo.
+
+### Raden på telefonen (2026-10-12)
+
+Leo: "på telefonen när man trycker på de olika kolumnerna i vyn
+exempelvis mina lektioner osv ska skärmen inte automatiskt hoppa ner. Så
+gör de också mer smooth när man trycker och de olika kolumnerna mer
+moderna". Mätt i samma provbänk som andra varvet (390 × 844, `isMobile`,
+`hasTouch`, ett tryck med `el.click()` i sidan):
+
+1. **Hoppet var punkt 3 ovan.** Högst upp flyttade varje tryck sidan 403
+   px i familjevyn och 378 i studiehjälparvyn, och raden for från 472 till
+   75 px under fingret. `sidomeny` lägger nu sektionen vid sin början bara
+   som på en dator: när början inte syns, eller när webbläsaren klämt
+   scrollen. Högst upp står allt still (0 → 0 i alla sektioner, i alla
+   fyra vyerna), och står raden fast långt ned läggs sektionen under den
+   (1 200 → 403, raden kvar på 75). Raden flyttas alltså aldrig av ett
+   tryck i den. Priset är det andra varvet löste: högst upp börjar
+   sektionen under hälsningen, med en tredjedel av skärmen kvar. Ytan
+   under raden är fortfarande minst en skärm, för fallet långt ned.
+   Passets sida (`#pass/<id>`) har sin egen regel i `bytteSektion` och
+   läggs fortfarande överst när dess början hamnar under 60 % av
+   skärmen, också högst upp på sidan (0 → 403 i provet): det är ett tryck
+   i innehållet, inte i raden, och inte ändrat.
+2. **Pillen.** Den valda posten var en fylld post som bytte på ett
+   ögonblick. Nu är den en pill (`.vy-sido-pil`) som ligger i raden under
+   posterna (`z-index:-1` i radens stapel, som sticky ger) och glider dit
+   (`translate` och `width`, 0,38 s, en aning förbi och tillbaka).
+   Skriptet sätter bara var den ska stå (`--x`, `--y`, `--w`, `--h` på
+   pillen, `läggPil`), efter `onByt`, för passets sida markerar posten man
+   kom ifrån där. `har-pil` på raden gör den valda posten genomskinlig;
+   utan den är posten fylld som förut, så en dator och en sida utan
+   skriptet ser ut som innan. Glidningen slås på vid första bytet och
+   aldrig av: ResizeObserver svarar i samma bildruta som ett byte och hade
+   annars stoppat den mitt i. Med minska rörelse glider inget.
+3. **Samma vikt.** En vald post i 600 var bredare och flyttade grannarna
+   några pixlar vid varje tryck; alla poster är 500 på en telefon, och
+   texten byter färg på 0,32 s, i pillens takt (med 0,22 s stod den ljus
+   på papperet innan pillen kommit fram).
+4. **Raden glider också**, med `scrollTo({behavior:'smooth'})` på raden,
+   aldrig sidan, och drar fram posten till mitten när den står inom 40 px
+   från en kant, så att grannen syns. Kom man från en länk eller menyn
+   bakom strecken till en post utanför skärmen möts pillen och posten
+   på vägen: de två rörelserna har olika kurvor, och pillen går förbi en
+   bit och vänder. Kort, och bara då.
+5. **Kanterna tonar**: en sticky gradient sist i raden (den sista posten
+   står helt fram när man dragit hela vägen) och en först, som tar ingen
+   plats och syns bara när raden är dragen (`ar-dragen`, satt av en
+   passiv lyssnare som bara byter när raden lämnar eller når början).
+   Strecken mellan grupperna är 18 px höga i stället för hela raden.
+   Skuggan under pillen är mörk i båda lägena; av `--bl` blev den ett
+   ljust sken i mörkt.
+
+Provat på telefon i familjevyn, studiehjälparvyn, barnets vy och
+adminvyn, ljust och mörkt, och med minska rörelse. På en dator (1280 ×
+800) är menyn pixel för pixel som förut (största skillnaden 6 av 255, i
+kantutjämningen), och sidan flyttas inte där heller.
 
 ### Adminvyns skal (2026-09-29)
 

@@ -2197,15 +2197,56 @@ window.NXStudie = (function () {
       return först || sektion;
     }
 
-    /* Står raden fast under sidhuvudet (en telefon), eller som en
-       kolumn bredvid innehållet (en dator)? */
-    function fastRad() {
-      var cs = window.getComputedStyle(nav);
-      return cs.position === 'sticky' && cs.flexDirection !== 'column';
+    /* ---------- pillen som glider ----------
+       På en telefon bytte den valda posten färg på ett ögonblick, och
+       resten av rörelsen var sidan som hoppade. Nu är den valda posten
+       en pill under raden som glider till den nya (2026-10-12, Leo: "gör
+       de också mer smooth när man trycker"). Den ligger i raden och
+       rullar med den, och skriptet sätter bara var den ska stå: CSS
+       glider. På en dator är menyn en kolumn och pillen dold; där är
+       posten fylld som förut (har-pil saknas). */
+    var pil = document.createElement('span');
+    pil.className = 'vy-sido-pil';
+    pil.setAttribute('aria-hidden', 'true');
+    nav.appendChild(pil);
+
+    function lugn() {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
+
+    /* Den glider från första bytet: när vyn öppnas står den där den
+       ska, utan att komma farande från radens början. En post som blir
+       bredare efter det (en siffra) följs med samma rörelse. Glidningen
+       slås aldrig av igen, för ResizeObserver svarar i samma bildruta
+       som ett byte och hade då stoppat den mitt i. Utan ResizeObserver
+       syns pillen bara om raden syntes när vyn ritades; annars är den
+       valda posten fylld som förut (har-pil saknas). */
+    function läggPil(glid) {
+      var a = nav.querySelector('a.ar-har');
+      var syns = !!(a && pil.offsetParent && a.offsetWidth);
+      nav.classList.toggle('har-pil', syns);
+      if (!syns) return;
+      if (glid) pil.classList.add('glider');
+      pil.style.setProperty('--x', a.offsetLeft + 'px');
+      pil.style.setProperty('--y', a.offsetTop + 'px');
+      pil.style.setProperty('--w', a.offsetWidth + 'px');
+      pil.style.setProperty('--h', a.offsetHeight + 'px');
+    }
+    if (window.ResizeObserver) {
+      var rö = new ResizeObserver(function () { läggPil(false); });
+      rö.observe(nav);
+      länkar.forEach(function (a) { rö.observe(a); });
+    }
+    /* Vänsterkanten tonar ut när raden är dragen, som den högra (CSS).
+       Klassen byts bara när raden lämnar eller når början. */
+    nav.addEventListener('scroll', function () {
+      var dragen = nav.scrollLeft > 2;
+      if (dragen !== nav.classList.contains('ar-dragen')) nav.classList.toggle('ar-dragen', dragen);
+    }, { passive: true });
 
     function visa(önskad) {
       var vald = giltig(önskad);
+      var bytt = !första && vald !== aktiv;
       /* Läses FÖRE bytet. Att gömma en sektion ändrar sidhöjden, och
          då klämmer webbläsaren scrollen på egen hand — den enda
          förflyttning vi vill veta om nedan. */
@@ -2239,9 +2280,15 @@ window.NXStudie = (function () {
           }
         }
       } else if (vald_a && nav.scrollWidth > nav.clientWidth + 1) {
+        /* Posten dras in till mitten också när den står nära kanten,
+           inte bara utanför: "Mina l" som trycks fram ska visa grannen
+           efter den. Vid ett tryck glider raden dit, som pillen; raden
+           är sin egen rullyta, så sidan rör sig inte (2026-10-12). */
         var d = vald_a.getBoundingClientRect().left - nav.getBoundingClientRect().left;
-        if (d < 0 || d + vald_a.offsetWidth > nav.clientWidth) {
-          nav.scrollLeft += d - (nav.clientWidth - vald_a.offsetWidth) / 2;
+        if (d < 40 || d + vald_a.offsetWidth > nav.clientWidth - 40) {
+          var mål = nav.scrollLeft + d - (nav.clientWidth - vald_a.offsetWidth) / 2;
+          if (bytt && !lugn()) nav.scrollTo({ left: mål, behavior: 'smooth' });
+          else nav.scrollLeft = mål;
         }
       }
 
@@ -2267,18 +2314,20 @@ window.NXStudie = (function () {
          Bara vid ett byte av sektion: en flik i samma sektion
          (#lektioner/plan) ska inte skicka en uppåt.
 
-         Utom på en telefon, där sektionsraden står fast under
-         sidhuvudet: där läggs den nya sektionen alltid direkt under
-         raden. Högst upp på sidan står hälsningen, 450 px av en 844 px
-         hög skärm, och varje sektion man valde började under den, med
-         en tredjedel av skärmen kvar till innehållet. Leo 2026-10-09:
-         "vyerna på mobil är jätte jobbiga att använda". Hälsningen står
-         kvar överst när vyn öppnas. */
-      if (!första && vald !== aktiv) {
+         Också på en telefon. Från 2026-10-09 lades den nya sektionen där
+         alltid direkt under raden, för att hälsningen överst tar 450 px
+         av en 844 px hög skärm. Men högst upp på sidan var det ett hopp
+         på 400 px vid varje tryck: raden for upp under fingret och
+         hälsningen försvann. Leo 2026-10-12: "när man trycker på de
+         olika kolumnerna i vyn exempelvis mina lektioner ska skärmen
+         inte automatiskt hoppa ner". Nu står allt still när början
+         syns, och står raden fast långt ned på sidan läggs sektionen vid
+         sin början under den som på en dator; raden står kvar där den
+         stod i båda fallen. */
+      if (bytt) {
         var sektion = början(rot.querySelector('section[data-sek="' + vald + '"]'));
         var plats = sektion ? platsUtanInglidning(sektion) : 0;
-        if (sektion && (window.scrollY < föreY || plats < täcktÖverst() + 12
-            || (fastRad() && plats > täcktÖverst() + 24))) visaÖverst(sektion);
+        if (sektion && (window.scrollY < föreY || plats < täcktÖverst() + 12)) visaÖverst(sektion);
       }
       if (!första) {
         var rubrik = rot.querySelector('section[data-sek="' + vald + '"] h2, section[data-sek="' + vald + '"] h5');
@@ -2291,6 +2340,9 @@ window.NXStudie = (function () {
       aktiv = vald;
 
       if (typeof o.onByt === 'function') o.onByt(vald);
+      /* Efter onByt: passets sida har ingen post, och vyn markerar då
+         posten man kom ifrån (bytteSektion), där pillen ska stå. */
+      läggPil(bytt);
       return vald;
     }
 

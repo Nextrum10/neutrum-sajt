@@ -366,8 +366,11 @@ ruta för år och månad (2026-10-06), från september 2026 till och med decembe
 står i fältet och i rutan, och Lektioner räknar upp andra månader utan rapport under det.
 **Tummen**: tryckytor minst 44 px, och `::after` provas med `elementFromPoint`. Ett fält har
 minst 16 px text (`.inp,.sel` är 1rem), annars zoomar en iPhone in sidan vid tryck. **På en
-telefon** (2026-10-09) läggs en ny sektion direkt under sektionsraden (`sidomeny`, `början()`),
-vyns delar står i menyn bakom de tre strecken (`mobilmeny`), och Enter är en ny rad i chatten.
+telefon** flyttar ett tryck i sektionsraden aldrig raden (2026-10-12, Leo: "ska skärmen inte
+automatiskt hoppa ner"): högst upp står sidan still, och står raden fast långt ned läggs sektionen
+vid sin början under den (`sidomeny`, `början()`). Den valda posten är en pill som glider
+(`läggPil`, `.vy-sido-pil`), med samma vikt på alla poster. Vyns delar står i menyn bakom de tre
+strecken (`mobilmeny`), och Enter är en ny rad i chatten.
 **Notiserna vid inloggningen** (2026-10-12): det som väntar på en står i en ruta när vyn öppnas
 (`NXStudie.notisruta`), med samma poster som klockan i sidhuvudet (`notisposter()` i båda vyerna),
 och väntar inget kommer ingen ruta. En gång per inloggning (`sessionStorage`, som `loggaUt()` och
