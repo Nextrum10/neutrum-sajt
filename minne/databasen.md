@@ -263,6 +263,15 @@ så många gånger som väntat, och vyns kolumner lästes i driften före
 `create or replace view` (en vy kan inte tappa kolumner, så felet kom
 direkt, men först i driften). **Läs driften, inte grenen, innan du
 ändrar en funktion eller vy någon annan också ändrar.**
+**En driftsättning har EN session** (2026-10-13). Tre sessioner
+driftsatte samma kedja efter #270 och #269 samtidigt, utan att veta om
+varandra: `notis-ko` driftsattes tre gånger (v22–v24, alla
+mains), och `barnet_foreslar_pass` kördes av två, den ena i sex delar
+med en md5-vakt per del på `current_query()`, omlott med den andras hela
+körning. Filerna gick att köra två gånger, så slutläget blev ändå det
+lokala, men det visste ingen förrän en av dem skrev till de andra. Innan
+du kör något i driften: lista sessionerna (`list_sessions`), fråga de som
+arbetar i samma repo (`send_message`), och säg till när du är klar.
 Runda 2 la till notisernas sju: `notiser` (i vyn), `notis_utskick` (kön), `notis_val` (av och på per person, typ och
 kanal), `notis_installning`, `notis_drift`, `notis_korningar` och
 `notis_fel` — plus `flaggor`, som är strömbrytarna för det som
@@ -1067,10 +1076,13 @@ vilket inte spelar någon roll så länge det inte finns någon kod, och utan
 förut (den läser `klippkort_saldo` med `*`).
 
 **Körda i driften 2026-10-13 kväll**, efter merge av PR #270 och #269
-(28a0e8a), i den här ordningen: `notis-ko` v23 från main (hämtad tillbaka,
-byte för byte lika i alla femton filer), `barnet_foreslar_pass` (med
-`execute_sql`, avsnitt för avsnitt, för filen har tre `delete` i
-funktioner; registrerad efteråt med filens text ur `extensions.http_get`),
+(28a0e8a), i den här ordningen: `notis-ko` från main (v22, v23 och v24
+av tre sessioner, se ovan; v24 i driften är byte för byte 28a0e8a i alla
+femton filer), `barnet_foreslar_pass` (med `execute_sql`, för filen har
+tre `delete` i funktioner; registrerad efteråt med filens text ur
+`extensions.http_get`; en annan session körde del 1–4 före och del 5–6
+efter, och slutläget prövades igen efteråt: lika det lokala, ett
+cronjobb `barnforslag-gallring`),
 `adminkonton_utanfor_statistiken`, `rabattkoden_krockar_inte`,
 `gratistimmarna_60_dagar` och `tipskoder_bonus_och_timbanken` (hämtade
 från merge-commiten, prövade mot sin md5 och körda och registrerade i var

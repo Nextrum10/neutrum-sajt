@@ -354,7 +354,7 @@ kod förrän steg 4 är gjort och `kolla_rabattkod` har ett tak**
 (`minne/sakerhet.md`).
 
 **Läget 2026-10-13 kl. 22.40: steg 1–7 är gjorda**, efter merge av PR #270
-och #269 (`notis-ko` v23, de fyra migrationerna med filens md5, `drift` v17
+och #269 (`notis-ko` v24 byte för byte main, de fyra migrationerna med filens md5, `drift` v17
 och `rls-test.sql` 1643 av 1643 mot driften; `minne/databasen.md`, Körda i
 driften). Kvar är 8, 9 och 10. Efter merge, i den här ordningen:
 

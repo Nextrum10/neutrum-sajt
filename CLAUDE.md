@@ -480,7 +480,9 @@ Detaljer: `minne/grunden.md`.
   den inte. `schema.sql` rensar tabellerna.
 - **Flera sessioner** kör mot samma databas: läs driften, inte grenen. Lappa en funktion med
   `replace()` på `pg_get_functiondef()` och en vakt som räknar träffarna; läs vyns kolumner i
-  driften före `create or replace view`.
+  driften före `create or replace view`. **En driftsättning har EN session** (2026-10-13 körde tre
+  samma kedja samtidigt och fick veta det först efteråt): fråga de andra sessionerna innan du börjar
+  (`minne/databasen.md`).
 - **Auditloggen** går inte att ändra, inte ens för admin, och loggar bara vitlistade kolumner,
   aldrig namn eller fritext; en läsning den berörda inte märker loggas av funktionen som läser.
   Sök med `audit_sok()`; AI-märkningen läses inte ur `aktor_typ`.
@@ -840,9 +842,10 @@ Detaljer: `minne/grunden.md`.
   påslaget i projektet 2026-09-28 (`TRAFIK.md`). Juristen har inte läst texterna eller rad 14 i `DATASKYDD.md`.
 - **Barnets förslag på pass, förhandsvisningen, adminkontona i statistiken, rabattkoden och gratistimmarnas
   60 dagar** (2026-10-12 och 13) är i drift sedan 2026-10-13 kväll, efter merge av PR #270 och #269: först
-  `notis-ko` v23 från main (mallen för `barnforslag`), hämtad tillbaka och byte för byte lika, sedan
-  `barnet_foreslar_pass` (med `execute_sql`, för den har tre `delete` i funktioner; en tom rad som föll bort i
-  `barn_foresla_pass` på vägen skrevs om ur filen), `adminkonton_utanfor_statistiken`, `rabattkoden_krockar_inte`
+  `notis-ko` från main (mallen för `barnforslag`; tre sessioner driftsatte den samma kväll, och v24 i driften är byte
+  för byte 28a0e8a i alla 15 filer), sedan `barnet_foreslar_pass` (med `execute_sql`, för den har tre `delete` i
+  funktioner; en annan session körde den samtidigt i sex delar, och slutläget är lika den lokala databasen, med ett
+  cronjobb), `adminkonton_utanfor_statistiken`, `rabattkoden_krockar_inte`
   och `gratistimmarna_60_dagar` (hämtade från merge-commiten 28a0e8a, prövade mot sin md5 och körda och
   registrerade i var sitt do-block), och `drift` v17 efter den sista. Alla står i `schema_migrations` med filens
   md5, och hela `rls-test.sql` gick 1643 av 1643 mot driften, tillbakarullat. Villkorens version är 2026-10-13, så
