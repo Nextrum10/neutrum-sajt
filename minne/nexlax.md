@@ -387,6 +387,52 @@ utveckling som är roligare att följa, och ett quest-system.
 
 ---
 
+## NexLäx som spel, ranker, märken och profil (2026-10-13)
+
+**Leo 2026-10-13:** fler uppgifter och mer interaktivt, bättre ljud "som Duolingo", mindre
+ämneskolumner med Visa fler ämnen, en snyggare och mer minimalistisk årskurs, en kortare Din
+utveckling i flera sidor, ranker som ett battlepass, studiehjälparen särskild, märken i en egen flik och
+på profilen, grupper att tävla i, och att NexLäx ska kännas som ett spel. Det här är första delen
+(bara skärmen, inget i databasen). **Grupperna och nya frågor är inte byggda**, se längst ner.
+
+- **Fem flikar** i studievyn och barnets vy: Din väg, Rank, Märken, Din utveckling, Studiehjälparen
+  (`#nexlax/vag`, `/rank`, `/marken`, `/utveckling`, `/hjalpare`). Rank, märken och bedömningen
+  ligger inte längre i Din utveckling, och uppgifterna och passet från studiehjälparen inte på vägen:
+  vägen har bara en remsa dit (`.nl-hjalp-remsa`, `data-nl-till`). Maskinens rättning och en
+  människas omdöme blandas fortfarande aldrig ihop; barnets vy har ingen bedömning.
+- **Spelskalet**: är NexLäx den visade sektionen döljs menyn och hälsningen (`body.vy:has(...)`,
+  bara CSS, utan `:has()` står allt som förut), en rad överst (`.nl-spelrad`) har vägen tillbaka och
+  ljudknappen, och flikarna är spelets meny (`.nl-flikar`, fasta under sidhuvudet). Ingen ny sida
+  eller adress. Inträdet är en animation utan fyllning (`backwards`): en transform som blir kvar
+  hade stoppat flikarna från att klistra.
+- **Väljaren**: tre ämnen framme (`FOKUSÄMNEN`, samma tre som fotnoten) och resten bakom Visa fler
+  ämnen; det valda ämnet syns alltid. Årskurserna är siffror, Åk och Gy, den valda i ämnets färg;
+  knappen är 44 px, det som syns en ring. Läget bär `host.dataset.fler`.
+- **Ranker som ett battlepass**: `rankBana()`, ett kort per rank i en rad man sveper i (pilar för
+  mus), banan fylls ur XP:n, raden rullas bara själv och står på nuvarande rank när fliken syns
+  (`centreraRank`, IntersectionObserver). Färg per rank är `data-rk` i CSS. Varje rank utom den
+  första har ett **rankmärke** (`MÄRKEN`, grupp `rank`): belöningen är ett märke, aldrig pengar.
+  Rankmärkena firas av spelaren som andra märken.
+- **Märken** i egen flik, räknade ur samma data som förut och aldrig sparade. **Profilen**
+  (`profilHtml`/`ritaProfil`): rank, XP, serie och upp till sex märken, överst under Profil i
+  barnets vy och under Profil → Barn i studievyn. Det visas bara för familjen och barnet själva.
+- **Din utveckling** är fyra sidor (Översikt, Ämnen, Veckor, Rättat), byts med knapparna eller ett
+  sidledssvep (`visaSida`); sidan man står på minns `host.dataset.sida`.
+- **Ljuden** (`nextrum-ljud.js`): klockklang (`klang()`, grundton plus överton som klingar av
+  snabbare) i stället för triangelvågor, en mjuk sjunkande ton vid fel, nya ljud `rang`, `oppna`
+  (in i spelet) och `flik`. Samma namn och vibrationer som förut; ljudet kan inte höras i prov.
+- **Provet** `verktyg/prova-nexlax.js` täcker väljaren, flikarna, rankraden, märkena, sidorna och
+  profilen (87 av 87).
+- **Kvar, med flit inte byggt än:** (1) *Grupper att tävla i.* Det kräver tabeller, RLS, funktioner
+  som räknar XP och rank i databasen, `DATASKYDD.md` och policyn på båda språken, en behörighet för
+  barnet (`barn_behorigheter_alla()`, `kolla-behorigheter.py`) och förhandsvisningens värld, och
+  beslut om vem som får skapa, hur man går med, vad en medlem ser om andra (förnamn eller alias,
+  aldrig skola eller årskurs) och om man kan tävla i märken (de räknas i JavaScript, inte SQL).
+  (2) *Fler frågetyper och mer innehåll:* rättningen sker i `niva_ratta`, så en ny frågetyp är en
+  migration och en bankändring, inte skärmarbete.
+
+---
+
 ## Prova NexLäx på startsidan (2026-10-06, borttaget 2026-10-07)
 
 Startsidan hade en dag en ruta med tre egna frågor utan konto, rättade i

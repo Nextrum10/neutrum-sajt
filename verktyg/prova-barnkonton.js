@@ -730,10 +730,14 @@ async function provaBarnetsNexlax(webb) {
     await page.waitForFunction(() => /Jämför bråk/.test(document.querySelector('#bv-nl-vag').textContent), null, { timeout: 5000 }).catch(() => {});
     const väg = await text(page, '#bv-nl-vag');
     prova('barn nexlax: vägen visar banans nivåer', väg.includes('Jämför bråk'), väg.slice(0, 160));
-    prova('barn nexlax: det studiehjälparen gett står på vägen', väg.includes('Läs kapitel 3') && väg.includes('Rekommenderat av Sara'),
-      väg.slice(0, 200));
+    /* Studiehjälparens uppgifter har en egen flik (2026-10-13); vägen har en remsa dit. */
+    prova('barn nexlax: vägen har en remsa till studiehjälparens uppgifter', väg.includes('Sara har gett dig 2'), väg.slice(0, 200));
+    await page.click('#bv-flik-hjalpare');
+    await vänta(200);
+    const hj = await text(page, '#bv-nl-hjalpare');
+    prova('barn nexlax: det studiehjälparen gett står under Studiehjälparen', hj.includes('Läs kapitel 3') && hj.includes('Rekommenderat av Sara'), hj.slice(0, 200));
     prova('barn nexlax: text ur databasen ritas som text',
-      (await page.locator('#bv-nexlax img[data-elak]').count()) === 0 && väg.includes('<img src=x data-elak=1>'));
+      (await page.locator('#bv-nexlax img[data-elak]').count()) === 0 && hj.includes('<img src=x data-elak=1>'));
     prova('barn nexlax: läget hämtas med barnets id', anrop.some(a => a[0] === 'nexlax_lage' && a[1].p_elev === 'barn-1'),
       JSON.stringify(anrop.filter(a => a[0] === 'nexlax_lage')));
     await bild(page, 'barn-nexlax-vag');

@@ -102,72 +102,102 @@ window.NXLjud = (function () {
   }
 
   /* Tonerna i hertz, så att melodierna går att läsa. */
-  const N = { C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, A5: 880, B5: 987.77,
+  const N = { G4: 392, C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, A5: 880, B5: 987.77,
               C6: 1046.5, D6: 1174.66, E6: 1318.51, G6: 1567.98, A6: 1760, C7: 2093 };
   const halvton = (f, n) => f * Math.pow(2, n / 12);
 
+  /* Ett klingande slag (2026-10-13, Leo: "ljuden ska ändras till bättre
+     ljud likanande som duolingo"). Duolingos ljud är inte rena vågor
+     utan klockor och marimba: en grundton med överton som klingar av
+     snabbare, så att slaget låter ljust i början och mjukt i slutet. Tre
+     sinus, den andra en oktav upp och den tredje lite ofullkomligt
+     (3,01 gånger), vilket är det som ger klockan sin klang. */
+  function klang(frek, start, längd, vol) {
+    const v = vol == null ? 0.16 : vol;
+    ton(frek, start, längd, { typ: 'sine', vol: v, attack: 0.004 });
+    ton(frek * 2, start, längd * 0.5, { typ: 'sine', vol: v * 0.4, attack: 0.003 });
+    ton(frek * 3.01, start, längd * 0.25, { typ: 'sine', vol: v * 0.14, attack: 0.002 });
+  }
+  /* Ett svep uppåt, för det som öppnas. */
+  function svep(från, till, start, längd, vol) {
+    ton(från, start, längd, { typ: 'sine', vol: vol || 0.07, glid: till, attack: 0.02 });
+  }
+
   const LJUD = {
-    /* Ett steg på vägen, en knapp: ett kort tick. */
-    tryck(t) { ton(1250, t, 0.04, { typ: 'sine', vol: 0.05, glid: 800 }); },
-    /* Ett alternativ, en bricka, ett par. */
-    val(t) { ton(N.E5, t, 0.07, { vol: 0.07, glid: N.A5 }); },
-    /* Rätt: två ljusa toner uppåt. Med opts.rad stiger de en halvton för
-       varje svar i rad, högst en oktav. */
+    /* Ett steg på vägen, en knapp: ett litet träklick. */
+    tryck(t) { ton(1500, t, 0.035, { typ: 'sine', vol: 0.05, glid: 900 }); },
+    /* Ett alternativ, en bricka, ett par: ett mjukt pling. */
+    val(t) { klang(N.E6, t, 0.09, 0.05); },
+    /* Rätt: ett ljust ding-ding uppåt. Med opts.rad stiger det en halvton
+       för varje svar i rad, högst en oktav. */
     ratt(t, o) {
       const steg = Math.min(12, Math.max(0, ((o && o.rad) || 1) - 1));
-      ton(halvton(N.A5, steg), t, 0.13, { vol: 0.16 });
-      ton(halvton(N.E6, steg), t + 0.085, 0.22, { vol: 0.17 });
-      ton(halvton(N.A5, steg) / 2, t + 0.085, 0.2, { typ: 'sine', vol: 0.08 });
+      klang(halvton(N.G5, steg), t, 0.22, 0.17);
+      klang(halvton(N.C6, steg), t + 0.09, 0.4, 0.19);
+      ton(halvton(N.C5, steg), t + 0.09, 0.3, { typ: 'sine', vol: 0.06 });
     },
-    /* Fel: två mjuka toner nedåt, filtrerade så att de inte skär. */
+    /* Fel: en mjuk, låg ton som sjunker, som en studs. Inget gnissel. */
     fel(t) {
-      ton(311.13, t, 0.14, { typ: 'square', vol: 0.07, lågpass: 900 });
-      ton(233.08, t + 0.13, 0.22, { typ: 'square', vol: 0.07, lågpass: 700 });
+      ton(240, t, 0.26, { typ: 'sine', vol: 0.15, glid: 150, attack: 0.012 });
+      ton(120, t, 0.26, { typ: 'triangle', vol: 0.08, glid: 75, attack: 0.012, lågpass: 500 });
     },
     /* En stjärna i resultatet: i = 1, 2, 3 går uppåt. */
     stjarna(t, o) {
       const i = Math.max(1, Math.min(3, (o && o.i) || 1));
       const f = [N.E6, N.G6, N.C7][i - 1];
-      ton(f, t, 0.35, { typ: 'sine', vol: 0.13 });
-      ton(f * 2, t, 0.18, { typ: 'sine', vol: 0.04 });
+      klang(f, t, 0.5, 0.13);
     },
-    /* Nivån klar: ett arpeggio och ett ackord. */
+    /* Nivån klar: ett snabbt arpeggio uppåt och ett ackord som klingar ut. */
     niva(t) {
-      [N.C5, N.E5, N.G5, N.C6].forEach((f, i) => ton(f, t + i * 0.09, 0.18, { vol: 0.14 }));
-      [N.C5, N.E5, N.G5].forEach(f => ton(f, t + 0.4, 0.6, { typ: 'sine', vol: 0.07 }));
-      ton(N.C6, t + 0.4, 0.7, { vol: 0.12 });
+      [N.C5, N.E5, N.G5, N.C6, N.E6].forEach((f, i) => klang(f, t + i * 0.075, 0.28, 0.13));
+      [N.C5, N.E5, N.G5].forEach(f => ton(f, t + 0.4, 0.8, { typ: 'sine', vol: 0.06 }));
+      klang(N.G6, t + 0.4, 0.9, 0.14);
+      klang(N.C7, t + 0.46, 0.9, 0.09);
     },
-    /* Ett helt område: längre, högre, och ett glitter sist. */
+    /* Ett helt område: en längre uppgång och ett glitter sist. */
     omrade(t) {
-      [N.G5, N.C6, N.E6, N.G6].forEach((f, i) => ton(f, t + i * 0.1, 0.2, { vol: 0.13 }));
-      [N.C5, N.E5, N.G5, N.C6].forEach(f => ton(f, t + 0.45, 0.9, { typ: 'sine', vol: 0.06 }));
-      ton(N.E6, t + 0.45, 0.9, { vol: 0.1 });
-      [N.C7, N.G6, N.E6 * 2, N.A6].forEach((f, i) => ton(f, t + 0.6 + i * 0.07, 0.12, { typ: 'sine', vol: 0.04 }));
+      [N.G5, N.C6, N.E6, N.G6, N.C7].forEach((f, i) => klang(f, t + i * 0.09, 0.3, 0.13));
+      [N.C5, N.E5, N.G5, N.C6].forEach(f => ton(f, t + 0.5, 1.0, { typ: 'sine', vol: 0.055 }));
+      klang(N.E6, t + 0.5, 1.0, 0.12);
+      [N.C7, N.G6, N.E6 * 2, N.A6].forEach((f, i) => klang(f, t + 0.7 + i * 0.07, 0.2, 0.05));
     },
     /* Hela banan: området, en gång till en oktav upp. */
     bana(t) {
       LJUD.omrade(t);
-      [N.C6, N.E6, N.G6, N.C7].forEach((f, i) => ton(f, t + 1.0 + i * 0.08, 0.25, { vol: 0.1 }));
+      [N.C6, N.E6, N.G6, N.C7].forEach((f, i) => klang(f, t + 1.1 + i * 0.09, 0.35, 0.1));
     },
-    /* Ett uppdrag klart: ett mynt. */
+    /* Ett uppdrag klart: ett mynt, två klara slag. */
     uppdrag(t) {
-      ton(N.B5, t, 0.07, { typ: 'square', vol: 0.05, lågpass: 3000 });
-      ton(N.E6, t + 0.07, 0.3, { typ: 'square', vol: 0.05, lågpass: 3000 });
+      klang(N.B5, t, 0.1, 0.1);
+      klang(N.E6, t + 0.08, 0.4, 0.12);
     },
-    /* Dagens kista öppnas: ett glid uppåt och glitter. */
+    /* Dagens kista öppnas: ett svep uppåt och glitter. */
     kista(t) {
-      ton(392, t, 0.45, { typ: 'sine', vol: 0.09, glid: 1568 });
-      [N.C7, N.A6, N.E6 * 2, N.G6].forEach((f, i) => ton(f, t + 0.35 + i * 0.06, 0.14, { typ: 'sine', vol: 0.05 }));
+      svep(N.G4, N.G6, t, 0.45, 0.08);
+      [N.C7, N.A6, N.E6 * 2, N.G6].forEach((f, i) => klang(f, t + 0.35 + i * 0.06, 0.25, 0.06));
     },
     /* Ett nytt märke. */
     marke(t) {
-      [N.E6, N.G6, N.C7].forEach((f, i) => ton(f, t + i * 0.07, 0.22, { typ: 'sine', vol: 0.08 }));
+      [N.E6, N.G6, N.C7].forEach((f, i) => klang(f, t + i * 0.08, 0.35, 0.1));
     },
     /* En nivå som öppnas på vägen. */
     upplast(t) {
-      ton(N.D6, t, 0.1, { typ: 'sine', vol: 0.08 });
-      ton(N.A6, t + 0.08, 0.25, { typ: 'sine', vol: 0.09 });
-    }
+      klang(N.D6, t, 0.14, 0.09);
+      klang(N.A6, t + 0.08, 0.4, 0.1);
+    },
+    /* En ny rank: det tyngsta slaget, med ett ackord under. */
+    rang(t) {
+      [N.C5, N.G5, N.C6, N.E6, N.G6, N.C7].forEach((f, i) => klang(f, t + i * 0.1, 0.4, 0.13));
+      [N.C5, N.E5, N.G5].forEach(f => ton(f, t + 0.6, 1.2, { typ: 'sine', vol: 0.06 }));
+    },
+    /* In i spelet: ett kort svep uppåt och ett slag, som en start. */
+    oppna(t) {
+      svep(N.G4, N.G5, t, 0.22, 0.06);
+      klang(N.C6, t + 0.18, 0.4, 0.11);
+      klang(N.G6, t + 0.28, 0.5, 0.09);
+    },
+    /* Byta flik i spelet: ett lågt, kort slag. */
+    flik(t) { klang(N.A5, t, 0.08, 0.04); }
   };
 
   function spela(namn, opts) {
@@ -187,9 +217,11 @@ window.NXLjud = (function () {
   const MÖNSTER = {
     tryck: [8], val: [10], ratt: [14, 50, 22], fel: [45, 70, 45],
     niva: [20, 60, 20, 60, 70], omrade: [30, 50, 30, 50, 30, 50, 140], bana: [40, 50, 40, 50, 40, 50, 200],
-    uppdrag: [15, 40, 15], kista: [20, 40, 40], marke: [15, 40, 15], upplast: [12, 40, 12], stjarna: [12]
+    uppdrag: [15, 40, 15], kista: [20, 40, 40], marke: [15, 40, 15], upplast: [12, 40, 12], stjarna: [12],
+    rang: [30, 50, 30, 50, 120], oppna: [15, 40, 25], flik: [6]
   };
-  const TICK = { tryck: 1, val: 1, ratt: 1, fel: 2, niva: 3, omrade: 4, bana: 5, uppdrag: 2, kista: 2, marke: 2, upplast: 1, stjarna: 1 };
+  const TICK = { tryck: 1, val: 1, ratt: 1, fel: 2, niva: 3, omrade: 4, bana: 5, uppdrag: 2, kista: 2, marke: 2, upplast: 1, stjarna: 1,
+    rang: 4, oppna: 2, flik: 1 };
 
   const harVibrate = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
   const finger = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);

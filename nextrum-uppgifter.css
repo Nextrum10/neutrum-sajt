@@ -185,31 +185,13 @@
 .nl-pass p em{font-style:normal;font-weight:650;color:var(--bl);margin-right:4px}
 .nl-pass .btn{margin-top:6px}
 
-/* ---------- väljaren (2026-10-06) ----------
+/* ---------- väljaren (2026-10-06, omgjord längre ned 2026-10-13) ----------
    Leo: "gör så att man kan välja från olika ämnen och årskurser lite
    enklare och mer effektivt". Årskursen är en rad knappar som bryts,
    ämnena rutor i ett rutnät, och de senast övade banorna genvägar
    överst. Inget rullar i sidled, så ett tryck kan aldrig vara ett drag
    (samma skäl som .nl-hopp nedan). minmax(0,…) överallt: fälla 2. */
-.nl-valj{
-  display:flex;flex-direction:column;gap:12px;min-width:0;
-  padding:14px;border-radius:24px;background:var(--yta);border:1px solid var(--ln);box-shadow:var(--sk-1);
-}
-.nl-ak{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
-.nl-ak-knapp{
-  position:relative;min-width:54px;min-height:44px;padding:0 12px;border-radius:100px;cursor:pointer;
-  border:1.5px solid var(--ln-2);background:var(--pap);color:var(--bl-2);
-  font:inherit;font-size:.86rem;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;
-  transition:scale .45s var(--vy-fjader,ease), background-color .15s var(--e), border-color .15s var(--e);
-  -webkit-tap-highlight-color:transparent;
-}
-.nl-ak-knapp:active{scale:.94;transition-duration:.09s}
-.nl-ak-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.nl-ak-knapp[aria-pressed="true"]{background:var(--bl);border-color:var(--bl);color:var(--pap)}
-/* Elevens egen årskurs har en prick i hörnet. */
-.nl-ak-knapp.egen::after{content:"";position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
-.nl-ak-knapp.egen[aria-pressed="true"]::after{background:var(--lera-l)}
-@media (hover:hover){.nl-ak-knapp:hover{border-color:var(--bl-3)}}
+
 /* Vad vi bygger mest på just nu: en fotnot i rutan, under en tunn linje. */
 .nl-valj-not{
   margin:2px 2px 0;padding-top:12px;border-top:1px solid var(--ln);
@@ -217,41 +199,92 @@
 }
 .nl-valj-not b{font-weight:650;color:var(--bl-2)}
 
-.nl-amnen{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;min-width:0}
+/* ============================================================
+   VÄLJAREN, IGEN (2026-10-13)
+   Leo: "På din väg när man väljer ämne ska de kolumnerna vara mindre.
+   De tar för stor del av sidan. Så lägg några ämnen på visa fler ämnen
+   så inte alla står där. Årskursen ska också vara snyggare och mer
+   minimalistisk."
+   Tre ämnen framme (de vi bygger mest på) och resten bakom Visa fler
+   ämnen. Ett ämne är en liten bricka, tre i bredd på en telefon.
+   Årskurserna är siffror på en rad, den valda i ämnets färg; knappen
+   är 44 px men det som syns är en liten ring (fälla 4 och tummen).
+   minmax(0,…) överallt: fälla 2.
+   ============================================================ */
+.nl-valj{
+  display:flex;flex-direction:column;gap:6px;min-width:0;
+  padding:12px;border-radius:22px;background:var(--yta);border:1px solid var(--ln);box-shadow:var(--sk-1);
+}
+.nl-amnen{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:8px;min-width:0}
 .nl-amne{
-  display:flex;align-items:center;gap:10px;min-width:0;min-height:66px;
-  padding:10px 12px 10px 10px;border-radius:18px;cursor:pointer;
-  border:2px solid var(--ln);background:var(--yta);color:var(--bl);font:inherit;text-align:left;
+  display:flex;align-items:center;gap:9px;min-width:0;min-height:50px;
+  padding:7px 11px 7px 8px;border-radius:15px;cursor:pointer;
+  border:1.5px solid var(--ln);background:var(--yta);color:var(--bl);font:inherit;text-align:left;
   transition:scale .45s var(--vy-fjader,ease), border-color .15s var(--e), background-color .15s var(--e);
   -webkit-tap-highlight-color:transparent;
 }
 .nl-amne:active{scale:.96;transition-duration:.09s}
 .nl-amne:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .nl-amne-ik{
-  flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:14px;
+  flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:10px;
   background:color-mix(in srgb,var(--nl-f,var(--acc)) 14%,var(--yta));color:var(--nl-f,var(--acc));
   transition:background-color .15s var(--e), color .15s var(--e);
 }
-.nl-amne-ik svg{width:23px;height:23px;stroke-width:1.9}
-.nl-sprakkod{font-family:var(--f-mono);font-size:.8rem;font-weight:700;letter-spacing:.04em;line-height:1}
-.nl-amne-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.nl-amne-text b{font-size:.95rem;font-weight:650;letter-spacing:-.01em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nl-amne-mat{display:block;height:6px;border-radius:6px;background:color-mix(in srgb,var(--nl-f,var(--acc)) 14%,var(--pap-3));overflow:hidden}
-.nl-amne-mat i{display:block;height:100%;border-radius:6px;background:var(--nl-f,var(--mossa))}
-.nl-amne-not{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--bl-3);font-variant-numeric:tabular-nums}
-.nl-amne-not em{
-  font-style:normal;font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;
-  padding:1px 6px;border-radius:100px;background:var(--ockra-soft);color:var(--ockra-text);
+.nl-amne-ik svg{width:18px;height:18px;stroke-width:1.9}
+.nl-sprakkod{font-family:var(--f-mono);font-size:.7rem;font-weight:700;letter-spacing:.04em;line-height:1}
+.nl-amne-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.nl-amne-text b{display:flex;align-items:center;gap:5px;min-width:0;font-size:.86rem;font-weight:650;letter-spacing:-.01em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nl-amne-text b em{
+  flex:none;font-style:normal;font-family:var(--f-mono);font-size:8.5px;letter-spacing:.08em;
+  padding:1px 5px;border-radius:100px;background:var(--ockra-soft);color:var(--ockra-text);
 }
-/* På en telefon står ikonen över namnet: två rutor i bredd ger namnet
-   för lite plats bredvid ikonen, och "Matematik" kapades. */
+.nl-amne-mat{display:block;height:4px;border-radius:4px;background:color-mix(in srgb,var(--nl-f,var(--acc)) 14%,var(--pap-3));overflow:hidden}
+.nl-amne-mat i{display:block;height:100%;border-radius:4px;background:var(--nl-f,var(--mossa))}
+/* På en telefon: tre i bredd, ikonen över namnet. */
 @media (max-width:540px){
-  .nl-amnen{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}
-  .nl-amne{flex-direction:column;align-items:flex-start;gap:8px;padding:12px}
-  .nl-amne-ik{width:38px;height:38px;border-radius:12px}
+  .nl-amnen{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .nl-amne{flex-direction:column;align-items:flex-start;gap:7px;min-height:78px;padding:9px 9px 9px}
   .nl-amne-text{width:100%}
-  .nl-amne-text b{white-space:normal;hyphens:auto;overflow-wrap:anywhere}
+  .nl-amne-text b{font-size:.8rem}
 }
+@media (max-width:360px){.nl-amne-text b em{display:none}}
+
+/* Visa fler ämnen: en tyst textknapp, inte en ruta till. */
+.nl-fler{
+  display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:44px;padding:0 12px;
+  border:0;border-radius:13px;background:transparent;color:var(--bl-2);cursor:pointer;
+  font:inherit;font-size:.86rem;font-weight:650;-webkit-tap-highlight-color:transparent;
+}
+.nl-fler em{font-style:normal;font-family:var(--f-mono);font-size:.7rem;padding:1px 8px;border-radius:100px;background:var(--bricka);color:var(--bl-2)}
+.nl-fler-pil{display:grid;place-items:center;width:16px;height:16px}
+.nl-fler-pil svg{width:16px;height:16px;transform:rotate(90deg)}
+.nl-fler[aria-expanded="true"] .nl-fler-pil svg{transform:rotate(-90deg)}
+.nl-fler:active{scale:.97}
+.nl-fler:focus-visible{outline:3px solid var(--focus);outline-offset:-2px}
+@media (hover:hover){.nl-fler:hover{color:var(--bl)}}
+
+/* Årskurserna: små siffror på en rad, Åk och Gy som tysta etiketter. */
+.nl-ak{display:flex;flex-wrap:wrap;align-items:center;gap:0 16px;min-width:0;padding-top:4px;border-top:1px solid var(--ln)}
+.nl-ak-grupp{display:inline-flex;align-items:center;min-width:0}
+.nl-ak-grupp > i{
+  font-style:normal;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--bl-3);margin-right:2px;
+}
+.nl-ak-knapp{
+  position:relative;display:grid;place-items:center;min-width:38px;min-height:44px;padding:0;
+  border:0;background:transparent;color:var(--bl-2);font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.nl-ak-knapp > span{
+  display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
+  font-size:.88rem;font-weight:650;font-variant-numeric:tabular-nums;
+  transition:scale .45s var(--vy-fjader,ease), background-color .15s var(--e), color .15s var(--e);
+}
+.nl-ak-knapp:active > span{scale:.9;transition-duration:.09s}
+.nl-ak-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:-3px;border-radius:12px}
+.nl-ak-knapp[aria-pressed="true"] > span{background:var(--nl-f,var(--bl));color:var(--yta)}
+/* Elevens egen årskurs: en liten prick under siffran. */
+.nl-ak-knapp.egen::after{content:"";position:absolute;bottom:2px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+@media (hover:hover){.nl-ak-knapp:hover > span{background:var(--bricka)}.nl-ak-knapp[aria-pressed="true"]:hover > span{background:var(--nl-f,var(--bl))}}
 
 /* Vägen eller NP-sektionen: två lägen i ett spår, som flikar. */
 .nl-spar{
@@ -1012,7 +1045,7 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 [data-nl-f] .nl-bana-rad strong{color:var(--nl-f-l)}
 
 /* Ämnesrutorna: varje ruta i sitt ämnes färg, den valda fylld. */
-.nl-amne[data-nl-f]{border-color:color-mix(in srgb,var(--nl-f) 26%,var(--ln));background:color-mix(in srgb,var(--nl-f) 4%,var(--yta))}
+.nl-amne[data-nl-f]{border-color:color-mix(in srgb,var(--nl-f) 22%,var(--ln));background:color-mix(in srgb,var(--nl-f) 3%,var(--yta))}
 .nl-amne[data-nl-f][aria-pressed="true"]{border-color:var(--nl-f);background:color-mix(in srgb,var(--nl-f) 12%,var(--yta))}
 .nl-amne[data-nl-f][aria-pressed="true"] .nl-amne-text b{color:var(--nl-f)}
 .nl-amne[data-nl-f][aria-pressed="true"] .nl-amne-ik{background:var(--nl-f);color:var(--yta)}
@@ -1464,8 +1497,6 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 .upg-fel-knapp:disabled{opacity:.6;cursor:default}
 .upg-fel-tack{margin:0;min-height:44px;display:flex;align-items:center;font-size:.92rem;font-weight:600}
 
-/* Väljaren (2026-10-06, igen): årskurserna under ämnena. */
-.nl-ak-rubrik{margin:2px 0 -4px;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3)}
 
 /* Alla ranker (2026-10-06). */
 .nl-ranker{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:8px}
@@ -1481,3 +1512,270 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 .nl-ranker li.nu{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,var(--yta))}
 .nl-ranker li.nu .nl-ranker-nr{background:var(--acc);color:var(--yta)}
 .nl-ranker em{grid-column:2 / -1;font-style:normal;font-size:.8rem;font-weight:650;color:var(--acc-text)}
+
+
+/* ============================================================
+   SPELSKALET (2026-10-13)
+   Leo: "När man trycker på NexLäx ska man komma till en separat sida,
+   som när man spelar ett spel. Det ska inte vara en helt separat sida,
+   fortfarande i studievyn, men man kommer in i spelet på något sätt."
+   Är NexLäx den sektion som visas döljs menyn och hälsningen (bara med
+   CSS: :has(), och utan stödet står allt som förut), sektionen får en
+   egen rad överst med vägen tillbaka, och flikarna är spelets meny och
+   står kvar under sidhuvudet. Ingen ny sida och ingen ny adress:
+   #nexlax är densamma, och menyn bakom de tre strecken finns kvar.
+   ============================================================ */
+.nl-spelrad{
+  display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:6px 8px;border-radius:20px;
+  background:
+    radial-gradient(90% 140% at 0% 0%, var(--nt-glod), transparent 60%),
+    linear-gradient(180deg, var(--nt), var(--nt-2));
+  color:var(--nt-fg);box-shadow:var(--sk-2);
+}
+.nl-spelrad-ut{
+  display:inline-flex;align-items:center;gap:2px;min-height:46px;padding:0 12px 0 6px;border-radius:13px;
+  color:var(--nt-mut);font-size:.88rem;font-weight:600;text-decoration:none;-webkit-tap-highlight-color:transparent;
+}
+.nl-spelrad-ut svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nl-spelrad-ut:active{scale:.96}
+.nl-spelrad-ut:focus-visible,.nl-spelrad-ljud:focus-visible{outline:3px solid var(--lera-l);outline-offset:1px}
+.nl-spelrad-namn{
+  flex:1;text-align:center;font-size:1.12rem;font-weight:800;letter-spacing:-.03em;color:var(--nt-fg);
+}
+.nl-spelrad-ljud{
+  flex:none;display:grid;place-items:center;width:46px;height:46px;border:0;border-radius:13px;cursor:pointer;
+  background:rgba(239,230,214,.08);color:var(--nt-fg);-webkit-tap-highlight-color:transparent;
+}
+.nl-spelrad-ljud svg{width:21px;height:21px}
+.nl-spelrad-ljud[aria-pressed="false"]{color:var(--nt-mut)}
+.nl-spelrad-ljud:active{scale:.94}
+
+/* Spelets meny: flikarna, fasta under sidhuvudet. */
+.nl-flikar{
+  position:sticky;top:var(--vy-hdr-h,75px);z-index:6;
+  padding:5px;border-radius:18px;background:var(--pap-2);box-shadow:var(--sk-1);
+}
+.nl-flikar .vy-flik{min-height:44px;padding:0 16px;border-radius:13px;font-weight:650;-webkit-tap-highlight-color:transparent}
+.nl-flikar .vy-flik[aria-selected="true"]{background:var(--bl);color:var(--pap);box-shadow:none}
+.nl-flikar .vy-flik-mark{background:var(--lera);color:var(--yta)}
+
+/* In i spelet: den enda sektionen som visas, utan menyn och hälsningen.
+   Utan :has() står allt som förut. */
+/* Bara när spelet finns på sidan: i barnets vy är #bv-nexlax dold när banan
+   inte gick att hämta, och då måste menyn finnas kvar. */
+body.vy:has(section[data-sek="nexlax"]:not([hidden]) :is(#nl-vag, #bv-nexlax:not([hidden]))) .vy-hero,
+body.vy:has(section[data-sek="nexlax"]:not([hidden]) :is(#nl-vag, #bv-nexlax:not([hidden]))) .vy-sido{display:none}
+body.vy:has(section[data-sek="nexlax"]:not([hidden]) :is(#nl-vag, #bv-nexlax:not([hidden]))) .vy-layout{grid-template-columns:minmax(0,1fr)}
+section[data-sek="nexlax"]{max-width:900px;margin-inline:auto}
+section[data-sek="nexlax"] > .vy-sek-topp > div:first-child{display:none}
+section[data-sek="nexlax"] > .vy-sek-topp{margin-bottom:0}
+section[data-sek="nexlax"] > .vy-sek-topp:has(.vy-barnvaxel[hidden]){display:none}
+/* Utan :has() syns rubriken ändå: spelraden är en extra, inte en ersättning. */
+@supports not selector(:has(*)){
+  section[data-sek="nexlax"] > .vy-sek-topp > div:first-child{display:block}
+  section[data-sek="nexlax"] > .vy-sek-topp{margin-bottom:clamp(16px,1.8vw,22px)}
+}
+/* Inträdet: ett kort lyft och en tonad ruta, bara medan det pågår. Ingen
+   fyllning efteråt: en transform som blir kvar gör sektionen till
+   innehållsruta för det fasta, och flikarna ovan slutar klistra. */
+@keyframes nl-in{from{opacity:0;translate:0 14px;scale:.985}to{opacity:1;translate:0 0;scale:1}}
+section[data-sek="nexlax"]:not([hidden]){animation:nl-in .45s var(--e-ut,ease) backwards}
+@media (prefers-reduced-motion:reduce){section[data-sek="nexlax"]:not([hidden]){animation:none}}
+
+/* ============================================================
+   RANKERNA SOM EN BANA (2026-10-13)
+   Ett kort per rank i en rad man sveper i, som ett battlepass. Raden
+   rullas bara själv (avsnitt 3, punkt 5): overflow-y gömt, inget
+   mask-image, kanterna tonas inte. Färgen per rank är en ton ur
+   cinemas paletter (--rk), så mörkt läge följer med av sig självt.
+   ============================================================ */
+[data-rk="0"]{--rk:var(--bl-3)}
+[data-rk="1"]{--rk:var(--acc)}
+[data-rk="2"]{--rk:var(--ockra)}
+[data-rk="3"]{--rk:var(--mossa)}
+[data-rk="4"]{--rk:var(--amne-ma)}
+[data-rk="5"]{--rk:var(--amne-en)}
+[data-rk="6"]{--rk:var(--amne-ms)}
+[data-rk="7"]{--rk:var(--amne-sv)}
+[data-rk="8"]{--rk:var(--amne-so)}
+[data-rk="9"]{--rk:var(--ockra)}
+
+.nl-rangkort[data-rk]{
+  background:
+    radial-gradient(70% 60% at 100% 0%, color-mix(in srgb,var(--rk) 26%,transparent), transparent 60%),
+    linear-gradient(180deg, var(--nt), var(--nt-2));
+}
+.nl-rangkort[data-rk] .nl-rang-ik{background:color-mix(in srgb,var(--rk) 22%,transparent);color:color-mix(in srgb,var(--rk) 55%,var(--nt-fg))}
+.nl-rangkort[data-rk] .nl-rang-ik b{background:color-mix(in srgb,var(--rk) 55%,var(--nt-fg))}
+
+.nl-rank{margin-top:clamp(16px,1.8vw,22px);min-width:0}
+.nl-rank .nl-grupp{flex-wrap:wrap;justify-content:space-between;gap:4px 12px}
+.nl-rank-tips{font-size:.78rem;color:var(--bl-3)}
+.nl-tips-mus{display:none}
+@media (hover:hover) and (pointer:fine){.nl-tips-pek{display:none}.nl-tips-mus{display:inline}}
+.nl-rank-ram{position:relative;min-width:0;margin-inline:calc(-1 * clamp(0px,1vw,8px))}
+.nl-rank-rad{
+  list-style:none;margin:0;padding:8px 16px 16px;position:relative;
+  display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;scroll-padding-inline:16px;overscroll-behavior-x:contain;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.nl-rank-rad::-webkit-scrollbar{display:none}
+.nl-rk{
+  position:relative;flex:0 0 164px;min-width:0;scroll-snap-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:26px 12px 14px;border-radius:24px;text-align:center;
+  background:var(--yta);border:2px solid color-mix(in srgb,var(--rk) 30%,var(--ln));
+}
+/* Banan: ett streck överst på varje kort som fylls ur XP:n. */
+.nl-rk-bana{
+  position:absolute;top:10px;left:16px;right:16px;height:6px;border-radius:6px;overflow:hidden;
+  background:color-mix(in srgb,var(--rk) 16%,var(--pap-3));
+}
+.nl-rk-bana i{display:block;width:0;height:100%;border-radius:6px;background:var(--rk)}
+.nl-rk.klar .nl-rk-bana i{width:100%}
+.nl-rk.nu .nl-rk-bana i{width:var(--andel,0%)}
+.nl-rk-nr{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3)}
+.nl-rk-emblem{
+  display:grid;place-items:center;width:68px;height:68px;margin:4px 0 2px;border-radius:22px;
+  background:radial-gradient(circle at 30% 24%, color-mix(in srgb,var(--rk) 45%,var(--yta)), var(--rk));
+  color:var(--yta);box-shadow:0 6px 14px -6px color-mix(in srgb,var(--rk) 70%,transparent);
+}
+.nl-rk-emblem svg{width:34px;height:34px;stroke-width:1.8}
+.nl-rk b{font-size:1rem;font-weight:750;letter-spacing:-.025em;line-height:1.2;color:var(--bl);overflow-wrap:break-word;hyphens:manual}
+.nl-rk-xp{font-family:var(--f-mono);font-size:.74rem;color:var(--bl-3);font-variant-numeric:tabular-nums}
+.nl-rk-lage{
+  display:inline-flex;align-items:center;gap:4px;margin-top:2px;font-size:.78rem;font-weight:650;color:var(--bl-2);
+  font-variant-numeric:tabular-nums;
+}
+.nl-rk-lage svg{width:14px;height:14px}
+.nl-rk-pris{
+  display:flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:6px;padding:7px 8px;border-radius:13px;
+  background:color-mix(in srgb,var(--rk) 10%,var(--pap));font-size:.74rem;font-weight:650;line-height:1.25;color:var(--bl-2);
+}
+.nl-rk-pris svg{flex:none;width:15px;height:15px;color:var(--rk)}
+.nl-rk-start{color:var(--bl-3);font-weight:500}
+.nl-rk.klar .nl-rk-lage{color:var(--mossa-text,var(--mossa))}
+.nl-rk.nu{border-color:var(--rk);box-shadow:0 0 0 4px color-mix(in srgb,var(--rk) 16%,transparent),var(--sk-2);background:color-mix(in srgb,var(--rk) 6%,var(--yta))}
+.nl-rk.nu .nl-rk-emblem{animation:nl-rk-puls 2.8s var(--e-mjuk,ease) infinite}
+@keyframes nl-rk-puls{0%,100%{scale:1}50%{scale:1.06}}
+.nl-rk.last{background:var(--pap)}
+.nl-rk.last .nl-rk-emblem{background:var(--bricka);color:var(--bl-3);box-shadow:none}
+.nl-rk.last b{color:var(--bl-2)}
+.nl-rank-not{margin:2px 2px 0;font-size:.84rem;line-height:1.5;color:var(--bl-3)}
+
+/* Pilarna för den som har en mus: ingen svepning där. */
+.nl-rank-pil{display:none}
+@media (hover:hover) and (pointer:fine){
+  .nl-rank-pil{
+    display:grid;place-items:center;position:absolute;top:50%;right:6px;z-index:2;width:44px;height:44px;margin-top:-30px;
+    border:1px solid var(--ln);border-radius:50%;background:var(--yta);color:var(--bl);cursor:pointer;box-shadow:var(--sk-2);
+  }
+  .nl-rank-pil svg{width:20px;height:20px}
+  .nl-rank-bak{right:auto;left:6px}
+  .nl-rank-bak svg{transform:scaleX(-1)}
+  .nl-rank-pil:hover{border-color:var(--bl-3)}
+  .nl-rank-pil:active{scale:.94}
+}
+@media (prefers-reduced-motion:reduce){.nl-rk.nu .nl-rk-emblem{animation:none}}
+
+/* ============================================================
+   MÄRKENA (2026-10-13)
+   En egen flik, och de man har står på profilen.
+   ============================================================ */
+.nl-marken-topp{
+  display:flex;flex-direction:column;gap:12px;padding:18px clamp(16px,2.4vw,22px);border-radius:24px;
+  background:
+    radial-gradient(70% 60% at 100% 0%, color-mix(in srgb,var(--ockra-l) 18%,transparent), transparent 60%),
+    linear-gradient(180deg, var(--nt), var(--nt-2));
+  color:var(--nt-fg);box-shadow:var(--sk-2);
+}
+.nl-marken-et{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--nt-mut)}
+.nl-marken-topp b{display:block;margin-top:2px;font-size:clamp(1.7rem,5vw,2.1rem);font-weight:750;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+.nl-marken-topp b i{font-style:normal;font-size:.5em;font-weight:500;color:var(--nt-mut);margin-left:4px}
+.nl-marken-topp small{display:block;margin-top:4px;font-size:.8rem;line-height:1.45;color:var(--nt-mut)}
+.nl-marken-topp .nl-mat{background:rgba(239,230,214,.12)}
+.nl-marken-topp .nl-mat i{background:linear-gradient(90deg,var(--ockra-l),var(--lera-l))}
+
+/* ============================================================
+   PROFILEN (2026-10-13): rank, XP, serie och märkena att visa upp.
+   ============================================================ */
+.nl-prof{
+  display:flex;flex-direction:column;gap:14px;padding:18px clamp(16px,2.4vw,22px);border-radius:24px;margin-bottom:clamp(16px,1.8vw,22px);
+  background:
+    radial-gradient(70% 60% at 100% 0%, color-mix(in srgb,var(--rk,var(--ockra)) 24%,transparent), transparent 60%),
+    linear-gradient(180deg, var(--nt), var(--nt-2));
+  color:var(--nt-fg);box-shadow:var(--sk-2);
+}
+.nl-prof-huvud{display:flex;align-items:center;gap:16px;min-width:0}
+.nl-prof-emblem{
+  position:relative;flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:20px;
+  background:color-mix(in srgb,var(--rk,var(--ockra)) 24%,transparent);color:color-mix(in srgb,var(--rk,var(--ockra)) 55%,var(--nt-fg));
+}
+.nl-prof-emblem svg{width:34px;height:34px;stroke-width:1.7}
+.nl-prof-emblem b{
+  position:absolute;right:-6px;bottom:-6px;display:grid;place-items:center;min-width:26px;height:26px;padding:0 6px;border-radius:100px;
+  background:color-mix(in srgb,var(--rk,var(--ockra)) 55%,var(--nt-fg));color:var(--nt-2);font-size:.8rem;font-weight:750;
+}
+.nl-prof-text{min-width:0;display:flex;flex-direction:column;gap:2px}
+.nl-prof-et{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--nt-mut)}
+.nl-prof-text > b{font-size:clamp(1.3rem,4vw,1.6rem);font-weight:750;letter-spacing:-.02em;line-height:1.2}
+.nl-prof-siffror{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.84rem;color:var(--nt-mut)}
+.nl-prof-siffror span{display:inline-flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums}
+.nl-prof-siffror svg{width:16px;height:16px}
+.nl-prof-marken{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.nl-prof-marken .upg-marke{
+  align-items:center;text-align:center;gap:6px;padding:12px 8px;border-radius:16px;
+  background:rgba(239,230,214,.07);border:1px solid var(--nt-ln);
+}
+.nl-prof-marken .upg-marke-ikon{background:var(--ockra-l);color:var(--nt-2)}
+.nl-prof-marken .upg-marke b{font-size:.78rem;color:var(--nt-fg)}
+.nl-prof-not{margin:0;font-size:.82rem;color:var(--nt-mut)}
+.nl-prof-lank{
+  display:inline;min-height:44px;padding:0;border:0;background:transparent;color:var(--lera-l);
+  font:inherit;font-weight:650;text-decoration:underline;cursor:pointer;
+}
+
+/* ============================================================
+   STUDIEHJÄLPAREN, remsan på vägen och sidorna i Din utveckling
+   ============================================================ */
+.nl-hjalp-remsa{
+  display:flex;align-items:center;gap:12px;width:100%;min-height:58px;margin-top:14px;padding:10px 14px 10px 12px;
+  border-radius:18px;cursor:pointer;text-align:left;font:inherit;color:var(--bl);
+  border:1.5px solid color-mix(in srgb,var(--ockra) 42%,var(--ln));background:color-mix(in srgb,var(--ockra) 8%,var(--yta));
+  -webkit-tap-highlight-color:transparent;
+}
+.nl-hjalp-remsa:active{scale:.985}
+.nl-hjalp-remsa:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.nl-hjalp-ik{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--ockra);color:var(--yta)}
+.nl-hjalp-ik svg{width:19px;height:19px}
+.nl-hjalp-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.nl-hjalp-text b{font-size:.92rem;font-weight:650;line-height:1.3}
+.nl-hjalp-text small{font-size:.78rem;color:var(--bl-3)}
+.nl-hjalp-pil{flex:none;width:20px;height:20px;color:var(--bl-3)}
+.nl-hjalp-pil svg{width:20px;height:20px}
+
+.nl-hj-huvud{
+  display:flex;align-items:center;gap:14px;padding:16px;border-radius:22px;
+  background:var(--yta);border:1px solid var(--ln);box-shadow:var(--sk-1);
+}
+.nl-hj-ik{flex:none;display:grid;place-items:center;width:46px;height:46px;border-radius:15px;background:color-mix(in srgb,var(--ockra) 16%,var(--yta));color:var(--ockra-text)}
+.nl-hj-ik svg{width:24px;height:24px}
+.nl-hj-huvud b{display:block;font-size:1.04rem;font-weight:700;letter-spacing:-.015em;color:var(--bl)}
+.nl-hj-huvud span{font-size:.84rem;line-height:1.5;color:var(--bl-3)}
+
+.nl-sidor{
+  display:flex;gap:4px;padding:4px;border-radius:16px;background:var(--bricka);
+  overflow-x:auto;scrollbar-width:none;
+}
+.nl-sidor::-webkit-scrollbar{display:none}
+.nl-sida-knapp{
+  flex:1 0 auto;min-height:44px;padding:0 16px;border:0;border-radius:12px;background:transparent;color:var(--bl-2);cursor:pointer;
+  font:inherit;font-size:.88rem;font-weight:650;white-space:nowrap;
+  transition:background-color .15s var(--e), color .15s var(--e);-webkit-tap-highlight-color:transparent;
+}
+.nl-sida-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:-2px}
+.nl-sida-knapp[aria-pressed="true"]{background:var(--yta);color:var(--bl);box-shadow:var(--sk-1)}
+.nl-sida-kropp{display:grid;gap:clamp(16px,1.8vw,22px);min-width:0}
+
+.nl.stack{grid-template-columns:minmax(0,1fr)}
