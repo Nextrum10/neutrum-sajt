@@ -81,8 +81,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Timmarna**: `bookings_timmarna_tillbaka` är den SISTA before-triggern på `bookings`
   (namnordning), och klippkortets triggrar rör inte `skydda_bokningsfalt`. Timmen dras bara i
   `klippkort_dra()`, när förslaget skapas, och kommer tillbaka vid nej, avbokning eller
-  obesvarat förslag. `timmar-betalar` väntar aldrig på ett lås. Timbanken fylls bara av köpta
-  timmar och går inte ut. Vid ånger eller uppsägning: avboka först allt kommande.
+  obesvarat förslag. `timmar-betalar` väntar aldrig på ett lås. Timbanken fylls av köpta
+  timmar och, sedan 2026-10-13, timmar för tips; sparade minuter och timmar för tips går inte ut.
+  Tipstimmen dras sist (`bookings_timmar_tips`, efter timmarna och före `bookings_timmarna_tillbaka`).
+  Vid ånger eller uppsägning: avboka först allt kommande.
 - **NexLäx**: rättningen sker i databasen; frågorna går ut utan facit, försök och svar har ingen
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
   sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. Allt i NexLäx är
@@ -99,15 +101,27 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
   Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
   (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
-- **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare (`mina_tips()`) och
-  en kampanjkod per affisch; `leads.kod`. Koden syns i formuläret och lagras aldrig i
-  webbläsaren, och en okänd kod fäller aldrig anmälan. Tipstimmen är `startrabatt` med
+- **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per
+  affisch. **En familjs kod och en kampanjkod gäller intresseanmälan (`leads.kod`), en studiehjälpares
+  jobbansökan (`applications.kod`)** (2026-10-13, Leo: "ansökning ska inte kunna använda koder från
+  familjer och familjer ska inte använda koder från anställda"); fel sort blir null som en okänd kod,
+  och admin som rättar in fel sort får ett fel. Koden syns i formuläret och lagras aldrig i
+  webbläsaren, och en okänd kod fäller aldrig anmälan eller ansökan. Tipstimmen är `startrabatt` med
   `rabattkod = 'TIPS'` (raden i `rabattkoder` blir aldrig aktiv): en per ny familj som haft två
   timmar läxhjälp i hållna pass (sedan 2026-10-09; förut det första passet, `intern.tva_timmar_hallna`),
   också om den familjen fått en av timmarna gratis, och intjänad ges den också med flaggan `tipstimme` av.
-  Den står utanför taket för första timmen. Studiehjälpare får ingen
-  ersättning, med flit. Den som tipsat ser antal, aldrig vilka. `/affisch` tar ingen fritext ur
-  adressen, och QR-koden går till formuläret, inte till en områdessida.
+  Den står utanför taket för första timmen. **Den ligger i timbanken** (2026-10-13, Leo: "timmarna läggs
+  in i timbanken för familjerna"): den visas där, går inte ut och dras sist, bara på ett pass som köpta
+  timmar och sparade minuter inte betalar (`intern.tipstimmen_dras`). **En studiehjälpare får 300 kr i
+  lön** (Leo samma dag: "bonus redovisas som lön") när vi tar in den som sökt med hens kod
+  (`tutor_profiles.status` blir `approved`; ansökan hittas på adressen): en LAGRAD rad i `tipsbonus`, en
+  per ny studiehjälpare och bara om hen var ny när hen sökte, med eget läge (Utkast, Godkänd, Utbetald,
+  Struken) under Löner, i lönefilen på en egen löneart (`foretagsfakta.lonart_tipsbonus`), aldrig i
+  `payouts`; beloppet är `intern.tipsbonus_ore()` och ändras med villkoren, och flaggan `tipsbonus`
+  stänger av. Förut fick studiehjälpare ingen ersättning, med flit. Den som tipsat ser antal, aldrig
+  vilka. **Koder** i adminvyn (`koder_lage`, `nextrum-admin-koder.js`) har allas kod och skapar de som
+  saknas, utom åt admins. `/affisch` tar ingen fritext ur adressen, och QR-koden går till formuläret,
+  inte till en områdessida.
 - **Materialbanken** (2026-10-02): bladen är våra egna. Nationella prov och läromedel kopieras aldrig in,
   banken länkar till provgruppernas egna sidor (`verktyg/bladen/lankar.py`), NP-träningen är egna
   uppgifter i provens stil som säger det på bladet, och genomgångarna är egna faktablad, aldrig bokens text.
@@ -188,8 +202,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | NexLäx | studievyns sektion för banan (`nexlax`, `NXUppgifter`) |
 | motförslag | en annan tid på samma pass (`motforslag_at`), ja eller nej; ett avslag är `cancelled` |
 | XP | poäng ur svaren och försöken, aldrig sparade |
-| tipskod | en familjs eller studiehjälpares egen kod i intresseanmälan (`tipskoder`); en kampanjkod är en affischs |
-| tipstimme | en timme på köpet för ett tips: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`); en kampanjkod är en affischs |
+| tipstimme | en timme i timbanken för ett tips, dragen sist: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| tipsbonus | 300 kr i lön till en studiehjälpare för ett tips som vi tagit in (`tipsbonus`), aldrig ett underlag |
 | timbanken | familjens köpta timmar (en plan eller Fyll timbanken) och sparade minuter; pass för pass går inte genom den |
 | Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
@@ -205,7 +220,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
   pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
   **Timbanken** är familjens köpta timmar och sparade minuter, och den fylls på två sätt (Leo 2026-10-12: "timbanken
-  fylls antingen med plan eller förköpta timmarna"): med en plan, eller med **Fyll timbanken** (klippkorten
+  fylls antingen med plan eller förköpta timmarna"), och sedan 2026-10-13 också med timmar för tips, som inte köps och
+  inte går ut: med en plan, eller med **Fyll timbanken** (klippkorten
   `klipp10`–`klipp100` i databasen), som kostar timpriset, 399 kr, utan rabatt och utan märke, och gäller i sex månader
   i alla storlekar. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
   och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
@@ -747,6 +763,15 @@ Detaljer: `minne/grunden.md`.
   tillbakarullat. `drift` (agentens fakta) är driftsatt som v16 från main, hämtad tillbaka och byte för byte lika i
   alla fem filer. Villkorens version är 2026-10-12, så alla får frågan igen. Inget klippkort var köpt. Juristen har
   inte läst de nya villkoren.
+- **Koderna, bonusen och tipstimmen i timbanken** (2026-10-13) är byggda men inte i drift: migrationen
+  `tipskoder_bonus_och_timbanken` (20261013120000) körs efter merge, och `drift` (agentens fakta) driftsätts från
+  main efter den. Lokalt gick hela `rls-test.sql` 1542 av 1542 med migrationen. Villkorens version blir 2026-10-13,
+  så alla får frågan igen. Kvar: lönearten för bonusen i Fortnox och bolagsfakta (`lonart_tipsbonus`), med revisorn om
+  den ska vara semestergrundande (`studiehjalpare_form` är fortfarande oklar); juristen har inte läst villkoren, rad 19
+  och 26 i `DATASKYDD.md` eller policyns stycke om koden i jobbansökan; ingen har sagt till studiehjälparna att koden
+  nu gäller jobbansökan, eller familjerna att timmen ligger i timbanken. Tas någon in på ett konto med en annan adress
+  än ansökans ges ingen bonus av sig själv, och bonusen kräver bara att personen tas in, inte att hen håller ett pass
+  (Leos regel).
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för

@@ -681,14 +681,15 @@ window.NXArbete = (function () {
       var perTimme = timprisOre() + (st.barn > 1 ? extraOre() : 0);
       return Math.round(perTimme * st.minuter / 60);
     }
-    /* Första timmen bjuds (Fas 19.5). o.bjuden(minuter) svarar om
-       förslaget blir passet som får timmen; databasen avgör
+    /* Första timmen bjuds (Fas 19.5). o.bjuden(minuter, dag, barn) svarar
+       om förslaget blir passet som får timmen; databasen avgör
        (forsta_timmen_bjuds), det här visar bara priset i förväg. En
        timme till passets timpris, aldrig mer än passet kostar. Svaret
-       'tips' är en timme på köpet för ett tips (2026-09-30): samma
-       rabatt, en annan rad under priset. */
+       'tips' är tipstimmen ur timbanken (2026-09-30, sedan 2026-10-13
+       bara när köpta timmar inte betalar passet): samma rabatt, en annan
+       rad under priset. Dagen och barnen behövs för att veta det. */
     function bjudenOre() {
-      if (!o.bjuden || !o.bjuden(st.minuter)) return 0;
+      if (!o.bjuden || !o.bjuden(st.minuter, st.dag, st.barn)) return 0;
       return Math.min(timprisOre() + (st.barn > 1 ? extraOre() : 0), bruttoOre());
     }
 
@@ -857,7 +858,7 @@ window.NXArbete = (function () {
           ? '<b>' + esc(tim.titel) + '</b><span>' + esc(tim.under) + '</span>'
           : '<b>' + esc(kr((bruttoOre() - bjuden) / 100)) + '</b>'
             + '<span>' + esc(!bjuden ? längdText()
-              : o.bjuden(st.minuter) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + '</span>')
+              : o.bjuden(st.minuter, st.dag, st.barn) === 'tips' ? 'En timme ur timbanken för ert tips' : 'Första timmen på köpet') + '</span>')
         + '</div>'
         + '<button class="btn btn-primary" id="bk-boka" type="button"'
         + (klar ? '' : ' disabled') + '>Föreslå tiden</button>'

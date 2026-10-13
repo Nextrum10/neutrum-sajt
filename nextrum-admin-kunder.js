@@ -96,8 +96,9 @@
      med rapport (sedan 2026-10-09; förut det första passet): det är då en
      familjs kod ger en timme på köpet.
 
-     Personkoder utan anmälningar står inte med: varje familj som
-     öppnat sin flik har en, och listan hade blivit en namnlista.
+     Personkoderna står sedan 2026-10-13 under Koder
+     (nextrum-admin-koder.js), med vad var och en gett. Här står bara
+     affischernas kampanjkoder.
 
      En kod tas aldrig bort, den stängs av: anmälningarna pekar på den,
      och en borttagen kod hade tagit kopplingen med sig.
@@ -115,12 +116,12 @@
       host.innerHTML = tomt('Koderna gick inte att läsa', S.tipskoderFel);
       return;
     }
-    const rader = (S.tipskoder || []).filter(k => k.sort === 'kampanj' || k.anmalda > 0);
+    const rader = (S.tipskoder || []).filter(k => k.sort === 'kampanj');
     const tim = S.tipsFlagga;
     $('#koder-antal').textContent = rader.length ? rader.length + ' st' : '';
     host.innerHTML = (tim && !tim.aktiv
-        ? '<p class="xsmall" style="margin:0 0 12px;color:var(--bl-3)">Timmen på köpet för ett tips är avstängd, '
-          + 'under Betalningar → Inställningar. Koderna räknas som förut, och timmar som tjänats in innan ges ändå.</p>'
+        ? '<p class="xsmall" style="margin:0 0 12px;color:var(--bl-3)">Timmen i timbanken för ett tips är avstängd, '
+          + 'under Koder. Koderna räknas som förut, och timmar som tjänats in innan ges ändå.</p>'
         : '')
       + tabell([
         { namn: 'Kod', rita: k => '<b style="font-family:var(--f-mono);letter-spacing:.06em">' + esc(k.kod) + '</b>'
@@ -139,7 +140,7 @@
             : '')
             + '<button class="btn btn-ghost btn-sm" type="button" data-kod-vaxla="' + esc(k.kod) + '">'
             + (k.aktiv ? 'Stäng av' : 'Slå på') + '</button>' }
-      ], rader, 'Inga koder med anmälningar än. Skapa en kampanjkod för en affisch nedan.');
+      ], rader, 'Inga kampanjkoder än. Skapa en för en affisch nedan.');
   }
 
   async function hämtaKoder() {

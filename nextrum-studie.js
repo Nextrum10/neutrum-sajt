@@ -4091,25 +4091,32 @@ window.NXStudie = (function () {
   }
 
   /* ============================================================
-     TIPSA EN FAMILJ (2026-09-30)
+     TIPSA (2026-09-30, delad 2026-10-13)
 
-     Familjens och studiehjälparens egen kod, med länken till
-     intresseanmälan. mina_tips() skapar koden första gången och svarar
-     med hur många som anmält sig med den och hur många av dem som blivit
-     kunder, aldrig vilka. Familjen ser också timmarna på köpet: en per
-     ny familj som haft sitt första pass, räknade i databasen
-     (forsta_timmen_bjuds). Studiehjälparen får ingen ersättning för ett
-     tips, med flit, och rutan säger det.
+     Familjens och studiehjälparens egen kod, med länken dit koden
+     gäller. mina_tips() skapar koden första gången och svarar med antal,
+     aldrig vilka.
 
-     Länken går direkt till intresseanmälan, där formuläret fyller i
-     koden i ett fält familjen ser. Ingenting lagras i webbläsaren på
-     vägen (CLAUDE.md avsnitt 6, Samtycket).
+     FAMILJEN tipsar familjer: länken går till intresseanmälan, och när
+     en ny familj som anmält sig med koden har haft två timmar läxhjälp
+     får familjen en timme i timbanken (räknad i databasen,
+     intern.tipstimmar_intjanade). Timmen betalar ett pass som köpta
+     timmar inte betalar.
 
-     Svarar med datan, så att bokningen kan visa timmen på köpet i
-     förväg. Finns funktionen inte än (migrationen
-     tipskoder_och_kampanjkoder är inte körd) står rutan tyst.
+     STUDIEHJÄLPAREN tipsar nya studiehjälpare (Leo 2026-10-13: "blivande
+     läxhjälpare ska bara kunna använda befintliga läxhjälp[ares koder]"):
+     länken går till jobbansökan, och när vi tar in någon som sökt med
+     koden får studiehjälparen 300 kr i lönen (tipsbonus). Förut gällde
+     koden intresseanmälan och gav ingen ersättning.
+
+     Länken fyller i koden i ett fält den som söker ser. Ingenting lagras
+     i webbläsaren på vägen (CLAUDE.md avsnitt 6, Samtycket).
+
+     Svarar med datan, så att bokningen kan visa tipstimmen i förväg.
+     Finns funktionen inte än står rutan tyst.
      ============================================================ */
   var TIPS_ADRESS = 'https://nextrum.se/intresseanmalan?kod=';
+  var JOBB_ADRESS = 'https://nextrum.se/bli-studiehjalpare?kod=';
 
   function tipsa(o) {
     var host = o.host;
@@ -4121,39 +4128,57 @@ window.NXStudie = (function () {
        ett förslag har timmen kanske dragits. */
     if (host.__tipsa) return host.__tipsa();
 
-    function länk() { return TIPS_ADRESS + encodeURIComponent(data.kod); }
+    /* Studiehjälparens länk går till ansökan, och #ansok till formuläret. */
+    function länk() {
+      return familj ? TIPS_ADRESS + encodeURIComponent(data.kod)
+        : JOBB_ADRESS + encodeURIComponent(data.kod) + '#ansok';
+    }
     function antal(n, en, fler) { return n === 1 ? en : n + ' ' + fler; }
+    var kr = function (öre) { return NXBetalning.kronor(öre); };
 
-    /* Texten följer med i dela-rutan och går att ändra där. Timmen står
-       i den, för den som får tipset ska veta att den som tipsar får
+    /* Texten följer med i dela-rutan och går att ändra där. Belöningen
+       står i den, för den som får tipset ska veta att den som tipsar får
        något för det. */
     function delaText() {
       return familj
         ? 'Läxhjälp i Stockholm genom Nextrum. Skriv vår kod ' + data.kod
-          + ' i anmälan. Vi får en timme på köpet när ni haft två timmar läxhjälp.'
-        : 'Läxhjälp i Stockholm genom Nextrum, där jag är studiehjälpare. Skriv min kod '
-          + data.kod + ' i anmälan.';
+          + ' i anmälan. Vi får en timme i vår timbank när ni haft två timmar läxhjälp.'
+        : 'Jobba som studiehjälpare hos Nextrum, som jag. Skriv min kod ' + data.kod
+          + ' i ansökan' + (data.bonus_ges ? ', så får jag en bonus om ni börjar.' : '.');
     }
 
     function rita() {
       if (!data) {
-        host.innerHTML = '<p class="xsmall nx-dok-tom">Tipsa en familj finns inte här än.</p>';
+        host.innerHTML = '<p class="xsmall nx-dok-tom">' + (familj ? 'Tipsa en familj' : 'Tipsa en studiehjälpare')
+          + ' finns inte här än.</p>';
         return;
       }
-      var n = Number(data.anmalda || 0);
-      var k = Number(data.kunder || 0);
       var kvar = Number(data.kvar || 0);
       var tal = [];
-      if (n) tal.push(antal(n, 'En familj har anmält sig med koden', 'familjer har anmält sig med koden'));
-      if (k) tal.push(antal(k, 'en har blivit kund', 'har blivit kunder'));
+      if (familj) {
+        var n = Number(data.anmalda || 0);
+        var k = Number(data.kunder || 0);
+        if (n) tal.push(antal(n, 'En familj har anmält sig med koden', 'familjer har anmält sig med koden'));
+        if (k) tal.push(antal(k, 'en har blivit kund', 'har blivit kunder'));
+      } else {
+        var s = Number(data.ansokningar || 0);
+        var in_ = Number(data.intagna || 0);
+        if (s) tal.push(antal(s, 'En har sökt jobb med koden', 'har sökt jobb med koden'));
+        if (in_) tal.push(antal(in_, 'en har vi tagit in', 'har vi tagit in'));
+      }
+      var bonus = Number(data.bonus_ore || 0);
+      var utbetalt = Number(data.bonus_utbetald_ore || 0);
+      var belopp = Number(data.bonus_belopp_ore || 30000);
 
       var intro = familj
         ? 'Känner ni en familj som behöver hjälp med skolan? Dela er länk, eller be dem skriva koden i intresseanmälan.'
           + (data.timme_ges
-            ? ' När en ny familj som anmält sig med er kod har haft två timmar läxhjälp får ni en timme läxhjälp på köpet.'
+            ? ' När en ny familj som anmält sig med er kod har haft två timmar läxhjälp får ni en timme i er timbank.'
             : '')
-        : 'Känner du en familj som behöver läxhjälp? Dela din länk, eller be dem skriva koden i intresseanmälan. '
-          + 'Då ser vi att tipset kom från dig.';
+        : 'Känner du någon som vill jobba som studiehjälpare? Dela din länk, eller be hen skriva koden i jobbansökan.'
+          + (data.bonus_ges
+            ? ' När vi tar in någon som sökt med din kod får du ' + kr(belopp) + ' extra i lönen.'
+            : ' Då ser vi att tipset kom från dig.');
 
       host.innerHTML = '<p class="nx-tips-intro">' + esc(intro) + '</p>'
         + (data.aktiv
@@ -4167,14 +4192,21 @@ window.NXStudie = (function () {
             + '</div>'
           : '<p class="nx-tips-av">Koden är avstängd. Skriv till oss om du undrar varför.</p>')
         + (kvar && familj
-          ? '<p class="nx-tips-timme"><b>' + esc(antal(kvar, 'En timme', 'timmar')) + ' på köpet.</b> '
-            + 'Den dras på nästa läxhjälpspass ni föreslår, en timme per pass.</p>'
+          ? '<p class="nx-tips-timme"><b>' + esc(antal(kvar, 'En timme', 'timmar')) + ' i er timbank.</b> '
+            + 'Timmen betalar ett pass som köpta timmar inte betalar, en timme per pass. '
+            + '<a href="#profil/timbank">Se timbanken</a></p>'
+          : '')
+        + (bonus && !familj
+          ? '<p class="nx-tips-timme"><b>' + esc(kr(bonus)) + ' i bonus.</b> '
+            + esc(utbetalt >= bonus ? 'Den är utbetald.' : utbetalt ? kr(utbetalt) + ' är utbetalt.' : 'Den betalas med lönen den 25:e.')
+            + ' <a href="#statistik/ersattning">Se lönen</a></p>'
           : '')
         + (tal.length ? '<p class="nx-tips-tal">' + esc(tal.join(', ')) + '.</p>' : '')
         + '<p class="xsmall nx-tips-not">'
         + (familj
-          ? 'Ni ser hur många som anmält sig med er kod, inte vilka. Timmen på köpet går inte att växla in mot pengar. '
-          : 'Tipset ger ingen ersättning, varken pengar eller timmar. Du ser hur många som anmält sig med din kod, inte vilka. ')
+          ? 'Ni ser hur många som anmält sig med er kod, inte vilka. Timmen går inte att växla in mot pengar. '
+          : 'Koden gäller jobbansökan, inte en familjs anmälan. Bonusen är lön och betalas med lönen för månaden vi tog in '
+            + 'personen. Du ser hur många som sökt med din kod, inte vilka. ')
         + '<a href="/anvandarvillkor#tips">Villkoren för tips</a></p>';
     }
 

@@ -1103,7 +1103,11 @@ async function provaAdminvyn(webb) {
     const rubriker = await page.locator('#vy-sido .vy-sido-rubrik').evaluateAll(r => r.filter(x => !x.hidden).map(x => x.textContent));
     prova('begränsad: rubriker utan poster göms', JSON.stringify(rubriker) === '["Kunder","Inställningar"]', JSON.stringify(rubriker));
     prova('begränsad: Tips och kampanjer är borta', (await page.locator('#koder-tabell').count()) === 0);
-    const förbjudna = S.logg.filter(r => /rpc\/(ekonomiska_avvikelser|audit_sok|tipskoder_lage|driftkorningar)|\/(passunderlag|analys_|admin_lage)/.test(r.väg));
+    /* Koder (2026-10-13) är superadminens: en adress dit hämtar ingenting. */
+    await page.goto(BAS + '/admin#koder/studiehjalpare');
+    await vänta(400);
+    prova('begränsad: en adress till Koder visar inga koder', !(await synlig(page, '#kod-vy')) && !(await synlig(page, '#kod-val .kod-val-kort')));
+    const förbjudna = S.logg.filter(r => /rpc\/(ekonomiska_avvikelser|audit_sok|tipskoder_lage|koder_lage|driftkorningar)|\/(passunderlag|analys_|admin_lage|tipsbonus)/.test(r.väg));
     prova('begränsad: det superadminen ser hämtas inte', förbjudna.length === 0, förbjudna.map(r => r.väg).join(', '));
     await page.goto(BAS + '/admin#system/adminanvandare');
     await vänta(300);

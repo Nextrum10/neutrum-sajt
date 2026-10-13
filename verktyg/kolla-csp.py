@@ -35,7 +35,7 @@ SKRIPT = ['nextrum-app.js', 'nextrum-kontakt.js', 'nextrum-studie.js', 'nextrum-
           'nextrum-admin-kommunikation.js',
           'nextrum-admin-drift.js', 'nextrum-admin-ekonomi.js', 'nextrum-admin-tjanster.js',
           'nextrum-admin-system.js', 'nextrum-admin-behorighet.js', 'nextrum-admin-automationer.js',
-          'nextrum-admin-ai.js', 'nextrum-admin-konsol.js',
+          'nextrum-admin-ai.js', 'nextrum-admin-konsol.js', 'nextrum-admin-koder.js',
           'nextrum-larare-vy.js', 'nextrum-studie-vy.js', 'nextrum-barn-vy.js', 'nextrum-uppgifter.js',
           'nextrum-tjanster.js', 'nextrum-modulvakt.js', 'nextrum-fel.js', 'nextrum-lank.js']
 

@@ -1976,7 +1976,8 @@
         + '<button type="button" class="btn btn-primary" data-tillagg="' + esc(b.id) + '">Betala tillägget</button></div></div>';
     } else {
       const läge = !b || b.fakturerbar === false ? ''
-        : ingetAttBetala(b) ? 'Passet kostar ingenting: ' + påKöpet(b).replace(' på köpet', ' är på köpet') + '.'
+        : ingetAttBetala(b) ? (b.rabattkod === 'TIPS' ? 'Passet kostar ingenting: tipstimmen ur er timbank betalar det.'
+          : 'Passet kostar ingenting: ' + påKöpet(b).replace(' på köpet', ' är på köpet') + '.')
         : b.betalning_status === 'faktura' ? 'Passet betalas mot faktura.'
         : b.betalning_status === 'betald' ? (b.klippkort_id ? 'Passet är betalt med timmar.'
           : medBanken(b) ? 'Passet är betalt med timbanken.' : 'Passet är betalt.')
@@ -2208,16 +2209,54 @@
   /* ============================================================
      TIPSA EN FAMILJ (2026-09-30)
 
-     Koden och timmarna på köpet, under Profil → Tipsa en familj. Läses
-     före passen och bokningen: förslaget visar i förväg om en timme
-     är på köpet, och databasen avgör (forsta_timmen_bjuds). Ett pass
-     med tipstimmen bär rabattkod TIPS och startrabatt, så det betalas
-     som passet med första timmen: med kort, aldrig med köpta timmar.
+     Koden och timmarna för tips, under Profil → Tipsa en familj. Läses
+     före passen och bokningen: förslaget visar i förväg om tipstimmen
+     dras, och databasen avgör (intern.tipstimmen_dras). Ett pass med
+     tipstimmen bär rabattkod TIPS och startrabatt, så resten av ett
+     längre pass betalas som passet med första timmen: med kort eller
+     faktura, aldrig med köpta timmar.
+
+     Sedan 2026-10-13 ligger timmarna i timbanken (Leo: "timmarna läggs
+     in i timbanken för familjerna"): de står i Er timbank och under
+     Profil → Timbanken, och används sist, när köpta timmar och sparade
+     minuter inte betalar passet. De går inte ut.
      ============================================================ */
   async function laddaTips() {
     S.tips = await NXStudie.tipsa({ host: $('#tips-ruta'), supa: supa, roll: 'parent' });
+    /* Timbanken ritas om med timmarna för tips när svaret kommit, men
+       först när köpen är hämtade: annars hade "inga köpta timmar" blinkat
+       förbi för en familj som har dem. Kommer tipsen först ritar
+       laddaErbjudanden med dem. */
+    if (S.erb.rorelser !== undefined) {
+      ritaTillgängliga();
+      ritaTimbankTimmar();
+    }
   }
-  const påKöpet = b => b && b.rabattkod === 'TIPS' ? 'en timme på köpet för ert tips' : 'första timmen på köpet';
+
+  /* Tipstimmarna som ett kort i timbanken, som ett köp: hur många kvar
+     av de intjänade, och under Profil → Timbanken passen de betalat. */
+  function tipsKort(medPass) {
+    const t = S.tips;
+    const tim = t ? Number(t.timmar || 0) : 0;
+    if (!tim) return '';
+    const kvar = Number(t.kvar || 0);
+    const andel = Math.round(100 * kvar / tim);
+    const pass = medPass ? (S.bokningar || []).filter(b => b.rabattkod === 'TIPS' && b.status !== 'cancelled')
+      .sort((a, b) => String(a.wanted_date).localeCompare(String(b.wanted_date))) : [];
+    const idag = isoFor(new Date());
+    return '<div class="erb-mitt' + (kvar ? '' : ' ar-slut') + '">'
+      + '<div class="erb-mitt-topp"><b>Timmar för tips</b><span>' + esc(kvar ? 'Går inte ut' : 'Använda') + '</span></div>'
+      + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
+      + '<i style="width:' + andel + '%"></i></div>'
+      + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' ' + (tim === 1 ? 'timme' : 'timmar') + ' kvar</span>'
+      + '<p class="erb-bank-text">En timme för varje ny familj som anmält sig med er kod och haft två timmar läxhjälp. '
+      + 'Den betalar en timme av ett pass som köpta timmar inte betalar.</p>'
+      + (pass.length ? '<ul class="tb-rorelser">' + pass.map(b => '<li><span>' + esc(passNamn(b.id, b.wanted_date))
+          + (b.status === 'requested' ? ', föreslaget' : b.status !== 'completed' && String(b.wanted_date) >= idag ? ', kommande' : '')
+          + '</span><span class="tb-min ut">−1 timme</span></li>').join('') + '</ul>' : '')
+      + '</div>';
+  }
+  const påKöpet = b => b && b.rabattkod === 'TIPS' ? 'en timme ur timbanken för ert tips' : 'första timmen på köpet';
 
   /* ============================================================
      BETYGSGARANTIN UNDER PROFIL (2026-10-07)
@@ -3324,20 +3363,31 @@
        hänvisar dit i stället för att upprepa dem. Timmar som redan ligger
        på ett förslag eller ett bokat pass är inte tillgängliga: kvar
        räknas i databasen (klippkort_saldo). */
+    ritaTillgängliga();
+  }
+
+  /* Er timbank: köpta timmar, sparade minuter och sedan 2026-10-13
+     timmarna för tips, som räknas för sig (de betalar en timme av ett
+     pass, inte ett helt). */
+  function ritaTillgängliga() {
     const box = $('#erb-mina-box'), mina = $('#erb-mina');
     if (!box || !mina) return;
     const brukbara = S.erb.kort.filter(k => k.brukbar);
     const timmar = brukbara.reduce((n, k) => n + Number(k.kvar || 0), 0);
     const minuter = S.erb.bank.saldo;
+    const tips = S.tips ? Number(S.tips.kvar || 0) : 0;
+    const och = [minuter ? tidLängd(minuter) + ' sparat' : '',
+      tips ? (tips === 1 ? '1 timme' : tips + ' timmar') + ' för tips' : ''].filter(Boolean);
     box.hidden = false;
     mina.innerHTML = '<div class="erb-mitt erb-tillg">'
       + '<div class="erb-mitt-topp"><b>Tillgängliga timmar</b>'
-      + (minuter ? '<span>och ' + esc(tidLängd(minuter)) + ' sparat</span>' : '') + '</div>'
+      + (och.length ? '<span>och ' + esc(och.join(' och ')) + '</span>' : '') + '</div>'
       + '<span class="erb-kvar"><b>' + timmar + '</b> ' + (timmar === 1 ? 'timme' : 'timmar') + '</span>'
-      + (timmar || minuter ? ''
+      + (timmar || minuter || tips ? ''
         : '<p class="erb-bank-text">Fyll timbanken med en plan eller med timmar nedan, så betalar timmarna era pass av sig själva.</p>')
       + '</div>'
       + brukbara.map(k => kortRad(k)).join('')
+      + tipsKort(false)
       + '<p class="erb-bank-text erb-tillg-lank">Hur timmarna används, hur länge de gäller och villkoren står under '
       + '<a href="#profil/timbank">Profil &amp; inställningar → Timbanken</a>.</p>';
   }
@@ -3422,10 +3472,11 @@
     if (!host) return;
     const kort = S.erb.kort;
     if (!kort.length) {
-      host.innerHTML = '<p class="erb-bank-text">Ni har inga köpta timmar.'
+      host.innerHTML = '<p class="erb-bank-text tb-inga">Ni har inga köpta timmar.'
         + (S.erb.aktiv ? ' Köper ni en plan eller fyller timbanken betalar timmarna era pass av sig själva. '
           + '<a href="#erbjudanden">Se planer och Fyll timbanken</a>' : '')
-        + '</p>';
+        + '</p>'
+        + tipsKort(true);
       return;
     }
     host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När ni föreslår '
@@ -3434,7 +3485,8 @@
       + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
       + 'Ett pass med fler barn, och ett pass där första timmen eller tipstimmen är på köpet, '
       + 'betalas med kort. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
-      + kort.map(k => kortRad(k, kortetsPass(k))).join('');
+      + kort.map(k => kortRad(k, kortetsPass(k))).join('')
+      + tipsKort(true);
   }
 
   function ritaTimbankProfil() {
@@ -3979,7 +4031,7 @@
        Sedan 2026-10-09 bara för en familj vi valt, och aldrig när familjen
        fått timmen i en plan (forsta_timmen_lage). Databasen avgör; här
        visas bara vad förslaget kommer att kosta. */
-    bjuden: minuter => {
+    bjuden: (minuter, datum, barn) => {
       const aktiva = (S.bokningar || []).filter(b => b.status !== 'cancelled'
         && b.fakturerbar !== false && (b.tjanst || 'laxhjalp') === 'laxhjalp');
       /* null: databasen saknar funktionen och har den gamla regeln.
@@ -3989,11 +4041,15 @@
       /* Ett pass med tipstimmen (rabattkod TIPS) är inte prissidans
          första timme. Den går först; annars tipstimmen, om det finns en
          kvar (2026-09-30). kvar räknas i databasen och gäller också när
-         erbjudandet stängts: det som tjänats in innan ges ändå. */
+         erbjudandet stängts: det som tjänats in innan ges ändå.
+         Sedan 2026-10-13 ligger tipstimmen i timbanken och används sist:
+         betalar köpta timmar eller sparade minuter passet står den kvar
+         (intern.tipstimmen_dras, samma val som timmarFörFörslag). */
       if (kanFå && !aktiva.some(b => b.startrabatt && b.rabattkod !== 'TIPS')) {
         const före = aktiva.reduce((a, b) => a + (Number(b.duration_min) || 60), 0);
         if (före < 120 && före + minuter >= 120) return true;
       }
+      if (datum && timmarFörFörslag(minuter, datum, barn)) return false;
       return S.tips && Number(S.tips.kvar) > 0 ? 'tips' : false;
     },
     /* Köpta timmar i stället för priset vid knappen (2026-09-28). */

@@ -4927,3 +4927,111 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   .ah-rad-knappar{justify-content:flex-start;max-width:none}
   .ah-rad-knappar .adm-und{text-align:left}
 }
+
+/* ============================================================
+   KODER (2026-10-13, nextrum-admin-koder.js)
+   Först valet, två stora kort, och sedan en rad per person som fälls
+   ut och visar vilka som använt koden. Raden är en <details>: utan
+   skript går den ändå att fälla ut, och summary är ingen knapp att
+   lägga knappar i, så knapparna står i det utfällda. Hovring och tryck
+   rör sig med scale, aldrig transform (avsnitt 3). Bara tokens.
+   ============================================================ */
+.kod-val{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.kod-val-kort{
+  display:flex;align-items:center;gap:16px;min-width:0;min-height:44px;
+  padding:clamp(20px,2.4vw,26px);
+  border:1px solid var(--ln);border-radius:clamp(22px,2.4vw,24px);
+  background:var(--yta);box-shadow:var(--sk-1);
+  color:inherit;text-decoration:none;
+  transition:border-color .18s var(--e),background .18s var(--e),scale .2s var(--e);
+}
+.kod-val-kort:hover{border-color:var(--ln-2);background:var(--tint)}
+.kod-val-kort:active{scale:.985}
+.kod-val-kort:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.kod-val-ik{
+  width:52px;height:52px;border-radius:18px;flex:none;
+  display:grid;place-items:center;
+  background:var(--acc-soft);color:var(--acc-lugn);
+}
+.kod-val-kort:nth-child(2) .kod-val-ik{background:var(--ockra-soft);color:var(--ockra-text)}
+.kod-val-ik svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.kod-val-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.kod-val-text > b{font-size:1.15rem;font-weight:700;letter-spacing:-.02em;line-height:1.25;color:var(--bl)}
+.kod-val-text > span{font-size:.86rem;line-height:1.5;color:var(--bl-2)}
+.kod-val-text > .kod-val-tal{margin-top:6px;font-size:.84rem;color:var(--bl-2);font-variant-numeric:tabular-nums}
+.kod-val-tal b{font-weight:700;color:var(--bl)}
+.kod-val-pil{flex:none;display:inline-flex;color:var(--bl-3)}
+.kod-val-pil svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+.kod-regel{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:16px clamp(16px,2vw,20px);margin-bottom:clamp(16px,2vw,22px);
+  border:1px solid var(--ln);border-radius:20px;background:var(--yta);box-shadow:var(--sk-1);
+}
+.kod-regel-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.kod-regel-text > b{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.95rem;font-weight:650;color:var(--bl)}
+.kod-regel-text > span{font-size:.86rem;line-height:1.55;color:var(--bl-2);max-width:78ch}
+.kod-regel-text > .kod-regel-not{font-size:.8rem;color:var(--bl-3)}
+.kod-regel-knapp{flex:none}
+
+.kod-lista{border:1px solid var(--ln);border-radius:18px;overflow:hidden;background:var(--yta)}
+.kod-rad + .kod-rad{border-top:1px solid var(--ln)}
+.kod-rad > summary{
+  list-style:none;cursor:pointer;
+  display:grid;grid-template-columns:minmax(0,1.4fr) auto minmax(0,1.7fr) auto;
+  grid-template-areas:"person kod siffror lage";
+  align-items:center;gap:10px 18px;
+  min-height:44px;padding:12px clamp(14px,1.8vw,18px);
+  transition:background .16s var(--e);
+}
+.kod-rad > summary::-webkit-details-marker{display:none}
+.kod-rad > summary:hover{background:var(--tint)}
+.kod-rad > summary:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.kod-person{grid-area:person;display:flex;align-items:center;gap:12px;min-width:0}
+.kod-person .nx-avatar{width:36px;height:36px;font-size:.74rem;flex:none}
+.kod-person-text{min-width:0}
+.kod-person-text b{display:block;font-size:.93rem;font-weight:650;line-height:1.35;color:var(--bl);overflow-wrap:anywhere}
+.kod-person-text span{display:block;margin-top:2px;font-size:.8rem;color:var(--bl-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kod-kod{grid-area:kod}
+.kod-kod code{
+  display:inline-block;padding:6px 10px;border-radius:10px;
+  font-family:var(--f-mono);font-size:.86rem;font-weight:600;letter-spacing:.08em;
+  background:var(--bricka);color:var(--bl);
+}
+.kod-siffror{grid-area:siffror;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;min-width:0;font-size:.84rem;color:var(--bl-2)}
+.kod-siffra{white-space:nowrap}
+.kod-siffra b{font-weight:700;color:var(--bl);font-variant-numeric:tabular-nums}
+.kod-siffra.ar-belonad b{color:var(--mossa-text)}
+.kod-under{flex-basis:100%;font-size:.78rem;color:var(--bl-3)}
+.kod-lage{grid-area:lage;display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.kod-fall{display:inline-flex;color:var(--bl-3);transition:rotate .2s var(--e)}
+.kod-fall svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.kod-rad[open] .kod-fall{rotate:180deg}
+.kod-rad[open] > summary{background:var(--tint)}
+.kod-kropp{padding:6px clamp(14px,1.8vw,18px) 18px calc(clamp(14px,1.8vw,18px) + 48px)}
+.kod-del{margin:12px 0 4px;font-size:.74rem;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--bl-3)}
+.kod-vilka{list-style:none;margin:0;padding:0}
+.kod-vilka li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;min-height:44px;padding:6px 0;font-size:.86rem}
+.kod-vilka li + li{border-top:1px solid var(--ln)}
+.kod-vilka .eko-lank{font-weight:600;color:var(--bl)}
+.kod-vilka-nar{margin-right:auto;font-size:.8rem;color:var(--bl-3)}
+.kod-tom{margin:4px 0 0;font-size:.84rem;color:var(--bl-3)}
+.kod-atg{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+@media (max-width:720px){
+  .kod-rad > summary{
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"person lage" "kod siffror";
+  }
+  .kod-siffror{justify-content:flex-end;text-align:right}
+  .kod-under{text-align:right}
+  .kod-kropp{padding-left:clamp(14px,1.8vw,18px)}
+  .kod-regel{flex-wrap:wrap}
+  /* Texten tar raden, och knappen går ned under den. */
+  .kod-regel-text{flex:1 1 calc(100% - 64px)}
+  .kod-regel-knapp{margin-left:64px}
+}
+@media (max-width:420px){
+  .kod-rad > summary{grid-template-areas:"person lage" "kod kod" "siffror siffror"}
+  .kod-siffror{justify-content:flex-start;text-align:left}
+  .kod-under{text-align:left}
+}

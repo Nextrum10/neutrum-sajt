@@ -125,10 +125,14 @@ SIFFRORNA:
   som gör att familjen har bokat två timmar. Högst en gratis timme per familj,
   utom timmar för tips. Ett pass på en timme kan alltså kosta noll
   kronor, och det är då inte obetalt.
-· En familj som tipsat får en timme på köpet när en ny familj som
-  anmält sig med dess kod haft två timmar läxhjälp.
+· En familjs kod gäller intresseanmälan och en studiehjälpares kod
+  jobbansökan. En familj som tipsat får en timme i sin timbank när en
+  ny familj som anmält sig med dess kod haft två timmar läxhjälp. Den
+  går inte ut och dras av på ett pass som köpta timmar inte betalar.
 · Studiehjälparen får betalt den 25:e, i en klump för månadens
-  rapporterade pass.
+  rapporterade pass. Tar vi in någon som sökt jobb med en
+  studiehjälpares kod får den studiehjälparen 300 kr i bonus med
+  lönen för den månaden.
 · Belopp räknas i ören. Kronor blir det först när något visas.
 
 VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:

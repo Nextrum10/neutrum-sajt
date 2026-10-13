@@ -443,3 +443,33 @@ förslagen, annars betalar förslagen sig själva. Blocken för 22.3 och
   **Leo samma kväll bad om den ("fixa de")**, och den kördes 2026-09-30:
   köpet är märkt som test igen och räknas inte längre som pengar in i
   september. Kortet, dess fyra pass och timmarna är orörda.
+
+---
+
+## Timmarna för tips i timbanken (2026-10-13)
+
+Leo: "timmarna läggs in i timbanken för familjerna". Tipstimmen (en per ny
+familj som anmält sig med familjens kod och haft två timmar läxhjälp,
+`minne/affaren.md`) står sedan dess i timbanken, och timbanken fylls alltså
+på tre sätt: en plan, Fyll timbanken och tips. Timmen för tips köps inte
+och går inte ut, och den är aldrig pengar: den betalas inte tillbaka när
+familjen slutar och ingår inte i `vid_uppsagning_ore`.
+
+- **Den används sist.** Förut drogs den på nästa förslag, före köpta
+  timmar, och ett pass med timmen kan köpta timmar inte betala (Fas 22.2):
+  en familj med plan betalade resten med kort medan planens timmar gick ut.
+  Nu betalar köpta timmar och sparade minuter först, som förut, och betalar
+  de inte passet dras tipstimmen av på det (`intern.tipstimmen_dras`,
+  triggern `bookings_timmar_tips`, efter `bookings_timmar_betalar_forslaget`
+  och före `bookings_timmarna_tillbaka`, som står sist). Resten av ett
+  längre pass betalas som pass för pass. Avbokas passet kommer timmen
+  tillbaka.
+- **Den är ingen rad i `klippkort`.** Det hade gjort den till ett köp (0 kr
+  i Köpta timmar, ångerrätten, uppsägningen och avstämningen), och som
+  minuter hade den betalats ut när familjen slutar. Den räknas ur raderna
+  som förut (`intern.tipstimmar_intjanade`, `intern.tipstimmar_anvanda`).
+- **Vyn**: Er timbank under Erbjudanden säger "och N timmar för tips" och
+  har ett kort Timmar för tips med en mätare; Profil → Timbanken har samma
+  kort under Timmar, med passen timmen betalat, och Vad är timbanken? säger
+  det. Boka pass visar timmen i förväg bara när timmarna inte betalar
+  passet (`bjuden(minuter, dag, barn)` mot `timmarFörFörslag`).

@@ -445,6 +445,25 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   inte provläst i Fortnox** (Fortnox hjälpsidor och paxml.se nåddes inte
   från sessionen som byggde den). Läs in den första i en löneperiod som
   går att kontrollera; nekar Fortnox den är det `paxml()` som ska rättas.
+- **Bonusen för tips** (2026-10-13, Leo: "bonus redovisas som lön"): 300 kr
+  till en studiehjälpare när vi tar in någon som sökt jobb med hens kod
+  (`tipsbonus`, `minne/affaren.md`). Den är inget pass och har ingen tid,
+  så den står inte i `payouts`: en `payout_lines`-rad kräver minuter, bara
+  månadskörningen skriver underlag, och `las_utbetalningsbelopp` fryser
+  beloppet. I stället har den ett eget läge (Utkast, Godkänd, Utbetald,
+  Struken) i rutan Bonus för tips under Löner, med samma regel som
+  underlaget (Utbetald bara efter Godkänd, och läget sparas bara om det är
+  det som visades). Den hör till lönemånaden den tjänades in
+  (`tipsbonus.period`), räknas i Att betala ut, i personens Att få och i
+  Månadens ekonomi (`lönFörMånad`, där en månad är utbetald först när
+  också bonusarna är det). Lönefilen tar den godkända som en egen
+  `lonetrans`: lönearten `foretagsfakta.lonart_tipsbonus`, datumet den
+  tjänades in, antal 1 och apris lika med beloppet. Filen går att bygga
+  med bara bonusar, och stoppas om lönearten saknas när en bonus är
+  godkänd. Om bonusen ska vara semestergrundande avgörs av lönearten i
+  Fortnox, med revisorn; timlönens regel (inklusive semesterersättning)
+  gäller inte den. `Skicka underlag` (mejlet) handlar om passen och bär
+  inte bonusen.
 
 ## Lönespecen
 
@@ -475,6 +494,8 @@ står på `oklart` (avsnitt 11), och utan anställningsform finns ingen
 skattetabell att dra efter. Summan står "före skatt". Blir
 studiehjälparna anställda gör Fortnox Lön lönebeskedet med skatten, och
 då ska lönespecen här säga var det finns i stället för att räkna själv.
+Sedan 2026-10-13 står månadens bonus för tips under passen, med summan
+inklusive den, och under månadens lön (`o.bonus` i `lonespec`).
 
 ---
 

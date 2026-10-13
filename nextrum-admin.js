@@ -62,6 +62,7 @@
   const ritaKalender = (...a) => NXAdmin.rita.ritaKalender(...a);
   const ritaKontakt = (...a) => NXAdmin.rita.ritaKontakt(...a);
   const ritaKoder = (...a) => NXAdmin.rita.ritaKoder(...a);
+  const ritaKodsidan = (...a) => NXAdmin.rita.ritaKodsidan(...a);
   const ritaLeads = (...a) => NXAdmin.rita.ritaLeads(...a);
   const ritaLektioner = (...a) => NXAdmin.rita.ritaLektioner(...a);
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
@@ -400,7 +401,7 @@
   const SEKTIONSNAMN = {
     oversikt: 'Översikt', leads: 'Intresseanmälningar', ansokningar: 'Ansökningar',
     meddelanden: 'Frågor', familjer: 'Familjer', elever: 'Elever',
-    studiehjalpare: 'Studiehjälpare', matchning: 'Matchning', bokningar: 'Bokningar',
+    studiehjalpare: 'Studiehjälpare', koder: 'Koder', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
     ekonomi: 'Betalningar', manaden: 'Månadens ekonomi', loner: 'Löner',
     system: 'System',
@@ -1084,6 +1085,7 @@
       ritaTjanster();
       ritaRabattkoder();
       ritaKoder();
+      ritaKodsidan();
       ritaFel();
       ritaInstallningar();
       ritaNotisdrift();

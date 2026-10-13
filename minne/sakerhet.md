@@ -561,7 +561,8 @@ kör `verktyg/satt-version.py`.
 - **Adressen lämnar oss utan frågesträng** (`renAdress`, 2026-10-11),
   utom våra utm-taggar, till både Vercel (`beforeSend`) och Google
   (`page_location`, `page_referrer`); Ads får dessutom klick-id:t.
-  `?kod=` i intresseanmälan är en familjs tipskod. **En sida med en
+  `?kod=` i intresseanmälan är en familjs tipskod, och i jobbansökan
+  (2026-10-13) en studiehjälpares. **En sida med en
   nyckel i adressen laddar inte `nextrum-samtycke.js` alls**:
   `utbildningsprov` (`?t=`, provets nyckel) och `avanmal` (`?t=`,
   avregistreringen, som aldrig går ut). `avanmal` sa i sin kommentar
@@ -619,7 +620,7 @@ gång till. **Kontrollerat 2026-09-23, med prov mot driften, igen
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser`, (sedan Fas 18.1) `google_koppling`, och (sedan 2026-09-30) `barn_andringsfonster` och `barn_notiser` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan. Barnets notiser läses bara genom `barn_notiser()`, och fönstren skrivs bara av `barn-konto` |
-| 49 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-30 efter `barnkonto_skapas_genom_auth`; 42 före barnkontona, med de sju i raden om barnkontona nedan; 40 dagen före). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `mina_tips`, `tipskoder_lage`, `chatt_las`, `nexlax_lage`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `mina_tips` (den inloggades egen kod och antal, aldrig vilka), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 49 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-30 efter `barnkonto_skapas_genom_auth`; 42 före barnkontona, med de sju i raden om barnkontona nedan; 40 dagen före). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `koder_lage` (2026-10-13, skapar koder, `is_admin()` först), `mina_tips`, `tipskoder_lage`, `chatt_las`, `nexlax_lage`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `mina_tips` (den inloggades egen kod och antal, aldrig vilka), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | Barnkontonas och adminrollernas funktioner (2026-09-30): `har_behorighet`, `har_nagon_behorighet`, `mina_behorigheter`, `admin_kan_ge`, `gor_till_admin`, `ta_bort_admin`, `mina_barnkonton` | Alla svarar om den inloggade själv eller prövar anroparen i triggern `admin_roller_vakt`. `har_behorighet` och `har_nagon_behorighet` är nåbara för `anon` för att de står i policyer `to public` (Fas 10-fällan); med `auth.uid()` null svarar de nej. Barnets tre funktioner når bara rollen `nextrum_barn` |
 | `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |

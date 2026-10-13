@@ -273,6 +273,11 @@
           </fieldset>
           <div class="pay-field"><label for="ap-erf">Experience of explaining things to others</label><textarea class="inp" id="ap-erf" name="erfarenhet" style="min-height:74px" placeholder="Tutoring, leadership, coaching, siblings — it all counts. If you have none at all, that is fine too."></textarea></div>
           <div class="pay-field"><label for="ap-why">Why do you want to become a tutor?</label><textarea class="inp" id="ap-why" name="varfor" style="min-height:110px"></textarea></div>
+          <!-- KODEN (2026-10-13). Se bli-studiehjalpare.html. -->
+          <div class="pay-field"><label for="ap-kod">Code from a tutor <span class="lbl-valfri">optional</span></label>
+            <input class="inp" id="ap-kod" name="kod" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <p class="nx-fil-hjalp">Did someone who already works with us recommend you? Enter their code. Only a tutor's code works here, not a family's or a poster's.</p>
+          </div>
 
           <div class="pay-field">
             <label for="ap-cv">CV <span class="lbl-valfri">optional</span></label>
@@ -484,7 +489,7 @@
 <script src="../nextrum-config.js?v=1b401ac9"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=41e2f360"></script>
+<script src="../nextrum-app.js?v=5e61cbcd"></script>
 <script src="../nextrum-samtycke.js?v=92474eaf"></script>
 <script src="../nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
@@ -579,6 +584,15 @@
     return fel;
   };
 
+  /* KODEN (2026-10-13). Se bli-studiehjalpare.html. */
+  const kodFält = $('#ap-kod');
+  const renKod = v => String(v || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 24);
+  if (kodFält) {
+    let frånAdressen = '';
+    try { frånAdressen = renKod(new URLSearchParams(location.search).get('kod')); } catch (e) { /* ingen kod */ }
+    if (frånAdressen) kodFält.value = frånAdressen;
+  }
+
   /* Timmarna: ja eller nej måste väljas. Rutan markeras som den
      glömda samtyckesrutan och släpper när något väljs. */
   const timmarFält = $('#ap-timmar');
@@ -604,7 +618,8 @@
       return t('valjTimmar');
     },
     överst: () => 'Minst 4 timmar i veckan: ' + timmarVal(),
-    kolumner: () => (under18() ? { vardnadshavare_epost: vh.value.trim() } : {}),
+    kolumner: () => Object.assign(under18() ? { vardnadshavare_epost: vh.value.trim() } : {},
+      kodFält && renKod(kodFält.value) ? { kod: renKod(kodFält.value) } : {}),
     tack: () => (under18() ? t('tackAnsokanUnder18') : ''),
     extra: () => {
       const rader = [];

@@ -64,7 +64,9 @@ const NXAdmin = (function () {
     bokslut: null, bokslutFel: null, stangdaManader: new Set(),
     /* 2026-09-28: Månadens ekonomi. Pass som timbanken betalat hela,
        och köp av timmar som var testbetalningar. */
-    timbankPass: new Set(), klippkortTest: new Set()
+    timbankPass: new Set(), klippkortTest: new Set(),
+    /* 2026-10-13: bonusen för tips, och dess strömbrytare. */
+    tipsbonus: [], tipsbonusFel: null, bonusFlagga: null
   };
 
   /* Har modulvakten (nextrum-modulvakt.js) redan konstaterat att en
@@ -474,7 +476,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
-           bankPass, kkSkarp, tips, sett] = await Promise.all([
+           bankPass, kkSkarp, tips, sett, bonus] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -519,8 +521,9 @@ const NXAdmin = (function () {
       /* Fas 14.6: och strömbrytaren för faktura som betalsätt, samma
          sort. Båda i en fråga. */
       /* Fas 16.1: och erbjudandena, samma sort. */
-      /* 2026-09-30: och timmen på köpet för ett tips, samma sort. */
-      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura', 'erbjudanden', 'tipstimme']),
+      /* 2026-09-30: och timmen på köpet för ett tips, samma sort.
+         2026-10-13: och bonusen för tips, som står under Koder. */
+      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura', 'erbjudanden', 'tipstimme', 'tipsbonus']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
       bara(() => hämtaAlla('stripe_tvister', '*', nyastFörst('skapad'))),
@@ -568,7 +571,11 @@ const NXAdmin = (function () {
          ansökningarna. Bara de egna raderna (policyn), och för alla
          admins: den som bara har Intresseanmälningar ska också slippa
          siffran för det hen redan sett. */
-      supa.from('admin_sett').select('omrade, sett_till')
+      supa.from('admin_sett').select('omrade, sett_till'),
+      /* 2026-10-13: bonusen för tips, 300 kr i lön när vi tar in någon
+         som sökt jobb med en studiehjälpares kod. Löner räknar den och
+         lägger den i lönefilen, Koder visar den per kod. */
+      bara(() => hämtaAlla('tipsbonus', '*', nyastFörst('intjanad_at')))
     ]);
 
     S.leads = leads.data || [];
@@ -612,6 +619,11 @@ const NXAdmin = (function () {
     S.fakturaFlagga = (flaggor.data || []).find(f => f.kod === 'faktura') || null;
     S.erbFlagga = (flaggor.data || []).find(f => f.kod === 'erbjudanden') || null;
     S.tipsFlagga = (flaggor.data || []).find(f => f.kod === 'tipstimme') || null;
+    S.bonusFlagga = (flaggor.data || []).find(f => f.kod === 'tipsbonus') || null;
+    /* Saknas tabellen (migrationen tipskoder_bonus_och_timbanken är inte
+       körd) är bonusarna inga, och Löner räknar som förut. */
+    S.tipsbonus = bonus.data || [];
+    S.tipsbonusFel = bonus.error ? (/PGRST205|42P01/.test(String(bonus.error.code)) ? 'saknas' : felText(bonus.error)) : null;
     /* Saknas funktionen (migrationen tipskoder_och_kampanjkoder är inte
        körd) är listan tom och säger det, i stället för att fälla vyn. */
     S.tipskoder = tips.data || [];
