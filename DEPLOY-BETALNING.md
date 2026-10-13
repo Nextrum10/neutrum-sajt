@@ -1207,9 +1207,9 @@ kod har en gräns totalt och per familj, och prövningen har ett tak
 (`minne/betalning.md`, `minne/sakerhet.md`). Vyerna går ut med Vercel vid
 merge och tål att migrationen saknas: rutan under Erbjudanden svarar då att
 koden inte gick att pröva, och 2026-10-13 fanns ingen kod utom `TIPS`.
-**Skapa ingen kod förrän steg 3 är gjort.** Efter merge, i den här
-ordningen, och fråga först de andra sessionerna som arbetar i repot om
-någon redan kör något (`minne/databasen.md`):
+**Steg 1–3 är gjorda** (natten till 2026-10-14, 00.15–00.30 svensk tid,
+efter att de andra sessionerna fått frågan och fem minuter på sig), så en
+kod går att skapa. Steg 4 och 5 återstår. Ordningen var den här:
 
 1. **`stripe-checkout` från main**, FÖRE migrationen. Den tar en kod på ett
    köp (SESSIONSFORM 8), och utan kod gör den som förut, också mot en
@@ -1217,21 +1217,31 @@ någon redan kör något (`minne/databasen.md`):
    korten medan den gamla kassan drar hela priset. Sju filer:
    `stripe-checkout/index.ts` och ur `_delad/` `auth.ts`, `http.ts`,
    `stripe.ts`, `pris.ts`, `erbjudanden.ts` och `konstanter.ts`. Hämta
-   tillbaka och jämför byte för byte, som förut.
+   tillbaka och jämför byte för byte, som förut. *Gjort*: v19 från main
+   (2de6d28), hämtad tillbaka, 7 av 7 filer byte för byte lika.
 2. **`20261013160000_rabattkoden_timmar_och_tak`** från merge-commiten,
    prövad mot sin md5, efter `gratistimmar` (20261013140000). Filen har ett
    `delete` i en funktion (`intern.rabattkod_forsok_notera`), så den körs
    med `execute_sql` avsnitt för avsnitt, aldrig genom `execute` i ett
    do-block, och registreras sedan med filens text. Vakten i avsnitt 0
    prövar `skydda_rabatt`, `kolla_rabattkod` och `rakna_rabattkod` mot
-   driftens text 2026-10-13 och avbryter om någon ändrats.
+   driftens text 2026-10-13 och avbryter om någon ändrats. *Gjort*: vakten
+   och avsnitt 1 i samma anrop, sedan ett anrop per avsnitt; registrerad med
+   texten hämtad från merge-commiten (md5 `e59f42f5…`). Alla 13 funktioner
+   och 6 triggrar har samma md5 (`prosrc`, `pg_get_triggerdef`) som en
+   lokal databas byggd ur filerna.
 3. **Hela `rls-test.sql` mot driften**, i en transaktion som rullas
    tillbaka: lokalt 1664 av 1664 (avsnitt 32 är nytt). Saknas
    `ta_tillbaka_gratistimmar` fortfarande i driften faller avsnitt 30; kör
    då `gratistimmar` först i samma transaktion, som 2026-10-13
    (`minne/databasen.md`). Kör advisorn: den
    ska bara larma om `kolla_rabattkod_kop` som en SECURITY DEFINER-funktion
-   för `authenticated`, och det är med flit.
+   för `authenticated`, och det är med flit. *Gjort*: 1664 av 1664 mot
+   driften, tillbakarullat, sviten från 2de6d28 med `gratistimmar` först i
+   samma block (`ta_tillbaka_gratistimmar` saknades fortfarande) och avsnitt
+   33 bortklippt (`kortet_reserveras` ska inte köras än). Inget blev kvar.
+   Advisorn larmade om `kolla_rabattkod_kop` och om `intern.rabattkod_forsok`
+   (RLS utan policy), båda med flit.
 4. **Prova i testläge**: skapa en provkod i adminvyn (Procent av priset 10,
    Gånger per familj 2, annars svarar gränsen före timmarna i nästa prov),
    köp Basic med koden som en provfamilj och se att

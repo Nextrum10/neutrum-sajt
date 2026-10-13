@@ -212,7 +212,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   aldrig så att köpet blir gratis, och gratistimmar bär ingen kod. **Hur många gånger** sätts per kod, totalt och
   per familj (`max_anvandningar`, `max_per_familj`, en gång som förval; Leo: "rabattkoder ska vi också bestämma hur
   många gånger de får användas"), och ett avbokat pass ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6).
-  Skapa ingen kod förrän `rabattkoden_timmar_och_tak` körts i driften.
+  I drift sedan natten till 2026-10-14; en kods villkor ska stå där den delas ut (avsnitt 11).
 - **Kortet reserveras** (2026-10-13, under arbete; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
   och när passet har hållits och läxhjälparen har skrivit rapport så dras pengarna"): valet är frivilligt, och kortet
   och reservationen står i egna tabeller, aldrig på `bookings` (`kortreservationer`, bara genom `valj_kort()` och
@@ -881,14 +881,15 @@ Detaljer: `minne/grunden.md`.
   beslut och en egen ändring (`DEPLOY-BARNKONTON.md` 12).
   Juristen har inte läst rad 26 i `DATASKYDD.md` eller meningarna om förslagen i policyn, och familjerna
   med barnkonto har inte fått veta att valet finns.
-- **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13) är byggd men inte i drift. Efter merge, i den
-  ordningen: `stripe-checkout` från main (SESSIONSFORM 8, tar en kod på ett köp), migrationen
-  `rabattkoden_timmar_och_tak` (20261013160000, efter `gratistimmar`) och hela `rls-test.sql` mot driften (lokalt
-  1664 av 1664, avsnitt 32). I omvänd ordning visar vyn priset med koden på korten medan den gamla kassan drar hela
-  priset. Vyerna tål att migrationen saknas (rutan under Erbjudanden svarar att koden inte gick att pröva), och
-  ingen kod finns utom `TIPS`. Villkoren nämner inga koder och får ingen ny version, så en kods villkor (hur många
-  gånger, inte med timmar i timbanken) ska stå klart där koden delas ut (e-handelslagen 9 §). Juristen har inte läst
-  rad 28 i `DATASKYDD.md` (`DEPLOY-BETALNING.md` 9.13).
+- **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13) är i drift sedan natten till 2026-10-14, i den
+  ordningen: `stripe-checkout` v19 (SESSIONSFORM 8, tar en kod på ett köp) från main (2de6d28), hämtad tillbaka och
+  byte för byte lika (7 av 7 filer), sedan `rabattkoden_timmar_och_tak` (20261013160000) avsnitt för avsnitt med
+  `execute_sql` och registrerad med filens text från merge-commiten (md5 `e59f42f5…`); alla 13 funktioner och 6
+  triggrar är lika en lokal databas byggd ur filerna, och hela `rls-test.sql` gick 1664 av 1664 mot driften,
+  tillbakarullat (med `gratistimmar` först i samma block och avsnitt 33 bortklippt). Ingen kod finns utom `TIPS`.
+  Kvar: provköpet i testläge (`DEPLOY-BETALNING.md` 9.13 steg 4). Villkoren nämner inga koder och får ingen ny
+  version, så en kods villkor (hur många gånger, inte med timmar i timbanken) ska stå klart där koden delas ut
+  (e-handelslagen 9 §). Juristen har inte läst rad 28 i `DATASKYDD.md`.
 - **Kortet reserveras vid bokningen** (2026-10-13) är under arbete och inte i drift. Databasen är skriven
   (`kortet_reserveras`, 20261013170000; lokalt ur 190 migrationer 1699 av 1699 i `rls-test.sql`, avsnitt 33),
   med strömbrytaren `kortreservation` av, mallen `kort_nekat` i `notis-ko`, och policyn och rad 29 i `DATASKYDD.md`.

@@ -381,6 +381,17 @@ tar bort filens `begin;`, slutraden och `rollback;`, kör den med
 % gröna. FEL: %'`. Felet rullar tillbaka allt, tillägget behöver inte
 skapas (det står i `extensions`), och svaret står i felmeddelandet.
 
+**Ett avsnitt för en migration som inte är körd klipps bort i blocket.**
+Ett sådant avsnitt prövar tabeller som inte finns i driften och faller.
+Så var det 2026-10-14 med avsnitt 33 (`kortet_reserveras`). Sviten slutar
+då före avsnittets rubrik: `left(text, position(E'\n-- 33. Kortet
+reserveras …' in text))`, plus `reset role;`.
+
+En migration som står till hälften i driften körs i stället först i samma
+block. Så var det med `gratistimmar`, som saknade
+`ta_tillbaka_gratistimmar`, och resultatet blev 1664 av 1664. Båda filerna
+hämtas från samma commit och prövas mot sin md5.
+
 **Kör hela filen, inte bara ditt eget avsnitt.** 2026-09-27 hade den
 varit röd sedan förmiddagen utan att någon sett det, för varje session
 provade sin egen del för sig. Fas 19.2 gjorde kortspärren omöjlig att
