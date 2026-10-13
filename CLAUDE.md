@@ -826,9 +826,10 @@ Detaljer: `minne/grunden.md`.
   personen tas in, inte att hen håller ett pass (Leos regel).
 - **Gratistimmarna i timbanken** (2026-10-13) är i drift utom en funktion: `gratistimmar` (20261013140000) kördes
   sist samma kväll, avsnitt för avsnitt med `execute_sql` (filen har ett `delete`), och allt den skapar och lappar är
-  byte för byte som i en databas byggd ur alla 188 migrationer, utom `ta_tillbaka_gratistimmar`: den fastnade två
-  gånger på verktygets bekräftelse utan svar (avsnitt 5), och inget kördes. **Kvar**: kör avsnitt 7 i filen med
-  `execute_sql` när Leo kan svara ja i verktyget, och registrera sedan filen (md5 `079603c5…`), som de andra. Till
+  byte för byte som i en databas byggd ur alla 188 migrationer, utom `ta_tillbaka_gratistimmar`: den fastnade tre
+  gånger på verktygets bekräftelse utan svar (avsnitt 5), och inget kördes; den tredje gången satt Leo vid skärmen,
+  men ingen ruta syntes i hans app. **Kvar**: kör avsnitt 7 i filen med `execute_sql` från en klient där verktygets
+  fråga syns och Leo kan svara ja, och registrera sedan filen (md5 `079603c5…`), som de andra. Till
   dess går det att sätta in gratistimmar men inte att ta tillbaka dem. Hela `rls-test.sql` gick 1643 av 1643 mot
   driften, tillbakarullat, med filen körd först i samma transaktion (`minne/databasen.md`). Villkorens version är
   2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Ingen påminnelse går om gratistimmar

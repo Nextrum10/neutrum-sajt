@@ -823,6 +823,10 @@ försöker igen (finns objekten, kör något, väntar något på ett lås). Det 
 |---|---|
 | `drop` (också `drop policy if exists`), `delete` utanför en funktion, en funktion med två `delete`, och 2026-10-13 en funktion med ett `delete` och två `update` (`ta_tillbaka_gratistimmar`, två gånger, ensam i anropet andra gången) | `create`, `alter`, `comment`, `grant`, `revoke`, `update … where`, en funktion med ett `delete` och inget `update` (tre sådana i ett anrop, `barnet_foreslar_pass`, samma kväll) eller en datamodifierande CTE, `do`-block, `select cron.unschedule(…)`, `select cron.schedule(…)` |
 
+Frågan syns bara i en klient som visar verktygets bekräftelser: 2026-10-13 syntes den inte alls i Leos app, och
+ingen ruta är inget ja. Säg det till Leo innan du kör något som utlöser den, och vänta inte på ett svar som inte
+kan komma.
+
 Orden i en sträng räknas inte. Runda aldrig spärren med dynamisk SQL (`execute 'drop …'`): den finns för att
 användaren ska godkänna det som river något. En städning av egna provobjekt kräver alltså ett svar från
 användaren, så ge inte dina provobjekt namn du måste riva, och gör prov som `create or replace` på en
@@ -1095,8 +1099,9 @@ triggrar och jobb; de fyra i do-block är filens egen text):
 `barn_foresla_pass` hade tappat en tom rad på vägen, hittad med md5 rad
 för rad, och skapades om ur filen från `extensions.http_get` (inget
 `delete` i den); resten var lika. **`ta_tillbaka_gratistimmar` är inte körd**: den har
-ett `delete` och två `update`, och verktyget frågade efter ett ja två
-gånger utan svar (tabellen ovan). Inget kördes; allt annat i
+ett `delete` och två `update`, och verktyget frågade efter ett ja tre
+gånger utan svar (tabellen ovan); den tredje satt Leo vid skärmen och
+svarade "kör", men ingen ruta syntes i hans app. Inget kördes; allt annat i
 `gratistimmar` är inne och lika det lokala, och filen registreras när
 avsnitt 7 körts (md5 `079603c5e8d0566c0ebc086c4ff84d1f`). Hela
 `rls-test.sql` (24718559…) gick 1643 av 1643 mot driften i ett do-block
