@@ -2444,8 +2444,10 @@
      ============================================================ */
   /* rorelser och dragningar: undefined innan de hämtats, null om de inte
      gick att läsa. dragningar är passen varje kort betalat, per kort-id. */
+  /* kod (2026-10-13): en rabattkod på köp av timmar, prövad i databasen
+     för varje kort: { kod, beskrivning, pris: { erbjudande: att betala } }. */
   S.erb = { aktiv: false, katalog: [], kort: [], bank: { saldo: 0, varde: null, perPass: {}, finns: false },
-            rorelser: undefined, dragningar: undefined };
+            rorelser: undefined, dragningar: undefined, kod: null };
 
   async function laddaErbjudanden() {
     const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta] = await Promise.all([
@@ -2960,7 +2962,10 @@
   /* Ett erbjudande går genom samma kassa, med koden i stället för ett
      pass (Fas 16.1). Beloppet räknas av stripe-checkout. */
   async function startaKöp(kod, ui) {
-    return startaKassa({ erbjudande: kod, retur: location.origin, ui: ui });
+    /* En rabattkod följer med när den gäller kortet (2026-10-13). Kassan
+       prövar den igen och drar det databasen räknat fram. */
+    const rk = S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
+    return startaKassa(Object.assign({ erbjudande: kod, retur: location.origin, ui: ui }, rk ? { rabattkod: rk } : {}));
   }
   async function startaKassa(body) {
     const svar = await supa.functions.invoke('stripe-checkout', { body: body });
@@ -3109,6 +3114,8 @@
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && panel && panel.rot.classList.contains('open')) stängBetalpanel();
+    // Enter i rutan för rabattkoden prövar den, som knappen.
+    if (e.key === 'Enter' && e.target && e.target.id === 'erb-kod') { e.preventDefault(); provaErbKod(); }
   });
 
   /* ---------- erbjudandena: köpa och dra (Fas 16.1) ---------- */
@@ -3213,7 +3220,8 @@
           try {
             await öppnaKassa(knapp, null, svar, Stripe, {
               titel: 'Köp ' + e.namn,
-              vad: erbTimmar(e) + ' · ' + NXBetalning.kronor(e.pris_ore),
+              vad: erbTimmar(e) + ' · ' + NXBetalning.kronor(svar.belopp_ore != null ? svar.belopp_ore : e.pris_ore)
+                + (svar.rabatt_ore > 0 && S.erb.kod ? ' med koden ' + S.erb.kod.kod : ''),
               kod: kod,
               klar: köpKlart
             });
@@ -3301,11 +3309,54 @@
       + (märken ? '<span class="erb-marken">' + märken + '</span>' : '') + '</div>'
       + '<span class="erb-vad">' + esc(vad) + '</span>'
       + (första ? '<span class="erb-forsta">Er första plan: en timme till, gratis</span>' : '')
-      + '<span class="erb-pris">' + (spar > 0 ? '<s>' + esc(kr(e.ordinarie_ore)) + '</s>' : '')
-      + '<b>' + esc(kr(e.pris_ore)) + '</b></span>'
+      + erbPris(e, spar)
       + (timrad ? '<span class="erb-tim">' + timrad + '</span>' : '')
       + köpKnapp(e)
       + '</div>';
+  }
+
+  /* Priset på kortet. Med en rabattkod som gäller kortet står katalogens
+     pris överstruket och priset med koden bredvid, ur databasens svar
+     (kolla_rabattkod_kop), aldrig räknat här. */
+  function erbPris(e, spar) {
+    const kr = NXBetalning.kronor;
+    const medKod = S.erb.kod ? S.erb.kod.pris[e.kod] : null;
+    if (medKod != null && medKod < Number(e.pris_ore)) {
+      return '<span class="erb-pris"><s>' + esc(kr(e.pris_ore)) + '</s><b>' + esc(kr(medKod)) + '</b>'
+        + '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + '</span></span>';
+    }
+    return '<span class="erb-pris">' + (spar > 0 ? '<s>' + esc(kr(e.ordinarie_ore)) + '</s>' : '')
+      + '<b>' + esc(kr(e.pris_ore)) + '</b></span>';
+  }
+
+  /* Rabattkoden på köp av timmar (2026-10-13, Leo: "rabattkoden kan
+     användas för att köpa timmar i timbanken"). Den prövas mot det
+     första kortet; gäller den prövas resten, så att varje kort kan visa
+     sitt pris. En kod som inte finns räknas mot taket bara en gång. Tom
+     ruta tar bort koden. */
+  async function provaErbKod() {
+    const fält = $('#erb-kod'), svarEl = $('#erb-kod-svar'), knapp = $('#erb-kod-anvand');
+    if (!fält || !svarEl) return;
+    const kod = String(fält.value || '').trim().toUpperCase();
+    const visa = (text, fel) => { svarEl.textContent = text; svarEl.classList.toggle('is-err', !!fel); };
+    if (!kod) { S.erb.kod = null; visa('', false); ritaErbjudanden(); return; }
+    const kat = S.erb.katalog;
+    if (!kat.length) return;
+    await medan(knapp, 'Prövar…', async () => {
+      const fråga = e => supa.rpc('kolla_rabattkod_kop', { p_kod: kod, p_erbjudande: e.kod })
+        .then(({ data, error }) => (error ? null : (Array.isArray(data) ? data[0] : data)));
+      const första = await fråga(kat[0]);
+      if (!första) { visa('Koden gick inte att pröva just nu. Försök igen om en stund.', true); return; }
+      if (!första.giltig) { S.erb.kod = null; visa(första.orsak || 'Koden gäller inte.', true); ritaErbjudanden(); return; }
+      const pris = {};
+      pris[kat[0].kod] = Number(första.att_betala_ore);
+      const resten = await Promise.all(kat.slice(1).map(fråga));
+      resten.forEach((s, i) => { if (s && s.giltig) pris[kat[i + 1].kod] = Number(s.att_betala_ore); });
+      S.erb.kod = { kod: kod, beskrivning: första.beskrivning || '', pris: pris };
+      visa('✓ ' + kod + ' gäller när ni köper timmar' + (första.beskrivning ? ' · ' + första.beskrivning : '')
+        + '. Priset med koden står på korten.', false);
+      ritaErbjudanden();
+    });
   }
 
   /* Köpknappen, lika på planerna och klippkorten. Före matchningen
@@ -3346,12 +3397,20 @@
       const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
       const billigare = Number(e.rabatterat_timpris_ore) < Number(e.timpris_ore);
       const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
+      // Med en rabattkod som gäller kortet: samma pris som kassan drar.
+      const medKod = S.erb.kod ? S.erb.kod.pris[e.kod] : null;
+      const kod = medKod != null && medKod < Number(e.pris_ore);
       return '<div class="erb-klipp-rad">'
         + '<div class="erb-topp"><b class="erb-namn">' + esc(e.timmar + ' timmar') + '</b>'
-        + '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b></div>'
-        + '<span class="erb-tim">' + (billigare ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
-        + esc(kr(e.rabatterat_timpris_ore)) + ' per timme'
-        + (billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>'
+        + (kod
+          ? '<span class="erb-summa"><s>' + esc(kr(e.pris_ore)) + '</s> <b>' + esc(kr(medKod)) + '</b></span>'
+          : '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b>')
+        + '</div>'
+        + (kod
+          ? '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + '</span>'
+          : '<span class="erb-tim">' + (billigare ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
+            + esc(kr(e.rabatterat_timpris_ore)) + ' per timme'
+            + (billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>')
         + '<div class="erb-klipp-fot"><span class="erb-vad">Gäller i ' + esc(mån) + '</span>' + köpKnapp(e) + '</div>'
         + '</div>';
     }).join('');
@@ -3389,6 +3448,10 @@
     planer.innerHTML = kat.filter(e => e.sort === 'plan').map(erbKort).join('')
       + klippKolumn(kat.filter(e => e.sort === 'klippkort'), öppen)
       || tomt('Inga erbjudanden just nu', 'Skriv till oss om ni vill ha ett upplägg.');
+
+    /* Rabattkoden står bara där familjen kan köpa. */
+    const kodRad = $('#erb-kod-rad');
+    if (kodRad) kodRad.hidden = !(S.erb.aktiv && !S.väntar && kat.length);
 
     const msg = $('#erb-msg');
     if (msg && S.väntar && !msg.classList.contains('show')) {
@@ -3875,6 +3938,7 @@
     if (tb) { await betalaMedBanken(tb, tb.dataset.timbank); return; }
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
+    if (e.target.closest('#erb-kod-anvand')) { await provaErbKod(); return; }
 
     const bet = e.target.closest('[data-betala]');
     if (bet) { await betalaIKassan(bet, bet.dataset.betala, false); return; }

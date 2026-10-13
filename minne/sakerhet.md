@@ -620,10 +620,10 @@ gång till. **Kontrollerat 2026-09-23, med prov mot driften, igen
 | Varning | Varför den är väntad |
 |---|---|
 | `rls_enabled_no_policy` på `notis_konfig`, `kund_skatteuppgifter`, `stripe_handelser`, (sedan Fas 18.1) `google_koppling`, och (sedan 2026-09-30) `barn_andringsfonster` och `barn_notiser` | RLS på utan en enda policy ÄR skyddet: bara `service_role` ser dem. Se avsnitt 6 ovan. Barnets notiser läses bara genom `barn_notiser()`, och fönstren skrivs bara av `barn-konto` |
-| 49 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-30 efter `barnkonto_skapas_genom_auth`; 42 före barnkontona, med de sju i raden om barnkontona nedan; 40 dagen före). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `koder_lage` (2026-10-13, skapar koder, `is_admin()` först), `mina_tips`, `tipskoder_lage`, `chatt_las`, `nexlax_lage`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `mina_tips` (den inloggades egen kod och antal, aldrig vilka), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
+| 49 SECURITY DEFINER-funktioner i `public` nåbara för `authenticated`, triggerfunktionerna oräknade (räknat i driften 2026-09-30 efter `barnkonto_skapas_genom_auth`; 42 före barnkontona, med de sju i raden om barnkontona nedan; 40 dagen före). Förut stod 35 här, räknat före Fas 23.1 och på ett sätt som inte skrevs ned. Bland de senaste: `kolla_rabattkod_kop` (2026-10-13, priset med en kod för den inloggade familjen, med taket), `koder_lage` (2026-10-13, skapar koder, `is_admin()` först), `mina_tips`, `tipskoder_lage`, `chatt_las`, `nexlax_lage`, `driftkorningar`, `mina_handlingar`, `radering_lage` och `radera_person` | Adminfunktionerna kontrollerar `is_admin()` internt. Resten svarar bara om den inloggade själv: `faktura_mojlig`, `far_forbereda_passet`, `upptagna_tider` (egen eller matchad studiehjälpare), `mina_handlingar` (handlingar delade med den inloggade), `mina_tips` (den inloggades egen kod och antal, aldrig vilka), `kolla_rabattkod_kop` (katalogens pris och den inloggades egna gränser), `ar_*`- och `is_my_*`-hjälparna. Att EXECUTE finns är inte samma sak som att funktionen gör något |
 | `is_admin(uid)` nåbar för `anon` | Funktionen hämtar raden bara om `uid` är ens eget ELLER anroparen själv är admin. Som anon är `auth.uid()` null, så villkoret faller alltid |
 | Barnkontonas och adminrollernas funktioner (2026-09-30): `har_behorighet`, `har_nagon_behorighet`, `mina_behorigheter`, `admin_kan_ge`, `gor_till_admin`, `ta_bort_admin`, `mina_barnkonton` | Alla svarar om den inloggade själv eller prövar anroparen i triggern `admin_roller_vakt`. `har_behorighet` och `har_nagon_behorighet` är nåbara för `anon` för att de står i policyer `to public` (Fas 10-fällan); med `auth.uid()` null svarar de nej. Barnets tre funktioner når bara rollen `nextrum_barn` |
-| `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` |
+| `kolla_rabattkod` nåbar för `anon` | Första raden i kroppen är `if auth.uid() is null then return 'Logga in först.'` (också efter taket, 2026-10-13); `kolla_rabattkod_kop` är inte nåbar för `anon` |
 | `ar_matchade`, `ar_min_elev`, `is_my_student`, `is_my_matched_tutor`, `is_matched_tutor_of` nåbara för `anon` | Alla jämför mot `auth.uid()`, som är null för anon, så svaret är alltid falskt. De backar policyer, och en revoke från anon är Fas 10-fällan om någon av dem står i en policy `to public` |
 | `publika_studiehjalpare` nåbar för `anon` | Den ÄR den publika listan: förnamn, ålder, stad, ämnen, bio, bara godkända med `visa_publikt` |
 | `extension_in_public` för `btree_gist` och `pg_net` | `btree_gist` bär överlappsvillkoret på `bookings` (v9), och `pg_net` går inte att flytta med `set schema`. Att flytta dem vinner ingenting och riskerar det som hänger på dem |
@@ -660,15 +660,27 @@ på en fråga om en PERSON ska ha is_admins vakt från första raden.**
 1. **Läckta lösenord kontrolleras inte.** Supabase Auth kan stämma av
    mot HaveIBeenPwned. Det är en kryssruta under Authentication →
    Policies, kostar ingenting och gäller nya och ändrade lösenord.
-2. **`kolla_rabattkod` har inget tak per inloggad användare.** I dag
-   spelar det ingen roll: `rabattkoder` är TOM, så det finns ingenting
-   att gissa. **Skapas den första koden återkommer frågan** — en
-   inloggad kan då pröva koder i en slinga. Lägg ett tak då, inte nu.
-   Sedan 2026-10-13 står rutan i varje förälders förslag
-   (`rabattkoden_krockar_inte`), så koderna är en sak familjerna ser; den
-   2026-10-13 fanns fortfarande bara `TIPS`. Konton skapar bara vi, så de
-   som kan pröva är få, men taket ska finnas innan den första koden
-   delas ut.
+2. **`kolla_rabattkod` och `kolla_rabattkod_kop` har ett tak per konto**
+   (2026-10-13, `rabattkoden_timmar_och_tak`). Förut fanns inget, för
+   `rabattkoder` var tom; men rutan stod i varje förälders förslag
+   (`rabattkoden_krockar_inte`) och sedan under Erbjudanden, och en
+   inloggad hade kunnat pröva koder i en slinga när den första koden
+   skapats. Nu räknar båda funktionerna kontots försök med en kod som
+   inte finns (`intern.rabattkod_forsok`): efter tio på en timme svarar de
+   "För många försök med koder. Vänta en timme och försök igen." utan att
+   pröva. Försöket sparas som en HMAC av kontots id med
+   `notis_konfig.barn_nyckel`, som barnets inloggningsförsök, aldrig kontot
+   eller koden, och raderas efter ett dygn när nästa försök sparas. Bara
+   okända koder räknas: en kod som finns men inte gäller (datumen,
+   gränserna, timmarna) säger inget om andra koder, och familjen ska kunna
+   pröva den igen. Triggrarna på pass och köp prövar utan tak
+   (`intern.rabattkod_prova`), för de sparar bara en kod som finns.
+   `anon` får "Logga in först.", och `kolla_rabattkod_kop` är inte nåbar
+   för `anon` eller `nextrum_barn`. Båda är VOLATILE, för de skriver
+   försöken, och PostgREST kör en STABLE funktion i en läsande
+   transaktion; anropa dem med POST (supabase-js förval), aldrig GET.
+   Advisorn larmar om att de är SECURITY DEFINER och nåbara för
+   `authenticated`: med flit, de prövar själva.
 
 ### Content-Security-Policy
 

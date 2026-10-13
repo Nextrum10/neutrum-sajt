@@ -1065,3 +1065,38 @@ utan `rabattkoden_krockar_inte` gäller den gamla ordningen i databasen,
 vilket inte spelar någon roll så länge det inte finns någon kod, och utan
 `gratistimmarna_60_dagar` saknas gratiskolumnerna, och vyn räknar då som
 förut (den läser `klippkort_saldo` med `*`).
+
+### Rabattkoden: timbanken, köpen, gränserna och taket (2026-10-13)
+**`20261013160000_rabattkoden_timmar_och_tak`** (`minne/betalning.md`,
+taket i `minne/sakerhet.md`): kolumnerna `rabattkoder.max_per_familj`
+(null eller större än noll), `klippkort.rabattkod` (pekar på
+`rabattkoder`) och `klippkort.rabatt_ore`; tabellen
+`intern.rabattkod_forsok` (HMAC av kontot och tiden, RLS utan policy, inga
+rättigheter) med `intern.rabattkod_forsok_nyckel`, `_notera` (ett `delete`
+av det som är äldre än ett dygn, sedan försöket) och
+`intern.rabattkod_for_manga`; hjälparna `intern.rabattkod_anvand`,
+`intern.har_timmar`, `intern.kopets_tjanst` och prövningen
+`intern.rabattkod_prova`; `kolla_rabattkod` omskriven (VOLATILE, taket) och
+den nya `kolla_rabattkod_kop` (inte för `anon` eller `nextrum_barn`);
+`skydda_rabatt` omskriven (låser kodens rad och prövar med
+`intern.rabattkod_prova`); triggrarna `klippkort_rabatt` (BEFORE INSERT,
+sätter `rabatt_ore` och `begart_ore`) och `klippkort_rabatt_star_fast`
+(BEFORE UPDATE); `rakna_rabattkod` omskriven så att den räknar om ur passen
+och köpen, med de nya triggrarna `bookings_rakna_rabattkod_andring`,
+`klippkort_rakna_rabattkod` och `klippkort_rakna_rabattkod_andring`; och
+sist räknas `antal_anvandningar` om för alla koder, också `TIPS` (noll i driften 2026-10-13).
+`skydda_rabatt`, `kolla_rabattkod` och `rakna_rabattkod` skrivs om helt
+efter en vakt som prövar driftens text 2026-10-13 (md5 på `prosrc`:
+`49c29326…`, `96c3320c…` och `5698d597…`; `kolla_rabattkod` har en andra
+summa, `407154d7…`, för den lokala databasen byggd ur arkivet, där
+kommentarerna står kvar i kroppen). En funktion som redan bär
+`rabattkoden_timmar_och_tak` släpps igenom, så filen går att köra två
+gånger. Inget `drop`, inget `delete` utanför en funktion, och ingen
+funktion med två. **PL/pgSQL skiljer inte på stora och små bokstäver**: en
+variabel `r` i ett block som har konstanten `R` är samma namn, och
+`rls-test.sql` avsnitt 32 heter därför `rd` och `tx`.
+
+Lokalt, byggd ur alla 189 migrationer: hela `rls-test.sql` 1664 av 1664
+(avsnitt 32 är nytt, 21 prov). **Körs efter merge, efter `gratistimmar`,
+och `stripe-checkout` från main driftsätts FÖRE den** (`DEPLOY-BETALNING.md`
+9.13). Vyerna tål att den saknas.

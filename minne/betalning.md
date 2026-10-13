@@ -160,9 +160,74 @@ texten är kärnans.
     om timbanken. Tipstimmen och första timmen pass för pass är avdrag på
     passet och följer regeln om en gratis timme. Villkoren nämner inga
     koder, så rabattkoden behövde ingen ny version.
-  - Rabattkoderna var tomma i driften 2026-10-13 (bara `TIPS`). Skapas den
-    första koden ska `kolla_rabattkod` få ett tak först
-    (`minne/sakerhet.md`).
+  - Rabattkoderna var tomma i driften 2026-10-13 (bara `TIPS`). Taket kom
+    samma kväll (nedan och `minne/sakerhet.md`).
+- **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13,
+  `rabattkoden_timmar_och_tak`). Leo samma kväll: "rabattkod kan inte
+  användas om man har timmar i timbanken. rabattkoden kan användas för att
+  köpa timmar i timbanken eller om man har noll timmar kvar och vill köpa
+  pass för pass", och strax efter: "rabattkoder ska vi också bestämma hur
+  många gånger de får användas".
+  - **Timmar i timbanken stänger koden på ett pass** (`intern.har_timmar`):
+    ett kort med timmar som går att använda i dag
+    (`klippkort_saldo.brukbar`, köpta eller gratis) eller sparade minuter
+    till en hel timme (`intern.timbank_saldo` minst 60). Bara med
+    strömbrytaren `erbjudanden` på, för utan den betalar timmarna inga
+    pass. Ett köp som väntar på betalning räknas inte: timmarna finns inte
+    än. Utan timmar gäller koden som förut, på det familjen betalar med
+    pengar. `skydda_rabatt` prövar det när passet skapas och tar bort en
+    kod som inte gäller; rutan har redan sagt varför (`kolla_rabattkod`).
+    Köper familjen timmar efter att passet skapats står koden kvar tills
+    timmarna betalar passet, och då tar `bookings_timmar_betalar_utan_kod`
+    bort den, som förut.
+  - **Koden gäller köp av timmar**, en plan eller Fyll timbanken, också när
+    familjen har timmar kvar. Rutan står ovanför korten under Erbjudanden
+    i studievyn (`#erb-kod-rad`, bara när familjen kan köpa). Den prövar
+    koden mot det första kortet med `kolla_rabattkod_kop` och, gäller den,
+    mot resten, så en okänd kod är ett försök och inte ett per kort. Korten
+    visar då katalogens pris överstruket och priset med koden. Köp skickar
+    koden till `stripe-checkout`, som prövar den med familjens token och
+    svarar med skälet (409) i stället för att ta fullt pris. Beloppet
+    räknas ändå i databasen: BEFORE INSERT-triggern `klippkort_rabatt`
+    (`intern.klippkort_rabatt`) läser katalogens pris (`erbjudanden_pris`)
+    och sätter `rabatt_ore` och `begart_ore`, och kassan drar `begart_ore`.
+    Tar triggern bort koden (den tog slut emellan) öppnas ingen kassa.
+    Koden och rabatten står fast efter köpet (`klippkort_rabatt_star_fast`),
+    och ett väntande köp återanvänds bara med samma kod. Gratistimmar bär
+    aldrig en kod.
+  - **Ett köp blir aldrig gratis av en kod**: kortet kan inte dra noll och
+    `begart_ore` får inte vara noll, så en kod som tar hela priset gäller
+    inte köp av timmar ("Koden gäller inte köp av timmar.").
+  - **Tjänsten** för ett köp är den första aktiva tjänsten för kunder
+    (`intern.kopets_tjanst`, i dag läxhjälpen), så en kod som bara gäller
+    en annan tjänst gäller inte köpet.
+  - **Återbetalningen** räknar på det familjen betalade, som förut:
+    ångerrätten tar en andel av `betalt_ore` (`vid_anger_ore`), och vid
+    uppsägning räknas de använda timmarna till ordinarie timpris vid köpet
+    (`timpris_ore`), som för en plan, för koden gällde köpet av alla
+    timmarna. Villkoren behövde ingen ändring för det.
+  - **Hur många gånger**: `max_anvandningar` (totalt, fanns) och
+    `max_per_familj` (ny; adminvyns förval är en gång, och tomt är utan
+    gräns). En användning är ett pass som inte är avbokat och har kvar
+    koden, eller ett betalt köp med koden (`intern.rabattkod_anvand`). Ett
+    köp som väntar på betalning och är yngre än ett dygn håller sin plats
+    mot gränsen totalt, men räknas inte i antalet och inte mot familjens
+    egen gräns: en kassa familjen lämnade ska inte stänga koden för dem.
+    `antal_anvandningar` räknas om ur passen och köpen när de ändras
+    (`rakna_rabattkod`, med nya triggrar efter UPDATE på `bookings` och
+    efter INSERT och UPDATE på `klippkort`), så ett avbokat pass ger
+    tillbaka sin gång; förut räknades varje skapat pass, för alltid.
+    Triggrarna låser kodens rad innan de prövar, så två familjer kan inte
+    ta den sista gången samtidigt.
+  - **Prövningen** är en funktion för alla vägar (`intern.rabattkod_prova`):
+    tom, finns inte (också `TIPS` och en avstängd), datumen, gränsen
+    totalt, gränsen per familj, tjänsten, timmarna (bara på ett pass) och
+    sist att ett köp inte blir gratis. Svaren är meningar familjen kan
+    läsa. Taket står i `minne/sakerhet.md`.
+  - **Villkoren nämner inga koder** och fick ingen ny version. En kods
+    villkor (hur många gånger, inte med timmar i timbanken) ska därför stå
+    klart där koden delas ut, på affischen eller i mejlet (e-handelslagen
+    9 §).
 - Belopp lagras i **ören** överallt. Kronor blir det först vid visning
   (`NXBetalning.kronor`). Enda stället ett avrundningsfel kan smyga in
   är omvandlingen — gör den en gång, på ett ställe.

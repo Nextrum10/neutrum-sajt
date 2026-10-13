@@ -936,6 +936,70 @@ async function provaFörälderns(webb) {
     await context.close();
   }
 
+  /* 3h. Rabattkoden på köp av timmar (rabattkoden_timmar_och_tak,
+         2026-10-13): rutan under Erbjudanden prövar koden mot varje
+         kort, korten visar priset med koden, och Köp skickar koden till
+         kassan. En kod som inte gäller säger varför. */
+  {
+    const R = foralderRpc({});
+    R.rpc.kolla_rabattkod_kop = (k, W) => {
+      R.anrop.push(['kolla_rabattkod_kop', k]);
+      const e = (W.erbjudanden_pris || []).find(x => x.kod === k.p_erbjudande);
+      if (k.p_kod !== 'VAN10' || !e) {
+        return [{ giltig: false, orsak: 'Koden finns inte, eller gäller inte längre.', rabatt_ore: 0, beskrivning: null,
+                  pris_ore: e ? e.pris_ore : null, att_betala_ore: e ? e.pris_ore : null }];
+      }
+      const rab = Math.floor(e.pris_ore / 10);
+      return [{ giltig: true, orsak: null, rabatt_ore: rab, beskrivning: 'Höstkampanj', pris_ore: e.pris_ore,
+                att_betala_ore: e.pris_ore - rab }];
+    };
+    const { context, page, S } = await öppna(webb, {
+      rpc: R.rpc, inloggad: 'foralder-1',
+      värld: W => {
+        W.flaggor = [{ kod: 'erbjudanden', aktiv: true }];
+        W.erbjudanden_pris = [
+          { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5, giltig_manader: 1, ordning: 10,
+            timpris_ore: 39900, ordinarie_ore: 159600, pris_ore: 151600, rabatterat_timpris_ore: 37900, timmar_pa_kopet: 0 },
+          { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, rabatt_procent: 5, giltig_manader: 1, ordning: 20,
+            timpris_ore: 39900, ordinarie_ore: 319200, pris_ore: 303200, rabatterat_timpris_ore: 37900, timmar_pa_kopet: 0 },
+          { kod: 'klipp10', sort: 'klippkort', namn: '10 timmar', timmar: 10, rabatt_procent: 0, giltig_manader: 6, ordning: 100,
+            timpris_ore: 39900, ordinarie_ore: 399000, pris_ore: 399000, rabatterat_timpris_ore: 39900, timmar_pa_kopet: 0 }
+        ];
+      }
+    });
+    await page.goto(BAS + '/foralder#erbjudanden');
+    await page.waitForSelector('#erb-planer .erb-kort', { timeout: 10000 }).catch(() => {});
+    prova('köp med kod: rutan för rabattkoden står under Erbjudanden', await synlig(page, '#erb-kod-rad'));
+    await page.fill('#erb-kod', 'fel1');
+    await page.click('#erb-kod-anvand');
+    await page.waitForFunction(() => /finns inte/.test((document.querySelector('#erb-kod-svar') || {}).textContent || ''),
+      null, { timeout: 4000 }).catch(() => {});
+    prova('köp med kod: en kod som inte gäller säger varför, och prövas bara mot ett kort',
+      (await text(page, '#erb-kod-svar')).includes('Koden finns inte')
+      && R.anrop.filter(x => x[0] === 'kolla_rabattkod_kop').length === 1, await text(page, '#erb-kod-svar'));
+    await page.fill('#erb-kod', 'van10');
+    await page.press('#erb-kod', 'Enter');
+    await page.waitForFunction(() => /med koden VAN10/.test((document.querySelector('#erb-planer') || {}).textContent || ''),
+      null, { timeout: 4000 }).catch(() => {});
+    const kort = await text(page, '#erb-planer');
+    prova('köp med kod: korten visar priset med koden ur databasens svar',
+      /1\s?364,40\s*kr/.test(kort) && /2\s?728,80\s*kr/.test(kort) && kort.includes('med koden VAN10')
+      && (await text(page, '#erb-kod-svar')).includes('VAN10 gäller när ni köper timmar'),
+      kort.slice(0, 200) + ' | ' + await text(page, '#erb-kod-svar'));
+    // Fyll timbanken visar samma pris som kassan drar, inte katalogens.
+    const klipp = await text(page, '.erb-klipp-rad');
+    prova('köp med kod: raden i Fyll timbanken visar priset med koden',
+      /3\s?591(,00)?\s*kr/.test(klipp) && klipp.includes('med koden VAN10') && !klipp.includes('per timme'), klipp);
+    await page.click('[data-kop="plan_standard"]');
+    await page.waitForFunction(() => true, null, { timeout: 500 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 800));
+    const kassa = S.logg.filter(r => r.metod === 'POST' && r.väg === '/functions/v1/stripe-checkout').pop();
+    prova('köp med kod: Köp skickar koden till kassan, och priset räknas där',
+      kassa && kassa.kropp && kassa.kropp.erbjudande === 'plan_standard' && kassa.kropp.rabattkod === 'VAN10'
+      && kassa.kropp.belopp_ore === undefined, JSON.stringify(kassa && kassa.kropp));
+    await context.close();
+  }
+
   /* 4. Inställningen: Föreslå pass under Profil → Barn, av som förval. */
   {
     const R = foralderRpc({});

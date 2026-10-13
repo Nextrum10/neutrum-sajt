@@ -199,7 +199,15 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   skapas och när de betalar det senare (`bookings_timmar_betalar_utan_kod`): då tas koden bort från
   passet, och den läggs aldrig ihop med något. En kod som tas bort när passet skapas räknas inte som
   använd. Rutan säger när koden inte används och varför, och koden skickas ändå: databasen avgör.
-  Skapa ingen kod förrän `kolla_rabattkod` har ett tak (avsnitt 6).
+  **Har familjen timmar i timbanken gäller ingen kod på ett pass** (samma kväll, Leo: "rabattkod kan inte
+  användas om man har timmar i timbanken ... kan användas för att köpa timmar i timbanken eller om man har noll
+  timmar kvar och vill köpa pass för pass"): timmar som går att använda i dag, eller sparade minuter till en hel
+  timme (`intern.har_timmar`). **Koden gäller när familjen köper timmar**, en plan eller Fyll timbanken, i rutan
+  under Erbjudanden (`kolla_rabattkod_kop`, `klippkort.rabattkod`): databasen drar av den (`intern.klippkort_rabatt`),
+  aldrig så att köpet blir gratis, och gratistimmar bär ingen kod. **Hur många gånger** sätts per kod, totalt och
+  per familj (`max_anvandningar`, `max_per_familj`, en gång som förval; Leo: "rabattkoder ska vi också bestämma hur
+  många gånger de får användas"), och ett avbokat pass ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6).
+  Skapa ingen kod förrän `rabattkoden_timmar_och_tak` körts i driften.
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -606,7 +614,8 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   2026-10-11); klasserna heter `nx-kakor-*`. Ändras lagringen följer `lagring.html`
   med; före ett pixel-id, se `minne/sakerhet.md`.
 - **Advisorn** larmar om det som är med flit (listan i `minne/sakerhet.md`). Läckta lösenord
-  kontrolleras inte, och `kolla_rabattkod` får ett tak med den första koden.
+  kontrolleras inte. `kolla_rabattkod` och `kolla_rabattkod_kop` har ett tak: tio okända koder i timmen per
+  konto, sparade som HMAC i ett dygn (`intern.rabattkod_forsok`, `rabattkoden_timmar_och_tak`).
 - **Förhandsvisningen använder aldrig den riktiga klienten**: med `?forhandsvisning` på `/foralder`
   eller `/larare` och utan `nextrum-forhandsvisning.js` skapar `nextrum-app.js` ingen klient alls, och
   modulvakten säger det. Den riktiga inloggningen frågar bara `mina_behorigheter()` (grinden, som är
@@ -851,6 +860,14 @@ Detaljer: `minne/grunden.md`.
   och en egen ändring (`DEPLOY-BARNKONTON.md` 12).
   Juristen har inte läst rad 26 i `DATASKYDD.md` eller meningarna om förslagen i policyn, och familjerna
   med barnkonto har inte fått veta att valet finns.
+- **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13) är byggd men inte i drift. Efter merge, i den
+  ordningen: `stripe-checkout` från main (SESSIONSFORM 8, tar en kod på ett köp), migrationen
+  `rabattkoden_timmar_och_tak` (20261013160000, efter `gratistimmar`) och hela `rls-test.sql` mot driften (lokalt
+  1664 av 1664, avsnitt 32). I omvänd ordning visar vyn priset med koden på korten medan den gamla kassan drar hela
+  priset. Vyerna tål att migrationen saknas (rutan under Erbjudanden svarar att koden inte gick att pröva), och
+  ingen kod finns utom `TIPS`. Villkoren nämner inga koder och får ingen ny version, så en kods villkor (hur många
+  gånger, inte med timmar i timbanken) ska stå klart där koden delas ut (e-handelslagen 9 §). Juristen har inte läst
+  rad 28 i `DATASKYDD.md` (`DEPLOY-BETALNING.md` 9.13).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

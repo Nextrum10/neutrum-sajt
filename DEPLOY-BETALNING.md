@@ -1198,3 +1198,50 @@ timmen alltså till nästa.
   är fyra eller åtta timmar som gäller en månad. Hur de bokas är familjens sak.
 - **Startererbjudandet** (Fas 19.5) betalas inte med timmar: `klippkort_dra` nekar
   ett pass med `startrabatt`, och det passet betalas med kort.
+
+### 9.13 Rabattkoden på ett köp, gränserna och taket (2026-10-13)
+
+En rabattkod gäller inte på ett pass när familjen har timmar i timbanken,
+den gäller när familjen köper timmar (en plan eller Fyll timbanken), varje
+kod har en gräns totalt och per familj, och prövningen har ett tak
+(`minne/betalning.md`, `minne/sakerhet.md`). Vyerna går ut med Vercel vid
+merge och tål att migrationen saknas: rutan under Erbjudanden svarar då att
+koden inte gick att pröva, och 2026-10-13 fanns ingen kod utom `TIPS`.
+**Skapa ingen kod förrän steg 3 är gjort.** Efter merge, i den här
+ordningen, och fråga först de andra sessionerna som arbetar i repot om
+någon redan kör något (`minne/databasen.md`):
+
+1. **`stripe-checkout` från main**, FÖRE migrationen. Den tar en kod på ett
+   köp (SESSIONSFORM 8), och utan kod gör den som förut, också mot en
+   databas utan migrationen. I omvänd ordning visar vyn priset med koden på
+   korten medan den gamla kassan drar hela priset. Sju filer:
+   `stripe-checkout/index.ts` och ur `_delad/` `auth.ts`, `http.ts`,
+   `stripe.ts`, `pris.ts`, `erbjudanden.ts` och `konstanter.ts`. Hämta
+   tillbaka och jämför byte för byte, som förut.
+2. **`20261013160000_rabattkoden_timmar_och_tak`** från merge-commiten,
+   prövad mot sin md5, efter `gratistimmar` (20261013140000). Filen har ett
+   `delete` i en funktion (`intern.rabattkod_forsok_notera`), så den körs
+   med `execute_sql` avsnitt för avsnitt, aldrig genom `execute` i ett
+   do-block, och registreras sedan med filens text. Vakten i avsnitt 0
+   prövar `skydda_rabatt`, `kolla_rabattkod` och `rakna_rabattkod` mot
+   driftens text 2026-10-13 och avbryter om någon ändrats.
+3. **Hela `rls-test.sql` mot driften**, i en transaktion som rullas
+   tillbaka: lokalt 1664 av 1664 (avsnitt 32 är nytt). Saknas
+   `ta_tillbaka_gratistimmar` fortfarande i driften faller avsnitt 30; kör
+   då `gratistimmar` först i samma transaktion, som 2026-10-13
+   (`minne/databasen.md`). Kör advisorn: den
+   ska bara larma om `kolla_rabattkod_kop` som en SECURITY DEFINER-funktion
+   för `authenticated`, och det är med flit.
+4. **Prova i testläge**: skapa en provkod i adminvyn (Procent av priset 10,
+   Gånger per familj 2, annars svarar gränsen före timmarna i nästa prov),
+   köp Basic med koden som en provfamilj och se att
+   kassan visar 1 364,40 kr, att `klippkort.begart_ore` och `betalt_ore` är
+   136440 och att koden har en användning. Föreslå sedan ett pass med koden:
+   rutan ska säga att den inte gäller när ni har timmar i timbanken, och
+   passet ska sparas utan den. Pröva elva påhittade koder i rad: den
+   elfte ska svara "För många försök med koder." Stäng av provkoden och
+   återbetala köpet i Stripes dashboard.
+5. **Innan en kod delas ut**: villkoren nämner inga koder, så kodens villkor
+   (hur många gånger, att den inte gäller med timmar i timbanken) ska stå
+   klart där den delas ut, på affischen eller i mejlet (e-handelslagen 9 §).
+   Juristen har inte läst rad 28 i `DATASKYDD.md`.

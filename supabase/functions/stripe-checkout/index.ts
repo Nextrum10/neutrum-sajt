@@ -78,8 +78,11 @@ const CORS = cors();
    7: planerna (2026-10-07): raden säger timmen på köpet ("8 timmar
       läxhjälp för priset av 7") och aldrig "0 % rabatt". Ett väntande
       köp som återanvänds får annars en ny beskrivning under samma
-      nyckel, och Stripe nekar. */
-const SESSIONSFORM = 7;
+      nyckel, och Stripe nekar.
+   8: en rabattkod på ett köp av timmar (rabattkoden_timmar_och_tak,
+      2026-10-13): beloppet är köpets begart_ore, som databasen räknat,
+      och raden och metadata säger koden. */
+const SESSIONSFORM = 8;
 
 /* DEN INBÄDDADE KASSAN (Fas 14.5)
 
@@ -162,13 +165,24 @@ function descriptor(s: string): string {
      "utan pass-id", med pengarna dragna.
 
    Inget client_reference_id: webhooken läser det som ett pass-id.
+
+   EN RABATTKOD (rabattkoden_timmar_och_tak, 2026-10-13, Leo:
+   "rabattkoden kan användas för att köpa timmar i timbanken"). Kassan
+   prövar koden med familjens token (kolla_rabattkod_kop), så att
+   familjen får veta varför en kod inte gäller i stället för att betala
+   fullt pris. Beloppet räknas ändå i databasen: triggern
+   intern.klippkort_rabatt sätter rabatt_ore och begart_ore när köpet
+   skapas, och det är begart_ore som dras. Tar triggern bort koden (den
+   tog slut emellan) öppnas ingen kassa.
    ============================================================ */
 async function köpErbjudande(
   vem: Inloggad,
-  kropp: { retur?: string; ui?: string; erbjudande?: string },
+  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: string },
 ): Promise<Response> {
   const kod = String(kropp.erbjudande ?? '').trim();
   if (!arErbjudandekod(kod)) return json({ error: 'Vilket erbjudande?' }, 400, CORS);
+  // Samma form som i databasen: stora bokstäver, utan mellanslag runt.
+  const rabattkod = String(kropp.rabattkod ?? '').trim().toUpperCase() || null;
 
   const db = serviceklient();
   const { data: flagga } = await db.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle();
@@ -195,6 +209,21 @@ async function köpErbjudande(
     .maybeSingle();
   if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
 
+  /* Vad familjen ska betala: katalogens pris, eller priset med koden
+     som databasen säger att den gäller. */
+  let attBetala = Number(e.pris_ore);
+  if (rabattkod) {
+    const { data: prov, error: provfel } = await vem.klient
+      .rpc('kolla_rabattkod_kop', { p_kod: rabattkod, p_erbjudande: e.kod });
+    const svar = Array.isArray(prov) ? prov[0] : prov;
+    if (provfel || !svar) {
+      return json({ error: 'Rabattkoden gick inte att pröva just nu. Försök igen, eller köp utan koden.' }, 409, CORS);
+    }
+    if (!svar.giltig) return json({ error: String(svar.orsak || 'Koden gäller inte.') }, 409, CORS);
+    attBetala = Number(svar.att_betala_ore);
+    if (!(attBetala > 0)) return json({ error: 'Koden gäller inte köp av timmar.' }, 409, CORS);
+  }
+
   try {
     /* Trycker familjen Köp två gånger ska det bli ETT köp. Ett väntande
        köp av samma erbjudande, till samma pris och yngre än ett dygn,
@@ -210,8 +239,11 @@ async function köpErbjudande(
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
     let kopId: string;
-    if (kanAteranvandas(forut, Number(e.pris_ore)) && sammaInnehall(forut, e as ErbjudandePris)) {
+    let belopp: number;
+    if (kanAteranvandas(forut, attBetala) && sammaInnehall(forut, e as ErbjudandePris)
+        && (forut?.rabattkod ?? null) === rabattkod) {
       kopId = String(forut!.id);
+      belopp = Number(forut!.begart_ore);
     } else {
       const { data: ny, error: nyfel } = await db.from('klippkort').insert({
         parent_id: vem.anvandare,
@@ -226,10 +258,19 @@ async function köpErbjudande(
         giltig_manader: e.giltig_manader,
         rabatt_procent: e.rabatt_procent,
         timpris_ore: e.timpris_ore,
-        begart_ore: e.pris_ore,
-      }).select('id').single();
+        // Med en kod räknar triggern om både rabatten och beloppet.
+        begart_ore: attBetala,
+        ...(rabattkod ? { rabattkod } : {}),
+      }).select('id, begart_ore').single();
       if (nyfel || !ny) return json({ error: 'Köpet gick inte att spara. Försök igen.' }, 500, CORS);
       kopId = String(ny.id);
+      belopp = Number(ny.begart_ore);
+      /* Databasen tog bort koden (den tog slut emellan) och satte
+         katalogens pris. Då öppnas ingen kassa: familjen trodde att
+         koden gällde. Köpet står kvar som väntande och används inte. */
+      if (rabattkod && belopp !== attBetala) {
+        return json({ error: 'Koden gick inte att använda just nu. Försök igen, eller köp utan koden.' }, 409, CORS);
+      }
     }
 
     const bas = egenAdress(kropp.retur, 'https://nextrum.se');
@@ -241,7 +282,7 @@ async function köpErbjudande(
       : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
           cancel_url: `${bas}/foralder#erbjudanden` };
 
-    const rad = kassarad(e as ErbjudandePris);
+    const rad = kassarad(e as ErbjudandePris, rabattkod);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -250,23 +291,24 @@ async function köpErbjudande(
       payment_method_types: ['card'],
       managed_payments: { enabled: false },
       customer_email: prof.email ?? undefined,
-      metadata: { klippkort_id: kopId, erbjudande: e.kod },
+      metadata: { klippkort_id: kopId, erbjudande: e.kod, ...(rabattkod ? { rabattkod } : {}) },
       line_items: [{
         quantity: 1,
-        price_data: { currency: VALUTA, unit_amount: e.pris_ore, product_data: rad },
+        price_data: { currency: VALUTA, unit_amount: belopp, product_data: rad },
       }],
       payment_intent_data: {
-        metadata: { klippkort_id: kopId, erbjudande: e.kod },
+        metadata: { klippkort_id: kopId, erbjudande: e.kod, ...(rabattkod ? { rabattkod } : {}) },
         statement_descriptor_suffix: descriptor(String(e.namn)),
         receipt_email: prof.email ?? undefined,
       },
-    }, `nextrum-klippkort-${kopId}-${e.pris_ore}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
+    }, `nextrum-klippkort-${kopId}-${belopp}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
 
     await db.from('klippkort')
       .update({ stripe_session_id: String((session as { id?: string }).id ?? '') })
       .eq('id', kopId);
 
-    const svar = { session: (session as { id?: string }).id, belopp_ore: e.pris_ore, klippkort: kopId };
+    const svar = { session: (session as { id?: string }).id, belopp_ore: belopp, klippkort: kopId,
+                   rabatt_ore: Number(e.pris_ore) - belopp };
     return inbaddad
       ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
                nyckel: pk, ...svar }, 200, CORS)

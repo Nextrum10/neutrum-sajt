@@ -1989,6 +1989,14 @@ a.pass-lank:hover{color:var(--acc)}
    rad hade annars fått spalten att växa ut ur skärmen på en telefon
    (CLAUDE.md avsnitt 3, fälla 2).
    ============================================================ */
+/* Rabattkoden på ett köp av timmar (2026-10-13), som rutan i bokningen. */
+.erb-kod{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 14px}
+.erb-kod-et{font-size:.86rem;color:var(--bl-2)}
+.erb-kod .inp{flex:1 1 180px;min-width:0;text-transform:uppercase}
+.erb-kod-svar{flex:1 1 100%;margin:0;font-size:.86rem;line-height:1.5;color:var(--mossa)}
+.erb-kod-svar:empty{display:none}
+.erb-kod-svar.is-err{color:var(--acc)}
+.erb-pris-kod{display:block;font-size:.8rem;color:var(--mossa)}
 .erb-grid{
   display:grid;gap:12px;
   grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));
@@ -2044,6 +2052,7 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-klipp-rad{display:flex;flex-direction:column;gap:4px;padding:14px 0;border-top:1px solid var(--ln)}
 .erb-klipp-rad .erb-topp{align-items:baseline}
 .erb-summa{font-size:1.15rem;letter-spacing:-.03em;color:var(--bl);white-space:nowrap}
+.erb-summa s{font-size:.8rem;letter-spacing:0;color:var(--muted-2);margin-right:2px}
 /* Giltigheten och knappen på samma rad: en knapp under varje kort
    gjorde fem rader till en skärm och en halv på en telefon. */
 .erb-klipp-fot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}
