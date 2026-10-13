@@ -82,9 +82,10 @@
 import { serviceklient } from '../_delad/auth.ts';
 import { json } from '../_delad/http.ts';
 import {
-  aterbetalningsLage, arStripeId, balans, betallageEfterTvist, prövaSignatur, tidFranUnix, tvistOrsakText,
-  tvistUnderlag, tvistUtfall, tvistVantarPaOss, v1,
+  aterbetalningsLage, arStripeId, balans, betallageEfterTvist, prövaSignatur, StripeError, tidFranUnix,
+  tvistOrsakText, tvistUnderlag, tvistUtfall, tvistVantarPaOss, v1,
 } from '../_delad/stripe.ts';
+import { kortetsDelar, reservationensPass, reserveradTill, slappetsLage } from '../_delad/kortreservation.ts';
 
 type Handelse = {
   id?: string;
@@ -97,6 +98,15 @@ type Handelse = {
 // filhuvudet. 'betald' är inte med: en andra leverans av samma
 // betalning ska träffa noll rader.
 const TAR_EMOT_BETALNING = ['ingen', 'vantar', 'misslyckad', 'faktura'];
+
+/* Minuterna betalningen avsåg (Fas 20.1), ur metadata vi själva skrev
+   (stripe-checkout, och stripe-reservation sedan 2026-10-13). Saknas de,
+   eller ser de fel ut, skrivs inget: passunderlag räknar då med det
+   bokade, som förut. */
+function minuterUr(metadata: unknown): number | null {
+  const t = (metadata as Record<string, string> | undefined)?.minuter;
+  return /^\d{2,3}$/.test(String(t ?? '')) && Number(t) >= 15 && Number(t) <= 240 ? Number(t) : null;
+}
 
 Deno.serve(async (req) => {
   // Ingen CORS och ingen OPTIONS: ingen webbläsare ska nå hit.
@@ -174,10 +184,154 @@ Deno.serve(async (req) => {
     return await klar(`ej nedskriven: ${vad}, uppgift skapad`);
   };
 
+  /* EN SÄKERT HÄMTAD CHARGE (Fas 12.2, en hjälpare sedan 2026-10-13).
+     Charge-id:t är det enda som gör en senare charge.refunded-händelse
+     spårbar till rätt pass utan att lita på metadata vi inte skriver
+     själva.
+
+     BALANSTRANSAKTIONEN ÄR DEN ANDRA HALVAN. Stripe betalar ut i KLUMPAR,
+     netto efter avgift, med fördröjning: ingen rad på bankkontot
+     motsvarar ett enskilt pass. txn_-id:t är enda vägen från passet till
+     den bankraden, och avgiften finns ingen annanstans alls: den syns
+     varken i vad familjen betalade eller i vad vi begärde. Ofta finns den
+     inte än (punkt 5 i filhuvudet), och då kommer den med charge.updated. */
+  const chargeOchBalans = async (piId: string): Promise<{ chargeId: string | null; b: ReturnType<typeof balans> }> => {
+    const pi = await v1('GET', `/v1/payment_intents/${piId}?expand[]=latest_charge.balance_transaction`);
+    const charge = (pi as { latest_charge?: Record<string, unknown> }).latest_charge;
+    if (charge && typeof charge === 'object') {
+      return {
+        chargeId: String(charge.id ?? '') || null,
+        b: balans((charge as { balance_transaction?: unknown }).balance_transaction),
+      };
+    }
+    return { chargeId: null, b: balans(null) };
+  };
+
+  /* PASSETS BETALNING SKRIVS (Fas 14.1; en egen funktion sedan 2026-10-13).
+     Kassans betalning och en dragning med det sparade kortet
+     (kortet_reserveras) är samma sak för passet: pengarna är dragna med
+     kort, och samma regler gäller, också när timmarna eller timbanken
+     hann före. Bara den här funktionen skriver betald och betalt_ore. */
+  const betalaPasset = async (
+    passId: string, piId: string, chargeId: string | null, b: ReturnType<typeof balans>,
+    draget: number | null, minuter: number | null,
+  ): Promise<Response> => {
+    const kortbetalning = {
+      betalning_status: 'betald',
+      betald_at: new Date().toISOString(),
+      stripe_payment_intent_id: piId || null,
+      stripe_charge_id: chargeId,
+      stripe_balanstransaktion_id: b.id,
+      stripe_avgift_ore: b.avgiftOre,
+      stripe_netto_ore: b.nettoOre,
+      stripe_skarp: skarp,
+      betalt_ore: draget,
+      stripe_minuter: minuter,
+      /* NOLLAS, och det är avsiktligt. Kolumnerna beskriver den
+         betalning som gäller NU. Ett pass som återbetalades och
+         sedan betalades igen har en ny charge, och den gamla
+         återbetalningen hör till den gamla. Läts siffran stå kvar
+         räknade stripe-aterbetalning taket mot fel belopp och
+         svarade "Hela beloppet är redan återbetalt" på en
+         betalning som just kommit in. */
+      aterbetald_ore: 0,
+    };
+
+    /* Villkoret på läget är inte pynt. Två samtidiga leveranser som
+       båda ser hanterad_at = null hinner annars båda hit; när den
+       första satt 'betald' träffar den andra noll rader. Listan
+       står i TAR_EMOT_BETALNING, se punkt 6 i filhuvudet. */
+    const { data: traffade, error: skrivfel } = await db.from('bookings').update(kortbetalning)
+      .eq('id', passId).in('betalning_status', TAR_EMOT_BETALNING).select('id');
+    /* Ett fel kastas, så att raden i stripe_handelser står kvar ohanterad
+       och Stripe försöker igen. Förut lästes felet aldrig: ett tillfälligt
+       fel gav 200, och passet stod obetalt med pengarna dragna. */
+    if (skrivfel) throw new Error('bookings: ' + skrivfel.message);
+
+    /* PASSET VAR REDAN BETALT MED TIMMAR (Fas 16.1). Kassan kan ha
+       stått öppen när familjen drog timmarna — klippkort-betala
+       stänger den, men en betalning som redan var på väg hinner
+       igenom. Pengarna är dragna, så kortet vinner, som i punkt 6:
+       passet står som betalt med kort, och klippkort_id nollas så
+       att timmarna kommer tillbaka på kortet. En andra leverans
+       träffar noll rader, för då finns stripe_payment_intent_id. */
+    if (!traffade?.length) {
+      const { data: tillbaka, error: tbfel } = await db.from('bookings')
+        .update({ ...kortbetalning, klippkort_id: null })
+        .eq('id', passId).eq('betalning_status', 'betald')
+        .not('klippkort_id', 'is', null).is('stripe_payment_intent_id', null)
+        .select('id');
+      if (tbfel) throw new Error('bookings: ' + tbfel.message);
+      if (tillbaka?.length) return await klar('betald med kort, klippkortets timmar tillbaka');
+
+      /* PASSET VAR BETALT MED TIMBANKEN (Fas 22.1). Samma sak: kortet
+         vinner. timbank_kort_vinner skriver kortbetalningen och ger
+         tillbaka minuterna i samma transaktion. Förut var det två anrop,
+         och föll det andra stod passet som obetalt med pengarna dragna
+         tills Stripe levererade igen. Ett fel kastas, så att Stripe
+         försöker igen: ingenting är då skrivet. */
+      const { data: vann, error: bankfel } = await db.rpc('timbank_kort_vinner',
+        { p_pass: passId, p_kort: kortbetalning });
+      if (bankfel) throw new Error('timbank_kort_vinner: ' + bankfel.message);
+      if (vann === true) return await klar('betald med kort, timbankens minuter tillbaka');
+
+      /* Ingenting tog emot betalningen. Bär passet samma betalning är
+         det en andra leverans av samma händelse, och allt är redan
+         nedskrivet. Annars är det en betalning till. */
+      const { data: nu, error: nufel } = await db.from('bookings')
+        .select('stripe_payment_intent_id').eq('id', passId).maybeSingle();
+      if (nufel) throw new Error('bookings: ' + nufel.message);
+      if (piId && nu?.stripe_payment_intent_id !== piId) {
+        return await ejNedskriven('passet', piId, draget, nu ? { tabell: 'bookings', id: passId } : null);
+      }
+    }
+
+    return await klar('betald');
+  };
+
   try {
     switch (typ) {
       // ---------- betalningen gick igenom ----------
       case 'checkout.session.completed': {
+        /* KORTET SPARAS (kortet_reserveras, 2026-10-13). En kassa i läget
+           setup tar ingen betalning: den sparar familjens kort hos Stripe,
+           på familjens kund. Den prövas före betalningen nedan, som annars
+           hade kvitterat den som en session utan betalning. KUNDEN avgör
+           familjen, inte metadata: kunden skapade stripe-checkout själv,
+           en per familj (stripe_kunder). */
+        if (obj.mode === 'setup') {
+          const kund = String(obj.customer ?? '');
+          const seti = String(obj.setup_intent ?? '');
+          if (!arStripeId(kund, 'cus') || !arStripeId(seti, 'seti')) {
+            return await klar('kortkassa utan kund eller setup_intent');
+          }
+          const { data: k, error: kfel } = await db.from('stripe_kunder')
+            .select('parent_id').eq('stripe_kund', kund).maybeSingle();
+          if (kfel) throw new Error('stripe_kunder: ' + kfel.message);
+          if (!k) return await klar('kortkassa för en kund vi inte känner');
+          const si = await v1('GET', `/v1/setup_intents/${seti}?expand[]=payment_method`);
+          if (si.status !== 'succeeded') return await klar(`kortkassa: setup_intent står som ${String(si.status)}`);
+          const kort = kortetsDelar(si.payment_method);
+          if (!kort) return await klar('kortkassa utan kort');
+          const { data: forra, error: sparfel } = await db.rpc('kort_sparat', {
+            p_parent: k.parent_id, p_metod: kort.metod, p_marke: kort.marke, p_sista4: kort.sista4,
+            p_manad: kort.manad, p_ar: kort.ar,
+          });
+          if (sparfel) throw new Error('kort_sparat: ' + sparfel.message);
+          /* Ett kort per familj: det förra kopplas bort hos Stripe. En
+             reservation som redan står på det dras ändå, för den hålls på
+             sitt PaymentIntent. Städning: ett fel här kastas inte. */
+          if (arStripeId(forra, 'pm') && forra !== kort.metod) {
+            try {
+              await v1('POST', `/v1/payment_methods/${forra}/detach`, {}, `nextrum-koppla-bort-${forra}`);
+            } catch (e) {
+              if (!(e instanceof StripeError)) throw e;
+              console.error('stripe-webhook: det förra kortet kopplades inte bort', JSON.stringify(e.fel));
+            }
+          }
+          return await klar(arStripeId(forra, 'pm') ? 'kortet bytt' : 'kortet sparat');
+        }
+
         if (obj.payment_status !== 'paid') return await klar('session utan betalning');
 
         /* ETT KÖPT KLIPPKORT (Fas 16.1) bär sitt id i metadata och
@@ -194,32 +348,7 @@ Deno.serve(async (req) => {
         if (!passId && !kkId && !tillaggId) return await klar('session utan pass-id');
 
         const piId = String(obj.payment_intent ?? '');
-        let chargeId: string | null = null;
-        let b = balans(null);
-
-        if (piId) {
-          /* Charge-id:t är det enda som gör en senare
-             charge.refunded-händelse spårbar till rätt pass utan att
-             lita på metadata vi inte skriver själva.
-
-             BALANSTRANSAKTIONEN ÄR DEN ANDRA HALVAN. Stripe betalar ut
-             i KLUMPAR, netto efter avgift, med fördröjning: ingen rad på
-             bankkontot motsvarar ett enskilt pass. txn_-id:t är enda
-             vägen från passet till den bankraden, och avgiften finns
-             ingen annanstans alls — den syns varken i vad familjen
-             betalade eller i vad vi begärde. Ofta finns den inte än
-             (punkt 5 i filhuvudet), och då kommer den med
-             charge.updated. */
-          const pi = await v1(
-            'GET',
-            `/v1/payment_intents/${piId}?expand[]=latest_charge.balance_transaction`,
-          );
-          const charge = (pi as { latest_charge?: Record<string, unknown> }).latest_charge;
-          if (charge && typeof charge === 'object') {
-            chargeId = String(charge.id ?? '') || null;
-            b = balans((charge as { balance_transaction?: unknown }).balance_transaction);
-          }
-        }
+        const { chargeId, b } = piId ? await chargeOchBalans(piId) : { chargeId: null, b: balans(null) };
 
         /* BELOPPET KOMMER FRÅN STRIPE, INTE FRÅN OSS (Fas 14.1).
            amount_total är vad kortet faktiskt drogs på. Förut skrev
@@ -283,84 +412,7 @@ Deno.serve(async (req) => {
           return await klar('tillägget var redan betalt');
         }
 
-        /* Minuterna betalningen avsåg (Fas 20.1), ur metadata vi själva
-           skrev i stripe-checkout. Saknas de, eller ser de fel ut, skrivs
-           inget: passunderlag räknar då med det bokade, som förut. */
-        const minText = (obj.metadata as Record<string, string> | undefined)?.minuter;
-        const minuter = /^\d{2,3}$/.test(String(minText ?? '')) && Number(minText) >= 15 && Number(minText) <= 240
-          ? Number(minText) : null;
-
-        const kortbetalning = {
-          betalning_status: 'betald',
-          betald_at: new Date().toISOString(),
-          stripe_payment_intent_id: piId || null,
-          stripe_charge_id: chargeId,
-          stripe_balanstransaktion_id: b.id,
-          stripe_avgift_ore: b.avgiftOre,
-          stripe_netto_ore: b.nettoOre,
-          stripe_skarp: skarp,
-          betalt_ore: draget,
-          stripe_minuter: minuter,
-          /* NOLLAS, och det är avsiktligt. Kolumnerna beskriver den
-             betalning som gäller NU. Ett pass som återbetalades och
-             sedan betalades igen har en ny charge, och den gamla
-             återbetalningen hör till den gamla. Läts siffran stå kvar
-             räknade stripe-aterbetalning taket mot fel belopp och
-             svarade "Hela beloppet är redan återbetalt" på en
-             betalning som just kommit in. */
-          aterbetald_ore: 0,
-        };
-
-        /* Villkoret på läget är inte pynt. Två samtidiga leveranser som
-           båda ser hanterad_at = null hinner annars båda hit; när den
-           första satt 'betald' träffar den andra noll rader. Listan
-           står i TAR_EMOT_BETALNING, se punkt 6 i filhuvudet. */
-        const { data: traffade, error: skrivfel } = await db.from('bookings').update(kortbetalning)
-          .eq('id', passId).in('betalning_status', TAR_EMOT_BETALNING).select('id');
-        /* Ett fel kastas, så att raden i stripe_handelser står kvar ohanterad
-           och Stripe försöker igen. Förut lästes felet aldrig: ett tillfälligt
-           fel gav 200, och passet stod obetalt med pengarna dragna. */
-        if (skrivfel) throw new Error('bookings: ' + skrivfel.message);
-
-        /* PASSET VAR REDAN BETALT MED TIMMAR (Fas 16.1). Kassan kan ha
-           stått öppen när familjen drog timmarna — klippkort-betala
-           stänger den, men en betalning som redan var på väg hinner
-           igenom. Pengarna är dragna, så kortet vinner, som i punkt 6:
-           passet står som betalt med kort, och klippkort_id nollas så
-           att timmarna kommer tillbaka på kortet. En andra leverans
-           träffar noll rader, för då finns stripe_payment_intent_id. */
-        if (!traffade?.length) {
-          const { data: tillbaka, error: tbfel } = await db.from('bookings')
-            .update({ ...kortbetalning, klippkort_id: null })
-            .eq('id', passId).eq('betalning_status', 'betald')
-            .not('klippkort_id', 'is', null).is('stripe_payment_intent_id', null)
-            .select('id');
-          if (tbfel) throw new Error('bookings: ' + tbfel.message);
-          if (tillbaka?.length) return await klar('betald med kort, klippkortets timmar tillbaka');
-
-          /* PASSET VAR BETALT MED TIMBANKEN (Fas 22.1). Samma sak: kortet
-             vinner. timbank_kort_vinner skriver kortbetalningen och ger
-             tillbaka minuterna i samma transaktion. Förut var det två anrop,
-             och föll det andra stod passet som obetalt med pengarna dragna
-             tills Stripe levererade igen. Ett fel kastas, så att Stripe
-             försöker igen: ingenting är då skrivet. */
-          const { data: vann, error: bankfel } = await db.rpc('timbank_kort_vinner',
-            { p_pass: passId, p_kort: kortbetalning });
-          if (bankfel) throw new Error('timbank_kort_vinner: ' + bankfel.message);
-          if (vann === true) return await klar('betald med kort, timbankens minuter tillbaka');
-
-          /* Ingenting tog emot betalningen. Bär passet samma betalning är
-             det en andra leverans av samma händelse, och allt är redan
-             nedskrivet. Annars är det en betalning till. */
-          const { data: nu, error: nufel } = await db.from('bookings')
-            .select('stripe_payment_intent_id').eq('id', passId).maybeSingle();
-          if (nufel) throw new Error('bookings: ' + nufel.message);
-          if (piId && nu?.stripe_payment_intent_id !== piId) {
-            return await ejNedskriven('passet', piId, draget, nu ? { tabell: 'bookings', id: passId } : null);
-          }
-        }
-
-        return await klar('betald');
+        return await betalaPasset(passId, piId, chargeId, b, draget, minuterUr(obj.metadata));
       }
 
       // ---------- avgiften kom (Fas 14.7) ----------
@@ -408,6 +460,12 @@ Deno.serve(async (req) => {
 
       // ---------- betalningen gick inte igenom ----------
       case 'payment_intent.payment_failed': {
+        /* En reservation eller en dragning med det sparade kortet
+           (kortet_reserveras, 2026-10-13): stripe-reservation skriver nejet
+           i samma stund som Stripe svarar, och familjen får notisen. Här
+           skrivs inget. Passet står inte i 'vantar', och en andra skrivning
+           hade räknat försöken dubbelt. */
+        if (reservationensPass(obj.metadata)) return await klar('kortet nekades, stripe-reservation skriver det');
         const tillaggId = String((obj.metadata as Record<string, string> | undefined)?.tillagg_booking_id ?? '');
         /* Varje skrivning läser sitt fel och kastar det (2026-09-29), som
            betalningen ovan. Förut kvitterades händelsen även när
@@ -438,7 +496,13 @@ Deno.serve(async (req) => {
       // ---------- återbetalning ----------
       case 'charge.refunded': {
         const aterbetalt = Number(obj.amount_refunded ?? 0);
-        const totalt = Number(obj.amount ?? 0);
+        /* En reservation som drogs delvis (kortet_reserveras, 2026-10-13) har
+           amount_captured under amount, och det dragna är helheten: att
+           allt det dragna betalats tillbaka är en hel återbetalning. Sedan
+           API-versionen 2025-03-31.basil räknas det som aldrig drogs inte
+           som återbetalt. */
+        const totalt = Number(typeof obj.amount_captured === 'number' && obj.amount_captured > 0
+          ? obj.amount_captured : obj.amount ?? 0);
         const lage = aterbetalningsLage(aterbetalt, totalt);
 
         /* EN TVIST ÄGER LÄGET (2026-09-29). Beloppet skrivs alltid, men en
@@ -500,6 +564,76 @@ Deno.serve(async (req) => {
         if (!passId) return await klar('återbetalning utan charge-id och utan pass-id');
         await aterbetala('bookings', 'id', passId, 'betalning_status', lage);
         return await klar(`återbetalt ${aterbetalt} öre (via metadata)`);
+      }
+
+      // ---------- kortet reserveras (kortet_reserveras, 2026-10-13) ----------
+      /* stripe-reservation skriver reservationens läge själv, i samma stund
+         som Stripe svarar. Händelserna här är reserven: föll funktionen
+         mellan Stripes svar och skrivningen, skriver webhooken. Varje
+         skrivning går att göra två gånger (kortreservation_skriv). Bara ett
+         PaymentIntent som bär kortreservation i metadata rörs här: kassans
+         egna har sina grenar ovan, och deras payment_intent-händelser
+         kvitteras utan att något skrivs. */
+      case 'payment_intent.amount_capturable_updated': {
+        const passId = reservationensPass(obj.metadata);
+        const piId = String(obj.id ?? '');
+        if (!passId || !arStripeId(piId, 'pi')) return await klar('inte en reservation');
+        // Läget läses färskt: en sen leverans kan gälla en reservation som redan släppts.
+        const pi = await v1('GET', `/v1/payment_intents/${piId}?expand[]=latest_charge`);
+        const belopp = typeof pi.amount_capturable === 'number' ? pi.amount_capturable : 0;
+        if (pi.status !== 'requires_capture' || !(belopp > 0)) {
+          return await klar(`reservation som står som ${String(pi.status)}`);
+        }
+        const { data: blev, error } = await db.rpc('kortreservation_skriv', {
+          p_bokning: passId, p_lage: 'reserverad', p_pi: piId, p_belopp: belopp,
+          p_till: reserveradTill(pi.latest_charge),
+        });
+        if (error) throw new Error('kortreservation_skriv: ' + error.message);
+        /* Familjen valde bort kortet medan Stripe svarade, eller raden har
+           redan en annan reservation: den här släpps. */
+        if (blev === 'saknas' || blev === 'avvisad') {
+          try {
+            await v1('POST', `/v1/payment_intents/${piId}/cancel`, { cancellation_reason: 'duplicate' },
+              `nextrum-slapp-${piId}`);
+          } catch (e) {
+            if (!(e instanceof StripeError)) throw e;
+          }
+          return await klar('reservationen var över och släpptes');
+        }
+        return await klar(`reservation: ${String(blev)}`);
+      }
+
+      /* PENGARNA DROGS med det sparade kortet: en reservation som drogs när
+         rapporten kom, eller en dragning utan reservation. Passet blir betalt
+         på samma sätt som genom kassan (betalaPasset), med beloppet Stripe
+         drog och minuterna stripe-reservation skrev i metadata. */
+      case 'payment_intent.succeeded': {
+        const passId = reservationensPass(obj.metadata);
+        const piId = String(obj.id ?? '');
+        if (!passId || !arStripeId(piId, 'pi')) return await klar('betalas genom kassan');
+        const draget = typeof obj.amount_received === 'number' ? obj.amount_received : null;
+        const { error } = await db.rpc('kortreservation_skriv', {
+          p_bokning: passId, p_lage: 'dragen', p_pi: piId, p_belopp: draget,
+        });
+        if (error) throw new Error('kortreservation_skriv: ' + error.message);
+        const { chargeId, b } = await chargeOchBalans(piId);
+        return await betalaPasset(passId, piId, chargeId, b, draget, minuterUr(obj.metadata));
+      }
+
+      /* RESERVATIONEN SLÄPPTES. Vårt eget släpp har en orsak som
+         stripe-reservation sätter; utan den släppte Stripe en reservation
+         som inte drogs i tid, och den har gått ut. Raden ändras bara om den
+         pekar på just det här PaymentIntent. */
+      case 'payment_intent.canceled': {
+        const passId = reservationensPass(obj.metadata);
+        const piId = String(obj.id ?? '');
+        if (!passId || !arStripeId(piId, 'pi')) return await klar('inte en reservation');
+        const lage = slappetsLage(obj.cancellation_reason);
+        const { data: blev, error } = await db.rpc('kortreservation_skriv', {
+          p_bokning: passId, p_lage: lage, p_pi: piId,
+        });
+        if (error) throw new Error('kortreservation_skriv: ' + error.message);
+        return await klar(`reservation ${lage === 'slappt' ? 'släppt' : 'utgången'}: ${String(blev)}`);
       }
 
       // ---------- korttvist (Fas 14.3) ----------

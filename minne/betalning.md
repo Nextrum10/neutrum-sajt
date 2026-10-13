@@ -319,13 +319,67 @@ pass som redan är betalt i förväg står kvar som det är.
 hinder (`kort_sparat`, `kort_reserverat`) i `intern.radering_underlag`, så
 att inget blir kvar hos Stripe när kontot tas bort.
 
-**Kvar att bygga**: kassans läge `setup` och Ta bort kortet
-(`stripe-checkout`), `stripe-reservation`, webhookens nya händelser
-(`payment_intent.amount_capturable_updated`, `.succeeded`, `.canceled`;
-`WEBHOOK_HANDELSER` och Stripes endpoint), mallen `kort_nekat` i
-`notis-ko`, vyerna, villkorsmeningen på alla 36 ställen och i mejlen med
-en ny version, policyn på båda språken och `DATASKYDD.md` (sparat kort
-hos Stripe).
+**Edge-funktionerna** (byggda samma natt, inte driftsatta):
+- **`stripe-checkout`** har två lägen till. `kort: 'spara'` öppnar en kassa i
+  läget `setup` på familjens kund (bara familjen, bara med strömbrytaren på;
+  kunden skapas utan namn och e-post). `kort: 'ta_bort'` anropar
+  `kort_borttaget()` och kopplar bort alla kort på kunden hos Stripe, också
+  ett som blev kvar vid ett byte. Familjen tar bort sitt eget kort och admin
+  en familjs (`familj`). Det går alltid, också med strömbrytaren av.
+- **`stripe-reservation`** (ny, `verify_jwt` av, hemligheten i
+  `x-nextrum-notis`) gör det `kortreservation_att_gora()` säger, högst 20
+  rader per väckning.
+  - **Reservationen**: ett PaymentIntent med `capture_method: manual`,
+    `off_session` och `confirm`.
+  - **Dragningen**: `capture` med `amount_to_capture`, priset för den
+    hållna tiden och högst det reserverade (`dragning()` i
+    `_delad/kortreservation.ts`), och minuterna i metadata.
+  - **Utan reservation**: en vanlig dragning, när reservationen inte
+    hann göras eller gick ut.
+  - **Släppet**: `cancel`, med vår egen orsak.
+  - **Ett nej** (card_error, eller ett kort som inte finns) skriver bara
+    den, som `misslyckad` med Stripes kod. Stripe nere, eller ett fel i
+    vårt anrop, skriver inget: jobbet försöker igen om tio minuter.
+- **Två dragningar får aldrig hända.** Innan ett PaymentIntent skapas
+  frågas Stripe om kunden redan har ett för passet (listan över kundens, i
+  realtid). Varje skapande har en idempotensnyckel med radens ändringstid:
+  inom samma läge ger två körningar samma PaymentIntent, men ett nytt
+  försök är ett nytt anrop. Stripe sparar annars ett nej på nyckeln i ett
+  dygn.
+- **Webhooken** är reserven och den som betalar passet.
+  - `checkout.session.completed` i läget `setup` sparar kortet
+    (`kort_sparat()`), med familjen ur kunden och aldrig ur metadata, och
+    kopplar bort det förra.
+  - `payment_intent.amount_capturable_updated` skriver en reservation som
+    funktionen inte hann skriva.
+  - `payment_intent.succeeded` skriver betalningen på passet genom samma
+    `betalaPasset` som kassan (timmar och timbank som hann före, och
+    uppgiften när raden redan bär en annan betalning).
+  - `payment_intent.canceled` är `slappt` med vår orsak och `utgangen`
+    utan.
+  - `payment_failed` skriver inget för en reservation: funktionen har
+    redan gjort det, och en andra skrivning hade räknat försöken dubbelt.
+  - Bara ett PaymentIntent med `kortreservation` i metadata rörs. Med
+    flit inte `booking_id`, som webhooken läser som kassans.
+- **Ett släpp rör bara radens egen reservation.**
+  `kortreservation_skriv(…, 'slappt', pi)` prövar nu, som `utgangen`, att
+  raden pekar på just det PaymentIntent. Ett överblivet som släpps efter
+  `avvisad` hade annars fått en reservation som fortfarande håller pengar
+  att se släppt ut.
+- **En delvis dragning är ingen återbetalning.** Stripe räknar sedan
+  API-versionen 2025-03-31.basil (vi pinnar 2025-08-27.basil) inte det
+  som släpps som återbetalt: inget `charge.refunded` och inget
+  `amount_refunded`. Webhookens återbetalning räknar mot `amount_captured`,
+  så att en hel återbetalning av det dragna blir `aterbetald`.
+
+**Kvar**:
+- Vyerna.
+- Villkorsmeningen på alla 36 ställen och i mejlen, med en ny version.
+- Stripes endpoint: de tre nya händelserna.
+- Driftsättningen (`DEPLOY-BETALNING.md` 9.14) och provet i testläge.
+  Det provet säger om kassan i läget `setup` behöver
+  `managed_payments: { enabled: false }`, som kassan för ett pass har. Den
+  står inte där, för läget tar ingen betalning.
 
 ---
 

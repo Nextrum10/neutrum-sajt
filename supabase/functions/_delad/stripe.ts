@@ -258,6 +258,28 @@ export async function prövaSignatur(
 
 export const VALUTA = 'sek';
 
+/* Kontoutdragets text. Stripe tillåter varken <>'"* eller tecken
+   utanför latin-1, och svarar med ett fel i stället för att kapa.
+
+   HÖGST TIO TECKEN (Fas 14.3). Det här är bara tillägget: Stripe
+   sätter kontots förkortade namn framför, plus "* ", och hela raden får
+   vara högst 22 tecken. Förkortningen får vara upp till tio, så tio
+   kvar till ämnet är det enda som alltid ryms. Förut kapades vid 22,
+   och "SAMHALLSKUNSKAP" efter "NEXTRUM* " blev 24, en betalning som
+   Stripe hade nekat för ett ämne.
+
+   Här sedan kortet_reserveras (2026-10-13): stripe-reservation drar
+   samma pass och ska stå likadant på kontoutdraget som kassan. */
+export function descriptor(s: string): string {
+  const rent = s
+    .replace(/[åäÅÄ]/g, 'A').replace(/[öÖ]/g, 'O').replace(/[éèÉÈ]/g, 'E')
+    .replace(/[^A-Za-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+  return rent.slice(0, 10).trim() || 'LAXHJALP';
+}
+
 /** Beloppet för ett pass: minuter mot ett timpris i ören. Speglar belopp() i pris.ts. */
 export function oreFor(minuter: number, timprisOre: number): number {
   return Math.round((minuter / 60) * timprisOre);
@@ -398,6 +420,11 @@ export const WEBHOOK_HANDELSER = [
   'charge.dispute.created',
   'charge.dispute.updated',
   'charge.dispute.closed',
+  // Kortet reserveras (kortet_reserveras, 2026-10-13): reservationen, dragningen
+  // och släppet. Kortet som sparas kommer med checkout.session.completed.
+  'payment_intent.amount_capturable_updated',
+  'payment_intent.succeeded',
+  'payment_intent.canceled',
 ];
 
 export type Balans = { id: string | null; avgiftOre: number | null; nettoOre: number | null };

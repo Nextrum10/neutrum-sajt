@@ -220,8 +220,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `mitt_kort()`), beloppet reserveras två dagar före ett bekräftat pass, dras efter rapporten och släpps när passet
   inte längre ska betalas med kortet. Stripe släpper en reservation vi gjort utan familjen efter 4 dygn och 18 timmar
   (Visa) eller 7 dagar, och gränsen läses ur Stripe (`capture_before`). En reservation som står skrivs aldrig om
-  till nekad, bara webhooken skriver betalningen på passet, och raderingen väntar på kortet. Strömbrytaren
-  `kortreservation` står av (`minne/betalning.md`, Kortet reserveras vid bokningen).
+  till nekad, bara webhooken skriver betalningen på passet, och raderingen väntar på kortet. Reservationen,
+  dragningen och släppet gör `stripe-reservation` (jobbet `kortreservation`), som först frågar Stripe om passet
+  redan har ett PaymentIntent: **inget dras två gånger**. Ett nej skriver bara den, och ett släpp rör bara radens
+  egen reservation. Strömbrytaren `kortreservation` står av (`minne/betalning.md`, Kortet reserveras vid bokningen).
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -891,11 +893,12 @@ Detaljer: `minne/grunden.md`.
   version, så en kods villkor (hur många gånger, inte med timmar i timbanken) ska stå klart där koden delas ut
   (e-handelslagen 9 §). Juristen har inte läst rad 28 i `DATASKYDD.md`.
 - **Kortet reserveras vid bokningen** (2026-10-13) är under arbete och inte i drift. Databasen är skriven
-  (`kortet_reserveras`, 20261013170000; lokalt ur 190 migrationer 1699 av 1699 i `rls-test.sql`, avsnitt 33),
+  (`kortet_reserveras`, 20261013170000; lokalt ur 190 migrationer 1700 av 1700 i `rls-test.sql`, avsnitt 33),
   med strömbrytaren `kortreservation` av, mallen `kort_nekat` i `notis-ko`, och policyn och rad 29 i `DATASKYDD.md`.
-  Kvar: kassans läge `setup` och Ta bort kortet, `stripe-reservation`, webhookens nya händelser, vyerna och
-  villkoren (`minne/betalning.md`). **Kör inte migrationen förrän resten är byggd**, och `notis-ko` driftsätts
-  före den. Pengarna dras när passet har rapporterats (Leo samma kväll).
+  Edge-funktionerna är skrivna samma natt: kassans läge `setup` och Ta bort kortet (`stripe-checkout`), den nya
+  `stripe-reservation` och webhookens tre nya händelser (lokalt 1700 av 1700 i `rls-test.sql`). Kvar: vyerna,
+  villkoren och Stripes endpoint (`minne/betalning.md`). **Kör inte migrationen förrän resten är byggd**, och
+  ordningen står i `DEPLOY-BETALNING.md` 9.14. Pengarna dras när passet har rapporterats (Leo samma kväll).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

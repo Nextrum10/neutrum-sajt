@@ -661,6 +661,9 @@ Händelser som ska väljas, och varför just de:
 | `charge.dispute.created` | Sparar tvisten med sista svarsdag och orsak, och lägger en uppgift (9.10) |
 | `charge.dispute.updated` | Stripe flyttar tvisten till `under_review` när underlaget skickats in, och kan ändra dagen. **Ny i Fas 14.3** |
 | `charge.dispute.closed` | Utfallet: vunnen blir en betalning igen, förlorad står kvar som tvist |
+| `payment_intent.amount_capturable_updated` | Kortet reserveras (9.14): en reservation som `stripe-reservation` inte hann skriva. **Ny 2026-10-13** |
+| `payment_intent.succeeded` | Kortet reserveras (9.14): pengarna drogs med det sparade kortet, och passet blir betalt. Kassans egna kvitteras utan att något skrivs. **Ny 2026-10-13** |
+| `payment_intent.canceled` | Kortet reserveras (9.14): reservationen släpptes, av oss eller för att den gick ut. **Ny 2026-10-13** |
 
 **`charge.dispute.updated` och `charge.updated` saknas på endpointen**, för de
 stod inte här när endpointen skapades. Lägg till dem: endpointens sida → **Update
@@ -1255,3 +1258,52 @@ kod går att skapa. Steg 4 och 5 återstår. Ordningen var den här:
    (hur många gånger, att den inte gäller med timmar i timbanken) ska stå
    klart där den delas ut, på affischen eller i mejlet (e-handelslagen 9 §).
    Juristen har inte läst rad 28 i `DATASKYDD.md`.
+
+### 9.14 Kortet reserveras vid bokningen (2026-10-13, under arbete)
+
+Familjen väljer kort när den föreslår ett pass, och kortet sparas hos Stripe.
+Beloppet reserveras två dagar före passet, dras när rapporten finns och släpps
+när passet inte längre ska betalas med kortet (`minne/betalning.md`, Kortet
+reserveras vid bokningen). Databasen (`20261013170000_kortet_reserveras`) och
+edge-funktionerna är byggda. Vyerna och villkoren är det inte. **Inget av det
+här körs förrän resten är byggt**, och strömbrytaren `kortreservation` står av
+tills provet i testläge (steg 6) gått igenom.
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`):
+
+1. **`notis-ko`** med mallen `kort_nekat`, FÖRE migrationen: dess trigger köar
+   notisen.
+2. **`stripe-webhook`**. Den tar emot reservationens händelser och sparar
+   kortet. Utan migrationen gör grenarna ingenting, för inget PaymentIntent bär
+   `kortreservation` och ingen kassa i läget `setup` finns.
+3. **`stripe-checkout`**: kortets två lägen, och `descriptor` ur
+   `_delad/stripe.ts`.
+4. **`stripe-reservation`** (ny), med `verify_jwt` av, som `config.toml` säger.
+   Varje funktion hämtas tillbaka och jämförs byte för byte, som förut.
+5. **Migrationen `20261013170000_kortet_reserveras`** från merge-commiten,
+   prövad mot sin md5. Den har inga `delete` utanför funktioner och ingen
+   funktion med två. Kör den avsnitt för avsnitt med `execute_sql` och
+   registrera den sedan med filens text. Sedan hela `rls-test.sql` mot
+   driften, tillbakarullat, och advisorn. Jobbet `kortreservation` börjar gå
+   var tionde minut. Med strömbrytaren av reserverar det inget.
+6. **Stripe och provet i testläge**:
+   - Lägg till de tre nya händelserna på endpointen (tabellen i 9.6).
+     Kontrollera Stripe säger vilka som saknas.
+   - Slå på `kortreservation` och välj kort på ett pass som en provfamilj
+     (testkortet 4242 4242 4242 4242). Kortet ska stå under Profil.
+   - Flytta passet till inom 48 timmar: inom tio minuter ska raden stå som
+     reserverad, med `reserverat_till` från Stripe.
+   - Skriv rapporten: inom tio minuter ska passet stå som betalt, med
+     `betalt_ore` och `stripe_minuter`.
+   - Prova ett kort som sparas men nekas när det dras (4000 0000 0000 0341):
+     notisen `kort_nekat` ska komma.
+   - Prova ett avbokat pass: reservationen ska släppas.
+   - Säger Stripe något om kassan i läget `setup` (Managed Payments), lägg
+     till `managed_payments: { enabled: false }` där, som för ett pass.
+   - Stäng av strömbrytaren igen tills vyerna och villkoren är ute.
+7. **Villkoren** säger betalsätten på 36 ställen och i mejlen
+   (`kolla-betalningsvillkor.py`). Kort som reserveras och dras efter passet
+   är ett nytt sätt, så meningen, villkoren och deras version ändras i samma
+   PR som vyerna, och juristen läser dem innan strömbrytaren slås på.
+
