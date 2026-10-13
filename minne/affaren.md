@@ -756,7 +756,9 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   på nästa läxhjälpspass familjen föreslår, en per pass, också när
   familjen skrivit en rabattkod (som då tas bort, 2026-10-13; förut sköt
   koden timmen till ett senare pass), och kommer tillbaka när passet
-  avbokas eller avslås. Den räknas ur raderna och
+  avbokas eller avslås. Sedan 2026-10-13 gäller den i 60 dagar från dagen
+  den nya familjen haft sina två timmar, för ett pass inom dem
+  (`intern.tipstimmar_kvar`, `minne/timmar.md`). Den räknas ur raderna och
   sparas inte.
 - **Ingen ersättning till studiehjälpare**, med flit: de är ofta sexton,
   en belöning för att värva kunder är lön, och anställningsformen är inte

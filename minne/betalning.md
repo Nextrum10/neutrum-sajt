@@ -119,6 +119,11 @@ texten är kärnans.
     innan svaret kommit visas ingen timme.
   - Spararaden räknar in timmen (`data-erb-spara-forsta`): 879, 1 359 och
     1 839 kr på 6 månader för Basic, Standard och Intensiv.
+  - **60 dagar och först** (2026-10-13, `gratistimmarna_60_dagar`): planens
+    gratis timme dras först och gäller efter planens månad så länge den
+    inte använts, till 60 dagar efter köpet; tipstimmen och första timmen
+    pass för pass gäller ett pass inom 60 dagar. Återbetalningen räknas
+    som förut. Allt i `minne/timmar.md`.
 - **Rabattkoden krockar inte med gratis timmar eller timbanken**
   (2026-10-13, `rabattkoden_krockar_inte`). Leo: "rabattkoden, fixa det
   ... koden får inte krocka med gratis timmar. jag ska bygga nytt system
@@ -150,9 +155,10 @@ texten är kärnans.
     ordning. Koden skickas ändå: databasen avgör, och blev timmarna tagna
     någon annanstans under tiden gäller den. Kvittot säger bara om en kod
     som försvann utan att en gratis timme eller timmarna förklarar det.
-  - När gratistimmarna står i timbanken (Leos nya system) följer de
-    regeln om timbanken, och inget här behöver ändras. Villkoren nämner
-    inga koder, så ingen ny version behövdes.
+  - Planens gratis timme står i timbanken (i planen) och följer regeln
+    om timbanken. Tipstimmen och första timmen pass för pass är avdrag på
+    passet och följer regeln om en gratis timme. Villkoren nämner inga
+    koder, så rabattkoden behövde ingen ny version.
   - Rabattkoderna var tomma i driften 2026-10-13 (bara `TIPS`). Skapas den
     första koden ska `kolla_rabattkod` få ett tak först
     (`minne/sakerhet.md`).

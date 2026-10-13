@@ -1022,12 +1022,30 @@ driften 2026-10-13 byte för byte den lokala (md5 `570b7ccc…`). Lappen
 känner igen sig själv (`rabattkoden_krockar_inte` i texten), så filen går
 att köra två gånger.
 
+**`20261013110000_gratistimmarna_60_dagar`** (2026-10-13, samma gren):
+hjälparna `intern.gratis_till`, `intern.kortets_timmar` och
+`intern.kortets_sista_dag`; `klippkort_saldo` omskriven med samma kolumner
+och `gratis_kvar` och `gratis_till` sist, och `brukbar` som räknar med
+dem (`security_invoker = true` utskrivet igen); `intern.timmar_betala` och
+`klippkort_dra` omskrivna helt efter en md5-vakt (driftens text
+2026-10-13: `ba9100a9…` och `282bdbd2…`), med gratis timmar först;
+`intern.tipstimmar_oanvanda` och `intern.tipstimmar_kvar`; lappar med
+`replace()` och en vakt som räknar träffarna i
+`intern.timmar_betalar_obetalda` (förurvalet), `intern.timmar_gar_ut_koa`,
+`forsta_timmen_bjuds` (två), `forsta_timmen_lage` (`beviljad_till`) och
+`mina_tips` (`kvar`, `kvar_till`); och `intern.villkor_version()` =
+2026-10-13. En funktion som redan bär `gratistimmarna_60_dagar` hoppas
+över, och vakten släpper igenom en som redan är omskriven, så filen går
+att köra två gånger. Allt i `minne/timmar.md`.
+
 Versionerna var först `20261012120000` och `20261012120100`, men `fyll_timbanken`
 kördes i driften samma kväll med just `20261012120000`; de ligger nu efter
-den. Lokalt, byggd ur alla 185 migrationer: hela `rls-test.sql` 1586 av 1586
-(avsnitt 26, 27 och 28 är nya). **Körs efter merge, i den ordningen, och
+den. Lokalt, byggd ur alla 186 migrationer: hela `rls-test.sql` 1603 av 1603
+(avsnitt 26, 27, 28 och 29 är nya). **Körs efter merge, i den ordningen, och
 `notis-ko` från main driftsätts FÖRE den första** (`minne/notiser.md`).
 Vyerna tål att alla tre saknas: utan tabellen syns inga förslag, utan `boka`
-i listan inget val, adminvyns tal räknar ur `admin_roller` själv, och
+i listan inget val, adminvyns tal räknar ur `admin_roller` själv,
 utan `rabattkoden_krockar_inte` gäller den gamla ordningen i databasen,
-vilket inte spelar någon roll så länge det inte finns någon kod.
+vilket inte spelar någon roll så länge det inte finns någon kod, och utan
+`gratistimmarna_60_dagar` saknas gratiskolumnerna, och vyn räknar då som
+förut (den läser `klippkort_saldo` med `*`).

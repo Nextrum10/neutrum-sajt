@@ -563,7 +563,7 @@ function foralderRpc(o) {
       return { lage: 'ok' };
     }
   };
-  if (o.tips) rpc.mina_tips = () => ({ kod: 'ANNA1', anmalda: 1, kunder: 1, kvar: 1 });
+  if (o.tips) rpc.mina_tips = () => ({ kod: 'ANNA1', anmalda: 1, kunder: 1, kvar: 1, kvar_till: o.tipsTill || null });
   return { rpc, anrop, får };
 }
 
@@ -859,6 +859,80 @@ async function provaFörälderns(webb) {
     prova('förälder med timmar: kvittot säger att timmarna betalade, och inget om koden',
       (await text(page, '#boka-inner .bk-kvitto')).includes('Passet är betalt med 1 timme av era timmar')
       && !(await text(page, '#boka-inner .bk-kvitto')).includes('gällde inte'), await text(page, '#boka-inner .bk-kvitto'));
+    await context.close();
+  }
+
+  /* 3f. En plan som gått ut med gratistimmen kvar (gratistimmarna_60_dagar,
+         2026-10-13): timmen står överst i Boka pass, betalar ett pass på
+         en timme inom sina 60 dagar, men inte ett på två timmar eller ett
+         efter sista dagen. */
+  {
+    const R = foralderRpc({});
+    const { context, page } = await öppna(webb, {
+      rpc: R.rpc, inloggad: 'foralder-1',
+      värld: W => {
+        W.flaggor = [{ kod: 'erbjudanden', aktiv: true }];
+        W.klippkort_saldo = [{ id: 'kp-1', parent_id: 'foralder-1', erbjudande: 'plan_basic', namn: 'Basic',
+          sort: 'plan', timmar: 5, anvanda: 0, kvar: 5, giltigt_till: dagar(-9), status: 'betald', brukbar: true,
+          gratis_kvar: 1, gratis_till: dagar(20), created_at: nu(-60000) }];
+      }
+    });
+    await page.goto(BAS + '/foralder#boka');
+    await page.waitForSelector('#boka-inner .mv-dag', { timeout: 10000 }).catch(() => {});
+    await page.waitForFunction(() => /gratis timme/.test((document.querySelector('#boka-timmar') || {}).textContent || ''),
+      null, { timeout: 5000 }).catch(() => {});
+    prova('gratistimme efter planen: den står överst i Boka pass med sin sista dag',
+      (await text(page, '#boka-timmar')).includes('1 gratis timme kvar på Basic'), await text(page, '#boka-timmar'));
+    await tillMånaden(page, '#boka-inner', framåt(6));
+    await väljDagOchTid(page, '#boka-inner', framåt(6), '17:00');
+    prova('gratistimme efter planen: ett pass på en timme betalas med den',
+      (await text(page, '#boka-inner .bk-sum-pris')).includes('Er timbank'), await text(page, '#boka-inner .bk-sum-pris'));
+    await page.click('#boka-inner #bk-langder button[data-v="120"]');
+    await page.waitForFunction(() => /798/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 3000 }).catch(() => {});
+    prova('gratistimme efter planen: den räcker inte till två timmar',
+      /^798\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris')), await text(page, '#boka-inner .bk-sum-pris'));
+    await page.click('#boka-inner #bk-langder button[data-v="60"]');
+    await tillMånaden(page, '#boka-inner', framåt(26));
+    await väljDagOchTid(page, '#boka-inner', framåt(26), '17:00');
+    await page.waitForFunction(() => /399/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 3000 }).catch(() => {});
+    prova('gratistimme efter planen: inte för en dag efter sista dagen',
+      /^399\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris')), await text(page, '#boka-inner .bk-sum-pris'));
+    await context.close();
+  }
+
+  /* 3g. Den beviljade första timmen och tipstimmen gäller i 60 dagar
+         (gratistimmarna_60_dagar): priset vid knappen bjuder inte på en
+         timme som gått ut, eller för en dag efter den sista. */
+  {
+    const R = foralderRpc({ forsta: { beviljad: true, tagen: false, beviljad_till: dagar(-1) } });
+    const { context, page } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1' });
+    await page.goto(BAS + '/foralder#boka');
+    await page.waitForSelector('#boka-inner .mv-dag', { timeout: 10000 }).catch(() => {});
+    await tillMånaden(page, '#boka-inner', framåt(6));
+    await väljDagOchTid(page, '#boka-inner', framåt(6), '17:00');
+    await page.click('#boka-inner #bk-langder button[data-v="120"]');
+    await page.waitForFunction(() => /798/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 3000 }).catch(() => {});
+    prova('första timmen som gått ut: ingen timme på köpet vid knappen',
+      /^798\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris'))
+      && !(await text(page, '#boka-inner .bk-sum-pris')).includes('på köpet'), await text(page, '#boka-inner .bk-sum-pris'));
+    await context.close();
+  }
+  {
+    const R = foralderRpc({ tips: true, tipsTill: dagar(15) });
+    const { context, page } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1' });
+    await page.goto(BAS + '/foralder#boka');
+    await page.waitForSelector('#boka-inner .mv-dag', { timeout: 10000 }).catch(() => {});
+    await tillMånaden(page, '#boka-inner', framåt(6));
+    await väljDagOchTid(page, '#boka-inner', framåt(6), '17:00');
+    await page.waitForFunction(() => /tips/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 3000 }).catch(() => {});
+    prova('tipstimmen: på köpet för en dag inom dess 60 dagar',
+      (await text(page, '#boka-inner .bk-sum-pris')).includes('En timme på köpet för ert tips'), await text(page, '#boka-inner .bk-sum-pris'));
+    await tillMånaden(page, '#boka-inner', framåt(26));
+    await väljDagOchTid(page, '#boka-inner', framåt(26), '17:00');
+    await page.waitForFunction(() => /399/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 3000 }).catch(() => {});
+    prova('tipstimmen: inte för en dag efter dess sista',
+      /^399\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris'))
+      && !(await text(page, '#boka-inner .bk-sum-pris')).includes('tips'), await text(page, '#boka-inner .bk-sum-pris'));
     await context.close();
   }
 

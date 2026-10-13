@@ -2415,8 +2415,11 @@
          gamla katalogen som förut, och den är vad kassan då tar betalt
          efter. Vyn har inga kolumner som inte ska visas. */
       supa.from('erbjudanden_pris').select('*').order('ordning'),
+      /* Alla kolumner (gratistimmarna_60_dagar, 2026-10-13): gratis_kvar
+         och gratis_till finns först efter migrationen, och en uttrycklig
+         lista med dem hade gett ett fel och inga timmar tills dess. */
       supa.from('klippkort_saldo')
-        .select('id, erbjudande, namn, sort, timmar, anvanda, kvar, giltigt_till, status, brukbar, created_at')
+        .select('*')
         .eq('parent_id', S.user.id).in('status', ['betald', 'tvist', 'aterbetald'])
         .order('giltigt_till', { ascending: true }),
       /* Timbanken (Fas 22.1): saldot räknas i databasen, och uttagen
@@ -2477,19 +2480,33 @@
     return Math.max(1, Math.ceil(min / 60));
   };
 
-  /* Kortet timmarna dras från: det som går ut först och räcker. Samma
-     urval som klippkort_dra gör — funktionen väljer själv, det här
-     avgör bara om knappen ska stå där. Ett pass med fler barn betalas
-     med kort (villkoren, #erbjudanden). */
+  /* Hur många timmar ett kort räcker till för ett pass på dagen, som
+     databasen räknar (intern.kortets_timmar, gratistimmarna_60_dagar,
+     2026-10-13): alla som är kvar fram till kortets sista dag, och efter
+     den de gratis timmar som är kvar, till 60 dagar efter köpet. Utan
+     migrationen saknas gratis_till, och då gäller bara sista dagen.
+     Dagen är aldrig före i dag. */
+  const passetsDag = datum => { const idag = isoFor(new Date()); return datum && String(datum) > idag ? String(datum) : idag; };
+  const kortetsTimmar = (k, dag) => String(k.giltigt_till) >= dag ? Number(k.kvar) || 0
+    : k.gratis_till && String(k.gratis_till) >= dag ? Number(k.gratis_kvar) || 0 : 0;
+  const harGratis = (k, dag) => Number(k.gratis_kvar) > 0 && !!k.gratis_till && String(k.gratis_till) >= dag;
+  const kortetsSistaDag = (k, dag) => String(k.giltigt_till) >= dag ? String(k.giltigt_till) : String(k.gratis_till || '');
+
+  /* Kortet timmarna dras från. Samma urval som klippkort_dra gör:
+     gratis timmar först (Leo 2026-10-13: "gratis timmar går ut först sen
+     planerna"), sedan kortet som går ut först och räcker. Funktionen
+     väljer själv, det här avgör bara om knappen ska stå där. Ett pass
+     med fler barn betalas med kort (villkoren, #erbjudanden). */
   function kortFör(b) {
     /* Ett pass med första timmen bjuden betalas med kort (Fas 19.5):
        timmarna dras ur passets hela längd, och klippkort_dra nekar det. */
     if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1 || b.startrabatt) return null;
     const behov = passTimmar(b);
+    const dag = passetsDag(b.wanted_date);
     return S.erb.kort
-      .filter(k => k.brukbar && k.status === 'betald' && Number(k.kvar) >= behov
-        && String(k.giltigt_till) >= String(b.wanted_date))
-      .sort((a, c) => String(a.giltigt_till).localeCompare(String(c.giltigt_till)))[0] || null;
+      .filter(k => k.brukbar && k.status === 'betald' && kortetsTimmar(k, dag) >= behov)
+      .sort((a, c) => (harGratis(c, dag) - harGratis(a, dag))
+        || kortetsSistaDag(a, dag).localeCompare(kortetsSistaDag(c, dag)))[0] || null;
   }
 
   /* Timbanken betalar ett helt pass när minuterna räcker till det
@@ -2518,8 +2535,9 @@
     if (!S.erb.aktiv || Number(barn) > 1 || !datum) return null;
     const behov = passTimmar({ duration_min: minuter });
     const brukbara = S.erb.kort.filter(k => k.brukbar);
-    if (brukbara.some(k => String(k.giltigt_till) >= String(datum) && Number(k.kvar) >= behov)) {
-      const kvar = brukbara.reduce((a, k) => a + Number(k.kvar), 0);
+    const dag = passetsDag(datum), idag = isoFor(new Date());
+    if (brukbara.some(k => kortetsTimmar(k, dag) >= behov)) {
+      const kvar = brukbara.reduce((a, k) => a + kortetsTimmar(k, idag), 0);
       return { titel: 'Er timbank', under: '−' + timText(behov) + ', ' + (kvar - behov) + ' kvar efter' };
     }
     if (S.erb.bank.saldo >= minuter) return { titel: 'Timbanken', under: '−' + tidLängd(minuter) };
@@ -2535,11 +2553,18 @@
     const bank = S.erb.aktiv ? Number(S.erb.bank.saldo) || 0 : 0;
     el.hidden = !kort.length && !bank;
     if (el.hidden) { el.innerHTML = ''; return; }
-    el.innerHTML = kort.map(k => '<p><b>' + esc(k.kvar + ' av ' + k.timmar + ' timmar kvar') + '</b> på '
-        + esc(k.namn) + ', till ' + esc(datumText(k.giltigt_till)) + '.</p>').join('')
+    const idag = isoFor(new Date());
+    /* En plan som gått ut med en gratis timme kvar (gratistimmarna_60_dagar)
+       står med den timmen och dess sista dag. */
+    el.innerHTML = kort.map(k => String(k.giltigt_till) < idag
+        ? '<p><b>' + esc(kortetsTimmar(k, idag) === 1 ? '1 gratis timme kvar' : kortetsTimmar(k, idag) + ' gratis timmar kvar')
+          + '</b> på ' + esc(k.namn) + ', till ' + esc(datumText(k.gratis_till)) + '.</p>'
+        : '<p><b>' + esc(k.kvar + ' av ' + k.timmar + ' timmar kvar') + '</b> på '
+          + esc(k.namn) + ', till ' + esc(datumText(k.giltigt_till)) + '.</p>').join('')
       + (bank ? '<p><b>' + esc(tidLängd(bank)) + '</b> i timbanken.</p>' : '')
       + '<p class="bk-timmar-not">' + esc((kort.length ? 'Timmarna' : 'Minuterna')
-        + ' dras när ni föreslår ett pass, ett barn per pass. Föreslår er studiehjälpare en annan tid följer de med passet. '
+        + ' dras när ni föreslår ett pass, ett barn per pass' + (kort.some(k => harGratis(k, idag)) ? ', gratis timmar först' : '')
+        + '. Föreslår er studiehjälpare en annan tid följer de med passet. '
         + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka.') + '</p>';
   }
 
@@ -3072,7 +3097,8 @@
     const ord = n => n === 1 ? '1 timme' : n + ' timmar';
     const ok = await NXStudie.bekräfta({
       titel: 'Betala med timmar?',
-      text: ord(behov) + ' dras från ' + kort.namn + '. Kvar efteråt: ' + ord(Number(kort.kvar) - behov)
+      text: ord(behov) + ' dras från ' + kort.namn + '. Kvar efteråt: '
+        + ord(kortetsTimmar(kort, passetsDag(b.wanted_date)) - behov)
         + ' av ' + kort.timmar + '. Avbokas passet kommer timmarna tillbaka.',
       knapp: 'Dra ' + ord(behov)
     });
@@ -3348,7 +3374,8 @@
     const box = $('#erb-mina-box'), mina = $('#erb-mina');
     if (!box || !mina) return;
     const brukbara = S.erb.kort.filter(k => k.brukbar);
-    const timmar = brukbara.reduce((n, k) => n + Number(k.kvar || 0), 0);
+    const idagT = isoFor(new Date());
+    const timmar = brukbara.reduce((n, k) => n + kortetsTimmar(k, idagT), 0);
     const minuter = S.erb.bank.saldo;
     box.hidden = false;
     mina.innerHTML = '<div class="erb-mitt erb-tillg">'
@@ -3368,24 +3395,33 @@
      betalat står under den (under). */
   function kortRad(k, under) {
     const idag = isoFor(new Date());
-    const kvar = Number(k.kvar), tim = Number(k.timmar);
+    /* En plan som gått ut med sin gratis timme kvar (gratistimmarna_60_dagar,
+       2026-10-13): timmen gäller till 60 dagar efter köpet, och raden
+       visar den och dess sista dag. */
+    const baraGratis = k.brukbar && String(k.giltigt_till) < idag && harGratis(k, idag);
+    const kvar = baraGratis ? kortetsTimmar(k, idag) : Number(k.kvar), tim = Number(k.timmar);
+    const sista = baraGratis ? k.gratis_till : k.giltigt_till;
     /* Tio dagar före sista dagen går påminnelsemejlet (Fas 21.2), och
        vyn säger samma sak från samma dag: timmar som inte används
        förfaller. */
-    const dagarKvar = Math.round((Date.parse(String(k.giltigt_till)) - Date.parse(idag)) / 864e5);
+    const dagarKvar = Math.round((Date.parse(String(sista)) - Date.parse(idag)) / 864e5);
     const snart = k.brukbar && dagarKvar >= 0 && dagarKvar <= 10;
     const läge = k.status === 'aterbetald' ? 'Återbetalt'
       : k.status === 'tvist' ? 'Betalningen är ifrågasatt'
       : kvar === 0 ? 'Förbrukat'
+      : baraGratis ? 'Gratistimmen gäller till ' + datumText(k.gratis_till)
       : String(k.giltigt_till) < idag ? 'Gick ut ' + datumText(k.giltigt_till)
       : 'Gäller till ' + datumText(k.giltigt_till);
+    const gratis = !baraGratis && harGratis(k, idag) && String(k.giltigt_till) >= idag
+      ? ' · ' + (Number(k.gratis_kvar) === 1 ? '1 gratis timme' : k.gratis_kvar + ' gratis timmar')
+        + ', som dras först och gäller till ' + datumText(k.gratis_till)
+      : S.forstaTimmen && S.forstaTimmen.plan_id === k.id ? ' · första timmen gratis ingår' : '';
     const andel = tim ? Math.round(100 * kvar / tim) : 0;
     return '<div class="erb-mitt' + (k.brukbar ? '' : ' ar-slut') + '">'
       + '<div class="erb-mitt-topp"><b>' + esc(k.namn) + '</b><span>' + esc(läge) + '</span></div>'
       + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
       + '<i style="width:' + andel + '%"></i></div>'
-      + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar'
-      + (S.forstaTimmen && S.forstaTimmen.plan_id === k.id ? ' · första timmen gratis ingår' : '') + '</span>'
+      + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar' + esc(gratis) + '</span>'
       + (snart ? '<p class="erb-snart">'
         + esc(dagarKvar === 0 ? 'Sista dagen är i dag.' : dagarKvar === 1 ? 'Sista dagen är i morgon.' : 'Sista dagen är om ' + dagarKvar + ' dagar.')
         + ' Timmar som inte används förfaller. <a href="#boka">Boka ett pass</a></p>' : '')
@@ -3450,7 +3486,8 @@
       return;
     }
     host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När ni föreslår '
-      + 'ett pass dras timmarna från det köp som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
+      + 'ett pass dras först en gratis timme, sedan timmarna från det köp som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
+      + 'En gratis timme gäller i 60 dagar från köpet, också om planens andra timmar gått ut. '
       + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
       + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
       + 'Ett pass med fler barn, och ett pass där första timmen eller tipstimmen är på köpet, '
@@ -4013,13 +4050,18 @@
        Sedan 2026-10-09 bara för en familj vi valt, och aldrig när familjen
        fått timmen i en plan (forsta_timmen_lage). Databasen avgör; här
        visas bara vad förslaget kommer att kosta. */
-    bjuden: minuter => {
+    bjuden: (minuter, datum) => {
       const aktiva = (S.bokningar || []).filter(b => b.status !== 'cancelled'
         && b.fakturerbar !== false && (b.tjanst || 'laxhjalp') === 'laxhjalp');
       /* null: databasen saknar funktionen och har den gamla regeln.
-         Inte hämtat än: ingen timme visas, hellre fullt pris än ett löfte. */
+         Inte hämtat än: ingen timme visas, hellre fullt pris än ett löfte.
+         En gratis timme gäller i 60 dagar (gratistimmarna_60_dagar,
+         2026-10-13): beviljad_till och tipstimmens kvar_till är sista
+         dagen, och passets dag ska ligga inom den. */
+      const dag = passetsDag(datum);
       const ft = S.forstaTimmen;
-      const kanFå = ft === null || !!(ft && ft.beviljad && !ft.tagen);
+      const kanFå = ft === null || !!(ft && ft.beviljad && !ft.tagen
+        && (!ft.beviljad_till || String(ft.beviljad_till) >= dag));
       /* Ett pass med tipstimmen (rabattkod TIPS) är inte prissidans
          första timme. Den går först; annars tipstimmen, om det finns en
          kvar (2026-09-30). kvar räknas i databasen och gäller också när
@@ -4028,7 +4070,8 @@
         const före = aktiva.reduce((a, b) => a + (Number(b.duration_min) || 60), 0);
         if (före < 120 && före + minuter >= 120) return true;
       }
-      return S.tips && Number(S.tips.kvar) > 0 ? 'tips' : false;
+      return S.tips && Number(S.tips.kvar) > 0
+        && (!S.tips.kvar_till || String(S.tips.kvar_till) >= dag) ? 'tips' : false;
     },
     /* Köpta timmar i stället för priset vid knappen (2026-09-28). */
     timmar: (minuter, datum, barn) => timmarFörFörslag(minuter, datum, barn),

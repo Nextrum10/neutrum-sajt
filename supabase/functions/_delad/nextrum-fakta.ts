@@ -120,13 +120,17 @@ SIFFRORNA:
 · Priset är det som gällde när passet bokades. En prishöjning gäller
   bara pass som bokas efter den.
 · Första timmen är gratis med den första planen familjen köper: planen
-  får en timme till. En familj som betalar pass för pass får den bara
-  om admin valt det för familjen, och då dras en timme av på det pass
-  som gör att familjen har bokat två timmar. Högst en gratis timme per familj,
-  utom timmar för tips. Ett pass på en timme kan alltså kosta noll
-  kronor, och det är då inte obetalt.
+  får en timme till, 9 timmar när man köper 8. Den dras först och
+  gäller i 60 dagar från köpet, också om planens andra timmar gått ut
+  (en plan gäller en månad). En familj som betalar pass för pass får den
+  bara om admin valt det för familjen, och då dras en timme av på det
+  pass som gör att familjen har bokat två timmar, inom 60 dagar från att
+  admin gav den. Högst en gratis timme per familj, utom timmar för tips.
+  Ett pass på en timme kan alltså kosta noll kronor, och det är då inte
+  obetalt.
 · En familj som tipsat får en timme på köpet när en ny familj som
-  anmält sig med dess kod haft två timmar läxhjälp.
+  anmält sig med dess kod haft två timmar läxhjälp. Den dras av på nästa
+  pass och gäller i 60 dagar från den dagen.
 · Studiehjälparen får betalt den 25:e, i en klump för månadens
   rapporterade pass.
 · Belopp räknas i ören. Kronor blir det först när något visas.

@@ -740,14 +740,14 @@ window.NXArbete = (function () {
       var perTimme = timprisOre() + (st.barn > 1 ? extraOre() : 0);
       return Math.round(perTimme * st.minuter / 60);
     }
-    /* Första timmen bjuds (Fas 19.5). o.bjuden(minuter) svarar om
+    /* Första timmen bjuds (Fas 19.5). o.bjuden(minuter, dag) svarar om
        förslaget blir passet som får timmen; databasen avgör
        (forsta_timmen_bjuds), det här visar bara priset i förväg. En
        timme till passets timpris, aldrig mer än passet kostar. Svaret
        'tips' är en timme på köpet för ett tips (2026-09-30): samma
        rabatt, en annan rad under priset. */
     function bjudenOre() {
-      var bjuds = o.bjuden ? o.bjuden(st.minuter) : false;
+      var bjuds = o.bjuden ? o.bjuden(st.minuter, st.dag) : false;
       if (!bjuds) return 0;
       /* En gratis timme går före en rabattkod, också tipstimmen
          (rabattkoden_krockar_inte, 2026-10-13). */
@@ -892,7 +892,7 @@ window.NXArbete = (function () {
         /* En gratis timme eller timmarna går före koden, och de läggs
            inte ihop. Rutan säger varför priset inte ändrades. */
         var före = bjudenOre()
-          ? (o.bjuden(st.minuter) === 'tips' ? 'passet får en timme på köpet för ert tips' : 'första timmen är på köpet')
+          ? (o.bjuden(st.minuter, st.dag) === 'tips' ? 'passet får en timme på köpet för ert tips' : 'första timmen är på köpet')
           : medTimmar() ? 'passet betalas med timmar ur er timbank' : null;
         if (före) return '<span class="bk-rabatt-inte">' + esc(st.rabatt.kod + ' gäller, men inte på det här passet: '
           + före + '. Koden går att använda på ett pass ni betalar.') + '</span>';
@@ -1017,7 +1017,7 @@ window.NXArbete = (function () {
           ? '<b>' + esc(tim.titel) + '</b><span>' + esc(tim.under) + '</span>'
           : '<b>' + esc(kronorÖre(bruttoOre() - bjuden - rabatt)) + '</b>'
             + '<span>' + esc(!bjuden ? (rabatt ? 'Med rabattkoden ' + st.rabatt.kod : längdText())
-              : o.bjuden(st.minuter) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + '</span>';
+              : o.bjuden(st.minuter, st.dag) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + '</span>';
       var knapp = o.utanPris ? 'Skicka till din förälder'
         : st.granskar ? 'Skicka till ' + (o.hos || 'studiehjälparen') : 'Föreslå tiden';
       return '<div class="bk-sum' + (vald ? ' ar-vald' : '') + '">'

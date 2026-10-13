@@ -500,7 +500,12 @@ migrationen, telefonen) mot en falsk Supabase, som de andra. Sedan
 en kod, och med timbanken: den falska databasen svarar på ett nytt pass
 med raden, som PostgREST, och `bokat` säger vad triggrarna gjort av den.
 `rls-test.sql` avsnitt 28 provar samma ordning i databasen, och mot den
-gamla funktionen faller nio av dess elva rader.
+gamla funktionen faller nio av dess elva rader. Samma dag (`gratistimmarna_60_dagar`)
+3f och 3g: en plan som gått ut med gratistimmen kvar, en beviljad första
+timme som gått ut och tipstimmens sista dag, vid knappen; och
+`rls-test.sql` avsnitt 29 (17 rader). Pass i tips- och första
+timmen-blocken som låg mer än 60 dagar fram flyttades inom dem, för en
+gratis timme gäller inte längre för ett pass efter sina 60 dagar.
 
 `verktyg/prova-forhandsvisning.js` (port 8974) provar förhandsvisningen
 mot den riktiga adressen, men svarar själv på den enda fråga den ställer

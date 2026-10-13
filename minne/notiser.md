@@ -94,7 +94,11 @@ pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
 `timmar-gar-ut` kör varje timme och som bara gör något mellan 9 och 20
 svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
 Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
-familjen har raden i `NOTISVAL` (`bara: 'parent'`).
+familjen har raden i `NOTISVAL` (`bara: 'parent'`). Sedan 2026-10-13
+(`gratistimmarna_60_dagar`) räknar `kvar` bara de timmar som går ut med
+planen: en oanvänd gratis timme gäller till 60 dagar efter köpet. Ingen
+påminnelse om gratistimmen själv, för mallen säger "köpta timmar" och att
+resten betalas tillbaka, och en gratis timme betalas aldrig ut.
 
 **Notiser som inte gick fram (System → Fel) är bara databasens egna
 utskick** (2026-09-27). `notisfel()` läste förut hela

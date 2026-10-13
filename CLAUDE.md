@@ -105,6 +105,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `rabattkod = 'TIPS'` (raden i `rabattkoder` blir aldrig aktiv): en per ny familj som haft två
   timmar läxhjälp i hållna pass (sedan 2026-10-09; förut det första passet, `intern.tva_timmar_hallna`),
   också om den familjen fått en av timmarna gratis, och intjänad ges den också med flaggan `tipstimme` av.
+  Den gäller i 60 dagar från den dagen (2026-10-13, `intern.tipstimmar_kvar`).
   Den står utanför taket för första timmen. Studiehjälpare får ingen
   ersättning, med flit. Den som tipsat ser antal, aldrig vilka. `/affisch` tar ingen fritext ur
   adressen, och QR-koden går till formuläret, inte till en områdessida.
@@ -260,6 +261,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   en familj vi valt (`forsta_timmen_beviljad`, `ge_forsta_timmen()` i Ta in familjen och familjens panel), då med Fas
   19.5:s `startrabatt` på det pass som gör att familjen bokat två timmar. Studievyns `bjuden` speglar regeln ur
   `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
+  **En gratis timme gäller i 60 dagar och dras först** (2026-10-13, Leo: "gratis timmar går ut efter 60 dagar att de
+  läggs in", "gratis timmar går ut först sen planerna", "9h vid köp av 8"): planens gratis timme (`timmar_pa_kopet`) dras
+  först och gäller efter planens månad så länge den inte använts, till 60 dagar efter köpet (`klippkort_saldo.gratis_kvar`
+  och `gratis_till`, `intern.kortets_timmar`), och bland korten väljs först ett med gratis timmar, sedan det som går ut
+  först (`intern.timmar_betala`, `klippkort_dra`, `kortFör`). Tipstimmen och första timmen pass för pass gäller ett pass
+  inom 60 dagar (`intern.tipstimmar_kvar`, `beviljad_till`), och vyn bjuder bara för en dag inom dem. Återbetalningen
+  räknas som förut: en använd timme kostar, också den gratis.
   Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
@@ -673,12 +681,6 @@ Detaljer: `minne/grunden.md`.
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
 - **Obetalda pass på månadens faktura av sig själva** är beslutat (2026-10-01), inte byggt: en
   villkorsändring på alla 36 ställen och i mejlen, i en egen PR (`minne/betalning.md`).
-- **Gratistimmarna i timbanken** är beslutade (2026-10-13), inte byggda: en gratis timme är en timme
-  i timbanken och går ut 60 dagar efter att den lagts in, och en plan går ut en månad efter köpet,
-  som i dag (Leo: "gratis timmar går ut efter 60 dagar att de läggs in, planerna man köper går ut
-  samma månad"). I dag är första timmen och tipstimmen en rabatt på ett pass, och planens första
-  timme går ut med planen. Ordningen mellan gratis och köpta timmar, betygsgarantins sex månader och
-  en ny version av villkoren avgörs när det byggs (`minne/timmar.md`).
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten, och familjerna om barnens inloggning
@@ -788,11 +790,14 @@ Detaljer: `minne/grunden.md`.
   hand), datadelningen med Googles produkter och Google-signaler av, lagringstiden (policyn lovar högst 14
   månader), och ingen koppling till Google Ads. Vercels Web Analytics var inte
   påslaget i projektet 2026-09-28 (`TRAFIK.md`). Juristen har inte läst texterna eller rad 14 i `DATASKYDD.md`.
-- **Barnets förslag på pass, förhandsvisningen, adminkontona i statistiken och rabattkoden** (2026-10-12
-  och 13) är byggda men inte i drift: migrationerna `barnet_foreslar_pass`, `adminkonton_utanfor_statistiken`
-  och `rabattkoden_krockar_inte` körs efter merge, i den ordningen, och **`notis-ko` driftsätts från main
-  FÖRE den första** (mallen för `barnforslag`). Versionerna ligger efter `fyll_timbanken` (20261012120000, i
-  drift), som de först krockade med. Lokalt, byggd ur alla 185 migrationer, 1586 av 1586 i `rls-test.sql`.
+- **Barnets förslag på pass, förhandsvisningen, adminkontona i statistiken, rabattkoden och gratistimmarnas
+  60 dagar** (2026-10-12 och 13) är byggda men inte i drift: migrationerna `barnet_foreslar_pass`,
+  `adminkonton_utanfor_statistiken`, `rabattkoden_krockar_inte` och `gratistimmarna_60_dagar` körs efter merge,
+  i den ordningen, och **`notis-ko` driftsätts från main FÖRE den första** (mallen för `barnforslag`), och
+  `drift` efter den sista (agentens fakta om gratistimmarna). Villkorens version blir 2026-10-13, så alla får
+  frågan igen. Versionerna ligger efter `fyll_timbanken` (20261012120000, i drift), som de först krockade med.
+  Lokalt, byggd ur alla 186 migrationer, 1603 av 1603 i `rls-test.sql`. Juristen har inte läst de nya
+  villkoren om gratistimmarna.
   Vyerna tål att de saknas, och förhandsvisningen behöver ingen av dem. Rutan för en rabattkod står i
   förälderns förslag direkt; utan migrationen gäller den gamla ordningen i databasen, men 2026-10-13 fanns
   ingen kod utom `TIPS`, och ingen ska skapas förrän migrationen körts och `kolla_rabattkod` har ett tak. Ett adminkonto som också är förälder hade

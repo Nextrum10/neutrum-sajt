@@ -341,7 +341,7 @@ inloggning). I ordning:
    Skicka länk för lösenord på ett konto i bruk. Radera provfamiljen i
    adminvyns panel.
 
-## 12. Barnets förslag, förhandsvisningen, adminkontona i statistiken och rabattkoden (2026-10-12–13)
+## 12. Barnets förslag, förhandsvisningen, adminkontona i statistiken, rabattkoden och gratistimmarna (2026-10-12–13)
 
 Vyerna går ut med Vercel vid merge och tål att migrationerna saknas:
 utan tabellen syns inga förslag, utan `boka` i listan inget val, och
@@ -365,15 +365,26 @@ kod förrän steg 4 är gjort och `kolla_rabattkod` har ett tak**
    texten den byter i `forsta_timmen_bjuds` och avbryter om den inte
    hittas; funktionen var 2026-10-13 densamma i driften som lokalt (md5
    `570b7cccf330cff006ad3e3dcd44ffdb`).
-5. **Hela `rls-test.sql` mot driften**, i en transaktion som rullas
-   tillbaka: lokalt 1586 av 1586 (avsnitt 26, 27 och 28 är nya).
-6. **Prova**: slå på Föreslå pass för ett provbarn under Profil → Barn,
+5. **`20261013110000_gratistimmarna_60_dagar`**, likadant. Vakten prövar
+   `intern.timmar_betala`, `klippkort_dra` och `klippkort_saldo` mot
+   driftens text 2026-10-13 och avbryter om någon ändrats. Villkorens
+   version blir 2026-10-13: alla får frågan igen vid nästa inloggning, och
+   ingen bokar eller köper timmar innan dess. Vyerna och villkorssidan går
+   ut vid merge, så kör den här direkt efter merge.
+6. **`drift` från main**: agentens fakta (`_delad/nextrum-fakta.ts`) säger
+   att en gratis timme gäller i 60 dagar. Hämta tillbaka och jämför byte för
+   byte, som förut.
+7. **Hela `rls-test.sql` mot driften**, i en transaktion som rullas
+   tillbaka: lokalt 1603 av 1603 (avsnitt 26–29 är nya).
+8. **Prova**: slå på Föreslå pass för ett provbarn under Profil → Barn,
    föreslå ett pass i barnets vy, se mejlet och raden under Att göra,
    granska, skicka och acceptera som studiehjälpare. Öppna Förhandsvisning
    i adminvyn och prova samma sak där, utan att något hamnar i databasen.
-7. **Säg till** familjerna med barnkonto att valet finns, i samma mejl som
-   policyändringen (`DATASKYDD.md` avsnitt 8), och låt juristen läsa rad 26.
-8. **Adminkontots pass**: kontot som också är förälder har alla passen
+9. **Säg till** familjerna med barnkonto att valet finns, i samma mejl som
+   policyändringen (`DATASKYDD.md` avsnitt 8), och låt juristen läsa rad 26
+   och de nya villkoren om gratistimmarna (#erbjudanden, #forsta-timmen,
+   #tips).
+10. **Adminkontots pass**: kontot som också är förälder har alla passen
    från provandet. De räknas inte i statistiken efter steg 3, men står
    kvar som pass och betalningar. Ett adminkonto raderas inte i panelen
    (`radera_person()` vägrar), och `bookings.parent_id` är ON DELETE
