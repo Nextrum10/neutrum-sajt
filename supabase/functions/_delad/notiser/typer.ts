@@ -23,17 +23,19 @@
 
 export const NOTIS_TYPER = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
-  'meddelande', 'rapport', 'paminnelse', 'timmar_gar_ut', 'barnforslag',
+  'meddelande', 'rapport', 'paminnelse', 'timmar_gar_ut', 'barnforslag', 'kort_nekat',
 ] as const;
 
 export type NotisTyp = typeof NOTIS_TYPER[number];
 
 /** Samma som notis_mejlbara(): allt utom rapport, som bara syns i appen.
  *  barnforslag (barnet_foreslar_pass, 2026-10-12): ett barn har föreslagit
- *  ett pass som väntar på föräldern. */
+ *  ett pass som väntar på föräldern. kort_nekat (kortet_reserveras,
+ *  2026-10-13): det sparade kortet nekades när beloppet skulle reserveras
+ *  eller dras. */
 export const MEJLBARA = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
-  'meddelande', 'paminnelse', 'timmar_gar_ut', 'barnforslag',
+  'meddelande', 'paminnelse', 'timmar_gar_ut', 'barnforslag', 'kort_nekat',
 ] as const;
 
 export type MejlbarTyp = typeof MEJLBARA[number];
@@ -120,6 +122,10 @@ export type RenData = {
   betalsatt: Betalsatt | null;
   /** Fas 21.2. Köpta timmar som är kvar på ett kort som snart går ut. */
   kvar: number | null;
+  /** kortet_reserveras. Varför kortet inte gick: 'bekrafta' (banken vill
+   *  att familjen bekräftar betalningen) eller 'nekat'. En kod, aldrig
+   *  Stripes text. */
+  kortet: 'bekrafta' | 'nekat' | null;
   /** barnets_epost. Koden i länken som bekräftar barnets adress:
    *  barnets id, en punkt och en HMAC. Ingen personuppgift: den räknas
    *  fram när mejlet skickas och sparas ingenstans. */
@@ -177,6 +183,7 @@ export function renData(v: unknown): RenData {
     skal: AVBOKNINGSSKAL.find((k) => k === d.skal) ?? null,
     betalsatt: BETALSATT.find((k) => k === d.betalsatt) ?? null,
     kvar: kvarOk(d.kvar),
+    kortet: d.kortet === 'bekrafta' || d.kortet === 'nekat' ? d.kortet : null,
     kod: typeof d.kod === 'string' && KOD.test(d.kod) ? d.kod : null,
     prov: d.prov === true,
   };

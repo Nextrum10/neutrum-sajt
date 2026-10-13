@@ -79,6 +79,7 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
   paminnelse: 'påminnelser före pass',
   timmar_gar_ut: 'köpta timmar som går ut',
   barnforslag: 'barnens förslag på pass',
+  kort_nekat: 'kort som nekas',
 };
 
 const SVARA = 'Svara ja eller nej i Nextrum.';
@@ -291,6 +292,33 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       knapp: flera ? 'Visa förslagen' : 'Visa förslaget',
       mal: 'boka',
       fakta: flera ? [] : passFakta(m, nar),
+    };
+  },
+
+  // kortet_reserveras (2026-10-13). Det sparade kortet nekades när
+  // beloppet skulle reserveras två dagar före passet, eller dras efter
+  // det. Bara familjen får mejlet, utan belopp och utan Stripes kod: vill
+  // banken att familjen bekräftar betalningen säger mejlet det, annars
+  // att kortet nekades. Före passet: inget är reserverat, och familjen kan
+  // lägga till ett kort eller betala efter passet. Efter: betala i Nextrum.
+  kort_nekat(m) {
+    const nar = narText(m.d.datum, m.d.tid);
+    const efter = m.d.status === 'completed';
+    const varfor = m.d.kortet === 'bekrafta'
+      ? 'Er bank vill att ni bekräftar betalningen själva'
+      : 'Kortet nekades';
+    return {
+      amne: medNar(efter ? 'Betalningen för passet gick inte igenom' : 'Kortet kunde inte reserveras', nar),
+      rubrik: efter ? 'Betalningen gick inte igenom' : 'Kortet kunde inte reserveras',
+      mening: efter
+        ? `${varfor} när vi skulle dra betalningen för passet${med(m)}. Betala passet i Nextrum, med kort eller`
+          + ' faktura.'
+        : `${varfor} när vi skulle reservera beloppet för passet${med(m)}. Inget är reserverat. Lägg till kortet`
+          + ' igen i Nextrum, eller ett annat kort, så försöker vi igen. Annars betalar ni efter passet, med kort'
+          + ' eller faktura.',
+      knapp: 'Gå till betalningen',
+      mal: 'betalning',
+      fakta: passFakta(m, nar),
     };
   },
 };

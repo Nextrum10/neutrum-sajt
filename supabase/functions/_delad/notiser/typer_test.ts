@@ -45,7 +45,7 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   // överst innan det går igenom.
   assertEquals(Object.keys(rad).sort(), [
     'amne', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid',
-    'kod', 'kvar', 'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
+    'kod', 'kortet', 'kvar', 'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
   ]);
 
   // Ingen av texterna finns kvar någonstans i svaret.
@@ -165,8 +165,8 @@ Deno.test('rapport finns som notistyp men mejlas aldrig', () => {
 
   // Listorna står också i databasen (notis_typer, notis_mejlbara).
   // Ändras den ena ska den andra ändras i samma ändring.
-  assertEquals(NOTIS_TYPER.length, 10);
-  assertEquals(MEJLBARA.length, 9);
+  assertEquals(NOTIS_TYPER.length, 11);
+  assertEquals(MEJLBARA.length, 10);
   for (const t of MEJLBARA) assertEquals(arNotisTyp(t), true, `${t} saknas i NOTIS_TYPER`);
 
   assertEquals(arNotisTyp('pass_installt'), false);
@@ -174,6 +174,14 @@ Deno.test('rapport finns som notistyp men mejlas aldrig', () => {
   assertEquals(arKanal('mejl'), true);
   assertEquals(arKanal('sms'), true);
   assertEquals(arKanal('brev'), false);
+});
+
+Deno.test('kortet är en av två koder, aldrig Stripes text (kortet_reserveras, 2026-10-13)', () => {
+  assertEquals(renData({ kortet: 'bekrafta' }).kortet, 'bekrafta');
+  assertEquals(renData({ kortet: 'nekat' }).kortet, 'nekat');
+  assertEquals(renData({ kortet: 'Your card has insufficient funds.' }).kortet, null);
+  assertEquals(renData({ kortet: 'card_declined' }).kortet, null);
+  assertEquals(renData({}).kortet, null);
 });
 
 Deno.test('de två listorna är inte samma lista', () => {

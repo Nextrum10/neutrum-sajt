@@ -208,6 +208,15 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   per familj (`max_anvandningar`, `max_per_familj`, en gång som förval; Leo: "rabattkoder ska vi också bestämma hur
   många gånger de får användas"), och ett avbokat pass ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6).
   Skapa ingen kod förrän `rabattkoden_timmar_och_tak` körts i driften.
+- **Kortet reserveras** (2026-10-13, under arbete; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
+  och när passet har hållits och läxhjälparen har skrivit rapport så dras pengarna"): valet är frivilligt, och kortet
+  och reservationen står i egna tabeller, aldrig på `bookings` (`kortreservationer`, bara genom `valj_kort()` och
+  tjänstekontot). Kortet sparas hos Stripe (`sparade_kort`; familjen ser märke, sista fyra och giltighetstid genom
+  `mitt_kort()`), beloppet reserveras två dagar före ett bekräftat pass, dras efter rapporten och släpps när passet
+  inte längre ska betalas med kortet. Stripe släpper en reservation vi gjort utan familjen efter 4 dygn och 18 timmar
+  (Visa) eller 7 dagar, och gränsen läses ur Stripe (`capture_before`). En reservation som står skrivs aldrig om
+  till nekad, bara webhooken skriver betalningen på passet, och raderingen väntar på kortet. Strömbrytaren
+  `kortreservation` står av (`minne/betalning.md`, Kortet reserveras vid bokningen).
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -875,6 +884,11 @@ Detaljer: `minne/grunden.md`.
   ingen kod finns utom `TIPS`. Villkoren nämner inga koder och får ingen ny version, så en kods villkor (hur många
   gånger, inte med timmar i timbanken) ska stå klart där koden delas ut (e-handelslagen 9 §). Juristen har inte läst
   rad 28 i `DATASKYDD.md` (`DEPLOY-BETALNING.md` 9.13).
+- **Kortet reserveras vid bokningen** (2026-10-13) är under arbete och inte i drift. Databasen är skriven
+  (`kortet_reserveras`, 20261013170000; lokalt ur 190 migrationer 1699 av 1699 i `rls-test.sql`, avsnitt 33),
+  med strömbrytaren `kortreservation` av, mallen `kort_nekat` i `notis-ko`, och policyn och rad 29 i `DATASKYDD.md`.
+  Kvar: kassans läge `setup` och Ta bort kortet, `stripe-reservation`, webhookens nya händelser, vyerna och
+  villkoren (`minne/betalning.md`). `notis-ko` driftsätts före migrationen.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

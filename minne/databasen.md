@@ -1147,3 +1147,40 @@ Lokalt, byggd ur alla 189 migrationer: hela `rls-test.sql` 1664 av 1664
 (avsnitt 32 är nytt, 21 prov). **Körs efter merge, efter `gratistimmar`,
 och `stripe-checkout` från main driftsätts FÖRE den** (`DEPLOY-BETALNING.md`
 9.13). Vyerna tål att den saknas.
+
+### Kortet reserveras vid bokningen (2026-10-13, under arbete)
+**`20261013170000_kortet_reserveras`** (`minne/betalning.md`, Kortet
+reserveras vid bokningen): strömbrytaren `kortreservation` (av);
+`notis_konfig.kortreservation_url`, härledd ur arbetarens adress som
+`admin_paminnelse_url`; tabellerna `stripe_kunder` (bara tjänstekontot),
+`sparade_kort` (ett kort per familj; admin läser, familjen genom
+`mitt_kort()`) och `kortreservationer` (ett val per pass; familjen och
+admin läser, ingen inloggad skriver); auditloggen genom
+`intern.logga_andring_nyckel()`, som är `logga_andring` med nyckeln som
+andra argument, för tabellerna har familjen och passet som nyckel och
+`logga_andring` läser objektet ur en kolumn som heter `id`; hjälparna
+`intern.kortreservation_pa`, `passets_start`, `passet_kostar` (samma
+räkning som `ej_betalt` i `avvikelser_rader`) och `kortet_betalar`;
+familjens `mitt_kort()` och `valj_kort()` (en faktura som valts byts mot
+kortet med familjens egen skrivning, som `skydda_bokningsfalt` prövar);
+tjänstekontots `kort_sparat()`, `kort_borttaget()`,
+`kortreservation_att_gora()` och `kortreservation_skriv()`; jobbet
+`kortreservation` (var tionde minut) med `intern.kortreservation_vack()`
+och `intern.kortval_stada()`; typen `kort_nekat` i båda listorna och
+triggern `kortreservationer_nekat`, som bygger notisens data som
+`notis_vid_pass` och skriver ett fel till `notis_fel` i stället för att
+rulla tillbaka; och hindren `kort_sparat` och `kort_reserverat` i
+`intern.radering_underlag`, lappad med ett ankare som räknas.
+Delete står bara i `intern.kortval_glom`, `intern.kortval_stada` och
+`kort_borttaget`, ett i var. Filen går att köra två gånger (lapparna
+känner igen sig själva, och `cron.schedule` byter jobbet med samma namn).
+
+Två saker provet hittade innan det gick grönt: en reservation med kort
+giltighet hade släppts och gjorts om var tionde minut, så den släpps för
+att passet flyttats bara när starttiden ändrats sedan reservationen
+(`reserverat_for`); och en reservation som står fick först skrivas om
+till nekad, vilket hade låtit ett nytt kort nollställa raden och tappa en
+reservation som håller pengar. Lokalt, ur 190 migrationer: hela
+`rls-test.sql` 1699 av 1699 (avsnitt 33 är nytt, 35 prov). **Körs inte
+förrän resten är byggd, och `notis-ko` från main driftsätts före den**
+(mallen `kort_nekat`).
