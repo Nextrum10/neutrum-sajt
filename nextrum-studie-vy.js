@@ -2456,10 +2456,11 @@
     return Math.max(1, Math.ceil(min / 60));
   };
 
-  /* Kortet timmarna dras från: det som går ut först och räcker. Samma
-     urval som klippkort_dra gör — funktionen väljer själv, det här
-     avgör bara om knappen ska stå där. Ett pass med fler barn betalas
-     med kort (villkoren, #erbjudanden). */
+  /* Kortet timmarna dras från: gratistimmarna först (2026-10-13), och
+     annars det som går ut först och räcker. Samma urval som
+     klippkort_dra gör — funktionen väljer själv, det här avgör bara om
+     knappen ska stå där. Ett pass med fler barn betalas med kort
+     (villkoren, #erbjudanden). */
   function kortFör(b) {
     /* Ett pass med första timmen bjuden betalas med kort (Fas 19.5):
        timmarna dras ur passets hela längd, och klippkort_dra nekar det. */
@@ -2468,7 +2469,8 @@
     return S.erb.kort
       .filter(k => k.brukbar && k.status === 'betald' && Number(k.kvar) >= behov
         && String(k.giltigt_till) >= String(b.wanted_date))
-      .sort((a, c) => String(a.giltigt_till).localeCompare(String(c.giltigt_till)))[0] || null;
+      .sort((a, c) => (Number(NXBetalning.gratistimmar(c)) - Number(NXBetalning.gratistimmar(a)))
+        || String(a.giltigt_till).localeCompare(String(c.giltigt_till)))[0] || null;
   }
 
   /* Timbanken betalar ett helt pass när minuterna räcker till det
@@ -3364,7 +3366,8 @@
       + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
       + '<i style="width:' + andel + '%"></i></div>'
       + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar'
-      + (S.forstaTimmen && S.forstaTimmen.plan_id === k.id ? ' · första timmen gratis ingår' : '') + '</span>'
+      + (S.forstaTimmen && S.forstaTimmen.plan_id === k.id ? ' · första timmen gratis ingår' : '')
+      + (NXBetalning.gratistimmar(k) ? ' · gratis, från oss' : '') + '</span>'
       + (snart ? '<p class="erb-snart">'
         + esc(dagarKvar === 0 ? 'Sista dagen är i dag.' : dagarKvar === 1 ? 'Sista dagen är i morgon.' : 'Sista dagen är om ' + dagarKvar + ' dagar.')
         + ' Timmar som inte används förfaller. <a href="#boka">Boka ett pass</a></p>' : '')
@@ -3422,18 +3425,25 @@
     if (!host) return;
     const kort = S.erb.kort;
     if (!kort.length) {
-      host.innerHTML = '<p class="erb-bank-text">Ni har inga köpta timmar.'
+      host.innerHTML = '<p class="erb-bank-text">Ni har inga timmar i timbanken.'
         + (S.erb.aktiv ? ' Köper ni en plan eller fyller timbanken betalar timmarna era pass av sig själva. '
           + '<a href="#erbjudanden">Se planer och Fyll timbanken</a>' : '')
         + '</p>';
       return;
     }
+    /* Gratistimmarna (2026-10-13) står med de köpta och dras först. */
+    const gratis = kort.some(NXBetalning.gratistimmar);
     host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När ni föreslår '
-      + 'ett pass dras timmarna från det köp som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
+      + 'ett pass dras timmarna från ' + (gratis ? 'era gratistimmar först, och annars från ' : '')
+      + 'det köp som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
       + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
-      + 'svarat på har passerat. Köper ni timmar, eller kommer timmar tillbaka, betalar de era pass i datumordning. '
+      + 'svarat på har passerat. Köper ni timmar, sätter vi in gratistimmar eller kommer timmar tillbaka, betalar de era '
+      + 'pass i datumordning. '
       + 'Ett pass med fler barn, och ett pass där första timmen eller tipstimmen är på köpet, '
-      + 'betalas med kort. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
+      + 'betalas med kort. '
+      + (gratis ? 'Gratistimmar från oss gäller i 60 dagar, det som blir över av en sådan timme sparas inte, och de '
+        + 'betalas aldrig ut. ' : '')
+      + '<a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
       + kort.map(k => kortRad(k, kortetsPass(k))).join('');
   }
 
@@ -3468,7 +3478,7 @@
 
     host.innerHTML = '<div class="erb-mitt-topp"><b>' + esc(tidLängd(bank.saldo)) + ' sparat</b>'
       + (bank.varde ? '<span>Värt ' + esc(NXBetalning.kronor(bank.varde)) + ' om ni slutar</span>' : '') + '</div>'
-      + '<p class="erb-bank-text">Här sparas det som blir över när ett pass betalt med timmar slutar före en hel timme: '
+      + '<p class="erb-bank-text">Här sparas det som blir över när ett pass betalt med köpta timmar slutar före en hel timme: '
       + 'ett pass på två timmar som höll 1 h 15 lägger 45 minuter här. Drar ett pass med ett barn över tas tiden härifrån '
       + 'först, utan kostnad, och räcker minuterna till ett helt pass betalar de nästa pass ni föreslår, om inga köpta '
       + 'timmar gör det. Minuterna går inte ut, och slutar ni betalar vi tillbaka dem. '
@@ -4288,7 +4298,7 @@
       + ruta('', 'Kan betalas i förväg', iFörväg.length ? kronor(förvägKr) : '0 kr',
         iFörväg.length ? (iFörväg.length === 1 ? '1 bekräftat pass' : iFörväg.length + ' bekräftade pass') : 'Inget bekräftat pass')
       + ruta('', 'Betalt i ' + (NX.MANADER[new Date().getMonth()] || 'månaden'), kronor(betaltKr),
-        timmar ? 'och ' + (timmar === 1 ? '1 köpt timme' : timmar + ' köpta timmar')
+        timmar ? 'och ' + (timmar === 1 ? '1 timme' : timmar + ' timmar') + ' ur timbanken'
           : iMånaden.length ? (iMånaden.length === 1 ? '1 pass' : iMånaden.length + ' pass') : 'Inget betalt än');
   }
 
@@ -4312,6 +4322,7 @@
              Betalda pass. Ett återbetalt eller bestritt pass behåller
              sitt märke: det är det enda som skiljer dem från resten. */
           const timmar = Math.max(1, Math.round(Number(b.duration_min || 60) / 60));
+          const gratis = b.klippkort_id && S.erb.kort.some(k => k.id === b.klippkort_id && NXBetalning.gratistimmar(k));
           const drogs = b.klippkort_id && !betalt ? (timmar === 1 ? '1 timme' : timmar + ' timmar')
             : medBanken(b) && !betalt ? tidLängd(Number(b.duration_min || 60)) : betalt ? kronor(betalt) : '';
           return NXKontakt.passRad(b, {
@@ -4319,7 +4330,8 @@
             med: medBarn(b),
             tid: false,
             plats: false,
-            under: [b.klippkort_id && !betalt ? 'Köpta timmar' : medBanken(b) && !betalt ? 'Sparade minuter' : 'Kort',
+            under: [b.klippkort_id && !betalt ? (gratis ? 'Gratistimmar' : 'Köpta timmar')
+              : medBanken(b) && !betalt ? 'Sparade minuter' : 'Kort',
               'betalt ' + kortDatum(isoFor(new Date(b.betald_at)))].join(' · '),
             vem: !tillbaka ? null
               : tillbaka >= betalt ? 'Hela beloppet är återbetalt.'

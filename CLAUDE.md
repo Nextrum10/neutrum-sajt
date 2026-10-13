@@ -23,7 +23,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 1. Familjen skickar **intresseanmälan** → rad i `leads` (Nextrum matchar; ingen katalog)
 2. Ni ringer och väljer studiehjälpare
 3. Admin tar in familjen (**Ta in familjen** på anmälan, 2026-10-06): kontot skapas med anmälans
-   adress, eleven ur anmälan, och familjen väljer lösenordet genom länken i mejlet. **Inget Skapa
+   adress, eleven ur anmälan, och familjen väljer lösenordet genom länken i mejlet; i samma ruta kan
+   vi sätta in gratistimmar (2026-10-13). **Inget Skapa
    konto** på sajten (2026-10-07): konton skapar bara vi (`bjud-in`) och föräldern (barnets inloggning)
 4. `admin.html` → **Familjer** → välj hjälpare: sätter `matched_tutor_id` och `match_status`
    **samtidigt**. Först då öppnas bokningen, köpen och tråden; före det är vyn öppen med barnen,
@@ -81,8 +82,16 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Timmarna**: `bookings_timmarna_tillbaka` är den SISTA before-triggern på `bookings`
   (namnordning), och klippkortets triggrar rör inte `skydda_bokningsfalt`. Timmen dras bara i
   `klippkort_dra()`, när förslaget skapas, och kommer tillbaka vid nej, avbokning eller
-  obesvarat förslag. `timmar-betalar` väntar aldrig på ett lås. Timbanken fylls bara av köpta
-  timmar och går inte ut. Vid ånger eller uppsägning: avboka först allt kommande.
+  obesvarat förslag. `timmar-betalar` väntar aldrig på ett lås. De sparade minuterna kommer bara ur
+  köpta timmar och går inte ut. Vid ånger eller uppsägning: avboka först allt kommande.
+- **Gratistimmar** (2026-10-13, Leo): admin sätter in dem i familjens timbank, i Ta in familjen och i
+  familjens panel under Ekonomi, och bara genom `ge_gratistimmar()` (1–40 åt gången, `is_admin()`). De är
+  en rad i `klippkort` med erbjudandet `gratis` (katalograden säljs aldrig), utan betalning (`betalt_ore`
+  0, `betald_at` null) och utan villkor först: en gåva är inget köp. De gäller i 60 dagar, används FÖRE
+  köpta timmar (Leo: "de används först av alla timmar"), sparar inga minuter (`intern.timbank_in`), får
+  ingen påminnelse och betalas aldrig ut; studiehjälparen får lön som vanligt. `ta_tillbaka_gratistimmar()`
+  tar bara det som inte ligger på ett pass. De står utanför första timmen, som tipstimmen. Det river
+  beskedet 2026-10-09 "inte få gratis av oss".
 - **NexLäx**: rättningen sker i databasen; frågorna går ut utan facit, försök och svar har ingen
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
   sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. Allt i NexLäx är
@@ -190,7 +199,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs eller studiehjälpares egen kod i intresseanmälan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips: `startrabatt` och `rabattkod = 'TIPS'` på passet |
-| timbanken | familjens köpta timmar (en plan eller Fyll timbanken) och sparade minuter; pass för pass går inte genom den |
+| timbanken | familjens köpta timmar (en plan eller Fyll timbanken), gratistimmar och sparade minuter; pass för pass går inte genom den |
+| gratistimmar | timmar vi sätter in i familjens timbank utan kostnad (`klippkort` med erbjudandet `gratis`); 60 dagar, först av alla timmar |
 | Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
@@ -207,7 +217,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   **Timbanken** är familjens köpta timmar och sparade minuter, och den fylls på två sätt (Leo 2026-10-12: "timbanken
   fylls antingen med plan eller förköpta timmarna"): med en plan, eller med **Fyll timbanken** (klippkorten
   `klipp10`–`klipp100` i databasen), som kostar timpriset, 399 kr, utan rabatt och utan märke, och gäller i sex månader
-  i alla storlekar. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
+  i alla storlekar. Sedan 2026-10-13 sätter vi också in gratistimmar där (avsnitt 1). Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
   och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
   Studievyns Erbjudanden visar alltid Er timbank med de tillgängliga timmarna och hänvisar till Profil → Timbanken,
   där förklaringen och villkoren står (Leo samma kväll).
@@ -240,7 +250,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   är lika. Plankorten har ingen rad med timpris och "ni sparar" under priset (2026-10-12, Leo: "de ska bort"), varken
   på prissidan eller i studievyn, och kalkylatorn säger inget "Ni sparar" heller (Leo samma kväll). Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
   gratis första lektion", "MAXIMALT ... en timme gratis"): högst en per familj, någonsin, utom tipstimmar
-  (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
+  och gratistimmar (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
   `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald); pass för pass bara för
   en familj vi valt (`forsta_timmen_beviljad`, `ge_forsta_timmen()` i Ta in familjen och familjens panel), då med Fas
   19.5:s `startrabatt` på det pass som gör att familjen bokat två timmar. Studievyns `bjuden` speglar regeln ur
@@ -747,6 +757,12 @@ Detaljer: `minne/grunden.md`.
   tillbakarullat. `drift` (agentens fakta) är driftsatt som v16 från main, hämtad tillbaka och byte för byte lika i
   alla fem filer. Villkorens version är 2026-10-12, så alla får frågan igen. Inget klippkort var köpt. Juristen har
   inte läst de nya villkoren.
+- **Gratistimmarna** (2026-10-13) är inte i drift: migrationen `gratistimmar` (20261013140000) körs efter merge, hämtad
+  från merge-commiten och prövad mot sin md5, och sedan hela `rls-test.sql` mot driften (lokalt 1536 av 1536, 17 nya
+  prov). Vyerna tål att den saknas: knappen säger att funktionen saknas. Villkorens version blir 2026-10-13, så alla
+  får frågan igen. `drift` (agentens fakta) driftsätts från main efter merge. Ingen påminnelse går om gratistimmar
+  (mejlet säger "köpta timmar" och lovar återbetalning); vill vi ha en krävs en egen mall och `notis-ko`. Juristen
+  har inte läst villkoren för gratistimmarna.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för

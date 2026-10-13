@@ -106,6 +106,10 @@ SIFFRORNA:
   betalt med timmar slutar före en hel timme går aldrig ut. Pass för
   pass går inte genom timbanken: varje pass betalas för sig. Utåt
   heter det aldrig klippkort.
+· Admin kan sätta in gratistimmar i en familjs timbank, när familjen
+  tas in och senare. De gäller i 60 dagar, används före köpta timmar,
+  sparar inga minuter och betalas aldrig ut. Studiehjälparen får lön
+  för passen som vanligt.
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
   468 kronor i timmen, inte 537.
@@ -122,9 +126,10 @@ SIFFRORNA:
 · Första timmen är gratis med den första planen familjen köper: planen
   får en timme till. En familj som betalar pass för pass får den bara
   om admin valt det för familjen, och då dras en timme av på det pass
-  som gör att familjen har bokat två timmar. Högst en gratis timme per familj,
-  utom timmar för tips. Ett pass på en timme kan alltså kosta noll
-  kronor, och det är då inte obetalt.
+  som gör att familjen har bokat två timmar. Högst en sådan timme per familj;
+  timmar för tips och gratistimmar som admin sätter in räknas inte hit.
+  Ett pass på en timme kan alltså kosta noll kronor, och det är då
+  inte obetalt.
 · En familj som tipsat får en timme på köpet när en ny familj som
   anmält sig med dess kod haft två timmar läxhjälp.
 · Studiehjälparen får betalt den 25:e, i en klump för månadens

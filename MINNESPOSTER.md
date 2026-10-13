@@ -98,7 +98,8 @@ av den sista påbörjade timmen på ett timpass sparas i familjens timbank
 betala ett helt pass och går inte ut. Kortpass som blev kortare får
 fortfarande pengarna tillbaka, inte minuter. Sedan Fas 22.2 betalar köpta
 timmar ett pass av sig själva när det bekräftas eller genomförs (kortet
-som går ut först, annars timbanken), och ett nytt köp betalar de
+som går ut först, annars timbanken; sedan 2026-10-13 gratistimmarna
+före allt annat), och ett nytt köp betalar de
 bekräftade pass som redan står obetalda. Sedan Fas 22.3 betalar timmar
 som blir lediga (avbokning, kortet som vann, banken som fyllts på) nästa
 bekräftade pass inom fem minuter, genom pg_cron-jobbet `timmar-betalar`.
@@ -452,7 +453,9 @@ Priset fryses på passet när det bokas (Fas 19.5, `timpris_ore`), och
 första timmen är gratis med den första planen (en timme till i planen,
 sedan 2026-10-09), och pass för pass bara för en familj vi valt: då får
 passet som gör två bokade timmar en timme i `rabatt_ore` (`startrabatt`).
-Högst en per familj. Ett pass på noll kronor är inte obetalt. Bokföringen, fakturorna och lönen
+Högst en per familj. Gratistimmar som admin sätter in (2026-10-13: när
+familjen tas in eller senare, 60 dagar, inga sparade minuter, aldrig
+utbetalda) räknas för sig. Ett pass på noll kronor är inte obetalt. Bokföringen, fakturorna och lönen
 sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
 Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28);
 fakturorna läggs in för hand, för Fortnox läser inte in kundfakturor från

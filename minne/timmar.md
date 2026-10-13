@@ -1,7 +1,7 @@
 # Timmarna: planer, klippkort och timbanken
 
 Arkivet för Fas 16.1, 21 och 22.1–22.4 ur avsnitt 1 och 11 i `CLAUDE.md`, ordagrant, och Leos
-besked 2026-09-30 om testköpet. Reglerna står i kärnan, `CLAUDE.md`; siffrorna och
+besked 2026-09-30 om testköpet. Gratistimmarna (2026-10-13) står efter köpta timmar. Reglerna står i kärnan, `CLAUDE.md`; siffrorna och
 kortbetalningen i `betalning.md`. "Avsnitt N" i texten är kärnans.
 
 ---
@@ -203,6 +203,79 @@ text vad timbanken är för något också".
   hela `rls-test.sql` 1519 av 1519 mot driften och `drift` v16
   (`minne/databasen.md` och `minne/funktioner.md`).
 
+## Gratistimmar (2026-10-13)
+
+**Admin sätter in gratistimmar i familjens timbank.** Leo: "när vi tar in en
+familj ska vi kunna fylla deras timbank med önskade timmar som vi klickar in,
+inte de. vi kan även sätta in gratis timmar som vi själva väljer när familjen
+redan är inne i system". Han fick tre frågor och svarade: timmarna är gratis
+också när familjen tas in (inte ett köp vi förbereder, inte Swish eller
+faktura vid sidan av), de gäller i "60 dagar men de används först av alla
+timmar om man har flera timmar", och det som blir över av en gratistimme
+sparas inte (sparade minuter betalas tillbaka i kronor, och en gåva hade då
+blivit pengar).
+- **Det river beskedet 2026-10-09** ("MAXIMALT en timme gratis ... de kan spara
+  genom timbanken men inte få gratis av oss"). Leo fick höra det, och att en
+  gratistimme kostar lönen ändå: studiehjälparen får betalt för den tid som
+  hölls (`passunderlag.lon_min`), hur familjen än betalade. Första timmen står
+  kvar som den var, högst en per familj, och gratistimmarna räknas inte dit
+  (`intern.forsta_timmen_tagen` är orörd), som tipstimmen.
+- **En gåva är en rad i `klippkort`** med erbjudandet `gratis`, en katalograd
+  som aldrig säljs (`aktiv` falsk, och villkoret `erbjudanden_gratis_saljs_inte`
+  håller den så). Då gäller allt som finns för köpta timmar utan att något
+  skrivs om: saldot, att timmarna betalar förslag och bokade pass av sig själva
+  (Fas 22.2–22.4), Er timbank, Profil → Timbanken och Köpta timmar i adminvyn.
+  `betalt_ore` är 0 och `betald_at` null (villkoret `klippkort_gratis_utan_betalning`):
+  listorna över pengar (Betalningar, Översikt, Månadens ekonomi) tar köp efter
+  `betald_at`, så gåvan står aldrig som pengar in, och `vid_uppsagning_ore`,
+  `vid_anger_ore` och `angerfrist_till` blir 0 och null. `begart_ore` får inte
+  vara noll (villkoret går inte att ändra utan en drop) och bär timmarnas
+  värde till ordinarie timpris. Sorten är `klippkort`, `giltig_manader` 2
+  (närmaste hela månad, läses inte) och `giltigt_till` i dag plus 60 dagar.
+- **Först av alla timmar**: `klippkort_dra` och `intern.timmar_betala` ordnar
+  `(k.erbjudande = 'gratis') desc, k.giltigt_till, k.created_at` (lappade), och
+  studievyns `kortFör` gör samma sak. Ett kort väljs fortfarande bara om det
+  räcker till hela passet, så ett pass på tre timmar betalas med köpta timmar
+  när två gratistimmar finns kvar. **Risken med ordningen**, som Leo valt: har
+  familjen en plan (en månad) och gratistimmar samtidigt tar gratistimmarna
+  passen först, och bokar familjen för lite kan planens timmar gå ut obrukade.
+  Påminnelsen tio dagar före och villkorens "hör av er, så betalar vi tillbaka
+  resten" är skyddet. Åt andra hållet blir mer kvar av det betalda om familjen
+  slutar eller ångrar sig.
+- **Inga sparade minuter**: `intern.timbank_in` ger noll för ett pass betalt
+  med gratistimmar, och frågar `intern.ar_gratistimmar()` (security definer),
+  så att svaret är detsamma för en studiehjälpare som inte läser familjens kort.
+- **Ingen påminnelse**: `intern.timmar_gar_ut_koa` hoppar över gratistimmarna,
+  för mejlet säger "köpta timmar" och lovar att resten betalas tillbaka. En
+  egen mall kräver `notis-ko` och typlistorna.
+- **Inga villkor först**: `intern.kop_kraver_villkor` släpper en gåva, så den
+  kan sättas in när familjen tas in, innan de loggat in. Timmarna betalar inget
+  förrän familjen godkänt villkoren och föreslagit ett pass.
+- **Sätta in**: `ge_gratistimmar(familj, timmar)`, 1–40 åt gången, bara
+  `is_admin()`. Efter insättningen betalar timmarna familjens obetalda förslag
+  och bokade pass direkt (`intern.timmar_betalar_obetalda`, samma som jobbet
+  `timmar-betalar`), och svaret säger hur många. Strömbrytaren `erbjudanden`
+  gäller som för köpta timmar: står den av betalar timmarna inget.
+- **Ta tillbaka**: `ta_tillbaka_gratistimmar(id)` tar det som inte ligger på
+  ett förslag eller pass. Ligger timmar där krymper kortet till dem (och
+  avbokas passet kommer timmen tillbaka som förut); ligger inga där tas kortet
+  bort, efter att avbokade pass som bär det släppts. Auditen loggar nu också
+  `timmar` och borttagningen (`klippkort_audit`).
+- **Vyerna**: Ta in familjen har ett fält Gratistimmar i timbanken (0 som
+  förval, bara när kontot skapas där, som första timmen), och kvittot säger
+  hur många och till vilken dag. Familjens panel har raden Timbanken under
+  Översikt och allt under Ekonomi: köpen och gratistimmarna kort för kort,
+  de sparade minuterna, Sätt in (med en fråga till) och Ta tillbaka. Bara för
+  en superadmin, som enda har köpen i `S.klippkort`. Betalningar säger
+  Gratistimmar på ett pass de betalat, och Köpta timmar visar gåvan som
+  Gratis. Studievyn kallar dem Gratistimmar från Nextrum ("gratis, från oss"),
+  drar dem först, och Profil → Timbanken säger reglerna; Betalning säger
+  Gratistimmar på passet. Koden `gratis` står en gång i JavaScript:
+  `NXBetalning.gratistimmar(k)`.
+- **Villkoren** (`#gratistimmar`, båda språken), integritetspolicyn,
+  `DATASKYDD.md` rad 8 och agentens fakta säger det. Version 2026-10-13.
+- `rls-test.sql` avsnitt 26 (17 prov). Lokalt 1536 av 1536.
+
 ## Timbanken (Fas 22.1)
 
 **Det som blir över på ett timpass sparas i timbanken** (Fas 22.1,
@@ -212,7 +285,8 @@ pass på två timmar som höll 1 h 15 drog två timmar ur klippkortet och
 kostade 1 h 15 med kort. Familjen med rabatt betalade mer. Nu drar
 klippkortet som förut, och resten upp till hel timme (45 minuter)
 står i familjens timbank. Tre beslut av Leo samma dag:
-1. **Bara köpta timmar fyller banken.** Ett kortpass som blev kortare
+1. **Bara köpta timmar fyller banken** (sedan 2026-10-13 aldrig gratistimmar,
+   ovan). Ett kortpass som blev kortare
    får pengarna tillbaka (`betalt_for_lange`), som villkoren lovar. Ett
    tillgodohavande i stället för en återbetalning är sämre för
    familjen, och det var det som föreslogs först.
