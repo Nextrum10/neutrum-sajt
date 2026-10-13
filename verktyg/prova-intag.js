@@ -249,7 +249,9 @@ async function provaPoolenUtanKonto(webb) {
   await vänta(400);
   prova('pool: ansökan säger att kontot skapas när hen tas in', (await page.locator('.dp-fakta').first().innerText())
     .includes('det skapas när hen tas in i poolen'));
-  await page.click('[data-ans-pool="ans-ny"]');
+  /* Panelens knapp: Utbildning-listan i Rekryteringen har en likadan
+     (2026-10-13), dold medan Ansökningar visas. */
+  await page.click('.dp-atgard [data-ans-pool="ans-ny"]');
   await page.waitForSelector('#ap-konto', { timeout: 4000 }).catch(() => {});
   prova('pool: Skapa kontot med adressen i ansökan är valt', (await page.inputValue('#ap-konto')) === '__nytt'
     && (await text(page, '#ap-konto option[value="__nytt"]')).includes('sara.n@example.se'), await page.inputValue('#ap-konto'));
@@ -290,7 +292,7 @@ async function provaPoolenMedKonto(webb) {
   await tillAdmin(page, 'ansokningar');
   await page.click('[data-dp="ansokan:ans-har"]');
   await vänta(400);
-  await page.click('[data-ans-pool="ans-har"]');
+  await page.click('.dp-atgard [data-ans-pool="ans-har"]');
   await page.waitForSelector('#ap-konto', { timeout: 4000 }).catch(() => {});
   prova('pool med konto: kontot med samma adress är valt', (await page.inputValue('#ap-konto')) === 'sh-1', await page.inputValue('#ap-konto'));
   prova('pool med konto: inget nytt konto erbjuds för en adress som redan finns',
