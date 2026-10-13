@@ -111,7 +111,8 @@ texten är kärnans.
     icke avbokat pass med `startrabatt` utan `TIPS`, eller en plan med
     `forsta_timmen` (också en återbetald, för timmen kan ha använts). Båda
     vägarna tar samma rådgivande lås som förut. Tipstimmen står utanför
-    (Leo: "utan tips").
+    (Leo: "utan tips"), och sedan 2026-10-13 gratistimmarna admin sätter in
+    (`minne/timmar.md`, Gratistimmar): de är en gåva och inget erbjudande.
   - `forsta_timmen_lage()` säger läget för familjen själv och för admin
     (`beviljad`, `tagen`, `i_planen`, `pa_pass`, `plan_id`). Studievyns
     `bjuden` visar timmen bara när den är `beviljad` och inte `tagen`;

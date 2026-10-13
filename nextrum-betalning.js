@@ -311,10 +311,20 @@ window.NXBetalning = (function () {
       + '</div>';
   }
 
+  /* ---------- gratistimmarna (2026-10-13) ----------
+     Timmar admin satt in i familjens timbank: en rad i klippkort med
+     erbjudandet 'gratis', utan betalning, som gäller i 60 dagar och
+     används före köpta timmar (migrationen gratistimmar). Koden står här
+     en gång, för adminvyn och studievyn. */
+  var GRATIS = 'gratis';
+  function gratistimmar(k) {
+    return !!k && k.erbjudande === GRATIS;
+  }
+
   return {
     kronor: kronor, timmar: timmar, periodText: periodText,
     FAKTURA: FAKTURA, UTBETALNING: UTBETALNING, fakturaLage: fakturaLage,
     fakturaRad: fakturaRad, lonemanad: lonemanad, lonespec: lonespec, manadEfter: manadEfter,
-    ocrGiltigt: ocrGiltigt, pagaende: pagaende, passpris: passpris
+    ocrGiltigt: ocrGiltigt, pagaende: pagaende, passpris: passpris, gratistimmar: gratistimmar
   };
 })();

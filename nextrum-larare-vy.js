@@ -4042,7 +4042,7 @@
         : medBanken
         ? { text: 'Passet är bokat, och familjen har betalat det med sin timbank. ' + ses + ' Avbokas det går minuterna tillbaka till familjen.' + bankTips, ton: 'klart' }
         : medTimmar
-        ? { text: 'Passet är bokat, och familjen har betalat det med köpta timmar. ' + ses + ' Avbokas det går timmarna tillbaka till familjen.' + bankTips, ton: 'klart' }
+        ? { text: 'Passet är bokat, och familjen har betalat det med timmar ur sin timbank. ' + ses + ' Avbokas det går timmarna tillbaka till familjen.' + bankTips, ton: 'klart' }
         : b.betalning_status === 'faktura'
         ? { text: 'Passet är bokat, och familjen betalar det mot faktura. ' + ses + bankTips, ton: 'klart' }
         : { text: 'Passet är bokat. ' + ses + bankTips, ton: 'klart' };

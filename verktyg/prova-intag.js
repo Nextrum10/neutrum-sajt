@@ -146,7 +146,23 @@ function falskSupabase(o) {
     mitt_villkorslage: () => ({ version: '2026-09-30', godkant_at: '2026-10-01T09:00:00+00:00', tidigare: false }),
     /* Första timmen pass för pass (2026-10-09): valet och läget. */
     ge_forsta_timmen: k => ({ beviljad: !!k.p_ja, tagen: false, i_planen: false, pa_pass: false }),
-    forsta_timmen_lage: () => ({ beviljad: false, tagen: false, i_planen: false, pa_pass: false })
+    forsta_timmen_lage: () => ({ beviljad: false, tagen: false, i_planen: false, pa_pass: false }),
+    /* Gratistimmarna (2026-10-13): kortet står i klippkort_saldo som
+       databasen skriver det, så att panelen ser det när vyn hämtar om. */
+    ge_gratistimmar: k => {
+      const sista = new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10);
+      const rad = { id: 'gava-' + (++löpnr), parent_id: k.p_familj, erbjudande: 'gratis', namn: 'Gratistimmar från Nextrum',
+        sort: 'klippkort', timmar: k.p_timmar, anvanda: 0, kvar: k.p_timmar, giltigt_till: sista, status: 'betald',
+        brukbar: true, betalt_ore: 0, betald_at: null, vid_uppsagning_ore: 0, vid_anger_ore: 0, angerfrist_till: null,
+        created_at: nu(0) };
+      (W.klippkort_saldo = W.klippkort_saldo || []).push(rad);
+      return { ok: true, id: rad.id, timmar: k.p_timmar, giltigt_till: sista, betalda_pass: 0 };
+    },
+    ta_tillbaka_gratistimmar: k => {
+      const i = (W.klippkort_saldo || []).findIndex(r => r.id === k.p_id);
+      const rad = i >= 0 ? W.klippkort_saldo.splice(i, 1)[0] : null;
+      return { ok: true, tillbaka: rad ? rad.timmar : 0, pa_pass: 0, borttagen: true };
+    }
   };
   async function hantera(route) {
     const req = route.request();
@@ -326,6 +342,14 @@ async function provaFamiljen(webb) {
   prova('familj: rutan för första timmen pass för pass finns och är av', (await page.locator('#le-forsta').count()) === 1
     && !(await page.isChecked('#le-forsta')));
   await page.check('#le-forsta');
+  prova('familj: fältet för gratistimmar finns och står på 0', (await page.locator('#le-gratis').count()) === 1
+    && (await page.inputValue('#le-gratis')) === '0');
+  await page.fill('#le-gratis', '41');
+  await page.click('#le-skapa');
+  await vänta(300);
+  prova('familj: 41 gratistimmar nekas innan kontot skapas', S.bjudIn.length === 0
+    && (await text(page, '#le-msg')).includes('mellan 0 och 40'), await text(page, '#le-msg'));
+  await page.fill('#le-gratis', '3');
   await bild(page, 'familj-ta-in', '.nx-fraga-box');
   await page.click('#le-skapa');
   await page.waitForFunction(() => /intagen/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
@@ -351,6 +375,13 @@ async function provaFamiljen(webb) {
     && S.logg.indexOf(ft) < S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/students'));
   prova('familj: kvittot säger att första timmen ges pass för pass', (await text(page, '.nx-fraga-box')).includes('första timmen gratis även pass för pass'),
     await text(page, '.nx-fraga-box'));
+  const gt = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_gratistimmar');
+  prova('familj: gratistimmarna sätts in på det nya kontot', gt && gt.kropp.p_familj === 'ny-1' && gt.kropp.p_timmar === 3,
+    JSON.stringify(gt && gt.kropp));
+  prova('familj: gratistimmarna sätts in efter kontot och före eleven', S.logg.indexOf(gt) > S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
+    && S.logg.indexOf(gt) < S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/students'));
+  prova('familj: kvittot säger hur många gratistimmar och till vilken dag', /3 gratistimmar står i familjens timbank, till och med \d+ \S+/
+    .test(await text(page, '.nx-fraga-box')), await text(page, '.nx-fraga-box'));
   await bild(page, 'familj-kvitto', '.nx-fraga-box');
   prova('familj: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
@@ -381,7 +412,52 @@ async function provaFamiljenElevenFaller(webb) {
   prova('eleven faller: andra trycket skapar eleven på kontot', S.W.students.length === 1 && S.W.students[0].parent_id === 'ny-1',
     JSON.stringify(S.W.students));
   prova('eleven faller: kvittot säger att familjen är intagen', (await text(page, '.nx-fraga-box h3')) === 'Familjen är intagen');
+  prova('eleven faller: inga gratistimmar när fältet står på 0', !S.logg.some(r => r.väg === '/rest/v1/rpc/ge_gratistimmar'));
   prova('eleven faller: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+}
+
+/* ============ 3c. Gratistimmar i familjens panel (2026-10-13) ============
+   Översikt säger timbanken i korthet, och knappen går till Ekonomi, där
+   gratistimmarna sätts in efter en fråga och tas tillbaka. */
+async function provaGratistimmarIPanelen(webb) {
+  const { context, page, S, konsol } = await öppna(webb, {});
+  await tillAdmin(page, 'familjer');
+  await page.click('[data-dp="familj:familj-1"]');
+  await vänta(400);
+  const fakta = await page.locator('.dp-fakta').first().innerText();
+  prova('gratis: Översikt säger timbanken, utan timmar', /Timbanken\s*0 timmar/.test(fakta), fakta);
+  await page.click('.dp-fakta [data-dp-flik="ekonomi"]');
+  await page.waitForSelector('form[data-dp-gratis="familj-1"]', { timeout: 3000 }).catch(() => {});
+  prova('gratis: knappen går till Ekonomi, där rutan finns', await synlig(page, 'form[data-dp-gratis="familj-1"]'));
+  await page.fill('#dp-gratis-n', '2');
+  await page.click('form[data-dp-gratis] [type="submit"]');
+  await page.waitForSelector('.nx-fraga.open', { timeout: 3000 }).catch(() => {});
+  prova('gratis: frågar först, med antalet och sista dagen', /Sätt in 2 gratistimmar\?/.test(await text(page, '.nx-fraga-box h3'))
+    && (await text(page, '.nx-fraga-box')).includes('till och med'), await text(page, '.nx-fraga-box'));
+  await page.click('.nx-fraga [data-svar="ja"]');
+  await page.waitForFunction(() => /insatta/.test((document.querySelector('.dp-gratis .ok-msg') || {}).textContent || ''),
+    null, { timeout: 6000 }).catch(() => {});
+  const gt = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_gratistimmar');
+  prova('gratis: ge_gratistimmar får familjen och antalet', gt && gt.kropp.p_familj === 'familj-1' && gt.kropp.p_timmar === 2,
+    JSON.stringify(gt && gt.kropp));
+  const panel = await page.locator('.dp').first().innerText();
+  prova('gratis: kortet står i panelen med timmarna', panel.includes('Gratistimmar från Nextrum') && panel.includes('2 av 2 timmar kvar'), panel);
+  prova('gratis: kvittot säger att de är insatta', (await text(page, '.dp-gratis .ok-msg')).startsWith('2 gratistimmar insatta, till och med'),
+    await text(page, '.dp-gratis .ok-msg'));
+  await bild(page, 'gratis-panelen', '.dp');
+  await page.click('[data-dp-gratis-tillbaka]');
+  await page.waitForSelector('.nx-fraga.open', { timeout: 3000 }).catch(() => {});
+  prova('gratis: Ta tillbaka frågar först', (await text(page, '.nx-fraga-box')).includes('står kvar där'), await text(page, '.nx-fraga-box'));
+  await page.click('.nx-fraga [data-svar="ja"]');
+  await page.waitForFunction(() => /togs tillbaka/.test((document.querySelector('.dp-gratis .ok-msg') || {}).textContent || ''),
+    null, { timeout: 6000 }).catch(() => {});
+  const tt = S.logg.find(r => r.väg === '/rest/v1/rpc/ta_tillbaka_gratistimmar');
+  prova('gratis: ta_tillbaka_gratistimmar får kortet', tt && /^gava-/.test(tt.kropp.p_id),
+    JSON.stringify(tt && tt.kropp));
+  prova('gratis: kortet är borta, och kvittot säger det', !(await page.locator('.dp').first().innerText()).includes('Gratistimmar från Nextrum')
+    && (await text(page, '.dp-gratis .ok-msg')) === '2 gratistimmar togs tillbaka.', await text(page, '.dp-gratis .ok-msg'));
+  prova('gratis: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
 }
 
@@ -454,6 +530,7 @@ async function provaIgen(webb) {
     await provaPoolenMedKonto(webb);
     await provaFamiljen(webb);
     await provaFamiljenElevenFaller(webb);
+    await provaGratistimmarIPanelen(webb);
     await provaIgen(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);

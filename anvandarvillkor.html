@@ -225,7 +225,13 @@
          från att den lades in och dras först. Planens gratis timme står
          kvar i planen (timmar_pa_kopet) och gäller efter planens månad
          så länge den inte använts (klippkort_saldo.gratis_till).
-         Återbetalningen räknas som förut. -->
+         Återbetalningen räknas som förut.
+
+         2026-10-13, samma dag: gratistimmar som vi sätter in i timbanken
+         (Leo: "fylla deras timbank med önskade timmar som vi klickar in").
+         De gäller i 60 dagar, dras först med de andra gratis timmarna,
+         sparar inga minuter och betalas aldrig ut (migrationen
+         gratistimmar). -->
     <h2 id="erbjudanden">Planer och timbanken</h2>
     <p>Ni kan fylla er timbank med timmar i förväg på två sätt: med en plan för en månad, till ett
       lägre timpris, eller med Fyll timbanken, till ordinarie timpris. Betalar ni pass för pass används
@@ -235,24 +241,25 @@
     <ul>
       <li><b>Hur länge timmarna gäller.</b> En plan gäller i en månad från köpet. Timmar ni köpt
         med Fyll timbanken gäller i 6 månader från köpet, hur många ni än köpt. En gratis timme
-        gäller i 60 dagar från dagen den läggs in (se <a href="#forsta-timmen">Första timmen gratis</a>
-        och <a href="#tips">Tipsa en familj</a>). Sista dagen står i er vy.</li>
+        gäller i 60 dagar från dagen den läggs in (se <a href="#forsta-timmen">Första timmen gratis</a>,
+        <a href="#gratistimmar">Gratistimmar</a> och <a href="#tips">Tipsa en familj</a>). Sista dagen står i er vy.</li>
       <li><b>Hur timmarna används.</b> Timmarna betalar passen av sig själva. När ni föreslår
-        ett pass dras först gratis timmar och sedan de köpta timmar som går ut först, och föreslår
+        ett pass dras först gratis timmar, planens gratis timme och <a href="#gratistimmar">gratistimmar</a>
+        vi satt in, och sedan de köpta timmar som går ut först, och föreslår
         studiehjälparen en annan tid ligger de kvar på passet. Säger studiehjälparen nej, drar ni
         tillbaka förslaget eller går dagen utan att någon svarat, kommer timmarna tillbaka. Köper
-        ni timmar, eller kommer timmar tillbaka, medan ni har förslag eller bokade pass framför er
+        ni timmar, sätter vi in gratistimmar eller kommer timmar tillbaka, medan ni har förslag eller bokade pass framför er
         som inte är betalda, betalar de dem i datumordning, så långt de räcker. Varje påbörjad timme av passet drar en timme, och det
-        som blir över av den sista timmen sparas i er <a href="#timbank">timbank</a>.
+        som blir över av den sista köpta timmen sparas i er <a href="#timbank">timbank</a>.
         Timmarna gäller pass med ett barn; ett pass med fler barn betalas med kort, liksom ett pass
         där en timme är på köpet och ett pass som timmarna inte räcker till.</li>
       <li id="timbank"><b>Timbanken.</b> I timbanken står timmarna ni köpt, med en plan eller med Fyll
-        timbanken, minuter som sparats och timmar ni fått för tips (se <a href="#tips">Tipsa en familj eller en
-        studiehjälpare</a>). Slutar ett pass som betalats med timmar före en hel timme
+        timbanken, gratistimmar vi satt in, minuter som sparats och timmar ni fått för tips (se <a href="#tips">Tipsa en
+        familj eller en studiehjälpare</a>). Slutar ett pass som betalats med köpta timmar före en hel timme
         sparas resten i er timbank, räknat per påbörjad kvart: höll ett pass på två timmar i 1 timme
         och 45 minuter sparas 15 minuter. Drar ett senare pass över tas tiden ur timbanken först,
         utan kostnad, så långt minuterna räcker och när passet gäller ett barn. Räcker minuterna
-        till ett helt pass betalar de nästa pass ni föreslår, om inga köpta timmar gör det. Timbanken är familjens,
+        till ett helt pass betalar de nästa pass ni föreslår, om inga timmar gör det. Timbanken är familjens,
         syskon delar den, och de sparade minuterna går inte ut. Hur länge de köpta timmarna gäller står
         ovan.</li>
       <!-- 2026-10-09 (Leo: "bara folk som köper planen ska få gratis första
@@ -266,9 +273,15 @@
         hunnit gå ut. Slutar ni i förtid räknas den som de andra timmarna (se Att sluta nedan), och
         den betalas aldrig ut som pengar. Utan plan kan vi, om vi kommit överens om det, i stället
         dra av en timme på det pass som gör att ni har bokat två timmar, om ni föreslår det inom 60
-        dagar från att vi gav er timmen. En familj får högst en gratis timme på något av sätten;
-        timmar för tips (se <a href="#tips">Tipsa en familj eller en
-        studiehjälpare</a>) räknas inte hit.</li>
+        dagar från att vi gav er timmen. En familj får högst en sådan timme, på något av sätten;
+        timmar för tips (se <a href="#tips">Tipsa en familj eller en studiehjälpare</a>) och
+        gratistimmar (nedan) räknas inte hit.</li>
+      <li id="gratistimmar"><b>Gratistimmar.</b> Vi kan sätta in timmar i er timbank utan kostnad,
+        till exempel när ni börjar hos oss. De gäller i 60 dagar från den dag vi satte in dem, och
+        sista dagen står i er vy. De betalar passen som köpta timmar och dras först, med de andra
+        gratis timmarna. Det som blir över av en gratistimme när ett pass slutar före en hel timme
+        sparas inte, och gratistimmar som inte används förfaller utan påminnelse. De är en gåva:
+        de räknas inte som köpta timmar och betalas aldrig ut som pengar.</li>
       <li><b>Avbokning.</b> Ett pass som betalats med timmar avbokar ni själva i er vy, som ett
         obetalt pass. Timmarna kommer då tillbaka och gäller till samma dag som förut.
         Går en timme förlorad för att vi eller studiehjälparen avbokat för sent för att ni ska
@@ -278,8 +291,8 @@
         rabatt gäller för att ni köper alla timmarna. De första 14 dagarna efter köpet gäller i stället
         <a href="#angerratt">ångerrätten</a>, och då räknas de använda timmarna till det pris ni
         betalat. Minuter i timbanken betalar vi tillbaka till ordinarie timpris.</li>
-      <li><b>Timmar som inte hunnit användas.</b> Timmar som finns kvar när tiden gått ut
-        förfaller. Tio dagar innan mejlar vi er om ni har timmar kvar. Hör av er innan dess om
+      <li><b>Timmar som inte hunnit användas.</b> Köpta timmar som finns kvar när tiden gått ut
+        förfaller. Tio dagar innan mejlar vi er om ni har köpta timmar kvar. Hör av er innan dess om
         ni inte kommer att hinna, så betalar vi tillbaka resten enligt punkten ovan.</li>
     </ul>
 
@@ -479,7 +492,7 @@
     <h2>Att sluta</h2>
     <p>Ni kan sluta när ni vill. Betalda pass som inte hållits betalar vi tillbaka, och timmar som
       finns kvar i timbanken, köpta timmar och sparade minuter, betalar vi tillbaka enligt
-      <a href="#erbjudanden">Planer och timbanken</a>. Vi kan stänga av ett konto som bryter mot
+      <a href="#erbjudanden">Planer och timbanken</a>. Gratistimmar betalar vi inte tillbaka. Vi kan stänga av ett konto som bryter mot
       villkoren, och säger då till varför.</p>
 
     <h2>Ändringar</h2>

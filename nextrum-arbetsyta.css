@@ -2106,6 +2106,16 @@ body.vy-admin .dbox * + h5{margin-top:24px}
 }
 .le-forsta input{flex:none;width:18px;height:18px;margin:2px 0 0}
 .le-forsta[hidden]{display:none}
+/* Gratistimmar när familjen tas in (2026-10-13): antalet bredvid
+   rubriken, och vad timmarna är under. */
+.le-gratis{
+  display:grid;grid-template-columns:minmax(0,1fr) 6.5rem;gap:6px 12px;align-items:center;
+  margin-top:12px;
+}
+.le-gratis label{font-size:.88rem;font-weight:600;color:var(--bl)}
+.le-gratis .inp{width:100%;min-height:44px;text-align:center}
+.le-gratis span{grid-column:1 / -1;font-size:.82rem;line-height:1.5;color:var(--bl-2)}
+.le-gratis[hidden]{display:none}
 
 /* Behoven familjen angav. Egen ton, så att de inte läses som ännu ett
    ämne i raden. */
@@ -2455,6 +2465,21 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 .dp-faktura + .dp-faktura{border-top:1px solid var(--ln)}
 .dp-faktura-pass{margin:0 0 12px;padding:0 12px;border-radius:14px;background:var(--tint)}
 .dp-faktura-pass .dp-rad{padding:9px 0}
+/* Sätt in gratistimmar under familjens Ekonomi (2026-10-13): antalet
+   och knappen i en rad, vad timmarna är under, och kvittot sist. */
+.dp-gratis{
+  display:grid;grid-template-columns:minmax(0,1fr) 5.5rem auto;gap:8px 10px;align-items:center;
+  margin:10px 0 18px;padding:12px 14px;border-radius:14px;background:var(--tint);
+}
+.dp-gratis label{font-size:.88rem;font-weight:650;color:var(--bl)}
+.dp-gratis .inp{width:100%;min-height:44px;text-align:center}
+.dp-gratis .btn{min-height:44px}
+.dp-gratis-not{grid-column:1 / -1;font-size:.8rem;line-height:1.5;color:var(--bl-2)}
+.dp-gratis .ok-msg{grid-column:1 / -1;margin:0}
+@media (max-width:420px){
+  .dp-gratis{grid-template-columns:minmax(0,1fr) 5.5rem}
+  .dp-gratis label{grid-column:1 / -1}
+}
 
 /* Formulären i panelen: materialrutan och AI-förslagen.
 
