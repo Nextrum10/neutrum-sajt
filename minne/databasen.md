@@ -812,7 +812,7 @@ försöker igen (finns objekten, kör något, väntar något på ett lås). Det 
 
 | Utlöser bekräftelsen | Gick direkt |
 |---|---|
-| `drop` (också `drop policy if exists`), `delete` utanför en funktion, en funktion med två `delete` | `create`, `alter`, `comment`, `grant`, `revoke`, `update … where`, en funktion med ett `delete` eller en datamodifierande CTE, `do`-block, `select cron.unschedule(…)`, `select cron.schedule(…)` |
+| `drop` (också `drop policy if exists`), `delete` utanför en funktion, en funktion med två `delete`, och 2026-10-13 en funktion med ett `delete` och två `update` (`ta_tillbaka_gratistimmar`, två gånger, ensam i anropet andra gången) | `create`, `alter`, `comment`, `grant`, `revoke`, `update … where`, en funktion med ett `delete` och inget `update` (tre sådana i ett anrop, `barnet_foreslar_pass`, samma kväll) eller en datamodifierande CTE, `do`-block, `select cron.unschedule(…)`, `select cron.schedule(…)` |
 
 Orden i en sträng räknas inte. Runda aldrig spärren med dynamisk SQL (`execute 'drop …'`): den finns för att
 användaren ska godkänna det som river något. En städning av egna provobjekt kräver alltså ett svar från
@@ -1065,3 +1065,33 @@ utan `rabattkoden_krockar_inte` gäller den gamla ordningen i databasen,
 vilket inte spelar någon roll så länge det inte finns någon kod, och utan
 `gratistimmarna_60_dagar` saknas gratiskolumnerna, och vyn räknar då som
 förut (den läser `klippkort_saldo` med `*`).
+
+**Körda i driften 2026-10-13 kväll**, efter merge av PR #270 och #269
+(28a0e8a), i den här ordningen: `notis-ko` v23 från main (hämtad tillbaka,
+byte för byte lika i alla femton filer), `barnet_foreslar_pass` (med
+`execute_sql`, avsnitt för avsnitt, för filen har tre `delete` i
+funktioner; registrerad efteråt med filens text ur `extensions.http_get`),
+`adminkonton_utanfor_statistiken`, `rabattkoden_krockar_inte`,
+`gratistimmarna_60_dagar` och `tipskoder_bonus_och_timbanken` (hämtade
+från merge-commiten, prövade mot sin md5 och körda och registrerade i var
+sitt do-block), `gratistimmar` (avsnitt för avsnitt, för filen har ett
+`delete`) och `drift` v17 från main. Alla fem registrerade raderna har
+filens md5. De två filerna som skrevs av för hand jämfördes med en lokal
+databas byggd ur alla 188 migrationer (`md5(pg_get_functiondef())` och
+rättigheterna, och tabellernas kolumner, villkor, index, policyer,
+triggrar och jobb; de fyra i do-block är filens egen text):
+`barn_foresla_pass` hade tappat en tom rad på vägen, hittad med md5 rad
+för rad, och skapades om ur filen från `extensions.http_get` (inget
+`delete` i den); resten var lika. **`ta_tillbaka_gratistimmar` är inte körd**: den har
+ett `delete` och två `update`, och verktyget frågade efter ett ja två
+gånger utan svar (tabellen ovan). Inget kördes; allt annat i
+`gratistimmar` är inne och lika det lokala, och filen registreras när
+avsnitt 7 körts (md5 `079603c5e8d0566c0ebc086c4ff84d1f`). Hela
+`rls-test.sql` (24718559…) gick 1643 av 1643 mot driften i ett do-block
+som hämtade både den och `gratistimmar` ur merge-commiten, körde
+migrationen först (den går att köra två gånger) och slutade med `raise
+exception`, så att inget blev kvar, inte heller återtagandet. Advisorn
+larmade inte om något nytt för `anon`; `ge_gratistimmar`, `koder_lage` och
+`mina_tips` är nåbara för `authenticated` och prövar själva
+(`minne/sakerhet.md`). Ingen hade godkänt villkoren 2026-10-13 kl. 22.40,
+och sajten med 28a0e8a var då ute (Vercel, READY, byggd från 22.14).

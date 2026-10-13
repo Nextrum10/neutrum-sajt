@@ -351,7 +351,12 @@ den gamla ordningen i databasen (koden ovanpå första timmen, och före
 tipstimmen). Det spelar ingen roll så länge det inte finns någon kod:
 2026-10-13 fanns bara `TIPS`, som aldrig går att skriva in. **Skapa ingen
 kod förrän steg 4 är gjort och `kolla_rabattkod` har ett tak**
-(`minne/sakerhet.md`). Efter merge, i den här ordningen:
+(`minne/sakerhet.md`).
+
+**Läget 2026-10-13 kl. 22.40: steg 1–7 är gjorda**, efter merge av PR #270
+och #269 (`notis-ko` v23, de fyra migrationerna med filens md5, `drift` v17
+och `rls-test.sql` 1643 av 1643 mot driften; `minne/databasen.md`, Körda i
+driften). Kvar är 8, 9 och 10. Efter merge, i den här ordningen:
 
 1. **`notis-ko` från main**, före migrationen: den känner mallen för
    `barnforslag`. Ur `_delad/notiser/` ändrades `mallar.ts` och `typer.ts`.

@@ -286,7 +286,14 @@ blivit pengar).
   som ändrade samma sida samma dag. Har den körts och någon hunnit godkänna
   2026-10-13 innan texten om gratistimmarna kom ut på sidan, har de inte
   sett den: byt då datumet på båda sidorna och skriv `villkor_version` i
-  `gratistimmar` (`kolla-villkor.py`).
+  `gratistimmar` (`kolla-villkor.py`). Ingen hade godkänt 2026-10-13 när
+  migrationerna kördes, och sidan var ute.
+- **I drift 2026-10-13 kväll, utom återtagandet**: allt i `gratistimmar` är
+  inne och lika en lokal databas ur alla migrationer, men
+  `ta_tillbaka_gratistimmar` (avsnitt 7) väntar på ett ja i verktyget, och
+  filen är inte registrerad förrän den körts (`minne/databasen.md`, Körda i
+  driften). Till dess går det att sätta in gratistimmar men inte att ta
+  tillbaka dem; knappen svarar med felet.
 
 ## Timbanken (Fas 22.1)
 

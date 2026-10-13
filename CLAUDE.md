@@ -469,7 +469,8 @@ Detaljer: `minne/grunden.md`.
   registrerade (`kolla-migrationer.py`). **Klistra aldrig in SQL i SQL Editor utan att den blir
   en fil.** Migrationen körs efter merge, och vyerna tål att den saknas.
 - **Verktygen som ändrar driften ber om en bekräftelse** för `drop`, för en `delete` utanför en funktion
-  och för en funktion med två `delete`, och hänger sig i 60 sekunder om ingen svarar: inget har hänt, och
+  och för en funktion med två `delete` (2026-10-13 också för en med ett `delete` och två `update`,
+  `ta_tillbaka_gratistimmar`), och hänger sig i 60 sekunder om ingen svarar: inget har hänt, och
   `apply_migration` gör likadant. Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en
   rensning per funktion), kör dem avsnitt för avsnitt med `execute_sql` och registrera filens text sedan i
   `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL,
@@ -810,25 +811,27 @@ Detaljer: `minne/grunden.md`.
   tillbakarullat. `drift` (agentens fakta) är driftsatt som v16 från main, hämtad tillbaka och byte för byte lika i
   alla fem filer. Villkorens version är 2026-10-12, så alla får frågan igen. Inget klippkort var köpt. Juristen har
   inte läst de nya villkoren.
-- **Koderna, bonusen och tipstimmen i timbanken** (2026-10-13) är byggda men inte i drift: migrationen
-  `tipskoder_bonus_och_timbanken` (20261013120000) körs efter merge, EFTER `gratistimmarna_60_dagar` (vakten kräver
-  den `mina_tips()` den lämnar), och `drift` (agentens fakta) driftsätts från main efter den. Villkorens version är
-  2026-10-13, samma som `gratistimmarna_60_dagar`: körs båda vid samma tillfälle får alla frågan en gång, men den som
-  godkänner mellan dem får inte frågan om koderna och bonusen. Kvar: lönearten för bonusen i Fortnox och bolagsfakta
+- **Koderna, bonusen och tipstimmen i timbanken** (2026-10-13) är i drift sedan samma kväll: PR #269 mergades
+  (28a0e8a) och `tipskoder_bonus_och_timbanken` (20261013120000) kördes direkt efter `gratistimmarna_60_dagar`,
+  hämtad från merge-commiten, prövad mot sin md5 (`733fbcc2…`) och körd och registrerad i ett do-block; `drift`
+  (agentens fakta) är driftsatt som v17 från main, hämtad tillbaka och byte för byte lika i alla fem filer. Villkorens
+  version är 2026-10-13, och ingen hade godkänt den när kvällens migrationer var körda, så alla får frågan om
+  koderna och bonusen. Ingen bonus och inga gratistimmar fanns. Kvar: lönearten för bonusen i Fortnox och bolagsfakta
   (`lonart_tipsbonus`), med revisorn om den ska vara semestergrundande (`studiehjalpare_form` är fortfarande oklar);
   juristen har inte läst villkoren, rad 19 och 27 i `DATASKYDD.md` eller policyns stycke om koden i jobbansökan;
   ingen har sagt till studiehjälparna att koden nu gäller jobbansökan, eller familjerna att timmen står i timbanken.
   Tas någon in på ett konto med en annan adress än ansökans ges ingen bonus av sig själv, och bonusen kräver bara att
   personen tas in, inte att hen håller ett pass (Leos regel).
-- **Gratistimmarna i timbanken** (2026-10-13) är inte i drift: migrationen `gratistimmar` (20261013140000) körs efter
-  merge, SIST, efter `gratistimmarna_60_dagar` (nedan), vars funktioner den lappar (vakten prövar md5 på dem som den
-  lämnar dem), hämtad från merge-commiten och prövad mot sin md5, och sedan hela `rls-test.sql` mot driften (lokalt,
-  ur alla 187 migrationer, 1620 av 1620, avsnitt 30). Vyerna tål att den saknas: knappen säger att funktionen
-  saknas. Villkorens version är 2026-10-13, satt av `gratistimmarna_60_dagar`: har den körts och någon godkänt
-  2026-10-13 innan texten om gratistimmarna kom ut, byt datumet (sidorna och `villkor_version` i den här
-  migrationen). `drift` (agentens fakta) driftsätts efter den sista. Ingen påminnelse går om gratistimmar (mejlet
-  säger "köpta timmar" och lovar återbetalning); vill vi ha en krävs en egen mall och `notis-ko`. Juristen har inte
-  läst villkoren för gratistimmarna.
+- **Gratistimmarna i timbanken** (2026-10-13) är i drift utom en funktion: `gratistimmar` (20261013140000) kördes
+  sist samma kväll, avsnitt för avsnitt med `execute_sql` (filen har ett `delete`), och allt den skapar och lappar är
+  byte för byte som i en databas byggd ur alla 188 migrationer, utom `ta_tillbaka_gratistimmar`: den fastnade två
+  gånger på verktygets bekräftelse utan svar (avsnitt 5), och inget kördes. **Kvar**: kör avsnitt 7 i filen med
+  `execute_sql` när Leo kan svara ja i verktyget, och registrera sedan filen (md5 `079603c5…`), som de andra. Till
+  dess går det att sätta in gratistimmar men inte att ta tillbaka dem. Hela `rls-test.sql` gick 1643 av 1643 mot
+  driften, tillbakarullat, med filen körd först i samma transaktion (`minne/databasen.md`). Villkorens version är
+  2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Ingen påminnelse går om gratistimmar
+  (mejlet säger "köpta timmar" och lovar återbetalning); vill vi ha en krävs en egen mall och `notis-ko`. Juristen
+  har inte läst villkoren för gratistimmarna.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
@@ -836,19 +839,19 @@ Detaljer: `minne/grunden.md`.
   månader), och ingen koppling till Google Ads. Vercels Web Analytics var inte
   påslaget i projektet 2026-09-28 (`TRAFIK.md`). Juristen har inte läst texterna eller rad 14 i `DATASKYDD.md`.
 - **Barnets förslag på pass, förhandsvisningen, adminkontona i statistiken, rabattkoden och gratistimmarnas
-  60 dagar** (2026-10-12 och 13) är byggda men inte i drift: migrationerna `barnet_foreslar_pass`,
-  `adminkonton_utanfor_statistiken`, `rabattkoden_krockar_inte` och `gratistimmarna_60_dagar` körs efter merge,
-  i den ordningen, och **`notis-ko` driftsätts från main FÖRE den första** (mallen för `barnforslag`), och
-  `drift` efter den sista (agentens fakta om gratistimmarna). Villkorens version blir 2026-10-13, så alla får
-  frågan igen. Versionerna ligger efter `fyll_timbanken` (20261012120000, i drift), som de först krockade med.
-  Lokalt, byggd ur alla 186 migrationer, 1603 av 1603 i `rls-test.sql`. Juristen har inte läst de nya
-  villkoren om gratistimmarna.
-  Vyerna tål att de saknas, och förhandsvisningen behöver ingen av dem. Rutan för en rabattkod står i
-  förälderns förslag direkt; utan migrationen gäller den gamla ordningen i databasen, men 2026-10-13 fanns
-  ingen kod utom `TIPS`, och ingen ska skapas förrän migrationen körts och `kolla_rabattkod` har ett tak. Ett adminkonto som också är förälder hade
-  2026-10-12 alla 16 passen i driften; de räknas inte i statistiken när migrationen körts, men de står
-  kvar som pass och betalningar. Ett adminkonto raderas inte i panelen; ska passen bort är det Leos beslut
-  och en egen ändring (`DEPLOY-BARNKONTON.md` 12).
+  60 dagar** (2026-10-12 och 13) är i drift sedan 2026-10-13 kväll, efter merge av PR #270 och #269: först
+  `notis-ko` v23 från main (mallen för `barnforslag`), hämtad tillbaka och byte för byte lika, sedan
+  `barnet_foreslar_pass` (med `execute_sql`, för den har tre `delete` i funktioner; en tom rad som föll bort i
+  `barn_foresla_pass` på vägen skrevs om ur filen), `adminkonton_utanfor_statistiken`, `rabattkoden_krockar_inte`
+  och `gratistimmarna_60_dagar` (hämtade från merge-commiten 28a0e8a, prövade mot sin md5 och körda och
+  registrerade i var sitt do-block), och `drift` v17 efter den sista. Alla står i `schema_migrations` med filens
+  md5, och hela `rls-test.sql` gick 1643 av 1643 mot driften, tillbakarullat. Villkorens version är 2026-10-13, så
+  alla får frågan igen. Juristen har inte läst de nya villkoren om gratistimmarna. Kvar (`DEPLOY-BARNKONTON.md`
+  12): provet med ett provbarn och i förhandsvisningen.
+  2026-10-13 fanns ingen rabattkod utom `TIPS`, och ingen ska skapas förrän `kolla_rabattkod` har ett tak. Ett
+  adminkonto som också är förälder hade 2026-10-12 alla 16 passen i driften; de räknas inte längre i statistiken,
+  men de står kvar som pass och betalningar. Ett adminkonto raderas inte i panelen; ska passen bort är det Leos
+  beslut och en egen ändring (`DEPLOY-BARNKONTON.md` 12).
   Juristen har inte läst rad 26 i `DATASKYDD.md` eller meningarna om förslagen i policyn, och familjerna
   med barnkonto har inte fått veta att valet finns.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
