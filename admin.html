@@ -22,8 +22,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
-<link rel="stylesheet" href="nextrum-vy.css?v=7ebabb05">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=89a38253">
+<link rel="stylesheet" href="nextrum-vy.css?v=3be7d3b8">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=eb771e35">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -224,6 +224,9 @@
         <a href="#familjer" data-sek="familjer" title="Familjer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8" r="3"/><path d="M3 19c0-2.8 2.5-4.5 5.5-4.5S14 16.2 14 19"/><path d="M16 5.5a3 3 0 0 1 0 5.8M21 19c0-2.2-1.4-3.7-3.5-4.3"/></svg><span class="adm-etikett">Familjer</span></a>
         <a href="#elever" data-sek="elever" title="Elever"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.2"/><path d="M4.5 20c0-3.4 3.2-5.5 7.5-5.5s7.5 2.1 7.5 5.5"/></svg><span class="adm-etikett">Elever</span></a>
         <a href="#studiehjalpare" data-sek="studiehjalpare" title="Studiehjälpare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h7v12H4z"/><path d="M13 6.5h7v12h-7z"/><path d="M11 9.5h2M11 13h2"/></svg><span class="adm-etikett">Studiehjälpare</span></a>
+        <!-- Koder (2026-10-13): familjernas och studiehjälparnas egna koder,
+             med vad de gett. Bara superadmin (nextrum-admin-behorighet.js). -->
+        <a href="#koder" data-sek="koder" title="Koder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6.5h17v3.6a1.9 1.9 0 0 0 0 3.8v3.6h-17v-3.6a1.9 1.9 0 0 0 0-3.8z"/><path d="M14.5 7v1.5M14.5 11.25v1.5M14.5 15.5V17"/></svg><span class="adm-etikett">Koder</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Drift</span>
         <a href="#matchning" data-sek="matchning" title="Matchning"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6.5" cy="8" r="2.8"/><circle cx="17.5" cy="16" r="2.8"/><path d="M9.3 8h2.2a3 3 0 0 1 3 3v2"/><path d="m12.5 11.5 2 1.5 2-1.5"/></svg><span class="adm-etikett">Matchning</span></a>
@@ -657,6 +660,36 @@
               <span class="small" id="sh-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
             <div id="sh-tabell"><div class="loading">Hämtar</div></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             KODER (2026-10-13)
+             Leo: "i admin vyn ska du skapa en ny spalt, där ska koder
+             synas, allas personliga kod ska synas där. först när jag
+             klicka på koder så ska jag klickar om jag vill kolla på
+             familjer eller studiehjälpare." Valet står på #koder, listan
+             på #koder/familjer och #koder/studiehjalpare. Ritas av
+             nextrum-admin-koder.js ur koder_lage(). Kampanjkoderna för
+             affischerna står kvar under Tjänster & priser.
+             ============================================================ -->
+        <section class="vy-sek" data-sek="koder" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Koder</h2>
+              <p>Varje familj och studiehjälpare har en egen kod. Familjernas skrivs i intresseanmälan och ger en timme i timbanken, studiehjälparnas skrivs i jobbansökan och ger bonus i lönen.</p>
+            </div>
+          </div>
+          <div class="kod-val" id="kod-val" aria-label="Vilka koder"></div>
+          <div id="kod-vy" hidden>
+            <div class="vy-flikar" id="kod-flikar" role="tablist" aria-label="Familjer eller studiehjälpare"></div>
+            <div class="adm-tal-rad" id="kod-tal"></div>
+            <div id="kod-regel"></div>
+            <div class="eko-verktyg">
+              <div class="chips eko-chips" id="kod-chips" role="group" aria-label="Vilka koder som visas"></div>
+              <input class="inp eko-sok" id="kod-sok" type="search" placeholder="Sök namn, e-post eller kod" aria-label="Sök bland koderna" autocomplete="off">
+            </div>
+            <div id="kod-lista"><div class="loading">Hämtar</div></div>
           </div>
         </section>
 
@@ -1247,6 +1280,20 @@
               Utbetald när pengarna gått.
             </p>
             <div id="lon-personer"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <!-- Bonusen för tips (2026-10-13): 300 kr till en studiehjälpare
+               när vi tar in någon som sökt jobb med hens kod. Ingår i Att
+               betala ut och kommer med i lönefilen när den är godkänd, på
+               sin egen löneart. Rutan står bara när månaden har en bonus. -->
+          <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)" hidden>
+            <h5>Bonus för tips</h5>
+            <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 14px">
+              300 kr i lön när vi tagit in någon som sökt jobb med studiehjälparens kod, för månaden
+              hen togs in. Godkänn bonusen när du sett att det stämmer, så kommer den med i lönefilen,
+              och sätt Utbetald när lönen gått. Struken betalas inte.
+            </p>
+            <div id="lon-bonus"><div class="loading">Hämtar</div></div>
           </div>
 
           <div class="split">
@@ -1843,7 +1890,7 @@
                 <h5 style="margin:0">Tips och kampanjer</h5>
                 <span class="small" id="koder-antal" style="margin-left:auto;color:var(--bl-3)"></span>
               </div>
-              <p class="xsmall" style="margin:4px 0 14px;color:var(--bl-3);line-height:1.6">Varje familj och studiehjälpare har en egen kod under Profil i sin vy, och en affisch har en kampanjkod. Kunder är familjer som anmält sig med koden och inte hade haft pass förut; två timmar är de av dem som haft två timmar läxhjälp. En familj som tipsat får en timme på köpet för varje sådan.</p>
+              <p class="xsmall" style="margin:4px 0 14px;color:var(--bl-3);line-height:1.6">En affisch har en kampanjkod, som skrivs i intresseanmälan. Kunder är familjer som anmält sig med koden och inte hade haft pass förut; två timmar är de av dem som haft två timmar läxhjälp. Familjernas och studiehjälparnas egna koder står under <a href="#koder">Koder</a>.</p>
               <div id="koder-tabell"><div class="loading">Hämtar</div></div>
               <form id="koder-form" class="adm-verktyg" style="margin-top:16px;flex-wrap:wrap">
                 <input class="inp" id="koder-kod" maxlength="24" placeholder="Kod, t.ex. FARSTA-BIB" aria-label="Kampanjkod" autocomplete="off" style="max-width:15rem">
@@ -2402,37 +2449,38 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=b827f810"></script>
+<script src="nextrum-app.js?v=1632f8d9"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=ba719a45"></script>
+<script src="nextrum-studie.js?v=99247b56"></script>
 <script src="nextrum-arbetsyta.js?v=8354e990"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
-<script src="nextrum-betalning.js?v=6d397624"></script>
+<script src="nextrum-betalning.js?v=b651d432"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=970ac675"></script>
-<script src="nextrum-admin-detalj.js?v=3c0d5562"></script>
+<script src="nextrum-admin-karna.js?v=9d442451"></script>
+<script src="nextrum-admin-detalj.js?v=896473e0"></script>
 <script src="nextrum-admin-oversikt.js?v=58bec850"></script>
-<script src="nextrum-admin-kunder.js?v=91599920"></script>
+<script src="nextrum-admin-kunder.js?v=5812444a"></script>
 <script src="nextrum-admin-rekrytering.js?v=ce0dad1e"></script>
 <script src="nextrum-admin-bibliotek.js?v=c61fd760"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=f2e7d309"></script>
-<script src="nextrum-admin-ekonomi.js?v=cf23938b"></script>
+<script src="nextrum-admin-ekonomi.js?v=854e4cd5"></script>
 <script src="nextrum-admin-manaden.js?v=8daec1e5"></script>
-<script src="nextrum-admin-loner.js?v=658e30ed"></script>
+<script src="nextrum-admin-loner.js?v=0dc57440"></script>
+<script src="nextrum-admin-koder.js?v=2b773c4f"></script>
 <script src="nextrum-admin-tjanster.js?v=20b4a52d"></script>
 <script src="nextrum-admin-system.js?v=850d4673"></script>
-<script src="nextrum-admin-behorighet.js?v=87b7b306"></script>
+<script src="nextrum-admin-behorighet.js?v=6eb31e9f"></script>
 <script src="nextrum-admin-automationer.js?v=0fb655ba"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
-<script src="nextrum-admin-radera.js?v=5a3ff225"></script>
+<script src="nextrum-admin-radera.js?v=82f15d77"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
-<script src="nextrum-modulvakt.js?v=3f42be2c"></script>
-<script src="nextrum-admin.js?v=0bedd6c1"></script>
+<script src="nextrum-modulvakt.js?v=d84f1619"></script>
+<script src="nextrum-admin.js?v=867441b5"></script>
 </body>
 </html>

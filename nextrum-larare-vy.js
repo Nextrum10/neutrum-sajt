@@ -3362,14 +3362,22 @@
        månads redan var godkänd. Alla underlag, inte bara månadens: listan
        behövs för märkena i månadsraden, för regeln, och för att veta
        vilken månads specifikation ett pass står på. */
-    const [passen, ut] = await Promise.all([
+    const [passen, ut, bon] = await Promise.all([
       NXStudie.hämtaAlla(supa, 'passunderlag', 'id, wanted_date, lon_min, duration_min, fakturerbar, har_rapport, pa_underlag',
         q => q.eq('tutor_id', S.user.id).lt('wanted_date', gräns.till)
           .or('pa_underlag.eq.false,wanted_date.gte.' + gräns.från)),
       supa.from('payouts').select('id, period, status, belopp_ore, minuter, fel, utbetald_at')
-        .eq('tutor_id', S.user.id)
+        .eq('tutor_id', S.user.id),
+      /* Bonusen för tips (2026-10-13): 300 kr i lönen för månaden vi tog
+         in någon som sökt jobb med din kod. Saknas tabellen är det ingen
+         bonus, inte ett fel. */
+      supa.from('tipsbonus').select('id, belopp_ore, period, status, intjanad_at')
+        .eq('studiehjalpare_id', S.user.id).neq('status', 'struken')
     ]);
     if (nr !== ersFråga) return;
+    const bonusar = bon && !bon.error
+      ? (bon.data || []).filter(b => String(b.period).slice(0, 10) === m) : [];
+    const bonusÖre = bonusar.reduce((n, b) => n + Number(b.belopp_ore || 0), 0);
 
     /* INGET UTBETALNINGSKONTO HÄR, och det är ett beslut (Fas 12.5).
        Ersättningen betalas den 25:e, som en löning, i en klump för
@@ -3473,6 +3481,14 @@
       });
     }
 
+    if (bonusÖre) {
+      const utbetald = bonusar.every(b => b.status === 'utbetald');
+      pag.insertAdjacentHTML('beforeend', '<p class="bet-not lonespec-bonus"><b>' + esc(B.kronor(bonusÖre))
+        + ' i bonus för tips</b> ' + esc((bonusar.length === 1 ? 'för någon' : 'för ' + bonusar.length + ' personer')
+        + ' vi tog in i ' + mNamn + ' som sökt jobb med din kod. '
+        + (utbetald ? 'Den är utbetald.' : 'Den betalas med lönen den 25 ' + nästa + '.')) + '</p>');
+    }
+
     const noter = [];
     const rapporten = n => n === 1 ? 'rapporten' : 'rapporterna';
     /* Går det inte att läsa var passen står sägs ingenting om dem. En
@@ -3514,7 +3530,7 @@
         rader = (linjer.data || []).slice()
           .sort((a, b) => (när[a.booking_id] || '~').localeCompare(när[b.booking_id] || '~'));
       }
-      lista.innerHTML = B.lonespec(spec, rader, { namn: S.profil && S.profil.full_name, noter });
+      lista.innerHTML = B.lonespec(spec, rader, { namn: S.profil && S.profil.full_name, noter, bonus: bonusar });
       return;
     }
 
@@ -4396,8 +4412,8 @@
     /* Dokumenten under Profil → Dokument (2026-09-29): avtalet och annat
        Nextrum delat med studiehjälparen. Samma modul som föräldravyn. */
     NXStudie.dokument({ host: $('#dokument-lista'), supa: supa, msg: $('#dokument-msg') });
-    /* Koden att tipsa familjer med, under Profil → Tipsa en familj
-       (2026-09-30). Ingen ersättning, och rutan säger det. */
+    /* Koden att tipsa nya studiehjälpare med, under Profil → Tipsa en
+       studiehjälpare (2026-10-13; förut familjer, utan ersättning). */
     NXStudie.tipsa({ host: $('#tips-ruta'), supa: supa, roll: 'tutor' });
 
     $('#k-namn').value = S.profil.full_name || '';

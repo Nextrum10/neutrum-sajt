@@ -28,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
-<link rel="stylesheet" href="nextrum-vy.css?v=7ebabb05">
+<link rel="stylesheet" href="nextrum-vy.css?v=3be7d3b8">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=89a38253">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=eb771e35">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=ad93496c">
 </head>
 <body class="vy">
@@ -931,7 +931,7 @@
                förklaringen och villkoren står överst här. -->
           <div class="dbox">
             <h5>Vad är timbanken?</h5>
-            <p class="erb-bank-text">Timbanken är familjens konto för läxhjälpstimmar. Ni fyller den med en plan, som gör timmen billigare och gäller en månad, eller med Fyll timbanken, till timpriset och i sex månader. Ibland sätter vi in gratistimmar åt er, som gäller i 60 dagar. När ni föreslår ett pass för ett barn betalar timmarna det av sig själva, gratis timmar först, och det som blir över av ett pass betalt med köpta timmar sparas som minuter, som aldrig går ut. Betalar ni pass för pass används inte timbanken. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för planer och timbanken</a></p>
+            <p class="erb-bank-text">Timbanken är familjens konto för läxhjälpstimmar. Ni fyller den med en plan, som gör timmen billigare och gäller en månad, eller med Fyll timbanken, till timpriset och i sex månader. Ibland sätter vi in gratistimmar åt er, som gäller i 60 dagar. Tipsar ni en familj får ni också en timme här när den nya familjen haft två timmar läxhjälp; den gäller också i 60 dagar och dras först, som en timme på köpet på nästa pass ni föreslår. När ni föreslår ett pass för ett barn betalar timmarna det av sig själva, gratis timmar först, och det som blir över av ett pass betalt med köpta timmar sparas som minuter, som aldrig går ut. Betalar ni pass för pass används timbanken bara för gratistimmar och timmar för tips. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för planer och timbanken</a></p>
           </div>
           <!-- 2026-10-13: rutan visar också gratistimmarna vi satt in
                (erbjudandet 'gratis'), och heter därför Timmar. -->
@@ -981,9 +981,10 @@
 
         <!-- ============ TIPSA EN FAMILJ (2026-09-30) ============
              Familjens egen kod och länken till intresseanmälan, och
-             timmarna på köpet för familjer som anmält sig med den.
-             Ritas av NXStudie.tipsa() ur mina_tips(); samma flik står i
-             studiehjälparvyn, utan timmar. -->
+             timmarna i timbanken för familjer som anmält sig med den
+             (sedan 2026-10-13 i timbanken; förut på köpet på nästa pass).
+             Ritas av NXStudie.tipsa() ur mina_tips(); studiehjälparvyn
+             har sin egen flik, för jobbansökan. -->
         <div class="vy-flik-panel" role="tabpanel" data-flik="tips"
              id="panel-tips" aria-labelledby="flik-tips" hidden>
           <div class="dbox">
@@ -1059,19 +1060,19 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-forhandsvisning.js?v=3d14faef"></script>
-<script src="nextrum-app.js?v=b827f810"></script>
+<script src="nextrum-forhandsvisning.js?v=f2e96d72"></script>
+<script src="nextrum-app.js?v=1632f8d9"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=8bab89e2"></script>
-<script src="nextrum-studie.js?v=ba719a45"></script>
+<script src="nextrum-studie.js?v=99247b56"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-arbetsyta.js?v=8354e990"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
-<script src="nextrum-betalning.js?v=6d397624"></script>
+<script src="nextrum-betalning.js?v=b651d432"></script>
 <script src="nextrum-ljud.js?v=af6ef39f"></script>
 <script src="nextrum-uppgifter.js?v=e2b63c33"></script>
 <script src="nextrum-introduktion.js?v=2f3aa58e"></script>
-<script src="nextrum-modulvakt.js?v=3f42be2c"></script>
-<script src="nextrum-studie-vy.js?v=3d8b7819"></script>
+<script src="nextrum-modulvakt.js?v=d84f1619"></script>
+<script src="nextrum-studie-vy.js?v=8b7df3df"></script>
 </body>
 </html>

@@ -2336,12 +2336,13 @@
           knapp: '<button class="btn ' + (er.aktiv ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-erbflagga="'
             + (er.aktiv ? '0' : '1') + '">' + (er.aktiv ? 'Stäng av' : 'Slå på') + '</button>'
         }) : saknas('erbjudanden'))
-        /* 2026-09-30: timmen på köpet för ett tips. Saknas raden är
-           migrationen tipskoder_och_kampanjkoder inte körd, och då finns
-           ingen timme att stänga av: raden står inte med. */
+        /* 2026-09-30: timmen för ett tips, sedan 2026-10-13 i timbanken.
+           Saknas raden är migrationen tipskoder_och_kampanjkoder inte
+           körd, och då finns ingen timme att stänga av: raden står inte
+           med. Samma strömbrytare står under Koder. */
         + (ti ? brytare({
-          titel: 'En timme på köpet för ett tips', på: ti.aktiv, påText: ti.aktiv ? 'På' : 'Av',
-          text: ti.beskrivning || 'En familj får en timme på köpet för varje ny familj som anmält sig med familjens kod och haft två timmar läxhjälp.',
+          titel: 'En timme i timbanken för ett tips', på: ti.aktiv, påText: ti.aktiv ? 'På' : 'Av',
+          text: 'En familj får en timme i timbanken för varje ny familj som anmält sig med familjens kod och haft två timmar läxhjälp.',
           krav: !ti.aktiv && ti.vantar_pa ? 'Ska vara avgjort först: ' + ti.vantar_pa : '',
           not: 'Står den av räknas koderna och anmälningarna som förut, och timmar som tjänats in innan ges ändå. Ändrad '
             + kortDatum(ti.uppdaterad) + '.',
@@ -2424,7 +2425,7 @@
     const ja = await bekräfta({
       titel: på ? 'Slå på timmen för tips?' : 'Stäng av timmen för tips?',
       text: på
-        ? 'Från och med nu får en familj en timme på köpet på nästa pass den föreslår, för varje ny familj som '
+        ? 'Från och med nu får en familj en timme i timbanken för varje ny familj som '
           + 'anmält sig med familjens kod och haft två timmar läxhjälp. Villkoren ska säga det.'
         : 'En familj som tipsats efter i dag ger ingen timme. Timmar som redan tjänats in ges ändå, '
           + 'för villkoren lovade dem. Villkoren ska ändras i samma veva.',
@@ -3234,7 +3235,7 @@
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
     avvText, betRad, betalningsrader, familjefakturaRad, familjefakturor, fyllPerioder, kandidater, laddaBokslut, laddaOmEkonomi,
-    märkEkonomi, påminnKnapp, ritaAttGöra, ritaAvvikelser, ritaBokslut, ritaFakturor, ritaKortbetalningar,
+    märkEkonomi, påminnKnapp, ritaAttGöra, ritaAvvikelser, ritaBokslut, ritaFakturor, ritaInställningar, ritaKortbetalningar,
     ritaPris, ritaUtbetalningar, sättKörningsperiod, utanRapport, visaBetalningsmånad
   });
 })();

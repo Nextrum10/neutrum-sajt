@@ -166,7 +166,8 @@
     <ul>
       <li>Namn, e-postadress och — om du fyller i det — telefonnummer</li>
       <li>Profilbild, om du laddar upp en</li>
-      <li>Din kod att tipsa andra familjer med, och hur många som anmält sig med den</li>
+      <li>Din kod att tipsa med, och hur många som använt den: en familjs kod för en ny familjs
+        intresseanmälan, en studiehjälpares kod för någons jobbansökan</li>
       <li>När du godkände användarvillkoren, och vilken version av dem. Det sparas när du godkänner
         villkoren när du loggar in, så att det syns vad vi kommit överens om.</li>
       <li>Ditt lösenord ser vi aldrig. Det hanteras krypterat av vår
@@ -206,6 +207,10 @@
       <li>Är du under 18: din vårdnadshavares e-post. Vi mejlar hen och ber om ett skriftligt
         godkännande, och sparar svaret och när det kom med din ansökan</li>
       <li>Blir du antagen: din profiltext, ort, ämnen och den timpenning vi kommit överens om</li>
+      <li>Koden, om du skriver en: en studiehjälpares, om någon som jobbar hos oss tipsat dig. Då
+        ser vi vem som tipsat dig, och tar vi in dig får den studiehjälparen en bonus i lönen. Hen
+        ser hur många som sökt med koden och hur många vi tagit in, men inte vilka, och kan förstå
+        av bonusen att någon hen tipsat har börjat.</li>
       <li>Ta bort ditt personnummer ur CV:t innan du skickar det. Vi behöver det inte för att
         läsa en ansökan.</li>
     </ul>
@@ -234,6 +239,8 @@
       <li>Har barnet en egen inloggning: det barnet och studiehjälparen skriver till varandra i
         barnets vy, och när det lästes</li>
       <li>Betalningar och ersättningsunderlag: vilket pass som betalats, belopp och när, om familjen fått sin första timme gratis och hur, och gratistimmar vi satt in i familjens timbank (hur många, när och till vilken dag). Kortuppgifterna har vi aldrig</li>
+      <li>För en studiehjälpare som tipsat: bonusen för tips, med vem den gäller, beloppet och när den
+        betalades</li>
     </ul>
 
     <h3>Om du skriver till oss eller något går sönder</h3>
@@ -260,11 +267,10 @@
       du ingen anmälan sparas ingenting hos oss.</p>
     <p>Skriver du en kod i intresseanmälan, eller kommer du dit genom en länk eller en affisch
       med en kod, sparar vi koden med anmälan. Den står i ett fält du ser och kan tömma innan du
-      skickar. En kod kommer från en affisch eller från en familj eller studiehjälpare som tipsat
-      er, och då ser vi vem som tipsat. Den som tipsat ser hur många som anmält sig med koden och
-      hur många av dem som blivit kunder, men inte vilka. En familj som tipsat får en timme på
-      köpet när en ny familj haft två timmar läxhjälp, och kan förstå av det att någon den tipsat
-      har börjat.</p>
+      skickar. En kod kommer från en affisch eller från en familj som tipsat er, och då ser vi vem
+      som tipsat. Den som tipsat ser hur många som anmält sig med koden och hur många av dem som
+      blivit kunder, men inte vilka. En familj som tipsat får en timme i sin timbank när en ny
+      familj haft två timmar läxhjälp, och kan förstå av det att någon den tipsat har börjat.</p>
 
     <h3>Handlingar om verksamheten</h3>
     <p>Avtal, intyg och försäkringspapper sparas i ett eget stängt utrymme. Bara vi når det, med
@@ -308,9 +314,10 @@
         att kunna visa vem som gjort vad och upptäcka om något gått fel.</li>
       <li><b>Att vi läser chatten</b>: berättigat intresse (artikel 6.1 f), att barnen är trygga
         och att vi kan reda ut det som gått fel mellan en familj och en studiehjälpare.</li>
-      <li><b>Koden i intresseanmälan och tipsen</b>: berättigat intresse (artikel 6.1 f), att
-        veta vilka tips och affischer som leder till att någon hör av sig. För den som tipsat är
-        den bjudna timmen en del av avtalet (artikel 6.1 b).</li>
+      <li><b>Koden i intresseanmälan och jobbansökan, och tipsen</b>: berättigat intresse (artikel
+        6.1 f), att veta vilka tips och affischer som leder till att någon hör av sig. För en familj
+        som tipsat är timmen i timbanken en del av avtalet (artikel 6.1 b), och för en
+        studiehjälpare är bonusen en del av lönen (artikel 6.1 b), som bokföras som lön (artikel 6.1 c).</li>
       <li><b>Betygsgarantin</b>: avtalet med er (artikel 6.1 b). Ni anmäler den, med barnets
         nuvarande betyg, och gör anspråket, och betygen är det som visar om villkoren är
         uppfyllda.</li>
@@ -449,8 +456,9 @@
         bort den eller inloggningen, eller raderas barnet, tas den bort direkt. En adress som
         aldrig bekräftats tas bort 30 dagar efter att vi skickade länken, och försöken att logga
         in med en adress efter ett dygn. Det sker automatiskt varje natt.</li>
-      <li><b>Bokföringsunderlag</b>: betalningar och ersättningsunderlag, sju år. Det är
-        bokföringslagens krav och något vi inte kan förkorta, inte ens på begäran.</li>
+      <li><b>Bokföringsunderlag</b>: betalningar och ersättningsunderlag, och bonusen för tips, sju
+        år. Det är bokföringslagens krav och något vi inte kan förkorta, inte ens på begäran. En
+        bonus står kvar också när ansökan den kom ur har tagits bort, utan koden och ansökan.</li>
       <li><b>Ändringsloggen</b>: så länge verksamheten finns. Den bär tillstånd och tidpunkter,
         aldrig namn eller text, och den är vårt kvitto på vem som gjort vad.</li>
       <li><b>Avtal och intyg</b>: så länge de gäller, och därefter så länge lagen kräver.</li>
@@ -732,7 +740,7 @@
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=b827f810"></script>
+<script src="nextrum-app.js?v=1632f8d9"></script>
 <script src="nextrum-samtycke.js?v=92474eaf"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

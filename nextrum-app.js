@@ -1188,7 +1188,7 @@ const NX = (function () {
 
   /* Hur en kolumn som saknas skrivs i why (reserven i kopplaAnsökan).
      Svenska: den läses av oss, inte av den som söker. */
-  const KOLUMN_I_WHY = { vardnadshavare_epost: 'Vårdnadshavarens e-post' };
+  const KOLUMN_I_WHY = { vardnadshavare_epost: 'Vårdnadshavarens e-post', kod: 'Kod från en studiehjälpare' };
 
   /* ---------- ansökan om att bli studiehjälpare ----------
      Samma formulär finns i modalen på startsidan och som vanligt

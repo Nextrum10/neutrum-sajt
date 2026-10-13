@@ -2138,6 +2138,9 @@ a.pass-lank:hover{color:var(--acc)}
    betalat under mätaren. Förklaringen står över korten, inte mellan dem. */
 .tb-forklaring{margin:0 0 16px}
 .erb-mitt .tb-rorelser{margin-top:10px}
+/* Timmarna för tips (2026-10-13) under en familj utan köpta timmar: samma
+   linje som mellan två köp. */
+.tb-inga + .erb-mitt{margin-top:16px;padding-top:16px;border-top:1px solid var(--ln)}
 /* Betygsgarantin under Profil (2026-10-07): ett block per barn, med en
    linje emellan som mellan barnens kort, och de anmälda ämnena som
    timbankens rader. */

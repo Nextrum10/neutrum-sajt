@@ -593,3 +593,40 @@ villkoren "fixa villkoren".
   **Leo samma kväll bad om den ("fixa de")**, och den kördes 2026-09-30:
   köpet är märkt som test igen och räknas inte längre som pengar in i
   september. Kortet, dess fyra pass och timmarna är orörda.
+
+---
+
+## Timmarna för tips i timbanken (2026-10-13)
+
+Leo: "timmarna läggs in i timbanken för familjerna". Tipstimmen (en per ny
+familj som anmält sig med familjens kod och haft två timmar läxhjälp,
+`minne/affaren.md`) står sedan dess i timbanken, i vyn. Den är aldrig
+pengar: den betalas inte tillbaka när familjen slutar och ingår inte i
+`vid_uppsagning_ore`.
+
+- **Regeln är `gratistimmarna_60_dagar`s** (samma dag, Leo: "gratis timmar
+  går ut efter 60 dagar att de läggs in", "gratis timmar går ut först sen
+  planerna"): timmen gäller i 60 dagar från dagen den nya familjen haft sina
+  två timmar och dras först, som ett avdrag på nästa läxhjälpspass
+  (`forsta_timmen_bjuds`, `intern.tipstimmar_kvar`). Ett pass med timmen
+  betalas inte med köpta timmar (Fas 22.2); resten av ett längre pass
+  betalas som pass för pass. Avbokas passet kommer timmen tillbaka, till
+  samma sista dag.
+- **Grenen hade först en annan regel.** `tipskoder_bonus_och_timbanken`
+  drog timmen sist (en egen trigger efter timmarna) och lät den aldrig gå
+  ut, för att en familj med plan annars betalar resten av passet med kort
+  medan planens timmar går ut. Main fick Leos 60 dagar och "gratis först"
+  innan grenen var mergad, och det är hans senare ord, så den regeln ströks
+  vid sammanslagningen. Problemet med kortet står kvar: vill Leo att köpta
+  timmar betalar resten av ett pass med tipstimmen är det Fas 22.2 som ska
+  ändras, inte ordningen.
+- **Den är ingen rad i `klippkort`.** Det hade gjort den till ett köp (0 kr
+  i Köpta timmar, ångerrätten, uppsägningen och avstämningen). Den räknas
+  ur raderna som förut (`intern.tipstimmar_intjanade`,
+  `intern.tipstimmar_oanvanda`), och `mina_tips()` svarar med `kvar` (de som
+  gäller i dag) och `kvar_till` (sista dagen för den som gäller längst).
+- **Vyn**: Er timbank under Erbjudanden säger "och N timmar för tips" och
+  har ett kort Timmar för tips med en mätare och sista dagen; Profil →
+  Timbanken har samma kort under Timmar, med passen timmen använts till, och
+  Vad är timbanken? säger det. Boka pass visar timmen i förväg som förut
+  (`bjuden(minuter, dag)`, inom `kvar_till`).

@@ -239,6 +239,20 @@ Den första tabellen i `intern` kom 2026-09-27: `intern.natanrop_logg`,
 id:t på databasens egna pg_net-anrop (skrivs bara av `intern.natanrop()`,
 ingen roll utom ägaren når den). Se Notiserna nedan.
 
+`tipskoder_bonus_och_timbanken` (2026-10-13, `minne/affaren.md`) skriver om
+`intern.leads_tipskod` (bara familjens och kampanjens kod) och `mina_tips`
+med md5-vakter (`mina_tips` som `gratistimmarna_60_dagar` lämnar den, med
+`kvar` och `kvar_till`, så den körs efter den), och lägger till
+`applications.kod` med `intern.ansokan_tipskod`, tabellen `tipsbonus` med
+`intern.tipsbonus_skydda`, `tipsbonus_audit` och triggern
+`tutor_profiles_tipsbonus` (`intern.tipsbonus_vid_intag`), flaggan
+`tipsbonus`, `intern.tipsbonus_ore`, `intern.ny_tipskod`, `koder_lage`,
+`foretagsfakta.lonart_tipsbonus` (med auditlistan) och villkorens version
+2026-10-13. `intern.radering_underlag` lappas med `replace()` och räknade
+träffar: hindret `tipsbonus`, avidentifiering för den som har en bonus och
+`tipsbonus` under `star_kvar`.
+Ingen drop och ingen delete utanför en funktion.
+
 **Flera sessioner kör mot samma databas samtidigt.** Fas 19.5 och Fas
 20.1 skrevs samma förmiddag i två sessioner och ändrade båda
 `avvikelser_rader`, `klippkort_dra` och `passunderlag`. Den som skrev om

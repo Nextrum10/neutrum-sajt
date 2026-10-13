@@ -1426,6 +1426,21 @@
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
             + esc(konto.full_name || konto.email) + '</button>'
           : null, 'inget än: det skapas när hen tas in i poolen'],
+        /* Koden (2026-10-13): en studiehjälpares, som får 300 kr i lönen
+           när hen tas in i poolen (tipsbonus). Bara en kod som gällde
+           står här; databasen tömde de andra. */
+        ['Kod', dpKod(a), 'ingen'],
+        ...(a.kod ? [['Bonus för tipset', (() => {
+          const b = (S.tipsbonus || []).find(x => x.ansokan_id === a.id);
+          if (!b) return esc(S.bonusFlagga && !S.bonusFlagga.aktiv
+            ? 'ingen: bonusen är avstängd under Koder'
+            : 'ges när hen tas in i poolen');
+          const l = { utkast: 'utkast', godkand: 'godkänd', utbetald: 'utbetald', struken: 'struken' }[b.status] || b.status;
+          /* Lönen för månaden hen togs in, som betalas den 25:e månaden efter. */
+          const [år, mån] = String(b.period).split('-').map(Number);
+          return esc(NXBetalning.kronor(b.belopp_ore) + ', ' + l + ', i lönen den 25 '
+            + NXStudie.månadsNamn(NXStudie.månadIso(new Date(år, mån, 1, 12))));
+        })()]] : []),
         ['Provet', esc(kör('provKort', a) || '') + (provKnapp ? ' ' + provKnapp : '')]
       ])
       + dpRubrik('Varför hen söker')

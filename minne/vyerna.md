@@ -1236,6 +1236,38 @@ tabellerna och listorna, inte ytorna.
 - NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
   vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
 
+### Koder i adminvyn (2026-10-13)
+
+Leo: "i admin vyn ska du skapa en ny spalt, där ska koder synas, allas
+personliga kod ska synas där. först när jag klicka på koder så ska jag
+klickar om jag vill kolla på familjer eller studiehjälpare ... gör det
+snyggt." En egen sektion i gruppen Kunder, efter Studiehjälpare
+(`#koder`, `nextrum-admin-koder.js`, `ritaKodsidan`, bara superadmin i
+`BARA_SUPER`, i modulvakten och i `kolla-csp.py`).
+- **Valet först**: två stora kort (`.kod-val`, `.kod-val-kort`), Familjer
+  i lera och Studiehjälpare i ockra, med vad koden gör och tre tal. De är
+  länkar till `#koder/familjer` och `#koder/studiehjalpare`, så att
+  Tillbaka i webbläsaren går tillbaka till valet. Sektionen lyssnar själv
+  på `hashchange`, för skalets `sidomeny` har inget `onByt`.
+- **Listan**: flikar för att byta sort (`.vy-flikar` med länkar),
+  nyckeltalen (`.adm-tal-rad`), regeln med strömbrytaren (`.kod-regel`;
+  samma flagga som under Betalningar → Inställningar, och båda ritas om),
+  filterchips med antal (`.eko-chips`), sök på namn, e-post och kod, och en
+  `<details class="kod-rad">` per person: avatar, namn, e-post, koden i
+  mono, talen och läget. Utfälld visar den vilka som använt koden
+  (anmälningarna eller ansökningarna ur S, med länk till panelen och
+  läget, för en studiehjälpare bonusens läge) och knapparna Öppna, Kopiera
+  koden och Stäng av koden. Summary har inga knappar: de står i det
+  utfällda. Raderna ordnas efter användning.
+- **Hämtningen**: `koder_lage(p_sort)` för båda sorterna när sektionen
+  öppnas, inte vid start, för den skapar de koder som saknas. En utfälld
+  rad står kvar utfälld när listan ritas om.
+- **Telefonen**: summary blir två rader under 720 px (person och läge,
+  kod och tal) och tre under 420 px; tryckytorna är minst 44 px; hovring
+  och tryck rör sig med `scale`.
+- Ansökans panel har raderna Kod och Bonus för tipset, och Löner har rutan
+  Bonus för tips (`minne/betalning.md`).
+
 ### Mejl från adminvyn skrivs i Gmail (2026-10-11)
 
 Leo: "när vi ska skicka mail från plattformen, se till att det alltid görs i

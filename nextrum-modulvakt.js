@@ -104,6 +104,7 @@
         ritaAvvikelser:    'nextrum-admin-ekonomi.js',
         ritaMånaden:       'nextrum-admin-manaden.js',
         ritaLöner:         'nextrum-admin-loner.js',
+        ritaKodsidan:      'nextrum-admin-koder.js',
         ritaTjanster:      'nextrum-admin-tjanster.js',
         ritaAudit:         'nextrum-admin-system.js',
         ritaAdminhantering: 'nextrum-admin-behorighet.js',

@@ -329,7 +329,9 @@ window.NXForhandsvisning = (function () {
         { id: id(901), tutor_id: SARA, period: dag(-40).slice(0, 7) + '-01', status: 'utbetald', belopp_ore: 90000,
           minuter: 300, skapad_at: tid(-14, '04:20'), utbetald_at: tid(-12, '09:00') }
       ],
-      payout_lines: []
+      payout_lines: [],
+      /* 2026-10-13: bonusen för tips, lön som studiehjälparen läser själv. */
+      tipsbonus: []
     };
   }
 
@@ -454,6 +456,7 @@ window.NXForhandsvisning = (function () {
         return roll === 'foralder' ? r.parent_id === JAG : false;
       case 'barn_passforslag': return roll === 'foralder' && r.parent_id === JAG;
       case 'payouts': case 'arbetade_timmar': case 'payout_lines': return roll !== 'foralder' && r.tutor_id === JAG;
+      case 'tipsbonus': return roll !== 'foralder' && r.studiehjalpare_id === JAG;
       case 'niva_fragor': return roll !== 'foralder';
       case 'notis_val': return r.profil_id === JAG;
       default: return true;
@@ -777,8 +780,14 @@ window.NXForhandsvisning = (function () {
     godkann_villkor: function () { return true; },
     mina_handlingar: function () { return []; },
     min_handling_text: function () { return null; },
+    /* Samma form som mina_tips() (tipskoder_bonus_och_timbanken, 2026-10-13):
+       familjens timmar för tips, studiehjälparens sökande och bonus. */
     mina_tips: function () {
-      return roll === 'foralder' ? { kod: tipsKod, anmalda: 0, kunder: 0, kvar: 0 } : { kod: tipsKod, anmalda: 1, kunder: 0, kvar: 0 };
+      return roll === 'foralder'
+        ? { kod: tipsKod, sort: 'familj', aktiv: true, anmalda: 0, kunder: 0, timmar: 0, anvanda: 0, kvar: 0,
+            kvar_till: null, timme_ges: true }
+        : { kod: tipsKod, sort: 'studiehjalpare', aktiv: true, ansokningar: 1, intagna: 0, bonus_ore: 0,
+            bonus_utbetald_ore: 0, bonus_ges: true, bonus_belopp_ore: 30000 };
     },
     forsta_timmen_lage: function () { return { beviljad: false, tagen: false }; },
     faktura_mojlig: function () { return true; },

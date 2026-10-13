@@ -762,7 +762,8 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   sparas inte.
 - **Ingen ersättning till studiehjälpare**, med flit: de är ofta sexton,
   en belöning för att värva kunder är lön, och anställningsformen är inte
-  avgjord.
+  avgjord. Gällde till 2026-10-13: sedan dess gäller studiehjälparens kod
+  jobbansökan och ger bonus i lönen (nästa avsnitt).
 - **Flaggan `tipstimme`** stänger av erbjudandet. Det som tjänats in innan
   ges ändå, för villkoren (`#tips`) lovar det: gränsen är flaggans
   `uppdaterad`, som `stampla_flaggan` sätter och bara en ändring av
@@ -805,6 +806,103 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   väntade rader till, `mina_tips` och `tipskoder_lage` (`minne/sakerhet.md`).
   Flaggan `tipstimme` står på, och ingen kod fanns när migrationen kördes.
 
+## Koderna per formulär, bonusen och tipstimmen i timbanken (2026-10-13)
+
+Leo 2026-10-13: "i admin vyn ska du skapa en ny spalt, där ska koder synas,
+allas personliga kod ska synas där. först när jag klicka på koder så ska jag
+klickar om jag vill kolla på familjer eller studiehjälpare. när jag har valt
+ska koderna synas samt att hur många som använt personens kod. blivande
+läxhjälpare ska bara kunna använda befintliga läxhjälp[ares koder], när det
+sker och vi tagit in de nya anställda ska den persons kod de använt få en
+extra bonus på 300kr, betalas ut som lön. nya familjerna som använder
+befintliga familjers koder i sin intresseanmälan, när och om de nya
+familjerna tas in i systemet och har haft två timmar i lektion, oavsett om
+första var gratis eller inte, så ska familjen med koden få antingen en gratis
+lektion eller voucher på x antal kronor, men sätt voucher på en gratis timme
+som läggs in i timbanken. vi kan komma att ändra det. gör det snyggt. koder
+ska kunna skrivas in i intresseanmälning och jobbansökan och ansökning ska
+inte kunna använda koder från familjer och familjer ska inte använda koder
+från anställda." Strax efter: "timmarna läggs in i timbanken för familjerna
+och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
+
+- **Koden gäller sitt formulär.** En familjs kod och en kampanjkod gäller
+  intresseanmälan (`intern.leads_tipskod`), en godkänd studiehjälpares kod
+  jobbansökan (`applications.kod`, `intern.ansokan_tipskod`, triggern
+  `applications_tipskod` efter `applications_skydda`). Fel sort blir null,
+  som en okänd kod, så en anmälan eller ansökan fälls aldrig av en kod; admin
+  som rättar in fel sort får 23514. Studiehjälparens godkännande läses
+  direkt i `tutor_profiles`, för `ar_godkand_studiehjalpare()` svarar nej
+  för en anonym anropare. Ingen anmälan i driften bar en studiehjälpares kod
+  när det byggdes. Formulären säger vilken kod som gäller under fältet, och
+  jobbansökan fyller i fältet ur `?kod=` som intresseanmälan (reserven när
+  kolumnen saknas skriver koden i `why`, `KOLUMN_I_WHY`).
+- **Familjens timme står i timbanken.** Regeln för när den tjänas in är
+  densamma (två timmar, 2026-10-09), och den räknas ur raderna som förut.
+  Hur den används är `gratistimmarna_60_dagar`s (Leo samma dag: "gratis
+  timmar går ut efter 60 dagar att de läggs in", "gratis timmar går ut först
+  sen planerna"): den gäller i 60 dagar från den dagen och dras först, som
+  ett avdrag på nästa läxhjälpspass (`forsta_timmen_bjuds`,
+  `intern.tipstimmar_kvar`). Den här grenen drog den först sist och lät den
+  aldrig gå ut; det ströks när main fått regeln, före merge. Studievyn visar
+  den som ett kort i Er timbank och under Profil → Timbanken (Timmar för
+  tips, med sista dagen ur `mina_tips().kvar_till` och passen den använts
+  till).
+- **Varför inte en rad i `klippkort`.** Det hade gjort timmen till ett köp:
+  0 kr i Köpta timmar, i ångerrätten, i uppsägningen och i Stripes
+  avstämning, och `begart_ore > 0` och sorten hade fått släppas med en drop.
+  En timme som minuter i timbanken hade betalats tillbaka som pengar när
+  familjen slutar, och tipstimmen är aldrig pengar. Rabatten på passet var
+  redan provad och i drift; den flyttade bara sist i ordningen.
+- **Bonusen är lön.** 300 kr (`intern.tipsbonus_ore()`) till studiehjälparen
+  vars kod den nya sökte med, när vi tar in hen: triggern
+  `tutor_profiles_tipsbonus` när `tutor_profiles.status` blir `approved`
+  (Ta in i poolen och lägesväljaren gör det). Ansökan hittas på adressen,
+  som allt annat som kopplar en ansökan till ett konto: den första ansökan
+  med en studiehjälpares kod från samma adress, som inte är avböjd. Den nya
+  ska vara ny när hen sökte: aldrig godkänd i poolen före ansökan
+  (auditloggen) och inget hållet pass. En bonus per ny studiehjälpare och per
+  ansökan, aldrig för den egna koden, och bara med flaggan `tipsbonus` på
+  när personen tas in.
+- **LAGRAD, inte räknad.** Tipstimmen räknas ur raderna, men en lön som är
+  godkänd, inläst i Fortnox och betald får inte ändra sig för att en ansökan
+  gallrats. `tipsbonus` har en rad per bonus med lönemånaden (`period`,
+  månaden den tjänades in), läget (Utkast, Godkänd, Utbetald, Struken) och
+  stämplarna. Ingen insert- eller delete-policy; admin ändrar bara läget
+  (`intern.tipsbonus_skydda` fryser resten och sätter stämplarna), och
+  nycklarna till ansökan och den nya får bli null när de tas bort.
+- **Inte i `payouts`.** En rad i `payout_lines` kräver minuter
+  (`minuter > 0`), underlaget skrivs bara av månadskörningen, och
+  `las_utbetalningsbelopp` fryser beloppet för alla med en token. Bonusen
+  står därför för sig: Löner räknar den i Att betala ut och i Månadens
+  ekonomi (`lönFörMånad`), har rutan Bonus för tips med lägena, och
+  lönefilen tar den godkända som en egen lönetransaktion, antal 1, på
+  lönearten `foretagsfakta.lonart_tipsbonus` (`minne/betalning.md`).
+  Studiehjälparens lön visar den under månaden och på lönespecen.
+- **Koder i adminvyn** (`#koder`, `nextrum-admin-koder.js`, bara
+  superadmin): först valet Familjer eller Studiehjälpare (två kort), sedan
+  allas kod med nyckeltal, regeln med strömbrytaren, filter, sök och en rad
+  per person som fälls ut och visar vilka som använt koden, med länk till
+  anmälan eller ansökan och bonusens läge. `koder_lage(p_sort)` skapar de
+  koder som saknas (`intern.ny_tipskod`, samma form som `mina_tips`), men
+  aldrig åt ett adminkonto, som ofta har rollen parent. Hämtas när sektionen
+  öppnas, inte vid start. Tips och kampanjer under Tjänster & priser visar
+  bara kampanjkoderna sedan dess.
+- **Studiehjälparens flik heter Tipsa en studiehjälpare**: länken går till
+  `/bli-studiehjalpare?kod=…#ansok`, och rutan säger antal sökande och
+  intagna och bonusen. Familjens flik säger timmen i timbanken.
+- **Raderingen**: en studiehjälpare med en bonus som inte är utbetald eller
+  struken raderas inte (hindret `tipsbonus`), och en med en bonus alls
+  avidentifieras i stället för att tas bort; bonusen står under Står kvar.
+- **Villkoren** (#tips, båda språken) och policyn säger det; versionen är
+  2026-10-13. Rad 19 och 27 i `DATASKYDD.md`.
+- **Vad Leo kan ändra**: "vi kan komma att ändra det" om familjens
+  belöning. En timme är `startrabatt` på ett pass; en voucher i kronor finns
+  inte i betalningen och vore en egen ändring (ett tillgodohavande som
+  kassan och fakturan drar av). Antalet timmar och bonusens belopp ändras
+  med en migration och villkoren samtidigt.
+- **Provat** lokalt: 1542 av 1542 i `rls-test.sql`, med avsnittet KB (23
+  nya prov) och tipsavsnittet omskrivet för ordningen.
+
 ---
 
 ### Ordlistan (använd den, i kod och i text)
@@ -823,5 +921,6 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
 | NexLäx | studievyns sektion för banan, det studiehjälparen gett och utvecklingen (Fas 23.2). Ersatte Uppgifter och Min utveckling. I koden `nexlax` och `NXUppgifter` |
 | motförslag | en annan tid som svar på ett förslag: samma pass, flyttat, med `motforslag_at` (2026-09-30). Besvaras med ja eller nej. Ett avslag är `cancelled` med studiehjälparens svar i `svar_meddelande` |
 | XP | poäng som räknas ur svaren och försöken och aldrig sparas (Fas 23.2, reglerna i `intern.nexlax_*`) |
-| tipskod | en familjs eller studiehjälpares egen kod i intresseanmälan (`tipskoder`, 2026-09-30); en kampanjkod är en affischs |
-| tipstimme | en timme på köpet för ett tips: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`, 2026-09-30; per formulär sedan 2026-10-13); en kampanjkod är en affischs |
+| tipstimme | en timme i timbanken för ett tips (sedan 2026-10-13), dragen sist: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| tipsbonus | 300 kr i lön till en studiehjälpare när vi tar in någon som sökt med hens kod (`tipsbonus`, 2026-10-13); aldrig ett underlag i `payouts` |

@@ -132,11 +132,15 @@ SIFFRORNA:
   admin gav den. Högst en sådan timme per familj; timmar för tips och
   gratistimmar som admin sätter in räknas inte hit. Ett pass på en timme
   kan alltså kosta noll kronor, och det är då inte obetalt.
-· En familj som tipsat får en timme på köpet när en ny familj som
-  anmält sig med dess kod haft två timmar läxhjälp. Den dras av på nästa
-  pass och gäller i 60 dagar från den dagen.
+· En familjs kod gäller intresseanmälan och en studiehjälpares kod
+  jobbansökan. En familj som tipsat får en timme i sin timbank när en
+  ny familj som anmält sig med dess kod haft två timmar läxhjälp. Den
+  dras först, som en timme på köpet på nästa pass, och gäller i 60
+  dagar från den dagen.
 · Studiehjälparen får betalt den 25:e, i en klump för månadens
-  rapporterade pass.
+  rapporterade pass. Tar vi in någon som sökt jobb med en
+  studiehjälpares kod får den studiehjälparen 300 kr i bonus med
+  lönen för den månaden.
 · Belopp räknas i ören. Kronor blir det först när något visas.
 
 VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:
