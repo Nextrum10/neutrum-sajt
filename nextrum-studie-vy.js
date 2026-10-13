@@ -1203,6 +1203,24 @@
   function ritaNexlax() {
     ritaVägen();
     ritaNexlaxUtveckling();
+    ritaNexlaxFlikar();
+  }
+
+  /* Rank, Märken och Studiehjälparen (2026-10-13) har egna flikar, och
+     barnets NexLäx-profil står under Profil → Barn. De ritas ur samma
+     underlag som vägen. */
+  function ritaNexlaxFlikar() {
+    if (!S.valtBarn || !S.nl.laddad) return;
+    const u = nlUnderlag();
+    const b = nlBana();
+    const rita = (id, fn, extra) => { const host = $(id); if (host) fn(Object.assign({}, u, { host }, extra || {})); };
+    rita('#nl-rank', U.ritaRank);
+    rita('#nl-marken', U.ritaMärken);
+    rita('#nl-hjalpare', U.ritaHjälpare, {
+      amne: b.amne, arskurs: b.arskurs, väntar: !!S.väntar,
+      hjälpare: S.tutor ? { namn: S.tutor.full_name } : null
+    });
+    rita('#nl-profil', U.ritaProfil, { länk: true });
   }
 
   function ritaVägen() {

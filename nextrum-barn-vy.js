@@ -658,6 +658,26 @@
   function ritaNexlax() {
     ritaVägen();
     ritaUtveckling();
+    ritaFlikar();
+  }
+
+  /* Rank, Märken och Studiehjälparen har egna flikar (2026-10-13), och
+     rank, XP och märken står också under Profil. Ur samma underlag som
+     vägen. */
+  function ritaFlikar() {
+    if (!S.nl.data) return;
+    const u = nlUnderlag();
+    const b = nlBana();
+    const d = S.nl.data;
+    const rita = (id, fn, extra) => { const host = $(id); if (host) fn(Object.assign({}, u, { host, barnvy: true }, extra || {})); };
+    rita('#bv-nl-rank', U.ritaRank);
+    rita('#bv-nl-marken', U.ritaMärken);
+    rita('#bv-nl-hjalpare', U.ritaHjälpare, {
+      amne: b.amne, arskurs: b.arskurs,
+      väntar: !(S.data && S.data.studiehjalpare) && !(d.uppgifter || []).length,
+      hjälpare: S.data && S.data.studiehjalpare ? { namn: S.data.studiehjalpare } : null
+    });
+    rita('#bv-nl-profil', U.ritaProfil, { länk: true });
   }
 
   /* Flikarna, under Mina lektioner och i NexLäx. Arbetsytan laddas bara
