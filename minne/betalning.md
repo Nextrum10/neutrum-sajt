@@ -283,7 +283,9 @@ rapporten innan Visas reservation släpps. Längre förlängda reservationer
    familjen lagt till ett kort eller tryckt Försök igen.
 4. **Dragningen**: när rapporten finns (passet `completed`) dras priset för
    den hållna tiden, högst det reserverade (delvis dragning släpper
-   resten). Var passet längre betalas tillägget som förut
+   resten). Leo samma kväll: "när passet har rapporterats kan pengarna
+   dras". Familjens bekräftelse av rapporten väntas inte in, som för
+   alla pass sedan Fas 19.2. Var passet längre betalas tillägget som förut
    (`pass_tillagg`). Webhooken skriver betalningen på passet
    (`payment_intent.succeeded`): bara den sätter `betald` och
    `betalt_ore`.

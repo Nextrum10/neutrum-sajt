@@ -888,7 +888,8 @@ Detaljer: `minne/grunden.md`.
   (`kortet_reserveras`, 20261013170000; lokalt ur 190 migrationer 1699 av 1699 i `rls-test.sql`, avsnitt 33),
   med strömbrytaren `kortreservation` av, mallen `kort_nekat` i `notis-ko`, och policyn och rad 29 i `DATASKYDD.md`.
   Kvar: kassans läge `setup` och Ta bort kortet, `stripe-reservation`, webhookens nya händelser, vyerna och
-  villkoren (`minne/betalning.md`). `notis-ko` driftsätts före migrationen.
+  villkoren (`minne/betalning.md`). **Kör inte migrationen förrän resten är byggd**, och `notis-ko` driftsätts
+  före den. Pengarna dras när passet har rapporterats (Leo samma kväll).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
