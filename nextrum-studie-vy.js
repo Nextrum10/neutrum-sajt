@@ -1206,20 +1206,15 @@
     ritaNexlaxFlikar();
   }
 
-  /* Rank, Märken och Studiehjälparen (2026-10-13) har egna flikar, och
-     barnets NexLäx-profil står under Profil → Barn. De ritas ur samma
+  /* Rank och Märken (2026-10-13) har egna flikar, studiehjälparen är en
+     del av Din utveckling, och barnets NexLäx-profil står under Profil → Barn. De ritas ur samma
      underlag som vägen. */
   function ritaNexlaxFlikar() {
     if (!S.valtBarn || !S.nl.laddad) return;
     const u = nlUnderlag();
-    const b = nlBana();
     const rita = (id, fn, extra) => { const host = $(id); if (host) fn(Object.assign({}, u, { host }, extra || {})); };
     rita('#nl-rank', U.ritaRank);
     rita('#nl-marken', U.ritaMärken);
-    rita('#nl-hjalpare', U.ritaHjälpare, {
-      amne: b.amne, arskurs: b.arskurs, väntar: !!S.väntar,
-      hjälpare: S.tutor ? { namn: S.tutor.full_name } : null
-    });
     rita('#nl-profil', U.ritaProfil, { länk: true });
   }
 
@@ -1243,7 +1238,11 @@
     if (!host) return;
     if (!S.valtBarn) { host.innerHTML = tomt('Inget barn valt', 'Lägg till ditt barn under Profil & inställningar.'); return; }
     if (!S.nl.laddad) return;
-    U.ritaUtveckling(Object.assign(nlUnderlag(), { host, alla: S.nl.alla }));
+    const b = nlBana();
+    U.ritaUtveckling(Object.assign(nlUnderlag(), {
+      host, alla: S.nl.alla, amne: b.amne, arskurs: b.arskurs, väntar: !!S.väntar,
+      hjälpare: S.tutor ? { namn: S.tutor.full_name } : null
+    }));
   }
 
   /* Ämnet, årskursen och en nod på vägen. Vägen ritas om, så knappen
@@ -1270,7 +1269,7 @@
   function väljBana(val, fokus) {
     S.banaVal[S.valtBarn] = val;
     S.nl.öppen = null;
-    ritaOchHåll('#nl-vag .nl-valj', ritaVägen, fokus);
+    ritaOchHåll('#nl-vag .nl-baner', ritaVägen, fokus);
   }
   document.addEventListener('click', e => {
     const host = $('#nl-vag');
@@ -5153,6 +5152,12 @@
   function bytteSektion(vald) {
     const förra = S.aktivSek;
     S.aktivSek = vald;
+    /* In i NexLäx: alltid på Din väg (2026-10-13, Leo: "när du går in och ut
+       ska du alltid hamna på startsidan"), utom när en länk bett om en
+       annan flik. En adress med fliken i (#nexlax/rank) tas av följHash. */
+    if (vald === 'nexlax' && förra !== 'nexlax' && S.flikar && S.flikar.nexlax) {
+      S.flikar.nexlax.visa(U.tagFlik() || 'vag');
+    }
     /* Barnens trådar bär barnets och studiehjälparens namn, så de
        hämtas först när båda finns (S.namnKlara). */
     if (vald === 'meddelanden' && S.namnKlara) laddaBarnensTradar();

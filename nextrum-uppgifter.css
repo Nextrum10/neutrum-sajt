@@ -1779,3 +1779,152 @@ section[data-sek="nexlax"]:not([hidden]){animation:nl-in .45s var(--e-ut,ease) b
 .nl-sida-kropp{display:grid;gap:clamp(16px,1.8vw,22px);min-width:0}
 
 .nl.stack{grid-template-columns:minmax(0,1fr)}
+
+/* ============================================================
+   NEXLÄX DUNDER (2026-10-13, andra omgången)
+   Leo, efter att ha sett det på telefonen: NexLäx i mitten högst upp
+   och ett tydligt sätt ut, banan ska synas så fort man är inne (som i
+   Duolingo), streak i stället för dagar, Fortsätt säger vilket ämne,
+   Dagens uppdrag hopfällt, Din utveckling efter Din väg med bara
+   NexLäx eller studiehjälparen att välja mellan, och huvudsidans
+   textfärg (gradienten blå, lila, rosa) i NexLäx.
+   ============================================================ */
+
+/* Gradienten från huvudsidans NexLäx-rubrik (.nlx-rubrik em): bara i
+   NexLäx. Mot barken står de ljusa syskonen (-l), som klarar AA där.
+   Den ligger på en text i en egen ruta (span), aldrig på knappen: ytan
+   bakom är barken, och texten klipps ur gradienten. */
+.nl-spelrad-namn,
+.nl-flikar .vy-flik[aria-selected="true"] .vy-flik-t,
+.nl-del-knapp[aria-pressed="true"] .nl-del-t,
+.nl-gradient{
+  background:linear-gradient(96deg,var(--amne-ma-l) 6%,var(--amne-en-l) 56%,var(--amne-ms-l) 98%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+  padding-right:.05em;
+}
+
+/* Det fasta huvudet: Lämna, NexLäx i mitten, ljudet, och menyn under.
+   Står tätt under sidhuvudet och följer med, så att vägen ut och
+   titeln alltid syns. */
+.nl-spelhuvud{
+  position:sticky;top:var(--vy-hdr-h,75px);z-index:6;
+  margin:0 0 12px;padding:4px 0 0;background:var(--pap);
+}
+.nl-spelrad{margin:0 0 6px;padding:5px 8px;border-radius:18px}
+.nl-spelrad-ut{
+  gap:5px;min-height:46px;padding:0 14px 0 10px;border-radius:14px;color:var(--nt-fg);
+  background:rgba(239,230,214,.1);font-size:.9rem;font-weight:650;
+}
+.nl-spelrad-ut svg{width:19px;height:19px}
+.nl-spelrad-namn{font-size:1.28rem;font-weight:850;letter-spacing:-.035em}
+.nl-flikar{position:static;top:auto;margin:0;padding:4px;border-radius:16px;gap:2px;box-shadow:var(--sk-1)}
+.nl-flikar .vy-flik{flex:1 1 0;min-width:0;padding:0 6px;font-size:.88rem;white-space:nowrap}
+.nl-flikar .vy-flik[aria-selected="true"]{background:linear-gradient(var(--nt),var(--nt-2));color:var(--nt-fg)}
+@media (max-width:420px){.nl-flikar .vy-flik{font-size:.8rem;padding:0 3px}}
+
+/* Toppen: tät, en rad stjärnor och ett steg. */
+.nl-topp{gap:12px;padding:14px;border-radius:24px}
+.nl-stat{flex-wrap:nowrap;gap:6px}
+.nl-stat-pill{padding:5px 11px 5px 8px;gap:5px;font-size:.78rem;min-width:0}
+.nl-stat-pill svg{width:18px;height:18px}
+.nl-stat-pill b{font-size:.98rem}
+.nl-stat-pill.nl-rang b{font-size:.86rem;overflow:hidden;text-overflow:ellipsis}
+.nl-stat-pill.nl-rang{flex:0 1 auto}
+@media (max-width:380px){.nl-stat-pill span{display:none}.nl-stat-pill.nl-rang b{font-size:.8rem}}
+
+.nl-cta{
+  grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:12px 12px 12px 14px;border-radius:18px;
+  background:rgba(239,230,214,.07);
+}
+.nl-cta-text{grid-column:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.nl-cta-et{font-size:9.5px}
+.nl-cta-amne{
+  align-self:flex-start;margin-top:1px;padding:2px 9px;border-radius:100px;
+  font-size:.74rem;font-weight:700;letter-spacing:.01em;
+  background:color-mix(in srgb,var(--nl-f-l,var(--lera-l)) 20%,transparent);color:var(--nl-f-l,var(--lera-l));
+}
+.nl-cta-titel{font-size:1.04rem;margin-top:2px}
+.nl-cta-fakta{font-size:.8rem}
+.nl-cta .nl-prickar{margin-top:5px}
+.nl-cta-knapp{grid-column:2;grid-row:1;align-self:center;min-height:50px;padding:0 20px;font-size:.98rem}
+@media (max-width:540px){
+  .nl-cta{grid-template-columns:minmax(0,1fr) auto}
+  .nl-cta-knapp{grid-column:2;grid-row:1;width:auto;margin-top:0;padding:0 16px}
+  .nl-cta-knapp svg{display:none}
+}
+.nl-cta-klar .nl-cta-text{grid-column:1 / -1}
+.nl-mal{font-size:.8rem;line-height:1.4;gap:8px}
+.nl-mal-ikon{width:26px;height:26px}
+.nl-mal-ikon svg{width:14px;height:14px}
+
+/* Studiehjälparens remsa: tätare. */
+.nl-hjalp-remsa{margin-top:10px;min-height:52px}
+
+/* Dagens uppdrag: en rad, listan fälls ut med ett tryck. */
+.nl-uppdrag{margin-top:10px;padding:0;border-radius:20px}
+.nl-uppdrag > summary{list-style:none;cursor:pointer}
+.nl-uppdrag > summary::-webkit-details-marker{display:none}
+.nl-uppdrag-huvud{margin:0;padding:10px 12px 10px 16px;min-height:60px;border-radius:20px;-webkit-tap-highlight-color:transparent}
+.nl-uppdrag-huvud:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
+.nl-uppdrag-rubrik b{font-size:.98rem;font-weight:700;letter-spacing:-.015em;color:var(--bl)}
+.nl-uppdrag .nl-kista{width:40px;height:40px;border-radius:14px}
+.nl-uppdrag .nl-kista svg{width:24px;height:24px}
+.nl-uppdrag-pil{flex:none;width:20px;height:20px;color:var(--bl-3)}
+.nl-uppdrag-pil svg{width:20px;height:20px;transform:rotate(90deg)}
+.nl-uppdrag[open] .nl-uppdrag-pil svg{transform:rotate(-90deg)}
+.nl-uppdrag-lista{margin:0;padding:0 14px 12px}
+.nl-uppdrag-mer{padding-top:0}
+
+/* Banderollen över banan, som avsnittsraden i Duolingo. */
+.nl-baner{
+  position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:68px;margin-top:12px;padding:10px 14px 14px 12px;
+  border:0;border-radius:20px;cursor:pointer;text-align:left;font:inherit;overflow:hidden;
+  background:var(--nl-f,var(--bl));color:var(--yta);box-shadow:0 4px 0 0 color-mix(in srgb,var(--nl-f,var(--bl)) 55%,var(--bl));
+  -webkit-tap-highlight-color:transparent;
+}
+.nl-baner:active{scale:.985}
+.nl-baner:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.nl-baner-ik{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.2);color:var(--yta)}
+.nl-baner-ik svg{width:22px;height:22px}
+.nl-baner-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.nl-baner-et{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nl-baner-text b{font-size:1.18rem;font-weight:800;letter-spacing:-.025em;line-height:1.15}
+.nl-baner-pct{flex:none;font-size:1.3rem;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.nl-baner-pct i{font-style:normal;font-size:.55em;margin-left:1px}
+.nl-baner-pil{flex:none;width:22px;height:22px;opacity:.9}
+.nl-baner-pil svg{width:22px;height:22px;transform:rotate(90deg)}
+.nl-baner[aria-expanded="true"] .nl-baner-pil svg{transform:rotate(-90deg)}
+.nl-baner-mat{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(0,0,0,.18)}
+.nl-baner-mat i{display:block;height:100%;background:rgba(255,255,255,.75)}
+.nl-baner + .nl-valj{margin-top:10px}
+.nl-baner ~ .nl-grupp:first-of-type{margin-top:22px}
+
+/* Din utveckling: NexLäx eller studiehjälparen. */
+.nl-del{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;border-radius:18px;background:var(--bricka)}
+.nl-del-knapp{
+  display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 10px;border:0;border-radius:14px;
+  background:transparent;color:var(--bl-2);cursor:pointer;font:inherit;font-size:.92rem;font-weight:700;
+  transition:background-color .15s var(--e),color .15s var(--e);-webkit-tap-highlight-color:transparent;
+}
+.nl-del-knapp em{
+  font-style:normal;font-family:var(--f-mono);font-size:.7rem;font-weight:600;padding:2px 7px;border-radius:100px;
+  background:var(--lera);color:var(--yta);
+}
+.nl-del-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:-2px}
+.nl-del-knapp[aria-pressed="true"]{background:linear-gradient(var(--nt),var(--nt-2))}
+
+/* Finjusteringar efter första titten på telefonen. */
+.nl-flikar .vy-flik{flex:1 1 auto;padding:0 8px}
+@media (max-width:420px){.nl-flikar .vy-flik{padding:0 5px;font-size:.82rem}}
+/* Tätt under sidhuvudet: raden är ett spelhuvud, inte en sektionsrubrik. */
+section[data-sek="nexlax"]{margin-top:-26px}
+/* NP som en liten bricka i hörnet på en smal ämnesruta: namnet får hela raden. */
+@media (max-width:540px){
+  .nl-amne{position:relative}
+  .nl-amne-text b em{position:absolute;top:8px;right:8px}
+}
+.nl-uppdrag-not{margin:-4px 16px 12px;font-size:.8rem;color:var(--bl-3)}
+.nl-uppdrag-huvud{min-height:54px}
+.nl-spar{margin:12px 0 4px}
+.nl-baner ~ .nl-grupp{margin:16px 0 8px}
