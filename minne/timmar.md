@@ -721,8 +721,9 @@ och ett pass får delas mellan gratistimmarna och planen.
   `rls-test.sql` avsnitt 34 kör funktionen som `service_role`.
 - **Prov.** `rls-test.sql` avsnitt 34 (33 prov, `TD`), och tolv äldre prov
   skrivna om till den nya regeln (19.5, 22.2 block 4 och 5, 22.4, Tips, GT,
-  GTB B och C). Lokalt ur alla 191 migrationer: 1737 av 1737, och i ett driftlikt
-  läge (till och med `gratistimmar`, utan återtagandet, och filen ovanpå) 1683 av 1683. Webbläsarprovet
+  GTB B och C). Lokalt ur alla 191 migrationer: 1737 av 1737, och i driftens läge
+  (till och med `rabattkoden_timmar_och_tak`, utan återtagandet och `kortet_reserveras`, och filen ovanpå)
+  1703 av 1703. Webbläsarprovet
   `prova-barnforslag.js` 3i (tio prov): timmen på köpet med timmar, två köp på
   ett pass, Välj själv, telefonen och kassans kropp (erbjudandet och antalet,
   aldrig ett pris).

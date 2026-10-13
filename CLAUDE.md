@@ -884,8 +884,9 @@ Detaljer: `minne/grunden.md`.
   `intern.gratis_till` och `intern.kortets_sista_dag`, så Betala med timmar (`klippkort-betala`, som kör
   `klippkort_dra` med `service_role`) svarar "permission denied" sedan 2026-10-13. Lokalt, ur alla 191
   migrationer: hela `rls-test.sql` 1737 av 1737 (avsnitt 34 är nytt), och filen går att köra två gånger. Den beror
-  inte på `rabattkoden_timmar_och_tak` eller `kortet_reserveras` och kan köras före dem: byggd till och med
-  `gratistimmar`, utan `ta_tillbaka_gratistimmar` som i driften, och med filen ovanpå, 1683 av 1683. **Körs
+  inte på `rabattkoden_timmar_och_tak` eller `kortet_reserveras`: byggd till och med `rabattkoden_timmar_och_tak`
+  (i driften sedan 2026-10-13 kl. 22.30), utan `ta_tillbaka_gratistimmar` och `kortet_reserveras`, som driften,
+  och med filen ovanpå, 1703 av 1703. **Körs
   efter merge**: pröva vakterna (md5 i avsnitt 0) och att inget pass med `startrabatt` redan har ett kort, kör
   filen hel i ett do-block från merge-commiten (den tar inte bort något), registrera den och `gratistimmar`,
   driftsätt `stripe-checkout` och `drift` från main, och kör hela `rls-test.sql` mot driften. Villkorens version
