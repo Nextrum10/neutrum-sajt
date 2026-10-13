@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
-<link rel="stylesheet" href="nextrum-vy.css?v=3be7d3b8">
+<link rel="stylesheet" href="nextrum-vy.css?v=7c836d53">
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=eb771e35">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
@@ -1835,7 +1835,7 @@
                   <div class="fgroup">
                     <label for="rk-typ">Typ</label>
                     <select class="inp" id="rk-typ">
-                      <option value="procent">Procent av passet</option>
+                      <option value="procent">Procent av priset</option>
                       <option value="belopp">Fast belopp i kronor</option>
                     </select>
                   </div>
@@ -1852,8 +1852,16 @@
                     <input class="inp" id="rk-till" type="date">
                   </div>
                   <div class="fgroup">
-                    <label for="rk-max">Max antal</label>
+                    <label for="rk-max">Gånger totalt</label>
                     <input class="inp" id="rk-max" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                  </div>
+                  <!-- 2026-10-13 (Leo: "rabattkoder ska vi också bestämma hur många
+                       gånger de får användas"). En gång per familj som förval; tom
+                       ruta är obegränsat. Pass och köp av timmar räknas ihop, och ett
+                       avbokat pass räknas inte. -->
+                  <div class="fgroup">
+                    <label for="rk-familj">Gånger per familj</label>
+                    <input class="inp" id="rk-familj" type="number" min="1" step="1" inputmode="numeric" value="1" placeholder="Obegränsat">
                   </div>
                 </div>
                 <div class="fgroup" style="margin-top:14px">
@@ -2451,7 +2459,7 @@
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=1632f8d9"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=99247b56"></script>
+<script src="nextrum-studie.js?v=92acb066"></script>
 <script src="nextrum-arbetsyta.js?v=8354e990"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=b651d432"></script>
@@ -2469,14 +2477,14 @@
 <script src="nextrum-admin-manaden.js?v=8daec1e5"></script>
 <script src="nextrum-admin-loner.js?v=0dc57440"></script>
 <script src="nextrum-admin-koder.js?v=2b773c4f"></script>
-<script src="nextrum-admin-tjanster.js?v=20b4a52d"></script>
+<script src="nextrum-admin-tjanster.js?v=3f8e7485"></script>
 <script src="nextrum-admin-system.js?v=850d4673"></script>
 <script src="nextrum-admin-behorighet.js?v=6eb31e9f"></script>
 <script src="nextrum-admin-automationer.js?v=0fb655ba"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
-<script src="nextrum-admin-radera.js?v=82f15d77"></script>
+<script src="nextrum-admin-radera.js?v=12512614"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>

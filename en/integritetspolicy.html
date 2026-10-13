@@ -241,6 +241,10 @@
       <li>If the child has a login of their own: what the child and the tutor write to each other
         in the child’s view, and when it was read</li>
       <li>Payments and pay statements: which session was paid, amounts and when, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when and until which day). We never have the card details</li>
+      <li>If you have saved a card to pay for sessions: the card’s brand, its last four digits and
+        when it expires, Stripe’s IDs for the card and for you as a customer, and for each session
+        where you chose the card whether the amount is reserved, charged or released and what it
+        was. We never have the full card number</li>
       <li>For a tutor who recommended someone: the bonus for the recommendation, who it concerns, the
         amount and when it was paid</li>
     </ul>
@@ -307,6 +311,9 @@
       <li><b>The child’s chat with the tutor</b>: the contract with you (Article 6(1)(b)), as part
         of the child’s login. That you and we can read it is legitimate interest (Article
         6(1)(f)): keeping the children safe.</li>
+      <li><b>Attempts with discount codes</b>: legitimate interest (Article 6(1)(f)): protecting
+        the codes against guessing. We only store that the account tried a code that does not
+        exist, and when, in a form we cannot read back to the account.</li>
       <li><b>Accounting records</b>: legal obligation (Article 6(1)(c)), the Swedish Accounting
         Act.</li>
       <li><b>Job applications</b>: legitimate interest (Article 6(1)(f)), being able to hire the
@@ -405,7 +412,10 @@
         see which enquiries are waiting for a reply. It then gets students’ initials, school
         year and subject and masked free text, never names, email addresses or addresses.</li>
       <li><b>Stripe</b>: receives card payments. You give your card details directly to Stripe,
-        never to us, and we do not store them. Stripe gets your email address, the amount and
+        never to us, and we do not store them. If you choose to pay for a session by card when you
+        propose it, Stripe saves the card, so that we can reserve the amount two days before the
+        session and charge it when the report has been written. You remove the card under Profile
+        whenever you like. Stripe gets your email address, the amount and
         which session the payment is for (subject and date), and we get back that the session
         is paid. For fraud checks and what the law requires of a payment service, Stripe is
         itself the controller, as described in
@@ -467,6 +477,10 @@
         remove it or the login, or the child is deleted, it is deleted at once. An address that
         was never confirmed is deleted 30 days after we sent the link, and attempts to log in
         with an address after a day. This happens automatically every night.</li>
+      <li><b>Attempts with discount codes</b>: one day.</li>
+      <li><b>A saved card</b>: as long as you keep it saved. If you remove it, or the account, it
+        is deleted here and detached at Stripe. What was reserved and charged for a session
+        remains with the payment.</li>
       <li><b>Accounting records</b>: payments and payout records, and the bonus for
         recommendations, seven years. That is required by the Swedish Accounting Act and not
         something we can shorten, not even on request. A bonus remains even when the application it

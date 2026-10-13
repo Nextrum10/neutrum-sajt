@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
-<link rel="stylesheet" href="nextrum-vy.css?v=3be7d3b8">
+<link rel="stylesheet" href="nextrum-vy.css?v=7c836d53">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=eb771e35">
@@ -644,6 +644,17 @@
 
           <div class="dbox">
             <h5>Planer och Fyll timbanken</h5>
+            <!-- 2026-10-13 (Leo: "rabattkoden kan användas för att köpa timmar
+                 i timbanken"). Koden prövas av kolla_rabattkod_kop och dras av
+                 stripe-checkout; priset räknas i databasen. Raden visas bara
+                 när familjen kan köpa. -->
+            <div class="erb-kod" id="erb-kod-rad" hidden>
+              <label class="erb-kod-et" for="erb-kod">Rabattkod</label>
+              <input class="inp" id="erb-kod" maxlength="40" autocomplete="off" autocapitalize="characters"
+                     spellcheck="false" enterkeyhint="done" placeholder="Valfritt, om ni har en">
+              <button type="button" class="btn btn-ghost btn-sm" id="erb-kod-anvand">Använd</button>
+              <p class="erb-kod-svar" id="erb-kod-svar" aria-live="polite"></p>
+            </div>
             <div class="erb-grid" id="erb-planer"><div class="loading">Hämtar</div></div>
           </div>
 
@@ -1097,11 +1108,11 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-forhandsvisning.js?v=f2e96d72"></script>
+<script src="nextrum-forhandsvisning.js?v=3ad121d6"></script>
 <script src="nextrum-app.js?v=1632f8d9"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=8bab89e2"></script>
-<script src="nextrum-studie.js?v=99247b56"></script>
+<script src="nextrum-studie.js?v=92acb066"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-arbetsyta.js?v=8354e990"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
@@ -1110,6 +1121,6 @@
 <script src="nextrum-uppgifter.js?v=1790cff1"></script>
 <script src="nextrum-introduktion.js?v=2f3aa58e"></script>
 <script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-studie-vy.js?v=9beefca2"></script>
+<script src="nextrum-studie-vy.js?v=3aa81c0e"></script>
 </body>
 </html>

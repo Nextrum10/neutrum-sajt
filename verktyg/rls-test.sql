@@ -14965,6 +14965,719 @@ begin
   end if;
 end $$;
 
+-- ------------------------------------------------------------
+-- 32. Rabattkoden: timmarna, köpen, gränserna och taket
+--     (rabattkoden_timmar_och_tak, 2026-10-13)
+--
+-- Leo: "rabattkod kan inte användas om man har timmar i timbanken.
+-- rabattkoden kan användas för att köpa timmar i timbanken eller om man
+-- har noll timmar kvar och vill köpa pass för pass", och "rabattkoder
+-- ska vi också bestämma hur många gånger de får användas". Tre nya
+-- familjer med barnet hos A: R och U utan timmar, T med gratistimmar
+-- från admin. Utan migrationen hoppas avsnittet över, och allt rullas
+-- tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  tx   text;
+  n    integer;
+  i    integer;
+  rd   record;
+  k    record;
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  R    constant uuid := '00000000-0000-4000-8000-0000000032f1';
+  T    constant uuid := '00000000-0000-4000-8000-0000000032f2';
+  U    constant uuid := '00000000-0000-4000-8000-0000000032f3';
+  ER   constant uuid := '00000000-0000-4000-8000-0000000032e1';
+  ET   constant uuid := '00000000-0000-4000-8000-0000000032e2';
+  EU   constant uuid := '00000000-0000-4000-8000-0000000032e3';
+  B1   constant uuid := '00000000-0000-4000-8000-0000000032b1';
+  B2   constant uuid := '00000000-0000-4000-8000-0000000032b2';
+  B3   constant uuid := '00000000-0000-4000-8000-0000000032b3';
+  B4   constant uuid := '00000000-0000-4000-8000-0000000032b4';
+  B5   constant uuid := '00000000-0000-4000-8000-0000000032b5';
+  B6   constant uuid := '00000000-0000-4000-8000-0000000032b6';
+  B7   constant uuid := '00000000-0000-4000-8000-0000000032b7';
+  KK1  constant uuid := '00000000-0000-4000-8000-0000000032c1';
+  KK2  constant uuid := '00000000-0000-4000-8000-0000000032c2';
+  KK3  constant uuid := '00000000-0000-4000-8000-0000000032c3';
+begin
+  if to_regprocedure('intern.rabattkod_prova(text, text, bigint, uuid, boolean)') is null then
+    insert into utfall (test, ok, detalj) values ('RT Rabattkoden och timmarna: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+  begin
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (R, 'rls-r32@example.invalid', '{"role":"parent","full_name":"Test Familj R"}'),
+      (T, 'rls-t32@example.invalid', '{"role":"parent","full_name":"Test Familj T"}'),
+      (U, 'rls-u32@example.invalid', '{"role":"parent","full_name":"Test Familj U"}');
+    insert into public.villkor_godkannanden (anvandare, version, kalla)
+    select x, intern.villkor_version(), 'registrering' from unnest(array[R, T, U]) x;
+    insert into public.students (id, parent_id, name, matched_tutor_id, match_status) values
+      (ER, R, 'Rut', A, 'matched'), (ET, T, 'Tor', A, 'matched'), (EU, U, 'Ulla', A, 'matched');
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.rabattkoder (kod, beskrivning, typ, varde, aktiv, max_anvandningar, max_per_familj) values
+      ('RLS-EN',  'En gång per familj', 'procent', 10,  true, null, 1),
+      ('RLS-TVA', 'Två gånger totalt',  'procent', 10,  true, 2,    null),
+      ('RLS-KOP', 'Köp av timmar',      'procent', 10,  true, null, null),
+      ('RLS-HEL', 'Hela priset',        'procent', 100, true, null, null);
+    perform pg_temp.bli(AD);
+    perform public.ge_gratistimmar(T, 3);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- timmarna i timbanken ----------
+    ut := ut || jsonb_build_object('t', 'RT R har inga timmar i timbanken, T har gratistimmar', 'ok',
+            not intern.har_timmar(R) and intern.har_timmar(T),
+            'd', concat_ws(' ', intern.har_timmar(R), intern.har_timmar(T)));
+    update public.flaggor set aktiv = false where kod = 'erbjudanden';
+    ut := ut || jsonb_build_object('t', 'RT utan strömbrytaren erbjudanden räknas timmarna inte', 'ok',
+            not intern.har_timmar(T), 'd', intern.har_timmar(T)::text);
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+
+    perform pg_temp.bli(R);
+    select * into k from public.kolla_rabattkod('rls-en', null, 39900);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'RT kolla_rabattkod: R utan timmar får tio procent', 'ok',
+            k.giltig and k.rabatt_ore = 3990, 'd', concat_ws(' ', k.giltig, k.orsak, k.rabatt_ore));
+
+    perform pg_temp.bli(T);
+    select * into k from public.kolla_rabattkod('RLS-EN', null, 39900);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'RT kolla_rabattkod: T med timmar får nej, och skälet', 'ok',
+            not k.giltig and k.orsak like 'Koden gäller inte när ni har timmar i timbanken%',
+            'd', concat_ws(' ', k.giltig, k.orsak));
+
+    -- Ett pass hos R får koden, med stora bokstäver.
+    perform pg_temp.bli(R);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, rabattkod)
+    values (B1, R, A, ER, R, idag + 40, '06:00', 60, 'requested', 'rls-en');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select b.rabattkod, b.rabatt_ore, b.timpris_ore into rd from public.bookings b where b.id = B1;
+    ut := ut || jsonb_build_object('t', 'RT ett pass hos R utan timmar får koden', 'ok',
+            rd.rabattkod = 'RLS-EN' and rd.rabatt_ore = rd.timpris_ore / 10,
+            'd', concat_ws(' ', coalesce(rd.rabattkod, 'null'), rd.rabatt_ore, rd.timpris_ore));
+
+    -- T:s pass med två barn betalas inte av timmarna, men T har timmar:
+    -- koden gäller ändå inte.
+    perform pg_temp.bli(T);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, antal_barn, rabattkod)
+    values (B2, T, A, ET, T, idag + 41, '06:00', 60, 'requested', 2, 'RLS-EN');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select b.rabattkod, b.rabatt_ore, b.klippkort_id into rd from public.bookings b where b.id = B2;
+    ut := ut || jsonb_build_object('t', 'RT T med timmar får ingen kod, också på ett pass timmarna inte betalar', 'ok',
+            rd.rabattkod is null and rd.rabatt_ore is null and rd.klippkort_id is null,
+            'd', concat_ws(' ', coalesce(rd.rabattkod, 'null'), coalesce(rd.rabatt_ore::text, 'null'),
+                           coalesce(rd.klippkort_id::text, 'inget kort')));
+
+    -- ---------- en gång per familj ----------
+    perform pg_temp.bli(R);
+    select * into k from public.kolla_rabattkod('RLS-EN', null, 39900);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, rabattkod)
+    values (B3, R, A, ER, R, idag + 42, '06:00', 60, 'requested', 'RLS-EN');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select b.rabattkod into tx from public.bookings b where b.id = B3;
+    ut := ut || jsonb_build_object('t', 'RT en gång per familj: R:s andra pass får inte koden, och skälet', 'ok',
+            not k.giltig and k.orsak like 'Ni har redan använt koden%' and tx is null,
+            'd', concat_ws(' ', k.giltig, k.orsak, coalesce(tx, 'null')));
+
+    perform pg_temp.bli(U);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, rabattkod)
+    values (B4, U, A, EU, U, idag + 43, '06:00', 60, 'requested', 'RLS-EN');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select b.rabattkod into tx from public.bookings b where b.id = B4;
+    select antal_anvandningar into n from public.rabattkoder where kod = 'RLS-EN';
+    ut := ut || jsonb_build_object('t', 'RT en annan familj använder koden, och antalet är två', 'ok',
+            tx = 'RLS-EN' and n = 2, 'd', concat_ws(' ', coalesce(tx, 'null'), n));
+
+    update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = B1;
+    select antal_anvandningar into n from public.rabattkoder where kod = 'RLS-EN';
+    perform pg_temp.bli(R);
+    select * into k from public.kolla_rabattkod('RLS-EN', null, 39900);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'RT ett avbokat pass ger tillbaka användningen, och R kan använda koden igen', 'ok',
+            n = 1 and k.giltig, 'd', concat_ws(' ', n, k.giltig, k.orsak));
+
+    -- ---------- två gånger totalt ----------
+    perform pg_temp.bli(R);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, rabattkod)
+    values (B5, R, A, ER, R, idag + 44, '06:00', 60, 'requested', 'RLS-TVA');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform pg_temp.bli(U);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, rabattkod)
+    values (B6, U, A, EU, U, idag + 45, '06:00', 60, 'requested', 'RLS-TVA');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform pg_temp.bli(R);
+    select * into k from public.kolla_rabattkod('RLS-TVA', null, 39900);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, rabattkod)
+    values (B7, R, A, ER, R, idag + 46, '06:00', 60, 'requested', 'RLS-TVA');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select b.rabattkod into tx from public.bookings b where b.id = B7;
+    select antal_anvandningar into n from public.rabattkoder where kod = 'RLS-TVA';
+    ut := ut || jsonb_build_object('t', 'RT två gånger totalt: den tredje får nej, Koden är slut', 'ok',
+            not k.giltig and k.orsak = 'Koden är slut.' and tx is null and n = 2,
+            'd', concat_ws(' ', k.giltig, k.orsak, coalesce(tx, 'null'), n));
+
+    -- ---------- köp av timmar ----------
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, rabattkod)
+    select KK1, T, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore, 'rls-kop'
+      from public.erbjudanden_pris e where e.kod = 'plan_basic';
+    select kk.rabattkod, kk.rabatt_ore, kk.begart_ore, e.pris_ore into rd
+      from public.klippkort kk, public.erbjudanden_pris e where kk.id = KK1 and e.kod = 'plan_basic';
+    ut := ut || jsonb_build_object('t', 'RT ett köp av timmar får koden, också för T med timmar, och priset räknas i databasen', 'ok',
+            rd.rabattkod = 'RLS-KOP' and rd.rabatt_ore = floor(rd.pris_ore / 10.0) and rd.begart_ore = rd.pris_ore - rd.rabatt_ore,
+            'd', concat_ws(' ', coalesce(rd.rabattkod, 'null'), rd.rabatt_ore, rd.begart_ore, rd.pris_ore));
+    select antal_anvandningar into n from public.rabattkoder where kod = 'RLS-KOP';
+    ut := ut || jsonb_build_object('t', 'RT ett köp som väntar räknas inte i antalet', 'ok', n = 0, 'd', n::text);
+    perform public.klippkort_betald(KK1, (select kk.begart_ore from public.klippkort kk where kk.id = KK1)::integer,
+                                    'pi_rls32', 'ch_rls32', 'txn_rls32', 0, 0, false);
+    select antal_anvandningar into n from public.rabattkoder where kod = 'RLS-KOP';
+    ut := ut || jsonb_build_object('t', 'RT ett betalt köp räknas', 'ok', n = 1, 'd', n::text);
+
+    update public.klippkort set rabattkod = null, rabatt_ore = null where id = KK1;
+    select kk.rabattkod into tx from public.klippkort kk where kk.id = KK1;
+    ut := ut || jsonb_build_object('t', 'RT koden på ett köp ändras inte efteråt', 'ok', tx = 'RLS-KOP', 'd', coalesce(tx, 'null'));
+
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, rabattkod)
+    select KK2, R, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, 1, 'RLS-HEL'
+      from public.erbjudanden_pris e where e.kod = 'plan_basic';
+    select kk.rabattkod, kk.rabatt_ore, kk.begart_ore, e.pris_ore into rd
+      from public.klippkort kk, public.erbjudanden_pris e where kk.id = KK2 and e.kod = 'plan_basic';
+    ut := ut || jsonb_build_object('t', 'RT en kod som gör köpet gratis tas bort, och priset är katalogens', 'ok',
+            rd.rabattkod is null and rd.rabatt_ore is null and rd.begart_ore = rd.pris_ore,
+            'd', concat_ws(' ', coalesce(rd.rabattkod, 'null'), coalesce(rd.rabatt_ore::text, 'null'), rd.begart_ore, rd.pris_ore));
+
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore)
+    select KK3, U, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore
+      from public.erbjudanden_pris e where e.kod = 'plan_basic';
+    select kk.rabattkod, kk.begart_ore, e.pris_ore into rd
+      from public.klippkort kk, public.erbjudanden_pris e where kk.id = KK3 and e.kod = 'plan_basic';
+    ut := ut || jsonb_build_object('t', 'RT ett köp utan kod är som förut', 'ok',
+            rd.rabattkod is null and rd.begart_ore = rd.pris_ore, 'd', concat_ws(' ', coalesce(rd.rabattkod, 'null'), rd.begart_ore));
+
+    perform pg_temp.bli(T);
+    select * into k from public.kolla_rabattkod_kop('rls-kop', 'plan_basic');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'RT kolla_rabattkod_kop säger priset och vad som ska betalas', 'ok',
+            k.giltig and k.att_betala_ore = k.pris_ore - k.rabatt_ore and k.rabatt_ore = floor(k.pris_ore / 10.0),
+            'd', concat_ws(' ', k.giltig, k.orsak, k.pris_ore, k.rabatt_ore, k.att_betala_ore));
+
+    tx := pg_temp.svar_som(null, $q$select * from public.kolla_rabattkod_kop('RLS-KOP', 'plan_basic')$q$)
+         || ' ' || pg_temp.svar_som(R, $q$select intern.har_timmar('00000000-0000-4000-8000-0000000032f1')$q$);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'RT anon når inte kolla_rabattkod_kop, och ingen inloggad når hjälparna', 'ok',
+            tx = '42501 42501', 'd', tx);
+
+    -- ---------- taket ----------
+    perform pg_temp.bli(U);
+    for i in 1 .. 10 loop
+      perform public.kolla_rabattkod('RLS-NEJ' || i, null, 39900);
+    end loop;
+    select * into k from public.kolla_rabattkod('RLS-KOP', null, 39900);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'RT efter tio koder som inte finns säger kolla_rabattkod vänta, också för en riktig kod', 'ok',
+            not k.giltig and k.orsak like 'För många försök%', 'd', concat_ws(' ', k.giltig, k.orsak));
+    select count(*) into n from intern.rabattkod_forsok f where f.nyckel = intern.rabattkod_forsok_nyckel(U);
+    ut := ut || jsonb_build_object('t', 'RT försöken sparas som en HMAC av kontot, aldrig kontot', 'ok',
+            n = 10 and not exists (select 1 from intern.rabattkod_forsok f where f.nyckel like '%' || U::text || '%'),
+            'd', n::text);
+
+    perform pg_temp.bli(R);
+    select * into k from public.kolla_rabattkod('RLS-KOP', null, 39900);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'RT taket gäller den som provade, inte andra familjer', 'ok',
+            k.giltig, 'd', concat_ws(' ', k.giltig, k.orsak));
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('RT Rabattkoden och timmarna', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 33. Kortet reserveras vid bokningen (kortet_reserveras, 2026-10-13)
+--
+-- Leo: "när man klickar på boka pass eller godkänn förslaget från barnet
+-- ska man kunna betala nu, eller på faktura. då reserveras pengar från
+-- stripe och när passet har hållits och läxhjälparen har skrivit rapport
+-- så dras pengarna". Familjen K väljer kort på sina pass, L är en annan
+-- familj, och edge-funktionernas skrivningar görs som tjänstekontot. Utan
+-- migrationen hoppas avsnittet över, och allt rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  tx   text;
+  tx2  text;
+  n    integer;
+  rd   record;
+  ja   boolean;
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  K    constant uuid := '00000000-0000-4000-8000-0000000033f1';
+  L    constant uuid := '00000000-0000-4000-8000-0000000033f2';
+  EK   constant uuid := '00000000-0000-4000-8000-0000000033e1';
+  EL   constant uuid := '00000000-0000-4000-8000-0000000033e2';
+  P1   constant uuid := '00000000-0000-4000-8000-0000000033b1';
+  P2   constant uuid := '00000000-0000-4000-8000-0000000033b2';
+  P3   constant uuid := '00000000-0000-4000-8000-0000000033b3';
+  P4   constant uuid := '00000000-0000-4000-8000-0000000033b4';
+  P5   constant uuid := '00000000-0000-4000-8000-0000000033b5';
+  P6   constant uuid := '00000000-0000-4000-8000-0000000033b6';
+  P7   constant uuid := '00000000-0000-4000-8000-0000000033b7';
+  P8   constant uuid := '00000000-0000-4000-8000-0000000033b8';
+  P9   constant uuid := '00000000-0000-4000-8000-0000000033b9';
+begin
+  if to_regprocedure('public.valj_kort(uuid, boolean)') is null then
+    insert into utfall (test, ok, detalj) values ('KR Kortet reserveras: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+  begin
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (K, 'rls-k33@example.invalid', '{"role":"parent","full_name":"Test Familj K"}'),
+      (L, 'rls-l33@example.invalid', '{"role":"parent","full_name":"Test Familj L"}');
+    insert into public.villkor_godkannanden (anvandare, version, kalla)
+    select x, intern.villkor_version(), 'registrering' from unnest(array[K, L]) x;
+    insert into public.students (id, parent_id, name, matched_tutor_id, match_status) values
+      (EK, K, 'Kim', A, 'matched'), (EL, L, 'Lo', A, 'matched');
+    update public.flaggor set aktiv = false where kod = 'kortreservation';
+    update public.flaggor set aktiv = true where kod = 'faktura';
+
+    -- Familjerna föreslår passen. P1 ligger långt fram, de andra i morgon
+    -- (inom 48 timmar), på timmar som inte krockar för studiehjälparen.
+    perform pg_temp.bli(K);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status) values
+      (P1, K, A, EK, K, idag + 10, '15:00', 60, 'requested'),
+      (P2, K, A, EK, K, idag + 1,  '15:00', 60, 'requested'),
+      (P3, K, A, EK, K, idag + 1,  '16:00', 60, 'requested'),
+      (P4, K, A, EK, K, idag + 1,  '17:00', 60, 'requested'),
+      (P5, K, A, EK, K, idag + 1,  '18:00', 60, 'requested'),
+      (P6, K, A, EK, K, idag + 1,  '19:00', 60, 'requested'),
+      (P7, K, A, EK, K, idag + 1,  '20:00', 60, 'requested'),
+      (P8, K, A, EK, K, idag + 1,  '21:00', 60, 'requested');
+    perform pg_temp.bli(L);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status) values
+      (P9, L, A, EL, L, idag + 1, '22:00', 60, 'requested');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    update public.bookings set status = 'confirmed' where id in (P2, P3, P4, P5, P6, P7, P8, P9);
+    -- P7 är betalt på annat sätt, P8 kostar inget (rabatten täcker allt).
+    update public.bookings set betalning_status = 'betald', betald_at = now() where id = P7;
+    update public.bookings set startrabatt = true, rabatt_ore = timpris_ore where id = P8;
+
+    -- ---------- strömbrytaren ----------
+    begin
+      perform pg_temp.bli(K);
+      perform public.valj_kort(P2, true);
+      tx := 'gick igenom';
+    exception when others then tx := sqlerrm;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR utan strömbrytaren går kort inte att välja', 'ok',
+            tx like 'Kort går inte att välja just nu%', 'd', tx);
+    update public.flaggor set aktiv = true where kod = 'kortreservation';
+
+    -- ---------- familjen väljer ----------
+    perform pg_temp.bli(K);
+    tx := public.valj_kort(P1, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR familjen väljer kort på ett förslag långt fram', 'ok',
+            tx = 'vald' and exists (select 1 from public.kortreservationer r
+                                     where r.booking_id = P1 and r.lage = 'vald' and r.parent_id = K),
+            'd', tx);
+
+    begin
+      perform pg_temp.bli(L);
+      perform public.valj_kort(P1, true);
+      tx := 'gick igenom';
+    exception when others then tx := sqlerrm;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR en annan familj väljer inte kort på K:s pass', 'ok',
+            tx = 'Passet finns inte.', 'd', tx);
+
+    perform pg_temp.bli(K);
+    select count(*) into n from public.kortreservationer;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR familjen läser sina reservationer', 'ok', n = 1, 'd', n::text);
+    perform pg_temp.bli(L);
+    select count(*) into n from public.kortreservationer;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR en annan familj läser inte K:s reservationer', 'ok', n = 0, 'd', n::text);
+    perform pg_temp.bli(A);
+    select count(*) into n from public.kortreservationer;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR studiehjälparen läser inte reservationerna', 'ok', n = 0, 'd', n::text);
+
+    begin
+      perform pg_temp.bli(K);
+      update public.kortreservationer set lage = 'dragen' where booking_id = P1;
+      get diagnostics n = row_count;
+      tx := 'gick igenom: ' || n;
+    exception when others then tx := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR familjen skriver inte i reservationerna', 'ok', tx = '42501', 'd', tx);
+
+    -- ---------- kortet ----------
+    begin
+      perform pg_temp.bli(K);
+      perform public.kort_sparat(K, 'pm_rlsk33a', 'visa', '4242', 12, 2030);
+      tx := 'gick igenom';
+    exception when others then tx := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR familjen sparar inte ett kort själv', 'ok', tx = '42501', 'd', tx);
+
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    insert into public.stripe_kunder (parent_id, stripe_kund) values (K, 'cus_rlsk33');
+    tx := public.kort_sparat(K, 'pm_rlsk33a', 'VISA', '4242', 12, 2030);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR tjänstekontot sparar kortet, och det fanns inget gammalt', 'ok',
+            tx is null and exists (select 1 from public.sparade_kort sk
+                                    where sk.parent_id = K and sk.marke = 'visa' and sk.sista4 = '4242'),
+            'd', coalesce(tx, 'null'));
+
+    perform pg_temp.bli(K);
+    select * into rd from public.mitt_kort();
+    select count(*) into n from public.sparade_kort;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR familjen ser märke och sista fyra genom mitt_kort, inte tabellen', 'ok',
+            rd.marke = 'visa' and rd.sista4 = '4242' and rd.utgar_ar = 2030 and n = 0,
+            'd', concat_ws(' ', rd.marke, rd.sista4, n));
+
+    begin
+      perform pg_temp.bli(K);
+      select count(*) into n from public.stripe_kunder;
+      tx := 'läste ' || n;
+    exception when others then tx := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR familjen når inte kunden hos Stripe', 'ok', tx = '42501', 'd', tx);
+
+    -- ---------- vad jobbet ska göra ----------
+    perform pg_temp.bli(K);
+    tx := public.valj_kort(P2, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    select string_agg(ag.booking_id::text || ':' || ag.atgard, ',' order by ag.booking_id) into tx2
+      from public.kortreservation_att_gora(50) ag where ag.booking_id in (P1, P2);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR ett bekräftat pass inom 48 timmar reserveras, ett förslag långt fram inte', 'ok',
+            tx = 'vald' and tx2 = P2::text || ':reservera', 'd', concat_ws(' ', tx, coalesce(tx2, 'inget')));
+
+    update public.flaggor set aktiv = false where kod = 'kortreservation';
+    select count(*) into n from public.kortreservation_att_gora(50) ag where ag.atgard = 'reservera';
+    update public.flaggor set aktiv = true where kod = 'kortreservation';
+    ut := ut || jsonb_build_object('t', 'KR utan strömbrytaren reserveras inget nytt', 'ok', n = 0, 'd', n::text);
+
+    -- ---------- reservationen ----------
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kortreservation_skriv(P2, 'reserverad', 'pi_rlsk33p2', 39900, now() + interval '4 days');
+    tx2 := public.kortreservation_skriv(P2, 'reserverad', 'pi_rlsk33p2', 39900, now() + interval '4 days');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select r.*, intern.passets_start(b) as start into rd
+      from public.kortreservationer r join public.bookings b on b.id = r.booking_id where r.booking_id = P2;
+    ut := ut || jsonb_build_object('t', 'KR reservationen skrivs med belopp, gräns och passets start, och går att skriva två gånger', 'ok',
+            tx = 'reserverad' and tx2 = 'reserverad' and rd.lage = 'reserverad' and rd.reserverat_ore = 39900
+            and rd.stripe_reservation = 'pi_rlsk33p2' and rd.reserverat_for = rd.start,
+            'd', concat_ws(' ', tx, tx2, rd.lage, rd.reserverat_ore));
+
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kortreservation_skriv(P2, 'reserverad', 'pi_rlsk33annan', 39900, now() + interval '4 days');
+    tx2 := public.kortreservation_skriv(P9, 'reserverad', 'pi_rlsk33p9', 39900, now() + interval '4 days');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR en andra reservation avvisas, och ett pass utan val saknas', 'ok',
+            tx = 'avvisad' and tx2 = 'saknas'
+            and (select r.stripe_reservation from public.kortreservationer r where r.booking_id = P2) = 'pi_rlsk33p2',
+            'd', concat_ws(' ', tx, tx2));
+
+    -- Bort och tillbaka innan jobbet hunnit släppa.
+    perform pg_temp.bli(K);
+    tx := public.valj_kort(P2, false);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select ag.atgard into tx2 from public.kortreservation_att_gora(50) ag where ag.booking_id = P2;
+    ut := ut || jsonb_build_object('t', 'KR bort med kortet: reservationen ska släppas', 'ok',
+            tx = 'slapps' and tx2 = 'slapp', 'd', concat_ws(' ', tx, tx2));
+    perform pg_temp.bli(K);
+    tx := public.valj_kort(P2, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR kort igen innan släppet: reservationen står kvar', 'ok',
+            tx = 'reserverad'
+            and not exists (select 1 from public.kortreservation_att_gora(50) ag where ag.booking_id = P2),
+            'd', tx);
+
+    -- Avbokat: släpps, och blir slappt.
+    update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = P2;
+    select ag.atgard into tx2 from public.kortreservation_att_gora(50) ag where ag.booking_id = P2;
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kortreservation_skriv(P2, 'slappt');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR ett avbokat pass släpper reservationen', 'ok',
+            tx2 = 'slapp' and tx = 'slappt', 'd', concat_ws(' ', coalesce(tx2, 'inget'), tx));
+
+    -- ---------- flyttat ----------
+    perform pg_temp.bli(K);
+    perform public.valj_kort(P4, true);
+    perform public.valj_kort(P5, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    perform public.kortreservation_skriv(P4, 'reserverad', 'pi_rlsk33p4', 39900, now() + interval '4 days');
+    -- P5: ett kort med kort reservation, som räcker till strax före passet.
+    perform public.kortreservation_skriv(P5, 'reserverad', 'pi_rlsk33p5', 39900, now() + interval '2 hours');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n from public.kortreservation_att_gora(50) ag where ag.booking_id in (P4, P5);
+    ut := ut || jsonb_build_object('t', 'KR en reservation som inte räcker länge släpps inte, så länge passet inte flyttats', 'ok',
+            n = 0, 'd', n::text);
+
+    update public.bookings set wanted_date = idag + 6 where id = P4;
+    select ag.atgard into tx2 from public.kortreservation_att_gora(50) ag where ag.booking_id = P4;
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kortreservation_skriv(P4, 'slappt');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR ett flyttat pass släpps och reserveras igen före den nya tiden', 'ok',
+            tx2 = 'slapp' and tx = 'vald'
+            and (select r.stripe_reservation from public.kortreservationer r where r.booking_id = P4) is null,
+            'd', concat_ws(' ', coalesce(tx2, 'inget'), tx));
+
+    -- ---------- dragningen ----------
+    perform pg_temp.bli(K);
+    perform public.valj_kort(P3, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    perform public.kortreservation_skriv(P3, 'reserverad', 'pi_rlsk33p3', 39900, now() + interval '3 days');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    update public.bookings set status = 'completed' where id = P3;
+    select ag.atgard into tx from public.kortreservation_att_gora(50) ag where ag.booking_id = P3;
+    update public.kortreservationer set reserverat_till = now() - interval '1 minute' where booking_id = P3;
+    select ag.atgard into tx2 from public.kortreservation_att_gora(50) ag where ag.booking_id = P3;
+    ut := ut || jsonb_build_object('t', 'KR genomfört: reservationen dras, och en som gått ut debiteras', 'ok',
+            tx = 'dra' and tx2 = 'debitera', 'd', concat_ws(' ', coalesce(tx, 'inget'), coalesce(tx2, 'inget')));
+
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kortreservation_skriv(P3, 'dragen', null, 39900);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    begin
+      perform pg_temp.bli(K);
+      perform public.valj_kort(P3, false);
+      tx2 := 'gick igenom';
+    exception when others then tx2 := sqlerrm;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR ett draget pass står kvar som draget', 'ok',
+            tx = 'dragen' and tx2 = 'Passet är redan betalt med kortet.'
+            and (select r.dragen_ore from public.kortreservationer r where r.booking_id = P3) = 39900,
+            'd', concat_ws(' ', tx, tx2));
+
+    -- ---------- nekat ----------
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kortreservation_skriv(P1, 'misslyckad', null, null, null, 'card_declined');
+    tx2 := public.kortreservation_skriv(P4, 'misslyckad', null, null, null, 'authentication_required');
+    -- En reservation som står blir aldrig nekad.
+    perform public.kortreservation_skriv(P5, 'misslyckad', null, null, null, 'card_declined');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select r.lage, r.fel, r.forsok into rd from public.kortreservationer r where r.booking_id = P1;
+    ut := ut || jsonb_build_object('t', 'KR ett nekat kort står som misslyckat med Stripes kod', 'ok',
+            tx = 'misslyckad' and rd.fel = 'card_declined' and rd.forsok = 1,
+            'd', concat_ws(' ', tx, rd.fel, rd.forsok));
+    ut := ut || jsonb_build_object('t', 'KR familjen får notisen kort_nekat, med passet och skälet', 'ok',
+            exists (select 1 from public.notiser x where x.mottagare = K and x.typ = 'kort_nekat'
+                     and x.pass_id = P1 and x.data ->> 'kortet' = 'nekat'
+                     and x.data ->> 'datum' is not null)
+            and exists (select 1 from public.notiser x where x.mottagare = K and x.typ = 'kort_nekat'
+                         and x.pass_id = P4 and x.data ->> 'kortet' = 'bekrafta')
+            and (select r.lage from public.kortreservationer r where r.booking_id = P5) = 'reserverad',
+            'd', (select count(*) from public.notiser x where x.mottagare = K and x.typ = 'kort_nekat')::text);
+    ut := ut || jsonb_build_object('t', 'KR kort_nekat finns i båda typlistorna', 'ok',
+            'kort_nekat' = any (public.notis_typer()) and 'kort_nekat' = any (public.notis_mejlbara()),
+            'd', array_to_string(public.notis_typer(), ','));
+
+    -- Ett nytt kort ger de nekade passen ett nytt försök.
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kort_sparat(K, 'pm_rlsk33b', 'mastercard', '5555', 1, 2031);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR ett nytt kort ersätter det gamla och ger nekade pass ett nytt försök', 'ok',
+            tx = 'pm_rlsk33a'
+            and (select r.lage from public.kortreservationer r where r.booking_id = P1) = 'vald'
+            and (select r.lage from public.kortreservationer r where r.booking_id = P4) = 'vald'
+            and (select r.fel from public.kortreservationer r where r.booking_id = P1) is null,
+            'd', coalesce(tx, 'null'));
+
+    -- ---------- faktura, betalt, kostar inget ----------
+    perform pg_temp.bli(K);
+    update public.bookings set betalning_status = 'faktura' where id = P6;
+    tx := public.valj_kort(P6, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR faktura byts mot kort i samma tryck', 'ok',
+            tx = 'vald' and (select b.betalning_status from public.bookings b where b.id = P6) = 'ingen',
+            'd', tx);
+
+    begin
+      perform pg_temp.bli(K);
+      perform public.valj_kort(P7, true);
+      tx := 'gick igenom';
+    exception when others then tx := sqlerrm;
+    end;
+    begin
+      perform pg_temp.bli(K);
+      perform public.valj_kort(P8, true);
+      tx2 := 'gick igenom';
+    exception when others then tx2 := sqlerrm;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR inget kort på ett betalt pass eller ett som inte kostar något', 'ok',
+            tx like 'Passet betalas redan på annat sätt%' and tx2 like 'Passet betalas redan på annat sätt%',
+            'd', concat_ws(' | ', tx, tx2));
+
+    -- Faktura vald efteråt: valet glöms av jobbet.
+    update public.bookings set betalning_status = 'faktura' where id = P6;
+    perform intern.kortval_stada();
+    ut := ut || jsonb_build_object('t', 'KR ett val på ett pass som betalas på annat sätt glöms', 'ok',
+            not exists (select 1 from public.kortreservationer r where r.booking_id = P6), 'd', '');
+
+    -- ---------- raderingen och kortet bort ----------
+    select exists (select 1 from jsonb_array_elements(intern.radering_underlag('familj', K) -> 'hinder') h
+                    where h ->> 'kod' = 'kort_sparat')
+       and exists (select 1 from jsonb_array_elements(intern.radering_underlag('familj', K) -> 'hinder') h
+                    where h ->> 'kod' = 'kort_reserverat' and (h ->> 'belopp_ore')::bigint = 39900)
+      into ja;
+    ut := ut || jsonb_build_object('t', 'KR raderingen väntar på det sparade kortet och reservationen', 'ok', ja, 'd', '');
+
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kort_borttaget(K);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR kortet bort: reservationerna släpps och valen glöms', 'ok',
+            tx = 'pm_rlsk33b'
+            and not exists (select 1 from public.sparade_kort sk where sk.parent_id = K)
+            and (select r.lage from public.kortreservationer r where r.booking_id = P5) = 'slapps'
+            and not exists (select 1 from public.kortreservationer r where r.booking_id in (P1, P4))
+            and (select r.lage from public.kortreservationer r where r.booking_id = P3) = 'dragen',
+            'd', coalesce(tx, 'null'));
+
+    -- ---------- rättigheterna, loggen och jobbet ----------
+    ut := ut || jsonb_build_object('t', 'KR barnets roll och anon når inget av kortet', 'ok',
+            not has_table_privilege('nextrum_barn', 'public.kortreservationer', 'select')
+            and not has_table_privilege('anon', 'public.sparade_kort', 'select')
+            and not has_function_privilege('anon', 'public.mitt_kort()', 'execute')
+            and not has_function_privilege('nextrum_barn', 'public.valj_kort(uuid, boolean)', 'execute'),
+            'd', '');
+    ut := ut || jsonb_build_object('t', 'KR bara tjänstekontot skriver kort och reservationer', 'ok',
+            not has_function_privilege('authenticated', 'public.kortreservation_skriv(uuid, text, text, bigint, timestamptz, text)', 'execute')
+            and not has_function_privilege('authenticated', 'public.kort_borttaget(uuid)', 'execute')
+            and not has_function_privilege('authenticated', 'public.kortreservation_att_gora(integer)', 'execute')
+            and has_function_privilege('service_role', 'public.kortreservation_skriv(uuid, text, text, bigint, timestamptz, text)', 'execute'),
+            'd', '');
+    ut := ut || jsonb_build_object('t', 'KR auditloggen har passet som objekt, och inga kortsiffror', 'ok',
+            exists (select 1 from public.audit_logg x
+                     where x.handling = 'kortreservation.skapad' and x.objekt_id = P1::text)
+            and exists (select 1 from public.audit_logg x where x.handling = 'betalkort.skapad' and x.objekt_id = K::text)
+            and not exists (select 1 from public.audit_logg x
+                             where x.handling like 'betalkort.%' and x.objekt_id = K::text
+                               and (coalesce(x.efter::text, '') || coalesce(x.fore::text, '')) like '%4242%'),
+            'd', '');
+    begin
+      perform intern.kortreservation_vack();
+      tx := 'ok';
+    exception when others then tx := sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'KR jobbet är schemalagt och väcker utan fel', 'ok',
+            tx = 'ok' and exists (select 1 from cron.job j where j.jobname = 'kortreservation'), 'd', tx);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('KR Kortet reserveras', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
 reset role;
 select set_config('request.jwt.claims', null, true);
 

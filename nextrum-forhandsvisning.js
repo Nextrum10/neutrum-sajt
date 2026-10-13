@@ -811,6 +811,11 @@ window.NXForhandsvisning = (function () {
     kolla_rabattkod: function () {
       return [{ giltig: false, orsak: 'Rabattkoderna prövas inte i förhandsvisningen.', rabatt_ore: 0, beskrivning: null }];
     },
+    /* En kod på ett köp av timmar (rabattkoden_timmar_och_tak, 2026-10-13). */
+    kolla_rabattkod_kop: function () {
+      return [{ giltig: false, orsak: 'Rabattkoderna prövas inte i förhandsvisningen.', rabatt_ore: 0, beskrivning: null,
+                pris_ore: null, att_betala_ore: null }];
+    },
     /* Förälderns svar på barnets förslag (barnet_foreslar_pass). */
     skicka_barnets_forslag: function (k) {
       var f = W.barn_passforslag.find(function (x) { return x.id === k.p_id && x.parent_id === JAG; });

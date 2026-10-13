@@ -160,12 +160,172 @@ texten är kärnans.
     om timbanken. Tipstimmen och första timmen pass för pass är avdrag på
     passet och följer regeln om en gratis timme. Villkoren nämner inga
     koder, så rabattkoden behövde ingen ny version.
-  - Rabattkoderna var tomma i driften 2026-10-13 (bara `TIPS`). Skapas den
-    första koden ska `kolla_rabattkod` få ett tak först
-    (`minne/sakerhet.md`).
+  - Rabattkoderna var tomma i driften 2026-10-13 (bara `TIPS`). Taket kom
+    samma kväll (nedan och `minne/sakerhet.md`).
+- **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13,
+  `rabattkoden_timmar_och_tak`). Leo samma kväll: "rabattkod kan inte
+  användas om man har timmar i timbanken. rabattkoden kan användas för att
+  köpa timmar i timbanken eller om man har noll timmar kvar och vill köpa
+  pass för pass", och strax efter: "rabattkoder ska vi också bestämma hur
+  många gånger de får användas".
+  - **Timmar i timbanken stänger koden på ett pass** (`intern.har_timmar`):
+    ett kort med timmar som går att använda i dag
+    (`klippkort_saldo.brukbar`, köpta eller gratis) eller sparade minuter
+    till en hel timme (`intern.timbank_saldo` minst 60). Bara med
+    strömbrytaren `erbjudanden` på, för utan den betalar timmarna inga
+    pass. Ett köp som väntar på betalning räknas inte: timmarna finns inte
+    än. Utan timmar gäller koden som förut, på det familjen betalar med
+    pengar. `skydda_rabatt` prövar det när passet skapas och tar bort en
+    kod som inte gäller; rutan har redan sagt varför (`kolla_rabattkod`).
+    Köper familjen timmar efter att passet skapats står koden kvar tills
+    timmarna betalar passet, och då tar `bookings_timmar_betalar_utan_kod`
+    bort den, som förut.
+  - **Koden gäller köp av timmar**, en plan eller Fyll timbanken, också när
+    familjen har timmar kvar. Rutan står ovanför korten under Erbjudanden
+    i studievyn (`#erb-kod-rad`, bara när familjen kan köpa). Den prövar
+    koden mot det första kortet med `kolla_rabattkod_kop` och, gäller den,
+    mot resten, så en okänd kod är ett försök och inte ett per kort. Korten
+    visar då katalogens pris överstruket och priset med koden. Köp skickar
+    koden till `stripe-checkout`, som prövar den med familjens token och
+    svarar med skälet (409) i stället för att ta fullt pris. Beloppet
+    räknas ändå i databasen: BEFORE INSERT-triggern `klippkort_rabatt`
+    (`intern.klippkort_rabatt`) läser katalogens pris (`erbjudanden_pris`)
+    och sätter `rabatt_ore` och `begart_ore`, och kassan drar `begart_ore`.
+    Tar triggern bort koden (den tog slut emellan) öppnas ingen kassa.
+    Koden och rabatten står fast efter köpet (`klippkort_rabatt_star_fast`),
+    och ett väntande köp återanvänds bara med samma kod. Gratistimmar bär
+    aldrig en kod.
+  - **Ett köp blir aldrig gratis av en kod**: kortet kan inte dra noll och
+    `begart_ore` får inte vara noll, så en kod som tar hela priset gäller
+    inte köp av timmar ("Koden gäller inte köp av timmar.").
+  - **Tjänsten** för ett köp är den första aktiva tjänsten för kunder
+    (`intern.kopets_tjanst`, i dag läxhjälpen), så en kod som bara gäller
+    en annan tjänst gäller inte köpet.
+  - **Återbetalningen** räknar på det familjen betalade, som förut:
+    ångerrätten tar en andel av `betalt_ore` (`vid_anger_ore`), och vid
+    uppsägning räknas de använda timmarna till ordinarie timpris vid köpet
+    (`timpris_ore`), som för en plan, för koden gällde köpet av alla
+    timmarna. Villkoren behövde ingen ändring för det.
+  - **Hur många gånger**: `max_anvandningar` (totalt, fanns) och
+    `max_per_familj` (ny; adminvyns förval är en gång, och tomt är utan
+    gräns). En användning är ett pass som inte är avbokat och har kvar
+    koden, eller ett betalt köp med koden (`intern.rabattkod_anvand`). Ett
+    köp som väntar på betalning och är yngre än ett dygn håller sin plats
+    mot gränsen totalt, men räknas inte i antalet och inte mot familjens
+    egen gräns: en kassa familjen lämnade ska inte stänga koden för dem.
+    `antal_anvandningar` räknas om ur passen och köpen när de ändras
+    (`rakna_rabattkod`, med nya triggrar efter UPDATE på `bookings` och
+    efter INSERT och UPDATE på `klippkort`), så ett avbokat pass ger
+    tillbaka sin gång; förut räknades varje skapat pass, för alltid.
+    Triggrarna låser kodens rad innan de prövar, så två familjer kan inte
+    ta den sista gången samtidigt.
+  - **Prövningen** är en funktion för alla vägar (`intern.rabattkod_prova`):
+    tom, finns inte (också `TIPS` och en avstängd), datumen, gränsen
+    totalt, gränsen per familj, tjänsten, timmarna (bara på ett pass) och
+    sist att ett köp inte blir gratis. Svaren är meningar familjen kan
+    läsa. Taket står i `minne/sakerhet.md`.
+  - **Villkoren nämner inga koder** och fick ingen ny version. En kods
+    villkor (hur många gånger, inte med timmar i timbanken) ska därför stå
+    klart där koden delas ut, på affischen eller i mejlet (e-handelslagen
+    9 §).
 - Belopp lagras i **ören** överallt. Kronor blir det först vid visning
   (`NXBetalning.kronor`). Enda stället ett avrundningsfel kan smyga in
   är omvandlingen — gör den en gång, på ett ställe.
+
+---
+
+## Kortet reserveras vid bokningen (2026-10-13, under arbete)
+
+Leo: "när man klickar på boka pass eller godkänn förslaget från barnet
+ska man kunna betala nu, eller på faktura. då reserveras pengar från
+stripe och när passet har hållits och läxhjälparen har skrivit rapport så
+dras pengarna om man betalar med kort". På två frågor samma kväll valde
+han att **kortet sparas och beloppet reserveras två dagar före passet**,
+och att **valet är frivilligt**: väljer familjen inget betalar de efter
+passet, med kort eller faktura, som förut. Han sa också att designen kan
+ändras. Det här är planen; databasen är skriven
+(`20261013170000_kortet_reserveras`), resten byggs i samma gren.
+
+**Stripes regel, och varför två dagar.** En reservation (ett
+PaymentIntent med `capture_method: manual`) släpps av Stripe om den inte
+dragits i tid. För en reservation vi gör utan att familjen är med (MIT,
+merchant-initiated) gäller Visa 5 dagar, och Stripe räknar 4 dygn och 18
+timmar, och Mastercard, American Express och Discover 7 dagar. Den
+exakta gränsen står på chargen (`payment_method_details.card.capture_before`)
+och läses därifrån, aldrig ur en tabell här. Reserverar vi vid bokningen
+släpps reservationen före ett pass som ligger mer än några dagar fram.
+Därför sparas kortet när familjen föreslår passet (Checkout i läget
+`setup`), och beloppet reserveras två dagar före passet. Studiehjälparen
+har då ungefär två och ett halvt dygn efter passet på sig att skriva
+rapporten innan Visas reservation släpps. Längre förlängda reservationer
+(30 dagar) finns bara för IC+-prissättning och bara när familjen är med.
+
+**Flödet.**
+1. **Valet** står i Föreslå pass och i granskningen av ett barns förslag:
+   kort, faktura eller efter passet. Det visas inte när timmarna betalar
+   passet eller passet kostar inget, och kort bara när strömbrytaren
+   `kortreservation` är på. Faktura väljs med samma skrivning som förut
+   (`betalning_status` till `faktura`, prövad i `skydda_bokningsfalt`),
+   nu direkt efter att förslaget skapats. Kort väljs med
+   `valj_kort(pass, true)`.
+2. **Kortet sparas** första gången: kassan öppnas i läget `setup` med
+   familjens kund hos Stripe (`stripe_kunder`, en per familj, utan namn
+   och e-post, bara familjens id i metadata), och webhooken skriver kortet
+   (`kort_sparat()`). Sedan räcker valet: samma kort används för nästa
+   pass. Stänger familjen kassan står kortet som valt utan kort; inget
+   reserveras, och familjen betalar efter passet om inget kort läggs till.
+3. **Reservationen**: jobbet `kortreservation` (var tionde minut) väcker
+   `stripe-reservation` när `kortreservation_att_gora()` har något.
+   Ett bekräftat pass som börjar inom 48 timmar reserveras med det
+   sparade kortet utan att familjen är med (`off_session`), till passets
+   pris för den bokade tiden. Nekas kortet blir läget `misslyckad`, och
+   familjen får notisen `kort_nekat`; inget nytt försök görs förrän
+   familjen lagt till ett kort eller tryckt Försök igen.
+4. **Dragningen**: när rapporten finns (passet `completed`) dras priset för
+   den hållna tiden, högst det reserverade (delvis dragning släpper
+   resten). Leo samma kväll: "när passet har rapporterats kan pengarna
+   dras". Familjens bekräftelse av rapporten väntas inte in, som för
+   alla pass sedan Fas 19.2. Var passet längre betalas tillägget som förut
+   (`pass_tillagg`). Webhooken skriver betalningen på passet
+   (`payment_intent.succeeded`): bara den sätter `betald` och
+   `betalt_ore`.
+5. **Utan reservation**: hann ingen reservation göras, eller släppte
+   Stripe den innan rapporten kom, dras kortet en gång efter rapporten
+   (en vanlig betalning utan familjen). Nekas den betalar familjen efter
+   passet som förut (`ej_betalt` larmar).
+6. **Släppet**: en reservation släpps (PaymentIntent cancel) när passet
+   avbokas, när timmarna, kassan eller fakturan betalar det, när familjen
+   väljer bort kortet eller tar bort det, och när passet flyttas så att
+   reservationen inte räcker till efter passet (då reserveras det igen två
+   dagar före den nya tiden).
+
+**Datat** (inga nya kolumner på `bookings`, så `skydda_bokningsfalt` rörs
+inte):
+- `stripe_kunder`: familjens kund hos Stripe. Bara tjänstekontot.
+- `sparade_kort`: ett kort per familj, Stripes id för kortet och det
+  familjen ser: märke, sista fyra siffror och giltighetstid. Familjen
+  läser genom `mitt_kort()`, admin genom policyn.
+- `kortreservationer`: en rad per pass där kort valts. Lägena: `vald`
+  (inget reserverat än), `reserverad`, `dragen`, `slapps` (ska släppas),
+  `slappt`, `utgangen` (Stripe släppte den) och `misslyckad` (`fel` är
+  Stripes kod). Familjen läser sina rader.
+
+**"Betala i förväg" går bort** när strömbrytaren slås på: att dra pengarna
+direkt vid bokningen hade varit ett andra sätt att betala före passet,
+och villkoren hade fått lova två. Knappen blir valet av kort, och ett
+pass som redan är betalt i förväg står kvar som det är.
+
+**Raderingen** väntar på kortet: ett sparat kort och en reservation är
+hinder (`kort_sparat`, `kort_reserverat`) i `intern.radering_underlag`, så
+att inget blir kvar hos Stripe när kontot tas bort.
+
+**Kvar att bygga**: kassans läge `setup` och Ta bort kortet
+(`stripe-checkout`), `stripe-reservation`, webhookens nya händelser
+(`payment_intent.amount_capturable_updated`, `.succeeded`, `.canceled`;
+`WEBHOOK_HANDELSER` och Stripes endpoint), mallen `kort_nekat` i
+`notis-ko`, vyerna, villkorsmeningen på alla 36 ställen och i mejlen med
+en ny version, policyn på båda språken och `DATASKYDD.md` (sparat kort
+hos Stripe).
 
 ---
 

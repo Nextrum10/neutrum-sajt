@@ -1112,3 +1112,75 @@ larmade inte om något nytt för `anon`; `ge_gratistimmar`, `koder_lage` och
 `mina_tips` är nåbara för `authenticated` och prövar själva
 (`minne/sakerhet.md`). Ingen hade godkänt villkoren 2026-10-13 kl. 22.40,
 och sajten med 28a0e8a var då ute (Vercel, READY, byggd från 22.14).
+
+### Rabattkoden: timbanken, köpen, gränserna och taket (2026-10-13)
+**`20261013160000_rabattkoden_timmar_och_tak`** (`minne/betalning.md`,
+taket i `minne/sakerhet.md`): kolumnerna `rabattkoder.max_per_familj`
+(null eller större än noll), `klippkort.rabattkod` (pekar på
+`rabattkoder`) och `klippkort.rabatt_ore`; tabellen
+`intern.rabattkod_forsok` (HMAC av kontot och tiden, RLS utan policy, inga
+rättigheter) med `intern.rabattkod_forsok_nyckel`, `_notera` (ett `delete`
+av det som är äldre än ett dygn, sedan försöket) och
+`intern.rabattkod_for_manga`; hjälparna `intern.rabattkod_anvand`,
+`intern.har_timmar`, `intern.kopets_tjanst` och prövningen
+`intern.rabattkod_prova`; `kolla_rabattkod` omskriven (VOLATILE, taket) och
+den nya `kolla_rabattkod_kop` (inte för `anon` eller `nextrum_barn`);
+`skydda_rabatt` omskriven (låser kodens rad och prövar med
+`intern.rabattkod_prova`); triggrarna `klippkort_rabatt` (BEFORE INSERT,
+sätter `rabatt_ore` och `begart_ore`) och `klippkort_rabatt_star_fast`
+(BEFORE UPDATE); `rakna_rabattkod` omskriven så att den räknar om ur passen
+och köpen, med de nya triggrarna `bookings_rakna_rabattkod_andring`,
+`klippkort_rakna_rabattkod` och `klippkort_rakna_rabattkod_andring`; och
+sist räknas `antal_anvandningar` om för alla koder, också `TIPS` (noll i driften 2026-10-13).
+`skydda_rabatt`, `kolla_rabattkod` och `rakna_rabattkod` skrivs om helt
+efter en vakt som prövar driftens text 2026-10-13 (md5 på `prosrc`:
+`49c29326…`, `96c3320c…` och `5698d597…`; `kolla_rabattkod` har en andra
+summa, `407154d7…`, för den lokala databasen byggd ur arkivet, där
+kommentarerna står kvar i kroppen). En funktion som redan bär
+`rabattkoden_timmar_och_tak` släpps igenom, så filen går att köra två
+gånger. Inget `drop`, inget `delete` utanför en funktion, och ingen
+funktion med två. **PL/pgSQL skiljer inte på stora och små bokstäver**: en
+variabel `r` i ett block som har konstanten `R` är samma namn, och
+`rls-test.sql` avsnitt 32 heter därför `rd` och `tx`.
+
+Lokalt, byggd ur alla 189 migrationer: hela `rls-test.sql` 1664 av 1664
+(avsnitt 32 är nytt, 21 prov). **Körs efter merge, efter `gratistimmar`,
+och `stripe-checkout` från main driftsätts FÖRE den** (`DEPLOY-BETALNING.md`
+9.13). Vyerna tål att den saknas.
+
+### Kortet reserveras vid bokningen (2026-10-13, under arbete)
+**`20261013170000_kortet_reserveras`** (`minne/betalning.md`, Kortet
+reserveras vid bokningen): strömbrytaren `kortreservation` (av);
+`notis_konfig.kortreservation_url`, härledd ur arbetarens adress som
+`admin_paminnelse_url`; tabellerna `stripe_kunder` (bara tjänstekontot),
+`sparade_kort` (ett kort per familj; admin läser, familjen genom
+`mitt_kort()`) och `kortreservationer` (ett val per pass; familjen och
+admin läser, ingen inloggad skriver); auditloggen genom
+`intern.logga_andring_nyckel()`, som är `logga_andring` med nyckeln som
+andra argument, för tabellerna har familjen och passet som nyckel och
+`logga_andring` läser objektet ur en kolumn som heter `id`; hjälparna
+`intern.kortreservation_pa`, `passets_start`, `passet_kostar` (samma
+räkning som `ej_betalt` i `avvikelser_rader`) och `kortet_betalar`;
+familjens `mitt_kort()` och `valj_kort()` (en faktura som valts byts mot
+kortet med familjens egen skrivning, som `skydda_bokningsfalt` prövar);
+tjänstekontots `kort_sparat()`, `kort_borttaget()`,
+`kortreservation_att_gora()` och `kortreservation_skriv()`; jobbet
+`kortreservation` (var tionde minut) med `intern.kortreservation_vack()`
+och `intern.kortval_stada()`; typen `kort_nekat` i båda listorna och
+triggern `kortreservationer_nekat`, som bygger notisens data som
+`notis_vid_pass` och skriver ett fel till `notis_fel` i stället för att
+rulla tillbaka; och hindren `kort_sparat` och `kort_reserverat` i
+`intern.radering_underlag`, lappad med ett ankare som räknas.
+Delete står bara i `intern.kortval_glom`, `intern.kortval_stada` och
+`kort_borttaget`, ett i var. Filen går att köra två gånger (lapparna
+känner igen sig själva, och `cron.schedule` byter jobbet med samma namn).
+
+Två saker provet hittade innan det gick grönt: en reservation med kort
+giltighet hade släppts och gjorts om var tionde minut, så den släpps för
+att passet flyttats bara när starttiden ändrats sedan reservationen
+(`reserverat_for`); och en reservation som står fick först skrivas om
+till nekad, vilket hade låtit ett nytt kort nollställa raden och tappa en
+reservation som håller pengar. Lokalt, ur 190 migrationer: hela
+`rls-test.sql` 1699 av 1699 (avsnitt 33 är nytt, 35 prov). **Körs inte
+förrän resten är byggd, och `notis-ko` från main driftsätts före den**
+(mallen `kort_nekat`).

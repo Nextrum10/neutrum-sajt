@@ -351,8 +351,12 @@
       { namn: 'Rabatt', rita: r => '<span class="adm-tal">' + esc(rabattText(r)) + '</span>' },
       { namn: 'Gäller', rita: r => esc(r.tjanst ? (S.tjanster.find(t => t.kod === r.tjanst) || {}).namn || r.tjanst : 'Alla tjänster') },
       { namn: 'Till', rita: r => '<span class="adm-tal">' + esc(r.giltig_till ? kortDatum(r.giltig_till) : '—') + '</span>' },
+      /* Pass som inte är avbokade och betalda köp av timmar (2026-10-13),
+         räknat i databasen. Gränsen per familj står under. */
       { namn: 'Använd', rita: r => '<span class="adm-tal">' + r.antal_anvandningar
-          + (r.max_anvandningar ? ' / ' + r.max_anvandningar : '') + '</span>' },
+          + (r.max_anvandningar ? ' / ' + r.max_anvandningar : '') + '</span>'
+          + (r.max_per_familj ? '<span class="adm-und">' + esc(r.max_per_familj === 1 ? 'en gång per familj'
+              : r.max_per_familj + ' gånger per familj') + '</span>' : '') },
       { namn: 'Läge', rita: r => {
           /* Slut och utgången är två olika skäl att koden inte
              fungerar, och den som felsöker behöver veta vilket. */
@@ -402,6 +406,9 @@
           tjanst: $('#rk-tjanst').value || null,
           giltig_till: $('#rk-till').value || null,
           max_anvandningar: Number($('#rk-max').value) || null,
+          // Bara när kolumnen finns: utan migrationen nekar PostgREST den.
+          ...(S.rabattkoder.length && !('max_per_familj' in S.rabattkoder[0]) ? {}
+            : { max_per_familj: Number($('#rk-familj').value) || null }),
           beskrivning: String($('#rk-text').value || '').trim() || null
         });
 

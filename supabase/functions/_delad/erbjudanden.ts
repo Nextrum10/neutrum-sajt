@@ -39,7 +39,7 @@ const timmarText = (n: number) => (n === 1 ? '1 timme' : `${n} timmar`);
  * blandas ihop med första timmen som bjuds på ett pass (startrabatten).
  * Ett klippkort får exakt samma rad som förut.
  */
-export function kassarad(e: ErbjudandePris): { name: string; description: string } {
+export function kassarad(e: ErbjudandePris, rabattkod: string | null = null): { name: string; description: string } {
   const man = e.giltig_manader === 1 ? '1 månad' : `${e.giltig_manader} månader`;
   const timmar = Number(e.timmar);
   const pa = Math.max(0, Math.min(Number(e.timmar_pa_kopet) || 0, timmar - 1));
@@ -47,7 +47,9 @@ export function kassarad(e: ErbjudandePris): { name: string; description: string
   let vad = `${timmarText(timmar)} läxhjälp`;
   if (pa > 0) vad += ` för priset av ${timmar - pa} (${timmarText(pa)} på köpet)`;
   if (rabatt > 0) vad += `, ${rabatt} % rabatt`;
-  return { name: e.namn, description: `${vad}. Gäller i ${man} från köpet.` };
+  // Koden står på raden, så att kvittot säger varför beloppet är lägre.
+  const kod = rabattkod ? ` Med rabattkoden ${rabattkod}.` : '';
+  return { name: e.namn, description: `${vad}. Gäller i ${man} från köpet.${kod}` };
 }
 
 /**

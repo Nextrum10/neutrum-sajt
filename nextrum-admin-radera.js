@@ -113,7 +113,15 @@
     tipsbonus: h => [st(h.antal, 'bonus för tips', 'bonusar för tips') + ' som inte är utbetald'
         + (h.antal === 1 ? '' : 'a') + ': ' + kronor(h.belopp_ore || 0),
       'Betala ut bonusen med nästa lön och markera den Utbetald under Löner, eller stryk den där om den '
-        + 'inte ska betalas.']
+        + 'inte ska betalas.'],
+    /* kortet_reserveras (2026-10-13): inget ska bli kvar hos Stripe. */
+    kort_sparat: () => ['Familjen har ett sparat kort',
+      'Ta bort kortet med Ta bort kortet i familjens panel under Ekonomi, eller be familjen göra det under '
+        + 'Profil. Då kopplas det bort hos Stripe.'],
+    kort_reserverat: h => [st(h.antal, 'pass har', 'pass har') + ' ett reserverat belopp på kortet: '
+        + kronor(h.belopp_ore || 0),
+      'Pengarna hålls på familjens kort. Avboka passen under Bokningar, så släpps reservationen inom tio '
+        + 'minuter, eller låt passen hållas så dras den.']
   };
 
   const TAS_BORT = {
