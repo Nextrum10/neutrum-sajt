@@ -22,9 +22,6 @@
                     sig själv. Samma illustration står på För elever &
                     föräldrar.
      sidhuvud       lapparna på menysidornas foto fjädrar in
-     laxhjälpsöversikt  grupperna i Läxhjälp för just ert barn, sist på
-                    startsidan: öppna på datorn, och på telefonen
-                    glider de upp och ner med ett tryck (2026-10-13)
      stegFoton      Så fungerar Nextrum, på startsidan och menysidan:
                     den pinnade scenen på dator och den svepbara
                     raden på pekskärm (2026-10-07)
@@ -1164,81 +1161,6 @@ const NXStart = (function () {
     });
   }
 
-  /* ============================================================
-     LÄXHJÄLP I ÖVERSIKT (avsnitt 19 i CSS, 2026-10-12)
-     Grupperna glider upp och ner i stället för att hoppa (Leo: "gör
-     de lite mer smooth"). En <details> visar och döljer sitt innehåll
-     på en gång, så trycket på rubriken tas här: öppna sätter open och
-     sedan .oppen, så att listan växer från 0fr; stäng tar bort .oppen
-     och sätter open först när listan krympt klart, eller efter en
-     stund om ingen transition kom (en äldre Safari animerar inte
-     grid-template-rows). Ett nytt tryck mitt i vänder rörelsen.
-
-     .nx-lo-glid sätts sist och bara här, och utan den gömmer CSS
-     inget: utan skript eller med rörelse bortvald är det webbläsarens
-     egen <details>. Öppnar webbläsaren en grupp själv (sök på sidan)
-     följer klassen med.
-
-     ÖPPNA PÅ DATORN (2026-10-13, Leo: "öppna på datoern och klicka på
-     mobilen"). Grupperna står med open i HTML, så utan skript syns
-     allt. Över 860 px, där de står i fyra kolumner, hålls de öppna och
-     rubriken går inte att trycka på; under stängs de och öppnas med ett
-     tryck som förut. Det gäller också med rörelse bortvald, för det är
-     läget, inte glidet. .nx-lo-styrd säger att skriptet tagit över.
-     ============================================================ */
-  function laxhjälpsöversikt() {
-    const sek = $('#laxhjalp-oversikt');
-    if (!sek) return;
-    const smal = matchMedia('(max-width:860px)');
-    const grupper = $$('.nx-lo-g', sek);
-    const läge = () => grupper.forEach(g => {
-      g.open = !smal.matches;
-      g.classList.toggle('oppen', g.open);
-      const rubrik = $('summary', g);
-      if (!rubrik) return;
-      if (smal.matches) rubrik.removeAttribute('tabindex');
-      else rubrik.tabIndex = -1;
-    });
-    läge();
-    smal.addEventListener('change', läge);
-    grupper.forEach(g => {
-      const rubrik = $('summary', g);
-      const lista = $('.nx-lo-l', g);
-      if (!rubrik || !lista) return;
-      let väntar = 0;
-      const öppna = () => {
-        void lista.offsetHeight;
-        g.classList.add('oppen');
-      };
-      const stängd = () => {
-        clearTimeout(väntar);
-        if (!g.classList.contains('oppen')) g.open = false;
-      };
-      rubrik.addEventListener('click', e => {
-        if (!smal.matches) { e.preventDefault(); return; }
-        if (!rörelse) return;
-        e.preventDefault();
-        clearTimeout(väntar);
-        if (g.classList.contains('oppen')) {
-          g.classList.remove('oppen');
-          väntar = setTimeout(stängd, 700);
-        } else {
-          g.open = true;
-          öppna();
-        }
-      });
-      lista.addEventListener('transitionend', e => {
-        if (e.target === lista && e.propertyName === 'grid-template-rows') stängd();
-      });
-      g.addEventListener('toggle', () => {
-        if (!g.open) g.classList.remove('oppen');
-        else if (!g.classList.contains('oppen')) öppna();
-      });
-    });
-    sek.classList.add('nx-lo-styrd');
-    if (rörelse) sek.classList.add('nx-lo-glid');
-  }
-
   function allt() {
     if (rörelse) document.documentElement.classList.add('nx-sr');
     prova('ordfyll', ordfyll);
@@ -1252,7 +1174,6 @@ const NXStart = (function () {
     prova('studievy', studievy);
     prova('sidhuvud', sidhuvud);
     prova('stegFoton', stegFoton);
-    prova('laxhjälpsöversikt', laxhjälpsöversikt);
   }
 
   allt();

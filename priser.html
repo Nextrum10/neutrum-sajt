@@ -52,9 +52,9 @@
      Menysidorna använder startsidans delar som de är (nextrum-start.css
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
-<link rel="stylesheet" href="nextrum-home.css?v=5d4c3399">
-<link rel="stylesheet" href="nextrum-cinema.css?v=a92f8e96">
-<link rel="stylesheet" href="nextrum-start.css?v=dea728c1">
+<link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
+<link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
+<link rel="stylesheet" href="nextrum-start.css?v=5eee7c41">
 <link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
 
 <!-- Strukturerad data för tjänsten och timpriset. Ger Google en
@@ -825,18 +825,6 @@
           <li><a href="/priser">Priser</a></li>
         </ul>
       </nav>
-      <nav aria-labelledby="ftr-laxhjalp">
-        <h2 class="ftr-rubrik" id="ftr-laxhjalp">Läxhjälp</h2>
-        <ul>
-          <li><a href="/laxhjalp-stockholm">I Stockholm</a></li>
-          <li><a href="/laxhjalp-matematik">Matte</a></li>
-          <li><a href="/laxhjalp-svenska">Svenska</a></li>
-          <li><a href="/laxhjalp-engelska">Engelska</a></li>
-          <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
-          <li><a href="/laxhjalp-online">Online</a></li>
-          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
-        </ul>
-      </nav>
       <nav aria-labelledby="ftr-fordig">
         <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
         <ul>
@@ -858,6 +846,62 @@
         </ul>
       </nav>
     </div>
+
+    <nav class="ftr-lax" aria-labelledby="ftr-laxhjalp">
+      <div class="ftr-lax-in">
+        <h2 class="ftr-lax-h" id="ftr-laxhjalp">Läxhjälp</h2>
+        <p>Hitta sidan som passar ämnet, årskursen eller området.</p>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Ämne</h3>
+        <ul>
+          <li><a href="/laxhjalp-matematik">Matematik</a></li>
+          <li><a href="/laxhjalp-svenska">Svenska</a></li>
+          <li><a href="/laxhjalp-engelska">Engelska</a></li>
+          <li><a href="/laxhjalp-no">NO</a></li>
+          <li><a href="/laxhjalp-so">SO</a></li>
+          <li><a href="/laxhjalp-moderna-sprak">Moderna språk</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Årskurs</h3>
+        <ul>
+          <li><a href="/laxhjalp-lagstadiet">Lågstadiet</a></li>
+          <li><a href="/laxhjalp-mellanstadiet">Mellanstadiet</a></li>
+          <li><a href="/laxhjalp-hogstadiet">Högstadiet</a></li>
+          <li><a href="/laxhjalp-gymnasiet">Gymnasiet</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Område</h3>
+        <ul>
+          <li><a href="/laxhjalp-stockholm">Stockholm</a></li>
+          <li><a href="/laxhjalp-sodermalm">Södermalm</a></li>
+          <li><a href="/laxhjalp-hammarby-sjostad">Hammarby Sjöstad</a></li>
+          <li><a href="/laxhjalp-farsta">Farsta</a></li>
+          <li><a href="/laxhjalp-bromma">Bromma</a></li>
+          <li><a href="/laxhjalp-solna">Solna</a></li>
+          <li><a href="/laxhjalp-nacka">Nacka</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
+          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Guider</h3>
+        <ul>
+          <li><a href="/vad-kostar-laxhjalp">Vad kostar läxhjälp?</a></li>
+          <li><a href="/laxhjalp-eller-privatlarare">Läxhjälp eller privatlärare?</a></li>
+          <li><a href="/nationella-prov-ak-6">Nationella prov i årskurs&nbsp;6</a></li>
+          <li><a href="/nationella-prov-ak-9">Nationella prov i årskurs&nbsp;9</a></li>
+          <li><a href="/plugga-infor-prov">Plugga inför prov</a></li>
+          <li><a href="/infor-terminsbetyget">Inför terminsbetyget</a></li>
+          <li><a href="/barnet-vill-inte-gora-laxorna">Barnet vill inte göra läxorna</a></li>
+          <li><a href="/hjalpa-barn-med-matte">Hjälpa barn med matte</a></li>
+          <li><a href="/hjalpa-barn-med-lasforstaelse">Hjälpa barn med läsförståelse</a></li>
+          <li><a href="/laxhjalp-efter-sommarlovet">Läxhjälp efter sommarlovet</a></li>
+        </ul>
+      </div>
+    </nav>
 
     <div class="ftr-bot">
       <span>© <span id="year">2026</span> Nextrum.</span>
@@ -922,7 +966,7 @@
 <script src="nextrum-app.js?v=41e2f360"></script>
 <script src="nextrum-samtycke.js?v=92474eaf"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
-<script src="nextrum-start.js?v=1bf0f9f9"></script>
+<script src="nextrum-start.js?v=c809c1c0"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
