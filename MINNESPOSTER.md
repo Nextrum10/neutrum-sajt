@@ -452,7 +452,10 @@ Priset fryses på passet när det bokas (Fas 19.5, `timpris_ore`), och
 första timmen är gratis med den första planen (en timme till i planen,
 sedan 2026-10-09), och pass för pass bara för en familj vi valt: då får
 passet som gör två bokade timmar en timme i `rabatt_ore` (`startrabatt`).
-Högst en per familj. Ett pass på noll kronor är inte obetalt. Bokföringen, fakturorna och lönen
+Högst en per familj. En gratis timme gäller i 60 dagar och dras först
+(2026-10-13): planens gratis timme lever efter planens månad om den inte
+använts, och tipstimmen och första timmen pass för pass gäller ett pass
+inom 60 dagar (`minne/timmar.md`). Ett pass på noll kronor är inte obetalt. Bokföringen, fakturorna och lönen
 sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
 Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28);
 fakturorna läggs in för hand, för Fortnox läser inte in kundfakturor från

@@ -82,8 +82,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (namnordning), och klippkortets triggrar rör inte `skydda_bokningsfalt`. Timmen dras bara i
   `klippkort_dra()`, när förslaget skapas, och kommer tillbaka vid nej, avbokning eller
   obesvarat förslag. `timmar-betalar` väntar aldrig på ett lås. Timbanken fylls av köpta
-  timmar och, sedan 2026-10-13, timmar för tips; sparade minuter och timmar för tips går inte ut.
-  Tipstimmen dras sist (`bookings_timmar_tips`, efter timmarna och före `bookings_timmarna_tillbaka`).
+  timmar och visar sedan 2026-10-13 också timmar för tips, som är ett avdrag på nästa pass, inte ett köp.
   Vid ånger eller uppsägning: avboka först allt kommande.
 - **NexLäx**: rättningen sker i databasen; frågorna går ut utan facit, försök och svar har ingen
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
@@ -110,9 +109,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `rabattkod = 'TIPS'` (raden i `rabattkoder` blir aldrig aktiv): en per ny familj som haft två
   timmar läxhjälp i hållna pass (sedan 2026-10-09; förut det första passet, `intern.tva_timmar_hallna`),
   också om den familjen fått en av timmarna gratis, och intjänad ges den också med flaggan `tipstimme` av.
-  Den står utanför taket för första timmen. **Den ligger i timbanken** (2026-10-13, Leo: "timmarna läggs
-  in i timbanken för familjerna"): den visas där, går inte ut och dras sist, bara på ett pass som köpta
-  timmar och sparade minuter inte betalar (`intern.tipstimmen_dras`). **En studiehjälpare får 300 kr i
+  Den gäller i 60 dagar från den dagen (2026-10-13, `intern.tipstimmar_kvar`).
+  Den står utanför taket för första timmen. **Den står i timbanken** (2026-10-13, Leo: "timmarna läggs
+  in i timbanken för familjerna"): Er timbank och Profil → Timbanken visar den med sista dagen, och den
+  dras först, som en gratis timme (`forsta_timmen_bjuds`). **En studiehjälpare får 300 kr i
   lön** (Leo samma dag: "bonus redovisas som lön") när vi tar in den som sökt med hens kod
   (`tutor_profiles.status` blir `approved`; ansökan hittas på adressen): en LAGRAD rad i `tipsbonus`, en
   per ny studiehjälpare och bara om hen var ny när hen sökte, med eget läge (Utkast, Godkänd, Utbetald,
@@ -163,18 +163,33 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   vuxen, utan @ ett barn, som hamnar på `/barn`. Adressen `<namn>@barn.nextrum.se` finns bara
   för att Auth kräver en, nekas i inloggningen och tar aldrig emot mejl. Bara föräldern skapar, pausar och tar bort
   inloggningen, genom `barn-konto`. Barnet kan inte boka, avboka, svara eller ändra något utöver
-  NexLäx, bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01) och sin tråd med
-  studiehjälparen, och ser aldrig priser, betalningar, erbjudanden eller föräldern; timmarna är
+  NexLäx, bocken på en vanlig uppgift (`nexlax_for_barnet`, 2026-10-01), sin tråd med
+  studiehjälparen och sina förslag på pass (nedan), och ser aldrig priser, betalningar, erbjudanden eller föräldern; timmarna är
   genomförda och bokade pass, aldrig timbanken. NexLäx görs i barnets vy och i familjens
   inloggning, med samma rader. Elevvyn har fem delar och inget mer (2026-10-06): Översikt
   (antal genomförda och kommande pass), Mina lektioner (utan betalning), NexLäx, Meddelanden och
-  Profil. **En inloggning** för förälder, elev och studiehjälpare (2026-10-07): samma ruta på
+  Profil, och Boka pass som en sjätte bara när föräldern låtit barnet föreslå pass (2026-10-12). **En inloggning** för förälder, elev och studiehjälpare (2026-10-07): samma ruta på
   `/foralder` och `/larare`, två kort (Familj och elev, Studiehjälpare), och kontot avgör vyn:
   studievyn skickar en studiehjälpare till `/larare`, studiehjälparvyn en förälder till `/foralder`,
   och ett barn hamnar på `/barn`. `#elev` tas bort ur adressen, och `/barn` har ingen egen inloggning.
   **Föräldern väljer vad barnet får** (2026-10-06): pass, studieplan, rapporter, NexLäx, notiserna
-  och tråden med studiehjälparen (`barn_behorigheter`, rapporterna i `visa_rapporter`). Barnets
+  och tråden med studiehjälparen (`barn_behorigheter`, rapporterna i `visa_rapporter`), och att
+  föreslå pass (`boka` i `far_boka`, av som förval, 2026-10-12). Barnets
   funktioner lämnar inte ut det som är av; vyn säger bara det.
+- **Barnets förslag på pass** (2026-10-12, Leo: "barn skickar förslag, precis som förälder, men ser
+  inte priset"): förslaget står i `barn_passforslag`, aldrig i `bookings`, och är inget pass. Föräldern
+  ser det (Boka pass, Att göra, mejlet `barnforslag`), granskar det i den vanliga ytan med priset och en
+  rabattkod och skickar det som sitt eget (`skicka_barnets_forslag()`, SECURITY INVOKER, så policyn
+  och alla triggrar på `bookings` gäller), eller låter bli. Barnet ser aldrig ett pris, och priset
+  vid knappen följer databasens ordning (Rabattkoden, nedan).
+- **Rabattkoden** (2026-10-13, Leo: "koden får inte krocka med gratis timmar ... gratis timmarna
+  räknas i timbanken"): rutan står i förälderns egna förslag och i granskningen av ett barns, aldrig
+  i barnets vy. Koden gäller bara det familjen betalar med pengar. En gratis timme går före den
+  (`forsta_timmen_bjuds`, också tipstimmen), och köpta timmar och timbanken går före den, när passet
+  skapas och när de betalar det senare (`bookings_timmar_betalar_utan_kod`): då tas koden bort från
+  passet, och den läggs aldrig ihop med något. En kod som tas bort när passet skapas räknas inte som
+  använd. Rutan säger när koden inte används och varför, och koden skickas ändå: databasen avgör.
+  Skapa ingen kod förrän `kolla_rabattkod` har ett tak (avsnitt 6).
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -203,7 +218,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | motförslag | en annan tid på samma pass (`motforslag_at`), ja eller nej; ett avslag är `cancelled` |
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`); en kampanjkod är en affischs |
-| tipstimme | en timme i timbanken för ett tips, dragen sist: `startrabatt` och `rabattkod = 'TIPS'` på passet |
+| tipstimme | en timme på köpet för ett tips, i timbanken i 60 dagar: `startrabatt` och `rabattkod = 'TIPS'` på passet |
 | tipsbonus | 300 kr i lön till en studiehjälpare för ett tips som vi tagit in (`tipsbonus`), aldrig ett underlag |
 | timbanken | familjens köpta timmar (en plan eller Fyll timbanken) och sparade minuter; pass för pass går inte genom den |
 | Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
@@ -220,8 +235,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
   pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
   **Timbanken** är familjens köpta timmar och sparade minuter, och den fylls på två sätt (Leo 2026-10-12: "timbanken
-  fylls antingen med plan eller förköpta timmarna"), och sedan 2026-10-13 också med timmar för tips, som inte köps och
-  inte går ut: med en plan, eller med **Fyll timbanken** (klippkorten
+  fylls antingen med plan eller förköpta timmarna"), och sedan 2026-10-13 visar den också timmar för tips, som inte köps
+  och gäller i 60 dagar: med en plan, eller med **Fyll timbanken** (klippkorten
   `klipp10`–`klipp100` i databasen), som kostar timpriset, 399 kr, utan rabatt och utan märke, och gäller i sex månader
   i alla storlekar. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
   och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
@@ -261,6 +276,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   en familj vi valt (`forsta_timmen_beviljad`, `ge_forsta_timmen()` i Ta in familjen och familjens panel), då med Fas
   19.5:s `startrabatt` på det pass som gör att familjen bokat två timmar. Studievyns `bjuden` speglar regeln ur
   `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
+  **En gratis timme gäller i 60 dagar och dras först** (2026-10-13, Leo: "gratis timmar går ut efter 60 dagar att de
+  läggs in", "gratis timmar går ut först sen planerna", "9h vid köp av 8"): planens gratis timme (`timmar_pa_kopet`) dras
+  först och gäller efter planens månad så länge den inte använts, till 60 dagar efter köpet (`klippkort_saldo.gratis_kvar`
+  och `gratis_till`, `intern.kortets_timmar`), och bland korten väljs först ett med gratis timmar, sedan det som går ut
+  först (`intern.timmar_betala`, `klippkort_dra`, `kortFör`). Tipstimmen och första timmen pass för pass gäller ett pass
+  inom 60 dagar (`intern.tipstimmar_kvar`, `beviljad_till`), och vyn bjuder bara för en dag inom dem. Återbetalningen
+  räknas som förut: en använd timme kostar, också den gratis.
   Belopp i **ören**, kronor först vid visning.
 
 Detaljer: `minne/affaren.md`, `minne/betalning.md`, `minne/timmar.md`, `minne/nexlax.md`.
@@ -297,7 +319,7 @@ under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
 **Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
-som vill jobba (`#bli`) och Nästa steg, och sist före footern **Läxhjälp för just ert barn** (`#laxhjalp-oversikt`, 2026-10-10: internlänkning till alla läxhjälps- och guidesidor i fyra grupper, `<details>` som är stängda på alla bredder och glider upp med ett tryck (2026-10-12: `laxhjälpsöversikt()` sätter `.oppen` och `.nx-lo-glid`, CSS låter `.nx-lo-l` växa från 0fr; utan skript eller rörelse är det en vanlig `<details>`), på footerns `--ftr-bg` i ljust läge och `--pap` i mörkt; en ny sida i kartan läggs också in där, i `index.html` och `en/index.html`). **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
+som vill jobba (`#bli`) och Nästa steg. **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): alla läxhjälps- och guidesidor i fyra grupper (Ämne, Årskurs, Område, Guider) med ämnesfärgens prick, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp; en ny sida i kartan läggs in där på alla sidor, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
 en rad, två och två på telefon, läxhjälpen, expertisen, erfarenheten och NexLäx, var och en med en NexLäx-ämnesfärg
 i `--f`; erfarenheten är studiehjälparnas, aldrig ett antal år. **Betygsgarantin har ingen egen sektion**: den är en
@@ -396,6 +418,16 @@ lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillb
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
 Familjernas och studiehjälparnas sidor behåller `mailto:`.
+**Förhandsvisningen** (2026-10-12, Leo: "föreslå tid och byta vy och acceptera"): sektionen
+Förhandsvisning (för varje admin) öppnar `/foralder?forhandsvisning` och `/larare?forhandsvisning`, de
+riktiga vyerna med en påhittad familj och studiehjälpare. `nextrum-forhandsvisning.js` laddas före
+`nextrum-app.js` och ger vyn en klient som svarar ur en värld i webbläsaren; de två vyerna delar den
+(`localStorage`), och remsan överst byter vy. Den når aldrig databasen, så inget av det räknas i
+statistik, lön eller faktura. Börjar vyerna fråga efter en ny tabell eller funktion ska den in i
+världen (`prova-forhandsvisning.js` säger vad som saknas). **Adminkontona räknas inte i
+statistiken** (samma dag): Översiktens tal (`räknas()`, `ärAdminkonto()`) och analysvyerna
+(`intern.utanfor_statistiken`) räknar inga pass där familjen eller studiehjälparen har en adminroll;
+listorna, betalningarna, fakturorna och lönerna som förut.
 Fällor: `h5` och `h6` har webbläsarens marginal; `--pap-2` och `--yta` är nästan samma i mörkt
 läge (`--tint`, `--bricka`); KÄNSLAN står sist och väger lika mycket; `nextrum-admin-konsol.css`
 vinner över arbetsytan. Headless Chromium döljer rullningslister; mät ett tryck med `el.click()`
@@ -564,6 +596,10 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   med; före ett pixel-id, se `minne/sakerhet.md`.
 - **Advisorn** larmar om det som är med flit (listan i `minne/sakerhet.md`). Läckta lösenord
   kontrolleras inte, och `kolla_rabattkod` får ett tak med den första koden.
+- **Förhandsvisningen använder aldrig den riktiga klienten**: med `?forhandsvisning` på `/foralder`
+  eller `/larare` och utan `nextrum-forhandsvisning.js` skapar `nextrum-app.js` ingen klient alls, och
+  modulvakten säger det. Den riktiga inloggningen frågar bara `mina_behorigheter()` (grinden, som är
+  bekvämlighet: allt i världen är påhittat), och Logga ut där leder till adminvyn.
 - **Content-Security-Policy**: `/admin`, `/larare`, `/barn`, `/lank` och `/foralder` har `script-src 'self'`,
   alltså **ingen inline-JavaScript** där (`kolla-csp.py`). `/foralder` släpper in Stripe, som
   aldrig vendoras. **Två skarpa CSP-rader får aldrig matcha samma sida.**
@@ -764,20 +800,37 @@ Detaljer: `minne/grunden.md`.
   alla fem filer. Villkorens version är 2026-10-12, så alla får frågan igen. Inget klippkort var köpt. Juristen har
   inte läst de nya villkoren.
 - **Koderna, bonusen och tipstimmen i timbanken** (2026-10-13) är byggda men inte i drift: migrationen
-  `tipskoder_bonus_och_timbanken` (20261013120000) körs efter merge, och `drift` (agentens fakta) driftsätts från
-  main efter den. Lokalt gick hela `rls-test.sql` 1542 av 1542 med migrationen. Villkorens version blir 2026-10-13,
-  så alla får frågan igen. Kvar: lönearten för bonusen i Fortnox och bolagsfakta (`lonart_tipsbonus`), med revisorn om
-  den ska vara semestergrundande (`studiehjalpare_form` är fortfarande oklar); juristen har inte läst villkoren, rad 19
-  och 26 i `DATASKYDD.md` eller policyns stycke om koden i jobbansökan; ingen har sagt till studiehjälparna att koden
-  nu gäller jobbansökan, eller familjerna att timmen ligger i timbanken. Tas någon in på ett konto med en annan adress
-  än ansökans ges ingen bonus av sig själv, och bonusen kräver bara att personen tas in, inte att hen håller ett pass
-  (Leos regel).
+  `tipskoder_bonus_och_timbanken` (20261013120000) körs efter merge, EFTER `gratistimmarna_60_dagar` (vakten kräver
+  den `mina_tips()` den lämnar), och `drift` (agentens fakta) driftsätts från main efter den. Villkorens version är
+  2026-10-13, samma som `gratistimmarna_60_dagar`: körs båda vid samma tillfälle får alla frågan en gång, men den som
+  godkänner mellan dem får inte frågan om koderna och bonusen. Kvar: lönearten för bonusen i Fortnox och bolagsfakta
+  (`lonart_tipsbonus`), med revisorn om den ska vara semestergrundande (`studiehjalpare_form` är fortfarande oklar);
+  juristen har inte läst villkoren, rad 19 och 27 i `DATASKYDD.md` eller policyns stycke om koden i jobbansökan;
+  ingen har sagt till studiehjälparna att koden nu gäller jobbansökan, eller familjerna att timmen står i timbanken.
+  Tas någon in på ett konto med en annan adress än ansökans ges ingen bonus av sig själv, och bonusen kräver bara att
+  personen tas in, inte att hen håller ett pass (Leos regel).
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
   hand), datadelningen med Googles produkter och Google-signaler av, lagringstiden (policyn lovar högst 14
   månader), och ingen koppling till Google Ads. Vercels Web Analytics var inte
   påslaget i projektet 2026-09-28 (`TRAFIK.md`). Juristen har inte läst texterna eller rad 14 i `DATASKYDD.md`.
+- **Barnets förslag på pass, förhandsvisningen, adminkontona i statistiken, rabattkoden och gratistimmarnas
+  60 dagar** (2026-10-12 och 13) är byggda men inte i drift: migrationerna `barnet_foreslar_pass`,
+  `adminkonton_utanfor_statistiken`, `rabattkoden_krockar_inte` och `gratistimmarna_60_dagar` körs efter merge,
+  i den ordningen, och **`notis-ko` driftsätts från main FÖRE den första** (mallen för `barnforslag`), och
+  `drift` efter den sista (agentens fakta om gratistimmarna). Villkorens version blir 2026-10-13, så alla får
+  frågan igen. Versionerna ligger efter `fyll_timbanken` (20261012120000, i drift), som de först krockade med.
+  Lokalt, byggd ur alla 186 migrationer, 1603 av 1603 i `rls-test.sql`. Juristen har inte läst de nya
+  villkoren om gratistimmarna.
+  Vyerna tål att de saknas, och förhandsvisningen behöver ingen av dem. Rutan för en rabattkod står i
+  förälderns förslag direkt; utan migrationen gäller den gamla ordningen i databasen, men 2026-10-13 fanns
+  ingen kod utom `TIPS`, och ingen ska skapas förrän migrationen körts och `kolla_rabattkod` har ett tak. Ett adminkonto som också är förälder hade
+  2026-10-12 alla 16 passen i driften; de räknas inte i statistiken när migrationen körts, men de står
+  kvar som pass och betalningar. Ett adminkonto raderas inte i panelen; ska passen bort är det Leos beslut
+  och en egen ändring (`DEPLOY-BARNKONTON.md` 12).
+  Juristen har inte läst rad 26 i `DATASKYDD.md` eller meningarna om förslagen i policyn, och familjerna
+  med barnkonto har inte fått veta att valet finns.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

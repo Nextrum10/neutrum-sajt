@@ -314,8 +314,9 @@ const vänta = ms => new Promise(r => setTimeout(r, ms));
 
 /* ============ barnets vy ============ */
 /* Det enda barnets vy får fråga databasen om (nexlax_for_barnet lade
-   till NexLäx, barnets_epost inställningarna och valen). */
-const BARNETS_FUNKTIONER = /\/rpc\/(barn_(oversikt|notiser|markera_last|nexlax|uppgift|installningar|notisval|chatt|chatt_last|chatt_skriv)|nexlax_lage|niva_(starta|svara|genomgang))$/;
+   till NexLäx, barnets_epost inställningarna och valen, och
+   barnet_foreslar_pass förslagen på pass). */
+const BARNETS_FUNKTIONER = /\/rpc\/(barn_(oversikt|notiser|markera_last|nexlax|uppgift|installningar|notisval|chatt|chatt_last|chatt_skriv|passforslag|foresla_pass|upptagna_tider|aterkalla_forslag)|nexlax_lage|niva_(starta|svara|genomgang))$/;
 
 function barnRpc(extra) {
   /* Tråden med studiehjälparen (barnets_chatt): ett oläst meddelande,
@@ -514,7 +515,9 @@ async function provaBarnvyn(webb) {
       const små = await page.evaluate(() => Array.from(document.querySelectorAll('#view-app button, #nav-actions button'))
         .filter(b => b.offsetParent).map(b => b.getBoundingClientRect()).filter(r => Math.round(r.height) < 44).length);
       prova(namn + ': tryckytorna är minst 44 px', små === 0, små + ' knappar lägre än 44 px');
-      const meny = await page.$$eval('#vy-sido a', a => a.map(x => x.getBoundingClientRect().height).filter(h => Math.round(h) < 44).length);
+      /* Boka pass är dold tills föräldern slagit på det (barnet_foreslar_pass). */
+      const meny = await page.$$eval('#vy-sido a', a => a.filter(x => !x.hidden)
+        .map(x => x.getBoundingClientRect().height).filter(h => Math.round(h) < 44).length);
       prova(namn + ': menyns poster är minst 44 px', meny === 0, meny + ' lägre');
     }
     if (namn.includes('mork')) {
@@ -1097,7 +1100,9 @@ async function provaAdminvyn(webb) {
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
     prova('begränsad: adminvyn laddar', await synlig(page, '#view-app'));
     const synliga = await page.locator('#vy-sido a[data-sek]').evaluateAll(as => as.filter(a => !a.hidden).map(a => a.dataset.sek));
-    prova('begränsad: menyn har bara Intresseanmälningar och System', JSON.stringify(synliga) === '["leads","system"]', JSON.stringify(synliga));
+    /* Förhandsvisningen (2026-10-12) står för varje admin. */
+    prova('begränsad: menyn har bara Intresseanmälningar, Förhandsvisning och System',
+      JSON.stringify(synliga) === '["leads","forhandsvisning","system"]', JSON.stringify(synliga));
     const framme = await page.locator('section.vy-sek[data-sek]:not([hidden])').evaluateAll(s => s.map(x => x.dataset.sek));
     prova('begränsad: en adress till Betalningar landar i Intresseanmälningar', JSON.stringify(framme) === '["leads"]', JSON.stringify(framme));
     const rubriker = await page.locator('#vy-sido .vy-sido-rubrik').evaluateAll(r => r.filter(x => !x.hidden).map(x => x.textContent));
@@ -1138,8 +1143,8 @@ async function provaAdminvyn(webb) {
     await page.goto(BAS + '/admin');
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
     const synliga = await page.locator('#vy-sido a[data-sek]').evaluateAll(as => as.filter(a => !a.hidden).map(a => a.dataset.sek));
-    prova('matchning: Familjer, Elever, Studiehjälpare och Matchning',
-      JSON.stringify(synliga) === '["familjer","elever","studiehjalpare","matchning"]', JSON.stringify(synliga));
+    prova('matchning: Familjer, Elever, Studiehjälpare, Matchning och Förhandsvisning',
+      JSON.stringify(synliga) === '["familjer","elever","studiehjalpare","matchning","forhandsvisning"]', JSON.stringify(synliga));
     await context.close();
   }
 
@@ -1601,7 +1606,9 @@ async function provaBarnetsBehörigheter(webb) {
     const kryss = () => page.$$eval(bo + ' [data-bi-far-ny]', k => k.map(x => x.dataset.biFarNy + '=' + x.checked));
     prova('behörigheter: formuläret har sex kryssrutor med förvalet', JSON.stringify(await kryss()) === JSON.stringify(
       ['pass=true', 'studieplan=true', 'rapporter=false', 'nexlax=true', 'meddelanden=true', 'chatt=true']), JSON.stringify(await kryss()));
-    prova('behörigheter: formuläret säger vad barnet aldrig kan', (await text(page, bo + ' .bi-far-val')).includes('aldrig boka'));
+    /* Sedan barnet_foreslar_pass kan barnet föreslå pass, som går till föräldern först. */
+    prova('behörigheter: formuläret säger vad barnet aldrig kan', (await text(page, bo + ' .bi-far-val')).includes('aldrig avboka')
+      && (await text(page, bo + ' .bi-far-val')).includes('går till er först'), await text(page, bo + ' .bi-far-val'));
     await page.uncheck(bo + ' [data-bi-far-ny="nexlax"]');
     await page.fill(bo + ' [data-bi-anv]', 'bo.b');
     await page.fill(bo + ' [data-bi-los]', 'hemligt-1');

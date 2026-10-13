@@ -39,6 +39,8 @@ function prova(namn, ok, detalj) {
 }
 const vänta = ms => new Promise(r => setTimeout(r, ms));
 const nu = min => new Date(Date.now() + min * 60000).toISOString();
+/* Tipstimmen gäller i 60 dagar (gratistimmarna_60_dagar): här 50 dagar kvar. */
+const TIPS_TILL = nu(50 * 24 * 60).slice(0, 10);
 /* Förra månaden: lönen för den betalas den 25:e i den här, och Löner
    väljer den månaden till och med den 25:e. */
 const förraMånaden = (() => {
@@ -166,7 +168,7 @@ function falskSupabase(o) {
       : { admin: true, superadmin: true, behorigheter: [] }),
     /* Familjens kod: två timmar intjänade, en dragen. */
     mina_tips: () => ({ kod: 'FAMAAA', sort: 'familj', aktiv: true, anmalda: 2, kunder: 1, timmar: 2, anvanda: 1,
-      kvar: 1, timme_ges: true }),
+      kvar: 1, kvar_till: TIPS_TILL, timme_ges: true }),
     notisfel: () => [], ekonomiska_avvikelser: () => [],
     tipskoder_lage: () => KODER.familj.concat(KODER.studiehjalpare).map(k => ({
       kod: k.kod, sort: k.person_id.startsWith('sh') ? 'studiehjalpare' : 'familj', person_id: k.person_id,
@@ -431,6 +433,8 @@ async function provaFamiljensTimbank(webb) {
   const mina = await text(page, '#erb-mina');
   prova('familjen: Er timbank säger timmen för tips', /och 1 timme för tips/.test(mina) && /Timmar för tips/.test(mina)
     && /1 av 2 timmar kvar/.test(mina), mina);
+  prova('familjen: timmen för tips gäller i 60 dagar och dras först', /Gäller till \d/.test(mina)
+    && /gäller i 60 dagar och dras först/.test(mina) && !/Går inte ut/.test(mina), mina);
   await bild(page, 'familj-erbjudanden', '#erb-mina-box');
   await page.goto(BAS + '/foralder#profil/timbank');
   await vänta(700);
@@ -442,7 +446,7 @@ async function provaFamiljensTimbank(webb) {
   await vänta(500);
   const tips = await text(page, '#tips-ruta');
   prova('familjen: Tipsa säger timmen i timbanken', /En timme i er timbank/.test(tips) && /i er timbank\./.test(tips)
-    && /Se timbanken/.test(tips), tips);
+    && /och gäller till \d/.test(tips) && /Se timbanken/.test(tips), tips);
   await bild(page, 'familj-tipsa', '#tips-ruta');
   prova('familjen: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   prova('familjen: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));

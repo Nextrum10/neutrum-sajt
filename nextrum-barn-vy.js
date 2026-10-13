@@ -15,10 +15,13 @@
    kommer ur databasen och skrivs av andra än barnet. NexLäx ritas av
    NXUppgifter, som i studievyn, med esc() på allt ur databasen.
 
-   Barnet kan inte boka, avboka, svara på ett förslag, byta lösenord eller
+   Barnet kan inte avboka, svara på ett förslag, byta lösenord eller
    ändra något om sig själv. Allt sådant gör föräldern, och vyn säger det.
    Det barnet gör själv är NexLäx, bocken på en vanlig uppgift och, sedan
-   2026-10-06, att skriva till sin studiehjälpare i en egen tråd.
+   2026-10-06, att skriva till sin studiehjälpare i en egen tråd. Sedan
+   2026-10-12 kan barnet också föreslå ett pass, när föräldern slagit på
+   det (Boka pass, nedan): förslaget går till föräldern, inte till
+   studiehjälparen, och barnet ser aldrig ett pris.
 
    ELEVVYN (2026-10-06). Samma skal som studievyn: hälsningen överst
    (NXArbete.hero, med dagens bild och veckodagen) och en sidomeny med
@@ -166,10 +169,11 @@
         S.tillVal = false;
         $('#view-app .vy-layout').scrollIntoView({ block: 'start' });
       }
-      /* NexLäx och tråden väntar inte resten av vyn in: de ritas när de
-         kommer. */
+      /* NexLäx, tråden och förslagen väntar inte resten av vyn in: de
+         ritas när de kommer. */
       laddaNexlax();
       laddaChatt();
+      laddaForslag();
     } catch (fel) {
       NXStudie.felvy(visa, fel, 'din vy skulle hämtas');
     } finally {
@@ -189,6 +193,7 @@
   /* ============ behörigheterna ============ */
   const FÅR = {
     pass: 'se dina pass',
+    boka: 'föreslå pass',
     studieplan: 'se studieplanen',
     rapporter: 'läsa rapporterna',
     nexlax: 'göra NexLäx',
@@ -196,10 +201,13 @@
     chatt: 'skriva till din studiehjälpare'
   };
 
-  /* Rapporterna står också i visa_rapporter, som de alltid gjort. */
+  /* Rapporterna står också i visa_rapporter, som de alltid gjort. Att
+     föreslå pass (2026-10-12) är av tills listan säger att det är på:
+     en databas utan listan har inte förslagen heller. */
   function får(sak) {
     const lista = S.data && S.data.behorigheter;
     if (sak === 'rapporter') return !!(S.data && S.data.visa_rapporter);
+    if (sak === 'boka') return Array.isArray(lista) && lista.indexOf('boka') !== -1;
     return !Array.isArray(lista) || lista.indexOf(sak) !== -1;
   }
 
@@ -248,6 +256,7 @@
     ritaRapporter();
     ritaBehörigheter();
     ritaInställningar();
+    ritaBokaDel();
   }
 
   /* ============ inställningarna (barnets_epost) ============
@@ -391,7 +400,9 @@
         : nästa
           ? { href: '#oversikt', text: 'Nästa pass · ' + dag(nästa.datum, nästa.tid),
               under: [nästa.amne, nästa.status === 'confirmed' ? 'Bekräftat' : 'Väntar på svar'].filter(Boolean).join(' · ') }
-          : { href: '#oversikt', text: 'Inga pass bokade just nu', under: 'När din förälder bokat ett pass står det här' },
+          : får('boka')
+            ? { href: '#boka', text: 'Inga pass bokade just nu', under: 'Föreslå en tid under Boka pass' }
+            : { href: '#oversikt', text: 'Inga pass bokade just nu', under: 'När din förälder bokat ett pass står det här' },
       chatt: { href: '#meddelanden', text: 'Meddelanden',
         under: olästa ? olästa + ' ny' + (olästa > 1 ? 'a' : '')
           : c ? 'Skriv till ' + (c.studiehjalpare || 'din studiehjälpare')
@@ -433,7 +444,9 @@
   function ritaKommande() {
     const lista = S.data.kommande || [];
     $('#bv-kommande-antal').textContent = lista.length ? String(lista.length) : '';
-    const tom = () => tomt('Inga pass bokade just nu', 'När din förälder bokat ett pass står det här.');
+    const tom = () => tomt('Inga pass bokade just nu', får('boka')
+      ? 'Föreslå en tid under Boka pass, så skickar din förälder den vidare.'
+      : 'När din förälder bokat ett pass står det här.');
     $('#bv-kommande').replaceChildren(...(lista.length ? lista.map(kommandeRad) : [tom()]));
     $('#bv-narmast').replaceChildren(...(lista.length ? lista.slice(0, 3).map(kommandeRad) : [tom()]));
   }
@@ -877,6 +890,194 @@
   setInterval(() => {
     if (S.user && S.chatt.data && S.aktiv === 'meddelanden' && document.visibilityState === 'visible') laddaChatt();
   }, 30000);
+
+  /* ============ Boka pass (barnet_foreslar_pass, 2026-10-12) ============
+     Leo: "barn ska kunna boka pass med läxhjälparen själva ... barn
+     skickar förslag, precis som förälder, men ser inte priset". Samma
+     yta som förälderns (NXArbete.bokning) i barnets läge (utanPris):
+     inget pris, inget antal barn, och förslaget går till föräldern, som
+     ser priset, kan ändra det och skickar det till studiehjälparen.
+     Barnets roll når fortfarande ingen tabell: förslaget skrivs med
+     barn_foresla_pass(), listan läses med barn_passforslag() och de
+     upptagna timmarna med barn_upptagna_tider(), och alla tre prövar att
+     föräldern slagit på det. Under ytan står barnets förslag och vad som
+     hänt med dem; ett som väntar går att ta tillbaka. */
+  S.bk = { yta: null, data: null, hämtad: false };
+
+  const FÖRSLAG_FEL = {
+    tak: 'Du har redan skickat många förslag. Vänta tills din förälder svarat, eller ta tillbaka ett.',
+    avstangd: 'Din förälder har stängt av att du föreslår pass, så förslaget gick inte iväg.',
+    ingen: 'Du har ingen studiehjälpare just nu, så förslaget gick inte iväg.',
+    saknas: 'Din inloggning är pausad, så förslaget gick inte iväg.'
+  };
+  const FÄLT_FEL = {
+    datum: 'Den dagen går inte att föreslå. Välj en annan dag.',
+    tid: 'Den tiden går inte att föreslå. Välj en annan tid.',
+    langd: 'Passet får vara en, två eller tre timmar och sluta samma dag.',
+    amne: 'Skriv vilket ämne det gäller.',
+    format: 'Välj om ni ses på plats eller online.',
+    plats: 'Skriv var ni ses.',
+    rad: 'Raden till studiehjälparen är för lång.'
+  };
+
+  async function laddaForslag() {
+    if (!får('boka')) { S.bk.data = null; S.bk.hämtad = true; ritaForslag(); return; }
+    const { data, error } = await supa.rpc('barn_passforslag');
+    if (error) {
+      if (error.code !== 'PGRST202' && error.code !== '42883') console.warn('barn_passforslag:', error.message);
+      /* En lista som redan står byts inte mot ingenting. */
+      if (!S.bk.data) S.bk.data = { lage: 'fel' };
+    } else {
+      S.bk.data = data || { lage: 'fel' };
+    }
+    S.bk.hämtad = true;
+    ritaForslag();
+  }
+
+  /* Menyposten och raden när föräldern inte slagit på det. Ritas med
+     resten av vyn; ytan och listan ritas när förslagen kommit. */
+  function ritaBokaDel() {
+    const på = får('boka');
+    const länk = $('#vy-sido a[data-sek="boka"]');
+    if (länk) länk.hidden = !på;
+    const av = $('#bv-boka-av');
+    if (!av) return;
+    if (!på) {
+      av.hidden = false;
+      av.textContent = 'Din förälder har valt att du inte föreslår pass här. Undrar du något? Fråga din förälder.';
+      $('#bv-boka-ruta').hidden = true;
+      $('#bv-forslag-ruta').hidden = true;
+    }
+  }
+
+  function ritaForslag() {
+    const av = $('#bv-boka-av'), ruta = $('#bv-boka-ruta');
+    if (!av || !ruta) return;
+    const d = S.bk.data;
+    if (!får('boka') || !d) { ritaBokaDel(); return; }
+    if (d.lage !== 'ok') {
+      av.hidden = false;
+      av.textContent = d.lage === 'avstangd'
+        ? 'Din förälder har valt att du inte föreslår pass här. Undrar du något? Fråga din förälder.'
+        : 'Förslagen går inte att hämta just nu. Försök igen om en stund.';
+      ruta.hidden = true;
+      $('#bv-forslag-ruta').hidden = true;
+      return;
+    }
+    $('#bv-boka-hos').textContent = d.studiehjalpare ? 'hos ' + d.studiehjalpare : '';
+    if (!d.kan_foresla) {
+      av.hidden = false;
+      av.textContent = 'När du har en studiehjälpare kan du föreslå pass här.';
+      ruta.hidden = true;
+    } else {
+      av.hidden = true;
+      ruta.hidden = false;
+      if (!S.bk.yta) {
+        S.bk.yta = NXArbete.bokning({
+          host: $('#bv-boka-yta'),
+          amnen: NXArbete.BOKA_AMNEN,
+          utanPris: true,
+          hos: d.studiehjalpare || 'din studiehjälpare',
+          ladda: laddaBokningsytan,
+          boka: skickaForslag
+        });
+      } else {
+        S.bk.yta.sättHos(d.studiehjalpare || 'din studiehjälpare');
+      }
+      S.bk.yta.ladda();
+    }
+    ritaEgnaForslag();
+  }
+
+  /* De upptagna timmarna hos studiehjälparen, och förra passets ämne och
+     längd som förval, när barnet får se sina pass. */
+  async function laddaBokningsytan() {
+    const fran = NX.isoFor(new Date());
+    const till = NX.isoFor(new Date(Date.now() + 100 * 864e5));
+    const { data, error } = await supa.rpc('barn_upptagna_tider', { p_fran: fran, p_till: till });
+    if (error) console.warn('barn_upptagna_tider:', error.message);
+    const upptagna = new Set((data || []).map(r => r.datum + '|' + r.tid));
+    const tidigare = ((S.data && S.data.kommande) || []).concat((S.data && S.data.genomforda) || [])
+      .map(p => ({ wanted_date: p.datum, subject: p.amne, duration_min: p.langd_min }));
+    return { upptagna, tidigare };
+  }
+
+  async function skickaForslag(v) {
+    const { data, error } = await supa.rpc('barn_foresla_pass', {
+      p_datum: v.datum, p_tid: v.tid, p_langd: v.minuter, p_amne: v.amne,
+      p_format: v.format || null, p_plats: v.plats || null, p_rad: v.not || null
+    });
+    if (error) return 'Förslaget gick inte iväg. Försök igen om en stund.';
+    const läge = data && data.lage;
+    if (läge !== 'ok') {
+      return (läge === 'ogiltigt' && FÄLT_FEL[data.falt]) || FÖRSLAG_FEL[läge]
+        || 'Förslaget gick inte iväg. Försök igen om en stund.';
+    }
+    laddaForslag();
+    return { status: 'vantar', id: data.id };
+  }
+
+  /* Barnets egna förslag, nyast först. Ritas med textContent. */
+  function ritaEgnaForslag() {
+    const ruta = $('#bv-forslag-ruta'), host = $('#bv-forslag');
+    const d = S.bk.data;
+    const lista = (d && d.forslag) || [];
+    ruta.hidden = !lista.length;
+    $('#bv-forslag-antal').textContent = lista.length ? String(lista.length) : '';
+    const hjälpare = (d && d.studiehjalpare) || 'din studiehjälpare';
+    host.replaceChildren(...lista.map(f => {
+      const pass = f.pass || null;
+      const när = pass && pass.datum ? dag(pass.datum, pass.tid) : dag(f.datum, f.tid);
+      let läge, klass = '', ton = ' ar-ockra', knapp = null, rad = null;
+      if (f.lage === 'vantar') {
+        läge = 'Väntar på din förälder';
+        klass = ' vantar';
+        knapp = el('button', { class: 'btn btn-ghost btn-sm', type: 'button', 'data-bv-tillbaka': f.id }, 'Ta tillbaka');
+      } else if (f.lage === 'skickat') {
+        ton = ' ar-mossa';
+        if (pass && pass.status === 'confirmed') { läge = 'Bokat'; klass = ' klar'; }
+        else if (pass && pass.status === 'completed') { läge = 'Genomfört'; klass = ' klar'; }
+        else if (pass && pass.status === 'cancelled') { läge = 'Blev inte av'; ton = ' ar-tyst'; }
+        else if (pass) { läge = 'Väntar på ' + hjälpare; klass = ' vantar'; }
+        else { läge = 'Skickat till ' + hjälpare; klass = ' klar'; }
+        if (pass && (pass.datum !== f.datum || pass.tid !== f.tid || pass.langd_min !== f.langd_min)) {
+          rad = 'Din förälder ändrade tiden innan förslaget skickades.';
+        }
+      } else if (f.lage === 'nej') {
+        läge = 'Inte skickat'; ton = ' ar-tyst';
+        rad = 'Din förälder skickade inte förslaget. Undrar du varför? Fråga din förälder.';
+      } else {
+        läge = 'Tillbakataget'; ton = ' ar-tyst';
+      }
+      return el('div', { class: 'vy-rad' },
+        el('span', { class: 'vy-rad-ik' + ton }, ikon('dag')),
+        el('span', { class: 'vy-rad-mitt' },
+          el('span', { class: 'vy-rad-titel' }, när),
+          el('span', { class: 'vy-rad-meta' },
+            f.amne ? el('span', {}, f.amne) : null,
+            f.langd_min ? el('span', {}, NXStudie.längdText(pass && pass.langd_min ? pass.langd_min : f.langd_min)) : null,
+            f.format ? el('span', {}, f.format) : null),
+          rad ? el('span', { class: 'vy-rad-not' }, rad) : null),
+        el('span', { class: 'vy-rad-hoger' },
+          el('span', { class: 'lage' + klass }, läge), knapp));
+    }));
+  }
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-bv-tillbaka]');
+    if (!k) return;
+    const msg = $('#bv-forslag-msg');
+    NX.rensa(msg);
+    await NXStudie.medan(k, 'Tar tillbaka…', async () => {
+      const { data, error } = await supa.rpc('barn_aterkalla_forslag', { p_id: k.dataset.bvTillbaka });
+      if (error || !data || (data.lage !== 'ok' && data.lage !== 'redan')) {
+        NX.säg(msg, 'Förslaget gick inte att ta tillbaka. Försök igen om en stund.', false);
+        return;
+      }
+      if (data.lage === 'redan') NX.säg(msg, 'Din förälder hann svara på förslaget.', true);
+      await laddaForslag();
+    });
+  });
 
   /* ============ bekräftelsen av barnets e-post (barnets_epost) ============
      Koden tas ur adressen direkt, så att den inte står kvar i historiken

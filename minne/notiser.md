@@ -94,7 +94,11 @@ pass.** Den köas av `intern.timmar_gar_ut_koa()`, som pg_cron-jobbet
 `timmar-gar-ut` kör varje timme och som bara gör något mellan 9 och 20
 svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
 Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
-familjen har raden i `NOTISVAL` (`bara: 'parent'`).
+familjen har raden i `NOTISVAL` (`bara: 'parent'`). Sedan 2026-10-13
+(`gratistimmarna_60_dagar`) räknar `kvar` bara de timmar som går ut med
+planen: en oanvänd gratis timme gäller till 60 dagar efter köpet. Ingen
+påminnelse om gratistimmen själv, för mallen säger "köpta timmar" och att
+resten betalas tillbaka, och en gratis timme betalas aldrig ut.
 
 **Notiser som inte gick fram (System → Fel) är bara databasens egna
 utskick** (2026-09-27). `notisfel()` läste förut hela
@@ -316,7 +320,9 @@ den vars möte i steg 2 var avbockat. Nu står Öppna provet på raden
 Provet (`provKnapp`), stegens knappar står direkt under skälet,
 flikarna Intervju och Utbildning öppnar panelen på Rekryteringen
 (`data-dp-start`), och Utbildning tar också den som har ett
-utbildningsmöte utan att steg 2 är avbockat.
+utbildningsmöte utan att steg 2 är avbockat. Sedan 2026-10-13 står Öppna
+provet också på raden under fliken Utbildning, och Till utbildning under
+Intervju är "Mötet är hållet" med en fråga först (`minne/vyerna.md`).
 
 **Admin kan göra provet själv** (2026-10-02, Leo: "gör provet
 tillgängligt för admin genom admin vyn"). Prova utbildningsprovet i
@@ -450,6 +456,21 @@ per dag), direktmejlet, bromsen, mottagarna och rättigheterna.
   Fas 18.1). Sedan Fas 22.1 har utbildningen ett prov systemet läser
   resultatet av, men det prövar att hen läst handboken, inte vem hen
   är.
+
+### Barnets förslag till föräldern (barnet_foreslar_pass, 2026-10-12)
+Typen `barnforslag` går till föräldern när barnet föreslagit ett pass:
+en rad i `notiser` och ett mejl (`notis_typer()`, `notis_mejlbara()` och
+`typer.ts` ändrades tillsammans). Ett förslag har inget pass, så
+`notis_skapa` har en egen gren för typen, med samlingsnyckeln
+`barnforslag:<förälder>`: två förslag inom samlingsfönstret blir ett mejl
+("Alva har föreslagit 2 pass"). Mejlet bär barnets förnamn, dagen, tiden
+och ämnet, aldrig platsen eller barnets rad, och knappen går till Boka
+pass. Svarar föräldern i vyn, eller tar barnet tillbaka förslagen, innan
+mejlet gått, blir raden `hoppad` (`intern.barnforslag_post_hoppas`, som
+alla tre vägarna anropar). Barnet får ingen notis om förälderns svar:
+`barn_notiser` har ett villkor över typerna, och att skriva om det är ett
+`drop`. **`notis-ko` driftsätts från main FÖRE migrationen**: en rad av
+typen innan funktionen känner mallen hade blivit ett fel.
 
 ### Barnkontots tekniska adress får inga mejl (barnkonton_och_admin, 2026-09-30)
 Kontots adress, `<namn>@barn.nextrum.se`, får aldrig ett mejl. `notis_utskick_ta` hoppar över

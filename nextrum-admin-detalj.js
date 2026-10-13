@@ -1981,7 +1981,9 @@
       if (!person) { stängDetalj(); return; }
       rubrik = person.name || person.email || '(namn saknas)';
       under = [person.age ? person.age + ' år' : null, person.school].filter(Boolean).join(' · ');
-      märken = läge(ANS_LAGE, person.status);
+      /* Var i rekryteringen hen står, som i listan (2026-10-13). Läget
+         längre ned är fortfarande det som sparas. */
+      märken = kör('stegLäge', person) || läge(ANS_LAGE, person.status);
     } else if (DP.typ === 'elev') {
       /* Ur alla elever, också de raderade: ett gammalt pass pekar på
          dem, och därifrån ska det gå att se varför namnet är borta. */

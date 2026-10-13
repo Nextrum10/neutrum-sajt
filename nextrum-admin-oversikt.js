@@ -17,7 +17,7 @@
   const M = NXMedia;
 
   const { DAG, S, dagarSedan, elevNamn, kortDatum, märkFlik, namnFör,
-          närText, osedda, tabell, ärRaderad } = NXAdmin;
+          närText, osedda, räknas, tabell, ärAdminkonto, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaNotiser = (...a) => NXAdmin.rita.ritaNotiser(...a);
@@ -31,7 +31,7 @@
   function aktivaElever(från, till) {
     const set = {};
     S.bokningar.forEach(b => {
-      if (!b.student_id || b.status === 'cancelled') return;
+      if (!b.student_id || b.status === 'cancelled' || !räknas(b)) return;
       if (b.wanted_date >= från && b.wanted_date <= till) set[b.student_id] = 1;
     });
     return Object.keys(set).length;
@@ -81,12 +81,12 @@
     const nu = aktivaElever(dagarSedan(30), fram);
     const förr = aktivaElever(dagarSedan(60), dagarSedan(31));
 
-    const godkända = Object.values(S.tutorProfiler).filter(t => t.status === 'approved');
+    const godkända = Object.values(S.tutorProfiler).filter(t => t.status === 'approved' && !ärAdminkonto(t.id));
     const nyaShDennaMånad = godkända.filter(t =>
       String(t.created_at || '').slice(0, 7) === idag.slice(0, 7)).length;
 
     const kommande = S.bokningar.filter(b =>
-      b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed')).length;
+      b.wanted_date >= idag && (b.status === 'requested' || b.status === 'confirmed') && räknas(b)).length;
 
     /* Intäkten är det som kommit in på kort under månaden, efter
        återbetalningar, räknat på betalningsdagen (Fas 14.2). Förut var
@@ -550,7 +550,10 @@
 
     const pass = summa(ek, 'genomforda_pass');
     const minuter = summa(ek, 'minuter');
-    const familjer = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p)).length;
+    /* Våra egna konton är inga familjer (adminkonton_utanfor_statistiken). */
+    const familjer = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p)
+      && !ärAdminkonto(p.id)).length;
+    const elever = S.elevlista.filter(e => !ärAdminkonto(e.parent_id)).length;
     /* Betalt = kort efter återbetalningar plus betalda äldre fakturor,
        samma definition som grafen ovanför. ej_betalda är pass som
        hölls och rapporterades utan att familjen betalat. */
@@ -563,8 +566,8 @@
       + '<div class="adm-kpi"><b>' + NXBetalning.timmar(minuter) + '</b><span>Undervisad tid</span>'
       + '<span class="adm-kpi-diff">i genomförda pass</span></div>'
       + '<div class="adm-kpi"><b>' + familjer + '</b><span>Familjer</span>'
-      + '<span class="adm-kpi-diff">' + S.elevlista.length
-      + (S.elevlista.length === 1 ? ' elev' : ' elever') + '</span></div>'
+      + '<span class="adm-kpi-diff">' + elever
+      + (elever === 1 ? ' elev' : ' elever') + '</span></div>'
       + '<div class="adm-kpi"><b>' + kronor(betalt) + '</b><span>Betalt</span>'
       + '<span class="adm-kpi-diff">' + (ejBetalda
         ? ejBetalda + (ejBetalda === 1 ? ' pass hölls' : ' pass hölls') + ' utan betalning'
@@ -681,7 +684,7 @@
     const kontaktade = L.filter(l => l.status !== 'new').length;
     const matchade = L.filter(l => l.status === 'matched').length;
     const kunder = Object.values(S.personer).filter(p =>
-      p.role === 'parent' && (S.elever[p.id] || []).some(e =>
+      p.role === 'parent' && !ärAdminkonto(p.id) && (S.elever[p.id] || []).some(e =>
         e.matched_tutor_id && e.match_status === 'matched')).length;
 
     /* Fas 9.6: hur många anmälningar som är märkta matchade men

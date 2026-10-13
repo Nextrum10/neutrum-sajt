@@ -66,7 +66,9 @@ const NXAdmin = (function () {
        och köp av timmar som var testbetalningar. */
     timbankPass: new Set(), klippkortTest: new Set(),
     /* 2026-10-13: bonusen för tips, och dess strömbrytare. */
-    tipsbonus: [], tipsbonusFel: null, bonusFlagga: null
+    tipsbonus: [], tipsbonusFel: null, bonusFlagga: null,
+    /* 2026-10-12: våra egna konton, som statistiken inte räknar. */
+    adminkonton: new Set()
   };
 
   /* Har modulvakten (nextrum-modulvakt.js) redan konstaterat att en
@@ -130,12 +132,16 @@ const NXAdmin = (function () {
     if (!rader.length) return tomt(o.tomt || 'Inget här', '');
     return '<ul class="adm-namnlista">' + rader.map(r => {
       const under = o.under ? o.under(r) : '';
+      /* o.knapp: radens nästa steg, bredvid namnet och inte i det, för en
+         knapp i en knapp går inte att trycka på (2026-10-13, Ansökningar). */
+      const knapp = o.knapp ? o.knapp(r) : '';
       /* Initialerna först (2026-09-29): ögat hittar en person på formen
          innan det läst namnet, och en lista med bara text var en vägg. De
          är aria-hidden; skärmläsaren läser namnet som förut. */
       /* o.nytt: raden kom in sedan du tittade senast (2026-10-05).
          Pricken är en genväg; o.under säger det i ord. */
-      return '<li><button type="button" class="adm-namn' + (o.nytt && o.nytt(r) ? ' ar-nytt' : '')
+      return '<li' + (knapp ? ' class="har-knapp"' : '') + '><button type="button" class="adm-namn'
+        + (o.nytt && o.nytt(r) ? ' ar-nytt' : '')
         + '" data-dp="' + esc(o.typ + ':' + o.id(r)) + '"'
         + (o.flik ? ' data-dp-start="' + esc(o.flik) + '"' : '') + '>'
         + M.avatar(o.namn(r) || '', null, { liten: true })
@@ -143,7 +149,9 @@ const NXAdmin = (function () {
         + (under ? '<span>' + esc(under) + '</span>' : '')
         + '</span>'
         + (o.läge ? '<span class="adm-namn-lage">' + o.läge(r) + '</span>' : '')
-        + '</button></li>';
+        + '</button>'
+        + (knapp ? '<span class="adm-namn-knapp">' + knapp + '</span>' : '')
+        + '</li>';
     }).join('') + '</ul>';
   }
 
@@ -383,6 +391,16 @@ const NXAdmin = (function () {
     return NXBetalning.lonemanad(datum, (lägen || underlagslägen())[tutorId] || {});
   }
 
+  /* Ett av våra konton (adminkonton_utanfor_statistiken, 2026-10-12):
+     Leo: "våra adminkonton ska inte synas i statistik". Statistiken
+     räknar inte ett pass där familjen eller studiehjälparen är admin,
+     samma regel som analysvyerna i databasen. Listorna visar dem som
+     förut: de är registret, inte statistiken. */
+  function ärAdminkonto(id) {
+    return !!(id && S.adminkonton && S.adminkonton.has(id));
+  }
+  const räknas = b => !ärAdminkonto(b.parent_id) && !ärAdminkonto(b.tutor_id);
+
   /* Tom lista eller tomt filter är två olika besked. "Inga familjer
      matchar" i en databas utan familjer skickar folk på jakt efter
      ett filter som inte är satt. Alla listor nedan väljer därför
@@ -476,7 +494,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
-           bankPass, kkSkarp, tips, sett, bonus] = await Promise.all([
+           bankPass, kkSkarp, tips, sett, roller, bonus] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -572,6 +590,10 @@ const NXAdmin = (function () {
          admins: den som bara har Intresseanmälningar ska också slippa
          siffran för det hen redan sett. */
       supa.from('admin_sett').select('omrade, sett_till'),
+      /* 2026-10-12: vilka konton som är våra (adminkonton_utanfor_statistiken).
+         De räknas inte i Översiktens och Statistikens tal. Bara den som
+         ser Översikt behöver dem, och bara den får läsa rollerna. */
+      bara(() => supa.from('admin_roller').select('user_id')),
       /* 2026-10-13: bonusen för tips, 300 kr i lön när vi tar in någon
          som sökt jobb med en studiehjälpares kod. Löner räknar den och
          lägger den i lönefilen, Koder visar den per kod. */
@@ -646,6 +668,11 @@ const NXAdmin = (function () {
     S.timbankFel = bank.error ? felText(bank.error) : null;
     S.timbankPass = new Set((bankPass.data || []).map(r => r.booking_id).filter(Boolean));
     S.klippkortTest = new Set((kkSkarp.data || []).filter(r => r.stripe_skarp === false).map(r => r.id));
+    /* Utan rollerna (ett läsfel) är superadminerna de med is_admin, som
+       profiles speglar. */
+    S.adminkonton = new Set(!roller.error && roller.data
+      ? roller.data.map(r => r.user_id)
+      : Object.values(S.personer).filter(p => p.is_admin).map(p => p.id));
 
     /* En rad per tråd, den senaste. Trådarna kommer sorterade
        nyast först, så den första träffen på ett par ÄR den senaste. */
@@ -1021,7 +1048,7 @@ const NXAdmin = (function () {
     gmailAdress, gmailLänk, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
-    lägesväljare,
-    ärNyNu, ärRaderad, rita
+    lägesväljare, räknas,
+    ärAdminkonto, ärNyNu, ärRaderad, rita
   };
 })();

@@ -664,6 +664,11 @@ på en fråga om en PERSON ska ha is_admins vakt från första raden.**
    spelar det ingen roll: `rabattkoder` är TOM, så det finns ingenting
    att gissa. **Skapas den första koden återkommer frågan** — en
    inloggad kan då pröva koder i en slinga. Lägg ett tak då, inte nu.
+   Sedan 2026-10-13 står rutan i varje förälders förslag
+   (`rabattkoden_krockar_inte`), så koderna är en sak familjerna ser; den
+   2026-10-13 fanns fortfarande bara `TIPS`. Konton skapar bara vi, så de
+   som kan pröva är få, men taket ska finnas innan den första koden
+   delas ut.
 
 ### Content-Security-Policy
 
@@ -690,3 +695,32 @@ policyn. Regeln om inline-JavaScript gäller oförändrat också på
 `/foralder`: Stripe.js laddas med en `src`, när familjen trycker
 Betala. **Lägg aldrig två skarpa CSP-rader som båda matchar samma
 sida**: webbläsaren kräver då båda, och Stripe stoppas av den strängare.
+
+### Förhandsvisningen (forhandsvisning, 2026-10-12)
+`/foralder?forhandsvisning` och `/larare?forhandsvisning` visar vyerna för
+en påhittad familj och studiehjälpare (`nextrum-forhandsvisning.js`). Det
+som gör den säker:
+
+- **Inget lämnar webbläsaren.** Vyns klient är supabase-js med en egen
+  `fetch` som svarar ur världen i filen, en egen websocket som inte går
+  någonstans och en egen lagring i minnet för den påhittade inloggningen
+  (nyckeln `nx-forhandsvisning`, aldrig den riktiga). Edge-funktionerna
+  svarar 409, lagringen 400, och `window.Stripe` är en stubbe, så Stripe.js
+  hämtas aldrig. Världen sparas i `localStorage`
+  (`nx-forhandsvisning-varld`) och delas mellan de två vyerna; den når
+  aldrig databasen, och därför aldrig statistiken, lönerna, fakturorna
+  eller auditloggen.
+- **Grinden är bekvämlighet, inte skydd.** En riktig klient, med den
+  riktiga inloggningen i samma webbläsare, frågar `mina_behorigheter()`;
+  utan adminroll, eller utloggad, leder sidan till `/admin#forhandsvisning`.
+  Världen innehåller inget som inte står i filen, så den som tar sig förbi
+  grinden ser bara påhittade namn.
+- **Aldrig den riktiga klienten i förhandsvisningen.** Har adressen
+  `?forhandsvisning` på `/foralder` eller `/larare` och filen inte kom
+  fram, skapar `nextrum-app.js` ingen klient alls, och modulvakten säger
+  vilken fil som saknas. Den riktiga hade visat adminens eget konto i en
+  vy som ser ut som förhandsvisningen, och det som gjorts där hade blivit
+  riktiga pass. Logga ut i förhandsvisningen leder till adminvyn och
+  loggar inte ut den riktiga inloggningen.
+- CSP:n är orörd: filen laddas med `src` som alla andra, och remsan
+  ritas med DOM, inte med inline-kod.

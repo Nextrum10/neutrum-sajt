@@ -350,7 +350,8 @@
    ['#msg-sok', ritaKontakt], ['#msg-ohanterade', ritaKontakt],
    ['#fam-sok', ritaFamiljer], ['#fam-status', ritaFamiljer],
    ['#sh-sok', ritaStudiehjalpare], ['#sh-status', ritaStudiehjalpare],
-   ['#bok-sok', ritaBokningar], ['#bok-status', ritaBokningar], ['#bok-nar', ritaBokningar]
+   ['#bok-sok', ritaBokningar], ['#bok-status', ritaBokningar], ['#bok-nar', ritaBokningar],
+   ['#bok-familj', ritaBokningar]
    /* Betalningar (2026-09-29): lägena är knappar i sidan, och söken
       (#kort-sok, #fakt-sok) sköts i nextrum-admin-ekonomi.js, med
       listan stilla (NXStudie.hållLista). Underlagen söks under Löner. */

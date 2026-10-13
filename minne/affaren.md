@@ -207,6 +207,21 @@ plats alls. Förval ur förra passet och barnets `format_onskemal`.
 Platsen ändras inte när tiden flyttas — `skydda_bokningsfalt` släpper
 bara igenom tid och status på ett befintligt pass.
 
+**Barnet kan föreslå pass (barnet_foreslar_pass, 2026-10-12)**, när
+föräldern slagit på det för barnet (`boka`, av som förval). Förslaget
+går till föräldern, utan pris, och blir ett pass först när föräldern
+skickat det, kanske med en annan tid och en rabattkod, som sitt eget
+förslag (`skicka_barnets_forslag()`). Studiehjälparen svarar på passet
+som på vilket förslag som helst. Ett förslag föräldern själv gör går som
+förut, och har samma ruta för en rabattkod sedan 2026-10-13. Allt om det
+i `minne/barnkonton-och-admin.md`.
+
+**Rabattkoden gäller bara det familjen betalar med pengar**
+(`rabattkoden_krockar_inte`, 2026-10-13, Leo: "koden får inte krocka med
+gratis timmar"). En gratis timme (första timmen, tipstimmen) och köpta
+timmar eller timbanken går före koden, som då tas bort från passet; de
+läggs aldrig ihop. Allt om det i `minne/betalning.md`.
+
 ## Svaret på en föreslagen tid och avbokade pass
 
 **Svaret på en föreslagen tid och avbokade pass (2026-09-30).** Leo bad
@@ -738,8 +753,12 @@ skolorna (punkt 7). Migrationen `tipskoder_och_kampanjkoder`.
   ha varit ny, utan hållet pass före anmälan, annars hade ett syskons
   anmälan med en väns kod gett en timme. Bara familjens FÖRSTA anmälan
   med en kod räknas. Prissidans första timme går först; tipstimmen dras
-  på nästa läxhjälpspass familjen föreslår, en per pass, och kommer
-  tillbaka när passet avbokas eller avslås. Den räknas ur raderna och
+  på nästa läxhjälpspass familjen föreslår, en per pass, också när
+  familjen skrivit en rabattkod (som då tas bort, 2026-10-13; förut sköt
+  koden timmen till ett senare pass), och kommer tillbaka när passet
+  avbokas eller avslås. Sedan 2026-10-13 gäller den i 60 dagar från dagen
+  den nya familjen haft sina två timmar, för ett pass inom dem
+  (`intern.tipstimmar_kvar`, `minne/timmar.md`). Den räknas ur raderna och
   sparas inte.
 - **Ingen ersättning till studiehjälpare**, med flit: de är ofta sexton,
   en belöning för att värva kunder är lön, och anställningsformen är inte
@@ -817,20 +836,17 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
   när det byggdes. Formulären säger vilken kod som gäller under fältet, och
   jobbansökan fyller i fältet ur `?kod=` som intresseanmälan (reserven när
   kolumnen saknas skriver koden i `why`, `KOLUMN_I_WHY`).
-- **Familjens timme ligger i timbanken.** Regeln för när den tjänas in är
+- **Familjens timme står i timbanken.** Regeln för när den tjänas in är
   densamma (två timmar, 2026-10-09), och den räknas ur raderna som förut.
-  Det som ändrades är hur den används: den drogs på nästa förslag, före
-  köpta timmar, och ett pass med timmen kan köpta timmar inte betala (Fas
-  22.2), så en familj med plan betalade resten med kort medan planens timmar
-  gick ut. Nu är den timbankens sista timme: `forsta_timmen_bjuds` har bara
-  första timmen kvar, och `intern.tipstimmen_dras` (triggern
-  `bookings_timmar_tips`, som namnet lägger efter
-  `bookings_timmar_betalar_forslaget` och före `bookings_timmarna_tillbaka`)
-  drar timmen bara på ett pass som timmarna inte betalat. Den går inte ut.
-  Studievyn visar den som ett kort i Er timbank och under Profil →
-  Timbanken (Timmar för tips, med passen den betalat), och bokningen visar
-  den i förväg bara när `timmarFörFörslag` säger att timmarna inte betalar
-  (`bjuden(minuter, dag, barn)`).
+  Hur den används är `gratistimmarna_60_dagar`s (Leo samma dag: "gratis
+  timmar går ut efter 60 dagar att de läggs in", "gratis timmar går ut först
+  sen planerna"): den gäller i 60 dagar från den dagen och dras först, som
+  ett avdrag på nästa läxhjälpspass (`forsta_timmen_bjuds`,
+  `intern.tipstimmar_kvar`). Den här grenen drog den först sist och lät den
+  aldrig gå ut; det ströks när main fått regeln, före merge. Studievyn visar
+  den som ett kort i Er timbank och under Profil → Timbanken (Timmar för
+  tips, med sista dagen ur `mina_tips().kvar_till` och passen den använts
+  till).
 - **Varför inte en rad i `klippkort`.** Det hade gjort timmen till ett köp:
   0 kr i Köpta timmar, i ångerrätten, i uppsägningen och i Stripes
   avstämning, och `begart_ore > 0` och sorten hade fått släppas med en drop.
@@ -878,7 +894,7 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
   struken raderas inte (hindret `tipsbonus`), och en med en bonus alls
   avidentifieras i stället för att tas bort; bonusen står under Står kvar.
 - **Villkoren** (#tips, båda språken) och policyn säger det; versionen är
-  2026-10-13. Rad 19 och 26 i `DATASKYDD.md`.
+  2026-10-13. Rad 19 och 27 i `DATASKYDD.md`.
 - **Vad Leo kan ändra**: "vi kan komma att ändra det" om familjens
   belöning. En timme är `startrabatt` på ett pass; en voucher i kronor finns
   inte i betalningen och vore en egen ändring (ett tillgodohavande som

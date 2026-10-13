@@ -3818,7 +3818,9 @@ window.NXStudie = (function () {
     { typ: 'paminnelse',     namn: 'Påminnelse före pass', om: 'Innan ett bokat pass.' },
     /* Fas 21.2. Bara familjen köper timmar, så bara föräldravyn visar
        raden: en strömbrytare för ett mejl man aldrig kan få är brus. */
-    { typ: 'timmar_gar_ut',  namn: 'Köpta timmar går ut',  om: 'Tio dagar innan köpta timmar går ut, om det finns timmar kvar.', bara: 'parent' }
+    { typ: 'timmar_gar_ut',  namn: 'Köpta timmar går ut',  om: 'Tio dagar innan köpta timmar går ut, om det finns timmar kvar.', bara: 'parent' },
+    /* barnet_foreslar_pass (2026-10-12). Bara familjen får förslagen. */
+    { typ: 'barnforslag',    namn: 'Barnens förslag',      om: 'När ett barn föreslår ett pass i sin vy. Inget går till studiehjälparen förrän ni skickat det.', bara: 'parent' }
   ];
 
   function notisval(o) {
@@ -4100,8 +4102,9 @@ window.NXStudie = (function () {
      FAMILJEN tipsar familjer: länken går till intresseanmälan, och när
      en ny familj som anmält sig med koden har haft två timmar läxhjälp
      får familjen en timme i timbanken (räknad i databasen,
-     intern.tipstimmar_intjanade). Timmen betalar ett pass som köpta
-     timmar inte betalar.
+     intern.tipstimmar_intjanade). Den gäller i 60 dagar och dras på
+     nästa läxhjälpspass (gratistimmarna_60_dagar); kvar_till är sista
+     dagen.
 
      STUDIEHJÄLPAREN tipsar nya studiehjälpare (Leo 2026-10-13: "blivande
      läxhjälpare ska bara kunna använda befintliga läxhjälp[ares koder]"):
@@ -4193,7 +4196,8 @@ window.NXStudie = (function () {
           : '<p class="nx-tips-av">Koden är avstängd. Skriv till oss om du undrar varför.</p>')
         + (kvar && familj
           ? '<p class="nx-tips-timme"><b>' + esc(antal(kvar, 'En timme', 'timmar')) + ' i er timbank.</b> '
-            + 'Timmen betalar ett pass som köpta timmar inte betalar, en timme per pass. '
+            + esc('Den dras på nästa läxhjälpspass ni föreslår, en timme per pass'
+              + (data.kvar_till ? ', och gäller till ' + datumText(data.kvar_till) : '') + '. ')
             + '<a href="#profil/timbank">Se timbanken</a></p>'
           : '')
         + (bonus && !familj

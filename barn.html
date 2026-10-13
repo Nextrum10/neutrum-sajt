@@ -13,16 +13,18 @@
 <meta name="robots" content="noindex">
 <!-- Barnets vy, elevvyn (barnkonton_och_admin). Samma lager som studievyn,
      så att den ser ut som resten av Nextrum, men bara det barnet får se: det
-     barn_oversikt(), barn_notiser(), barn_nexlax(), barn_chatt() och
-     barn_installningar() svarar, inget annat. Barnets roll
+     barn_oversikt(), barn_notiser(), barn_nexlax(), barn_chatt(),
+     barn_installningar() och, när föräldern slagit på det, barnets förslag
+     på pass (barn_passforslag()) svarar, inget annat. Priser och
+     betalningar svarar ingen av dem om. Barnets roll
      i databasen (nextrum_barn) når inga tabeller alls, så sidan KAN inte
      hämta mer än så, vad som än står i skriptet. -->
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
-<link rel="stylesheet" href="nextrum-home.css?v=5d4c3399">
-<link rel="stylesheet" href="nextrum-cinema.css?v=a92f8e96">
+<link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
+<link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
 <link rel="stylesheet" href="nextrum-vy.css?v=3be7d3b8">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=87881a21">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=ae04adf1">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=ad93496c">
 </head>
 <body class="vy vy-barn">
@@ -114,7 +116,8 @@
        elevvyn ska bara Översikt, nexläx, meddelanden, och profil för
        barnet finnas"), samma kväll också Mina lektioner, "bara att ingen
        betalning syns", och en chatt med studiehjälparen under
-       Meddelanden.
+       Meddelanden. En sjätte, Boka pass, när föräldern låtit barnet
+       föreslå pass (2026-10-12).
 
        Allt nedan ritas av nextrum-barn-vy.js med textContent, ur det
        barn_oversikt(), barn_notiser() och barn_installningar() svarar.
@@ -129,6 +132,9 @@
       <nav class="vy-sido" id="vy-sido" aria-label="Delar av din vy">
         <a href="#oversikt" data-sek="oversikt"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Översikt</a>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Mina lektioner</a>
+        <!-- Den sjätte delen, bara när föräldern låtit barnet föreslå pass
+             (barnet_foreslar_pass, 2026-10-12). nextrum-barn-vy.js visar den. -->
+        <a href="#boka" data-sek="boka" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M12 13v4M10 15h4"/></svg>Boka pass</a>
         <a href="#nexlax" data-sek="nexlax"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg>NexLäx</a>
         <a href="#meddelanden" data-sek="meddelanden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12c0 3.9-3.8 7-8.5 7a9.8 9.8 0 0 1-2.6-.35L4.5 20l1.2-3.3A6.6 6.6 0 0 1 3.5 12c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>Meddelanden</a>
         <a href="#profil" data-sek="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8"/></svg>Profil</a>
@@ -196,6 +202,32 @@
         </div>
         <div class="vy-flik-panel" role="tabpanel" data-flik="rapporter" id="bv-panel-rapporter" aria-labelledby="bv-flik-rapporter" hidden>
           <div class="vy-kort vy-lista" id="bv-rapporter"></div>
+        </div>
+      </section>
+
+      <!-- ============ BOKA PASS ============
+           barnet_foreslar_pass, 2026-10-12. Leo: "barn ska kunna boka pass
+           med läxhjälparen själva ... barn skickar förslag, precis som
+           förälder, men ser inte priset". Samma yta som förälderns
+           (NXArbete.bokning), utan pris: förslaget går till föräldern, som
+           ser priset, kan ändra det och skickar det till studiehjälparen.
+           Under ytan står barnets förslag och vad som hänt med dem. Bara
+           när föräldern slagit på det; annars säger raden varför. -->
+      <section class="vy-sek" data-sek="boka" hidden>
+        <div class="vy-sek-topp">
+          <div>
+            <h2>Boka pass <em id="bv-boka-hos"></em></h2>
+            <p>Föreslå en tid. Din förälder ser förslaget först och skickar det till din studiehjälpare.</p>
+          </div>
+        </div>
+        <p class="bv-fraga bv-avstangt" id="bv-boka-av" hidden></p>
+        <div class="dbox" id="bv-boka-ruta" hidden>
+          <div id="bv-boka-yta"><div class="loading">Hämtar</div></div>
+        </div>
+        <div class="bf-egna" id="bv-forslag-ruta" hidden>
+          <div class="vy-grupp"><h3>Dina förslag</h3><span class="vy-antal" id="bv-forslag-antal"></span></div>
+          <div class="vy-kort vy-lista" id="bv-forslag"></div>
+          <p class="ok-msg" id="bv-forslag-msg" role="alert"></p>
         </div>
       </section>
 
@@ -287,13 +319,13 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=5e61cbcd"></script>
-<script src="nextrum-studie.js?v=7fe1fd73"></script>
+<script src="nextrum-app.js?v=1632f8d9"></script>
+<script src="nextrum-studie.js?v=99247b56"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
-<script src="nextrum-arbetsyta.js?v=dc6d0f32"></script>
+<script src="nextrum-arbetsyta.js?v=8863a5c9"></script>
 <script src="nextrum-ljud.js?v=af6ef39f"></script>
 <script src="nextrum-uppgifter.js?v=e2b63c33"></script>
-<script src="nextrum-modulvakt.js?v=38f4e570"></script>
-<script src="nextrum-barn-vy.js?v=e8e60af4"></script>
+<script src="nextrum-modulvakt.js?v=d84f1619"></script>
+<script src="nextrum-barn-vy.js?v=9c8bd1e7"></script>
 </body>
 </html>

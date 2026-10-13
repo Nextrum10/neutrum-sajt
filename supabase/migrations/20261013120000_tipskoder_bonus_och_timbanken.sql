@@ -78,26 +78,17 @@
 -- betalas.
 --
 --
--- 4. TIPSTIMMEN LIGGER I TIMBANKEN
+-- 4. TIPSTIMMEN I TIMBANKEN
 --
--- Regeln för när timmen tjänas in är densamma (2026-10-09): en per ny
--- familj som anmält sig med familjens kod och haft två timmar
--- läxhjälp i hållna pass, också om en av timmarna var gratis. Den
--- räknas ur raderna som förut, och den går inte ut.
---
--- Det som ändras är hur den används. Den drogs på nästa läxhjälpspass
--- familjen föreslog, före köpta timmar, och ett pass med timmen på
--- köpet kan köpta timmar inte betala (Fas 22.2). En familj med en plan
--- betalade därför resten av passet med kort medan planens timmar gick
--- ut. Nu används den som timbankens sista timme: först betalar köpta
--- timmar och sparade minuter passet, som förut, och betalar de inte
--- dras tipstimmen av på det. Den går inte ut, köpta timmar gör det.
---
--- forsta_timmen_bjuds behåller första timmen (Fas 19.5, 2026-10-09), som
--- fortfarande avgörs före timmarna, och tipstimmen flyttar till en egen
--- trigger, bookings_timmar_tips, som namnet lägger efter
--- bookings_timmar_betalar_forslaget och före bookings_timmarna_tillbaka,
--- som ska stå sist.
+-- Timmen visas i familjens timbank (vyn), och databasen ändras inte för
+-- den här. Regeln står i gratistimmarna_60_dagar (Leo samma dag: "gratis
+-- timmar går ut efter 60 dagar att de läggs in", "gratis timmar går ut
+-- först sen planerna"): en per ny familj som anmält sig med familjens kod
+-- och haft två timmar läxhjälp i hållna pass, också om en av timmarna var
+-- gratis; den gäller i 60 dagar från den dagen och dras först, som ett
+-- avdrag på nästa läxhjälpspass (forsta_timmen_bjuds). mina_tips() svarar
+-- med de timmar som gäller i dag och den sista dagen, som den lappades
+-- till där.
 --
 --
 -- 5. ADMINENS KODLISTA
@@ -120,9 +111,10 @@
 -- VILLKOREN säger det här under Tips, så versionen blir 2026-10-13 och
 -- alla får frågan igen vid nästa inloggning (kolla-villkor.py).
 --
--- forsta_timmen_bjuds, intern.leads_tipskod och mina_tips skrivs om i
--- sin helhet, med en vakt som avbryter om funktionen i databasen inte är
--- den som lästes i driften 2026-10-13 (md5 nedan).
+-- intern.leads_tipskod och mina_tips skrivs om i sin helhet, med en vakt
+-- som avbryter om funktionen i databasen inte är den som lästes i driften
+-- 2026-10-13 (leads_tipskod) eller den gratistimmarna_60_dagar lämnar
+-- (mina_tips), som körs före den här (md5 nedan).
 -- intern.radering_underlag lappas med replace() och en vakt som räknar
 -- träffarna. Ingen drop och ingen delete utanför en funktion. Går att
 -- köra två gånger. Körs efter merge.
@@ -135,20 +127,16 @@ do $$
 declare
   f text;
 begin
-  select prosrc into f from pg_proc where oid = 'public.forsta_timmen_bjuds()'::regprocedure;
-  if md5(f) is distinct from 'b253775f1af55e7770926a72b20884a9'
-     and position('bookings_timmar_tips' in f) = 0 then
-    raise exception 'forsta_timmen_bjuds är inte den som lästes 2026-10-13 (md5 %). Läs driften och skriv om migrationen.', md5(f);
-  end if;
   select prosrc into f from pg_proc where oid = 'intern.leads_tipskod()'::regprocedure;
   if md5(f) is distinct from 'd415d0df643889c28e7e9e248f40fd0d'
      and position('jobbansökan' in f) = 0 then
     raise exception 'intern.leads_tipskod är inte den som lästes 2026-10-13 (md5 %). Läs driften och skriv om migrationen.', md5(f);
   end if;
+  -- mina_tips som gratistimmarna_60_dagar lappade den (kvar och kvar_till).
   select prosrc into f from pg_proc where oid = 'public.mina_tips()'::regprocedure;
-  if md5(f) is distinct from '46039ad23f7424f8890c6b126e7f76e1'
+  if md5(f) is distinct from '5c87439ff06cf373b7fc92e9ffa826b4'
      and position('tipsbonus' in f) = 0 then
-    raise exception 'mina_tips är inte den som lästes 2026-10-13 (md5 %). Läs driften och skriv om migrationen.', md5(f);
+    raise exception 'mina_tips är inte den gratistimmarna_60_dagar lämnar (md5 %). Kör den först, eller läs driften och skriv om migrationen.', md5(f);
   end if;
 end $$;
 
@@ -480,109 +468,7 @@ create or replace trigger foretagsfakta_audit
 
 
 -- ------------------------------------------------------------
--- 5. Tipstimmen i timbanken
--- ------------------------------------------------------------
-
--- Första timmen, som förut. Tipstimmen står i bookings_timmar_tips.
-create or replace function public.forsta_timmen_bjuds()
-returns trigger
-language plpgsql
-security definer
-set search_path to 'public'
-as $$
-declare
-  fore   bigint;
-  timme  bigint;
-  brutto bigint;
-begin
-  if new.startrabatt or new.parent_id is null or not new.fakturerbar
-     or new.status = 'cancelled' or new.tjanst is distinct from 'laxhjalp' then
-    return new;
-  end if;
-
-  -- Två förslag samtidigt från samma familj ska inte båda få timmen, och
-  -- inte heller ett förslag och ett planköp (intern.planens_forsta_timme).
-  perform pg_advisory_xact_lock(hashtextextended('startrabatt:' || new.parent_id::text, 0));
-
-  timme := coalesce(new.timpris_ore, 0)
-         + case when coalesce(new.antal_barn, 1) > 1 then coalesce(new.extra_ore, 0) else 0 end;
-  if timme <= 0 then
-    return new;
-  end if;
-  brutto := round(timme * coalesce(new.duration_min, 60) / 60.0);
-
-  -- Första timmen (Fas 19.5, sedan 2026-10-09 bara för en familj vi valt):
-  -- det pass som gör att familjen bokat två timmar, en gång, och aldrig
-  -- om familjen redan fått timmen i en plan. Ett pass med tipstimmen är
-  -- inte den. Tipstimmen dras sedan 2026-10-13 i bookings_timmar_tips,
-  -- efter timmarna.
-  if exists (select 1 from public.forsta_timmen_beviljad v where v.parent_id = new.parent_id)
-     and not intern.forsta_timmen_tagen(new.parent_id) then
-    select coalesce(sum(coalesce(x.duration_min, 60)), 0) into fore
-      from public.bookings x
-     where x.parent_id = new.parent_id and x.status <> 'cancelled'
-       and x.fakturerbar and x.tjanst = 'laxhjalp';
-
-    if fore < 120 and fore + coalesce(new.duration_min, 60) >= 120 then
-      new.startrabatt := true;
-      new.rabatt_ore := least(coalesce(new.rabatt_ore, 0) + timme, brutto);
-    end if;
-  end if;
-
-  return new;
-end $$;
-
--- Tipstimmen är timbankens sista timme: den dras av på ett läxhjälpspass
--- som köpta timmar och sparade minuter inte betalat, en timme per pass,
--- till passets eget timpris. Samma lås som första timmen.
-create or replace function intern.tipstimmen_dras()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  timme  bigint;
-  brutto bigint;
-begin
-  if new.startrabatt or new.parent_id is null or not new.fakturerbar
-     or new.status = 'cancelled' or new.tjanst is distinct from 'laxhjalp'
-     or new.rabattkod is not null
-     -- Timmarna har redan betalat passet (bookings_timmar_betalar_forslaget).
-     or new.klippkort_id is not null
-     or coalesce(new.betalning_status, 'ingen') not in ('ingen', 'vantar', 'misslyckad') then
-    return new;
-  end if;
-
-  perform pg_advisory_xact_lock(hashtextextended('startrabatt:' || new.parent_id::text, 0));
-
-  timme := coalesce(new.timpris_ore, 0)
-         + case when coalesce(new.antal_barn, 1) > 1 then coalesce(new.extra_ore, 0) else 0 end;
-  if timme <= 0 then
-    return new;
-  end if;
-  brutto := round(timme * coalesce(new.duration_min, 60) / 60.0);
-
-  -- Flaggan tipstimme läses i intern.tipstimmar_intjanade.
-  if intern.tipstimmar_intjanade(new.parent_id) > intern.tipstimmar_anvanda(new.parent_id) then
-    new.startrabatt := true;
-    new.rabattkod := 'TIPS';
-    new.rabatt_ore := least(coalesce(new.rabatt_ore, 0) + timme, brutto);
-  end if;
-  return new;
-end $$;
-
-revoke all on function intern.tipstimmen_dras() from public, anon, authenticated;
-
--- Efter bookings_timmar_betalar_forslaget och före bookings_timmarna_tillbaka
--- (namnordning: "timmar_t" efter "timmar_b", "timmar_" före "timmarna").
-create or replace trigger bookings_timmar_tips
-  before insert on public.bookings
-  for each row execute function intern.tipstimmen_dras();
-
-
--- ------------------------------------------------------------
--- 6. Koderna skapas på ett ställe
+-- 5. Koderna skapas på ett ställe
 -- ------------------------------------------------------------
 
 -- Personens kod, skapad om den saknas. Sex tecken ur 32, utan I, O, 0 och
@@ -631,12 +517,13 @@ revoke all on function intern.ny_tipskod(uuid, text) from public, anon, authenti
 
 
 -- ------------------------------------------------------------
--- 7. Den inloggades kod, och vad den gett
+-- 6. Den inloggades kod, och vad den gett
 -- ------------------------------------------------------------
 
 -- Svarar med antal, aldrig med vilka. Familjen ser timmarna i
--- timbanken; studiehjälparen hur många som sökt jobb med koden, hur
--- många vi tagit in och bonusen.
+-- timbanken, med kvar och kvar_till som gratistimmarna_60_dagar lade
+-- till; studiehjälparen hur många som sökt jobb med koden, hur många vi
+-- tagit in och bonusen.
 create or replace function public.mina_tips()
 returns jsonb
 language plpgsql
@@ -682,7 +569,11 @@ begin
       'kunder', (select count(*) from intern.tipsade_familjer(k.kod)),
       'timmar', timmar,
       'anvanda', anvanda,
-      'kvar', greatest(timmar - anvanda, 0),
+      -- gratistimmarna_60_dagar: bara de som gäller i dag, och sista dagen
+      -- för den som gäller längst (priset vid knappen gäller en dag).
+      'kvar', intern.tipstimmar_kvar(jag, null),
+      'kvar_till', (select max(till) from intern.tipstimmar_oanvanda(jag) till
+                     where till >= (now() at time zone 'Europe/Stockholm')::date),
       'timme_ges', coalesce((select f.aktiv from public.flaggor f where f.kod = 'tipstimme'), false)
     );
   end if;
@@ -709,7 +600,7 @@ grant execute on function public.mina_tips() to authenticated;
 
 
 -- ------------------------------------------------------------
--- 8. Adminens kodlista, Koder i adminvyn
+-- 7. Adminens kodlista, Koder i adminvyn
 -- ------------------------------------------------------------
 create or replace function public.koder_lage(p_sort text)
 returns table (person_id uuid, kod text, aktiv boolean, kod_skapad timestamptz,
@@ -780,7 +671,7 @@ comment on function public.koder_lage(text) is
 
 
 -- ------------------------------------------------------------
--- 9. Raderingen: en bonus är lön
+-- 8. Raderingen: en bonus är lön
 -- ------------------------------------------------------------
 do $$
 declare
@@ -823,7 +714,7 @@ end $$;
 
 
 -- ------------------------------------------------------------
--- 10. Villkorens version
+-- 9. Villkorens version
 -- ------------------------------------------------------------
 create or replace function intern.villkor_version()
 returns text

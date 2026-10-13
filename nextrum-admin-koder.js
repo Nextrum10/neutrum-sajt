@@ -50,7 +50,7 @@
       sort: 'familj', namn: 'Familjer', en: 'familj', flagga: 'tipstimme',
       formulär: 'intresseanmälan',
       regel: 'En timme i timbanken för varje ny familj som anmält sig med koden och haft två timmar läxhjälp, '
-        + 'också om en av timmarna var gratis. Timmen betalar ett pass som köpta timmar inte betalar, och den går inte ut.',
+        + 'också om en av timmarna var gratis. Timmen gäller i 60 dagar och dras först, som en timme på köpet på nästa pass.',
       kort: 'Koden skrivs i intresseanmälan. En timme i timbanken när den nya familjen haft två timmar läxhjälp.'
     },
     studiehjalpare: {
