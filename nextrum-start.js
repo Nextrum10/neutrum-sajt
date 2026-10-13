@@ -23,7 +23,8 @@
                     föräldrar.
      sidhuvud       lapparna på menysidornas foto fjädrar in
      laxhjälpsöversikt  grupperna i Läxhjälp för just ert barn, sist på
-                    startsidan, glider upp och ner (2026-10-12)
+                    startsidan: öppna på datorn, och på telefonen
+                    glider de upp och ner med ett tryck (2026-10-13)
      stegFoton      Så fungerar Nextrum, på startsidan och menysidan:
                     den pinnade scenen på dator och den svepbara
                     raden på pekskärm (2026-10-07)
@@ -1177,11 +1178,30 @@ const NXStart = (function () {
      inget: utan skript eller med rörelse bortvald är det webbläsarens
      egen <details>. Öppnar webbläsaren en grupp själv (sök på sidan)
      följer klassen med.
+
+     ÖPPNA PÅ DATORN (2026-10-13, Leo: "öppna på datoern och klicka på
+     mobilen"). Grupperna står med open i HTML, så utan skript syns
+     allt. Över 860 px, där de står i fyra kolumner, hålls de öppna och
+     rubriken går inte att trycka på; under stängs de och öppnas med ett
+     tryck som förut. Det gäller också med rörelse bortvald, för det är
+     läget, inte glidet. .nx-lo-styrd säger att skriptet tagit över.
      ============================================================ */
   function laxhjälpsöversikt() {
     const sek = $('#laxhjalp-oversikt');
-    if (!sek || !rörelse) return;
-    $$('.nx-lo-g', sek).forEach(g => {
+    if (!sek) return;
+    const smal = matchMedia('(max-width:860px)');
+    const grupper = $$('.nx-lo-g', sek);
+    const läge = () => grupper.forEach(g => {
+      g.open = !smal.matches;
+      g.classList.toggle('oppen', g.open);
+      const rubrik = $('summary', g);
+      if (!rubrik) return;
+      if (smal.matches) rubrik.removeAttribute('tabindex');
+      else rubrik.tabIndex = -1;
+    });
+    läge();
+    smal.addEventListener('change', läge);
+    grupper.forEach(g => {
       const rubrik = $('summary', g);
       const lista = $('.nx-lo-l', g);
       if (!rubrik || !lista) return;
@@ -1194,8 +1214,9 @@ const NXStart = (function () {
         clearTimeout(väntar);
         if (!g.classList.contains('oppen')) g.open = false;
       };
-      g.classList.toggle('oppen', g.open);
       rubrik.addEventListener('click', e => {
+        if (!smal.matches) { e.preventDefault(); return; }
+        if (!rörelse) return;
         e.preventDefault();
         clearTimeout(väntar);
         if (g.classList.contains('oppen')) {
@@ -1210,10 +1231,12 @@ const NXStart = (function () {
         if (e.target === lista && e.propertyName === 'grid-template-rows') stängd();
       });
       g.addEventListener('toggle', () => {
-        if (g.open && !g.classList.contains('oppen')) öppna();
+        if (!g.open) g.classList.remove('oppen');
+        else if (!g.classList.contains('oppen')) öppna();
       });
     });
-    sek.classList.add('nx-lo-glid');
+    sek.classList.add('nx-lo-styrd');
+    if (rörelse) sek.classList.add('nx-lo-glid');
   }
 
   function allt() {

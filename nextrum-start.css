@@ -3502,10 +3502,10 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    före rubriken, aldrig texten, och på den mörka ytan är det de ljusa
    syskonen (-l).
 
-   HOPFÄLLDA PÅ ALLA BREDDER (2026-10-12, Leo: "ha de inbäddade i ämne,
-   årskurs, område och guider så man behöver trycka på de för att få upp
-   dem"). Grupperna är <details> utan open: plus eller minus säger att
-   det går att trycka. Länkarna står kvar i HTML, och Google läser det
+   HOPFÄLLDA (2026-10-12, Leo: "ha de inbäddade i ämne, årskurs, område
+   och guider så man behöver trycka på de för att få upp dem"; sedan
+   2026-10-13 bara på telefonen, se nedan). Grupperna är <details>:
+   plus eller minus säger att det går att trycka. Länkarna står kvar i HTML, och Google läser det
    som står i en stängd <details>, så internlänkningen är densamma.
 
    DE GLIDER (samma kväll, Leo: "gör de lite mer smooth"). Listan står i
@@ -3518,6 +3518,12 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    CSS gömmer inget. Plustecknet är två streck, och det lodräta krymper
    medan tecknet vrids ett halvt varv till ett minus. Listan klipps
    medan den växer, så länkarnas fokusring står innanför.
+
+   ÖPPNA PÅ DATORN (2026-10-13, Leo: "öppna på datoern och klicka på
+   mobilen"). Grupperna har open i HTML, och skriptet stänger dem bara
+   under 861 px. Över det, när skriptet tagit över (.nx-lo-styrd), är
+   rubriken bara en rubrik: inget plustecken och ingen hand. Utan skript
+   är det webbläsarens <details> på alla bredder, med tecknet kvar.
 
    SVART I LJUST LÄGE (samma dag, Leo: "Gör den sektionen svart i ljus
    vy som färgen ovan och under"). Ytan är footerns --ftr-bg (#1F1915),
@@ -3571,6 +3577,10 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .nx-lo-g li a:focus-visible{outline-offset:-3px}
 @media (max-width:860px){
   .nx-lo-grid{grid-template-columns:minmax(0,1fr);gap:0}
+}
+@media (min-width:861px){
+  .nx-lo-styrd .nx-lo-g summary{cursor:default}
+  .nx-lo-styrd .nx-lo-g summary::after{display:none}
 }
 @media (prefers-reduced-motion:reduce){
   .nx-lo-g summary::after{transition:none}
