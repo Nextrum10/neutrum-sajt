@@ -902,6 +902,11 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
   med en migration och villkoren samtidigt.
 - **Provat** lokalt: 1542 av 1542 i `rls-test.sql`, med avsnittet KB (23
   nya prov) och tipsavsnittet omskrivet för ordningen.
+- **I drift 2026-10-13 kväll**: PR #269 mergades (28a0e8a) och migrationen
+  kördes efter `gratistimmarna_60_dagar`, med filens md5, och `drift` v17
+  säger regeln för agenten. Hela `rls-test.sql` 1643 av 1643 mot driften,
+  tillbakarullat (`minne/databasen.md`, Körda i driften). Ingen bonus och
+  ingen kod för en studiehjälpare i en ansökan fanns då.
 
 ---
 
