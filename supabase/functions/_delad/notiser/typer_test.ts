@@ -165,8 +165,8 @@ Deno.test('rapport finns som notistyp men mejlas aldrig', () => {
 
   // Listorna står också i databasen (notis_typer, notis_mejlbara).
   // Ändras den ena ska den andra ändras i samma ändring.
-  assertEquals(NOTIS_TYPER.length, 9);
-  assertEquals(MEJLBARA.length, 8);
+  assertEquals(NOTIS_TYPER.length, 10);
+  assertEquals(MEJLBARA.length, 9);
   for (const t of MEJLBARA) assertEquals(arNotisTyp(t), true, `${t} saknas i NOTIS_TYPER`);
 
   assertEquals(arNotisTyp('pass_installt'), false);

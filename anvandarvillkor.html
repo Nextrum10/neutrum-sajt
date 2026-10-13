@@ -50,8 +50,8 @@
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
-<link rel="stylesheet" href="nextrum-home.css?v=5d4c3399">
-<link rel="stylesheet" href="nextrum-cinema.css?v=a92f8e96">
+<link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
+<link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
 </head>
 <body>
 
@@ -219,10 +219,19 @@
          2026-10-12: klippkorten heter Fyll timbanken, kostar ordinarie
          timpris och gäller i sex månader, alla storlekar (Leo).
 
-         2026-10-13: gratistimmar, som vi sätter in (Leo: "fylla deras
-         timbank med önskade timmar som vi klickar in"). De gäller i 60
-         dagar, används först, sparar inga minuter och betalas aldrig ut
-         (migrationen gratistimmar). -->
+         2026-10-13 (gratistimmarna_60_dagar, Leo: "gratis timmar går ut
+         efter 60 dagar att de läggs in", "gratis timmar går ut först sen
+         planerna", "9h vid köp av 8"): en gratis timme gäller i 60 dagar
+         från att den lades in och dras först. Planens gratis timme står
+         kvar i planen (timmar_pa_kopet) och gäller efter planens månad
+         så länge den inte använts (klippkort_saldo.gratis_till).
+         Återbetalningen räknas som förut.
+
+         2026-10-13, samma dag: gratistimmar som vi sätter in i timbanken
+         (Leo: "fylla deras timbank med önskade timmar som vi klickar in").
+         De gäller i 60 dagar, dras först med de andra gratis timmarna,
+         sparar inga minuter och betalas aldrig ut (migrationen
+         gratistimmar). -->
     <h2 id="erbjudanden">Planer och timbanken</h2>
     <p>Ni kan fylla er timbank med timmar i förväg på två sätt: med en plan för en månad, till ett
       lägre timpris, eller med Fyll timbanken, till ordinarie timpris. Betalar ni pass för pass används
@@ -231,10 +240,12 @@
       görs en gång, med kort. Det är inget abonnemang och förnyas inte av sig självt.</p>
     <ul>
       <li><b>Hur länge timmarna gäller.</b> En plan gäller i en månad från köpet. Timmar ni köpt
-        med Fyll timbanken gäller i 6 månader från köpet, hur många ni än köpt. Sista dagen står i er vy.</li>
+        med Fyll timbanken gäller i 6 månader från köpet, hur många ni än köpt. En gratis timme
+        gäller i 60 dagar från dagen den läggs in (se <a href="#forsta-timmen">Första timmen gratis</a>,
+        <a href="#gratistimmar">Gratistimmar</a> och <a href="#tips">Tipsa en familj</a>). Sista dagen står i er vy.</li>
       <li><b>Hur timmarna används.</b> Timmarna betalar passen av sig själva. När ni föreslår
-        ett pass dras timmarna från era <a href="#gratistimmar">gratistimmar</a> först, och annars
-        från de köpta timmar som går ut först, och föreslår
+        ett pass dras först gratis timmar, planens gratis timme och <a href="#gratistimmar">gratistimmar</a>
+        vi satt in, och sedan de köpta timmar som går ut först, och föreslår
         studiehjälparen en annan tid ligger de kvar på passet. Säger studiehjälparen nej, drar ni
         tillbaka förslaget eller går dagen utan att någon svarat, kommer timmarna tillbaka. Köper
         ni timmar, sätter vi in gratistimmar eller kommer timmar tillbaka, medan ni har förslag eller bokade pass framför er
@@ -256,18 +267,20 @@
            pass ges den bara till en familj vi valt (forsta_timmen_beviljad),
            med Fas 19.5:s regel. Högst en per familj: intern.forsta_timmen_tagen. -->
       <li id="forsta-timmen"><b>Första timmen gratis.</b> Den första plan ni köper får en timme
-        till, gratis. Den läggs till i planen när planen är betald och används som planens andra
-        timmar. Slutar ni i förtid räknas den som de andra timmarna (se Att sluta nedan), och den
-        betalas aldrig ut som pengar. Utan plan kan vi, om vi kommit överens om det, i stället dra
-        av en timme på det pass som gör att ni har bokat två timmar. En familj får högst en sådan
-        timme, på något av sätten; timmar för tips (se <a href="#tips">Tipsa en familj</a>) och
-        gratistimmar (nedan) räknas inte hit.</li>
+        till, gratis: köper ni en plan med 8 timmar får ni 9. Den läggs till i planen när planen är
+        betald, och den dras först. Den gäller i 60 dagar från köpet, också om planens andra timmar
+        hunnit gå ut. Slutar ni i förtid räknas den som de andra timmarna (se Att sluta nedan), och
+        den betalas aldrig ut som pengar. Utan plan kan vi, om vi kommit överens om det, i stället
+        dra av en timme på det pass som gör att ni har bokat två timmar, om ni föreslår det inom 60
+        dagar från att vi gav er timmen. En familj får högst en sådan timme, på något av sätten;
+        timmar för tips (se <a href="#tips">Tipsa en familj</a>) och gratistimmar (nedan) räknas
+        inte hit.</li>
       <li id="gratistimmar"><b>Gratistimmar.</b> Vi kan sätta in timmar i er timbank utan kostnad,
         till exempel när ni börjar hos oss. De gäller i 60 dagar från den dag vi satte in dem, och
-        sista dagen står i er vy. De betalar passen som köpta timmar och används före dem. Det som
-        blir över av en gratistimme när ett pass slutar före en hel timme sparas inte, och
-        gratistimmar som inte används förfaller utan påminnelse. De är en gåva: de räknas inte som
-        köpta timmar och betalas aldrig ut som pengar.</li>
+        sista dagen står i er vy. De betalar passen som köpta timmar och dras först, med de andra
+        gratis timmarna. Det som blir över av en gratistimme när ett pass slutar före en hel timme
+        sparas inte, och gratistimmar som inte används förfaller utan påminnelse. De är en gåva:
+        de räknas inte som köpta timmar och betalas aldrig ut som pengar.</li>
       <li><b>Avbokning.</b> Ett pass som betalats med timmar avbokar ni själva i er vy, som ett
         obetalt pass. Timmarna kommer då tillbaka och gäller till samma dag som förut.
         Går en timme förlorad för att vi eller studiehjälparen avbokat för sent för att ni ska
@@ -386,8 +399,10 @@
         koder räknas den första den anmälde sig med.</li>
       <li><b>Hur timmen används.</b> Den dras av på nästa läxhjälpspass ni föreslår, en timme per
         pass, till passets eget timpris. Resten av ett längre pass betalar ni som vanligt, med kort
-        eller faktura; köpta timmar betalar inte ett pass där en timme är på köpet. Avbokas passet,
-        eller säger studiehjälparen nej till tiden, kommer timmen tillbaka.</li>
+        eller faktura; köpta timmar betalar inte ett pass där en timme är på köpet. Timmen gäller i
+        60 dagar från dagen den nya familjen haft sina två timmar, och den går till ett pass ni
+        föreslår inom den tiden, för en dag inom den. Avbokas passet, eller säger studiehjälparen nej
+        till tiden, kommer timmen tillbaka och gäller till samma dag som förut.</li>
       <li><b>Timmen är inte pengar.</b> Den går inte att växla in, och den betalas inte tillbaka om
         ni slutar.</li>
       <li><b>Vad ni ser.</b> Ni ser hur många som anmält sig med er kod och hur många av dem som
@@ -516,18 +531,6 @@
           <li><a href="/priser">Priser</a></li>
         </ul>
       </nav>
-      <nav aria-labelledby="ftr-laxhjalp">
-        <h2 class="ftr-rubrik" id="ftr-laxhjalp">Läxhjälp</h2>
-        <ul>
-          <li><a href="/laxhjalp-stockholm">I Stockholm</a></li>
-          <li><a href="/laxhjalp-matematik">Matte</a></li>
-          <li><a href="/laxhjalp-svenska">Svenska</a></li>
-          <li><a href="/laxhjalp-engelska">Engelska</a></li>
-          <li><a href="/laxhjalp-no">Fysik, kemi och biologi</a></li>
-          <li><a href="/laxhjalp-online">Online</a></li>
-          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
-        </ul>
-      </nav>
       <nav aria-labelledby="ftr-fordig">
         <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
         <ul>
@@ -549,6 +552,62 @@
         </ul>
       </nav>
     </div>
+
+    <nav class="ftr-lax" aria-labelledby="ftr-laxhjalp">
+      <div class="ftr-lax-in">
+        <h2 class="ftr-lax-h" id="ftr-laxhjalp">Läxhjälp</h2>
+        <p>Hitta sidan som passar ämnet, årskursen eller området.</p>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Ämne</h3>
+        <ul>
+          <li><a href="/laxhjalp-matematik">Matematik</a></li>
+          <li><a href="/laxhjalp-svenska">Svenska</a></li>
+          <li><a href="/laxhjalp-engelska">Engelska</a></li>
+          <li><a href="/laxhjalp-no">NO</a></li>
+          <li><a href="/laxhjalp-so">SO</a></li>
+          <li><a href="/laxhjalp-moderna-sprak">Moderna språk</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Årskurs</h3>
+        <ul>
+          <li><a href="/laxhjalp-lagstadiet">Lågstadiet</a></li>
+          <li><a href="/laxhjalp-mellanstadiet">Mellanstadiet</a></li>
+          <li><a href="/laxhjalp-hogstadiet">Högstadiet</a></li>
+          <li><a href="/laxhjalp-gymnasiet">Gymnasiet</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Område</h3>
+        <ul>
+          <li><a href="/laxhjalp-stockholm">Stockholm</a></li>
+          <li><a href="/laxhjalp-sodermalm">Södermalm</a></li>
+          <li><a href="/laxhjalp-hammarby-sjostad">Hammarby Sjöstad</a></li>
+          <li><a href="/laxhjalp-farsta">Farsta</a></li>
+          <li><a href="/laxhjalp-bromma">Bromma</a></li>
+          <li><a href="/laxhjalp-solna">Solna</a></li>
+          <li><a href="/laxhjalp-nacka">Nacka</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
+          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Guider</h3>
+        <ul>
+          <li><a href="/vad-kostar-laxhjalp">Vad kostar läxhjälp?</a></li>
+          <li><a href="/laxhjalp-eller-privatlarare">Läxhjälp eller privatlärare?</a></li>
+          <li><a href="/nationella-prov-ak-6">Nationella prov i årskurs&nbsp;6</a></li>
+          <li><a href="/nationella-prov-ak-9">Nationella prov i årskurs&nbsp;9</a></li>
+          <li><a href="/plugga-infor-prov">Plugga inför prov</a></li>
+          <li><a href="/infor-terminsbetyget">Inför terminsbetyget</a></li>
+          <li><a href="/barnet-vill-inte-gora-laxorna">Barnet vill inte göra läxorna</a></li>
+          <li><a href="/hjalpa-barn-med-matte">Hjälpa barn med matte</a></li>
+          <li><a href="/hjalpa-barn-med-lasforstaelse">Hjälpa barn med läsförståelse</a></li>
+          <li><a href="/laxhjalp-efter-sommarlovet">Läxhjälp efter sommarlovet</a></li>
+        </ul>
+      </div>
+    </nav>
 
     <div class="ftr-bot">
       <span>© <span id="year">2026</span> Nextrum.</span>
@@ -610,13 +669,13 @@
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=41e2f360"></script>
+<script src="nextrum-app.js?v=b827f810"></script>
 <script src="nextrum-samtycke.js?v=92474eaf"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=012ff177"></script>
+<script src="nextrum-maskot-svar.js?v=50356135"></script>
 <script src="nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {

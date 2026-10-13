@@ -50,8 +50,8 @@
 
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
-<link rel="stylesheet" href="../nextrum-home.css?v=5d4c3399">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=a92f8e96">
+<link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=61e4a39a">
 </head>
 <body>
 
@@ -489,6 +489,11 @@
         The login is a
         username and a password. The technical address it needs (the username at
         barn.nextrum.se) never receives any email.</li>
+      <li>The parent can also let the child suggest sessions. The child’s suggestion, with the day,
+        time, subject, where you meet and a line to the tutor, goes to the parent first and never
+        shows a price. The parent sends it on as their own suggestion, perhaps with another time,
+        or leaves it, and the tutor only sees what the parent has sent. The suggestions are deleted
+        30 days after the parent’s answer.</li>
       <li>The parent can also add the child’s own email. We send a link there, and the address is
         used only once the child has clicked it. After that the child can log in with it, and get
         emails about their sessions if the parent turns that on: when a session is booked or
@@ -517,6 +522,8 @@
         your study plan and your notifications and can write to your tutor. Your parent can read
         what you write to each other, and so can we. Nobody sees your password, not
         even us. If you want to change something, ask your parent.</li>
+      <li>If your parent has turned it on, you can also suggest sessions. The suggestion goes to
+        your parent first, who sends it on to your tutor.</li>
       <li>If your parent has added your email, you get an email where you confirm that it is
         yours. After that you can log in with it, and get emails about your sessions if your
         parent turns that on. You choose which emails you get under Profil (Profile) in
@@ -602,18 +609,6 @@
           <li><a href="/en/priser">Pricing</a></li>
         </ul>
       </nav>
-      <nav aria-labelledby="ftr-laxhjalp">
-        <h2 class="ftr-rubrik" id="ftr-laxhjalp">Tutoring</h2>
-        <ul>
-          <li><a href="/laxhjalp-stockholm">In Stockholm</a></li>
-          <li><a href="/laxhjalp-matematik">Maths</a></li>
-          <li><a href="/laxhjalp-svenska">Swedish</a></li>
-          <li><a href="/laxhjalp-engelska">English</a></li>
-          <li><a href="/laxhjalp-no">Physics, chemistry and biology</a></li>
-          <li><a href="/laxhjalp-online">Online</a></li>
-          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
-        </ul>
-      </nav>
       <nav aria-labelledby="ftr-fordig">
         <h2 class="ftr-rubrik" id="ftr-fordig">For you</h2>
         <ul>
@@ -635,6 +630,62 @@
         </ul>
       </nav>
     </div>
+
+    <nav class="ftr-lax" aria-labelledby="ftr-laxhjalp">
+      <div class="ftr-lax-in">
+        <h2 class="ftr-lax-h" id="ftr-laxhjalp">Tutoring</h2>
+        <p>Find the page that fits the subject, the grade or the area.</p>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Subject</h3>
+        <ul>
+          <li><a href="/laxhjalp-matematik">Maths</a></li>
+          <li><a href="/laxhjalp-svenska">Swedish</a></li>
+          <li><a href="/laxhjalp-engelska">English</a></li>
+          <li><a href="/laxhjalp-no">Science</a></li>
+          <li><a href="/laxhjalp-so">Social studies</a></li>
+          <li><a href="/laxhjalp-moderna-sprak">Modern languages</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Grade</h3>
+        <ul>
+          <li><a href="/laxhjalp-lagstadiet">Lower primary</a></li>
+          <li><a href="/laxhjalp-mellanstadiet">Middle primary</a></li>
+          <li><a href="/laxhjalp-hogstadiet">Lower secondary</a></li>
+          <li><a href="/laxhjalp-gymnasiet">Upper secondary</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Area</h3>
+        <ul>
+          <li><a href="/laxhjalp-stockholm">Stockholm</a></li>
+          <li><a href="/laxhjalp-sodermalm">Södermalm</a></li>
+          <li><a href="/laxhjalp-hammarby-sjostad">Hammarby Sjöstad</a></li>
+          <li><a href="/laxhjalp-farsta">Farsta</a></li>
+          <li><a href="/laxhjalp-bromma">Bromma</a></li>
+          <li><a href="/laxhjalp-solna">Solna</a></li>
+          <li><a href="/laxhjalp-nacka">Nacka</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
+          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Guides</h3>
+        <ul>
+          <li><a href="/vad-kostar-laxhjalp">What does tutoring cost?</a></li>
+          <li><a href="/laxhjalp-eller-privatlarare">Tutoring or a private teacher?</a></li>
+          <li><a href="/nationella-prov-ak-6">National tests in year&nbsp;6</a></li>
+          <li><a href="/nationella-prov-ak-9">National tests in year&nbsp;9</a></li>
+          <li><a href="/plugga-infor-prov">How to study for a test</a></li>
+          <li><a href="/infor-terminsbetyget">Before the term grades</a></li>
+          <li><a href="/barnet-vill-inte-gora-laxorna">When your child won't do homework</a></li>
+          <li><a href="/hjalpa-barn-med-matte">Helping your child with maths</a></li>
+          <li><a href="/hjalpa-barn-med-lasforstaelse">Helping your child with reading comprehension</a></li>
+          <li><a href="/laxhjalp-efter-sommarlovet">Tutoring after the summer break</a></li>
+        </ul>
+      </div>
+    </nav>
 
     <div class="ftr-bot">
       <span>© <span id="year">2026</span> Nextrum.</span>
@@ -696,13 +747,13 @@
 <script src="../nextrum-config.js?v=1b401ac9"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=41e2f360"></script>
+<script src="../nextrum-app.js?v=b827f810"></script>
 <script src="../nextrum-samtycke.js?v=92474eaf"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=012ff177"></script>
+<script src="../nextrum-maskot-svar.js?v=50356135"></script>
 <script src="../nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {

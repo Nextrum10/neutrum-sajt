@@ -34,9 +34,11 @@
 --     något någon begärt.
 --   · 60 dagar från dagen de sattes in, i giltigt_till. giltig_manader är
 --     2, närmaste hela månad, och läses inte för en gåva.
---   · Först av alla timmar. klippkort_dra och intern.timmar_betala tar
---     gratistimmarna före köpta, och annars det som går ut först, som
---     förut. Ett kort väljs bara om det räcker till hela passet, som förut.
+--   · Först av alla timmar. gratistimmarna_60_dagar (samma dag, körs
+--     före den här) låter planens gratis timme dras först; klippkort_dra
+--     och intern.timmar_betala räknar nu också ett kort med gratistimmar
+--     som gratis, och annars väljs det som går ut först, som där. Ett kort
+--     väljs bara om det räcker till hela passet, som förut.
 --   · Inga sparade minuter. intern.timbank_in ger noll för ett pass betalt
 --     med gratistimmar: sparade minuter betalas tillbaka i kronor när
 --     familjen slutar, och en gåva hade då blivit pengar.
@@ -61,17 +63,25 @@
 -- VILLKOREN
 --
 -- Villkoren säger det i Planer och timbanken (anvandarvillkor.html, båda
--- språken): timbanken rymmer också timmar vi gett, de används först,
--- gäller i 60 dagar, sparar inga minuter och betalas aldrig ut. Versionen
--- blir 2026-10-13, så alla får frågan igen vid nästa inloggning.
+-- språken, #gratistimmar): timbanken rymmer också timmar vi gett, de dras
+-- först, gäller i 60 dagar, sparar inga minuter och betalas aldrig ut.
+-- Versionen 2026-10-13 sätts av gratistimmarna_60_dagar, som ändrade
+-- samma sida samma dag. Har den körts, och någon hunnit godkänna
+-- 2026-10-13, INNAN texten om gratistimmarna kom ut på sidan, har de inte
+-- sett den: byt då datumet på båda sidorna och skriv villkor_version här
+-- (kolla-villkor.py), så att alla får frågan igen.
 --
 -- klippkort_dra, intern.timmar_betala och intern.timmar_gar_ut_koa LAPPAS
 -- med replace() på pg_get_functiondef(), med en vakt som räknar
--- träffarna. intern.timbank_in och intern.kop_kraver_villkor skrivs om,
--- men bara om driftens kropp är den som lästes 2026-10-13 (md5 nedan).
--- Ingen drop och ingen delete utanför en funktion. Går att köra två
--- gånger. Körs efter merge: vyerna tål att den saknas (utan katalograden
--- finns inga gratistimmar, och knappen säger att funktionen saknas).
+-- träffarna, så som gratistimmarna_60_dagar lämnar dem (md5 nedan, läst ur
+-- en databas byggd ur alla migrationer till och med den, för driften har
+-- den inte än). intern.timbank_in och intern.kop_kraver_villkor skrivs om,
+-- men bara om kroppen är den som lästes i driften 2026-10-13. Markörerna
+-- är satserna själva: ordet gratis står redan i funktionerna. Ingen drop
+-- och ingen delete utanför en funktion. Går att köra två gånger. Körs
+-- efter merge, efter gratistimmarna_60_dagar: vyerna tål att den saknas
+-- (utan katalograden finns inga gratistimmar, och knappen säger att
+-- funktionen saknas).
 -- ============================================================
 
 -- ------------------------------------------------------------
@@ -81,21 +91,23 @@ do $$
 declare
   f text;
 begin
+  -- Som gratistimmarna_60_dagar lämnar dem.
   select prosrc into f from pg_proc where oid = 'public.klippkort_dra(uuid,uuid)'::regprocedure;
-  if md5(f) is distinct from 'f9c81e534873b24d5d3c65ce90fc315f'
-     and position('gratis' in f) = 0 then
-    raise exception 'klippkort_dra är inte den som lästes 2026-10-13 (md5 %). Läs driften och skriv om migrationen.', md5(f);
+  if md5(f) is distinct from '2b1354f0420648fa386ebaaed6560a43'
+     and position($m$k.erbjudande = 'gratis'$m$ in f) = 0 then
+    raise exception 'klippkort_dra är inte den som gratistimmarna_60_dagar lämnar (md5 %). Läs databasen och skriv om migrationen.', md5(f);
   end if;
   select prosrc into f from pg_proc where oid = 'intern.timmar_betala(public.bookings,boolean)'::regprocedure;
-  if md5(f) is distinct from '1e76c54212a2d19919e1c11fe68d3883'
-     and position('gratis' in f) = 0 then
-    raise exception 'intern.timmar_betala är inte den som lästes 2026-10-13 (md5 %). Läs driften och skriv om migrationen.', md5(f);
+  if md5(f) is distinct from 'fc20b497ebbb8c7e86ad44499abc135b'
+     and position($m$k.erbjudande = 'gratis'$m$ in f) = 0 then
+    raise exception 'intern.timmar_betala är inte den som gratistimmarna_60_dagar lämnar (md5 %). Läs databasen och skriv om migrationen.', md5(f);
   end if;
   select prosrc into f from pg_proc where oid = 'intern.timmar_gar_ut_koa(timestamptz)'::regprocedure;
-  if md5(f) is distinct from '6c1c394a169b01b8dc309938763df06c'
-     and position('gratis' in f) = 0 then
-    raise exception 'intern.timmar_gar_ut_koa är inte den som lästes 2026-10-13 (md5 %). Läs driften och skriv om migrationen.', md5(f);
+  if md5(f) is distinct from '453b015bce566ba9c42cb949a79f8176'
+     and position($m$s.erbjudande is distinct from 'gratis'$m$ in f) = 0 then
+    raise exception 'intern.timmar_gar_ut_koa är inte den som gratistimmarna_60_dagar lämnar (md5 %). Läs databasen och skriv om migrationen.', md5(f);
   end if;
+  -- Som de lästes i driften 2026-10-13 (gratistimmarna_60_dagar rör dem inte).
   select prosrc into f from pg_proc where oid = 'intern.timbank_in(public.bookings)'::regprocedure;
   if md5(f) is distinct from 'fa20cf854de8e737af00b828810eed77'
      and position('ar_gratistimmar' in f) = 0 then
@@ -103,7 +115,7 @@ begin
   end if;
   select prosrc into f from pg_proc where oid = 'intern.kop_kraver_villkor()'::regprocedure;
   if md5(f) is distinct from 'b6566f7f45ed0e18afc9bc3e7f7095a3'
-     and position('gratis' in f) = 0 then
+     and position($m$new.erbjudande = 'gratis'$m$ in f) = 0 then
     raise exception 'intern.kop_kraver_villkor är inte den som lästes 2026-10-13 (md5 %). Läs driften och skriv om migrationen.', md5(f);
   end if;
 end $$;
@@ -230,22 +242,24 @@ revoke all on function intern.kop_kraver_villkor() from public, anon, authentica
 do $$
 declare
   f     text;
-  ordn1 text := $g$   order by k.giltigt_till, k.created_at
-   limit 1;$g$;
-  ordn2 text := $n$   /* Gratistimmarna först (2026-10-13, Leo: "de används först av
-      alla timmar"), och annars det som går ut först. */
-   order by (k.erbjudande = 'gratis') desc, k.giltigt_till, k.created_at
-   limit 1;$n$;
-  pam1  text := $g$       and s.kvar > 0
+  ordn1 text := $g$   order by coalesce(k.timmar_pa_kopet > a.anv and intern.gratis_till(k.betald_at) >= dag, false) desc,
 $g$;
-  pam2  text := $n$       and s.kvar > 0
-       -- Gratistimmarna (2026-10-13): mejlet gäller köpta timmar och
-       -- lovar att resten betalas tillbaka. Sista dagen står i vyn.
+  ordn2 text := $n$   /* gratistimmar (2026-10-13): gratistimmar som admin satt in är gratis
+      rakt igenom och går först, med planens gratis timmar (Leo: "de
+      används först av alla timmar"). */
+   order by (k.erbjudande = 'gratis'
+             or coalesce(k.timmar_pa_kopet > a.anv and intern.gratis_till(k.betald_at) >= dag, false)) desc,
+$n$;
+  pam1  text := $g$     where s.status = 'betald'
+$g$;
+  pam2  text := $n$     where s.status = 'betald'
+       -- gratistimmar (2026-10-13): mejlet gäller köpta timmar och lovar
+       -- att resten betalas tillbaka. Sista dagen står i vyn.
        and s.erbjudande is distinct from 'gratis'
 $n$;
 begin
   f := pg_get_functiondef('public.klippkort_dra(uuid,uuid)'::regprocedure);
-  if position('gratis' in f) = 0 then
+  if position($m$k.erbjudande = 'gratis'$m$ in f) = 0 then
     if (length(f) - length(replace(f, ordn1, ''))) / length(ordn1) <> 1 then
       raise exception 'klippkort_dra: ordningen hittades inte exakt en gång.';
     end if;
@@ -253,7 +267,7 @@ begin
   end if;
 
   f := pg_get_functiondef('intern.timmar_betala(public.bookings,boolean)'::regprocedure);
-  if position('gratis' in f) = 0 then
+  if position($m$k.erbjudande = 'gratis'$m$ in f) = 0 then
     if (length(f) - length(replace(f, ordn1, ''))) / length(ordn1) <> 1 then
       raise exception 'intern.timmar_betala: ordningen hittades inte exakt en gång.';
     end if;
@@ -261,9 +275,9 @@ begin
   end if;
 
   f := pg_get_functiondef('intern.timmar_gar_ut_koa(timestamptz)'::regprocedure);
-  if position('gratis' in f) = 0 then
+  if position($m$s.erbjudande is distinct from 'gratis'$m$ in f) = 0 then
     if (length(f) - length(replace(f, pam1, ''))) / length(pam1) <> 1 then
-      raise exception 'intern.timmar_gar_ut_koa: raden med kvar hittades inte exakt en gång.';
+      raise exception 'intern.timmar_gar_ut_koa: raden med status hittades inte exakt en gång.';
     end if;
     execute replace(f, pam1, pam2);
   end if;
@@ -406,14 +420,3 @@ create or replace trigger klippkort_audit
   for each row execute function public.logga_andring(
     'klippkort', 'id', 'parent_id', 'erbjudande', 'timmar', 'timmar_pa_kopet', 'status', 'giltigt_till',
     'begart_ore', 'betalt_ore', 'aterbetald_ore');
-
-
--- ------------------------------------------------------------
--- 8. Villkorens version
--- ------------------------------------------------------------
-create or replace function intern.villkor_version()
-returns text
-language sql
-immutable
-set search_path = pg_temp
-as $$ select '2026-10-13'::text $$;

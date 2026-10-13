@@ -366,7 +366,7 @@ sidan där färgerna passar in."
 (`#just-nu`), Vår idé (`#om`), studievyn, NexLäx (`#nexlax`), Från
 intresseanmälan till första passet (`#hur`), studiehjälparna, Trygg hjälp
 (`#plattformen`), bildväggen, omdömena (`#rost`, brevet), För dig som vill
-jobba (`#bli`) och Nästa steg, och sist före footern Läxhjälp för just ert barn (`#laxhjalp-oversikt`, 2026-10-10: fyra grupper med länkar till alla läxhjälps- och guidesidor, `<details>`, ämnesfärgens prick i ordningen från avsnitt 18, CSS avsnitt 19; en ny sida i kartan läggs in där på båda språken). Sedan 2026-10-12 är grupperna stängda på alla bredder och öppnas med ett tryck (Leo: "ha de inbäddade i ämne, årskurs, område och guider så man behöver trycka på de för att få upp dem"): ingen `open`, plus och minus på alla bredder. Samma kväll fick de glida (Leo: "gör de lite mer smooth"): listan står i `.nx-lo-l`, en grid vars rad växer från 0fr till 1fr och tonar in, och `laxhjälpsöversikt()` tar trycket på rubriken, sätter `.oppen` och stänger `open` först när listan krympt klart. 0fr gäller bara under `.nx-lo-glid`, som skriptet sätter sist, så utan skript eller med rörelse bortvald är det webbläsarens egen `<details>`; plustecknet är två streck som vrids till ett minus. Länkarna står kvar i HTML, och Google läser en stängd `<details>`. Samma dag blev ytan svart i ljust läge (Leo: "Gör den sektionen svart i ljus vy som färgen ovan och under"): footerns `--ftr-bg` (`#1F1915`), där Nästa steg slutar i ljust läge, med barkens text och ämnesfärgernas `-l`; i mörkt läge står den kvar på `--pap`. Sektionerna flyttades som hela block mellan
+jobba (`#bli`) och Nästa steg. Sist före footern stod 2026-10-10 till 2026-10-13 Läxhjälp för just ert barn (`#laxhjalp-oversikt`): fyra grupper med länkar till alla läxhjälps- och guidesidor i `<details>`, för internlänkningens skull. 2026-10-12 blev grupperna stängda på alla bredder och fick glida upp med ett tryck (Leo: "ha de inbäddade i ämne, årskurs, område och guider så man behöver trycka på de för att få upp dem", "gör de lite mer smooth"), och ytan blev svart i ljust läge, footerns `--ftr-bg`. Dagen efter frågade Leo vart landningssidorna försvunnit: fyra hopfällda rubriker på samma svarta som footern direkt under såg ut som en del av footern. Först blev de öppna på datorn och stängda på telefonen, och samma kväll togs sektionen bort (Leo: "skit i att lägga tillbaka de, lägg in de längst ner vid de andra landingssidorna och gör de snyggt"). Länkarna står nu i footerns block Läxhjälp (`.ftr-lax`, cinemas FOTEN), på varje publik sida och båda språken, i stället för footerns gamla spalt Läxhjälp med sju länkar: rubriken och en rad till vänster, i första spalten (27 % över 1100 px, som märket i raden ovanför, så att grupperna börjar där Nextrum-spalten börjar), och de fyra grupperna med ämnesfärgens prick i ordningen från avsnitt 18, `-l`-syskonen eftersom footern är mörk i båda lägena. Guiderna har den bredare spalten (1,6 mot 1) så att de står på en rad på datorn, och "årskurs 6" och "årskurs 9" hålls ihop med `&nbsp;`. Under 820 px står grupperna två och två. Footerns länkar väger något mindre hos Google än en sektion i innehållet, men nu länkas varje landningssida från alla publika sidor i stället för från två. En ny sida i kartan läggs in i blocket på alla sidor (`var-ide.html` är `bygg-omradessidor.py`s källa till skalet). Sektionerna flyttades som hela block mellan
 kommentarsbanderollerna, likadant på /en/; numren i banderollerna är gamla.
 Hero är orörd utom priset (399 kr, `data-stat` ur `nextrum-config.js`).
 Studievyns exempelpass står också på 399 (`data-sd-pris` skrivs ur `CFG`).
@@ -1414,7 +1414,9 @@ senare sida ger felet, aldrig en halv lista.
   till föräldervyn. Sedan 2026-10-06 samma skal som studievyn: hälsningen
   (`NXArbete.hero`) och sidomenyn (`NXStudie.sidomeny`) med fem delar,
   Översikt, Mina lektioner, NexLäx, Meddelanden och Profil (se "Hälsningen,
-  en bild per veckodag" nedan och `minne/barnkonton-och-admin.md`). Förut en
+  en bild per veckodag" nedan och `minne/barnkonton-och-admin.md`), och
+  sedan 2026-10-12 Boka pass som en sjätte, bara när föräldern låtit barnet
+  föreslå pass (`boka`; menyposten är dold annars). Förut en
   spalt utan meny och utan bild. Mina lektioner har studievyns flikar (Pass,
   Studieplan, Rapporter) men ingen betalning; Översikt räknar genomförda och
   kommande pass (`.bv-antal`). Barnets tråd med studiehjälparen ritas av
@@ -1548,3 +1550,54 @@ granska kommer en popup med notisen där. det går inte att stänga av".
   (studiehjälparen), ett oläst meddelande, ingen ruta när inget väntar,
   ingen efter omladdning, igen i en ny flik, Escape, Stäng, Tab och ett
   tryck utanför.
+
+### Förhandsvisningen i adminvyn (2026-10-12)
+Leo: "bygg två förhandsgranskningvyer där till vår admin vy, där ska vi
+med våra konton kunna se en förhandsgranskning av studievy och
+studielärarvyn", och samma kväll: "vyerna, studievy och studiecoachvyn
+ska vara kopplade med varandra i förhandsgranskningen, man ska kunna leka
+där och lätt kunna byta vy i admin. tex föreslå tid och byta vy och
+acceptera. detta ingår inte i riktig statistik eller underlag för lön
+eller faktura".
+
+- **Adminvyn**: sektionen Förhandsvisning (`data-sek="forhandsvisning"`,
+  under Inställningar, för varje admin: `SEKTIONER.forhandsvisning` är
+  alla behörigheter) med två rader och Öppna i en ny flik, till
+  `/foralder?forhandsvisning` (familjen Andersson: Anna, och Alva i
+  årskurs 6) och `/larare?forhandsvisning` (Sara Svensson, med Alva och
+  Kim). Ingen ritfunktion, bara länkarna och en ruta som säger hur den
+  fungerar.
+- **Vyerna** är de riktiga, med de riktiga filerna: bara klienten är en
+  annan (`nextrum-forhandsvisning.js`, laddad före `nextrum-app.js`, som
+  frågar den efter klienten). Världen är introduktionsbildernas familjer
+  (`verktyg/bygg-introbilder.js`) med dagens datum och dagens pris, ett
+  förslag från Alva, barnets tråd, en plan och NexLäx-nivåer med fyra
+  påhittade frågor var. Den svarar som PostgREST så långt vyerna frågar
+  (filtren, `or`, ordningen, `limit`, `count`, `.single()`, de inbäddade
+  `nivaer`, `biblioteksmaterial` och `invoice_lines`), med RLS i
+  `synlig()`: föräldern ser sin familj, studiehjälparen sina elever.
+  Triggrarna som vyerna ser efteråt står i `stämpla()` (motförslaget och
+  avbokningen, som `stampla_avbokningen`) och `efterSkrivning()` (en
+  rapport gör passet genomfört).
+- **De två vyerna delar världen.** Den sparas i `localStorage` efter
+  varje skrivning och läses om före varje fråga, så föräldern föreslår,
+  Byt till studiehjälparvyn i remsan, Acceptera, och tillbaka. En flik
+  som står öppen laddar om när man kommer tillbaka till den och världen
+  ändrats i en annan. Börja om tar bort den; den börjar också om en ny
+  dag och när världen i filen ändras (ett fingeravtryck av den nya
+  världen).
+- **Remsan** står överst i sidhuvudet (`.nx-fv`, ockra, i
+  `nextrum-arbetsyta.css`): vem man är, att det är påhittat och inte
+  räknas, och Byt, Börja om och Till adminvyn, 44 px höga. Fliken heter
+  "Förhandsvisning · …". I sidhuvudet och inte i innehållet: heron drar
+  sig upp under sidhuvudet och hade täckt den.
+- **Det som inte görs** säger det: edge-funktionerna (betalning, AI,
+  mejl, Meet) svarar 409 med "Det här görs inte i förhandsvisningen",
+  rabattkoderna prövas inte, betygsgarantin och barnets e-post sparas
+  inte, och Mästarprov och repetition startar inte.
+- **Statistiken.** Förhandsvisningen skriver aldrig i databasen. Konton
+  vi redan har (ett adminkonto som också är förälder hade 2026-10-12 alla
+  16 passen i driften) räknas inte i Översiktens tal (`räknas()`,
+  `ärAdminkonto()` i kärnan, ur `admin_roller`) eller i Statistik
+  (analysvyerna, `minne/databasen.md`). Listorna visar dem som förut.
+

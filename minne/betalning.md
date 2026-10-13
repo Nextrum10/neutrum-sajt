@@ -120,6 +120,49 @@ texten är kärnans.
     innan svaret kommit visas ingen timme.
   - Spararaden räknar in timmen (`data-erb-spara-forsta`): 879, 1 359 och
     1 839 kr på 6 månader för Basic, Standard och Intensiv.
+  - **60 dagar och först** (2026-10-13, `gratistimmarna_60_dagar`): planens
+    gratis timme dras först och gäller efter planens månad så länge den
+    inte använts, till 60 dagar efter köpet; tipstimmen och första timmen
+    pass för pass gäller ett pass inom 60 dagar. Återbetalningen räknas
+    som förut. Allt i `minne/timmar.md`.
+- **Rabattkoden krockar inte med gratis timmar eller timbanken**
+  (2026-10-13, `rabattkoden_krockar_inte`). Leo: "rabattkoden, fixa det
+  ... koden får inte krocka med gratis timmar. jag ska bygga nytt system
+  för gratis timmarna. gratis timmarna räknas i timbanken".
+  - Förut kunde ett pass få en kod och något annat: första timmen lades
+    ovanpå koden (två timmar med 10 % gav 478,80 kr i rabatt), tipstimmen
+    gavs bara utan kod (koden sköt timmen till ett senare pass), och
+    köpta timmar betalade ett pass med en kod som stod kvar och räknades
+    som använd utan att ändra något.
+  - Nu gäller koden bara det familjen betalar med pengar. **En gratis
+    timme går först**: `forsta_timmen_bjuds` tar bort koden när den ger
+    första timmen eller tipstimmen, och rabatten är timmen och inget mer.
+    **Timbanken går före koden**: triggern
+    `bookings_timmar_betalar_utan_kod` (BEFORE INSERT OR UPDATE, efter
+    `bookings_timmar_betalar_forslaget` och före
+    `bookings_timmarna_tillbaka` i namnordning) tar bort koden från ett
+    pass som köpta timmar eller timbankens minuter betalar, när passet
+    skapas och när de betalar det senare (bekräftelsen, jobbet
+    `timmar-betalar`, ett köp som blir betalt, Betala med timmar). En egen
+    trigger, för den ser passet efter vem som än betalat; ingen `UPDATE
+    OF`-lista, för timmarna sätts av en BEFORE-trigger. Ett kortköp rör
+    inte koden.
+  - En kod som tas bort när passet skapas räknas inte som använd
+    (`rakna_rabattkod` räknar efter INSERT). En som tas bort senare har
+    redan räknats, som en kod på ett pass som avbokas.
+  - Rutan står i förälderns egna förslag och i granskningen av ett barns
+    (`NXArbete.bokning`, `o.rabattkod`), aldrig i barnets vy. Den säger när
+    koden inte används och varför, och priset vid knappen följer samma
+    ordning. Koden skickas ändå: databasen avgör, och blev timmarna tagna
+    någon annanstans under tiden gäller den. Kvittot säger bara om en kod
+    som försvann utan att en gratis timme eller timmarna förklarar det.
+  - Planens gratis timme står i timbanken (i planen) och följer regeln
+    om timbanken. Tipstimmen och första timmen pass för pass är avdrag på
+    passet och följer regeln om en gratis timme. Villkoren nämner inga
+    koder, så rabattkoden behövde ingen ny version.
+  - Rabattkoderna var tomma i driften 2026-10-13 (bara `TIPS`). Skapas den
+    första koden ska `kolla_rabattkod` få ett tak först
+    (`minne/sakerhet.md`).
 - Belopp lagras i **ören** överallt. Kronor blir det först vid visning
   (`NXBetalning.kronor`). Enda stället ett avrundningsfel kan smyga in
   är omvandlingen — gör den en gång, på ett ställe.

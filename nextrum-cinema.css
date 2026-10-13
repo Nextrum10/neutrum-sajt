@@ -1566,6 +1566,47 @@ html[lang="en"] .nx-hero-rubrik{
 .ftr .mark rect{fill:var(--nt-fg)}
 .ftr .mark path{stroke:var(--nt)}
 
+/* LÄXHJÄLPEN LÄNGST NER (2026-10-13, Leo: "lägg in de längst ner vid de
+   andra landingssidorna och gör de snyggt"). Alla läxhjälps- och
+   guidesidor, på varje publik sida och båda språken, i stället för
+   startsidans sektion Läxhjälp för just ert barn och footerns gamla
+   spalt Läxhjälp. Fyra grupper med ämnesfärgens prick i ordningen från
+   startsidans avsnitt 18 (blå, lila, grön, lera), de ljusa syskonen,
+   för ytan är mörk i båda lägena. Över 1100 px är första spalten 27 %,
+   som märkets i raden ovanför (nextrum-home.css), så grupperna börjar
+   där Nextrum-spalten börjar. Under 820 px två och två.
+   En ny sida i kartan läggs in här, på alla sidor och båda språken. */
+.ftr-lax{
+  display:grid;gap:30px 32px;grid-template-columns:repeat(2,minmax(0,1fr));
+  margin-top:clamp(44px,5.5vw,72px);padding-top:clamp(32px,4vw,48px);
+  border-top:1px solid var(--nt-ln);
+}
+.ftr-lax-in{grid-column:1/-1}
+.ftr .ftr-lax-h{
+  font-size:clamp(1.3rem,2.2vw,1.6rem);line-height:1.15;letter-spacing:-.01em;
+  color:var(--nt-fg);margin:0 0 .4em;
+}
+.ftr-lax-in p{color:var(--nt-mut);font-size:.92rem;line-height:1.5;max-width:30ch;margin:0}
+.ftr-lax > :nth-child(2){--f:var(--amne-ma-l)}
+.ftr-lax > :nth-child(3){--f:var(--amne-en-l)}
+.ftr-lax > :nth-child(4){--f:var(--amne-no-l)}
+.ftr-lax > :nth-child(5){--f:var(--lera-l)}
+.ftr-lax .ftr-rubrik{display:flex;align-items:center;gap:.7em}
+.ftr-lax .ftr-rubrik::before{
+  content:"";flex:none;width:7px;height:7px;border-radius:50%;
+  background:var(--f,var(--lera-l));
+}
+.ftr-lax ul li a{line-height:1.35;display:inline-block;text-wrap:pretty}
+/* Guiderna har de längsta namnen och får en bredare spalt, så att de
+   står på en rad där det går. */
+@media (min-width:820px){
+  .ftr-lax{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.5fr)}
+}
+@media (min-width:1100px){
+  .ftr-lax{grid-template-columns:minmax(0,27%) repeat(3,minmax(0,1fr)) minmax(0,1.6fr)}
+  .ftr-lax-in{grid-column:auto}
+}
+
 /* En sista, mycket stor ordbild längst ned. Ren typografi, inget
    annat — det är sista intrycket. */
 .nx-ftr-ord{

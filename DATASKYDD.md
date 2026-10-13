@@ -65,6 +65,7 @@ finnas. Det här är det.
 | 23 | Barnets chatt med studiehjälparen (`barn_meddelanden`; barnets_chatt, 2026-10-06) | barn, studiehjälpare; föräldern (läser) | meddelandetexten (högst 2000 tecken), vem av de två som skrev, när, och när den andra läste. Att någon av oss öppnat tråden står i `audit_logg` (`chatt.oppnad` med tabellen `barn_meddelanden`: vem, när, familjen, studiehjälparen, antalet, aldrig texten) | 6.1 b genom föräldern, som en del av barnets inloggning (rad 20); att föräldern och vi kan läsa: 6.1 f (barnens trygghet) | Supabase. Studiehjälparen får en notis med barnets förnamn, aldrig texten; inget går till en AI, och barnet får inget mejl om chatten | som kontot: står kvar när inloggningen tas bort, så att föräldern kan läsa; tas bort med barnet, och med familjens eller studiehjälparens radering eller avidentifiering (`profiles_barnchatt_rensa`); loggraden så länge verksamheten finns (rad 13) |
 | 24 | Godkända användarvillkor (`villkor_godkannanden`; villkoren_godkanns, 2026-10-07) | förälder, studiehjälpare | vilken version av användarvillkoren kontot godkänt (datumet sist på sidan), när (tiden sätts av databasen) och var: rutan vid inloggningen (eller kryssrutan i Skapa konto, som fanns till 2026-10-07). Inget namn, ingen adress, bara kontots id | 6.1 b: att visa att avtalet ingåtts på de villkor som stod, och att den som bokar eller köper timmar har godkänt dem (databasen kräver det) | Supabase. Admin med rätt att läsa personer ser när villkoren godkändes | som kontot: tas bort med kontot när det raderas helt; står kvar med ett avidentifierat konto, eftersom passen och betalningarna gör det (rad 5 och 8) |
 | 25 | Betygsgarantin (`betygsgarantier`, `anmal_betygsgaranti()`; `anvandarvillkor.html#betygsgaranti`, 2026-10-07; anmälan i föräldravyn, anspråket med e-post till info@) | förälder, barn | anmälan: barnet, ämnena (högst tre per läsår ur `intern.betygsgaranti_amnen()`), barnets nuvarande betyg i dem som föräldern anger (F till B), läsåret och tiden, satt av databasen; en rättelse, som bara vi gör (`andra_betygsgaranti()`): när (`andrad_at`, som familjen ser) och vem hos oss (`andrad_av`, som ingen inloggad läser); anspråket: en kopia av betyget före anmälan och av det som räknas (årskursens sista betyg) i varje ämne det gäller, och vårt svar. Prövningen läser det som redan finns (hållen tid, rapporterna, `bookings.attendance`, `homework`, betalningarna); de 10 timmarna ges som vanliga pass | 6.1 b: familjen anmäler garantin och gör anspråket, och betygen är det som visar om villkoren är uppfyllda | Supabase (anmälan); Google (Workspace: inkorgen info@nextrum.se, anspråket). Studiehjälparen ser inte betygen: bara föräldern och den av oss som läser personer (`anvandare_las`, `anvandare_redigera`) | anmälan (ämne, läsår, tid) som kontot, och med barnet; betyget i anmälan gallras den 1 oktober efter läsåret (`betygsgaranti-gallring`) och direkt när barnet raderas eller avidentifieras (`students_betygsgarantier_raderas`); kopiorna raderas ur inkorgen för hand när anspråket är avgjort |
+| 26 | Barnets förslag på pass (`barn_passforslag`; behörigheten `boka` i `students.far_boka`; barnet_foreslar_pass, 2026-10-12) | barn; föräldern (slår på det, läser och svarar) | dagen, tiden, längden, ämnet, var de ses (online, eller en adress barnet skrivit), en rad till studiehjälparen (högst 300 tecken), läget (väntar, skickat, inte skickat, tillbakataget), när förslaget kom och besvarades, och passet det blev. Inget pris, ingen betalning. Att föräldern slagit på det står med barnets övriga val (rad 20) | 6.1 b genom föräldern, som slår på det för barnet och skickar förslagen vidare som sina egna pass (rad 20); ett skickat förslag är ett pass (rad 5) | Supabase; Resend (mejlet till föräldern om att ett förslag väntar: barnets förnamn, dagen, tiden och ämnet, aldrig platsen eller raden). Studiehjälparen ser inget förrän föräldern skickat förslaget, och då som ett pass. Barnets roll når inte tabellen, bara sina fyra funktioner | 30 dagar efter svaret, eller 30 dagar efter dagen för ett förslag som aldrig besvarades (`barnforslag-gallring`); direkt när barnet eller familjen raderas eller avidentifieras (`students_barnforslag_raderas`, `profiles_barnforslag_raderas`); passet det blev som rad 5 |
 
 **Känsliga uppgifter (art. 9) samlas inte in.** Vi ber aldrig om hälsa
 eller diagnoser, men fritexten kan få dem ändå ("Elsa har ADHD"). Därför
@@ -127,6 +128,7 @@ adminvyn under System → Automationer med sin senaste körning.
 | `ai-och-uppgifter-gallring` | varje natt 03.51 UTC | agentloggens text efter 90 dagar, AI-förslagens motivering 90 dagar efter beslut, klara och avbrutna uppgifter efter 1 år |
 | `svar-gallring` | varje natt 03.53 UTC | tömmer studiehjälparens svar på en föreslagen tid 30 dagar efter avslaget, eller 30 dagar efter passet; passet står kvar |
 | `betygsgaranti-gallring` | varje natt 03.56 UTC | tömmer betyget föräldern angav i betygsgarantins anmälningar den 1 oktober efter läsåret, svensk tid; raden (ämne, läsår, tid) står kvar. Ett barn som raderas tar betyget med sig direkt (`students_betygsgarantier_raderas`) |
+| `barnforslag-gallring` | varje natt 03.38 UTC | tar bort barnets förslag på pass 30 dagar efter förälderns svar, eller 30 dagar efter dagen för ett förslag som aldrig besvarades (barnet_foreslar_pass); passet ett skickat förslag blev står kvar som ett pass |
 | `barnkonton-gallring` | varje natt 03.59 UTC | notiserna i barnens vy efter 180 dagar, och ändringsfönster som gått ut, för ett lösenordsbyte eller ett nytt konto (barnkonton_och_admin); en barnadress som inte bekräftats på 30 dagar, och inloggningsförsöken med barnadresser efter ett dygn (barnets_epost) |
 | `konton-oanvanda` | den 1:a varje månad | gör varje konto som inte använts på 2 år till en uppgift i adminvyn |
 | `cron-stada` | varje natt | jobbens egen logg efter 7 dagar |
@@ -271,6 +273,11 @@ reglerna står i `radera_person()` (migrationen
   när barnet raderas eller avidentifieras (barnkonton_och_admin), och
   med inloggningen barnets egen e-post och barnets rader i kön
   (barnets_epost).
+- Barnets förslag på pass (`barn_passforslag`) går med barnet och med
+  familjen, i samma transaktion som raderingen eller avidentifieringen
+  (`students_barnforslag_raderas`, `profiles_barnforslag_raderas`,
+  barnet_foreslar_pass). Ett förslag som blivit ett pass står kvar som
+  passet.
 - Barnets chatt med studiehjälparen (`barn_meddelanden`) går med barnet,
   och med familjens eller studiehjälparens radering eller avidentifiering
   (triggern `profiles_barnchatt_rensa` på `raderad_at`, barnets_chatt).
@@ -403,6 +410,11 @@ Inget av det här går att göra i koden.
   båda språken. Säg till familjerna i samma mejl som villkorsändringen.
   Radera kopiorna av betygen ur inkorgen samma dag som svaret på ett
   anspråk skickas.
+- [ ] **Barnets förslag på pass (2026-10-12):** av som förval; föräldern
+  slår på det per barn under Profil → Barn. Låt juristen läsa rad 26 och
+  meningen om förslagen i policyns avsnitt om barn, på båda språken, och
+  säg till familjerna med barnkonto att valet finns i samma mejl som
+  policyändringen.
 - [ ] **Fortnox i policyn** innan första fakturan eller lönen går dit
   (CLAUDE.md avsnitt 11).
 - [ ] **Google Analytics (på 2026-10-11):** i Analytics, kontrollera
