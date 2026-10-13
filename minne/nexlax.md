@@ -395,6 +395,27 @@ utveckling i flera sidor, ranker som ett battlepass, studiehjälparen särskild,
 på profilen, grupper att tävla i, och att NexLäx ska kännas som ett spel. Det här är första delen
 (bara skärmen, inget i databasen). **Grupperna och nya frågor är inte byggda**, se längst ner.
 
+**Andra omgången, samma dag (Leo, efter att ha sett det på telefonen).** Det här ersätter
+fliklistan nedan där de skiljer sig:
+- **Fyra flikar:** Din väg, Din utveckling, Rank, Märken. Studiehjälparen är inte längre en
+  flik utan en del av Din utveckling, som bara har två val: NexLäx (det maskinen räknat, i fyra
+  sidor) eller Studiehjälparen (uppgifter, pass, bedömning). Remsan på vägen går dit
+  (`data-nl-till="hjalpare"`). Siffran på studiehjälparen är öppna uppgifter.
+- **Alltid på Din väg:** går man ut ur NexLäx och in igen står man på Din väg (`bytteSektion`
+  och barnvyns `onByt`). En länk som ber om en annan flik (Se alla märken på profilen) lämnar
+  den i `NXUppgifter.tagFlik()`. Adressen `#nexlax/rank` följs fortfarande.
+- **Fast huvud:** `.nl-spelhuvud` (Lämna med kryss och ord, NexLäx i mitten med
+  huvudsidans gradient blå, lila, rosa, ljudet, och flikarna) står under sidhuvudet. Menyn och
+  hälsningen göms bara när spelet finns på sidan (`#nl-vag` eller `#bv-nexlax` utan `hidden`),
+  så att menyn finns kvar när barnets NexLäx inte gick att hämta. Gradienten är NexLäx egen: den
+  ligger på en `span` i den markerade fliken och valet i Din utveckling, aldrig på knappen.
+- **Banan syns direkt:** toppen är en rad (streak, XP, rank) och ett steg; Fortsätt säger
+  ämnet och årskursen i ämnets färg (`.nl-cta-amne`), för det kan vara ett annat ämne än det valda.
+  Dagens uppdrag är hopfällt (`details`, öppet läge på `host.dataset.upp`). Banderollen
+  (`.nl-baner`, ämnets färg, procent) öppnar väljaren (`host.dataset.valj`), som stänger sig när
+  man valt årskurs. "Streak" står i stället för "dagar" i toppen.
+- **Prov:** `prova-nexlax.js` (99) och `prova-barnkonton.js` (277) följer med.
+
 - **Fem flikar** i studievyn och barnets vy: Din väg, Rank, Märken, Din utveckling, Studiehjälparen
   (`#nexlax/vag`, `/rank`, `/marken`, `/utveckling`, `/hjalpare`). Rank, märken och bedömningen
   ligger inte längre i Din utveckling, och uppgifterna och passet från studiehjälparen inte på vägen:

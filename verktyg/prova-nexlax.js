@@ -301,6 +301,18 @@ async function provaBarnet(webb) {
   /* Väljaren (2026-10-13): tre ämnen framme, resten bakom Visa fler
      ämnen, och årskurserna som små siffror. */
   const namnen = () => page.$$eval('#bv-nl-vag .nl-amne', b => b.map(x => x.querySelector('b').firstChild.textContent));
+  /* Banan syns direkt: väljaren är gömd bakom banderollen (2026-10-13). */
+  prova('banan: väljaren är gömd och banderollen säger ämnet och årskursen', (await page.locator('#bv-nl-vag .nl-valj').count()) === 0
+    && (await text(page, '#bv-nl-vag .nl-baner')).includes('Matematik') && (await text(page, '#bv-nl-vag .nl-baner')).includes('Åk 6'),
+    await text(page, '#bv-nl-vag .nl-baner'));
+  prova('banan: stegen syns i första skärmen', await page.evaluate(() => {
+    const k = document.querySelector('#bv-nl-vag .upg-nod-knapp, #bv-nl-vag .nl-omr');
+    return !!k && k.getBoundingClientRect().top < window.innerHeight;
+  }));
+  await page.click('#bv-nl-vag [data-nl-baner]');
+  await vänta(100);
+  prova('banan: banderollen öppnar väljaren', (await page.getAttribute('#bv-nl-vag [data-nl-baner]', 'aria-expanded')) === 'true'
+    && (await page.locator('#bv-nl-vag .nl-valj').count()) === 1);
   const rutor = await namnen();
   prova('väljaren: tre ämnen framme', JSON.stringify(rutor) === JSON.stringify(['Matematik', 'Svenska', 'Engelska']), JSON.stringify(rutor));
   prova('väljaren: Visa fler ämnen säger hur många som är gömda',
@@ -330,13 +342,34 @@ async function provaBarnet(webb) {
   await page.click('#bv-nl-vag [data-nl-fler]');
   await vänta(100);
   prova('väljaren: Visa färre gömmer dem igen', (await namnen()).length === 3);
+  await page.click('#bv-nl-vag .nl-ak-knapp[data-nl-ak="ak7"]');
+  await vänta(150);
+  prova('väljaren: ett val av årskurs stänger väljaren och byter bana', (await page.locator('#bv-nl-vag .nl-valj').count()) === 0
+    && (await page.getAttribute('#bv-nl-vag', 'data-arskurs')) === 'ak7');
+  await page.click('#bv-nl-vag [data-nl-baner]');
+  await vänta(100);
+  await page.click('#bv-nl-vag .nl-ak-knapp[data-nl-ak="ak6"]');
+  await vänta(150);
+  await page.click('#bv-nl-vag [data-nl-baner]');
+  await vänta(100);
   await bild(page, 'nexlax-barn-vag', '#bv-nexlax');
 
   /* Spelets meny: Rank, Märken, Din utveckling och Studiehjälparen har
      var sin flik. */
-  prova('flikarna: fem delar i spelets meny',
+  prova('flikarna: fyra delar i spelets meny, Din utveckling efter Din väg',
     JSON.stringify(await page.$$eval('#bv-nexlax .nl-flikar .vy-flik', b => b.map(x => x.dataset.flik)))
-    === JSON.stringify(['vag', 'rank', 'marken', 'utveckling', 'hjalpare']));
+    === JSON.stringify(['vag', 'utveckling', 'rank', 'marken']));
+  prova('flikarna: huvudet har Lämna, NexLäx i mitten och ljudet', (await text(page, '#bv-nexlax .nl-spelrad-ut')).includes('Lämna')
+    && (await text(page, '#bv-nexlax .nl-spelrad-namn')) === 'NexLäx' && (await page.locator('#bv-nexlax .nl-spelrad-ljud svg').count()) === 1);
+  prova('flikarna: streak står i stället för dagar', (await text(page, '#bv-nl-vag .nl-serie')).includes('streak') && !(await text(page, '#bv-nl-vag .nl-serie')).includes('dagar'),
+    await text(page, '#bv-nl-vag .nl-serie'));
+  prova('fortsätt: säger vilket ämne', (await text(page, '#bv-nl-vag .nl-cta-amne')).includes('Åk'), await text(page, '#bv-nl-vag .nl-cta-amne'));
+  prova('uppdrag: hopfällda, och öppnas med ett tryck', (await page.locator('#bv-nl-vag details.nl-uppdrag[open]').count()) === 0
+    && (await page.locator('#bv-nl-vag details.nl-uppdrag').count()) === 1);
+  await page.click('#bv-nl-vag details.nl-uppdrag > summary');
+  await vänta(100);
+  prova('uppdrag: listan syns när man trycker', await synlig(page, '#bv-nl-vag .nl-uppdrag-lista'));
+  await page.click('#bv-nl-vag details.nl-uppdrag > summary');
   await page.click('#bv-flik-rank');
   await vänta(250);
   const rk = await page.$$eval('#bv-nl-rank .nl-rk', b => b.map(x => x.className.replace('nl-rk ', '')));
@@ -371,12 +404,25 @@ async function provaBarnet(webb) {
     && (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="veckor"]', 'aria-pressed')) === 'true'
     && (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="oversikt"]', 'aria-pressed')) === 'false');
   await bild(page, 'nexlax-barn-utveckling', '#bv-nexlax');
-  await page.click('#bv-flik-hjalpare');
+  prova('utveckling: bara NexLäx eller studiehjälparen att välja mellan', JSON.stringify(await page.$$eval('#bv-nl-utveckling [data-nl-del]', b => b.map(x => x.dataset.nlDel)))
+    === JSON.stringify(['nexlax', 'hjalpare']));
+  await page.click('#bv-nl-utveckling [data-nl-del="hjalpare"]');
   await vänta(150);
-  prova('studiehjälparen: egen flik, och barnets vy visar ingen bedömning', /studiehjälpar/i.test(await text(page, '#bv-nl-hjalpare'))
-    && (await page.locator('#bv-nl-hjalpare').getByText('Studiehjälparens bedömning').count()) === 0, await text(page, '#bv-nl-hjalpare'));
+  prova('studiehjälparen: en del av Din utveckling, och barnets vy visar ingen bedömning', /studiehjälpar/i.test(await text(page, '#bv-nl-utveckling'))
+    && (await page.locator('#bv-nl-utveckling [data-nl-sida]').count()) === 0
+    && (await page.locator('#bv-nl-utveckling').getByText('Studiehjälparens bedömning').count()) === 0, await text(page, '#bv-nl-utveckling'));
+  await page.click('#bv-nl-utveckling [data-nl-del="nexlax"]');
   await page.click('#bv-flik-vag');
   await vänta(100);
+
+  /* Ut ur NexLäx och in igen: alltid på Din väg. */
+  await page.click('#bv-flik-rank');
+  await page.click('#bv-nexlax .nl-spelrad-ut');
+  await vänta(200);
+  prova('NexLäx: Lämna går till Översikt och menyn är tillbaka', !(await synlig(page, '#bv-nexlax')) && await synlig(page, '#vy-sido'));
+  await page.click('#vy-sido a[data-sek="nexlax"]');
+  await vänta(250);
+  prova('NexLäx: in igen står man på Din väg', (await page.getAttribute('#bv-flik-vag', 'aria-selected')) === 'true' && await synlig(page, '#bv-panel-vag'));
 
   /* Vägen har inte NP-nivåerna, och procenten räknar bara vägen. */
   const väg = await text(page, '#bv-nl-vag .nl-vag');
@@ -397,6 +443,7 @@ async function provaBarnet(webb) {
   prova('väljaren: trycket tickar', (await känt(page)).includes('tryck'), JSON.stringify(await känt(page)));
   prova('väljaren: språket har sin kod i stället för en flagga', (await text(page, '#bv-nl-vag .nl-amne[data-nl-amne="Spanska"] .nl-sprakkod')) === 'ES');
   /* Tillbaka till matematiken: elevens årskurs, och åk 7 med en knapp. */
+  if ((await page.locator('#bv-nl-vag .nl-valj').count()) === 0) await page.click('#bv-nl-vag [data-nl-baner]');
   await page.click('#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]');
   await vänta(150);
   prova('väljaren: tillbaka i ämnet står elevens årskurs', (await page.getAttribute('#bv-nl-vag', 'data-arskurs')) === 'ak6');
@@ -404,6 +451,7 @@ async function provaBarnet(webb) {
   await vänta(150);
   prova('väljaren: en årskurs byter bana i ämnet', (await page.getAttribute('#bv-nl-vag', 'data-amne')) === 'Matematik'
     && (await page.getAttribute('#bv-nl-vag', 'data-arskurs')) === 'ak7');
+  await page.click('#bv-nl-vag [data-nl-baner]');
   await page.click('#bv-nl-vag .nl-ak-knapp[data-nl-ak="ak6"]');
   await vänta(150);
 
@@ -421,13 +469,14 @@ async function provaBarnet(webb) {
   prova('NP: i barnets vy inga länkar ut', (await page.locator('#bv-nexlax a:not(.nl-spelrad-ut)').count()) === 0
     && (await page.getAttribute('#bv-nexlax .nl-spelrad-ut', 'href')) === '#oversikt',
     await page.locator('#bv-nexlax a:not(.nl-spelrad-ut)').count());
-  prova('NP: toppen räknar sektionen', (await text(page, '#bv-nl-vag .nl-bana')).includes('Inför NP'));
+  prova('NP: toppen räknar sektionen', (await text(page, '#bv-nl-vag .nl-baner')).includes('Inför NP'));
   await bild(page, 'nexlax-barn-np', '#bv-nexlax');
   await page.click('#bv-nl-vag [data-nl-spar="vag"]');
   await vänta(150);
 
   /* Engelska åk 6 har bara NP-nivåer: sektionen står där direkt, utan
      en tom väg och utan knappen mellan dem. Text ur banken ritas som text. */
+  if ((await page.locator('#bv-nl-vag .nl-valj').count()) === 0) await page.click('#bv-nl-vag [data-nl-baner]');
   await page.click('#bv-nl-vag .nl-amne[data-nl-amne="Engelska"]');
   await vänta(150);
   prova('NP: en bana med bara NP-nivåer visar sektionen direkt',
@@ -436,6 +485,7 @@ async function provaBarnet(webb) {
     await page.getAttribute('#bv-nl-vag', 'data-spar'));
   prova('NP: text ur banken ritas som text', (await page.locator('#bv-nexlax img[data-elak]').count()) === 0
     && (await text(page, '#bv-nl-vag .nl-np')).includes(ELAK));
+  if ((await page.locator('#bv-nl-vag .nl-valj').count()) === 0) await page.click('#bv-nl-vag [data-nl-baner]');
   await page.click('#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]');
   await vänta(150);
   prova('NP: tillbaka i matematiken står vägen, som eleven valde', (await page.getAttribute('#bv-nl-vag', 'data-spar')) === 'vag');
@@ -630,8 +680,8 @@ async function provaStudievyn(webb) {
   const { context, page, riktiga, konsol } = await öppna(webb, { rpc, inloggad: 'foralder-1', tabeller });
   await page.goto(BAS + '/foralder#nexlax');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
-  await page.waitForFunction(() => document.querySelector('#nl-vag .nl-valj'), null, { timeout: 8000 }).catch(() => {});
-  prova('studievyn: väljaren och uppdragen', await synlig(page, '#nl-vag .nl-valj') && await synlig(page, '#nl-vag .nl-uppdrag'));
+  await page.waitForFunction(() => document.querySelector('#nl-vag .nl-baner'), null, { timeout: 8000 }).catch(() => {});
+  prova('studievyn: väljaren och uppdragen', await synlig(page, '#nl-vag .nl-baner') && await synlig(page, '#nl-vag .nl-uppdrag'));
   await page.click('#nl-vag [data-nl-spar="np"]').catch(() => {});
   await vänta(200);
   const länkar = await page.$$eval('#nl-vag .nl-np-lank', a => a.map(x => [x.getAttribute('href'), x.getAttribute('target'), x.getAttribute('rel')]));
