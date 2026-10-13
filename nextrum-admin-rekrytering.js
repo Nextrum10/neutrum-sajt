@@ -16,8 +16,8 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { ANS_LAGE, S, fråga, funktionsFel, gmailAdress, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
-          kortDatum, läge, matchar, namnlista, närText, ritaPanelen, tomtText, visaRuta,
+  const { S, fråga, funktionsFel, gmailAdress, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
+          kortDatum, läge, matchar, märkFlik, namnlista, närText, ritaPanelen, tomtText, visaRuta,
           ärNyNu, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
@@ -31,24 +31,60 @@
      ANSÖKNINGAR
      ============================================================ */
 
-  /* Namnen, med läget. Uppgifterna, CV:t och rekryteringens steg står
+  /* ============================================================
+     VAR I REKRYTERINGEN (2026-10-13)
+
+     Leo: "gör en knapp för att skicka vidare från alla ansökningar till
+     intervju och sedan utbildningar så att man kan skicka runt anställd
+     och hålla koll på de". Fliken Intervju tog förut varje ansökan som
+     inte var avgjord, så Alla och Intervju var samma lista och ingen
+     hade valt vem som gick vidare.
+
+     Steget räknas ur det ansökan redan bär, utan en egen kolumn:
+     Kontaktad (status contacted, som Leo redan satt för hand på dem han
+     gått vidare med) är Intervju, "Mötet är hållet" eller ett påbörjat
+     prov är Utbildning, och Utbildad väntar på poolen. Flikarna, listan
+     och filtret läser samma funktion, så en person står på ett ställe.
+     ============================================================ */
+  function ansSteg(a) {
+    if (a.status === 'rejected') return 'avbojd';
+    if (a.status === 'approved') return 'godkand';
+    if (a.utbildad_at) return 'utbildad';
+    /* Den som redan har ett utbildningsmöte hör hit, också utan att
+       mötet innan är avbockat (2026-09-29): provet går att öppna före
+       steg 2, och fliken var då tom medan provet pågick. */
+    if (a.intervju_at || a.utbildningsmote_at || a.prov_sista_dag) return 'utbildning';
+    if (a.status === 'contacted' || a.kontaktad_at || a.mote_tid) return 'intervju';
+    return 'ny';
+  }
+
+  const ANS_STEG = {
+    ny: ['Ny', 'ar-ny'], intervju: ['Intervju', 'ar-vantar'], utbildning: ['Utbildning', 'ar-vantar'],
+    utbildad: ['Klar för poolen', 'ar-ny'], godkand: ['Godkänd', 'ar-klar'], avbojd: ['Avböjd', '']
+  };
+  const stegLäge = a => läge(ANS_STEG, ansSteg(a));
+
+  /* Namnen, med steget. Uppgifterna, CV:t och rekryteringens steg står
      i panelen: Ansökan och Rekryteringen (nextrum-admin-detalj.js).
-     Söket går fortfarande mot allt de skrev. */
+     Söket går fortfarande mot allt de skrev. Filtret är steget, och
+     Utbildning tar med den som är klar för poolen. */
   function ritaAnsokningar() {
     const sök = $('#ans-sok').value.trim();
     const st = $('#ans-status').value;
+    const iSteg = a => !st || ansSteg(a) === st || (st === 'utbildning' && ansSteg(a) === 'utbildad');
     const rader = S.ansokningar
-      .filter(a => !st || a.status === st)
+      .filter(iSteg)
       .filter(a => matchar(a, ['name', 'email', 'school', 'subjects', 'why'], sök));
 
     $('#ans-antal').textContent = rader.length + ' av ' + S.ansokningar.length;
     $('#ans-tabell').innerHTML = namnlista(rader, {
       typ: 'ansokan', id: a => a.id,
       namn: a => a.name || a.email,
-      läge: a => läge(ANS_LAGE, a.status),
+      läge: stegLäge,
       /* Den som kom in sedan du tittade senast (2026-10-05, ärNyNu). */
       nytt: a => ärNyNu('ansokningar', a),
       under: a => (ärNyNu('ansokningar', a) ? 'Ny sedan du tittade senast · ' + närText(a.created_at) : ''),
+      knapp: a => ansSteg(a) === 'ny' ? vidareKnapp('intervju', a, 'Till intervju') : '',
       tomt: tomtText(sök || st, 'Ingen ansökan matchar filtret', 'Inga ansökningar än')
     });
 
@@ -56,25 +92,30 @@
     ritaPanelen();
   }
 
-  /* ============================================================
-     INTERVJU OCH UTBILDNING (Fas 6)
+  function vidareKnapp(steg, a, text) {
+    return '<button type="button" class="btn btn-ghost btn-sm" data-ans-vidare="' + steg + ':' + esc(a.id) + '">'
+      + esc(text) + '</button>';
+  }
 
-     Rekryteringens två steg som egna flikar: vem som väntar på en
-     intervju, och vem som är i utbildningen men inte utbildad. Namnen,
-     och under dem hur länge de väntat, för det är vad flikarna svarar
-     på. Stegen bockas av i panelen, som öppnas på fliken Rekryteringen.
-     Avböjda och godkända ligger bara under Alla.
+  /* ============================================================
+     INTERVJU OCH UTBILDNING (Fas 6, knapparna 2026-10-13)
+
+     Rekryteringens två steg som egna flikar: vem som gått vidare till en
+     intervju, och vem som är i utbildningen eller klar med den men inte
+     intagen. Namnen, och under dem var de står, för det är vad flikarna
+     svarar på. Varje rad har sitt nästa steg som en knapp; resten bockas
+     av i panelen, som öppnas på fliken Rekryteringen. Avböjda och
+     godkända ligger bara under Alla.
      ============================================================ */
   function ritaStegflikar() {
-    const aktiva = S.ansokningar.filter(a => a.status !== 'rejected' && a.status !== 'approved');
-    /* Den som redan har ett utbildningsmöte hör hit, också utan att
-       mötet innan är avbockat (2026-09-29): provet går att öppna före
-       steg 2, och fliken var då tom medan provet pågick. */
-    const iUtbildning = a => !a.utbildad_at && (a.intervju_at || a.utbildningsmote_at || a.prov_sista_dag);
-    const tillIntervju = aktiva.filter(a => !a.intervju_at && !iUtbildning(a))
+    const tillIntervju = S.ansokningar.filter(a => ansSteg(a) === 'intervju')
       .sort((a, b) => String(a.kontaktad_at || a.created_at).localeCompare(String(b.kontaktad_at || b.created_at)));
     const sedan = a => String(a.intervju_at || a.utbildningsmote_at || a.prov_sista_dag || '');
-    const tillUtbildning = aktiva.filter(iUtbildning).sort((a, b) => sedan(a).localeCompare(sedan(b)));
+    const tillUtbildning = S.ansokningar.filter(a => ansSteg(a) === 'utbildning' || ansSteg(a) === 'utbildad')
+      .sort((a, b) => sedan(a).localeCompare(sedan(b)));
+
+    märkFlik('#flik-ans-intervju-mark', tillIntervju.length);
+    märkFlik('#flik-ans-utbildning-mark', tillUtbildning.length);
 
     const intervju = $('#ans-intervju');
     if (intervju) {
@@ -82,8 +123,10 @@
       intervju.innerHTML = namnlista(tillIntervju, {
         typ: 'ansokan', id: a => a.id, flik: 'rekrytering',
         namn: a => a.name || a.email,
-        under: a => a.kontaktad_at ? 'Kontaktad ' + kortDatum(a.kontaktad_at) : 'Inte kontaktad än',
-        tomt: 'Ingen väntar på en intervju'
+        under: a => a.mote_tid ? 'Möte ' + (mötesText(a) || '')
+          : a.kontaktad_at ? 'Kontaktad ' + kortDatum(a.kontaktad_at) : 'Inte kontaktad än',
+        knapp: a => vidareKnapp('utbildning', a, 'Till utbildning'),
+        tomt: 'Ingen är på väg till en intervju. Skicka hit från Alla ansökningar.'
       });
     }
 
@@ -93,12 +136,62 @@
       utbildning.innerHTML = namnlista(tillUtbildning, {
         typ: 'ansokan', id: a => a.id, flik: 'rekrytering',
         namn: a => a.name || a.email,
-        under: a => (a.intervju_at ? 'Intervjuad ' + kortDatum(a.intervju_at) : 'Utbildningsmöte '
-          + kortDatum(a.utbildningsmote_at || a.prov_sista_dag)) + ' · ' + provKort(a),
-        tomt: 'Ingen väntar på utbildning'
+        under: a => a.utbildad_at
+          ? 'Utbildad ' + kortDatum(a.utbildad_at) + ' · klar att tas in i poolen'
+          : (a.intervju_at ? 'Intervjuad ' + kortDatum(a.intervju_at) : 'Utbildningsmöte '
+            + kortDatum(a.utbildningsmote_at || a.prov_sista_dag)) + ' · ' + provKort(a),
+        /* Nästa steg: in i poolen när hen är utbildad, annars provet om
+           det inte är öppet (provKnapp är tom medan det pågår). */
+        knapp: a => a.utbildad_at
+          ? '<button type="button" class="btn btn-ghost btn-sm" data-ans-pool="' + esc(a.id) + '">Ta in i poolen</button>'
+          : provKnapp(a),
+        tomt: 'Ingen är i utbildningen. Skicka hit från Intervju.'
       });
     }
   }
+
+  /* ---- skicka vidare: till intervju, till utbildning (2026-10-13) ----
+     Till intervju sätter läget Kontaktad och mejlar ingenting, så den går
+     utan fråga; tillbaka är läget Ny i panelen. Till utbildning är "Mötet
+     är hållet" i Rekryteringen, och det mejlar ett tack som säger att
+     introduktionen är nästa steg. Ett mejl går inte att ta tillbaka, och
+     knappen står ett tryck från listan, så den frågar först. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-ans-vidare]');
+    if (!knapp) return;
+    const [steg, id] = knapp.dataset.ansVidare.split(':');
+    const a = S.ansokningar.find(x => x.id === id);
+    if (!a) return;
+
+    let ändring;
+    if (steg === 'intervju') {
+      if (ansSteg(a) !== 'ny') return;
+      ändring = { status: 'contacted' };
+    } else if (steg === 'utbildning') {
+      if (ansSteg(a) !== 'intervju') return;
+      const ja = await bekräfta({
+        titel: 'Skicka ' + (a.name || 'den sökande') + ' till utbildningen?',
+        text: 'Intervjun markeras som hållen, och ' + (a.name || 'hen') + ' får ett mejl som tackar för '
+          + 'mötet och säger att introduktionen är nästa steg. Utbildningsmötet och provet öppnar du sedan '
+          + 'under fliken Utbildning.',
+        knapp: 'Skicka till utbildningen',
+        avbryt: 'Avbryt'
+      });
+      if (!ja) return;
+      ändring = { intervju_at: new Date().toISOString() };
+    } else {
+      return;
+    }
+
+    await medan(knapp, '…', async () => {
+      const { data, error } = await supa.from('applications')
+        .update(ändring).eq('id', a.id).select('*').maybeSingle();
+      if (error || !data) { alert('Kunde inte spara: ' + (error ? felText(error) : 'ingen rad ändrades')); return; }
+      Object.assign(a, data);
+      if (steg === 'utbildning') await hämtaBesked(a.id);
+      ritaOm();
+    });
+  });
 
   /* ============================================================
      CV:T
@@ -1193,6 +1286,6 @@
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
     ansökansText, bekräftaNej, cvKnapp, hämtaBesked, provKort, provKnapp, ritaAnsokningar, spårLista,
-    vhFakta, vhSvar
+    stegLäge, vhFakta, vhSvar
   });
 })();

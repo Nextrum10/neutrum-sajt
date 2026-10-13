@@ -12,8 +12,10 @@
 
    Provet ser det en människa ser: fältet för vårdnadshavaren i
    formuläret på båda språken och vad som skickas, rutan som visar nejet
-   innan läget blir Avböjd, godkännandet i ansökan, och att siffran vid
-   Ansökningar och Intresseanmälningar går bort när man tittat. Reglerna
+   innan läget blir Avböjd, godkännandet i ansökan, att siffran vid
+   Ansökningar och Intresseanmälningar går bort när man tittat, och
+   knapparna som skickar vidare till intervju och utbildning
+   (2026-10-13). Reglerna
    i databasen provas i verktyg/rls-test.sql, mallarna i
    supabase/functions/_delad/notiser/ansokan_test.ts.
    ============================================================ */
@@ -91,6 +93,19 @@ function värld(o) {
     tjanster: [{ kod: 'laxhjalp', namn: 'Läxhjälp', aktiv: true, for_jobb: true, for_kund: true, ordning: 1 }],
     flaggor: []
   };
+  /* Rekryteringens steg (2026-10-13): en i utbildningen utan öppnat
+     prov, och en som är utbildad och väntar på poolen. */
+  if (o.steg) {
+    w.applications.push(
+      { id: 'ans-utb', name: 'Ulla Utbildning', email: 'ulla@example.se', age: 20, status: 'contacted',
+        created_at: '2026-09-22T10:00:00Z', intervju_at: '2026-10-01T10:00:00Z', tjanster: ['laxhjalp'], why: 'Hej',
+        vardnadshavare_epost: null, vardnadshavare_godkand_at: null, vardnadshavare_svar: null },
+      { id: 'ans-klar', name: 'Klara Klar', email: 'klara@example.se', age: 21, status: 'contacted',
+        created_at: '2026-09-21T10:00:00Z', intervju_at: '2026-09-28T10:00:00Z', utbildningsmote_at: '2026-10-02T10:00:00Z',
+        prov_sista_dag: '2026-10-05', prov_godkant_at: '2026-10-03T10:00:00Z', utbildad_at: '2026-10-03T10:00:00Z',
+        tjanster: ['laxhjalp'], why: 'Hej',
+        vardnadshavare_epost: null, vardnadshavare_godkand_at: null, vardnadshavare_svar: null });
+  }
   if (o.utanKolumner) {
     w.applications.forEach(a => {
       delete a.vardnadshavare_epost; delete a.vardnadshavare_godkand_at; delete a.vardnadshavare_svar;
@@ -500,6 +515,123 @@ async function provaAdminvyn(webb) {
   }
 }
 
+/* ============ rekryteringens steg (2026-10-13) ============ */
+async function provaStegen(webb) {
+  const { context, page, S, riktiga, konsol } = await öppna(webb, { inloggad: true, steg: true });
+  await page.goto(BAS + '/admin#ansokningar');
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+  await vänta(800);
+  const patchar = () => S.logg.filter(r => r.metod === 'PATCH' && r.väg === '/rest/v1/applications');
+  const rad = id => '#ans-tabell li:has([data-dp="ansokan:' + id + '"])';
+  const flik = async f => { await page.click('#flik-ans-' + f); await vänta(200); };
+
+  prova('steg: en ny ansökan har Till intervju', (await page.locator(rad('ans-ung') + ' [data-ans-vidare="intervju:ans-ung"]').count()) === 1);
+  prova('steg: en som redan gått vidare har ingen knapp i Alla', (await page.locator(rad('ans-gammal') + ' [data-ans-vidare]').count()) === 0);
+  prova('steg: Alla visar steget', (await text(page, rad('ans-gammal') + ' .adm-namn-lage')).trim() === 'Intervju'
+    && (await text(page, rad('ans-klar') + ' .adm-namn-lage')).trim() === 'Klar för poolen'
+    && (await text(page, rad('ans-ung') + ' .adm-namn-lage')).trim() === 'Ny',
+    [await text(page, rad('ans-gammal') + ' .adm-namn-lage'), await text(page, rad('ans-klar') + ' .adm-namn-lage')].join(' / '));
+  prova('steg: flikarna räknar', (await text(page, '#flik-ans-intervju-mark')) === '1'
+    && (await text(page, '#flik-ans-utbildning-mark')) === '2',
+    (await text(page, '#flik-ans-intervju-mark')) + ' / ' + (await text(page, '#flik-ans-utbildning-mark')));
+  await bild(page, 'steg-alla', '#ans-tabell');
+
+  /* Till intervju: läget Kontaktad, ingen fråga, och raden flyttar. */
+  await page.click('[data-ans-vidare="intervju:ans-ung"]');
+  await vänta(400);
+  const tillIntervju = patchar().pop();
+  prova('steg: Till intervju sparar läget Kontaktad och inget annat', tillIntervju
+    && JSON.stringify(tillIntervju.kropp) === '{"status":"contacted"}' && tillIntervju.sök.includes('ans-ung'),
+    JSON.stringify(tillIntervju));
+  prova('steg: utan fråga', (await page.locator('.nx-fraga-box').count()) === 0);
+  prova('steg: raden säger Intervju och knappen är borta', (await text(page, rad('ans-ung') + ' .adm-namn-lage')).trim() === 'Intervju'
+    && (await page.locator(rad('ans-ung') + ' [data-ans-vidare]').count()) === 0);
+  prova('steg: fliken Intervju räknar upp', (await text(page, '#flik-ans-intervju-mark')) === '2');
+
+  await flik('intervju');
+  const iIntervju = await page.locator('#ans-intervju [data-dp]').evaluateAll(l => l.map(x => x.dataset.dp));
+  prova('steg: Intervju har de två som skickats dit', iIntervju.length === 2 && iIntervju.includes('ansokan:ans-ung')
+    && iIntervju.includes('ansokan:ans-gammal'), iIntervju.join(', '));
+  prova('steg: varje rad i Intervju har Till utbildning',
+    (await page.locator('#ans-intervju [data-ans-vidare^="utbildning:"]').count()) === 2);
+  await bild(page, 'steg-intervju', '#panel-ans-intervju');
+
+  /* Till utbildning frågar, för ett mejl går. Avbryt sparar inget. */
+  const före = patchar().length;
+  await page.click('[data-ans-vidare="utbildning:ans-gammal"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  prova('steg: Till utbildning frågar och säger att ett mejl går',
+    (await text(page, '.nx-fraga-box h3')).includes('Kalle Sökande') && (await text(page, '.nx-fraga-box')).includes('mejl'),
+    await text(page, '.nx-fraga-box'));
+  await bild(page, 'steg-fraga', '.nx-fraga-box');
+  await page.click('[data-svar="nej"]');
+  await vänta(200);
+  prova('steg: Avbryt sparar inget', patchar().length === före);
+  await page.click('[data-ans-vidare="utbildning:ans-gammal"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  await page.click('[data-svar="ja"]');
+  await vänta(500);
+  const tillUtb = patchar().pop();
+  prova('steg: Skicka till utbildningen sätter intervju_at och inget annat', tillUtb && tillUtb.sök.includes('ans-gammal')
+    && Object.keys(tillUtb.kropp || {}).join() === 'intervju_at' && !Number.isNaN(Date.parse(tillUtb.kropp.intervju_at)),
+    JSON.stringify(tillUtb));
+  prova('steg: och hämtar beskeden om', S.logg.some(r => r.metod === 'GET' && r.väg === '/rest/v1/ansokan_utskick'
+    && r.sök.includes('ans-gammal')));
+  prova('steg: Kalle har lämnat Intervju', (await page.locator('#ans-intervju [data-dp="ansokan:ans-gammal"]').count()) === 0
+    && (await text(page, '#flik-ans-intervju-mark')) === '1' && (await text(page, '#flik-ans-utbildning-mark')) === '3');
+
+  await flik('utbildning');
+  prova('steg: Utbildning har Kalle, provet att öppna och poolen för den som är klar',
+    (await page.locator('#ans-utbildning [data-dp="ansokan:ans-gammal"]').count()) === 1
+    && (await page.locator('#ans-utbildning [data-ans-steg="utbmote:ans-utb"]').count()) === 1
+    && (await page.locator('#ans-utbildning [data-ans-pool="ans-klar"]').count()) === 1);
+  prova('steg: den som är klar säger det', (await text(page, '#ans-utbildning li:has([data-dp="ansokan:ans-klar"]) .adm-namn-text span'))
+    .includes('klar att tas in i poolen'));
+  await bild(page, 'steg-utbildning', '#panel-ans-utbildning');
+
+  /* Namnet öppnar fortfarande panelen, med steget överst. */
+  await page.click('#ans-utbildning [data-dp="ansokan:ans-gammal"]');
+  await vänta(400);
+  prova('steg: panelen visar steget', (await text(page, '.dp-marken')).includes('Utbildning'), await text(page, '.dp-marken'));
+  await page.click('[data-dp-stang]').catch(() => {});
+  await vänta(200);
+
+  /* Filtret är steget, och Utbildning tar med den som är klar. */
+  await flik('alla');
+  await page.selectOption('#ans-status', 'utbildning');
+  await vänta(200);
+  const filtrerat = await page.locator('#ans-tabell [data-dp]').evaluateAll(l => l.map(x => x.dataset.dp).sort());
+  prova('steg: filtret Utbildning', filtrerat.join() === 'ansokan:ans-gammal,ansokan:ans-klar,ansokan:ans-utb', filtrerat.join());
+  await page.selectOption('#ans-status', '');
+
+  prova('steg: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('steg: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+
+  /* Telefonen: knappen under namnet, minst 44 px, inget utanför rutan. */
+  {
+    const { context, page, konsol } = await öppna(webb, { inloggad: true, steg: true,
+      context: { viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true } });
+    await page.goto(BAS + '/admin#ansokningar');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+    await vänta(800);
+    const mått = await page.evaluate(() => {
+      const k = document.querySelector('[data-ans-vidare="intervju:ans-ung"]');
+      const n = k.closest('li').querySelector('.adm-namn');
+      const kr = k.getBoundingClientRect(), nr = n.getBoundingClientRect();
+      const mitt = document.elementFromPoint(kr.left + kr.width / 2, kr.top + kr.height / 2);
+      return { h: kr.height, under: kr.top >= nr.bottom - 1, höger: kr.right, bredd: innerWidth,
+        sida: document.documentElement.scrollWidth, träff: !!mitt && mitt.closest('[data-ans-vidare]') === k };
+    });
+    prova('steg telefon: knappen står under namnet', mått.under, JSON.stringify(mått));
+    prova('steg telefon: minst 44 px och träffbar', mått.h >= 44 && mått.träff, JSON.stringify(mått));
+    prova('steg telefon: inget sticker ut', mått.höger <= mått.bredd && mått.sida <= mått.bredd, JSON.stringify(mått));
+    await bild(page, 'steg-telefon', '#ans-tabell');
+    prova('steg telefon: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    await context.close();
+  }
+}
+
 (async function () {
   const server = spawn('python3', [path.join(ROT, '.claude', 'serve.py'), String(PORT)], { stdio: 'ignore' });
   let klar = false;
@@ -510,6 +642,7 @@ async function provaAdminvyn(webb) {
   try {
     await provaFormuläret(webb);
     await provaAdminvyn(webb);
+    await provaStegen(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);
   } finally {
