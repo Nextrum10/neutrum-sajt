@@ -17,8 +17,8 @@
   const M = NXMedia;
 
   const { ANS_LAGE, BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
-          UTB_LAGE, elevHjälpare, elevNamn, funktionsFel, gmailAdress, hämtaMatchunderlag, kortDatum, läge, namnFör, närText,
-          lägesväljare, pill, rad, ärRaderad } = NXAdmin;
+          UTB_LAGE, elevHjälpare, elevNamn, funktionsFel, gmailAdress, hämtaAllt, hämtaMatchunderlag, kortDatum, läge,
+          namnFör, närText, lägesväljare, pill, rad, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden, nådda när de anropas. En som
      saknas hoppas över: panelen ska inte dö för att en lista inte
      laddade. */
@@ -384,6 +384,78 @@
     return esc(l.beviljad ? 'vald pass för pass, och annars i den första planen' : 'bara i den första planen')
       + ' <button class="btn btn-ghost btn-sm" type="button" data-dp-forsta="' + esc(p.id) + '" data-ja="'
       + (l.beviljad ? '0' : '1') + '">' + (l.beviljad ? 'Ta bort valet' : 'Ge den pass för pass') + '</button>';
+  }
+
+  /* TIMBANKEN OCH GRATISTIMMARNA (2026-10-13)
+
+     Leo: "vi kan även sätta in gratis timmar som vi själva väljer när
+     familjen redan är inne i system". Gratistimmarna är en rad i
+     klippkort med erbjudandet 'gratis' (migrationen gratistimmar): de
+     gäller i 60 dagar, betalar familjens pass före köpta timmar, sparar
+     inga minuter och betalas aldrig ut. Bara en superadmin sätter in och
+     tar tillbaka (ge_gratistimmar, ta_tillbaka_gratistimmar), och bara
+     hen har köpen i S.klippkort: för andra står raden inte alls.
+
+     Översikt säger timmarna i korthet; allt står under Ekonomi, med köpen
+     och gratistimmarna kort för kort och rutan för att sätta in. */
+  const fullAdmin = () => !S.behorighet || S.behorighet.superadmin;
+  let gratisBesked = null;   // { id, text, ok }: kvittot efter en ändring, visas en gång
+
+  function dpTimbankKort(p) {
+    if (!fullAdmin() || S.klippkortFel) return null;
+    const brukbara = (S.klippkort || []).filter(k => k.parent_id === p.id && k.brukbar);
+    const timmar = brukbara.reduce((n, k) => n + Number(k.kvar || 0), 0);
+    const gratis = brukbara.filter(NXBetalning.gratistimmar).reduce((n, k) => n + Number(k.kvar || 0), 0);
+    const bank = (S.timbank || []).find(r => r.parent_id === p.id);
+    const delar = [timmar === 1 ? '1 timme' : timmar + ' timmar'];
+    if (gratis) delar.push('varav ' + gratis + ' gratis');
+    if (bank && Number(bank.saldo_min) > 0) delar.push(bank.saldo_min + ' min sparade');
+    return esc(delar.join(', '))
+      + ' <button class="btn btn-ghost btn-sm" type="button" data-dp-flik="ekonomi">Sätt in gratistimmar</button>';
+  }
+
+  function dpTimbank(p) {
+    if (!fullAdmin()) return '';
+    const idag = isoFor(new Date());
+    if (S.klippkortFel) {
+      return dpRubrik('Timbanken') + tomt('Timbanken gick inte att läsa', S.klippkortFel);
+    }
+    const kort = (S.klippkort || [])
+      .filter(k => k.parent_id === p.id && k.status !== 'vantar' && k.status !== 'misslyckad')
+      .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    const bank = (S.timbank || []).find(r => r.parent_id === p.id);
+    const rader = kort.map(k => {
+      const gratis = NXBetalning.gratistimmar(k);
+      const utgånget = !!k.giltigt_till && String(k.giltigt_till) < idag;
+      const under = [
+        k.kvar + ' av ' + k.timmar + ' timmar kvar',
+        gratis ? 'insatta ' + kortDatum(k.created_at) : 'köpt ' + kortDatum(k.betald_at || k.created_at),
+        k.giltigt_till ? (utgånget ? 'gick ut ' : 'gäller till ') + kortDatum(k.giltigt_till) : null
+      ].filter(Boolean).join(' · ');
+      /* Ta tillbaka står bara där det finns timmar att ta: timmarna på
+         förslag och pass står kvar (ta_tillbaka_gratistimmar). */
+      const höger = gratis && k.brukbar && Number(k.kvar) > 0
+        ? '<button class="btn btn-ghost btn-sm" type="button" data-dp-gratis-tillbaka="' + esc(k.id) + '">Ta tillbaka</button>'
+        : '';
+      return dpRad(gratis ? 'Gratistimmar från Nextrum' : (k.namn || 'Köpta timmar'), under, höger);
+    }).join('');
+    const besked = gratisBesked && gratisBesked.id === p.id ? gratisBesked : null;
+    gratisBesked = null;
+    return dpRubrik('Timbanken', 'köpta timmar, gratistimmar och sparade minuter')
+      + (rader || tomt('Inga timmar', 'Familjen har inte köpt några timmar, och inga gratistimmar är insatta.'))
+      + (bank && Number(bank.saldo_min) > 0
+        ? dpRad('Sparade minuter', bank.saldo_min + ' min'
+            + (bank.varde_ore != null ? ', värda ' + kronor(bank.varde_ore) + ' om familjen slutar' : ''), '')
+        : '')
+      + '<form class="dp-gratis" data-dp-gratis="' + esc(p.id) + '">'
+      + '<label for="dp-gratis-n">Sätt in gratistimmar</label>'
+      + '<input class="inp" id="dp-gratis-n" name="timmar" type="number" min="1" max="40" step="1" inputmode="numeric" value="1" required>'
+      + '<button class="btn btn-primary" type="submit">Sätt in</button>'
+      + '<span class="dp-gratis-not">Från oss, utan kostnad. De gäller i 60 dagar och betalar familjens pass före köpta '
+      + 'timmar, också förslag och bokade pass som inte är betalda. Det som blir över av en timme sparas inte, och de '
+      + 'betalas aldrig ut. Studiehjälparen får lön för passen som vanligt.</span>'
+      + (besked ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '">' + esc(besked.text) + '</p>' : '')
+      + '</form>';
   }
 
   function dpRubrik(text, extra) {
@@ -946,6 +1018,7 @@
         [fakturor.length, 'Fakturor'],
         [fakturapass, 'Pass mot faktura']
       ])
+      + dpTimbank(p)
       + dpRubrik('Faktura som betalsätt')
       + dpRad(spärrad ? 'Avstängd för den här familjen' : 'Tillåten',
           spärrad ? 'Familjen kan bara betala med kort. Pass som redan valts för faktura faktureras ändå.'
@@ -975,6 +1048,7 @@
       ['Senast inloggad', dpSenast(p)],
       ['Användarvillkoren', dpVillkor(d), 'okänt'],
       ['Första timmen gratis', dpFörstaTimmen(p, d), 'okänt'],
+      ...(fullAdmin() ? [['Timbanken', dpTimbankKort(p), 'okänt']] : []),
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
     + dpRubrik('Nästa pass')
@@ -2097,6 +2171,79 @@
       delete S.detaljCache['familj:' + id];
       await hämtaDetalj('familj', id);
       if (DP.typ === 'familj' && DP.id === id) ritaDetalj();
+    });
+  });
+
+  /* Gratistimmarna (dpTimbank). Databasen avgör: bara en superadmin
+     sätter in och tar tillbaka, 1–40 timmar åt gången. Efter en ändring
+     hämtas allt om, för timmarna kan ha betalat familjens pass, och
+     Betalningar → Köpta timmar ritas om med panelen. */
+  const gratisTimmar = n => (n === 1 ? '1 gratistimme' : n + ' gratistimmar');
+  const saknasFunktion = fel => fel && (fel.code === 'PGRST202' || /could not find the function/i.test(String(fel.message || '')));
+
+  async function efterGratis(id, text, ok) {
+    gratisBesked = { id, text, ok };
+    await hämtaAllt();
+    kör('ritaKortbetalningar');
+    if (DP.typ === 'familj' && DP.id === id) ritaDetalj();
+  }
+
+  document.addEventListener('submit', async ev => {
+    const f = ev.target.closest('form[data-dp-gratis]');
+    if (!f) return;
+    ev.preventDefault();
+    const id = f.dataset.dpGratis;
+    const n = Number(String(f.elements.timmar.value).trim());
+    if (!Number.isInteger(n) || n < 1 || n > 40) {
+      alert('Sätt in ett helt antal timmar, mellan 1 och 40.');
+      return;
+    }
+    const sista = new Date();
+    sista.setDate(sista.getDate() + 60);
+    const ja = await bekräfta({
+      titel: 'Sätt in ' + gratisTimmar(n) + '?',
+      text: namnFör(id) + ' får dem i sin timbank i dag, och de gäller till och med ' + datumText(isoFor(sista)) + '. '
+        + 'De betalar familjens pass före köpta timmar, också förslag och bokade pass som inte är betalda. '
+        + 'Studiehjälparen får lön för passen som vanligt.',
+      knapp: 'Sätt in ' + gratisTimmar(n)
+    });
+    if (!ja) return;
+    await medan(f.querySelector('button[type="submit"]'), 'Sätter in…', async () => {
+      const { data, error } = await supa.rpc('ge_gratistimmar', { p_familj: id, p_timmar: n });
+      if (error) {
+        alert('Kunde inte sätta in: ' + (saknasFunktion(error)
+          ? 'funktionen finns inte i databasen än (migrationen gratistimmar).' : felText(error)));
+        return;
+      }
+      const betalda = Number((data && data.betalda_pass) || 0);
+      await efterGratis(id, gratisTimmar(n) + ' insatta, till och med ' + datumText(String(data.giltigt_till)) + '.'
+        + (betalda ? ' De betalade ' + (betalda === 1 ? '1 pass' : betalda + ' pass') + ' direkt.' : ''), true);
+    });
+  });
+
+  document.addEventListener('click', async ev => {
+    const k = ev.target.closest('[data-dp-gratis-tillbaka]');
+    if (!k) return;
+    const kortId = k.dataset.dpGratisTillbaka;
+    const kortet = (S.klippkort || []).find(x => x.id === kortId);
+    if (!kortet) return;
+    const ja = await bekräfta({
+      titel: 'Ta tillbaka gratistimmarna?',
+      text: (Number(kortet.kvar) === 1 ? 'Den gratistimme' : 'De ' + gratisTimmar(Number(kortet.kvar)))
+        + ' som inte används försvinner ur timbanken hos ' + namnFör(kortet.parent_id)
+        + '. Timmar som redan ligger på ett förslag eller ett bokat pass står kvar där.',
+      knapp: 'Ta tillbaka'
+    });
+    if (!ja) return;
+    await medan(k, 'Tar tillbaka…', async () => {
+      const { data, error } = await supa.rpc('ta_tillbaka_gratistimmar', { p_id: kortId });
+      if (error) { alert('Kunde inte ta tillbaka: ' + felText(error)); return; }
+      const tillbaka = Number((data && data.tillbaka) || 0);
+      await efterGratis(kortet.parent_id, tillbaka
+        ? gratisTimmar(tillbaka) + ' togs tillbaka.'
+          + (Number(data.pa_pass) ? ' ' + (Number(data.pa_pass) === 1 ? '1 timme' : data.pa_pass + ' timmar')
+            + ' står kvar på familjens pass.' : '')
+        : 'Inget att ta tillbaka: alla timmarna ligger redan på familjens pass.', true);
     });
   });
 

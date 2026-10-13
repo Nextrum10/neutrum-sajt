@@ -114,7 +114,10 @@
   const ärBetalt = r => ärPass(r) && (r.filter.has('betalda') || r.filter.has('tvist'));
   const ärObetalt = r => ärPass(r) && r.filter.has('attbetala');
   const ärKommande = r => ärPass(r) && r.filter.has('kommande');
-  const medTimmar = r => r.sätt === 'Köpta timmar' || r.sätt === 'Timbanken';
+  /* Gratistimmarna (2026-10-13) betalar som köpta timmar men utan några
+     pengar alls: de räknas med timmarna, och för sig i talet. */
+  const medGratis = r => r.sätt === 'Gratistimmar';
+  const medTimmar = r => r.sätt === 'Köpta timmar' || r.sätt === 'Timbanken' || medGratis(r);
   const utanPris = r => r.belopp == null && r.beloppText == null;
 
   function passen(rader) {
@@ -127,7 +130,8 @@
       alla: del(pass), betalda, obetalda, kommande,
       /* Första timmen bjuden, återbetalt, en makulerad faktura. */
       övriga: del(pass.filter(r => !ärBetalt(r) && !ärObetalt(r) && !ärKommande(r))),
-      medTimmar: betalda.rader.filter(medTimmar).length,
+      medTimmar: betalda.rader.filter(r => medTimmar(r) && !medGratis(r)).length,
+      medGratis: betalda.rader.filter(medGratis).length,
       obetaltÖre: summa(obetalda.rader, 'attFåIn'),
       kommandeÖre: summa(kommande.rader, 'kommande'),
       utanPris: obetalda.rader.concat(kommande.rader).filter(utanPris).length
@@ -267,7 +271,7 @@
     if (filter === 'kommande') return kr(f.kommandeÖre, 'kommande');
     if (filter === 'betalda') {
       const pengar = f.in - f.köpt;
-      if (!pengar && f.timmarMin) return { text: tim(f.timmarMin), vad: 'med köpta timmar', värde: 0 };
+      if (!pengar && f.timmarMin) return { text: tim(f.timmarMin), vad: 'med timmar ur timbanken', värde: 0 };
       return kr(pengar, f.timmarMin ? 'betalt, och ' + tim(f.timmarMin) + ' med timmar' : 'betalt för passen');
     }
     if (filter === 'tillbaka') return kr(f.attÅterbetala, 'ska tillbaka');
@@ -275,7 +279,7 @@
     if (f.attFåIn > 0) return kr(f.attFåIn, 'att få in');
     if (f.attÅterbetala > 0) return kr(f.attÅterbetala, 'ska tillbaka');
     if (f.kommandeÖre > 0) return kr(f.kommandeÖre, 'kommande');
-    if (!f.in && f.timmarMin) return { text: tim(f.timmarMin), vad: 'med köpta timmar', värde: 0 };
+    if (!f.in && f.timmarMin) return { text: tim(f.timmarMin), vad: 'med timmar ur timbanken', värde: 0 };
     return kr(f.in, f.in ? 'har kommit in' : '');
   }
 
@@ -389,7 +393,8 @@
     const attGöra = fakt.utkast + (läge.slut ? fakt.attSkapa.length : 0);
     host.innerHTML =
       tavla({ filter: 'betalda', rubrik: 'Betalda', tal: plural(p.betalda.pass, 'pass', 'pass'),
-        under: tim(p.betalda.min) + (p.medTimmar ? ' · ' + p.medTimmar + ' med köpta timmar' : '') })
+        under: tim(p.betalda.min) + (p.medTimmar ? ' · ' + p.medTimmar + ' med köpta timmar' : '')
+          + (p.medGratis ? ' · ' + p.medGratis + ' med gratistimmar' : '') })
       + tavla({ filter: 'attbetala', rubrik: 'Hållna, inte betalda', tal: plural(p.obetalda.pass, 'pass', 'pass'),
         under: p.obetalda.pass ? tim(p.obetalda.min) + ' · ' + kronor(p.obetaltÖre) + utan : 'inget som väntar',
         gör: p.obetalda.pass > 0 })

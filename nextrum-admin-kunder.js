@@ -532,6 +532,16 @@
       + '</div>';
   }
 
+  /* Kvittot på gratistimmarna, ur svaret från ge_gratistimmar. */
+  function gratisText(svar) {
+    const t = Number(svar.timmar) || 0;
+    return (t === 1 ? '1 gratistimme' : t + ' gratistimmar') + ' står i familjens timbank'
+      + (svar.giltigt_till ? ', till och med ' + datumText(svar.giltigt_till) : '') + '.'
+      + (Number(svar.betalda_pass) > 0
+        ? ' De har redan betalat ' + (Number(svar.betalda_pass) === 1 ? '1 pass' : svar.betalda_pass + ' pass') + '.'
+        : '');
+  }
+
   /* TA IN FAMILJEN (2026-10-06)
 
      Leo: "när vi tar in ... familjen till plattformen används deras
@@ -555,6 +565,7 @@
     let familj = anmälansFamilj(lead);
     let inbjuden = false;
     let forstaVal = null;   // första timmen pass för pass: true, eller felet
+    let gratisVal = null;   // gratistimmarna: svaret från ge_gratistimmar, eller felet
     const kanBjuda = NX.epostOk(lead.email || '');
 
     const ruta = document.createElement('div');
@@ -583,6 +594,15 @@
       + (familj ? '' : '<label class="le-forsta"><input type="checkbox" id="le-forsta"> '
         + 'Första timmen gratis även om familjen betalar pass för pass. Köper de en plan får de den '
         + 'där ändå, och aldrig mer än en.</label>')
+      /* Gratistimmar (2026-10-13, Leo: "när vi tar in en familj ska vi
+         kunna fylla deras timbank med önskade timmar som vi klickar in,
+         inte de"). Gratis också här, och samma regler som i familjens
+         panel (ge_gratistimmar). Noll eller tomt: inga. Bara när kontot
+         skapas här, som första timmen. */
+      + (familj ? '' : '<div class="le-gratis"><label for="le-gratis">Gratistimmar i timbanken</label>'
+        + '<input class="inp" id="le-gratis" type="number" min="0" max="40" step="1" inputmode="numeric" value="0">'
+        + '<span>Från oss, utan kostnad. De gäller i 60 dagar och betalar familjens pass före köpta timmar. '
+        + 'Det som blir över av en timme sparas inte, och de betalas aldrig ut.</span></div>')
       + '<p class="ok-msg" id="le-msg"></p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-le-stang>Avbryt</button>'
@@ -642,6 +662,15 @@
       rensa(msg);
       const namn = $('#le-namn', ruta).value.trim();
       if (!namn) { säg(msg, 'Eleven behöver ett namn.', false); return; }
+      /* Antalet prövas innan kontot skapas: ett felskrivet tal ska inte
+         lämna en familj intagen utan de timmar som var tänkta. */
+      const gratisFält = $('#le-gratis', ruta);
+      const gratis = gratisFält && !gratisFält.closest('.le-gratis').hidden
+        ? Number(String(gratisFält.value).trim() || 0) : 0;
+      if (!Number.isInteger(gratis) || gratis < 0 || gratis > 40) {
+        säg(msg, 'Gratistimmarna är ett helt antal timmar, mellan 0 och 40.', false);
+        return;
+      }
 
       await medan($('#le-skapa', ruta), familj ? 'Skapar…' : 'Tar in…', async () => {
         const forsta = $('#le-forsta', ruta);
@@ -653,6 +682,13 @@
           const v = await supa.rpc('ge_forsta_timmen', { p_familj: parent, p_ja: true });
           forstaVal = v.error ? felText(v.error) : true;
           forsta.closest('label').hidden = true;
+        }
+        /* Gratistimmarna, en gång, när kontot finns. Familjen har inte
+           godkänt villkoren än, och behöver inte: en gåva är inget köp. */
+        if (gratis > 0 && inbjuden && gratisVal === null) {
+          const v = await supa.rpc('ge_gratistimmar', { p_familj: parent, p_timmar: gratis });
+          gratisVal = v.error ? felText(v.error) : (v.data || {});
+          gratisFält.closest('.le-gratis').hidden = true;
         }
 
         /* Ämnena är en text[] som inte får vara null (förvalet är en
@@ -743,6 +779,12 @@
             : forstaVal
               ? '<p style="margin-top:10px;color:var(--acc-text)">Första timmen kunde inte väljas (' + esc(forstaVal)
                 + '). Välj den i familjens panel.</p>'
+              : '')
+          + (gratisVal && typeof gratisVal === 'object'
+            ? '<p style="margin-top:10px">' + esc(gratisText(gratisVal)) + '</p>'
+            : gratisVal
+              ? '<p style="margin-top:10px;color:var(--acc-text)">Gratistimmarna kunde inte sättas in (' + esc(gratisVal)
+                + '). Sätt in dem i familjens panel, under Ekonomi.</p>'
               : '')
           + '<p' + (inbjuden ? ' style="margin-top:10px"' : '') + '><b>' + esc(namn) + '</b> ligger nu under <b>Elever</b> och i matchningskön. '
           + 'Anmälan från ' + esc(lead.parent_name || lead.email || 'familjen')

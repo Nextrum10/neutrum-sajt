@@ -950,11 +950,13 @@
     }
 
     /* Köpta timmar och timbanken är betalda med pengar som kom in när
-       timmarna köptes. De är betalda, men de är inga pengar i månaden. */
+       timmarna köptes. De är betalda, men de är inga pengar i månaden.
+       Gratistimmarna (2026-10-13) betalar passet utan några pengar alls. */
     if (b.klippkort_id && (st === 'betald' || st === 'tvist')) {
-      r.sätt = 'Köpta timmar';
+      const gratis = gratisKort(b.klippkort_id);
+      r.sätt = gratis ? 'Gratistimmar' : 'Köpta timmar';
       r.beloppText = tim(b.duration_min || 60);
-      r.läge = ['Betalt med timmar', 'ar-klar'];
+      r.läge = [gratis ? 'Betalt med gratistimmar' : 'Betalt med timmar', 'ar-klar'];
       r.filter.add('betalda');
       return r;
     }
@@ -1077,6 +1079,9 @@
     return r;
   }
 
+  /* Är kortet gratistimmar (2026-10-13)? Köpen är få, så de letas upp. */
+  const gratisKort = id => (S.klippkort || []).some(k => k.id === id && NXBetalning.gratistimmar(k));
+
   /* KÖPTA TIMMAR (Fas 16.1), på dagen de betalades. Pengarna kom in i
      månaden, men timmarna är familjens tills de använts. Ett köp som
      aldrig betalades är en kassa som stängdes, inte ett köp. */
@@ -1156,6 +1161,8 @@
       const b = bokning(t.booking_id);
       if (b && iMånaden(b.wanted_date)) rader.push(tilläggRad(t, b, larmade.has('tillagg_obetalt:' + b.id)));
     });
+    /* Gratistimmar (2026-10-13) har ingen betalningsdag och är inga
+       pengar: de står under Köpta timmar, inte här. */
     (S.klippkort || []).forEach(k => {
       if (['betald', 'aterbetald', 'tvist'].indexOf(k.status) === -1 || !k.betald_at) return;
       if (iMånaden(isoFor(new Date(k.betald_at)))) rader.push(köpRad(k));
@@ -2150,6 +2157,11 @@
      timmar slutade före en hel timme. Slutar familjen betalas värdet
      tillbaka tillsammans med klippkortet, och banken markeras här.
      Knappen flyttar inga pengar.
+
+     Gratistimmarna (2026-10-13) står bland köpen, för de är timmar
+     familjen har, men som gratis: inga pengar kom in och inget går
+     tillbaka. De sätts in och tas tillbaka i familjens panel, under
+     Ekonomi.
      ============================================================ */
   const iÅngerfristen = k => !!k.angerfrist_till && String(k.angerfrist_till) >= isoFor(new Date());
   const omDeSlutar = k => Number((iÅngerfristen(k) ? k.vid_anger_ore : k.vid_uppsagning_ore) || 0);
@@ -2169,6 +2181,8 @@
     const giltiga = aktiva.filter(k => !k.giltigt_till || String(k.giltigt_till) >= idag || gratisKvar(k) > 0);
     const timmarKvar = giltiga.reduce((n, k) => n + (!k.giltigt_till || String(k.giltigt_till) >= idag
       ? Number(k.kvar || 0) : gratisKvar(k)), 0);
+    /* Gratistimmarna admin satt in (gratistimmar, samma dag), för sig i talet. */
+    const gåvaKvar = giltiga.filter(NXBetalning.gratistimmar).reduce((n, k) => n + Number(k.kvar || 0), 0);
     const tillbaka = aktiva.reduce((n, k) => n + omDeSlutar(k), 0);
     const banken = (S.timbank || []).slice().sort((a, b) => Number(b.saldo_min) - Number(a.saldo_min));
     const bankMin = banken.reduce((n, r) => n + Number(r.saldo_min || 0), 0);
@@ -2176,7 +2190,8 @@
 
     if (sam) {
       sam.innerHTML = samKort('Timmar kvar hos familjerna', timmarKvar + ' h',
-          giltiga.length ? giltiga.length + ' köp som gäller' : 'inga köp som gäller')
+          (giltiga.length ? giltiga.length + ' köp som gäller' : 'inga köp som gäller')
+          + (gåvaKvar ? ', varav ' + gåvaKvar + ' h gratistimmar' : ''))
         + samKort('Tillbaka om alla slutar i dag', kronor(tillbaka + bankVärde), 'köpta timmar och sparade minuter, som villkoren räknar')
         + samKort('Sparade minuter', minText(bankMin), bankMin ? kronor(bankVärde) + ' hos ' + banken.length
           + (banken.length === 1 ? ' familj' : ' familjer') : 'inga sparade minuter');
@@ -2199,16 +2214,19 @@
     } else {
       kop.innerHTML = köp.map(k => {
         const betald = k.status === 'betald';
+        const gratis = NXBetalning.gratistimmar(k);
         const andel = k.timmar ? Math.max(0, Math.min(100, Math.round(100 * Number(k.kvar || 0) / Number(k.timmar)))) : 0;
         const utgånget = !!k.giltigt_till && String(k.giltigt_till) < idag;
         const meta = [
           esc(k.kvar + ' av ' + k.timmar + ' timmar kvar'),
-          esc('köpt ' + lokalDag(k.betald_at || k.created_at)),
+          esc((gratis ? 'insatta ' : 'köpt ') + lokalDag(k.betald_at || k.created_at)),
           k.giltigt_till ? esc((utgånget ? 'gick ut ' : 'gäller till ') + kortDatum(k.giltigt_till)) : '',
           betald && iÅngerfristen(k) ? esc('ångerrätt t.o.m. ' + kortDatum(k.angerfrist_till)) : ''
         ].filter(Boolean);
         const l = test(k) && betald ? ['Testköp', ''] : utgånget && betald ? ['Har gått ut', ''] : (KK_LAGE[k.status] || [k.status, '']);
-        const höger = betald && !test(k)
+        const höger = gratis
+          ? '<span class="eko-stack"><b>Gratis</b><small>från Nextrum, inget tillbaka</small></span>'
+          : betald && !test(k)
           ? '<span class="eko-stack"><b>' + esc(kronor(omDeSlutar(k))) + '</b><small>tillbaka om de slutar i dag</small></span>'
           : '<span class="eko-stack"><b>' + esc(kronor(k.betalt_ore)) + '</b>'
             + (Number(k.aterbetald_ore || 0) > 0 ? '<small>' + esc(kronor(k.aterbetald_ore) + ' tillbaka') + '</small>' : '') + '</span>';
