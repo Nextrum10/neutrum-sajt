@@ -416,6 +416,8 @@
       $('#bok-sok').value = '';
       $('#bok-status').value = 'requested';
       $('#bok-nar').value = 'framat';
+      const familj = $('#bok-familj');
+      if (familj) familj.value = '';
       ritaBokningar();
       return;
     }
@@ -502,14 +504,45 @@
       : '';
   }
 
+  /* Familjerna i väljaren (2026-10-13, Leo: "bokningar, gör så att vi
+     kan filtrera utifrån familj"): de som har ett pass, med barnens namn
+     efter, för barnet är vad man har när en familj ringer. Fylls om med
+     listan, bara när familjerna ändrats, och håller det valda. */
+  function familjeval() {
+    const fält = $('#bok-familj');
+    if (!fält) return '';
+    const vald = fält.value;
+    const barn = {};
+    S.bokningar.forEach(b => {
+      if (!b.parent_id) return;
+      const n = elevNamn(b.student_id);
+      barn[b.parent_id] = barn[b.parent_id] || new Set();
+      if (n && n !== '—') barn[b.parent_id].add(n);
+    });
+    if (vald && !barn[vald]) barn[vald] = new Set();
+    const val = Object.keys(barn)
+      .map(id => [id, namnFör(id) + (barn[id].size ? ' · ' + [...barn[id]].join(', ') : '')])
+      .sort((a, b) => a[1].localeCompare(b[1], 'sv'));
+    const nyckel = JSON.stringify(val);
+    if (fält.dataset.val !== nyckel) {
+      fält.dataset.val = nyckel;
+      fält.innerHTML = '<option value="">Alla familjer</option>'
+        + val.map(v => '<option value="' + esc(v[0]) + '">' + esc(v[1]) + '</option>').join('');
+      fält.value = vald;
+    }
+    return vald;
+  }
+
   function ritaBokningar() {
     ritaFörfrågningar();
     const sök = $('#bok-sok').value.trim();
     const st = $('#bok-status').value;
     const när = $('#bok-nar').value;
+    const familj = familjeval();
     const idag = isoFor(new Date());
 
     const rader = S.bokningar
+      .filter(b => !familj || b.parent_id === familj)
       .filter(b => !st || b.status === st)
       .filter(b => när === 'alla' || (när === 'framat' ? b.wanted_date >= idag : b.wanted_date < idag))
       .map(b => ({ ...b, familj: namnFör(b.parent_id), hjalpare: namnFör(b.tutor_id),
@@ -548,7 +581,7 @@
         return väljare('avbokskal', AVBOKNINGSSKAL, b.avbokningsskal || '',
           'data-avbokskal="' + b.id + '"');
       } }
-    ], rader, tomtText(sök || st, 'Ingen bokning matchar filtret', 'Inga bokningar än'));
+    ], rader, tomtText(sök || st || familj, 'Ingen bokning matchar filtret', 'Inga bokningar än'));
   }
 
 
@@ -825,6 +858,9 @@
         if (när) när.value = 'alla';
         const sök = $('#bok-sok');
         if (sök) sök.value = elevNamn(b.student_id) || namnFör(b.parent_id);
+        /* En annan familj vald i listan hade gömt passet. */
+        const familj = $('#bok-familj');
+        if (familj) familj.value = '';
         ritaBokningar();
       }
     });

@@ -689,7 +689,9 @@ inte vill senare ha vår tjänst".
 
 **Listorna är namn.** Intresseanmälningar, Ansökningar (med flikarna
 Intervju och Utbildning), Familjer, Elever och Studiehjälpare ritas av
-`namnlista()` i `nextrum-admin-karna.js`: namnet och läget, inget annat.
+`namnlista()` i `nextrum-admin-karna.js`: namnet och läget, inget annat,
+och i Ansökningar radens nästa steg som en knapp bredvid (2026-10-13,
+`minne/vyerna.md`).
 Allt annat står i personpanelen (`nextrum-admin-detalj.js`), som sedan
 dess också öppnar anmälan och ansökan. Rekryteringens steg är fliken
 Rekryteringen där; rutan de stod i förut är borta. Söket i sidhuvudet

@@ -128,12 +128,16 @@ const NXAdmin = (function () {
     if (!rader.length) return tomt(o.tomt || 'Inget här', '');
     return '<ul class="adm-namnlista">' + rader.map(r => {
       const under = o.under ? o.under(r) : '';
+      /* o.knapp: radens nästa steg, bredvid namnet och inte i det, för en
+         knapp i en knapp går inte att trycka på (2026-10-13, Ansökningar). */
+      const knapp = o.knapp ? o.knapp(r) : '';
       /* Initialerna först (2026-09-29): ögat hittar en person på formen
          innan det läst namnet, och en lista med bara text var en vägg. De
          är aria-hidden; skärmläsaren läser namnet som förut. */
       /* o.nytt: raden kom in sedan du tittade senast (2026-10-05).
          Pricken är en genväg; o.under säger det i ord. */
-      return '<li><button type="button" class="adm-namn' + (o.nytt && o.nytt(r) ? ' ar-nytt' : '')
+      return '<li' + (knapp ? ' class="har-knapp"' : '') + '><button type="button" class="adm-namn'
+        + (o.nytt && o.nytt(r) ? ' ar-nytt' : '')
         + '" data-dp="' + esc(o.typ + ':' + o.id(r)) + '"'
         + (o.flik ? ' data-dp-start="' + esc(o.flik) + '"' : '') + '>'
         + M.avatar(o.namn(r) || '', null, { liten: true })
@@ -141,7 +145,9 @@ const NXAdmin = (function () {
         + (under ? '<span>' + esc(under) + '</span>' : '')
         + '</span>'
         + (o.läge ? '<span class="adm-namn-lage">' + o.läge(r) + '</span>' : '')
-        + '</button></li>';
+        + '</button>'
+        + (knapp ? '<span class="adm-namn-knapp">' + knapp + '</span>' : '')
+        + '</li>';
     }).join('') + '</ul>';
   }
 
