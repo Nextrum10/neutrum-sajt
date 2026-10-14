@@ -49,20 +49,20 @@ SV = 'Svenska'
 # --- Lästexterna, ett stycke per element -----------------------------
 
 # åk 6, faktatext.
-FLADDERMOSS = '\n\n'.join([
-    'Fladdermöss i Sverige',
-    'Fladdermöss är de enda däggdjur som kan flyga på riktigt. Vingarna är gjorda av tunn hud '
-    'som är spänd mellan långa fingrar. I Sverige lever nästan tjugo olika arter, och alla äter '
-    'insekter. En liten fladdermus kan fånga hundratals myggor under en sommarnatt.',
-    'På natten är det mörkt, men fladdermössen hittar ändå sin mat. De skickar ut höga ljud som '
-    'människor oftast inte kan höra. När ljudet träffar en insekt studsar det tillbaka som ett '
-    'eko, och fladdermusen hör var insekten finns. Det kallas ekolokalisering.',
-    'På vintern finns det nästan inga insekter att äta. Därför går fladdermössen i ide. De söker '
-    'upp ett kallt men frostfritt ställe, till exempel en grotta, en källare eller ett hål i ett '
-    'träd, och sover där tills det blir varmt igen. Under tiden slår hjärtat mycket långsamt, och '
-    'kroppen behöver nästan ingen energi.',
-    'Många fladdermöss har det svårt i dag, eftersom de gamla träden och byggnaderna där de bor '
-    'försvinner. Därför är alla arter i Sverige skyddade av lag.',
+MYROR = '\n\n'.join([
+    'Myror i skogen',
+    'Myror är små insekter som lever i stora samhällen. I skogen kan du hitta stackar som är byggda '
+    'av barr och kvistar. En stack kan vara över en meter hög, och inuti finns gångar och kammare '
+    'där tusentals myror bor.',
+    'Varje samhälle har minst en drottning. Hon lägger äggen och gör inget annat. Arbetarna gör allt '
+    'annat: de hämtar mat, bygger stacken och tar hand om äggen och larverna. Myrorna förstår varandra '
+    'genom doftämnen och genom att röra vid varandra med sina långa antenner.',
+    'Myror äter mycket olika saker, till exempel små insekter, döda djur och söt saft från bladlöss. '
+    'När de hotas kan många myror spruta en sur vätska som kallas myrsyra. Den svider i munnen på en '
+    'fiende.',
+    'Myrorna gör nytta i skogen. De äter skadeinsekter, de luckrar upp jorden, och de bär med sig '
+    'frön som växter kan gro ur. På vintern är det för kallt för arbete. Då ligger myrorna stilla '
+    'djupt nere i stacken tills det blir varmt igen.',
 ])
 
 # åk 6, instruktion.
@@ -83,35 +83,32 @@ KRASSE = '\n\n'.join([
 ])
 
 # åk 7, insändare.
-CYKELSTALL = '\n\n'.join([
-    'Fler cykelställ vid skolan, tack',
-    'Varje morgon är det trångt vid cykelstället på vår skola. Det finns plats för sextio cyklar, '
-    'men över hundra elever cyklar hit när det är fint väder. De som kommer sist får ställa cykeln '
-    'mot staketet eller på gräsmattan.',
-    'Det här är ett problem av två skäl. För det första blir cyklarna lätt nedtrampade eller faller '
-    'omkull, och då kan de gå sönder. För det andra är det svårt att ta sig fram till entrén när den '
-    'är full av cyklar, särskilt för den som går med kryckor eller använder rullstol.',
-    'Jag tycker att skolan borde bygga ett nytt cykelställ med plats för minst hundrafemtio cyklar. '
-    'Det behöver inte bli dyrt, och det skulle få fler att cykla i stället för att bli skjutsade i '
-    'bil. Det är bättre både för miljön och för hälsan.',
-    'Så, kära rektor: sätt upp fler cykelställ före nästa vår!',
+PAPPERSKORGAR = '\n\n'.join([
+    'Fler papperskorgar i skolparken',
+    'Varje dag äter över hundra elever sin lunch i parken bredvid skolan. Där finns bara två '
+    'papperskorgar, och de är fulla redan före lunch. Resten av skräpet hamnar på gräset.',
+    'Det här är ett problem av två skäl. För det första blåser skräpet iväg till dammen, och där kan '
+    'fåglar fastna i plast. För det andra är det inte trevligt att sitta bland tomma förpackningar, '
+    'särskilt inte för den som vill läsa eller vila på rasten.',
+    'Jag tycker att skolan borde sätta upp minst sex papperskorgar i parken. De behöver inte vara '
+    'dyra, och elevrådet kan gärna måla dem. Då blir det lättare att göra rätt, och parken blir en '
+    'plats där alla vill vara.',
+    'Så, kära rektor: köp in fler papperskorgar före nästa termin!',
     'Linnea Åkesson, årskurs 7',
 ])
 
 # åk 7, ett svar på insändaren (replik).
 REPLIKEN = '\n\n'.join([
-    'Svar till Linnea: vi har platser som står tomma',
-    'I förra veckans tidning föreslog Linnea Åkesson att skolan ska bygga ett nytt cykelställ för '
-    'minst hundrafemtio cyklar. Jag förstår hennes problem, men jag håller inte med om lösningen.',
-    'För det första används skolans gamla cykelställ bakom gymnastiksalen knappt alls. Där finns '
-    'plats för fyrtio cyklar, men många vet inte om det eftersom stället inte syns från entrén. '
-    'Det är alltså inte säkert att vi behöver fler platser. Kanske behöver fler bara få veta var '
-    'de finns.',
-    'För det andra kostar ett stort cykelställ pengar som skolan kan behöva till annat, till '
-    'exempel nya böcker till biblioteket. Linnea har rätt i att det inte behöver bli dyrt, men det '
-    'blir ändå en kostnad.',
-    'Jag föreslår därför att skolan sätter upp en tydlig skylt vid entrén och att elevrådet visar '
-    'vägen den första veckan. Räcker inte det kan vi prata om ett nytt cykelställ i vår.',
+    'Svar till Linnea: problemet är inte korgarna',
+    'I förra veckans tidning föreslog Linnea Åkesson att skolan ska sätta upp minst sex nya '
+    'papperskorgar i parken. Jag förstår hennes problem, men jag håller inte med om lösningen.',
+    'För det första ligger mycket av skräpet redan bredvid de korgar som finns. Det är de som slänger '
+    'skräpet på marken som är problemet, inte antalet korgar. Fler korgar hjälper inte om vi inte '
+    'bryr oss om att använda dem.',
+    'För det andra måste varje korg tömmas, och vaktmästaren har redan mycket att göra. Linnea har '
+    'rätt i att korgarna inte behöver vara dyra, men det blir ändå mer arbete för någon.',
+    'Jag föreslår därför att klasserna turas om att plocka skräp i parken en gång i veckan. Hjälper '
+    'inte det kan vi prata om fler papperskorgar efter jul.',
     'Elias Nordin, årskurs 8',
 ])
 
@@ -187,7 +184,7 @@ RUMMET = '\n\n'.join([
 ])
 
 # Uppdraget: lästexter på 600–1200 tecken.
-for _t in (FLADDERMOSS, KRASSE, CYKELSTALL, REPLIKEN, JACKAN, RESVASKAN, KRONIKAN, RUMMET):
+for _t in (MYROR, KRASSE, PAPPERSKORGAR, REPLIKEN, JACKAN, RESVASKAN, KRONIKAN, RUMMET):
     assert 600 <= len(_t) <= 1200, len(_t)
 
 

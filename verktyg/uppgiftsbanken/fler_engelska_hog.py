@@ -56,8 +56,8 @@ UTAN_TELEFON = '\n\n'.join([
     'Last week I tried something new: seven days without my phone. My little sister Lisa had said '
     'that I could not do it, and I wanted to prove her wrong.',
     'On Monday I felt strange. I kept putting my hand in my pocket, but there was nothing there. '
-    'On the bus I had to look out of the window, and I saw a man walking a tiny dog in a red '
-    'coat. I would never have noticed that before.',
+    'On the bus I had to look out of the window, and I saw a man walking a tiny dog that was '
+    'wearing a red coat. I would never have noticed that before.',
     'On Wednesday my friend Erik and I met at the park. We played football instead of looking at '
     'videos, and we talked for two hours. On Friday I finished a book that I had started in the '
     'summer.',
@@ -147,10 +147,10 @@ TILLAGG = [
         niva('en-ak6-fler-jamfora-1', 'Taller, bigger, happier', 'Jämförelser', [
             val('Välj rätt form: My brother is ___ than me.', ['taller', 'more tall', 'tallest'], 'taller',
                 'Tall är ett kort adjektiv. När man jämför två personer får det -er och ordet than '
-                'efter sig: taller than. More tall är en försvenskning, och tallest används när man '
-                'jämför med många.'),
+                'efter sig: taller than. More används bara framför långa adjektiv, och tallest används '
+                'när man jämför med många.'),
             val("Hur stavas 'big' när man jämför två saker?", ['biger', 'bigger', 'bigr'], 'bigger',
-                'Ett kort adjektiv som slutar på en vokal och en konsonant dubblar konsonanten före '
+                'Ett kort adjektiv som slutar på en kort vokal och en konsonant dubblar konsonanten före '
                 '-er: big blir bigger.'),
             sant("'More fast' är rätt sätt att säga snabbare på engelska.", False,
                  'Fast är ett kort adjektiv och får -er: faster. More används framför långa adjektiv, '
@@ -194,7 +194,7 @@ TILLAGG = [
             val('Välj rätt form: This is the ___ day of my life!',
                 ['most exciting', 'excitingest', 'more exciting'], 'most exciting',
                 'Exciting är långt och får most framför sig i superlativ: the most exciting day.'),
-            skriv("Skriv rätt form av 'good': Mia is my ___ friend.", 'best',
+            skriv("Skriv superlativ av 'good': Mia is my ___ friend.", 'best',
                   'Good, better, best. Superlativen av good är best, och den passar när man jämför med '
                   'alla andra.'),
             skriv("Skriv rätt form av 'bad': The weather today is ___ than yesterday.", 'worse',
@@ -384,7 +384,7 @@ TILLAGG = [
             skriv('Hur många dagar varade försöket? Skriv talet.', ['7', 'seven', 'sju'],
                   'Det står seven days without my phone. Seven är sju.'),
             skriv('Vilken färg hade jackan som den lilla hunden hade på sig? Skriv färgen på engelska.', 'red',
-                  'Det står a tiny dog in a red coat. Red är röd.'),
+                  'Det står a tiny dog that was wearing a red coat. Red är röd.'),
             sant('Berättaren och Erik tittade på videor i parken.', False,
                  'Det står We played football instead of looking at videos. De spelade fotboll i '
                  'stället för att titta på videor.'),
