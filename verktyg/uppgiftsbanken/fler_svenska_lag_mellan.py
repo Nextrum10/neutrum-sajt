@@ -106,7 +106,7 @@ AK1_STOR_BOKSTAV = niva(
              'Namn har alltid stor bokstav, som Omar och Stockholm.'),
         skriv('Hur många ord är det i meningen ”%s”?' % MENING_ORD, antal(len(MENING_ORD.split())),
               'Jag, ser, en, stor, hund. Det är fem ord, med mellanrum emellan.'),
-        skriv('Ett ord saknar stor bokstav: ”Min kompis heter omar.” Skriv ordet rätt.', 'Omar',
+        skriv('Ett ord i meningen ska ha stor bokstav: ”Min kompis heter omar.” Vilket ord är det? Skriv det.', 'Omar',
               'Omar är ett namn. Namn har alltid stor bokstav.'),
         ordna('Bygg meningen om hunden. Den börjar med stor bokstav och slutar med punkt.',
               'Hunden sover på mattan.',
@@ -142,7 +142,7 @@ AK2_DUBBLA = niva(
               'S-o-m-m-a-r. M står två gånger i rad, så det blir två m.'),
         sant('Ordet ”hatt” skrivs med två t eftersom a är kort.', True,
              'Efter en kort vokal skriver man oftast två konsonanter. Hatt är ett sådant ord.'),
-        sant('Ordet ”tak”, som sitter överst på ett hus, skrivs med två k.', False,
+        sant('Ordet ”tak”, som sitter överst på ett hus, skrivs med ck.', False,
              'I tak är a långt, och då skriver man bara ett k. Det är tack, med ck, som har kort a.'),
         ordna('Bygg meningen om pappas hatt.', 'Pappa har en ny hatt.',
               forklaring='Pappa har stor bokstav och står först. Hatt har punkt och står sist.'),
@@ -161,7 +161,7 @@ AK2_BESKRIV = niva(
             ['Katten sover i korgen.', 'Hunden och katten sover.', 'Den svarta katten sover.'],
             'Den svarta katten sover.',
             'Svarta berättar hur katten ser ut. De andra meningarna har inget sådant ord.'),
-        skriv('Skriv ordet som beskriver: ”Den gula bananen ligger på bordet.”', 'gula',
+        skriv('Skriv ordet som beskriver: ”Den gula bananen ligger på bordet.”', ['gula', 'gul'],
               'Gula berättar hur bananen ser ut. Ligger är ett verb och bordet är ett substantiv.'),
         skriv('Hur många ord som beskriver finns det i meningen? ”En stor och grön groda hoppar.”', antal(2),
               'Stor och grön berättar båda hur grodan är. Hoppar säger vad grodan gör.'),
@@ -180,7 +180,7 @@ AMIR_TEXT = '\n\n'.join([
     'Det var vinter, och det hade snöat hela natten. Amir tittade ut genom köksfönstret. I trädgården satt '
     'en liten fågel på en gren. Den såg frusen ut.',
     '– Mamma, vad äter fåglar på vintern? frågade Amir.\n'
-    '– De äter frön och bär, svarade mamma. Men nu ligger det snö över allt.',
+    '– De äter frön och bär, svarade mamma. Men nu ligger det snö överallt.',
     'Amir hämtade en burk med solroskärnor i skafferiet. Han tog på sig mössa, vantar och stövlar och gick '
     'ut. Han hängde upp en liten korg i äppelträdet och hällde i kärnorna. Sedan gick han in och väntade '
     'vid fönstret.',
@@ -194,8 +194,8 @@ AK2_AMIR = niva(
         skriv('Vad heter pojken i texten?', 'Amir',
               'Det står i andra meningen: Amir tittade ut genom köksfönstret.'),
         val('Varför kunde fåglarna inte hitta mat själva?',
-            ['Mamma hade tagit fröna', 'Det låg snö över allt', 'Fåglarna sov'], 'Det låg snö över allt',
-            'Mamma säger det: Men nu ligger det snö över allt. Då syns inga frön och bär.'),
+            ['Mamma hade tagit fröna', 'Det låg snö överallt', 'Fåglarna sov'], 'Det låg snö överallt',
+            'Mamma säger det: Men nu ligger det snö överallt. Då syns inga frön och bär.'),
         val('Varför tror du att Amir tog på sig mössa, vantar och stövlar?',
             ['För att han skulle åka pulka', 'För att han skulle gå på kalas', 'För att det var kallt ute'],
             'För att det var kallt ute',
@@ -205,7 +205,7 @@ AK2_AMIR = niva(
         sant('Fåglarna kom direkt när Amir hade hängt upp korgen.', False,
              'Det står att först hände ingenting. Fåglarna kom efter en stund.'),
         skriv('I vilket träd hängde Amir upp korgen?',
-              ['äppelträdet', 'äppelträd', 'ett äppelträd', 'i äppelträdet'],
+              ['äppelträdet', 'äppelträd', 'ett äppelträd', 'i äppelträdet', 'i ett äppelträd'],
               'Han hängde upp en liten korg i äppelträdet.'),
         ordna('Ordna det som händer i texten.',
               ['Amir ser en fågel.', 'Amir hämtar solroskärnor.', 'Amir hänger upp en korg.',
@@ -234,8 +234,8 @@ REGN_TEXT = '\n\n'.join([
     'vattnet blir då till ånga och stiger upp i luften. Ångan syns inte, för den är en gas.',
     'Högt upp är det kallt. Där blir ångan till små, små vattendroppar. Många droppar tillsammans bildar '
     'ett moln.',
-    'När molnet har blivit tungt faller dropparna ner. Då regnar det. Om det är mycket kallt blir dropparna '
-    'till snö i stället.',
+    'När dropparna har blivit stora och tunga faller de ner. Då regnar det. Om det är kallt faller det snö '
+    'i stället.',
     'Regnet rinner ner i marken, till bäckar och sjöar och till sist ut i havet. Sedan kan hela resan börja '
     'om igen.',
 ])
@@ -251,8 +251,8 @@ AK3_REGN = niva(
             'Texten säger: Ångan syns inte, för den är en gas.'),
         skriv('Vad bildar många vattendroppar tillsammans? Skriv ordet.', ['moln', 'ett moln'],
               'Många droppar tillsammans bildar ett moln.'),
-        skriv('Vad blir dropparna till om det är mycket kallt? Skriv ordet.', 'snö',
-              'Om det är mycket kallt blir dropparna till snö i stället.'),
+        skriv('Vad faller det i stället för regn om det är kallt? Skriv ordet.', 'snö',
+              'Texten säger: Om det är kallt faller det snö i stället.'),
         sant('Man kan se ångan som stiger upp från havet.', False,
              'Ångan syns inte, för den är en gas.'),
         sant('Regnet kan till sist rinna ut i havet.', True,
@@ -305,14 +305,14 @@ AK3_IDA = niva(
         sant('Pappa blev arg och sa att kakan var dålig.', False,
              'Pappa skrattade och tog en bit till. Han sa att han gillade kakan ändå.'),
         ordna('Ordna det som händer i texten.',
-              ['Ida ställer ut mjöl, ägg, smör och mjölk.', 'Kakan kommer ut ur ugnen.', 'Pappa tar en bit.',
+              ['Ida ställer ut mjöl, ägg, smör och mjölk.', 'Kakan kommer ut ur ugnen.', 'Alla får en bit av kakan.',
                'Ida ser sockerburken.'],
-              forklaring='Först ställer Ida ut det hon behöver. Sedan kommer kakan ut ur ugnen, pappa tar en bit och sist ser Ida sockerburken.'),
+              forklaring='Först ställer Ida ut det hon behöver. Sedan kommer kakan ut ur ugnen, alla får en bit och sist ser Ida sockerburken.'),
         val('Hur kan man se att pappa inte blev arg?',
             ['Han skrattade och tog en bit till', 'Han gick ut ur köket', 'Han slängde kakan'],
             'Han skrattade och tog en bit till',
             'Den som är arg skrattar inte och tar inte mer kaka. Pappa gjorde både och, och sa att han gillade kakan ändå.'),
-        para('Para ihop ställena i texten med hur de var.',
+        para('Para ihop det som finns i texten med vad texten säger om det.',
              [('Huset efter en stund', 'luktade gott'), ('Kakan när Ida tog ut den', 'gyllenbrun och hög'),
               ('Kakan när Ida smakade', 'smakade nästan ingenting'), ('Sockerburken', 'full som förut')],
              'Allt står i texten: huset luktade gott, kakan var gyllenbrun, smakade nästan ingenting och sockerburken var full.'),
@@ -329,15 +329,15 @@ AK3_K_CK = niva(
             ['nyckel', 'nykel', 'nyckkel'], 'nyckel',
             'Y är kort i nyckel, och då skrivs k-ljudet ck.'),
         val('I vilket ord är vokalen lång?',
-            ['sock', 'tack', 'bok', 'lock'], 'bok',
-            'I bok är o långt, och då räcker ett k. I sock, tack och lock är vokalen kort, och då skrivs ck.'),
+            ['säck', 'tack', 'bok', 'lock'], 'bok',
+            'I bok är o långt, och då räcker ett k. I säck, tack och lock är vokalen kort, och då skrivs ck.'),
         skriv('Ett ord är felstavat: ”Vi åkte pulka nerför en brant bake.” Skriv ordet rätt.', 'backe',
               'A är kort i backe, och då skrivs k-ljudet ck.'),
         skriv('Ett ord är felstavat: ”Hon bär en tung ryggsäk.” Skriv ordet rätt.', 'ryggsäck',
               'Ä är kort i ryggsäck, och då skrivs k-ljudet ck.'),
         skriv('Hur många bokstäver har ordet ”tack”?', antal(len('tack')),
               'T-a-c-k. Ck är två bokstäver, men de låter som ett enda k-ljud.'),
-        sant('Ck skrivs efter en kort vokal, som i ordet ”flicka”.', True,
+        sant('I ordet ”flicka” skrivs k-ljudet ck, eftersom i är kort.', True,
              'I flicka är i kort, och då skrivs k-ljudet ck.'),
         sant('Ordet ”bok” skrivs med ck.', False,
              'O är långt i bok, och då räcker ett k.'),
@@ -352,12 +352,12 @@ AK3_SJ_TJ = niva(
             ['tjö', 'kjö', 'sjö'], 'sjö',
             'Sjö stavas med sj.'),
         val('Vilket ord är rätt stavat? ”Jag äter gröt med en …”',
-            ['sked', 'tjed', 'kjed'], 'sked',
+            ['sked', 'sjed', 'skjed'], 'sked',
             'Före e låter sk som sj-ljudet, men ordet skrivs med sk: sked.'),
         val('Vilket ord är rätt stavat? ”Min kusin är en glad … på tolv år.”',
             ['kjej', 'tjej', 'sjej'], 'tjej',
             'Tjej stavas med tj, och tj-ljudet hör man först i ordet.'),
-        skriv('Det är talet som kommer efter sex. Skriv det med bokstäver. Det börjar med sj.', ['sju', '7'],
+        skriv('Det är talet som kommer efter sex. Skriv det med bokstäver. Det börjar med sj.', 'sju',
               'Sex, sju, åtta. Sju stavas med sj.'),
         skriv('Ett ord är felstavat: ”Vi sjunger i tjyrkan.” Skriv ordet rätt.', 'kyrkan',
               'K före y låter som tj-ljudet, men ordet skrivs med k: kyrka.'),
@@ -367,13 +367,13 @@ AK3_SJ_TJ = niva(
              'Tjugo stavas med tj.'),
         para('Para ihop varje ord med hur dess första ljud stavas.',
              [('sjuk', 'sj'), ('tjock', 'tj'), ('skön', 'sk'), ('kind', 'k')],
-             'Sj-ljudet och tj-ljudet kan stavas på flera sätt. Orden måste man lära sig ett och ett.'),
+             'Sj-ljudet kan stavas sj eller sk, och tj-ljudet tj eller k. Titta på första bokstaven eller de två första.'),
         ordna('Bygg meningen om tjejen och skeden.', 'Tjejen äter med en sked.',
               forklaring='Tjejen har stor bokstav och står först. Sked har punkt och står sist.'),
         ordna('Bygg meningen om badet i sjön.', 'Vi badar i sjön.',
               forklaring='Vi har stor bokstav och står först. Sjön har punkt och står sist.'),
     ],
-    beskrivning='Samma ljud kan stavas sj, sk, tj eller k.')
+    beskrivning='Sj-ljudet kan stavas sj eller sk, och tj-ljudet tj eller k.')
 
 
 # ---------------------------------------------------------------------------
@@ -381,7 +381,7 @@ AK3_SJ_TJ = niva(
 # ---------------------------------------------------------------------------
 
 VULKAN_TEXT = '\n\n'.join([
-    'Under jordens yta finns het, smält sten. Den kallas magma. Ibland blir trycket så stort att magman '
+    'Djupt under jordens yta finns det på vissa ställen het, smält sten. Den kallas magma. Ibland blir trycket så stort att magman '
     'pressas upp genom en öppning i marken. Det kallas ett vulkanutbrott.',
     'När magman har kommit ut kallas den lava. Lavan är glödhet och kan flyta som en långsam, tjock flod. '
     'Efter en tid svalnar den och blir hård sten. På så sätt kan en vulkan växa och bli ett högt berg. '
@@ -393,7 +393,7 @@ VULKAN_TEXT = '\n\n'.join([
 AK4_VULKAN = niva(
     'sv-ak4-fler-fakta-1', 'Vulkaner', 'Fakta och berättelser', [
         skriv('Vad kallas den smälta stenen under jordens yta? Skriv ordet.', 'magma',
-              'Texten säger: Under jordens yta finns het, smält sten. Den kallas magma.'),
+              'Texten säger att det djupt under jordens yta finns het, smält sten, och att den kallas magma.'),
         val('Vad kallas magman när den har kommit ut ur vulkanen?',
             ['aska', 'lava', 'sten'], 'lava',
             'När magman har kommit ut kallas den lava.'),
@@ -428,7 +428,7 @@ SKRIDSKOR_TEXT = '\n\n'.join([
     'sjön hade frusit, ringde grannen Karin på dörren. Hon höll ett par vita skridskor som var lite gula i '
     'kanterna.',
     '– De var mina när jag var i din ålder, sa Karin. Nu står de bara i garderoben. Vill du prova?',
-    'Hanna drog på sig dem och gick försiktigt ner till sjön. Första gången hon ställde sig på isen föll '
+    'Hanna drog på sig dem och gick försiktigt ner till sjön tillsammans med Karin. Första gången hon ställde sig på isen föll '
     'hon omedelbart. Andra gången klarade hon sig i fem sekunder. Efter en timme kunde hon åka hela vägen '
     'till bryggan utan att ramla.',
     'När Hanna kom hem var kinderna röda och hon skrattade fortfarande. Hon lade skridskorna mitt på '
@@ -444,7 +444,7 @@ AK4_SKRIDSKOR = niva(
             ['en cykel', 'en hund', 'skridskor'], 'skridskor',
             'Första meningen säger att Hanna hade önskat sig skridskor i flera år.'),
         skriv('Var åkte Hanna skridskor? Skriv ett ord.',
-              ['sjön', 'på sjön', 'sjö', 'en sjö', 'på en sjö'],
+              ['sjön', 'på sjön', 'sjö', 'en sjö', 'på en sjö', 'isen', 'på isen'],
               'Hanna gick ner till sjön, och efter en timme åkte hon hela vägen till bryggan.'),
         sant('Skridskorna var nya när Hanna fick dem.', False,
              'Karin hade haft dem själv när hon var barn. De var lite gula i kanterna.'),
@@ -473,7 +473,7 @@ AK4_SKRIDSKOR = niva(
 AK4_PERSONER = niva(
     'sv-ak4-fler-delar-1', 'Personer, plats och tid', 'Berättelsens delar', [
         skriv('Vad kallas den person som en berättelse handlar mest om? Skriv ordet.',
-              ['huvudperson', 'huvudpersonen'],
+              ['huvudperson', 'huvudpersonen', 'huvudkaraktär', 'huvudkaraktären'],
               'Den som berättelsen handlar mest om kallas huvudperson.'),
         val('Berättelsen börjar så här: ”En kall vinterkväll satt Siri ensam i en liten fiskestuga vid sjön.” Var utspelar sig berättelsen?',
             ['På en båt på havet', 'I en fiskestuga vid sjön', 'I en skola i staden'],
@@ -492,7 +492,7 @@ AK4_PERSONER = niva(
             ['”Jag stängde dörren och lyssnade.”', '”Han stängde dörren och lyssnade.”',
              '”Dörren stängdes av vinden.”'],
             '”Jag stängde dörren och lyssnade.”',
-            'I första texten berättar personen själv med ordet jag. I den andra berättar någon utanför, med ordet han.'),
+            'I meningen med jag berättar personen själv. I meningen med han berättar någon utanför berättelsen, och meningen om vinden har inget jag.'),
         sant('Huvudpersonen är den som berättelsen handlar mest om.', True,
              'Det är just det som kallas huvudperson.'),
         sant('Miljön är samma sak som huvudpersonen.', False,
@@ -549,7 +549,7 @@ FLADDERMOSS_TEXT = '\n\n'.join([
     'Fladdermöss är de enda däggdjuren som kan flyga på riktigt. Deras vingar är gjorda av tunn hud som '
     'är spänd mellan långa fingrar. På dagen vilar fladdermössen på mörka platser, till exempel i grottor, '
     'i gamla ladugårdar eller i håliga träd.',
-    'När det blir mörkt flyger de ut för att jaga insekter. I mörkret har de ett särskilt knep för att '
+    'Fladdermössen i Sverige äter insekter. När det blir mörkt flyger de ut för att jaga. I mörkret har de ett särskilt knep för att '
     'hitta sin mat. De skickar ut korta, höga ljud som människor inte kan höra. Ljuden studsar mot saker '
     'och kommer tillbaka som ett eko. Av ekot kan fladdermusen avgöra var en mygga flyger. Det kallas '
     'ekolokalisering.',
@@ -560,7 +560,7 @@ FLADDERMOSS_TEXT = '\n\n'.join([
 AK5_FLADDERMOSS = niva(
     'sv-ak5-fler-tolka-1', 'Fladdermöss', 'Läsa och tolka', [
         val('Vad är särskilt med fladdermöss jämfört med andra däggdjur?',
-            ['De är de enda som kan flyga på riktigt', 'De är de minsta som finns', 'De är de enda som äter insekter'],
+            ['De är de enda som kan flyga på riktigt', 'De är de enda som sover på dagen', 'De är de enda som äter insekter'],
             'De är de enda som kan flyga på riktigt',
             'Texten säger att fladdermöss är de enda däggdjuren som kan flyga på riktigt.'),
         skriv('Vad är fladdermusens vingar gjorda av? Skriv de två orden ur texten.', ['tunn hud', 'hud'],
@@ -574,7 +574,7 @@ AK5_FLADDERMOSS = niva(
         sant('Människor kan höra ljuden som fladdermössen skickar ut.', False,
              'Texten säger att ljuden är sådana som människor inte kan höra.'),
         sant('Fladdermössen jagar insekter när det är mörkt.', True,
-             'När det blir mörkt flyger de ut för att jaga insekter.'),
+             'Texten säger att fladdermössen i Sverige äter insekter och att de flyger ut för att jaga när det blir mörkt.'),
         ordna('Ordna hur ekolokalisering går till.',
               ['Fladdermusen skickar ut ett ljud.', 'Ljudet studsar mot en mygga.', 'Ekot kommer tillbaka.',
                'Fladdermusen vet var myggan är.'],
@@ -622,7 +622,7 @@ AK5_INSANDARE = niva(
             ['Hon förstår föräldrarna men vill ändra något', 'Hon är arg på alla föräldrar',
              'Hon vill att föräldrarna ska skjutsa fler'],
             'Hon förstår föräldrarna men vill ändra något',
-            'Orden vill väl visar att hon tror att föräldrarna menar gott. Men visar att hon ändå tycker att något borde bli annorlunda.'),
+            'Orden vill väl visar att hon tror att föräldrarna menar gott. Ordet men visar att hon ändå tycker att något borde bli annorlunda.'),
         sant('Texten är skriven av en elev.', True,
              'Sist i texten står Elsa, åk 5.'),
         sant('Skribenten vill att skolan ska ta bort cykelställen.', False,
@@ -657,7 +657,7 @@ AK5_UTTRYCK = niva(
             ['Att spela piano högt', 'Att göra bort sig', 'Att gå i en lerpöl'], 'Att göra bort sig',
             'Uttrycket är bildligt. Den som trampar i klaveret säger eller gör något olämpligt och gör bort sig.'),
         val('Vilken mening använder uttrycket ”få kalla fötter” bildligt?',
-            ['Dan hade glömt sina strumpor och fick kalla fötter ute på isen.',
+            ['Dan hade glömt sina tjocka strumpor och fick kalla fötter ute på isen.',
              'Plötsligt fick Dan kalla fötter och vågade inte hoppa från tiometern.',
              'Dan satte sig vid brasan för att värma sina kalla fötter.'],
             'Plötsligt fick Dan kalla fötter och vågade inte hoppa från tiometern.',
@@ -665,7 +665,7 @@ AK5_UTTRYCK = niva(
         skriv('Vilket ord saknas? Att gå som katten kring het …', 'gröt',
               'Uttrycket betyder att man undviker att komma till saken, som en katt som inte vågar ta i den heta gröten.'),
         skriv('Vilket ord saknas? Att ha många … i elden.', 'järn',
-              'Uttrycket betyder att man har många saker på gång på en gång.'),
+              'Uttrycket betyder att man har många saker på gång samtidigt, som en smed med många järn att smida i elden.'),
         sant('Ett uttryck som ”ha is i magen” betyder något annat än vad orden säger.', True,
              'Det är bildligt språk. Betydelsen är att man är lugn, inte att man har is i magen.'),
         sant('Uttrycket ”hålla tummarna” betyder att man håller hårt i sina tummar.', False,
@@ -676,7 +676,7 @@ AK5_UTTRYCK = niva(
               ('vara ute och cykla', 'ha fel'),
               ('fatta galoppen', 'förstå vad det handlar om')],
              'Uttryck betyder ofta något helt annat än orden var för sig.'),
-        ordna('Bygg uttrycket.', 'Slå två flugor i en smäll.',
+        ordna('Bygg uttrycket som betyder att man klarar två saker på en gång.', 'Slå två flugor i en smäll.',
               forklaring='Uttrycket betyder att man klarar av två saker på en gång.'),
     ],
     beskrivning='Uttryck som betyder något annat än orden säger.')
@@ -701,13 +701,13 @@ AK5_LIKNELSER = niva(
             'Skrattet jämförs med musik, som många tycker är vacker. Det betyder att skrattet lät fint.'),
         sant('I meningen ”Bilen stod och väntade tålmodigt” får bilen en mänsklig egenskap.', True,
              'En bil kan inte vara tålmodig, det kan människor. Bilen får en mänsklig egenskap, och det kallas personifikation.'),
-        sant('Meningen ”Han var stark som en björn” är en personifikation.', False,
+        sant('Meningen ”Han var tyst som en mus” är en personifikation.', False,
              'Det är en liknelse, för den jämför med ordet som. I en personifikation gör en sak som en människa.'),
         para('Para ihop meningen med vad den är.',
              [('Snön var vit som socker.', 'liknelse'), ('Skogen sov under snön.', 'personifikation'),
               ('Det snöade hela natten.', 'rak beskrivning')],
              'Som socker jämför, så det är en liknelse. Skogen kan inte sova, så den får en mänsklig egenskap. Den sista meningen säger bara som det är.'),
-        ordna('Bygg liknelsen.', 'Hennes ögon var blå som havet.',
+        ordna('Bygg liknelsen om hennes ögon.', 'Hennes ögon var blå som havet.',
               forklaring='Hennes har stor bokstav och står först. Ordet som kommer före havet, och jämförelsen är klar.'),
     ],
     beskrivning='Bilder i språket: jämförelser med som, och saker som beter sig som människor.')

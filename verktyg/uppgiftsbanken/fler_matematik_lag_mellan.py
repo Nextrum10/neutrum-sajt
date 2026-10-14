@@ -142,7 +142,7 @@ AK1_DUBBELT_2 = niva('ma-ak1-fler-dubbelt-2', 'Hälften', 'Dubbelt och hälften'
           'Hälften av 12 är 6, för 6 + 6 = 12.'),
     sant('Hälften av 14 är 7.', 7 + 7 == 14,
          '7 + 7 = 14, så hälften av 14 är 7.'),
-    sant('Man kan dela 9 kulor lika mellan två barn så att båda får hela kulor.', 9 % 2 == 0,
+    sant('Man kan dela 9 kulor lika mellan två barn, utan att någon kula blir över.', 9 % 2 == 0,
          'Får båda 4 kulor blir en kula över, och får båda 5 behövs 10 kulor. 9 är ett udda tal, '
          'och det går inte att dela lika i två hela delar.'),
     para('Para ihop talet med hälften av talet.', [(n, n // 2) for n in (4, 8, 12, 16, 20)],
@@ -184,7 +184,7 @@ AK1_DUBBELT_3 = niva('ma-ak1-fler-dubbelt-3', 'Dubbelt eller hälften?', 'Dubbel
           'Systern har 4 + 4 = 8 bilar. Tillsammans har de 4 + 8 = %s bilar.' % tal(4 + 8)),
     val('Hälften av ett tal är 6. Vilket är talet?', unika(6 * 2, 6 // 2, 6 + 1), 6 * 2,
         'Talet är dubbelt så stort som hälften: 6 + 6 = %s. Kolla: hälften av 12 är 6.' % tal(12)),
-    ordna_efter('Ordna talen efter hur mycket det blir, minst först.',
+    ordna_efter('Ordna efter hur mycket det blir, minst först.',
                 [('hälften av 18', 9), ('dubbelt 4', 8), ('hälften av 10', 5), ('dubbelt 6', 12)],
                 'Hälften av 10 är 5, dubbelt 4 är 8, hälften av 18 är 9 och dubbelt 6 är 12.'),
 ], beskrivning='Läs noga om det är dubbelt eller hälften, och räkna.')
@@ -222,7 +222,7 @@ AK2_GRUPPER_1 = niva('ma-ak2-fler-grupper-1', 'Lika stora grupper', 'Lika gruppe
           'Det är 4 grupper med 5: 5 + 5 + 5 + 5 = %s.' % tal(4 * 5)),
 ], beskrivning='Lika stora grupper och att lägga ihop dem: 3 påsar med 2 bullar i varje.')
 
-AK2_GRUPPER_2 = niva('ma-ak2-fler-grupper-2', 'Gånger-tecknet', 'Lika grupper', [
+AK2_GRUPPER_2 = niva('ma-ak2-fler-grupper-2', 'Gångertecknet', 'Lika grupper', [
     val('Vilken addition ger samma svar som 3 · 4?', unika('4 + 4 + 4', '3 + 4', '3 + 3 + 3'),
         enda(['4 + 4 + 4', '3 + 4', '3 + 3 + 3'], lambda a: ber(a) == ber('3 · 4')),
         '3 · 4 betyder 3 grupper med 4: 4 + 4 + 4 = %s. 3 + 4 blir bara %s och 3 + 3 + 3 blir %s.'
@@ -249,7 +249,7 @@ AK2_GRUPPER_2 = niva('ma-ak2-fler-grupper-2', 'Gånger-tecknet', 'Lika grupper',
     val('Vilken räkning har svaret 20?', unika('4 · 5', '4 · 4', '5 · 5', '2 · 5'),
         enda(['4 · 5', '4 · 4', '5 · 5', '2 · 5'], lambda a: ber(a) == 20),
         '4 · 5 = 20. 4 · 4 är 16, 5 · 5 är 25 och 2 · 5 är bara 10.'),
-], beskrivning='Gånger-tecknet visar lika stora grupper: 3 · 4 är 3 grupper med 4.')
+], beskrivning='Gångertecknet visar lika stora grupper: 3 · 4 är 3 grupper med 4.')
 
 AK2_GRUPPER_3 = niva('ma-ak2-fler-grupper-3', 'Gånger och dela lika', 'Lika grupper', [
     skriv('12 kulor delas lika i 3 påsar. Hur många kulor är det i varje påse?', svar(12 // 3, 'kulor'),
@@ -263,13 +263,13 @@ AK2_GRUPPER_3 = niva('ma-ak2-fler-grupper-3', 'Gånger och dela lika', 'Lika gru
     sant('Man kan dela 9 kulor lika i 3 påsar, så att det blir lika många kulor i varje påse.', 9 % 3 == 0,
          '3 + 3 + 3 = 9, så varje påse får 3 kulor.'),
     sant('Man kan dela 10 kulor lika i 3 påsar, så att det blir lika många kulor i varje påse.', 10 % 3 == 0,
-         '3 + 3 + 3 = 9 och 4 + 4 + 4 = 12. 10 ligger mittemellan, så en kula skulle bli över.'),
+         '3 + 3 + 3 = 9 och 4 + 4 + 4 = 12. 10 ligger mellan dem, så får varje påse 3 kulor blir en kula över.'),
     val('15 elever delas i grupper med 5 elever i varje grupp. Hur många grupper blir det?',
         unika(15 // 5, 15 - 5, 15 + 5), 15 // 5,
         '5 + 5 + 5 = 15, så det blir 3 grupper.'),
     skriv('Ett paket har 4 pennor. Hur många pennor är det i 5 paket?', svar(5 * 4, 'pennor'),
           'Det är 5 grupper med 4: 4 + 4 + 4 + 4 + 4 = %s.' % tal(5 * 4)),
-    para('Para ihop gånger-räkningen med delningen som hör ihop.',
+    para('Para ihop gångerräkningen med delningen som hör ihop.',
          [('2 · 5 = 10', '10 delat med 2 = 5'), ('3 · 4 = 12', '12 delat med 3 = 4'),
           ('5 · 3 = 15', '15 delat med 5 = 3'), ('4 · 4 = 16', '16 delat med 4 = 4')],
          'Gånger och delat hör ihop. Eftersom 3 · 4 = 12 blir 12 delat med 3 lika med 4, och så vidare.'),
@@ -297,7 +297,7 @@ AK3_BRAK_1 = niva('ma-ak3-fler-brak-1', 'En halv, en tredjedel och en fjärdedel
           ('5 lika delar', 'en femtedel'), ('10 lika delar', 'en tiondel')],
          'Delar man något i 2 lika delar blir varje del en halv, i 3 en tredjedel, i 4 en fjärdedel, '
          'i 5 en femtedel och i 10 en tiondel.'),
-    skriv('Hur många fjärdedelar behövs för att bli en hel pizza?', tal(4),
+    skriv('Hur många fjärdedelar behövs för att bli en hel pizza?', svar(4) + ['4/4', '4 / 4'],
           'En fjärdedel är en av fyra lika delar. Alla fyra delarna tillsammans är hela pizzan.'),
     sant('Två halvor är lika mycket som en hel.', True,
          'En halv är en av två lika delar. Båda delarna tillsammans är hela.'),
@@ -306,7 +306,7 @@ AK3_BRAK_1 = niva('ma-ak3-fler-brak-1', 'En halv, en tredjedel och en fjärdedel
     val('Vilket bråk betyder en tredjedel?', unika('1/3', '3/1', '1/4'), '1/3',
         'Talet under strecket säger i hur många lika delar helheten delas: 3. Talet över strecket säger hur många '
         'delar vi tar: 1. En tredjedel är 1/3.'),
-    skriv('En chokladkaka har 8 rutor. Du äter en halv kaka. Hur många rutor äter du?', tal(8 // 2),
+    skriv('En chokladkaka har 8 rutor. Du äter en halv kaka. Hur många rutor äter du?', svar(8 // 2),
           'Hälften av 8 rutor är 4 rutor, för 4 + 4 = 8.'),
     ordna_efter('Ordna delarna från minst till störst.',
                 [(namn, F(1, n)) for namn, n in _DELAR],
@@ -418,8 +418,8 @@ _VALD = [('äpple', 12), ('banan', 8), ('päron', 5)]
 _STAPLAR = [('Hallon', 6), ('Jordgubbar', 9), ('Blåbär', 4), ('Körsbär', 7)]
 
 AK3_DIAGRAM_2 = niva('ma-ak3-fler-diagram-2', 'Stapeldiagram', 'Tabeller och diagram', [
-    skriv('I ett stapeldiagram betyder varje ruta 2 böcker. Stapeln för Bea är 4 rutor hög. '
-          'Hur många böcker har Bea läst?', tal(4 * 2),
+    skriv('Ett stapeldiagram visar hur många böcker några barn har läst. Varje ruta betyder 2 böcker. '
+          'Stapeln för Bea är 4 rutor hög. Hur många böcker har Bea läst?', tal(4 * 2),
           'Varje ruta är 2 böcker och stapeln har 4 rutor: 4 · 2 = %s.' % tal(4 * 2)),
     skriv('I ett stapeldiagram betyder varje ruta 5 elever. Stapeln för klass 3A är 6 rutor hög. '
           'Hur många elever visar stapeln?', tal(6 * 5),
@@ -433,8 +433,10 @@ AK3_DIAGRAM_2 = niva('ma-ak3-fler-diagram-2', 'Stapeldiagram', 'Tabeller och dia
     sant('I ett stapeldiagram betyder varje ruta 10 sidor. En stapel som är 5 rutor hög visar 5 sidor.',
          5 * 10 == 5,
          'Varje ruta är 10 sidor, så 5 rutor är 5 · 10 = %s sidor. Titta alltid på vad en ruta betyder.' % tal(50)),
-    sant('I ett stapeldiagram visar en stapel som är dubbelt så hög som en annan stapel dubbelt så mycket.', True,
-         'Höjden visar hur mycket det är. Är en stapel dubbelt så hög är det dubbelt så mycket.'),
+    sant('I ett stapeldiagram betyder varje ruta 2 glassar. En stapel som är 8 rutor hög visar dubbelt så många '
+         'glassar som en stapel som är 4 rutor hög.', 8 * 2 == 2 * (4 * 2),
+         '8 rutor är 8 · 2 = %s glassar och 4 rutor är 4 · 2 = %s glassar. %s är dubbelt så mycket som %s.'
+         % (tal(8 * 2), tal(4 * 2), tal(8 * 2), tal(4 * 2))),
     val('I ett stapeldiagram betyder varje ruta 4 mål. Stapeln för lag A är 3 rutor hög och stapeln för lag B '
         'är 5 rutor hög. Hur många mål gjorde lag B?',
         unika(5 * 4, 5, 3 * 4, 3 + 5), 5 * 4,
@@ -533,7 +535,7 @@ AK4_BRAK_2 = niva('ma-ak4-fler-brak-2', 'Bråk i flera steg', 'Bråk i vardagen'
                 [('1/2', del_av(1, 2, 12)), ('1/3', del_av(1, 3, 12)), ('1/4', del_av(1, 4, 12)),
                  ('2/3', del_av(2, 3, 12))],
                 '1/4 av 12 är 3 kr, 1/3 är 4 kr, 1/2 är 6 kr och 2/3 är 8 kr.'),
-    skriv('Hur många fjärdedelar är lika mycket som en halv?', tal(2),
+    skriv('Hur många fjärdedelar är lika mycket som en halv?', [tal(2), '2/4', '2 / 4'],
           'En hel är fyra fjärdedelar, och hälften av 4 är 2. Alltså är en halv lika med 2/4.'),
 ], beskrivning='Bråk i flera steg: hur stor del det är, vad som blir kvar och att jämföra delar.')
 
@@ -628,7 +630,7 @@ AK5_SANNOLIKHET_1 = niva('ma-ak5-fler-sannolikhet-1', 'Chans i ord och bråk', '
          'Det finns ingen sida med 7, så det är omöjligt. Sannolikheten för något omöjligt är 0.'),
     sant('När du singlar en slant är det säkert att du får krona.', False,
          'Det finns två lika troliga utfall, krona och klave. Krona är inte säkert, sannolikheten är 1/2.'),
-    val('En spelskiva är delad i 8 lika stora fält, och 3 av fälten är gröna. Hur stor är sannolikheten att '
+    val('En snurra är delad i 8 lika stora fält, och 3 av fälten är gröna. Hur stor är sannolikheten att '
         'snurran stannar på grönt?', unika('3/8', '3/5', '5/8', '8/3'), '3/8',
         '3 av de 8 fälten är gröna, och fälten är lika stora. Sannolikheten är 3/8. 3/5 jämför bara de gröna '
         'med de andra fälten.'),
@@ -654,7 +656,7 @@ AK5_SANNOLIKHET_1 = niva('ma-ak5-fler-sannolikhet-1', 'Chans i ord och bråk', '
         'Lika stor som för klave, för myntet minns inte',
         'Myntet kommer inte ihåg tidigare kast. Varje kast har samma chans, 1/2 för krona och 1/2 för klave.'),
     skriv('En påse har 2 röda, 3 gröna och 5 blå kulor. Sannolikheten att dra en grön kula är 3/?. Vilket tal '
-          'ska stå där frågetecknet står?', tal(2 + 3 + 5),
+          'ska stå där frågetecknet står?', [tal(2 + 3 + 5), '3/%s' % tal(2 + 3 + 5), '3 / %s' % tal(2 + 3 + 5)],
           'Nämnaren är antalet kulor i påsen, alla färger: 2 + 3 + 5 = %s. Sannolikheten är 3/10. '
           'Det är inte 3/7, för det jämför bara de gröna med de andra kulorna.' % tal(2 + 3 + 5)),
 ], beskrivning='Sannolikhet i ord och som bråk: omöjligt, säkert, och hur många av alla utfall som passar.')
@@ -935,7 +937,7 @@ AK6_PRIORITERING_2 = niva('ma-ak6-fler-prioritering-2', 'Parenteser och flera r�
     skriv('Räkna: 12 : 3 · 2', tal(heltal(ber('12 : 3 · 2'))),
           'Delat och gånger har samma rang, så du räknar från vänster: 12 : 3 = 4 och sedan 4 · 2 = %s.'
           % tal(heltal(ber('12 : 3 · 2')))),
-    skriv('Tre vänner delar lika på en nota. De köper 4 pizzor för 90 kr styck. Hur många kronor betalar var och en?',
+    skriv('Tre vänner köper 4 pizzor för 90 kr styck och delar lika på notan. Hur många kronor betalar var och en?',
           tal(heltal(ber('(4 · 90) : 3'))),
           'Först pizzornas pris: 4 · 90 = 360 kr. Sedan delas det på 3: 360 : 3 = %s kr. Det är (4 · 90) : 3.'
           % tal(heltal(ber('(4 · 90) : 3')))),

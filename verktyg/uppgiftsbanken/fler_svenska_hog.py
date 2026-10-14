@@ -93,7 +93,7 @@ PAPPERSKORGAR = '\n\n'.join([
     'Jag tycker att skolan borde sätta upp minst sex papperskorgar i parken. De behöver inte vara '
     'dyra, och elevrådet kan gärna måla dem. Då blir det lättare att göra rätt, och parken blir en '
     'plats där alla vill vara.',
-    'Så, kära rektor: köp in fler papperskorgar före nästa termin!',
+    'Kära rektor: köp in fler papperskorgar före nästa termin!',
     'Linnea Åkesson, årskurs 7',
 ])
 
@@ -162,7 +162,7 @@ KRONIKAN = '\n\n'.join([
     'mellan de två jobben hann han sälja skor och arbeta på en färja. Inget av det var ett '
     'misstag, sa han. Det var vägen dit.',
     'Jag tror att vi lägger för stor vikt vid frågan. En väg är sällan rak, och ingen kan veta vad '
-    'som väntar bakom nästa kurva. Så nästa gång någon frågar vad jag ska bli tänker jag svara: '
+    'som väntar bakom nästa kurva. Så nästa gång någon frågar vad jag ska bli, tänker jag svara: '
     '”Äldre.” Det är åtminstone sant.',
     'Alma Sundin, årskurs 9',
 ])
@@ -203,8 +203,8 @@ TILLAGG = [
                 'Klassrummet var en bikupa av röster.',
                 'Klassrummet sägs vara en bikupa. Det är inget bisamhälle, men det surrar av röster på samma sätt.'),
             sant('Meningen ”Natten är en svart kappa” är en liknelse.', False,
-                 'Ordet som saknas, så det är en metafor. Natten sägs vara en kappa i stället för att jämföras '
-                 'med en.'),
+                 'Ordet ”som” finns inte i meningen, så det är en metafor. Natten sägs vara en kappa i stället '
+                 'för att jämföras med en.'),
             val('Vad betyder metaforen ”Hon har ett hjärta av guld”?',
                 ['Hon är väldigt snäll och generös', 'Hon bär ett halsband av äkta guld',
                  'Hon har ärvt väldigt mycket pengar'],
@@ -221,7 +221,7 @@ TILLAGG = [
                  'En metafor ska läsas som en bild. Solstrålen sprider ljus, klippan står fast, knivar gör ont '
                  'och pengar ska man vara rädd om.'),
             ordna('Bygg metaforen.', ['Livet', 'är', 'en', 'resa.'],
-                  forklaring='Livet sägs vara en resa. Det är en metafor eftersom ordet som saknas.'),
+                  forklaring='Livet sägs vara en resa utan att ordet ”som” används. Då är det en metafor.'),
             sant('En metafor säger att något är något annat, utan att jämföra med ordet som.', True,
                  'Så skiljer den sig från liknelsen. Stark som en björn är en liknelse, och Han är en björn är '
                  'en metafor.'),
@@ -255,17 +255,17 @@ TILLAGG = [
                 'Orden sårade henne mycket',
                 'Knivar gör ont, och orden sägs vara knivar. Det är en metafor för att orden sårade henne '
                 'djupt. Det finns inga riktiga knivar.'),
-            val('Vilket bildspråk finns i texten? ”Månen hängde som en gul lampa över taken, och vinden '
-                'viskade mellan husen.”',
-                ['en liknelse och en personifikation', 'en metafor och en överdrift',
-                 'två liknelser', 'inget bildspråk'],
+            val('Vilket bildspråk finns i texten? ”Månen hängde som en gul lampa över taken, och havet '
+                'suckade mot bryggan.”',
+                ['en liknelse och en personifikation', 'en metafor och en personifikation',
+                 'en liknelse och en överdrift', 'inget bildspråk'],
                 'en liknelse och en personifikation',
-                'Månen jämförs med en lampa med ordet som, och det är en liknelse. Vinden kan inte viska, så '
-                'den får en mänsklig egenskap, och det är en personifikation.'),
+                'Månen jämförs med en lampa med ordet som, och det är en liknelse. Havet kan inte sucka, så '
+                'det får en mänsklig egenskap, och det är en personifikation.'),
             val('Varför använder författare bildspråk?',
-                ['Texten blir levande och läsaren ser det framför sig', 'Texten blir kortare och lättare att stava',
-                 'Texten kan då inte missförstås av någon'],
-                'Texten blir levande och läsaren ser det framför sig',
+                ['Texten blir levande och lätt att se framför sig', 'Texten blir kortare och lättare att stava rätt',
+                 'Texten kan då aldrig missförstås av någon läsare'],
+                'Texten blir levande och lätt att se framför sig',
                 'Bildspråk gör att läsaren får en bild i huvudet och känner mer. Det gör inte texten kortare, och '
                 'en bild kan tolkas på olika sätt.'),
             ordna('Bygg meningen med personifikationen.', ['Skuggorna', 'dansade', 'på', 'väggen.'],
@@ -292,22 +292,21 @@ TILLAGG = [
                  'Det står i andra stycket att arbetarna hämtar mat, bygger stacken och tar hand om äggen och '
                  'larverna.'),
             val('Varför är myror nyttiga i skogen, enligt texten?',
-                ['De äter skadeinsekter och luckrar upp jorden', 'De bygger bon åt skogens fåglar',
-                 'De gör att träden växer snabbare'],
+                ['De äter skadeinsekter och luckrar upp jorden', 'De bygger bon åt många av skogens fåglar',
+                 'De gör att alla träden växer mycket snabbare'],
                 'De äter skadeinsekter och luckrar upp jorden',
                 'Sista stycket nämner just det: de äter skadeinsekter, de luckrar upp jorden, och de bär frön.'),
             val('Vad kan man förstå av att myrorna bär med sig frön som växter kan gro ur?',
-                ['Att de hjälper växter att sprida sig', 'Att de äter alla frön i skogen',
-                 'Att de planterar träd med flit'],
+                ['Att de hjälper växter att sprida sig', 'Att de äter alla frön som finns i skogen',
+                 'Att de planterar nya träd med flit'],
                 'Att de hjälper växter att sprida sig',
                 'När myrorna flyttar frön kan nya växter börja växa på andra ställen. Myrorna gör det inte med flit, '
                 'men växterna får hjälp.'),
             val('Vad är doftämnen?',
-                ['Ämnen som luktar och som myror kan känna av', 'Mat som myrorna samlar till vintern',
-                 'Ljud som hörs långt bort'],
-                'Ämnen som luktar och som myror kan känna av',
-                'Myrorna lämnar doftämnen efter sig och förstår varandra genom dem. De är alltså en sorts budskap '
-                'som man känner med lukten.'),
+                ['Ämnen med lukt som myror känner av', 'Mat som myrorna samlar inför vintern',
+                 'Ljud som hörs långt bort i skogen'],
+                'Ämnen med lukt som myror känner av',
+                'Doftämnen är ämnen med lukt. Myrorna använder dem för att lämna budskap till varandra.'),
             para('Para ihop det i myrsamhället med vad det gör.',
                  [('drottningen', 'lägger äggen'), ('arbetarna', 'hämtar mat och bygger stacken'),
                   ('antennerna', 'används för att röra vid varandra'), ('myrsyran', 'sprutas mot fiender')],
@@ -333,12 +332,12 @@ TILLAGG = [
             skriv('Hur högt ska plantorna vara innan du klipper dem? Svara med antal centimeter.',
                   [tal(5), 'fem'], 'Steg 6 säger att du kan klippa dem när de är fem centimeter höga.'),
             val('Hur mycket vatten ska du hälla på första gången?',
-                ['Så att pappret blir fuktigt, men inte simmar', 'Så att hela tallriken fylls med vatten',
+                ['Så att pappret blir fuktigt, men inte simmar', 'Så att hela tallriken fylls med vatten till kanten',
                  'Bara en enda liten droppe över pappret'],
                 'Så att pappret blir fuktigt, men inte simmar',
                 'Steg 2 säger att pappret ska bli fuktigt men inte simma.'),
             val('Mia sår krassefrön en måndag. När kan hon ungefär börja äta krassen?',
-                ['Ungefär en vecka senare', 'Redan samma kväll', 'Efter ungefär en månad'],
+                ['Ungefär en vecka senare', 'Redan samma kväll', 'Efter ungefär en hel månad'],
                 'Ungefär en vecka senare',
                 'Första stycket säger att det går att äta krassen efter ungefär en vecka.'),
             skriv('Vilken grönsak liknar krassens smak, enligt texten? Skriv ordet.',
@@ -445,8 +444,8 @@ TILLAGG = [
 
         niva('sv-ak7-fler-debatt-1', 'Fler papperskorgar i skolparken', 'Läsa debatt', [
             val('Vad är skribentens tes?',
-                ['Skolan borde sätta upp fler papperskorgar', 'Alla elever ska äta lunch inomhus',
-                 'Parken ska stängas på rasterna'],
+                ['Skolan borde sätta upp fler papperskorgar', 'Alla elever ska äta sin lunch inomhus',
+                 'Parken ska stängas för alla elever på rasterna'],
                 'Skolan borde sätta upp fler papperskorgar',
                 'Tesen är skribentens huvudåsikt. Den står i tredje stycket: skolan borde sätta upp minst sex '
                 'papperskorgar i parken.'),
@@ -462,8 +461,8 @@ TILLAGG = [
                 'Andra stycket säger: för det första blåser skräpet iväg till dammen, och där kan fåglar fastna '
                 'i plast.'),
             val('Varför nämner skribenten att elevrådet kan måla korgarna?',
-                ['Eleverna kan hjälpa till så att det blir billigt', 'Elevrådet har redan beställt papperskorgar',
-                 'Rektorn har redan bett elevrådet om hjälp'],
+                ['Eleverna kan hjälpa till så att det blir billigt', 'Elevrådet har redan beställt nya papperskorgar',
+                 'Rektorn har redan bett elevrådet om hjälp med korgarna'],
                 'Eleverna kan hjälpa till så att det blir billigt',
                 'Meningen står efter att korgarna inte behöver vara dyra. Om eleverna målar dem själva blir '
                 'förslaget billigare. Texten säger inget om att något redan är beställt eller efterfrågat.'),
@@ -476,9 +475,9 @@ TILLAGG = [
                              'uppmaning till rektorn.'),
             skriv('Vem vänder sig skribenten till i den sista meningen? Skriv ordet.',
                   ['rektor', 'rektorn', 'kära rektor'],
-                  'Den sista meningen börjar ”Så, kära rektor”. Skribenten ber rektorn köpa in fler papperskorgar.'),
+                  'Den sista meningen börjar ”Kära rektor”. Skribenten ber rektorn köpa in fler papperskorgar.'),
             para('Para ihop ordet ur texten med vad det betyder.',
-                 [('förpackningar', 'omslag och burkar kring mat och dryck'), ('särskilt', 'mer än för andra'),
+                 [('förpackningar', 'omslag och burkar kring mat och dryck'), ('särskilt', 'framför allt, i synnerhet'),
                   ('elevrådet', 'elevernas egna representanter på skolan'), ('termin', 'ett halvår i skolan')],
                  'Orden står i texten: skräpet är ofta tomma förpackningar, och skribenten vill att korgarna sätts '
                  'upp före nästa termin.'),
@@ -490,8 +489,8 @@ TILLAGG = [
                   'Skriv ordet.', ['replik', 'repliken', 'en replik', 'svar'],
                   'Ett svar på någon annans inlägg i en debatt kallas replik. Elias bemöter Linneas förslag.'),
             val('Vad är Elias tes?',
-                ['Skolan bör först få eleverna att slänga rätt', 'Skolan ska ta bort alla papperskorgar',
-                 'Skolan ska köpa sex papperskorgar direkt'],
+                ['Skolan bör först få eleverna att slänga rätt', 'Skolan ska ta bort alla papperskorgar i parken',
+                 'Skolan ska köpa sex nya papperskorgar direkt'],
                 'Skolan bör först få eleverna att slänga rätt',
                 'Elias håller inte med om att fler korgar är lösningen. Han vill att klasserna plockar skräp och att '
                 'fler lär sig använda de korgar som redan finns.'),
@@ -501,13 +500,13 @@ TILLAGG = [
             sant('Elias tycker inte att Linnea har något problem alls.', False,
                  'Han skriver att han förstår hennes problem. Det är lösningen han inte håller med om.'),
             val('Varför räcker det inte med fler korgar, enligt Elias?',
-                ['Skräpet hamnar ofta bredvid korgarna som finns', 'Korgarna är alldeles för dyra att köpa',
-                 'Det finns ingen plats kvar i parken'],
+                ['Skräpet hamnar ofta bredvid korgarna som finns', 'Korgarna är alldeles för dyra för skolan att köpa',
+                 'Det finns ingen plats kvar att ställa dem på'],
                 'Skräpet hamnar ofta bredvid korgarna som finns',
                 'Han skriver att mycket skräp redan ligger bredvid de korgar som finns. Då hjälper det inte med '
                 'fler, om inte eleverna bryr sig om att använda dem.'),
             val('Vad vill Elias troligen att eleverna gör?',
-                ['Tar eget ansvar för skräpet', 'Slutar äta lunch i parken', 'Betalar för nya korgar'],
+                ['Tar eget ansvar för skräpet', 'Slutar äta lunch ute i parken', 'Betalar själva för alla nya korgar'],
                 'Tar eget ansvar för skräpet',
                 'Hans förslag är att klasserna turas om att plocka skräp. Han vill att eleverna själva ska ta '
                 'ansvar, i stället för att skolan köper fler korgar.'),
@@ -581,10 +580,10 @@ TILLAGG = [
             sant('Reklam ska vara tydligt märkt så att man förstår att det är reklam.', True,
                  'Det är huvudregeln. Ett inlägg som är betalt av ett företag ska tydligt visa att det är reklam.'),
             val('En butik skriver ”Upp till 70 % rabatt!”. Vad betyder det?',
-                ['Att 70 % är högsta rabatten, andra varor kan ha mindre',
-                 'Att alla varor i butiken har 70 % rabatt just nu',
-                 'Att varje vara kostar exakt 70 kronor just nu'],
-                'Att 70 % är högsta rabatten, andra varor kan ha mindre',
+                ['Att 70 % är högsta rabatten, andra kan ha mindre',
+                 'Att alla varor i hela butiken har 70 % rabatt just nu',
+                 'Att varje enskild vara kostar exakt 70 kronor just nu'],
+                'Att 70 % är högsta rabatten, andra kan ha mindre',
                 'Upp till betyder att 70 % är det mesta. Många varor kan ha en mindre rabatt, och några kanske '
                 'ingen alls.'),
             skriv('Reklamen säger ”Testvinnare!” men inte vem som gjort testet. Vilket frågeord ska stå i '
@@ -602,8 +601,9 @@ TILLAGG = [
                  'Vikt kan man väga och priser kan man jämföra. Smak är en åsikt, och alla älskar den går inte '
                  'att bevisa.'),
             val('En reklam säger ”Bara i dag!”. Hur kan ett sådant erbjudande påverka oss?',
-                ['Vi får mindre tid att jämföra och tänka efter', 'Vi blir säkrare på att varan är bra',
-                 'Vi får bättre kvalitet på varan i dag'],
+                ['Vi får mindre tid att jämföra och tänka efter',
+                 'Vi blir mycket säkrare på att varan verkligen är bra',
+                 'Vi får bättre kvalitet på varan om vi köper i dag'],
                 'Vi får mindre tid att jämföra och tänka efter',
                 'Tidspress får oss att skynda. Då hinner vi inte jämföra priser eller fundera på om vi '
                 'verkligen behöver varan.'),
@@ -612,8 +612,9 @@ TILLAGG = [
                   'Det kallas dold reklam eller smygreklam. Den som läser kan tro att det bara är en åsikt.'),
             val('En känd person visar en ny energidryck och skriver ”Min nya favorit!”, utan att nämna att det '
                 'är reklam. Vad är klokast att tänka?',
-                ['Det kan vara betalt även om det inte står där', 'Det är säkert bara personens egen åsikt',
-                 'Drycken är bra om personen säger det'],
+                ['Det kan vara betalt även om det inte står där',
+                 'Det är säkert bara personens egen, ärliga åsikt',
+                 'Drycken måste vara bra om personen säger det'],
                 'Det kan vara betalt även om det inte står där',
                 'Reklam ska märkas, men gör den inte det bör man vara försiktig. Fråga vem som tjänar på att '
                 'inlägget finns.'),
@@ -623,8 +624,8 @@ TILLAGG = [
             skriv('Jackan var gul och för … i ärmarna. Skriv ordet ur texten.', ['stor', 'för stor'],
                   'Det står i början: den var gul och för stor i ärmarna.'),
             val('Varför knöt Rasmus ihop ärmarna?',
-                ['Han ville dölja att jackan var för stor', 'Det blåste så att ärmarna fladdrade',
-                 'Mamma hade bett honom göra det'],
+                ['Han ville dölja att jackan var för stor', 'Det blåste så mycket att ärmarna fladdrade',
+                 'Mamma hade bett honom att göra det'],
                 'Han ville dölja att jackan var för stor',
                 'Det står att han gjorde det så att ingen skulle se hur långa ärmarna var. Han skämdes lite '
                 'över jackan.'),
@@ -634,17 +635,18 @@ TILLAGG = [
                   ['Teo', 'kusinen Teo', 'sin kusin Teo', 'kusin Teo', 'hans kusin Teo'],
                   'Det står i första meningen: Rasmus hade fått jackan av sin kusin Teo.'),
             val('Vad visar det att Rasmus ger sin jacka till Elis?',
-                ['Han vill hjälpa Elis, fast han är osäker själv', 'Han har själv glömt att det är snöstorm ute',
+                ['Han vill hjälpa Elis, fast han är osäker själv', 'Han har inte märkt att det är snöstorm ute just nu',
                  'Han vill att Elis ska skämmas över tröjan'],
                 'Han vill hjälpa Elis, fast han är osäker själv',
                 'Rasmus skämdes för jackan men tvekar bara en stund. Elis fryser, och Rasmus väljer att hjälpa '
                 'honom trots att han själv är osäker.'),
             val('Hur tar Rasmus emot Veras kommentar om jackan?',
-                ['Han blir osäker på om hon skojar', 'Han blir mycket glad och stolt', 'Han blir arg och svarar högt'],
+                ['Han blir osäker på om hon skojar', 'Han blir glad och stolt över jackan',
+                 'Han blir arg och svarar henne högt'],
                 'Han blir osäker på om hon skojar',
                 'Det står att Rasmus inte visste om hon skojade. Han mumlar något och hänger undan jackan.'),
             val('Vilken uppgift har snöstormen i berättelsen?',
-                ['Den gör att Rasmus måste välja något', 'Den visar att vintern i år är lång',
+                ['Den gör att Rasmus måste välja något', 'Den visar att vintern i år är mycket lång',
                  'Den gör att skolan stänger tidigare'],
                 'Den gör att Rasmus måste välja något',
                 'Snöstormen och Elis kyla skapar läget där Rasmus kan välja mellan att behålla jackan och '
@@ -721,8 +723,8 @@ TILLAGG = [
                 'Liksom och typ är utfyllnadsord som hör till talet. De andra meningarna är mer formella.'),
             sant('Man kan ändra och förbättra en skriven text innan någon läser den, men inte ett ord som redan '
                  'har sagts högt.', True,
-                 'Det är en av skillnaderna. Skriftspråket går att planera och rätta, men det sagda ordet är redan '
-                 'hörda.'),
+                 'Det är en av skillnaderna. Skriftspråket går att planera och rätta, men det som redan har sagts '
+                 'har också hörts.'),
             skriv('Vilket ord i meningen ”Det var liksom jättekul” är ett utfyllnadsord? Skriv ordet.', 'liksom',
                   'Liksom fyller ut meningen utan att tillföra någon betydelse. Sådana ord hör till talspråket.'),
             sant('Talspråk är ett sämre språk än skriftspråk.', False,
@@ -768,26 +770,27 @@ TILLAGG = [
                   [tal(5), 'fem'],
                   'Det är fem: samiska, finska, meänkieli, romani chib och jiddisch.'),
             val('Vad kan ungdomsspråk bland annat användas till?',
-                ['Att visa att man hör till en grupp', 'Att göra språket mer formellt',
-                 'Att göra alla ord längre'],
+                ['Att visa att man hör till en grupp', 'Att göra språket mer formellt och strängt',
+                 'Att göra alla ord längre och svårare'],
                 'Att visa att man hör till en grupp',
-                'Orden och uttrycken fungerar som ett gemensamt kännetecken. Den som använder dem visar att hen '
+                'Orden och uttrycken fungerar som ett gemensamt kännetecken. Den som använder dem visar att man '
                 'hör ihop med de andra.'),
             val('I vilken del av Sverige talas meänkieli?',
-                ['Tornedalen', 'Skåne', 'Gotland', 'Bohuslän'], 'Tornedalen',
+                ['Tornedalen i norr', 'Skåne i södra Sverige', 'Gotland ute i Östersjön', 'Bohuslän vid västkusten'],
+                'Tornedalen i norr',
                 'Meänkieli talas i Tornedalen längst i norr, vid gränsen mot Finland.'),
         ], beskrivning='Tränar dialekt, sociolekt, idiolekt och standardsvenska, ungdomsspråk och Sveriges '
                        'nationella minoritetsspråk.'),
 
         niva('sv-ak9-fler-tolka-1', 'Vad ska du bli?', 'Läsa och tolka', [
             val('Vad är krönikans huvudbudskap?',
-                ['Att det är okej att inte veta än vad man blir', 'Att man måste välja ett yrke redan i nian',
-                 'Att kockar och ingenjörer har bäst framtid'],
+                ['Att det är okej att inte veta än vad man blir', 'Att man bör bestämma sitt yrke redan i nian',
+                 'Att kockar och ingenjörer har bäst framtid av alla'],
                 'Att det är okej att inte veta än vad man blir',
                 'Skribenten har inget svar på frågan och menar att det är i sin ordning, för en väg är sällan rak.'),
             val('Varför svarar skribenten ”Äldre” i slutet?',
-                ['Ett skämt som också visar att frågan är svår', 'Ett sätt att slippa prata med någon alls',
-                 'Ett besked om att skolan ska hoppas över'],
+                ['Ett skämt som också visar att frågan är svår', 'Ett sätt att slippa prata med någon om framtiden',
+                 'Ett besked om att gymnasiet ska hoppas över'],
                 'Ett skämt som också visar att frågan är svår',
                 'Svaret är sant men inte det någon väntar sig. Humorn visar att ingen kan veta svaret ännu.'),
             para('Para ihop bilden i texten med vad den står för.',
@@ -797,12 +800,12 @@ TILLAGG = [
                  'Bilderna är metaforer och liknelser. Kartan är planen, det vita pappret saknar plan, vägen har '
                  'kurvor, och ett färdigt svar är som en färdig smörgås.'),
             sant('Skribenten vet redan exakt vilket yrke som väntar efter gymnasiet.', False,
-                 'Skribenten skriver att hon eller han inget svar har på vad hen ska göra sedan.'),
+                 'Skribenten skriver ”Jag har inget svar” och vet inte vad som ska hända efter gymnasiet.'),
             skriv('Vilket yrke hade pappas kollega först? Skriv ordet.', ['kock', 'kocken', 'en kock'],
                   'Det står att kollegan är ingenjör nu men började som kock.'),
             val('Varför berättar skribenten om pappas kollega?',
-                ['Som exempel på att en väg sällan går rakt fram', 'För att ge tips om hur man blir kock',
-                 'För att visa att man ska byta jobb ofta'],
+                ['Som exempel på att en väg sällan går rakt fram', 'För att ge praktiska tips om hur man blir kock',
+                 'För att visa att alla borde byta jobb ganska ofta'],
                 'Som exempel på att en väg sällan går rakt fram',
                 'Kollegan har haft flera jobb och säger att inget var ett misstag. Det är ett exempel på en krokig '
                 'väg som ändå leder någonstans.'),
@@ -822,8 +825,8 @@ TILLAGG = [
 
         niva('sv-ak9-fler-tolka-2', 'Rummet bredvid', 'Läsa och tolka', [
             val('Hur förändras berättaren i novellen?',
-                ['Från att vilja slippa ljudet till att sakna det', 'Från att tycka om gitarr till att avsky den',
-                 'Från att vara glad till att bli rasande'],
+                ['Från att vilja slippa ljudet till att sakna det', 'Från att tycka mycket om gitarr till att avsky den',
+                 'Från att vara glad och lugn till att bli helt rasande'],
                 'Från att vilja slippa ljudet till att sakna det',
                 'Först tryckte berättaren kudden mot öronen. Sedan lyssnar berättaren efter ett ackord. Det som '
                 'störde har blivit något att sakna.'),
@@ -832,9 +835,10 @@ TILLAGG = [
                  'fram först senare.'),
             val('Vad betyder det att berättaren står ”med armarna i kors” och säger att det inte är någon '
                 'stor sak?',
-                ['Berättaren försöker dölja sina känslor', 'Berättaren är arg på musiken', 'Berättaren fryser i hallen'],
+                ['Berättaren försöker dölja sina känslor', 'Berättaren är väldigt arg på all musik',
+                 'Berättaren fryser och vill komma in i värmen'],
                 'Berättaren försöker dölja sina känslor',
-                'Det som berättaren säger stämmer inte med natten efter, då det är så tyst att det gör ont. '
+                'Det som berättaren säger stämmer inte med kvällen efter, då det är så tyst att det känns tomt. '
                 'Armarna i kors är ett sätt att skydda sig.'),
             skriv('Vart flyttade Ida? Skriv staden.', ['Umeå', 'till Umeå'],
                   'Det står att hon flyttade till Umeå för att läsa musik.'),
