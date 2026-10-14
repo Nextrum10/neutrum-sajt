@@ -130,7 +130,7 @@ AK1_DUBBELT_1 = niva('ma-ak1-fler-dubbelt-1', 'Dubbelt så många', 'Dubbelt och
           'Bo har dubbelt så många som Alma: 4 + 4 = %s kritor.' % tal(4 + 4)),
     sant('Dubbelt så mycket som 6 är 14.', 6 + 6 == 14,
          '6 + 6 = %s, inte 14. 14 är dubbelt så mycket som 7.' % tal(6 + 6)),
-    ordna_efter('Ordna efter hur mycket det blir, minst först.',
+    ordna_efter('Ordna dubblorna efter hur mycket de blir, minst först.',
                 [('dubbelt 4', 8), ('dubbelt 2', 4), ('dubbelt 5', 10), ('dubbelt 3', 6)],
                 'Dubbelt 2 är 2 + 2 = 4, dubbelt 3 är 6, dubbelt 4 är 8 och dubbelt 5 är 10.'),
     para('Para ihop talet med dubbelt så mycket.', [(n, 2 * n) for n in (2, 4, 6, 8, 9)],
@@ -158,7 +158,7 @@ AK1_DUBBELT_2 = niva('ma-ak1-fler-dubbelt-2', 'Hälften', 'Dubbelt och hälften'
          'Hälften av 4 är 2, av 8 är 4, av 12 är 6, av 16 är 8 och av 20 är 10.'),
     val('Vad är hälften av 18?', unika(18 // 2, 18 - 10, 18 * 2), 18 // 2,
         '9 + 9 = 18, så hälften av 18 är 9.'),
-    ordna_efter('Ordna efter hur mycket det blir, minst först.',
+    ordna_efter('Ordna hälfterna efter hur mycket de blir, minst först.',
                 [('hälften av 6', 3), ('hälften av 20', 10), ('hälften av 12', 6), ('hälften av 2', 1)],
                 'Hälften av 2 är 1, av 6 är 3, av 12 är 6 och av 20 är 10.'),
     skriv('En pizza har 8 bitar. Hälften av bitarna är uppätna. Hur många bitar är kvar?', svar(8 // 2, 'bitar'),
@@ -193,7 +193,7 @@ AK1_DUBBELT_3 = niva('ma-ak1-fler-dubbelt-3', 'Dubbelt eller hälften?', 'Dubbel
           'Systern har 4 + 4 = 8 bilar. Tillsammans har de 4 + 8 = %s bilar.' % tal(4 + 8)),
     val('Hälften av ett tal är 6. Vilket är talet?', unika(6 * 2, 6 // 2, 6 + 1), 6 * 2,
         'Talet är dubbelt så stort som hälften: 6 + 6 = %s. Kolla: hälften av 12 är 6.' % tal(12)),
-    ordna_efter('Ordna efter hur mycket det blir, minst först.',
+    ordna_efter('Ordna talen efter hur mycket det blir, minst först.',
                 [('hälften av 18', 9), ('dubbelt 4', 8), ('hälften av 10', 5), ('dubbelt 6', 12)],
                 'Hälften av 10 är 5, dubbelt 4 är 8, hälften av 18 är 9 och dubbelt 6 är 12.'),
 ], beskrivning='Läs noga om det är dubbelt eller hälften, och räkna.')
@@ -663,13 +663,14 @@ AK5_SANNOLIKHET_1 = niva('ma-ak5-fler-sannolikhet-1', 'Chans i ord och bråk', '
           tal(4 + 2),
           'Det är 4 gula och 2 gröna: 4 + 2 = 6 kulor som inte är röda. Burken har 12 kulor.'),
     val('Lisa singlar en slant 3 gånger och får krona varje gång. Hur stor är chansen för krona vid nästa kast?',
-        unika('Lika stor som för klave', 'Större än för klave', 'Mindre än för klave'),
-        'Lika stor som för klave',
+        unika('Lika stor som för klave, för myntet minns inte', 'Mindre än för klave, för krona kom redan tre gånger',
+              'Större än för klave, för krona kom redan tre gånger'),
+        'Lika stor som för klave, för myntet minns inte',
         'Myntet kommer inte ihåg tidigare kast. Varje kast har samma chans, 1/2 för krona och 1/2 för klave.'),
-    val('En påse har 2 röda, 3 gröna och 5 blå kulor. Hur stor är sannolikheten att dra en grön kula?',
-        unika('3/10', '3/7', '3/5', '1/3'), '3/10',
-        'Det finns 2 + 3 + 5 = 10 kulor, och 3 av dem är gröna. Sannolikheten är 3/10. 3/7 jämför de gröna med '
-        'de andra kulorna, inte med alla.'),
+    skriv('En påse har 2 röda, 3 gröna och 5 blå kulor. Sannolikheten att dra en grön kula är 3/?. Vilket tal '
+          'ska stå där frågetecknet står?', tal(2 + 3 + 5),
+          'Nämnaren är antalet kulor i påsen, alla färger: 2 + 3 + 5 = %s. Sannolikheten är 3/10. '
+          'Det är inte 3/7, för det jämför bara de gröna med de andra kulorna.' % tal(2 + 3 + 5)),
 ], beskrivning='Sannolikhet i ord och som bråk: omöjligt, säkert, och hur många av alla utfall som passar.')
 
 _SKIVA_TAL = 10
@@ -710,8 +711,8 @@ AK5_SANNOLIKHET_2 = niva('ma-ak5-fler-sannolikhet-2', 'Jämföra chanser', 'Sann
                 'Antal sidor som passar: en 6:a 1 av 6, över 4 är 2 av 6, jämnt tal är 3 av 6 och under 6 är '
                 '5 av 6.'),
     val('En påse har 3 röda, 2 blå och 5 gula kulor. Hur kan du öka chansen att dra en röd kula?',
-        unika('Lägga i 2 röda kulor till', 'Lägga i 2 blå kulor till', 'Ta bort 2 röda kulor'),
-        'Lägga i 2 röda kulor till',
+        unika('Lägga i 2 röda kulor', 'Lägga i 2 blå kulor', 'Ta bort 2 röda kulor'),
+        'Lägga i 2 röda kulor',
         'Med 2 röda till är det 5 röda av 12, vilket är större än 3 av 10. Blå kulor till gör att de röda blir en '
         'mindre del, och tar du bort röda blir det färre.'),
 ], beskrivning='Jämföra chanser, förväntade antal och händelser med tärning och påse.')
@@ -953,10 +954,10 @@ AK6_PRIORITERING_2 = niva('ma-ak6-fler-prioritering-2', 'Parenteser och flera r�
           tal(heltal(ber('(4 · 90) : 3'))),
           'Först pizzornas pris: 4 · 90 = 360 kr. Sedan delas det på 3: 360 : 3 = %s kr. Det är (4 · 90) : 3.'
           % tal(heltal(ber('(4 · 90) : 3')))),
-    ordna_efter('Ordna uttrycken efter värde, minst först.',
+    ordna_efter('Ordna uttrycken med parenteser efter värde, minst först.',
                 [(u, heltal(ber(u))) for u in ('(4 + 2) · 3', '4 + 2 · 3', '(4 + 2) : 3', '4 · (2 + 3)')],
                 '(4 + 2) : 3 = 2, 4 + 2 · 3 = 10, (4 + 2) · 3 = 18 och 4 · (2 + 3) = 20.'),
-    para('Para ihop uttrycket med värdet.',
+    para('Para ihop varje uttryck med sitt värde.',
          parvis([(u, tal(heltal(ber(u)))) for u in ('(8 − 2) · 3', '8 − 2 · 3', '8 + 2 : 2', '(8 + 2) : 2')],
                 ber, lambda h: F(h)),
          '(8 − 2) · 3 = 18, 8 − 2 · 3 = 2, 8 + 2 : 2 = 9 och (8 + 2) : 2 = 5. Parenteser ändrar ordningen.'),
