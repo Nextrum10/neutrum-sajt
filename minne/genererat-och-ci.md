@@ -523,6 +523,9 @@ timme som gått ut och tipstimmens sista dag, vid knappen; och
 `rls-test.sql` avsnitt 29 (17 rader). Pass i tips- och första
 timmen-blocken som låg mer än 60 dagar fram flyttades inom dem, för en
 gratis timme gäller inte längre för ett pass efter sina 60 dagar.
+Sedan 2026-10-14 (3j, `kortet_reserveras`) också att Välj kort inte står på
+ett pass som familjens timmar betalar, och att det står på ett med två barn,
+som timmarna inte betalar.
 
 `verktyg/prova-forhandsvisning.js` (port 8974) provar förhandsvisningen
 mot den riktiga adressen, men svarar själv på den enda fråga den ställer

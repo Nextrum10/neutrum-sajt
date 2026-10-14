@@ -1091,6 +1091,44 @@ async function provaFörälderns(webb) {
     await context.close();
   }
 
+  /* 3j. Kortet och timmarna (kortet_reserveras, 2026-10-14): räcker
+         familjens timmar till ett bekräftat pass betalar jobbet
+         timmar-betalar det, så Välj kort står inte där, bara Betala med
+         timmar. Ett pass med två barn betalar timmarna inte, och där står
+         Välj kort. */
+  {
+    const R = foralderRpc({});
+    R.rpc.mitt_kort = () => [{ marke: 'visa', sista4: '4242', utgar_manad: 8, utgar_ar: 2028, sparat: nu(-6000) }];
+    const pass = (id, o) => Object.assign({ id, parent_id: 'foralder-1', tutor_id: 'handledare-1', student_id: 'barn-1',
+      created_by: 'foralder-1', subject: 'Matematik', wanted_date: framåt(6), wanted_time: '17:00', duration_min: 60,
+      antal_barn: 1, status: 'confirmed', betalning_status: 'ingen', fakturerbar: true, timpris_ore: 39900, extra_ore: 6900,
+      rabatt_ore: null, startrabatt: false, rabattkod: null, klippkort_id: null, format: 'Online', location: null,
+      created_at: nu(-3000) }, o);
+    const { context, page } = await öppna(webb, {
+      rpc: R.rpc, inloggad: 'foralder-1',
+      värld: W => {
+        W.flaggor = [{ kod: 'erbjudanden', aktiv: true }, { kod: 'kortreservation', aktiv: true }];
+        W.kortreservationer = [];
+        W.klippkort_saldo = [{ id: 'kk-1', parent_id: 'foralder-1', erbjudande: 'klipp10', namn: 'Fyll timbanken, 10 timmar',
+          sort: 'klippkort', timmar: 10, anvanda: 0, kvar: 10, giltigt_till: dagar(150), status: 'betald', brukbar: true,
+          created_at: nu(-6000) }];
+        W.bookings.push(pass('pass-tim'), pass('pass-tva', { antal_barn: 2, wanted_date: framåt(7) }));
+      }
+    });
+    await page.goto(BAS + '/foralder#pass/pass-tim');
+    await page.waitForSelector('#pass-sida .vy-betalval', { timeout: 10000 }).catch(() => {});
+    prova('kortet och timmarna: räcker timmarna står Betala med timmar och inte Välj kort',
+      (await page.locator('#pass-sida [data-timmar]').count()) > 0
+      && (await page.locator('#pass-sida [data-kort-val]').count()) === 0, await text(page, '#pass-sida .ps-gor'));
+    await page.evaluate(() => { location.hash = '#pass/pass-tva'; });
+    await page.waitForFunction(() => /pass-tva/.test(location.hash) && !!document.querySelector('#pass-sida [data-kort-val]'),
+      null, { timeout: 5000 }).catch(() => {});
+    prova('kortet och timmarna: ett pass med två barn, som timmarna inte betalar, har Välj kort',
+      (await page.locator('#pass-sida [data-kort-val]').count()) > 0
+      && (await page.locator('#pass-sida [data-timmar]').count()) === 0, await text(page, '#pass-sida .ps-gor'));
+    await context.close();
+  }
+
   /* 4. Inställningen: Föreslå pass under Profil → Barn, av som förval. */
   {
     const R = foralderRpc({});

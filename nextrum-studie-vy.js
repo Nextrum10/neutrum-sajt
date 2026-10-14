@@ -3292,13 +3292,15 @@
 
   /* Går kortet att välja på passet? Före passet, med strömbrytaren på,
      när passet kostar något och inte betalas på annat sätt. Samma
-     prövning gör valj_kort() i databasen. */
+     prövning gör valj_kort() i databasen. Räcker familjens timmar eller
+     timbanken till passet betalar de det (timmar-betalar, också när ett
+     köp blir betalt), och ett val av kort hade inte gjort något. */
   function kortKanVäljas(b) {
     return !!(S.kort && S.kort.pa) && ['requested', 'confirmed'].indexOf(b.status) !== -1
       && b.wanted_date >= isoFor(new Date())
       && b.fakturerbar !== false && !ingetAttBetala(b) && !b.klippkort_id
       && ['ingen', 'misslyckad', 'faktura'].indexOf(b.betalning_status || 'ingen') !== -1
-      && !kortValt(b);
+      && !kortValt(b) && !kortFör(b) && !bankFör(b);
   }
 
   /* Vad kortet gör med passet, i en mening. */
