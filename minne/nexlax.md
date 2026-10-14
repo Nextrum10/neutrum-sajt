@@ -395,6 +395,21 @@ utveckling i flera sidor, ranker som ett battlepass, studiehjälparen särskild,
 på profilen, grupper att tävla i, och att NexLäx ska kännas som ett spel. Det här är första delen
 (bara skärmen, inget i databasen). **Grupperna och nya frågor är inte byggda**, se längst ner.
 
+**Fjärde omgången, samma kväll (Leo): smoothare, och tyst utom när man klarar något.**
+- **Ljud bara för det man klarar:** rätt svar, stjärnor, nivå, område, bana, uppdrag, kistan, märke, en
+  ny rank och en nivå som öppnas. Ett tryck på en knapp, ett val, ett flikbyte, ett fel svar och att gå in i
+  NexLäx ger bara vibration (`känn('tryck')` och de andra finns kvar, men har ingen ton i `LJUD` i
+  `nextrum-ljud.js`; `spela` svarar inget för ett namn som saknas). Det ersätter "ett tick med ljud" längre ned.
+- **Ny rank i spelaren:** efter en nivå jämförs rankens nummer före och efter ur `nexlax_lage()`, och
+  en ny rank ger rutan `.upg-slut-rang` (emblem, namn, rankens färg) och ljudet `rang`; rankmärket kommer
+  efter, med sitt eget ljud.
+- **Smoothare:** `touch-action:manipulation` på allt som trycks (ingen väntan på dubbeltryck);
+  `sättHtml` ritar inte om en flik vars text inte ändrats (vyerna ritar om vid varje hämtning, och det blinkade
+  och tappade platsen i väljaren och rankraden); banderollen sätter in och tar bort bara väljaren i stället
+  för att rita om banan; det som byts tonar in (`nl-ton`, opacity och 6 px, aldrig scale på en hel flik); och
+  tryckknapparna svarar på 140 ms i stället för 450. Rörelsen är av med rörelse bortvald. Byter någon
+  DOM:en för hand ska den glömma cachen (`sistaHtml.delete(host)`).
+
 **Tredje omgången, samma kväll (Leo):** "Gör alla märken coolare och mer färgglada", NexLäx i mitten,
 "ta bort så att man hamnar på en separerad sida, det var jobbigt", veckorna in i översikten och en
 ljusare flik. Det här gäller före allt längre ned:

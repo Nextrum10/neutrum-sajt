@@ -113,7 +113,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (Dagens uppdrag hopfällt, väljaren bakom ämnesbanderollen), huvudsidans gradient på NexLäx titel och val (ingen separat sida: menyn och hälsningen står kvar, Leo
   2026-10-13), ranker som en rad kort att svepa i med rankmärken som belöning (aldrig pengar), märken som
   färgglada medaljer i egen flik och på profilen (räknade, aldrig sparade), Din utveckling i tre sidor, tre ämnen framme och resten bakom Visa fler ämnen, och klockljud i
-  `nextrum-ljud.js`. Grupper att tävla i är inte byggda (`minne/nexlax.md`).
+  `nextrum-ljud.js` som bara låter för det man klarar (rätt svar, nivå, uppdrag, kista, märke, ny rank): knappar
+  och flikar ger bara vibration (Leo 2026-10-13). Grupper att tävla i är inte byggda (`minne/nexlax.md`).
   Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
   (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
 - **Tipskoder** (2026-09-30): en kod per familj och godkänd studiehjälpare och en kampanjkod per
