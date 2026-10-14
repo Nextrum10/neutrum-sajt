@@ -182,7 +182,7 @@ async function provaPå(webb) {
   await vänta(300);
   prova('på: Välj kort ger en rad i världen', (await reservation(page, id(106))) === 'vald', await reservation(page, id(106)));
   const besked = await text(page, BESKED);
-  prova('på: beskedet säger kortet och när', /Priset reserveras på Visa ·· 4242 två dagar före passet och dras när passet har rapporterats\./.test(besked), besked);
+  prova('på: beskedet säger kortet och när', /Priset reserveras på Visa ·· 4242 två dagar före passet och dras när studiehjälparen har skrivit rapporten\./.test(besked), besked);
   prova('på: passets betalning står som Med kortet', /Med kortet/.test(await text(page, '#pass-sida .ps-fakta')),
     await text(page, '#pass-sida .ps-fakta'));
   prova('på: inga betalknappar när kortet betalar', (await page.locator('#pass-sida .vy-betalval').count()) === 0);
@@ -432,7 +432,7 @@ async function provaLägen(webb) {
   /* Reserverat. */
   await tillPasset(page, id(105));
   prova('reserverat: beskedet säger beloppet och kortet',
-    /399 kr är reserverat på Visa ·· 4242 och dras när passet har rapporterats\./.test(await text(page, BESKED)), await text(page, BESKED));
+    /399 kr är reserverat på Visa ·· 4242 och dras när studiehjälparen har skrivit rapporten\./.test(await text(page, BESKED)), await text(page, BESKED));
   prova('reserverat: inga betalknappar', (await page.locator('#pass-sida .vy-betalval, #pass-sida [data-betala]').count()) === 0);
   await bild(page, 'passet-reserverat', '#pass-sida');
   await page.click('#pass-sida .ps-alt [data-kort-bort]');

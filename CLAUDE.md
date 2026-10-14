@@ -229,7 +229,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   per familj (`max_anvandningar`, `max_per_familj`, en gång som förval; Leo: "rabattkoder ska vi också bestämma hur
   många gånger de får användas"), och ett avbokat pass ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6).
   I drift sedan natten till 2026-10-14; en kods villkor ska stå där den delas ut (avsnitt 11).
-- **Kortet reserveras** (2026-10-13, under arbete; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
+- **Kortet reserveras** (2026-10-13, i drift sedan 2026-10-14; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
   och när passet har hållits och läxhjälparen har skrivit rapport så dras pengarna"): valet är frivilligt, och kortet
   och reservationen står i egna tabeller, aldrig på `bookings` (`kortreservationer`, bara genom `valj_kort()` och
   tjänstekontot). Kortet sparas hos Stripe (`sparade_kort`; familjen ser märke, sista fyra och giltighetstid genom
@@ -241,12 +241,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   redan har ett PaymentIntent: **inget dras två gånger**. Ett nej skriver bara den, och ett släpp rör bara radens
   egen reservation. Vyerna (2026-10-14) visar valet bara med strömbrytaren på, och då tar Välj kort platsen från
   Betala i förväg; med den av räknar vyn bara med en reservation som står, för jobbet reserverar och drar inget
-  val då. Strömbrytaren `kortreservation` står av (`minne/betalning.md`, Kortet reserveras vid bokningen).
+  val då. Strömbrytaren `kortreservation` står på sedan 2026-10-14 (`minne/betalning.md`, Kortet reserveras vid
+  bokningen).
   **Villkoren** (version 2026-10-15, `villkoren_kortet`) har en egen punkt (`#kortet`): valet ger oss rätt att
   reservera den bokade tiden och dra den hållna, aldrig mer än det reserverade, och den som väljer kortet har
-  godkänt den gällande versionen (`kortreservationer_kraver_villkor`; bort går alltid). **Texten gick ut 2026-10-14,
-  före strömbrytaren** (Leos beslut): tills kedjan i `DEPLOY-BETALNING.md` 9.14 körts säger sidorna kortet medan vyn
-  har Betala i förväg, mejlen och agenterna säger det förra, och databasens version står på 2026-10-14.
+  godkänt den gällande versionen (`kortreservationer_kraver_villkor`; bort går alltid). Texten gick ut några timmar
+  före strömbrytaren (Leos beslut, PR #281); sedan kedjan i `DEPLOY-BETALNING.md` 9.14 kördes samma eftermiddag
+  säger sidorna, villkoren, mejlen, agenterna och vyn samma sak, pass för pass (PR #283, Leo: "sajt ska säga samma
+  sak som vyn, lektion per lektion"), och databasens version är 2026-10-15.
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -756,8 +758,9 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Skarp kortbetalning**: bara testläge. Stripes endpoint behöver `charge.updated` och
-  `charge.dispute.updated`; före första skarpa betalningen kopplas Stripe till Fortnox.
+- **Skarp kortbetalning**: bara testläge. Stripes endpoint behöver `charge.updated`,
+  `charge.dispute.updated` och kortets tre (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
+  `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox.
 - **Fakturan** är på, men bolaget, bankgirot, beskedet till befintliga familjer och
   provfaktureringen återstår (DEPLOY-BETALNING.md 9.11); när bolaget är registrerat ändras
   villkoren och integritetspolicyn. Spärren "ingen betalning, inget pass" kan inte slås på.
@@ -945,19 +948,22 @@ Detaljer: `minne/grunden.md`.
   Kvar: provköpet i testläge (`DEPLOY-BETALNING.md` 9.13 steg 4). Villkoren nämner inga koder och får ingen ny
   version, så en kods villkor (hur många gånger, inte med timmar i timbanken) ska stå klart där koden delas ut
   (e-handelslagen 9 §). Juristen har inte läst rad 28 i `DATASKYDD.md`.
-- **Kortet reserveras vid bokningen** (2026-10-13) är under arbete och inte i drift. Databasen är skriven
-  (`kortet_reserveras`, 20261013170000; lokalt ur 190 migrationer 1700 av 1700 i `rls-test.sql`, avsnitt 33),
-  med strömbrytaren `kortreservation` av, mallen `kort_nekat` i `notis-ko`, och policyn och rad 29 i `DATASKYDD.md`.
-  Edge-funktionerna är skrivna samma natt: kassans läge `setup` och Ta bort kortet (`stripe-checkout`), den nya
-  `stripe-reservation` och webhookens tre nya händelser (lokalt 1700 av 1700 i `rls-test.sql`). Vyerna är skrivna
-  2026-10-14, bakom strömbrytaren och utan att fråga efter kortet innan migrationen är körd (`prova-kortet.js`).
-  Villkoren är skrivna samma dag (`villkoren_kortet`, 20261015090000, version 2026-10-15): meningen på 36 ställen och
-  i mejlen, villkorens `#kortet` och triggern `kortreservationer_kraver_villkor`; lokalt ur 192 migrationer 1739 av 1739
-  i `rls-test.sql`, och lika många utan villkoren, där provet hoppar över sig självt. **Villkoren mergades 2026-10-14,
-  före strömbrytaren** (Leos beslut, PR #281): sajten säger att pengarna dras efter rapporten, medan vyn har Betala i
-  förväg tills strömbrytaren slås på (Stripe står i testläge, så inga riktiga pengar dras), och den som godkänner
-  villkoren godkänner version 2026-10-14 för en text daterad 15 oktober tills `villkoren_kortet` körts, som kräver
-  `kortet_reserveras` först. Kvar: Stripes tre händelser, kedjan i `DEPLOY-BETALNING.md` 9.14 och juristen. Pengarna dras när passet har rapporterats (Leo samma kväll).
+- **Kortet reserveras vid bokningen** (2026-10-13) är i drift sedan 2026-10-14, med strömbrytaren `kortreservation`
+  på sedan 15.47 UTC (Leos "kör"; auditloggen säger `system`, för den slogs på med SQL). Databasen, edge-funktionerna
+  och vyerna skrevs 2026-10-13 och 14, och villkoren (`villkoren_kortet`, version 2026-10-15) mergades före
+  strömbrytaren (Leos beslut, PR #281). Kedjan i `DEPLOY-BETALNING.md` 9.14 gick samma dag, från main (1fbc18a):
+  `drift` v19, `stripe-reservation` v1 (`verify_jwt` av), `stripe-webhook` v14, `ekonomi` v25 och `notis-ko` v25,
+  hämtade tillbaka och byte för byte lika main med hela importgrafen, utom att webhookens `index.ts` saknar en tom
+  rad i en kommentar (rad 540): samma kod, och den blir lika nästa gång webhooken driftsätts. Sedan
+  `kortet_reserveras` avsnitt för avsnitt med `execute_sql` (tre funktioner har ett `delete` var), registrerad med
+  filens text (md5 `1a8c2ac0…`), och `villkoren_kortet` hel i ett do-block (md5 `8effe953…`): alla får frågan om
+  villkoren igen. Funktionerna, tabellerna, policyerna, triggrarna, jobbet och flaggan är lika en lokal databas byggd
+  ur main; tabellernas rättigheter skiljer bara i Postgres 17:s `m` (MAINTAIN), som alla tabeller i driften har.
+  Hela `rls-test.sql` gick 1739 av 1739 mot driften, tillbakarullat, före och efter strömbrytaren, advisorn larmade
+  inte om något nytt för `anon`, `stripe-reservation` svarade 200 på ett röktest, och jobbet gick första gången 15.50.
+  **Kvar**: Stripes tre händelser på endpointen (utan `payment_intent.succeeded` blir ett draget pass inte betalt hos
+  oss), provet i testläge (9.14 steg 6) och juristen, som inte läst villkoren eller rad 29 i `DATASKYDD.md`. Stripe
+  står i testläge, så inga riktiga pengar dras. Pengarna dras när passet har rapporterats (Leo 2026-10-13).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

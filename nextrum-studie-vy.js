@@ -2729,9 +2729,10 @@
   /* ============================================================
      FAKTURA (Fas 14.6)
 
-     Bredvid "Betala med kort" kan familjen välja "Få faktura nästa
-     månad". Passet kommer då med på en samlad faktura i början av
-     nästa månad, med alla pass familjen valt faktura för. Fakturan
+     Bredvid "Betala med kort" kan familjen välja "Betala mot faktura"
+     (förut "Få faktura nästa månad"). Passet kommer då med på en samlad
+     faktura i början av månaden efter passet, med alla pass familjen
+     valt faktura för. Fakturan
      skapas och skickas från Fortnox; här syns den när den skickats.
 
      Valet är en knapp bredvid kortknappen (Leo 2026-09-27: "knappen
@@ -2759,11 +2760,11 @@
   const fakturaMöjlig = b => S.faktura === true && kanBetalas(b) && b.status === 'completed';
   function fakturaKnapp(b, liten) {
     return fakturaMöjlig(b)
-      ? '<button type="button" class="btn btn-ghost' + (liten ? ' btn-sm' : '') + '" data-faktura-val="' + esc(b.id) + '">Få faktura nästa månad</button>'
+      ? '<button type="button" class="btn btn-ghost' + (liten ? ' btn-sm' : '') + '" data-faktura-val="' + esc(b.id) + '">Betala mot faktura</button>'
       : '';
   }
   const fakturaNotText = b => fakturaMöjlig(b)
-    ? 'Faktura: passet kommer med på en samlad faktura i början av nästa månad. Den betalas inom '
+    ? 'Faktura: passet kommer med på en samlad faktura i början av månaden efter passet. Den betalas inom '
       + DAGAR + ' dagar och kostar ingenting extra.'
     : '';
   function fakturaNot(b) {
@@ -2806,7 +2807,7 @@
       under: pris ? NXBetalning.kronor(pris) + ' dras direkt' : 'Beloppet står i kassan', först: !tim && !bank }));
     if (fakturaMöjlig(b)) {
       val.push(V({ attr: 'data-faktura-val="' + esc(b.id) + '"', ikon: 'faktura',
-        titel: 'Få faktura nästa månad', under: 'Kommer i början av nästa månad' }));
+        titel: 'Betala mot faktura', under: 'Kommer i början av månaden efter passet' }));
     }
     return val.join('');
   }
@@ -2868,7 +2869,7 @@
     await NXStudie.håll(ankare, () => Promise.all([laddaPass(), laddaFakturor()]));
     const msg = $('#bet-msg');
     if (msg && !document.querySelector('#pass-sida .ps-titel')) {
-      säg(msg, 'Klart. Passet kommer med på fakturan i början av nästa månad.', true);
+      säg(msg, 'Klart. Passet kommer med på fakturan i början av månaden efter passet.', true);
     }
   }
 
@@ -2961,7 +2962,7 @@
         plats: false,
         under: pris ? kronor(pris) : '',
         vem: utkast ? 'Står på fakturan för ' + NXBetalning.periodText(utkast.period) + ', som snart skickas.'
-          : 'Kommer med på fakturan i början av nästa månad.',
+          : 'Kommer med på fakturan i början av månaden efter passet.',
         märke: NXKontakt.betalMärke(b),
         /* Med kortreservationen på (2026-10-13) väljs kortet före passet,
            och det reserveras i stället för att dras direkt. */
@@ -2971,7 +2972,7 @@
       }));
     });
     host.innerHTML = delar.length ? delar.join('')
-      : tomt('Inga fakturor', 'Välj "Få faktura nästa månad" när ni bekräftar rapporten, så kommer passet med på en samlad faktura i början av nästa månad. Den ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra.');
+      : tomt('Inga fakturor', 'Välj "Betala mot faktura" på ett pass, så kommer det med på en samlad faktura i början av månaden efter passet. Den ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra.');
   }
 
   /* Kopiera bankgiro eller OCR (Fas 19.6). Går det inte står värdet
@@ -3310,7 +3311,7 @@
     const k = kortNamn(S.kort.kort);
     if (r.lage === 'reserverad') {
       return (r.reserverat_ore ? NXBetalning.kronor(r.reserverat_ore) + ' är reserverat' : 'Priset är reserverat')
-        + ' på ' + k + ' och dras när passet har rapporterats.';
+        + ' på ' + k + ' och dras när studiehjälparen har skrivit rapporten.';
     }
     if (r.lage === 'slapps') return 'Reservationen på kortet släpps inom några minuter.';
     // Strömbrytaren av: inget nytt reserveras eller dras, och passet betalas som vanligt.
@@ -3322,8 +3323,8 @@
         : 'Kortet nekades. Lägg till ett annat kort, försök igen, eller betala efter passet.';
     }
     if (!S.kort.kort) return 'Ni har valt kort, men inget kort är sparat. Spara kortet, annars betalar ni efter passet.';
-    if (r.lage === 'utgangen') return 'Reservationen på ' + k + ' gick ut. Priset dras från kortet när passet har rapporterats.';
-    return 'Priset reserveras på ' + k + ' två dagar före passet och dras när passet har rapporterats.';
+    if (r.lage === 'utgangen') return 'Reservationen på ' + k + ' gick ut. Priset dras från kortet när studiehjälparen har skrivit rapporten.';
+    return 'Priset reserveras på ' + k + ' två dagar före passet och dras när studiehjälparen har skrivit rapporten.';
   }
 
   /* Kortets mening på passets sida, när kortet har något med passet att
@@ -3338,8 +3339,8 @@
     const val = [['efter', 'Efter passet', 'Ni betalar efter passet, när ni bekräftar rapporten'
       + (S.faktura ? ', med kort eller mot faktura.' : ', med kort.')]];
     val.push(['kort', 'Kort', S.kort.kort
-      ? 'Priset reserveras på ' + kortNamn(S.kort.kort) + ' två dagar före passet och dras när passet har rapporterats.'
-      : 'Ni sparar kortet när förslaget är skickat. Priset reserveras två dagar före passet och dras när passet har rapporterats.']);
+      ? 'Priset reserveras på ' + kortNamn(S.kort.kort) + ' två dagar före passet och dras när studiehjälparen har skrivit rapporten.'
+      : 'Ni sparar kortet när förslaget är skickat. Priset reserveras två dagar före passet och dras när studiehjälparen har skrivit rapporten.']);
     if (S.faktura) {
       val.push(['faktura', 'Faktura', 'Passet kommer med på fakturan i början av månaden efter passet, med '
         + DAGAR + ' dagars betalningstid och utan avgift.']);
@@ -3366,7 +3367,7 @@
       return { text: 'Ni har valt kort. Spara kortet, så reserveras priset två dagar före passet. Utan kort betalar ni efter passet.',
                kortKnapp: true };
     }
-    return { text: 'Priset reserveras på ' + kortNamn(S.kort.kort) + ' två dagar före passet och dras när passet har rapporterats.' };
+    return { text: 'Priset reserveras på ' + kortNamn(S.kort.kort) + ' två dagar före passet och dras när studiehjälparen har skrivit rapporten.' };
   }
 
   /* Välj kort på ett pass, eller välj bort det. Saknas ett sparat kort
@@ -3476,8 +3477,8 @@
       : '<p class="erb-bank-text">Inget kort är sparat.</p>'
         + (S.kort.pa ? '<button type="button" class="btn btn-primary btn-sm" data-kort-spara>Spara ett kort</button>' : ''))
       + '<p class="erb-bank-text">Kortet finns hos Stripe, vår betalleverantör. Vi ser bara märket, de fyra sista siffrorna '
-      + 'och när det går ut. Väljer ni kort på ett pass reserveras priset två dagar före passet och dras när passet har '
-      + 'rapporterats. Tar ni bort kortet betalar ni de passen efter passet i stället.</p>';
+      + 'och när det går ut. Väljer ni kort på ett pass reserveras priset två dagar före passet och dras när studiehjälparen har '
+      + 'skrivit rapporten. Tar ni bort kortet betalar ni de passen efter passet i stället.</p>';
   }
 
   /* ---------- erbjudandena: köpa och dra (Fas 16.1) ---------- */
@@ -4376,9 +4377,9 @@
          rapporten. Knappen säger båda, så att ingen tror att rapporten
          bekräftas i ett senare steg. */
       const ok = await NXStudie.bekräfta({
-        titel: 'Få faktura nästa månad?',
+        titel: 'Betala mot faktura?',
         text: (fpris ? 'Passet kostar ' + NXBetalning.kronor(fpris) + '. ' : '')
-          + 'Passet kommer med på en samlad faktura från Nextrum i början av nästa månad, tillsammans med de andra pass ni valt faktura för. '
+          + 'Passet kommer med på en samlad faktura från Nextrum i början av månaden efter passet, tillsammans med de andra pass ni valt faktura för. '
           + 'Fakturan ska betalas inom ' + DAGAR + ' dagar, och det kostar ingenting extra. '
           + 'Rapporten bekräftas samtidigt. Vill ni hellre betala med kort går det tills fakturan är skapad.',
         knapp: 'Bekräfta faktura'
@@ -5069,7 +5070,7 @@
      BETALNING (Fas 14.2, Fas 19.2, kortet_reserveras)
      Familjen betalar varje pass med kort. Med strömbrytaren
      kortreservation på väljs kortet före passet, priset reserveras två
-     dagar före och dras när rapporten är skriven; med den av går passet
+     dagar före och dras när studiehjälparen har skrivit rapporten; med den av går passet
      att betala i förväg, när studiehjälparen bekräftat tiden. Annars
      betalar familjen efter passet när de bekräftar rapporten. Här står
      det som väntar före passet och det som är betalt, båda ritade ur
@@ -5136,7 +5137,7 @@
     if (!iFörväg.length) {
       host.innerHTML = S.kort.pa
         ? tomt('Inget att välja före passet',
-          'När er studiehjälpare bekräftat ett pass kan ni välja kort för det här, så reserveras priset två dagar före passet och dras när rapporten är skriven. Annars betalar ni efter passet, när ni bekräftar rapporten.')
+          'När er studiehjälpare bekräftat ett pass kan ni välja kort för det här, så reserveras priset två dagar före passet och dras när studiehjälparen har skrivit rapporten. Annars betalar ni efter passet, när ni bekräftar rapporten.')
         : tomt('Inget att betala i förväg',
           'När er studiehjälpare bekräftat ett pass kan ni betala det här i förväg. Annars betalar ni efter passet, när ni bekräftar rapporten.');
       return;
@@ -5753,7 +5754,7 @@
         : b.betalning_status === 'aterbetald'
         ? { text: 'Passet är bokat, och det ni betalade för det är återbetalt. Undrar ni varför, hör av er till oss.', ton: 'lugn' }
         : b.betalning_status === 'faktura'
-        ? { text: 'Passet är bokat och betalas mot faktura. Det kommer med på fakturan i början av nästa månad.', ton: 'klart' }
+        ? { text: 'Passet är bokat och betalas mot faktura. Det kommer med på fakturan i början av månaden efter passet.', ton: 'klart' }
         /* Fas 22.3: timmarna räcker men har inte betalat än, för de blev
            lediga efter att passet bekräftades. Jobbet tar det inom fem
            minuter; knappen gör det nu. */
@@ -5805,7 +5806,7 @@
       const skickad = f && f.status !== 'utkast';
       const läge = skickad ? NXBetalning.fakturaLage(f) : null;
       besked = !skickad
-        ? { text: 'Passet är genomfört och kommer med på nästa månadsfaktura.', ton: 'klart' }
+        ? { text: 'Passet är genomfört och kommer med på fakturan i början av månaden efter passet.', ton: 'klart' }
         : läge === 'betald'
         ? { text: 'Passet är genomfört och betalt' + (f.fortnox_fakturanummer ? ', med faktura ' + f.fortnox_fakturanummer : '') + '.', ton: 'klart' }
         : { text: 'Passet är genomfört och står på faktura' + (f.fortnox_fakturanummer ? ' ' + f.fortnox_fakturanummer : 'n')

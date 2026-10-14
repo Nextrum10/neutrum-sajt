@@ -846,6 +846,9 @@ Det som fungerade, i ordning:
    och raden är filen. Står `drop` eller `delete` i filen är det att runda spärren: då gäller punkt 2.
 4. Bevisa funktionerna: `md5(prosrc)` i `pg_proc` mot samma text mellan `as $$` och `$$;` i filen. Ett byte
    fel syns direkt, och det är det enda som visar att en edge-funktion eller en kropp inte skrivits av fel.
+   Tabellerna jämförs med samma frågor mot driften och en lokal databas (kolumner, villkor, index, policyer,
+   triggrar, rättigheter). Rättigheterna skiljer alltid i `m` (MAINTAIN), som Postgres 17 i driften har och
+   bilden lokalt (15) saknar (2026-10-14).
 5. Röktesta en edge-funktion utan att skicka något: `select intern.natanrop('<mål>', url := k.<kolumn>,
    headers := jsonb_build_object('Content-Type', 'application/json', 'x-nextrum-notis', k.hemlighet), body :=
    jsonb_build_object('id', gen_random_uuid())) from notis_konfig k`, och läs `net._http_response` för id:t.
@@ -1177,7 +1180,7 @@ kod fanns utom `TIPS` (noll användningar). Strömbrytaren `erbjudanden` stod
 på, så kassan med koden var skarp för köp från första stund. Provköpet i
 testläge återstår (9.13 steg 4).
 
-### Kortet reserveras vid bokningen (2026-10-13, under arbete)
+### Kortet reserveras vid bokningen (2026-10-13, i drift 2026-10-14)
 **`20261013170000_kortet_reserveras`** (`minne/betalning.md`, Kortet
 reserveras vid bokningen): strömbrytaren `kortreservation` (av);
 `notis_konfig.kortreservation_url`, härledd ur arbetarens adress som
@@ -1213,6 +1216,32 @@ reservation som håller pengar. Lokalt, ur 190 migrationer: hela
 `rls-test.sql` 1699 av 1699 (avsnitt 33 är nytt, 35 prov). **Körs inte
 förrän resten är byggd, och `notis-ko` från main driftsätts före den**
 (mallen `kort_nekat`).
+
+**I drift 2026-10-14, 15.40–15.48 UTC**, efter funktionerna (`notis-ko` v25
+först bland dem som behövs; `minne/betalning.md`, I drift). Ingen annan session
+körde mot driften, och ingen av raderna fanns innan (inga tabeller, ingen flagga,
+inget jobb). Filen delades i 19 delar som tillsammans är filen ordagrant (bara
+tomraderna mellan delarna skiljer) och kördes i fjorton `execute_sql`, i
+filens ordning, med varje funktion som har ett `delete` (`intern.kortval_glom`,
+`kort_borttaget`, `intern.kortval_stada`) eller flera `update` i ett eget anrop.
+Inget anrop frågade om en bekräftelse. Registrerad med filens text
+hämtad från 1fbc18a (md5 `1a8c2ac0…`, 34 777 tecken). Sedan
+`20261015090000_villkoren_kortet` hel i ett do-block (`http_get`, md5
+`8effe953…`, vägrar om versionen redan står där, `execute` och registrering),
+för den har ingen `delete` och ingen `drop`: `intern.villkor_version()` säger
+2026-10-15. Jämfört med en lokal databas byggd ur main (193 migrationer): alla
+20 funktioner (också de lappade `notis_typer`, `notis_mejlbara` och
+`intern.radering_underlag`) med `pg_get_functiondef`, rättigheter och
+kommentarer, tabellernas kolumner, villkor, index, policyer, triggrar och
+kommentarer, jobbet och flaggan: lika. Tabellernas rättigheter skiljer bara i
+`m` (MAINTAIN), som Postgres 17 i driften ger alla tabeller och bilden lokalt
+(15) inte har (`authenticated=rm` på `sparade_kort` och `kortreservationer`, som
+på `barn_passforslag`). Hela `rls-test.sql` 1739 av 1739 mot driften,
+tillbakarullat, före och efter strömbrytaren. Advisorn: inget nytt för `anon`;
+`mitt_kort()` och `valj_kort()` går att anropa inloggad (familjens egna, och de
+prövar `auth.uid()`), och `stripe_kunder` har RLS utan policy (bara
+tjänstekontot), båda med flit. Strömbrytaren slogs på 15.47:57, och jobbet
+`kortreservation` (nr 42) gick första gången 15.50.
 
 ### Timmarna delas och köps till (timmarna_delas_och_kops_till, 2026-10-14)
 **`20261014100000_timmarna_delas_och_kops_till`**: kolumnerna

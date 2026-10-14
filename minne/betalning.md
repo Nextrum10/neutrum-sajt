@@ -234,7 +234,7 @@ texten är kärnans.
 
 ---
 
-## Kortet reserveras vid bokningen (2026-10-13, under arbete)
+## Kortet reserveras vid bokningen (2026-10-13, i drift sedan 2026-10-14)
 
 Leo: "när man klickar på boka pass eller godkänn förslaget från barnet
 ska man kunna betala nu, eller på faktura. då reserveras pengar från
@@ -243,8 +243,9 @@ dras pengarna om man betalar med kort". På två frågor samma kväll valde
 han att **kortet sparas och beloppet reserveras två dagar före passet**,
 och att **valet är frivilligt**: väljer familjen inget betalar de efter
 passet, med kort eller faktura, som förut. Han sa också att designen kan
-ändras. Databasen (`20261013170000_kortet_reserveras`), edge-funktionerna
-och vyerna är skrivna; villkoren och driftsättningen återstår.
+ändras. Databasen (`20261013170000_kortet_reserveras`), edge-funktionerna,
+vyerna och villkoren är i drift sedan 2026-10-14, med strömbrytaren på (I
+drift, sist i avsnittet).
 
 **Stripes regel, och varför två dagar.** En reservation (ett
 PaymentIntent med `capture_method: manual`) släpps av Stripe om den inte
@@ -320,7 +321,7 @@ pass som redan är betalt i förväg står kvar som det är.
 hinder (`kort_sparat`, `kort_reserverat`) i `intern.radering_underlag`, så
 att inget blir kvar hos Stripe när kontot tas bort.
 
-**Edge-funktionerna** (byggda samma natt, inte driftsatta):
+**Edge-funktionerna** (byggda samma natt, i drift sedan 2026-10-14):
 - **`stripe-checkout`** har två lägen till. `kort: 'spara'` öppnar en kassa i
   läget `setup` på familjens kund (bara familjen, bara med strömbrytaren på;
   kunden skapas utan namn och e-post). `kort: 'ta_bort'` anropar
@@ -442,11 +443,14 @@ förväg.
   `KORTET_RESERVERAS` (som `FAKTURA_I_TEXTEN`): på kräver den nya meningen
   och förbjuder den gamla och "betala i förväg"; slås strömbrytaren av ska
   meningen tillbaka i samma ändring. PR:en skulle mergas när strömbrytaren
-  slogs på, men **mergades 2026-10-14, före** (Leos beslut, PR #281). Tills
-  kedjan i `DEPLOY-BETALNING.md` 9.14 körts säger sidorna, villkoren och FAQ:n
-  kortet medan vyn har Betala i förväg (Stripe står i testläge), mejlen och
-  agenterna säger det förra, och databasens version står på 2026-10-14 för en
-  text daterad 15 oktober.
+  slogs på, men **mergades 2026-10-14, före** (Leos beslut, PR #281), och
+  kedjan i `DEPLOY-BETALNING.md` 9.14 kördes samma eftermiddag: i några timmar
+  sa sidorna kortet medan vyn hade Betala i förväg (Stripe stod i testläge,
+  så inga riktiga pengar drogs), och sedan 15.47 UTC står strömbrytaren på och
+  databasens version är 2026-10-15. Vyns ord pass för pass (dras när
+  studiehjälparen har skrivit rapporten, Betala mot faktura, i början av
+  månaden efter passet) följde i PR #283 (Leo: "sajt ska säga samma sak som
+  vyn, lektion per lektion").
 - **Den som väljer kortet har godkänt villkoren**: triggern
   `kortreservationer_kraver_villkor` (i `villkoren_kortet`, som bokningens och
   köpets) prövar `intern.villkoren_godkanda` när familjen själv väljer kortet,
@@ -454,15 +458,43 @@ förväg.
   och att välja bort går alltid, som en avbokning. En trigger och inte en rad
   i `valj_kort()`, för `kortet_reserveras` körs i driften före villkoren och
   ändras inte efteråt. Provet står i avsnitt 33 i `rls-test.sql`.
-- **Datumet** är dagen villkoren går ut. Blir det en annan dag än
-  2026-10-15 byts det i migrationen och på båda sidorna (`kolla-villkor.py`).
+- **Datumet** är 15 oktober, fast villkoren gick ut 2026-10-14: sidorna kom
+  ut med det datumet, och versionen ska vara sidans datum
+  (`kolla-villkor.py`).
+
+**I drift** (2026-10-14, Leos "kör", i ordningen i `DEPLOY-BETALNING.md`
+9.14, från main 1fbc18a; ingen annan session körde mot driften, och
+NexLäx-sessionen väntade med sin bank tills kedjan var klar):
+- Funktionerna, 12.41–12.47 UTC: `drift` v19, `stripe-reservation` v1
+  (`verify_jwt` av), `stripe-webhook` v14, `ekonomi` v25 och `notis-ko` v25
+  (mallen `kort_nekat` och mejlets mening). Agenterna som driftsatte dem
+  stoppades av kvoten innan de hann jämföra, så de hämtades tillbaka
+  15.35: `notis-ko` 15 av 15 filer, `stripe-reservation` 9 av 9, `drift` 5
+  av 5 och `ekonomi` 4 av 4 byte för byte lika main, med hela importgrafen.
+  Webhookens `index.ts` saknar en tom rad i en kommentar (rad 540), som föll
+  bort när filen skrevs av; de andra sex filerna är lika. Koden är
+  densamma, och den blir byte för byte lika nästa gång webhooken
+  driftsätts. `stripe-checkout` v20 var redan lika main.
+- Databasen, 15.40–15.48 UTC: `kortet_reserveras` och `villkoren_kortet`,
+  jämförda med en lokal databas byggd ur main (`minne/databasen.md`, Kortet
+  reserveras vid bokningen). Hela `rls-test.sql` 1739 av 1739 mot driften,
+  tillbakarullat, före och efter strömbrytaren.
+- Strömbrytaren `kortreservation` på 15.47:57 UTC, med SQL (auditloggen
+  säger `system`). `stripe-reservation` svarade 200 (`{"ok":true,
+  "utfall":{}}`) på ett röktest genom `intern.natanrop` med målet
+  `rokprov:stripe-reservation`, och jobbet `kortreservation` (nr 42) gick
+  första gången 15.50, utan något att göra.
 
 **Kvar**:
 - Juristen läser villkoren, särskilt rätten att dra från ett sparat kort
-  utan att familjen är med.
-- Stripes endpoint: de tre nya händelserna.
-- Driftsättningen (`DEPLOY-BETALNING.md` 9.14) och provet i testläge.
-  Det provet säger om kassan i läget `setup` behöver
+  utan att familjen är med, och rad 29 i `DATASKYDD.md`.
+- Stripes endpoint: de tre nya händelserna
+  (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
+  `payment_intent.canceled`). Utan `succeeded` drar `stripe-reservation`
+  pengarna, men passet blir aldrig betalt hos oss, för bara webhooken
+  skriver betalningen. Kontrollera Stripe säger vilka som saknas.
+- Provet i testläge (`DEPLOY-BETALNING.md` 9.14 steg 6), med strömbrytaren
+  på. Det provet säger om kassan i läget `setup` behöver
   `managed_payments: { enabled: false }`, som kassan för ett pass har. Den
   står inte där, för läget tar ingen betalning.
 
