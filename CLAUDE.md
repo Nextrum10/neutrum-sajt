@@ -963,7 +963,8 @@ Detaljer: `minne/grunden.md`.
   länken (`minne/sakerhet.md`).
 - **NexLäx Fas 23.4** (2026-10-06) är i drift sedan samma kväll: `nexlax_uppdrag_och_np` och banken,
   körda efter merge som de förra bankerna (`minne/nexlax.md`). Juridiken, företagsekonomin och språken, och de 1 217 frågorna i matematik, svenska och engelska från 2026-10-14 (Fas 23.5), är skrivna med AI och inte lästa
-  av någon som undervisar i ämnet.
+  av någon som undervisar i ämnet. Fas 23.5 är i drift sedan 2026-10-14 (`uppgiftsbanken_fler_uppgifter`, PR #282,
+  md5 `cebbc232…`, facitprovet gav 1 217 av 1 217).
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14

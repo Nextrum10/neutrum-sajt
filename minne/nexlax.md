@@ -400,11 +400,16 @@ utveckling som är roligare att följa, och ett quest-system.
   som de står); därför är första brickan stor och sista har punkten, och en mening med
   två giltiga ordningar är en `val`. `norm()` gör alla `val`- och `skriv`-svar till
   gemener, så en fråga får aldrig skilja svar på bara versal och gemen.
-  **I drift:** körs efter merge, från merge-commiten, med md5 prövad, i en session
-  (avsnitt 5 i CLAUDE.md); driften hade 2026-10-14 exakt den bank repot hade före ändringen
-  (1 112 nivåer och 6 298 frågor aktiva), så migrationen är ett rent tillägg. Facitprovet
-  (varje aktiv fråga lämnas ut, facit rättas som rätt och inget fel alternativ godtas) ska
-  köras efteråt mot driften.
+  **I drift 2026-10-14**, direkt efter merge av PR #282 (e4228e5): filen hämtades från
+  merge-commiten genom `extensions.http_get`, prövades mot sin md5 (`cebbc232…`) och kördes och
+  registrerades i ett do-block (`$kor$`) med vakter före och efter (driften hade 1 112 nivåer och
+  6 298 frågor aktiva, efteråt 1 285 och 7 515, annars rullas allt tillbaka). Raden i
+  `schema_migrations` har filens md5. En annan session driftsatte kortets kedja samma dag; vi
+  väntade in varandra (en driftsättning åt gången). **Facitprovet mot driften:**
+  `intern.niva_ratta` rättade alla 1 217 nya frågor (657 val, 328 skriv, 129 para, 103 ordna)
+  rätt med sitt eget facit, exakt ett alternativ godtogs per valfråga, och ett fel svar (omvänd
+  ordning, nonsenstext) godtogs aldrig. Hela `rls-test.sql` kördes inte: migrationen är bara
+  data, ingen policy, trigger eller funktion. Villkorens version rörs inte.
 - **Skrivet och granskat med AI.** Skribenter skrev språken,
   företagsekonomin, lågstadiet, engelskan och NP-träningen; juridiken
   skrevs i huvudsessionen. En granskare per ämnesgrupp läste sedan varje
