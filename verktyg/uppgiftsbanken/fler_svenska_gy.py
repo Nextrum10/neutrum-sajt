@@ -126,12 +126,11 @@ TILLAGG = [
             sant('Namn på språk, som svenska och franska, skrivs med stor bokstav i svenskan.', False,
                  'Språk, veckodagar och månader skrivs med liten bokstav: svenska, franska, måndag, juni. '
                  'Länder skrivs med stor bokstav: Sverige, Frankrike.'),
-            val('Vilken mening har stor och liten bokstav på rätt ställen?',
-                ['Vi läser engelska på tisdag och reser till Italien i augusti.',
-                 'Vi läser Engelska på Tisdag och reser till Italien i Augusti.',
-                 'Vi läser engelska på tisdag och reser till italien i augusti.'],
-                'Vi läser engelska på tisdag och reser till Italien i augusti.',
-                'Språk, veckodagar och månader skrivs med liten bokstav, men namnet på ett land har stor bokstav.'),
+            val('Vilka ord ska skrivas med stor bokstav i meningen ”i går åkte hamid och mia till lund.”?',
+                ['I, Hamid, Mia och Lund', 'Bara Hamid, Mia och Lund', 'I, Hamid, Mia, Lund och går'],
+                'I, Hamid, Mia och Lund',
+                'Första ordet i en mening har stor bokstav, och det har namn på personer och platser. ”Går” är ett '
+                'vanligt ord och skrivs med liten bokstav.'),
             skriv('Hur många kommatecken behövs i uppräkningen ”Vi åt pannkakor sylt och grädde”? Skriv ett tal.',
                   [tal(1), 'ett', 'ett komma'],
                   'Det är tre led: pannkakor, sylt och grädde. Komma behövs mellan de två första, men inte före '
@@ -182,7 +181,7 @@ TILLAGG = [
                        'dem, och särskrivning.'),
 
         niva('sv-gy1-fler-ungdomssprak-1', 'Orden kommer och går', 'Språket förändras', [
-            val('Vad är textens huvudtanke?',
+            val('Vilken är krönikans huvudtanke?',
                 ['Språket förändras hela tiden, och det visar att det lever',
                  'Ungdomar borde sluta hitta på nya ord så att språket förblir lika',
                  'Vuxna förstår aldrig ungdomsspråk, och därför förfaller språket'],
@@ -346,7 +345,7 @@ TILLAGG = [
         ], beskrivning='Tränar modernismens drag, begreppen fri vers och inre monolog, och att skilja epokerna åt.'),
 
         niva('sv-gy2-fler-novell-1', 'Äppelträdet', 'Läsa och tolka', [
-            val('Vem berättar historien?',
+            val('Vem är berättaren i novellen?',
                 ['Siri, som är morfars barnbarn', 'Siris mamma, som står vid köksfönstret',
                  'En berättare utanför som kan se allas tankar'],
                 'Siri, som är morfars barnbarn',
@@ -412,7 +411,7 @@ TILLAGG = [
                  'En sammanfattning av vad tidigare forskare har skrivit'],
                 'Ett antagande som en undersökning ska pröva',
                 'En hypotes är en gissning som går att pröva. Undersökningen visar sedan om den stöds eller inte.'),
-            para('Para ihop begreppet med förklaringen.',
+            para('Para ihop begreppet med vad det betyder i en undersökning.',
                  [('population', 'alla som undersökningen vill uttala sig om'),
                   ('urval', 'de som faktiskt ingår i undersökningen'),
                   ('bortfall', 'de i urvalet som inte svarar eller deltar'),
@@ -474,7 +473,7 @@ TILLAGG = [
                   'Skriv ordet.',
                   ['skensamband', 'ett skensamband', 'skensambandet'],
                   'Ett skensamband ser ut som en orsak men är ett resultat av något annat som påverkar båda sidor.'),
-            para('Para ihop begreppet med förklaringen.',
+            para('Para ihop begreppet med dess betydelse.',
                  [('korrelation', 'två saker som förekommer tillsammans'),
                   ('orsakssamband', 'det ena leder till det andra'),
                   ('bakomliggande faktor', 'en tredje sak som påverkar båda'),

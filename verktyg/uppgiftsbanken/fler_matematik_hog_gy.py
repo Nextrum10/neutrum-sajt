@@ -20,6 +20,7 @@ felaktiga alternativen prövas mot samma räkning: ett fel facit lär barnet att
 det rätta svaret är fel, och ett "fel" alternativ som råkar vara rätt gör
 samma sak.
 """
+import cmath
 import math
 from fractions import Fraction as F
 
@@ -1074,7 +1075,6 @@ MA_GY3_KOMPLEXA_2 = niva('ma-gy3-fler-komplexa-2', 'Konjugat, belopp och divisio
 ], beskrivning='Konjugat, absolutbelopp, division och andragradsekvationer med komplexa lösningar.')
 
 # ---- nivå 3
-import cmath
 
 
 def polar(r, v):

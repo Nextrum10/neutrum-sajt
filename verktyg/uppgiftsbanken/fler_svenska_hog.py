@@ -193,68 +193,59 @@ TILLAGG = [
     # ÅRSKURS 6
     # ================================================================
     bana(SV, 'ak6', [
-        niva('sv-ak6-fler-bildsprak-1', 'Liknelser', 'Bildspråk', [
-            val('Vilken mening innehåller en liknelse?',
-                ['Hunden var snabb som en pil.', 'Hunden sprang över gräsmattan.',
-                 'Hunden var snabb och glad.'],
-                'Hunden var snabb som en pil.',
-                'En liknelse jämför två saker med ordet som. Hunden jämförs med en pil, som är mycket snabb.'),
-            sant('I en liknelse jämförs två olika saker med varandra, ofta med hjälp av ordet som.', True,
-                 'Så fungerar en liknelse. En snabb hund kan till exempel jämföras med en pil, som är snabb.'),
-            skriv('Vilket ord fattas i liknelsen? ”Hon var lätt … en fjäder.”', ['som', 'liksom'],
-                  'Liknelser jämför med ordet som: lätt som en fjäder. Hon är inte en fjäder, men lika lätt.'),
-            val('Vad jämförs snön med i liknelsen ”Snön låg som ett täcke över marken”?',
-                ['ett täcke', 'marken', 'kylan', 'en vinterdag'], 'ett täcke',
-                'Det som kommer efter ordet som är det man jämför med: ett täcke. Snön är inget riktigt '
-                'täcke, men den täcker marken på samma sätt.'),
-            para('Para ihop liknelsen med vad den säger om personen eller saken.',
-                 [('stark som en björn', 'mycket stark'), ('tyst som en mus', 'mycket tyst'),
-                  ('envis som en åsna', 'mycket envis'), ('mjuk som sammet', 'mycket mjuk')],
-                 'Det som kommer efter som är en bild av egenskapen: björnen är stark, musen tyst, åsnan '
-                 'envis och sammet mjukt.'),
-            sant('När man säger att en kompis är ”stark som en björn” menar man att kompisen verkligen är en björn.',
-                 False,
-                 'En liknelse jämför bara. Kompisen är inte en björn, men är lika stark som en.'),
-            val('Vilken mening innehåller INGEN liknelse?',
-                ['Isen var hal som såpa.', 'Katten sov i soffan hela dagen.', 'Han var glad som en lärka.'],
-                'Katten sov i soffan hela dagen.',
-                'I den meningen jämförs ingenting med något annat. De andra jämför med såpa och en lärka '
-                'med hjälp av ordet som.'),
-            skriv('Vad jämförs molnen med i meningen ”Molnen var mjuka som bomull”? Skriv ordet.',
-                  ['bomull', 'bomullen'],
-                  'Efter ordet som står bomull. Molnen ser mjuka och lätta ut, och det är det meningen vill säga.'),
-            ordna('Bygg liknelsen.', ['Hon', 'var', 'vit', 'som', 'snö.'],
-                  forklaring='Jämförelsen kommer efter ordet som: vit som snö.'),
-        ], beskrivning='Tränar att känna igen liknelser, vad de jämför och vad de vill säga.'),
+        niva('sv-ak6-fler-bildsprak-1', 'Metaforer', 'Bildspråk', [
+            skriv('Hur kallas bildspråk där något sägs vara något annat, som i ”Livet är en resa”? Skriv ordet.',
+                  ['metafor', 'metaforer', 'metaforen'],
+                  'En metafor säger att något är något annat. Livet är inte en riktig resa, men det liknar en.'),
+            val('Vilken mening innehåller en metafor?',
+                ['Klassrummet var en bikupa av röster.', 'Klassrummet var fullt av röster.',
+                 'Klassrummet ligger på andra våningen.'],
+                'Klassrummet var en bikupa av röster.',
+                'Klassrummet sägs vara en bikupa. Det är inget bisamhälle, men det surrar av röster på samma sätt.'),
+            sant('Meningen ”Natten är en svart kappa” är en liknelse.', False,
+                 'Ordet som saknas, så det är en metafor. Natten sägs vara en kappa i stället för att jämföras '
+                 'med en.'),
+            val('Vad betyder metaforen ”Hon har ett hjärta av guld”?',
+                ['Hon är väldigt snäll och generös', 'Hon bär ett halsband av äkta guld',
+                 'Hon har ärvt väldigt mycket pengar'],
+                'Hon är väldigt snäll och generös',
+                'Guld är värdefullt. Ett hjärta av guld betyder en person som är god och omtänksam.'),
+            skriv('I metaforen ”Skolan är ett pussel” sägs skolan vara något annat. Vad sägs den vara? '
+                  'Skriv ordet.', ['pussel', 'ett pussel', 'pusslet'],
+                  'Skolan sägs vara ett pussel, där många delar ska passa ihop. Skolan är inget riktigt pussel.'),
+            para('Para ihop metaforen med vad den betyder.',
+                 [('Hon är en solstråle', 'hon sprider glädje omkring sig'),
+                  ('Han är en klippa', 'han är trygg och går att lita på'),
+                  ('Orden var knivar', 'orden sårade mycket'),
+                  ('Tiden är pengar', 'man ska inte slösa med tiden')],
+                 'En metafor ska läsas som en bild. Solstrålen sprider ljus, klippan står fast, knivar gör ont '
+                 'och pengar ska man vara rädd om.'),
+            ordna('Bygg metaforen.', ['Livet', 'är', 'en', 'resa.'],
+                  forklaring='Livet sägs vara en resa. Det är en metafor eftersom ordet som saknas.'),
+            sant('En metafor säger att något är något annat, utan att jämföra med ordet som.', True,
+                 'Så skiljer den sig från liknelsen. Stark som en björn är en liknelse, och Han är en björn är '
+                 'en metafor.'),
+            val('Vilken mening är en metafor och inte en liknelse?',
+                ['Hennes skratt var musik.', 'Hennes skratt var som musik.', 'Hon skrattade högt.'],
+                'Hennes skratt var musik.',
+                'Skrattet sägs vara musik, och det är en metafor. Med ordet som, ”som musik”, blir det en '
+                'liknelse. Den sista meningen är ingen bild alls.'),
+        ], beskrivning='Tränar metaforer, vad de betyder och skillnaden mot liknelser.'),
 
-        niva('sv-ak6-fler-bildsprak-2', 'Metaforer och personifikation', 'Bildspråk', [
+        niva('sv-ak6-fler-bildsprak-2', 'Bildspråk i texter', 'Bildspråk', [
             para('Para ihop meningen med sorten av bildspråk.',
                  [('Vinden viskade i träden.', 'personifikation'), ('Hon är en ängel.', 'metafor'),
                   ('Han var stark som en björn.', 'liknelse'), ('Jag har sagt det tusen gånger!', 'överdrift')],
                  'Vinden kan inte viska på riktigt, så det är en personifikation. Hon är en ängel säger att '
                  'hon är något annat, och det är en metafor. Som visar en liknelse, och tusen gånger är en '
                  'överdrift.'),
-            val('Vilken mening innehåller en metafor?',
-                ['Klassrummet var en bikupa av röster.', 'Klassrummet var fullt av röster.',
-                 'Klassrummet ligger på andra våningen.'],
-                'Klassrummet var en bikupa av röster.',
-                'En metafor säger att något är något annat. Klassrummet är inget bisamhälle, men det surrar av '
-                'röster som en bikupa.'),
-            sant('Meningen ”Natten är en svart kappa” är en liknelse.', False,
-                 'Ordet som saknas, så det är en metafor. Natten sägs vara en kappa i stället för att jämföras '
-                 'med en.'),
-            skriv('Vad kallas bildspråket i ”Solen log mot oss över havet”? Skriv ordet.',
+            skriv('Vad kallas bildspråket i ”Bilen protesterade och vägrade starta på morgonen”? Skriv ordet.',
                   ['personifikation', 'personifikationen', 'personifiering', 'personifieringen'],
-                  'Solen kan inte le. När en sak får mänskliga egenskaper kallas det personifikation.'),
-            skriv('Vilket ord i meningen ”Skuggorna dansade på väggen” visar att det är en personifikation? '
-                  'Skriv ordet.', 'dansade',
-                  'Att dansa är något människor gör. Skuggor kan inte dansa på riktigt, men här får de en '
-                  'mänsklig egenskap.'),
-            val('Vad betyder metaforen ”Hon har ett hjärta av guld”?',
-                ['Hon är väldigt snäll och generös', 'Hon bär ett halsband av äkta guld',
-                 'Hon har ärvt väldigt mycket pengar'],
-                'Hon är väldigt snäll och generös',
-                'Guld är värdefullt. Ett hjärta av guld betyder en person som är god och omtänksam.'),
+                  'En bil kan inte protestera eller vägra. När en sak får mänskliga egenskaper kallas det '
+                  'personifikation.'),
+            skriv('Vilket ord i meningen ”Tåget stönade uppför backen” visar att det är en personifikation? '
+                  'Skriv ordet.', 'stönade',
+                  'Att stöna är något människor gör. Tåget får en mänsklig egenskap, och det är en personifikation.'),
             sant('I meningen ”Jag är så hungrig att jag kan äta en häst” har skribenten använt en överdrift.',
                  True,
                  'Ingen kan äta en hel häst. Det är en överdrift som visar hur hungrig personen är.'),
@@ -264,46 +255,67 @@ TILLAGG = [
                 'Orden sårade henne mycket',
                 'Knivar gör ont, och orden sägs vara knivar. Det är en metafor för att orden sårade henne '
                 'djupt. Det finns inga riktiga knivar.'),
-            ordna('Bygg metaforen.', ['Livet', 'är', 'en', 'resa.'],
-                  forklaring='Livet sägs vara en resa. Det är en metafor eftersom ordet som saknas.'),
-        ], beskrivning='Tränar metaforer, personifikation och överdrifter, och skillnaden mot liknelser.'),
+            val('Vilket bildspråk finns i texten? ”Månen hängde som en gul lampa över taken, och vinden '
+                'viskade mellan husen.”',
+                ['en liknelse och en personifikation', 'en metafor och en överdrift',
+                 'två liknelser', 'inget bildspråk'],
+                'en liknelse och en personifikation',
+                'Månen jämförs med en lampa med ordet som, och det är en liknelse. Vinden kan inte viska, så '
+                'den får en mänsklig egenskap, och det är en personifikation.'),
+            val('Varför använder författare bildspråk?',
+                ['Texten blir levande och läsaren ser det framför sig', 'Texten blir kortare och lättare att stava',
+                 'Texten kan då inte missförstås av någon'],
+                'Texten blir levande och läsaren ser det framför sig',
+                'Bildspråk gör att läsaren får en bild i huvudet och känner mer. Det gör inte texten kortare, och '
+                'en bild kan tolkas på olika sätt.'),
+            ordna('Bygg meningen.', ['Skuggorna', 'dansade', 'på', 'väggen.'],
+                  forklaring='Skuggorna står först och väggen sist. Verbet dansade kommer efter subjektet, och på '
+                             'väggen säger var det sker.'),
+            sant('En överdrift är ett bildspråk som jämför två saker med ordet som.', False,
+                 'Det är en liknelse som gör det. En överdrift påstår för mycket, som tusen gånger.'),
+        ], beskrivning='Tränar att känna igen liknelse, metafor, personifikation och överdrift i korta texter.'),
 
-        niva('sv-ak6-fler-fakta-1', 'Fladdermöss i Sverige', 'Läsa fakta och instruktioner', [
-            skriv('Fladdermusens vingar är gjorda av tunn …. Skriv ordet ur texten.', 'hud',
-                  'Det står att vingarna är gjorda av tunn hud som är spänd mellan långa fingrar.'),
-            sant('Alla fladdermöss i Sverige äter insekter.', True,
-                 'Det står i första stycket: i Sverige lever nästan tjugo olika arter, och alla äter insekter.'),
-            skriv('Vad kallas det när en fladdermus hittar sin mat med hjälp av ljud som studsar tillbaka? '
-                  'Skriv ordet ur texten.', ['ekolokalisering', 'ekolokaliseringen'],
-                  'Fladdermusen skickar ut ljud, och ekot visar var insekten finns. Det kallas ekolokalisering.'),
-            val('Varför går fladdermössen i ide på vintern?',
-                ['Det finns nästan inga insekter att äta', 'Det blir för mörkt för att hitta ut',
-                 'Deras vingar fryser och går sönder'],
-                'Det finns nästan inga insekter att äta',
-                'Insekterna är fladdermössens mat. Utan mat på vintern sparar de energi genom att sova.'),
-            sant('Enligt texten söker fladdermössen upp ett varmt ställe att sova på under vintern.', False,
-                 'Texten säger att de söker upp ett kallt men frostfritt ställe, till exempel en grotta eller '
-                 'en källare.'),
-            val('Vad kan man förstå av att alla arter i Sverige är skyddade av lag?',
-                ['Att fladdermössen har det svårt och behöver skydd',
-                 'Att fladdermössen är farliga och måste hållas borta',
-                 'Att det finns fler fladdermöss i Sverige än någonsin'],
-                'Att fladdermössen har det svårt och behöver skydd',
-                'Texten säger att många fladdermöss har det svårt när de gamla träden och byggnaderna '
-                'försvinner. Därför skyddar lagen alla arter.'),
-            val('Vad betyder ordet ”frostfritt” i texten?',
-                ['Utan minusgrader', 'Täckt av is', 'Helt utan ljus'], 'Utan minusgrader',
-                'Frost är kyla under noll grader. Ett frostfritt ställe är ett ställe där det inte fryser.'),
-            ordna('Ordna det som händer när en fladdermus jagar.',
-                  ['Fladdermusen skickar ut ett ljud.', 'Ljudet träffar en insekt.',
-                   'Ljudet studsar tillbaka som ett eko.', 'Fladdermusen hör var insekten finns.'],
-                  forklaring='Först kommer ljudet, sedan träffen och ekot. Av ekot hör fladdermusen var '
-                             'insekten finns.'),
-            skriv('Vad äter fladdermössen i Sverige? Skriv ordet ur texten.', ['insekter', 'insekt', 'myggor'],
-                  'Det står att alla arter äter insekter, och att en liten fladdermus kan fånga hundratals myggor.'),
-        ], beskrivning='En faktatext om fladdermöss, med frågor om vad som står, vad ett ord betyder och '
+        niva('sv-ak6-fler-fakta-1', 'Myror i skogen', 'Läsa fakta och instruktioner', [
+            skriv('Myrstackarna är byggda av barr och …. Skriv ordet ur texten.',
+                  ['kvistar', 'kvist'],
+                  'Det står att stackarna är byggda av barr och kvistar.'),
+            skriv('Vem i myrsamhället lägger äggen? Skriv ordet ur texten.',
+                  ['drottningen', 'drottning', 'hon'],
+                  'Det står att drottningen lägger äggen och gör inget annat.'),
+            skriv('Vad kallas den sura vätska som myror kan spruta på en fiende? Skriv ordet ur texten.',
+                  ['myrsyra', 'myrsyran'],
+                  'När myror hotas kan de spruta myrsyra. Den svider i munnen på en fiende.'),
+            sant('Enligt texten förstår myrorna varandra genom att göra höga ljud.', False,
+                 'Texten säger att de förstår varandra genom doftämnen och genom att röra vid varandra med '
+                 'antennerna.'),
+            sant('Arbetarna hämtar mat och tar hand om äggen och larverna.', True,
+                 'Det står i andra stycket att arbetarna hämtar mat, bygger stacken och tar hand om äggen och '
+                 'larverna.'),
+            val('Varför är myror nyttiga i skogen, enligt texten?',
+                ['De äter skadeinsekter och luckrar upp jorden', 'De bygger bon åt skogens fåglar',
+                 'De gör att träden växer snabbare'],
+                'De äter skadeinsekter och luckrar upp jorden',
+                'Sista stycket nämner just det: de äter skadeinsekter, de luckrar upp jorden, och de bär frön.'),
+            val('Vad kan man förstå av att myrorna bär med sig frön som växter kan gro ur?',
+                ['Att de hjälper växter att sprida sig', 'Att de äter alla frön i skogen',
+                 'Att de planterar träd med flit'],
+                'Att de hjälper växter att sprida sig',
+                'När myrorna flyttar frön kan nya växter börja växa på andra ställen. Myrorna gör det inte med flit, '
+                'men växterna får hjälp.'),
+            val('Vad är doftämnen?',
+                ['Ämnen som luktar och som myror kan känna av', 'Mat som myrorna samlar till vintern',
+                 'Ljud som hörs långt bort'],
+                'Ämnen som luktar och som myror kan känna av',
+                'Myrorna lämnar doftämnen efter sig och förstår varandra genom dem. De är alltså en sorts budskap '
+                'som man känner med lukten.'),
+            para('Para ihop det i myrsamhället med vad det gör.',
+                 [('drottningen', 'lägger äggen'), ('arbetarna', 'hämtar mat och bygger stacken'),
+                  ('antennerna', 'används för att röra vid varandra'), ('myrsyran', 'sprutas mot fiender')],
+                 'Allt står i texten: drottningen lägger äggen, arbetarna gör allt annat, antennerna används för '
+                 'beröring och myrsyran är ett försvar.'),
+        ], beskrivning='En faktatext om myror, med frågor om vad som står, vad ett ord betyder och '
                        'vad man kan förstå av texten.',
-            text=FLADDERMOSS),
+            text=MYROR),
 
         niva('sv-ak6-fler-fakta-2', 'Så odlar du krasse', 'Läsa fakta och instruktioner', [
             ordna('Ordna stegen i den ordning du ska göra dem.',

@@ -389,9 +389,9 @@ TILLAGG = [
                  'Det står We played football instead of looking at videos. De spelade fotboll i '
                  'stället för att titta på videor.'),
             val('Varför gick berättaren vilse två gånger?',
-                ['Det fanns ingen karta att använda', 'Bussen körde fel väg', 'Erik visade fel väg',
+                ['Det fanns ingen karta', 'Bussen körde fel väg', 'Erik visade fel väg',
                  'Det var mörkt ute'],
-                'Det fanns ingen karta att använda',
+                'Det fanns ingen karta',
                 'Det står I got lost twice because I had no map. Utan telefon fanns ingen karta.'),
             para('Para ihop ordet från texten med det svenska.',
                  [('pocket', 'ficka'), ('strange', 'konstig'), ('prove', 'bevisa'),
@@ -418,9 +418,9 @@ TILLAGG = [
 
         niva('en-ak7-fler-lasa-2', 'Bees on the roof', 'Läsa och förstå', [
             val('Var står Taras bikupor?',
-                ['På taket av huset där hon bor', 'På en balkong högst upp i huset',
+                ['På taket på huset där hon bor', 'På en balkong högst upp i huset',
                  'I trädgården bakom skolan', 'Hos grannen som lärde henne'],
-                'På taket av huset där hon bor',
+                'På taket på huset där hon bor',
                 'Det står Her hives stand on the flat roof of the building where she lives. Roof är '
                 'tak. Balkongerna har blommor, inte bikupor.'),
             sant('En granne lärde Tara grunderna.', True,
@@ -435,16 +435,16 @@ TILLAGG = [
                   ['40', 'forty', 'fyrtio'],
                   'Det står her bees made forty kilos of honey. Forty är fyrtio.'),
             skriv('Tara använde pengarna till att köpa en andra ___. Skriv ordet på engelska.',
-                  ['hive', 'a hive'],
+                  ['hive', 'a hive', 'beehive', 'a beehive', 'bee hive'],
                   'Det står With the money, she bought a second hive. Hive är bikupa.'),
             sant('Tara tycker att bin alltid är farliga.', False,
                  'Tara säger att bin bara sticks när de är rädda: they only sting when they are afraid. '
-                 'Är man lugn lämnar de en ifred.'),
+                 'Är man lugn lämnar de en i fred.'),
             val("Vad menar Tara med 'they leave you alone'?",
                 ['De låter en vara i fred', 'De följer efter en hem', 'De äter upp ens mat',
                  'De flyger bort för alltid'],
                 'De låter en vara i fred',
-                'Leave you alone betyder lämna en ifred. Om man rör sig långsamt och är lugn gör bina '
+                'Leave you alone betyder lämna en i fred. Om man rör sig långsamt och är lugn gör bina '
                 'ingenting.'),
             val('Varför har invånarna planterat blommor på balkongerna?',
                 ['Bin behöver blommor för att klara sig', 'Husägaren kräver att alla har blommor',
@@ -562,15 +562,15 @@ TILLAGG = [
                   'Anteckningen börjar Dear Anna och slutar Love, Karin. Karin skrev den, och Anna fick '
                   'den.'),
             val('How did Selma find out where Anna lived?',
-                ['The address was written inside the cover', 'Karin gave her the address',
+                ['It was written inside the cover', 'Karin gave her the address',
                  'A neighbour told her', 'It was printed on the photo'],
-                'The address was written inside the cover',
+                'It was written inside the cover',
                 'Det står Inside the cover there was a name and an address: Anna Berg, 4 Rose Street.'),
-            para('Match the word with the Swedish word.',
-                 [('envelope', 'kuvert'), ('torn', 'sönderriven'), ('cover', 'omslag'),
+            para('Match the word from the text with the Swedish word.',
+                 [('envelope', 'kuvert'), ('second-hand', 'begagnad'), ('cover', 'omslag'),
                   ('beach', 'strand')],
-                 'Envelope är ett kuvert, torn betyder sönderriven eller trasig, cover är omslaget på '
-                 'en bok och beach är en strand.'),
+                 'Envelope är ett kuvert, second-hand betyder begagnad, alltså att någon har ägt den '
+                 'förut, cover är omslaget på en bok och beach är en strand.'),
             val('Why did the woman at the door start to cry?',
                 ['The photo reminded her of a happy time', 'She was angry that Selma had come',
                  'She had lost her own keys', 'She was afraid of strangers'],
@@ -589,7 +589,7 @@ TILLAGG = [
             text=KUVERTET),
 
         niva('en-ak8-fler-lasa-2', 'A later start', 'Läsa och förstå', [
-            skriv('How long will the trial last? Complete: one ___.', 'term',
+            skriv('How long will the trial last? Complete: one ___.', ['term', 'one term'],
                   'Det står The trial will last one term. Term är termin.'),
             val('Why did Ms Dahl want to try a later start?',
                 ['Many pupils seemed sleepy in the first lesson', 'The school did not have enough teachers',
@@ -598,12 +598,13 @@ TILLAGG = [
                 'Det står Ms Dahl noticed that a lot of pupils were yawning in the first lesson. '
                 'Yawning är att gäspa.'),
             sant('Ms Dahl has already decided to keep the later start.', False,
-                 'Det står Ms Dahl will listen carefully before she decides anything. Försöket är bara '
-                 'ett försök än så länge.'),
-            skriv('At what time did lessons start before the trial? Write the number.',
-                  ['8', 'eight', "8 o'clock", "eight o'clock"],
-                  'Det står lessons used to start at eight o’clock. Used to betyder att det var så '
-                  'förut.'),
+                 'Det står Ms Dahl will listen carefully before she decides anything. Hon har alltså '
+                 'inte bestämt något än.'),
+            skriv('After how many weeks did the school ask pupils and teachers what they thought? '
+                  'Write the number.',
+                  ['6', 'six', 'sex', 'six weeks'],
+                  'Det står After six weeks, the school asked pupils and teachers what they thought. '
+                  'Six är sex.'),
             skriv('Most pupils said that they felt more ___ in the mornings. Write the missing word.',
                   ['awake', 'more awake'],
                   'Det står Most pupils said that they felt more awake in the mornings. Awake betyder '

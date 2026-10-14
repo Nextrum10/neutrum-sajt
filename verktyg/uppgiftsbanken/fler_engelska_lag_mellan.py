@@ -76,9 +76,9 @@ SAMS_LORDAG = '\n\n'.join([
 
 TARIQ = '\n\n'.join([
     'Last weekend my cousin Tariq stayed at our house. He arrived on Friday evening, and we '
-    'talked until midnight about our summer.',
-    'On Saturday morning we cooked pancakes for the whole family. I mixed the eggs and the flour, '
-    'and Tariq cooked them. He dropped the first pancake on the floor, and our dog Bella ate it!',
+    'talked about our summer until midnight.',
+    'On Saturday morning we cooked pancakes for the whole family. I mixed the eggs, milk and flour, '
+    'and Tariq cooked the pancakes. He dropped the first pancake on the floor, and our dog Bella ate it!',
     'In the afternoon we walked to the lake and played football on the beach. Later we watched a '
     'film and laughed a lot.',
     'On Sunday it rained, so we stayed inside and made a big castle out of boxes. When Tariq went '
@@ -166,7 +166,7 @@ TILLAGG = [
                 'Zoo betyder djurpark, en plats där man ser många djur.'),
             sant("'Home' betyder hem.", True,
                  'Home betyder hem, platsen där du bor. House betyder hus.'),
-            skriv("Skriv 'skola' på engelska.", 'school',
+            skriv("Skriv 'skola' på engelska.", ['school', 'a school'],
                   'Skola heter school. Ch i mitten låter som ett k.'),
             ordna('Bygg meningen: Jag är i parken.', ['I', 'am', 'in', 'the', 'park.'],
                   forklaring='Jag är heter I am, och i parken heter in the park.'),
@@ -329,7 +329,7 @@ TILLAGG = [
                  [('four', tal(4)), ('six', tal(6)), ('eight', tal(8)), ('nine', tal(9))],
                  'Four är %s, six är %s, eight är %s och nine är %s.' % (tal(4), tal(6), tal(8), tal(9))),
             sant("'Five pounds' betyder fem pund.", True,
-                 'Pound är engelska pengar, ett pund. Flera heter pounds, med -s.'),
+                 'Ett pound, pund på svenska, är pengar i Storbritannien. Flera heter pounds, med -s.'),
             ordna('Bygg meningen: Det kostar fem pund.', ['It', 'is', 'five', 'pounds.'],
                   forklaring='Det kostar kan heta it is. Fem pund heter five pounds, med -s på pounds.'),
             val('Vad svarar man på "How much is the pen?"',
@@ -474,7 +474,8 @@ TILLAGG = [
             skriv("Skriv motsatsen till 'big'.", ['small', 'little'],
                   'Motsatsen till big (stor) är small (liten). Little betyder också liten och är lika rätt.'),
             skriv("Skriv motsatsen till 'hot'.", ['cold', 'cool'],
-                  'Hot betyder het eller varm, och motsatsen är cold, kall. Cool, sval, passar också.'),
+                  'Hot betyder het eller varm, och motsatsen är cold, kall. Cool (sval) godtas också, '
+                  'men de vanliga paren är hot och cold, och warm och cool.'),
             para('Para ihop orden med sina motsatser.',
                  [('easy', 'difficult'), ('heavy', 'light'), ('clean', 'dirty'), ('full', 'empty')],
                  'Easy (lätt att göra) är motsatsen till difficult (svår). Heavy (tung) är motsatsen '
@@ -492,8 +493,8 @@ TILLAGG = [
 
         niva('en-ak5-fler-adjektiv-2', 'Bigger, the biggest', 'Adjektiv', [
             val('Välj rätt form: My dog is ___ than your dog.', ['bigger', 'biger', 'more big'], 'bigger',
-                'Big är kort och slutar på en konsonant, så g:et dubblas före -er: bigger. '
-                'Efter than kommer jämförelseformen.'),
+                'Big har en kort vokal (i) och slutar på en enda konsonant (g), så g:et dubblas före '
+                '-er: bigger. Efter than kommer jämförelseformen.'),
             val('Välj rätt form: Today is the ___ day of the year.', ['hottest', 'hotest', 'hotter'],
                 'hottest',
                 'Dagen är den varmaste av alla, och då används en form på -est. '
@@ -539,7 +540,7 @@ TILLAGG = [
             ordna('Bygg meningen: Vi tittade på en film igår.',
                   ['We', 'watched', 'a', 'film', 'yesterday.'], extra=['watch'],
                   forklaring='Igår visar att det är preteritum, så watch får -ed: watched. '
-                             'Yesterday står sist.'),
+                             'Meningen börjar med We, med stor bokstav, och slutar med yesterday.'),
             sant("'I walked to school yesterday' handlar om något som redan har hänt.", True,
                  'Walked har -ed och yesterday betyder igår. Det har redan hänt.'),
             sant("'She danced' och 'she dances' betyder samma sak.", False,
