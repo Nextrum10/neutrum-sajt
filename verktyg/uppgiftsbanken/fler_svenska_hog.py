@@ -1,0 +1,875 @@
+# -*- coding: utf-8 -*-
+"""Fler nivåer i svenska för åk 6, 7, 8 och 9 (2026-10-14): fyra nya nivåer
+i varje bana, i två nya områden om två nivåer vardera.
+
+- åk 6: ”Bildspråk” (liknelser; metaforer och personifikation) och ”Läsa
+  fakta och instruktioner” (en faktatext och en instruktion med lästext).
+- åk 7: ”Berättande text” (berättare, miljö och personer; konflikt och
+  berättelsens delar) och ”Läsa debatt” (en insändare och ett svar med
+  lästext).
+- åk 8: ”Reklam och påverkan” (reklamens knep; läs reklam kritiskt) och
+  ”Läsa novell” (två noveller med lästext).
+- åk 9: ”Språk och variation” (talspråk och skriftspråk; dialekt,
+  sociolekt och minoritetsspråk) och ”Läsa och tolka” (en krönika och en
+  novell med lästext).
+
+Allt står i TILLAGG och läggs sist i banor som redan finns (svenska.py,
+svenska_mer.py). Områdena med lästext har bara nivåer med text och får
+därför inget Mästarprov, för frågor ur en lästext dras aldrig dit.
+
+Skrivet från grunden mot Lgr22:s centrala innehåll. Lästexterna och alla
+personer, platser och exempel är påhittade för banken; inget är taget ur
+ett nationellt prov, en lärobok eller en annan källa. Texten är skriven med
+AI och inte läst av någon som undervisar i ämnet.
+
+Samma regler som i svenska.py och svenska_mer.py:
+
+- Rättningen struntar i stora och små bokstäver och i punkt sist, så stor
+  bokstav och skiljetecken frågas som val eller ordna, aldrig som skriv.
+- En ordna-fråga har bara en rimlig ordning.
+- Det lärare inte är ense om frågas inte: komma i gränsfall, i dag eller
+  idag, dom, och ord som heter olika i olika läromedel.
+- Läsförståelsens frågor går att besvara ur texten ensam. Alla andra frågor
+  förstås utan att man har sett en annan fråga.
+
+Förenklat, med flit:
+- Berättelsens delar är inledning, problem, höjdpunkt och avslutning, de
+  fyra som läromedlen är ense om. Upptrappning, vändpunkt och upplösning
+  frågas inte, för de används olika.
+- Ungdomsspråk frågas som en sociolekt, och dialekt som språkvariation som
+  hör ihop med en region. Minoritetsspråken är de fem som lagen räknar:
+  samiska, finska, meänkieli, romani chib och jiddisch.
+- Reklamens märkning frågas bara som huvudregeln: reklam ska tydligt
+  märkas. Inga paragrafer eller gränsfall mellan gåva och betalning.
+"""
+from grund import bana, niva, val, skriv, ordna, sant, para, tal
+
+SV = 'Svenska'
+
+# --- Lästexterna, ett stycke per element -----------------------------
+
+# åk 6, faktatext.
+MYROR = '\n\n'.join([
+    'Myror i skogen',
+    'Myror är små insekter som lever i stora samhällen. I skogen kan du hitta stackar som är byggda '
+    'av barr och kvistar. En stack kan vara över en meter hög, och inuti finns gångar och kammare '
+    'där tusentals myror bor.',
+    'Varje samhälle har minst en drottning. Hon lägger äggen och gör inget annat. Arbetarna gör allt '
+    'annat: de hämtar mat, bygger stacken och tar hand om äggen och larverna. Myrorna förstår varandra '
+    'genom doftämnen och genom att röra vid varandra med sina långa antenner.',
+    'Myror äter mycket olika saker, till exempel små insekter, döda djur och söt saft från bladlöss. '
+    'När de hotas kan många myror spruta en sur vätska som kallas myrsyra. Den svider i munnen på en '
+    'fiende.',
+    'Myrorna gör nytta i skogen. De äter skadeinsekter, de luckrar upp jorden, och de bär med sig '
+    'frön som växter kan gro ur. På vintern är det för kallt för arbete. Då ligger myrorna stilla '
+    'djupt nere i stacken tills det blir varmt igen.',
+])
+
+# åk 6, instruktion.
+KRASSE = '\n\n'.join([
+    'Så odlar du krasse i fönstret',
+    'Krasse växer snabbt, och du kan odla den inomhus hela året. Efter ungefär en vecka har du '
+    'något som går att äta på smörgåsen.',
+    'Du behöver: en tallrik, vitt hushållspapper, vatten och en påse krassefrön.',
+    'Så här gör du:\n'
+    '1. Lägg två lager hushållspapper på tallriken.\n'
+    '2. Häll på vatten så att pappret blir fuktigt men inte simmar.\n'
+    '3. Strö ut fröna jämnt över pappret. Tryck inte ner dem.\n'
+    '4. Ställ tallriken i ett ljust fönster, men inte i stark sol.\n'
+    '5. Häll på lite vatten varje dag, så att pappret hålls fuktigt.\n'
+    '6. När plantorna är fem centimeter höga kan du klippa dem med en sax.',
+    'Tips: Krasse smakar lite starkt, ungefär som rädisa. Den passar bra på smörgåsar, i sallader '
+    'och på ägg.',
+])
+
+# åk 7, insändare.
+PAPPERSKORGAR = '\n\n'.join([
+    'Fler papperskorgar i skolparken',
+    'Varje dag äter över hundra elever sin lunch i parken bredvid skolan. Där finns bara två '
+    'papperskorgar, och de är fulla redan före lunch. Resten av skräpet hamnar på gräset.',
+    'Det här är ett problem av två skäl. För det första blåser skräpet iväg till dammen, och där kan '
+    'fåglar fastna i plast. För det andra är det inte trevligt att sitta bland tomma förpackningar, '
+    'särskilt inte för den som vill läsa eller vila på rasten.',
+    'Jag tycker att skolan borde sätta upp minst sex papperskorgar i parken. De behöver inte vara '
+    'dyra, och elevrådet kan gärna måla dem. Då blir det lättare att göra rätt, och parken blir en '
+    'plats där alla vill vara.',
+    'Kära rektor, köp in fler papperskorgar före nästa termin!',
+    'Linnea Åkesson, årskurs 7',
+])
+
+# åk 7, ett svar på insändaren (replik).
+REPLIKEN = '\n\n'.join([
+    'Svar till Linnea: problemet är inte korgarna',
+    'I förra veckans tidning föreslog Linnea Åkesson att skolan ska sätta upp minst sex nya '
+    'papperskorgar i parken. Jag förstår hennes problem, men jag håller inte med om lösningen.',
+    'För det första ligger mycket av skräpet redan bredvid de korgar som finns. Det är de som slänger '
+    'skräpet på marken som är problemet, inte antalet korgar. Fler korgar hjälper inte om vi inte '
+    'bryr oss om att använda dem.',
+    'För det andra måste varje korg tömmas, och vaktmästaren har redan mycket att göra. Linnea har '
+    'rätt i att korgarna inte behöver vara dyra, men det blir ändå mer arbete för någon.',
+    'Jag föreslår därför att klasserna turas om att plocka skräp i parken en gång i veckan. Hjälper '
+    'inte det kan vi prata om fler papperskorgar efter jul.',
+    'Elias Nordin, årskurs 8',
+])
+
+# åk 8, novell i tredje person.
+JACKAN = '\n\n'.join([
+    'Jackan',
+    'Rasmus hade fått jackan av sin kusin Teo. Den var gul och för stor i ärmarna, och på ryggen '
+    'satt ett märke från en klubb som ingen i Rasmus klass hade hört talas om.',
+    '– Den är jättefin, sa mamma. Och den håller dig varm hela vintern.',
+    'På väg till skolan gick Rasmus bakom en häck och vek upp ärmarna, så att ingen skulle se hur '
+    'långa de var.',
+    'I kapprummet satt Elis och Vera. Vera tittade upp.',
+    '– Är den där din? Den är ju grym.',
+    'Rasmus visste inte om hon skojade. Han mumlade något och hängde jackan längst bak på kroken.',
+    'Efter skolan kom en snöstorm. Rasmus tog på sig jackan och gick mot dörren. Där stod Elis i bara '
+    'tröjan och skakade av kyla. Han hade glömt sin jacka hemma.',
+    'Rasmus tvekade. Sedan drog han av sig jackan och räckte fram den.',
+    '– Ta den. Den är för stor på mig ändå.',
+    'Elis tog på sig den. Ärmarna räckte ner över hans händer.',
+    '– Den är faktiskt rätt bra, sa han.',
+])
+
+# åk 8, novell med jag-berättare.
+RESVASKAN = '\n\n'.join([
+    'Resväskan',
+    'Mamma sa att jag bara fick ta med det som ryms i en väska, så jag valde den gamla blå som '
+    'pappa haft på sina resor. Locket var täckt av klistermärken: Lissabon, Oslo, Tallinn och en '
+    'gul sol som någon hade ritat själv.',
+    'Jag packade tröjor, en kudde och fotoalbumet. Kompisarnas gamla brev fick plats längst ner. '
+    'Det sista jag lade i var min fotbollströja, men väskan gick inte att stänga med den i, så jag '
+    'tog ut den och lade den på sängen igen.',
+    'Rummet såg konstigt ut. Utan mina saker på hyllorna var väggarna nästan vita, som om ingen '
+    'hade bott där.',
+    'Flyttbilen åkte först. Vi körde efter i mammas bil, och jag satt med väskan i knät och '
+    'räknade klistermärkena med fingret.',
+    '– Det finns plats kvar, sa mamma och mötte min blick i backspegeln. Där borta, vid handtaget.',
+    'Jag tittade dit. Det var en tom fläck, precis så stor som ett klistermärke.',
+    '– Vi får köpa ett nytt när vi har sett stan, sa jag.',
+])
+
+# åk 9, krönika.
+KRONIKAN = '\n\n'.join([
+    'Vad ska du bli?',
+    'Det är frågan jag har fått flest gånger i höst. Av mormor, av grannen, av en tant på bussen '
+    'som aldrig har sett mig förut. Jag går i nian, och alla verkar tro att jag har ett svar '
+    'klart, som en färdig smörgås.',
+    'Jag har inget svar. Jag vet vilket program jag vill söka på gymnasiet, men inte vad jag ska göra sedan. '
+    'Det känns som om alla andra redan har ritat sin karta, medan min fortfarande är ett vitt '
+    'papper med en fläck kaffe.',
+    'Häromdagen träffade jag en kollega till pappa. Han är ingenjör nu, men började som kock, och '
+    'mellan de två jobben hann han sälja skor och arbeta på en färja. Inget av det var ett '
+    'misstag, sa han. Det var vägen dit.',
+    'Jag tror att vi lägger för stor vikt vid frågan. En väg är sällan rak, och ingen kan veta vad '
+    'som väntar bakom nästa kurva. Så nästa gång någon frågar vad jag ska bli, tänker jag svara: '
+    '”Äldre.” Det är åtminstone sant.',
+    'Alma Sundin, årskurs 9',
+])
+
+# åk 9, novell.
+RUMMET = '\n\n'.join([
+    'Rummet bredvid',
+    'I åtta år hade jag hört Idas gitarr genom väggen varje kväll. Först var det bara samma tre '
+    'ackord, om och om igen, så att jag ibland tryckte kudden mot öronen och önskade att hon skulle '
+    'sluta. Sedan blev det låtar. Jag lärde mig texterna utan att vilja.',
+    'I augusti flyttade hon till Umeå för att läsa musik. Mamma grät i hallen, pappa bar kartonger, '
+    'och jag stod med armarna i kors och sa att det inte var någon stor sak.',
+    'Första kvällen låg jag vaken. Det var så tyst att jag kunde höra kylskåpet ute i köket. Jag '
+    'lyssnade efter ett ackord, ett enda, men väggen sa ingenting.',
+    'Efter en vecka gick jag in i hennes rum. Den enkla gitarren stod kvar i hörnet. Den dyra hade '
+    'hon tagit med sig. Jag satte mig på sängen och lät tummen glida över strängarna. Det blev ett '
+    'skevt, mjukt ljud.',
+    'Då hörde jag att jag nynnade på en av hennes låtar.',
+])
+
+# Uppdraget: lästexter på 600–1200 tecken.
+for _t in (MYROR, KRASSE, PAPPERSKORGAR, REPLIKEN, JACKAN, RESVASKAN, KRONIKAN, RUMMET):
+    assert 600 <= len(_t) <= 1200, len(_t)
+
+
+TILLAGG = [
+    # ================================================================
+    # ÅRSKURS 6
+    # ================================================================
+    bana(SV, 'ak6', [
+        niva('sv-ak6-fler-bildsprak-1', 'Metaforer', 'Bildspråk', [
+            skriv('Hur kallas bildspråk där något sägs vara något annat, som i ”Livet är en resa”? Skriv ordet.',
+                  ['metafor', 'metaforer', 'metaforen'],
+                  'En metafor säger att något är något annat. Livet är inte en riktig resa, men det liknar en.'),
+            val('Vilken mening innehåller en metafor?',
+                ['Klassrummet var en bikupa av röster.', 'Klassrummet var fullt av röster.',
+                 'Klassrummet ligger på andra våningen.'],
+                'Klassrummet var en bikupa av röster.',
+                'Klassrummet sägs vara en bikupa. Det är inget bisamhälle, men det surrar av röster på samma sätt.'),
+            sant('Meningen ”Natten är en svart kappa” är en liknelse.', False,
+                 'Natten sägs vara en kappa i stället för att jämföras med en, och ordet ”som” finns inte i '
+                 'meningen. Det är en metafor.'),
+            val('Vad betyder metaforen ”Hon har ett hjärta av guld”?',
+                ['Hon är väldigt snäll och generös', 'Hon bär ett halsband av äkta guld',
+                 'Hon har ärvt väldigt mycket pengar'],
+                'Hon är väldigt snäll och generös',
+                'Guld är värdefullt. Ett hjärta av guld betyder en person som är god och omtänksam.'),
+            skriv('I metaforen ”Skolan är ett pussel” sägs skolan vara något annat. Vad sägs den vara? '
+                  'Skriv ordet.', ['pussel', 'ett pussel', 'pusslet'],
+                  'Skolan sägs vara ett pussel, där många delar ska passa ihop. Skolan är inget riktigt pussel.'),
+            para('Para ihop metaforen med vad den betyder.',
+                 [('Hon är en solstråle', 'hon sprider glädje omkring sig'),
+                  ('Han är en klippa', 'han är trygg och går att lita på'),
+                  ('Pappa är en nattuggla', 'han är vaken sent på kvällarna'),
+                  ('Tiden är pengar', 'man ska inte slösa med tiden')],
+                 'En metafor ska läsas som en bild. Solstrålen sprider ljus, klippan står fast, en nattuggla är '
+                 'vaken på natten och pengar ska man vara rädd om.'),
+            ordna('Bygg metaforen.', ['Mitt', 'rum', 'är', 'en', 'djungel.'],
+                  forklaring='Rummet sägs vara en djungel utan att ordet ”som” används. Då är det en metafor, och '
+                             'den betyder att rummet är stökigt och fullt av saker.'),
+            sant('En metafor säger att något är något annat, utan att jämföra med ordet som.', True,
+                 'Så skiljer den sig från liknelsen. ”Stark som en björn” är en liknelse, och ”Han är en björn” '
+                 'är en metafor.'),
+            val('Vilken mening är en metafor och inte en liknelse?',
+                ['Hennes skratt var musik.', 'Hennes skratt var som musik.', 'Hon skrattade högt.'],
+                'Hennes skratt var musik.',
+                'Skrattet sägs vara musik, och det är en metafor. Med ordet som, ”som musik”, blir det en '
+                'liknelse. Den sista meningen är ingen bild alls.'),
+        ], beskrivning='Tränar metaforer, vad de betyder och skillnaden mot liknelser.'),
+
+        niva('sv-ak6-fler-bildsprak-2', 'Bildspråk i texter', 'Bildspråk', [
+            para('Para ihop meningen med sorten av bildspråk.',
+                 [('Vinden viskade i träden.', 'personifikation'), ('Hon är en ängel.', 'metafor'),
+                  ('Han var stark som en björn.', 'liknelse'), ('Jag har sagt det tusen gånger!', 'överdrift')],
+                 'Vinden kan inte viska på riktigt, så det är en personifikation. Hon är en ängel säger att '
+                 'hon är något annat, och det är en metafor. Ordet som visar att det är en liknelse, och tusen '
+                 'gånger är en överdrift.'),
+            skriv('Vad kallas bildspråket i ”Bilen protesterade och vägrade starta på morgonen”? Skriv ordet.',
+                  ['personifikation', 'personifikationen', 'personifiering', 'personifieringen'],
+                  'En bil kan inte protestera eller vägra. När en sak får mänskliga egenskaper kallas det '
+                  'personifikation.'),
+            skriv('Vilket ord i meningen ”Tåget stönade uppför backen” visar att det är en personifikation? '
+                  'Skriv ordet.', 'stönade',
+                  'Att stöna är något människor gör. Tåget får en mänsklig egenskap, och det är en personifikation.'),
+            sant('I meningen ”Jag är så hungrig att jag kan äta en häst” har skribenten använt en överdrift.',
+                 True,
+                 'Ingen kan äta en hel häst. Det är en överdrift som visar hur hungrig personen är.'),
+            val('Författaren skriver: ”Orden var knivar i hennes bröst.” Vad vill författaren säga?',
+                ['Orden sårade henne mycket', 'Någon hade kastat knivar på henne',
+                 'Hon var rädd för vassa föremål'],
+                'Orden sårade henne mycket',
+                'Knivar gör ont, och orden sägs vara knivar. Det är en metafor för att orden sårade henne '
+                'djupt. Det finns inga riktiga knivar.'),
+            val('Vilket bildspråk finns i texten? ”Månen hängde som en gul lampa över taken, och havet '
+                'suckade mot bryggan.”',
+                ['en liknelse och en personifikation', 'en metafor och en personifikation',
+                 'en liknelse och en överdrift', 'inget bildspråk'],
+                'en liknelse och en personifikation',
+                'Månen jämförs med en lampa med ordet som, och det är en liknelse. Havet kan inte sucka, så '
+                'det får en mänsklig egenskap, och det är en personifikation.'),
+            val('Varför använder författare bildspråk?',
+                ['Texten blir levande och lätt att se framför sig', 'Texten blir kortare och lättare att stava rätt',
+                 'Texten kan då aldrig missförstås av någon läsare'],
+                'Texten blir levande och lätt att se framför sig',
+                'Bildspråk gör att läsaren får en bild i huvudet och känner mer. Det gör inte texten kortare, och '
+                'en bild kan tolkas på olika sätt.'),
+            ordna('Bygg meningen med personifikationen.', ['Skuggorna', 'dansade', 'på', 'väggen.'],
+                  forklaring='Skuggorna står först och väggen sist. Verbet dansade kommer efter subjektet, och på '
+                             'väggen säger var det sker. Skuggor kan inte dansa på riktigt, så det är en '
+                             'personifikation.'),
+            sant('En överdrift är ett bildspråk som jämför två saker med ordet som.', False,
+                 'Det är en liknelse som gör det. En överdrift påstår för mycket, som tusen gånger.'),
+        ], beskrivning='Tränar att känna igen liknelse, metafor, personifikation och överdrift i korta texter.'),
+
+        niva('sv-ak6-fler-fakta-1', 'Myror i skogen', 'Läsa fakta och instruktioner', [
+            skriv('Vad mer än barr är myrstackarna byggda av? Skriv ordet ur texten.',
+                  ['kvistar', 'kvist'],
+                  'Det står att stackarna är byggda av barr och kvistar.'),
+            skriv('Vem i myrsamhället lägger äggen? Skriv ordet ur texten.',
+                  ['drottningen', 'drottning', 'en drottning'],
+                  'Det står att drottningen lägger äggen och gör inget annat.'),
+            skriv('Vad kallas den sura vätska som myror kan spruta på en fiende? Skriv ordet ur texten.',
+                  ['myrsyra', 'myrsyran'],
+                  'När myror hotas kan de spruta myrsyra. Den svider i munnen på en fiende.'),
+            sant('Enligt texten förstår myrorna varandra genom att göra höga ljud.', False,
+                 'Texten säger att de förstår varandra genom doftämnen och genom att röra vid varandra med '
+                 'antennerna.'),
+            sant('Arbetarna hämtar mat och tar hand om äggen och larverna.', True,
+                 'Det står i andra stycket att arbetarna hämtar mat, bygger stacken och tar hand om äggen och '
+                 'larverna.'),
+            val('Varför är myror nyttiga i skogen, enligt texten?',
+                ['De äter skadeinsekter och luckrar upp jorden', 'De bygger bon åt många av skogens fåglar',
+                 'De gör att alla träden växer mycket snabbare'],
+                'De äter skadeinsekter och luckrar upp jorden',
+                'Sista stycket nämner just det: de äter skadeinsekter, de luckrar upp jorden, och de bär frön.'),
+            val('Vad kan man förstå av att myrorna bär med sig frön som växter kan gro ur?',
+                ['Att de hjälper växter att sprida sig', 'Att de äter alla frön som finns i skogen',
+                 'Att de planterar nya träd med flit'],
+                'Att de hjälper växter att sprida sig',
+                'När myrorna flyttar frön kan nya växter börja växa på andra ställen. Myrorna gör det inte med flit, '
+                'men växterna får hjälp.'),
+            val('Vad är doftämnen?',
+                ['Ämnen med lukt som myror känner av', 'Mat som myrorna samlar inför vintern',
+                 'Ljud som hörs långt bort i skogen'],
+                'Ämnen med lukt som myror känner av',
+                'Doftämnen är ämnen med lukt. Myrorna använder dem för att lämna budskap till varandra.'),
+            para('Para ihop det i myrsamhället med vad det gör.',
+                 [('drottningen', 'lägger äggen'), ('arbetarna', 'hämtar mat och bygger stacken'),
+                  ('antennerna', 'används för att röra vid varandra'), ('myrsyran', 'sprutas mot fiender')],
+                 'Allt står i texten: drottningen lägger äggen, arbetarna gör allt annat, antennerna används för '
+                 'beröring och myrsyran är ett försvar.'),
+        ], beskrivning='En faktatext om myror, med frågor om vad som står, vad ett ord betyder och '
+                       'vad man kan förstå av texten.',
+            text=MYROR),
+
+        niva('sv-ak6-fler-fakta-2', 'Så odlar du krasse', 'Läsa fakta och instruktioner', [
+            ordna('Ordna stegen i den ordning du ska göra dem.',
+                  ['Lägg hushållspapper på tallriken.', 'Häll på vatten så att pappret blir fuktigt.',
+                   'Strö ut fröna över pappret.', 'Ställ tallriken i ett ljust fönster.'],
+                  forklaring='Underlaget kommer först, sedan vattnet och fröna, och till sist tallriken i '
+                             'fönstret. Det är den ordning som stegen står i.'),
+            skriv('Hur många lager hushållspapper ska du lägga på tallriken? Svara med en siffra.',
+                  [tal(2), 'två'], 'I steg 1 står det att du ska lägga två lager hushållspapper på tallriken.'),
+            sant('Du ska trycka ner fröna i pappret.', False,
+                 'I steg 3 står det att du inte ska trycka ner fröna. Du ska bara strö ut dem.'),
+            val('Hur ofta ska du hälla på lite vatten när fröna ligger på pappret?',
+                ['Varje dag', 'Varannan dag', 'En gång i veckan'], 'Varje dag',
+                'Steg 5 säger att du ska hälla på lite vatten varje dag, så att pappret hålls fuktigt.'),
+            skriv('Hur högt ska plantorna vara innan du klipper dem? Svara med antal centimeter.',
+                  [tal(5), 'fem', 'fem centimeter', 'fem cm'], 'Steg 6 säger att du kan klippa dem när de är fem centimeter höga.'),
+            val('Hur mycket vatten ska du hälla på första gången?',
+                ['Så att pappret blir fuktigt, men inte simmar', 'Så att hela tallriken fylls med vatten till kanten',
+                 'Bara en enda liten droppe över pappret'],
+                'Så att pappret blir fuktigt, men inte simmar',
+                'Steg 2 säger att pappret ska bli fuktigt men inte simma.'),
+            val('Mia sår krassefrön en måndag. När kan hon ungefär börja äta krassen?',
+                ['Ungefär en vecka senare', 'Redan samma kväll', 'Efter ungefär en hel månad'],
+                'Ungefär en vecka senare',
+                'Första stycket säger att det går att äta krassen efter ungefär en vecka.'),
+            skriv('Vilken grönsak liknar krassens smak, enligt texten? Skriv ordet.',
+                  ['rädisa', 'rädisan', 'rädisor'],
+                  'Texten säger att krasse smakar lite starkt, ungefär som rädisa.'),
+            para('Para ihop sakerna med vad de används till.',
+                 [('hushållspapper', 'det som fröna ligger på'), ('vatten', 'det som håller pappret fuktigt'),
+                  ('sax', 'det man klipper plantorna med'), ('ljust fönster', 'platsen där tallriken står')],
+                 'Allt står i stegen: pappret är underlaget, vattnet ger fukt, saxen klipper plantorna och '
+                 'fönstret ger ljus.'),
+        ], beskrivning='En instruktion för att odla krasse, med frågor om stegens ordning och om det som '
+                       'står i texten.',
+            text=KRASSE),
+    ]),
+
+    # ================================================================
+    # ÅRSKURS 7
+    # ================================================================
+    bana(SV, 'ak7', [
+        niva('sv-ak7-fler-beratta-1', 'Berättare, miljö och personer', 'Berättande text', [
+            para('Para ihop textutdraget med berättaren.',
+                 [('”Jag stod kvar på bryggan och väntade.”', 'jag-berättare'),
+                  ('”Alva stod kvar på bryggan och väntade.”', 'tredjepersonsberättare')],
+                 'En jag-berättare är med i handlingen och säger jag. En tredjepersonsberättare står utanför '
+                 'och använder namn eller han och hon.'),
+            sant('En författare kan hitta på en jag-berättare som är en helt annan person än författaren själv.',
+                 True,
+                 'Jaget i en berättelse är en roll som författaren skapar. Det behöver inte vara författaren.'),
+            skriv('Skriv ordet: Platsen och tiden där en berättelse utspelar sig kallas berättelsens …',
+                  ['miljö', 'miljön'],
+                  'Miljön är var och när något händer: en strand en sommardag eller en rymdstation i framtiden.'),
+            val('Vilken mening beskriver miljön?',
+                ['En kall novemberkväll lyste gatlyktorna svagt.', 'Hon blev så rädd att hon genast började springa.',
+                 'Han hette Elias och var tolv år gammal.'],
+                'En kall novemberkväll lyste gatlyktorna svagt.',
+                'Miljön är var och när något sker. Här får vi veta årstid, tid på dygnet och hur platsen ser ut. '
+                'De andra meningarna handlar om vad en person känner och vem han är.'),
+            sant('I en berättelse med jag-berättare får läsaren aldrig veta vad berättaren tänker.', False,
+                 'Tvärtom: en jag-berättare kan berätta om sina egna tankar och känslor, och därför kommer '
+                 'läsaren nära berättaren.'),
+            val('Berättaren skriver: ”Tim slog igen dörren så att glaset i fönstret skakade.” Vad får läsaren '
+                'veta om Tim utan att det sägs rakt ut?',
+                ['Att Tim är arg', 'Att Tim är glad', 'Att Tim är trött'], 'Att Tim är arg',
+                'Att slå igen en dörr hårt visar ilska. Författaren visar känslan genom vad Tim gör, i stället '
+                'för att skriva att han är arg.'),
+            para('Para ihop begreppet med vad det betyder.',
+                 [('berättare', 'rösten som berättar historien'),
+                  ('stämning', 'den känsla texten skapar hos läsaren'),
+                  ('replik', 'det en person säger i ett samtal'),
+                  ('huvudperson', 'den som berättelsen mest handlar om')],
+                 'Begreppen hjälper dig att prata om en text: vem som berättar, vilken känsla texten ger, '
+                 'vad personerna säger och vem berättelsen följer.'),
+            val('Varför väljer en författare ibland en jag-berättare?',
+                ['Läsaren kommer nära en persons tankar', 'Berättelsen behöver då ingen handling',
+                 'Texten blir då helt och hållet sann'],
+                'Läsaren kommer nära en persons tankar',
+                'Jaget kan berätta hur det känns inifrån, och det gör att läsaren kommer nära. En jag-text '
+                'behöver lika mycket handling som andra berättelser, och den är inte mer sann.'),
+        ], beskrivning='Tränar jag-berättare och tredjepersonsberättare, miljö, stämning och att visa känslor '
+                       'genom vad personer gör.'),
+
+        niva('sv-ak7-fler-beratta-2', 'Konflikt och berättelsens delar', 'Berättande text', [
+            ordna('Ordna delarna i en berättelse i den ordning de oftast kommer.',
+                  ['Inledning', 'Problem', 'Höjdpunkt', 'Avslutning'],
+                  forklaring='Berättelsen börjar med en inledning där man får veta vilka som är med. Sedan '
+                             'kommer ett problem, och spänningen stiger till höjdpunkten. Sist kommer avslutningen.'),
+            val('Vad är en konflikt i en berättelse?',
+                ['Ett problem som huvudpersonen måste hantera', 'En scen där två personer pratar med varandra',
+                 'Berättelsens allra första mening i texten'],
+                'Ett problem som huvudpersonen måste hantera',
+                'En konflikt är en motsättning eller ett problem som driver berättelsen framåt. Utan något '
+                'som händer eller går fel finns det inget att läsa vidare om.'),
+            val('Vilket exempel är en inre konflikt?',
+                ['Elin vill erkänna att hon tagit pennan, men skäms.', 'Elin och Sam bråkar om vems penna det är.',
+                 'Elin hittar en penna på golvet i hallen.'],
+                'Elin vill erkänna att hon tagit pennan, men skäms.',
+                'En inre konflikt finns inne i huvudpersonen: Elin vill en sak men något håller henne tillbaka. '
+                'Bråket med Sam är en yttre konflikt, och att hitta en penna är ingen konflikt alls.'),
+            sant('En yttre konflikt är en konflikt mellan huvudpersonen och något i omgivningen, till exempel '
+                 'en annan person.', True,
+                 'En yttre konflikt finns mellan huvudpersonen och en person, en grupp eller en händelse i '
+                 'omgivningen. Motsatsen är en inre konflikt.'),
+            val('Texten lyder: ”Det var tidigt på morgonen i en liten fiskeby. Ines, som var tolv år, vaknade '
+                'av att havet bullrade utanför fönstret.” Vilken del av en berättelse är det troligast att '
+                'texten kommer från?',
+                ['inledningen', 'höjdpunkten', 'avslutningen'], 'inledningen',
+                'Texten presenterar en person och en plats. Det görs oftast i inledningen, innan något '
+                'har gått fel.'),
+            sant('Höjdpunkten är den första delen i en berättelse.', False,
+                 'Höjdpunkten kommer när spänningen är som störst, långt efter inledningen.'),
+            skriv('Skriv ordet: En konflikt inne i huvudpersonen själv kallas en … konflikt.', 'inre',
+                  'Det är en inre konflikt när huvudpersonen kämpar med sina egna tankar och känslor.'),
+            para('Para ihop berättelsens del med vad som händer där.',
+                 [('Inledning', 'Personerna och miljön presenteras'),
+                  ('Problem', 'Något går fel eller någon vill något'),
+                  ('Höjdpunkt', 'Spänningen är som störst'),
+                  ('Avslutning', 'Berättelsen knyts ihop')],
+                 'Delarna bygger upp berättelsen: först presenteras allt, sedan kommer problemet, spänningen '
+                 'stiger och till sist knyts historien ihop.'),
+            skriv('Skriv ordet: En konflikt mellan huvudpersonen och en annan person kallas en … konflikt.',
+                  'yttre',
+                  'En konflikt mellan två personer finns utanför huvudpersonen. Det är en yttre konflikt.'),
+        ], beskrivning='Tränar konflikt, inre och yttre konflikt och de fyra delarna i en berättelse.'),
+
+        niva('sv-ak7-fler-debatt-1', 'Fler papperskorgar i skolparken', 'Läsa debatt', [
+            val('Vad är skribentens tes?',
+                ['Skolan borde sätta upp fler papperskorgar', 'Alla elever ska äta sin lunch inomhus',
+                 'Parken ska stängas för alla elever på rasterna'],
+                'Skolan borde sätta upp fler papperskorgar',
+                'Tesen är skribentens huvudåsikt. Den står i tredje stycket: skolan borde sätta upp minst sex '
+                'papperskorgar i parken.'),
+            skriv('Hur många papperskorgar finns det i parken nu? Svara med ett tal.',
+                  [tal(2), 'två'],
+                  'Det står i första stycket att det bara finns två papperskorgar.'),
+            sant('Enligt texten äter över hundra elever lunch i parken varje dag.', True,
+                 'Det står i första meningen: varje dag äter över hundra elever sin lunch i parken.'),
+            val('Vilket är det första skälet som skribenten ger för att skräpet är ett problem?',
+                ['Skräp i dammen kan skada fåglar', 'Parken blir för trång på rasterna',
+                 'Det blir dyrt att städa skolan'],
+                'Skräp i dammen kan skada fåglar',
+                'Andra stycket säger: för det första blåser skräpet iväg till dammen, och där kan fåglar fastna '
+                'i plast.'),
+            val('Varför nämner skribenten att elevrådet kan måla korgarna?',
+                ['Eleverna kan hjälpa till så att det blir billigt', 'Elevrådet har redan beställt nya papperskorgar',
+                 'Rektorn har redan bett elevrådet om hjälp med korgarna'],
+                'Eleverna kan hjälpa till så att det blir billigt',
+                'Meningen står efter att korgarna inte behöver vara dyra. Om eleverna målar dem själva blir '
+                'förslaget billigare. Texten säger inget om att något redan är beställt eller efterfrågat.'),
+            sant('Skribenten menar att papperskorgarna måste vara dyra.', False,
+                 'Texten säger tvärtom: de behöver inte vara dyra.'),
+            ordna('Ordna delarna i insändaren i den ordning de kommer.',
+                  ['Skribenten beskriver problemet.', 'Skribenten ger två skäl.',
+                   'Skribenten föreslår en lösning.', 'Skribenten uppmanar rektorn.'],
+                  forklaring='Först beskrivs problemet, sedan kommer skälen, därefter förslaget och sist en '
+                             'uppmaning till rektorn.'),
+            skriv('Vem vänder sig skribenten till i den sista meningen? Skriv ordet.',
+                  ['rektor', 'rektorn', 'kära rektor'],
+                  'Den sista meningen börjar ”Kära rektor”. Skribenten ber rektorn köpa in fler papperskorgar.'),
+            para('Para ihop ordet ur texten med vad det betyder.',
+                 [('förpackningar', 'omslag och burkar kring mat och dryck'), ('särskilt', 'framför allt, i synnerhet'),
+                  ('elevrådet', 'elevernas egna representanter på skolan'), ('termin', 'ett halvår i skolan')],
+                 'Orden står i texten: skräpet är ofta tomma förpackningar, och skribenten vill att korgarna sätts '
+                 'upp före nästa termin.'),
+        ], beskrivning='En insändare om skräp i skolparken, med frågor om tes, skäl och uppbyggnad.',
+            text=PAPPERSKORGAR),
+
+        niva('sv-ak7-fler-debatt-2', 'Svar till Linnea', 'Läsa debatt', [
+            skriv('Elias text är ett svar på någon annans insändare. Vad kallas ett sådant svar i en debatt? '
+                  'Skriv ordet.', ['replik', 'repliken', 'en replik'],
+                  'Ett svar på någon annans inlägg i en debatt kallas replik. Elias bemöter Linneas förslag.'),
+            val('Vad är Elias tes?',
+                ['Skolan bör först få eleverna att slänga rätt', 'Skolan ska ta bort alla papperskorgar i parken',
+                 'Skolan ska köpa sex nya papperskorgar direkt'],
+                'Skolan bör först få eleverna att slänga rätt',
+                'Elias håller inte med om att fler korgar är lösningen. Han vill att klasserna plockar skräp och att '
+                'fler lär sig använda de korgar som redan finns.'),
+            skriv('Hur många gånger i veckan föreslår Elias att klasserna plockar skräp? Svara med en siffra.',
+                  [tal(1), 'en', 'en gång', 'ett'],
+                  'Det står i det sista stycket att klasserna ska turas om att plocka skräp en gång i veckan.'),
+            sant('Elias tycker att problemet som Linnea beskriver inte finns.', False,
+                 'Han skriver att han förstår hennes problem. Det är lösningen han inte håller med om.'),
+            val('Varför räcker det inte med fler korgar, enligt Elias?',
+                ['Skräpet hamnar ofta bredvid korgarna som finns', 'Korgarna är alldeles för dyra för skolan att köpa',
+                 'Det finns ingen plats kvar att ställa dem på'],
+                'Skräpet hamnar ofta bredvid korgarna som finns',
+                'Han skriver att mycket skräp redan ligger bredvid de korgar som finns. Då hjälper det inte med '
+                'fler, om inte eleverna bryr sig om att använda dem.'),
+            val('Vad vill Elias troligen att eleverna gör?',
+                ['Tar eget ansvar för skräpet', 'Slutar äta lunch ute i parken', 'Betalar själva för alla nya korgar'],
+                'Tar eget ansvar för skräpet',
+                'Hans förslag är att klasserna turas om att plocka skräp. Han vill att eleverna själva ska ta '
+                'ansvar, i stället för att skolan köper fler korgar.'),
+            sant('Elias utesluter inte att skolan kan sätta upp fler papperskorgar senare.', True,
+                 'Sista stycket säger: hjälper inte det kan vi prata om fler papperskorgar efter jul.'),
+            ordna('Ordna delarna i svaret i den ordning de kommer.',
+                  ['Elias hänvisar till Linneas förslag.', 'Elias ger sitt första skäl.',
+                   'Elias ger sitt andra skäl.', 'Elias kommer med ett eget förslag.'],
+                  forklaring='Svaret börjar med Linneas förslag. Sedan kommer två skäl mot det, och sist Elias '
+                             'eget förslag.'),
+            para('Para ihop ordet eller uttrycket ur texten med vad det betyder.',
+                 [('lösningen', 'sättet att lösa ett problem'), ('turas om', 'göra något i tur och ordning'),
+                  ('vaktmästaren', 'den som sköter underhåll på skolan'),
+                  ('bryr oss om', 'tycker att något är viktigt')],
+                 'Orden står i texten: lösningen är Linneas förslag, klasserna turas om att plocka skräp, '
+                 'vaktmästaren tömmer korgarna, och vi måste bry oss om att använda dem.'),
+        ], beskrivning='Ett svar på en insändare, med frågor om replik, skäl och hur skribenten bemöter '
+                       'ett förslag.',
+            text=REPLIKEN),
+    ]),
+
+    # ================================================================
+    # ÅRSKURS 8
+    # ================================================================
+    bana(SV, 'ak8', [
+        niva('sv-ak8-fler-reklam-1', 'Reklamens knep', 'Reklam och påverkan', [
+            para('Para ihop reklamens knep med ett exempel.',
+                 [('överdrift', '”Världens godaste glass!”'),
+                  ('tidspress', '”Köp i dag, erbjudandet slutar klockan 18!”'),
+                  ('känd förebild', '”Löparstjärnan Nora Vik tränar i dem varje dag.”'),
+                  ('känslor', '”Ge dem du älskar en riktig stund tillsammans.”')],
+                 'Överdriften påstår för mycket, tidspressen får oss att skynda, en känd person ska vara en '
+                 'förebild, och känslorna ska få oss att vilja ha varan.'),
+            skriv('Vad kallas de människor som en reklam vill nå? Skriv ordet.',
+                  ['målgrupp', 'målgruppen', 'målgrupper'],
+                  'Målgruppen är de människor som reklamen riktar sig till, till exempel ungdomar eller föräldrar.'),
+            val('En reklamfilm för en ny skateboard visar tonåringar som åker i en skatepark till snabb musik. '
+                'Vilken är troligen målgruppen?',
+                ['Ungdomar', 'Pensionärer', 'Småbarnsföräldrar', 'Cykelbutiker'], 'Ungdomar',
+                'Reklamen visar tonåringar och snabb musik, och det är ungdomar den vill nå.'),
+            sant('En slogan är en kort fras som ska vara lätt att komma ihåg.', True,
+                 'Slogans är korta och ofta med rim eller upprepning, så att de fastnar.'),
+            sant('När en reklam säger ”Stans godaste pizza!” är det ett faktum som går att bevisa.', False,
+                 'Vad som är godast är en åsikt, för olika människor tycker olika. Det går inte att mäta eller '
+                 'kontrollera.'),
+            skriv('Vad kallas det när reklamen gör något större eller bättre än det är, som i ”världens bästa”? '
+                  'Skriv ordet.', ['överdrift', 'överdriften', 'överdrifter', 'hyperbol'],
+                  'En överdrift låter bättre än verkligheten. Den är ett vanligt knep i reklam.'),
+            val('Vilket påstående i en reklam går att kontrollera?',
+                ['Varje burk innehåller 330 milliliter.', 'Det allra godaste du någonsin kan dricka!',
+                 'Alla i hela världen älskar den här läsken!'],
+                'Varje burk innehåller 330 milliliter.',
+                'En volym går att mäta. Vad som är godast och vad alla tycker är åsikter eller överdrifter.'),
+            val('Varför visar reklam ofta glada människor?',
+                ['För att koppla varan till goda känslor', 'För att visa hur varan tillverkas',
+                 'För att berätta exakt vad varan kostar'],
+                'För att koppla varan till goda känslor',
+                'Reklam vill att vi ska känna något positivt för varan. Glada människor kan få oss att '
+                'förknippa den med glädje.'),
+            skriv('Vad kallas den som står bakom en reklam och betalar för den? Skriv ordet.',
+                  ['avsändare', 'avsändaren', 'annonsör', 'annonsören'],
+                  'Avsändaren är den som står bakom reklamen, ofta ett företag.'),
+        ], beskrivning='Tränar reklamens knep: målgrupp, slogan, överdrift, tidspress, känslor och skillnaden '
+                       'mellan fakta och åsikt.'),
+
+        niva('sv-ak8-fler-reklam-2', 'Läs reklam kritiskt', 'Reklam och påverkan', [
+            para('Para ihop frågan man kan ställa till en reklam med det den handlar om.',
+                 [('Vem har betalat för reklamen?', 'avsändaren'), ('Vem försöker den nå?', 'målgruppen'),
+                  ('Vad vill den att jag ska göra?', 'syftet'), ('Vad berättar den inte om?', 'det som utelämnas')],
+                 'Fyra bra frågor att ställa: vem som står bakom, vem den riktar sig till, vad den vill och '
+                 'vad den lämnar osagt.'),
+            sant('Reklam ska vara tydligt märkt så att man förstår att det är reklam.', True,
+                 'Det är huvudregeln. Ett inlägg som är betalt av ett företag ska tydligt visa att det är reklam.'),
+            val('En butik skriver ”Upp till 70 % rabatt!” Vad betyder det?',
+                ['Att 70 % är högst, och andra varor kan ha mindre',
+                 'Att alla varor i hela butiken har 70 % rabatt just nu',
+                 'Att varje enskild vara kostar exakt 70 kronor just nu'],
+                'Att 70 % är högst, och andra varor kan ha mindre',
+                'Upp till betyder att 70 % är det mesta. Många varor kan ha en mindre rabatt, och några kanske '
+                'ingen alls.'),
+            skriv('Reklamen säger bara ”Testvinnare!” och inget mer om testet. Vilket frågeord ska stå i '
+                  'luckan i frågan ”… har gjort testet, och vad jämfördes?”', ['vem', 'vilka'],
+                  'Utan att veta vem som testat går det inte att bedöma om ”testvinnare” är värt något. Företaget '
+                  'kan ha gjort testet själv.'),
+            sant('Om en känd person använder en produkt är det ett bevis för att produkten är bra.', False,
+                 'En känd person kan ha fått betalt, och ett namn är inget bevis. Kvaliteten går att kontrollera '
+                 'på andra sätt.'),
+            para('Para ihop påståendet i en reklam med vad det är för slags påstående.',
+                 [('Burken innehåller 400 gram.', 'Går att väga och kontrollera'),
+                  ('Smakar helt fantastiskt!', 'En åsikt om smak'),
+                  ('Billigast i stan!', 'Går att kontrollera med prisjämförelse'),
+                  ('Alla älskar den!', 'Överdrift som inte går att bevisa')],
+                 'Vikt kan man väga och priser kan man jämföra. Smak är en åsikt, och alla älskar den går inte '
+                 'att bevisa.'),
+            val('En reklam säger ”Bara i dag!” Hur kan ett sådant erbjudande påverka oss?',
+                ['Vi får mindre tid att jämföra och tänka efter',
+                 'Vi blir mycket säkrare på att varan verkligen är bra',
+                 'Vi får bättre kvalitet på varan om vi köper i dag'],
+                'Vi får mindre tid att jämföra och tänka efter',
+                'Tidspress får oss att skynda. Då hinner vi inte jämföra priser eller fundera på om vi '
+                'verkligen behöver varan.'),
+            skriv('Reklam som inte tydligt säger att den är reklam, fast ett företag har betalat för den, kallas '
+                  'ofta … reklam. Skriv ordet.', ['dold', 'dold reklam', 'smygreklam'],
+                  'Det kallas dold reklam eller smygreklam, i ett ord. Den som läser kan tro att det bara är en '
+                  'åsikt.'),
+            val('En känd person visar en ny energidryck och skriver ”Min nya favorit!”, utan att nämna att det '
+                'är reklam. Vad är klokast att tänka?',
+                ['Det kan vara betalt även om det inte står där',
+                 'Det är säkert bara personens egen, ärliga åsikt',
+                 'Drycken måste vara bra om personen säger det'],
+                'Det kan vara betalt även om det inte står där',
+                'Reklam ska märkas, men gör den inte det bör man vara försiktig. Fråga vem som tjänar på att '
+                'inlägget finns.'),
+        ], beskrivning='Tränar att granska reklam: avsändare, målgrupp, syfte, fakta och åsikt, och dold reklam.'),
+
+        niva('sv-ak8-fler-novell-1', 'Jackan', 'Läsa novell', [
+            skriv('Jackan var gul och för … i ärmarna. Skriv ordet ur texten.', ['stor', 'för stor'],
+                  'Det står i början: den var gul och för stor i ärmarna.'),
+            val('Varför vek Rasmus upp ärmarna?',
+                ['Han ville dölja att jackan var för stor', 'Det blåste så mycket att ärmarna fladdrade',
+                 'Mamma hade bett honom att göra det'],
+                'Han ville dölja att jackan var för stor',
+                'Det står att han gjorde det så att ingen skulle se hur långa ärmarna var. Han skämdes lite '
+                'över jackan.'),
+            sant('Mamma tycker att jackan är ful.', False,
+                 'Mamma säger att den är jättefin och att den håller Rasmus varm hela vintern.'),
+            skriv('Vem hade Rasmus fått jackan av? Skriv namnet.',
+                  ['Teo', 'kusinen Teo', 'sin kusin Teo', 'kusin Teo', 'hans kusin Teo'],
+                  'Det står i första meningen: Rasmus hade fått jackan av sin kusin Teo.'),
+            val('Vad visar det att Rasmus ger sin jacka till Elis?',
+                ['Han vill hjälpa Elis, fast han är osäker själv', 'Han har inte märkt att det är snöstorm ute just nu',
+                 'Han vill att Elis ska skämmas över tröjan'],
+                'Han vill hjälpa Elis, fast han är osäker själv',
+                'Rasmus skämdes för jackan men tvekar bara en stund. Elis fryser, och Rasmus väljer att hjälpa '
+                'honom trots att han själv är osäker.'),
+            val('Hur tar Rasmus emot Veras kommentar om jackan?',
+                ['Han blir osäker på om hon skojar', 'Han blir glad och stolt över jackan',
+                 'Han blir arg och svarar henne högt'],
+                'Han blir osäker på om hon skojar',
+                'Det står att Rasmus inte visste om hon skojade. Han mumlar något och hänger undan jackan.'),
+            val('Vilken uppgift har snöstormen i berättelsen?',
+                ['Den gör att Rasmus måste välja något', 'Den visar att vintern i år är mycket lång',
+                 'Den gör att skolan stänger tidigare'],
+                'Den gör att Rasmus måste välja något',
+                'Snöstormen och Elis kyla skapar läget där Rasmus kan välja mellan att behålla jackan och '
+                'att ge bort den.'),
+            skriv('Vem säger att jackan är grym? Skriv namnet.', 'Vera',
+                  'Vera säger i kapprummet: ”Den är ju grym.”'),
+            ordna('Ordna händelserna i den ordning de kommer i novellen.',
+                  ['Rasmus viker upp ärmarna.', 'Vera säger att jackan är grym.', 'Snöstormen kommer.',
+                   'Rasmus ger jackan till Elis.'],
+                  forklaring='Först viker Rasmus upp ärmarna på väg till skolan. Veras kommentar kommer i '
+                             'kapprummet, snöstormen efter skolan och sist ger han bort jackan.'),
+        ], beskrivning='En novell om en jacka som är för stor, med frågor om vad som står, vad personerna '
+                       'känner och vad slutet visar.',
+            text=JACKAN),
+
+        niva('sv-ak8-fler-novell-2', 'Resväskan', 'Läsa novell', [
+            skriv('Vem hade haft väskan på sina resor? Skriv ordet.',
+                  ['pappa', 'pappan', 'min pappa', 'berättarens pappa'],
+                  'Det står att berättaren valde den gamla blå väskan som pappa haft på sina resor.'),
+            sant('Berättaren packar ner fotbollströjan i väskan och tar med den.', False,
+                 'Väskan gick inte att stänga med tröjan i, så berättaren tog ut den och lade den på sängen igen.'),
+            val('Vad vill berättaren visa med jämförelsen ”som om ingen hade bott där”?',
+                ['Att rummet känns tomt utan alla saker', 'Att ingen någonsin har städat rummet',
+                 'Att rummet har blivit alldeles för kallt'],
+                'Att rummet känns tomt utan alla saker',
+                'När hyllorna är tomma ser rummet nästan ut som om ingen har bott där. Jämförelsen visar hur '
+                'tomt det känns.'),
+            val('Vad kan den tomma fläcken vid handtaget vara en symbol för?',
+                ['Att det finns plats för något nytt', 'Att väskan har gått sönder', 'Att ett klistermärke har ramlat av'],
+                'Att det finns plats för något nytt',
+                'Fläcken väntar på ett nytt klistermärke, precis som berättaren kommer att få nya minnen på det '
+                'nya stället. Berättaren svarar också att de ska köpa ett nytt.'),
+            val('Hur känner sig berättaren troligen inför flytten?',
+                ['Både ledsen och en aning hoppfull', 'Bara glad och förväntansfull',
+                 'Mycket arg på mamma och pappa'],
+                'Både ledsen och en aning hoppfull',
+                'Det tomma rummet och kompisarnas brev visar att det är sorgligt att lämna det gamla. Men '
+                'berättaren säger också att de ska köpa ett nytt klistermärke, och det är hoppfullt.'),
+            skriv('Hur många städer står på klistermärkena enligt texten? Svara med en siffra.',
+                  [tal(3), 'tre'],
+                  'Det står Lissabon, Oslo och Tallinn. Den gula solen är ingen stad.'),
+            ordna('Ordna händelserna i den ordning de kommer i novellen.',
+                  ['Berättaren packar väskan.', 'Berättaren tar ut fotbollströjan.', 'Flyttbilen åker först.',
+                   'Mamma säger att det finns plats kvar.'],
+                  forklaring='Berättaren packar först och tar sedan ut tröjan. Därefter åker flyttbilen, och '
+                             'i bilen säger mamma att det finns plats kvar på väskan.'),
+            sant('Berättaren packar både fotoalbumet och kompisarnas gamla brev.', True,
+                 'Det står att berättaren packade tröjor, en kudde och fotoalbumet, och att kompisarnas gamla '
+                 'brev fick plats längst ner.'),
+            skriv('Vad räknade berättaren med fingret under bilresan? Skriv ordet.',
+                  ['klistermärkena', 'klistermärken', 'klistermärke'],
+                  'Berättaren satt med väskan i knät och räknade klistermärkena med fingret.'),
+        ], beskrivning='En novell med jag-berättare om en flytt, med frågor om vad som står, om symboler och '
+                       'om vad berättaren känner.',
+            text=RESVASKAN),
+    ]),
+
+    # ================================================================
+    # ÅRSKURS 9
+    # ================================================================
+    bana(SV, 'ak9', [
+        niva('sv-ak9-fler-variation-1', 'Talspråk och skriftspråk', 'Språk och variation', [
+            para('Para ihop begreppet med vad det betyder.',
+                 [('talspråk', 'språket vi använder när vi pratar'),
+                  ('skriftspråk', 'språket vi använder när vi skriver'),
+                  ('utfyllnadsord', 'ord som fyller ut talet, till exempel ”typ”'),
+                  ('stilnivå', 'hur formellt eller vardagligt språket är')],
+                 'Talspråk och skriftspråk skiljer sig åt. I tal använder vi ofta utfyllnadsord, och stilnivån '
+                 'visar hur formellt vi uttrycker oss.'),
+            val('Vilken mening är skriven i talspråk?',
+                ['Jag hann liksom inte, det blev typ för mycket.', 'Jag hann tyvärr inte, eftersom det blev för mycket.',
+                 'Jag hann inte på grund av en stor arbetsbörda.'],
+                'Jag hann liksom inte, det blev typ för mycket.',
+                'Liksom och typ är utfyllnadsord som hör till talet. De andra meningarna är mer formella.'),
+            sant('Man kan ändra och förbättra en skriven text innan någon läser den, men inte ett ord som redan '
+                 'har sagts högt.', True,
+                 'Det är en av skillnaderna. Skriftspråket går att planera och rätta, men det som redan har sagts '
+                 'har också hörts.'),
+            skriv('Vilket ord i meningen ”Det var liksom jättekul” är ett utfyllnadsord? Skriv ordet.', 'liksom',
+                  'Liksom fyller ut meningen utan att tillföra någon betydelse. Sådana ord hör till talspråket.'),
+            sant('Talspråk är ett sämre språk än skriftspråk.', False,
+                 'Ingen av dem är bättre. De passar för olika situationer: samtal med kompisar kräver inte samma '
+                 'språk som en ansökan.'),
+            val('Varför passar skriftspråk bäst i en ansökan om sommarjobb?',
+                ['Mottagaren väntar sig ett tydligt språk', 'Skriftspråk är alltid roligare att läsa',
+                 'Alla ansökningar måste vara långa'],
+                'Mottagaren väntar sig ett tydligt språk',
+                'En ansökan läses av någon som inte känner dig. Då är ett tydligt, genomtänkt språk viktigt.'),
+            para('Para ihop det talspråkliga ordet med ordet som passar i en formell text.',
+                 [('nåt', 'något'), ('sen', 'sedan'), ('typ', 'ungefär'), ('kolla', 'undersöka')],
+                 'I formell text väljer man ordet som skriftspråket använder, och man undviker förkortade '
+                 'talspråksformer.'),
+            skriv('Chattar och sms är skrivna, men språket påminner ofta om det vi säger i samtal. Chattspråk '
+                  'ligger därför närmare … än vanligt skriftspråk. Skriv ordet.',
+                  ['talspråk', 'talspråket'],
+                  'Chattar liknar samtal: korta meningar, utfyllnadsord och vardagliga ord. Därför ligger '
+                  'chattspråk närmare talspråket.'),
+        ], beskrivning='Tränar skillnaden mellan talspråk och skriftspråk, utfyllnadsord och stilnivå.'),
+
+        niva('sv-ak9-fler-variation-2', 'Dialekt, ungdomsspråk och minoritetsspråk', 'Språk och variation', [
+            para('Para ihop begreppet med vad det betyder.',
+                 [('dialekt', 'språkvariant som hör ihop med en region'),
+                  ('sociolekt', 'språkvariant som hör ihop med en grupp, som en åldersgrupp'),
+                  ('idiolekt', 'en enskild persons eget sätt att tala och skriva'),
+                  ('standardsvenska', 'den form av svenska som de flesta förstår överallt')],
+                 'Dialekten hör till en plats, sociolekten till en grupp och idiolekten till en enda person. '
+                 'Standardsvenskan är den gemensamma formen.'),
+            skriv('Skånska, göteborgska och norrländska är exempel på vad? Skriv ordet.',
+                  ['dialekter', 'dialekt', 'dialekterna', 'språkvarianter'],
+                  'Det är dialekter. En dialekt är en språkvariant som hör ihop med en region.'),
+            val('Ungdomsspråk, alltså ord och uttryck som är typiska för unga, är ett exempel på:',
+                ['en sociolekt', 'en dialekt', 'en idiolekt', 'ett nationellt minoritetsspråk'],
+                'en sociolekt',
+                'En sociolekt hör ihop med en social grupp, här en åldersgrupp. Den hänger inte ihop med var man '
+                'bor, och den är heller inte en enskild persons språk.'),
+            sant('Alla som bor på samma ort talar precis likadant.', False,
+                 'Varje människa har sitt eget sätt att tala och skriva, en idiolekt, även om man delar dialekt.'),
+            sant('Samiska, finska och meänkieli är några av Sveriges nationella minoritetsspråk.', True,
+                 'Alla tre är nationella minoritetsspråk. De har talats i Sverige i flera hundra år och har ett '
+                 'särskilt skydd i lag.'),
+            skriv('Hur många nationella minoritetsspråk har Sverige? Svara med en siffra.',
+                  [tal(5), 'fem'],
+                  'Det är fem: samiska, finska, meänkieli, romani chib och jiddisch.'),
+            val('Vad kan ungdomsspråk bland annat användas till?',
+                ['Att visa att man hör till en grupp', 'Att göra språket mer formellt och strängt',
+                 'Att göra alla ord längre och svårare'],
+                'Att visa att man hör till en grupp',
+                'Orden och uttrycken fungerar som ett gemensamt kännetecken. Den som använder dem visar att man '
+                'hör ihop med de andra.'),
+            val('I vilken del av Sverige talas meänkieli?',
+                ['Tornedalen i norr', 'Skåne i södra Sverige', 'Gotland ute i Östersjön', 'Bohuslän vid västkusten'],
+                'Tornedalen i norr',
+                'Meänkieli talas i Tornedalen längst i norr, vid gränsen mot Finland.'),
+        ], beskrivning='Tränar dialekt, sociolekt, idiolekt och standardsvenska, ungdomsspråk och Sveriges '
+                       'nationella minoritetsspråk.'),
+
+        niva('sv-ak9-fler-tolka-1', 'Vad ska du bli?', 'Läsa och tolka', [
+            val('Vad är krönikans huvudbudskap?',
+                ['Att det är okej att inte veta vad man ska bli', 'Att man bör bestämma sitt yrke redan i nian',
+                 'Att kockar och ingenjörer har bäst framtid av alla'],
+                'Att det är okej att inte veta vad man ska bli',
+                'Skribenten har inget svar på frågan och menar att det är i sin ordning, för en väg är sällan rak.'),
+            val('Varför tänker skribenten svara ”Äldre” nästa gång någon frågar?',
+                ['Ett skämt som också visar att frågan är svår', 'Ett tecken på att skribenten vill bli vuxen fort',
+                 'Ett besked om att gymnasiet ska hoppas över'],
+                'Ett skämt som också visar att frågan är svår',
+                'Svaret är sant men inte det någon väntar sig. Humorn visar att ingen kan veta svaret ännu.'),
+            para('Para ihop bilden i texten med vad den står för.',
+                 [('en karta', 'en plan för framtiden'), ('ett vitt papper', 'att inget är bestämt ännu'),
+                  ('en väg med kurvor', 'ett liv som inte går rakt fram'),
+                  ('en färdig smörgås', 'något som är klart och redo')],
+                 'Bilderna är metaforer och liknelser. Kartan är planen, det vita pappret saknar plan, vägen har '
+                 'kurvor, och ett färdigt svar är som en färdig smörgås.'),
+            sant('Skribenten vet redan exakt vilket yrke som väntar efter gymnasiet.', False,
+                 'Skribenten skriver ”Jag har inget svar” och vet inte vad som ska hända efter gymnasiet.'),
+            skriv('Vilket yrke hade pappas kollega först? Skriv ordet.', ['kock', 'kocken', 'en kock'],
+                  'Det står att kollegan är ingenjör nu men började som kock.'),
+            val('Varför berättar skribenten om pappas kollega?',
+                ['Som exempel på att en väg sällan går rakt fram', 'För att ge praktiska tips om hur man blir kock',
+                 'För att visa att alla borde byta jobb ganska ofta'],
+                'Som exempel på att en väg sällan går rakt fram',
+                'Kollegan har haft flera jobb och säger att inget var ett misstag. Det är ett exempel på en krokig '
+                'väg som ändå leder någonstans.'),
+            sant('Krönikan är skriven i första person.', True,
+                 'Skribenten skriver jag och berättar om egna erfarenheter. Det är typiskt för en krönika.'),
+            ordna('Ordna delarna i krönikan i den ordning de kommer.',
+                  ['Många frågar vad skribenten ska bli.', 'Skribenten har inget svar.',
+                   'Skribenten berättar om pappas kollega.', 'Skribenten bestämmer sig för ett skämtsamt svar.'],
+                  forklaring='Texten börjar med frågan, fortsätter med att skribenten saknar svar, ger ett '
+                             'exempel med kollegan och slutar med ett skämt.'),
+            skriv('Enligt krönikan verkar alla tro att skribenten har ett svar klart, ”som en färdig smörgås”. '
+                  'Vilket slags bildspråk är det? Skriv ordet.',
+                  ['liknelse', 'liknelsen', 'en liknelse', 'jämförelse', 'en jämförelse'],
+                  'Svaret jämförs med en färdig smörgås, och ordet som binder ihop dem. Det är en liknelse. '
+                  'Utan som, ”svaret är en färdig smörgås”, hade det varit en metafor.'),
+        ], beskrivning='En krönika om frågan vad man ska bli, med frågor om budskap, bildspråk och hur '
+                       'texten är byggd.',
+            text=KRONIKAN),
+
+        niva('sv-ak9-fler-tolka-2', 'Rummet bredvid', 'Läsa och tolka', [
+            val('Hur förändras berättaren i novellen?',
+                ['Från att vilja slippa ljudet till att sakna det', 'Från att tycka mycket om gitarr till att avsky den',
+                 'Från att vara glad och lugn till att bli helt rasande'],
+                'Från att vilja slippa ljudet till att sakna det',
+                'Först tryckte berättaren kudden mot öronen. Sedan lyssnar berättaren efter ett ackord. Det som '
+                'störde har blivit något att sakna.'),
+            sant('Berättaren gick in i Idas rum redan första kvällen.', False,
+                 'Första kvällen låg berättaren vaken och lyssnade efter ett ackord. Det står att berättaren gick '
+                 'in i rummet först efter en vecka.'),
+            val('Vad betyder det att berättaren står ”med armarna i kors” och säger att det inte är någon '
+                'stor sak?',
+                ['Berättaren försöker dölja sina känslor', 'Berättaren är väldigt arg på all musik',
+                 'Berättaren fryser och vill komma in i värmen'],
+                'Berättaren försöker dölja sina känslor',
+                'Det som berättaren säger stämmer inte med kvällen efter, då det är så tyst att det känns tomt. '
+                'Armarna i kors är ett sätt att skydda sig.'),
+            skriv('Vart flyttade Ida? Skriv staden.', ['Umeå', 'till Umeå'],
+                  'Det står att hon flyttade till Umeå för att läsa musik.'),
+            skriv('Vad kunde berättaren höra första kvällen, när det var så tyst? Skriv ordet.',
+                  ['kylskåpet', 'kylskåpet i köket', 'ett kylskåp', 'kylskåp'],
+                  'Det var så tyst att berättaren kunde höra kylskåpet ute i köket.'),
+            val('Vad antyder slutet, när berättaren nynnar på en av Idas låtar?',
+                ['Att något av Ida lever kvar i berättaren', 'Att berättaren tänker sluta lyssna på musik',
+                 'Att Ida kommer hem redan nästa vecka'],
+                'Att något av Ida lever kvar i berättaren',
+                'Berättaren lärde sig låtarna utan att vilja. Nu nynnar berättaren på en av dem, och då är '
+                'Ida nära trots avståndet.'),
+            ordna('Ordna händelserna i den ordning de kommer i novellen.',
+                  ['Ida flyttar till Umeå.', 'Berättaren ligger vaken i tystnaden.',
+                   'Berättaren går in i Idas rum.', 'Berättaren nynnar på en av hennes låtar.'],
+                  forklaring='Efter flytten kommer den första tysta kvällen. Först en vecka senare går '
+                             'berättaren in i rummet, och sist kommer nynnandet.'),
+            sant('Berättaren lärde sig Idas låttexter fast det inte var meningen.', True,
+                 'Det står: jag lärde mig texterna utan att vilja.'),
+            skriv('Hur många år hade berättaren hört gitarren genom väggen? Svara med en siffra.',
+                  [tal(8), 'åtta'],
+                  'Första meningen säger att berättaren hade hört Idas gitarr genom väggen i åtta år.'),
+        ], beskrivning='En novell med jag-berättare om en syster som flyttat, med frågor om förändring, '
+                       'dolda känslor och vad slutet antyder.',
+            text=RUMMET),
+    ]),
+]
