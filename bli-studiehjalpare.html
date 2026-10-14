@@ -11,7 +11,7 @@
 <link rel="mask-icon" href="/favicon.svg" color="#2E2A20">
 
 <title>Bli studiehjälpare i Stockholm, extrajobb — Nextrum</title>
-<meta name="description" content="Extrajobb i Stockholm för alla som får jobba, också om du pluggar: hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t.">
+<meta name="description" content="Extrajobb i Stockholm för dig som gått ut grundskolan, också om du pluggar: hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t.">
 <link rel="canonical" href="https://nextrum.se/bli-studiehjalpare">
 <link rel="alternate" hreflang="sv" href="https://nextrum.se/bli-studiehjalpare">
 <link rel="alternate" hreflang="en" href="https://nextrum.se/en/bli-studiehjalpare">
@@ -25,7 +25,7 @@
 <meta property="og:site_name" content="Nextrum">
 <meta property="og:locale" content="sv_SE">
 <meta property="og:title" content="Bli studiehjälpare i Stockholm, extrajobb — Nextrum">
-<meta property="og:description" content="Extrajobb i Stockholm för alla som får jobba, också om du pluggar: hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t.">
+<meta property="og:description" content="Extrajobb i Stockholm för dig som gått ut grundskolan, också om du pluggar: hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t.">
 <meta property="og:url" content="https://nextrum.se/bli-studiehjalpare">
 <meta property="og:image" content="https://nextrum.se/delning/bli-studiehjalpare.jpg">
 <meta property="og:image:width" content="1200">
@@ -33,7 +33,7 @@
 <meta property="og:image:alt" content="Nextrum: Ditt första jobb kan börja här.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Bli studiehjälpare i Stockholm, extrajobb — Nextrum">
-<meta name="twitter:description" content="Extrajobb i Stockholm för alla som får jobba, också om du pluggar: hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t.">
+<meta name="twitter:description" content="Extrajobb i Stockholm för dig som gått ut grundskolan, också om du pluggar: hjälp yngre elever med skolan, tjäna pengar och bygg erfarenhet som går att skriva på CV:t.">
 <meta name="twitter:image" content="https://nextrum.se/delning/bli-studiehjalpare.jpg">
 
 <!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
@@ -53,7 +53,7 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=61e4a39a">
+<link rel="stylesheet" href="nextrum-cinema.css?v=4f09070d">
 <link rel="stylesheet" href="nextrum-start.css?v=5eee7c41">
 <link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
 </head>
@@ -207,7 +207,7 @@
       <h2 class="nx-d2" data-avslöj style="margin-top:20px">Du behöver inte vara lärare.<br>Du behöver kunna förklara.</h2>
       <ul class="nx-punkter" data-stig data-fördröj="1">
         <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
-          <span><b>Du får jobba</b><span>Du behöver inte plugga. Alla som får jobba är välkomna att söka.</span></span></li>
+          <span><b>Du går på gymnasiet eller är äldre</b><span>Du behöver ha börjat gymnasiet. Efter det behöver du inte plugga: alla som får jobba är välkomna att söka.</span></span></li>
         <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
           <span><b>Du är trygg i dina ämnen</b><span>Du behöver inte vara bäst i klassen i allt — bara säker i det du vill hjälpa till med.</span></span></li>
         <li><span class="pk"><svg viewBox="0 0 20 20"><path d="M4 10.5 8 14.5 16 5.5"/></svg></span>
@@ -256,6 +256,20 @@
                syns, så listan växer av sig själv den dag en
                ny tjänst slås på i adminvyn. -->
           <div class="pay-field" id="ap-tjanster-falt"></div>
+          <!-- SKOLAN (2026-10-14, Leo: "vi anställer gymnasieelever och
+               uppåt"). Ett val, inget förval. Grundskolan stoppar ansökan i
+               formuläret med en förklaring; svaret står överst i why. Samma
+               fält står i en/bli-studiehjalpare.html. -->
+          <fieldset class="nx-val" id="ap-skolniva">
+            <legend>Var är du i skolan just nu?</legend>
+            <div class="nx-val-rad fyra">
+              <label><input type="radio" name="skolniva" value="grundskolan" required><span>Grundskolan</span></label>
+              <label><input type="radio" name="skolniva" value="gymnasiet" required><span>Gymnasiet</span></label>
+              <label><input type="radio" name="skolniva" value="hogskola" required><span>Universitet eller högskola</span></label>
+              <label><input type="radio" name="skolniva" value="klar" required><span>Jag har gått ut gymnasiet</span></label>
+            </div>
+            <p class="nx-fil-hjalp" id="ap-skolniva-nej" hidden>Du behöver ha börjat gymnasiet för att jobba hos oss. Välkommen att söka när du gjort det!</p>
+          </fieldset>
           <div class="pay-field"><label for="ap-school">Skola &amp; program</label><input class="inp" id="ap-school" name="skola" placeholder="om du pluggar, t.ex. gymnasiet, naturvetenskapsprogrammet"></div>
           <div class="pay-field"><label for="ap-subj">Ämnen du vill hjälpa till med</label><input class="inp" id="ap-subj" name="amnen" placeholder="t.ex. matematik, fysik, engelska"></div>
           <div class="pay-field"><label for="ap-avail">Tider som funkar för dig</label><input class="inp" id="ap-avail" name="tider" placeholder="t.ex. vardagar efter 16, helger"></div>
@@ -341,7 +355,7 @@
       </div>
       <div class="faq-item">
         <button class="faq-q" aria-expanded="false">Måste jag plugga för att få jobba?<span class="pm"></span></button>
-        <div class="faq-a"><p>Nej. Alla som får jobba är välkomna att söka, vare sig du går i skolan, pluggar eller jobbar med annat.</p></div>
+        <div class="faq-a"><p>Nej, men du behöver ha börjat gymnasiet. Går du på gymnasiet, pluggar vidare eller jobbar med annat är du välkommen att söka. Går du i grundskolan får du gärna söka när du börjat gymnasiet.</p></div>
       </div>
     </div>
   </div>
@@ -541,7 +555,7 @@
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=1632f8d9"></script>
+<script src="nextrum-app.js?v=97cbce73"></script>
 <script src="nextrum-samtycke.js?v=92474eaf"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
@@ -549,7 +563,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=b74d2888"></script>
+<script src="nextrum-maskot-svar.js?v=ac60ba28"></script>
 <script src="nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {
@@ -658,12 +672,37 @@
   $('#apply-form').querySelectorAll('input[name="timmar"]').forEach(r =>
     r.addEventListener('change', () => timmarFält.classList.remove('fel')));
 
+  /* Skolan (2026-10-14): ett val måste göras, och Grundskolan stoppar
+     ansökan, med förklaringen under valen. */
+  const skolFält = $('#ap-skolniva'), skolNej = $('#ap-skolniva-nej');
+  const skolVal = () => {
+    const v = $('#apply-form').querySelector('input[name="skolniva"]:checked');
+    return v ? v.value : '';
+  };
+  const SKOLA_I_WHY = { grundskolan: 'Grundskolan', gymnasiet: 'Gymnasiet', hogskola: 'Universitet eller högskola', klar: 'Har gått ut gymnasiet' };
+  const visaSkolNej = () => { skolNej.hidden = skolVal() !== 'grundskolan'; };
+  $('#apply-form').querySelectorAll('input[name="skolniva"]').forEach(r =>
+    r.addEventListener('change', () => { skolFält.classList.remove('fel'); visaSkolNej(); }));
+  $('#apply-form').addEventListener('reset', () => setTimeout(visaSkolNej));
+  const skolFel = () => {
+    skolFält.classList.remove('fel');
+    const v = skolVal();
+    if (v && v !== 'grundskolan') return '';
+    skolFält.classList.add('fel');
+    const första = skolFält.querySelector('input');
+    första.focus({ preventScroll: true });
+    skolFält.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return v ? t('grundskolanInte') : t('valjSkola');
+  };
+
   NX.kopplaAnsökan($('#apply-form'), $('#apply-ok'), {
     krävSamtycke: '#ap-gdpr',
     cv: '#ap-cv',
     kontroll: () => {
       const vhSvar = vhFel();
       if (vhSvar) return vhSvar;
+      const skolSvar = skolFel();
+      if (skolSvar) return skolSvar;
       timmarFält.classList.remove('fel');
       if (timmarVal()) return '';
       timmarFält.classList.add('fel');
@@ -672,7 +711,7 @@
       första.scrollIntoView({ block: 'center', behavior: 'smooth' });
       return t('valjTimmar');
     },
-    överst: () => 'Minst 4 timmar i veckan: ' + timmarVal(),
+    överst: () => 'Skola nu: ' + (SKOLA_I_WHY[skolVal()] || '') + '\nMinst 4 timmar i veckan: ' + timmarVal(),
     kolumner: () => Object.assign(under18() ? { vardnadshavare_epost: vh.value.trim() } : {},
       kodFält && renKod(kodFält.value) ? { kod: renKod(kodFält.value) } : {}),
     tack: () => (under18() ? t('tackAnsokanUnder18') : ''),

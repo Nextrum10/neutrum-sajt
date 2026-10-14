@@ -180,8 +180,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`kolla-villkor.py`), och då får alla frågan igen.
 - **Programmering erbjuds inte** (2026-10-07, Leo): inte i `NX.AMNEN`, NexLäx, materialbanken
   eller betygsgarantin, och ingen sida; `/laxhjalp-programmering` omdirigeras till navet.
-- **Vem som får bli studiehjälpare** (2026-10-06, Leo): alla som får jobba. Ingen sida kräver
-  att man pluggar; "nyligen läst samma kurser" är vad matchningen letar efter, inget krav för att söka.
+- **Vem som får bli studiehjälpare** (2026-10-06, Leo): alla som får jobba och har börjat
+  gymnasiet (2026-10-14, Leo: "vi anställer gymnasieelever och uppåt", efter en ansökan från en
+  13-åring). Ansökan frågar var man är i skolan (`skolniva`, svaret överst i why), och Grundskolan
+  stoppar den i formuläret, inte i databasen. Efter gymnasiet krävs inga studier; "nyligen läst samma
+  kurser" är vad matchningen letar efter, inget krav för att söka.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
   kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
@@ -966,7 +969,8 @@ Detaljer: `minne/grunden.md`.
   länken (`minne/sakerhet.md`).
 - **NexLäx Fas 23.4** (2026-10-06) är i drift sedan samma kväll: `nexlax_uppdrag_och_np` och banken,
   körda efter merge som de förra bankerna (`minne/nexlax.md`). Juridiken, företagsekonomin och språken, och de 1 217 frågorna i matematik, svenska och engelska från 2026-10-14 (Fas 23.5), är skrivna med AI och inte lästa
-  av någon som undervisar i ämnet.
+  av någon som undervisar i ämnet. Fas 23.5 är i drift sedan 2026-10-14 (`uppgiftsbanken_fler_uppgifter`, PR #282,
+  md5 `cebbc232…`, facitprovet gav 1 217 av 1 217).
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14
