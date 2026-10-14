@@ -61,9 +61,9 @@
 // hade glidit isär från den första, precis som de sju esc() gjorde.
 // ============================================================
 
-import { type Inloggad, kravInloggad, serviceklient } from '../_delad/auth.ts';
+import { arAdmin, type Inloggad, kravInloggad, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
-import { StripeError, v1, VALUTA } from '../_delad/stripe.ts';
+import { arStripeId, descriptor, StripeError, v1, VALUTA } from '../_delad/stripe.ts';
 import { familjebelopp, passpris, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
 import { arErbjudandekod, type ErbjudandePris, kanAteranvandas, kassarad, sammaInnehall } from '../_delad/erbjudanden.ts';
 
@@ -126,25 +126,6 @@ function egenAdress(u: unknown, reserv: string): string {
     if (ok && (a.protocol === 'https:' || a.hostname === 'localhost')) return a.origin;
   } catch { /* faller igenom */ }
   return reserv;
-}
-
-/* Kontoutdragets text. Stripe tillåter varken <>'"* eller tecken
-   utanför latin-1, och svarar med ett fel i stället för att kapa.
-
-   HÖGST TIO TECKEN (Fas 14.3). Det här är bara tillägget: Stripe
-   sätter kontots förkortade namn framför, plus "* ", och hela raden får
-   vara högst 22 tecken. Förkortningen får vara upp till tio, så tio
-   kvar till ämnet är det enda som alltid ryms. Förut kapades vid 22,
-   och "SAMHALLSKUNSKAP" efter "NEXTRUM* " blev 24 — en betalning som
-   Stripe hade nekat för ett ämne. */
-function descriptor(s: string): string {
-  const rent = s
-    .replace(/[åäÅÄ]/g, 'A').replace(/[öÖ]/g, 'O').replace(/[éèÉÈ]/g, 'E')
-    .replace(/[^A-Za-z0-9 ]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toUpperCase();
-  return rent.slice(0, 10).trim() || 'LAXHJALP';
 }
 
 /* ============================================================
@@ -475,6 +456,148 @@ async function betalaTillagg(
   }
 }
 
+/* ============================================================
+   KORTET (kortet_reserveras, 2026-10-13)
+
+   Leo: "när man klickar på boka pass eller godkänn förslaget från barnet
+   ska man kunna betala nu, eller på faktura. då reserveras pengar från
+   stripe och när passet har hållits och läxhjälparen har skrivit rapport
+   så dras pengarna". Kortet sparas hos Stripe när familjen väljer det på
+   ett pass, och stripe-reservation reserverar två dagar före passet och
+   drar när rapporten finns (minne/betalning.md).
+
+   · SPARA: en kassa i läget setup, på familjens kund hos Stripe. Den tar
+     ingen betalning. Webhooken skriver kortet (kort_sparat) när kassan är
+     klar, ur Stripes svar, aldrig ur vyn. Bara familjen, och bara med
+     strömbrytaren kortreservation på.
+   · TA BORT: kortet kopplas bort hos Stripe, reservationerna släpps av
+     jobbet och valen glöms (kort_borttaget). Familjen tar bort sitt eget,
+     admin en familjs. Går alltid, också med strömbrytaren av.
+
+   KUNDEN är en per familj (stripe_kunder), utan namn och e-post: Stripe
+   behöver en kund att spara kortet på, och familjens id i metadata räcker.
+   ============================================================ */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function familjensKund(db: ReturnType<typeof serviceklient>, familj: string): Promise<string> {
+  const { data: finns, error: lasfel } = await db.from('stripe_kunder')
+    .select('stripe_kund').eq('parent_id', familj).maybeSingle();
+  if (lasfel) throw new Error('stripe_kunder: ' + lasfel.message);
+  if (finns?.stripe_kund) return String(finns.stripe_kund);
+
+  // Två tryck samtidigt ger samma kund: nyckeln är familjens.
+  const kund = await v1('POST', '/v1/customers', { metadata: { parent_id: familj } }, `nextrum-kund-${familj}`);
+  const id = String(kund.id ?? '');
+  if (!arStripeId(id, 'cus')) throw new Error('Stripe svarade utan en kund.');
+  const { error: skrivfel } = await db.from('stripe_kunder').insert({ parent_id: familj, stripe_kund: id });
+  if (skrivfel && skrivfel.code !== '23505') throw new Error('stripe_kunder: ' + skrivfel.message);
+  // Hann ett annat anrop först står dess kund kvar, och den gäller.
+  const { data: nu } = await db.from('stripe_kunder').select('stripe_kund').eq('parent_id', familj).maybeSingle();
+  return String(nu?.stripe_kund ?? id);
+}
+
+async function kortet(
+  vem: Inloggad,
+  kropp: { kort?: string; retur?: string; ui?: string; familj?: string },
+): Promise<Response> {
+  // Barnet sparar och tar inte bort något kort (barnkonton_och_admin).
+  if (vem.appMetadata?.roll === 'barn') return json({ error: 'Kortet sköts av föräldern.' }, 403, CORS);
+  const db = serviceklient();
+
+  try {
+    if (kropp.kort === 'ta_bort') {
+      let familj = vem.anvandare;
+      if (kropp.familj !== undefined && kropp.familj !== vem.anvandare) {
+        if (!UUID.test(String(kropp.familj))) return json({ error: 'Vilken familj?' }, 400, CORS);
+        if (!await arAdmin(vem.klient, vem.anvandare)) {
+          return json({ error: 'Bara admin tar bort en annan familjs kort.' }, 403, CORS);
+        }
+        familj = String(kropp.familj);
+      }
+      const { data: metod, error } = await db.rpc('kort_borttaget', { p_parent: familj });
+      if (error) return json({ error: 'Kortet gick inte att ta bort. Försök igen.' }, 500, CORS);
+      /* Raden är borta, och inget reserveras med kortet igen. Hos Stripe
+         kopplas alla kort på familjens kund bort, också ett som blev kvar när
+         kortet byttes. Det är städning: går det inte står kortet kvar på en
+         kund ingen använder, och felet står i loggen. En reservation som står
+         släpps av jobbet ändå, för den hålls på sitt PaymentIntent. */
+      const metoder = new Set<string>(arStripeId(metod, 'pm') ? [metod] : []);
+      const { data: kunden } = await db.from('stripe_kunder').select('stripe_kund').eq('parent_id', familj).maybeSingle();
+      const kund = String(kunden?.stripe_kund ?? '');
+      try {
+        if (arStripeId(kund, 'cus')) {
+          const lista = await v1('GET', `/v1/payment_methods?customer=${kund}&type=card&limit=20`) as { data?: { id?: string }[] };
+          for (const x of lista.data ?? []) if (arStripeId(x.id, 'pm')) metoder.add(x.id);
+        }
+        for (const m of metoder) {
+          await v1('POST', `/v1/payment_methods/${m}/detach`, {}, `nextrum-koppla-bort-${m}`)
+            .catch((e) => {
+              // Redan bortkopplat: inget att göra.
+              if (!(e instanceof StripeError)) throw e;
+              console.error('stripe-checkout: kortet kopplades inte bort', JSON.stringify({ familj, ...e.fel }));
+            });
+        }
+      } catch (e) {
+        if (!(e instanceof StripeError)) throw e;
+        console.error('stripe-checkout: korten gick inte att läsa hos Stripe', JSON.stringify({ familj, ...e.fel }));
+      }
+      return json({ ok: true, borttaget: arStripeId(metod, 'pm') }, 200, CORS);
+    }
+
+    if (kropp.kort !== 'spara') return json({ error: 'Vad ska göras med kortet?' }, 400, CORS);
+
+    const { data: prof } = await vem.klient
+      .from('profiles').select('role').eq('id', vem.anvandare).maybeSingle();
+    if (!prof || prof.role !== 'parent') return json({ error: 'Kortet sparas av familjen.' }, 403, CORS);
+    const { data: flagga } = await db.from('flaggor').select('aktiv').eq('kod', 'kortreservation').maybeSingle();
+    if (!flagga?.aktiv) {
+      return json({ error: 'Kort går inte att spara just nu. Betala efter passet, eller välj faktura.' }, 409, CORS);
+    }
+
+    const kund = await familjensKund(db, vem.anvandare);
+    const bas = egenAdress(kropp.retur, 'https://nextrum.se');
+    const pk = kropp.ui === 'inbaddad' ? publicerbarNyckel() : null;
+    const inbaddad = pk !== null;
+    // Vyn läser kortet ur mitt_kort() när den kommer tillbaka: webhooken kan vara några sekunder efter.
+    const efter = inbaddad
+      ? { ui_mode: 'embedded', redirect_on_completion: 'if_required', return_url: `${bas}/foralder?kort={CHECKOUT_SESSION_ID}` }
+      : { success_url: `${bas}/foralder?kort={CHECKOUT_SESSION_ID}`, cancel_url: `${bas}/foralder?kort=avbrutet` };
+    const parametrar = {
+      mode: 'setup',
+      locale: 'sv',
+      ...efter,
+      customer: kund,
+      // Bara kort, som kassan. Inga pengar dras här, så inget kvitto och ingen säljare att välja.
+      payment_method_types: ['card'],
+      metadata: { kort_parent: vem.anvandare },
+      setup_intent_data: {
+        metadata: { kort_parent: vem.anvandare },
+        description: 'Kortet sparas för passen hos Nextrum',
+      },
+    };
+    /* Ett dubbeltryck inom samma minut ger samma kassa. En kassa som redan
+       är klar eller har gått ut går inte att öppna: då en ny, med en egen
+       nyckel, som för passet. */
+    const nyckel = `nextrum-kortkassa-${vem.anvandare}-${Math.floor(Date.now() / 60_000)}-${inbaddad ? 'inbaddad' : 'sida'}`;
+    let session = await v1('POST', '/v1/checkout/sessions', parametrar, nyckel);
+    if (String((session as { status?: string }).status ?? 'open') !== 'open') {
+      session = await v1('POST', '/v1/checkout/sessions', parametrar, `${nyckel}-n${Date.now()}`);
+    }
+    const id = (session as { id?: string }).id;
+    return inbaddad
+      ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
+               nyckel: pk, session: id }, 200, CORS)
+      : json({ lage: 'sida', url: (session as { url?: string }).url ?? null, session: id }, 200, CORS);
+  } catch (fel) {
+    if (fel instanceof StripeError) {
+      console.error('stripe-checkout: Stripe nekade kortet', JSON.stringify({ kort: kropp.kort, ...fel.fel }));
+      return json({ error: 'Stripe nekade: ' + fel.fel.meddelande, stripe: fel.fel }, 502, CORS);
+    }
+    console.error('stripe-checkout: fel med kortet', JSON.stringify({ kort: kropp.kort, fel: (fel as Error)?.message ?? String(fel) }));
+    return json({ error: (fel as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight(CORS);
   if (req.method !== 'POST') return json({ error: 'Bara POST.' }, 405, CORS);
@@ -483,7 +606,9 @@ Deno.serve(async (req) => {
   const vem = await kravInloggad(req.headers.get('authorization'));
   if (!vem.ok) return vem.svar;
 
-  let kropp: { pass?: string; retur?: string; ui?: string; erbjudande?: string; tillagg?: boolean } = {};
+  let kropp: {
+    pass?: string; retur?: string; ui?: string; erbjudande?: string; tillagg?: boolean; kort?: string; familj?: string;
+  } = {};
   try {
     kropp = await req.json();
   } catch {
@@ -491,6 +616,8 @@ Deno.serve(async (req) => {
   }
   // Ett erbjudande (Fas 16.1) är ett eget köp, inte ett pass.
   if (kropp.erbjudande !== undefined) return await köpErbjudande(vem, kropp);
+  // Kortet som sparas eller tas bort (2026-10-13) är inte heller ett pass.
+  if (kropp.kort !== undefined) return await kortet(vem, kropp);
 
   const passId = String(kropp.pass ?? '').trim();
   if (!passId) return json({ error: 'Vilket pass?' }, 400, CORS);

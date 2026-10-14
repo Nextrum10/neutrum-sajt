@@ -1780,7 +1780,7 @@
           href: '#pass/' + b.id,
           med: medBarn(b),
           nu: b.wanted_date === idag,
-          märke: NXKontakt.betalMärke(b)
+          märke: passMärke(b)
         })).join('')
       : tomt('Inga kommande pass', S.väntar
         ? 'När vi matchat er med en studiehjälpare bokar ni under Boka pass, och passet står här.'
@@ -2018,6 +2018,9 @@
         : b.betalning_status === 'faktura' ? 'Passet betalas mot faktura.'
         : b.betalning_status === 'betald' ? (b.klippkort_id ? 'Passet är betalt med timmar.'
           : medBanken(b) ? 'Passet är betalt med timbanken.' : 'Passet är betalt.')
+        /* Kortet drar priset när rapporten finns (kortet_reserveras), inte
+           när den bekräftas: jobbet går var tionde minut. */
+        : kortBetalar(b) ? 'Priset dras från ' + kortNamn(S.kort.kort) + ' inom några minuter.'
         : (BETALNING_TEXT[b.betalning_status] ? 'Betalning: ' + BETALNING_TEXT[b.betalning_status].toLowerCase() + '.' : '');
       fot = '<div class="rb-fot-rad">'
         + (läge ? '<p class="rb-klart"><span class="rb-bock">' + NXStudie.IKON.bock + '</span><span>' + esc(läge) + '</span></p>' : '<span></span>')
@@ -2220,6 +2223,9 @@
      Grenen står kvar för den dag villkoren ändras tillbaka. */
   function kanBetalas(b) {
     if (b.fakturerbar === false || ingetAttBetala(b)) return false;
+    /* Kortet reserveras (2026-10-13): ett pass som kortet betalar väntar
+       inte på familjen, och knapparna för att betala står inte där. */
+    if (kortBetalar(b)) return false;
     if (OBETALDA.indexOf(b.betalning_status || 'ingen') === -1) return false;
     if (b.status === 'completed') return true;
     if (b.status !== 'confirmed') return false;
@@ -2668,6 +2674,17 @@
     const bank = !tim && bankFör(b);
     if (tim) return '<button type="button" class="btn btn-primary btn-sm" data-timmar="' + esc(b.id) + '">Betala med timmar</button>';
     if (bank) return '<button type="button" class="btn btn-primary btn-sm" data-timbank="' + esc(b.id) + '">Betala med timbanken</button>';
+    /* Kortet reserveras (2026-10-13): Betala i förväg är borta med
+       strömbrytaren på. Knappen väljer kortet, och ett kort som saknas
+       eller nekades är familjens drag. */
+    const kr = kortResRad(b);
+    if (kr && kortValt(b) && S.kort.pa && (kr.lage === 'misslyckad' || (kr.lage === 'vald' && !S.kort.kort))) {
+      return '<button type="button" class="btn btn-primary btn-sm" data-kort-spara>'
+        + (S.kort.kort ? 'Byt kort' : kr.lage === 'misslyckad' ? 'Lägg till kort' : 'Spara kortet') + '</button>';
+    }
+    if (kortKanVäljas(b)) {
+      return '<button type="button" class="btn btn-orange btn-sm" data-kort-val="' + esc(b.id) + '">Välj kort</button>';
+    }
     return b.betalning_status === 'misslyckad'
       ? '<button type="button" class="btn btn-primary btn-sm" data-betala="' + esc(b.id) + '">Försök betala igen</button>'
       : '<button type="button" class="btn btn-orange btn-sm" data-betala="' + esc(b.id) + '">Betala i förväg</button>';
@@ -2744,6 +2761,18 @@
     } else if (bank) {
       val.push(V({ attr: 'data-timbank="' + esc(b.id) + '"', ikon: 'bank', titel: 'Betala med timbanken',
         under: tidLängd(Number(b.duration_min || 60)) + ' ur timbanken', först: true }));
+    }
+    /* Före passet, med kortreservationen på (2026-10-13): kortet väljs och
+       reserveras två dagar före passet, och fakturan går att välja redan
+       nu. Efter passet är valen som förut. */
+    if (kortKanVäljas(b)) {
+      val.push(V({ attr: 'data-kort-val="' + esc(b.id) + '"', ikon: 'kort', titel: 'Välj kort',
+        under: (pris ? NXBetalning.kronor(pris) + ' r' : 'R') + 'eserveras två dagar före passet', först: !tim && !bank }));
+      if (S.faktura) {
+        val.push(V({ attr: 'data-faktura-fore="' + esc(b.id) + '"', ikon: 'faktura',
+          titel: 'Betala mot faktura', under: 'Kommer i början av månaden efter passet' }));
+      }
+      return val.join('');
     }
     val.push(V({ attr: 'data-betala="' + esc(b.id) + '"', ikon: 'kort',
       titel: b.betalning_status === 'misslyckad' ? 'Försök betala igen' : 'Betala med kort',
@@ -2907,7 +2936,11 @@
         vem: utkast ? 'Står på fakturan för ' + NXBetalning.periodText(utkast.period) + ', som snart skickas.'
           : 'Kommer med på fakturan i början av nästa månad.',
         märke: NXKontakt.betalMärke(b),
-        atgarder: kortNu(b, true)
+        /* Med kortreservationen på (2026-10-13) väljs kortet före passet,
+           och det reserveras i stället för att dras direkt. */
+        atgarder: kortKanVäljas(b)
+          ? '<button type="button" class="btn btn-ghost btn-sm" data-kort-val="' + esc(b.id) + '">Välj kort i stället</button>'
+          : kortNu(b, true)
       }));
     });
     host.innerHTML = delar.length ? delar.join('')
@@ -3057,6 +3090,8 @@
     p.knapp = knapp; p.pass = passId; p.klar = false;
     p.kod = o && o.kod ? o.kod : null;
     p.tillägg = !!(o && o.tillägg);
+    // 'kort': kassan sparar kortet (kortet_reserveras) och tar ingen betalning.
+    p.sort = o && o.sort ? o.sort : null;
     const titel = (o && o.titel) || 'Betala passet';
     p.rot.querySelector('.betalpanel-titel').textContent = titel;
     p.rot.setAttribute('aria-label', titel);
@@ -3102,7 +3137,10 @@
     /* Betald under tiden panelen var öppen: listorna ska visa det.
        Omritningen byter ut knappen, så fokus flyttas till den nya om
        passet fortfarande har en (webhooken har inte hunnit). */
-    if (p.klar && !p.pass) {
+    if (p.klar && p.sort === 'kort') {
+      // Kortet är sparat: det ska synas, och passen där det valts.
+      laddaKortOchPass().catch(() => {});
+    } else if (p.klar && !p.pass) {
       // Ett köpt erbjudande: timmarna ska synas, och knapparna på passen.
       Promise.all([laddaErbjudanden(), laddaPass()]).catch(() => {});
     } else if (p.klar) {
@@ -3134,6 +3172,281 @@
     // Enter i rutan för rabattkoden prövar den, som knappen.
     if (e.key === 'Enter' && e.target && e.target.id === 'erb-kod') { e.preventDefault(); provaErbKod(); }
   });
+
+  /* ============================================================
+     KORTET RESERVERAS (kortet_reserveras, 2026-10-13)
+
+     Leo: "när man klickar på boka pass eller godkänn förslaget från
+     barnet ska man kunna betala nu, eller på faktura. då reserveras
+     pengar från stripe och när passet har hållits och läxhjälparen har
+     skrivit rapport så dras pengarna om man betalar med kort". Kortet
+     sparas hos Stripe (kassan i läget setup), och stripe-reservation
+     reserverar priset två dagar före passet och drar det när rapporten
+     finns (minne/betalning.md).
+
+     Allt här hänger på strömbrytaren kortreservation: av är vyn som
+     förut. Ett kort som redan är sparat och en reservation som står syns
+     ändå, och kortet går alltid att ta bort. Vyn läser bara: kortet
+     genom mitt_kort() (märke, sista fyra och giltighetstid, inga id från
+     Stripe) och familjens reservationer. Valet skrivs med valj_kort(),
+     kortet sparas och tas bort genom stripe-checkout, och pengarna rör
+     bara stripe-reservation och webhooken.
+     ============================================================ */
+  S.kort = { pa: false, kort: null, rader: {} };
+
+  /* Lägen som säger något om passet nu. Ett draget pass står som betalt,
+     och ett släppt är ingenting. Listan växer inte med åren. */
+  const KORTLAGEN = ['vald', 'reserverad', 'slapps', 'utgangen', 'misslyckad'];
+
+  async function laddaKort() {
+    /* Flaggan först. Utan raden är migrationen inte körd, och då finns
+       varken funktionen eller tabellen: vyn frågar inte efter dem, så att
+       varje inloggning inte ger två 404 tills den är körd, och är som förut. */
+    const flagga = await supa.from('flaggor').select('aktiv').eq('kod', 'kortreservation').maybeSingle();
+    if (flagga.error || !flagga.data) {
+      S.kort.pa = false; S.kort.kort = null; S.kort.rader = {};
+      ritaKortet();
+      return;
+    }
+    const [kort, rader] = await Promise.all([
+      supa.rpc('mitt_kort'),
+      supa.from('kortreservationer').select('booking_id, lage, reserverat_ore, fel').in('lage', KORTLAGEN)
+    ]);
+    S.kort.pa = !!flagga.data.aktiv && !kort.error && !rader.error;
+    S.kort.kort = !kort.error && Array.isArray(kort.data) ? kort.data[0] || null : null;
+    S.kort.rader = {};
+    if (!rader.error) (rader.data || []).forEach(r => { S.kort.rader[r.booking_id] = r; });
+    ritaKortet();
+  }
+
+  /* Passen ritas ur kortets rader: kortet först, sedan passen. Hämtade
+     samtidigt kunde passen ritas med de gamla raderna, för kortet tar två
+     varv (flaggan, sedan raderna). */
+  const laddaKortOchPass = () => laddaKort().then(() => laddaPass());
+
+  const KORTMÄRKEN = { visa: 'Visa', mastercard: 'Mastercard', amex: 'American Express', maestro: 'Maestro',
+                       discover: 'Discover', diners: 'Diners Club', jcb: 'JCB', unionpay: 'UnionPay' };
+  const kortNamn = k => !k ? 'kortet' : (KORTMÄRKEN[k.marke] || 'Kortet') + (k.sista4 ? ' ·· ' + k.sista4 : '');
+  const kortResRad = b => (S.kort && S.kort.rader[b.id]) || null;
+
+  /* Betalar kortet passet av sig självt? En reservation som står dras
+     när rapporten finns, också med strömbrytaren av. Ett val med ett
+     sparat kort, eller en reservation som gick ut, reserveras eller dras
+     bara med strömbrytaren på (kortreservation_att_gora). Ett nej
+     (misslyckad) eller ett val utan kort gör det inte. */
+  function kortBetalar(b) {
+    const r = kortResRad(b);
+    if (!r || ['ingen', 'misslyckad'].indexOf(b.betalning_status || 'ingen') === -1) return false;
+    if (r.lage === 'reserverad') return true;
+    return (r.lage === 'vald' || r.lage === 'utgangen') && !!S.kort.kort && S.kort.pa;
+  }
+
+  /* Märket på en passrad när kortet är valt: hur passet betalas, i
+     stället för Ej betalt, och att kortet nekades. Annars som förut. */
+  function kortMärke(b) {
+    const r = kortResRad(b);
+    if (!r || b.status === 'cancelled' || ['ingen', 'misslyckad'].indexOf(b.betalning_status || 'ingen') === -1) return null;
+    if (r.lage === 'misslyckad') return S.kort.pa ? { text: 'Kortet nekades', klass: 'sen' } : null;
+    if (!kortBetalar(b)) return null;
+    return { text: r.lage === 'reserverad' ? 'Reserverat på kortet' : 'Kort', klass: 'pa' };
+  }
+  function passMärke(b) { return kortMärke(b) || NXKontakt.betalMärke(b); }
+
+  /* Är kortet valt på passet, så att det går att välja bort? Inte när
+     passet betalas på annat sätt (en faktura valdes efter ett nej), och
+     inte medan en reservation släpps. */
+  function kortValt(b) {
+    const r = kortResRad(b);
+    return !!r && r.lage !== 'slapps' && ['ingen', 'misslyckad'].indexOf(b.betalning_status || 'ingen') !== -1;
+  }
+
+  /* Går kortet att välja på passet? Före passet, med strömbrytaren på,
+     när passet kostar något och inte betalas på annat sätt. Samma
+     prövning gör valj_kort() i databasen. */
+  function kortKanVäljas(b) {
+    return !!(S.kort && S.kort.pa) && ['requested', 'confirmed'].indexOf(b.status) !== -1
+      && b.wanted_date >= isoFor(new Date())
+      && b.fakturerbar !== false && !ingetAttBetala(b) && !b.klippkort_id
+      && ['ingen', 'misslyckad', 'faktura'].indexOf(b.betalning_status || 'ingen') !== -1
+      && !kortValt(b);
+  }
+
+  /* Vad kortet gör med passet, i en mening. */
+  function kortText(b) {
+    const r = kortResRad(b);
+    if (!r) return null;
+    const k = kortNamn(S.kort.kort);
+    if (r.lage === 'reserverad') {
+      return (r.reserverat_ore ? NXBetalning.kronor(r.reserverat_ore) + ' är reserverat' : 'Priset är reserverat')
+        + ' på ' + k + ' och dras när passet har rapporterats.';
+    }
+    if (r.lage === 'slapps') return 'Reservationen på kortet släpps inom några minuter.';
+    // Strömbrytaren av: inget nytt reserveras eller dras, och passet betalas som vanligt.
+    if (!S.kort.pa) return 'Kortet reserveras inte för passen just nu, så ni betalar passet som vanligt.';
+    if (r.lage === 'misslyckad') {
+      return r.fel === 'authentication_required' || r.fel === 'card_authentication_required'
+        ? 'Banken ville att ni bekräftade betalningen, och det går inte när ni inte är med. '
+          + 'Lägg till kortet igen, eller betala efter passet.'
+        : 'Kortet nekades. Lägg till ett annat kort, försök igen, eller betala efter passet.';
+    }
+    if (!S.kort.kort) return 'Ni har valt kort, men inget kort är sparat. Spara kortet, annars betalar ni efter passet.';
+    if (r.lage === 'utgangen') return 'Reservationen på ' + k + ' gick ut. Priset dras från kortet när passet har rapporterats.';
+    return 'Priset reserveras på ' + k + ' två dagar före passet och dras när passet har rapporterats.';
+  }
+
+  /* Kortets mening på passets sida, när kortet har något med passet att
+     göra: valt, eller en reservation som släpps. */
+  const kortBesked = b => kortValt(b) || (kortResRad(b) && kortResRad(b).lage === 'slapps') ? kortText(b) : null;
+
+  /* Valen i ett förslag. Efter passet först: valet är frivilligt, och
+     förvalet är som förut. Faktura bara när familjen får välja den
+     (faktura_mojlig). */
+  function betalvalFörslag() {
+    if (!S.kort.pa || S.väntar) return null;
+    const val = [['efter', 'Efter passet', 'Ni betalar efter passet, när ni bekräftar rapporten'
+      + (S.faktura ? ', med kort eller mot faktura.' : ', med kort.')]];
+    val.push(['kort', 'Kort', S.kort.kort
+      ? 'Priset reserveras på ' + kortNamn(S.kort.kort) + ' två dagar före passet och dras när passet har rapporterats.'
+      : 'Ni sparar kortet när förslaget är skickat. Priset reserveras två dagar före passet och dras när passet har rapporterats.']);
+    if (S.faktura) {
+      val.push(['faktura', 'Faktura', 'Passet kommer med på fakturan i början av månaden efter passet, med '
+        + DAGAR + ' dagars betalningstid och utan avgift.']);
+    }
+    return val;
+  }
+
+  /* Betalsättet som valdes i förslaget, när passet just skapats. Passet
+     finns redan: ett fel här fäller inte förslaget, och kvittot säger
+     vad som gick och var resten görs. Timmarna eller timbanken kan ha
+     betalat passet när det skapades; då finns inget att välja. */
+  async function efterBetalsätt(pass, val) {
+    if (!pass || !pass.id || (val !== 'kort' && val !== 'faktura')) return null;
+    if ((pass.betalning_status || 'ingen') !== 'ingen') return null;
+    if (val === 'faktura') {
+      const { error } = await supa.from('bookings').update({ betalning_status: 'faktura' }).eq('id', pass.id);
+      if (error) return { text: 'Fakturan gick inte att välja: ' + felText(error) + ' Välj betalsätt på passet.' };
+      return { text: 'Passet betalas mot faktura. Det kommer med på fakturan i början av månaden efter passet.' };
+    }
+    const { error } = await supa.rpc('valj_kort', { p_bokning: pass.id, p_kort: true });
+    if (error) return { text: 'Kortet gick inte att välja: ' + felText(error) + ' Välj betalsätt på passet.' };
+    await laddaKort().catch(() => {});
+    if (!S.kort.kort) {
+      return { text: 'Ni har valt kort. Spara kortet, så reserveras priset två dagar före passet. Utan kort betalar ni efter passet.',
+               kortKnapp: true };
+    }
+    return { text: 'Priset reserveras på ' + kortNamn(S.kort.kort) + ' två dagar före passet och dras när passet har rapporterats.' };
+  }
+
+  /* Välj kort på ett pass, eller välj bort det. Saknas ett sparat kort
+     öppnas kassan för det direkt, i samma tryck. */
+  async function väljKort(knapp, passId, på) {
+    let saknas = false;
+    await medan(knapp, på ? 'Väljer…' : 'Sparar…', async () => {
+      const { error } = await supa.rpc('valj_kort', { p_bokning: passId, p_kort: på });
+      if (error) {
+        alert((på ? 'Kortet gick inte att välja: ' : 'Kortet gick inte att välja bort: ') + felText(error));
+        return;
+      }
+      await NXStudie.håll(knapp, laddaKortOchPass);
+      saknas = på && !S.kort.kort;
+    });
+    if (saknas) {
+      const ny = document.querySelector('[data-kort-spara]');
+      await sparaKort(ny && ny.isConnected ? ny : knapp);
+    }
+  }
+
+  async function sparaKort(knapp) {
+    if (!S.kort.pa) return;
+    await medan(knapp, 'Öppnar…', async () => {
+      const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
+      const svar = await startaKassa({ kort: 'spara', retur: location.origin, ui: 'inbaddad' });
+      if (!svar) return;
+      if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
+        const Stripe = await stripeKlar;
+        if (Stripe) {
+          try {
+            await öppnaKassa(knapp, null, svar, Stripe, {
+              titel: S.kort.kort ? 'Byt kort' : 'Spara kortet',
+              vad: 'Inget dras nu. Priset för ett pass reserveras två dagar före passet.',
+              sort: 'kort',
+              klar: kortSparat
+            });
+            return;
+          } catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
+        }
+        const reserv = await startaKassa({ kort: 'spara', retur: location.origin, ui: 'sida' });
+        if (reserv && reserv.url) { location.href = reserv.url; return; }
+        if (!reserv) return;
+      } else if (svar.url) {
+        location.href = svar.url;
+        return;
+      }
+      alert('Kassan kunde inte öppnas. Försök igen, eller hör av dig till oss.');
+    });
+  }
+
+  function kortSparat() {
+    const p = panel;
+    if (!p) return;
+    p.klar = true;
+    p.besked.textContent = '✓ Kortet är sparat. Det kan ta en liten stund innan det syns här.';
+    p.besked.hidden = false;
+    väntaPåKortet();
+  }
+
+  /* Webhooken skriver kortet en stund efter kassan (kort_sparat). Läs om
+     tills det syns, högst en halv minut, i stället för att familjen
+     trycker Spara kortet en gång till. */
+  function väntaPåKortet(gånger) {
+    const kvar = gånger == null ? 10 : gånger;
+    const före = S.kort.kort ? S.kort.kort.sparat : null;
+    setTimeout(() => {
+      laddaKort().then(() => {
+        if ((S.kort.kort && S.kort.kort.sparat !== före) || kvar <= 1) return laddaPass();
+        väntaPåKortet(kvar - 1);
+      }).catch(() => {});
+    }, 3000);
+  }
+
+  async function taBortKort(knapp) {
+    const ok = await bekräfta({
+      titel: 'Ta bort kortet?',
+      text: 'Kortet tas bort hos Stripe. Pass där ni valt kort betalar ni efter passet i stället, och ett belopp som är reserverat släpps.',
+      knapp: 'Ta bort kortet'
+    });
+    if (!ok) return;
+    await medan(knapp, 'Tar bort…', async () => {
+      const svar = await startaKassa({ kort: 'ta_bort' });
+      if (!svar) return;
+      await laddaKortOchPass();
+      säg($('#kort-msg'), 'Kortet är borttaget.', true);
+    });
+  }
+
+  /* Profil → Kortet. Fliken syns med strömbrytaren på, eller när ett kort
+     redan är sparat: det ska alltid gå att ta bort. */
+  function ritaKortet() {
+    const flik = $('#flik-kort'), host = $('#kort-ruta');
+    if (flik) flik.hidden = !(S.kort.pa || S.kort.kort);
+    if (!host) return;
+    const k = S.kort.kort;
+    const utgår = k && k.utgar_manad && k.utgar_ar
+      ? 'går ut ' + String(k.utgar_manad).padStart(2, '0') + '/' + String(k.utgar_ar).slice(-2) : null;
+    const antal = Object.keys(S.kort.rader).filter(id => ['vald', 'reserverad'].indexOf(S.kort.rader[id].lage) !== -1).length;
+    host.innerHTML = (k
+      ? '<div class="vy-rad"><span class="vy-rad-mitt"><span class="vy-rad-titel">' + esc(kortNamn(k)) + '</span>'
+        + '<span class="vy-rad-meta">' + [utgår, antal ? (antal === 1 ? '1 pass med kortet' : antal + ' pass med kortet') : null]
+          .filter(Boolean).map(m => '<span>' + esc(m) + '</span>').join('') + '</span></span>'
+        + '<span class="vy-rad-hoger">'
+        + (S.kort.pa ? '<button type="button" class="btn btn-ghost btn-sm" data-kort-spara>Byt kort</button>' : '')
+        + '<button type="button" class="btn btn-ghost btn-sm" data-kort-ta-bort>Ta bort</button></span></div>'
+      : '<p class="erb-bank-text">Inget kort är sparat.</p>'
+        + (S.kort.pa ? '<button type="button" class="btn btn-primary btn-sm" data-kort-spara>Spara ett kort</button>' : ''))
+      + '<p class="erb-bank-text">Kortet finns hos Stripe, vår betalleverantör. Vi ser bara märket, de fyra sista siffrorna '
+      + 'och när det går ut. Väljer ni kort på ett pass reserveras priset två dagar före passet och dras när passet har '
+      + 'rapporterats. Tar ni bort kortet betalar ni de passen efter passet i stället.</p>';
+  }
 
   /* ---------- erbjudandena: köpa och dra (Fas 16.1) ---------- */
 
@@ -3822,7 +4135,7 @@
         /* Studiehjälparens rader, kapade: hela står på passets sida. */
         not: b.svar_meddelande && (b.status === 'cancelled' || ärMotförslag(b))
           ? NXKontakt.kortNot(b.svar_meddelande) : null,
-        märke: NXKontakt.betalMärke(b),
+        märke: passMärke(b),
         atgarder: knappar
       });
       }
@@ -3956,6 +4269,29 @@
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
     if (e.target.closest('#erb-kod-anvand')) { await provaErbKod(); return; }
+
+    /* Kortet (kortet_reserveras, 2026-10-13). */
+    const kv = e.target.closest('[data-kort-val]');
+    if (kv) { await väljKort(kv, kv.dataset.kortVal, true); return; }
+    const kb = e.target.closest('[data-kort-bort]');
+    if (kb) { await väljKort(kb, kb.dataset.kortBort, false); return; }
+    const ks = e.target.closest('[data-kort-spara]');
+    if (ks) { await sparaKort(ks); return; }
+    const kt = e.target.closest('[data-kort-ta-bort]');
+    if (kt) { await taBortKort(kt); return; }
+    /* Fakturan före passet, med kortreservationen på: ingen rapport att
+       bekräfta, bara valet. */
+    const ff = e.target.closest('[data-faktura-fore]');
+    if (ff) {
+      const ok = await bekräfta({
+        titel: 'Betala passet mot faktura?',
+        text: 'Passet kommer med på fakturan i början av månaden efter passet. Fakturan ska betalas inom '
+          + DAGAR + ' dagar, och det kostar ingenting extra.',
+        knapp: 'Välj faktura'
+      });
+      if (ok) await väljFaktura(ff, ff.dataset.fakturaFore);
+      return;
+    }
 
     const bet = e.target.closest('[data-betala]');
     if (bet) { await betalaIKassan(bet, bet.dataset.betala, false); return; }
@@ -4278,6 +4614,10 @@
     },
     neka: id => nekaBarnforslag(id),
     efterGranskning: () => ritaBarnforslag(),
+    /* Hur passet betalas (kortet_reserveras, 2026-10-13): bara med
+       strömbrytaren på, och då är Betala i förväg borta. */
+    betalval: () => betalvalFörslag(),
+    sparaKort: knapp => sparaKort(knapp),
 
     boka: async v => {
       if (v.forslag) return skickaBarnforslag(v);
@@ -4314,6 +4654,8 @@
          och Era timmar laddas om. */
       const betalt = !data || data.betalning_status !== 'betald' ? null
         : data.klippkort_id ? 'timmar' : 'timbanken';
+      // Betalsättet som valdes i förslaget (kortet_reserveras).
+      const bs = await efterBetalsätt(data, v.betalsatt);
       /* Listan laddas om bakom kvittot, inte före det. Den som trycker
          på Föreslå tiden ska få svaret när databasen gett det. */
       laddaPass();
@@ -4322,7 +4664,8 @@
       if (data && data.rabattkod === 'TIPS') laddaTips().catch(() => {});
       return { status: data ? data.status : null, id: data ? data.id : null, betalt: betalt,
                rabatt: data && data.rabattkod !== 'TIPS' ? data.rabattkod : null,
-               gratis: !!(data && data.startrabatt) };
+               gratis: !!(data && data.startrabatt),
+               betalText: bs ? bs.text : null, kortKnapp: !!(bs && bs.kortKnapp) };
     }
   });
 
@@ -4465,13 +4808,16 @@
     }
     const betalt = !data || data.betalning_status !== 'betald' ? null
       : data.klippkort_id ? 'timmar' : 'timbanken';
+    // Betalsättet i granskningen, som i förälderns eget förslag (kortet_reserveras).
+    const bs = await efterBetalsätt(data, v.betalsatt);
     laddaPass();
     laddaBarnforslag();
     if (betalt) laddaErbjudanden().catch(() => {});
     if (data && data.rabattkod === 'TIPS') laddaTips().catch(() => {});
     return { status: data ? data.status : null, id: data ? data.id : null, betalt,
              rabatt: data && data.rabattkod !== 'TIPS' ? data.rabattkod : null,
-             gratis: !!(data && data.startrabatt) };
+             gratis: !!(data && data.startrabatt),
+             betalText: bs ? bs.text : null, kortKnapp: !!(bs && bs.kortKnapp) };
   }
 
   /* Skicka inte. null när det gick; annars felet, som ytan visar. */
@@ -4741,15 +5087,25 @@
   function läsBetalsvar() {
     const q = new URLSearchParams(location.search);
     const svar = q.has('betalt') ? 'betalt' : q.has('kopt') ? 'kopt'
+      // Kassan som sparar kortet (kortet_reserveras) kommer tillbaka med ?kort=.
+      : q.has('kort') ? (q.get('kort') === 'avbrutet' ? 'kortAvbrutet' : 'kort')
       : q.get('betalning') === 'avbruten' ? 'avbruten' : null;
     if (svar && window.history && history.replaceState) {
-      // Ett köpt erbjudande (Fas 16.1) öppnar på Erbjudanden.
-      history.replaceState(null, '', location.pathname + (svar === 'kopt' ? '#erbjudanden' : '#betalning'));
+      // Ett köpt erbjudande (Fas 16.1) öppnar på Erbjudanden, och kortet under Profil.
+      history.replaceState(null, '', location.pathname
+        + (svar === 'kopt' ? '#erbjudanden' : svar === 'kort' || svar === 'kortAvbrutet' ? '#profil/kort' : '#betalning'));
     }
     return svar;
   }
 
   function visaBetalsvar(svar) {
+    if (svar === 'kort' || svar === 'kortAvbrutet') {
+      const km = $('#kort-msg');
+      if (km) säg(km, svar === 'kort' ? '✓ Kortet är sparat. Det kan ta en liten stund innan det syns här.'
+        : 'Inget kort sparades.', svar === 'kort');
+      if (svar === 'kort') väntaPåKortet();
+      return;
+    }
     if (svar === 'kopt') {
       const em = $('#erb-msg');
       if (em) säg(em, '✓ Tack! Köpet är klart. Timmarna syns under Er timbank om en liten stund.', true);
@@ -5210,8 +5566,21 @@
           + ' en annan tid följer minuterna med, och säger hen nej kommer de tillbaka.'
         : !betalt && b.betalning_status !== 'betald' && (kortFör(b) || bankFör(b))
           ? ' Era timmar räcker till passet och betalar det av sig själva.' : '';
-      besked = { text: 'Väntar på att ' + förnamn + ' accepterar tiden. Ni får ett mejl när hen svarat.' + timmarna + (betalt ? viaOss : ''), ton: 'vantar' };
+      besked = { text: 'Väntar på att ' + förnamn + ' accepterar tiden. Ni får ett mejl när hen svarat.' + timmarna + (betalt ? viaOss : '')
+        + (kortBesked(b) ? ' ' + kortBesked(b) : ''), ton: 'vantar' };
       fot = flytta('Ändra tiden') + skriv + (betalt ? '' : avboka('Dra tillbaka förslaget', true));
+      /* Kortet (2026-10-13): går att välja redan på förslaget, och att
+         välja bort. Ett kort som saknas är familjens drag. */
+      const krf = kortResRad(b);
+      if (krf && kortValt(b) && S.kort.pa && (krf.lage === 'misslyckad' || (krf.lage === 'vald' && !S.kort.kort))) {
+        atgarder = '<button type="button" class="btn btn-primary" data-kort-spara>'
+          + (S.kort.kort ? 'Byt kort' : krf.lage === 'misslyckad' ? 'Lägg till kort' : 'Spara kortet') + '</button>';
+      }
+      alternativ = kortValt(b)
+        ? '<button type="button" class="btn btn-ghost btn-sm" data-kort-bort="' + esc(b.id) + '">Välj bort kortet</button>'
+        : kortKanVäljas(b)
+        ? '<button type="button" class="btn btn-ghost btn-sm" data-kort-val="' + esc(b.id) + '">Välj kort för passet</button>'
+        : '';
     } else if (b.status === 'confirmed' && framåt) {
       /* Återbetald är hela beloppet tillbaka på ett pass som står
          kvar. Det är ett beslut någon hos oss tagit, och vyn gissar
@@ -5235,10 +5604,29 @@
            minuter; knappen gör det nu. */
         : kortFör(b) || bankFör(b)
         ? { text: 'Passet är bokat, och era timmar räcker till det. De betalar det av sig själva inom fem minuter, eller nu med knappen.', ton: 'klart' }
+        /* Kortet reserveras (2026-10-13): vad kortet gör med passet. */
+        : kortBesked(b)
+        ? { text: 'Passet är bokat. ' + ses + ' ' + kortBesked(b), ton: kortBetalar(b) ? 'klart' : 'fraga' }
+        : kortKanVäljas(b)
+        ? { text: 'Passet är bokat. ' + ses + ' Välj kort, så reserveras priset två dagar före passet, eller betala efter passet när ni bekräftar rapporten.', ton: 'klart' }
         : { text: 'Passet är bokat. ' + ses + ' Betala nu, eller efter passet när ni bekräftar rapporten.', ton: 'klart' };
-      if (kanBetalas(b)) val = betalVal(b);
+      const kr = kortResRad(b);
+      if (kr && kortValt(b) && S.kort.pa && (kr.lage === 'misslyckad' || (kr.lage === 'vald' && !S.kort.kort))) {
+        /* Kortet saknas eller nekades: att lägga till ett är familjens
+           drag. Ett nytt kort ger passet ett nytt försök av sig självt. */
+        atgarder = '<button type="button" class="btn btn-primary" data-kort-spara>'
+          + (S.kort.kort ? 'Byt kort' : kr.lage === 'misslyckad' ? 'Lägg till kort' : 'Spara kortet') + '</button>'
+          + (kr.lage === 'misslyckad' && S.kort.kort
+            ? '<button type="button" class="btn btn-ghost" data-kort-val="' + esc(b.id) + '">Försök igen</button>' : '');
+      } else if (kanBetalas(b)) val = betalVal(b);
       fot = flytta('Föreslå ny tid') + skriv + (betalt ? '' : avboka('Avboka passet'));
-      alternativ = fakturaNot(b) || kortNu(b, true);
+      alternativ = kortValt(b)
+        ? '<button type="button" class="btn btn-ghost btn-sm" data-kort-bort="' + esc(b.id) + '">Välj bort kortet</button>'
+        /* Ett fakturapass före passet, med strömbrytaren på: kortet i
+           stället, som reserveras, i stället för Betala med kort nu. */
+        : b.betalning_status === 'faktura' && kortKanVäljas(b)
+        ? '<button type="button" class="btn btn-ghost btn-sm" data-kort-val="' + esc(b.id) + '">Välj kort i stället</button>'
+        : fakturaNot(b) || kortNu(b, true);
     } else if (b.status === 'confirmed' && kanBetalas(b)) {
       /* Passerat och obetalt medan spärren är på — bara då släpper
          kanBetalas igenom det. Hölls passet kan rapporten inte skrivas
@@ -5285,8 +5673,10 @@
       /* Betalt i förväg, eller undantaget från betalning. Rapporten
          bekräftas ändå (Fas 19.2). */
       const bekr = rbKnappFör(b);
-      besked = bekr ? { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den.', ton: 'fraga' }
-        : { text: 'Passet är genomfört.', ton: 'klart' };
+      // Kortet drar priset när rapporten finns (kortet_reserveras): jobbet går var tionde minut.
+      const kortet = kortBetalar(b) ? ' Priset dras från ' + kortNamn(S.kort.kort) + ' inom några minuter.' : '';
+      besked = bekr ? { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den.' + kortet, ton: 'fraga' }
+        : { text: 'Passet är genomfört.' + kortet, ton: 'klart' };
       atgarder = bekr || bokaNästa(true);
       if (bekr) fot = bokaNästa(false) + skriv;
     } else {
@@ -5310,6 +5700,10 @@
       : b.betalning_status === 'faktura' && b.status !== 'cancelled'
         ? (fakturaFör(b.id) && fakturaFör(b.id).fortnox_fakturanummer && fakturaFör(b.id).status !== 'utkast'
             ? 'Faktura ' + fakturaFör(b.id).fortnox_fakturanummer : 'Mot faktura')
+      /* Kortet reserveras (2026-10-13). */
+      : kortBetalar(b) && b.status !== 'cancelled'
+        ? (kortResRad(b).lage === 'reserverad' ? 'Reserverat på kortet' : 'Med kortet')
+      : S.kort.pa && kortResRad(b) && kortResRad(b).lage === 'misslyckad' && b.status !== 'cancelled' ? 'Kortet nekades'
       : b.status === 'requested' && ['betald', 'tvist'].indexOf(b.betalning_status) === -1
         ? 'Betalas när passet är bekräftat'
       : b.status === 'cancelled' ? (b.betalning_status && b.betalning_status !== 'ingen'
@@ -5670,7 +6064,10 @@
        får inte hålla passen och läxorna i kö; chatten startar när
        namnet finns. */
     /* Erbjudandena före passen: knappen Betala med timmar ritas ur dem. */
-    await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden(), laddaTips()]);
+    /* Kortet (2026-10-13) före passen, som dess val och lägen ritas ur.
+       Ett fel här stoppar inte vyn: utan kortet är den som förut. */
+    await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden(), laddaTips(),
+      laddaKort().catch(err => console.warn('kortet:', err))]);
     await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaNexlax(), laddaProgress(), laddaPass(), laddaBokning(), laddaFakturor(), laddaBekrafta(), laddaBarnforslag()]);
     /* Barnens förslag kan komma medan fliken står öppen: de hämtas när
        man kommer tillbaka till den, högst en gång i minuten. */

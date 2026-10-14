@@ -1148,6 +1148,31 @@ Lokalt, byggd ur alla 189 migrationer: hela `rls-test.sql` 1664 av 1664
 och `stripe-checkout` från main driftsätts FÖRE den** (`DEPLOY-BETALNING.md`
 9.13). Vyerna tål att den saknas.
 
+**I drift sedan natten till 2026-10-14** (00.15–00.30 svensk tid). De två
+sessioner som var igång fick frågan och fem minuter på sig. Ingen svarade.
+Sedan kördes i ordning:
+
+1. `stripe-checkout` v19 från main (2de6d28), hämtad tillbaka: 7 av 7 filer
+   byte för byte lika.
+2. Vakten och avsnitt 1 i samma `execute_sql`, sedan ett anrop per avsnitt.
+3. Registrering med texten hämtad från merge-commiten. `md5(statements[1])`
+   är `e59f42f5…`, samma som filens.
+4. Kontrollen: alla 13 funktioner och 6 triggrar har samma md5 på `prosrc`
+   och `pg_get_triggerdef` som den lokala databasen.
+5. Hela `rls-test.sql` från samma commit: 1664 av 1664 mot driften,
+   tillbakarullat.
+
+`gratistimmar` stod då till hälften i driften (`ta_tillbaka_gratistimmar`
+saknades och versionen var oregistrerad, i väntan på Leos ja). Filen kördes
+därför först i provblocket, så att avsnitt 30 prövade det som ska bli.
+Avsnitt 33 (`kortet_reserveras`, som inte ska köras än) klipptes bort.
+
+Advisorn larmade bara om två saker, båda med flit: `kolla_rabattkod_kop`
+för `authenticated` och `intern.rabattkod_forsok` (RLS utan policy). Ingen
+kod fanns utom `TIPS` (noll användningar). Strömbrytaren `erbjudanden` stod
+på, så kassan med koden var skarp för köp från första stund. Provköpet i
+testläge återstår (9.13 steg 4).
+
 ### Kortet reserveras vid bokningen (2026-10-13, under arbete)
 **`20261013170000_kortet_reserveras`** (`minne/betalning.md`, Kortet
 reserveras vid bokningen): strömbrytaren `kortreservation` (av);

@@ -601,7 +601,10 @@ begin
     return 'dragen';
 
   elsif p_lage = 'slappt' then
-    if r.lage not in ('reserverad', 'slapps') then
+    -- Bara radens egen reservation: ett annat PaymentIntent som släpps (ett
+    -- överblivet, som anroparen släppte efter 'avvisad') rör inte raden.
+    if r.lage not in ('reserverad', 'slapps')
+       or (p_pi is not null and r.stripe_reservation is distinct from p_pi) then
       return r.lage;
     end if;
     -- Släppt för att passet flyttades, men passet ska fortfarande betalas
