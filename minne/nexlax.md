@@ -395,6 +395,38 @@ utveckling i flera sidor, ranker som ett battlepass, studiehjälparen särskild,
 på profilen, grupper att tävla i, och att NexLäx ska kännas som ett spel. Det här är första delen
 (bara skärmen, inget i databasen). **Grupperna och nya frågor är inte byggda**, se längst ner.
 
+**Fjärde omgången, samma kväll (Leo): smoothare, och tyst utom när man klarar något.**
+- **Ljud bara för det man klarar:** rätt svar, stjärnor, nivå, område, bana, uppdrag, kistan, märke, en
+  ny rank och en nivå som öppnas. Ett tryck på en knapp, ett val, ett flikbyte, ett fel svar och att gå in i
+  NexLäx ger bara vibration (`känn('tryck')` och de andra finns kvar, men har ingen ton i `LJUD` i
+  `nextrum-ljud.js`; `spela` svarar inget för ett namn som saknas). Det ersätter "ett tick med ljud" längre ned.
+- **Ny rank i spelaren:** efter en nivå jämförs rankens nummer före och efter ur `nexlax_lage()`, och
+  en ny rank ger rutan `.upg-slut-rang` (emblem, namn, rankens färg) och ljudet `rang`; rankmärket kommer
+  efter, med sitt eget ljud.
+- **Smoothare:** `touch-action:manipulation` på allt som trycks (ingen väntan på dubbeltryck);
+  `sättHtml` ritar inte om en flik vars text inte ändrats (vyerna ritar om vid varje hämtning, och det blinkade
+  och tappade platsen i väljaren och rankraden); banderollen sätter in och tar bort bara väljaren i stället
+  för att rita om banan; det som byts tonar in (`nl-ton`, opacity och 6 px, aldrig scale på en hel flik); och
+  tryckknapparna svarar på 140 ms i stället för 450. Rörelsen är av med rörelse bortvald. Byter någon
+  DOM:en för hand ska den glömma cachen (`sistaHtml.delete(host)`).
+
+**Tredje omgången, samma kväll (Leo):** "Gör alla märken coolare och mer färgglada", NexLäx i mitten,
+"ta bort så att man hamnar på en separerad sida, det var jobbigt", veckorna in i översikten och en
+ljusare flik. Det här gäller före allt längre ned:
+- **Ingen separat sida.** Menyn och hälsningen göms inte (`:has()`-skalet är borta), och "Lämna" med
+  det. NexLäx är en sektion som de andra; menyn lägger den vid sin början. Kvar är raden överst med
+  NexLäx i mitten (tre kolumner, så att titeln står mitt i raden och inte mitt i det som blev över
+  bredvid knappen) och ljudet till höger.
+- **Flikarna är ljusa:** den valda har ytans färg och texten i huvudsidans gradient (de mörkare
+  tonerna, `--amne-ma`, `-en`, `-ms`, som klarar AA mot ytan); rubriken på barken har de ljusa (`-l`).
+- **Din utveckling har tre sidor:** Översikt (siffror, höjdpunkter, XP per vecka, de fyra senaste
+  veckorna, uppdragen), Ämnen och Rättat. Veckor är borta som egen sida.
+- **Märkena är medaljer** (`märkesHtml`, `medaljHtml`, `.mk-medal`): en sexhörning med glans i märkets
+  färg (`IKONFÄRG`: låga eld, blixt gul, krona lila, bock grön och så vidare; rankmärken har sin rankens
+  färg, `data-rk`), en bock när man har det och en ring av framsteg annars. Ett märke man inte har är
+  blekt i sin färg, inte grått, och de tre närmaste (`.upg-marken.nara`) står i full färg. Samma medaljer
+  står på profilen och i spelarens ruta för ett nytt märke. Glansen går en gång och är av med rörelse bortvald.
+
 **Andra omgången, samma dag (Leo, efter att ha sett det på telefonen).** Det här ersätter
 fliklistan nedan där de skiljer sig:
 - **Fyra flikar:** Din väg, Din utveckling, Rank, Märken. Studiehjälparen är inte längre en
@@ -404,11 +436,9 @@ fliklistan nedan där de skiljer sig:
 - **Alltid på Din väg:** går man ut ur NexLäx och in igen står man på Din väg (`bytteSektion`
   och barnvyns `onByt`). En länk som ber om en annan flik (Se alla märken på profilen) lämnar
   den i `NXUppgifter.tagFlik()`. Adressen `#nexlax/rank` följs fortfarande.
-- **Fast huvud:** `.nl-spelhuvud` (Lämna med kryss och ord, NexLäx i mitten med
-  huvudsidans gradient blå, lila, rosa, ljudet, och flikarna) står under sidhuvudet. Menyn och
-  hälsningen göms bara när spelet finns på sidan (`#nl-vag` eller `#bv-nexlax` utan `hidden`),
-  så att menyn finns kvar när barnets NexLäx inte gick att hämta. Gradienten är NexLäx egen: den
-  ligger på en `span` i den markerade fliken och valet i Din utveckling, aldrig på knappen.
+- **Huvudet:** `.nl-spelhuvud` (NexLäx i mitten med huvudsidans gradient blå, lila, rosa, ljudet,
+  och flikarna). Det var fast och hade en Lämna-knapp tills tredje omgången tog bort båda. Gradienten
+  är NexLäx egen: den ligger på en `span` i den markerade fliken och valet i Din utveckling, aldrig på knappen.
 - **Banan syns direkt:** toppen är en rad (streak, XP, rank) och ett steg; Fortsätt säger
   ämnet och årskursen i ämnets färg (`.nl-cta-amne`), för det kan vara ett annat ämne än det valda.
   Dagens uppdrag är hopfällt (`details`, öppet läge på `host.dataset.upp`). Banderollen
