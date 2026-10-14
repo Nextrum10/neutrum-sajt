@@ -1098,14 +1098,16 @@ rättigheterna, och tabellernas kolumner, villkor, index, policyer,
 triggrar och jobb; de fyra i do-block är filens egen text):
 `barn_foresla_pass` hade tappat en tom rad på vägen, hittad med md5 rad
 för rad, och skapades om ur filen från `extensions.http_get` (inget
-`delete` i den); resten var lika. **`ta_tillbaka_gratistimmar` är inte körd**: den har
+`delete` i den); resten var lika. **`ta_tillbaka_gratistimmar` kördes aldrig**: den har
 ett `delete` och två `update`, och verktyget frågade efter ett ja tre
 gånger utan svar (tabellen ovan); den tredje satt Leo vid skärmen och
 svarade "kör", men ingen ruta syntes i hans app. Inget kördes; allt annat i
-`gratistimmar` är inne och lika det lokala. Avsnitt 7 körs aldrig:
-`timmarna_delas_och_kops_till` (nästa avsnitt) skriver funktionen utan
-`delete`, och `gratistimmar` registreras med filens text (md5
-`079603c5e8d0566c0ebc086c4ff84d1f`) när den körts. Hela
+`gratistimmar` är inne och lika det lokala. 2026-10-14 skickade en annan
+session avsnittet två gånger till (09.10 och 09.38 UTC), med samma utfall.
+Avsnitt 7 ersattes: `timmarna_delas_och_kops_till` (nästa avsnitt) skrev
+funktionen utan `delete` 2026-10-14, och `gratistimmar` registrerades i samma
+do-block med filens text (md5 `079603c5e8d0566c0ebc086c4ff84d1f`) som första del
+och en anteckning om avsnitt 7 som andra. Hela
 `rls-test.sql` (24718559…) gick 1643 av 1643 mot driften i ett do-block
 som hämtade både den och `gratistimmar` ur merge-commiten, körde
 migrationen först (den går att köra två gånger) och slutade med `raise
@@ -1263,3 +1265,20 @@ ordningen (till och med `rabattkoden_timmar_och_tak`, den här, sedan
 main bär sedan PR #275 kortets lägen (`kort: 'spara'` och `'ta_bort'`), men de nås
 bara med `kort` i anropet, och att spara kräver strömbrytaren `kortreservation`,
 som inte finns före migrationen; passens och köpens kassa är som förut.
+
+**I drift 2026-10-14, kl. 9.43–10.00 UTC** (Leos ja 9.38, efter merge av PR #276
+som 721e4b0). Före: alla tio vakterna stämde mot driften, inget pass med
+`startrabatt` hade ett kort, `ta_tillbaka_gratistimmar` saknades, inga andra
+frågor gick, och de två andra sessionerna hade svarat (den för PR #270 att dess
+två försök med avsnitt 7 samma morgon gått ut utan att något körts). Ett do-block
+hämtade filen och `gratistimmar` ur 721e4b0 med `extensions.http_get`, prövade
+dem mot sina md5 (`ab3d031f…`, `079603c5…`), körde filen och registrerade båda,
+`gratistimmar` med anteckningen om avsnitt 7 som `statements[2]`. Efter:
+`md5(prosrc)` för alla 15 funktioner filen skriver är lika en lokal databas byggd
+ur filerna, `service_role` får köra alla sex hjälparna, katalograden `plan_extra`
+finns och `flaggor_stampla` står på igen. `drift` v18 (5 filer) och
+`stripe-checkout` v20 (7 filer) driftsattes från 721e4b0 och hämtades tillbaka
+byte för byte lika. Hela `rls-test.sql` (`8c71c67e…`) gick 1703 av 1703 i ett
+do-block som slutade med `raise exception`; avsnitt 33 hoppade över sig självt,
+så inget klipptes. Advisorn: inget nytt för `anon`, och det enda nya för
+`authenticated` är `ta_tillbaka_gratistimmar`, som prövar `is_admin()` först.
