@@ -77,7 +77,7 @@ ORDEN_HISTORIA = '\n\n'.join([
     'The Vikings left their mark too. Words such as ‘egg’, ‘sky’ and ‘window’ come from Old Norse, and so do '
     'the small words ‘they’, ‘them’ and ‘their’. It is unusual for a language to borrow such everyday words, '
     'and it suggests that the Vikings and the English lived side by side and mixed.',
-    'Borrowing never stopped. ‘Pyjamas’ come from India, ‘ski’ from Norway and ‘tsunami’ from Japan. Some '
+    'Borrowing never stopped. English picked up ‘pyjamas’ in India, ‘ski’ from Norway and ‘tsunami’ from Japan. Some '
     'people fear that English is being damaged by new words. Linguists tend to see the opposite: a language '
     'that borrows is a language that is alive.',
 ])
@@ -101,17 +101,17 @@ TILLAGG = [
                 'det förflutna.'),
             val('Välj rätt: His coat is still here, so he ___ left yet.',
                 ["can't have", "can't be", "mustn't"], "can't have",
-                "Kappan är kvar, så det är omöjligt att han har gått. Can't have plus particip säger att något "
+                "Rocken är kvar, så det är omöjligt att han har gått. Can't have plus particip säger att något "
                 'inte kan ha hänt.'),
-            val('Välj rätt: I am not sure where she is. She ___ gone to the shop.',
+            val('Välj rätt: I am not sure where she is. She ___ gone to the shop, or she could still be at the gym.',
                 ['might have', 'must have', "can't have"], 'might have',
-                'Du är osäker, så du gissar. Might have uttrycker att något kan ha hänt. Must have hade betytt att '
-                "du var nästan säker, och can't have att det var omöjligt."),
+                'Du är osäker och nämner två möjligheter, så du gissar. Might have uttrycker att något kan ha hänt. '
+                "Must have hade betytt att du var nästan säker, och can't have att det var omöjligt."),
             val('Välj rätt: The test was hard. I ___ studied more.',
                 ['should have', 'should had', 'should has'], 'should have',
                 'Should have plus particip uttrycker att man borde ha gjort något men inte gjorde det. Här är det '
-                'en självkritik. Efter should kommer alltid have, aldrig had eller has.'),
-            skriv("Skriv de två orden som fattas: You ___ said that to her. It was rude. (Du borde inte ha sagt "
+                'en självkritik. Efter should kommer verbets grundform, så det blir have, aldrig had eller has.'),
+            skriv("Skriv orden som fattas: You ___ said that to her. It was rude. (Du borde inte ha sagt "
                   'det.)',
                   ["shouldn't have", 'should not have'],
                   "Shouldn't have plus particip är kritik av något som redan hänt: du borde inte ha sagt det."),
@@ -130,8 +130,8 @@ TILLAGG = [
                  'Det betyder att jag borde ha ringt, men inte gjorde det.'),
             ordna('Bygg meningen: Hon kan inte ha sett oss.',
                   ['She', "can't", 'have', 'seen', 'us.'],
-                  forklaring="Can't have plus particip säger att något är omöjligt. Se, såg, sett: efter have "
-                             'kommer seen.'),
+                  forklaring="Can't have plus particip säger att något är omöjligt. See, saw, seen: efter have "
+                             'kommer particip, seen.'),
         ], beskrivning='Tränar modala verb om det förflutna: must have, can’t have, might have och should have.'),
 
         niva('en-gy1-fler-modals-2', 'Promised to, suggested going', 'Modala verb och återgivet tal', [
@@ -145,7 +145,8 @@ TILLAGG = [
             skriv('Gör om till indirekt tal och flytta verbet ett steg bakåt. "I must go home," she said. → She '
                   'said that she ___ go home. (två ord)',
                   ['had to'],
-                  'Must har ingen dåtid. När man återger det som sades blir must had to.'),
+                  'Must har ingen dåtidsform. När verbet ska flyttas bakåt i återgivet tal blir must had to (must '
+                  'får också stå kvar, men här frågas efter förskjutningen).'),
             val('Välj rätt: She promised ___ me a postcard.',
                 ['to send', 'sending', 'send'], 'to send',
                 'Promise följs av to och infinitiv: promised to send.'),
@@ -181,11 +182,11 @@ TILLAGG = [
                  'Köpcentret ska stänga tidigare på fredagskvällarna'],
                 'Ungdomar fick kommunen att prova att ha poolen öppen sent',
                 'Rubriken och första stycket säger det: efter ungdomarnas kampanj öppnar poolen sent på fredagar.'),
-            skriv('Hur många besökare behövs det minst på en vanlig fredag för att försöket ska få fortsätta? '
-                  'Skriv talet.',
-                  [tal(FORTY), 'forty', 'fyrtio'],
-                  'Det står att om färre än forty besökare kommer en vanlig fredag får kommunen tänka om. Alltså '
-                  'behövs minst %d.' % FORTY),
+            skriv('Hur många besökare behöver poolen minst en genomsnittlig fredag för att kommunen inte ska behöva '
+                  'tänka om? Skriv talet.',
+                  [tal(FORTY), 'forty', 'fyrtio', 'minst %d' % FORTY],
+                  'Det står: If fewer than forty visitors turn up on an average Friday, we will have to think again. '
+                  'Alltså behövs minst %d.' % FORTY),
             val('Varför vill Amira och hennes vänner inte vara på köpcentret på fredagskvällar?',
                 ['Det finns inget att göra där om man inte vill handla',
                  'Köpcentret stänger redan klockan sex på fredagskvällarna',
@@ -250,18 +251,19 @@ TILLAGG = [
                 'Pay attention är den fasta kombinationen. Man säger inte make attention eller do attention.'),
             val('Välj rätt verb: She worked all night to ___ the deadline.',
                 ['meet', 'win', 'catch'], 'meet',
-                'Meet a deadline betyder att hinna i tid. Det man möter kan också vara a goal eller a need.'),
+                'Meet a deadline betyder att hinna i tid. Meet betyder här klara eller uppfylla, som i meet a target '
+                'och meet a need.'),
             para('Para ihop verbet med det ord det hör ihop med.',
                  [('make', 'a mistake'), ('do', 'your homework'), ('take', 'a photo'), ('break', 'the law'),
                   ('catch', 'a cold')],
-                 'Svenskan och engelskan väljer verb olika: på engelska gör man en miss (make a mistake), man tar '
-                 'ett foto (take) och man fångar en förkylning (catch).'),
+                 'Verbet följer substantivet och måste läras som en helhet: ett misstag med make, läxor med do, '
+                 'ett foto med take, lagen med break och en förkylning med catch (på svenska får man en förkylning).'),
             skriv('Skriv ordet som fattas: She always tells the ___, even when it is hard.', 'truth',
                   'Tell the truth är en fast kombination. Man säger också tell a lie och tell a story.'),
             skriv('Skriv verbet som fattas: We cannot wait any longer. It is time to ___ a decision.',
-                  ['make', 'take', 'reach', 'come to'],
-                  'På brittisk engelska går make a decision och take a decision bra. Reach a decision och come to a '
-                  'decision är också vanliga.'),
+                  ['make', 'take', 'reach', 'come to', 'arrive at'],
+                  'På brittisk engelska går make a decision och take a decision bra. Reach a decision, come to a '
+                  'decision och arrive at a decision är också vanliga.'),
             sant("‘Make homework’ är en naturlig kombination på engelska.", False,
                  'Man gör läxor på engelska: do homework. Make används för att skapa eller tillverka något.'),
             sant('Kollokationer är ord som ofta förekommer tillsammans, till exempel ‘heavy traffic’.', True,
@@ -269,8 +271,8 @@ TILLAGG = [
                  'inte alltid räkna ut dem från svenskan.'),
             ordna('Bygg meningen: Vi måste hålla tidsfristen.',
                   ['We', 'must', 'meet', 'the', 'deadline.'],
-                  forklaring='På engelska möter man en tidsfrist: meet the deadline. Must följs av infinitiv utan '
-                             'to.'),
+                  forklaring='På engelska heter det meet the deadline, där meet betyder klara. Must följs av '
+                             'infinitiv utan to.'),
         ], beskrivning='Tränar kollokationer: verb och substantiv som hör ihop på engelska, som make a mistake, do '
                        'homework och pay attention.'),
 
@@ -282,7 +284,7 @@ TILLAGG = [
             val('Vilket ord är ett beröm om en person som är försiktig med pengar?',
                 ['thrifty', 'stingy', 'greedy'], 'thrifty',
                 'Thrifty är positivt: sparsam på ett klokt sätt. Stingy betyder snål, och greedy betyder girig.'),
-            para('Para ihop verbet för att titta med dess betydelse.',
+            para('Alla fyra verben handlar om att titta. Para ihop varje verb med dess betydelse.',
                  [('glance', 'titta hastigt'), ('stare', 'stirra, titta länge och fixerat'),
                   ('gaze', 'titta länge med beundran eller drömskt'), ('glare', 'titta ilsket')],
                  'Alla betyder titta, men de visar olika hur länge man tittar och vad man känner.'),
@@ -295,13 +297,14 @@ TILLAGG = [
                 'She has a childlike sense of wonder.',
                 'Childlike är positivt: nyfiken och förundrad som ett barn. Childish är negativt: barnslig på ett '
                 'irriterande sätt.'),
-            skriv('Skriv ett verb, mer exakt än walk: att gå långsamt och lugnt, utan brådska, för nöjes skull.',
-                  ['stroll', 'amble', 'saunter', 'wander', 'to stroll', 'to amble', 'to saunter', 'to wander'],
-                  'Stroll betyder att promenera lugnt och avslappnat. Amble, saunter och wander är nära '
-                  'synonymer.'),
-            val('"Leave me alone!" he ___, and slammed the door.',
+            skriv('Skriv ett verb som är mer exakt än walk och betyder att gå lugnt och avslappnat, för nöjes skull. '
+                  'Det börjar på s och har sex bokstäver.',
+                  ['stroll', 'to stroll'],
+                  'Stroll betyder att promenera lugnt och avslappnat. Amble och saunter är nära synonymer.'),
+            val('Välj rätt verb: "Leave me alone!" he ___, and slammed the door.',
                 ['snapped', 'whispered', 'chuckled'], 'snapped',
-                'Snapped visar att han sa det argt och kort. Whispered är viska och chuckled är skratta tyst.'),
+                'Snapped visar att han sa det argt och kort. Whispered betyder viskade, och chuckled betyder '
+                'skrattade tyst för sig själv.'),
             sant('Ord med nästan samma betydelse kan ändå ge olika intryck, till exempel ‘cheap’ och '
                  '‘inexpensive’.', True,
                  'Cheap kan antyda dålig kvalitet, medan inexpensive bara säger att det är billigt. Det kallas '
@@ -382,7 +385,7 @@ TILLAGG = [
                  [('rhetorical question', 'en fråga som ställs för effekten, inte för att få svar'),
                   ('hyperbole', 'en medveten överdrift'), ('understatement', 'en medveten förminskning'),
                   ('repetition', 'samma ord eller fras upprepas för eftertryck'),
-                  ('rule of three', 'tre led i rad för rytm och minnesvärdhet')],
+                  ('rule of three', 'tre led i rad, för rytmen och för att fastna i minnet')],
                  'Retoriska grepp används för att påverka hur ett budskap tas emot, inte bara vad som sägs.'),
             para('Para ihop begreppet med vad det vädjar till.',
                  [('ethos', 'talarens trovärdighet'), ('pathos', 'publikens känslor'),
@@ -396,7 +399,7 @@ TILLAGG = [
                 'Bonden gör något mycket stort till något litet. Det kallas understatement och används ofta för '
                 'torr humor.'),
             val('Vilken mening innehåller alliteration?',
-                ['The wind whistled through the willows.', 'A cold air filled the empty street.',
+                ['The wind whistled through the willows.', 'Cold air filled the empty street.',
                  'The streets were empty after the heavy rain.'],
                 'The wind whistled through the willows.',
                 'Alliteration är samma begynnelseljud i närliggande ord: wind, whistled, willows.'),
@@ -469,9 +472,9 @@ TILLAGG = [
             sant('Pathos betyder att talaren ljuger för att påverka publiken.', False,
                  'Pathos är en vädjan till känslor. Det kan vara ärligt eller oärligt, men det är inte samma sak som '
                  'att ljuga.'),
-            ordna('Ordna delarna i ett kort tal från början till slut.',
-                  ['Catch the audience’s attention', 'State your main point', 'Support it with reasons and evidence',
-                   'End with a call to action'],
+            ordna('Ordna delarna i ett kort övertygande tal från början till slut.',
+                  ['Open with a hook that catches attention', 'State your main point',
+                   'Support it with reasons and evidence', 'End with a call to action'],
                   forklaring='Ett tal börjar med att fånga uppmärksamheten, säger sin poäng, stöder den med skäl och '
                              'belägg och slutar med en uppmaning.'),
         ], beskrivning='Tränar att känna igen retoriska grepp i exempel och att tänka på deras effekt.'),

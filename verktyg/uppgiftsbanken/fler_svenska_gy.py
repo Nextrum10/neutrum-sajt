@@ -35,7 +35,7 @@ ORDEN = '\n\n'.join([
     'Orden kommer och går',
     'Min farfar säger fortfarande ”toppen” när något är riktigt bra. Jag har aldrig hört någon i min klass '
     'säga det. Vi säger andra saker, och om några år kommer våra ord också att låta gammaldags.',
-    'Så har det alltid varit. Ungdomar hittar på nya ord, ändrar betydelsen på gamla och lånar från andra '
+    'Så har det alltid varit. Ungdomar hittar på nya ord, ger gamla ord nya betydelser och lånar från andra '
     'språk. Vissa ord blir kvar och andra försvinner efter bara en sommar. Ordet ”mejl” kom en gång från '
     'engelskan men är i dag så vanligt att ingen tänker på var det kommer ifrån.',
     'Många vuxna oroar sig för att språket förfaller. Språkforskare brukar svara att ett språk som inte '
@@ -89,14 +89,15 @@ TILLAGG = [
                 ['Vi köpte bröd, ost, smör och mjölk.', 'Vi köpte bröd ost smör och mjölk.',
                  'Vi köpte bröd, ost, smör, och mjölk.'],
                 'Vi köpte bröd, ost, smör och mjölk.',
-                'I en uppräkning skiljs leden åt med komma, men före det sista ledet står ”och” utan komma.'),
+                'I en uppräkning skiljs leden åt med komma. Före ”och” vid det sista ledet sätter man normalt inget '
+                'komma, och här behövs det inte för att meningen ska bli tydlig.'),
             sant('Före ”men” sätter man komma när ordet binder ihop två huvudsatser, som i ”Jag ville komma, men '
                  'jag hade inte tid”.', True,
                  'Båda delarna kan stå som egna meningar: ”Jag ville komma” och ”jag hade inte tid”. Då skiljs de åt '
                  'med komma före ”men”.'),
             val('Varför står kommatecken runt ”som är sex år” i meningen ”Min lillebror, som är sex år, älskar '
                 'dinosaurier”?',
-                ['Bisatsen är ett extra tillägg som går att stryka', 'Bisatsen är en huvudsats som kan stå helt ensam',
+                ['Bisatsen är ett extra tillägg som går att stryka', 'Satsen är en huvudsats som kan stå helt ensam',
                  'Alla bisatser måste alltid stå inom kommatecken'],
                 'Bisatsen är ett extra tillägg som går att stryka',
                 'Man vet redan vem det är, så bisatsen ger bara extra information. Då står den mellan kommatecken. '
@@ -114,8 +115,9 @@ TILLAGG = [
                   ('citattecken', 'visar ord som är återgivna ordagrant'),
                   ('punkt', 'avslutar en vanlig påståendemening')],
                  'Skiljetecknen visar läsaren hur texten hänger ihop.'),
-            val('Vilken mening är en direkt anföring, alltså återgiven ordagrant?',
-                ['Hamid sa: ”Jag kommer strax.”', 'Hamid sa att han kom strax.', 'Hamid kommer strax, enligt Mia.'],
+            val('Vilken mening innehåller en direkt anföring, alltså ord som återges ordagrant?',
+                ['Hamid sa: ”Jag kommer strax.”', 'Hamid sa att han skulle komma strax.',
+                 'Hamid kommer strax, enligt Mia.'],
                 'Hamid sa: ”Jag kommer strax.”',
                 'En direkt anföring återger orden som de sades och står inom citattecken. I de andra två återger '
                 'någon annan vad Hamid sagt.'),
@@ -156,12 +158,12 @@ TILLAGG = [
                 ['som', 'än', 'då'], 'som',
                 'Vid likhet används ”lika … som”: lika lång som. ”Än” hör till jämförelse med olikhet: längre än.'),
             para('Para ihop ordet med hur det används.',
-                 [('sin', 'hör ihop med subjektet: Anna tog sin väska.'),
-                  ('hans', 'hör ihop med en annan man: Anna tog hans väska.'),
+                 [('sin', 'syftar på subjektet: Anna tog sin väska.'),
+                  ('hans', 'syftar på en annan man: Anna tog hans väska.'),
                   ('de', 'subjekt: De kommer snart.'),
                   ('dem', 'objekt: Jag ser dem.')],
                  'Sin, sitt och sina syftar tillbaka på subjektet i samma sats. Hans, hennes och deras syftar på '
-                 'någon annan.'),
+                 'någon annan. De är subjektsformen och dem objektsformen.'),
             sant('Särskrivning, som ”hund koja” i stället för ”hundkoja”, räknas som ett skrivfel.', True,
                  'Sammansatta ord skrivs ihop på svenska, och en särskrivning kan dessutom göra meningen svår att '
                  'förstå.'),
@@ -242,9 +244,9 @@ TILLAGG = [
     bana(SV, 'gy2', [
         niva('sv-gy2-fler-epoker-1', 'Upplysningen, romantiken och realismen', 'Litteraturens epoker', [
             skriv('Vad kallas en tidsperiod vars litteratur har gemensamma drag i tema och stil? Skriv ordet.',
-                  ['epok', 'en epok', 'epoken'],
+                  ['epok', 'en epok', 'epoken', 'litterär epok', 'en litterär epok'],
                   'En epok är en period då många författare skriver med liknande tankar och stil. Gränserna är '
-                  'inte skarpa, men epoken hjälper oss att se sambanden.'),
+                  'inte skarpa, men indelningen i epoker hjälper oss att se sambanden.'),
             val('Vilket av dessa drag är typiskt för romantiken?',
                 ['Känslor, natur och längtan efter något större står i centrum',
                  'Författaren granskar samhällets orättvisor på ett nyktert sätt',
@@ -265,14 +267,15 @@ TILLAGG = [
                   ('realismen', 'vardagen och samhället sedda på nära håll'),
                   ('naturalismen', 'människan formas av arv och miljö')],
                  'Epokerna svarar ofta på varandra: romantiken tog avstånd från upplysningens förnuft, och '
-                 'realismen ville visa verkligheten utan drömmar.'),
+                 'realismen ville visa verkligheten utan drömmar. Naturalismen drev realismen längre och såg '
+                 'människan som formad av arv och miljö.'),
             sant('Romantiken var till en del en reaktion mot upplysningens tro på förnuftet.', True,
                  'Upplysningen litade på förnuft och vetenskap. Romantiken lyfte i stället fram känslan, fantasin '
                  'och det som inte går att förklara.'),
             sant('I realismen berättar författarna helst om kungar, sagoväsen och ödsliga landskap.', False,
                  'Det passar romantiken. Realismen skildrar helst vanliga människor i vardagen och i samhället.'),
-            val('Vilken epok passar följande textstycke bäst? ”Skymningen lade sig över skogen, och i den bleka '
-                'månen anade hon en röst som kallade henne bort från bygden, mot något som ingen kunde namnge.”',
+            val('Vilken epok passar följande textstycke bäst? ”Skymningen lade sig över skogen, och i det bleka '
+                'månskenet anade hon en röst som kallade henne bort från bygden, mot något som ingen kunde namnge.”',
                 ['romantiken', 'realismen', 'upplysningen'], 'romantiken',
                 'Natur, månsken, längtan och det outsägliga är typiska romantiska drag.'),
             val('Vilken epok passar följande textstycke bäst? ”Hyran hade höjts igen. Vid köksbordet räknade Berta '
@@ -285,7 +288,7 @@ TILLAGG = [
                  'Misstro mot allt som kommer från andra länder och kulturer',
                  'Kritik mot hur landets regering och myndigheter styr landet'],
                 'Intresse för det egna landets natur, historia och folkdikt',
-                'Nationalromantiken var en gren av romantiken. Man samlade sagor och folkvisor och lyfte fram den '
+                'Nationalromantiken växte fram ur romantiken. Man samlade sagor och folkvisor och lyfte fram den '
                 'egna naturen och historien.'),
             ordna('Ordna epokerna från äldst till yngst.',
                   ['upplysningen', 'romantiken', 'realismen'],
@@ -355,7 +358,7 @@ TILLAGG = [
                  'Det står att trädet aldrig hade gett mycket frukt. Därför är det en stor sak att det hänger '
                  'fullt i år.'),
             skriv('Vad brukade morfar säga varje höst om trädet? Skriv de två första orden i hans replik.',
-                  ['nästa år', 'nästa år,'],
+                  ['nästa år', 'nästa år,', '”nästa år”', '"nästa år"'],
                   'Morfar sa: ”Nästa år, Siri. Då blir det äpplen.” Han lovade det varje höst.'),
             ordna('Ordna det som händer, i den ordning det berättas.',
                   ['Siri blir kvar i trädgården efter begravningen', 'Siri minns vad morfar brukade säga om trädet',
@@ -410,10 +413,10 @@ TILLAGG = [
                 ['Ett antagande som en undersökning ska pröva', 'Ett resultat som redan är bevisat och säkert',
                  'En sammanfattning av vad tidigare forskare har skrivit'],
                 'Ett antagande som en undersökning ska pröva',
-                'En hypotes är en gissning som går att pröva. Undersökningen visar sedan om den stöds eller inte.'),
+                'En hypotes är ett antagande, ofta byggt på tidigare kunskap, som går att pröva. Undersökningen visar sedan om den stöds eller inte.'),
             para('Para ihop begreppet med vad det betyder i en undersökning.',
                  [('population', 'alla som undersökningen vill uttala sig om'),
-                  ('urval', 'de som faktiskt ingår i undersökningen'),
+                  ('urval', 'de som väljs ut att delta i undersökningen'),
                   ('bortfall', 'de i urvalet som inte svarar eller deltar'),
                   ('kontrollgrupp', 'en jämförelsegrupp som inte får behandlingen')],
                  'Ett urval hämtas ur en population. Bortfallet säger hur många av urvalet som aldrig kom med.'),
@@ -469,12 +472,12 @@ TILLAGG = [
             sant('Om två saker förekommer samtidigt bevisar det att den ena orsakar den andra.', False,
                  'Ett samband är inte detsamma som ett orsakssamband. Det kan bero på en tredje faktor eller på '
                  'slumpen.'),
-            skriv('Vad kallas ett samband som ser ut att finnas men i själva verket beror på en tredje faktor? '
-                  'Skriv ordet.',
-                  ['skensamband', 'ett skensamband', 'skensambandet'],
+            skriv('Vad kallas ett samband mellan två saker som ser ut som ett orsakssamband men i själva verket '
+                  'beror på en tredje faktor? Skriv ordet.',
+                  ['skensamband', 'ett skensamband', 'skensambandet', 'skenbart samband', 'ett skenbart samband'],
                   'Ett skensamband ser ut som en orsak men är ett resultat av något annat som påverkar båda sidor.'),
             para('Para ihop begreppet med dess betydelse.',
-                 [('korrelation', 'två saker som förekommer tillsammans'),
+                 [('korrelation', 'två saker som varierar tillsammans'),
                   ('orsakssamband', 'det ena leder till det andra'),
                   ('bakomliggande faktor', 'en tredje sak som påverkar båda'),
                   ('slump', 'en tillfällighet som inte följer någon regel')],
@@ -500,7 +503,7 @@ TILLAGG = [
                  'För att slippa formulera en hypotes före starten'],
                 'För att kunna jämföra med dem som inte fick tekniken',
                 'Utan en jämförelse går det inte att veta om förbättringen beror på tekniken eller på något annat.'),
-            sant('Om en undersökning bara frågar de personer som själva vill svara kan resultatet bli skevt.', True,
+            sant('Om bara de som själva vill svara deltar i en undersökning kan resultatet bli skevt.', True,
                  'De som väljer att svara kan skilja sig från dem som inte gör det. Urvalet speglar då inte '
                  'populationen.'),
             skriv('Vad heter verbet för att låta ett resultat från ett urval gälla en större grupp? Skriv verbet '
