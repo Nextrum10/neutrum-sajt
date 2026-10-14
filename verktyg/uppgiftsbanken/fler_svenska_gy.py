@@ -119,8 +119,8 @@ TILLAGG = [
                 ['Hamid sa: ”Jag kommer strax.”', 'Hamid sa att han skulle komma strax.',
                  'Hamid kommer strax, enligt Mia.'],
                 'Hamid sa: ”Jag kommer strax.”',
-                'En direkt anföring återger orden som de sades och står inom citattecken. I de andra två återger '
-                'någon annan vad Hamid sagt.'),
+                'En direkt anföring återger orden som de sades och står inom citattecken. I de andra två återges '
+                'innehållet med andra ord och utan citattecken.'),
             skriv('Vilket skiljetecken inleder oftast en uppräkning efter en hel sats? Skriv tecknet eller '
                   'namnet. Exempel: ”Jag har tre favoritämnen___ svenska, historia och bild.”',
                   [':', 'kolon', 'ett kolon'],
@@ -532,14 +532,15 @@ TILLAGG = [
                  'Eleverna fick inte veta vad undersökningen handlade om'],
                 'Eleverna rapporterade själva, och bara en del av dem svarade',
                 'Betyg och joggingvanor kom från eleverna själva, och de flesta svarade inte alls. Det ger ett '
-                'osäkert underlag och ett möjligt bortfall.'),
+                'osäkert underlag och ett stort bortfall.'),
             val('Vilken förklaring kan finnas till att joggarna har högre betyg, utan att joggingen är orsaken?',
                 ['Mycket målmedvetna elever kan både jogga och satsa på skolan',
                  'Elever som joggar sover alltid mindre än alla andra elever',
                  'Rektorn satte själv betygen på de elever som joggade'],
                 'Mycket målmedvetna elever kan både jogga och satsa på skolan',
                 'En bakomliggande faktor, till exempel målmedvetenhet, kan påverka både joggingen och betygen. De '
-                'andra två förklaringarna har inget stöd i texten.'),
+                'andra två förklarar inte skillnaden: mindre sömn ger inte högre betyg, och rektorn sätter inte '
+                'betygen.'),
             sant('Undersökningen har granskats av utomstående forskare.', False,
                  'Det står: ”Undersökningen har inte granskats av någon utomstående.”'),
             sant('Eleverna uppgav själva sina betyg, vilket kan göra uppgifterna mindre tillförlitliga.', True,
@@ -557,10 +558,10 @@ TILLAGG = [
                   forklaring='Artikeln börjar med resultatet och rektorns tolkning, går över till metoden, tar upp '
                              'rektorns plan och slutar med att studien inte är granskad.'),
             val('Vilken formulering vore mest rimlig i en korrekt rapport om undersökningen?',
-                ['Av de 94 som svarade hade joggarna högre betyg, men orsaken är okänd',
+                ['Bland de %d som svarade uppgav joggarna högre betyg, men orsaken är okänd' % SVARADE,
                  'Jogging ger bättre betyg, och därför bör alla elever på skolan jogga',
                  'Skolans elever har högre betyg än elever på andra gymnasieskolor'],
-                'Av de 94 som svarade hade joggarna högre betyg, men orsaken är okänd',
+                'Bland de %d som svarade uppgav joggarna högre betyg, men orsaken är okänd' % SVARADE,
                 'Rapporten ska säga vad undersökningen visar och vilka den gäller, utan att påstå att joggingen är '
                 'orsaken.'),
             val('Vad skulle göra studien starkare?',

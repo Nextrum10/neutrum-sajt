@@ -502,7 +502,7 @@ TILLAGG = [
                 'That the two groups lived close together and mixed',
                 'Det står att det är ovanligt att låna så vardagliga ord, och att det tyder på att vikingarna och '
                 'engelsmännen levde sida vid sida och blandades.'),
-            para('Match the word with the country it comes from, according to the text.',
+            para('Match the word with the country English took it from, according to the text.',
                  [('ski', 'Norway'), ('pyjamas', 'India'), ('tsunami', 'Japan')],
                  'Lånord har kommit från hela världen. Texten nämner just de här tre som exempel.'),
             skriv('In which year did the Norman conquest take place, according to the text? Write the year.',
@@ -515,14 +515,15 @@ TILLAGG = [
                 'A language that borrows words is alive, not damaged',
                 'Sista meningen säger: a language that borrows is a language that is alive.'),
             val('How does the writer treat the explanation of "cow" and "beef"?',
-                ['Carefully: the writer says it is only "often explained" this way',
+                ['Carefully, adding that the real story was probably more complicated',
                  'As a proven fact that no historian has ever doubted or questioned',
-                 'As a myth that has long since been shown to be false'],
-                'Carefully: the writer says it is only "often explained" this way',
+                 'As a myth that has long since been shown to be completely false'],
+                'Carefully, adding that the real story was probably more complicated',
                 'Skribenten skriver historians often explain it this way, although the real story was probably more '
                 'complicated. Det är en försiktig formulering.'),
             sant('According to the text, "pork" is a Germanic word that farmers used.', False,
-                 'Det står att pork, liksom beef och mutton, kom från franskan. Det var bönderna som sa ‘pig’.'),
+                 'Texten säger att samma sak gäller pig och pork som cow och beef: pork kom från franskan, och det '
+                 'var bönderna som sa ‘pig’.'),
             ordna('Put the topics in the order they appear in the text.',
                   ['Cow and beef', 'Egg, sky and window', 'Pyjamas, ski and tsunami',
                    'The linguists’ view of new words'],
