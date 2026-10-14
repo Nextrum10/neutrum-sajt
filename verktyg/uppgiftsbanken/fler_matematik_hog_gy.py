@@ -151,6 +151,17 @@ def ktext(z):
     return '%s %s %s' % (m(a), '+' if b > 0 else '−', im)
 
 
+def i_svar(b, var=None):
+    """Ett rent imaginärt svar bi (b > 0 heltal) skrivet på de sätt en elev skriver det: 2i, 2 i, 0 + 2i,
+    2·i, i2. Rättningen jämför det som text, så varje skrivsätt måste stå här."""
+    s = str(b)
+    svar = [s + 'i', s + ' i', '0 + %si' % s, '0+%si' % s, s + '*i', s + ' * i', s + '·i', s + ' · i', 'i' + s]
+    if var:
+        svar += ['%s = %si' % (var, s), '%s=%si' % (var, s), '%s = %s i' % (var, s)]
+    assert len(svar) <= 12   # verktygets tak för godtagna svar
+    return svar
+
+
 def cplx(text):
     """'7 − 3i', '2i', '−4', '3 − i' → complex. Alternativen prövas ur sin egen text."""
     s = text.replace('−', '-').replace(' ', '').replace('i', 'j')
@@ -169,8 +180,8 @@ assert bv('4/6') == F(2, 3) and bv('0,125') == F(1, 8) and bv('−1/2') == F(-1,
 MA_AK7_BRAK_1 = niva('ma-ak7-fler-brak-1', 'Förlänga, förkorta och jämföra bråk', 'Bråk och decimaltal', [
     val('Vilket bråk är lika stort som 2/3?', ['4/6', '3/4', '2/6', '4/9'],
         enda(['4/6', '3/4', '2/6', '4/9'], lambda a: bv(a) == F(2, 3)),
-        'Förläng med 2: både täljaren och nämnaren multipliceras med 2, så 2/3 = 4/6. Ändrar man bara en av dem, '
-        'som i 2/6 och 4/9, blir det ett annat tal.'),
+        'Förläng med 2: både täljaren och nämnaren multipliceras med 2, så 2/3 = 4/6. Multiplicerar man täljaren '
+        'och nämnaren med olika tal, som i 2/6 och 4/9, blir det ett annat tal.'),
     skriv('Förkorta 18/24 så långt det går. Svara som ett bråk.', brak(F(18, 24)),
           'Både 18 och 24 går att dela med 6. 18 : 6 = 3 och 24 : 6 = 4, så 18/24 = 3/4. '
           'Talen 3 och 4 har ingen gemensam delare, så det går inte att förkorta mer.'),
@@ -230,10 +241,11 @@ MA_AK7_BRAK_2 = niva('ma-ak7-fler-brak-2', 'Räkna med bråk och decimaltal', 'B
          'Gemensam nämnare ger 2/4 + 1/4 = 3/4 och 2/4 − 1/4 = 1/4. Multiplikation ger 1/8. '
          'Och 1/4 ryms två gånger i 1/2, så 1/2 delat med 1/4 är 2.'),
     skriv('Mira har 3/4 liter saft. Hon använder 1/3 av saften till en dryck. '
-          'Hur många liter saft använder hon? Svara som ett bråk.', brak(F(3, 4) * F(1, 3)),
+          'Hur många liter saft använder hon? Svara som ett bråk i enklaste form.',
+          brak(F(3, 4) * F(1, 3)) + ['1/4 liter', '1/4 l', '1 / 4 liter', '1 / 4 l'],
           '1/3 av 3/4 är 1/3 · 3/4 = 3/12 = 1/4 liter.'),
     sant('Att dela ett tal med 1/2 ger samma resultat som att multiplicera talet med 2.', F(6) / F(1, 2) == 6 * 2,
-         'Det ryms två halva i varje hel. 6 : 1/2 = 12, och 6 · 2 = 12.'),
+         'Det ryms två halvor i varje hel. 6 : 1/2 = 12, och 6 · 2 = 12.'),
 ], beskrivning='Addera, multiplicera och dela bråk, och räkna med decimaltal.')
 
 # ---------------------------------------------------------------- åk 7: cirkeln
@@ -285,7 +297,7 @@ MA_AK7_CIRKEL_2 = niva('ma-ak7-fler-cirkel-2', 'Cirkelns area', 'Cirkelns omkret
     skriv('En cirkel har diametern 12 cm. Hur stor är arean? Räkna med π ≈ 3,14 och svara i kvadratcentimeter.',
           t(PI * 6 * 6),
           'Radien är 12 : 2 = 6 cm. Arean är 3,14 · 6 · 6 = 3,14 · 36 = 113,04 cm². '
-          'Den som använder 12 som radie får ett fel svar.'),
+          'Den som räknar med 12 som radie får fyra gånger så stor area, %s cm².' % t(PI * 12 * 12)),
     val('Arean av en cirkel är 78,5 cm². Hur lång är radien? Räkna med π ≈ 3,14.',
         ['5 cm', '25 cm', '12,5 cm', '10 cm'], '5 cm',
         'A = 3,14 · r², så r² = 78,5 : 3,14 = 25. Radien är det tal som ger 25 när det multipliceras med sig '
@@ -325,7 +337,7 @@ MA_AK8_SAMBAND_1 = niva('ma-ak8-fler-samband-1', 'Proportionella samband', 'Samb
           'Hur många kronor kostar 10 liter?', t(F(138, 6) * 10),
           'En liter kostar 138 : 6 = 23 kr. Tio liter kostar 10 · 23 = 230 kr.'),
     skriv('I ett proportionellt samband är y = 7 när x = 2, y = 14 när x = 4 och y = 21 när x = 6. '
-          'Vad är y när x = 10?', t(F(7, 2) * 10),
+          'Vad är y när x = 10?', x_svar(F(7, 2) * 10, 'y'),
           'y är 3,5 gånger x, för 7 : 2 = 3,5 (och 14 : 4 och 21 : 6 ger också 3,5). Då är y = 3,5 · 10 = 35.'),
     val('Priset y kr är proportionellt mot vikten x kg, och 5 kg kostar 90 kr. Vad är proportionalitetskonstanten k i '
         'y = kx?', ['18', '450', '85', '0,056'], '18',
@@ -486,10 +498,10 @@ assert F(10, 2) == 5 and F('31.4') / (2 * PI) == 5
 
 MA_AK9_FORMLER_1 = niva('ma-ak9-fler-formler-1', 'Sätta in och lösa ut i formler', 'Formler och omskrivning', [
     skriv('Omkretsen O av en rektangel med basen b och höjden h ges av O = 2(b + h). '
-          'Vad är O när b = 8 och h = 5?', t(2 * (8 + 5)),
+          'Vad är O när b = 8 och h = 5?', x_svar(2 * (8 + 5), 'O'),
           'Sätt in värdena: O = 2(8 + 5) = 2 · 13 = 26.'),
     skriv('Sträckan s, hastigheten v och tiden t hänger ihop så att s = v · t. '
-          'Hur många timmar tar det att färdas 150 km med hastigheten 50 km/h?', t(F(150, 50)),
+          'Hur många timmar tar det att färdas 150 km med hastigheten 50 km/h?', x_svar(F(150, 50), 't'),
           'Lös ut t genom att dela båda led med v: t = s / v = 150 / 50 = 3 timmar.'),
     val('Lös ut b ur formeln A = b · h.', ['b = A/h', 'b = A · h', 'b = h/A', 'b = A − h'],
         enda(['b = A/h', 'b = A · h', 'b = h/A', 'b = A − h'],
@@ -506,7 +518,7 @@ MA_AK9_FORMLER_1 = niva('ma-ak9-fler-formler-1', 'Sätta in och lösa ut i forml
                            for k0, m0, x0 in ((2, 3, 5), (3, -4, 7)))),
         'Subtrahera m från båda led: y − m = kx. Dela sedan båda led med k: x = (y − m)/k.'),
     skriv('Sambandet mellan temperaturen F i grader Fahrenheit och C i grader Celsius är F = 1,8C + 32. '
-          'Vad är F när C = 25?', t(F(18, 10) * 25 + 32),
+          'Vad är F när C = 25?', x_svar(F(18, 10) * 25 + 32, 'F'),
           'Sätt in C = 25: F = 1,8 · 25 + 32 = 45 + 32 = 77.'),
     skriv('I formeln y = 3x − 7 är y = 11. Vad är x?', x_svar(F(11 + 7, 3)),
           'Sätt in y = 11: 3x − 7 = 11. Addera 7: 3x = 18. Dela med 3: x = 6.'),
@@ -521,7 +533,7 @@ MA_AK9_FORMLER_1 = niva('ma-ak9-fler-formler-1', 'Sätta in och lösa ut i forml
          'För att få v ensamt delar man båda led med t: v = s / t. Exempel: 150 km på 3 timmar ger v = 150 / 3 = '
          '50 km/h, inte 150 · 3.'),
     skriv('Priset p kr för en tjänst ges av p = 200 + 50m, där m är antalet månader. '
-          'Efter hur många månader har man betalat 650 kr?', t(F(650 - 200, 50)),
+          'Efter hur många månader har man betalat 650 kr?', x_svar(F(650 - 200, 50), 'm'),
           '200 + 50m = 650 ger 50m = 450, så m = 9 månader.'),
 ], beskrivning='Sätta in värden i formler och lösa ut en variabel i enkla formler.')
 
@@ -529,7 +541,8 @@ MA_AK9_FORMLER_1 = niva('ma-ak9-fler-formler-1', 'Sätta in och lösa ut i forml
 assert F(30 - 10, 4) == 5 and F(340 - 60, 35) == 8 and F(24 - 5 - 9) == 10 and F('31.4') / (2 * PI) == 5
 
 MA_AK9_FORMLER_2 = niva('ma-ak9-fler-formler-2', 'Omskrivning i flera steg', 'Formler och omskrivning', [
-    skriv('Formeln v = u + at ger sluthastigheten v. Vad är a när v = 30, u = 10 och t = 4?', t(F(30 - 10, 4)),
+    skriv('Formeln v = u + at ger sluthastigheten v. Vad är a när v = 30, u = 10 och t = 4?',
+          x_svar(F(30 - 10, 4), 'a'),
           'Lös ut a: at = v − u, så a = (v − u)/t = (30 − 10)/4 = 5.'),
     val('En kon har volymen V = (π · r² · h)/3. Lös ut h.',
         ['h = 3V/(πr²)', 'h = V/(3πr²)', 'h = 3V · πr²', 'h = V · πr²/3'],
@@ -549,10 +562,10 @@ MA_AK9_FORMLER_2 = niva('ma-ak9-fler-formler-2', 'Omskrivning i flera steg', 'Fo
         'Dela båda led med π: r² = A/π. Ta sedan kvadratroten ur båda led: r = √(A/π). '
         'Rottecknet ska gälla hela bråket, inte bara A.'),
     skriv('En cirkels omkrets O ges av O = 2πr. Vad är r när O = 31,4? Räkna med π ≈ 3,14.',
-          t(F('31.4') / (2 * PI)),
+          x_svar(F('31.4') / (2 * PI), 'r'),
           'Lös ut r: r = O/(2π) = 31,4 / (2 · 3,14) = 31,4 / 6,28 = 5.'),
     skriv('Priset för att hyra en cykel är p = 60 + 35t kr, där t är antalet timmar. '
-          'Hur många timmar får man hyra för 340 kr?', t(F(340 - 60, 35)),
+          'Hur många timmar får man hyra för 340 kr?', x_svar(F(340 - 60, 35), 't'),
           '60 + 35t = 340 ger 35t = 280, alltså t = 8 timmar.'),
     val('Lös ut y ur ekvationen 2x + 3y = 12.',
         ['y = (12 − 2x)/3', 'y = 4 − 2x', 'y = 12 − 2x − 3', 'y = (12 + 2x)/3'],
@@ -568,7 +581,7 @@ MA_AK9_FORMLER_2 = niva('ma-ak9-fler-formler-2', 'Omskrivning i flera steg', 'Fo
     sant('Ur y = x/k får man x = y/k.', False,
          'Multiplicera båda led med k: yk = x. Om k = 2 och x = 10 är y = 5, men y/k = 2,5 är inte x.'),
     skriv('Medelvärdet m av tre tal ges av m = (a + b + c)/3. Medelvärdet är 8, a = 5 och b = 9. Vad är c?',
-          t(F(8 * 3 - 5 - 9)),
+          x_svar(F(8 * 3 - 5 - 9), 'c'),
           'Multiplicera med 3: a + b + c = 24. Då är c = 24 − 5 − 9 = 10.'),
     ordna('Ordna stegen när du löser ut x ur y = 3x + 5.',
           ['Subtrahera 5 från båda led: y − 5 = 3x', 'Dela båda led med 3: (y − 5)/3 = x',
@@ -585,7 +598,7 @@ assert 1 - F(7, 10) * F(1, 2) == F('0.65')
 MA_AK9_SANNOLIKHET_1 = niva('ma-ak9-fler-sannolikhet-1', 'Träddiagram och oberoende händelser',
                             'Sannolikhet i flera steg', [
     skriv('Sannolikheten att bussen kommer i tid är 0,8 varje dag, och dagarna påverkar inte varandra. '
-          'Hur stor är sannolikheten att den kommer i tid två dagar i rad?', t(F(8, 10) ** 2),
+          'Hur stor är sannolikheten att den kommer i tid två dagar i rad? Svara som ett decimaltal.', t(F(8, 10) ** 2),
           'Händelserna är oberoende, så sannolikheterna multipliceras: 0,8 · 0,8 = 0,64.'),
     skriv('Ett mynt singlas tre gånger. Hur stor är sannolikheten att få klave alla tre gångerna? '
           'Svara som ett bråk.', brak(F(1, 2) ** 3),
@@ -595,10 +608,12 @@ MA_AK9_SANNOLIKHET_1 = niva('ma-ak9-fler-sannolikhet-1', 'Träddiagram och obero
         'Första kastet kan ge 6 olika tal, och för vart och ett av dem kan det andra kastet ge 6 olika tal. '
         '6 · 6 = 36 utfall, inte 6 + 6.'),
     skriv('I en påse finns 3 röda och 7 blå kulor. Du drar en kula, tittar och lägger tillbaka den, '
-          'och drar sedan en kula till. Hur stor är sannolikheten att båda kulorna är blå?', t(F(7, 10) ** 2),
+          'och drar sedan en kula till. Hur stor är sannolikheten att båda kulorna är blå? Svara som ett decimaltal.',
+          t(F(7, 10) ** 2),
           'Kulan läggs tillbaka, så sannolikheten för blå är 7/10 båda gångerna: 0,7 · 0,7 = 0,49.'),
     skriv('Sannolikheten för regn är 0,3 på lördag och 0,5 på söndag, och dagarna påverkar inte varandra. '
-          'Hur stor är sannolikheten för regn minst en av dagarna?', t(1 - (1 - F(3, 10)) * (1 - F(1, 2))),
+          'Hur stor är sannolikheten för regn minst en av dagarna? Svara som ett decimaltal.',
+          t(1 - (1 - F(3, 10)) * (1 - F(1, 2))),
           'Räkna på motsatsen. Inget regn alls har sannolikheten 0,7 · 0,5 = 0,35. '
           'Minst en dag med regn är då 1 − 0,35 = 0,65.'),
     val('Hur räknar man ut sannolikheten för en väg genom ett träddiagram?',
@@ -638,7 +653,7 @@ MA_AK9_SANNOLIKHET_2 = niva('ma-ak9-fler-sannolikhet-2', 'Dragning utan återlä
         '2/6 · 1/5 = 2/30 = 1/15. Den som lägger tillbaka kulan får 1/3 · 1/3 = 1/9.'),
     skriv('I en påse finns 3 röda och 5 blå kulor. Du drar två kulor utan återläggning. Hur stor är sannolikheten '
           'att få en kula av varje färg? Svara som ett bråk i enklaste form.',
-          brak(F(15, 28)) + ['30/56', '30 / 56'],
+          brak(F(15, 28)),
           'Det finns två vägar. Röd sedan blå: 3/8 · 5/7 = 15/56. Blå sedan röd: 5/8 · 3/7 = 15/56. '
           'Lägg ihop: 30/56 = 15/28.'),
     sant('När man drar utan återläggning är den andra dragningen oberoende av den första.', False,
@@ -650,7 +665,7 @@ MA_AK9_SANNOLIKHET_2 = niva('ma-ak9-fler-sannolikhet-2', 'Dragning utan återlä
           'Produkten är 20/132 = 5/33.'),
     skriv('Fem kort är numrerade 1, 2, 3, 4 och 5. Du drar två kort utan återläggning. Hur stor är sannolikheten '
           'att båda korten har jämna nummer? Svara som ett bråk eller ett decimaltal.',
-          brak(F(2, 5) * F(1, 4), decimal=True),
+          brak(F(2, 5) * F(1, 4), decimal=True) + ['2/20', '2 / 20'],
           'Jämna nummer är 2 och 4. Första kortet är jämnt med sannolikheten 2/5, och då är 1 jämnt av 4 kort kvar: '
           '1/4. Produkten är 2/20 = 1/10.'),
     val('En burk innehåller 3 gröna och 2 gula karameller. Du tar två utan att lägga tillbaka. '
@@ -723,25 +738,41 @@ MA_GY1_STATISTIK_1 = niva('ma-gy1-fler-statistik-1', 'Frekvenstabeller och läge
 ], beskrivning='Frekvenstabeller, medelvärde, median, typvärde och variationsbredd.')
 
 # ---- nivå 2
-A8 = [14, 6, 20, 4, 15, 9, 7, 12]
-B12 = [13, 5, 24, 8, 15, 3, 18, 10, 6, 16, 12, 9]
-assert kvartiler(A8) == (F(13, 2), F(29, 2)) and median(A8) == F(21, 2)
-assert kvartiler(B12) == (7, F(31, 2)) and median(B12) == 11
+# Värdena runt varje kvartil som frågas efter är lika (andra och tredje, sjätte och sjunde i A8, nionde och
+# tionde i B12), så att kvartilen blir densamma med halvornas medianer, med plats (n + 1)/4 och med
+# räknarens eller kalkylprogrammets interpolation.
+A8 = [14, 6, 20, 4, 14, 9, 6, 12]
+B12 = [13, 5, 24, 8, 15, 3, 18, 10, 6, 15, 12, 9]
+assert kvartiler(A8) == (6, 14) and median(A8) == F(21, 2)
+assert kvartiler(B12)[1] == 15 and median(B12) == 11
+assert sorted(A8)[1] == sorted(A8)[2] and sorted(A8)[5] == sorted(A8)[6] and sorted(B12)[8] == sorted(B12)[9]
+assert sorted(A8)[:4] == [4, 6, 6, 9] and sorted(A8)[4:] == [12, 14, 14, 20]   # halvorna i förklaringarna
+assert sorted(B12)[6:] == [12, 13, 15, 15, 18, 24] and sorted(B12)[5:7] == [10, 12]
 q1_, q3_ = kvartiler(A8)
 assert q3_ - q1_ == 8
-assert median([1, 2, 3]) == 2 and median([4, 20, 30]) == 20
-assert F(2 + 20, 2) == 11 and median([1, 2, 3, 4, 20, 30]) == F(7, 2)
+
+
+def uppr(v):
+    """Talen som de räknas upp i en text: 4, 6, 6 och 9."""
+    return ', '.join(m(x) for x in v[:-1]) + ' och ' + m(v[-1])
+
+
+A8_TEXT, A8_ORD, B12_TEXT, B12_ORD = uppr(A8), ', '.join(map(m, sorted(A8))), uppr(B12), ', '.join(map(m, sorted(B12)))
+# Exemplet i sant/falskt: andra och tredje värdet lika, sjätte och sjunde lika, så att alla vanliga
+# kvartilmetoder (halvornas medianer, plats (n + 1)/4, interpolation) ger kvartilerna 2 och 20.
+MOT8 = [1, 2, 2, 3, 5, 20, 20, 30]
+assert kvartiler(MOT8) == (2, 20) and median(MOT8) == 4 and F(2 + 20, 2) == 11
 
 MA_GY1_STATISTIK_2 = niva('ma-gy1-fler-statistik-2', 'Kvartiler och lådagram', 'Statistik och lägesmått', [
-    skriv('Åtta värden är 14, 6, 20, 4, 15, 9, 7 och 12. Vad är nedre kvartilen?', t(kvartiler(A8)[0]),
-          'Ordna först: 4, 6, 7, 9, 12, 14, 15, 20. Nedre halvan är 4, 6, 7, 9, och nedre kvartilen är dess '
-          'median: (6 + 7)/2 = 6,5.'),
-    skriv('Åtta värden är 14, 6, 20, 4, 15, 9, 7 och 12. Vad är övre kvartilen?', t(kvartiler(A8)[1]),
-          'Ordnat: 4, 6, 7, 9, 12, 14, 15, 20. Övre halvan är 12, 14, 15, 20, och dess median är '
-          '(14 + 15)/2 = 14,5.'),
-    skriv('Åtta värden är 14, 6, 20, 4, 15, 9, 7 och 12. Vad är kvartilavståndet?',
+    skriv('Åtta värden är %s. Vad är nedre kvartilen?' % A8_TEXT, t(kvartiler(A8)[0]),
+          'Ordna först: %s. Nedre halvan är 4, 6, 6, 9, och nedre kvartilen är dess median, mitt emellan andra och '
+          'tredje värdet: (6 + 6)/2 = 6.' % A8_ORD),
+    skriv('Åtta värden är %s. Vad är övre kvartilen?' % A8_TEXT, t(kvartiler(A8)[1]),
+          'Ordnat: %s. Övre halvan är 12, 14, 14, 20, och dess median är (14 + 14)/2 = 14.' % A8_ORD),
+    skriv('Åtta värden är %s. Vad är kvartilavståndet?' % A8_TEXT,
           t(kvartiler(A8)[1] - kvartiler(A8)[0]),
-          'Kvartilavståndet är övre kvartilen minus nedre kvartilen: 14,5 − 6,5 = 8.'),
+          'Ordnat: %s. Nedre kvartilen är 6 och övre kvartilen 14. Kvartilavståndet är övre kvartilen minus nedre '
+          'kvartilen: 14 − 6 = 8.' % A8_ORD),
     val('Ett lådagram har minsta värdet 4, nedre kvartilen 6,5, medianen 10,5, övre kvartilen 14,5 och största '
         'värdet 20. Hur stor del av värdena ligger i själva lådan, mellan 6,5 och 14,5?',
         ['Hälften', 'En fjärdedel', 'Tre fjärdedelar', 'Alla'], 'Hälften',
@@ -752,19 +783,19 @@ MA_GY1_STATISTIK_2 = niva('ma-gy1-fler-statistik-2', 'Kvartiler och lådagram', 
          'Medelvärdet och medianen'], 'De mittersta 50 % av värdena',
         'Lådan går från nedre till övre kvartilen och innehåller den mittersta hälften av värdena. '
         'Linjerna ut från lådan går till minsta och största värdet.'),
-    skriv('Tolv värden är 13, 5, 24, 8, 15, 3, 18, 10, 6, 16, 12 och 9. Vad är medianen?', t(median(B12)),
-          'Ordnat: 3, 5, 6, 8, 9, 10, 12, 13, 15, 16, 18, 24. De mittersta är det sjätte och sjunde värdet, 10 och '
-          '12. Medianen är (10 + 12)/2 = 11.'),
-    skriv('Tolv värden är 13, 5, 24, 8, 15, 3, 18, 10, 6, 16, 12 och 9. Vad är övre kvartilen?',
+    skriv('Tolv värden är %s. Vad är medianen?' % B12_TEXT, t(median(B12)),
+          'Ordnat: %s. De mittersta är det sjätte och sjunde värdet, 10 och 12. Medianen är (10 + 12)/2 = 11.'
+          % B12_ORD),
+    skriv('Tolv värden är %s. Vad är övre kvartilen?' % B12_TEXT,
           t(kvartiler(B12)[1]),
-          'Ordnat: 3, 5, 6, 8, 9, 10, 12, 13, 15, 16, 18, 24. Övre halvan är 12, 13, 15, 16, 18, 24, och dess '
-          'median ligger mellan tredje och fjärde värdet: (15 + 16)/2 = 15,5.'),
+          'Ordnat: %s. Övre halvan är 12, 13, 15, 15, 18, 24, och dess median ligger mellan tredje och fjärde '
+          'värdet: (15 + 15)/2 = 15.' % B12_ORD),
     sant('Kvartilavståndet påverkas mindre av ett extremt värde än variationsbredden.', True,
          'Variationsbredden bygger på det största och minsta värdet, som kan vara extrema. Kvartilavståndet bygger '
-         'på de mittersta 50 %, så ett enstaka extremvärde ändrar det inte.'),
+         'på de mittersta 50 %, så ett enstaka extremvärde ändrar det lite eller inte alls.'),
     sant('Medianen ligger alltid exakt mitt emellan nedre och övre kvartilen.', False,
-         'För 1, 2, 3, 4, 20, 30 är nedre kvartilen 2, medianen 3,5 och övre kvartilen 20. Mitt emellan '
-         'kvartilerna ligger 11, inte 3,5.'),
+         'För 1, 2, 2, 3, 5, 20, 20, 30 är nedre kvartilen 2, medianen 4 och övre kvartilen 20. Mitt emellan '
+         'kvartilerna ligger 11, inte 4.'),
     para('Para ihop begreppet med rätt förklaring.',
          [('Nedre kvartilen', 'Medianen i den nedre halvan av värdena'),
           ('Övre kvartilen', 'Medianen i den övre halvan av värdena'),
@@ -810,7 +841,7 @@ MA_GY1_STATISTIK_3 = niva('ma-gy1-fler-statistik-3', 'Jämföra och tolka data',
          'busshållplats. Då är urvalet representativt för alla invånare.', False,
          'De som står på en busshållplats åker oftare buss än andra. Urvalet blir skevt. '
          'Ett bättre urval lottas ur alla invånare.'),
-    val('Ett stapeldiagram har y-axeln startande på 90 i stället för 0, och staplarna visar 92 och 96. '
+    val('Ett stapeldiagram har en y-axel som börjar på 90 i stället för 0, och staplarna visar 92 och 96. '
         'Vilken effekt ger det?',
         ['Skillnaden ser större ut än den är', 'Skillnaden ser mindre ut än den är', 'Staplarna blir lika höga',
          'Ingenting ändras'], 'Skillnaden ser större ut än den är',
@@ -857,16 +888,19 @@ assert [x for x in (F(1), F(3), F(-1), F(-3), F(4)) if x * x - 4 * x + 3 == 0] =
 MA_GY2_PARABEL_1 = niva('ma-gy2-fler-parabel-1', 'Symmetri och nollställen', 'Andragradsfunktioner', [
     val('Vilket påstående stämmer för funktionen y = −2x² + 8x − 3?',
         ['Den har ett största värde', 'Den har ett minsta värde', 'Den har varken största eller minsta värde',
-         'Den har två största värden'], 'Den har ett största värde',
+         'Den har både ett största och ett minsta värde'], 'Den har ett största värde',
         'Koefficienten framför x² är −2, alltså negativ. Parabeln öppnar sig nedåt och har en högsta punkt men '
         'inget minsta värde.'),
-    skriv('Grafen till y = x² − 8x + 5 är en parabel. Vilket x-värde har symmetrilinjen?', x_svar(sym(1, -8)),
-          'För y = x² + px + q ligger symmetrilinjen vid x = −p/2. Här är p = −8, så x = 4.'),
-    skriv('Grafen till y = x² + 6x − 1 är en parabel. Vilket x-värde har symmetrilinjen?', x_svar(sym(1, 6)),
-          'Symmetrilinjen ligger vid x = −p/2 = −6/2 = −3.'),
+    skriv('Parabeln y = x² − 8x + 5 har symmetrilinjen x = a. Vad är a?',
+          x_svar(sym(1, -8), 'a') + x_svar(sym(1, -8))[1:],
+          'För y = x² + px + q ligger symmetrilinjen vid x = −p/2. Här är p = −8, så x = 4 och a = 4.'),
+    skriv('Parabeln y = x² + 6x − 1 har sin lägsta punkt på symmetrilinjen. Vilket x-värde har den lägsta punkten?',
+          x_svar(sym(1, 6)),
+          'Symmetrilinjen ligger vid x = −p/2 = −6/2 = −3. Parabeln öppnar sig uppåt, så den lägsta punkten '
+          'ligger där.'),
     skriv('En parabel har nollställena x = 2 och x = 10. Vilket x-värde har symmetrilinjen?', x_svar(F(2 + 10, 2)),
           'Symmetrilinjen går mitt emellan nollställena: (2 + 10)/2 = 6.'),
-    skriv('Vad är f(0) för funktionen f(x) = x² − 4x − 5?', neg_svar(-5) + ['f(0) = -5', 'f(0) = - 5'],
+    skriv('Vad är f(0) för funktionen f(x) = x² − 4x − 5?', x_svar(-5, 'f(0)'),
           'Sätt in x = 0: f(0) = 0 − 0 − 5 = −5. Det är där parabeln skär y-axeln, och det är alltid termen utan x.'),
     skriv('Funktionen y = x² − 6x + 10 har samma y-värde för x = 1 som för ett annat x-värde a. Vad är a?',
           x_svar(F(5), 'a'),
@@ -903,11 +937,11 @@ MA_GY2_PARABEL_2 = niva('ma-gy2-fler-parabel-2', 'Största och minsta värde', '
     val('Vilken är minimipunkten för y = (x − 3)² + 2?', ['(3, 2)', '(−3, 2)', '(3, −2)', '(2, 3)'], '(3, 2)',
         'En kvadrat är aldrig negativ och är som minst 0, när x − 3 = 0, alltså x = 3. Då är y = 0 + 2 = 2. '
         'Minimipunkten är (3, 2).'),
-    skriv('Vilket är det minsta värdet för y = x² − 6x + 13?', t(3 ** 2 - 6 * 3 + 13),
+    skriv('Vilket är det minsta värdet för y = x² − 6x + 13?', x_svar(3 ** 2 - 6 * 3 + 13, 'y'),
           'Symmetrilinjen är x = 3, och där ligger minimipunkten. y(3) = 9 − 18 + 13 = 4.'),
-    skriv('Vilket är det största värdet för y = −x² + 8x − 7?', t(-(4 ** 2) + 8 * 4 - 7),
+    skriv('Vilket är det största värdet för y = −x² + 8x − 7?', x_svar(-(4 ** 2) + 8 * 4 - 7, 'y'),
           'Parabeln öppnar sig nedåt. Symmetrilinjen är x = −8/(2 · (−1)) = 4. y(4) = −16 + 32 − 7 = 9.'),
-    skriv('Skriv x² + 10x + 7 på formen (x + a)² + b. Vad är b?', neg_svar(-18) + ['b = -18', 'b = - 18'],
+    skriv('Skriv x² + 10x + 7 på formen (x + a)² + b. Vad är b?', x_svar(-18, 'b'),
           '(x + 5)² = x² + 10x + 25. Det är 18 för mycket, så x² + 10x + 7 = (x + 5)² − 18. Alltså b = −18.'),
     val('Vilket uttryck är x² − 8x + 6 skrivet med kvadratkomplettering?', [a for a, _ in KOMPL], KOMPL_SVAR[0],
         '(x − 4)² = x² − 8x + 16. Det är 10 för mycket, så x² − 8x + 6 = (x − 4)² − 10.'),
@@ -951,8 +985,9 @@ MA_GY2_PARABEL_3 = niva('ma-gy2-fler-parabel-3', 'Andragradsfunktioner i problem
           'sekunder. Efter hur många sekunder landar stenen?', x_svar(F(4), 't'),
           'Stenen är på marken när h = 0. −5t² + 20t = 0 ger −5t(t − 4) = 0, så t = 0 (kastet) eller t = 4. '
           'Stenen landar efter 4 sekunder.'),
-    skriv('En hage med tre stängda sidor byggs mot en lång mur. Det finns 40 m stängsel. De två sidorna vinkelrätt '
-          'mot muren är x meter långa var, och sidan längs muren är 40 − 2x meter. För vilket x blir arean störst?',
+    skriv('En rektangulär hage byggs mot en lång mur, och de tre andra sidorna får stängsel. Det finns 40 m '
+          'stängsel. De två sidorna vinkelrätt mot muren är x meter långa var, och sidan längs muren är 40 − 2x '
+          'meter. För vilket x blir arean störst?',
           x_svar(sym(-2, 40)),
           'Arean är A = x(40 − 2x) = −2x² + 40x. Den är störst på symmetrilinjen x = −40/(2 · (−2)) = 10 m. '
           'Sidan längs muren blir då 40 − 20 = 20 m.'),
@@ -1011,7 +1046,7 @@ MA_GY3_KOMPLEXA_1 = niva('ma-gy3-fler-komplexa-1', 'Imaginära enheten och räkn
     val('Beräkna (2 + 3i)(1 − 4i).', K6, enda(K6, lambda a: cplx(a) == (2 + 3j) * (1 - 4j)),
         'Multiplicera in: 2 − 8i + 3i − 12i². Eftersom i² = −1 är −12i² = +12. Realdelen är 2 + 12 = 14 och '
         'imaginärdelen −8 + 3 = −5. Svaret är 14 − 5i.'),
-    skriv('Beräkna (1 + i)². Svara på formen a + bi.', ['2i', '2 i', '0 + 2i', '0+2i', '2*i', '2 * i', '2 · i'],
+    skriv('Beräkna (1 + i)². Svara på formen a + bi.', i_svar(int(((1 + 1j) ** 2).imag)),
           '(1 + i)² = 1 + 2i + i² = 1 + 2i − 1 = 2i.'),
     sant('Alla reella tal är också komplexa tal.', True,
          'Ett reellt tal a kan skrivas a + 0i, och det är ett komplext tal med imaginärdelen 0.'),
@@ -1055,12 +1090,12 @@ MA_GY3_KOMPLEXA_2 = niva('ma-gy3-fler-komplexa-2', 'Konjugat, belopp och divisio
         'Förläng med nämnarens konjugat 1 + i. Täljaren: (7 + i)(1 + i) = 7 + 7i + i + i² = 6 + 8i. '
         'Nämnaren: (1 − i)(1 + i) = 1 − i² = 2. Dela: (6 + 8i)/2 = 3 + 4i.'),
     skriv('Lös ekvationen z² + 9 = 0. Vilken lösning har positiv imaginärdel? Svara på formen a + bi.',
-          ['3i', '3 i', '0 + 3i', '0+3i', '3*i', '3 * i', '3 · i'],
+          i_svar(math.isqrt(9), 'z'),
           'z² = −9 ger z = ±3i, eftersom (3i)² = 9 · i² = −9. Den lösning som har positiv imaginärdel är 3i.'),
     val('Lös ekvationen x² − 4x + 13 = 0.', [a for a, _ in K5B], K5B_SVAR[0],
         'Med pq-formeln: x = 2 ± √(4 − 13) = 2 ± √(−9) = 2 ± 3i. Komplexa lösningar till en ekvation med reella '
         'koefficienter kommer som ett konjugatpar.'),
-    skriv('För vilket reellt tal a är produkten (a + 2i)(3 − i) ett reellt tal?', t(6),
+    skriv('För vilket reellt tal a är produkten (a + 2i)(3 − i) ett reellt tal?', x_svar(6, 'a'),
           'Multiplicera: 3a − ai + 6i − 2i² = (3a + 2) + (6 − a)i. Imaginärdelen 6 − a ska vara 0, så a = 6. '
           'Produkten är då 20.'),
     sant('Konjugatet till ett reellt tal är talet självt.', True,
@@ -1113,13 +1148,13 @@ MA_GY3_KOMPLEXA_3 = niva('ma-gy3-fler-komplexa-3', 'Polär form och de Moivres f
     skriv('Vilket argument v, i grader med 0° ≤ v < 360°, har z = −1 − i?',
           t(round(math.degrees(cmath.phase(-1 - 1j)) % 360)),
           'Punkten (−1, −1) ligger i tredje kvadranten. Vinkeln mot den positiva reella axeln är 180° + 45° = 225°.'),
-    val('Vilken är polär form av z = 2i?', [ptext(r, v) for r, v in P3], P3_SVAR[0],
+    val('Vilken är den polära formen av z = 2i?', [ptext(r, v) for r, v in P3], P3_SVAR[0],
         'Talet 2i ligger på den positiva imaginära axeln, 2 enheter från origo. Absolutbeloppet är 2 och '
         'argumentet 90°.'),
-    val('z₁ = 2(cos 20° + i sin 20°) och z₂ = 3(cos 40° + i sin 40°). Vilken är z₁ · z₂ på polär form?',
+    val('z₁ = 2(cos 20° + i sin 20°) och z₂ = 3(cos 40° + i sin 40°). Vad är z₁ · z₂ på polär form?',
         [ptext(r, v) for r, v in P4], P4_SVAR[0],
         'Vid multiplikation multipliceras absolutbeloppen, 2 · 3 = 6, och argumenten adderas, 20° + 40° = 60°.'),
-    skriv('Låt z = 2(cos 15° + i sin 15°). Vad är z⁶ på formen a + bi?', ['64i', '64 i', '0 + 64i', '0+64i', '64*i', '64 * i', '64 · i'],
+    skriv('Låt z = 2(cos 15° + i sin 15°). Vad är z⁶ på formen a + bi?', i_svar(2 ** 6),
           'Enligt de Moivres formel är z⁶ = 2⁶(cos 90° + i sin 90°) = 64(0 + i · 1) = 64i.'),
     val('Vilken ekvation har lösningarna z = 2i och z = −2i?', [a for a, _ in z6], Z6_SVAR[0],
         '(2i)² = 4i² = −4 och (−2i)² = −4. Alltså är båda lösningar till z² = −4.'),

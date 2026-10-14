@@ -104,11 +104,10 @@ TILLAGG = [
             val('Vilken mening använder kolon rätt?',
                 ['Jag har tre husdjur: en hund, en katt och en hamster.',
                  'Jag har tre husdjur en hund: en katt och en hamster.',
-                 'Jag köpte: en cykel och en hjälm.'],
+                 'Jag har tre husdjur: en hund: en katt: och en hamster.'],
                 'Jag har tre husdjur: en hund, en katt och en hamster.',
                 'Kolon kan inleda en uppräkning efter en hel sats, och ”Jag har tre husdjur” är en hel sats. '
-                '”Jag köpte” är ingen hel sats utan behöver sitt objekt, och i den andra står kolonet mitt i '
-                'uppräkningen.'),
+                'Leden i uppräkningen skiljs sedan åt med komma, och kolon står inte mitt i den.'),
             para('Para ihop skiljetecknet med vad det gör.',
                  [('komma', 'skiljer leden i en uppräkning åt'),
                   ('kolon', 'kan inleda en uppräkning efter en hel sats'),
@@ -212,8 +211,8 @@ TILLAGG = [
                 'Orden visar gruppen man hör till, och den som saknar dem märker det',
                 'Skribenten tror att ungdomsord också är ett sätt att visa att man hör ihop. Den som inte kan dem '
                 'känner sig utanför gruppen.'),
-            sant('Skribenten menar att ungdomsord bara handlar om att förnya språket.', False,
-                 'Det står att ungdomsorden ”gör mer än att förnya”: de visar också vilken grupp man hör till.'),
+            sant('Skribenten menar att ungdomsord också kan visa vilken grupp man hör till.', True,
+                 'Det står att ungdomsorden ”gör mer än att förnya”: de visar vilken grupp man hör till.'),
             para('Para ihop det i texten med vad det handlar om.',
                  [('toppen', 'ett ord som farfar fortfarande säger'),
                   ('mejl', 'ett lånord som blivit helt vanligt'),
@@ -441,7 +440,7 @@ TILLAGG = [
                   'Bortfall kan göra resultatet skevt, särskilt om de som saknas skiljer sig från dem som svarat.'),
             val('Vilken undersökning är kvalitativ?',
                 ['Djupintervjuer med fem elever om hur det är att byta skola',
-                 'En enkät med svarsskala 1–5 till trehundra elever',
+                 'En enkät med svarsskala från 1 till 5 till trehundra elever',
                  'En räkning av frånvarodagar i alla klasser under ett läsår'],
                 'Djupintervjuer med fem elever om hur det är att byta skola',
                 'Kvalitativa metoder undersöker upplevelser och mening på djupet. Kvantitativa metoder mäter och '

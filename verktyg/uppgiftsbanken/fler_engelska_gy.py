@@ -8,8 +8,8 @@ exempel (Amira Haddad och poolen i Eastfield, skribenten som flyttar till
 Sydney) är påhittade för banken; inget är taget ur ett nationellt prov, en
 lärobok eller någon annan källa. Skriven med AI och inte läst av en lärare.
 
-- gy1: ”Modala verb och indirekt tal” (must, should, might, had to och
-  reported speech) och en kort nyhetsartikel att läsa.
+- gy1: ”Modala verb och återgivet tal” (must have, can’t have, should have
+  och verb som promise, warn och suggest) och en kort nyhetsartikel att läsa.
 - gy2: ”Ord och nyanser” (kollokationer, och ord med nästan samma betydelse
   men olika klang) och en essä om varieteter av engelska.
 - gy3: ”Retoriska grepp” (begreppen, och att känna igen dem i exempel) och
@@ -55,7 +55,7 @@ VARIETETER = '\n\n'.join([
     'realised I was wrong. My classmates said ‘arvo’ for afternoon, ‘servo’ for petrol station and ‘no '
     'worries’ for almost everything. I understood the words one by one, but not the conversation.',
     'Linguists make a useful distinction. An accent is the way a person pronounces words; a dialect also '
-    'includes vocabulary and grammar. We both had accents, then, but we also spoke different dialects. Neither '
+    'includes vocabulary and grammar. My classmates and I all had accents, then, but we also spoke different dialects. Neither '
     'was wrong, and neither was ‘better English’, although people often behave as if the version they grew up '
     'with is the real one.',
     'Language also changes with the situation. I do not speak to my grandmother as I speak in a job interview. '
@@ -94,90 +94,85 @@ TILLAGG = [
     # GYMNASIET 1 (Engelska 5)
     # ================================================================
     bana(EN, 'gy1', [
-        niva('en-gy1-fler-modals-1', 'Must, should, might', 'Modala verb och indirekt tal', [
+        niva('en-gy1-fler-modals-1', 'Must have, should have', 'Modala verb och återgivet tal', [
+            val('Välj rätt: The ground is wet. It ___ rained during the night.',
+                ['must have', 'must be', 'was'], 'must have',
+                'Marken är blöt, så det har säkert regnat. Must have plus particip uttrycker en stark slutsats om '
+                'det förflutna.'),
+            val('Välj rätt: His coat is still here, so he ___ left yet.',
+                ["can't have", "can't be", "mustn't"], "can't have",
+                "Kappan är kvar, så det är omöjligt att han har gått. Can't have plus particip säger att något "
+                'inte kan ha hänt.'),
+            val('Välj rätt: I am not sure where she is. She ___ gone to the shop.',
+                ['might have', 'must have', "can't have"], 'might have',
+                'Du är osäker, så du gissar. Might have uttrycker att något kan ha hänt. Must have hade betytt att '
+                "du var nästan säker, och can't have att det var omöjligt."),
+            val('Välj rätt: The test was hard. I ___ studied more.',
+                ['should have', 'should had', 'should has'], 'should have',
+                'Should have plus particip uttrycker att man borde ha gjort något men inte gjorde det. Här är det '
+                'en självkritik. Efter should kommer alltid have, aldrig had eller has.'),
+            skriv("Skriv de två orden som fattas: You ___ said that to her. It was rude. (Du borde inte ha sagt "
+                  'det.)',
+                  ["shouldn't have", 'should not have'],
+                  "Shouldn't have plus particip är kritik av något som redan hänt: du borde inte ha sagt det."),
+            skriv('Skriv verbet i rätt form: She must have ___ the answer all along. (know)', 'known',
+                  'Efter must have kommer particip. Know, knew, known är oregelbundet, så det heter known.'),
             para('Para ihop den engelska meningen med rätt betydelse.',
-                 [('You must go.', 'Du måste gå.'), ("You mustn't go.", 'Du får inte gå.'),
-                  ("You don't have to go.", 'Du behöver inte gå.'), ('You should go.', 'Du borde gå.')],
-                 "Must är ett krav. Mustn't är ett förbud, medan don't have to betyder att man slipper. Should är "
-                 'ett råd.'),
-            val('Välj rätt: You ___ wear a seat belt in the car. It is the law.',
-                ['must', 'might', 'would'], 'must',
-                'Lagen kräver det, så det är ett krav. Must uttrycker att något är nödvändigt. Might betyder kanske.'),
-            val('Välj rätt: You ___ to see a doctor about that cough.',
-                ['ought', 'should', 'must'], 'ought',
-                'Ought är ett modalt verb som följs av to: You ought to see a doctor. Should och must följs av '
-                'infinitiv utan to.'),
-            skriv('Skriv modalverbet som fattas: The lights are on, so he ___ be at home. (Du är nästan säker.)',
-                  'must',
-                  'Must kan också uttrycka en stark slutsats: ljuset är på, så han måste vara hemma. Might skulle '
-                  'betyda att du bara gissar.'),
-            val('Välj rätt: The phone is ringing. It ___ be Anna, but I am not sure.',
-                ['might', 'must', 'shall'], 'might',
-                'Might uttrycker att något är möjligt men osäkert. Must hade betytt att du var nästan säker.'),
-            val("Välj rätt: Yesterday I ___ get up at five o'clock.",
-                ['had to', 'must', 'have to'], 'had to',
-                'Must har ingen dåtidsform. När man talar om det förflutna används had to.'),
-            val('Vilken mening är ett erbjudande, alltså ”Ska jag öppna fönstret?”',
-                ['Shall I open the window?', 'Do I must open the window?', 'Am I open the window?'],
-                'Shall I open the window?',
-                'Shall I …? används för att erbjuda hjälp. De andra två är fel: efter must står ingen do, och am I '
-                'öppnar inget.'),
-            sant("‘I could swim when I was five’ är en korrekt mening om en förmåga i det förflutna.", True,
-                 'Could är förmåga i dåtid: Jag kunde simma när jag var fem.'),
-            sant("‘Mustn’t’ och ‘don’t have to’ betyder samma sak.", False,
-                 "You mustn't park here är ett förbud. You don't have to park here betyder att du kan göra det, "
-                 'men inte behöver.'),
-            ordna('Bygg meningen: Du borde inte äta så mycket choklad.',
-                  ['You', "shouldn't", 'eat', 'so', 'much', 'chocolate.'],
-                  forklaring="Shouldn't är negativ form av should och följs av infinitiv utan to. Chocolate går "
-                             'inte att räkna, så det heter so much.'),
-        ], beskrivning='Tränar must, mustn’t och don’t have to, should och ought to, might och had to.'),
+                 [('She must have missed the bus.', 'Hon har säkert missat bussen.'),
+                  ("She can't have missed the bus.", 'Hon kan inte ha missat bussen.'),
+                  ('She might have missed the bus.', 'Hon kan ha missat bussen.'),
+                  ('She should have caught the bus.', 'Hon borde ha hunnit med bussen.')],
+                 'Modala verb plus have och particip talar om det förflutna: säker slutsats, omöjligt, möjligt '
+                 'eller något som borde ha hänt.'),
+            sant("‘He must have left’ betyder att talaren är nästan säker på att han har gått.", True,
+                 'Must have plus particip är en stark slutsats om det som redan hänt.'),
+            sant("‘I should have called’ betyder att jag ringde.", False,
+                 'Det betyder att jag borde ha ringt, men inte gjorde det.'),
+            ordna('Bygg meningen: Hon kan inte ha sett oss.',
+                  ['She', "can't", 'have', 'seen', 'us.'],
+                  forklaring="Can't have plus particip säger att något är omöjligt. Se, såg, sett: efter have "
+                             'kommer seen.'),
+        ], beskrivning='Tränar modala verb om det förflutna: must have, can’t have, might have och should have.'),
 
-        niva('en-gy1-fler-modals-2', 'She said that …', 'Modala verb och indirekt tal', [
-            val('Tom sa till mig: "I will help you." Vilken är den korrekta indirekta formen?',
-                ['Tom told me that he would help me.', 'Tom told me that I would help him.',
-                 'Tom told me that he will help you.'],
-                'Tom told me that he would help me.',
-                'I blir he, you blir me, och will blir would. Efter told står vem man talade till: told me.'),
-            val('Välj rätt: She ___ me that the shop was closed.',
-                ['told', 'said', 'spoke'], 'told',
-                'Tell följs av den som får veta något: told me. Say tar inget sådant objekt: She said that the shop '
-                'was closed.'),
-            skriv('Gör om till indirekt tal och flytta verbet ett steg bakåt i tiden. "We live in Leeds," said '
-                  'Ali. → Ali said that they ___ in Leeds. Skriv verbet (live) i rätt form.',
-                  'lived',
-                  'Vid indirekt tal flyttas verbet ett steg bakåt: present (live) blir preteritum (lived).'),
-            val('Maria asked me: "Where do you live?" Vilken är den korrekta indirekta formen?',
-                ['Maria asked me where I lived.', 'Maria asked me where did I live.',
-                 'Maria asked me where do I live.'],
-                'Maria asked me where I lived.',
-                'I en återgiven fråga har satsen vanlig ordföljd, utan do eller did. Verbet flyttas bakåt: live '
-                'blir lived.'),
-            val('Välj rätt ord: He asked me ___ I liked jazz. (Frågan var "Do you like jazz?")',
-                ['if', 'that', 'what'], 'if',
-                'En ja/nej-fråga återges med if eller whether. That används i återgivna påståenden.'),
-            para('Para ihop ordet med vad det ofta blir i indirekt tal.',
-                 [('now', 'then'), ('here', 'there'), ('yesterday', 'the day before'), ('tomorrow', 'the next day')],
-                 'När man återger något efteråt ändras ord för tid och plats, eftersom talsituationen inte längre är '
-                 'densamma.'),
-            ordna('Bygg meningen: Han sa att filmen var tråkig.',
-                  ['He', 'said', 'that', 'the', 'film', 'was', 'boring.'],
-                  forklaring='Verbet står i dåtid efter said that, och filmen var tråkig i det förflutna: the film '
-                             'was boring.'),
-            sant("‘She told that she was late’ är en korrekt mening.", False,
-                 'Efter told måste det stå vem man talade till: She told me that she was late. Utan objekt används '
-                 'said: She said that she was late.'),
-            skriv('Skriv verbet som fattas: "Please close the door," he said. → He asked me to ___ the door.',
-                  'close',
-                  'En uppmaning återges med ask someone to och verbet i grundform: He asked me to close the door.'),
-            val('"Don\'t be late," the teacher said to us. Vilken är den korrekta indirekta formen?',
-                ['The teacher told us not to be late.', 'The teacher told us don’t be late.',
-                 'The teacher said us not to be late.'],
-                'The teacher told us not to be late.',
-                'En uppmaning som förbjuder återges med tell someone not to och infinitiv. Efter said står inget '
-                'objekt, så said us är fel.'),
-        ], beskrivning='Tränar indirekt tal: said och told, återgivna frågor och uppmaningar, tidsförskjutning och '
-                       'ord för tid och plats.'),
+        niva('en-gy1-fler-modals-2', 'Promised to, suggested going', 'Modala verb och återgivet tal', [
+            val('Ali sa: "I have lost my keys." Du återger det en vecka senare. Vilken mening följer reglerna om '
+                'tidsförskjutning?',
+                ['Ali said that he had lost his keys.', 'Ali said that he has lost his keys.',
+                 'Ali said that I had lost his keys.'],
+                'Ali said that he had lost his keys.',
+                'I blir he, my blir his, och present perfect (have lost) flyttas ett steg bakåt till past perfect '
+                '(had lost).'),
+            skriv('Gör om till indirekt tal och flytta verbet ett steg bakåt. "I must go home," she said. → She '
+                  'said that she ___ go home. (två ord)',
+                  ['had to'],
+                  'Must har ingen dåtid. När man återger det som sades blir must had to.'),
+            val('Välj rätt: She promised ___ me a postcard.',
+                ['to send', 'sending', 'send'], 'to send',
+                'Promise följs av to och infinitiv: promised to send.'),
+            val('Välj rätt: He admitted ___ the window.',
+                ['breaking', 'to break', 'break'], 'breaking',
+                'Admit följs av ing-form: admitted breaking. Samma sak gäller deny.'),
+            val('Välj rätt: The guard warned us ___ the door.',
+                ['not to open', 'not opening', "don't open"], 'not to open',
+                'Warn someone not to plus infinitiv återger en varning: warned us not to open.'),
+            val('Välj rätt: Mia suggested ___ to the cinema.',
+                ['going', 'to go', 'go'], 'going',
+                'Suggest följs av ing-form: suggested going. Suggested to go är fel.'),
+            para('Para ihop det som sades med verbet som återger det.',
+                 [('"I will definitely call you tomorrow."', 'promised'),
+                  ('"Don\'t touch the wire!"', 'warned'),
+                  ('"Why don\'t we go swimming?"', 'suggested'),
+                  ('"I didn\'t take your pen."', 'denied')],
+                 'Verbet visar vad den som talar gör: lovar, varnar, föreslår eller nekar.'),
+            sant("‘She suggested to go home’ är en korrekt mening.", False,
+                 'Efter suggest kommer ing-form (suggested going home) eller en sats (suggested that we go home).'),
+            sant("‘He denied taking the money’ betyder att han sa att han inte tog pengarna.", True,
+                 'Deny betyder förneka, och det som förnekas står i ing-form.'),
+            ordna('Bygg meningen: Hon lovade att ringa mig.',
+                  ['She', 'promised', 'to', 'call', 'me.'],
+                  forklaring='Promise följs av to och infinitiv: promised to call. Efter call kommer objektet me.'),
+        ], beskrivning='Tränar återgivet tal på högre nivå: tidsförskjutning och verb som promise, warn, suggest, '
+                       'admit och deny.'),
 
         niva('en-gy1-fler-nyhet-1', 'Pool to open late', 'Läsa en nyhet', [
             val('Vad är huvudbudskapet i artikeln?',
@@ -252,7 +247,7 @@ TILLAGG = [
                 'kollokationer.'),
             val('Välj rätt verb: Please ___ attention to the instructions.',
                 ['pay', 'make', 'do'], 'pay',
-                'Pay attention är den fasta kombinationen, som på svenska ”ge akt på”.'),
+                'Pay attention är den fasta kombinationen. Man säger inte make attention eller do attention.'),
             val('Välj rätt verb: She worked all night to ___ the deadline.',
                 ['meet', 'win', 'catch'], 'meet',
                 'Meet a deadline betyder att hinna i tid. Det man möter kan också vara a goal eller a need.'),
@@ -264,8 +259,9 @@ TILLAGG = [
             skriv('Skriv ordet som fattas: She always tells the ___, even when it is hard.', 'truth',
                   'Tell the truth är en fast kombination. Man säger också tell a lie och tell a story.'),
             skriv('Skriv verbet som fattas: We cannot wait any longer. It is time to ___ a decision.',
-                  ['make', 'take'],
-                  'På brittisk engelska går både make a decision och take a decision bra.'),
+                  ['make', 'take', 'reach', 'come to'],
+                  'På brittisk engelska går make a decision och take a decision bra. Reach a decision och come to a '
+                  'decision är också vanliga.'),
             sant("‘Make homework’ är en naturlig kombination på engelska.", False,
                  'Man gör läxor på engelska: do homework. Make används för att skapa eller tillverka något.'),
             sant('Kollokationer är ord som ofta förekommer tillsammans, till exempel ‘heavy traffic’.', True,
@@ -299,9 +295,10 @@ TILLAGG = [
                 'She has a childlike sense of wonder.',
                 'Childlike är positivt: nyfiken och förundrad som ett barn. Childish är negativt: barnslig på ett '
                 'irriterande sätt.'),
-            skriv('Skriv verbet: att gå långsamt och lugnt, utan brådska, för nöjes skull.',
-                  ['stroll', 'amble', 'saunter'],
-                  'Stroll betyder att promenera lugnt och avslappnat. Amble och saunter är nära synonymer.'),
+            skriv('Skriv ett verb, mer exakt än walk: att gå långsamt och lugnt, utan brådska, för nöjes skull.',
+                  ['stroll', 'amble', 'saunter', 'wander', 'to stroll', 'to amble', 'to saunter', 'to wander'],
+                  'Stroll betyder att promenera lugnt och avslappnat. Amble, saunter och wander är nära '
+                  'synonymer.'),
             val('"Leave me alone!" he ___, and slammed the door.',
                 ['snapped', 'whispered', 'chuckled'], 'snapped',
                 'Snapped visar att han sa det argt och kort. Whispered är viska och chuckled är skratta tyst.'),
@@ -394,13 +391,13 @@ TILLAGG = [
             val('Vilket grepp används i "This is the worst day in the history of the world"?',
                 ['hyperbole', 'understatement', 'irony'], 'hyperbole',
                 'Det är en medveten överdrift. Understatement är raka motsatsen: att förminska något stort.'),
-            val('Efter att stormen förstört halva byn kallar bonden det "a bit of bad weather". Vilket grepp är det?',
+            val('Efter att stormen förstört halva byn kallar bonden det "a minor inconvenience". Vilket grepp är det?',
                 ['understatement', 'hyperbole', 'alliteration'], 'understatement',
                 'Bonden gör något mycket stort till något litet. Det kallas understatement och används ofta för '
                 'torr humor.'),
             val('Vilken mening innehåller alliteration?',
-                ['The wind whistled through the willows.', 'The wind was as cold as ice.',
-                 'The wind was strong enough to move a car.'],
+                ['The wind whistled through the willows.', 'A cold air filled the empty street.',
+                 'The streets were empty after the heavy rain.'],
                 'The wind whistled through the willows.',
                 'Alliteration är samma begynnelseljud i närliggande ord: wind, whistled, willows.'),
             val('En läkare börjar ett tal med "I have treated young patients for twenty years". Vilken sorts '
@@ -430,7 +427,7 @@ TILLAGG = [
                  'Irony, där talaren menar motsatsen till det sagda'],
                 'Anaphora, där samma ord inleder flera meningar',
                 'Tre meningar börjar med We will not. Upprepningen i början ger rytm och eftertryck.'),
-            val('Texten säger: "I just love waiting two hours in the rain. It is the highlight of my week." '
+            val('Ett utdrag säger: "I just love waiting two hours in the rain. It is the highlight of my week." '
                 'Vilket grepp används?',
                 ['Irony: the speaker says the opposite of what is meant',
                  'Alliteration: the same sound begins several words',
@@ -483,7 +480,7 @@ TILLAGG = [
             val('How does the text explain that English has both "cow" and "beef"?',
                 ['"Cow" is the farmers’ Germanic word, "beef" the French-speaking lords’ word',
                  '"Cow" is a British word and "beef" is an American word for the same thing',
-                 '"Cow" is an old English word and "beef" a modern invention'],
+                 '"Cow" is a modern word and "beef" an old Germanic word'],
                 '"Cow" is the farmers’ Germanic word, "beef" the French-speaking lords’ word',
                 'Efter 1066 talade herrarna franska och åt köttet, medan bönderna med sitt germanska språk skötte '
                 'djuren.'),
