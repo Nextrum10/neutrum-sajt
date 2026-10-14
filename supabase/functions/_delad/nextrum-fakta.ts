@@ -71,10 +71,12 @@ ORDEN. Använd dem, och inga andra:
   beläggning för hög.
 · underlag — vad studiehjälparen ska få.
 · betalning — vad familjen betalat för ett pass. Den görs med kort,
-  per pass, antingen i förväg eller efter passet när familjen
-  bekräftar rapporten. Efter passet kan familjen i stället välja
-  faktura: en samlad faktura per familj och månad, som kommer i början
-  av nästa månad. Ett pass som familjen valt faktura för väntar på
+  per pass, och pengarna dras först när studiehjälparen har skrivit
+  rapporten: väljer familjen kort när den bokar reserveras priset två
+  dagar före passet, annars betalar den när den bekräftar rapporten.
+  Före eller efter passet kan familjen i stället välja faktura: en
+  samlad faktura per familj och månad, som kommer i början av månaden
+  efter passet. Ett pass som familjen valt faktura för väntar på
   fakturan och är inget fel.
 · tjänst — det som går att boka eller söka till.
 
@@ -119,11 +121,14 @@ SIFFRORNA:
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
   468 kronor i timmen, inte 537.
-· Familjen betalar varje pass med kort, antingen i förväg, när
-  studiehjälparen bekräftat tiden, eller efter passet när de bekräftar
-  rapporten. När de bekräftar rapporten kan de i stället välja faktura,
-  som kommer i början av nästa månad med tio dagars betalningstid och
-  utan avgift. Rapporten bekräftas också när passet redan är betalt. Ett
+· Familjen betalar varje pass med kort, och pengarna dras först när
+  studiehjälparen har skrivit rapporten. Väljer familjen kort när den
+  bokar sparas kortet hos Stripe, priset reserveras två dagar före
+  passet och dras när rapporten finns, för den tid passet hölls och
+  aldrig mer än det reserverade. Annars betalar familjen när den
+  bekräftar rapporten. Före eller efter passet kan den i stället välja
+  faktura, som kommer i början av månaden efter passet med tio dagars
+  betalningstid och utan avgift. Rapporten bekräftas också när passet redan är betalt. Ett
   pass som har hållits ska betalas även om rapporten inte bekräftats.
   En betalning som tas på ett annat sätt än villkoren lovar är en
   tvist, inte ett skrivfel.
@@ -172,9 +177,9 @@ siffra syns inte som gissad när den väl ligger i ett medelvärde. Är
 en lucka stor är talet bredvid den för lågt, och det ska du skriva.
 
 Ett kortbelopp räknas på den dag betalningen kom in, inte på passets
-dag. Familjen betalar i förväg, efter passet eller mot faktura, så en
-månads betalningar och samma månads genomförda pass hör inte ihop rad
-för rad. En faktura räknas på den månad den gäller men skickas först
+dag. Familjen betalar med kortet efter rapporten, när den bekräftar
+rapporten eller mot faktura, och förut också i förväg, så en månads
+betalningar och samma månads genomförda pass hör inte ihop rad för rad. En faktura räknas på den månad den gäller men skickas först
 i början av nästa: ett fakturerat belopp är inte betalt förrän
 fakturan är det, och ett utkast är inte skickat. Köpta timmar betalas
 i förväg och är en skuld till familjen tills timmarna använts; de är

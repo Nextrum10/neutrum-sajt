@@ -124,16 +124,19 @@ Deno.test('varje mejl har en knapp till rätt vy, och bara en', () => {
 });
 
 Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, studiehjälparens inte', () => {
-  // Samma mening som villkoren och sidorna (Fas 19.2): i förväg eller
-  // efter passet när rapporten bekräftas. Det gamla löftet att ett
-  // obetalt pass inte hålls får inte stå kvar.
-  const VILLKORET = 'antingen i förväg eller efter passet när ni bekräftar rapporten';
-  // Och sedan 2026-09-28 att fakturan är ett val efter passet, som på
-  // sidorna. verktyg/kolla-betalningsvillkor.py räknar samma mening.
-  const FAKTURAN = 'välja faktura, som kommer i början av nästa månad med tio dagars betalningstid och utan avgift';
+  // Samma mening som villkoren och sidorna (kortet_reserveras): pengarna
+  // dras först när rapporten är skriven. Det gamla löftet att ett
+  // obetalt pass inte hålls får inte stå kvar, och inte heller Betala i
+  // förväg, som inte finns med kortet som reserveras.
+  const VILLKORET = 'pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar '
+    + 'reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten';
+  // Och att fakturan är ett val, före eller efter passet, som på sidorna.
+  // verktyg/kolla-betalningsvillkor.py räknar samma mening.
+  const FAKTURAN = 'välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift';
   const bekraftat = rendera('pass_bekraftat', 'parent');
   assertStringIncludes(bekraftat.text, VILLKORET);
   assertStringIncludes(bekraftat.text, FAKTURAN);
+  assertEquals(bekraftat.text.includes('betala i förväg'), false);
   assertEquals(bekraftat.text.includes('hålls inte'), false);
   assertStringIncludes(bekraftat.text, `${SAJT}/foralder#betalning`);
   assertStringIncludes(bekraftat.html, 'Gå till betalningen');

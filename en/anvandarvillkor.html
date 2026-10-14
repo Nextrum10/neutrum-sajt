@@ -182,11 +182,24 @@
         amount looks wrong, and we are the ones who refund. The tutor is never your
         counterparty in a question about money.</li>
       <li>The hourly price is shown on the <a href="/en/priser">pricing page</a>, and the price that applies is the one shown at the time of booking.</li>
-      <li>You pay for each session by card, either in advance or after the session when you confirm
-        the report. In advance is possible as soon as the tutor has confirmed the time. After the
-        session the tutor writes a report, and you pay once you have read and confirmed it in your view.</li>
-      <li id="faktura">After the session you can choose an invoice instead, which comes at the start
-        of the following month with ten days to pay and no fee. The invoice lists the sessions that
+      <li>You pay for each session by card, and the money is only taken once the tutor has written
+        the report: if you choose card payment when you book, the price is reserved two days before the
+        session, otherwise you pay when you confirm the report. After the session the tutor writes a
+        report, and you read and confirm it in your view.</li>
+      <li id="kortet"><b>The card you choose when you book.</b> You choose card payment when you propose
+        the session, or later on the session's page as long as the session has not been held, and the
+        card is then saved with Stripe. By choosing it you give us the right to reserve and take the
+        session's price from the card, as follows: the price for the booked time is reserved at the earliest two days before the
+        session, once the tutor has confirmed the time, and the money is taken when the tutor has written
+        the report, for the time the session lasted. What is taken is never more than what was reserved,
+        and the rest is released. If the session ran longer, you pay the extra when you confirm the
+        report. If the session is cancelled or paid another way, the reservation is released, and if it
+        is moved, the price is reserved again for the new time. You can deselect the card on the session
+        until the money has been taken, and remove the card under Profile whenever you like. Anything
+        reserved is then released. If the price cannot be reserved or taken, you get an email, and you
+        then pay in one of the other ways.</li>
+      <li id="faktura">Before or after the session you can choose an invoice instead, which comes at the
+        start of the month after the session with ten days to pay and no fee. The invoice lists the sessions that
         month you chose an invoice for, and it also shows under Payment in your view. If an earlier
         invoice has not been paid, we may close the invoice option for you until it is.</li>
       <li>You confirm the report even when the session has already been paid. A session that has
@@ -201,7 +214,8 @@
       <li>If you have filled your time bank with hours in advance, with a plan or Fill the time bank, your hours pay for the
         session instead, automatically, as soon as you propose it. See <a href="#erbjudanden">Plans and the time bank</a> below.</li>
       <li>Card payments are handled by Stripe. You give your card details directly to Stripe, never
-        to us, and we do not store them.</li>
+        to us. A card you save is kept by Stripe, and we only see the brand, the last four digits
+        and when it expires.</li>
       <li>No registration fee, no monthly fee and no minimum term. You pay for the sessions you
         book and for hours you have chosen to buy in advance, nothing else.</li>
     </ul>
@@ -492,7 +506,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Swedish National Board for Consumer Disputes (ARN)</a>
       or by a Swedish general court.</p>
 
-    <p class="jur-datum">Last updated 14 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 15 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 
@@ -673,7 +687,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=50356135"></script>
+<script src="../nextrum-maskot-svar.js?v=fdac9a04"></script>
 <script src="../nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {

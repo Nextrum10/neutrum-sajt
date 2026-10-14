@@ -183,11 +183,30 @@
         Studiehjälparen är aldrig er motpart i en pengafråga.</li>
       <li>Priset per timme står på <a href="/priser">prissidan</a> och är det som gäller vid
         bokningstillfället.</li>
-      <li>Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar
-        rapporten. I förväg går det så fort studiehjälparen har bekräftat tiden. Efter passet
-        skriver studiehjälparen en rapport, och ni betalar när ni har läst och bekräftat den i er vy.</li>
-      <li id="faktura">Efter passet kan ni i stället välja faktura, som kommer i början av nästa månad
-        med tio dagars betalningstid och utan avgift. På fakturan står de pass under månaden som ni
+      <li>Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit
+        rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar
+        ni när ni bekräftar rapporten. Efter passet skriver studiehjälparen en rapport, och den läser
+        och bekräftar ni i er vy.</li>
+      <!-- Kortet reserveras (kortet_reserveras, 2026-10-13, Leo: "då
+           reserveras pengar från stripe och när passet har hållits och
+           läxhjälparen har skrivit rapport så dras pengarna"). Reservationen
+           görs av jobbet kortreservation för ett bekräftat pass som börjar
+           inom 48 timmar, dragningen när rapporten finns, högst det
+           reserverade (stripe-reservation). Den som väljer kortet ska ha
+           godkänt den här versionen (kortreservationer_kraver_villkor). -->
+      <li id="kortet"><b>Kortet ni väljer när ni bokar.</b> Kort väljer ni när ni föreslår passet, eller
+        senare på passets sida så länge passet inte har hållits, och kortet sparas då hos Stripe. Med
+        valet ger ni oss rätt att reservera och dra passets pris från kortet, så här: priset för den bokade tiden reserveras tidigast
+        två dagar före passet, när studiehjälparen har bekräftat tiden, och pengarna dras när
+        studiehjälparen har skrivit rapporten, för den tid passet hölls. Det som dras är aldrig mer än det
+        som reserverades, och resten släpps. Blev passet längre betalar ni tillägget när ni bekräftar
+        rapporten. Avbokas passet eller betalas det på annat sätt släpps reservationen, och flyttas det
+        reserveras priset på nytt inför den nya tiden. Ni kan välja bort kortet på passet fram till att
+        pengarna har dragits, och ta bort kortet under Profil när ni vill. Då släpps det som är
+        reserverat. Går priset inte att reservera eller dra får ni ett mejl, och betalar då på något av de
+        andra sätten.</li>
+      <li id="faktura">Före eller efter passet kan ni i stället välja faktura, som kommer i början av
+        månaden efter passet med tio dagars betalningstid och utan avgift. På fakturan står de pass under månaden som ni
         valt faktura för, och den syns också under Betalning i er vy. Har en tidigare faktura inte
         betalats kan vi stänga fakturavalet för er tills den är betald.</li>
       <li>Rapporten bekräftar ni också när passet redan är betalt. Ett pass som har hållits ska
@@ -202,7 +221,8 @@
       <li>Har ni fyllt er timbank med timmar i förväg, med en plan eller Fyll timbanken, betalar timmarna passet i
         stället, av sig själva, redan när ni föreslår det. Se <a href="#erbjudanden">Planer och timbanken</a> nedan.</li>
       <li>Kortbetalningen sköts av Stripe. Kortuppgifterna lämnar ni direkt till Stripe, aldrig
-        till oss, och vi sparar dem inte.</li>
+        till oss. Ett kort ni sparar står hos Stripe, och vi ser bara märket, de fyra sista siffrorna
+        och när det går ut.</li>
       <li>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar för de
         pass ni bokar och för timmar ni själva valt att köpa i förväg, inget annat.</li>
     </ul>
@@ -527,7 +547,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 14 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 15 oktober 2026.</p>
   </div>
 </section>
 
@@ -708,7 +728,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=50356135"></script>
+<script src="nextrum-maskot-svar.js?v=fdac9a04"></script>
 <script src="nextrum-maskot.js?v=ce98f31d" defer></script>
 <script>
 (function () {
