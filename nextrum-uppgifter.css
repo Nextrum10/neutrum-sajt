@@ -1528,7 +1528,7 @@ section[data-sek="nexlax"] > .vy-sek-topp:has(.vy-barnvaxel[hidden]){display:non
 /* Inträdet: ett kort lyft och en tonad ruta, bara medan det pågår. Ingen
    fyllning efteråt: en transform som blir kvar gör sektionen till
    innehållsruta för det fasta, och flikarna ovan slutar klistra. */
-@keyframes nl-in{from{opacity:0;translate:0 14px;scale:.985}to{opacity:1;translate:0 0;scale:1}}
+@keyframes nl-in{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
 section[data-sek="nexlax"]:not([hidden]){animation:nl-in .45s var(--e-ut,ease) backwards}
 @media (prefers-reduced-motion:reduce){section[data-sek="nexlax"]:not([hidden]){animation:none}}
 
@@ -1978,3 +1978,60 @@ section[data-sek="nexlax"]:not([hidden]){animation:nl-in .45s var(--e-ut,ease) b
 .upg-marken.nara .upg-marke:not(.klart) .upg-marke-ikon::before{background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--mk) 58%,white),var(--mk) 72%)}
 .upg-marken.nara .upg-marke:not(.klart) .mk-medal{filter:drop-shadow(0 7px 9px color-mix(in srgb,var(--mk) 45%,transparent))}
 .upg-marken.nara .upg-marke:not(.klart){border-style:solid}
+
+
+/* ============================================================
+   SMOOTHARE (2026-10-13)
+   Leo: "gör så att allt är mer smooth, vissa sekvenser och knappar blir
+   osmooth". Fem saker:
+     · touch-action:manipulation: ingen väntan på dubbeltryck och ingen
+       inzoomning, så ett tryck händer direkt
+     · det som byts visas med en kort tonning (opacity och ett par pixlars
+       translate) i stället för att hoppa in
+     · en omritning som inte ändrat något görs inte alls (sättHtml)
+     · banderollen byter bara väljaren, inte hela banan
+     · inträdet för hela sektionen flyttar inget stort: bara opacity och
+       8 px, aldrig scale på en hel flik
+   Rörelsen är opacity och translate, och ingen alls med rörelse bortvald.
+   ============================================================ */
+.nl button,.nl a,.nl summary,.nl .vy-flik,
+.nl-flikar .vy-flik,.nl-spelrad-ljud,
+.upg-spel button,.upg-spel a,.upg-spel input[type="text"]{touch-action:manipulation}
+.nl-rank-rad{touch-action:pan-x pan-y}
+
+@keyframes nl-ton{from{opacity:0;translate:0 6px}to{opacity:1;translate:0 0}}
+section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
+#bv-nexlax .vy-flik-panel:not([hidden]){animation:nl-ton .22s var(--e-ut,ease-out) backwards}
+.nl-sida-kropp > *{animation:nl-ton .22s var(--e-ut,ease-out) backwards}
+.nl-baner + .nl-valj,.nl-valj{animation:nl-ton .18s var(--e-ut,ease-out) backwards}
+.nl-uppdrag[open] > .nl-uppdrag-lista,.nl-uppdrag[open] > .nl-uppdrag-not,.nl-uppdrag[open] > .nl-uppdrag-mer{animation:nl-ton .2s var(--e-ut,ease-out) backwards}
+.upg-slut-serie:not([hidden]),.upg-slut-uppdrag:not([hidden]),.upg-slut-marken:not([hidden]),.upg-slut-rang:not([hidden]){animation:nl-ton .35s var(--e-ut,ease-out) backwards}
+@media (prefers-reduced-motion:reduce){
+  section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),#bv-nexlax .vy-flik-panel:not([hidden]),
+  .nl-sida-kropp > *,.nl-valj,.nl-uppdrag[open] > *,
+  .upg-slut-serie:not([hidden]),.upg-slut-uppdrag:not([hidden]),.upg-slut-marken:not([hidden]),.upg-slut-rang:not([hidden]){animation:none}
+}
+
+/* Ett tryck svarar direkt: snabb nedtryckning, och släpper med en kort återgång
+   (förut 450 ms på varje knapp, som kändes seg när man tryckte flera i rad). */
+.nl-amne,.nl-baner,.nl-cta-knapp,.nl-sida-knapp,.nl-del-knapp,.nl-fler,.nl-hjalp-remsa,.nl-spar-knapp,.nl-ak-knapp > span{
+  transition-duration:.14s,.15s,.15s;
+}
+.nl-amne:active,.nl-baner:active,.nl-hjalp-remsa:active,.nl-spar-knapp:active,.nl-fler:active{transition-duration:.06s}
+
+/* En ny rank efter nivån. */
+.upg-slut-rang{
+  display:flex;align-items:center;gap:14px;margin:14px auto 0;max-width:420px;padding:14px 16px;border-radius:22px;text-align:left;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--rk,var(--ockra)) 22%,var(--yta)),var(--yta));
+  border:2px solid color-mix(in srgb,var(--rk,var(--ockra)) 55%,var(--ln));
+}
+.upg-slut-rang-ik{
+  flex:none;display:grid;place-items:center;width:56px;height:56px;border-radius:18px;color:var(--yta);
+  background:radial-gradient(circle at 30% 24%,color-mix(in srgb,var(--rk,var(--ockra)) 45%,var(--yta)),var(--rk,var(--ockra)));
+  box-shadow:0 6px 14px -6px color-mix(in srgb,var(--rk,var(--ockra)) 70%,transparent);
+}
+.upg-slut-rang-ik svg{width:30px;height:30px}
+.upg-slut-rang small{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-3)}
+.upg-slut-rang b{display:block;font-size:1.3rem;font-weight:800;letter-spacing:-.025em;color:var(--bl)}
+.upg-slut-rang:not([hidden]) .upg-slut-rang-ik{animation:upg-pop .6s var(--vy-fjader,ease) .1s backwards}
+@media (prefers-reduced-motion:reduce){.upg-slut-rang:not([hidden]) .upg-slut-rang-ik{animation:none}}

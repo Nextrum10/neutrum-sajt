@@ -127,7 +127,7 @@ function nexlaxRpc() {
       anrop.push(['nexlax_lage', k]);
       lägen++;
       const efter = rätt.size === frågor.length;
-      return { xp: efter ? 640 : 480, xp_idag: efter ? 110 : 20, xp_vecka: 200, serie: { nu: 2, basta: 4, idag: efter },
+      return { xp: efter ? 820 : 480, xp_idag: efter ? 110 : 20, xp_vecka: 200, serie: { nu: 2, basta: 4, idag: efter },
                dagar: [{ dag: dagar(-1), xp: 160, nivaer: 1, uppgifter: 0, pass: 0 }], banor: [],
                nivaer: {}, omraden: efter ? [{ amne: 'Matematik', arskurs: 'ak6', omrade: 'Bråk', klart: nu(0) }] : [],
                missade: [], uppgifter: { klara: 30, direkt: 25, forsta: 40, forsta_ratt: 30 },
@@ -511,8 +511,20 @@ async function provaBarnet(webb) {
   await page.click('#bv-nl-vag [data-nl-ljud]');
   prova('ljud: på igen', (await page.evaluate(() => localStorage.getItem('nx.nexlax.ljud'))) === 'pa');
 
-  /* Spelaren: rätt, fel, rad i rad och resultatet. */
+  /* Knapparna är tysta (2026-10-13): ett tryck, ett val och ett flikbyte känns men låter inte. */
   await page.evaluate(() => { window.__känt.length = 0; window.__toner = 0; window.__vibb.length = 0; });
+  await page.click('#bv-flik-rank');
+  await page.click('#bv-flik-vag');
+  if ((await page.locator('#bv-nl-vag .nl-valj').count()) === 0) await page.click('#bv-nl-vag [data-nl-baner]');
+  await page.click('#bv-nl-vag .nl-amne[data-nl-amne="Svenska"]');
+  await page.click('#bv-nl-vag .nl-amne[data-nl-amne="Matematik"]');
+  await page.click('#bv-nl-vag [data-nl-baner]');
+  const tryckta = await känt(page);
+  prova('knappar: tryck och flikbyte känns men har ingen ton', (tryckta.includes('flik') || tryckta.includes('tryck')) && (await page.evaluate(() => window.__toner)) === 0,
+    JSON.stringify(tryckta) + ' ' + await page.evaluate(() => window.__toner));
+  await page.evaluate(() => { window.__känt.length = 0; window.__toner = 0; window.__vibb.length = 0; });
+
+  /* Spelaren: rätt, fel, rad i rad och resultatet. */
   await page.click('#bv-nl-vag .nl-cta-knapp');
   await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
   prova('spelaren: öppnas med en ljudknapp', await synlig(page, '.upg-spel [data-spel-ljud]'));
@@ -536,7 +548,7 @@ async function provaBarnet(webb) {
   await page.click('.upg-spel [data-spel="vidare"]');
   /* Fråga 4 fel: den kommer tillbaka sist, och då rätt. */
   await svara(1);
-  prova('spelaren: fel låter, skakar och nollar raden', (await känt(page)).includes('fel')
+  prova('spelaren: fel känns, skakar och nollar raden', (await känt(page)).includes('fel')
     && (await page.locator('.upg-spel .upg-fraga.skaka').count()) === 1 && (await page.locator('.upg-spel.het').count()) === 0,
     JSON.stringify(await känt(page)));
   await bild(page, 'nexlax-spelaren-fel', '.upg-spel');
@@ -562,10 +574,12 @@ async function provaBarnet(webb) {
   await page.waitForSelector('.upg-spel .upg-slut-uppdrag:not([hidden])', { timeout: 5000 }).catch(() => {});
   const ut = await text(page, '.upg-spel .upg-slut-uppdrag');
   prova('resultat: de nya uppdragen och kistan', ut.includes('Uppdrag klara') && ut.includes('Samla 50 XP') && ut.includes('Dagens kista är öppnad'), ut);
-  await vänta(4300);
+  await vänta(6500);
   const ljud = await känt(page);
-  prova('resultat: nivån, stjärnorna, området, uppdragen och kistan låter',
-    ['niva', 'stjarna', 'omrade', 'uppdrag', 'kista'].every(x => ljud.includes(x)), JSON.stringify(ljud));
+  prova('resultat: nivån, stjärnorna, området, uppdragen, kistan, märket och den nya ranken låter',
+    ['niva', 'stjarna', 'omrade', 'uppdrag', 'kista', 'marke', 'rang'].every(x => ljud.includes(x)), JSON.stringify(ljud));
+  prova('resultat: en ny rank visas med namn och emblem', (await text(page, '.upg-spel .upg-slut-rang')).includes('Ny rank') && (await text(page, '.upg-spel .upg-slut-rang')).includes('Tänkare')
+    && (await page.locator('.upg-spel .upg-slut-rang svg').count()) === 1, await text(page, '.upg-spel .upg-slut-rang'));
   await bild(page, 'nexlax-resultat', '.upg-spel');
 
   /* Ljudet av i spelaren: tyst efter det. */
@@ -583,7 +597,7 @@ async function provaBarnet(webb) {
   const rank = await text(page, '#bv-nl-rank');
   prova('rank: ranken med vad som är kvar', rank.includes('Din rank') && /XP kvar till/.test(rank), rank.slice(0, 200));
   prova('rank: alla ranker syns, med den nuvarande', (await page.locator('#bv-nl-rank .nl-rk').count()) === 10
-    && (await page.locator('#bv-nl-rank .nl-rk.nu').count()) === 1 && (await page.locator('#bv-nl-rank .nl-rk.klar').count()) === 2);
+    && (await page.locator('#bv-nl-rank .nl-rk.nu').count()) === 1 && (await page.locator('#bv-nl-rank .nl-rk.klar').count()) === 3);
   prova('rank: varje rank utom den första har ett märke', (await page.locator('#bv-nl-rank .nl-rk-pris:not(.nl-rk-start)').count()) === 9);
   await page.click('#bv-flik-marken');
   await vänta(150);
@@ -610,7 +624,7 @@ async function provaBarnet(webb) {
   await page.click('a[data-sek="profil"]').catch(() => {});
   await vänta(250);
   const prof = await text(page, '#bv-nl-profil');
-  prova('profilen: rank, XP och märken syns', prof.includes('Utforskare') && prof.includes('XP') && (await page.locator('#bv-nl-profil .nl-prof-marken li').count()) > 0
+  prova('profilen: rank, XP och märken syns', prof.includes('Tänkare') && prof.includes('XP') && (await page.locator('#bv-nl-profil .nl-prof-marken li').count()) > 0
     && !prof.includes('Rank:') , prof.slice(0, 200));
   await bild(page, 'nexlax-barn-profil', 'section[data-sek="profil"]');
 
