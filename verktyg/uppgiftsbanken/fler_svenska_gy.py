@@ -49,7 +49,7 @@ APPELTRADET = '\n\n'.join([
     'Efter begravningen blev jag kvar i trädgården. De andra hade gått in till kaffet, och genom '
     'köksfönstret hörde jag klirret av koppar och dämpade röster.',
     'Morfars äppelträd stod vid stenmuren, precis som förut. Det hade aldrig gett mycket frukt, men han '
-    'hade klippt det varje vår ändå. Varje höst hade han sagt samma sak: ”Nästa år, Siri. Då blir det äpplen.”',
+    'hade klippt det varje vår ändå. Varje höst hade han sagt till mig: ”Nästa år, Siri. Då blir det äpplen.”',
     'I år var grenarna tunga av frukt. Ingen hade klippt trädet, och det hade tagit tillfället i akt.',
     'Jag plockade ett äpple och bet i det. Det var hårt och så surt att jag fick knipa ihop ögonen. Ändå '
     'åt jag upp det, sakta, ända till kärnhuset.',
@@ -103,11 +103,12 @@ TILLAGG = [
                 'En bisats som behövs för att peka ut någon, som i ”Eleverna som kom sent fick vänta”, får inga.'),
             val('Vilken mening använder kolon rätt?',
                 ['Jag har tre husdjur: en hund, en katt och en hamster.',
-                 'Jag har: tre husdjur, en hund, en katt och en hamster.',
+                 'Jag har tre husdjur en hund: en katt och en hamster.',
                  'Jag köpte: en cykel och en hjälm.'],
                 'Jag har tre husdjur: en hund, en katt och en hamster.',
                 'Kolon kan inleda en uppräkning efter en hel sats, och ”Jag har tre husdjur” är en hel sats. '
-                'Efter ”har” och ”köpte” saknas det som uppräkningen ska förklara.'),
+                '”Jag köpte” är ingen hel sats utan behöver sitt objekt, och i den andra står kolonet mitt i '
+                'uppräkningen.'),
             para('Para ihop skiljetecknet med vad det gör.',
                  [('komma', 'skiljer leden i en uppräkning åt'),
                   ('kolon', 'kan inleda en uppräkning efter en hel sats'),
@@ -132,7 +133,7 @@ TILLAGG = [
                 'Första ordet i en mening har stor bokstav, och det har namn på personer och platser. ”Går” är ett '
                 'vanligt ord och skrivs med liten bokstav.'),
             skriv('Hur många kommatecken behövs i uppräkningen ”Vi åt pannkakor sylt och grädde”? Skriv ett tal.',
-                  [tal(1), 'ett', 'ett komma'],
+                  [tal(1), 'ett', 'ett komma', 'ett kommatecken'],
                   'Det är tre led: pannkakor, sylt och grädde. Komma behövs mellan de två första, men inte före '
                   '”och”: ”Vi åt pannkakor, sylt och grädde.”'),
         ], beskrivning='Tränar komma i uppräkningar, komma före ”men” och runt extra information, kolon, '
@@ -298,7 +299,7 @@ TILLAGG = [
             val('Vilket av dessa drag är typiskt för modernismen?',
                 ['Brott mot traditionen och experiment med form och språk',
                  'Tro på att allt kan förklaras med förnuft och vetenskap',
-                 'Skildringar av naturen som en källa till längtan och anda'],
+                 'Skildringar av naturen som en källa till längtan och andlighet'],
                 'Brott mot traditionen och experiment med form och språk',
                 'Modernismen ville inte fortsätta som förr. Författarna prövade nya former, och dikter utan rim var '
                 'vanliga.'),
@@ -352,8 +353,8 @@ TILLAGG = [
                 'Berättaren säger ”jag”, och morfar tilltalar henne i repliken: ”Nästa år, Siri.” Det är en '
                 'jagberättare.'),
             sant('Trädet hade alltid gett mycket frukt.', False,
-                 'Det står att trädet ”aldrig hade gett mycket frukt”. Det är därför det är en stor sak att det '
-                 'hänger fullt i år.'),
+                 'Det står att trädet aldrig hade gett mycket frukt. Därför är det en stor sak att det hänger '
+                 'fullt i år.'),
             skriv('Vad brukade morfar säga varje höst om trädet? Skriv de två första orden i hans replik.',
                   ['nästa år', 'nästa år,'],
                   'Morfar sa: ”Nästa år, Siri. Då blir det äpplen.” Han lovade det varje höst.'),
@@ -540,8 +541,7 @@ TILLAGG = [
             sant('Undersökningen har granskats av utomstående forskare.', False,
                  'Det står: ”Undersökningen har inte granskats av någon utomstående.”'),
             sant('Eleverna uppgav själva sina betyg, vilket kan göra uppgifterna mindre tillförlitliga.', True,
-                 'Uppgifterna är inte kontrollerade mot skolans register. Den som svarar kan minnas fel eller '
-                 'överdriva.'),
+                 'Uppgifterna kommer bara från eleverna själva. Den som svarar kan minnas fel eller överdriva.'),
             skriv('Hur många av dem som svarade joggar inte före skolan? Skriv ett tal.', tal(SVARADE - JOGGAR),
                   '%d svarade, och %d joggar före skolan. %d − %d = %d.'
                   % (SVARADE, JOGGAR, SVARADE, JOGGAR, SVARADE - JOGGAR)),
