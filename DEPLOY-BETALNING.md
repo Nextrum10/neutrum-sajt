@@ -1264,10 +1264,15 @@ kod går att skapa. Steg 4 och 5 återstår. Ordningen var den här:
 Familjen väljer kort när den föreslår ett pass, och kortet sparas hos Stripe.
 Beloppet reserveras två dagar före passet, dras när rapporten finns och släpps
 när passet inte längre ska betalas med kortet (`minne/betalning.md`, Kortet
-reserveras vid bokningen). Databasen (`20261013170000_kortet_reserveras`) och
-edge-funktionerna är byggda. Vyerna och villkoren är det inte. **Inget av det
-här körs förrän resten är byggt**, och strömbrytaren `kortreservation` står av
-tills provet i testläge (steg 6) gått igenom.
+reserveras vid bokningen). Databasen (`20261013170000_kortet_reserveras`),
+edge-funktionerna och vyerna är byggda. Villkoren är det inte. **Inget av det
+här körs förrän villkoren är skrivna**, och strömbrytaren `kortreservation` står
+av tills provet i testläge (steg 6) gått igenom.
+
+Vyerna går ut med sajten när grenen mergas, före allt nedan. Det är med flit:
+utan flaggans rad (migrationen är inte körd) frågar studievyn inte efter kortet,
+och adminvyn visar ingen rubrik, och med strömbrytaren av är båda som förut
+(`verktyg/prova-kortet.js`).
 
 I den här ordningen, från main efter merge. Fråga först de andra sessionerna
 som arbetar i repot (`minne/databasen.md`):
@@ -1301,9 +1306,12 @@ som arbetar i repot (`minne/databasen.md`):
    - Prova ett avbokat pass: reservationen ska släppas.
    - Säger Stripe något om kassan i läget `setup` (Managed Payments), lägg
      till `managed_payments: { enabled: false }` där, som för ett pass.
-   - Stäng av strömbrytaren igen tills vyerna och villkoren är ute.
+   - Spara ett kort och ta bort det under Profil → Kortet, och ta bort ett
+     från adminvyn (familjens panel, Ekonomi). Förhandsvisningen når inte
+     Stripe, så det här är första gången de provas.
+   - Stäng av strömbrytaren igen tills villkoren är ute.
 7. **Villkoren** säger betalsätten på 36 ställen och i mejlen
    (`kolla-betalningsvillkor.py`). Kort som reserveras och dras efter passet
-   är ett nytt sätt, så meningen, villkoren och deras version ändras i samma
-   PR som vyerna, och juristen läser dem innan strömbrytaren slås på.
+   är ett nytt sätt, så meningen, villkoren och deras version ändras i en egen
+   PR, och juristen läser dem innan strömbrytaren slås på.
 

@@ -224,7 +224,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   till nekad, bara webhooken skriver betalningen på passet, och raderingen väntar på kortet. Reservationen,
   dragningen och släppet gör `stripe-reservation` (jobbet `kortreservation`), som först frågar Stripe om passet
   redan har ett PaymentIntent: **inget dras två gånger**. Ett nej skriver bara den, och ett släpp rör bara radens
-  egen reservation. Strömbrytaren `kortreservation` står av (`minne/betalning.md`, Kortet reserveras vid bokningen).
+  egen reservation. Vyerna (2026-10-14) visar valet bara med strömbrytaren på, och då tar Välj kort platsen från
+  Betala i förväg; med den av räknar vyn bara med en reservation som står, för jobbet reserverar och drar inget
+  val då. Strömbrytaren `kortreservation` står av (`minne/betalning.md`, Kortet reserveras vid bokningen).
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -426,7 +428,7 @@ knappen stängs med `NXStudie.medan()`.
 Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, mossa klart (tokens i
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
 ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knappen
-Betala i förväg och Köp under Erbjudanden (2026-10-12). Ett drag överst, en knapp per listrad, tid och plats genom
+Betala i förväg (Välj kort med strömbrytaren `kortreservation` på) och Köp under Erbjudanden (2026-10-12). Ett drag överst, en knapp per listrad, tid och plats genom
 `NXKontakt.passRad`, betalvalen i `.vy-betalval`. Adminvyns månadsväljare är ett fält med en
 ruta för år och månad (2026-10-06), från september 2026 till och med december nästa år; märket
 står i fältet och i rutan, och Lektioner räknar upp andra månader utan rapport under det.
@@ -897,7 +899,8 @@ Detaljer: `minne/grunden.md`.
   (`kortet_reserveras`, 20261013170000; lokalt ur 190 migrationer 1700 av 1700 i `rls-test.sql`, avsnitt 33),
   med strömbrytaren `kortreservation` av, mallen `kort_nekat` i `notis-ko`, och policyn och rad 29 i `DATASKYDD.md`.
   Edge-funktionerna är skrivna samma natt: kassans läge `setup` och Ta bort kortet (`stripe-checkout`), den nya
-  `stripe-reservation` och webhookens tre nya händelser (lokalt 1700 av 1700 i `rls-test.sql`). Kvar: vyerna,
+  `stripe-reservation` och webhookens tre nya händelser (lokalt 1700 av 1700 i `rls-test.sql`). Vyerna är skrivna
+  2026-10-14, bakom strömbrytaren och utan att fråga efter kortet innan migrationen är körd (`prova-kortet.js`). Kvar:
   villkoren och Stripes endpoint (`minne/betalning.md`). **Kör inte migrationen förrän resten är byggd**, och
   ordningen står i `DEPLOY-BETALNING.md` 9.14. Pengarna dras när passet har rapporterats (Leo samma kväll).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot

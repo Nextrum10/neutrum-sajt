@@ -243,8 +243,8 @@ dras pengarna om man betalar med kort". På två frågor samma kväll valde
 han att **kortet sparas och beloppet reserveras två dagar före passet**,
 och att **valet är frivilligt**: väljer familjen inget betalar de efter
 passet, med kort eller faktura, som förut. Han sa också att designen kan
-ändras. Det här är planen; databasen är skriven
-(`20261013170000_kortet_reserveras`), resten byggs i samma gren.
+ändras. Databasen (`20261013170000_kortet_reserveras`), edge-funktionerna
+och vyerna är skrivna; villkoren och driftsättningen återstår.
 
 **Stripes regel, och varför två dagar.** En reservation (ett
 PaymentIntent med `capture_method: manual`) släpps av Stripe om den inte
@@ -263,8 +263,9 @@ rapporten innan Visas reservation släpps. Längre förlängda reservationer
 **Flödet.**
 1. **Valet** står i Föreslå pass och i granskningen av ett barns förslag:
    kort, faktura eller efter passet. Det visas inte när timmarna betalar
-   passet eller passet kostar inget, och kort bara när strömbrytaren
-   `kortreservation` är på. Faktura väljs med samma skrivning som förut
+   passet eller passet kostar inget, och bara när strömbrytaren
+   `kortreservation` är på: med den av är förslaget som förut, och
+   fakturan väljs efter passet. Faktura väljs med samma skrivning som förut
    (`betalning_status` till `faktura`, prövad i `skydda_bokningsfalt`),
    nu direkt efter att förslaget skapats. Kort väljs med
    `valj_kort(pass, true)`.
@@ -372,8 +373,47 @@ att inget blir kvar hos Stripe när kontot tas bort.
   `amount_refunded`. Webhookens återbetalning räknar mot `amount_captured`,
   så att en hel återbetalning av det dragna blir `aterbetald`.
 
+**Vyerna** (2026-10-14, bakom strömbrytaren; med den av är allt som förut):
+- **Förslaget** och granskningen av ett barns förslag har raden
+  **Betalning** i dagens panel: Efter passet (förvalet), Kort och, när
+  familjen får välja faktura, Faktura, med en mening under om vad valet
+  gör (`betalval` i `NXArbete.bokning`, `betalvalFörslag()`). Valet står
+  kvar till nästa förslag. Passet skapas först och valet skrivs sedan
+  (`efterBetalsätt()`: fakturan som förut, kortet med `valj_kort`); ett
+  fel där fäller inte förslaget, och kvittot säger vad som gick. Saknas
+  kortet är Spara kortet familjens drag i kvittot.
+- **Passets sida**: före passet är valen Välj kort (orange, på platsen
+  där Betala i förväg stod) och Betala mot faktura. Med kortet valt säger
+  beskedet vad kortet gör och när, och Välj bort kortet står under. Ett
+  fakturapass får Välj kort i stället, aldrig Betala med kort nu. Nekat:
+  Byt kort (eller Lägg till kort) och Försök igen.
+- **Listorna** märker passet med kortets läge (Kort, Reserverat på
+  kortet, Kortet nekades) i stället för Ej betalt (`passMärke`), och
+  **Bekräfta rapport** säger att priset dras från kortet inom några
+  minuter, utan betalval: kortet dras när rapporten finns, inte när den
+  bekräftas.
+- **Profil → Kortet** (`#flik-kort`, dold tills strömbrytaren är på
+  eller ett kort är sparat, så att ett kort alltid går att ta bort):
+  märket, de sista fyra, giltigheten, Byt kort och Ta bort. Kassan för
+  kortet öppnas inbäddad som de andra, och vyn läser om kortet i en halv
+  minut efter kassan, för webhooken skriver det en stund senare.
+- **Strömbrytaren av med ett val kvar**: jobbet reserverar och drar då
+  inget val (`kortreservation_att_gora`), så vyn räknar inte med kortet
+  (`kortBetalar` kräver strömbrytaren, utom för en reservation som står,
+  som dras ändå) och säger att passet betalas som vanligt.
+- **Utan migrationen** läser vyn flaggans rad först och frågar inte efter
+  `mitt_kort()` eller `kortreservationer` när den saknas, så att varje
+  inloggning inte ger två 404.
+- **Adminvyn**: familjens panel under Ekonomi har Kortet, med kortet och
+  Ta bort kortet (`stripe-checkout` med `familj`) och passen där kortet
+  valts, med läge, belopp och sista dag för dragningen. Bara för en
+  superadmin (policyerna), och utan migrationen står rubriken inte.
+- **Förhandsvisningen** har strömbrytaren på, Annas Visa ·· 4242 och ett
+  förslag med kortet valt, och `valj_kort` prövar som databasen. Kortet
+  sparas och tas inte bort där: det går genom Stripe.
+- **Provet** är `verktyg/prova-kortet.js` (`minne/genererat-och-ci.md`).
+
 **Kvar**:
-- Vyerna.
 - Villkorsmeningen på alla 36 ställen och i mejlen, med en ny version.
 - Stripes endpoint: de tre nya händelserna.
 - Driftsättningen (`DEPLOY-BETALNING.md` 9.14) och provet i testläge.
