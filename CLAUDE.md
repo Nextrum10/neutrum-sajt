@@ -108,10 +108,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och barnets vy har inga länkar ut. Fel i en fråga rapporteras i spelaren (`rapportera_fragefel`,
   fyra skäl, ingen fritext, ingen person) och syns under Material i adminvyn. Ljuden räknas fram i webbläsaren (`nextrum-ljud.js`) och
   valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
-  **NexLäx är ett spel i studievyn** (2026-10-13): fem flikar (Din väg, Rank, Märken, Din utveckling,
-  Studiehjälparen), menyn och hälsningen gömda medan man är där (CSS `:has()`), ranker som en rad kort att
-  svepa i med rankmärken som belöning (aldrig pengar), märken i egen flik och på profilen (räknade, aldrig
-  sparade), Din utveckling i fyra sidor, tre ämnen framme och resten bakom Visa fler ämnen, och klockljud i
+  **NexLäx är ett spel i studievyn** (2026-10-13): fyra flikar (Din väg, Din utveckling med NexLäx eller
+  Studiehjälparen att välja mellan, Rank, Märken), alltid på Din väg när man kommer in, banan synlig direkt
+  (Dagens uppdrag hopfällt, väljaren bakom ämnesbanderollen), huvudsidans gradient på NexLäx titel och val (ingen separat sida: menyn och hälsningen står kvar, Leo
+  2026-10-13), ranker som en rad kort att svepa i med rankmärken som belöning (aldrig pengar), märken som
+  färgglada medaljer i egen flik och på profilen (räknade, aldrig sparade), Din utveckling i tre sidor, tre ämnen framme och resten bakom Visa fler ämnen, och klockljud i
   `nextrum-ljud.js`. Grupper att tävla i är inte byggda (`minne/nexlax.md`).
   Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
   (`.nlx-bygger`, brickorna `fokus`) och sist i Välj ämne (`.nl-valj-not`), och ändras på alla ställen samtidigt.
