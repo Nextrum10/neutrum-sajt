@@ -123,11 +123,15 @@ window.NXLjud = (function () {
     ton(från, start, längd, { typ: 'sine', vol: vol || 0.07, glid: till, attack: 0.02 });
   }
 
+  /* LJUD BARA FÖR DET SOM KLARAS (2026-10-13, Leo: "när man trycker på alla
+     knappar i NexLäx ska det inte pipa, bara haptic feedback. Ljud bara när
+     man klarar uppgifter eller nivåer, öppnar kistor, avancerar i rank och
+     låser upp märken"). Ett tryck på en knapp, ett val, en flik, ett fel svar
+     och att gå in i NexLäx har därför ingen ton här: `känn('tryck')` och de
+     andra vibrerar, och `spela` svarar inget för ett namn som saknas. Det som
+     låter är rätt svar, stjärnor, nivå, område, bana, uppdrag, kista, märke,
+     en ny rank och en nivå som öppnas. */
   const LJUD = {
-    /* Ett steg på vägen, en knapp: ett litet träklick. */
-    tryck(t) { ton(1500, t, 0.035, { typ: 'sine', vol: 0.05, glid: 900 }); },
-    /* Ett alternativ, en bricka, ett par: ett mjukt pling. */
-    val(t) { klang(N.E6, t, 0.09, 0.05); },
     /* Rätt: ett ljust ding-ding uppåt. Med opts.rad stiger det en halvton
        för varje svar i rad, högst en oktav. */
     ratt(t, o) {
@@ -135,11 +139,6 @@ window.NXLjud = (function () {
       klang(halvton(N.G5, steg), t, 0.22, 0.17);
       klang(halvton(N.C6, steg), t + 0.09, 0.4, 0.19);
       ton(halvton(N.C5, steg), t + 0.09, 0.3, { typ: 'sine', vol: 0.06 });
-    },
-    /* Fel: en mjuk, låg ton som sjunker, som en studs. Inget gnissel. */
-    fel(t) {
-      ton(240, t, 0.26, { typ: 'sine', vol: 0.15, glid: 150, attack: 0.012 });
-      ton(120, t, 0.26, { typ: 'triangle', vol: 0.08, glid: 75, attack: 0.012, lågpass: 500 });
     },
     /* En stjärna i resultatet: i = 1, 2, 3 går uppåt. */
     stjarna(t, o) {
@@ -189,15 +188,7 @@ window.NXLjud = (function () {
     rang(t) {
       [N.C5, N.G5, N.C6, N.E6, N.G6, N.C7].forEach((f, i) => klang(f, t + i * 0.1, 0.4, 0.13));
       [N.C5, N.E5, N.G5].forEach(f => ton(f, t + 0.6, 1.2, { typ: 'sine', vol: 0.06 }));
-    },
-    /* In i spelet: ett kort svep uppåt och ett slag, som en start. */
-    oppna(t) {
-      svep(N.G4, N.G5, t, 0.22, 0.06);
-      klang(N.C6, t + 0.18, 0.4, 0.11);
-      klang(N.G6, t + 0.28, 0.5, 0.09);
-    },
-    /* Byta flik i spelet: ett lågt, kort slag. */
-    flik(t) { klang(N.A5, t, 0.08, 0.04); }
+    }
   };
 
   function spela(namn, opts) {

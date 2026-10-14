@@ -826,6 +826,22 @@ window.NXUppgifter = (function () {
      utan att vyn behöver veta något. */
   const senaste = new WeakMap();
 
+  /* Ritar bara om något har ändrats (2026-10-13, Leo: "gör så att allt är mer
+     smooth"). Vyerna ritar om NexLäx varje gång något har hämtats (uppgifterna,
+     försöken, läget, bedömningarna), och varje omritning byter hela flikens
+     innehåll: det blinkar, väljaren och raden tappar sin plats och animationerna
+     går om. Är texten densamma som sist står DOM:en kvar. */
+  const sistaHtml = new WeakMap();
+  function sättHtml(host, html) {
+    const sist = sistaHtml.get(host);
+    /* Står första elementet kvar är det vår ritning (ett "Hämtar" som någon
+       annan satt in har ett annat). */
+    if (sist && sist.html === html && sist.nod && sist.nod === host.firstElementChild) return false;
+    host.innerHTML = html;
+    sistaHtml.set(host, { html, nod: host.firstElementChild });
+    return true;
+  }
+
   function ritaVäg(o) {
     const host = o.host;
     if (!host) return null;
@@ -842,14 +858,14 @@ window.NXUppgifter = (function () {
     /* Studiehjälparens uppgifter, passet och bedömningen har en egen
        flik (2026-10-13); här finns bara en remsa dit. */
     const valjOppen = host.dataset.valj === '1';
-    host.innerHTML = toppHtml(o, väg, nästa, spar === 'np' ? np : null)
+    sättHtml(host, toppHtml(o, väg, nästa, spar === 'np' ? np : null)
       + hjälpRemsa(o)
       + uppdragHtml(o.läge, { öppen: host.dataset.upp === '1' })
       + (ämnen.length ? banerHtml(o, väg, np, spar, amne, arskurs, valjOppen) : '')
       + (ämnen.length && valjOppen ? valjHtml(o, finns, ämnen, amne, arskurs, host.dataset.fler === '1') : '')
       + (np && !baraNp ? spårHtml(spar, np) : '')
       + (spar === 'np' ? npHtml(o, np) : väg ? vägHtml(o, väg) + repetitionHtml(o, väg) : tommaVägen(o))
-      + inställningarHtml();
+      + inställningarHtml());
 
     host.dataset.amne = amne;
     host.dataset.arskurs = arskurs;
@@ -1617,7 +1633,7 @@ window.NXUppgifter = (function () {
     host.dataset.sida = sida;
     const öppna = (o.uppgifter || []).filter(h => h.status !== 'klar').length;
     const val = [['nexlax', 'NexLäx', 0], ['hjalpare', 'Studiehjälparen', öppna]];
-    host.innerHTML = '<div class="nl-del" role="group" aria-label="Vilken utveckling">' + val.map(x =>
+    sättHtml(host, '<div class="nl-del" role="group" aria-label="Vilken utveckling">' + val.map(x =>
         '<button type="button" class="nl-del-knapp" data-nl-del="' + x[0] + '" aria-pressed="' + (x[0] === del ? 'true' : 'false') + '">'
         + '<span class="nl-del-t">' + esc(x[1]) + '</span>' + (x[2] ? '<em>' + x[2] + '</em>' : '') + '</button>').join('') + '</div>'
       + (del === 'hjalpare'
@@ -1625,7 +1641,7 @@ window.NXUppgifter = (function () {
           : '<div class="nl-sidor" role="group" aria-label="Sidor i Din utveckling">' + UTV_SIDOR.map(x =>
               '<button type="button" class="nl-sida-knapp" data-nl-sida="' + x[0] + '" aria-pressed="' + (x[0] === sida ? 'true' : 'false') + '">'
               + esc(x[1]) + '</button>').join('') + '</div>'
-            + '<div class="nl-sida-kropp">' + utvSidor(o)[sida]() + '</div>');
+            + '<div class="nl-sida-kropp">' + utvSidor(o)[sida]() + '</div>'));
   }
 
   /* Byt sida i Din utveckling: bara innehållet byts, knapparna står kvar. */
@@ -1637,6 +1653,7 @@ window.NXUppgifter = (function () {
     host.querySelectorAll('[data-nl-sida]').forEach(k => k.setAttribute('aria-pressed', k.dataset.nlSida === namn ? 'true' : 'false'));
     const kropp = host.querySelector('.nl-sida-kropp');
     if (kropp) kropp.innerHTML = sidor[namn]();
+    sistaHtml.delete(host);
     känn('flik');
     /* Är sidan kortare än den förra och man står långt ned hamnar knapparna
        ovanför bild: då hämtas de tillbaka. */
@@ -1718,7 +1735,7 @@ window.NXUppgifter = (function () {
     const rörde = gammal ? gammal.scrollLeft : null;
     const före = host.dataset.rankNr;
     const nu = String(rang(l.xp).nr);
-    host.innerHTML = rangHtml(l) + rankBana(l);
+    if (!sättHtml(host, rangHtml(l) + rankBana(l))) return;
     host.dataset.rankNr = nu;
     const rad = host.querySelector('.nl-rank-rad');
     /* Samma rank som förut: raden står kvar där man lämnade den. Annars
@@ -1766,7 +1783,7 @@ window.NXUppgifter = (function () {
     const nästaIds = new Set(nära.map(m => m.id));
     const grid = (lista, klass) => '<div class="upg-marken' + (klass ? ' ' + klass : '') + '">' + lista.map(m => märkesHtml(m)).join('') + '</div>';
     const procent = Math.round(klara.length / alla.length * 100);
-    host.innerHTML =
+    sättHtml(host,
       '<section class="nl-marken-topp"><div><span class="nl-marken-et">Dina märken</span>'
       + '<b>' + klara.length + '<i> av ' + alla.length + '</i></b>'
       + '<small>Märkena räknas ur det du gjort och syns på din profil. De ger och tar ingenting.</small></div>'
@@ -1776,7 +1793,7 @@ window.NXUppgifter = (function () {
       + (klara.some(m => m.grupp !== 'rank') ? block('Du har', null, grid(klara.filter(m => m.grupp !== 'rank'))) : '')
       + block('Att samla', 'Stjärnorna räknar det bästa försöket på varje nivå: en för minst 60 procent rätt på första försöket, två för minst 80 och tre för allt rätt.',
           grid(kvar.filter(m => !nästaIds.has(m.id) && m.grupp !== 'rank')))
-      + block('Rankmärken', 'Ett för varje rank. Du får märket när ranken är nådd.', grid(alla.filter(m => m.grupp === 'rank')));
+      + block('Rankmärken', 'Ett för varje rank. Du får märket när ranken är nådd.', grid(alla.filter(m => m.grupp === 'rank'))));
   }
 
   /* ============================================================
@@ -1810,7 +1827,7 @@ window.NXUppgifter = (function () {
       + '</section>';
   }
   function ritaProfil(o) {
-    if (o.host) o.host.innerHTML = profilHtml(o);
+    if (o.host) sättHtml(o.host, profilHtml(o));
   }
 
   /* ============================================================
@@ -2815,6 +2832,7 @@ window.NXUppgifter = (function () {
               + '</div>'
             : '')
         + '<div class="upg-slut-serie" hidden></div>'
+        + '<div class="upg-slut-rang" hidden></div>'
         + (r.godkand
             ? (nya ? '<p class="upg-slut-ny">+' + nya + (nya === 1 ? ' ny stjärna' : ' nya stjärnor') + '</p>'
                    : stj < 3 ? '<p class="upg-slut-not">Gör om nivån när du vill. Allt rätt direkt ger tre stjärnor.</p>' : '')
@@ -2863,6 +2881,20 @@ window.NXUppgifter = (function () {
           + '<small>' + esc(läge.serie.idag ? 'Dagens mål är klart · ' + xpText(läge.xp) + ' totalt' : xpText(läge.xp) + ' totalt') + '</small></span>';
       }
 
+      /* En ny rank (2026-10-13): XP:n före och efter, ur databasen. Det tyngsta
+         ljudet, och en ruta med rankens emblem och färg. */
+      const rangFöre = lägeFöre ? rang(lägeFöre.xp) : null;
+      const rangEfter = läge ? rang(läge.xp) : null;
+      const nyRang = rangFöre && rangEfter && rangEfter.nr > rangFöre.nr ? rangEfter : null;
+      const rangEl = kropp.querySelector('.upg-slut-rang');
+      if (nyRang && rangEl) {
+        rangEl.hidden = false;
+        rangEl.dataset.rk = String(nyRang.nr - 1);
+        rangEl.innerHTML = '<span class="upg-slut-rang-ik">' + IKON[RANGIKON[nyRang.nr - 1]] + '</span>'
+          + '<span><small>Ny rank!</small><b>' + esc(nyRang.namn) + '</b></span>';
+        senare(r.godkand ? 1500 : 300, () => känn('rang'));
+      }
+
       /* Uppdragen som blev klara nu: de som är klara efter och inte var
          det före, enligt databasen. Ett uppdrag som klarades i en annan
          flik syns här också; det är också klart. */
@@ -2891,7 +2923,7 @@ window.NXUppgifter = (function () {
         mk.hidden = false;
         mk.innerHTML = '<p>' + (nuKlara.length === 1 ? 'Nytt märke' : 'Nya märken') + '</p>'
           + nuKlara.map(m => märkesHtml(m, { nytt: true })).join('');
-        senare(fördröjning + 900 + nyaUppdrag.rader.length * 260, () => känn('marke'));
+        senare(fördröjning + (nyRang ? 1500 : 900) + nyaUppdrag.rader.length * 260, () => känn('marke'));
       }
       if (läge) o.läge = läge;
     }
@@ -3119,7 +3151,7 @@ window.NXUppgifter = (function () {
       if (ljudval) {
         const på = !NXLjud.ljudPå();
         NXLjud.sättLjud(på);
-        if (på) NXLjud.spela('val');
+        if (på) NXLjud.vibrera('tryck');
       } else {
         const på = !NXLjud.vibrationPå();
         NXLjud.sättVibration(på);
@@ -3162,6 +3194,7 @@ window.NXUppgifter = (function () {
       host.dataset.fler = host.dataset.fler === '1' ? '' : '1';
       const { finns, ämnen, amne, arskurs } = lösBana(o);
       valj.outerHTML = valjHtml(o, finns, ämnen, amne, arskurs, host.dataset.fler === '1');
+      sistaHtml.delete(host);
       const ny = host.querySelector('[data-nl-fler]');
       if (ny) {
         const diff = ny.getBoundingClientRect().top - y;
@@ -3203,10 +3236,18 @@ window.NXUppgifter = (function () {
       const host = baner.closest('.nl');
       const o = host && senaste.get(host);
       if (!o) return;
-      host.dataset.valj = host.dataset.valj === '1' ? '' : '1';
-      ritaVäg(o);
-      const ny = host.querySelector('[data-nl-baner]');
-      if (ny) ny.focus({ preventScroll: true });
+      /* Bara väljaren sätts in eller tas bort: banan nedanför ritas inte om. */
+      const öppnar = host.dataset.valj !== '1';
+      host.dataset.valj = öppnar ? '1' : '';
+      baner.setAttribute('aria-expanded', öppnar ? 'true' : 'false');
+      const valj = host.querySelector('.nl-valj');
+      if (öppnar && !valj) {
+        const { finns, ämnen, amne, arskurs } = lösBana(o);
+        baner.insertAdjacentHTML('afterend', valjHtml(o, finns, ämnen, amne, arskurs, host.dataset.fler === '1'));
+      } else if (!öppnar && valj) {
+        valj.remove();
+      }
+      sistaHtml.delete(host);
       känn('tryck');
       return;
     }
@@ -3228,7 +3269,7 @@ window.NXUppgifter = (function () {
     /* Ett val av årskurs är klart: väljaren går ihop. Vyns egen lyssnare byter
        bana och ritar om, och den kommer efter den här. */
     const akVal = mål.closest('.nl-valj [data-nl-ak]');
-    if (akVal) { const host = akVal.closest('.nl'); if (host) host.dataset.valj = ''; }
+    if (akVal) { const host = akVal.closest('.nl'); if (host) { host.dataset.valj = ''; sistaHtml.delete(host); } }
 
     const sida = mål.closest('[data-nl-sida]');
     if (sida) {
