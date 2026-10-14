@@ -1246,8 +1246,20 @@ också `ta_tillbaka_gratistimmar`, som inte finns där), att inget pass med
 `startrabatt` redan har ett kort (`select count(*) from bookings where
 klippkort_id is not null and startrabatt` ska vara 0; ett sådant hade fått
 en timme tillbaka), och vem som mer kör mot driften. **Efter**: registrera
-`20261014100000` och `20261013140000` (med en anteckning om att avsnitt 7
-ersattes), driftsätt `stripe-checkout` och `drift` från main och hämta
-tillbaka dem, kör hela `rls-test.sql` mot driften tillbakarullat, och se att
-advisorn inte larmar om något nytt för `anon` (`extra_timmar_erbjudande` är
-nåbar för `authenticated` och svarar bara om den inloggade).
+`20261014100000`, och `20261013140000` om den inte redan står där (med en
+anteckning om att avsnitt 7 ersattes), driftsätt `stripe-checkout` och `drift`
+från main och hämta tillbaka dem, kör hela `rls-test.sql` mot driften
+tillbakarullat (avsnitt 33 hoppar över sig självt så länge `kortet_reserveras`
+inte är körd), och se att advisorn inte larmar om något nytt för `anon`
+(`extra_timmar_erbjudande` är nåbar för `authenticated` och svarar bara om den
+inloggade).
+
+**`kortet_reserveras` (20261013170000) körs efter den här i driften**, fast
+numret är lägre. De skriver inga gemensamma objekt, och `kortet_betalar()`
+kräver `klippkort_id is null`, som fortfarande stämmer: `forsta_klippkort_id`
+kräver `klippkort_id` (`bookings_forsta_kortet_med_kort`). Lokalt i den
+ordningen (till och med `rabattkoden_timmar_och_tak`, den här, sedan
+`kortet_reserveras`): hela `rls-test.sql` 1738 av 1738. `stripe-checkout` från
+main bär sedan PR #275 kortets lägen (`kort: 'spara'` och `'ta_bort'`), men de nås
+bara med `kort` i anropet, och att spara kräver strömbrytaren `kortreservation`,
+som inte finns före migrationen; passens och köpens kassa är som förut.
