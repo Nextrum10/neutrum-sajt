@@ -661,6 +661,9 @@ Händelser som ska väljas, och varför just de:
 | `charge.dispute.created` | Sparar tvisten med sista svarsdag och orsak, och lägger en uppgift (9.10) |
 | `charge.dispute.updated` | Stripe flyttar tvisten till `under_review` när underlaget skickats in, och kan ändra dagen. **Ny i Fas 14.3** |
 | `charge.dispute.closed` | Utfallet: vunnen blir en betalning igen, förlorad står kvar som tvist |
+| `payment_intent.amount_capturable_updated` | Kortet reserveras (9.14): en reservation som `stripe-reservation` inte hann skriva. **Ny 2026-10-13** |
+| `payment_intent.succeeded` | Kortet reserveras (9.14): pengarna drogs med det sparade kortet, och passet blir betalt. Kassans egna kvitteras utan att något skrivs. **Ny 2026-10-13** |
+| `payment_intent.canceled` | Kortet reserveras (9.14): reservationen släpptes, av oss eller för att den gick ut. **Ny 2026-10-13** |
 
 **`charge.dispute.updated` och `charge.updated` saknas på endpointen**, för de
 stod inte här när endpointen skapades. Lägg till dem: endpointens sida → **Update
@@ -1207,9 +1210,9 @@ kod har en gräns totalt och per familj, och prövningen har ett tak
 (`minne/betalning.md`, `minne/sakerhet.md`). Vyerna går ut med Vercel vid
 merge och tål att migrationen saknas: rutan under Erbjudanden svarar då att
 koden inte gick att pröva, och 2026-10-13 fanns ingen kod utom `TIPS`.
-**Skapa ingen kod förrän steg 3 är gjort.** Efter merge, i den här
-ordningen, och fråga först de andra sessionerna som arbetar i repot om
-någon redan kör något (`minne/databasen.md`):
+**Steg 1–3 är gjorda** (natten till 2026-10-14, 00.15–00.30 svensk tid,
+efter att de andra sessionerna fått frågan och fem minuter på sig), så en
+kod går att skapa. Steg 4 och 5 återstår. Ordningen var den här:
 
 1. **`stripe-checkout` från main**, FÖRE migrationen. Den tar en kod på ett
    köp (SESSIONSFORM 8), och utan kod gör den som förut, också mot en
@@ -1217,21 +1220,31 @@ någon redan kör något (`minne/databasen.md`):
    korten medan den gamla kassan drar hela priset. Sju filer:
    `stripe-checkout/index.ts` och ur `_delad/` `auth.ts`, `http.ts`,
    `stripe.ts`, `pris.ts`, `erbjudanden.ts` och `konstanter.ts`. Hämta
-   tillbaka och jämför byte för byte, som förut.
+   tillbaka och jämför byte för byte, som förut. *Gjort*: v19 från main
+   (2de6d28), hämtad tillbaka, 7 av 7 filer byte för byte lika.
 2. **`20261013160000_rabattkoden_timmar_och_tak`** från merge-commiten,
    prövad mot sin md5, efter `gratistimmar` (20261013140000). Filen har ett
    `delete` i en funktion (`intern.rabattkod_forsok_notera`), så den körs
    med `execute_sql` avsnitt för avsnitt, aldrig genom `execute` i ett
    do-block, och registreras sedan med filens text. Vakten i avsnitt 0
    prövar `skydda_rabatt`, `kolla_rabattkod` och `rakna_rabattkod` mot
-   driftens text 2026-10-13 och avbryter om någon ändrats.
+   driftens text 2026-10-13 och avbryter om någon ändrats. *Gjort*: vakten
+   och avsnitt 1 i samma anrop, sedan ett anrop per avsnitt; registrerad med
+   texten hämtad från merge-commiten (md5 `e59f42f5…`). Alla 13 funktioner
+   och 6 triggrar har samma md5 (`prosrc`, `pg_get_triggerdef`) som en
+   lokal databas byggd ur filerna.
 3. **Hela `rls-test.sql` mot driften**, i en transaktion som rullas
    tillbaka: lokalt 1664 av 1664 (avsnitt 32 är nytt). Saknas
    `ta_tillbaka_gratistimmar` fortfarande i driften faller avsnitt 30; kör
    då `gratistimmar` först i samma transaktion, som 2026-10-13
    (`minne/databasen.md`). Kör advisorn: den
    ska bara larma om `kolla_rabattkod_kop` som en SECURITY DEFINER-funktion
-   för `authenticated`, och det är med flit.
+   för `authenticated`, och det är med flit. *Gjort*: 1664 av 1664 mot
+   driften, tillbakarullat, sviten från 2de6d28 med `gratistimmar` först i
+   samma block (`ta_tillbaka_gratistimmar` saknades fortfarande) och avsnitt
+   33 bortklippt (`kortet_reserveras` ska inte köras än). Inget blev kvar.
+   Advisorn larmade om `kolla_rabattkod_kop` och om `intern.rabattkod_forsok`
+   (RLS utan policy), båda med flit.
 4. **Prova i testläge**: skapa en provkod i adminvyn (Procent av priset 10,
    Gånger per familj 2, annars svarar gränsen före timmarna i nästa prov),
    köp Basic med koden som en provfamilj och se att
@@ -1245,3 +1258,60 @@ någon redan kör något (`minne/databasen.md`):
    (hur många gånger, att den inte gäller med timmar i timbanken) ska stå
    klart där den delas ut, på affischen eller i mejlet (e-handelslagen 9 §).
    Juristen har inte läst rad 28 i `DATASKYDD.md`.
+
+### 9.14 Kortet reserveras vid bokningen (2026-10-13, under arbete)
+
+Familjen väljer kort när den föreslår ett pass, och kortet sparas hos Stripe.
+Beloppet reserveras två dagar före passet, dras när rapporten finns och släpps
+när passet inte längre ska betalas med kortet (`minne/betalning.md`, Kortet
+reserveras vid bokningen). Databasen (`20261013170000_kortet_reserveras`),
+edge-funktionerna och vyerna är byggda. Villkoren är det inte. **Inget av det
+här körs förrän villkoren är skrivna**, och strömbrytaren `kortreservation` står
+av tills provet i testläge (steg 6) gått igenom.
+
+Vyerna går ut med sajten när grenen mergas, före allt nedan. Det är med flit:
+utan flaggans rad (migrationen är inte körd) frågar studievyn inte efter kortet,
+och adminvyn visar ingen rubrik, och med strömbrytaren av är båda som förut
+(`verktyg/prova-kortet.js`).
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`):
+
+1. **`notis-ko`** med mallen `kort_nekat`, FÖRE migrationen: dess trigger köar
+   notisen.
+2. **`stripe-webhook`**. Den tar emot reservationens händelser och sparar
+   kortet. Utan migrationen gör grenarna ingenting, för inget PaymentIntent bär
+   `kortreservation` och ingen kassa i läget `setup` finns.
+3. **`stripe-checkout`**: kortets två lägen, och `descriptor` ur
+   `_delad/stripe.ts`.
+4. **`stripe-reservation`** (ny), med `verify_jwt` av, som `config.toml` säger.
+   Varje funktion hämtas tillbaka och jämförs byte för byte, som förut.
+5. **Migrationen `20261013170000_kortet_reserveras`** från merge-commiten,
+   prövad mot sin md5. Den har inga `delete` utanför funktioner och ingen
+   funktion med två. Kör den avsnitt för avsnitt med `execute_sql` och
+   registrera den sedan med filens text. Sedan hela `rls-test.sql` mot
+   driften, tillbakarullat, och advisorn. Jobbet `kortreservation` börjar gå
+   var tionde minut. Med strömbrytaren av reserverar det inget.
+6. **Stripe och provet i testläge**:
+   - Lägg till de tre nya händelserna på endpointen (tabellen i 9.6).
+     Kontrollera Stripe säger vilka som saknas.
+   - Slå på `kortreservation` och välj kort på ett pass som en provfamilj
+     (testkortet 4242 4242 4242 4242). Kortet ska stå under Profil.
+   - Flytta passet till inom 48 timmar: inom tio minuter ska raden stå som
+     reserverad, med `reserverat_till` från Stripe.
+   - Skriv rapporten: inom tio minuter ska passet stå som betalt, med
+     `betalt_ore` och `stripe_minuter`.
+   - Prova ett kort som sparas men nekas när det dras (4000 0000 0000 0341):
+     notisen `kort_nekat` ska komma.
+   - Prova ett avbokat pass: reservationen ska släppas.
+   - Säger Stripe något om kassan i läget `setup` (Managed Payments), lägg
+     till `managed_payments: { enabled: false }` där, som för ett pass.
+   - Spara ett kort och ta bort det under Profil → Kortet, och ta bort ett
+     från adminvyn (familjens panel, Ekonomi). Förhandsvisningen når inte
+     Stripe, så det här är första gången de provas.
+   - Stäng av strömbrytaren igen tills villkoren är ute.
+7. **Villkoren** säger betalsätten på 36 ställen och i mejlen
+   (`kolla-betalningsvillkor.py`). Kort som reserveras och dras efter passet
+   är ett nytt sätt, så meningen, villkoren och deras version ändras i en egen
+   PR, och juristen läser dem innan strömbrytaren slås på.
+

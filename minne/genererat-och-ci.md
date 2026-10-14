@@ -381,6 +381,17 @@ tar bort filens `begin;`, slutraden och `rollback;`, kör den med
 % gröna. FEL: %'`. Felet rullar tillbaka allt, tillägget behöver inte
 skapas (det står i `extensions`), och svaret står i felmeddelandet.
 
+**Ett avsnitt för en migration som inte är körd klipps bort i blocket.**
+Ett sådant avsnitt prövar tabeller som inte finns i driften och faller.
+Så var det 2026-10-14 med avsnitt 33 (`kortet_reserveras`). Sviten slutar
+då före avsnittets rubrik: `left(text, position(E'\n-- 33. Kortet
+reserveras …' in text))`, plus `reset role;`.
+
+En migration som står till hälften i driften körs i stället först i samma
+block. Så var det med `gratistimmar`, som saknade
+`ta_tillbaka_gratistimmar`, och resultatet blev 1664 av 1664. Båda filerna
+hämtas från samma commit och prövas mot sin md5.
+
 **Kör hela filen, inte bara ditt eget avsnitt.** 2026-09-27 hade den
 varit röd sedan förmiddagen utan att någon sett det, för varje session
 provade sin egen del för sig. Fas 19.2 gjorde kortspärren omöjlig att
@@ -526,6 +537,22 @@ byt tillbaka, omladdningen, Börja om), telefonen och adminvyns sektion
 och tal utan adminens konto. När vyerna börjar fråga efter en ny tabell
 eller funktion säger provet det: lägg den i världen i
 `nextrum-forhandsvisning.js`.
+
+### Webbläsarprovet för kortet (2026-10-14)
+`verktyg/prova-kortet.js` (port 8976) provar kortets vyer
+(`kortet_reserveras`) i förhandsvisningens värld, som har strömbrytaren
+på, Annas Visa ·· 4242 och `valj_kort` med databasens prövning: raden
+Betalning i förslaget och i granskningen av barnets förslag (kort,
+faktura, valet som står kvar), Välj kort och Välj bort på passets sida,
+fakturan före passet och kortet i stället, märket i Mina lektioner,
+Profil → Kortet, och lägena som jobbet och Stripe skriver (nekat,
+reserverat, ett genomfört pass under Bekräfta rapport), inskrivna i
+världen i webbläsarens lagring. Sedan strömbrytaren av och inget kort
+(vyn som förut), migrationen inte körd (vyn frågar inte efter kortet),
+strömbrytaren av med ett val kvar (passet betalas som vanligt),
+telefonen, och adminvyns Ekonomi mot en falsk Supabase, med och utan
+tabellerna. Spara och ta bort ett kort går genom Stripe och provas inte
+här: det är steg 6 i `DEPLOY-BETALNING.md` 9.14.
 
 `prova-barnkonton.js` fick två ändringar samma dag: Boka pass är en dold
 menypost i barnets vy tills föräldern slagit på den, och Förhandsvisning

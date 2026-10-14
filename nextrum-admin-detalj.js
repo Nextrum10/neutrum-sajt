@@ -208,6 +208,13 @@
       /* Första timmen (2026-10-09): om vi valt familjen för den pass för
          pass, och om den redan fått sin timme. */
       lägg('forstaTimmen', supa.rpc('forsta_timmen_lage', { p_familj: id }));
+      /* Kortet (kortet_reserveras, 2026-10-13): familjens sparade kort och
+         passen där det valts. Policyerna ger bara en superadmin raderna. */
+      lägg('kort', supa.from('sparade_kort')
+        .select('marke, sista4, utgar_manad, utgar_ar, sparat').eq('parent_id', id));
+      lägg('kortpass', supa.from('kortreservationer')
+        .select('booking_id, lage, reserverat_ore, reserverat_till, dragen_ore, fel, andrad').eq('parent_id', id)
+        .order('andrad', { ascending: false }).limit(50));
     }
 
     /* Varje fråga fångas var för sig.
@@ -229,10 +236,10 @@
       d[namn[i]] = (r && r.data) || [];
       if (r && r.error) {
         d[namn[i] + 'Fel'] = felText(r.error);
-        /* En funktion som inte finns (migrationen är inte körd) ska
-           kunna sägas som vad den är, inte som ett obegripligt fel. */
-        d[namn[i] + 'Saknas'] = r.error.code === 'PGRST202'
-          || /could not find the function/i.test(String(r.error.message || ''));
+        /* En funktion eller tabell som inte finns (migrationen är inte
+           körd) ska kunna sägas som vad den är, inte som ett obegripligt fel. */
+        d[namn[i] + 'Saknas'] = r.error.code === 'PGRST202' || r.error.code === 'PGRST205'
+          || /could not find the (function|table)/i.test(String(r.error.message || ''));
       }
     });
 
@@ -458,6 +465,39 @@
       + 'betalas aldrig ut. Studiehjälparen får lön för passen som vanligt.</span>'
       + (besked ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '">' + esc(besked.text) + '</p>' : '')
       + '</form>';
+  }
+
+  /* Kortet (kortet_reserveras, 2026-10-13): familjens sparade kort och
+     passen där det valts och som inte är avgjorda. Kortet finns hos
+     Stripe; här står märket, de sista fyra siffrorna och när det går ut.
+     Ta bort kortet går genom stripe-checkout, som kopplar bort det hos
+     Stripe; det som är reserverat släpps av jobbet, och passen betalas
+     efter passet i stället. Utan kort och utan sådana pass, eller utan
+     migrationen, står rubriken inte alls. */
+  const KORTRES_LAGE = { vald: 'Kortet valt, inget reserverat än', reserverad: 'Reserverat', slapps: 'Släpps',
+                         utgangen: 'Reservationen gick ut, dras efter rapporten', misslyckad: 'Kortet nekades' };
+  function dpKortet(p, d) {
+    if (!fullAdmin() || d.kortSaknas || d.kortpassSaknas) return '';
+    if (d.kortFel || d.kortpassFel) return dpRubrik('Kortet') + tomt('Kortet gick inte att läsa', d.kortFel || d.kortpassFel);
+    const k = (d.kort || [])[0] || null;
+    const öppna = (d.kortpass || []).filter(r => KORTRES_LAGE[r.lage]);
+    if (!k && !öppna.length) return '';
+    const kortrad = k
+      ? dpRad((k.marke ? k.marke.charAt(0).toUpperCase() + k.marke.slice(1) : 'Kort') + (k.sista4 ? ' ·· ' + k.sista4 : ''),
+          [k.utgar_manad && k.utgar_ar ? 'går ut ' + String(k.utgar_manad).padStart(2, '0') + '/' + String(k.utgar_ar).slice(-2) : null,
+           'sparat ' + kortDatum(k.sparat)].filter(Boolean).join(' · '),
+          '<button class="btn btn-ghost btn-sm" type="button" data-dp-kort-bort="' + esc(p.id) + '">Ta bort kortet</button>')
+      : dpRad('Inget kort sparat', 'Passen nedan betalas efter passet om familjen inte sparar ett.', '');
+    const passrader = öppna.map(r => {
+      const b = S.bokningar.find(x => x.id === r.booking_id);
+      const när = b ? datumText(b.wanted_date) + (b.wanted_time ? ' ' + String(b.wanted_time).slice(0, 5) : '') : 'Passet';
+      const under = [KORTRES_LAGE[r.lage] + (r.lage === 'misslyckad' && r.fel ? ' (' + r.fel + ')' : ''),
+        r.reserverat_ore && r.lage !== 'vald' ? kronor(r.reserverat_ore) : null,
+        r.lage === 'reserverad' && r.reserverat_till ? 'dras senast ' + kortDatum(r.reserverat_till) : null
+      ].filter(Boolean).join(' · ');
+      return dpRad(när, under, '');
+    }).join('');
+    return dpRubrik('Kortet', 'priset reserveras två dagar före passet och dras efter rapporten') + kortrad + passrader;
   }
 
   function dpRubrik(text, extra) {
@@ -1021,6 +1061,7 @@
         [fakturapass, 'Pass mot faktura']
       ])
       + dpTimbank(p)
+      + dpKortet(p, d)
       + dpRubrik('Faktura som betalsätt')
       + dpRad(spärrad ? 'Avstängd för den här familjen' : 'Tillåten',
           spärrad ? 'Familjen kan bara betala med kort. Pass som redan valts för faktura faktureras ändå.'
@@ -2261,6 +2302,31 @@
           + (Number(data.pa_pass) ? ' ' + (Number(data.pa_pass) === 1 ? '1 timme' : data.pa_pass + ' timmar')
             + ' står kvar på familjens pass.' : '')
         : 'Inget att ta tillbaka: alla timmarna ligger redan på familjens pass.', true);
+    });
+  });
+
+  /* Ta bort familjens kort (dpKortet), till exempel när familjen ber om
+     det. stripe-checkout prövar att den som frågar är admin, kopplar bort
+     kortet hos Stripe och tar bort raden; jobbet släpper det som är
+     reserverat. */
+  document.addEventListener('click', async ev => {
+    const k = ev.target.closest('[data-dp-kort-bort]');
+    if (!k) return;
+    const id = k.dataset.dpKortBort;
+    const ja = await bekräfta({
+      titel: 'Ta bort kortet?',
+      text: 'Kortet tas bort hos Stripe för ' + namnFör(id) + '. Pass där familjen valt kort betalas efter passet i '
+        + 'stället, och det som är reserverat släpps inom några minuter.',
+      knapp: 'Ta bort kortet'
+    });
+    if (!ja) return;
+    await medan(k, 'Tar bort…', async () => {
+      const res = await supa.functions.invoke('stripe-checkout', { body: { kort: 'ta_bort', familj: id } });
+      const fel = res.error || (res.data && res.data.error);
+      if (fel) { alert(await funktionsFel(fel)); return; }
+      delete S.detaljCache['familj:' + id];
+      await hämtaDetalj('familj', id);
+      if (DP.typ === 'familj' && DP.id === id) ritaDetalj();
     });
   });
 

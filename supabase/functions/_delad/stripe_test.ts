@@ -15,7 +15,7 @@
 
 import { assert, assertEquals, assertFalse } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  API_VERSION, arStripeId, aterbetalningsLage, balans, betallageEfterTvist, formulardata, granskaStripe,
+  API_VERSION, arStripeId, aterbetalningsLage, balans, betallageEfterTvist, descriptor, formulardata, granskaStripe,
   type Granskning, nyckelLage, oreFor, prövaSignatur, tidFranUnix, tvistOrsakText, tvistUtfall,
   tvistVantarPaOss, WEBHOOK_HANDELSER,
 } from './stripe.ts';
@@ -350,6 +350,22 @@ Deno.test('ingen balanstransaktion än är null, aldrig noll', () => {
 
 Deno.test('charge.updated står bland händelserna endpointen måste ha', () => {
   assert(WEBHOOK_HANDELSER.includes('charge.updated'));
+});
+
+Deno.test('reservationens händelser står bland dem endpointen måste ha (2026-10-13)', () => {
+  assert(WEBHOOK_HANDELSER.includes('payment_intent.amount_capturable_updated'));
+  assert(WEBHOOK_HANDELSER.includes('payment_intent.succeeded'));
+  assert(WEBHOOK_HANDELSER.includes('payment_intent.canceled'));
+  assertEquals(new Set(WEBHOOK_HANDELSER).size, WEBHOOK_HANDELSER.length);
+});
+
+Deno.test('kontoutdraget: högst tio tecken, latin-1 och inga specialtecken', () => {
+  assertEquals(descriptor('Matematik'), 'MATEMATIK');
+  assertEquals(descriptor('Samhällskunskap'), 'SAMHALLSKU');
+  assertEquals(descriptor('Svenska <som> "andraspråk"'), 'SVENSKA SO');
+  assertEquals(descriptor('Fysik*'), 'FYSIK');
+  assertEquals(descriptor('   '), 'LAXHJALP');
+  assertEquals(descriptor(''), 'LAXHJALP');
 });
 
 Deno.test('ett id som går in i en adress prövas till formen', () => {

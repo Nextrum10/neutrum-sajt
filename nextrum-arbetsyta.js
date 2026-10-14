@@ -335,11 +335,14 @@ window.NXArbete = (function () {
       /* Piltangenter mellan flikar är vad en flikrad lovar när den
          har role="tablist". Utan dem är löftet falskt. */
       k.addEventListener('keydown', function (e) {
-        var i = knappar.indexOf(k);
         var steg = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
         if (!steg) return;
         e.preventDefault();
-        var nästa = knappar[(i + steg + knappar.length) % knappar.length];
+        /* En dold flik hoppas över: den finns inte för den här familjen
+           än (Kortet, kortet_reserveras 2026-10-13). */
+        var synliga = knappar.filter(function (x) { return !x.hidden; });
+        var i = synliga.indexOf(k);
+        var nästa = synliga[(i + steg + synliga.length) % synliga.length];
         nästa.focus();
         skrivAdress(visa(nästa.dataset.flik));
       });
@@ -556,6 +559,13 @@ window.NXArbete = (function () {
                 Barnets läge har ingen
        neka   — async (förslagets id) => 'felmeddelande' | null: Skicka
                 inte, i granskningen
+       betalval — () => null | [[värde, etikett, text], …]: hur passet
+                betalas (kortet_reserveras, 2026-10-13). Det första är
+                förvalet, och texten står under raden när valet är gjort.
+                Värdet följer med till boka() som betalsatt, och boka()
+                svarar med betalText (och kortKnapp när kortet ska sparas),
+                som kvittot visar. Barnets läge har ingen
+       sparaKort — (knappen) => void: Spara kortet i kvittot
 
      BARNETS FÖRSLAG (barnet_foreslar_pass, 2026-10-12). Leo: "barn
      skickar förslag, precis som förälder, men ser inte priset. förälder
@@ -661,7 +671,12 @@ window.NXArbete = (function () {
       skickatFörslag: null,
       /* En kod som databasen inte tog, utan att en gratis timme eller
          timmarna förklarar det: kvittot säger det. */
-      kodTappad: null
+      kodTappad: null,
+      /* Hur passet betalas (kortet_reserveras): det familjen valde, som
+         står kvar till nästa förslag, och vad vyn sa om det efteråt
+         ({ text, kortKnapp }), för kvittot. */
+      betalsatt: null,
+      betalKvitto: null
     };
 
     /* Förra passet bestämmer förvalen. En familj som alltid tar matte
@@ -857,6 +872,7 @@ window.NXArbete = (function () {
         + '<input class="inp" id="bk-not" maxlength="300"'
         + ' placeholder="Valfritt — t.ex. provet på fredag, kapitel 4" value="' + esc(st.not) + '"></div>'
         + (o.rabattkod && !o.utanPris ? rabattRad() : '')
+        + betalRad()
         + '</div>'
         /* Barnet ber inte om något: det är föräldern som föreslår passet
            när förslaget skickas, och där står meningen om ångerrätten. */
@@ -875,6 +891,33 @@ window.NXArbete = (function () {
           : '<p class="bk-anger">När ni föreslår tiden ber ni också att passet får hållas inom '
             + 'ångerfristen på 14 dagar. Ett genomfört pass går inte att ångra. '
             + '<a href="/anvandarvillkor#angerratt" target="_blank" rel="noopener">Om ångerrätten</a></p>');
+    }
+
+    /* BETALNINGEN (kortet_reserveras, 2026-10-13). Leo: "när man klickar på
+       boka pass eller godkänn förslaget från barnet ska man kunna betala nu,
+       eller på faktura". Valen och texterna kommer från vyn (o.betalval),
+       som vet vad familjen får välja. Raden står bara där familjen betalar
+       med pengar: inte när timmarna betalar passet, inte när det inte
+       kostar något, och aldrig i barnets läge. Valet är frivilligt: det
+       första är förvalet, och passet går iväg ändå. */
+    function betalPoster() {
+      if (o.utanPris || !o.betalval || medTimmar()) return null;
+      if (bruttoOre() - bjudenOre() - rabattOre() <= 0) return null;
+      var v = o.betalval();
+      return v && v.length > 1 ? v : null;
+    }
+    function betalValt() {
+      var v = betalPoster();
+      if (!v) return null;
+      return v.some(function (p) { return p[0] === st.betalsatt; }) ? st.betalsatt : v[0][0];
+    }
+    function betalRad() {
+      var v = betalPoster();
+      if (!v) return '';
+      var valt = betalValt();
+      var text = (v.filter(function (p) { return p[0] === valt; })[0] || [])[2] || '';
+      return rad('Betalning', chips('bk-betal', v.map(function (p) { return [p[0], p[1]]; }), valt, 'Betalning'))
+        + (text ? '<p class="bk-betal-text">' + esc(text) + '</p>' : '');
     }
 
     /* Rutan för en rabattkod, i förälderns förslag och i granskningen av
@@ -990,8 +1033,14 @@ window.NXArbete = (function () {
         + (st.kodTappad ? '<p>' + esc('Rabattkoden ' + st.kodTappad + ' gällde inte när passet skapades, '
             + 'så passet har ordinarie pris. Hör av er till oss om koden borde ha gällt.') + '</p>' : '')
         + (betalt ? '<p>' + esc(betalt) + '</p>' : '')
+        /* Vad som blev av betalsättet (kortet_reserveras): vyn säger det. */
+        + (st.betalKvitto ? '<p>' + esc(st.betalKvitto.text) + '</p>' : '')
         + '<div class="bk-kvitto-knappar">'
-        + (st.nyttId ? '<a class="btn btn-primary btn-sm" href="#pass/' + esc(st.nyttId) + '">'
+        /* Kortet ska sparas: det är familjens drag nu, och knappen går först. */
+        + (st.betalKvitto && st.betalKvitto.kortKnapp && o.sparaKort
+            ? '<button type="button" class="btn btn-primary btn-sm" data-bk-kort>Spara kortet</button>' : '')
+        + (st.nyttId ? '<a class="btn ' + (st.betalKvitto && st.betalKvitto.kortKnapp ? 'btn-ghost' : 'btn-primary')
+            + ' btn-sm" href="#pass/' + esc(st.nyttId) + '">'
             + (sf ? 'Visa passet' : 'Visa förslaget') + '</a>' : '')
         + '<button type="button" class="btn btn-ghost btn-sm" data-bk-igen>Föreslå en tid till</button>'
         + '</div></div>';
@@ -1198,8 +1247,12 @@ window.NXArbete = (function () {
       }
 
       if (e.target.closest('[data-bk-igen]')) {
-        st.besked = null; st.nyttId = null; st.skickatFörslag = null; st.kodTappad = null;
+        st.besked = null; st.nyttId = null; st.skickatFörslag = null; st.kodTappad = null; st.betalKvitto = null;
         ritaDel();
+        return;
+      }
+      if (e.target.closest('[data-bk-kort]')) {
+        if (o.sparaKort) o.sparaKort(e.target.closest('[data-bk-kort]'));
         return;
       }
 
@@ -1227,6 +1280,7 @@ window.NXArbete = (function () {
         if (grupp === 'bk-amnen') st.amne = val.dataset.v;
         else if (grupp === 'bk-barn') st.barn = Number(val.dataset.v) || 1;
         else if (grupp === 'bk-format') { st.format = val.dataset.v; st.formatValt = true; }
+        else if (grupp === 'bk-betal') st.betalsatt = val.dataset.v;
         else if (grupp === 'bk-langder') {
           st.minuter = Number(val.dataset.v);
           /* Längden ändrar vilka tider som ryms. En vald tid som inte
@@ -1334,6 +1388,7 @@ window.NXArbete = (function () {
       st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
       st.dag = null; st.tid = null; st.barn = 1; st.not = ''; st.annat = '';
       st.besked = null; st.fel = null; st.nyttId = null; st.skickatFörslag = null; st.kodTappad = null;
+      st.betalKvitto = null;
       st.formatValt = false;
       if (o.efterGranskning) o.efterGranskning();
       rita();
@@ -1347,7 +1402,9 @@ window.NXArbete = (function () {
       return { status: svar && svar.status ? svar.status : null, id: svar && svar.id ? svar.id : null,
                betalt: svar && svar.betalt ? svar.betalt : null,
                rabatt: svar && svar.rabatt ? svar.rabatt : null,
-               gratis: !!(svar && svar.gratis) };
+               gratis: !!(svar && svar.gratis),
+               betalText: svar && svar.betalText ? String(svar.betalText) : null,
+               kortKnapp: !!(svar && svar.kortKnapp) };
     }
 
     function skicka() {
@@ -1371,7 +1428,8 @@ window.NXArbete = (function () {
           plats: st.format === 'På plats' ? st.plats.trim() : null,
           not: st.not.trim() || null,
           forslag: g ? g.id : null,
-          rabattkod: kod
+          rabattkod: kod,
+          betalsatt: betalValt()
         }));
         if (r.fel) {
           /* Laddas om så att en timme som hann tas försvinner ur valet.
@@ -1393,6 +1451,7 @@ window.NXArbete = (function () {
            och då säger kvittot det i stället för att priset tyst blev
            ett annat än vid knappen. */
         st.kodTappad = kod && r.rabatt !== kod && !r.betalt && !r.gratis ? kod : null;
+        st.betalKvitto = r.betalText ? { text: r.betalText, kortKnapp: r.kortKnapp } : null;
         st.dag = null; st.tid = null; st.barn = 1; st.not = '';
         st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
         if (g) {
@@ -1451,7 +1510,7 @@ window.NXArbete = (function () {
       st.granskar = { id: f.id, namn: f.namn || 'Barnet', skapad: f.skapad || null, datum: f.datum,
                       tidBorta: null, dagBorta: !!(f.datum && f.datum < idag) };
       st.besked = null; st.fel = null; st.nyttId = null; st.betalt = null; st.skickatFörslag = null;
-      st.kodTappad = null;
+      st.kodTappad = null; st.betalKvitto = null;
       st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
       st.ärvt = true;
       st.minuter = [60, 120, 180].indexOf(Number(f.langd_min)) !== -1 ? Number(f.langd_min) : 60;

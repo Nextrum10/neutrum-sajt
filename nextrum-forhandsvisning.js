@@ -297,7 +297,23 @@ window.NXForhandsvisning = (function () {
       ],
       flaggor: [
         { kod: 'kortsparr', aktiv: false }, { kod: 'erbjudanden', aktiv: true },
-        { kod: 'faktura', aktiv: true }, { kod: 'tipstimme', aktiv: true }
+        { kod: 'faktura', aktiv: true }, { kod: 'tipstimme', aktiv: true },
+        /* Kortet reserveras (kortet_reserveras, 2026-10-13): på här, så att
+           valet syns i förhandsvisningen. I driften står det av tills
+           villkoren är klara. */
+        { kod: 'kortreservation', aktiv: true }
+      ],
+      /* Annas sparade kort, och ett förslag där hon valt det. Kortet sparas
+         och tas bort hos Stripe, vilket förhandsvisningen inte gör; att
+         välja kort på ett pass går (valj_kort nedan). */
+      sparade_kort: [
+        { parent_id: ANNA, stripe_metod: 'pm_forhandsvisning', marke: 'visa', sista4: '4242', utgar_manad: 8,
+          utgar_ar: 2028, sparat: tid(-6, '20:12') }
+      ],
+      kortreservationer: [
+        { booking_id: id(108), parent_id: ANNA, lage: 'vald', stripe_reservation: null, reserverat_ore: null,
+          reserverat_till: null, reserverat_for: null, dragen_ore: null, fel: null, forsok: 0,
+          vald: tid(0, '08:41'), andrad: tid(0, '08:41') }
       ],
       erbjudanden: [
         { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 10 },
@@ -455,6 +471,10 @@ window.NXForhandsvisning = (function () {
       case 'rapport_bekraftelser': case 'invoices': case 'betygsgarantier': case 'timbank_uttag':
         return roll === 'foralder' ? r.parent_id === JAG : false;
       case 'barn_passforslag': return roll === 'foralder' && r.parent_id === JAG;
+      /* Kortet (kortet_reserveras): familjen läser sina reservationer, och
+         kortet bara genom mitt_kort(). */
+      case 'kortreservationer': return roll === 'foralder' && r.parent_id === JAG;
+      case 'sparade_kort': return false;
       case 'payouts': case 'arbetade_timmar': case 'payout_lines': return roll !== 'foralder' && r.tutor_id === JAG;
       case 'tipsbonus': return roll !== 'foralder' && r.studiehjalpare_id === JAG;
       case 'niva_fragor': return roll !== 'foralder';
@@ -621,7 +641,8 @@ window.NXForhandsvisning = (function () {
   };
   /* Tabellerna utan ett eget id. */
   var NYCKLAR = { rapport_bekraftelser: ['rapport_id'], student_notes: ['student_id'], notis_val: ['profil_id', 'typ', 'kanal'],
-                  avatarer: ['profil_id'], study_plans: ['student_id', 'subject'], progress_items: ['id'] };
+                  avatarer: ['profil_id'], study_plans: ['student_id', 'subject'], progress_items: ['id'],
+                  kortreservationer: ['booking_id'], sparade_kort: ['parent_id'] };
 
   function skriv(tabell, metod, sök, kropp, prefer, accept) {
     var rader = W[tabell];
@@ -815,6 +836,48 @@ window.NXForhandsvisning = (function () {
     kolla_rabattkod_kop: function () {
       return [{ giltig: false, orsak: 'Rabattkoderna prövas inte i förhandsvisningen.', rabatt_ore: 0, beskrivning: null,
                 pris_ore: null, att_betala_ore: null }];
+    },
+    /* Kortet (kortet_reserveras, 2026-10-13): samma prövning som
+       valj_kort() i databasen. Jobbet som reserverar och släpper finns
+       inte här, så en reservation som väljs bort är släppt direkt. */
+    mitt_kort: function () {
+      return roll !== 'foralder' ? [] : W.sparade_kort.filter(function (k) { return k.parent_id === JAG; })
+        .map(function (k) { return { marke: k.marke, sista4: k.sista4, utgar_manad: k.utgar_manad, utgar_ar: k.utgar_ar, sparat: k.sparat }; });
+    },
+    valj_kort: function (k) {
+      var b = W.bookings.find(function (x) { return x.id === k.p_bokning; });
+      if (!b || b.parent_id !== JAG) return { __fel: [403, '42501', 'Passet finns inte.'] };
+      var r = W.kortreservationer.find(function (x) { return x.booking_id === b.id; });
+      if (!k.p_kort) {
+        if (!r) return 'inget';
+        if (r.lage === 'dragen') return { __fel: [403, '42501', 'Passet är redan betalt med kortet.'] };
+        if (r.lage === 'reserverad' || r.lage === 'slapps') { r.lage = 'slappt'; r.andrad = nu(); return 'slapps'; }
+        W.kortreservationer.splice(W.kortreservationer.indexOf(r), 1);
+        return 'inget';
+      }
+      if (b.status !== 'requested' && b.status !== 'confirmed') {
+        return { __fel: [403, '42501', 'Kortet väljs innan passet hålls. Efter passet betalar ni som förut.'] };
+      }
+      if (r && r.lage === 'dragen') return { __fel: [403, '42501', 'Passet är redan betalt med kortet.'] };
+      if (b.betalning_status === 'faktura') b.betalning_status = 'ingen';
+      var fullt = Math.round((Number(b.timpris_ore || 0) + (Number(b.antal_barn || 1) > 1 ? Number(b.extra_ore || 0) : 0))
+        * Number(b.duration_min || 60) / 60);
+      var kostar = b.timpris_ore == null || Number(b.rabatt_ore || 0) < fullt;
+      if (['ingen', 'misslyckad'].indexOf(b.betalning_status) === -1 || b.fakturerbar === false || b.klippkort_id || !kostar) {
+        return { __fel: [403, '42501', 'Passet betalas redan på annat sätt, eller kostar inget.'] };
+      }
+      if (!r) {
+        W.kortreservationer.push({ booking_id: b.id, parent_id: JAG, lage: 'vald', stripe_reservation: null, reserverat_ore: null,
+          reserverat_till: null, reserverat_for: null, dragen_ore: null, fel: null, forsok: 0, vald: nu(), andrad: nu() });
+        return 'vald';
+      }
+      if (r.lage === 'slapps') { r.lage = 'reserverad'; r.andrad = nu(); return 'reserverad'; }
+      if (['slappt', 'utgangen', 'misslyckad'].indexOf(r.lage) !== -1) {
+        Object.assign(r, { lage: 'vald', stripe_reservation: null, reserverat_ore: null, reserverat_till: null,
+          reserverat_for: null, fel: null, forsok: 0, andrad: nu() });
+        return 'vald';
+      }
+      return r.lage;
     },
     /* Förälderns svar på barnets förslag (barnet_foreslar_pass). */
     skicka_barnets_forslag: function (k) {

@@ -801,7 +801,10 @@ samma design (se Adminvyns rullning och design nedan). Sex regler:
    2026-10-12 (Leo: "Köp knappen ska vara orange") bär den också Köp på
    planerna och Fyll timbanken under Erbjudanden (`köpKnapp`), av samma
    skäl: ett val att betala med kort. Den låsta knappen före matchningen
-   och med flaggan av är ghost som förut.
+   och med flaggan av är ghost som förut. Med strömbrytaren
+   `kortreservation` på (2026-10-14) bär den Välj kort i stället för
+   Betala i förväg, för valet av kort tar dess plats (`radBetala`,
+   `betalVal`; `minne/betalning.md`, Kortet reserveras vid bokningen).
 2. **Ett drag överst, resten längst ner.** Passets sida
    (`NXStudie.passSida`) tar `datum`, `val` (betalvalen), `belopp`,
    `fakta` och `fot`, och ett block med `forst` står direkt under

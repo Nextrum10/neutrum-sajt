@@ -15512,6 +15512,20 @@ begin
             and (select r.stripe_reservation from public.kortreservationer r where r.booking_id = P2) = 'pi_rlsk33p2',
             'd', concat_ws(' ', tx, tx2));
 
+    -- Det avvisade PaymentIntent släpps av anroparen, och webhooken får det
+    -- släppet. Raden pekar på ett annat och rörs inte.
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    tx := public.kortreservation_skriv(P2, 'slappt', 'pi_rlsk33annan');
+    tx2 := public.kortreservation_skriv(P2, 'utgangen', 'pi_rlsk33annan');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KR ett annat PaymentIntent som släpps eller går ut rör inte radens reservation', 'ok',
+            tx = 'reserverad' and tx2 = 'reserverad'
+            and (select r.lage || ' ' || r.stripe_reservation from public.kortreservationer r where r.booking_id = P2)
+                = 'reserverad pi_rlsk33p2',
+            'd', concat_ws(' ', tx, tx2));
+
     -- Bort och tillbaka innan jobbet hunnit släppa.
     perform pg_temp.bli(K);
     tx := public.valj_kort(P2, false);

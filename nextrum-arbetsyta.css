@@ -412,6 +412,9 @@
   border-radius:100px;padding:2px 6px;
 }
 .vy-flik-panel[hidden]{display:none}
+/* En flik som inte finns för familjen än (Kortet, 2026-10-13). .vy-flik sätter
+   display, och den vinner annars över attributet. */
+.vy-flik[hidden]{display:none}
 
 /* ============================================================
    4. BOKNINGEN
@@ -594,6 +597,9 @@
    timmarna går före den (rabattkoden_krockar_inte). Ingen lägesfärg,
    för den är varken klar eller fel. */
 .bk-rabatt-svar .bk-rabatt-inte{color:var(--bl-2)}
+/* Betalningen i förslaget (kortet_reserveras, 2026-10-13): vad valet gör, under
+   raden. Ingen lägesfärg, för den säger vad som händer, inte vems drag det är. */
+.bk-betal-text{margin:-2px 0 0;font-size:.86rem;line-height:1.5;color:var(--bl-2);max-width:62ch}
 /* Där barnet hade sett ett pris står vem som ser förslaget först. */
 .bk-sum-pris > b.bk-sum-till{font-size:1rem;letter-spacing:0}
 /* Listan med barnens förslag över ytan, i förälderns Boka pass, och

@@ -114,6 +114,15 @@ verify_jwt = false
 [functions.stripe-webhook]
 verify_jwt = false
 
+# Kortet reserveras (kortet_reserveras, 2026-10-13): reserverar, drar och
+# släpper med familjens sparade kort. Väcks av pg_cron-jobbet
+# kortreservation genom notis_konfig.kortreservation_url, med samma
+# hemlighet i headern. Står den här raden inte kvar svarar funktionen 401
+# var tionde minut: inget reserveras, och pengarna dras inte när
+# rapporten kommer.
+[functions.stripe-reservation]
+verify_jwt = false
+
 # Avanmälan ur ett mejl. Måste fungera utan inloggning — mottagaren
 # är ofta inte inloggad, och mejlprogrammets One-Click-knapp
 # (RFC 8058) POSTar utan att någon öppnar sajten. Skyddet är
