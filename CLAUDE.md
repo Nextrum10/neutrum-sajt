@@ -159,7 +159,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Frågorna**: talregeln i `intern.niva_tal` och i Pythons `grund.lika()` ändras tillsammans.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används
-  (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad).
+  (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad, och `fler_*.py`, Fas 23.5).
 - **Intaget** (2026-10-06): vi skapar familjens och studiehjälparens konto (Ta in familjen, Ta in i
   poolen, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
   ruta som inte går att stänga (`user_metadata.valkommen = 'losenord'`, `NXStudie.lösenordFörst`).
@@ -959,7 +959,7 @@ Detaljer: `minne/grunden.md`.
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
 - **NexLäx Fas 23.4** (2026-10-06) är i drift sedan samma kväll: `nexlax_uppdrag_och_np` och banken,
-  körda efter merge som de förra bankerna (`minne/nexlax.md`). Juridiken, företagsekonomin och språken är skrivna med AI och inte lästa
+  körda efter merge som de förra bankerna (`minne/nexlax.md`). Juridiken, företagsekonomin och språken, och de 1 217 frågorna i matematik, svenska och engelska från 2026-10-14 (Fas 23.5), är skrivna med AI och inte lästa
   av någon som undervisar i ämnet.
 - Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
