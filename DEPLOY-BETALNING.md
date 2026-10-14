@@ -535,14 +535,15 @@ kvar att köra innan ni rör en skarp nyckel, och innan spärren slås på (9.9)
 | Korttvisterna (`20260924125618_fas14_3_*.sql`) | **Applicerad.** Tabellen `stripe_tvister`, se 9.10 |
 | Faktura som betalsätt (`20260925120727_fas14_6_*.sql`) | **Applicerad, flaggan `faktura` AV.** Se 9.11 |
 | Test eller skarpt (`20260925121120_fas14_7_*.sql`) | **Applicerad.** `bookings.stripe_skarp`, `stripe_handelser.skarp` |
-| `stripe-checkout` | **ACTIVE**, version 16, `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2). Fas 14.6: vägrade ett fakturapass. Version 16 (2026-09-28): tar ett fakturapass som inte står på en faktura, och läget står kvar som `faktura` tills webhooken skrivit betalningen; passets förra kassa stängs när en ny skapas |
-| `stripe-webhook` | **ACTIVE**, version 12, `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall. Fas 14.7: avgiften ur `charge.updated`, läget ur `livemode`, och en betalning efter ett nekat kort tas emot. Version 12 (2026-09-28): ett skrivfel ger Stripe ett nytt försök, och en betalning som inte blev nedskriven blir en uppgift |
+| `stripe-checkout` | **ACTIVE**, version 20 (2026-10-14), `verify_jwt = true`. Fas 14.3: bara kort, kvitto till familjens adress, kontoutdragets tillägg högst tio tecken. Fas 14.4: Managed Payments av, och Stripes nej skrivs till loggen (9.5). Fas 14.5: kassan öppnas i en panel på sidan (9.2). Fas 14.6: vägrade ett fakturapass. Version 16 (2026-09-28): tar ett fakturapass som inte står på en faktura, och läget står kvar som `faktura` tills webhooken skrivit betalningen; passets förra kassa stängs när en ny skapas. Version 20 (2026-10-14) har också kortets lägen `spara` (kassan i läget `setup`) och `ta_bort` (9.14); versionerna däremellan står i CLAUDE.md avsnitt 11 |
+| `stripe-webhook` | **ACTIVE**, version 14 (2026-10-14), `verify_jwt = false`. Fas 14.3: tvisterna sparas med sista svarsdag, orsak och utfall. Fas 14.7: avgiften ur `charge.updated`, läget ur `livemode`, och en betalning efter ett nekat kort tas emot. Version 12 (2026-09-28): ett skrivfel ger Stripe ett nytt försök, och en betalning som inte blev nedskriven blir en uppgift. Version 14: sparar kortet ur kassan i läget `setup` och tar emot reservationens tre händelser (9.14). Den driftsatta `index.ts` saknar en tom rad i en kommentar (rad 540) jämfört med main; koden är densamma |
+| `stripe-reservation` | **ACTIVE**, version 1 (2026-10-14), `verify_jwt = false`, hemligheten i `x-nextrum-notis`. Reserverar, drar, debiterar och släpper åt jobbet `kortreservation` (9.14) |
 | `stripe-aterbetalning` | **ACTIVE**, version 6, `verify_jwt = true`. Bara för admin. Vanlig återbetalning, ingen transfer att backa |
 | `stripe-lage` | **ACTIVE**, version 4, `verify_jwt = true`. Bara för admin. Frågar Stripe om kontot och endpointen och svarar med en lista. Läser, skriver ingenting. Fas 14.5: säger om den publicerbara nyckeln är satt och i samma läge som den hemliga |
 | `stripe-avstamning` | **ACTIVE**, version 1, `verify_jwt = true`. Bara för admin (Fas 14.7). Hämtar avgift, netto och läge för betalningar som saknar dem, högst femtio per tryck |
 | `STRIPE_SECRET_KEY` | **Visas i adminvyn** sedan Fas 14.3: Betalningar → Inställningar → **Kontrollera Stripe** säger om den saknas, är en test- eller skarp nyckel, eller har fel format. Inte ett tecken mer än så |
 | `STRIPE_WEBHOOK_SECRET` | **Satt och provad**: en påhittad signatur faller på tidsstämpeln, inte på hemligheten (slutet av 9.4) |
-| Webhook-endpoint hos Stripe | **Skapad** i sandlådan, och två leveranser har kommit fram. **Saknar `charge.dispute.updated`** (Kontrollera Stripe sa det 2026-09-25) **och `charge.updated`**, som kom till i Fas 14.7 (9.4) |
+| Webhook-endpoint hos Stripe | **Skapad** i sandlådan, och två leveranser har kommit fram. **Saknar `charge.dispute.updated`** (Kontrollera Stripe sa det 2026-09-25) **och `charge.updated`**, som kom till i Fas 14.7 (9.4), **och kortets tre**: `payment_intent.amount_capturable_updated`, `payment_intent.succeeded` och `payment_intent.canceled` (9.14) |
 | Knappen hos familjen | Finns: på passet när det är bekräftat, och på ett genomfört pass som inte är betalt |
 | Spärren `kortsparr` | **Av.** Se 9.9 |
 
@@ -1259,16 +1260,15 @@ kod går att skapa. Steg 4 och 5 återstår. Ordningen var den här:
    klart där den delas ut, på affischen eller i mejlet (e-handelslagen 9 §).
    Juristen har inte läst rad 28 i `DATASKYDD.md`.
 
-### 9.14 Kortet reserveras vid bokningen (2026-10-13, under arbete)
+### 9.14 Kortet reserveras vid bokningen (2026-10-13, i drift 2026-10-14)
 
 Familjen väljer kort när den föreslår ett pass, och kortet sparas hos Stripe.
 Beloppet reserveras två dagar före passet, dras när rapporten finns och släpps
 när passet inte längre ska betalas med kortet (`minne/betalning.md`, Kortet
-reserveras vid bokningen). Databasen (`20261013170000_kortet_reserveras`),
-edge-funktionerna och vyerna är byggda, och villkoren är skrivna (2026-10-14,
-steg 7) men går ut först när strömbrytaren slås på. Strömbrytaren
-`kortreservation` står av tills provet i testläge (steg 6) gått igenom och
-villkoren är ute.
+reserveras vid bokningen). **Steg 1–5 och 7 gjordes 2026-10-14** (Gjort, sist
+i avsnittet), och strömbrytaren `kortreservation` står på sedan 15.47 UTC,
+för villkoren var redan ute (PR #281) och vyn skulle säga samma sak. **Kvar är
+steg 6**: Stripes tre händelser och provet i testläge, och juristen.
 
 Vyerna går ut med sajten när grenen mergas, före allt nedan. Det är med flit:
 utan flaggans rad (migrationen är inte körd) frågar studievyn inte efter kortet,
@@ -1310,7 +1310,9 @@ som arbetar i repot (`minne/databasen.md`):
    - Spara ett kort och ta bort det under Profil → Kortet, och ta bort ett
      från adminvyn (familjens panel, Ekonomi). Förhandsvisningen når inte
      Stripe, så det här är första gången de provas.
-   - Stäng av strömbrytaren igen tills villkoren är ute.
+   - Strömbrytaren står kvar på efter provet: villkoren är ute sedan
+     2026-10-14. Går något fel som inte kan rättas samma dag, stäng av den
+     och sätt tillbaka meningen i samma ändring (steg 7, sist).
 7. **Villkoren och strömbrytaren.** Villkoren är skrivna i en egen
    PR (2026-10-14): meningen på 36 ställen och i mejlen ("pengarna dras först
    när studiehjälparen har skrivit rapporten"), villkorens punkt Kortet ni
@@ -1337,4 +1339,26 @@ som arbetar i repot (`minne/databasen.md`):
    Slås strömbrytaren av senare går meningen tillbaka i samma ändring
    (`KORTET_RESERVERAS = False` i `kolla-betalningsvillkor.py`), med en ny
    version av villkoren.
+
+**Gjort 2026-10-14** (Leos "kör", från main 1fbc18a, och ingen annan session
+körde mot driften):
+- Steg 1–4 och 7:s funktioner, 12.41–12.47 UTC: `drift` v19,
+  `stripe-reservation` v1 (`verify_jwt` av), `stripe-webhook` v14, `ekonomi`
+  v25 och `notis-ko` v25. Hämtade tillbaka och lika main byte för byte, med
+  hela importgrafen, utom en tom rad i en kommentar i webhookens `index.ts`
+  (rad 540): samma kod. `stripe-checkout` v20 var redan lika main.
+- Steg 5: `kortet_reserveras` avsnitt för avsnitt och registrerad (md5
+  `1a8c2ac0…`), jämförd med en lokal databas byggd ur main: lika
+  (`minne/databasen.md`). Advisorn: inget nytt för `anon`.
+- Steg 7: `villkoren_kortet` hel i ett do-block (md5 `8effe953…`), version
+  2026-10-15. Strömbrytaren på 15.47:57 UTC, med SQL. Hela `rls-test.sql`
+  1739 av 1739 mot driften, tillbakarullat, före och efter strömbrytaren.
+- Röktest: `stripe-reservation` svarade 200 (`{"ok":true,"utfall":{}}`), och
+  jobbet `kortreservation` gick första gången 15.50.
+
+Juristen hade inte läst villkoren (steg 7:s första punkt): de var redan ute
+på sajten sedan PR #281, och Leo sa kör. Står strömbrytaren på utan steg 6
+drar `stripe-reservation` pengarna för ett pass med ett sparat kort, men utan
+`payment_intent.succeeded` på endpointen blir passet aldrig betalt hos oss.
+Stripe står i testläge, så bara testkort fungerar.
 
