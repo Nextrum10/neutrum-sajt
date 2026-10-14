@@ -386,7 +386,11 @@ att inget blir kvar hos Stripe när kontot tas bort.
   där Betala i förväg stod) och Betala mot faktura. Med kortet valt säger
   beskedet vad kortet gör och när, och Välj bort kortet står under. Ett
   fakturapass får Välj kort i stället, aldrig Betala med kort nu. Nekat:
-  Byt kort (eller Lägg till kort) och Försök igen.
+  Byt kort (eller Lägg till kort) och Försök igen. Räcker familjens timmar
+  eller timbanken till passet står Välj kort inte där (`kortKanVäljas`,
+  2026-10-14): timmarna går först, `timmar-betalar` och
+  `timmar_betalar_kommande` betalar passet också när kortet valts, och ett
+  val av kort hade inte gjort något.
 - **Listorna** märker passet med kortets läge (Kort, Reserverat på
   kortet, Kortet nekades) i stället för Ej betalt (`passMärke`), och
   **Bekräfta rapport** säger att priset dras från kortet inom några
