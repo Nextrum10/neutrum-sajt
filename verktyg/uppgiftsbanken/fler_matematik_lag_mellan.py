@@ -183,11 +183,11 @@ AK1_DUBBELT_3 = niva('ma-ak1-fler-dubbelt-3', 'Dubbelt eller hälften?', 'Dubbel
          'Hälften av 12 är 6, och dubbelt så mycket som 3 är 3 + 3 = 6.'),
     sant('Dubbelt så mycket som 4 är mer än hälften av 20.', 2 * 4 > 20 // 2,
          'Dubbelt så mycket som 4 är 8. Hälften av 20 är 10. 8 är mindre än 10.'),
-    val('Vilket av talen är störst?', unika(*_STORST), enda(_STORST, lambda a: _STORST_VARDE[a] == max(_STORST_VARDE.values())),
+    val('Vilket blir störst?', unika(*_STORST), enda(_STORST, lambda a: _STORST_VARDE[a] == max(_STORST_VARDE.values())),
         'Dubbelt så mycket som 4 är 8, hälften av 20 är 10 och dubbelt så mycket som 3 är 6. '
         'Det största är 10.'),
-    skriv('Vad är hälften av 18?', svar(18 // 2),
-          '9 + 9 = 18, så hälften av 18 är 9.'),
+    skriv('Vad är hälften av 16?', svar(16 // 2),
+          '8 + 8 = 16, så hälften av 16 är 8.'),
     skriv('Ben har 4 bilar. Hans syster har dubbelt så många. Hur många bilar har de tillsammans?',
           svar(4 + 2 * 4, 'bilar'),
           'Systern har 4 + 4 = 8 bilar. Tillsammans har de 4 + 8 = %s bilar.' % tal(4 + 8)),
@@ -325,7 +325,7 @@ AK3_BRAK_1 = niva('ma-ak3-fler-brak-1', 'En halv, en tredjedel och en fjärdedel
         unika('En pizza delad i 4 lika stora bitar', 'En pizza delad i 4 olika stora bitar',
               'En pizza delad i 3 lika stora bitar'),
         'En pizza delad i 4 lika stora bitar',
-        'Fjärdedelar är 4 delar som är exakt lika stora. Är bitarna olika stora, eller är de 3, '
+        'Fjärdedelar är 4 delar som är exakt lika stora. Är delarna olika stora, eller är det bara 3 delar, '
         'är det inte fjärdedelar.'),
 ], beskrivning='Att dela en helhet i lika delar: hälften, en tredjedel och en fjärdedel.')
 
@@ -413,8 +413,8 @@ AK3_DIAGRAM_1 = niva('ma-ak3-fler-diagram-1', 'Läsa av en tabell', 'Tabeller oc
          % _oc(_BILAR),
          sum(v for _, v in _BILAR) == 20,
          'Lägg ihop alla: 6 + 9 + 4 = %s. Det är 19 bilar, inte 20.' % tal(sum(v for _, v in _BILAR))),
-    val('Fyra barn cyklade olika långt: %s km. Vem cyklade kortast?'
-        % lista('%s %s' % (k, tal(v)) for k, v in _CYKEL),
+    val('Fyra barn cyklade olika långt: %s. Vem cyklade kortast?'
+        % lista('%s %s km' % (k, tal(v)) for k, v in _CYKEL),
         unika(*[k for k, _ in _CYKEL]), _MIN_CYKEL,
         'Det minsta talet är %s km, och det är %s som cyklade.' % (tal(dict(_CYKEL)[_MIN_CYKEL]), _MIN_CYKEL)),
     para('En tabell visar poäng i ett spel: %s. Para ihop spelaren med sin placering.' % _oc(_SPEL),
@@ -451,7 +451,7 @@ AK3_DIAGRAM_2 = niva('ma-ak3-fler-diagram-2', 'Stapeldiagram', 'Tabeller och dia
          'Höjden visar hur mycket det är. Är en stapel dubbelt så hög är det dubbelt så mycket.'),
     val('I ett stapeldiagram betyder varje ruta 4 mål. Stapeln för lag A är 3 rutor hög och stapeln för lag B '
         'är 5 rutor hög. Hur många mål gjorde lag B?',
-        unika(5 * 4, 5, 3 * 4, 3 + 5 + 1), 5 * 4,
+        unika(5 * 4, 5, 3 * 4, 3 + 5), 5 * 4,
         'Varje ruta är 4 mål och lag B har 5 rutor: 5 · 4 = %s. 5 är antalet rutor, inte antalet mål.' % tal(20)),
     skriv('Ett stapeldiagram visar hur många som valt frukt: %s. Hur många valde frukt tillsammans?'
           % _oc(_VALD), tal(sum(v for _, v in _VALD)),
@@ -459,8 +459,8 @@ AK3_DIAGRAM_2 = niva('ma-ak3-fler-diagram-2', 'Stapeldiagram', 'Tabeller och dia
     para('I ett stapeldiagram betyder varje ruta 5 kr. Para ihop stapelns höjd med beloppet.',
          [('%d rutor' % r, '%s kr' % tal(5 * r)) for r in (2, 3, 4, 6)],
          'Varje ruta är 5 kr: ' + lista('%d rutor är %s kr' % (r, tal(5 * r)) for r in (2, 3, 4, 6)) + '.'),
-    ordna_efter('Fyra staplar är olika höga: %s rutor. Ordna staplarna från lägst till högst.'
-                % ', '.join('%s %s' % (k, tal(v)) for k, v in _STAPLAR),
+    ordna_efter('Fyra staplar i ett stapeldiagram är olika höga: %s. Ordna staplarna från lägst till högst.'
+                % lista('%s %s rutor' % (k, tal(v)) for k, v in _STAPLAR),
                 _STAPLAR,
                 'Jämför antalet rutor: %s.' % lista('%s %s' % (k, tal(v)) for k, v in sorted(_STAPLAR,
                                                                                          key=lambda p: p[1]))),
@@ -548,7 +548,7 @@ AK4_BRAK_2 = niva('ma-ak4-fler-brak-2', 'Bråk i flera steg', 'Bråk i vardagen'
                  ('2/3', del_av(2, 3, 12))],
                 '1/4 av 12 är 3 kr, 1/3 är 4 kr, 1/2 är 6 kr och 2/3 är 8 kr.'),
     skriv('Hur många fjärdedelar är lika mycket som en halv?', tal(2),
-          'En halv är 2/4, för om du delar en halv i två lika delar får du två fjärdedelar.'),
+          'En hel är fyra fjärdedelar, och hälften av 4 är 2. Alltså är en halv lika med 2/4.'),
 ], beskrivning='Bråk i flera steg: hur stor del det är, vad som blir kvar och att jämföra delar.')
 
 
@@ -570,7 +570,7 @@ AK4_OVERSLAG_1 = niva('ma-ak4-fler-overslag-1', 'Avrunda tal', 'Avrunda och öve
         enda([651, 649, 750, 599], lambda x: avrunda(x, 100) == 700),
         '651 har tiotalssiffran 5, så det avrundas uppåt till 700. 649 blir 600, 750 blir 800 och 599 blir 600.'),
     sant('Talet 35 avrundas till 40 när man avrundar till närmaste tiotal.', avrunda(35, 10) == 40,
-         'Entalssiffran är 5, och 5 avrundas uppåt. Därför blir 35 till 40.'),
+         'Entalssiffran är 5, och 5 avrundas uppåt. Därför avrundas 35 till 40.'),
     sant('Talet 2449 avrundas till 2500 när man avrundar till närmaste hundratal.', avrunda(2449, 100) == 2500,
          'Titta bara på tiotalssiffran, som är 4. Den är mindre än 5, så svaret blir %s. '
          'Man avrundar aldrig i två steg.' % tal(avrunda(2449, 100))),
@@ -596,10 +596,12 @@ AK4_OVERSLAG_2 = niva('ma-ak4-fler-overslag-2', 'Överslag och rimliga svar', 'A
     skriv('Gör ett överslag av 6 · 49. Avrunda 49 till 50 först. Vad får du?', tal(6 * 50),
           'Räkna med 50 i stället för 49: 6 · 50 = %s. Det riktiga svaret är lite mindre, %s.'
           % (tal(6 * 50), tal(6 * 49))),
-    val('Maja har 100 kr. Hon vill köpa saker som kostar 56 kr, 48 kr och 29 kr. Räcker pengarna?',
-        unika('Nej, det blir ungefär 140 kr', 'Ja, det blir ungefär 100 kr', 'Ja, det blir ungefär 110 kr'),
-        'Nej, det blir ungefär 140 kr',
-        'Avrunda till tiotal: 60 + 50 + 30 = 140. Det är mycket mer än 100, så pengarna räcker inte. '
+    val('Maja har 100 kr och vill köpa saker som kostar 56 kr, 48 kr och 29 kr. Avrunda varje pris till '
+        'närmaste tiotal. Hur mycket blir det ungefär, och räcker pengarna?',
+        unika('Ungefär 140 kr, så pengarna räcker inte', 'Ungefär 110 kr, så pengarna räcker inte',
+              'Ungefär 90 kr, så pengarna räcker'),
+        'Ungefär 140 kr, så pengarna räcker inte',
+        'Avrunda till tiotal: 60 + 50 + 30 = 140. Det är mer än 100, så pengarna räcker inte. '
         'Det riktiga priset är %s kr.' % tal(56 + 48 + 29)),
     sant('Överslaget för 28 + 41 är ungefär 70.', avrunda(28, 10) + avrunda(41, 10) == 70,
          '28 blir 30 och 41 blir 40. 30 + 40 = 70.'),
@@ -611,7 +613,7 @@ AK4_OVERSLAG_2 = niva('ma-ak4-fler-overslag-2', 'Överslag och rimliga svar', 'A
     skriv('Ett par byxor kostar 198 kr. Ungefär hur många kronor kostar 3 par? Avrunda priset till 200 kr.',
           tal(3 * 200),
           '3 · 200 = %s. Det riktiga priset är %s kr, alltså lite mindre.' % (tal(3 * 200), tal(3 * 198))),
-    skriv('En skola har 287 elever. Varje buss tar 50 elever. Hur många bussar behövs?',
+    skriv('En skola har 287 elever. Varje buss tar 50 elever. Hur många bussar behövs för att alla ska få plats?',
           tal(-(-287 // 50)),
           '287 är nästan 300, och 300 delat med 50 är 6. Fem bussar räcker bara till 250 elever, så det behövs %s.'
           % tal(-(-287 // 50))),
@@ -634,7 +636,7 @@ AK5_SANNOLIKHET_1 = niva('ma-ak5-fler-sannolikhet-1', 'Chans i ord och bråk', '
     val('Du kastar en vanlig tärning med sidorna 1 till 6. Hur stor är sannolikheten att få en 4:a?',
         unika('1/6', '1/4', '4/6', '6/4'), '1/6',
         'Det finns 6 lika troliga sidor och bara 1 av dem är en 4:a. Sannolikheten är 1/6. '
-        'Talet 4 på sidan har ingenting med nämnaren att göra.'),
+        'Att talet är 4 ändrar inte hur många sidor det finns.'),
     sant('Sannolikheten att få en 7:a med en vanlig tärning med sidorna 1 till 6 är noll.',
          7 not in range(1, 7),
          'Det finns ingen sida med 7, så det är omöjligt. Sannolikheten för något omöjligt är 0.'),
@@ -647,10 +649,10 @@ AK5_SANNOLIKHET_1 = niva('ma-ak5-fler-sannolikhet-1', 'Chans i ord och bråk', '
     para('Para ihop händelsen med hur troligt det är.',
          [('Du slår en 7:a med en vanlig tärning.', 'omöjligt'),
           ('Du slår 1, 2, 3, 4, 5 eller 6 med en vanlig tärning.', 'säkert'),
-          ('Du får krona när du singlar en slant.', 'lika troligt som klave'),
-          ('Du slår ett tal större än 3 med en tärning.', 'lika troligt som ett tal mindre än 4')],
-         'Det går inte att slå 7, så det är omöjligt. Alla sidor är med, så det är säkert. Krona och klave är lika '
-         'troliga, och 4, 5, 6 är lika många sidor som 1, 2, 3.'),
+          ('Du får krona när du singlar en slant.', 'chansen är 1 av 2'),
+          ('Du slår en 6:a med en vanlig tärning.', 'chansen är 1 av 6')],
+         'Det går inte att slå 7, så det är omöjligt. Alla sidor är med, så det är säkert. Krona är 1 av 2 '
+         'lika troliga utfall, och en 6:a är 1 av 6 sidor.'),
     ordna_efter('Du drar en kula ur varje påse utan att titta. Ordna påsarna efter hur stor chansen är att dra '
                 'en röd kula, minst chans först.',
                 [('1 röd och 9 blå', F(1, 10)), ('5 röda och 5 blå', F(5, 10)), ('9 röda och 1 blå', F(9, 10)),
@@ -767,7 +769,7 @@ AK5_FAKTORER_2 = niva('ma-ak5-fler-faktorer-2', 'Primtal och delbarhet', 'Faktor
           'Ett tal som går att dela med både 2 och 5 slutar på 0. Det första över 30 är 40.'),
     skriv('Vilket är det största primtalet som är mindre än 30?',
           tal(max(x for x in range(2, 30) if ar_primtal(x))),
-          '29 går bara att dela med 1 och 29. De tre talen mellan 29 och 30 finns inte, och 28 är jämnt.'),
+          'Titta på talen under 30 uppifrån: 29 går bara att dela med 1 och 29, så det är ett primtal.'),
     ordna_efter('Ordna primtalen från minst till störst. En av brickorna är inget primtal.',
                 [(str(x), x) for x in (7, 13, 19, 31)],
                 '7, 13, 19 och 31 är primtal. 21 = 3 · 7, så det är inget primtal.',
@@ -844,8 +846,8 @@ _LITER = [('2 liter för 30 kr', F(30, 2)), ('3 liter för 36 kr', F(36, 3)), ('
           ('4 liter för 64 kr', F(64, 4))]
 
 def _kilopris(u):
-    """'2 kg kostar 30 kr: 5 kg' → vad 5 kg kostar."""
-    a, b, c = (int(x) for x in re.match(r'(\d+) kg kostar (\d+) kr: (\d+) kg', u).groups())
+    """'2 kg kostar 30 kr. Vad kostar 5 kg?' → vad 5 kg kostar."""
+    a, b, c = (int(x) for x in re.match(r'(\d+) kg kostar (\d+) kr\. Vad kostar (\d+) kg\?', u).groups())
     return F(b, a) * c
 
 
@@ -870,10 +872,10 @@ AK6_SKALA_2 = niva('ma-ak6-fler-skala-2', 'Proportionalitet i vardagen', 'Skala 
     skriv('Selma cyklar 12 km på 30 minuter i jämn fart. Hur många kilometer cyklar hon på 2 timmar?',
           tal(12 * 120 // 30),
           '2 timmar är 120 minuter, alltså 4 gånger 30 minuter. Hon cyklar 4 · 12 = %s km.' % tal(12 * 4)),
-    para('Alla varor kostar lika mycket per kilo. Para ihop uppgiften med priset.',
+    para('Alla varor kostar lika mycket per kilo. Para ihop frågan med priset.',
          parvis([(u, '%s kr' % tal(heltal(_kilopris(u)))) for u in
-                 ('2 kg kostar 30 kr: 5 kg', '4 kg kostar 36 kr: 3 kg', '5 kg kostar 40 kr: 2 kg',
-                  '3 kg kostar 21 kr: 10 kg')],
+                 ('2 kg kostar 30 kr. Vad kostar 5 kg?', '4 kg kostar 36 kr. Vad kostar 3 kg?',
+                  '5 kg kostar 40 kr. Vad kostar 2 kg?', '3 kg kostar 21 kr. Vad kostar 10 kg?')],
                 _kilopris, lambda h: F(int(h.split()[0]))),
          'Pris per kilo först: 15 kr, 9 kr, 8 kr och 7 kr. Sedan gånger antalet kilo: 75, 27, 16 och 70 kr.'),
     ordna_efter('Ordna efter pris per liter, billigast först.', _LITER,
