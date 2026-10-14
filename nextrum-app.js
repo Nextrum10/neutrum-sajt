@@ -113,6 +113,11 @@ const NX = (function () {
                        'Thank you. We have received your enquiry and will call you on {tel} within 24 hours.'],
     tackIntresseRingUppstart: ['Tack. Vi har tagit emot er intresseanmälan och ringer er på {tel} inom 24 timmar, så planerar vi ert första pass till starten {om}.',
                                'Thank you. We have received your enquiry and will call you on {tel} within 24 hours. We will plan your first session for when we start {om}.'],
+    /* Skolan (2026-10-14): studiehjälpare har börjat gymnasiet. */
+    valjSkola:       ['Välj var du är i skolan just nu.',
+                      'Please choose where you are in school right now.'],
+    grundskolanInte: ['Du behöver ha börjat gymnasiet för att jobba hos oss. Välkommen att söka när du gjort det!',
+                      'You need to have started upper secondary school to work with us. You are welcome to apply once you have!'],
     valjTimmar:      ['Svara ja eller nej på om du kan jobba minst 4 timmar i veckan.',
                       'Please answer yes or no to whether you can work at least 4 hours a week.'],
     /* Under 18 (2026-10-05): vårdnadshavarens e-post i ansökan. */

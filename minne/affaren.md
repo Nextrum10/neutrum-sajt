@@ -582,6 +582,14 @@ Driftsättningen och det som är kvar, ur avsnitt 11:
   godkännande. "Nyligen läst samma kurser" står kvar som det matchningen
   letar efter, och "Av unga, för unga" som namnet på idén. Fältet Skola &
   program i ansökan var aldrig obligatoriskt och säger nu "om du pluggar".
+- **Gymnasiet eller äldre** (2026-10-14, Leo): "vi anställer gymnasieelever och uppåt".
+  En 13-åring sökte, och inget på sajten sa att det inte gick; nejet fick förklaras i
+  efterhand. Nu säger Bli studiehjälpare (båda språken, punkten och FAQ:n), FAQ:n, startsidan
+  och juridikagentens bakgrund att man ska ha börjat gymnasiet. Ansökan har ett obligatoriskt
+  val, Var är du i skolan just nu? (Grundskolan, Gymnasiet, Universitet eller högskola, Jag har
+  gått ut gymnasiet). Grundskolan visar förklaringen och stoppar ansökan i formuläret; databasen
+  prövar det inte, så en ansökan som går förbi formuläret sorteras bort för hand. Svaret står
+  överst i why som "Skola nu: ...". Den som gått ut gymnasiet behöver fortfarande inte plugga.
 - **Hemma eller online:** familjen väljer för varje pass; att ses hemma
   förutsätter att matchningen ger någon som kan ta sig dit varje vecka,
   annars börjar man online. Områdessidorna sa att formatet "avgörs av

@@ -1734,6 +1734,9 @@ html[lang="en"] .nx-hero-rubrik{
 .nx-val-rad label:has(input:focus-visible){
   outline:2px solid var(--focus,var(--bl));outline-offset:2px;
 }
+/* Fyra val (skolan i ansökan, 2026-10-14): två rader, så rundan blir en ruta. */
+.nx-val-rad.fyra{border-radius:22px}
+.nx-val-rad.fyra label{border-radius:17px;line-height:1.25}
 /* Glömt val: samma outline som den glömda samtyckesrutan. */
 .nx-val.fel .nx-val-rad{
   outline:2px solid color-mix(in srgb,var(--acc) 55%,transparent);outline-offset:4px;
