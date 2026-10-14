@@ -4182,7 +4182,7 @@ window.NXStudie = (function () {
             : '')
         : 'Känner du någon som vill jobba som studiehjälpare? Dela din länk, eller be hen skriva koden i jobbansökan.'
           + (data.bonus_ges
-            ? ' När vi tar in någon som sökt med din kod får du ' + kr(belopp) + ' extra i lönen.'
+            ? ' När vi tar in någon som sökt med din kod får du ' + kr(belopp) + ' extra i lönen, inklusive semesterersättning.'
             : ' Då ser vi att tipset kom från dig.');
 
       host.innerHTML = '<p class="nx-tips-intro">' + esc(intro) + '</p>'
@@ -4211,8 +4211,8 @@ window.NXStudie = (function () {
         + '<p class="xsmall nx-tips-not">'
         + (familj
           ? 'Ni ser hur många som anmält sig med er kod, inte vilka. Timmen går inte att växla in mot pengar. '
-          : 'Koden gäller jobbansökan, inte en familjs anmälan. Bonusen är lön och betalas med lönen för månaden vi tog in '
-            + 'personen. Du ser hur många som sökt med din kod, inte vilka. ')
+          : 'Koden gäller jobbansökan, inte en familjs anmälan. Bonusen är lön, inklusive semesterersättning, och betalas '
+            + 'med lönen för månaden vi tog in personen. Du ser hur många som sökt med din kod, inte vilka. ')
         + '<a href="/anvandarvillkor#tips">Villkoren för tips</a></p>';
     }
 

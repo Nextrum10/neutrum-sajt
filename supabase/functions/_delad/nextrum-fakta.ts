@@ -110,6 +110,12 @@ SIFFRORNA:
   tas in och senare. De gäller i 60 dagar och dras först, med planens
   gratis timme, före köpta timmar. De sparar inga minuter och betalas
   aldrig ut. Studiehjälparen får lön för passen som vanligt.
+· Ett pass dras från högst två köp i timbanken: räcker inte det första
+  i ordningen (gratis timmar först, sedan det som går ut först) tas
+  resten från nästa. På ett pass där en timme är på köpet (första
+  timmen eller tipstimmen) betalar timmarna resten.
+· Har familjen en plan som gäller kan den köpa till 1–20 timmar till
+  planens timpris, 379 kronor. De går ut samma dag som planen.
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
   468 kronor i timmen, inte 537.
@@ -140,7 +146,8 @@ SIFFRORNA:
 · Studiehjälparen får betalt den 25:e, i en klump för månadens
   rapporterade pass. Tar vi in någon som sökt jobb med en
   studiehjälpares kod får den studiehjälparen 300 kr i bonus med
-  lönen för den månaden.
+  lönen för den månaden, inklusive semesterersättning, som
+  timpenningen.
 · Belopp räknas i ören. Kronor blir det först när något visas.
 
 VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:

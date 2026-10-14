@@ -87,3 +87,52 @@ export function sammaInnehall(
     && tal(kop.rabatt_procent) === tal(e.rabatt_procent)
     && tal(kop.giltig_manader) === tal(e.giltig_manader);
 }
+
+/* ============================================================
+   TIMMAR TILL PLANEN (2026-10-14, timmarna_delas_och_kops_till)
+
+   Leo: "man ska kunna välja hur många timmar man köper". Priset räknas
+   i databasen (extra_timmar_erbjudande), och här står bara det som går
+   att pröva utan den: hur många timmar anropet får be om, och raden i
+   kassan och på kvittot.
+   ============================================================ */
+
+/** Högst så många timmar åt gången, som i extra_timmar_erbjudande(). */
+export const EXTRA_TIMMAR_MAX = 20;
+
+/** Ett heltal 1–20, eller null. Allt annat nekas innan databasen frågas. */
+export function extraTimmar(v: unknown): number | null {
+  const n = typeof v === 'number' ? v : typeof v === 'string' && /^\d{1,2}$/.test(v.trim()) ? Number(v) : NaN;
+  return Number.isInteger(n) && n >= 1 && n <= EXTRA_TIMMAR_MAX ? n : null;
+}
+
+const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september',
+  'oktober', 'november', 'december'];
+
+/** "2026-11-03" som "3 november 2026". Ett datum i fel form står som det är. */
+export function svensktDatum(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso ?? ''));
+  if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return String(iso ?? '');
+  return `${Number(m[3])} ${MANADER[Number(m[2]) - 1]} ${m[1]}`;
+}
+
+export type ExtraTimmar = {
+  plan_namn: string;
+  timmar: number;
+  rabatterat_timpris_ore: number;
+  giltigt_till: string;
+};
+
+/**
+ * Raden i kassan och på kvittot för timmar till en plan. Som kassarad():
+ * vad familjen köper och hur länge det gäller, och här att det är
+ * planens timpris och planens sista dag.
+ */
+export function kassaradTillPlanen(x: ExtraTimmar): { name: string; description: string } {
+  const kr = Math.floor(Number(x.rabatterat_timpris_ore) / 100);
+  return {
+    name: `Extra timmar till ${String(x.plan_namn || 'planen')}`,
+    description: `${timmarText(Number(x.timmar))} läxhjälp till planens timpris, ${kr} kr i timmen. `
+      + `Gäller till och med ${svensktDatum(x.giltigt_till)}, samma dag som planen.`,
+  };
+}

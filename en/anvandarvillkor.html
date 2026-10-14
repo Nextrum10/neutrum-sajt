@@ -226,10 +226,16 @@
          (Leo: "fylla deras timbank med önskade timmar som vi klickar in").
          De gäller i 60 dagar, dras först med de andra gratis timmarna,
          sparar inga minuter och betalas aldrig ut (migrationen
-         gratistimmar). -->
+         gratistimmar).
+
+         2026-10-14 (timmarna_delas_och_kops_till): ett pass dras från högst
+         två köp, timmen på köpet dras inte och timmarna betalar resten, och
+         timmar till en plan kostar planens timpris och går ut med planen.
+         Se anvandarvillkor.html. -->
     <h2 id="erbjudanden">Plans and the time bank</h2>
     <p>You can fill your time bank with hours in advance in one of two ways: with a plan for one
       month, at a lower hourly price, or with Fill the time bank, at the regular hourly price. If you
+      have a plan you can also buy more hours for it (see <a href="#kop-till">Buy more hours</a>). If you
       pay session by session the time bank is not used, and each session is paid as under Price and
       payment above.
       What is available and what it costs is shown on the <a href="/en/priser#erbjudanden">pricing page</a>. It is a
@@ -237,7 +243,7 @@
     <ul>
       <li><b>How long the hours are valid.</b> A plan is valid for one month from the purchase.
         Hours bought with Fill the time bank are valid for 6 months from the purchase, however many you
-        bought. A free hour is valid for 60 days from the day it is added (see <a href="#forsta-timmen">The first hour free</a>,
+        bought. Hours you bought for a plan are valid until the plan's last day. A free hour is valid for 60 days from the day it is added (see <a href="#forsta-timmen">The first hour free</a>,
         <a href="#gratistimmar">Free hours</a> and <a href="#tips">Recommend a family</a>). The last day is shown in your view.</li>
       <li><b>How the hours are used.</b> The hours pay for your sessions automatically. When you
         propose a session, free hours are taken first, the plan's free hour and <a href="#gratistimmar">free hours</a>
@@ -246,11 +252,16 @@
         you withdraw the proposal or the day passes without an answer, the hours come back. If you
         buy hours, we add free hours or hours come back, while you have proposed or booked sessions coming up that
         are not paid, they pay for them in date order, as far as they go. Each started hour of the session
-        uses one hour, and what is left of the last bought hour is saved in your <a href="#timbank">time bank</a>.
+        uses one hour, except an hour that is free (see <a href="#forsta-timmen">The first hour free</a> and
+        <a href="#tips">Recommend a family or a study helper</a>): then the hours pay for the rest of the session.
+        What is left of the last bought hour is saved in your <a href="#timbank">time bank</a>.
+        If the hours in the purchase used first do not cover the whole session, the rest is taken from the
+        next one, in the same order, and a session is taken from at most two purchases. If a session is
+        shorter than booked, the hours come back in reverse order, so that the ones taken first are the ones used.
         The hours cover sessions with one child; a session with more children is paid by card, as
-        is a session where an hour is free and a session the hours do not cover.</li>
-      <li id="timbank"><b>The time bank.</b> The time bank holds the hours you bought, with a plan or
-        with Fill the time bank, free hours we have added, minutes that have been saved and hours you received for
+        is a session the hours do not cover.</li>
+      <li id="timbank"><b>The time bank.</b> The time bank holds the hours you bought, with a plan, for a plan
+        or with Fill the time bank, free hours we have added, minutes that have been saved and hours you received for
         recommendations (see <a href="#tips">Recommend a family or a study helper</a>). If a session paid with bought hours ends before a full hour,
         the rest is saved in your time bank, counted per started quarter of an hour: if a two-hour
         session lasted 1 hour and 45 minutes, 15 minutes are saved. If a later session runs over,
@@ -273,6 +284,11 @@
         first, with the other free hours. What is left of a free hour when a session ends before a
         full hour is not saved, and free hours that are not used expire without a reminder. They are
         a gift: they do not count as bought hours and are never paid out as money.</li>
+      <li id="kop-till"><b>Buy more hours.</b> If you have a plan that is valid for at least one more day,
+        you can buy 1–20 more hours at a time, under Your time bank in your view. They cost the plan's
+        hourly price, what you paid per hour for the plan, and expire on the same day as the plan. They
+        are a separate purchase with the same rules as the plan: what is set out here, under Stopping and
+        under <a href="#angerratt">Right of withdrawal</a> also applies to them, and they come with no free hour.</li>
       <li><b>Cancelling.</b> You cancel a session paid with hours yourselves in your view, like
         an unpaid session. The hours then come back and stay valid until the same day as before.
         If an hour is lost because we or the tutor cancelled too late for you to use it, we
@@ -289,7 +305,8 @@
     </ul>
 
     <h2 id="prisgaranti">Price guarantee</h2>
-    <p>What you paid for a plan or for Fill the time bank is the price for all the hours in the purchase. If we raise
+    <p>What you paid for a plan, for hours for a plan or for Fill the time bank is the price for all the hours in
+      the purchase. If we raise
       the hourly price in the meantime, the hours you have already bought do not cost more, and
       you never pay a difference. If you stop, the hours used are counted at the regular hourly
       price that applied when you bought them, not at a later, higher one.</p>
@@ -373,15 +390,16 @@
         one it signed up with counts.</li>
       <li><b>How the hour is used.</b> It is deducted from the next homework help session you
         propose, one hour per session, at that session's own hourly price. You pay for the rest of
-        a longer session as usual, by card or invoice; bought hours do not pay for a session where
-        an hour is free. The hour is valid for 60 days from the day the new family had its two hours,
+        a longer session as usual: with hours in your time bank if you have any, otherwise by card or
+        invoice. The hour is valid for 60 days from the day the new family had its two hours,
         and it goes to a session you propose within that time, for a day within it. If the session is
         cancelled, or the study helper says no to the time, the hour comes back and stays valid until
         the same day as before.</li>
       <li><b>The hour is not money.</b> It cannot be exchanged, and it is not paid back if you
         stop.</li>
       <li><b>If you are a study helper: a bonus in your pay.</b> When we take on someone who applied
-        for a job with your code, you get 300 kronor in pay, before tax. The bonus is paid with the pay
+        for a job with your code, you get 300 kronor in pay, including holiday pay and before tax. The
+        bonus is paid with the pay
         for the month we took the person on, on the 25th of the month after. It applies to a person who
         has not been a study helper with us before, and is given once per person.</li>
       <li><b>What you see.</b> You see how many signed up or applied with your code and how many of
@@ -413,7 +431,7 @@
         therefore asking us to hold the session even though the period has not yet ended. If you
         withdraw after the session has started, you pay for the part that has taken place. A
         session that has been fully held cannot be withdrawn from.</li>
-      <li>If you buy a plan or Fill the time bank, the same right of withdrawal applies, counted from
+      <li>If you buy a plan, hours for a plan or Fill the time bank, the same right of withdrawal applies, counted from
         the day of purchase. If you withdraw, we refund what you paid, except for the hours
         already used. Those are counted at the hourly price you paid for the plan or the hours,
         not at the regular price.</li>
@@ -474,7 +492,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Swedish National Board for Consumer Disputes (ARN)</a>
       or by a Swedish general court.</p>
 
-    <p class="jur-datum">Last updated 13 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 14 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 

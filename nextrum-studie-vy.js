@@ -2256,7 +2256,8 @@
      före passen och bokningen: förslaget visar i förväg om en timme
      är på köpet, och databasen avgör (forsta_timmen_bjuds). Ett pass
      med tipstimmen bär rabattkod TIPS och startrabatt, så det betalas
-     som passet med första timmen: med kort, aldrig med köpta timmar.
+     som passet med första timmen: sedan timmarna_delas (2026-10-14)
+     betalar köpta timmar resten av det, och förut gjorde kortet det.
 
      Sedan 2026-10-13 står timmarna i timbanken (Leo: "timmarna läggs
      in i timbanken för familjerna"), i Er timbank och under Profil →
@@ -2508,7 +2509,10 @@
     S.forstaTimmen = forsta.error ? null : (forsta.data || null);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
     S.erb.katalog = katalog.data || [];
-    S.erb.kort = kort.data || [];
+    /* Gratistimmar som admin tagit tillbaka (aterkallad_at, timmarna_delas
+       2026-10-14) står kvar i databasen men inte hos familjen, som när de
+       raderades. */
+    S.erb.kort = (kort.data || []).filter(k => !k.aterkallad_at);
     /* Kan banken inte läsas står den som fanns. Noll hade tagit bort
        knappen Betala med timbanken från en familj som har minuter. */
     if (saldo.error || uttag.error) console.warn('Timbanken gick inte att läsa', saldo.error || uttag.error);
@@ -2561,27 +2565,47 @@
     : Number(k.gratis_kvar) > 0 && !!k.gratis_till && String(k.gratis_till) >= dag;
   const kortetsSistaDag = (k, dag) => String(k.giltigt_till) >= dag ? String(k.giltigt_till) : String(k.gratis_till || '');
 
-  /* Kortet timmarna dras från. Samma urval som klippkort_dra gör:
+  /* Hur många timmar ett pass drar ur korten: varje påbörjad timme,
+     minus timmen på köpet (intern.passets_korttimmar, timmarna_delas,
+     2026-10-14). Ett pass på en timme med timmen på köpet drar inget. */
+  const korttimmar = b => Math.max(passTimmar(b) - (b.startrabatt ? 1 : 0), 0);
+
+  /* Korten timmarna dras från, som intern.timmar_fordela väljer dem:
      gratis timmar först (Leo 2026-10-13: "gratis timmar går ut först sen
-     planerna"; gratistimmarna admin satt in också), sedan kortet som går
-     ut först och räcker. Funktionen väljer själv, det här avgör bara om
-     knappen ska stå där. Ett pass med fler barn betalas med kort
-     (villkoren, #erbjudanden). */
-  function kortFör(b) {
-    /* Ett pass med första timmen bjuden betalas med kort (Fas 19.5):
-       timmarna dras ur passets hela längd, och klippkort_dra nekar det. */
-    if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1 || b.startrabatt) return null;
-    const behov = passTimmar(b);
-    const dag = passetsDag(b.wanted_date);
-    return S.erb.kort
-      .filter(k => k.brukbar && k.status === 'betald' && kortetsTimmar(k, dag) >= behov)
+     planerna"; gratistimmarna admin satt in också), sedan det köp som går
+     ut först. Räcker det första till hela passet dras bara det; annars allt
+     som är kvar på det och resten från det första köp i ordningen som
+     räcker till resten (timmarna_delas, 2026-10-14). Högst två köp per
+     pass. Databasen väljer själv; det här avgör vad vyn lovar.
+     { kort, forsta, forstaTimmar, behov } eller null. */
+  function fördela(behov, dag) {
+    if (!(behov > 0)) return null;
+    const kort = S.erb.kort
+      .filter(k => k.brukbar && k.status === 'betald' && kortetsTimmar(k, dag) > 0)
       .sort((a, c) => (harGratis(c, dag) - harGratis(a, dag))
-        || kortetsSistaDag(a, dag).localeCompare(kortetsSistaDag(c, dag)))[0] || null;
+        || kortetsSistaDag(a, dag).localeCompare(kortetsSistaDag(c, dag))
+        || String(a.created_at || '').localeCompare(String(c.created_at || '')));
+    const först = kort[0];
+    if (!först) return null;
+    const har = kortetsTimmar(först, dag);
+    if (har >= behov) return { kort: först, forsta: null, forstaTimmar: 0, behov: behov };
+    const rest = kort.slice(1).find(k => kortetsTimmar(k, dag) >= behov - har);
+    return rest ? { kort: rest, forsta: först, forstaTimmar: har, behov: behov } : null;
   }
 
+  /* Ett pass med fler barn betalas med kort (villkoren, #erbjudanden). */
+  function kortFör(b) {
+    if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1) return null;
+    return fördela(korttimmar(b), passetsDag(b.wanted_date));
+  }
+  /* "2 timmar ur Standard", eller "1 timme ur Gratistimmar från Nextrum och 1 ur Standard". */
+  const dragText = f => f.forsta
+    ? timText(f.forstaTimmar) + ' ur ' + f.forsta.namn + ' och ' + (f.behov - f.forstaTimmar) + ' ur ' + f.kort.namn
+    : timText(f.behov) + ' ur ' + f.kort.namn;
+
   /* Timbanken betalar ett helt pass när minuterna räcker till det
-     bokade (Fas 22.1). Samma pass som timmarna: ett barn, inte ett med
-     första timmen bjuden. timbank_dra prövar det igen. */
+     bokade (Fas 22.1): ett barn, och inte ett med en timme på köpet,
+     vars resten timmarna betalar. timbank_dra prövar det igen. */
   function bankFör(b) {
     if (!S.erb.aktiv || Number(b.antal_barn || 1) > 1 || b.startrabatt) return false;
     return S.erb.bank.saldo >= Number(b.duration_min || 60);
@@ -2601,16 +2625,19 @@
      bort här (lovadeTimmar), för databasen drog först vid bekräftelsen,
      och en summa över flera kort kunde säga "räcker" om ett pass som
      inget enskilt kort räckte till. */
-  function timmarFörFörslag(minuter, datum, barn) {
+  /* gratis: förslaget får en timme på köpet (bjuden), och timmarna
+     betalar resten (timmarna_delas, 2026-10-14). Timbanken betalar bara
+     hela pass. */
+  function timmarFörFörslag(minuter, datum, barn, gratis) {
     if (!S.erb.aktiv || Number(barn) > 1 || !datum) return null;
-    const behov = passTimmar({ duration_min: minuter });
-    const brukbara = S.erb.kort.filter(k => k.brukbar);
+    const behov = Math.max(passTimmar({ duration_min: minuter }) - (gratis ? 1 : 0), 0);
+    if (!behov) return null;
     const dag = passetsDag(datum), idag = isoFor(new Date());
-    if (brukbara.some(k => kortetsTimmar(k, dag) >= behov)) {
-      const kvar = brukbara.reduce((a, k) => a + kortetsTimmar(k, idag), 0);
+    if (fördela(behov, dag)) {
+      const kvar = S.erb.kort.filter(k => k.brukbar).reduce((a, k) => a + kortetsTimmar(k, idag), 0);
       return { titel: 'Er timbank', under: '−' + timText(behov) + ', ' + (kvar - behov) + ' kvar efter' };
     }
-    if (S.erb.bank.saldo >= minuter) return { titel: 'Timbanken', under: '−' + tidLängd(minuter) };
+    if (!gratis && S.erb.bank.saldo >= minuter) return { titel: 'Timbanken', under: '−' + tidLängd(minuter) };
     return null;
   }
 
@@ -2757,7 +2784,7 @@
     const val = [];
     if (tim) {
       val.push(V({ attr: 'data-timmar="' + esc(b.id) + '"', ikon: 'timmar', titel: 'Betala med timmar',
-        under: timText(passTimmar(b)) + ' ur ' + tim.namn, först: true }));
+        under: dragText(tim), först: true }));
     } else if (bank) {
       val.push(V({ attr: 'data-timbank="' + esc(b.id) + '"', ikon: 'bank', titel: 'Betala med timbanken',
         under: tidLängd(Number(b.duration_min || 60)) + ' ur timbanken', först: true }));
@@ -3011,11 +3038,13 @@
   }
   /* Ett erbjudande går genom samma kassa, med koden i stället för ett
      pass (Fas 16.1). Beloppet räknas av stripe-checkout. */
-  async function startaKöp(kod, ui) {
+  async function startaKöp(kod, ui, extra) {
     /* En rabattkod följer med när den gäller kortet (2026-10-13). Kassan
-       prövar den igen och drar det databasen räknat fram. */
-    const rk = S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
-    return startaKassa(Object.assign({ erbjudande: kod, retur: location.origin, ui: ui }, rk ? { rabattkod: rk } : {}));
+       prövar den igen och drar det databasen räknat fram. Timmar till
+       planen (2026-10-14) köps utan kod: extra bär antalet timmar. */
+    const rk = !extra && S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
+    return startaKassa(Object.assign({ erbjudande: kod, retur: location.origin, ui: ui }, rk ? { rabattkod: rk } : {},
+      extra || {}));
   }
   async function startaKassa(body) {
     const svar = await supa.functions.invoke('stripe-checkout', { body: body });
@@ -3089,6 +3118,7 @@
     if (p.checkout) { try { p.checkout.destroy(); } catch (_) { /* redan borta */ } p.checkout = null; }
     p.knapp = knapp; p.pass = passId; p.klar = false;
     p.kod = o && o.kod ? o.kod : null;
+    p.extra = o && o.extra ? o.extra : null;
     p.tillägg = !!(o && o.tillägg);
     // 'kort': kassan sparar kortet (kortet_reserveras) och tar ingen betalning.
     p.sort = o && o.sort ? o.sort : null;
@@ -3475,14 +3505,18 @@
      ett pass som hålls inte går att ångra (villkoren, #angerratt). */
   async function betalaMedTimmar(knapp, passId) {
     const b = (S.bokningar || []).find(x => x.id === passId);
-    const kort = b ? kortFör(b) : null;
-    if (!b || !kort) return;
-    const behov = passTimmar(b);
+    const f = b ? kortFör(b) : null;
+    if (!b || !f) return;
+    const kort = f.kort, behov = f.behov, härifrån = behov - f.forstaTimmar;
     const ord = n => n === 1 ? '1 timme' : n + ' timmar';
+    /* Ett pass kan dras från två köp (timmarna_delas, 2026-10-14), och
+       timmen på köpet dras inte. Rutan säger båda. */
     const ok = await NXStudie.bekräfta({
       titel: 'Betala med timmar?',
-      text: ord(behov) + ' dras från ' + kort.namn + '. Kvar efteråt: '
-        + ord(kortetsTimmar(kort, passetsDag(b.wanted_date)) - behov)
+      text: (f.forsta ? ord(f.forstaTimmar) + ' dras från ' + f.forsta.namn + ' och ' + ord(härifrån) + ' från ' + kort.namn
+          : ord(behov) + ' dras från ' + kort.namn)
+        + (b.startrabatt ? ', och timmen på köpet dras inte' : '')
+        + '. Kvar efteråt på ' + kort.namn + ': ' + ord(kortetsTimmar(kort, passetsDag(b.wanted_date)) - härifrån)
         + ' av ' + kort.timmar + '. Avbokas passet kommer timmarna tillbaka.',
       knapp: 'Dra ' + ord(behov)
     });
@@ -3542,25 +3576,34 @@
   async function köpErbjudande(knapp, kod) {
     const e = S.erb.katalog.find(x => x.kod === kod);
     if (!e || !S.erb.aktiv || S.väntar) return;
+    await köpIKassan(knapp, kod, null, 'Köp ' + e.namn, svar => erbTimmar(e) + ' · '
+      + NXBetalning.kronor(svar.belopp_ore != null ? svar.belopp_ore : e.pris_ore)
+      + (svar.rabatt_ore > 0 && S.erb.kod ? ' med koden ' + S.erb.kod.kod : ''));
+  }
+
+  /* Ett köp i samma kassa som passen. extra följer med till
+     stripe-checkout (timmarna till planen), och vad(svar) är raden under
+     rubriken: beloppet där är det kassan räknat. */
+  async function köpIKassan(knapp, kod, extra, titel, vad) {
     await medan(knapp, 'Öppnar…', async () => {
       const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
-      const svar = await startaKöp(kod, 'inbaddad');
+      const svar = await startaKöp(kod, 'inbaddad', extra);
       if (!svar) return;
       if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
         const Stripe = await stripeKlar;
         if (Stripe) {
           try {
             await öppnaKassa(knapp, null, svar, Stripe, {
-              titel: 'Köp ' + e.namn,
-              vad: erbTimmar(e) + ' · ' + NXBetalning.kronor(svar.belopp_ore != null ? svar.belopp_ore : e.pris_ore)
-                + (svar.rabatt_ore > 0 && S.erb.kod ? ' med koden ' + S.erb.kod.kod : ''),
+              titel: titel,
+              vad: vad(svar),
               kod: kod,
+              extra: extra,
               klar: köpKlart
             });
             return;
           } catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
         }
-        const reserv = await startaKöp(kod, 'sida');
+        const reserv = await startaKöp(kod, 'sida', extra);
         if (reserv && reserv.url) { location.href = reserv.url; return; }
         if (!reserv) return;
       } else if (svar.url) {
@@ -3836,9 +3879,84 @@
         : '<p class="erb-bank-text">Fyll timbanken med en plan eller med timmar nedan, så betalar timmarna era pass av sig själva.</p>')
       + '</div>'
       + brukbara.map(k => kortRad(k)).join('')
+      + extraRuta()
       + tipsKort(false)
       + '<p class="erb-bank-text erb-tillg-lank">Hur timmarna används, hur länge de gäller och villkoren står under '
       + '<a href="#profil/timbank">Profil &amp; inställningar → Timbanken</a>.</p>';
+  }
+
+  /* ============================================================
+     KÖP TILL TIMMAR (2026-10-14, timmarna_delas_och_kops_till)
+
+     Leo: "man kan köpa till timmar med plan men de går ut när månaden är
+     slut. man ska kunna välja hur många timmar man köper, det ska finnas
+     välj själv knapp och checkout för de specifika timmarna". Under Er
+     timbank, när familjen har en plan som gäller minst en dag till:
+     Välj själv öppnar ett val av 1–20 timmar, till planens timpris
+     (klippkort_saldo.rabatterat_timpris_ore), och timmarna går ut med
+     planen. Kassan räknar priset själv (extra_timmar_erbjudande); här
+     visas det bara i förväg.
+     ============================================================ */
+  S.extra = { öppen: false, timmar: 2 };
+  const EXTRA_MAX = 20;
+
+  /* Planen timmarna köps till, som extra_timmar_erbjudande väljer den:
+     den senaste betalda planen som gäller minst en dag till. */
+  function planFörExtra() {
+    const idag = isoFor(new Date());
+    return S.erb.kort
+      .filter(k => k.sort === 'plan' && k.status === 'betald' && String(k.giltigt_till) > idag)
+      .sort((a, c) => String(c.giltigt_till).localeCompare(String(a.giltigt_till))
+        || String(c.created_at || '').localeCompare(String(a.created_at || '')))[0] || null;
+  }
+
+  function extraRuta() {
+    const plan = S.erb.aktiv && !S.väntar ? planFörExtra() : null;
+    // Före migrationen saknas timpriset i vyn, och då står ingen knapp.
+    const timpris = plan ? Number(plan.rabatterat_timpris_ore) : 0;
+    if (!plan || !(timpris > 0)) return '';
+    const n = S.extra.timmar;
+    return '<div class="erb-mitt erb-extra">'
+      + '<div class="erb-mitt-topp"><b>Köp till timmar</b><span>' + esc(NXBetalning.kronor(timpris) + ' i timmen') + '</span></div>'
+      + '<p class="erb-bank-text">' + esc('Timmar till ' + plan.namn + ', till planens timpris. De går ut med planen, '
+        + datumText(plan.giltigt_till) + '.') + '</p>'
+      + (S.extra.öppen
+        ? '<div class="erb-extra-val">'
+          + '<div class="erb-steg" role="group" aria-label="Antal timmar">'
+          + '<button type="button" class="erb-steg-knapp" data-extra-steg="-1" aria-label="En timme färre"'
+          + (n <= 1 ? ' disabled' : '') + '>−</button>'
+          + '<output class="erb-steg-tal" aria-live="polite">' + esc(timText(n)) + '</output>'
+          + '<button type="button" class="erb-steg-knapp" data-extra-steg="1" aria-label="En timme till"'
+          + (n >= EXTRA_MAX ? ' disabled' : '') + '>+</button>'
+          + '</div>'
+          + '<p class="erb-extra-pris"><b>' + esc(NXBetalning.kronor(timpris * n)) + '</b></p>'
+          + '<button type="button" class="btn btn-orange" data-extra-kop>Till kassan</button>'
+          + '</div>'
+        : '<button type="button" class="btn btn-ghost btn-sm" data-extra-valj>Välj själv</button>')
+      + '</div>';
+  }
+
+  /* Stegen ändrar bara talet och priset, på plats: rutan ritas inte om
+     under fingret, och fokus står kvar på knappen. */
+  function uppdateraExtra() {
+    const ruta = $('#erb-mina .erb-extra');
+    const plan = planFörExtra();
+    if (!ruta || !plan) { ritaTillgängliga(); return; }
+    const n = S.extra.timmar;
+    const tal = ruta.querySelector('.erb-steg-tal'), pris = ruta.querySelector('.erb-extra-pris b');
+    if (tal) tal.textContent = timText(n);
+    if (pris) pris.textContent = NXBetalning.kronor(Number(plan.rabatterat_timpris_ore) * n);
+    const minus = ruta.querySelector('[data-extra-steg="-1"]'), plus = ruta.querySelector('[data-extra-steg="1"]');
+    if (minus) minus.disabled = n <= 1;
+    if (plus) plus.disabled = n >= EXTRA_MAX;
+  }
+
+  async function köpTillPlanen(knapp) {
+    const plan = planFörExtra();
+    if (!plan || !S.erb.aktiv || S.väntar) return;
+    const n = S.extra.timmar;
+    await köpIKassan(knapp, 'plan_extra', { timmar: n }, 'Köp till timmar',
+      svar => timText(n) + ' till ' + plan.namn + (svar.belopp_ore ? ' · ' + NXBetalning.kronor(svar.belopp_ore) : ''));
   }
 
   /* Ett köpt kort: timmarna kvar som en mätare, och sista dagen. Samma
@@ -3901,6 +4019,11 @@
      ============================================================ */
   const RORELSE_TEXT = { in: 'Över från', overtid: 'Övertid på', pass: 'Betalade' };
 
+  /* Köpen ett pass drogs från, en rad per köp (klippkort_rorelser). Tom
+     innan de hämtats. */
+  const passetsDrag = id => Object.keys(S.erb.dragningar || {})
+    .reduce((alla, k) => alla.concat(S.erb.dragningar[k].filter(r => r.booking_id === id)), []);
+
   const passNamn = (id, datum) => {
     const b = (S.bokningar || []).find(x => x.id === id);
     return b ? (b.subject || 'passet') + ' ' + datumText(b.wanted_date) : 'passet ' + datumText(datum);
@@ -3952,8 +4075,8 @@
       + 'Säger hen nej, eller drar ni tillbaka förslaget, kommer de tillbaka, och det gör de också när ett förslag ingen '
       + 'svarat på har passerat. Köper ni timmar, sätter vi in gratistimmar eller kommer timmar tillbaka, betalar de era '
       + 'pass i datumordning. '
-      + 'Ett pass med fler barn, och ett pass där första timmen eller tipstimmen är på köpet, '
-      + 'betalas med kort. '
+      + 'Räcker inte ett köp till hela passet tas resten från nästa, högst två köp per pass. På ett pass där första '
+      + 'timmen eller tipstimmen är på köpet betalar timmarna resten. Ett pass med fler barn betalas med kort. '
       + (gratis ? 'Gratistimmar från oss gäller i 60 dagar, det som blir över av en sådan timme sparas inte, och de '
         + 'betalas aldrig ut. ' : '')
       + '<a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
@@ -4015,9 +4138,9 @@
     if (e.disposition !== 'enforce') return;
     if (!/stripe\.(com|network)/.test(String(e.blockedURI || ''))) return;
     console.error('CSP stoppade Stripe:', e.violatedDirective, e.blockedURI);
-    const passId = p.pass, kod = p.kod, tillägg = p.tillägg;
+    const passId = p.pass, kod = p.kod, extra = p.extra, tillägg = p.tillägg;
     stängBetalpanel();
-    const reserv = passId ? await startaBetalning(passId, 'sida', tillägg) : kod ? await startaKöp(kod, 'sida') : null;
+    const reserv = passId ? await startaBetalning(passId, 'sida', tillägg) : kod ? await startaKöp(kod, 'sida', extra) : null;
     if (reserv && reserv.url) location.href = reserv.url;
   });
 
@@ -4271,6 +4394,22 @@
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
     if (e.target.closest('#erb-kod-anvand')) { await provaErbKod(); return; }
+    /* Köp till timmar (2026-10-14): Välj själv, stegen och kassan. */
+    if (e.target.closest('[data-extra-valj]')) {
+      S.extra.öppen = true;
+      ritaTillgängliga();
+      const plus = $('#erb-mina [data-extra-steg="1"]');
+      if (plus) plus.focus();
+      return;
+    }
+    const steg = e.target.closest('[data-extra-steg]');
+    if (steg) {
+      S.extra.timmar = Math.min(EXTRA_MAX, Math.max(1, S.extra.timmar + Number(steg.dataset.extraSteg)));
+      uppdateraExtra();
+      return;
+    }
+    const ek = e.target.closest('[data-extra-kop]');
+    if (ek) { await köpTillPlanen(ek); return; }
 
     /* Kortet (kortet_reserveras, 2026-10-13). */
     const kv = e.target.closest('[data-kort-val]');
@@ -4563,8 +4702,9 @@
       return S.tips && Number(S.tips.kvar) > 0
         && (!S.tips.kvar_till || String(S.tips.kvar_till) >= dag) ? 'tips' : false;
     },
-    /* Köpta timmar i stället för priset vid knappen (2026-09-28). */
-    timmar: (minuter, datum, barn) => timmarFörFörslag(minuter, datum, barn),
+    /* Köpta timmar i stället för priset vid knappen (2026-09-28), och
+       för resten av ett pass med en timme på köpet (2026-10-14). */
+    timmar: (minuter, datum, barn, gratis) => timmarFörFörslag(minuter, datum, barn, gratis),
 
     /* Spärren förr yttrade sig som en avstängd knapp utan
        förklaring. Nu står skälet där kalendern skulle ha stått. */
@@ -5060,16 +5200,23 @@
              drogs, inte ett märke som säger Betalt under rubriken
              Betalda pass. Ett återbetalt eller bestritt pass behåller
              sitt märke: det är det enda som skiljer dem från resten. */
-          const timmar = Math.max(1, Math.round(Number(b.duration_min || 60) / 60));
-          const gratis = b.klippkort_id && S.erb.kort.some(k => k.id === b.klippkort_id && NXBetalning.gratistimmar(k));
-          const drogs = b.klippkort_id && !betalt ? (timmar === 1 ? '1 timme' : timmar + ' timmar')
+          /* Ett pass kan ha dragits från två köp (timmarna_delas,
+             2026-10-14): timmarna och om de var gratis läses ur
+             klippkort_rorelser, en rad per köp. Timmen på köpet dras inte. */
+          const drag = b.klippkort_id ? passetsDrag(b.id) : [];
+          const timmar = drag.length ? drag.reduce((a, r) => a + (Number(r.timmar) || 0), 0) : korttimmar(b);
+          const ärGratis = id => S.erb.kort.some(k => k.id === id && NXBetalning.gratistimmar(k));
+          const nGratis = drag.length ? drag.filter(r => ärGratis(r.klippkort_id)).length
+            : b.klippkort_id && ärGratis(b.klippkort_id) ? 1 : 0;
+          const gratis = nGratis > 0 && nGratis >= Math.max(drag.length, 1);
+          const drogs = b.klippkort_id && !betalt ? (!timmar ? '' : timmar === 1 ? '1 timme' : timmar + ' timmar')
             : medBanken(b) && !betalt ? tidLängd(Number(b.duration_min || 60)) : betalt ? kronor(betalt) : '';
           return NXKontakt.passRad(b, {
             href: '#pass/' + b.id,
             med: medBarn(b),
             tid: false,
             plats: false,
-            under: [b.klippkort_id && !betalt ? (gratis ? 'Gratistimmar' : 'Köpta timmar')
+            under: [b.klippkort_id && !betalt ? (gratis ? 'Gratistimmar' : nGratis ? 'Gratistimmar och köpta timmar' : 'Köpta timmar')
               : medBanken(b) && !betalt ? 'Sparade minuter' : 'Kort',
               'betalt ' + kortDatum(isoFor(new Date(b.betald_at)))].join(' · '),
             vem: !tillbaka ? null

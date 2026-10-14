@@ -2160,6 +2160,17 @@ a.pass-lank:hover{color:var(--acc)}
 /* Fas 21.2: tio dagar före sista dagen, samma dag som mejlet går. */
 .erb-snart{margin:10px 0 0;font-size:.84rem;line-height:1.5;color:var(--bl)}
 .erb-snart a{color:var(--acc);font-weight:600}
+/* Köp till timmar (2026-10-14): Välj själv öppnar ett val av 1–20 timmar
+   under Er timbank. Stegknapparna är 44 px, tummens mått, och talet har
+   jämnbreda siffror, så att priset bredvid inte hoppar. */
+.erb-extra > .btn{margin-top:12px}
+.erb-extra-val{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:12px}
+.erb-steg{display:inline-flex;align-items:center;border:1px solid var(--ln);border-radius:100px;background:var(--yta)}
+.erb-steg-knapp{width:44px;height:44px;border:0;padding:0;background:none;border-radius:100px;font:inherit;font-size:1.3rem;line-height:1;color:var(--bl);cursor:pointer}
+.erb-steg-knapp:disabled{color:var(--muted-2);cursor:default}
+.erb-steg-tal{min-width:8ch;text-align:center;font-variant-numeric:tabular-nums;font-weight:600;color:var(--bl)}
+.erb-extra-pris{margin:0;font-variant-numeric:tabular-nums}
+.erb-extra-pris b{font-size:1.15rem;color:var(--bl)}
 /* Fas 21.3: vägen till köpta timmar under Betala i förväg. */
 .bet-erb-tips{margin:14px 0 0;color:var(--bl-2);line-height:1.6}
 .bet-erb-tips a{color:var(--acc);font-weight:600;white-space:nowrap}
