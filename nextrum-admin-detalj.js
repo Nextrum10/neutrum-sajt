@@ -434,10 +434,12 @@
     const rader = kort.map(k => {
       const gratis = NXBetalning.gratistimmar(k);
       const utgånget = !!k.giltigt_till && String(k.giltigt_till) < idag;
+      /* Tillbakatagna gratistimmar står kvar, märkta (aterkallad_at,
+         timmarna_delas 2026-10-14). Förut raderades de. */
       const under = [
-        k.kvar + ' av ' + k.timmar + ' timmar kvar',
+        k.aterkallad_at ? 'togs tillbaka ' + kortDatum(k.aterkallad_at) : k.kvar + ' av ' + k.timmar + ' timmar kvar',
         gratis ? 'insatta ' + kortDatum(k.created_at) : 'köpt ' + kortDatum(k.betald_at || k.created_at),
-        k.giltigt_till ? (utgånget ? 'gick ut ' : 'gäller till ') + kortDatum(k.giltigt_till) : null
+        k.aterkallad_at || !k.giltigt_till ? null : (utgånget ? 'gick ut ' : 'gäller till ') + kortDatum(k.giltigt_till)
       ].filter(Boolean).join(' · ');
       /* Ta tillbaka står bara där det finns timmar att ta: timmarna på
          förslag och pass står kvar (ta_tillbaka_gratistimmar). */

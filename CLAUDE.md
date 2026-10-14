@@ -82,7 +82,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Timmarna**: `bookings_timmarna_tillbaka` är den SISTA before-triggern på `bookings`
   (namnordning), och klippkortets triggrar rör inte `skydda_bokningsfalt`. Timmen dras bara i
   `klippkort_dra()`, när förslaget skapas, och kommer tillbaka vid nej, avbokning eller
-  obesvarat förslag. `timmar-betalar` väntar aldrig på ett lås. De sparade minuterna kommer bara ur
+  obesvarat förslag. `timmar-betalar` väntar aldrig på ett lås. **Ett pass dras från högst två köp**
+  (2026-10-14, Leo: ett pass "kan delas" mellan gratistimmarna och planen): det första i
+  `forsta_klippkort_id` och `forsta_klippkort_timmar`, resten i `klippkort_id`, i ordningen ur
+  `intern.timmar_fordela` (gratis först, sedan det som går ut först), och blir passet kortare kommer
+  timmarna tillbaka bakifrån (`intern.kortets_anvanda`, och samma uttryck i vyerna). Ett pass med en
+  timme på köpet drar resten ur timmarna (`intern.passets_korttimmar`; Leo: "tipstimmen används också
+  före planerna"), men timbanken betalar bara hela pass utan den. De sparade minuterna kommer bara ur
   köpta timmar och går inte ut. Timbanken visar sedan 2026-10-13 också timmar för tips, som är ett avdrag
   på nästa pass, inte ett köp. Vid ånger eller uppsägning: avboka först allt kommande.
 - **Gratistimmar** (2026-10-13, Leo): admin sätter in dem i familjens timbank, i Ta in familjen och i
@@ -92,8 +98,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   med planens gratis timme, före köpta timmar (Leo: "de används först av alla timmar"; ordningen är
   `gratistimmarna_60_dagar`s, där ett kort med gratistimmar räknas som gratis), sparar inga minuter
   (`intern.timbank_in`), får ingen påminnelse och betalas aldrig ut; studiehjälparen får lön som vanligt.
-  `ta_tillbaka_gratistimmar()` tar bara det som inte ligger på ett pass. De står utanför första timmen, som
-  tipstimmen. Det river beskedet 2026-10-09 "inte få gratis av oss".
+  `ta_tillbaka_gratistimmar()` tar bara det som inte ligger på ett pass, och återkallar kortet
+  (`aterkallad_at`) i stället för att radera det (2026-10-14): ingen `delete`, och historiken står kvar.
+  De står utanför första timmen, som tipstimmen. Det river beskedet 2026-10-09 "inte få gratis av oss".
 - **NexLäx**: rättningen sker i databasen; frågorna går ut utan facit, försök och svar har ingen
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
   sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. Allt i NexLäx är
@@ -130,7 +137,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   Den står utanför taket för första timmen. **Den står i timbanken** (2026-10-13, Leo: "timmarna läggs
   in i timbanken för familjerna"): Er timbank och Profil → Timbanken visar den med sista dagen, och den
   dras först, som en gratis timme (`forsta_timmen_bjuds`). **En studiehjälpare får 300 kr i
-  lön** (Leo samma dag: "bonus redovisas som lön") när vi tar in den som sökt med hens kod
+  lön, inklusive semesterersättning** (Leo samma dag: "bonus redovisas som lön", och "300kr är inklusive
+  semesterersättning": lönearten i Fortnox är inte semestergrundande, som timlönens) när vi tar in den som sökt med hens kod
   (`tutor_profiles.status` blir `approved`; ansökan hittas på adressen): en LAGRAD rad i `tipsbonus`, en
   per ny studiehjälpare och bara om hen var ny när hen sökte, med eget läge (Utkast, Godkänd, Utbetald,
   Struken) under Löner, i lönefilen på en egen löneart (`foretagsfakta.lonart_tipsbonus`), aldrig i
@@ -257,10 +265,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips, i timbanken i 60 dagar: `startrabatt` och `rabattkod = 'TIPS'` på passet |
-| tipsbonus | 300 kr i lön till en studiehjälpare för ett tips som vi tagit in (`tipsbonus`), aldrig ett underlag |
+| tipsbonus | 300 kr i lön, inklusive semesterersättning, till en studiehjälpare för ett tips som vi tagit in (`tipsbonus`), aldrig ett underlag |
 | timbanken | familjens köpta timmar (en plan eller Fyll timbanken), gratistimmar och sparade minuter; pass för pass går inte genom den |
 | gratistimmar | timmar vi sätter in i familjens timbank utan kostnad (`klippkort` med erbjudandet `gratis`); 60 dagar, dras först med planens gratis timme. Inte första timmen eller tipstimmen |
 | Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
+| timmar till planen | Köp till timmar: 1–20 timmar till en plan som gäller, till planens timpris, som går ut med planen (`klippkort` med erbjudandet `plan_extra` och `till_plan`; Välj själv under Er timbank) |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
 ### Siffror som måste stämma överallt
@@ -277,7 +286,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   fylls antingen med plan eller förköpta timmarna"), och sedan 2026-10-13 visar den också timmar för tips, som inte köps
   och gäller i 60 dagar: med en plan, eller med **Fyll timbanken** (klippkorten
   `klipp10`–`klipp100` i databasen), som kostar timpriset, 399 kr, utan rabatt och utan märke, och gäller i sex månader
-  i alla storlekar. Sedan 2026-10-13 sätter vi också in gratistimmar där (avsnitt 1). Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
+  i alla storlekar. Sedan 2026-10-13 sätter vi också in gratistimmar där (avsnitt 1). **Köp till timmar**
+  (2026-10-14, Leo: "man kan köpa till timmar med plan men de går ut när månaden är slut ... välj själv knapp och
+  checkout för de specifika timmarna"): med en plan som gäller minst en dag till köper familjen 1–20 timmar åt
+  gången under Er timbank, till planens eget timpris (379 kr i dag; `extra_timmar_erbjudande()` räknar, aldrig
+  anropet), och de går ut samma dag som planen (`klippkort_betald`). De får ingen gratis timme, och påminnelsen
+  tio dagar innan räknar dem med planen. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
   och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
   Studievyns Erbjudanden visar alltid Er timbank med de tillgängliga timmarna och hänvisar till Profil → Timbanken,
   där förklaringen och villkoren står (Leo samma kväll).
@@ -499,8 +513,10 @@ Detaljer: `minne/grunden.md`.
 - **Verktygen som ändrar driften ber om en bekräftelse** för `drop`, för en `delete` utanför en funktion
   och för en funktion med två `delete` (2026-10-13 också för en med ett `delete` och två `update`,
   `ta_tillbaka_gratistimmar`), och hänger sig i 60 sekunder om ingen svarar: inget har hänt, och
-  `apply_migration` gör likadant. Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en
-  rensning per funktion), kör dem avsnitt för avsnitt med `execute_sql` och registrera filens text sedan i
+  `apply_migration` gör likadant. Rutan syns inte i alla klienter (2026-10-13 syntes den inte i Leos app).
+  Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en rensning per funktion, en
+  tidsstämpel i stället för `delete`, som `klippkort.aterkallad_at` 2026-10-14), kör dem avsnitt för avsnitt med
+  `execute_sql` och registrera filens text sedan i
   `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL,
   och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*` från 2026-10-02 står kvar och väntar
   på ett ja, avsnitt 11).
@@ -857,13 +873,31 @@ Detaljer: `minne/grunden.md`.
   sist samma kväll, avsnitt för avsnitt med `execute_sql` (filen har ett `delete`), och allt den skapar och lappar är
   byte för byte som i en databas byggd ur alla 188 migrationer, utom `ta_tillbaka_gratistimmar`: den fastnade tre
   gånger på verktygets bekräftelse utan svar (avsnitt 5), och inget kördes; den tredje gången satt Leo vid skärmen,
-  men ingen ruta syntes i hans app. **Kvar**: kör avsnitt 7 i filen med `execute_sql` från en klient där verktygets
-  fråga syns och Leo kan svara ja, och registrera sedan filen (md5 `079603c5…`), som de andra. Till
+  men ingen ruta syntes i hans app. **Avsnitt 7 körs aldrig**: `timmarna_delas_och_kops_till` (nedan) skriver
+  funktionen utan `delete` (kortet återkallas), och när den körts registreras `gratistimmar` med filens text
+  (md5 `079603c5…`) och en anteckning om att avsnitt 7 ersattes. Till
   dess går det att sätta in gratistimmar men inte att ta tillbaka dem. Hela `rls-test.sql` gick 1643 av 1643 mot
   driften, tillbakarullat, med filen körd först i samma transaktion (`minne/databasen.md`). Villkorens version är
   2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Ingen påminnelse går om gratistimmar
   (mejlet säger "köpta timmar" och lovar återbetalning); vill vi ha en krävs en egen mall och `notis-ko`. Juristen
   har inte läst villkoren för gratistimmarna.
+- **Timmarna delas, och timmar köps till planen** (2026-10-14, `timmarna_delas_och_kops_till`, 20261014100000) är
+  byggda men inte i drift: ett pass dras från högst två köp, timmen på köpet dras inte och timmarna betalar resten,
+  gratistimmar återkallas utan `delete`, Köp till timmar (Välj själv, `plan_extra`, `stripe-checkout`), påminnelsen
+  räknar dem med planen, och bonusen för tips säger "inklusive semesterersättning". **Filen rättar också ett fel i
+  driften**: `gratistimmarna_60_dagar` gav inte `service_role` rätt att köra `intern.kortets_timmar`,
+  `intern.gratis_till` och `intern.kortets_sista_dag`, så Betala med timmar (`klippkort-betala`, som kör
+  `klippkort_dra` med `service_role`) svarar "permission denied" sedan 2026-10-13. Lokalt, ur alla 191
+  migrationer: hela `rls-test.sql` 1738 av 1738 (avsnitt 34 är nytt), och filen går att köra två gånger. Den beror
+  inte på `rabattkoden_timmar_och_tak` eller `kortet_reserveras`: byggd till och med `rabattkoden_timmar_och_tak`
+  (i driften sedan 2026-10-13 kl. 22.30), utan `ta_tillbaka_gratistimmar` och `kortet_reserveras`, som driften,
+  och med filen ovanpå, 1703 av 1703 (avsnitt 33 hoppar över sig självt med en rad). **`kortet_reserveras` körs
+  efter den i driften**, fast numret är lägre: de skriver inget gemensamt, och i den ordningen 1738 av 1738. **Körs
+  efter merge**: pröva vakterna (md5 i avsnitt 0) och att inget pass med `startrabatt` redan har ett kort, kör
+  filen hel i ett do-block från merge-commiten (den tar inte bort något), registrera den, och `gratistimmar` om den
+  inte redan står där, driftsätt `stripe-checkout` och `drift` från main (`stripe-checkout` bär sedan PR #275 också
+  kortets lägen, som inte gör något utan `kortet_reserveras` och strömbrytaren), och kör hela `rls-test.sql` mot
+  driften. Villkorens version blir 2026-10-14, så alla får frågan igen. Juristen har inte läst de nya villkoren.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för

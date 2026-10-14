@@ -172,7 +172,12 @@ function falskSupabase(o) {
     }
     if (p === '/auth/v1/logout') { inloggad.id = null; return svar(route, 204); }
     if (p.startsWith('/auth/v1/')) return svar(route, 200, {});
-    if (p.startsWith('/functions/v1/')) return svar(route, 404, { error: 'Ingen sådan funktion i provet.' });
+    if (p.startsWith('/functions/v1/')) {
+      /* o.funktion svarar för en edge function (kassan i 3h); annars finns ingen. */
+      const f = o.funktion ? o.funktion(p.slice('/functions/v1/'.length), kropp) : null;
+      if (f) return svar(route, f.status || 200, f.data);
+      return svar(route, 404, { error: 'Ingen sådan funktion i provet.' });
+    }
 
     if (p.startsWith('/rest/v1/rpc/')) {
       const namn = p.slice('/rest/v1/rpc/'.length);
@@ -997,6 +1002,92 @@ async function provaFörälderns(webb) {
     prova('köp med kod: Köp skickar koden till kassan, och priset räknas där',
       kassa && kassa.kropp && kassa.kropp.erbjudande === 'plan_standard' && kassa.kropp.rabattkod === 'VAN10'
       && kassa.kropp.belopp_ore === undefined, JSON.stringify(kassa && kassa.kropp));
+    await context.close();
+  }
+
+  /* 3i. Timmarna delas (timmarna_delas_och_kops_till, 2026-10-14): med
+         första timmen på köpet betalar timmarna resten, ett pass kan dras
+         från två köp (gratistimmen och planen), och Välj själv under Er
+         timbank köper till timmar till planen i kassan. */
+  const delvärld = (planKvar) => W => {
+    W.flaggor = [{ kod: 'erbjudanden', aktiv: true }];
+    W.klippkort_saldo = [
+      { id: 'kg-1', parent_id: 'foralder-1', erbjudande: 'gratis', namn: 'Gratistimmar från Nextrum',
+        sort: 'klippkort', timmar: 1, anvanda: 0, kvar: 1, giltigt_till: dagar(50), status: 'betald', brukbar: true,
+        created_at: nu(-6000) },
+      { id: 'kp-1', parent_id: 'foralder-1', erbjudande: 'plan_standard', namn: 'Standard',
+        sort: 'plan', timmar: 8, anvanda: 8 - planKvar, kvar: planKvar, giltigt_till: dagar(20), status: 'betald',
+        brukbar: planKvar > 0, gratis_kvar: 0, rabatterat_timpris_ore: 37900, created_at: nu(-60000) }];
+  };
+  {
+    const R = foralderRpc({ forsta: { beviljad: true, tagen: false } });
+    const { context, page } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1', värld: delvärld(8) });
+    await page.goto(BAS + '/foralder#boka');
+    await page.waitForSelector('#boka-inner .mv-dag', { timeout: 10000 }).catch(() => {});
+    await tillMånaden(page, '#boka-inner', framåt(6));
+    await väljDagOchTid(page, '#boka-inner', framåt(6), '17:00');
+    await page.click('#boka-inner #bk-langder button[data-v="120"]');
+    await page.waitForFunction(() => /på köpet/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 3000 }).catch(() => {});
+    prova('delade timmar: med första timmen på köpet betalar timmarna resten',
+      /Er timbank/.test(await text(page, '#boka-inner .bk-sum-pris'))
+      && /Första timmen på köpet · −1 timme, 8 kvar efter/.test(await text(page, '#boka-inner .bk-sum-pris')),
+      await text(page, '#boka-inner .bk-sum-pris'));
+    await context.close();
+  }
+  {
+    const R = foralderRpc({});
+    const { context, page } = await öppna(webb, { rpc: R.rpc, inloggad: 'foralder-1', värld: delvärld(1) });
+    await page.goto(BAS + '/foralder#boka');
+    await page.waitForSelector('#boka-inner .mv-dag', { timeout: 10000 }).catch(() => {});
+    await tillMånaden(page, '#boka-inner', framåt(6));
+    await väljDagOchTid(page, '#boka-inner', framåt(6), '17:00');
+    await page.click('#boka-inner #bk-langder button[data-v="120"]');
+    await page.waitForFunction(() => /Er timbank/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 3000 }).catch(() => {});
+    prova('delade timmar: gratistimmen och planens sista timme betalar två timmar tillsammans',
+      /Er timbank/.test(await text(page, '#boka-inner .bk-sum-pris'))
+      && /−2 timmar, 0 kvar efter/.test(await text(page, '#boka-inner .bk-sum-pris')),
+      await text(page, '#boka-inner .bk-sum-pris'));
+    await page.click('#boka-inner #bk-langder button[data-v="180"]');
+    await page.waitForFunction(() => /1[\s\u00a0]?197/.test(document.querySelector('#boka-inner .bk-sum-pris').textContent), null, { timeout: 3000 }).catch(() => {});
+    prova('delade timmar: räcker inte två köp står priset',
+      /^1[\s\u00a0]?197\s*kr/.test(await text(page, '#boka-inner .bk-sum-pris')), await text(page, '#boka-inner .bk-sum-pris'));
+    await context.close();
+  }
+  {
+    const R = foralderRpc({});
+    const { context, page, S, konsol } = await öppna(webb, {
+      rpc: R.rpc, inloggad: 'foralder-1', värld: delvärld(0),
+      funktion: (namn) => namn === 'stripe-checkout' ? { status: 409, data: { error: 'Provet öppnar ingen kassa.' } } : null
+    });
+    await page.goto(BAS + '/foralder#erbjudanden');
+    await page.waitForSelector('#erb-mina [data-extra-valj]', { timeout: 10000 }).catch(() => {});
+    const ruta = await text(page, '#erb-mina .erb-extra');
+    prova('köp till timmar: rutan står under Er timbank med planens timpris och sista dag',
+      /Köp till timmar/.test(ruta) && /379\s*kr i timmen/.test(ruta) && /Timmar till Standard/.test(ruta), ruta);
+    await page.click('#erb-mina [data-extra-valj]');
+    await page.waitForSelector('#erb-mina .erb-steg', { timeout: 3000 }).catch(() => {});
+    prova('köp till timmar: Välj själv öppnar valet, två timmar som förval',
+      (await text(page, '#erb-mina .erb-steg-tal')) === '2 timmar' && /758\s*kr/.test(await text(page, '#erb-mina .erb-extra-pris')),
+      await text(page, '#erb-mina .erb-extra-val'));
+    await page.click('#erb-mina [data-extra-steg="1"]');
+    prova('köp till timmar: plus ger en timme till och priset följer',
+      (await text(page, '#erb-mina .erb-steg-tal')) === '3 timmar' && /1[\s\u00a0]?137\s*kr/.test(await text(page, '#erb-mina .erb-extra-pris')),
+      await text(page, '#erb-mina .erb-extra-val'));
+    const höjd = await page.locator('#erb-mina .erb-steg-knapp').first().evaluate(el => el.getBoundingClientRect().height);
+    prova('köp till timmar: stegknapparna är minst 44 px', höjd >= 44, String(höjd));
+    await bild(page, 'foraldern-kop-till-timmar', '#erb-mina-box');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await vänta(200);
+    prova('köp till timmar på telefon: ingen sidledsscroll',
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
+    await bild(page, 'foraldern-kop-till-timmar-telefon', '#erb-mina-box');
+    await page.click('#erb-mina [data-extra-kop]');
+    await vänta(500);
+    const kassa = S.logg.filter(r => r.metod === 'POST' && r.väg === '/functions/v1/stripe-checkout').pop();
+    prova('köp till timmar: kassan får planens erbjudande och antalet timmar, aldrig ett pris',
+      kassa && kassa.kropp && kassa.kropp.erbjudande === 'plan_extra' && kassa.kropp.timmar === 3
+      && !('pris' in kassa.kropp) && !('belopp_ore' in kassa.kropp), JSON.stringify(kassa && kassa.kropp));
+    prova('köp till timmar: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
     await context.close();
   }
 

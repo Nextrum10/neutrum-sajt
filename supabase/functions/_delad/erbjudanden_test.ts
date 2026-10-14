@@ -1,5 +1,7 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { arErbjudandekod, kanAteranvandas, kassarad, sammaInnehall } from './erbjudanden.ts';
+import {
+  arErbjudandekod, extraTimmar, kanAteranvandas, kassarad, kassaradTillPlanen, sammaInnehall, svensktDatum,
+} from './erbjudanden.ts';
 
 Deno.test('erbjudandekoden: bara katalogens form släpps in', () => {
   assertEquals(arErbjudandekod('klipp10'), true);
@@ -78,4 +80,34 @@ Deno.test('ett väntande köp återanvänds bara med samma innehåll, inte bara 
   assertEquals(sammaInnehall({ timmar: 4, rabatt_procent: 10, giltig_manader: 1 },
     { timmar: 4, rabatt_procent: 10, giltig_manader: 1 }), true);
   assertEquals(sammaInnehall(null, std), false);
+});
+
+Deno.test('timmar till planen: bara ett heltal mellan 1 och 20 (2026-10-14)', () => {
+  assertEquals(extraTimmar(1), 1);
+  assertEquals(extraTimmar(20), 20);
+  assertEquals(extraTimmar('7'), 7);
+  assertEquals(extraTimmar(0), null);
+  assertEquals(extraTimmar(21), null);
+  assertEquals(extraTimmar(2.5), null);
+  assertEquals(extraTimmar('2.5'), null);
+  assertEquals(extraTimmar('3; drop'), null);
+  assertEquals(extraTimmar(null), null);
+  assertEquals(extraTimmar(undefined), null);
+  assertEquals(extraTimmar(Number.NaN), null);
+});
+
+Deno.test('raden för timmar till planen säger planens timpris och planens sista dag', () => {
+  const x = { plan_namn: 'Standard', timmar: 3, rabatterat_timpris_ore: 37900, giltigt_till: '2026-11-03' };
+  assertEquals(kassaradTillPlanen(x).name, 'Extra timmar till Standard');
+  assertEquals(kassaradTillPlanen(x).description,
+    '3 timmar läxhjälp till planens timpris, 379 kr i timmen. Gäller till och med 3 november 2026, samma dag som planen.');
+  assertEquals(kassaradTillPlanen({ ...x, timmar: 1 }).description.startsWith('1 timme läxhjälp'), true);
+  assertEquals(kassaradTillPlanen({ ...x, plan_namn: '' }).name, 'Extra timmar till planen');
+});
+
+Deno.test('datumet på svenska, och ett datum i fel form står som det är', () => {
+  assertEquals(svensktDatum('2026-01-09'), '9 januari 2026');
+  assertEquals(svensktDatum('2026-12-31'), '31 december 2026');
+  assertEquals(svensktDatum('2026-13-01'), '2026-13-01');
+  assertEquals(svensktDatum('igår'), 'igår');
 });

@@ -56,9 +56,9 @@
     studiehjalpare: {
       sort: 'studiehjalpare', namn: 'Studiehjälpare', en: 'studiehjälpare', flagga: 'tipsbonus',
       formulär: 'jobbansökan',
-      regel: '300 kr i lön för varje ny studiehjälpare som sökt jobb med koden och som vi tar in i poolen. '
-        + 'Bonusen betalas med lönen för månaden hen togs in och står under Löner, med en egen rad i lönefilen.',
-      kort: 'Koden skrivs i jobbansökan. 300 kr i lönen när vi tar in den som sökt.'
+      regel: '300 kr i lön, inklusive semesterersättning, för varje ny studiehjälpare som sökt jobb med koden och som '
+        + 'vi tar in i poolen. Bonusen betalas med lönen för månaden hen togs in och står under Löner, med en egen rad i lönefilen.',
+      kort: 'Koden skrivs i jobbansökan. 300 kr i lönen, inklusive semesterersättning, när vi tar in den som sökt.'
     }
   };
 
@@ -445,7 +445,7 @@
             ? 'Från och med nu får en familj en timme i timbanken för varje ny familj som anmält sig med familjens kod och haft två timmar läxhjälp. Villkoren ska säga det.'
             : 'En familj som tipsats efter i dag ger ingen timme. Timmar som redan tjänats in ges ändå, för villkoren lovade dem. Villkoren ska ändras i samma veva.')
           : (på
-            ? 'Från och med nu får en studiehjälpare 300 kr i lönen för varje ny studiehjälpare som sökt jobb med hens kod och som vi tar in i poolen. Villkoren ska säga det.'
+            ? 'Från och med nu får en studiehjälpare 300 kr i lönen, inklusive semesterersättning, för varje ny studiehjälpare som sökt jobb med hens kod och som vi tar in i poolen. Villkoren ska säga det.'
             : 'Den som tas in i poolen efter i dag ger ingen bonus. Bonusar som redan tjänats in står kvar under Löner och betalas. Villkoren ska ändras i samma veva.'),
         knapp: på ? 'Slå på' : 'Stäng av'
       });

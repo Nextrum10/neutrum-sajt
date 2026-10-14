@@ -247,7 +247,7 @@ window.NXBetalning = (function () {
       + (antal ? '<span>' + antal + ' pass</span>' : '') + '</th>'
       + '<td class="lonespec-tal">' + esc(timmar(p.minuter)) + '</td>'
       + '<td class="lonespec-tal">' + esc(kronor(Number(p.belopp_ore || 0) + bonusÖre)) + '</td></tr></tfoot></table>'
-      + '<p class="lonespec-not">Timpenningen är inklusive semesterersättning.'
+      + '<p class="lonespec-not">Timpenningen' + (bonusÖre ? ' och bonusen för tips är' : ' är') + ' inklusive semesterersättning.'
       + (bonusÖre ? ' Summan har ' + esc(kronor(bonusÖre)) + ' i bonus för tips med.' : '') + '</p>'
       + (p.status === 'misslyckad' && p.fel ? '<p class="lonespec-not lonespec-fel">' + esc(p.fel) + '</p>' : '')
       + (o.noter || []).map(function (n) { return '<p class="lonespec-not">' + esc(n) + '</p>'; }).join('')
