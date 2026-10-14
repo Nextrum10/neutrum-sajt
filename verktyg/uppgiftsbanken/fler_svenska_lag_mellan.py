@@ -79,8 +79,8 @@ AK1_BYGG_ORD = niva(
         sant('Ordet ”hund” har fem bokstäver.', False,
              'H-u-n-d. Det är fyra bokstäver, inte fem.'),
         val('Vilket ord har fyra bokstäver?',
-            ['tåg', 'hund', 'bil'], 'hund',
-            'H-u-n-d är fyra bokstäver. Tåg och bil har tre.'),
+            ['tåg', 'katt', 'bil'], 'katt',
+            'K-a-t-t är fyra bokstäver. Tåg och bil har tre.'),
         ordna('Bygg ordet ”hand”. En bokstav hör inte dit.', 'h a n d', extra='l',
               forklaring='Hand stavas h-a-n-d. L hör inte dit.'),
         para('Para ihop den stora bokstaven med den lilla.',
@@ -165,7 +165,7 @@ AK2_BESKRIV = niva(
               'Gula berättar hur bananen ser ut. Ligger är ett verb och bordet är ett substantiv.'),
         skriv('Hur många ord som beskriver finns det i meningen? ”En stor och grön groda hoppar.”', antal(2),
               'Stor och grön berättar båda hur grodan är. Hoppar säger vad grodan gör.'),
-        skriv('Skriv motsatsen till ”het”. Soppan är het. Glassen är …', 'kall',
+        skriv('Skriv motsatsen till ”het”. Soppan är het. Glassen är …', ['kall', 'iskall'],
               'Het och kall är motsatser. Båda är ord som beskriver.'),
         sant('Ordet ”glad” berättar hur någon är.', True,
              'Glad är ett adjektiv. Det berättar hur en person känner sig.'),
@@ -328,7 +328,7 @@ AK3_K_CK = niva(
         val('Vilket ord är rätt stavat? ”Han tappade sin …”',
             ['nyckel', 'nykel', 'nyckkel'], 'nyckel',
             'Y är kort i nyckel, och då skrivs k-ljudet ck.'),
-        val('Vilket av orden har ett långt ljud före k-ljudet?',
+        val('I vilket ord är vokalen lång?',
             ['sock', 'tack', 'bok', 'lock'], 'bok',
             'I bok är o långt, och då räcker ett k. I sock, tack och lock är vokalen kort, och då skrivs ck.'),
         skriv('Ett ord är felstavat: ”Vi åkte pulka nerför en brant bake.” Skriv ordet rätt.', 'backe',
@@ -347,7 +347,7 @@ AK3_K_CK = niva(
     beskrivning='K-ljudet skrivs k eller ck, beroende på vokalen framför.')
 
 AK3_SJ_TJ = niva(
-    'sv-ak3-fler-stavning-2', 'Sj-ljudet och tj-ljudet', 'Stavning', [
+    'sv-ak3-fler-stavning-2', 'Sj-ljud och tj-ljud i vanliga ord', 'Stavning', [
         val('Vilket ord är rätt stavat? ”På sommaren badar vi i en …”',
             ['tjö', 'kjö', 'sjö'], 'sjö',
             'Sjö stavas med sj.'),
@@ -548,7 +548,7 @@ AK4_BORJAN_SLUT = niva(
 FLADDERMOSS_TEXT = '\n\n'.join([
     'Fladdermöss är de enda däggdjuren som kan flyga på riktigt. Deras vingar är gjorda av tunn hud som '
     'är spänd mellan långa fingrar. På dagen vilar fladdermössen på mörka platser, till exempel i grottor, '
-    'på vindar eller i håliga träd.',
+    'i gamla ladugårdar eller i håliga träd.',
     'När det blir mörkt flyger de ut för att jaga insekter. I mörkret har de ett särskilt knep för att '
     'hitta sin mat. De skickar ut korta, höga ljud som människor inte kan höra. Ljuden studsar mot saker '
     'och kommer tillbaka som ett eko. Av ekot kan fladdermusen avgöra var en mygga flyger. Det kallas '
@@ -567,7 +567,7 @@ AK5_FLADDERMOSS = niva(
               'Vingarna är gjorda av tunn hud som är spänd mellan långa fingrar.'),
         val('Var vilar fladdermössen på dagen?',
             ['På öppna fält', 'På mörka platser', 'I vattnet'], 'På mörka platser',
-            'Texten nämner grottor, vindar och håliga träd. Alla är mörka platser.'),
+            'Texten nämner grottor, gamla ladugårdar och håliga träd. Alla är mörka platser.'),
         skriv('Vad kallas det när fladdermusen använder ljud och eko för att hitta sin mat? Skriv ordet.',
               ['ekolokalisering', 'ekolokaliseringen'],
               'Det kallas ekolokalisering.'),
@@ -582,7 +582,7 @@ AK5_FLADDERMOSS = niva(
         val('Varför sover många fladdermöss på vintern?',
             ['Det är för mörkt för att flyga', 'Det finns nästan inga insekter att äta', 'Deras vingar fryser av'],
             'Det finns nästan inga insekter att äta',
-            'Texten säger inte ordet varför, men den säger att det på vintern nästan inte finns insekter. Då sover de i stället.'),
+            'Texten säger inte rakt ut varför de sover, men den säger att det på vintern nästan inte finns några insekter att äta. Då sover de i stället.'),
         para('Para ihop ordet med vad det betyder i texten.',
              [('vingar', 'tunn hud mellan långa fingrar'), ('eko', 'ljud som studsar tillbaka'),
               ('dvala', 'en lång sömn på vintern'), ('insekter', 'maten som fladdermössen jagar')],
@@ -700,7 +700,7 @@ AK5_LIKNELSER = niva(
             'Skrattet lät mycket fint',
             'Skrattet jämförs med musik, som många tycker är vacker. Det betyder att skrattet lät fint.'),
         sant('I meningen ”Bilen stod och väntade tålmodigt” får bilen en mänsklig egenskap.', True,
-             'Bara människor kan vara tålmodiga. Därför är det en personifikation.'),
+             'En bil kan inte vara tålmodig, det kan människor. Bilen får en mänsklig egenskap, och det kallas personifikation.'),
         sant('Meningen ”Han var stark som en björn” är en personifikation.', False,
              'Det är en liknelse, för den jämför med ordet som. I en personifikation gör en sak som en människa.'),
         para('Para ihop meningen med vad den är.',
