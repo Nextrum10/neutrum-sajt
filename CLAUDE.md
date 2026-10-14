@@ -513,7 +513,7 @@ Detaljer: `minne/grunden.md`.
 - **Verktygen som ändrar driften ber om en bekräftelse** för `drop`, för en `delete` utanför en funktion
   och för en funktion med två `delete` (2026-10-13 också för en med ett `delete` och två `update`,
   `ta_tillbaka_gratistimmar`), och hänger sig i 60 sekunder om ingen svarar: inget har hänt, och
-  `apply_migration` gör likadant. Rutan syns inte i alla klienter (2026-10-13 syntes den inte i Leos app).
+  `apply_migration` gör likadant. Rutan syns inte i alla klienter (den syntes aldrig i Leos app, fem gånger 2026-10-13 och 14).
   Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en rensning per funktion, en
   tidsstämpel i stället för `delete`, som `klippkort.aterkallad_at` 2026-10-14), kör dem avsnitt för avsnitt med
   `execute_sql` och registrera filens text sedan i
@@ -869,35 +869,37 @@ Detaljer: `minne/grunden.md`.
   ingen har sagt till studiehjälparna att koden nu gäller jobbansökan, eller familjerna att timmen står i timbanken.
   Tas någon in på ett konto med en annan adress än ansökans ges ingen bonus av sig själv, och bonusen kräver bara att
   personen tas in, inte att hen håller ett pass (Leos regel).
-- **Gratistimmarna i timbanken** (2026-10-13) är i drift utom en funktion: `gratistimmar` (20261013140000) kördes
+- **Gratistimmarna i timbanken** (2026-10-13) är i drift, och återtagandet sedan 2026-10-14: `gratistimmar` (20261013140000) kördes
   sist samma kväll, avsnitt för avsnitt med `execute_sql` (filen har ett `delete`), och allt den skapar och lappar är
   byte för byte som i en databas byggd ur alla 188 migrationer, utom `ta_tillbaka_gratistimmar`: den fastnade tre
   gånger på verktygets bekräftelse utan svar (avsnitt 5), och inget kördes; den tredje gången satt Leo vid skärmen,
-  men ingen ruta syntes i hans app. **Avsnitt 7 körs aldrig**: `timmarna_delas_och_kops_till` (nedan) skriver
-  funktionen utan `delete` (kortet återkallas), och när den körts registreras `gratistimmar` med filens text
-  (md5 `079603c5…`) och en anteckning om att avsnitt 7 ersattes. Till
-  dess går det att sätta in gratistimmar men inte att ta tillbaka dem. Hela `rls-test.sql` gick 1643 av 1643 mot
+  men ingen ruta syntes i hans app. **Avsnitt 7 kördes aldrig** (två försök till 2026-10-14 gick också ut utan svar):
+  `timmarna_delas_och_kops_till` (nedan) skrev funktionen utan `delete` (kortet återkallas) 2026-10-14, och
+  `gratistimmar` registrerades i samma block med filens text (md5 `079603c5…`) och en anteckning om att avsnitt 7
+  ersattes, som andra del. Hela `rls-test.sql` gick 1643 av 1643 mot
   driften, tillbakarullat, med filen körd först i samma transaktion (`minne/databasen.md`). Villkorens version är
   2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Ingen påminnelse går om gratistimmar
   (mejlet säger "köpta timmar" och lovar återbetalning); vill vi ha en krävs en egen mall och `notis-ko`. Juristen
   har inte läst villkoren för gratistimmarna.
 - **Timmarna delas, och timmar köps till planen** (2026-10-14, `timmarna_delas_och_kops_till`, 20261014100000) är
-  byggda men inte i drift: ett pass dras från högst två köp, timmen på köpet dras inte och timmarna betalar resten,
-  gratistimmar återkallas utan `delete`, Köp till timmar (Välj själv, `plan_extra`, `stripe-checkout`), påminnelsen
-  räknar dem med planen, och bonusen för tips säger "inklusive semesterersättning". **Filen rättar också ett fel i
-  driften**: `gratistimmarna_60_dagar` gav inte `service_role` rätt att köra `intern.kortets_timmar`,
-  `intern.gratis_till` och `intern.kortets_sista_dag`, så Betala med timmar (`klippkort-betala`, som kör
-  `klippkort_dra` med `service_role`) svarar "permission denied" sedan 2026-10-13. Lokalt, ur alla 191
-  migrationer: hela `rls-test.sql` 1738 av 1738 (avsnitt 34 är nytt), och filen går att köra två gånger. Den beror
-  inte på `rabattkoden_timmar_och_tak` eller `kortet_reserveras`: byggd till och med `rabattkoden_timmar_och_tak`
-  (i driften sedan 2026-10-13 kl. 22.30), utan `ta_tillbaka_gratistimmar` och `kortet_reserveras`, som driften,
-  och med filen ovanpå, 1703 av 1703 (avsnitt 33 hoppar över sig självt med en rad). **`kortet_reserveras` körs
-  efter den i driften**, fast numret är lägre: de skriver inget gemensamt, och i den ordningen 1738 av 1738. **Körs
-  efter merge**: pröva vakterna (md5 i avsnitt 0) och att inget pass med `startrabatt` redan har ett kort, kör
-  filen hel i ett do-block från merge-commiten (den tar inte bort något), registrera den, och `gratistimmar` om den
-  inte redan står där, driftsätt `stripe-checkout` och `drift` från main (`stripe-checkout` bär sedan PR #275 också
-  kortets lägen, som inte gör något utan `kortet_reserveras` och strömbrytaren), och kör hela `rls-test.sql` mot
-  driften. Villkorens version blir 2026-10-14, så alla får frågan igen. Juristen har inte läst de nya villkoren.
+  i drift sedan samma förmiddag: ett pass dras från högst två köp, timmen på köpet dras inte och timmarna betalar
+  resten, gratistimmar återkallas utan `delete`, Köp till timmar (Välj själv, `plan_extra`, `stripe-checkout`),
+  påminnelsen räknar dem med planen, och bonusen för tips säger "inklusive semesterersättning". PR #276 mergades
+  (721e4b0) och filen kördes direkt efter, hämtad från merge-commiten, prövad mot sin md5 (`ab3d031f…`) och körd och
+  registrerad i ett do-block, med `gratistimmar` registrerad i samma block (ovan). Vakterna stämde mot driften, inget
+  pass med `startrabatt` hade ett kort, och alla 15 funktionskroppar är byte för byte som i en databas byggd ur
+  filerna. **Den rättade ett fel i driften**: `gratistimmarna_60_dagar` gav inte `service_role` rätt att köra
+  `intern.kortets_timmar`, `intern.gratis_till` och `intern.kortets_sista_dag`, så Betala med timmar
+  (`klippkort-betala`, som kör `klippkort_dra` med `service_role`) svarade "permission denied" från 2026-10-13 till
+  dess. `drift` (v18) och `stripe-checkout` (v20) är driftsatta från merge-commiten, hämtade tillbaka och byte för
+  byte lika (5 och 7 filer); `stripe-checkout` bär sedan PR #275 också kortets lägen, som inte gör något utan
+  `kortet_reserveras` och strömbrytaren. Hela `rls-test.sql` gick 1703 av 1703 mot driften, tillbakarullat (avsnitt
+  33 hoppade över sig självt), och advisorn larmade inte om något nytt för `anon`; `ta_tillbaka_gratistimmar` är
+  nåbar för `authenticated` och prövar `is_admin()` först. **`kortet_reserveras` körs efter den i driften**, fast
+  numret är lägre: de skriver inget gemensamt, och lokalt i den ordningen 1738 av 1738. Villkorens version är
+  2026-10-14, så alla får frågan igen. Kvar: inget provköp av Köp till timmar är gjort, lönearten för bonusen i
+  Fortnox ska inte vara semestergrundande (300 kr är inklusive semesterersättning; revisorn bekräftar), och juristen
+  har inte läst de nya villkoren.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för

@@ -290,12 +290,12 @@ blivit pengar).
   sett den: byt då datumet på båda sidorna och skriv `villkor_version` i
   `gratistimmar` (`kolla-villkor.py`). Ingen hade godkänt 2026-10-13 när
   migrationerna kördes, och sidan var ute.
-- **I drift 2026-10-13 kväll, utom återtagandet**: allt i `gratistimmar` är
-  inne och lika en lokal databas ur alla migrationer, men
-  `ta_tillbaka_gratistimmar` (avsnitt 7) väntar på ett ja i verktyget, och
-  filen är inte registrerad förrän den körts (`minne/databasen.md`, Körda i
-  driften). Till dess går det att sätta in gratistimmar men inte att ta
-  tillbaka dem; knappen svarar med felet.
+- **I drift 2026-10-13 kväll, och återtagandet 2026-10-14**: allt i
+  `gratistimmar` är inne och lika en lokal databas ur alla migrationer.
+  `ta_tillbaka_gratistimmar` (avsnitt 7) kördes aldrig, för verktygets fråga
+  syntes inte; `timmarna_delas_och_kops_till` skrev den utan `delete`
+  2026-10-14 (kortet återkallas, nedan), och filen registrerades då med en
+  anteckning om avsnitt 7 (`minne/databasen.md`, Körda i driften).
 
 ## Timbanken (Fas 22.1)
 
@@ -728,5 +728,6 @@ och ett pass får delas mellan gratistimmarna och planen.
   `prova-barnforslag.js` 3i (tio prov): timmen på köpet med timmar, två köp på
   ett pass, Välj själv, telefonen och kassans kropp (erbjudandet och antalet,
   aldrig ett pris).
-- **Kvar efter merge**: körningen i driften (`CLAUDE.md` avsnitt 11), och
-  att juristen läser villkoren.
+- **I drift 2026-10-14** (`CLAUDE.md` avsnitt 11, `minne/databasen.md`), och
+  Betala med timmar svarar inte längre "permission denied". Kvar: ett provköp
+  av Köp till timmar, och att juristen läser villkoren.
