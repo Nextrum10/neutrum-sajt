@@ -366,6 +366,45 @@ utveckling som är roligare att följa, och ett quest-system.
   prövad, och räkningen efteråt stämde (1 112 och 6 298, ingen nivå eller
   fråga i programmering aktiv). Hela `rls-test.sql` 1 490 av 1 490 mot
   driften, tillbakarullat.
+- **Fler uppgifter i matematik, svenska och engelska (2026-10-14, Fas 23.5,
+  `20261014120000_uppgiftsbanken_fler_uppgifter`).** Leo: "Lägg in flera matte,
+  svenska och engelska uppgifter". 129 nya nivåer och 1 217 frågor, sist i 36
+  banor (åk 1 till gy3 i alla tre ämnen), i nya områden, så ingen fråga som fanns
+  ändrades och ingen blev inaktiv. De står i åtta filer med `TILLAGG`, som
+  `blad_*.py`: `fler_matematik_lag_mellan.py` (åk 1–6, 22 nivåer),
+  `fler_matematik_hog_gy.py` (åk 7–gy3, 21), `fler_svenska_lag_mellan.py` (åk 1–5,
+  18), `fler_svenska_hog.py` (åk 6–9, 16), `fler_svenska_gy.py` (9),
+  `fler_engelska_lag_mellan.py` (åk 1–5, 18), `fler_engelska_hog.py` (åk 6–9, 16) och
+  `fler_engelska_gy.py` (9). Banken har sedan 68 banor, 863 vanliga nivåer (1 285 med
+  Mästarprov och repetitioner) och 7 515 frågor. Ett område där varje nivå har en lästext
+  får inget Mästarprov (verktyget gör det av sig självt), så lästexterna ligger i egna
+  områden, blandade med vanliga.
+  **Skrivet av sju skribenter med AI, en eller två filer var, och läst av en oberoende
+  granskare per fil** som löste varje fråga på nytt utan att se facit först (matte i
+  Python). Inget facit var uträknat fel, men omkring 200 frågor och ett tiotal lästexter
+  ändrades: faktafel i lästexter (regndroppar som blir snö, "smält sten" under hela
+  jorden, alla fladdermöss äter insekter), kvartilfrågor i gy1 vars svar berodde på
+  vilken metod man räknar med (talen ändrades så att alla vanliga metoder ger samma
+  svar), riktiga svar som rättningen nekat ("a = 6", "O = 26", "f(0) = −5", `2i`; nu
+  godtas de), sant/falskt som inte alltid stämde, en ordna-fråga med två ordningar,
+  klockslag som `skriv` (läses som tal, nu `val`), och frågor där ett andra alternativ
+  också var rätt. Huvudsessionen läste sedan allt en gång till och räknade om
+  gymnasiematten, utan fynd. **Kvar för en lärare:** matematik gy1 (kvartiler och
+  lådagram, Ma 1?), gy2 (kvadratkomplettering) och gy3 (komplexa tal i polär form hör
+  till Ma 4), åk 5 (primtal; står de i Lgr22 för åk 4–6?), åk 6 (`12 : 3 · 2`, facit 8);
+  svenska (kommatering, epokernas drag i gy2, vetenskaplig metod i gy3, ungdomsspråk som
+  sociolekt, gränsen mellan metafor och liknelse); engelska (`cool` godtas som motsats
+  till `hot` i åk 5, tidsförskjutning i återgivet tal, cow/beef-förklaringen i gy3 som
+  texten själv kallar förenklad, kollokationer i gy2).
+  **Rättningen av en `ordna`-fråga är exakt och skiftlägeskänslig** (brickorna jämförs
+  som de står); därför är första brickan stor och sista har punkten, och en mening med
+  två giltiga ordningar är en `val`. `norm()` gör alla `val`- och `skriv`-svar till
+  gemener, så en fråga får aldrig skilja svar på bara versal och gemen.
+  **I drift:** körs efter merge, från merge-commiten, med md5 prövad, i en session
+  (avsnitt 5 i CLAUDE.md); driften hade 2026-10-14 exakt den bank repot hade före ändringen
+  (1 112 nivåer och 6 298 frågor aktiva), så migrationen är ett rent tillägg. Facitprovet
+  (varje aktiv fråga lämnas ut, facit rättas som rätt och inget fel alternativ godtas) ska
+  köras efteråt mot driften.
 - **Skrivet och granskat med AI.** Skribenter skrev språken,
   företagsekonomin, lågstadiet, engelskan och NP-träningen; juridiken
   skrevs i huvudsessionen. En granskare per ämnesgrupp läste sedan varje
