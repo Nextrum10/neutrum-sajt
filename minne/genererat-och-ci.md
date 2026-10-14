@@ -235,7 +235,8 @@ Körs på varje push och PR. Ska vara grön före merge.
 
 1. `node --check` på all JavaScript
 2. `node verktyg/testa-agent.js`
-3. `verktyg/kolla-betalningsvillkor.py` (betalningslöftet, och att det gamla är borta)
+3. `verktyg/kolla-betalningsvillkor.py` (betalningslöftet, och att det gamla är borta; `KORTET_RESERVERAS`
+   väljer meningen efter strömbrytaren `kortreservation`, som `FAKTURA_I_TEXTEN` efter `faktura`)
 4. `verktyg/kolla-migrationer.py`, och `verktyg/bygg-uppgifter.py --kolla`
    (uppgiftsbankens form, och att den har sin migration)
 5. `verktyg/kolla-csp.py` (fyra vyer sedan `/barn`, och `/lank` sedan

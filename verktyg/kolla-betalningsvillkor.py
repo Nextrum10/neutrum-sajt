@@ -67,11 +67,29 @@ import glob, io, os, re, sys
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# KORTET RESERVERAS (kortet_reserveras). Med strömbrytaren kortreservation
+# på väljer familjen kort när den bokar: priset reserveras två dagar före
+# passet och dras när rapporten är skriven, och Betala i förväg finns inte
+# i vyn. Då dras pengarna aldrig före rapporten, och det är löftet. Med
+# strömbrytaren av gäller det förra löftet, kort i förväg eller efter
+# passet. Texten och strömbrytaren följs åt: slås den av ska meningen
+# tillbaka i samma ändring, och KORTET_RESERVERAS sättas till False
+# (DEPLOY-BETALNING.md 9.14).
+KORTET_RESERVERAS = True
+
 # Mellanrummen är \s+: i villkoren bryts meningen över två rader i
 # källan, och ett mönster med vanliga mellanslag hade sett det som ett
 # omskrivet löfte.
-LOFTE_SV = r'antingen\s+i\s+förväg\s+eller\s+efter\s+passet\s+när\s+ni\s+bekräftar\s+rapporten'
-LOFTE_EN = r'either\s+in\s+advance\s+or\s+after\s+the\s+session\s+when\s+you\s+confirm\s+the\s+report'
+if KORTET_RESERVERAS:
+    LOFTE_SV = (r'pengarna\s+dras\s+först\s+när\s+studiehjälparen\s+har\s+skrivit\s+rapporten:\s+väljer\s+ni\s+kort\s+'
+                r'när\s+ni\s+bokar\s+reserveras\s+priset\s+två\s+dagar\s+före\s+passet,\s+annars\s+betalar\s+ni\s+när\s+ni\s+'
+                r'bekräftar\s+rapporten')
+    LOFTE_EN = (r'the\s+money\s+is\s+only\s+taken\s+once\s+the\s+tutor\s+has\s+written\s+the\s+report:\s+if\s+you\s+'
+                r'choose\s+card\s+payment\s+when\s+you\s+book,\s+the\s+price\s+is\s+reserved\s+two\s+days\s+before\s+the\s+'
+                r'session,\s+otherwise\s+you\s+pay\s+when\s+you\s+confirm\s+the\s+report')
+else:
+    LOFTE_SV = r'antingen\s+i\s+förväg\s+eller\s+efter\s+passet\s+när\s+ni\s+bekräftar\s+rapporten'
+    LOFTE_EN = r'either\s+in\s+advance\s+or\s+after\s+the\s+session\s+when\s+you\s+confirm\s+the\s+report'
 
 # Fakturameningen, med betalningstiden i ord. Står den på ett ställe som
 # lovar kortet ska den stå på alla: en familj som läst prissidan och
@@ -81,11 +99,16 @@ DAGAR_I_ORD = {10: ('tio', 'ten'), 14: ('fjorton', 'fourteen'), 20: ('tjugo', 't
 
 
 def fakturameningen(dagar, svenska):
+    """Med kortet som reserveras går fakturan att välja också före passet,
+    och då är "nästa månad" inte entydigt: fakturan kommer i början av
+    månaden efter passet."""
     sv, en = DAGAR_I_ORD[dagar]
     if svenska:
-        return (r'välja\s+faktura,\s+som\s+kommer\s+i\s+början\s+av\s+nästa\s+månad\s+med\s+'
+        nar = r'månaden\s+efter\s+passet' if KORTET_RESERVERAS else r'nästa\s+månad'
+        return (r'välja\s+faktura,\s+som\s+kommer\s+i\s+början\s+av\s+' + nar + r'\s+med\s+'
                 + sv + r'\s+dagars\s+betalningstid\s+och\s+utan\s+avgift')
-    return (r'choose\s+an\s+invoice\s+instead,\s+which\s+comes\s+at\s+the\s+start\s+of\s+the\s+following\s+month\s+with\s+'
+    nar = r'the\s+month\s+after\s+the\s+session' if KORTET_RESERVERAS else r'the\s+following\s+month'
+    return (r'choose\s+an\s+invoice\s+instead,\s+which\s+comes\s+at\s+the\s+start\s+of\s+' + nar + r'\s+with\s+'
             + en + r'\s+days\s+to\s+pay\s+and\s+no\s+fee')
 
 # (fil, mönster, hur många träffar som ska finnas, vad stället är)
@@ -161,6 +184,20 @@ DET_GAMLA = [
     r'innan det hålls',
     r'before it takes place',
 ]
+
+# Med kortet som reserveras finns inget Betala i förväg: kortet väljs när
+# familjen bokar och dras när rapporten är skriven. Det förra löftet får
+# inte stå kvar någonstans (timmar köpta i förväg är något annat, och
+# skrivs "betalar timmarna i förväg" eller "köpa timmar i förväg").
+if KORTET_RESERVERAS:
+    DET_GAMLA += [
+        r'antingen\s+i\s+förväg\s+eller\s+efter\s+passet',
+        r'betala\s+(?:det\s+|passet\s+)?i\s+förväg',
+        r'i\s+förväg\s+går\s+det',
+        r'either\s+in\s+advance\s+or\s+after\s+the\s+session',
+        r'pay\s+(?:for\s+it\s+|for\s+the\s+session\s+)?in\s+advance',
+        r'in\s+advance\s+(?:is\s+possible|works)',
+    ]
 
 
 def las(fil):

@@ -441,7 +441,11 @@ och PÅ sedan 2026-09-27: familjen väljer det per pass, månadskörningen
 gör ett utkast per familj, admin lägger in det i Fortnox för hand. Tio
 dagar, inga avgifter. Sedan 2026-09-28 står fakturan bredvid
 kortmeningen på alla 36 ställen, och kontrollen räknar den; fakturan
-väljs efter passet, när rapporten bekräftas. Ett fakturapass som inte
+väljs efter passet, när rapporten bekräftas, och med kortet som
+reserveras också före passet. Kortmeningen säger sedan villkoren för
+kortet (`villkoren_kortet`, version 2026-10-15) att pengarna dras först
+när rapporten är skriven, och den följer strömbrytaren `kortreservation`
+(`KORTET_RESERVERAS` i kontrollen). Ett fakturapass som inte
 står på en faktura än betalas med kort genom Betala med kort nu, och
 står kvar som faktura tills kortet är draget. Bankgirot, bolaget och
 beskedet till befintliga familjer återstår (DEPLOY-BETALNING.md 9.11). Spärren "ingen betalning, inget pass" (flaggan `kortsparr`)

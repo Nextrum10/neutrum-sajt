@@ -15379,6 +15379,37 @@ begin
             tx like 'Kort går inte att välja just nu%', 'd', tx);
     update public.flaggor set aktiv = true where kod = 'kortreservation';
 
+    -- ---------- villkoren (villkoren_kortet, 2026-10-15) ----------
+    -- Kortet ger oss rätt att reservera och dra utan att familjen är med:
+    -- den som väljer det har godkänt den gällande versionen. Att välja
+    -- bort det går ändå, som en avbokning.
+    -- Utan villkoren_kortet (körs när strömbrytaren slås på) hoppas provet över.
+    if to_regprocedure('intern.kortval_kraver_villkor()') is null then
+      ut := ut || jsonb_build_object('t', 'KR villkoren för kortet: migrationen är inte körd', 'ok', true,
+              'd', 'hoppas över');
+    else
+      delete from public.villkor_godkannanden where anvandare = K;
+      begin
+        perform pg_temp.bli(K);
+        perform public.valj_kort(P1, true);
+        tx := 'gick igenom';
+      exception when others then tx := sqlerrm;
+      end;
+      begin
+        perform pg_temp.bli(K);
+        tx2 := public.valj_kort(P1, false);
+      exception when others then tx2 := sqlerrm;
+      end;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'KR utan godkända villkor går kort inte att välja, och att välja bort går', 'ok',
+              tx like 'Godkänn användarvillkoren först%' and tx2 = 'inget'
+              and not exists (select 1 from public.kortreservationer r where r.booking_id = P1),
+              'd', tx || ' / ' || coalesce(tx2, 'null'));
+      insert into public.villkor_godkannanden (anvandare, version, kalla)
+        values (K, intern.villkor_version(), 'registrering');
+    end if;
+
     -- ---------- familjen väljer ----------
     perform pg_temp.bli(K);
     tx := public.valj_kort(P1, true);
