@@ -1311,22 +1311,23 @@ som arbetar i repot (`minne/databasen.md`):
      från adminvyn (familjens panel, Ekonomi). Förhandsvisningen når inte
      Stripe, så det här är första gången de provas.
    - Stäng av strömbrytaren igen tills villkoren är ute.
-7. **Villkoren och strömbrytaren, samma dag.** Villkoren är skrivna i en egen
+7. **Villkoren och strömbrytaren.** Villkoren är skrivna i en egen
    PR (2026-10-14): meningen på 36 ställen och i mejlen ("pengarna dras först
    när studiehjälparen har skrivit rapporten"), villkorens punkt Kortet ni
    väljer när ni bokar (`#kortet`), versionen och triggern
    `kortreservationer_kraver_villkor` i `20261015090000_villkoren_kortet`.
    Med strömbrytaren av finns Betala i förväg kvar, och då stämmer inte den
-   nya texten, så **PR:en mergas när strömbrytaren slås på, inte före**, och
-   steg 1–6 görs från main innan den är mergad. Den dagen, i den här
-   ordningen:
+   nya texten. PR:en skulle mergas när strömbrytaren slogs på, men **mergades
+   2026-10-14, före** (Leos beslut, PR #281): sidorna säger kortet tills
+   strömbrytaren är på, och databasens version står på 2026-10-14 tills
+   `villkoren_kortet` körts. Gör därför steg 1–6 och resten nedan så snart
+   Stripes händelser finns, i den här ordningen:
    - Juristen har läst villkoren, särskilt rätten att reservera och dra från
      ett sparat kort utan att familjen är med.
-   - Är det inte den 15 oktober: byt datumet i migrationen och på båda
-     villkorssidorna (`kolla-villkor.py`), och kör `satt-version.py` sist.
-   - Merga PR:en. Vercel lägger ut sidorna inom någon minut.
-   - Kör `20261015090000_villkoren_kortet` från merge-commiten, prövad mot
-     sin md5, och registrera den. Den har ingen `delete` och ingen `drop`.
+   - Datumet står kvar på 15 oktober, också om kedjan körs senare: sidorna
+     är redan ute med det, och versionen ska vara sidans datum.
+   - Kör `20261015090000_villkoren_kortet` från main, prövad mot sin md5,
+     och registrera den. Den har ingen `delete` och ingen `drop`.
      Alla får frågan om villkoren vid nästa inloggning.
    - Driftsätt `notis-ko` (mejlets mening), `drift` och `ekonomi`
      (agenternas fakta) från main, och jämför dem byte för byte.

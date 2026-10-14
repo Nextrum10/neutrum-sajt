@@ -441,8 +441,12 @@ förväg.
   förväg, och då stämmer inte meningen. `kolla-betalningsvillkor.py` har
   `KORTET_RESERVERAS` (som `FAKTURA_I_TEXTEN`): på kräver den nya meningen
   och förbjuder den gamla och "betala i förväg"; slås strömbrytaren av ska
-  meningen tillbaka i samma ändring. PR:en mergas därför när strömbrytaren
-  slås på, inte före (`DEPLOY-BETALNING.md` 9.14).
+  meningen tillbaka i samma ändring. PR:en skulle mergas när strömbrytaren
+  slogs på, men **mergades 2026-10-14, före** (Leos beslut, PR #281). Tills
+  kedjan i `DEPLOY-BETALNING.md` 9.14 körts säger sidorna, villkoren och FAQ:n
+  kortet medan vyn har Betala i förväg (Stripe står i testläge), mejlen och
+  agenterna säger det förra, och databasens version står på 2026-10-14 för en
+  text daterad 15 oktober.
 - **Den som väljer kortet har godkänt villkoren**: triggern
   `kortreservationer_kraver_villkor` (i `villkoren_kortet`, som bokningens och
   köpets) prövar `intern.villkoren_godkanda` när familjen själv väljer kortet,

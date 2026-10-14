@@ -241,8 +241,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   val då. Strömbrytaren `kortreservation` står av (`minne/betalning.md`, Kortet reserveras vid bokningen).
   **Villkoren** (version 2026-10-15, `villkoren_kortet`) har en egen punkt (`#kortet`): valet ger oss rätt att
   reservera den bokade tiden och dra den hållna, aldrig mer än det reserverade, och den som väljer kortet har
-  godkänt den gällande versionen (`kortreservationer_kraver_villkor`; bort går alltid). De går ut när strömbrytaren
-  slås på, inte före.
+  godkänt den gällande versionen (`kortreservationer_kraver_villkor`; bort går alltid). **Texten gick ut 2026-10-14,
+  före strömbrytaren** (Leos beslut): tills kedjan i `DEPLOY-BETALNING.md` 9.14 körts säger sidorna kortet medan vyn
+  har Betala i förväg, mejlen och agenterna säger det förra, och databasens version står på 2026-10-14.
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -949,9 +950,11 @@ Detaljer: `minne/grunden.md`.
   2026-10-14, bakom strömbrytaren och utan att fråga efter kortet innan migrationen är körd (`prova-kortet.js`).
   Villkoren är skrivna samma dag (`villkoren_kortet`, 20261015090000, version 2026-10-15): meningen på 36 ställen och
   i mejlen, villkorens `#kortet` och triggern `kortreservationer_kraver_villkor`; lokalt ur 192 migrationer 1739 av 1739
-  i `rls-test.sql`, och lika många utan villkoren, där provet hoppar över sig självt. **Villkoren mergas när
-  strömbrytaren slås på, inte före**, för med den av finns Betala i förväg. Kvar: juristen, Stripes endpoint och provet i
-  testläge, i ordningen i `DEPLOY-BETALNING.md` 9.14. Pengarna dras när passet har rapporterats (Leo samma kväll).
+  i `rls-test.sql`, och lika många utan villkoren, där provet hoppar över sig självt. **Villkoren mergades 2026-10-14,
+  före strömbrytaren** (Leos beslut, PR #281): sajten säger att pengarna dras efter rapporten, medan vyn har Betala i
+  förväg tills strömbrytaren slås på (Stripe står i testläge, så inga riktiga pengar dras), och den som godkänner
+  villkoren godkänner version 2026-10-14 för en text daterad 15 oktober tills `villkoren_kortet` körts, som kräver
+  `kortet_reserveras` först. Kvar: Stripes tre händelser, kedjan i `DEPLOY-BETALNING.md` 9.14 och juristen. Pengarna dras när passet har rapporterats (Leo samma kväll).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
