@@ -5066,11 +5066,14 @@
   }
 
   /* ============================================================
-     BETALNING (Fas 14.2, Fas 19.2)
-     Familjen betalar varje pass med kort, antingen i förväg, när
-     studiehjälparen bekräftat tiden, eller efter passet när de
-     bekräftar rapporten. Här står det som går att betala i förväg och
-     det som är betalt, båda ritade ur passen. Ett genomfört pass betalas
+     BETALNING (Fas 14.2, Fas 19.2, kortet_reserveras)
+     Familjen betalar varje pass med kort. Med strömbrytaren
+     kortreservation på väljs kortet före passet, priset reserveras två
+     dagar före och dras när rapporten är skriven; med den av går passet
+     att betala i förväg, när studiehjälparen bekräftat tiden. Annars
+     betalar familjen efter passet när de bekräftar rapporten. Här står
+     det som väntar före passet och det som är betalt, båda ritade ur
+     passen. Ett genomfört pass betalas
      under Bekräfta rapport, där rapporten står bredvid: betalningen efter
      passet är en del av bekräftelsen, och en knapp här hade låtit
      familjen betala utan att ha sett vad de betalar för.
@@ -5131,8 +5134,11 @@
 
     $('#bet-att-antal').textContent = iFörväg.length ? String(iFörväg.length) : '';
     if (!iFörväg.length) {
-      host.innerHTML = tomt('Inget att betala i förväg',
-        'När er studiehjälpare bekräftat ett pass kan ni betala det här i förväg. Annars betalar ni efter passet, när ni bekräftar rapporten.');
+      host.innerHTML = S.kort.pa
+        ? tomt('Inget att välja före passet',
+          'När er studiehjälpare bekräftat ett pass kan ni välja kort för det här, så reserveras priset två dagar före passet och dras när rapporten är skriven. Annars betalar ni efter passet, när ni bekräftar rapporten.')
+        : tomt('Inget att betala i förväg',
+          'När er studiehjälpare bekräftat ett pass kan ni betala det här i förväg. Annars betalar ni efter passet, när ni bekräftar rapporten.');
       return;
     }
     host.innerHTML = iFörväg.map(b => {
@@ -5174,7 +5180,7 @@
     host.innerHTML =
       ruta(efter.length ? 'ar-gor' : '', 'Efter passet', efter.length ? kronor(efterKr) : '0 kr',
         efter.length ? (efter.length === 1 ? '1 pass väntar på er' : efter.length + ' pass väntar på er') : 'Inget väntar på er')
-      + ruta('', 'Kan betalas i förväg', iFörväg.length ? kronor(förvägKr) : '0 kr',
+      + ruta('', 'Före passet', iFörväg.length ? kronor(förvägKr) : '0 kr',
         iFörväg.length ? (iFörväg.length === 1 ? '1 bekräftat pass' : iFörväg.length + ' bekräftade pass') : 'Inget bekräftat pass')
       + ruta('', 'Betalt i ' + (NX.MANADER[new Date().getMonth()] || 'månaden'), kronor(betaltKr),
         timmar ? 'och ' + (timmar === 1 ? '1 timme' : timmar + ' timmar') + ' ur timbanken'

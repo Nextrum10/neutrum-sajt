@@ -419,10 +419,12 @@ OMRADEN = [
              'märks särskilt på gymnasienivå, där den som läste kursen i fjol minns vilket '
              'steg som är det svåra.'),
             ('Måste vi binda upp oss?',
-             f'Nej. Ingen bindningstid, ingen månadsavgift. {PRIS} i timmen, och ni betalar varje '
-             'pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. '
-             'Efter passet kan ni i stället välja faktura, som kommer i början av nästa månad '
-             'med tio dagars betalningstid och utan avgift. Betalningen går till Nextrum.'),
+             f'Nej. Ingen bindningstid, ingen månadsavgift. {PRIS} i timmen. Ni betalar varje '
+             'pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: '
+             'väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar '
+             'ni när ni bekräftar rapporten. Före eller efter passet kan ni i stället välja '
+             'faktura, som kommer i början av månaden efter passet med tio dagars betalningstid '
+             'och utan avgift. Betalningen går till Nextrum.'),
             ('Kan vi ses på biblioteket i stället för hemma?',
              'Ja. Skriv platsen när ni föreslår tiden, till exempel Solna stadsbibliotek eller '
              'Bergshamra bibliotek.'),
@@ -522,9 +524,11 @@ AMNEN = [
              'att eleven ska klara nästa uppgift också när ingen sitter bredvid.'),
             ('Vad kostar mattehjälpen?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
-             'passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, '
-             'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
+             'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
+             'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
+             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
+             'Före eller efter passet kan ni i stället välja faktura, som kommer i början av '
+             'månaden efter passet med tio dagars betalningstid och utan avgift.'),
         ],
     },
     {
@@ -594,9 +598,11 @@ AMNEN = [
              'varje pass visar hur det går.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
-             'passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, '
-             'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
+             'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
+             'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
+             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
+             'Före eller efter passet kan ni i stället välja faktura, som kommer i början av '
+             'månaden efter passet med tio dagars betalningstid och utan avgift.'),
         ],
     },
     {
@@ -664,9 +670,11 @@ AMNEN = [
              'eleverna brukar det gå lättare att ses.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
-             'passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, '
-             'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
+             'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
+             'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
+             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
+             'Före eller efter passet kan ni i stället välja faktura, som kommer i början av '
+             'månaden efter passet med tio dagars betalningstid och utan avgift.'),
         ],
     },
     {
@@ -735,9 +743,11 @@ AMNEN = [
              'med tre veckor hinner ni förstå det, inte bara känna igen det.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort, antingen i förväg eller efter '
-             'passet när ni bekräftar rapporten. Efter passet kan ni i stället välja faktura, '
-             'som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.'),
+             'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
+             'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
+             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
+             'Före eller efter passet kan ni i stället välja faktura, som kommer i början av '
+             'månaden efter passet med tio dagars betalningstid och utan avgift.'),
         ],
     },
     {

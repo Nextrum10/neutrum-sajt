@@ -59,8 +59,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Chatten** läser admin med `chatt_las()` (loggat, aldrig cachat), aldrig `NXKontakt.tråd()`;
   att vi kan läsa står i policyn och chatten och tas inte bort.
 - **Månader** väljs på passets månad, och ingen väljare börjar före september 2026.
-- **Betalning**: kort i förväg, eller kort eller faktura efter passet när rapporten bekräftas;
-  ett hållet pass betalas även obekräftat. Ett pass med kortpengar avbokas inte från en vy, ett
+- **Betalning**: kort, och pengarna dras först när rapporten är skriven: kortet som väljs när
+  familjen bokar reserveras två dagar före passet och dras efter rapporten, annars kort eller
+  faktura när rapporten bekräftas, och fakturan går att välja också före passet (2026-10-15,
+  `villkoren_kortet`). Med strömbrytaren `kortreservation` av gäller det förra, kort i förväg; texten
+  och strömbrytaren följs åt (Siffror nedan). Ett hållet pass betalas även obekräftat. Ett pass med kortpengar avbokas inte från en vy, ett
   i tvist återbetalas inte, och ett fakturapass står som `faktura` tills webhooken skrivit
   kortet. OCR räknas aldrig fram, och påminnelser tas ut utan avgift.
 - **Hållen tid** (Fas 20.1) debiteras per påbörjad kvart; avvikelse kräver skäl, ingen ändring i
@@ -236,6 +239,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   egen reservation. Vyerna (2026-10-14) visar valet bara med strömbrytaren på, och då tar Välj kort platsen från
   Betala i förväg; med den av räknar vyn bara med en reservation som står, för jobbet reserverar och drar inget
   val då. Strömbrytaren `kortreservation` står av (`minne/betalning.md`, Kortet reserveras vid bokningen).
+  **Villkoren** (version 2026-10-15, `villkoren_kortet`) har en egen punkt (`#kortet`): valet ger oss rätt att
+  reservera den bokade tiden och dra den hållna, aldrig mer än det reserverade, och den som väljer kortet har
+  godkänt den gällande versionen (`kortreservationer_kraver_villkor`; bort går alltid). De går ut när strömbrytaren
+  slås på, inte före.
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -298,7 +305,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
-  samtidigt. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
+  samtidigt. Meningen följer strömbrytaren `kortreservation` (`KORTET_RESERVERAS`): på säger den att
+  pengarna dras först när rapporten är skriven och att kortet reserveras två dagar före passet, och "betala
+  i förväg" får inte stå; slås strömbrytaren av går den förra meningen tillbaka i samma ändring. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
   och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`; svaret är månadskostnaden och
@@ -937,9 +946,12 @@ Detaljer: `minne/grunden.md`.
   med strömbrytaren `kortreservation` av, mallen `kort_nekat` i `notis-ko`, och policyn och rad 29 i `DATASKYDD.md`.
   Edge-funktionerna är skrivna samma natt: kassans läge `setup` och Ta bort kortet (`stripe-checkout`), den nya
   `stripe-reservation` och webhookens tre nya händelser (lokalt 1700 av 1700 i `rls-test.sql`). Vyerna är skrivna
-  2026-10-14, bakom strömbrytaren och utan att fråga efter kortet innan migrationen är körd (`prova-kortet.js`). Kvar:
-  villkoren och Stripes endpoint (`minne/betalning.md`). **Kör inte migrationen förrän resten är byggd**, och
-  ordningen står i `DEPLOY-BETALNING.md` 9.14. Pengarna dras när passet har rapporterats (Leo samma kväll).
+  2026-10-14, bakom strömbrytaren och utan att fråga efter kortet innan migrationen är körd (`prova-kortet.js`).
+  Villkoren är skrivna samma dag (`villkoren_kortet`, 20261015090000, version 2026-10-15): meningen på 36 ställen och
+  i mejlen, villkorens `#kortet` och triggern `kortreservationer_kraver_villkor`; lokalt ur 192 migrationer 1739 av 1739
+  i `rls-test.sql`, och lika många utan villkoren, där provet hoppar över sig självt. **Villkoren mergas när
+  strömbrytaren slås på, inte före**, för med den av finns Betala i förväg. Kvar: juristen, Stripes endpoint och provet i
+  testläge, i ordningen i `DEPLOY-BETALNING.md` 9.14. Pengarna dras när passet har rapporterats (Leo samma kväll).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

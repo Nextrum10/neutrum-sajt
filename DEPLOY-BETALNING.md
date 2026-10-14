@@ -1265,9 +1265,10 @@ Familjen väljer kort när den föreslår ett pass, och kortet sparas hos Stripe
 Beloppet reserveras två dagar före passet, dras när rapporten finns och släpps
 när passet inte längre ska betalas med kortet (`minne/betalning.md`, Kortet
 reserveras vid bokningen). Databasen (`20261013170000_kortet_reserveras`),
-edge-funktionerna och vyerna är byggda. Villkoren är det inte. **Inget av det
-här körs förrän villkoren är skrivna**, och strömbrytaren `kortreservation` står
-av tills provet i testläge (steg 6) gått igenom.
+edge-funktionerna och vyerna är byggda, och villkoren är skrivna (2026-10-14,
+steg 7) men går ut först när strömbrytaren slås på. Strömbrytaren
+`kortreservation` står av tills provet i testläge (steg 6) gått igenom och
+villkoren är ute.
 
 Vyerna går ut med sajten när grenen mergas, före allt nedan. Det är med flit:
 utan flaggans rad (migrationen är inte körd) frågar studievyn inte efter kortet,
@@ -1310,8 +1311,29 @@ som arbetar i repot (`minne/databasen.md`):
      från adminvyn (familjens panel, Ekonomi). Förhandsvisningen når inte
      Stripe, så det här är första gången de provas.
    - Stäng av strömbrytaren igen tills villkoren är ute.
-7. **Villkoren** säger betalsätten på 36 ställen och i mejlen
-   (`kolla-betalningsvillkor.py`). Kort som reserveras och dras efter passet
-   är ett nytt sätt, så meningen, villkoren och deras version ändras i en egen
-   PR, och juristen läser dem innan strömbrytaren slås på.
+7. **Villkoren och strömbrytaren, samma dag.** Villkoren är skrivna i en egen
+   PR (2026-10-14): meningen på 36 ställen och i mejlen ("pengarna dras först
+   när studiehjälparen har skrivit rapporten"), villkorens punkt Kortet ni
+   väljer när ni bokar (`#kortet`), versionen och triggern
+   `kortreservationer_kraver_villkor` i `20261015090000_villkoren_kortet`.
+   Med strömbrytaren av finns Betala i förväg kvar, och då stämmer inte den
+   nya texten, så **PR:en mergas när strömbrytaren slås på, inte före**, och
+   steg 1–6 görs från main innan den är mergad. Den dagen, i den här
+   ordningen:
+   - Juristen har läst villkoren, särskilt rätten att reservera och dra från
+     ett sparat kort utan att familjen är med.
+   - Är det inte den 15 oktober: byt datumet i migrationen och på båda
+     villkorssidorna (`kolla-villkor.py`), och kör `satt-version.py` sist.
+   - Merga PR:en. Vercel lägger ut sidorna inom någon minut.
+   - Kör `20261015090000_villkoren_kortet` från merge-commiten, prövad mot
+     sin md5, och registrera den. Den har ingen `delete` och ingen `drop`.
+     Alla får frågan om villkoren vid nästa inloggning.
+   - Driftsätt `notis-ko` (mejlets mening), `drift` och `ekonomi`
+     (agenternas fakta) från main, och jämför dem byte för byte.
+   - Slå på `kortreservation` (Betalningar → Inställningar, Strömbrytare).
+   - Kör hela `rls-test.sql` mot driften, tillbakarullat.
+
+   Slås strömbrytaren av senare går meningen tillbaka i samma ändring
+   (`KORTET_RESERVERAS = False` i `kolla-betalningsvillkor.py`), med en ny
+   version av villkoren.
 

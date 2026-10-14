@@ -19,10 +19,12 @@
 // får båda den. "Tove har flyttat passet" hade då varit fel. Texterna
 // säger vad som hänt, inte vem som gjorde det.
 //
-// BETALNINGEN STÅR I FAMILJENS MEJL (Fas 14.3). Sedan Fas 19.2
-// betalar familjen varje pass med kort, antingen i förväg eller efter
-// passet när de bekräftar rapporten, och mejlet säger samma mening som
-// villkoren. Förut stod här att ett obetalt pass inte hålls; det gäller
+// BETALNINGEN STÅR I FAMILJENS MEJL (Fas 14.3). Familjen betalar varje
+// pass med kort, och sedan kortet_reserveras dras pengarna först när
+// rapporten är skriven: kortet som väljs när familjen bokar reserveras
+// två dagar före passet, och annars betalar familjen när den bekräftar
+// rapporten. Mejlet säger samma mening som villkoren. Förut stod här
+// att ett obetalt pass inte hålls; det gäller
 // inte längre, och spärren som bar det kan inte slås på. Mallen vet inte om passet är betalt —
 // RenData bär bara datum, tid, ämne och förnamn, och läget hade ändå
 // hunnit ändras mellan kön och utskicket — så alla tre säger det
@@ -87,9 +89,12 @@ const SVARA = 'Svara ja eller nej i Nextrum.';
 /* Samma mening som villkoren, prissidan och FAQ:n. Den räknas av
    verktyg/kolla-betalningsvillkor.py, så att mejlet inte kan börja säga
    något annat än sidorna. */
-const VILLKORET = 'Ni betalar varje pass med kort, antingen i förväg eller efter passet när ni bekräftar rapporten. '
-  + 'Efter passet kan ni i stället välja faktura, som kommer i början av nästa månad med tio dagars betalningstid och utan avgift.';
-const BETALA = `${VILLKORET} Vill ni betala i förväg gör ni det i Nextrum, om ni inte redan har gjort det.`;
+// Varje mening som räknas står i en sträng: mönstren ser inte över ett +.
+const VILLKORET = 'Ni betalar varje pass med kort, och '
+  + 'pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
+  + 'Före eller efter passet kan ni i stället '
+  + 'välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift.';
+const BETALA = `${VILLKORET} Vill ni välja kort gör ni det i Nextrum före passet, om ni inte redan har gjort det.`;
 const FAKTURA = 'Ni har valt faktura, så passet kommer med på månadens faktura från Nextrum.';
 const TIMMAR = 'Passet är betalt med timmarna ni köpt i förväg, så det finns inget att betala.';
 

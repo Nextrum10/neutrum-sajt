@@ -417,8 +417,45 @@ att inget blir kvar hos Stripe när kontot tas bort.
   sparas och tas inte bort där: det går genom Stripe.
 - **Provet** är `verktyg/prova-kortet.js` (`minne/genererat-och-ci.md`).
 
+**Villkoren** (2026-10-14, migrationen `villkoren_kortet`, version
+2026-10-15): med strömbrytaren på dras pengarna aldrig före rapporten, och
+det är löftet. Meningen på alla 36 ställen och i mejlen är "Ni betalar varje
+pass med kort, och pengarna dras först när studiehjälparen har skrivit
+rapporten: väljer ni kort när ni bokar reserveras priset två dagar före
+passet, annars betalar ni när ni bekräftar rapporten", och fakturan går att
+välja "före eller efter passet" och kommer "i början av månaden efter
+passet" (förut "nästa månad", som inte är entydigt när den väljs före).
+Villkoren har en egen punkt, Kortet ni väljer när ni bokar (`#kortet`): att
+valet ger oss rätt att reservera och dra, att reservationen är den bokade
+tiden tidigast två dagar före ett bekräftat pass, att dragningen är den
+hållna tiden och aldrig mer än det reserverade, att tillägget för ett
+längre pass betalas när rapporten bekräftas, när reservationen släpps, att
+kortet går att välja bort tills pengarna dragits och tas bort under Profil,
+och att ett nej ger ett mejl. Stripe-punkten säger vad vi ser av ett sparat
+kort (märket, sista fyra, giltighetstiden) i stället för "vi sparar dem
+inte". FAQ:ns "Måste vi betala innan passet?", prissidans steg 02 (Välj hur
+ni betalar), mejlets "Vill ni välja kort" och agenternas fakta säger samma
+sak, och Betalning i studievyn heter Före passet i stället för Betala i
+förväg.
+- **Texten och strömbrytaren följs åt**: med strömbrytaren av finns Betala i
+  förväg, och då stämmer inte meningen. `kolla-betalningsvillkor.py` har
+  `KORTET_RESERVERAS` (som `FAKTURA_I_TEXTEN`): på kräver den nya meningen
+  och förbjuder den gamla och "betala i förväg"; slås strömbrytaren av ska
+  meningen tillbaka i samma ändring. PR:en mergas därför när strömbrytaren
+  slås på, inte före (`DEPLOY-BETALNING.md` 9.14).
+- **Den som väljer kortet har godkänt villkoren**: triggern
+  `kortreservationer_kraver_villkor` (i `villkoren_kortet`, som bokningens och
+  köpets) prövar `intern.villkoren_godkanda` när familjen själv väljer kortet,
+  en ny rad eller en som väljs igen. Jobbet, webhooken och admin går förbi,
+  och att välja bort går alltid, som en avbokning. En trigger och inte en rad
+  i `valj_kort()`, för `kortet_reserveras` körs i driften före villkoren och
+  ändras inte efteråt. Provet står i avsnitt 33 i `rls-test.sql`.
+- **Datumet** är dagen villkoren går ut. Blir det en annan dag än
+  2026-10-15 byts det i migrationen och på båda sidorna (`kolla-villkor.py`).
+
 **Kvar**:
-- Villkorsmeningen på alla 36 ställen och i mejlen, med en ny version.
+- Juristen läser villkoren, särskilt rätten att dra från ett sparat kort
+  utan att familjen är med.
 - Stripes endpoint: de tre nya händelserna.
 - Driftsättningen (`DEPLOY-BETALNING.md` 9.14) och provet i testläge.
   Det provet säger om kassan i läget `setup` behöver
