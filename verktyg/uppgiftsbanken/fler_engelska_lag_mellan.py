@@ -295,9 +295,9 @@ TILLAGG = [
             sant("'Here you are' betyder varsågod.", True,
                  'Here you are betyder varsågod eller här har du. Det säger man när man ger något.'),
             val("Vad svarar man på 'Thank you'?",
-                ["You're welcome.", "I'm sorry.", 'Good night.'], "You're welcome.",
-                "You're welcome betyder varsågod eller ingen orsak. Sorry är förlåt och good night är "
-                'god natt.'),
+                ["You're welcome.", "I'm sorry.", 'Good morning.'], "You're welcome.",
+                "You're welcome betyder varsågod eller ingen orsak. Sorry är förlåt och good morning "
+                'är god morgon.'),
             skriv('Skriv ordet som fattas: Can I have an apple, ___? (Kan jag få ett äpple, snälla?)',
                   'please',
                   'Snälla heter please. Man säger det när man ber om något.'),
@@ -443,8 +443,9 @@ TILLAGG = [
             para('Para ihop klockslaget med vad Sam gör.',
                  [(UPP[0], 'står upp'), (FOTBOLL[0], 'spelar fotboll'), (LUNCH[0], 'äter lunch'),
                   (AFFAREN[0], 'går till affären')],
-                 "Half past eight är 8.30, ten o'clock är 10.00, twelve o'clock är 12.00 och "
-                 "four o'clock är 4.00. Det är den ordning Sam gör sakerna i."),
+                 "Half past eight är 8.30, ten o'clock är 10.00 och twelve o'clock är 12.00. "
+                 "Four o'clock är klockan fyra på eftermiddagen, efter lunchen. Det är den ordning "
+                 "Sam gör sakerna i."),
             ordna('Sätt i ordning vad Sam gör, från morgon till kväll.',
                   ['breakfast', 'football', 'lunch', 'shop', 'film'],
                   forklaring='Sam äter frukost, spelar fotboll, äter lunch, går till affären och '

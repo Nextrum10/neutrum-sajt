@@ -120,8 +120,8 @@ FORSTA_DAGEN = '\n\n'.join([
     '“Don’t worry,” said Rosa, the manager, handing me a cloth. “Everybody does it once. I did it '
     'on my second day, and the customer was wearing a white jacket.”',
     'I had expected her to be angry. Instead she showed me how to carry a tray with the heaviest '
-    'cups in the middle, and she told me to stop saying sorry to every customer. “You are not '
-    'sorry for being here,” she said. “Just smile and carry on.”',
+    'cups in the middle, and she told me to stop saying sorry to every customer. “You don’t have '
+    'to say sorry for being here,” she said. “Just smile and carry on.”',
     'By the end of the week I could carry three plates in one hand. By the end of the month I had '
     'become friends with Mr Kowal, an old man who came every morning for a black coffee and always '
     'left a coin under his saucer “for the tray girl”.',
@@ -624,10 +624,10 @@ TILLAGG = [
                 'Point out betyder att påpeka. Några sa att skoldagen nu slutar klockan fyra, och '
                 'ingen pekade med fingret.'),
             val("What does Ms Dahl mean by 'A good idea for most pupils can still be a bad idea for some'?",
-                ['A change good for many may be bad for a few',
+                ['A change that helps many can hurt a few',
                  'Most pupils will dislike the new start', 'A bad idea can become good with time',
-                 'The few pupils are always right'],
-                'A change good for many may be bad for a few',
+                 'Pupils who complain are always right'],
+                'A change that helps many can hurt a few',
                 'Ms Dahl menar att en ändring som är bra för de flesta kan vara dålig för några, som '
                 'barnen som blir ensamma hemma en timme.'),
             para('Match the word from the text with the Swedish word.',
@@ -668,8 +668,9 @@ TILLAGG = [
                   ['He', 'said', 'that', 'she', 'lived', 'in', 'Gothenburg.'], extra=['live'],
                   forklaring='Said that betyder sa att. Hon bodde heter she lived, i preteritum. '
                              'Gothenburg är Göteborg på engelska.'),
-            skriv("Skriv verbet: Erik said, 'I can swim.' Erik said that he ___ swim.", 'could',
-                  'Can blir could när man återger det som sagts i efterhand.'),
+            skriv("Skriv verbet i preteritum: Erik said, 'I can swim.' Erik said that he ___ swim.",
+                  'could',
+                  'Could är preteritum av can. Can blir could när man återger det som sagts i efterhand.'),
             sant("'I told him that I was late' betyder 'Jag sa till honom att jag var sen'.", True,
                  'Told him betyder sa till honom. Efter told kommer personen.'),
             para('Para ihop det som sades med hur det återges.',
@@ -677,7 +678,7 @@ TILLAGG = [
                   ('I will help you.', 'She said she would help me.'),
                   ('I have finished.', 'She said she had finished.'),
                   ('I live here.', 'She said she lived there.')],
-                 'Am blir was, will blir would och have blir had. Live blir lived, och här blir there. '
+                 'Am blir was, will blir would och have blir had. Live blir lived, och here blir there. '
                  'Verbet flyttas alltså ett steg bakåt i tiden.'),
         ], beskrivning='Att återge vad någon sagt: said that, told me och tidsförskjutning.'),
 
@@ -695,11 +696,11 @@ TILLAGG = [
                 'En uppmaning återges med told + person + to + verb: told us to open.'),
             skriv("Skriv ordet som fattas: He asked me ___ I wanted tea or coffee. (Do you want tea or "
                   'coffee?)', ['if', 'whether'],
-                  'En ja/nej-fråga som återges börjar med if eller whether. Båda är rätt.'),
+                  'En fråga utan frågeord återges med if eller whether. Båda är rätt.'),
             sant("'He asked if I was ready' slutar med punkt, inte med frågetecken.", True,
                  'Meningen är ett påstående om att han frågade, inte en fråga. Därför slutar den med '
                  'punkt.'),
-            val("'Where do you live?' Vilken mening återger frågan rätt?",
+            val("Hon frågade: 'Where do you live?' Vilken mening återger frågan rätt?",
                 ['She asked where I lived.', 'She asked where did I live.', 'She asked where I do live.'],
                 'She asked where I lived.',
                 'I en återgiven fråga blir ordföljden som i ett påstående, utan do eller did, och '
@@ -739,7 +740,7 @@ TILLAGG = [
                 ['She wants the narrator to feel more confident', 'She thinks customers dislike polite people',
                  'She wants the work to go faster', 'She is tired of hearing it herself'],
                 'She wants the narrator to feel more confident',
-                'Rosa säger You are not sorry for being here. Just smile and carry on. Hon vill att '
+                'Rosa säger You don’t have to say sorry for being here. Just smile and carry on. Hon vill att '
                 'berättaren ska känna sig trygg i stället för att be om ursäkt hela tiden.'),
             skriv('What does Mr Kowal drink every morning? Write the drink in English.',
                   ['coffee', 'black coffee', 'a black coffee'],
@@ -755,12 +756,12 @@ TILLAGG = [
                  'Tray är en bricka, saucer är ett tefat, cloth är en trasa och customer är en kund.'),
             sant('Mr Kowal always left a coin under his saucer.', True,
                  'Det står always left a coin under his saucer.'),
-            val('What does the last sentence mean?',
+            val("What does Rosa mean by 'mistakes are only expensive if you hide them'?",
                 ['Hiding a mistake usually makes things worse', 'Mistakes cost cafés a lot of money',
                  'You should never make a mistake', 'Expensive cups break more easily'],
                 'Hiding a mistake usually makes things worse',
                 'Rosa menar att ett misstag bara blir dyrt om man gömmer det. Är man ärlig kan man lära '
-                'sig av det, och ingen skada blir större.'),
+                'sig av det, och skadan blir inte större.'),
             ordna('Put the events in the order they happen.',
                   ['She dropped a tray of hot chocolate', 'Rosa showed her how to carry a tray',
                    'She learned to carry three plates', 'She became friends with Mr Kowal'],
@@ -772,7 +773,8 @@ TILLAGG = [
             text=FORSTA_DAGEN),
 
         niva('en-ak9-fler-lasa-2', 'Teenagers and jobs', 'Läsa och förstå', [
-            skriv('On which day of the week does Mina work? Write the day.', ['Saturday', 'Saturdays'],
+            skriv('On which day of the week does Mina work? Write the day.',
+                  ['Saturday', 'Saturdays', 'on Saturday', 'on Saturdays', 'every Saturday'],
                   'Det står Mina, 15, works at a bakery every Saturday.'),
             val('What has Mina learnt from her job, according to her?',
                 ['To be on time', 'To bake bread', 'To save money for a trip', 'To speak to customers'],
