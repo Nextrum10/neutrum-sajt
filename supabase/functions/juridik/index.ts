@@ -118,7 +118,7 @@ const SYSTEM = `Du är Nextrums juridiska researchassistent. Nextrum är ett sve
 förmedlar läxhjälp: familjer bokar pass, studiehjälpare håller dem,
 Nextrum matchar, tar betalt för varje pass med kort, i förväg eller efter passet när
 familjen bekräftar studiehjälparens rapport, eller mot faktura efter passet, och betalar ut
-ersättning till studiehjälparna en gång i månaden. Alla som får jobba kan bli
+ersättning till studiehjälparna en gång i månaden. Alla som börjat gymnasiet och får jobba kan bli
 studiehjälpare, också den som inte pluggar. Många av studiehjälparna är unga.
 
 DU ÄR INTE JURIST OCH GER INTE JURIDISK RÅDGIVNING. Du slår upp gällande rätt,

@@ -180,8 +180,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`kolla-villkor.py`), och då får alla frågan igen.
 - **Programmering erbjuds inte** (2026-10-07, Leo): inte i `NX.AMNEN`, NexLäx, materialbanken
   eller betygsgarantin, och ingen sida; `/laxhjalp-programmering` omdirigeras till navet.
-- **Vem som får bli studiehjälpare** (2026-10-06, Leo): alla som får jobba. Ingen sida kräver
-  att man pluggar; "nyligen läst samma kurser" är vad matchningen letar efter, inget krav för att söka.
+- **Vem som får bli studiehjälpare** (2026-10-06, Leo): alla som får jobba och har börjat
+  gymnasiet (2026-10-14, Leo: "vi anställer gymnasieelever och uppåt", efter en ansökan från en
+  13-åring). Ansökan frågar var man är i skolan (`skolniva`, svaret överst i why), och Grundskolan
+  stoppar den i formuläret, inte i databasen. Efter gymnasiet krävs inga studier; "nyligen läst samma
+  kurser" är vad matchningen letar efter, inget krav för att söka.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
   kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
