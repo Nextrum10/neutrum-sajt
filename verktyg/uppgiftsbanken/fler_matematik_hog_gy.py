@@ -128,6 +128,11 @@ def kvartiler(data):
     return median(s[:h]), median(s[h:])
 
 
+def passar(f, punkter):
+    """Formeln f stämmer med alla (x, y) i punkter."""
+    return all(abs(f(x) - y) < 1e-9 for x, y in punkter)
+
+
 def kvadrat_ok(f, g, punkter=range(-6, 7)):
     """Två uttryck är samma uttryck: lika i tretton punkter."""
     return all(f(F(x)) == g(F(x)) for x in punkter)
@@ -334,7 +339,10 @@ MA_AK8_SAMBAND_1 = niva('ma-ak8-fler-samband-1', 'Proportionella samband', 'Samb
     skriv('Till 4 portioner pasta behövs 300 g pasta. Hur många gram pasta behövs till 10 portioner?',
           t(F(300, 4) * 10), 'En portion behöver 300 : 4 = 75 g. Tio portioner behöver 10 · 75 = 750 g.'),
     val('x = 1 ger y = 5, x = 2 ger y = 10 och x = 3 ger y = 15. Vilken formel passar?',
-        ['y = 5x', 'y = x + 4', 'y = 5 + x', 'y = x/5'], 'y = 5x',
+        ['y = 5x', 'y = x + 4', 'y = 5 + x', 'y = x/5'],
+        enda(['y = 5x', 'y = x + 4', 'y = 5 + x', 'y = x/5'],
+             lambda a: passar({'y = 5x': lambda x: 5 * x, 'y = x + 4': lambda x: x + 4, 'y = 5 + x': lambda x: 5 + x,
+                               'y = x/5': lambda x: x / 5}[a], [(1, 5), (2, 10), (3, 15)])),
         'y är 5 gånger x i alla tre raderna. Formeln y = x + 4 stämmer bara för x = 1.'),
 ], beskrivning='Proportionella samband: konstanten k, tabeller och grafer genom origo.')
 
@@ -343,7 +351,11 @@ assert 100 + 20 * 4 == 60 + 30 * 4 == 180
 
 MA_AK8_SAMBAND_2 = niva('ma-ak8-fler-samband-2', 'Linjära samband med startvärde', 'Samband och proportionalitet', [
     val('En taxiresa kostar 50 kr i startavgift och 12 kr per kilometer. Vilken formel ger priset y kr för x km?',
-        ['y = 12x + 50', 'y = 50x + 12', 'y = 62x', 'y = 12 + 50 + x'], 'y = 12x + 50',
+        ['y = 12x + 50', 'y = 50x + 12', 'y = 62x', 'y = 12 + 50 + x'],
+        enda(['y = 12x + 50', 'y = 50x + 12', 'y = 62x', 'y = 12 + 50 + x'],
+             lambda a: passar({'y = 12x + 50': lambda x: 12 * x + 50, 'y = 50x + 12': lambda x: 50 * x + 12,
+                               'y = 62x': lambda x: 62 * x, 'y = 12 + 50 + x': lambda x: 62 + x}[a],
+                              [(0, 50), (1, 62), (10, 170)])),
         'Priset är 12 kr för varje kilometer, alltså 12 · x, plus startavgiften 50 kr: y = 12x + 50.'),
     skriv('Priset y kr för en taxiresa på x km ges av y = 12x + 50. Vad kostar en resa på 7 km?', t(12 * 7 + 50),
           'Sätt in x = 7: y = 12 · 7 + 50 = 84 + 50 = 134 kr.'),
@@ -351,7 +363,11 @@ MA_AK8_SAMBAND_2 = niva('ma-ak8-fler-samband-2', 'Linjära samband med startvär
           'Hur mycket ökar y när x ökar med 1?', t(11 - 8),
           'Från 8 till 11 och från 11 till 14 ökar y med 3 varje gång. Det är förändringen per steg.'),
     val('x = 0 ger y = 5, x = 1 ger y = 9 och x = 2 ger y = 13. Vilken formel passar?',
-        ['y = 4x + 5', 'y = 5x + 4', 'y = 9x', 'y = 4x + 9'], 'y = 4x + 5',
+        ['y = 4x + 5', 'y = 5x + 4', 'y = 9x', 'y = 4x + 9'],
+        enda(['y = 4x + 5', 'y = 5x + 4', 'y = 9x', 'y = 4x + 9'],
+             lambda a: passar({'y = 4x + 5': lambda x: 4 * x + 5, 'y = 5x + 4': lambda x: 5 * x + 4,
+                               'y = 9x': lambda x: 9 * x, 'y = 4x + 9': lambda x: 4 * x + 9}[a],
+                              [(0, 5), (1, 9), (2, 13)])),
         'Värdet vid x = 0 är 5, startvärdet. Sedan ökar y med 4 för varje steg. Alltså y = 4x + 5.'),
     skriv('Ett badkar innehåller 20 liter vatten. Sedan rinner det i 15 liter per minut. '
           'Hur många liter finns i badkaret efter 6 minuter?', t(20 + 6 * 15),
@@ -426,7 +442,7 @@ MA_AK8_ROTTER_2 = niva('ma-ak8-fler-rotter-2', 'Rötter i beräkningar', 'Kvadra
           'Volymen är kant · kant · kant. 5 · 5 · 5 = 125, så kanten är 5 dm.'),
     sant('√(16 + 9) = 7', math.isqrt(16 + 9) == 7,
          'Under rottecknet är 16 + 9 = 25, och √25 = 5. Man kan inte ta roten ur varje term för sig: '
-         '√16 + √9 = 7 är något annat.'),
+         '√16 + √9 = 4 + 3 = 7 är ett annat tal än √25 = 5.'),
     sant('√(16 · 9) = 12', math.isqrt(16 * 9) == 12,
          '16 · 9 = 144 och √144 = 12. Det stämmer med √16 · √9 = 4 · 3 = 12: rötter får man multiplicera var för sig.'),
     val('Vilket av uttrycken har störst värde?', ['2⁴', '√144', '3²', '√81 + 1'],
@@ -474,10 +490,19 @@ MA_AK9_FORMLER_1 = niva('ma-ak9-fler-formler-1', 'Sätta in och lösa ut i forml
     skriv('Sträckan s, hastigheten v och tiden t hänger ihop så att s = v · t. '
           'Hur många timmar tar det att färdas 150 km med hastigheten 50 km/h?', t(F(150, 50)),
           'Lös ut t genom att dela båda led med v: t = s / v = 150 / 50 = 3 timmar.'),
-    val('Lös ut b ur formeln A = b · h.', ['b = A/h', 'b = A · h', 'b = h/A', 'b = A − h'], 'b = A/h',
+    val('Lös ut b ur formeln A = b · h.', ['b = A/h', 'b = A · h', 'b = h/A', 'b = A − h'],
+        enda(['b = A/h', 'b = A · h', 'b = h/A', 'b = A − h'],
+             lambda a: all({'b = A/h': lambda A, h: A / h, 'b = A · h': lambda A, h: A * h,
+                            'b = h/A': lambda A, h: h / A, 'b = A − h': lambda A, h: A - h}[a](b0 * h0, h0) == b0
+                           for b0, h0 in ((6, 4), (3, 7), (5, 2)))),
         'Dela båda led med h: A/h = b. Det som multipliceras med b tas bort genom att man delar med det.'),
     val('Lös ut x ur formeln y = kx + m.',
-        ['x = (y − m)/k', 'x = y − m − k', 'x = (y + m)/k', 'x = k(y − m)'], 'x = (y − m)/k',
+        ['x = (y − m)/k', 'x = y − m − k', 'x = (y + m)/k', 'x = k(y − m)'],
+        enda(['x = (y − m)/k', 'x = y − m − k', 'x = (y + m)/k', 'x = k(y − m)'],
+             lambda a: all({'x = (y − m)/k': lambda y, k, mm: F(y - mm) / k, 'x = y − m − k': lambda y, k, mm: y - mm - k,
+                            'x = (y + m)/k': lambda y, k, mm: F(y + mm) / k,
+                            'x = k(y − m)': lambda y, k, mm: k * (y - mm)}[a](k0 * x0 + m0, k0, m0) == x0
+                           for k0, m0, x0 in ((2, 3, 5), (3, -4, 7)))),
         'Subtrahera m från båda led: y − m = kx. Dela sedan båda led med k: x = (y − m)/k.'),
     skriv('Sambandet mellan temperaturen F i grader Fahrenheit och C i grader Celsius är F = 1,8C + 32. '
           'Vad är F när C = 25?', t(F(18, 10) * 25 + 32),
@@ -506,9 +531,20 @@ MA_AK9_FORMLER_2 = niva('ma-ak9-fler-formler-2', 'Omskrivning i flera steg', 'Fo
     skriv('Formeln v = u + at ger sluthastigheten v. Vad är a när v = 30, u = 10 och t = 4?', t(F(30 - 10, 4)),
           'Lös ut a: at = v − u, så a = (v − u)/t = (30 − 10)/4 = 5.'),
     val('En kon har volymen V = (π · r² · h)/3. Lös ut h.',
-        ['h = 3V/(πr²)', 'h = V/(3πr²)', 'h = 3V · πr²', 'h = V · πr²/3'], 'h = 3V/(πr²)',
+        ['h = 3V/(πr²)', 'h = V/(3πr²)', 'h = 3V · πr²', 'h = V · πr²/3'],
+        enda(['h = 3V/(πr²)', 'h = V/(3πr²)', 'h = 3V · πr²', 'h = V · πr²/3'],
+             lambda a: all(abs({'h = 3V/(πr²)': lambda V, r: 3 * V / (math.pi * r * r),
+                                'h = V/(3πr²)': lambda V, r: V / (3 * math.pi * r * r),
+                                'h = 3V · πr²': lambda V, r: 3 * V * math.pi * r * r,
+                                'h = V · πr²/3': lambda V, r: V * math.pi * r * r / 3}[a](math.pi * r0 * r0 * h0 / 3, r0)
+                              - h0) < 1e-9 for r0, h0 in ((2, 3), (3, 5)))),
         'Multiplicera båda led med 3: 3V = πr²h. Dela sedan båda led med πr²: h = 3V/(πr²).'),
-    val('Lös ut r ur formeln A = πr², där r > 0.', ['r = √(A/π)', 'r = A/π', 'r = √A/π', 'r = A/(2π)'], 'r = √(A/π)',
+    val('Lös ut r ur formeln A = πr², där r > 0.', ['r = √(A/π)', 'r = A/π', 'r = √A/π', 'r = A/(2π)'],
+        enda(['r = √(A/π)', 'r = A/π', 'r = √A/π', 'r = A/(2π)'],
+             lambda a: all(abs({'r = √(A/π)': lambda A: math.sqrt(A / math.pi), 'r = A/π': lambda A: A / math.pi,
+                                'r = √A/π': lambda A: math.sqrt(A) / math.pi,
+                                'r = A/(2π)': lambda A: A / (2 * math.pi)}[a](math.pi * r0 * r0) - r0) < 1e-9
+                           for r0 in (3, 5))),
         'Dela båda led med π: r² = A/π. Ta sedan kvadratroten ur båda led: r = √(A/π). '
         'Rottecknet ska gälla hela bråket, inte bara A.'),
     skriv('En cirkels omkrets O ges av O = 2πr. Vad är r när O = 31,4? Räkna med π ≈ 3,14.',
@@ -518,7 +554,12 @@ MA_AK9_FORMLER_2 = niva('ma-ak9-fler-formler-2', 'Omskrivning i flera steg', 'Fo
           'Hur många timmar får man hyra för 340 kr?', t(F(340 - 60, 35)),
           '60 + 35t = 340 ger 35t = 280, alltså t = 8 timmar.'),
     val('Lös ut y ur ekvationen 2x + 3y = 12.',
-        ['y = (12 − 2x)/3', 'y = 4 − 2x', 'y = 12 − 2x − 3', 'y = (12 + 2x)/3'], 'y = (12 − 2x)/3',
+        ['y = (12 − 2x)/3', 'y = 4 − 2x', 'y = 12 − 2x − 3', 'y = (12 + 2x)/3'],
+        enda(['y = (12 − 2x)/3', 'y = 4 − 2x', 'y = 12 − 2x − 3', 'y = (12 + 2x)/3'],
+             lambda a: all({'y = (12 − 2x)/3': lambda x: F(12 - 2 * x, 3), 'y = 4 − 2x': lambda x: 4 - 2 * x,
+                            'y = 12 − 2x − 3': lambda x: 12 - 2 * x - 3,
+                            'y = (12 + 2x)/3': lambda x: F(12 + 2 * x, 3)}[a](x0) == F(12 - 2 * x0, 3)
+                           for x0 in (3, -2, 6))),
         'Flytta över 2x: 3y = 12 − 2x. Dela hela högerledet med 3: y = (12 − 2x)/3. '
         'Man ska dela alla termer, inte bara 12.'),
     sant('Ur s = (a + b)/2 får man a = 2s − b.', True,
@@ -925,7 +966,8 @@ MA_GY2_PARABEL_3 = niva('ma-gy2-fler-parabel-3', 'Andragradsfunktioner i problem
         'Hur många enheter ger störst vinst?', ['20', '40', '80', '10'], t(sym(-2, 80)),
         'Vinsten beskrivs av en parabel som öppnar sig nedåt. Den är störst vid x = −80/(2 · (−2)) = 20 enheter. '
         'Då är vinsten −800 + 1 600 − 300 = 500 kr.'),
-    sant('Höjden h = −5t² + 20t + 1 meter är positiv efter 4 sekunder, så bollen är då fortfarande över marken.',
+    sant('Bollens höjd h = −5t² + 20t + 1 meter (t är tiden i sekunder) är positiv efter 4 sekunder, så bollen är '
+         'då fortfarande över marken.',
          h_(4) > 0,
          'h(4) = −5 · 16 + 80 + 1 = 1. Höjden är 1 meter, så bollen är kvar i luften.'),
     sant('Funktionen y = x² + 6x + 10 har minsta värdet 10.', False,
@@ -968,7 +1010,7 @@ MA_GY3_KOMPLEXA_1 = niva('ma-gy3-fler-komplexa-1', 'Imaginära enheten och räkn
     val('Beräkna (2 + 3i)(1 − 4i).', K6, enda(K6, lambda a: cplx(a) == (2 + 3j) * (1 - 4j)),
         'Multiplicera in: 2 − 8i + 3i − 12i². Eftersom i² = −1 är −12i² = +12. Realdelen är 2 + 12 = 14 och '
         'imaginärdelen −8 + 3 = −5. Svaret är 14 − 5i.'),
-    skriv('Beräkna (1 + i)². Svara på formen a + bi.', ['2i', '2 i', '0 + 2i', '0+2i'],
+    skriv('Beräkna (1 + i)². Svara på formen a + bi.', ['2i', '2 i', '0 + 2i', '0+2i', '2*i', '2 * i', '2 · i'],
           '(1 + i)² = 1 + 2i + i² = 1 + 2i − 1 = 2i.'),
     sant('Alla reella tal är också komplexa tal.', True,
          'Ett reellt tal a kan skrivas a + 0i, och det är ett komplext tal med imaginärdelen 0.'),
@@ -1012,7 +1054,7 @@ MA_GY3_KOMPLEXA_2 = niva('ma-gy3-fler-komplexa-2', 'Konjugat, belopp och divisio
         'Förläng med nämnarens konjugat 1 + i. Täljaren: (7 + i)(1 + i) = 7 + 7i + i + i² = 6 + 8i. '
         'Nämnaren: (1 − i)(1 + i) = 1 − i² = 2. Dela: (6 + 8i)/2 = 3 + 4i.'),
     skriv('Lös ekvationen z² + 9 = 0. Vilken lösning har positiv imaginärdel? Svara på formen a + bi.',
-          ['3i', '3 i', '0 + 3i', '0+3i'],
+          ['3i', '3 i', '0 + 3i', '0+3i', '3*i', '3 * i', '3 · i'],
           'z² = −9 ger z = ±3i, eftersom (3i)² = 9 · i² = −9. Den lösning som har positiv imaginärdel är 3i.'),
     val('Lös ekvationen x² − 4x + 13 = 0.', [a for a, _ in K5B], K5B_SVAR[0],
         'Med pq-formeln: x = 2 ± √(4 − 13) = 2 ± √(−9) = 2 ± 3i. Komplexa lösningar till en ekvation med reella '
@@ -1057,7 +1099,7 @@ P4_SVAR = [ptext(r, v) for r, v in P4 if lika_k(polar(r, v), polar(2, 20) * pola
 assert P4_SVAR == [ptext(6, 60)] and lika_k(polar(2, 20) * polar(3, 40), polar(6, 60))
 assert lika_k(polar(2, 15) ** 6, 64j)
 z6 = [('z² = −4', lambda z: z * z + 4), ('z² = 4', lambda z: z * z - 4), ('z² = −2', lambda z: z * z + 2),
-      ('z² + 2 = 0', lambda z: z * z + 2)]
+      ('z² = 2', lambda z: z * z - 2)]
 Z6_SVAR = [a for a, f in z6 if all(lika_k(f(z), 0) for z in (2j, -2j))]
 assert Z6_SVAR == ['z² = −4']
 K7 = [('z = −1 ± 2i', (-1, 2)), ('z = 1 ± 2i', (1, 2)), ('z = −1 ± 4i', (-1, 4)), ('z = −2 ± 5i', (-2, 5))]
@@ -1077,7 +1119,7 @@ MA_GY3_KOMPLEXA_3 = niva('ma-gy3-fler-komplexa-3', 'Polär form och de Moivres f
     val('z₁ = 2(cos 20° + i sin 20°) och z₂ = 3(cos 40° + i sin 40°). Vilken är z₁ · z₂ på polär form?',
         [ptext(r, v) for r, v in P4], P4_SVAR[0],
         'Vid multiplikation multipliceras absolutbeloppen, 2 · 3 = 6, och argumenten adderas, 20° + 40° = 60°.'),
-    skriv('Låt z = 2(cos 15° + i sin 15°). Vad är z⁶ på formen a + bi?', ['64i', '64 i', '0 + 64i', '0+64i'],
+    skriv('Låt z = 2(cos 15° + i sin 15°). Vad är z⁶ på formen a + bi?', ['64i', '64 i', '0 + 64i', '0+64i', '64*i', '64 * i', '64 · i'],
           'Enligt de Moivres formel är z⁶ = 2⁶(cos 90° + i sin 90°) = 64(0 + i · 1) = 64i.'),
     val('Vilken ekvation har lösningarna z = 2i och z = −2i?', [a for a, _ in z6], Z6_SVAR[0],
         '(2i)² = 4i² = −4 och (−2i)² = −4. Alltså är båda lösningar till z² = −4.'),

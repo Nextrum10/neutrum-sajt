@@ -46,11 +46,6 @@ def svar(n, enhet=None):
     return s
 
 
-def brak(a, b):
-    """Ett bråk som skriv-facit: 3/8 och 3 / 8."""
-    return ['%d/%d' % (a, b), '%d / %d' % (a, b)]
-
-
 def enda(alternativ, prov):
     """Det enda alternativet som klarar provet. Klarar noll eller flera är frågan fel skriven."""
     traffar = [a for a in alternativ if prov(a)]
@@ -73,7 +68,7 @@ def lista(delar):
 def ber(uttryck):
     """'3 + 4 · 5' → 23, räknat exakt med räknesätten i skolans ordning."""
     kod = re.sub(r'(\d+)', r'_F(\1)', uttryck.replace('·', '*').replace(':', '/').replace('−', '-'))
-    return eval(kod, {'_F': F})  # noqa: S307 — bara våra egna uttryck
+    return eval(kod, {'_F': F})  # noqa: S307 (bara våra egna uttryck)
 
 
 def heltal(x):
@@ -87,10 +82,6 @@ def ordna_efter(fraga, poster, forklaring, extra=None):
     varden = [v for _, v in poster]
     assert len(set(varden)) == len(varden), 'två brickor har samma värde: %r' % (poster,)
     return ordna(fraga, [t for t, _ in sorted(poster, key=lambda p: p[1])], extra=extra, forklaring=forklaring)
-
-
-def sorterat(poster):
-    return sorted(poster, key=lambda p: p[1])
 
 
 def parvis(par, vanster_varde, hoger_varde):
@@ -363,11 +354,6 @@ AK3_BRAK_2 = niva('ma-ak3-fler-brak-2', 'Bråk av ett antal', 'Bråk', [
 # Åk 3: Tabeller och diagram
 # =====================================================================
 
-def _rader(par):
-    """[('hund', 7), ('katt', 9)] → 'hund 7, katt 9'."""
-    return ', '.join('%s %s' % (k, tal(v)) for k, v in par)
-
-
 def _oc(par):
     """[('hund', 7), ('katt', 9), ('fisk', 5)] → 'hund 7, katt 9 och fisk 5'."""
     return lista('%s %s' % (k, tal(v)) for k, v in par)
@@ -387,7 +373,7 @@ _KORT = dict(_GLASS)
 _MAX_GLASS = max(_GLASS, key=lambda p: p[1])[0]
 _MIN_CYKEL = min(_CYKEL, key=lambda p: p[1])[0]
 _MIN_FRUKT = min(_FRUKT, key=lambda p: p[1])[0]
-_FRUKTDAGAR = dict(_FRUKT)
+_FRUKTVARDE = dict(_FRUKT)
 
 AK3_DIAGRAM_1 = niva('ma-ak3-fler-diagram-1', 'Läsa av en tabell', 'Tabeller och diagram', [
     skriv('En tabell visar hur många elever som har olika husdjur: %s. Hur många elever har katt?' % _oc(_HUSDJUR),
@@ -440,7 +426,7 @@ AK3_DIAGRAM_2 = niva('ma-ak3-fler-diagram-2', 'Stapeldiagram', 'Tabeller och dia
           'Varje ruta är 5 elever och stapeln har 6 rutor: 6 · 5 = %s.' % tal(6 * 5)),
     val('Ett stapeldiagram visar hur många frukter som såldes: %s. Vilken stapel är lägst?' % _FRUKT_TEXT,
         unika(*[k for k, _ in _FRUKT]), _MIN_FRUKT,
-        'Den lägsta stapeln hör till det minsta talet. Det är %s med %s.' % (_MIN_FRUKT, tal(_FRUKTDAGAR[_MIN_FRUKT]))),
+        'Den lägsta stapeln hör till det minsta talet. Det är %s med %s.' % (_MIN_FRUKT, tal(_FRUKTVARDE[_MIN_FRUKT]))),
     skriv('Ett stapeldiagram visar hur många frukter som såldes: äpplen 6, päron 9 och bananer 4. '
           'Hur många fler päron än äpplen såldes?', tal(9 - 6),
           'Jämför staplarna: 9 − 6 = %s.' % tal(9 - 6)),
@@ -673,7 +659,6 @@ AK5_SANNOLIKHET_1 = niva('ma-ak5-fler-sannolikhet-1', 'Chans i ord och bråk', '
           'Det är inte 3/7, för det jämför bara de gröna med de andra kulorna.' % tal(2 + 3 + 5)),
 ], beskrivning='Sannolikhet i ord och som bråk: omöjligt, säkert, och hur många av alla utfall som passar.')
 
-_SKIVA_TAL = 10
 AK5_SANNOLIKHET_2 = niva('ma-ak5-fler-sannolikhet-2', 'Jämföra chanser', 'Sannolikhet', [
     val('Påse A har 5 röda och 15 blå kulor. Påse B har 3 röda och 5 blå kulor. Du vill dra en röd kula. '
         'Vilken påse ger störst chans?', unika('Påse A', 'Påse B', 'Lika stor chans'),
