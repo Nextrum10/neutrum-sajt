@@ -52,7 +52,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   för familjen, och bara admin rättar den (`andra_betygsgaranti()`), med "senast ändrad" i familjens vy
   och vem i `andrad_av`, som ingen inloggad läser; ämnena står i `NX.GARANTI_AMNEN` och
   `intern.betygsgaranti_amnen()` och ändras tillsammans, betyget gallras den 1
-  oktober efter läsåret, och kopiorna vid anspråket raderas för hand. Ersättningen är timmar,
+  oktober efter läsåret, och kopiorna vid anspråket raderas för hand. Ett anspråk prövas i elevens
+  panel (2026-10-15): `betygsgaranti_underlag()`, bara superadmin, räknar det villkoren säger att vi
+  prövar ur det familjen ser och sparar inget, och det som inte går att räkna (slutbetyget, lovveckorna,
+  vem som avbokade, tiden mellan ämnena) står under Bedöms av er. Tiden räknas ur rapportens ämne, och
+  studiehjälparen ser därför vilka ämnen eleven har garanti i, aldrig betyget
+  (`mina_elevers_garantiamnen()`, i elevprofilen och rapporten). Ersättningen är timmar,
   aldrig pengar. Startsidan, prissidan och FAQ säljer den utan villkor och siffror (utom sista
   dagen i FAQ-svaren, som annars missas), men länkar alltid till villkoren, säger att de gäller
   och lovar aldrig ett betyg.
@@ -480,7 +485,9 @@ av: inget val under Profil → Notiser. Stäng och Escape stänger rutan, ett tr
 Samma hus som de andra vyerna: KÄNSLAN och INNEHÅLLET står på `.vy` och adminvyn har inga egna
 ytor; ändras de andra vyerna oväntat är specificiteten första stället. Menyn är en egen rullyta
 som `sidomeny()` drar, aldrig sidan, och en lång etikett får bryta; `täcktÖverst()` räknar
-toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är bara vårt drag. Siffran vid
+toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är bara vårt drag. En knapp som
+databasen bara släpper fram för en superadmin eller en behörighet ritas efter `ärSuperadmin()` eller `får(kod)`
+(2026-10-15), och `skriv()` säger Ingenting sparades när en uppdatering inte träffade något. Siffran vid
 Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-10-05), och att visa
 sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
 (`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
@@ -783,12 +790,17 @@ Detaljer: `minne/grunden.md`.
   `barn-konto` v2, `admin-skapa` v1), och barnets hela kedja är provad mot riktiga Auth. Kvar
   (`DEPLOY-BARNKONTON.md`): tre Auth-inställningar (Redirect URL för inbjudan är redan rätt),
   null-MX:en i Cloudflare, en skarp inbjudan genom `admin-skapa`, och att säga till familjerna.
-  En admin med behörigheter ser rätt sektioner, men knapparna i dem är superadminens; databasen
-  säger nej.
+  En admin med behörigheter ser rätt sektioner, och sedan 2026-10-15 bara de knappar databasen släpper
+  fram (`får(kod)` och `ärSuperadmin()` i kärnan): Avboka, Radera, Ta in familjen, chatten, anteckningarna,
+  materialet och timpenningen är superadminens, läget på en studiehjälpare kräver Godkänna och Redigera
+  kräver Ändra. `skriv()` ber om raderna och säger Ingenting sparades när en uppdatering inte träffade
+  något, för RLS nekar en uppdatering utan fel (Avboka såg ut att gå igenom).
 - **Barnets egen e-post** (2026-10-01) är i drift men inte på: migrationen och de tre
   funktionerna gick ut samma dag, och flaggan `barn_epost` står av tills juristen läst policyn,
   registrets rad 22 och konsekvensbedömningen; sedan ett prov i sandlådan
-  (`DEPLOY-BARNKONTON.md` 8). Adminvyn visar inte barnens inloggningar, och inte adressen.
+  (`DEPLOY-BARNKONTON.md` 8). Elevens panel i adminvyn visar barnets inloggning sedan 2026-10-15
+  (användarnamnet, pausad, senast inloggad, vad barnet får och förälderns ja; `BARNETS_VAL`, som
+  `kolla-behorigheter.py` jämför), aldrig adressen och inga knappar: bara föräldern ändrar den.
 - **Barnets chatt och elevvyns fem delar** (2026-10-06) är i drift och på sedan samma kväll, utan
   flagga (Leos val): `barnets_chatt` kördes efter merge av PR #203, med filens version och md5, och
   hela `rls-test.sql` gick igenom mot driften (1393 av 1393, tillbakarullat). Juristen har inte läst
@@ -820,9 +832,12 @@ Detaljer: `minne/grunden.md`.
 - **Betygsgarantin** (2026-10-07) är i drift sedan samma dag och säljs på startsidan, prissidan och i
   FAQ: `betygsgarantin` från merge-commiten (md5 prövad, också de sex funktionskropparna), och hela
   `rls-test.sql` 1490 av 1490 mot driften. Versionen är `2026-10-07`, så alla får frågan om villkoren igen.
-  Inget är byggt för att pröva ett anspråk (admin räknar ur vyerna; anmälningarna står i elevens
-  panel), passen har inget ämnesfält, studiehjälparen ser inte vilka ämnen som har garanti, och
-  juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`.
+  Juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`. **Prövningen**
+  (2026-10-15, `betygsgarantin_provas`, 20261015120000) är byggd men inte i drift: underlaget i elevens
+  panel och garantiämnena i studiehjälparens vy. Passens ämne är rapportens (fritext, och bokningens grupp
+  som "NO / Fysik / Kemi / Biologi" står som oklar), anspråken sparas inte i systemet (inget säger att
+  garantin redan använts för ett ämne), och de 10 timmarna har ingen egen väg: gratistimmarna gäller 60
+  dagar och hela familjen, villkoren lovar sex månader och eleven.
 - **Planerna Basic, Standard och Intensiv** (2026-10-07) är i drift sedan samma kväll, i den ordningen:
   `stripe-checkout` v18 (SESSIONSFORM 7) från main (2f12977), hämtad tillbaka och byte för byte lika
   (7 av 7 filer), och sedan `planerna_basic_standard_intensiv` (20261007210000) från merge-commiten
@@ -977,7 +992,9 @@ Detaljer: `minne/grunden.md`.
   körda efter merge som de förra bankerna (`minne/nexlax.md`). Juridiken, företagsekonomin och språken, och de 1 217 frågorna i matematik, svenska och engelska från 2026-10-14 (Fas 23.5), är skrivna med AI och inte lästa
   av någon som undervisar i ämnet. Fas 23.5 är i drift sedan 2026-10-14 (`uppgiftsbanken_fler_uppgifter`, PR #282,
   md5 `cebbc232…`, facitprovet gav 1 217 av 1 217).
-- Adminvyn har ingen vy över nivåerna, och banken är skriven med AI
+- **Nivåerna i adminvyn** (2026-10-15, `nexlax_i_adminvyn`, 20261015110000) är byggda men inte i drift:
+  Material visar en rad per bana och en banas nivåer (`nexlax_banor()`, `nexlax_nivaer()`, bara superadmin),
+  bara antal och aldrig frågor eller facit, och utan barn i familjer med en adminroll. Banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14
   länkarna till provgrupperna är inte klickprovade (miljön nådde dem inte), men jämförda med sökmotorernas index 2026-10-03, då fyra rättades. Delade dokument: ingen notis, ingen underskrift, en person per

@@ -663,11 +663,41 @@ sektioner och flikar (`SEKTIONER`, `FLIKAR`), och det start() ritar och hen
 inte behöver byts mot en tom funktion i `NXAdmin.rita`, så att inget område
 frågar databasen om det hen ändå inte får läsa. `[data-bara-super]` tas
 bort (Tips och kampanjer, som stod under Intresseanmälningar och sedan
-2026-10-06 står under Tjänster, som bara superadmin ser). **Knapparna i en
-sektion som syns är superadminens**: en admin med `bokningar_las` ser
-Avboka, och databasen säger nej. Det är med flit, reglerna står i RLS, men
-det är inte snyggt, och nästa steg är att vyn frågar `har()` före varje
-knapp.
+2026-10-06 står under Tjänster, som bara superadmin ser).
+
+**Knapparna efter behörighet (2026-10-15).** Förut var knapparna i en
+sektion som syns superadminens: en admin med `bokningar_las` såg Avboka,
+och värre, databasen nekade utan fel (RLS släpper inte fram raden, och en
+uppdatering som inte träffar något är inget fel), så passet såg avbokat
+ut. Nu frågar vyn kärnans `får(kod)` och `ärSuperadmin()` före varje knapp
+databasen annars nekar:
+
+- bara superadmin: Avboka och avbokningsskälet (för andra står skälet som
+  text), Radera, Skapa elev och Ta in familjen, Skicka inbjudan igen, Ge
+  första timmen pass för pass, Stäng av faktura, Öppna chatt, de interna
+  anteckningarna, Lägg till ett dokument, elevens material och AI-förslagen,
+  och timpenningen i Redigera (för andra gick den tyst tillbaka);
+- `studiehjalpare_godkann`: läget på en studiehjälpare och Visa på
+  startsidan (`skydda_tutorfalt`; för andra står läget som ett märke);
+- `anvandare_redigera`: Redigera uppgifterna på en familj, en elev och en
+  studiehjälpare (för en elev sparade `skydda_studentfalt` annars bara
+  matchningen), och `leads` på en anmälan.
+
+`skriv()` i kärnan ber om raderna (`select('id')`) och säger "Ingenting
+sparades" när en uppdatering inte träffade något, så en knapp som ändå
+nekas syns som ett nej. De falska servrarna i webbläsarproven svarar med
+raderna som PostgREST gör (`prova-barnkonton.js`, `prova-intag.js`,
+`prova-barnforslag.js`; de andra gjorde det redan). Skyddet är fortfarande
+RLS: vyn ritar bara inte det som ändå nekas.
+
+**Barnets inloggning i elevens panel (2026-10-15).** Användarnamnet, om
+föräldern pausat inloggningen, när barnet senast loggade in, vad barnet får
+(`BARNETS_VAL`, samma namn som föräldrarnas `BARN_FÅR`, och
+`kolla-behorigheter.py` jämför listan med databasens) och när föräldern sa
+ja. Kolumnerna står på `students`, som panelen redan läste hela; ingen ny
+fråga. Aldrig adressen, den tekniska eller barnets egen (`barn_epost` når
+ingen inloggad), och inga knappar: bara föräldern skapar, pausar och tar
+bort inloggningen.
 
 En admin som också är förälder eller studiehjälpare landar i sin vanliga
 vy med länken Adminvy i sidhuvudet (`NXStudie.adminroll`). Ett konto som

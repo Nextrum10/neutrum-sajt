@@ -429,6 +429,10 @@
                              att bekräfta det tog en halv skärm på en telefon.
                              Listan öppnas när inget ämne är valt. -->
                         <p class="rp-fraga" style="margin-top:20px">Vad arbetade ni med?</p>
+                        <!-- Betygsgarantin (2026-10-15): garantin räknar tiden ur
+                             rapportens ämne, och raden säger vilka ämnen eleven
+                             har garanti i. Skriptet fyller och visar den. -->
+                        <p class="xsmall" id="r-amne-garanti" hidden aria-live="polite" style="margin:0 0 10px;color:var(--bl-3);line-height:1.5"></p>
                         <div class="rp-amne-vald" id="r-amne-vald" hidden>
                           <b id="r-amne-namn"></b>
                           <button type="button" class="vy-lank" id="r-amne-byt" aria-controls="r-amne-val" aria-expanded="false">Byt ämne</button>
@@ -1289,7 +1293,7 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=1b401ac9"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-forhandsvisning.js?v=05c07a42"></script>
+<script src="nextrum-forhandsvisning.js?v=185eb061"></script>
 <script src="nextrum-app.js?v=97cbce73"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=8bab89e2"></script>
@@ -1302,6 +1306,6 @@
 <script src="nextrum-uppgifter.js?v=7183a63f"></script>
 <script src="nextrum-introduktion.js?v=2f3aa58e"></script>
 <script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-larare-vy.js?v=8e0409a5"></script>
+<script src="nextrum-larare-vy.js?v=fcdafecc"></script>
 </body>
 </html>

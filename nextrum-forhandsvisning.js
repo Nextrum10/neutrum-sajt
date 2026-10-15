@@ -902,6 +902,14 @@ window.NXForhandsvisning = (function () {
     anmal_betygsgaranti: function () {
       return { __fel: [400, 'P0001', 'Betygsgarantin anmäls inte i förhandsvisningen.'] };
     },
+    /* betygsgarantin_provas (2026-10-15): ämnena studiehjälparens elever
+       har garanti i, aldrig betyget. */
+    mina_elevers_garantiamnen: function () {
+      if (roll === 'foralder') return [];
+      var barn = minaBarn();
+      return W.betygsgarantier.filter(function (g) { return barn.indexOf(g.student_id) !== -1; })
+        .map(function (g) { return { student_id: g.student_id, amne: g.amne }; });
+    },
     barn_epost_satt: function () { return { __fel: [400, 'P0001', 'Barnets e-post sparas inte i förhandsvisningen.'] }; },
     barn_epost_skicka_igen: function () { return { __fel: [400, 'P0001', 'Inga mejl går från förhandsvisningen.'] }; },
     barn_epost_ta_bort: function () { return true; },

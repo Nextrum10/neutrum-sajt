@@ -16,9 +16,9 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { ANS_LAGE, BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
+  const { ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
           UTB_LAGE, elevHjälpare, elevNamn, funktionsFel, gmailAdress, hämtaAllt, hämtaMatchunderlag, kortDatum, läge,
-          namnFör, närText, lägesväljare, pill, rad, ärRaderad } = NXAdmin;
+          namnFör, närText, lägesväljare, pill, rad, ärRaderad, får, ärSuperadmin } = NXAdmin;
   /* Funktioner som bor i andra områden, nådda när de anropas. En som
      saknas hoppas över: panelen ska inte dö för att en lista inte
      laddade. */
@@ -351,7 +351,8 @@
      tryckt på länken, annars en länk för att välja lösenord. */
   function dpSenast(p) {
     const när = p.last_seen_at ? esc(kortDatum(p.last_seen_at)) : 'aldrig';
-    if (!p.email || (p.role !== 'parent' && p.role !== 'tutor')) return när;
+    // bjud-in släpper bara fram en superadmin (kravAdmin).
+    if (!p.email || (p.role !== 'parent' && p.role !== 'tutor') || !ärSuperadmin()) return när;
     return när + ' <button class="btn btn-ghost btn-sm" type="button" data-dp-bjud-igen="' + esc(p.id) + '">'
       + (p.last_seen_at ? 'Skicka länk för lösenord' : 'Skicka inbjudan igen') + '</button>';
   }
@@ -389,8 +390,10 @@
     if (l.i_planen) return 'given, i familjens första plan';
     if (l.pa_pass) return 'given, på ett pass';
     return esc(l.beviljad ? 'vald pass för pass, och annars i den första planen' : 'bara i den första planen')
-      + ' <button class="btn btn-ghost btn-sm" type="button" data-dp-forsta="' + esc(p.id) + '" data-ja="'
-      + (l.beviljad ? '0' : '1') + '">' + (l.beviljad ? 'Ta bort valet' : 'Ge den pass för pass') + '</button>';
+      + (ärSuperadmin()
+        ? ' <button class="btn btn-ghost btn-sm" type="button" data-dp-forsta="' + esc(p.id) + '" data-ja="'
+          + (l.beviljad ? '0' : '1') + '">' + (l.beviljad ? 'Ta bort valet' : 'Ge den pass för pass') + '</button>'
+        : '');
   }
 
   /* TIMBANKEN OCH GRATISTIMMARNA (2026-10-13)
@@ -405,7 +408,7 @@
 
      Översikt säger timmarna i korthet; allt står under Ekonomi, med köpen
      och gratistimmarna kort för kort och rutan för att sätta in. */
-  const fullAdmin = () => !S.behorighet || S.behorighet.superadmin;
+  const fullAdmin = ärSuperadmin;
   let gratisBesked = null;   // { id, text, ok }: kvittot efter en ändring, visas en gång
 
   function dpTimbankKort(p) {
@@ -805,8 +808,11 @@
     return dpRubrik('Dokument', egna.length ? String(egna.length) : '')
       + (S.handlingarFel ? tomt('Dokumenten gick inte att läsa', S.handlingarFel)
         : rader || '<p class="xsmall" style="color:var(--bl-3);margin:0 0 12px">Inga dokument.</p>')
-      + '<div class="dp-atgard"><a class="btn btn-ghost btn-sm" href="#system/dokument" data-dok-ny="'
-      + esc(p.id) + '" data-dp-stang>Lägg till ett dokument</a></div>';
+      // Dokumenten under System är superadminens: för andra är länken död.
+      + (ärSuperadmin()
+        ? '<div class="dp-atgard"><a class="btn btn-ghost btn-sm" href="#system/dokument" data-dok-ny="'
+          + esc(p.id) + '" data-dp-stang>Lägg till ett dokument</a></div>'
+        : '');
   }
 
   /* ------------------------------------------------------------
@@ -972,8 +978,11 @@
 
     const rader = lista.map(t => dpRad(namnFör(t.id),
       t.senast ? 'senast ' + kortDatum(t.senast) : 'ingen har skrivit än',
-      '<button class="btn btn-ghost btn-sm" type="button" data-dp="chatt:'
-        + esc(ärFamilj ? p.id + '|' + t.id : t.id + '|' + p.id) + '">Öppna chatt</button>')).join('');
+      // chatt_las och barnchatt_las släpper bara fram en superadmin.
+      ärSuperadmin()
+        ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="chatt:'
+          + esc(ärFamilj ? p.id + '|' + t.id : t.id + '|' + p.id) + '">Öppna chatt</button>'
+        : '')).join('');
 
     return dpRubrik('Chatt', lista.length > 1 ? lista.length + ' trådar' : '')
       + (d.tradarFel ? tomt('Chattarna gick inte att läsa', d.tradarFel)
@@ -1067,8 +1076,10 @@
           spärrad ? 'Familjen kan bara betala med kort. Pass som redan valts för faktura faktureras ändå.'
             : (S.fakturaFlagga && S.fakturaFlagga.aktiv ? 'Familjen kan välja faktura på ett pass.'
               : 'Faktura är avstängt för alla just nu, under Betalningar → Inställningar.'),
-          '<button class="btn btn-ghost btn-sm" type="button" data-fakturasparr="' + esc(p.id) + '" data-sparra="'
-            + (spärrad ? '0' : '1') + '">' + (spärrad ? 'Tillåt faktura' : 'Stäng av faktura') + '</button>')
+          ärSuperadmin()
+            ? '<button class="btn btn-ghost btn-sm" type="button" data-fakturasparr="' + esc(p.id) + '" data-sparra="'
+              + (spärrad ? '0' : '1') + '">' + (spärrad ? 'Tillåt faktura' : 'Stäng av faktura') + '</button>'
+            : '')
       + dpRubrik('Fakturor', 'en per månad')
       + (familjens.length ? familjens.map(dpFaktura).join('')
         : tomt('Inga fakturor', 'Familjen betalar med kort, eller har inte valt faktura på något pass än.'));
@@ -1131,16 +1142,14 @@
      kan ändra den och då står det senast ändrad"). Knappen står för den
      som får redigera personer, och databasen prövar det igen
      (andra_betygsgaranti). Ett gallrat betyg rättas inte. */
-  function kanRättaGaranti() {
-    const b = S.behorighet;
-    return !b || b.superadmin || (b.behorigheter || []).indexOf('anvandare_redigera') !== -1;
-  }
+  const kanRättaGaranti = () => får('anvandare_redigera');
 
   function dpGaranti(d) {
     if (d.garantierFel) return '';
     const g = d.garantier || [];
-    const läsår = år => år + '/' + String((år + 1) % 100).padStart(2, '0');
-    const får = kanRättaGaranti();
+    const läsår = läsårText;
+    const kanRätta = kanRättaGaranti();
+    const åren = [...new Set(g.map(x => x.lasar))].sort();
     const val = (lista, nu) => lista.map(v => '<option' + (v === nu ? ' selected' : '') + '>' + esc(v) + '</option>').join('');
     return dpRubrik('Betygsgaranti', g.length ? 'låst för familjen' : '')
       + (g.length
@@ -1148,9 +1157,9 @@
             'läsåret ' + läsår(x.lasar) + ' · anmäld ' + kortDatum(x.anmald_at)
               + (x.andrad_at ? ' · senast ändrad ' + kortDatum(x.andrad_at) : ''),
             pill(x.betyg ? 'Betyg ' + x.betyg : 'Betyget gallrat', '')
-              + (får && x.betyg ? ' <button class="btn btn-ghost btn-sm" type="button" data-dp-garanti-ratta="'
+              + (kanRätta && x.betyg ? ' <button class="btn btn-ghost btn-sm" type="button" data-dp-garanti-ratta="'
                 + esc(x.id) + '">Rätta</button>' : ''))
-            + (får && x.betyg
+            + (kanRätta && x.betyg
               ? '<form data-dp-garanti="' + esc(x.id) + '" hidden style="margin:4px 0 14px">'
                 + '<div class="vy-form-rad">'
                 + '<div class="fgroup"><label for="dpg-a-' + esc(x.id) + '">Ämne</label>'
@@ -1163,7 +1172,155 @@
                 + '<button class="btn btn-primary btn-sm" type="submit" style="margin-top:9px">Spara rättelsen</button>'
                 + '<p class="ok-msg" data-dp-garanti-msg></p></form>'
               : '')).join('')
+          /* Prövningen av ett anspråk, ett läsår i taget. Bara superadmin. */
+          + (ärSuperadmin() ? åren.map(år => '<div class="dp-atgard">'
+              + '<button class="btn btn-ghost btn-sm" type="button" data-dp-garanti-prova="' + esc(år) + '">'
+              + (underlag[DP.id + ':' + år] ? 'Räkna om underlaget för ' : 'Pröva ett anspråk för ') + 'läsåret '
+              + esc(läsår(år)) + '</button></div>' + dpUnderlag(DP.id, år)).join('') : '')
         : tomt('Ingen anmäld', 'Föräldern anmäler den under Profil i studievyn, senast den 31 december.'));
+  }
+
+  /* PRÖVNINGEN AV ETT ANSPRÅK (betygsgarantin_provas, 2026-10-15). Villkoren
+     säger att vi prövar "bara det som står här, ur det som står i er vy:
+     hållen tid, rapporterna, uteblivna pass, uppgifterna och
+     betalningarna". betygsgaranti_underlag räknar det, och det som inte
+     går att räkna står sist under Bedöms av er, i villkorens ordning.
+     Underlaget står kvar i panelen tills sidan laddas om, och räknas om
+     vid nästa tryck. */
+  const underlag = {};   // 'elev:läsår' → svaret, eller { fel }
+
+  function läsårText(år) { return år + '/' + String((år + 1) % 100).padStart(2, '0'); }
+
+  function timText(min) {
+    const h = Math.floor(Number(min) / 60), m = Number(min) % 60;
+    return h && m ? h + ' h ' + m + ' min' : h ? h + ' h' : m + ' min';
+  }
+
+  /* Veckans nummer, ISO 8601, ur måndagens datum. */
+  function veckoNr(iso) {
+    const t = new Date(String(iso).slice(0, 10) + 'T12:00:00Z');
+    t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+    const jan1 = Date.UTC(t.getUTCFullYear(), 0, 1);
+    return Math.ceil(((t - jan1) / 864e5 + 1) / 7);
+  }
+
+  const BEDÖMS = [
+    'Betyget som räknas: årskursens sista betyg, ur kopian, jämfört med betyget vid anmälan (eller kopian av det).',
+    'Vilka veckor som var lov eller efter skolavslutningen: de står med ovan, och räknas inte.',
+    'En vecka med för lite som vi eller studiehjälparen avbokade: då räcker det att familjen tog den nya tiden vi föreslog.',
+    'Om ett ämne inte gick upp för att tiden lagts på ett annat av ämnena med garanti: timmarna per ämne står ovan.',
+    'Vilket ämne de oklara passen gällde.',
+    'Att anspråket kom inom 30 dagar efter betyget, och att garantin inte redan har använts för eleven och ämnet.'
+  ];
+
+  function dpUnderlag(elevId, år) {
+    const u = underlag[elevId + ':' + år];
+    if (!u) return '';
+    if (u.fel) return tomt('Underlaget gick inte att räkna', u.fel);
+    if (!(u.amnen || []).length) return tomt('Ingen anmälan läsåret ' + läsårText(år), '');
+    const veckor = u.veckor || [], under = veckor.filter(v => v.under);
+    const lista = (rader, tom, rita) => rader.length ? rader.map(rita).join('')
+      : '<p class="xsmall" style="margin:0 0 12px;color:var(--bl-3)">' + esc(tom) + '</p>';
+    const betalt = (u.obetalda || []).length + (u.sena_fakturor || []).length;
+    return '<div class="dp-underlag" style="margin:6px 0 18px">'
+      + '<p class="xsmall" style="margin:0 0 12px;line-height:1.6;color:var(--bl-3)">'
+      + esc((u.fran ? 'Från första passet ' + kortDatum(u.fran) : 'Inget pass efter anmälan än') + ' till ' + kortDatum(u.till)
+        + ', räknat ur rapporterna, uppgifterna och betalningarna så som familjen ser dem. Det som inte går att '
+        + 'räkna står sist.') + '</p>'
+      + dpRubrik('Ämnena')
+      + u.amnen.map(a => {
+          const upp = a.uppgifter || { totalt: 0, i_tid: 0 };
+          const andel = upp.totalt ? Math.round(100 * upp.i_tid / upp.totalt) : null;
+          return dpRad(a.amne, [
+              'betyg vid anmälan ' + (a.betyg || 'gallrat'), 'anmäld ' + kortDatum(a.anmald),
+              a.forsta_pass ? 'första passet ' + kortDatum(a.forsta_pass) : 'inget pass efter anmälan',
+              timText(a.minuter) + ' på ' + a.pass + ' pass',
+              upp.totalt ? 'uppgifterna klara i tid ' + upp.i_tid + ' av ' + upp.totalt + ' (' + andel + ' %)'
+                : 'inga uppgifter med passerat slutdatum'
+            ].join(' · '),
+            pill(a.i_tid ? 'Började i tid' : 'Började inte i tid', a.i_tid ? 'ar-klar' : 'ar-ny')
+              + (upp.totalt ? ' ' + pill(andel >= 90 ? 'Uppgifter minst 90 %' : 'Uppgifter under 90 %',
+                  andel >= 90 ? 'ar-klar' : 'ar-ny') : ''));
+        }).join('')
+      + dpRubrik('Två timmar i veckan', under.length + ' av ' + veckor.length + ' veckor under')
+      + lista(under, 'Ingen vecka under två timmar.', v => dpRad('Vecka ' + veckoNr(v.vecka) + ', från ' + kortDatum(v.vecka),
+          [timText(v.minuter) + ' i ämnena med garanti',
+           v.oklara ? timText(v.oklara) + ' oklart ämne' : null,
+           v.andra ? timText(v.andra) + ' i andra ämnen' : null].filter(Boolean).join(' · '),
+          pill(v.igen === true ? 'Togs igen' : v.igen === false ? 'Togs inte igen' : 'Väntar',
+            v.igen === true ? 'ar-klar' : v.igen === false ? 'ar-ny' : 'ar-vantar')))
+      + '<p class="xsmall" style="margin:0 0 12px;color:var(--bl-3)">' + esc((u.utan_tider
+          ? u.utan_tider + ' pass saknar tider i rapporten och räknas med bokad längd. ' : '')
+          + '"Togs igen" räknar tiden över två timmar de två veckorna efter.') + '</p>'
+      + dpRubrik('Oklara ämnen', 'räknas inte förrän ni bestämt')
+      + lista(u.oklara || [], 'Inga.', x => dpRad(kortDatum(x.datum), (x.amne || 'inget ämne i rapporten')
+          + ' · ' + timText(x.minuter), ''))
+      + dpRubrik('Uteblivna pass')
+      + lista(u.uteblivna || [], 'Inga.', x => dpRad(kortDatum(x.datum), x.amne || '',
+          pill('Garantin gäller inte längre', 'ar-ny')))
+      + dpRubrik('Avbokade pass')
+      + lista(u.avbokade || [], 'Inga.', x => dpRad(kortDatum(x.datum), 'av ' + x.av
+          + (x.skal ? ' · ' + ((AVBOKNINGSSKAL[x.skal] || [x.skal])[0]).toLowerCase() : ''), ''))
+      + dpRubrik('Betalningarna')
+      + (betalt
+        ? (u.obetalda || []).map(x => dpRad(kortDatum(x.datum), 'passet är inte betalt', pill('Obetalt', 'ar-ny'))).join('')
+          + (u.sena_fakturor || []).map(x => dpRad('Fakturan för ' + kortDatum(x.period).replace(/^1 /, ''),
+              'förföll ' + kortDatum(x.forfaller) + (x.betald ? ', markerad betald ' + kortDatum(x.betald) : ', inte betald'),
+              pill('Sen', 'ar-ny'))).join('')
+        : lista([], 'Alla pass är betalda, och ingen faktura betalades sent.', null))
+      + dpRubrik('Bedöms av er')
+      + '<ul class="xsmall" style="margin:0 0 12px;padding-left:18px;line-height:1.6">'
+      + BEDÖMS.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>'
+      + '</div>';
+  }
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-dp-garanti-prova]');
+    if (!k || DP.typ !== 'elev') return;
+    const elev = DP.id, år = Number(k.dataset.dpGarantiProva);
+    await medan(k, 'Räknar…', async () => {
+      const { data, error } = await supa.rpc('betygsgaranti_underlag', { p_elev: elev, p_lasar: år });
+      underlag[elev + ':' + år] = error ? { fel: felText(error) } : (data || {});
+    });
+    if (DP.typ === 'elev' && DP.id === elev) ritaDetalj();
+  });
+
+  /* BARNETS INLOGGNING (2026-10-15). Det föräldern ser under Barnen:
+     användarnamnet, om inloggningen är pausad, när barnet senast loggade
+     in och vad det får. Aldrig adressen: den tekniska finns bara för
+     Auth, och barnets egen e-post når ingen inloggad. Bara föräldern
+     skapar, pausar och tar bort inloggningen (barn-konto), så här finns
+     inga knappar. Kolumnerna står på students, som panelen läser hela.
+
+     Valen har samma namn som i föräldrarnas ruta (BARN_FÅR), och
+     kolla-behorigheter.py jämför listan med databasens. Rapporterna och
+     förslagen står i egna kolumner, visa_rapporter och far_boka. */
+  const BARNETS_VAL = {
+    pass: 'se sina pass',
+    boka: 'föreslå pass',
+    studieplan: 'se studieplanen',
+    rapporter: 'läsa rapporterna',
+    nexlax: 'göra NexLäx',
+    meddelanden: 'se notiserna från Nextrum',
+    chatt: 'skriva till studiehjälparen'
+  };
+
+  function dpInloggning(e) {
+    if (!e.user_id) {
+      return dpRubrik('Egen inloggning')
+        + tomt('Ingen', 'Föräldern skapar den i studievyn, under Barnen.');
+    }
+    const har = k => k === 'rapporter' ? !!e.visa_rapporter
+      : k === 'boka' ? !!e.far_boka
+      : (e.barn_behorigheter || []).indexOf(k) !== -1;
+    const val = Object.keys(BARNETS_VAL).filter(har).map(k => BARNETS_VAL[k]);
+    return dpRubrik('Egen inloggning', e.barn_aktiv === false ? 'pausad av föräldern' : 'aktiv')
+      + dpFakta([
+        ['Användarnamn', e.anvandarnamn ? esc(e.anvandarnamn) : null, 'okänt'],
+        ['Senast inloggad', e.senast_inloggad ? esc(kortDatum(e.senast_inloggad)) : null, 'aldrig'],
+        ['Får', val.length ? esc(val.join(', ')) : null, 'bara logga in'],
+        ['Förälderns ja', e.vardnadshavare_godkand_at ? esc(kortDatum(e.vardnadshavare_godkand_at)) : null, 'saknas']
+      ]);
   }
 
   function dpElev(e, d) {
@@ -1250,6 +1407,7 @@
       ? '<div class="dp-text">' + esc(plan.plan_text || plan.goals) + '</div>'
       : tomt('Ingen studieplan', 'Studiehjälparen skriver den efter första passet.'))
     + dpGaranti(d)
+    + dpInloggning(e)
     + dpHantera('elev', e, {
         /* Matchningen görs under Matchning, med eleven redan vald. */
         knappar: '<a class="btn btn-ghost btn-sm" href="#matchning" data-mt-hoppa="' + esc(e.id)
@@ -1330,9 +1488,12 @@
        eget beslut, inte en följd av att vara godkänd (schema-v23), och
        knappen står därför bara när hen är godkänd. */
     + dpRubrik('Läge')
-    + (tp.id ? lägesväljare(SH_LAGE, tp.status, 'data-sh="' + esc(p.id) + '"') : '')
+    /* Läget och startsidan ändrar bara den som får godkänna
+       (skydda_tutorfalt); för andra går ändringen tyst tillbaka. */
+    + (tp.id ? (får('studiehjalpare_godkann') ? lägesväljare(SH_LAGE, tp.status, 'data-sh="' + esc(p.id) + '"')
+      : läge(SH_LAGE, tp.status)) : '')
     + '<div class="dp-atgard">'
-    + (tp.status === 'approved'
+    + (tp.status === 'approved' && får('studiehjalpare_godkann')
       ? '<button class="btn btn-ghost btn-sm" type="button" data-sh-publik="' + esc(p.id) + '">'
         + (tp.visa_publikt ? 'Syns på startsidan: dölj' : 'Visa på startsidan') + '</button>'
       : '')
@@ -1353,6 +1514,8 @@
   }
 
   function dpNoteringar(profilId, d) {
+    // admin_noteringar läser och skriver bara en superadmin.
+    if (!ärSuperadmin()) return '';
     const n = d.noteringar || [];
     return dpRubrik('Interna anteckningar', 'syns bara för admin')
       + '<form data-dp-not="' + esc(profilId) + '" style="margin-bottom:16px">'
@@ -1426,7 +1589,8 @@
       + '<div class="dp-atgard">'
       + '<button class="btn btn-ghost btn-sm" type="button" data-lead-kontakt="' + esc(l.id) + '">'
       + (l.kontaktad_at ? 'Skriv igen' : 'Kontakta') + '</button>'
-      + (l.status !== 'matched'
+      // Kontot, eleven och timmarna skapar bara en superadmin (bjud-in, is_admin).
+      + (l.status !== 'matched' && ärSuperadmin()
         ? '<button class="btn btn-primary btn-sm" type="button" data-lead-elev="' + esc(l.id) + '">'
           + (familj ? 'Skapa elev' : 'Ta in familjen') + '</button>'
         : '')
@@ -1544,11 +1708,15 @@
      databasen vägrar, och knappen ritas inte.
      ------------------------------------------------------------ */
   function dpHantera(typ, rad, o) {
+    /* Redigera kräver behörigheten att ändra (en anmälan: leads), och
+       raderingen är superadminens (2026-10-15). Förut stod båda för alla,
+       och databasen sparade ingenting eller bara matchningen. */
+    const redigera = typ === 'anmalan' ? får('leads') : får('anvandare_redigera');
     return '<div class="dp-atgard dp-hantera">'
-      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-redigera>Redigera uppgifterna</button>'
+      + (redigera ? '<button class="btn btn-ghost btn-sm" type="button" data-dp-redigera>Redigera uppgifterna</button>' : '')
       + (o.knappar || '')
       + '</div>'
-      + (rad.is_admin ? ''
+      + (rad.is_admin || !ärSuperadmin() ? ''
         : '<div class="dp-fara">'
           + '<div class="dp-fara-text"><b>' + esc(o.rubrik) + '</b><span>' + esc(o.text) + '</span></div>'
           + '<button class="btn btn-fara btn-sm" type="button" data-radera="' + esc(typ + ':' + rad.id) + '">'
@@ -1614,7 +1782,8 @@
       { k: 'subjects', et: 'Ämnen, med komma emellan', lista: true, max: 400, tabell: 'tutor_profiles' },
       /* Utan timpenning hoppar månadskörningen över hen: passen hålls
          och ingen lön räknas ut. Därför krävs den för en godkänd. */
-      { k: 'hourly_rate', et: 'Timpenning, kronor', tal: [1, 10000], tabell: 'tutor_profiles' },
+      // Timpenningen ändrar bara en superadmin: för andra går den tyst tillbaka.
+      { k: 'hourly_rate', et: 'Timpenning, kronor', tal: [1, 10000], tabell: 'tutor_profiles', om: () => ärSuperadmin() },
       { k: 'availability', et: 'Kan jobba', max: 200, tabell: 'tutor_profiles' },
       { k: 'bio', et: 'Om hen', text: true, max: 1000, tabell: 'tutor_profiles' }
     ] }
@@ -1821,6 +1990,8 @@
   }
 
   function dpMaterial(e, d) {
+    // Elevens mapp och AI-förslagen är superadminens (materials, material-forslag).
+    if (!ärSuperadmin()) return '';
     const lista = d.material || [];
 
     return dpRubrik('Material', lista.length ? lista.length + ' st' : '')

@@ -341,6 +341,56 @@ async function provaStudiehjalparvyn(webb) {
   await context.close();
 }
 
+/* Betygsgarantin (betygsgarantin_provas, 2026-10-15): studiehjälparen ser
+   elevens garantiämnen men aldrig betyget, och rapporten säger om passet
+   räknas för garantin. Kim får garanti i engelska direkt i världen. */
+async function provaGarantiämnena(webb) {
+  const { context, page, riktiga, konsol } = await öppnaFörhandsvisning(webb, { grind: 'admin' });
+  await page.goto(BAS + '/larare?forhandsvisning');
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  const nu = new Date(), läsår = nu.getMonth() >= 6 ? nu.getFullYear() : nu.getFullYear() - 1;
+  await page.evaluate(([kim, år]) => {
+    const k = 'nx-forhandsvisning-varld';
+    const l = JSON.parse(localStorage.getItem(k));
+    l.W.betygsgarantier.push({ id: 'f0000000-0000-4000-8000-000000000901', student_id: kim, lasar: år, amne: 'Engelska',
+      betyg: 'D', anmald_at: new Date().toISOString(), andrad_at: null, betyg_gallrat_at: null });
+    l.rev += 1;
+    localStorage.setItem(k, JSON.stringify(l));
+  }, [id(12), läsår]);
+  await page.reload();
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  await stängNotisrutan(page);
+
+  await page.evaluate(() => { location.hash = '#rapporter'; });
+  const skriv = '[data-rapportera="' + id(111) + '"]';
+  await page.waitForSelector(skriv + ':visible', { timeout: 5000 }).catch(() => {});
+  await page.locator(skriv + ':visible').first().click().catch(() => {});
+  await page.waitForSelector('#r-amne-garanti:not([hidden])', { timeout: 5000 }).catch(() => {});
+  prova('garanti: rapporten säger att passet räknas för garantin',
+    (await page.textContent('#r-amne-garanti').catch(() => '')) === 'Betygsgaranti i Engelska. Passet räknas för garantin.',
+    await page.textContent('#r-amne-garanti').catch(() => ''));
+  const först = await page.getAttribute('#r-amne-val button', 'data-v').catch(() => null);
+  prova('garanti: garantins ämne står först i valet', först === 'Engelska', först);
+  await page.click('#r-amne-byt').catch(() => {});
+  await page.click('#r-amne-val button[data-v="Matematik"]').catch(() => {});
+  prova('garanti: ett annat ämne får rapporten att be om rätt ämne',
+    (await page.textContent('#r-amne-garanti').catch(() => ''))
+      === 'Betygsgaranti i Engelska. Gällde passet det ämnet, välj det: garantin räknar bara tiden i rapporter med ämnet.',
+    await page.textContent('#r-amne-garanti').catch(() => ''));
+  await page.locator('#r-amne-garanti').scrollIntoViewIfNeeded().catch(() => {});
+  await bild(page, 'studiehjalparvyn-garanti', '#rapport-form');
+  await page.keyboard.press('Escape').catch(() => {});
+  const profil = await page.textContent('#elev-profil').catch(() => '');
+  prova('garanti: elevprofilen säger ämnet, aldrig betyget',
+    /Betygsgaranti i Engelska\./.test(profil) && !/Betyg D|betyg D/.test(profil), profil.slice(0, 300));
+  const anrop = await logg(page);
+  prova('garanti: vyn frågar mina_elevers_garantiamnen',
+    anrop.some(r => /mina_elevers_garantiamnen/.test(JSON.stringify(r))), JSON.stringify(anrop.slice(-3)));
+  prova('garanti: inget anrop mot den riktiga Supabase utom grinden', riktiga.length === 0, riktiga.join(', '));
+  prova('garanti: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
+  await context.close();
+}
+
 /* De två vyerna delar världen (Leo: "föreslå tid och byta vy och
    acceptera"): ett förslag som familjen, Byt i remsan, Acceptera som
    Sara, och tillbaka. Världen står kvar efter en omladdning, och Börja
@@ -584,6 +634,7 @@ async function provaAdminvyn(webb) {
     await provaGrinden(webb);
     await provaStudievyn(webb);
     await provaStudiehjalparvyn(webb);
+    await provaGarantiämnena(webb);
     await provaDelad(webb);
     await provaTelefonen(webb);
     await provaAdminvyn(webb);

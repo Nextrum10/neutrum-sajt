@@ -16428,6 +16428,298 @@ end $$;
 reset role;
 select set_config('request.jwt.claims', null, true);
 
+-- ------------------------------------------------------------
+-- 35. Nivåerna i adminvyn (nexlax_i_adminvyn, 2026-10-15)
+--
+-- nexlax_banor() och nexlax_nivaer() räknar nivåerna, försöken och de
+-- öppna felrapporterna per bana och per nivå. Bara en superadmin når
+-- dem, inget facit följer med, och barn i familjer med en adminroll
+-- räknas inte. En egen bana (Provämne åk 5) så att talen inte beror på
+-- banken. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  j    jsonb;
+  b    jsonb;
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  L3   constant uuid := '00000000-0000-4000-8000-0000000bcad3';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  E1   constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  EQ   constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  N1   constant uuid := '00000000-0000-4000-8000-0000000035a1';
+  N2   constant uuid := '00000000-0000-4000-8000-0000000035a2';
+  NM   constant uuid := '00000000-0000-4000-8000-0000000035a3';
+  F1   constant uuid := '00000000-0000-4000-8000-0000000035b1';
+  F2   constant uuid := '00000000-0000-4000-8000-0000000035b2';
+  F3   constant uuid := '00000000-0000-4000-8000-0000000035b3';
+begin
+  if to_regprocedure('public.nexlax_banor()') is null then
+    insert into utfall (test, ok, detalj) values ('NA Nivåerna i adminvyn: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    insert into public.nivaer (id, nyckel, amne, arskurs, omrade, titel, ordning, sort) values
+      (N1, 'rls-na-1', 'Provämne', 'ak5', 'Bråk', 'Första', 1, 'vanlig'),
+      (N2, 'rls-na-2', 'Provämne', 'ak5', 'Bråk', 'Andra', 2, 'vanlig'),
+      (NM, 'rls-na-m', 'Provämne', 'ak5', 'Bråk', 'Mästarprov', 3, 'mastare');
+    insert into public.niva_fragor (id, niva_id, ordning, typ, fraga, ratt) values
+      (F1, N1, 1, 'skriv', 'Vad är en halv plus en halv?', '["rls-hemligt-facit"]'),
+      (F2, N1, 2, 'skriv', 'Vad är två plus två?', '["4"]'),
+      (F3, N2, 1, 'skriv', 'Vad är tre plus tre?', '["6"]');
+    insert into public.niva_felrapporter (fraga_id, sort, konto, hanterad_at) values
+      (F1, 'facit', 'familj', null), (F1, 'otydlig', 'barn', null),
+      (F3, 'annat', 'studiehjalpare', null), (F2, 'sprak', 'familj', now());
+    -- Familj P räknas. Familj Q blir ett adminkonto och räknas inte.
+    insert into public.niva_forsok (niva_id, student_id, fragor, klar_at, antal, ratt_direkt, stjarnor, godkand) values
+      (N1, E1, array[F1, F2], now(), 2, 2, 3, true),
+      (N1, E1, array[F1, F2], null, 0, 0, null, false),
+      (N2, E1, array[F3], now(), 1, 0, 1, false),
+      (N1, EQ, array[F1, F2], now(), 2, 2, 3, true);
+    insert into public.admin_roller (user_id, behorigheter) values (Q, '{leads}');
+
+    perform pg_temp.bli(AD);
+    j := public.nexlax_banor();
+    b := (select x from jsonb_array_elements(j) x where x ->> 'amne' = 'Provämne' and x ->> 'arskurs' = 'ak5');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'NA banan: två nivåer och ett prov, tre frågor, tre försök, två klara, en godkänd, en elev, tre öppna fel',
+            'ok', b is not null and (b ->> 'nivaer')::int = 2 and (b ->> 'prov')::int = 1 and (b ->> 'fragor')::int = 3
+                  and (b ->> 'forsok')::int = 3 and (b ->> 'klara')::int = 2 and (b ->> 'godkanda')::int = 1
+                  and (b ->> 'elever')::int = 1 and (b ->> 'felrapporter')::int = 3 and b ->> 'spar' = 'vag'
+                  and b ->> 'senast' is not null,
+            'd', coalesce(b::text, 'ingen rad'));
+
+    perform pg_temp.bli(AD);
+    j := public.nexlax_nivaer('Provämne', 'ak5', 'vag');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select string_agg((x ->> 'titel') || ':' || (x ->> 'forsok') || ':' || (x ->> 'klara') || ':' || (x ->> 'godkanda') || ':'
+                      || (x ->> 'elever') || ':' || coalesce(x ->> 'stjarnor', '-') || ':' || (x ->> 'felrapporter')
+                      || ':' || (x ->> 'antal_fragor'), ',' order by (x ->> 'ordning')::int) into t
+      from jsonb_array_elements(j) x;
+    ut := ut || jsonb_build_object('t', 'NA nivåerna i banan, i spelets ordning, utan adminkontots barn',
+            'ok', t = 'Första:2:1:1:1:3.0:2:2,Andra:1:1:0:1:1.0:1:1,Mästarprov:0:0:0:0:-:0:0', 'd', coalesce(t, 'inga rader'));
+
+    -- Inget facit, ingen fråga och ingen elev i svaren.
+    perform pg_temp.bli(AD);
+    t := public.nexlax_banor()::text || public.nexlax_nivaer('Provämne', 'ak5', 'vag')::text;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'NA svaren bär aldrig facit, frågor eller elever',
+            'ok', position('rls-hemligt-facit' in t) = 0 and position('halv plus' in t) = 0
+                  and position(E1::text in t) = 0 and position('"ratt"' in t) = 0,
+            'd', length(t)::text || ' tecken');
+
+    -- Bara en superadmin.
+    t := pg_temp.svar_som(L3, 'select public.nexlax_banor()')
+      || ' ' || pg_temp.svar_som(L3, $q$select public.nexlax_nivaer('Provämne', 'ak5', 'vag')$q$)
+      || ' ' || pg_temp.svar_som(P, 'select public.nexlax_banor()')
+      || ' ' || pg_temp.svar_som(null, 'select public.nexlax_banor()')
+      || ' ' || pg_temp.svar_som(P, 'select * from intern.nexlax_forsok_raknas()');
+    ut := ut || jsonb_build_object('t', 'NA en admin med behörigheter, en familj och anon når inte nivåöversikten',
+            'ok', t = '42501 42501 42501 42501 42501', 'd', t);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('NA Nivåerna i adminvyn', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- ------------------------------------------------------------
+-- 36. Betygsgarantins underlag och studiehjälparens ämnen
+--     (betygsgarantin_provas, 2026-10-15)
+--
+-- betygsgaranti_underlag() räknar det villkoren säger att vi prövar:
+-- första passet efter anmälan, hållen tid per vecka i ämnena med garanti
+-- (och om en vecka med för lite togs igen), oklara ämnen, pass utan
+-- tider, uteblivna och avbokade pass, uppgifterna i tid, obetalda pass
+-- och sena fakturor. Ett påhittat läsår, 2025/26, så att provet inte
+-- beror på dagens datum. mina_elevers_garantiamnen() ger studiehjälparen
+-- ämnena, aldrig betyget. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  j    jsonb;
+  m    jsonb;
+  f    jsonb;
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  B    constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  L3   constant uuid := '00000000-0000-4000-8000-0000000bcad3';
+  E    constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  LA   constant integer := 2025;
+  b1 uuid := '00000000-0000-4000-8000-000000036b01'; b2 uuid := '00000000-0000-4000-8000-000000036b02';
+  b3 uuid := '00000000-0000-4000-8000-000000036b03'; b4 uuid := '00000000-0000-4000-8000-000000036b04';
+  b5 uuid := '00000000-0000-4000-8000-000000036b05'; b6 uuid := '00000000-0000-4000-8000-000000036b06';
+  b7 uuid := '00000000-0000-4000-8000-000000036b07'; b8 uuid := '00000000-0000-4000-8000-000000036b08';
+  b9 uuid := '00000000-0000-4000-8000-000000036b09'; bx uuid := '00000000-0000-4000-8000-000000036b10';
+  bu uuid := '00000000-0000-4000-8000-000000036b11';
+begin
+  if to_regprocedure('public.betygsgaranti_underlag(uuid, integer)') is null then
+    insert into utfall (test, ok, detalj) values ('BU Betygsgarantins underlag: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    insert into public.betygsgarantier (student_id, lasar, amne, betyg, anmald_at) values
+      (E, LA, 'Matematik', 'D', '2025-09-01 10:00+02'),
+      (E, LA, 'Fysik', 'E', '2025-09-01 10:00+02');
+
+    -- Passen, betalda utom det 23 september. Den 2 oktober avbokade
+    -- studiehjälparen.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min,
+                                 status, betalning_status, betald_at) values
+      (b1, P, A, E, P, '2025-09-09', '16:00', 60,  'confirmed', 'betald', now()),
+      (b2, P, A, E, P, '2025-09-11', '16:00', 60,  'confirmed', 'betald', now()),
+      (b3, P, A, E, P, '2025-09-12', '16:00', 60,  'confirmed', 'betald', now()),
+      (b4, P, A, E, P, '2025-09-16', '16:00', 60,  'confirmed', 'betald', now()),
+      (b5, P, A, E, P, '2025-09-17', '16:00', 60,  'confirmed', 'betald', now()),
+      (b6, P, A, E, P, '2025-09-23', '16:00', 120, 'confirmed', 'ingen', null),
+      (b7, P, A, E, P, '2025-09-24', '16:00', 60,  'confirmed', 'betald', now()),
+      (b8, P, A, E, P, '2025-09-30', '16:00', 120, 'confirmed', 'betald', now()),
+      (b9, P, A, E, P, '2025-10-01', '16:00', 60,  'confirmed', 'betald', now()),
+      (bu, P, A, E, P, '2025-10-07', '16:00', 60,  'confirmed', 'betald', now());
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min,
+                                 status, avbokad_av, avbokningsskal) values
+      (bx, P, A, E, P, '2025-10-02', '16:00', 60, 'cancelled', A, 'forhinder');
+
+    -- Rapporterna: ämnet ur rapporten, tiden ur start och slut. Den 12
+    -- september utan tider, den 16 med bokningens grupp, och den 7 oktober
+    -- kom eleven inte.
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, amne,
+                                       start_tid, slut_tid, avvikelse_skal) values
+      (E, A, b1, 'x', '2025-09-09', 'narvarande', 'Matematik', '16:00', '17:00', null),
+      (E, A, b2, 'x', '2025-09-11', 'narvarande', 'fysik', '16:00', '17:00', null),
+      (E, A, b3, 'x', '2025-09-12', 'narvarande', 'Fysik', null, null, null),
+      (E, A, b4, 'x', '2025-09-16', 'narvarande', 'NO / Fysik / Kemi / Biologi', '16:00', '17:00', null),
+      (E, A, b5, 'x', '2025-09-17', 'narvarande', 'Matematik', '16:00', '16:45', 'prov'),
+      (E, A, b6, 'x', '2025-09-23', 'narvarande', 'Matematik', '16:00', '18:00', null),
+      (E, A, b7, 'x', '2025-09-24', 'narvarande', 'Fysik', '16:00', '17:20', 'prov'),
+      (E, A, b8, 'x', '2025-09-30', 'narvarande', 'Matematik', '16:00', '17:30', 'prov'),
+      (E, A, b9, 'x', '2025-10-01', 'narvarande', 'Engelska', '16:00', '17:00', null),
+      (E, A, bu, 'x', '2025-10-07', 'franvarande', 'Matematik', null, null, null);
+
+    -- Uppgifterna: en i tid, en sen, en utan slutdatum och en som inte gjordes.
+    insert into public.homework (student_id, tutor_id, title, subject, due_date, status, completed_at, created_at) values
+      (E, A, 'Bråk', 'Matematik', '2025-09-20', 'klar', '2025-09-19 18:00+02', '2025-09-10 12:00+02'),
+      (E, A, 'Procent', 'Matematik', '2025-09-27', 'klar', '2025-09-28 18:00+02', '2025-09-18 12:00+02'),
+      (E, A, 'Läs', 'Matematik', null, 'ej_paborjad', null, '2025-09-18 12:00+02'),
+      (E, A, 'Kraft', 'Fysik', '2025-10-05', 'ej_paborjad', null, '2025-09-25 12:00+02');
+
+    -- En faktura som betalades fem dagar efter förfallodagen.
+    insert into public.invoices (parent_id, period, status, belopp_ore, forfaller, betald_at) values
+      (P, '2025-10-01', 'betald', 39900, '2025-11-10', '2025-11-15 12:00+01');
+
+    perform pg_temp.bli(AD);
+    j := public.betygsgaranti_underlag(E, LA);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+
+    m := (select x from jsonb_array_elements(j -> 'amnen') x where x ->> 'amne' = 'Matematik');
+    f := (select x from jsonb_array_elements(j -> 'amnen') x where x ->> 'amne' = 'Fysik');
+    ut := ut || jsonb_build_object('t', 'BU perioden börjar med första passet efter anmälan och slutar den 30 juni',
+            'ok', j ->> 'fran' = '2025-09-09' and j ->> 'till' = '2026-06-30', 'd', coalesce(j ->> 'fran', '-') || ' ' || coalesce(j ->> 'till', '-'));
+    ut := ut || jsonb_build_object('t', 'BU varje ämne: betyget, första passet, i tid, hållen tid och passen',
+            'ok', m ->> 'betyg' = 'D' and m ->> 'forsta_pass' = '2025-09-09' and (m ->> 'i_tid')::boolean
+                  and (m ->> 'minuter')::int = 315 and (m ->> 'pass')::int = 4
+                  and f ->> 'forsta_pass' = '2025-09-11' and (f ->> 'minuter')::int = 200 and (f ->> 'pass')::int = 3,
+            'd', coalesce(m::text, '-') || ' ' || coalesce(f::text, '-'));
+    ut := ut || jsonb_build_object('t', 'BU uppgifterna med passerat slutdatum, och hur många som var klara i tid',
+            'ok', (m -> 'uppgifter' ->> 'totalt')::int = 2 and (m -> 'uppgifter' ->> 'i_tid')::int = 1
+                  and (f -> 'uppgifter' ->> 'totalt')::int = 1 and (f -> 'uppgifter' ->> 'i_tid')::int = 0,
+            'd', coalesce(m -> 'uppgifter', 'null'::jsonb)::text || ' ' || coalesce(f -> 'uppgifter', 'null'::jsonb)::text);
+
+    select string_agg((x ->> 'vecka') || ':' || (x ->> 'minuter') || ':' || (x ->> 'oklara') || ':' || (x ->> 'andra') || ':'
+                      || (x ->> 'under') || ':' || coalesce(x ->> 'igen', '-'), ',' order by x ->> 'vecka') into t
+      from jsonb_array_elements(j -> 'veckor') x where x ->> 'vecka' between '2025-09-08' and '2025-10-06';
+    ut := ut || jsonb_build_object('t', 'BU veckorna: hållen tid i garantiämnena, oklart och annat för sig, och om för lite togs igen',
+            'ok', t = '2025-09-08:180:0:0:false:-,2025-09-15:45:60:0:true:true,2025-09-22:200:0:0:false:-,'
+                      || '2025-09-29:90:0:60:true:false,2025-10-06:0:0:0:true:false',
+            'd', coalesce(t, 'inga veckor'));
+    ut := ut || jsonb_build_object('t', 'BU alla veckor till läsårets slut står med',
+            'ok', jsonb_array_length(j -> 'veckor') = 43 and (j -> 'veckor' -> -1 ->> 'vecka') = '2026-06-29',
+            'd', jsonb_array_length(j -> 'veckor')::text || ' ' || coalesce(j -> 'veckor' -> -1 ->> 'vecka', '-'));
+    ut := ut || jsonb_build_object('t', 'BU oklara ämnen, pass utan tider, uteblivna och avbokade pass',
+            'ok', j -> 'oklara' = '[{"datum": "2025-09-16", "amne": "NO / Fysik / Kemi / Biologi", "minuter": 60}]'::jsonb
+                  and (j ->> 'utan_tider')::int = 1
+                  and j -> 'uteblivna' = '[{"datum": "2025-10-07", "amne": "Matematik"}]'::jsonb
+                  and j -> 'avbokade' = '[{"datum": "2025-10-02", "av": "studiehjälparen", "skal": "forhinder"}]'::jsonb,
+            'd', (j -> 'oklara')::text || ' ' || (j ->> 'utan_tider') || ' ' || (j -> 'uteblivna')::text || ' ' || (j -> 'avbokade')::text);
+    ut := ut || jsonb_build_object('t', 'BU betalningarna: det obetalda passet och fakturan som betalades sent',
+            'ok', j -> 'obetalda' = '[{"datum": "2025-09-23"}]'::jsonb
+                  and j -> 'sena_fakturor' = '[{"period": "2025-10-01", "forfaller": "2025-11-10", "betald": "2025-11-15"}]'::jsonb,
+            'd', (j -> 'obetalda')::text || ' ' || (j -> 'sena_fakturor')::text);
+    ut := ut || jsonb_build_object('t', 'BU underlaget bär aldrig rapportens text',
+            'ok', position('raw_notes' in j::text) = 0 and position('"x"' in j::text) = 0, 'd', length(j::text)::text);
+
+    perform pg_temp.bli(AD);
+    j := public.betygsgaranti_underlag(E, 2024);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'BU ett läsår utan anmälan ger ett tomt underlag',
+            'ok', j -> 'amnen' = '[]'::jsonb and j -> 'veckor' = '[]'::jsonb and j ->> 'fran' is null, 'd', j::text);
+
+    t := pg_temp.svar_som(L3, format('select public.betygsgaranti_underlag(%L, 2025)', E))
+      || ' ' || pg_temp.svar_som(P, format('select public.betygsgaranti_underlag(%L, 2025)', E))
+      || ' ' || pg_temp.svar_som(A, format('select public.betygsgaranti_underlag(%L, 2025)', E))
+      || ' ' || pg_temp.svar_som(null, format('select public.betygsgaranti_underlag(%L, 2025)', E));
+    ut := ut || jsonb_build_object('t', 'BU bara en superadmin får underlaget', 'ok', t = '42501 42501 42501 42501', 'd', t);
+
+    -- Studiehjälparen ser ämnena det här läsåret, aldrig betyget.
+    insert into public.betygsgarantier (student_id, lasar, amne, betyg, anmald_at)
+    values (E, intern.lasaret((now() at time zone 'Europe/Stockholm')::date), 'Engelska', 'C', now());
+    perform pg_temp.bli(A);
+    select string_agg(x.amne, ',' order by x.amne) || '|' || count(*)
+      into t from public.mina_elevers_garantiamnen() x where x.student_id = E;
+    select t || '|' || (select string_agg(k, ',' order by k) from jsonb_object_keys(to_jsonb(x)) k)
+      into t from public.mina_elevers_garantiamnen() x limit 1;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'BU studiehjälparen ser elevens ämnen det här läsåret, utan betyget',
+            'ok', t = 'Engelska|1|amne,student_id', 'd', coalesce(t, 'inget'));
+    t := pg_temp.svar_som(B, 'select * from public.mina_elevers_garantiamnen()')
+      || ' ' || pg_temp.svar_som(P, 'select * from public.mina_elevers_garantiamnen()')
+      || ' ' || pg_temp.svar_som(null, 'select * from public.mina_elevers_garantiamnen()');
+    ut := ut || jsonb_build_object('t', 'BU en annan studiehjälpare och familjen får inga ämnen, anon får inte fråga',
+            'ok', t = 'noll noll 42501', 'd', t);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('BU Betygsgarantins underlag', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
 select test, ok is true as ok, detalj from utfall order by nr;
 
 rollback;

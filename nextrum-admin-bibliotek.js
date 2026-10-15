@@ -104,17 +104,91 @@
     ], data || [], 'Inga rapporterade fel just nu');
   }
 
+  /* ============================================================
+     NIVÅERNA I NEXLÄX (2026-10-15)
+     En rad per bana ur nexlax_banor(), och en banas nivåer ur
+     nexlax_nivaer() när man trycker på Nivåerna. Bara antal: frågorna
+     och facit stannar i databasen, och barn i familjer med en adminroll
+     räknas inte (intern.utanfor_statistiken). Försöken räknas i
+     databasen, för de är fler än tusen.
+     ============================================================ */
+  const SPÅR = { vag: 'Vägen', np: 'NP' };
+  const NIVÅSORT = { vanlig: 'Nivå', mastare: 'Mästarprov', repetition: 'Repetition' };
+  let banorHämtat = false;
+  let banor = [];
+
+  const andel = (del, av) => av ? ' (' + Math.round(100 * del / av) + ' %)' : '';
+  const felPill = n => Number(n) ? pill(Number(n) === 1 ? '1 öppen' : n + ' öppna', 'ar-ny') : '';
+
+  async function ritaNivåöversikt(omIgen) {
+    const host = $('#nexlax-banor');
+    if (!host || (banorHämtat && !omIgen)) return;
+    banorHämtat = true;
+    const { data, error } = await supa.rpc('nexlax_banor');
+    if (error) {
+      host.innerHTML = '<p class="small">Nivåerna gick inte att hämta: ' + esc(felText(error)) + '</p>';
+      return;
+    }
+    banor = data || [];
+    host.innerHTML = tabell([
+      { namn: 'Bana', rita: b => '<b>' + esc(b.amne) + '</b><div class="small">'
+          + esc([NX.årskursText(b.arskurs), SPÅR[b.spar] || b.spar].filter(Boolean).join(' · ')) + '</div>' },
+      { namn: 'Nivåer', rita: b => esc(b.nivaer + (b.prov ? ' + ' + b.prov + ' prov' : '')) },
+      { namn: 'Frågor', rita: b => esc(String(b.fragor)) },
+      { namn: 'Försök', rita: b => esc(String(b.forsok)) },
+      { namn: 'Klara', rita: b => esc(b.klara + andel(b.klara, b.forsok)) },
+      { namn: 'Elever', rita: b => esc(String(b.elever)) },
+      { namn: 'Fel', rita: b => felPill(b.felrapporter) },
+      { namn: 'Senast', rita: b => b.senast ? esc(kortDatum(b.senast)) : '' },
+      { namn: '', höger: true, rita: b => '<button type="button" class="btn btn-ghost btn-sm" data-nl-bana="'
+          + banor.indexOf(b) + '">Nivåerna</button>' }
+    ], banor, 'Inga nivåer i banken');
+  }
+
+  async function ritaBanansNivåer(b) {
+    const host = $('#nexlax-nivaer');
+    if (!host) return;
+    const { data, error } = await supa.rpc('nexlax_nivaer', { p_amne: b.amne, p_arskurs: b.arskurs, p_spar: b.spar });
+    const namn = [b.amne, NX.årskursText(b.arskurs), SPÅR[b.spar] || b.spar].filter(Boolean).join(' · ');
+    if (error) {
+      host.innerHTML = '<p class="small">Nivåerna i ' + esc(namn) + ' gick inte att hämta: ' + esc(felText(error)) + '</p>';
+      return;
+    }
+    // Ett h5 i en .dbox är rutans egen rubrik, så banans namn är en rad.
+    host.innerHTML = '<p class="small" style="margin:18px 0 8px"><b>' + esc(namn) + '</b></p>'
+      + tabell([
+        { namn: 'Ordning', rita: n => esc(String(n.ordning)) },
+        { namn: 'Nivå', rita: n => '<b>' + esc(n.titel) + '</b><div class="small">'
+            + esc([NIVÅSORT[n.sort] || n.sort, n.omrade].filter(Boolean).join(' · ')) + '</div>' },
+        { namn: 'Frågor', rita: n => esc(String(n.antal_fragor)) },
+        { namn: 'Försök', rita: n => esc(String(n.forsok)) },
+        { namn: 'Klara', rita: n => esc(n.klara + andel(n.klara, n.forsok)) },
+        { namn: 'Godkända', rita: n => esc(String(n.godkanda)) },
+        { namn: 'Stjärnor', rita: n => n.stjarnor == null ? '' : esc(String(n.stjarnor).replace('.', ',')) },
+        { namn: 'Elever', rita: n => esc(String(n.elever)) },
+        { namn: 'Fel', rita: n => felPill(n.felrapporter) }
+      ], data || [], 'Inga nivåer i banan');
+  }
+
+  document.addEventListener('click', async e => {
+    const k = e.target.closest('[data-nl-bana]');
+    if (!k) return;
+    const b = banor[Number(k.dataset.nlBana)];
+    if (b) await medan(k, 'Hämtar', () => ritaBanansNivåer(b));
+  });
+
   document.addEventListener('click', async e => {
     const k = e.target.closest('[data-fel-hanterad]');
     if (!k) return;
     await medan(k, 'Sparar', async () => {
       const { error } = await supa.rpc('nexlax_felrapport_hanterad', { p_fraga: k.dataset.felHanterad });
       if (error) { säg($('#fel-msg'), felText(error), false); return; }
-      await ritaFelrapporter(true);
+      await Promise.all([ritaFelrapporter(true), ritaNivåöversikt(true)]);
     });
   });
 
   function ritaBibliotek() {
+    ritaNivåöversikt();
     ritaFelrapporter();
     fyllVäljare();
     const host = $('#bib-tabell');

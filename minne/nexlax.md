@@ -653,8 +653,17 @@ Reglerna:
      `intern.mitt_aktiva_barn()`, konsekvensbedömningen i `DATASKYDD.md`
      har en rad för det, och `rls-test.sql` avsnitt 14 provar att barnet
      bara spelar sitt eget och inte med en pausad inloggning.
-  2. **Adminvyn har ingen vy över nivåerna.** Banken ändras i
-     `verktyg/uppgiftsbanken/` och går in genom en migration.
+  2. **Adminvyn har nivåerna under Material sedan 2026-10-15**
+     (`nexlax_i_adminvyn`): en rad per bana (ämne, årskurs och spår) med
+     nivåerna, provnivåerna, frågorna, försöken, de klara, eleverna, de
+     öppna felrapporterna och det senaste försöket (`nexlax_banor()`), och
+     en banas nivåer i spelets ordning med stjärnornas snitt
+     (`nexlax_nivaer()`). Bara superadmin, bara antal: aldrig en fråga, ett
+     alternativ eller ett facit. Försöken räknas i databasen, för de är
+     fler än tusen, och barn i familjer med en adminroll räknas inte
+     (`intern.nexlax_forsok_raknas()`, `intern.utanfor_statistiken`).
+     Banken ändras fortfarande i `verktyg/uppgiftsbanken/` och går in
+     genom en migration.
   3. **Migrationerna är i drift sedan 2026-09-29**, som
      `20260929100313` (`fas23_1_uppgifterna_blir_digitala`) och
      `20260929100314` (`uppgiftsbanken_startpaketet`), och det driften

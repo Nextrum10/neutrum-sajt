@@ -102,7 +102,26 @@
     S.elever = data || [];
     $('#kpi-elever').textContent = S.elever.length;
     ritaStatistik();
+    await laddaGarantiämnen();
   }
+
+  /* Betygsgarantin (betygsgarantin_provas, 2026-10-15). Vilka ämnen
+     eleverna har garanti i det här läsåret, aldrig betyget. Garantin
+     räknar tiden ur rapportens ämne, så den som skriver rapporten ska
+     veta vilka ämnen som räknas. Saknas funktionen (migrationen är inte
+     körd) står inget, som förut. */
+  S.garanti = {};
+  async function laddaGarantiämnen() {
+    try {
+      const { data, error } = await supa.rpc('mina_elevers_garantiamnen');
+      if (error) return;
+      const ut = {};
+      (data || []).forEach(r => { (ut[r.student_id] = ut[r.student_id] || []).push(r.amne); });
+      S.garanti = ut;
+    } catch (e) { /* som om funktionen saknades */ }
+  }
+  const garantiämnen = id => S.garanti[id] || [];
+  const uppräkning = l => l.length < 2 ? (l[0] || '') : l.slice(0, -1).join(', ') + ' och ' + l[l.length - 1];
 
   /* Elevlistan visar bara den familj man jobbar med just nu. */
   function minaElever() {
@@ -333,6 +352,7 @@
       e.school ? '<span class="tag">' + esc(e.school) + '</span>' : '',
       ...(e.subjects || []).map(x => '<span class="tag">' + esc(x) + '</span>')
     ].filter(Boolean).join('');
+    const garanti = garantiämnen(e.id);
 
     host.innerHTML = '<div class="ep">'
       + '<div class="ep-topp">'
@@ -348,6 +368,8 @@
           : '<b>Inget pass inbokat</b><span>Familjen föreslår en tid, du accepterar</span>')
       + '</div></div>'
       + (bitar ? '<div class="tutor-meta ep-taggar">' + bitar + '</div>' : '')
+      + (garanti.length ? '<p class="small ep-mal"><b>Betygsgaranti i ' + esc(uppräkning(garanti)) + '.</b> '
+          + 'Garantin räknar tiden ur ämnet i din rapport, så välj det ämnet när passet gällde det.</p>' : '')
       + (e.goals ? '<p class="small ep-mal"><b>Mål:</b> ' + esc(e.goals) + '</p>' : '')
       + '<div class="ep-vagar">'
       + ELEV_VAGAR.map(v => '<a href="' + v[0] + '">' + esc(v[1])
@@ -2194,7 +2216,24 @@
      bara när inget är valt, när Annat är öppet eller när man bett om
      den. Passet vet nästan alltid ämnet (sättÄmneFrånPass). */
   let ämnenÖppna = false;
+  /* Har eleven betygsgaranti står ämnena över valet, och raden säger till
+     när det valda ämnet inte är ett av dem: passets ämne ur bokningen är
+     ofta en grupp, som "NO / Fysik / Kemi / Biologi", och den räknas inte. */
+  function visaGarantiRad() {
+    const rad = $('#r-amne-garanti');
+    if (!rad) return;
+    const e = elev(), g = e ? garantiämnen(e.id) : [];
+    rad.hidden = !g.length;
+    if (!g.length) { rad.textContent = ''; return; }
+    const träff = rap.amne && g.some(a => a.toLowerCase() === String(rap.amne).toLowerCase());
+    rad.textContent = 'Betygsgaranti i ' + uppräkning(g) + '. '
+      + (träff ? 'Passet räknas för garantin.'
+        : (g.length === 1 ? 'Gällde passet det ämnet, välj det' : 'Gällde passet ett av dem, välj det ämnet')
+          + ': garantin räknar bara tiden i rapporter med ämnet.');
+  }
+
   function visaÄmne() {
+    visaGarantiRad();
     const vald = $('#r-amne-vald'), lista = $('#r-amne-val'), knapp = $('#r-amne-byt');
     if (!vald || !lista || !knapp) return;
     const annat = !$('#r-amne-annat-falt').hidden;
@@ -2243,6 +2282,7 @@
   function ämnesFörslag() {
     const e = elev();
     const ur = []
+      .concat(e ? garantiämnen(e.id) : [])
       .concat((S.tutorProfil && S.tutorProfil.subjects) || [])
       .concat((e && e.subjects) || [])
       .concat(S.bokningar.filter(b => b.student_id === S.aktivElev).map(b => b.subject));
@@ -2263,6 +2303,7 @@
     if (rap.amne && lista.indexOf(rap.amne) === -1 && $('#r-amne-annat-falt').hidden) lista.unshift(rap.amne);
 
     const annatÖppet = !$('#r-amne-annat-falt').hidden;
+    visaGarantiRad();
     host.innerHTML = lista.map(a =>
       '<button type="button" data-v="' + esc(a) + '" aria-pressed="'
       + (a === rap.amne && !annatÖppet ? 'true' : 'false') + '">' + esc(a) + '</button>').join('')
