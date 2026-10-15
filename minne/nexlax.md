@@ -563,6 +563,9 @@ Reglerna:
   "Tre i rad!" ur RAD_HEJA. Ändras XP-reglerna, ranken, märkena eller
   uppdragen ändras illustrationen samtidigt.
 - Inget lås, inga antal frågor eller nivåer, inget om lärare.
+- Telefonen har ingen ö överst och ingen hemlinje (2026-10-15, Leo: "ta
+  bort kamera notchen och swipe knappen"): statusraden har tiden och
+  ikonerna, och skärmen går ner till kanten.
 - Rundturen, `nexlax()` i `nextrum-start.js`: högst tre varv varje gång
   telefonen kommer in i bild; väntan räknas bara medan den syns och fliken
   är framme; `.nlx-paus` stoppar omloppet, svävandet och ringarna; ett tryck
