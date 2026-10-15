@@ -974,11 +974,13 @@ Detaljer: `minne/grunden.md`.
   **Kvar**: Stripes tre händelser på endpointen (utan `payment_intent.succeeded` blir ett draget pass inte betalt hos
   oss), provet i testläge (9.14 steg 6) och juristen, som inte läst villkoren eller rad 29 i `DATASKYDD.md`. Stripe
   står i testläge, så inga riktiga pengar dras. Pengarna dras när passet har rapporterats (Leo 2026-10-13).
-- **Skicka vidare till intervju** (2026-10-15): migrationen `ansokan_till_intervju` (20261015130000) körs
-  efter merge, hel i ett do-block (den tar inte bort något), och hela `rls-test.sql` efter den. Lokalt 1745
-  av 1745, och de nya proven fäller en databas utan skyddet. Till dess räknar adminvyn Intervju ur läget Kontaktad,
-  som 2026-10-13. Efter den är fliken Intervju tom: i driften var sju av nio ansökningar Kontaktad, och Leo
-  skickar dit dem han vill intervjua.
+- **Skicka vidare till intervju** (2026-10-15) är i drift sedan samma kväll (Leo: "merge och migrera"): PR #289
+  mergades (b85b892), Vercel driftsatte den 19.31 UTC, och `ansokan_till_intervju` (20261015130000) kördes
+  direkt efter, hämtad från merge-commiten, prövad mot sin md5 (`344c91c4…`) och körd och registrerad i ett
+  do-block. Båda funktionerna, alla sju triggrar på `applications`, kolumnen och rättigheterna är byte för byte
+  lika en lokal databas byggd ur filerna, och hela `rls-test.sql` gick 1745 av 1745 mot driften, tillbakarullat.
+  Advisorn larmade inte om något nytt. De tre andra sessionerna i repot fick veta före och efter. Fliken Intervju
+  är tom: i driften var sju av nio ansökningar Kontaktad, och Leo skickar dit dem han vill intervjua.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
