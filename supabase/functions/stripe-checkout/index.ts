@@ -66,7 +66,8 @@ import { cors, json, preflight } from '../_delad/http.ts';
 import { arStripeId, descriptor, StripeError, v1, VALUTA } from '../_delad/stripe.ts';
 import { familjebelopp, passpris, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
 import {
-  arErbjudandekod, type ErbjudandePris, extraTimmar, kanAteranvandas, kassarad, kassaradTillPlanen, sammaInnehall,
+  arErbjudandekod, type ErbjudandePris, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen,
+  sammaInnehall,
 } from '../_delad/erbjudanden.ts';
 
 const CORS = cors();
@@ -83,8 +84,10 @@ const CORS = cors();
       nyckel, och Stripe nekar.
    8: en rabattkod på ett köp av timmar (rabattkoden_timmar_och_tak,
       2026-10-13): beloppet är köpets begart_ore, som databasen räknat,
-      och raden och metadata säger koden. */
-const SESSIONSFORM = 8;
+      och raden och metadata säger koden.
+   9: familjens rabatt (familjerabatter, 2026-10-15): raden säger den, på
+      ett pass och på ett köp, och beloppet är databasens efter den. */
+const SESSIONSFORM = 9;
 
 /* DEN INBÄDDADE KASSAN (Fas 14.5)
 
@@ -116,6 +119,19 @@ function publicerbarNyckel(): string | null {
     return null;
   }
   return pk;
+}
+
+/* FAMILJENS RABATT (familjerabatter, 2026-10-15). Kronor av per timme som
+   admin satt på familjen, frågat med familjens egen token: bara beloppet,
+   aldrig koden. Databasen drar dem när priset sätts (passet när det bokas,
+   köpet när det skapas); här behövs beloppet till raden i kassan och till
+   att känna igen ett väntande köp. Saknas funktionen, före migrationen, är
+   det noll, och kassan är som förut. */
+async function familjensRabatt(vem: Inloggad): Promise<number> {
+  const { data, error } = await vem.klient.rpc('min_familjerabatt');
+  if (error) return 0;
+  const ore = Number(data);
+  return Number.isInteger(ore) && ore > 0 ? ore : 0;
 }
 
 /* Bara vår egen sajt får vara returadress. En öppen omdirigering i ett
@@ -157,6 +173,11 @@ function egenAdress(u: unknown, reserv: string): string {
    intern.klippkort_rabatt sätter rabatt_ore och begart_ore när köpet
    skapas, och det är begart_ore som dras. Tar triggern bort koden (den
    tog slut emellan) öppnas ingen kassa.
+
+   FAMILJENS RABATT (familjerabatter, 2026-10-15) dras på samma ställe,
+   från varje betald timme, före en kod. Kassan räknar samma sak bara för
+   att känna igen ett väntande köp med samma pris; beloppet som dras är
+   databasens, och raden säger rabatten när köpet har en.
    ============================================================ */
 async function köpErbjudande(
   vem: Inloggad,
@@ -194,9 +215,10 @@ async function köpErbjudande(
     .maybeSingle();
   if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
 
-  /* Vad familjen ska betala: katalogens pris, eller priset med koden
-     som databasen säger att den gäller. */
-  let attBetala = Number(e.pris_ore);
+  /* Vad familjen ska betala: katalogens pris minus familjens rabatt, eller
+     priset med koden som databasen säger att den gäller (efter rabatten). */
+  const egen = familjerabattPaKop(e as ErbjudandePris, await familjensRabatt(vem));
+  let attBetala = Number(e.pris_ore) - egen.summa;
   if (rabattkod) {
     const { data: prov, error: provfel } = await vem.klient
       .rpc('kolla_rabattkod_kop', { p_kod: rabattkod, p_erbjudande: e.kod });
@@ -225,10 +247,14 @@ async function köpErbjudande(
 
     let kopId: string;
     let belopp: number;
+    // Familjens rabatt per timme på köpet, som databasen satte den.
+    let rabattPerTimme: number;
     if (kanAteranvandas(forut, attBetala) && sammaInnehall(forut, e as ErbjudandePris)
-        && (forut?.rabattkod ?? null) === rabattkod) {
+        && (forut?.rabattkod ?? null) === rabattkod
+        && (Number(forut?.familjerabatt_ore) || 0) === egen.perTimme) {
       kopId = String(forut!.id);
       belopp = Number(forut!.begart_ore);
+      rabattPerTimme = Number(forut!.familjerabatt_ore) || 0;
     } else {
       const { data: ny, error: nyfel } = await db.from('klippkort').insert({
         parent_id: vem.anvandare,
@@ -243,13 +269,15 @@ async function köpErbjudande(
         giltig_manader: e.giltig_manader,
         rabatt_procent: e.rabatt_procent,
         timpris_ore: e.timpris_ore,
-        // Med en kod räknar triggern om både rabatten och beloppet.
+        // Med en kod eller familjens rabatt räknar triggern om beloppet.
         begart_ore: attBetala,
         ...(rabattkod ? { rabattkod } : {}),
-      }).select('id, begart_ore').single();
+        // Hela raden tillbaka: familjerabatt_ore finns först efter migrationen.
+      }).select('*').single();
       if (nyfel || !ny) return json({ error: 'Köpet gick inte att spara. Försök igen.' }, 500, CORS);
       kopId = String(ny.id);
       belopp = Number(ny.begart_ore);
+      rabattPerTimme = Number(ny.familjerabatt_ore) || 0;
       /* Databasen tog bort koden (den tog slut emellan) och satte
          katalogens pris. Då öppnas ingen kassa: familjen trodde att
          koden gällde. Köpet står kvar som väntande och används inte. */
@@ -267,7 +295,7 @@ async function köpErbjudande(
       : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
           cancel_url: `${bas}/foralder#erbjudanden` };
 
-    const rad = kassarad(e as ErbjudandePris, rabattkod);
+    const rad = kassarad(e as ErbjudandePris, rabattkod, rabattPerTimme);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -293,7 +321,8 @@ async function köpErbjudande(
       .eq('id', kopId);
 
     const svar = { session: (session as { id?: string }).id, belopp_ore: belopp, klippkort: kopId,
-                   rabatt_ore: Number(e.pris_ore) - belopp };
+                   rabatt_ore: Number(e.pris_ore) - belopp,
+                   familjerabatt_ore: familjerabattPaKop(e as ErbjudandePris, rabattPerTimme).summa };
     return inbaddad
       ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
                nyckel: pk, ...svar }, 200, CORS)
@@ -342,7 +371,11 @@ async function köpTimmarTillPlanen(
   const e = (x ?? {}) as {
     ok?: boolean; fel?: string; plan?: string; plan_namn?: string; timmar?: number; timpris_ore?: number;
     rabatt_procent?: number; rabatterat_timpris_ore?: number; pris_ore?: number; giltigt_till?: string;
+    familjerabatt_ore?: number;
   };
+  // Familjens rabatt per timme (familjerabatter, 2026-10-15), redan dragen
+  // i pris_ore. Saknas den, före migrationen, är den noll.
+  const rabattPerTimme = Number(e.familjerabatt_ore) > 0 ? Number(e.familjerabatt_ore) : 0;
   // Ett besked från databasen, skrivet för familjen: visas som det är.
   if (!e.ok) return json({ error: e.fel ?? 'Timmarna går inte att köpa just nu.' }, 409, CORS);
   if (!(Number(e.pris_ore) > 0) || !e.plan || !e.giltigt_till) {
@@ -359,13 +392,14 @@ async function köpTimmarTillPlanen(
 
     const rad = kassaradTillPlanen({
       plan_namn: String(e.plan_namn ?? ''), timmar, rabatterat_timpris_ore: Number(e.rabatterat_timpris_ore),
-      giltigt_till: String(e.giltigt_till),
+      giltigt_till: String(e.giltigt_till), familjerabatt_ore: rabattPerTimme,
     });
 
     let kopId: string;
     if (kanAteranvandas(forut, Number(e.pris_ore))
         && Number(forut!.rabatt_procent) === Number(e.rabatt_procent)
-        && Number(forut!.timpris_ore) === Number(e.timpris_ore)) {
+        && Number(forut!.timpris_ore) === Number(e.timpris_ore)
+        && (Number(forut!.familjerabatt_ore) || 0) === rabattPerTimme) {
       kopId = String(forut!.id);
     } else {
       const { data: ny, error: nyfel } = await db.from('klippkort').insert({
@@ -380,6 +414,8 @@ async function köpTimmarTillPlanen(
         timpris_ore: e.timpris_ore,
         begart_ore: e.pris_ore,
         till_plan: e.plan,
+        // Rabatten är redan dragen i priset; köpet säger hur mycket per timme.
+        ...(rabattPerTimme > 0 ? { familjerabatt_ore: rabattPerTimme } : {}),
       }).select('id').single();
       if (nyfel || !ny) {
         console.error('stripe-checkout: köpet till planen', JSON.stringify({ fel: nyfel?.message }));
@@ -421,7 +457,8 @@ async function köpTimmarTillPlanen(
       .update({ stripe_session_id: String((session as { id?: string }).id ?? '') })
       .eq('id', kopId);
 
-    const svar = { session: (session as { id?: string }).id, belopp_ore: e.pris_ore, klippkort: kopId };
+    const svar = { session: (session as { id?: string }).id, belopp_ore: e.pris_ore, klippkort: kopId,
+                   familjerabatt_ore: rabattPerTimme * timmar };
     return inbaddad
       ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
                nyckel: pk, ...svar }, 200, CORS)
@@ -897,6 +934,13 @@ Deno.serve(async (req) => {
     const { data: kund } = await vem.klient
       .from('profiles').select('email').eq('id', vem.anvandare).maybeSingle();
 
+    /* Familjens rabatt (familjerabatter, 2026-10-15) är redan dragen i det
+       frysta timpriset; raden säger den, för kassan är där familjen ser att
+       den har rabatt. En egen fråga, så att kassan tål att kolumnen saknas. */
+    const { data: frys } = await vem.klient
+      .from('bookings').select('familjerabatt_ore').eq('id', pass.id).maybeSingle();
+    const rabattPerTimme = Number((frys as { familjerabatt_ore?: number | null } | null)?.familjerabatt_ore) || 0;
+
     const bas = egenAdress(kropp.retur, 'https://nextrum.se');
     const text = radtext(pass.subject, String(pass.wanted_date));
 
@@ -962,7 +1006,8 @@ Deno.serve(async (req) => {
           product_data: {
             name: `${text}${barn > 1 ? ` (${barn} barn)` : ''}`,
             description: `Läxhjälp, ${minuter} minuter`
-              + (pass.startrabatt && rabatt > 0 ? ', första timmen på köpet' : ''),
+              + (pass.startrabatt && rabatt > 0 ? ', första timmen på köpet' : '')
+              + (rabattPerTimme > 0 ? `, med er rabatt på ${Math.round(rabattPerTimme / 100)} kr per timme` : ''),
           },
         },
       }],

@@ -566,7 +566,12 @@
     let familj = anmälansFamilj(lead);
     let inbjuden = false;
     let gratisVal = null;   // gratistimmarna: svaret från ge_gratistimmar, eller felet
+    let rabattVal = null;   // familjerabatten: koden som sattes, eller { fel }
     const kanBjuda = NX.epostOk(lead.email || '');
+    /* Familjerabatterna (2026-10-15) som går att ge, bara för en superadmin
+       och bara när det finns någon. */
+    const rabatter = (!S.behorighet || S.behorighet.superadmin) && !S.familjerabatterFel
+      ? (S.familjerabatter || []).filter(k => k.aktiv) : [];
 
     const ruta = document.createElement('div');
     ruta.className = 'nx-fraga';
@@ -597,6 +602,17 @@
         + '<input class="inp" id="le-gratis" type="number" min="0" max="40" step="1" inputmode="numeric" value="0">'
         + '<span>Från oss, utan kostnad. De gäller i 60 dagar och betalar familjens pass före köpta timmar. '
         + 'Det som blir över av en timme sparas inte, och de betalas aldrig ut.</span></div>')
+      /* Familjerabatt (2026-10-15, Leo: "precis som när vi ger ut gratis
+         timmar"): en av våra koder, till exempel för familjer som kommer
+         genom en samarbetspartner. Samma regler som i familjens panel
+         (satt_familjerabatt). Bara när kontot skapas här, som gratistimmarna. */
+      + (familj || !rabatter.length ? '' : '<div class="le-gratis le-rabatt"><label for="le-rabatt">Familjerabatt</label>'
+        + '<select class="sel" id="le-rabatt"><option value="">Ingen</option>'
+        + rabatter.map(k => '<option value="' + esc(k.kod) + '">' + esc(k.kod + ', '
+          + kronor(k.ore_per_timme) + ' av per timme') + '</option>').join('')
+        + '</select>'
+        + '<span>Bara vi ser koden. Familjen betalar så många kronor mindre för varje timme, tills ni tar bort den i '
+        + 'familjens panel, och ser bara det lägre priset.</span></div>')
       + '<p class="ok-msg" id="le-msg"></p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-le-stang>Avbryt</button>'
@@ -675,6 +691,13 @@
           const v = await supa.rpc('ge_gratistimmar', { p_familj: parent, p_timmar: gratis });
           gratisVal = v.error ? felText(v.error) : (v.data || {});
           gratisFält.closest('.le-gratis').hidden = true;
+        }
+        /* Familjerabatten, en gång, när kontot finns. */
+        const rabattFält = $('#le-rabatt', ruta);
+        if (rabattFält && rabattFält.value && inbjuden && rabattVal === null) {
+          const v = await supa.rpc('satt_familjerabatt', { p_familj: parent, p_kod: rabattFält.value });
+          rabattVal = v.error ? { fel: felText(v.error) } : rabattFält.value;
+          rabattFält.closest('.le-rabatt').hidden = true;
         }
 
         /* Ämnena är en text[] som inte får vara null (förvalet är en
@@ -765,6 +788,12 @@
             : gratisVal
               ? '<p style="margin-top:10px;color:var(--acc-text)">Gratistimmarna kunde inte sättas in (' + esc(gratisVal)
                 + '). Sätt in dem i familjens panel, under Ekonomi.</p>'
+              : '')
+          + (typeof rabattVal === 'string'
+            ? '<p style="margin-top:10px">' + esc('Familjerabatten ' + rabattVal + ' gäller familjen. Bara ni ser koden.') + '</p>'
+            : rabattVal
+              ? '<p style="margin-top:10px;color:var(--acc-text)">Familjerabatten kunde inte sättas (' + esc(rabattVal.fel)
+                + '). Ge den i familjens panel, under Ekonomi.</p>'
               : '')
           + '<p' + (inbjuden ? ' style="margin-top:10px"' : '') + '><b>' + esc(namn) + '</b> ligger nu under <b>Elever</b> och i matchningskön. '
           + 'Anmälan från ' + esc(lead.parent_name || lead.email || 'familjen')

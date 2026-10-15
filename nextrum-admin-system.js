@@ -637,7 +637,10 @@
     /* 2026-09-29: chatt_las() skriver chatt.oppnad varje gång någon av
        oss öppnar en tråd. Gäller är familjen, studiehjälparen står i
        Ändring. Aldrig texten. */
-    chatt: 'Chatt'
+    chatt: 'Chatt',
+    /* 2026-10-15: familjerabatterna, och att en familj fick, bytte eller
+       blev av med sin. Aldrig vilken kod familjen har. */
+    familjerabatt: 'Familjerabatt', familjerabatt_familj: 'Familjens rabatt'
   };
   const AUDIT_HANDLING = {
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
@@ -672,7 +675,9 @@
     ansokningar: 'ansökningar', kontaktmeddelanden: 'frågor',
     /* Dokumenten (Fas 9.10, delningen 2026-09-29) */
     giltig_fran: 'giltig från', giltig_till: 'giltig till', uppladdad_av: 'uppladdad av',
-    delad_med_personen: 'personen ser den'
+    delad_med_personen: 'personen ser den',
+    /* Familjerabatterna (2026-10-15) */
+    ore_per_timme: 'kronor av per timme', har_rabatt: 'har rabatt', andrad_at: 'ändrad'
   };
 
 
@@ -690,7 +695,7 @@
       return String(AVBOKNINGSSKAL[v][0]).toLowerCase();
     }
     if (typeof v === 'boolean') return v ? 'ja' : 'nej';
-    if (/_ore$/.test(nyckel) && typeof v === 'number') return kronor(v);
+    if ((/_ore$/.test(nyckel) || nyckel === 'ore_per_timme') && typeof v === 'number') return kronor(v);
     if (typeof v === 'string' && S.personer && S.personer[v]) return namnFör(v);
     if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) return kortDatum(v);
     if (typeof v === 'object') return JSON.stringify(v).slice(0, 60);

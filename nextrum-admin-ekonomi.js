@@ -2223,6 +2223,8 @@
         const meta = [
           esc(k.kvar + ' av ' + k.timmar + ' timmar kvar'),
           esc((gratis ? 'insatta ' : 'köpt ') + lokalDag(k.betald_at || k.created_at)),
+          /* Köpt med familjerabatten (2026-10-15): kronor av per betald timme. */
+          Number(k.familjerabatt_ore) > 0 ? esc('med familjerabatt, ' + kronor(k.familjerabatt_ore) + ' av per timme') : '',
           k.giltigt_till ? esc((utgånget ? 'gick ut ' : 'gäller till ') + kortDatum(k.giltigt_till)) : '',
           betald && iÅngerfristen(k) ? esc('ångerrätt t.o.m. ' + kortDatum(k.angerfrist_till)) : ''
         ].filter(Boolean);
