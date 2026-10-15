@@ -355,12 +355,18 @@ async function provaDelad(webb) {
   await page.waitForSelector('#boka-inner .mv-tid', { timeout: 3000 }).catch(() => {});
   await page.click('#boka-inner .mv-tid');
   await page.click('#boka-inner #bk-format button[data-v="Online"]');
+  /* Det nya förslaget är passet som inte fanns före trycket. Världen har
+     redan ett motförslag 16 dagar fram (pass 7), och kalenderns sista dag
+     kan vara samma dag: ett sök på datum och läge tog då motförslaget, som
+     studiehjälparen inte kan acceptera och som Börja om lägger tillbaka
+     (2026-10-15 föll tre prov så). */
+  const före = await page.evaluate(() => NXForhandsvisning.värld.bookings.map(b => b.id));
   await page.click('#boka-inner #bk-boka');
   await page.waitForSelector('#boka-inner .bk-kvitto', { timeout: 5000 }).catch(() => {});
-  const nytt = await page.evaluate(d => {
-    const b = NXForhandsvisning.värld.bookings.find(x => x.wanted_date === d && x.status === 'requested' && x.subject);
+  const nytt = await page.evaluate(([d, före]) => {
+    const b = NXForhandsvisning.värld.bookings.find(x => !före.includes(x.id) && x.wanted_date === d && x.status === 'requested');
     return b ? b.id : null;
-  }, dag);
+  }, [dag, före]);
   prova('delad: familjens förslag finns i världen', !!nytt, nytt);
 
   await page.reload();

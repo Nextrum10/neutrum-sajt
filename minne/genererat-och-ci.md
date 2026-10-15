@@ -542,6 +542,14 @@ och tal utan adminens konto. När vyerna börjar fråga efter en ny tabell
 eller funktion säger provet det: lägg den i världen i
 `nextrum-forhandsvisning.js`.
 
+Ett pass som provet själv skapar hittas på id:t som inte fanns före
+trycket, aldrig på datum och läge: världens pass står relativt i dag
+(motförslaget, pass 7, 16 dagar fram), och kalenderns sista dag kan vara
+samma dag. 2026-10-15 tog sökningen motförslaget, och tre prov föll i de
+kopplade vyerna (studiehjälparen såg inget att acceptera, passet blev
+aldrig bekräftat, och Börja om lade tillbaka det) fast förhandsvisningen
+gjorde rätt.
+
 ### Webbläsarprovet för kortet (2026-10-14)
 `verktyg/prova-kortet.js` (port 8976) provar kortets vyer
 (`kortet_reserveras`) i förhandsvisningens värld, som har strömbrytaren
