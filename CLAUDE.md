@@ -483,6 +483,10 @@ Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-1
 sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
 (`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
 lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka.
+**Ansökningarnas Intervju är ett val, inte ett läge** (2026-10-15, Leo: "i intervjudelen ska namn bara
+finnas där som jag har klickat i"): bara den som skickats vidare (`till_intervju_at`: Skicka vidare till
+intervju på raden, i panelen under läget och i Rekryteringen, eller ett bokat möte), aldrig läget
+Kontaktad. Läget (Ny, Kontaktad, Godkänd, Avböjd) sätter Leo själv, och Skicka vidare rör det inte.
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
 Familjernas och studiehjälparnas sidor behåller `mailto:`.
@@ -964,6 +968,11 @@ Detaljer: `minne/grunden.md`.
   **Kvar**: Stripes tre händelser på endpointen (utan `payment_intent.succeeded` blir ett draget pass inte betalt hos
   oss), provet i testläge (9.14 steg 6) och juristen, som inte läst villkoren eller rad 29 i `DATASKYDD.md`. Stripe
   står i testläge, så inga riktiga pengar dras. Pengarna dras när passet har rapporterats (Leo 2026-10-13).
+- **Skicka vidare till intervju** (2026-10-15): migrationen `ansokan_till_intervju` (20261015130000) körs
+  efter merge, hel i ett do-block (den tar inte bort något), och hela `rls-test.sql` efter den. Lokalt 1745
+  av 1745, och de nya proven fäller en databas utan skyddet. Till dess räknar adminvyn Intervju ur läget Kontaktad,
+  som 2026-10-13. Efter den är fliken Intervju tom: i driften var sju av nio ansökningar Kontaktad, och Leo
+  skickar dit dem han vill intervjua.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

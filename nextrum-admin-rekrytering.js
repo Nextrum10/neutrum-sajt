@@ -40,12 +40,24 @@
      inte var avgjord, så Alla och Intervju var samma lista och ingen
      hade valt vem som gick vidare.
 
-     Steget räknas ur det ansökan redan bär, utan en egen kolumn:
-     Kontaktad (status contacted, som Leo redan satt för hand på dem han
-     gått vidare med) är Intervju, "Mötet är hållet" eller ett påbörjat
-     prov är Utbildning, och Utbildad väntar på poolen. Flikarna, listan
-     och filtret läser samma funktion, så en person står på ett ställe.
+     Steget räknas ur det ansökan bär: valet att gå vidare är Intervju
+     (nedan), "Mötet är hållet" eller ett påbörjat prov är Utbildning, och
+     Utbildad väntar på poolen. Flikarna, listan och filtret läser samma
+     funktion, så en person står på ett ställe.
+
+     INTERVJU ÄR ETT VAL, INTE ETT LÄGE (2026-10-15). Leo: "de fyra
+     stadierna ... är ny, kontaktad, godkänd eller avböjd. detta innebär
+     att jag klickar själv i de vid klick av profil ... så i intervjudelen
+     ska namn bara finnas där som jag har klickat i att de ska vidare till
+     intervju." Intervju räknades förut ur läget Kontaktad, och sju av nio
+     ansökningar i driften stod där för att Leo hört av sig till dem.
+     Steget har nu en egen tidsstämpel (till_intervju_at, migrationen
+     ansokan_till_intervju), som bara Skicka vidare till intervju och ett
+     bokat möte sätter, och läget ändras bara när Leo trycker på det.
+     Utan kolumnen räknas Intervju som förut, ur läget.
      ============================================================ */
+  const harIntervjuKolumn = a => !!a && 'till_intervju_at' in a;
+
   function ansSteg(a) {
     if (a.status === 'rejected') return 'avbojd';
     if (a.status === 'approved') return 'godkand';
@@ -54,15 +66,24 @@
        mötet innan är avbockat (2026-09-29): provet går att öppna före
        steg 2, och fliken var då tom medan provet pågick. */
     if (a.intervju_at || a.utbildningsmote_at || a.prov_sista_dag) return 'utbildning';
-    if (a.status === 'contacted' || a.kontaktad_at || a.mote_tid) return 'intervju';
+    if (harIntervjuKolumn(a) ? a.till_intervju_at
+      : (a.status === 'contacted' || a.kontaktad_at || a.mote_tid)) return 'intervju';
     return 'ny';
   }
 
+  /* Den som inte skickats vidare står i listan med läget Leo satt, Ny
+     eller Kontaktad, och filtret skiljer dem åt. */
+  function listSteg(a) {
+    const st = ansSteg(a);
+    return st === 'ny' && a.status === 'contacted' ? 'kontaktad' : st;
+  }
+
   const ANS_STEG = {
-    ny: ['Ny', 'ar-ny'], intervju: ['Intervju', 'ar-vantar'], utbildning: ['Utbildning', 'ar-vantar'],
-    utbildad: ['Klar för poolen', 'ar-ny'], godkand: ['Godkänd', 'ar-klar'], avbojd: ['Avböjd', '']
+    ny: ['Ny', 'ar-ny'], kontaktad: ['Kontaktad', 'ar-vantar'], intervju: ['Intervju', 'ar-vantar'],
+    utbildning: ['Utbildning', 'ar-vantar'], utbildad: ['Klar för poolen', 'ar-ny'], godkand: ['Godkänd', 'ar-klar'],
+    avbojd: ['Avböjd', '']
   };
-  const stegLäge = a => läge(ANS_STEG, ansSteg(a));
+  const stegLäge = a => läge(ANS_STEG, listSteg(a));
 
   /* Namnen, med steget. Uppgifterna, CV:t och rekryteringens steg står
      i panelen: Ansökan och Rekryteringen (nextrum-admin-detalj.js).
@@ -71,7 +92,7 @@
   function ritaAnsokningar() {
     const sök = $('#ans-sok').value.trim();
     const st = $('#ans-status').value;
-    const iSteg = a => !st || ansSteg(a) === st || (st === 'utbildning' && ansSteg(a) === 'utbildad');
+    const iSteg = a => !st || listSteg(a) === st || (st === 'utbildning' && ansSteg(a) === 'utbildad');
     const rader = S.ansokningar
       .filter(iSteg)
       .filter(a => matchar(a, ['name', 'email', 'school', 'subjects', 'why'], sök));
@@ -92,9 +113,21 @@
     ritaPanelen();
   }
 
-  function vidareKnapp(steg, a, text) {
-    return '<button type="button" class="btn btn-ghost btn-sm" data-ans-vidare="' + steg + ':' + esc(a.id) + '">'
-      + esc(text) + '</button>';
+  function vidareKnapp(steg, a, text, primär) {
+    return '<button type="button" class="btn ' + (primär ? 'btn-primary' : 'btn-ghost') + ' btn-sm" data-ans-vidare="'
+      + steg + ':' + esc(a.id) + '">' + esc(text) + '</button>';
+  }
+
+  /* Samma knapp i ansökans panel, under läget (2026-10-15). Leo: "där
+     det passar ska det också finnas skicka vidare till intervju, det är
+     då för nya ansökningar ... sen när de ligger i intervju så finns det
+     att skicka vidare till utbildnings sektionen." Tom när hen redan är
+     längre fram, eller avgjord. */
+  function panelVidare(a) {
+    const st = ansSteg(a);
+    if (st === 'ny') return vidareKnapp('intervju', a, 'Skicka vidare till intervju', true);
+    if (st === 'intervju') return vidareKnapp('utbildning', a, 'Skicka vidare till utbildning', true);
+    return '';
   }
 
   /* ============================================================
@@ -108,8 +141,10 @@
      godkända ligger bara under Alla.
      ============================================================ */
   function ritaStegflikar() {
+    /* I den ordning de skickades hit (2026-10-15), förut när de kontaktades. */
+    const hit = a => String(a.till_intervju_at || a.kontaktad_at || a.created_at);
     const tillIntervju = S.ansokningar.filter(a => ansSteg(a) === 'intervju')
-      .sort((a, b) => String(a.kontaktad_at || a.created_at).localeCompare(String(b.kontaktad_at || b.created_at)));
+      .sort((a, b) => hit(a).localeCompare(hit(b)));
     const sedan = a => String(a.intervju_at || a.utbildningsmote_at || a.prov_sista_dag || '');
     const tillUtbildning = S.ansokningar.filter(a => ansSteg(a) === 'utbildning' || ansSteg(a) === 'utbildad')
       .sort((a, b) => sedan(a).localeCompare(sedan(b)));
@@ -123,8 +158,11 @@
       intervju.innerHTML = namnlista(tillIntervju, {
         typ: 'ansokan', id: a => a.id, flik: 'rekrytering',
         namn: a => a.name || a.email,
+        /* Läget Kontaktad räknas också: Leo sätter det själv, oftast utan
+           att ha skrivit härifrån (2026-10-15). */
         under: a => a.mote_tid ? 'Möte ' + (mötesText(a) || '')
-          : a.kontaktad_at ? 'Kontaktad ' + kortDatum(a.kontaktad_at) : 'Inte kontaktad än',
+          : a.kontaktad_at ? 'Kontaktad ' + kortDatum(a.kontaktad_at)
+            : a.status === 'contacted' ? 'Kontaktad' : 'Inte kontaktad än',
         knapp: a => vidareKnapp('utbildning', a, 'Till utbildning'),
         tomt: 'Ingen är på väg till en intervju. Skicka hit från Alla ansökningar.'
       });
@@ -151,11 +189,13 @@
   }
 
   /* ---- skicka vidare: till intervju, till utbildning (2026-10-13) ----
-     Till intervju sätter läget Kontaktad och mejlar ingenting, så den går
-     utan fråga; tillbaka är läget Ny i panelen. Till utbildning är "Mötet
-     är hållet" i Rekryteringen, och det mejlar ett tack som säger att
-     introduktionen är nästa steg. Ett mejl går inte att ta tillbaka, och
-     knappen står ett tryck från listan, så den frågar först. */
+     Till intervju sätter steget och mejlar ingenting, så den går utan
+     fråga; tillbaka är Ångra i Rekryteringen. Läget rör den inte
+     (2026-10-15): det sätter Leo själv. Utan kolumnen sätter den läget
+     Kontaktad, som förut. Till utbildning är "Mötet är hållet" i
+     Rekryteringen, och det mejlar ett tack som säger att introduktionen
+     är nästa steg. Ett mejl går inte att ta tillbaka, och knappen står
+     ett tryck från listan, så den frågar först. */
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-ans-vidare]');
     if (!knapp) return;
@@ -166,7 +206,7 @@
     let ändring;
     if (steg === 'intervju') {
       if (ansSteg(a) !== 'ny') return;
-      ändring = { status: 'contacted' };
+      ändring = harIntervjuKolumn(a) ? { till_intervju_at: new Date().toISOString() } : { status: 'contacted' };
     } else if (steg === 'utbildning') {
       if (ansSteg(a) !== 'intervju') return;
       const ja = await bekräfta({
@@ -350,8 +390,13 @@
     const a = S.ansokningar.find(x => x.id === id);
     if (!a) return;
 
-    const kolumn = { intervju: 'intervju_at', utbmote: 'utbildningsmote_at' }[steg] || 'utbildad_at';
+    const kolumn = { tillintervju: 'till_intervju_at', intervju: 'intervju_at', utbmote: 'utbildningsmote_at' }[steg]
+      || 'utbildad_at';
     const nu = a[kolumn] ? null : new Date().toISOString();
+    /* Till intervju och tillbaka (2026-10-15) går bara medan hen är ny
+       eller i Intervju: längre fram är det de senare stegen som ångras. */
+    if (kolumn === 'till_intervju_at'
+        && (!harIntervjuKolumn(a) || ansSteg(a) !== (nu ? 'ny' : 'intervju'))) return;
 
     /* Fas 22.1: utbildningen är provet. Att markera någon som utbildad
        utan godkänt prov går, men det ska vara ett val och inte ett
@@ -673,28 +718,52 @@
       + '</div></div>';
   }
 
+  /* Steg 1: skicka vidare, eller ångra medan hen står under Intervju
+     (2026-10-15). Ingen knapp utan kolumnen, eller när hen redan är
+     längre fram: då är det de senare stegen som ångras. */
+  function tillIntervjuKnapp(a) {
+    if (!harIntervjuKolumn(a)) return '';
+    const st = ansSteg(a);
+    if (st !== 'ny' && st !== 'intervju') return '';
+    return '<button type="button" class="btn btn-ghost btn-sm" data-ans-steg="tillintervju:' + esc(a.id) + '">'
+      + (st === 'ny' ? 'Skicka vidare till intervju' : 'Ångra "till intervju"') + '</button> ';
+  }
+
   /* Fliken Rekryteringen i panelen (dpAnsokan i nextrum-admin-detalj.js). */
   function spårLista(a) {
     const id = esc(a.id);
     const möte = mötesText(a);
     const utbLänk = String(CFG.UTBILDNING_URL || '').trim();
+    const harKolumn = harIntervjuKolumn(a);
 
     return '<div class="ans-spar-lista">'
 
-      + spårSteg(1, 'Kontakt',
-          'Kvittot på ansökan har redan gått av sig självt. Här föreslår du tider för mötet: '
-          + 'utkastet öppnas i Gmail med din adress som avsändare, så att svaret '
-          + 'kommer till dig.',
-          a.kontaktad_at,
-          '<button type="button" class="btn btn-ghost btn-sm" data-ans-kontakt="' + id + '">'
+      /* Steg 1 är valet att gå vidare, med kontakten i (2026-10-15).
+         Förut var det bara kontakten, och läget Kontaktad var intervjun. */
+      + spårSteg(1, 'Till intervju',
+          (harKolumn
+            ? 'Du väljer vem som går vidare: hen hamnar under fliken Intervju, och ingenting mejlas. '
+              + 'Läget (Ny, Kontaktad) sätter du själv under Ansökan, och det flyttar ingen. '
+            : 'Läget Kontaktad flyttar hen till fliken Intervju tills migrationen '
+              + 'ansokan_till_intervju är körd. ')
+          + 'Kvittot på ansökan har redan gått av sig självt. Skriv till hen för att föreslå tider '
+          + 'för mötet: utkastet öppnas i Gmail med din adress som avsändare, så att svaret kommer '
+          + 'till dig.',
+          harKolumn ? a.till_intervju_at : a.kontaktad_at,
+          tillIntervjuKnapp(a)
+          + '<button type="button" class="btn btn-ghost btn-sm" data-ans-kontakt="' + id + '">'
           + (a.kontaktad_at ? 'Skriv igen' : 'Skriv till hen') + '</button>',
-          besked(a, 'mottagen') + besked(a, 'vardnadshavare'))
+          (harKolumn && a.kontaktad_at
+            ? '<div class="ans-steg-fakta"><b>Skrev till hen:</b> ' + esc(kortDatum(a.kontaktad_at)) + '</div>'
+            : '')
+          + besked(a, 'mottagen') + besked(a, 'vardnadshavare'))
 
       + spårSteg(2, 'Digitalt möte',
           'En kvart över video. Det är ett samtal, inget prov — vi vill höra hur hen '
           + 'förklarar saker och vilka ämnen hen är trygg i. Tiden och länken mejlas till hen '
-          + 'när du sparar dem, och igen om du ändrar dem. "Mötet är hållet" mejlar ett tack '
-          + 'och säger att introduktionen är nästa steg.',
+          + 'när du sparar dem, och igen om du ändrar dem. Ett bokat möte skickar hen vidare till '
+          + 'Intervju, om du inte redan gjort det. "Mötet är hållet" är Skicka vidare till utbildning: '
+          + 'det mejlar ett tack och säger att introduktionen är nästa steg.',
           a.intervju_at,
           '<button type="button" class="btn btn-ghost btn-sm" data-ans-mote="' + id + '">'
           + (a.mote_tid ? 'Ändra mötet' : 'Boka möte') + '</button>'
@@ -820,12 +889,14 @@
        tidszon, alltså i den tid admin faktiskt skrev. Med Z hade
        ett möte klockan 17 blivit 19 på sommaren. */
     const när = new Date(svar.datum + 'T' + svar.tid);
-    const { error } = await supa.from('applications')
-      .update({ mote_tid: när.toISOString(), mote_lank: svar.länk })
-      .eq('id', a.id);
+    const ändring = { mote_tid: när.toISOString(), mote_lank: svar.länk };
+    /* Mötet är intervjun: den som inte skickats vidare dit gör det nu
+       (2026-10-15). Annars hade hen haft ett bokat möte och stått kvar
+       under Alla ansökningar. */
+    if (harIntervjuKolumn(a) && ansSteg(a) === 'ny') ändring.till_intervju_at = new Date().toISOString();
+    const { error } = await supa.from('applications').update(ändring).eq('id', a.id);
     if (error) { alert('Kunde inte spara mötet: ' + felText(error)); return; }
-    a.mote_tid = när.toISOString();
-    a.mote_lank = svar.länk;
+    Object.assign(a, ändring);
     await hämtaBesked(a.id);
     ritaOm();
   });
@@ -1285,7 +1356,7 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ansökansText, bekräftaNej, cvKnapp, hämtaBesked, provKort, provKnapp, ritaAnsokningar, spårLista,
-    stegLäge, vhFakta, vhSvar
+    ansökansText, bekräftaNej, cvKnapp, hämtaBesked, panelVidare, provKort, provKnapp, ritaAnsokningar,
+    spårLista, stegLäge, vhFakta, vhSvar
   });
 })();

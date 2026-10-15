@@ -1375,6 +1375,7 @@ vem som gick vidare.
   ansökningar Kontaktad utan `kontaktad_at`: Leo hade redan använt läget så,
   och ingen funktion i databasen läser `contacted`. Flikarna, listans märke,
   panelens märke överst och filtret (som nu är steget) läser samma funktion.
+  **Ersatt 2026-10-15**: Intervju är ett eget steg, aldrig läget (nedan).
 - **Knappen på raden** (`o.knapp` i `namnlista()`, bredvid namnknappen och
   aldrig i den; under namnet under 560 px): Alla har Till intervju på en ny
   (läget Kontaktad, inget mejl, ingen fråga; tillbaka är läget Ny i
@@ -1391,6 +1392,49 @@ vem som gick vidare.
   än de lovar. Kalendern filtreras inte.
 - `verktyg/prova-ansokningar.js` provar stegen i Chromium: knapparna, frågan,
   vad som sparas, flikarnas tal, filtret och telefonens rad.
+
+### Intervju är ett val, inte ett läge (2026-10-15)
+
+Leo: "de fyra stadierna när en ansökan om jobb kommer in är ny, kontaktad,
+godkänd eller avböjd. detta innebär att jag klickar själv i de vid klick av
+profil ... där det passar ska det också finnas skicka vidare till intervju,
+det är då för nya ansökningar. så i intervjudelen ska namn bara finnas där
+som jag har klickat i att de ska vidare till intervju. sen när de ligger i
+intervju så finns det att skicka vidare till utbildnings sektionen." Fliken
+Intervju räknade läget Kontaktad som intervju (ovan), och i driften stod sju
+av nio ansökningar där för att Leo hört av sig till dem.
+
+- **Steget har en egen tidsstämpel**, `applications.till_intervju_at`
+  (migrationen `ansokan_till_intervju`), och `ansSteg()` läser den, aldrig
+  läget. Den sätts av Skicka vidare till intervju (Till intervju på raden i
+  Alla, i ansökans panel under läget och i steg 1 i Rekryteringen) och av
+  Boka möte, för mötet är intervjun. Ångra "till intervju" i steg 1 tar bort
+  den medan hen står under Intervju. Ingen bakåtfyllning: ingen visste vilka
+  av de sju som skulle dit, så fliken börjar tom.
+- **Läget sätter Leo själv**, med märkena i panelen. Skicka vidare rör det
+  inte. Skriv till hen sätter Kontaktad på en ny, som förut: det är en
+  kontakt.
+- **Listan visar läget för den som inte gått vidare** (`listSteg()`): Ny
+  eller Kontaktad, och filtret har Kontaktade bredvid Nya. De andra står med
+  steget (Intervju, Utbildning, Klar för poolen) eller Godkänd och Avböjd.
+  Under Intervju står "Kontaktad" också för läget, inte bara för
+  `kontaktad_at`.
+- **Panelen** (`panelVidare()`): Skicka vidare till intervju på en ny eller
+  kontaktad, Skicka vidare till utbildning på den som står under Intervju,
+  som primär knapp under läget och samma handling som raden. Ta in i poolen
+  är primär bara när inget steg står kvar före den. Till utbildning är
+  "Mötet är hållet" och frågar först, för tacket mejlas.
+- **Steg 1 i Rekryteringen heter Till intervju** (förut Kontakt): valet och
+  Skriv till hen, med `till_intervju_at` som stämpel och när hen skrevs till
+  under.
+- **Utan kolumnen** (`harIntervjuKolumn()`, migrationen inte körd) är allt som
+  2026-10-13: Kontaktad är Intervju, och Till intervju sätter läget.
+- I databasen sätts steget aldrig utifrån (`skydda_ansokningsfalt`), gallringen
+  räknar det, och auditloggen tar tidpunkten. Inget mejlas.
+- `verktyg/prova-ansokningar.js` provar det i Chromium, med reserven utan
+  kolumnen och panelens knapp på en telefon, och `rls-test.sql` databasen
+  (proven TI). Provet fyller också i skolnivån, som jobbansökan kräver sedan
+  2026-10-14: utan den skickades inget, och formulärets prov föll.
 
 ### Tusen rader (2026-09-29)
 

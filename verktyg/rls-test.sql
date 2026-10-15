@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken och koderna med bonusen)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen och steget till intervju)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -55,7 +55,7 @@
 -- planerna_basic_standard_intensiv (2026-10-07), barnet_foreslar_pass och
 -- adminkonton_utanfor_statistiken (2026-10-12), rabattkoden_krockar_inte,
 -- gratistimmarna_60_dagar, tipskoder_bonus_och_timbanken och gratistimmar (2026-10-13)
--- är körda.
+-- och ansokan_till_intervju (2026-10-15) är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -16343,6 +16343,90 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('TD Timmarna delas och köps till', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- Till intervju (ansokan_till_intervju, 2026-10-15)
+-- ------------------------------------------------------------
+-- Steget har en egen tidsstämpel, som bara admin sätter: den som söker
+-- skickar inte sig själv vidare, och en inloggad som inte är admin gör
+-- det inte heller. Läget står kvar (Leo sätter det själv), inget mejlas,
+-- auditloggen får tidpunkten, och gallringen räknar steget.
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  ny    constant uuid := '00000000-0000-4000-8000-0000000071a1';
+  gamla constant uuid := '00000000-0000-4000-8000-0000000071a2';
+  a     public.applications%rowtype;
+  n     integer;
+  m     integer;
+  sedan timestamptz;
+begin
+  begin
+    -- Utifrån, med steget satt.
+    perform pg_temp.bli(null);
+    insert into public.applications (id, name, email, till_intervju_at)
+    values (ny, 'Prov Intervju', 'rls-ti-1@example.invalid', now());
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into a from public.applications where id = ny;
+    ut := ut || jsonb_build_object('t', 'TI den som söker skickar inte sig själv till intervju', 'ok',
+            a.till_intervju_at is null, 'd', coalesce(a.till_intervju_at::text, 'null'));
+
+    -- En förälder som är inloggad.
+    begin
+      perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+      update public.applications set till_intervju_at = now() where id = ny;
+    exception when insufficient_privilege then null;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into a from public.applications where id = ny;
+    ut := ut || jsonb_build_object('t', 'TI en inloggad som inte är admin skickar ingen till intervju', 'ok',
+            a.till_intervju_at is null, 'd', coalesce(a.till_intervju_at::text, 'null'));
+
+    -- Admin skickar vidare.
+    select count(*) into n from public.ansokan_utskick where ansokan_id = ny;
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set till_intervju_at = now() where id = ny;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into a from public.applications where id = ny;
+    ut := ut || jsonb_build_object('t', 'TI admin skickar vidare, och läget står kvar', 'ok',
+            a.till_intervju_at is not null and a.status = 'new',
+            'd', coalesce(a.till_intervju_at::text, 'null') || ' ' || a.status);
+    select count(*) into m from public.ansokan_utskick where ansokan_id = ny;
+    ut := ut || jsonb_build_object('t', 'TI inget mejlas när någon skickas till intervju', 'ok', m = n,
+            'd', 'före ' || n || ', efter ' || m);
+    select count(*) into n from public.audit_logg l
+     where l.tabell = 'applications' and l.objekt_id = ny::text and l.handling = 'ansokan.andrad'
+       and l.aktor_typ = 'admin' and l.efter ? 'till_intervju_at';
+    ut := ut || jsonb_build_object('t', 'TI auditloggen får tidpunkten', 'ok', n = 1, 'd', 'rader: ' || n);
+
+    -- Gallringen: en ansökan från för två år sedan som skickades vidare
+    -- för tio dagar sedan står kvar trettio dagar efter steget.
+    insert into public.applications (id, name, email, status, created_at, till_intervju_at)
+    values (gamla, 'Prov Gammal', 'rls-ti-2@example.invalid', 'new', now() - interval '2 years',
+            now() - interval '10 days');
+    select intern.ansokan_gallras_fran(x) into sedan from public.applications x where x.id = gamla;
+    select count(*) into n from public.ansokan_gallring_lista(1000) l where l.ansokan_id = gamla;
+    ut := ut || jsonb_build_object('t', 'TI gallringen räknar steget: trettio dagar efter', 'ok',
+            sedan = (select x.till_intervju_at from public.applications x where x.id = gamla) + interval '30 days'
+            and n = 0, 'd', coalesce(sedan::text, 'null') || ', i listan: ' || n);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('TI Till intervju', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
