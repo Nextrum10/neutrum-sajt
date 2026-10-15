@@ -23,7 +23,7 @@ på en retinaskärm.
 
 VERKTYGET
 
-Samma sort som satt-logga.py: körs för hand när bilder läggs till,
+Samma sort som bygg-logga.js: körs för hand när bilder läggs till,
 inte i CI. Det behöver en kodare på maskinen och tar den första som
 finns av cwebp, magick och sips (den sista bara på macOS 13+).
 

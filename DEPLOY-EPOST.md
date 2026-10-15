@@ -295,9 +295,11 @@ Business Connect som en kvadratisk bild på 1024–4864 pixlar:
 `bilder/nextrum-logo-profil.png` är 1024. Apple listar inte vilka
 länder Branded Mail finns i — logga in och se om valet dyker upp.
 
-**Byts märket** måste `nextrum-logo-bimi.svg` och
-`nextrum-logo-profil.png` ritas om för hand. `verktyg/satt-logga.py`
-rör bara sajtens ikoner.
+**Byts märket** ritas `nextrum-logo-bimi.svg` och
+`nextrum-logo-profil.png` om av `verktyg/bygg-logga.js`, ur
+`bilder/nextrum-logga.svg`, med favicons och mejlloggan (2026-10-15:
+den nya loggan, brunt och orange på papperet). Profilbilden på info@
+och i Apple Business Connect byts för hand: ladda upp den nya filen.
 
 ---
 

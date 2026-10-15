@@ -697,6 +697,40 @@ till en, hemma eller online skriv Rätt studiehjälp, på rätt plats"): rubrike
 är "Rätt studiehjälp, på rätt plats" ("The right help, in the right place"),
 på startsidan och Vår idé, båda språken, för bladen är samma kopia.
 
+### Den nya loggan (2026-10-15)
+
+Leo: "Du ska implementera våran nya logga i hemsidan", med loggan som
+bild (1654 x 1654 px): märket, ett brunt och orange sicksack, ordet
+nextrum i gemener och "av unga, för unga". Den ersätter N:et i den
+rundade rutan och ordet NEXTRUM i text.
+
+- **Källan är `bilder/nextrum-logga.svg`**, spårad i vektor ur bilden
+  (potrace på en 4x förstorad bild, där varje pixel delats upp i sin
+  andel brunt och orange; jämförd mot originalet, under en procent av
+  pixlarna skiljer). Märket är 223,5 x 169,5 enheter, ordet 751,75
+  bred i samma höjd, 51,75 till höger. Brunt #643820, orange #F88740.
+  Det bruna i märket går in under det orange, så att det aldrig syns en
+  springa i skarven.
+- **Sidorna har två inline-svg**, `.mark` och `.logo-text`, i samma
+  höjd (`--logga-h`, 26 px i sidhuvudet, 23 under 600 px, 22 i
+  adminvyn, 10 mm på affischen); bredden räknas ur höjden i
+  `nextrum.css`. Inline och inte `<use>` mot en fil: loggan ska stå
+  där när sidan ritas, och sidhuvudet var redan samma markup på alla
+  sidor. Ordet har `role="img" aria-label="Nextrum"`, så footerns länk
+  har ett namn utan text.
+- **Färgen**: det bruna och ordet är `currentColor`, och `.logo` tar
+  `--logga-brun` (#643820, 9,4:1 mot papperet; kräm i båda mörka
+  blocken). Mörka ytor sätter `color` på `.logo`: sidhuvudet över
+  heron och Bli studiehjälpares svarta (`.pa-mork`), footern och
+  maskotens öppna knapp. Det orange står i markupen och byts aldrig.
+  Affischen är alltid brun, för papperet är vitt i båda lägena.
+- **Sloganen** står inte i sidhuvudet (i 26 px går den inte att
+  läsa); den står som text i footern och på affischen, som förut, och
+  översätts på engelska.
+- Hovringen vrider inte längre märket (det var N:et som vände sig);
+  den förstorar det med `scale`.
+- Introduktionens bilder visar inget sidhuvud och byggdes inte om.
+
 ### Två fällor när en palett byts
 
 Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11
