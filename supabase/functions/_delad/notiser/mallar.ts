@@ -79,7 +79,7 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
   pass_avbojt: 'avböjda tider',
   meddelande: 'nya meddelanden',
   paminnelse: 'påminnelser före pass',
-  timmar_gar_ut: 'timmar som går ut',
+  timmar_gar_ut: 'köpta timmar som går ut',
   barnforslag: 'barnens förslag på pass',
   kort_nekat: 'kort som nekas',
 };
@@ -259,32 +259,8 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
   // hade inte varit en påminnelse. Knappen går till bokningen: timmarna
   // används genom att boka pass, inte på sidan där de köptes, och sedan
   // Fas 22.2 betalar de passet när det är bekräftat.
-  //
-  // gratistimmarna_paminns (2026-10-15): samma påminnelse om timmar som är
-  // gratis, gratistimmar från oss eller planens gratis timme efter planens
-  // månad. De betalas aldrig tillbaka (villkoren, #gratistimmar), så det
-  // mejlet lovar inte det.
   timmar_gar_ut(m) {
     const sista = m.d.datum ? datumText(m.d.datum) : null;
-    if (m.d.gratis) {
-      const en = m.d.kvar === 1;
-      const er = en ? 'Er gratis timme' : 'Era gratis timmar';
-      const fakta: [string, string][] = [];
-      if (m.d.kvar !== null) fakta.push(['Gratis timmar kvar', String(m.d.kvar)]);
-      if (sista) fakta.push(['Sista dagen', sista]);
-      return {
-        amne: sista ? `${er} går ut ${sista}` : `${er} går snart ut`,
-        rubrik: `${er} går snart ut`,
-        mening: (m.d.kvar === null ? 'Ni har gratis timmar kvar' : en ? 'Ni har 1 gratis timme kvar' : `Ni har ${m.d.kvar} gratis timmar kvar`)
-          + (sista ? `, och ${en ? 'den' : 'de'} gäller till och med ${sista}.` : ' som snart går ut.')
-          + (en ? ' Boka ett pass innan dess, så betalar timmen det när tiden är bekräftad.'
-            : ' Boka pass innan dess, så betalar timmarna dem när tiden är bekräftad.')
-          + ' Gratis timmar som inte används förfaller och betalas inte ut.',
-        knapp: 'Boka ett pass',
-        mal: 'boka',
-        fakta,
-      };
-    }
     const antal = m.d.kvar === null ? null : m.d.kvar === 1 ? '1 timme' : `${m.d.kvar} timmar`;
     const fakta: [string, string][] = [];
     if (m.d.kvar !== null) fakta.push(['Timmar kvar', String(m.d.kvar)]);

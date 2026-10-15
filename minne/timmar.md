@@ -251,10 +251,9 @@ blivit pengar).
 - **Inga sparade minuter**: `intern.timbank_in` ger noll för ett pass betalt
   med gratistimmar, och frågar `intern.ar_gratistimmar()` (security definer),
   så att svaret är detsamma för en studiehjälpare som inte läser familjens kort.
-- **Ingen påminnelse** fram till 2026-10-15: `intern.timmar_gar_ut_koa` hoppade
-  över gratistimmarna, för mejlet säger "köpta timmar" och lovar att resten
-  betalas tillbaka. Sedan `gratistimmarna_paminns` påminns de med en egen text
-  (sist i filen).
+- **Ingen påminnelse**: `intern.timmar_gar_ut_koa` hoppar över gratistimmarna,
+  för mejlet säger "köpta timmar" och lovar att resten betalas tillbaka. En
+  egen mall kräver `notis-ko` och typlistorna.
 - **Inga villkor först**: `intern.kop_kraver_villkor` släpper en gåva, så den
   kan sättas in när familjen tas in, innan de loggat in. Timmarna betalar inget
   förrän familjen godkänt villkoren och föreslagit ett pass.
@@ -507,10 +506,9 @@ villkoren "fixa villkoren".
   `forsta_timmen_lage()` `beviljad_till`, och priset vid knappen bjuder
   bara för en dag inom dem (`bjuden(minuter, dag)`).
 - **Påminnelsen** (`timmar_gar_ut_koa`) räknar bara de timmar som går ut
-  med planen; en oanvänd gratis timme gör det inte. Den gratis timmen
-  påminns för sig sedan 2026-10-15, tio dagar före `gratis_till` (sist i
-  filen); förut inte alls, för mejlet säger "köpta timmar" och att resten
-  betalas tillbaka, och en gratis timme betalas aldrig ut.
+  med planen; en oanvänd gratis timme gör det inte. Ingen påminnelse om
+  gratistimmen själv: mejlet säger "köpta timmar" och att resten betalas
+  tillbaka, och en gratis timme betalas aldrig ut.
 - **Återbetalningen räknas som förut** (`vid_anger_ore`,
   `vid_uppsagning_ore`): en använd timme kostar, också den gratis. Hade
   den gratis timmen räknats först även där, hade en familj kunnat köpa
@@ -733,51 +731,3 @@ och ett pass får delas mellan gratistimmarna och planen.
 - **I drift 2026-10-14** (`CLAUDE.md` avsnitt 11, `minne/databasen.md`), och
   Betala med timmar svarar inte längre "permission denied". Kvar: ett provköp
   av Köp till timmar, och att juristen läser villkoren.
-
-## Påminnelsen om gratis timmar (2026-10-15, `gratistimmarna_paminns`)
-
-Leo 2026-10-15: "bygg det du kunde bygga själv", där påminnelsen innan
-gratistimmarna går ut var en av fyra saker. Tio dagar före sista dagen går
-samma påminnelse som för köpta timmar (Fas 21.2), också för gratis timmar.
-
-- **Vilka timmar.** Gratistimmar från oss (`erbjudande = 'gratis'`), med
-  kortets `giltigt_till`, och planens gratis timme när den gäller efter
-  planens månad (`gratis_kvar > 0` och `gratis_till > giltigt_till`), med
-  `gratis_till`. Ett återkallat kort har inget kvar och påminns inte. Ett
-  pass drar de gratis timmarna först, så den gratis timmen på en plan är kvar
-  bara om familjen inte bokat något under planens månad. Tipstimmen och
-  första timmen pass för pass är inga kort och påminns inte.
-- **Samma notistyp.** `timmar_gar_ut`, med `gratis: true` i datan, så att
-  valet under Profil → Notiser (nu Timmar som går ut) gäller båda och
-  typlistorna i databasen och `typer.ts` är orörda. `renData` släpper bara
-  igenom `true`. Ett mejl per kort och sista dag, som förut: en plan kan få
-  ett om de köpta timmarna och senare ett om sin gratis timme, med var sin dag.
-- **Texten.** "Er gratis timme" eller "Era gratis timmar", hur många och
-  sista dagen, att timmarna betalar ett bokat pass, och att "gratis timmar
-  som inte används förfaller och betalas inte ut". Aldrig "köpta" och aldrig
-  "tillbaka": villkoren lovar återbetalning bara för köpta timmar, och mejlet
-  om köpta timmar säger "hör av er före sista dagen, så betalar vi tillbaka
-  resten". Därför **driftsätts `notis-ko` före migrationen**: en äldre
-  `notis-ko` tappar `gratis` och skickar mejlet om köpta timmar, med löftet.
-- **Utan studiehjälpare** (vyn väntar, `profiles.match_status` inte `matched`
-  eller ingen `matched_tutor_id`, som `S.väntar`) kan familjen inte boka, och
-  ett mejl om att boka vore fel. Gratistimmar kan sättas in redan när familjen
-  tas in, före matchningen. Då blir det en uppgift till oss (`skapa_uppgift`,
-  nyckeln `gratistimmar_utan_hjalpare:<kort>:<dag>`, förfallodag sista dagen):
-  matcha familjen, eller ta tillbaka timmarna och sätt in nya. Den kommer en
-  gång per kort och dag, också efter att den klarmarkerats (`skapa_uppgift`
-  släpper annars en ny när den gamla är klar), och får familjen en
-  studiehjälpare innan dagen går mejlet vid nästa körning. Köpta timmar
-  påminns som förut, också utan studiehjälpare: det mejlet erbjuder pengarna
-  tillbaka, och det går att göra utan att boka.
-- **Villkoren** säger fortfarande att gratistimmar "förfaller utan påminnelse"
-  (`#gratistimmar`). Orden tas bort i nästa version, inte i en egen: alla har
-  fått frågan om villkoren nästan varje dag sedan 2026-10-07, och en påminnelse
-  till är inget familjen förlorar på. Villkoren nämner ingen påminnelse för
-  köpta timmar heller.
-- **Prov.** `rls-test.sql` GTB E (fyra prov: uppgiften utan studiehjälpare, en
-  gång också efter klar, mejlet med `gratis` när familjen har en, inget om
-  återkallade) och GT E2 (två: planens gratis timme före sin egen dag, inte
-  när den använts), och mallens prov i `rendera_test.ts` och `typer_test.ts`.
-  Lokalt ur alla 194 migrationer 1744 av 1744.
-

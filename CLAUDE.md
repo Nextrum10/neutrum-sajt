@@ -105,9 +105,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   0, `betald_at` null) och utan villkor först: en gåva är inget köp. De gäller i 60 dagar och dras först,
   med planens gratis timme, före köpta timmar (Leo: "de används först av alla timmar"; ordningen är
   `gratistimmarna_60_dagar`s, där ett kort med gratistimmar räknas som gratis), sparar inga minuter
-  (`intern.timbank_in`) och betalas aldrig ut; studiehjälparen får lön som vanligt. **Påminnelsen** tio dagar före
-  (2026-10-15, `gratistimmarna_paminns`) är köpta timmars, med `gratis` i datan och en egen text som aldrig lovar
-  något tillbaka, också för planens gratis timme efter planens månad; utan studiehjälpare blir den en uppgift till oss.
+  (`intern.timbank_in`), får ingen påminnelse och betalas aldrig ut; studiehjälparen får lön som vanligt.
   `ta_tillbaka_gratistimmar()` tar bara det som inte ligger på ett pass, och återkallar kortet
   (`aterkallad_at`) i stället för att radera det (2026-10-14): ingen `delete`, och historiken står kvar.
   De står utanför första timmen, som tipstimmen. Det river beskedet 2026-10-09 "inte få gratis av oss".
@@ -911,13 +909,9 @@ Detaljer: `minne/grunden.md`.
   `gratistimmar` registrerades i samma block med filens text (md5 `079603c5…`) och en anteckning om att avsnitt 7
   ersattes, som andra del. Hela `rls-test.sql` gick 1643 av 1643 mot
   driften, tillbakarullat, med filen körd först i samma transaktion (`minne/databasen.md`). Villkorens version är
-  2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Juristen har inte läst villkoren för
-  gratistimmarna.
-- **Påminnelsen om gratis timmar** (2026-10-15, `gratistimmarna_paminns`, 20261015100000) är byggd men inte i drift:
-  `notis-ko` driftsätts först (en äldre läser inte `gratis` och skickar mejlet om köpta timmar, med löftet om
-  återbetalning), sedan migrationen. **Villkoren säger fortfarande** att gratistimmar "förfaller utan påminnelse"
-  (`#gratistimmar`): orden tas bort i nästa version av villkoren, inte i en egen, för en påminnelse till är inget
-  familjen förlorar på.
+  2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Ingen påminnelse går om gratistimmar
+  (mejlet säger "köpta timmar" och lovar återbetalning); vill vi ha en krävs en egen mall och `notis-ko`. Juristen
+  har inte läst villkoren för gratistimmarna.
 - **Timmarna delas, och timmar köps till planen** (2026-10-14, `timmarna_delas_och_kops_till`, 20261014100000) är
   i drift sedan samma förmiddag: ett pass dras från högst två köp, timmen på köpet dras inte och timmarna betalar
   resten, gratistimmar återkallas utan `delete`, Köp till timmar (Välj själv, `plan_extra`, `stripe-checkout`),
