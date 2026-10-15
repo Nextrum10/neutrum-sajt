@@ -1469,6 +1469,9 @@ av nio ansökningar där för att Leo hört av sig till dem.
   kolumnen och panelens knapp på en telefon, och `rls-test.sql` databasen
   (proven TI). Provet fyller också i skolnivån, som jobbansökan kräver sedan
   2026-10-14: utan den skickades inget, och formulärets prov föll.
+- **I drift 2026-10-15**: vyn med PR #289 (b85b892, Vercel 19.31 UTC) och
+  migrationen direkt efter (`minne/databasen.md`). Mellan de två räknade vyn
+  Intervju som förut, ur läget, och efter migrationen är fliken tom.
 
 ### Tusen rader (2026-09-29)
 

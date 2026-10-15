@@ -1312,3 +1312,28 @@ byte för byte lika. Hela `rls-test.sql` (`8c71c67e…`) gick 1703 av 1703 i ett
 do-block som slutade med `raise exception`; avsnitt 33 hoppade över sig självt,
 så inget klipptes. Advisorn: inget nytt för `anon`, och det enda nya för
 `authenticated` är `ta_tillbaka_gratistimmar`, som prövar `is_admin()` först.
+
+### Till intervju (ansokan_till_intervju, 2026-10-15)
+Kolumnen `applications.till_intervju_at`: när admin skickade ansökan vidare
+till intervju (Skicka vidare till intervju eller ett bokat möte). Fliken
+Intervju i adminvyn läser den, aldrig läget Kontaktad (`minne/vyerna.md`).
+`skydda_ansokningsfalt` nollar den på en ansökan utifrån och behåller den vid
+en ändring som inte är admins, `intern.ansokan_gallras_fran` räknar den som
+ett steg, och `applications_audit` och `applications_audit_borttagen` tar
+tidpunkten. `ansokan_besked` lyssnar inte på den: inget mejlas. Ingen
+bakåtfyllning. Funktionerna och triggrarna prövas mot driften som den lästes
+2026-10-15 (md5 på `pg_get_functiondef` och `pg_get_triggerdef`), och
+`create or replace trigger` byter dem utan `drop`. `rls-test.sql` proven TI.
+**I drift 2026-10-15**, direkt efter merge av PR #289 (b85b892), som Vercel
+driftsatte 19.31 UTC: de tre andra sessionerna i repot fick veta före (ingen
+svarade på fem minuter) och efter. Filen hämtades från merge-commiten genom
+`extensions.http_get`, prövades mot sin md5 (`344c91c4…`) och kördes och
+registrerades i samma do-block (`$kor$`), med en vakt mot att versionen redan
+fanns. Ordet `delete` står i filen bara i `after delete on` i triggerns
+definition, ingen sats, så den kördes hel. Efteråt: båda funktionerna, alla
+sju triggrar på `applications`, kolumnen, kommentaren och rättigheterna byte
+för byte lika en lokal databas byggd ur filerna, raden i `schema_migrations`
+med filens md5, och ingen ansökan med steget satt. Hela `rls-test.sql` från
+b85b892 gick 1745 av 1745 mot driften i ett do-block som slutar med ett fel
+(allt rullades tillbaka), och inget blev kvar. Advisorn larmade inte om något
+nytt.
