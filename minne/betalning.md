@@ -105,8 +105,38 @@ texten är kärnans.
     fristen till betalt delat med alla timmarna, och den betalas aldrig ut.
     Ett köp som läggs in som redan betalt (fixturerna) får ingen timme.
   - Pass för pass bara för en familj vi valt: `forsta_timmen_beviljad`
-    (ingen skrivpolicy; `ge_forsta_timmen()` med `is_admin()`, rutan i Ta
-    in familjen och knappen i familjens panel), med regeln ovan.
+    (ingen skrivpolicy; `ge_forsta_timmen()` med `is_admin()`), med regeln
+    ovan. **Sedan 2026-10-15 ges den inte pass för pass.** Leo: "i
+    familjers profil finns det ge den pass för pass, alltså första gratis
+    lektionen, ta bort den. det ska bara finnas ge gratis timmar till
+    timbanken". Rutan i Ta in familjen och knappen i familjens panel är
+    borta, och raden Första timmen gratis i panelen säger bara om timmen
+    getts. Ingen familj hade valet och inget pass hade timmen, så
+    databasen ändrades inte: tabellen, funktionen och Fas 19.5:s väg står
+    kvar utan knapp, och studievyn visar fortfarande en timme som är
+    `beviljad`. Villkoren säger att vi "kan, om vi kommit överens om det"
+    ge den pass för pass; meningen går med nästa version, för en version
+    bara för den skulle ge alla frågan om villkoren igen. Agentens fakta
+    (`drift`) och familjens ruta Pris under Profil säger det inte längre.
+  - **Som erbjudande i Erbjudanden, också med rabattkod** (2026-10-15).
+    Leo: "när familjen köper en plan för pris 379kr utan rabattkod, ska de
+    automatiskt få en gratis timme och det ska stå som erbjudande i deras
+    erbjudanden. sen när de köpt sin plan för första gången så ändras
+    synen på erbjudande och man får inte längre gratis timme", och samma
+    kväll: "har man en rabattkod får man ändå gratis timmen", "alltså den
+    första". Databasen gjorde redan så: den första betalda planen får
+    timmen, med eller utan kod, och sedan är den tagen. Ett första utkast
+    läste "utan rabattkod" som ett villkor, spärrade timmen med kod och
+    räknade varje betald plan som tagen (`forsta_timmen_utan_kod`, med en
+    ny version av villkoren); det kördes aldrig i driften och togs bort
+    samma kväll. Studievyn har rutan Erbjudande, Första timmen gratis
+    överst i Erbjudanden (`#erb-forsta-box`, framhävd som Standards kort,
+    med egna regler i mörkt läge) så länge `forsta_timmen_lage()` inte
+    säger `tagen`, och plankorten säger "Er första plan: en timme till,
+    gratis", också med en kod. Koden och timmen läggs alltså ihop på den
+    första planen, till skillnad från ett pass, där timmen går före koden.
+    En plan köpt före 2026-10-09 utan timmen (Leos testköp) tar inte
+    erbjudandet, så hans konto ser rutan, och hans nästa plan får timmen.
   - Högst en: `intern.forsta_timmen_tagen` är sann när familjen har ett
     icke avbokat pass med `startrabatt` utan `TIPS`, eller en plan med
     `forsta_timmen` (också en återbetald, för timmen kan ha använts). Båda

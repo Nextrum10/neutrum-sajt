@@ -565,7 +565,6 @@
 
     let familj = anmälansFamilj(lead);
     let inbjuden = false;
-    let forstaVal = null;   // första timmen pass för pass: true, eller felet
     let gratisVal = null;   // gratistimmarna: svaret från ge_gratistimmar, eller felet
     const kanBjuda = NX.epostOk(lead.email || '');
 
@@ -587,19 +586,13 @@
       + '<div class="fgroup"><label for="le-amnen">Ämnen</label>'
       + '<input class="inp" id="le-amnen" value="' + esc(lead.subject || '') + '"></div>'
       + '</div>'
-      /* Första timmen gratis (2026-10-09, Leo: "när vi skapar konto åt en
-         kund ska de MAXIMALT få en timme gratis"). Familjen får den alltid
-         i sin första plan; rutan ger den också pass för pass. Av som
-         förval, och bara när kontot skapas här: för en familj som redan
-         finns väljs den i familjens panel. */
-      + (familj ? '' : '<label class="le-forsta"><input type="checkbox" id="le-forsta"> '
-        + 'Första timmen gratis även om familjen betalar pass för pass. Köper de en plan får de den '
-        + 'där ändå, och aldrig mer än en.</label>')
       /* Gratistimmar (2026-10-13, Leo: "när vi tar in en familj ska vi
          kunna fylla deras timbank med önskade timmar som vi klickar in,
          inte de"). Gratis också här, och samma regler som i familjens
          panel (ge_gratistimmar). Noll eller tomt: inga. Bara när kontot
-         skapas här, som första timmen. */
+         skapas här; en familj som redan finns får dem i sin panel. Rutan
+         för första timmen pass för pass stod här till 2026-10-15 (Leo:
+         "det ska bara finnas ge gratis timmar till timbanken"). */
       + (familj ? '' : '<div class="le-gratis"><label for="le-gratis">Gratistimmar i timbanken</label>'
         + '<input class="inp" id="le-gratis" type="number" min="0" max="40" step="1" inputmode="numeric" value="0">'
         + '<span>Från oss, utan kostnad. De gäller i 60 dagar och betalar familjens pass före köpta timmar. '
@@ -674,16 +667,8 @@
       }
 
       await medan($('#le-skapa', ruta), familj ? 'Skapar…' : 'Tar in…', async () => {
-        const forsta = $('#le-forsta', ruta);
         if (!familj && !(await bjudIn(msg))) return;
         const parent = familj.id;
-        /* Valet skrivs när kontot finns. Går det inte säger kvittot det,
-           och det går att göra i familjens panel. */
-        if (forsta && forsta.checked && inbjuden && forstaVal === null) {
-          const v = await supa.rpc('ge_forsta_timmen', { p_familj: parent, p_ja: true });
-          forstaVal = v.error ? felText(v.error) : true;
-          forsta.closest('label').hidden = true;
-        }
         /* Gratistimmarna, en gång, när kontot finns. Familjen har inte
            godkänt villkoren än, och behöver inte: en gåva är inget köp. */
         if (gratis > 0 && inbjuden && gratisVal === null) {
@@ -775,12 +760,6 @@
               + '</b> med en länk där de väljer sitt lösenord. Efter lösenordet går de igenom introduktionen, '
               + 'och tills du valt studiehjälpare ser de att ni matchar dem.</p>'
             : '')
-          + (forstaVal === true
-            ? '<p style="margin-top:10px">Familjen får första timmen gratis även pass för pass.</p>'
-            : forstaVal
-              ? '<p style="margin-top:10px;color:var(--acc-text)">Första timmen kunde inte väljas (' + esc(forstaVal)
-                + '). Välj den i familjens panel.</p>'
-              : '')
           + (gratisVal && typeof gratisVal === 'object'
             ? '<p style="margin-top:10px">' + esc(gratisText(gratisVal)) + '</p>'
             : gratisVal
