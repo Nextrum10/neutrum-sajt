@@ -163,15 +163,22 @@ blockquote,figure{margin:0}
 .link-arrow svg{width:14px;height:14px}
 
 /* ============================================================
-   logo mark
+   loggan (2026-10-15): märket och ordet nextrum, två svg i samma
+   höjd ur Leos logga. Den bruna delen och ordet är currentColor, så
+   ett mörkt sidhuvud eller en mörk footer byter färg med color på
+   .logo; det orange står i markupen. Bredden räknas ur höjden, för
+   en inline-svg utan bredd blir 300 px i äldre Safari. Avståndet och
+   proportionerna är loggans egna (märket 223,5, ordet 751,75 och
+   glappet 51,75 enheter på höjden 169,5).
    ============================================================ */
-.mark{width:26px;height:26px;flex:none}
-.mark rect{fill:var(--fg)}
-.mark path{stroke:var(--bg);stroke-width:2.1;stroke-linecap:square;fill:none}
-.on-band .mark rect{fill:var(--band-fg)}
-.on-band .mark path{stroke:var(--band-bg)}
-.logo{display:inline-flex;align-items:center;gap:10px}
-.logo-text{font-weight:800;font-size:1.12rem;letter-spacing:-.02em;text-transform:uppercase}
+.logo{
+  --logga-h:26px;
+  display:inline-flex;align-items:center;gap:calc(var(--logga-h) * .305);
+  color:var(--logga-brun,#643820);
+}
+.mark{height:var(--logga-h,26px);width:calc(var(--logga-h,26px) * 1.319);flex:none;display:block}
+.logo-text{height:var(--logga-h,26px);width:calc(var(--logga-h,26px) * 4.435);flex:none;display:block}
+.on-band .logo{color:var(--band-fg)}
 
 /* ============================================================
    header / nav
