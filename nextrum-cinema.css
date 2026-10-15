@@ -585,7 +585,7 @@ html[data-motion] [data-stig][data-fördröj="5"]{transition-delay:.25s,.25s,0s,
 .hdr .logo{flex:none}
 .hdr .logo .mark{transition:scale .4s var(--e-ut)}
 .hdr .logo:hover .mark{scale:1.08}
-@media (max-width:600px){.hdr .logo{--logga-h:23px}}
+@media (max-width:600px){.hdr .logo{--logga-h:19px}}
 
 /* Menyn: liten, låg kontrast tills man är där. Understrykningen
    växer ut från vänster. */
