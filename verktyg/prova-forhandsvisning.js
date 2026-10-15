@@ -117,13 +117,12 @@ async function stängNotisrutan(page) {
   return t || '';
 }
 const värld = (page, f, arg) => page.evaluate(f, arg);
-/* Passen i världen före ett förslag. Världens pass står på dagar räknade
-   från i dag, och provet föreslår en tid sista dagen i månaden, där ett
-   av dem kan stå: den 15 oktober är dag(16) den 31:a, och där står Saras
-   motförslag. Provet tog det passet i stället för familjens, och föll på
-   tre ställen just de dagarna. Det nya passet är det som inte fanns
-   förut, inte det första med samma datum. */
+/* Ett nytt pass hittas på sitt id, aldrig på datum och läge: kalenderns
+   sista dag är månadens sista, och den kan vara samma dag som ett av
+   världens pass (dag(6), dag(16), dag(23)). Den 15 oktober tog provet Saras
+   motförslag för familjens förslag. */
 const passen = page => värld(page, () => NXForhandsvisning.värld.bookings.map(b => b.id));
+const nyaPass = (page, förut) => värld(page, f => NXForhandsvisning.värld.bookings.filter(b => !f.includes(b.id)), förut);
 
 /* Varje sektion i vyn, en i taget. Det vyerna frågade efter som världen
    inte har står i loggen med 404 (eller 500 om världen kastade). */
@@ -226,16 +225,16 @@ async function provaStudievyn(webb) {
   /* Ett eget förslag. */
   await page.click('#boka-inner [data-bk-igen]').catch(() => {});
   const dag = await page.$$eval('#boka-inner .mv-dag:not([disabled])', d => d.map(x => x.dataset.datum).slice(-1)[0]);
+  const förut = await passen(page);
   await page.click('#boka-inner .mv-dag[data-datum="' + dag + '"]');
   await page.waitForSelector('#boka-inner .mv-tid', { timeout: 3000 }).catch(() => {});
   await page.click('#boka-inner .mv-tid');
   await page.click('#boka-inner #bk-format button[data-v="Online"]');
-  const förut = await passen(page);
   await page.click('#boka-inner #bk-boka');
   await page.waitForSelector('#boka-inner .bk-kvitto', { timeout: 5000 }).catch(() => {});
-  const eget = await värld(page, ([d, förut]) => NXForhandsvisning.värld.bookings.filter(b => förut.indexOf(b.id) === -1
-    && b.wanted_date === d && b.created_by === NXForhandsvisning.värld.profiles[0].id).length, [dag, förut]);
-  prova('studievyn: ett eget förslag sparas i världen', eget === 1, eget);
+  const eget = await nyaPass(page, förut);
+  prova('studievyn: ett eget förslag sparas i världen', eget.length === 1 && eget[0].wanted_date === dag
+    && eget[0].status === 'requested' && eget[0].created_by === id(1), JSON.stringify(eget));
 
   /* Ett meddelande. */
   await page.evaluate(() => { location.hash = '#meddelanden'; });
@@ -360,19 +359,16 @@ async function provaDelad(webb) {
   await page.waitForSelector('#boka-inner .mv-dag', { timeout: 15000 }).catch(() => {});
   await stängNotisrutan(page);
   const dag = await page.$$eval('#boka-inner .mv-dag:not([disabled])', d => d.map(x => x.dataset.datum).slice(-1)[0]);
+  const förut = await passen(page);
   await page.click('#boka-inner .mv-dag[data-datum="' + dag + '"]');
   await page.waitForSelector('#boka-inner .mv-tid', { timeout: 3000 }).catch(() => {});
   await page.click('#boka-inner .mv-tid');
   await page.click('#boka-inner #bk-format button[data-v="Online"]');
-  const förut = await passen(page);
   await page.click('#boka-inner #bk-boka');
   await page.waitForSelector('#boka-inner .bk-kvitto', { timeout: 5000 }).catch(() => {});
-  const nytt = await page.evaluate(([d, förut]) => {
-    const b = NXForhandsvisning.värld.bookings.find(x => förut.indexOf(x.id) === -1
-      && x.wanted_date === d && x.status === 'requested' && x.subject);
-    return b ? b.id : null;
-  }, [dag, förut]);
-  prova('delad: familjens förslag finns i världen', !!nytt, nytt);
+  const nya = await nyaPass(page, förut);
+  const nytt = nya.length === 1 && nya[0].wanted_date === dag && nya[0].status === 'requested' ? nya[0].id : null;
+  prova('delad: familjens förslag finns i världen', !!nytt, JSON.stringify(nya));
 
   await page.reload();
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
