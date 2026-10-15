@@ -96,9 +96,14 @@ svensk tid. En gång per kort och sista dag; ett förlängt kort får en ny.
 Mallen läser `kvar` (heltal, 1–200) och `datum` ur `RenData`, och bara
 familjen har raden i `NOTISVAL` (`bara: 'parent'`). Sedan 2026-10-13
 (`gratistimmarna_60_dagar`) räknar `kvar` bara de timmar som går ut med
-planen: en oanvänd gratis timme gäller till 60 dagar efter köpet. Ingen
-påminnelse om gratistimmen själv, för mallen säger "köpta timmar" och att
-resten betalas tillbaka, och en gratis timme betalas aldrig ut.
+planen: en oanvänd gratis timme gäller till 60 dagar efter köpet. Sedan
+2026-10-15 (`gratistimmarna_paminns`) påminns gratis timmar med samma typ och
+`gratis: true` i datan: gratistimmar från oss och planens gratis timme efter
+planens månad. Mallen har då en egen text som aldrig säger "köpta" eller
+lovar något tillbaka, för en gratis timme betalas aldrig ut, och `renData`
+släpper bara igenom `true`. `notis-ko` driftsätts före migrationen, annars
+går mejlet om köpta timmar ut, med löftet. En familj utan studiehjälpare får
+inget mejl om gratis timmar, utan vi får en uppgift (`minne/timmar.md`).
 
 **Notiser som inte gick fram (System → Fel) är bara databasens egna
 utskick** (2026-09-27). `notisfel()` läste förut hela

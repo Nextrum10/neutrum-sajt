@@ -204,6 +204,33 @@ Deno.test('påminnelsen om timmarna säger hur många, vilken dag och att resten
   assertEquals(/NaN|undefined|många/.test(utan.text), false);
 });
 
+Deno.test('påminnelsen om gratis timmar lovar aldrig att något betalas tillbaka (gratistimmarna_paminns)', () => {
+  const m = rendera('timmar_gar_ut', 'parent', { data: { datum: '2026-10-23', kvar: 3, klippkort: 'c16a', gratis: true } });
+  assertStringIncludes(m.amne, 'Era gratis timmar går ut fredag 23 oktober');
+  assertStringIncludes(m.text, 'Ni har 3 gratis timmar kvar, och de gäller till och med fredag 23 oktober.');
+  assertStringIncludes(m.text, 'Gratis timmar som inte används förfaller och betalas inte ut.');
+  assertStringIncludes(m.text, 'Gratis timmar kvar: 3');
+  assertStringIncludes(m.text, `${SAJT}/foralder#boka`);
+  assertEquals(/tillbaka|köpta/.test(m.text), false, 'gratis timmar betalas aldrig tillbaka, och de är inte köpta');
+  assertEquals(m.text.includes('c16a'), false);
+
+  const en = rendera('timmar_gar_ut', 'parent', { data: { datum: '2026-10-23', kvar: 1, gratis: true } });
+  assertStringIncludes(en.amne, 'Er gratis timme går ut');
+  assertStringIncludes(en.text, 'Ni har 1 gratis timme kvar, och den gäller till och med fredag 23 oktober.');
+  assertStringIncludes(en.text, 'så betalar timmen det');
+
+  // Bara true räknas: en sträng eller en etta ger mejlet om köpta timmar,
+  // som det var före ändringen.
+  for (const gratis of ['true', 1, null]) {
+    const kopta = rendera('timmar_gar_ut', 'parent', { data: { datum: '2026-10-23', kvar: 2, gratis } });
+    assertStringIncludes(kopta.text, 'Ni har 2 timmar kvar');
+  }
+
+  const utan = rendera('timmar_gar_ut', 'parent', { data: { kvar: 'många', datum: 'snart', gratis: true } });
+  assertStringIncludes(utan.text, 'Ni har gratis timmar kvar som snart går ut.');
+  assertEquals(/NaN|undefined|många/.test(utan.text), false);
+});
+
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
   const m = rendera('meddelande', 'parent');
   assertStringIncludes(m.text, 'Du får det här för att du har ett konto på Nextrum');
