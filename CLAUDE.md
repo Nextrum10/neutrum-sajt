@@ -985,6 +985,12 @@ Detaljer: `minne/grunden.md`.
   lika en lokal databas byggd ur filerna, och hela `rls-test.sql` gick 1745 av 1745 mot driften, tillbakarullat.
   Advisorn larmade inte om något nytt. De tre andra sessionerna i repot fick veta före och efter. Fliken Intervju
   är tom: i driften var sju av nio ansökningar Kontaktad, och Leo skickar dit dem han vill intervjua.
+- **Första timmen som Erbjudande, också med rabattkod, och inte pass för pass** (2026-10-15) är i drift sedan samma
+  kväll: PR #286 mergades (bed3797), Vercel driftsatte den 19.48 UTC, och `drift` v20 gick ut från merge-commiten,
+  hämtad tillbaka och byte för byte lika i alla fem filer. Ingen migration: databasen gav redan den första planen
+  timmen också med kod, och villkoren står kvar på 2026-10-15. Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()`
+  och villkorens "kan vi, om vi kommit överens" går med nästa version av villkoren, och faktatextens "(första timmen
+  eller tipstimmen)" rättas nästa gång den ändras (`minne/funktioner.md`).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
