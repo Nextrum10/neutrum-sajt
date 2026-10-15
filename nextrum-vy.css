@@ -2123,15 +2123,59 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-mitt-topp{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
 .erb-mitt-topp b{color:var(--bl)}
 .erb-mitt-topp span{font-size:.82rem;color:var(--bl-2)}
-.erb-matare{height:8px;border-radius:100px;background:var(--pap-3);margin:10px 0 8px;overflow:hidden}
-.erb-matare i{display:block;height:100%;border-radius:inherit;background:var(--mossa)}
+.erb-matare{display:flex;height:8px;border-radius:100px;background:var(--pap-3);margin:10px 0 8px;overflow:hidden}
+/* Köpta timmar orange och gratis gröna, som i batteriet (2026-10-15). */
+.erb-matare i{flex:none;display:block;height:100%;background:var(--orange)}
+.erb-matare i.gratis{background:var(--mossa)}
+.erb-matare i:last-child{border-radius:0 100px 100px 0}
 .erb-kvar{font-size:.84rem;color:var(--bl-2)}
 .erb-kvar b{color:var(--bl);font-size:1rem}
 .erb-mitt.ar-slut{opacity:.6}
-/* Tillgängliga timmar överst i Er timbank (2026-10-12): summan står
-   störst, och länken till Profil → Timbanken sist, under köpen. */
-.erb-tillg .erb-kvar b{font-size:1.7rem;letter-spacing:-.03em;margin-right:2px}
+/* Tillgängliga timmar överst i Er timbank (2026-10-12), sedan
+   2026-10-15 som batteriet nedan, och länken till Profil → Timbanken
+   sist, under köpen. */
 .erb-tillg-lank{margin-top:16px}
+/* Batteriet i timbanken (2026-10-15, Leo: "som ett batteri bara att
+   orange timmar är köpta och gratis är gröna"). En ruta per timme:
+   köpta i orange, gratis i mossa, använda tomma och lägre. Skriptet
+   sätter klasserna och --d (turordningen bland rutorna som ändras), och
+   rutorna byter färg en i taget. Över 24 timmar är det en stapel, vars
+   delar skriptet ger bredden --b. Höjden står fast, så att inget under
+   batteriet flyttar sig när det fylls. */
+.tb-batteri{margin:12px 0 2px}
+.tb-batteri-bild{display:flex;align-items:center;max-width:360px}
+.tb-batteri-kropp{
+  flex:1 1 auto;min-width:0;height:36px;padding:4px;
+  display:flex;gap:3px;
+  border:2px solid var(--bl-2);border-radius:10px;
+}
+.tb-batteri-pol{flex:none;width:5px;height:14px;margin-left:2px;border-radius:0 3px 3px 0;background:var(--bl-2)}
+.tb-ruta{
+  flex:1 1 0;min-width:0;border-radius:3px;background:var(--pap-3);
+  transform:scaleY(.55);
+  transition:background-color .4s ease,transform .4s cubic-bezier(.3,1.4,.5,1);
+  transition-delay:calc(var(--d,0) * 45ms);
+}
+.tb-ruta.kopt{background:var(--orange);transform:none}
+.tb-ruta.gratis{background:var(--mossa);transform:none}
+.tb-stapel{flex:1 1 auto;display:flex;min-width:0;border-radius:4px;overflow:hidden;background:var(--pap-3)}
+.tb-stapel i{flex:none;width:var(--b,0%);height:100%;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.tb-stapel i.kopt{background:var(--orange)}
+.tb-stapel i.gratis{background:var(--mossa)}
+.tb-batteri-tal{margin:10px 0 0;font-size:.9rem;color:var(--bl-2)}
+.tb-batteri-tal b{font-size:1.7rem;letter-spacing:-.03em;color:var(--bl);margin-right:2px}
+.tb-batteri-not{display:flex;flex-wrap:wrap;gap:4px 16px;margin:4px 0 0;font-size:.82rem;color:var(--bl-2)}
+.tb-batteri-not[hidden]{display:none}
+.tb-batteri-not span::before{
+  content:"";display:inline-block;width:10px;height:10px;border-radius:3px;
+  margin-right:6px;vertical-align:-1px;background:var(--orange);
+}
+.tb-batteri-not .gratis::before{background:var(--mossa)}
+/* Profil → Timbanken: batteriet överst, förklaringen under. */
+.tb-batteri + .tb-forklaring,.tb-batteri + .tb-inga{margin-top:16px}
+@media (prefers-reduced-motion:reduce){
+  .tb-ruta,.tb-stapel i{transition:none}
+}
 /* Fas 22.1: timbanken, under klippkorten i Era timmar. */
 .erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
 .erb-bank-text a{color:var(--acc);font-weight:600}

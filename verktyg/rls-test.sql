@@ -14469,13 +14469,77 @@ begin
     ('GT en tipstimme som tjänades in för tio dagar sedan ges', t3 = 'TIPS', t3);
 end $$;
 
+-- gratistimmarna_paminns (2026-10-15): en tipstimme påminns tio dagar
+-- innan den går ut, som de andra gratis timmarna. Den är inget kort, så
+-- påminnelsen har inget kort och gäller familjen och dagen, en gång.
+-- Samma fixtur som ovan, men passen hölls för 52 dagar sedan: åtta dagar kvar.
+do $$
+declare
+  fel  text;
+  jp   jsonb;
+  t    text;
+  n    bigint;
+  idag date := (now() at time zone 'Europe/Stockholm')::date;
+  mitt timestamptz := (idag + time '12:00') at time zone 'Europe/Stockholm';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  EQ   constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  LQ   constant uuid := '00000000-0000-4000-8000-00000000eb21';
+  QB1  constant uuid := '00000000-0000-4000-8000-00000000eb22';
+  QB2  constant uuid := '00000000-0000-4000-8000-00000000eb23';
+begin
+  if to_regprocedure('intern.tipstimmar_kvar(uuid, date)') is null then
+    return;
+  end if;
+  begin
+    perform pg_temp.bli(P);
+    jp := public.mina_tips();
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    perform pg_temp.bli(null);
+    insert into public.leads (id, parent_name, email, kod)
+    values (LQ, 'Test Familj Q', 'rls-q-gt@example.invalid', jp ->> 'kod');
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    update public.leads set kund_id = Q, created_at = now() - interval '90 days' where id = LQ;
+    update public.students set matched_tutor_id = A, match_status = 'matched' where id = EQ;
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (QB1, Q, A, EQ, Q, idag - 53, '12:00', 60, 'confirmed'),
+           (QB2, Q, A, EQ, Q, idag - 52, '14:00', 60, 'confirmed');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro)
+    values (EQ, A, QB1, 'fixtur', idag - 53, 'narvarande'),
+           (EQ, A, QB2, 'fixtur', idag - 52, 'narvarande');
+
+    perform intern.timmar_gar_ut_koa(mitt);
+    perform intern.timmar_gar_ut_koa(mitt);
+    select string_agg(coalesce(x.data ->> 'gratis', '-') || ':' || (x.data ->> 'kvar') || ':' || (x.data ->> 'datum')
+                      || ':' || (x.data ? 'klippkort'), ',')
+      into t from public.notiser x where x.mottagare = P and x.typ = 'timmar_gar_ut' and not (x.data ? 'klippkort');
+    select count(*) into n from public.notis_utskick u
+     where u.mottagare = P and u.typ = 'timmar_gar_ut' and u.idempotens like '%:tips:%';
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('GT påminnelsen om tipstimmen', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('GT en tipstimme som går ut om åtta dagar påminns en gång, märkt gratis och utan kort',
+      t = 'true:1:' || (idag + 8) || ':false' and n = 1, coalesce(t, 'ingen påminnelse') || ', i kön ' || n);
+end $$;
+
 -- ------------------------------------------------------------
 -- 30. Gratistimmarna i timbanken (gratistimmar, 2026-10-13)
 --
 -- Leo: admin sätter in gratistimmar i familjens timbank, när familjen
 -- tas in och när den redan finns. De gäller i 60 dagar, används före
--- köpta timmar, sparar inga minuter, betalas aldrig ut och får ingen
--- påminnelse. Bara admin sätter in och tar tillbaka. Familj Q får dem,
+-- köpta timmar, sparar inga minuter och betalas aldrig ut. Sedan
+-- gratistimmarna_paminns (2026-10-15) påminns de tio dagar innan, märkta
+-- gratis. Bara admin sätter in och tar tillbaka. Familj Q får dem,
 -- med barnet matchat hos A och strömbrytaren erbjudanden på. Varje
 -- delblock rullas tillbaka för sig (variablerna står kvar), och allt
 -- rullas tillbaka sist.
@@ -14767,7 +14831,10 @@ begin
     reset role;
     perform set_config('request.jwt.claims', '', true);
 
-    -- ---------- E. Ingen påminnelse om gratistimmar ----------
+    -- ---------- E. Påminnelsen om gratistimmar (gratistimmarna_paminns) ----------
+    -- Förut påmindes bara köpta timmar (Leo 2026-10-15: "fixa påminelse").
+    -- Gratistimmarna påminns som köpta, märkta gratis så att mejlet inte
+    -- lovar pengar tillbaka, och ett återkallat kort påminns aldrig.
     begin
       insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
                                     timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
@@ -14775,15 +14842,55 @@ begin
               idag + 5, now(), 'ch_rlsprov_gratistimmar');
       perform pg_temp.bli(AD);
       g := (public.ge_gratistimmar(Q, 3) ->> 'id')::uuid;
+      r := public.ge_gratistimmar(Q, 2);
+      perform public.ta_tillbaka_gratistimmar((r ->> 'id')::uuid);
       reset role;
       perform set_config('request.jwt.claims', '', true);
-      update public.klippkort set giltigt_till = idag + 5 where id = g;
+      update public.klippkort set giltigt_till = idag + 5 where id in (g, (r ->> 'id')::uuid);
 
       perform intern.timmar_gar_ut_koa(mitt);
-      select count(*) into n from public.notiser where typ = 'timmar_gar_ut' and data ->> 'klippkort' = g::text;
-      select count(*) into m from public.notiser where typ = 'timmar_gar_ut' and data ->> 'klippkort' = KK::text;
-      ut := ut || jsonb_build_object('t', 'GTB påminnelsen går om köpta timmar men inte om gratistimmar',
-              'ok', n = 0 and m = 1, 'd', 'gratis ' || n || ', köpta ' || m);
+      perform intern.timmar_gar_ut_koa(mitt);
+      select string_agg(coalesce(x.data ->> 'gratis', '-') || ':' || (x.data ->> 'kvar') || ':' || (x.data ->> 'datum'), ',')
+        into t from public.notiser x where x.typ = 'timmar_gar_ut' and x.data ->> 'klippkort' = g::text;
+      ut := ut || jsonb_build_object('t', 'GTB gratistimmarna påminns en gång, märkta gratis, med timmarna kvar och sista dagen',
+              'ok', t = 'true:' || (select s.kvar from public.klippkort_saldo s where s.id = g) || ':' || (idag + 5),
+              'd', coalesce(t, 'ingen påminnelse'));
+      select string_agg(coalesce(x.data ->> 'gratis', '-') || ':' || (x.data ->> 'kvar'), ',')
+        into t from public.notiser x where x.typ = 'timmar_gar_ut' and x.data ->> 'klippkort' = KK::text;
+      ut := ut || jsonb_build_object('t', 'GTB de köpta timmarna påminns som förut, utan märket',
+              'ok', t = '-:4', 'd', coalesce(t, 'ingen påminnelse'));
+      select count(*) into n from public.notis_utskick u
+       where u.typ = 'timmar_gar_ut' and u.data ->> 'klippkort' = g::text and u.data ->> 'gratis' = 'true';
+      select count(*) into m from public.notiser x
+       where x.typ = 'timmar_gar_ut' and x.data ->> 'klippkort' = r ->> 'id';
+      ut := ut || jsonb_build_object('t', 'GTB mejlet får märket, och återkallade gratistimmar påminns inte',
+              'ok', n = 1 and m = 0, 'd', 'i kön ' || n || ', återkallade ' || m);
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- F. Planens gratis timme påminns när den går ut efter planen ----------
+    -- Planen gick ut för 25 dagar sedan, och timmen på köpet gäller 60
+    -- dagar från köpet: fem dagar kvar. Planens köpta timmar har gått ut
+    -- och påminns inte.
+    begin
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, timmar_pa_kopet, giltig_manader,
+                                    rabatt_procent, timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at,
+                                    stripe_charge_id)
+      values (KK, Q, 'plan_basic', 'Prov Basic', 'plan', 5, 1, 1, 5, tp, 151600, 151600, 'betald',
+              idag - 25, now() - interval '55 days', 'ch_rlsprov_gratistimmen');
+      perform intern.timmar_gar_ut_koa(mitt);
+      perform intern.timmar_gar_ut_koa(mitt);
+      select string_agg(coalesce(x.data ->> 'gratis', '-') || ':' || (x.data ->> 'kvar') || ':' || (x.data ->> 'datum'), ',')
+        into t from public.notiser x where x.typ = 'timmar_gar_ut' and x.data ->> 'klippkort' = KK::text;
+      ut := ut || jsonb_build_object('t', 'GTB planens gratis timme påminns en gång när den går ut efter planen',
+              'ok', t = 'true:1:' || (select s.gratis_till from public.klippkort_saldo s where s.id = KK),
+              'd', coalesce(t, 'ingen påminnelse') || ' (gratis till '
+                   || coalesce((select s.gratis_till - idag from public.klippkort_saldo s where s.id = KK)::text, 'null') || ' dagar)');
 
       raise exception 'delblock';
     exception when others then

@@ -79,7 +79,7 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
   pass_avbojt: 'avböjda tider',
   meddelande: 'nya meddelanden',
   paminnelse: 'påminnelser före pass',
-  timmar_gar_ut: 'köpta timmar som går ut',
+  timmar_gar_ut: 'timmar som går ut',
   barnforslag: 'barnens förslag på pass',
   kort_nekat: 'kort som nekas',
 };
@@ -261,6 +261,28 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
   // Fas 22.2 betalar de passet när det är bekräftat.
   timmar_gar_ut(m) {
     const sista = m.d.datum ? datumText(m.d.datum) : null;
+    // gratistimmar_paminns (2026-10-15): gratis timmar påminns också, men
+    // utan löftet om pengar tillbaka, för de betalas aldrig ut.
+    if (m.d.gratis) {
+      const en = m.d.kvar === 1;
+      const de = en ? 'den' : 'de';
+      const fakta: [string, string][] = [];
+      if (m.d.kvar !== null) fakta.push(['Gratis timmar kvar', String(m.d.kvar)]);
+      if (sista) fakta.push(['Sista dagen', sista]);
+      return {
+        amne: `${en ? 'Er gratis timme' : 'Era gratis timmar'} går ${sista ? `ut ${sista}` : 'snart ut'}`,
+        rubrik: en ? 'Er gratis timme går snart ut' : 'Era gratis timmar går snart ut',
+        mening: (m.d.kvar === null ? 'Ni har gratis timmar kvar'
+            : `Ni har ${en ? '1 gratis timme' : `${m.d.kvar} gratis timmar`} kvar`)
+          + (sista ? `, och ${de} gäller till och med ${sista}.` : ' som snart går ut.')
+          + ` Boka ${en ? 'ett pass' : 'pass'} innan dess, så används ${de} först.`
+          + (en ? ' En gratis timme som inte används förfaller och betalas inte ut.'
+            : ' Gratis timmar som inte används förfaller och betalas inte ut.'),
+        knapp: 'Boka ett pass',
+        mal: 'boka',
+        fakta,
+      };
+    }
     const antal = m.d.kvar === null ? null : m.d.kvar === 1 ? '1 timme' : `${m.d.kvar} timmar`;
     const fakta: [string, string][] = [];
     if (m.d.kvar !== null) fakta.push(['Timmar kvar', String(m.d.kvar)]);
