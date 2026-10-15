@@ -321,7 +321,7 @@ Genererat:
 - `sitemap.xml` byggs av `verktyg/bygg-sitemap.py` ur sidornas
   canonical och hreflang. `lastmod` flyttas bara när sidans text
   ändras, inte vid varje commit
-- Ikonlänkar och bildstorlekar sätts av `verktyg/satt-logga.py`
+- Ikonerna och loggans PNG:er ritas av `verktyg/bygg-logga.js` ur `bilder/nextrum-logga.svg` (2026-10-15)
 - `?v=`-stämplarna på varje script- och link-tagg sätts av
   `verktyg/satt-version.py`, som körs SIST — områdesgeneratorn skriver
   egna script-taggar och tappar stämpeln

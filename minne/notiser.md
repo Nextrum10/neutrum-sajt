@@ -345,7 +345,10 @@ ansökan återges utom förnamnet.
 `bilder/nextrum-logo-512.png`, ritad i 32×32 med `alt=""` och ordet
 Nextrum som text bredvid, så att ett mejlprogram som blockerar bilder
 fortfarande visar avsändaren. Filen är undantagen i `.gitignore`; tas
-undantaget bort blir loggan en trasig bild i varje mejl.
+undantaget bort blir loggan en trasig bild i varje mejl. Sedan
+2026-10-15 är den det nya märket (brunt och orange på papperet), ritat
+av `verktyg/bygg-logga.js`; adressen är densamma, så inget behövde
+driftsättas.
 
 **Alla mejl vi skickar har samma skal** (2026-09-25): `skal()` i
 `_delad/notiser/rendera.ts`. Sajtens papper ända ut till kanten, ingen
