@@ -1455,11 +1455,11 @@ body.adm-inne.vy main{
   display:flex;align-items:center;gap:12px;
 }
 
-.adm-logo{display:inline-flex;align-items:center;gap:9px;flex:none}
-.adm-logo .mark{width:24px;height:24px}
-.adm-logo .mark rect{fill:var(--bl)}
-.adm-logo .mark path{stroke:var(--pap);stroke-width:2.3;fill:none;stroke-linecap:square}
-.adm-logo .logo-text{font-size:1rem;font-weight:750;letter-spacing:-.03em;color:var(--bl)}
+.adm-logo{
+  --logga-h:22px;
+  display:inline-flex;align-items:center;gap:calc(var(--logga-h) * .305);flex:none;
+  color:var(--logga-brun);
+}
 @media (max-width:899px){.adm-logo .logo-text{display:none}}
 
 /* Sektionens namn i raden: bara där menyn är en rad man sveper i. På en
