@@ -3844,6 +3844,15 @@
       + klippKolumn(kat.filter(e => e.sort === 'klippkort'), öppen)
       || tomt('Inga erbjudanden just nu', 'Skriv till oss om ni vill ha ett upplägg.');
 
+    /* Första timmen gratis som erbjudande (2026-10-15, Leo: "det ska stå
+       som erbjudande i deras erbjudanden. sen när de köpt sin plan för
+       första gången så ändras synen på erbjudande"). Rutan står när
+       databasen säger att timmen inte är tagen och det finns en plan att
+       köpa. Den första planen får timmen också med en rabattkod (Leo samma
+       kväll), och sedan säger forsta_timmen_lage() tagen, och rutan går. */
+    const ftRuta = $('#erb-forsta-box');
+    if (ftRuta) ftRuta.hidden = !(S.forstaTimmen && !S.forstaTimmen.tagen && kat.some(e => e.sort === 'plan'));
+
     /* Rabattkoden står bara där familjen kan köpa. */
     const kodRad = $('#erb-kod-rad');
     if (kodRad) kodRad.hidden = !(S.erb.aktiv && !S.väntar && kat.length);

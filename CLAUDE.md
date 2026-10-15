@@ -225,7 +225,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   timmar kvar och vill köpa pass för pass"): timmar som går att använda i dag, eller sparade minuter till en hel
   timme (`intern.har_timmar`). **Koden gäller när familjen köper timmar**, en plan eller Fyll timbanken, i rutan
   under Erbjudanden (`kolla_rabattkod_kop`, `klippkort.rabattkod`): databasen drar av den (`intern.klippkort_rabatt`),
-  aldrig så att köpet blir gratis, och gratistimmar bär ingen kod. **Hur många gånger** sätts per kod, totalt och
+  aldrig så att köpet blir gratis, och gratistimmar bär ingen kod. Den första planen får sin gratis timme också
+  med koden (Leo 2026-10-15): där läggs de ihop. **Hur många gånger** sätts per kod, totalt och
   per familj (`max_anvandningar`, `max_per_familj`, en gång som förval; Leo: "rabattkoder ska vi också bestämma hur
   många gånger de får användas"), och ett avbokat pass ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6).
   I drift sedan natten till 2026-10-14; en kods villkor ska stå där den delas ut (avsnitt 11).
@@ -356,10 +357,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   på prissidan eller i studievyn, och kalkylatorn säger inget "Ni sparar" heller (Leo samma kväll). Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
   gratis första lektion", "MAXIMALT ... en timme gratis"): högst en per familj, någonsin, utom tipstimmar
   och gratistimmar (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
-  `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald); pass för pass bara för
-  en familj vi valt (`forsta_timmen_beviljad`, `ge_forsta_timmen()` i Ta in familjen och familjens panel), då med Fas
-  19.5:s `startrabatt` på det pass som gör att familjen bokat två timmar. Studievyns `bjuden` speglar regeln ur
-  `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
+  `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald), **också
+  med rabattkod**, och sedan ingen (2026-10-15, Leo: "har man en rabattkod får man ändå gratis timmen", "alltså den
+  första"). Till dess står den som Erbjudande överst i studievyns Erbjudanden (`#erb-forsta-box`; Leo: "det ska stå
+  som erbjudande i deras erbjudanden"). **Pass för pass ges den inte** (samma dag, Leo: "det ska bara finnas ge gratis
+  timmar till timbanken"): vill vi bjuda en familj sätter vi in gratistimmar. Valet (`forsta_timmen_beviljad`, `ge_forsta_timmen()`, då med Fas 19.5:s `startrabatt`)
+  står kvar i databasen utan knapp, och villkorens "kan vi, om vi kommit överens" går med nästa version. Studievyns
+  `bjuden` speglar regeln ur `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
   **En gratis timme gäller i 60 dagar och dras först** (2026-10-13, Leo: "gratis timmar går ut efter 60 dagar att de
   läggs in", "gratis timmar går ut först sen planerna", "9h vid köp av 8"): planens gratis timme (`timmar_pa_kopet`) dras
   först och gäller efter planens månad så länge den inte använts, till 60 dagar efter köpet (`klippkort_saldo.gratis_kvar`
@@ -392,6 +396,11 @@ Detaljer: `minne/grunden.md`.
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
   `nextrum-introduktion.js` (`NXIntro`) är introduktionen i studievyn och studiehjälparvyn; bilderna
   står i `NEXTRUM_INTRO` och tas med `bygg-introbilder.js`.
+- **Loggan** (2026-10-15, Leo: "implementera våran nya logga"): märket och ordet nextrum, spårade i vektor ur Leos
+  bild, och källan är `bilder/nextrum-logga.svg`. Sidorna har dem som två inline-svg (`.mark`, `.logo-text`) i samma
+  höjd (`--logga-h`); det bruna är `currentColor` (`--logga-brun`, kräm i mörkt läge och på mörka ytor) och det
+  orange (#F88740) står i markupen. Byts loggan ändras vägarna på alla sidor (`var-ide.html` är områdessidornas
+  skal), i maskoten och affischen, och `bygg-logga.js` körs.
 - CSS: `nextrum.css`, `-home`, `-cinema`, `-vy`, `-arbetsyta`, `-agent`. **Cinema är
   sanningen**; `-vy`, `-agent` och `-typsnitt` har inga hexkoder. Papperet (`#F1EDE6` sedan 2026-10-08) tar
   `theme-color` med sig, men mejlens `FARG` ändras för sig. Adminpaletten laddas sist.
@@ -499,6 +508,10 @@ Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-1
 sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
 (`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
 lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka.
+**Ansökningarnas Intervju är ett val, inte ett läge** (2026-10-15, Leo: "i intervjudelen ska namn bara
+finnas där som jag har klickat i"): bara den som skickats vidare (`till_intervju_at`: Skicka vidare till
+intervju på raden, i panelen under läget och i Rekryteringen, eller ett bokat möte), aldrig läget
+Kontaktad. Läget (Ny, Kontaktad, Godkänd, Avböjd) sätter Leo själv, och Skicka vidare rör det inte.
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
 Familjernas och studiehjälparnas sidor behåller `mailto:`.
@@ -735,7 +748,8 @@ Detaljer: `minne/funktioner.md`.
 
 ## 8. Genererade filer — ändra aldrig för hand
 Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessidor.py`
-(`laxhjalp-*` med stadiesidorna, guiderna, navets kort och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `satt-logga.py`,
+(`laxhjalp-*` med stadiesidorna, guiderna, navets kort och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
+`bilder/nextrum-logga.svg`),
 `bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
 `bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras),
 `bygg-delningsbilder.js` (för hand: en delningsbild per sida i kartan, `delning/`, med rubriken och
@@ -932,10 +946,10 @@ Detaljer: `minne/grunden.md`.
   2026-10-14, så alla får frågan igen. Kvar: inget provköp av Köp till timmar är gjort, lönearten för bonusen i
   Fortnox ska inte vara semestergrundande (300 kr är inklusive semesterersättning; revisorn bekräftar), och juristen
   har inte läst de nya villkoren.
-- **Familjerabatterna** (2026-10-15) är skrivna, inte i drift: efter merge `familjerabatter` (20261015120000; inget `drop`
+- **Familjerabatterna** (2026-10-15) är skrivna, inte i drift: efter merge `familjerabatter` (20261015210000; inget `drop`
   och inget `delete`, så hel i ett do-block) och hela `rls-test.sql` mot driften (avsnitt 35), sedan `stripe-checkout`
   (SESSIONSFORM 9) och `drift` (agentens fakta) från merge-commiten (`DEPLOY-BETALNING.md` 9.15). Vyerna tål att migrationen
-  saknas. Lokalt ur alla migrationer 1765 av 1765, och `verktyg/prova-familjerabatter.js` 60 av 60. Kvar: juristen har inte
+  saknas. Lokalt ur alla 195 migrationer 1775 av 1775, och `verktyg/prova-familjerabatter.js` 60 av 60. Kvar: juristen har inte
   läst rad 30 i `DATASKYDD.md` eller policyns nya stycken.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
@@ -985,6 +999,13 @@ Detaljer: `minne/grunden.md`.
   **Kvar**: Stripes tre händelser på endpointen (utan `payment_intent.succeeded` blir ett draget pass inte betalt hos
   oss), provet i testläge (9.14 steg 6) och juristen, som inte läst villkoren eller rad 29 i `DATASKYDD.md`. Stripe
   står i testläge, så inga riktiga pengar dras. Pengarna dras när passet har rapporterats (Leo 2026-10-13).
+- **Skicka vidare till intervju** (2026-10-15) är i drift sedan samma kväll (Leo: "merge och migrera"): PR #289
+  mergades (b85b892), Vercel driftsatte den 19.31 UTC, och `ansokan_till_intervju` (20261015130000) kördes
+  direkt efter, hämtad från merge-commiten, prövad mot sin md5 (`344c91c4…`) och körd och registrerad i ett
+  do-block. Båda funktionerna, alla sju triggrar på `applications`, kolumnen och rättigheterna är byte för byte
+  lika en lokal databas byggd ur filerna, och hela `rls-test.sql` gick 1745 av 1745 mot driften, tillbakarullat.
+  Advisorn larmade inte om något nytt. De tre andra sessionerna i repot fick veta före och efter. Fliken Intervju
+  är tom: i driften var sju av nio ansökningar Kontaktad, och Leo skickar dit dem han vill intervjua.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

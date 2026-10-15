@@ -120,8 +120,11 @@ Google visar loggan på två ställen, och de läses ur två olika saker:
 | Den lilla ikonen bredvid träffen | `<link rel="icon">` på startsidan | `favicon.svg` plus `favicon-48.png` och `favicon-96.png` |
 | Kunskapspanelen till höger | `logo` i den strukturerade datan | `bilder/nextrum-logo-512.png` |
 
-Alla är samma märke som i sidhuvudet: N:et i den rundade rutan, bark
-och lin. PNG:erna renderades ur `favicon.svg` 2026-09-23.
+Alla är samma märke som i sidhuvudet: sedan 2026-10-15 den nya loggans
+märke, brunt och orange, på papperet i PNG:erna och genomskinligt i
+`favicon.svg`. Alla ritas av `verktyg/bygg-logga.js` ur
+`bilder/nextrum-logga.svg`. (Förut N:et i den rundade rutan, bark och
+lin, renderat ur `favicon.svg` 2026-09-23.)
 
 ### Det här var fel före 2026-09-23
 
@@ -141,31 +144,21 @@ SVG-faviconen i sig var giltig — Google tar SVG för ikonen bredvid
 träffen. **Syns ingen logga i sökresultatet är orsaken nästan säkert
 att Google inte hämtat om startsidan, inte filerna.** Se Steg 4 nedan.
 
-### Om den riktiga logotypen är en annan
+### Byts loggan
 
-Tidigare stod här att märket i sidhuvudet är en förenklad version. Är
-det så, och ni har loggan som bild:
-
-**Steg 1.** Spara den kvadratiska loggan som `bilder/nextrum-logo.png`.
-Minst 512×512 pixlar, helst 1024×1024. Den **måste vara kvadratisk** —
-Google beskär till en kvadrat, så en avlång bild får något bortkapat.
-Använd märket, inte den breda varianten med texten NEXTRUM bredvid:
-i 48 pixlar går en wordmark inte att läsa ändå.
-
-**Steg 2.** Kör verktyget (på Macen — det använder `sips`):
+Källan är `bilder/nextrum-logga.svg` (märket, ordet och sloganen i
+vektor). Byts märket: spåra om källan, byt vägarna i sidornas
+inline-svg (`CLAUDE.md` avsnitt 3) och kör, i en molnsession eller på
+Macen:
 
 ```bash
-python3 verktyg/satt-logga.py
+NODE_PATH="$(npm root -g)" node verktyg/bygg-logga.js
 ```
 
-Det skriver över PNG:erna ovan med samma namn och pekar om den
-strukturerade datan. Ikonlänkarna står redan rätt på alla sidor.
-
-**`favicon.svg`, `bilder/nextrum-logo-bimi.svg` och
-`bilder/nextrum-logo-profil.png` rör det inte.** De är ritade för
-hand. Byts märket måste de ritas om, annars visar webbläsarfliken och
-inkorgen det gamla medan Google visar det nya (`DEPLOY-EPOST.md`
-avsnitt 5).
+Det skriver favicons, `apple-touch-icon.png`, `nextrum-logo-512.png`,
+profilbilden och BIMI-filen med samma namn, så den strukturerade datan
+och ikonlänkarna står redan rätt. Bara märket kommer med, aldrig
+ordet: i 48 pixlar går det inte att läsa ändå.
 
 **Steg 3.** Commit och push.
 

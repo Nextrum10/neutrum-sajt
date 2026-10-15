@@ -1379,7 +1379,7 @@ Utan migrationen).
 I den här ordningen, från main efter merge. Fråga först de andra sessionerna
 som arbetar i repot (`minne/databasen.md`):
 
-1. **Migrationen `20261015120000_familjerabatter`** från merge-commiten,
+1. **Migrationen `20261015210000_familjerabatter`** från merge-commiten,
    prövad mot sin md5. Den har inget `drop`, inget `delete` och ingen funktion
    med ett, så den går hel i ett do-block, och registreras med filens text.
    Vakten prövar att de fem funktionerna och vyn `klippkort_saldo` är som de

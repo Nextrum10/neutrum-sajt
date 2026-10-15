@@ -29,11 +29,9 @@
   background:white;color:var(--bl);font-family:var(--f-sans);
   box-shadow:0 10px 40px rgba(43,34,28,.18);
 }
-.aff-topp{display:flex;align-items:center;gap:3mm}
-.aff-mark{width:11mm;height:11mm;flex:none}
-.aff-mark rect{fill:var(--acc)}
-.aff-mark path{fill:none;stroke:white;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.aff-namn{font-size:7mm;font-weight:700;letter-spacing:-.02em}
+/* Loggan i samma proportioner som i sidhuvudet (nextrum.css), och
+   alltid brun: affischen är vit också i mörkt läge. */
+.aff-topp{--logga-h:10mm;display:flex;align-items:center;gap:calc(var(--logga-h) * .305);color:#643820}
 .aff-slogan{margin-left:auto;font-size:4.2mm;color:var(--bl-3)}
 
 .aff-rubrik{

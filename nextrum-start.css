@@ -593,8 +593,9 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
    rutnätscell, så telefonens höjd byts aldrig, och stigens text står
    alltid utskriven (fälla 4: det ovanför det man läser får inte byta
    höjd). Telefonens alla mått är em ur dess bredd (--tw), så den ser
-   likadan ut i 280 och 320 px. Inget här har en hexkod; de två egna
-   färgerna står som tokens överst, i alla tre blocken.
+   likadan ut i 280 och 320 px. Inget här har en hexkod; de egna
+   färgerna står som tokens överst, i alla tre blocken. Telefonen har
+   ingen ö överst och ingen hemlinje (Leo 2026-10-15).
    ============================================================ */
 :root{
   /* Telefonens skugga: kort och tät närmast. Den långa skuggan under
@@ -603,7 +604,6 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
      raka kanter i Chromium på telefon. Ingen av dem animeras. */
   --nlx-skugga:0 2px 6px rgba(28,24,18,.08),0 30px 50px -26px rgba(28,24,18,.38);
   --nlx-golv:rgba(28,24,18,.3);
-  --nlx-o:#0F0C0A;                 /* ön överst i skärmen */
   --nlx-spar:var(--pap-2);         /* flikarnas skena i telefonen */
   --nlx-vald:var(--yta);           /* den valda fliken */
 }
@@ -611,7 +611,6 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
   :root:not([data-theme="light"]){
     --nlx-skugga:0 2px 6px rgba(0,0,0,.45),0 30px 50px -26px rgba(0,0,0,.7);
     --nlx-golv:rgba(0,0,0,.62);
-    --nlx-o:#0B0A08;
     /* --pap-2 och --yta är nästan samma i mörkt läge (CLAUDE.md,
        Adminvyns skal): fliken måste lyfta ur skenan, inte sjunka. */
     --nlx-spar:var(--pap-2);
@@ -621,7 +620,6 @@ html.nx-sr .showcase .sc-card.nx-in{opacity:1;transform:none}
 :root[data-theme="dark"]{
   --nlx-skugga:0 2px 6px rgba(0,0,0,.45),0 30px 50px -26px rgba(0,0,0,.7);
   --nlx-golv:rgba(0,0,0,.62);
-  --nlx-o:#0B0A08;
   --nlx-spar:var(--pap-2);
   --nlx-vald:var(--pap-3);
 }
@@ -949,12 +947,6 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
 }
 .nlx-telefon::before{left:-3px;top:21%;height:6.5%;box-shadow:0 calc(var(--tw) * .2) 0 var(--nt-2)}
 .nlx-telefon::after{right:-3px;top:27%;height:11%}
-.nlx-o{
-  position:absolute;z-index:4;left:50%;translate:-50% 0;
-  top:calc(var(--tw) * .062);
-  width:30%;height:calc(var(--tw) * .085);border-radius:100px;
-  background:var(--nlx-o);
-}
 
 /* Skärmen. Typsnittets storlek följer telefonens bredd, och allt inne
    i skärmen är em: telefonen är samma bild i alla storlekar. */
@@ -965,11 +957,6 @@ html.nx-sr .nlx-scen.nlx-in .nlx-omlopp,html.nx-sr .nlx-scen.nlx-in .nlx-sken{op
   display:grid;grid-template-rows:auto minmax(0,1fr);
   font-size:calc(var(--tw) * .042);line-height:1.35;
   text-align:left;
-}
-/* Hemlinjen längst ner. */
-.nlx-skarm::after{
-  content:"";position:absolute;z-index:4;left:50%;bottom:.55em;translate:-50% 0;
-  width:34%;height:.3em;border-radius:1em;background:var(--bl);opacity:.28;
 }
 .nlx-scen svg,.nlx-delar svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nlx-scen svg.nlx-fyll,.nlx-delar svg.nlx-fyll{fill:currentColor;stroke:none}

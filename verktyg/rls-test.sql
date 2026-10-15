@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen, kortet, timmarna som delas och familjerabatterna)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen, kortet, timmarna som delas, steget till intervju och familjerabatterna)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -56,7 +56,7 @@
 -- adminkonton_utanfor_statistiken (2026-10-12), rabattkoden_krockar_inte,
 -- gratistimmarna_60_dagar, tipskoder_bonus_och_timbanken och gratistimmar (2026-10-13),
 -- rabattkoden_timmar_och_tak och kortet_reserveras (2026-10-13), timmarna_delas_och_kops_till
--- (2026-10-14) och familjerabatter (2026-10-15) är körda.
+-- (2026-10-14), ansokan_till_intervju och familjerabatter (2026-10-15) är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -9512,6 +9512,74 @@ begin
      r1.timmar || '/' || r1.forsta_timmen);
 end $$;
 
+-- Den första planen får timmen också med en rabattkod, och sedan ingen
+-- (2026-10-15, Leo: "har man en rabattkod får man ändå gratis timmen",
+-- "alltså den första"). En plan som väntar i kassan tar inte erbjudandet:
+-- studievyn visar det tills forsta_timmen_lage() säger tagen.
+do $$
+declare
+  q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  k1  constant uuid := '00000000-0000-4000-8000-00000000f7a1';
+  k2  constant uuid := '00000000-0000-4000-8000-00000000f7a2';
+  k3  constant uuid := '00000000-0000-4000-8000-00000000f7a3';
+  vantar jsonb; efter jsonb; r1 record; r2 record;
+  fel text;
+begin
+  begin
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.rabattkoder (kod, beskrivning, typ, varde, aktiv) values ('RLS-FT', 'Prov', 'procent', 10, true);
+
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status)
+    select k3, q, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore, 'vantar'
+      from public.erbjudanden_pris e where e.kod = 'plan_basic';
+    perform pg_temp.bli(q);
+    vantar := public.forsta_timmen_lage();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, rabattkod)
+    select k1, q, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore, 'RLS-FT'
+      from public.erbjudanden_pris e where e.kod = 'plan_basic';
+    perform public.klippkort_betald(k1, (select k.begart_ore from public.klippkort k where k.id = k1)::integer,
+                                    'pi_rlsprov_ftk1', 'ch_rlsprov_ftk1', null, null, null, false);
+    perform pg_temp.bli(q);
+    efter := public.forsta_timmen_lage();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore)
+    select k2, q, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore
+      from public.erbjudanden_pris e where e.kod = 'plan_basic';
+    perform public.klippkort_betald(k2, (select k.begart_ore from public.klippkort k where k.id = k2)::integer,
+                                    'pi_rlsprov_ftk2', 'ch_rlsprov_ftk2', null, null, null, false);
+    select timmar, timmar_pa_kopet, forsta_timmen, rabattkod, rabatt_ore into r1 from public.klippkort where id = k1;
+    select timmar, timmar_pa_kopet, forsta_timmen into r2 from public.klippkort where id = k2;
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('Första timmen med kod', false, fel);
+    return;
+  end if;
+  insert into utfall (test, ok, detalj) values
+    ('Första timmen: en plan som väntar i kassan tar inte erbjudandet',
+     coalesce(not (vantar->>'tagen')::boolean, false), coalesce(vantar::text, 'null')),
+    ('Första timmen: den första planen får timmen också med en rabattkod',
+     r1.rabattkod = 'RLS-FT' and r1.rabatt_ore > 0 and r1.timmar = 5 and r1.timmar_pa_kopet = 1 and r1.forsta_timmen,
+     concat_ws('/', r1.rabattkod, r1.rabatt_ore, r1.timmar, r1.timmar_pa_kopet, r1.forsta_timmen)),
+    ('Första timmen: efter den första planen, med kod, är erbjudandet borta',
+     coalesce((efter->>'tagen')::boolean and (efter->>'i_planen')::boolean, false), coalesce(efter::text, 'null')),
+    ('Första timmen: planen efter den första får ingen',
+     r2.timmar = 4 and r2.timmar_pa_kopet = 0 and not r2.forsta_timmen,
+     concat_ws('/', r2.timmar, r2.timmar_pa_kopet, r2.forsta_timmen));
+end $$;
+
 -- ============================================================
 -- BARNKONTON OCH ADMIN MED BEHÖRIGHETER (barnkonton_och_admin)
 --
@@ -16344,6 +16412,90 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('TD Timmarna delas och köps till', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- Till intervju (ansokan_till_intervju, 2026-10-15)
+-- ------------------------------------------------------------
+-- Steget har en egen tidsstämpel, som bara admin sätter: den som söker
+-- skickar inte sig själv vidare, och en inloggad som inte är admin gör
+-- det inte heller. Läget står kvar (Leo sätter det själv), inget mejlas,
+-- auditloggen får tidpunkten, och gallringen räknar steget.
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  ny    constant uuid := '00000000-0000-4000-8000-0000000071a1';
+  gamla constant uuid := '00000000-0000-4000-8000-0000000071a2';
+  a     public.applications%rowtype;
+  n     integer;
+  m     integer;
+  sedan timestamptz;
+begin
+  begin
+    -- Utifrån, med steget satt.
+    perform pg_temp.bli(null);
+    insert into public.applications (id, name, email, till_intervju_at)
+    values (ny, 'Prov Intervju', 'rls-ti-1@example.invalid', now());
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into a from public.applications where id = ny;
+    ut := ut || jsonb_build_object('t', 'TI den som söker skickar inte sig själv till intervju', 'ok',
+            a.till_intervju_at is null, 'd', coalesce(a.till_intervju_at::text, 'null'));
+
+    -- En förälder som är inloggad.
+    begin
+      perform pg_temp.bli('00000000-0000-4000-8000-0000000000f1');
+      update public.applications set till_intervju_at = now() where id = ny;
+    exception when insufficient_privilege then null;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into a from public.applications where id = ny;
+    ut := ut || jsonb_build_object('t', 'TI en inloggad som inte är admin skickar ingen till intervju', 'ok',
+            a.till_intervju_at is null, 'd', coalesce(a.till_intervju_at::text, 'null'));
+
+    -- Admin skickar vidare.
+    select count(*) into n from public.ansokan_utskick where ansokan_id = ny;
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set till_intervju_at = now() where id = ny;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select * into a from public.applications where id = ny;
+    ut := ut || jsonb_build_object('t', 'TI admin skickar vidare, och läget står kvar', 'ok',
+            a.till_intervju_at is not null and a.status = 'new',
+            'd', coalesce(a.till_intervju_at::text, 'null') || ' ' || a.status);
+    select count(*) into m from public.ansokan_utskick where ansokan_id = ny;
+    ut := ut || jsonb_build_object('t', 'TI inget mejlas när någon skickas till intervju', 'ok', m = n,
+            'd', 'före ' || n || ', efter ' || m);
+    select count(*) into n from public.audit_logg l
+     where l.tabell = 'applications' and l.objekt_id = ny::text and l.handling = 'ansokan.andrad'
+       and l.aktor_typ = 'admin' and l.efter ? 'till_intervju_at';
+    ut := ut || jsonb_build_object('t', 'TI auditloggen får tidpunkten', 'ok', n = 1, 'd', 'rader: ' || n);
+
+    -- Gallringen: en ansökan från för två år sedan som skickades vidare
+    -- för tio dagar sedan står kvar trettio dagar efter steget.
+    insert into public.applications (id, name, email, status, created_at, till_intervju_at)
+    values (gamla, 'Prov Gammal', 'rls-ti-2@example.invalid', 'new', now() - interval '2 years',
+            now() - interval '10 days');
+    select intern.ansokan_gallras_fran(x) into sedan from public.applications x where x.id = gamla;
+    select count(*) into n from public.ansokan_gallring_lista(1000) l where l.ansokan_id = gamla;
+    ut := ut || jsonb_build_object('t', 'TI gallringen räknar steget: trettio dagar efter', 'ok',
+            sedan = (select x.till_intervju_at from public.applications x where x.id = gamla) + interval '30 days'
+            and n = 0, 'd', coalesce(sedan::text, 'null') || ', i listan: ' || n);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('TI Till intervju', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

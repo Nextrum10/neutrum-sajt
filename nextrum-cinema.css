@@ -135,6 +135,10 @@
   --orange:#F07A1E;
   --orange-lugn:#D9650F;
   --orange-ink:#1A1813;
+  /* Loggans brun (2026-10-15), ur Leos logga. Det orange i märket
+     (#F88740) står i markupen och byts aldrig; det bruna blir kräm i
+     mörkt läge, för brunt på barken syns inte. 9,4:1 mot papperet. */
+  --logga-brun:#643820;
 
   /* tejpen (2026-10-08) — en remsa washi-tejp i varm ockra, nästan
      täckande, med bark som bläck. Ränderna är tejpens fibrer.
@@ -280,6 +284,7 @@
     --orange:#F28A2E;
     --orange-lugn:#F9A055;
     --orange-ink:#1A1813;
+    --logga-brun:#EFE6D6;
     /* tejpen i ljus ockra mot orange: bark på den över barken → 6,8:1 */
     --tejp:rgba(222,152,72,.94);
     --tejp-ink:#1A1813;
@@ -342,7 +347,7 @@
   --nt-2:#262319; --nt-glod:rgba(217,129,79,.09); --nt-mossa:rgba(157,173,134,.07); --nt-film:#262319;
   --bli-bg:#1A1813; --bli-glod:rgba(217,129,79,.17); --bli-kant:rgba(217,129,79,.5); --bli-linje:rgba(217,129,79,.3);
   --acc:#D9814F; --acc-lugn:#E89A6D; --mossa:#9DAD86; --ockra:#C08A2E;
-  --orange:#F28A2E; --orange-lugn:#F9A055; --orange-ink:#1A1813;
+  --orange:#F28A2E; --orange-lugn:#F9A055; --orange-ink:#1A1813; --logga-brun:#EFE6D6;
   --tejp:rgba(222,152,72,.94); --tejp-ink:#1A1813; --tejp-fiber:rgba(255,240,210,.12);
   --band-bg:#22201A; --band-fg:#EFE6D6; --band-muted:#A99E88;
   --band-line:rgba(239,230,214,.14); --band-surface:rgba(239,230,214,.05);
@@ -577,14 +582,10 @@ html[data-motion] [data-stig][data-fördröj="5"]{transition-delay:.25s,.25s,0s,
 .hdr.stuck .nav{padding-block:clamp(11px,1.3vw,15px)}
 .hdr.bort{transform:translateY(-102%)}
 
-.hdr .logo{display:inline-flex;align-items:center;gap:10px;flex:none}
-.hdr .logo .mark{width:25px;height:25px;transition:transform .4s var(--e-ut)}
-.hdr .logo:hover .mark{transform:rotate(-90deg)}
-.hdr .logo-text{
-  font-weight:700;font-size:1.06rem;letter-spacing:-.035em;
-}
-.hdr .mark rect{fill:var(--bl)}
-.hdr .mark path{stroke:var(--pap);stroke-width:2.3;fill:none;stroke-linecap:square}
+.hdr .logo{flex:none}
+.hdr .logo .mark{transition:scale .4s var(--e-ut)}
+.hdr .logo:hover .mark{scale:1.08}
+@media (max-width:600px){.hdr .logo{--logga-h:23px}}
 
 /* Menyn: liten, låg kontrast tills man är där. Understrykningen
    växer ut från vänster. */
@@ -615,12 +616,10 @@ html[data-motion] [data-stig][data-fördröj="5"]{transition-delay:.25s,.25s,0s,
 /* Över hero är headern ljus mot mörkt foto? Nej — hero är ljus,
    så headern behåller mörk text. Den här klassen finns för de
    sidor som har mörk sidtopp (bli-studiehjalpare). */
-.hdr.pa-mork:not(.stuck) .logo-text,
+.hdr.pa-mork:not(.stuck) .logo,
 .hdr.pa-mork:not(.stuck) .nav-links a,
 .hdr.pa-mork:not(.stuck) .login{color:var(--nt-fg)}
 .hdr.pa-mork:not(.stuck) .nav-links a{color:color-mix(in srgb,var(--nt-fg) 72%,transparent)}
-.hdr.pa-mork:not(.stuck) .mark rect{fill:var(--nt-fg)}
-.hdr.pa-mork:not(.stuck) .mark path{stroke:var(--nt)}
 .hdr.pa-mork:not(.stuck) .btn-primary{background:var(--nt-fg);color:var(--nt)}
 .hdr.pa-mork:not(.stuck) .burger span{background:var(--nt-fg)}
 
@@ -1563,8 +1562,7 @@ html[lang="en"] .nx-hero-rubrik{
 }
 .ftr ul li a:hover{color:var(--nt-fg)}
 .ftr ul li{margin-bottom:11px}
-.ftr .mark rect{fill:var(--nt-fg)}
-.ftr .mark path{stroke:var(--nt)}
+.ftr .logo{color:var(--nt-fg)}
 
 /* LÄXHJÄLPEN LÄNGST NER (2026-10-13, Leo: "lägg in de längst ner vid de
    andra landingssidorna och gör de snyggt"). Alla läxhjälps- och
@@ -2749,9 +2747,7 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
    skriptet bort <img>, och då blir märket kvar av sig självt. */
 .mk-bild{display:grid;place-items:center;width:44px;height:44px;flex:none}
 .mk-bild>*{grid-area:1/1}
-.mk-mark{width:30px;height:30px}
-.mk-mark rect{fill:var(--bl)}
-.mk-mark path{stroke:var(--pap);stroke-width:2.3;fill:none;stroke-linecap:square}
+.mk-mark{width:30px;height:calc(30px / 1.319);color:var(--logga-brun)}
 
 /* MÅSTE stå före .mk-panel-regeln nedan i tanken, men vinner ändå:
    [hidden] i webbläsarens egen stilmall sätter display:none, men en
@@ -2776,7 +2772,7 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 }
 .mk-avatar{display:grid;place-items:center;width:34px;height:34px;flex:none}
 .mk-avatar>*{grid-area:1/1}
-.mk-avatar .mk-mark{width:26px;height:26px}
+.mk-avatar .mk-mark{width:26px;height:calc(26px / 1.319)}
 .mk-topp b{display:block;font-size:.97rem;letter-spacing:-.02em}
 .mk-topp span{display:block;font-size:.82rem;line-height:1.5;color:var(--muted);margin-top:3px}
 /* 28 px utan bakgrund var för litet. Riktlinjen för en pekyta är
@@ -2806,8 +2802,7 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
 /* Öppen ruta: knappen nere i hörnet är samma växel tillbaka, och
    det ska synas på den. */
 .mk-knapp.ar-oppen{background:var(--bl);color:var(--pap);border-color:var(--bl)}
-.mk-knapp.ar-oppen .mk-mark rect{fill:var(--pap)}
-.mk-knapp.ar-oppen .mk-mark path{stroke:var(--bl)}
+.mk-knapp.ar-oppen .mk-mark{color:var(--pap)}
 
 .mk-flode{padding:14px 16px;overflow-y:auto;display:grid;gap:12px;align-content:start}
 .mk-bubbla{font-size:.88rem;line-height:1.6}
