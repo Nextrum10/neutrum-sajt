@@ -235,12 +235,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   egna koder (`familjerabatter`, Tjänster → Familjerabatter), kronor av per timme, 1–200 kr i hela kronor, som admin sätter
   på en familj i familjens panel (Ekonomi) och i Ta in familjen, bara genom `satt_familjerabatt()` (`is_admin()`, en kod per
   familj, null tar bort: raden står kvar utan kod, aldrig ett `delete`). Ingen rabattkod: familjen skriver den aldrig, ser
-  aldrig koden och den räknas inte. Familjen får bara beloppet (`min_familjerabatt()`), och vyn visar det bara vid priset i
-  Boka pass, Köp till timmar och kassan. Kronorna dras på varje timme familjen betalar med pengar, när priset fryses:
+  aldrig koden och den räknas inte. Familjen får bara beloppet (`min_familjerabatt()`), och vyn visar det bara där familjen
+  betalar: på korten under Erbjudanden (Leo samma kväll: "Visa på korten också"; `medRabatt()`, samma regel som databasen),
+  vid priset i Boka pass, i Köp till timmar och i kassan. Kronorna dras på varje timme familjen betalar med pengar, när priset fryses:
   passets `timpris_ore` (`frys_passets_pris`; `bookings.familjerabatt_ore` säger hur mycket), ett köp ur katalogen per betald
   timme (`intern.klippkort_rabatt`; `klippkort.familjerabatt_ore`, och `timpris_ore` står kvar som katalogens) och timmar
   till en plan (`extra_timmar_erbjudande()`). Tillägget för fler barn, gratistimmar, första timmen och tipstimmen rörs inte,
-  och en rabattkod räknas på priset efter den. Det bokade och köpta står fast när rabatten sätts, ändras eller tas bort, och
+  och en rabattkod räknas på priset efter den: de staplas (Leo samma kväll). Det bokade och köpta står fast när rabatten sätts, ändras eller tas bort, och
   en avstängd kod ger ingen rabatt. Slutar familjen räknas de använda timmarna och minuterna till timpriset minus den
   (`vid_uppsagning_ore`, `intern.timbank_varde`). Lönen rörs inte. Den ändrar inget publikt pris, och villkoren nämner den
   inte (ingen ny version): en rabatts villkor ska stå där vi ger den. Auditen får att familjen fick eller blev av med en
@@ -949,7 +950,7 @@ Detaljer: `minne/grunden.md`.
 - **Familjerabatterna** (2026-10-15) är skrivna, inte i drift: efter merge `familjerabatter` (20261015210000; inget `drop`
   och inget `delete`, så hel i ett do-block) och hela `rls-test.sql` mot driften (avsnitt 35), sedan `stripe-checkout`
   (SESSIONSFORM 9) och `drift` (agentens fakta) från merge-commiten (`DEPLOY-BETALNING.md` 9.15). Vyerna tål att migrationen
-  saknas. Lokalt ur alla 195 migrationer 1775 av 1775, och `verktyg/prova-familjerabatter.js` 60 av 60. Kvar: juristen har inte
+  saknas. Lokalt ur alla 195 migrationer 1775 av 1775, och `verktyg/prova-familjerabatter.js` 63 av 63. Kvar: juristen har inte
   läst rad 30 i `DATASKYDD.md` eller policyns nya stycken.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige

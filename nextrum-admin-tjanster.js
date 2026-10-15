@@ -452,7 +452,7 @@
      tillgång till ... vi vill ge 10 kr billigare på alla timmar som köps
      tex". Våra egna koder: kronor av per timme för de familjer vi sätter
      koden på, i familjens panel under Ekonomi (satt_familjerabatt).
-     Familjen skriver dem aldrig och ser bara priset i kassan. Som
+     Familjen skriver dem aldrig och ser bara det lägre priset. Som
      rabattkoderna tas de aldrig bort, de stängs av, och ett nytt belopp
      gäller det som bokas och köps efter det: priset fryses.
      ------------------------------------------------------------ */

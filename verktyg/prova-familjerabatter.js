@@ -7,11 +7,13 @@
    Leo: "vi i admin vill skapa egna rabattkoder som bara vi har tillgång
    till ... vi ser rabattkoden när vi klickar på deras namn och kan välja
    ta bort eller ändra ... de ser bara att de har rabatt vid checkout men
-   inte annat." Provet går igenom fliken Familjerabatter under Tjänster
+   inte annat", och samma kväll om korten under Erbjudanden: "Visa på
+   korten också". Provet går igenom fliken Familjerabatter under Tjänster
    (skapa, nytt belopp, stäng av), familjens panel (raden under Översikt,
    valet under Ekonomi, Ta bort), passets panel och Ta in familjen, och
-   studievyn: priset vid knappen i Boka pass och i Köp till timmar, med och
-   utan rabatt, och vyerna utan migrationen. Databasens regler provas i
+   studievyn: priset vid knappen i Boka pass, på plankortet och i Fyll
+   timbanken och i Köp till timmar, med och utan rabatt, och vyerna utan
+   migrationen. Databasens regler provas i
    rls-test.sql (avsnittet FR); här provas vyerna, mot en falsk Supabase,
    som verktyg/prova-koder.js (egen port, 8977). Ett anrop till den
    riktiga adressen fäller provet.
@@ -103,6 +105,9 @@ function värld() {
     erbjudanden_pris: [
       { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, rabatt_procent: 5, giltig_manader: 1,
         ordning: 2, timpris_ore: 39900, ordinarie_ore: 319200, pris_ore: 303200, rabatterat_timpris_ore: 37900,
+        timmar_pa_kopet: 0 },
+      { kod: 'klipp10', sort: 'klippkort', namn: '10 timmar', timmar: 10, rabatt_procent: 0, giltig_manader: 6,
+        ordning: 10, timpris_ore: 39900, ordinarie_ore: 399000, pris_ore: 399000, rabatterat_timpris_ore: 39900,
         timmar_pa_kopet: 0 }
     ]
   };
@@ -446,7 +451,7 @@ async function provaPanelen(webb) {
   await context.close();
 }
 
-/* ============ 3. Studievyn: priset i kassan ============ */
+/* ============ 3. Studievyn: priset med rabatten ============ */
 async function väljDagOchTid(page) {
   const host = '#boka-inner';
   await page.waitForSelector(host + ' .mv-dag', { timeout: 8000 }).catch(() => {});
@@ -495,12 +500,23 @@ async function provaStudievyn(webb) {
       await bild(page, 'studievyn-boka', '#boka-inner .bk-sum');
     }
 
-    /* Rabatten syns inte någon annanstans: inte på plankorten. */
+    /* Korten under Erbjudanden säger priset med rabatten (Leo 2026-10-15:
+       "Visa på korten också"), aldrig koden: Standard 8 betalda timmar,
+       10 kr av på var och en, och Fyll timbanken 10 timmar. */
     await page.goto(BAS + '/foralder#erbjudanden');
     await vänta(900);
-    prova('studievyn ' + namn + ': plankortet visar katalogens pris', /3\s*032\s*kr/.test(await text(page, '#erb-planer')),
-      await text(page, '#erb-planer'));
-    prova('studievyn ' + namn + ': ordet rabatt står inte på korten', !/er rabatt/.test(await text(page, '#erb-planer')));
+    const plan = await text(page, '#erb-planer .erb-kort:not(.erb-klippkol)');
+    prova('studievyn ' + namn + ': plankortet', rabatt
+      ? /2\s*952\s*kr/.test(plan) && /med er rabatt/.test(plan) && /369\s*kr/.test(plan) && /3\s*192\s*kr/.test(plan)
+      : /3\s*032\s*kr/.test(plan) && /379\s*kr/.test(plan) && !/er rabatt/.test(plan), plan);
+    await page.click('#erb-planer .erb-klippkol summary').catch(() => {});
+    await vänta(250);
+    const klipp = await text(page, '#erb-planer .erb-klippkol');
+    prova('studievyn ' + namn + ': Fyll timbanken', rabatt
+      ? /3\s*890\s*kr/.test(klipp) && /389\s*kr per timme/.test(klipp) && /med er rabatt/.test(klipp)
+      : /3\s*990\s*kr/.test(klipp) && /399\s*kr per timme/.test(klipp) && !/er rabatt/.test(klipp), klipp);
+    prova('studievyn ' + namn + ': korten säger aldrig koden', !/PARTNER/.test(await text(page, '#erb-planer')));
+    if (rabatt) await bild(page, 'studievyn-kort', '#erb-planer');
 
     /* Köp till timmar: priset efter rabatten, i steget före kassan. */
     await page.click('[data-extra-valj]').catch(() => {});

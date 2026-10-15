@@ -1086,8 +1086,8 @@ window.NXArbete = (function () {
           : '<b>' + esc(kronorÖre(bruttoOre() - bjuden - rabatt)) + '</b>'
             + '<span>' + esc((!bjuden ? (rabatt ? 'Med rabattkoden ' + st.rabatt.kod : längdText())
               : o.bjuden(st.minuter, st.dag) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet')
-              /* Familjens rabatt (2026-10-15) står där priset står: det enda
-                 ställe familjen ser att den har en, utom kassan. */
+              /* Familjens rabatt (2026-10-15) står där priset står, som på
+                 korten under Erbjudanden och i kassan. */
               + (familjerabattOre() && bruttoOre() - bjuden - rabatt > 0 ? (rabatt ? ' och er rabatt' : ', med er rabatt') : ''))
             + '</span>';
       var knapp = o.utanPris ? 'Skicka till din förälder'

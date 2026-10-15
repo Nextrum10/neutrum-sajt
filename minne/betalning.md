@@ -1407,6 +1407,7 @@ studievyn. Inte i drift när det skrevs: kedjan står i `DEPLOY-BETALNING.md`
   ingenting. Lönen rörs inte: studiehjälparen får betalt för den tid som hölls.
 - **En rabattkod gäller ovanpå**, räknad på priset efter familjerabatten: den
   är familjens pris, och en kod räknas på familjens pris som för vem som helst.
+  Leo samma kväll, när frågan ställdes: de staplas.
   `skydda_rabatt` läser redan passets frysta timpris, och `kolla_rabattkod_kop`
   och `intern.klippkort_rabatt` prövar koden mot priset efter rabatten. Vill
   Leo att de inte ska gälla samtidigt är det en rad i `intern.rabattkod_prova`
@@ -1418,11 +1419,16 @@ studievyn. Inte i drift när det skrevs: kedjan står i `DEPLOY-BETALNING.md`
   varandra. Det blir aldrig mer än villkoren tillåter. Inom ångerfristen räknas
   andelen av det betalda, som förut.
 - **Vad familjen ser.** Leo: "de ser bara att de har rabatt vid checkout men
-  inte annat". Priset vid knappen i Boka pass ("1 timme, med er rabatt"), steget
-  i Köp till timmar ("med er rabatt"), raden under rubriken när kassan öppnas,
-  och raden i Stripes kassa och på kvittot ("Med er rabatt på 10 kr per timme",
-  `kassarad`, och på ett pass "med er rabatt på 10 kr per timme"). Plankorten och
-  Fyll timbanken visar katalogens pris, och Profil säger ingenting. Priset på ett
+  inte annat", och samma kväll om korten under Erbjudanden: "Visa på korten
+  också" (annars stod 3 032 kr på Standard och kassan drog 2 952 kr, och det
+  ser ut som ett fel). Korten under Erbjudanden (planerna och Fyll timbanken)
+  visar priset och timpriset efter rabatten, med "med er rabatt" och katalogens
+  pris överstruket (`medRabatt()`, samma regel som `intern.klippkort_rabatt`;
+  kassan drar databasens belopp). Priset vid knappen i Boka pass ("1 timme, med
+  er rabatt"), steget i Köp till timmar ("med er rabatt"), raden under rubriken
+  när kassan öppnas, och raden i Stripes kassa och på kvittot ("Med er rabatt på
+  10 kr per timme", `kassarad`, och på ett pass "med er rabatt på 10 kr per
+  timme"). Koden står ingenstans, och Profil säger ingenting. Priset på ett
   bokat pass är det frysta, alltså med rabatten, utan ett ord om den.
 - **Vad vi ser.** Fliken Tjänster → Familjerabatter: koderna, beloppet som
   ändras på raden, hur många familjer som har koden, och Stäng av, som frågar
@@ -1442,7 +1448,7 @@ studievyn. Inte i drift när det skrevs: kedjan står i `DEPLOY-BETALNING.md`
   tills vidare och att vi kan ta bort den) ska stå där vi ger den, i mejlet
   eller avtalet med partnern, som för en rabattkod.
 - **Prov.** `rls-test.sql` avsnitt 35 (26 prov, `FR`); lokalt ur alla 195
-  migrationer 1775 av 1775. `verktyg/prova-familjerabatter.js` (60 prov):
+  migrationer 1775 av 1775. `verktyg/prova-familjerabatter.js` (63 prov):
   fliken, panelen, Ta in familjen, passets panel, studievyn med och utan
-  rabatt, och vyerna utan migrationen. `_delad/erbjudanden_test.ts`:
+  rabatt (korten, Boka pass och Köp till timmar), och vyerna utan migrationen. `_delad/erbjudanden_test.ts`:
   kassaraden och regeln för köpet.

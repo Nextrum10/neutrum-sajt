@@ -612,7 +612,7 @@
           + kronor(k.ore_per_timme) + ' av per timme') + '</option>').join('')
         + '</select>'
         + '<span>Bara vi ser koden. Familjen betalar så många kronor mindre för varje timme, tills ni tar bort den i '
-        + 'familjens panel, och ser bara priset i kassan.</span></div>')
+        + 'familjens panel, och ser bara det lägre priset.</span></div>')
       + '<p class="ok-msg" id="le-msg"></p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-le-stang>Avbryt</button>'

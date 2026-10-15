@@ -478,7 +478,7 @@
      bort eller ändra". En av våra koder (Tjänster → Familjerabatter) på
      familjen: kronor av på varje timme den betalar, för det som bokas och
      köps medan koden gäller. Bara en superadmin läser och sätter den
-     (satt_familjerabatt); familjen ser aldrig koden, bara priset i kassan.
+     (satt_familjerabatt); familjen ser aldrig koden, bara det lägre priset.
      Översikt säger den i korthet, och Ekonomi har valet. */
   let rabattBesked = null;   // { id, text, ok }: kvittot efter en ändring, visas en gång
 
@@ -516,7 +516,7 @@
     const kvitto = besked ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '">' + esc(besked.text) + '</p>' : '';
     const när = rad ? (rad.kod ? 'satt ' : 'togs bort ') + kortDatum(rad.andrad_at)
       + (rad.andrad_av ? ' av ' + namnFör(rad.andrad_av) : '') : null;
-    return dpRubrik('Familjerabatt', 'bara vi ser koden; familjen ser priset i kassan')
+    return dpRubrik('Familjerabatt', 'bara vi ser koden; familjen ser det lägre priset')
       + (kod
         ? dpRad(kod.kod + ', ' + kronor(kod.ore_per_timme) + ' av per timme',
             [kod.aktiv ? null : 'koden är avstängd, så ingen rabatt dras', kod.beskrivning || null, när].filter(Boolean).join(' · '),
@@ -2399,7 +2399,7 @@
       titel: (nu ? 'Byt till ' : 'Ge ') + kod.kod + '?',
       text: namnFör(id) + ' betalar ' + kronor(kod.ore_per_timme) + ' mindre för varje timme: pass, planer, Fyll timbanken och '
         + 'timmar till en plan, för det som bokas och köps från och med nu, tills ni tar bort rabatten. Familjen ser aldrig '
-        + 'koden, bara priset i kassan. Det som redan är bokat och köpt behåller sitt pris.',
+        + 'koden, bara det lägre priset. Det som redan är bokat och köpt behåller sitt pris.',
       knapp: nu ? 'Byt' : 'Ge rabatten'
     });
     if (!ja) return;
