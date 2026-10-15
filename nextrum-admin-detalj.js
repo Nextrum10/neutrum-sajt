@@ -205,8 +205,7 @@
         .select('tutor_id, created_at').eq('parent_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
       läggVillkor(id);
-      /* Första timmen (2026-10-09): om vi valt familjen för den pass för
-         pass, och om den redan fått sin timme. */
+      /* Första timmen (2026-10-09): om familjen redan fått sin timme. */
       lägg('forstaTimmen', supa.rpc('forsta_timmen_lage', { p_familj: id }));
       /* Kortet (kortet_reserveras, 2026-10-13): familjens sparade kort och
          passen där det valts. Policyerna ger bara en superadmin raderna. */
@@ -377,23 +376,21 @@
   }
 
   /* Första timmen gratis (2026-10-09, Leo: "bara folk som köper planen
-     ska få gratis första lektion", "vi ska kunna välja om vanliga kunder
-     som köper timme för timme får gratis första lektion", och högst en
-     timme per familj). Den första planen familjen betalar får timmen av
-     sig själv; för en familj som betalar pass för pass väljer vi här, och
-     då ges den på det pass som gör att familjen bokat två timmar. Har
-     familjen fått den står det hur, och knappen är borta. Utan funktionen
-     (en databas före migrationen) står raden som okänd. */
-  function dpFörstaTimmen(p, d) {
+     ska få gratis första lektion", och högst en timme per familj). Den
+     första planen familjen betalar får timmen av sig själv, och raden
+     säger om den getts och hur. Knappen Ge den pass för pass togs bort
+     2026-10-15 (Leo: "det ska bara finnas ge gratis timmar till
+     timbanken"): vill vi bjuda en familj sätter vi in gratistimmar. Ett
+     val pass för pass som redan står i databasen visas som förut, men
+     ingen familj hade något. Utan funktionen (en databas före
+     migrationen) står raden som okänd. */
+  function dpFörstaTimmen(d) {
     if (d.forstaTimmenFel) return null;
     const l = d.forstaTimmen || {};
     if (l.i_planen) return 'given, i familjens första plan';
     if (l.pa_pass) return 'given, på ett pass';
-    return esc(l.beviljad ? 'vald pass för pass, och annars i den första planen' : 'bara i den första planen')
-      + (ärSuperadmin()
-        ? ' <button class="btn btn-ghost btn-sm" type="button" data-dp-forsta="' + esc(p.id) + '" data-ja="'
-          + (l.beviljad ? '0' : '1') + '">' + (l.beviljad ? 'Ta bort valet' : 'Ge den pass för pass') + '</button>'
-        : '');
+    return l.beviljad ? 'vald pass för pass, och annars i den första planen'
+      : 'inte given än, den följer med familjens första plan';
   }
 
   /* TIMBANKEN OCH GRATISTIMMARNA (2026-10-13)
@@ -1101,7 +1098,7 @@
       ['Konto skapat', p.created_at ? esc(kortDatum(p.created_at)) : null],
       ['Senast inloggad', dpSenast(p)],
       ['Användarvillkoren', dpVillkor(d), 'okänt'],
-      ['Första timmen gratis', dpFörstaTimmen(p, d), 'okänt'],
+      ['Första timmen gratis', dpFörstaTimmen(d), 'okänt'],
       ...(fullAdmin() ? [['Timbanken', dpTimbankKort(p), 'okänt']] : []),
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
@@ -1617,6 +1614,10 @@
     /* Öppna provet härifrån (2026-09-29): steg 3 i fliken Rekryteringen
        låg nedanför skärmkanten, och här stod bara "Inte öppnat". */
     const provKnapp = kör('provKnapp', a) || '';
+    /* Skicka vidare till intervju, eller därifrån till utbildning, under
+       läget (2026-10-15): nästa steg är knappen att trycka på, så Ta in i
+       poolen är det bara när inget steg står kvar före den. */
+    const vidare = kör('panelVidare', a) || '';
 
     return dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
       + dpFakta([
@@ -1661,8 +1662,10 @@
       + '<div class="dp-atgard">'
       + '<button class="btn btn-ghost btn-sm" type="button" data-dp-flik="rekrytering">Rekryteringens steg</button>'
       + (a.status !== 'approved'
-        ? '<button class="btn btn-primary btn-sm" type="button" data-ans-pool="' + esc(a.id) + '">Ta in i poolen</button>'
+        ? '<button class="btn ' + (vidare ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-ans-pool="'
+          + esc(a.id) + '">Ta in i poolen</button>'
         : '')
+      + vidare
       + '</div>'
       + dpHantera('ansokan', a, {
           rubrik: 'Radera ansökan',
@@ -2385,21 +2388,6 @@
       alert(res.data.skickat === 'losenord'
         ? 'En länk för att välja lösenord har gått till ' + res.data.till + '.'
         : 'En ny inbjudan har gått till ' + res.data.till + '.');
-    });
-  });
-
-  /* Första timmen pass för pass (dpFörstaTimmen). Databasen avgör: bara
-     admin väljer, och har familjen fått timmen ges ingen till. */
-  document.addEventListener('click', async ev => {
-    const k = ev.target.closest('[data-dp-forsta]');
-    if (!k) return;
-    const id = k.dataset.dpForsta;
-    await medan(k, 'Sparar…', async () => {
-      const { error } = await supa.rpc('ge_forsta_timmen', { p_familj: id, p_ja: k.dataset.ja === '1' });
-      if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
-      delete S.detaljCache['familj:' + id];
-      await hämtaDetalj('familj', id);
-      if (DP.typ === 'familj' && DP.id === id) ritaDetalj();
     });
   });
 

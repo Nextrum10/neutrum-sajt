@@ -468,6 +468,8 @@ async function provaJobbansökan(webb) {
     await page.fill('#ap-name', 'Olle Olsson');
     await page.fill('#ap-age', '19');
     await page.fill('#ap-email', 'olle@example.se');
+    /* Var hen är i skolan (2026-10-14): utan svar skickas inget. */
+    await page.check('#ap-skolniva input[value="gymnasiet"]');
     await page.check('#ap-timmar input[value="ja"]');
     await page.check('#ap-gdpr');
     await page.click('#apply-form button[type="submit"]');

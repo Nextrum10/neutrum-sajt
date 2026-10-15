@@ -15,7 +15,8 @@
    innan läget blir Avböjd, godkännandet i ansökan, att siffran vid
    Ansökningar och Intresseanmälningar går bort när man tittat, och
    knapparna som skickar vidare till intervju och utbildning
-   (2026-10-13). Reglerna
+   (2026-10-13), i ansökans panel och med ett eget steg för intervjun,
+   så att läget Kontaktad inte flyttar någon (2026-10-15). Reglerna
    i databasen provas i verktyg/rls-test.sql, mallarna i
    supabase/functions/_delad/notiser/ansokan_test.ts.
    ============================================================ */
@@ -94,7 +95,18 @@ function värld(o) {
     flaggor: []
   };
   /* Rekryteringens steg (2026-10-13): en i utbildningen utan öppnat
-     prov, och en som är utbildad och väntar på poolen. */
+     prov, och en som är utbildad och väntar på poolen. Med steget till
+     intervju (2026-10-15) också en som skickats dit och en ny att boka
+     ett möte med. */
+  if (o.steg && !o.utanIntervjuKolumn) {
+    w.applications.push(
+      { id: 'ans-intervju', name: 'Ivar Intervju', email: 'ivar@example.se', age: 19, status: 'contacted',
+        created_at: '2026-09-23T10:00:00Z', till_intervju_at: '2026-10-14T10:00:00Z', tjanster: ['laxhjalp'], why: 'Hej',
+        vardnadshavare_epost: null, vardnadshavare_godkand_at: null, vardnadshavare_svar: null },
+      { id: 'ans-boka', name: 'Bo Bokare', email: 'bo@example.se', age: 20, status: 'new',
+        created_at: '2026-09-24T10:00:00Z', tjanster: ['laxhjalp'], why: 'Hej',
+        vardnadshavare_epost: null, vardnadshavare_godkand_at: null, vardnadshavare_svar: null });
+  }
   if (o.steg) {
     w.applications.push(
       { id: 'ans-utb', name: 'Ulla Utbildning', email: 'ulla@example.se', age: 20, status: 'contacted',
@@ -111,6 +123,11 @@ function värld(o) {
       delete a.vardnadshavare_epost; delete a.vardnadshavare_godkand_at; delete a.vardnadshavare_svar;
     });
     w.ansokan_utskick.forEach(u => { delete u.skicka_efter; });
+  }
+  /* Kolumnen till_intervju_at (migrationen ansokan_till_intervju): select=*
+     ger nyckeln på varje rad när den finns, null eller inte. */
+  if (!o.utanIntervjuKolumn) {
+    w.applications.forEach(a => { if (!('till_intervju_at' in a)) a.till_intervju_at = null; });
   }
   return w;
 }
@@ -258,6 +275,8 @@ async function fyll(page, o) {
   await page.fill('#ap-age', o.ålder);
   await page.fill('#ap-email', o.epost || 'tove@example.se');
   if (o.vh != null) await page.fill('#ap-vh', o.vh);
+  /* Var hen är i skolan (2026-10-14): utan svar skickas inget. */
+  await page.check('#ap-skolniva input[value="gymnasiet"]');
   await page.check('#ap-timmar input[value="ja"]');
   await page.check('#ap-gdpr');
 }
@@ -515,7 +534,10 @@ async function provaAdminvyn(webb) {
   }
 }
 
-/* ============ rekryteringens steg (2026-10-13) ============ */
+/* ============ rekryteringens steg (2026-10-13, valet 2026-10-15) ============
+   Leo 2026-10-15: läget (Ny, Kontaktad, Godkänd, Avböjd) sätter han själv,
+   och under Intervju står bara de han skickat dit. Knappen står på raden och
+   i ansökans panel, och Ångra i Rekryteringen. */
 async function provaStegen(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, { inloggad: true, steg: true });
   await page.goto(BAS + '/admin#ansokningar');
@@ -524,91 +546,213 @@ async function provaStegen(webb) {
   const patchar = () => S.logg.filter(r => r.metod === 'PATCH' && r.väg === '/rest/v1/applications');
   const rad = id => '#ans-tabell li:has([data-dp="ansokan:' + id + '"])';
   const flik = async f => { await page.click('#flik-ans-' + f); await vänta(200); };
+  const lägeI = async id => (await text(page, rad(id) + ' .adm-namn-lage')).trim();
+  const flikTal = async () => (await text(page, '#flik-ans-intervju-mark')) + ' / ' + (await text(page, '#flik-ans-utbildning-mark'));
+  const öppnaPanel = async id => { await page.click('#ans-tabell [data-dp="ansokan:' + id + '"]'); await vänta(400); };
+  const ansökan = id => S.W.applications.find(a => a.id === id);
+  const listan = async sel => page.locator(sel + ' [data-dp]').evaluateAll(l => l.map(x => x.dataset.dp));
 
-  prova('steg: en ny ansökan har Till intervju', (await page.locator(rad('ans-ung') + ' [data-ans-vidare="intervju:ans-ung"]').count()) === 1);
-  prova('steg: en som redan gått vidare har ingen knapp i Alla', (await page.locator(rad('ans-gammal') + ' [data-ans-vidare]').count()) === 0);
-  prova('steg: Alla visar steget', (await text(page, rad('ans-gammal') + ' .adm-namn-lage')).trim() === 'Intervju'
-    && (await text(page, rad('ans-klar') + ' .adm-namn-lage')).trim() === 'Klar för poolen'
-    && (await text(page, rad('ans-ung') + ' .adm-namn-lage')).trim() === 'Ny',
-    [await text(page, rad('ans-gammal') + ' .adm-namn-lage'), await text(page, rad('ans-klar') + ' .adm-namn-lage')].join(' / '));
-  prova('steg: flikarna räknar', (await text(page, '#flik-ans-intervju-mark')) === '1'
-    && (await text(page, '#flik-ans-utbildning-mark')) === '2',
-    (await text(page, '#flik-ans-intervju-mark')) + ' / ' + (await text(page, '#flik-ans-utbildning-mark')));
+  /* Alla: läget för den som inte skickats vidare, steget för de andra. */
+  prova('steg: Alla visar läget för den som inte gått vidare och steget för de andra',
+    (await lägeI('ans-ung')) === 'Ny' && (await lägeI('ans-gammal')) === 'Kontaktad'
+    && (await lägeI('ans-intervju')) === 'Intervju' && (await lägeI('ans-klar')) === 'Klar för poolen',
+    [await lägeI('ans-ung'), await lägeI('ans-gammal'), await lägeI('ans-intervju'), await lägeI('ans-klar')].join(' / '));
+  prova('steg: Till intervju på en ny och på en kontaktad, inte på den som redan gått vidare',
+    (await page.locator(rad('ans-ung') + ' [data-ans-vidare="intervju:ans-ung"]').count()) === 1
+    && (await page.locator(rad('ans-gammal') + ' [data-ans-vidare="intervju:ans-gammal"]').count()) === 1
+    && (await page.locator(rad('ans-intervju') + ' [data-ans-vidare]').count()) === 0);
+  prova('steg: läget Kontaktad är inte Intervju, bara den som skickats dit räknas',
+    (await flikTal()) === '1 / 2', await flikTal());
   await bild(page, 'steg-alla', '#ans-tabell');
 
-  /* Till intervju: läget Kontaktad, ingen fråga, och raden flyttar. */
-  await page.click('[data-ans-vidare="intervju:ans-ung"]');
+  /* Filtret skiljer Nya och Kontaktade. */
+  await page.selectOption('#ans-status', 'kontaktad');
+  await vänta(200);
+  let filtrerat = (await listan('#ans-tabell')).sort();
+  prova('steg: filtret Kontaktade', filtrerat.join() === 'ansokan:ans-gammal', filtrerat.join());
+  await page.selectOption('#ans-status', 'ny');
+  await vänta(200);
+  filtrerat = (await listan('#ans-tabell')).sort();
+  prova('steg: filtret Nya', filtrerat.join() === 'ansokan:ans-boka,ansokan:ans-ung', filtrerat.join());
+  await page.selectOption('#ans-status', 'intervju');
+  await vänta(200);
+  filtrerat = (await listan('#ans-tabell')).sort();
+  prova('steg: filtret Intervju', filtrerat.join() === 'ansokan:ans-intervju', filtrerat.join());
+  await page.selectOption('#ans-status', '');
+  await vänta(200);
+
+  /* Läget Kontaktad i panelen sparar läget och flyttar ingen. */
+  await öppnaPanel('ans-ung');
+  await page.click('[data-ans="ans-ung"] > button[value="contacted"]');
+  await vänta(400);
+  const läget = patchar().pop();
+  prova('steg: läget Kontaktad sparas som läget och inget annat',
+    läget && JSON.stringify(läget.kropp) === '{"status":"contacted"}', JSON.stringify(läget && läget.kropp));
+  prova('steg: och hen står kvar under Alla', (await lägeI('ans-ung')) === 'Kontaktad' && (await flikTal()) === '1 / 2',
+    (await lägeI('ans-ung')) + ' ' + (await flikTal()));
+
+  /* Panelen: Skicka vidare till intervju under läget, och Ta in i poolen
+     är inte knappen att trycka på då. */
+  prova('steg: panelen har Skicka vidare till intervju under läget',
+    (await page.locator('.dp-atgard [data-ans-vidare="intervju:ans-ung"].btn-primary').count()) === 1
+    && (await text(page, '.dp-atgard [data-ans-vidare="intervju:ans-ung"]')).trim() === 'Skicka vidare till intervju');
+  prova('steg: Ta in i poolen är då inte primär', (await page.locator('.dp-atgard [data-ans-pool="ans-ung"].btn-ghost').count()) === 1);
+  await bild(page, 'steg-panel-ny', '.dp');
+  await page.click('.dp-atgard [data-ans-vidare="intervju:ans-ung"]');
   await vänta(400);
   const tillIntervju = patchar().pop();
-  prova('steg: Till intervju sparar läget Kontaktad och inget annat', tillIntervju
-    && JSON.stringify(tillIntervju.kropp) === '{"status":"contacted"}' && tillIntervju.sök.includes('ans-ung'),
-    JSON.stringify(tillIntervju));
+  prova('steg: Skicka vidare till intervju sparar steget och inte läget', tillIntervju && tillIntervju.sök.includes('ans-ung')
+    && Object.keys(tillIntervju.kropp || {}).join() === 'till_intervju_at'
+    && !Number.isNaN(Date.parse(tillIntervju.kropp.till_intervju_at)), JSON.stringify(tillIntervju));
   prova('steg: utan fråga', (await page.locator('.nx-fraga-box').count()) === 0);
-  prova('steg: raden säger Intervju och knappen är borta', (await text(page, rad('ans-ung') + ' .adm-namn-lage')).trim() === 'Intervju'
-    && (await page.locator(rad('ans-ung') + ' [data-ans-vidare]').count()) === 0);
-  prova('steg: fliken Intervju räknar upp', (await text(page, '#flik-ans-intervju-mark')) === '2');
+  prova('steg: läget står kvar', ansökan('ans-ung').status === 'contacted', ansökan('ans-ung').status);
+  prova('steg: panelen visar Intervju och nästa knapp',
+    (await text(page, '.dp-marken')).includes('Intervju')
+    && (await page.locator('.dp-atgard [data-ans-vidare="utbildning:ans-ung"]').count()) === 1
+    && (await page.locator('.dp-atgard [data-ans-vidare="intervju:ans-ung"]').count()) === 0,
+    await text(page, '.dp-marken'));
+  prova('steg: fliken Intervju räknar upp', (await flikTal()) === '2 / 2', await flikTal());
+  await bild(page, 'steg-panel-intervju', '.dp');
+  await page.click('[data-dp-stang]').catch(() => {});
+  await vänta(200);
+
+  /* Knappen på raden gör samma sak. */
+  await page.click('[data-ans-vidare="intervju:ans-gammal"]');
+  await vänta(400);
+  const frånRaden = patchar().pop();
+  prova('steg: Till intervju på raden sparar steget och inte läget', frånRaden && frånRaden.sök.includes('ans-gammal')
+    && Object.keys(frånRaden.kropp || {}).join() === 'till_intervju_at', JSON.stringify(frånRaden));
+  prova('steg: raden säger Intervju och knappen är borta', (await lägeI('ans-gammal')) === 'Intervju'
+    && (await page.locator(rad('ans-gammal') + ' [data-ans-vidare]').count()) === 0, await lägeI('ans-gammal'));
 
   await flik('intervju');
-  const iIntervju = await page.locator('#ans-intervju [data-dp]').evaluateAll(l => l.map(x => x.dataset.dp));
-  prova('steg: Intervju har de två som skickats dit', iIntervju.length === 2 && iIntervju.includes('ansokan:ans-ung')
-    && iIntervju.includes('ansokan:ans-gammal'), iIntervju.join(', '));
+  const iIntervju = await listan('#ans-intervju');
+  prova('steg: Intervju har bara de tre som skickats dit, i den ordningen',
+    iIntervju.join() === 'ansokan:ans-intervju,ansokan:ans-ung,ansokan:ans-gammal', iIntervju.join());
+  const underUng = (await text(page, '#ans-intervju li:has([data-dp="ansokan:ans-ung"]) .adm-namn-text span')).trim();
+  prova('steg: Intervju säger Kontaktad när läget är det, inte "Inte kontaktad än"', underUng === 'Kontaktad', underUng);
   prova('steg: varje rad i Intervju har Till utbildning',
-    (await page.locator('#ans-intervju [data-ans-vidare^="utbildning:"]').count()) === 2);
+    (await page.locator('#ans-intervju [data-ans-vidare^="utbildning:"]').count()) === 3);
   await bild(page, 'steg-intervju', '#panel-ans-intervju');
 
-  /* Till utbildning frågar, för ett mejl går. Avbryt sparar inget. */
+  /* Ångra i Rekryteringen: tillbaka till Alla, läget står kvar. */
+  await page.click('#ans-intervju [data-dp="ansokan:ans-ung"]');
+  await vänta(400);
+  prova('steg: från Intervju öppnas Rekryteringen, med steg 1 Till intervju och Ångra',
+    (await text(page, '.ans-steg h4')).includes('Till intervju')
+    && (await text(page, '[data-ans-steg="tillintervju:ans-ung"]')).trim() === 'Ångra "till intervju"',
+    await text(page, '.ans-steg h4'));
+  await bild(page, 'steg-rekryteringen', '.dp');
+  await page.click('[data-ans-steg="tillintervju:ans-ung"]');
+  await vänta(400);
+  const ångra = patchar().pop();
+  prova('steg: Ångra tar bort steget och inget annat', ångra && ångra.sök.includes('ans-ung')
+    && JSON.stringify(ångra.kropp) === '{"till_intervju_at":null}', JSON.stringify(ångra && ångra.kropp));
+  prova('steg: hen har lämnat Intervju, med läget kvar',
+    (await page.locator('#ans-intervju [data-dp="ansokan:ans-ung"]').count()) === 0 && (await flikTal()) === '2 / 2'
+    && ansökan('ans-ung').status === 'contacted', await flikTal());
+  prova('steg: och knappen skickar vidare igen',
+    (await text(page, '[data-ans-steg="tillintervju:ans-ung"]')).trim() === 'Skicka vidare till intervju');
+  await page.click('[data-ans-steg="tillintervju:ans-ung"]');
+  await vänta(400);
+  const igen = patchar().pop();
+  prova('steg: Skicka vidare i Rekryteringen sätter steget igen', igen
+    && Object.keys(igen.kropp || {}).join() === 'till_intervju_at' && igen.kropp.till_intervju_at
+    && (await flikTal()) === '3 / 2', JSON.stringify(igen && igen.kropp) + ' ' + (await flikTal()));
+
+  /* Panelen: Skicka vidare till utbildning frågar, för ett mejl går. */
+  await page.click('.dp-flik[data-dp-flik="oversikt"]');
+  await vänta(300);
   const före = patchar().length;
-  await page.click('[data-ans-vidare="utbildning:ans-gammal"]');
+  await page.click('.dp-atgard [data-ans-vidare="utbildning:ans-ung"]');
   await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
-  prova('steg: Till utbildning frågar och säger att ett mejl går',
-    (await text(page, '.nx-fraga-box h3')).includes('Kalle Sökande') && (await text(page, '.nx-fraga-box')).includes('mejl'),
+  prova('steg: Skicka vidare till utbildning frågar och säger att ett mejl går',
+    (await text(page, '.nx-fraga-box h3')).includes('Tove Lind') && (await text(page, '.nx-fraga-box')).includes('mejl'),
     await text(page, '.nx-fraga-box'));
   await bild(page, 'steg-fraga', '.nx-fraga-box');
   await page.click('[data-svar="nej"]');
   await vänta(200);
   prova('steg: Avbryt sparar inget', patchar().length === före);
-  await page.click('[data-ans-vidare="utbildning:ans-gammal"]');
+  await page.click('.dp-atgard [data-ans-vidare="utbildning:ans-ung"]');
   await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
   await page.click('[data-svar="ja"]');
   await vänta(500);
   const tillUtb = patchar().pop();
-  prova('steg: Skicka till utbildningen sätter intervju_at och inget annat', tillUtb && tillUtb.sök.includes('ans-gammal')
+  prova('steg: Skicka vidare till utbildning sätter intervju_at och inget annat', tillUtb && tillUtb.sök.includes('ans-ung')
     && Object.keys(tillUtb.kropp || {}).join() === 'intervju_at' && !Number.isNaN(Date.parse(tillUtb.kropp.intervju_at)),
     JSON.stringify(tillUtb));
   prova('steg: och hämtar beskeden om', S.logg.some(r => r.metod === 'GET' && r.väg === '/rest/v1/ansokan_utskick'
-    && r.sök.includes('ans-gammal')));
+    && r.sök.includes('ans-ung')));
+  prova('steg: panelen visar Utbildning, ingen knapp vidare, och Ta in i poolen är primär',
+    (await text(page, '.dp-marken')).includes('Utbildning')
+    && (await page.locator('.dp-atgard [data-ans-vidare]').count()) === 0
+    && (await page.locator('.dp-atgard [data-ans-pool="ans-ung"].btn-primary').count()) === 1,
+    await text(page, '.dp-marken'));
+  prova('steg: flikarna efter utbildningen', (await flikTal()) === '2 / 3', await flikTal());
+  await page.click('[data-dp-stang]').catch(() => {});
+  await vänta(200);
+
+  /* Raden i Intervju skickar också vidare, efter samma fråga. */
+  await page.click('#ans-intervju [data-ans-vidare="utbildning:ans-gammal"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  await page.click('[data-svar="ja"]');
+  await vänta(500);
+  const radUtb = patchar().pop();
+  prova('steg: Till utbildning på raden sätter intervju_at', radUtb && radUtb.sök.includes('ans-gammal')
+    && Object.keys(radUtb.kropp || {}).join() === 'intervju_at', JSON.stringify(radUtb));
   prova('steg: Kalle har lämnat Intervju', (await page.locator('#ans-intervju [data-dp="ansokan:ans-gammal"]').count()) === 0
-    && (await text(page, '#flik-ans-intervju-mark')) === '1' && (await text(page, '#flik-ans-utbildning-mark')) === '3');
+    && (await flikTal()) === '1 / 4', await flikTal());
 
   await flik('utbildning');
-  prova('steg: Utbildning har Kalle, provet att öppna och poolen för den som är klar',
+  prova('steg: Utbildning har dem, provet att öppna och poolen för den som är klar',
     (await page.locator('#ans-utbildning [data-dp="ansokan:ans-gammal"]').count()) === 1
+    && (await page.locator('#ans-utbildning [data-dp="ansokan:ans-ung"]').count()) === 1
     && (await page.locator('#ans-utbildning [data-ans-steg="utbmote:ans-utb"]').count()) === 1
     && (await page.locator('#ans-utbildning [data-ans-pool="ans-klar"]').count()) === 1);
   prova('steg: den som är klar säger det', (await text(page, '#ans-utbildning li:has([data-dp="ansokan:ans-klar"]) .adm-namn-text span'))
     .includes('klar att tas in i poolen'));
   await bild(page, 'steg-utbildning', '#panel-ans-utbildning');
 
-  /* Namnet öppnar fortfarande panelen, med steget överst. */
-  await page.click('#ans-utbildning [data-dp="ansokan:ans-gammal"]');
-  await vänta(400);
-  prova('steg: panelen visar steget', (await text(page, '.dp-marken')).includes('Utbildning'), await text(page, '.dp-marken'));
+  /* Ett bokat möte är intervjun: den nya hamnar under Intervju. */
+  await flik('alla');
+  await öppnaPanel('ans-boka');
+  await page.click('.dp-flik[data-dp-flik="rekrytering"]');
+  await vänta(300);
+  await page.click('[data-ans-mote="ans-boka"]');
+  await page.waitForSelector('#mo-datum', { timeout: 3000 }).catch(() => {});
+  const imorgon = new Date(Date.now() + 24 * 3600 * 1000);
+  const dag = imorgon.getFullYear() + '-' + String(imorgon.getMonth() + 1).padStart(2, '0') + '-'
+    + String(imorgon.getDate()).padStart(2, '0');
+  await page.fill('#mo-datum', dag);
+  await page.fill('#mo-tid', '17:00');
+  await page.fill('#mo-lank', 'meet.google.com/abc-defg-hij');
+  await page.click('[data-fr="ja"]');
+  await vänta(500);
+  const bokat = patchar().pop();
+  prova('steg: Boka möte skickar en ny vidare till intervju', bokat && bokat.sök.includes('ans-boka')
+    && Object.keys(bokat.kropp || {}).sort().join() === 'mote_lank,mote_tid,till_intervju_at'
+    && bokat.kropp.mote_lank === 'https://meet.google.com/abc-defg-hij', JSON.stringify(bokat && bokat.kropp));
+  prova('steg: och läget står kvar', ansökan('ans-boka').status === 'new', ansökan('ans-boka').status);
+  prova('steg: hen står under Intervju med mötet', (await flikTal()) === '2 / 4'
+    && (await text(page, '#ans-intervju li:has([data-dp="ansokan:ans-boka"]) .adm-namn-text span')).startsWith('Möte '),
+    await flikTal());
   await page.click('[data-dp-stang]').catch(() => {});
   await vänta(200);
 
-  /* Filtret är steget, och Utbildning tar med den som är klar. */
-  await flik('alla');
+  /* Filtret Utbildning tar med den som är klar. */
   await page.selectOption('#ans-status', 'utbildning');
   await vänta(200);
-  const filtrerat = await page.locator('#ans-tabell [data-dp]').evaluateAll(l => l.map(x => x.dataset.dp).sort());
-  prova('steg: filtret Utbildning', filtrerat.join() === 'ansokan:ans-gammal,ansokan:ans-klar,ansokan:ans-utb', filtrerat.join());
+  filtrerat = (await listan('#ans-tabell')).sort();
+  prova('steg: filtret Utbildning', filtrerat.join() === 'ansokan:ans-gammal,ansokan:ans-klar,ansokan:ans-ung,ansokan:ans-utb',
+    filtrerat.join());
   await page.selectOption('#ans-status', '');
 
   prova('steg: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   prova('steg: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
 
-  /* Telefonen: knappen under namnet, minst 44 px, inget utanför rutan. */
+  /* Telefonen: knappen under namnet, minst 44 px, inget utanför rutan,
+     och panelens knappar ryms. */
   {
     const { context, page, konsol } = await öppna(webb, { inloggad: true, steg: true,
       context: { viewport: { width: 375, height: 800 }, hasTouch: true, isMobile: true } });
@@ -627,9 +771,120 @@ async function provaStegen(webb) {
     prova('steg telefon: minst 44 px och träffbar', mått.h >= 44 && mått.träff, JSON.stringify(mått));
     prova('steg telefon: inget sticker ut', mått.höger <= mått.bredd && mått.sida <= mått.bredd, JSON.stringify(mått));
     await bild(page, 'steg-telefon', '#ans-tabell');
+
+    await page.click('#ans-tabell [data-dp="ansokan:ans-ung"]');
+    await vänta(500);
+    const panel = await page.evaluate(() => {
+      const k = document.querySelector('.dp-atgard [data-ans-vidare="intervju:ans-ung"]');
+      if (!k) return null;
+      k.scrollIntoView({ block: 'center' });
+      const kr = k.getBoundingClientRect();
+      const mitt = document.elementFromPoint(kr.left + kr.width / 2, kr.top + kr.height / 2);
+      return { h: kr.height, vänster: kr.left, höger: kr.right, bredd: innerWidth,
+        sida: document.documentElement.scrollWidth, träff: !!mitt && mitt.closest('[data-ans-vidare]') === k };
+    });
+    prova('steg telefon: panelens knapp är minst 44 px, träffbar och inom rutan', panel && panel.h >= 44 && panel.träff
+      && panel.vänster >= 0 && panel.höger <= panel.bredd && panel.sida <= panel.bredd, JSON.stringify(panel));
+    await bild(page, 'steg-telefon-panel', '.dp');
     prova('steg telefon: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }
+}
+
+/* ============ rekryteringens steg utan kolumnen (2026-10-13) ============
+   Före migrationen ansokan_till_intervju räknas Intervju ur läget
+   Kontaktad, och Till intervju sätter läget, som det gjorde 2026-10-13. */
+async function provaStegenUtanKolumnen(webb) {
+  const { context, page, S, riktiga, konsol } = await öppna(webb, { inloggad: true, steg: true, utanIntervjuKolumn: true });
+  await page.goto(BAS + '/admin#ansokningar');
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+  await vänta(800);
+  const patchar = () => S.logg.filter(r => r.metod === 'PATCH' && r.väg === '/rest/v1/applications');
+  const rad = id => '#ans-tabell li:has([data-dp="ansokan:' + id + '"])';
+  const flik = async f => { await page.click('#flik-ans-' + f); await vänta(200); };
+
+  prova('steg utan kolumnen: en ny ansökan har Till intervju', (await page.locator(rad('ans-ung') + ' [data-ans-vidare="intervju:ans-ung"]').count()) === 1);
+  prova('steg utan kolumnen: en som redan gått vidare har ingen knapp i Alla', (await page.locator(rad('ans-gammal') + ' [data-ans-vidare]').count()) === 0);
+  prova('steg utan kolumnen: Alla visar steget', (await text(page, rad('ans-gammal') + ' .adm-namn-lage')).trim() === 'Intervju'
+    && (await text(page, rad('ans-klar') + ' .adm-namn-lage')).trim() === 'Klar för poolen'
+    && (await text(page, rad('ans-ung') + ' .adm-namn-lage')).trim() === 'Ny',
+    [await text(page, rad('ans-gammal') + ' .adm-namn-lage'), await text(page, rad('ans-klar') + ' .adm-namn-lage')].join(' / '));
+  prova('steg utan kolumnen: flikarna räknar', (await text(page, '#flik-ans-intervju-mark')) === '1'
+    && (await text(page, '#flik-ans-utbildning-mark')) === '2',
+    (await text(page, '#flik-ans-intervju-mark')) + ' / ' + (await text(page, '#flik-ans-utbildning-mark')));
+  await bild(page, 'reserv-steg-alla', '#ans-tabell');
+
+  /* Till intervju: läget Kontaktad, ingen fråga, och raden flyttar. */
+  await page.click('[data-ans-vidare="intervju:ans-ung"]');
+  await vänta(400);
+  const tillIntervju = patchar().pop();
+  prova('steg utan kolumnen: Till intervju sparar läget Kontaktad och inget annat', tillIntervju
+    && JSON.stringify(tillIntervju.kropp) === '{"status":"contacted"}' && tillIntervju.sök.includes('ans-ung'),
+    JSON.stringify(tillIntervju));
+  prova('steg utan kolumnen: utan fråga', (await page.locator('.nx-fraga-box').count()) === 0);
+  prova('steg utan kolumnen: raden säger Intervju och knappen är borta', (await text(page, rad('ans-ung') + ' .adm-namn-lage')).trim() === 'Intervju'
+    && (await page.locator(rad('ans-ung') + ' [data-ans-vidare]').count()) === 0);
+  prova('steg utan kolumnen: fliken Intervju räknar upp', (await text(page, '#flik-ans-intervju-mark')) === '2');
+
+  await flik('intervju');
+  const iIntervju = await page.locator('#ans-intervju [data-dp]').evaluateAll(l => l.map(x => x.dataset.dp));
+  prova('steg utan kolumnen: Intervju har de två som skickats dit', iIntervju.length === 2 && iIntervju.includes('ansokan:ans-ung')
+    && iIntervju.includes('ansokan:ans-gammal'), iIntervju.join(', '));
+  prova('steg utan kolumnen: varje rad i Intervju har Till utbildning',
+    (await page.locator('#ans-intervju [data-ans-vidare^="utbildning:"]').count()) === 2);
+  await bild(page, 'reserv-steg-intervju', '#panel-ans-intervju');
+
+  /* Till utbildning frågar, för ett mejl går. Avbryt sparar inget. */
+  const före = patchar().length;
+  await page.click('[data-ans-vidare="utbildning:ans-gammal"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  prova('steg utan kolumnen: Till utbildning frågar och säger att ett mejl går',
+    (await text(page, '.nx-fraga-box h3')).includes('Kalle Sökande') && (await text(page, '.nx-fraga-box')).includes('mejl'),
+    await text(page, '.nx-fraga-box'));
+  await bild(page, 'reserv-steg-fraga', '.nx-fraga-box');
+  await page.click('[data-svar="nej"]');
+  await vänta(200);
+  prova('steg utan kolumnen: Avbryt sparar inget', patchar().length === före);
+  await page.click('[data-ans-vidare="utbildning:ans-gammal"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  await page.click('[data-svar="ja"]');
+  await vänta(500);
+  const tillUtb = patchar().pop();
+  prova('steg utan kolumnen: Skicka till utbildningen sätter intervju_at och inget annat', tillUtb && tillUtb.sök.includes('ans-gammal')
+    && Object.keys(tillUtb.kropp || {}).join() === 'intervju_at' && !Number.isNaN(Date.parse(tillUtb.kropp.intervju_at)),
+    JSON.stringify(tillUtb));
+  prova('steg utan kolumnen: och hämtar beskeden om', S.logg.some(r => r.metod === 'GET' && r.väg === '/rest/v1/ansokan_utskick'
+    && r.sök.includes('ans-gammal')));
+  prova('steg utan kolumnen: Kalle har lämnat Intervju', (await page.locator('#ans-intervju [data-dp="ansokan:ans-gammal"]').count()) === 0
+    && (await text(page, '#flik-ans-intervju-mark')) === '1' && (await text(page, '#flik-ans-utbildning-mark')) === '3');
+
+  await flik('utbildning');
+  prova('steg utan kolumnen: Utbildning har Kalle, provet att öppna och poolen för den som är klar',
+    (await page.locator('#ans-utbildning [data-dp="ansokan:ans-gammal"]').count()) === 1
+    && (await page.locator('#ans-utbildning [data-ans-steg="utbmote:ans-utb"]').count()) === 1
+    && (await page.locator('#ans-utbildning [data-ans-pool="ans-klar"]').count()) === 1);
+  prova('steg utan kolumnen: den som är klar säger det', (await text(page, '#ans-utbildning li:has([data-dp="ansokan:ans-klar"]) .adm-namn-text span'))
+    .includes('klar att tas in i poolen'));
+  await bild(page, 'reserv-steg-utbildning', '#panel-ans-utbildning');
+
+  /* Namnet öppnar fortfarande panelen, med steget överst. */
+  await page.click('#ans-utbildning [data-dp="ansokan:ans-gammal"]');
+  await vänta(400);
+  prova('steg utan kolumnen: panelen visar steget', (await text(page, '.dp-marken')).includes('Utbildning'), await text(page, '.dp-marken'));
+  await page.click('[data-dp-stang]').catch(() => {});
+  await vänta(200);
+
+  /* Filtret är steget, och Utbildning tar med den som är klar. */
+  await flik('alla');
+  await page.selectOption('#ans-status', 'utbildning');
+  await vänta(200);
+  const filtrerat = await page.locator('#ans-tabell [data-dp]').evaluateAll(l => l.map(x => x.dataset.dp).sort());
+  prova('steg utan kolumnen: filtret Utbildning', filtrerat.join() === 'ansokan:ans-gammal,ansokan:ans-klar,ansokan:ans-utb', filtrerat.join());
+  await page.selectOption('#ans-status', '');
+
+  prova('steg utan kolumnen: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('steg utan kolumnen: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
 }
 
 (async function () {
@@ -643,6 +898,7 @@ async function provaStegen(webb) {
     await provaFormuläret(webb);
     await provaAdminvyn(webb);
     await provaStegen(webb);
+    await provaStegenUtanKolumnen(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);
   } finally {

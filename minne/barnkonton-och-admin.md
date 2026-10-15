@@ -673,8 +673,8 @@ ut. Nu frågar vyn kärnans `får(kod)` och `ärSuperadmin()` före varje knapp
 databasen annars nekar:
 
 - bara superadmin: Avboka och avbokningsskälet (för andra står skälet som
-  text), Radera, Skapa elev och Ta in familjen, Skicka inbjudan igen, Ge
-  första timmen pass för pass, Stäng av faktura, Öppna chatt, de interna
+  text), Radera, Skapa elev och Ta in familjen, Skicka inbjudan igen, Stäng
+  av faktura, Öppna chatt, de interna
   anteckningarna, Lägg till ett dokument, elevens material och AI-förslagen,
   och timpenningen i Redigera (för andra gick den tyst tillbaka);
 - `studiehjalpare_godkann`: läget på en studiehjälpare och Visa på

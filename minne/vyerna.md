@@ -697,6 +697,40 @@ till en, hemma eller online skriv Rätt studiehjälp, på rätt plats"): rubrike
 är "Rätt studiehjälp, på rätt plats" ("The right help, in the right place"),
 på startsidan och Vår idé, båda språken, för bladen är samma kopia.
 
+### Den nya loggan (2026-10-15)
+
+Leo: "Du ska implementera våran nya logga i hemsidan", med loggan som
+bild (1654 x 1654 px): märket, ett brunt och orange sicksack, ordet
+nextrum i gemener och "av unga, för unga". Den ersätter N:et i den
+rundade rutan och ordet NEXTRUM i text.
+
+- **Källan är `bilder/nextrum-logga.svg`**, spårad i vektor ur bilden
+  (potrace på en 4x förstorad bild, där varje pixel delats upp i sin
+  andel brunt och orange; jämförd mot originalet, under en procent av
+  pixlarna skiljer). Märket är 223,5 x 169,5 enheter, ordet 751,75
+  bred i samma höjd, 51,75 till höger. Brunt #643820, orange #F88740.
+  Det bruna i märket går in under det orange, så att det aldrig syns en
+  springa i skarven.
+- **Sidorna har två inline-svg**, `.mark` och `.logo-text`, i samma
+  höjd (`--logga-h`, 26 px i sidhuvudet, 23 under 600 px, 22 i
+  adminvyn, 10 mm på affischen); bredden räknas ur höjden i
+  `nextrum.css`. Inline och inte `<use>` mot en fil: loggan ska stå
+  där när sidan ritas, och sidhuvudet var redan samma markup på alla
+  sidor. Ordet har `role="img" aria-label="Nextrum"`, så footerns länk
+  har ett namn utan text.
+- **Färgen**: det bruna och ordet är `currentColor`, och `.logo` tar
+  `--logga-brun` (#643820, 9,4:1 mot papperet; kräm i båda mörka
+  blocken). Mörka ytor sätter `color` på `.logo`: sidhuvudet över
+  heron och Bli studiehjälpares svarta (`.pa-mork`), footern och
+  maskotens öppna knapp. Det orange står i markupen och byts aldrig.
+  Affischen är alltid brun, för papperet är vitt i båda lägena.
+- **Sloganen** står inte i sidhuvudet (i 26 px går den inte att
+  läsa); den står som text i footern och på affischen, som förut, och
+  översätts på engelska.
+- Hovringen vrider inte längre märket (det var N:et som vände sig);
+  den förstorar det med `scale`.
+- Introduktionens bilder visar inget sidhuvud och byggdes inte om.
+
 ### Två fällor när en palett byts
 
 Båda kostade en omgång i Fas 11 och syns inte förrän i drift. Fas 11
@@ -1383,6 +1417,7 @@ vem som gick vidare.
   ansökningar Kontaktad utan `kontaktad_at`: Leo hade redan använt läget så,
   och ingen funktion i databasen läser `contacted`. Flikarna, listans märke,
   panelens märke överst och filtret (som nu är steget) läser samma funktion.
+  **Ersatt 2026-10-15**: Intervju är ett eget steg, aldrig läget (nedan).
 - **Knappen på raden** (`o.knapp` i `namnlista()`, bredvid namnknappen och
   aldrig i den; under namnet under 560 px): Alla har Till intervju på en ny
   (läget Kontaktad, inget mejl, ingen fråga; tillbaka är läget Ny i
@@ -1399,6 +1434,52 @@ vem som gick vidare.
   än de lovar. Kalendern filtreras inte.
 - `verktyg/prova-ansokningar.js` provar stegen i Chromium: knapparna, frågan,
   vad som sparas, flikarnas tal, filtret och telefonens rad.
+
+### Intervju är ett val, inte ett läge (2026-10-15)
+
+Leo: "de fyra stadierna när en ansökan om jobb kommer in är ny, kontaktad,
+godkänd eller avböjd. detta innebär att jag klickar själv i de vid klick av
+profil ... där det passar ska det också finnas skicka vidare till intervju,
+det är då för nya ansökningar. så i intervjudelen ska namn bara finnas där
+som jag har klickat i att de ska vidare till intervju. sen när de ligger i
+intervju så finns det att skicka vidare till utbildnings sektionen." Fliken
+Intervju räknade läget Kontaktad som intervju (ovan), och i driften stod sju
+av nio ansökningar där för att Leo hört av sig till dem.
+
+- **Steget har en egen tidsstämpel**, `applications.till_intervju_at`
+  (migrationen `ansokan_till_intervju`), och `ansSteg()` läser den, aldrig
+  läget. Den sätts av Skicka vidare till intervju (Till intervju på raden i
+  Alla, i ansökans panel under läget och i steg 1 i Rekryteringen) och av
+  Boka möte, för mötet är intervjun. Ångra "till intervju" i steg 1 tar bort
+  den medan hen står under Intervju. Ingen bakåtfyllning: ingen visste vilka
+  av de sju som skulle dit, så fliken börjar tom.
+- **Läget sätter Leo själv**, med märkena i panelen. Skicka vidare rör det
+  inte. Skriv till hen sätter Kontaktad på en ny, som förut: det är en
+  kontakt.
+- **Listan visar läget för den som inte gått vidare** (`listSteg()`): Ny
+  eller Kontaktad, och filtret har Kontaktade bredvid Nya. De andra står med
+  steget (Intervju, Utbildning, Klar för poolen) eller Godkänd och Avböjd.
+  Under Intervju står "Kontaktad" också för läget, inte bara för
+  `kontaktad_at`.
+- **Panelen** (`panelVidare()`): Skicka vidare till intervju på en ny eller
+  kontaktad, Skicka vidare till utbildning på den som står under Intervju,
+  som primär knapp under läget och samma handling som raden. Ta in i poolen
+  är primär bara när inget steg står kvar före den. Till utbildning är
+  "Mötet är hållet" och frågar först, för tacket mejlas.
+- **Steg 1 i Rekryteringen heter Till intervju** (förut Kontakt): valet och
+  Skriv till hen, med `till_intervju_at` som stämpel och när hen skrevs till
+  under.
+- **Utan kolumnen** (`harIntervjuKolumn()`, migrationen inte körd) är allt som
+  2026-10-13: Kontaktad är Intervju, och Till intervju sätter läget.
+- I databasen sätts steget aldrig utifrån (`skydda_ansokningsfalt`), gallringen
+  räknar det, och auditloggen tar tidpunkten. Inget mejlas.
+- `verktyg/prova-ansokningar.js` provar det i Chromium, med reserven utan
+  kolumnen och panelens knapp på en telefon, och `rls-test.sql` databasen
+  (proven TI). Provet fyller också i skolnivån, som jobbansökan kräver sedan
+  2026-10-14: utan den skickades inget, och formulärets prov föll.
+- **I drift 2026-10-15**: vyn med PR #289 (b85b892, Vercel 19.31 UTC) och
+  migrationen direkt efter (`minne/databasen.md`). Mellan de två räknade vyn
+  Intervju som förut, ur läget, och efter migrationen är fliken tom.
 
 ### Tusen rader (2026-09-29)
 
