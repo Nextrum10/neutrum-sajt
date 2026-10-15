@@ -2171,6 +2171,8 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-steg-tal{min-width:8ch;text-align:center;font-variant-numeric:tabular-nums;font-weight:600;color:var(--bl)}
 .erb-extra-pris{margin:0;font-variant-numeric:tabular-nums}
 .erb-extra-pris b{font-size:1.15rem;color:var(--bl)}
+/* Familjens rabatt (2026-10-15) under priset, som koden på korten. */
+.erb-extra-rabatt{display:block;font-size:.8rem;color:var(--mossa)}
 /* Fas 21.3: vägen till köpta timmar under Betala i förväg. */
 .bet-erb-tips{margin:14px 0 0;color:var(--bl-2);line-height:1.6}
 .bet-erb-tips a{color:var(--acc);font-weight:600;white-space:nowrap}

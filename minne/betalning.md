@@ -1319,3 +1319,100 @@ istället 399 streck över de, 379". (Han skrev "basic" två gånger; den andra
   tre korten. I
   studievyn står raden bara kvar på ett kort med timmar på köpet, utan
   "ni sparar", för där är den det enda som säger hur summan går ihop.
+
+---
+
+## Familjerabatterna (2026-10-15)
+
+Leo: "vi i admin vill skapa egna rabattkoder som bara vi har tillgång till.
+de ska skrivas i i familjernas konto som bara vi kan se och röra,
+rabattkoden kan vara en samarbetsparter som anvönder den och vi vill ge 10 kr
+billigare på alla timmar som köps tex. vi ska precis som när vi ger ut gratis
+timmar i timbank kunna skriva in rabattkoder för familjerna som ändrar deras
+pris tills vi tar bort rabatten. tex 10 kr tills vidare. de ser bara att de har
+rabatt vid checkout men inte annat. vi ser rabatkoden när vi klickar på deras
+namn och kan välja ta bort eller ändra. sen skapar vi våra rabattkoder."
+
+Migrationen `20261015120000_familjerabatter`, kassan (`stripe-checkout`,
+SESSIONSFORM 9, `_delad/erbjudanden.ts`), agentens fakta, adminvyn och
+studievyn. Inte i drift när det skrevs: kedjan står i `DEPLOY-BETALNING.md`
+9.15.
+
+- **Två tabeller.** `familjerabatter` är koderna: kod (som rabattkoder:
+  versaler, siffror och bindestreck), en beskrivning bara för oss,
+  `ore_per_timme` (1–200 kr i hela kronor: taket fångar en nolla för mycket)
+  och `aktiv`. Bara admin läser och skriver (`is_admin()`), och en kod tas
+  aldrig bort och byter aldrig namn: den stängs av. `familjens_rabatt` är en
+  rad per familj med koden, `andrad_at` och `andrad_av`. Bara admin läser den,
+  och bara `satt_familjerabatt(familj, kod)` skriver, med `is_admin()` först;
+  null tar bort, och raden står kvar utan kod (inget `delete`, kärnan avsnitt
+  5). Familjen frågar `min_familjerabatt()` och får bara beloppet per timme,
+  aldrig koden; barnets roll och anon når den inte.
+- **Ingen rabattkod.** En rabattkod skriver familjen in, den räknas, har
+  gränser och datum, och den prövas av `intern.rabattkod_prova`. En
+  familjerabatt skriver familjen aldrig, den syns inte och den räknas inte.
+  De står i var sin tabell så att en kod för en partner aldrig kan gissas i
+  rabattkodsrutan, och fliken nekar ett namn som en rabattkod redan har.
+- **Kronor av på varje timme, inte ett lägre baspris.** Leo sa "10 kr
+  billigare på alla timmar som köps". En plan kostar timpriset minus 5 %,
+  nedåt till hel krona, och sedan dras rabatten från varje betald timme
+  (379 kr blir 369). Hade rabatten dragits från baspriset före planens 5 %
+  hade 20 kr blivit 19 på en plan (floor(379 × 0,95) = 360 mot 359), och
+  kassan hade dragit mindre än vi sagt till partnern. Därför står
+  `klippkort.timpris_ore` kvar som katalogens, och rabatten bredvid, per timme.
+  På ett pass dras den från det frysta timpriset, för allt som räknar ett
+  pass läser `bookings.timpris_ore` (kortet, reservationen, fakturan,
+  månadskörningen, första timmen, en rabattkod): att lägga rabatten i en egen
+  kolumn hade krävt att varje sådan räkning skrevs om, och glömdes en hade en
+  månad fått två belopp.
+- **Priset fryses som förut.** Rabatten gäller det som bokas och köps medan
+  den finns. Sätts, ändras eller tas den bort står det bokade och köpta kvar
+  med sitt pris, som när timpriset ändras. En avstängd kod ger ingen rabatt,
+  och den sätts inte på en ny familj. Att också sänka obetalda bokade pass hade
+  krävt att första timmen, en kod och en reservation som redan står räknades
+  om; det gör vi inte.
+- **Vad den gäller.** Pass, planer, Fyll timbanken och timmar till en plan,
+  när rabatten lämnar ett pris kvar. Tillägget för fler barn rörs inte (Leo
+  sa timmar), och gratistimmar, första timmen och tipstimmen kostar redan
+  ingenting. Lönen rörs inte: studiehjälparen får betalt för den tid som hölls.
+- **En rabattkod gäller ovanpå**, räknad på priset efter familjerabatten: den
+  är familjens pris, och en kod räknas på familjens pris som för vem som helst.
+  `skydda_rabatt` läser redan passets frysta timpris, och `kolla_rabattkod_kop`
+  och `intern.klippkort_rabatt` prövar koden mot priset efter rabatten. Vill
+  Leo att de inte ska gälla samtidigt är det en rad i `intern.rabattkod_prova`
+  och en mening i rutan.
+- **Att sluta.** Villkoren räknar de använda timmarna till "ordinarie
+  timpris". För en familj med rabatt var det lägre, och `vid_uppsagning_ore`
+  räknar dem nu till `timpris_ore − familjerabatt_ore`, och
+  `intern.timbank_varde` minuterna till samma, så att de två fortfarande tar ut
+  varandra. Det blir aldrig mer än villkoren tillåter. Inom ångerfristen räknas
+  andelen av det betalda, som förut.
+- **Vad familjen ser.** Leo: "de ser bara att de har rabatt vid checkout men
+  inte annat". Priset vid knappen i Boka pass ("1 timme, med er rabatt"), steget
+  i Köp till timmar ("med er rabatt"), raden under rubriken när kassan öppnas,
+  och raden i Stripes kassa och på kvittot ("Med er rabatt på 10 kr per timme",
+  `kassarad`, och på ett pass "med er rabatt på 10 kr per timme"). Plankorten och
+  Fyll timbanken visar katalogens pris, och Profil säger ingenting. Priset på ett
+  bokat pass är det frysta, alltså med rabatten, utan ett ord om den.
+- **Vad vi ser.** Fliken Tjänster → Familjerabatter: koderna, beloppet som
+  ändras på raden, hur många familjer som har koden, och Stäng av, som frågar
+  när en familj har den. Familjens panel: raden Familjerabatt under Översikt
+  och rutan under Ekonomi, med vem och när, Byt till och Ta bort. Ta in
+  familjen har valet bredvid gratistimmarna, när kontot skapas där. Passets
+  panel säger timpriset med rabatten dragen, och Köpta timmar och familjens
+  timbank säger att ett köp gjordes med rabatten.
+- **Auditen** får när en kod skapas, stängs av eller får ett nytt belopp, och
+  att en familj fick, bytte eller blev av med en rabatt och av vem
+  (`har_rabatt`, en kolumn som räknas ur koden), aldrig vilken kod: koden kan
+  säga vilken partner familjen kom genom, och auditen står kvar så länge
+  verksamheten finns. Avidentifieras familjen tas koden bort
+  (`profiles_familjerabatt_rensas`); raderas kontot går raden med.
+- **Villkoren** nämner ingen rabatt och fick ingen ny version: ett lägre pris
+  än prislistan ändrar dem inte. En rabatts villkor (beloppet, att den gäller
+  tills vidare och att vi kan ta bort den) ska stå där vi ger den, i mejlet
+  eller avtalet med partnern, som för en rabattkod.
+- **Prov.** `rls-test.sql` avsnitt 35 (26 prov, `FR`); lokalt ur alla
+  migrationer 1765 av 1765. `verktyg/prova-familjerabatter.js` (60 prov):
+  fliken, panelen, Ta in familjen, passets panel, studievyn med och utan
+  rabatt, och vyerna utan migrationen. `_delad/erbjudanden_test.ts`:
+  kassaraden och regeln för köpet.

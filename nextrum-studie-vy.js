@@ -2472,9 +2472,16 @@
      för varje kort: { kod, beskrivning, pris: { erbjudande: att betala } }. */
   S.erb = { aktiv: false, katalog: [], kort: [], bank: { saldo: 0, varde: null, perPass: {}, finns: false },
             rorelser: undefined, dragningar: undefined, kod: null };
+  /* Familjens rabatt (familjerabatter, 2026-10-15): kronor av per timme som
+     admin satt på familjen, ur min_familjerabatt(). Bara beloppet, aldrig
+     koden, och den syns bara där familjen betalar: priset vid knappen i Boka
+     pass, Köp till timmar och kassan. Noll utan rabatt, och före migrationen. */
+  S.familjerabatt = 0;
+  const familjerabatt = () => Math.max(Number(S.familjerabatt) || 0, 0);
+  const medErRabatt = 'med er rabatt';
 
   async function laddaErbjudanden() {
-    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta] = await Promise.all([
+    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta, rabatt] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       /* Alla kolumner (planerna, 2026-10-07): timmar_pa_kopet finns först
          efter migrationen, och en uttrycklig lista med den hade gett ett
@@ -2504,9 +2511,13 @@
          pass, och om den redan fått sin timme. Hämtas med köpen, för ett
          planköp ändrar den. Utan funktionen (före migrationen) är den null,
          och då gäller den gamla regeln, som databasen då också har. */
-      supa.rpc('forsta_timmen_lage')
+      supa.rpc('forsta_timmen_lage'),
+      /* Familjens rabatt per timme (familjerabatter, 2026-10-15). Ett fel,
+         eller en databas före migrationen, är ingen rabatt. */
+      supa.rpc('min_familjerabatt')
     ]);
     S.forstaTimmen = forsta.error ? null : (forsta.data || null);
+    S.familjerabatt = rabatt.error ? 0 : Math.max(Number(rabatt.data) || 0, 0);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
     S.erb.katalog = katalog.data || [];
     /* Gratistimmar som admin tagit tillbaka (aterkallad_at, timmarna_delas
@@ -3579,7 +3590,14 @@
     if (!e || !S.erb.aktiv || S.väntar) return;
     await köpIKassan(knapp, kod, null, 'Köp ' + e.namn, svar => erbTimmar(e) + ' · '
       + NXBetalning.kronor(svar.belopp_ore != null ? svar.belopp_ore : e.pris_ore)
-      + (svar.rabatt_ore > 0 && S.erb.kod ? ' med koden ' + S.erb.kod.kod : ''));
+      + medVad(Number(svar.familjerabatt_ore) > 0,
+        Number(svar.rabatt_ore) > Number(svar.familjerabatt_ore || 0) && S.erb.kod ? S.erb.kod.kod : null));
+  }
+
+  /* "med er rabatt", "med koden X" eller båda, efter beloppet i kassan. */
+  function medVad(rabatt, kod) {
+    const delar = [rabatt ? medErRabatt : null, kod ? 'koden ' + kod : null].filter(Boolean);
+    return delar.length ? ' ' + (rabatt ? '' : 'med ') + delar.join(' och ') : '';
   }
 
   /* Ett köp i samma kassa som passen. extra följer med till
@@ -3699,7 +3717,8 @@
     const medKod = S.erb.kod ? S.erb.kod.pris[e.kod] : null;
     if (medKod != null && medKod < Number(e.pris_ore)) {
       return '<span class="erb-pris"><s>' + esc(kr(e.pris_ore)) + '</s><b>' + esc(kr(medKod)) + '</b>'
-        + '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + '</span></span>';
+        + '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + (familjerabatt() ? ' och er rabatt' : '')
+        + '</span></span>';
     }
     return '<span class="erb-pris">' + (spar > 0 ? '<s>' + esc(kr(e.ordinarie_ore)) + '</s>' : '')
       + '<b>' + esc(kr(e.pris_ore)) + '</b></span>';
@@ -3783,7 +3802,7 @@
           : '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b>')
         + '</div>'
         + (kod
-          ? '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + '</span>'
+          ? '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + (familjerabatt() ? ' och er rabatt' : '') + '</span>'
           : '<span class="erb-tim">' + (billigare ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
             + esc(kr(e.rabatterat_timpris_ore)) + ' per timme'
             + (billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>')
@@ -3917,6 +3936,8 @@
     const timpris = plan ? Number(plan.rabatterat_timpris_ore) : 0;
     if (!plan || !(timpris > 0)) return '';
     const n = S.extra.timmar;
+    // Priset efter familjens rabatt, som extra_timmar_erbjudande räknar det.
+    const perTimme = extraTimpris(timpris);
     return '<div class="erb-mitt erb-extra">'
       + '<div class="erb-mitt-topp"><b>Köp till timmar</b><span>' + esc(NXBetalning.kronor(timpris) + ' i timmen') + '</span></div>'
       + '<p class="erb-bank-text">' + esc('Timmar till ' + plan.namn + ', till planens timpris. De går ut med planen, '
@@ -3930,7 +3951,8 @@
           + '<button type="button" class="erb-steg-knapp" data-extra-steg="1" aria-label="En timme till"'
           + (n >= EXTRA_MAX ? ' disabled' : '') + '>+</button>'
           + '</div>'
-          + '<p class="erb-extra-pris"><b>' + esc(NXBetalning.kronor(timpris * n)) + '</b></p>'
+          + '<p class="erb-extra-pris"><b>' + esc(NXBetalning.kronor(perTimme * n)) + '</b>'
+          + (perTimme < timpris ? '<span class="erb-extra-rabatt">' + esc(medErRabatt) + '</span>' : '') + '</p>'
           + '<button type="button" class="btn btn-orange" data-extra-kop>Till kassan</button>'
           + '</div>'
         : '<button type="button" class="btn btn-ghost btn-sm" data-extra-valj>Välj själv</button>')
@@ -3946,18 +3968,23 @@
     const n = S.extra.timmar;
     const tal = ruta.querySelector('.erb-steg-tal'), pris = ruta.querySelector('.erb-extra-pris b');
     if (tal) tal.textContent = timText(n);
-    if (pris) pris.textContent = NXBetalning.kronor(Number(plan.rabatterat_timpris_ore) * n);
+    if (pris) pris.textContent = NXBetalning.kronor(extraTimpris(Number(plan.rabatterat_timpris_ore)) * n);
     const minus = ruta.querySelector('[data-extra-steg="-1"]'), plus = ruta.querySelector('[data-extra-steg="1"]');
     if (minus) minus.disabled = n <= 1;
     if (plus) plus.disabled = n >= EXTRA_MAX;
   }
+
+  /* Planens timpris minus familjens rabatt, när den lämnar ett pris kvar:
+     samma regel som extra_timmar_erbjudande(), som kassan drar efter. */
+  const extraTimpris = timpris => (familjerabatt() > 0 && familjerabatt() < timpris ? timpris - familjerabatt() : timpris);
 
   async function köpTillPlanen(knapp) {
     const plan = planFörExtra();
     if (!plan || !S.erb.aktiv || S.väntar) return;
     const n = S.extra.timmar;
     await köpIKassan(knapp, 'plan_extra', { timmar: n }, 'Köp till timmar',
-      svar => timText(n) + ' till ' + plan.namn + (svar.belopp_ore ? ' · ' + NXBetalning.kronor(svar.belopp_ore) : ''));
+      svar => timText(n) + ' till ' + plan.namn + (svar.belopp_ore ? ' · ' + NXBetalning.kronor(svar.belopp_ore) : '')
+        + (Number(svar.familjerabatt_ore) > 0 ? ' ' + medErRabatt : ''));
   }
 
   /* Ett köpt kort: timmarna kvar som en mätare, och sista dagen. Samma
@@ -4706,6 +4733,10 @@
     /* Köpta timmar i stället för priset vid knappen (2026-09-28), och
        för resten av ett pass med en timme på köpet (2026-10-14). */
     timmar: (minuter, datum, barn, gratis) => timmarFörFörslag(minuter, datum, barn, gratis),
+    /* Familjens rabatt per timme (familjerabatter, 2026-10-15): databasen
+       drar den från timpriset när passet skapas (frys_passets_pris), och
+       priset vid knappen visar samma sak. */
+    familjerabatt: () => familjerabatt(),
 
     /* Spärren förr yttrade sig som en avstängd knapp utan
        förklaring. Nu står skälet där kalendern skulle ha stått. */

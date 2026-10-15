@@ -134,6 +134,13 @@ SIFFRORNA:
   tvist, inte ett skrivfel.
 · Priset är det som gällde när passet bokades. En prishöjning gäller
   bara pass som bokas efter den.
+· Admin kan ge en familj en egen rabatt, till exempel genom en
+  samarbetspartner: ett antal kronor av på varje timme familjen betalar,
+  på pass, planer, Fyll timbanken och timmar till en plan, tills admin
+  tar bort den. Den gäller det som bokas och köps medan den finns, och
+  en rabattkod räknas på priset efter den. Familjen ser bara att priset
+  är lägre i kassan. Ett pass eller köp under ordinarie pris hos en
+  sådan familj är alltså inget fel.
 · Första timmen är gratis med den första planen familjen köper: planen
   får en timme till, 9 timmar när man köper 8. Den dras först och
   gäller i 60 dagar från köpet, också om planens andra timmar gått ut
