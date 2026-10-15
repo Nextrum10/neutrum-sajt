@@ -2103,15 +2103,6 @@ body.vy-admin .dbox * + h5{margin-top:24px}
 }
 .le-familj-saknas{border-style:dashed}
 .le-familj .btn{align-self:flex-start;margin-top:8px}
-/* Första timmen gratis pass för pass (2026-10-09): hela raden är
-   tryckytan, minst 44 px hög. */
-.le-forsta{
-  display:flex;gap:10px;align-items:flex-start;min-height:44px;
-  margin-top:12px;padding:6px 0;
-  font-size:.84rem;line-height:1.5;color:var(--bl-2);cursor:pointer;
-}
-.le-forsta input{flex:none;width:18px;height:18px;margin:2px 0 0}
-.le-forsta[hidden]{display:none}
 /* Gratistimmar när familjen tas in (2026-10-13): antalet bredvid
    rubriken, och vad timmarna är under. */
 .le-gratis{

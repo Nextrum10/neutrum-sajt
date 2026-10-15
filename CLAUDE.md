@@ -340,10 +340,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   på prissidan eller i studievyn, och kalkylatorn säger inget "Ni sparar" heller (Leo samma kväll). Priset fryses vid bokningen. **Första timmen gratis** (2026-10-09, Leo: "bara folk som köper planen ska få
   gratis första lektion", "MAXIMALT ... en timme gratis"): högst en per familj, någonsin, utom tipstimmar
   och gratistimmar (`intern.forsta_timmen_tagen`). Den första planen familjen betalar får en timme till (`klippkort.forsta_timmen`,
-  `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald); pass för pass bara för
-  en familj vi valt (`forsta_timmen_beviljad`, `ge_forsta_timmen()` i Ta in familjen och familjens panel), då med Fas
-  19.5:s `startrabatt` på det pass som gör att familjen bokat två timmar. Studievyns `bjuden` speglar regeln ur
-  `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
+  `timmar` och `timmar_pa_kopet` ett steg upp, `intern.planens_forsta_timme` när den blir betald). **Pass för
+  pass ges den inte** (2026-10-15, Leo: "det ska bara finnas ge gratis timmar till timbanken"): vill vi bjuda en familj
+  sätter vi in gratistimmar. Valet (`forsta_timmen_beviljad`, `ge_forsta_timmen()`, då med Fas 19.5:s `startrabatt`)
+  står kvar i databasen utan knapp, och villkorens "kan vi, om vi kommit överens" går med nästa version. Studievyns
+  `bjuden` speglar regeln ur `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
   **En gratis timme gäller i 60 dagar och dras först** (2026-10-13, Leo: "gratis timmar går ut efter 60 dagar att de
   läggs in", "gratis timmar går ut först sen planerna", "9h vid köp av 8"): planens gratis timme (`timmar_pa_kopet`) dras
   först och gäller efter planens månad så länge den inte använts, till 60 dagar efter köpet (`klippkort_saldo.gratis_kvar`

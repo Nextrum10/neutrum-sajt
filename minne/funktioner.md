@@ -265,6 +265,13 @@ den, Fyll timbanken kostar timpriset och gäller i sex månader, sparade
 minuter går aldrig ut, och pass för pass går inte genom den. Utan
 tabellnamn, och `testa-agent.js` gick igenom.
 
+**drift v19** driftsätts från main efter merge av ändringen 2026-10-15:
+`nextrum-fakta.ts` säger att en familj som betalar pass för pass inte får
+någon första timme gratis, och att vi bjuder med gratistimmar (Leo samma
+dag). Att ett pass på en timme kan kosta noll kronor står nu vid
+tipstimmen, den enda timmen som fortfarande gör det. v17 och v18 står i
+kärnans avsnitt 11.
+
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —
 anmälningar, omatchade elever, kommande pass, saknade rapporter — och

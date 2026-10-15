@@ -137,17 +137,16 @@ SIFFRORNA:
 · Första timmen är gratis med den första planen familjen köper: planen
   får en timme till, 9 timmar när man köper 8. Den dras först och
   gäller i 60 dagar från köpet, också om planens andra timmar gått ut
-  (en plan gäller en månad). En familj som betalar pass för pass får den
-  bara om admin valt det för familjen, och då dras en timme av på det
-  pass som gör att familjen har bokat två timmar, inom 60 dagar från att
-  admin gav den. Högst en sådan timme per familj; timmar för tips och
-  gratistimmar som admin sätter in räknas inte hit. Ett pass på en timme
-  kan alltså kosta noll kronor, och det är då inte obetalt.
+  (en plan gäller en månad). En familj som betalar pass för pass får
+  ingen första timme gratis: vill vi bjuda en familj sätter admin in
+  gratistimmar i timbanken. Högst en första timme per familj; timmar för
+  tips och gratistimmar räknas inte hit.
 · En familjs kod gäller intresseanmälan och en studiehjälpares kod
   jobbansökan. En familj som tipsat får en timme i sin timbank när en
   ny familj som anmält sig med dess kod haft två timmar läxhjälp. Den
   dras först, som en timme på köpet på nästa pass, och gäller i 60
-  dagar från den dagen.
+  dagar från den dagen. Ett pass på en timme kan då kosta noll kronor,
+  och det är inte obetalt.
 · Studiehjälparen får betalt den 25:e, i en klump för månadens
   rapporterade pass. Tar vi in någon som sökt jobb med en
   studiehjälpares kod får den studiehjälparen 300 kr i bonus med

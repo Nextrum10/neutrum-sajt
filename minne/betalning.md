@@ -105,8 +105,19 @@ texten är kärnans.
     fristen till betalt delat med alla timmarna, och den betalas aldrig ut.
     Ett köp som läggs in som redan betalt (fixturerna) får ingen timme.
   - Pass för pass bara för en familj vi valt: `forsta_timmen_beviljad`
-    (ingen skrivpolicy; `ge_forsta_timmen()` med `is_admin()`, rutan i Ta
-    in familjen och knappen i familjens panel), med regeln ovan.
+    (ingen skrivpolicy; `ge_forsta_timmen()` med `is_admin()`), med regeln
+    ovan. **Sedan 2026-10-15 ges den inte pass för pass.** Leo: "i
+    familjers profil finns det ge den pass för pass, alltså första gratis
+    lektionen, ta bort den. det ska bara finnas ge gratis timmar till
+    timbanken". Rutan i Ta in familjen och knappen i familjens panel är
+    borta, och raden Första timmen gratis i panelen säger bara om timmen
+    getts. Ingen familj hade valet och inget pass hade timmen, så
+    databasen ändrades inte: tabellen, funktionen och Fas 19.5:s väg står
+    kvar utan knapp, och studievyn visar fortfarande en timme som är
+    `beviljad`. Villkoren säger att vi "kan, om vi kommit överens om det"
+    ge den pass för pass; meningen går med nästa version, för en version
+    bara för den skulle ge alla frågan om villkoren igen. Agentens fakta
+    (`drift`) och familjens ruta Pris under Profil säger det inte längre.
   - Högst en: `intern.forsta_timmen_tagen` är sann när familjen har ett
     icke avbokat pass med `startrabatt` utan `TIPS`, eller en plan med
     `forsta_timmen` (också en återbetald, för timmen kan ha använts). Båda
