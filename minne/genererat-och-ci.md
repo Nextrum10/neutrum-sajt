@@ -540,7 +540,11 @@ en rapport, elevens tråd, de två vyerna kopplade (föreslå, byt, acceptera,
 byt tillbaka, omladdningen, Börja om), telefonen och adminvyns sektion
 och tal utan adminens konto. När vyerna börjar fråga efter en ny tabell
 eller funktion säger provet det: lägg den i världen i
-`nextrum-forhandsvisning.js`.
+`nextrum-forhandsvisning.js`. Ett pass som provet skapar hittas på sitt id
+(de som inte fanns före Boka), aldrig på datum och läge: provet bokar
+kalenderns sista dag, alltså månadens sista, och världens pass ligger på
+`dag(6)`, `dag(16)` och `dag(23)`. Den 15 oktober var `dag(16)` den 31:a,
+och provet tog Saras motförslag för familjens förslag (tre prov föll).
 
 ### Webbläsarprovet för kortet (2026-10-14)
 `verktyg/prova-kortet.js` (port 8976) provar kortets vyer
