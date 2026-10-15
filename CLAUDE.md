@@ -103,7 +103,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`intern.timbank_in`) och betalas aldrig ut; studiehjälparen får lön som vanligt. **De påminns** tio dagar
   innan de går ut (2026-10-15, `gratistimmarna_paminns`, Leo: "fixa påminelse"), med planens gratis timme som
   gäller efter planen och tipstimmarna: samma mejltyp och val som köpta timmar, med `gratis` i datan, och mejlet
-  lovar då inga pengar tillbaka. Ett återkallat kort påminns aldrig, och villkoren lovar ingen påminnelse.
+  lovar då inga pengar tillbaka. Utan studiehjälpare (`S.väntar`) kan familjen inte boka, så då blir det en uppgift
+  till oss i stället, en gång per kort och dag (idén från PR #287). Ett återkallat kort påminns aldrig. Villkoren
+  säger fortfarande "förfaller utan påminnelse" (`#gratistimmar`): orden tas bort i nästa version, inte i en egen.
   `ta_tillbaka_gratistimmar()` tar bara det som inte ligger på ett pass, och återkallar kortet
   (`aterkallad_at`) i stället för att radera det (2026-10-14): ingen `delete`, och historiken står kvar.
   De står utanför första timmen, som tipstimmen. Det river beskedet 2026-10-09 "inte få gratis av oss".
@@ -921,10 +923,12 @@ Detaljer: `minne/grunden.md`.
 - **Påminnelsen om gratis timmar och batteriet** (2026-10-15) är byggda men inte i drift: **`notis-ko` driftsätts
   från main FÖRE** migrationen `gratistimmarna_paminns` (20261015140000), annars får familjen köptimmarnas mejl,
   som lovar pengar tillbaka; sedan migrationen efter merge, hämtad från merge-commiten och prövad mot sin md5, i
-  ett do-block (inget `drop` eller `delete`), och hela `rls-test.sql` mot driften (lokalt, ur alla 195 migrationer,
-  1749 av 1749). Vakten kräver att `intern.timmar_gar_ut_koa` är den `timmarna_delas_och_kops_till` lämnade.
-  Villkorens version blir 2026-10-16 ("utan påminnelse" är borta), så alla får frågan igen; går den ut en annan dag
-  byts datumet på båda sidorna och i migrationen. Batteriet behöver ingen migration. Juristen har inte läst ändringen.
+  ett do-block (inget `drop` eller `delete`), och hela `rls-test.sql` mot driften. Vakten släpper bara igenom
+  funktionen `timmarna_delas_och_kops_till` lämnade (md5 `2c8fa456…`) eller filens egen (`c54a9b63…`): **PR #287
+  byggde samma påminnelse** med samma namn, och Leo valde den här (2026-10-15); #287:s version i driften stoppar
+  filen i stället för att skrivas över. **Villkoren byts inte för den** (Leo samma kväll): `#gratistimmar` säger
+  fortfarande "förfaller utan påminnelse", och orden tas bort i nästa version av villkoren. Batteriet behöver ingen
+  migration.
 - **Timmarna delas, och timmar köps till planen** (2026-10-14, `timmarna_delas_och_kops_till`, 20261014100000) är
   i drift sedan samma förmiddag: ett pass dras från högst två köp, timmen på köpet dras inte och timmarna betalar
   resten, gratistimmar återkallas utan `delete`, Köp till timmar (Välj själv, `plan_extra`, `stripe-checkout`),

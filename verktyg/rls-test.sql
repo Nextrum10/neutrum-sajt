@@ -14540,6 +14540,7 @@ end $$;
 -- gratistimmarna_paminns (2026-10-15): en tipstimme påminns tio dagar
 -- innan den går ut, som de andra gratis timmarna. Den är inget kort, så
 -- påminnelsen har inget kort och gäller familjen och dagen, en gång.
+-- Utan studiehjälpare blir den en uppgift till oss, som de andra.
 -- Samma fixtur som ovan, men passen hölls för 52 dagar sedan: åtta dagar kvar.
 do $$
 declare
@@ -14547,6 +14548,8 @@ declare
   jp   jsonb;
   t    text;
   n    bigint;
+  n0   bigint;
+  tu   text;
   idag date := (now() at time zone 'Europe/Stockholm')::date;
   mitt timestamptz := (idag + time '12:00') at time zone 'Europe/Stockholm';
   P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
@@ -14579,6 +14582,16 @@ begin
     values (EQ, A, QB1, 'fixtur', idag - 53, 'narvarande'),
            (EQ, A, QB2, 'fixtur', idag - 52, 'narvarande');
 
+    -- P har ingen studiehjälpare: en uppgift till oss, inget mejl.
+    update public.profiles set match_status = 'pending', matched_tutor_id = null where id = P;
+    perform intern.timmar_gar_ut_koa(mitt);
+    select count(*) into n0 from public.notiser x
+     where x.mottagare = P and x.typ = 'timmar_gar_ut' and not (x.data ? 'klippkort');
+    select string_agg(u.status || ':' || (u.kopplad_id = P::text) || ':' || (position('för tips' in u.beskrivning) > 0)
+                      || ':' || (position('ta tillbaka' in u.beskrivning) = 0), ',') into tu
+      from public.uppgifter u where u.nyckel = 'gratistimmar_utan_hjalpare:tips:' || P || ':' || (idag + 8);
+
+    update public.profiles set match_status = 'matched', matched_tutor_id = A where id = P;
     perform intern.timmar_gar_ut_koa(mitt);
     perform intern.timmar_gar_ut_koa(mitt);
     select string_agg(coalesce(x.data ->> 'gratis', '-') || ':' || (x.data ->> 'kvar') || ':' || (x.data ->> 'datum')
@@ -14596,6 +14609,8 @@ begin
     return;
   end if;
   insert into utfall (test, ok, detalj) values
+    ('GT en tipstimme utan studiehjälpare blir en uppgift till oss, inget mejl',
+      n0 = 0 and tu = 'oppen:true:true:true', 'mejl ' || n0 || ', uppgiften ' || coalesce(tu, 'saknas')),
     ('GT en tipstimme som går ut om åtta dagar påminns en gång, märkt gratis och utan kort',
       t = 'true:1:' || (idag + 8) || ':false' and n = 1, coalesce(t, 'ingen påminnelse') || ', i kön ' || n);
 end $$;
@@ -14607,7 +14622,8 @@ end $$;
 -- tas in och när den redan finns. De gäller i 60 dagar, används före
 -- köpta timmar, sparar inga minuter och betalas aldrig ut. Sedan
 -- gratistimmarna_paminns (2026-10-15) påminns de tio dagar innan, märkta
--- gratis. Bara admin sätter in och tar tillbaka. Familj Q får dem,
+-- gratis, och utan studiehjälpare blir det en uppgift till oss. Bara
+-- admin sätter in och tar tillbaka. Familj Q får dem,
 -- med barnet matchat hos A och strömbrytaren erbjudanden på. Varje
 -- delblock rullas tillbaka för sig (variablerna står kvar), och allt
 -- rullas tillbaka sist.
@@ -14902,7 +14918,9 @@ begin
     -- ---------- E. Påminnelsen om gratistimmar (gratistimmarna_paminns) ----------
     -- Förut påmindes bara köpta timmar (Leo 2026-10-15: "fixa påminelse").
     -- Gratistimmarna påminns som köpta, märkta gratis så att mejlet inte
-    -- lovar pengar tillbaka, och ett återkallat kort påminns aldrig.
+    -- lovar pengar tillbaka, och ett återkallat kort påminns aldrig. Utan
+    -- studiehjälpare kan familjen inte boka: då en uppgift till oss i
+    -- stället för mejlet (idén från PR #287).
     begin
       insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
                                     timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
@@ -14916,6 +14934,29 @@ begin
       perform set_config('request.jwt.claims', '', true);
       update public.klippkort set giltigt_till = idag + 5 where id in (g, (r ->> 'id')::uuid);
 
+      -- Familjen Q har ingen studiehjälpare än.
+      update public.profiles set match_status = 'pending', matched_tutor_id = null where id = Q;
+      perform intern.timmar_gar_ut_koa(mitt);
+      select count(*) into n from public.notiser where typ = 'timmar_gar_ut' and data ->> 'klippkort' = g::text;
+      select count(*) into m from public.notiser where typ = 'timmar_gar_ut' and data ->> 'klippkort' = KK::text
+                                                  and not (data ? 'gratis');
+      select string_agg(u.status || ':' || u.kopplad_tabell || ':' || (u.kopplad_id = Q::text) || ':'
+                        || (u.forfallodag - idag) || ':' || (position('3 gratis timmar' in u.beskrivning) > 0) || ':'
+                        || (position('ta tillbaka timmarna' in u.beskrivning) > 0), ',') into t
+        from public.uppgifter u where u.nyckel = 'gratistimmar_utan_hjalpare:' || g || ':' || (idag + 5);
+      ut := ut || jsonb_build_object('t', 'GTB utan studiehjälpare: inget mejl om gratistimmarna, en uppgift till oss, köpta timmar som förut',
+              'ok', n = 0 and m = 1 and t = 'oppen:profiles:true:5:true:true',
+              'd', 'gratis ' || n || ', köpta ' || m || ', uppgiften ' || coalesce(t, 'saknas'));
+
+      -- En gång per kort och dag, också när uppgiften är klar.
+      update public.uppgifter set status = 'klar' where nyckel = 'gratistimmar_utan_hjalpare:' || g || ':' || (idag + 5);
+      perform intern.timmar_gar_ut_koa(mitt);
+      select count(*) into n from public.uppgifter where nyckel like 'gratistimmar_utan_hjalpare:' || g || ':%';
+      ut := ut || jsonb_build_object('t', 'GTB uppgiften om gratistimmarna kommer en gång, också efter att den klarmarkerats',
+              'ok', n = 1, 'd', n::text);
+
+      -- Familjen får en studiehjälpare: mejlet går vid nästa körning, en gång.
+      update public.profiles set match_status = 'matched', matched_tutor_id = A where id = Q;
       perform intern.timmar_gar_ut_koa(mitt);
       perform intern.timmar_gar_ut_koa(mitt);
       select string_agg(coalesce(x.data ->> 'gratis', '-') || ':' || (x.data ->> 'kvar') || ':' || (x.data ->> 'datum'), ',')
@@ -14946,6 +14987,7 @@ begin
     -- dagar från köpet: fem dagar kvar. Planens köpta timmar har gått ut
     -- och påminns inte.
     begin
+      update public.profiles set match_status = 'matched', matched_tutor_id = A where id = Q;
       insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, timmar_pa_kopet, giltig_manader,
                                     rabatt_procent, timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at,
                                     stripe_charge_id)

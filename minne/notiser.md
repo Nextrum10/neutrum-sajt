@@ -103,7 +103,9 @@ tipstimmarna, med `gratis: true` i datan (`RenData.gratis`, sant bara för
 `true`). Mallen säger då "gratis timmar" och lovar inga pengar tillbaka, för
 en gratis timme betalas aldrig ut. `notis-ko` driftsätts före migrationen.
 Tipstimmarnas påminnelse har inget kort i datan. Foten och valet heter
-"timmar som går ut".
+"timmar som går ut". En familj utan studiehjälpare får inget mejl om gratis
+timmar, för den kan inte boka: vi får en uppgift i stället (idén från PR
+#287, `minne/timmar.md`).
 
 **Notiser som inte gick fram (System → Fel) är bara databasens egna
 utskick** (2026-09-27). `notisfel()` läste förut hela
