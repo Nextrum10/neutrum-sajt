@@ -114,10 +114,33 @@ texten är kärnans.
     getts. Ingen familj hade valet och inget pass hade timmen, så
     databasen ändrades inte: tabellen, funktionen och Fas 19.5:s väg står
     kvar utan knapp, och studievyn visar fortfarande en timme som är
-    `beviljad`. Villkoren säger att vi "kan, om vi kommit överens om det"
-    ge den pass för pass; meningen går med nästa version, för en version
-    bara för den skulle ge alla frågan om villkoren igen. Agentens fakta
-    (`drift`) och familjens ruta Pris under Profil säger det inte längre.
+    `beviljad`. Villkoren sa att vi "kan, om vi kommit överens om det"
+    ge den pass för pass; meningen gick med nästa version, 2026-10-16
+    (nedan), i stället för att bli en egen. Agentens fakta (`drift`) och
+    familjens ruta Pris under Profil säger det inte längre.
+  - **Bara den första planen, och bara utan rabattkod** (2026-10-15,
+    `forsta_timmen_utan_kod`). Leo: "när familjen köper en plan för pris
+    379kr utan rabattkod, ska de automatiskt få en gratis timme och det
+    ska stå som erbjudande i deras erbjudanden. sen när de köpt sin plan
+    för första gången så ändras synen på erbjudande och man får inte
+    längre gratis timme". `intern.planens_forsta_timme` ger ingen timme
+    när planen köptes med kod; koden läses ur OLD, för
+    `klippkort_rabatt_star_fast` lägger tillbaka den efter. Och
+    `intern.forsta_timmen_tagen` räknar en betald plan (`sort = 'plan'`
+    och `betald_at`): också en köpt med kod, en återbetald och en köpt
+    före 2026-10-09 (Leos testköp, så hans eget konto ser inget
+    erbjudande). En plan som väntar i kassan räknas inte. Läsningen av
+    Leos ord: "när de köpt sin plan för första gången" tar erbjudandet,
+    med eller utan kod, och det väntar inte på en plan utan kod.
+    Studievyn har rutan Erbjudande, Första timmen gratis överst i
+    Erbjudanden (`#erb-forsta-box`, framhävd som Standards kort, med egna
+    regler i mörkt läge) så länge `forsta_timmen_lage()` inte säger
+    `tagen`, plankorten säger "Er första plan: en timme till, gratis",
+    och med en kod som gäller kortet "Med koden ingår ingen gratis
+    timme", som kodens svar också säger. Adminpanelen säger "ingen,
+    familjen har redan köpt en plan utan den". Villkoren (2026-10-16),
+    prissidans startererbjudande och FAQ-svaret säger "utan rabattkod".
+    Ingen kod fanns utom `TIPS`, och inget köp hade en kod.
   - Högst en: `intern.forsta_timmen_tagen` är sann när familjen har ett
     icke avbokat pass med `startrabatt` utan `TIPS`, eller en plan med
     `forsta_timmen` (också en återbetald, för timmen kan ha använts). Båda

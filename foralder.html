@@ -28,7 +28,7 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=4f09070d">
-<link rel="stylesheet" href="nextrum-vy.css?v=6ea7cff3">
+<link rel="stylesheet" href="nextrum-vy.css?v=da64c0bd">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
 <link rel="stylesheet" href="nextrum-arbetsyta.css?v=e8c00c2f">
@@ -631,6 +631,19 @@
         <div class="stack">
           <p class="ok-msg" id="erb-msg"></p>
 
+          <!-- 2026-10-15 (Leo: "när familjen köper en plan för pris 379kr utan
+               rabattkod, ska de automatiskt få en gratis timme och det ska stå
+               som erbjudande i deras erbjudanden. sen när de köpt sin plan för
+               första gången så ändras synen på erbjudande"). Rutan står när
+               forsta_timmen_lage() säger att timmen inte är tagen, och går när
+               familjen betalat sin första plan. -->
+          <div class="dbox erb-erbjudande" id="erb-forsta-box" hidden>
+            <h5>Erbjudande</h5>
+            <b class="erb-erbjudande-rubrik">Första timmen gratis</b>
+            <p>Köp er första plan utan rabattkod, så får den en timme till, gratis: köper ni en plan med 8 timmar får ni 9. Timmen dras först och gäller i 60 dagar från köpet.</p>
+            <p class="erb-erbjudande-not">Gäller bara er första plan, och inte tillsammans med en rabattkod.</p>
+          </div>
+
           <div class="dbox" id="erb-mina-box" hidden>
             <h5>Er timbank</h5>
             <div id="erb-mina"></div>
@@ -1020,7 +1033,7 @@
             <div class="sum-line"><span>Anmälningsavgift</span><span>0 kr</span></div>
             <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
             <p class="xsmall" data-pris-extra-not style="margin-top:14px;color:var(--muted-2);line-height:1.6">Tillägget för syskon är en fast summa per timme, oavsett om de är två eller tre — inte ett pris per barn.</p>
-            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Första timmen är gratis när ni köper er första plan: planen får en timme till. Ni får högst en sådan timme; gratistimmar vi sätter in i er timbank räknas för sig.</p>
+            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Första timmen är gratis när ni köper er första plan utan rabattkod: planen får en timme till. Erbjudandet gäller bara den första planen; gratistimmar vi sätter in i er timbank räknas för sig.</p>
             <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. Före eller efter passet kan ni i stället välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift. Betalningarna står under Betalning.</p>
           </div>
         </div>
@@ -1134,6 +1147,6 @@
 <script src="nextrum-uppgifter.js?v=7183a63f"></script>
 <script src="nextrum-introduktion.js?v=2f3aa58e"></script>
 <script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-studie-vy.js?v=5f5d330d"></script>
+<script src="nextrum-studie-vy.js?v=4adeadd6"></script>
 </body>
 </html>

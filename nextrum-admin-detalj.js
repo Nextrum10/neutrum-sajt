@@ -388,8 +388,11 @@
     const l = d.forstaTimmen || {};
     if (l.i_planen) return 'given, i familjens första plan';
     if (l.pa_pass) return 'given, på ett pass';
+    /* Sedan 2026-10-15 är timmen tagen när familjen betalat en plan alls:
+       en plan köpt med rabattkod får ingen, och ingen plan efter den. */
+    if (l.tagen) return 'ingen, familjen har redan köpt en plan utan den';
     return l.beviljad ? 'vald pass för pass, och annars i den första planen'
-      : 'inte given än, den följer med familjens första plan';
+      : 'inte given än, den följer med familjens första plan utan rabattkod';
   }
 
   /* TIMBANKEN OCH GRATISTIMMARNA (2026-10-13)

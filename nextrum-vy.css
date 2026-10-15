@@ -2018,6 +2018,19 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-vad{font-size:.84rem;color:var(--bl-2)}
 /* Första timmen i den första planen (2026-10-09). */
 .erb-forsta{font-size:.8rem;font-weight:600;line-height:1.4;color:var(--acc-text)}
+.erb-forsta.ar-utan{color:var(--muted-2)}
+/* Första timmen gratis som erbjudande överst i Erbjudanden (2026-10-15):
+   samma framhävning som Standards kort. Mörkerreglerna för .dbox väger
+   (0,4,0), så rutan har egna med en klass till. */
+.vy .dbox.erb-erbjudande{border-color:var(--acc-line);background:var(--acc-soft)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .vy .dbox.erb-erbjudande{background:var(--acc-soft)}
+}
+:root[data-theme="dark"] .vy .dbox.erb-erbjudande{background:var(--acc-soft)}
+.vy .dbox.erb-erbjudande h5{color:var(--acc-text);margin-bottom:10px}
+.erb-erbjudande-rubrik{display:block;margin-bottom:6px;font-size:1.25rem;letter-spacing:-.02em;color:var(--bl)}
+.erb-erbjudande p{margin:0;font-size:.92rem;line-height:1.55;color:var(--bl-2)}
+.erb-erbjudande .erb-erbjudande-not{margin-top:8px;font-size:.82rem;color:var(--muted-2)}
 .erb-pris{display:flex;align-items:baseline;gap:8px;margin-top:6px;flex-wrap:wrap}
 .erb-pris s{font-size:.88rem;color:var(--muted-2)}
 .erb-pris b{font-size:1.45rem;letter-spacing:-.03em;color:var(--bl)}

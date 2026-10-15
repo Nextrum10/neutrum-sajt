@@ -974,6 +974,19 @@ async function provaFörälderns(webb) {
     });
     await page.goto(BAS + '/foralder#erbjudanden');
     await page.waitForSelector('#erb-planer .erb-kort', { timeout: 10000 }).catch(() => {});
+    /* Första timmen som erbjudande (forsta_timmen_utan_kod, 2026-10-15):
+       rutan överst och raden på varje plan, så länge timmen inte är tagen. */
+    prova('första timmen: erbjudandet står i Erbjudanden och säger utan rabattkod',
+      await synlig(page, '#erb-forsta-box') && (await text(page, '#erb-forsta-box')).includes('Första timmen gratis')
+      && (await text(page, '#erb-forsta-box')).includes('utan rabattkod'), await text(page, '#erb-forsta-box'));
+    prova('första timmen: varje plan säger en timme till, inte Fyll timbanken',
+      (await page.locator('#erb-planer .erb-forsta').count()) === 2
+      && (await page.locator('#erb-planer .erb-forsta.ar-utan').count()) === 0, await text(page, '#erb-planer'));
+    const yta = sel => page.locator(sel).first().evaluate(el => getComputedStyle(el).backgroundColor).catch(() => '');
+    prova('första timmen: rutan är framhävd mot de andra',
+      (await yta('#erb-forsta-box')) !== (await yta('.dbox:has(#erb-planer)')),
+      (await yta('#erb-forsta-box')) + ' mot ' + (await yta('.dbox:has(#erb-planer)')));
+    await bild(page, 'foraldern-forsta-timmen', '#erb-forsta-box');
     prova('köp med kod: rutan för rabattkoden står under Erbjudanden', await synlig(page, '#erb-kod-rad'));
     await page.fill('#erb-kod', 'fel1');
     await page.click('#erb-kod-anvand');
@@ -987,6 +1000,10 @@ async function provaFörälderns(webb) {
     await page.waitForFunction(() => /med koden VAN10/.test((document.querySelector('#erb-planer') || {}).textContent || ''),
       null, { timeout: 4000 }).catch(() => {});
     const kort = await text(page, '#erb-planer');
+    prova('första timmen: med koden säger planerna att ingen gratis timme ingår, och svaret säger det',
+      (await page.locator('#erb-planer .erb-forsta.ar-utan').count()) === 2 && !kort.includes('Er första plan')
+      && (await text(page, '#erb-kod-svar')).includes('Köper ni er första plan med koden ingår ingen gratis timme'),
+      kort.slice(0, 300) + ' | ' + await text(page, '#erb-kod-svar'));
     prova('köp med kod: korten visar priset med koden ur databasens svar',
       /1\s?364,40\s*kr/.test(kort) && /2\s?728,80\s*kr/.test(kort) && kort.includes('med koden VAN10')
       && (await text(page, '#erb-kod-svar')).includes('VAN10 gäller när ni köper timmar'),
@@ -1002,6 +1019,41 @@ async function provaFörälderns(webb) {
     prova('köp med kod: Köp skickar koden till kassan, och priset räknas där',
       kassa && kassa.kropp && kassa.kropp.erbjudande === 'plan_standard' && kassa.kropp.rabattkod === 'VAN10'
       && kassa.kropp.belopp_ore === undefined, JSON.stringify(kassa && kassa.kropp));
+    await context.close();
+  }
+
+  /* 3h2. Första timmen efter det första planköpet (forsta_timmen_utan_kod,
+          2026-10-15): databasen säger tagen, och då står varken rutan
+          eller raden på planerna. Och rutan i mörkt läge, där
+          mörkerreglerna för .dbox väger mer än en klass. */
+  {
+    const katalog = W => {
+      W.flaggor = [{ kod: 'erbjudanden', aktiv: true }];
+      W.erbjudanden_pris = [
+        { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5, giltig_manader: 1, ordning: 10,
+          timpris_ore: 39900, ordinarie_ore: 159600, pris_ore: 151600, rabatterat_timpris_ore: 37900, timmar_pa_kopet: 0 },
+        { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, rabatt_procent: 5, giltig_manader: 1, ordning: 20,
+          timpris_ore: 39900, ordinarie_ore: 319200, pris_ore: 303200, rabatterat_timpris_ore: 37900, timmar_pa_kopet: 0 }
+      ];
+    };
+    const tagen = foralderRpc({ forsta: { beviljad: false, tagen: true, i_planen: false, pa_pass: false } });
+    let { context, page } = await öppna(webb, { rpc: tagen.rpc, inloggad: 'foralder-1', värld: katalog });
+    await page.goto(BAS + '/foralder#erbjudanden');
+    await page.waitForSelector('#erb-planer .erb-kort', { timeout: 10000 }).catch(() => {});
+    prova('första timmen: efter det första planköpet står inget erbjudande, varken rutan eller raden',
+      !(await synlig(page, '#erb-forsta-box')) && (await page.locator('#erb-planer .erb-forsta').count()) === 0,
+      await text(page, '#erb-planer'));
+    await context.close();
+
+    ({ context, page } = await öppna(webb, { rpc: foralderRpc({}).rpc, inloggad: 'foralder-1', värld: katalog,
+      context: { colorScheme: 'dark' } }));
+    await page.goto(BAS + '/foralder#erbjudanden');
+    await page.waitForSelector('#erb-forsta-box:not([hidden])', { timeout: 10000 }).catch(() => {});
+    const yta = sel => page.locator(sel).first().evaluate(el => getComputedStyle(el).backgroundColor).catch(() => '');
+    prova('första timmen: rutan är framhävd också i mörkt läge',
+      (await yta('#erb-forsta-box')) !== (await yta('.dbox:has(#erb-planer)')),
+      (await yta('#erb-forsta-box')) + ' mot ' + (await yta('.dbox:has(#erb-planer)')));
+    await bild(page, 'foraldern-forsta-timmen-mork', '#erb-forsta-box');
     await context.close();
   }
 

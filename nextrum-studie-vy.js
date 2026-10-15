@@ -2500,9 +2500,10 @@
          som i klippkort_saldo. Här räknas ingenting om. */
       supa.from('klippkort_rorelser').select('klippkort_id, booking_id, timmar, datum, status')
         .eq('parent_id', S.user.id).order('datum', { ascending: true }),
-      /* Första timmen (2026-10-09): om vi valt familjen för den pass för
-         pass, och om den redan fått sin timme. Hämtas med köpen, för ett
-         planköp ändrar den. Utan funktionen (före migrationen) är den null,
+      /* Första timmen (2026-10-09): om familjen redan tagit sin timme,
+         och sedan 2026-10-15 är den tagen när familjen betalat en plan
+         alls (forsta_timmen_utan_kod). Hämtas med köpen, för ett planköp
+         ändrar den. Utan funktionen (före migrationen) är den null,
          och då gäller den gamla regeln, som databasen då också har. */
       supa.rpc('forsta_timmen_lage')
     ]);
@@ -3676,15 +3677,20 @@
     const lyft = pa > 0 || e.kod === 'plan_standard';
     /* Första timmen (2026-10-09, Leo: "bara folk som köper planen ska få
        gratis första lektion"): den första planen familjen betalar får en
-       timme till. Raden står bara för en familj som inte fått sin timme,
-       och bara när databasen kan säga det. */
+       timme till, sedan 2026-10-15 bara utan rabattkod. Raden står bara
+       för en familj som inte tagit sin timme, och bara när databasen kan
+       säga det. Gäller en kod kortet säger raden att timmen inte ingår
+       med koden, som databasen avgör (intern.planens_forsta_timme). */
     const ft = S.forstaTimmen;
     const första = e.sort === 'plan' && ft && !ft.tagen;
+    const medKod = S.erb.kod ? S.erb.kod.pris[e.kod] : null;
+    const kodenTar = medKod != null && medKod < Number(e.pris_ore);
     return '<div class="erb-kort' + (lyft ? ' ar-framhavd' : '') + '">'
       + '<div class="erb-topp"><b class="erb-namn">' + esc(e.namn) + '</b>'
       + (märken ? '<span class="erb-marken">' + märken + '</span>' : '') + '</div>'
       + '<span class="erb-vad">' + esc(vad) + '</span>'
-      + (första ? '<span class="erb-forsta">Er första plan: en timme till, gratis</span>' : '')
+      + (första ? (kodenTar ? '<span class="erb-forsta ar-utan">Med koden ingår ingen gratis timme</span>'
+        : '<span class="erb-forsta">Er första plan: en timme till, gratis</span>') : '')
       + erbPris(e, spar)
       + (timrad ? '<span class="erb-tim">' + timrad + '</span>' : '')
       + köpKnapp(e)
@@ -3729,8 +3735,14 @@
       const resten = await Promise.all(kat.slice(1).map(fråga));
       resten.forEach((s, i) => { if (s && s.giltig) pris[kat[i + 1].kod] = Number(s.att_betala_ore); });
       S.erb.kod = { kod: kod, beskrivning: första.beskrivning || '', pris: pris };
+      /* Den första planen får ingen gratis timme med en kod (2026-10-15),
+         och erbjudandet gäller bara den planen: det sägs innan någon köper. */
+      const ft = S.forstaTimmen;
+      const tarTimmen = ft && !ft.tagen
+        && kat.some(e => e.sort === 'plan' && pris[e.kod] != null && pris[e.kod] < Number(e.pris_ore));
       visa('✓ ' + kod + ' gäller när ni köper timmar' + (första.beskrivning ? ' · ' + första.beskrivning : '')
-        + '. Priset med koden står på korten.', false);
+        + '. Priset med koden står på korten.'
+        + (tarTimmen ? ' Köper ni er första plan med koden ingår ingen gratis timme.' : ''), false);
       ritaErbjudanden();
     });
   }
@@ -3824,6 +3836,15 @@
     planer.innerHTML = kat.filter(e => e.sort === 'plan').map(erbKort).join('')
       + klippKolumn(kat.filter(e => e.sort === 'klippkort'), öppen)
       || tomt('Inga erbjudanden just nu', 'Skriv till oss om ni vill ha ett upplägg.');
+
+    /* Första timmen gratis som erbjudande (2026-10-15, Leo: "det ska stå
+       som erbjudande i deras erbjudanden. sen när de köpt sin plan för
+       första gången så ändras synen på erbjudande"). Rutan står när
+       databasen säger att timmen inte är tagen och det finns en plan att
+       köpa. När familjen betalat sin första plan, med eller utan kod,
+       säger forsta_timmen_lage() tagen, och rutan går. */
+    const ftRuta = $('#erb-forsta-box');
+    if (ftRuta) ftRuta.hidden = !(S.forstaTimmen && !S.forstaTimmen.tagen && kat.some(e => e.sort === 'plan'));
 
     /* Rabattkoden står bara där familjen kan köpa. */
     const kodRad = $('#erb-kod-rad');

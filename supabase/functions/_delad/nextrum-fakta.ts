@@ -134,13 +134,15 @@ SIFFRORNA:
   tvist, inte ett skrivfel.
 · Priset är det som gällde när passet bokades. En prishöjning gäller
   bara pass som bokas efter den.
-· Första timmen är gratis med den första planen familjen köper: planen
-  får en timme till, 9 timmar när man köper 8. Den dras först och
-  gäller i 60 dagar från köpet, också om planens andra timmar gått ut
-  (en plan gäller en månad). En familj som betalar pass för pass får
-  ingen första timme gratis: vill vi bjuda en familj sätter admin in
-  gratistimmar i timbanken. Högst en första timme per familj; timmar för
-  tips och gratistimmar räknas inte hit.
+· Första timmen är gratis med den första planen familjen köper, om den
+  köps utan rabattkod: planen får en timme till, 9 timmar när man köper
+  8. Den dras först och gäller i 60 dagar från köpet, också om planens
+  andra timmar gått ut (en plan gäller en månad). Köps den första planen
+  med en kod får den ingen gratis timme, och inte heller en senare plan:
+  erbjudandet gäller bara den första. En familj som betalar pass för
+  pass får ingen första timme gratis: vill vi bjuda en familj sätter
+  admin in gratistimmar i timbanken. Timmar för tips och gratistimmar
+  räknas inte hit.
 · En familjs kod gäller intresseanmälan och en studiehjälpares kod
   jobbansökan. En familj som tipsat får en timme i sin timbank när en
   ny familj som anmält sig med dess kod haft två timmar läxhjälp. Den
