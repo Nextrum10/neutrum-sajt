@@ -9511,15 +9511,10 @@ begin
      r1.timmar || '/' || r1.forsta_timmen);
 end $$;
 
--- Bara den första planen, och bara utan rabattkod (forsta_timmen_utan_kod,
--- 2026-10-15). Leo: "när familjen köper en plan för pris 379kr utan
--- rabattkod, ska de automatiskt få en gratis timme", och "sen när de köpt
--- sin plan för första gången ... får [man] inte längre gratis timme". En
--- plan som väntar i kassan tar inte erbjudandet. Q:s första plan köps med
--- en kod och får ingen timme, och sedan är erbjudandet borta: nästa plan,
--- utan kod, får ingen heller. I blocket efter har Q en plan köpt före
--- regeln, och planen efter den får ingen. Utan migrationen hoppas båda
--- blocken över.
+-- Den första planen får timmen också med en rabattkod, och sedan ingen
+-- (2026-10-15, Leo: "har man en rabattkod får man ändå gratis timmen",
+-- "alltså den första"). En plan som väntar i kassan tar inte erbjudandet:
+-- studievyn visar det tills forsta_timmen_lage() säger tagen.
 do $$
 declare
   q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
@@ -9529,9 +9524,6 @@ declare
   vantar jsonb; efter jsonb; r1 record; r2 record;
   fel text;
 begin
-  if position('forsta_timmen_utan_kod' in pg_get_functiondef('intern.planens_forsta_timme()'::regprocedure)) = 0 then
-    return;
-  end if;
   begin
     update public.flaggor set aktiv = true where kod = 'erbjudanden';
     insert into public.rabattkoder (kod, beskrivning, typ, varde, aktiv) values ('RLS-FT', 'Prov', 'procent', 10, true);
@@ -9562,7 +9554,7 @@ begin
       from public.erbjudanden_pris e where e.kod = 'plan_basic';
     perform public.klippkort_betald(k2, (select k.begart_ore from public.klippkort k where k.id = k2)::integer,
                                     'pi_rlsprov_ftk2', 'ch_rlsprov_ftk2', null, null, null, false);
-    select timmar, timmar_pa_kopet, forsta_timmen, rabattkod into r1 from public.klippkort where id = k1;
+    select timmar, timmar_pa_kopet, forsta_timmen, rabattkod, rabatt_ore into r1 from public.klippkort where id = k1;
     select timmar, timmar_pa_kopet, forsta_timmen into r2 from public.klippkort where id = k2;
 
     raise exception 'rulla tillbaka';
@@ -9571,66 +9563,20 @@ begin
   reset role;
   perform set_config('request.jwt.claims', '', true);
   if fel <> 'rulla tillbaka' then
-    insert into utfall (test, ok, detalj) values ('Första timmen utan kod', false, fel);
+    insert into utfall (test, ok, detalj) values ('Första timmen med kod', false, fel);
     return;
   end if;
   insert into utfall (test, ok, detalj) values
     ('Första timmen: en plan som väntar i kassan tar inte erbjudandet',
      coalesce(not (vantar->>'tagen')::boolean, false), coalesce(vantar::text, 'null')),
-    ('Första timmen: den första planen köpt med kod får ingen timme',
-     r1.rabattkod = 'RLS-FT' and r1.timmar = 4 and r1.timmar_pa_kopet = 0 and not r1.forsta_timmen,
-     concat_ws('/', r1.rabattkod, r1.timmar, r1.timmar_pa_kopet, r1.forsta_timmen)),
-    ('Första timmen: efter den första planen är erbjudandet borta, också när den köptes med kod',
-     coalesce((efter->>'tagen')::boolean and not (efter->>'i_planen')::boolean, false), coalesce(efter::text, 'null')),
-    ('Första timmen: planen efter en plan köpt med kod får ingen, fast den köps utan',
+    ('Första timmen: den första planen får timmen också med en rabattkod',
+     r1.rabattkod = 'RLS-FT' and r1.rabatt_ore > 0 and r1.timmar = 5 and r1.timmar_pa_kopet = 1 and r1.forsta_timmen,
+     concat_ws('/', r1.rabattkod, r1.rabatt_ore, r1.timmar, r1.timmar_pa_kopet, r1.forsta_timmen)),
+    ('Första timmen: efter den första planen, med kod, är erbjudandet borta',
+     coalesce((efter->>'tagen')::boolean and (efter->>'i_planen')::boolean, false), coalesce(efter::text, 'null')),
+    ('Första timmen: planen efter den första får ingen',
      r2.timmar = 4 and r2.timmar_pa_kopet = 0 and not r2.forsta_timmen,
      concat_ws('/', r2.timmar, r2.timmar_pa_kopet, r2.forsta_timmen));
-end $$;
-
-do $$
-declare
-  q   constant uuid := '00000000-0000-4000-8000-0000000000f2';
-  k1  constant uuid := '00000000-0000-4000-8000-00000000f7a1';
-  k2  constant uuid := '00000000-0000-4000-8000-00000000f7a2';
-  idag date := (now() at time zone 'Europe/Stockholm')::date;
-  lage jsonb; r2 record;
-  fel text;
-begin
-  if position('forsta_timmen_utan_kod' in pg_get_functiondef('intern.planens_forsta_timme()'::regprocedure)) = 0 then
-    return;
-  end if;
-  begin
-    -- Köpt före 2026-10-09, utan timmen: insatt som betald, som fixturerna.
-    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
-                                  timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
-    values (k1, q, 'plan_basic', 'Prov Basic förut', 'plan', 4, 1, 5, 37900, 151600, 151600, 'betald',
-            idag + 10, now() - interval '20 days', 'ch_rlsprov_ftk3');
-    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
-                                  timpris_ore, begart_ore)
-    select k2, q, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore
-      from public.erbjudanden_pris e where e.kod = 'plan_basic';
-    perform public.klippkort_betald(k2, (select k.begart_ore from public.klippkort k where k.id = k2)::integer,
-                                    'pi_rlsprov_ftk4', 'ch_rlsprov_ftk4', null, null, null, false);
-    select timmar, timmar_pa_kopet, forsta_timmen into r2 from public.klippkort where id = k2;
-    perform pg_temp.bli(q);
-    lage := public.forsta_timmen_lage();
-    reset role;
-    perform set_config('request.jwt.claims', '', true);
-
-    raise exception 'rulla tillbaka';
-  exception when others then fel := sqlerrm;
-  end;
-  reset role;
-  perform set_config('request.jwt.claims', '', true);
-  if fel <> 'rulla tillbaka' then
-    insert into utfall (test, ok, detalj) values ('Första timmen efter en äldre plan', false, fel);
-    return;
-  end if;
-  insert into utfall (test, ok, detalj) values
-    ('Första timmen: en plan köpt före regeln tar erbjudandet, och planen efter får ingen',
-     r2.timmar = 4 and r2.timmar_pa_kopet = 0 and not r2.forsta_timmen
-       and coalesce((lage->>'tagen')::boolean and not (lage->>'i_planen')::boolean, false),
-     concat_ws('/', r2.timmar, r2.timmar_pa_kopet, r2.forsta_timmen, coalesce(lage::text, 'null')));
 end $$;
 
 -- ============================================================

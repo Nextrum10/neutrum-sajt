@@ -278,7 +278,7 @@
         tillbaka förslaget eller går dagen utan att någon svarat, kommer timmarna tillbaka. Köper
         ni timmar, sätter vi in gratistimmar eller kommer timmar tillbaka, medan ni har förslag eller bokade pass framför er
         som inte är betalda, betalar de dem i datumordning, så långt de räcker. Varje påbörjad timme av passet drar en timme, utom en
-        timme som är på köpet för ett tips (se
+        timme som är på köpet (se <a href="#forsta-timmen">Första timmen gratis</a> och
         <a href="#tips">Tipsa en familj eller en studiehjälpare</a>): då betalar timmarna resten av passet.
         Det som blir över av den sista köpta timmen sparas i er <a href="#timbank">timbank</a>.
         Räcker inte timmarna i det köp som dras först till hela passet tas resten från nästa, i samma
@@ -296,21 +296,19 @@
         syskon delar den, och de sparade minuterna går inte ut. Hur länge de köpta timmarna gäller står
         ovan.</li>
       <!-- 2026-10-09 (Leo: "bara folk som köper planen ska få gratis första
-           lektion", och "MAXIMALT ... en timme gratis"), och 2026-10-15 (Leo:
-           "när familjen köper en plan för pris 379kr utan rabattkod, ska de
-           automatiskt få en gratis timme", och efter det första planköpet
-           "får [man] inte längre gratis timme"). Timmen läggs till av
-           intern.planens_forsta_timme när planen blir betald, inte på en plan
-           köpt med kod, och intern.forsta_timmen_tagen är sann när familjen
-           betalat en plan alls. Pass för pass ges den inte sedan 2026-10-15. -->
+           lektion", och "MAXIMALT ... en timme gratis"). Timmen läggs till
+           av intern.planens_forsta_timme när planen blir betald; pass för
+           pass ges den bara till en familj vi valt (forsta_timmen_beviljad),
+           med Fas 19.5:s regel. Högst en per familj: intern.forsta_timmen_tagen. -->
       <li id="forsta-timmen"><b>Första timmen gratis.</b> Den första plan ni köper får en timme
-        till, gratis, om ni köper den utan rabattkod: köper ni en plan med 8 timmar får ni 9. Den
-        läggs till i planen när planen är betald, och den dras först. Den gäller i 60 dagar från
-        köpet, också om planens andra timmar hunnit gå ut. Slutar ni i förtid räknas den som de
-        andra timmarna (se Att sluta nedan), och den betalas aldrig ut som pengar. Erbjudandet
-        gäller bara er första plan: köper ni den med en rabattkod får den ingen gratis timme, och
-        inte heller en plan ni köper senare. Timmar för tips (se <a href="#tips">Tipsa en familj
-        eller en studiehjälpare</a>) och gratistimmar (nedan) räknas inte hit.</li>
+        till, gratis: köper ni en plan med 8 timmar får ni 9. Den läggs till i planen när planen är
+        betald, och den dras först. Den gäller i 60 dagar från köpet, också om planens andra timmar
+        hunnit gå ut. Slutar ni i förtid räknas den som de andra timmarna (se Att sluta nedan), och
+        den betalas aldrig ut som pengar. Utan plan kan vi, om vi kommit överens om det, i stället
+        dra av en timme på det pass som gör att ni har bokat två timmar, om ni föreslår det inom 60
+        dagar från att vi gav er timmen. En familj får högst en sådan timme, på något av sätten;
+        timmar för tips (se <a href="#tips">Tipsa en familj eller en studiehjälpare</a>) och
+        gratistimmar (nedan) räknas inte hit.</li>
       <li id="gratistimmar"><b>Gratistimmar.</b> Vi kan sätta in timmar i er timbank utan kostnad,
         till exempel när ni börjar hos oss. De gäller i 60 dagar från den dag vi satte in dem, och
         sista dagen står i er vy. De betalar passen som köpta timmar och dras först, med de andra
@@ -546,7 +544,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 16 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 15 oktober 2026.</p>
   </div>
 </section>
 
@@ -727,7 +725,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=6a979c5b"></script>
+<script src="nextrum-maskot-svar.js?v=ac60ba28"></script>
 <script src="nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

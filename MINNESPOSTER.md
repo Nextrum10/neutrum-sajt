@@ -456,11 +456,10 @@ Ett pass i tvist återbetalas inte, och en återbetalning skriver inte
 över `tvist`.
 Priset fryses på passet när det bokas (Fas 19.5, `timpris_ore`), och
 första timmen är gratis med den första planen (en timme till i planen,
-sedan 2026-10-09), sedan 2026-10-15 bara utan rabattkod, och det första
-planköpet tar erbjudandet, också med kod. Pass för pass ges den inte sedan
-samma dag (förut för en familj vi valt, med en timme i `rabatt_ore` på
-passet som gör två bokade timmar, `startrabatt`); vill vi bjuda sätter vi
-in gratistimmar. Högst en per familj. En gratis timme gäller i 60 dagar och dras först
+sedan 2026-10-09, och också med rabattkod). Pass för pass ges den inte sedan 2026-10-15 (förut
+för en familj vi valt, med en timme i `rabatt_ore` på passet som gör två
+bokade timmar, `startrabatt`); vill vi bjuda sätter vi in gratistimmar.
+Högst en per familj. En gratis timme gäller i 60 dagar och dras först
 (2026-10-13): planens gratis timme lever efter planens månad om den inte
 använts, och tipstimmen och första timmen pass för pass gäller ett pass
 inom 60 dagar (`minne/timmar.md`). Gratistimmar som admin sätter in i

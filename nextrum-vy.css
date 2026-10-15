@@ -2018,7 +2018,6 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-vad{font-size:.84rem;color:var(--bl-2)}
 /* Första timmen i den första planen (2026-10-09). */
 .erb-forsta{font-size:.8rem;font-weight:600;line-height:1.4;color:var(--acc-text)}
-.erb-forsta.ar-utan{color:var(--muted-2)}
 /* Första timmen gratis som erbjudande överst i Erbjudanden (2026-10-15):
    samma framhävning som Standards kort. Mörkerreglerna för .dbox väger
    (0,4,0), så rutan har egna med en klass till. */

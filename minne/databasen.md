@@ -1311,17 +1311,3 @@ byte för byte lika. Hela `rls-test.sql` (`8c71c67e…`) gick 1703 av 1703 i ett
 do-block som slutade med `raise exception`; avsnitt 33 hoppade över sig självt,
 så inget klipptes. Advisorn: inget nytt för `anon`, och det enda nya för
 `authenticated` är `ta_tillbaka_gratistimmar`, som prövar `is_admin()` först.
-
-### Första timmen utan kod (forsta_timmen_utan_kod, 2026-10-15)
-Två funktioner och villkorens version, inget annat: `intern.planens_forsta_timme`
-ger ingen timme när `old.rabattkod` finns, `intern.forsta_timmen_tagen` räknar
-en betald plan, och `intern.villkor_version()` blir 2026-10-16 (`minne/betalning.md`).
-Avsnitt 0 prövar båda funktionerna mot sin md5 i driften (`8a64b55c…` och
-`76af72b3…`, lika en lokal databas byggd ur main) och vägrar om villkoren redan
-har en nyare version; bodyn bär `forsta_timmen_utan_kod`, så filen går att köra
-igen. Ingen `drop` och ingen `delete`: den kan köras hel i ett do-block som
-hämtar filen ur merge-commiten, prövar md5 och registrerar den, som
-`timmarna_delas_och_kops_till`. Lokalt: utan filen 1739 av 1739 (de fem nya
-proven hoppar över sig själva), med den 1744 av 1744, också i en databas byggd
-från grunden (194 migrationer), och med den gamla regeln och markören kvar 1741
-av 1744: proven faller när regeln inte finns.

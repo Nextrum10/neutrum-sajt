@@ -267,11 +267,11 @@ tabellnamn, och `testa-agent.js` gick igenom.
 
 **drift efter v19** (v19 gick ut 2026-10-14 med kortet, kärnans avsnitt
 11) driftsätts från main efter merge av ändringen 2026-10-15:
-`nextrum-fakta.ts` säger att första timmen följer med den första planen
-bara utan rabattkod, att erbjudandet gäller bara den första planen, att
-en familj som betalar pass för pass inte får någon, och att vi bjuder med
-gratistimmar (Leo samma dag). Att ett pass på en timme kan kosta noll
-kronor står nu vid tipstimmen, den enda timmen som fortfarande gör det.
+`nextrum-fakta.ts` säger att den första planen får första timmen också
+med rabattkod, att senare planer inte får någon, att en familj som
+betalar pass för pass inte får någon, och att vi bjuder med gratistimmar
+(Leo samma dag). Att ett pass på en timme kan kosta noll kronor står nu
+vid tipstimmen, den enda timmen som fortfarande gör det.
 
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —
