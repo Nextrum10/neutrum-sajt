@@ -774,7 +774,8 @@ Detaljer: `minne/grunden.md`.
 ## 11. Vad som inte är byggt
 - **Skarp kortbetalning**: bara testläge. Stripes endpoint behöver `charge.updated`,
   `charge.dispute.updated` och kortets tre (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
-  `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox.
+  `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox. Stegen till skarpt läge, i
+  ordning och med driftens läge: `DEPLOY-BETALNING.md` 9.15 (2026-10-15).
 - **Fakturan** är på, men bolaget, bankgirot, beskedet till befintliga familjer och
   provfaktureringen återstår (DEPLOY-BETALNING.md 9.11); när bolaget är registrerat ändras
   villkoren och integritetspolicyn. Spärren "ingen betalning, inget pass" kan inte slås på.
