@@ -712,7 +712,7 @@ rundade rutan och ordet NEXTRUM i text.
   Det bruna i märket går in under det orange, så att det aldrig syns en
   springa i skarven.
 - **Sidorna har två inline-svg**, `.mark` och `.logo-text`, i samma
-  höjd (`--logga-h`, 26 px i sidhuvudet, 23 under 600 px, 22 i
+  höjd (`--logga-h`, 26 px i sidhuvudet, 19 under 600 px (23 till 2026-10-16, Leo: "Gör denna logga lite mindre"), 22 i
   adminvyn, 10 mm på affischen); bredden räknas ur höjden i
   `nextrum.css`. Inline och inte `<use>` mot en fil: loggan ska stå
   där när sidan ritas, och sidhuvudet var redan samma markup på alla

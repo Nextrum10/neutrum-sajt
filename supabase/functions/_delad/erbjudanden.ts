@@ -24,9 +24,33 @@ export type ErbjudandePris = {
   pris_ore: number;
   /** Planerna 2026-10-07: timmar som inte kostar något (Standard, 8 för 7). */
   timmar_pa_kopet?: number;
+  /** Timpriset efter rabatten, nedåt till hel krona. Saknas i äldre svar. */
+  rabatterat_timpris_ore?: number;
 };
 
 const timmarText = (n: number) => (n === 1 ? '1 timme' : `${n} timmar`);
+
+/** Ören som kronor på kvittot: hela kronor utan decimaler, annars två. */
+const kr = (ore: number) =>
+  Number(ore) % 100 === 0 ? String(Number(ore) / 100) : (Number(ore) / 100).toFixed(2).replace('.', ',');
+
+/**
+ * Familjens rabatt på ett köp ur katalogen (familjerabatter, 2026-10-15):
+ * kronor av på varje betald timme, när de lämnar ett pris kvar. Samma regel
+ * som intern.klippkort_rabatt, som räknar beloppet när köpet skapas, och
+ * det är databasens belopp kassan drar. Här avgör regeln bara om ett
+ * väntande köp har samma pris som ett nytt hade fått.
+ */
+export function familjerabattPaKop(
+  e: Pick<ErbjudandePris, 'timmar' | 'timmar_pa_kopet' | 'rabatterat_timpris_ore'>,
+  perTimmeOre: number,
+): { perTimme: number; summa: number } {
+  const per = Number(perTimmeOre) || 0;
+  const betalda = Math.max(Number(e.timmar) - (Number(e.timmar_pa_kopet) || 0), 0);
+  const timpris = Number(e.rabatterat_timpris_ore);
+  if (!(per > 0) || !(betalda > 0) || !(timpris > per)) return { perTimme: 0, summa: 0 };
+  return { perTimme: per, summa: betalda * per };
+}
 
 /**
  * Raden i kassan och på kvittot. Säger vad familjen köper och hur länge
@@ -38,8 +62,16 @@ const timmarText = (n: number) => (n === 1 ? '1 timme' : `${n} timmar`);
  * står som "för priset av 7", samma ord som på sidan, så att den inte
  * blandas ihop med första timmen som bjuds på ett pass (startrabatten).
  * Ett klippkort får exakt samma rad som förut.
+ *
+ * Familjens rabatt (familjerabatter, 2026-10-15) står på raden när köpet
+ * har en: kassan är det enda ställe familjen ser att den har rabatt, och
+ * kvittot ska säga varför beloppet är lägre. Aldrig koden.
  */
-export function kassarad(e: ErbjudandePris, rabattkod: string | null = null): { name: string; description: string } {
+export function kassarad(
+  e: ErbjudandePris,
+  rabattkod: string | null = null,
+  familjerabattOre = 0,
+): { name: string; description: string } {
   const man = e.giltig_manader === 1 ? '1 månad' : `${e.giltig_manader} månader`;
   const timmar = Number(e.timmar);
   const pa = Math.max(0, Math.min(Number(e.timmar_pa_kopet) || 0, timmar - 1));
@@ -49,7 +81,8 @@ export function kassarad(e: ErbjudandePris, rabattkod: string | null = null): { 
   if (rabatt > 0) vad += `, ${rabatt} % rabatt`;
   // Koden står på raden, så att kvittot säger varför beloppet är lägre.
   const kod = rabattkod ? ` Med rabattkoden ${rabattkod}.` : '';
-  return { name: e.namn, description: `${vad}. Gäller i ${man} från köpet.${kod}` };
+  const egen = Number(familjerabattOre) > 0 ? ` Med er rabatt på ${kr(familjerabattOre)} kr per timme.` : '';
+  return { name: e.namn, description: `${vad}. Gäller i ${man} från köpet.${egen}${kod}` };
 }
 
 /**
@@ -121,18 +154,23 @@ export type ExtraTimmar = {
   timmar: number;
   rabatterat_timpris_ore: number;
   giltigt_till: string;
+  /** Familjens rabatt per timme (familjerabatter, 2026-10-15), eller 0. */
+  familjerabatt_ore?: number;
 };
 
 /**
  * Raden i kassan och på kvittot för timmar till en plan. Som kassarad():
  * vad familjen köper och hur länge det gäller, och här att det är
- * planens timpris och planens sista dag.
+ * planens timpris och planens sista dag. Med familjens rabatt står också
+ * timpriset efter den.
  */
 export function kassaradTillPlanen(x: ExtraTimmar): { name: string; description: string } {
-  const kr = Math.floor(Number(x.rabatterat_timpris_ore) / 100);
+  const timpris = Number(x.rabatterat_timpris_ore);
+  const rabatt = Number(x.familjerabatt_ore) || 0;
+  const med = rabatt > 0 && rabatt < timpris ? `, med er rabatt ${kr(timpris - rabatt)} kr` : '';
   return {
     name: `Extra timmar till ${String(x.plan_namn || 'planen')}`,
-    description: `${timmarText(Number(x.timmar))} läxhjälp till planens timpris, ${kr} kr i timmen. `
+    description: `${timmarText(Number(x.timmar))} läxhjälp till planens timpris, ${kr(Math.floor(timpris / 100) * 100)} kr i timmen${med}. `
       + `Gäller till och med ${svensktDatum(x.giltigt_till)}, samma dag som planen.`,
   };
 }

@@ -42,7 +42,11 @@ set local lock_timeout = '5s';
 -- ---------- 0. driften är som den lästes ----------
 -- Bara funktionen timmarna_delas_och_kops_till lämnade, eller den här
 -- filens: en annan version (till exempel #287:s, med samma namn) stoppar
--- filen i stället för att skrivas över utan ett ord.
+-- filen i stället för att skrivas över utan ett ord. Vyn får vara den
+-- timmarna_delas_och_kops_till lämnade eller den familjerabatter
+-- (20261015210000) skrev, som kördes före den här filen i driften fast
+-- numret är högre: den lägger bara till familjerabatt_ore och räknar om
+-- vid_uppsagning_ore, och kolumnerna den här läser är desamma.
 do $$
 declare
   def text;
@@ -53,7 +57,7 @@ begin
       md5(def);
   end if;
   def := pg_get_viewdef('public.klippkort_saldo'::regclass, true);
-  if md5(def) <> 'a34041ef762316f238c6902224864a89' then
+  if md5(def) not in ('a34041ef762316f238c6902224864a89', 'e4bf8d237207b6fbaef843e8457e4c1f') then
     raise exception 'klippkort_saldo har ändrats sedan gratistimmarna_paminns skrevs (md5 %). Läs driften.', md5(def);
   end if;
   if to_regprocedure('intern.tipstimmar_oanvanda(uuid)') is null then

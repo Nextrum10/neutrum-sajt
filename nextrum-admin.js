@@ -68,6 +68,7 @@
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
   const ritaPris = (...a) => NXAdmin.rita.ritaPris(...a);
   const ritaRabattkoder = (...a) => NXAdmin.rita.ritaRabattkoder(...a);
+  const ritaFamiljerabatter = (...a) => NXAdmin.rita.ritaFamiljerabatter(...a);
   const ritaStatistik = (...a) => NXAdmin.rita.ritaStatistik(...a);
   const ritaStudiehjalpare = (...a) => NXAdmin.rita.ritaStudiehjalpare(...a);
   const ritaTjanster = (...a) => NXAdmin.rita.ritaTjanster(...a);
@@ -1085,6 +1086,7 @@
       ritaPris();
       ritaTjanster();
       ritaRabattkoder();
+      ritaFamiljerabatter();
       ritaKoder();
       ritaKodsidan();
       ritaFel();

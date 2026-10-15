@@ -1362,3 +1362,46 @@ drar `stripe-reservation` pengarna för ett pass med ett sparat kort, men utan
 `payment_intent.succeeded` på endpointen blir passet aldrig betalt hos oss.
 Stripe står i testläge, så bara testkort fungerar.
 
+
+### 9.15 Familjerabatterna (2026-10-15, inte i drift)
+
+Våra egna koder, som bara vi ser: kronor av per timme för de familjer vi sätter
+koden på (`CLAUDE.md` avsnitt 1, `minne/betalning.md`, Familjerabatterna).
+Inga pengar dras annorlunda än förut, bara mindre: priset fryses som förut, med
+rabatten dragen, och kassan drar det databasen räknat.
+
+Vyerna går ut med sajten när grenen mergas, före allt nedan, och tål att
+migrationen saknas: fliken under Tjänster och rutan i familjens panel säger att
+den inte är körd, och studievyn får ingen rabatt (`min_familjerabatt` svarar
+404) och visar priset som förut (`verktyg/prova-familjerabatter.js`, avsnittet
+Utan migrationen).
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`):
+
+1. **Migrationen `20261015210000_familjerabatter`** från merge-commiten,
+   prövad mot sin md5. Den har inget `drop`, inget `delete` och ingen funktion
+   med ett, så den går hel i ett do-block, och registreras med filens text.
+   Vakten prövar att de fem funktionerna och vyn `klippkort_saldo` är som de
+   lästes 2026-10-15; har någon ändrats sedan stannar den med md5 och namnet,
+   och då ska migrationen skrivas om mot driften. Sedan hela `rls-test.sql`
+   mot driften, tillbakarullat (avsnitt 35, `FR`), och advisorn: två nya
+   tabeller med RLS, `min_familjerabatt()` och `satt_familjerabatt()` för
+   `authenticated` (den andra prövar `is_admin()` först).
+2. **`stripe-checkout`** (SESSIONSFORM 9): raden i kassan säger rabatten, och
+   ett väntande köp återanvänds bara med samma rabatt. En äldre kassa drar
+   ändå rätt belopp, för det är köpets `begart_ore`, som triggern räknar; den
+   kan bara inte säga varför beloppet är lägre. Hämta tillbaka och jämför
+   byte för byte, med `_delad/erbjudanden.ts`.
+3. **`drift`** (agentens fakta: ett pass under ordinarie pris hos en familj
+   med rabatt är inget fel), hämtad tillbaka och jämförd.
+4. **Prova** i testläge: skapa en familjerabatt på 10 kr under Tjänster, sätt
+   den på en provfamilj i familjens panel, föreslå ett pass (priset vid
+   knappen ska vara 389 kr, "med er rabatt"), köp en plan (kassan ska säga
+   "Med er rabatt på 10 kr per timme" och dra 80 kr mindre för Standard), och
+   ta bort rabatten (nästa pass ska kosta 399 kr, det förra stå kvar).
+
+Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md` eller policyns
+nya stycken, och en rabatts villkor (beloppet, att den gäller tills vidare och
+att vi kan ta bort den) ska stå där vi ger den, i mejlet eller avtalet med
+partnern.

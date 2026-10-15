@@ -783,7 +783,12 @@ finns kvar".
   betalat inte får det. Foten säger "timmar som går ut", och valet under
   Profil → Notiser heter Timmar som går ut.
 - **Ordningen i driften**: `notis-ko` först, sedan migrationen. Utan den nya
-  mallen får familjen köptimmarnas text om en gåva.
+  mallen får familjen köptimmarnas text om en gåva. `familjerabatter`
+  (20261015210000, #293) kördes i driften före den här, fast numret är högre,
+  och skrev om `klippkort_saldo` (familjerabatt_ore sist, vid_uppsagning_ore
+  räknad med den). Vakten godkänner båda vyerna (`a34041ef…` och `e4bf8d23…`),
+  för kolumnerna påminnelsen läser är desamma; lokalt gick hela `rls-test.sql`
+  1782 av 1782 i båda ordningarna.
 - **Villkoren** säger fortfarande att gratistimmar "förfaller utan påminnelse"
   (`#gratistimmar`). Orden tas bort i nästa version, inte i en egen (Leo
   2026-10-15, på förslaget från #287): alla har fått frågan om villkoren nästan

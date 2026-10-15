@@ -746,10 +746,23 @@ window.NXArbete = (function () {
     /* Timpriset ur katalogen — samma källa som faktureringen tar betalt
        efter. o.pris (kronor, ur konfigurationen) gäller bara innan
        katalogen finns. Allt räknas i ÖRE; kronorna härleds ur det. */
-    function timprisOre() {
+    function katalogensTimpris() {
       var t = tjanstRad();
       if (t && t.pris_per_timme_ore) return Number(t.pris_per_timme_ore);
       return (o.pris || 399) * 100;
+    }
+    /* Familjens rabatt per timme (familjerabatter, 2026-10-15), ur vyn
+       (o.familjerabatt). Databasen drar den från timpriset när passet
+       skapas (frys_passets_pris), när den lämnar ett pris kvar, och priset
+       vid knappen räknar likadant: också första timmen och en rabattkod
+       räknas på priset efter den. Barnet ser inget pris och ingen rabatt. */
+    function familjerabattOre() {
+      if (o.utanPris || !o.familjerabatt) return 0;
+      var r = Math.max(Number(o.familjerabatt()) || 0, 0);
+      return r > 0 && r < katalogensTimpris() ? r : 0;
+    }
+    function timprisOre() {
+      return katalogensTimpris() - familjerabattOre();
     }
     function bruttoOre() {
       var perTimme = timprisOre() + (st.barn > 1 ? extraOre() : 0);
@@ -1071,8 +1084,12 @@ window.NXArbete = (function () {
           ? '<b>' + esc(tim.titel) + '</b><span>' + esc((bjuden ? (o.bjuden(st.minuter, st.dag) === 'tips'
               ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + ' · ' : '') + tim.under) + '</span>'
           : '<b>' + esc(kronorÖre(bruttoOre() - bjuden - rabatt)) + '</b>'
-            + '<span>' + esc(!bjuden ? (rabatt ? 'Med rabattkoden ' + st.rabatt.kod : längdText())
-              : o.bjuden(st.minuter, st.dag) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet') + '</span>';
+            + '<span>' + esc((!bjuden ? (rabatt ? 'Med rabattkoden ' + st.rabatt.kod : längdText())
+              : o.bjuden(st.minuter, st.dag) === 'tips' ? 'En timme på köpet för ert tips' : 'Första timmen på köpet')
+              /* Familjens rabatt (2026-10-15) står där priset står, som på
+                 korten under Erbjudanden och i kassan. */
+              + (familjerabattOre() && bruttoOre() - bjuden - rabatt > 0 ? (rabatt ? ' och er rabatt' : ', med er rabatt') : ''))
+            + '</span>';
       var knapp = o.utanPris ? 'Skicka till din förälder'
         : st.granskar ? 'Skicka till ' + (o.hos || 'studiehjälparen') : 'Föreslå tiden';
       return '<div class="bk-sum' + (vald ? ' ar-vald' : '') + '">'
