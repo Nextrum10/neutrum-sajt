@@ -117,6 +117,13 @@ async function stängNotisrutan(page) {
   return t || '';
 }
 const värld = (page, f, arg) => page.evaluate(f, arg);
+/* Passen i världen före ett förslag. Världens pass står på dagar räknade
+   från i dag, och provet föreslår en tid sista dagen i månaden, där ett
+   av dem kan stå: den 15 oktober är dag(16) den 31:a, och där står Saras
+   motförslag. Provet tog det passet i stället för familjens, och föll på
+   tre ställen just de dagarna. Det nya passet är det som inte fanns
+   förut, inte det första med samma datum. */
+const passen = page => värld(page, () => NXForhandsvisning.värld.bookings.map(b => b.id));
 
 /* Varje sektion i vyn, en i taget. Det vyerna frågade efter som världen
    inte har står i loggen med 404 (eller 500 om världen kastade). */
@@ -223,9 +230,11 @@ async function provaStudievyn(webb) {
   await page.waitForSelector('#boka-inner .mv-tid', { timeout: 3000 }).catch(() => {});
   await page.click('#boka-inner .mv-tid');
   await page.click('#boka-inner #bk-format button[data-v="Online"]');
+  const förut = await passen(page);
   await page.click('#boka-inner #bk-boka');
   await page.waitForSelector('#boka-inner .bk-kvitto', { timeout: 5000 }).catch(() => {});
-  const eget = await värld(page, d => NXForhandsvisning.värld.bookings.filter(b => b.wanted_date === d && b.created_by === NXForhandsvisning.värld.profiles[0].id).length, dag);
+  const eget = await värld(page, ([d, förut]) => NXForhandsvisning.värld.bookings.filter(b => förut.indexOf(b.id) === -1
+    && b.wanted_date === d && b.created_by === NXForhandsvisning.värld.profiles[0].id).length, [dag, förut]);
   prova('studievyn: ett eget förslag sparas i världen', eget === 1, eget);
 
   /* Ett meddelande. */
@@ -355,12 +364,14 @@ async function provaDelad(webb) {
   await page.waitForSelector('#boka-inner .mv-tid', { timeout: 3000 }).catch(() => {});
   await page.click('#boka-inner .mv-tid');
   await page.click('#boka-inner #bk-format button[data-v="Online"]');
+  const förut = await passen(page);
   await page.click('#boka-inner #bk-boka');
   await page.waitForSelector('#boka-inner .bk-kvitto', { timeout: 5000 }).catch(() => {});
-  const nytt = await page.evaluate(d => {
-    const b = NXForhandsvisning.värld.bookings.find(x => x.wanted_date === d && x.status === 'requested' && x.subject);
+  const nytt = await page.evaluate(([d, förut]) => {
+    const b = NXForhandsvisning.värld.bookings.find(x => förut.indexOf(x.id) === -1
+      && x.wanted_date === d && x.status === 'requested' && x.subject);
     return b ? b.id : null;
-  }, dag);
+  }, [dag, förut]);
   prova('delad: familjens förslag finns i världen', !!nytt, nytt);
 
   await page.reload();

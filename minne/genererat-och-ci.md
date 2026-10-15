@@ -541,6 +541,12 @@ byt tillbaka, omladdningen, Börja om), telefonen och adminvyns sektion
 och tal utan adminens konto. När vyerna börjar fråga efter en ny tabell
 eller funktion säger provet det: lägg den i världen i
 `nextrum-forhandsvisning.js`.
+**Världens pass står på dagar räknade från i dag** (`dag(n)`), så ett prov
+som letar upp "passet på den dagen" kan ta ett som redan fanns. 2026-10-15
+föll tre prov i den delade delen av just det skälet: provet föreslog en tid
+sista dagen i månaden, och dag(16) var den 31:a, där Saras motförslag står.
+Ett prov som letar efter ett nytt pass minns vilka som fanns före klicket
+(`passen()`) och tar det som inte fanns.
 
 ### Webbläsarprovet för kortet (2026-10-14)
 `verktyg/prova-kortet.js` (port 8976) provar kortets vyer
