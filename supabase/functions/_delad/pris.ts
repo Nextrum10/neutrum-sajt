@@ -19,8 +19,13 @@
 // ett pass (betalning_status = 'faktura'), och bara de passen samlas
 // på en månadsfaktura: byggFakturor(). Samma pris som kortet tar, ur
 // familjebelopp(), så att betalsättet aldrig ändrar vad passet kostar.
-// Ett pass familjen inte valt faktura för faktureras aldrig av sig
-// självt, också om det är obetalt.
+//
+// SEDAN 2026-10-15 (obetalda_pass_pa_fakturan) läggs ett pass som inte är
+// betalt när månaden faktureras på fakturan av sig självt: databasen
+// skriver det som 'faktura' (fakturera_obetalda) innan körningen väljer
+// fakturapassen. Förut fakturerades det aldrig av sig självt. Undantagen
+// står kvar som obetalda; somFaktura() gör samma sak i minnet när
+// körningen bara torrkör.
 //
 // PRISLOGIKEN ÄR DENSAMMA SOM FÖRUT (planens avsnitt D):
 //   · priset som frystes på passet när det bokades (Fas 19.5), annars
@@ -130,6 +135,22 @@ export function passpris(
 // (Fas 14.6) är inte med: passet betalas mot faktura, och om fakturan
 // är betald står på fakturan, inte här.
 export const OBETALDA_LAGEN = new Set(['ingen', 'vantar', 'misslyckad']);
+
+/** obetalda_pass_pa_fakturan (2026-10-15). Torrkörningen skriver inget,
+ *  så passen som fakturera_obetalda() SKULLE lägga på fakturan räknas som
+ *  fakturapass i minnet: i `lista` blir deras betalning 'faktura', och de
+ *  ur `extra` som inte redan står där läggs till. Svarar med listan. */
+export function somFaktura(lista: Pass[], extra: Pass[], ids: string[]): Pass[] {
+  const valda = new Set(ids);
+  for (const b of lista) if (valda.has(b.id)) b.betalning_status = 'faktura';
+  const finns = new Set(lista.map((b) => b.id));
+  for (const b of extra) {
+    if (!valda.has(b.id) || finns.has(b.id)) continue;
+    lista.push({ ...b, betalning_status: 'faktura' });
+    finns.add(b.id);
+  }
+  return lista;
+}
 
 export function obetalt(b: Pass): boolean {
   return OBETALDA_LAGEN.has(String(b.betalning_status ?? 'ingen'));

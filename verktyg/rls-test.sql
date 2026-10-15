@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen, kortet, timmarna som delas, steget till intervju, familjerabatterna, nivåerna i adminvyn och betygsgarantins prövning)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen, kortet, timmarna som delas, steget till intervju, familjerabatterna, nivåerna i adminvyn, betygsgarantins prövning och de obetalda passen på fakturan)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -56,8 +56,8 @@
 -- adminkonton_utanfor_statistiken (2026-10-12), rabattkoden_krockar_inte,
 -- gratistimmarna_60_dagar, tipskoder_bonus_och_timbanken och gratistimmar (2026-10-13),
 -- rabattkoden_timmar_och_tak och kortet_reserveras (2026-10-13), timmarna_delas_och_kops_till
--- (2026-10-14), ansokan_till_intervju, familjerabatter, nexlax_i_adminvyn och betygsgarantin_provas
--- (2026-10-15) är körda.
+-- (2026-10-14), ansokan_till_intervju, familjerabatter, nexlax_i_adminvyn, betygsgarantin_provas
+-- och obetalda_pass_pa_fakturan (2026-10-15) är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -17201,6 +17201,243 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('BU Betygsgarantins underlag', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+
+-- ------------------------------------------------------------
+-- 38. Obetalda pass på fakturan (obetalda_pass_pa_fakturan, 2026-10-15)
+--
+-- Månadskörningen lägger ett obetalt pass på familjens faktura med
+-- fakturera_obetalda(): samma pass som avvikelsen Inte betalt, utom en
+-- kassa som kan stå öppen, ett kort som ska betala, en familj utan
+-- faktura och ett pass bokat innan familjen godkänt villkoren som säger
+-- det. Familjen M godkände dem före passen, N en äldre version före och
+-- den nya efter sitt pass, och S är spärrad från faktura. Svaret filtreras
+-- på provets pass, för funktionen ser hela databasen. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  j    jsonb;
+  fore date := date_trunc('month', now() at time zone 'Europe/Stockholm')::date;
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  M    constant uuid := '00000000-0000-4000-8000-0000000037f1';
+  N    constant uuid := '00000000-0000-4000-8000-0000000037f2';
+  S    constant uuid := '00000000-0000-4000-8000-0000000037f3';
+  EM   constant uuid := '00000000-0000-4000-8000-0000000037e1';
+  EN   constant uuid := '00000000-0000-4000-8000-0000000037e2';
+  ES   constant uuid := '00000000-0000-4000-8000-0000000037e3';
+  q1   constant uuid := '00000000-0000-4000-8000-000000037b01';  -- inte betalt
+  q2   constant uuid := '00000000-0000-4000-8000-000000037b02';  -- kortet nekades i kassan
+  q3   constant uuid := '00000000-0000-4000-8000-000000037b03';  -- kassan öppnades för två timmar sedan
+  q4   constant uuid := '00000000-0000-4000-8000-000000037b04';  -- kassan öppnades för 30 timmar sedan
+  q5   constant uuid := '00000000-0000-4000-8000-000000037b05';  -- kortet valt och sparat
+  q6   constant uuid := '00000000-0000-4000-8000-000000037b06';  -- priset reserverat
+  q7   constant uuid := '00000000-0000-4000-8000-000000037b07';  -- det sparade kortet nekades
+  q8   constant uuid := '00000000-0000-4000-8000-000000037b08';  -- den här månaden
+  q9   constant uuid := '00000000-0000-4000-8000-000000037b09';  -- betalt
+  q10  constant uuid := '00000000-0000-4000-8000-000000037b10';  -- utan rapport
+  q11  constant uuid := '00000000-0000-4000-8000-000000037b11';  -- kostar inget
+  n1   constant uuid := '00000000-0000-4000-8000-000000037b12';  -- N: bokat före villkoren
+  s1   constant uuid := '00000000-0000-4000-8000-000000037b13';  -- S: spärrad
+  alla uuid[];
+begin
+  if to_regprocedure('public.fakturera_obetalda(date, boolean)') is null then
+    insert into utfall (test, ok, detalj) values ('OF Obetalda pass på fakturan: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+  alla := array[q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, n1, s1];
+
+  begin
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (M, 'rls-m37@example.invalid', '{"role":"parent","full_name":"Test Familj M"}'),
+      (N, 'rls-n37@example.invalid', '{"role":"parent","full_name":"Test Familj N"}'),
+      (S, 'rls-s37@example.invalid', '{"role":"parent","full_name":"Test Familj S"}');
+    insert into public.students (id, parent_id, name, matched_tutor_id, match_status) values
+      (EM, M, 'Mo', A, 'matched'), (EN, N, 'Ni', A, 'matched'), (ES, S, 'Si', A, 'matched');
+    insert into public.villkor_godkannanden (anvandare, version, kalla, godkant_at) values
+      (M, intern.obetalda_faktureras_fran(), 'registrering', now() - interval '10 days'),
+      (S, intern.obetalda_faktureras_fran(), 'registrering', now() - interval '10 days'),
+      (N, '2026-10-15', 'registrering', now() - interval '10 days'),
+      (N, intern.obetalda_faktureras_fran(), 'inloggning', now() - interval '1 hour');
+    insert into public.faktura_sparr (parent_id) values (S);
+    update public.flaggor set aktiv = true where kod in ('faktura', 'kortreservation');
+
+    -- Passen i förra månaden, bokade för fem dagar sedan. Som databasen,
+    -- för en familj bokar aldrig bakåt.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, created_at) values
+      (q1,  M, A, EM, M, fore - 1,  '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q2,  M, A, EM, M, fore - 2,  '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q3,  M, A, EM, M, fore - 3,  '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q4,  M, A, EM, M, fore - 4,  '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q5,  M, A, EM, M, fore - 5,  '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q6,  M, A, EM, M, fore - 6,  '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q7,  M, A, EM, M, fore - 7,  '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q8,  M, A, EM, M, fore,      '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q9,  M, A, EM, M, fore - 9,  '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q10, M, A, EM, M, fore - 10, '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (q11, M, A, EM, M, fore - 11, '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (n1,  N, A, EN, N, fore - 12, '08:00', 60, 'confirmed', now() - interval '5 days'),
+      (s1,  S, A, ES, S, fore - 13, '08:00', 60, 'confirmed', now() - interval '5 days');
+    insert into public.lesson_reports (student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, amne,
+                                       start_tid, slut_tid)
+    select b.student_id, A, b.id, 'x', b.wanted_date, 'narvarande', 'Matematik', '08:00', '09:00'
+      from public.bookings b where b.id = any (alla) and b.id <> q10;
+
+    update public.bookings set betalning_status = 'misslyckad' where id = q2;
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = timpris_ore where id = q9;
+    update public.bookings set startrabatt = true, rabatt_ore = timpris_ore where id = q11;
+    insert into public.stripe_kunder (parent_id, stripe_kund) values (M, 'cus_rls37');
+    insert into public.sparade_kort (parent_id, stripe_metod, marke, sista4, utgar_manad, utgar_ar)
+      values (M, 'pm_rls37', 'visa', '4242', 12, 2030);
+    insert into public.kortreservationer (booking_id, parent_id, lage, stripe_reservation, reserverat_ore, fel) values
+      (q5, M, 'vald', null, null, null),
+      (q6, M, 'reserverad', 'pi_rls37', 39900, null),
+      (q7, M, 'misslyckad', null, null, 'card_declined');
+
+    -- ---------- kassan som öppnas ----------
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    update public.bookings set betalning_status = 'vantar', stripe_session_id = 'cs_rls37a' where id = q3;
+    update public.bookings set betalning_status = 'vantar', stripe_session_id = 'cs_rls37b' where id = q4;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'OF en kassa som öppnas får sin tid',
+            'ok', (select count(*) from intern.kassan_oppnad k
+                    where k.booking_id in (q3, q4) and k.oppnad_at = now()) = 2,
+            'd', (select string_agg(k.session_id || ' ' || k.oppnad_at, ', ') from intern.kassan_oppnad k
+                   where k.booking_id in (q3, q4)));
+
+    update intern.kassan_oppnad set oppnad_at = now() - interval '30 hours' where booking_id = q4;
+    update intern.kassan_oppnad set oppnad_at = now() - interval '30 hours' where booking_id = q3;
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    update public.bookings set betalning_status = 'vantar', stripe_session_id = 'cs_rls37b' where id = q4;
+    update public.bookings set betalning_status = 'vantar', stripe_session_id = 'cs_rls37c' where id = q3;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'OF samma kassa igen behåller sin tid, en ny kassa får en ny',
+            'ok', (select k.oppnad_at from intern.kassan_oppnad k where k.booking_id = q4) = now() - interval '30 hours'
+                  and (select k.oppnad_at || k.session_id from intern.kassan_oppnad k where k.booking_id = q3)
+                      = now() || 'cs_rls37c',
+            'd', (select string_agg(k.session_id || ' ' || k.oppnad_at, ', ') from intern.kassan_oppnad k
+                   where k.booking_id in (q3, q4)));
+    update intern.kassan_oppnad set oppnad_at = now() - interval '2 hours' where booking_id = q3;
+
+    -- ---------- torrkörningen ----------
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    j := public.fakturera_obetalda(fore, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select string_agg(right(x, 2), ',' order by o) into t
+      from jsonb_array_elements_text(j) with ordinality y(x, o) where x::uuid = any (alla);
+    ut := ut || jsonb_build_object('t', 'OF torrkörningen: inte betalt, nekat och en kassa som gått ut, inget annat',
+            'ok', t = '07,04,02,01', 'd', coalesce(t, 'inga'));
+    ut := ut || jsonb_build_object('t', 'OF torrkörningen skriver ingenting',
+            'ok', not exists (select 1 from public.bookings b where b.id = any (alla) and b.betalning_status = 'faktura'),
+            'd', (select string_agg(right(b.id::text, 2) || ':' || b.betalning_status, ' ' order by b.id)
+                   from public.bookings b where b.id = any (alla)));
+
+    -- Med strömbrytaren av drar kortjobbet inget, och då betalar kortet inte.
+    update public.flaggor set aktiv = false where kod = 'kortreservation';
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    j := public.fakturera_obetalda(fore, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    update public.flaggor set aktiv = true where kod = 'kortreservation';
+    select string_agg(right(x, 2), ',' order by o) into t
+      from jsonb_array_elements_text(j) with ordinality y(x, o) where x::uuid = any (alla);
+    ut := ut || jsonb_build_object('t', 'OF kortet som valts betalar inte med strömbrytaren av, och passet kommer med',
+            'ok', t = '07,05,04,02,01', 'd', coalesce(t, 'inga'));
+
+    update public.flaggor set aktiv = false where kod = 'faktura';
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    j := public.fakturera_obetalda(fore, true);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    update public.flaggor set aktiv = true where kod = 'faktura';
+    select string_agg(right(x, 2), ',' order by o) into t
+      from jsonb_array_elements_text(j) with ordinality y(x, o) where x::uuid = any (alla);
+    ut := ut || jsonb_build_object('t', 'OF med faktura avstängd läggs inget på fakturan', 'ok', t is null,
+            'd', coalesce(t, 'inga'));
+
+    -- ---------- skrivningen ----------
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    j := public.fakturera_obetalda(fore);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select string_agg(right(x, 2), ',' order by o) into t
+      from jsonb_array_elements_text(j) with ordinality y(x, o) where x::uuid = any (alla);
+    ut := ut || jsonb_build_object('t', 'OF körningen skriver de fyra passen som fakturapass, och svarar med dem',
+            'ok', t = '07,04,02,01'
+                  and (select count(*) from public.bookings b
+                        where b.id in (q1, q2, q4, q7) and b.betalning_status = 'faktura') = 4,
+            'd', coalesce(t, 'inga'));
+    select string_agg(right(b.id::text, 2) || ':' || b.betalning_status, ' ' order by b.id) into t
+      from public.bookings b where b.id = any (alla) and b.id not in (q1, q2, q4, q7);
+    ut := ut || jsonb_build_object('t', 'OF de andra passen står som de stod',
+            'ok', t = '03:vantar 05:ingen 06:ingen 08:ingen 09:betald 10:ingen 11:ingen 12:ingen 13:ingen',
+            'd', coalesce(t, 'inga'));
+    ut := ut || jsonb_build_object('t', 'OF fakturapassen syns inte längre som Inte betalt',
+            'ok', not exists (select 1 from public.avvikelser_rader() a
+                               where a.typ = 'ej_betalt' and a.objekt_id in (q1::text, q2::text, q4::text, q7::text)),
+            'd', (select string_agg(right(a.objekt_id, 2), ',') from public.avvikelser_rader() a
+                   where a.typ = 'ej_betalt' and a.objekt_id = any (alla::text[])));
+
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    j := public.fakturera_obetalda(fore);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'OF nästa natt läggs inget på en gång till',
+            'ok', not exists (select 1 from jsonb_array_elements_text(j) x where x::uuid = any (alla)),
+            'd', j::text);
+
+    -- ---------- vem som får anropa ----------
+    t := pg_temp.svar_som(M, format('select public.fakturera_obetalda(%L)', fore))
+      || ' ' || pg_temp.svar_som(AD, format('select public.fakturera_obetalda(%L, true)', fore))
+      || ' ' || pg_temp.svar_som(null, format('select public.fakturera_obetalda(%L)', fore))
+      || ' ' || pg_temp.svar_som(M, 'select * from intern.kassan_oppnad')
+      || ' ' || pg_temp.svar_som(AD, 'select * from intern.kassan_oppnad');
+    ut := ut || jsonb_build_object('t', 'OF bara månadskörningen lägger pass på fakturan, och ingen inloggad läser kassornas tider',
+            'ok', t = '42501 42501 42501 42501 42501', 'd', t);
+
+    -- Vyn får veta från när det gäller, om sitt eget konto. N godkände
+    -- en äldre version först, och den räknas inte.
+    perform pg_temp.bli(M);
+    j := public.mitt_villkorslage();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform pg_temp.bli(N);
+    j := jsonb_build_array(j, public.mitt_villkorslage());
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'OF mitt_villkorslage säger när kontot först godkände villkoren om de obetalda passen',
+            'ok', j -> 0 -> 'obetalda_fran' = to_jsonb(now() - interval '10 days')
+                  and j -> 1 -> 'obetalda_fran' = to_jsonb(now() - interval '1 hour')
+                  and j -> 0 ? 'version' and j -> 0 ? 'godkant_at' and j -> 0 ? 'tidigare',
+            'd', j::text);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('OF Obetalda pass på fakturan', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

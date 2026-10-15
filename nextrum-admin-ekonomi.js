@@ -290,7 +290,9 @@
   const AVV_TEXT = {
     pass_utan_rapport: ['Pass utan rapport', 'Genomfört men utan rapport, så det kommer inte med på underlaget. Koppla rapporten eller undanta passet under Betalningar → Att göra.'],
     fristaende_rapport: ['Rapport utan pass', 'En rapport som inte hör till något pass. Koppla den till sitt pass under Betalningar → Att göra.'],
-    ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy.'],
+    ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy. '
+      + 'Natten efter månaden läggs passet på familjens faktura (sedan 2026-10-16), utom med en öppen kassa, ett kort som betalar, '
+      + 'en familj utan faktura eller ett pass bokat innan familjen godkänt villkoren som säger det.'],
     /* Fas 20.1. Passet var betalt och drog över. Familjen betalar
        tillägget med kort när de bekräftar rapporten; beloppet räknas i
        stripe-checkout och står därför inte i larmet. */
@@ -3027,8 +3029,11 @@
       h += rad('Fakturor att lägga in i Fortnox, ' + fakturor.length + ' st', esc(kronor(summa(fakturor))), true);
     }
 
-    /* Per familj, för det är familjen man hör av sig till. Ingen
-       faktura skapas av det här: det är en lista, inte ett krav. */
+    /* Per familj, för det är familjen man hör av sig till. Sedan
+       2026-10-15 läggs ett obetalt pass på fakturan av sig självt
+       (pa_fakturan); de som står här är undantagen: en öppen kassa, ett
+       kort som betalar, en familj utan faktura eller ett pass bokat före
+       villkoren som säger det. */
     if (obetalda.length) {
       const per = {};
       obetalda.forEach(o => { (per[o.parent_id] = per[o.parent_id] || []).push(o); });
@@ -3038,11 +3043,23 @@
     }
 
     const noter = [];
+    const paFakturan = (d.pa_fakturan || []).length;
+    if (paFakturan) {
+      /* En torrkörning för en månad som pågår räknar pass som hinner
+         betalas innan den är slut. */
+      const pågår = String(d.period || '').slice(0, 7) + '-01' === NXStudie.månadIso(new Date());
+      const betalt = paFakturan === 1 ? 'betalt' : 'betalda';
+      noter.push(paFakturan + ' pass ' + (pågår
+        ? 'är inte ' + betalt + ' än och läggs på familjens faktura om ' + (paFakturan === 1 ? 'det' : 'de')
+          + ' inte betalas innan månaden är slut'
+        : 'var inte ' + betalt + ' när månaden tog slut och ' + (torr ? 'läggs' : 'lades') + ' på familjens faktura')
+        + ' (villkoren sedan 2026-10-16).');
+    }
     if (obetalda.length) {
       noter.push('⚠️ ' + obetalda.length + (obetalda.length === 1 ? ' pass hölls' : ' pass hölls')
-        + ' utan att familjen betalat. De faktureras inte av sig själva: Betala-knappen ligger '
-        + 'kvar på passet i familjens vy, och Påminn under Att göra skriver ett mejl. '
-        + '<a href="#ekonomi/attgora">Till Att göra</a>.');
+        + ' utan att familjen betalat och kom inte på fakturan: en öppen kassa, ett kort som betalar, en familj '
+        + 'utan faktura eller ett pass bokat före villkoren som säger det. Betala-knappen ligger kvar på passet i '
+        + 'familjens vy, och Påminn under Att göra skriver ett mejl. <a href="#ekonomi/attgora">Till Att göra</a>.');
     }
     const utan = d.hoppade_over_utan_rapport || [];
     if (utan.length) {

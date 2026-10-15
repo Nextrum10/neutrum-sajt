@@ -133,9 +133,12 @@ Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, stu
   // Och att fakturan är ett val, före eller efter passet, som på sidorna.
   // verktyg/kolla-betalningsvillkor.py räknar samma mening.
   const FAKTURAN = 'välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift';
+  // Och att ett obetalt pass kommer med på fakturan (obetalda_pass_pa_fakturan, 2026-10-16).
+  const OBETALDA = 'Är ett pass inte betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.';
   const bekraftat = rendera('pass_bekraftat', 'parent');
   assertStringIncludes(bekraftat.text, VILLKORET);
   assertStringIncludes(bekraftat.text, FAKTURAN);
+  assertStringIncludes(bekraftat.text, OBETALDA);
   assertEquals(bekraftat.text.includes('betala i förväg'), false);
   assertEquals(bekraftat.text.includes('hålls inte'), false);
   assertStringIncludes(bekraftat.text, `${SAJT}/foralder#betalning`);
@@ -148,6 +151,7 @@ Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, stu
   assertStringIncludes(paminnelse.text, 'om ni inte redan har gjort det');
   assertStringIncludes(paminnelse.text, VILLKORET);
   assertStringIncludes(paminnelse.text, FAKTURAN);
+  assertStringIncludes(paminnelse.text, OBETALDA);
   assertEquals(paminnelse.text.includes('hålls inte'), false);
 
   for (const typ of ['pass_bekraftat', 'paminnelse', 'pass_nytt'] as const) {

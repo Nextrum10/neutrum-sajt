@@ -53,6 +53,13 @@ om vad familjen lovades. Slås flaggan av ska meningen bort i samma
 ändring, och FAKTURA_I_TEXTEN nedan sättas till False
 (DEPLOY-BETALNING.md 9.11).
 
+OBETALDA PASS PÅ FAKTURAN (2026-10-16, obetalda_pass_pa_fakturan). Ett
+pass som inte är betalt när månaden är slut, och inte på väg att dras från
+kortet, läggs på familjens faktura av månadskörningen. Det säger en egen
+mening direkt efter fakturameningen, och verktyget räknar den på samma
+ställen och lika många gånger. Den hör till fakturan: slås faktura av går
+båda, och OBETALDA_PA_FAKTURAN följer FAKTURA_I_TEXTEN.
+
 Mejlmallarna i _delad/notiser/mallar.ts TÄCKS sedan Fas 14.3, och
 säger sedan Fas 19.2 samma mening som sidorna. Mejlet är det familjen
 läser sist innan passet. Meningen står en gång i källan, som en
@@ -110,6 +117,15 @@ def fakturameningen(dagar, svenska):
     nar = r'the\s+month\s+after\s+the\s+session' if KORTET_RESERVERAS else r'the\s+following\s+month'
     return (r'choose\s+an\s+invoice\s+instead,\s+which\s+comes\s+at\s+the\s+start\s+of\s+' + nar + r'\s+with\s+'
             + en + r'\s+days\s+to\s+pay\s+and\s+no\s+fee')
+
+# Meningen om de obetalda passen (obetalda_pass_pa_fakturan, 2026-10-16).
+# Månadskörningen lägger dem på fakturan (fakturera_obetalda), så meningen
+# står där fakturameningen står och går med den.
+OBETALDA_PA_FAKTURAN = FAKTURA_I_TEXTEN
+OBETALDA_SV = (r'Är\s+ett\s+pass\s+inte\s+betalt\s+när\s+månaden\s+är\s+slut,\s+och\s+inte\s+på\s+väg\s+att\s+'
+               r'dras\s+från\s+kortet,\s+kommer\s+det\s+med\s+på\s+fakturan')
+OBETALDA_EN = (r'If\s+a\s+session\s+is\s+not\s+paid\s+when\s+the\s+month\s+ends,\s+and\s+is\s+not\s+about\s+to\s+'
+               r'be\s+charged\s+to\s+your\s+card,\s+it\s+is\s+included\s+on\s+the\s+invoice')
 
 # (fil, mönster, hur många träffar som ska finnas, vad stället är)
 LOFTET = [
@@ -239,6 +255,12 @@ def main():
                 fynd.append('FAKTURA    %s — %s: väntade %d gång%s att familjen kan välja faktura '
                             '(%s dagar, utan avgift), hittade %d'
                             % (fil, vad, antal, '' if antal == 1 else 'er', i_koden, n))
+        if OBETALDA_PA_FAKTURAN:
+            obetalda = OBETALDA_SV if monster == LOFTE_SV else OBETALDA_EN
+            n = len(re.findall(obetalda, text))
+            if n != antal:
+                fynd.append('OBETALDA   %s — %s: väntade %d gång%s att ett obetalt pass kommer med på '
+                            'fakturan, hittade %d' % (fil, vad, antal, '' if antal == 1 else 'er', n))
 
     serveras = sorted(glob.glob(os.path.join(ROT, '*.html'))
                       + glob.glob(os.path.join(ROT, 'en', '*.html'))
@@ -259,7 +281,8 @@ def main():
     print('ok   betalningslöftet står på alla %d ställen i %d filer%s, det gamla ingenstans, '
           'och fakturans betalningstid är %d dagar i båda filerna'
           % (sum(antal for _, _, antal, _ in LOFTET), len({fil for fil, _, _, _ in LOFTET}),
-             ', med fakturan bredvid' if FAKTURA_I_TEXTEN else '', i_koden))
+             (', med fakturan och de obetalda passen bredvid' if OBETALDA_PA_FAKTURAN
+              else ', med fakturan bredvid') if FAKTURA_I_TEXTEN else '', i_koden))
     return 0
 
 

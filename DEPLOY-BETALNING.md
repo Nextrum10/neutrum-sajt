@@ -1525,3 +1525,42 @@ göra de här stegen, för nycklarna får aldrig stå i en chatt (9.2).
     i efterskott, gratistimmarna och första timmen), marknadsföringen
     (jämförelsetejperna på Standard och Intensiv har inget underlag, kärnans
     avsnitt 11) och de rader i `DATASKYDD.md` som väntar.
+
+### 9.17 Obetalda pass på fakturan (2026-10-16, inte i drift)
+
+Månadskörningen lägger ett pass som inte är betalt när månaden är slut, och
+inte på väg att dras från kortet, på familjens faktura (`fakturera_obetalda()`,
+`minne/betalning.md`, Obetalda pass på fakturan). Villkoren får versionen
+2026-10-16, så alla får frågan igen, och det gäller bara pass som bokas efter
+att familjen godkänt den: inget läggs på i efterhand.
+
+Sidorna, villkoren och policyn går ut med sajten när grenen mergas. Det är med
+flit, och samma ordning som förut: sidan står före versionen i några minuter,
+och utan migrationen gör `fakturering` som förut (funktionen saknas, PGRST202)
+och studievyn säger inget om fakturan på passen.
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`):
+
+1. **Migrationen `20261016010000_obetalda_pass_pa_fakturan`** från
+   merge-commiten, prövad mot sin md5. Den har ingen `drop` och ingen `delete`,
+   så den kan köras hel i ett do-block och registreras med filens text. Vakten
+   först i filen kräver villkorens version 2026-10-15 (eller 16) och att
+   `mitt_villkorslage()` är den `villkoren_godkanns` skrev (md5 `7b64c1bc…` på
+   kroppen); stannar den har någon ändrat driften, och då läses den om.
+2. **`fakturering`** från main: anropar funktionen före fakturapassen och
+   räknar dem i torrkörningen.
+3. **`notis-ko`** (mejlets mening) och **`drift`** (agenternas fakta) från
+   main. Varje funktion hämtas tillbaka och jämförs byte för byte, som förut.
+4. Hela `rls-test.sql` mot driften, tillbakarullat (avsnitt 37), och advisorn.
+   Avsnittets körning skriver som tjänstekontot också i riktiga obetalda pass
+   som uppfyller villkoren, och låser dem tills sviten rullats tillbaka: kör
+   den inte medan månadskörningen går (natten, 04.17).
+5. **Torrkör förra månaden** under Betalningar → Fakturor (körningen för hand):
+   rutan säger hur många obetalda pass som skulle läggas på fakturan. Före
+   första natten är det noll, för ingen har godkänt version 2026-10-16 när
+   passen bokades.
+
+Kvar efter det: att säga till familjerna att ett obetalt pass hamnar på
+fakturan (villkorsändringen), och juristen, som inte läst `#faktura` eller rad 8
+i `DATASKYDD.md`.

@@ -797,7 +797,12 @@ window.NXForhandsvisning = (function () {
 
   var RPC = {
     mina_behorigheter: function () { return { admin: false, superadmin: false, behorigheter: [] }; },
-    mitt_villkorslage: function () { return { version: '2026-10-12', godkant_at: tid(0, '08:00'), tidigare: null }; },
+    /* obetalda_fran (2026-10-16): före världens pass, så att ett obetalt
+       pass säger att det kommer med på fakturan, som för en familj som
+       godkänt villkoren innan den bokade. */
+    mitt_villkorslage: function () {
+      return { version: '2026-10-12', godkant_at: tid(0, '08:00'), tidigare: null, obetalda_fran: tid(-31, '08:00') };
+    },
     godkann_villkor: function () { return true; },
     mina_handlingar: function () { return []; },
     min_handling_text: function () { return null; },
