@@ -662,6 +662,7 @@ Regeln står i `intern.ansokan_gallras_fran()` och ingen annanstans:
    också när samma person senare fått ja.
 2. **Ett år från `created_at`, men inte mitt i en rekrytering.** En
    ansökan väntar till trettio dagar efter sitt senaste steg: kontakten,
+   valet att gå vidare till intervju (`till_intervju_at`, 2026-10-15),
    mötet, utbildningsmötet, provets sista dag, det godkända provet,
    utbildningen. Policyn säger "så att vi kan höra av oss om något dyker
    upp", och den som hörs av i månad elva ska inte förlora ansökan mitt i

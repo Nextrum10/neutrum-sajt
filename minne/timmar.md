@@ -782,6 +782,6 @@ finns kvar".
 - **Prov.** `rls-test.sql`: GTB E (gratistimmarna påminns, märkta, en gång;
   köpta som förut; ett återkallat kort inte), GTB F (planens gratis timme) och
   ett prov efter GT G (tipstimmen). De fyra nya faller med den gamla funktionen.
-  Lokalt ur alla 194 migrationer 1743 av 1743. Deno: `typer_test.ts` och
+  Lokalt ur alla 195 migrationer 1749 av 1749. Deno: `typer_test.ts` och
   `rendera_test.ts`. Batteriet provades i förhandsvisningen med påhittade köp
   (rutor, stapel, tomt, mörkt läge); provet checkades inte in.
