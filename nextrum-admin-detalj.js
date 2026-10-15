@@ -1452,6 +1452,10 @@
     /* Öppna provet härifrån (2026-09-29): steg 3 i fliken Rekryteringen
        låg nedanför skärmkanten, och här stod bara "Inte öppnat". */
     const provKnapp = kör('provKnapp', a) || '';
+    /* Skicka vidare till intervju, eller därifrån till utbildning, under
+       läget (2026-10-15): nästa steg är knappen att trycka på, så Ta in i
+       poolen är det bara när inget steg står kvar före den. */
+    const vidare = kör('panelVidare', a) || '';
 
     return dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
       + dpFakta([
@@ -1496,8 +1500,10 @@
       + '<div class="dp-atgard">'
       + '<button class="btn btn-ghost btn-sm" type="button" data-dp-flik="rekrytering">Rekryteringens steg</button>'
       + (a.status !== 'approved'
-        ? '<button class="btn btn-primary btn-sm" type="button" data-ans-pool="' + esc(a.id) + '">Ta in i poolen</button>'
+        ? '<button class="btn ' + (vidare ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-ans-pool="'
+          + esc(a.id) + '">Ta in i poolen</button>'
         : '')
+      + vidare
       + '</div>'
       + dpHantera('ansokan', a, {
           rubrik: 'Radera ansökan',

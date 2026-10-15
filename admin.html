@@ -461,7 +461,7 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ansökningar</h2>
-              <p>Unga som vill jobba. Skicka vidare med knappen på raden: från Alla ansökningar till Intervju, därifrån till Utbildning, och sedan in i poolen. Tryck på ett namn för ansökan, CV:t och rekryteringens steg.</p>
+              <p>Unga som vill jobba. Skicka vidare med knappen på raden eller i ansökan: från Alla ansökningar till Intervju, därifrån till Utbildning, och sedan in i poolen. Läget sätter du själv i ansökan, och Kontaktad flyttar ingen till Intervju. Tryck på ett namn för ansökan, CV:t och rekryteringens steg.</p>
             </div>
             <!-- Provläget: admin gör utbildningsprovet själv, med facit
                  efteråt. Inget sparas (edge-funktionen prövar admin). -->
@@ -487,6 +487,7 @@
               <select class="sel" id="ans-status" aria-label="Filtrera på steg">
                 <option value="">Alla steg</option>
                 <option value="ny">Nya</option>
+                <option value="kontaktad">Kontaktade</option>
                 <option value="intervju">Intervju</option>
                 <option value="utbildning">Utbildning</option>
                 <option value="godkand">Godkända</option>
@@ -500,7 +501,9 @@
 
           <!-- Rekryteringens två steg som egna flikar (Fas 6): vem som
                gått vidare till en intervju, och vem som är i utbildningen.
-               Knappen på raden skickar vidare (2026-10-13). -->
+               Knappen på raden skickar vidare (2026-10-13), och samma
+               knapp står i ansökan (2026-10-15). Intervju har bara dem
+               som skickats dit, aldrig läget Kontaktad. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="intervju"
                id="panel-ans-intervju" aria-labelledby="flik-ans-intervju" hidden>
             <div class="dbox">
@@ -2467,10 +2470,10 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=9d442451"></script>
-<script src="nextrum-admin-detalj.js?v=459f8e54"></script>
+<script src="nextrum-admin-detalj.js?v=49378bd1"></script>
 <script src="nextrum-admin-oversikt.js?v=ed84102c"></script>
 <script src="nextrum-admin-kunder.js?v=2dc95ec8"></script>
-<script src="nextrum-admin-rekrytering.js?v=ce0dad1e"></script>
+<script src="nextrum-admin-rekrytering.js?v=9006e4c3"></script>
 <script src="nextrum-admin-bibliotek.js?v=c61fd760"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=f2e7d309"></script>
