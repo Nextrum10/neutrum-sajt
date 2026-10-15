@@ -144,8 +144,8 @@ function falskSupabase(o) {
     admin_sett_markera: k => k.p_till,
     /* Adminens eget läge: panelen läser bara den gällande versionen ur det. */
     mitt_villkorslage: () => ({ version: '2026-09-30', godkant_at: '2026-10-01T09:00:00+00:00', tidigare: false }),
-    /* Första timmen pass för pass (2026-10-09): valet och läget. */
-    ge_forsta_timmen: k => ({ beviljad: !!k.p_ja, tagen: false, i_planen: false, pa_pass: false }),
+    /* Första timmen (2026-10-09): bara läget. Valet pass för pass togs
+       bort 2026-10-15, och proven säger att inget anropar det. */
     forsta_timmen_lage: () => ({ beviljad: false, tagen: false, i_planen: false, pa_pass: false }),
     /* Gratistimmarna (2026-10-13): kortet står i klippkort_saldo som
        databasen skriver det, så att panelen ser det när vyn hämtar om. */
@@ -339,9 +339,8 @@ async function provaFamiljen(webb) {
   prova('familj: rutan säger att kontot skapas och mejlet går', (await text(page, '#le-familj-rad')).includes('Det skapas när du tar in familjen'));
   prova('familj: ingen separat inbjudningsknapp', (await page.locator('#le-bjud').count()) === 0);
   prova('familj: eleven är ifylld ur anmälan', (await page.inputValue('#le-namn')) === 'Kim' && (await page.inputValue('#le-arskurs')) === 'Åk 8');
-  prova('familj: rutan för första timmen pass för pass finns och är av', (await page.locator('#le-forsta').count()) === 1
-    && !(await page.isChecked('#le-forsta')));
-  await page.check('#le-forsta');
+  prova('familj: ingen ruta för första timmen pass för pass (2026-10-15)', (await page.locator('#le-forsta').count()) === 0
+    && !/första timmen/i.test(await text(page, '.nx-fraga-box')), await text(page, '.nx-fraga-box'));
   prova('familj: fältet för gratistimmar finns och står på 0', (await page.locator('#le-gratis').count()) === 1
     && (await page.inputValue('#le-gratis')) === '0');
   await page.fill('#le-gratis', '41');
@@ -368,12 +367,8 @@ async function provaFamiljen(webb) {
   prova('familj: kvittot säger att familjen är intagen och vad som händer sedan', (await text(page, '.nx-fraga-box h3')) === 'Familjen är intagen'
     && (await text(page, '.nx-fraga-box')).includes('väljer sitt lösenord'), await text(page, '.nx-fraga-box'));
   prova('familj: vidare till matchningen finns', await synlig(page, '[data-le-match]'));
-  const ft = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_forsta_timmen');
-  prova('familj: första timmen väljs för det nya kontot', ft && ft.kropp.p_familj === 'ny-1' && ft.kropp.p_ja === true,
-    JSON.stringify(ft && ft.kropp));
-  prova('familj: valet görs efter kontot och före eleven', S.logg.indexOf(ft) > S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
-    && S.logg.indexOf(ft) < S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/students'));
-  prova('familj: kvittot säger att första timmen ges pass för pass', (await text(page, '.nx-fraga-box')).includes('första timmen gratis även pass för pass'),
+  prova('familj: ingen första timme pass för pass väljs', !S.logg.some(r => r.väg === '/rest/v1/rpc/ge_forsta_timmen'));
+  prova('familj: kvittot säger inget om första timmen', !/första timmen/i.test(await text(page, '.nx-fraga-box')),
     await text(page, '.nx-fraga-box'));
   const gt = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_gratistimmar');
   prova('familj: gratistimmarna sätts in på det nya kontot', gt && gt.kropp.p_familj === 'ny-1' && gt.kropp.p_timmar === 3,
@@ -427,6 +422,8 @@ async function provaGratistimmarIPanelen(webb) {
   await vänta(400);
   const fakta = await page.locator('.dp-fakta').first().innerText();
   prova('gratis: Översikt säger timbanken, utan timmar', /Timbanken\s*0 timmar/.test(fakta), fakta);
+  prova('panel: första timmen är ett läge, utan knapp pass för pass (2026-10-15)',
+    /Första timmen gratis\s*inte given än/.test(fakta) && (await page.locator('[data-dp-forsta]').count()) === 0, fakta);
   await page.click('.dp-fakta [data-dp-flik="ekonomi"]');
   await page.waitForSelector('form[data-dp-gratis="familj-1"]', { timeout: 3000 }).catch(() => {});
   prova('gratis: knappen går till Ekonomi, där rutan finns', await synlig(page, 'form[data-dp-gratis="familj-1"]'));

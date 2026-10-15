@@ -270,7 +270,8 @@ blivit pengar).
   driften (verktygets fråga syntes inte), och sedan 2026-10-14 återkallas kortet
   i stället (sist i filen).
 - **Vyerna**: Ta in familjen har ett fält Gratistimmar i timbanken (0 som
-  förval, bara när kontot skapas där, som första timmen), och kvittot säger
+  förval, bara när kontot skapas där; rutan för första timmen bredvid togs
+  bort 2026-10-15), och kvittot säger
   hur många och till vilken dag. Familjens panel har raden Timbanken under
   Översikt och allt under Ekonomi: köpen och gratistimmarna kort för kort,
   de sparade minuterna, Sätt in (med en fråga till) och Ta tillbaka. Bara för
@@ -496,7 +497,8 @@ villkoren "fixa villkoren".
   passets, aldrig före i dag. Jobbets förurval (`timmar_betalar_obetalda`)
   tar med en gratis timme efter planens månad. Vyn gör samma val
   (`kortetsTimmar`, `harGratis`, `kortFör`, `timmarFörFörslag`).
-- **Tipstimmen och första timmen pass för pass** är fortfarande ett avdrag
+- **Tipstimmen och första timmen pass för pass** (som inte ges sedan
+  2026-10-15, `minne/betalning.md`) är fortfarande ett avdrag
   på passet (`startrabatt`), inte en timme i timbanken, och gäller ett pass
   inom 60 dagar: tipstimmen från dagen den nya familjen haft sina två
   timmar (`intern.tipstimmar_oanvanda` ger sista dagen för var och en,
