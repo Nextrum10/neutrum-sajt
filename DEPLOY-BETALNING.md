@@ -1,6 +1,6 @@
 # Sätta upp betalning
 
-**Ska ni ta emot riktiga pengar: börja i 9.15**, som har stegen i ordning och
+**Ska ni ta emot riktiga pengar: börja i 9.16**, som har stegen i ordning och
 driftens läge.
 
 **Sedan 2026-10-14 dras pengarna för ett pass först när studiehjälparen har skrivit
@@ -19,7 +19,7 @@ Filen står därför i fyra delar:
 - **Avsnitt 7** är historik: planen att skicka månadsfakturan genom Stripe.
 - **Avsnitt 8** är utskicket av underlagen. Fakturor skickas från Fortnox.
 - **Avsnitt 9** är kortbetalningen, spärren "ingen betalning, inget pass",
-  (9.11) det som ska göras den dag fakturan slås på, och (9.15) vägen till
+  (9.11) det som ska göras den dag fakturan slås på, och (9.16) vägen till
   skarpt läge.
 
 Läs igenom hela filen innan du börjar. Det finns en torrkörning som du ska göra
@@ -40,7 +40,7 @@ behövs om ni sätter upp en ny miljö.
 | 4. Deploy `fakturering` | ACTIVE, version 34 (2026-10-01, från main efter PR #171, jämförd byte för byte). Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas. Ett sent pass läggs på sin månads utkast (Passets månad, avsnitt 6). En skarp körning för en månad som inte är slut får 409 (2026-10-01). Provad i driften: 401 utan inloggning, och schemats torrkörning 200 för september; 409 nås bara med en admininloggning, och regeln (`manadenArSlut`) är provad i `pris_test.ts` |
 | 5. Torrkörning | **Gjord 2026-09-28** genom schemavägen: 200, augusti utan pass. Knappen under Betalningar → Fakturor (Månadskörningen) torrkör en avslutad eller pågående månad, och skapar bara en avslutad |
 | 6. Schemaläggning | **På sedan 2026-09-28**: pg_cron `manadskorning` klockan 04:17 UTC genom `intern.manadskorning_vack()`, den 1:a och **varje natt sedan 2026-10-01** (`manadskorningen_gar_varje_natt`). Den första skarpa körningen gjordes med knappen den 29 september, medan månaden pågick. Schemat gick första gången den 1 oktober och svarade 207, se avsnitt 6 |
-| 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar: stegen står i 9.15 |
+| 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar: stegen står i 9.16 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
 
 Den första skarpa körningen gjordes med knappen den 29 september 2026, för september
@@ -1368,9 +1368,52 @@ drar `stripe-reservation` pengarna för ett pass med ett sparat kort, men utan
 `payment_intent.succeeded` på endpointen blir passet aldrig betalt hos oss.
 Stripe står i testläge, så bara testkort fungerar.
 
-### 9.15 Till skarpt läge, i ordning (2026-10-15)
+### 9.15 Familjerabatterna (2026-10-15, inte i drift)
 
-Stegen för att ta emot riktiga pengar står utspridda i 9.2–9.14. Här står de i
+Våra egna koder, som bara vi ser: kronor av per timme för de familjer vi sätter
+koden på (`CLAUDE.md` avsnitt 1, `minne/betalning.md`, Familjerabatterna).
+Inga pengar dras annorlunda än förut, bara mindre: priset fryses som förut, med
+rabatten dragen, och kassan drar det databasen räknat.
+
+Vyerna går ut med sajten när grenen mergas, före allt nedan, och tål att
+migrationen saknas: fliken under Tjänster och rutan i familjens panel säger att
+den inte är körd, och studievyn får ingen rabatt (`min_familjerabatt` svarar
+404) och visar priset som förut (`verktyg/prova-familjerabatter.js`, avsnittet
+Utan migrationen).
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`):
+
+1. **Migrationen `20261015210000_familjerabatter`** från merge-commiten,
+   prövad mot sin md5. Den har inget `drop`, inget `delete` och ingen funktion
+   med ett, så den går hel i ett do-block, och registreras med filens text.
+   Vakten prövar att de fem funktionerna och vyn `klippkort_saldo` är som de
+   lästes 2026-10-15; har någon ändrats sedan stannar den med md5 och namnet,
+   och då ska migrationen skrivas om mot driften. Sedan hela `rls-test.sql`
+   mot driften, tillbakarullat (avsnitt 35, `FR`), och advisorn: två nya
+   tabeller med RLS, `min_familjerabatt()` och `satt_familjerabatt()` för
+   `authenticated` (den andra prövar `is_admin()` först).
+2. **`stripe-checkout`** (SESSIONSFORM 9): raden i kassan säger rabatten, och
+   ett väntande köp återanvänds bara med samma rabatt. En äldre kassa drar
+   ändå rätt belopp, för det är köpets `begart_ore`, som triggern räknar; den
+   kan bara inte säga varför beloppet är lägre. Hämta tillbaka och jämför
+   byte för byte, med `_delad/erbjudanden.ts`.
+3. **`drift`** (agentens fakta: ett pass under ordinarie pris hos en familj
+   med rabatt är inget fel), hämtad tillbaka och jämförd.
+4. **Prova** i testläge: skapa en familjerabatt på 10 kr under Tjänster, sätt
+   den på en provfamilj i familjens panel, föreslå ett pass (priset vid
+   knappen ska vara 389 kr, "med er rabatt"), köp en plan (kassan ska säga
+   "Med er rabatt på 10 kr per timme" och dra 80 kr mindre för Standard), och
+   ta bort rabatten (nästa pass ska kosta 399 kr, det förra stå kvar).
+
+Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md` eller policyns
+nya stycken, och en rabatts villkor (beloppet, att den gäller tills vidare och
+att vi kan ta bort den) ska stå där vi ger den, i mejlet eller avtalet med
+partnern.
+
+### 9.16 Till skarpt läge, i ordning (2026-10-15)
+
+Stegen för att ta emot riktiga pengar står utspridda i 9.2–9.15. Här står de i
 den ordning de beror på varandra, med vem som gör vad och hur man ser att ett
 steg är klart. Avsnitten de pekar på har detaljerna. Det här är billigast att
 göra nu, innan den första familjen har en studiehjälpare och kan boka.
@@ -1432,11 +1475,11 @@ efter varje steg). Kan göras nu, parallellt med A.
    nekat kort, återbetalning, tvist och avbokat pass; med `kortreservation` på
    öppnas kassan för ett pass när rapporten bekräftas, inte före passet), 9.12
    (köp en plan, timmarna betalar ett pass, avboka och återbetala en del),
-   9.13 steg 4 (en rabattkod på ett köp och taket) och 9.14 steg 6 (spara
-   kortet, reservationen inom 48 timmar,
-   dragningen efter rapporten, ett nekat kort med `4000 0000 0000 0341`,
-   släppet vid avbokning och ta bort kortet). Klart när varje steg har stått
-   rätt i databasen.
+   9.13 steg 4 (en rabattkod på ett köp och taket), 9.15 steg 4 (en
+   familjerabatt på ett pass och ett köp) och 9.14 steg 6 (spara kortet,
+   reservationen inom 48 timmar, dragningen efter rapporten, ett nekat kort
+   med `4000 0000 0000 0341`, släppet vid avbokning och ta bort kortet). Klart
+   när varje steg har stått rätt i databasen.
 
 **C. Skarpt läge, i ett svep** (Leo, ungefär en halvtimme). Claude kan inte
 göra de här stegen, för nycklarna får aldrig stå i en chatt (9.2).
@@ -1482,4 +1525,3 @@ göra de här stegen, för nycklarna får aldrig stå i en chatt (9.2).
     i efterskott, gratistimmarna och första timmen), marknadsföringen
     (jämförelsetejperna på Standard och Intensiv har inget underlag, kärnans
     avsnitt 11) och de rader i `DATASKYDD.md` som väntar.
-

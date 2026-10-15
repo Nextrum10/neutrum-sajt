@@ -2472,9 +2472,18 @@
      för varje kort: { kod, beskrivning, pris: { erbjudande: att betala } }. */
   S.erb = { aktiv: false, katalog: [], kort: [], bank: { saldo: 0, varde: null, perPass: {}, finns: false },
             rorelser: undefined, dragningar: undefined, kod: null };
+  /* Familjens rabatt (familjerabatter, 2026-10-15): kronor av per timme som
+     admin satt på familjen, ur min_familjerabatt(). Bara beloppet, aldrig
+     koden, och den syns bara där familjen betalar: på korten under
+     Erbjudanden (Leo samma kväll: "Visa på korten också"), priset vid knappen
+     i Boka pass, Köp till timmar och kassan. Noll utan rabatt, och före
+     migrationen. */
+  S.familjerabatt = 0;
+  const familjerabatt = () => Math.max(Number(S.familjerabatt) || 0, 0);
+  const medErRabatt = 'med er rabatt';
 
   async function laddaErbjudanden() {
-    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta] = await Promise.all([
+    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta, rabatt] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       /* Alla kolumner (planerna, 2026-10-07): timmar_pa_kopet finns först
          efter migrationen, och en uttrycklig lista med den hade gett ett
@@ -2504,9 +2513,13 @@
          pass, och om den redan fått sin timme. Hämtas med köpen, för ett
          planköp ändrar den. Utan funktionen (före migrationen) är den null,
          och då gäller den gamla regeln, som databasen då också har. */
-      supa.rpc('forsta_timmen_lage')
+      supa.rpc('forsta_timmen_lage'),
+      /* Familjens rabatt per timme (familjerabatter, 2026-10-15). Ett fel,
+         eller en databas före migrationen, är ingen rabatt. */
+      supa.rpc('min_familjerabatt')
     ]);
     S.forstaTimmen = forsta.error ? null : (forsta.data || null);
+    S.familjerabatt = rabatt.error ? 0 : Math.max(Number(rabatt.data) || 0, 0);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
     S.erb.katalog = katalog.data || [];
     /* Gratistimmar som admin tagit tillbaka (aterkallad_at, timmarna_delas
@@ -3579,7 +3592,14 @@
     if (!e || !S.erb.aktiv || S.väntar) return;
     await köpIKassan(knapp, kod, null, 'Köp ' + e.namn, svar => erbTimmar(e) + ' · '
       + NXBetalning.kronor(svar.belopp_ore != null ? svar.belopp_ore : e.pris_ore)
-      + (svar.rabatt_ore > 0 && S.erb.kod ? ' med koden ' + S.erb.kod.kod : ''));
+      + medVad(Number(svar.familjerabatt_ore) > 0,
+        Number(svar.rabatt_ore) > Number(svar.familjerabatt_ore || 0) && S.erb.kod ? S.erb.kod.kod : null));
+  }
+
+  /* "med er rabatt", "med koden X" eller båda, efter beloppet i kassan. */
+  function medVad(rabatt, kod) {
+    const delar = [rabatt ? medErRabatt : null, kod ? 'koden ' + kod : null].filter(Boolean);
+    return delar.length ? ' ' + (rabatt ? '' : 'med ') + delar.join(' och ') : '';
   }
 
   /* Ett köp i samma kassa som passen. extra följer med till
@@ -3637,7 +3657,8 @@
      går ihop ("8 timmar för priset av 7"). */
   function erbKort(e) {
     const kr = NXBetalning.kronor;
-    const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
+    const fr = medRabatt(e);
+    const spar = Number(e.ordinarie_ore) - fr.pris;
     const pa = erbPåKöpet(e);
     const rabatt = Number(e.rabatt_procent) || 0;
     /* Timpriset räknas i vyn, och summan är timpriset gånger de betalda
@@ -3646,8 +3667,9 @@
        timme på köpet hade den blivit ett snittpris (331,63 kr) som ingen
        betalar. Standard visar därför inget timpris; en plan med både
        timmar på köpet och rabatt visar det rabatterade timpriset, som är
-       vad varje betald timme kostar. */
-    const perTimme = Number(e.rabatterat_timpris_ore);
+       vad varje betald timme kostar. Med familjens rabatt är det timpriset
+       efter den. */
+    const perTimme = fr.perTimme;
     /* Ur raden, inte ur koden (Fas 21.3): ändras timmarna eller
        giltigheten i katalogen ska kortet säga det nya av sig självt.
        En plan är ingen bindning: villkoren säger ingen bindningstid, och
@@ -3668,7 +3690,7 @@
         + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + '</span>' : '');
     const timrad = pa
       ? esc(erbTimmar(e))
-        + (rabatt ? ', <s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme' : '')
+        + (rabatt || fr.av ? ', <s>' + esc(kr(e.timpris_ore)) + '</s> ' + esc(kr(perTimme)) + ' per timme' : '')
       : '';
     /* Standard lyfts fram (Leo 2026-10-07: "Visa standard planens
        erbjudande"), på koden sedan den 2026-10-08 slutade ha en timme på
@@ -3685,24 +3707,40 @@
       + (märken ? '<span class="erb-marken">' + märken + '</span>' : '') + '</div>'
       + '<span class="erb-vad">' + esc(vad) + '</span>'
       + (första ? '<span class="erb-forsta">Er första plan: en timme till, gratis</span>' : '')
-      + erbPris(e, spar)
+      + erbPris(e, spar, fr)
       + (timrad ? '<span class="erb-tim">' + timrad + '</span>' : '')
       + köpKnapp(e)
       + '</div>';
   }
 
+  /* Kortets pris med familjens rabatt (familjerabatter, Leo 2026-10-15:
+     "Visa på korten också"): kronorna av på varje betald timme, när de
+     lämnar ett pris kvar, som intern.klippkort_rabatt räknar när köpet
+     skapas. Kassan drar databasens belopp; det här är vad kortet säger.
+     Utan rabatt är det katalogens pris. */
+  function medRabatt(e) {
+    const d = familjerabatt();
+    const per = Number(e.rabatterat_timpris_ore);
+    const betalda = Number(e.timmar) - erbPåKöpet(e);
+    const av = d > 0 && d < per && betalda > 0 ? d : 0;
+    return { pris: Number(e.pris_ore) - av * betalda, perTimme: per - av, av: av };
+  }
+
   /* Priset på kortet. Med en rabattkod som gäller kortet står katalogens
      pris överstruket och priset med koden bredvid, ur databasens svar
-     (kolla_rabattkod_kop), aldrig räknat här. */
-  function erbPris(e, spar) {
+     (kolla_rabattkod_kop, som räknar koden på priset efter familjens
+     rabatt), aldrig räknat här. */
+  function erbPris(e, spar, fr) {
     const kr = NXBetalning.kronor;
     const medKod = S.erb.kod ? S.erb.kod.pris[e.kod] : null;
     if (medKod != null && medKod < Number(e.pris_ore)) {
       return '<span class="erb-pris"><s>' + esc(kr(e.pris_ore)) + '</s><b>' + esc(kr(medKod)) + '</b>'
-        + '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + '</span></span>';
+        + '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + (familjerabatt() ? ' och er rabatt' : '')
+        + '</span></span>';
     }
     return '<span class="erb-pris">' + (spar > 0 ? '<s>' + esc(kr(e.ordinarie_ore)) + '</s>' : '')
-      + '<b>' + esc(kr(e.pris_ore)) + '</b></span>';
+      + '<b>' + esc(kr(fr.pris)) + '</b>'
+      + (fr.av ? '<span class="erb-pris-kod">' + esc(medErRabatt) + '</span>' : '') + '</span>';
   }
 
   /* Rabattkoden på köp av timmar (2026-10-13, Leo: "rabattkoden kan
@@ -3765,28 +3803,35 @@
     const kr = NXBetalning.kronor;
     const lika = f => new Set(kort.map(e => String(e[f]))).size === 1;
     const tim = kort.map(e => Number(e.timmar));
-    const billigast = kort.reduce((a, e) => Number(e.pris_ore) < Number(a.pris_ore) ? e : a);
+    /* Med familjens rabatt (medRabatt): samma timpris på alla kort när
+       katalogens är detsamma, för rabatten är densamma per timme. */
+    const billigast = kort.reduce((a, e) => medRabatt(e).pris < medRabatt(a).pris ? e : a);
+    const fr0 = medRabatt(kort[0]);
     const spann = Math.min(...tim) === Math.max(...tim)
       ? Math.min(...tim) + ' timmar'
       : Math.min(...tim) + ' till ' + Math.max(...tim) + ' timmar';
     const rader = kort.map(e => {
       const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
       const billigare = Number(e.rabatterat_timpris_ore) < Number(e.timpris_ore);
+      const fr = medRabatt(e);
       const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
       // Med en rabattkod som gäller kortet: samma pris som kassan drar.
       const medKod = S.erb.kod ? S.erb.kod.pris[e.kod] : null;
       const kod = medKod != null && medKod < Number(e.pris_ore);
+      /* Med familjens rabatt står katalogens summa överstruken och
+         timpriset efter rabatten, i stället för "ni sparar". */
       return '<div class="erb-klipp-rad">'
         + '<div class="erb-topp"><b class="erb-namn">' + esc(e.timmar + ' timmar') + '</b>'
-        + (kod
-          ? '<span class="erb-summa"><s>' + esc(kr(e.pris_ore)) + '</s> <b>' + esc(kr(medKod)) + '</b></span>'
+        + (kod || fr.av
+          ? '<span class="erb-summa"><s>' + esc(kr(e.pris_ore)) + '</s> <b>' + esc(kr(kod ? medKod : fr.pris)) + '</b></span>'
           : '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b>')
         + '</div>'
         + (kod
-          ? '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + '</span>'
-          : '<span class="erb-tim">' + (billigare ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
-            + esc(kr(e.rabatterat_timpris_ore)) + ' per timme'
-            + (billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>')
+          ? '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + (familjerabatt() ? ' och er rabatt' : '') + '</span>'
+          : '<span class="erb-tim">' + (billigare || fr.av ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
+            + esc(kr(fr.perTimme)) + ' per timme'
+            + (fr.av ? ' · ' + esc(medErRabatt)
+              : billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>')
         + '<div class="erb-klipp-fot"><span class="erb-vad">Gäller i ' + esc(mån) + '</span>' + köpKnapp(e) + '</div>'
         + '</div>';
     }).join('');
@@ -3794,17 +3839,19 @@
       + '<summary>'
       + '<span class="erb-topp"><b class="erb-namn">Fyll timbanken</b>'
       + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
-        && Number(kort[0].rabatterat_timpris_ore) < Number(kort[0].timpris_ore)
+        && fr0.perTimme < Number(kort[0].timpris_ore)
         ? '<span class="erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span>' + esc(kr(kort[0].timpris_ore))
-          + '</s> ' + esc(kr(kort[0].rabatterat_timpris_ore)) + '</span>'
+          + '</s> ' + esc(kr(fr0.perTimme)) + '</span>'
         : '')
       + '</span>'
       + '<span class="erb-vad">' + esc(spann) + ' i er timbank, när det passar er</span>'
       + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
         ? '<span class="erb-pris">'
-          + (Number(kort[0].rabatterat_timpris_ore) < Number(kort[0].timpris_ore) ? '<s>' + esc(kr(kort[0].timpris_ore)) + '</s>' : '')
-          + '<b>' + esc(kr(kort[0].rabatterat_timpris_ore)) + '</b></span><span class="erb-tim">per timme</span>'
-        : '<span class="erb-pris"><span class="erb-fran">från</span><b>' + esc(kr(billigast.pris_ore)) + '</b></span>')
+          + (fr0.perTimme < Number(kort[0].timpris_ore) ? '<s>' + esc(kr(kort[0].timpris_ore)) + '</s>' : '')
+          + '<b>' + esc(kr(fr0.perTimme)) + '</b></span><span class="erb-tim">per timme'
+          + (fr0.av ? ', ' + esc(medErRabatt) : '') + '</span>'
+        : '<span class="erb-pris"><span class="erb-fran">från</span><b>' + esc(kr(medRabatt(billigast).pris)) + '</b>'
+          + (medRabatt(billigast).av ? '<span class="erb-pris-kod">' + esc(medErRabatt) + '</span>' : '') + '</span>')
       + '<span class="erb-visa"><span class="erb-visa-stangd">Se alternativen</span>'
       + '<span class="erb-visa-oppen">Dölj alternativen</span>'
       + '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"'
@@ -3926,6 +3973,8 @@
     const timpris = plan ? Number(plan.rabatterat_timpris_ore) : 0;
     if (!plan || !(timpris > 0)) return '';
     const n = S.extra.timmar;
+    // Priset efter familjens rabatt, som extra_timmar_erbjudande räknar det.
+    const perTimme = extraTimpris(timpris);
     return '<div class="erb-mitt erb-extra">'
       + '<div class="erb-mitt-topp"><b>Köp till timmar</b><span>' + esc(NXBetalning.kronor(timpris) + ' i timmen') + '</span></div>'
       + '<p class="erb-bank-text">' + esc('Timmar till ' + plan.namn + ', till planens timpris. De går ut med planen, '
@@ -3939,7 +3988,8 @@
           + '<button type="button" class="erb-steg-knapp" data-extra-steg="1" aria-label="En timme till"'
           + (n >= EXTRA_MAX ? ' disabled' : '') + '>+</button>'
           + '</div>'
-          + '<p class="erb-extra-pris"><b>' + esc(NXBetalning.kronor(timpris * n)) + '</b></p>'
+          + '<p class="erb-extra-pris"><b>' + esc(NXBetalning.kronor(perTimme * n)) + '</b>'
+          + (perTimme < timpris ? '<span class="erb-extra-rabatt">' + esc(medErRabatt) + '</span>' : '') + '</p>'
           + '<button type="button" class="btn btn-orange" data-extra-kop>Till kassan</button>'
           + '</div>'
         : '<button type="button" class="btn btn-ghost btn-sm" data-extra-valj>Välj själv</button>')
@@ -3955,18 +4005,23 @@
     const n = S.extra.timmar;
     const tal = ruta.querySelector('.erb-steg-tal'), pris = ruta.querySelector('.erb-extra-pris b');
     if (tal) tal.textContent = timText(n);
-    if (pris) pris.textContent = NXBetalning.kronor(Number(plan.rabatterat_timpris_ore) * n);
+    if (pris) pris.textContent = NXBetalning.kronor(extraTimpris(Number(plan.rabatterat_timpris_ore)) * n);
     const minus = ruta.querySelector('[data-extra-steg="-1"]'), plus = ruta.querySelector('[data-extra-steg="1"]');
     if (minus) minus.disabled = n <= 1;
     if (plus) plus.disabled = n >= EXTRA_MAX;
   }
+
+  /* Planens timpris minus familjens rabatt, när den lämnar ett pris kvar:
+     samma regel som extra_timmar_erbjudande(), som kassan drar efter. */
+  const extraTimpris = timpris => (familjerabatt() > 0 && familjerabatt() < timpris ? timpris - familjerabatt() : timpris);
 
   async function köpTillPlanen(knapp) {
     const plan = planFörExtra();
     if (!plan || !S.erb.aktiv || S.väntar) return;
     const n = S.extra.timmar;
     await köpIKassan(knapp, 'plan_extra', { timmar: n }, 'Köp till timmar',
-      svar => timText(n) + ' till ' + plan.namn + (svar.belopp_ore ? ' · ' + NXBetalning.kronor(svar.belopp_ore) : ''));
+      svar => timText(n) + ' till ' + plan.namn + (svar.belopp_ore ? ' · ' + NXBetalning.kronor(svar.belopp_ore) : '')
+        + (Number(svar.familjerabatt_ore) > 0 ? ' ' + medErRabatt : ''));
   }
 
   /* Ett köpt kort: timmarna kvar som en mätare, och sista dagen. Samma
@@ -4715,6 +4770,10 @@
     /* Köpta timmar i stället för priset vid knappen (2026-09-28), och
        för resten av ett pass med en timme på köpet (2026-10-14). */
     timmar: (minuter, datum, barn, gratis) => timmarFörFörslag(minuter, datum, barn, gratis),
+    /* Familjens rabatt per timme (familjerabatter, 2026-10-15): databasen
+       drar den från timpriset när passet skapas (frys_passets_pris), och
+       priset vid knappen visar samma sak. */
+    familjerabatt: () => familjerabatt(),
 
     /* Spärren förr yttrade sig som en avstängd knapp utan
        förklaring. Nu står skälet där kalendern skulle ha stått. */

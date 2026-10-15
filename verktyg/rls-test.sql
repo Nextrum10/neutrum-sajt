@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen och steget till intervju)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen, kortet, timmarna som delas, steget till intervju och familjerabatterna)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -54,8 +54,9 @@
 -- villkoren_godkanns, betygsgarantin och
 -- planerna_basic_standard_intensiv (2026-10-07), barnet_foreslar_pass och
 -- adminkonton_utanfor_statistiken (2026-10-12), rabattkoden_krockar_inte,
--- gratistimmarna_60_dagar, tipskoder_bonus_och_timbanken och gratistimmar (2026-10-13)
--- och ansokan_till_intervju (2026-10-15) är körda.
+-- gratistimmarna_60_dagar, tipskoder_bonus_och_timbanken och gratistimmar (2026-10-13),
+-- rabattkoden_timmar_och_tak och kortet_reserveras (2026-10-13), timmarna_delas_och_kops_till
+-- (2026-10-14), ansokan_till_intervju och familjerabatter (2026-10-15) är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.
@@ -16495,6 +16496,418 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('TI Till intervju', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- ------------------------------------------------------------
+-- 35. Familjerabatterna (familjerabatter, 2026-10-15)
+--
+-- Leo: våra egna koder, som bara vi ser och sätter på en familj, med
+-- kronor av på varje timme familjen köper tills vi tar bort dem. Familjen
+-- ser bara priset. Tre nya familjer med barnet hos A: F får rabatten, G
+-- inte, och H raderas. Varje delblock rullas tillbaka för sig, och allt
+-- rullas tillbaka sist. Utan migrationen hoppas avsnittet över.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  t     text;
+  n     bigint;
+  m     bigint;
+  r     jsonb;
+  rd    record;
+  k     record;
+  e     record;
+  tp    integer;
+  xo    integer;
+  u     text;
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  F     constant uuid := '00000000-0000-4000-8000-0000000035f1';
+  G     constant uuid := '00000000-0000-4000-8000-0000000035f2';
+  H     constant uuid := '00000000-0000-4000-8000-0000000035f3';
+  EF    constant uuid := '00000000-0000-4000-8000-0000000035e1';
+  EG    constant uuid := '00000000-0000-4000-8000-0000000035e2';
+  B1    constant uuid := '00000000-0000-4000-8000-0000000035b1';
+  B2    constant uuid := '00000000-0000-4000-8000-0000000035b2';
+  B3    constant uuid := '00000000-0000-4000-8000-0000000035b3';
+  B4    constant uuid := '00000000-0000-4000-8000-0000000035b4';
+  B5    constant uuid := '00000000-0000-4000-8000-0000000035b5';
+  B6    constant uuid := '00000000-0000-4000-8000-0000000035b6';
+  K1    constant uuid := '00000000-0000-4000-8000-0000000035c1';
+  K2    constant uuid := '00000000-0000-4000-8000-0000000035c2';
+  K3    constant uuid := '00000000-0000-4000-8000-0000000035c3';
+  K4    constant uuid := '00000000-0000-4000-8000-0000000035c4';
+  K5    constant uuid := '00000000-0000-4000-8000-0000000035c5';
+begin
+  if to_regprocedure('public.satt_familjerabatt(uuid, text)') is null then
+    insert into utfall (test, ok, detalj) values ('FR Familjerabatterna: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    select pris_per_timme_ore, extra_personer_ore into tp, xo from public.tjanster where kod = 'laxhjalp';
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (F, 'rls-f35@example.invalid', '{"role":"parent","full_name":"Test Familj F"}'),
+      (G, 'rls-g35@example.invalid', '{"role":"parent","full_name":"Test Familj G"}'),
+      (H, 'rls-h35@example.invalid', '{"role":"parent","full_name":"Test Familj H"}');
+    insert into public.villkor_godkannanden (anvandare, version, kalla)
+    select x, intern.villkor_version(), 'registrering' from unnest(array[F, G]) x;
+    insert into public.students (id, parent_id, name, matched_tutor_id, match_status) values
+      (EF, F, 'Frida', A, 'matched'), (EG, G, 'Gustav', A, 'matched');
+
+    -- ---------- A. koderna: bara admin ----------
+    t := pg_temp.svar_som(AD, $q$insert into public.familjerabatter (kod, beskrivning, ore_per_timme)
+                                  values ('FR-TIO', 'Prov: tio kronor', 1000), ('FR-TJUGO', 'Prov: tjugo kronor', 2000)$q$);
+    ut := ut || jsonb_build_object('t', 'FR admin skapar koderna', 'ok', t = 'ok', 'd', t);
+
+    t := pg_temp.svar_som(F, $q$insert into public.familjerabatter (kod, ore_per_timme) values ('FR-EGEN', 5000)$q$)
+         || ' ' || pg_temp.svar_som(A, $q$insert into public.familjerabatter (kod, ore_per_timme) values ('FR-EGEN', 5000)$q$)
+         || ' ' || pg_temp.svar_som(null, $q$select 1 from public.familjerabatter$q$);
+    perform pg_temp.bli(F);
+    select count(*) into n from public.familjerabatter;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'FR en familj eller studiehjälpare skapar ingen kod, och ingen utom admin läser dem',
+            'ok', t = '42501 42501 42501' and n = 0, 'd', t || ', familjen ser ' || n);
+
+    t := pg_temp.svar_som(AD, $q$insert into public.familjerabatter (kod, ore_per_timme) values ('fr-liten', 1000)$q$)
+         || ' ' || pg_temp.svar_som(AD, $q$insert into public.familjerabatter (kod, ore_per_timme) values ('FR-ORE', 1050)$q$)
+         || ' ' || pg_temp.svar_som(AD, $q$insert into public.familjerabatter (kod, ore_per_timme) values ('FR-STOR', 20100)$q$)
+         || ' ' || pg_temp.svar_som(AD, $q$insert into public.familjerabatter (kod, ore_per_timme) values ('FR-NOLL', 0)$q$);
+    ut := ut || jsonb_build_object('t', 'FR en kod står i versaler, och rabatten är 1–200 kr i hela kronor',
+            'ok', t = '23514 23514 23514 23514', 'd', t);
+
+    t := pg_temp.svar_som(AD, $q$delete from public.familjerabatter where kod = 'FR-TJUGO'$q$)
+         || ' ' || pg_temp.svar_som(AD, $q$update public.familjerabatter set kod = 'FR-ANNAN' where kod = 'FR-TIO'$q$);
+    select count(*) filter (where kod = 'FR-TIO') * 10 + count(*) filter (where kod in ('FR-ANNAN', 'FR-TJUGO'))
+      into n from public.familjerabatter;
+    ut := ut || jsonb_build_object('t', 'FR en kod tas inte bort och byter inte namn',
+            'ok', t = '42501 ok' and n = 11, 'd', t || ' ' || n);
+
+    select count(*) into n from public.audit_logg
+     where tabell = 'familjerabatter' and objekt_id = 'FR-TIO' and handling = 'familjerabatt.skapad';
+    ut := ut || jsonb_build_object('t', 'FR auditen loggar koden när den skapas', 'ok', n = 1, 'd', n::text);
+
+    -- ---------- B. familjens rabatt: bara admin sätter, familjen ser beloppet ----------
+    t := pg_temp.svar_som(F, format('select public.satt_familjerabatt(%L, %L)', F, 'FR-TIO'))
+         || ' ' || pg_temp.svar_som(A, format('select public.satt_familjerabatt(%L, %L)', F, 'FR-TIO'));
+    ut := ut || jsonb_build_object('t', 'FR familjen och studiehjälparen sätter ingen rabatt', 'ok', t = '42501 42501', 'd', t);
+
+    perform pg_temp.bli(AD);
+    r := public.satt_familjerabatt(F, ' fr-tio ');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select * into rd from public.familjens_rabatt where parent_id = F;
+    ut := ut || jsonb_build_object('t', 'FR admin sätter koden på familjen, och vem står på raden',
+            'ok', r ->> 'kod' = 'FR-TIO' and (r ->> 'ore_per_timme')::int = 1000 and rd.kod = 'FR-TIO'
+                  and rd.andrad_av = AD and rd.har_rabatt,
+            'd', r::text || ' ' || coalesce(rd.kod, 'null'));
+
+    perform pg_temp.bli(F);
+    n := public.min_familjerabatt();
+    select count(*) into m from public.familjens_rabatt;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    t := pg_temp.som(G, null, 'select public.min_familjerabatt()::text') || ' '
+         || pg_temp.som(A, null, 'select public.min_familjerabatt()::text');
+    ut := ut || jsonb_build_object('t', 'FR familjen ser bara beloppet per timme, aldrig koden; andra ser noll',
+            'ok', n = 1000 and m = 0 and t = '0 0', 'd', n || ' rader ' || m || ' andra ' || t);
+
+    t := pg_temp.svar_som(null, 'select public.min_familjerabatt()');
+    ut := ut || jsonb_build_object('t', 'FR utloggad och barnet når inte beloppet',
+            'ok', t = '42501' and pg_temp.som_barn(F, EF, F, null, 'select public.min_familjerabatt()::text') like 'FEL 42501%',
+            'd', t || ' ' || pg_temp.som_barn(F, EF, F, null, 'select public.min_familjerabatt()::text'));
+
+    t := pg_temp.svar_som(AD, format('select public.satt_familjerabatt(%L, %L)', F, 'FR-FINNS-INTE'))
+         || ' ' || pg_temp.svar_som(AD, format('select public.satt_familjerabatt(%L, %L)', gen_random_uuid(), 'FR-TIO'))
+         || ' ' || pg_temp.svar_som(AD, format('select public.satt_familjerabatt(%L, %L)', A, 'FR-TIO'));
+    ut := ut || jsonb_build_object('t', 'FR en kod som inte finns, och någon som inte är en familj, nekas',
+            'ok', t = 'P0002 P0002 P0002', 'd', t);
+
+    select count(*) into n from public.audit_logg
+     where tabell = 'familjens_rabatt' and objekt_id = F::text and (efter ->> 'har_rabatt')::boolean
+       and position('FR-TIO' in coalesce(efter::text, '') || coalesce(fore::text, '')) = 0;
+    ut := ut || jsonb_build_object('t', 'FR auditen säger att familjen fick en rabatt, aldrig vilken', 'ok', n = 1, 'd', n::text);
+
+    -- ---------- C. passet: priset fryses med rabatten ----------
+    perform pg_temp.bli(F);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (B1, F, A, EF, F, idag + 30, '06:00', 60, 'requested');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status,
+                                 antal_barn, timpris_ore, extra_ore, familjerabatt_ore)
+    values (B2, F, A, EF, F, idag + 31, '06:00', 60, 'requested', 2, 100, 0, 30000);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select string_agg(b.timpris_ore || ':' || coalesce(b.familjerabatt_ore::text, 'null') || ':' || b.extra_ore, ' ' order by b.id)
+      into t from public.bookings b where b.id in (B1, B2);
+    ut := ut || jsonb_build_object('t', 'FR ett pass familjen föreslår får timpriset minus rabatten, och tillägget för barnen står kvar',
+            'ok', t = (tp - 1000) || ':1000:' || xo || ' ' || (tp - 1000) || ':1000:' || xo, 'd', coalesce(t, 'null'));
+
+    t := pg_temp.svar_som(F, format('update public.bookings set familjerabatt_ore = 5000 where id = %L', B1))
+         || ' ' || pg_temp.svar_som(F, format('update public.bookings set familjerabatt_ore = null where id = %L', B1));
+    ut := ut || jsonb_build_object('t', 'FR familjen ändrar inte rabatten på ett bokat pass', 'ok', t = '42501 42501', 'd', t);
+
+    perform pg_temp.bli(G);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (B3, G, A, EG, G, idag + 30, '07:00', 60, 'requested');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select b.timpris_ore || ':' || coalesce(b.familjerabatt_ore::text, 'null') into t from public.bookings b where b.id = B3;
+    ut := ut || jsonb_build_object('t', 'FR en familj utan rabatt får timpriset', 'ok', t = tp || ':null', 'd', coalesce(t, 'null'));
+
+    perform pg_temp.bli(AD);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status,
+                                 timpris_ore, extra_ore)
+    values (B4, F, A, EF, AD, idag + 32, '06:00', 60, 'requested', 30000, 0);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select b.timpris_ore || ':' || coalesce(b.familjerabatt_ore::text, 'null') into t from public.bookings b where b.id = B4;
+    ut := ut || jsonb_build_object('t', 'FR ett pris som admin sätter står som det är', 'ok', t = '30000:null', 'd', coalesce(t, 'null'));
+
+    -- En rabattkod räknas på priset efter rabatten (koden_krockar_inte: inga timmar).
+    begin
+      insert into public.rabattkoder (kod, beskrivning, typ, varde, aktiv) values ('FR-KOD', 'Prov', 'procent', 10, true);
+      perform pg_temp.bli(F);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min,
+                                   status, rabattkod)
+      values (B5, F, A, EF, F, idag + 33, '06:00', 60, 'requested', 'FR-KOD');
+      select * into k from public.kolla_rabattkod('FR-KOD', 'laxhjalp', tp - 1000);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select b.rabattkod || ':' || b.rabatt_ore || ':' || b.timpris_ore into t from public.bookings b where b.id = B5;
+      ut := ut || jsonb_build_object('t', 'FR en rabattkod räknas på passets pris efter familjens rabatt',
+              'ok', t = 'FR-KOD:' || ((tp - 1000) / 10) || ':' || (tp - 1000) and k.rabatt_ore = (tp - 1000) / 10,
+              'd', coalesce(t, 'null') || ' ' || k.rabatt_ore);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Första timmen bjuds till passets eget pris, alltså efter rabatten. F har
+    -- två timmar bokade (B1, B2) och admin pris på B4, så de avbokas först.
+    begin
+      update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id in (B1, B2, B4);
+      insert into public.forsta_timmen_beviljad (parent_id) values (F);
+      perform pg_temp.bli(F);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B5, F, A, EF, F, idag + 34, '06:00', 120, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select b.startrabatt || ':' || b.rabatt_ore || ':' || b.timpris_ore into t from public.bookings b where b.id = B5;
+      ut := ut || jsonb_build_object('t', 'FR första timmen bjuds till passets pris efter rabatten',
+              'ok', t = 'true:' || (tp - 1000) || ':' || (tp - 1000), 'd', coalesce(t, 'null'));
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Tas rabatten bort står priset på det bokade, och nästa pass får timpriset.
+    begin
+      perform pg_temp.bli(AD);
+      r := public.satt_familjerabatt(F, null);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      perform pg_temp.bli(F);
+      n := public.min_familjerabatt();
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B5, F, A, EF, F, idag + 35, '06:00', 60, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select string_agg(b.timpris_ore || ':' || coalesce(b.familjerabatt_ore::text, 'null'), ' ' order by b.id)
+        into t from public.bookings b where b.id in (B1, B5);
+      select * into rd from public.familjens_rabatt where parent_id = F;
+      ut := ut || jsonb_build_object('t', 'FR tas rabatten bort står priset på det bokade, och nästa pass får timpriset',
+              'ok', n = 0 and t = (tp - 1000) || ':1000 ' || tp || ':null' and rd.kod is null and not rd.har_rabatt
+                    and r ->> 'kod' is null,
+              'd', n || ' ' || coalesce(t, 'null') || ' ' || coalesce(rd.kod, 'null'));
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Ett nytt belopp gäller nästa pass, och det bokade står fast.
+    begin
+      t := pg_temp.svar_som(AD, $q$update public.familjerabatter set ore_per_timme = 1500 where kod = 'FR-TIO'$q$);
+      perform pg_temp.bli(F);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B5, F, A, EF, F, idag + 35, '06:00', 60, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select string_agg(b.timpris_ore || ':' || b.familjerabatt_ore, ' ' order by b.id)
+        into t from public.bookings b where b.id in (B1, B5);
+      select count(*) into n from public.audit_logg
+       where tabell = 'familjerabatter' and objekt_id = 'FR-TIO' and handling = 'familjerabatt.andrad'
+         and (efter ->> 'ore_per_timme')::int = 1500;
+      ut := ut || jsonb_build_object('t', 'FR ett nytt belopp gäller nästa pass, det bokade står fast, och auditen säger det',
+              'ok', t = (tp - 1000) || ':1000 ' || (tp - 1500) || ':1500' and n = 1, 'd', coalesce(t, 'null') || ' ' || n);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- En avstängd kod ger ingen rabatt, och sätts inte på en familj.
+    begin
+      t := pg_temp.svar_som(AD, $q$update public.familjerabatter set aktiv = false where kod in ('FR-TIO', 'FR-TJUGO')$q$)
+           || ' ' || pg_temp.svar_som(AD, format('select public.satt_familjerabatt(%L, %L)', G, 'FR-TJUGO'));
+      perform pg_temp.bli(F);
+      n := public.min_familjerabatt();
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+      values (B5, F, A, EF, F, idag + 35, '06:00', 60, 'requested');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select b.timpris_ore || ':' || coalesce(b.familjerabatt_ore::text, 'null') into u from public.bookings b where b.id = B5;
+      select count(*) into m from public.audit_logg
+       where tabell = 'familjerabatter' and objekt_id = 'FR-TIO' and handling = 'familjerabatt.avaktiverad';
+      ut := ut || jsonb_build_object('t', 'FR en avstängd kod ger ingen rabatt, sätts inte på en familj, och auditen säger det',
+              'ok', t = 'ok 22023' and n = 0 and u = tp || ':null' and m = 1,
+              'd', t || ' ' || n || ' ' || coalesce(u, 'null') || ' ' || m);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- D. köpen ----------
+    -- Som kassan skriver köpet: katalogens rad, och priset utan rabatten.
+    -- Triggern räknar om det.
+    begin
+      for e in select * from public.erbjudanden_pris where kod in ('plan_standard', 'klipp10') loop
+        insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                      timpris_ore, begart_ore, timmar_pa_kopet)
+        values (case e.kod when 'plan_standard' then K1 else K2 end, F, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader,
+                e.rabatt_procent, e.timpris_ore, e.pris_ore, e.timmar_pa_kopet);
+      end loop;
+      select string_agg(x.kod || ':' || (x.pris_ore - (x.timmar - x.timmar_pa_kopet) * 1000) || ':1000', ' ' order by x.kod)
+        into t from public.erbjudanden_pris x where x.kod in ('klipp10', 'plan_standard');
+      select string_agg(kk.erbjudande || ':' || kk.begart_ore || ':' || coalesce(kk.familjerabatt_ore::text, 'null'), ' '
+                        order by kk.erbjudande)
+        into u from public.klippkort kk where kk.id in (K1, K2);
+      ut := ut || jsonb_build_object('t', 'FR en plan och Fyll timbanken drar rabatten från varje betald timme',
+              'ok', u = t, 'd', coalesce(u, 'null') || ' väntat ' || coalesce(t, 'null'));
+
+      -- En kod på köpet räknas efter rabatten, och vyn får samma pris.
+      insert into public.rabattkoder (kod, beskrivning, typ, varde, aktiv) values ('FR-KOD', 'Prov', 'procent', 10, true);
+      select * into e from public.erbjudanden_pris where kod = 'plan_basic';
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, timmar_pa_kopet, rabattkod)
+      values (K3, F, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore,
+              e.timmar_pa_kopet, 'FR-KOD');
+      perform pg_temp.bli(F);
+      select * into k from public.kolla_rabattkod_kop('FR-KOD', 'plan_basic');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select * into rd from public.klippkort where id = K3;
+      n := e.pris_ore - (e.timmar - e.timmar_pa_kopet) * 1000;
+      ut := ut || jsonb_build_object('t', 'FR en kod på ett köp räknas efter rabatten, och kolla_rabattkod_kop säger samma pris',
+              'ok', rd.rabattkod = 'FR-KOD' and rd.rabatt_ore = floor(n * 10 / 100.0) and rd.begart_ore = n - floor(n * 10 / 100.0)
+                    and k.giltig and k.att_betala_ore = rd.begart_ore and k.pris_ore = n and rd.familjerabatt_ore = 1000,
+              'd', concat_ws(' ', rd.rabattkod, rd.rabatt_ore, rd.begart_ore, k.giltig, k.att_betala_ore, k.pris_ore));
+
+      -- Utan rabatt rör triggern inte priset, och gratistimmar får ingen.
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, timmar_pa_kopet)
+      values (K4, G, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore,
+              e.timmar_pa_kopet);
+      perform pg_temp.bli(AD);
+      r := public.ge_gratistimmar(F, 2);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select string_agg(kk.begart_ore || ':' || coalesce(kk.familjerabatt_ore::text, 'null'), ' ' order by kk.id = K4 desc)
+        into t from public.klippkort kk where kk.id in (K4, (r ->> 'id')::uuid);
+      ut := ut || jsonb_build_object('t', 'FR utan rabatt rör köpet inte priset, och gratistimmar får ingen rabatt',
+              'ok', t = e.pris_ore || ':null ' || (2 * tp) || ':null', 'd', coalesce(t, 'null'));
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Timmar till planen: planens timpris minus rabatten, för familjen med den.
+    begin
+      select * into e from public.erbjudanden_pris where kod = 'plan_basic';
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+      values (K1, F, 'plan_basic', 'Prov Basic', 'plan', 4, 1, e.rabatt_procent, e.timpris_ore, e.pris_ore - 4000,
+              e.pris_ore - 4000, 'betald', idag + 20, now(), 'ch_rlsprov_35_k1'),
+             (K4, G, 'plan_basic', 'Prov Basic', 'plan', 4, 1, e.rabatt_procent, e.timpris_ore, e.pris_ore, e.pris_ore,
+              'betald', idag + 20, now(), 'ch_rlsprov_35_k4');
+      t := pg_temp.som(F, null, 'select public.extra_timmar_erbjudande(2)::text');
+      u := pg_temp.som(G, null, 'select public.extra_timmar_erbjudande(2)::text');
+      ut := ut || jsonb_build_object('t', 'FR timmar till planen kostar planens timpris minus rabatten',
+              'ok', (pg_temp.j(t) ->> 'pris_ore')::int = 2 * (e.rabatterat_timpris_ore - 1000)
+                    and (pg_temp.j(t) ->> 'familjerabatt_ore')::int = 1000
+                    and (pg_temp.j(t) ->> 'rabatterat_timpris_ore')::int = e.rabatterat_timpris_ore
+                    and (pg_temp.j(u) ->> 'pris_ore')::int = 2 * e.rabatterat_timpris_ore
+                    and (pg_temp.j(u) ->> 'familjerabatt_ore')::int = 0,
+              'd', t || ' / ' || u);
+
+      -- Att sluta: de använda timmarna räknas till familjens ordinarie
+      -- timpris, och minuterna i timbanken till samma.
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min,
+                                   status, klippkort_id, betalning_status, betald_at)
+      values (B6, F, A, EF, F, idag + 36, '06:00', 60, 'confirmed', K1, 'betald', now());
+      select s.vid_uppsagning_ore, s.familjerabatt_ore, s.anvanda into rd from public.klippkort_saldo s where s.id = K1;
+      n := intern.timbank_varde(F, 30);
+      ut := ut || jsonb_build_object('t', 'FR att sluta: de använda timmarna och minuterna räknas till familjens ordinarie timpris',
+              'ok', rd.anvanda = 1 and rd.familjerabatt_ore = 1000 and rd.vid_uppsagning_ore = e.pris_ore - 4000 - (tp - 1000)
+                    and n = ceil(30 * (tp - 1000) / 60.0),
+              'd', concat_ws(' ', rd.anvanda, rd.familjerabatt_ore, rd.vid_uppsagning_ore, n));
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- E. kontot ----------
+    -- Avidentifieras familjen tas koden bort; raderas kontot går raden med.
+    begin
+      update public.profiles set raderad_at = now() where id = F;
+      select * into rd from public.familjens_rabatt where parent_id = F;
+      perform pg_temp.bli(AD);
+      r := public.satt_familjerabatt(H, 'FR-TJUGO');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select count(*) into n from public.familjens_rabatt where parent_id = H and kod = 'FR-TJUGO';
+      delete from auth.users where id = H;
+      select count(*) into m from public.familjens_rabatt where parent_id = H;
+      ut := ut || jsonb_build_object('t', 'FR en avidentifierad familj tappar koden, och ett raderat konto tar raden med sig',
+              'ok', rd.kod is null and intern.familjerabatt(F) = 0 and n = 1 and m = 0,
+              'd', concat_ws(' ', coalesce(rd.kod, 'null'), intern.familjerabatt(F), n, m));
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('FR Familjerabatterna', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

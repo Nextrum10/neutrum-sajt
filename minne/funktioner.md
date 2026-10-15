@@ -274,8 +274,9 @@ någon, och att vi bjuder med gratistimmar (Leo samma dag). Att ett pass
 på en timme kan kosta noll kronor står nu vid tipstimmen, den enda
 timmen som fortfarande gör det. Kvar i texten: stycket om ett pass som
 dras från två köp säger "(första timmen eller tipstimmen)" om en timme
-på köpet på ett pass, men sedan 2026-10-15 är det bara tipstimmen. Det
-rättas nästa gång faktatexten ändras, inte med en egen driftsättning.
+på köpet på ett pass, men sedan 2026-10-15 är det bara tipstimmen. Den
+stod kvar också när #293 ändrade texten (8b28e1a), och rättas nästa gång
+faktatexten ändras, inte med en egen driftsättning.
 
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —

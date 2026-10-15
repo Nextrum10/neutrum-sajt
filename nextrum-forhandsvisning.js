@@ -811,6 +811,9 @@ window.NXForhandsvisning = (function () {
             bonus_utbetald_ore: 0, bonus_ges: true, bonus_belopp_ore: 30000 };
     },
     forsta_timmen_lage: function () { return { beviljad: false, tagen: false }; },
+    /* Familjens rabatt per timme (familjerabatter, 2026-10-15): den påhittade
+       familjen har ingen, och priset vid knappen är katalogens. */
+    min_familjerabatt: function () { return 0; },
     faktura_mojlig: function () { return true; },
     mina_barnkonton: function () {
       return [{ barn_id: ALVA, anvandarnamn: 'alva.a', barn_aktiv: true, visa_rapporter: true,
