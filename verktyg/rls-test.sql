@@ -17365,11 +17365,8 @@ end $$;
 -- kassa som kan stå öppen, ett kort som ska betala, en familj utan
 -- faktura och ett pass bokat innan familjen godkänt villkoren som säger
 -- det. Familjen M godkände dem före passen, N en äldre version före och
--- den nya efter sitt pass, och S är spärrad från faktura. N:s äldre version
--- är 2026-10-16, familjerabattens, som den här filen först skrev (PR #298
--- och #302 samma dag): den som godkänt den har aldrig sett meningen om
--- fakturan. Svaret filtreras på provets pass, för funktionen ser hela
--- databasen. Allt rullas tillbaka.
+-- den nya efter sitt pass, och S är spärrad från faktura. Svaret filtreras
+-- på provets pass, för funktionen ser hela databasen. Allt rullas tillbaka.
 -- ------------------------------------------------------------
 do $$
 declare
@@ -17417,7 +17414,7 @@ begin
     insert into public.villkor_godkannanden (anvandare, version, kalla, godkant_at) values
       (M, intern.obetalda_faktureras_fran(), 'registrering', now() - interval '10 days'),
       (S, intern.obetalda_faktureras_fran(), 'registrering', now() - interval '10 days'),
-      (N, '2026-10-16', 'registrering', now() - interval '10 days'),
+      (N, '2026-10-15', 'registrering', now() - interval '10 days'),
       (N, intern.obetalda_faktureras_fran(), 'inloggning', now() - interval '1 hour');
     insert into public.faktura_sparr (parent_id) values (S);
     update public.flaggor set aktiv = true where kod in ('faktura', 'kortreservation');
@@ -17567,7 +17564,7 @@ begin
             'ok', t = '42501 42501 42501 42501 42501', 'd', t);
 
     -- Vyn får veta från när det gäller, om sitt eget konto. N godkände
-    -- familjerabattens version (2026-10-16) först, och den räknas inte.
+    -- en äldre version först, och den räknas inte.
     perform pg_temp.bli(M);
     j := public.mitt_villkorslage();
     reset role;

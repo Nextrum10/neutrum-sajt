@@ -133,7 +133,7 @@ Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, stu
   // Och att fakturan är ett val, före eller efter passet, som på sidorna.
   // verktyg/kolla-betalningsvillkor.py räknar samma mening.
   const FAKTURAN = 'välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift';
-  // Och att ett obetalt pass kommer med på fakturan (obetalda_pass_pa_fakturan, 2026-10-17).
+  // Och att ett obetalt pass kommer med på fakturan (obetalda_pass_pa_fakturan, 2026-10-16).
   const OBETALDA = 'Är ett pass inte betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.';
   const bekraftat = rendera('pass_bekraftat', 'parent');
   assertStringIncludes(bekraftat.text, VILLKORET);

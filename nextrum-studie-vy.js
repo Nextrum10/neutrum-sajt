@@ -2242,7 +2242,7 @@
        bara om den som frågar: flaggan är på och familjen är inte
        spärrad. Kan den inte läsas finns inget fakturaval, och kortet
        står kvar som förut. Databasen prövar valet ändå. */
-    /* Obetalda pass på fakturan (obetalda_pass_pa_fakturan, 2026-10-17)
+    /* Obetalda pass på fakturan (obetalda_pass_pa_fakturan, 2026-10-16)
        gäller pass som bokats efter att familjen godkänt villkoren som
        säger det. Databasen säger när (mitt_villkorslage, obetalda_fran),
        och utan svaret säger passen inget om det. */

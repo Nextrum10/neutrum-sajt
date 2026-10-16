@@ -447,7 +447,7 @@ kortet (`villkoren_kortet`, version 2026-10-15) att pengarna dras först
 när rapporten är skriven, och den följer strömbrytaren `kortreservation`
 (`KORTET_RESERVERAS` i kontrollen). Ett fakturapass som inte
 står på en faktura än betalas med kort genom Betala med kort nu, och
-står kvar som faktura tills kortet är draget. Sedan villkoren 2026-10-17
+står kvar som faktura tills kortet är draget. Sedan villkoren 2026-10-16
 (`obetalda_pass_pa_fakturan`, byggt 2026-10-15) lägger månadskörningen ett
 pass som inte är betalt när månaden är slut på fakturan, utom ett kort som
 betalar, en kassa öppnad det senaste dygnet, en familj utan faktura och ett

@@ -53,7 +53,7 @@ om vad familjen lovades. Slås flaggan av ska meningen bort i samma
 ändring, och FAKTURA_I_TEXTEN nedan sättas till False
 (DEPLOY-BETALNING.md 9.11).
 
-OBETALDA PASS PÅ FAKTURAN (2026-10-17, obetalda_pass_pa_fakturan). Ett
+OBETALDA PASS PÅ FAKTURAN (2026-10-16, obetalda_pass_pa_fakturan). Ett
 pass som inte är betalt när månaden är slut, och inte på väg att dras från
 kortet, läggs på familjens faktura av månadskörningen. Det säger en egen
 mening direkt efter fakturameningen, och verktyget räknar den på samma
@@ -118,7 +118,7 @@ def fakturameningen(dagar, svenska):
     return (r'choose\s+an\s+invoice\s+instead,\s+which\s+comes\s+at\s+the\s+start\s+of\s+' + nar + r'\s+with\s+'
             + en + r'\s+days\s+to\s+pay\s+and\s+no\s+fee')
 
-# Meningen om de obetalda passen (obetalda_pass_pa_fakturan, 2026-10-17).
+# Meningen om de obetalda passen (obetalda_pass_pa_fakturan, 2026-10-16).
 # Månadskörningen lägger dem på fakturan (fakturera_obetalda), så meningen
 # står där fakturameningen står och går med den.
 OBETALDA_PA_FAKTURAN = FAKTURA_I_TEXTEN

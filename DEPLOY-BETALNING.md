@@ -1574,48 +1574,42 @@ göra de här stegen, för nycklarna får aldrig stå i en chatt (9.2).
     (jämförelsetejperna på Standard och Intensiv har inget underlag, kärnans
     avsnitt 11) och de rader i `DATASKYDD.md` som väntar.
 
-### 9.17 Obetalda pass på fakturan (version 2026-10-17, inte i drift)
+### 9.17 Obetalda pass på fakturan (version 2026-10-16, inte i drift)
 
 Månadskörningen lägger ett pass som inte är betalt när månaden är slut, och
 inte på väg att dras från kortet, på familjens faktura (`fakturera_obetalda()`,
-`minne/betalning.md`, Obetalda pass på fakturan). Villkoren får versionen
-2026-10-17, så alla får frågan igen, och det gäller bara pass som bokas efter
-att familjen godkänt den: inget läggs på i efterhand.
+`minne/betalning.md`, Obetalda pass på fakturan). Villkoren säger det i
+versionen 2026-10-16, och det gäller bara pass som bokas efter att familjen
+godkänt den: inget läggs på i efterhand.
 
-PR #298 skrev först versionen 2026-10-16, samma datum som familjerabattens
-punkt (PR #302). Leo lät #302 gå först (2026-10-16, "#302 först"), och den är i
-drift (9.15, steg 5). Två texter med samma version går inte: den som godkänt
-familjerabattens 2026-10-16 hade räknats som att ha godkänt meningen om
-fakturan, som den aldrig sett. Därför ett nytt datum, och en vakt som kräver
-exakt den version som står i driften.
+2026-10-16 är också familjerabattens version (PR #302, 9.15 steg 5), som gick
+ut först samma förmiddag. Två texter med samma version går bara när ingen
+godkänt den första: den som godkänt familjerabattens 2026-10-16 innan meningen
+om fakturan stod på sidan hade räknats som att ha godkänt den. Ingen hade
+godkänt 2026-10-16 när Leo sa "merga bara och fixa villkoren" (det senaste
+godkännandet var från 2026-10-15), så versionen står kvar och sidan säger 16
+oktober. Migrationen skriver därför inte om `intern.villkor_version()`, bara
+`intern.obetalda_faktureras_fran()`.
 
 Sidorna, villkoren och policyn går ut med sajten när grenen mergas. Det är med
-flit, och samma ordning som förut: sidan står före versionen i några minuter,
+flit, och samma ordning som förut: sidan står före migrationen i några minuter,
 och utan migrationen gör `fakturering` som förut (funktionen saknas, PGRST202)
 och studievyn säger inget om fakturan på passen.
 
-I den här ordningen. Fråga först de andra sessionerna som arbetar i repot
-(`minne/databasen.md`):
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`):
 
-0. **Datumet, före merge.** Versionen är dagen den går ut. Går den inte ut
-   2026-10-17, eller har en annan version gått ut före den, byts datumet på
-   grenen först: `git grep -n "2026-10-17\|17 oktober\|17 October"` visar
-   alla ställen (villkoren och policyn på båda språken, migrationen, vyerna,
-   agenternas fakta, proven, `kolla-betalningsvillkor.py`, `DATASKYDD.md` och
-   minnet; affischernas 17 oktober i `AFFISCHKAMPANJ.md` är en annan sak), och
-   filens nummer byts så att den sorterar efter den senaste
-   migrationen i driften. Vakten i filen ska kräva exakt den version som då
-   står i driften (`select intern.villkor_version()`), och att ingen har
-   godkänt en version från det nya datumet. Sedan `kolla-villkor.py`,
-   `bygg-sitemap.py` och sist `satt-version.py`.
-1. **Migrationen `20261017010000_obetalda_pass_pa_fakturan`** från
-   merge-commiten, prövad mot sin md5. Den har ingen `drop` och ingen `delete`,
-   så den kan köras hel i ett do-block och registreras med filens text. Vakten
-   först i filen kräver villkorens version exakt 2026-10-16 (familjerabattens),
-   att ingen har godkänt en version från 2026-10-17 och att
-   `mitt_villkorslage()` är den `villkoren_godkanns` skrev (md5 `7b64c1bc…` på
-   kroppen, oförändrad i driften 2026-10-16 efter #302); stannar den har någon
-   ändrat driften, och då läses den om (steg 0).
+1. **Migrationen `20261016110000_obetalda_pass_pa_fakturan`** från
+   merge-commiten, prövad mot sin md5, och först när sidan med meningen är ute
+   (läs den med `extensions.http_get`). Den har ingen `drop` och ingen
+   `delete`, så den kan köras hel i ett do-block och registreras med filens
+   text. Vakten först i filen kräver villkorens version exakt 2026-10-16, att
+   ingen har godkänt den, och att `mitt_villkorslage()` är den
+   `villkoren_godkanns` skrev (md5 `7b64c1bc…` på kroppen, oförändrad efter
+   #302). Stannar den på godkännandet har någon hunnit godkänna
+   familjerabattens text: då får meningen ett eget, senare datum (sidorna på
+   båda språken, en migration som skriver `intern.villkor_version()`, och
+   alla ställen som säger 2026-10-16 om meningen), och vakten kräver det.
 2. **`fakturering`** från main: anropar funktionen före fakturapassen och
    räknar dem i torrkörningen.
 3. **`notis-ko`** (mejlets mening) och **`drift`** (agenternas fakta) från
@@ -1624,10 +1618,11 @@ I den här ordningen. Fråga först de andra sessionerna som arbetar i repot
    Avsnittets körning skriver som tjänstekontot också i riktiga obetalda pass
    som uppfyller villkoren, och låser dem tills sviten rullats tillbaka: kör
    den inte medan månadskörningen går (natten, 04.17).
-5. **Torrkör förra månaden** under Betalningar → Fakturor (körningen för hand):
-   rutan säger hur många obetalda pass som skulle läggas på fakturan. Före
-   första natten är det noll, för ingen har godkänt version 2026-10-17 när
-   passen bokades.
+5. **Torrkör förra månaden** under Betalningar → Fakturor (körningen för hand),
+   eller `fakturera_obetalda(<första dagen i månaden>, true)` som
+   tjänstekontot: rutan säger hur många obetalda pass som skulle läggas på
+   fakturan. Före första natten är det noll, för ingen har godkänt version
+   2026-10-16 när passen bokades.
 
 Kvar efter det: att säga till familjerna att ett obetalt pass hamnar på
 fakturan (villkorsändringen), och juristen, som inte läst `#faktura` eller rad 8

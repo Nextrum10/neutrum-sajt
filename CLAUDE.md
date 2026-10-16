@@ -71,11 +71,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och strömbrytaren följs åt (Siffror nedan). Ett hållet pass betalas även obekräftat. Ett pass med kortpengar avbokas inte från en vy, ett
   i tvist återbetalas inte, och ett fakturapass står som `faktura` tills webhooken skrivit
   kortet. OCR räknas aldrig fram, och påminnelser tas ut utan avgift. **Ett obetalt pass hamnar på
-  fakturan** (2026-10-17, `obetalda_pass_pa_fakturan`, beslutat 2026-10-01): månadskörningen lägger ett pass som
+  fakturan** (2026-10-16, `obetalda_pass_pa_fakturan`, beslutat 2026-10-01): månadskörningen lägger ett pass som
   inte är betalt när månaden är slut på familjens faktura (`fakturera_obetalda()`, natten efter månaden eller
   efter en sen rapport), utom ett kort som ska betala det, en kassa öppnad det senaste dygnet
   (`intern.kassan_oppnad`, 25 timmar), en familj utan faktura och ett pass bokat innan familjen godkänt version
-  2026-10-17 (`intern.obetalda_faktureras_fran`): inget läggs på i efterhand. Kortet går att välja tills passet
+  2026-10-16 (`intern.obetalda_faktureras_fran`): inget läggs på i efterhand. Kortet går att välja tills passet
   står på en faktura.
 - **Hållen tid** (Fas 20.1) debiteras per påbörjad kvart; avvikelse kräver skäl, ingen ändring i
   efterhand. Övertid på egen rad (`pass_tillagg`), aldrig passets betalningskolumner. Lönen
@@ -349,7 +349,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   tips), gratis närmast de tomma för de dras först, "N av M timmar kvar", och en stapel över 24 timmar
   (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger.
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
-  `kolla-betalningsvillkor.py` räknar dem, och sedan 2026-10-17 meningen om de obetalda passen ("Är ett pass inte
+  `kolla-betalningsvillkor.py` räknar dem, och sedan 2026-10-16 meningen om de obetalda passen ("Är ett pass inte
   betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.") direkt efter
   fakturameningen, på samma ställen (`OBETALDA_PA_FAKTURAN`, som går med fakturan). **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
@@ -829,11 +829,11 @@ Detaljer: `minne/grunden.md`.
 - **Skatt och anställning av minderåriga**: `studiehjalpare_form = oklart`; revisor före första
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
 - **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är byggda 2026-10-15, inte i drift:
-  `obetalda_pass_pa_fakturan` (20261017010000), `fakturering`, meningen på alla 36 ställen och i mejlen,
-  villkoren (version 2026-10-17: `#faktura` och den hållna tiden på fakturan), policyn och studievyn
-  per pass (`mitt_villkorslage().obetalda_fran`). Den skrev först 2026-10-16, samma version som familjerabatten (PR
-  #302), och Leo lät den gå först; vakten kräver nu exakt 2026-10-16 i driften, och går den ut en annan dag än
-  2026-10-17 byts datumet överallt (9.17 steg 0).
+  `obetalda_pass_pa_fakturan` (20261016110000), `fakturering`, meningen på alla 36 ställen och i mejlen,
+  villkoren (`#faktura` och den hållna tiden på fakturan), policyn och studievyn
+  per pass (`mitt_villkorslage().obetalda_fran`). Villkorens version är 2026-10-16, samma som familjerabattens punkt
+  (PR #302), som gick ut först samma förmiddag: ingen hade godkänt den när Leo sa "merga bara och fixa villkoren", så
+  meningen går med i den versionen, och vakten stannar om någon hunnit godkänna den (9.17).
   Kvar efter merge (`DEPLOY-BETALNING.md` 9.17): migrationen, `fakturering`, `notis-ko` och `drift`, att säga till
   familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och
   ett tillägg för övertid kommer inte med (`minne/betalning.md`).

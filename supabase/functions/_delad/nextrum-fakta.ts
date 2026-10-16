@@ -79,7 +79,7 @@ ORDEN. Använd dem, och inga andra:
   efter passet. Ett pass som familjen valt faktura för väntar på
   fakturan och är inget fel. Är ett pass inte betalt när månaden är
   slut, och inte på väg att dras från kortet, lägger månadskörningen
-  det på familjens faktura (sedan 2026-10-17, för pass bokade efter
+  det på familjens faktura (sedan 2026-10-16, för pass bokade efter
   att familjen godkänt de villkoren).
 · tjänst — det som går att boka eller söka till.
 
@@ -135,7 +135,7 @@ SIFFRORNA:
   är slut, och inte på väg att dras från kortet, kommer det med på
   fakturan: natten efter månaden, eller natten efter rapporten om den
   kommer senare. Det gäller pass som bokats efter att familjen godkänt
-  villkoren från 2026-10-17, och inte en familj vi stängt fakturan för.
+  villkoren från 2026-10-16, och inte en familj vi stängt fakturan för.
   Rapporten bekräftas också när passet redan är betalt. Ett
   pass som har hållits ska betalas även om rapporten inte bekräftats.
   En betalning som tas på ett annat sätt än villkoren lovar är en

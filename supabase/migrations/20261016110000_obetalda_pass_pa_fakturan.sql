@@ -22,7 +22,7 @@
 --     familjen spärrad (intern.faktura_tillaten). Passet står kvar som
 --     Inte betalt, som förut
 --   · ett pass som bokades innan familjen godkänt villkoren som säger det
---     här (version 2026-10-17, intern.obetalda_faktureras_fran): det
+--     här (version 2026-10-16, intern.obetalda_faktureras_fran): det
 --     avtalet slöts med de gamla villkoren, där familjen valde själv
 --
 -- Bara pass före periodens slut. Månaden som pågår faktureras aldrig
@@ -30,12 +30,14 @@
 -- månad är slut. Kortet går att välja tills passet står på en faktura, som
 -- förut (stripe-checkout).
 --
--- Villkoren får en ny version, 2026-10-17, och meningen om betalningen
--- säger det på alla ställen (kolla-betalningsvillkor.py). 2026-10-16 är
--- familjerabattens (villkoren_familjerabatt, PR #302), som gick först.
--- Går filen ut en annan dag byts datumet överallt (DEPLOY-BETALNING.md
--- 9.17). Filen tar inte bort något och kan köras hel i ett do-block
--- (CLAUDE.md avsnitt 5).
+-- Villkoren säger det i versionen 2026-10-16, samma som familjerabattens
+-- punkt (villkoren_familjerabatt, PR #302), som gick ut samma förmiddag.
+-- Ingen hade godkänt den versionen när meningen kom till på sidan (Leo:
+-- "merga bara och fixa villkoren"), så den som godkänner 2026-10-16 har
+-- sett den. Versionen står därför kvar, och vakten kräver att ingen har
+-- godkänt den. Meningen om betalningen säger det på alla ställen
+-- (kolla-betalningsvillkor.py). Filen tar inte bort något och kan köras
+-- hel i ett do-block (CLAUDE.md avsnitt 5).
 -- ============================================================
 
 set local lock_timeout = '5s';
@@ -43,17 +45,18 @@ set local lock_timeout = '5s';
 -- ---------- 0. driften är som den lästes ----------
 do $$
 begin
-  -- Exakt 2026-10-16, familjerabattens version. Har en annan fil redan
-  -- satt 2026-10-17 har familjer godkänt en text med det datumet utan
-  -- meningen om fakturan, och obetalda_faktureras_fran() skulle räkna dem
-  -- som att de godkänt den (2026-10-16 skrev två PR:er samma datum, #298
-  -- och #302, och #302 gick först).
+  -- Exakt 2026-10-16, och ingen har godkänt den. Familjerabattens punkt
+  -- gick ut med den versionen samma förmiddag, före meningen om fakturan:
+  -- den som godkänt 2026-10-16 innan dess har aldrig sett meningen, och
+  -- obetalda_faktureras_fran() skulle räkna den som att den gjort det.
+  -- Stannar vakten här får meningen ett eget, senare datum
+  -- (DEPLOY-BETALNING.md 9.17).
   if intern.villkor_version() <> '2026-10-16' then
     raise exception 'Villkorens version är %, inte 2026-10-16. Läs driften och skriv om migrationen.',
       intern.villkor_version();
   end if;
-  if exists (select 1 from public.villkor_godkannanden where version >= '2026-10-17') then
-    raise exception 'Någon har redan godkänt villkor från 2026-10-17. Läs driften och skriv om migrationen.';
+  if exists (select 1 from public.villkor_godkannanden where version >= '2026-10-16') then
+    raise exception 'Någon har redan godkänt villkor 2026-10-16. Meningen om fakturan behöver ett eget datum.';
   end if;
   -- Avsnitt 5 skriver om mitt_villkorslage() hel: kroppen ska vara den
   -- villkoren_godkanns skrev.
@@ -64,23 +67,18 @@ begin
 end $$;
 
 
--- ---------- 1. versionen ----------
-create or replace function intern.villkor_version()
-returns text
-language sql
-immutable
-set search_path = pg_temp
-as $$ select '2026-10-17'::text $$;
-
+-- ---------- 1. från vilken version ----------
 /* Versionen av villkoren som säger att ett obetalt pass läggs på
    fakturan. Ett pass faktureras av sig själv bara om familjen godkänt
-   den, eller en senare, innan passet bokades. */
+   den, eller en senare, innan passet bokades. intern.villkor_version()
+   står kvar på 2026-10-16 (villkoren_familjerabatt): sidan bytte text
+   innan någon godkänt den versionen (avsnitt 0). */
 create or replace function intern.obetalda_faktureras_fran()
 returns text
 language sql
 immutable
 set search_path = pg_temp
-as $$ select '2026-10-17'::text $$;
+as $$ select '2026-10-16'::text $$;
 
 -- Inloggade får läsa den, som villkor_version(): mitt_villkorslage() körs
 -- som den som frågar (avsnitt 5).
@@ -239,7 +237,7 @@ grant execute on function public.fakturera_obetalda(date, boolean) to service_ro
 comment on function public.fakturera_obetalda(date, boolean) is
   'obetalda_pass_pa_fakturan (2026-10-15). Lägger hållna, rapporterade och obetalda pass före p_fore på '
   'fakturan (betalning_status faktura), utom med en kassa som kan stå öppen, ett kort som betalar, faktura '
-  'som inte är tillåten eller ett pass bokat innan familjen godkänt version 2026-10-17. p_torr svarar utan '
+  'som inte är tillåten eller ett pass bokat innan familjen godkänt version 2026-10-16. p_torr svarar utan '
   'att skriva. Bara månadskörningen (tjänstekontot).';
 
 

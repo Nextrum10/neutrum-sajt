@@ -797,7 +797,7 @@ window.NXForhandsvisning = (function () {
 
   var RPC = {
     mina_behorigheter: function () { return { admin: false, superadmin: false, behorigheter: [] }; },
-    /* obetalda_fran (2026-10-17): före världens pass, så att ett obetalt
+    /* obetalda_fran (2026-10-16): före världens pass, så att ett obetalt
        pass säger att det kommer med på fakturan, som för en familj som
        godkänt villkoren innan den bokade. */
     mitt_villkorslage: function () {
