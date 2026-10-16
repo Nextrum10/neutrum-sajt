@@ -272,11 +272,12 @@ att den första planen får första timmen också med rabattkod, att senare
 planer inte får någon, att en familj som betalar pass för pass inte får
 någon, och att vi bjuder med gratistimmar (Leo samma dag). Att ett pass
 på en timme kan kosta noll kronor står nu vid tipstimmen, den enda
-timmen som fortfarande gör det. Kvar i texten: stycket om ett pass som
-dras från två köp säger "(första timmen eller tipstimmen)" om en timme
-på köpet på ett pass, men sedan 2026-10-15 är det bara tipstimmen. Den
-stod kvar också när #293 ändrade texten (8b28e1a), och rättas nästa gång
-faktatexten ändras, inte med en egen driftsättning.
+timmen som fortfarande gör det. Stycket om ett pass som dras från två
+köp sa "(första timmen eller tipstimmen)" om en timme på köpet på ett
+pass, men sedan 2026-10-15 är det bara tipstimmen. Det stod kvar också
+när #293 ändrade texten (8b28e1a). PR #298 (de obetalda passen) rättar
+det till "(tipstimmen)", och det går ut med `drift` efter merge, inte med
+en egen driftsättning.
 
 **drift v21, 2026-10-16**, från merge-commiten av PR #293 (8b28e1a), 00.13
 UTC, hämtad tillbaka och byte för byte lika i alla fem filer.

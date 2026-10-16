@@ -117,8 +117,8 @@ SIFFRORNA:
   aldrig ut. Studiehjälparen får lön för passen som vanligt.
 · Ett pass dras från högst två köp i timbanken: räcker inte det första
   i ordningen (gratis timmar först, sedan det som går ut först) tas
-  resten från nästa. På ett pass där en timme är på köpet (första
-  timmen eller tipstimmen) betalar timmarna resten.
+  resten från nästa. På ett pass där en timme är på köpet
+  (tipstimmen) betalar timmarna resten.
 · Har familjen en plan som gäller kan den köpa till 1–20 timmar till
   planens timpris, 379 kronor. De går ut samma dag som planen.
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är

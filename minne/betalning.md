@@ -114,9 +114,10 @@ texten är kärnans.
     getts. Ingen familj hade valet och inget pass hade timmen, så
     databasen ändrades inte: tabellen, funktionen och Fas 19.5:s väg står
     kvar utan knapp, och studievyn visar fortfarande en timme som är
-    `beviljad`. Villkoren säger att vi "kan, om vi kommit överens om det"
-    ge den pass för pass; meningen går med nästa version, för en version
-    bara för den skulle ge alla frågan om villkoren igen. Agentens fakta
+    `beviljad`. Villkoren sa att vi "kan, om vi kommit överens om det"
+    ge den pass för pass; meningen går med nästa version, 2026-10-16 (de
+    obetalda passen), för en version bara för den skulle ge alla frågan
+    om villkoren igen. Agentens fakta
     (`drift`) och familjens ruta Pris under Profil säger det inte längre.
   - **Som erbjudande i Erbjudanden, också med rabattkod** (2026-10-15).
     Leo: "när familjen köper en plan för pris 379kr utan rabattkod, ska de
@@ -770,7 +771,11 @@ faktura". Byggt 2026-10-15, på Leos "bygg det du kunde bygga själv".
   betalar med kort. Den hållna tiden står på fakturan (`#hallen-tid`).
   Samma version tar bort orden "utan påminnelse" ur `#gratistimmar`, för
   Leo bestämde att de går med nästa version och inte i en egen
-  (`minne/timmar.md`, påminnelsen från PR #292).
+  (`minne/timmar.md`, påminnelsen från PR #292). Den tar också bort
+  meningen om första timmen pass för pass ur `#forsta-timmen`, och
+  hänvisningen dit från en timme på köpet på ett pass: sedan 2026-10-15
+  ges första timmen bara med planen, och tipstimmen är den enda timmen
+  på köpet på ett pass (Första timmen gratis ovan).
   Meningen "Är ett pass inte betalt när månaden är slut, och inte på väg att
   dras från kortet, kommer det med på fakturan." står direkt efter
   fakturameningen på alla 36 ställen och i mejlen, och

@@ -1561,7 +1561,8 @@ inte på väg att dras från kortet, på familjens faktura (`fakturera_obetalda(
 `minne/betalning.md`, Obetalda pass på fakturan). Villkoren får versionen
 2026-10-16, så alla får frågan igen, och det gäller bara pass som bokas efter
 att familjen godkänt den: inget läggs på i efterhand. Samma version tar bort
-orden "utan påminnelse" ur `#gratistimmar` (påminnelsen från PR #292).
+orden "utan påminnelse" ur `#gratistimmar` (påminnelsen från PR #292) och
+meningen om första timmen pass för pass ur `#forsta-timmen`.
 
 Sidorna, villkoren och policyn går ut med sajten när grenen mergas. Det är med
 flit, och samma ordning som förut: sidan står före versionen i några minuter,

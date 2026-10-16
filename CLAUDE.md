@@ -385,7 +385,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   första"). Till dess står den som Erbjudande överst i studievyns Erbjudanden (`#erb-forsta-box`; Leo: "det ska stå
   som erbjudande i deras erbjudanden"). **Pass för pass ges den inte** (samma dag, Leo: "det ska bara finnas ge gratis
   timmar till timbanken"): vill vi bjuda en familj sätter vi in gratistimmar. Valet (`forsta_timmen_beviljad`, `ge_forsta_timmen()`, då med Fas 19.5:s `startrabatt`)
-  står kvar i databasen utan knapp, och villkorens "kan vi, om vi kommit överens" går med nästa version. Studievyns
+  står kvar i databasen utan knapp, och villkorens "kan vi, om vi kommit överens" går med nästa version, 2026-10-16 (de obetalda passen). Studievyns
   `bjuden` speglar regeln ur `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
   **En gratis timme gäller i 60 dagar och dras först** (2026-10-13, Leo: "gratis timmar går ut efter 60 dagar att de
   läggs in", "gratis timmar går ut först sen planerna", "9h vid köp av 8"): planens gratis timme (`timmar_pa_kopet`) dras
@@ -828,7 +828,8 @@ Detaljer: `minne/grunden.md`.
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
 - **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är byggda 2026-10-15, inte i drift:
   `obetalda_pass_pa_fakturan` (20261016010000), `fakturering`, meningen på alla 36 ställen och i mejlen,
-  villkoren (version 2026-10-16: `#faktura`, och "utan påminnelse" bort ur `#gratistimmar`), policyn och studievyn
+  villkoren (version 2026-10-16: `#faktura`, "utan påminnelse" bort ur `#gratistimmar` och första timmen pass för pass
+  bort ur `#forsta-timmen`), policyn och studievyn
   per pass (`mitt_villkorslage().obetalda_fran`).
   Kvar efter merge (`DEPLOY-BETALNING.md` 9.17): migrationen, `fakturering`, `notis-ko` och `drift`, att säga till
   familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och
@@ -1062,9 +1063,10 @@ Detaljer: `minne/grunden.md`.
 - **Första timmen som Erbjudande, också med rabattkod, och inte pass för pass** (2026-10-15) är i drift sedan samma
   kväll: PR #286 mergades (bed3797), Vercel driftsatte den 19.48 UTC, och `drift` v20 gick ut från merge-commiten,
   hämtad tillbaka och byte för byte lika i alla fem filer. Ingen migration: databasen gav redan den första planen
-  timmen också med kod, och villkoren står kvar på 2026-10-15. Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()`
-  och villkorens "kan vi, om vi kommit överens" går med nästa version av villkoren, och faktatextens "(första timmen
-  eller tipstimmen)" står kvar också efter #293 (8b28e1a) och rättas nästa gång texten ändras (`minne/funktioner.md`).
+  timmen också med kod, och villkoren står kvar på 2026-10-15. Villkorens "kan vi, om vi kommit överens" och
+  faktatextens "(första timmen eller tipstimmen)" går med version 2026-10-16 (de obetalda passen; `drift` efter merge,
+  `minne/funktioner.md`). Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()` står i databasen utan knapp, och att ta
+  bort dem kräver en migration med `drop` (avsnitt 5).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
