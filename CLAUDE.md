@@ -791,7 +791,8 @@ Detaljer: `minne/grunden.md`.
 ## 11. Vad som inte är byggt
 - **Skarp kortbetalning**: bara testläge. Stripes endpoint behöver `charge.updated`,
   `charge.dispute.updated` och kortets tre (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
-  `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox.
+  `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox. Stegen till skarpt läge, i
+  ordning och med driftens läge: `DEPLOY-BETALNING.md` 9.16 (2026-10-15).
 - **Fakturan** är på, men bolaget, bankgirot, beskedet till befintliga familjer och
   provfaktureringen återstår (DEPLOY-BETALNING.md 9.11); när bolaget är registrerat ändras
   villkoren och integritetspolicyn. Spärren "ingen betalning, inget pass" kan inte slås på.
@@ -1007,6 +1008,12 @@ Detaljer: `minne/grunden.md`.
   lika en lokal databas byggd ur filerna, och hela `rls-test.sql` gick 1745 av 1745 mot driften, tillbakarullat.
   Advisorn larmade inte om något nytt. De tre andra sessionerna i repot fick veta före och efter. Fliken Intervju
   är tom: i driften var sju av nio ansökningar Kontaktad, och Leo skickar dit dem han vill intervjua.
+- **Första timmen som Erbjudande, också med rabattkod, och inte pass för pass** (2026-10-15) är i drift sedan samma
+  kväll: PR #286 mergades (bed3797), Vercel driftsatte den 19.48 UTC, och `drift` v20 gick ut från merge-commiten,
+  hämtad tillbaka och byte för byte lika i alla fem filer. Ingen migration: databasen gav redan den första planen
+  timmen också med kod, och villkoren står kvar på 2026-10-15. Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()`
+  och villkorens "kan vi, om vi kommit överens" går med nästa version av villkoren, och faktatextens "(första timmen
+  eller tipstimmen)" står kvar också efter #293 (8b28e1a) och rättas nästa gång texten ändras (`minne/funktioner.md`).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).
