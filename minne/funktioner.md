@@ -278,6 +278,18 @@ på köpet på ett pass, men sedan 2026-10-15 är det bara tipstimmen. Den
 stod kvar också när #293 ändrade texten (8b28e1a), och rättas nästa gång
 faktatexten ändras, inte med en egen driftsättning.
 
+**drift v21, 2026-10-16**, från merge-commiten av PR #293 (8b28e1a), 00.13
+UTC, hämtad tillbaka och byte för byte lika i alla fem filer.
+`nextrum-fakta.ts` fick familjerabatten: kronor av på varje timme familjen
+betalar, tills admin tar bort den, en rabattkod räknas på priset efter den,
+familjen ser bara det lägre priset, och ett pass eller köp under ordinarie pris
+hos en sådan familj är inget fel. Texten lästes hel mot kärnan först, och det
+enda som skilde mot v20 var det stycket; "(första timmen eller tipstimmen)"
+står kvar, som ovan. `stripe-checkout` v21 (SESSIONSFORM 9) gick ut samma
+natt, 00.06 UTC, alla sju filer lika. Båda svarade 401 ur sin egen kod på ett
+röktest genom `intern.natanrop` med den publika nyckeln (`rokprov:drift` och
+`rokprov:stripe-checkout`, `minne/databasen.md`).
+
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —
 anmälningar, omatchade elever, kommande pass, saknade rapporter — och
