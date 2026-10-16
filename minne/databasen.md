@@ -1390,3 +1390,16 @@ driften i ett do-block som slutar med ett fel (allt rullades tillbaka), och
 advisorn larmade inte om något nytt. En torrkörning av funktionen i driften,
 också den tillbakarullad, köade inga mejl och inga uppgifter: inga gratistimmar
 fanns, och inga köpta timmar gick ut om tio dagar.
+
+### Villkoren 2026-10-16 (villkoren_familjerabatt)
+Byter bara `intern.villkor_version()` till 2026-10-16, för användarvillkoren
+ändrades i sak (Leo: "fixa villkoren"): familjerabatten fick en egen punkt,
+Att sluta säger hur en familj med rabatt räknas, och två meningar som väntade
+på nästa version gick (`minne/betalning.md`, Familjerabatterna). En vakt
+stannar om versionen i driften inte är 2026-10-15, för då står en annan text
+på sidan än filen utgår från. Inget `drop` och inget `delete`, så filen går
+hel i ett do-block från merge-commiten. Alla får frågan om villkoren igen vid
+nästa inloggning, och den som inte svarat kan inte föreslå pass, köpa timmar
+eller välja kortet. Fram till körningen säger sidan 2026-10-16 och databasen
+2026-10-15: då får ingen frågan, så den körs direkt efter merge.
+`rls-test.sql` läser versionen ur funktionen och behöver inga nya prov.

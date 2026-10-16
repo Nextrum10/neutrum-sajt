@@ -1374,8 +1374,8 @@ Våra egna koder, som bara vi ser: kronor av per timme för de familjer vi sätt
 koden på (`CLAUDE.md` avsnitt 1, `minne/betalning.md`, Familjerabatterna).
 Inga pengar dras annorlunda än förut, bara mindre: priset fryses som förut, med
 rabatten dragen, och kassan drar det databasen räknat. **Steg 1–3 gjordes
-natten till 2026-10-16** (Gjort, sist i avsnittet). **Kvar är steg 4**, provet
-i testläge, och juristen.
+natten till 2026-10-16** (Gjort, sist i avsnittet). **Kvar är steg 4 och 5**,
+provet i testläge och villkoren (2026-10-16), och juristen.
 
 Vyerna går ut med sajten när grenen mergas, före allt nedan, och tål att
 migrationen saknas: fliken under Tjänster och rutan i familjens panel säger att
@@ -1407,11 +1407,20 @@ som arbetar i repot (`minne/databasen.md`):
    knappen ska vara 389 kr, "med er rabatt"), köp en plan (kassan ska säga
    "Med er rabatt på 10 kr per timme" och dra 80 kr mindre för Standard), och
    ta bort rabatten (nästa pass ska kosta 399 kr, det förra stå kvar).
+5. **Villkoren** (2026-10-16, Leo: "fixa villkoren"): efter merge
+   `villkoren_familjerabatt` (20261016100000) hel i ett do-block från
+   merge-commiten, prövad mot sin md5 och registrerad med filens text. Den
+   byter bara `intern.villkor_version()` till 2026-10-16, och vakten stannar
+   om versionen i driften inte är 2026-10-15. Sajten med de nya villkoren går
+   ut vid merge; tills migrationen är körd får ingen frågan om dem. Sedan
+   `intern.villkor_version()` och hela `rls-test.sql` mot driften,
+   tillbakarullat. Alla får frågan om villkoren igen vid nästa inloggning.
 
-Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md` eller policyns
-nya stycken, och en rabatts villkor (beloppet, att den gäller tills vidare och
-att vi kan ta bort den) ska stå där vi ger den, i mejlet eller avtalet med
-partnern.
+Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md`, policyns nya
+stycken eller villkorens punkt om familjerabatten. Villkoren säger sedan
+2026-10-16 vad en familjerabatt gäller och att vi kan ändra eller ta bort den
+(`anvandarvillkor.html#familjerabatt`); beloppet ser familjen vid priset, och
+det vi lovar en partner om rabatten står i avtalet med partnern.
 
 **Gjort natten till 2026-10-16** (Leo: "Ja, kör hela kedjan efter merge",
 sedan "Merga"; från merge-commiten 8b28e1a, och de två andra sessionerna som

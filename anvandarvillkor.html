@@ -180,6 +180,21 @@
         Studiehjälparen är aldrig er motpart i en pengafråga.</li>
       <li>Priset per timme står på <a href="/priser">prissidan</a> och är det som gäller vid
         bokningstillfället.</li>
+      <!-- Familjerabatt (familjerabatter, 2026-10-15, Leo: "10 kr billigare på
+           alla timmar som köps tex ... tills vi tar bort rabatten"; i villkoren
+           sedan 2026-10-16, Leo: "fixa villkoren"). Kronorna dras när priset
+           fryses (frys_passets_pris, intern.klippkort_rabatt,
+           extra_timmar_erbjudande), och att sluta räknas till timpriset minus
+           rabatten på köpet (klippkort_saldo.vid_uppsagning_ore,
+           intern.timbank_varde). Koden själv står aldrig i familjens vy. -->
+      <li id="familjerabatt"><b>Familjerabatt.</b> Vi kan ge er familj en rabatt på ett antal kronor
+        per timme, till exempel genom en samarbetspartner. Den dras på varje timme ni betalar med
+        pengar: på pass, planer, Fyll timbanken och timmar till en plan. Tillägget för fler barn och
+        timmar som redan är gratis påverkas inte. Priset med rabatten står i er vy när ni bokar eller
+        köper och i kassan, innan ni betalar, och en rabattkod räknas på det priset. Rabatten gäller
+        tills vidare, för det ni bokar och köper medan ni har den. Vi kan ändra eller ta bort den, och
+        det ni redan har bokat eller köpt behåller sitt pris. Hur den räknas om ni slutar står under
+        <a href="#erbjudanden">Planer och timbanken</a>.</li>
       <li>Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit
         rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar
         ni när ni bekräftar rapporten. Efter passet skriver studiehjälparen en rapport, och den läser
@@ -278,7 +293,7 @@
         tillbaka förslaget eller går dagen utan att någon svarat, kommer timmarna tillbaka. Köper
         ni timmar, sätter vi in gratistimmar eller kommer timmar tillbaka, medan ni har förslag eller bokade pass framför er
         som inte är betalda, betalar de dem i datumordning, så långt de räcker. Varje påbörjad timme av passet drar en timme, utom en
-        timme som är på köpet (se <a href="#forsta-timmen">Första timmen gratis</a> och
+        timme som är på köpet för ett tips (se
         <a href="#tips">Tipsa en familj eller en studiehjälpare</a>): då betalar timmarna resten av passet.
         Det som blir över av den sista köpta timmen sparas i er <a href="#timbank">timbank</a>.
         Räcker inte timmarna i det köp som dras först till hela passet tas resten från nästa, i samma
@@ -297,23 +312,24 @@
         ovan.</li>
       <!-- 2026-10-09 (Leo: "bara folk som köper planen ska få gratis första
            lektion", och "MAXIMALT ... en timme gratis"). Timmen läggs till
-           av intern.planens_forsta_timme när planen blir betald; pass för
-           pass ges den bara till en familj vi valt (forsta_timmen_beviljad),
-           med Fas 19.5:s regel. Högst en per familj: intern.forsta_timmen_tagen. -->
+           av intern.planens_forsta_timme när planen blir betald. Högst en per
+           familj: intern.forsta_timmen_tagen. Pass för pass ges den inte sedan
+           2026-10-15 (Leo: "det ska bara finnas ge gratis timmar till
+           timbanken"), och meningen om att vi kunde göra det gick med
+           versionen 2026-10-16; valet (forsta_timmen_beviljad) står kvar i
+           databasen utan knapp. -->
       <li id="forsta-timmen"><b>Första timmen gratis.</b> Den första plan ni köper får en timme
         till, gratis: köper ni en plan med 8 timmar får ni 9. Den läggs till i planen när planen är
         betald, och den dras först. Den gäller i 60 dagar från köpet, också om planens andra timmar
         hunnit gå ut. Slutar ni i förtid räknas den som de andra timmarna (se Att sluta nedan), och
-        den betalas aldrig ut som pengar. Utan plan kan vi, om vi kommit överens om det, i stället
-        dra av en timme på det pass som gör att ni har bokat två timmar, om ni föreslår det inom 60
-        dagar från att vi gav er timmen. En familj får högst en sådan timme, på något av sätten;
+        den betalas aldrig ut som pengar. En familj får högst en sådan timme;
         timmar för tips (se <a href="#tips">Tipsa en familj eller en studiehjälpare</a>) och
         gratistimmar (nedan) räknas inte hit.</li>
       <li id="gratistimmar"><b>Gratistimmar.</b> Vi kan sätta in timmar i er timbank utan kostnad,
         till exempel när ni börjar hos oss. De gäller i 60 dagar från den dag vi satte in dem, och
         sista dagen står i er vy. De betalar passen som köpta timmar och dras först, med de andra
         gratis timmarna. Det som blir över av en gratistimme när ett pass slutar före en hel timme
-        sparas inte, och gratistimmar som inte används förfaller utan påminnelse. De är en gåva:
+        sparas inte, och gratistimmar som inte används förfaller. De är en gåva:
         de räknas inte som köpta timmar och betalas aldrig ut som pengar.</li>
       <li id="kop-till"><b>Köp till timmar.</b> Har ni en plan som gäller minst en dag till kan ni köpa
         till 1–20 timmar åt gången, under Er timbank i vyn. De kostar planens timpris, det ni betalade
@@ -326,9 +342,11 @@
         hinna använda den, betalar vi tillbaka den till det pris ni betalat.</li>
       <li><b>Att sluta.</b> Vill ni sluta innan timmarna är använda betalar vi tillbaka det som
         är kvar. De timmar ni redan använt räknas då till ordinarie timpris, eftersom en plans
-        rabatt gäller för att ni köper alla timmarna. De första 14 dagarna efter köpet gäller i stället
+        rabatt gäller för att ni köper alla timmarna. Hade ni en <a href="#familjerabatt">familjerabatt</a>
+        när ni köpte timmarna räknas de använda timmarna till ordinarie timpris med den rabatten dragen. De första 14 dagarna efter köpet gäller i stället
         <a href="#angerratt">ångerrätten</a>, och då räknas de använda timmarna till det pris ni
-        betalat. Minuter i timbanken betalar vi tillbaka till ordinarie timpris.</li>
+        betalat. Minuter i timbanken betalar vi tillbaka till ordinarie timpris, med familjerabatten
+        dragen om ert senaste köp av timmar hade en.</li>
       <li><b>Timmar som inte hunnit användas.</b> Köpta timmar som finns kvar när tiden gått ut
         förfaller. Tio dagar innan mejlar vi er om ni har köpta timmar kvar. Hör av er innan dess om
         ni inte kommer att hinna, så betalar vi tillbaka resten enligt punkten ovan.</li>
@@ -544,7 +562,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 15 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 16 oktober 2026.</p>
   </div>
 </section>
 
