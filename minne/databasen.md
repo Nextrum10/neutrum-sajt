@@ -1440,4 +1440,36 @@ Efteråt: `intern.villkor_version()` svarar 2026-10-16, kroppen (`md5(prosrc)`
 `authenticated`, inte `anon`). Ingen hade godkänt 2026-10-16. Hela
 `rls-test.sql` från 947f0b4 (`393d3278…`) gick 1798 av 1798 mot driften i ett
 do-block som slutar med ett fel (allt rullades tillbaka), och advisorn larmade
-inte om något nytt.
+inte om något nytt. **#298 gick ut samma dag, i samma version**: ingen hade
+godkänt 2026-10-16 när Leo sa "merga bara och fixa villkoren", så meningen om
+fakturan gick med i den, och vakten krävde att ingen godkänt den (nedan).
+
+### Obetalda pass på fakturan (obetalda_pass_pa_fakturan, 2026-10-15, i drift 2026-10-16)
+Vad den gör står i `minne/betalning.md` (Obetalda pass på fakturan). Filen har
+inget `drop` och inget `delete`, och den skriver inte om
+`intern.villkor_version()`: meningen om fakturan gick med i familjerabattens
+version, 2026-10-16, för ingen hade godkänt den (ovan, Villkoren 2026-10-16).
+Vakten först i filen kräver exakt 2026-10-16 och att ingen godkänt den; lokalt
+i en transaktion med ett godkännande inlagt stannade den, och en databas byggd
+ur alla 200 migrationer gav 1810 av 1810.
+**I drift 2026-10-16**, på Leos "merga bara och fixa villkoren". Sessionerna
+för PR #301 och #302 fick veta före. PR #298 mergades 10.32 UTC (b68509f), och
+sidorna var ute 10.33 (läst genom `extensions.http_get` med blanktecken
+hopslagna, för meningen bryts över två rader i källan; utan det ser den ut att
+saknas). Sedan filen hämtad från merge-commiten, prövad mot sin md5
+(`c5a8752f…`), körd och registrerad i ett do-block (`$kor$`), med vakter mot att
+versionen eller `fakturera_obetalda` redan fanns. Efteråt var `md5(prosrc)` för
+de fem funktionerna filen skriver (`intern.obetalda_faktureras_fran`,
+`intern.kassan_oppnades`, `intern.obetalt_till_fakturan`, `fakturera_obetalda`
+och `mitt_villkorslage`) byte för byte kropparna i filen, `villkor_version()`
+stod kvar (`bc41515f…`), och raden i `schema_migrations` hade filens md5.
+`fakturera_obetalda` kan bara köras av `postgres` och `service_role`,
+`obetalda_faktureras_fran` av `authenticated` och `service_role` (inte `anon`),
+triggerfunktionen och `obetalt_till_fakturan` av ingen utom `postgres`, och
+`intern.kassan_oppnad` har RLS och ingen åtkomst för inloggade. Tre pass stod i
+`vantar` och fick sin tid från körningen, så att ingen gammal kassa läggs på
+en faktura i natt. Hela `rls-test.sql` från b68509f (`eb36ab7b…`) gick 1810 av
+1810 mot driften i ett do-block som slutar med ett fel (allt rullades
+tillbaka). Advisorn: bara `intern.kassan_oppnad` under RLS utan policy (info,
+med flit); inget nytt för `anon`. Torrkörningen (`fakturera_obetalda(...,
+true)` som tjänstekontot) gav inga pass för förra månaden eller till i dag.

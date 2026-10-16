@@ -802,6 +802,13 @@ faktura". Byggt 2026-10-15, på Leos "bygg det du kunde bygga själv".
   undantag, kassans tid, torrkörningen, skrivningen, en andra natt, vem som
   får anropa och `obetalda_fran`), `pris_test.ts` för torrkörningens räkning
   och `rendera_test.ts` för mejlets mening.
+- **I drift sedan 2026-10-16** (Leo: "merga bara och fixa villkoren"). PR
+  #298 mergades 10.32 UTC (b68509f); sidorna var ute 10.33, och migrationen,
+  `fakturering` v35, `notis-ko` v27 och `drift` v22 gick ut direkt
+  efter (`minne/databasen.md`, `DEPLOY-BETALNING.md` 9.17). Ingen hade
+  godkänt 2026-10-16, och torrkörningen lade inget på fakturan. Ett pass
+  kan hamna där tidigast natten efter den månad det hölls i, och bara om det
+  bokades efter att familjen godkänt 2026-10-16.
 
 ## Månadens ekonomi och Löner
 
@@ -1060,9 +1067,9 @@ Samma dag i finstilen och FAQ:n:
 
 ## 11. Vad som inte är byggt: betalningen
 
-- **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är byggda
-  sedan 2026-10-15, inte i drift: avsnittet Obetalda pass på fakturan ovan,
-  och `DEPLOY-BETALNING.md` 9.17. Familjerna ska få veta, och juristen har
+- **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är i drift
+  sedan 2026-10-16: avsnittet Obetalda pass på fakturan ovan, och
+  `DEPLOY-BETALNING.md` 9.17. Kvar: familjerna ska få veta, och juristen har
   inte läst villkoren.
 - **Betalning.** Familjen betalar varje pass med kort, **i förväg eller
   efter passet när de bekräftar rapporten** (Fas 19.2; före passet från

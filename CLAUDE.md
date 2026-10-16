@@ -828,15 +828,17 @@ Detaljer: `minne/grunden.md`.
   (`stripe_skarp = false`): det räknas inte längre som intäkt.
 - **Skatt och anställning av minderåriga**: `studiehjalpare_form = oklart`; revisor före första
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
-- **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är byggda 2026-10-15, inte i drift:
-  `obetalda_pass_pa_fakturan` (20261016110000), `fakturering`, meningen på alla 36 ställen och i mejlen,
-  villkoren (`#faktura` och den hållna tiden på fakturan), policyn och studievyn
-  per pass (`mitt_villkorslage().obetalda_fran`). Villkorens version är 2026-10-16, samma som familjerabattens punkt
-  (PR #302), som gick ut först samma förmiddag: ingen hade godkänt den när Leo sa "merga bara och fixa villkoren", så
-  meningen går med i den versionen, och vakten stannar om någon hunnit godkänna den (9.17).
-  Kvar efter merge (`DEPLOY-BETALNING.md` 9.17): migrationen, `fakturering`, `notis-ko` och `drift`, att säga till
-  familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och
-  ett tillägg för övertid kommer inte med (`minne/betalning.md`).
+- **Obetalda pass på månadens faktura** (beslutat 2026-10-01, byggda 2026-10-15) är i drift sedan 2026-10-16 (Leo:
+  "merga bara och fixa villkoren"): PR #298 mergades 10.32 UTC (b68509f), Vercel hade lagt ut sidorna 10.33 (båda språken
+  med meningen och `#familjerabatt`, 16 oktober), och `obetalda_pass_pa_fakturan` (20261016110000) kördes direkt efter,
+  hel i ett do-block, hämtad från merge-commiten, prövad mot sin md5 (`c5a8752f…`) och registrerad med filens text.
+  Villkorens version är 2026-10-16, samma som familjerabattens punkt (PR #302, ute samma förmiddag): ingen hade godkänt
+  den, så meningen gick med i den versionen, och vakten krävde det. De fem funktionskropparna är byte för byte filens;
+  `fakturering` v35, `notis-ko` v27 och `drift` v22 från merge-commiten är hämtade tillbaka och byte för byte lika
+  (7, 15 och 5 filer). Hela `rls-test.sql` gick 1810 av 1810 mot driften, tillbakarullat, advisorn larmade bara om
+  `intern.kassan_oppnad` (RLS utan policy, med flit), och torrkörningen lade inget på fakturan. Kvar: att säga till
+  familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och ett
+  tillägg för övertid kommer inte med (`minne/betalning.md`).
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten, och familjerna om barnens inloggning
@@ -1080,7 +1082,8 @@ Detaljer: `minne/grunden.md`.
   ordinarie timpris, mer än databasen betalar tillbaka till en familj med rabatt), och två meningar som skulle gå med
   nästa version gick: "kan vi, om vi kommit överens" om första timmen pass för pass och "utan påminnelse" om
   gratistimmarna. PR #298 (de obetalda passen) skrev samma version; Leo valde att den här gick först ("#302 först", och
-  sedan "Merga sen när du kan"), så #298 får datumet den går ut. PR #302 mergades (947f0b4), Vercel lade ut sidan 10.01
+  sedan "Merga sen när du kan"), så #298 får datumet den går ut. Den gick ut samma dag, i samma version, för ingen hade
+  godkänt den (ovan). PR #302 mergades (947f0b4), Vercel lade ut sidan 10.01
   UTC, och `villkoren_familjerabatt` (20261016100000) kördes direkt efter, hel i ett do-block, hämtad från
   merge-commiten, prövad mot sin md5 (`d3f4748c…`) och registrerad med filens text. Kroppen är filens (`bc41515f…`),
   hela `rls-test.sql` gick 1798 av 1798 mot driften, tillbakarullat, och advisorn larmade inte om något nytt. Alla får
