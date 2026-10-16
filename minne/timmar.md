@@ -789,11 +789,13 @@ finns kvar".
   räknad med den). Vakten godkänner båda vyerna (`a34041ef…` och `e4bf8d23…`),
   för kolumnerna påminnelsen läser är desamma; lokalt gick hela `rls-test.sql`
   1798 av 1798 i båda ordningarna, med #287:s två migrationer före.
-- **Villkoren** säger fortfarande att gratistimmar "förfaller utan påminnelse"
+- **Villkoren** sa att gratistimmar "förfaller utan påminnelse"
   (`#gratistimmar`). Orden tas bort i nästa version, inte i en egen (Leo
   2026-10-15, på förslaget från #287): alla har fått frågan om villkoren nästan
   varje dag sedan 2026-10-07, och en påminnelse till är inget familjen förlorar
-  på. Villkoren nämner ingen påminnelse för köpta timmar heller.
+  på. Nästa version är 2026-10-16 (de obetalda passen, PR #298), och där står
+  bara att de förfaller, på båda språken. Villkoren nämner ingen påminnelse
+  för köpta timmar heller, så de lovar ingen innan den är i drift.
 - **Batteriet** (`nextrum-studie-vy.js`, `batteriTimmar`, `fyllBatteri`,
   `sättBatterier`) står överst i Er timbank och under Profil → Timbanken. En
   ruta per timme i det som gäller nu: köp som inte gått ut (med de använda

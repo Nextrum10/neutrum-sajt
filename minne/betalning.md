@@ -768,6 +768,9 @@ faktura". Byggt 2026-10-15, på Leos "bygg det du kunde bygga själv".
   en sen rapport), att det sedan betalas genom fakturan, att det gäller pass
   bokade efter godkännandet, och att en familj med fakturavalet stängt
   betalar med kort. Den hållna tiden står på fakturan (`#hallen-tid`).
+  Samma version tar bort orden "utan påminnelse" ur `#gratistimmar`, för
+  Leo bestämde att de går med nästa version och inte i en egen
+  (`minne/timmar.md`, påminnelsen från PR #292).
   Meningen "Är ett pass inte betalt när månaden är slut, och inte på väg att
   dras från kortet, kommer det med på fakturan." står direkt efter
   fakturameningen på alla 36 ställen och i mejlen, och

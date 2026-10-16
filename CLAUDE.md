@@ -115,8 +115,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   innan de går ut (2026-10-15, `gratistimmarna_paminns`, Leo: "fixa påminelse"), med planens gratis timme som
   gäller efter planen och tipstimmarna: samma mejltyp och val som köpta timmar, med `gratis` i datan, och mejlet
   lovar då inga pengar tillbaka. Utan studiehjälpare (`S.väntar`) kan familjen inte boka, så då blir det en uppgift
-  till oss i stället, en gång per kort och dag (idén från PR #287). Ett återkallat kort påminns aldrig. Villkoren
-  säger fortfarande "förfaller utan påminnelse" (`#gratistimmar`): orden tas bort i nästa version, inte i en egen.
+  till oss i stället, en gång per kort och dag (idén från PR #287). Ett återkallat kort påminns aldrig. Orden
+  "utan påminnelse" i villkoren (`#gratistimmar`) går med nästa version, 2026-10-16 (de obetalda passen), inte i en egen.
   `ta_tillbaka_gratistimmar()` tar bara det som inte ligger på ett pass, och återkallar kortet
   (`aterkallad_at`) i stället för att radera det (2026-10-14): ingen `delete`, och historiken står kvar.
   De står utanför första timmen, som tipstimmen. Det river beskedet 2026-10-09 "inte få gratis av oss".
@@ -828,7 +828,8 @@ Detaljer: `minne/grunden.md`.
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
 - **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är byggda 2026-10-15, inte i drift:
   `obetalda_pass_pa_fakturan` (20261016010000), `fakturering`, meningen på alla 36 ställen och i mejlen,
-  villkoren (version 2026-10-16, `#faktura`), policyn och studievyn per pass (`mitt_villkorslage().obetalda_fran`).
+  villkoren (version 2026-10-16: `#faktura`, och "utan påminnelse" bort ur `#gratistimmar`), policyn och studievyn
+  per pass (`mitt_villkorslage().obetalda_fran`).
   Kvar efter merge (`DEPLOY-BETALNING.md` 9.17): migrationen, `fakturering`, `notis-ko` och `drift`, att säga till
   familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och
   ett tillägg för övertid kommer inte med (`minne/betalning.md`).
@@ -973,8 +974,8 @@ Detaljer: `minne/grunden.md`.
   byggde samma påminnelse** med samma namn, och Leo valde den här (2026-10-15); #287:s version i driften stoppar
   filen i stället för att skrivas över. Vyn `klippkort_saldo` får vara den förra (`a34041ef…`) eller
   familjerabatternas (`e4bf8d23…`): `familjerabatter` körs före den i driften, fast numret är högre, och kolumnerna
-  påminnelsen läser är desamma. **Villkoren byts inte för den** (Leo samma kväll): `#gratistimmar` säger
-  fortfarande "förfaller utan påminnelse", och orden tas bort i nästa version av villkoren. Batteriet behöver ingen
+  påminnelsen läser är desamma. **Villkoren byts inte för den** (Leo samma kväll): orden "utan påminnelse" i
+  `#gratistimmar` går med nästa version av villkoren, 2026-10-16 (de obetalda passen). Batteriet behöver ingen
   migration.
 - **Timmarna delas, och timmar köps till planen** (2026-10-14, `timmarna_delas_och_kops_till`, 20261014100000) är
   i drift sedan samma förmiddag: ett pass dras från högst två köp, timmen på köpet dras inte och timmarna betalar
