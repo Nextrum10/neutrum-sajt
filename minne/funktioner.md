@@ -291,6 +291,20 @@ natt, 00.06 UTC, alla sju filer lika. Båda svarade 401 ur sin egen kod på ett
 röktest genom `intern.natanrop` med den publika nyckeln (`rokprov:drift` och
 `rokprov:stripe-checkout`, `minne/databasen.md`).
 
+**drift v22, notis-ko v27 och fakturering v35, 2026-10-16**, från
+merge-commiten av PR #298 (b68509f), direkt efter migrationen
+`obetalda_pass_pa_fakturan` (`DEPLOY-BETALNING.md` 9.17). Före körningen
+skilde de sig från main bara i #298:s ändringar: `nextrum-fakta.ts` (regeln om
+de obetalda passen och "(tipstimmen)", ovan), `notiser/mallar.ts` (meningen i
+mejlen) och `fakturering/index.ts` med `_delad/pris.ts` (`fakturera_obetalda`
+före fakturapassen, `somFaktura` i torrkörningen). Tre hjälpagenter laddade
+upp var sin funktion ur filerna på disk, och alla tre hämtades sedan tillbaka
+och jämfördes byte för byte med b68509f: 5, 15 och 7 filer lika, och
+`verify_jwt` som förut (på för `drift`, av för de andra två). `notis-ko`
+behöll grenen för gratis timmar (`RenData.gratis`, v26). Alla tre svarade 401
+ur sin egen kod på ett röktest genom `extensions.http` från SQL, `drift` med
+den publika nyckeln.
+
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —
 anmälningar, omatchade elever, kommande pass, saknade rapporter — och

@@ -1458,6 +1458,8 @@ kan"; #298:s session väntade, och ingen annan session körde något mot driften
 - Efteråt: `intern.villkor_version()` svarar 2026-10-16, kroppen är filens
   (`bc41515f…`), och rättigheterna står kvar. Hela `rls-test.sql` (`393d3278…`,
   från 947f0b4) 1798 av 1798 mot driften, tillbakarullat. Advisorn: inget nytt.
+- Samma dag gick meningen om de obetalda passen med i samma version (9.17): ingen
+  hade godkänt 2026-10-16 när Leo sa "merga bara och fixa villkoren".
 
 ### 9.16 Till skarpt läge, i ordning (2026-10-15)
 
@@ -1574,7 +1576,7 @@ göra de här stegen, för nycklarna får aldrig stå i en chatt (9.2).
     (jämförelsetejperna på Standard och Intensiv har inget underlag, kärnans
     avsnitt 11) och de rader i `DATASKYDD.md` som väntar.
 
-### 9.17 Obetalda pass på fakturan (version 2026-10-16, inte i drift)
+### 9.17 Obetalda pass på fakturan (version 2026-10-16, i drift sedan 2026-10-16)
 
 Månadskörningen lägger ett pass som inte är betalt när månaden är slut, och
 inte på väg att dras från kortet, på familjens faktura (`fakturera_obetalda()`,
@@ -1627,3 +1629,33 @@ som arbetar i repot (`minne/databasen.md`):
 Kvar efter det: att säga till familjerna att ett obetalt pass hamnar på
 fakturan (villkorsändringen), och juristen, som inte läst `#faktura` eller rad 8
 i `DATASKYDD.md`.
+
+**Gjort 2026-10-16** (Leo: "merga bara och fixa villkoren"; #302:s och #301:s
+sessioner fick veta före, och ingen annan session körde något mot driften):
+- Före merge: versionen var 2026-10-16, ingen hade godkänt den (det senaste
+  godkännandet var från 2026-10-15 13.39 UTC), och `mitt_villkorslage()` hade
+  kroppen `7b64c1bc…`.
+- PR #298 mergades 10.32 UTC (b68509f). Vercel hade lagt ut sidorna 10.33:
+  båda språken hade meningen och `#familjerabatt` och sa 16 oktober, och
+  policyn sa 16 oktober (läst med `extensions.http_get`, blanktecken
+  hopslagna, för meningen bryts över två rader i källan).
+- Steg 1: `obetalda_pass_pa_fakturan` hel i ett do-block, hämtad från
+  b68509f, prövad mot sin md5 (`c5a8752f…`) och registrerad med filens text.
+  Vakten stämde. Efteråt: `intern.villkor_version()` står kvar (`bc41515f…`,
+  familjerabattens), `intern.obetalda_faktureras_fran()` svarar 2026-10-16,
+  och de fem kropparna filen skriver är byte för byte filens. `fakturera_obetalda`
+  kan bara köras av `service_role`, `intern.kassan_oppnad` har RLS och ingen
+  åtkomst för inloggade, och triggern finns. Tre pass stod i `vantar` och fick
+  sin tid från körningen.
+- Steg 2 och 3: `fakturering` v35, `notis-ko` v27 och `drift` v22 från
+  b68509f, hämtade tillbaka och byte för byte lika (7, 15 och 5 filer). Före
+  körningen skilde de sig från main bara i #298:s ändringar: `fakturering/index.ts`
+  och `_delad/pris.ts`, `_delad/notiser/mallar.ts` och `_delad/nextrum-fakta.ts`.
+  Alla tre svarade 401 ur sin egen kod på ett röktest utan inloggning (`drift`
+  med den publika nyckeln, för den kräver en token), och kön hade inga utskick
+  det senaste dygnet.
+- Steg 4: hela `rls-test.sql` från b68509f (`eb36ab7b…`) 1810 av 1810 mot
+  driften, tillbakarullat. Advisorn: bara `intern.kassan_oppnad` under RLS utan
+  policy (info, med flit, som `intern.rabattkod_forsok`); inget nytt för `anon`.
+- Steg 5: torrkörningen som tjänstekontot, för förra månaden och till och med
+  i dag, gav inga pass.
