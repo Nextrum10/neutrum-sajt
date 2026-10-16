@@ -1445,8 +1445,8 @@ namn och kan välja ta bort eller ändra. sen skapar vi våra rabattkoder."
 
 Migrationen `20261015210000_familjerabatter`, kassan (`stripe-checkout`,
 SESSIONSFORM 9, `_delad/erbjudanden.ts`), agentens fakta, adminvyn och
-studievyn. Inte i drift när det skrevs: kedjan står i `DEPLOY-BETALNING.md`
-9.15.
+studievyn. I drift sedan natten till 2026-10-16 (sist i avsnittet), och
+kedjan står i `DEPLOY-BETALNING.md` 9.15.
 
 - **Två tabeller.** `familjerabatter` är koderna: kod (som rabattkoder:
   versaler, siffror och bindestreck), en beskrivning bara för oss,
@@ -1532,3 +1532,10 @@ studievyn. Inte i drift när det skrevs: kedjan står i `DEPLOY-BETALNING.md`
   fliken, panelen, Ta in familjen, passets panel, studievyn med och utan
   rabatt (korten, Boka pass och Köp till timmar), och vyerna utan migrationen. `_delad/erbjudanden_test.ts`:
   kassaraden och regeln för köpet.
+- **I drift** natten till 2026-10-16, direkt efter merge av PR #293
+  (8b28e1a): sajten 23.50 UTC, migrationen hel i ett do-block (md5
+  `8348b94c…`), hela `rls-test.sql` 1775 av 1775 mot driften, tillbakarullat,
+  och `stripe-checkout` v21 och `drift` v21 från merge-commiten, hämtade
+  tillbaka och byte för byte lika (`minne/databasen.md`, Familjerabatterna).
+  Ingen kod var skapad och ingen familj hade en rabatt. Kvar: provet i testläge
+  (`DEPLOY-BETALNING.md` 9.15 steg 4) och juristen.

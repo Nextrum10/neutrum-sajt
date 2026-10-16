@@ -2302,7 +2302,6 @@
     const tim = t ? Number(t.timmar || 0) : 0;
     if (!tim) return '';
     const kvar = Number(t.kvar || 0);
-    const andel = Math.round(100 * kvar / tim);
     const pass = medPass ? (S.bokningar || []).filter(b => b.rabattkod === 'TIPS' && b.status !== 'cancelled')
       .sort((a, b) => String(a.wanted_date).localeCompare(String(b.wanted_date))) : [];
     const idag = isoFor(new Date());
@@ -2310,8 +2309,7 @@
       : kvar ? 'Kvar' : Number(t.anvanda || 0) >= tim ? 'Använda' : 'Inga kvar';
     return '<div class="erb-mitt' + (kvar ? '' : ' ar-slut') + '">'
       + '<div class="erb-mitt-topp"><b>Timmar för tips</b><span>' + esc(till) + '</span></div>'
-      + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
-      + '<i style="width:' + andel + '%"></i></div>'
+      + mätare(0, kvar, tim, kvar + ' av ' + tim + ' timmar kvar')
       + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' ' + (tim === 1 ? 'timme' : 'timmar') + ' kvar</span>'
       + '<p class="erb-bank-text">En timme för varje ny familj som anmält sig med er kod och haft två timmar läxhjälp. '
       + 'Den gäller i 60 dagar och dras först, som en timme på köpet på nästa pass.</p>'
@@ -3931,25 +3929,156 @@
     ritaTillgängliga();
   }
 
+  /* ============================================================
+     BATTERIET I TIMBANKEN (2026-10-15)
+
+     Leo: "i timbanken kan du göra en animerad bild som ändras beroende
+     på hur många timmar. så typ som ett batteri bara att orange timmar är
+     köpta och gratis är gröna. sen kan det stå 9av 9 timmar finns kvar".
+     En ruta per timme i det som gäller nu: köpen som inte gått ut, med
+     de timmar som använts tomma, planens gratis timme medan den gäller
+     efter planen, och timmarna för tips (en använd så länge passet är
+     högst 60 dagar gammalt, som timmen gällde). Gratis timmar står
+     närmast de tomma, för de dras först. Fler än BATTERI_RUTOR timmar
+     blir en stapel. De sparade minuterna är inga timmar och står bredvid,
+     som förut.
+
+     Skriptet sätter klasserna och CSS rör sig: rutorna fylls en i taget
+     första gången batteriet syns, och de som ändras byter färg när
+     timmarna ändras. Batteriet är samma element mellan omritningarna
+     (batterier), så att inget fylls om från tomt när rutan ritas om.
+     ============================================================ */
+  const BATTERI_RUTOR = 24;
+  const batterier = {};
+
+  function batteriTimmar() {
+    const idag = isoFor(new Date());
+    let köpta = 0, gratis = 0, använda = 0;
+    S.erb.kort.forEach(k => {
+      if (k.status !== 'betald') return;
+      const tim = Number(k.timmar) || 0, kvar = Number(k.kvar) || 0;
+      if (String(k.giltigt_till) >= idag) {
+        const g = NXBetalning.gratistimmar(k) ? kvar : Math.min(Number(k.gratis_kvar) || 0, kvar);
+        gratis += g;
+        köpta += kvar - g;
+        använda += Math.max(tim - kvar, 0);
+      } else if (harGratis(k, idag)) {
+        gratis += kortetsTimmar(k, idag);
+      }
+    });
+    if (S.tips && Number(S.tips.timmar || 0)) {
+      const sedan = isoFor(new Date(Date.now() - 60 * 864e5));
+      gratis += Number(S.tips.kvar || 0);
+      använda += Math.min(Number(S.tips.anvanda || 0), (S.bokningar || []).filter(b => b.rabattkod === 'TIPS'
+        && b.status !== 'cancelled' && String(b.wanted_date) >= sedan).length);
+    }
+    return { köpta: köpta, gratis: gratis, kvar: köpta + gratis, alla: köpta + gratis + använda };
+  }
+
+  function nyttBatteri() {
+    const el = document.createElement('div');
+    el.className = 'tb-batteri';
+    el.innerHTML = '<div class="tb-batteri-bild" role="img"><div class="tb-batteri-kropp"></div>'
+      + '<span class="tb-batteri-pol"></span></div>'
+      + '<p class="tb-batteri-tal"></p><p class="tb-batteri-not"></p>';
+    const b = { el: el, sett: !('IntersectionObserver' in window), mål: null };
+    if (!b.sett) {
+      const syn = new IntersectionObserver(poster => {
+        if (!poster.some(p => p.isIntersecting)) return;
+        syn.disconnect();
+        b.sett = true;
+        fyllBatteri(b);
+      });
+      syn.observe(el);
+    }
+    return b;
+  }
+
+  /* Talet och färgerna. Före första gången batteriet syns står rutorna
+     tomma, så att det fylls framför ögonen. */
+  function fyllBatteri(b) {
+    const t = b.mål, kropp = b.el.querySelector('.tb-batteri-kropp');
+    const delar = [t.köpta ? t.köpta + (t.köpta === 1 ? ' köpt' : ' köpta') : '',
+      t.gratis ? t.gratis + ' gratis' : ''].filter(Boolean);
+    b.el.querySelector('.tb-batteri-bild').setAttribute('aria-label', t.alla
+      ? t.kvar + ' av ' + timText(t.alla) + ' kvar' + (delar.length ? ': ' + delar.join(' och ') : '')
+      : 'Inga timmar i timbanken');
+    b.el.querySelector('.tb-batteri-tal').innerHTML = t.alla
+      ? '<b>' + t.kvar + '</b> av ' + esc(timText(t.alla)) + ' kvar'
+      : 'Inga timmar i timbanken';
+    const not = b.el.querySelector('.tb-batteri-not');
+    not.innerHTML = (t.köpta ? '<span class="kopt">' + esc(delar[0]) + '</span>' : '')
+      + (t.gratis ? '<span class="gratis">' + esc(delar[delar.length - 1]) + '</span>' : '');
+    not.hidden = !t.kvar;
+
+    const stapel = t.alla > BATTERI_RUTOR;
+    b.el.classList.toggle('stapel', stapel);
+    if (stapel) {
+      if (!kropp.querySelector('.tb-stapel')) {
+        kropp.innerHTML = '<span class="tb-stapel"><i class="kopt"></i><i class="gratis"></i></span>';
+      }
+      if (!b.sett) return;
+      const delarna = kropp.querySelectorAll('.tb-stapel i');
+      void kropp.offsetWidth;
+      delarna[0].style.setProperty('--b', (100 * t.köpta / t.alla) + '%');
+      delarna[1].style.setProperty('--b', (100 * t.gratis / t.alla) + '%');
+      return;
+    }
+    if (kropp.querySelector('.tb-stapel')) kropp.innerHTML = '';
+    const rutor = kropp.children;
+    while (rutor.length > t.alla) kropp.removeChild(kropp.lastElementChild);
+    while (rutor.length < t.alla) {
+      const r = document.createElement('i');
+      r.className = 'tb-ruta';
+      kropp.appendChild(r);
+    }
+    if (!b.sett) return;
+    void kropp.offsetWidth;
+    /* Bara de rutor som byter färg rör sig, i tur och ordning (--d). */
+    let tur = 0;
+    Array.prototype.forEach.call(rutor, (r, j) => {
+      const ny = j < t.köpta ? 'kopt' : j < t.kvar ? 'gratis' : '';
+      const nu = r.classList.contains('kopt') ? 'kopt' : r.classList.contains('gratis') ? 'gratis' : '';
+      if (ny === nu) return;
+      r.style.setProperty('--d', tur++);
+      r.classList.toggle('kopt', ny === 'kopt');
+      r.classList.toggle('gratis', ny === 'gratis');
+    });
+  }
+
+  /* Byter platshållaren [data-batteri] i det som just ritats mot
+     batteriet med samma namn, och fyller det. */
+  function sättBatterier(värd) {
+    värd.querySelectorAll('[data-batteri]').forEach(plats => {
+      const namn = plats.getAttribute('data-batteri');
+      const b = batterier[namn] || (batterier[namn] = nyttBatteri());
+      plats.parentNode.replaceChild(b.el, plats);
+      b.mål = batteriTimmar();
+      fyllBatteri(b);
+    });
+  }
+
+  /* Köpta timmar orange och gratis gröna, som i batteriet. */
+  const mätare = (köpta, gratis, alla, text) => '<div class="erb-matare" role="img" aria-label="' + esc(text) + '">'
+    + (köpta > 0 && alla ? '<i class="kopt" style="width:' + Math.round(100 * köpta / alla) + '%"></i>' : '')
+    + (gratis > 0 && alla ? '<i class="gratis" style="width:' + Math.round(100 * gratis / alla) + '%"></i>' : '')
+    + '</div>';
+
   /* Er timbank: köpta timmar, sparade minuter och sedan 2026-10-13
-     timmarna för tips, som räknas för sig (de betalar en timme av ett
-     pass, inte ett helt). */
+     timmarna för tips. Sedan 2026-10-15 står de i batteriet, timmarna
+     för tips som gratis timmar, och minuterna bredvid. */
   function ritaTillgängliga() {
     const box = $('#erb-mina-box'), mina = $('#erb-mina');
     if (!box || !mina) return;
     const brukbara = S.erb.kort.filter(k => k.brukbar);
-    const idagT = isoFor(new Date());
-    const timmar = brukbara.reduce((n, k) => n + kortetsTimmar(k, idagT), 0);
     const minuter = S.erb.bank.saldo;
-    const tips = S.tips ? Number(S.tips.kvar || 0) : 0;
-    const och = [minuter ? tidLängd(minuter) + ' sparat' : '',
-      tips ? (tips === 1 ? '1 timme' : tips + ' timmar') + ' för tips' : ''].filter(Boolean);
+    const t = batteriTimmar();
     box.hidden = false;
     mina.innerHTML = '<div class="erb-mitt erb-tillg">'
       + '<div class="erb-mitt-topp"><b>Tillgängliga timmar</b>'
-      + (och.length ? '<span>och ' + esc(och.join(' och ')) + '</span>' : '') + '</div>'
-      + '<span class="erb-kvar"><b>' + timmar + '</b> ' + (timmar === 1 ? 'timme' : 'timmar') + '</span>'
-      + (timmar || minuter || tips ? ''
+      + (minuter ? '<span>och ' + esc(tidLängd(minuter) + ' sparat') + '</span>' : '') + '</div>'
+      + '<div data-batteri="erbjudanden"></div>'
+      + (t.kvar || minuter ? ''
         : '<p class="erb-bank-text">Fyll timbanken med en plan eller med timmar nedan, så betalar timmarna era pass av sig själva.</p>')
       + '</div>'
       + brukbara.map(k => kortRad(k)).join('')
@@ -3957,6 +4086,7 @@
       + tipsKort(false)
       + '<p class="erb-bank-text erb-tillg-lank">Hur timmarna används, hur länge de gäller och villkoren står under '
       + '<a href="#profil/timbank">Profil &amp; inställningar → Timbanken</a>.</p>';
+    sättBatterier(mina);
   }
 
   /* ============================================================
@@ -4069,11 +4199,12 @@
       ? ' · ' + (Number(k.gratis_kvar) === 1 ? '1 gratis timme' : k.gratis_kvar + ' gratis timmar')
         + ', som dras först och gäller till ' + datumText(k.gratis_till)
       : S.forstaTimmen && S.forstaTimmen.plan_id === k.id ? ' · första timmen gratis ingår' : '';
-    const andel = tim ? Math.round(100 * kvar / tim) : 0;
+    /* Gratis timmar gröna och köpta orange, som i batteriet (2026-10-15). */
+    const gratisKvar = NXBetalning.gratistimmar(k) || baraGratis ? kvar
+      : String(k.giltigt_till) >= idag ? Math.min(Number(k.gratis_kvar) || 0, kvar) : 0;
     return '<div class="erb-mitt' + (k.brukbar ? '' : ' ar-slut') + '">'
       + '<div class="erb-mitt-topp"><b>' + esc(k.namn) + '</b><span>' + esc(läge) + '</span></div>'
-      + '<div class="erb-matare" role="img" aria-label="' + esc(kvar + ' av ' + tim + ' timmar kvar') + '">'
-      + '<i style="width:' + andel + '%"></i></div>'
+      + mätare(kvar - gratisKvar, gratisKvar, tim, kvar + ' av ' + tim + ' timmar kvar')
       + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar' + esc(gratis) + '</span>'
       + (snart ? '<p class="erb-snart">'
         + esc(dagarKvar === 0 ? 'Sista dagen är i dag.' : dagarKvar === 1 ? 'Sista dagen är i morgon.' : 'Sista dagen är om ' + dagarKvar + ' dagar.')
@@ -4136,21 +4267,24 @@
     const host = $('#timbank-timmar');
     if (!host) return;
     const kort = S.erb.kort;
+    /* Batteriet (2026-10-15) överst, när det finns timmar att visa. */
+    const batteri = batteriTimmar().alla ? '<div data-batteri="profil"></div>' : '';
     if (!kort.length) {
       /* Har familjen timmar för tips står de under, så då är det bara
          köpta timmar och gratistimmar den saknar. */
       const tips = tipsKort(true);
-      host.innerHTML = '<p class="erb-bank-text tb-inga">'
+      host.innerHTML = batteri + '<p class="erb-bank-text tb-inga">'
         + (tips ? 'Ni har inga köpta timmar eller gratistimmar.' : 'Ni har inga timmar i timbanken.')
         + (S.erb.aktiv ? ' Köper ni en plan eller fyller timbanken betalar timmarna era pass av sig själva. '
           + '<a href="#erbjudanden">Se planer och Fyll timbanken</a>' : '')
         + '</p>'
         + tips;
+      sättBatterier(host);
       return;
     }
     /* Gratistimmarna (2026-10-13) står med de köpta och dras först. */
     const gratis = kort.some(NXBetalning.gratistimmar);
-    host.innerHTML = '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När ni föreslår '
+    host.innerHTML = batteri + '<p class="erb-bank-text tb-forklaring">Timmarna betalar era pass av sig själva. När ni föreslår '
       + 'ett pass dras först gratis timmar' + (gratis ? ', också gratistimmarna från oss,' : '')
       + ' sedan timmarna från det köp som går ut först, och föreslår studiehjälparen en annan tid följer de med. '
       + 'En gratis timme i en plan gäller i 60 dagar från köpet, också om planens andra timmar gått ut. '
@@ -4164,10 +4298,19 @@
       + '<a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för timmarna</a></p>'
       + kort.map(k => kortRad(k, kortetsPass(k))).join('')
       + tipsKort(true);
+    sättBatterier(host);
   }
 
   function ritaTimbankProfil() {
     ritaTimbankTimmar();
+    /* Passen räknar de använda timmarna för tips, och de kan komma efter
+       köpen: batteriet i Er timbank följer med. */
+    Object.keys(batterier).forEach(namn => {
+      const b = batterier[namn];
+      if (!b.el.isConnected) return;
+      b.mål = batteriTimmar();
+      fyllBatteri(b);
+    });
     const host = $('#timbank-profil');
     if (!host) return;
     const bank = S.erb.bank;

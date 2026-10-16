@@ -111,7 +111,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   0, `betald_at` null) och utan villkor först: en gåva är inget köp. De gäller i 60 dagar och dras först,
   med planens gratis timme, före köpta timmar (Leo: "de används först av alla timmar"; ordningen är
   `gratistimmarna_60_dagar`s, där ett kort med gratistimmar räknas som gratis), sparar inga minuter
-  (`intern.timbank_in`), får ingen påminnelse och betalas aldrig ut; studiehjälparen får lön som vanligt.
+  (`intern.timbank_in`) och betalas aldrig ut; studiehjälparen får lön som vanligt. **De påminns** tio dagar
+  innan de går ut (2026-10-15, `gratistimmarna_paminns`, Leo: "fixa påminelse"), med planens gratis timme som
+  gäller efter planen och tipstimmarna: samma mejltyp och val som köpta timmar, med `gratis` i datan, och mejlet
+  lovar då inga pengar tillbaka. Utan studiehjälpare (`S.väntar`) kan familjen inte boka, så då blir det en uppgift
+  till oss i stället, en gång per kort och dag (idén från PR #287). Ett återkallat kort påminns aldrig. Villkoren
+  säger fortfarande "förfaller utan påminnelse" (`#gratistimmar`): orden tas bort i nästa version, inte i en egen.
   `ta_tillbaka_gratistimmar()` tar bara det som inte ligger på ett pass, och återkallar kortet
   (`aterkallad_at`) i stället för att radera det (2026-10-14): ingen `delete`, och historiken står kvar.
   De står utanför första timmen, som tipstimmen. Det river beskedet 2026-10-09 "inte få gratis av oss".
@@ -336,7 +341,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   tio dagar innan räknar dem med planen. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
   och villkoren säger båda, så att namnet aldrig lovar att timmarna står kvar. Utåt heter det aldrig klippkort.
   Studievyns Erbjudanden visar alltid Er timbank med de tillgängliga timmarna och hänvisar till Profil → Timbanken,
-  där förklaringen och villkoren står (Leo samma kväll).
+  där förklaringen och villkoren står (Leo samma kväll). **Batteriet** (2026-10-15, Leo: "som ett batteri bara att
+  orange timmar är köpta och gratis är gröna ... 9 av 9 timmar finns kvar") står överst på båda ställena: en ruta per
+  timme i det som gäller nu (köp som inte gått ut, med de använda tomma; planens gratis timme efter planen; timmarna för
+  tips), gratis närmast de tomma för de dras först, "N av M timmar kvar", och en stapel över 24 timmar
+  (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger.
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
   `kolla-betalningsvillkor.py` räknar dem, och sedan 2026-10-16 meningen om de obetalda passen ("Är ett pass inte
   betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.") direkt efter
@@ -497,7 +506,8 @@ knappen stängs med `NXStudie.medan()`.
 Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, mossa klart (tokens i
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
 ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knappen
-Betala i förväg (Välj kort med strömbrytaren `kortreservation` på) och Köp under Erbjudanden (2026-10-12). Ett drag överst, en knapp per listrad, tid och plats genom
+Betala i förväg (Välj kort med strömbrytaren `kortreservation` på) och Köp under Erbjudanden (2026-10-12),
+och köpta timmar i timbankens batteri och mätare, där gratis timmar är mossa (2026-10-15, Leo). Ett drag överst, en knapp per listrad, tid och plats genom
 `NXKontakt.passRad`, betalvalen i `.vy-betalval`. Adminvyns månadsväljare är ett fält med en
 ruta för år och månad (2026-10-06), från september 2026 till och med december nästa år; märket
 står i fältet och i rutan, och Lektioner räknar upp andra månader utan rapport under det.
@@ -953,9 +963,19 @@ Detaljer: `minne/grunden.md`.
   `gratistimmar` registrerades i samma block med filens text (md5 `079603c5…`) och en anteckning om att avsnitt 7
   ersattes, som andra del. Hela `rls-test.sql` gick 1643 av 1643 mot
   driften, tillbakarullat, med filen körd först i samma transaktion (`minne/databasen.md`). Villkorens version är
-  2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Ingen påminnelse går om gratistimmar
-  (mejlet säger "köpta timmar" och lovar återbetalning); vill vi ha en krävs en egen mall och `notis-ko`. Juristen
-  har inte läst villkoren för gratistimmarna.
+  2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Påminnelsen om dem (nedan) är byggd men
+  inte i drift. Juristen har inte läst villkoren för gratistimmarna.
+- **Påminnelsen om gratis timmar och batteriet** (2026-10-15) är byggda men inte i drift: **`notis-ko` driftsätts
+  från main FÖRE** migrationen `gratistimmarna_paminns` (20261015140000), annars får familjen köptimmarnas mejl,
+  som lovar pengar tillbaka; sedan migrationen efter merge, hämtad från merge-commiten och prövad mot sin md5, i
+  ett do-block (inget `drop` eller `delete`), och hela `rls-test.sql` mot driften. Vakten släpper bara igenom
+  funktionen `timmarna_delas_och_kops_till` lämnade (md5 `2c8fa456…`) eller filens egen (`c54a9b63…`): **PR #287
+  byggde samma påminnelse** med samma namn, och Leo valde den här (2026-10-15); #287:s version i driften stoppar
+  filen i stället för att skrivas över. Vyn `klippkort_saldo` får vara den förra (`a34041ef…`) eller
+  familjerabatternas (`e4bf8d23…`): `familjerabatter` körs före den i driften, fast numret är högre, och kolumnerna
+  påminnelsen läser är desamma. **Villkoren byts inte för den** (Leo samma kväll): `#gratistimmar` säger
+  fortfarande "förfaller utan påminnelse", och orden tas bort i nästa version av villkoren. Batteriet behöver ingen
+  migration.
 - **Timmarna delas, och timmar köps till planen** (2026-10-14, `timmarna_delas_och_kops_till`, 20261014100000) är
   i drift sedan samma förmiddag: ett pass dras från högst två köp, timmen på köpet dras inte och timmarna betalar
   resten, gratistimmar återkallas utan `delete`, Köp till timmar (Välj själv, `plan_extra`, `stripe-checkout`),
@@ -975,10 +995,13 @@ Detaljer: `minne/grunden.md`.
   2026-10-14, så alla får frågan igen. Kvar: inget provköp av Köp till timmar är gjort, lönearten för bonusen i
   Fortnox ska inte vara semestergrundande (300 kr är inklusive semesterersättning; revisorn bekräftar), och juristen
   har inte läst de nya villkoren.
-- **Familjerabatterna** (2026-10-15) är skrivna, inte i drift: efter merge `familjerabatter` (20261015210000; inget `drop`
-  och inget `delete`, så hel i ett do-block) och hela `rls-test.sql` mot driften (avsnitt 35), sedan `stripe-checkout`
-  (SESSIONSFORM 9) och `drift` (agentens fakta) från merge-commiten (`DEPLOY-BETALNING.md` 9.15). Vyerna tål att migrationen
-  saknas. Lokalt ur alla 195 migrationer 1775 av 1775, och `verktyg/prova-familjerabatter.js` 63 av 63. Kvar: juristen har inte
+- **Familjerabatterna** (2026-10-15) är i drift sedan natten till 2026-10-16 (Leo: "Ja, kör hela kedjan efter merge", sedan
+  "Merga"): PR #293 mergades (8b28e1a), Vercel driftsatte den 23.50 UTC, och `familjerabatter` (20261015210000) kördes direkt
+  efter, hämtad från merge-commiten, prövad mot sin md5 (`8348b94c…`) och körd och registrerad i ett do-block (inget `drop` och
+  inget `delete`). Alla kroppar den skriver är byte för byte filens, hela `rls-test.sql` gick 1775 av 1775 mot driften,
+  tillbakarullat, och advisorn larmade inte om något nytt för `anon`. Sedan `stripe-checkout` v21 (SESSIONSFORM 9) och `drift`
+  v21 från merge-commiten, hämtade tillbaka och byte för byte lika (7 och 5 filer), och båda svarade 401 ur sin egen kod på ett
+  röktest (`DEPLOY-BETALNING.md` 9.15). Ingen familjerabatt fanns. Kvar: provet i testläge (9.15 steg 4), och juristen har inte
   läst rad 30 i `DATASKYDD.md` eller policyns nya stycken.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige

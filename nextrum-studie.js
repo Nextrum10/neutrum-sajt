@@ -3816,9 +3816,10 @@ window.NXStudie = (function () {
     { typ: 'pass_avbojt',    namn: 'Avböjd tid',           om: 'När en föreslagen tid inte passar.' },
     { typ: 'meddelande',     namn: 'Nya meddelanden',      om: 'När någon skriver till dig.' },
     { typ: 'paminnelse',     namn: 'Påminnelse före pass', om: 'Innan ett bokat pass.' },
-    /* Fas 21.2. Bara familjen köper timmar, så bara föräldravyn visar
-       raden: en strömbrytare för ett mejl man aldrig kan få är brus. */
-    { typ: 'timmar_gar_ut',  namn: 'Köpta timmar går ut',  om: 'Tio dagar innan köpta timmar går ut, om det finns timmar kvar.', bara: 'parent' },
+    /* Fas 21.2. Bara familjen har timmar, så bara föräldravyn visar
+       raden: en strömbrytare för ett mejl man aldrig kan få är brus.
+       gratistimmarna_paminns (2026-10-15): gratis timmar påminns också. */
+    { typ: 'timmar_gar_ut',  namn: 'Timmar som går ut',    om: 'Tio dagar innan köpta eller gratis timmar går ut, om det finns timmar kvar.', bara: 'parent' },
     /* barnet_foreslar_pass (2026-10-12). Bara familjen får förslagen. */
     { typ: 'barnforslag',    namn: 'Barnens förslag',      om: 'När ett barn föreslår ett pass i sin vy. Inget går till studiehjälparen förrän ni skickat det.', bara: 'parent' },
     /* kortet_reserveras (2026-10-13). Bara familjen betalar med kort. */

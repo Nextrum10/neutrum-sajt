@@ -554,7 +554,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `ansokan-besked` | var femte minut | nya försök med beskeden till den som söker jobb |
 | `admin-paminnelse` | var femte minut | räknar Att göra och skriver kl. 9 svensk tid ETT mejl till admin med det som ligger kvar och inte mejlats; klockan avgörs i funktionen, inte i schemat (2026-10-02, Notiserna) |
 | `timmar-betalar` | var femte minut | obesvarade förslag lämnar tillbaka timmen, lediga timmar betalar nästa pass (Fas 22.3–22.4) |
-| `timmar-gar-ut` | :07 varje timme | mejlet tio dagar innan köpta timmar går ut (Fas 21.2) |
+| `timmar-gar-ut` | :07 varje timme | mejlet tio dagar innan köpta eller gratis timmar går ut (Fas 21.2, gratis sedan `gratistimmarna_paminns`) |
 | `utbildningsprov-paminn` | :13 varje timme | påminnelserna om utbildningsprovet |
 | `notis-stada` | 03:17 | städar notiserna och utskicken |
 | `cron-stada` | 03:23 | tar bort körningar äldre än sju dagar ur `cron.job_run_details` |
@@ -1337,6 +1337,34 @@ med filens md5, och ingen ansökan med steget satt. Hela `rls-test.sql` från
 b85b892 gick 1745 av 1745 mot driften i ett do-block som slutar med ett fel
 (allt rullades tillbaka), och inget blev kvar. Advisorn larmade inte om något
 nytt.
+
+### Familjerabatterna (familjerabatter, 2026-10-15, i drift 2026-10-16)
+Tabellerna `familjerabatter` och `familjens_rabatt`, kolumnerna
+`bookings.familjerabatt_ore` och `klippkort.familjerabatt_ore`, och fem
+funktioner och vyn `klippkort_saldo` omskrivna mot driften som den lästes
+2026-10-15 (`minne/betalning.md`, Familjerabatterna). `rls-test.sql` avsnitt
+35 (`FR`).
+**I drift natten till 2026-10-16**, direkt efter merge av PR #293 (8b28e1a),
+som Vercel driftsatte 23.50 UTC: de två andra sessionerna i repot (PR #292 och
+#296) fick veta före och efter, och ingen av dem körde mot driften. Filen
+hämtades från merge-commiten genom `extensions.http_get`, prövades mot sin md5
+(`8348b94c…`) och kördes och registrerades i samma do-block (`$kor$`), med en
+vakt mot att versionen redan fanns. Filen har inget `drop` och inget `delete`.
+Vakterna (md5 på de fem kropparna och på vyns definition) stämde. Efteråt:
+alla kroppar byte för byte filens (`md5(prosrc)`), raden i `schema_migrations`
+med filens md5, de tre kolumnerna, fyra policyer, fyra triggrar och RLS på
+plats, inga rättigheter för `anon` eller `nextrum_barn`, `authenticated` får
+läsa och skriva koderna och läsa familjernas rader (policyerna prövar
+`is_admin()`) och köra `min_familjerabatt()` och `satt_familjerabatt()`,
+`intern.familjerabatt` körs bara av ägaren, och inga rader i de nya tabellerna.
+Vyn har `familjerabatt_ore` sist, och `md5(pg_get_viewdef('public.klippkort_saldo'::regclass, true))`
+är nu `e4bf8d23…` (var `a34041ef…`): en migration som vaktar vyn ska läsa
+driften igen. Hela `rls-test.sql` från 8b28e1a (`ebb2ac5e…`) gick 1775 av 1775
+mot driften i ett do-block som slutar med ett fel (allt rullades tillbaka), och
+advisorn larmade inte om något nytt för `anon`. `stripe-checkout` v21 och
+`drift` v21 gick ut från samma commit, och båda svarade 401 på ett röktest
+genom `intern.natanrop` med den publika nyckeln som token (punkt 5 i Att köra
+en migration i driften från en session, och `minne/funktioner.md`).
 
 ### Nivåerna och prövningen (nexlax_i_adminvyn och betygsgarantin_provas, 2026-10-15)
 Vad de gör står i `minne/nexlax.md` (nivåerna i adminvyn) och

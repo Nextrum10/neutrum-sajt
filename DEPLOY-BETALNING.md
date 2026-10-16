@@ -1368,12 +1368,14 @@ drar `stripe-reservation` pengarna för ett pass med ett sparat kort, men utan
 `payment_intent.succeeded` på endpointen blir passet aldrig betalt hos oss.
 Stripe står i testläge, så bara testkort fungerar.
 
-### 9.15 Familjerabatterna (2026-10-15, inte i drift)
+### 9.15 Familjerabatterna (2026-10-15, i drift 2026-10-16)
 
 Våra egna koder, som bara vi ser: kronor av per timme för de familjer vi sätter
 koden på (`CLAUDE.md` avsnitt 1, `minne/betalning.md`, Familjerabatterna).
 Inga pengar dras annorlunda än förut, bara mindre: priset fryses som förut, med
-rabatten dragen, och kassan drar det databasen räknat.
+rabatten dragen, och kassan drar det databasen räknat. **Steg 1–3 gjordes
+natten till 2026-10-16** (Gjort, sist i avsnittet). **Kvar är steg 4**, provet
+i testläge, och juristen.
 
 Vyerna går ut med sajten när grenen mergas, före allt nedan, och tål att
 migrationen saknas: fliken under Tjänster och rutan i familjens panel säger att
@@ -1410,6 +1412,32 @@ Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md` eller policyns
 nya stycken, och en rabatts villkor (beloppet, att den gäller tills vidare och
 att vi kan ta bort den) ska stå där vi ger den, i mejlet eller avtalet med
 partnern.
+
+**Gjort natten till 2026-10-16** (Leo: "Ja, kör hela kedjan efter merge",
+sedan "Merga"; från merge-commiten 8b28e1a, och de två andra sessionerna som
+arbetade i repot körde inget mot driften):
+- Sajten: Vercel driftsatte 8b28e1a 23.50 UTC (READY), och 693421b efter den.
+- Steg 1: `familjerabatter` hel i ett do-block, hämtad från 8b28e1a, prövad
+  mot sin md5 (`8348b94c…`) och registrerad med filens text, med en vakt mot
+  att versionen redan fanns. Vakterna stämde mot driften. Efteråt: alla
+  kroppar filen skriver byte för byte filens, kolumnerna, policyerna och
+  triggrarna på plats, inga rättigheter för `anon` eller `nextrum_barn`, och
+  inga rader i de nya tabellerna (`minne/databasen.md`). Hela `rls-test.sql`
+  (`ebb2ac5e…`, från 8b28e1a) 1775 av 1775 mot driften, tillbakarullat.
+  Advisorn: inget nytt för `anon`, och för `authenticated` bara
+  `min_familjerabatt()` och `satt_familjerabatt()`, som prövar `is_admin()`
+  först.
+- Steg 2: `stripe-checkout` v21, 00.06 UTC, alla sju filer hämtade tillbaka
+  och byte för byte lika.
+- Steg 3: `drift` v21, 00.13 UTC, alla fem filer lika. Faktatexten lästes
+  hel mot kärnan först, och det enda som skilde mot v20 var familjerabatten.
+- Röktest genom `intern.natanrop` med den publika nyckeln (målen
+  `rokprov:stripe-checkout` och `rokprov:drift`, `minne/databasen.md`): båda
+  svarade 401, "Inloggningen gick inte att verifiera.", ur sin egen kod och
+  utan grindens felkod. Svaren syns under System → Fel och på Översikt tills
+  pg_net rensar dem sex timmar senare.
+
+Ingen kod var skapad och ingen familj hade en rabatt när kedjan var klar.
 
 ### 9.16 Till skarpt läge, i ordning (2026-10-15)
 
