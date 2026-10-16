@@ -1,6 +1,7 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  arErbjudandekod, extraTimmar, kanAteranvandas, kassarad, kassaradTillPlanen, sammaInnehall, svensktDatum,
+  arErbjudandekod, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen, sammaInnehall,
+  svensktDatum,
 } from './erbjudanden.ts';
 
 Deno.test('erbjudandekoden: bara katalogens form släpps in', () => {
@@ -37,6 +38,29 @@ Deno.test('kassaraden säger rabattkoden när köpet har en (2026-10-13)', () =>
     '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med rabattkoden VAR10.');
   // Utan kod är raden densamma som förut, också med null.
   assertEquals(kassarad(basic, null).description, kassarad(basic).description);
+});
+
+Deno.test('kassaraden säger familjens rabatt, aldrig koden (familjerabatter, 2026-10-15)', () => {
+  const basic = { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5,
+    giltig_manader: 1, timpris_ore: 39900, pris_ore: 151600, timmar_pa_kopet: 0 };
+  assertEquals(kassarad(basic, null, 1000).description,
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med er rabatt på 10 kr per timme.');
+  // Med en rabattkod ovanpå står båda, rabatten först.
+  assertEquals(kassarad(basic, 'VAR10', 1000).description,
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med er rabatt på 10 kr per timme. Med rabattkoden VAR10.');
+  // Noll är ingen rabatt, och raden är densamma som förut.
+  assertEquals(kassarad(basic, null, 0).description, kassarad(basic).description);
+});
+
+Deno.test('familjens rabatt på ett köp: varje betald timme, och bara när ett pris blir kvar', () => {
+  const standard = { timmar: 8, timmar_pa_kopet: 0, rabatterat_timpris_ore: 37900 };
+  assertEquals(familjerabattPaKop(standard, 1000), { perTimme: 1000, summa: 8000 });
+  // En timme på köpet kostar inget, och får ingen rabatt.
+  assertEquals(familjerabattPaKop({ ...standard, timmar_pa_kopet: 1 }, 1000), { perTimme: 1000, summa: 7000 });
+  assertEquals(familjerabattPaKop(standard, 0), { perTimme: 0, summa: 0 });
+  assertEquals(familjerabattPaKop(standard, 37900), { perTimme: 0, summa: 0 });
+  // Ett äldre svar utan timpriset ger ingen rabatt i stället för en gissning.
+  assertEquals(familjerabattPaKop({ timmar: 8, timmar_pa_kopet: 0 }, 1000), { perTimme: 0, summa: 0 });
 });
 
 // Standard hade en timme på köpet 2026-10-07–08. Katalogen har ingen i dag,
@@ -103,6 +127,11 @@ Deno.test('raden för timmar till planen säger planens timpris och planens sist
     '3 timmar läxhjälp till planens timpris, 379 kr i timmen. Gäller till och med 3 november 2026, samma dag som planen.');
   assertEquals(kassaradTillPlanen({ ...x, timmar: 1 }).description.startsWith('1 timme läxhjälp'), true);
   assertEquals(kassaradTillPlanen({ ...x, plan_namn: '' }).name, 'Extra timmar till planen');
+  // Familjens rabatt (familjerabatter, 2026-10-15): timpriset efter den står också.
+  assertEquals(kassaradTillPlanen({ ...x, familjerabatt_ore: 1000 }).description,
+    '3 timmar läxhjälp till planens timpris, 379 kr i timmen, med er rabatt 369 kr. '
+      + 'Gäller till och med 3 november 2026, samma dag som planen.');
+  assertEquals(kassaradTillPlanen({ ...x, familjerabatt_ore: 0 }).description, kassaradTillPlanen(x).description);
 });
 
 Deno.test('datumet på svenska, och ett datum i fel form står som det är', () => {

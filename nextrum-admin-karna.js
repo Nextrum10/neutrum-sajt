@@ -43,6 +43,9 @@ const NXAdmin = (function () {
     sett: null, nyttNu: { leads: new Set(), ansokningar: new Set() }, settSek: null,
     fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
+    /* 2026-10-15: familjerabatterna, och vilken familj som har vilken
+       (parent_id → raden). Bara en superadmin läser dem. */
+    familjerabatter: [], familjerabatterFel: null, familjensRabatt: {}, familjensRabattFel: null,
     elevlista: [], allaElever: [], rapporter: [], lage: null, attGora: [],
     matchunderlag: [], matchunderlagFel: null, valdElev: null, kalender: null,
     matForslag: [], detaljCache: {},
@@ -494,7 +497,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
-           bankPass, kkSkarp, tips, sett, roller, bonus] = await Promise.all([
+           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -597,7 +600,12 @@ const NXAdmin = (function () {
       /* 2026-10-13: bonusen för tips, 300 kr i lön när vi tar in någon
          som sökt jobb med en studiehjälpares kod. Löner räknar den och
          lägger den i lönefilen, Koder visar den per kod. */
-      bara(() => hämtaAlla('tipsbonus', '*', nyastFörst('intjanad_at')))
+      bara(() => hämtaAlla('tipsbonus', '*', nyastFörst('intjanad_at'))),
+      /* 2026-10-15: familjerabatterna, våra egna koder som bara vi ser, och
+         vilken familj som har vilken. Fliken under Tjänster och familjens
+         panel ritar dem. En rad per familj som någon gång haft en. */
+      bara(() => supa.from('familjerabatter').select('*').order('skapad', { ascending: false })),
+      bara(() => hämtaAlla('familjens_rabatt', 'parent_id, kod, andrad_at, andrad_av', null, 'parent_id'))
     ]);
 
     S.leads = leads.data || [];
@@ -645,6 +653,15 @@ const NXAdmin = (function () {
     /* Saknas tabellen (migrationen tipskoder_bonus_och_timbanken är inte
        körd) är bonusarna inga, och Löner räknar som förut. */
     S.tipsbonus = bonus.data || [];
+    /* Saknas tabellerna (migrationen familjerabatter är inte körd) säger
+       fliken och panelen det, och ingen familj har en rabatt. */
+    const saknas = fel => fel && (/PGRST205|42P01/.test(String(fel.code))
+      || /could not find the table/i.test(String(fel.message || '')));
+    S.familjerabatter = frKoder.data || [];
+    S.familjerabatterFel = frKoder.error ? (saknas(frKoder.error) ? 'saknas' : felText(frKoder.error)) : null;
+    S.familjensRabatt = {};
+    (frFamiljer.data || []).forEach(r => { S.familjensRabatt[r.parent_id] = r; });
+    S.familjensRabattFel = frFamiljer.error ? (saknas(frFamiljer.error) ? 'saknas' : felText(frFamiljer.error)) : null;
     S.tipsbonusFel = bonus.error ? (/PGRST205|42P01/.test(String(bonus.error.code)) ? 'saknas' : felText(bonus.error)) : null;
     /* Saknas funktionen (migrationen tipskoder_och_kampanjkoder är inte
        körd) är listan tom och säger det, i stället för att fälla vyn. */

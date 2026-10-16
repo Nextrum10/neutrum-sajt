@@ -1,5 +1,6 @@
 /* ============================================================
-   NEXTRUM — adminvyn, Tjänster: tjänstekatalogen och rabattkoderna
+   NEXTRUM — adminvyn, Tjänster: tjänstekatalogen, rabattkoderna och
+   familjerabatterna
 
    En del av nextrum-admin.js, utflyttad i Fas 6 utan att någon
    funktion skrivits om. Kärnan (nextrum-admin-karna.js) laddas
@@ -444,6 +445,177 @@
     });
   });
 
+  /* ------------------------------------------------------------
+     FAMILJERABATTERNA (2026-10-15)
+
+     Leo: "vi i admin vill skapa egna rabattkoder som bara vi har
+     tillgång till ... vi vill ge 10 kr billigare på alla timmar som köps
+     tex". Våra egna koder: kronor av per timme för de familjer vi sätter
+     koden på, i familjens panel under Ekonomi (satt_familjerabatt).
+     Familjen skriver dem aldrig och ser bara det lägre priset. Som
+     rabattkoderna tas de aldrig bort, de stängs av, och ett nytt belopp
+     gäller det som bokas och köps efter det: priset fryses.
+     ------------------------------------------------------------ */
+  const krPerTimme = ore => Math.round(Number(ore) / 100) + ' kr per timme';
+
+  /* Hur många familjer som bär koden nu. En avidentifierad familj har
+     ingen kod kvar (profiles_familjerabatt_rensas). */
+  function familjerMed(kod) {
+    return Object.values(S.familjensRabatt || {}).filter(r => r.kod === kod).length;
+  }
+
+  /* Koderna och familjernas rader på nytt, efter en ändring här eller i
+     familjens panel. Ett fel lämnar det som stod. */
+  async function hämtaFamiljerabatter() {
+    const [k, f] = await Promise.all([
+      supa.from('familjerabatter').select('*').order('skapad', { ascending: false }),
+      NXStudie.hämtaAlla(supa, 'familjens_rabatt', 'parent_id, kod, andrad_at, andrad_av', null, 'parent_id')
+    ]);
+    if (!k.error) { S.familjerabatter = k.data || []; S.familjerabatterFel = null; }
+    if (!f.error) {
+      S.familjensRabatt = {};
+      (f.data || []).forEach(r => { S.familjensRabatt[r.parent_id] = r; });
+      S.familjensRabattFel = null;
+    }
+  }
+
+  function ritaFamiljerabatter() {
+    const host = $('#fr-tabell');
+    if (!host) return;
+    const antal = $('#fr-antal');
+    if (S.familjerabatterFel) {
+      if (antal) antal.textContent = '';
+      host.innerHTML = S.familjerabatterFel === 'saknas'
+        ? tomt('Familjerabatterna finns inte i databasen än',
+            'Migrationen familjerabatter är inte körd. Fliken fungerar när den är det.')
+        : tomt('Familjerabatterna gick inte att läsa', S.familjerabatterFel);
+      return;
+    }
+    const koder = S.familjerabatter || [];
+    if (antal) antal.textContent = koder.length ? koder.length + ' st' : '';
+
+    host.innerHTML = tabell([
+      { namn: 'Kod', rita: r => '<b style="font-family:var(--f-mono);letter-spacing:.06em">' + esc(r.kod) + '</b>'
+          + (r.beskrivning ? '<span class="adm-und">' + esc(r.beskrivning) + '</span>' : '') },
+      /* Beloppet ändras på raden. Det gäller det som bokas och köps
+         efter ändringen, och frågan säger hur många familjer det rör. */
+      { namn: 'Kronor av per timme', rita: r => '<form class="fr-belopp" data-fr-belopp="' + esc(r.kod) + '">'
+          + '<input class="inp" name="kr" type="number" min="1" max="200" step="1" inputmode="numeric"'
+          + ' aria-label="' + esc('Kronor av per timme för ' + r.kod) + '" value="' + Math.round(r.ore_per_timme / 100) + '">'
+          + '<button class="btn btn-ghost btn-sm" type="submit">Spara</button></form>' },
+      { namn: 'Familjer', rita: r => '<span class="adm-tal">' + familjerMed(r.kod) + '</span>' },
+      { namn: 'Läge', rita: r => (r.aktiv ? pill('Aktiv', 'ar-klar') : pill('Avstängd', '')) },
+      { namn: '', höger: true, rita: r => '<button class="btn btn-ghost btn-sm" type="button" data-fr-vaxla="'
+          + esc(r.kod) + '">' + (r.aktiv ? 'Stäng av' : 'Slå på') + '</button>' }
+    ], koder, 'Inga familjerabatter än');
+  }
+
+  /* Familjens panel visar koden och dess läge; står den öppen ritas den om. */
+  const ritaOmPanelen = () => {
+    if (typeof NXAdmin.rita.ritaDetalj === 'function') NXAdmin.rita.ritaDetalj();
+  };
+
+  (function kopplaFamiljerabatter() {
+    const form = $('#fr-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const msg = $('#fr-msg');
+      rensa(msg);
+      const kod = String($('#fr-kod').value || '').trim().toUpperCase();
+      const kr = Number(String($('#fr-kr').value || '').trim());
+      const text = String($('#fr-text').value || '').trim();
+
+      /* Samma villkor som databasens. Beskedet här, skyddet där. */
+      if (!/^[A-Z0-9-]{3,24}$/.test(kod)) {
+        säg(msg, 'Koden får bara innehålla A–Z, 0–9 och bindestreck, 3–24 tecken.', false); return;
+      }
+      if (!Number.isInteger(kr) || kr < 1 || kr > 200) {
+        säg(msg, 'Rabatten är hela kronor per timme, mellan 1 och 200.', false); return;
+      }
+      /* En familjerabatt och en rabattkod med samma namn går att skapa,
+         men inte att hålla isär i huvudet. */
+      if ((S.rabattkoder || []).some(r => r.kod === kod)) {
+        säg(msg, 'Det finns redan en rabattkod som heter ' + kod + '. Välj ett annat namn, så att de inte blandas ihop.', false);
+        return;
+      }
+
+      await medan($('#fr-spara'), 'Skapar…', async () => {
+        const { error } = await supa.from('familjerabatter')
+          .insert({ kod, ore_per_timme: kr * 100, beskrivning: text || null });
+        if (error) {
+          säg(msg, error.code === '23505' ? 'Det finns redan en familjerabatt som heter ' + kod + '.'
+            : (error.code === 'PGRST205' || error.code === '42P01') ? 'Migrationen familjerabatter är inte körd än.'
+            : 'Kunde inte skapa: ' + felText(error), false);
+          return;
+        }
+        await hämtaFamiljerabatter();
+        ritaFamiljerabatter();
+        form.reset();
+        säg(msg, '✓ ' + kod + ' är skapad, ' + krPerTimme(kr * 100) + '. Sätt den på en familj i familjens panel, under Ekonomi.', true);
+      });
+    });
+  })();
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-fr-vaxla]');
+    if (!knapp) return;
+    const rad = (S.familjerabatter || []).find(r => r.kod === knapp.dataset.frVaxla);
+    if (!rad) return;
+    const n = familjerMed(rad.kod);
+    if (rad.aktiv && n) {
+      const ja = await bekräfta({
+        titel: 'Stäng av ' + rad.kod + '?',
+        text: (n === 1 ? 'En familj har koden. Den betalar' : n + ' familjer har koden. De betalar')
+          + ' ordinarie pris för det som bokas och köps från och med nu, tills ni slår på koden igen eller ger '
+          + (n === 1 ? 'den' : 'dem') + ' en annan. Det som redan är bokat och köpt behåller sitt pris.',
+        knapp: 'Stäng av'
+      });
+      if (!ja) return;
+    }
+    await medan(knapp, '…', async () => {
+      const { error } = await supa.from('familjerabatter').update({ aktiv: !rad.aktiv }).eq('kod', rad.kod);
+      if (error) { alert('Kunde inte ändra: ' + felText(error)); return; }
+      rad.aktiv = !rad.aktiv;
+      ritaFamiljerabatter();
+      ritaOmPanelen();
+    });
+  });
+
+  document.addEventListener('submit', async e => {
+    const f = e.target.closest('form[data-fr-belopp]');
+    if (!f) return;
+    e.preventDefault();
+    const rad = (S.familjerabatter || []).find(r => r.kod === f.dataset.frBelopp);
+    if (!rad) return;
+    const kr = Number(String(f.elements.kr.value).trim());
+    const tillbaka = () => { f.elements.kr.value = Math.round(rad.ore_per_timme / 100); };
+    if (!Number.isInteger(kr) || kr < 1 || kr > 200) {
+      alert('Rabatten är hela kronor per timme, mellan 1 och 200.');
+      tillbaka();
+      return;
+    }
+    if (kr * 100 === Number(rad.ore_per_timme)) return;
+    const n = familjerMed(rad.kod);
+    const ja = await bekräfta({
+      titel: 'Ändra ' + rad.kod + ' till ' + krPerTimme(kr * 100) + '?',
+      text: (n ? (n === 1 ? 'Familjen med koden betalar ' : 'De ' + n + ' familjerna med koden betalar ')
+                 + kr + ' kr mindre per timme för det som bokas och köps från och med nu.'
+               : 'Ingen familj har koden än.')
+        + ' Det som redan är bokat och köpt behåller sitt pris.',
+      knapp: 'Ändra'
+    });
+    if (!ja) { tillbaka(); return; }
+    await medan(f.querySelector('button'), 'Sparar…', async () => {
+      const { error } = await supa.from('familjerabatter').update({ ore_per_timme: kr * 100 }).eq('kod', rad.kod);
+      if (error) { alert('Kunde inte spara: ' + felText(error)); tillbaka(); return; }
+      rad.ore_per_timme = kr * 100;
+      ritaFamiljerabatter();
+      ritaOmPanelen();
+    });
+  });
+
   /* ============ tjänsterna ============
      Ett spara per kort. Delegerat, eftersom korten ritas om varje
      gång något sparas — en lyssnare per knapp hade tappats bort vid
@@ -590,6 +762,6 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ritaRabattkoder, ritaTjanster, standardJobbtjanst
+    ritaRabattkoder, ritaTjanster, standardJobbtjanst, ritaFamiljerabatter, hämtaFamiljerabatter
   });
 })();

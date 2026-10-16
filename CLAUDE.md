@@ -223,7 +223,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   i barnets vy. Koden gäller bara det familjen betalar med pengar. En gratis timme går före den
   (`forsta_timmen_bjuds`, också tipstimmen), och köpta timmar och timbanken går före den, när passet
   skapas och när de betalar det senare (`bookings_timmar_betalar_utan_kod`): då tas koden bort från
-  passet, och den läggs aldrig ihop med något. En kod som tas bort när passet skapas räknas inte som
+  passet, och den läggs aldrig ihop med något (en familjerabatt är familjens pris, och koden räknas på det). En kod som tas bort när passet skapas räknas inte som
   använd. Rutan säger när koden inte används och varför, och koden skickas ändå: databasen avgör.
   **Har familjen timmar i timbanken gäller ingen kod på ett pass** (samma kväll, Leo: "rabattkod kan inte
   användas om man har timmar i timbanken ... kan användas för att köpa timmar i timbanken eller om man har noll
@@ -235,6 +235,22 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   per familj (`max_anvandningar`, `max_per_familj`, en gång som förval; Leo: "rabattkoder ska vi också bestämma hur
   många gånger de får användas"), och ett avbokat pass ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6).
   I drift sedan natten till 2026-10-14; en kods villkor ska stå där den delas ut (avsnitt 11).
+- **Familjerabatter** (2026-10-15, Leo: "egna rabattkoder som bara vi har tillgång till ... 10 kr billigare på alla
+  timmar som köps tex ... tills vi tar bort rabatten. ... de ser bara att de har rabatt vid checkout men inte annat"): våra
+  egna koder (`familjerabatter`, Tjänster → Familjerabatter), kronor av per timme, 1–200 kr i hela kronor, som admin sätter
+  på en familj i familjens panel (Ekonomi) och i Ta in familjen, bara genom `satt_familjerabatt()` (`is_admin()`, en kod per
+  familj, null tar bort: raden står kvar utan kod, aldrig ett `delete`). Ingen rabattkod: familjen skriver den aldrig, ser
+  aldrig koden och den räknas inte. Familjen får bara beloppet (`min_familjerabatt()`), och vyn visar det bara där familjen
+  betalar: på korten under Erbjudanden (Leo samma kväll: "Visa på korten också"; `medRabatt()`, samma regel som databasen),
+  vid priset i Boka pass, i Köp till timmar och i kassan. Kronorna dras på varje timme familjen betalar med pengar, när priset fryses:
+  passets `timpris_ore` (`frys_passets_pris`; `bookings.familjerabatt_ore` säger hur mycket), ett köp ur katalogen per betald
+  timme (`intern.klippkort_rabatt`; `klippkort.familjerabatt_ore`, och `timpris_ore` står kvar som katalogens) och timmar
+  till en plan (`extra_timmar_erbjudande()`). Tillägget för fler barn, gratistimmar, första timmen och tipstimmen rörs inte,
+  och en rabattkod räknas på priset efter den: de staplas (Leo samma kväll). Det bokade och köpta står fast när rabatten sätts, ändras eller tas bort, och
+  en avstängd kod ger ingen rabatt. Slutar familjen räknas de använda timmarna och minuterna till timpriset minus den
+  (`vid_uppsagning_ore`, `intern.timbank_varde`). Lönen rörs inte. Den ändrar inget publikt pris, och villkoren nämner den
+  inte (ingen ny version): en rabatts villkor ska stå där vi ger den. Auditen får att familjen fick eller blev av med en
+  rabatt (`har_rabatt`), aldrig koden, som kan säga vilken partner familjen kom genom.
 - **Kortet reserveras** (2026-10-13, i drift sedan 2026-10-14; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
   och när passet har hållits och läxhjälparen har skrivit rapport så dras pengarna"): valet är frivilligt, och kortet
   och reservationen står i egna tabeller, aldrig på `bookings` (`kortreservationer`, bara genom `valj_kort()` och
@@ -287,6 +303,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | tipsbonus | 300 kr i lön, inklusive semesterersättning, till en studiehjälpare för ett tips som vi tagit in (`tipsbonus`), aldrig ett underlag |
 | timbanken | familjens köpta timmar (en plan eller Fyll timbanken), gratistimmar och sparade minuter; pass för pass går inte genom den |
 | gratistimmar | timmar vi sätter in i familjens timbank utan kostnad (`klippkort` med erbjudandet `gratis`); 60 dagar, dras först med planens gratis timme. Inte första timmen eller tipstimmen |
+| familjerabatt | kronor av per timme för en familj vi satt en av våra koder på (`familjerabatter`, `familjens_rabatt`); aldrig en rabattkod, och familjen ser aldrig koden, bara priset |
 | Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
 | timmar till planen | Köp till timmar: 1–20 timmar till en plan som gäller, till planens timpris, som går ut med planen (`klippkort` med erbjudandet `plan_extra` och `till_plan`; Välj själv under Er timbank) |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
@@ -781,7 +798,8 @@ Detaljer: `minne/grunden.md`.
 ## 11. Vad som inte är byggt
 - **Skarp kortbetalning**: bara testläge. Stripes endpoint behöver `charge.updated`,
   `charge.dispute.updated` och kortets tre (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
-  `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox.
+  `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox. Stegen till skarpt läge, i
+  ordning och med driftens läge: `DEPLOY-BETALNING.md` 9.16 (2026-10-15).
 - **Fakturan** är på, men bolaget, bankgirot, beskedet till befintliga familjer och
   provfaktureringen återstår (DEPLOY-BETALNING.md 9.11); när bolaget är registrerat ändras
   villkoren och integritetspolicyn. Spärren "ingen betalning, inget pass" kan inte slås på.
@@ -945,6 +963,11 @@ Detaljer: `minne/grunden.md`.
   2026-10-14, så alla får frågan igen. Kvar: inget provköp av Köp till timmar är gjort, lönearten för bonusen i
   Fortnox ska inte vara semestergrundande (300 kr är inklusive semesterersättning; revisorn bekräftar), och juristen
   har inte läst de nya villkoren.
+- **Familjerabatterna** (2026-10-15) är skrivna, inte i drift: efter merge `familjerabatter` (20261015210000; inget `drop`
+  och inget `delete`, så hel i ett do-block) och hela `rls-test.sql` mot driften (avsnitt 35), sedan `stripe-checkout`
+  (SESSIONSFORM 9) och `drift` (agentens fakta) från merge-commiten (`DEPLOY-BETALNING.md` 9.15). Vyerna tål att migrationen
+  saknas. Lokalt ur alla 195 migrationer 1775 av 1775, och `verktyg/prova-familjerabatter.js` 63 av 63. Kvar: juristen har inte
+  läst rad 30 i `DATASKYDD.md` eller policyns nya stycken.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
@@ -1000,6 +1023,12 @@ Detaljer: `minne/grunden.md`.
   lika en lokal databas byggd ur filerna, och hela `rls-test.sql` gick 1745 av 1745 mot driften, tillbakarullat.
   Advisorn larmade inte om något nytt. De tre andra sessionerna i repot fick veta före och efter. Fliken Intervju
   är tom: i driften var sju av nio ansökningar Kontaktad, och Leo skickar dit dem han vill intervjua.
+- **Första timmen som Erbjudande, också med rabattkod, och inte pass för pass** (2026-10-15) är i drift sedan samma
+  kväll: PR #286 mergades (bed3797), Vercel driftsatte den 19.48 UTC, och `drift` v20 gick ut från merge-commiten,
+  hämtad tillbaka och byte för byte lika i alla fem filer. Ingen migration: databasen gav redan den första planen
+  timmen också med kod, och villkoren står kvar på 2026-10-15. Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()`
+  och villkorens "kan vi, om vi kommit överens" går med nästa version av villkoren, och faktatextens "(första timmen
+  eller tipstimmen)" står kvar också efter #293 (8b28e1a) och rättas nästa gång texten ändras (`minne/funktioner.md`).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

@@ -2113,6 +2113,9 @@ body.vy-admin .dbox * + h5{margin-top:24px}
 .le-gratis .inp{width:100%;min-height:44px;text-align:center}
 .le-gratis span{grid-column:1 / -1;font-size:.82rem;line-height:1.5;color:var(--bl-2)}
 .le-gratis[hidden]{display:none}
+/* Familjerabatten när familjen tas in (2026-10-15): koden behöver bredden. */
+.le-rabatt{grid-template-columns:minmax(0,1fr)}
+.le-rabatt .sel{width:100%;min-height:44px}
 
 /* Behoven familjen angav. Egen ton, så att de inte läses som ännu ett
    ämne i raden. */
@@ -2477,6 +2480,23 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
   .dp-gratis{grid-template-columns:minmax(0,1fr) 5.5rem}
   .dp-gratis label{grid-column:1 / -1}
 }
+/* Familjerabatten under familjens Ekonomi (2026-10-15): koden att välja och
+   knappen i en rad, vad den gör under, som gratistimmarna. */
+.dp-rabatt{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 10px;align-items:center;
+  margin:10px 0 18px;padding:12px 14px;border-radius:14px;background:var(--tint);
+}
+.dp-rabatt label{font-size:.88rem;font-weight:650;color:var(--bl)}
+.dp-rabatt .sel{width:100%;min-height:44px}
+.dp-rabatt .btn{min-height:44px}
+.dp-rabatt .dp-gratis-not,.dp-rabatt .ok-msg{grid-column:1 / -1;margin:0}
+@media (max-width:420px){
+  .dp-rabatt{grid-template-columns:minmax(0,1fr) auto}
+  .dp-rabatt label{grid-column:1 / -1}
+}
+/* Beloppet på en familjerabatt ändras på raden under Tjänster. */
+.fr-belopp{display:flex;gap:8px;align-items:center}
+.fr-belopp .inp{width:5.5rem;min-height:44px;text-align:center}
 
 /* Formulären i panelen: materialrutan och AI-förslagen.
 

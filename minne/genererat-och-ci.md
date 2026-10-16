@@ -540,7 +540,11 @@ en rapport, elevens tråd, de två vyerna kopplade (föreslå, byt, acceptera,
 byt tillbaka, omladdningen, Börja om), telefonen och adminvyns sektion
 och tal utan adminens konto. När vyerna börjar fråga efter en ny tabell
 eller funktion säger provet det: lägg den i världen i
-`nextrum-forhandsvisning.js`.
+`nextrum-forhandsvisning.js`. Ett pass som provet skapar hittas på sitt id
+(de som inte fanns före Boka), aldrig på datum och läge: provet bokar
+kalenderns sista dag, alltså månadens sista, och världens pass ligger på
+`dag(6)`, `dag(16)` och `dag(23)`. Den 15 oktober var `dag(16)` den 31:a,
+och provet tog Saras motförslag för familjens förslag (tre prov föll).
 
 ### Webbläsarprovet för kortet (2026-10-14)
 `verktyg/prova-kortet.js` (port 8976) provar kortets vyer
@@ -561,6 +565,21 @@ här: det är steg 6 i `DEPLOY-BETALNING.md` 9.14.
 `prova-barnkonton.js` fick två ändringar samma dag: Boka pass är en dold
 menypost i barnets vy tills föräldern slagit på den, och Förhandsvisning
 står i menyn för varje admin.
+
+### Webbläsarprovet för familjerabatterna (2026-10-15)
+`verktyg/prova-familjerabatter.js` (port 8977) provar familjerabatterna
+(`familjerabatter`) mot en falsk Supabase, som `prova-koder.js`: fliken
+Tjänster → Familjerabatter (koderna, formulärets besked, en ny kod i öre, nytt
+belopp och Stäng av med sina frågor, telefonen och mörkt läge), familjens
+panel (raden under Översikt, rutan under Ekonomi med vem och när, Byt till
+utan familjens egen kod, Ta bort och Ge, och att fliken räknar familjen),
+passets panel (timpriset med rabatten dragen) och valet i Ta in familjen.
+Sedan studievyn med rabatt, utan och utan migrationen: priset vid knappen i
+Boka pass (389 kr "med er rabatt", 458 kr med två barn), plankortet (2 952 kr
+och 369 kr i timmen "med er rabatt") och Fyll timbanken (3 890 kr, 389 kr i
+timmen) och utan rabatt katalogens pris, att korten aldrig säger koden, Köp
+till timmar och att vyn frågar efter beloppet men aldrig efter koden. Sist
+adminvyn utan tabellerna. 63 prov.
 
 Flera prov samtidigt kan fälla `prova-ansokningar.js` på tid (den väntar
 800 ms på adminvyns siffror). Ensam går den igenom.

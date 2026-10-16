@@ -21,9 +21,9 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=bc9488ef">
-<link rel="stylesheet" href="nextrum-vy.css?v=90502f7c">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=8bf02212">
+<link rel="stylesheet" href="nextrum-cinema.css?v=f21d3928">
+<link rel="stylesheet" href="nextrum-vy.css?v=5ec4b230">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=28094f6d">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -1766,13 +1766,14 @@
              sajten. #system/tjanster och #system/rabattkoder skickas
              hit (följHash i nextrum-admin.js). Tips och kampanjer
              flyttade hit från Intresseanmälningar 2026-10-06
-             (#katalog/tips).
+             (#katalog/tips). Familjerabatterna, våra egna koder som bara
+             vi ser, kom 2026-10-15 (#katalog/familjerabatter).
              ============================================================ -->
         <section class="vy-sek" data-sek="katalog" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Tjänster</h2>
-              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor, och koderna: rabattkoder, tipskoder och kampanjkoder.</p>
+              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor, och koderna: rabattkoder, familjerabatter, tipskoder och kampanjkoder.</p>
             </div>
           </div>
 
@@ -1781,6 +1782,8 @@
                     id="flik-tjanster" aria-controls="panel-tjanster">Tjänster &amp; priser</button>
             <button class="vy-flik" type="button" role="tab" data-flik="rabattkoder"
                     id="flik-rabattkoder" aria-controls="panel-rabattkoder">Rabattkoder</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="familjerabatter"
+                    id="flik-familjerabatter" aria-controls="panel-familjerabatter">Familjerabatter</button>
             <button class="vy-flik" type="button" role="tab" data-flik="tips"
                     id="flik-tips" aria-controls="panel-tips">Tips och kampanjer</button>
           </div>
@@ -1889,6 +1892,56 @@
             <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
               <h5>Koder <em id="rk-antal"></em></h5>
               <div id="rk-tabell"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- ============ FAMILJERABATTER (2026-10-15) ============
+               Leo: "vi i admin vill skapa egna rabattkoder som bara vi har
+               tillgång till ... vi vill ge 10 kr billigare på alla timmar
+               som köps tex". Koderna står här; en familj får sin i
+               familjens panel, under Ekonomi (satt_familjerabatt). Familjen
+               skriver den aldrig och ser aldrig koden, bara det lägre priset.
+               Tabellen familjerabatter läser och skriver bara admin, och en
+               kod tas aldrig bort: den stängs av. Ritas av
+               ritaFamiljerabatter() i nextrum-admin-tjanster.js. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="familjerabatter"
+               id="panel-familjerabatter" aria-labelledby="flik-familjerabatter" hidden>
+            <div class="dbox">
+              <h5>Ny familjerabatt</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                Våra egna koder, till exempel för en samarbetspartner. Ni sätter koden på en familj i
+                familjens panel, under <b>Ekonomi</b>, och familjen betalar då så många kronor mindre för
+                varje timme: pass, planer, Fyll timbanken och timmar till en plan, tills ni tar bort den.
+                Familjen ser aldrig koden, bara det lägre priset: på korten under Erbjudanden, när de bokar och
+                i kassan. Det som redan är bokat eller
+                köpt behåller sitt pris, och en rabattkod räknas på priset efter rabatten.
+              </p>
+              <form id="fr-form" novalidate>
+                <div class="ag-faltrad">
+                  <div class="fgroup">
+                    <label for="fr-kod">Kod</label>
+                    <input class="inp" id="fr-kod" maxlength="24" placeholder="PARTNER-X"
+                           autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+                  </div>
+                  <div class="fgroup">
+                    <label for="fr-kr">Kronor av per timme</label>
+                    <input class="inp" id="fr-kr" type="number" min="1" max="200" step="1" inputmode="numeric" placeholder="10">
+                  </div>
+                </div>
+                <div class="fgroup" style="margin-top:14px">
+                  <label for="fr-text">Vad den gäller</label>
+                  <input class="inp" id="fr-text" maxlength="120" placeholder="Till exempel samarbetspartnern. Syns bara för oss">
+                </div>
+                <div class="ag-rad">
+                  <button class="btn btn-primary btn-sm" type="submit" id="fr-spara">Skapa familjerabatten</button>
+                  <p class="ok-msg" id="fr-msg" style="margin:0"></p>
+                </div>
+              </form>
+            </div>
+
+            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
+              <h5>Familjerabatter <em id="fr-antal"></em></h5>
+              <div id="fr-tabell"><div class="loading">Hämtar</div></div>
             </div>
           </div>
 
@@ -2351,6 +2404,8 @@
                   <option value="utbetalning">Utbetalningar</option>
                   <option value="tjanst">Tjänster</option>
                   <option value="rabattkod">Rabattkoder</option>
+                  <option value="familjerabatt">Familjerabatter</option>
+                  <option value="familjerabatt_familj">Familjernas rabatter</option>
                   <option value="behorighet">Adminbehörighet</option>
                   <option value="studiehjalpare">Studiehjälpare</option>
                   <option value="skatteuppgifter">Personnummer</option>
@@ -2471,26 +2526,26 @@
 <script src="nextrum-app.js?v=97cbce73"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-studie.js?v=26232db1"></script>
-<script src="nextrum-arbetsyta.js?v=b7e89bed"></script>
+<script src="nextrum-arbetsyta.js?v=d5f36b47"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=3a28925a"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=001ce08e"></script>
-<script src="nextrum-admin-detalj.js?v=f4ac67db"></script>
+<script src="nextrum-admin-karna.js?v=ff23328e"></script>
+<script src="nextrum-admin-detalj.js?v=6710db5e"></script>
 <script src="nextrum-admin-oversikt.js?v=ed84102c"></script>
-<script src="nextrum-admin-kunder.js?v=2dc95ec8"></script>
+<script src="nextrum-admin-kunder.js?v=d24d5089"></script>
 <script src="nextrum-admin-rekrytering.js?v=9006e4c3"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=da4828c4"></script>
-<script src="nextrum-admin-ekonomi.js?v=e24a7aa2"></script>
+<script src="nextrum-admin-ekonomi.js?v=7b193f2a"></script>
 <script src="nextrum-admin-manaden.js?v=8daec1e5"></script>
 <script src="nextrum-admin-loner.js?v=2c10dffa"></script>
 <script src="nextrum-admin-koder.js?v=87ddf501"></script>
-<script src="nextrum-admin-tjanster.js?v=3f8e7485"></script>
-<script src="nextrum-admin-system.js?v=850d4673"></script>
-<script src="nextrum-admin-behorighet.js?v=6eb31e9f"></script>
+<script src="nextrum-admin-tjanster.js?v=86fe950a"></script>
+<script src="nextrum-admin-system.js?v=0d7e538d"></script>
+<script src="nextrum-admin-behorighet.js?v=640897ae"></script>
 <script src="nextrum-admin-automationer.js?v=0fb655ba"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2500,6 +2555,6 @@
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
 <script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-admin.js?v=867441b5"></script>
+<script src="nextrum-admin.js?v=b811b085"></script>
 </body>
 </html>

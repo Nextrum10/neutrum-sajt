@@ -158,6 +158,10 @@
         .select('id, minuter, begart_ore, status, betalt_ore, aterbetald_ore, betald_at, stripe_skarp, created_at')
         .eq('booking_id', id));
       lägg('pass', supa.from('bookings').select('id, stripe_minuter').eq('id', id));
+      /* Familjens rabatt på passet (familjerabatter, 2026-10-15), i en egen
+         fråga: kolumnen finns först efter migrationen, och en fråga som
+         nämner den hade annars tömt raden ovanför. */
+      lägg('passRabatt', supa.from('bookings').select('familjerabatt_ore').eq('id', id));
     } else if (typ === 'anmalan' || typ === 'ansokan') {
       /* Allt om en anmälan eller en ansökan finns redan i S: raden,
          besöken i mejlkön och provförsöken. Ingen fråga till. */
@@ -439,6 +443,8 @@
       const under = [
         k.aterkallad_at ? 'togs tillbaka ' + kortDatum(k.aterkallad_at) : k.kvar + ' av ' + k.timmar + ' timmar kvar',
         gratis ? 'insatta ' + kortDatum(k.created_at) : 'köpt ' + kortDatum(k.betald_at || k.created_at),
+        /* Köpt med familjerabatten (2026-10-15): kronor av per betald timme. */
+        Number(k.familjerabatt_ore) > 0 ? 'med familjerabatt, ' + kronor(k.familjerabatt_ore) + ' av per timme' : null,
         k.aterkallad_at || !k.giltigt_till ? null : (utgånget ? 'gick ut ' : 'gäller till ') + kortDatum(k.giltigt_till)
       ].filter(Boolean).join(' · ');
       /* Ta tillbaka står bara där det finns timmar att ta: timmarna på
@@ -465,6 +471,75 @@
       + 'betalas aldrig ut. Studiehjälparen får lön för passen som vanligt.</span>'
       + (besked ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '">' + esc(besked.text) + '</p>' : '')
       + '</form>';
+  }
+
+  /* FAMILJERABATTEN (2026-10-15)
+
+     Leo: "vi ser rabattkoden när vi klickar på deras namn och kan välja ta
+     bort eller ändra". En av våra koder (Tjänster → Familjerabatter) på
+     familjen: kronor av på varje timme den betalar, för det som bokas och
+     köps medan koden gäller. Bara en superadmin läser och sätter den
+     (satt_familjerabatt); familjen ser aldrig koden, bara det lägre priset.
+     Översikt säger den i korthet, och Ekonomi har valet. */
+  let rabattBesked = null;   // { id, text, ok }: kvittot efter en ändring, visas en gång
+
+  const familjerabattSaknas = () => S.familjerabatterFel === 'saknas' || S.familjensRabattFel === 'saknas';
+  function familjensKod(p) {
+    const rad = (S.familjensRabatt || {})[p.id] || null;
+    if (!rad || !rad.kod) return { rad, kod: null };
+    return { rad, kod: (S.familjerabatter || []).find(k => k.kod === rad.kod)
+      || { kod: rad.kod, ore_per_timme: 0, aktiv: false, beskrivning: null } };
+  }
+
+  function dpRabattKort(p) {
+    if (!fullAdmin() || S.familjerabatterFel || S.familjensRabattFel) return null;
+    const { kod } = familjensKod(p);
+    return (kod
+      ? esc(kod.kod + ', ' + kronor(kod.ore_per_timme) + ' av per timme' + (kod.aktiv ? '' : ', men koden är avstängd'))
+      : 'ingen')
+      + ' <button class="btn btn-ghost btn-sm" type="button" data-dp-flik="ekonomi">' + (kod ? 'Ändra' : 'Ge en rabatt') + '</button>';
+  }
+
+  function dpRabatt(p) {
+    if (!fullAdmin()) return '';
+    if (familjerabattSaknas()) {
+      return dpRubrik('Familjerabatt') + tomt('Familjerabatterna finns inte i databasen än',
+        'Migrationen familjerabatter är inte körd. Rutan fungerar när den är det.');
+    }
+    if (S.familjerabatterFel || S.familjensRabattFel) {
+      return dpRubrik('Familjerabatt') + tomt('Familjerabatterna gick inte att läsa', S.familjerabatterFel || S.familjensRabattFel);
+    }
+    const { rad, kod } = familjensKod(p);
+    /* Valet har de aktiva koderna, utom den familjen redan har. */
+    const aktiva = (S.familjerabatter || []).filter(k => k.aktiv && !(kod && k.kod === kod.kod));
+    const besked = rabattBesked && rabattBesked.id === p.id ? rabattBesked : null;
+    rabattBesked = null;
+    const kvitto = besked ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '">' + esc(besked.text) + '</p>' : '';
+    const när = rad ? (rad.kod ? 'satt ' : 'togs bort ') + kortDatum(rad.andrad_at)
+      + (rad.andrad_av ? ' av ' + namnFör(rad.andrad_av) : '') : null;
+    return dpRubrik('Familjerabatt', 'bara vi ser koden; familjen ser det lägre priset')
+      + (kod
+        ? dpRad(kod.kod + ', ' + kronor(kod.ore_per_timme) + ' av per timme',
+            [kod.aktiv ? null : 'koden är avstängd, så ingen rabatt dras', kod.beskrivning || null, när].filter(Boolean).join(' · '),
+            '<button class="btn btn-ghost btn-sm" type="button" data-dp-rabatt-bort="' + esc(p.id) + '">Ta bort</button>')
+        : dpRad('Ingen familjerabatt', när || 'Familjen betalar ordinarie pris.', ''))
+      + (aktiva.length
+        ? '<form class="dp-rabatt" data-dp-rabatt="' + esc(p.id) + '">'
+          + '<label for="dp-rabatt-kod">' + (kod ? 'Byt till' : 'Ge familjen') + '</label>'
+          + '<select class="sel" id="dp-rabatt-kod" name="kod">'
+          + aktiva.map(k => '<option value="' + esc(k.kod) + '">'
+            + esc(k.kod + ', ' + kronor(k.ore_per_timme) + ' per timme') + '</option>').join('')
+          + '</select>'
+          + '<button class="btn btn-primary" type="submit">' + (kod ? 'Byt' : 'Ge rabatten') + '</button>'
+          + '<span class="dp-gratis-not">Familjen betalar så många kronor mindre för varje timme: pass, planer, Fyll timbanken '
+          + 'och timmar till en plan, för det som bokas och köps från och med nu. Det som redan är bokat och köpt behåller sitt '
+          + 'pris, och en rabattkod räknas på priset efter rabatten. Studiehjälparen får lön som vanligt.</span>'
+          + kvitto
+          + '</form>'
+        : kvitto
+          + '<p class="xsmall" style="color:var(--bl-3);margin:0 0 14px">' + (kod ? 'Fler familjerabatter att byta till '
+            : 'Skapa en familjerabatt för att ge familjen en, ') + 'skapar ni under '
+          + '<a href="#katalog/familjerabatter">Tjänster → Familjerabatter</a>.</p>');
   }
 
   /* Kortet (kortet_reserveras, 2026-10-13): familjens sparade kort och
@@ -698,6 +773,7 @@
     const rapporter = d.rapporter || [];
     const rapport = rapporter.find(r => r.start_tid) || rapporter[0] || null;
     const tillägg = (d.tillagg || [])[0] || null;
+    const rabatt = Number(((d.passRabatt || [])[0] || {}).familjerabatt_ore || 0);
     const bokat = b.duration_min || 60;
     const klock = t => String(t || '').slice(0, 5);
     const knapp = (typ, id, text) => '<button class="btn btn-ghost btn-sm" type="button" data-dp="'
@@ -710,6 +786,10 @@
       ['Elev', b.student_id ? knapp('elev', b.student_id, elevNamn(b.student_id)) : null, 'inget barn valt'],
       ['Familj', b.parent_id ? knapp('familj', b.parent_id, namnFör(b.parent_id)) : null],
       ['Studiehjälpare', b.tutor_id ? knapp('studiehjalpare', b.tutor_id, namnFör(b.tutor_id)) : null, 'ingen'],
+      /* Priset som frystes när passet bokades (Fas 19.5), och sedan
+         2026-10-15 familjens rabatt som redan är dragen i det. */
+      ['Timpris', b.timpris_ore != null ? esc(kronor(b.timpris_ore) + ' per timme'
+        + (rabatt > 0 ? ', med familjerabatten ' + kronor(rabatt) + ' dragen' : '')) : null, 'fryses när passet bokas'],
       ['Betalning', esc((KORT_LAGE[b.betalning_status || 'ingen'] || b.betalning_status)
         + (b.klippkort_id ? ', med timmar' : '')
         + (b.betalt_ore != null ? ' · ' + kronor(b.betalt_ore) : '')
@@ -1067,6 +1147,7 @@
         [fakturapass, 'Pass mot faktura']
       ])
       + dpTimbank(p)
+      + dpRabatt(p)
       + dpKortet(p, d)
       + dpRubrik('Faktura som betalsätt')
       + dpRad(spärrad ? 'Avstängd för den här familjen' : 'Tillåten',
@@ -1099,7 +1180,7 @@
       ['Senast inloggad', dpSenast(p)],
       ['Användarvillkoren', dpVillkor(d), 'okänt'],
       ['Första timmen gratis', dpFörstaTimmen(d), 'okänt'],
-      ...(fullAdmin() ? [['Timbanken', dpTimbankKort(p), 'okänt']] : []),
+      ...(fullAdmin() ? [['Timbanken', dpTimbankKort(p), 'okänt'], ['Familjerabatt', dpRabattKort(p), 'okänt']] : []),
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
     + dpRubrik('Nästa pass')
@@ -2461,6 +2542,60 @@
           + (Number(data.pa_pass) ? ' ' + (Number(data.pa_pass) === 1 ? '1 timme' : data.pa_pass + ' timmar')
             + ' står kvar på familjens pass.' : '')
         : 'Inget att ta tillbaka: alla timmarna ligger redan på familjens pass.', true);
+    });
+  });
+
+  /* Familjerabatten (dpRabatt). Databasen avgör: bara en superadmin sätter,
+     byter och tar bort, och bara en aktiv kod. Efter ändringen hämtas
+     koderna och familjernas rader om, och fliken Familjerabatter med. */
+  async function efterRabatt(id, text, ok) {
+    rabattBesked = { id, text, ok };
+    await kör('hämtaFamiljerabatter');
+    kör('ritaFamiljerabatter');
+    if (DP.typ === 'familj' && DP.id === id) ritaDetalj();
+  }
+
+  document.addEventListener('submit', async ev => {
+    const f = ev.target.closest('form[data-dp-rabatt]');
+    if (!f) return;
+    ev.preventDefault();
+    const id = f.dataset.dpRabatt;
+    const kod = (S.familjerabatter || []).find(k => k.kod === f.elements.kod.value);
+    if (!kod) return;
+    const nu = ((S.familjensRabatt || {})[id] || {}).kod || null;
+    if (nu === kod.kod) return;
+    const ja = await bekräfta({
+      titel: (nu ? 'Byt till ' : 'Ge ') + kod.kod + '?',
+      text: namnFör(id) + ' betalar ' + kronor(kod.ore_per_timme) + ' mindre för varje timme: pass, planer, Fyll timbanken och '
+        + 'timmar till en plan, för det som bokas och köps från och med nu, tills ni tar bort rabatten. Familjen ser aldrig '
+        + 'koden, bara det lägre priset. Det som redan är bokat och köpt behåller sitt pris.',
+      knapp: nu ? 'Byt' : 'Ge rabatten'
+    });
+    if (!ja) return;
+    await medan(f.querySelector('button[type="submit"]'), 'Sparar…', async () => {
+      const { error } = await supa.rpc('satt_familjerabatt', { p_familj: id, p_kod: kod.kod });
+      if (error) { await efterRabatt(id, 'Kunde inte spara: ' + felText(error), false); return; }
+      await efterRabatt(id, kod.kod + ' gäller nu: ' + kronor(kod.ore_per_timme) + ' av per timme på det som bokas och köps.', true);
+    });
+  });
+
+  document.addEventListener('click', async ev => {
+    const k = ev.target.closest('[data-dp-rabatt-bort]');
+    if (!k) return;
+    const id = k.dataset.dpRabattBort;
+    const nu = ((S.familjensRabatt || {})[id] || {}).kod || null;
+    if (!nu) return;
+    const ja = await bekräfta({
+      titel: 'Ta bort familjerabatten?',
+      text: namnFör(id) + ' betalar ordinarie pris för det som bokas och köps från och med nu. Det som redan är bokat och '
+        + 'köpt behåller priset med rabatten.',
+      knapp: 'Ta bort'
+    });
+    if (!ja) return;
+    await medan(k, 'Tar bort…', async () => {
+      const { error } = await supa.rpc('satt_familjerabatt', { p_familj: id, p_kod: null });
+      if (error) { await efterRabatt(id, 'Kunde inte ta bort: ' + felText(error), false); return; }
+      await efterRabatt(id, 'Familjerabatten ' + nu + ' är borttagen.', true);
     });
   });
 

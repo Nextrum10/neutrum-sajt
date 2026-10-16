@@ -1,9 +1,14 @@
 # Sätta upp betalning
 
-**Sedan Fas 19.2 betalar familjen varje pass med kort, i förväg eller efter passet
-när de bekräftar rapporten.** (Fas 14.2 till 19.2: före passet.) Pengarna tas
-emot genom Stripe (avsnitt 9). **Sedan Fas 14.6 finns faktura som andra betalsätt,
-byggt men avstängt** tills bolaget och Fortnox-kontot finns (9.11). Studiehjälparen får betalt
+**Ska ni ta emot riktiga pengar: börja i 9.16**, som har stegen i ordning och
+driftens läge.
+
+**Sedan 2026-10-14 dras pengarna för ett pass först när studiehjälparen har skrivit
+rapporten**: med kortet familjen valde när den bokade, annars med kort när den
+bekräftar rapporten (9.14). Före det betalade familjen i förväg eller efter passet
+(Fas 19.2), och före Fas 19.2 före passet. Pengarna tas emot genom Stripe (avsnitt
+9). **Faktura är det andra betalsättet**, påslaget sedan 2026-09-27 fast bolaget och
+bankgirot inte finns än (9.11). Studiehjälparen får betalt
 den 25:e ur `payouts`. Månadskörningen skapar underlagen, och ett fakturautkast per
 familj som valt faktura.
 
@@ -13,8 +18,9 @@ Filen står därför i fyra delar:
   fungerar utan Stripe.
 - **Avsnitt 7** är historik: planen att skicka månadsfakturan genom Stripe.
 - **Avsnitt 8** är utskicket av underlagen. Fakturor skickas från Fortnox.
-- **Avsnitt 9** är kortbetalningen, spärren "ingen betalning, inget pass", och
-  (9.11) det som ska göras den dag fakturan slås på.
+- **Avsnitt 9** är kortbetalningen, spärren "ingen betalning, inget pass",
+  (9.11) det som ska göras den dag fakturan slås på, och (9.16) vägen till
+  skarpt läge.
 
 Läs igenom hela filen innan du börjar. Det finns en torrkörning som du ska göra
 före den första skarpa körningen, och den är hela poängen med den här ordningen.
@@ -29,12 +35,12 @@ behövs om ni sätter upp en ny miljö.
 | Steg | Läge |
 |---|---|
 | 1. Schemat | Applicerat |
-| 2. Priset | Satt: 37900 ören, alltså 379 kr — samma som prissidan |
+| 2. Priset | Satt: 39900 ören, alltså 399 kr, samma som prissidan (sedan 2026-10-08; 37900 före) |
 | 3. Timpenningarna | Satta för samtliga studiehjälpare (1 av 1) |
 | 4. Deploy `fakturering` | ACTIVE, version 34 (2026-10-01, från main efter PR #171, jämförd byte för byte). Skapar underlag, ett fakturautkast per familj som valt faktura (Fas 14.6), och räknar upp pass som hölls utan att betalas. Ett sent pass läggs på sin månads utkast (Passets månad, avsnitt 6). En skarp körning för en månad som inte är slut får 409 (2026-10-01). Provad i driften: 401 utan inloggning, och schemats torrkörning 200 för september; 409 nås bara med en admininloggning, och regeln (`manadenArSlut`) är provad i `pris_test.ts` |
 | 5. Torrkörning | **Gjord 2026-09-28** genom schemavägen: 200, augusti utan pass. Knappen under Betalningar → Fakturor (Månadskörningen) torrkör en avslutad eller pågående månad, och skapar bara en avslutad |
 | 6. Schemaläggning | **På sedan 2026-09-28**: pg_cron `manadskorning` klockan 04:17 UTC genom `intern.manadskorning_vack()`, den 1:a och **varje natt sedan 2026-10-01** (`manadskorningen_gar_varje_natt`). Den första skarpa körningen gjordes med knappen den 29 september, medan månaden pågick. Schemat gick första gången den 1 oktober och svarade 207, se avsnitt 6 |
-| 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar. Se avsnitt 9 |
+| 7. Stripe | **Testläge, provat.** Två provbetalningar gick hela vägen 2026-09-25. Skarpt läge väntar: stegen står i 9.16 |
 | 8. Deploy `faktura-utskick` | ACTIVE, version 19. Skickar bara underlag sedan Fas 14.6 |
 
 Den första skarpa körningen gjordes med knappen den 29 september 2026, för september
@@ -111,11 +117,11 @@ där. Kortbetalningen läser tjänstens pris ur databasen i stället. Sätt det 
 adminvyn under Tjänster & priser, eller för en ny miljö:
 
 ```sql
-update public.tjanster set pris_per_timme_ore = 37900 where kod = 'laxhjalp';
+update public.tjanster set pris_per_timme_ore = 39900 where kod = 'laxhjalp';
 ```
 
 En trigger speglar läxhjälpens pris till `prissattning`, som kortbetalningen läser
-som reserv. `37900` är 379 kr. Ören, alltid.
+som reserv. `39900` är 399 kr (sedan 2026-10-08). Ören, alltid.
 
 ## 3. Sätt timpenningarna
 
@@ -1362,3 +1368,160 @@ drar `stripe-reservation` pengarna för ett pass med ett sparat kort, men utan
 `payment_intent.succeeded` på endpointen blir passet aldrig betalt hos oss.
 Stripe står i testläge, så bara testkort fungerar.
 
+### 9.15 Familjerabatterna (2026-10-15, inte i drift)
+
+Våra egna koder, som bara vi ser: kronor av per timme för de familjer vi sätter
+koden på (`CLAUDE.md` avsnitt 1, `minne/betalning.md`, Familjerabatterna).
+Inga pengar dras annorlunda än förut, bara mindre: priset fryses som förut, med
+rabatten dragen, och kassan drar det databasen räknat.
+
+Vyerna går ut med sajten när grenen mergas, före allt nedan, och tål att
+migrationen saknas: fliken under Tjänster och rutan i familjens panel säger att
+den inte är körd, och studievyn får ingen rabatt (`min_familjerabatt` svarar
+404) och visar priset som förut (`verktyg/prova-familjerabatter.js`, avsnittet
+Utan migrationen).
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`):
+
+1. **Migrationen `20261015210000_familjerabatter`** från merge-commiten,
+   prövad mot sin md5. Den har inget `drop`, inget `delete` och ingen funktion
+   med ett, så den går hel i ett do-block, och registreras med filens text.
+   Vakten prövar att de fem funktionerna och vyn `klippkort_saldo` är som de
+   lästes 2026-10-15; har någon ändrats sedan stannar den med md5 och namnet,
+   och då ska migrationen skrivas om mot driften. Sedan hela `rls-test.sql`
+   mot driften, tillbakarullat (avsnitt 35, `FR`), och advisorn: två nya
+   tabeller med RLS, `min_familjerabatt()` och `satt_familjerabatt()` för
+   `authenticated` (den andra prövar `is_admin()` först).
+2. **`stripe-checkout`** (SESSIONSFORM 9): raden i kassan säger rabatten, och
+   ett väntande köp återanvänds bara med samma rabatt. En äldre kassa drar
+   ändå rätt belopp, för det är köpets `begart_ore`, som triggern räknar; den
+   kan bara inte säga varför beloppet är lägre. Hämta tillbaka och jämför
+   byte för byte, med `_delad/erbjudanden.ts`.
+3. **`drift`** (agentens fakta: ett pass under ordinarie pris hos en familj
+   med rabatt är inget fel), hämtad tillbaka och jämförd.
+4. **Prova** i testläge: skapa en familjerabatt på 10 kr under Tjänster, sätt
+   den på en provfamilj i familjens panel, föreslå ett pass (priset vid
+   knappen ska vara 389 kr, "med er rabatt"), köp en plan (kassan ska säga
+   "Med er rabatt på 10 kr per timme" och dra 80 kr mindre för Standard), och
+   ta bort rabatten (nästa pass ska kosta 399 kr, det förra stå kvar).
+
+Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md` eller policyns
+nya stycken, och en rabatts villkor (beloppet, att den gäller tills vidare och
+att vi kan ta bort den) ska stå där vi ger den, i mejlet eller avtalet med
+partnern.
+
+### 9.16 Till skarpt läge, i ordning (2026-10-15)
+
+Stegen för att ta emot riktiga pengar står utspridda i 9.2–9.15. Här står de i
+den ordning de beror på varandra, med vem som gör vad och hur man ser att ett
+steg är klart. Avsnitten de pekar på har detaljerna. Det här är billigast att
+göra nu, innan den första familjen har en studiehjälpare och kan boka.
+
+**Läget i driften 2026-10-15:**
+
+- Stripe står i testläge. `stripe_handelser` har tre leveranser, alla
+  `checkout.session.completed` i testläge, den senaste 2026-09-28. Ingen av de
+  fem händelserna som saknas på endpointen (9.1) har kommit.
+- Bolagsfakta (Agenter → Bolagsfakta) är tomma: inget organisationsnummer,
+  ingen F-skatt, inte arbetsgivarregistrerat, inte momsregistrerat,
+  `studiehjalpare_form = oklart` och inga lönearter.
+- `BANKGIRO` i `nextrum-config.js` är tom.
+- `faktura` och `kortreservation` står på. Inget kort är sparat och ingen
+  reservation finns.
+- Alla 16 pass i driften står på Leos eget familjekonto, som är ett
+  adminkonto: provpass, med en och samma studiehjälpare. Kontot har ingen
+  studiehjälpare nu (`pending`). Det enda köpet med timmar är Leos testköp
+  2026-09-28 på samma konto, märkt som test.
+
+**A. Bolaget, före allt annat** (Leo, med revisorn)
+
+1. **Registrera bolaget, med F-skatt.** Stripe vill ha bolagets uppgifter, en
+   företrädare och ett bankkonto innan kontot får ta emot riktiga betalningar,
+   och fakturan, Fortnox och lönerna står på samma bolag. Klart när
+   organisationsnumret står i Bolagsfakta.
+2. **Revisorn** bestämmer anställningsformen (`studiehjalpare_form`),
+   arbetsgivarregistreringen, momsen och lönearterna i Fortnox: timlönen och
+   tipsbonusen, ingen av dem semestergrundande (9.7, kärnans avsnitt 1). Kan
+   gå parallellt med B och C, men måste vara klart före den 25:e efter det
+   första passet, för då går den första lönen ut. Klart när Bolagsfakta säger
+   formen och båda lönearterna är satta under Löner.
+3. **Fortnox** på bolaget: Stripe-integrationen kopplad från
+   integrationsmarknaden, med bokningen bestämd med revisorn (9.7), och
+   fakturans inställningar: tio dagar, ingen avgift och påminnelser utan avgift
+   (9.11 steg 2). Integritetspolicyn nämner redan Fortnox.
+4. **Bankgirot**, i Fortnox och i `BANKGIRO` i `nextrum-config.js` (9.11 steg
+   9, en rad kod). En familj kan välja faktura så snart den har en
+   studiehjälpare, och fakturan ska ut i början av månaden efter passet. Utan
+   bolag, Fortnox och bankgiro finns ingen faktura att skicka. Hinns det inte
+   före den första matchningen: stäng av `faktura`, och då går fakturameningen
+   ur texterna i samma ändring (9.11).
+
+**B. Testläget klart** (Leo i Stripes dashboard, och Claude läser databasen
+efter varje steg). Kan göras nu, parallellt med A.
+
+5. **Endpointen i testläget får alla tio händelser** (tabellen i 9.4): lägg
+   till `charge.updated`, `charge.dispute.updated`,
+   `payment_intent.amount_capturable_updated`, `payment_intent.succeeded` och
+   `payment_intent.canceled`. **Gör det innan någon väljer kort på ett pass**:
+   `kortreservation` står på, och utan `payment_intent.succeeded` drar
+   `stripe-reservation` pengarna utan att passet blir betalt hos oss (9.14).
+   Klart när Kontrollera Stripe (Betalningar → Inställningar) säger "Alla 10
+   som webhooken hanterar är valda".
+6. **Provkedjan med testkort**, på Leos eget familjekonto. Den kräver en
+   studiehjälpare som tar emot passen och skriver rapporterna: matcha kontot
+   med en studiehjälpare Leo själv styr. Sätt notisernas sandlåda först
+   (System → Notiser). I den här ordningen: 9.6 (ett pass: betala, 3D Secure,
+   nekat kort, återbetalning, tvist och avbokat pass; med `kortreservation` på
+   öppnas kassan för ett pass när rapporten bekräftas, inte före passet), 9.12
+   (köp en plan, timmarna betalar ett pass, avboka och återbetala en del),
+   9.13 steg 4 (en rabattkod på ett köp och taket), 9.15 steg 4 (en
+   familjerabatt på ett pass och ett köp) och 9.14 steg 6 (spara kortet,
+   reservationen inom 48 timmar, dragningen efter rapporten, ett nekat kort
+   med `4000 0000 0000 0341`, släppet vid avbokning och ta bort kortet). Klart
+   när varje steg har stått rätt i databasen.
+
+**C. Skarpt läge, i ett svep** (Leo, ungefär en halvtimme). Claude kan inte
+göra de här stegen, för nycklarna får aldrig stå i en chatt (9.2).
+
+7. **Aktivera kontot** i Stripe (Settings → Business): bolagets uppgifter,
+   företrädaren och bankkontot för utbetalningarna. Klart när Kontrollera
+   Stripe säger "Kontot tar emot betalningar: Ja" och ingen rad "Stripe väntar
+   på uppgifter".
+8. **Inställningarna i det skarpa läget**: kontoutdragets grunddel `NEXTRUM`
+   (Settings → Business → Public details), kvittots logga och färg (Settings →
+   Branding) och Managed Payments av (9.5).
+9. **En ny endpoint i det skarpa läget.** Testlägets endpoint följer inte
+   med. Samma adress som i 9.4, omfånget "Ditt konto", API-versionen
+   `2025-08-27.basil` om den går att välja, och alla tio händelserna. Kopiera
+   dess `whsec_…`.
+10. **Byt de tre hemligheterna samtidigt** (Supabase, Edge Functions →
+    Secrets): `STRIPE_SECRET_KEY` (`sk_live_…`), `STRIPE_PUBLISHABLE_KEY`
+    (`pk_live_…`) och `STRIPE_WEBHOOK_SECRET` (den skarpa endpointens). En
+    nyckel från varje läge ger en kassa som inte öppnas på sidan, och en gammal
+    hemlighet ger en webhook som svarar 400 på varje leverans (9.2, 9.4).
+11. **Kontrollera Stripe**: varje rad grön. "Skarp nyckel", Kassan på sidan i
+    samma läge, endpointen finns och är påslagen, alla tio händelser, och
+    kontoutdraget säger Nextrum. Prova sedan webhooken utifrån (provet i 9.4):
+    svaret ska vara "Leveransen är för gammal." Det visar att hemligheten är
+    satt, inte att den är rätt. Det visar betalningen i nästa steg.
+12. **En riktig betalning med Leos eget kort**, på hans eget familjekonto,
+    matchat som i steg 6 (köpen öppnas först med en studiehjälpare): köp Basic
+    och betala sedan tillbaka köpet i Stripes dashboard (9.12), och spara ett
+    kort under Profil → Kortet och ta bort det. Klart när
+    `stripe_skarp = true` på köpet och `skarp = true` i `stripe_handelser`,
+    avgiften och nettot har kommit med `charge.updated`, kvittot har kommit
+    till Leos adress, kontoutdraget säger `NEXTRUM`, köpet står som återbetalt,
+    och betalningen syns i Fortnox genom integrationen. Stripe behåller sin
+    avgift vid en återbetalning, så provet kostar avgiften på köpet.
+13. **Säg till Claude**, som läser databasen och skriver in det i kärnans
+    avsnitt 11 och här. Först då stämmer det inte längre att kortbetalningen
+    bara är i testläge.
+
+**D. Innan den första riktiga familjen bokar** (kan gå parallellt med C)
+
+14. **Juristen** läser villkoren (särskilt rätten att reservera och dra från
+    ett sparat kort utan att familjen är med, ångerrätten för pass som betalas
+    i efterskott, gratistimmarna och första timmen), marknadsföringen
+    (jämförelsetejperna på Standard och Intensiv har inget underlag, kärnans
+    avsnitt 11) och de rader i `DATASKYDD.md` som väntar.
