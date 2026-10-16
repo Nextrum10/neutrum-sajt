@@ -1575,9 +1575,12 @@ som arbetar i repot (`minne/databasen.md`):
 1. **Migrationen `20261016010000_obetalda_pass_pa_fakturan`** från
    merge-commiten, prövad mot sin md5. Den har ingen `drop` och ingen `delete`,
    så den kan köras hel i ett do-block och registreras med filens text. Vakten
-   först i filen kräver villkorens version 2026-10-15 (eller 16) och att
-   `mitt_villkorslage()` är den `villkoren_godkanns` skrev (md5 `7b64c1bc…` på
-   kroppen); stannar den har någon ändrat driften, och då läses den om.
+   först i filen kräver villkorens version exakt 2026-10-15, att ingen har
+   godkänt 2026-10-16 och att `mitt_villkorslage()` är den `villkoren_godkanns`
+   skrev (md5 `7b64c1bc…` på kroppen); stannar den har någon ändrat driften,
+   och då läses den om. Har en annan fil satt 2026-10-16 före den (PR #302
+   skrev samma datum) får den här filen ett nytt datum, för de som godkänt den
+   versionen har aldrig sett meningen om fakturan.
 2. **`fakturering`** från main: anropar funktionen före fakturapassen och
    räknar dem i torrkörningen.
 3. **`notis-ko`** (mejlets mening) och **`drift`** (agenternas fakta) från

@@ -40,14 +40,21 @@ set local lock_timeout = '5s';
 -- ---------- 0. driften är som den lästes ----------
 do $$
 begin
-  if intern.villkor_version() not in ('2026-10-15', '2026-10-16') then
+  -- Exakt 2026-10-15. Har en annan fil redan satt 2026-10-16 har familjer
+  -- godkänt en text med det datumet utan meningen om fakturan, och
+  -- obetalda_faktureras_fran() skulle räkna dem som att de godkänt den
+  -- (2026-10-16 skrev två PR:er samma datum, #298 och #302).
+  if intern.villkor_version() <> '2026-10-15' then
     raise exception 'Villkorens version är %, inte 2026-10-15. Läs driften och skriv om migrationen.',
       intern.villkor_version();
   end if;
+  if exists (select 1 from public.villkor_godkannanden where version = '2026-10-16') then
+    raise exception 'Någon har redan godkänt villkor 2026-10-16. Läs driften och skriv om migrationen.';
+  end if;
   -- Avsnitt 5 skriver om mitt_villkorslage() hel: kroppen ska vara den
-  -- villkoren_godkanns skrev, eller den här filens (en andra körning).
+  -- villkoren_godkanns skrev.
   if (select md5(p.prosrc) from pg_proc p where p.oid = 'public.mitt_villkorslage()'::regprocedure)
-     not in ('7b64c1bced9291a027930889ef3cf39e', 'a9caab8f9345b0d902f94702b4e94603') then
+     <> '7b64c1bced9291a027930889ef3cf39e' then
     raise exception 'mitt_villkorslage() är inte den som lästes. Läs driften och skriv om migrationen.';
   end if;
 end $$;
