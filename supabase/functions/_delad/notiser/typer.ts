@@ -122,6 +122,11 @@ export type RenData = {
   betalsatt: Betalsatt | null;
   /** Fas 21.2. Köpta timmar som är kvar på ett kort som snart går ut. */
   kvar: number | null;
+  /** gratistimmar_paminns (2026-10-15). Timmarna i påminnelsen är gratis
+   *  (gratistimmar vi satt in, eller planens gratis timme), så mejlet
+   *  lovar inga pengar tillbaka: en gåva betalas aldrig ut. Sant bara
+   *  för true, aldrig för text. */
+  gratis: boolean;
   /** kortet_reserveras. Varför kortet inte gick: 'bekrafta' (banken vill
    *  att familjen bekräftar betalningen) eller 'nekat'. En kod, aldrig
    *  Stripes text. */
@@ -183,6 +188,7 @@ export function renData(v: unknown): RenData {
     skal: AVBOKNINGSSKAL.find((k) => k === d.skal) ?? null,
     betalsatt: BETALSATT.find((k) => k === d.betalsatt) ?? null,
     kvar: kvarOk(d.kvar),
+    gratis: d.gratis === true,
     kortet: d.kortet === 'bekrafta' || d.kortet === 'nekat' ? d.kortet : null,
     kod: typeof d.kod === 'string' && KOD.test(d.kod) ? d.kod : null,
     prov: d.prov === true,

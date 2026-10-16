@@ -554,7 +554,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `ansokan-besked` | var femte minut | nya försök med beskeden till den som söker jobb |
 | `admin-paminnelse` | var femte minut | räknar Att göra och skriver kl. 9 svensk tid ETT mejl till admin med det som ligger kvar och inte mejlats; klockan avgörs i funktionen, inte i schemat (2026-10-02, Notiserna) |
 | `timmar-betalar` | var femte minut | obesvarade förslag lämnar tillbaka timmen, lediga timmar betalar nästa pass (Fas 22.3–22.4) |
-| `timmar-gar-ut` | :07 varje timme | mejlet tio dagar innan köpta timmar går ut (Fas 21.2) |
+| `timmar-gar-ut` | :07 varje timme | mejlet tio dagar innan köpta eller gratis timmar går ut (Fas 21.2, gratis sedan `gratistimmarna_paminns`) |
 | `utbildningsprov-paminn` | :13 varje timme | påminnelserna om utbildningsprovet |
 | `notis-stada` | 03:17 | städar notiserna och utskicken |
 | `cron-stada` | 03:23 | tar bort körningar äldre än sju dagar ur `cron.job_run_details` |

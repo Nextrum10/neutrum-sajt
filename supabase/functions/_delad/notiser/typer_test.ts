@@ -44,7 +44,7 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   // det här provet, och den som lägger till det får läsa kommentaren
   // överst innan det går igenom.
   assertEquals(Object.keys(rad).sort(), [
-    'amne', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid',
+    'amne', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid', 'gratis',
     'kod', 'kortet', 'kvar', 'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
   ]);
 
@@ -64,6 +64,16 @@ Deno.test('timmarna kvar är ett heltal, aldrig text (Fas 21.2)', () => {
   assertEquals(renData({ kvar: 201 }).kvar, null);
   assertEquals(renData({ kvar: 2.5 }).kvar, null);
   assertEquals(renData({ kvar: '3 timmar, ring 070-123' }).kvar, null);
+});
+
+Deno.test('gratis är sant bara för true (gratistimmarna_paminns)', () => {
+  assertEquals(renData({ gratis: true }).gratis, true);
+  // Allt annat är köpta timmar, vars mejl lovar pengar tillbaka: hellre
+  // det löftet en gång för mycket än att en familj som betalat inte får det.
+  for (const v of ['true', 1, 'ja', {}, [], null, undefined, false]) {
+    assertEquals(renData({ gratis: v }).gratis, false, `${JSON.stringify(v)} blev gratis`);
+  }
+  assertEquals(renData({}).gratis, false);
 });
 
 Deno.test('betalsättet är en kod, och bara en', () => {

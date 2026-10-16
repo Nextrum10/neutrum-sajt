@@ -202,6 +202,42 @@ Deno.test('påminnelsen om timmarna säger hur många, vilken dag och att resten
   const utan = rendera('timmar_gar_ut', 'parent', { data: { kvar: 'många', datum: 'snart' } });
   assertStringIncludes(utan.text, 'Ni har köpta timmar kvar som snart går ut.');
   assertEquals(/NaN|undefined|många/.test(utan.text), false);
+
+  // Köpta timmar betalar vi tillbaka; det löftet är mejlets, inte gratistimmarnas.
+  assertStringIncludes(m.text, 'betalar vi tillbaka resten');
+  assertStringIncludes(m.text, 'timmar som går ut är påslaget');
+});
+
+Deno.test('påminnelsen om gratis timmar lovar inga pengar tillbaka (gratistimmarna_paminns)', () => {
+  const m = rendera('timmar_gar_ut', 'parent', { data: { ...SMUTSIG, datum: '2026-10-23', kvar: 3, klippkort: 'c16a', gratis: true } });
+  assertStringIncludes(m.amne, 'Era gratis timmar går ut fredag 23 oktober');
+  assertStringIncludes(m.text, 'Ni har 3 gratis timmar kvar, och de gäller till och med fredag 23 oktober.');
+  assertStringIncludes(m.text, 'så används de först');
+  assertStringIncludes(m.text, 'förfaller och betalas inte ut');
+  assertStringIncludes(m.text, 'Gratis timmar kvar: 3');
+  assertStringIncludes(m.text, `${SAJT}/foralder#boka`);
+  assertStringIncludes(m.text, 'timmar som går ut är påslaget');
+  // En gåva betalas aldrig ut, och det är inga köpta timmar.
+  for (const fel of ['betalar vi tillbaka', 'tillbaka resten', 'köpta', 'c16a']) {
+    assertEquals(m.text.includes(fel), false, `gratismejlet säger "${fel}"`);
+    assertEquals(m.html.includes(fel), false, `gratismejlets html säger "${fel}"`);
+  }
+
+  const en = rendera('timmar_gar_ut', 'parent', { data: { datum: '2026-10-23', kvar: 1, gratis: true } });
+  assertStringIncludes(en.amne, 'Er gratis timme går ut fredag 23 oktober');
+  assertStringIncludes(en.text, 'Ni har 1 gratis timme kvar, och den gäller till och med fredag 23 oktober.');
+  assertStringIncludes(en.text, 'Boka ett pass innan dess, så används den först.');
+  assertStringIncludes(en.text, 'En gratis timme som inte används förfaller och betalas inte ut.');
+
+  // Utan ett giltigt antal eller datum: inga tal, och fortfarande inget löfte.
+  const utan = rendera('timmar_gar_ut', 'parent', { data: { kvar: 'många', datum: 'snart', gratis: true } });
+  assertStringIncludes(utan.amne, 'Era gratis timmar går snart ut');
+  assertStringIncludes(utan.text, 'Ni har gratis timmar kvar som snart går ut.');
+  assertEquals(/NaN|undefined|många|tillbaka/.test(utan.text), false);
+
+  // "gratis" som text är inget gratis: då är det köptimmarnas mejl.
+  const text = rendera('timmar_gar_ut', 'parent', { data: { datum: '2026-10-23', kvar: 2, gratis: 'true' } });
+  assertStringIncludes(text.text, 'Ni har 2 timmar kvar');
 });
 
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
