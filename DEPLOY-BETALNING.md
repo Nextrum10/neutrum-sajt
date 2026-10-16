@@ -1408,12 +1408,10 @@ som arbetar i repot (`minne/databasen.md`):
    "Med er rabatt på 10 kr per timme" och dra 80 kr mindre för Standard), och
    ta bort rabatten (nästa pass ska kosta 399 kr, det förra stå kvar).
 
-Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md`, policyns nya
-stycken eller villkorens punkt om familjerabatten. Punkten
-(`anvandarvillkor.html#familjerabatt`, och Att sluta) går ut med version
-2026-10-16, med de obetalda passen (9.17): vad en familjerabatt gäller och att
-vi kan ändra eller ta bort den. Beloppet ser familjen vid priset, och det vi
-lovar en partner om rabatten står i avtalet med partnern.
+Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md` eller policyns
+nya stycken, och en rabatts villkor (beloppet, att den gäller tills vidare och
+att vi kan ta bort den) ska stå där vi ger den, i mejlet eller avtalet med
+partnern.
 
 **Gjort natten till 2026-10-16** (Leo: "Ja, kör hela kedjan efter merge",
 sedan "Merga"; från merge-commiten 8b28e1a, och de två andra sessionerna som
@@ -1564,9 +1562,7 @@ inte på väg att dras från kortet, på familjens faktura (`fakturera_obetalda(
 2026-10-16, så alla får frågan igen, och det gäller bara pass som bokas efter
 att familjen godkänt den: inget läggs på i efterhand. Samma version tar bort
 orden "utan påminnelse" ur `#gratistimmar` (påminnelsen från PR #292) och
-meningen om första timmen pass för pass ur `#forsta-timmen`, och den har
-familjerabattens punkt (`#familjerabatt` och Att sluta, 9.15; Leo 2026-10-16
-valde en version i stället för två).
+meningen om första timmen pass för pass ur `#forsta-timmen`.
 
 Sidorna, villkoren och policyn går ut med sajten när grenen mergas. Det är med
 flit, och samma ordning som förut: sidan står före versionen i några minuter,
