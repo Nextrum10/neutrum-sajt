@@ -949,9 +949,24 @@ const NXAdmin = (function () {
     return (fel && fel.message) || 'Okänt fel.';
   }
 
+  /* Vad den inloggade får göra (2026-10-15). En superadmin får allt, en
+     admin med behörigheter det koderna täcker (nextrum-admin-behorighet.js).
+     Bekvämlighet, inte skydd: databasen prövar igen. Utan S.behorighet
+     gäller det som förut, is_admin är allt. En knapp som databasen ändå
+     nekar ritas inte: ett nej efteråt säger inte varför. */
+  const ärSuperadmin = () => !S.behorighet || !!S.behorighet.superadmin;
+  const får = kod => ärSuperadmin() || (S.behorighet.behorigheter || []).indexOf(kod) !== -1;
+
   async function skriv(tabellNamn, id, fält, efteråt) {
-    const { error } = await supa.from(tabellNamn).update(fält).eq('id', id);
+    const { data, error } = await supa.from(tabellNamn).update(fält).eq('id', id).select('id');
     if (error) { alert('Kunde inte spara: ' + felText(error)); return false; }
+    /* En uppdatering som RLS inte släpper fram ger inget fel, bara noll
+       rader (2026-10-15): Avboka såg ut att gå igenom för en admin med
+       behörigheter, och passet stod kvar. */
+    if (!data || !data.length) {
+      alert('Ingenting sparades. Raden finns inte längre, eller så får du inte ändra den.');
+      return false;
+    }
     if (efteråt) efteråt();
     return true;
   }
@@ -1065,7 +1080,7 @@ const NXAdmin = (function () {
     gmailAdress, gmailLänk, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
-    lägesväljare, räknas,
-    ärAdminkonto, ärNyNu, ärRaderad, rita
+    lägesväljare, räknas, får,
+    ärAdminkonto, ärNyNu, ärRaderad, ärSuperadmin, rita
   };
 })();

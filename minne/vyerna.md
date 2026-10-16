@@ -1273,6 +1273,14 @@ tabellerna och listorna, inte ytorna.
 - NEX-bandets yta står i `nextrum-admin-konsol.css`, som laddas efter och
   vinner på samma vikt; en regel för `.kon-*` i `arbetsyta.css` gör inget.
 
+**Knapparna efter behörighet (2026-10-15).** En knapp som databasen bara
+släpper fram för en superadmin eller en behörighet ritas efter kärnans
+`ärSuperadmin()` eller `får(kod)`, och `skriv()` ber om raderna och säger
+Ingenting sparades när en uppdatering inte träffade något (RLS nekar en
+uppdatering utan fel). Listan över knapparna står i
+`minne/barnkonton-och-admin.md`, under Adminvyn.
+
+
 ### Koder i adminvyn (2026-10-13)
 
 Leo: "i admin vyn ska du skapa en ny spalt, där ska koder synas, allas
@@ -1544,8 +1552,10 @@ senare sida ger felet, aldrig en halv lista.
 - En admin med behörigheter får sina sektioner genom `o.tillåten` i
   `NXStudie.sidomeny` (de andra döljs och går inte att nå med en adress),
   flikarna hen inte har tas bort ur DOM:en, och en rubrik utan synlig post
-  göms (`städaMenyn`). Knapparna i en synlig sektion är fortfarande
-  superadminens; databasen säger nej. Se `minne/barnkonton-och-admin.md`.
+  göms (`städaMenyn`). Sedan 2026-10-15 ritas i en synlig sektion bara de
+  knappar databasen släpper fram (`får(kod)`, `ärSuperadmin()`), och
+  `skriv()` säger när en uppdatering inte träffade något. Se
+  `minne/barnkonton-och-admin.md`.
 
 ### Hälsningen, en bild per veckodag (2026-10-06)
 Leo: "På studievyerna ska rullande heron ändras varje dag så de blir en ny

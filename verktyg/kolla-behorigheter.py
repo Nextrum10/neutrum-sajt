@@ -24,7 +24,8 @@ Och för vad ett barn får se och göra (barnets_behorigheter, 2026-10-06):
 listan står i intern.barn_behorigheter_alla() och, utan rapporterna och
 boka, i villkoret på students; förvalet i kolumnen och i
 skydda_studentfalt; och i föräldrarnas ruta (BARN_FÅR och
-BARN_FÅR_FÖRVAL) och elevvyn (FÅR). En sak som vyn erbjuder och
+BARN_FÅR_FÖRVAL), elevvyn (FÅR) och sedan 2026-10-15 elevens panel i
+adminvyn (BARNETS_VAL). En sak som vyn erbjuder och
 databasen nekar blir ett fel för föräldern; en som databasen har och vyn
 saknar går inte att slå av. Rapporterna står i visa_rapporter och boka
 (barnet_foreslar_pass, 2026-10-12) i far_boka, var sin kolumn, så de två
@@ -140,11 +141,15 @@ def main():
         m = re.search(r"const FÅR = \{(.*?)\};", las('nextrum-barn-vy.js'), re.S)
         if not m or sorted(re.findall(r"^\s*([a-z_]+):", m.group(1), re.M)) != sorted(lista):
             fynd.append('nextrum-barn-vy.js (FÅR) har en annan lista än databasen: %s' % ', '.join(lista))
+        # Adminvyn visar vad barnet får i elevens panel (2026-10-15).
+        m = re.search(r"const BARNETS_VAL = \{(.*?)\};", las('nextrum-admin-detalj.js'), re.S)
+        if not m or re.findall(r"^\s*([a-z_]+):", m.group(1), re.M) != lista:
+            fynd.append('nextrum-admin-detalj.js (BARNETS_VAL) har en annan lista än databasen: %s' % ', '.join(lista))
 
     if fynd:
         print('\n'.join(fynd))
         return 1
-    print('ok   %d behörigheter på fyra ställen, användarnamnet på fyra, domänen %s, och barnets %d val på fem'
+    print('ok   %d behörigheter på fyra ställen, användarnamnet på fyra, domänen %s, och barnets %d val på sex'
           % (len(db), doman, antal_far))
     return 0
 
