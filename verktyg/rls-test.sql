@@ -56,8 +56,8 @@
 -- adminkonton_utanfor_statistiken (2026-10-12), rabattkoden_krockar_inte,
 -- gratistimmarna_60_dagar, tipskoder_bonus_och_timbanken och gratistimmar (2026-10-13),
 -- rabattkoden_timmar_och_tak och kortet_reserveras (2026-10-13), timmarna_delas_och_kops_till
--- (2026-10-14), ansokan_till_intervju, familjerabatter, nexlax_i_adminvyn, betygsgarantin_provas
--- och obetalda_pass_pa_fakturan (2026-10-15) är körda.
+-- (2026-10-14), ansokan_till_intervju, familjerabatter, nexlax_i_adminvyn, betygsgarantin_provas,
+-- gratistimmarna_paminns och obetalda_pass_pa_fakturan (2026-10-15) är körda.
 --
 -- Lokalt: verktyg/lokal-databas.sh bygger databasen i Docker och kör
 -- hela filen mot den.

@@ -789,13 +789,21 @@ finns kvar".
   räknad med den). Vakten godkänner båda vyerna (`a34041ef…` och `e4bf8d23…`),
   för kolumnerna påminnelsen läser är desamma; lokalt gick hela `rls-test.sql`
   1798 av 1798 i båda ordningarna, med #287:s två migrationer före.
+- **I drift 2026-10-16.** PR #292 mergades 00.28 UTC (aabb046), och Vercel
+  lade ut batteriet. Sessionen startades sedan om och låg nere i över åtta
+  timmar, så `notis-ko` v26 gick ut först 08.59 UTC, från merge-commiten och
+  byte för byte lika i alla 15 filer, och migrationen 09.00, hel i ett do-block
+  (`minne/databasen.md`). Under natten sa Profil → Notiser redan "köpta eller
+  gratis timmar" medan databasen bara påminde om köpta: inget gick fel, för
+  inga gratistimmar fanns. En torrkörning i driften efteråt (rullad tillbaka)
+  köade inga mejl och inga uppgifter.
 - **Villkoren** sa att gratistimmar "förfaller utan påminnelse"
   (`#gratistimmar`). Orden tas bort i nästa version, inte i en egen (Leo
   2026-10-15, på förslaget från #287): alla har fått frågan om villkoren nästan
   varje dag sedan 2026-10-07, och en påminnelse till är inget familjen förlorar
   på. Nästa version är 2026-10-16 (de obetalda passen, PR #298), och där står
   bara att de förfaller, på båda språken. Villkoren nämner ingen påminnelse
-  för köpta timmar heller, så de lovar ingen innan den är i drift.
+  för köpta timmar heller.
 - **Batteriet** (`nextrum-studie-vy.js`, `batteriTimmar`, `fyllBatteri`,
   `sättBatterier`) står överst i Er timbank och under Profil → Timbanken. En
   ruta per timme i det som gäller nu: köp som inte gått ut (med de använda

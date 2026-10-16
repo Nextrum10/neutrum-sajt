@@ -1389,3 +1389,28 @@ Advisorn: inget nytt för `anon`. De fyra nya för `authenticated` skyddar sig
 själva: `nexlax_banor`, `nexlax_nivaer` och `betygsgaranti_underlag` släpper
 bara fram superadmin, och `mina_elevers_garantiamnen` ger bara
 studiehjälparens egna elever (`is_my_student`).
+
+### Gratis timmar påminns (gratistimmarna_paminns, 2026-10-15, i drift 2026-10-16)
+`intern.timmar_gar_ut_koa` omskriven helt: köpta timmar som förut, och nu också
+gratistimmarna, planens gratis timme efter planen och tipstimmarna, märkta
+`gratis`, och en uppgift i stället för ett mejl när familjen saknar
+studiehjälpare (`minne/timmar.md`, Gratis timmar påminns). Inga nya tabeller,
+inget `drop`, inget `delete`. Vakten prövar funktionen (md5 på
+`pg_get_functiondef`: driftens `2c8fa456…` eller filens egen `c54a9b63…`), vyn
+`klippkort_saldo` (`a34041ef…` eller familjerabatternas `e4bf8d23…`) och att
+`intern.tipstimmar_oanvanda` finns. `rls-test.sql` proven GTB E, GTB F och två
+efter GT G.
+**I drift 2026-10-16**: PR #292 mergades 00.28 UTC (aabb046), efter #293 och
+#287, i den ordning de tre sessionerna kommit överens om. Sessionen låg sedan
+nere i över åtta timmar och fortsatte 08.59 UTC: först `notis-ko` v26 från
+merge-commiten, hämtad tillbaka och byte för byte lika i alla 15 filer, sedan
+filen hämtad från merge-commiten genom `extensions.http_get`, prövad mot sin
+md5 (`fb8d50f3…`) och körd och registrerad i samma do-block (`$kor$`), med en
+vakt mot att versionen redan fanns. Vakterna stämde. Efteråt: funktionens kropp,
+`SECURITY DEFINER`, `search_path`, rättigheter (bara ägaren) och kommentar lika
+en lokal databas byggd ur aabb046, och raden i `schema_migrations` med filens
+md5. Hela `rls-test.sql` från aabb046 (`27a01226…`) gick 1798 av 1798 mot
+driften i ett do-block som slutar med ett fel (allt rullades tillbaka), och
+advisorn larmade inte om något nytt. En torrkörning av funktionen i driften,
+också den tillbakarullad, köade inga mejl och inga uppgifter: inga gratistimmar
+fanns, och inga köpta timmar gick ut om tio dagar.
