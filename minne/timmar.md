@@ -797,11 +797,13 @@ finns kvar".
   gratis timmar" medan databasen bara påminde om köpta: inget gick fel, för
   inga gratistimmar fanns. En torrkörning i driften efteråt (rullad tillbaka)
   köade inga mejl och inga uppgifter.
-- **Villkoren** säger fortfarande att gratistimmar "förfaller utan påminnelse"
-  (`#gratistimmar`). Orden tas bort i nästa version, inte i en egen (Leo
+- **Villkoren** sa att gratistimmar "förfaller utan påminnelse"
+  (`#gratistimmar`). Orden skulle tas bort i nästa version, inte i en egen (Leo
   2026-10-15, på förslaget från #287): alla har fått frågan om villkoren nästan
   varje dag sedan 2026-10-07, och en påminnelse till är inget familjen förlorar
-  på. Villkoren nämner ingen påminnelse för köpta timmar heller.
+  på. De togs bort med versionen 2026-10-16 (familjerabatten,
+  `minne/betalning.md`), och villkoren lovar ingen påminnelse om gratistimmar;
+  för köpta timmar lovar de ett mejl tio dagar innan.
 - **Batteriet** (`nextrum-studie-vy.js`, `batteriTimmar`, `fyllBatteri`,
   `sättBatterier`) står överst i Er timbank och under Profil → Timbanken. En
   ruta per timme i det som gäller nu: köp som inte gått ut (med de använda
