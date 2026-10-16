@@ -963,10 +963,13 @@ Detaljer: `minne/grunden.md`.
   2026-10-14, så alla får frågan igen. Kvar: inget provköp av Köp till timmar är gjort, lönearten för bonusen i
   Fortnox ska inte vara semestergrundande (300 kr är inklusive semesterersättning; revisorn bekräftar), och juristen
   har inte läst de nya villkoren.
-- **Familjerabatterna** (2026-10-15) är skrivna, inte i drift: efter merge `familjerabatter` (20261015210000; inget `drop`
-  och inget `delete`, så hel i ett do-block) och hela `rls-test.sql` mot driften (avsnitt 35), sedan `stripe-checkout`
-  (SESSIONSFORM 9) och `drift` (agentens fakta) från merge-commiten (`DEPLOY-BETALNING.md` 9.15). Vyerna tål att migrationen
-  saknas. Lokalt ur alla 195 migrationer 1775 av 1775, och `verktyg/prova-familjerabatter.js` 63 av 63. Kvar: juristen har inte
+- **Familjerabatterna** (2026-10-15) är i drift sedan natten till 2026-10-16 (Leo: "Ja, kör hela kedjan efter merge", sedan
+  "Merga"): PR #293 mergades (8b28e1a), Vercel driftsatte den 23.50 UTC, och `familjerabatter` (20261015210000) kördes direkt
+  efter, hämtad från merge-commiten, prövad mot sin md5 (`8348b94c…`) och körd och registrerad i ett do-block (inget `drop` och
+  inget `delete`). Alla kroppar den skriver är byte för byte filens, hela `rls-test.sql` gick 1775 av 1775 mot driften,
+  tillbakarullat, och advisorn larmade inte om något nytt för `anon`. Sedan `stripe-checkout` v21 (SESSIONSFORM 9) och `drift`
+  v21 från merge-commiten, hämtade tillbaka och byte för byte lika (7 och 5 filer), och båda svarade 401 ur sin egen kod på ett
+  röktest (`DEPLOY-BETALNING.md` 9.15). Ingen familjerabatt fanns. Kvar: provet i testläge (9.15 steg 4), och juristen har inte
   läst rad 30 i `DATASKYDD.md` eller policyns nya stycken.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
