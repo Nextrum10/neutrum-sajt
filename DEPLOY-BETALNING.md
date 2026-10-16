@@ -1448,6 +1448,17 @@ arbetade i repot körde inget mot driften):
 
 Ingen kod var skapad och ingen familj hade en rabatt när kedjan var klar.
 
+**Gjort 2026-10-16, steg 5** (Leo: "#302 först", och sedan "Merga sen när du
+kan"; #298:s session väntade, och ingen annan session körde något mot driften):
+- PR #302 mergades 10.00 UTC (947f0b4). Vercel hade lagt ut sidan 10.01: båda
+  språken sa 16 oktober och hade `#familjerabatt`.
+- `villkoren_familjerabatt` hel i ett do-block, hämtad från 947f0b4, prövad mot
+  sin md5 (`d3f4748c…`) och registrerad med filens text. Vakten stämde
+  (versionen var 2026-10-15, och ingen hade godkänt 2026-10-16).
+- Efteråt: `intern.villkor_version()` svarar 2026-10-16, kroppen är filens
+  (`bc41515f…`), och rättigheterna står kvar. Hela `rls-test.sql` (`393d3278…`,
+  från 947f0b4) 1798 av 1798 mot driften, tillbakarullat. Advisorn: inget nytt.
+
 ### 9.16 Till skarpt läge, i ordning (2026-10-15)
 
 Stegen för att ta emot riktiga pengar står utspridda i 9.2–9.15. Här står de i
