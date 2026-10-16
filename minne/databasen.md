@@ -1337,3 +1337,27 @@ med filens md5, och ingen ansökan med steget satt. Hela `rls-test.sql` från
 b85b892 gick 1745 av 1745 mot driften i ett do-block som slutar med ett fel
 (allt rullades tillbaka), och inget blev kvar. Advisorn larmade inte om något
 nytt.
+
+### Nivåerna och prövningen (nexlax_i_adminvyn och betygsgarantin_provas, 2026-10-15)
+Vad de gör står i `minne/nexlax.md` (nivåerna i adminvyn) och
+`minne/affaren.md` (prövningen av ett anspråk). Ingen av filerna har `drop`
+eller `delete`.
+**I drift natten till 2026-10-16**, direkt efter merge av PR #287 (0c30568,
+00.19 UTC, på Leos "Merga"). Sessionerna för PR #292 och #293 fick veta före
+och efter. Varje fil hämtades från merge-commiten genom `extensions.http_get`,
+prövades mot sin md5 (`6124842e…`, `07e17698…`) och kördes och registrerades
+i ett eget do-block (`$kor$`), med vakter mot att versionen eller funktionerna
+redan fanns. Efteråt var `md5(prosrc)`, `security definer`, `proconfig` och
+rättigheterna för alla sex funktionerna (`nexlax_banor`, `nexlax_nivaer`,
+`intern.nexlax_forsok_raknas`, `betygsgaranti_underlag`, `intern.lasaret` och
+`mina_elevers_garantiamnen`) lika en lokal databas byggd ur filerna, och
+raderna i `schema_migrations` hade filernas md5. **De kördes efter
+`familjerabatter`** (20261015210000), som var körd före dem, fast numren är
+lägre: de skriver inga gemensamma objekt. Hela `rls-test.sql` från 0c30568
+(`c6a994a6…`) gick 1791 av 1791 mot driften i ett do-block som slutar med ett
+fel, så allt rullades tillbaka. Det första försöket stoppades av blockets egen
+kontroll innan något kördes: svansen som klipps bort är 74 tecken, inte 77.
+Advisorn: inget nytt för `anon`. De fyra nya för `authenticated` skyddar sig
+själva: `nexlax_banor`, `nexlax_nivaer` och `betygsgaranti_underlag` släpper
+bara fram superadmin, och `mina_elevers_garantiamnen` ger bara
+studiehjälparens egna elever (`is_my_student`).

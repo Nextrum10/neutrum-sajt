@@ -1552,7 +1552,7 @@ som arbetar i repot (`minne/databasen.md`):
    räknar dem i torrkörningen.
 3. **`notis-ko`** (mejlets mening) och **`drift`** (agenternas fakta) från
    main. Varje funktion hämtas tillbaka och jämförs byte för byte, som förut.
-4. Hela `rls-test.sql` mot driften, tillbakarullat (avsnitt 37), och advisorn.
+4. Hela `rls-test.sql` mot driften, tillbakarullat (avsnitt 38), och advisorn.
    Avsnittets körning skriver som tjänstekontot också i riktiga obetalda pass
    som uppfyller villkoren, och låser dem tills sviten rullats tillbaka: kör
    den inte medan månadskörningen går (natten, 04.17).

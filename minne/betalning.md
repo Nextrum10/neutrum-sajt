@@ -784,7 +784,7 @@ faktura". Byggt 2026-10-15, på Leos "bygg det du kunde bygga själv".
   övertid (`pass_tillagg`) kommer inte med, för det är ett eget köp med kort;
   adminvyn säger inte "Läggs på fakturan i natt" om ett obetalt pass, bara
   körningens svar räknar dem.
-- **Prov**: avsnitt 37 i `rls-test.sql` (tretton pass i tre familjer: varje
+- **Prov**: avsnitt 38 i `rls-test.sql` (tretton pass i tre familjer: varje
   undantag, kassans tid, torrkörningen, skrivningen, en andra natt, vem som
   får anropa och `obetalda_fran`), `pris_test.ts` för torrkörningens räkning
   och `rendera_test.ts` för mejlets mening.

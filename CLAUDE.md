@@ -875,8 +875,8 @@ Detaljer: `minne/grunden.md`.
   FAQ: `betygsgarantin` från merge-commiten (md5 prövad, också de sex funktionskropparna), och hela
   `rls-test.sql` 1490 av 1490 mot driften. Versionen är `2026-10-07`, så alla får frågan om villkoren igen.
   Juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`. **Prövningen**
-  (2026-10-15, `betygsgarantin_provas`, 20261015120000) är byggd men inte i drift: underlaget i elevens
-  panel och garantiämnena i studiehjälparens vy. Passens ämne är rapportens (fritext, och bokningens grupp
+  (2026-10-15, `betygsgarantin_provas`, 20261015120000) är i drift sedan natten till 2026-10-16, med nivåerna i
+  adminvyn (nedan): underlaget i elevens panel och garantiämnena i studiehjälparens vy. Passens ämne är rapportens (fritext, och bokningens grupp
   som "NO / Fysik / Kemi / Biologi" står som oklar), anspråken sparas inte i systemet (inget säger att
   garantin redan använts för ett ämne), och de 10 timmarna har ingen egen väg: gratistimmarna gäller 60
   dagar och hela familjen, villkoren lovar sex månader och eleven.
@@ -1048,8 +1048,12 @@ Detaljer: `minne/grunden.md`.
   körda efter merge som de förra bankerna (`minne/nexlax.md`). Juridiken, företagsekonomin och språken, och de 1 217 frågorna i matematik, svenska och engelska från 2026-10-14 (Fas 23.5), är skrivna med AI och inte lästa
   av någon som undervisar i ämnet. Fas 23.5 är i drift sedan 2026-10-14 (`uppgiftsbanken_fler_uppgifter`, PR #282,
   md5 `cebbc232…`, facitprovet gav 1 217 av 1 217).
-- **Nivåerna i adminvyn** (2026-10-15, `nexlax_i_adminvyn`, 20261015110000) är byggda men inte i drift:
-  Material visar en rad per bana och en banas nivåer (`nexlax_banor()`, `nexlax_nivaer()`, bara superadmin),
+- **Nivåerna i adminvyn** (2026-10-15, `nexlax_i_adminvyn`, 20261015110000) är i drift sedan natten till 2026-10-16,
+  med betygsgarantins prövning: PR #287 mergades (0c30568) och båda migrationerna kördes direkt efter, hämtade från
+  merge-commiten, prövade mot sina md5 (`6124842e…`, `07e17698…`) och körda och registrerade i var sitt do-block. De sex
+  funktionskropparna och deras rättigheter är lika en lokal databas byggd ur filerna, och hela `rls-test.sql` gick 1791 av
+  1791 mot driften, tillbakarullat. De kördes efter `familjerabatter`, fast numren är lägre: de skriver inget gemensamt.
+  Advisorn larmade inte om något nytt för `anon` (`minne/databasen.md`). Material visar en rad per bana och en banas nivåer (`nexlax_banor()`, `nexlax_nivaer()`, bara superadmin),
   bara antal och aldrig frågor eller facit, och utan barn i familjer med en adminroll. Banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14
