@@ -656,8 +656,9 @@ Reglerna:
      `intern.mitt_aktiva_barn()`, konsekvensbedömningen i `DATASKYDD.md`
      har en rad för det, och `rls-test.sql` avsnitt 14 provar att barnet
      bara spelar sitt eget och inte med en pausad inloggning.
-  2. **Adminvyn har nivåerna under Material sedan 2026-10-15**
-     (`nexlax_i_adminvyn`): en rad per bana (ämne, årskurs och spår) med
+  2. **Adminvyn har nivåerna under Material sedan natten till 2026-10-16**
+     (`nexlax_i_adminvyn`, byggd 2026-10-15 och körd efter merge av PR
+     #287; `minne/databasen.md`): en rad per bana (ämne, årskurs och spår) med
      nivåerna, provnivåerna, frågorna, försöken, de klara, eleverna, de
      öppna felrapporterna och det senaste försöket (`nexlax_banor()`), och
      en banas nivåer i spelets ordning med stjärnornas snitt

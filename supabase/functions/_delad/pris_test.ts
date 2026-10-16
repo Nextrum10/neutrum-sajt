@@ -20,7 +20,8 @@
 import { assert, assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
   belopp, byggFakturor, byggUnderlag, familjebelopp, fordela, malmanad, manadenArSlut, manadenNu, manadFor, nastaManad,
-  type Pass, passpris, radtext, rutFor, sammanfatta, minuterspris, sorteraPass, standardTjanst, tillaggsbelopp, type Tjanst,
+  type Pass, passpris, radtext, rutFor, sammanfatta, minuterspris, somFaktura, sorteraPass, standardTjanst, tillaggsbelopp,
+  type Tjanst,
 } from './pris.ts';
 import { MANADER } from './konstanter.ts';
 
@@ -485,6 +486,26 @@ Deno.test('bara fakturapass faktureras, och bara de som inte redan står på en 
   });
   assertEquals([...f.keys()], [P]);
   assertEquals(f.get(P)!.map((r) => r.booking_id), ['f-ja']);
+});
+
+Deno.test('torrkörningen räknar passen som skulle läggas på fakturan som fakturapass (obetalda_pass_pa_fakturan)', () => {
+  const lista: Pass[] = [
+    { ...GRUND, id: 'o-1', wanted_date: '2026-09-02', betalning_status: 'ingen' },
+    { ...GRUND, id: 'o-2', wanted_date: '2026-09-03', betalning_status: 'vantar' },
+  ];
+  const extra: Pass[] = [
+    { ...GRUND, id: 'o-1', wanted_date: '2026-09-02', betalning_status: 'ingen' },
+    { ...GRUND, id: 'o-3', wanted_date: '2026-09-04', betalning_status: 'misslyckad', pa_underlag: true },
+    { ...GRUND, id: 'o-4', wanted_date: '2026-09-05', betalning_status: 'ingen' },
+  ];
+  const ut = somFaktura(lista, extra, ['o-1', 'o-3']);
+  assertEquals(ut.map((b) => b.id + ':' + b.betalning_status), ['o-1:faktura', 'o-2:vantar', 'o-3:faktura']);
+  // Passen blir fakturapass och inte obetalda, och fakturan tar dem.
+  const f = byggFakturor({ pass: ut, tjanster: KATALOG, timprisOre: 37900 });
+  assertEquals(f.get(P)!.map((r) => r.booking_id), ['o-1', 'o-3']);
+  // Utan id ändras ingenting.
+  const orörd: Pass[] = [{ ...GRUND, id: 'o-5', wanted_date: '2026-09-02', betalning_status: 'ingen' }];
+  assertEquals(somFaktura(orörd, [], []).map((b) => b.betalning_status), ['ingen']);
 });
 
 Deno.test('ett fakturapass är inte obetalt med kort, men studiehjälparen får betalt för det', () => {

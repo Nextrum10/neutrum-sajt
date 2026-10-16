@@ -755,10 +755,13 @@ det, och inget mer.
   använts), och de 10 timmarna har ingen egen väg. Gratistimmarna
   (`ge_gratistimmar`) gäller 60 dagar och hela familjen, villkoren lovar
   sex månader och eleven.
-- **Prov.** `rls-test.sql` avsnitt 36 (12 prov, ett påhittat läsår
+- **Prov.** `rls-test.sql` avsnitt 37 (12 prov, ett påhittat läsår
   2025/26), `prova-barnkonton.js` (underlaget i panelen, ingen prövning
   för en admin med behörigheter) och `prova-forhandsvisning.js` (raden i
   rapporten och elevprofilen).
+- **I drift sedan natten till 2026-10-16**, efter merge av PR #287
+  (0c30568), med nivåerna i adminvyn. Hur den kördes och provades står i
+  `minne/databasen.md`.
 
 ## Tipsa en familj och affischerna (2026-09-30)
 

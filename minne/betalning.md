@@ -705,6 +705,104 @@ ruta, där det skulle torrköras innan något skapades.
   driftsättningen. Provet är `verktyg/prova-fakturor.js` (Playwright mot en
   falsk Supabase, inte i CI).
 
+## Obetalda pass på fakturan (2026-10-16, `obetalda_pass_pa_fakturan`)
+
+Beslutat 2026-10-01 (avsnitt 11 sa "inte byggt" till 2026-10-15). Leo: en
+familj som har ett pass den 30 september och bekräftar i oktober "ska inte
+kunna välja hur de betalar utan bekräftar de inte läggs det automatiskt på
+faktura". Byggt 2026-10-15, på Leos "bygg det du kunde bygga själv".
+
+- **Vad som händer.** Månadskörningen (`fakturering`, natten efter månaden
+  och sedan varje natt för sena pass) frågar `fakturera_obetalda(p_fore,
+  p_torr)` innan den hämtar fakturapassen. Funktionen väljer samma pass som
+  avvikelsen Inte betalt (`avvikelser_rader()`, `ej_betalt`: hållet,
+  rapporterat, fakturerbart, inte på en faktura, kostar något) före
+  periodens slut, skriver dem som `faktura` och svarar med deras id. Sedan
+  tar körningen dem som vilka fakturapass som helst: `malmanad` och
+  `fordela` lägger dem på familjens faktura för sin månad så länge den är ett
+  utkast, annars på förra månadens. Svaret säger vilka (`pa_fakturan`), och
+  körningens ruta i adminvyn räknar dem.
+- **Fyra undantag**, i `intern.obetalt_till_fakturan(b)`, som prövas två
+  gånger, när passen väljs (låsta, `for update`) och när de skrivs:
+  - **Ett kort som ska betala passet**: reserverat, draget eller på väg att
+    släppas, eller valt eller utgånget med ett sparat kort, en kund hos
+    Stripe och strömbrytaren `kortreservation` på, och `intern.kortet_betalar`.
+    Det är `kortreservation_att_gora`s regel för vad jobbet drar, debiterar
+    eller släpper. Ett nekat kort (`misslyckad`) och ett släppt kommer med.
+  - **En kassa som kan stå öppen**: passet står som `vantar` från att
+    `stripe-checkout` öppnar kassan tills webhooken skriver betalningen eller
+    ett nej, och en kassa som bara stängs eller går ut lämnar det där. Ingen
+    händelse skriver om det, så utan en tid hade det passet aldrig kommit med.
+    Triggern `bookings_kassan_oppnad` (efter skrivningen, så den rör inte
+    ordningen bland before-triggrarna) stämplar `intern.kassan_oppnad` när en
+    ny kassa öppnas (ett nytt sessions-id), och samma kassa igen behåller sin
+    tid. En kassa lever som mest 24 timmar (Stripes `expires_at`), så en som
+    öppnades för mer än 25 timmar sedan kan inte betalas. Pass som redan stod
+    i `vantar` när migrationen kördes räknas från den stunden.
+  - **Faktura som inte är tillåten** (`intern.faktura_tillaten`: flaggan
+    `faktura` av, eller familjen i `faktura_sparr`). Passet står kvar som
+    Inte betalt, och familjen betalar med kort, som villkoren säger.
+  - **Ett pass bokat innan familjen godkänt villkoren som säger det**:
+    `villkor_godkannanden` med en version från `intern.obetalda_faktureras_fran()`
+    (2026-10-16) och `godkant_at` före passets `created_at`. Avtalet om ett
+    äldre pass slöts med villkoren där familjen valde själv, så det läggs
+    aldrig på i efterhand. Ett pass som admin bokat åt en familj som inte
+    godkänt kommer inte heller med.
+- **Låset.** En kassa som öppnas medan passen skrivs väntar på låset, ser
+  sedan ett fakturapass och stängs av `stripe-checkout` (409). En betalning
+  som kom före låset står i raden när den prövas igen. Hinner familjen ändå
+  betala med kort efter att passet hamnat på fakturan larmar
+  `betald_och_fakturerad`, som förut.
+- **Kortet går att välja tills passet står på en faktura**, som förut
+  (`stripe-checkout` nekar ett fakturapass med en rad i `invoice_lines`).
+  Förslaget 2026-10-01 var att stänga kortet först då, inte vid
+  månadsskiftet: att stänga det tidigare ger bara pengarna senare.
+- **Torrkörningen skriver ingenting**: `p_torr` svarar med passen, och
+  `fakturering` räknar dem som fakturapass i svaret (`somFaktura` i
+  `_delad/pris.ts`), så att rutan visar fakturan som den blir. En torrkörning
+  för en månad som pågår visar alltså obetalda pass som kan hinna betalas.
+- **Bara tjänstekontot**: funktionen nekar allt utom `service_role` (och en
+  session utan roll, som SQL Editor) och har ingen EXECUTE för `anon` och
+  `authenticated`. Ingen inloggad läser `intern.kassan_oppnad`.
+- **Villkoren** har versionen 2026-10-16 (alla får frågan igen), och `#faktura`
+  säger det: meningen, när passet läggs på (natten efter månaden eller efter
+  en sen rapport), att det sedan betalas genom fakturan, att det gäller pass
+  bokade efter godkännandet, och att en familj med fakturavalet stängt
+  betalar med kort. Den hållna tiden står på fakturan (`#hallen-tid`).
+  **Två PR:er skrev 2026-10-16.** #298 tog först med sig orden "utan
+  påminnelse" ur `#gratistimmar` och första timmen pass för pass ur
+  `#forsta-timmen`, som skulle gå med nästa version. Familjerabattens punkt
+  (PR #302) skrev samma version och tog bort samma meningar, och Leo lät den
+  gå först ("#302 först", 2026-10-16; Familjerabatterna nedan). Två texter
+  med samma version går bara när ingen godkänt den första: den som godkänt
+  familjerabattens 2026-10-16 innan meningen om fakturan stod på sidan hade
+  räknats som att ha godkänt den (`obetalda_faktureras_fran()` jämför
+  versionen). Ingen hade godkänt 2026-10-16 när Leo sa "merga bara och fixa
+  villkoren" (det senaste godkännandet var från 2026-10-15), så meningen går
+  med i samma version, och sidan säger 16 oktober. Vakten först i filen
+  kräver exakt 2026-10-16 och att ingen godkänt den; stannar den får meningen
+  ett eget, senare datum (`DEPLOY-BETALNING.md` 9.17).
+  Meningen "Är ett pass inte betalt när månaden är slut, och inte på väg att
+  dras från kortet, kommer det med på fakturan." står direkt efter
+  fakturameningen på alla 36 ställen och i mejlen, och
+  `kolla-betalningsvillkor.py` räknar den (`OBETALDA_PA_FAKTURAN`, som följer
+  `FAKTURA_I_TEXTEN`). Policyn säger att Fortnox får fakturan också då, och
+  att vi sparar när en kortbetalning påbörjades (`DATASKYDD.md` rad 8).
+- **Studievyn** säger det per pass, under Bekräfta rapport och på passets
+  sida, bara när det gäller: fakturan går att välja för familjen, kortet
+  betalar inte, och passet bokades efter `mitt_villkorslage().obetalda_fran`
+  (när kontot först godkände en version från 2026-10-16). Utan svaret säger
+  passet inget. Agenternas fakta (`_delad/nextrum-fakta.ts`) säger regeln.
+- **Inte byggt**: inget mejl när ett pass läggs på fakturan (fakturan skickas
+  från Fortnox, och familjen ser passet under Betalning); ett tillägg för
+  övertid (`pass_tillagg`) kommer inte med, för det är ett eget köp med kort;
+  adminvyn säger inte "Läggs på fakturan i natt" om ett obetalt pass, bara
+  körningens svar räknar dem.
+- **Prov**: avsnitt 38 i `rls-test.sql` (tretton pass i tre familjer: varje
+  undantag, kassans tid, torrkörningen, skrivningen, en andra natt, vem som
+  får anropa och `obetalda_fran`), `pris_test.ts` för torrkörningens räkning
+  och `rendera_test.ts` för mejlets mening.
+
 ## Månadens ekonomi och Löner
 
 **Månadens ekonomi och Löner (2026-09-28)** är två egna sidor under
@@ -962,15 +1060,10 @@ Samma dag i finstilen och FAQ:n:
 
 ## 11. Vad som inte är byggt: betalningen
 
-- **Obetalda pass på månadens faktura av sig själva** (beslutat
-  2026-10-01, inte byggt). Leo: en familj som har ett pass den 30
-  september och bekräftar i oktober "ska inte kunna välja hur de betalar
-  utan bekräftar de inte läggs det automatiskt på faktura". Det ändrar
-  villkoren: meningen på 36 ställen i 23 filer och i mejlen, på båda
-  språken, och familjerna ska få veta. Leo valde en egen PR efter
-  Passets månad (avsnitt Månadens ekonomi och Löner). Förslaget var att
-  stänga kortet först när passet faktiskt står på en faktura: att stänga
-  det vid månadsskiftet ger bara pengarna senare.
+- **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är byggda
+  sedan 2026-10-15, inte i drift: avsnittet Obetalda pass på fakturan ovan,
+  och `DEPLOY-BETALNING.md` 9.17. Familjerna ska få veta, och juristen har
+  inte läst villkoren.
 - **Betalning.** Familjen betalar varje pass med kort, **i förväg eller
   efter passet när de bekräftar rapporten** (Fas 19.2; före passet från
   Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt

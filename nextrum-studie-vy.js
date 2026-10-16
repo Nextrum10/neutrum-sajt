@@ -1998,7 +1998,8 @@
       const hjälp = (bekräftad ? 'Rapporten är bekräftad, men passet är inte betalt än.'
           : 'Passet är inte betalt än. Välj hur ni betalar, så är rapporten bekräftad.')
         + (b.betalning_status === 'vantar' ? ' En betalning är påbörjad men inte klar.'
-          : b.betalning_status === 'misslyckad' ? ' Förra försöket gick inte igenom.' : '');
+          : b.betalning_status === 'misslyckad' ? ' Förra försöket gick inte igenom.' : '')
+        + (påFakturanOmObetalt(b) ? ' ' + PÅ_FAKTURAN : '');
       const not = fakturaNotText(b);
       fot = '<div class="rb-fot-rad"><div>'
         + (pris ? '<p class="rb-att"><small>Att betala</small><b>' + esc(NXBetalning.kronor(pris)) + '</b></p>' : '')
@@ -2241,13 +2242,29 @@
        bara om den som frågar: flaggan är på och familjen är inte
        spärrad. Kan den inte läsas finns inget fakturaval, och kortet
        står kvar som förut. Databasen prövar valet ändå. */
-    const [flagga, faktura] = await Promise.all([
+    /* Obetalda pass på fakturan (obetalda_pass_pa_fakturan, 2026-10-16)
+       gäller pass som bokats efter att familjen godkänt villkoren som
+       säger det. Databasen säger när (mitt_villkorslage, obetalda_fran),
+       och utan svaret säger passen inget om det. */
+    const [flagga, faktura, villkor] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'kortsparr').maybeSingle(),
-      supa.rpc('faktura_mojlig')
+      supa.rpc('faktura_mojlig'),
+      supa.rpc('mitt_villkorslage')
     ]);
     S.kortsparr = !!(flagga.data && flagga.data.aktiv);
     S.faktura = faktura.data === true;
+    S.obetaldaFrån = (villkor && villkor.data && villkor.data.obetalda_fran) || null;
   }
+
+  /* Kommer passet med på fakturan om det inte är betalt när månaden är
+     slut? Så långt vyn ser databasens regel (fakturera_obetalda): faktura
+     går att välja för familjen, kortet betalar inte passet, och passet
+     bokades efter att familjen godkänt villkoren som säger det. */
+  function påFakturanOmObetalt(b) {
+    return S.faktura && !!S.obetaldaFrån && !!b.created_at && !kortBetalar(b)
+      && new Date(b.created_at).getTime() >= new Date(S.obetaldaFrån).getTime();
+  }
+  const PÅ_FAKTURAN = 'Är passet inte betalt när månaden är slut kommer det med på fakturan.';
 
   /* ============================================================
      TIPSA EN FAMILJ (2026-09-30)
@@ -6007,7 +6024,8 @@
       /* Genomfört men inte betalt: betalningen efter passet (Fas 19.2).
          Rapporten står nedan, och att välja betalsätt här bekräftar den,
          som under Bekräfta rapport. */
-      besked = { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den genom att välja hur ni betalar.', ton: 'fraga' };
+      besked = { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den genom att välja hur ni betalar.'
+        + (påFakturanOmObetalt(b) ? ' ' + PÅ_FAKTURAN : ''), ton: 'fraga' };
       val = betalVal(b);
       alternativ = fakturaNot(b);
     } else if (b.status === 'completed' && b.betalning_status === 'faktura') {

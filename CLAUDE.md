@@ -70,7 +70,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `villkoren_kortet`). Med strömbrytaren `kortreservation` av gäller det förra, kort i förväg; texten
   och strömbrytaren följs åt (Siffror nedan). Ett hållet pass betalas även obekräftat. Ett pass med kortpengar avbokas inte från en vy, ett
   i tvist återbetalas inte, och ett fakturapass står som `faktura` tills webhooken skrivit
-  kortet. OCR räknas aldrig fram, och påminnelser tas ut utan avgift.
+  kortet. OCR räknas aldrig fram, och påminnelser tas ut utan avgift. **Ett obetalt pass hamnar på
+  fakturan** (2026-10-16, `obetalda_pass_pa_fakturan`, beslutat 2026-10-01): månadskörningen lägger ett pass som
+  inte är betalt när månaden är slut på familjens faktura (`fakturera_obetalda()`, natten efter månaden eller
+  efter en sen rapport), utom ett kort som ska betala det, en kassa öppnad det senaste dygnet
+  (`intern.kassan_oppnad`, 25 timmar), en familj utan faktura och ett pass bokat innan familjen godkänt version
+  2026-10-16 (`intern.obetalda_faktureras_fran`): inget läggs på i efterhand. Kortet går att välja tills passet
+  står på en faktura.
 - **Hållen tid** (Fas 20.1) debiteras per påbörjad kvart; avvikelse kräver skäl, ingen ändring i
   efterhand. Övertid på egen rad (`pass_tillagg`), aldrig passets betalningskolumner. Lönen
   följer tiden nedåt, uppåt bara när övertiden är betald.
@@ -343,7 +349,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   tips), gratis närmast de tomma för de dras först, "N av M timmar kvar", och en stapel över 24 timmar
   (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger.
 - Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
-  `kolla-betalningsvillkor.py` räknar dem. **En betalning som tas på ett annat sätt än villkoren
+  `kolla-betalningsvillkor.py` räknar dem, och sedan 2026-10-16 meningen om de obetalda passen ("Är ett pass inte
+  betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.") direkt efter
+  fakturameningen, på samma ställen (`OBETALDA_PA_FAKTURAN`, som går med fakturan). **En betalning som tas på ett annat sätt än villkoren
   lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
   samtidigt. Meningen följer strömbrytaren `kortreservation` (`KORTET_RESERVERAS`): på säger den att
   pengarna dras först när rapporten är skriven och att kortet reserveras två dagar före passet, och "betala
@@ -820,8 +828,15 @@ Detaljer: `minne/grunden.md`.
   (`stripe_skarp = false`): det räknas inte längre som intäkt.
 - **Skatt och anställning av minderåriga**: `studiehjalpare_form = oklart`; revisor före första
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
-- **Obetalda pass på månadens faktura av sig själva** är beslutat (2026-10-01), inte byggt: en
-  villkorsändring på alla 36 ställen och i mejlen, i en egen PR (`minne/betalning.md`).
+- **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är byggda 2026-10-15, inte i drift:
+  `obetalda_pass_pa_fakturan` (20261016110000), `fakturering`, meningen på alla 36 ställen och i mejlen,
+  villkoren (`#faktura` och den hållna tiden på fakturan), policyn och studievyn
+  per pass (`mitt_villkorslage().obetalda_fran`). Villkorens version är 2026-10-16, samma som familjerabattens punkt
+  (PR #302), som gick ut först samma förmiddag: ingen hade godkänt den när Leo sa "merga bara och fixa villkoren", så
+  meningen går med i den versionen, och vakten stannar om någon hunnit godkänna den (9.17).
+  Kvar efter merge (`DEPLOY-BETALNING.md` 9.17): migrationen, `fakturering`, `notis-ko` och `drift`, att säga till
+  familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och
+  ett tillägg för övertid kommer inte med (`minne/betalning.md`).
 - **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten, och familjerna om barnens inloggning
@@ -875,8 +890,8 @@ Detaljer: `minne/grunden.md`.
   FAQ: `betygsgarantin` från merge-commiten (md5 prövad, också de sex funktionskropparna), och hela
   `rls-test.sql` 1490 av 1490 mot driften. Versionen är `2026-10-07`, så alla får frågan om villkoren igen.
   Juristen har inte läst villkoret, marknadsföringen eller rad 25 i `DATASKYDD.md`. **Prövningen**
-  (2026-10-15, `betygsgarantin_provas`, 20261015120000) är byggd men inte i drift: underlaget i elevens
-  panel och garantiämnena i studiehjälparens vy. Passens ämne är rapportens (fritext, och bokningens grupp
+  (2026-10-15, `betygsgarantin_provas`, 20261015120000) är i drift sedan natten till 2026-10-16, med nivåerna i
+  adminvyn (nedan): underlaget i elevens panel och garantiämnena i studiehjälparens vy. Passens ämne är rapportens (fritext, och bokningens grupp
   som "NO / Fysik / Kemi / Biologi" står som oklar), anspråken sparas inte i systemet (inget säger att
   garantin redan använts för ett ämne), och de 10 timmarna har ingen egen väg: gratistimmarna gäller 60
   dagar och hela familjen, villkoren lovar sex månader och eleven.
@@ -1057,8 +1072,8 @@ Detaljer: `minne/grunden.md`.
   hämtad tillbaka och byte för byte lika i alla fem filer. Ingen migration: databasen gav redan den första planen
   timmen också med kod, och villkoren stod kvar på 2026-10-15. Villkorens "kan vi, om vi kommit överens" gick med
   versionen 2026-10-16 (nedan). Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()` står i databasen utan knapp, och
-  faktatextens "(första timmen eller tipstimmen)" står kvar också efter #293 (8b28e1a) och rättas nästa gång texten
-  ändras (`minne/funktioner.md`).
+  faktatextens "(första timmen eller tipstimmen)" står kvar också efter #293 (8b28e1a); PR #298 rättar den, och den går
+  ut med `drift` efter merge (`minne/funktioner.md`).
 - **Villkoren 2026-10-16** (Leo: "fixa villkoren") är i drift sedan samma förmiddag: familjerabatten fick en egen punkt
   (`#familjerabatt` under Pris och betalning), Att sluta säger att en familj med rabatt räknas till ordinarie timpris med
   rabatten dragen, som `vid_uppsagning_ore` och `intern.timbank_varde` redan gör (förut lovade villkoren minuterna till
@@ -1078,8 +1093,12 @@ Detaljer: `minne/grunden.md`.
   körda efter merge som de förra bankerna (`minne/nexlax.md`). Juridiken, företagsekonomin och språken, och de 1 217 frågorna i matematik, svenska och engelska från 2026-10-14 (Fas 23.5), är skrivna med AI och inte lästa
   av någon som undervisar i ämnet. Fas 23.5 är i drift sedan 2026-10-14 (`uppgiftsbanken_fler_uppgifter`, PR #282,
   md5 `cebbc232…`, facitprovet gav 1 217 av 1 217).
-- **Nivåerna i adminvyn** (2026-10-15, `nexlax_i_adminvyn`, 20261015110000) är byggda men inte i drift:
-  Material visar en rad per bana och en banas nivåer (`nexlax_banor()`, `nexlax_nivaer()`, bara superadmin),
+- **Nivåerna i adminvyn** (2026-10-15, `nexlax_i_adminvyn`, 20261015110000) är i drift sedan natten till 2026-10-16,
+  med betygsgarantins prövning: PR #287 mergades (0c30568) och båda migrationerna kördes direkt efter, hämtade från
+  merge-commiten, prövade mot sina md5 (`6124842e…`, `07e17698…`) och körda och registrerade i var sitt do-block. De sex
+  funktionskropparna och deras rättigheter är lika en lokal databas byggd ur filerna, och hela `rls-test.sql` gick 1791 av
+  1791 mot driften, tillbakarullat. De kördes efter `familjerabatter`, fast numren är lägre: de skriver inget gemensamt.
+  Advisorn larmade inte om något nytt för `anon` (`minne/databasen.md`). Material visar en rad per bana och en banas nivåer (`nexlax_banor()`, `nexlax_nivaer()`, bara superadmin),
   bara antal och aldrig frågor eller facit, och utan barn i familjer med en adminroll. Banken är skriven med AI
   och inte läst av en lärare. Samma sak gäller de 158 övningsbladen
   i materialbanken (`bank/`, `verktyg/bladen/`) och deras facit: Nextrums egna, ingen lärare har läst dem. De 14

@@ -93,7 +93,8 @@ const SVARA = 'Svara ja eller nej i Nextrum.';
 const VILLKORET = 'Ni betalar varje pass med kort, och '
   + 'pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
   + 'Före eller efter passet kan ni i stället '
-  + 'välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift.';
+  + 'välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift. '
+  + 'Är ett pass inte betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.';
 const BETALA = `${VILLKORET} Vill ni välja kort gör ni det i Nextrum före passet, om ni inte redan har gjort det.`;
 const FAKTURA = 'Ni har valt faktura, så passet kommer med på månadens faktura från Nextrum.';
 const TIMMAR = 'Passet är betalt med timmarna ni köpt i förväg, så det finns inget att betala.';

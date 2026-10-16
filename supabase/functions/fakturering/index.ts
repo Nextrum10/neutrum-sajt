@@ -19,8 +19,15 @@
 // kort, genom stripe-checkout, i förväg eller efter passet när de
 // bekräftar rapporten (Fas 19.2). Pass som hölls utan att
 // familjen betalat räknas upp i svaret under `obetalda`, med beloppet,
-// och syns under Avvikelser som Inte betalt. De försvinner inte tyst,
-// och de faktureras inte i efterhand av sig själva.
+// och syns under Avvikelser som Inte betalt. De försvinner inte tyst.
+//
+// OBETALDA PASS PÅ FAKTURAN (2026-10-15, beslutat 2026-10-01). Ett pass
+// som inte är betalt när månaden faktureras läggs på familjens faktura:
+// fakturera_obetalda() väljer passen i databasen och skriver dem som
+// faktura innan fakturapassen hämtas. Undantagen (en öppen kassa, ett
+// kort som betalar, familjer utan faktura och pass bokade innan familjen
+// godkänt villkoren som säger det) står kvar som Inte betalt och under
+// `obetalda`. Svaret säger vilka som lades på fakturan (`pa_fakturan`).
 //
 // Fas 14.6 lät familjen välja faktura på ett pass. Bara de passen,
 // betalning_status = 'faktura', samlas på ett fakturautkast per
@@ -106,7 +113,7 @@ import { kravAdmin, lika, serviceklient } from '../_delad/auth.ts';
 import { hemlighetOk } from '../_delad/notis.ts';
 import {
   byggFakturor, byggUnderlag, type Dokument, fordela, manadenArSlut, manadenNu, manadFor, minuterSum, type Pass,
-  sammanfatta, sorteraPass, standardTjanst, summa, type Tjanst,
+  sammanfatta, somFaktura, sorteraPass, standardTjanst, summa, type Tjanst,
 } from '../_delad/pris.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -302,6 +309,19 @@ Deno.serve(async (req) => {
       }, 500);
     }
 
+    // ---------- obetalda pass på fakturan (2026-10-15) ----------
+    // Före passen hämtas, så att båda frågorna nedan ser läget som det
+    // blev. Utan funktionen (migrationen är inte körd) står allt som förut.
+    // Torrkörningen skriver ingenting: passen läggs till i svaret nedan.
+    let paFakturan: string[] = [];
+    {
+      const { data, error } = await db.rpc('fakturera_obetalda', { p_fore: slut, p_torr: torrkorning });
+      if (error && error.code !== 'PGRST202') {
+        return json({ error: 'Kunde inte lägga obetalda pass på fakturan: ' + error.message }, 500);
+      }
+      paFakturan = Array.isArray(data) ? data.map(String) : [];
+    }
+
     // ---------- passen som inte tagits med ----------
     // Vyn passunderlag svarar för varje genomfört pass om det har en
     // rapport, är undantaget, står på en äldre faktura, är betalt och
@@ -325,10 +345,6 @@ Deno.serve(async (req) => {
       return json({ error: 'Kunde inte hämta passen: ' + (fel as Error).message }, 500);
     }
 
-    // Två sorters pass som INTE går vidare, och som ska synas i svaret
-    // i stället för att försvinna tyst.
-    const { pass, utanRapport, undantagna } = sorteraPass(allaPass);
-
     // ---------- fakturapassen (Fas 14.6) ----------
     // En egen fråga, för urvalet ovan tar bara pass som inte står på ett
     // underlag. Ett fakturapass kan redan ha kommit med på
@@ -350,6 +366,27 @@ Deno.serve(async (req) => {
     } catch (fel) {
       return json({ error: 'Kunde inte hämta fakturapassen: ' + (fel as Error).message }, 500);
     }
+
+    // Torrkörningen har inte skrivit något, så passen som skulle läggas på
+    // fakturan räknas som fakturapass här, och inte som obetalda.
+    if (torrkorning && paFakturan.length) {
+      try {
+        const extra = await allaRader<Pass>((fran, till) => db.from('passunderlag')
+          .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
+            + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status, debiterade_min, lon_min, timbank_min')
+          .in('id', paFakturan)
+          .order('id')
+          .range(fran, till));
+        fakturapass = somFaktura(fakturapass, extra, paFakturan);
+        somFaktura(allaPass, [], paFakturan);
+      } catch (fel) {
+        return json({ error: 'Kunde inte hämta passen för fakturan: ' + (fel as Error).message }, 500);
+      }
+    }
+
+    // Två sorters pass som INTE går vidare, och som ska synas i svaret
+    // i stället för att försvinna tyst.
+    const { pass, utanRapport, undantagna } = sorteraPass(allaPass);
 
     // ---------- timpenningarna ----------
     const tutorIdn = [...new Set(pass.filter((b) => !b.pa_underlag).map((b) => b.tutor_id).filter(Boolean))];
@@ -409,7 +446,7 @@ Deno.serve(async (req) => {
       utbetalningarFordelade, fakturorFordelade,
     });
 
-    if (torrkorning) return json({ torrkorning: true, ...sammanfattning }, 200);
+    if (torrkorning) return json({ torrkorning: true, ...sammanfattning, pa_fakturan: paFakturan }, 200);
 
     // ---------- skriv ----------
     // Underlag, och ett fakturautkast per familj som valt faktura. Ett
@@ -493,7 +530,7 @@ Deno.serve(async (req) => {
     // gånger — en gång vid passet och en gång här. Fakturan skickas av
     // Fortnox, inte härifrån.
 
-    return json({ ...sammanfattning, skapade, tillagda, problem }, problem.length ? 207 : 200);
+    return json({ ...sammanfattning, pa_fakturan: paFakturan, skapade, tillagda, problem }, problem.length ? 207 : 200);
   } catch (fel) {
     return json({ error: String((fel as Error)?.message ?? fel) }, 500);
   }

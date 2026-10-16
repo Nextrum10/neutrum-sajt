@@ -77,7 +77,10 @@ ORDEN. Använd dem, och inga andra:
   Före eller efter passet kan familjen i stället välja faktura: en
   samlad faktura per familj och månad, som kommer i början av månaden
   efter passet. Ett pass som familjen valt faktura för väntar på
-  fakturan och är inget fel.
+  fakturan och är inget fel. Är ett pass inte betalt när månaden är
+  slut, och inte på väg att dras från kortet, lägger månadskörningen
+  det på familjens faktura (sedan 2026-10-16, för pass bokade efter
+  att familjen godkänt de villkoren).
 · tjänst — det som går att boka eller söka till.
 
 ORDNINGEN, och den hoppar aldrig ett steg:
@@ -114,8 +117,8 @@ SIFFRORNA:
   aldrig ut. Studiehjälparen får lön för passen som vanligt.
 · Ett pass dras från högst två köp i timbanken: räcker inte det första
   i ordningen (gratis timmar först, sedan det som går ut först) tas
-  resten från nästa. På ett pass där en timme är på köpet (första
-  timmen eller tipstimmen) betalar timmarna resten.
+  resten från nästa. På ett pass där en timme är på köpet
+  (tipstimmen) betalar timmarna resten.
 · Har familjen en plan som gäller kan den köpa till 1–20 timmar till
   planens timpris, 379 kronor. De går ut samma dag som planen.
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
@@ -128,7 +131,12 @@ SIFFRORNA:
   aldrig mer än det reserverade. Annars betalar familjen när den
   bekräftar rapporten. Före eller efter passet kan den i stället välja
   faktura, som kommer i början av månaden efter passet med tio dagars
-  betalningstid och utan avgift. Rapporten bekräftas också när passet redan är betalt. Ett
+  betalningstid och utan avgift. Är ett pass inte betalt när månaden
+  är slut, och inte på väg att dras från kortet, kommer det med på
+  fakturan: natten efter månaden, eller natten efter rapporten om den
+  kommer senare. Det gäller pass som bokats efter att familjen godkänt
+  villkoren från 2026-10-16, och inte en familj vi stängt fakturan för.
+  Rapporten bekräftas också när passet redan är betalt. Ett
   pass som har hållits ska betalas även om rapporten inte bekräftats.
   En betalning som tas på ett annat sätt än villkoren lovar är en
   tvist, inte ett skrivfel.

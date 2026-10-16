@@ -447,7 +447,12 @@ kortet (`villkoren_kortet`, version 2026-10-15) att pengarna dras först
 när rapporten är skriven, och den följer strömbrytaren `kortreservation`
 (`KORTET_RESERVERAS` i kontrollen). Ett fakturapass som inte
 står på en faktura än betalas med kort genom Betala med kort nu, och
-står kvar som faktura tills kortet är draget. Bankgirot, bolaget och
+står kvar som faktura tills kortet är draget. Sedan villkoren 2026-10-16
+(`obetalda_pass_pa_fakturan`, byggt 2026-10-15) lägger månadskörningen ett
+pass som inte är betalt när månaden är slut på fakturan, utom ett kort som
+betalar, en kassa öppnad det senaste dygnet, en familj utan faktura och ett
+pass bokat före godkännandet, och meningen står efter fakturameningen på
+samma ställen (CLAUDE.md avsnitt 1, `minne/betalning.md`). Bankgirot, bolaget och
 beskedet till befintliga familjer återstår (DEPLOY-BETALNING.md 9.11). Spärren "ingen betalning, inget pass" (flaggan `kortsparr`)
 kan inte slås på sedan Fas 19.2 (`flaggor_kortsparr_av`). En korttvist
 har en sista dag att svara, sparas i `stripe_tvister` och blir en
