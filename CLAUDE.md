@@ -115,8 +115,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   innan de går ut (2026-10-15, `gratistimmarna_paminns`, Leo: "fixa påminelse"), med planens gratis timme som
   gäller efter planen och tipstimmarna: samma mejltyp och val som köpta timmar, med `gratis` i datan, och mejlet
   lovar då inga pengar tillbaka. Utan studiehjälpare (`S.väntar`) kan familjen inte boka, så då blir det en uppgift
-  till oss i stället, en gång per kort och dag (idén från PR #287). Ett återkallat kort påminns aldrig. Orden
-  "utan påminnelse" i villkoren (`#gratistimmar`) går med nästa version, 2026-10-16 (de obetalda passen), inte i en egen.
+  till oss i stället, en gång per kort och dag (idén från PR #287). Ett återkallat kort påminns aldrig. Villkoren
+  sa "förfaller utan påminnelse" (`#gratistimmar`) till versionen 2026-10-16, då orden togs bort; de lovar ingen påminnelse.
   `ta_tillbaka_gratistimmar()` tar bara det som inte ligger på ett pass, och återkallar kortet
   (`aterkallad_at`) i stället för att radera det (2026-10-14): ingen `delete`, och historiken står kvar.
   De står utanför första timmen, som tipstimmen. Det river beskedet 2026-10-09 "inte få gratis av oss".
@@ -259,8 +259,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   till en plan (`extra_timmar_erbjudande()`). Tillägget för fler barn, gratistimmar, första timmen och tipstimmen rörs inte,
   och en rabattkod räknas på priset efter den: de staplas (Leo samma kväll). Det bokade och köpta står fast när rabatten sätts, ändras eller tas bort, och
   en avstängd kod ger ingen rabatt. Slutar familjen räknas de använda timmarna och minuterna till timpriset minus den
-  (`vid_uppsagning_ore`, `intern.timbank_varde`). Lönen rörs inte. Den ändrar inget publikt pris, och villkoren nämner den
-  inte (ingen ny version): en rabatts villkor ska stå där vi ger den. Auditen får att familjen fick eller blev av med en
+  (`vid_uppsagning_ore`, `intern.timbank_varde`). Lönen rörs inte. Den ändrar inget publikt pris. **Villkoren har en egen
+  punkt** (`#familjerabatt`, version 2026-10-16, Leo: "fixa villkoren"): vad den gäller, att den gäller tills vidare, att vi
+  kan ändra eller ta bort den och att det bokade och köpta behåller sitt pris, och Att sluta säger att timmarna och minuterna
+  då räknas till ordinarie timpris med rabatten dragen; beloppet ser familjen vid priset. Auditen får att familjen fick eller blev av med en
   rabatt (`har_rabatt`), aldrig koden, som kan säga vilken partner familjen kom genom.
 - **Kortet reserveras** (2026-10-13, i drift sedan 2026-10-14; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
   och när passet har hållits och läxhjälparen har skrivit rapport så dras pengarna"): valet är frivilligt, och kortet
@@ -281,7 +283,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   godkänt den gällande versionen (`kortreservationer_kraver_villkor`; bort går alltid). Texten gick ut några timmar
   före strömbrytaren (Leos beslut, PR #281); sedan kedjan i `DEPLOY-BETALNING.md` 9.14 kördes samma eftermiddag
   säger sidorna, villkoren, mejlen, agenterna och vyn samma sak, pass för pass (PR #283, Leo: "sajt ska säga samma
-  sak som vyn, lektion per lektion"), och databasens version är 2026-10-15.
+  sak som vyn, lektion per lektion"), och databasens version blev 2026-10-15.
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -385,7 +387,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   första"). Till dess står den som Erbjudande överst i studievyns Erbjudanden (`#erb-forsta-box`; Leo: "det ska stå
   som erbjudande i deras erbjudanden"). **Pass för pass ges den inte** (samma dag, Leo: "det ska bara finnas ge gratis
   timmar till timbanken"): vill vi bjuda en familj sätter vi in gratistimmar. Valet (`forsta_timmen_beviljad`, `ge_forsta_timmen()`, då med Fas 19.5:s `startrabatt`)
-  står kvar i databasen utan knapp, och villkorens "kan vi, om vi kommit överens" går med nästa version, 2026-10-16 (de obetalda passen). Studievyns
+  står kvar i databasen utan knapp, och villkorens "kan vi, om vi kommit överens" gick med versionen 2026-10-16. Studievyns
   `bjuden` speglar regeln ur `forsta_timmen_lage()`, och utan den gamla regeln. Tipstimmen är samma rabatt; ett pass på noll kronor är INTE betalt.
   **En gratis timme gäller i 60 dagar och dras först** (2026-10-13, Leo: "gratis timmar går ut efter 60 dagar att de
   läggs in", "gratis timmar går ut först sen planerna", "9h vid köp av 8"): planens gratis timme (`timmar_pa_kopet`) dras
@@ -978,8 +980,8 @@ Detaljer: `minne/grunden.md`.
   `timmarna_delas_och_kops_till` lämnade (md5 `2c8fa456…`) eller filens egen: **PR #287 byggde samma påminnelse**
   med samma namn, och Leo valde den här (2026-10-15). Vyn `klippkort_saldo` fick vara den förra (`a34041ef…`) eller
   familjerabatternas (`e4bf8d23…`): `familjerabatter` kördes före den i driften, fast numret är högre, och kolumnerna
-  påminnelsen läser är desamma. **Villkoren byts inte för den** (Leo samma kväll): orden "utan påminnelse" i
-  `#gratistimmar` går med nästa version av villkoren, 2026-10-16 (de obetalda passen). Batteriet behöver ingen
+  påminnelsen läser är desamma. **Villkoren byttes inte för den** (Leo samma kväll): `#gratistimmar` sa
+  "förfaller utan påminnelse", och orden togs bort med nästa version av villkoren, 2026-10-16. Batteriet behöver ingen
   migration.
 - **Timmarna delas, och timmar köps till planen** (2026-10-14, `timmarna_delas_och_kops_till`, 20261014100000) är
   i drift sedan samma förmiddag: ett pass dras från högst två köp, timmen på köpet dras inte och timmarna betalar
@@ -1006,8 +1008,9 @@ Detaljer: `minne/grunden.md`.
   inget `delete`). Alla kroppar den skriver är byte för byte filens, hela `rls-test.sql` gick 1775 av 1775 mot driften,
   tillbakarullat, och advisorn larmade inte om något nytt för `anon`. Sedan `stripe-checkout` v21 (SESSIONSFORM 9) och `drift`
   v21 från merge-commiten, hämtade tillbaka och byte för byte lika (7 och 5 filer), och båda svarade 401 ur sin egen kod på ett
-  röktest (`DEPLOY-BETALNING.md` 9.15). Ingen familjerabatt fanns. Kvar: provet i testläge (9.15 steg 4), och juristen har inte
-  läst rad 30 i `DATASKYDD.md` eller policyns nya stycken.
+  röktest (`DEPLOY-BETALNING.md` 9.15). Ingen familjerabatt fanns. Villkorens punkt om den (`#familjerabatt`) är i drift
+  sedan förmiddagen 2026-10-16 (nedan). Kvar: provet i testläge (9.15 steg 4), och juristen har inte läst rad 30 i
+  `DATASKYDD.md`, policyns nya stycken eller villkorens punkt.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
@@ -1066,10 +1069,22 @@ Detaljer: `minne/grunden.md`.
 - **Första timmen som Erbjudande, också med rabattkod, och inte pass för pass** (2026-10-15) är i drift sedan samma
   kväll: PR #286 mergades (bed3797), Vercel driftsatte den 19.48 UTC, och `drift` v20 gick ut från merge-commiten,
   hämtad tillbaka och byte för byte lika i alla fem filer. Ingen migration: databasen gav redan den första planen
-  timmen också med kod, och villkoren står kvar på 2026-10-15. Villkorens "kan vi, om vi kommit överens" och
-  faktatextens "(första timmen eller tipstimmen)" går med version 2026-10-16 (de obetalda passen; `drift` efter merge,
-  `minne/funktioner.md`). Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()` står i databasen utan knapp, och att ta
-  bort dem kräver en migration med `drop` (avsnitt 5).
+  timmen också med kod, och villkoren stod kvar på 2026-10-15. Villkorens "kan vi, om vi kommit överens" gick med
+  versionen 2026-10-16 (nedan). Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()` står i databasen utan knapp, och
+  faktatextens "(första timmen eller tipstimmen)" står kvar också efter #293 (8b28e1a) och rättas nästa gång texten
+  ändras (`minne/funktioner.md`).
+- **Villkoren 2026-10-16** (Leo: "fixa villkoren") är i drift sedan samma förmiddag: familjerabatten fick en egen punkt
+  (`#familjerabatt` under Pris och betalning), Att sluta säger att en familj med rabatt räknas till ordinarie timpris med
+  rabatten dragen, som `vid_uppsagning_ore` och `intern.timbank_varde` redan gör (förut lovade villkoren minuterna till
+  ordinarie timpris, mer än databasen betalar tillbaka till en familj med rabatt), och två meningar som skulle gå med
+  nästa version gick: "kan vi, om vi kommit överens" om första timmen pass för pass och "utan påminnelse" om
+  gratistimmarna. PR #298 (de obetalda passen) skrev samma version; Leo valde att den här gick först ("#302 först", och
+  sedan "Merga sen när du kan"), så #298 får datumet den går ut. PR #302 mergades (947f0b4), Vercel lade ut sidan 10.01
+  UTC, och `villkoren_familjerabatt` (20261016100000) kördes direkt efter, hel i ett do-block, hämtad från
+  merge-commiten, prövad mot sin md5 (`d3f4748c…`) och registrerad med filens text. Kroppen är filens (`bc41515f…`),
+  hela `rls-test.sql` gick 1798 av 1798 mot driften, tillbakarullat, och advisorn larmade inte om något nytt. Alla får
+  frågan igen vid nästa inloggning; ingen hade godkänt 2026-10-16, ingen familj hade en rabatt och ingen valet av första
+  timmen pass för pass. Juristen har inte läst den nya punkten.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

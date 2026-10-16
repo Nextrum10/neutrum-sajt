@@ -1374,8 +1374,8 @@ Våra egna koder, som bara vi ser: kronor av per timme för de familjer vi sätt
 koden på (`CLAUDE.md` avsnitt 1, `minne/betalning.md`, Familjerabatterna).
 Inga pengar dras annorlunda än förut, bara mindre: priset fryses som förut, med
 rabatten dragen, och kassan drar det databasen räknat. **Steg 1–3 gjordes
-natten till 2026-10-16** (Gjort, sist i avsnittet). **Kvar är steg 4**, provet
-i testläge, och juristen.
+natten till 2026-10-16** (Gjort, sist i avsnittet). **Kvar är steg 4 och 5**,
+provet i testläge och villkoren (2026-10-16), och juristen.
 
 Vyerna går ut med sajten när grenen mergas, före allt nedan, och tål att
 migrationen saknas: fliken under Tjänster och rutan i familjens panel säger att
@@ -1407,11 +1407,20 @@ som arbetar i repot (`minne/databasen.md`):
    knappen ska vara 389 kr, "med er rabatt"), köp en plan (kassan ska säga
    "Med er rabatt på 10 kr per timme" och dra 80 kr mindre för Standard), och
    ta bort rabatten (nästa pass ska kosta 399 kr, det förra stå kvar).
+5. **Villkoren** (2026-10-16, Leo: "fixa villkoren"): efter merge
+   `villkoren_familjerabatt` (20261016100000) hel i ett do-block från
+   merge-commiten, prövad mot sin md5 och registrerad med filens text. Den
+   byter bara `intern.villkor_version()` till 2026-10-16, och vakten stannar
+   om versionen i driften inte är 2026-10-15. Sajten med de nya villkoren går
+   ut vid merge; tills migrationen är körd får ingen frågan om dem. Sedan
+   `intern.villkor_version()` och hela `rls-test.sql` mot driften,
+   tillbakarullat. Alla får frågan om villkoren igen vid nästa inloggning.
 
-Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md` eller policyns
-nya stycken, och en rabatts villkor (beloppet, att den gäller tills vidare och
-att vi kan ta bort den) ska stå där vi ger den, i mejlet eller avtalet med
-partnern.
+Kvar efter det: juristen har inte läst rad 30 i `DATASKYDD.md`, policyns nya
+stycken eller villkorens punkt om familjerabatten. Villkoren säger sedan
+2026-10-16 vad en familjerabatt gäller och att vi kan ändra eller ta bort den
+(`anvandarvillkor.html#familjerabatt`); beloppet ser familjen vid priset, och
+det vi lovar en partner om rabatten står i avtalet med partnern.
 
 **Gjort natten till 2026-10-16** (Leo: "Ja, kör hela kedjan efter merge",
 sedan "Merga"; från merge-commiten 8b28e1a, och de två andra sessionerna som
@@ -1438,6 +1447,17 @@ arbetade i repot körde inget mot driften):
   pg_net rensar dem sex timmar senare.
 
 Ingen kod var skapad och ingen familj hade en rabatt när kedjan var klar.
+
+**Gjort 2026-10-16, steg 5** (Leo: "#302 först", och sedan "Merga sen när du
+kan"; #298:s session väntade, och ingen annan session körde något mot driften):
+- PR #302 mergades 10.00 UTC (947f0b4). Vercel hade lagt ut sidan 10.01: båda
+  språken sa 16 oktober och hade `#familjerabatt`.
+- `villkoren_familjerabatt` hel i ett do-block, hämtad från 947f0b4, prövad mot
+  sin md5 (`d3f4748c…`) och registrerad med filens text. Vakten stämde
+  (versionen var 2026-10-15, och ingen hade godkänt 2026-10-16).
+- Efteråt: `intern.villkor_version()` svarar 2026-10-16, kroppen är filens
+  (`bc41515f…`), och rättigheterna står kvar. Hela `rls-test.sql` (`393d3278…`,
+  från 947f0b4) 1798 av 1798 mot driften, tillbakarullat. Advisorn: inget nytt.
 
 ### 9.16 Till skarpt läge, i ordning (2026-10-15)
 
