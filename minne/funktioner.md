@@ -265,13 +265,18 @@ den, Fyll timbanken kostar timpriset och gäller i sex månader, sparade
 minuter går aldrig ut, och pass för pass går inte genom den. Utan
 tabellnamn, och `testa-agent.js` gick igenom.
 
-**drift efter v19** (v19 gick ut 2026-10-14 med kortet, kärnans avsnitt
-11) driftsätts från main efter merge av ändringen 2026-10-15:
-`nextrum-fakta.ts` säger att den första planen får första timmen också
-med rabattkod, att senare planer inte får någon, att en familj som
-betalar pass för pass inte får någon, och att vi bjuder med gratistimmar
-(Leo samma dag). Att ett pass på en timme kan kosta noll kronor står nu
-vid tipstimmen, den enda timmen som fortfarande gör det.
+**drift v20, 2026-10-15**, från main (bed3797) efter PR #286, 20.18
+UTC, hämtad tillbaka och byte för byte lika i alla fem filer (v19 gick
+ut 2026-10-14 med kortet, kärnans avsnitt 11). `nextrum-fakta.ts` säger
+att den första planen får första timmen också med rabattkod, att senare
+planer inte får någon, att en familj som betalar pass för pass inte får
+någon, och att vi bjuder med gratistimmar (Leo samma dag). Att ett pass
+på en timme kan kosta noll kronor står nu vid tipstimmen, den enda
+timmen som fortfarande gör det. Kvar i texten: stycket om ett pass som
+dras från två köp säger "(första timmen eller tipstimmen)" om en timme
+på köpet på ett pass, men sedan 2026-10-15 är det bara tipstimmen. Den
+stod kvar också när #293 ändrade texten (8b28e1a), och rättas nästa gång
+faktatexten ändras, inte med en egen driftsättning.
 
 Tre agenter: `juridik`, `ekonomi` och `drift`. De två första läser
 rättskällor och bolagets siffror. Den tredje läser verksamheten —

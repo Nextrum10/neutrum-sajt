@@ -710,10 +710,55 @@ blev svårare genom villkor som går att räkna, inte genom luddiga
   villkoren. Hero är orörd, och startsidans beskrivning likaså (den är
   redan vid gränsen för vad sökmotorerna visar).
 - **Versionen byttes** (`betygsgarantin`), så alla får frågan igen.
-  Inget är byggt för att pröva ett anspråk: admin räknar ur vyerna.
+  Inget var byggt för att pröva ett anspråk förrän 2026-10-15 (nedan).
   `rls-test.sql` avsnitt 24 prövar anmälan, läsrätten, gallringen och
   raderingen (1490 av 1490 lokalt, och mot driften när migrationen
   kördes efter merge av PR #212 samma dag; `minne/databasen.md`).
+
+### Prövningen av ett anspråk (2026-10-15, `betygsgarantin_provas`)
+
+Leo 2026-10-15: "bygg det du kunde bygga själv", där prövningen var en av
+fyra saker. Villkoren säger att vi prövar "bara det som står här, ur det
+som står i er vy: hållen tid, rapporterna, uteblivna pass, uppgifterna och
+betalningarna", och att vi inte bedömer engagemang. Underlaget gör just
+det, och inget mer.
+
+- **`betygsgaranti_underlag(elev, läsår)`**, bara superadmin, räknar när
+  den frågas och sparar inget. Perioden börjar med det första passet efter
+  anmälan i något av ämnena och slutar i dag eller den 30 juni. För varje
+  ämne: betyget vid anmälan, första passet och om det kom senast den 31
+  december, hållen tid och pass, och uppgifterna med passerat slutdatum som
+  var klara i tid (`completed_at`, minst 90 procent). Veckorna: hållen tid
+  i garantiämnena, oklart och andra ämnen för sig, under två timmar, och om
+  underskottet togs igen med överskottet de två veckorna efter. Sist oklara
+  ämnen, pass utan tider (räknas med bokad längd), uteblivna pass, avbokade
+  pass med vem som avbokade, obetalda pass (samma regel som avvikelsen Inte
+  betalt, ur `avvikelser_rader()`) och familjens fakturor som betalades
+  efter förfallodagen eller inte är betalda. Fakturans `betald_at` är dagen
+  admin markerade den, inte bankens.
+- **Ämnet är rapportens.** En rapport räknas när ämnet är ett av
+  garantiämnena (utan hänsyn till stora bokstäver). Saknas ämnet, eller är
+  det bokningens grupp där ett garantiämne står ("NO / Fysik / Kemi /
+  Biologi"), är det oklart och räknas inte förrän vi bestämt. Därför ser
+  studiehjälparen vilka ämnen eleven har garanti i, men aldrig betyget
+  (`mina_elevers_garantiamnen()`, det här läsåret, `is_my_student`):
+  elevprofilen säger det, garantiämnena står först i rapportens ämnesval,
+  och en rad över valet säger om passet räknas. Det står i
+  `DATASKYDD.md` rad 25 och i policyn på båda språken.
+- **Bedöms av er**, i elevens panel: slutbetyget ur kopian mot betyget vid
+  anmälan, lovveckorna och skolavslutningen, en vecka med för lite som vi
+  eller studiehjälparen avbokade (då räcker det att familjen tog den nya
+  tiden), om ett ämne inte gick upp för att tiden lades på ett annat
+  garantiämne, de oklara passen, och att anspråket kom inom 30 dagar och
+  att garantin inte redan använts.
+- **Inte byggt:** anspråken sparas inte (svaret, ämnena, att garantin
+  använts), och de 10 timmarna har ingen egen väg. Gratistimmarna
+  (`ge_gratistimmar`) gäller 60 dagar och hela familjen, villkoren lovar
+  sex månader och eleven.
+- **Prov.** `rls-test.sql` avsnitt 36 (12 prov, ett påhittat läsår
+  2025/26), `prova-barnkonton.js` (underlaget i panelen, ingen prövning
+  för en admin med behörigheter) och `prova-forhandsvisning.js` (raden i
+  rapporten och elevprofilen).
 
 ## Tipsa en familj och affischerna (2026-09-30)
 

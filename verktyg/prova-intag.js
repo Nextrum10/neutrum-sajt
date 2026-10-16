@@ -199,6 +199,12 @@ function falskSupabase(o) {
       if (metod === 'PATCH') {
         const träff = filtrera(W[tabell] || [], url.searchParams);
         träff.forEach(r => Object.assign(r, kropp || {}));
+        /* Som PostgREST: raderna tillbaka när vyn ber om dem (skriv() gör
+           det sedan 2026-10-15, för att se en skrivning som inte träffade). */
+        if ((req.headers()['prefer'] || '').includes('return=representation')) {
+          const objekt = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
+          return svar(route, 200, objekt ? (träff[0] || null) : träff);
+        }
         return svar(route, 204);
       }
       if (metod === 'POST') {

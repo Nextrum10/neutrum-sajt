@@ -128,6 +128,7 @@ function värld() {
 
 function falskSupabase(o) {
   const W = värld();
+  if (o.mer) o.mer(W);
   const logg = [];
   const inloggad = { id: o.inloggad || null };
 
@@ -229,6 +230,12 @@ function falskSupabase(o) {
       if (metod === 'PATCH') {
         const ut = filtrera(W[tabell] || [], url.searchParams);
         ut.forEach(r => Object.assign(r, kropp || {}));
+        /* Som PostgREST: raderna tillbaka när vyn ber om dem (skriv() gör
+           det sedan 2026-10-15, för att se en skrivning som inte träffade). */
+        if ((req.headers()['prefer'] || '').includes('return=representation')) {
+          const objekt = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
+          return svar(route, 200, objekt ? (ut[0] || null) : ut);
+        }
         return svar(route, 204);
       }
       return svar(route, 201, []);
@@ -1030,6 +1037,248 @@ function adminRpc(roll, extra) {
     gor_till_admin: k => ({ user_id: k.p_user_id, superadmin: !!k.p_superadmin, behorigheter: k.p_behorigheter }),
     ta_bort_admin: () => true
   }, extra || {});
+}
+
+/* ============ adminvyns knappar, barnens inloggning och nivåerna (2026-10-15) ============
+   En admin med behörigheter ser inte knappar som databasen ändå nekar
+   (Avboka, Radera, Redigera utan behörigheten, läget på en studiehjälpare,
+   timpenningen), elevens panel visar barnets inloggning utan adress, och
+   superadminen ser nivåerna i Material. */
+const BANOR = [
+  { amne: 'Matematik', arskurs: 'ak6', spar: 'vag', nivaer: 2, prov: 1, fragor: 15, forsok: 12, klara: 9,
+    godkanda: 7, elever: 3, felrapporter: 1, senast: '2026-10-14T10:00:00Z' },
+  { amne: 'Engelska', arskurs: 'ak6', spar: 'np', nivaer: 1, prov: 0, fragor: 6, forsok: 0, klara: 0,
+    godkanda: 0, elever: 0, felrapporter: 0, senast: null }
+];
+const NIVAER = [
+  { id: 'n1', nyckel: 'mat-6-1', titel: 'Bråk', omrade: 'Tal', sort: 'vanlig', ordning: 1, antal_fragor: 8,
+    forsok: 7, klara: 5, godkanda: 4, elever: 3, stjarnor: 2.5, felrapporter: 1 },
+  { id: 'n2', nyckel: 'mat-6-2', titel: ELAK + 'Procent', omrade: 'Tal', sort: 'vanlig', ordning: 2, antal_fragor: 7,
+    forsok: 5, klara: 4, godkanda: 3, elever: 2, stjarnor: null, felrapporter: 0 }
+];
+/* Betygsgarantins underlag (betygsgarantin_provas), som databasen svarar. */
+const UNDERLAG = {
+  lasar: 2025, fran: '2025-09-09', till: '2026-06-30', sista_anmalan: '2025-12-31',
+  amnen: [
+    { amne: 'Matematik', betyg: 'D', anmald: '2025-09-01', forsta_pass: '2025-09-09', i_tid: true, minuter: 315, pass: 4,
+      uppgifter: { totalt: 10, i_tid: 9 } },
+    { amne: 'Fysik', betyg: 'E', anmald: '2025-09-01', forsta_pass: null, i_tid: false, minuter: 0, pass: 0,
+      uppgifter: { totalt: 2, i_tid: 1 } }
+  ],
+  veckor: [
+    { vecka: '2025-09-08', minuter: 180, oklara: 0, andra: 0, under: false, igen: null },
+    { vecka: '2025-09-15', minuter: 45, oklara: 60, andra: 0, under: true, igen: true },
+    { vecka: '2025-09-29', minuter: 90, oklara: 0, andra: 60, under: true, igen: false }
+  ],
+  oklara: [{ datum: '2025-09-16', amne: 'NO / Fysik / Kemi / Biologi', minuter: 60 }],
+  utan_tider: 1,
+  uteblivna: [{ datum: '2025-10-07', amne: 'Matematik' }],
+  avbokade: [{ datum: '2025-10-02', av: 'studiehjälparen', skal: 'forhinder' }],
+  obetalda: [{ datum: '2025-09-23' }],
+  sena_fakturor: [{ period: '2025-10-01', forfaller: '2025-11-10', betald: '2025-11-15' }]
+};
+
+function merAdmin(W) {
+  W.betygsgarantier = [
+    { id: 'garanti-1', student_id: 'barn-1', lasar: 2025, amne: 'Matematik', betyg: 'D',
+      anmald_at: '2025-09-01T08:00:00Z', andrad_at: null }
+  ];
+  /* Alva har en egen inloggning (barnkonton_och_admin), Bo ingen. */
+  Object.assign(W.students[0], {
+    user_id: 'barnkonto-1', anvandarnamn: 'alva.a', barn_aktiv: true, senast_inloggad: '2026-10-14T16:00:00Z',
+    barn_behorigheter: ['pass', 'nexlax', 'chatt'], visa_rapporter: true, far_boka: false,
+    vardnadshavare_godkand_at: '2026-10-01T09:00:00Z'
+  });
+  W.bookings = [
+    { id: 'pass-1', parent_id: 'foralder-1', tutor_id: 'handledare-1', student_id: 'barn-1', subject: 'Matematik',
+      wanted_date: dagar(3), wanted_time: '16:00:00', duration_min: 60, status: 'confirmed', created_at: nu(-600) },
+    { id: 'pass-2', parent_id: 'foralder-1', tutor_id: 'handledare-1', student_id: 'barn-1', subject: 'Matematik',
+      wanted_date: dagar(5), wanted_time: '16:00:00', duration_min: 60, status: 'cancelled',
+      avbokningsskal: 'sjukdom', created_at: nu(-6000) }
+  ];
+}
+
+/* Panelen ligger kvar över listan när bara adressens # byts. */
+async function stängPanelen(page) {
+  await page.keyboard.press('Escape').catch(() => {});
+  await vänta(250);
+}
+
+async function provaAdminvynsKnappar(webb) {
+  /* Superadmin: allt, och nivåerna i Material. */
+  {
+    const { context, page, S, konsol } = await öppna(webb, {
+      inloggad: 'admin-1', mer: merAdmin,
+      rpc: adminRpc({ admin: true, superadmin: true, behorigheter: ALLA }, {
+        nexlax_banor: () => BANOR, nexlax_nivaer: () => NIVAER, nexlax_felrapporter: () => [],
+        betygsgaranti_underlag: () => UNDERLAG
+      })
+    });
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#elever');
+    await page.waitForSelector('[data-dp="elev:barn-1"]', { timeout: 10000 }).catch(() => {});
+    await page.click('[data-dp="elev:barn-1"]');
+    await page.waitForSelector('.dp [data-radera]', { timeout: 5000 }).catch(() => {});
+    const panel = await page.locator('.dp').first().innerText().catch(() => '');
+    prova('knappar superadmin: Radera och Redigera i elevens panel',
+      (await page.locator('.dp [data-radera^="elev:"]').count()) === 1 && (await page.locator('.dp [data-dp-redigera]').count()) === 1);
+    prova('inloggning: elevens panel visar användarnamnet, läget och vad barnet får',
+      /Egen inloggning/.test(panel) && /alva\.a/.test(panel) && /aktiv/.test(panel)
+      && /se sina pass, läsa rapporterna, göra NexLäx, skriva till studiehjälparen/.test(panel), panel.slice(0, 800));
+    prova('inloggning: aldrig adressen', !/@barn\.nextrum\.se/.test(panel));
+
+    /* Prövningen av ett anspråk (betygsgarantin_provas). */
+    prova('garanti: superadminen har knappen för läsåret', (await page.locator('.dp [data-dp-garanti-prova="2025"]').count()) === 1);
+    await page.click('.dp [data-dp-garanti-prova="2025"]').catch(() => {});
+    await page.waitForSelector('.dp .dp-underlag', { timeout: 5000 }).catch(() => {});
+    const und = await page.locator('.dp .dp-underlag').first().innerText().catch(() => '');
+    const fråga = S.logg.filter(r => r.väg === '/rest/v1/rpc/betygsgaranti_underlag').pop();
+    prova('garanti: underlaget frågas för eleven och läsåret',
+      fråga && fråga.kropp.p_elev === 'barn-1' && fråga.kropp.p_lasar === 2025, JSON.stringify(fråga && fråga.kropp));
+    prova('garanti: ämnena med första passet, tiden och uppgifterna',
+      /Började i tid/.test(und) && /Började inte i tid/.test(und) && /5 h 15 min på 4 pass/.test(und)
+      && /9 av 10 \(90 %\)/.test(und) && /Uppgifter minst 90 %/.test(und) && /Uppgifter under 90 %/.test(und), und.slice(0, 900));
+    prova('garanti: veckorna under två timmar, med veckonummer och om de togs igen',
+      /2 av 3 veckor under/.test(und) && /Vecka 38, från 15 september 2025/.test(und) && /Togs igen/.test(und)
+      && /Vecka 40/.test(und) && /Togs inte igen/.test(und) && !/Vecka 37/.test(und), und.slice(0, 1400));
+    prova('garanti: oklara ämnen, uteblivna och avbokade pass, betalningarna och det vi bedömer',
+      /NO \/ Fysik \/ Kemi \/ Biologi · 1 h/.test(und) && /Garantin gäller inte längre/.test(und)
+      && /av studiehjälparen · förhinder/.test(und) && /passet är inte betalt/.test(und)
+      && /Fakturan för oktober 2025/.test(und) && /markerad betald 15 november 2025/.test(und)
+      && /Bedöms av er/.test(und) && /1 pass saknar tider/.test(und), und.slice(-1200));
+    await page.locator('.dp .dp-underlag').scrollIntoViewIfNeeded().catch(() => {});
+    await bild(page, 'admin-garanti-underlag', '.dp');
+    await page.click('.dp [data-dp-flik="pass"]').catch(() => {});
+    await page.click('.dp [data-dp-flik="oversikt"]').catch(() => {});
+    await vänta(300);
+    prova('garanti: underlaget står kvar när panelen ritas om', (await page.locator('.dp .dp-underlag').count()) === 1);
+    await page.locator('.dp').getByText('Egen inloggning', { exact: true }).scrollIntoViewIfNeeded().catch(() => {});
+    await bild(page, 'admin-elev-inloggning', '.dp');
+
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#elever');
+    await page.click('[data-dp="elev:barn-2"]').catch(() => {});
+    await vänta(400);
+    prova('inloggning: ett barn utan inloggning står som Ingen',
+      /Egen inloggning\s*Ingen/.test(await page.locator('.dp').first().innerText().catch(() => '')));
+
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#bibliotek');
+    await page.waitForSelector('#nexlax-banor table', { timeout: 8000 }).catch(() => {});
+    const banor = await page.locator('#nexlax-banor tbody tr').allInnerTexts().catch(() => []);
+    prova('nivåer: en rad per bana med nivåerna, frågorna, försöken och felen',
+      banor.length === 2 && /Matematik/.test(banor[0]) && /2 \+ 1 prov/.test(banor[0]) && /9 \(75 %\)/.test(banor[0])
+      && /1 öppen/.test(banor[0]) && /NP/.test(banor[1]), JSON.stringify(banor));
+    await page.click('[data-nl-bana="0"]');
+    await page.waitForSelector('#nexlax-nivaer table', { timeout: 5000 }).catch(() => {});
+    const nivåer = await page.locator('#nexlax-nivaer tbody tr').allInnerTexts().catch(() => []);
+    const anrop = S.logg.filter(r => r.väg === '/rest/v1/rpc/nexlax_nivaer').pop();
+    prova('nivåer: Nivåerna frågar efter banan och ritar dess nivåer, stjärnorna med komma',
+      nivåer.length === 2 && /Bråk/.test(nivåer[0]) && /2,5/.test(nivåer[0])
+      && anrop && anrop.kropp.p_amne === 'Matematik' && anrop.kropp.p_arskurs === 'ak6' && anrop.kropp.p_spar === 'vag',
+      JSON.stringify(nivåer) + ' ' + JSON.stringify(anrop && anrop.kropp));
+    prova('nivåer: text ur databasen ritas som text', (await page.locator('#nexlax-nivaer [data-elak]').count()) === 0);
+    await bild(page, 'admin-nivaerna', '#nexlax-banor');
+    const jsfel = konsol.filter(t => !/Failed to load resource/.test(t));
+    prova('knappar superadmin: inga fel i skripten', jsfel.length === 0, jsfel.join(' | '));
+    await context.close();
+  }
+
+  /* Matchning, läsa användare och bokningar: inga knappar som databasen nekar. */
+  {
+    const { context, page, S, konsol } = await öppna(webb, {
+      inloggad: 'admin-2', mer: merAdmin,
+      rpc: adminRpc({ admin: true, superadmin: false, behorigheter: ['matchning', 'anvandare_las', 'bokningar_las'] })
+    });
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#elever');
+    await page.waitForSelector('[data-dp="elev:barn-1"]', { timeout: 10000 }).catch(() => {});
+    await page.click('[data-dp="elev:barn-1"]');
+    await vänta(500);
+    const panel = await page.locator('.dp').first().innerText().catch(() => '');
+    prova('knappar begränsad: ingen Radera och ingen Redigera i elevens panel',
+      (await page.locator('.dp [data-radera]').count()) === 0 && (await page.locator('.dp [data-dp-redigera]').count()) === 0);
+    prova('knappar begränsad: Matcha står kvar', (await page.locator('.dp [data-mt-hoppa]').count()) === 1);
+    prova('inloggning begränsad: användarnamnet syns, adressen aldrig', /alva\.a/.test(panel) && !/@barn\.nextrum\.se/.test(panel));
+    prova('garanti begränsad: ingen prövning för en admin med behörigheter',
+      (await page.locator('.dp [data-dp-garanti-prova]').count()) === 0 && /Betygsgaranti/.test(panel));
+
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#elever');
+    await page.click('[data-dp="elev:barn-1"]');
+    await page.click('.dp [data-dp-flik="uppgifter"]').catch(() => {});
+    await vänta(300);
+    prova('knappar begränsad: inget material och inga AI-förslag',
+      (await page.locator('.dp form[data-dp-mat], .dp [data-dp-mat-ai]').count()) === 0);
+
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#studiehjalpare');
+    await page.click('[data-dp="studiehjalpare:handledare-1"]').catch(() => {});
+    await vänta(500);
+    prova('knappar begränsad: läget på en studiehjälpare går inte att byta utan Godkänna',
+      (await page.locator('.dp [data-sh]').count()) === 0 && (await page.locator('.dp [data-sh-publik]').count()) === 0
+      && /Godkänd/.test(await page.locator('.dp').first().innerText().catch(() => '')));
+    prova('knappar begränsad: ingen anteckningsruta', (await page.locator('.dp form[data-dp-not]').count()) === 0);
+
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#bokningar');
+    await page.waitForSelector('#bok-tabell tbody tr, [data-sek="bokningar"] tbody tr', { timeout: 5000 }).catch(() => {});
+    const bokText = await page.locator('section[data-sek="bokningar"]').innerText().catch(() => '');
+    prova('knappar begränsad: Bokningar utan Avboka och utan skälväljaren, skälet som text',
+      (await page.locator('[data-avboka]').count()) === 0 && (await page.locator('[data-avbokskal]').count()) === 0
+      && /Sjukdom/.test(bokText), bokText.slice(0, 400));
+    const nivå = S.logg.filter(r => /rpc\/nexlax_(banor|nivaer)/.test(r.väg));
+    prova('knappar begränsad: nivåerna hämtas inte', nivå.length === 0, nivå.map(r => r.väg).join(', '));
+    const jsfel = konsol.filter(t => !/Failed to load resource/.test(t));
+    prova('knappar begränsad: inga fel i skripten', jsfel.length === 0, jsfel.join(' | '));
+    await bild(page, 'admin-begransad-bokningar');
+    await context.close();
+  }
+
+  /* Ändra användare och Godkänna: läget och Redigera, men ingen timpenning. */
+  {
+    const { context, page } = await öppna(webb, {
+      inloggad: 'admin-2', mer: merAdmin,
+      rpc: adminRpc({ admin: true, superadmin: false,
+        behorigheter: ['anvandare_las', 'anvandare_redigera', 'studiehjalpare_godkann'] })
+    });
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#studiehjalpare');
+    await page.waitForSelector('[data-dp="studiehjalpare:handledare-1"]', { timeout: 10000 }).catch(() => {});
+    await page.click('[data-dp="studiehjalpare:handledare-1"]');
+    await vänta(500);
+    prova('knappar godkänna: läget går att byta', (await page.locator('.dp [data-sh]').count()) >= 1);
+    await page.click('.dp [data-dp-redigera]');
+    await vänta(300);
+    prova('knappar ändra: Redigera utan timpenning',
+      (await page.locator('.dp form[data-dp-red]').count()) === 1
+      && (await page.locator('.dp form[data-dp-red] [name="hourly_rate@tp"]').count()) === 0
+      && (await page.locator('.dp form[data-dp-red] [name="school@tp"]').count()) === 1);
+    await context.close();
+  }
+
+  /* skriv(): en uppdatering som inte träffar något sägs, i stället för att se sparad ut. */
+  {
+    const { context, page } = await öppna(webb, {
+      inloggad: 'admin-1', mer: merAdmin,
+      rpc: adminRpc({ admin: true, superadmin: true, behorigheter: ALLA })
+    });
+    await page.route(/supabase\.test\/rest\/v1\/bookings\?/, route => route.request().method() === 'PATCH'
+      ? route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' })
+      : route.fallback());
+    const dialoger = [];
+    page.removeAllListeners('dialog');
+    page.on('dialog', d => { dialoger.push(d.message()); d.dismiss(); });
+    await stängPanelen(page);
+    await page.goto(BAS + '/admin#bokningar');
+    await page.waitForSelector('[data-avbokskal="pass-2"]', { timeout: 10000 }).catch(() => {});
+    await page.selectOption('[data-avbokskal="pass-2"]', 'annat').catch(() => {});
+    await vänta(600);
+    prova('skriv: noll rader ger beskedet Ingenting sparades, och skälet går tillbaka',
+      dialoger.some(t => /Ingenting sparades/.test(t))
+      && (await page.locator('[data-avbokskal="pass-2"]').inputValue().catch(() => '')) === 'sjukdom', JSON.stringify(dialoger));
+    await context.close();
+  }
 }
 
 async function provaAdminvyn(webb) {
@@ -1875,6 +2124,7 @@ async function provaBarnetsChattHosDeVuxna(webb) {
     await provaBarnetsEpost(webb);
     await provaBarnetsBehörigheter(webb);
     await provaAdminvyn(webb);
+    await provaAdminvynsKnappar(webb);
     await provaBarnetsChattHosDeVuxna(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);

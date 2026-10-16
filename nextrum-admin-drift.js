@@ -18,7 +18,7 @@
 
   const { AVBOKNINGSSKAL, BOK_LAGE, S, elevNamn, hämtaMatchunderlag,
           kortDatum, läge, matchar, namnFör, pill, skriv, tabell, tomtText,
-          lägesväljare, väljare } = NXAdmin;
+          lägesväljare, väljare, ärSuperadmin } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaElever = (...a) => NXAdmin.rita.ritaElever(...a);
@@ -574,6 +574,11 @@
          Därför fasta koder, och därför i efterhand: den som avbokar
          klockan sju på morgonen svarar inte på en enkät. */
       { namn: '', höger: true, rita: b => {
+        /* Avboka och skälet är superadminens (2026-10-15). Databasen nekar
+           andra utan att svara med ett fel, och passet såg avbokat ut. */
+        if (!ärSuperadmin()) {
+          return b.status === 'cancelled' ? esc((AVBOKNINGSSKAL[b.avbokningsskal || ''] || AVBOKNINGSSKAL[''])[0]) : '';
+        }
         if (b.status === 'requested' || b.status === 'confirmed') {
           return '<button class="btn btn-ghost btn-sm" data-avboka="' + b.id + '">Avboka</button>';
         }

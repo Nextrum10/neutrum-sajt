@@ -206,6 +206,11 @@ function falskSupabase(o) {
       if (metod === 'PATCH') {
         const ut = filtrera(W[tabell] || [], url.searchParams);
         ut.forEach(r => Object.assign(r, kropp || {}));
+        // Som PostgREST: raderna tillbaka när vyn ber om dem.
+        if ((req.headers()['prefer'] || '').includes('return=representation')) {
+          const objekt = (req.headers()['accept'] || '').includes('vnd.pgrst.object');
+          return svar(route, 200, objekt ? (ut[0] || null) : ut);
+        }
         return svar(route, 204);
       }
       /* Familjens eget förslag: raden som databasen skapade, med det
