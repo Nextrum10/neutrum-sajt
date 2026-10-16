@@ -480,9 +480,9 @@
   }
 
   function ritaFamiljerabatter() {
-    const host = $('#fr-tabell');
+    const host = $('#frab-tabell');
     if (!host) return;
-    const antal = $('#fr-antal');
+    const antal = $('#frab-antal');
     if (S.familjerabatterFel) {
       if (antal) antal.textContent = '';
       host.innerHTML = S.familjerabatterFel === 'saknas'
@@ -515,17 +515,20 @@
     if (typeof NXAdmin.rita.ritaDetalj === 'function') NXAdmin.rita.ritaDetalj();
   };
 
+  /* Formulärets id börjar på frab-, inte fr-: fr- är frågerutans (fråga() i
+     kärnan har fr-t och fr-msg), och ett id som finns två gånger ger det
+     första till den som letar i hela sidan. */
   (function kopplaFamiljerabatter() {
-    const form = $('#fr-form');
+    const form = $('#frab-form');
     if (!form) return;
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const msg = $('#fr-msg');
+      const msg = $('#frab-msg');
       rensa(msg);
-      const kod = String($('#fr-kod').value || '').trim().toUpperCase();
-      const kr = Number(String($('#fr-kr').value || '').trim());
-      const text = String($('#fr-text').value || '').trim();
+      const kod = String($('#frab-kod').value || '').trim().toUpperCase();
+      const kr = Number(String($('#frab-kr').value || '').trim());
+      const text = String($('#frab-text').value || '').trim();
 
       /* Samma villkor som databasens. Beskedet här, skyddet där. */
       if (!/^[A-Z0-9-]{3,24}$/.test(kod)) {
@@ -541,7 +544,7 @@
         return;
       }
 
-      await medan($('#fr-spara'), 'Skapar…', async () => {
+      await medan($('#frab-spara'), 'Skapar…', async () => {
         const { error } = await supa.from('familjerabatter')
           .insert({ kod, ore_per_timme: kr * 100, beskrivning: text || null });
         if (error) {

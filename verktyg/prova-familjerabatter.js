@@ -294,49 +294,49 @@ async function provaFliken(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, {});
   await tillAdmin(page, 'katalog/familjerabatter');
   prova('fliken: Tjänster har fliken Familjerabatter', await synlig(page, '#flik-familjerabatter'));
-  prova('fliken: adressen öppnar den', await synlig(page, '#panel-familjerabatter #fr-form'));
-  const tabell = await text(page, '#fr-tabell');
+  prova('fliken: adressen öppnar den', await synlig(page, '#panel-familjerabatter #frab-form'));
+  const tabell = await text(page, '#frab-tabell');
   prova('fliken: koderna står med beskrivning, antal familjer och läge',
     /PARTNER-X/.test(tabell) && /Samarbete med föreningen X/.test(tabell) && /GAMMAL/.test(tabell)
       && /Aktiv/.test(tabell) && /Avstängd/.test(tabell), tabell);
   prova('fliken: PARTNER-X bärs av en familj, och beloppet står i fältet',
     (await page.inputValue('form[data-fr-belopp="PARTNER-X"] input')) === '10'
       && /PARTNER-X[\s\S]*\b1\b/.test(tabell), tabell);
-  prova('fliken: antalet står i rubriken', (await text(page, '#fr-antal')) === '3 st', await text(page, '#fr-antal'));
+  prova('fliken: antalet står i rubriken', (await text(page, '#frab-antal')) === '3 st', await text(page, '#frab-antal'));
   await bild(page, 'fliken', '#panel-familjerabatter');
 
   /* Formuläret: villkoren, och en krock med en rabattkod. */
-  await page.fill('#fr-kod', 'x');
-  await page.fill('#fr-kr', '10');
-  await page.click('#fr-spara');
+  await page.fill('#frab-kod', 'x');
+  await page.fill('#frab-kr', '10');
+  await page.click('#frab-spara');
   await vänta(200);
-  prova('fliken: en för kort kod nekas med ett besked', /A–Z, 0–9 och bindestreck/.test(await text(page, '#fr-msg')),
-    await text(page, '#fr-msg'));
-  await page.fill('#fr-kod', 'partner-y');
-  await page.fill('#fr-kr', '250');
-  await page.click('#fr-spara');
+  prova('fliken: en för kort kod nekas med ett besked', /A–Z, 0–9 och bindestreck/.test(await text(page, '#frab-msg')),
+    await text(page, '#frab-msg'));
+  await page.fill('#frab-kod', 'partner-y');
+  await page.fill('#frab-kr', '250');
+  await page.click('#frab-spara');
   await vänta(200);
-  prova('fliken: mer än 200 kr nekas', /mellan 1 och 200/.test(await text(page, '#fr-msg')), await text(page, '#fr-msg'));
-  await page.fill('#fr-kod', 'sommar10');
-  await page.fill('#fr-kr', '15');
-  await page.click('#fr-spara');
+  prova('fliken: mer än 200 kr nekas', /mellan 1 och 200/.test(await text(page, '#frab-msg')), await text(page, '#frab-msg'));
+  await page.fill('#frab-kod', 'sommar10');
+  await page.fill('#frab-kr', '15');
+  await page.click('#frab-spara');
   await vänta(200);
-  prova('fliken: ett namn som en rabattkod redan har nekas', /redan en rabattkod som heter SOMMAR10/.test(await text(page, '#fr-msg')),
-    await text(page, '#fr-msg'));
+  prova('fliken: ett namn som en rabattkod redan har nekas', /redan en rabattkod som heter SOMMAR10/.test(await text(page, '#frab-msg')),
+    await text(page, '#frab-msg'));
   prova('fliken: inget skickades för de tre', !S.logg.some(r => r.metod === 'POST' && r.väg === '/rest/v1/familjerabatter'));
 
-  await page.fill('#fr-kod', 'partner-y');
-  await page.fill('#fr-kr', '15');
-  await page.fill('#fr-text', 'Föreningen Y');
-  await page.click('#fr-spara');
-  await page.waitForFunction(() => /PARTNER-Y är skapad/.test(document.querySelector('#fr-msg').textContent), null, { timeout: 4000 }).catch(() => {});
+  await page.fill('#frab-kod', 'partner-y');
+  await page.fill('#frab-kr', '15');
+  await page.fill('#frab-text', 'Föreningen Y');
+  await page.click('#frab-spara');
+  await page.waitForFunction(() => /PARTNER-Y är skapad/.test(document.querySelector('#frab-msg').textContent), null, { timeout: 4000 }).catch(() => {});
   const post = S.logg.find(r => r.metod === 'POST' && r.väg === '/rest/v1/familjerabatter');
   prova('fliken: en ny kod skickas i versaler och i öre',
     post && post.kropp && post.kropp.kod === 'PARTNER-Y' && post.kropp.ore_per_timme === 1500
       && post.kropp.beskrivning === 'Föreningen Y', JSON.stringify(post && post.kropp));
   prova('fliken: kvittot säger var den sätts, och den står i tabellen',
-    /familjens panel, under Ekonomi/.test(await text(page, '#fr-msg')) && /PARTNER-Y/.test(await text(page, '#fr-tabell')),
-    await text(page, '#fr-msg'));
+    /familjens panel, under Ekonomi/.test(await text(page, '#frab-msg')) && /PARTNER-Y/.test(await text(page, '#frab-tabell')),
+    await text(page, '#frab-msg'));
 
   /* Nytt belopp: frågan säger hur många familjer det rör. */
   await page.fill('form[data-fr-belopp="PARTNER-X"] input', '20');
@@ -355,7 +355,7 @@ async function provaFliken(webb) {
   prova('fliken: Stäng av frågar när en familj har koden', /Stäng av PARTNER-X/.test(fråga2)
     && /En familj har koden/.test(fråga2) && /ordinarie pris/.test(fråga2), fråga2);
   const av = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/familjerabatter' && r.kropp && r.kropp.aktiv === false);
-  prova('fliken: och stänger av koden', !!av && /Avstängd/.test(await text(page, '#fr-tabell')), JSON.stringify(av));
+  prova('fliken: och stänger av koden', !!av && /Avstängd/.test(await text(page, '#frab-tabell')), JSON.stringify(av));
   /* Slå på igen frågar inte. */
   await page.click('[data-fr-vaxla="PARTNER-X"]');
   await vänta(400);
@@ -420,7 +420,7 @@ async function provaPanelen(webb) {
   prova('panelen: Ge skickar koden', ge && ge.kropp && ge.kropp.p_familj === 'fam-b' && ge.kropp.p_kod === 'PARTNER-X',
     JSON.stringify(ge && ge.kropp));
   await vänta(400);
-  const räknat = await page.$$eval('#fr-tabell tr', rader => rader.map(r => Array.from(r.cells).map(c => c.textContent.trim()).join('|')));
+  const räknat = await page.$$eval('#frab-tabell tr', rader => rader.map(r => Array.from(r.cells).map(c => c.textContent.trim()).join('|')));
   prova('panelen: och fliken räknar familjen', räknat.some(r => /^PARTNER-X/.test(r) && /\|1\|Aktiv/.test(r)), räknat.join(' / '));
 
   /* Passets panel: timpriset med rabatten dragen. */
@@ -545,8 +545,8 @@ async function provaStudievyn(webb) {
 async function provaUtanMigrationen(webb) {
   const { context, page, riktiga, konsol } = await öppna(webb, { utanMigrationen: true });
   await tillAdmin(page, 'katalog/familjerabatter');
-  prova('utan migrationen: fliken säger att den inte är körd', /Migrationen familjerabatter är inte körd/.test(await text(page, '#fr-tabell')),
-    await text(page, '#fr-tabell'));
+  prova('utan migrationen: fliken säger att den inte är körd', /Migrationen familjerabatter är inte körd/.test(await text(page, '#frab-tabell')),
+    await text(page, '#frab-tabell'));
   await öppnaPanel(page, 'familj:fam-a', 'ekonomi');
   const eko = await text(page, '.dp');
   prova('utan migrationen: panelen säger det, och resten av Ekonomi står', /Familjerabatterna finns inte i databasen än/.test(eko)
