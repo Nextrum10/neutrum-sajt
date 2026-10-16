@@ -705,7 +705,7 @@ ruta, där det skulle torrköras innan något skapades.
   driftsättningen. Provet är `verktyg/prova-fakturor.js` (Playwright mot en
   falsk Supabase, inte i CI).
 
-## Obetalda pass på fakturan (2026-10-16, `obetalda_pass_pa_fakturan`)
+## Obetalda pass på fakturan (2026-10-17, `obetalda_pass_pa_fakturan`)
 
 Beslutat 2026-10-01 (avsnitt 11 sa "inte byggt" till 2026-10-15). Leo: en
 familj som har ett pass den 30 september och bekräftar i oktober "ska inte
@@ -744,7 +744,7 @@ faktura". Byggt 2026-10-15, på Leos "bygg det du kunde bygga själv".
     Inte betalt, och familjen betalar med kort, som villkoren säger.
   - **Ett pass bokat innan familjen godkänt villkoren som säger det**:
     `villkor_godkannanden` med en version från `intern.obetalda_faktureras_fran()`
-    (2026-10-16) och `godkant_at` före passets `created_at`. Avtalet om ett
+    (2026-10-17) och `godkant_at` före passets `created_at`. Avtalet om ett
     äldre pass slöts med villkoren där familjen valde själv, så det läggs
     aldrig på i efterhand. Ett pass som admin bokat åt en familj som inte
     godkänt kommer inte heller med.
@@ -764,18 +764,22 @@ faktura". Byggt 2026-10-15, på Leos "bygg det du kunde bygga själv".
 - **Bara tjänstekontot**: funktionen nekar allt utom `service_role` (och en
   session utan roll, som SQL Editor) och har ingen EXECUTE för `anon` och
   `authenticated`. Ingen inloggad läser `intern.kassan_oppnad`.
-- **Villkoren** har versionen 2026-10-16 (alla får frågan igen), och `#faktura`
+- **Villkoren** har versionen 2026-10-17 (alla får frågan igen), och `#faktura`
   säger det: meningen, när passet läggs på (natten efter månaden eller efter
   en sen rapport), att det sedan betalas genom fakturan, att det gäller pass
   bokade efter godkännandet, och att en familj med fakturavalet stängt
   betalar med kort. Den hållna tiden står på fakturan (`#hallen-tid`).
-  Samma version tar bort orden "utan påminnelse" ur `#gratistimmar`, för
-  Leo bestämde att de går med nästa version och inte i en egen
-  (`minne/timmar.md`, påminnelsen från PR #292). Den tar också bort
-  meningen om första timmen pass för pass ur `#forsta-timmen`, och
-  hänvisningen dit från en timme på köpet på ett pass: sedan 2026-10-15
-  ges första timmen bara med planen, och tipstimmen är den enda timmen
-  på köpet på ett pass (Första timmen gratis ovan).
+  **Två PR:er skrev 2026-10-16.** #298 tog först med sig orden "utan
+  påminnelse" ur `#gratistimmar` och första timmen pass för pass ur
+  `#forsta-timmen`, som skulle gå med nästa version. Familjerabattens punkt
+  (PR #302) skrev samma version och tog bort samma meningar, och Leo lät den
+  gå först ("#302 först", 2026-10-16; Familjerabatterna nedan). Två texter
+  med samma version går inte: den som godkänt familjerabattens 2026-10-16
+  hade räknats som att ha godkänt meningen om fakturan, som den aldrig sett
+  (`obetalda_faktureras_fran()` jämför versionen). Därför fick #298 nästa
+  datum, och vakten först i filen kräver exakt 2026-10-16 i driften och att
+  ingen godkänt en version från 2026-10-17. Går den ut en annan dag byts
+  datumet överallt först (`DEPLOY-BETALNING.md` 9.17 steg 0).
   Meningen "Är ett pass inte betalt när månaden är slut, och inte på väg att
   dras från kortet, kommer det med på fakturan." står direkt efter
   fakturameningen på alla 36 ställen och i mejlen, och
@@ -785,7 +789,7 @@ faktura". Byggt 2026-10-15, på Leos "bygg det du kunde bygga själv".
 - **Studievyn** säger det per pass, under Bekräfta rapport och på passets
   sida, bara när det gäller: fakturan går att välja för familjen, kortet
   betalar inte, och passet bokades efter `mitt_villkorslage().obetalda_fran`
-  (när kontot först godkände en version från 2026-10-16). Utan svaret säger
+  (när kontot först godkände en version från 2026-10-17). Utan svaret säger
   passet inget. Agenternas fakta (`_delad/nextrum-fakta.ts`) säger regeln.
 - **Inte byggt**: inget mejl när ett pass läggs på fakturan (fakturan skickas
   från Fortnox, och familjen ser passet under Betalning); ett tillägg för

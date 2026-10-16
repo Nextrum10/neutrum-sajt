@@ -22,7 +22,7 @@
 --     familjen spärrad (intern.faktura_tillaten). Passet står kvar som
 --     Inte betalt, som förut
 --   · ett pass som bokades innan familjen godkänt villkoren som säger det
---     här (version 2026-10-16, intern.obetalda_faktureras_fran): det
+--     här (version 2026-10-17, intern.obetalda_faktureras_fran): det
 --     avtalet slöts med de gamla villkoren, där familjen valde själv
 --
 -- Bara pass före periodens slut. Månaden som pågår faktureras aldrig
@@ -30,9 +30,12 @@
 -- månad är slut. Kortet går att välja tills passet står på en faktura, som
 -- förut (stripe-checkout).
 --
--- Villkoren får en ny version, 2026-10-16, och meningen om betalningen
--- säger det på alla ställen (kolla-betalningsvillkor.py). Filen tar inte
--- bort något och kan köras hel i ett do-block (CLAUDE.md avsnitt 5).
+-- Villkoren får en ny version, 2026-10-17, och meningen om betalningen
+-- säger det på alla ställen (kolla-betalningsvillkor.py). 2026-10-16 är
+-- familjerabattens (villkoren_familjerabatt, PR #302), som gick först.
+-- Går filen ut en annan dag byts datumet överallt (DEPLOY-BETALNING.md
+-- 9.17). Filen tar inte bort något och kan köras hel i ett do-block
+-- (CLAUDE.md avsnitt 5).
 -- ============================================================
 
 set local lock_timeout = '5s';
@@ -40,16 +43,17 @@ set local lock_timeout = '5s';
 -- ---------- 0. driften är som den lästes ----------
 do $$
 begin
-  -- Exakt 2026-10-15. Har en annan fil redan satt 2026-10-16 har familjer
-  -- godkänt en text med det datumet utan meningen om fakturan, och
-  -- obetalda_faktureras_fran() skulle räkna dem som att de godkänt den
-  -- (2026-10-16 skrev två PR:er samma datum, #298 och #302).
-  if intern.villkor_version() <> '2026-10-15' then
-    raise exception 'Villkorens version är %, inte 2026-10-15. Läs driften och skriv om migrationen.',
+  -- Exakt 2026-10-16, familjerabattens version. Har en annan fil redan
+  -- satt 2026-10-17 har familjer godkänt en text med det datumet utan
+  -- meningen om fakturan, och obetalda_faktureras_fran() skulle räkna dem
+  -- som att de godkänt den (2026-10-16 skrev två PR:er samma datum, #298
+  -- och #302, och #302 gick först).
+  if intern.villkor_version() <> '2026-10-16' then
+    raise exception 'Villkorens version är %, inte 2026-10-16. Läs driften och skriv om migrationen.',
       intern.villkor_version();
   end if;
-  if exists (select 1 from public.villkor_godkannanden where version = '2026-10-16') then
-    raise exception 'Någon har redan godkänt villkor 2026-10-16. Läs driften och skriv om migrationen.';
+  if exists (select 1 from public.villkor_godkannanden where version >= '2026-10-17') then
+    raise exception 'Någon har redan godkänt villkor från 2026-10-17. Läs driften och skriv om migrationen.';
   end if;
   -- Avsnitt 5 skriver om mitt_villkorslage() hel: kroppen ska vara den
   -- villkoren_godkanns skrev.
@@ -66,7 +70,7 @@ returns text
 language sql
 immutable
 set search_path = pg_temp
-as $$ select '2026-10-16'::text $$;
+as $$ select '2026-10-17'::text $$;
 
 /* Versionen av villkoren som säger att ett obetalt pass läggs på
    fakturan. Ett pass faktureras av sig själv bara om familjen godkänt
@@ -76,7 +80,7 @@ returns text
 language sql
 immutable
 set search_path = pg_temp
-as $$ select '2026-10-16'::text $$;
+as $$ select '2026-10-17'::text $$;
 
 -- Inloggade får läsa den, som villkor_version(): mitt_villkorslage() körs
 -- som den som frågar (avsnitt 5).
@@ -235,7 +239,7 @@ grant execute on function public.fakturera_obetalda(date, boolean) to service_ro
 comment on function public.fakturera_obetalda(date, boolean) is
   'obetalda_pass_pa_fakturan (2026-10-15). Lägger hållna, rapporterade och obetalda pass före p_fore på '
   'fakturan (betalning_status faktura), utom med en kassa som kan stå öppen, ett kort som betalar, faktura '
-  'som inte är tillåten eller ett pass bokat innan familjen godkänt version 2026-10-16. p_torr svarar utan '
+  'som inte är tillåten eller ett pass bokat innan familjen godkänt version 2026-10-17. p_torr svarar utan '
   'att skriva. Bara månadskörningen (tjänstekontot).';
 
 

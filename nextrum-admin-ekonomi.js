@@ -291,7 +291,7 @@
     pass_utan_rapport: ['Pass utan rapport', 'Genomfört men utan rapport, så det kommer inte med på underlaget. Koppla rapporten eller undanta passet under Betalningar → Att göra.'],
     fristaende_rapport: ['Rapport utan pass', 'En rapport som inte hör till något pass. Koppla den till sitt pass under Betalningar → Att göra.'],
     ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy. '
-      + 'Natten efter månaden läggs passet på familjens faktura (sedan 2026-10-16), utom med en öppen kassa, ett kort som betalar, '
+      + 'Natten efter månaden läggs passet på familjens faktura (sedan 2026-10-17), utom med en öppen kassa, ett kort som betalar, '
       + 'en familj utan faktura eller ett pass bokat innan familjen godkänt villkoren som säger det.'],
     /* Fas 20.1. Passet var betalt och drog över. Familjen betalar
        tillägget med kort när de bekräftar rapporten; beloppet räknas i
@@ -3053,7 +3053,7 @@
         ? 'är inte ' + betalt + ' än och läggs på familjens faktura om ' + (paFakturan === 1 ? 'det' : 'de')
           + ' inte betalas innan månaden är slut'
         : 'var inte ' + betalt + ' när månaden tog slut och ' + (torr ? 'läggs' : 'lades') + ' på familjens faktura')
-        + ' (villkoren sedan 2026-10-16).');
+        + ' (villkoren sedan 2026-10-17).');
     }
     if (obetalda.length) {
       noter.push('⚠️ ' + obetalda.length + (obetalda.length === 1 ? ' pass hölls' : ' pass hölls')
