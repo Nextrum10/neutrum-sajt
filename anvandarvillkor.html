@@ -180,6 +180,21 @@
         Studiehjälparen är aldrig er motpart i en pengafråga.</li>
       <li>Priset per timme står på <a href="/priser">prissidan</a> och är det som gäller vid
         bokningstillfället.</li>
+      <!-- Familjerabatt (familjerabatter, 2026-10-15, Leo: "10 kr billigare på
+           alla timmar som köps tex ... tills vi tar bort rabatten"; i villkoren
+           sedan 2026-10-16, Leo: "fixa villkoren"). Kronorna dras när priset
+           fryses (frys_passets_pris, intern.klippkort_rabatt,
+           extra_timmar_erbjudande), och att sluta räknas till timpriset minus
+           rabatten på köpet (klippkort_saldo.vid_uppsagning_ore,
+           intern.timbank_varde). Koden själv står aldrig i familjens vy. -->
+      <li id="familjerabatt"><b>Familjerabatt.</b> Vi kan ge er familj en rabatt på ett antal kronor
+        per timme, till exempel genom en samarbetspartner. Den dras på varje timme ni betalar med
+        pengar: på pass, planer, Fyll timbanken och timmar till en plan. Tillägget för fler barn och
+        timmar som redan är gratis påverkas inte. Priset med rabatten står i er vy när ni bokar eller
+        köper och i kassan, innan ni betalar, och en rabattkod räknas på det priset. Rabatten gäller
+        tills vidare, för det ni bokar och köper medan ni har den. Vi kan ändra eller ta bort den, och
+        det ni redan har bokat eller köpt behåller sitt pris. Hur den räknas om ni slutar står under
+        <a href="#erbjudanden">Planer och timbanken</a>.</li>
       <li>Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit
         rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar
         ni när ni bekräftar rapporten. Efter passet skriver studiehjälparen en rapport, och den läser
@@ -339,9 +354,11 @@
         hinna använda den, betalar vi tillbaka den till det pris ni betalat.</li>
       <li><b>Att sluta.</b> Vill ni sluta innan timmarna är använda betalar vi tillbaka det som
         är kvar. De timmar ni redan använt räknas då till ordinarie timpris, eftersom en plans
-        rabatt gäller för att ni köper alla timmarna. De första 14 dagarna efter köpet gäller i stället
+        rabatt gäller för att ni köper alla timmarna. Hade ni en <a href="#familjerabatt">familjerabatt</a>
+        när ni köpte timmarna räknas de använda timmarna till ordinarie timpris med den rabatten dragen. De första 14 dagarna efter köpet gäller i stället
         <a href="#angerratt">ångerrätten</a>, och då räknas de använda timmarna till det pris ni
-        betalat. Minuter i timbanken betalar vi tillbaka till ordinarie timpris.</li>
+        betalat. Minuter i timbanken betalar vi tillbaka till ordinarie timpris, med familjerabatten
+        dragen om ert senaste köp av timmar hade en.</li>
       <li><b>Timmar som inte hunnit användas.</b> Köpta timmar som finns kvar när tiden gått ut
         förfaller. Tio dagar innan mejlar vi er om ni har köpta timmar kvar. Hör av er innan dess om
         ni inte kommer att hinna, så betalar vi tillbaka resten enligt punkten ovan.</li>

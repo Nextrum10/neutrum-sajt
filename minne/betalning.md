@@ -1500,12 +1500,15 @@ kedjan står i `DEPLOY-BETALNING.md` 9.15.
   och `intern.klippkort_rabatt` prövar koden mot priset efter rabatten. Vill
   Leo att de inte ska gälla samtidigt är det en rad i `intern.rabattkod_prova`
   och en mening i rutan.
-- **Att sluta.** Villkoren räknar de använda timmarna till "ordinarie
-  timpris". För en familj med rabatt var det lägre, och `vid_uppsagning_ore`
-  räknar dem nu till `timpris_ore − familjerabatt_ore`, och
-  `intern.timbank_varde` minuterna till samma, så att de två fortfarande tar ut
-  varandra. Det blir aldrig mer än villkoren tillåter. Inom ångerfristen räknas
-  andelen av det betalda, som förut.
+- **Att sluta.** `vid_uppsagning_ore` räknar de använda timmarna till
+  `timpris_ore − familjerabatt_ore`, rabatten på köpet, och
+  `intern.timbank_varde` minuterna till samma på familjens senaste köp, så att
+  de två fortfarande tar ut varandra. Inom ångerfristen räknas andelen av det
+  betalda, som förut. Villkoren sa till version 2026-10-16 bara "ordinarie
+  timpris". För de använda timmarna var det lägre och alltså inom villkoren, men
+  minuterna lovades tillbaka till ordinarie timpris, och för en familj med
+  rabatt betalar databasen tillbaka mindre: sedan version 2026-10-16 säger Att
+  sluta i villkoren båda med rabatten dragen (Villkoren, nedan).
 - **Vad familjen ser.** Leo: "de ser bara att de har rabatt vid checkout men
   inte annat", och samma kväll om korten under Erbjudanden: "Visa på korten
   också" (annars stod 3 032 kr på Standard och kassan drog 2 952 kr, och det
@@ -1531,10 +1534,22 @@ kedjan står i `DEPLOY-BETALNING.md` 9.15.
   säga vilken partner familjen kom genom, och auditen står kvar så länge
   verksamheten finns. Avidentifieras familjen tas koden bort
   (`profiles_familjerabatt_rensas`); raderas kontot går raden med.
-- **Villkoren** nämner ingen rabatt och fick ingen ny version: ett lägre pris
-  än prislistan ändrar dem inte. En rabatts villkor (beloppet, att den gäller
-  tills vidare och att vi kan ta bort den) ska stå där vi ger den, i mejlet
-  eller avtalet med partnern, som för en rabattkod.
+- **Villkoren** nämnde först ingen rabatt och fick ingen ny version: ett lägre
+  pris än prislistan ändrar dem inte, och rabattens villkor skulle stå där vi
+  ger den, i mejlet eller avtalet med partnern. **2026-10-16** (Leo: "fixa
+  villkoren") fick den en egen punkt, i version 2026-10-16 med de obetalda
+  passen på fakturan (`obetalda_pass_pa_fakturan`, Obetalda pass på fakturan
+  nedan): först skrevs den som en egen version med samma datum (PR #302), och
+  när det visade sig att båda tog 2026-10-16 valde Leo en version, så att
+  familjerna får frågan en gång och ingen godkänner en version utan att ha sett
+  den andra texten. `#familjerabatt` under Pris och betalning säger vad den
+  gäller (varje timme som betalas med pengar, inte tillägget för fler barn eller
+  timmar som redan är gratis), att priset med rabatten står i vyn och i kassan
+  innan familjen betalar, att en rabattkod räknas på det priset, att den gäller
+  tills vidare och att vi kan ändra eller ta bort den, och att det bokade och
+  köpta behåller sitt pris. Att sluta under Planer och timbanken säger hur
+  timmarna och minuterna räknas med den. Koden och beloppet står inte i
+  villkoren: beloppet ser familjen vid priset. Juristen har inte läst punkten.
 - **Prov.** `rls-test.sql` avsnitt 35 (26 prov, `FR`); lokalt ur alla 195
   migrationer 1775 av 1775. `verktyg/prova-familjerabatter.js` (63 prov):
   fliken, panelen, Ta in familjen, passets panel, studievyn med och utan

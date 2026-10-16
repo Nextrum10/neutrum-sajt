@@ -259,8 +259,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   till en plan (`extra_timmar_erbjudande()`). Tillägget för fler barn, gratistimmar, första timmen och tipstimmen rörs inte,
   och en rabattkod räknas på priset efter den: de staplas (Leo samma kväll). Det bokade och köpta står fast när rabatten sätts, ändras eller tas bort, och
   en avstängd kod ger ingen rabatt. Slutar familjen räknas de använda timmarna och minuterna till timpriset minus den
-  (`vid_uppsagning_ore`, `intern.timbank_varde`). Lönen rörs inte. Den ändrar inget publikt pris, och villkoren nämner den
-  inte (ingen ny version): en rabatts villkor ska stå där vi ger den. Auditen får att familjen fick eller blev av med en
+  (`vid_uppsagning_ore`, `intern.timbank_varde`). Lönen rörs inte. Den ändrar inget publikt pris. **Villkoren har en egen
+  punkt** (`#familjerabatt`, Leo 2026-10-16: "fixa villkoren"; i version 2026-10-16 med de obetalda passen, så att familjerna
+  får frågan en gång): vad den gäller, att den gäller tills vidare, att vi kan ändra eller ta bort den och att det bokade och
+  köpta behåller sitt pris, och Att sluta säger att timmarna och minuterna då räknas till ordinarie timpris med rabatten
+  dragen; beloppet ser familjen vid priset. Auditen får att familjen fick eller blev av med en
   rabatt (`har_rabatt`), aldrig koden, som kan säga vilken partner familjen kom genom.
 - **Kortet reserveras** (2026-10-13, i drift sedan 2026-10-14; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
   och när passet har hållits och läxhjälparen har skrivit rapport så dras pengarna"): valet är frivilligt, och kortet
@@ -828,8 +831,9 @@ Detaljer: `minne/grunden.md`.
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
 - **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är byggda 2026-10-15, inte i drift:
   `obetalda_pass_pa_fakturan` (20261016010000), `fakturering`, meningen på alla 36 ställen och i mejlen,
-  villkoren (version 2026-10-16: `#faktura`, "utan påminnelse" bort ur `#gratistimmar` och första timmen pass för pass
-  bort ur `#forsta-timmen`), policyn och studievyn
+  villkoren (version 2026-10-16: `#faktura`, "utan påminnelse" bort ur `#gratistimmar`, första timmen pass för pass
+  bort ur `#forsta-timmen`, och familjerabattens punkt `#familjerabatt` med Att sluta, Leo 2026-10-16: "fixa villkoren",
+  i samma version i stället för en egen), policyn och studievyn
   per pass (`mitt_villkorslage().obetalda_fran`).
   Kvar efter merge (`DEPLOY-BETALNING.md` 9.17): migrationen, `fakturering`, `notis-ko` och `drift`, att säga till
   familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och
@@ -1006,8 +1010,9 @@ Detaljer: `minne/grunden.md`.
   inget `delete`). Alla kroppar den skriver är byte för byte filens, hela `rls-test.sql` gick 1775 av 1775 mot driften,
   tillbakarullat, och advisorn larmade inte om något nytt för `anon`. Sedan `stripe-checkout` v21 (SESSIONSFORM 9) och `drift`
   v21 från merge-commiten, hämtade tillbaka och byte för byte lika (7 och 5 filer), och båda svarade 401 ur sin egen kod på ett
-  röktest (`DEPLOY-BETALNING.md` 9.15). Ingen familjerabatt fanns. Kvar: provet i testläge (9.15 steg 4), och juristen har inte
-  läst rad 30 i `DATASKYDD.md` eller policyns nya stycken.
+  röktest (`DEPLOY-BETALNING.md` 9.15). Ingen familjerabatt fanns. Villkorens punkt om den (`#familjerabatt`) går ut med
+  version 2026-10-16, med de obetalda passen (ovan). Kvar: provet i testläge (9.15 steg 4), och juristen har inte
+  läst rad 30 i `DATASKYDD.md`, policyns nya stycken eller villkorens punkt.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
