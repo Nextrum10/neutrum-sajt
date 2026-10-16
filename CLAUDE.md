@@ -994,8 +994,9 @@ Detaljer: `minne/grunden.md`.
   inget `delete`). Alla kroppar den skriver är byte för byte filens, hela `rls-test.sql` gick 1775 av 1775 mot driften,
   tillbakarullat, och advisorn larmade inte om något nytt för `anon`. Sedan `stripe-checkout` v21 (SESSIONSFORM 9) och `drift`
   v21 från merge-commiten, hämtade tillbaka och byte för byte lika (7 och 5 filer), och båda svarade 401 ur sin egen kod på ett
-  röktest (`DEPLOY-BETALNING.md` 9.15). Ingen familjerabatt fanns. Kvar: provet i testläge (9.15 steg 4), och juristen har inte
-  läst rad 30 i `DATASKYDD.md` eller policyns nya stycken.
+  röktest (`DEPLOY-BETALNING.md` 9.15). Ingen familjerabatt fanns. Villkorens punkt om den (`#familjerabatt`) är i drift
+  sedan förmiddagen 2026-10-16 (nedan). Kvar: provet i testläge (9.15 steg 4), och juristen har inte läst rad 30 i
+  `DATASKYDD.md`, policyns nya stycken eller villkorens punkt.
 - **Google Analytics och samtyckesrutan** (2026-10-11) är på i koden: `STATISTIK`, `KALLSPARNING` och
   `GOOGLE_TAG_ID`, och alla får frågan igen. Kvar i Google Analytics (bara där): kontots land är Sverige
   (då ingår Google Ads Data Processing Terms, biträdesavtalet policyn talar om; utanför EES godkänns de för
@@ -1058,15 +1059,18 @@ Detaljer: `minne/grunden.md`.
   versionen 2026-10-16 (nedan). Kvar: `forsta_timmen_beviljad` och `ge_forsta_timmen()` står i databasen utan knapp, och
   faktatextens "(första timmen eller tipstimmen)" står kvar också efter #293 (8b28e1a) och rättas nästa gång texten
   ändras (`minne/funktioner.md`).
-- **Villkoren 2026-10-16** (Leo: "fixa villkoren") är skrivna och körs efter merge: familjerabatten får en egen punkt
+- **Villkoren 2026-10-16** (Leo: "fixa villkoren") är i drift sedan samma förmiddag: familjerabatten fick en egen punkt
   (`#familjerabatt` under Pris och betalning), Att sluta säger att en familj med rabatt räknas till ordinarie timpris med
   rabatten dragen, som `vid_uppsagning_ore` och `intern.timbank_varde` redan gör (förut lovade villkoren minuterna till
   ordinarie timpris, mer än databasen betalar tillbaka till en familj med rabatt), och två meningar som skulle gå med
-  nästa version går: "kan vi, om vi kommit överens" om första timmen pass för pass och "utan påminnelse" om
-  gratistimmarna. `villkoren_familjerabatt` (20261016100000) har inget `drop` och inget `delete` och går hel i ett
-  do-block; vakten stannar om versionen i driften inte är 2026-10-15. Alla får frågan igen vid nästa inloggning. I
-  driften 2026-10-16 hade ingen familj en rabatt eller valet av första timmen pass för pass. Juristen har inte läst
-  den nya punkten.
+  nästa version gick: "kan vi, om vi kommit överens" om första timmen pass för pass och "utan påminnelse" om
+  gratistimmarna. PR #298 (de obetalda passen) skrev samma version; Leo valde att den här gick först ("#302 först", och
+  sedan "Merga sen när du kan"), så #298 får datumet den går ut. PR #302 mergades (947f0b4), Vercel lade ut sidan 10.01
+  UTC, och `villkoren_familjerabatt` (20261016100000) kördes direkt efter, hel i ett do-block, hämtad från
+  merge-commiten, prövad mot sin md5 (`d3f4748c…`) och registrerad med filens text. Kroppen är filens (`bc41515f…`),
+  hela `rls-test.sql` gick 1798 av 1798 mot driften, tillbakarullat, och advisorn larmade inte om något nytt. Alla får
+  frågan igen vid nästa inloggning; ingen hade godkänt 2026-10-16, ingen familj hade en rabatt och ingen valet av första
+  timmen pass för pass. Juristen har inte läst den nya punkten.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

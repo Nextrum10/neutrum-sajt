@@ -1461,8 +1461,9 @@ kedjan står i `DEPLOY-BETALNING.md` 9.15.
   och beloppet står inte i villkoren: beloppet ser familjen vid priset. Samma
   version tog bort "kan vi, om vi kommit överens" om första timmen pass för
   pass och "utan påminnelse" om gratistimmarna (`minne/timmar.md`), som båda
-  väntade på nästa version. Alla får frågan om villkoren igen. Juristen har
-  inte läst punkten.
+  väntade på nästa version. Alla får frågan om villkoren igen. Versionen är i
+  drift sedan förmiddagen 2026-10-16 (PR #302, 947f0b4, `minne/databasen.md`).
+  Juristen har inte läst punkten.
 - **Prov.** `rls-test.sql` avsnitt 35 (26 prov, `FR`); lokalt ur alla 195
   migrationer 1775 av 1775. `verktyg/prova-familjerabatter.js` (63 prov):
   fliken, panelen, Ta in familjen, passets panel, studievyn med och utan

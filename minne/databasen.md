@@ -1403,3 +1403,17 @@ nästa inloggning, och den som inte svarat kan inte föreslå pass, köpa timmar
 eller välja kortet. Fram till körningen säger sidan 2026-10-16 och databasen
 2026-10-15: då får ingen frågan, så den körs direkt efter merge.
 `rls-test.sql` läser versionen ur funktionen och behöver inga nya prov.
+**I drift 2026-10-16**: #298 (`obetalda_pass_pa_fakturan`) skrev samma
+version, och Leo svarade olika i de två sessionerna, elva sekunder isär. På
+frågan igen svarade han "Merga sen när du kan", och den här gick först; #298
+får datumet den går ut och en vakt som kräver 2026-10-16. PR #302 mergades
+10.00 UTC (947f0b4), och Vercel hade lagt ut sidan 10.01 (båda språken sa 16
+oktober och hade `#familjerabatt`, hämtat genom `extensions.http_get`). Sedan
+filen hämtad från merge-commiten, prövad mot sin md5 (`d3f4748c…`), körd och
+registrerad i samma do-block, med en vakt mot att versionen redan fanns.
+Efteråt: `intern.villkor_version()` svarar 2026-10-16, kroppen (`md5(prosrc)`
+`bc41515f…`) är filens, och rättigheterna står kvar (`postgres` och
+`authenticated`, inte `anon`). Ingen hade godkänt 2026-10-16. Hela
+`rls-test.sql` från 947f0b4 (`393d3278…`) gick 1798 av 1798 mot driften i ett
+do-block som slutar med ett fel (allt rullades tillbaka), och advisorn larmade
+inte om något nytt.
