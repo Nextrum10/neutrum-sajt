@@ -951,16 +951,19 @@ Detaljer: `minne/grunden.md`.
   `gratistimmar` registrerades i samma block med filens text (md5 `079603c5…`) och en anteckning om att avsnitt 7
   ersattes, som andra del. Hela `rls-test.sql` gick 1643 av 1643 mot
   driften, tillbakarullat, med filen körd först i samma transaktion (`minne/databasen.md`). Villkorens version är
-  2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Påminnelsen om dem (nedan) är byggd men
-  inte i drift. Juristen har inte läst villkoren för gratistimmarna.
-- **Påminnelsen om gratis timmar och batteriet** (2026-10-15) är byggda men inte i drift: **`notis-ko` driftsätts
-  från main FÖRE** migrationen `gratistimmarna_paminns` (20261015140000), annars får familjen köptimmarnas mejl,
-  som lovar pengar tillbaka; sedan migrationen efter merge, hämtad från merge-commiten och prövad mot sin md5, i
-  ett do-block (inget `drop` eller `delete`), och hela `rls-test.sql` mot driften. Vakten släpper bara igenom
-  funktionen `timmarna_delas_och_kops_till` lämnade (md5 `2c8fa456…`) eller filens egen (`c54a9b63…`): **PR #287
-  byggde samma påminnelse** med samma namn, och Leo valde den här (2026-10-15); #287:s version i driften stoppar
-  filen i stället för att skrivas över. Vyn `klippkort_saldo` får vara den förra (`a34041ef…`) eller
-  familjerabatternas (`e4bf8d23…`): `familjerabatter` körs före den i driften, fast numret är högre, och kolumnerna
+  2026-10-13, och sidan med gratistimmarna var ute innan någon godkänt den. Påminnelsen om dem (nedan) är i drift
+  sedan 2026-10-16. Juristen har inte läst villkoren för gratistimmarna.
+- **Påminnelsen om gratis timmar och batteriet** (2026-10-15) är i drift sedan 2026-10-16: PR #292 mergades
+  (aabb046) och Vercel lade ut batteriet; sedan, 09.00 UTC, **`notis-ko` v26 från merge-commiten FÖRE** migrationen
+  (annars hade familjen fått köptimmarnas mejl, som lovar pengar tillbaka), hämtad tillbaka och byte för byte lika i
+  alla 15 filer, och sist `gratistimmarna_paminns` (20261015140000) hel i ett do-block (inget `drop` eller `delete`),
+  hämtad från merge-commiten, prövad mot sin md5 (`fb8d50f3…`) och registrerad med filens text. Funktionen
+  (`c54a9b63…`) är lika en lokal databas byggd ur merge-commiten i kropp, inställningar, rättigheter och kommentar,
+  hela `rls-test.sql` gick 1798 av 1798 mot driften, tillbakarullat, och advisorn larmade inte om något nytt. Inga
+  gratistimmar fanns, och en torrkörning köade inget. Vakten släpper bara igenom funktionen
+  `timmarna_delas_och_kops_till` lämnade (md5 `2c8fa456…`) eller filens egen: **PR #287 byggde samma påminnelse**
+  med samma namn, och Leo valde den här (2026-10-15). Vyn `klippkort_saldo` fick vara den förra (`a34041ef…`) eller
+  familjerabatternas (`e4bf8d23…`): `familjerabatter` kördes före den i driften, fast numret är högre, och kolumnerna
   påminnelsen läser är desamma. **Villkoren byts inte för den** (Leo samma kväll): `#gratistimmar` säger
   fortfarande "förfaller utan påminnelse", och orden tas bort i nästa version av villkoren. Batteriet behöver ingen
   migration.
