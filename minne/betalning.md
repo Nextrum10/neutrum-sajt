@@ -1,11 +1,77 @@
-# Betalningen: siffrorna, kort och faktura, bokslutet och lönerna
+# Betalningen: siffrorna, kortet, bokslutet och lönerna
 
 Arkivet för betalningen ur avsnitt 1 och 11 i `CLAUDE.md`, ordagrant: siffrorna, bekräftelsen,
 den hållna tiden, bokslutet, Betalningar, Månadens ekonomi, Löner, lönespecen och kortvägens
 historia. Timmarna står i `timmar.md`. Reglerna står i kärnan, `CLAUDE.md`; "avsnitt N" i
 texten är kärnans.
 
+**Fakturan är borta sedan 2026-10-21** (nedan, Fakturan tas bort). Allt i den här filen
+som beskriver fakturan, fakturans flöde i adminvyn, obetalda pass på fakturan och
+fakturameningen är historik: avsnitten står kvar för att förklara varför koden och
+databasen ser ut som de gör.
+
 ---
+
+## Fakturan tas bort (2026-10-21)
+
+Leo: "Ta bort fakturasystemet helt: UI, funktioner, edge functions, notismallar,
+tabeller, texter på sajten (priser, FAQ, villkorstext som nämner faktura). Det har
+aldrig använts på riktigt. Kontrollera ändå först att alla fakturarader tillhör
+testkontot Leo Trikke. Finns rader som tillhör någon annan, avbryt droppen, behåll
+tabellerna och rapportera."
+
+**Varför i två delar.** En droppad tabell kommer bara tillbaka ur en backup, och vyerna,
+funktionerna och edge-funktionerna som läste fakturan måste vara ute först. Del 1 tar
+därför inte bort något, och del 2 droppar efter en backup, för hand:
+
+1. `fakturan_tas_bort` (20261021000000). Vakten först: varje rad i `invoices`,
+   `invoice_lines`, `faktura_sparr` och varje pass med `betalning_status = 'faktura'`
+   ska höra till ett konto med namnet Leo Trikke. Också ett annat adminkonto är "någon
+   annan": filen stannar, säger hur många rader och vems (namn och id), och ingenting
+   är ändrat. Sedan md5-vakter på varje funktion den skriver om, strömbrytaren `faktura`
+   av och låst (`flaggor_faktura_av`, som `kortsparr`), och allt som delas med lönerna
+   och larmen omskrivet utan fakturan: `passunderlag` (`fakturerad` alltid falsk),
+   `avvikelser_rader` och `kontroll_ekonomiska_avvikelser` (inga fakturalarm),
+   `manad_lage`, `admin_att_gora`, `dagliga_kontroller`, `admin_lage` och
+   `analys_ekonomi` (fakturakolumnerna alltid noll, så att vyer och AI-verktyg som
+   bygger på dem står kvar), `skydda_bokningsfalt` (familjen väljer inte betalsätt på
+   passet), `valj_kort`, `mitt_villkorslage` och `betygsgaranti_underlag` (inga sena
+   fakturor). Fakturans egna funktioner blir stubbar som svarar att den är borta.
+   Villkorens version blir 2026-10-21.
+2. `fakturans_tabeller_tas_bort` (20261021090000), efter backup. Samma vakt, en vakt
+   som kräver del 1, och en som letar efter funktioner som fortfarande nämner det som
+   droppas (Postgres följer inte namnen i en funktionskropp). Testkontots fakturapass
+   blir `ingen`, `faktura` försvinner ur `bookings_betalning_status_check`, och vyerna
+   `ofakturerat` och `rut_underlag`, triggern `bookings_kassan_oppnad`, tabellerna och
+   de nio funktionerna droppas, utan cascade. Flaggraden tas bort; villkoret står kvar.
+
+Båda går att köra igen: del 1 efter del 2 gör ingenting med tabellerna, och del 2 utan
+tabeller säger det och slutar. `rls-test.sql` avsnitt 38 prövar båda lägena (1797 av
+1797 med båda, 1794 av 1794 med bara del 1, 2026-10-21), och vakten är prövad med en
+annan familjs faktura i en egen lokal databas: del 1 och del 2 stannade och namngav
+familjen, och gick igenom när bara testkontots rad var kvar.
+
+**Det som står kvar med flit.** `fakturering` och `faktura-utskick` behåller sina namn
+(adresserna står i schemat, i adminvyn och i `config.toml`) men gör bara lönernas
+underlag; `faktura-utskick` nekar allt utom ett underlag. `bookings.fakturerbar` är
+lönens och larmens ("räknas passet"), inte fakturans. RUT (`rut_tak`,
+`kund_skatteuppgifter`, tjänsternas RUT-fält) rörs inte: RUT kan inte slås på sedan Fas
+14.2 och drogs bara på fakturan, så personnumren i `kund_skatteuppgifter` har inget
+syfte längre (en öppen fråga till Leo och juristen, `DATASKYDD.md`). Auditloggens rader
+om fakturor står kvar, och filtret Fakturor (till 2026-10-21) i adminvyn läser dem.
+
+**Sajten.** Villkoren (`#faktura` borta, version 2026-10-21), prissidan, FAQ (frågan om
+faktura borta, schemat ombyggt), integritetspolicyn (Fortnox är bokföringen, inga
+fakturor till familjer), startsidan, läxhjälpssidorna (generatorn), Vår idé och För
+elever och föräldrar, på båda språken. `kolla-betalningsvillkor.py` har
+fakturameningen, meningen om de obetalda passen och "tio dagar" bland det gamla.
+Studievyn har inget fakturaval och inga fakturor att betala, adminvyns Betalningar har
+fliken Månadskörningen i stället för Fakturor (`#ekonomi/fakturor` leds dit), Månadens
+ekonomi har inga fakturor, och förhandsvisningen har ingen faktura i sin värld.
+`prova-fakturor.js` är borttaget.
+
+**Driften** (`DEPLOY-BETALNING.md` 9.18): edge-funktionerna först (de frågar inte
+längre efter fakturan), sedan del 1, sedan backup och del 2.
 
 ### Siffror som måste stämma överallt
 
@@ -653,7 +719,7 @@ som förut ändrar något. **Raden i listorna heter `.eko-rad`**, och alla
 dess delar börjar på `eko-`: `.bet-atg` fanns redan i familjens
 Betalning, och den första versionen flyttade knapparna där.
 
-## Familjens faktura
+## Familjens faktura (historik: borttagen 2026-10-21)
 
 **En rad per familj och månad, och samma rad hela vägen (2026-10-06).**
 Leo: "det ska inte vara 4 st olika underlag för en familj och sen köra
@@ -705,7 +771,7 @@ ruta, där det skulle torrköras innan något skapades.
   driftsättningen. Provet är `verktyg/prova-fakturor.js` (Playwright mot en
   falsk Supabase, inte i CI).
 
-## Obetalda pass på fakturan (2026-10-16, `obetalda_pass_pa_fakturan`)
+## Obetalda pass på fakturan (2026-10-16, `obetalda_pass_pa_fakturan`; historik: borttagna 2026-10-21)
 
 Beslutat 2026-10-01 (avsnitt 11 sa "inte byggt" till 2026-10-15). Leo: en
 familj som har ett pass den 30 september och bekräftar i oktober "ska inte
@@ -1067,10 +1133,10 @@ Samma dag i finstilen och FAQ:n:
 
 ## 11. Vad som inte är byggt: betalningen
 
-- **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är i drift
-  sedan 2026-10-16: avsnittet Obetalda pass på fakturan ovan, och
-  `DEPLOY-BETALNING.md` 9.17. Kvar: familjerna ska få veta, och juristen har
-  inte läst villkoren.
+- **Fakturan är borttagen** (2026-10-21) i koden och migrationerna, inte i
+  driften: avsnittet Fakturan tas bort överst, och `DEPLOY-BETALNING.md` 9.18.
+  Obetalda pass på månadens faktura (i drift 2026-10-16) gick med den.
+  Det nedan om fakturan är historik.
 - **Betalning.** Familjen betalar varje pass med kort, **i förväg eller
   efter passet när de bekräftar rapporten** (Fas 19.2; före passet från
   Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt

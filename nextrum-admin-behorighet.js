@@ -87,7 +87,7 @@
     ritaDetalj: null, stängDetalj: null, byggFlöde: null, visaRadering: null
   };
   const BARA_SUPER = ['ritaÖversikt', 'ritaStatistik', 'ritaAnsokningar', 'ritaKontakt', 'ritaChattar',
-    'ritaLektioner', 'ritaUppdrag', 'ritaUppgifter', 'ritaBibliotek', 'ritaFakturor', 'ritaUtbetalningar',
+    'ritaLektioner', 'ritaUppdrag', 'ritaUppgifter', 'ritaBibliotek', 'ritaUtbetalningar',
     'ritaKortbetalningar', 'ritaAvvikelser', 'fyllPerioder', 'ritaMånaden', 'ritaLöner', 'ritaIntegrationer',
     'ritaPris', 'ritaTjanster', 'ritaRabattkoder', 'ritaFamiljerabatter', 'hämtaFamiljerabatter', 'ritaKoder', 'ritaKodsidan', 'ritaInställningar', 'ritaFel', 'ritaInstallningar', 'ritaDokument',
     'ritaAudit', 'ritaAutomationer', 'ritaMaskinUppgifter', 'ritaAI', 'ritaFörslag', 'ritaDriftlogg',

@@ -130,8 +130,12 @@
   const n = (antal, en, fler) => antal + ' ' + (antal === 1 ? en : fler);
 
   /* Vilka som använt koden. Anmälningarna och ansökningarna står i S;
-     ingen ny fråga behövs. */
+     ingen ny fråga behövs. En anmälan som flyttats till familjen
+     (intagna_anmalningar, 2026-10-21) står som familjen, med
+     anmälningsdagen. */
   const anmälningar = kod => (S.leads || []).filter(l => l.kod === kod)
+    .concat((S.intagna || []).filter(i => i.kod === kod)
+      .map(i => ({ id: i.id, intagen: true, kund_id: i.parent_id, created_at: i.anmald_at })))
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
   const ansökningar = kod => (S.ansokningar || []).filter(a => a.kod === kod)
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
@@ -238,7 +242,11 @@
       const lista = anmälningar(r.kod);
       return '<p class="kod-del">Anmälningar med koden</p>'
         + (lista.length ? '<ul class="kod-vilka">' + lista.map(l => '<li>'
-          + '<button type="button" class="eko-lank" data-dp="anmalan:' + esc(l.id) + '">' + esc(l.parent_name || 'Anmälan') + '</button>'
+          + (l.intagen
+            ? (l.kund_id
+              ? '<button type="button" class="eko-lank" data-dp="familj:' + esc(l.kund_id) + '">' + esc(namnFör(l.kund_id)) + '</button>'
+              : '<span>Raderad familj</span>')
+            : '<button type="button" class="eko-lank" data-dp="anmalan:' + esc(l.id) + '">' + esc(l.parent_name || 'Anmälan') + '</button>')
           + '<span class="kod-vilka-nar">' + esc(kortDatum(l.created_at)) + '</span>'
           + (l.kund_id ? pill('Kund', 'ar-klar') : pill((LEAD_LAGE[l.status] || [l.status || '—'])[0], (LEAD_LAGE[l.status] || [])[1] || ''))
           + '</li>').join('') + '</ul>'

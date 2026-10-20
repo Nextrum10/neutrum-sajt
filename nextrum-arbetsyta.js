@@ -589,7 +589,7 @@ window.NXArbete = (function () {
      ============================================================ */
 
   /* Timmarna ett förslag kan ligga på, varje dag i veckan. Hela timmar,
-     eftersom allt bokas och faktureras i hela timmar; till 22 för att
+     eftersom allt bokas och betalas i hela timmar; till 22 för att
      ett pass som börjar 21 ska sluta senast 22.
 
      Vardagar från 11, lördag och söndag från 9. Leo 2026-09-28: "man
@@ -743,7 +743,7 @@ window.NXArbete = (function () {
       var t = tjanstRad();
       return (t && t.extra_personer_ore) || 0;
     }
-    /* Timpriset ur katalogen — samma källa som faktureringen tar betalt
+    /* Timpriset ur katalogen — samma källa som kassan tar betalt
        efter. o.pris (kronor, ur konfigurationen) gäller bara innan
        katalogen finns. Allt räknas i ÖRE; kronorna härleds ur det. */
     function katalogensTimpris() {

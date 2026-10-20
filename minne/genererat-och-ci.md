@@ -236,7 +236,8 @@ Körs på varje push och PR. Ska vara grön före merge.
 1. `node --check` på all JavaScript
 2. `node verktyg/testa-agent.js`
 3. `verktyg/kolla-betalningsvillkor.py` (betalningslöftet, och att det gamla är borta; `KORTET_RESERVERAS`
-   väljer meningen efter strömbrytaren `kortreservation`, som `FAKTURA_I_TEXTEN` efter `faktura`)
+   väljer meningen efter strömbrytaren `kortreservation`. Fakturameningen, meningen om de obetalda
+   passen och "tio dagar" står bland det gamla sedan 2026-10-21, då fakturan togs bort)
 4. `verktyg/kolla-migrationer.py`, och `verktyg/bygg-uppgifter.py --kolla`
    (uppgiftsbankens form, och att den har sin migration)
 5. `verktyg/kolla-csp.py` (fyra vyer sedan `/barn`, och `/lank` sedan
@@ -455,8 +456,9 @@ villkor, ingen ruta för den som godkänt eller när funktionen saknas, och
 `/foralder`, utan att studsa. Tryckytorna mäts med `offsetHeight`: rutan glider fram med en skala.
 `prova-intag.js` provar raden i adminvyns panel.
 
-### Webbläsarprovet för familjens faktura (2026-10-06)
-`verktyg/prova-fakturor.js` är byggt som de nedan (egen port, 8964), med
+### Webbläsarprovet för familjens faktura (2026-10-06, borttaget 2026-10-21)
+Borttaget med fakturan 2026-10-21. Det som stod här:
+`verktyg/prova-fakturor.js` var byggt som de nedan (egen port, 8964), med
 klockan fast på 6 oktober 2026 (`page.clock.setFixedTime`): en rad per
 familj och månad under Betalningar → Fakturor, oktobers faktura som
 samlas och septembers utkast med det sena passet, att familjens namn
@@ -550,9 +552,9 @@ och provet tog Saras motförslag för familjens förslag (tre prov föll).
 `verktyg/prova-kortet.js` (port 8976) provar kortets vyer
 (`kortet_reserveras`) i förhandsvisningens värld, som har strömbrytaren
 på, Annas Visa ·· 4242 och `valj_kort` med databasens prövning: raden
-Betalning i förslaget och i granskningen av barnets förslag (kort,
-faktura, valet som står kvar), Välj kort och Välj bort på passets sida,
-fakturan före passet och kortet i stället, märket i Mina lektioner,
+Betalning i förslaget och i granskningen av barnets förslag (Efter passet
+och Kort, utan faktura sedan 2026-10-21, och valet som står kvar), Välj
+kort, Välj bort och Välj kort igen på passets sida, märket i Mina lektioner,
 Profil → Kortet, och lägena som jobbet och Stripe skriver (nekat,
 reserverat, ett genomfört pass under Bekräfta rapport), inskrivna i
 världen i webbläsarens lagring. Sedan strömbrytaren av och inget kort

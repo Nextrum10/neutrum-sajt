@@ -16,8 +16,8 @@
 //    betalningar av två klick. Nyckeln byggs av kod ur objektets id,
 //    aldrig av något anroparen skickar in.
 // 2. SIGNATUREN PRÖVAS I KONSTANT TID. En webhook utan
-//    signaturkontroll är en adress där vem som helst kan påstå att en
-//    faktura är betald. En kontroll som läcker via svarstiden är
+//    signaturkontroll är en adress där vem som helst kan påstå att ett
+//    pass är betalt. En kontroll som läcker via svarstiden är
 //    sämre än ingen, för den ser ut att hålla.
 // 3. NYCKELN LÄSES UR MILJÖN, ALDRIG UR ETT ANROP. Den hemliga
 //    nyckeln går förbi allt: den hör hemma som secret i Supabase och

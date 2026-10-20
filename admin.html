@@ -22,8 +22,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=f21d3928">
-<link rel="stylesheet" href="nextrum-vy.css?v=5a101f12">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=28094f6d">
+<link rel="stylesheet" href="nextrum-vy.css?v=9ac5eca2">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=55fe009b">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -445,7 +445,7 @@
                 <option value="">Alla lägen</option>
                 <option value="new">Nya</option>
                 <option value="contacted">Kontaktade</option>
-                <option value="matched">Matchade</option>
+                <option value="matched">Intagna</option>
                 <option value="declined">Avböjda</option>
               </select>
               <span class="small" id="leads-antal" style="margin-left:auto;color:var(--bl-3)"></span>
@@ -590,10 +590,10 @@
           <div class="dbox">
             <div class="adm-verktyg">
               <input class="inp adm-sok" id="fam-sok" type="search" placeholder="Sök namn eller e-post" aria-label="Sök familj" autocomplete="off">
-              <select class="sel" id="fam-status" aria-label="Filtrera på matchning">
+              <select class="sel" id="fam-status" aria-label="Filtrera på barnens matchning">
                 <option value="">Alla</option>
-                <option value="pending">Väntar på matchning</option>
-                <option value="matched">Matchade</option>
+                <option value="pending">Barn utan studiehjälpare</option>
+                <option value="matched">Alla barn matchade</option>
               </select>
               <span class="small" id="fam-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
@@ -1048,9 +1048,9 @@
              Läget (betalda timmar av månadens), fyra tal som visar
              familjerna bakom sig, pengarna (kommit in, väntar, går ut och
              vad som blir kvar), familjerna med Påminn på raden, och
-             månadens fakturor med månadskörningen. Pengarna räknas på
-             samma rader som Betalningar → Alla betalningar
-             (nextrum-admin-manaden.js).
+             månadskörningen. Fakturorna stod här till 2026-10-21, då
+             fakturan togs bort. Pengarna räknas på samma rader som
+             Betalningar → Alla betalningar (nextrum-admin-manaden.js).
              ============================================================ -->
         <section class="vy-sek" data-sek="manaden" hidden>
           <div class="vy-sek-topp">
@@ -1075,10 +1075,6 @@
           </div>
           <div class="vy-kort"><div class="vy-lista" id="man-lista" aria-live="polite"><div class="loading">Hämtar</div></div></div>
 
-          <div class="vy-grupp" id="man-fakturor"><h3>Fakturorna</h3><span class="vy-antal" id="man-fakturor-antal"></span></div>
-          <p class="eko-grupptext">En faktura per familj, som samlar varje pass de väljer faktura på. När månaden är slut blir den ett utkast av sig själv, natten mot den 1:a, och läggs in i Fortnox för hand: Underlag, skapa fakturan i Fortnox, och Lagd i Fortnox med numret, OCR och förfallodagen. Fortnox skickar den. Tryck på familjen för att se passen.</p>
-          <p class="kor-not" data-fakt-svar aria-live="polite" hidden></p>
-          <div class="vy-kort"><div class="vy-lista" id="man-fakt-lista"></div></div>
           <!-- Månadskörningen för sidans månad, hopfälld sedan 2026-10-06:
                schemat gör den varje natt. Rutan ritas inte om när sidan
                gör det, så en torrkörning står kvar tills någon byter
@@ -1086,7 +1082,7 @@
           <div class="vy-kort"><div class="vy-kort-kropp man-korning" id="man-korning" data-kor-ruta>
             <details class="eko-mer kor-hand">
               <summary id="man-korning-rubrik">Månadskörningen för hand</summary>
-              <p class="eko-text">Samma körning som under Betalningar → Fakturor och Löner, och den som går av sig själv varje natt: den skapar fakturautkasten och studiehjälparnas underlag för månaden i samma steg. Behövs bara för en natt som inte gick. Torrkör visar vad som skulle skapas utan att skriva något.</p>
+              <p class="eko-text">Samma körning som under Betalningar → Månadskörningen och Löner, och den som går av sig själv varje natt: den skapar studiehjälparnas underlag för månaden. Behövs bara för en natt som inte gick. Torrkör visar vad som skulle skapas utan att skriva något.</p>
               <div class="adm-verktyg">
                 <button class="btn btn-ghost btn-sm" type="button" data-kor-torr>Torrkör</button>
                 <button class="btn btn-primary btn-sm" type="button" data-kor-skapa disabled>Skapa utkast</button>
@@ -1107,16 +1103,17 @@
 
              Familjernas pengar, i sex flikar. Att göra är allt som väntar
              på er i alla månader, med knappen som gör det på raden; Alla
-             betalningar är månadens betalningar, en rad var; Fakturor är
-             flödet från fakturapass till betald faktura; Bokslut stänger
+             betalningar är månadens betalningar, en rad var;
+             Månadskörningen gör studiehjälparnas underlag; Bokslut stänger
              månaden; Köpta timmar är planerna, klippkorten och timbanken;
              Inställningar är strömbrytarna och Stripe.
 
              Studiehjälparnas underlag bor under Löner, som redan hade
-             samma rader och knappar, och månadskörningen under Fakturor,
-             där dess utkast hamnar. Gamla adresser (#ekonomi/kortbetalningar,
-             /avvikelser, /utbetalningar, /korning) leds rätt i FLYTTAT i
-             nextrum-admin.js. Allt ritas av nextrum-admin-ekonomi.js.
+             samma rader och knappar. Månadskörningen stod under Fakturor
+             till 2026-10-21, då fakturan togs bort. Gamla adresser
+             (#ekonomi/kortbetalningar, /avvikelser, /utbetalningar,
+             /fakturor) leds rätt i FLYTTAT i nextrum-admin.js. Allt ritas
+             av nextrum-admin-ekonomi.js.
              ============================================================ -->
         <section class="vy-sek" data-sek="ekonomi" hidden>
           <div class="vy-sek-topp">
@@ -1132,9 +1129,8 @@
               <span class="vy-flik-mark" id="flik-attgora-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="betalningar"
                     id="flik-betalningar" aria-controls="panel-betalningar">Alla betalningar</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
-                    id="flik-fakturor" aria-controls="panel-fakturor">Fakturor
-              <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="korning"
+                    id="flik-korning" aria-controls="panel-korning">Månadskörningen</button>
             <button class="vy-flik" type="button" role="tab" data-flik="bokslut"
                     id="flik-bokslut" aria-controls="panel-bokslut">Bokslut
               <span class="vy-flik-mark" id="flik-bokslut-mark" hidden></span></button>
@@ -1167,26 +1163,14 @@
             <p class="vy-finstilt" id="bet-fot"></p>
           </div>
 
-          <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
-               id="panel-fakturor" aria-labelledby="flik-fakturor" hidden>
-            <!-- Flödet, inte en månad: en faktura för augustis pass hanteras
-                 i september, och ska synas då. -->
-            <ol class="fakt-flode" id="fakt-steg" aria-label="Fakturornas steg"></ol>
-            <div class="eko-verktyg">
-              <input class="inp eko-sok" id="fakt-sok" type="search" placeholder="Sök familj eller fakturanummer" aria-label="Sök faktura" autocomplete="off">
-            </div>
-            <!-- Svaret från Skapa nu på en rad (2026-10-06). -->
-            <p class="kor-not" data-fakt-svar aria-live="polite" hidden></p>
-            <!-- En rad per familj och månad (2026-10-06): fakturan samlas
-                 under månaden och blir ett utkast av sig själv natten mot
-                 den 1:a. Familjens namn fäller ut passen. -->
-            <div id="fakt-lista"><div class="loading">Hämtar</div></div>
-
-            <!-- data-kor-*: samma körning står under Löner och Månadens
-                 ekonomi (2026-09-28), och en lyssnare i
-                 nextrum-admin-ekonomi.js sköter alla tre rutorna. Sedan
-                 2026-10-06 hopfälld: schemat gör den varje natt, och
-                 raderna har Skapa nu. -->
+          <!-- Månadskörningen. Fliken hette Fakturor och hade fakturorna
+               överst till 2026-10-21, då fakturan togs bort.
+               data-kor-*: samma körning står under Löner och Månadens
+               ekonomi (2026-09-28), och en lyssnare i
+               nextrum-admin-ekonomi.js sköter alla tre rutorna. Sedan
+               2026-10-06 hopfälld: schemat gör den varje natt. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="korning"
+               id="panel-korning" aria-labelledby="flik-korning" hidden>
             <div class="vy-grupp" id="kor-rubrik"><h3>Månadskörningen</h3></div>
             <div class="vy-kort"><div class="vy-kort-kropp" data-kor-ruta>
               <!-- Schemat står i cron.job, inte här: rutan frågar databasen
@@ -1194,7 +1178,7 @@
               <div id="kor-schema" class="kor-schema" aria-live="polite"><div class="loading">Hämtar</div></div>
               <details class="eko-mer kor-hand">
                 <summary>Köra den för hand</summary>
-                <p class="eko-text">Behövs bara för en natt som inte gick, eller en äldre månad som aldrig kördes. Skapa nu på en faktura gör samma sak för förra månaden. Torrkör visar vad som skulle skapas utan att skriva något, och Skapa utkast går bara efter den.</p>
+                <p class="eko-text">Behövs bara för en natt som inte gick, eller en äldre månad som aldrig kördes. Torrkör visar vad som skulle skapas utan att skriva något, och Skapa utkast går bara efter den.</p>
                 <div class="adm-verktyg">
                   <select class="sel" id="kor-period" data-kor-period aria-label="Vilken månad körningen gäller"></select>
                   <button class="btn btn-ghost btn-sm" type="button" id="kor-torr" data-kor-torr>Torrkör</button>
@@ -1202,15 +1186,15 @@
                 </div>
                 <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
                 <div id="kor-resultat" data-kor-resultat aria-live="polite"></div>
-                <p class="eko-text">Alla genomförda och rapporterade pass samlas till ett underlag per studiehjälpare, det som betalas ut den 25:e, och varje familj som valt faktura får ett fakturautkast för månaden. Andra pass betalas med kort, med kortet som reserveras och dras när rapporten är skriven eller när familjen bekräftar rapporten, och pass som hölls utan betalning räknas upp i körningen i stället för att faktureras. Ett pass som rapporteras efter körningen läggs på sin månads utkast natten efter, så länge det är ett utkast.</p>
-                <p class="eko-text">Med schemat på går den av sig själv varje natt för förra månaden: den 1:a skapar den underlagen och fakturautkasten, och resten av månaden lägger den till sena pass. Här körs den med din inloggning. Gick körningen inte står det under System → Fel i sex timmar, och en halvtimme efter körningen blir allt utom ett helt lyckat svar en uppgift.</p>
-                <p class="eko-text"><b>Skapa utkast</b> skriver underlagen och fakturorna som utkast. Ingenting skickas och ingenting betalas ut härifrån: underlaget skickas per studiehjälpare under Löner, och fakturan skickas från Fortnox.</p>
+                <p class="eko-text">Alla genomförda och rapporterade pass samlas till ett underlag per studiehjälpare, det som betalas ut den 25:e. Familjerna betalar varje pass med kort eller med timmar ur timbanken, och pass som hölls utan betalning räknas upp i körningen så att någon kan höra av sig. Ett pass som rapporteras efter körningen läggs på sin månads utkast natten efter, så länge det är ett utkast.</p>
+                <p class="eko-text">Med schemat på går den av sig själv varje natt för förra månaden: den 1:a skapar den underlagen, och resten av månaden lägger den till sena pass. Här körs den med din inloggning. Gick körningen inte står det under System → Fel i sex timmar, och en halvtimme efter körningen blir allt utom ett helt lyckat svar en uppgift.</p>
+                <p class="eko-text"><b>Skapa utkast</b> skriver underlagen som utkast. Ingenting skickas och ingenting betalas ut härifrån: underlaget skickas per studiehjälpare under Löner.</p>
                 <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
                 <div class="sum-line"><span>Utbetalning</span><span class="adm-tal">den 25:e, från banken</span></div>
                 <div class="sum-line total"><span>Pris per timme, för pass utan betalning</span><span class="adm-tal" id="kor-pris">—</span></div>
               </details>
             </div></div>
-            <p class="vy-finstilt">Beloppen går inte att ändra härifrån: de räknades av månadskörningen ur de pass som hållits, med samma pris som kortet tar. Stämmer något inte, ta bort utkastet, rätta passet och kör igen. Ingen påminnelseavgift och ingen fakturaavgift, för villkoren nämner ingen.</p>
+            <p class="vy-finstilt">Beloppen går inte att ändra härifrån: de räknades av månadskörningen ur de pass som hållits och studiehjälparens timpenning. Stämmer något inte, ta bort utkastet under Löner, rätta passet och kör igen.</p>
           </div>
 
           <!-- Bokslutet (Fas 20.2). Månadens siffror och larm ur manad_lage,
@@ -1313,7 +1297,7 @@
                 <h5>Månadskörningen <em data-kor-namn></em></h5>
                 <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
                   Samlar månadens genomförda och rapporterade pass till ett underlag per
-                  studiehjälpare, och skapar fakturautkasten för familjer som valt faktura.
+                  studiehjälpare.
                   Den går av sig själv varje natt för förra månaden; här behövs den bara för en
                   natt som inte gick. Torrkör visar vad som skulle skapas utan att skriva något.
                   Ingenting skickas och ingenting betalas ut härifrån.
@@ -2012,9 +1996,9 @@
 
           <div class="dbox" style="margin-top:20px">
             <h3>Så fungerar den</h3>
-            <p class="small">Vyn öppnas i en ny flik, med påhittade uppgifter, och båda vyerna delar samma värld: föreslå en tid som familjen, tryck på Byt till studiehjälparvyn i remsan överst och acceptera den som Sara, och byt tillbaka. Allt går att klicka på, men inget lämnar webbläsaren: inget mejl, ingen betalning och ingen AI går iväg, och inget räknas i statistiken, lönerna eller fakturorna. Världen står kvar i webbläsaren tills du trycker på Börja om, och börjar om av sig själv nästa dag.</p>
+            <p class="small">Vyn öppnas i en ny flik, med påhittade uppgifter, och båda vyerna delar samma värld: föreslå en tid som familjen, tryck på Byt till studiehjälparvyn i remsan överst och acceptera den som Sara, och byt tillbaka. Allt går att klicka på, men inget lämnar webbläsaren: inget mejl, ingen betalning och ingen AI går iväg, och inget räknas i statistiken, lönerna eller betalningarna. Världen står kvar i webbläsaren tills du trycker på Börja om, och börjar om av sig själv nästa dag.</p>
             <p class="small" style="margin-top:10px">Den visas för den som är inloggad som admin i samma webbläsare.</p>
-            <p class="small" style="margin-top:10px">Våra egna konton räknas inte heller i statistiken: Översikt och Statistik här, och drift-agentens siffror, räknar inga pass där familjen eller studiehjälparen är admin. I listorna står de som förut, och betalningar, fakturor och löner räknas som vanligt.</p>
+            <p class="small" style="margin-top:10px">Våra egna konton räknas inte heller i statistiken: Översikt och Statistik här, och drift-agentens siffror, räknar inga pass där familjen eller studiehjälparen är admin. I listorna står de som förut, och betalningar och löner räknas som vanligt.</p>
           </div>
         </section>
 
@@ -2249,8 +2233,8 @@
           <!-- ============ INSTÄLLNINGAR (Fas 6) ============
                Det som styr verksamheten men inte är kod. RUT-taket per
                år matas in här med källa — ingen skattesiffra står i
-               koden (Fas 5.3). Utan ett tak för året drar
-               faktureringen ingen RUT. -->
+               koden (Fas 5.3). Ingen RUT dras sedan Fas 14.2, och
+               fakturan, som drog den, togs bort 2026-10-21. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="installningar"
                id="panel-installningar" aria-labelledby="flik-installningar" hidden>
             <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
@@ -2280,7 +2264,8 @@
           </div>
 
           <!-- ============ AUDITLOGG (Fas 6) ============
-               Vem som ändrade vad och när: matchningar, fakturor,
+               Vem som ändrade vad och när: matchningar, fakturor (till
+               2026-10-21),
                utbetalningar, tjänster, adminbehörighet, undantag,
                kopplade rapporter och varje åtkomst till ett
                personnummer. Loggen innehåller bara id, status, belopp
@@ -2400,7 +2385,7 @@
                   <option value="matchning">Matchningar</option>
                   <option value="pass">Pass</option>
                   <option value="rapport">Rapporter</option>
-                  <option value="faktura">Fakturor</option>
+                  <option value="faktura">Fakturor (till 2026-10-21)</option>
                   <option value="utbetalning">Utbetalningar</option>
                   <option value="tjanst">Tjänster</option>
                   <option value="rabattkod">Rabattkoder</option>
@@ -2521,40 +2506,40 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=1b401ac9"></script>
+<script src="nextrum-config.js?v=a1535527"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=97cbce73"></script>
+<script src="nextrum-app.js?v=0b805164"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=4cd06199"></script>
-<script src="nextrum-arbetsyta.js?v=d5f36b47"></script>
+<script src="nextrum-studie.js?v=d8530c80"></script>
+<script src="nextrum-arbetsyta.js?v=91456198"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
-<script src="nextrum-betalning.js?v=3a28925a"></script>
+<script src="nextrum-betalning.js?v=60e55cea"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=ff23328e"></script>
-<script src="nextrum-admin-detalj.js?v=6710db5e"></script>
-<script src="nextrum-admin-oversikt.js?v=ed84102c"></script>
-<script src="nextrum-admin-kunder.js?v=d24d5089"></script>
-<script src="nextrum-admin-rekrytering.js?v=9006e4c3"></script>
+<script src="nextrum-admin-karna.js?v=885c9aeb"></script>
+<script src="nextrum-admin-detalj.js?v=4f720586"></script>
+<script src="nextrum-admin-oversikt.js?v=4675189b"></script>
+<script src="nextrum-admin-kunder.js?v=c59f9f8c"></script>
+<script src="nextrum-admin-rekrytering.js?v=b4c66c4f"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
-<script src="nextrum-admin-drift.js?v=da4828c4"></script>
-<script src="nextrum-admin-ekonomi.js?v=ed5a83af"></script>
-<script src="nextrum-admin-manaden.js?v=8daec1e5"></script>
+<script src="nextrum-admin-drift.js?v=d2b8b595"></script>
+<script src="nextrum-admin-ekonomi.js?v=26746710"></script>
+<script src="nextrum-admin-manaden.js?v=51040ed6"></script>
 <script src="nextrum-admin-loner.js?v=2c10dffa"></script>
-<script src="nextrum-admin-koder.js?v=87ddf501"></script>
-<script src="nextrum-admin-tjanster.js?v=7fcafa26"></script>
-<script src="nextrum-admin-system.js?v=0d7e538d"></script>
-<script src="nextrum-admin-behorighet.js?v=640897ae"></script>
-<script src="nextrum-admin-automationer.js?v=0fb655ba"></script>
+<script src="nextrum-admin-koder.js?v=b8bc88c4"></script>
+<script src="nextrum-admin-tjanster.js?v=84bd81c9"></script>
+<script src="nextrum-admin-system.js?v=9aeaacb2"></script>
+<script src="nextrum-admin-behorighet.js?v=49f2054a"></script>
+<script src="nextrum-admin-automationer.js?v=f8750cf7"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
-<script src="nextrum-admin-radera.js?v=12512614"></script>
+<script src="nextrum-admin-radera.js?v=85c68990"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
+<script src="nextrum-admin-konsol.js?v=0b10c92f"></script>
 <script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-admin.js?v=b811b085"></script>
+<script src="nextrum-admin.js?v=71c22cb0"></script>
 </body>
 </html>

@@ -580,7 +580,7 @@ const NX = (function () {
 
        Här stod tre barn = pris + extra * 2, alltså 517 kr mot
        systemets 448. En prissida som lovar ett annat belopp än
-       fakturan är en diskussion i första samtalet — även när den,
+       kassan är en diskussion i första samtalet — även när den,
        som här, lovade för mycket. */
     const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
     $$('[data-stat="extra-barn"]').forEach(el => el.textContent = kr(extra));

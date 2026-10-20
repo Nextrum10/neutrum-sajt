@@ -1074,8 +1074,7 @@ const UNDERLAG = {
   utan_tider: 1,
   uteblivna: [{ datum: '2025-10-07', amne: 'Matematik' }],
   avbokade: [{ datum: '2025-10-02', av: 'studiehjälparen', skal: 'forhinder' }],
-  obetalda: [{ datum: '2025-09-23' }],
-  sena_fakturor: [{ period: '2025-10-01', forfaller: '2025-11-10', betald: '2025-11-15' }]
+  obetalda: [{ datum: '2025-09-23' }]
 };
 
 function merAdmin(W) {
@@ -1144,7 +1143,7 @@ async function provaAdminvynsKnappar(webb) {
     prova('garanti: oklara ämnen, uteblivna och avbokade pass, betalningarna och det vi bedömer',
       /NO \/ Fysik \/ Kemi \/ Biologi · 1 h/.test(und) && /Garantin gäller inte längre/.test(und)
       && /av studiehjälparen · förhinder/.test(und) && /passet är inte betalt/.test(und)
-      && /Fakturan för oktober 2025/.test(und) && /markerad betald 15 november 2025/.test(und)
+      && !/Fakturan/.test(und)
       && /Bedöms av er/.test(und) && /1 pass saknar tider/.test(und), und.slice(-1200));
     await page.locator('.dp .dp-underlag').scrollIntoViewIfNeeded().catch(() => {});
     await bild(page, 'admin-garanti-underlag', '.dp');

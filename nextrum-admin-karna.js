@@ -34,6 +34,9 @@ const NXAdmin = (function () {
     elever: {},        // parent_id → [elevrader]
     tutorProfiler: {}, // id → tutor_profiles-rad
     leads: [], ansokningar: [], kontakt: [], bokningar: [], bibliotek: [],
+    /* 2026-10-21: anmälningarna som flyttats till familjen, och den första
+       per familj (parent_id → raden). */
+    intagna: [], intagenFör: {},
     /* Fas 16.1: mejlen till den som sökt jobb, per ansökan. */
     ansokanUtskick: {}, ansokanUtskickFel: null, provForsok: {},
     /* 2026-10-05: hur långt den inloggade har sett anmälningarna och
@@ -41,7 +44,7 @@ const NXAdmin = (function () {
        öppnade sektionen. null: tabellen finns inte, och läget Ny räknas
        som förut. */
     sett: null, nyttNu: { leads: new Set(), ansokningar: new Set() }, settSek: null,
-    fakturor: [], utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
+    utbetalningar: [], chattar: [], klientfel: [], notisfel: [],
     integrationer: [], pris: null, tjanster: [], rabattkoder: [], saknasV13: [],
     /* 2026-10-15: familjerabatterna, och vilken familj som har vilken
        (parent_id → raden). Bara en superadmin läser dem. */
@@ -247,9 +250,11 @@ const NXAdmin = (function () {
     return '<span class="adm-status' + (klass ? ' ' + klass : '') + '">' + esc(text) + '</span>';
   }
 
+  /* matched betyder att familjen tagits in (eleven skapad), inte att en
+     studiehjälpare valts: det står på barnet (2026-10-21). */
   const LEAD_LAGE = {
     new: ['Ny', 'ar-ny'], contacted: ['Kontaktad', 'ar-vantar'],
-    matched: ['Matchad', 'ar-klar'], declined: ['Avböjd', '']
+    matched: ['Intagen', 'ar-klar'], declined: ['Avböjd', '']
   };
   const ANS_LAGE = {
     new: ['Ny', 'ar-ny'], contacted: ['Kontaktad', 'ar-vantar'],
@@ -276,10 +281,6 @@ const NXAdmin = (function () {
     ombokat: ['Ombokat', ''], ingen_hjalpare: ['Ingen studiehjälpare', ''],
     familjen_avslutar: ['Familjen avslutar', ''], annat: ['Annat', '']
   };
-  const FAKT_LAGE = {
-    utkast: ['Utkast', ''], skickad: ['Skickad', 'ar-vantar'], betald: ['Betald', 'ar-klar'],
-    forfallen: ['Förfallen', 'ar-ny'], makulerad: ['Makulerad', '']
-  };
   const UTB_LAGE = {
     utkast: ['Utkast', ''], godkand: ['Godkänd', 'ar-vantar'],
     utbetald: ['Utbetald', 'ar-klar'], misslyckad: ['Misslyckad', 'ar-ny']
@@ -289,7 +290,7 @@ const NXAdmin = (function () {
      två kopior av samma ord hade glidit isär. */
   const KORT_LAGE = {
     ingen: 'Ej betald', vantar: 'Väntar', betald: 'Betald', aterbetald: 'Återbetald',
-    tvist: 'Tvist', misslyckad: 'Misslyckad', faktura: 'Faktura'
+    tvist: 'Tvist', misslyckad: 'Misslyckad'
   };
   const TILLAGG_LAGE = {
     vantar: ['Obetalt', 'ar-ny'], betald: ['Betalt', 'ar-klar'], misslyckad: ['Misslyckades', 'ar-ny'],
@@ -495,9 +496,9 @@ const NXAdmin = (function () {
     const full = !S.behorighet || S.behorighet.superadmin;
     const bara = fråga => full ? fråga() : Promise.resolve({ data: [], error: null });
 
-    const [leads, ans, kontakt, bok, fakt, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, flaggor, tvister, fsparr, kk, ansUt, tillagg, bank, prov,
-           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer] = await Promise.all([
+    const [leads, ans, kontakt, bok, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
+           upd, uppg, rt, audit, bib, flaggor, tvister, kk, ansUt, tillagg, bank, prov,
+           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -505,10 +506,6 @@ const NXAdmin = (function () {
          sedan 2026-09-28: Månadens ekonomi räknar vad ett obetalt pass
          kostar, med samma regel som familjens vy (NXBetalning.passpris). */
       hämtaAlla('bookings', 'id, parent_id, tutor_id, student_id, subject, tjanst, format, wanted_date, wanted_time, duration_min, status, attendance, created_at, uppdrag_id, avbokad_at, avbokad_av, avbokningsskal, betalning_status, fakturerbar, begart_ore, betalt_ore, ersattning_ore, avgift_ore, aterbetald_ore, betald_at, stripe_payment_intent_id, stripe_transfer_id, stripe_charge_id, stripe_avgift_ore, stripe_netto_ore, stripe_skarp, klippkort_id, antal_barn, rabatt_ore, timpris_ore, extra_ore, startrabatt, rabattkod', nyastFörst('wanted_date')),
-      /* Raderna följer med (Fas 14.6): de är underlaget admin lägger in
-         i Fortnox, och vilket pass som står på vilken faktura. */
-      bara(() => hämtaAlla('invoices', '*, invoice_lines(id, booking_id, beskrivning, minuter, pris_per_timme_ore, belopp_ore)',
-        nyastFörst('period'))),
       bara(() => hämtaAlla('payouts', '*', nyastFörst('period'))),
       bara(() => supa.from('messages').select('parent_id, tutor_id, sender_id, body, created_at, read_at').order('created_at', { ascending: false }).limit(400)),
       bara(() => supa.from('klientfel').select('*').order('created_at', { ascending: false }).limit(100)),
@@ -539,17 +536,14 @@ const NXAdmin = (function () {
       /* Fas 14.2: spärren "ingen betalning, inget pass". En rad i
          flaggor, som notismejlen. Slås om under Ekonomi →
          Kortbetalningar, där det den styr också syns. */
-      /* Fas 14.6: och strömbrytaren för faktura som betalsätt, samma
-         sort. Båda i en fråga. */
-      /* Fas 16.1: och erbjudandena, samma sort. */
+      /* Fas 16.1: och erbjudandena, samma sort. (Strömbrytaren faktura
+         lästes här från Fas 14.6 till 2026-10-21.) */
       /* 2026-09-30: och timmen på köpet för ett tips, samma sort.
          2026-10-13: och bonusen för tips, som står under Koder. */
-      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'faktura', 'erbjudanden', 'tipstimme', 'tipsbonus']),
+      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'erbjudanden', 'tipstimme', 'tipsbonus']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
       bara(() => hämtaAlla('stripe_tvister', '*', nyastFörst('skapad'))),
-      /* Fas 14.6: familjer som inte får välja faktura. */
-      bara(() => hämtaAlla('faktura_sparr', 'parent_id, satt_at', null, 'parent_id')),
       /* Fas 16.1: köpta planer och klippkort, med timmarna räknade i
          databasen och vad som går tillbaka om familjen slutar i dag. */
       bara(() => hämtaAlla('klippkort_saldo', '*', nyastFörst('created_at'))),
@@ -605,10 +599,21 @@ const NXAdmin = (function () {
          vilken familj som har vilken. Fliken under Tjänster och familjens
          panel ritar dem. En rad per familj som någon gång haft en. */
       bara(() => supa.from('familjerabatter').select('*').order('skapad', { ascending: false })),
-      bara(() => hämtaAlla('familjens_rabatt', 'parent_id, kod, andrad_at, andrad_av', null, 'parent_id'))
+      bara(() => hämtaAlla('familjens_rabatt', 'parent_id, kod, andrad_at, andrad_av', null, 'parent_id')),
+      /* 2026-10-21: anmälningarna som flyttats till familjen (intag_lead),
+         med källan, koden och meddelandet. Koder räknar dem, och familjens
+         panel säger när familjen togs in och varifrån den kom. */
+      supa.from('intagna_anmalningar').select('*').order('intagen_at', { ascending: false })
     ]);
 
     S.leads = leads.data || [];
+    /* Saknas tabellen (migrationen anmalan_flyttas_till_familjen är inte
+       körd) har ingen anmälan flyttats, och allt står som förut. */
+    S.intagna = intagna.data || [];
+    S.intagenFör = {};
+    S.intagna.slice().reverse().forEach(r => {
+      if (r.parent_id && !S.intagenFör[r.parent_id]) S.intagenFör[r.parent_id] = r;
+    });
     S.bibliotek = bib.data || [];
     S.ansokningar = ans.data || [];
     /* Ett fel (tabellen saknas, migrationen admin_sett är inte körd) gör
@@ -629,7 +634,6 @@ const NXAdmin = (function () {
     });
     S.kontakt = kontakt.data || [];
     S.bokningar = bok.data || [];
-    S.fakturor = fakt.data || [];
     S.utbetalningar = utb.data || [];
     S.klientfel = fel.data || [];
     S.notisfel = notis.data || [];
@@ -646,7 +650,6 @@ const NXAdmin = (function () {
        av. Kortet säger det i stället för att visa ett läge det inte vet. */
     S.kortsparr = (flaggor.data || []).find(f => f.kod === 'kortsparr') || null;
     S.kortsparrFel = flaggor.error ? felText(flaggor.error) : null;
-    S.fakturaFlagga = (flaggor.data || []).find(f => f.kod === 'faktura') || null;
     S.erbFlagga = (flaggor.data || []).find(f => f.kod === 'erbjudanden') || null;
     S.tipsFlagga = (flaggor.data || []).find(f => f.kod === 'tipstimme') || null;
     S.bonusFlagga = (flaggor.data || []).find(f => f.kod === 'tipsbonus') || null;
@@ -672,8 +675,6 @@ const NXAdmin = (function () {
     S.tipskoder.forEach(k => { S.tipskod[k.kod] = k; });
     S.klippkort = kk.data || [];
     S.klippkortFel = kk.error ? felText(kk.error) : null;
-    S.fakturaSparr = new Set((fsparr.data || []).map(r => r.parent_id));
-    S.fakturaSparrFel = fsparr.error ? felText(fsparr.error) : null;
     /* Ett läsfel är inte "inga tvister": rutan säger att den inte
        kunde läsa, i stället för att se lugn ut. */
     S.tvister = tvister.data || [];
@@ -711,8 +712,8 @@ const NXAdmin = (function () {
     }
   }
 
-  /* Passunderlaget (Fas 2): varje genomfört pass, och om det kan
-     faktureras — har det en rapport, är det undantaget, är det redan
+  /* Passunderlaget (Fas 2): varje genomfört pass, och om det räknas —
+     har det en rapport, är det undantaget, är det redan
      med. Samma vy som månadskörningen väljer ur, så att avvikelserna
      här är exakt de pass körningen hoppar över.
 
@@ -973,8 +974,8 @@ const NXAdmin = (function () {
 
   /* Skriver bara om raden fortfarande har värdena i villkor (2026-10-01).
      Månadskörningen går varje natt och lägger sent rapporterade pass på
-     månadens utkast, så ett underlag eller en faktura kan ha vuxit sedan
-     sidan hämtades. Godkänns eller skickas det då, gäller beslutet ett
+     månadens utkast, så ett underlag kan ha vuxit sedan sidan hämtades.
+     Godkänns det då, gäller beslutet ett
      belopp ingen har sett. Svarar true, false vid fel, och 'ändrad' när
      raden inte längre har värdena: en uppdatering som inte träffar något
      ger inget fel, bara noll rader. */
@@ -1075,7 +1076,7 @@ const NXAdmin = (function () {
   };
 
   return {
-    ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
+    ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     gmailAdress, gmailLänk, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
     kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,

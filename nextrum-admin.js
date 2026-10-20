@@ -16,7 +16,7 @@
 
    2. Kopplingarna görs lokalt, inte i frågan. profiles, students
       och tutor_profiles hämtas en gång var och läggs i kartor;
-      bokningar och fakturor slås ihop mot dem i webbläsaren.
+      bokningar och underlag slås ihop mot dem i webbläsaren.
 
       Anledningen är konkret: bookings har tre främmande nycklar
       mot profiles (parent_id, tutor_id, created_by), och PostgREST
@@ -55,7 +55,6 @@
   const ritaBokningar = (...a) => NXAdmin.rita.ritaBokningar(...a);
   const ritaChattar = (...a) => NXAdmin.rita.ritaChattar(...a);
   const ritaElever = (...a) => NXAdmin.rita.ritaElever(...a);
-  const ritaFakturor = (...a) => NXAdmin.rita.ritaFakturor(...a);
   const ritaFamiljer = (...a) => NXAdmin.rita.ritaFamiljer(...a);
   const ritaFel = (...a) => NXAdmin.rita.ritaFel(...a);
   const ritaIntegrationer = (...a) => NXAdmin.rita.ritaIntegrationer(...a);
@@ -167,11 +166,6 @@
        ägs matchningen av eleven, och profiles.matched_tutor_id
        skrivs av en trigger. Se kommentaren i ritaFamiljer. */
 
-    /* Fakturans läge hade en rullgardin här. Sedan Fas 14.6 har varje
-       läge sin egen knapp under Betalningar → Fakturor (Lagd i Fortnox,
-       Betald, Makulera), för Skickad utan fakturanumret i Fortnox och
-       förfallodag är en rad ingen kan följa upp i Fortnox. */
-
     if (el.dataset && el.dataset.utb) {
       const u = S.utbetalningar.find(x => x.id === el.dataset.utb);
 
@@ -279,9 +273,6 @@
           + (b.betalning_status === 'betald' || b.betalning_status === 'tvist'
             ? 'Passet är betalt, och pengarna går inte tillbaka av sig själva — återbetala '
               + 'under Betalningar → Att göra.'
-            : b.betalning_status === 'faktura'
-            ? 'Familjen betalar passet mot faktura. Står det redan på en faktura i Fortnox ska raden '
-              + 'krediteras där; annars kommer det inte med på nästa faktura.'
             : 'Passet är inte betalt, så det finns inget att betala tillbaka.'),
         not: 'Både familjen och studiehjälparen får ett mejl om att passet är avbokat och varför.'
       });
@@ -312,8 +303,8 @@
        det andra skickar. Ett mejl som lämnat huset går inte att
        ångra, så det ska gå att läsa igenom först.
 
-       Bara underlag sedan Fas 14.6. Fakturor skapas och skickas i
-       Fortnox, och faktura-utskick nekar dem. */
+       Bara underlag sedan Fas 14.6, och fakturor finns inte sedan
+       2026-10-21: faktura-utskick nekar allt annat än ett underlag. */
     const skicka = e.target.closest('[data-skicka]');
     if (skicka) {
       const id = skicka.dataset.id;
@@ -354,7 +345,7 @@
    ['#bok-sok', ritaBokningar], ['#bok-status', ritaBokningar], ['#bok-nar', ritaBokningar],
    ['#bok-familj', ritaBokningar]
    /* Betalningar (2026-09-29): lägena är knappar i sidan, och söken
-      (#kort-sok, #fakt-sok) sköts i nextrum-admin-ekonomi.js, med
+      (#kort-sok) sköts i nextrum-admin-ekonomi.js, med
       listan stilla (NXStudie.hållLista). Underlagen söks under Löner. */
   ].forEach(([sel, fn]) => {
     const el = $(sel);
@@ -439,11 +430,12 @@
     'system/tjanster': 'katalog/tjanster',
     'system/rabattkoder': 'katalog/rabattkoder',
     /* Betalningar gjordes om 2026-09-29. Underlagen bor under Löner,
-       månadskörningen under Fakturor, och avvikelserna under Att göra. */
+       och avvikelserna under Att göra. Fakturor blev Månadskörningen när
+       fakturan togs bort (2026-10-21). */
     'ekonomi/kortbetalningar': 'ekonomi/betalningar',
     'ekonomi/avvikelser': 'ekonomi/attgora',
     'ekonomi/utbetalningar': 'loner',
-    'ekonomi/korning': 'ekonomi/fakturor'
+    'ekonomi/fakturor': 'ekonomi/korning'
   };
 
   /* ------------------------------------------------------------
@@ -777,7 +769,7 @@
      passera. Var femte minut, och alltid direkt när fliken kommer
      fram, räknas raderna om på gamla viset.
 
-     Bara de tre borden som kommer utifrån. Fakturor och pass ändras
+     Bara de tre borden som kommer utifrån. Underlag och pass ändras
      av oss själva, och de raderna ritas redan om när vi ändrar dem.
      ------------------------------------------------------------ */
   (function startaBevakning() {
@@ -816,7 +808,7 @@
     }
 
     /* Hämta om de tre listorna och rita om allt som räknar på dem.
-       hämtaAllt() hade hämtat om hela vyn, inklusive fakturor och
+       hämtaAllt() hade hämtat om hela vyn, inklusive underlag och
        matchningsunderlag — fyra gånger så mycket arbete för en rad
        som tillkommit.
 
@@ -1073,7 +1065,6 @@
       ritaLektioner();
       if (full) await hämtaAnalys();
       ritaStatistik();
-      ritaFakturor();
       ritaUtbetalningar();
       ritaKortbetalningar();
       ritaAvvikelser();

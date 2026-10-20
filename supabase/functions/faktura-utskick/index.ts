@@ -4,14 +4,11 @@
 // Skickar ett ersättningsunderlag till en studiehjälpare. Anropas av
 // knappen Skicka underlag under Ekonomi → Utbetalningar.
 //
-// FAKTUROR SKICKAS INTE HÄRIFRÅN LÄNGRE (Fas 14.6). Funktionen skickade
-// förut också familjens månadsfaktura, som ett eget mejl från Nextrum
-// med texten "Ni betalar alltid i efterskott". Fas 14.2 rev
-// månadsfakturan, och Fas 14.6 gav familjen faktura som val igen, men
-// nu skapas och skickas fakturan i Fortnox (Fas 14.6 byggde det för
-// Wint), med ett fakturanummer därifrån. Ett andra fakturamejl härifrån hade
-// gett familjen två fakturor för samma pass, med olika nummer. Ett
-// anrop med typ = 'faktura' nekas därför, med ett besked om vägen dit.
+// INGA FAKTUROR. Funktionen skickade förut också familjens månadsfaktura.
+// Fas 14.2 rev månadsfakturan, Fas 14.6 gav familjen faktura som val igen
+// (skapad och skickad i Fortnox, aldrig härifrån), och 2026-10-21 togs
+// fakturan bort helt (fakturan_tas_bort). Ett anrop med en annan typ än
+// 'utbetalning' nekas.
 //
 // Namnet står kvar. Det är adressen adminvyn anropar, och ett nytt
 // namn hade varit en ny funktion i driften medan den gamla låg kvar
@@ -153,10 +150,7 @@ Deno.serve(async (req) => {
     // ---------- 2. Vad ska skickas? ----------
     const kropp = await req.json().catch(() => ({}));
     if (kropp?.typ !== 'utbetalning') {
-      return json({
-        error: 'Fakturor skapas och skickas i Fortnox, inte härifrån. Lägg in fakturan där, och skriv in '
-          + 'fakturanumret från Fortnox under Ekonomi → Fakturor.',
-      }, 409);
+      return json({ error: 'Härifrån skickas bara underlag till studiehjälparna. Nextrum skickar inga fakturor.' }, 409);
     }
     const id = String(kropp?.id ?? '').trim();
     const torrkorning = kropp?.torrkorning === true;

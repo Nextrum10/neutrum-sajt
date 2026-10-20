@@ -20,7 +20,7 @@
    föreslå en tid som familjen, byt vy i remsan och acceptera den som
    studiehjälparen. Inga mejl, inga betalningar, ingen AI: edge-
    funktionerna svarar att det inte görs här. Inget konto behövs, och
-   inget hamnar i databasen: inte i statistiken, lönerna, fakturorna,
+   inget hamnar i databasen: inte i statistiken, lönerna, betalningarna,
    auditloggen eller hos en familj.
 
    Vem som får se den: den som är inloggad som admin i samma webbläsare.
@@ -297,7 +297,7 @@ window.NXForhandsvisning = (function () {
       ],
       flaggor: [
         { kod: 'kortsparr', aktiv: false }, { kod: 'erbjudanden', aktiv: true },
-        { kod: 'faktura', aktiv: true }, { kod: 'tipstimme', aktiv: true },
+        { kod: 'tipstimme', aktiv: true },
         /* Kortet reserveras (kortet_reserveras, 2026-10-13): på här, så att
            valet syns i förhandsvisningen. I driften står det av tills
            villkoren är klara. */
@@ -326,8 +326,6 @@ window.NXForhandsvisning = (function () {
         { kod: 'klipp60', sort: 'klippkort', namn: 'Fyll timbanken, 60 timmar', timmar: 60, timmar_pa_kopet: 0, rabatt_procent: 0, giltig_manader: 6, ordning: 60 },
         { kod: 'klipp100', sort: 'klippkort', namn: 'Fyll timbanken, 100 timmar', timmar: 100, timmar_pa_kopet: 0, rabatt_procent: 0, giltig_manader: 6, ordning: 70 }
       ],
-      invoices: [],
-      invoice_lines: [],
       betygsgarantier: [],
       pass_tillagg: [],
       timbank_uttag: [],
@@ -363,7 +361,7 @@ window.NXForhandsvisning = (function () {
      tillbaka till den och världen ändrats i en annan. Den börjar om med
      Börja om, varje ny dag (datumen räknas från den dag den skapades)
      och när världen i den här filen ändras (fingeravtrycket). Inget av
-     det når databasen: ingen statistik, ingen lön och ingen faktura. */
+     det når databasen: ingen statistik, ingen lön och ingen betalning. */
   var LAGRAD = 'nx-forhandsvisning-varld';
   function fingeravtryck(t) {
     var h = 0x811c9dc5;
@@ -468,7 +466,7 @@ window.NXForhandsvisning = (function () {
       case 'lesson_reports': case 'homework': case 'study_plans': case 'progress_items':
       case 'progress_historik': case 'student_notes': case 'niva_forsok': case 'barn_meddelanden':
         return barn.indexOf(r.student_id) !== -1;
-      case 'rapport_bekraftelser': case 'invoices': case 'betygsgarantier': case 'timbank_uttag':
+      case 'rapport_bekraftelser': case 'betygsgarantier': case 'timbank_uttag':
         return roll === 'foralder' ? r.parent_id === JAG : false;
       case 'barn_passforslag': return roll === 'foralder' && r.parent_id === JAG;
       /* Kortet (kortet_reserveras): familjen läser sina reservationer, och
@@ -597,11 +595,10 @@ window.NXForhandsvisning = (function () {
   }
 
   /* Inbäddat i select: nivaer(...) och biblioteksmaterial(...) på en
-     läxa, invoice_lines(...) på en faktura. */
+     läxa. */
   var INBÄDDAT = {
     nivaer: { från: 'niva_id' },
-    biblioteksmaterial: { från: 'bibliotek_id' },
-    invoice_lines: { till: 'invoice_id' }
+    biblioteksmaterial: { från: 'bibliotek_id' }
   };
   function bädda(rader, select) {
     if (!select || select.indexOf('(') === -1) return rader;
@@ -613,8 +610,7 @@ window.NXForhandsvisning = (function () {
         var namn = m[1], regel = INBÄDDAT[namn];
         if (!regel) return;
         var tabell = tabellen(namn);
-        if (regel.från) ut[namn] = r[regel.från] ? (tabell.find(function (x) { return x.id === r[regel.från]; }) || null) : null;
-        else ut[namn] = tabell.filter(function (x) { return x[regel.till] === r.id; });
+        ut[namn] = r[regel.från] ? (tabell.find(function (x) { return x.id === r[regel.från]; }) || null) : null;
       });
       return ut;
     });
@@ -797,11 +793,8 @@ window.NXForhandsvisning = (function () {
 
   var RPC = {
     mina_behorigheter: function () { return { admin: false, superadmin: false, behorigheter: [] }; },
-    /* obetalda_fran (2026-10-16): före världens pass, så att ett obetalt
-       pass säger att det kommer med på fakturan, som för en familj som
-       godkänt villkoren innan den bokade. */
     mitt_villkorslage: function () {
-      return { version: '2026-10-12', godkant_at: tid(0, '08:00'), tidigare: null, obetalda_fran: tid(-31, '08:00') };
+      return { version: '2026-10-12', godkant_at: tid(0, '08:00'), tidigare: null };
     },
     godkann_villkor: function () { return true; },
     mina_handlingar: function () { return []; },
@@ -819,7 +812,6 @@ window.NXForhandsvisning = (function () {
     /* Familjens rabatt per timme (familjerabatter, 2026-10-15): den påhittade
        familjen har ingen, och priset vid knappen är katalogens. */
     min_familjerabatt: function () { return 0; },
-    faktura_mojlig: function () { return true; },
     mina_barnkonton: function () {
       return [{ barn_id: ALVA, anvandarnamn: 'alva.a', barn_aktiv: true, visa_rapporter: true,
                 vardnadshavare_godkand_at: tid(-20, '20:00'), senast_inloggad: tid(-1, '18:40') }];
@@ -867,7 +859,6 @@ window.NXForhandsvisning = (function () {
         return { __fel: [403, '42501', 'Kortet väljs innan passet hålls. Efter passet betalar ni som förut.'] };
       }
       if (r && r.lage === 'dragen') return { __fel: [403, '42501', 'Passet är redan betalt med kortet.'] };
-      if (b.betalning_status === 'faktura') b.betalning_status = 'ingen';
       var fullt = Math.round((Number(b.timpris_ore || 0) + (Number(b.antal_barn || 1) > 1 ? Number(b.extra_ore || 0) : 0))
         * Number(b.duration_min || 60) / 60);
       var kostar = b.timpris_ore == null || Number(b.rabatt_ore || 0) < fullt;
@@ -1152,7 +1143,7 @@ window.NXForhandsvisning = (function () {
     b.textContent = 'Förhandsvisning';
     text.appendChild(b);
     text.appendChild(document.createTextNode(' Du är ' + vem + '. Påhittat och sparat bara i din webbläsare: '
-      + 'inget skickas, och inget räknas i statistik, lön eller faktura.'));
+      + 'inget skickas, och inget räknas i statistik, lön eller betalningar.'));
     var knappar = document.createElement('span');
     knappar.className = 'nx-fv-knappar';
     /* Samma värld i den andra vyn: föreslå som familjen, byt, svara som

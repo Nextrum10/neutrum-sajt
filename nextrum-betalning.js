@@ -1,5 +1,5 @@
 /* ============================================================
-   NEXTRUM — fakturor och utbetalningar
+   NEXTRUM — betalningar och utbetalningar
    Delas av foralder.html, larare.html och admin.html. Familjen ser vad
    de ska betala, studiehjälparen vad de ska få. Samma pass, två sidor
    av samma rad i bookings.
@@ -15,7 +15,7 @@
 window.NXBetalning = (function () {
   'use strict';
 
-  var esc = NX.esc, datumText = NX.datumText;
+  var esc = NX.esc;
 
   /* ---------- pengar ----------
      Allt räknas i ören och blir kronor först här. Decimalerna visas
@@ -37,7 +37,7 @@ window.NXBetalning = (function () {
   }
 
   /* ---------- perioden ----------
-     Fakturan gäller en månad, och den månaden är det enda datum som
+     Ett underlag gäller en månad, och den månaden är det enda datum som
      betyder något för den som läser. */
   var MANADER = NX.MANADER;
   function periodText(iso) {
@@ -50,15 +50,8 @@ window.NXBetalning = (function () {
 
   /* ---------- lägena ----------
      Klasserna är .lage-familjen som redan finns i nextrum-vy.css, så
-     en faktura ser ut som ett pass och en utbetalning som en läxa.
-     Inget nytt formspråk för något som redan har ett. */
-  var FAKTURA = {
-    utkast:     { text: 'Utkast',    klass: 'ej' },
-    skickad:    { text: 'Att betala', klass: 'pa' },
-    betald:     { text: 'Betald',    klass: 'klar' },
-    forfallen:  { text: 'Förfallen', klass: 'sen' },
-    makulerad:  { text: 'Makulerad', klass: 'avbokad' }
-  };
+     en utbetalning ser ut som en läxa. Inget nytt formspråk för något
+     som redan har ett. (Fakturans lägen stod här till 2026-10-21.) */
   /* Sett av studiehjälparen, på lönespecifikationen. Ett utkast är ett
      underlag som Nextrum inte gått igenom än, och det är vad det heter
      för den som väntar på pengarna. Adminvyn har egna ord (UTB_LAGE). */
@@ -69,38 +62,11 @@ window.NXBetalning = (function () {
     misslyckad: { text: 'Gick inte igenom', klass: 'sen' }
   };
 
-  /* En faktura är förfallen när datumet passerat och den inte är
-     betald. Det räknas fram här i stället för att sparas, av samma
-     skäl som en läxa blir försenad utan att någon skriver om raden:
-     ett datum som passerar ska inte kräva en databaskörning. */
-  function fakturaLage(f) {
-    if (f.status === 'skickad' && f.forfaller && f.forfaller < NX.isoFor(new Date())) {
-      return 'forfallen';
-    }
-    return f.status;
-  }
-
-  /* OCR-numrets kontrollsiffra (Fas 19.6), 10-modulen som Bankgirot
-     använder. Samma regel som intern.ocr_giltigt() i databasen, som är
-     den som faktiskt nekar: den här finns för att admin ska få beskedet
-     i rutan, inte som rått databasfel. */
-  function ocrGiltigt(s) {
-    s = String(s || '');
-    if (!/^[0-9]{2,25}$/.test(s)) return false;
-    var summa = 0;
-    for (var i = 1; i <= s.length; i++) {
-      var d = Number(s.charAt(s.length - i));
-      if (i % 2 === 0) { d *= 2; if (d > 9) d -= 9; }
-      summa += d;
-    }
-    return summa % 10 === 0;
-  }
-
   /* ---------- vad ett pass kostar ----------
      Familjens pris för ett pass i ören, för så många minuter som ska
      betalas: max(avrundat m/60 × (timpris + tillägg för fler barn)
      − rabatt, 0). Samma regel som familjebelopp() i _delad/pris.ts,
-     som kortet och fakturan räknas med, och som ej_betalt i
+     som kortet räknas med, och som ej_betalt i
      avvikelser_rader().
 
      Låg förut i studievyn (prisFör). Sedan 2026-09-28 räknar adminvyns
@@ -126,27 +92,6 @@ window.NXBetalning = (function () {
     var perTimme = timme + ((b.antal_barn || 1) > 1 ? extra : 0);
     var rabatt = Math.max(Number(b.rabatt_ore != null ? b.rabatt_ore : (u && u.rabatt_ore) || 0), 0);
     return Math.max(Math.round(perTimme * Number(minuter) / 60) - rabatt, 0);
-  }
-
-  /* ---------- en faktura ----------
-     atgarder() får fakturan och returnerar knapparnas HTML. */
-  function fakturaRad(f, opts) {
-    var o = opts || {};
-    var l = FAKTURA[fakturaLage(f)] || { text: f.status, klass: '' };
-    var sen = fakturaLage(f) === 'forfallen';
-
-    return '<div class="bet">'
-      + '<span class="bet-nar"><b>' + esc(periodText(f.period)) + '</b>'
-      + (f.forfaller
-          ? '<span class="' + (sen ? 'sen' : '') + '">Betalas ' + esc(datumText(f.forfaller)) + '</span>'
-          : '')
-      + '</span>'
-      + '<span class="bet-vad"><b>' + esc(kronor(f.belopp_ore)) + '</b>'
-      + (o.under ? '<span>' + esc(o.under) + '</span>' : '')
-      + '</span>'
-      + '<span class="bet-atg"><span class="lage ' + l.klass + '">' + esc(l.text) + '</span>'
-      + (o.atgarder || '') + '</span>'
-      + '</div>';
   }
 
   /* ---------- lönespecifikationen (2026-09-28) ----------
@@ -293,9 +238,9 @@ window.NXBetalning = (function () {
     return m;
   }
 
-  /* ---------- det som ännu inte fakturerats ----------
+  /* ---------- det som ännu inte står på ett underlag ----------
      Den viktigaste siffran för båda parter: vad har vuxit fram den
-     här månaden? Den är en uppskattning tills fakturan är skapad,
+     här månaden? Den är en uppskattning tills underlaget är skapat,
      och det ska stå i texten — inte antydas. */
   function pagaende(opts) {
     var o = opts || {};
@@ -323,8 +268,7 @@ window.NXBetalning = (function () {
 
   return {
     kronor: kronor, timmar: timmar, periodText: periodText,
-    FAKTURA: FAKTURA, UTBETALNING: UTBETALNING, fakturaLage: fakturaLage,
-    fakturaRad: fakturaRad, lonemanad: lonemanad, lonespec: lonespec, manadEfter: manadEfter,
-    ocrGiltigt: ocrGiltigt, pagaende: pagaende, passpris: passpris, gratistimmar: gratistimmar
+    UTBETALNING: UTBETALNING, lonemanad: lonemanad, lonespec: lonespec, manadEfter: manadEfter,
+    pagaende: pagaende, passpris: passpris, gratistimmar: gratistimmar
   };
 })();

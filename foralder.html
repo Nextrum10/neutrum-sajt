@@ -28,10 +28,10 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=f21d3928">
-<link rel="stylesheet" href="nextrum-vy.css?v=5a101f12">
+<link rel="stylesheet" href="nextrum-vy.css?v=9ac5eca2">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=28094f6d">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=55fe009b">
 <link rel="stylesheet" href="nextrum-uppgifter.css?v=71ec1700">
 </head>
 <body class="vy">
@@ -424,10 +424,10 @@
            en flik bort, och ingenting sa att en ny kommit.
 
            Rapporten står här tills den är bekräftad OCH passet är
-           betalt. Sedan Fas 19.2 finns tre sätt att betala: kort i
-           förväg, kort efter passet och faktura efter passet (när
-           flaggan faktura är på). De två senare görs HÄR, i samband med
-           bekräftelsen: att välja betalsätt är att bekräfta rapporten.
+           betalt. Sedan Fas 19.2 betalar familjen med kort i förväg eller
+           efter passet (fakturan efter passet togs bort 2026-10-21). Det
+           senare görs HÄR, i samband med bekräftelsen: att välja betalsätt
+           är att bekräfta rapporten.
            Är passet redan betalt bekräftar familjen ändå, med knappen
            Bekräfta rapporten.
 
@@ -449,7 +449,7 @@
         <!-- Rubrikerna står på papperet och korten under (2026-09-28).
              Förut låg varje rapport i en ruta i en panel, och i den en
              ruta till för tiden. #rb-grupp är det omritningen håller
-             stilla (rbRitaOm, väljFaktura). -->
+             stilla (rbRitaOm). -->
         <p class="ok-msg" id="rb-msg"></p>
         <div class="vy-grupp" id="rb-grupp"><h3>Att bekräfta</h3><span class="vy-antal ar-gor" id="rb-antal"></span></div>
         <div id="rb-lista"><div class="loading">Hämtar</div></div>
@@ -679,28 +679,18 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Betalning</h2>
-            <p>Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. Kort väljer ni när ni bokar eller på passets sida, och utan kortet betalar ni efter passet under Bekräfta rapport. Före passet, eller där, kan ni i stället välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift. Är ett pass inte betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan. Kortuppgifterna skriver ni in hos Stripe, och ett kort ni sparar står hos Stripe, aldrig hos oss. Ett förslag som inte blivit ett pass kostar ingenting.</p>
+            <p>Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. Kort väljer ni när ni bokar eller på passets sida, och utan kortet betalar ni efter passet under Bekräfta rapport. Kortuppgifterna skriver ni in hos Stripe, och ett kort ni sparar står hos Stripe, aldrig hos oss. Ett förslag som inte blivit ett pass kostar ingenting.</p>
           </div>
         </div>
         <!-- ============ INNEHÅLLET (2026-09-28) ============
              Summan överst: vad som väntar efter passet, vad som står
              före passet och vad som betalats den här månaden.
              Sedan en grupp per sort, med rubriken på papperet och
-             raderna i ett kort. Det som väntar på familjen (en faktura,
-             ett genomfört pass) står före det som är ett val (i
-             förväg) och det som är gjort (betalda pass). -->
+             raderna i ett kort. Det som väntar på familjen (ett
+             genomfört pass) står före det som är ett val (i förväg) och
+             det som är gjort (betalda pass). -->
         <p class="ok-msg" id="bet-msg"></p>
         <div class="bet-sam" id="bet-sam"></div>
-
-        <!-- Fakturor att betala (Fas 19.6). Fakturor som skickats och
-             inte är betalda, med det familjen behöver för att betala
-             i sin bank: belopp, förfallodag, bankgiro och OCR. Ritas
-             av ritaFakturor() och syns bara när en sådan faktura
-             finns. Fakturor skapas bara när flaggan faktura är på. -->
-        <div class="vy-del" id="bet-fakt-box" hidden>
-          <div class="vy-grupp"><h3>Fakturor att betala</h3><span class="vy-antal ar-gor" id="bet-fakt-antal"></span></div>
-          <div class="vy-kort"><div class="vy-kort-kropp" id="bet-fakt-betala"></div></div>
-        </div>
 
         <!-- Genomförda pass som inte är betalda, och tillägg för ett pass
              som drog över (Fas 19.2, 20.1). De betalas under Bekräfta
@@ -721,15 +711,6 @@
              inte redan har timmar att betala med; ritaErbjudanden()
              avgör det. -->
         <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Fyll er timbank i förväg, så betalar timmarna passen av sig själva, och med en plan blir timmen billigare. <a href="#erbjudanden">Se planer och Fyll timbanken</a></p>
-
-        <!-- Faktura (Fas 14.6). Fakturorna som skickats, och passen
-             som väntar på nästa månadsfaktura. Ritas av ritaFakturor()
-             och syns bara när det finns något, eller när faktura går
-             att välja. -->
-        <div class="vy-del" id="bet-faktura-grupp" hidden>
-          <div class="vy-grupp"><h3>Faktura</h3><span class="vy-antal" id="bet-faktura-antal"></span></div>
-          <div class="vy-kort vy-lista" id="bet-faktura"></div>
-        </div>
 
         <div class="vy-grupp"><h3>Betalda pass</h3><span class="vy-antal" id="bet-antal"></span></div>
         <div class="vy-kort vy-lista" id="bet-lista"><div class="loading">Hämtar</div></div>
@@ -1034,7 +1015,7 @@
             <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
             <p class="xsmall" data-pris-extra-not style="margin-top:14px;color:var(--muted-2);line-height:1.6">Tillägget för syskon är en fast summa per timme, oavsett om de är två eller tre — inte ett pris per barn.</p>
             <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Första timmen är gratis när ni köper er första plan: planen får en timme till. Ni får högst en sådan timme; gratistimmar vi sätter in i er timbank räknas för sig.</p>
-            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. Före eller efter passet kan ni i stället välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift. Är ett pass inte betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan. Betalningarna står under Betalning.</p>
+            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. Betalningarna står under Betalning.</p>
           </div>
         </div>
 
@@ -1132,21 +1113,21 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=1b401ac9"></script>
+<script src="nextrum-config.js?v=a1535527"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-forhandsvisning.js?v=c6188459"></script>
-<script src="nextrum-app.js?v=97cbce73"></script>
+<script src="nextrum-forhandsvisning.js?v=013b6706"></script>
+<script src="nextrum-app.js?v=0b805164"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-kontakt.js?v=8bab89e2"></script>
-<script src="nextrum-studie.js?v=4cd06199"></script>
+<script src="nextrum-kontakt.js?v=c30f9d7e"></script>
+<script src="nextrum-studie.js?v=d8530c80"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
-<script src="nextrum-arbetsyta.js?v=d5f36b47"></script>
+<script src="nextrum-arbetsyta.js?v=91456198"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
-<script src="nextrum-betalning.js?v=3a28925a"></script>
+<script src="nextrum-betalning.js?v=60e55cea"></script>
 <script src="nextrum-ljud.js?v=6df8ca84"></script>
 <script src="nextrum-uppgifter.js?v=7183a63f"></script>
 <script src="nextrum-introduktion.js?v=2f3aa58e"></script>
 <script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-studie-vy.js?v=5a8b6b59"></script>
+<script src="nextrum-studie-vy.js?v=2c493588"></script>
 </body>
 </html>

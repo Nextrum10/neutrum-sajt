@@ -217,30 +217,12 @@
         pengarna har dragits, och ta bort kortet under Profil när ni vill. Då släpps det som är
         reserverat. Går priset inte att reservera eller dra får ni ett mejl, och betalar då på något av de
         andra sätten.</li>
-      <!-- Obetalda pass på fakturan (obetalda_pass_pa_fakturan, version
-           2026-10-16; Leo beslutade det 2026-10-01). Månadskörningen lägger
-           passet på fakturan natten efter månaden, eller natten efter
-           rapporten om den kommer senare (fakturera_obetalda). Undantagen:
-           ett kort som ska betala passet (kortreservation_att_gora:s regel),
-           en kassa som öppnats det senaste dygnet (Stripes kassa lever högst
-           24 timmar; databasen väntar 25), en familj med fakturavalet stängt
-           och pass bokade innan familjen godkänt den här versionen. -->
-      <li id="faktura">Före eller efter passet kan ni i stället välja faktura, som kommer i början av
-        månaden efter passet med tio dagars betalningstid och utan avgift. Är ett pass inte betalt när
-        månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan. På väg är det
-        när kortet ni valt ska betala passet, eller när ni har börjat betala det med kort det senaste
-        dygnet. Passet läggs på fakturan natten efter att månaden tagit slut, eller natten efter att
-        rapporten skrivits om den kommer senare, och betalas sedan genom fakturan. Det gäller pass som
-        ni bokat efter att ni godkänt de här villkoren. På fakturan står de pass under månaden som ni
-        valt faktura för och de som inte var betalda, och den syns också under Betalning i er vy. Har en
-        tidigare faktura inte betalats kan vi stänga fakturavalet för er tills den är betald. Då kommer
-        ett obetalt pass inte heller med på en faktura, och ni betalar det med kort.</li>
       <li>Rapporten bekräftar ni också när passet redan är betalt. Ett pass som har hållits ska
         betalas även om rapporten inte har bekräftats.</li>
       <li id="hallen-tid">Priset gäller den tid passet faktiskt hölls, räknat per påbörjad kvart.
         Studiehjälparen skriver in tiden i rapporten, och blev passet längre eller kortare än bokat
         står det där, med skälet, innan ni bekräftar. Stämmer inte tiden, skriv till oss innan ni
-        betalar. Står passet på en faktura är det den hållna tiden som kommer med på den. Har ni redan betalt och passet blev längre betalar ni tillägget när ni bekräftar
+        betalar. Har ni redan betalt och passet blev längre betalar ni tillägget när ni bekräftar
         rapporten. Blev det kortare betalar vi tillbaka mellanskillnaden. Var passet betalt med
         timmar från en plan eller ur timbanken kommer timmar som inte påbörjades tillbaka av sig
         själva, och det som blev över av den sista timmen sparas i er <a href="#timbank">timbank</a>.</li>
@@ -433,8 +415,7 @@
       <li><b>Uppgifterna.</b> Minst 90 procent av uppgifterna som studiehjälparen lagt i ämnet
         under perioden är klara senast sitt slutdatum, så som det står i er vy. En uppgift i
         NexLäx är klar när nivån är klar.</li>
-      <li><b>Betalningen.</b> Alla pass under perioden är betalda, och ingen faktura har betalats
-        efter förfallodagen.</li>
+      <li><b>Betalningen.</b> Alla pass under perioden är betalda.</li>
       <li><b>Anspråket.</b> Skriv till oss inom 30 dagar efter att betyget som räknas satts, med en
         kopia av det och av det senaste betyget före anmälan, för varje ämne. Vi prövar bara det
         som står här, ur det som står i er vy: hållen tid, rapporterna, uteblivna pass,
@@ -477,7 +458,7 @@
         familj ni tipsat, och har en familj fått flera koder räknas den första den anmälde sig med.</li>
       <li><b>Hur timmen används.</b> Den dras av på nästa läxhjälpspass ni föreslår, en timme per
         pass, till passets eget timpris. Resten av ett längre pass betalar ni som vanligt: med timmar
-        i er timbank om ni har några, annars med kort eller faktura. Timmen gäller i
+        i er timbank om ni har några, annars med kort. Timmen gäller i
         60 dagar från dagen den nya familjen haft sina två timmar, och den går till ett pass ni
         föreslår inom den tiden, för en dag inom den. Avbokas passet, eller säger studiehjälparen nej
         till tiden, kommer timmen tillbaka och gäller till samma dag som förut.</li>
@@ -576,7 +557,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 16 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 21 oktober 2026.</p>
   </div>
 </section>
 
@@ -748,16 +729,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=1b401ac9"></script>
+<script src="nextrum-config.js?v=a1535527"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=97cbce73"></script>
+<script src="nextrum-app.js?v=0b805164"></script>
 <script src="nextrum-samtycke.js?v=92474eaf"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=73042060"></script>
+<script src="nextrum-maskot-svar.js?v=72594d80"></script>
 <script src="nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

@@ -1497,15 +1497,11 @@ göra nu, innan den första familjen har en studiehjälpare och kan boka.
    första passet, för då går den första lönen ut. Klart när Bolagsfakta säger
    formen och båda lönearterna är satta under Löner.
 3. **Fortnox** på bolaget: Stripe-integrationen kopplad från
-   integrationsmarknaden, med bokningen bestämd med revisorn (9.7), och
-   fakturans inställningar: tio dagar, ingen avgift och påminnelser utan avgift
-   (9.11 steg 2). Integritetspolicyn nämner redan Fortnox.
-4. **Bankgirot**, i Fortnox och i `BANKGIRO` i `nextrum-config.js` (9.11 steg
-   9, en rad kod). En familj kan välja faktura så snart den har en
-   studiehjälpare, och fakturan ska ut i början av månaden efter passet. Utan
-   bolag, Fortnox och bankgiro finns ingen faktura att skicka. Hinns det inte
-   före den första matchningen: stäng av `faktura`, och då går fakturameningen
-   ur texterna i samma ändring (9.11).
+   integrationsmarknaden, med bokningen bestämd med revisorn (9.7).
+   Integritetspolicyn nämner redan Fortnox. (Fakturans inställningar i
+   Fortnox behövs inte längre: fakturan togs bort 2026-10-21, 9.18.)
+4. ~~**Bankgirot**~~: behövs inte för familjerna sedan 2026-10-21, då fakturan
+   togs bort (9.18). `BANKGIRO` finns inte längre i `nextrum-config.js`.
 
 **B. Testläget klart** (Leo i Stripes dashboard, och Claude läser databasen
 efter varje steg). Kan göras nu, parallellt med A.
@@ -1659,3 +1655,61 @@ sessioner fick veta före, och ingen annan session körde något mot driften):
   policy (info, med flit, som `intern.rabattkod_forsok`); inget nytt för `anon`.
 - Steg 5: torrkörningen som tjänstekontot, för förra månaden och till och med
   i dag, gav inga pass.
+
+### 9.18 Fakturan tas bort (2026-10-21, inte i drift)
+
+Leo: "Ta bort fakturasystemet helt". Ingen faktura hade gått till en familj.
+Koden, sidorna och migrationerna är klara på grenen; ingenting är kört mot
+driften. Hela resonemanget står i `minne/betalning.md`, Fakturan tas bort.
+
+Två migrationer: **del 1** (`20261021000000_fakturan_tas_bort`) tar inte bort
+något, men inget läser eller skapar fakturan efter den, och villkorens version
+blir 2026-10-21. **Del 2** (`20261021090000_fakturans_tabeller_tas_bort`)
+droppar tabellerna och kräver en backup först. Båda stannar innan något ändrats
+om en rad i fakturans tabeller, eller ett pass mot faktura, hör till någon
+annan än kontot med namnet Leo Trikke, och säger då hur många och vems.
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`). Hela PR:ens kedja (också Fas 2–4)
+står i avsnittet efter det här; gör stegen där om du kör allt på en gång.
+
+1. **Sajten** går ut med merge: villkoren 2026-10-21, inget fakturaval i
+   studievyn och fliken Månadskörningen i adminvyn. Vyerna frågar inte längre
+   efter fakturan, så de fungerar både före och efter migrationerna.
+2. **Edge-funktionerna som läste fakturan**, före del 2: `fakturering`,
+   `faktura-utskick`, `stripe-checkout`, `stripe-webhook` och `ekonomi`. De
+   gamla versionerna läser `invoices`, `faktura_sparr` eller
+   `intern.kassan_oppnad`, och slutar fungera när tabellerna är borta. De nya
+   rör inget som del 1 eller del 2 ändrar, så de kan gå ut före del 1.
+   Sedan `notis-ko` (mejlens mening utan fakturan, som villkoren), `drift` och
+   `juridik` (agenternas text), och resten som delar de ändrade filerna i
+   `_delad/` när det passar (`konstanter.ts`, `mejl.ts`, `notiser/*`,
+   `pris.ts`, `stripe.ts`): `admin-paminnelse`, `ansokan-gallring`,
+   `ansokan-notis`, `barn-inloggning`, `bjud-in`, `generate-feedback`,
+   `generate-message`, `klippkort-betala`, `lead-notis`, `notis-avanmal`,
+   `stripe-aterbetalning`, `stripe-avstamning`, `stripe-lage` och
+   `stripe-reservation`. Hämta tillbaka varje funktion och jämför byte för
+   byte, som förut.
+3. **Del 1**, hämtad från merge-commiten och prövad mot sin md5. Den har
+   ingen `drop` och inget `delete`, så den kan köras hel i ett do-block och
+   registreras med filens text. Stannar vakten på någon annans rader: kör
+   inget mer, och läs raderna med Leo.
+4. **Backup.** Database → Backups i Supabase, eller `pg_dump` av
+   `invoices`, `invoice_lines`, `faktura_sparr` och `intern.kassan_oppnad`.
+   Spara den utanför Supabase.
+5. **Del 2**, hämtad från merge-commiten och prövad mot sin md5. Den har
+   `drop` och ett `delete` (flaggraden), så verktyget ber om en bekräftelse
+   (CLAUDE.md avsnitt 5): kör den avsnitt för avsnitt med `execute_sql`, i
+   en transaktion, eller i SQL Editor som ett anrop, och registrera filens
+   text efteråt.
+6. Hela `rls-test.sql` mot driften, tillbakarullat (avsnitt 38 prövar båda
+   delarna), och advisorn: inget nytt för `anon`, och
+   `intern.kassan_oppnad` ska inte längre stå där.
+7. Torrkör förra månaden under Betalningar → Månadskörningen: underlagen som
+   förut, och inga fakturor i svaret.
+
+Kvar efter det: alla får frågan om villkoren igen (version 2026-10-21), och
+familjerna ska få veta att fakturan inte finns (ingen har valt den i driften,
+så ingen förlorar ett betalsätt de använt). Juristen har inte läst de nya
+villkoren eller rad 1 och 8 i `DATASKYDD.md`. `kund_skatteuppgifter` (RUT,
+personnummer) har inget syfte kvar: om tabellen ska bort är Leos fråga.

@@ -50,7 +50,10 @@ Resend. Modeller från Anthropic, bara i edge functions.
 
 Affären: familjen skickar intresseanmälan, Nextrum ringer och väljer
 studiehjälpare, admin sätter matchningen, då först låses föräldravyn upp.
-Ingen katalog att bläddra i.
+Ingen katalog att bläddra i. När familjen tas in flyttar anmälan till
+familjen (`intag_lead()`, 2026-10-21): källan och koden står i
+`intagna_anmalningar`, anmälan lämnar listan, familjen är Intagen och
+barnet Matchad.
 
 Ordlista: studiehjälpare (aldrig "lärare" utåt; "privatlärare" står
 bara i FAQ:n, för att säga att de inte är det), pass, rapport, underlag,
@@ -59,9 +62,10 @@ hette läxa till Fas 23.1, och i adminvyn betyder Uppgifter fortfarande
 adminens att göra-lista), nivå (en digital uppgift i en bana per ämne
 och årskurs, `nivaer`) och NexLäx (studievyns sektion för banan, det
 studiehjälparen gett och utvecklingen; ersatte Uppgifter och Min
-utveckling 2026-09-29). Faktura är sedan Fas 14.6 ett betalsätt familjen kan
-välja per pass, efter passet. Flaggan `faktura` är på sedan 2026-09-27,
-och texterna säger det sedan dagen efter.
+utveckling 2026-09-29). Faktura var ett betalsätt från Fas 14.6 till
+2026-10-21, då Leo tog bort fakturan helt: ingen hade gått till en familj.
+Flaggan `faktura` kan inte slås på (`flaggor_faktura_av`), och ingen text
+nämner den.
 
 Två siffror och ett löfte står på många ställen samtidigt: 399 kr/tim
 utan bindning (sedan 2026-10-08; paketen 379 kr/tim, en månad i
@@ -76,8 +80,8 @@ betalt, och ett hållet pass ska betalas även utan bekräftelse. Spärren
 påslaget sedan samma dag, och adminvyn visar om det är på. En månad
 skapas först när den är slut: körd mitt i månaden fick resten vänta en
 månad på lönen, så `fakturering` nekar det med 409 (2026-10-01). Ett
-pass hör till sin egen månads underlag och faktura så länge de är
-utkast: jobbet går varje natt sedan samma dag och lägger sena pass där. Svarar
+pass hör till sin egen månads underlag så länge det är ett utkast:
+jobbet går varje natt sedan samma dag och lägger sena pass där. Svarar
 körningen något annat än 200 blir det en uppgift en halvtimme senare
 (`manadskorning-svar`), som står kvar tills någon stänger den: System →
 Fel visar bara de senaste sex timmarna. Blir hen anställd
@@ -436,24 +440,15 @@ rapporten. Kortvägen har gått hela vägen i
 testläge (två provbetalningar 2026-09-25). Stripes avgift kommer med
 charge.updated, eller med knappen Hämta från Stripe (Fas 14.7), och
 testbetalningar märks. Studiehjälparens underlag betalas den 25:e från
-banken, aldrig genom Stripe. Faktura som betalsätt (Fas 14.6) är byggt
-och PÅ sedan 2026-09-27: familjen väljer det per pass, månadskörningen
-gör ett utkast per familj, admin lägger in det i Fortnox för hand. Tio
-dagar, inga avgifter. Sedan 2026-09-28 står fakturan bredvid
-kortmeningen på alla 36 ställen, och kontrollen räknar den; fakturan
-väljs efter passet, när rapporten bekräftas, och med kortet som
-reserveras också före passet. Kortmeningen säger sedan villkoren för
-kortet (`villkoren_kortet`, version 2026-10-15) att pengarna dras först
-när rapporten är skriven, och den följer strömbrytaren `kortreservation`
-(`KORTET_RESERVERAS` i kontrollen). Ett fakturapass som inte
-står på en faktura än betalas med kort genom Betala med kort nu, och
-står kvar som faktura tills kortet är draget. Sedan villkoren 2026-10-16
-(`obetalda_pass_pa_fakturan`, byggt 2026-10-15) lägger månadskörningen ett
-pass som inte är betalt när månaden är slut på fakturan, utom ett kort som
-betalar, en kassa öppnad det senaste dygnet, en familj utan faktura och ett
-pass bokat före godkännandet, och meningen står efter fakturameningen på
-samma ställen (CLAUDE.md avsnitt 1, `minne/betalning.md`). Bankgirot, bolaget och
-beskedet till befintliga familjer återstår (DEPLOY-BETALNING.md 9.11). Spärren "ingen betalning, inget pass" (flaggan `kortsparr`)
+banken, aldrig genom Stripe. Faktura som betalsätt (Fas 14.6, påslaget
+2026-09-27) och obetalda pass på månadens faktura (2026-10-16) togs bort
+2026-10-21 (`fakturan_tas_bort`, och tabellerna i `fakturans_tabeller_tas_bort`
+efter en backup): ingen faktura hade gått till en familj. Kortmeningen
+säger sedan villkoren för kortet (`villkoren_kortet`, version 2026-10-15)
+att pengarna dras först när rapporten är skriven, och den följer
+strömbrytaren `kortreservation` (`KORTET_RESERVERAS` i kontrollen);
+fakturameningen står bland det gamla (CLAUDE.md avsnitt 1,
+`minne/betalning.md`). Spärren "ingen betalning, inget pass" (flaggan `kortsparr`)
 kan inte slås på sedan Fas 19.2 (`flaggor_kortsparr_av`). En korttvist
 har en sista dag att svara, sparas i `stripe_tvister` och blir en
 uppgift; att svara är en människas jobb (DEPLOY-BETALNING.md 9.10).
@@ -471,12 +466,10 @@ inom 60 dagar (`minne/timmar.md`). Gratistimmar som admin sätter in i
 timbanken (samma dag: när familjen tas in eller senare) räknas för sig,
 gäller också i 60 dagar och dras först, sparar inga minuter och betalas
 aldrig ut. Med en plan som gäller kan familjen köpa till 1–20 timmar till
-planens timpris, som går ut med planen (2026-10-14). Ett pass på noll kronor är inte obetalt. Bokföringen, fakturorna och lönen
+planens timpris, som går ut med planen (2026-10-14). Ett pass på noll kronor är inte obetalt. Bokföringen och lönen
 sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
-Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28);
-fakturorna läggs in för hand, för Fortnox läser inte in kundfakturor från
-fil. Ingen API-koppling förrän handarbetet kostar tid och ett
-Fortnox-konto med bankgiro finns. Adminvyns Betalningar är det som
+Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28). Ingen
+API-koppling förrän handarbetet kostar tid. Adminvyns Betalningar är det som
 väntar på er och betalningarna en och en; Månadens ekonomi är månaden i
 stort, per familj och med vad som blir kvar efter lönerna, räknad på
 Betalningars rader så att samma månad aldrig har två belopp. Stripe ska bokföras genom en färdig integration som kopplas i

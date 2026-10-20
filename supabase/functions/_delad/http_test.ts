@@ -12,7 +12,7 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import { cors, CORS, esc, epostOk, json, preflight } from './http.ts';
 import { lika, kravAdmin, kravInloggad } from './auth.ts';
-import { BETALNINGSVILLKOR_DAGAR, MANADER } from './konstanter.ts';
+import { MANADER } from './konstanter.ts';
 
 Deno.test('esc tar alla fem tecknen, apostrofen med', () => {
   assertEquals(esc(`<a href="x" title='y'>&</a>`),
@@ -82,11 +82,7 @@ Deno.test('kravInloggad och kravAdmin nekar utan token, före något nätverksan
   }
 });
 
-Deno.test('betalningsvillkoret och månaderna', () => {
-  // Sedan Fas 14.2 gäller villkoret bara fakturor som skapades innan
-  // dess (se _delad/konstanter.ts). Ändras det ska det ändå vara ett
-  // beslut, för en sådan faktura har redan lovat familjen tio dagar.
-  assertEquals(BETALNINGSVILLKOR_DAGAR, 10);
+Deno.test('månaderna', () => {
   assertEquals(MANADER.length, 12);
   assertEquals(MANADER[0], 'januari');
   assertEquals(MANADER[11], 'december');

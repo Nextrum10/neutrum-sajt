@@ -33,11 +33,9 @@
 // låtit som en ny räkning. Studiehjälparen får ingenting om
 // betalningen: det är familjens sak.
 //
-// ETT FAKTURAPASS SÄGER FAKTURA (Fas 14.6). Har familjen valt faktura
-// för passet bär datan koden betalsatt = 'faktura', och då säger mejlet
-// att passet kommer med på månadens faktura i stället för att be
-// familjen betala med kort. Knappen går till passet, inte till
-// betalningen: det finns inget att betala där.
+// FAKTURAN ÄR BORTA (2026-10-21). Från Fas 14.6 bar ett pass som
+// familjen valt faktura för koden 'faktura', och mejlet sa det i stället
+// för att be om kortet. Betalsättet finns inte längre, och koden heller.
 //
 // ETT PASS SOM TIMMARNA BETALAT SÄGER DET (Fas 22.2). Timmar familjen
 // köpt i förväg betalar passet i samma skrivning som bekräftar det, och
@@ -91,17 +89,12 @@ const SVARA = 'Svara ja eller nej i Nextrum.';
    något annat än sidorna. */
 // Varje mening som räknas står i en sträng: mönstren ser inte över ett +.
 const VILLKORET = 'Ni betalar varje pass med kort, och '
-  + 'pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
-  + 'Före eller efter passet kan ni i stället '
-  + 'välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift. '
-  + 'Är ett pass inte betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.';
+  + 'pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.';
 const BETALA = `${VILLKORET} Vill ni välja kort gör ni det i Nextrum före passet, om ni inte redan har gjort det.`;
-const FAKTURA = 'Ni har valt faktura, så passet kommer med på månadens faktura från Nextrum.';
 const TIMMAR = 'Passet är betalt med timmarna ni köpt i förväg, så det finns inget att betala.';
 
 /** Vad familjen ska göra med betalningen, och vart knappen går. */
 function betalning(m: MallIn): { mening: string; knapp: string; mal: Mal } {
-  if (m.d.betalsatt === 'faktura') return { mening: FAKTURA, knapp: 'Visa passet', mal: 'pass' };
   if (m.d.betalsatt === 'timmar') return { mening: TIMMAR, knapp: 'Visa passet', mal: 'pass' };
   return { mening: BETALA, knapp: 'Gå till betalningen', mal: 'betalning' };
 }
@@ -339,11 +332,9 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       amne: medNar(efter ? 'Betalningen för passet gick inte igenom' : 'Kortet kunde inte reserveras', nar),
       rubrik: efter ? 'Betalningen gick inte igenom' : 'Kortet kunde inte reserveras',
       mening: efter
-        ? `${varfor} när vi skulle dra betalningen för passet${med(m)}. Betala passet i Nextrum, med kort eller`
-          + ' faktura.'
+        ? `${varfor} när vi skulle dra betalningen för passet${med(m)}. Betala passet med kort i Nextrum.`
         : `${varfor} när vi skulle reservera beloppet för passet${med(m)}. Inget är reserverat. Lägg till kortet`
-          + ' igen i Nextrum, eller ett annat kort, så försöker vi igen. Annars betalar ni efter passet, med kort'
-          + ' eller faktura.',
+          + ' igen i Nextrum, eller ett annat kort, så försöker vi igen. Annars betalar ni med kort efter passet.',
       knapp: 'Gå till betalningen',
       mal: 'betalning',
       fakta: passFakta(m, nar),

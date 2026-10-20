@@ -563,7 +563,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
 | `svar-gallring` | 03:53 | studiehjälparens svar på ett förslag, 30 dagar efter avslaget eller passet (2026-09-30) |
-| `manadskorning` | 04:17 (varje natt sedan 2026-10-01) | förra månadens underlag och fakturautkast den 1:a, sedan sena pass på utkasten (avsnitt 1) |
+| `manadskorning` | 04:17 (varje natt sedan 2026-10-01) | förra månadens underlag den 1:a, sedan sena pass på utkasten (avsnitt 1; fakturautkasten till 2026-10-21) |
 | `manadskorning-svar` | 04:47 (varje natt sedan 2026-10-01) | månadskörningens svar: allt utom 200 blir en uppgift (ovan) |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
 
@@ -1473,3 +1473,44 @@ en faktura i natt. Hela `rls-test.sql` från b68509f (`eb36ab7b…`) gick 1810 a
 tillbaka). Advisorn: bara `intern.kassan_oppnad` under RLS utan policy (info,
 med flit); inget nytt för `anon`. Torrkörningen (`fakturera_obetalda(...,
 true)` som tjänstekontot) gav inga pass för förra månaden eller till i dag.
+
+### Fakturan tas bort, och anmälan flyttar till familjen (2026-10-21, inte i drift)
+Tre filer och ett skript, skrivna och provade lokalt; ingenting är kört mot
+driften. Vad fakturans två delar gör står i `minne/betalning.md` (Fakturan tas
+bort), och ordningen i driften i `DEPLOY-BETALNING.md` 9.18.
+
+- `fakturan_tas_bort` (20261021000000) har inget `drop` och inget `delete`, och
+  går hel i ett do-block. Vakterna: testkontots rader (namnet Leo Trikke och
+  inget annat; en annan familjs rad stoppar filen och namnges), md5 på varje
+  funktion den skriver om (en vakt som hoppar över en funktion del 2 redan
+  droppat), och villkorens version (2026-10-16 eller 2026-10-21, så att filen
+  går att köra igen). Lapparna görs med `replace()` och räknade träffar ur en
+  tillfällig tabell, och mängden "redan lappade" räknas EN gång före loopen:
+  en funktion med två lappar fick annars bara den första, för markören som
+  den första lade dit fick loopen att tro att också den andra var gjord.
+  **`create or replace view` tar bort `security_invoker`** om det inte står i
+  satsen: `passunderlag` och `admin_lage` läste som ägaren en stund, och en
+  familj såg alla pass i analysvyn (rls-test fångade det). Båda har nu
+  `with (security_invoker = true)`, och avsnitt 38 prövar att tre vyer har det.
+- `fakturans_tabeller_tas_bort` (20261021090000) droppar, och körs för hand
+  efter en backup. Samma vakt som del 1, en vakt som kräver del 1 och en som
+  letar efter en funktion som fortfarande nämner det som droppas, med del 1:s
+  kommentarer bortrensade (Postgres följer inte namnen i en funktionskropp).
+  Inget cascade.
+- `anmalan_flyttas_till_familjen` (20261021000100): `intagna_anmalningar`,
+  `intag_lead()` (superadmin), och tipstimmen, koderna, statistiken,
+  gallringen och `radera_person` läser eller tömmer den nya tabellen. Vad och
+  varför står i filens huvud och i `minne/affaren.md`. En anmälan som redan
+  tagits in hela vägen flyttas av filen, och Hira (familjen som fanns före
+  anmälan) kopplas och flyttas om exakt en anmälan och en familj matchar,
+  annars en NOTICE och ingenting.
+- `supabase/scripts/rensa-testkonto.sql` är ingen migration (CLAUDE.md
+  avsnitt 5): en `pg_temp`-funktion med `dry_run` som förval, körd bara med
+  `dry_run` lokalt.
+
+Provat lokalt 2026-10-21: en databas byggd ur alla 203 migrationer gav 1797 av
+1797 i `rls-test.sql`, och 1794 av 1794 utan del 2. Alla tre filerna kördes en
+gång till efteråt utan fel, och sviten gav samma tal. Vakten provades i en
+egen databas byggd till och med 20261016110000 med en annan familjs faktura:
+del 1 och del 2 stannade och namngav familjen, och gick igenom när bara
+testkontots rad var kvar.

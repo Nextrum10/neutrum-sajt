@@ -353,7 +353,7 @@
       + 'stund och går igenom hur ett pass läggs upp och hur rapporten efteråt fungerar.\n\n'
       + 'Här är den:\n' + String(CFG.UTBILDNING_URL || '').trim() + '\n\n'
       + 'Rapporten är viktigare än den låter: ett pass räknas som genomfört först när '
-      + 'rapporten finns, och det är den som gör att familjen faktureras och att du får '
+      + 'rapporten finns, och det är den som gör att familjen betalar och att du får '
       + 'betalt. Hör av dig om något är oklart.\n\n'
       + 'Hälsningar,\nNextrum';
   }
@@ -778,7 +778,7 @@
       + spårSteg(3, 'Utbildning',
           'Utbildningsmötet och provet. Det här steget är inte en artighet: en studiehjälpare '
           + 'som inte vet hur rapporten fungerar lämnar inga rapporter, och utan rapport blir '
-          + 'passet aldrig genomfört — varken fakturerat eller utbetalt. "Utbildningsmötet är '
+          + 'passet aldrig genomfört — varken betalt eller utbetalt. "Utbildningsmötet är '
           + 'hållet" öppnar provet i tre dagar och mejlar länken, med en påminnelse dagen efter '
           + 'och en sista dagen. 80 procent rätt är godkänt, och då markeras hen som utbildad av '
           + 'sig själv och får mejlet om sista steget: att vi skapar hens konto.',
@@ -1035,14 +1035,14 @@
 
     /* Utbildningen är inte en artighet. En studiehjälpare som inte
        vet hur rapporten fungerar lämnar inga rapporter — och utan
-       rapport blir passet aldrig genomfört, alltså aldrig fakturerat
-       och aldrig utbetalt. Kedjan går isär i andra änden. */
+       rapport blir passet aldrig genomfört, alltså aldrig betalt och
+       aldrig utbetalt. Kedjan går isär i andra änden. */
     if (!ans.utbildad_at) {
       const ändå = await bekräfta({
         titel: 'Introduktionen är inte gjord',
         text: (ans.name || 'Den sökande') + ' är inte markerad som utbildad. En studiehjälpare '
           + 'som inte vet hur rapporten fungerar lämnar inga rapporter, och då blir passen '
-          + 'aldrig genomförda — varken fakturerade eller utbetalda. Markera Utbildad under '
+          + 'aldrig genomförda — varken betalda eller utbetalda. Markera Utbildad under '
           + 'Rekryteringen först, eller fortsätt om introduktionen är gjord ändå.',
         knapp: 'Ta in ändå',
         avbryt: 'Avbryt'

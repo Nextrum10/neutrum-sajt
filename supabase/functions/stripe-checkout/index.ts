@@ -53,7 +53,7 @@
 //
 // Kroppen säger vilket pass det gäller. Ingenting annat. Priset,
 // rabatten och ersättningen läses ur databasen, av samma skäl som
-// invoices och payouts med flit saknar INSERT-policy för användare:
+// payouts med flit saknar INSERT-policy för användare:
 // kan ingen skicka in ett belopp kan ingen skicka in fel belopp.
 //
 // Räkningen lånas ur _delad/pris.ts, den som faktureringen redan
@@ -720,7 +720,7 @@ async function kortet(
     if (!prof || prof.role !== 'parent') return json({ error: 'Kortet sparas av familjen.' }, 403, CORS);
     const { data: flagga } = await db.from('flaggor').select('aktiv').eq('kod', 'kortreservation').maybeSingle();
     if (!flagga?.aktiv) {
-      return json({ error: 'Kort går inte att spara just nu. Betala efter passet, eller välj faktura.' }, 409, CORS);
+      return json({ error: 'Kort går inte att spara just nu. Betala efter passet.' }, 409, CORS);
     }
 
     const kund = await familjensKund(db, vem.anvandare);
@@ -834,13 +834,12 @@ Deno.serve(async (req) => {
      "neka 'betald'". Allt annat släpptes in och fick 'vantar' skrivet
      över sig: en tvist blev en öppen kassa, en återbetalning likaså.
      Ett pass som ska betalas med kort står i ett av tre lägen, och bara
-     de släpps in, plus ett fakturapass som inte står på en faktura än
-     (nedan). */
+     de släpps in. (Ett fakturapass släpptes också in, från Fas 14.6 tills
+     fakturan togs bort 2026-10-21.) */
   if (pass.betalning_status === 'betald') {
     return json({ error: 'Passet är redan betalt.' }, 409, CORS);
   }
-  const påFaktura = pass.betalning_status === 'faktura';
-  if (!påFaktura && !['ingen', 'vantar', 'misslyckad'].includes(String(pass.betalning_status ?? 'ingen'))) {
+  if (!['ingen', 'vantar', 'misslyckad'].includes(String(pass.betalning_status ?? 'ingen'))) {
     return json({ error: 'Passet har en återbetalning eller en tvist och kan inte betalas här. Skriv till oss.' }, 409, CORS);
   }
   if (!pass.fakturerbar) {
@@ -848,34 +847,6 @@ Deno.serve(async (req) => {
   }
 
   const db = serviceklient();
-
-  /* ETT FAKTURAPASS BETALAS MED KORT I SAMMA TRYCK (2026-09-28). Leo:
-     "trycker man på betala nu ska man komma vidare till stripe och
-     passet kan räknas som betalt efter att man betalat det". Förut
-     nekade funktionen ett fakturapass, och vyn bytte därför först
-     passet till obetalt: rapporten kom tillbaka under Bekräfta rapport,
-     och stängdes kassan utan betalning hade passet inget betalsätt kvar.
-
-     Nu står passet kvar som 'faktura' medan kassan är öppen (skrivningen
-     nedan rör inte läget), och webhooken skriver 'betald' när kortet
-     dragits: 'faktura' står i dess TAR_EMOT_BETALNING sedan Fas 14.6.
-     Stängs kassan betalas passet mot fakturan, som familjen valt.
-     Månadskörningen tar bara 'faktura', så ett pass som betalats med
-     kort kommer aldrig med på en faktura.
-
-     Står passet redan på en faktura, också ett utkast, betalas det
-     genom den: samma regel som skydda_bokningsfalt har för bytet
-     tillbaka till kort. Hinner månadskörningen lägga passet på fakturan
-     medan kassan står öppen, och familjen betalar ändå, larmar
-     betald_och_fakturerad. */
-  if (påFaktura) {
-    const { data: rader, error: radfel } = await db.from('invoice_lines')
-      .select('id').eq('booking_id', pass.id).limit(1);
-    if (radfel) return json({ error: 'Passet gick inte att läsa.' }, 500, CORS);
-    if (rader?.length) {
-      return json({ error: 'Passet står redan på en faktura och betalas genom den.' }, 409, CORS);
-    }
-  }
 
   try {
     // ---------- beloppet, ur databasen ----------
@@ -1089,22 +1060,18 @@ Deno.serve(async (req) => {
 
        SKRIVNINGEN KRÄVER ATT PASSET FORTFARANDE ÄR OBETALT (Fas 22.1).
        Passet lästes innan sessionen skapades, och under tiden kan familjen
-       ha betalat det med timmar eller timbanken, eller valt faktura. Utan
+       ha betalat det med timmar eller timbanken. Utan
        villkoret skrev 'vantar' över 'betald': timmarna var dragna och
        passet stod som obetalt, och betalade familjen sedan kassan togs
        passet två gånger. Nu träffar skrivningen ingenting, och kassan som
-       just skapades stängs innan någon hunnit se den.
-
-       Ett fakturapass får inget 'vantar' (se ovan): det betalas mot
-       fakturan tills kortet är draget. Villkoret är då att det
-       fortfarande är ett fakturapass. */
+       just skapades stängs innan någon hunnit se den. */
     const sessionId = String((session as { id?: string }).id ?? '');
     const { data: skrivna, error: sparfel } = await db.from('bookings').update({
-      ...(påFaktura ? {} : { betalning_status: 'vantar' }),
+      betalning_status: 'vantar',
       stripe_session_id: sessionId,
       begart_ore: netto,
     }).eq('id', pass.id)
-      .in('betalning_status', påFaktura ? ['faktura'] : ['ingen', 'vantar', 'misslyckad']).select('id');
+      .in('betalning_status', ['ingen', 'vantar', 'misslyckad']).select('id');
 
     if (!sparfel && !skrivna?.length) {
       try {

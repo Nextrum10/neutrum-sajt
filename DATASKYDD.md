@@ -40,14 +40,14 @@ finnas. Det här är det.
 
 | # | Behandling | Registrerade | Uppgifter | Grund (art. 6) | Mottagare utanför oss | Lagringstid |
 |---|---|---|---|---|---|---|
-| 1 | Intresseanmälan (`leads`) | förälder, barn | förälderns namn, e-post, telefon (obligatorisk sedan 2026-10-11, för att vi ringer alla) och när ett samtal passar; barnets namn, årskurs, ämne; fritext; varifrån besöket kom; koden om familjen skrev en (rad 19) | 6.1 b, åtgärd före avtal | Supabase, Resend (kvitto och avisering) | avidentifieras 6 mån efter senaste kontakt |
+| 1 | Intresseanmälan (`leads`; `intagna_anmalningar`, 2026-10-21) | förälder, barn | förälderns namn, e-post, telefon (obligatorisk sedan 2026-10-11, för att vi ringer alla) och när ett samtal passar; barnets namn, årskurs, ämne; fritext; varifrån besöket kom; koden om familjen skrev en (rad 19). När familjen tas in flyttar anmälan till familjen (`intag_lead()`): varifrån besöket kom, koden, tjänsten, årskursen, ämnet och meddelandet står i `intagna_anmalningar` med familjens id, telefonnumret ur meddelandet sparas på familjens profil om den saknar ett, och raden i `leads` tas bort | 6.1 b, åtgärd före avtal; för den som tagits in 6.1 b (avtalet) och 6.1 f (var familjerna hittar oss) | Supabase, Resend (kvitto och avisering) | avidentifieras 6 mån efter senaste kontakt; i `intagna_anmalningar` gallras meddelandet på samma dag, och resten står kvar för statistiken så länge kontot finns (familjens id blir tomt när kontot tas bort helt) |
 | 2 | Konto (`profiles`) | förälder, studiehjälpare | namn, e-post, telefon, profilbild; i Auth om lösenordet är valt och introduktionen genomgången (`user_metadata.valkommen`, 2026-10-06). Kontot skapas av oss när vi tar in personen (`bjud-in`, med adressen ur anmälan eller ansökan; att skapa ett själv gick fram till 2026-10-07); lösenordet väljer personen alltid själv, med länken i mejlet. Godkännandet av användarvillkoren är rad 24 | 6.1 b, avtal | Supabase; Resend (mejlet med länken när vi skapat kontot eller skickar länken igen, med förnamnet; sedan 2026-10-07) | så länge det används; granskas efter 2 år utan användning |
 | 3 | Barnet och undervisningen (`students`, `study_plans`, `homework`, `progress_items`, `lesson_reports`, `materials`, `niva_forsok`, `niva_svar`) | barn | namn, årskurs, skola, ämnen, mål, uppgifter, svaren på de digitala uppgifterna och rättningen av dem, rapporter | 6.1 f, berättigat intresse (barnet är inte part) | Supabase; Anthropic (förnamn, årskurs, maskade anteckningar) när studiehjälparen ber om utkast | som kontot |
 | 4 | Förälderns privata anteckningar (`student_notes`) | barn | fritext | 6.1 f | Supabase. Ingen hos oss har läsrätt | som kontot |
 | 5 | Pass och bokningar (`bookings`, `pass_moten`) | förälder, barn, studiehjälpare | datum, tid, ämne, plats (ofta en hemadress), avbokningsskäl, vem som avbokade; studiehjälparens svar på en föreslagen tid (`svar_meddelande`, fritext, högst 500 tecken, kan nämna barnet) | 6.1 b | Supabase; Google (Meet-rum, när kopplat). Svaret går aldrig till en notis, ett mejl, auditloggen eller en AI | som kontot; pass med betalning 7 år; svaret 30 dagar efter avslaget eller passet |
 | 6 | Chatt (`messages`) | förälder, studiehjälpare; barnet när det skrivs om | meddelandetext. Att någon av oss öppnat tråden står i `audit_logg` (`chatt.oppnad`: vem, när, familjen, studiehjälparen, antalet meddelanden, aldrig texten) | 6.1 b; att vi läser den: 6.1 f (barnens trygghet, tonen, reda ut det som gått fel) | Supabase | som kontot; loggraden så länge verksamheten finns (rad 13) |
 | 7 | Notiser och mejl (`notiser`, `notis_utskick`) | alla med konto; barn med egen bekräftad e-post (rad 22) | typ, datum, förnamn, ämne | 6.1 b | Resend | 180 dagar i vyn, 90 dagar för utskicken |
-| 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `timbank_uttag`, `stripe_handelser`, `stripe_tvister`, `invoices`; `forsta_timmen_beviljad` och `klippkort.forsta_timmen`, 2026-10-09; gratistimmar som rader i `klippkort` med erbjudandet `gratis`, 2026-10-13; `bookings.forsta_klippkort_*`, `klippkort.aterkallad_at` och `klippkort.till_plan`, 2026-10-14; `intern.kassan_oppnad`, 2026-10-16) | förälder | belopp, tid, e-post, Stripe-id; om familjen fått sin första timme gratis, i en plan eller på ett pass, och för en familj som betalar pass för pass om vi valt att ge den, vem av oss som valde och när (valet tas bort med kontot); gratistimmar vi satt in i familjens timbank, hur många, när och till vilken dag, och när vi tog tillbaka dem (sedan 2026-10-14 står raden kvar, märkt, i stället för att raderas; vem av oss som satte in eller tog tillbaka dem står i `audit_logg`); vilka köp ett pass drogs från, högst två, och hur många timmar ur det första; timmar som köpts till en plan och vilken plan; när en kortbetalning för ett pass påbörjades (kassan öppnades), så att ett pass där betalningen aldrig blev klar kommer med på fakturan (sedan 2026-10-16 läggs ett pass som inte är betalt när månaden är slut på familjens faktura, villkoren #faktura) | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum); Fortnox (fakturan: namn, e-post, passen och beloppet), när familjen valt faktura och sedan 2026-10-16 också när ett pass inte var betalt när månaden tog slut | 7 år |
+| 8 | Betalning (`bookings.betalning_*`, `klippkort`, `pass_tillagg`, `timbank_uttag`, `stripe_handelser`, `stripe_tvister`; `forsta_timmen_beviljad` och `klippkort.forsta_timmen`, 2026-10-09; gratistimmar som rader i `klippkort` med erbjudandet `gratis`, 2026-10-13; `bookings.forsta_klippkort_*`, `klippkort.aterkallad_at` och `klippkort.till_plan`, 2026-10-14; `invoices` och `intern.kassan_oppnad` till 2026-10-21, då fakturan togs bort) | förälder | belopp, tid, e-post, Stripe-id; om familjen fått sin första timme gratis, i en plan eller på ett pass, och för en familj som betalar pass för pass om vi valt att ge den, vem av oss som valde och när (valet tas bort med kontot); gratistimmar vi satt in i familjens timbank, hur många, när och till vilken dag, och när vi tog tillbaka dem (sedan 2026-10-14 står raden kvar, märkt, i stället för att raderas; vem av oss som satte in eller tog tillbaka dem står i `audit_logg`); vilka köp ett pass drogs från, högst två, och hur många timmar ur det första; timmar som köpts till en plan och vilken plan. Ingen faktura sedan 2026-10-21: inget går till Fortnox om en familj, och när en kassa öppnades sparas inte längre | 6.1 b; 6.1 c bokföringslagen | Stripe (e-post, belopp, ämne och datum) | 7 år |
 | 9 | Ersättning till studiehjälpare (`payouts`, `lon_anstallning`; bonusen för tips i `tipsbonus` är rad 27) | studiehjälpare | timmar, belopp, anställningsnummer | 6.1 b; 6.1 c | Fortnox (lönefil i PAXml som admin laddar upp: anställningsnummer, datum, timmar, belopp, inga namn; bonusen för tips som en egen rad på sin löneart, sedan 2026-10-13) | 7 år |
 | 10 | Jobbansökan (`applications`, hinken `cv`) | sökande, ofta 16 år; vårdnadshavaren när den som söker är under 18 (2026-10-05) | namn, ålder, e-post, skola, ämnen, fritext, CV; koden om den sökande skrev en godkänd studiehjälpares (`applications.kod`, rad 19, 2026-10-13); under 18 också vårdnadshavarens e-post, när admin lade in vårdnadshavarens godkännande, och en kopia av vårdnadshavarens svar (inklistrad av admin, kan bära vårdnadshavarens namn och barnets för- och efternamn). Auditloggen får bara tidpunkten | 6.1 f; för vårdnadshavaren: att den som är under 18 inte tar anställning utan vårdnadshavarens samtycke (föräldrabalken) | Supabase, Resend (besked till den som söker, nejet när läget blir Avböjd, och mejlet till vårdnadshavaren: barnets förnamn, aldrig något annat ur ansökan, och en länk till policyns avsnitt för vårdnadshavare, som art. 14 kräver i första mejlet) | 1 år, eller 30 dagar efter senaste steget (godkännandet är ett steg); blev personen studiehjälpare: 2 år efter senaste pass, rapport eller inloggning. Vårdnadshavarens adress och svar går med ansökan |
 | 11 | Kontaktformuläret (`contact_messages`) | vem som helst | namn, e-post, fritext | 6.1 f | Supabase | 6 mån efter inkommet eller besvarat |
@@ -84,6 +84,8 @@ oanvänt: `kund_skatteuppgifter` kan bära förälderns personnummer för
 RUT-avdrag. Tabellen är tom och ingen RUT-tjänst är aktiv
 (kontrollerat 2026-09-28). Slås RUT på ska behandlingen in i registret,
 i integritetspolicyn på båda språken och i konsekvensbedömningen först.
+RUT drogs bara på fakturan, och fakturan togs bort 2026-10-21: tabellen
+har inget syfte kvar, och om den ska bort är Leos och juristens fråga.
 
 ---
 
@@ -102,7 +104,7 @@ avsnitt 8).
 | Anthropic | rapportutkast, hälsningar, agenterna | USA | standardavtalsklausuler | ingår i Commercial Terms för API:t |
 | Stripe | kortbetalningar | EU och USA | standardavtalsklausuler, DPF | ingår i Stripes villkor; Stripe är självt ansvarigt för bedrägerikontroll |
 | Google | Meet-rum (inte kopplat än); inkorgen info@nextrum.se (Workspace), där bland annat betygsgarantins anmälningar och betygskopior kommer in; Google Analytics, besöksstatistik efter ja (2026-10-11) | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console; för Analytics Google Ads Data Processing Terms, som ingår i villkoren för ett konto i EES (kontots land i Analytics ska vara Sverige; inte kontrollerat) |
-| Fortnox | bokföring, fakturor, lön (för hand, lönen som fil) | Sverige | ingen överföring | Fortnox villkor; fakturorna står i policyn sedan 2026-09-28, lönen inte än, se avsnitt 8 |
+| Fortnox | bokföring och lön (för hand, lönen som fil); fakturor till 2026-10-21, då fakturan togs bort, och ingen hade gått till en familj | Sverige | ingen överföring | Fortnox villkor; fakturorna står i policyn sedan 2026-09-28, lönen inte än, se avsnitt 8 |
 
 **Data Privacy Framework (DPF).** EU-kommissionens beslut från 2023
 gäller, men EDPB begärde en översyn i juli 2026 och beslutet kan falla
@@ -266,7 +268,7 @@ reglerna står i `radera_person()` (migrationen
 - **Helt** när ingenting om personen är bokföring: kontot, inloggningen,
   barnen, passen och chatten tas bort.
 - **Avidentifieras** när personen har pass som hållits eller betalats,
-  klippkort, fakturor, rapporter eller underlag. Namn, adress, telefon,
+  klippkort, rapporter eller underlag. Namn, adress, telefon,
   profilbild, chatten, barnens uppgifter, läxorna, planerna,
   kunskapsområdena, svaren på de digitala uppgifterna (`niva_forsok`,
   `niva_svar`) och rapporternas text tas bort, inloggningen stängs,
@@ -427,8 +429,12 @@ Inget av det här går att göra i koden.
   meningen om förslagen i policyns avsnitt om barn, på båda språken, och
   säg till familjerna med barnkonto att valet finns i samma mejl som
   policyändringen.
-- [ ] **Fortnox i policyn** innan första fakturan eller lönen går dit
-  (CLAUDE.md avsnitt 11).
+- [ ] **Fortnox i policyn** innan lönen går dit (CLAUDE.md avsnitt 11).
+  Fakturan finns inte sedan 2026-10-21, och policyn säger att vi inte
+  skickar fakturor till familjer.
+- [ ] **Anmälan flyttar till familjen (2026-10-21):** låt juristen läsa
+  rad 1 och meningen om det i policyns avsnitt om hur länge vi sparar, på
+  båda språken.
 - [ ] **Google Analytics (på 2026-10-11):** i Analytics, kontrollera
   att kontots land är Sverige under Administratör → Kontoinformation
   (då ingår Google Ads Data Processing Terms; spara en kopia från

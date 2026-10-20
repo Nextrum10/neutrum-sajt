@@ -91,9 +91,7 @@
     /* Intäkten är det som kommit in på kort under månaden, efter
        återbetalningar, räknat på betalningsdagen (Fas 14.2). Förut var
        den summan av månadens fakturor — och familjen får ingen faktura
-       längre, så talet hade stått på noll medan pengarna kom in. Äldre
-       fakturor räknas med på sin period, så att en månad från före
-       omställningen inte tappar sin intäkt.
+       längre, så talet hade stått på noll medan pengarna kom in.
 
        Betalningsdagen och inte passets dag: ett pass betalas innan det
        hålls, och det som kom in i september kom in i september.
@@ -125,11 +123,8 @@
       .filter(t => BETALD.indexOf(t.status) !== -1 && iMånad(t.betald_at, mån) && t.stripe_skarp !== false)
       .reduce((n, t) => n + netto(t), 0);
     const kortIn = mån => passIn(mån) + köptIn(mån) + tilläggIn(mån);
-    const fakturerat = mån => S.fakturor
-      .filter(f => String(f.period || '').slice(0, 7) === mån && f.status !== 'makulerad')
-      .reduce((n, f) => n + (f.belopp_ore || 0), 0);
-    const belopp = kortIn(period) + fakturerat(period);
-    const förraBelopp = kortIn(förraPeriod) + fakturerat(förraPeriod);
+    const belopp = kortIn(period);
+    const förraBelopp = kortIn(förraPeriod);
     /* Köpta timmar är pengar in men en skuld till familjen tills
        timmarna använts, och står därför för sig under talet. */
     const köpt = köptIn(period);
@@ -193,11 +188,6 @@
     const utanHjälpare = S.elevlista.filter(e =>
       !e.matched_tutor_id || e.match_status !== 'matched').length;
 
-    const obetalda = S.fakturor.filter(f =>
-      f.status === 'skickad' || f.status === 'forfallen').length;
-    /* Fas 14.6. Ett fakturautkast är ingen faktura förrän någon lagt in
-       det i Fortnox. Ingen annan än vi kan göra det. */
-    const attLäggaIn = S.fakturor.filter(f => f.status === 'utkast').length;
     const attBetalaUt = S.utbetalningar.filter(u =>
       u.status === 'utkast' || u.status === 'godkand').length;
 
@@ -230,12 +220,6 @@
       { antal: utanRapport().length,
         rubrik: 'genomförda pass saknar rapport', ental: 'genomfört pass saknar rapport',
         under: 'Pass saknar rapport och kan därför inte behandlas automatiskt.', till: '#ekonomi/attgora' },
-      { antal: attLäggaIn,
-        rubrik: 'fakturor att lägga in i Fortnox', ental: 'faktura att lägga in i Fortnox',
-        under: 'Månadskörningen har skapat dem. Familjen har inte fått dem än.', till: '#ekonomi/fakturor' },
-      { antal: obetalda,
-        rubrik: 'obetalda fakturor', ental: 'obetald faktura',
-        under: 'Skickade från Fortnox men inte betalda.', till: '#ekonomi/fakturor' },
       { antal: attBetalaUt,
         rubrik: 'utbetalningar att göra', ental: 'utbetalning att göra',
         under: 'Studiehjälpare som väntar på sin ersättning.', till: '#loner' }
@@ -253,21 +237,16 @@
   function övrigaAvvikelser() {
     return (S.avvikelser || []).filter(a => a.typ !== 'pass_utan_rapport' && a.typ !== 'fristaende_rapport');
   }
-  /* Till problemrutan: utan det som redan har en egen rad (förfallna
-     fakturor) eller står i arbetskön (väntande utbetalningar). */
-  const EGEN_RAD = ['faktura_forfallen', 'utbetalning_vantar'];
+  /* Till problemrutan: utan det som står i arbetskön (väntande
+     utbetalningar). Förfallna fakturor hade en egen rad, till 2026-10-21. */
+  const EGEN_RAD = ['utbetalning_vantar'];
 
   function byggProblem() {
     const l = S.lage || {};
     const idag = isoFor(new Date());
     const öppna = (S.uppgifter || []).filter(u => u.status === 'oppen' || u.status === 'pagar');
     const sena = öppna.filter(u => u.forfallodag && u.forfallodag < idag);
-    const förfallna = l.forfallna_fakturor != null ? l.forfallna_fakturor
-      : (S.fakturor || []).filter(f => (f.status === 'skickad' || f.status === 'forfallen')
-          && !f.betald_at && f.forfaller && f.forfaller < idag).length;
     return [
-      { antal: förfallna, rubrik: 'förfallna fakturor', ental: 'förfallen faktura',
-        under: 'Skickade, obetalda och efter förfallodagen.', till: '#ekonomi/fakturor' },
       { antal: l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length,
         rubrik: 'försenade uppgifter', ental: 'försenad uppgift',
         under: 'Öppna efter dagen de skulle vara klara.', till: '#uppgifter' },
@@ -312,10 +291,6 @@
       namnFör(r.tutor_id) + ' skrev rapport för passet ' + kortDatum(r.lesson_date) + '.'));
     S.bokningar.forEach(b => lägg(b.created_at, 'Pass bokat',
       namnFör(b.parent_id) + ' · ' + (b.subject || 'Pass') + ' ' + kortDatum(b.wanted_date) + '.'));
-    S.fakturor.forEach(f => {
-      lägg(f.betald_at, 'Betalning registrerad', namnFör(f.parent_id) + ' betalade ' + kronor(f.belopp_ore) + '.');
-      lägg(f.skickad_at, 'Faktura skickad', namnFör(f.parent_id) + ' · ' + kronor(f.belopp_ore) + '.');
-    });
     S.utbetalningar.forEach(u => lägg(u.utbetald_at, 'Ersättning utbetald',
       namnFör(u.tutor_id) + ' · ' + kronor(u.belopp_ore) + '.'));
 
@@ -411,8 +386,8 @@
     if (l) märkFlik('#flik-inkorg-mark', l.ohanterade_meddelanden);
     if (S.sido) {
       /* Summan av allt som pekar dit. Förut räknades bara den första
-         posten, så Ekonomi visade pass utan rapport men inte obetalda
-         fakturor eller väntande utbetalningar. */
+         posten, så Ekonomi visade pass utan rapport men inte väntande
+         utbetalningar. */
       const av = nyckel => S.attGora
         .filter(x => x.till === nyckel || x.till.indexOf(nyckel + '/') === 0)
         .reduce((n, p) => n + p.antal, 0);
@@ -520,8 +495,8 @@
          Förut fakturerat belopp per period. Familjen får ingen faktura
          sedan Fas 14.2, så grafen hade stått tom medan pengarna kom
          in. Nu: kortbetalningar på betalningsmånaden, efter
-         återbetalningar, plus betalda äldre fakturor på sin period.
-         Allt räknat i analys_ekonomi, inte här. */
+         återbetalningar. betalt_ore var de betalda fakturorna och är noll
+         sedan 2026-10-21. Allt räknat i analys_ekonomi, inte här. */
       NXArbete.graf($('#stat-intakt'), staplar(A.ekonomi, r =>
         Number(r.kortbetalt_ore || 0) - Number(r.aterbetalt_ore || 0) + Number(r.betalt_ore || 0)), {
         nagot: 'Det familjerna betalat, efter återbetalningar, på den månad pengarna kom in. Ett '
@@ -554,8 +529,8 @@
     const familjer = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p)
       && !ärAdminkonto(p.id)).length;
     const elever = S.elevlista.filter(e => !ärAdminkonto(e.parent_id)).length;
-    /* Betalt = kort efter återbetalningar plus betalda äldre fakturor,
-       samma definition som grafen ovanför. ej_betalda är pass som
+    /* Betalt = kort efter återbetalningar (betalt_ore, fakturorna, är
+       noll sedan 2026-10-21), samma definition som grafen ovanför. ej_betalda är pass som
        hölls och rapporterades utan att familjen betalat. */
     const betalt = summa(ek, 'kortbetalt_ore') - summa(ek, 'aterbetalt_ore') + summa(ek, 'betalt_ore');
     const ejBetalda = summa(ek, 'ej_betalda');
@@ -675,7 +650,9 @@
     const host = $('#stat-tratt');
     if (!host) return;
 
-    const L = S.leads;
+    /* En anmälan som flyttats till familjen (2026-10-21) står inte längre
+       i leads men är fortfarande en anmälan som blivit en familj. */
+    const L = S.leads.concat((S.intagna || []).map(i => ({ status: 'matched', kund_id: i.parent_id })));
     const kom = L.length;
     /* Kumulativt, inte per läge: en anmälan som blivit matchad HAR
        varit kontaktad, även om statusfältet bara minns det sista.
@@ -698,7 +675,7 @@
     const steg = [
       ['Intresseanmälningar', 'allt som kommit in', kom],
       ['Kontaktade', 'någon har hört av sig tillbaka', kontaktade],
-      ['Matchade', 'anmälan ledde till en studiehjälpare', matchade],
+      ['Intagna', 'anmälan blev en familj med ett barn i systemet', matchade],
       ['Aktiva familjer', 'har minst ett matchat barn i systemet', kunder]
     ];
 
@@ -723,10 +700,10 @@
     }).join('') + '</div>'
       /* "+N utanför" behöver en förklaring första gången man ser
          det, annars läser det som ett räknefel. */
-      + '<p class="graf-not">Aktiva familjer kan vara fler än matchade anmälningar: '
+      + '<p class="graf-not">Aktiva familjer kan vara fler än intagna anmälningar: '
       + 'alla familjer kom inte in via formuläret.'
       + (ejSpårbara
-          ? ' ' + ejSpårbara + ' ' + (ejSpårbara === 1 ? 'matchad anmälan' : 'matchade anmälningar')
+          ? ' ' + ejSpårbara + ' ' + (ejSpårbara === 1 ? 'intagen anmälan' : 'intagna anmälningar')
             + ' saknar koppling till ett konto och går inte att följa längre än hit — '
             + 'kopplingen började skrivas först i Fas 7, och den gissas inte fram i efterhand.'
           : '')

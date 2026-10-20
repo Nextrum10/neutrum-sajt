@@ -347,8 +347,8 @@ Playwright och tappar pekskärmsemuleringen; ta bilden med
   [data-betalflode]`, `betalflöde()`, CSS i nextrum-sidor.css): vågrätt
   på dator, där stegen och pilarna tänds i tur (`.ar-igang`), och lodrätt
   med pilen nedåt från 1100 px, där varje steg tänds när det passerat
-  mitten (`.ar-nadd`). Betalnings- och fakturameningen står en gång var i
-  flödet och en gång i FAQ:n. `.nx-holdpunkter` är kvar på Vår idé och För
+  mitten (`.ar-nadd`). Betalningsmeningen står en gång i flödet och en
+  gång i FAQ:n (fakturameningen gick med fakturan 2026-10-21). `.nx-holdpunkter` är kvar på Vår idé och För
   elever & föräldrar.
 
 ### Startsidan med en röd tråd (2026-10-08)

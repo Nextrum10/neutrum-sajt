@@ -217,20 +217,24 @@
      kolumnen Studiehjälpare nedan.
      ============================================================ */
 
-  /* Hur långt matchningen kommit, i ett ord. Här satt förr en
+  /* Familjen är intagen; matchad är barnet (2026-10-21, Leo: "'Matchad'
+     ska visas på barnet och inte på föräldern"). Här satt förr en
      rullgardin som skrev profiles.matched_tutor_id, och den är borta
      med flit: sedan schema-v14 äger ELEVEN sin matchning, och
      profiles-kolumnen skrivs av en trigger som räknar om den ur barnen.
      Två skrivvägar till samma sanning är en bugg som väntar. Matchningen
-     görs under Matchning, och panelen har knappen dit. */
+     görs under Matchning och står på varje barn, under Elever och i
+     familjens panel. Ett konto skapar bara vi (Ta in familjen), så varje
+     familj här är intagen; datumet står när anmälan flyttats hit. */
   function familjLäge(p) {
-    const barn = S.elever[p.id] || [];
-    const matchade = barn.filter(e => e.matched_tutor_id && e.match_status === 'matched').length;
-    if (!barn.length) return pill('Inga barn', '');
-    if (!matchade) return pill('Ingen matchad', 'ar-ny');
-    if (matchade < barn.length) return pill(matchade + ' av ' + barn.length + ' matchade', 'ar-vantar');
-    return pill('Matchad', 'ar-klar');
+    const intagen = (S.intagenFör || {})[p.id];
+    return pill(intagen ? 'Intagen ' + kortDatum(intagen.intagen_at) : 'Intagen', 'ar-klar');
   }
+
+  /* Har familjen ett barn som väntar på en studiehjälpare? Filtret
+     läser barnen, inte profiles.match_status, som bara speglar det
+     första matchade barnet. */
+  const barnUtanHjälpare = p => (S.elever[p.id] || []).some(e => !(e.matched_tutor_id && e.match_status === 'matched'));
 
   function ritaFamiljer() {
     const sök = $('#fam-sok').value.trim();
@@ -238,7 +242,9 @@
     const alla = Object.values(S.personer).filter(p => p.role === 'parent' && !ärRaderad(p))
       .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
     const rader = alla
-      .filter(p => !st || (st === 'matched' ? p.match_status === 'matched' : p.match_status !== 'matched'))
+      .filter(p => !st || (st === 'matched'
+        ? (S.elever[p.id] || []).length && !barnUtanHjälpare(p)
+        : barnUtanHjälpare(p) || !(S.elever[p.id] || []).length))
       .filter(p => matchar(p, ['full_name', 'email', 'phone'], sök));
 
     $('#fam-antal').textContent = rader.length + ' av ' + alla.length;
@@ -250,6 +256,56 @@
     });
     ritaPanelen();
   }
+
+
+  /* ============================================================
+     ANMÄLAN FLYTTAS TILL FAMILJEN (2026-10-21)
+
+     Leo: "när en intresseanmälan blir en familj ska ... (c) radera
+     lead-raden så den inte tar plats i listan." intag_lead flyttar
+     källan, koden och det familjen skrev till intagna_anmalningar och
+     tar bort anmälan; tipstimmen, Koder och statistiken läser båda.
+     Svarar true, null när funktionen saknas (migrationen inte körd),
+     eller felet som text.
+     ============================================================ */
+  async function flyttaAnmälan(leadId, familj) {
+    const { error } = await supa.rpc('intag_lead', { p_lead: leadId, p_familj: familj || null });
+    if (!error) {
+      S.leads = S.leads.filter(l => l.id !== leadId);
+      return true;
+    }
+    if (error.code === 'PGRST202' || error.code === '42883') return null;
+    return felText(error);
+  }
+
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-lead-intag]');
+    if (!knapp) return;
+    const lead = S.leads.find(l => l.id === knapp.dataset.leadIntag);
+    if (!lead) return;
+    const familj = anmälansFamilj(lead);
+    if (!familj) return;
+    const ja = await bekräfta({
+      titel: 'Flytta anmälan till familjen?',
+      text: 'Källan, koden och det ' + (lead.parent_name || 'familjen') + ' skrev flyttas till '
+        + (familj.full_name || familj.email || 'familjen') + ' och står i familjens panel. '
+        + 'Telefonnumret sparas på familjen om det saknas där, och anmälan står inte längre i listan.',
+      knapp: 'Flytta'
+    });
+    if (!ja) return;
+    await medan(knapp, '…', async () => {
+      const svar = await flyttaAnmälan(lead.id, familj.id);
+      if (svar === null) {
+        alert('Databasen kan inte flytta anmälningar än (migrationen anmalan_flyttas_till_familjen).');
+        return;
+      }
+      if (svar !== true) { alert('Kunde inte flytta: ' + svar); return; }
+      await hämtaAllt();
+      ritaLeads();
+      ritaFamiljer();
+      if (NXAdmin.rita.öppnaDetalj) NXAdmin.rita.öppnaDetalj('familj', familj.id);
+    });
+  });
 
 
   /* ============================================================
@@ -566,6 +622,7 @@
     let familj = anmälansFamilj(lead);
     let inbjuden = false;
     let gratisVal = null;   // gratistimmarna: svaret från ge_gratistimmar, eller felet
+    let flyttad = null;     // anmälan flyttad till familjen: true, felet, eller null utan funktionen
     let rabattVal = null;   // familjerabatten: koden som sattes, eller { fel }
     const kanBjuda = NX.epostOk(lead.email || '');
     /* Familjerabatterna (2026-10-15) som går att ge, bara för en superadmin
@@ -757,6 +814,14 @@
         lead.kund_id = parent;
         if (ny) lead.uppdrag_id = ny.uppdrag_id || null;
 
+        /* Anmälan flyttas till familjen (2026-10-21): källan, koden och
+           meddelandet följer med, och raden försvinner ur listan. Sist,
+           när eleven finns: gick något fel före står anmälan kvar, och
+           Skapa elev går att trycka igen. Saknas funktionen (migrationen
+           anmalan_flyttas_till_familjen är inte körd) står den kvar som
+           intagen, som förut. */
+        flyttad = await flyttaAnmälan(lead.id, parent);
+
         await hämtaAllt();
         ritaLeads();
         ritaElever();
@@ -797,7 +862,11 @@
               : '')
           + '<p' + (inbjuden ? ' style="margin-top:10px"' : '') + '><b>' + esc(namn) + '</b> ligger nu under <b>Elever</b> och i matchningskön. '
           + 'Anmälan från ' + esc(lead.parent_name || lead.email || 'familjen')
-          + ' är markerad som klar.</p>'
+          + (flyttad === true
+            ? ' är flyttad till familjen: källan och det de skrev står i familjens panel, och anmälan står inte längre i listan.</p>'
+            : flyttad
+              ? ' är intagen men kunde inte flyttas (' + esc(flyttad) + '). Tryck Flytta till familjen på anmälan.</p>'
+              : ' är markerad som intagen.</p>')
           + '<div class="nx-fraga-knappar">'
           + '<button type="button" class="btn btn-ghost" data-le-stang>Stäng</button>'
           + '<button type="button" class="btn btn-primary" data-le-match>Välj studiehjälpare</button>'

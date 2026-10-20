@@ -1,9 +1,10 @@
 /* ============================================================
    NEXTRUM — adminvyn, Automationer (Fas 7)
 
-   Fyra namngivna kontroller i databasen letar efter sådant som
+   Tre namngivna kontroller i databasen letar efter sådant som
    annars upptäcks för sent: pass utan rapport, ekonomi som inte går
-   ihop, förfallna fakturor och anmälningar ingen svarat på.
+   ihop och anmälningar ingen svarat på. (Den fjärde, förfallna
+   fakturor, gick med fakturan 2026-10-21.)
 
    DE SKICKAR INGENTING. Varje fynd blir en uppgift under Drift →
    Uppgifter, och en människa avgör vad som ska hända. Påminnelsen
@@ -38,21 +39,18 @@
   const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
 
-  /* Samma fyra som i migrationen fas7_3c. Texten här beskriver vad
+  /* Samma tre som i dagliga_kontroller() (fas7_3c, utan fakturorna sedan
+     fakturan_tas_bort). Texten här beskriver vad
      de gör; sanningen står i SQL:en, och ändras den ena ska den
      andra följa med. */
   const KONTROLLER = [
     ['Pass utan rapport',
      'Bekräftade pass som varit för mer än ett dygn sedan utan att någon skrivit rapport. '
-     + 'Utan rapport räknas passet inte som genomfört: det faktureras inte och betalas inte ut.',
+     + 'Utan rapport räknas passet inte som genomfört: det debiteras inte och betalas inte ut.',
      'kontroll'],
     ['Ekonomiska avvikelser',
-     'Allt som inte går ihop i ekonomin: rapporter utan pass, pass som är klara men inte '
-     + 'fakturerade, summor som inte stämmer med raderna, utbetalningar som fastnat.',
-     'problem'],
-    ['Förfallna fakturor',
-     'Skickade och obetalda fakturor där förfallodagen passerat. Skapar en uppgift — '
-     + 'påminnelsen skickar du själv från Ekonomi.',
+     'Allt som inte går ihop i ekonomin: rapporter utan pass, pass som hölls men inte '
+     + 'betalats, summor som inte stämmer med raderna, utbetalningar som fastnat.',
      'problem'],
     ['Uppföljning',
      'Intresseanmälningar som ingen svarat på, familjer som kontaktats men inte blivit '
@@ -89,7 +87,7 @@
     'utbildningsprov-paminn': 'Påminnelser om utbildningsprovet',
     'timmar-betalar': 'Lediga timmar betalar nästa pass',
     'timmar-gar-ut': 'Mejlet om timmar som snart går ut',
-    'manadskorning': 'Månadskörningen: lönespec och fakturautkast',
+    'manadskorning': 'Månadskörningen: lönespecifikationerna',
     'manadskorning-svar': 'Månadskörningens svar: fel blir en uppgift',
     'leads-avidentifiering': 'Intresseanmälningar avidentifieras',
     'ansokan-gallring': 'Ansökningar och CV:n gallras',
@@ -309,7 +307,7 @@
   /* ------------------------------------------------------------
      KÖR NU
 
-     De fyra kontrollerna, genom kor_kontrollerna() som har
+     De tre kontrollerna, genom kor_kontrollerna() som har
      adminvakten och kör dagliga_kontroller(). Inget schema kör dem
      (se överst), så det här är enda vägen. Svaret säger hur många
      NYA uppgifter som skapades — körs den två gånger i rad ska den
@@ -332,10 +330,9 @@
       const DEL = [
         [d.saknade_rapporter, 'pass utan rapport', 'pass utan rapport'],
         [d.ekonomiska_avvikelser, 'ekonomisk avvikelse', 'ekonomiska avvikelser'],
-        [d.forfallna_fakturor, 'förfallen faktura', 'förfallna fakturor'],
         [d.uppfoljningar, 'uppföljning', 'uppföljningar']
       ];
-      /* En kontroll som fallit rapporteras för sig. De andra tre har
+      /* En kontroll som fallit rapporteras för sig. De andra två har
          ändå gjort sitt, och ett tyst bortfall är värre än ett fult
          meddelande. */
       const trasiga = Array.isArray(d.fel) ? d.fel : [];

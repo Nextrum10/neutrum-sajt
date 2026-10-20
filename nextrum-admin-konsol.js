@@ -101,7 +101,7 @@
       värd.innerHTML = '<div class="adm-lugnt">'
         + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
         + '<span><b>Ingenting väntar just nu</b>'
-        + '<span>Inga förfallna fakturor, inga pass utan rapport och inga obesvarade anmälningar.</span></span>'
+        + '<span>Inga pass utan rapport och inga obesvarade anmälningar.</span></span>'
         + '</div>';
     } else {
       /* Problemen först: det som gått fel är inte samma sak som det

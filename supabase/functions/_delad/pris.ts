@@ -15,17 +15,11 @@
 // det: listan är till för att någon ska se passen, inte för att de ska
 // drivas in av sig själva.
 //
-// FAS 14.6 GAV TILLBAKA EN DEL AV DEN. Familjen kan välja faktura på
-// ett pass (betalning_status = 'faktura'), och bara de passen samlas
-// på en månadsfaktura: byggFakturor(). Samma pris som kortet tar, ur
-// familjebelopp(), så att betalsättet aldrig ändrar vad passet kostar.
-//
-// SEDAN 2026-10-15 (obetalda_pass_pa_fakturan) läggs ett pass som inte är
-// betalt när månaden faktureras på fakturan av sig självt: databasen
-// skriver det som 'faktura' (fakturera_obetalda) innan körningen väljer
-// fakturapassen. Förut fakturerades det aldrig av sig självt. Undantagen
-// står kvar som obetalda; somFaktura() gör samma sak i minnet när
-// körningen bara torrkör.
+// FAKTURAN ÄR BORTA IGEN (2026-10-21, fakturan_tas_bort). Fas 14.6 lät
+// familjen välja faktura på ett pass, och 2026-10-16 lades obetalda pass
+// på den av sig själva. Ingen faktura gick någonsin till en familj, och
+// Leo tog bort fakturan helt: byggFakturor() och somFaktura() gick med
+// den. Körningen bygger bara underlagen, och listan över obetalda pass.
 //
 // PRISLOGIKEN ÄR DENSAMMA SOM FÖRUT (planens avsnitt D):
 //   · priset som frystes på passet när det bokades (Fas 19.5), annars
@@ -73,7 +67,6 @@ export type Pass = {
   rabatt_ore: number | null;
   fakturerbar: boolean;
   har_rapport: boolean;
-  fakturerad: boolean;
   pa_underlag: boolean;
   // Valfri i typen med flit: en anropare som inte hämtar kolumnen får
   // passet räknat som obetalt. Att gissa "betalt" hade gömt det.
@@ -86,7 +79,7 @@ export type Pass = {
   debiterade_min?: number | null;
   lon_min?: number | null;
   // Fas 22.1: övertiden timbanken tog. Den är betald med minuter familjen
-  // redan köpt, och ska varken dras med kort eller stå på en faktura.
+  // redan köpt, och ska inte dras med kort.
   timbank_min?: number | null;
   // Priset fryst vid bokningen (Fas 19.5). Saknas det räknas passet på
   // tjänstens pris, som före Fas 19.5.
@@ -131,26 +124,8 @@ export function passpris(
 //
 // 'betald' och 'tvist' är betalda. 'aterbetald' är inte med: där har
 // någon redan beslutat vad som ska hända med pengarna, och en lista
-// över obetalda pass ska inte se ut att riva det beslutet. 'faktura'
-// (Fas 14.6) är inte med: passet betalas mot faktura, och om fakturan
-// är betald står på fakturan, inte här.
+// över obetalda pass ska inte se ut att riva det beslutet.
 export const OBETALDA_LAGEN = new Set(['ingen', 'vantar', 'misslyckad']);
-
-/** obetalda_pass_pa_fakturan (2026-10-15). Torrkörningen skriver inget,
- *  så passen som fakturera_obetalda() SKULLE lägga på fakturan räknas som
- *  fakturapass i minnet: i `lista` blir deras betalning 'faktura', och de
- *  ur `extra` som inte redan står där läggs till. Svarar med listan. */
-export function somFaktura(lista: Pass[], extra: Pass[], ids: string[]): Pass[] {
-  const valda = new Set(ids);
-  for (const b of lista) if (valda.has(b.id)) b.betalning_status = 'faktura';
-  const finns = new Set(lista.map((b) => b.id));
-  for (const b of extra) {
-    if (!valda.has(b.id) || finns.has(b.id)) continue;
-    lista.push({ ...b, betalning_status: 'faktura' });
-    finns.add(b.id);
-  }
-  return lista;
-}
 
 export function obetalt(b: Pass): boolean {
   return OBETALDA_LAGEN.has(String(b.betalning_status ?? 'ingen'));
@@ -205,8 +180,8 @@ export function manadenNu(nu: Date): string {
   return `${ar}-${String(man).padStart(2, '0')}-01`;
 }
 
-// Är perioden (ÅÅÅÅ-MM-01) slut i svensk tid? Underlag och fakturor
-// skapas först då (2026-10-01). Den 29 september kördes september med
+// Är perioden (ÅÅÅÅ-MM-01) slut i svensk tid? Underlag skapas först
+// då (2026-10-01). Den 29 september kördes september med
 // knappen medan den pågick, och ett pass som rapporterades samma kväll
 // fick inte plats: en studiehjälpare har ett underlag per månad, så
 // schemat svarade 207 den 1 oktober och passet fick vänta en månad på
@@ -287,9 +262,9 @@ export function byggUnderlag(o: {
     const text = radtext(b.subject, b.wanted_date);
     const t = tjanstFor(b.tjanst);
 
-    // FAMILJENS HALVA är en lista, inte en faktura. Ett pass som står
-    // på en äldre faktura drivs in genom den och räknas inte här.
-    if (b.parent_id && !b.fakturerad && obetalt(b)) {
+    // FAMILJENS HALVA är en lista över pass som hölls utan att familjen
+    // betalat, inte något som drivs in av sig självt.
+    if (b.parent_id && obetalt(b)) {
       const p = passpris(b, t, o.timprisOre);
       const barn = Math.max(1, Number(b.antal_barn || 1));
       const brutto = familjebelopp(familjensMinuter(b), p.timme, p.extra, barn);
@@ -339,78 +314,29 @@ export function byggUnderlag(o: {
   return { perTutor, utanTimpenning, obetalda };
 }
 
-export type Fakturarad = {
-  booking_id: string;
-  beskrivning: string;
-  minuter: number;
-  pris_per_timme_ore: number;
-  belopp_ore: number;
-};
-
-/**
- * Familjens månadsfaktura (Fas 14.6): en lista rader per familj, för
- * pass familjen valt att betala mot faktura och som inte redan står på
- * en faktura. Priset räknas precis som stripe-checkout räknar det:
- * tjänstens timpris, det fasta tillägget för flera barn, och rabatten
- * som frystes vid bokningen. Beskrivningen är ämne och datum, aldrig
- * barnets namn: fakturan läggs in i Fortnox och kan hamna i en inkorg.
- */
-export function byggFakturor(o: { pass: Pass[]; tjanster: Tjanst[]; timprisOre: number }) {
-  const perKod = new Map<string, Tjanst>();
-  for (const t of o.tjanster) perKod.set(t.kod, t);
-  const standard = standardTjanst(o.tjanster);
-
-  const perFamilj = new Map<string, Fakturarad[]>();
-  for (const b of o.pass) {
-    if (!b.parent_id || b.fakturerad || b.betalning_status !== 'faktura') continue;
-    const t = perKod.get(b.tjanst ?? standard?.kod ?? '');
-    const { timme, extra } = passpris(b, t, o.timprisOre);
-    // Fas 20.1: fakturan tar den hållna tiden.
-    const minuter = familjensMinuter(b);
-    const barn = Math.max(1, Number(b.antal_barn || 1));
-    const brutto = familjebelopp(minuter, timme, extra, barn);
-    const rabatt = Math.min(Math.max(Number(b.rabatt_ore || 0), 0), brutto);
-    // En rad på noll kronor är ingen faktura (Fas 19.5).
-    if (brutto - rabatt <= 0) continue;
-    const lista = perFamilj.get(b.parent_id) ?? [];
-    lista.push({
-      booking_id: b.id,
-      beskrivning: radtext(b.subject, b.wanted_date)
-        + (barn > 1 ? ` (${barn} barn)` : '')
-        + (rabatt > 0 ? ' − rabatt' : ''),
-      minuter,
-      pris_per_timme_ore: timme + (barn > 1 ? extra : 0),
-      belopp_ore: brutto - rabatt,
-    });
-    perFamilj.set(b.parent_id, lista);
-  }
-  return perFamilj;
-}
-
 // ---------- vilken månad ett pass hamnar på (2026-10-01) ----------
 
-// Ett underlag (payouts) eller en faktura (invoices) som redan finns.
+// Ett underlag (payouts) som redan finns.
 export type Dokument = { id: string; period: string; status: string };
 
 /**
- * Månaden ett pass hamnar på, på personens underlag eller faktura.
+ * Månaden ett pass hamnar på, på studiehjälparens underlag.
  *
  * Leo 2026-10-01: "passen som är hållna i september ska spärras av för
  * september". Förut tog körningen allt som inte stod på ett underlag och
  * lade det på periodens: ett pass den 30 september som rapporterades
- * efter körningen den 1 oktober hamnade på oktobers underlag och
- * oktobers faktura, och betalades en månad för sent åt båda hållen.
+ * efter körningen den 1 oktober hamnade på oktobers underlag, och
+ * betalades ut en månad för sent.
  *
- * Nu går passet till sin egen månad, så länge personens dokument för den
- * är ett utkast eller inte skapat än. Är det låst (godkänt, skickat,
- * betalt, makulerat) har någon redan gått igenom det, och då går passet
- * till den första senare månaden som har ett utkast, eller till
- * periodens.
+ * Nu går passet till sin egen månad, så länge underlaget för den är ett
+ * utkast eller inte skapat än. Är det låst (godkänt, utbetalt) har någon
+ * redan gått igenom det, och då går passet till den första senare
+ * månaden som har ett utkast, eller till periodens.
  *
  *   manad   passets månad, ÅÅÅÅ-MM-01
  *   period  körningens månad. Ett nytt dokument skapas bara för den: en
- *           äldre månad som aldrig fick ett hade fått en lönedag och en
- *           faktura som redan borde ha kommit.
+ *           äldre månad som aldrig fick ett hade fått en lönedag som
+ *           redan varit.
  *   lagen   personens dokument, månad → status
  *
  * null när ingen månad till och med perioden tar emot passet. Det väntar
@@ -499,25 +425,22 @@ export const minuterSum = (rader: Rad[]) => rader.reduce((a, r) => a + r.minuter
 // Svaret. `obetalda` står alltid med, också tom: en tom lista är ett
 // besked ("alla hållna pass är betalda"), en saknad nyckel är en fråga.
 //
-// Varje underlag och faktura säger sin månad, och `tillagg` om raderna
-// läggs till på ett utkast som redan finns (2026-10-01). Utan en
-// fördelning går allt till periodens, som när ingen har ett dokument än.
+// Varje underlag säger sin månad, och `tillagg` om raderna läggs till på
+// ett utkast som redan finns (2026-10-01). Utan en fördelning går allt
+// till periodens, som när ingen har ett underlag än.
 export function sammanfatta(o: {
   korningAv: 'nyckel' | 'schema' | 'admin';
   period: string;
   slut: string;
   timprisOre: number;
   underlag: ReturnType<typeof byggUnderlag>;
-  fakturor?: ReturnType<typeof byggFakturor>;
   utanRapport: ReturnType<typeof sorteraPass>['utanRapport'];
   undantagna: string[];
   utbetalningarFordelade?: Fordelning<Rad>;
-  fakturorFordelade?: Fordelning<Fakturarad>;
 }) {
   const u = o.underlag;
   const tom = { datumFor: new Map<string, string>(), dokument: new Map<string, Dokument[]>(), period: o.period };
   const utb = o.utbetalningarFordelade ?? fordela({ ...tom, rader: u.perTutor });
-  const fakt = o.fakturorFordelade ?? fordela({ ...tom, rader: o.fakturor ?? new Map<string, Fakturarad[]>() });
   return {
     korning_av: o.korningAv,
     period: o.period,
@@ -526,15 +449,10 @@ export function sammanfatta(o: {
     utbetalningar: utb.poster.map((p) => ({
       tutor_id: p.person, period: p.manad, tillagg: p.dokument !== null, pass: p.rader.length, belopp_ore: summa(p.rader),
     })),
-    // Fas 14.6. Står alltid med, också tom, av samma skäl som obetalda.
-    fakturor: fakt.poster.map((p) => ({
-      parent_id: p.person, period: p.manad, tillagg: p.dokument !== null, pass: p.rader.length, belopp_ore: summa(p.rader),
-    })),
     // Pass vars månad redan är låst, liksom allt efter den till och med
     // perioden. Nästa månads körning tar dem. Står alltid med.
     vantar: {
       underlag: utb.vantar.map((v) => ({ tutor_id: v.person, booking_id: v.booking_id, manad: v.manad })),
-      fakturor: fakt.vantar.map((v) => ({ parent_id: v.person, booking_id: v.booking_id, manad: v.manad })),
     },
     obetalda: u.obetalda,
     hoppade_over_utan_timpenning: [...new Set(u.utanTimpenning)],

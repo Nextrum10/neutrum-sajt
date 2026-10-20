@@ -41,8 +41,8 @@ Deno.test('varje sort står med sin etikett, i ental och flertal', () => {
 });
 
 Deno.test('raderna står i listans ordning, inte i den ordning databasen skrev dem', () => {
-  const r = adminRader({ uppgift: 1, fraga: 2, faktura_obetald: 3 });
-  assertEquals(r.map((x) => x.typ), ['fraga', 'faktura_obetald', 'uppgift']);
+  const r = adminRader({ uppgift: 1, fraga: 2, utbetalning: 3 });
+  assertEquals(r.map((x) => x.typ), ['fraga', 'utbetalning', 'uppgift']);
 });
 
 Deno.test('mejlet säger rapporten som familjen inte bekräftat', () => {
@@ -231,6 +231,6 @@ Deno.test('alla sorter har en etikett i ental och flertal, och inga två är lik
     assertEquals(adminRader({ [s.typ]: 1 })[0].etikett.length > 0, true);
     assertEquals(adminRader({ [s.typ]: 2 })[0].etikett.length > 0, true);
   }
-  assertEquals(typer.size, 10);
+  assertEquals(typer.size, 8);
   assertEquals(typer.has('ny_lead') || typer.has('ny_ansokan'), false);
 });

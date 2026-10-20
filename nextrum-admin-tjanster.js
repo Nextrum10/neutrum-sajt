@@ -28,8 +28,8 @@
      Ett kort per tjänst. `aktiv` är det enda som avgör vad
      besökare ser, så den kryssrutan är sidans vassaste kontroll —
      och den vägrar slås på för en tjänst utan pris. En tjänst som
-     går att boka men inte prissätta blir en faktura ingen kan
-     skriva.
+     går att boka men inte prissätta blir ett pass ingen kan ta
+     betalt för.
      ------------------------------------------------------------ */
   /* Den tjänst en ansökan utan val gäller: katalogens första aktiva
      jobbtjänst. S.tjanster är hela katalogen (admin läser även de
@@ -702,8 +702,8 @@
 
     /* VILLKOREN LOVAR PRISET SOM GÄLLDE VID BOKNINGEN, och sedan Fas 19.5
        håller databasen det: priset fryses på passet när det bokas
-       (bookings.timpris_ore), och kortet, fakturan och månadskörningen
-       räknar på det. Förut räknade kortet dagens pris, och den här
+       (bookings.timpris_ore), och kortet och månadskörningen räknar på
+       det. Förut räknade kortet dagens pris, och den här
        dialogen räknade de bokade passen en höjning hade slagit mot. Nu
        gäller ett nytt pris bara pass som bokas efter ändringen. */
 

@@ -12,8 +12,9 @@ inbjudningarna och rekryteringsmötet valdes bort, och mejlen går inte
 genom Google (se "Varför inte kalendern och mejlen" nedan).
 
 Fortnox stod här till Fas 14.8, som en koppling som aldrig gjordes.
-Sedan Fas 14.9 sköts bokföringen, fakturorna och lönen i **Fortnox**,
-och Fortnox är med flit inte kopplat hit (se nedan).
+Sedan Fas 14.9 sköts bokföringen och lönen i **Fortnox**, och Fortnox
+är med flit inte kopplat hit (se nedan). Fakturorna till familjerna
+skulle också dit, men fakturan togs bort 2026-10-21 innan någon gått ut.
 
 ---
 
@@ -48,26 +49,23 @@ samtidigt, och det de då når är ett enda scope: att skapa Meet-rum.
 
 ---
 
-## Fortnox: bokföringen, fakturorna och lönen, utan koppling
+## Fortnox: bokföringen och lönen, utan koppling
 
-Nextrum bokför, fakturerar och lägger in lönen i Fortnox. Fas 14.9 bytte
-Wint mot Fortnox. Ingenting härifrån når Fortnox automatiskt, och det
-är ett beslut, inte en lucka:
+Nextrum bokför och lägger in lönen i Fortnox. Fas 14.9 bytte Wint mot
+Fortnox. Ingenting härifrån når Fortnox automatiskt, och det är ett
+beslut, inte en lucka:
 
 - Fortnox har ett dokumenterat API, vilket Wint inte hade, så en
-  koppling för fakturor och lönetransaktioner går att bygga senare. Den
-  byggs först när handarbetet faktiskt kostar tid. En koppling mot
-  bokföringen som går sönder tyst är värre än ingen.
-- Volymen är liten. En faktura per familj och månad, för de familjer som
-  valt faktura, läggs in för hand på några minuter.
+  koppling för lönetransaktioner går att bygga senare. Den byggs först
+  när handarbetet faktiskt kostar tid. En koppling mot bokföringen som
+  går sönder tyst är värre än ingen.
+- Volymen är liten.
 
-Fakturorna (Fas 14.6): månadskörningen skapar ett fakturautkast per
-familj under **Betalningar → Fakturor**. **Underlag** kopierar det Fortnox
-behöver. Fakturan läggs in i Fortnox, som skickar den. Fakturanumret i
-Fortnox och förfallodagen skrivs sedan in här med **Lagd i Fortnox**,
-och fakturan markeras **Betald** när Fortnox visar det. Påminnelserna i
-Fortnox ställs utan avgift: villkoren nämner ingen, och då får ingen
-tas ut.
+Fakturorna (Fas 14.6 till 2026-10-21): månadskörningen skapade ett
+fakturautkast per familj som valt faktura, och det lades in i Fortnox för
+hand. Fakturan togs bort helt 2026-10-21 (`minne/betalning.md`, Fakturan
+tas bort); ingen hade gått till en familj. Familjen betalar varje pass
+med kort eller med timmar ur timbanken.
 
 Lönen: blir studiehjälparna anställda läggs underlaget den 25:e
 (`payouts`, **Löner**) in i Fortnox Lön, med lönefilen därifrån (PAXml).
@@ -83,8 +81,8 @@ Fortnox, på integrationsmarknaden där. Ingen kod här rör den. Koppla
 den, och bestäm med revisorn hur den bokar, innan den första skarpa
 betalningen (DEPLOY-BETALNING.md 9.7).
 
-Integritetspolicyn: innan något går till Fortnox (Stripe-integrationen,
-den första fakturan eller den första lönen) ska Fortnox stå under "Var
+Integritetspolicyn: innan något går till Fortnox (Stripe-integrationen
+eller den första lönen) ska Fortnox stå under "Var
 uppgifterna finns", på svenska och engelska. I dag räknar den upp
 Supabase, Vercel, Stripe och Google (Meet-rummen, Fas 18.1).
 

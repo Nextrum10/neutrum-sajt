@@ -1581,15 +1581,12 @@
   }
 
   /* Betalt nog för att rapporteras. Tvist räknas som betalt: familjen
-     HAR betalat, och passet hölls på den betalningen. Faktura räknas
-     också (Fas 14.6): familjen betalar passet mot en månadsfaktura som
-     kommer efter passet, så det hålls innan det är betalt, och
-     databasen släpper igenom rapporten. Ett pass Nextrum undantagit ska
-     inte betalas och stoppas därför inte. */
+     HAR betalat, och passet hölls på den betalningen. (Faktura räknades
+     också, från Fas 14.6 tills fakturan togs bort 2026-10-21.) Ett pass
+     Nextrum undantagit ska inte betalas och stoppas därför inte. */
   function betaltNog(b) {
     return !S.kortsparr || b.fakturerbar === false
-      || b.betalning_status === 'betald' || b.betalning_status === 'tvist'
-      || b.betalning_status === 'faktura';
+      || b.betalning_status === 'betald' || b.betalning_status === 'tvist';
   }
 
   /* ============================================================
@@ -4084,8 +4081,6 @@
         ? { text: 'Passet är bokat, och familjen har betalat det med sin timbank. ' + ses + ' Avbokas det går minuterna tillbaka till familjen.' + bankTips, ton: 'klart' }
         : medTimmar
         ? { text: 'Passet är bokat, och familjen har betalat det med timmar ur sin timbank. ' + ses + ' Avbokas det går timmarna tillbaka till familjen.' + bankTips, ton: 'klart' }
-        : b.betalning_status === 'faktura'
-        ? { text: 'Passet är bokat, och familjen betalar det mot faktura. ' + ses + bankTips, ton: 'klart' }
         : { text: 'Passet är bokat. ' + ses + bankTips, ton: 'klart' };
       fot = flytta('Föreslå ny tid') + skriv + (betalt ? '' : avboka('Avboka passet'));
     } else if (b.status === 'completed') {

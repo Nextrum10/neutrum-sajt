@@ -16,7 +16,7 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
    Kontot skapas med anmälans adress, eleven ur anmälan, och familjen
    väljer lösenordet genom länken i mejlet. Inget Skapa konto på sajten
    (2026-10-07): konton skapar bara vi (`bjud-in`) och föräldern (barnets
-   inloggning)
+   inloggning). Sist flyttar anmälan till familjen (nedan, 2026-10-21)
 4. `admin.html` → **Familjer** → välj hjälpare i rullgardinen. Sätter
    `matched_tutor_id` och `match_status` **samtidigt** — förr var det
    två kolumner i Table Editor och satte man bara den ena såg familjen
@@ -115,6 +115,55 @@ tryck som personen tas in, med personens egen adress:
 - Leo bad om lösenordet 12345678 för alla nya konton. Det blev en länk i
   stället, för samma steg för personen; varför står i
   `minne/sakerhet.md`.
+
+## Anmälan flyttar till familjen (2026-10-21, `anmalan_flyttas_till_familjen`)
+
+Leo: "när en intresseanmälan blir en familj ska en SECURITY DEFINER-funktion
+intag_lead(lead_id) (a) kopiera källa, kampanj och utm till familjens profil,
+(b) markera familjen som intagen och (c) radera lead-raden så den inte tar
+plats i listan. Bygg samma sak som knapp i admin. Hira finns redan som
+familj: gör en engångsfix för henne." Och om matchningen: Intagen ska stå på
+familjen och Matchad på barnet.
+
+**Varför inte på profilen.** `profiles` skyddas av en lista över kolumner
+familjen INTE får skriva (`skydda_profilfalt`); en ny kolumn där hade varit
+skrivbar för familjen själv, och källan är vår uppgift, inte deras. Den står
+därför i `intagna_anmalningar`, med anmälans id och familjens id, och
+familjens panel i adminvyn visar den (Intagen, när de anmälde sig, varifrån,
+koden). Bara `intern.intag_lead` skriver; de som läser intresseanmälningar
+läser.
+
+**Varför inte bara radera anmälan.** Tre saker läser den efter att familjen
+blivit kund: tipstimmen (`intern.tipsade_familjer` hittar den nya familjen
+genom anmälan och koden), koderna (`mina_tips`, `tipskoder_lage`,
+`koder_lage` räknar anmälningarna) och statistiken (`analys_konvertering`,
+`analys_leads_per_kalla`: blev_kund är just de som flyttas). Alla fem läser
+båda tabellerna. Utan det hade familjen som tipsat förlorat sin timme.
+
+**Vem och hur.** `intag_lead(anmälan, familj)` är bara superadmin, som Ta in
+familjen: familjen är den som anges, annars anmälans `kund_id`, annars den
+enda familjen med anmälans adress. Telefonnumret ur meddelandets första rad
+går till profilen om den saknar ett. Ta in familjen anropar den sist, och en
+anmälan som tagits in före 2026-10-21 (eller där flytten föll) har knappen
+**Flytta till familjen** i sin panel. En anmälan som redan flyttats svarar
+med det, så knappen går att trycka två gånger.
+
+**Matchningen** låg redan på barnet (`students.matched_tutor_id`,
+`match_status`, sedan schema-v14); `profiles` bär bara en spegel av det
+första matchade barnet. Adminvyn visar **Intagen** på familjen (läget
+`matched` på en anmälan heter Intagen) och **Matchad** på barnet. Ingen
+policy flyttades.
+
+**Gallringen**: meddelandet och adressens frågesträng gallras som i `leads`,
+sex månader efter kontakten, och `radera_person` tömmer dem för en familj
+som raderas. Resten står kvar för statistiken, och familjens id blir tomt när
+kontot tas bort helt.
+
+**Hira** (en familj som fanns innan anmälan kopplades): filen kopplar
+anmälan med förnamnet Hira, utan `kund_id`, till familjen med samma adress
+eller förnamn och flyttar den. Hittas inte exakt en av varje görs ingenting,
+och en NOTICE säger varför. Går att köra igen. Provet i webbläsaren är
+`verktyg/prova-intag.js`.
 
 ## Uppstarten
 
@@ -974,8 +1023,7 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
 | pass | ett bokat tillfälle (`bookings`). Hela timmar, 1–3 |
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
-| betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
-| faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, efter passet. Påslaget sedan 2026-09-27 (flaggan `faktura`). Skickas från Fortnox, aldrig härifrån |
+| betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas, eller med timmar ur timbanken (`bookings.betalning_status`, `betalt_ore`). Mot faktura gick det från Fas 14.6 till 2026-10-21, då fakturan togs bort |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
 | uppgift | i studievyn (under NexLäx) och studiehjälparvyn det eleven ska göra mellan passen (`homework`, Fas 23.1). Hette läxa. I adminvyn och i tabellen `uppgifter` betyder ordet fortfarande adminens att göra-lista; koden för elevens uppgifter säger `laxor` och `homework` |
 | nivå | en digital uppgift i banan (`nivaer`): 5–12 frågor som rättas i databasen. En **bana** är nivåerna i ett ämne och en årskurs. Ett **Mästarprov** och **repetitionen** är nivåer som drar sina frågor ur banan (Fas 23.2) |

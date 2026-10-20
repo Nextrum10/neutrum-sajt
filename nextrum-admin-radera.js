@@ -141,7 +141,6 @@
   const STAR_KVAR = {
     pass: ['pass som hållits eller betalats', 'pass som hållits eller betalats'],
     klippkort: ['köp av timmar', 'köp av timmar'],
-    fakturor: ['faktura', 'fakturor'],
     underlag: ['löneunderlag', 'löneunderlag'],
     tipsbonus: ['bonus för tips', 'bonusar för tips'],
     elevernas_material: ['läxa, plan eller material hen skrivit åt en elev (eleven har det kvar)',

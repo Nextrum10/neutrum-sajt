@@ -837,7 +837,7 @@ window.NXStudie = (function () {
         + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
         /* Förhandsvisning: text som ska läsas exakt som den står,
            med sina radbrytningar. Ett <p> hade klämt ihop ett helt
-           fakturamejl till en enda mening. Fortfarande escapad —
+           underlagsmejl till en enda mening. Fortfarande escapad —
            innehållet kommer från servern, inte från oss. */
         + (o.forhandsvisning
           ? '<pre class="nx-fraga-prov">' + esc(o.forhandsvisning) + '</pre>' : '')
@@ -1404,7 +1404,7 @@ window.NXStudie = (function () {
        besked:  { text, ton },             vad som väntar, på vem
        atgarder: html,                     knapparna
        alternativ: html,                   ett andra val under knapparna,
-                                           t.ex. faktura i stället för kort
+                                           t.ex. att välja bort kortet
        kort:    [{ rubrik, rader: [[etikett, värde]] }],
                                            värde är text, eller { href, text }
                                            för möteslänken (Fas 18.1)
@@ -1518,8 +1518,8 @@ window.NXStudie = (function () {
             + (o.val ? '<div class="vy-betalval">' + o.val + '</div>' : '')
             + (o.atgarder ? '<div class="ps-knappar">' + o.atgarder + '</div>' : '')
             /* Under knapparna, inte bland dem (Fas 14.6). En knapp i
-               .ps-knappar blir full bredd på en telefon, och "Betala med
-               faktura i stället" är ett andra val, inte ett andra steg. */
+               .ps-knappar blir full bredd på en telefon, och "Välj bort
+               kortet" är ett andra val, inte ett andra steg. */
             + (o.alternativ ? '<div class="ps-alt">' + o.alternativ + '</div>' : '')
             + '</div>'
           : '')
@@ -1665,7 +1665,6 @@ window.NXStudie = (function () {
     dubbelbock: ikon('<path d="m3.5 12.5 4 4L15 9"/><path d="m10.5 16.5 1 0L20.5 7.5"/>'),
     flagga: ikon('<path d="M6 20.5V4"/><path d="M6 4.5h11l-2.5 4 2.5 4H6"/>'),
     kort: ikon('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/>'),
-    faktura: ikon('<path d="M7 3.5h10A1.5 1.5 0 0 1 18.5 5v14.5l-3-2-3 2-3-2-3 2V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M9 8.5h6M9 12h6"/>'),
     timmar: ikon('<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3.5 13.5V3.5h10l7.1 7.1a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.4"/>'),
     bank: ikon('<path d="M4 9.5 12 4l8 5.5"/><path d="M5.5 10v7M10 10v7M14 10v7M18.5 10v7M4 19.5h16"/>'),
     rapport: ikon('<path d="M14 3.5H6.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9z"/><path d="M14 3.5V9h5.5M8.5 14.5l2.5 2.5 4.5-4.5"/>'),
@@ -2816,7 +2815,7 @@ window.NXStudie = (function () {
 
      Nu är kommande pass listan. Det som varit ligger under den,
      tre rader djupt, med resten bakom en knapp. Ingenting
-     försvinner — historiken är kvitto på vad som fakturerats och
+     försvinner — historiken är kvitto på vad som betalats och
      får inte gå att tappa bort, bara att lägga undan.
 
      opts: { host, bokningar, rad(b), tomtKommande, tomtAllt }

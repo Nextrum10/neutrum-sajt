@@ -78,26 +78,16 @@ const KALLOR = [
 // och det är hela skyddet.
 // ============================================================
 
-/* FAKTURAN ÄR ETT VAL IGEN, SEDAN 2026-09-27 (Fas 19.6). Familjen
-   betalar varje pass med kort, i förväg eller efter passet när de
-   bekräftar rapporten (Fas 19.2), eller väljer faktura när de
-   bekräftar rapporten. Månadskörningen gör då en faktura per familj
-   och månad, ett utkast tills admin lagt det i Fortnox.
-   Studiehjälparen får sitt underlag den 25:e som förut.
+/* INGEN FAKTURA (2026-10-21). Fas 19.6 lät familjen välja faktura, och
+   frågorna fakturor och obetalt läste tabellen invoices. Ingen faktura
+   gick till en familj, och Leo tog bort fakturan helt
+   (fakturan_tas_bort): tabellen droppas, och frågorna gick med den.
+   Familjen betalar varje pass med kort eller med timmarna, och
+   studiehjälparen får sitt underlag den 25:e som förut.
 
-   Från Fas 14.2 till dess fick familjen ingen faktura. Frågan
-   ofakturerade_pass fanns för att hitta intäkt som glidit förbi
-   fakturan, och efter omställningen hade den svarat med VARJE pass —
-   agenten hade läst det som en växande hög pengar ingen skickat
-   räkning på. Den heter sedan dess obetalda_pass och frågar det som
-   betyder samma sak i dag: pass som hållits och rapporterats utan att
-   familjen betalat dem eller valt faktura för dem.
-
-   fakturor och obetalt sa till 2026-10-07 att inga nya fakturor
-   skapas, och en agent som läste det kunde ta månadens faktura för en
-   rest från förr. Ett utkast räknas för sig i fakturor: det är inte
-   skickat, och en summa med utkasten i hade sett ut som pengar
-   familjerna är skyldiga.
+   obetalda_pass hette ofakturerade_pass till Fas 14.2, och frågar det
+   som betyder samma sak i dag: pass som hållits och rapporterats utan
+   att familjen betalat dem.
 
    kortbetalningar räknar aldrig en testbetalning, som Betalningar i
    adminvyn. Kortbetalningen är i testläge, så förut hade varje prov
@@ -154,15 +144,13 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
     beskrivning:
       'Pass som hållits och rapporterats men som familjen inte betalat. Intäkt som borde ha ' +
       'kommit in men inte har det. Ingen periodavgränsning — poängen är att hitta gamla pass ' +
-      'som glidit förbi. Ett pass som familjen valt att betala mot faktura är inte med: det ' +
-      'väntar på fakturan, som syns i fakturor och obetalt.',
+      'som glidit förbi.',
     koer: async (db) => {
       const { data, error } = await db
         .from('passunderlag')
         .select('wanted_date, duration_min, subject, betalning_status')
         .eq('fakturerbar', true)
         .eq('har_rapport', true)
-        .eq('fakturerad', false)
         .in('betalning_status', ['ingen', 'vantar', 'misslyckad'])
         .order('wanted_date');
       if (error) throw new Error(error.message);
@@ -174,44 +162,6 @@ const FRAGOR: Record<string, { beskrivning: string; koer: (db: SupabaseClient, f
           datum: b.wanted_date, minuter: b.duration_min, amne: b.subject, lage: b.betalning_status,
         })),
       };
-    },
-  },
-
-  fakturor: {
-    beskrivning: 'Fakturor till familjer: en per familj och månad, för de pass familjen valt att ' +
-      'betala mot faktura. Period mellan från och till, belopp i ören, status, förfallodatum. ' +
-      'summa_ore är de skickade, förfallna och betalda; ett utkast är inte skickat än och står ' +
-      'i utkast_ore, och en makulerad faktura är inte med i någon summa.',
-    koer: async (db, fran, till) => {
-      const { data, error } = await db
-        .from('invoices')
-        .select('period, status, belopp_ore, forfaller, skickad_at, betald_at')
-        .gte('period', fran).lte('period', till)
-        .order('period');
-      if (error) throw new Error(error.message);
-      const rader = data ?? [];
-      const summa = (lagen: string[]) =>
-        rader.filter((r) => lagen.includes(r.status)).reduce((s, r) => s + Number(r.belopp_ore), 0);
-      return {
-        antal: rader.length,
-        summa_ore: summa(['skickad', 'forfallen', 'betald']),
-        utkast_ore: summa(['utkast']),
-        rader,
-      };
-    },
-  },
-
-  obetalt: {
-    beskrivning: 'Fakturor som är skickade eller förfallna men inte betalda. Ingen ' +
-      'periodavgränsning. Pass som familjen varken betalat eller valt faktura för finns i obetalda_pass.',
-    koer: async (db) => {
-      const { data, error } = await db
-        .from('invoices')
-        .select('period, status, belopp_ore, forfaller, skickad_at')
-        .in('status', ['skickad', 'forfallen'])
-        .order('forfaller');
-      if (error) throw new Error(error.message);
-      return { antal: data?.length ?? 0, summa_ore: (data ?? []).reduce((s, r) => s + Number(r.belopp_ore), 0), rader: data };
     },
   },
 
@@ -250,12 +200,10 @@ och en del är under 18.
 Familjen betalar varje pass med kort genom Stripe, och pengarna dras först när
 studiehjälparen har skrivit rapporten: väljer familjen kort när den bokar reserveras priset två
 dagar före passet och dras efter rapporten, annars betalar den när den bekräftar rapporten. Ett
-pass som hållits ska betalas även om rapporten inte bekräftats. Systemet kan också låta familjen
-välja faktura, före passet eller när den bekräftar rapporten: en samlad månadsfaktura med tio
-dagars betalningstid och ingen avgift. Det valet är påslaget, men bolaget är inte registrerat
-än, och bankgirot och den första provfaktureringen återstår. Bokföringen
-och fakturorna ska skötas i Fortnox, utan koppling till Nextrums system, och du kan inte läsa
-Fortnox. Fakturautkasten läggs in där för hand. Kortbetalningarna, Stripes avgifter och
+pass som hållits ska betalas även om rapporten inte bekräftats. Familjen kan också betala med
+timmar den köpt i förväg. Nextrum skickar inga fakturor till familjerna. Bokföringen ska skötas
+i Fortnox, utan koppling till Nextrums system, och du kan inte läsa Fortnox. Kortbetalningarna,
+Stripes avgifter och
 utbetalningarna ska bokföras genom en Stripe-integration som kopplas i Fortnox; om den är
 kopplad vet du inte.
 Studiehjälparen får ersättning den 25:e för månadens rapporterade pass, utbetald från banken.

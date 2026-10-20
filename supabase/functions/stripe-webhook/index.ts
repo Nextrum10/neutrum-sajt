@@ -62,11 +62,9 @@
 //    sätter payment_intent.payment_failed 'misslyckad', men kassan är
 //    fortfarande öppen och familjen kan försöka igen med ett annat
 //    kort. Lyckades det träffade uppdateringen noll rader: pengarna var
-//    dragna och passet stod som misslyckat. Detsamma om familjen valt
-//    faktura, eller bytt tillbaka till kort, medan kassan stod öppen.
-//    Kortet vinner: pengarna är dragna, och en faktura hinner bara
-//    skapas om kassan stått öppen över en månadsskiftning, vilket
-//    avvikelsen betald_och_fakturerad fångar.
+//    dragna och passet stod som misslyckat. Kortet vinner: pengarna är
+//    dragna. (Läget 'faktura' stod här från Fas 14.6 tills fakturan
+//    togs bort 2026-10-21.)
 //
 // 7. SKARP ELLER TEST (Fas 14.7). Händelsens livemode sparas på
 //    händelsen och på passet, så att en testbetalning aldrig ser ut
@@ -97,7 +95,7 @@ type Handelse = {
 // Lägen där passet ännu inte är betalt med kort. Se punkt 6 i
 // filhuvudet. 'betald' är inte med: en andra leverans av samma
 // betalning ska träffa noll rader.
-const TAR_EMOT_BETALNING = ['ingen', 'vantar', 'misslyckad', 'faktura'];
+const TAR_EMOT_BETALNING = ['ingen', 'vantar', 'misslyckad'];
 
 /* Minuterna betalningen avsåg (Fas 20.1), ur metadata vi själva skrev
    (stripe-checkout, och stripe-reservation sedan 2026-10-13). Saknas de,

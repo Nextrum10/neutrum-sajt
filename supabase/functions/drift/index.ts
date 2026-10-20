@@ -129,9 +129,8 @@ const VERKTYG = [
       + 'elever och studiehjälpare, anmälningar, hur många som blev kund och fick sitt '
       + 'första pass, fakturerat, betalt, utbetalt och antal avbokningar. Bara tal och '
       + 'datum. Ett genomfört pass betyder ett pass MED rapport. betalt är kortbetalningar '
-      + 'för pass efter återbetalning, räknat på dagen pengarna kom in, plus betalda fakturor '
-      + 'på den månad fakturan gäller. fakturerat är fakturorna på den månad de gäller, också '
-      + 'ett utkast som inte skickats än och en makulerad faktura. Köpta timmar och betald övertid är inte med i betalt, '
+      + 'för pass efter återbetalning, räknat på dagen pengarna kom in. fakturerat är alltid '
+      + 'noll: Nextrum skickar inga fakturor sedan 2026-10-21. Köpta timmar och betald övertid är inte med i betalt, '
       + 'och testbetalningar sorteras inte bort, så betalt är inte månadens intäkt: skriv det '
       + 'när du talar om pengar. ej_sparbara är '
       + 'anmälningar som är märkta matchade men saknar koppling till ett konto — är den '
@@ -185,7 +184,7 @@ const VERKTYG = [
     input_schema: {
       type: 'object',
       properties: {
-        tabell: { type: 'string', enum: ['leads', 'students', 'bookings', 'invoices', 'payouts'] },
+        tabell: { type: 'string', enum: ['leads', 'students', 'bookings', 'payouts'] },
         objekt_id: { type: 'string' },
         varfor: { type: 'string' },
       },
@@ -239,9 +238,9 @@ går att följa vidare, och avbokningar räknar bara dem som har en tidpunkt spa
 Är en lucka stor är siffran bredvid den för låg — skriv det, i stället för att läsa
 ett tapp där det bara saknas mätning. Samma sak åt andra hållet: en månad med noll
 utbetalt betyder inte noll arbete, det kan betyda att månadskörningen inte är gjord.
-Och familjen betalar i förväg, efter passet när de bekräftar rapporten, eller mot en
-faktura i början av nästa månad, så betalt och genomfört samma månad hör inte ihop rad
-för rad.
+Och familjen betalar med kortet som dras när rapporten är skriven, när de bekräftar
+rapporten, eller med timmar köpta i förväg, så betalt och genomfört samma månad hör inte
+ihop rad för rad.
 
 SVARETS FORM, på svenska:
 · Kort läge först: vad som är viktigast just nu.

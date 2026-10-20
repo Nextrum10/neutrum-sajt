@@ -431,7 +431,9 @@ async function provaFamiljensTimbank(webb) {
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
   await vänta(1200);
   const mina = await text(page, '#erb-mina');
-  prova('familjen: Er timbank säger timmen för tips', /och 1 timme för tips/.test(mina) && /Timmar för tips/.test(mina)
+  /* Sedan batteriet (2026-10-15) står timmen för tips som en gratis
+     timme i batteriet, inte som "och 1 timme för tips" i texten. */
+  prova('familjen: Er timbank säger timmen för tips', /1 gratis/.test(mina) && /Timmar för tips/.test(mina)
     && /1 av 2 timmar kvar/.test(mina), mina);
   prova('familjen: timmen för tips gäller i 60 dagar och dras först', /Gäller till \d/.test(mina)
     && /gäller i 60 dagar och dras först/.test(mina) && !/Går inte ut/.test(mina), mina);

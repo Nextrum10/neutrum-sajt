@@ -77,7 +77,8 @@ Deno.test('gratis är sant bara för true (gratistimmarna_paminns)', () => {
 });
 
 Deno.test('betalsättet är en kod, och bara en', () => {
-  assertEquals(renData({ betalsatt: 'faktura' }).betalsatt, 'faktura');
+  // Fakturan är borta (2026-10-21): koden släpps inte längre igenom.
+  assertEquals(renData({ betalsatt: 'faktura' }).betalsatt, null);
   // Fas 22.2: köpta timmar eller timbanken betalade passet.
   assertEquals(renData({ betalsatt: 'timmar' }).betalsatt, 'timmar');
   assertEquals(renData({ betalsatt: 'Timmar' }).betalsatt, null);

@@ -190,7 +190,7 @@ async function provaStudievyn(webb) {
   prova('studievyn: hälsningen är till Anna', /Anna\.$/.test((await text(page, '#vy-hero h1')).trim()), await text(page, '#vy-hero h1'));
   prova('studievyn: remsan säger att det är en förhandsvisning, och vems',
     (await text(page, '.nx-fv')).includes('familjen Andersson')
-    && (await text(page, '.nx-fv')).includes('inget räknas i statistik, lön eller faktura'), await text(page, '.nx-fv'));
+    && (await text(page, '.nx-fv')).includes('inget räknas i statistik, lön eller betalningar'), await text(page, '.nx-fv'));
   prova('studievyn: remsan byter till studiehjälparvyn', (await page.getAttribute('.nx-fv [data-fv-byt]', 'href')) === '/larare?forhandsvisning');
   /* Vyn sätter antalet olästa först i fliken: "(3) Förhandsvisning · …". */
   prova('studievyn: fliken heter Förhandsvisning', /^(\(\d+\) )?Förhandsvisning · /.test(await page.title()), await page.title());
