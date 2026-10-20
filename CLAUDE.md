@@ -1096,6 +1096,15 @@ Detaljer: `minne/grunden.md`.
   hela `rls-test.sql` gick 1798 av 1798 mot driften, tillbakarullat, och advisorn larmade inte om något nytt. Alla får
   frågan igen vid nästa inloggning; ingen hade godkänt 2026-10-16, ingen familj hade en rabatt och ingen valet av första
   timmen pass för pass. Juristen har inte läst den nya punkten.
+- **Bokningssidan för intervjun och mejlet till den som söker** (2026-10-20) är i drift sedan samma dag (Leo: "merge
+  och driftsätt"): PR #306 mergades (864e49e), Vercel lade ut sajten (configen med `INTERVJU_BOKNING_URL`, Rekryteringen och
+  policyn på båda språken, kontrollerat från databasen mot nextrum.se), och `ansokan-mejl` v1 gick ut från merge-commiten,
+  hämtad tillbaka och byte för byte lika i alla tio filer. Röktest från databasen: preflighten svarade `ok` ur funktionens
+  egen kod, och ett anrop utan inloggning 401. Ingen migration. Inget riktigt mejl är skickat än. Kvar: ett första mejl
+  till en egen ansökan (och att kopian når info@), juristen (policyns meningar och rad 10 i `DATASKYDD.md`), och att ta
+  bort intervjubokningarna ur kalendern för hand. **En annan session bygger ett automatiskt intervjumejl**
+  (`20261021100000_intervjumejlet`, inte i main 2026-10-20) som köas när `till_intervju_at` sätts; Skriv till hen med
+  bokningslänken sätter den, så går båda ut får den sökande två mejl. Hur de ska samsas är Leos beslut.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

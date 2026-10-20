@@ -1539,6 +1539,7 @@ i Gmail, från det konto som råkade vara inloggat i webbläsaren.
   Mejlet går från info@ i mejlens skal, ett stycke per tom rad och
   https-adresser som länkar, med en hemlig kopia till info@. Varför:
   `supabase/functions/_delad/ansokan_mejl.ts`.
+- **I drift sedan 2026-10-20** (`ansokan-mejl` v1, CLAUDE.md avsnitt 11). Inget riktigt mejl är skickat än.
 - **Utan funktionen** (före driftsättningen) svarar den 404, och rutan säger
   att `ansokan-mejl` inte är driftsatt än och att Gmail går.
 - Proven: `_delad/ansokan_mejl_test.ts` (adressen, gränserna, nyckeln,
