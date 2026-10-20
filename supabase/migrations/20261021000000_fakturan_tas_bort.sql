@@ -17,10 +17,13 @@
 -- (fakturans_tabeller_tas_bort) körs, för hand, efter en backup:
 --   1. Vakten: varje rad i invoices, invoice_lines, faktura_sparr och varje
 --      pass med betalningen 'faktura' ska höra till testkontot (namnet Leo
---      Trikke). Annars stannar filen innan något ändrats, och säger hur
---      många och vems: också ett annat adminkonto är "någon annan" (Leo:
---      "Finns rader som tillhör någon annan, avbryt droppen, behåll
---      tabellerna och rapportera").
+--      Trikke) eller ett konto med en adminroll. Annars stannar filen innan
+--      något ändrats, och säger hur många och vems (Leo: "Finns rader som
+--      tillhör någon annan, avbryt droppen, behåll tabellerna och
+--      rapportera"). Adminkontona kom med 2026-10-20: i driften låg ett
+--      utkast och fyra fakturapass på Leos eget adminkonto, och Leo bad oss
+--      räkna dem som test. De räknas inte heller i statistiken
+--      (intern.utanfor_statistiken).
 --   2. Strömbrytaren faktura står av och kan inte slås på
 --      (flaggor_faktura_av), som kortsparr.
 --   3. Familjen väljer inte längre betalsätt på passet: grenen i
@@ -75,10 +78,12 @@ begin
     return;
   end if;
 
-  -- Testkontot är namnet Leo Trikke och inget annat.
+  -- Testkontot är namnet Leo Trikke, och ett adminkonto räknas som test.
   create temp table if not exists faktura_testkonton on commit drop as
     select p.id from public.profiles p
-     where lower(btrim(coalesce(p.full_name, ''))) = 'leo trikke';
+     where lower(btrim(coalesce(p.full_name, ''))) = 'leo trikke'
+    union
+    select r.user_id from public.admin_roller r;
 
   select count(*) into n from public.invoices i
    where i.parent_id not in (select id from faktura_testkonton);
@@ -106,7 +111,7 @@ begin
             union select b.parent_id from public.bookings b where b.betalning_status = 'faktura') x
       join public.profiles p on p.id = x.parent_id
      where x.parent_id not in (select id from faktura_testkonton);
-    raise exception 'fakturan_tas_bort: % tillhör någon annan än testkontot Leo Trikke (%). Ingenting är ändrat. '
+    raise exception 'fakturan_tas_bort: % tillhör någon annan än testkontot Leo Trikke och adminkontona (%). Ingenting är ändrat. '
       'Läs raderna och bestäm vad som ska hända med dem innan fakturan tas bort.', array_to_string(fel, ', '), agare;
   end if;
 end $$;

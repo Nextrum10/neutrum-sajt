@@ -15,11 +15,11 @@
 -- rullas allt tillbaka.
 --
 --   0. Vakten: del 1 är körd, och varje rad i tabellerna hör till
---      testkontot (namnet Leo Trikke och inget annat), som i del 1. Hör
---      en rad till någon annan stannar filen, säger vems, och tabellerna
---      står kvar.
+--      testkontot (namnet Leo Trikke) eller ett adminkonto, som i del 1.
+--      Hör en rad till någon annan stannar filen, säger vems, och
+--      tabellerna står kvar.
 --      Ingen funktion utom de som droppas här nämner det som droppas.
---   1. Testkontots fakturapass blir obetalda ('ingen'), och 'faktura' är
+--   1. Testkontots och adminkontonas fakturapass blir obetalda ('ingen'), och 'faktura' är
 --      inte längre ett betalningsläge.
 --   2. Vyerna ofakturerat och rut_underlag, triggern som skrev när en kassa
 --      öppnades, och de fyra tabellerna. Inget cascade: beror något annat
@@ -62,10 +62,13 @@ begin
     raise exception 'Kör fakturan_tas_bort (del 1) först. Ingenting är ändrat.';
   end if;
 
-  -- Testkontot är namnet Leo Trikke och inget annat, som i del 1.
+  -- Testkontot är namnet Leo Trikke, och ett adminkonto räknas som test,
+  -- som i del 1.
   create temp table if not exists faktura_testkonton on commit drop as
     select p.id from public.profiles p
-     where lower(btrim(coalesce(p.full_name, ''))) = 'leo trikke';
+     where lower(btrim(coalesce(p.full_name, ''))) = 'leo trikke'
+    union
+    select r.user_id from public.admin_roller r;
 
   select count(*) into n from public.invoices i
    where i.parent_id not in (select id from faktura_testkonton);
@@ -85,7 +88,7 @@ begin
             union select b.parent_id from public.bookings b where b.betalning_status = 'faktura') x
       join public.profiles p on p.id = x.parent_id
      where x.parent_id not in (select id from faktura_testkonton);
-    raise exception 'fakturans_tabeller_tas_bort: % tillhör någon annan än testkontot Leo Trikke (%). '
+    raise exception 'fakturans_tabeller_tas_bort: % tillhör någon annan än testkontot Leo Trikke och adminkontona (%). '
       'Ingenting är ändrat, och tabellerna står kvar.', array_to_string(fel, ', '), agare;
   end if;
 
@@ -116,7 +119,7 @@ end $$;
 
 
 -- ---------- 1. betalningsläget ----------
--- Bara testkontots pass (vakten). Ett fakturapass som aldrig fakturerades
+-- Bara testkontots och adminkontonas pass (vakten). Ett fakturapass som aldrig fakturerades
 -- är obetalt, och ett som fakturerades betalades aldrig: inget gick till en
 -- familj.
 update public.bookings set betalning_status = 'ingen'

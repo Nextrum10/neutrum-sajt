@@ -26,9 +26,11 @@ därför inte bort något, och del 2 droppar efter en backup, för hand:
 
 1. `fakturan_tas_bort` (20261021000000). Vakten först: varje rad i `invoices`,
    `invoice_lines`, `faktura_sparr` och varje pass med `betalning_status = 'faktura'`
-   ska höra till ett konto med namnet Leo Trikke. Också ett annat adminkonto är "någon
-   annan": filen stannar, säger hur många rader och vems (namn och id), och ingenting
-   är ändrat. Sedan md5-vakter på varje funktion den skriver om, strömbrytaren `faktura`
+   ska höra till ett konto med namnet Leo Trikke eller ett konto med en adminroll (sedan
+   2026-10-20: i driften låg ett fakturautkast och fyra genomförda fakturapass på Leos eget
+   adminkonto, och Leo valde att räkna dem som test, som statistiken redan gör; förut var
+   ett annat adminkonto "någon annan"). Hör en rad till en familj stannar filen, säger
+   hur många rader och vems (namn och id), och ingenting är ändrat. Sedan md5-vakter på varje funktion den skriver om, strömbrytaren `faktura`
    av och låst (`flaggor_faktura_av`, som `kortsparr`), och allt som delas med lönerna
    och larmen omskrivet utan fakturan: `passunderlag` (`fakturerad` alltid falsk),
    `avvikelser_rader` och `kontroll_ekonomiska_avvikelser` (inga fakturalarm),

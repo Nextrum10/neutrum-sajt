@@ -80,7 +80,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`fakturan_tas_bort`) låser strömbrytaren `faktura` av (`flaggor_faktura_av`, som `kortsparr`) och
   skriver om allt som läste fakturan; del 2 (`fakturans_tabeller_tas_bort`, för hand efter en backup)
   droppar `invoices`, `invoice_lines`, `faktura_sparr` och `intern.kassan_oppnad`, och `faktura` är inte
-  längre ett `betalning_status`. Båda stannar om en rad hör till någon annan än testkontot Leo Trikke.
+  längre ett `betalning_status`. Båda stannar om en rad hör till någon annan än testkontot Leo Trikke eller
+  ett adminkonto (2026-10-20, Leo: utkastet och fyra fakturapass på hans eget adminkonto räknas som test).
   Ett obetalt pass följs upp av oss (`ej_betalt`), och påminnelser tas ut utan avgift.
   `passunderlag.fakturerad` (alltid falsk) och analysvyernas fakturakolumner (alltid noll) står kvar för
   vyerna som bygger på dem, och `fakturering` och `faktura-utskick` behåller sina namn: de gör lönernas

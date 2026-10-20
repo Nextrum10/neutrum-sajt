@@ -1667,7 +1667,10 @@ något, men inget läser eller skapar fakturan efter den, och villkorens version
 blir 2026-10-21. **Del 2** (`20261021090000_fakturans_tabeller_tas_bort`)
 droppar tabellerna och kräver en backup först. Båda stannar innan något ändrats
 om en rad i fakturans tabeller, eller ett pass mot faktura, hör till någon
-annan än kontot med namnet Leo Trikke, och säger då hur många och vems.
+annan än kontot med namnet Leo Trikke eller ett adminkonto, och säger då hur
+många och vems. Adminkontona kom med 2026-10-20, när driften visade ett
+fakturautkast och fyra fakturapass på Leos eget adminkonto (Leo: räkna dem som
+test); de fyra passen blir obetalda med del 2.
 
 I den här ordningen, från main efter merge. Fråga först de andra sessionerna
 som arbetar i repot (`minne/databasen.md`). Hela PR:ens kedja (också Fas 2–4)

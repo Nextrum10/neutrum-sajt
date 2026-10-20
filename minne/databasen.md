@@ -1480,8 +1480,9 @@ driften. Vad fakturans två delar gör står i `minne/betalning.md` (Fakturan ta
 bort), och ordningen i driften i `DEPLOY-BETALNING.md` 9.18.
 
 - `fakturan_tas_bort` (20261021000000) har inget `drop` och inget `delete`, och
-  går hel i ett do-block. Vakterna: testkontots rader (namnet Leo Trikke och
-  inget annat; en annan familjs rad stoppar filen och namnges), md5 på varje
+  går hel i ett do-block. Vakterna: testkontots rader (namnet Leo Trikke, och
+  sedan 2026-10-20 också konton med en adminroll; en familjs rad stoppar filen
+  och namnges), md5 på varje
   funktion den skriver om (en vakt som hoppar över en funktion del 2 redan
   droppat), och villkorens version (2026-10-16 eller 2026-10-21, så att filen
   går att köra igen). Lapparna görs med `replace()` och räknade träffar ur en
