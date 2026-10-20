@@ -113,10 +113,10 @@ Deno.test('det admin skriver escapas', () => {
 });
 
 Deno.test('bokningslänken går att trycka på, utan skiljetecknet efter', () => {
-  const r = renderaBrev('Hej', 'Välj en tid här: https://calendar.app.google/9pBZSKMmgtdMLX4i7.');
+  const r = renderaBrev('Hej', 'Välj en tid här: https://calendar.app.google/rRiTTLP5ymKQunSv7.');
   assertStringIncludes(r.html,
-    '<a href="https://calendar.app.google/9pBZSKMmgtdMLX4i7" style="color:');
-  assertStringIncludes(r.html, '>https://calendar.app.google/9pBZSKMmgtdMLX4i7</a>.');
+    '<a href="https://calendar.app.google/rRiTTLP5ymKQunSv7" style="color:');
+  assertStringIncludes(r.html, '>https://calendar.app.google/rRiTTLP5ymKQunSv7</a>.');
 });
 
 Deno.test('bara https blir en länk, och inget kan ta sig ur href', () => {

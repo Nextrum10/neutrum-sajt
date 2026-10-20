@@ -956,7 +956,7 @@ async function provaIntervjumejlet(webb) {
   prova('intervjumejlet: frågan visar Leos mejl med bokningslänken',
     prov.includes('Ämne: Du går vidare till intervju') && prov.includes('Hej Tove!')
     && prov.includes('Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.')
-    && prov.includes('Boka en tid för intervjun som passar dig här:\nhttps://calendar.app.google/9pBZSKMmgtdMLX4i7\n\n'
+    && prov.includes('Boka en tid för intervjun som passar dig här:\nhttps://calendar.app.google/rRiTTLP5ymKQunSv7\n\n'
       + 'Intervjun hålls i Google Meet, och länken till mötet kommer i bekräftelsen när du har bokat. '
       + 'Du behöver inget Google-konto. Passar ingen av tiderna får du gärna mejla oss på info@nextrum.se.')
     && prov.includes('Hälsningar\nLeo och Alex, Nextrum'), prov);
