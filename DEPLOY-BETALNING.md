@@ -1656,7 +1656,7 @@ sessioner fick veta före, och ingen annan session körde något mot driften):
 - Steg 5: torrkörningen som tjänstekontot, för förra månaden och till och med
   i dag, gav inga pass.
 
-### 9.18 Fakturan tas bort (2026-10-21, inte i drift)
+### 9.18 Fakturan tas bort (2026-10-21, i drift sedan 2026-10-20)
 
 Leo: "Ta bort fakturasystemet helt". Ingen faktura hade gått till en familj.
 Koden, sidorna och migrationerna är klara på grenen; ingenting är kört mot
@@ -1717,7 +1717,7 @@ så ingen förlorar ett betalsätt de använt). Juristen har inte läst de nya
 villkoren eller rad 1 och 8 i `DATASKYDD.md`. `kund_skatteuppgifter` (RUT,
 personnummer) har inget syfte kvar: om tabellen ska bort är Leos fråga.
 
-### 9.19 Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, inte i drift)
+### 9.19 Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, i drift sedan 2026-10-20)
 
 Leo (2026-10-21): Stripe bara genom webhooken, en liggare med en rad per
 betalning, planerna per kalendermånad ("Den här månaden" eller "Nästa månad"),
@@ -1789,7 +1789,7 @@ Kvar efter det: juristen (rad 8 och 32 i `DATASKYDD.md`, köpvillkoren och
 planernas nya ord om kalendermånaden i villkoren), att säga till familjerna att
 planerna följer kalendermånaden, och provköpen i testläge.
 
-### 9.20 Koderna bara på planer, och partnerkoderna (2026-10-21, inte i drift)
+### 9.20 Koderna bara på planer, och partnerkoderna (2026-10-21, i drift sedan 2026-10-20)
 
 Leo (2026-10-21): "Bygg en flik Koder i admin med två typer: partnerkod
 (spårar partnerföreningars volym) och rabattkod (t.ex. Zayans). Båda gäller
@@ -1838,3 +1838,26 @@ I den här ordningen, från main efter merge. Fråga först de andra sessionerna
 Kvar efter det: juristen (rad 33 i `DATASKYDD.md` och policyns meningar om koden
 och partnern, med frågan om en förenings namn kan säga något känsligt), och att
 säga till familjerna som har en kod att den bara gäller planer.
+
+### 9.21 Kedjan 9.18–9.20 i drift (2026-10-20)
+
+Leo: "Merga och driftsätt hela kedjan". En session körde den, och de andra fick veta före och efter.
+
+1. **Provkörning före merge**: alla nio migrationer och hela `rls-test.sql` mot driften i ett do-block som rullades
+   tillbaka. Den stannade på två vakter (Leos adminkonto i fakturan, och vyernas text i Postgres 17), som rättades
+   på grenen; sedan 1897 av 1897 (`minne/databasen.md`).
+2. **Merge** av PR #307 (e92104b). Vercel lade ut sajten inom ett par minuter: villkoren 2026-10-21, med köpvillkorens
+   platshållare (Leo valde att driftsätta utan texten).
+3. **De tio funktionerna** från merge-commiten, hämtade tillbaka och byte för byte lika main, och röktestade från
+   databasen: `ekonomi` v26, `fakturering` v36, `faktura-utskick` v23, `stripe-webhook` v15, `stripe-checkout` v22,
+   `notis-ko` v29, `drift` v23, `juridik` v23, `stripe-aterbetalning` v8 och `stripe-reservation` v2
+   (`minne/funktioner.md`).
+4. **Del 1** hel i ett do-block ur merge-commiten.
+5. **Backup** av fakturans fyra tabeller, som en JSON-fil till Leo.
+6. **De åtta sista migrationerna** i ett block som hämtade, prövade och registrerade dem i ordning, efter Leos
+   uttryckliga ja (verktygets bekräftelse syntes inte; `minne/databasen.md`).
+7. **Efteråt**: `rls-test.sql` 1897 av 1897 mot driften, tillbakarullat, och advisorn utan något nytt för `anon`.
+
+Kvar, och Leos: köpvillkorens text (en ny version av villkoren), fem frågor till utbildningsprovet, Stripes Apple Pay
+och Google Pay med domänerna (9.19 steg 7), provköpen i testläge (9.19 steg 7 och 9.20 steg 5), att säga till
+familjerna (villkoren, planerna per kalendermånad, koderna bara på planer) och studiehjälparna (provet), och juristen.

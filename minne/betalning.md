@@ -335,7 +335,7 @@ längre efter fakturan), sedan del 1, sedan backup och del 2.
 
 ---
 
-## Koderna gäller bara planköp, och partnerkoderna (2026-10-21, `koder_for_planer`, inte i drift)
+## Koderna gäller bara planköp, och partnerkoderna (2026-10-21, `koder_for_planer`, i drift sedan 2026-10-20)
 
 Leo: "Bygg en flik Koder i admin med två typer: partnerkod (spårar
 partnerföreningars volym) och rabattkod (t.ex. Zayans). Båda gäller ENBART
@@ -414,7 +414,7 @@ familjen vid första användningen för uppföljning."
   `prova-barnforslag.js` och `prova-koder.js` (planskoderna). Juristen har inte
   läst rad 33 i `DATASKYDD.md`.
 
-## Betalningsliggaren och köpvillkoren i kassan (2026-10-21, `betalningsliggaren`, inte i drift)
+## Betalningsliggaren och köpvillkoren i kassan (2026-10-21, `betalningsliggaren`, i drift sedan 2026-10-20)
 
 Leo (2026-10-21): Stripe bara genom webhooken, "aldrig" betalstatus eller timmar för att någon kommer
 tillbaka till en tacksida, en tabell `betalningar` med en rad per betalning (familj, belopp, valuta, typ,
@@ -736,7 +736,7 @@ NexLäx-sessionen väntade med sin bank tills kedjan var klar):
 
 ---
 
-## Kortet försöker igen (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift)
+## Kortet försöker igen (2026-10-21, `kortdragningen_forsoker_igen`, i drift sedan 2026-10-20)
 
 Leo (2026-10-21), för passen som betalas med det sparade kortet: reservation 48 timmar före passet, direkt
 om passet bokas närmare än så, dragning när passet är genomfört, en ny dragning utan familjen om
