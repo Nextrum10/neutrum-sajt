@@ -565,17 +565,18 @@ väljer också i sina inställningar om barnet ska kunna boka pass."
   mejl (typen `barnforslag`, `minne/notiser.md`). Granska öppnar
   förslaget i den vanliga ytan med allt ifyllt (en dag som varit eller en
   tid som tagits står inte ifylld, och hjälpraden säger det), med priset
-  och en ruta för en rabattkod (`kolla_rabattkod`, prövad igen när
-  föräldern skickar). Skicka går genom `skicka_barnets_forslag()`, som är
+  (rutan för en rabattkod, 2026-10-13, är borta sedan 2026-10-21: koderna
+  gäller bara planköp). Skicka går genom `skicka_barnets_forslag()`, som är
   SECURITY INVOKER: passet skrivs med förälderns egen inloggning, genom
   policyn och alla triggrar på `bookings` (pris, rabattkod, första timmen
   och tipstimmen, timmarna, villkoren, notisen till studiehjälparen), och
   förslaget markeras i samma transaktion. Skicka inte
   (`barnforslag_neka()`) svarar barnet utan pass; Tillbaka låter
-  förslaget vänta. Ett förslag föräldern själv gör har samma ruta för en
-  rabattkod sedan 2026-10-13 (förut ingen).
+  förslaget vänta. Ett förslag föräldern själv gör går som förut, utan
+  ruta för en kod sedan 2026-10-21.
 - **Priset vid knappen följer databasens ordning** (sedan 2026-10-13,
-  `rabattkoden_krockar_inte`, `minne/betalning.md`): koden gäller bara det
+  `rabattkoden_krockar_inte`, `minne/betalning.md`; och utan någon kod på ett
+  pass sedan 2026-10-21, `koder_for_planer`): koden gällde bara det
   familjen betalar med pengar. Första timmen och tipstimmen går före
   koden (`forsta_timmen_bjuds`), och köpta timmar och timbanken går före
   den (`bookings_timmar_betalar_utan_kod`); då tas koden bort och läggs

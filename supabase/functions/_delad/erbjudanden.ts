@@ -72,6 +72,7 @@ export function kassarad(
   rabattkod: string | null = null,
   familjerabattOre = 0,
   gallerFran: string | null = null,
+  kodensRabattOre: number | null = null,
 ): { name: string; description: string } {
   const man = e.giltig_manader === 1 ? '1 månad' : `${e.giltig_manader} månader`;
   const timmar = Number(e.timmar);
@@ -81,7 +82,10 @@ export function kassarad(
   if (pa > 0) vad += ` för priset av ${timmar - pa} (${timmarText(pa)} på köpet)`;
   if (rabatt > 0) vad += `, ${rabatt} % rabatt`;
   // Koden står på raden, så att kvittot säger varför beloppet är lägre.
-  const kod = rabattkod ? ` Med rabattkoden ${rabattkod}.` : '';
+  // En partnerkod utan rabatt (koder_for_planer, 2026-10-21) gör inte
+  // beloppet lägre, och då säger raden bara koden.
+  const kod = !rabattkod ? ''
+    : kodensRabattOre === 0 ? ` Med koden ${rabattkod}.` : ` Med rabattkoden ${rabattkod}.`;
   const egen = Number(familjerabattOre) > 0 ? ` Med er rabatt på ${kr(familjerabattOre)} kr per timme.` : '';
   // Planerna per månad (2026-10-21): planen gäller sin kalendermånad.
   const nar = gallerFran ? `Gäller ${planensPeriod(gallerFran)}.` : `Gäller i ${man} från köpet.`;

@@ -69,6 +69,7 @@ import {
   arErbjudandekod, type ErbjudandePris, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen,
   manadensForsta, planManad, sammaInnehall,
 } from '../_delad/erbjudanden.ts';
+import { kodPaFelBetalning, planensKod } from '../_delad/koder.ts';
 
 const CORS = cors();
 
@@ -182,14 +183,16 @@ function egenAdress(u: unknown, reserv: string): string {
 
    Inget client_reference_id: webhooken läser det som ett pass-id.
 
-   EN RABATTKOD (rabattkoden_timmar_och_tak, 2026-10-13, Leo:
-   "rabattkoden kan användas för att köpa timmar i timbanken"). Kassan
-   prövar koden med familjens token (kolla_rabattkod_kop), så att
-   familjen får veta varför en kod inte gäller i stället för att betala
-   fullt pris. Beloppet räknas ändå i databasen: triggern
-   intern.klippkort_rabatt sätter rabatt_ore och begart_ore när köpet
-   skapas, och det är begart_ore som dras. Tar triggern bort koden (den
-   tog slut emellan) öppnas ingen kassa.
+   EN KOD, BARA PÅ EN PLAN (rabattkoden_timmar_och_tak 2026-10-13, och
+   koder_for_planer 2026-10-21, Leo: "Båda gäller ENBART planköp, aldrig
+   enskilda pass"). Kassan prövar koden med familjens token
+   (kod_pa_planen, genom planensKod i _delad/koder.ts), så att familjen
+   får veta varför en kod inte gäller i stället för att betala fullt
+   pris, och räknar om rabatten ur typen och värdet. Beloppet räknas ändå
+   i databasen: triggern intern.klippkort_rabatt sätter rabatt_ore och
+   begart_ore när köpet skapas, och det är begart_ore som dras. Tar
+   triggern bort koden (den tog slut emellan) öppnas ingen kassa. En
+   partnerkod utan rabatt följer med köpet och räknas, till samma pris.
 
    FAMILJENS RABATT (familjerabatter, 2026-10-15) dras på samma ställe,
    från varje betald timme, före en kod. Kassan räknar samma sak bara för
@@ -198,12 +201,10 @@ function egenAdress(u: unknown, reserv: string): string {
    ============================================================ */
 async function köpErbjudande(
   vem: Inloggad,
-  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: string; timmar?: unknown; manad?: unknown },
+  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: unknown; timmar?: unknown; manad?: unknown },
 ): Promise<Response> {
   const kod = String(kropp.erbjudande ?? '').trim();
   if (!arErbjudandekod(kod)) return json({ error: 'Vilket erbjudande?' }, 400, CORS);
-  // Samma form som i databasen: stora bokstäver, utan mellanslag runt.
-  const rabattkod = String(kropp.rabattkod ?? '').trim().toUpperCase() || null;
 
   const db = serviceklient();
   const { data: flagga } = await db.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle();
@@ -243,17 +244,10 @@ async function köpErbjudande(
      priset med koden som databasen säger att den gäller (efter rabatten). */
   const egen = familjerabattPaKop(e as ErbjudandePris, await familjensRabatt(vem));
   let attBetala = Number(e.pris_ore) - egen.summa;
-  if (rabattkod) {
-    const { data: prov, error: provfel } = await vem.klient
-      .rpc('kolla_rabattkod_kop', { p_kod: rabattkod, p_erbjudande: e.kod });
-    const svar = Array.isArray(prov) ? prov[0] : prov;
-    if (provfel || !svar) {
-      return json({ error: 'Rabattkoden gick inte att pröva just nu. Försök igen, eller köp utan koden.' }, 409, CORS);
-    }
-    if (!svar.giltig) return json({ error: String(svar.orsak || 'Koden gäller inte.') }, 409, CORS);
-    attBetala = Number(svar.att_betala_ore);
-    if (!(attBetala > 0)) return json({ error: 'Koden gäller inte köp av timmar.' }, 409, CORS);
-  }
+  const kodbeslut = await planensKod({ rpc: (fn, args) => vem.klient.rpc(fn, args) }, kropp.rabattkod, e);
+  if (!kodbeslut.ok) return json({ error: kodbeslut.fel }, kodbeslut.status, CORS);
+  const rabattkod = kodbeslut.kod;
+  if (kodbeslut.kod !== null) attBetala = kodbeslut.attBetala;
 
   try {
     /* Trycker familjen Köp två gånger ska det bli ETT köp. Ett väntande
@@ -334,7 +328,11 @@ async function köpErbjudande(
       : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
           cancel_url: `${bas}/foralder#erbjudanden` };
 
-    const rad = kassarad(e as ErbjudandePris, rabattkod, rabattPerTimme, kopManad);
+    // Kodens egen rabatt, som databasen drog den: noll för en partnerkod utan rabatt.
+    const kodensRabatt = rabattkod
+      ? Number(e.pris_ore) - familjerabattPaKop(e as ErbjudandePris, rabattPerTimme).summa - belopp
+      : null;
+    const rad = kassarad(e as ErbjudandePris, rabattkod, rabattPerTimme, kopManad, kodensRabatt);
     await sparaKryss(db, vem.anvandare, 'kop', kopId);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
@@ -820,7 +818,7 @@ Deno.serve(async (req) => {
 
   let kropp: {
     pass?: string; retur?: string; ui?: string; erbjudande?: string; timmar?: unknown; tillagg?: boolean;
-    kort?: string; familj?: string; villkor?: unknown; manad?: unknown;
+    kort?: string; familj?: string; villkor?: unknown; manad?: unknown; rabattkod?: unknown;
   } = {};
   try {
     kropp = await req.json();
@@ -831,6 +829,12 @@ Deno.serve(async (req) => {
   if (kropp.kort !== 'ta_bort' && kropp.villkor !== true) {
     return json({ error: 'Kryssa i att ni godkänner köpvillkoren, så öppnas kassan.' }, 400, CORS);
   }
+  /* Koderna (koder_for_planer, 2026-10-21): en kod gäller bara när
+     familjen köper en plan. Följer den med ett pass, ett tillägg, kortet
+     eller timmar till planen blir det ett nej innan något annat händer,
+     inte en kassa som tyst tar betalt utan den. */
+  const kodfel = kodPaFelBetalning(kropp);
+  if (kodfel) return json({ error: kodfel }, 409, CORS);
   // Ett erbjudande (Fas 16.1) är ett eget köp, inte ett pass.
   if (kropp.erbjudande !== undefined) return await köpErbjudande(vem, kropp);
   // Kortet som sparas eller tas bort (2026-10-13) är inte heller ett pass.

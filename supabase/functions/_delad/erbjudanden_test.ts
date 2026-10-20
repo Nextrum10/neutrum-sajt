@@ -41,6 +41,11 @@ Deno.test('kassaraden säger rabattkoden när köpet har en (2026-10-13)', () =>
     '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med rabattkoden VAR10.');
   // Utan kod är raden densamma som förut, också med null.
   assertEquals(kassarad(basic, null).description, kassarad(basic).description);
+  // En partnerkod utan rabatt (2026-10-21) gör inte beloppet lägre: raden säger bara koden.
+  assertEquals(kassarad(basic, 'FORENING', 0, null, 0).description,
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med koden FORENING.');
+  assertEquals(kassarad(basic, 'VAR10', 0, null, 15160).description,
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med rabattkoden VAR10.');
 });
 
 Deno.test('kassaraden säger familjens rabatt, aldrig koden (familjerabatter, 2026-10-15)', () => {

@@ -223,7 +223,8 @@ längre efter fakturan), sedan del 1, sedan backup och del 2.
     pass för pass gäller ett pass inom 60 dagar. Återbetalningen räknas
     som förut. Allt i `minne/timmar.md`.
 - **Rabattkoden krockar inte med gratis timmar eller timbanken**
-  (2026-10-13, `rabattkoden_krockar_inte`). Leo: "rabattkoden, fixa det
+  (2026-10-13, `rabattkoden_krockar_inte`; sedan 2026-10-21 tar ett pass
+  ingen kod alls, nedan: Koderna gäller bara planköp). Leo: "rabattkoden, fixa det
   ... koden får inte krocka med gratis timmar. jag ska bygga nytt system
   för gratis timmarna. gratis timmarna räknas i timbanken".
   - Förut kunde ett pass få en kod och något annat: första timmen lades
@@ -260,7 +261,8 @@ längre efter fakturan), sedan del 1, sedan backup och del 2.
   - Rabattkoderna var tomma i driften 2026-10-13 (bara `TIPS`). Taket kom
     samma kväll (nedan och `minne/sakerhet.md`).
 - **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13,
-  `rabattkoden_timmar_och_tak`). Leo samma kväll: "rabattkod kan inte
+  `rabattkoden_timmar_och_tak`; sedan 2026-10-21 bara planerna bland köpen
+  och inget pass, nedan). Leo samma kväll: "rabattkod kan inte
   användas om man har timmar i timbanken. rabattkoden kan användas för att
   köpa timmar i timbanken eller om man har noll timmar kvar och vill köpa
   pass för pass", och strax efter: "rabattkoder ska vi också bestämma hur
@@ -330,6 +332,85 @@ längre efter fakturan), sedan del 1, sedan backup och del 2.
   är omvandlingen — gör den en gång, på ett ställe.
 
 ---
+
+## Koderna gäller bara planköp, och partnerkoderna (2026-10-21, `koder_for_planer`, inte i drift)
+
+Leo: "Bygg en flik Koder i admin med två typer: partnerkod (spårar
+partnerföreningars volym) och rabattkod (t.ex. Zayans). Båda gäller ENBART
+planköp, aldrig enskilda pass." Och: "En kod per köp, ingen stapling",
+"Koden skrivs in vid planköp, valideras på servern och rabatten räknas på
+servern innan Checkout skapas", "Admin skapar, inaktiverar och ser
+användning, men rader raderas inte", och "Partnerkopplingen sparas också på
+familjen vid första användningen för uppföljning."
+
+- **Koderna är `rabattkoder`**, med två nya kolumner: `sort` ('rabatt' eller
+  'partner') och `partner_namn`, som en partnerkod måste ha och en rabattkod
+  inte får ha. Beställningens "rabatt_typ" och "rabatt_varde" är `typ`
+  ('procent', eller 'belopp' i öre, kronor i vyn) och `varde`, som nu får vara
+  noll: en partnerkod som bara räknar. Villkoret på `varde` byttes med filens
+  enda `drop constraint`. Giltig från och till räknas i svensk tid.
+- **Bara planer.** `intern.rabattkod_prova` säger nej till varje pass med samma
+  mening för alla koder ("Rabattkoder gäller bara när ni köper en plan."), så
+  passets ruta inte säger vilka koder som finns, och inget försök räknas.
+  `bookings_kod_bara_pa_planer` (BEFORE INSERT OR UPDATE, före
+  `bookings_skydda_rabatt` i namnordning) tar bort en ny kod från ett pass för
+  alla, också admin och databasen; TIPS sätts efter den av
+  `forsta_timmen_bjuds` och står kvar, och ett pass som redan bar en kod
+  behåller den (en ändrad kod går tillbaka till den förra). På köpen gäller
+  koden bara en plan i katalogen (`intern.kod_galler_kopet`: `erbjudanden.sort =
+  'plan'`), aldrig Fyll timbanken, timmar till planen eller gratistimmar.
+  `intern.har_timmar` frågas inte längre av något och står kvar utan drop.
+- **En kod per köp**: `klippkort.rabattkod` är en kolumn. Familjens rabatt och
+  den första planens gratis timme är inga koder, och de staplas med koden som
+  Leo bestämde 2026-10-15.
+- **Noll gäller.** En kod som ger noll står kvar på köpet, med `rabatt_ore` null
+  och priset utan kod, och räknas. En rabatt som tar hela priset gäller inte
+  ("Rabatten är lika stor som priset eller större, och ett köp kan inte bli
+  gratis.").
+- **Kassan** (`_delad/koder.ts`, `planensKod`): koden skrivs som databasen
+  lagrar den, en kod på ett pass, ett tillägg, kortet eller timmar till planen
+  får 409 innan något annat händer (`kodPaFelBetalning`), en plan prövas med
+  familjens token i `kod_pa_planen()`, som också svarar rabattens typ och
+  värde, och kassan räknar om rabatten (`rabattenPa`, samma regel som
+  `intern.rabattkod_prova`, och de ändras tillsammans). Stämmer den inte öppnas
+  ingen kassa: det är en kontroll, inte en andra källa, och beloppet som dras
+  är databasens `begart_ore` som förut. Före migrationen frågar kassan
+  `kolla_rabattkod_kop` (som nu svarar ur `kod_pa_planen`) och prövar bara att
+  beloppen går ihop. Kassaraden säger "Med koden X" för en kod utan rabatt.
+- **Användningen står vid betalningen**: `kod_anvandningar`, en rad per betalt
+  köp med en kod, med `betalning_id` till liggaren, skriven av triggern
+  `betalningar_kod_anvands` (AFTER INSERT på `betalningar`) och fylld i med
+  köpen som redan var betalda. Ingen klient skriver den, inte heller admin.
+  Raden står fast och raderas aldrig (triggrar, som liggaren); bara
+  `klippkort_id` blir null om köpet tas bort (rensa-testkonto.sql).
+- **Familjens partner**: `familjens_partner`, partnerkoden familjen använde
+  första gången, skriven samtidigt och aldrig ändrad. Avidentifieras familjen tas
+  raden bort (`profiles_partner_rensas`), som familjens rabatt: en förenings namn
+  kan säga något om familjen. Användningen står kvar med betalningen.
+- **Rader raderas inte**: `rabattkoder` nekar delete och truncate med triggrar
+  (`rabattkoder_star_fast`, `rabattkoder_toms_aldrig`), authenticated har inte
+  längre rätten, och en kods namn och sort ändras aldrig. Den stängs av.
+- **Statistiken**, bara superadmin: `kod_statistik()` per kod,
+  `partner_statistik()` per partner (alla partnerkoder, också de som inte
+  använts) och `kodens_anvandningar(kod)`. Familjer, köp, köpta timmar (alla
+  timmar i köpen, också den första planens timme på köpet), genomförda timmar
+  (pass med rapport som köpens timmar betalade, `intern.kortets_genomforda`,
+  samma uttryck som `intern.kortets_anvanda`), betalt, återbetalt och rabatten.
+  Testbetalningar räknas inte, som i resten av adminvyn, utom med
+  `p_med_test` (rutan Räkna testbetalningar): Stripe står i testläge.
+- **Adminvyn**: under Koder (`#koder/rabattkoder`, `#koder/partnerkoder`,
+  `nextrum-admin-rabattkoder.js`), bredvid familjernas och studiehjälparnas egna
+  koder. `#katalog/rabattkoder` skickas hit. Familjens panel säger partnern
+  (Översikt och Ekonomi).
+- **Studievyn**: Boka pass och granskningen av ett barns förslag har ingen ruta
+  för en kod (arbetsytans `o.rabattkod` står kvar, men ingen vy skickar den).
+  Rutan under Erbjudanden heter Kod till en plan och prövar bara planerna; Fyll
+  timbanken visar aldrig ett pris med kod.
+- **Villkoren nämner inga koder** och fick ingen ny version. En kods villkor
+  (bara planer, hur många gånger, sista dagen) ska stå där koden delas ut.
+- Provat: `rls-test.sql` avsnitt 28, 32 och 46, `koder_test.ts`,
+  `prova-barnforslag.js` och `prova-koder.js` (planskoderna). Juristen har inte
+  läst rad 33 i `DATASKYDD.md`.
 
 ## Betalningsliggaren och köpvillkoren i kassan (2026-10-21, `betalningsliggaren`, inte i drift)
 

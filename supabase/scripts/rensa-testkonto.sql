@@ -42,6 +42,9 @@
 -- (kopvillkor_godkannanden): liggaren raderas aldrig, så testbetalningarna
 -- står kvar där, märkta som test (skarp = false), och deras koppling till
 -- passet eller köpet blir tom när raden här tas bort (on delete set null).
+-- Detsamma gäller kodernas användning (kod_anvandningar, koder_for_planer
+-- 2026-10-21), som pekar på betalningen, och familjens partner, som står
+-- kvar med kontot.
 --
 -- HINDER (inget raderas):
 --   - inget konto, eller fler än ett, med namnet

@@ -2876,12 +2876,14 @@
   /* Ett erbjudande går genom samma kassa, med koden i stället för ett
      pass (Fas 16.1). Beloppet räknas av stripe-checkout. */
   async function startaKöp(kod, ui, extra, månad) {
-    /* En rabattkod följer med när den gäller kortet (2026-10-13). Kassan
-       prövar den igen och drar det databasen räknat fram. Timmar till
-       planen (2026-10-14) köps utan kod: extra bär antalet timmar. En
-       plan bär sin månad (2026-10-21), och villkor: true säger att
-       köpvillkoren kryssats i före kassan. */
-    const rk = !extra && S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
+    /* En rabattkod följer med när den gäller planen (2026-10-13; bara
+       planerna sedan 2026-10-21). Kassan prövar den igen och drar det
+       databasen räknat fram. Timmar till planen (2026-10-14) och Fyll
+       timbanken köps utan kod: extra bär antalet timmar. En plan bär sin
+       månad (2026-10-21), och villkor: true säger att köpvillkoren
+       kryssats i före kassan. */
+    const plan = S.erb.katalog.some(e => e.kod === kod && e.sort === 'plan');
+    const rk = !extra && plan && S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
     return startaKassa(Object.assign({ erbjudande: kod, retur: location.origin, ui: ui, villkor: true },
       rk ? { rabattkod: rk } : {}, månad ? { manad: månad } : {}, extra || {}));
   }
@@ -3570,10 +3572,11 @@
       + (fr.av ? '<span class="erb-pris-kod">' + esc(medErRabatt) + '</span>' : '') + '</span>';
   }
 
-  /* Rabattkoden på köp av timmar (2026-10-13, Leo: "rabattkoden kan
-     användas för att köpa timmar i timbanken"). Den prövas mot det
-     första kortet; gäller den prövas resten, så att varje kort kan visa
-     sitt pris. En kod som inte finns räknas mot taket bara en gång. Tom
+  /* Koden på en plan (2026-10-13, och bara planerna sedan 2026-10-21,
+     Leo: "Båda gäller ENBART planköp, aldrig enskilda pass"). Den prövas
+     mot den första planen; gäller den prövas resten, så att varje plan
+     kan visa sitt pris. Fyll timbanken och timmarna till planen tar
+     ingen kod. En kod som inte finns räknas mot taket bara en gång. Tom
      ruta tar bort koden. */
   async function provaErbKod() {
     const fält = $('#erb-kod'), svarEl = $('#erb-kod-svar'), knapp = $('#erb-kod-anvand');
@@ -3581,7 +3584,7 @@
     const kod = String(fält.value || '').trim().toUpperCase();
     const visa = (text, fel) => { svarEl.textContent = text; svarEl.classList.toggle('is-err', !!fel); };
     if (!kod) { S.erb.kod = null; visa('', false); ritaErbjudanden(); return; }
-    const kat = S.erb.katalog;
+    const kat = S.erb.katalog.filter(e => e.sort === 'plan');
     if (!kat.length) return;
     await medan(knapp, 'Prövar…', async () => {
       const fråga = e => supa.rpc('kolla_rabattkod_kop', { p_kod: kod, p_erbjudande: e.kod })
@@ -3594,8 +3597,11 @@
       const resten = await Promise.all(kat.slice(1).map(fråga));
       resten.forEach((s, i) => { if (s && s.giltig) pris[kat[i + 1].kod] = Number(s.att_betala_ore); });
       S.erb.kod = { kod: kod, beskrivning: första.beskrivning || '', pris: pris };
-      visa('✓ ' + kod + ' gäller när ni köper timmar' + (första.beskrivning ? ' · ' + första.beskrivning : '')
-        + '. Priset med koden står på korten.', false);
+      /* En kod utan rabatt (en partnerförenings) gäller också: priset är
+         detsamma, och koden följer med köpet. */
+      const utanRabatt = !(Number(första.rabatt_ore) > 0);
+      visa('✓ ' + kod + ' gäller när ni köper en plan' + (första.beskrivning ? ' · ' + första.beskrivning : '')
+        + (utanRabatt ? '. Den ger ingen rabatt, men följer med köpet.' : '. Priset med koden står på planerna.'), false);
       ritaErbjudanden();
     });
   }
@@ -3655,23 +3661,19 @@
       const billigare = Number(e.rabatterat_timpris_ore) < Number(e.timpris_ore);
       const fr = medRabatt(e);
       const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
-      // Med en rabattkod som gäller kortet: samma pris som kassan drar.
-      const medKod = S.erb.kod ? S.erb.kod.pris[e.kod] : null;
-      const kod = medKod != null && medKod < Number(e.pris_ore);
       /* Med familjens rabatt står katalogens summa överstruken och
-         timpriset efter rabatten, i stället för "ni sparar". */
+         timpriset efter rabatten, i stället för "ni sparar". En rabattkod
+         gäller inte här (koder_for_planer, 2026-10-21): bara planerna. */
       return '<div class="erb-klipp-rad">'
         + '<div class="erb-topp"><b class="erb-namn">' + esc(e.timmar + ' timmar') + '</b>'
-        + (kod || fr.av
-          ? '<span class="erb-summa"><s>' + esc(kr(e.pris_ore)) + '</s> <b>' + esc(kr(kod ? medKod : fr.pris)) + '</b></span>'
+        + (fr.av
+          ? '<span class="erb-summa"><s>' + esc(kr(e.pris_ore)) + '</s> <b>' + esc(kr(fr.pris)) + '</b></span>'
           : '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b>')
         + '</div>'
-        + (kod
-          ? '<span class="erb-pris-kod">med koden ' + esc(S.erb.kod.kod) + (familjerabatt() ? ' och er rabatt' : '') + '</span>'
-          : '<span class="erb-tim">' + (billigare || fr.av ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
+        + '<span class="erb-tim">' + (billigare || fr.av ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
             + esc(kr(fr.perTimme)) + ' per timme'
             + (fr.av ? ' · ' + esc(medErRabatt)
-              : billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>')
+              : billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>'
         + '<div class="erb-klipp-fot"><span class="erb-vad">Gäller i ' + esc(mån) + '</span>' + köpKnapp(e) + '</div>'
         + '</div>';
     }).join('');
@@ -3721,9 +3723,9 @@
     const ftRuta = $('#erb-forsta-box');
     if (ftRuta) ftRuta.hidden = !(S.forstaTimmen && !S.forstaTimmen.tagen && kat.some(e => e.sort === 'plan'));
 
-    /* Rabattkoden står bara där familjen kan köpa. */
+    /* Rabattkoden står bara där familjen kan köpa en plan. */
     const kodRad = $('#erb-kod-rad');
-    if (kodRad) kodRad.hidden = !(S.erb.aktiv && !S.väntar && kat.length);
+    if (kodRad) kodRad.hidden = !(S.erb.aktiv && !S.väntar && kat.some(e => e.sort === 'plan'));
 
     const msg = $('#erb-msg');
     if (msg && S.väntar && !msg.classList.contains('show')) {
@@ -4776,15 +4778,12 @@
       };
     },
 
-    /* Rabattkoden prövas mot databasen innan förslaget skickas, i
-       familjens egna förslag och i barnens (2026-10-13). Skicka inte och
-       Tillbaka i granskningen ritar om listan ovanför ytan. */
-    rabattkod: async (kod, brutto) => {
-      const { data, error } = await supa.rpc('kolla_rabattkod',
-        { p_kod: kod, p_tjanst: NXTjanster.standard(), p_belopp_ore: brutto });
-      if (error) return null;
-      return Array.isArray(data) ? data[0] || null : data;
-    },
+    /* Ingen ruta för en rabattkod (koder_for_planer, 2026-10-21, Leo:
+       "Båda gäller ENBART planköp, aldrig enskilda pass"): utan
+       rabattkod här ritar arbetsytan ingen, och databasen tar ingen kod
+       på ett pass. Koden skrivs in när familjen köper en plan, under
+       Erbjudanden. Skicka inte och Tillbaka i granskningen ritar om
+       listan ovanför ytan. */
     neka: id => nekaBarnforslag(id),
     efterGranskning: () => ritaBarnforslag(),
     /* Hur passet betalas (kortet_reserveras, 2026-10-13): bara med
@@ -4808,9 +4807,6 @@
         format: v.format || null,
         location: v.plats || null,
         note: v.not || null,
-        /* Prövas igen av databasen (skydda_rabatt), och en gratis timme
-           eller timmarna går före den (rabattkoden_krockar_inte). */
-        rabattkod: v.rabattkod || null,
         status: 'requested'
       }).select('id, status, klippkort_id, betalning_status, rabattkod, startrabatt').single();
       if (error) {
@@ -4861,13 +4857,14 @@
      dem hit. De står överst under Boka pass, under Att göra och som en
      siffra i menyn, och föräldern får ett mejl. Granska öppnar
      förslaget i den vanliga ytan, med allt barnet valt ifyllt: där syns
-     priset, allt går att ändra, och en rabattkod går att lägga till.
-     Skicka gör det till ett pass, som förälderns eget förslag
-     (skicka_barnets_forslag), och studiehjälparen svarar som vanligt.
-     Skicka inte svarar barnet utan pass (barnforslag_neka).
+     priset och allt går att ändra. Skicka gör det till ett pass, som
+     förälderns eget förslag (skicka_barnets_forslag), och studiehjälparen
+     svarar som vanligt. Skicka inte svarar barnet utan pass
+     (barnforslag_neka).
 
-     Ett förslag föräldern själv skickar går som förut, och har samma
-     ruta för en rabattkod sedan 2026-10-13.
+     Ett förslag föräldern själv skickar går som förut. Rutan för en
+     rabattkod (2026-10-13) är borta sedan 2026-10-21: koderna gäller bara
+     planköp (koder_for_planer).
 
      Utan tabellen i databasen (migrationen inte körd) finns inga
      förslag, och inget av det här syns.
@@ -4956,14 +4953,14 @@
 
   /* Skicka: passet skapas av databasen som förälderns eget förslag,
      med samma pris, villkor och timmar som när föräldern bokar själv.
-     Samma svar till ytan som boka(), och koden passet fick. */
+     Samma svar till ytan som boka(). Ingen rabattkod: koderna gäller bara
+     planköp (koder_for_planer, 2026-10-21). */
   async function skickaBarnforslag(v) {
     const { data, error } = await supa.rpc('skicka_barnets_forslag', {
       p_id: v.forslag,
       p_pass: {
         datum: v.datum, tid: v.tid, minuter: v.minuter, amne: v.amne, tjanst: NXTjanster.standard(),
-        barn: v.barn || 1, format: v.format || null, plats: v.plats || null, not: v.not || null,
-        rabattkod: v.rabattkod || null
+        barn: v.barn || 1, format: v.format || null, plats: v.plats || null, not: v.not || null
       }
     });
     if (error) {

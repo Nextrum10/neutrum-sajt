@@ -37,6 +37,9 @@ const NXAdmin = (function () {
     /* 2026-10-21: anmälningarna som flyttats till familjen, och den första
        per familj (parent_id → raden). */
     intagna: [], intagenFör: {},
+    /* 2026-10-21: partnerkoden varje familj använde första gången den
+       köpte en plan med en (familjens_partner), familjens id → raden. */
+    familjensPartner: {},
     /* Fas 16.1: mejlen till den som sökt jobb, per ansökan. */
     ansokanUtskick: {}, ansokanUtskickFel: null, provForsok: {},
     /* 2026-10-05: hur långt den inloggade har sett anmälningarna och
@@ -498,7 +501,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, kk, ansUt, tillagg, bank, prov,
-           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna] = await Promise.all([
+           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna, partner] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -603,13 +606,19 @@ const NXAdmin = (function () {
       /* 2026-10-21: anmälningarna som flyttats till familjen (intag_lead),
          med källan, koden och meddelandet. Koder räknar dem, och familjens
          panel säger när familjen togs in och varifrån den kom. */
-      supa.from('intagna_anmalningar').select('*').order('intagen_at', { ascending: false })
+      supa.from('intagna_anmalningar').select('*').order('intagen_at', { ascending: false }),
+      /* 2026-10-21 (koder_for_planer): partnern familjen kom genom, sparad
+         första gången den köpte en plan med en partnerkod. Bara superadmin
+         läser den, och utan migrationen är den tom. */
+      bara(() => supa.from('familjens_partner').select('familj, kod, kopplad_at'))
     ]);
 
     S.leads = leads.data || [];
     /* Saknas tabellen (migrationen anmalan_flyttas_till_familjen är inte
        körd) har ingen anmälan flyttats, och allt står som förut. */
     S.intagna = intagna.data || [];
+    S.familjensPartner = {};
+    (partner.data || []).forEach(r => { S.familjensPartner[r.familj] = r; });
     S.intagenFör = {};
     S.intagna.slice().reverse().forEach(r => {
       if (r.parent_id && !S.intagenFör[r.parent_id]) S.intagenFör[r.parent_id] = r;

@@ -551,6 +551,28 @@
           + '<a href="#katalog/familjerabatter">Tjänster → Familjerabatter</a>.</p>');
   }
 
+  /* PARTNERN (koder_for_planer, 2026-10-21). Leo: "Partnerkopplingen
+     sparas också på familjen vid första användningen för uppföljning."
+     Partnerkoden familjen använde första gången den köpte en plan med en
+     (familjens_partner, skriven av databasen och aldrig ändrad), och
+     partnern är kodens. Utan koppling, eller utan migrationen, står
+     ingenting. */
+  function familjensPartner(p) {
+    const rad = (S.familjensPartner || {})[p.id];
+    if (!rad) return null;
+    const kod = (S.rabattkoder || []).find(k => k.kod === rad.kod) || null;
+    return { rad, partner: kod && kod.partner_namn ? kod.partner_namn : rad.kod };
+  }
+
+  function dpPartner(p) {
+    if (!fullAdmin()) return '';
+    const fp = familjensPartner(p);
+    if (!fp) return '';
+    return dpRubrik('Partner', 'sparas första gången familjen köper en plan med en partnerkod')
+      + dpRad(fp.partner, 'Koden ' + fp.rad.kod + ', första köpet ' + kortDatum(fp.rad.kopplad_at),
+        '<a class="btn btn-ghost btn-sm" href="#koder/partnerkoder">Partnerkoderna</a>');
+  }
+
   /* Kortet (kortet_reserveras, 2026-10-13): familjens sparade kort och
      passen där det valts och som inte är avgjorda. Kortet finns hos
      Stripe; här står märket, de sista fyra siffrorna och när det går ut.
@@ -1124,6 +1146,7 @@
       ])
       + dpTimbank(p)
       + dpRabatt(p)
+      + dpPartner(p)
       + dpKortet(p, d);
     }
 
@@ -1148,6 +1171,7 @@
       ['Användarvillkoren', dpVillkor(d), 'okänt'],
       ['Första timmen gratis', dpFörstaTimmen(d), 'okänt'],
       ...(fullAdmin() ? [['Timbanken', dpTimbankKort(p), 'okänt'], ['Familjerabatt', dpRabattKort(p), 'okänt']] : []),
+      ...(fullAdmin() && familjensPartner(p) ? [['Partner', esc(familjensPartner(p).partner), 'okänt']] : []),
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
     + dpRubrik('Nästa pass')

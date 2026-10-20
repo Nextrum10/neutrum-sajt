@@ -1785,3 +1785,53 @@ arbetar i repot (`minne/databasen.md`):
 Kvar efter det: juristen (rad 8 och 32 i `DATASKYDD.md`, köpvillkoren och
 planernas nya ord om kalendermånaden i villkoren), att säga till familjerna att
 planerna följer kalendermånaden, och provköpen i testläge.
+
+### 9.20 Koderna bara på planer, och partnerkoderna (2026-10-21, inte i drift)
+
+Leo (2026-10-21): "Bygg en flik Koder i admin med två typer: partnerkod
+(spårar partnerföreningars volym) och rabattkod (t.ex. Zayans). Båda gäller
+ENBART planköp, aldrig enskilda pass." Hur det fungerar står i
+`minne/betalning.md` (Koderna gäller bara planköp). Ingenting är kört mot
+driften.
+
+En migration: `20261021150000_koder_for_planer`, efter de tre i 9.19 (den
+kräver `betalningar`, och stannar annars). Den har EN `drop`:
+`alter table public.rabattkoder drop constraint if exists rabattkoder_varde_check`
+och samma villkor med `>= 0` direkt efter, så att en partnerkod kan ge noll i
+rabatt. Den står med flit utanför ett do-block, så att verktyget ser den och ber
+om en bekräftelse (CLAUDE.md avsnitt 5): kör filen i SQL Editor, eller avsnitt
+för avsnitt med `execute_sql` med det steget för sig. Inget `delete` utanför en
+funktion; `intern.familjens_partner_rensas` har ett. Vakterna prövar
+`intern.rabattkod_prova`, `kolla_rabattkod_kop` och `intern.klippkort_rabatt`
+mot sin md5 och stannar innan något ändrats om driften inte är som filen lästes.
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna:
+
+1. **Merga.** Vyerna tål att migrationen saknas: utan `rabattkoder.sort` står
+   alla koder som rabattkoder under Koder, statistiken säger att migrationen inte
+   är körd, och familjens ruta prövar koden på planerna med `kolla_rabattkod_kop`
+   som förut. Boka pass har ingen ruta för en kod från första stund.
+2. **`koder_for_planer`**, hämtad från merge-commiten och prövad mot sin md5,
+   registrerad med filens text. Den fyller `kod_anvandningar` med köp som redan
+   är betalda med en kod (ur liggaren). Ett pass som redan bär en kod behåller den.
+3. **Edge-funktionerna**: `stripe-checkout` (nekar en kod på ett pass, ett
+   tillägg, kortet och timmar till planen; frågar `kod_pa_planen` och räknar om
+   rabatten innan Stripe får beloppet; före migrationen `kolla_rabattkod_kop`) och
+   `drift` (agentens fakta om koderna). Inget i sessionens parametrar ändrades
+   för de koder som redan fanns, så SESSIONSFORM är 10 som förut. Hämta tillbaka
+   och jämför byte för byte.
+4. **Hela `rls-test.sql`** mot driften, tillbakarullat (avsnitt 28, 32 och 46),
+   och advisorn: inget nytt för `anon`. `kod_anvandningar` och
+   `familjens_partner` har RLS, och bara superadmin läser.
+5. **Prova i testläge**: skapa en partnerkod med noll i rabatt och en rabattkod
+   under Koder, köp en plan med var och en (testkortet `4242 4242 4242 4242`),
+   och se att köpen står under raden när den fälls ut, att familjens panel säger
+   partnern, och att Räkna testbetalningar tar med dem i talen. Prova att en kod
+   på Fyll timbanken får nej i rutan, och att Boka pass inte har någon ruta.
+6. **Där koderna delas ut**: villkoren nämner inga koder, så en kods villkor (bara
+   planer, hur många gånger, sista dagen) ska stå där koden lämnas till familjen
+   (e-handelslagen 9 §).
+
+Kvar efter det: juristen (rad 33 i `DATASKYDD.md` och policyns meningar om koden
+och partnern, med frågan om en förenings namn kan säga något känsligt), och att
+säga till familjerna som har en kod att den bara gäller planer.

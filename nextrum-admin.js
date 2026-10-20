@@ -427,10 +427,12 @@
 
   /* Adresser som flyttat. Tjänstekatalogen och rabattkoderna låg
      under System till Fas 6. Paret sektion/flik, inte bara sektionen,
-     för #system är fortfarande en giltig adress. */
+     för #system är fortfarande en giltig adress. Rabattkoderna flyttade
+     från Tjänster till Koder 2026-10-21, bredvid partnerkoderna. */
   const FLYTTAT = {
     'system/tjanster': 'katalog/tjanster',
-    'system/rabattkoder': 'katalog/rabattkoder',
+    'system/rabattkoder': 'koder/rabattkoder',
+    'katalog/rabattkoder': 'koder/rabattkoder',
     /* Betalningar gjordes om 2026-09-29. Underlagen bor under Löner,
        och avvikelserna under Att göra. Fakturor blev Månadskörningen när
        fakturan togs bort (2026-10-21). */

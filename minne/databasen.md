@@ -1576,3 +1576,35 @@ Varje vakt släpper igenom en kropp som redan bär filens markör (`betalningar`
 alla 208 migrationer gav 1866 av 1866 i `rls-test.sql` (avsnitt 42–44 är nya, och 22.2 räknar sedan dess
 datumen i Stockholms tid, för en plan gäller nu sin kalendermånad), och alla tre filerna kördes en gång till utan
 fel och med samma tal.
+
+### Koderna bara på planer, och partnerkoderna (koder_for_planer, 2026-10-21, inte i drift)
+En fil (20261021150000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
+`minne/betalning.md` (Koderna gäller bara planköp), och ordningen i driften i `DEPLOY-BETALNING.md` 9.20. Den kräver
+`betalningar` (9.19) och stannar annars.
+
+- **En `drop`**: `alter table public.rabattkoder drop constraint if exists rabattkoder_varde_check`, och samma
+  villkor med `>= 0` direkt efter. Den står med flit utanför ett do-block, så att verktyget ser den och ber om en
+  bekräftelse (avsnitt 5 i kärnan): kör filen i SQL Editor, eller med det steget för sig.
+- `rabattkoder.sort` och `partner_namn` (villkoren `rabattkoder_sort_check` och `rabattkoder_partner_check`),
+  auditen med `sort` och `max_per_familj` (aldrig partnerns namn, som är fritext), triggrarna
+  `rabattkoder_star_fast` (BEFORE UPDATE OR DELETE: namnet och sorten står fast, delete nekas) och
+  `rabattkoder_toms_aldrig` (truncate), och `revoke delete, truncate` från authenticated. Policyn "bara admin
+  hanterar rabattkoder" (FOR ALL) står kvar: utan rätten och med triggern går en kod ändå inte att radera.
+- `kod_anvandningar` (en rad per betalt köp med en kod, `betalning_id` unik och restrict, `familj` restrict,
+  `klippkort_id` set null) och `familjens_partner` (en rad per familj, cascade), båda med RLS och bara
+  superadminens SELECT. Den första står fast med `kod_anvandningar_star_fast` (bara `klippkort_id` får bli null)
+  och `kod_anvandningar_toms_aldrig`; den andra med `familjens_partner_star_fast` (BEFORE UPDATE), och
+  `profiles_partner_rensas` tar bort raden när familjen avidentifieras. `betalningar_kod_anvands` (AFTER INSERT på
+  `betalningar`, `intern.kod_anvands`) skriver båda; liggaren fyller i bakåt.
+- `intern.rabattkod_prova` och `intern.klippkort_rabatt` skrivs om helt, `kolla_rabattkod_kop` blir ett omslag kring
+  den nya `kod_pa_planen` (samma svar, utan typen och värdet), och `intern.kod_galler_kopet`,
+  `intern.passet_tar_ingen_kod` (triggern `bookings_kod_bara_pa_planer`, BEFORE INSERT OR UPDATE, före
+  `bookings_skydda_rabatt` och långt före `bookings_timmarna_tillbaka`) och `intern.kortets_genomforda` är nya.
+  Vakterna: md5 på `prosrc` för de tre som skrivs om, och en kropp som redan bär `koder_for_planer` släpps igenom.
+- `kod_statistik(p_med_test)`, `partner_statistik(p_med_test)` och `kodens_anvandningar(p_kod)` har `is_admin()`s
+  vakt på första raden, och ingen av dem når anon eller `nextrum_barn`.
+- Med `kod_anvandningar` pekande på `betalningar` nekar Postgres `truncate betalningar` redan med 0A000, före
+  liggarens egen trigger; avsnitt 42 tar båda som ett nej.
+
+Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla 209 migrationer, och
+`rls-test.sql` gick 1897 av 1897 (avsnitt 28 och 32 omskrivna till den nya regeln, och 46 nytt).

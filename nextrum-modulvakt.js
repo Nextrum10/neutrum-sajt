@@ -107,6 +107,7 @@
         ritaMånaden:       'nextrum-admin-manaden.js',
         ritaLöner:         'nextrum-admin-loner.js',
         ritaKodsidan:      'nextrum-admin-koder.js',
+        ritaRabattkoder:   'nextrum-admin-rabattkoder.js',
         ritaTjanster:      'nextrum-admin-tjanster.js',
         ritaAudit:         'nextrum-admin-system.js',
         ritaAdminhantering: 'nextrum-admin-behorighet.js',

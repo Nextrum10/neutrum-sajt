@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
 <link rel="stylesheet" href="nextrum-vy.css?v=61e1c2ac">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=09fea443">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=73650383">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -709,12 +709,19 @@
              på #koder/familjer och #koder/studiehjalpare. Ritas av
              nextrum-admin-koder.js ur koder_lage(). Kampanjkoderna för
              affischerna står kvar under Tjänster & priser.
+
+             Rabattkoderna och partnerkoderna (2026-10-21, Leo: "Bygg en flik
+             Koder i admin med två typer: partnerkod ... och rabattkod ...
+             Båda gäller ENBART planköp") står i samma val, på
+             #koder/rabattkoder och #koder/partnerkoder, och ritas av
+             nextrum-admin-rabattkoder.js i #kp-vy. Rabattkoderna stod under
+             Tjänster till dess.
              ============================================================ -->
         <section class="vy-sek" data-sek="koder" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Koder</h2>
-              <p>Varje familj och studiehjälpare har en egen kod. Familjernas skrivs i intresseanmälan och ger en timme i timbanken, studiehjälparnas skrivs i jobbansökan och ger bonus i lönen.</p>
+              <p>Varje familj och studiehjälpare har en egen kod. Familjernas skrivs i intresseanmälan och ger en timme i timbanken, studiehjälparnas skrivs i jobbansökan och ger bonus i lönen. Rabattkoder och partnerkoder skrivs när en familj köper en plan, aldrig på ett pass.</p>
             </div>
           </div>
           <div class="kod-val" id="kod-val" aria-label="Vilka koder"></div>
@@ -727,6 +734,74 @@
               <input class="inp eko-sok" id="kod-sok" type="search" placeholder="Sök namn, e-post eller kod" aria-label="Sök bland koderna" autocomplete="off">
             </div>
             <div id="kod-lista"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div id="kp-vy" hidden>
+            <div class="vy-flikar" id="kp-flikar" role="tablist" aria-label="Vilka koder"></div>
+            <div id="kp-regel"></div>
+            <div class="kp-verktyg">
+              <label class="kp-test"><input type="checkbox" id="kp-test"> Räkna testbetalningar</label>
+              <p class="kp-fel" id="kp-fel" hidden></p>
+            </div>
+            <div class="adm-tal-rad" id="kp-tal"></div>
+            <div id="kp-partner" hidden></div>
+            <div class="dbox">
+              <h5 id="kp-ny">Ny kod</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                Koden lagras i versaler och familjen skriver den när den köper en plan. Rabatten får vara noll.
+                Lämna <b>Gånger totalt</b> tomt för obegränsat, och <b>Gäller till</b> tomt för ingen slutdag.
+                En kod raderas aldrig: den stängs av.
+              </p>
+              <form id="kp-form" novalidate>
+                <div class="ag-faltrad">
+                  <div class="fgroup">
+                    <label for="kp-kod">Kod</label>
+                    <input class="inp" id="kp-kod" maxlength="24" placeholder="ZAYAN10"
+                           autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+                  </div>
+                  <div class="fgroup" id="kp-partner-rad" hidden>
+                    <label for="kp-partner-namn">Partner</label>
+                    <input class="inp" id="kp-partner-namn" maxlength="80" placeholder="Föreningens namn" autocomplete="off">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-typ">Rabatt</label>
+                    <select class="inp" id="kp-typ">
+                      <option value="procent">Procent av priset</option>
+                      <option value="belopp">Kronor av priset</option>
+                    </select>
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-varde">Värde</label>
+                    <input class="inp" id="kp-varde" type="number" min="0" step="1" inputmode="numeric" placeholder="10">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-fran">Gäller från</label>
+                    <input class="inp" id="kp-fran" type="date">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-till">Gäller till</label>
+                    <input class="inp" id="kp-till" type="date">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-max">Gånger totalt</label>
+                    <input class="inp" id="kp-max" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-familj">Gånger per familj</label>
+                    <input class="inp" id="kp-familj" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                  </div>
+                </div>
+                <div class="fgroup" style="margin-top:14px">
+                  <label for="kp-text">Beskrivning</label>
+                  <input class="inp" id="kp-text" maxlength="80" placeholder="Syns för familjen när koden godkänns">
+                </div>
+                <div class="ag-rad">
+                  <button class="btn btn-primary btn-sm" type="submit" id="kp-spara">Skapa koden</button>
+                  <p class="ok-msg" id="kp-msg" style="margin:0"></p>
+                </div>
+              </form>
+            </div>
+            <div id="kp-lista"><div class="loading">Hämtar</div></div>
           </div>
         </section>
 
@@ -1810,21 +1885,21 @@
              hit (följHash i nextrum-admin.js). Tips och kampanjer
              flyttade hit från Intresseanmälningar 2026-10-06
              (#katalog/tips). Familjerabatterna, våra egna koder som bara
-             vi ser, kom 2026-10-15 (#katalog/familjerabatter).
+             vi ser, kom 2026-10-15 (#katalog/familjerabatter). Rabattkoderna
+             flyttade till Koder 2026-10-21 (#koder/rabattkoder), bredvid
+             partnerkoderna.
              ============================================================ -->
         <section class="vy-sek" data-sek="katalog" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Tjänster</h2>
-              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor, och koderna: rabattkoder, familjerabatter, tipskoder och kampanjkoder.</p>
+              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor, och våra koder: familjerabatter, tipskoder och kampanjkoder. Rabattkoderna och partnerkoderna står under <a href="#koder/rabattkoder">Koder</a>.</p>
             </div>
           </div>
 
-          <div class="vy-flikar" role="tablist" aria-label="Tjänster, rabattkoder och kampanjer">
+          <div class="vy-flikar" role="tablist" aria-label="Tjänster, familjerabatter och kampanjer">
             <button class="vy-flik" type="button" role="tab" data-flik="tjanster"
                     id="flik-tjanster" aria-controls="panel-tjanster">Tjänster &amp; priser</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="rabattkoder"
-                    id="flik-rabattkoder" aria-controls="panel-rabattkoder">Rabattkoder</button>
             <button class="vy-flik" type="button" role="tab" data-flik="familjerabatter"
                     id="flik-familjerabatter" aria-controls="panel-familjerabatter">Familjerabatter</button>
             <button class="vy-flik" type="button" role="tab" data-flik="tips"
@@ -1862,80 +1937,6 @@
             </div>
 
             <div id="tj-kort" style="margin-top:clamp(16px,1.8vw,22px)"><div class="loading">Hämtar</div></div>
-          </div>
-
-          <!-- ============ RABATTKODER ============
-               Tabellen är stängd för alla utom admin, med flit: en
-               inloggad familj som kan LÄSA den kan läsa alla koder
-               och välja den som är mest värd. Bokningen kontrollerar
-               i stället en kod i taget via kolla_rabattkod().
-
-               Rabatten fryser vid bokningen. Ändrar ni en kod i
-               efterhand påverkas inga redan bokade pass — ett belopp
-               får inte ändra sig för att en kampanj justerats. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="rabattkoder"
-               id="panel-rabattkoder" aria-labelledby="flik-rabattkoder" hidden>
-            <div class="dbox">
-              <h5>Ny kod</h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
-                Koden lagras i versaler och familjen skriver den vid bokningen. Lämna
-                <b>Max antal</b> tomt för obegränsat, och <b>Gäller till</b> tomt för ingen
-                slutdag.
-              </p>
-              <form id="rk-form">
-                <div class="ag-faltrad">
-                  <div class="fgroup">
-                    <label for="rk-kod">Kod</label>
-                    <input class="inp" id="rk-kod" maxlength="24" placeholder="SOMMAR25"
-                           autocomplete="off" spellcheck="false" style="text-transform:uppercase">
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-typ">Typ</label>
-                    <select class="inp" id="rk-typ">
-                      <option value="procent">Procent av priset</option>
-                      <option value="belopp">Fast belopp i kronor</option>
-                    </select>
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-varde">Värde</label>
-                    <input class="inp" id="rk-varde" type="number" min="1" step="1" inputmode="numeric" placeholder="10">
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-tjanst">Gäller tjänst</label>
-                    <select class="inp" id="rk-tjanst"><option value="">Alla tjänster</option></select>
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-till">Gäller till</label>
-                    <input class="inp" id="rk-till" type="date">
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-max">Gånger totalt</label>
-                    <input class="inp" id="rk-max" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
-                  </div>
-                  <!-- 2026-10-13 (Leo: "rabattkoder ska vi också bestämma hur många
-                       gånger de får användas"). En gång per familj som förval; tom
-                       ruta är obegränsat. Pass och köp av timmar räknas ihop, och ett
-                       avbokat pass räknas inte. -->
-                  <div class="fgroup">
-                    <label for="rk-familj">Gånger per familj</label>
-                    <input class="inp" id="rk-familj" type="number" min="1" step="1" inputmode="numeric" value="1" placeholder="Obegränsat">
-                  </div>
-                </div>
-                <div class="fgroup" style="margin-top:14px">
-                  <label for="rk-text">Beskrivning</label>
-                  <input class="inp" id="rk-text" maxlength="80" placeholder="Syns för familjen när koden godkänns">
-                </div>
-                <div class="ag-rad">
-                  <button class="btn btn-primary btn-sm" type="submit" id="rk-spara">Skapa koden</button>
-                  <p class="ok-msg" id="rk-msg" style="margin:0"></p>
-                </div>
-              </form>
-            </div>
-
-            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
-              <h5>Koder <em id="rk-antal"></em></h5>
-              <div id="rk-tabell"><div class="loading">Hämtar</div></div>
-            </div>
           </div>
 
           <!-- ============ FAMILJERABATTER (2026-10-15) ============
@@ -2570,13 +2571,13 @@
 <script src="nextrum-app.js?v=a262aca7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-studie.js?v=e4708805"></script>
-<script src="nextrum-arbetsyta.js?v=91456198"></script>
+<script src="nextrum-arbetsyta.js?v=71f4330a"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=60e55cea"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=10a8959f"></script>
-<script src="nextrum-admin-detalj.js?v=2f667c52"></script>
+<script src="nextrum-admin-karna.js?v=8a37f109"></script>
+<script src="nextrum-admin-detalj.js?v=dd0594f9"></script>
 <script src="nextrum-admin-oversikt.js?v=4675189b"></script>
 <script src="nextrum-admin-kunder.js?v=c59f9f8c"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
@@ -2588,9 +2589,10 @@
 <script src="nextrum-admin-liggaren.js?v=8eeee83a"></script>
 <script src="nextrum-admin-manaden.js?v=51040ed6"></script>
 <script src="nextrum-admin-loner.js?v=2c10dffa"></script>
-<script src="nextrum-admin-koder.js?v=b8bc88c4"></script>
-<script src="nextrum-admin-tjanster.js?v=84bd81c9"></script>
-<script src="nextrum-admin-system.js?v=9aeaacb2"></script>
+<script src="nextrum-admin-koder.js?v=a0486d8a"></script>
+<script src="nextrum-admin-rabattkoder.js?v=da71bc94"></script>
+<script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
+<script src="nextrum-admin-system.js?v=1f4b7fcf"></script>
 <script src="nextrum-admin-behorighet.js?v=576427c6"></script>
 <script src="nextrum-admin-automationer.js?v=f8750cf7"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
@@ -2600,7 +2602,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=0b10c92f"></script>
-<script src="nextrum-modulvakt.js?v=f69ddaee"></script>
-<script src="nextrum-admin.js?v=8fe12e4b"></script>
+<script src="nextrum-modulvakt.js?v=bca26bc2"></script>
+<script src="nextrum-admin.js?v=d3f87ab1"></script>
 </body>
 </html>

@@ -551,7 +551,7 @@
       const PEKARE = [
         ['Bolagsfakta', 'Organisationsnummer, moms, F-skatt och hur studiehjälparna anlitas.', '#agenter/bolaget'],
         ['Tjänster och priser', 'Pris, ersättning, RUT-andel och villkor per tjänst.', '#katalog/tjanster'],
-        ['Rabattkoder', 'Koder, värden och giltighet.', '#katalog/rabattkoder'],
+        ['Rabattkoder och partnerkoder', 'Koder till planerna, värden, giltighet och användning.', '#koder/rabattkoder'],
         ['Integrationer', 'Google Meet-länkar till onlinepassen. Bokföringen sköts i Fortnox, utan koppling hit.', '#system/integrationer'],
         ['Adminhantering', 'Vem som ser den här vyn, och vad var och en får göra.', '#system/adminanvandare']
       ];

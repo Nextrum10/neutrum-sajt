@@ -5066,6 +5066,18 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   .kod-under{text-align:left}
 }
 
+/* Rabattkoderna och partnerkoderna (2026-10-21, nextrum-admin-rabattkoder.js):
+   samma rader som Koder, formuläret i en dbox och en ruta för
+   testbetalningarna. Bara tokens. */
+.kod-val-kort:nth-child(3) .kod-val-ik{background:var(--mossa-soft);color:var(--mossa-text)}
+.kod-val-kort:nth-child(4) .kod-val-ik{background:var(--bricka);color:var(--bl-2)}
+.kp-verktyg{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin:0 0 clamp(14px,1.6vw,18px)}
+.kp-test{display:inline-flex;align-items:center;gap:10px;min-height:44px;font-size:.88rem;color:var(--bl-2);cursor:pointer}
+.kp-test input{width:20px;height:20px;accent-color:var(--acc)}
+.kp-fel{margin:0;font-size:.86rem;color:var(--bl-2)}
+#kp-partner{margin-bottom:clamp(16px,1.8vw,22px)}
+#kp-vy .dbox + .dbox,#kp-vy .dbox + #kp-lista{margin-top:clamp(16px,1.8vw,22px)}
+
 /* ============================================================
    UTBILDNINGSPROVET I VYN (2026-10-21)
    Ansökningar → Provet i vyn (nextrum-admin-provet.js): frågorna med

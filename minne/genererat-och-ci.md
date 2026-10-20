@@ -642,3 +642,16 @@ att familjen bekräftar, och släppet. Båda funktionerna gör samma sak som fö
 i två sekunder, den andra ska vänta, säga nej och lämna saldot på noll med en använd timme. `rls-test.sql`
 kan inte pröva lås, för den är en transaktion. Provat 2026-10-21: 6 av 6, och med låset i
 `klippkort_dra` bortlappat föll fyra av dem (båda passen tog timmen).
+
+### Koderna bara på planer (koder_for_planer, 2026-10-21)
+`_delad/koder.ts` är det kassan gör med en kod före Stripe (formen, nej på ett pass, ett tillägg, kortet och
+timmar till planen, bara en plan, databasens svar och kontrollen av rabatten), med databasen inskickad
+(`Kodklient`). `koder_test.ts` provar procent, kronor, noll och en rabatt över priset (samma exempel som
+`rls-test.sql` avsnitt 46 räknar i databasen), databasens nej (utgången, inte börjad, slut, en gång per
+familj, finns inte), en rabatt som inte stämmer med typen och värdet, ett fel och ett tomt svar, och vägen före
+migrationen (`kolla_rabattkod_kop`). I `rls-test.sql` skrevs avsnitt 28 och 32 om till den nya regeln (ett pass
+tar ingen kod, för någon; gränserna prövas på köpen), och avsnitt 46 är nytt: sort och partner, noll, inget
+raderas, prövningen i svensk tid, användningen vid betalningen, familjens partner och avidentifieringen, vem
+som når vad och statistiken med och utan testbetalningar. `prova-koder.js` provar flikarna under Koder
+(planskoderna) med ett partnernamn som bär en `<img onerror>`, och `prova-barnforslag.js` att Boka pass och
+granskningen inte har någon ruta för en kod och att Fyll timbanken aldrig visar ett pris med kod.

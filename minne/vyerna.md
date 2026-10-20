@@ -1316,6 +1316,21 @@ snyggt." En egen sektion i gruppen Kunder, efter Studiehjälpare
   och tryck rör sig med `scale`.
 - Ansökans panel har raderna Kod och Bonus för tipset, och Löner har rutan
   Bonus för tips (`minne/betalning.md`).
+- **Rabattkoderna och partnerkoderna** (2026-10-21, `koder_for_planer`) står i
+  samma val, som kort tre och fyra (mossa och bricka), på `#koder/rabattkoder`
+  och `#koder/partnerkoder`, och ritas av `nextrum-admin-rabattkoder.js`
+  (`ritaRabattkoder`, modulvakten och `BARA_SUPER`) i en egen yta (`#kp-vy`).
+  `nextrum-admin-koder.js` ritar korten och de fyra flikarna (`kodflikar`) och
+  döljer sin yta på de två adresserna. Ytan: regeln (bara planer), rutan Räkna
+  testbetalningar, nyckeltalen, för partnerkoderna en tabell per partner
+  (`partner_statistik`), formuläret (partnern bara för en partnerkod, noll i
+  rabatt går, en gång per familj som förval för en rabattkod och tomt för en
+  partnerkod), och en `<details class="kod-rad">` per kod som hämtar sina köp
+  (`kodens_anvandningar`) första gången den fälls ut. Stäng av frågar först och
+  skriver `aktiv`; ingen knapp raderar. Rabattkoderna stod under Tjänster till
+  2026-10-21, och `#katalog/rabattkoder` skickas hit (`FLYTTAT`). Text ur
+  databasen går genom `esc()`: `prova-koder.js` provar ett partnernamn med en
+  `<img onerror>` och ett familjenamn med `<i>`.
 
 ### Mejl från adminvyn skrivs i Gmail (2026-10-11)
 

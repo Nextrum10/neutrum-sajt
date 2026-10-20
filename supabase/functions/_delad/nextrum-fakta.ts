@@ -136,6 +136,12 @@ SIFFRORNA:
   bara det lägre priset: på korten under Erbjudanden, när den bokar och
   i kassan. Ett pass eller köp under ordinarie pris hos en sådan familj
   är alltså inget fel.
+· Rabattkoder och partnerkoder (en partnerförenings kod, som kan ge en
+  rabatt eller bara räknas) gäller bara när familjen köper en plan,
+  aldrig ett pass, Fyll timbanken eller timmar till en plan, och ett köp
+  har högst en kod. Rabatten räknas av databasen innan kassan öppnas,
+  och ett köp blir aldrig gratis av en kod. Ett pass som fick en kod
+  innan regeln kom 2026-10-21 behåller sitt pris.
 · Första timmen är gratis med den första planen familjen köper, också
   om den köps med en rabattkod: planen får en timme till, 9 timmar när
   man köper 8. Den dras först och gäller i 60 dagar från köpet, också om

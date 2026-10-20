@@ -251,27 +251,30 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   funktioner lämnar inte ut det som är av; vyn säger bara det.
 - **Barnets förslag på pass** (2026-10-12, Leo: "barn skickar förslag, precis som förälder, men ser
   inte priset"): förslaget står i `barn_passforslag`, aldrig i `bookings`, och är inget pass. Föräldern
-  ser det (Boka pass, Att göra, mejlet `barnforslag`), granskar det i den vanliga ytan med priset och en
-  rabattkod och skickar det som sitt eget (`skicka_barnets_forslag()`, SECURITY INVOKER, så policyn
+  ser det (Boka pass, Att göra, mejlet `barnforslag`), granskar det i den vanliga ytan med priset
+  och skickar det som sitt eget (`skicka_barnets_forslag()`, SECURITY INVOKER, så policyn
   och alla triggrar på `bookings` gäller), eller låter bli. Barnet ser aldrig ett pris, och priset
-  vid knappen följer databasens ordning (Rabattkoden, nedan).
-- **Rabattkoden** (2026-10-13, Leo: "koden får inte krocka med gratis timmar ... gratis timmarna
-  räknas i timbanken"): rutan står i förälderns egna förslag och i granskningen av ett barns, aldrig
-  i barnets vy. Koden gäller bara det familjen betalar med pengar. En gratis timme går före den
-  (`forsta_timmen_bjuds`, också tipstimmen), och köpta timmar och timbanken går före den, när passet
-  skapas och när de betalar det senare (`bookings_timmar_betalar_utan_kod`): då tas koden bort från
-  passet, och den läggs aldrig ihop med något (en familjerabatt är familjens pris, och koden räknas på det). En kod som tas bort när passet skapas räknas inte som
-  använd. Rutan säger när koden inte används och varför, och koden skickas ändå: databasen avgör.
-  **Har familjen timmar i timbanken gäller ingen kod på ett pass** (samma kväll, Leo: "rabattkod kan inte
-  användas om man har timmar i timbanken ... kan användas för att köpa timmar i timbanken eller om man har noll
-  timmar kvar och vill köpa pass för pass"): timmar som går att använda i dag, eller sparade minuter till en hel
-  timme (`intern.har_timmar`). **Koden gäller när familjen köper timmar**, en plan eller Fyll timbanken, i rutan
-  under Erbjudanden (`kolla_rabattkod_kop`, `klippkort.rabattkod`): databasen drar av den (`intern.klippkort_rabatt`),
-  aldrig så att köpet blir gratis, och gratistimmar bär ingen kod. Den första planen får sin gratis timme också
-  med koden (Leo 2026-10-15): där läggs de ihop. **Hur många gånger** sätts per kod, totalt och
-  per familj (`max_anvandningar`, `max_per_familj`, en gång som förval; Leo: "rabattkoder ska vi också bestämma hur
-  många gånger de får användas"), och ett avbokat pass ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6).
-  I drift sedan natten till 2026-10-14; en kods villkor ska stå där den delas ut (avsnitt 11).
+  vid knappen följer databasens ordning. Ingen rabattkod på ett pass (Koderna, nedan).
+- **Koderna gäller bara planköp** (2026-10-21, `koder_for_planer`, Leo: "Bygg en flik Koder i admin med två typer:
+  partnerkod (spårar partnerföreningars volym) och rabattkod (t.ex. Zayans). Båda gäller ENBART planköp, aldrig enskilda
+  pass"). Koderna är `rabattkoder`, med `sort` ('rabatt' eller 'partner') och `partner_namn`; `typ` är rabattens typ
+  (procent, eller belopp i öre) och `varde` får vara noll (en partnerkod som bara räknar). **Ett pass tar ingen kod**, för
+  någon (`bookings_kod_bara_pa_planer`, och `intern.rabattkod_prova` säger samma nej till varje kod på ett pass); TIPS är
+  tipstimmens markering och står kvar, och ett pass som redan bar en kod behåller den. Bland köpen bara en plan i katalogen
+  (`intern.kod_galler_kopet`), aldrig Fyll timbanken, timmar till planen eller gratistimmar. **En kod per köp**
+  (`klippkort.rabattkod`); familjerabatten och den första planens gratis timme är inga koder och staplas med den (Leo
+  2026-10-15). Databasen prövar koden och räknar rabatten (`intern.klippkort_rabatt`, aldrig så att köpet blir gratis), och
+  kassan frågar `kod_pa_planen()` med familjens token, räknar om rabatten ur typen och värdet (`_delad/koder.ts`, samma regel
+  som `intern.rabattkod_prova`, och de ändras tillsammans) och öppnar ingen kassa när den inte stämmer; en kod på ett pass,
+  ett tillägg, kortet eller timmar till planen är ett nej. **Användningen står vid betalningen**: `kod_anvandningar`, en
+  rad per betalt köp med en kod, med `betalning_id`, skriven av databasen när liggaren bokför betalningen, aldrig av en
+  klient; den och koderna raderas aldrig (triggrar), och en kods namn och sort står fast. **Familjens partner**
+  (`familjens_partner`) sparas första gången och ändras aldrig, och tas bort när familjen avidentifieras. Statistiken
+  (`kod_statistik`, `partner_statistik`, `kodens_anvandningar`) är superadminens och räknar inte testbetalningar utom på
+  begäran. Adminvyn: Koder → Rabattkoder och Partnerkoder. Studievyn: rutan Kod till en plan under Erbjudanden, och ingen ruta i
+  Boka pass. **Hur många gånger** sätts per kod, totalt och per familj (`max_anvandningar`, `max_per_familj`), och ett
+  återbetalt köp ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6). Villkoren nämner inga koder: en kods villkor
+  ska stå där den delas ut (avsnitt 11). Historiken (koden på ett pass, 2026-10-13 till 2026-10-21): `minne/betalning.md`.
 - **Familjerabatter** (2026-10-15, Leo: "egna rabattkoder som bara vi har tillgång till ... 10 kr billigare på alla
   timmar som köps tex ... tills vi tar bort rabatten. ... de ser bara att de har rabatt vid checkout men inte annat"): våra
   egna koder (`familjerabatter`, Tjänster → Familjerabatter), kronor av per timme, 1–200 kr i hela kronor, som admin sätter
@@ -360,6 +363,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | timbanken | familjens köpta timmar (en plan eller Fyll timbanken), gratistimmar och sparade minuter; pass för pass går inte genom den |
 | gratistimmar | timmar vi sätter in i familjens timbank utan kostnad (`klippkort` med erbjudandet `gratis`); 60 dagar, dras först med planens gratis timme. Inte första timmen eller tipstimmen |
 | familjerabatt | kronor av per timme för en familj vi satt en av våra koder på (`familjerabatter`, `familjens_rabatt`); aldrig en rabattkod, och familjen ser aldrig koden, bara priset |
+| rabattkod | en kod som ger en rabatt när familjen köper en plan, aldrig på ett pass (`rabattkoder`, `sort = 'rabatt'`) |
+| partnerkod | en partnerförenings kod till en plan, med eller utan rabatt (`rabattkoder`, `sort = 'partner'`); den första sparas på familjen (`familjens_partner`) |
 | Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
 | timmar till planen | Köp till timmar: 1–20 timmar till en plan som gäller, till planens timpris, som går ut med planen (`klippkort` med erbjudandet `plan_extra` och `till_plan`; Välj själv under Er timbank) |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
@@ -797,8 +802,9 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   2026-10-11); klasserna heter `nx-kakor-*`. Ändras lagringen följer `lagring.html`
   med; före ett pixel-id, se `minne/sakerhet.md`.
 - **Advisorn** larmar om det som är med flit (listan i `minne/sakerhet.md`). Läckta lösenord
-  kontrolleras inte. `kolla_rabattkod` och `kolla_rabattkod_kop` har ett tak: tio okända koder i timmen per
-  konto, sparade som HMAC i ett dygn (`intern.rabattkod_forsok`, `rabattkoden_timmar_och_tak`).
+  kontrolleras inte. `kolla_rabattkod`, `kolla_rabattkod_kop` och `kod_pa_planen` har ett tak: tio okända koder i timmen per
+  konto, sparade som HMAC i ett dygn (`intern.rabattkod_forsok`, `rabattkoden_timmar_och_tak`). Passets ruta prövar
+  ingen kod alls sedan 2026-10-21 (`koder_for_planer`).
 - **Förhandsvisningen använder aldrig den riktiga klienten**: med `?forhandsvisning` på `/foralder`
   eller `/larare` och utan `nextrum-forhandsvisning.js` skapar `nextrum-app.js` ingen klient alls, och
   modulvakten säger det. Den riktiga inloggningen frågar bara `mina_behorigheter()` (grinden, som är
@@ -905,6 +911,11 @@ Detaljer: `minne/grunden.md`.
   Apple Pay och Google Pay med domänen, provköpen). Köpvillkoren på `/anvandarvillkor#kopvillkor` är en platshållare
   tills Leo skrivit dem, och en ny text är en ny version av villkoren. Juristen har inte läst rad 8 och 32 i
   `DATASKYDD.md` eller planernas nya ord om kalendermånaden.
+- **Koderna bara på planer och partnerkoderna** (2026-10-21, Fas 4) är byggda och provade lokalt (`rls-test.sql`
+  avsnitt 28, 32 och 46, `koder_test.ts`, `prova-koder.js` och `prova-barnforslag.js`), inte i driften: kedjan står i
+  `DEPLOY-BETALNING.md` 9.20 (merge, `koder_for_planer` med sin enda `drop constraint`, sedan `stripe-checkout` och
+  `drift`). Villkoren nämner inga koder, så en kods villkor ska stå där den delas ut. Juristen har inte läst rad 33 i
+  `DATASKYDD.md`, med frågan om en partnerförenings namn kan säga något känsligt om familjen.
 - **Timmarna**: provköpet (DEPLOY-BETALNING.md 9.12) är ogjort. Leos testköp står kvar med
   sina timmar till kortets sista dag, och är sedan 2026-09-30 märkt som test igen
   (`stripe_skarp = false`): det räknas inte längre som intäkt.

@@ -244,7 +244,7 @@
       <li>Messages between family and tutor in the platform’s chat</li>
       <li>If the child has a login of their own: what the child and the tutor write to each other
         in the child’s view, and when it was read</li>
-      <li>Payments and pay statements: which session was paid, amounts and when, when a card payment for a session was started, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when, until which day and whether we took them back). Every payment is also a row in our payment ledger (what it was for, the amount, the discount code and Stripe's ids), a plan with the month it applies to, and if we refund a purchase: how many hours were taken back, the amount and who at Nextrum did it. We never have the card details</li>
+      <li>Payments and pay statements: which session was paid, amounts and when, when a card payment for a session was started, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when, until which day and whether we took them back). Every payment is also a row in our payment ledger (what it was for, the amount, the discount code and Stripe's ids), a plan with the month it applies to, and if we refund a purchase: how many hours were taken back, the amount and who at Nextrum did it. If you buy a plan with a discount code or a partner organisation’s code, we store which code the purchase had and the discount it gave, with the payment, and the first time you use a partner code also which partner you came through. We never have the card details</li>
       <li>When you tick the purchase terms before the checkout opens: what it was for (a purchase, a session or the card), which version of the terms it was and when</li>
       <li>If we have given you a discount, for example through a partner: which of our discounts it
         is, when it was set or removed and by whom at our end, and for each session and purchase how
@@ -320,6 +320,10 @@
         of the child’s login. That you and we can read it is legitimate interest (Article
         6(1)(f)): keeping the children safe.</li>
       <li><b>A discount we have given you</b>: the contract with you (Article 6(1)(b)): it is the price you pay.</li>
+      <li><b>The code on a purchase and the partner you came through</b>: the contract with you (Article
+        6(1)(b)) for the discount, and legitimate interest (Article 6(1)(f)) for following up how many
+        families have come through a partner organisation and what they have bought. The partner is never
+        told which families they are.</li>
       <li><b>Attempts with discount codes</b>: legitimate interest (Article 6(1)(f)): protecting
         the codes against guessing. We only store that the account tried a code that does not
         exist, and when, in a form we cannot read back to the account.</li>
@@ -509,7 +513,10 @@
         something we can shorten, not even on request. A bonus remains even when the application it
         came from has been deleted, without the code and the application.
         We never delete the rows in the payment ledger: if you have paid for something, the account is not
-        deleted entirely but remains without a name, and the rows point to it.</li>
+        deleted entirely but remains without a name, and the rows point to it. Which code a purchase had
+        stays with the payment, for as long.</li>
+      <li><b>The partner you came through</b>: as long as the account exists. If the account is deleted
+        or anonymised, it is removed.</li>
       <li><b>That you ticked the purchase terms</b>: as long as the account exists. If you have paid for something, it
         remains on the account without a name, with the payments.</li>
       <li><b>The change log</b>: as long as the business exists. It carries states and times,

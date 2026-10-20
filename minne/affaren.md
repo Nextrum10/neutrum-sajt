@@ -259,17 +259,17 @@ bara igenom tid och status på ett befintligt pass.
 **Barnet kan föreslå pass (barnet_foreslar_pass, 2026-10-12)**, när
 föräldern slagit på det för barnet (`boka`, av som förval). Förslaget
 går till föräldern, utan pris, och blir ett pass först när föräldern
-skickat det, kanske med en annan tid och en rabattkod, som sitt eget
+skickat det, kanske med en annan tid, som sitt eget
 förslag (`skicka_barnets_forslag()`). Studiehjälparen svarar på passet
 som på vilket förslag som helst. Ett förslag föräldern själv gör går som
-förut, och har samma ruta för en rabattkod sedan 2026-10-13. Allt om det
-i `minne/barnkonton-och-admin.md`.
+förut. Allt om det i `minne/barnkonton-och-admin.md`.
 
-**Rabattkoden gäller bara det familjen betalar med pengar**
-(`rabattkoden_krockar_inte`, 2026-10-13, Leo: "koden får inte krocka med
-gratis timmar"). En gratis timme (första timmen, tipstimmen) och köpta
-timmar eller timbanken går före koden, som då tas bort från passet; de
-läggs aldrig ihop. Allt om det i `minne/betalning.md`.
+**Ett pass tar ingen rabattkod** (sedan 2026-10-21, `koder_for_planer`,
+Leo: "Båda gäller ENBART planköp, aldrig enskilda pass"). Rabattkoder och
+partnerkoder skrivs när familjen köper en plan, under Erbjudanden. Från
+2026-10-13 till dess stod en ruta för en kod i Boka pass, och en gratis
+timme och timbanken gick före koden (`rabattkoden_krockar_inte`). Allt om
+det i `minne/betalning.md`.
 
 ## Svaret på en föreslagen tid och avbokade pass
 

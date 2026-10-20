@@ -676,8 +676,9 @@ på en fråga om en PERSON ska ha is_admins vakt från första raden.**
 1. **Läckta lösenord kontrolleras inte.** Supabase Auth kan stämma av
    mot HaveIBeenPwned. Det är en kryssruta under Authentication →
    Policies, kostar ingenting och gäller nya och ändrade lösenord.
-2. **`kolla_rabattkod` och `kolla_rabattkod_kop` har ett tak per konto**
-   (2026-10-13, `rabattkoden_timmar_och_tak`). Förut fanns inget, för
+2. **`kolla_rabattkod`, `kolla_rabattkod_kop` och `kod_pa_planen` har ett tak per konto**
+   (2026-10-13, `rabattkoden_timmar_och_tak`; `kod_pa_planen` sedan 2026-10-21, och passets ruta
+   prövar sedan dess ingen kod alls: samma nej för varje kod, och inget försök räknas). Förut fanns inget, för
    `rabattkoder` var tom; men rutan stod i varje förälders förslag
    (`rabattkoden_krockar_inte`) och sedan under Erbjudanden, och en
    inloggad hade kunnat pröva koder i en slinga när den första koden
