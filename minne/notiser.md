@@ -361,7 +361,8 @@ lägga in kopia av mail till barnet."
 
 ### Utbildningsprovet i ansökan (Fas 22.1, borttaget 2026-10-21)
 
-**Borttaget 2026-10-21** (`provet_i_ansokan_tas_bort`; Leo 2026-10-20: "ta bort
+**Borttaget 2026-10-21**, i drift sedan kvällen 2026-10-20 (`DEPLOY-NOTISER.md` 9;
+`provet_i_ansokan_tas_bort`; Leo 2026-10-20: "ta bort
 gamla och ersätt med nya på 26 frågor ... provet ska bara göras en gång, vid
 aktivering av konto. först välja lösenord och sen provet"). Ingen gjorde det:
 ingen ansökan fick ett prov öppnat, och `utbildningsprov_forsok` var tom. Det

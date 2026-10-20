@@ -893,7 +893,9 @@ Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
   den går inte att prova på en gren; en utebliven körning syns bara i Actions.
 - **`verktyg/rls-test.sql`** körs inte i CI. Kör HELA filen som ett anrop efter varje ändring i
   en policy eller trigger; varje rad ska vara ok. Den slår upp triggrar på funktionen, har
-  flaggan `erbjudanden` av, och en fixtur syns för resten av filen. Lokalt först, med
+  flaggan `erbjudanden` av, stänger av driftens frågor till utbildningsprovet och sätter provets förval
+  (2026-10-20: med driftens 26 frågor spärrades fixturernas studiehjälpare, och 66 prov föll), och en
+  fixtur syns för resten av filen. Lokalt först, med
   `verktyg/lokal-databas.sh` (`STOPP=`); driften i en transaktion som rullas tillbaka, hämtad
   med tillägget `http` från en commit.
   I en molnsession: `dockerd &`, och Deno ur npm med en importkarta (`minne/genererat-och-ci.md`).
@@ -938,10 +940,14 @@ Detaljer: `minne/grunden.md`.
   fått 15 rätt (gränsen 55 %); de två godkända studiehjälparna är undantagna. FAQ:n och Så fungerar Nextrum säger att
   alla klarat ett prov innan de matchas, och det har de två inte gjort (Leo samma kväll: "Alla kommer att utbildas
   snart"); för dem stämmer texten först när Kräv provet slagits på (Ansökningar → Provet) och de klarat det, och
-  tills dess ser de inga elever. **Provet i ansökan tas bort** med
-  PR #312: efter merge körs `provet_i_ansokan_tas_bort` och `ansokan-notis` driftsätts, i den ordningen, och sedan tar
-  Leo bort edge-funktionen `utbildningsprov` i Supabases panel (verktygen kan inte ta bort en funktion). Med
-  migrationen körd når den ingenting.
+  tills dess ser de inga elever. **Provet i ansökan är borttaget** och i drift sedan kvällen 2026-10-20 (Leo:
+  "Merge"): PR #312 mergades (f33f82d), `provet_i_ansokan_tas_bort` kördes direkt efter, hel i ett do-block, hämtad från
+  merge-commiten, prövad mot sin md5 (`98d3cdff…`) och registrerad med filens text, och de tre funktioner den skriver
+  är byte för byte som i en databas byggd ur filerna (`intern.ansokan_besked` `f69babe7…`). Sedan `ansokan-notis` v10
+  från merge-commiten, hämtad tillbaka och byte för byte lika i alla tolv filer, och ett röktest gav 401 ur
+  funktionens egen kod. Hela `rls-test.sql` gick 1897 av 1897 mot driften, tillbakarullat, efter att sviten lärt sig
+  stänga av driftens provfrågor (avsnitt 9), och advisorn larmade inte om något nytt för `anon`. Kvar: Leo tar bort
+  edge-funktionen `utbildningsprov` i Supabases panel (verktygen kan inte ta bort en funktion); den når ingenting.
   Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
 - **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3), i
   drift sedan 2026-10-20 (ovan). Liggaren fylldes med en rad (en testbetalning). **Köpvillkoren** stod som en
