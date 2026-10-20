@@ -1519,6 +1519,20 @@ bort), och ordningen i driften i `DEPLOY-BETALNING.md` 9.18.
   Standard (1 364 kr, `stripe_skarp = false`) och dess rad i liggaren, som
   står kvar. Septembers bokslut frös passen i `summering`, så att talen där
   nollas först när månaden öppnas och stängs igen.
+- **Körd i driften 2026-10-20** (Leo: "nollställ statistiken i admin", "kör",
+  och efter att ha fått veta att bara spärren återstod: "Fixa själv"). Två
+  vanliga `execute_sql` fastnade på verktygets bekräftelse, 60 sekunder, och
+  ingenting hände (kontrollerat efter båda). Sedan, som med PR #307, ett
+  `do`-block: filen hämtad ur merge-commiten fc82566 med
+  `extensions.http_get` och prövad mot sin md5 (`0e171af6…`), torrkörningens
+  anrop bortklippt (vakt: exakt en träff), funktionen skapad ur filen,
+  september öppnad (`oppnad_av` null, skälet säger varför), skriptet kört med
+  `dry_run => false`, och en vakt som rullar tillbaka allt om ett pass står
+  kvar. Svaret: 16 pass, 6 rapporter, 1 köp och 1 underlag (fyra rader), 0
+  fakturor. Efteråt noll i `bookings`, `lesson_reports`, `payouts`,
+  `payout_lines`, `klippkort` och `timbank_uttag`; sex konton och tre barn
+  kvar; liggarens rad kvar (`skarp = false`, `klippkort_id` null). September
+  är öppen tills den stängs i adminvyn, och då fryses nollor.
 
 Provat lokalt 2026-10-21: en databas byggd ur alla 203 migrationer gav 1797 av
 1797 i `rls-test.sql`, och 1794 av 1794 utan del 2. Alla tre filerna kördes en
