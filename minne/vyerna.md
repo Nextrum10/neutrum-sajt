@@ -1538,8 +1538,12 @@ bokningsschema, med Meet som plats, och länken i vårt mejl.
   (rad 10 och avsnitt 8 i `DATASKYDD.md`).
 - `verktyg/prova-ansokningar.js` provar mallen, stämpeln och stegens text med
   en länk satt, och att inget ändras utan den.
-- Länken är satt sedan samma dag: `https://calendar.app.google/9pBZSKMmgtdMLX4i7`
-  (Leos bokningsschema i info@).
+- Länken är satt sedan samma dag: `https://calendar.app.google/rRiTTLP5ymKQunSv7`
+  (Leos bokningsschema i info@, med tider till kl. 20). Den första,
+  `…/9pBZSKMmgtdMLX4i7`, var fel schema, med tider bara till kl. 17 (Leo
+  2026-10-20: "du länkade fel", "ny mötesgrupp"). Byts länken ändras configen,
+  `INTERVJU_MEJLET` i adminvyn och `intervju.ts` tillsammans, och `notis-ko`
+  driftsätts efter merge: annars mejlar det automatiska intervjumejlet den gamla.
 
 ### Mejlet till den som söker skickas härifrån (2026-10-20)
 

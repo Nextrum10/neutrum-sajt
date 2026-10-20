@@ -79,7 +79,7 @@ window.NEXTRUM_CONFIG = {
      kalender där. Ett privat Gmail har inget sådant avtal.
 
      Tom sträng = mejlet föreslår tider som förut. */
-  INTERVJU_BOKNING_URL: 'https://calendar.app.google/9pBZSKMmgtdMLX4i7',
+  INTERVJU_BOKNING_URL: 'https://calendar.app.google/rRiTTLP5ymKQunSv7',
 
   /* Det som kräver besökarens samtycke (nextrum-samtycke.js).
      Står allt här av visas ingen ruta och ingenting lagras.

@@ -13,6 +13,12 @@
 -- tar inte ett adminkonto, och bookings.parent_id är ON DELETE CASCADE,
 -- så dashboarden är fel ställe. Det här är den egna ändringen.
 --
+-- NAMNET ÄR FAMILJENS (2026-10-20). I driften heter familjen med passen
+-- "leo thriskos" (Leos eget adminkonto); Leo Trikke är studiehjälparen på
+-- alla passen. Med Leo Trikke hittade skriptet ett konto utan ett enda pass
+-- som familj och hade raderat ingenting, så det nekar nu ett konto som inte
+-- är en familj. Underlaget på studiehjälparens sida går med passen.
+--
 -- SÅ HÄR, I SQL EDITOR (som postgres, utan inloggning):
 --   1. Kör filen som den står. dry_run är sant: inget ändras, och svaret
 --      är en rad per sak som skulle raderas, och raden `hinder` om något
@@ -47,7 +53,7 @@
 -- kvar med kontot.
 --
 -- HINDER (inget raderas):
---   - inget konto, eller fler än ett, med namnet
+--   - inget konto, eller fler än ett, med namnet, eller ett som inte är en familj
 --   - en skarp betalning (stripe_skarp) på ett pass, ett tillägg eller ett
 --     köp: riktiga pengar är bokföring och raderas aldrig härifrån
 --   - ett underlag med ett av passen som redan är utbetalt
@@ -82,6 +88,9 @@ begin
     raise exception 'rensa_testkonto: % konton heter "%". Det ska vara exakt ett; inget har ändrats.', antal, p_namn;
   end if;
   select p.id into konto from public.profiles p where lower(btrim(p.full_name)) = lower(btrim(p_namn));
+  if (select p.role from public.profiles p where p.id = konto) is distinct from 'parent' then
+    raise exception 'rensa_testkonto: "%" är inte en familj. Skriv familjens namn, inte studiehjälparens; inget har ändrats.', p_namn;
+  end if;
 
   pass      := array(select b.id from public.bookings b where b.parent_id = konto);
   barn      := array(select s.id from public.students s where s.parent_id = konto);
@@ -222,4 +231,4 @@ begin
            cardinality(pass), cardinality(rapporter), cardinality(kop), cardinality(fakturor));
 end $$;
 
-select * from pg_temp.rensa_testkonto('Leo Trikke', dry_run => true);
+select * from pg_temp.rensa_testkonto('leo thriskos', dry_run => true);

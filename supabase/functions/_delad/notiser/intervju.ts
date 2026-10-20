@@ -44,7 +44,7 @@ export const INTERVJU = {
   amne: 'Du går vidare till intervju',
   forsta: 'Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.',
   boka: 'Boka en tid för intervjun som passar dig här:',
-  lank: 'https://calendar.app.google/9pBZSKMmgtdMLX4i7',
+  lank: 'https://calendar.app.google/rRiTTLP5ymKQunSv7',
   andra: 'Intervjun hålls i Google Meet, och länken till mötet kommer i bekräftelsen när du har bokat. '
     + 'Du behöver inget Google-konto. Passar ingen av tiderna får du gärna mejla oss på info@nextrum.se.',
   halsning: 'Hälsningar',

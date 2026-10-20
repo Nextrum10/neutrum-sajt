@@ -718,7 +718,9 @@ Detaljer: `minne/grunden.md`.
   Editor och aldrig i dashboarden: `dry_run` är förvalet och listar varje rad som skulle gå (pass,
   rapporter, timmar, underlag och, så länge tabellerna finns, fakturor), kontot står kvar, allt sker
   i en transaktion, och en skarp betalning eller ett utbetalt underlag stoppar den. Skriptet är ingen
-  migration och registreras inte.
+  migration och registreras inte. **Det tar familjens namn** (2026-10-20): i driften är familjen med
+  passen Leos adminkonto `leo thriskos` och Leo Trikke studiehjälparen, och ett konto som inte är en
+  familj nekas (med Leo Trikke hade skriptet raderat ingenting).
 ### Notiserna
 - Trigger → `intern.notis_skapa()` → `intern.notis_koa()` → `notis-minut` → `notis-ko` → Resend.
   `notiser_mejl` är strömbrytaren (av och trasigt ser likadana ut); `loggad` är slutläge.

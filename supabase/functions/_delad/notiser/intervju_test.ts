@@ -15,7 +15,7 @@ import { INTERVJU, renderaIntervjuMejl } from './intervju.ts';
 const LEOS_TEXT = 'Hej Sara!\n\n'
   + 'Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.\n\n'
   + 'Boka en tid för intervjun som passar dig här:\n'
-  + 'https://calendar.app.google/9pBZSKMmgtdMLX4i7\n\n'
+  + 'https://calendar.app.google/rRiTTLP5ymKQunSv7\n\n'
   + 'Intervjun hålls i Google Meet, och länken till mötet kommer i bekräftelsen när du har bokat. '
   + 'Du behöver inget Google-konto. Passar ingen av tiderna får du gärna mejla oss på info@nextrum.se.\n\n'
   + 'Hälsningar\nLeo och Alex, Nextrum\n';
@@ -35,7 +35,7 @@ Deno.test('html-versionen har samma stycken, bokningssidan och adressen som län
   const h = renderaIntervjuMejl({ fornamn: 'Sara', prov: 'nej' }).html;
   assertStringIncludes(h, 'Hej Sara!');
   assertStringIncludes(h, INTERVJU.forsta);
-  assertStringIncludes(h, 'Boka en tid för intervjun som passar dig här:<br><a href="https://calendar.app.google/9pBZSKMmgtdMLX4i7"');
+  assertStringIncludes(h, 'Boka en tid för intervjun som passar dig här:<br><a href="https://calendar.app.google/rRiTTLP5ymKQunSv7"');
   assertStringIncludes(h, 'href="mailto:info@nextrum.se"');
   assertStringIncludes(h, 'Hälsningar<br>Leo och Alex, Nextrum');
   assert(!/Sluta få mejl|Ändra dina val|notis-avanmal/.test(h));
