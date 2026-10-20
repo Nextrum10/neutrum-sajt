@@ -323,10 +323,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   truncate för alla, bara det Stripe ändrar efteråt (återbetalt, läget, avgift) får ändras, ingen inloggad skriver,
   och en familj med en rad avidentifieras i stället för att raderas (`on delete restrict`). En betalning som inte
   kunde skrivas ner (två kassor) står där också (`betalning_utan_rad`). Liggaren och Kortet står under Betalningar.
-- **Köpvillkoren i kassan** (2026-10-21, i drift sedan 2026-10-20 med texten som platshållare): varje kassa föregås av en ruta med vad som köps, priset och
-  kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken `CFG.KOPVILLKOR_URL`, där texten är Leos och i dag
-  en platshållare), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
-  (`kopvillkor_godkannanden`, databasens tid och version). Anropet bär vad som köps, aldrig ett belopp.
+- **Köpvillkoren i kassan** (2026-10-21, i drift sedan 2026-10-20; texten sedan samma kväll, Leo: "fixa"): varje kassa
+  föregås av en ruta med vad som köps, priset och kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken
+  `CFG.KOPVILLKOR_URL`), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
+  (`kopvillkor_godkannanden`, databasens tid och version). Anropet bär vad som köps, aldrig ett belopp. Köpvillkoren
+  pekar på reglerna i resten av villkoren i stället för att säga dem igen, och punkten om ett nekat kort (två försök
+  till, sex timmar emellan) ändras med `betalning_installning`.
 - **Kortet försöker igen** (2026-10-21, `kortdragningen_forsoker_igen`, i drift sedan 2026-10-20): ett nekat kort provas igen
   efter sex timmar, högst tre försök, bara med en kod där ett nytt försök kan gå (`intern.kortet_provas_igen`, som
   också avgör om mejlet lovar ett försök: `kortet: 'igen'`), mejlas en gång per serie, och efter ett dygn blir det en
@@ -925,9 +927,10 @@ Detaljer: `minne/grunden.md`.
   Provet spärrar ingen förrän Leo skrivit fem frågor (inga än), och de två godkända studiehjälparna är undantagna.
   Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
 - **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3), i
-  drift sedan 2026-10-20 (ovan). Liggaren fylldes med en rad (en testbetalning). **Köpvillkoren på
-  `/anvandarvillkor#kopvillkor` är en platshållare i drift** (Leo valde att driftsätta utan texten; Stripe står i
-  testläge), och varje kassa kräver kryss för den: Leos text blir en ny version av villkoren, och alla får frågan igen.
+  drift sedan 2026-10-20 (ovan). Liggaren fylldes med en rad (en testbetalning). **Köpvillkoren** stod som en
+  platshållare i drift i några timmar samma kväll (Stripe står i testläge), och texten ersatte den med PR #309 (Leo:
+  "fixa", "merge"), i versionen 2026-10-21: ingen hade godkänt den versionen när texten gick ut. En ny text efter det
+  är en ny version av villkoren, och alla får frågan igen.
   Kvar i Stripe: Apple Pay och Google Pay med domänerna, och provköpen (`DEPLOY-BETALNING.md` 9.19 steg 7). Juristen
   har inte läst rad 8 och 32 i `DATASKYDD.md` eller planernas nya ord om kalendermånaden.
 - **Koderna bara på planer och partnerkoderna** (2026-10-21, Fas 4), i drift sedan 2026-10-20 (ovan): ingen kod har

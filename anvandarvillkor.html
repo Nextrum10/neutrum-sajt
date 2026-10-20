@@ -270,11 +270,53 @@
          (plan_extra, extra_timmar_erbjudande) kostar planens timpris och går
          ut med planen. -->
     <!-- 2026-10-21. Kryssrutan före kassan (NXStudie.kassansVillkor) länkar
-         hit, genom KOPVILLKOR_URL i nextrum-config.js. PLATSHÅLLARE: Leo
-         skriver köpvillkoren här, på båda språken, innan sidan går ut. -->
+         hit, genom KOPVILLKOR_URL i nextrum-config.js. Platshållaren byttes
+         mot texten 2026-10-20 (Leo: "fixa"), i samma version, för ingen
+         hade godkänt den. Punkterna samlar det som gäller ett köp och
+         pekar på reglerna ovan och nedan i stället för att säga dem igen,
+         så att en regel bara står på ett ställe. Kvittot är Stripes
+         (receipt_email i stripe-checkout och _delad/reservationen.ts).
+         Försöken med ett nekat kort speglar betalning_installning
+         (automatiska_forsok 3, alltså två till, och timmar_mellan_forsok 6)
+         och intern.kortet_provas_igen: ändras inställningen ändras texten,
+         och det är en ny version av villkoren. Koderna står inte här med
+         flit: en kods villkor står där koden delas ut. -->
     <h2 id="kopvillkor">Köpvillkor</h2>
-    <p class="jur-platshallare"><b>PLATSHÅLLARE.</b> Här står köpvillkoren som kryssrutan före kassan gäller.
-      Texten skrivs av Nextrum innan sidan går ut.</p>
+    <p>Det här gäller när ni betalar hos oss, för ett pass, ett tillägg för ett pass som blev längre,
+      en plan, timmar till en plan eller Fyll timbanken, och när ni sparar ett kort för passen. Innan
+      kassan öppnas kryssar ni i att ni har läst det.</p>
+    <ul>
+      <li><b>Vem ni köper av.</b> Ni köper av oss, så som det står under Vem avtalet är med överst på
+        sidan, och det är oss ni kontaktar om köpet: <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
+      <li><b>Vad ni köper.</b> Rutan före kassan säger vad köpet gäller. Hur passen bokas och betalas
+        står ovan, och vad timmarna ger, hur länge de gäller och hur de används står under
+        <a href="#erbjudanden">Planer och timbanken</a>.</li>
+      <li><b>Priset.</b> Priset i kronor står i kassan innan ni betalar, med en rabatt dragen om ni har
+        en, och inga avgifter läggs till. Betalar ett sparat kort passet är priset passets, så som det
+        står under <a href="#kortet">Kortet ni väljer när ni bokar</a>.</li>
+      <li><b>Hur ni betalar.</b> Med kort, i Stripes kassa. Apple Pay och Google Pay går också
+        när kassan visar dem, för de betalar med ett kort. Andra betalsätt tar vi inte. När ni sparar
+        ett kort dras ingenting.</li>
+      <li><b>När köpet är klart.</b> Ett köp av timmar är klart när Stripe har godkänt betalningen. Då
+        står timmarna i er timbank, och en plan för nästa månad gäller från månadens första dag.
+        Stripe mejlar ett kvitto till adressen på ert konto.</li>
+      <li><b>Om kortet nekas.</b> Nekas kortet när ett pass ska reserveras eller betalas får ni ett
+        mejl, och ni kan då byta kort i er vy eller betala passet på ett annat sätt. Går det att försöka
+        igen, till exempel när det saknades täckning, provar vi samma betalning med samma kort efter
+        sex timmar, högst två gånger till. Passet avbokas inte för att kortet nekas, och det ska
+        betalas när det har hållits.</li>
+      <li><b>Ångerrätt.</b> Ni har 14 dagars ångerrätt, för ett pass från dagen det bokades och för ett
+        köp av timmar från köpdagen. Hur ni ångrar er och vad vi då betalar tillbaka står under
+        <a href="#angerratt">Ångerrätt</a>.</li>
+      <li><b>Återbetalning.</b> Pengar vi betalar tillbaka går till kortet ni betalade med. Betalar vi
+        tillbaka ett köp av timmar räknas beloppet som under Att sluta i
+        <a href="#erbjudanden">Planer och timbanken</a>, eller under Ångerrätt de första 14 dagarna,
+        och timmarna vi betalar tillbaka tas bort ur er timbank. En timme som redan har betalat ett
+        pass räknas som använd.</li>
+      <li><b>Fel i en betalning.</b> Ser ett belopp fel ut, har ni betalat samma sak två gånger eller
+        fick ni inte det ni betalade för, skriv till oss. Det som inte skulle ha dragits betalar vi
+        tillbaka. Kan vi inte komma överens gäller det som står under Tvist.</li>
+    </ul>
 
     <h2 id="erbjudanden">Planer och timbanken</h2>
     <p>Ni kan fylla er timbank med timmar i förväg på två sätt: med en plan för en kalendermånad, till ett

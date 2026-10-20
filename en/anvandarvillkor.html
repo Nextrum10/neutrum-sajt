@@ -249,11 +249,44 @@
          timmar till en plan kostar planens timpris och går ut med planen.
          Se anvandarvillkor.html. -->
     <!-- 2026-10-21. Kryssrutan före kassan (NXStudie.kassansVillkor) länkar
-         hit, genom KOPVILLKOR_URL i nextrum-config.js. PLATSHÅLLARE: Leo
-         skriver köpvillkoren här, på båda språken, innan sidan går ut. -->
+         hit, genom KOPVILLKOR_URL i nextrum-config.js. Platshållaren byttes
+         mot texten 2026-10-20, i samma version. Se anvandarvillkor.html. -->
     <h2 id="kopvillkor">Purchase terms</h2>
-    <p class="jur-platshallare"><b>PLACEHOLDER.</b> The purchase terms that the checkbox before checkout refers to
-      go here. Nextrum writes the text before the page goes live.</p>
+    <p>These apply when you pay us, for a session, an extra charge for a session that ran longer,
+      a plan, hours for a plan or Fill the time bank, and when you save a card for your sessions. Before
+      checkout opens, you tick a box to confirm that you have read them.</p>
+    <ul>
+      <li><b>Who you buy from.</b> You buy from us, as set out under Who the agreement is with at the top
+        of this page, and you contact us about the purchase: <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
+      <li><b>What you buy.</b> The box before checkout says what the purchase is for. How sessions are
+        booked and paid for is set out above, and what the hours give you, how long they are valid and
+        how they are used is set out under <a href="#erbjudanden">Plans and the time bank</a>.</li>
+      <li><b>The price.</b> The price in kronor is shown in checkout before you pay, with any discount
+        you have taken off, and no fees are added. If a saved card pays for a session, the price is the
+        session's, as set out under <a href="#kortet">The card you choose when you book</a>.</li>
+      <li><b>How you pay.</b> By card, in Stripe's checkout. Apple Pay and Google Pay also
+        work when checkout shows them, since they pay with a card. We do not take other payment methods.
+        Nothing is taken when you save a card.</li>
+      <li><b>When the purchase is complete.</b> A purchase of hours is complete when Stripe has approved
+        the payment. The hours are then in your time bank, and a plan for next month is valid from the
+        first day of the month. Stripe emails a receipt to the address on your account.</li>
+      <li><b>If the card is declined.</b> If the card is declined when a session is to be reserved or
+        paid, you get an email, and you can then change card in your view or pay for the session another
+        way. If it can be tried again, for example when there were insufficient funds, we try the same
+        payment with the same card after six hours, at most two more times. The session is not
+        cancelled because the card is declined, and it must be paid once it has taken place.</li>
+      <li><b>Right of withdrawal.</b> You have a 14-day right of withdrawal, for a session from the day
+        it was booked and for a purchase of hours from the day of purchase. How you withdraw and what we
+        then refund is set out under <a href="#angerratt">Right of withdrawal</a>.</li>
+      <li><b>Refunds.</b> Money we refund goes to the card you paid with. If we refund a purchase of
+        hours, the amount is calculated as under Stopping in
+        <a href="#erbjudanden">Plans and the time bank</a>, or under Right of withdrawal during the first 14 days,
+        and the hours we refund are removed from your time bank. An hour that has already paid for a
+        session counts as used.</li>
+      <li><b>A payment that is wrong.</b> If an amount looks wrong, if you have paid for the same thing
+        twice or if you did not get what you paid for, write to us. We refund what should not have been
+        taken. If we cannot agree, what is set out under Disputes applies.</li>
+    </ul>
 
     <h2 id="erbjudanden">Plans and the time bank</h2>
     <p>You can fill your time bank with hours in advance in one of two ways: with a plan for one

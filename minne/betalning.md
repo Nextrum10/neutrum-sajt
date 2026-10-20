@@ -452,8 +452,8 @@ nothing`, så den går att köra två gånger.
 
 **Köpvillkoren i kassan.** Varje kassa (ett köp, ett pass, ett tillägg, att spara kortet) föregås av en
 ruta i vyn (`NXStudie.kassansVillkor`) som säger vad som köps och vad det kostar, med kryssrutan "Jag har
-läst och godkänner köpvillkoren" och länken `CFG.KOPVILLKOR_URL` (`/anvandarvillkor#kopvillkor`, där en
-platshållare står tills Leo skrivit texten). Till kassan går inte att trycka på före krysset, och Avbryt,
+läst och godkänner köpvillkoren" och länken `CFG.KOPVILLKOR_URL` (`/anvandarvillkor#kopvillkor`). Till
+kassan går inte att trycka på före krysset, och Avbryt,
 Escape eller ett tryck utanför gör ingenting (inte heller att en rapport bekräftas). Ta bort kortet frågar
 inte. `stripe-checkout` nekar ett anrop utan `villkor: true` (utom Ta bort kortet) och sparar krysset i
 `kopvillkor_godkannanden` (vad det gällde, raden, användarvillkorens version och databasens tid,
@@ -461,6 +461,17 @@ inte. `stripe-checkout` nekar ett anrop utan `villkor: true` (utom Ta bort korte
 loggen säger det. Krysset är vägen in, inte skyddet: databasen kräver fortfarande att användarvillkoren är
 godkända (`klippkort_kraver_villkor`, `bookings_kraver_villkor`, `kortreservationer_kraver_villkor`), och
 att `villkor: true` kom från en människa kan ingen server pröva.
+
+**Texten** (2026-10-20, Leo: "fixa", i stället för platshållaren och i samma version, 2026-10-21, för
+ingen hade godkänt den) har nio punkter: vem ni köper av, vad, priset, betalsätten, när köpet är klart
+och kvittot, ett nekat kort, ångerrätten, återbetalningen och fel i en betalning. Den pekar på punkterna
+i resten av villkoren (`#kortet`, `#erbjudanden`, `#angerratt`) i stället för att säga dem igen, så
+att en regel bara står på ett ställe. Två saker står bara här: kvittot är Stripes (`receipt_email`), och
+ett nekat kort provas "efter sex timmar, högst två gånger till", som `betalning_installning`
+(`automatiska_forsok` 3, `timmar_mellan_forsok` 6) och bara när `intern.kortet_provas_igen` säger ja;
+ändras inställningen ändras meningen, i en ny version. Koderna står inte i köpvillkoren, med flit: en
+kods villkor står där koden delas ut. Juristen har inte läst texten, och frågan om Stripes kvitto räcker
+som bekräftelse på ett varaktigt medium står i `DATASKYDD.md`.
 
 **Kort, Apple Pay och Google Pay.** Kassan tar bara kort (`payment_method_types: ['card']`), och Apple Pay
 och Google Pay är kort: de syns när de är påslagna i Stripe och, för den inbäddade kassan, domänen är
