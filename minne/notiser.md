@@ -255,7 +255,7 @@ configen, så den står i `intervju.ts`, i adminvyn och i configen, och
 Hej [förnamn]!
 Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.
 Boka en tid för intervjun som passar dig här:
-https://calendar.app.google/9pBZSKMmgtdMLX4i7
+https://calendar.app.google/rRiTTLP5ymKQunSv7
 Intervjun hålls i Google Meet, och länken till mötet kommer i bekräftelsen när du har bokat. Du behöver inget Google-konto. Passar ingen av tiderna får du gärna mejla oss på info@nextrum.se.
 Hälsningar
 Leo och Alex, Nextrum
