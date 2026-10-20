@@ -316,20 +316,20 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   före strömbrytaren (Leos beslut, PR #281); sedan kedjan i `DEPLOY-BETALNING.md` 9.14 kördes samma eftermiddag
   säger sidorna, villkoren, mejlen, agenterna och vyn samma sak, pass för pass (PR #283, Leo: "sajt ska säga samma
   sak som vyn, lektion per lektion"), och databasens version blev 2026-10-15.
-- **Betalningsliggaren** (2026-10-21, `betalningsliggaren`, inte i drift; Leo: "raderas ALDRIG och ingår inte i
+- **Betalningsliggaren** (2026-10-21, `betalningsliggaren`, i drift sedan 2026-10-20; Leo: "raderas ALDRIG och ingår inte i
   något städjobb"): en rad per betalning i `betalningar`, skriven av databasen själv (AFTER-triggrar,
   `intern.betalningar_bokfor()`) när tjänstekontot sätter pengarna på passet, köpet eller tillägget, en rad per
   PaymentIntent, aldrig av en vy och aldrig för att någon kommer tillbaka från Stripe. Triggrar nekar delete och
   truncate för alla, bara det Stripe ändrar efteråt (återbetalt, läget, avgift) får ändras, ingen inloggad skriver,
   och en familj med en rad avidentifieras i stället för att raderas (`on delete restrict`). En betalning som inte
   kunde skrivas ner (två kassor) står där också (`betalning_utan_rad`). Liggaren och Kortet står under Betalningar.
-- **Köpvillkoren i kassan** (2026-10-21, inte i drift): varje kassa föregås av en ruta med vad som köps, priset och
-  kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken `CFG.KOPVILLKOR_URL`; texten sedan 2026-10-20, Leo:
-  "fixa"), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
+- **Köpvillkoren i kassan** (2026-10-21, i drift sedan 2026-10-20; texten sedan samma kväll, Leo: "fixa"): varje kassa
+  föregås av en ruta med vad som köps, priset och kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken
+  `CFG.KOPVILLKOR_URL`), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
   (`kopvillkor_godkannanden`, databasens tid och version). Anropet bär vad som köps, aldrig ett belopp. Köpvillkoren
   pekar på reglerna i resten av villkoren i stället för att säga dem igen, och punkten om ett nekat kort (två försök
   till, sex timmar emellan) ändras med `betalning_installning`.
-- **Kortet försöker igen** (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift): ett nekat kort provas igen
+- **Kortet försöker igen** (2026-10-21, `kortdragningen_forsoker_igen`, i drift sedan 2026-10-20): ett nekat kort provas igen
   efter sex timmar, högst tre försök, bara med en kod där ett nytt försök kan gå (`intern.kortet_provas_igen`, som
   också avgör om mejlet lovar ett försök: `kortet: 'igen'`), mejlas en gång per serie, och efter ett dygn blir det en
   uppgift till oss; admin försöker igen under Betalningar → Kortet. Passet avbokas aldrig för att kortet nekas.
@@ -401,7 +401,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   timme i det som gäller nu (köp som inte gått ut, med de använda tomma; planens gratis timme efter planen; timmarna för
   tips), gratis närmast de tomma för de dras först, "N av M timmar kvar", och en stapel över 24 timmar
   (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger. **En plan gäller en kalendermånad**
-  (2026-10-21, `planerna_per_manad`, inte i drift; Leo: "Den här månaden" eller "Nästa månad"): familjen väljer
+  (2026-10-21, `planerna_per_manad`, i drift sedan 2026-10-20; Leo: "Den här månaden" eller "Nästa månad"): familjen väljer
   månaden på plankortet, `klippkort.galler_fran` är den 1:a (databasen prövar den), och planen går ut månadens sista
   dag; Fyll timbanken, gratistimmarna, planens gratis timme och tipstimmen räknas som förut. Under batteriet står en
   rad per månad, "3 av 8 timmar återstår" och "0 av 0" (`planens_manader()`), och nästa månads plan räknas inte i
@@ -656,7 +656,8 @@ Detaljer: `minne/grunden.md`.
   Skriv migrationer utan dem (en kontroll i stället för `drop policy`, en rensning per funktion, en
   tidsstämpel i stället för `delete`, som `klippkort.aterkallad_at` 2026-10-14), kör dem avsnitt för avsnitt med
   `execute_sql` och registrera filens text sedan i
-  `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL,
+  `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL
+  (det gjordes en gång, 2026-10-20, med Leos uttryckliga ja: PR #307:s åtta sista migrationer, avsnitt 11),
   och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*` från 2026-10-02 står kvar och väntar
   på ett ja, avsnitt 11).
 - `arkiv/` ändras aldrig; en rättelse är en ny migration. `schema-v22.sql` kördes aldrig, kör
@@ -903,24 +904,39 @@ Detaljer: `minne/grunden.md`.
   `charge.dispute.updated` och kortets tre (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
   `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox. Stegen till skarpt läge, i
   ordning och med driftens läge: `DEPLOY-BETALNING.md` 9.16 (2026-10-15).
-- **Fakturan är borttagen** (2026-10-21) i koden och i migrationerna, men inte i driften: kedjan står
-  i `DEPLOY-BETALNING.md` 9.18 (funktionerna först, sedan del 1, backup, del 2). Villkoren har versionen
-  2026-10-21, så alla får frågan igen. Spärren "ingen betalning, inget pass" kan inte slås på.
-- **Intervjumejlet och utbildningsprovet i studiehjälparvyn** (2026-10-21) är byggda och provade lokalt, inte i
-  driften: kedjan står i `DEPLOY-NOTISER.md` 8 (`notis-ko` före `intervjumejlet`, som byter ett villkor med `drop
-  constraint`). Provet spärrar ingen förrän Leo skrivit fem frågor, och de som var godkända när migrationen körs
-  slipper det. Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
-- **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3)
-  är byggda och provade lokalt (1867 av 1867 i `rls-test.sql` med alla 208 migrationer, `prova-kassan.js` 83 av 83),
-  inte i driften: kedjan står i `DEPLOY-BETALNING.md` 9.19 (merge, edge-funktionerna, de tre migrationerna, Stripes
-  Apple Pay och Google Pay med domänen, provköpen). Köpvillkoren på `/anvandarvillkor#kopvillkor` är skrivna sedan
-  2026-10-20, i versionen 2026-10-21; en ny text efter att den gått ut är en ny version av villkoren. Juristen har inte
-  läst rad 8 och 32 i `DATASKYDD.md`, köpvillkoren eller planernas nya ord om kalendermånaden.
-- **Koderna bara på planer och partnerkoderna** (2026-10-21, Fas 4) är byggda och provade lokalt (`rls-test.sql`
-  avsnitt 28, 32 och 46, `koder_test.ts`, `prova-koder.js` och `prova-barnforslag.js`), inte i driften: kedjan står i
-  `DEPLOY-BETALNING.md` 9.20 (merge, `koder_for_planer` med sin enda `drop constraint`, sedan `stripe-checkout` och
-  `drift`). Villkoren nämner inga koder, så en kods villkor ska stå där den delas ut. Juristen har inte läst rad 33 i
-  `DATASKYDD.md`, med frågan om en partnerförenings namn kan säga något känsligt om familjen.
+- **PR #307 är i drift** sedan kvällen 2026-10-20 (Leo: "Merga och driftsätt hela kedjan", sedan "Fixa själv om du
+  kan"): PR #307 mergades (e92104b), och Vercel lade ut sajten med villkoren 2026-10-21 (kontrollerat från databasen
+  mot nextrum.se). Sedan tio edge-funktioner från merge-commiten, hämtade tillbaka och byte för byte lika main:
+  `ekonomi` v26, `fakturering` v36, `faktura-utskick` v23, `stripe-webhook` v15, `stripe-checkout` v22 (SESSIONSFORM
+  10), `notis-ko` v29 (med bokningslänken i intervjumejlet), `drift` v23, `juridik` v23, `stripe-aterbetalning` v8 och
+  `stripe-reservation` v2. Alla tio svarade ur sin egen kod på ett röktest. Sist de nio migrationerna `20261021*`: del 1
+  av fakturan hel i ett do-block, och de åtta andra i ett block som hämtade varje fil ur merge-commiten, prövade md5
+  och körde och registrerade dem i ordning, allt eller inget. Det rundar verktygets bekräftelse (avsnitt 5) och
+  gjordes en gång, med Leos uttryckliga ja: anmälningarnas fil fastnade på rutan, som inte syntes den kvällen heller.
+  Alla nio står i `schema_migrations` med filernas md5, hela `rls-test.sql` gick 1897 av 1897 mot driften,
+  tillbakarullat (före merge också, med alla nio i samma transaktion), och advisorn larmade inte om något nytt för
+  `anon`. Två vakter rättades före merge, efter provkörningen: fakturans (adminkontona) och anmälningarnas (Postgres
+  17 skriver en vy utan alias, `minne/databasen.md`). Hur det gick till: `DEPLOY-BETALNING.md` 9.21.
+- **Fakturan är borttagen** (2026-10-21), i drift sedan 2026-10-20 (ovan). Del 2 kördes efter backupen: en JSON-fil
+  till Leo med utkastet, dess två rader och kassans tre loggrader, och Supabases dagliga backup har tabellerna. Vakten
+  släppte igenom Leos eget adminkonto, som bar utkastet och fyra genomförda fakturapass; passen står nu som obetalda
+  (`ingen`) och ger inga larm under Att göra. Villkoren har versionen 2026-10-21, så alla får frågan igen. Spärren
+  "ingen betalning, inget pass" kan inte slås på.
+- **Intervjumejlet och utbildningsprovet i studiehjälparvyn** (2026-10-21), i drift sedan 2026-10-20 (ovan): mejlet
+  köas när en ansökan skickas vidare från och med nu, och de fyra som redan var vidareskickade fick inget i efterhand.
+  Provet spärrar ingen förrän Leo skrivit fem frågor (inga än), och de två godkända studiehjälparna är undantagna.
+  Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
+- **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3), i
+  drift sedan 2026-10-20 (ovan). Liggaren fylldes med en rad (en testbetalning). **Köpvillkoren** stod som en
+  platshållare i drift i några timmar samma kväll (Stripe står i testläge), och texten ersatte den med PR #309 (Leo:
+  "fixa", "merge"), i versionen 2026-10-21: ingen hade godkänt den versionen när texten gick ut. En ny text efter det
+  är en ny version av villkoren, och alla får frågan igen.
+  Kvar i Stripe: Apple Pay och Google Pay med domänerna, och provköpen (`DEPLOY-BETALNING.md` 9.19 steg 7). Juristen
+  har inte läst rad 8 och 32 i `DATASKYDD.md` eller planernas nya ord om kalendermånaden.
+- **Koderna bara på planer och partnerkoderna** (2026-10-21, Fas 4), i drift sedan 2026-10-20 (ovan): ingen kod har
+  använts och ingen familj har en partner. Kvar: provet i testläge (`DEPLOY-BETALNING.md` 9.20 steg 5). Villkoren
+  nämner inga koder, så en kods villkor ska stå där den delas ut. Juristen har inte läst rad 33 i `DATASKYDD.md`, med
+  frågan om en partnerförenings namn kan säga något känsligt om familjen.
 - **Timmarna**: provköpet (DEPLOY-BETALNING.md 9.12) är ogjort. Leos testköp står kvar med
   sina timmar till kortets sista dag, och är sedan 2026-09-30 märkt som test igen
   (`stripe_skarp = false`): det räknas inte längre som intäkt.
@@ -1195,9 +1211,9 @@ Detaljer: `minne/grunden.md`.
   hämtad tillbaka och byte för byte lika i alla tio filer. Röktest från databasen: preflighten svarade `ok` ur funktionens
   egen kod, och ett anrop utan inloggning 401. Ingen migration. Inget riktigt mejl är skickat än. Kvar: ett första mejl
   till en egen ansökan (och att kopian når info@), juristen (policyns meningar och rad 10 i `DATASKYDD.md`), och att ta
-  bort intervjubokningarna ur kalendern för hand. **En annan session bygger ett automatiskt intervjumejl**
-  (`20261021100000_intervjumejlet`, inte i main 2026-10-20) som köas när `till_intervju_at` sätts; Skriv till hen med
-  bokningslänken sätter den, så går båda ut får den sökande två mejl. Hur de ska samsas är Leos beslut.
+  bort intervjubokningarna ur kalendern för hand. Det automatiska intervjumejlet (`intervjumejlet`, i drift sedan
+  samma kväll) är kallelsen, med bokningslänken; Skriv till hen med länken sätter `kontaktad_at` i samma ändring, och
+  då går inget automatiskt mejl (avsnitt 1).
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

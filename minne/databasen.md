@@ -1474,7 +1474,7 @@ tillbaka). Advisorn: bara `intern.kassan_oppnad` under RLS utan policy (info,
 med flit); inget nytt för `anon`. Torrkörningen (`fakturera_obetalda(...,
 true)` som tjänstekontot) gav inga pass för förra månaden eller till i dag.
 
-### Fakturan tas bort, och anmälan flyttar till familjen (2026-10-21, inte i drift)
+### Fakturan tas bort, och anmälan flyttar till familjen (2026-10-21, i drift sedan 2026-10-20)
 Tre filer och ett skript, skrivna och provade lokalt; ingenting är kört mot
 driften. Vad fakturans två delar gör står i `minne/betalning.md` (Fakturan tas
 bort), och ordningen i driften i `DEPLOY-BETALNING.md` 9.18.
@@ -1516,7 +1516,7 @@ egen databas byggd till och med 20261016110000 med en annan familjs faktura:
 del 1 och del 2 stannade och namngav familjen, och gick igenom när bara
 testkontots rad var kvar.
 
-### Intervjumejlet och utbildningsprovet (2026-10-21, inte i drift)
+### Intervjumejlet och utbildningsprovet (2026-10-21, i drift sedan 2026-10-20)
 Två filer, skrivna och provade lokalt; ingenting är kört mot driften. Vad de gör står i `minne/notiser.md`
 (Intervjumejlet) och `minne/affaren.md` (Utbildningsprovet i studiehjälparvyn), och ordningen i driften i
 `DEPLOY-NOTISER.md` 8.
@@ -1546,7 +1546,7 @@ var godkända skrivs bara första gången** (inställningens rad skrivs direkt e
 prövat i en egen databas byggd till och med `intervjumejlet`, där en studiehjälpare godkänd mellan två
 körningar inte fick något undantag.
 
-### Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, inte i drift)
+### Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, i drift sedan 2026-10-20)
 Tre filer, skrivna och provade lokalt; ingenting är kört mot driften. Vad de gör står i `minne/betalning.md`
 (Betalningsliggaren och köpvillkoren i kassan, Kortet försöker igen) och `minne/timmar.md` (Planerna per
 kalendermånad), och ordningen i driften i `DEPLOY-BETALNING.md` 9.19. Ingen har `drop` eller `delete` (bara `on
@@ -1578,7 +1578,7 @@ alla 208 migrationer gav 1866 av 1866 i `rls-test.sql` (avsnitt 42–44 är nya,
 datumen i Stockholms tid, för en plan gäller nu sin kalendermånad), och alla tre filerna kördes en gång till utan
 fel och med samma tal.
 
-### Koderna bara på planer, och partnerkoderna (koder_for_planer, 2026-10-21, inte i drift)
+### Koderna bara på planer, och partnerkoderna (koder_for_planer, 2026-10-21, i drift sedan 2026-10-20)
 En fil (20261021150000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
 `minne/betalning.md` (Koderna gäller bara planköp), och ordningen i driften i `DEPLOY-BETALNING.md` 9.20. Den kräver
 `betalningar` (9.19) och stannar annars.
@@ -1609,3 +1609,36 @@ En fil (20261021150000), skriven och provad lokalt; ingenting är kört mot drif
 
 Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla 209 migrationer, och
 `rls-test.sql` gick 1897 av 1897 (avsnitt 28 och 32 omskrivna till den nya regeln, och 46 nytt).
+
+### PR #307 i drift: nio migrationer, och spärren rundad en gång (2026-10-20)
+Leo: "Merga och driftsätt hela kedjan", sedan "Fixa själv om du kan". Ordningen var den i `DEPLOY-BETALNING.md`
+9.18–9.20 och `DEPLOY-NOTISER.md` 8: merge (e92104b), de tio funktionerna (`minne/funktioner.md`), sist
+migrationerna. Hur det gick till, i ordning:
+
+- **Provkörningen före merge fångade två vakter.** Alla nio filer och hela `rls-test.sql` kördes mot driften i ett
+  do-block som hämtade dem ur grenens commit och slutade med ett fel, så att allt rullades tillbaka. Fakturans vakt
+  stannade på Leos eget adminkonto (`leo thriskos`), som bar ett utkast och fyra fakturapass, och vakten släpper sedan
+  dess igenom konton med en adminroll (Leos val). Anmälningarnas vakt stannade på `analys_konvertering` och
+  `analys_leads_per_kalla`: **Postgres 17 i driften skriver en vy som bara läser en tabell utan alias**
+  (`created_at`, inte `l.created_at`), och Postgres 15 i den lokala bilden med alias. Samma vy, två texter, alltså
+  två md5; vakten godtar nu båda. En vy som läser flera tabeller skrivs lika i båda (fakturans vyvakter gick igenom).
+  Efter de två rättelserna gick provkörningen 1897 av 1897.
+- **Del 1** kördes hel i ett do-block ur merge-commiten (`http_get`, md5, vakt mot att versionen redan står), som
+  filen säger att den kan.
+- **Anmälningarnas fil skickades med texten synlig** (den har ett `delete` i en funktion, och CLAUDE.md avsnitt 5
+  säger då inte genom dynamisk SQL), och anropet fastnade på verktygets bekräftelse: timeout efter 60 sekunder,
+  ingen ruta i Leos app, och driften visade att ingenting körts. Vad i filen som utlöste rutan vet vi inte: den har
+  ett `delete` och ett `update` i samma funktion, `revoke … delete` och flera `update` i do-block.
+- **De åtta sista** (anmälningarna, del 2, intervjumejlet, provet, liggaren, planerna, kortet och koderna) kördes i
+  ETT do-block som hämtade varje fil ur merge-commiten, prövade md5, vägrade om versionen redan stod, körde filen och
+  registrerade den (`version`, `name` och filens text som enda del, som raderna före), allt eller inget. Det rundar
+  spärren, och det gjordes med Leos uttryckliga ja efter en fråga som sa just det. Före del 2 togs en backup av
+  fakturans fyra tabeller (en JSON-fil till Leo: utkastet, två rader, inga spärrar, tre loggrader i
+  `intern.kassan_oppnad`, och kolumnerna); Supabases dagliga backup har dem också.
+- **Efteråt**: alla nio står i `schema_migrations` med filernas md5, hela `rls-test.sql` (d2d99fbd…) gick 1897 av 1897
+  mot driften, tillbakarullat, och advisorn larmade inte om något nytt för `anon`; de tolv nya posterna gäller
+  funktioner som `authenticated` når och som prövar behörigheten själva, och `intern.kassan_oppnad` är borta ur
+  listan. Två anmälningar flyttades till familjen, fakturatabellerna är borta, Leos fyra fakturapass är `ingen` och
+  syns inte under Att göra, liggaren fick en rad (en testbetalning), inga koder hade använts, provet har inga frågor
+  (spärren gäller inte) och de två godkända studiehjälparna är undantagna, och intervjumejlet gick inte ut i efterhand
+  till de fyra ansökningar som redan var vidareskickade.

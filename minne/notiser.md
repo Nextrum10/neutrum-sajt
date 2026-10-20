@@ -232,7 +232,7 @@ Sex regler bär det:
    välkomsten, men bara den senare godkänner profilen. Lägesväljaren
    frågar därför först.
 
-### Intervjumejlet (2026-10-21, `intervjumejlet`, inte i drift)
+### Intervjumejlet (2026-10-21, `intervjumejlet`, i drift sedan 2026-10-20)
 
 Leo: när admin skickar en ansökan vidare till intervju ska den som sökt få ett
 mejl, högst en gång per ansökan, och det ska gå genom notiskön och följa läget.
@@ -303,7 +303,7 @@ applications.till_intervju_at: null → satt (Skicka vidare till intervju)
 Ansökans tack i formuläret (`tackAnsokan` i `nextrum-app.js`) är sedan samma dag
 "Tack, din ansökan är skickad! Vi hör av oss inom 24 timmar."
 
-### Ett nekat kort, en gång per serie (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift)
+### Ett nekat kort, en gång per serie (2026-10-21, `kortdragningen_forsoker_igen`, i drift sedan 2026-10-20)
 `kort_nekat` (kortet_reserveras) går sedan 2026-10-21 bara vid första nekandet i en serie (`forsok = 1` i
 `intern.kortreservation_notis`), inte när jobbet provar kortet igen; familjens egna försök börjar en ny serie.
 `kortet` i datan har ett tredje värde, `igen`, som databasen sätter när kortet kommer att provas igen av sig
