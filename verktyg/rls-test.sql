@@ -2155,6 +2155,7 @@ from unnest(array[
   'public.matchningsforslag_rader(uuid)', 'public.ai_finns(text, uuid)',
   'public.frys_forslaget()', 'public.ai_taket_racker()',
   'public.matchningspoang(text[], text, text[], text[], integer, integer, jsonb)',
+  'public.matchningspoang(text[], text, text[], text[], text[], text[], integer, integer, jsonb)',
   'public.stampla_matchningen()', 'public.stampla_avbokningen()',
   'public.ai_analys(integer)', 'public.ai_avvikelser()'
 ]) f;
@@ -18736,6 +18737,57 @@ begin
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
   end if;
 end $$;
+
+-- ============================================================
+-- BEHOV I MATCHNINGEN (behov_i_matchningen, 2026-10-21)
+-- Familjens behov (leads.behov, students.behov) och studiehjälparens
+-- styrkor (tutor_profiles.styrkor) är samma sex koder, och poängen
+-- räknar på dem. Bara koderna går in, och studiehjälparen sätter sina
+-- egna styrkor genom vitlistan i skydda_tutorfalt.
+-- ============================================================
+insert into utfall (test, ok, detalj)
+select 'Behov: studiehjälparen sparar sina styrkor', r = 'prov,motivation', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000b1', null,
+          $q$with u as (update public.tutor_profiles set styrkor = '{prov,motivation}'
+                         where id = '00000000-0000-4000-8000-0000000000b1' returning styrkor)
+             select coalesce((select array_to_string(styrkor, ',') from u), 'ingen rad')$q$) r) x
+union all
+select 'Behov: en styrka utanför koderna nekas', r like 'FEL 23514%', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000b1', null,
+          $q$with u as (update public.tutor_profiles set styrkor = '{diagnos}'
+                         where id = '00000000-0000-4000-8000-0000000000b1' returning 1)
+             select count(*)::text from u$q$) r) x
+union all
+select 'Behov: en anonym anmälan sparar behov och upplägg som koder', r = 'prov,ikapp|online', r
+  from (select pg_temp.som(null,
+          array[$q$set local role anon$q$,
+                $q$insert into public.leads (parent_name, email, behov, format_onskemal)
+                   values ('Rls Behov', 'rls-behov@example.se', '{prov,ikapp}', 'online')$q$,
+                $q$reset role$q$],
+          $q$select array_to_string(behov, ',') || '|' || format_onskemal from public.leads
+              where email = 'rls-behov@example.se'$q$) r) x
+union all
+select 'Behov: en anmälan med en kod utanför listan nekas', r like 'FEL 23514%', r
+  from (select pg_temp.som(null,
+          array[$q$set local role anon$q$,
+                $q$insert into public.leads (parent_name, email, behov)
+                   values ('Rls Behov', 'rls-behov2@example.se', '{adhd}')$q$],
+          $q$select 'gick in'$q$) r) x
+union all
+select 'Behov: ett möte ger mer än inget, och okänt ligger emellan', m > o and o > n, m || '>' || o || '>' || n
+  from (select (public.matchningspoang('{Matematik}', 'Åk 9', '{prov}', '{Matematik}', '{Åk 7–9}', '{prov}', 0, 0, '{}') ->> 'poang')::int m,
+               (public.matchningspoang('{Matematik}', 'Åk 9', '{prov}', '{Matematik}', '{Åk 7–9}', '{}', 0, 0, '{}') ->> 'poang')::int o,
+               (public.matchningspoang('{Matematik}', 'Åk 9', '{prov}', '{Matematik}', '{Åk 7–9}', '{utmaning}', 0, 0, '{}') ->> 'poang')::int n) x
+union all
+select 'Behov: poängen är högst 100', p <= 100, p::text
+  from (select (public.matchningspoang('{Matematik}', 'Åk 9', '{prov}', '{Matematik}', '{Åk 7–9}', '{prov}', 0, 10, '{}') ->> 'poang')::int p) x
+union all
+select 'Behov: fel ämne är fortfarande ett hårt nej, hur väl behoven än möts', p < 50 and h, p || ' ' || h
+  from (select (r ->> 'poang')::int p, (r ->> 'hart_nej')::boolean h
+          from (select public.matchningspoang('{Svenska}', 'Åk 9', '{prov}', '{Matematik}', '{Åk 7–9}', '{prov}', 0, 10, '{}') r) y) x
+union all
+select 'Behov: den gamla signaturen räknar som förut utan behov', r ->> 'behov_utfall' = 'vet_ej', r::text
+  from (select public.matchningspoang('{Matematik}', 'Åk 9', '{Matematik}', '{Åk 7–9}', 0, 0, '{}') r) x;
 
 reset role;
 select set_config('request.jwt.claims', null, true);

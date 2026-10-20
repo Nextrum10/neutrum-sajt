@@ -770,7 +770,13 @@
           parent_id: parent,
           name: namn,
           grade: $('#le-arskurs', ruta).value.trim() || null,
-          subjects: ämnen
+          subjects: ämnen,
+          /* Behoven och upplägget ur anmälan (behov_i_matchningen,
+             2026-10-21) följer med till eleven: det är dem matchningen
+             räknar på. Före migrationen saknas de på anmälan, och då
+             blir det samma tomma förval som förut. */
+          behov: Array.isArray(lead.behov) ? lead.behov.filter(k => NX.BEHOV.some(x => x.kod === k)) : [],
+          format_onskemal: NX.FORMAT_ONSKEMAL.some(x => x.kod === lead.format_onskemal) ? lead.format_onskemal : null
         }).select('id, uppdrag_id').single();
         if (error) {
           säg(msg, (inbjuden ? 'Familjen har fått sitt konto och mejlet, men eleven kunde inte skapas: '
