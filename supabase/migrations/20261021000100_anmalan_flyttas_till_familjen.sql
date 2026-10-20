@@ -77,13 +77,17 @@ begin
     end if;
   end loop;
 
+  -- Två summor per vy: Postgres 17 i driften skriver kolumnerna utan alias
+  -- när vyn bara läser en tabell (created_at, inte l.created_at), och
+  -- Postgres 15 i den lokala bilden med. Samma vy, två texter; den andra
+  -- summan är läst ur driften 2026-10-20, där bara aliaset skilde.
   for f in
     select * from (values
-      ('analys_konvertering',    'e3d6dedb2f02901937f7405c538251c6'),
-      ('analys_leads_per_kalla', '3eabf5c59f65474b6e00670f93abe406')) v(namn, summa)
+      ('analys_konvertering',    'e3d6dedb2f02901937f7405c538251c6', '3d89d1e361f751447d8f383578baf9b6'),
+      ('analys_leads_per_kalla', '3eabf5c59f65474b6e00670f93abe406', 'fab5d548ae1ed87d6e0e526244bb59f6')) v(namn, summa, summa17)
   loop
     def := pg_get_viewdef(('public.' || f.namn)::regclass, true);
-    if position('intagna_anmalningar' in def) = 0 and md5(def) <> f.summa then
+    if position('intagna_anmalningar' in def) = 0 and md5(def) not in (f.summa, f.summa17) then
       raise exception 'Vyn % har ändrats sedan anmalan_flyttas_till_familjen skrevs (md5 %). Läs driften.',
         f.namn, md5(def);
     end if;
