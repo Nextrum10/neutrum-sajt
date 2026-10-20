@@ -73,6 +73,20 @@ window.NEXTRUM_CONFIG = {
      rapporter, och utan rapport blir passet aldrig genomfört. */
   UTBILDNING_URL: '',
 
+  /* Bokningssidan för intervjun (2026-10-20): ett bokningsschema i
+     Google Kalender, med Google Meet som plats. Adressen ser ut som
+     https://calendar.app.google/XXXXXXXX och står i mejlet Skriv till
+     hen i Rekryteringen, där den sökande väljer en tid själv. Google
+     mejlar tiden och Meet-länken, och bokningen står i kalendern,
+     inte i adminvyn.
+
+     Bara i kalendern för info@nextrum.se: där gäller Workspace-avtalet
+     med Google, och integritetspolicyn säger att bokningen ligger i vår
+     kalender där. Ett privat Gmail har inget sådant avtal.
+
+     Tom sträng = mejlet föreslår tider som förut. */
+  INTERVJU_BOKNING_URL: 'https://calendar.app.google/9pBZSKMmgtdMLX4i7',
+
   /* Det som kräver besökarens samtycke (nextrum-samtycke.js).
      Står allt här av visas ingen ruta och ingenting lagras.
 
