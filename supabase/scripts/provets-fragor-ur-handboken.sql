@@ -1,6 +1,9 @@
 -- ============================================================
 -- Utbildningsprovet i studiehjälparvyn: frågorna ur Handledarhandboken (2026-10-20)
 --
+-- ERSATT SAMMA KVÄLL av provets-fragor-latta.sql (26 lättare frågor, Leos ord). Den här
+-- filen är historik: den lade in den första omgången, som den andra skrev över.
+--
 -- Leo, 2026-10-20: "provet ska vara utformat efter det dokumenten, 55% rätt för
 -- godkänd". Dokumentet är Handledarhandboken (19 sidor, filen hette
 -- Visuell_inlärning.pdf). Det här är inte en migration och registreras inte, som

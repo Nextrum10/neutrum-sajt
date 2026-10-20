@@ -366,8 +366,8 @@ lägga in kopia av mail till barnet."
 **Provet i studiehjälparvyn (2026-10-21) är ett annat prov**: det görs av den som
 redan är godkänd och har ett konto, vid första inloggningen, och står i
 `minne/affaren.md` (Utbildningsprovet i studiehjälparvyn). Det här står kvar orört.
-Sedan 2026-10-20 har det de 26 frågorna härifrån och fyra till ur handboken, så
-en fråga som skrivs om här skrivs om där också, i vyn.
+Sedan 2026-10-20 har det 26 lättare frågor på samma ämnen som härifrån
+(`supabase/scripts/provets-fragor-latta.sql`).
 
 Efter utbildningsmötet gör den som söker ett prov på nätet:
 `/utbildningsprov?t=<nyckel>`, tjugosex flervalsfrågor om

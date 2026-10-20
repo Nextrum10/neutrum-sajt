@@ -473,14 +473,15 @@ nu (`kravs` är spärren, inte kolumnen). `lamna_in_utbildningsprov(p_svar)` lå
 att provet inte redan är klarat och att väntetiden gått, kräver ett heltal för varje aktiv fråga (frågas en ny
 fråga in medan någon skriver får hen "Svara på alla frågor" och läser in sidan igen), sparar försöket och svarar
 bara `{ratt, antal, godkand}`. Godkänt är **mer än** gränsen: med 50 % och sex frågor är tre rätt underkänt,
-och med 55 % och 30 frågor krävs 17. Mer än och minst 55 % skiljer sig bara när antalet aktiva är 20, 40, 60
+och med 55 % och 26 frågor krävs 15. Mer än och minst 55 % skiljer sig bara när antalet aktiva är 20, 40, 60
 eller 80.
 `spara_provfraga()` och `satt_provinstallning()` är superadminens; `satt_provkrav()`, `aterstall_utbildningsprov()`
 och `utbildningsprovet_lage()` också den med behörigheten Godkänna. En nollställning sätter `aterstalld_at` och
 tar bort godkännandet: försöken står kvar men räknas inte för väntetiden. Ingen fråga tas bort, den stängs av.
 
 **Vyn.** `nextrum-provet.js` (`NXProvet.förstGörs`) körs i studiehjälparvyns start för en godkänd
-studiehjälpare, före introduktionen. Rutan är samma som lösenordets och villkorens och går inte att stänga:
+studiehjälpare, direkt efter lösenordet och före villkoren och introduktionen (2026-10-20, Leo: "först välja
+lösenord och sen provet"; förut kom villkoren före provet). Rutan är samma som lösenordets och villkorens och går inte att stänga:
 frågorna som radioknappar, Lämna in, och sedan godkänt med Fortsätt eller underkänt med tiden då provet går att
 göra om och Logga ut. Svarar databasen inte, eller saknas funktionen, visas ingen ruta.
 
@@ -498,8 +499,16 @@ handboken i filen. **Fyra av de nya står avstängda**: interleaving, psykisk oh
 att dokumentera objektivt. Leo tog bort frågorna om de ämnena ur provet i ansökan 2026-10-02, efter att ha gjort
 det själv (`minne/notiser.md`, Utbildningsprovet), så bara Leo slår på dem. Provet visar alternativen i den
 ordning de står (`mitt_utbildningsprov()` blandar inte), så det rätta står på olika platser, och att alltid välja
-det längsta ger 2 rätt av 30. En fråga ändras i vyn, aldrig i filen, och ändras handboken läses båda provens
-frågor om. Ingen migration lägger in frågor, och inga påhittade frågor ska in i driften.
+det längsta ger 2 rätt av 30.
+
+**Samma kväll blev de 26 lättare frågor** (Leo: "ta bort gamla och ersätt med nya på 26 frågor, 55% rätt släpper
+in läxhjälparen i sin vy, provet ska bara göras en gång, vid aktivering av konto ... gör provet relativt lätt"),
+med `supabase/scripts/provets-fragor-latta.sql`: samma 26 ämnen som provet i ansökan, kortare frågor, tre
+alternativ, det rätta nära handbokens ord och de fel som går emot den. Raderna skrevs över där de stod (ingen hade
+gjort provet), och de åtta som blev över står avstängda sist. Det rätta är längst i 8 frågor, kortast i 9 och
+mittemellan i 9, och ingen tumregel ger mer än 9 av de 15 rätt som krävs. En fråga ändras i vyn, aldrig i
+filerna, och ändras handboken läses frågorna om. Ingen migration lägger in frågor, och inga påhittade frågor
+ska in i driften.
 
 ## Studiehjälparen utåt och omdömena
 

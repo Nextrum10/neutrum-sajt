@@ -4299,11 +4299,6 @@
        okänd roll får beskedet som förut. */
     if (S.profil.role === 'parent') { location.replace('/foralder'); return; }
     if (S.profil.role !== 'tutor') { visa('view-wrongrole'); return; }
-    /* Användarvillkoren (2026-10-07): den som inte godkänt den gällande
-       versionen får rutan här, efter lösenordet och före introduktionen.
-       Databasen kräver godkännandet för att ett pass ska föreslås eller
-       bekräftas (NXStudie.villkorFörst). */
-    await NXStudie.villkorFörst(supa, S.user, 'studiehjalpare');
 
     const tp = await supa.from('tutor_profiles')
       .select('status, school, city, subjects, grade_levels, formats, bio, age, hourly_rate')
@@ -4327,13 +4322,19 @@
       return;
     }
 
-    /* Utbildningsprovet (2026-10-21): efter villkoren och före
-       introduktionen, för den som är godkänd och ska göra det. Rutan står
-       kvar tills provet är godkänt; databasen spärrar elevernas uppgifter
-       till dess (NXProvet, intern.provet_sparrar). */
+    /* Utbildningsprovet (2026-10-21) direkt efter lösenordet, för den som
+       är godkänd och ska göra det (2026-10-20, Leo: "först välja lösenord
+       och sen provet"). Rutan står kvar tills provet är godkänt; databasen
+       spärrar elevernas uppgifter till dess (NXProvet, intern.provet_sparrar). */
     if (S.tutorProfil.status === 'approved' && typeof NXProvet !== 'undefined') {
       await NXProvet.förstGörs(supa);
     }
+
+    /* Användarvillkoren (2026-10-07): den som inte godkänt den gällande
+       versionen får rutan här, efter lösenordet och provet och före
+       introduktionen. Databasen kräver godkännandet för att ett pass ska
+       föreslås eller bekräftas (NXStudie.villkorFörst). */
+    await NXStudie.villkorFörst(supa, S.user, 'studiehjalpare');
 
     /* Introduktionen första gången, och Fortsätt sist leder in i vyn
        (NXStudie.introduktion). En profil som inte är godkänd än får veta

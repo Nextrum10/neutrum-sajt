@@ -392,7 +392,7 @@ select jobname, schedule, active from cron.job where jobname = 'admin-paminnelse
 I drift sedan kvällen 2026-10-20, i den här ordningen: `notis-ko` v29 (med bokningslänken i mejlet), sedan
 `intervjumejlet` och `utbildningsprovet_i_studiehjalparvyn` med resten av PR #307 (`DEPLOY-BETALNING.md` 9.21). De fyra
 ansökningar som skickades vidare under minuten innan migrationen fick mejlet för hand samma kväll, på Leos ord
-(`minne/notiser.md`), provet fick 30 aktiva frågor ur handboken samma kväll (steg 7), och de två godkända
+(`minne/notiser.md`), provet fick 26 lätta frågor ur handboken samma kväll (steg 7), och de två godkända
 studiehjälparna är undantagna. Steg 6 nedan är kvar.
 
 Två saker som hör till rekryteringen och går ut tillsammans: mejlet till den som går vidare till intervju
@@ -423,7 +423,7 @@ migrationen, för där finns inga sådana rader.
    adminvyn (rutan visar mejlet först) och läs mejlet i sandlådan: ämnet börjar med "[Prov till sökande]".
    Skicka sedan samma ansökan vidare igen: inget nytt mejl. Töm sandlådan efteråt.
 7. **Frågorna** (gjort 2026-10-20): 34 ur Handledarhandboken med `supabase/scripts/provets-fragor-ur-handboken.sql`,
-   30 av dem aktiva, och gränsen 55 (`minne/affaren.md`). Spärren gäller sedan dess; nya frågor skrivs under
+   ersatta samma kväll av 26 lättare (`provets-fragor-latta.sql`), och gränsen 55 (`minne/affaren.md`). Spärren gäller sedan dess; nya frågor skrivs under
    Ansökningar → Provet i vyn. Studiehjälparna som var godkända när migrationen kördes slipper
    provet; slå på kravet för någon av dem i listan eller i personens panel om de ska göra det.
 
