@@ -664,7 +664,8 @@ Detaljer: `minne/grunden.md`.
   tidsstämpel i stället för `delete`, som `klippkort.aterkallad_at` 2026-10-14), kör dem avsnitt för avsnitt med
   `execute_sql` och registrera filens text sedan i
   `supabase_migrations.schema_migrations` (`minne/databasen.md`). Runda aldrig spärren med dynamisk SQL
-  (det gjordes en gång, 2026-10-20, med Leos uttryckliga ja: PR #307:s åtta sista migrationer, avsnitt 11),
+  (det gjordes två gånger 2026-10-20, båda med Leos uttryckliga ja: PR #307:s åtta sista migrationer, avsnitt 11,
+  och rensningen av testkontot, `minne/databasen.md`),
   och prova den aldrig med objekt som blir kvar i driften (`zz_prov_*` från 2026-10-02 står kvar och väntar
   på ett ja, avsnitt 11).
 - `arkiv/` ändras aldrig; en rättelse är en ny migration. `schema-v22.sql` kördes aldrig, kör
@@ -720,7 +721,9 @@ Detaljer: `minne/grunden.md`.
   i en transaktion, och en skarp betalning eller ett utbetalt underlag stoppar den. Skriptet är ingen
   migration och registreras inte. **Det tar familjens namn** (2026-10-20): i driften är familjen med
   passen Leos adminkonto `leo thriskos` och Leo Trikke studiehjälparen, och ett konto som inte är en
-  familj nekas (med Leo Trikke hade skriptet raderat ingenting).
+  familj nekas (med Leo Trikke hade skriptet raderat ingenting). **Körd i driften 2026-10-20** (Leo:
+  "nollställ statistiken"): 16 pass, 6 rapporter, septembers underlag och testköpet är borta, liggarens
+  rad står kvar som test, och septembers bokslut är stängt igen med nollor (`minne/databasen.md`).
 ### Notiserna
 - Trigger → `intern.notis_skapa()` → `intern.notis_koa()` → `notis-minut` → `notis-ko` → Resend.
   `notiser_mejl` är strömbrytaren (av och trasigt ser likadana ut); `loggad` är slutläge.
@@ -1173,7 +1176,7 @@ Detaljer: `minne/grunden.md`.
   adminkonto som också är förälder hade 2026-10-12 alla 16 passen i driften; de räknas inte längre i statistiken,
   men de står kvar som pass och betalningar. Ett adminkonto raderas inte i panelen; ska passen bort är det Leos
   beslut och en egen ändring (`DEPLOY-BARNKONTON.md` 12): den ändringen är `supabase/scripts/rensa-testkonto.sql`
-  (2026-10-21), som bara är körd med `dry_run` lokalt.
+  (2026-10-21), körd i driften 2026-10-20 (avsnitt 5): inga pass finns kvar.
   Juristen har inte läst rad 26 i `DATASKYDD.md` eller meningarna om förslagen i policyn, och familjerna
   med barnkonto har inte fått veta att valet finns.
 - **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13) är i drift sedan natten till 2026-10-14, i den
