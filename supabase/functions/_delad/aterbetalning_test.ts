@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects, assertStringIncludes } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { aterbetalaKop, kopetsNyckel, type Rpc, stamAvKopet, type StripeAnrop } from './aterbetalning.ts';
+import { aterbetalaKop, kopetsNyckel, provaKopetsLage, type Rpc, stamAvKopet, type StripeAnrop } from './aterbetalning.ts';
 import { StripeError } from './stripe.ts';
 
 const KORT = '11111111-1111-4111-8111-111111111111';
@@ -29,7 +29,9 @@ function falskDb(svar: Record<string, { data?: unknown; error?: { message: strin
   return { rpc, anrop };
 }
 
-const LAGE_DEL = { ok: true, pi: 'pi_123', hela: false, timmar: 3, belopp_ore: 113700, aterbetald_ore: 0 };
+/** Ett köp av 8 timmar för 3 032 kr (379 kr i timmen), 2 använda: 6 betalda kvar. */
+const LAGE_DEL = { ok: true, pi: 'pi_123', hela: false, timmar: 3, belopp_ore: 113700, aterbetald_ore: 0,
+  kvar_betalda: 6, per_timme_ore: 37900, vid_uppsagning_ore: 223400, betalt_ore: 303200 };
 
 Deno.test('nyckeln bär köpet, det som redan gått tillbaka och beloppet', () => {
   assertEquals(kopetsNyckel(KORT, 0, 113700), `nextrum-aterbet-kop-${KORT}-0-113700`);
@@ -59,7 +61,8 @@ Deno.test('en del av ett köp: beloppet och timmarna ur databasen, Stripe först
 Deno.test('hela köpet: timmar null till databasen, hela ja till Stripe', async () => {
   const { stripe, anrop } = falskStripe(() => ({ id: 're_2' }));
   const db = falskDb({
-    klippkort_aterbetalning_lage: { data: { ok: true, pi: 'pi_9', hela: true, timmar: 5, belopp_ore: 183500, aterbetald_ore: 0 } },
+    klippkort_aterbetalning_lage: { data: { ok: true, pi: 'pi_9', hela: true, timmar: 5, belopp_ore: 183500, aterbetald_ore: 0,
+      kvar_betalda: 5, per_timme_ore: 37900, vid_uppsagning_ore: 183500, betalt_ore: 303200 } },
     klippkort_aterbetalad: { data: { ok: true } },
   });
   const u = await aterbetalaKop(stripe, db.rpc, { kort: KORT, timmar: null, anledning: null, av: ADMIN });
@@ -128,4 +131,32 @@ Deno.test('webhooken: ett fel när timmarna skrivs kastas, så att Stripe förs�
   }));
   const db = falskDb({ klippkort_aterbetalad: { error: { message: 'låst' } } });
   await assertRejects(() => stamAvKopet(stripe, db.rpc, { kort: KORT, charge: 'ch_1' }), Error, 'klippkort_aterbetalad');
+});
+
+Deno.test('en återbetalning går aldrig under det som använts', () => {
+  // 8 köpta, 5 använda: 3 betalda kvar. Hela köpet är det villkoren lovar den som slutar.
+  const kop = { ok: true, pi: 'pi_1', kvar_betalda: 3, per_timme_ore: 37900, betalt_ore: 303200, aterbetald_ore: 0,
+    vid_uppsagning_ore: 303200 - 5 * 39900 };
+  assertEquals(provaKopetsLage({ ...kop, hela: false, timmar: 2, belopp_ore: 2 * 37900 }), null);
+  assertEquals(provaKopetsLage({ ...kop, hela: true, timmar: 3, belopp_ore: 303200 - 5 * 39900 }), null);
+  // Fler timmar än de som inte använts.
+  assertStringIncludes(String(provaKopetsLage({ ...kop, hela: false, timmar: 4, belopp_ore: 4 * 37900 })), 'inte använts');
+  // Ett belopp som räknar de använda timmarna som obetalda.
+  assertStringIncludes(String(provaKopetsLage({ ...kop, hela: true, timmar: 3, belopp_ore: 303200 })), 'använda timmarna');
+  // En del som kostar mer än timmarna.
+  assertStringIncludes(String(provaKopetsLage({ ...kop, hela: false, timmar: 1, belopp_ore: 50000 })), 'timmarna kostade');
+  // Mer än det som är kvar när en del redan gått tillbaka.
+  assertStringIncludes(String(provaKopetsLage({ ...kop, aterbetald_ore: 280000, hela: false, timmar: 1, belopp_ore: 37900 })),
+    'kvar av köpet');
+  // Ett svar utan talen håller inte.
+  assertStringIncludes(String(provaKopetsLage({ ok: true, pi: 'pi_1', hela: true, timmar: 3, belopp_ore: 100 })), 'inte använts');
+});
+
+Deno.test('databasens svar som inte håller: inget anrop till Stripe', async () => {
+  const { stripe, anrop } = falskStripe(() => ({ id: 're_x' }));
+  const db = falskDb({ klippkort_aterbetalning_lage: { data: { ...LAGE_DEL, timmar: 7, belopp_ore: 7 * 37900 } } });
+  const u = await aterbetalaKop(stripe, db.rpc, { kort: KORT, timmar: 7, anledning: null, av: ADMIN });
+  assertEquals(u.ok, false);
+  if (!u.ok) assertEquals(u.status, 409);
+  assertEquals(anrop.length, 0);
 });

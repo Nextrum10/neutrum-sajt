@@ -43,7 +43,7 @@ export type KopetsAterbetalning =
   | { ok: true; aterbetalning: string; belopp_ore: number; timmar: number; hela: boolean; varning: string | null }
   | { ok: false; status: number; fel: string; stripe?: unknown };
 
-type Lage = {
+export type Lage = {
   ok?: boolean;
   fel?: string;
   pi?: string;
@@ -51,7 +51,33 @@ type Lage = {
   timmar?: number;
   belopp_ore?: number;
   aterbetald_ore?: number;
+  kvar_betalda?: number;
+  per_timme_ore?: number;
+  vid_uppsagning_ore?: number;
+  betalt_ore?: number;
 };
+
+/**
+ * Databasens svar prövas en gång till innan pengar går ut: timmarna är
+ * aldrig fler än de betalda som inte använts, en del kostar aldrig mer än
+ * timmarna till det pris som betalades, och inget belopp går över det
+ * villkoren lovar den som slutar (vid_uppsagning_ore, där de använda
+ * timmarna redan är dragna) eller över det som är kvar att betala
+ * tillbaka. Svarar med felet, eller null när återbetalningen håller.
+ * Ett svar som saknar ett tal håller inte.
+ */
+export function provaKopetsLage(l: Lage): string | null {
+  const tal = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : NaN);
+  const timmar = tal(l.timmar), belopp = tal(l.belopp_ore), kvar = tal(l.kvar_betalda);
+  const per = tal(l.per_timme_ore), grans = tal(l.vid_uppsagning_ore);
+  const ater = tal(l.betalt_ore) - (tal(l.aterbetald_ore) || 0);
+  if (!(belopp > 0)) return 'Det finns inget att betala tillbaka.';
+  if (!(timmar >= 0 && timmar <= kvar)) return 'Fler timmar än de som inte använts.';
+  if (!(belopp <= grans)) return 'Mer än villkoren lovar: de använda timmarna kostar.';
+  if (!(belopp <= ater)) return 'Mer än det som är kvar av köpet.';
+  if (!l.hela && !(timmar >= 1 && belopp <= timmar * per)) return 'Mer än timmarna kostade.';
+  return null;
+}
 
 /**
  * Betalar tillbaka ett köp, helt (timmar null) eller ett antal timmar.
@@ -69,6 +95,9 @@ export async function aterbetalaKop(
   const belopp = Math.round(Number(l.belopp_ore) || 0);
   const timmar = Math.round(Number(l.timmar) || 0);
   if (!(belopp > 0) || !l.pi) return { ok: false, status: 409, fel: 'Det finns inget att betala tillbaka.' };
+  // Aldrig under det som använts, och aldrig mer än köpet (provaKopetsLage).
+  const haller = provaKopetsLage(l);
+  if (haller) return { ok: false, status: 409, fel: 'Återbetalningen stämmer inte med köpet: ' + haller };
 
   let aterbetalning: Record<string, unknown>;
   try {

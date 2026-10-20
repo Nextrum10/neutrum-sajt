@@ -254,7 +254,10 @@ function falskSupabase(o) {
     }
   };
   const FUNKTION = {
-    'stripe-checkout': () => [409, { error: 'Provet öppnar ingen kassa.' }],
+    'stripe-checkout': () => (o && o.kassa === 'inbaddad'
+      ? [200, { lage: 'inbaddad', client_secret: 'cs_test_falsk_kassa', nyckel: 'pk_test_falsk', belopp_ore: 303200,
+        rabatt_ore: 0, familjerabatt_ore: 0 }]
+      : [409, { error: 'Provet öppnar ingen kassa.' }]),
     'stripe-aterbetalning': k => [200, { ok: true, aterbetalning: 're_prov', belopp_ore: 75800, timmar: k.timmar,
       hela: false, varning: null }]
   };
@@ -752,6 +755,65 @@ async function provaLiggarenUtan(webb) {
   await context.close();
 }
 
+/* ============ 9. Kassan med en falsk Stripe.js ============ */
+/* Stripes inbäddade kassa, falsk: den visar sessionens hemlighet och har
+   en knapp som säger att betalningen gått igenom (onComplete). Inget nät. */
+const FALSK_STRIPE = `
+window.Stripe = function (nyckel) {
+  window.__stripeNyckel = nyckel;
+  return {
+    initEmbeddedCheckout: async function (o) {
+      const hemlighet = await o.fetchClientSecret();
+      window.__stripeHemlighet = hemlighet;
+      return {
+        mount: function (el) {
+          el.innerHTML = '<div class="falsk-kassa"><p>Falsk kassa</p><button type="button" id="falsk-betala">Betala</button></div>';
+          el.querySelector('#falsk-betala').addEventListener('click', function () { o.onComplete(); });
+        },
+        destroy: function () {}
+      };
+    }
+  };
+};`;
+
+async function provaFalskStripe(webb) {
+  const { context, page, S, riktiga, konsol } = await öppna(webb, { anv: FAMILJ, kassa: 'inbaddad' });
+  // Registrerad efter öppna(): Playwright frågar den sista vägen först, före spärren mot allt utanför.
+  await context.route('https://js.stripe.com/v3/', route => route.fulfill({
+    status: 200, contentType: 'application/javascript', body: FALSK_STRIPE }));
+  await tillErbjudanden(page);
+  await page.click('[data-erb-manad="nasta"][data-erb-kod="plan_standard"]');
+  await page.click('[data-kop="plan_standard"]');
+  await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+  await kryssaOchTillKassan(page);
+  await page.waitForSelector('.betalpanel.open .falsk-kassa', { timeout: 6000 }).catch(() => {});
+  prova('falsk Stripe: kassan öppnas i panelen bredvid sidan', await synlig(page, '.betalpanel.open .falsk-kassa'));
+  const stripeFick = await page.evaluate(() => [window.__stripeNyckel, window.__stripeHemlighet]);
+  prova('falsk Stripe: Stripe får den publika nyckeln och sessionens hemlighet ur funktionens svar',
+    stripeFick[0] === 'pk_test_falsk' && stripeFick[1] === 'cs_test_falsk_kassa', JSON.stringify(stripeFick));
+  const k = (kassor(S).pop() || {}).kropp || {};
+  prova('falsk Stripe: anropet bad om den inbäddade kassan för nästa månad, med krysset och utan belopp',
+    k.ui === 'inbaddad' && k.manad === 'nasta' && k.villkor === true && !('belopp_ore' in k), JSON.stringify(k));
+  prova('falsk Stripe: panelen säger vad som köps och kassans belopp',
+    /Köp Standard/.test(await innehåll(page, '.betalpanel-titel')) && /3\s?032\s*kr/.test(await innehåll(page, '[data-betalpanel-vad]')),
+    (await innehåll(page, '.betalpanel-titel')) + ' | ' + (await innehåll(page, '[data-betalpanel-vad]')));
+  await bild(page, 'falsk-stripe-kassan', '.betalpanel');
+  const fore = skrivningar(S).length;
+  await page.click('#falsk-betala');
+  await page.waitForFunction(() => /Köpet är klart/.test((document.querySelector('[data-betalpanel-besked]') || {}).textContent || ''),
+    null, { timeout: 4000 }).catch(() => {});
+  prova('falsk Stripe: när Stripe säger klart står beskedet i panelen',
+    /Köpet är klart/.test(await innehåll(page, '[data-betalpanel-besked]')), await innehåll(page, '[data-betalpanel-besked]'));
+  await vänta(3000);
+  const efter = skrivningar(S).slice(fore).filter(x => !/^POST \/rest\/v1\/rpc\/(planens_manader|forsta_timmen_lage|min_familjerabatt)$/.test(x));
+  prova('falsk Stripe: vyn skriver inget när betalningen är klar, den läser bara om timbanken (webhooken skriver)',
+    efter.length === 0, efter.join(', '));
+  prova('falsk Stripe: timbanken läses om', S.logg.filter(r => r.väg === '/rest/v1/klippkort_saldo').length >= 2);
+  prova('falsk Stripe: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('falsk Stripe: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+}
+
 (async function () {
   const server = spawn('python3', [path.join(ROT, '.claude', 'serve.py'), String(PORT)], { stdio: 'ignore' });
   let klar = false;
@@ -768,6 +830,7 @@ async function provaLiggarenUtan(webb) {
     await provaTelefonOchMörkt(webb);
     await provaLiggaren(webb);
     await provaLiggarenUtan(webb);
+    await provaFalskStripe(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);
   } finally {

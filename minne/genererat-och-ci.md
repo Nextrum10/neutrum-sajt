@@ -618,4 +618,27 @@ aldrig ett belopp, telefonen) och Kortet (de nekade överst, försöken, nästa 
 tillåter, Försök igen) och adminvyn utan migrationerna. 83 prov. `prova-barnforslag.js` och
 `prova-forhandsvisning.js` kryssar sedan samma dag i köpvillkoren före kassan.
 `_delad/aterbetalning_test.ts` provar återbetalningen av ett köp med en falsk Stripe och databas
-(nyckeln, Stripe först, ett nej från databasen eller Stripe, webhookens avstämning).
+(nyckeln, Stripe först, ett nej från databasen eller Stripe, webhookens avstämning, och att en
+återbetalning aldrig går under det som använts: `provaKopetsLage` prövar databasens svar innan
+pengar går ut). Sedan Fas 4 (samma dag) provar `prova-kassan.js` också hela kassan med en falsk
+Stripe.js (`js.stripe.com/v3/` byts mot ett skript med `initEmbeddedCheckout`): panelen öppnas med
+funktionens nyckel och sessionens hemlighet, och när Stripe säger klart står beskedet och vyn skriver
+ingenting själv.
+
+### Stripe utan nät: webhookens mottagning och kortets rader (2026-10-21)
+Leo bad om Stripe-logiken i rena moduler med en inskickad klient. `_delad/webhooken.ts` är webhookens
+mottagning (signaturen på den råa kroppen och taket mot dubbletter i `stripe_handelser`), och
+`webhooken_test.ts` provar en giltig och en ogiltig signatur, samma händelse två gånger med EN effekt,
+en leverans som föll och körs om, och en tabell som inte svarar. `_delad/reservationen.ts` är det
+`stripe-reservation` gör med en rad (reservera, dra, debitera, släppa), med 48-timmarsfönstret prövat
+en gång till (`reservationsfonster`, `passetsStart` i Stockholms tid), och `reservationen_test.ts`
+provar fönstret (före, exakt 48 timmar, efter, ett pass bokat närmare än så), reservationen, att inget
+dras två gånger, dragningen och dess tak, en reservation som gått ut, ett nekat kort, en bank som vill
+att familjen bekräftar, och släppet. Båda funktionerna gör samma sak som förut; koden flyttade.
+
+### Två samtidiga dragningar (2026-10-21)
+`verktyg/prova-samtidigt.sh` bygger en egen databas (`nextrum-samtidigt`, port 54330, med
+`lokal-databas.sh`) och låter två sessioner ta samma sista timme samtidigt: den första håller låset
+i två sekunder, den andra ska vänta, säga nej och lämna saldot på noll med en använd timme. `rls-test.sql`
+kan inte pröva lås, för den är en transaktion. Provat 2026-10-21: 6 av 6, och med låset i
+`klippkort_dra` bortlappat föll fyra av dem (båda passen tog timmen).

@@ -18231,6 +18231,162 @@ begin
   end if;
 end $$;
 
+-- ============================================================
+-- 45. Klienten sätter inget, ingen raderar en betalning, och en familj
+--     når inte en annans pengar (2026-10-21)
+--
+-- Leo (2026-10-21): en klient kan inte sätta provresultat, betalstatus,
+-- köpta timmar eller kodanvändning; betalningar kan inte raderas av
+-- någon roll; förälder A når inte förälder B:s betalningar, timmar eller
+-- koder. Det mesta prövas också där det byggdes (avsnitt 22, 41, 42 och
+-- 46); här står de samlade, mot samma två familjer. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  t     text;
+  roller text;
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q     constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  S     constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  SQ    constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  BP    constant uuid := '00000000-0000-4000-8000-000000045b01';
+  BP2   constant uuid := '00000000-0000-4000-8000-000000045b02';
+  BQ    constant uuid := '00000000-0000-4000-8000-000000045b03';
+  KP    constant uuid := '00000000-0000-4000-8000-000000045c01';
+  KQ    constant uuid := '00000000-0000-4000-8000-000000045c02';
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  n     bigint;
+  u     uuid;
+begin
+  if to_regclass('public.betalningar') is null then
+    insert into utfall (test, ok, detalj) values ('KL Klienten och liggaren: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status) values
+      (BP, P, A, S, P, idag + 6, '16:00', 60, 'confirmed'),
+      (BP2, P, A, S, P, idag + 7, '16:00', 60, 'confirmed'),
+      (BQ, Q, A, SQ, Q, idag + 6, '17:00', 60, 'confirmed');
+    -- Som webhooken skriver dem: tjänstekontot, ingen inloggning.
+    update public.bookings
+       set betalning_status = 'betald', betald_at = now(), betalt_ore = 39900,
+           stripe_payment_intent_id = case id when BP then 'pi_rls45p' else 'pi_rls45q' end, stripe_skarp = false
+     where id in (BP, BQ);
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status)
+    values (KP, P, 'plan_standard', 'Prov Standard', 'plan', 8, 1, 5, 39900, 303200, 'vantar'),
+           (KQ, Q, 'klipp10', 'Prov Fyll', 'klippkort', 10, 6, 0, 39900, 399000, 'vantar');
+    perform public.klippkort_betald(KP, 303200, 'pi_rls45kp', 'ch_rls45kp', null, null, null, false);
+    perform public.klippkort_betald(KQ, 399000, 'pi_rls45kq', 'ch_rls45kq', null, null, null, false);
+    insert into public.kortreservationer (booking_id, parent_id) values (BQ, Q);
+    insert into public.kopvillkor_godkannanden (anvandare, avser, referens, villkor_version) values (Q, 'kop', KQ, '-');
+
+    -- ---------- klienten sätter inget ----------
+    t := pg_temp.svar_som(P, format($q$update public.bookings set betalning_status = 'betald', betalt_ore = 1
+                                       where id = %L$q$, BP2));
+    ut := ut || jsonb_build_object('t', 'KL familjen sätter inte betalstatus eller beloppet på sitt eget pass',
+            'ok', t in ('42501', 'noll')
+                  and (select b.betalning_status = 'ingen' and b.betalt_ore is null from public.bookings b where b.id = BP2),
+            'd', t);
+    t := pg_temp.svar_som(P, format($q$insert into public.klippkort (parent_id, erbjudande, namn, sort, timmar, giltig_manader,
+                                       rabatt_procent, timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at)
+                                     values (%L, 'klipp10', 'Gratis?', 'klippkort', 10, 6, 0, 39900, 399000, 399000, 'betald',
+                                             current_date + 180, now())$q$, P));
+    ut := ut || jsonb_build_object('t', 'KL familjen skapar inga köpta timmar själv', 'ok', t = '42501', 'd', t);
+    -- Före: den första planen fick sin gratis timme när den blev betald (8 + 1).
+    select k.timmar into n from public.klippkort k where k.id = KP;
+    t := pg_temp.svar_som(P, format($q$update public.klippkort set timmar = 100, status = 'betald', betalt_ore = 1,
+                                       aterbetalda_timmar = 0 where id = %L$q$, KP));
+    ut := ut || jsonb_build_object('t', 'KL familjen ändrar inte sitt köp (timmar, läge, belopp)',
+            'ok', t in ('42501', 'noll')
+                  and (select k.timmar = n and k.betalt_ore = 303200 from public.klippkort k where k.id = KP),
+            'd', t || ', timmar ' || n);
+    if to_regclass('public.prov_forsok') is not null then
+      t := pg_temp.svar_som(A, format($q$insert into public.prov_forsok (studiehjalpare_id, antal, ratt, procent,
+                                         grans_procent, godkand) values (%L, 5, 5, 100, 50, true)$q$, A));
+      roller := pg_temp.svar_som(A, format($q$update public.prov_studiehjalpare set utbildningsprov_godkant_at = now()
+                                              where id = %L$q$, A));
+      ut := ut || jsonb_build_object('t', 'KL studiehjälparen sätter inte sitt eget provresultat',
+              'ok', t = '42501' and roller in ('42501', 'noll')
+                    and not exists (select 1 from public.prov_forsok f where f.studiehjalpare_id = A and f.godkand),
+              'd', t || ' ' || roller);
+    end if;
+
+    -- ---------- ingen roll raderar en betalning ----------
+    roller := '';
+    foreach u in array array[null::uuid, P, Q, A, AD] loop
+      t := pg_temp.svar_som(u, $q$delete from public.betalningar where stripe_payment_intent like 'pi_rls45%'$q$);
+      roller := roller || coalesce(u::text, 'anon') || '=' || t || ' ';
+      if t not in ('42501', 'noll') then roller := roller || '(!) '; end if;
+    end loop;
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    begin
+      execute 'set local role service_role';
+      delete from public.betalningar where stripe_payment_intent like 'pi_rls45%';
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    roller := roller || 'service_role=' || t || ' ';
+    begin
+      delete from public.betalningar where stripe_payment_intent like 'pi_rls45%';
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    roller := roller || 'postgres=' || t;
+    ut := ut || jsonb_build_object('t', 'KL ingen roll raderar en betalning: anon, familjerna, studiehjälparen, admin, tjänstekontot, ägaren',
+            'ok', position('(!)' in roller) = 0 and position('gick' in roller) = 0
+                  and (select count(*) from public.betalningar x where x.stripe_payment_intent like 'pi_rls45%') = 4,
+            'd', roller);
+
+    -- ---------- en familj når inte en annans pengar ----------
+    perform pg_temp.bli(P);
+    select (select count(*) from public.betalningar x where x.familj = Q)
+         + (select count(*) from public.klippkort k where k.parent_id = Q)
+         + (select count(*) from public.klippkort_saldo k where k.parent_id = Q)
+         + (select count(*) from public.bookings b where b.parent_id = Q)
+         + (select count(*) from public.kortreservationer r where r.parent_id = Q)
+         + (select count(*) from public.timbank_uttag x where x.parent_id = Q)
+      into n;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    t := pg_temp.svar_som(P, $q$select 1 from public.kopvillkor_godkannanden$q$);
+    ut := ut || jsonb_build_object('t', 'KL familjen P ser inga av familjen Q:s betalningar, köp, timmar, pass eller reservationer',
+            'ok', n = 0 and t in ('42501', 'noll'), 'd', n::text || ' rader, godkännandena ' || t);
+    perform pg_temp.bli(P);
+    select count(*) into n from public.klippkort_saldo k where k.parent_id = P and k.id = KP;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KL familjen P ser sitt eget köp (provet ovan mäter något)', 'ok', n = 1, 'd', n::text);
+    t := pg_temp.svar_som(P, format($q$update public.klippkort set namn = 'Mitt nu' where id = %L$q$, KQ));
+    roller := pg_temp.svar_som(P, format($q$update public.bookings set betalning_status = 'ingen' where id = %L$q$, BQ));
+    ut := ut || jsonb_build_object('t', 'KL familjen P ändrar varken Q:s köp eller Q:s betalning',
+            'ok', t in ('42501', 'noll') and roller in ('42501', 'noll')
+                  and (select k.namn from public.klippkort k where k.id = KQ) = 'Prov Fyll'
+                  and (select b.betalning_status from public.bookings b where b.id = BQ) = 'betald',
+            'd', t || ' ' || roller);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('KL Klienten och liggaren', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
 reset role;
 select set_config('request.jwt.claims', null, true);
 

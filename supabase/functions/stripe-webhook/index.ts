@@ -81,9 +81,10 @@ import { stamAvKopet } from '../_delad/aterbetalning.ts';
 import { serviceklient } from '../_delad/auth.ts';
 import { json } from '../_delad/http.ts';
 import {
-  aterbetalningsLage, arStripeId, balans, betallageEfterTvist, prövaSignatur, StripeError, tidFranUnix,
+  aterbetalningsLage, arStripeId, balans, betallageEfterTvist, StripeError, tidFranUnix,
   tvistOrsakText, tvistUnderlag, tvistUtfall, tvistVantarPaOss, v1,
 } from '../_delad/stripe.ts';
+import { type Handelselager, markeraKlar, taEmotLeverans } from '../_delad/webhooken.ts';
 import { kortetsDelar, reservationensPass, reserveradTill, slappetsLage } from '../_delad/kortreservation.ts';
 
 type Handelse = {
@@ -112,49 +113,36 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Bara POST.' }, 405, {});
 
   const raKropp = await req.text();
+  const db = serviceklient();
 
-  /* Hemligheten ligger i miljön här, inte i en tabell. Skillnaden mot
-     notis_konfig är att den här hemligheten ÄGS av Stripe: den byts i
-     Stripes dashboard, och en tabellrad hade bara blivit en andra
-     plats där samma sträng kan bli inaktuell. */
-  const provning = await prövaSignatur(
+  /* Signaturen och taket mot dubbletter (_delad/webhooken.ts, provade i
+     webhooken_test.ts). Hemligheten ligger i miljön här, inte i en
+     tabell: den ÄGS av Stripe och byts i Stripes dashboard, och en
+     tabellrad hade bara blivit en andra plats där samma sträng kan bli
+     inaktuell. */
+  const lager: Handelselager = {
+    spara: (rad) => db.from('stripe_handelser').insert(rad),
+    hanterad: (hid) => db.from('stripe_handelser').select('hanterad_at').eq('id', hid).maybeSingle(),
+    markera: (hid, resultat) => db.from('stripe_handelser')
+      .update({ hanterad_at: new Date().toISOString(), resultat }).eq('id', hid),
+  };
+  const leverans = await taEmotLeverans(
     raKropp,
     req.headers.get('stripe-signature'),
     Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '',
+    lager,
   );
-  if (!provning.ok) {
-    // 400, inte 401: Stripe ska inte försöka igen med en leverans som
-    // aldrig kommer att gå igenom.
-    return json({ error: provning.skal }, 400, {});
-  }
+  // 400, inte 401: Stripe ska inte försöka igen med en leverans som aldrig kommer att gå igenom.
+  if (leverans.gora === 'neka') return json({ error: leverans.fel }, 400, {});
+  if (leverans.gora === 'fel') return json({ error: 'Kunde inte ta emot händelsen.' }, 500, {});
+  if (leverans.gora === 'kvittera') return json({ ok: true, not: 'redan hanterad' }, 200, {});
 
-  const h = provning.handelse as Handelse;
-  const id = String(h.id ?? '');
-  const typ = String(h.type ?? '');
+  const { id, typ, skarp } = leverans;
+  const h = leverans.handelse as Handelse;
   const obj = (h.data?.object ?? {}) as Record<string, unknown>;
-  if (!id || !typ) return json({ error: 'Händelsen saknar id eller typ.' }, 400, {});
-  const skarp = typeof h.livemode === 'boolean' ? h.livemode : null;
-
-  const db = serviceklient();
-
-  // ---------- taket mot dubbletter ----------
-  const { error: insfel } = await db.from('stripe_handelser').insert({ id, typ, skarp });
-  if (insfel) {
-    if (insfel.code !== '23505') {
-      return json({ error: 'Kunde inte ta emot händelsen.' }, 500, {});
-    }
-    const { data: sedd } = await db.from('stripe_handelser')
-      .select('hanterad_at').eq('id', id).maybeSingle();
-    if (sedd?.hanterad_at) {
-      return json({ ok: true, not: 'redan hanterad' }, 200, {});
-    }
-    // Finns men aldrig blev klar: kör om.
-  }
 
   const klar = async (resultat: string) => {
-    await db.from('stripe_handelser')
-      .update({ hanterad_at: new Date().toISOString(), resultat })
-      .eq('id', id);
+    await markeraKlar(lager, id, resultat);
     return json({ ok: true, resultat }, 200, {});
   };
 
