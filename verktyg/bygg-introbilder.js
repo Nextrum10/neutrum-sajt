@@ -207,7 +207,7 @@ function värld() {
         extra_personer_max: 3, bokningstyp: 'pass', rapportkrav: true, rut_berattigad: false, rut_procent: 0,
         kundtyp: 'familj', jobbtyp: 'studiehjalpare', min_alder: 15 }
     ],
-    flaggor: [{ kod: 'kortsparr', aktiv: false }, { kod: 'erbjudanden', aktiv: false }, { kod: 'faktura', aktiv: true }],
+    flaggor: [{ kod: 'kortsparr', aktiv: false }, { kod: 'erbjudanden', aktiv: false }],
     arbetade_timmar: [
       { tutor_id: T, manad: '2026-09-01', pass: 5, minuter: 300, belopp_ore: 90000 },
       { tutor_id: T, manad: '2026-10-01', pass: 3, minuter: 180, belopp_ore: 54000 }
@@ -242,7 +242,6 @@ function rpc(W) {
     mina_handlingar: () => [],
     mina_tips: () => null,
     upptagna_tider: () => [],
-    faktura_mojlig: () => true,
     mina_barnkonton: () => [{ barn_id: 'barn-1', anvandarnamn: 'alva.a', barn_aktiv: true, visa_rapporter: true,
       vardnadshavare_godkand_at: tid(-15, '20:00'), senast_inloggad: tid(-1, '16:40') }],
     mina_barns_epost: () => ({ pa: false, barn: [] }),

@@ -77,7 +77,8 @@ Deno.test('gratis är sant bara för true (gratistimmarna_paminns)', () => {
 });
 
 Deno.test('betalsättet är en kod, och bara en', () => {
-  assertEquals(renData({ betalsatt: 'faktura' }).betalsatt, 'faktura');
+  // Fakturan är borta (2026-10-21): koden släpps inte längre igenom.
+  assertEquals(renData({ betalsatt: 'faktura' }).betalsatt, null);
   // Fas 22.2: köpta timmar eller timbanken betalade passet.
   assertEquals(renData({ betalsatt: 'timmar' }).betalsatt, 'timmar');
   assertEquals(renData({ betalsatt: 'Timmar' }).betalsatt, null);
@@ -186,9 +187,11 @@ Deno.test('rapport finns som notistyp men mejlas aldrig', () => {
   assertEquals(arKanal('brev'), false);
 });
 
-Deno.test('kortet är en av två koder, aldrig Stripes text (kortet_reserveras, 2026-10-13)', () => {
+Deno.test('kortet är en av tre koder, aldrig Stripes text (kortet_reserveras, 2026-10-13)', () => {
   assertEquals(renData({ kortet: 'bekrafta' }).kortet, 'bekrafta');
   assertEquals(renData({ kortet: 'nekat' }).kortet, 'nekat');
+  // kortdragningen_forsoker_igen (2026-10-21): vi provar kortet igen.
+  assertEquals(renData({ kortet: 'igen' }).kortet, 'igen');
   assertEquals(renData({ kortet: 'Your card has insufficient funds.' }).kortet, null);
   assertEquals(renData({ kortet: 'card_declined' }).kortet, null);
   assertEquals(renData({}).kortet, null);

@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=f21d3928">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=81de04a0">
 </head>
 <body>
 
@@ -204,23 +204,12 @@
         until the money has been taken, and remove the card under Profile whenever you like. Anything
         reserved is then released. If the price cannot be reserved or taken, you get an email, and you
         then pay in one of the other ways.</li>
-      <li id="faktura">Before or after the session you can choose an invoice instead, which comes at the
-        start of the month after the session with ten days to pay and no fee. If a session is not paid when
-        the month ends, and is not about to be charged to your card, it is included on the invoice. It is
-        about to be charged when the card you chose is to pay for the session, or when you have started
-        paying for it by card within the last day. The session is added to the invoice the night after the
-        month ends, or the night after the report is written if that comes later, and is then paid through
-        the invoice. This applies to sessions you booked after accepting these terms. The invoice lists the
-        sessions that month you chose an invoice for and those that were not paid, and it also shows under
-        Payment in your view. If an earlier invoice has not been paid, we may close the invoice option for
-        you until it is. An unpaid session is then not included on an invoice either, and you pay for it
-        by card.</li>
       <li>You confirm the report even when the session has already been paid. A session that has
         taken place must be paid even if the report has not been confirmed.</li>
       <li id="hallen-tid">The price applies to the time the session actually lasted, counted per started
         quarter of an hour. The tutor enters the time in the report, and if the session ran longer or
         shorter than booked, it says so there, with the reason, before you confirm. If the time is
-        wrong, write to us before you pay. If the session is on an invoice, it is the time actually held that goes on it. If you have already paid and the session ran longer, you
+        wrong, write to us before you pay. If you have already paid and the session ran longer, you
         pay the extra when you confirm the report. If it was shorter, we refund the difference. If
         the session was paid with hours from a plan or the time bank, hours that were not started
         come back automatically, and what was left of the last hour is saved in your <a href="#timbank">time bank</a>.</li>
@@ -259,16 +248,26 @@
          två köp, timmen på köpet dras inte och timmarna betalar resten, och
          timmar till en plan kostar planens timpris och går ut med planen.
          Se anvandarvillkor.html. -->
+    <!-- 2026-10-21. Kryssrutan före kassan (NXStudie.kassansVillkor) länkar
+         hit, genom KOPVILLKOR_URL i nextrum-config.js. PLATSHÅLLARE: Leo
+         skriver köpvillkoren här, på båda språken, innan sidan går ut. -->
+    <h2 id="kopvillkor">Purchase terms</h2>
+    <p class="jur-platshallare"><b>PLACEHOLDER.</b> The purchase terms that the checkbox before checkout refers to
+      go here. Nextrum writes the text before the page goes live.</p>
+
     <h2 id="erbjudanden">Plans and the time bank</h2>
     <p>You can fill your time bank with hours in advance in one of two ways: with a plan for one
-      month, at a lower hourly price, or with Fill the time bank, at the regular hourly price. If you
+      calendar month, at a lower hourly price, or with Fill the time bank, at the regular hourly price. If you
       have a plan you can also buy more hours for it (see <a href="#kop-till">Buy more hours</a>). If you
       pay session by session the time bank is not used, and each session is paid as under Price and
       payment above.
       What is available and what it costs is shown on the <a href="/en/priser#erbjudanden">pricing page</a>. It is a
       one-off purchase, by card. It is not a subscription and does not renew by itself.</p>
     <ul>
-      <li><b>How long the hours are valid.</b> A plan is valid for one month from the purchase.
+      <!-- planerna_per_manad (2026-10-21): en plan köps för den här eller nästa kalendermånad. -->
+      <li><b>How long the hours are valid.</b> A plan is bought for this or next calendar month and is
+        valid until the last day of that month. A plan for next month pays for no sessions before the
+        first day of the month.
         Hours bought with Fill the time bank are valid for 6 months from the purchase, however many you
         bought. Hours you bought for a plan are valid until the plan's last day. A free hour is valid for 60 days from the day it is added (see <a href="#forsta-timmen">The first hour free</a>,
         <a href="#gratistimmar">Free hours</a> and <a href="#tips">Recommend a family</a>). The last day is shown in your view.</li>
@@ -309,7 +308,7 @@
         first, with the other free hours. What is left of a free hour when a session ends before a
         full hour is not saved, and free hours that are not used expire. They are
         a gift: they do not count as bought hours and are never paid out as money.</li>
-      <li id="kop-till"><b>Buy more hours.</b> If you have a plan that is valid for at least one more day,
+      <li id="kop-till"><b>Buy more hours.</b> If you have a plan for this month that is valid for at least one more day,
         you can buy 1–20 more hours at a time, under Your time bank in your view. They cost the plan's
         hourly price, what you paid per hour for the plan, and expire on the same day as the plan. They
         are a separate purchase with the same rules as the plan: what is set out here, under Stopping and
@@ -381,8 +380,7 @@
       <li><b>The tasks.</b> At least 90 percent of the tasks the tutor has set in the subject
         during the period are done by their due date, as shown in your view. A task in NexLäx is
         done when the level is done.</li>
-      <li><b>Payment.</b> All sessions during the period are paid, and no invoice has been paid
-        after its due date.</li>
+      <li><b>Payment.</b> All sessions during the period are paid.</li>
       <li><b>Making a claim.</b> Write to us within 30 days of the grade that counts being set,
         with a copy of it and of the latest grade before signing up, for each subject. We only
         check what is written here, from what is in your view: time held, the reports, missed
@@ -416,8 +414,8 @@
         one it signed up with counts.</li>
       <li><b>How the hour is used.</b> It is deducted from the next homework help session you
         propose, one hour per session, at that session's own hourly price. You pay for the rest of
-        a longer session as usual: with hours in your time bank if you have any, otherwise by card or
-        invoice. The hour is valid for 60 days from the day the new family had its two hours,
+        a longer session as usual: with hours in your time bank if you have any, otherwise by card.
+        The hour is valid for 60 days from the day the new family had its two hours,
         and it goes to a session you propose within that time, for a day within it. If the session is
         cancelled, or the study helper says no to the time, the hour comes back and stays valid until
         the same day as before.</li>
@@ -518,7 +516,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Swedish National Board for Consumer Disputes (ARN)</a>
       or by a Swedish general court.</p>
 
-    <p class="jur-datum">Last updated 16 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 21 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 
@@ -690,16 +688,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<script src="../nextrum-config.js?v=6fb7557b"></script>
+<script src="../nextrum-config.js?v=6949b9e0"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=97cbce73"></script>
+<script src="../nextrum-app.js?v=a262aca7"></script>
 <script src="../nextrum-samtycke.js?v=92474eaf"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=73042060"></script>
+<script src="../nextrum-maskot-svar.js?v=72594d80"></script>
 <script src="../nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

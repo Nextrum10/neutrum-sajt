@@ -14,18 +14,14 @@
 // inte hålls, och en agent som läser det räknar varje hållet obetalt
 // pass som ett fel, fast det nu är normalt tills familjen bekräftat.
 //
-// SEDAN 2026-09-27 KAN FAMILJEN VÄLJA FAKTURA IGEN, efter passet, när
-// de bekräftar rapporten (Fas 19.6), med tio dagars betalningstid.
-// Texten nedan sa ändå till 2026-10-07 att inga fakturor skapas och att
-// fakturerat alltid var noll, och en agent som läste det kunde ta
-// månadens faktura för ett fel.
-//
-// FRÅN FAS 14.2 TILL DESS FICK FAMILJEN INGEN FAKTURA. Texten sa då
-// fortfarande "10 dagars betalningsvillkor" och "Betald kryssas i för
-// hand", och en agent som läste det letade efter förfallna fakturor som
-// inte fanns, och läste en månad utan fakturor som en månad utan
-// intäkt. Samma fel åt andra hållet är lika lätt att göra: ändras
-// betalsätten ändras texten här samma dag.
+// FAKTURAN ÄR BORTA SEDAN 2026-10-21 (fakturan_tas_bort). Från Fas 19.6
+// var fakturan ett betalsätt, och 2026-10-16 lades obetalda pass på
+// den. Ingen faktura gick till en familj, och Leo tog bort den helt.
+// En agent som läser att fakturan finns letar efter fakturor och
+// förfallodagar som inte finns, och läser ett obetalt pass som något
+// som väntar på en faktura. Ändras betalsätten ändras texten här samma
+// dag, som när Fas 14.2 tog bort månadsfakturan och texten sa "10
+// dagars betalningsvillkor" i flera veckor till.
 //
 // TILL 2026-10-09 SA TEXTEN att familjen kunde skapa kontot själv och
 // att föräldravyn var låst i ett väntläge före matchningen. Båda
@@ -74,13 +70,8 @@ ORDEN. Använd dem, och inga andra:
   per pass, och pengarna dras först när studiehjälparen har skrivit
   rapporten: väljer familjen kort när den bokar reserveras priset två
   dagar före passet, annars betalar den när den bekräftar rapporten.
-  Före eller efter passet kan familjen i stället välja faktura: en
-  samlad faktura per familj och månad, som kommer i början av månaden
-  efter passet. Ett pass som familjen valt faktura för väntar på
-  fakturan och är inget fel. Är ett pass inte betalt när månaden är
-  slut, och inte på väg att dras från kortet, lägger månadskörningen
-  det på familjens faktura (sedan 2026-10-16, för pass bokade efter
-  att familjen godkänt de villkoren).
+  Timmar familjen köpt i förväg kan också betala passet. Nextrum
+  skickar inga fakturor.
 · tjänst — det som går att boka eller söka till.
 
 ORDNINGEN, och den hoppar aldrig ett steg:
@@ -129,13 +120,8 @@ SIFFRORNA:
   bokar sparas kortet hos Stripe, priset reserveras två dagar före
   passet och dras när rapporten finns, för den tid passet hölls och
   aldrig mer än det reserverade. Annars betalar familjen när den
-  bekräftar rapporten. Före eller efter passet kan den i stället välja
-  faktura, som kommer i början av månaden efter passet med tio dagars
-  betalningstid och utan avgift. Är ett pass inte betalt när månaden
-  är slut, och inte på väg att dras från kortet, kommer det med på
-  fakturan: natten efter månaden, eller natten efter rapporten om den
-  kommer senare. Det gäller pass som bokats efter att familjen godkänt
-  villkoren från 2026-10-16, och inte en familj vi stängt fakturan för.
+  bekräftar rapporten. Ett pass som inte betalas står kvar som obetalt
+  och följs upp av oss; det läggs inte på någon faktura.
   Rapporten bekräftas också när passet redan är betalt. Ett
   pass som har hållits ska betalas även om rapporten inte bekräftats.
   En betalning som tas på ett annat sätt än villkoren lovar är en
@@ -150,6 +136,12 @@ SIFFRORNA:
   bara det lägre priset: på korten under Erbjudanden, när den bokar och
   i kassan. Ett pass eller köp under ordinarie pris hos en sådan familj
   är alltså inget fel.
+· Rabattkoder och partnerkoder (en partnerförenings kod, som kan ge en
+  rabatt eller bara räknas) gäller bara när familjen köper en plan,
+  aldrig ett pass, Fyll timbanken eller timmar till en plan, och ett köp
+  har högst en kod. Rabatten räknas av databasen innan kassan öppnas,
+  och ett köp blir aldrig gratis av en kod. Ett pass som fick en kod
+  innan regeln kom 2026-10-21 behåller sitt pris.
 · Första timmen är gratis med den första planen familjen köper, också
   om den köps med en rabattkod: planen får en timme till, 9 timmar när
   man köper 8. Den dras först och gäller i 60 dagar från köpet, också om
@@ -179,8 +171,6 @@ VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:
   underlag som inte står som utbetalt kan alltså vara betalt utan att
   någon hunnit markera det.
 · Ingen bokföringskoppling.
-· Fakturan går att välja, men bolaget är inte registrerat än, och
-  bankgirot och den första provfaktureringen återstår.
 · Bakgrundskontroll av studiehjälpare är en knapp, inte en process.
 
 HUR DU LÄSER SIFFROR HÄR
@@ -192,10 +182,8 @@ siffra syns inte som gissad när den väl ligger i ett medelvärde. Är
 en lucka stor är talet bredvid den för lågt, och det ska du skriva.
 
 Ett kortbelopp räknas på den dag betalningen kom in, inte på passets
-dag. Familjen betalar med kortet efter rapporten, när den bekräftar
-rapporten eller mot faktura, och förut också i förväg, så en månads
-betalningar och samma månads genomförda pass hör inte ihop rad för rad. En faktura räknas på den månad den gäller men skickas först
-i början av nästa: ett fakturerat belopp är inte betalt förrän
-fakturan är det, och ett utkast är inte skickat. Köpta timmar betalas
+dag. Familjen betalar med kortet efter rapporten, eller när den
+bekräftar rapporten, och förut också i förväg, så en månads
+betalningar och samma månads genomförda pass hör inte ihop rad för rad. Köpta timmar betalas
 i förväg och är en skuld till familjen tills timmarna använts; de är
 inte intäkt för något pass än. Och en testbetalning är inga pengar.`;

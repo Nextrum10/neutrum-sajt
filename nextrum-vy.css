@@ -672,6 +672,26 @@ body.betalar .hdr.bort{transform:none}
   font-weight:600;color:var(--acc-lugn);text-decoration:underline;text-underline-offset:3px;
 }
 .nx-fraga-box form[data-villkor]{margin-top:4px}
+/* Utbildningsprovet (NXProvet, 2026-10-21). Samma ruta, bredare, och
+   frågorna som en lista med ett val per fråga. Varje alternativ är en
+   tryckyta för tummen, och texten är 16 px så att en iPhone inte zoomar. */
+.nx-prov .nx-fraga-box{max-width:min(640px, calc(100vw - 32px))}
+.nx-prov form[data-prov]{margin-top:14px}
+.nx-prov-fraga{border:0;padding:0;margin:0 0 22px;min-width:0}
+.nx-prov-fraga legend{
+  padding:0;margin-bottom:10px;
+  font-size:1rem;font-weight:600;line-height:1.45;color:var(--bl);
+}
+.nx-prov-nr{color:var(--bl-3);font-weight:600}
+.nx-prov-alt{
+  display:flex;align-items:center;gap:12px;min-height:44px;
+  padding:8px 14px;margin-bottom:8px;
+  border:1px solid var(--ln);border-radius:14px;background:var(--yta);
+  font-size:1rem;line-height:1.4;color:var(--bl);cursor:pointer;
+}
+.nx-prov-alt:has(input:checked){border-color:var(--acc);background:var(--acc-soft)}
+.nx-prov-alt input{width:20px;height:20px;flex:none;margin:0;accent-color:var(--acc)}
+.nx-prov-alt input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 /* ============================================================
    INTRODUKTIONEN (2026-10-06)
@@ -1192,9 +1212,9 @@ section[data-sek]{overflow-anchor:none}
 .vy-sek-smal{max-width:820px}
 
 /* ============================================================
-   FAKTUROR OCH UTBETALNINGAR
+   UTBETALNINGAR (och fakturorna, till 2026-10-21)
    Samma rytm som passraden: när i vänsterkanten, vad i mitten,
-   läge till höger. En faktura och ett pass hör ihop — det är samma
+   läge till höger. Ett underlag och ett pass hör ihop — det är samma
    lektion sedd från två håll — och ska därför läsas likadant.
    ============================================================ */
 .bet{
@@ -1654,35 +1674,10 @@ section[data-sek]{overflow-anchor:none}
 .ps-knappar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ps-knappar .btn{text-decoration:none}
 
-/* Ett andra val under knapparna (Fas 14.6): "Betala med kort nu" på
-   ett pass som valts för faktura. Under raden, inte i den: fakturan är
-   vägen familjen valt, kortet ett andra val. Det var en textknapp,
-   "Betala med kort i stället", som bara bytte tillbaka till kort. Sedan
-   2026-09-28 öppnar den kassan, och är en knapp som de andra. "Få
-   faktura nästa månad" blev en knapp av samma skäl 2026-09-27: som
-   textlänk syntes den inte. */
+/* Ett andra val under knapparna (Fas 14.6): i dag kortet som valts
+   på passet. Under raden, inte i den. Fakturans val och fakturorna
+   att betala stod här till 2026-10-21, då fakturan togs bort. */
 .ps-alt{margin-top:10px;font-size:.86rem;color:var(--bl-2)}
-.val-lank{
-  appearance:none;background:none;border:0;padding:4px 0;margin:0;
-  font:inherit;font-size:.86rem;color:var(--bl);cursor:pointer;
-  text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;
-}
-.val-lank:hover{color:var(--acc)}
-.val-lank:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
-.val-lank[aria-busy="true"]{opacity:.6;cursor:progress}
-/* Villkoren för "Få faktura nästa månad" (Fas 19.6), under knapparna,
-   i den dämpade tonen, så att knapparna står först. */
-.val-not{display:block;flex-basis:100%;margin-top:4px;font-size:.82rem;line-height:1.5;color:var(--muted-2)}
-/* En faktura att betala (Fas 19.6). Raderna är prisrutans sum-line;
-   en förfallen faktura får den sena tonen i kanten, inte en ny färg. */
-.fakt-att{padding:12px 0;border-top:1px solid var(--line)}
-.fakt-att:first-child{border-top:0;padding-top:0}
-.fakt-att.ar-sen{border-left:3px solid var(--acc);padding-left:12px}
-.fakt-att-topp{margin-bottom:6px}
-.fakt-att .sum-line span:last-child{text-align:right}
-.fakt-att .sen{color:var(--acc);font-weight:500}
-.fakt-att-pass{list-style:none;margin:8px 0 0;padding:0;font-size:.85rem;color:var(--muted)}
-.fakt-att-pass li{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
 
 /* Bekräfta rapport (Fas 19.1). Rapporten överst, valet under ett
    streck: först läser man, sedan svarar man. Radbrytningarna i
@@ -2188,6 +2183,35 @@ a.pass-lank:hover{color:var(--acc)}
 @media (prefers-reduced-motion:reduce){
   .tb-ruta,.tb-stapel i{transition:none}
 }
+/* Planerna per månad (2026-10-21): den här och nästa månad under
+   batteriet, en rad var, "3 av 8 timmar återstår" och "0 av 0". */
+.tb-manader{display:grid;gap:0;margin:14px 0 0;border:1px solid var(--ln);border-radius:12px;overflow:hidden}
+.tb-manad{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding:12px 14px;
+  background:var(--yta)}
+.tb-manad + .tb-manad{border-top:1px solid var(--ln)}
+.tb-manad-namn{font-weight:600;color:var(--bl)}
+.tb-manad-tal{font-size:.9rem;color:var(--bl-2);font-variant-numeric:tabular-nums;text-align:right}
+.tb-manad-tal b{font-size:1.15rem;color:var(--bl);margin-right:2px}
+.tb-manad-not{grid-column:1 / -1;font-size:.8rem;color:var(--bl-3)}
+/* Nästa månads plan: strecket ovanför streckat, för den gäller inte än. */
+.erb-mitt + .erb-mitt.ar-kommande{border-top-style:dashed}
+/* Valet av månad på plankortet: två lika breda knappar, den valda fylld.
+   aria-pressed animeras inte (fällorna i vyerna). */
+.erb-manad{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin:12px 0 0}
+.erb-manad-val{
+  min-height:44px;padding:8px 10px;border-radius:10px;border:1px solid var(--ln);background:var(--yta);
+  color:var(--bl);font:inherit;font-size:.86rem;font-weight:600;line-height:1.2;cursor:pointer;
+}
+.erb-manad-val[aria-pressed="true"]{border-color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,var(--yta))}
+.erb-manad-val:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.erb-manad-not{margin:6px 0 10px;font-size:.8rem;color:var(--bl-2)}
+/* Köpvillkoren före kassan (2026-10-21): vad som köps, och krysset. */
+.nx-kassa-rader{margin:6px 0 12px;padding-left:18px;color:var(--bl);line-height:1.5}
+.nx-kassa-kryss{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:10px 0;font-size:1rem;
+  color:var(--bl);cursor:pointer}
+.nx-kassa-kryss input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange)}
+.nx-kassa-kryss a{color:var(--acc);font-weight:600}
+.nx-kassa-villkor .btn[disabled]{opacity:.5;cursor:not-allowed}
 /* Fas 22.1: timbanken, under klippkorten i Era timmar. */
 .erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
 .erb-bank-text a{color:var(--acc);font-weight:600}

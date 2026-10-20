@@ -190,7 +190,7 @@ async function provaStudievyn(webb) {
   prova('studievyn: hälsningen är till Anna', /Anna\.$/.test((await text(page, '#vy-hero h1')).trim()), await text(page, '#vy-hero h1'));
   prova('studievyn: remsan säger att det är en förhandsvisning, och vems',
     (await text(page, '.nx-fv')).includes('familjen Andersson')
-    && (await text(page, '.nx-fv')).includes('inget räknas i statistik, lön eller faktura'), await text(page, '.nx-fv'));
+    && (await text(page, '.nx-fv')).includes('inget räknas i statistik, lön eller betalningar'), await text(page, '.nx-fv'));
   prova('studievyn: remsan byter till studiehjälparvyn', (await page.getAttribute('.nx-fv [data-fv-byt]', 'href')) === '/larare?forhandsvisning');
   /* Vyn sätter antalet olästa först i fliken: "(3) Förhandsvisning · …". */
   prova('studievyn: fliken heter Förhandsvisning', /^(\(\d+\) )?Förhandsvisning · /.test(await page.title()), await page.title());
@@ -275,6 +275,12 @@ async function provaStudievyn(webb) {
   await page.evaluate(() => { location.hash = '#erbjudanden'; });
   await page.waitForSelector('[data-kop]', { timeout: 5000 }).catch(() => {});
   await page.locator('[data-kop]').first().click().catch(() => {});
+  /* Köpvillkoren först (2026-10-21): Till kassan går inte före krysset. */
+  await page.waitForSelector('.nx-kassa-villkor [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+  prova('studievyn: köpet frågar efter köpvillkoren, och Till kassan väntar på krysset',
+    await page.evaluate(() => { const b = document.querySelector('.nx-kassa-villkor [data-svar="ja"]'); return !!b && b.disabled; }));
+  await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
+  await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
   await vänta(800);
   prova('studievyn: ett köp säger att det inte görs här', dialoger.some(t => /förhandsvisningen/.test(t)), JSON.stringify(dialoger));
 

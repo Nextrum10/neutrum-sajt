@@ -549,8 +549,10 @@ async function provaUtanMigrationen(webb) {
     await text(page, '#frab-tabell'));
   await öppnaPanel(page, 'familj:fam-a', 'ekonomi');
   const eko = await text(page, '.dp');
+  /* Resten av Ekonomi: talet för hållna pass som inte är betalda (Faktura
+     som betalsätt stod här till 2026-10-21). */
   prova('utan migrationen: panelen säger det, och resten av Ekonomi står', /Familjerabatterna finns inte i databasen än/.test(eko)
-    && /Faktura som betalsätt/.test(eko), eko.slice(0, 800));
+    && /Hållna, inte betalda/.test(eko), eko.slice(0, 800));
   await öppnaPanel(page, 'pass:pass-1');
   prova('utan migrationen: passets panel står', /Timpris/.test(await text(page, '.dp .dp-fakta')));
   prova('utan migrationen: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));

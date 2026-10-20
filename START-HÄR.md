@@ -146,8 +146,8 @@ Postgres RLS kan inte begränsa enskilda kolumner, så lösningen är två trigg
 ## Vad som fortfarande saknas
 
 - **Betalning.** Familjen betalar varje pass med kort, före passet, genom Stripe
-  (se `DEPLOY-BETALNING.md` avsnitt 9). Det finns ingen månadsfaktura till familjen
-  sedan Fas 14.2. Kortvägen är driftsatt, men ingen betalning har gått igenom än,
+  (se `DEPLOY-BETALNING.md` avsnitt 9). Det finns ingen faktura till familjen:
+  ingen månadsfaktura sedan Fas 14.2, och fakturan som betalsätt togs bort 2026-10-21. Kortvägen är driftsatt, men ingen betalning har gått igenom än,
   och spärren som stoppar ett obetalt pass är av tills en provbetalning fungerat.
   Utbetalningarna till studiehjälparna: underlaget går att mejla, själva
   överföringen gör ni från banken den 25:e.
@@ -161,7 +161,7 @@ Postgres RLS kan inte begränsa enskilda kolumner, så lösningen är två trigg
   gjort stegen hos Google i `INTEGRATIONER.md` och tryckt **Koppla
   Google** under System → Integrationer. Tills dess står det som förut
   att länken kommer i meddelanden. Kalendern och inbjudningarna valdes
-  bort. Bokföringen, fakturorna och lönen sköts i Fortnox, utan
+  bort. Bokföringen och lönen sköts i Fortnox, utan
   koppling hit (Fas 14.9).
 - **Bilder.** Studiehjälparna visas med en generisk siluett, inte riktiga foton.
 - **Skatt och anställning av minderåriga.** Fortfarande olöst. Prata med en revisor innan första utbetalningen, inte efter.

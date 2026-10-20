@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=f21d3928">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=81de04a0">
 </head>
 <body>
 
@@ -204,10 +204,14 @@
       <li>What you write in the free-text field, and your CV if you attach one</li>
       <li>If you are under 18: your parent or guardian’s email. We email them to ask for written
         approval, and keep their reply, and when it came, with your application</li>
+      <li>If you go through to an interview, we email you about it once, at the address in your application</li>
       <li>If we invite you to an interview, you choose the time on our booking page in Google
         Calendar, and we talk in Google Meet. Google then gets your name, your email and the time,
         and the booking is kept in our calendar at Google. We do not record the conversation.</li>
       <li>If you are accepted: your profile text, town, subjects and the hourly rate we agreed</li>
+      <li>If you are accepted, you take a test on how the work is done the first time you log in. We
+        keep your answers, how many were right, whether you passed and when. Only we see your
+        answers, and they are deleted if your account is deleted</li>
       <li>The code, if you type one: a tutor's, if someone who works with us recommended you. We then
         see who recommended you, and if we take you on, that tutor gets a bonus in their pay. They see
         how many applied with the code and how many we took on, but not who, and can tell from the
@@ -240,7 +244,8 @@
       <li>Messages between family and tutor in the platform’s chat</li>
       <li>If the child has a login of their own: what the child and the tutor write to each other
         in the child’s view, and when it was read</li>
-      <li>Payments and pay statements: which session was paid, amounts and when, when a card payment for a session was started, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when, until which day and whether we took them back). We never have the card details</li>
+      <li>Payments and pay statements: which session was paid, amounts and when, when a card payment for a session was started, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when, until which day and whether we took them back). Every payment is also a row in our payment ledger (what it was for, the amount, the discount code and Stripe's ids), a plan with the month it applies to, and if we refund a purchase: how many hours were taken back, the amount and who at Nextrum did it. If you buy a plan with a discount code or a partner organisation’s code, we store which code the purchase had and the discount it gave, with the payment, and the first time you use a partner code also which partner you came through. We never have the card details</li>
+      <li>When you tick the purchase terms before the checkout opens: what it was for (a purchase, a session or the card), which version of the terms it was and when</li>
       <li>If we have given you a discount, for example through a partner: which of our discounts it
         is, when it was set or removed and by whom at our end, and for each session and purchase how
         much it took off. You see the discount as a lower price; only we see which code it has</li>
@@ -315,11 +320,18 @@
         of the child’s login. That you and we can read it is legitimate interest (Article
         6(1)(f)): keeping the children safe.</li>
       <li><b>A discount we have given you</b>: the contract with you (Article 6(1)(b)): it is the price you pay.</li>
+      <li><b>The code on a purchase and the partner you came through</b>: the contract with you (Article
+        6(1)(b)) for the discount, and legitimate interest (Article 6(1)(f)) for following up how many
+        families have come through a partner organisation and what they have bought. The partner is never
+        told which families they are.</li>
       <li><b>Attempts with discount codes</b>: legitimate interest (Article 6(1)(f)): protecting
         the codes against guessing. We only store that the account tried a code that does not
         exist, and when, in a form we cannot read back to the account.</li>
       <li><b>Accounting records</b>: legal obligation (Article 6(1)(c)), the Swedish Accounting
         Act.</li>
+      <li><b>That you ticked the purchase terms</b>: legal obligation and legitimate interest (Article 6(1)(c) and (f)):
+        we must be able to show that you received the terms and the information about the right of withdrawal before
+        the purchase.</li>
       <li><b>Job applications</b>: legitimate interest (Article 6(1)(f)), being able to hire the
         right tutors. If you are hired, the contract applies.</li>
       <li><b>A parent or guardian’s email and reply</b>: legitimate interest (Article 6(1)(f)).
@@ -378,7 +390,7 @@
         time-limited link that expires after an hour at most, for an agreement after five minutes. If such a link is passed on, it does not
         work for long.</li>
     </ul>
-    <p>We also keep a log of who on our side changed what and when: a match, an invoice, a session,
+    <p>We also keep a log of who on our side changed what and when: a match, a session,
       a permission. It also records every time one of us has opened a chat. Who made someone an
       admin, and with which permissions, is recorded in a separate log that cannot be altered
       either. The log carries
@@ -426,9 +438,7 @@
         is paid. For fraud checks and what the law requires of a payment service, Stripe is
         itself the controller, as described in
         <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripe’s privacy policy</a>.</li>
-      <li><b>Fortnox</b> (Sweden): our bookkeeping, and the invoices when you have chosen to pay
-        by invoice or when a session was not paid when the month ended. Fortnox gets your name and
-        email address, which sessions the invoice is for and the amount, and sends the invoice to you.</li>
+      <li><b>Fortnox</b> (Sweden): our bookkeeping. We do not send invoices to families.</li>
       <li><b>Google</b>, but not yet: today the link to an online session comes in messages. Once
         we have connected Google Meet, every confirmed online session gets its own room there, and
         the link is on the session’s page. During the session, video and audio then pass through
@@ -455,12 +465,17 @@
         the child’s name and what you wrote are removed. Only the date, school year, subject, where the visit
         came from and the code if you typed one remain, which do not identify you. This happens
         automatically every night. If the account a code belongs to is deleted, the code goes
-        with it, and so does the link to who recommended you.</li>
+        with it, and so does the link to who recommended you. If you become customers, the enquiry
+        moves to your account when we take you on: where the visit came from, the code and what you
+        wrote then belong to the account, the phone number is saved on the account if it has none,
+        and what you wrote is removed on the same day it would otherwise have been.</li>
       <li><b>Applications and CVs</b>, with a parent or guardian’s email and reply: deleted a year
         after they arrived, or thirty days after the last step in the recruitment if that is later. This happens automatically every
         night. If you become a tutor, the application stays while you work with us, and is
         deleted two years after your last session, report or login. We delete the interview
         booking in our calendar by hand, at the latest a year after the interview.</li>
+      <li><b>The tutor test</b>: your answers and your result as long as your account exists. If the
+        account is deleted or anonymised, the answers are deleted at once.</li>
       <li><b>Account and study history</b>: as long as you use the service. If an account has not
         been used for two years, we get in touch and delete what does not need to remain. You
         can ask us to delete it earlier at any time.</li>
@@ -496,7 +511,14 @@
       <li><b>Accounting records</b>: payments and payout records, and the bonus for
         recommendations, seven years. That is required by the Swedish Accounting Act and not
         something we can shorten, not even on request. A bonus remains even when the application it
-        came from has been deleted, without the code and the application.</li>
+        came from has been deleted, without the code and the application.
+        We never delete the rows in the payment ledger: if you have paid for something, the account is not
+        deleted entirely but remains without a name, and the rows point to it. Which code a purchase had
+        stays with the payment, for as long.</li>
+      <li><b>The partner you came through</b>: as long as the account exists. If the account is deleted
+        or anonymised, it is removed.</li>
+      <li><b>That you ticked the purchase terms</b>: as long as the account exists. If you have paid for something, it
+        remains on the account without a name, with the payments.</li>
       <li><b>The change log</b>: as long as the business exists. It carries states and times,
         never names or text, and it is our receipt of who did what.</li>
       <li><b>Agreements and certificates</b>: as long as they apply, and after that as long as
@@ -609,7 +631,7 @@
     <p>If we change anything material we update the date below, and contact those of you with an
       account if the change affects you.</p>
 
-    <p class="jur-datum">Last updated 20 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 21 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 
@@ -781,16 +803,16 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<script src="../nextrum-config.js?v=6fb7557b"></script>
+<script src="../nextrum-config.js?v=6949b9e0"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=97cbce73"></script>
+<script src="../nextrum-app.js?v=a262aca7"></script>
 <script src="../nextrum-samtycke.js?v=92474eaf"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=73042060"></script>
+<script src="../nextrum-maskot-svar.js?v=72594d80"></script>
 <script src="../nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

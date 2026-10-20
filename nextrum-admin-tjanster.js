@@ -1,6 +1,6 @@
 /* ============================================================
-   NEXTRUM — adminvyn, Tjänster: tjänstekatalogen, rabattkoderna och
-   familjerabatterna
+   NEXTRUM — adminvyn, Tjänster: tjänstekatalogen och familjerabatterna
+   (rabattkoderna står under Koder sedan 2026-10-21)
 
    En del av nextrum-admin.js, utflyttad i Fas 6 utan att någon
    funktion skrivits om. Kärnan (nextrum-admin-karna.js) laddas
@@ -12,7 +12,7 @@
 (function () {
   'use strict';
 
-  const { $, $$, esc, säg, rensa, felText, datumText, isoFor } = NX;
+  const { $, $$, esc, säg, rensa, felText, datumText } = NX;
   const { bekräfta, medan, tomt, laddar } = NXStudie;
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
@@ -28,8 +28,8 @@
      Ett kort per tjänst. `aktiv` är det enda som avgör vad
      besökare ser, så den kryssrutan är sidans vassaste kontroll —
      och den vägrar slås på för en tjänst utan pris. En tjänst som
-     går att boka men inte prissätta blir en faktura ingen kan
-     skriva.
+     går att boka men inte prissätta blir ett pass ingen kan ta
+     betalt för.
      ------------------------------------------------------------ */
   /* Den tjänst en ansökan utan val gäller: katalogens första aktiva
      jobbtjänst. S.tjanster är hela katalogen (admin läser även de
@@ -317,133 +317,10 @@
   }
 
   /* ------------------------------------------------------------
-     RABATTKODERNA
-
-     Koder tas inte bort, de stängs av. En borttagen kod tar med sig
-     svaret på frågan "varför blev det här passet billigare" — och
-     bookings.rabattkod pekar på raden.
+     RABATTKODERNA flyttade till Koder 2026-10-21, bredvid
+     partnerkoderna (nextrum-admin-rabattkoder.js, koder_for_planer):
+     båda gäller bara planköp.
      ------------------------------------------------------------ */
-  function rabattText(r) {
-    return r.typ === 'procent' ? r.varde + ' %' : kronor(r.varde);
-  }
-
-  function ritaRabattkoder() {
-    const host = $('#rk-tabell');
-    if (!host) return;
-
-    /* Rullgardinen för tjänst fylls ur katalogen, inte ur en lista
-       här — annars går de isär den dag en tjänst tillkommer. */
-    const val = $('#rk-tjanst');
-    if (val && val.options.length <= 1 && S.tjanster.length) {
-      val.innerHTML = '<option value="">Alla tjänster</option>'
-        + S.tjanster.map(t => '<option value="' + esc(t.kod) + '">' + esc(t.namn) + '</option>').join('');
-    }
-
-    /* TIPS är ingen kod någon skriver in, utan markeringen på ett pass
-       med en timme på köpet för ett tips (2026-09-30). Den kan aldrig
-       slås på, och står under fliken Tips och kampanjer här bredvid. */
-    const koder = S.rabattkoder.filter(r => r.kod !== 'TIPS');
-    $('#rk-antal').textContent = koder.length ? koder.length + ' st' : '';
-
-    host.innerHTML = tabell([
-      { namn: 'Kod', rita: r => '<b style="font-family:var(--f-mono);letter-spacing:.06em">'
-          + esc(r.kod) + '</b>'
-          + (r.beskrivning ? '<span class="adm-und">' + esc(r.beskrivning) + '</span>' : '') },
-      { namn: 'Rabatt', rita: r => '<span class="adm-tal">' + esc(rabattText(r)) + '</span>' },
-      { namn: 'Gäller', rita: r => esc(r.tjanst ? (S.tjanster.find(t => t.kod === r.tjanst) || {}).namn || r.tjanst : 'Alla tjänster') },
-      { namn: 'Till', rita: r => '<span class="adm-tal">' + esc(r.giltig_till ? kortDatum(r.giltig_till) : '—') + '</span>' },
-      /* Pass som inte är avbokade och betalda köp av timmar (2026-10-13),
-         räknat i databasen. Gränsen per familj står under. */
-      { namn: 'Använd', rita: r => '<span class="adm-tal">' + r.antal_anvandningar
-          + (r.max_anvandningar ? ' / ' + r.max_anvandningar : '') + '</span>'
-          + (r.max_per_familj ? '<span class="adm-und">' + esc(r.max_per_familj === 1 ? 'en gång per familj'
-              : r.max_per_familj + ' gånger per familj') + '</span>' : '') },
-      { namn: 'Läge', rita: r => {
-          /* Slut och utgången är två olika skäl att koden inte
-             fungerar, och den som felsöker behöver veta vilket. */
-          const slut = r.max_anvandningar && r.antal_anvandningar >= r.max_anvandningar;
-          const ute = r.giltig_till && r.giltig_till < isoFor(new Date());
-          if (!r.aktiv) return pill('Avstängd', '');
-          if (slut) return pill('Slut', 'ar-vantar');
-          if (ute) return pill('Utgången', 'ar-vantar');
-          return pill('Aktiv', 'ar-klar');
-        } },
-      { namn: '', höger: true, rita: r => '<button class="btn btn-ghost btn-sm" data-rk-vaxla="'
-          + esc(r.kod) + '">' + (r.aktiv ? 'Stäng av' : 'Slå på') + '</button>' }
-    ], koder, 'Inga rabattkoder än');
-  }
-
-  /* ============ rabattkoderna ============ */
-  (function kopplaRabattkoder() {
-    const form = $('#rk-form');
-    if (!form) return;
-
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const msg = $('#rk-msg');
-      rensa(msg);
-
-      const kod = String($('#rk-kod').value || '').trim().toUpperCase();
-      const typ = $('#rk-typ').value;
-      const varde = Number($('#rk-varde').value);
-
-      /* Samma villkor som check-constraintet i databasen. Det här är
-         inte säkerheten — den ligger i basen — utan ett begripligt
-         besked i stället för ett constraint-fel. */
-      if (!/^[A-Z0-9-]{3,24}$/.test(kod)) {
-        säg(msg, 'Koden får bara innehålla A–Z, 0–9 och bindestreck, 3–24 tecken.', false); return;
-      }
-      if (!varde || varde < 1) { säg(msg, 'Fyll i ett värde.', false); return; }
-      if (typ === 'procent' && varde > 100) {
-        säg(msg, 'Mer än 100 procent är inte en rabatt.', false); return;
-      }
-
-      await medan($('#rk-spara'), 'Skapar…', async () => {
-        const { error } = await supa.from('rabattkoder').insert({
-          kod,
-          typ,
-          // Fast belopp skrivs i kronor och lagras i öre, som allt annat.
-          varde: typ === 'belopp' ? Math.round(varde * 100) : Math.round(varde),
-          tjanst: $('#rk-tjanst').value || null,
-          giltig_till: $('#rk-till').value || null,
-          max_anvandningar: Number($('#rk-max').value) || null,
-          // Bara när kolumnen finns: utan migrationen nekar PostgREST den.
-          ...(S.rabattkoder.length && !('max_per_familj' in S.rabattkoder[0]) ? {}
-            : { max_per_familj: Number($('#rk-familj').value) || null }),
-          beskrivning: String($('#rk-text').value || '').trim() || null
-        });
-
-        if (error) {
-          säg(msg, error.code === '23505'
-            ? 'Det finns redan en kod som heter ' + kod + '.'
-            : 'Kunde inte skapa: ' + felText(error), false);
-          return;
-        }
-
-        const ny = await supa.from('rabattkoder').select('*').order('skapad', { ascending: false });
-        S.rabattkoder = ny.data || [];
-        ritaRabattkoder();
-        form.reset();
-        säg(msg, '✓ ' + kod + ' är skapad och gäller direkt.', true);
-      });
-    });
-  })();
-
-  document.addEventListener('click', async e => {
-    const knapp = e.target.closest('[data-rk-vaxla]');
-    if (!knapp) return;
-    const kod = knapp.dataset.rkVaxla;
-    const rad = S.rabattkoder.find(r => r.kod === kod);
-    if (!rad) return;
-
-    await medan(knapp, '…', async () => {
-      const { error } = await supa.from('rabattkoder')
-        .update({ aktiv: !rad.aktiv }).eq('kod', kod);
-      if (error) { alert('Kunde inte ändra: ' + felText(error)); return; }
-      rad.aktiv = !rad.aktiv;
-      ritaRabattkoder();
-    });
-  });
 
   /* ------------------------------------------------------------
      FAMILJERABATTERNA (2026-10-15)
@@ -702,8 +579,8 @@
 
     /* VILLKOREN LOVAR PRISET SOM GÄLLDE VID BOKNINGEN, och sedan Fas 19.5
        håller databasen det: priset fryses på passet när det bokas
-       (bookings.timpris_ore), och kortet, fakturan och månadskörningen
-       räknar på det. Förut räknade kortet dagens pris, och den här
+       (bookings.timpris_ore), och kortet och månadskörningen räknar på
+       det. Förut räknade kortet dagens pris, och den här
        dialogen räknade de bokade passen en höjning hade slagit mot. Nu
        gäller ett nytt pris bara pass som bokas efter ändringen. */
 
@@ -765,6 +642,6 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    ritaRabattkoder, ritaTjanster, standardJobbtjanst, ritaFamiljerabatter, hämtaFamiljerabatter
+    ritaTjanster, standardJobbtjanst, ritaFamiljerabatter, hämtaFamiljerabatter
   });
 })();

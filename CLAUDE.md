@@ -5,7 +5,7 @@ mot Supabase, driftsatt på Vercel (`nextrum.se`). Driften står i `START-HÄR.m
 Varför, historien och proven står i `minne/`, som läses när arbetet rör området:
 - `minne/grunden.md`: stacken, hela filkartan, språket, arbetssättet
 - `minne/affaren.md`: flödet, bokningen, svaren, passets sida, avtal, chatten, ordlistan
-- `minne/betalning.md`: siffrorna, kort, faktura, Stripe, hållen tid, bokslut, löner
+- `minne/betalning.md`: siffrorna, kort, Stripe, hållen tid, bokslut, löner (och fakturan, borta sedan 2026-10-21)
 - `minne/timmar.md`: planer, klippkort och timbanken (Fas 16.1, 21, 22)
 - `minne/nexlax.md`: uppgifterna, nivåerna, NexLäx och uppgiftsbanken (Fas 23)
 - `minne/vyerna.md`: startsidan, paletten, fällorna i vyerna, adminvyn, tusen rader
@@ -25,7 +25,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 3. Admin tar in familjen (**Ta in familjen** på anmälan, 2026-10-06): kontot skapas med anmälans
    adress, eleven ur anmälan, och familjen väljer lösenordet genom länken i mejlet; i samma ruta kan
    vi sätta in gratistimmar (2026-10-13). **Inget Skapa
-   konto** på sajten (2026-10-07): konton skapar bara vi (`bjud-in`) och föräldern (barnets inloggning)
+   konto** på sajten (2026-10-07): konton skapar bara vi (`bjud-in`) och föräldern (barnets inloggning).
+   **Anmälan flyttar till familjen** (2026-10-21, `intag_lead()`, bara superadmin: sist i Ta in familjen,
+   och knappen Flytta till familjen för en som redan tagits in): det som inte är personuppgifter (källan, kampanjen, utm, koden, tjänsten) står sedan i
+   `intagna_anmalningar` med anmälans id, raden i `leads` raderas och anmälan lämnar listan, och familjen står
+   som **Intagen** och barnet som **Matchad** i adminvyn. Tipstimmen, koderna och statistiken läser båda
+   tabellerna, för de hittade den nya familjen genom anmälan; familjens profil får inga nya kolumner
+   (`skydda_profilfalt`). Meddelandet gallras som i `leads`
 4. `admin.html` → **Familjer** → välj hjälpare: sätter `matched_tutor_id` och `match_status`
    **samtidigt**. Först då öppnas bokningen, köpen och tråden; före det är vyn öppen med barnen,
    NexLäx och profilen, och säger att vi letar studiehjälpare (`S.väntar`, 2026-10-07; inget väntläge)
@@ -65,18 +71,21 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   att vi kan läsa står i policyn och chatten och tas inte bort.
 - **Månader** väljs på passets månad, och ingen väljare börjar före september 2026.
 - **Betalning**: kort, och pengarna dras först när rapporten är skriven: kortet som väljs när
-  familjen bokar reserveras två dagar före passet och dras efter rapporten, annars kort eller
-  faktura när rapporten bekräftas, och fakturan går att välja också före passet (2026-10-15,
-  `villkoren_kortet`). Med strömbrytaren `kortreservation` av gäller det förra, kort i förväg; texten
-  och strömbrytaren följs åt (Siffror nedan). Ett hållet pass betalas även obekräftat. Ett pass med kortpengar avbokas inte från en vy, ett
-  i tvist återbetalas inte, och ett fakturapass står som `faktura` tills webhooken skrivit
-  kortet. OCR räknas aldrig fram, och påminnelser tas ut utan avgift. **Ett obetalt pass hamnar på
-  fakturan** (2026-10-16, `obetalda_pass_pa_fakturan`, beslutat 2026-10-01): månadskörningen lägger ett pass som
-  inte är betalt när månaden är slut på familjens faktura (`fakturera_obetalda()`, natten efter månaden eller
-  efter en sen rapport), utom ett kort som ska betala det, en kassa öppnad det senaste dygnet
-  (`intern.kassan_oppnad`, 25 timmar), en familj utan faktura och ett pass bokat innan familjen godkänt version
-  2026-10-16 (`intern.obetalda_faktureras_fran`): inget läggs på i efterhand. Kortet går att välja tills passet
-  står på en faktura.
+  familjen bokar reserveras två dagar före passet och dras efter rapporten, annars betalar familjen
+  med kort när rapporten bekräftas (`villkoren_kortet`). Med strömbrytaren `kortreservation` av gäller
+  det förra, kort i förväg; texten och strömbrytaren följs åt (Siffror nedan). Ett hållet pass betalas
+  även obekräftat. Ett pass med kortpengar avbokas inte från en vy, och ett i tvist återbetalas inte.
+  **Ingen faktura** (2026-10-21, Leo: "Ta bort fakturasystemet helt"; ingen hade gått till en familj):
+  inget betalsätt, ingen månadsfaktura för obetalda pass, ingen text som lovar en. Del 1
+  (`fakturan_tas_bort`) låser strömbrytaren `faktura` av (`flaggor_faktura_av`, som `kortsparr`) och
+  skriver om allt som läste fakturan; del 2 (`fakturans_tabeller_tas_bort`, för hand efter en backup)
+  droppar `invoices`, `invoice_lines`, `faktura_sparr` och `intern.kassan_oppnad`, och `faktura` är inte
+  längre ett `betalning_status`. Båda stannar om en rad hör till någon annan än testkontot Leo Trikke eller
+  ett adminkonto (2026-10-20, Leo: utkastet och fyra fakturapass på hans eget adminkonto räknas som test).
+  Ett obetalt pass följs upp av oss (`ej_betalt`), och påminnelser tas ut utan avgift.
+  `passunderlag.fakturerad` (alltid falsk) och analysvyernas fakturakolumner (alltid noll) står kvar för
+  vyerna som bygger på dem, och `fakturering` och `faktura-utskick` behåller sina namn: de gör lönernas
+  underlag.
 - **Hållen tid** (Fas 20.1) debiteras per påbörjad kvart; avvikelse kräver skäl, ingen ändring i
   efterhand. Övertid på egen rad (`pass_tillagg`), aldrig passets betalningskolumner. Lönen
   följer tiden nedåt, uppåt bara när övertiden är betald.
@@ -84,11 +93,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Betalningar, Månadens ekonomi och Löner** räknar på `betalningsrader()` och
   `NXBetalning.passpris`, så en månad har ett belopp; testbetalningar räknas aldrig. En månad
   skapas först när den är slut: `fakturering` nekar en som pågår med 409, och rutan låter bara
-  torrköra den (2026-10-01). En faktura är en rad per familj och månad (2026-10-06): månadens
-  samlas bara i vyn, natten gör utkastet, och Skapa nu kör förra månaden, aldrig en annan. Ett pass hör till EN lönemånad och EN faktura: sin egen månads
-  så länge den är ett utkast, och körningen går varje natt och lägger sena pass där
-  (`malmanad`, `NXBetalning.lonemanad`); Godkänd och Lagd i Fortnox sparas bara om beloppet är
-  det som visades. PAXml tar bara godkända, inte
+  torrköra den (2026-10-01). Ett pass hör till EN lönemånad: sin egen månads så länge den är ett
+  utkast, och körningen går varje natt och lägger sena pass där (`malmanad`,
+  `NXBetalning.lonemanad`); Godkänd sparas bara om beloppet är det som visades. Körningen står under
+  Betalningar → Månadskörningen (fliken hette Fakturor till 2026-10-21). PAXml tar bara godkända, inte
   utbetalda underlag och är inte provläst i Fortnox. Personnummer, bankkonto och skatt står i
   Fortnox, aldrig här, och lönespecen räknar inget och drar ingen skatt. **Timpenningen är
   inklusive semesterersättning** (2026-10-01): filen lägger inget på, och Fortnox får inte heller
@@ -205,6 +213,27 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
   kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
   poolen frågar först om det saknas.
+- **Intervjumejlet** (2026-10-21): när admin skickar en ansökan vidare till intervju köar databasen Leos
+  mejl "Du går vidare till intervju" till den som sökt, en gång per ansökan (`intern.ansokan_intervjumejl`;
+  `applications.intervju_mejl_skickat_at` sätter bara databasen), aldrig till en avböjd och aldrig när ett
+  möte bokas i samma steg (mötets mejl är inbjudan) eller när Skriv till hen skickar kallelsen med
+  bokningssidan (`kontaktad_at` i samma ändring, 2026-10-20: det mejlet är kallelsen). Det går genom notiskön (`notis_utskick.ansokan_id`,
+  rollen `sokande`), så sandlådan och `notiser_mejl` gäller; `notis_konfig.lage` läses inte av någon kod och
+  rörs inte. Texten är Leos, i `intervju.ts` och i adminvyn (`INTERVJU_MEJLET`, som visar mejlet
+  innan steget sätts), och `kolla-mejltexter.py` håller dem lika. **Mejlet är kallelsen** (2026-10-20, Leo: "lägg in
+  bokningslänken i det automatiska meddelandet"): det har länken till bokningssidan, där hen bokar en tid själv, och
+  adressen är `INTERVJU_BOKNING_URL`, som kontrollen också prövar (mallen läser inte configen). Ansökans tack är "Tack, din ansökan är
+  skickad! Vi hör av oss inom 24 timmar."
+- **Utbildningsprovet i studiehjälparvyn** (2026-10-21): en godkänd studiehjälpare gör provet vid första
+  inloggningen, före vyn (`NXProvet`), och en gång: mer än gränsen rätt (`prov_installning`, 50 % som förval)
+  är godkänt (`prov_studiehjalpare.utbildningsprov_godkant_at`), och den som inte klarar det gör om det efter
+  väntetiden (24 timmar). Databasen rättar (`lamna_in_utbildningsprov()` svarar bara poängen och godkänt eller
+  inte), `mitt_utbildningsprov()` lämnar frågorna utan facit, och `prov_fragor` läser bara superadmin.
+  Spärren står i databasen (`intern.provet_sparrar()`, avsnitt 6) och gäller först med minst fem aktiva
+  frågor; adminvyn varnar till dess. De som var godkända före migrationen är undantagna, och admin slår av och
+  på kravet och nollställer provet per person (superadmin eller Godkänna). Frågorna skriver Leo under
+  Ansökningar → Provet i vyn, aldrig en migration med påhittade frågor. Provet i ansökan
+  (`utbildningsprov.html`, `applications.prov_*`) är ett annat och står kvar.
 - **Barnkontona** (2026-09-30): ett barnkonto är ett användarnamn och ett lösenord, inget mer.
   Varje inloggning tar e-post eller användarnamn (`NXStudie.loggaIn`, 2026-10-01): med @ en
   vuxen, utan @ ett barn, som hamnar på `/barn`. Adressen `<namn>@barn.nextrum.se` finns bara
@@ -225,27 +254,30 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   funktioner lämnar inte ut det som är av; vyn säger bara det.
 - **Barnets förslag på pass** (2026-10-12, Leo: "barn skickar förslag, precis som förälder, men ser
   inte priset"): förslaget står i `barn_passforslag`, aldrig i `bookings`, och är inget pass. Föräldern
-  ser det (Boka pass, Att göra, mejlet `barnforslag`), granskar det i den vanliga ytan med priset och en
-  rabattkod och skickar det som sitt eget (`skicka_barnets_forslag()`, SECURITY INVOKER, så policyn
+  ser det (Boka pass, Att göra, mejlet `barnforslag`), granskar det i den vanliga ytan med priset
+  och skickar det som sitt eget (`skicka_barnets_forslag()`, SECURITY INVOKER, så policyn
   och alla triggrar på `bookings` gäller), eller låter bli. Barnet ser aldrig ett pris, och priset
-  vid knappen följer databasens ordning (Rabattkoden, nedan).
-- **Rabattkoden** (2026-10-13, Leo: "koden får inte krocka med gratis timmar ... gratis timmarna
-  räknas i timbanken"): rutan står i förälderns egna förslag och i granskningen av ett barns, aldrig
-  i barnets vy. Koden gäller bara det familjen betalar med pengar. En gratis timme går före den
-  (`forsta_timmen_bjuds`, också tipstimmen), och köpta timmar och timbanken går före den, när passet
-  skapas och när de betalar det senare (`bookings_timmar_betalar_utan_kod`): då tas koden bort från
-  passet, och den läggs aldrig ihop med något (en familjerabatt är familjens pris, och koden räknas på det). En kod som tas bort när passet skapas räknas inte som
-  använd. Rutan säger när koden inte används och varför, och koden skickas ändå: databasen avgör.
-  **Har familjen timmar i timbanken gäller ingen kod på ett pass** (samma kväll, Leo: "rabattkod kan inte
-  användas om man har timmar i timbanken ... kan användas för att köpa timmar i timbanken eller om man har noll
-  timmar kvar och vill köpa pass för pass"): timmar som går att använda i dag, eller sparade minuter till en hel
-  timme (`intern.har_timmar`). **Koden gäller när familjen köper timmar**, en plan eller Fyll timbanken, i rutan
-  under Erbjudanden (`kolla_rabattkod_kop`, `klippkort.rabattkod`): databasen drar av den (`intern.klippkort_rabatt`),
-  aldrig så att köpet blir gratis, och gratistimmar bär ingen kod. Den första planen får sin gratis timme också
-  med koden (Leo 2026-10-15): där läggs de ihop. **Hur många gånger** sätts per kod, totalt och
-  per familj (`max_anvandningar`, `max_per_familj`, en gång som förval; Leo: "rabattkoder ska vi också bestämma hur
-  många gånger de får användas"), och ett avbokat pass ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6).
-  I drift sedan natten till 2026-10-14; en kods villkor ska stå där den delas ut (avsnitt 11).
+  vid knappen följer databasens ordning. Ingen rabattkod på ett pass (Koderna, nedan).
+- **Koderna gäller bara planköp** (2026-10-21, `koder_for_planer`, Leo: "Bygg en flik Koder i admin med två typer:
+  partnerkod (spårar partnerföreningars volym) och rabattkod (t.ex. Zayans). Båda gäller ENBART planköp, aldrig enskilda
+  pass"). Koderna är `rabattkoder`, med `sort` ('rabatt' eller 'partner') och `partner_namn`; `typ` är rabattens typ
+  (procent, eller belopp i öre) och `varde` får vara noll (en partnerkod som bara räknar). **Ett pass tar ingen kod**, för
+  någon (`bookings_kod_bara_pa_planer`, och `intern.rabattkod_prova` säger samma nej till varje kod på ett pass); TIPS är
+  tipstimmens markering och står kvar, och ett pass som redan bar en kod behåller den. Bland köpen bara en plan i katalogen
+  (`intern.kod_galler_kopet`), aldrig Fyll timbanken, timmar till planen eller gratistimmar. **En kod per köp**
+  (`klippkort.rabattkod`); familjerabatten och den första planens gratis timme är inga koder och staplas med den (Leo
+  2026-10-15). Databasen prövar koden och räknar rabatten (`intern.klippkort_rabatt`, aldrig så att köpet blir gratis), och
+  kassan frågar `kod_pa_planen()` med familjens token, räknar om rabatten ur typen och värdet (`_delad/koder.ts`, samma regel
+  som `intern.rabattkod_prova`, och de ändras tillsammans) och öppnar ingen kassa när den inte stämmer; en kod på ett pass,
+  ett tillägg, kortet eller timmar till planen är ett nej. **Användningen står vid betalningen**: `kod_anvandningar`, en
+  rad per betalt köp med en kod, med `betalning_id`, skriven av databasen när liggaren bokför betalningen, aldrig av en
+  klient; den och koderna raderas aldrig (triggrar), och en kods namn och sort står fast. **Familjens partner**
+  (`familjens_partner`) sparas första gången och ändras aldrig, och tas bort när familjen avidentifieras. Statistiken
+  (`kod_statistik`, `partner_statistik`, `kodens_anvandningar`) är superadminens och räknar inte testbetalningar utom på
+  begäran. Adminvyn: Koder → Rabattkoder och Partnerkoder. Studievyn: rutan Kod till en plan under Erbjudanden, och ingen ruta i
+  Boka pass. **Hur många gånger** sätts per kod, totalt och per familj (`max_anvandningar`, `max_per_familj`), och ett
+  återbetalt köp ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6). Villkoren nämner inga koder: en kods villkor
+  ska stå där den delas ut (avsnitt 11). Historiken (koden på ett pass, 2026-10-13 till 2026-10-21): `minne/betalning.md`.
 - **Familjerabatter** (2026-10-15, Leo: "egna rabattkoder som bara vi har tillgång till ... 10 kr billigare på alla
   timmar som köps tex ... tills vi tar bort rabatten. ... de ser bara att de har rabatt vid checkout men inte annat"): våra
   egna koder (`familjerabatter`, Tjänster → Familjerabatter), kronor av per timme, 1–200 kr i hela kronor, som admin sätter
@@ -284,6 +316,23 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   före strömbrytaren (Leos beslut, PR #281); sedan kedjan i `DEPLOY-BETALNING.md` 9.14 kördes samma eftermiddag
   säger sidorna, villkoren, mejlen, agenterna och vyn samma sak, pass för pass (PR #283, Leo: "sajt ska säga samma
   sak som vyn, lektion per lektion"), och databasens version blev 2026-10-15.
+- **Betalningsliggaren** (2026-10-21, `betalningsliggaren`, inte i drift; Leo: "raderas ALDRIG och ingår inte i
+  något städjobb"): en rad per betalning i `betalningar`, skriven av databasen själv (AFTER-triggrar,
+  `intern.betalningar_bokfor()`) när tjänstekontot sätter pengarna på passet, köpet eller tillägget, en rad per
+  PaymentIntent, aldrig av en vy och aldrig för att någon kommer tillbaka från Stripe. Triggrar nekar delete och
+  truncate för alla, bara det Stripe ändrar efteråt (återbetalt, läget, avgift) får ändras, ingen inloggad skriver,
+  och en familj med en rad avidentifieras i stället för att raderas (`on delete restrict`). En betalning som inte
+  kunde skrivas ner (två kassor) står där också (`betalning_utan_rad`). Liggaren och Kortet står under Betalningar.
+- **Köpvillkoren i kassan** (2026-10-21, inte i drift): varje kassa föregås av en ruta med vad som köps, priset och
+  kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken `CFG.KOPVILLKOR_URL`, där texten är Leos och i dag
+  en platshållare), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
+  (`kopvillkor_godkannanden`, databasens tid och version). Anropet bär vad som köps, aldrig ett belopp.
+- **Kortet försöker igen** (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift): ett nekat kort provas igen
+  efter sex timmar, högst tre försök, bara med en kod där ett nytt försök kan gå (`intern.kortet_provas_igen`, som
+  också avgör om mejlet lovar ett försök: `kortet: 'igen'`), mejlas en gång per serie, och efter ett dygn blir det en
+  uppgift till oss; admin försöker igen under Betalningar → Kortet. Passet avbokas aldrig för att kortet nekas.
+  Inställningarna står i `betalning_installning`, och `sen_avbokning_timmar` är låst på 0 som `kortsparr`: villkoren
+  har ingen avbokningsavgift. Databasen väcker `stripe-reservation` direkt när ett pass har något att göra nu.
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -304,7 +353,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | rapport | `lesson_reports`; **passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
 | betalning | vad familjen betalat för ett pass (`betalning_status`, `betalt_ore`) |
-| faktura | `invoices`: betalsätt per pass efter passet, skickas från Fortnox |
+| liggaren | `betalningar`: en rad per kortbetalning (pass, plan, Fyll timbanken, tillägg), skriven av databasen och aldrig raderad |
 | tjänst | rad i `tjanster`; `aktiv` avgör vad som syns |
 | uppgift | det eleven gör mellan passen (`homework`); i adminvyn att göra-listan |
 | nivå | 5–12 frågor i en bana (`nivaer`); Mästarprov och repetition drar ur banan |
@@ -317,6 +366,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | timbanken | familjens köpta timmar (en plan eller Fyll timbanken), gratistimmar och sparade minuter; pass för pass går inte genom den |
 | gratistimmar | timmar vi sätter in i familjens timbank utan kostnad (`klippkort` med erbjudandet `gratis`); 60 dagar, dras först med planens gratis timme. Inte första timmen eller tipstimmen |
 | familjerabatt | kronor av per timme för en familj vi satt en av våra koder på (`familjerabatter`, `familjens_rabatt`); aldrig en rabattkod, och familjen ser aldrig koden, bara priset |
+| rabattkod | en kod som ger en rabatt när familjen köper en plan, aldrig på ett pass (`rabattkoder`, `sort = 'rabatt'`) |
+| partnerkod | en partnerförenings kod till en plan, med eller utan rabatt (`rabattkoder`, `sort = 'partner'`); den första sparas på familjen (`familjens_partner`) |
 | Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
 | timmar till planen | Köp till timmar: 1–20 timmar till en plan som gäller, till planens timpris, som går ut med planen (`klippkort` med erbjudandet `plan_extra` och `till_plan`; Välj själv under Er timbank) |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
@@ -347,15 +398,22 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   orange timmar är köpta och gratis är gröna ... 9 av 9 timmar finns kvar") står överst på båda ställena: en ruta per
   timme i det som gäller nu (köp som inte gått ut, med de använda tomma; planens gratis timme efter planen; timmarna för
   tips), gratis närmast de tomma för de dras först, "N av M timmar kvar", och en stapel över 24 timmar
-  (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger.
-- Betalnings- och fakturameningen står på 36 ställen i 23 filer och i mejlen, och
-  `kolla-betalningsvillkor.py` räknar dem, och sedan 2026-10-16 meningen om de obetalda passen ("Är ett pass inte
-  betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.") direkt efter
-  fakturameningen, på samma ställen (`OBETALDA_PA_FAKTURAN`, som går med fakturan). **En betalning som tas på ett annat sätt än villkoren
-  lovar är en tvist, inte ett skrivfel.** Slås `faktura` av går meningen och `FAKTURA_I_TEXTEN`
-  samtidigt. Meningen följer strömbrytaren `kortreservation` (`KORTET_RESERVERAS`): på säger den att
-  pengarna dras först när rapporten är skriven och att kortet reserveras två dagar före passet, och "betala
-  i förväg" får inte stå; slås strömbrytaren av går den förra meningen tillbaka i samma ändring. `BETALNINGSVILLKOR_DAGAR` (tio dagar) står på två ställen.
+  (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger. **En plan gäller en kalendermånad**
+  (2026-10-21, `planerna_per_manad`, inte i drift; Leo: "Den här månaden" eller "Nästa månad"): familjen väljer
+  månaden på plankortet, `klippkort.galler_fran` är den 1:a (databasen prövar den), och planen går ut månadens sista
+  dag; Fyll timbanken, gratistimmarna, planens gratis timme och tipstimmen räknas som förut. Under batteriet står en
+  rad per månad, "3 av 8 timmar återstår" och "0 av 0" (`planens_manader()`), och nästa månads plan räknas inte i
+  batteriet förrän den gäller. **Ett köp betalas tillbaka** under Liggaren, helt eller med ett antal timmar:
+  databasen räknar beloppet (`klippkort_aterbetalning_lage`), och timmarna dras tillbaka, aldrig under det som
+  använts (`klippkort_aterbetalningar`, en rad per återbetalning i Stripe).
+- Betalningsmeningen står på 36 ställen i 23 filer och i mejlen, och `kolla-betalningsvillkor.py` räknar
+  dem. **En betalning som tas på ett annat sätt än villkoren lovar är en tvist, inte ett skrivfel.**
+  Fakturameningen, meningen om de obetalda passen och `BETALNINGSVILLKOR_DAGAR` gick med fakturan
+  2026-10-21 och står bland det gamla: en sida som säger att familjen kan välja faktura lovar ett
+  betalsätt som inte finns. Meningen följer strömbrytaren `kortreservation` (`KORTET_RESERVERAS`): på
+  säger den att pengarna dras först när rapporten är skriven och att kortet reserveras två dagar före
+  passet, och "betala i förväg" får inte stå; slås strömbrytaren av går den förra meningen tillbaka i
+  samma ändring.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
   och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`; svaret är månadskostnaden och
@@ -555,11 +613,11 @@ Förhandsvisning (för varje admin) öppnar `/foralder?forhandsvisning` och `/la
 riktiga vyerna med en påhittad familj och studiehjälpare. `nextrum-forhandsvisning.js` laddas före
 `nextrum-app.js` och ger vyn en klient som svarar ur en värld i webbläsaren; de två vyerna delar den
 (`localStorage`), och remsan överst byter vy. Den når aldrig databasen, så inget av det räknas i
-statistik, lön eller faktura. Börjar vyerna fråga efter en ny tabell eller funktion ska den in i
+statistik, lön eller betalningar. Börjar vyerna fråga efter en ny tabell eller funktion ska den in i
 världen (`prova-forhandsvisning.js` säger vad som saknas). **Adminkontona räknas inte i
 statistiken** (samma dag): Översiktens tal (`räknas()`, `ärAdminkonto()`) och analysvyerna
 (`intern.utanfor_statistiken`) räknar inga pass där familjen eller studiehjälparen har en adminroll;
-listorna, betalningarna, fakturorna och lönerna som förut.
+listorna, betalningarna och lönerna som förut.
 Fällor: `h5` och `h6` har webbläsarens marginal; `--pap-2` och `--yta` är nästan samma i mörkt
 läge (`--tint`, `--bricka`); KÄNSLAN står sist och väger lika mycket; `nextrum-admin-konsol.css`
 vinner över arbetsytan. Headless Chromium döljer rullningslister; mät ett tryck med `el.click()`
@@ -646,6 +704,11 @@ Detaljer: `minne/grunden.md`.
   dashboarden**: `bookings.parent_id` är ON DELETE CASCADE. Databasen väljer helt eller
   avidentifierat och vägrar medan pengar inte är uppgjorda eller filer finns kvar. Ett
   adminkonto raderas inte där, och e-posten ändras inte i Redigera (profiles följer inte Auth).
+- **Testkontot Leo Trikke rensas med `supabase/scripts/rensa-testkonto.sql`** (2026-10-21), i SQL
+  Editor och aldrig i dashboarden: `dry_run` är förvalet och listar varje rad som skulle gå (pass,
+  rapporter, timmar, underlag och, så länge tabellerna finns, fakturor), kontot står kvar, allt sker
+  i en transaktion, och en skarp betalning eller ett utbetalt underlag stoppar den. Skriptet är ingen
+  migration och registreras inte.
 ### Notiserna
 - Trigger → `intern.notis_skapa()` → `intern.notis_koa()` → `notis-minut` → `notis-ko` → Resend.
   `notiser_mejl` är strömbrytaren (av och trasigt ser likadana ut); `loggad` är slutläge.
@@ -678,6 +741,10 @@ Detaljer: `minne/grunden.md`.
   adminvyn (`kolla-mejltexter.py`).
   Provets facit finns bara i funktionen, resultatet visas per avsnitt, fel svar är lika
   utförliga som rätt, nyckeln hamnar aldrig i en logg, och ändras handboken läses frågorna om.
+  Intervjumejlet (2026-10-21) är det enda till den som söker som går genom notiskön: en rad med
+  `ansokan_id` (villkoret `notis_utskick_en_mottagare` kräver exakt en av `mottagare`, `barn_id` och
+  `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i intervju och är
+  inte avböjd), och `notis-ko` mejlar den från info@ (`intervju.ts`).
 
 Detaljer: `minne/databasen.md`, `minne/notiser.md`.
 
@@ -703,6 +770,12 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   inklistrat avtal genom `min_handling_text()`: en handling är en fil eller en text, och texten
   ändras aldrig (`handlingar_texten_star_fast`).
   Notishemligheten står i `notis_konfig`, inte i en secret.
+- **Utbildningsprovet** (2026-10-21) har databasens första restriktiva policyer ("utbildningsprovet först"
+  på `bookings`, `students`, `lesson_reports`, `messages`, `study_plans`, `tutor_reviews`, `notiser` och
+  `profiles`, där den egna raden alltid syns), och `is_my_student()` och barnchatten frågar
+  `intern.provet_sparrar()`: resten (läxor, material, NexLäx, förberedelser, tillägg) går genom dem. En ny väg
+  till en studiehjälpares elever gör likadant. Provets läge står i `prov_studiehjalpare`, aldrig på
+  `tutor_profiles` (`skydda_tutorfalt` släpper bara vitlistade kolumner), och admins spärras aldrig.
 - Rå servertext visas bara i de inloggade vyerna; en återvändsgränd bär `{oss}`. Anonyma
   skrivningar har tak, och deras `created_at` sätts av databasen.
 - Hinkarna är privata och sökvägen är ett uuid, aldrig ett namn. I `cv` ändras `CV_RAD` och
@@ -732,8 +805,9 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   2026-10-11); klasserna heter `nx-kakor-*`. Ändras lagringen följer `lagring.html`
   med; före ett pixel-id, se `minne/sakerhet.md`.
 - **Advisorn** larmar om det som är med flit (listan i `minne/sakerhet.md`). Läckta lösenord
-  kontrolleras inte. `kolla_rabattkod` och `kolla_rabattkod_kop` har ett tak: tio okända koder i timmen per
-  konto, sparade som HMAC i ett dygn (`intern.rabattkod_forsok`, `rabattkoden_timmar_och_tak`).
+  kontrolleras inte. `kolla_rabattkod`, `kolla_rabattkod_kop` och `kod_pa_planen` har ett tak: tio okända koder i timmen per
+  konto, sparade som HMAC i ett dygn (`intern.rabattkod_forsok`, `rabattkoden_timmar_och_tak`). Passets ruta prövar
+  ingen kod alls sedan 2026-10-21 (`koder_for_planer`).
 - **Förhandsvisningen använder aldrig den riktiga klienten**: med `?forhandsvisning` på `/foralder`
   eller `/larare` och utan `nextrum-forhandsvisning.js` skapar `nextrum-app.js` ingen klient alls, och
   modulvakten säger det. Den riktiga inloggningen frågar bara `mina_behorigheter()` (grinden, som är
@@ -751,8 +825,8 @@ Detaljer: `minne/sakerhet.md`.
 - Belopp räknas i funktionen, aldrig ur anropet, och en nyckel lämnar aldrig funktionen. Bara
   `stripe-webhook` sätter en betalning som betald och skriver `betalt_ore` (`begart_ore` är det
   begärda); den kastar varje fel så att Stripe försöker igen, och en tvist äger läget. Kassan
-  tar bara kort, `faktura-utskick` skickar mejlet före statusen, och `google-meet` sparar bara
-  öppna rum.
+  tar bara kort, `faktura-utskick` skickar bara underlag och mejlet före statusen, och `google-meet`
+  sparar bara öppna rum.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
@@ -827,15 +901,31 @@ Detaljer: `minne/grunden.md`.
   `charge.dispute.updated` och kortets tre (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
   `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox. Stegen till skarpt läge, i
   ordning och med driftens läge: `DEPLOY-BETALNING.md` 9.16 (2026-10-15).
-- **Fakturan** är på, men bolaget, bankgirot, beskedet till befintliga familjer och
-  provfaktureringen återstår (DEPLOY-BETALNING.md 9.11); när bolaget är registrerat ändras
-  villkoren och integritetspolicyn. Spärren "ingen betalning, inget pass" kan inte slås på.
+- **Fakturan är borttagen** (2026-10-21) i koden och i migrationerna, men inte i driften: kedjan står
+  i `DEPLOY-BETALNING.md` 9.18 (funktionerna först, sedan del 1, backup, del 2). Villkoren har versionen
+  2026-10-21, så alla får frågan igen. Spärren "ingen betalning, inget pass" kan inte slås på.
+- **Intervjumejlet och utbildningsprovet i studiehjälparvyn** (2026-10-21) är byggda och provade lokalt, inte i
+  driften: kedjan står i `DEPLOY-NOTISER.md` 8 (`notis-ko` före `intervjumejlet`, som byter ett villkor med `drop
+  constraint`). Provet spärrar ingen förrän Leo skrivit fem frågor, och de som var godkända när migrationen körs
+  slipper det. Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
+- **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3)
+  är byggda och provade lokalt (1867 av 1867 i `rls-test.sql` med alla 208 migrationer, `prova-kassan.js` 83 av 83),
+  inte i driften: kedjan står i `DEPLOY-BETALNING.md` 9.19 (merge, edge-funktionerna, de tre migrationerna, Stripes
+  Apple Pay och Google Pay med domänen, provköpen). Köpvillkoren på `/anvandarvillkor#kopvillkor` är en platshållare
+  tills Leo skrivit dem, och en ny text är en ny version av villkoren. Juristen har inte läst rad 8 och 32 i
+  `DATASKYDD.md` eller planernas nya ord om kalendermånaden.
+- **Koderna bara på planer och partnerkoderna** (2026-10-21, Fas 4) är byggda och provade lokalt (`rls-test.sql`
+  avsnitt 28, 32 och 46, `koder_test.ts`, `prova-koder.js` och `prova-barnforslag.js`), inte i driften: kedjan står i
+  `DEPLOY-BETALNING.md` 9.20 (merge, `koder_for_planer` med sin enda `drop constraint`, sedan `stripe-checkout` och
+  `drift`). Villkoren nämner inga koder, så en kods villkor ska stå där den delas ut. Juristen har inte läst rad 33 i
+  `DATASKYDD.md`, med frågan om en partnerförenings namn kan säga något känsligt om familjen.
 - **Timmarna**: provköpet (DEPLOY-BETALNING.md 9.12) är ogjort. Leos testköp står kvar med
   sina timmar till kortets sista dag, och är sedan 2026-09-30 märkt som test igen
   (`stripe_skarp = false`): det räknas inte längre som intäkt.
 - **Skatt och anställning av minderåriga**: `studiehjalpare_form = oklart`; revisor före första
   utbetalningen. Övertid betald efter den 25:e når inte lönen.
-- **Obetalda pass på månadens faktura** (beslutat 2026-10-01, byggda 2026-10-15) är i drift sedan 2026-10-16 (Leo:
+- **Obetalda pass på månadens faktura** (beslutat 2026-10-01, byggda 2026-10-15, borttagna med fakturan
+  2026-10-21; det nedan är historik) var i drift sedan 2026-10-16 (Leo:
   "merga bara och fixa villkoren"): PR #298 mergades 10.32 UTC (b68509f), Vercel hade lagt ut sidorna 10.33 (båda språken
   med meningen och `#familjerabatt`, 16 oktober), och `obetalda_pass_pa_fakturan` (20261016110000) kördes direkt efter,
   hel i ett do-block, hämtad från merge-commiten, prövad mot sin md5 (`c5a8752f…`) och registrerad med filens text.
@@ -846,7 +936,7 @@ Detaljer: `minne/grunden.md`.
   `intern.kassan_oppnad` (RLS utan policy, med flit), och torrkörningen lade inget på fakturan. Kvar: att säga till
   familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och ett
   tillägg för övertid kommer inte med (`minne/betalning.md`).
-- **Med flit inte**: en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
+- **Med flit inte**: en faktura (2026-10-21), en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
   passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten, och familjerna om barnens inloggning
   (integritetspolicyn, 2026-09-30).
@@ -1041,7 +1131,8 @@ Detaljer: `minne/grunden.md`.
   2026-10-13 fanns ingen rabattkod utom `TIPS`, och ingen ska skapas förrän `kolla_rabattkod` har ett tak. Ett
   adminkonto som också är förälder hade 2026-10-12 alla 16 passen i driften; de räknas inte längre i statistiken,
   men de står kvar som pass och betalningar. Ett adminkonto raderas inte i panelen; ska passen bort är det Leos
-  beslut och en egen ändring (`DEPLOY-BARNKONTON.md` 12).
+  beslut och en egen ändring (`DEPLOY-BARNKONTON.md` 12): den ändringen är `supabase/scripts/rensa-testkonto.sql`
+  (2026-10-21), som bara är körd med `dry_run` lokalt.
   Juristen har inte läst rad 26 i `DATASKYDD.md` eller meningarna om förslagen i policyn, och familjerna
   med barnkonto har inte fått veta att valet finns.
 - **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13) är i drift sedan natten till 2026-10-14, i den

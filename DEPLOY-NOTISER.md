@@ -386,3 +386,39 @@ select jobname, schedule, active from cron.job where jobname = 'admin-paminnelse
 - Inget morgonmejl en dag: det kommer bara när något ligger kvar och inte mejlats, och bara om jobbet var aktivt
   någon gång mellan 09:00 och 09:59 svensk tid. Missade det timmen går det som låg kvar i morgon.
   `forst_sedd_at` och `mejlad_at` i `admin_paminnelser` säger vad som är mejlat.
+
+## 8. Intervjumejlet och utbildningsprovet (2026-10-21, inte i drift)
+
+Två saker som hör till rekryteringen och går ut tillsammans: mejlet till den som går vidare till intervju
+(`20261021100000_intervjumejlet`) och provet som en godkänd studiehjälpare gör före studiehjälparvyn
+(`20261021110000_utbildningsprovet_i_studiehjalparvyn`). Hur de fungerar står i `minne/notiser.md`
+(Intervjumejlet) och `minne/affaren.md` (Utbildningsprovet i studiehjälparvyn). Ingenting är kört mot driften.
+
+**Ordningen är `notis-ko` först, migrationen sedan.** Efter `intervjumejlet` lämnar kön ut rader med rollen
+`sokande`, och en äldre `notis-ko` känner inte igen den. Den nya `notis-ko` fungerar lika bra mot kön före
+migrationen, för där finns inga sådana rader.
+
+1. **Merga.** Vyerna tål att migrationerna saknas: utan `mitt_utbildningsprov()` visar studiehjälparvyn ingen
+   ruta, och utan `intervju_mejl_skickat_at` frågar adminvyn inget när en ansökan skickas vidare.
+2. **`notis-ko`** från main, med `_delad/notiser/intervju.ts` och `ko.ts`. Hämta tillbaka och jämför byte för
+   byte.
+3. **`intervjumejlet`**, hämtad från merge-commiten och prövad mot sin md5. Den byter villkoret
+   `notis_utskick_en_mottagare` (exakt en av `mottagare`, `barn_id` och `ansokan_id`), och det är en `drop
+   constraint`: verktyget ber om en bekräftelse (CLAUDE.md avsnitt 5). Kör den i SQL Editor som ett anrop (ett
+   anrop är en transaktion) och registrera filens text i `supabase_migrations.schema_migrations` efteråt, eller
+   avsnitt för avsnitt med `execute_sql`. Vakten stannar om `notis_utskick_ta` ändrats sedan filen skrevs.
+4. **`utbildningsprovet_i_studiehjalparvyn`**, på samma sätt. Den har ingen `drop`, men ett `delete` (i
+   `intern.provet_rensa`) och lappar `radera_person` med `replace()`: kör den i SQL Editor som ett anrop eller
+   avsnitt för avsnitt, inte i ett do-block. Vakterna stannar om `is_my_student`, barnchattens tre funktioner
+   eller `radera_person` ändrats.
+5. **Hela `rls-test.sql`** mot driften, tillbakarullat (avsnitt 40 och 41), och advisorn: inget nytt för
+   `anon`. De fyra nya tabellerna har RLS och inga skrivrättigheter för någon inloggad.
+6. **Prova mejlet i sandlådan.** Sätt `notis_drift.mejl_sandlada`, skicka en provansökan vidare till intervju i
+   adminvyn (rutan visar mejlet först) och läs mejlet i sandlådan: ämnet börjar med "[Prov till sökande]".
+   Skicka sedan samma ansökan vidare igen: inget nytt mejl. Töm sandlådan efteråt.
+7. **Skriv frågorna** under Ansökningar → Provet i vyn. Spärren gäller först när fem frågor är aktiva, och
+   varningen överst säger hur många som saknas. Studiehjälparna som var godkända när migrationen kördes slipper
+   provet; slå på kravet för någon av dem i listan eller i personens panel om de ska göra det.
+
+Kvar efter det: säg till studiehjälparna att provet kommer vid nästa inloggning (de nya får det direkt), och
+låt juristen läsa rad 31 i `DATASKYDD.md` och policyns stycke om provet.

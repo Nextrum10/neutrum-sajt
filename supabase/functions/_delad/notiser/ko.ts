@@ -27,6 +27,12 @@
 // form av token; adressen är barnets egen, bekräftade, aldrig kontots
 // tekniska, och den andra spärren nedan står kvar för den.
 //
+// EN ANSÖKANS RAD (2026-10-21) har roll 'sokande' och ansökans id som
+// mottagare: mejlet till den som går vidare till intervju (intervju.ts).
+// Det kommer från info@ och har ingen avregistrering, som de andra
+// beskeden till den som söker; ett besked om en ansökan är ingen
+// prenumeration.
+//
 // ETT FEL PÅ KONTOT STOPPAR KÖRNINGEN. Svarar Resend 401 eller 403 är
 // det nyckeln eller avsändardomänen, inte mejlet. Att fortsätta rad
 // för rad hade bränt hela kön på något som rättas på ett ställe. Raden
@@ -51,6 +57,7 @@ import { epostOk } from '../http.ts';
 import { smsText, type SmsSvar, type SmsUt } from '../sms.ts';
 import { renderaMejl, KONTAKT, type ProvLage, type Renderat } from './rendera.ts';
 import { renderaBarnMejl } from './barn.ts';
+import { INTERVJU_FRAN, INTERVJU_TYP, renderaIntervjuMejl, SOKANDE } from './intervju.ts';
 import { skapaBarnToken, skapaToken } from './token.ts';
 import { arBarnMejltyp, arMejlbar, BARN_BEKRAFTA } from './typer.ts';
 import { arBarnadress } from '../barnkonto.ts';
@@ -60,8 +67,9 @@ export const FRAN = 'Nextrum <no-reply@nextrum.se>';
 /** En rad ur notis_utskick_ta() (2.3d). */
 export type UtskickRad = {
   id: string;
-  /** Mottagarens id i profiles, eller barnets id i students när roll är 'barn'.
-   *  Tokenen i avregistreringslänken signeras för det. */
+  /** Mottagarens id i profiles, barnets id i students när roll är 'barn', eller
+   *  ansökans id i applications när roll är 'sokande'. Tokenen i
+   *  avregistreringslänken signeras för det (inte för en ansökan, som saknar länk). */
   mottagare: string | null;
   kanal: string;
   typ: string;
@@ -168,6 +176,7 @@ async function mejla(r: UtskickRad, b: Beroenden, nu: Date): Promise<Utfall> {
   // adress (barnets_epost) är en riktig adress och spärras inte här.
   if (arBarnadress(r.epost)) return klart(r.id, false, 'Barnkonton får inga mejl.', true);
   if (r.roll === 'barn') return await mejlaBarn(r, b, nu);
+  if (r.roll === SOKANDE) return await mejlaSokande(r, b);
   if (!arMejlbar(typ)) return klart(r.id, false, 'Typen mejlas inte.', true);
 
   const prov: ProvLage = r.till_sandlada === true ? 'sandlada'
@@ -208,8 +217,17 @@ async function mejlaBarn(r: UtskickRad, b: Beroenden, nu: Date): Promise<Utfall>
   return await skicka(r, b, m, token);
 }
 
+/** Mejlet till den som går vidare till intervju (intervju.ts). */
+async function mejlaSokande(r: UtskickRad, b: Beroenden): Promise<Utfall> {
+  if (r.typ !== INTERVJU_TYP) return klart(r.id, false, 'Typen mejlas inte till den som sökt.', true);
+  const prov: ProvLage = r.till_sandlada === true ? 'sandlada' : 'nej';
+  const m = renderaIntervjuMejl({ fornamn: r.fornamn, prov });
+  return await skicka(r, b, m, null, INTERVJU_FRAN);
+}
+
 /** Resend, och vad svaret betyder för raden. */
-async function skicka(r: UtskickRad, b: Beroenden, m: Renderat, token: string | null): Promise<Utfall> {
+async function skicka(r: UtskickRad, b: Beroenden, m: Renderat, token: string | null,
+                      fran: string = FRAN): Promise<Utfall> {
   const headers: Record<string, string> = {};
   if (token) {
     headers['List-Unsubscribe'] =
@@ -220,7 +238,7 @@ async function skicka(r: UtskickRad, b: Beroenden, m: Renderat, token: string | 
   let svar: Response;
   try {
     svar = await b.skickaMejl({
-      fran: FRAN,
+      fran,
       till: [String(r.epost).trim()],
       svaraTill: [KONTAKT],
       amne: m.amne,

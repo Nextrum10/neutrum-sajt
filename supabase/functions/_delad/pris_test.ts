@@ -19,8 +19,8 @@
 
 import { assert, assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  belopp, byggFakturor, byggUnderlag, familjebelopp, fordela, malmanad, manadenArSlut, manadenNu, manadFor, nastaManad,
-  type Pass, passpris, radtext, rutFor, sammanfatta, minuterspris, somFaktura, sorteraPass, standardTjanst, tillaggsbelopp,
+  belopp, byggUnderlag, familjebelopp, fordela, malmanad, manadenArSlut, manadenNu, manadFor, nastaManad,
+  type Pass, passpris, radtext, rutFor, sammanfatta, minuterspris, sorteraPass, standardTjanst, tillaggsbelopp,
   type Tjanst,
 } from './pris.ts';
 import { MANADER } from './konstanter.ts';
@@ -46,7 +46,11 @@ function gammalRadtext(subject: string | null, datum: string): string {
   const [, m, d] = datum.split('-');
   return `${subject || 'Pass'} ${Number(d)} ${MANADER[Number(m) - 1]}`;
 }
-function gammalUnderlag(pass: Pass[], tjanster: Tjanst[], timprisOre: number, timpenningar: Map<string, number>) {
+// fakturerad fanns på passet i v20. Den är alltid falsk sedan fakturan
+// togs bort (2026-10-21), och de slumpade passen har den inte.
+function gammalUnderlag(
+  pass: (Pass & { fakturerad?: boolean })[], tjanster: Tjanst[], timprisOre: number, timpenningar: Map<string, number>,
+) {
   type TjanstPris = { timme: number; extra: number };
   const prisFor = new Map<string, TjanstPris>();
   for (const t of tjanster) {
@@ -113,7 +117,6 @@ function slumpPass(antal: number, frö: number): Pass[] {
       rabatt_ore: välj(r, [null, 0, 5000, 37900, 999999, -100]),
       fakturerbar: r() > 0.1,
       har_rapport: r() > 0.1,
-      fakturerad: r() > 0.8,
       pa_underlag: r() > 0.8,
     });
   }
@@ -152,7 +155,7 @@ Deno.test('standardtjänsten är den första aktiva för kunder, annars den för
 Deno.test('torrkörningen för augusti: underlaget som förut, och fakturan är en lista över obetalda pass', () => {
   const P = 'a3acb449-b4bd-44d9-af06-b2a8e63f957a', T = '74c44af8-1a47-4c6a-95ef-41a89ed72891';
   const grund = { subject: 'Matematik', tjanst: 'laxhjalp', duration_min: 60, parent_id: P, tutor_id: T,
-    antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true, fakturerad: false, pa_underlag: false };
+    antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true, pa_underlag: false };
   const alla: Pass[] = [
     { id: 'x1', wanted_date: '2026-08-19', ...grund },
     { id: 'x2', wanted_date: '2026-08-26', ...grund },
@@ -169,8 +172,7 @@ Deno.test('torrkörningen för augusti: underlaget som förut, och fakturan är 
     pass_till_och_med: '2026-08-31',
     pris_per_timme_ore: 37900,
     utbetalningar: [{ tutor_id: T, period: '2026-08-01', tillagg: false, pass: 2, belopp_ore: 24000 }],
-    fakturor: [],
-    vantar: { underlag: [], fakturor: [] },
+    vantar: { underlag: [] },
     obetalda: [
       { booking_id: 'x1', parent_id: P, datum: '2026-08-19', lage: 'ingen', belopp_ore: 37900 },
       { booking_id: 'x2', parent_id: P, datum: '2026-08-26', lage: 'ingen', belopp_ore: 37900 },
@@ -212,7 +214,7 @@ Deno.test('sammanfattningen har sina nycklar i fast ordning', () => {
   const underlag = byggUnderlag({ pass, tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([['t1', 12000]]) });
   const s = sammanfatta({ korningAv: 'nyckel', period: '2026-09-01', slut: '2026-10-01', timprisOre: 37900, underlag, utanRapport, undantagna });
   assertEquals(Object.keys(s), [
-    'korning_av', 'period', 'pass_till_och_med', 'pris_per_timme_ore', 'utbetalningar', 'fakturor', 'vantar',
+    'korning_av', 'period', 'pass_till_och_med', 'pris_per_timme_ore', 'utbetalningar', 'vantar',
     'obetalda', 'hoppade_over_utan_timpenning', 'hoppade_over_utan_rapport', 'undantagna_pass',
   ]);
   assert(s.obetalda.length > 0);
@@ -222,10 +224,9 @@ Deno.test('sammanfattningen har sina nycklar i fast ordning', () => {
 
 // ---------- passets månad (2026-10-01) ----------
 // Leo: "passen som är hållna i september ska spärras av för september".
-// Driftens fall samma dag: septembers underlag och faktura skapades den
-// 29:e, och tre pass den 29 och 30 september som rapporterades efter det
-// hade hamnat på oktobers underlag, och fakturapasset den 30:e på
-// oktobers faktura.
+// Driftens fall samma dag: septembers underlag skapades den 29:e, och tre
+// pass den 29 och 30 september som rapporterades efter det hade hamnat på
+// oktobers underlag.
 Deno.test('månaden efter, och december går till januari', () => {
   assertEquals(nastaManad('2026-09-01'), '2026-10-01');
   assertEquals(nastaManad('2026-12-01'), '2027-01-01');
@@ -277,26 +278,22 @@ Deno.test('fördelningen: utkast får raderna, låsta månader väntar, och peri
 Deno.test('driftens september: de sena passen går på septembers utkast och inte på oktobers', () => {
   const T = '74c44af8-1a47-4c6a-95ef-41a89ed72891', P = 'a3acb449-b4bd-44d9-af06-b2a8e63f957a';
   const grund = { subject: 'Matematik', tjanst: 'laxhjalp', parent_id: P, tutor_id: T, antal_barn: 1, rabatt_ore: null,
-    fakturerbar: true, har_rapport: true, fakturerad: false, pa_underlag: false, timpris_ore: 37900, extra_ore: 6900 };
+    fakturerbar: true, har_rapport: true, pa_underlag: false, timpris_ore: 37900, extra_ore: 6900 };
   const sena: Pass[] = [
     { ...grund, id: 's29', wanted_date: '2026-09-29', duration_min: 60, betalning_status: 'betald' },
     { ...grund, id: 's30a', wanted_date: '2026-09-30', duration_min: 180, betalning_status: 'betald' },
-    { ...grund, id: 's30b', wanted_date: '2026-09-30', duration_min: 120, betalning_status: 'faktura' },
+    { ...grund, id: 's30b', wanted_date: '2026-09-30', duration_min: 120, betalning_status: 'betald' },
   ];
   const datumFor = new Map(sena.map((b) => [b.id, b.wanted_date]));
   const underlag = byggUnderlag({ pass: sena, tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]) });
-  const fakturor = byggFakturor({ pass: sena, tjanster: KATALOG, timprisOre: 37900 });
-  // Oktober körs den 1 november. Septembers underlag och faktura är fortfarande utkast.
+  // Oktober körs den 1 november. Septembers underlag är fortfarande ett utkast.
   const period = '2026-10-01';
   const utb = fordela({ rader: underlag.perTutor, datumFor, period,
     dokument: new Map([[T, [{ id: 'u-sep', period: '2026-09-01', status: 'utkast' }]]]) });
-  const fakt = fordela({ rader: fakturor, datumFor, period,
-    dokument: new Map([[P, [{ id: 'f-sep', period: '2026-09-01', status: 'utkast' }]]]) });
-  const s = sammanfatta({ korningAv: 'schema', period, slut: '2026-11-01', timprisOre: 37900, underlag, fakturor,
-    utanRapport: [], undantagna: [], utbetalningarFordelade: utb, fakturorFordelade: fakt });
+  const s = sammanfatta({ korningAv: 'schema', period, slut: '2026-11-01', timprisOre: 37900, underlag,
+    utanRapport: [], undantagna: [], utbetalningarFordelade: utb });
   assertEquals(s.utbetalningar, [{ tutor_id: T, period: '2026-09-01', tillagg: true, pass: 3, belopp_ore: 72000 }]);
-  assertEquals(s.fakturor, [{ parent_id: P, period: '2026-09-01', tillagg: true, pass: 1, belopp_ore: 75800 }]);
-  assertEquals(s.vantar, { underlag: [], fakturor: [] });
+  assertEquals(s.vantar, { underlag: [] });
 });
 
 // ---------- ersättningen ----------
@@ -304,9 +301,9 @@ Deno.test('tjänstens ersättning går före studiehjälparens egen, och tom ers
   const katalog: Tjanst[] = [{ ...KATALOG[0], ersattning_per_timme_ore: 11000 }];
   const pass: Pass[] = [
     { id: 'e1', subject: 'M', tjanst: 'laxhjalp', wanted_date: '2026-09-02', duration_min: 60, parent_id: 'p', tutor_id: 'medEgen',
-      antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true, fakturerad: false, pa_underlag: false },
+      antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true, pa_underlag: false },
     { id: 'e2', subject: 'M', tjanst: 'laxhjalp', wanted_date: '2026-09-03', duration_min: 60, parent_id: 'p', tutor_id: 'utanEgen',
-      antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true, fakturerad: false, pa_underlag: false },
+      antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true, pa_underlag: false },
   ];
   const u = byggUnderlag({ pass, tjanster: katalog, timprisOre: 37900, timpenningar: new Map([['medEgen', 12000]]) });
   assertEquals(u.perTutor.get('medEgen')?.[0].belopp_ore, 11000);
@@ -348,7 +345,7 @@ Deno.test('körningen drar ingen RUT, och en RUT-tjänst står med hela beloppet
   const u = byggUnderlag({
     pass: [{ id: 'r1', subject: 'Städ', tjanst: 'hushallsnara', wanted_date: '2026-09-10', duration_min: 60,
       parent_id: 'k', tutor_id: 't1', antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true,
-      fakturerad: false, pa_underlag: false }],
+      pa_underlag: false }],
     tjanster: RUTKATALOG, timprisOre: 37900, timpenningar: new Map([['t1', 12000]]),
   });
   assertEquals(u.obetalda.map((o) => o.belopp_ore), [50000]);
@@ -366,7 +363,7 @@ const P = 'p1', T = 't1';
 const GRUND = {
   subject: 'Matematik', tjanst: 'laxhjalp', duration_min: 60, parent_id: P, tutor_id: T,
   antal_barn: 1, rabatt_ore: null, fakturerbar: true, har_rapport: true,
-  fakturerad: false, pa_underlag: false,
+  pa_underlag: false,
 };
 
 Deno.test('bara pass familjen inte betalat är obetalda, och underlaget rörs inte', () => {
@@ -393,15 +390,6 @@ Deno.test('bara pass familjen inte betalat är obetalda, och underlaget rörs in
   // betalade. Att ett obetalt pass inte ska hållas alls är spärrens
   // sak (kortsparr i databasen), inte den här räkningens.
   assertEquals((u.perTutor.get(T) ?? []).length, 7);
-});
-
-Deno.test('ett pass på en äldre faktura är inte obetalt, men kommer med på underlaget', () => {
-  const u = byggUnderlag({
-    pass: [{ ...GRUND, id: 'b-fakt', wanted_date: '2026-08-03', fakturerad: true, betalning_status: 'ingen' }],
-    tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
-  });
-  assertEquals(u.obetalda, []);
-  assertEquals((u.perTutor.get(T) ?? []).map((r) => r.booking_id), ['b-fakt']);
 });
 
 Deno.test('obetalda räknas som kortbetalningen: tillägg för syskon och fryst rabatt', () => {
@@ -446,90 +434,22 @@ Deno.test('obetalda står alltid i svaret, också när allt är betalt', () => {
   assertEquals(obetald.obetalda, [{ booking_id: 'b1', parent_id: P, datum: '2026-08-03', lage: 'ingen', belopp_ore: 37900 }]);
 });
 
-// ---------- Fas 14.6: familjen väljer faktura ----------
+// ---------- fakturan är borta (2026-10-21) ----------
 //
-// Bara pass familjen valt faktura för hamnar på en faktura, och varje
-// rad kostar exakt vad kortet hade tagit för samma pass. Betalsättet
-// får aldrig ändra priset.
-
-Deno.test('fakturan är den gamla månadsfakturan, rad för rad, för pass som valts för faktura (600 slumpade pass)', () => {
-  for (const frö of [3, 99, 20260925]) {
-    const { pass } = sorteraPass(slumpPass(200, frö));
-    const fakturapass = pass.map((b) => ({ ...b, betalning_status: 'faktura' }));
-    const gammal = gammalUnderlag(fakturapass, KATALOG, 37900, new Map());
-    const ny = byggFakturor({ pass: fakturapass, tjanster: KATALOG, timprisOre: 37900 });
-    // En rad på noll kronor är ingen faktura sedan Fas 19.5, så den
-    // gamla koden jämförs utan dem.
-    const utanNoll = new Map([...gammal.perFamilj]
-      .map(([f, r]) => [f, r.filter((x) => x.belopp_ore > 0)] as const)
-      .filter(([, r]) => r.length > 0));
-    const platt = (m: Map<string, { booking_id: string; beskrivning: string; belopp_ore: number }[]>) =>
-      [...m].flatMap(([f, r]) => r.map((x) => [f, x.booking_id, x.beskrivning, x.belopp_ore].join('|'))).sort();
-    assert(utanNoll.size > 0);
-    assertEquals(platt(ny), platt(utanNoll));
-    for (const [f, rader] of ny) {
-      assertEquals(rader.map((r) => r.pris_per_timme_ore), utanNoll.get(f)!.map((r) => r.timpris_ore));
-    }
-  }
-});
-
-Deno.test('bara fakturapass faktureras, och bara de som inte redan står på en faktura', () => {
-  const f = byggFakturor({
-    pass: [
-      { ...GRUND, id: 'f-ja', wanted_date: '2026-09-02', betalning_status: 'faktura' },
-      { ...GRUND, id: 'f-redan', wanted_date: '2026-09-03', betalning_status: 'faktura', fakturerad: true },
-      { ...GRUND, id: 'f-kort', wanted_date: '2026-09-04', betalning_status: 'ingen' },
-      { ...GRUND, id: 'f-betald', wanted_date: '2026-09-05', betalning_status: 'betald' },
-      { ...GRUND, id: 'f-utan', wanted_date: '2026-09-06' },
-    ],
-    tjanster: KATALOG, timprisOre: 37900,
+// Fas 14.6 lät familjen välja faktura, och byggFakturor() samlade de
+// passen. Ingen faktura gick till en familj, och fakturan togs bort. Ett
+// pass som betalas på något annat sätt än kortet, timmarna eller kassan
+// finns inte: betalningsläget 'faktura' är borta ur databasen.
+Deno.test('sammanfattningen har ingen faktura', () => {
+  const s = sammanfatta({
+    korningAv: 'admin', period: '2026-09-01', slut: '2026-10-01', timprisOre: 37900, utanRapport: [], undantagna: [],
+    underlag: byggUnderlag({
+      pass: [{ ...GRUND, id: 'b1', wanted_date: '2026-09-03' }],
+      tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
+    }),
   });
-  assertEquals([...f.keys()], [P]);
-  assertEquals(f.get(P)!.map((r) => r.booking_id), ['f-ja']);
-});
-
-Deno.test('torrkörningen räknar passen som skulle läggas på fakturan som fakturapass (obetalda_pass_pa_fakturan)', () => {
-  const lista: Pass[] = [
-    { ...GRUND, id: 'o-1', wanted_date: '2026-09-02', betalning_status: 'ingen' },
-    { ...GRUND, id: 'o-2', wanted_date: '2026-09-03', betalning_status: 'vantar' },
-  ];
-  const extra: Pass[] = [
-    { ...GRUND, id: 'o-1', wanted_date: '2026-09-02', betalning_status: 'ingen' },
-    { ...GRUND, id: 'o-3', wanted_date: '2026-09-04', betalning_status: 'misslyckad', pa_underlag: true },
-    { ...GRUND, id: 'o-4', wanted_date: '2026-09-05', betalning_status: 'ingen' },
-  ];
-  const ut = somFaktura(lista, extra, ['o-1', 'o-3']);
-  assertEquals(ut.map((b) => b.id + ':' + b.betalning_status), ['o-1:faktura', 'o-2:vantar', 'o-3:faktura']);
-  // Passen blir fakturapass och inte obetalda, och fakturan tar dem.
-  const f = byggFakturor({ pass: ut, tjanster: KATALOG, timprisOre: 37900 });
-  assertEquals(f.get(P)!.map((r) => r.booking_id), ['o-1', 'o-3']);
-  // Utan id ändras ingenting.
-  const orörd: Pass[] = [{ ...GRUND, id: 'o-5', wanted_date: '2026-09-02', betalning_status: 'ingen' }];
-  assertEquals(somFaktura(orörd, [], []).map((b) => b.betalning_status), ['ingen']);
-});
-
-Deno.test('ett fakturapass är inte obetalt med kort, men studiehjälparen får betalt för det', () => {
-  const u = byggUnderlag({
-    pass: [{ ...GRUND, id: 'f1', wanted_date: '2026-09-02', betalning_status: 'faktura' }],
-    tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
-  });
-  assertEquals(u.obetalda, []);
-  assertEquals((u.perTutor.get(T) ?? []).map((r) => r.belopp_ore), [12000]);
-});
-
-Deno.test('fakturaraden säger ämne och datum, aldrig ett namn, och priset är kortets', () => {
-  const f = byggFakturor({
-    pass: [
-      { ...GRUND, id: 'f-s', subject: 'Engelska', wanted_date: '2026-09-02', duration_min: 120, antal_barn: 2,
-        betalning_status: 'faktura' },
-      { ...GRUND, id: 'f-r', wanted_date: '2026-09-09', rabatt_ore: 5000, betalning_status: 'faktura' },
-    ],
-    tjanster: KATALOG, timprisOre: 37900,
-  });
-  const rader = f.get(P)!;
-  assertEquals(rader.map((r) => r.beskrivning), [`Engelska 2 ${MANADER[8]} (2 barn)`, `Matematik 9 ${MANADER[8]} − rabatt`]);
-  assertEquals(rader.map((r) => r.belopp_ore), [familjebelopp(120, 37900, 6900, 2), 37900 - 5000]);
-  assertEquals(rader.map((r) => r.pris_per_timme_ore), [37900 + 6900, 37900]);
+  assert(!('fakturor' in s));
+  assertEquals(Object.keys(s.vantar), ['underlag']);
 });
 
 // ------------------------------------------------------------
@@ -556,7 +476,7 @@ Deno.test('20.1 familjen betalar den debiterade tiden, lönen följer lon_min', 
 // ------------------------------------------------------------
 // Fas 22.1: övertiden timbanken tog betalas inte en gång till
 // ------------------------------------------------------------
-Deno.test('22.1 det banken tog står varken på listan över obetalda eller på fakturan', () => {
+Deno.test('22.1 det banken tog står inte på listan över obetalda', () => {
   // bokat en timme, höll 75 minuter, och banken tog kvarten
   const u = byggUnderlag({
     pass: [{ ...GRUND, id: 'bank', wanted_date: '2026-09-03', debiterade_min: 75, timbank_min: 15, lon_min: 75 }],
@@ -566,21 +486,12 @@ Deno.test('22.1 det banken tog står varken på listan över obetalda eller på 
   // lönen tar hela den hållna tiden: övertiden är betald, med minuterna
   assertEquals((u.perTutor.get(T) ?? []).map((r) => r.minuter), [75]);
 
-  const f = byggFakturor({
-    pass: [{ ...GRUND, id: 'f', wanted_date: '2026-09-03', betalning_status: 'faktura', debiterade_min: 90, timbank_min: 15 }],
-    tjanster: KATALOG, timprisOre: 37900,
+  // 90 debiterade, kvarten ur banken: 75 minuter kvar att betala
+  const v = byggUnderlag({
+    pass: [{ ...GRUND, id: 'b2', wanted_date: '2026-09-03', debiterade_min: 90, timbank_min: 15 }],
+    tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]),
   });
-  const rad = (f.get(P) ?? [])[0];
-  assertEquals([rad.minuter, rad.belopp_ore], [75, Math.round(1.25 * 37900)]);
-});
-
-Deno.test('20.1 fakturan tar den debiterade tiden', () => {
-  const f = byggFakturor({
-    pass: [{ ...GRUND, id: 'f', wanted_date: '2026-09-03', betalning_status: 'faktura', debiterade_min: 75 }],
-    tjanster: KATALOG, timprisOre: 37900,
-  });
-  const rad = (f.get(P) ?? [])[0];
-  assertEquals([rad.minuter, rad.belopp_ore], [75, Math.round(1.25 * 37900)]);
+  assertEquals(v.obetalda.map((o) => o.belopp_ore), [Math.round(1.25 * 37900)]);
 });
 
 Deno.test('20.1 tillägget är skillnaden i pris, och rabatten dras en gång', () => {
@@ -617,25 +528,15 @@ Deno.test('ett höjt pris når inte ett pass som bokades före höjningen', () =
   const efter = { ...GRUND, id: 'b-efter', wanted_date: '2026-09-03' };
   const u = byggUnderlag({ pass: [fore, efter], tjanster: dyr, timprisOre: 37900, timpenningar: new Map([[T, 12000]]) });
   assertEquals(u.obetalda.map((o) => o.belopp_ore), [37900, 45000]);
-  const f = byggFakturor({
-    pass: [{ ...fore, betalning_status: 'faktura' }, { ...efter, betalning_status: 'faktura' }],
-    tjanster: dyr, timprisOre: 37900,
-  });
-  assertEquals(f.get(P)!.map((r) => [r.pris_per_timme_ore, r.belopp_ore]), [[37900, 37900], [45000, 45000]]);
 });
 
-Deno.test('ett pass där första timmen bjuds och täcker allt är varken obetalt eller en fakturarad', () => {
+Deno.test('ett pass där första timmen bjuds och täcker allt är inte obetalt', () => {
   const gratis = { ...GRUND, id: 'b-gratis', wanted_date: '2026-09-02', timpris_ore: 37900, extra_ore: 6900, rabatt_ore: 37900 };
   const halv = { ...GRUND, id: 'b-halv', wanted_date: '2026-09-03', duration_min: 120, timpris_ore: 37900, extra_ore: 6900, rabatt_ore: 37900 };
   const u = byggUnderlag({ pass: [gratis, halv], tjanster: KATALOG, timprisOre: 37900, timpenningar: new Map([[T, 12000]]) });
   assertEquals(u.obetalda.map((o) => [o.booking_id, o.belopp_ore]), [['b-halv', 37900]]);
   // Studiehjälparen får betalt för båda: rabatten sänker aldrig ersättningen.
   assertEquals((u.perTutor.get(T) ?? []).map((r) => r.belopp_ore), [12000, 24000]);
-  const f = byggFakturor({
-    pass: [{ ...gratis, betalning_status: 'faktura' }, { ...halv, betalning_status: 'faktura' }],
-    tjanster: KATALOG, timprisOre: 37900,
-  });
-  assertEquals(f.get(P)!.map((r) => r.booking_id), ['b-halv']);
 });
 
 Deno.test('månaden räknas i svensk tid, också strax efter midnatt den 1:a', () => {

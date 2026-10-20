@@ -18,9 +18,9 @@
    en färg. Delarna står i talen under, så mätaren behöver ingen
    förklaring i färg.
 
-   TALEN. Betalda, hållna men inte betalda, kommande och fakturor att
-   skicka. De tre första är knappar som visar familjerna bakom talet;
-   fakturornas leder till fakturorna längre ner.
+   TALEN. Betalda, hållna men inte betalda, kommande och det som ska
+   tillbaka till familjer. Alla fyra är knappar som visar familjerna
+   bakom talet. (Det fjärde var fakturorna att skicka, till 2026-10-21.)
 
    PENGARNA. Det som kommit in, det som väntar och det som går ut
    (lönerna den 25:e och det som ska tillbaka till familjer), och vad
@@ -42,12 +42,9 @@
    Lönen är Löners egen räkning (lönFörMånad): underlaget för passens
    månad, som betalas ut den 25:e månaden efter.
 
-   FAKTURORNA skapas här med månadskörningen, samma körning som under
-   Betalningar → Fakturor och Löner, och knapparna på varje faktura är
-   desamma (data-fakt-*): lyssnarna bor i nextrum-admin-ekonomi.js.
-   Fortnox läser inte in kundfakturor från en fil, så fakturan läggs in
-   där för hand med Underlag, och numret skrivs tillbaka med Lagd i
-   Fortnox.
+   MÅNADSKÖRNINGEN står här för sidans månad, samma körning som under
+   Betalningar → Månadskörningen och Löner. Fakturorna som den skapade
+   stod här också, tills fakturan togs bort 2026-10-21.
    ============================================================ */
 (function () {
   'use strict';
@@ -108,8 +105,7 @@
 
   const summa = (lista, fält) => lista.reduce((n, r) => n + Number(r[fält] || 0), 0);
   const ärPass = r => r.typ === 'pass' && r.räknas;
-  /* Betalt med kort, mot en betald faktura, med köpta timmar eller ur
-     timbanken. Ett pass i tvist är betalt tills tvisten avgjorts: det
+  /* Betalt med kort, med köpta timmar eller ur timbanken. Ett pass i tvist är betalt tills tvisten avgjorts: det
      står i Betalningar → Att göra. */
   const ärBetalt = r => ärPass(r) && (r.filter.has('betalda') || r.filter.has('tvist'));
   const ärObetalt = r => ärPass(r) && r.filter.has('attbetala');
@@ -128,47 +124,13 @@
     const kommande = del(pass.filter(ärKommande));
     return {
       alla: del(pass), betalda, obetalda, kommande,
-      /* Första timmen bjuden, återbetalt, en makulerad faktura. */
+      /* Första timmen bjuden eller återbetalt. */
       övriga: del(pass.filter(r => !ärBetalt(r) && !ärObetalt(r) && !ärKommande(r))),
       medTimmar: betalda.rader.filter(r => medTimmar(r) && !medGratis(r)).length,
       medGratis: betalda.rader.filter(medGratis).length,
       obetaltÖre: summa(obetalda.rader, 'attFåIn'),
       kommandeÖre: summa(kommande.rader, 'kommande'),
       utanPris: obetalda.rader.concat(kommande.rader).filter(utanPris).length
-    };
-  }
-
-  /* Fakturorna för månadens pass. Att skapa är familjer vars hållna
-     fakturapass inte står på någon faktura än; resten är fakturorna de
-     står på. En faktura per familj och period, så det är familjer och
-     fakturor som räknas, inte pass. */
-  function fakturorna(rader) {
-    const påFaktura = new Map();
-    (S.fakturor || []).forEach(f => (f.invoice_lines || []).forEach(l => {
-      if (l.booking_id) påFaktura.set(l.booking_id, f);
-    }));
-    const attSkapa = new Map();
-    const fakturor = new Map();
-    rader.filter(r => ärPass(r) && r.sätt === 'Faktura').forEach(r => {
-      const f = påFaktura.get(r.booking);
-      if (f) { fakturor.set(f.id, f); return; }
-      if (!r.filter.has('attbetala')) return;
-      const post = attSkapa.get(r.parent) || { id: r.parent, pass: 0, öre: 0, utanPris: 0, sista: '' };
-      post.pass++;
-      if (utanPris(r)) post.utanPris++; else post.öre += r.attFåIn;
-      if (String(r.datum) > post.sista) post.sista = String(r.datum);
-      attSkapa.set(r.parent, post);
-    });
-    const ORDNING = { utkast: 0, forfallen: 1, skickad: 2, betald: 3, makulerad: 4 };
-    const lista = Array.from(fakturor.values())
-      .map(f => ({ f, läge: NXBetalning.fakturaLage(f), familj: namnFör(f.parent_id) }))
-      .sort((a, b) => ((ORDNING[a.läge] == null ? 9 : ORDNING[a.läge]) - (ORDNING[b.läge] == null ? 9 : ORDNING[b.läge]))
-        || a.familj.localeCompare(b.familj, 'sv'));
-    return {
-      attSkapa: Array.from(attSkapa.values()).sort((a, b) => namnFör(a.id).localeCompare(namnFör(b.id), 'sv')),
-      fakturor: lista,
-      utkast: lista.filter(x => x.läge === 'utkast').length,
-      förfallna: lista.filter(x => x.läge === 'forfallen').length
     };
   }
 
@@ -180,10 +142,7 @@
      ------------------------------------------------------------ */
   function pengarna(rader) {
     const s = (villkor, fält) => summa(rader.filter(villkor), fält);
-    const kort = r => r.typ === 'pass' && r.sätt !== 'Faktura';
-    const faktura = r => r.typ === 'pass' && r.sätt === 'Faktura';
-    const ejSkickad = r => faktura(r) && (r.fakturaläge === 'saknas' || r.fakturaläge === 'utkast');
-    const skickad = r => faktura(r) && (r.fakturaläge === 'skickad' || r.fakturaläge === 'forfallen');
+    const kort = r => r.typ === 'pass';
     const tillägg = r => r.typ === 'tillagg';
     const köp = r => r.typ === 'kop';
     const alla = () => true;
@@ -191,19 +150,18 @@
 
     const p = {
       in: {
-        kort: s(kort, 'in'), faktura: s(faktura, 'in'), tillägg: s(tillägg, 'in'), köp: s(köp, 'in'),
+        kort: s(kort, 'in'), tillägg: s(tillägg, 'in'), köp: s(köp, 'in'),
         oanvänt: s(köp, 'oanvänt'), avgift: s(alla, 'avgift')
       },
       väntar: {
-        kort: s(kort, 'attFåIn'), attFakturera: s(ejSkickad, 'attFåIn'), fakturerat: s(skickad, 'attFåIn'),
-        förfallet: s(r => faktura(r) && r.fakturaläge === 'forfallen', 'attFåIn'),
+        kort: s(kort, 'attFåIn'),
         tillägg: s(tillägg, 'attFåIn'), kommande: s(alla, 'kommande'),
         utanPris: rader.filter(r => (r.filter.has('attbetala') || r.filter.has('kommande')) && utanPris(r)).length
       },
       ut: { lön, tillbaka: s(alla, 'attÅterbetala') }
     };
-    p.in.summa = p.in.kort + p.in.faktura + p.in.tillägg + p.in.köp;
-    p.väntar.summa = p.väntar.kort + p.väntar.attFakturera + p.väntar.fakturerat + p.väntar.tillägg + p.väntar.kommande;
+    p.in.summa = p.in.kort + p.in.tillägg + p.in.köp;
+    p.väntar.summa = p.väntar.kort + p.väntar.tillägg + p.väntar.kommande;
     p.ut.summa = (lön ? lön.öre : 0) + p.ut.tillbaka;
     p.kvarNu = p.in.summa - p.in.avgift - p.ut.summa;
     p.kvarSen = p.kvarNu + p.väntar.summa;
@@ -220,7 +178,7 @@
       let f = per.get(id);
       if (!f) {
         f = {
-          id, rader: [], pass: 0, min: 0, betalda: 0, timmarMin: 0, obetalda: 0, kommande: 0, faktura: {}, köp: [],
+          id, rader: [], pass: 0, min: 0, betalda: 0, timmarMin: 0, obetalda: 0, kommande: 0, köp: [],
           in: 0, attFåIn: 0, kommandeÖre: 0, attÅterbetala: 0, köpt: 0,
           tilläggObetalt: 0, tvist: 0, utanPris: 0, påminn: '', sök: namnFör(id)
         };
@@ -243,8 +201,7 @@
         f.betalda++;
         if (medTimmar(r)) f.timmarMin += r.min;
       } else if (ärObetalt(r)) {
-        if (r.sätt === 'Faktura') f.faktura[r.fakturaläge] = (f.faktura[r.fakturaläge] || 0) + 1;
-        else f.obetalda++;
+        f.obetalda++;
         if (utanPris(r)) f.utanPris++;
       } else if (ärKommande(r)) f.kommande++;
     });
@@ -256,7 +213,7 @@
     ['tillbaka', 'Ska ha tillbaka'], ['kop', 'Köpte timmar']
   ];
   const iFilter = (f, k) => k === 'alla'
-    || (k === 'attbetala' && f.attFåIn + f.obetalda + f.tilläggObetalt + Object.keys(f.faktura).length > 0)
+    || (k === 'attbetala' && f.attFåIn + f.obetalda + f.tilläggObetalt > 0)
     || (k === 'kommande' && f.kommande > 0)
     || (k === 'betalda' && f.betalda > 0)
     || (k === 'tillbaka' && f.attÅterbetala > 0)
@@ -288,22 +245,18 @@
   /* Lägena som märken, det som väntar på er först. Samma färger som
      resten av Betalningar: lera är ert drag, ockra väntar på någon
      annan, mossa är klart. */
-  function märken(f, slut) {
+  function märken(f) {
     const m = [];
     if (f.tvist) m.push(pill('Tvist', 'ar-ny'));
     if (f.obetalda) m.push(pill(plural(f.obetalda, 'pass inte betalt', 'pass inte betalda'), 'ar-ny'));
     if (f.tilläggObetalt) m.push(pill('Tillägg inte betalt', 'ar-ny'));
-    if (f.faktura.forfallen) m.push(pill('Fakturan har förfallit', 'ar-ny'));
     if (f.attÅterbetala > 0) m.push(pill(kronor(f.attÅterbetala) + ' ska tillbaka', 'ar-ny'));
-    const attFakturera = (f.faktura.saknas || 0) + (f.faktura.utkast || 0);
-    if (attFakturera) m.push(pill(plural(attFakturera, 'pass ska faktureras', 'pass ska faktureras'), slut ? 'ar-ny' : 'ar-vantar'));
-    if (f.faktura.skickad) m.push(pill(plural(f.faktura.skickad, 'pass fakturerat', 'pass fakturerade'), 'ar-vantar'));
     if (f.kommande) m.push(pill(plural(f.kommande, 'kommande', 'kommande'), ''));
     if (f.betalda) m.push(pill(plural(f.betalda, 'betalt', 'betalda'), 'ar-klar'));
     return m.join('');
   }
 
-  function familjRad(f, slut) {
+  function familjRad(f) {
     const namn = f.id ? namnFör(f.id) : 'Utan familj';
     const belopp = familjensBelopp(f);
     const meta = [];
@@ -320,7 +273,7 @@
         : '<span class="eko-titel">' + esc(namn) + '</span>')
       + (meta.length ? '<span class="eko-meta">' + meta.map(x => '<span>' + x + '</span>').join('') + '</span>' : '')
       + '</span>'
-      + '<span class="man-fam-lagen">' + märken(f, slut) + '</span>'
+      + '<span class="man-fam-lagen">' + märken(f) + '</span>'
       + '<span class="eko-atg">' + (f.påminn || '') + '</span>'
       + '<span class="eko-belopp"><b>' + esc(belopp.text) + '</b>' + (belopp.vad ? '<small>' + esc(belopp.vad) + '</small>' : '') + '</span>'
       + '</div>'
@@ -364,7 +317,7 @@
       : 'Inga pass i ' + esc(månadNamn()) + ' än';
     const not = [
       plural(p.alla.pass, 'pass bekräftat eller hållet', 'pass bekräftade eller hållna'),
-      p.övriga.pass ? tim(p.övriga.min) + ' utan betalning: första timmen bjuden, återbetalt eller en makulerad faktura' : null
+      p.övriga.pass ? tim(p.övriga.min) + ' utan betalning: första timmen bjuden eller återbetalt' : null
     ].filter(Boolean).join(' · ');
     host.innerHTML = '<div class="vy-kort-kropp">'
       + '<div class="man-lage-topp"><h3>' + esc(stor(månadText())) + '</h3>' + pill(läge.text, läge.klass) + '</div>'
@@ -376,9 +329,9 @@
       + '</div>';
   }
 
-  /* Ett tal är en knapp. De tre första visar familjerna bakom talet;
-     fakturornas leder till fakturorna. Trycket ändrar ingen höjd, bara
-     kanten (fälla 4), och sidan läggs vid listan. */
+  /* Ett tal är en knapp som visar familjerna bakom talet. Trycket
+     ändrar ingen höjd, bara kanten (fälla 4), och sidan läggs vid
+     listan. */
   function tavla(o) {
     const attr = o.till ? ' data-man-till="' + o.till + '"'
       : ' data-man-filter="' + o.filter + '" aria-pressed="' + (filter === o.filter) + '" aria-controls="man-lista"';
@@ -386,11 +339,11 @@
       + '<small>' + esc(o.rubrik) + '</small><b>' + esc(o.tal) + '</b><span>' + esc(o.under) + '</span></button>';
   }
 
-  function ritaTalen(p, fakt, läge) {
+  function ritaTalen(p, pengar) {
     const host = $('#man-tal');
     if (!host) return;
     const utan = p.utanPris ? ' · ' + plural(p.utanPris, 'pass utan pris', 'pass utan pris') : '';
-    const attGöra = fakt.utkast + (läge.slut ? fakt.attSkapa.length : 0);
+    const tillbaka = pengar.ut.tillbaka;
     host.innerHTML =
       tavla({ filter: 'betalda', rubrik: 'Betalda', tal: plural(p.betalda.pass, 'pass', 'pass'),
         under: tim(p.betalda.min) + (p.medTimmar ? ' · ' + p.medTimmar + ' med köpta timmar' : '')
@@ -400,12 +353,9 @@
         gör: p.obetalda.pass > 0 })
       + tavla({ filter: 'kommande', rubrik: 'Kommande, inte betalda', tal: plural(p.kommande.pass, 'pass', 'pass'),
         under: p.kommande.pass ? tim(p.kommande.min) + ' · ' + kronor(p.kommandeÖre) : 'inga obetalda framåt' })
-      + tavla({ till: 'man-fakturor', rubrik: fakt.attSkapa.length + fakt.utkast === 1 ? 'Faktura att skicka' : 'Fakturor att skicka',
-        tal: String(fakt.attSkapa.length + fakt.utkast),
-        under: fakt.attSkapa.length + fakt.utkast === 0 ? 'inga som väntar'
-          : [fakt.attSkapa.length ? fakt.attSkapa.length + (läge.slut ? ' utan utkast än' : ' samlas till månadens slut') : null,
-             fakt.utkast ? fakt.utkast + ' att lägga in i Fortnox' : null].filter(Boolean).join(' · '),
-        gör: attGöra > 0 });
+      + tavla({ filter: 'tillbaka', rubrik: 'Ska tillbaka till familjer', tal: kronor(tillbaka),
+        under: tillbaka ? 'återbetala under Betalningar → Att göra' : 'inget som ska tillbaka',
+        gör: tillbaka > 0 });
   }
 
   /* En kolumn i pengarna: rubriken, summan och posterna under. En post
@@ -433,7 +383,6 @@
       p.in.oanvänt ? esc(kronor(p.in.oanvänt)) + ' av de köpta timmarna är inte använda än och är familjernas tills de används.' : ''
     ].filter(Boolean).join(' ');
     const väntarNot = [
-      p.väntar.förfallet ? '<b>' + esc(kronor(p.väntar.förfallet)) + ' är på fakturor som har förfallit.</b>' : '',
       p.väntar.utanPris ? esc(plural(p.väntar.utanPris, 'pass saknar', 'pass saknar')) + ' pris och räknas inte in.' : ''
     ].filter(Boolean).join(' ');
     /* Lönedagen är den 25:e månaden efter passen. Har den passerat utan
@@ -463,14 +412,11 @@
       + '<div class="man-kolumner">'
       + kolumn('Kommit in', p.in.summa, [
           { text: 'Kort för passen', öre: p.in.kort, alltid: true },
-          { text: 'Betalda fakturor', öre: p.in.faktura },
           { text: 'Tillägg för övertid', öre: p.in.tillägg },
           { text: 'Köpta timmar', öre: p.in.köp, under: 'betalda i ' + esc(månadNamn()) }
         ], inNot)
       + kolumn('Väntar', p.väntar.summa, [
           { text: 'Hållna pass, inte betalda', öre: p.väntar.kort, alltid: true },
-          { text: 'Ska faktureras', öre: p.väntar.attFakturera },
-          { text: 'Fakturerat, inte betalt', öre: p.väntar.fakturerat },
           { text: 'Tillägg för övertid', öre: p.väntar.tillägg },
           { text: 'Kommande pass', öre: p.väntar.kommande, alltid: true }
         ], väntarNot)
@@ -519,38 +465,12 @@
         : tomt('Ingen familj här i ' + månadText(), 'Talet är noll. Tryck Alla för att se alla familjer i månaden.');
       return;
     }
-    host.innerHTML = visa.map(f => familjRad(f, läge.slut)).join('');
+    host.innerHTML = visa.map(f => familjRad(f)).join('');
   }
 
-  /* Fakturorna (omgjord 2026-10-06): en rad per familj och faktura,
-     samma rad som under Betalningar → Fakturor (familjefakturaRad), och
-     familjens namn fäller ut passen med dag, klocka och studiehjälpare.
-     Under månaden samlas fakturan på raden, och natten mot den 1:a blir
-     den ett utkast av sig själv. Med står fakturor som bär ett av
-     månadens pass, och månadens egna. Förut var det fakturapass utan
-     faktura en rad och fakturan de hamnade på en annan, och körningen
-     skulle torrköras här under. */
-  const FAKT_ORDNING = { utkast: 0, skapas: 0, forfallen: 1, samlas: 2, rapport: 3, skickad: 4, betald: 5, makulerad: 6 };
-  function ritaFakturorna() {
-    const host = $('#man-fakt-lista');
-    if (!host) return;
-    const m = valdMånad();
-    const g = NXStudie.månadsGräns(m);
-    const iMånaden = d => { const s = String(d || '').slice(0, 10); return s >= g.från && s < g.till; };
-    const rad = NXAdmin.rita.familjefakturaRad;
-    const alla = typeof NXAdmin.rita.familjefakturor === 'function' ? NXAdmin.rita.familjefakturor() : [];
-    const lista = alla.filter(x => x.period === m || x.pass.some(p => iMånaden(p.datum)))
-      .sort((a, b) => ((FAKT_ORDNING[a.läge] == null ? 9 : FAKT_ORDNING[a.läge]) - (FAKT_ORDNING[b.läge] == null ? 9 : FAKT_ORDNING[b.läge]))
-        || a.familj.localeCompare(b.familj, 'sv'));
-    const antal = $('#man-fakturor-antal');
-    if (antal) {
-      antal.textContent = String(lista.length);
-      antal.classList.toggle('ar-gor', lista.some(x => x.läge === 'utkast' || x.läge === 'skapas' || x.läge === 'forfallen'));
-    }
-    host.innerHTML = lista.length && typeof rad === 'function' ? lista.map(x => rad(x)).join('')
-      : tomt('Inga fakturapass i ' + månadText(),
-        'Familjen väljer faktura när de bekräftar rapporten. Passen samlas på en faktura per familj, som blir ett utkast när månaden är slut.');
-
+  /* Månadskörningen för sidans månad. Fakturorna (2026-10-06) stod
+     här ovanför, en rad per familj, tills fakturan togs bort 2026-10-21. */
+  function ritaKörningen() {
     const körning = $('#man-korning');
     if (körning && NXAdmin.rita.sättKörningsperiod) NXAdmin.rita.sättKörningsperiod(körning, valdMånad());
     const rubrik = $('#man-korning-rubrik');
@@ -591,12 +511,12 @@
     const rader = raderna();
     const läge = månadensLäge();
     const p = passen(rader);
-    const fakt = fakturorna(rader);
+    const pengar = pengarna(rader);
     ritaLäget(p, läge);
-    ritaTalen(p, fakt, läge);
-    ritaPengarna(pengarna(rader));
+    ritaTalen(p, pengar);
+    ritaPengarna(pengar);
     ritaFamiljerna(rader, läge);
-    ritaFakturorna();
+    ritaKörningen();
     ritaFoten(rader);
   }
 

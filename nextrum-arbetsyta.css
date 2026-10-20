@@ -1300,7 +1300,7 @@ button.fel-person:hover{border-color:var(--bl-3)}
    ============================================================ */
 
 /* Förhandsvisningen i en bekräftelseruta: mejlet som det kommer att
-   läsas. Egen rullning, för ett fakturamejl är längre än rutan och
+   läsas. Egen rullning, för ett mejl med ett underlag är längre än rutan och
    knapparna måste synas hela tiden — annars trycker man Skicka utan
    att ha sett slutet. */
 .nx-fraga-prov{
@@ -2273,7 +2273,7 @@ body.vy-admin .dbox * + h5{margin-top:24px}
    RAPPORTLÄGET PÅ EN LEKTION
    Tre lägen, och det mittersta är det som kostar pengar: ett pass
    som hållits men inte rapporterats blir aldrig genomfört, och
-   hamnar därför aldrig på en faktura.
+   hamnar därför aldrig på ett underlag.
    ------------------------------------------------------------ */
 .lekt-fakturerad{
   font-size:.78rem;font-weight:600;
@@ -2460,11 +2460,6 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
   font-size:.8rem;line-height:1.45;color:var(--bl-2);
 }
 .dp-rad-hoger{text-align:right;flex:none;white-space:nowrap}
-/* En faktura i familjens Ekonomi (2026-10-06): fakturans rad, och
-   passen på den i en tonad ruta under. */
-.dp-faktura + .dp-faktura{border-top:1px solid var(--ln)}
-.dp-faktura-pass{margin:0 0 12px;padding:0 12px;border-radius:14px;background:var(--tint)}
-.dp-faktura-pass .dp-rad{padding:9px 0}
 /* Sätt in gratistimmar under familjens Ekonomi (2026-10-13): antalet
    och knappen i en rad, vad timmarna är under, och kvittot sist. */
 .dp-gratis{
@@ -3947,7 +3942,7 @@ a:has(> .adm-status){
 
 /* Betalvalen: en knapp per sätt, med vad som händer på raden under.
    Samma data-attribut som de gamla knapparna (data-betala, data-timmar,
-   data-timbank, data-faktura-val), så att samma hanterare tar dem.
+   data-timbank), så att samma hanterare tar dem.
    Rubriken bär data-medan: den byter text medan kassan öppnas, raden
    under står kvar (NXStudie.medan). */
 /* Inte .vy-val: den klassen är ämnes- och formatväljarna i formulären,
@@ -4517,8 +4512,8 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
    samma delar som studievyerna (INNEHÅLLET ovan): grupper med rubrik
    på papperet och kort under, rader med en ikon, ett läge i färg och
    beloppet till höger. Det nya här är raden i betalningslistan, som
-   linjerar läge och belopp i kolumner, fakturornas flöde och
-   bokslutets lista över vad som krävs för att stänga.
+   linjerar läge och belopp i kolumner, och bokslutets lista över vad
+   som krävs för att stänga.
 
    Inga hexkoder, bara tokens, så mörkt läge följer med av sig självt.
    Ingenting byter höjd ovanför det man trycker på (fälla 4), och ett
@@ -4559,7 +4554,7 @@ section[data-sek="ekonomi"]:not(:has(> .vy-flikar .vy-flik[aria-selected="true"]
   .eko-chips .chip{flex:none}
 }
 
-/* ---------- en rad i betalningslistan och bland fakturorna ----------
+/* ---------- en rad i betalningslistan ----------
    Dagen, vad och vem, knappen, läget och beloppet. Läget och beloppet
    står i kolumner som linjerar rad för rad: mitten tar det som blir
    över, så märkenas högerkant och beloppen står under varandra. På en
@@ -4643,42 +4638,6 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   .eko-knappar{justify-content:flex-start}
 }
 
-/* ---------- fakturornas flöde ----------
-   Fyra steg med antal, och vems drag det är: lera när det är ert,
-   ockra när det väntar på familjen, mossa när det är betalt. Ett steg
-   leder till sin grupp nedanför. */
-.fakt-flode{
-  list-style:none;margin:0 0 18px;padding:0;
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;
-}
-.fakt-flode li{position:relative;min-width:0}
-.fakt-flode li + li::before{
-  content:"";position:absolute;left:-13px;top:50%;width:7px;height:7px;
-  border-top:1.6px solid var(--bl-3);border-right:1.6px solid var(--bl-3);
-  transform:translateY(-50%) rotate(45deg);
-}
-.fakt-flode button{
-  display:flex;flex-direction:column;gap:2px;width:100%;height:100%;
-  padding:14px 16px;border-radius:20px;border:1px solid var(--ln);
-  background:var(--yta);box-shadow:var(--sk-1);text-align:left;color:var(--bl);
-}
-.fakt-flode button:disabled{cursor:default;box-shadow:none;background:transparent}
-.fakt-flode button:not(:disabled):hover{border-color:var(--bl-3)}
-.fakt-flode button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.fakt-flode b{font-size:1.5rem;font-weight:700;letter-spacing:-.03em;line-height:1.1}
-.fakt-flode span{font-size:.88rem;font-weight:650}
-.fakt-flode small{font-size:.78rem;color:var(--bl-3)}
-.fakt-flode li.ar-gor button{background:var(--acc-soft);border-color:color-mix(in srgb,var(--acc) 30%,var(--ln))}
-.fakt-flode li.ar-gor small{color:var(--acc-lugn)}
-.fakt-flode li.ar-vantar button{background:var(--ockra-soft);border-color:color-mix(in srgb,var(--ockra) 30%,var(--ln))}
-.fakt-flode li.ar-vantar small{color:var(--ockra-text)}
-.fakt-flode li.ar-klar button{background:var(--mossa-soft);border-color:color-mix(in srgb,var(--mossa) 30%,var(--ln))}
-.fakt-flode li.ar-klar small{color:var(--mossa-text)}
-.fakt-flode li.ar-tom{opacity:.62}
-@media (max-width:760px){
-  .fakt-flode{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .fakt-flode li + li::before{display:none}
-}
 
 /* ---------- bokslutet ---------- */
 .bs-topp{display:flex;justify-content:space-between;align-items:flex-start;gap:10px 14px;flex-wrap:wrap;margin:0 0 14px}
@@ -4736,17 +4695,13 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .eko-mer > summary{cursor:pointer;font-size:.86rem;font-weight:600;color:var(--bl-2)}
 .eko-mer[open] > summary{margin-bottom:12px}
 .eko-mer > .vy-kort{margin-top:12px}
-.eko-mer-rader{border-top:1px solid var(--ln)}
-.eko-mer-rader > summary{cursor:pointer;padding:12px clamp(14px,2vw,20px);font-size:.86rem;font-weight:600;color:var(--bl-2)}
-.eko-mer-rader > .eko-rad{border-top:1px solid var(--ln)}
-.eko-mer-rader > .fakt-fam{border-top:1px solid var(--ln)}
 
 /* ============================================================
    MÅNADENS EKONOMI (omgjord 2026-09-29)
 
    Leo: "månadens ekonomi måste du göra mycket bättre också och
    funktionell". Samma delar som Betalningar ovan: talen är samma
-   rutor som .bet-sam, fast knappar; familjerna och fakturorna är rader
+   rutor som .bet-sam, fast knappar; familjerna är rader
    med kolumner för knappen och beloppet, som .eko-rad.
 
    Mätaren har en färg, mossa på papperets mörkare ton: den visar en
@@ -4878,37 +4833,9 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   .man-fam-pass > summary{margin-left:54px}
 }
 
-/* ---------- fakturorna och körningen ---------- */
+/* ---------- körningen ----------
+   Fakturorna stod här, en rad per familj och månad, till 2026-10-21. */
 .man-korning .adm-verktyg{margin-top:4px}
-
-/* ---------- familjens faktura (2026-10-06) ----------
-   En rad per familj och månad under Betalningar → Fakturor och Månadens
-   ekonomi. Raden är en .eko-rad; passen fälls ut under den, med namnet
-   eller med länken under, i samma ruta som familjernas pass under
-   Månadens ekonomi (.man-fam-rader). Länken står i linje med namnet,
-   bredvid månadens ruta (48 px och mellanrummet). */
-.vy-lista > * + .fakt-fam{border-top:1px solid var(--ln)}
-.fakt-fam > .eko-rad{padding-bottom:0}
-.fakt-fam-pass{padding:0 clamp(14px,2vw,20px) 6px calc(clamp(14px,2vw,20px) + 62px)}
-.fakt-fam-pass > summary{
-  padding:12px 0;cursor:pointer;
-  font-size:.82rem;font-weight:600;color:var(--bl-3);
-}
-.fakt-fam-pass > summary:hover{color:var(--bl)}
-.fakt-fam-pass > summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
-.fakt-fam-pass[open]{padding-bottom:14px}
-.fakt-fam-kontakt{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0;font-size:.84rem;line-height:1.5;color:var(--bl-2)}
-.fakt-fam-kontakt a{color:var(--bl);overflow-wrap:anywhere}
-.fakt-fam-pass .man-fam-rader{margin-top:10px}
-@media (max-width:760px){
-  .fakt-fam-pass{padding-left:calc(clamp(14px,2vw,20px) + 58px)}
-}
-/* Passen får hela kortets bredd på en telefon; bara länken står i
-   linje med namnet. */
-@media (max-width:560px){
-  .fakt-fam-pass{padding-left:clamp(14px,2vw,20px)}
-  .fakt-fam-pass > summary{margin-left:58px}
-}
 
 /* Körningen för hand (2026-10-06): schemat gör den varje natt, så den
    står hopfälld under schemats rad. */
@@ -5138,3 +5065,57 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   .kod-siffror{justify-content:flex-start;text-align:left}
   .kod-under{text-align:left}
 }
+
+/* Rabattkoderna och partnerkoderna (2026-10-21, nextrum-admin-rabattkoder.js):
+   samma rader som Koder, formuläret i en dbox och en ruta för
+   testbetalningarna. Bara tokens. */
+.kod-val-kort:nth-child(3) .kod-val-ik{background:var(--mossa-soft);color:var(--mossa-text)}
+.kod-val-kort:nth-child(4) .kod-val-ik{background:var(--bricka);color:var(--bl-2)}
+.kp-verktyg{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin:0 0 clamp(14px,1.6vw,18px)}
+.kp-test{display:inline-flex;align-items:center;gap:10px;min-height:44px;font-size:.88rem;color:var(--bl-2);cursor:pointer}
+.kp-test input{width:20px;height:20px;accent-color:var(--acc)}
+.kp-fel{margin:0;font-size:.86rem;color:var(--bl-2)}
+#kp-partner{margin-bottom:clamp(16px,1.8vw,22px)}
+#kp-vy .dbox + .dbox,#kp-vy .dbox + #kp-lista{margin-top:clamp(16px,1.8vw,22px)}
+
+/* ============================================================
+   UTBILDNINGSPROVET I VYN (2026-10-21)
+   Ansökningar → Provet i vyn (nextrum-admin-provet.js): frågorna med
+   facit, gränsen och studiehjälparna. Varningen står överst så länge
+   spärren inte gäller, i ockra: något väntar, inget är fel.
+   ============================================================ */
+.prov-varning{
+  margin:0 0 16px;padding:14px 18px;border-radius:16px;
+  background:var(--ockra-soft);color:var(--ockra-text);font-size:.92rem;line-height:1.55;
+}
+.prov-lista{list-style:none;margin:0 0 6px;padding:0}
+.prov-fraga{padding:14px 0;border-top:1px solid var(--ln)}
+.prov-fraga:first-child{border-top:0;padding-top:0}
+.prov-fraga.ar-av{opacity:.62}
+.prov-fraga-topp{font-size:.96rem;line-height:1.5;color:var(--bl);margin-bottom:8px}
+.prov-alt{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:4px}
+.prov-alt li{font-size:.9rem;line-height:1.5;color:var(--bl-2);padding-left:18px;position:relative}
+.prov-alt li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;
+  border:1.5px solid var(--bl-3)}
+.prov-alt li.ar-ratt{color:var(--bl);font-weight:600}
+.prov-alt li.ar-ratt::before{background:var(--mossa);border-color:var(--mossa)}
+.prov-facit{font-size:.78rem;font-weight:600;color:var(--mossa-text);margin-left:6px}
+.prov-form{display:grid;gap:12px}
+.prov-form-alt{border:0;padding:0;margin:0;min-width:0;display:grid;gap:8px}
+.prov-form-alt legend{padding:0;margin-bottom:6px;font-size:.86rem;font-weight:600;color:var(--bl)}
+.prov-form-rad{display:flex;align-items:center;gap:10px}
+.prov-form-rad input[type="radio"]{width:20px;height:20px;flex:none;margin:0;accent-color:var(--acc)}
+.prov-form-rad .inp{flex:1;min-width:0}
+.prov-form-aktiv{align-self:end;min-height:44px}
+.prov-ny{margin-top:14px}
+
+/* ============================================================
+   LIGGAREN OCH KORTET (2026-10-21, nextrum-admin-liggaren.js)
+   Raderna är Alla betalningars (.eko-rad). En betalning som betalas
+   tillbaka i Stripe säger det på raden i stället för en knapp.
+   ============================================================ */
+.eko-not{font-size:.8rem;color:var(--bl-3);align-self:center}
+.lig-val{border:0;padding:0;margin:0}
+.lig-val legend{font-size:.82rem;font-weight:600;color:var(--bl-2);margin-bottom:6px}
+.lig-alt{display:flex;align-items:center;gap:10px;min-height:44px;font-size:1rem;color:var(--bl)}
+.lig-alt input{flex:none;width:18px;height:18px}

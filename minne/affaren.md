@@ -16,7 +16,7 @@ Det här är inte en katalog man bläddrar i. Nextrum matchar.
    Kontot skapas med anmälans adress, eleven ur anmälan, och familjen
    väljer lösenordet genom länken i mejlet. Inget Skapa konto på sajten
    (2026-10-07): konton skapar bara vi (`bjud-in`) och föräldern (barnets
-   inloggning)
+   inloggning). Sist flyttar anmälan till familjen (nedan, 2026-10-21)
 4. `admin.html` → **Familjer** → välj hjälpare i rullgardinen. Sätter
    `matched_tutor_id` och `match_status` **samtidigt** — förr var det
    två kolumner i Table Editor och satte man bara den ena såg familjen
@@ -116,6 +116,55 @@ tryck som personen tas in, med personens egen adress:
   stället, för samma steg för personen; varför står i
   `minne/sakerhet.md`.
 
+## Anmälan flyttar till familjen (2026-10-21, `anmalan_flyttas_till_familjen`)
+
+Leo: "när en intresseanmälan blir en familj ska en SECURITY DEFINER-funktion
+intag_lead(lead_id) (a) kopiera källa, kampanj och utm till familjens profil,
+(b) markera familjen som intagen och (c) radera lead-raden så den inte tar
+plats i listan. Bygg samma sak som knapp i admin. Hira finns redan som
+familj: gör en engångsfix för henne." Och om matchningen: Intagen ska stå på
+familjen och Matchad på barnet.
+
+**Varför inte på profilen.** `profiles` skyddas av en lista över kolumner
+familjen INTE får skriva (`skydda_profilfalt`); en ny kolumn där hade varit
+skrivbar för familjen själv, och källan är vår uppgift, inte deras. Den står
+därför i `intagna_anmalningar`, med anmälans id och familjens id, och
+familjens panel i adminvyn visar den (Intagen, när de anmälde sig, varifrån,
+koden). Bara `intern.intag_lead` skriver; de som läser intresseanmälningar
+läser.
+
+**Varför inte bara radera anmälan.** Tre saker läser den efter att familjen
+blivit kund: tipstimmen (`intern.tipsade_familjer` hittar den nya familjen
+genom anmälan och koden), koderna (`mina_tips`, `tipskoder_lage`,
+`koder_lage` räknar anmälningarna) och statistiken (`analys_konvertering`,
+`analys_leads_per_kalla`: blev_kund är just de som flyttas). Alla fem läser
+båda tabellerna. Utan det hade familjen som tipsat förlorat sin timme.
+
+**Vem och hur.** `intag_lead(anmälan, familj)` är bara superadmin, som Ta in
+familjen: familjen är den som anges, annars anmälans `kund_id`, annars den
+enda familjen med anmälans adress. Telefonnumret ur meddelandets första rad
+går till profilen om den saknar ett. Ta in familjen anropar den sist, och en
+anmälan som tagits in före 2026-10-21 (eller där flytten föll) har knappen
+**Flytta till familjen** i sin panel. En anmälan som redan flyttats svarar
+med det, så knappen går att trycka två gånger.
+
+**Matchningen** låg redan på barnet (`students.matched_tutor_id`,
+`match_status`, sedan schema-v14); `profiles` bär bara en spegel av det
+första matchade barnet. Adminvyn visar **Intagen** på familjen (läget
+`matched` på en anmälan heter Intagen) och **Matchad** på barnet. Ingen
+policy flyttades.
+
+**Gallringen**: meddelandet och adressens frågesträng gallras som i `leads`,
+sex månader efter kontakten, och `radera_person` tömmer dem för en familj
+som raderas. Resten står kvar för statistiken, och familjens id blir tomt när
+kontot tas bort helt.
+
+**Hira** (en familj som fanns innan anmälan kopplades): filen kopplar
+anmälan med förnamnet Hira, utan `kund_id`, till familjen med samma adress
+eller förnamn och flyttar den. Hittas inte exakt en av varje görs ingenting,
+och en NOTICE säger varför. Går att köra igen. Provet i webbläsaren är
+`verktyg/prova-intag.js`.
+
 ## Uppstarten
 
 **Intresseanmälan säger att Nextrum bildas** (2026-09-29). Leo: "just
@@ -210,17 +259,17 @@ bara igenom tid och status på ett befintligt pass.
 **Barnet kan föreslå pass (barnet_foreslar_pass, 2026-10-12)**, när
 föräldern slagit på det för barnet (`boka`, av som förval). Förslaget
 går till föräldern, utan pris, och blir ett pass först när föräldern
-skickat det, kanske med en annan tid och en rabattkod, som sitt eget
+skickat det, kanske med en annan tid, som sitt eget
 förslag (`skicka_barnets_forslag()`). Studiehjälparen svarar på passet
 som på vilket förslag som helst. Ett förslag föräldern själv gör går som
-förut, och har samma ruta för en rabattkod sedan 2026-10-13. Allt om det
-i `minne/barnkonton-och-admin.md`.
+förut. Allt om det i `minne/barnkonton-och-admin.md`.
 
-**Rabattkoden gäller bara det familjen betalar med pengar**
-(`rabattkoden_krockar_inte`, 2026-10-13, Leo: "koden får inte krocka med
-gratis timmar"). En gratis timme (första timmen, tipstimmen) och köpta
-timmar eller timbanken går före koden, som då tas bort från passet; de
-läggs aldrig ihop. Allt om det i `minne/betalning.md`.
+**Ett pass tar ingen rabattkod** (sedan 2026-10-21, `koder_for_planer`,
+Leo: "Båda gäller ENBART planköp, aldrig enskilda pass"). Rabattkoder och
+partnerkoder skrivs när familjen köper en plan, under Erbjudanden. Från
+2026-10-13 till dess stod en ruta för en kod i Boka pass, och en gratis
+timme och timbanken gick före koden (`rabattkoden_krockar_inte`). Allt om
+det i `minne/betalning.md`.
 
 ## Svaret på en föreslagen tid och avbokade pass
 
@@ -386,6 +435,58 @@ formulären på den första eleven tills man bytt, och rutan som sa vem
 det var stod ovanför sektionen, 800 px över formuläret på en telefon.
 Rutan står därför inte längre under Lektioner & elever, bara ovanför
 Läxor och Meddelanden. En enda elev väljs inte; kortet säger bara vem.
+
+## Utbildningsprovet i studiehjälparvyn (2026-10-21, `utbildningsprovet_i_studiehjalparvyn`, inte i drift)
+
+Leo: ett prov som studiehjälparen gör vid första inloggningen, innan studiehjälparvyn öppnas. Mer än 50 %
+rätt är godkänt och gränsen står i en inställning; provet görs en gång; den som inte klarar det gör om det
+efter 24 timmar, och admin kan nollställa. Rättningen sker på servern, facit når aldrig webbläsaren, och
+spärren står i databasen. Den gäller först när det finns minst fem aktiva frågor (till dess en varning i
+adminvyn), de som var godkända före migrationen slipper, och admin slår på och av kravet per person.
+
+Det är **inte** provet i rekryteringen (`utbildningsprov.html`, `applications.prov_*`, `minne/notiser.md`,
+Utbildningsprovet, Fas 22.1), som den som söker gör genom en länk innan hen har ett konto. Båda finns nu, och
+om det gamla ska bort är Leos fråga.
+
+**Tabellerna.** `prov_installning` (en rad: `grans_procent` 50, `min_aktiva_fragor` 5, `vantetid_timmar` 24),
+`prov_fragor` (frågan, 2–6 alternativ, `ratt_svar` som index, `aktiv`, `ordning`), `prov_forsok` (varje
+inlämnat försök med svaren och vilka som var rätt) och `prov_studiehjalpare` (läget per person: `kravs`,
+`utbildningsprov_godkant_at`, `aterstalld_at`, `undantagen`). **Läget står inte på `tutor_profiles`**:
+`skydda_tutorfalt` släpper bara vitlistade kolumner när studiehjälparen själv ändrar sin rad, och provet lämnas
+in som studiehjälparen. Ingen rad i `prov_studiehjalpare` betyder att provet krävs, och de som var godkända när
+filen kördes fick en rad med `kravs = false` och "godkänd före provet (2026-10-21)". Ingen inloggad har
+skrivrättigheter på någon av dem: allt går genom funktionerna.
+
+**Spärren** är `intern.provet_sparrar(uid)`: sant för den som har en rad i `tutor_profiles`, ingen adminroll,
+inte klarat provet och inte är undantagen, när minst `min_aktiva_fragor` frågor är aktiva. Den ligger i
+restriktiva policyer på `bookings`, `students`, `lesson_reports`, `messages`, `study_plans`, `tutor_reviews`,
+`notiser` och `profiles` (den egna raden syns alltid), i `is_my_student()` och i barnchattens tre funktioner.
+Läxorna, materialet, utvecklingen och NexLäx-försöken bygger på `is_my_student()`, och förberedelsen, mötet,
+tilläggen, timbankens uttag och uppdragen läser `bookings` och `students` i sina policyer: de spärras med dem.
+Det som inte spärras är med flit: den egna profilen och `tutor_profiles` (vyn behöver dem), lönen och
+underlagen (de egna), och `upptagna_tider()` för den egna kalendern (datum och timmar, inga namn).
+Familjerna och admins spärras aldrig.
+
+**Funktionerna.** `mitt_utbildningsprov()` säger läget och lämnar frågorna utan facit bara när provet ska göras
+nu (`kravs` är spärren, inte kolumnen). `lamna_in_utbildningsprov(p_svar)` låser personens rad, prövar spärren,
+att provet inte redan är klarat och att väntetiden gått, kräver ett heltal för varje aktiv fråga (frågas en ny
+fråga in medan någon skriver får hen "Svara på alla frågor" och läser in sidan igen), sparar försöket och svarar
+bara `{ratt, antal, godkand}`. Godkänt är **mer än** gränsen: med 50 % och sex frågor är tre rätt underkänt.
+`spara_provfraga()` och `satt_provinstallning()` är superadminens; `satt_provkrav()`, `aterstall_utbildningsprov()`
+och `utbildningsprovet_lage()` också den med behörigheten Godkänna. En nollställning sätter `aterstalld_at` och
+tar bort godkännandet: försöken står kvar men räknas inte för väntetiden. Ingen fråga tas bort, den stängs av.
+
+**Vyn.** `nextrum-provet.js` (`NXProvet.förstGörs`) körs i studiehjälparvyns start för en godkänd
+studiehjälpare, före introduktionen. Rutan är samma som lösenordets och villkorens och går inte att stänga:
+frågorna som radioknappar, Lämna in, och sedan godkänt med Fortsätt eller underkänt med tiden då provet går att
+göra om och Logga ut. Svarar databasen inte, eller saknas funktionen, visas ingen ruta.
+
+**Adminvyn.** Ansökningar → Provet i vyn (`nextrum-admin-provet.js`, bara superadmin): varningen när spärren
+inte gäller än, frågorna med det rätta svaret markerat, Lägg till fråga, Stäng av och Slå på (frågar först om
+det tar spärren under gränsen), gränsen, spärren och väntetiden, och studiehjälparna med sitt läge. I
+studiehjälparens panel (Översikt) står Utbildningsprovet med läget, försöken och Nollställ provet och Kräv
+provet eller Kräv inte provet. **Frågorna skriver Leo**: ingen migration lägger in frågor, och inga påhittade
+frågor ska in i driften.
 
 ## Studiehjälparen utåt och omdömena
 
@@ -977,8 +1078,7 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
 | pass | ett bokat tillfälle (`bookings`). Hela timmar, 1–3 |
 | rapport | `lesson_reports`. **Passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
-| betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas (`bookings.betalning_status`, `betalt_ore`). Eller mot faktura, när flaggan `faktura` är på (Fas 14.6) |
-| faktura | `invoices`. Sedan Fas 14.6 ett betalsätt familjen kan välja per pass, efter passet. Påslaget sedan 2026-09-27 (flaggan `faktura`). Skickas från Fortnox, aldrig härifrån |
+| betalning | vad familjen betalat för ett pass: med kort, per pass, i förväg eller efter passet när rapporten bekräftas, eller med timmar ur timbanken (`bookings.betalning_status`, `betalt_ore`). Mot faktura gick det från Fas 14.6 till 2026-10-21, då fakturan togs bort |
 | tjänst | rad i `tjanster`. `aktiv` avgör vad som syns, inget annat |
 | uppgift | i studievyn (under NexLäx) och studiehjälparvyn det eleven ska göra mellan passen (`homework`, Fas 23.1). Hette läxa. I adminvyn och i tabellen `uppgifter` betyder ordet fortfarande adminens att göra-lista; koden för elevens uppgifter säger `laxor` och `homework` |
 | nivå | en digital uppgift i banan (`nivaer`): 5–12 frågor som rättas i databasen. En **bana** är nivåerna i ett ämne och en årskurs. Ett **Mästarprov** och **repetitionen** är nivåer som drar sina frågor ur banan (Fas 23.2) |

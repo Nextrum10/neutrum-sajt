@@ -2667,6 +2667,15 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   color:var(--bl) !important;
 }
 
+/* En text som ska skrivas innan sidan går ut (köpvillkoren, 2026-10-21).
+   Den ska synas för den som läser sidan innan dess, inte smälta in. */
+.jur-platshallare{
+  border:2px dashed var(--acc);
+  border-radius:10px;
+  padding:14px 18px;
+  color:var(--bl) !important;
+}
+
 .jur-datum{
   margin-top:clamp(44px,5vw,68px);padding-top:20px;
   border-top:1px solid var(--ln);

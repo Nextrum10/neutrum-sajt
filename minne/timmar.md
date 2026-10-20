@@ -826,3 +826,61 @@ finns kvar".
   alla 195 migrationer 1756 av 1756. Deno: `typer_test.ts` och
   `rendera_test.ts`. Batteriet provades i förhandsvisningen med påhittade köp
   (rutor, stapel, tomt, mörkt läge); provet checkades inte in.
+
+## Planerna per kalendermånad, och ett köp som betalas tillbaka (2026-10-21, `planerna_per_manad`, inte i drift)
+
+Leo (2026-10-21): en plan köps för "Den här månaden" eller "Nästa månad", timmarna går ut när månaden är
+slut, timbanken visar båda månaderna ("3 av 8 timmar återstår", "0 av 0" för en månad utan plan),
+förbrukningen räknas ur passen, saldot prövas med radlås, och en återbetalning drar tillbaka timmar men
+aldrig under det som använts.
+
+**Förut** gällde en plan en månad från betalningen (`giltig_manader` från betaldagen), och ett köp hade
+ingen första dag. Nu bara planerna: Fyll timbanken (sex månader från köpet), gratistimmarna (60 dagar),
+planens gratis timme (60 dagar efter köpet, som förut) och tipstimmen är orörda.
+
+**Månaden.** `klippkort.galler_fran` är planens första dag, den 1:a i den här eller nästa månad i
+Stockholms tid, skriven av `stripe-checkout` ur anropets `manad` (`denna` eller `nasta`, `planManad` och
+`manadensForsta` i `_delad/erbjudanden.ts`) och prövad i databasen (`intern.klippkort_manad`, BEFORE
+INSERT): en annan dag ger 22023, som kassan säger (midnatt den sista kan göra den här månaden till förra).
+Utan `manad` sätter databasen den här månaden på en plan. Timmar till planen (`plan_extra`) tar planens
+månad, och allt annat har null. `klippkort_betald` sätter `giltigt_till` till månadens sista dag för en
+plan med `galler_fran`; betalas den efter sin månad (en kassa som stått öppen över månadsskiftet) blir det
+en uppgift till oss, för timmarna har då redan gått ut. Kassans rad säger månaden (`kassarad`). Planer
+köpta före filen har null och behåller sina datum.
+
+**Förbrukningen** räknas som förut ur passen (`klippkort_saldo`, `anvanda`), och tre ställen följer
+månaden: `intern.timmar_fordela` (ett köp betalar inget pass före sin första dag, och timmar som betalats
+tillbaka finns inte), `klippkort_saldo` (`kvar` och `brukbar` räknar månaden och de återbetalda timmarna;
+`galler_fran` och `aterbetalda_timmar` sist i vyn) och `extra_timmar_erbjudande` (Köp till timmar går till
+den här månadens plan, aldrig till nästa månads och aldrig till ett köp av timmar till en plan, vilket den
+gamla "senaste raden" kunde bli). **Saldot prövas med lås** som förut: `klippkort_dra` och
+`intern.timmar_betala` tar `for update` på passet och köpen och det rådgivande låset `timbank:<familj>`, så
+två pass kan inte dra samma timme. Låset prövas inte av `rls-test.sql`, som är en enda transaktion; sviten prövar räkningen.
+
+**Vyn.** Plankorten har två knappar, Den här månaden (förval) och Nästa månad, och raden under säger vad
+valet betyder ("Gäller till och med 31 oktober, 12 dagar" eller "Gäller 1–30 november"); bara knapparna och
+raden byts, så kortet inte byter höjd. Månaderna kommer ur `planens_manader()` (databasens datum, Stockholms
+tid), och utan den (före migrationen) står ett Köp som förut och kassan får ingen månad. Rutan med
+köpvillkoren säger månaden igen. Under batteriet i Er timbank och i Profil → Timbanken står en rad per
+månad (`månadsRader`, `.tb-manader`): "<b>3</b> av 8 timmar återstår" och sista dagen, och "0 av 0" för en
+månad utan plan; Köp till timmar räknas med sin plan, och en plan köpt före filen räknas till den här
+månaden så länge den gäller. Batteriet räknar bara det som gäller nu: nästa månads plan står i listan som
+kommande (`.ar-kommande`, "Gäller 1–30 november") men inte i batteriet. Barnets vy visar inga timmar, som
+förut. Proven: `rls-test.sql` avsnitt 43 (PM) och `verktyg/prova-kassan.js`.
+
+**Ett köp betalas tillbaka** under Betalningar → Liggaren (`minne/betalning.md`), helt eller med ett antal
+timmar. `klippkort_aterbetalning_lage(p_id, p_timmar)` (admin eller tjänstekontot) räknar beloppet, aldrig
+anropet: hela köpet är det villkoren lovar den som slutar (`vid_uppsagning_ore`: använda timmar till
+ordinarie timpris, med familjerabatten dragen), en del är timmarna till det pris familjen betalade per
+betald timme (`betalt_ore` delat på de betalda timmarna), aldrig mer än hela köpet; gratistimmar, ett köp
+utan betalning i Stripe, ett i tvist och ett redan återbetalt nekas med en mening. Timmar som använts dras
+aldrig tillbaka, och en del tar betalda timmar, aldrig den gratis. `stripe-aterbetalning` (`{klippkort,
+timmar, anledning}`, `_delad/aterbetalning.ts`) gör återbetalningen i Stripe först, med köpets id, timmarna
+och adminens id i metadata och en nyckel av köpet, det som redan gått tillbaka och beloppet, och skriver
+den sedan med `klippkort_aterbetalad()` (tjänstekontot): en rad per återbetalning i
+`klippkort_aterbetalningar` (Stripes `re_`-id, timmar, belopp, hela, vem, anledningen), `aterbetalda_timmar`
+upp, `aterbetald_ore` till summan, och hela köpet stänger det (`aterbetald`). Hann funktionen inte skriva
+skriver webhooken samma återbetalning ur Stripes metadata när `charge.refunded` kommer (`stamAvKopet`), och
+samma återbetalning två gånger blir en rad. Användes timmar under tiden drogs färre tillbaka, och det blir
+en uppgift. En återbetalning i Stripes dashboard (utan köpets id) stänger köpet som förut och blir en
+uppgift: där drogs inga timmar.

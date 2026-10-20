@@ -48,6 +48,9 @@
 // När admin kallar till intervju skriver hen ett eget mejl med
 // förslag på tider (adminvyn öppnar det i hens mejlprogram). Ett
 // automatiskt mejl i samma stund hade varit samma besked två gånger.
+// Sedan 2026-10-21 går däremot ett mejl när ansökan skickas vidare till
+// intervju (Leos text, intervju.ts): det köas i notiskön, inte här, så
+// att det följer sandlådan och strömbrytaren notiser_mejl.
 // ============================================================
 
 import { fornamn } from './typer.ts';

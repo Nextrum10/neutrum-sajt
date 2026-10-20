@@ -130,15 +130,10 @@ Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, stu
   // förväg, som inte finns med kortet som reserveras.
   const VILLKORET = 'pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar '
     + 'reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten';
-  // Och att fakturan är ett val, före eller efter passet, som på sidorna.
-  // verktyg/kolla-betalningsvillkor.py räknar samma mening.
-  const FAKTURAN = 'välja faktura, som kommer i början av månaden efter passet med tio dagars betalningstid och utan avgift';
-  // Och att ett obetalt pass kommer med på fakturan (obetalda_pass_pa_fakturan, 2026-10-16).
-  const OBETALDA = 'Är ett pass inte betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på fakturan.';
   const bekraftat = rendera('pass_bekraftat', 'parent');
   assertStringIncludes(bekraftat.text, VILLKORET);
-  assertStringIncludes(bekraftat.text, FAKTURAN);
-  assertStringIncludes(bekraftat.text, OBETALDA);
+  // Fakturan är borta (2026-10-21): inget mejl erbjuder den.
+  assertEquals(bekraftat.text.toLowerCase().includes('faktura'), false);
   assertEquals(bekraftat.text.includes('betala i förväg'), false);
   assertEquals(bekraftat.text.includes('hålls inte'), false);
   assertStringIncludes(bekraftat.text, `${SAJT}/foralder#betalning`);
@@ -150,8 +145,7 @@ Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, stu
   const paminnelse = rendera('paminnelse', 'parent');
   assertStringIncludes(paminnelse.text, 'om ni inte redan har gjort det');
   assertStringIncludes(paminnelse.text, VILLKORET);
-  assertStringIncludes(paminnelse.text, FAKTURAN);
-  assertStringIncludes(paminnelse.text, OBETALDA);
+  assertEquals(paminnelse.text.toLowerCase().includes('faktura'), false);
   assertEquals(paminnelse.text.includes('hålls inte'), false);
 
   for (const typ of ['pass_bekraftat', 'paminnelse', 'pass_nytt'] as const) {
@@ -159,22 +153,18 @@ Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, stu
     assertEquals(hjalpare.text.includes('betal'), false, `${typ} till studiehjälparen nämner betalning`);
   }
   assertEquals(vyAdress('parent', 'betalning'), `${SAJT}/foralder#betalning`);
+  // kortdragningen_forsoker_igen (2026-10-21): ett nekat kort före passet leder dit kortet byts.
+  assertEquals(vyAdress('parent', 'kortet'), `${SAJT}/foralder#profil/kort`);
+  assertEquals(vyAdress('tutor', 'kortet'), `${SAJT}/larare#lektioner/pass`);
   assertEquals(vyAdress('tutor', 'betalning'), `${SAJT}/larare#lektioner/pass`);
 });
 
-Deno.test('ett fakturapass får inget kortmejl (Fas 14.6)', () => {
-  for (const typ of ['pass_bekraftat', 'paminnelse', 'pass_nytt'] as const) {
-    const familj = rendera(typ, 'parent', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: 'faktura' } });
-    assertStringIncludes(familj.text, 'månadens faktura', typ);
-    assertEquals(familj.text.includes('med kort'), false, `${typ} ber en fakturafamilj betala med kort`);
-    assertEquals(familj.text.includes('när ni bekräftar rapporten'), false, typ);
-    assertEquals(familj.text.includes('#betalning'), false, `${typ} leder till betalningen`);
-
-    const hjalpare = rendera(typ, 'tutor', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: 'faktura' } });
-    assertEquals(hjalpare.text.includes('faktura'), false, `${typ} till studiehjälparen nämner fakturan`);
+Deno.test('den gamla fakturakoden ger kortmejlet, som en okänd kod (fakturan togs bort 2026-10-21)', () => {
+  for (const kod of ['faktura', 'swish']) {
+    const familj = rendera('pass_bekraftat', 'parent', { data: { ...SMUTSIG, status: 'confirmed', betalsatt: kod } });
+    assertStringIncludes(familj.text, 'med kort', kod);
+    assertEquals(familj.text.toLowerCase().includes('faktura'), false, kod);
   }
-  // En okänd kod är samma sak som ingen kod: kortmejlet.
-  assertStringIncludes(rendera('pass_bekraftat', 'parent', { data: { ...SMUTSIG, betalsatt: 'swish' } }).text, 'med kort');
 });
 
 Deno.test('ett pass som timmarna betalat ber inte om betalning (Fas 22.2)', () => {
@@ -242,6 +232,29 @@ Deno.test('påminnelsen om gratis timmar lovar inga pengar tillbaka (gratistimma
   // "gratis" som text är inget gratis: då är det köptimmarnas mejl.
   const text = rendera('timmar_gar_ut', 'parent', { data: { datum: '2026-10-23', kvar: 2, gratis: 'true' } });
   assertStringIncludes(text.text, 'Ni har 2 timmar kvar');
+});
+
+Deno.test('ett nekat kort lovar ett nytt försök bara när vi gör ett (kortdragningen_forsoker_igen)', () => {
+  const fore = { ...SMUTSIG, status: 'confirmed' };
+  const igen = rendera('kort_nekat', 'parent', { data: { ...fore, kortet: 'igen' } });
+  assertStringIncludes(igen.text, 'Kortet nekades när vi skulle reservera beloppet');
+  assertStringIncludes(igen.text, 'Vi försöker igen om några timmar.');
+  assertStringIncludes(igen.text, 'Byter ni kort i Nextrum försöker vi med det nya direkt.');
+  assertStringIncludes(igen.text, `${SAJT}/foralder#profil/kort`);
+  // Ett kort som gått ut, eller en bank som vill att familjen bekräftar: inget löfte.
+  for (const kortet of ['nekat', 'bekrafta', undefined]) {
+    const m = rendera('kort_nekat', 'parent', { data: { ...fore, kortet } });
+    assertEquals(m.text.includes('Vi försöker igen'), false, `kortet ${kortet} lovar ett nytt försök`);
+  }
+  const bekrafta = rendera('kort_nekat', 'parent', { data: { ...fore, kortet: 'bekrafta' } });
+  assertStringIncludes(bekrafta.text, 'Er bank vill att ni bekräftar betalningen själva');
+  // Efter passet: till betalningen, och samma regel.
+  const efter = rendera('kort_nekat', 'parent', { data: { ...SMUTSIG, status: 'completed', kortet: 'igen' } });
+  assertStringIncludes(efter.text, 'när vi skulle dra betalningen för passet');
+  assertStringIncludes(efter.text, 'Vi försöker igen om några timmar.');
+  assertStringIncludes(efter.text, `${SAJT}/foralder#betalning`);
+  // Passet står kvar: mejlet säger aldrig att det avbokas.
+  assertEquals(/avboka/i.test(igen.text + efter.text), false);
 });
 
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {

@@ -9,6 +9,11 @@
    klickar om jag vill kolla på familjer eller studiehjälpare." Provet går
    igenom valet, båda listorna, vilka som använt en kod, strömbrytaren,
    bonusen under Löner och i ansökans panel, och koden i jobbansökan.
+   Och sedan 2026-10-21 (koder_for_planer) rabattkoderna och
+   partnerkoderna under samma val: listorna, statistiken med och utan
+   testbetalningar, användningen, formuläret, att en kod stängs av och
+   inte raderas, familjens partner i panelen, och att text ur databasen
+   aldrig tolkas som HTML.
    Databasens regler provas i rls-test.sql (avsnittet KB); här provas
    vyerna, mot en falsk Supabase, som verktyg/prova-intag.js (egen port,
    8973). Ett anrop till den riktiga adressen fäller provet.
@@ -112,7 +117,22 @@ function värld() {
     bookings: [{ id: 'pass-tips', parent_id: 'fam-a', tutor_id: 'sh-a', student_id: 'elev-a', subject: 'Matematik',
       tjanst: 'laxhjalp', wanted_date: '2026-10-02', wanted_time: '16:00', duration_min: 60, status: 'completed',
       betalning_status: 'ingen', fakturerbar: true, startrabatt: true, rabattkod: 'TIPS', rabatt_ore: 39900,
-      timpris_ore: 39900, antal_barn: 1, created_at: '2026-09-30T10:00:00Z' }]
+      timpris_ore: 39900, antal_barn: 1, created_at: '2026-09-30T10:00:00Z' }],
+    /* Koderna till planerna (koder_for_planer): två rabattkoder, två
+       partnerkoder, en med ett elakt namn, och TIPS, som aldrig visas. */
+    rabattkoder: [
+      { kod: 'TIPS', sort: 'rabatt', partner_namn: null, typ: 'belopp', varde: 1, aktiv: false, antal_anvandningar: 3,
+        skapad: '2026-09-30T10:00:00Z' },
+      { kod: 'ZAYAN10', sort: 'rabatt', partner_namn: null, beskrivning: 'Zayans 10 %', typ: 'procent', varde: 10, aktiv: true,
+        antal_anvandningar: 2, max_anvandningar: 50, max_per_familj: 1, skapad: '2026-10-15T10:00:00Z' },
+      { kod: 'GAMMAL', sort: 'rabatt', partner_namn: null, beskrivning: 'Sommaren', typ: 'belopp', varde: 5000, aktiv: false,
+        antal_anvandningar: 0, skapad: '2026-06-01T10:00:00Z' },
+      { kod: 'FORENING', sort: 'partner', partner_namn: 'Föreningen Prov', beskrivning: null, typ: 'procent', varde: 0,
+        aktiv: true, antal_anvandningar: 1, skapad: '2026-10-16T10:00:00Z' },
+      { kod: 'ELAK', sort: 'partner', partner_namn: '<img src=x onerror="window.__xss=1">Elak förening',
+        beskrivning: '<b>fet</b>', typ: 'belopp', varde: 2000, aktiv: true, antal_anvandningar: 0, skapad: '2026-10-17T10:00:00Z' }
+    ],
+    familjens_partner: [{ familj: 'fam-b', kod: 'FORENING', kopplad_at: '2026-10-18T10:00:00Z' }]
   };
 }
 
@@ -180,7 +200,28 @@ function falskSupabase(o) {
       hinder: [{ kod: 'tipsbonus', antal: 1, belopp_ore: 30000 }], star_kvar: { tipsbonus: 1 } }),
     admin_sett_markera: k => k.p_till,
     mitt_villkorslage: () => ({ version: '2026-10-13', godkant_at: '2026-10-13T09:00:00+00:00', tidigare: false }),
-    forsta_timmen_lage: () => ({ beviljad: false, tagen: false, i_planen: false, pa_pass: false })
+    forsta_timmen_lage: () => ({ beviljad: false, tagen: false, i_planen: false, pa_pass: false }),
+    /* Statistiken räknar en testbetalning bara med p_med_test. */
+    kod_statistik: k => [
+      { kod: 'ZAYAN10', familjer: k.p_med_test ? 2 : 1, kop: k.p_med_test ? 2 : 1, kopta_timmar: 8, genomforda_timmar: 3,
+        betalt_ore: k.p_med_test ? 545760 : 272880, aterbetalt_ore: 0, rabatt_ore: k.p_med_test ? 60640 : 30320 },
+      { kod: 'FORENING', familjer: 1, kop: 1, kopta_timmar: 9, genomforda_timmar: 2, betalt_ore: 303200, aterbetalt_ore: 0,
+        rabatt_ore: 0 }
+    ],
+    partner_statistik: () => [
+      { partner_namn: 'Föreningen Prov', koder: 1, aktiva_koder: 1, familjer: 1, kop: 1, kopta_timmar: 9,
+        genomforda_timmar: 2, betalt_ore: 303200, aterbetalt_ore: 0, rabatt_ore: 0 },
+      { partner_namn: '<img src=x onerror="window.__xss=1">Elak förening', koder: 1, aktiva_koder: 1, familjer: 0, kop: 0,
+        kopta_timmar: 0, genomforda_timmar: 0, betalt_ore: 0, aterbetalt_ore: 0, rabatt_ore: 0 }
+    ],
+    kodens_anvandningar: k => k.p_kod === 'ZAYAN10' ? [
+      { id: 'anv-1', anvand_at: '2026-10-18T10:00:00Z', familj: 'fam-a', familj_namn: '<i>Anna</i> Andersson',
+        erbjudande: 'plan_standard', timmar: 8, genomforda_timmar: 3, betalt_ore: 272880, aterbetalt_ore: 0,
+        rabatt_ore: 30320, status: 'betald', test: true }
+    ] : k.p_kod === 'FORENING' ? [
+      { id: 'anv-2', anvand_at: '2026-10-18T10:00:00Z', familj: 'fam-b', familj_namn: 'Bo Berg', erbjudande: 'plan_standard',
+        timmar: 9, genomforda_timmar: 2, betalt_ore: 303200, aterbetalt_ore: 0, rabatt_ore: 0, status: 'betald', test: false }
+    ] : []
   };
   async function hantera(route) {
     const req = route.request();
@@ -273,8 +314,10 @@ async function provaKoder(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, {});
   await tillAdmin(page, 'koder');
   prova('koder: menyn har Koder', await synlig(page, '#vy-sido a[data-sek="koder"]'));
-  prova('koder: valet står först, med två kort', (await page.locator('#kod-val .kod-val-kort').count()) === 2
-    && !(await synlig(page, '#kod-vy')));
+  prova('koder: valet står först, med fyra kort: familjer, studiehjälpare, rabattkoder och partnerkoder',
+    (await page.locator('#kod-val .kod-val-kort').count()) === 4 && !(await synlig(page, '#kod-vy'))
+    && (await page.locator('#kod-val a[href="#koder/rabattkoder"]').count()) === 1
+    && (await page.locator('#kod-val a[href="#koder/partnerkoder"]').count()) === 1);
   const val = await text(page, '#kod-val');
   prova('koder: korten säger antal koder och vad koden ger', /Familjer/.test(val) && /Studiehjälpare/.test(val)
     && /3 koder/.test(val) && /2 koder/.test(val) && /300 kr/.test(val), val);
@@ -365,6 +408,155 @@ async function provaKoder(webb) {
   await context.close();
 }
 
+/* ============ 1b. Rabattkoderna och partnerkoderna (koder_for_planer, 2026-10-21) ============ */
+async function provaPlanskoderna(webb) {
+  const { context, page, S, riktiga, konsol } = await öppna(webb, {});
+  const dialoger = [];
+  page.on('dialog', d => { dialoger.push(d.message()); d.dismiss().catch(() => {}); });
+
+  /* Den gamla adressen under Tjänster leder hit. */
+  await tillAdmin(page, 'katalog/rabattkoder');
+  prova('planskoder: #katalog/rabattkoder leder till Koder', new URL(page.url()).hash === '#koder/rabattkoder', page.url());
+  prova('planskoder: Tjänster har ingen flik för rabattkoder längre', (await page.locator('#flik-rabattkoder').count()) === 0);
+
+  prova('planskoder: ytan står, och valet och de personliga koderna är dolda',
+    await synlig(page, '#kp-vy') && !(await synlig(page, '#kod-val .kod-val-kort')) && !(await synlig(page, '#kod-vy')));
+  prova('planskoder: fyra flikar, Rabattkoder vald',
+    (await page.locator('#kp-flikar .vy-flik').count()) === 4
+    && (await page.getAttribute('#kp-flikar a[href="#koder/rabattkoder"]', 'aria-selected')) === 'true');
+  prova('planskoder: regeln säger att koderna bara gäller planer',
+    /bara planer/.test(await text(page, '#kp-regel')) && /aldrig ett pass/.test(await text(page, '#kp-regel')),
+    await text(page, '#kp-regel'));
+  const lista = await text(page, '#kp-lista');
+  prova('planskoder: rabattkoderna står, aldrig TIPS och inte partnerkoderna',
+    (await page.locator('#kp-lista .kod-rad').count()) === 2 && /ZAYAN10/.test(lista) && /GAMMAL/.test(lista)
+    && !/TIPS/.test(lista) && !/FORENING/.test(lista), lista);
+  prova('planskoder: raden säger rabatten, gränsen och läget',
+    /10 %/.test(lista) && /en gång per familj/.test(lista) && /Aktiv/.test(lista) && /Avstängd/.test(lista), lista);
+  const anrop = S.logg.filter(r => r.väg === '/rest/v1/rpc/kod_statistik');
+  prova('planskoder: statistiken hämtas utan testbetalningar', anrop.length >= 1 && anrop[0].kropp.p_med_test === false,
+    JSON.stringify(anrop.map(a => a.kropp)));
+  prova('planskoder: talen säger köpen, utan test', /Köp med kod/.test(await text(page, '#kp-tal'))
+    && /utan testbetalningar/.test(await text(page, '#kp-tal')), await text(page, '#kp-tal'));
+
+  /* Testbetalningarna. */
+  await page.check('#kp-test');
+  await vänta(500);
+  const sist = S.logg.filter(r => r.väg === '/rest/v1/rpc/kod_statistik').pop();
+  prova('planskoder: rutan räknar testbetalningarna', sist && sist.kropp.p_med_test === true
+    && /med testbetalningar/.test(await text(page, '#kp-tal')), JSON.stringify(sist && sist.kropp));
+
+  /* En kods användning, när raden fälls ut. */
+  await page.click('#kp-lista .kod-rad[data-kp-kod="ZAYAN10"] summary');
+  await page.waitForFunction(() => /Andersson/.test((document.querySelector('[data-kp-anv="ZAYAN10"]') || {}).textContent || ''),
+    null, { timeout: 4000 }).catch(() => {});
+  const anv = await text(page, '[data-kp-anv="ZAYAN10"]');
+  prova('planskoder: utfälld visar köpen med koden, familjen och att det var test',
+    /Andersson/.test(anv) && /Standard/.test(anv) && /Test/.test(anv)
+    && S.logg.some(r => r.väg === '/rest/v1/rpc/kodens_anvandningar' && r.kropp.p_kod === 'ZAYAN10'), anv);
+  prova('planskoder: familjens namn ur databasen är text, inte HTML',
+    /<i>Anna<\/i> Andersson/.test(anv) && (await page.locator('[data-kp-anv="ZAYAN10"] i').count()) === 0, anv);
+  await bild(page, 'planskoder-rabattkoder', '#kp-vy');
+
+  /* Formuläret: ett besked i stället för ett fel, sedan en kod som skapas. */
+  await page.fill('#kp-kod', 'ab');
+  await page.fill('#kp-varde', '10');
+  await page.click('#kp-spara');
+  await vänta(200);
+  prova('planskoder: en kod utan rätt form ger ett besked', /A–Z, 0–9 och bindestreck/.test(await text(page, '#kp-msg')),
+    await text(page, '#kp-msg'));
+  await page.fill('#kp-kod', 'host25');
+  await page.selectOption('#kp-typ', 'procent');
+  await page.fill('#kp-varde', '25');
+  await page.click('#kp-spara');
+  await page.waitForFunction(() => /HOST25 är skapad/.test((document.querySelector('#kp-msg') || {}).textContent || ''),
+    null, { timeout: 4000 }).catch(() => {});
+  const ny = S.logg.filter(r => r.metod === 'POST' && r.väg === '/rest/v1/rabattkoder').pop();
+  prova('planskoder: en ny rabattkod skrivs med sorten, i versaler, en gång per familj som förval',
+    ny && ny.kropp.kod === 'HOST25' && ny.kropp.sort === 'rabatt' && ny.kropp.partner_namn === null && ny.kropp.typ === 'procent'
+    && ny.kropp.varde === 25 && ny.kropp.max_per_familj === 1 && ny.kropp.aktiv === true, JSON.stringify(ny && ny.kropp));
+  prova('planskoder: den nya koden står i listan', /HOST25/.test(await text(page, '#kp-lista')));
+  await page.fill('#kp-kod', 'KR50');
+  await page.selectOption('#kp-typ', 'belopp');
+  await page.fill('#kp-varde', '50');
+  await page.click('#kp-spara');
+  await page.waitForFunction(() => /KR50 är skapad/.test((document.querySelector('#kp-msg') || {}).textContent || ''),
+    null, { timeout: 4000 }).catch(() => {});
+  const kr = S.logg.filter(r => r.metod === 'POST' && r.väg === '/rest/v1/rabattkoder').pop();
+  prova('planskoder: kronor skrivs i kronor och lagras i öre', kr && kr.kropp.kod === 'KR50' && kr.kropp.varde === 5000,
+    JSON.stringify(kr && kr.kropp));
+
+  /* Stäng av: en fråga först, och en uppdatering, aldrig en borttagning. */
+  await page.click('#kp-lista .kod-rad[data-kp-kod="ZAYAN10"] [data-kp-vaxla]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  prova('planskoder: Stäng av frågar först', /Stäng av koden ZAYAN10/.test(await text(page, '.nx-fraga-box')));
+  await page.click('.nx-fraga-box [data-svar="ja"]');
+  await vänta(500);
+  const av = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/rabattkoder' && /ZAYAN10/.test(r.sök));
+  prova('planskoder: koden stängs av, och ingenting raderas',
+    av && av.kropp && av.kropp.aktiv === false && !S.logg.some(r => r.metod === 'DELETE'), JSON.stringify(av));
+  prova('planskoder: raden säger Avstängd efteråt',
+    /Avstängd/.test(await text(page, '#kp-lista .kod-rad[data-kp-kod="ZAYAN10"] summary')));
+
+  /* Partnerkoderna. */
+  await page.click('#kp-flikar a[href="#koder/partnerkoder"]');
+  await vänta(500);
+  prova('planskoder: partnerkoderna, med en tabell per partner', await synlig(page, '#kp-partner table')
+    && /Föreningen Prov/.test(await text(page, '#kp-partner')), await text(page, '#kp-partner'));
+  prova('planskoder: tabellen säger familjer, köpta och genomförda timmar och beloppet',
+    /9/.test(await text(page, '#kp-partner tbody tr')) && /3 032 kr|3\s?032 kr/.test(await text(page, '#kp-partner')),
+    await text(page, '#kp-partner'));
+  prova('planskoder: partnerns elaka namn står som text, och inget skript körs',
+    /<img src=x/.test(await text(page, '#kp-vy')) && (await page.locator('#kp-vy img').count()) === 0
+    && (await page.evaluate(() => window.__xss)) === undefined && (await page.locator('#kp-vy b:text("fet")').count()) === 0,
+    await text(page, '#kp-partner'));
+  prova('planskoder: formuläret frågar efter partnern', await synlig(page, '#kp-partner-namn')
+    && (await page.inputValue('#kp-familj')) === '');
+  await page.fill('#kp-kod', 'BIBLIOTEK');
+  await page.fill('#kp-varde', '');
+  await page.click('#kp-spara');
+  await vänta(200);
+  prova('planskoder: en partnerkod utan partner ger ett besked', /partnerns namn/.test(await text(page, '#kp-msg')),
+    await text(page, '#kp-msg'));
+  await page.fill('#kp-partner-namn', 'Biblioteket');
+  await page.click('#kp-spara');
+  await page.waitForFunction(() => /BIBLIOTEK är skapad/.test((document.querySelector('#kp-msg') || {}).textContent || ''),
+    null, { timeout: 4000 }).catch(() => {});
+  const p = S.logg.filter(r => r.metod === 'POST' && r.väg === '/rest/v1/rabattkoder').pop();
+  prova('planskoder: en partnerkod utan rabatt skrivs med noll och partnern',
+    p && p.kropp.kod === 'BIBLIOTEK' && p.kropp.sort === 'partner' && p.kropp.partner_namn === 'Biblioteket'
+    && p.kropp.varde === 0 && p.kropp.max_per_familj === null, JSON.stringify(p && p.kropp));
+  await bild(page, 'planskoder-partnerkoder', '#kp-vy');
+
+  /* Familjens partner i panelen. */
+  await page.click('#kp-lista .kod-rad[data-kp-kod="FORENING"] summary');
+  await page.waitForSelector('[data-kp-anv="FORENING"] [data-dp="familj:fam-b"]', { timeout: 4000 }).catch(() => {});
+  await page.click('[data-kp-anv="FORENING"] [data-dp="familj:fam-b"]').catch(() => {});
+  await page.waitForSelector('.dp', { timeout: 4000 }).catch(() => {});
+  await vänta(400);
+  const panel = await text(page, '.dp');
+  prova('planskoder: familjens panel säger partnern familjen kom genom', /Partner/.test(panel) && /Föreningen Prov/.test(panel),
+    panel.slice(0, 400));
+
+  /* Telefonen och mörkt läge. */
+  await page.keyboard.press('Escape').catch(() => {});
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(BAS + '/admin#koder/partnerkoder');
+  await vänta(1200);
+  prova('planskoder: inget i sidled på en telefon', await ingenSidled(page));
+  await bild(page, 'planskoder-telefon', '#kp-vy');
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await vänta(300);
+  prova('planskoder: mörkt läge har en annan yta än ljust', await page.evaluate(() =>
+    getComputedStyle(document.body).backgroundColor !== 'rgb(241, 237, 230)'));
+  await bild(page, 'planskoder-telefon-morkt', '#kp-vy');
+
+  prova('planskoder: inga felrutor', dialoger.length === 0, dialoger.join(' | '));
+  prova('planskoder: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('planskoder: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+}
+
 /* ============ 2. Bonusen under Löner och i ansökans panel ============ */
 async function provaLöner(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, {});
@@ -431,7 +623,9 @@ async function provaFamiljensTimbank(webb) {
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
   await vänta(1200);
   const mina = await text(page, '#erb-mina');
-  prova('familjen: Er timbank säger timmen för tips', /och 1 timme för tips/.test(mina) && /Timmar för tips/.test(mina)
+  /* Sedan batteriet (2026-10-15) står timmen för tips som en gratis
+     timme i batteriet, inte som "och 1 timme för tips" i texten. */
+  prova('familjen: Er timbank säger timmen för tips', /1 gratis/.test(mina) && /Timmar för tips/.test(mina)
     && /1 av 2 timmar kvar/.test(mina), mina);
   prova('familjen: timmen för tips gäller i 60 dagar och dras först', /Gäller till \d/.test(mina)
     && /gäller i 60 dagar och dras först/.test(mina) && !/Går inte ut/.test(mina), mina);
@@ -492,6 +686,7 @@ async function provaJobbansökan(webb) {
   const webb = await pw.chromium.launch();
   try {
     await provaKoder(webb);
+    await provaPlanskoderna(webb);
     await provaLöner(webb);
     await provaFamiljensTimbank(webb);
     await provaJobbansökan(webb);

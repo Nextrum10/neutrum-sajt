@@ -554,9 +554,11 @@ window.NXArbete = (function () {
                 pris, inget antal barn, ingen ångerrätt (barnet är inte
                 part i avtalet), och förslaget går till föräldern
        rabattkod — async (kod, bruttoOre) => { giltig, orsak, rabatt_ore }:
-                förälderns förslag, och granskningen av ett barns, har
-                en ruta för en rabattkod, som databasen prövar igen.
-                Barnets läge har ingen
+                förälderns förslag, och granskningen av ett barns, hade
+                en ruta för en rabattkod, som databasen prövade igen.
+                Sedan koder_for_planer (2026-10-21) skickar ingen vy med
+                den: koderna gäller bara planköp, och databasen tar
+                ingen kod på ett pass. Barnets läge har ingen
        neka   — async (förslagets id) => 'felmeddelande' | null: Skicka
                 inte, i granskningen
        betalval — () => null | [[värde, etikett, text], …]: hur passet
@@ -577,7 +579,8 @@ window.NXArbete = (function () {
      id och rabattkoden; vyn gör det till ett pass. Ångerrätten står kvar
      sist i panelen i granskningen: det är föräldern som ber om passet.
 
-     RABATTKODEN (rabattkoden_krockar_inte, 2026-10-13). Leo: "rabattkoden,
+     RABATTKODEN (rabattkoden_krockar_inte, 2026-10-13; ingen vy använder
+     den sedan koder_for_planer, 2026-10-21, se rabattkod ovan). Leo: "rabattkoden,
      fixa det ... koden får inte krocka med gratis timmar ... gratis
      timmarna räknas i timbanken". Rutan står i förälderns egna förslag
      också, inte bara i granskningen. Koden gäller bara det familjen
@@ -589,7 +592,7 @@ window.NXArbete = (function () {
      ============================================================ */
 
   /* Timmarna ett förslag kan ligga på, varje dag i veckan. Hela timmar,
-     eftersom allt bokas och faktureras i hela timmar; till 22 för att
+     eftersom allt bokas och betalas i hela timmar; till 22 för att
      ett pass som börjar 21 ska sluta senast 22.
 
      Vardagar från 11, lördag och söndag från 9. Leo 2026-09-28: "man
@@ -743,7 +746,7 @@ window.NXArbete = (function () {
       var t = tjanstRad();
       return (t && t.extra_personer_ore) || 0;
     }
-    /* Timpriset ur katalogen — samma källa som faktureringen tar betalt
+    /* Timpriset ur katalogen — samma källa som kassan tar betalt
        efter. o.pris (kronor, ur konfigurationen) gäller bara innan
        katalogen finns. Allt räknas i ÖRE; kronorna härleds ur det. */
     function katalogensTimpris() {

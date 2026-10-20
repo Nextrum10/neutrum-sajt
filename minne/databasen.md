@@ -563,7 +563,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `leads-avidentifiering` | 03:47 | intresseanmälningar sex månader efter senaste kontakten |
 | `ai-och-uppgifter-gallring` | 03:51 | AI-texterna och avslutade uppgifter |
 | `svar-gallring` | 03:53 | studiehjälparens svar på ett förslag, 30 dagar efter avslaget eller passet (2026-09-30) |
-| `manadskorning` | 04:17 (varje natt sedan 2026-10-01) | förra månadens underlag och fakturautkast den 1:a, sedan sena pass på utkasten (avsnitt 1) |
+| `manadskorning` | 04:17 (varje natt sedan 2026-10-01) | förra månadens underlag den 1:a, sedan sena pass på utkasten (avsnitt 1; fakturautkasten till 2026-10-21) |
 | `manadskorning-svar` | 04:47 (varje natt sedan 2026-10-01) | månadskörningens svar: allt utom 200 blir en uppgift (ovan) |
 | `konton-oanvanda` | den 1:a 04:53 | konton som inte använts på två år blir uppgifter |
 
@@ -1473,3 +1473,139 @@ en faktura i natt. Hela `rls-test.sql` från b68509f (`eb36ab7b…`) gick 1810 a
 tillbaka). Advisorn: bara `intern.kassan_oppnad` under RLS utan policy (info,
 med flit); inget nytt för `anon`. Torrkörningen (`fakturera_obetalda(...,
 true)` som tjänstekontot) gav inga pass för förra månaden eller till i dag.
+
+### Fakturan tas bort, och anmälan flyttar till familjen (2026-10-21, inte i drift)
+Tre filer och ett skript, skrivna och provade lokalt; ingenting är kört mot
+driften. Vad fakturans två delar gör står i `minne/betalning.md` (Fakturan tas
+bort), och ordningen i driften i `DEPLOY-BETALNING.md` 9.18.
+
+- `fakturan_tas_bort` (20261021000000) har inget `drop` och inget `delete`, och
+  går hel i ett do-block. Vakterna: testkontots rader (namnet Leo Trikke, och
+  sedan 2026-10-20 också konton med en adminroll; en familjs rad stoppar filen
+  och namnges), md5 på varje
+  funktion den skriver om (en vakt som hoppar över en funktion del 2 redan
+  droppat), och villkorens version (2026-10-16 eller 2026-10-21, så att filen
+  går att köra igen). Lapparna görs med `replace()` och räknade träffar ur en
+  tillfällig tabell, och mängden "redan lappade" räknas EN gång före loopen:
+  en funktion med två lappar fick annars bara den första, för markören som
+  den första lade dit fick loopen att tro att också den andra var gjord.
+  **`create or replace view` tar bort `security_invoker`** om det inte står i
+  satsen: `passunderlag` och `admin_lage` läste som ägaren en stund, och en
+  familj såg alla pass i analysvyn (rls-test fångade det). Båda har nu
+  `with (security_invoker = true)`, och avsnitt 38 prövar att tre vyer har det.
+- `fakturans_tabeller_tas_bort` (20261021090000) droppar, och körs för hand
+  efter en backup. Samma vakt som del 1, en vakt som kräver del 1 och en som
+  letar efter en funktion som fortfarande nämner det som droppas, med del 1:s
+  kommentarer bortrensade (Postgres följer inte namnen i en funktionskropp).
+  Inget cascade.
+- `anmalan_flyttas_till_familjen` (20261021000100): `intagna_anmalningar`,
+  `intag_lead()` (superadmin), och tipstimmen, koderna, statistiken,
+  gallringen och `radera_person` läser eller tömmer den nya tabellen. Vad och
+  varför står i filens huvud och i `minne/affaren.md`. En anmälan som redan
+  tagits in hela vägen flyttas av filen, och Hira (familjen som fanns före
+  anmälan) kopplas och flyttas om exakt en anmälan och en familj matchar,
+  annars en NOTICE och ingenting.
+- `supabase/scripts/rensa-testkonto.sql` är ingen migration (CLAUDE.md
+  avsnitt 5): en `pg_temp`-funktion med `dry_run` som förval, körd bara med
+  `dry_run` lokalt.
+
+Provat lokalt 2026-10-21: en databas byggd ur alla 203 migrationer gav 1797 av
+1797 i `rls-test.sql`, och 1794 av 1794 utan del 2. Alla tre filerna kördes en
+gång till efteråt utan fel, och sviten gav samma tal. Vakten provades i en
+egen databas byggd till och med 20261016110000 med en annan familjs faktura:
+del 1 och del 2 stannade och namngav familjen, och gick igenom när bara
+testkontots rad var kvar.
+
+### Intervjumejlet och utbildningsprovet (2026-10-21, inte i drift)
+Två filer, skrivna och provade lokalt; ingenting är kört mot driften. Vad de gör står i `minne/notiser.md`
+(Intervjumejlet) och `minne/affaren.md` (Utbildningsprovet i studiehjälparvyn), och ordningen i driften i
+`DEPLOY-NOTISER.md` 8.
+
+- `intervjumejlet` (20261021100000): `applications.intervju_mejl_skickat_at`, `notis_utskick.ansokan_id`,
+  villkoret `notis_utskick_en_mottagare` med tre mottagare i stället för två, triggern
+  `applications_till_intervju` (efter `applications_skydda` i namnordning, så att den ser det skyddade) och en
+  lapp i `notis_utskick_ta`. Vakten är md5 på `notis_utskick_ta` som den byggs ur migrationerna, och en kropp
+  som redan nämner `ansokan_id` släpps igenom. **Villkoret byts med `drop constraint`**, och det kan inte
+  undvikas: en rad till den som söker har varken `mottagare` eller `barn_id`. Kör filen i SQL Editor som ett
+  anrop eller avsnitt för avsnitt, aldrig i ett do-block.
+- `utbildningsprovet_i_studiehjalparvyn` (20261021110000): fyra tabeller, `intern.provet_sparrar()`, de första
+  restriktiva policyerna (`minne/sakerhet.md`), lappar i `is_my_student`, `barnchatt_skriv`, `barnchatt_trad`,
+  `barnchatt_tradar` och `radera_person` (md5 på var och en, och en kropp som redan nämner `provet_` släpps
+  igenom), sju funktioner, rättigheter och auditen (`logga_andring` med basen `prov`). Ett `delete`, i
+  `intern.provet_rensa`. Policyerna skapas i ett do-block efter en kontroll i `pg_policies`.
+
+**Ingen fil har `begin` och `commit`**, som ingen av de andra 200: varje fil skrivs för att köras som EN
+transaktion av den som kör den (`psql -1` i `lokal-databas.sh`, ett do-block eller ett anrop till
+`execute_sql` i driften, och SQL Editor, som kör ett anrop med flera satser som en transaktion). Ett `begin` i
+filen hade gjort den omöjlig att köra i ett do-block (`EXECUTE` tar inga transaktionskommandon). `set local
+lock_timeout` överst gäller bara i en transaktion, och säger till om filen körs utan.
+
+Provat lokalt 2026-10-21: en databas byggd ur alla 205 migrationer gav 1829 av 1829 i `rls-test.sql` (avsnitt
+40 och 41 är nya), och båda filerna kördes en gång till utan fel och med samma tal. **Undantaget för dem som
+var godkända skrivs bara första gången** (inställningens rad skrivs direkt efter och säger att filen körts):
+prövat i en egen databas byggd till och med `intervjumejlet`, där en studiehjälpare godkänd mellan två
+körningar inte fick något undantag.
+
+### Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, inte i drift)
+Tre filer, skrivna och provade lokalt; ingenting är kört mot driften. Vad de gör står i `minne/betalning.md`
+(Betalningsliggaren och köpvillkoren i kassan, Kortet försöker igen) och `minne/timmar.md` (Planerna per
+kalendermånad), och ordningen i driften i `DEPLOY-BETALNING.md` 9.19. Ingen har `drop` eller `delete` (bara `on
+delete` i nycklarna), så var och en kan köras hel i ett do-block och registreras med filens text.
+
+- `betalningsliggaren` (20261021120000): `betalningar` (raderas aldrig: triggrar nekar delete och truncate för
+  alla, och bara det Stripe kan ändra efteråt får ändras), `intern.betalningar_bokfor()` som AFTER-triggrar på
+  `bookings`, `klippkort` och `pass_tillagg` (`<tabell>_bokfors_ny`, `<tabell>_bokfors`), `betalning_utan_rad()`
+  och `betalning_aterbetald()` för tjänstekontot, liggaren fylld bakåt, `kopvillkor_godkannanden` med databasens
+  tid och version (`intern.kopvillkor_tid`), och en lapp i `intern.radering_underlag` (vakten är dess md5).
+  `familj` har `on delete restrict`: en familj med en rad avidentifieras, raderas aldrig helt.
+- `planerna_per_manad` (20261021130000): `klippkort.galler_fran` (villkoret: den 1:a) och
+  `klippkort.aterbetalda_timmar` (villkoret: aldrig fler än köpets), triggern `klippkort_manad` (BEFORE INSERT),
+  lappar i `klippkort_betald`, `intern.timmar_fordela` och `extra_timmar_erbjudande` (md5 på var och en),
+  `klippkort_aterbetalningar` (en rad per Stripe-återbetalning, `re_`-id unikt), `klippkort_saldo` med två
+  kolumner sist (`create or replace view`, `security_invoker` kvar), `klippkort_aterbetalning_lage()`,
+  `klippkort_aterbetalad()` (bara tjänstekontot) och `planens_manader()`.
+- `kortdragningen_forsoker_igen` (20261021140000): `betalning_installning` (en rad, `sen_avbokning_timmar` låst
+  på 0 med ett villkor, som `kortsparr`), `kortreservationer.nekad_sedan` med sin BEFORE-trigger,
+  `intern.kortreservation_forsok_igen()` först i `kortreservation_vack()`, en lapp i
+  `intern.kortreservation_notis()` (ett mejl per serie), `intern.kortreservation_vack_nu()` med triggrarna
+  `kortreservationer_vack` och `bookings_vacker_kortet` (genom `intern.natanrop`), `intern.sen_avbokning()` och
+  `kortreservation_forsok_nu()` (superadmin). Vakterna: md5 på `kortreservation_vack`, `kortreservation_notis` och
+  `kortreservation_att_gora`.
+
+Varje vakt släpper igenom en kropp som redan bär filens markör (`betalningar`, `planerna_per_manad`,
+`kortdragningen_forsoker_igen`), så filerna går att köra två gånger. Provat lokalt 2026-10-21: en databas byggd ur
+alla 208 migrationer gav 1866 av 1866 i `rls-test.sql` (avsnitt 42–44 är nya, och 22.2 räknar sedan dess
+datumen i Stockholms tid, för en plan gäller nu sin kalendermånad), och alla tre filerna kördes en gång till utan
+fel och med samma tal.
+
+### Koderna bara på planer, och partnerkoderna (koder_for_planer, 2026-10-21, inte i drift)
+En fil (20261021150000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
+`minne/betalning.md` (Koderna gäller bara planköp), och ordningen i driften i `DEPLOY-BETALNING.md` 9.20. Den kräver
+`betalningar` (9.19) och stannar annars.
+
+- **En `drop`**: `alter table public.rabattkoder drop constraint if exists rabattkoder_varde_check`, och samma
+  villkor med `>= 0` direkt efter. Den står med flit utanför ett do-block, så att verktyget ser den och ber om en
+  bekräftelse (avsnitt 5 i kärnan): kör filen i SQL Editor, eller med det steget för sig.
+- `rabattkoder.sort` och `partner_namn` (villkoren `rabattkoder_sort_check` och `rabattkoder_partner_check`),
+  auditen med `sort` och `max_per_familj` (aldrig partnerns namn, som är fritext), triggrarna
+  `rabattkoder_star_fast` (BEFORE UPDATE OR DELETE: namnet och sorten står fast, delete nekas) och
+  `rabattkoder_toms_aldrig` (truncate), och `revoke delete, truncate` från authenticated. Policyn "bara admin
+  hanterar rabattkoder" (FOR ALL) står kvar: utan rätten och med triggern går en kod ändå inte att radera.
+- `kod_anvandningar` (en rad per betalt köp med en kod, `betalning_id` unik och restrict, `familj` restrict,
+  `klippkort_id` set null) och `familjens_partner` (en rad per familj, cascade), båda med RLS och bara
+  superadminens SELECT. Den första står fast med `kod_anvandningar_star_fast` (bara `klippkort_id` får bli null)
+  och `kod_anvandningar_toms_aldrig`; den andra med `familjens_partner_star_fast` (BEFORE UPDATE), och
+  `profiles_partner_rensas` tar bort raden när familjen avidentifieras. `betalningar_kod_anvands` (AFTER INSERT på
+  `betalningar`, `intern.kod_anvands`) skriver båda; liggaren fyller i bakåt.
+- `intern.rabattkod_prova` och `intern.klippkort_rabatt` skrivs om helt, `kolla_rabattkod_kop` blir ett omslag kring
+  den nya `kod_pa_planen` (samma svar, utan typen och värdet), och `intern.kod_galler_kopet`,
+  `intern.passet_tar_ingen_kod` (triggern `bookings_kod_bara_pa_planer`, BEFORE INSERT OR UPDATE, före
+  `bookings_skydda_rabatt` och långt före `bookings_timmarna_tillbaka`) och `intern.kortets_genomforda` är nya.
+  Vakterna: md5 på `prosrc` för de tre som skrivs om, och en kropp som redan bär `koder_for_planer` släpps igenom.
+- `kod_statistik(p_med_test)`, `partner_statistik(p_med_test)` och `kodens_anvandningar(p_kod)` har `is_admin()`s
+  vakt på första raden, och ingen av dem når anon eller `nextrum_barn`.
+- Med `kod_anvandningar` pekande på `betalningar` nekar Postgres `truncate betalningar` redan med 0A000, före
+  liggarens egen trigger; avsnitt 42 tar båda som ett nej.
+
+Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla 209 migrationer, och
+`rls-test.sql` gick 1897 av 1897 (avsnitt 28 och 32 omskrivna till den nya regeln, och 46 nytt).

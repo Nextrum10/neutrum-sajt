@@ -1497,15 +1497,11 @@ göra nu, innan den första familjen har en studiehjälpare och kan boka.
    första passet, för då går den första lönen ut. Klart när Bolagsfakta säger
    formen och båda lönearterna är satta under Löner.
 3. **Fortnox** på bolaget: Stripe-integrationen kopplad från
-   integrationsmarknaden, med bokningen bestämd med revisorn (9.7), och
-   fakturans inställningar: tio dagar, ingen avgift och påminnelser utan avgift
-   (9.11 steg 2). Integritetspolicyn nämner redan Fortnox.
-4. **Bankgirot**, i Fortnox och i `BANKGIRO` i `nextrum-config.js` (9.11 steg
-   9, en rad kod). En familj kan välja faktura så snart den har en
-   studiehjälpare, och fakturan ska ut i början av månaden efter passet. Utan
-   bolag, Fortnox och bankgiro finns ingen faktura att skicka. Hinns det inte
-   före den första matchningen: stäng av `faktura`, och då går fakturameningen
-   ur texterna i samma ändring (9.11).
+   integrationsmarknaden, med bokningen bestämd med revisorn (9.7).
+   Integritetspolicyn nämner redan Fortnox. (Fakturans inställningar i
+   Fortnox behövs inte längre: fakturan togs bort 2026-10-21, 9.18.)
+4. ~~**Bankgirot**~~: behövs inte för familjerna sedan 2026-10-21, då fakturan
+   togs bort (9.18). `BANKGIRO` finns inte längre i `nextrum-config.js`.
 
 **B. Testläget klart** (Leo i Stripes dashboard, och Claude läser databasen
 efter varje steg). Kan göras nu, parallellt med A.
@@ -1659,3 +1655,186 @@ sessioner fick veta före, och ingen annan session körde något mot driften):
   policy (info, med flit, som `intern.rabattkod_forsok`); inget nytt för `anon`.
 - Steg 5: torrkörningen som tjänstekontot, för förra månaden och till och med
   i dag, gav inga pass.
+
+### 9.18 Fakturan tas bort (2026-10-21, inte i drift)
+
+Leo: "Ta bort fakturasystemet helt". Ingen faktura hade gått till en familj.
+Koden, sidorna och migrationerna är klara på grenen; ingenting är kört mot
+driften. Hela resonemanget står i `minne/betalning.md`, Fakturan tas bort.
+
+Två migrationer: **del 1** (`20261021000000_fakturan_tas_bort`) tar inte bort
+något, men inget läser eller skapar fakturan efter den, och villkorens version
+blir 2026-10-21. **Del 2** (`20261021090000_fakturans_tabeller_tas_bort`)
+droppar tabellerna och kräver en backup först. Båda stannar innan något ändrats
+om en rad i fakturans tabeller, eller ett pass mot faktura, hör till någon
+annan än kontot med namnet Leo Trikke eller ett adminkonto, och säger då hur
+många och vems. Adminkontona kom med 2026-10-20, när driften visade ett
+fakturautkast och fyra fakturapass på Leos eget adminkonto (Leo: räkna dem som
+test); de fyra passen blir obetalda med del 2.
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna
+som arbetar i repot (`minne/databasen.md`). Hela PR:ens kedja (också Fas 2–4)
+står i avsnittet efter det här; gör stegen där om du kör allt på en gång.
+
+1. **Sajten** går ut med merge: villkoren 2026-10-21, inget fakturaval i
+   studievyn och fliken Månadskörningen i adminvyn. Vyerna frågar inte längre
+   efter fakturan, så de fungerar både före och efter migrationerna.
+2. **Edge-funktionerna som läste fakturan**, före del 2: `fakturering`,
+   `faktura-utskick`, `stripe-checkout`, `stripe-webhook` och `ekonomi`. De
+   gamla versionerna läser `invoices`, `faktura_sparr` eller
+   `intern.kassan_oppnad`, och slutar fungera när tabellerna är borta. De nya
+   rör inget som del 1 eller del 2 ändrar, så de kan gå ut före del 1.
+   Sedan `notis-ko` (mejlens mening utan fakturan, som villkoren), `drift` och
+   `juridik` (agenternas text), och resten som delar de ändrade filerna i
+   `_delad/` när det passar (`konstanter.ts`, `mejl.ts`, `notiser/*`,
+   `pris.ts`, `stripe.ts`): `admin-paminnelse`, `ansokan-gallring`,
+   `ansokan-notis`, `barn-inloggning`, `bjud-in`, `generate-feedback`,
+   `generate-message`, `klippkort-betala`, `lead-notis`, `notis-avanmal`,
+   `stripe-aterbetalning`, `stripe-avstamning`, `stripe-lage` och
+   `stripe-reservation`. Hämta tillbaka varje funktion och jämför byte för
+   byte, som förut.
+3. **Del 1**, hämtad från merge-commiten och prövad mot sin md5. Den har
+   ingen `drop` och inget `delete`, så den kan köras hel i ett do-block och
+   registreras med filens text. Stannar vakten på någon annans rader: kör
+   inget mer, och läs raderna med Leo.
+4. **Backup.** Database → Backups i Supabase, eller `pg_dump` av
+   `invoices`, `invoice_lines`, `faktura_sparr` och `intern.kassan_oppnad`.
+   Spara den utanför Supabase.
+5. **Del 2**, hämtad från merge-commiten och prövad mot sin md5. Den har
+   `drop` och ett `delete` (flaggraden), så verktyget ber om en bekräftelse
+   (CLAUDE.md avsnitt 5): kör den avsnitt för avsnitt med `execute_sql`, i
+   en transaktion, eller i SQL Editor som ett anrop, och registrera filens
+   text efteråt.
+6. Hela `rls-test.sql` mot driften, tillbakarullat (avsnitt 38 prövar båda
+   delarna), och advisorn: inget nytt för `anon`, och
+   `intern.kassan_oppnad` ska inte längre stå där.
+7. Torrkör förra månaden under Betalningar → Månadskörningen: underlagen som
+   förut, och inga fakturor i svaret.
+
+Kvar efter det: alla får frågan om villkoren igen (version 2026-10-21), och
+familjerna ska få veta att fakturan inte finns (ingen har valt den i driften,
+så ingen förlorar ett betalsätt de använt). Juristen har inte läst de nya
+villkoren eller rad 1 och 8 i `DATASKYDD.md`. `kund_skatteuppgifter` (RUT,
+personnummer) har inget syfte kvar: om tabellen ska bort är Leos fråga.
+
+### 9.19 Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, inte i drift)
+
+Leo (2026-10-21): Stripe bara genom webhooken, en liggare med en rad per
+betalning, planerna per kalendermånad ("Den här månaden" eller "Nästa månad"),
+en timbank som visar båda månaderna, en återbetalning som drar tillbaka timmar
+men aldrig under det som använts, köpvillkoren i kassan, och kortet som försöker
+igen och larmar efter ett dygn. Hur det fungerar står i `minne/betalning.md`
+(Betalningsliggaren och köpvillkoren i kassan, Kortet försöker igen) och
+`minne/timmar.md` (Planerna per kalendermånad). Ingenting är kört mot driften.
+
+Tre migrationer, i den här ordningen: `20261021120000_betalningsliggaren`,
+`20261021130000_planerna_per_manad` och `20261021140000_kortdragningen_forsoker_igen`.
+Ingen har `drop` eller `delete` (bara `on delete` i nycklarna; liggaren nekar
+delete och truncate med triggrar), och alla prövar funktionerna de lappar mot
+sin md5 och stannar innan något ändrats om driften inte är som filen lästes.
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna som
+arbetar i repot (`minne/databasen.md`):
+
+1. **Merga.** Vyerna tål att migrationerna saknas: utan `planens_manader()` står
+   inget månadsval och planen köps som förut, och utan `betalningar` säger
+   Liggaren att migrationen inte är körd. Rutan med köpvillkoren står före varje
+   kassa från första stund; länken går till `/anvandarvillkor#kopvillkor`, där
+   platshållaren står tills Leo skrivit texten (steg 8).
+2. **Edge-funktionerna**: `stripe-checkout` (SESSIONSFORM 10: nekar ett anrop
+   utan `villkor: true` utom Ta bort kortet, sparar krysset, tar planens månad),
+   `stripe-aterbetalning` (köp av timmar, helt eller ett antal timmar),
+   `stripe-webhook` (en betalning utan rad står i liggaren, och en återbetalning
+   av ett köp stäms av mot timmarna) och `notis-ko` (mejlet om ett nekat kort
+   länkar till kortet under Profil). De tål att migrationerna saknas: krysset
+   sparas inte (en rad i loggen), och webhooken hoppar över en funktion som inte
+   finns (PGRST202). Merga ändå först: den nya `stripe-checkout` nekar en gammal
+   sida som inte skickar krysset. Hämta tillbaka varje funktion och jämför byte
+   för byte, som förut.
+3. **`betalningsliggaren`**, hämtad från merge-commiten och prövad mot sin md5.
+   Kör den hel i ett do-block (eller i SQL Editor som ett anrop) och registrera
+   filens text. Vakten stannar om `intern.radering_underlag` ändrats. Den fyller
+   liggaren med det som redan är betalt, testbetalningarna med `skarp = false`.
+4. **`planerna_per_manad`**, på samma sätt. Vakterna: `intern.timmar_fordela`,
+   `klippkort_betald` och `extra_timmar_erbjudande`. `klippkort_saldo` byts med
+   `create or replace view` och två nya kolumner sist: läs vyns kolumner i
+   driften först (CLAUDE.md avsnitt 5). Planer köpta före filen behåller sina
+   datum (`galler_fran` null).
+5. **`kortdragningen_forsoker_igen`**, på samma sätt. Vakterna:
+   `intern.kortreservation_vack`, `intern.kortreservation_notis` och
+   `kortreservation_att_gora`. Strömbrytaren `kortreservation` rörs inte, och
+   `betalning_installning.sen_avbokning_timmar` är låst på 0 (som `kortsparr`).
+6. **Hela `rls-test.sql`** mot driften, tillbakarullat (avsnitt 42–44), och
+   advisorn: inget nytt för `anon`. `betalningar`, `kopvillkor_godkannanden`,
+   `klippkort_aterbetalningar` och `betalning_installning` har RLS, och bara
+   admin läser.
+7. **Stripe**, i testläge först. Webhookens händelser är desamma som i 9.14,
+   inga nya. Apple Pay och Google Pay är kortbetalningar och kräver ingen kod:
+   slå på dem under Settings → Payment methods, och lägg till `nextrum.se` och
+   `www.nextrum.se` under Settings → Payment method domains, för den inbäddade
+   kassan visar Apple Pay bara på en verifierad domän. Prova sedan: köp en plan
+   för nästa månad (timbanken visar "0 av 0" i den här månaden och planen i
+   nästa), betala tillbaka två timmar under Betalningar → Liggaren (raden blir
+   Delvis tillbaka och timmarna går tillbaka), och välj kort på ett pass med
+   testkortet `4000 0000 0000 0341`, som sparas men nekas när det dras: mejlet
+   kommer en gång, Kortet visar försöken, och efter ett dygn står en uppgift
+   under Att göra. Passet står kvar.
+8. **Köpvillkoren.** Leo skriver texten i `anvandarvillkor.html#kopvillkor` och
+   `en/anvandarvillkor.html#kopvillkor`, i stället för platshållaren (köpet,
+   priset, ångerrätten och hur den används, återbetalningen), och flyttar
+   villkorens version med sidans datum och `intern.villkor_version()` i en ny
+   migration (`kolla-villkor.py`): alla får frågan igen.
+
+Kvar efter det: juristen (rad 8 och 32 i `DATASKYDD.md`, köpvillkoren och
+planernas nya ord om kalendermånaden i villkoren), att säga till familjerna att
+planerna följer kalendermånaden, och provköpen i testläge.
+
+### 9.20 Koderna bara på planer, och partnerkoderna (2026-10-21, inte i drift)
+
+Leo (2026-10-21): "Bygg en flik Koder i admin med två typer: partnerkod
+(spårar partnerföreningars volym) och rabattkod (t.ex. Zayans). Båda gäller
+ENBART planköp, aldrig enskilda pass." Hur det fungerar står i
+`minne/betalning.md` (Koderna gäller bara planköp). Ingenting är kört mot
+driften.
+
+En migration: `20261021150000_koder_for_planer`, efter de tre i 9.19 (den
+kräver `betalningar`, och stannar annars). Den har EN `drop`:
+`alter table public.rabattkoder drop constraint if exists rabattkoder_varde_check`
+och samma villkor med `>= 0` direkt efter, så att en partnerkod kan ge noll i
+rabatt. Den står med flit utanför ett do-block, så att verktyget ser den och ber
+om en bekräftelse (CLAUDE.md avsnitt 5): kör filen i SQL Editor, eller avsnitt
+för avsnitt med `execute_sql` med det steget för sig. Inget `delete` utanför en
+funktion; `intern.familjens_partner_rensas` har ett. Vakterna prövar
+`intern.rabattkod_prova`, `kolla_rabattkod_kop` och `intern.klippkort_rabatt`
+mot sin md5 och stannar innan något ändrats om driften inte är som filen lästes.
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna:
+
+1. **Merga.** Vyerna tål att migrationen saknas: utan `rabattkoder.sort` står
+   alla koder som rabattkoder under Koder, statistiken säger att migrationen inte
+   är körd, och familjens ruta prövar koden på planerna med `kolla_rabattkod_kop`
+   som förut. Boka pass har ingen ruta för en kod från första stund.
+2. **`koder_for_planer`**, hämtad från merge-commiten och prövad mot sin md5,
+   registrerad med filens text. Den fyller `kod_anvandningar` med köp som redan
+   är betalda med en kod (ur liggaren). Ett pass som redan bär en kod behåller den.
+3. **Edge-funktionerna**: `stripe-checkout` (nekar en kod på ett pass, ett
+   tillägg, kortet och timmar till planen; frågar `kod_pa_planen` och räknar om
+   rabatten innan Stripe får beloppet; före migrationen `kolla_rabattkod_kop`) och
+   `drift` (agentens fakta om koderna). Inget i sessionens parametrar ändrades
+   för de koder som redan fanns, så SESSIONSFORM är 10 som förut. Hämta tillbaka
+   och jämför byte för byte.
+4. **Hela `rls-test.sql`** mot driften, tillbakarullat (avsnitt 28, 32 och 46),
+   och advisorn: inget nytt för `anon`. `kod_anvandningar` och
+   `familjens_partner` har RLS, och bara superadmin läser.
+5. **Prova i testläge**: skapa en partnerkod med noll i rabatt och en rabattkod
+   under Koder, köp en plan med var och en (testkortet `4242 4242 4242 4242`),
+   och se att köpen står under raden när den fälls ut, att familjens panel säger
+   partnern, och att Räkna testbetalningar tar med dem i talen. Prova att en kod
+   på Fyll timbanken får nej i rutan, och att Boka pass inte har någon ruta.
+6. **Där koderna delas ut**: villkoren nämner inga koder, så en kods villkor (bara
+   planer, hur många gånger, sista dagen) ska stå där koden lämnas till familjen
+   (e-handelslagen 9 §).
+
+Kvar efter det: juristen (rad 33 i `DATASKYDD.md` och policyns meningar om koden
+och partnern, med frågan om en förenings namn kan säga något känsligt), och att
+säga till familjerna som har en kod att den bara gäller planer.

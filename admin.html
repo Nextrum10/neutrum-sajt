@@ -21,9 +21,9 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=f21d3928">
-<link rel="stylesheet" href="nextrum-vy.css?v=5a101f12">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=28094f6d">
+<link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
+<link rel="stylesheet" href="nextrum-vy.css?v=61e1c2ac">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=73650383">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -445,7 +445,7 @@
                 <option value="">Alla lägen</option>
                 <option value="new">Nya</option>
                 <option value="contacted">Kontaktade</option>
-                <option value="matched">Matchade</option>
+                <option value="matched">Intagna</option>
                 <option value="declined">Avböjda</option>
               </select>
               <span class="small" id="leads-antal" style="margin-left:auto;color:var(--bl-3)"></span>
@@ -477,6 +477,8 @@
             <button class="vy-flik" type="button" role="tab" data-flik="utbildning"
                     id="flik-ans-utbildning" aria-controls="panel-ans-utbildning">Utbildning
               <span class="vy-flik-mark" id="flik-ans-utbildning-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="prov"
+                    id="flik-ans-prov" aria-controls="panel-ans-prov">Provet i vyn</button>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="alla"
@@ -516,6 +518,38 @@
             <div class="dbox">
               <h5>I utbildningen <em id="ans-utbildning-antal"></em></h5>
               <div id="ans-utbildning"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- Utbildningsprovet i studiehjälparvyn (2026-10-21): frågorna med
+               facit, gränsen och hur det gått för var och en. Studiehjälparen
+               gör det vid första inloggningen (nextrum-provet.js), och databasen
+               spärrar elevernas uppgifter tills det är godkänt. Det här är inte
+               provet i rekryteringen (Prova utbildningsprovet ovan).
+               nextrum-admin-provet.js. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="prov"
+               id="panel-ans-prov" aria-labelledby="flik-ans-prov" hidden>
+            <div id="prov-varning"></div>
+            <div class="dbox">
+              <h5>Frågorna <em id="prov-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 14px">
+                Studiehjälparen svarar på alla aktiva frågor vid första inloggningen, innan studiehjälparvyn öppnas.
+                Facit syns bara här, och provet rättas i databasen. Godkänd får sina elever, pass och meddelanden;
+                underkänd gör om provet efter väntetiden. En fråga tas aldrig bort: stäng av den.
+              </p>
+              <div id="prov-fragor"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox">
+              <h5>Gränsen och väntetiden</h5>
+              <div id="prov-inst"></div>
+            </div>
+            <div class="dbox">
+              <h5>Studiehjälparna</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 14px">
+                De som var godkända när provet kom (2026-10-21) slipper det. Tryck på ett namn för att nollställa
+                provet eller kräva det av någon.
+              </p>
+              <div id="prov-personer"><div class="loading">Hämtar</div></div>
             </div>
           </div>
         </section>
@@ -590,10 +624,10 @@
           <div class="dbox">
             <div class="adm-verktyg">
               <input class="inp adm-sok" id="fam-sok" type="search" placeholder="Sök namn eller e-post" aria-label="Sök familj" autocomplete="off">
-              <select class="sel" id="fam-status" aria-label="Filtrera på matchning">
+              <select class="sel" id="fam-status" aria-label="Filtrera på barnens matchning">
                 <option value="">Alla</option>
-                <option value="pending">Väntar på matchning</option>
-                <option value="matched">Matchade</option>
+                <option value="pending">Barn utan studiehjälpare</option>
+                <option value="matched">Alla barn matchade</option>
               </select>
               <span class="small" id="fam-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
@@ -675,12 +709,19 @@
              på #koder/familjer och #koder/studiehjalpare. Ritas av
              nextrum-admin-koder.js ur koder_lage(). Kampanjkoderna för
              affischerna står kvar under Tjänster & priser.
+
+             Rabattkoderna och partnerkoderna (2026-10-21, Leo: "Bygg en flik
+             Koder i admin med två typer: partnerkod ... och rabattkod ...
+             Båda gäller ENBART planköp") står i samma val, på
+             #koder/rabattkoder och #koder/partnerkoder, och ritas av
+             nextrum-admin-rabattkoder.js i #kp-vy. Rabattkoderna stod under
+             Tjänster till dess.
              ============================================================ -->
         <section class="vy-sek" data-sek="koder" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Koder</h2>
-              <p>Varje familj och studiehjälpare har en egen kod. Familjernas skrivs i intresseanmälan och ger en timme i timbanken, studiehjälparnas skrivs i jobbansökan och ger bonus i lönen.</p>
+              <p>Varje familj och studiehjälpare har en egen kod. Familjernas skrivs i intresseanmälan och ger en timme i timbanken, studiehjälparnas skrivs i jobbansökan och ger bonus i lönen. Rabattkoder och partnerkoder skrivs när en familj köper en plan, aldrig på ett pass.</p>
             </div>
           </div>
           <div class="kod-val" id="kod-val" aria-label="Vilka koder"></div>
@@ -693,6 +734,74 @@
               <input class="inp eko-sok" id="kod-sok" type="search" placeholder="Sök namn, e-post eller kod" aria-label="Sök bland koderna" autocomplete="off">
             </div>
             <div id="kod-lista"><div class="loading">Hämtar</div></div>
+          </div>
+
+          <div id="kp-vy" hidden>
+            <div class="vy-flikar" id="kp-flikar" role="tablist" aria-label="Vilka koder"></div>
+            <div id="kp-regel"></div>
+            <div class="kp-verktyg">
+              <label class="kp-test"><input type="checkbox" id="kp-test"> Räkna testbetalningar</label>
+              <p class="kp-fel" id="kp-fel" hidden></p>
+            </div>
+            <div class="adm-tal-rad" id="kp-tal"></div>
+            <div id="kp-partner" hidden></div>
+            <div class="dbox">
+              <h5 id="kp-ny">Ny kod</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
+                Koden lagras i versaler och familjen skriver den när den köper en plan. Rabatten får vara noll.
+                Lämna <b>Gånger totalt</b> tomt för obegränsat, och <b>Gäller till</b> tomt för ingen slutdag.
+                En kod raderas aldrig: den stängs av.
+              </p>
+              <form id="kp-form" novalidate>
+                <div class="ag-faltrad">
+                  <div class="fgroup">
+                    <label for="kp-kod">Kod</label>
+                    <input class="inp" id="kp-kod" maxlength="24" placeholder="ZAYAN10"
+                           autocomplete="off" spellcheck="false" style="text-transform:uppercase">
+                  </div>
+                  <div class="fgroup" id="kp-partner-rad" hidden>
+                    <label for="kp-partner-namn">Partner</label>
+                    <input class="inp" id="kp-partner-namn" maxlength="80" placeholder="Föreningens namn" autocomplete="off">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-typ">Rabatt</label>
+                    <select class="inp" id="kp-typ">
+                      <option value="procent">Procent av priset</option>
+                      <option value="belopp">Kronor av priset</option>
+                    </select>
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-varde">Värde</label>
+                    <input class="inp" id="kp-varde" type="number" min="0" step="1" inputmode="numeric" placeholder="10">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-fran">Gäller från</label>
+                    <input class="inp" id="kp-fran" type="date">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-till">Gäller till</label>
+                    <input class="inp" id="kp-till" type="date">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-max">Gånger totalt</label>
+                    <input class="inp" id="kp-max" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                  </div>
+                  <div class="fgroup">
+                    <label for="kp-familj">Gånger per familj</label>
+                    <input class="inp" id="kp-familj" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                  </div>
+                </div>
+                <div class="fgroup" style="margin-top:14px">
+                  <label for="kp-text">Beskrivning</label>
+                  <input class="inp" id="kp-text" maxlength="80" placeholder="Syns för familjen när koden godkänns">
+                </div>
+                <div class="ag-rad">
+                  <button class="btn btn-primary btn-sm" type="submit" id="kp-spara">Skapa koden</button>
+                  <p class="ok-msg" id="kp-msg" style="margin:0"></p>
+                </div>
+              </form>
+            </div>
+            <div id="kp-lista"><div class="loading">Hämtar</div></div>
           </div>
         </section>
 
@@ -1048,9 +1157,9 @@
              Läget (betalda timmar av månadens), fyra tal som visar
              familjerna bakom sig, pengarna (kommit in, väntar, går ut och
              vad som blir kvar), familjerna med Påminn på raden, och
-             månadens fakturor med månadskörningen. Pengarna räknas på
-             samma rader som Betalningar → Alla betalningar
-             (nextrum-admin-manaden.js).
+             månadskörningen. Fakturorna stod här till 2026-10-21, då
+             fakturan togs bort. Pengarna räknas på samma rader som
+             Betalningar → Alla betalningar (nextrum-admin-manaden.js).
              ============================================================ -->
         <section class="vy-sek" data-sek="manaden" hidden>
           <div class="vy-sek-topp">
@@ -1075,10 +1184,6 @@
           </div>
           <div class="vy-kort"><div class="vy-lista" id="man-lista" aria-live="polite"><div class="loading">Hämtar</div></div></div>
 
-          <div class="vy-grupp" id="man-fakturor"><h3>Fakturorna</h3><span class="vy-antal" id="man-fakturor-antal"></span></div>
-          <p class="eko-grupptext">En faktura per familj, som samlar varje pass de väljer faktura på. När månaden är slut blir den ett utkast av sig själv, natten mot den 1:a, och läggs in i Fortnox för hand: Underlag, skapa fakturan i Fortnox, och Lagd i Fortnox med numret, OCR och förfallodagen. Fortnox skickar den. Tryck på familjen för att se passen.</p>
-          <p class="kor-not" data-fakt-svar aria-live="polite" hidden></p>
-          <div class="vy-kort"><div class="vy-lista" id="man-fakt-lista"></div></div>
           <!-- Månadskörningen för sidans månad, hopfälld sedan 2026-10-06:
                schemat gör den varje natt. Rutan ritas inte om när sidan
                gör det, så en torrkörning står kvar tills någon byter
@@ -1086,7 +1191,7 @@
           <div class="vy-kort"><div class="vy-kort-kropp man-korning" id="man-korning" data-kor-ruta>
             <details class="eko-mer kor-hand">
               <summary id="man-korning-rubrik">Månadskörningen för hand</summary>
-              <p class="eko-text">Samma körning som under Betalningar → Fakturor och Löner, och den som går av sig själv varje natt: den skapar fakturautkasten och studiehjälparnas underlag för månaden i samma steg. Behövs bara för en natt som inte gick. Torrkör visar vad som skulle skapas utan att skriva något.</p>
+              <p class="eko-text">Samma körning som under Betalningar → Månadskörningen och Löner, och den som går av sig själv varje natt: den skapar studiehjälparnas underlag för månaden. Behövs bara för en natt som inte gick. Torrkör visar vad som skulle skapas utan att skriva något.</p>
               <div class="adm-verktyg">
                 <button class="btn btn-ghost btn-sm" type="button" data-kor-torr>Torrkör</button>
                 <button class="btn btn-primary btn-sm" type="button" data-kor-skapa disabled>Skapa utkast</button>
@@ -1107,16 +1212,17 @@
 
              Familjernas pengar, i sex flikar. Att göra är allt som väntar
              på er i alla månader, med knappen som gör det på raden; Alla
-             betalningar är månadens betalningar, en rad var; Fakturor är
-             flödet från fakturapass till betald faktura; Bokslut stänger
+             betalningar är månadens betalningar, en rad var;
+             Månadskörningen gör studiehjälparnas underlag; Bokslut stänger
              månaden; Köpta timmar är planerna, klippkorten och timbanken;
              Inställningar är strömbrytarna och Stripe.
 
              Studiehjälparnas underlag bor under Löner, som redan hade
-             samma rader och knappar, och månadskörningen under Fakturor,
-             där dess utkast hamnar. Gamla adresser (#ekonomi/kortbetalningar,
-             /avvikelser, /utbetalningar, /korning) leds rätt i FLYTTAT i
-             nextrum-admin.js. Allt ritas av nextrum-admin-ekonomi.js.
+             samma rader och knappar. Månadskörningen stod under Fakturor
+             till 2026-10-21, då fakturan togs bort. Gamla adresser
+             (#ekonomi/kortbetalningar, /avvikelser, /utbetalningar,
+             /fakturor) leds rätt i FLYTTAT i nextrum-admin.js. Allt ritas
+             av nextrum-admin-ekonomi.js.
              ============================================================ -->
         <section class="vy-sek" data-sek="ekonomi" hidden>
           <div class="vy-sek-topp">
@@ -1132,9 +1238,12 @@
               <span class="vy-flik-mark" id="flik-attgora-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="betalningar"
                     id="flik-betalningar" aria-controls="panel-betalningar">Alla betalningar</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="fakturor"
-                    id="flik-fakturor" aria-controls="panel-fakturor">Fakturor
-              <span class="vy-flik-mark" id="flik-fakt-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="liggaren"
+                    id="flik-liggaren" aria-controls="panel-liggaren">Liggaren</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="kortdragning"
+                    id="flik-kortdragning" aria-controls="panel-kortdragning">Kortet</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="korning"
+                    id="flik-korning" aria-controls="panel-korning">Månadskörningen</button>
             <button class="vy-flik" type="button" role="tab" data-flik="bokslut"
                     id="flik-bokslut" aria-controls="panel-bokslut">Bokslut
               <span class="vy-flik-mark" id="flik-bokslut-mark" hidden></span></button>
@@ -1167,26 +1276,35 @@
             <p class="vy-finstilt" id="bet-fot"></p>
           </div>
 
-          <div class="vy-flik-panel" role="tabpanel" data-flik="fakturor"
-               id="panel-fakturor" aria-labelledby="flik-fakturor" hidden>
-            <!-- Flödet, inte en månad: en faktura för augustis pass hanteras
-                 i september, och ska synas då. -->
-            <ol class="fakt-flode" id="fakt-steg" aria-label="Fakturornas steg"></ol>
+          <!-- Liggaren och Kortet (2026-10-21, nextrum-admin-liggaren.js):
+               varje kortbetalning en rad, med återbetalningen, och passen
+               som betalas med det sparade kortet, de nekade överst. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="liggaren"
+               id="panel-liggaren" aria-labelledby="flik-liggaren" hidden>
+            <div class="bet-sam eko-sam" id="lig-sam"></div>
             <div class="eko-verktyg">
-              <input class="inp eko-sok" id="fakt-sok" type="search" placeholder="Sök familj eller fakturanummer" aria-label="Sök faktura" autocomplete="off">
+              <div class="chips eko-chips" id="lig-chips" role="group" aria-label="Visa betalningar i liggaren"></div>
+              <input class="inp eko-sok" id="lig-sok" type="search" placeholder="Sök familj, köp, kod eller Stripe-id" aria-label="Sök i liggaren" autocomplete="off">
             </div>
-            <!-- Svaret från Skapa nu på en rad (2026-10-06). -->
-            <p class="kor-not" data-fakt-svar aria-live="polite" hidden></p>
-            <!-- En rad per familj och månad (2026-10-06): fakturan samlas
-                 under månaden och blir ett utkast av sig själv natten mot
-                 den 1:a. Familjens namn fäller ut passen. -->
-            <div id="fakt-lista"><div class="loading">Hämtar</div></div>
+            <div class="vy-kort"><div class="vy-lista" id="lig-lista"><div class="loading">Hämtar</div></div></div>
+            <p class="vy-finstilt" id="lig-fot"></p>
+          </div>
 
-            <!-- data-kor-*: samma körning står under Löner och Månadens
-                 ekonomi (2026-09-28), och en lyssnare i
-                 nextrum-admin-ekonomi.js sköter alla tre rutorna. Sedan
-                 2026-10-06 hopfälld: schemat gör den varje natt, och
-                 raderna har Skapa nu. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="kortdragning"
+               id="panel-kortdragning" aria-labelledby="flik-kortdragning" hidden>
+            <div class="bet-sam eko-sam" id="kd-sam"></div>
+            <div class="vy-kort"><div class="vy-lista" id="kd-lista"><div class="loading">Hämtar</div></div></div>
+            <p class="vy-finstilt" id="kd-fot"></p>
+          </div>
+
+          <!-- Månadskörningen. Fliken hette Fakturor och hade fakturorna
+               överst till 2026-10-21, då fakturan togs bort.
+               data-kor-*: samma körning står under Löner och Månadens
+               ekonomi (2026-09-28), och en lyssnare i
+               nextrum-admin-ekonomi.js sköter alla tre rutorna. Sedan
+               2026-10-06 hopfälld: schemat gör den varje natt. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="korning"
+               id="panel-korning" aria-labelledby="flik-korning" hidden>
             <div class="vy-grupp" id="kor-rubrik"><h3>Månadskörningen</h3></div>
             <div class="vy-kort"><div class="vy-kort-kropp" data-kor-ruta>
               <!-- Schemat står i cron.job, inte här: rutan frågar databasen
@@ -1194,7 +1312,7 @@
               <div id="kor-schema" class="kor-schema" aria-live="polite"><div class="loading">Hämtar</div></div>
               <details class="eko-mer kor-hand">
                 <summary>Köra den för hand</summary>
-                <p class="eko-text">Behövs bara för en natt som inte gick, eller en äldre månad som aldrig kördes. Skapa nu på en faktura gör samma sak för förra månaden. Torrkör visar vad som skulle skapas utan att skriva något, och Skapa utkast går bara efter den.</p>
+                <p class="eko-text">Behövs bara för en natt som inte gick, eller en äldre månad som aldrig kördes. Torrkör visar vad som skulle skapas utan att skriva något, och Skapa utkast går bara efter den.</p>
                 <div class="adm-verktyg">
                   <select class="sel" id="kor-period" data-kor-period aria-label="Vilken månad körningen gäller"></select>
                   <button class="btn btn-ghost btn-sm" type="button" id="kor-torr" data-kor-torr>Torrkör</button>
@@ -1202,15 +1320,15 @@
                 </div>
                 <p class="kor-not" data-kor-not aria-live="polite" hidden></p>
                 <div id="kor-resultat" data-kor-resultat aria-live="polite"></div>
-                <p class="eko-text">Alla genomförda och rapporterade pass samlas till ett underlag per studiehjälpare, det som betalas ut den 25:e, och varje familj som valt faktura får ett fakturautkast för månaden. Andra pass betalas med kort, med kortet som reserveras och dras när rapporten är skriven eller när familjen bekräftar rapporten, och pass som hölls utan betalning räknas upp i körningen i stället för att faktureras. Ett pass som rapporteras efter körningen läggs på sin månads utkast natten efter, så länge det är ett utkast.</p>
-                <p class="eko-text">Med schemat på går den av sig själv varje natt för förra månaden: den 1:a skapar den underlagen och fakturautkasten, och resten av månaden lägger den till sena pass. Här körs den med din inloggning. Gick körningen inte står det under System → Fel i sex timmar, och en halvtimme efter körningen blir allt utom ett helt lyckat svar en uppgift.</p>
-                <p class="eko-text"><b>Skapa utkast</b> skriver underlagen och fakturorna som utkast. Ingenting skickas och ingenting betalas ut härifrån: underlaget skickas per studiehjälpare under Löner, och fakturan skickas från Fortnox.</p>
+                <p class="eko-text">Alla genomförda och rapporterade pass samlas till ett underlag per studiehjälpare, det som betalas ut den 25:e. Familjerna betalar varje pass med kort eller med timmar ur timbanken, och pass som hölls utan betalning räknas upp i körningen så att någon kan höra av sig. Ett pass som rapporteras efter körningen läggs på sin månads utkast natten efter, så länge det är ett utkast.</p>
+                <p class="eko-text">Med schemat på går den av sig själv varje natt för förra månaden: den 1:a skapar den underlagen, och resten av månaden lägger den till sena pass. Här körs den med din inloggning. Gick körningen inte står det under System → Fel i sex timmar, och en halvtimme efter körningen blir allt utom ett helt lyckat svar en uppgift.</p>
+                <p class="eko-text"><b>Skapa utkast</b> skriver underlagen som utkast. Ingenting skickas och ingenting betalas ut härifrån: underlaget skickas per studiehjälpare under Löner.</p>
                 <div class="sum-line"><span>Vilka pass</span><span class="adm-tal">genomförda och rapporterade, till och med månadens slut</span></div>
                 <div class="sum-line"><span>Utbetalning</span><span class="adm-tal">den 25:e, från banken</span></div>
                 <div class="sum-line total"><span>Pris per timme, för pass utan betalning</span><span class="adm-tal" id="kor-pris">—</span></div>
               </details>
             </div></div>
-            <p class="vy-finstilt">Beloppen går inte att ändra härifrån: de räknades av månadskörningen ur de pass som hållits, med samma pris som kortet tar. Stämmer något inte, ta bort utkastet, rätta passet och kör igen. Ingen påminnelseavgift och ingen fakturaavgift, för villkoren nämner ingen.</p>
+            <p class="vy-finstilt">Beloppen går inte att ändra härifrån: de räknades av månadskörningen ur de pass som hållits och studiehjälparens timpenning. Stämmer något inte, ta bort utkastet under Löner, rätta passet och kör igen.</p>
           </div>
 
           <!-- Bokslutet (Fas 20.2). Månadens siffror och larm ur manad_lage,
@@ -1231,7 +1349,7 @@
             <div class="vy-kort"><div class="vy-lista" id="timmar-kop"><div class="loading">Hämtar</div></div></div>
             <div class="vy-grupp"><h3>Sparade minuter i timbanken</h3></div>
             <div class="vy-kort"><div class="vy-lista" id="timmar-bank"><div class="loading">Hämtar</div></div></div>
-            <p class="vy-finstilt">Timmar och minuter familjerna betalat för men inte använt är deras tills de använts. Slutar en familj betalas det tillbaka som villkoren räknar: de använda timmarna till ordinarie pris, inom ångerfristen till det avtalade. Återbetalningen görs i Stripes dashboard, och webhooken stänger köpet när den kommer. Markera utbetald flyttar inga pengar.</p>
+            <p class="vy-finstilt">Timmar och minuter familjerna betalat för men inte använt är deras tills de använts. Slutar en familj betalas det tillbaka som villkoren räknar: de använda timmarna till ordinarie pris, inom ångerfristen till det avtalade. Ett köp betalas tillbaka under Liggaren, helt eller med ett antal timmar, och timmarna dras då tillbaka; en återbetalning i Stripes dashboard stänger köpet. Markera utbetald flyttar inga pengar.</p>
           </div>
 
           <!-- Strömbrytarna och Stripe. Fas 14.3: stripe-lage frågar Stripe
@@ -1313,7 +1431,7 @@
                 <h5>Månadskörningen <em data-kor-namn></em></h5>
                 <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:14px">
                   Samlar månadens genomförda och rapporterade pass till ett underlag per
-                  studiehjälpare, och skapar fakturautkasten för familjer som valt faktura.
+                  studiehjälpare.
                   Den går av sig själv varje natt för förra månaden; här behövs den bara för en
                   natt som inte gick. Torrkör visar vad som skulle skapas utan att skriva något.
                   Ingenting skickas och ingenting betalas ut härifrån.
@@ -1767,21 +1885,21 @@
              hit (följHash i nextrum-admin.js). Tips och kampanjer
              flyttade hit från Intresseanmälningar 2026-10-06
              (#katalog/tips). Familjerabatterna, våra egna koder som bara
-             vi ser, kom 2026-10-15 (#katalog/familjerabatter).
+             vi ser, kom 2026-10-15 (#katalog/familjerabatter). Rabattkoderna
+             flyttade till Koder 2026-10-21 (#koder/rabattkoder), bredvid
+             partnerkoderna.
              ============================================================ -->
         <section class="vy-sek" data-sek="katalog" hidden>
           <div class="vy-sek-topp">
             <div>
               <h2>Tjänster</h2>
-              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor, och koderna: rabattkoder, familjerabatter, tipskoder och kampanjkoder.</p>
+              <p>Vad Nextrum erbjuder, till vilket pris och på vilka villkor, och våra koder: familjerabatter, tipskoder och kampanjkoder. Rabattkoderna och partnerkoderna står under <a href="#koder/rabattkoder">Koder</a>.</p>
             </div>
           </div>
 
-          <div class="vy-flikar" role="tablist" aria-label="Tjänster, rabattkoder och kampanjer">
+          <div class="vy-flikar" role="tablist" aria-label="Tjänster, familjerabatter och kampanjer">
             <button class="vy-flik" type="button" role="tab" data-flik="tjanster"
                     id="flik-tjanster" aria-controls="panel-tjanster">Tjänster &amp; priser</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="rabattkoder"
-                    id="flik-rabattkoder" aria-controls="panel-rabattkoder">Rabattkoder</button>
             <button class="vy-flik" type="button" role="tab" data-flik="familjerabatter"
                     id="flik-familjerabatter" aria-controls="panel-familjerabatter">Familjerabatter</button>
             <button class="vy-flik" type="button" role="tab" data-flik="tips"
@@ -1819,80 +1937,6 @@
             </div>
 
             <div id="tj-kort" style="margin-top:clamp(16px,1.8vw,22px)"><div class="loading">Hämtar</div></div>
-          </div>
-
-          <!-- ============ RABATTKODER ============
-               Tabellen är stängd för alla utom admin, med flit: en
-               inloggad familj som kan LÄSA den kan läsa alla koder
-               och välja den som är mest värd. Bokningen kontrollerar
-               i stället en kod i taget via kolla_rabattkod().
-
-               Rabatten fryser vid bokningen. Ändrar ni en kod i
-               efterhand påverkas inga redan bokade pass — ett belopp
-               får inte ändra sig för att en kampanj justerats. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="rabattkoder"
-               id="panel-rabattkoder" aria-labelledby="flik-rabattkoder" hidden>
-            <div class="dbox">
-              <h5>Ny kod</h5>
-              <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
-                Koden lagras i versaler och familjen skriver den vid bokningen. Lämna
-                <b>Max antal</b> tomt för obegränsat, och <b>Gäller till</b> tomt för ingen
-                slutdag.
-              </p>
-              <form id="rk-form">
-                <div class="ag-faltrad">
-                  <div class="fgroup">
-                    <label for="rk-kod">Kod</label>
-                    <input class="inp" id="rk-kod" maxlength="24" placeholder="SOMMAR25"
-                           autocomplete="off" spellcheck="false" style="text-transform:uppercase">
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-typ">Typ</label>
-                    <select class="inp" id="rk-typ">
-                      <option value="procent">Procent av priset</option>
-                      <option value="belopp">Fast belopp i kronor</option>
-                    </select>
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-varde">Värde</label>
-                    <input class="inp" id="rk-varde" type="number" min="1" step="1" inputmode="numeric" placeholder="10">
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-tjanst">Gäller tjänst</label>
-                    <select class="inp" id="rk-tjanst"><option value="">Alla tjänster</option></select>
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-till">Gäller till</label>
-                    <input class="inp" id="rk-till" type="date">
-                  </div>
-                  <div class="fgroup">
-                    <label for="rk-max">Gånger totalt</label>
-                    <input class="inp" id="rk-max" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
-                  </div>
-                  <!-- 2026-10-13 (Leo: "rabattkoder ska vi också bestämma hur många
-                       gånger de får användas"). En gång per familj som förval; tom
-                       ruta är obegränsat. Pass och köp av timmar räknas ihop, och ett
-                       avbokat pass räknas inte. -->
-                  <div class="fgroup">
-                    <label for="rk-familj">Gånger per familj</label>
-                    <input class="inp" id="rk-familj" type="number" min="1" step="1" inputmode="numeric" value="1" placeholder="Obegränsat">
-                  </div>
-                </div>
-                <div class="fgroup" style="margin-top:14px">
-                  <label for="rk-text">Beskrivning</label>
-                  <input class="inp" id="rk-text" maxlength="80" placeholder="Syns för familjen när koden godkänns">
-                </div>
-                <div class="ag-rad">
-                  <button class="btn btn-primary btn-sm" type="submit" id="rk-spara">Skapa koden</button>
-                  <p class="ok-msg" id="rk-msg" style="margin:0"></p>
-                </div>
-              </form>
-            </div>
-
-            <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
-              <h5>Koder <em id="rk-antal"></em></h5>
-              <div id="rk-tabell"><div class="loading">Hämtar</div></div>
-            </div>
           </div>
 
           <!-- ============ FAMILJERABATTER (2026-10-15) ============
@@ -2012,9 +2056,9 @@
 
           <div class="dbox" style="margin-top:20px">
             <h3>Så fungerar den</h3>
-            <p class="small">Vyn öppnas i en ny flik, med påhittade uppgifter, och båda vyerna delar samma värld: föreslå en tid som familjen, tryck på Byt till studiehjälparvyn i remsan överst och acceptera den som Sara, och byt tillbaka. Allt går att klicka på, men inget lämnar webbläsaren: inget mejl, ingen betalning och ingen AI går iväg, och inget räknas i statistiken, lönerna eller fakturorna. Världen står kvar i webbläsaren tills du trycker på Börja om, och börjar om av sig själv nästa dag.</p>
+            <p class="small">Vyn öppnas i en ny flik, med påhittade uppgifter, och båda vyerna delar samma värld: föreslå en tid som familjen, tryck på Byt till studiehjälparvyn i remsan överst och acceptera den som Sara, och byt tillbaka. Allt går att klicka på, men inget lämnar webbläsaren: inget mejl, ingen betalning och ingen AI går iväg, och inget räknas i statistiken, lönerna eller betalningarna. Världen står kvar i webbläsaren tills du trycker på Börja om, och börjar om av sig själv nästa dag.</p>
             <p class="small" style="margin-top:10px">Den visas för den som är inloggad som admin i samma webbläsare.</p>
-            <p class="small" style="margin-top:10px">Våra egna konton räknas inte heller i statistiken: Översikt och Statistik här, och drift-agentens siffror, räknar inga pass där familjen eller studiehjälparen är admin. I listorna står de som förut, och betalningar, fakturor och löner räknas som vanligt.</p>
+            <p class="small" style="margin-top:10px">Våra egna konton räknas inte heller i statistiken: Översikt och Statistik här, och drift-agentens siffror, räknar inga pass där familjen eller studiehjälparen är admin. I listorna står de som förut, och betalningar och löner räknas som vanligt.</p>
           </div>
         </section>
 
@@ -2249,8 +2293,8 @@
           <!-- ============ INSTÄLLNINGAR (Fas 6) ============
                Det som styr verksamheten men inte är kod. RUT-taket per
                år matas in här med källa — ingen skattesiffra står i
-               koden (Fas 5.3). Utan ett tak för året drar
-               faktureringen ingen RUT. -->
+               koden (Fas 5.3). Ingen RUT dras sedan Fas 14.2, och
+               fakturan, som drog den, togs bort 2026-10-21. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="installningar"
                id="panel-installningar" aria-labelledby="flik-installningar" hidden>
             <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)">
@@ -2280,7 +2324,8 @@
           </div>
 
           <!-- ============ AUDITLOGG (Fas 6) ============
-               Vem som ändrade vad och när: matchningar, fakturor,
+               Vem som ändrade vad och när: matchningar, fakturor (till
+               2026-10-21),
                utbetalningar, tjänster, adminbehörighet, undantag,
                kopplade rapporter och varje åtkomst till ett
                personnummer. Loggen innehåller bara id, status, belopp
@@ -2400,7 +2445,7 @@
                   <option value="matchning">Matchningar</option>
                   <option value="pass">Pass</option>
                   <option value="rapport">Rapporter</option>
-                  <option value="faktura">Fakturor</option>
+                  <option value="faktura">Fakturor (till 2026-10-21)</option>
                   <option value="utbetalning">Utbetalningar</option>
                   <option value="tjanst">Tjänster</option>
                   <option value="rabattkod">Rabattkoder</option>
@@ -2521,40 +2566,43 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=6fb7557b"></script>
+<script src="nextrum-config.js?v=6949b9e0"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=97cbce73"></script>
+<script src="nextrum-app.js?v=a262aca7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=4cd06199"></script>
-<script src="nextrum-arbetsyta.js?v=d5f36b47"></script>
+<script src="nextrum-studie.js?v=e4708805"></script>
+<script src="nextrum-arbetsyta.js?v=71f4330a"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
-<script src="nextrum-betalning.js?v=3a28925a"></script>
+<script src="nextrum-betalning.js?v=60e55cea"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=bf7a6c19"></script>
-<script src="nextrum-admin-detalj.js?v=6710db5e"></script>
-<script src="nextrum-admin-oversikt.js?v=ed84102c"></script>
-<script src="nextrum-admin-kunder.js?v=d24d5089"></script>
-<script src="nextrum-admin-rekrytering.js?v=99ac281f"></script>
+<script src="nextrum-admin-karna.js?v=8a37f109"></script>
+<script src="nextrum-admin-detalj.js?v=dd0594f9"></script>
+<script src="nextrum-admin-oversikt.js?v=4675189b"></script>
+<script src="nextrum-admin-kunder.js?v=c59f9f8c"></script>
+<script src="nextrum-admin-provet.js?v=0850a22d"></script>
+<script src="nextrum-admin-rekrytering.js?v=6e830703"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
-<script src="nextrum-admin-drift.js?v=da4828c4"></script>
-<script src="nextrum-admin-ekonomi.js?v=ed5a83af"></script>
-<script src="nextrum-admin-manaden.js?v=8daec1e5"></script>
+<script src="nextrum-admin-drift.js?v=d2b8b595"></script>
+<script src="nextrum-admin-ekonomi.js?v=8e7e6225"></script>
+<script src="nextrum-admin-liggaren.js?v=8eeee83a"></script>
+<script src="nextrum-admin-manaden.js?v=51040ed6"></script>
 <script src="nextrum-admin-loner.js?v=2c10dffa"></script>
-<script src="nextrum-admin-koder.js?v=87ddf501"></script>
-<script src="nextrum-admin-tjanster.js?v=7fcafa26"></script>
-<script src="nextrum-admin-system.js?v=0d7e538d"></script>
-<script src="nextrum-admin-behorighet.js?v=640897ae"></script>
-<script src="nextrum-admin-automationer.js?v=0fb655ba"></script>
+<script src="nextrum-admin-koder.js?v=a0486d8a"></script>
+<script src="nextrum-admin-rabattkoder.js?v=da71bc94"></script>
+<script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
+<script src="nextrum-admin-system.js?v=1f4b7fcf"></script>
+<script src="nextrum-admin-behorighet.js?v=576427c6"></script>
+<script src="nextrum-admin-automationer.js?v=f8750cf7"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
-<script src="nextrum-admin-radera.js?v=12512614"></script>
+<script src="nextrum-admin-radera.js?v=85c68990"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=c1e55e6e"></script>
-<script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-admin.js?v=b811b085"></script>
+<script src="nextrum-admin-konsol.js?v=0b10c92f"></script>
+<script src="nextrum-modulvakt.js?v=bca26bc2"></script>
+<script src="nextrum-admin.js?v=d3f87ab1"></script>
 </body>
 </html>

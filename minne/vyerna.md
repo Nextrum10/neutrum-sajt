@@ -347,8 +347,8 @@ Playwright och tappar pekskärmsemuleringen; ta bilden med
   [data-betalflode]`, `betalflöde()`, CSS i nextrum-sidor.css): vågrätt
   på dator, där stegen och pilarna tänds i tur (`.ar-igang`), och lodrätt
   med pilen nedåt från 1100 px, där varje steg tänds när det passerat
-  mitten (`.ar-nadd`). Betalnings- och fakturameningen står en gång var i
-  flödet och en gång i FAQ:n. `.nx-holdpunkter` är kvar på Vår idé och För
+  mitten (`.ar-nadd`). Betalningsmeningen står en gång i flödet och en
+  gång i FAQ:n (fakturameningen gick med fakturan 2026-10-21). `.nx-holdpunkter` är kvar på Vår idé och För
   elever & föräldrar.
 
 ### Startsidan med en röd tråd (2026-10-08)
@@ -1316,6 +1316,21 @@ snyggt." En egen sektion i gruppen Kunder, efter Studiehjälpare
   och tryck rör sig med `scale`.
 - Ansökans panel har raderna Kod och Bonus för tipset, och Löner har rutan
   Bonus för tips (`minne/betalning.md`).
+- **Rabattkoderna och partnerkoderna** (2026-10-21, `koder_for_planer`) står i
+  samma val, som kort tre och fyra (mossa och bricka), på `#koder/rabattkoder`
+  och `#koder/partnerkoder`, och ritas av `nextrum-admin-rabattkoder.js`
+  (`ritaRabattkoder`, modulvakten och `BARA_SUPER`) i en egen yta (`#kp-vy`).
+  `nextrum-admin-koder.js` ritar korten och de fyra flikarna (`kodflikar`) och
+  döljer sin yta på de två adresserna. Ytan: regeln (bara planer), rutan Räkna
+  testbetalningar, nyckeltalen, för partnerkoderna en tabell per partner
+  (`partner_statistik`), formuläret (partnern bara för en partnerkod, noll i
+  rabatt går, en gång per familj som förval för en rabattkod och tomt för en
+  partnerkod), och en `<details class="kod-rad">` per kod som hämtar sina köp
+  (`kodens_anvandningar`) första gången den fälls ut. Stäng av frågar först och
+  skriver `aktiv`; ingen knapp raderar. Rabattkoderna stod under Tjänster till
+  2026-10-21, och `#katalog/rabattkoder` skickas hit (`FLYTTAT`). Text ur
+  databasen går genom `esc()`: `prova-koder.js` provar ett partnernamn med en
+  `<img onerror>` och ett familjenamn med `<i>`.
 
 ### Mejl från adminvyn skrivs i Gmail (2026-10-11)
 
@@ -1506,6 +1521,8 @@ bokningsschema, med Meet som plats, och länken i vårt mejl.
   kallelsen: hen bokar själv, och Boka möte, som annars skickar vidare, används
   inte. Utan länken är Skriv till hen bara en kontakt, som 2026-10-15. Läget
   rörs som förut (Ny blir Kontaktad).
+  Intervjumejlet (2026-10-21, `minne/notiser.md`) går då inte: databasen ser
+  `kontaktad_at` i samma ändring som steget.
 - **Steg 1 och 2 i Rekryteringen säger det**: steg 1 visar bokningssidan (och sedan samma dag att mejlet
   går från info@, nedan), eller
   var den sätts; steg 2 säger att mötet står i kalendern för info@, inte här,
@@ -1686,6 +1703,38 @@ lektioner, detta ska ske efter att man bekräftat sitt nya lösenord."
 - **Barnets vy har ingen introduktion**: barnet kommer in med ett
   användarnamn föräldern gett det, och vyn har fyra delar. Den
   behövs inte, och ingen bad om den.
+
+### Utbildningsprovet före studiehjälparvyn (2026-10-21)
+Ordningen vid inloggningen i studiehjälparvyn är lösenordet (`lösenordFörst`),
+villkoren (`villkorFörst`), provet (`NXProvet.förstGörs`, bara för en godkänd
+studiehjälpare) och introduktionen. Provet är samma ruta (`.nx-fraga.nx-prov`)
+och går inte att stänga: Escape gör inget, och utan provet finns inget att
+visa, för databasen lämnar inte ut elever, pass eller meddelanden förrän det
+är klart (`minne/affaren.md`). Logga ut står kvar. Alternativen är hela
+etiketter på minst 44 px med 16 px text (`.nx-prov-alt`), och den valda tar
+accentens färg med `:has(input:checked)`. Svarar databasen inte, eller saknas
+`mitt_utbildningsprov()`, visas ingen ruta. Förhandsvisningens värld svarar
+att provet är klart (`nextrum-forhandsvisning.js`).
+
+### Köpvillkoren före kassan, planens månad och Liggaren (2026-10-21)
+**Rutan före kassan** (`NXStudie.kassansVillkor`, `.nx-kassa-villkor`): varje väg till Stripe i studievyn
+(Köp under Erbjudanden, Köp till timmar, Betala med kort och tillägget på passet, Spara kortet och Byt kort)
+frågar först, i samma `.nx-fraga`-ruta som resten av vyn. Den säger vad som köps och priset (kodens pris när en
+rabattkod gäller, annars `medRabatt()`), för en plan också månaden, och har kryssrutan med länken till
+köpvillkoren (`CFG.KOPVILLKOR_URL`). Fokus står på krysset när den öppnas, Till kassan är `disabled` tills det
+är ikryssat, Tab stannar i rutan, och Escape, Avbryt eller ett tryck utanför stänger utan att något händer.
+Krysset är en etikett på minst 44 px, och knappen bär orange som Köp. Anropet bär `villkor: true`, aldrig ett
+belopp.
+**Planens månad**: plankorten har två knappar (`.erb-manad`, `[data-erb-manad]`, `aria-pressed`, minst 44 px)
+och raden under (`[data-erb-manad-not]`); ett tryck byter bara knapparnas läge och radens text, så kortet inte
+byter höjd under fingret (fälla 4). Valet bor i `S.erb.manad` per plan, och det syns bara när
+`planens_manader()` svarat. **Timbanken** har en rad per månad under batteriet (`.tb-manader`, `.tb-manad`, i Er
+timbank och i Profil → Timbanken), nästa månads plan står i listan med streckad linje ovanför
+(`.ar-kommande`) men inte i batteriet, och timmar som betalats tillbaka räknas inte någonstans.
+**Adminvyn**: Betalningar har flikarna Liggaren och Kortet (`nextrum-admin-liggaren.js`, `ritaLiggaren`, i
+`BARA_SUPER` och modulvakten). Raderna är `.eko-rad` som Alla betalningar, med `data-lig-rad`; filtren är
+chippen `[data-lig-filter]`, och sökningen är `#lig-sok`. Före migrationerna säger listan det i stället för ett
+fel. Proven: `verktyg/prova-kassan.js`.
 
 ### Notiserna vid inloggningen (2026-10-12)
 Leo: "gör ett notissystem som kommer som en popup när man loggar in. har

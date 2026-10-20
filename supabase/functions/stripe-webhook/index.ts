@@ -62,11 +62,9 @@
 //    sätter payment_intent.payment_failed 'misslyckad', men kassan är
 //    fortfarande öppen och familjen kan försöka igen med ett annat
 //    kort. Lyckades det träffade uppdateringen noll rader: pengarna var
-//    dragna och passet stod som misslyckat. Detsamma om familjen valt
-//    faktura, eller bytt tillbaka till kort, medan kassan stod öppen.
-//    Kortet vinner: pengarna är dragna, och en faktura hinner bara
-//    skapas om kassan stått öppen över en månadsskiftning, vilket
-//    avvikelsen betald_och_fakturerad fångar.
+//    dragna och passet stod som misslyckat. Kortet vinner: pengarna är
+//    dragna. (Läget 'faktura' stod här från Fas 14.6 tills fakturan
+//    togs bort 2026-10-21.)
 //
 // 7. SKARP ELLER TEST (Fas 14.7). Händelsens livemode sparas på
 //    händelsen och på passet, så att en testbetalning aldrig ser ut
@@ -79,12 +77,14 @@
 // händer vid nästa deploy.
 // ============================================================
 
+import { stamAvKopet } from '../_delad/aterbetalning.ts';
 import { serviceklient } from '../_delad/auth.ts';
 import { json } from '../_delad/http.ts';
 import {
-  aterbetalningsLage, arStripeId, balans, betallageEfterTvist, prövaSignatur, StripeError, tidFranUnix,
+  aterbetalningsLage, arStripeId, balans, betallageEfterTvist, StripeError, tidFranUnix,
   tvistOrsakText, tvistUnderlag, tvistUtfall, tvistVantarPaOss, v1,
 } from '../_delad/stripe.ts';
+import { type Handelselager, markeraKlar, taEmotLeverans } from '../_delad/webhooken.ts';
 import { kortetsDelar, reservationensPass, reserveradTill, slappetsLage } from '../_delad/kortreservation.ts';
 
 type Handelse = {
@@ -97,7 +97,7 @@ type Handelse = {
 // Lägen där passet ännu inte är betalt med kort. Se punkt 6 i
 // filhuvudet. 'betald' är inte med: en andra leverans av samma
 // betalning ska träffa noll rader.
-const TAR_EMOT_BETALNING = ['ingen', 'vantar', 'misslyckad', 'faktura'];
+const TAR_EMOT_BETALNING = ['ingen', 'vantar', 'misslyckad'];
 
 /* Minuterna betalningen avsåg (Fas 20.1), ur metadata vi själva skrev
    (stripe-checkout, och stripe-reservation sedan 2026-10-13). Saknas de,
@@ -113,49 +113,36 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Bara POST.' }, 405, {});
 
   const raKropp = await req.text();
+  const db = serviceklient();
 
-  /* Hemligheten ligger i miljön här, inte i en tabell. Skillnaden mot
-     notis_konfig är att den här hemligheten ÄGS av Stripe: den byts i
-     Stripes dashboard, och en tabellrad hade bara blivit en andra
-     plats där samma sträng kan bli inaktuell. */
-  const provning = await prövaSignatur(
+  /* Signaturen och taket mot dubbletter (_delad/webhooken.ts, provade i
+     webhooken_test.ts). Hemligheten ligger i miljön här, inte i en
+     tabell: den ÄGS av Stripe och byts i Stripes dashboard, och en
+     tabellrad hade bara blivit en andra plats där samma sträng kan bli
+     inaktuell. */
+  const lager: Handelselager = {
+    spara: (rad) => db.from('stripe_handelser').insert(rad),
+    hanterad: (hid) => db.from('stripe_handelser').select('hanterad_at').eq('id', hid).maybeSingle(),
+    markera: (hid, resultat) => db.from('stripe_handelser')
+      .update({ hanterad_at: new Date().toISOString(), resultat }).eq('id', hid),
+  };
+  const leverans = await taEmotLeverans(
     raKropp,
     req.headers.get('stripe-signature'),
     Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '',
+    lager,
   );
-  if (!provning.ok) {
-    // 400, inte 401: Stripe ska inte försöka igen med en leverans som
-    // aldrig kommer att gå igenom.
-    return json({ error: provning.skal }, 400, {});
-  }
+  // 400, inte 401: Stripe ska inte försöka igen med en leverans som aldrig kommer att gå igenom.
+  if (leverans.gora === 'neka') return json({ error: leverans.fel }, 400, {});
+  if (leverans.gora === 'fel') return json({ error: 'Kunde inte ta emot händelsen.' }, 500, {});
+  if (leverans.gora === 'kvittera') return json({ ok: true, not: 'redan hanterad' }, 200, {});
 
-  const h = provning.handelse as Handelse;
-  const id = String(h.id ?? '');
-  const typ = String(h.type ?? '');
+  const { id, typ, skarp } = leverans;
+  const h = leverans.handelse as Handelse;
   const obj = (h.data?.object ?? {}) as Record<string, unknown>;
-  if (!id || !typ) return json({ error: 'Händelsen saknar id eller typ.' }, 400, {});
-  const skarp = typeof h.livemode === 'boolean' ? h.livemode : null;
-
-  const db = serviceklient();
-
-  // ---------- taket mot dubbletter ----------
-  const { error: insfel } = await db.from('stripe_handelser').insert({ id, typ, skarp });
-  if (insfel) {
-    if (insfel.code !== '23505') {
-      return json({ error: 'Kunde inte ta emot händelsen.' }, 500, {});
-    }
-    const { data: sedd } = await db.from('stripe_handelser')
-      .select('hanterad_at').eq('id', id).maybeSingle();
-    if (sedd?.hanterad_at) {
-      return json({ ok: true, not: 'redan hanterad' }, 200, {});
-    }
-    // Finns men aldrig blev klar: kör om.
-  }
 
   const klar = async (resultat: string) => {
-    await db.from('stripe_handelser')
-      .update({ hanterad_at: new Date().toISOString(), resultat })
-      .eq('id', id);
+    await markeraKlar(lager, id, resultat);
     return json({ ok: true, resultat }, 200, {});
   };
 
@@ -167,8 +154,19 @@ Deno.serve(async (req) => {
      en människa betalar tillbaka den. skapa_uppgift svarar null på en
      andra leverans med samma nyckel, så en omleverans ger ingen dubblett. */
   const ejNedskriven = async (vad: string, pi: string, belopp: number | null,
-    kopplad: { tabell: 'bookings'; id: string } | null) => {
+    kopplad: { tabell: 'bookings'; id: string } | null,
+    galler: { booking?: string; klippkort?: string; tillagg?: boolean } = {}) => {
     const kr = typeof belopp === 'number' ? `${Math.round(belopp / 100)} kr` : 'okänt belopp';
+    /* Pengarna står i liggaren ändå (betalningsliggaren, 2026-10-21): det är
+       riktiga pengar in, och de ska tillbaka. Familjen läses ur raden de
+       gällde. Utan funktionen (före migrationen) bara uppgiften, som förut. */
+    if (pi && typeof belopp === 'number' && belopp > 0 && (galler.booking || galler.klippkort)) {
+      const { error: lfel } = await db.rpc('betalning_utan_rad', {
+        p_pi: pi, p_belopp: belopp, p_charge: null, p_skarp: skarp,
+        p_booking: galler.booking ?? null, p_klippkort: galler.klippkort ?? null, p_tillagg: !!galler.tillagg,
+      });
+      if (lfel && lfel.code !== 'PGRST202') throw new Error('betalning_utan_rad: ' + lfel.message);
+    }
     const { error } = await db.rpc('skapa_uppgift', {
       p_titel: 'Kontrollera en kortbetalning som inte blev nedskriven',
       p_nyckel: `ej-nedskriven:${pi || 'utan-pi'}`,
@@ -282,7 +280,8 @@ Deno.serve(async (req) => {
         .select('stripe_payment_intent_id').eq('id', passId).maybeSingle();
       if (nufel) throw new Error('bookings: ' + nufel.message);
       if (piId && nu?.stripe_payment_intent_id !== piId) {
-        return await ejNedskriven('passet', piId, draget, nu ? { tabell: 'bookings', id: passId } : null);
+        return await ejNedskriven('passet', piId, draget, nu ? { tabell: 'bookings', id: passId } : null,
+          nu ? { booking: passId } : {});
       }
     }
 
@@ -373,7 +372,7 @@ Deno.serve(async (req) => {
             .select('stripe_payment_intent_id').eq('id', kkId).maybeSingle();
           if (kklas) throw new Error('klippkort: ' + kklas.message);
           if (piId && kk?.stripe_payment_intent_id !== piId) {
-            return await ejNedskriven(`klippkortet ${kkId}`, piId, draget, null);
+            return await ejNedskriven(`klippkortet ${kkId}`, piId, draget, null, { klippkort: kkId });
           }
           return await klar('klippkortet var redan betalt');
         }
@@ -407,7 +406,8 @@ Deno.serve(async (req) => {
             .select('stripe_payment_intent_id').eq('booking_id', tillaggId).maybeSingle();
           if (tlas) throw new Error('pass_tillagg: ' + tlas.message);
           if (piId && tr?.stripe_payment_intent_id !== piId) {
-            return await ejNedskriven('tillägget till passet', piId, draget, { tabell: 'bookings', id: tillaggId });
+            return await ejNedskriven('tillägget till passet', piId, draget, { tabell: 'bookings', id: tillaggId },
+              { booking: tillaggId, tillagg: true });
           }
           return await klar('tillägget var redan betalt');
         }
@@ -543,20 +543,62 @@ Deno.serve(async (req) => {
            det HÄR siffran hamnar. */
         const chargeId = String(obj.id ?? '');
         if (chargeId) {
-          await aterbetala('bookings', 'stripe_charge_id', chargeId, 'betalning_status', lage);
-          /* Ett klippkort (Fas 16.1) STÄNGS av varje återbetalning, också
-             en delvis. Villkoren har tre skäl att betala tillbaka ett
-             köp: ångerrätten, att familjen slutar, och en timme som gick
-             förlorad när kortet löpte ut för att vi avbokat för sent. I
-             alla tre är kortet slut. En delåterbetalning som lämnade det
-             öppet hade låtit familjen fortsätta dra timmar som redan gått
-             tillbaka. */
-          if (await aterbetala('klippkort', 'stripe_charge_id', chargeId, 'status', 'aterbetald')) {
-            return await klar(`klippkort återbetalt ${aterbetalt} öre, stängt`);
+          const passen = await aterbetala('bookings', 'stripe_charge_id', chargeId, 'betalning_status', lage);
+          /* Ett köp av timmar (Fas 16.1). En återbetalning i Stripes panel
+             STÄNGER köpet, också en delvis: villkoren har tre skäl att
+             betala tillbaka ett köp (ångerrätten, att familjen slutar, och
+             en timme som gick förlorad när kortet löpte ut för att vi
+             avbokat för sent), och i alla tre är det slut. Öppet hade det
+             låtit familjen dra timmar som redan gått tillbaka.
+
+             Sedan 2026-10-21 (planerna_per_manad) drar adminvyns
+             återbetalning tillbaka timmarna själv (stripe-aterbetalning):
+             den bär köpets id i Stripes metadata, och då står köpet kvar
+             med de timmar som är kvar. Varje sådan återbetalning skrivs här
+             också, om funktionen inte hann. Allt som återbetalats utan
+             köpets id stänger köpet som förut, och blir en uppgift. */
+          const { data: kop, error: kopfel } = await db.from('klippkort')
+            .select('id').eq('stripe_charge_id', chargeId).maybeSingle();
+          if (kopfel) throw new Error('klippkort: ' + kopfel.message);
+          if (kop) {
+            const { framande_ore } = await stamAvKopet(v1, (namn, args) => db.rpc(namn, args),
+              { kort: String(kop.id), charge: chargeId });
+            const stang = framande_ore > 0 || aterbetalt >= totalt;
+            if (stang) {
+              await aterbetala('klippkort', 'stripe_charge_id', chargeId, 'status', 'aterbetald');
+            } else {
+              /* Bara beloppet: läget är det avstämningen just lämnade (hela
+                 köpet tillbaka genom adminvyn har redan stängt det). */
+              const { error: bfel } = await db.from('klippkort')
+                .update({ aterbetald_ore: aterbetalt }).eq('stripe_charge_id', chargeId);
+              if (bfel) throw new Error('klippkort: ' + bfel.message);
+            }
+            if (framande_ore > 0) {
+              const { error: ufel } = await db.rpc('skapa_uppgift', {
+                p_titel: 'Ett köp av timmar betalades tillbaka i Stripe',
+                p_nyckel: `kop-aterbetalt-i-stripe:${chargeId}:${aterbetalt}`,
+                p_typ: 'kontroll',
+                p_beskrivning: `${Math.round(framande_ore / 100)} kr betalades tillbaka i Stripes dashboard, inte i `
+                  + 'adminvyn, så inga timmar drogs tillbaka och köpet stängdes. Stäm av med familjen vilka timmar '
+                  + 'som ska gälla.',
+                p_kopplad_tabell: 'klippkort',
+                p_kopplad_id: String(kop.id),
+                p_skapad_av_typ: 'system',
+              });
+              if (ufel) throw new Error('skapa_uppgift: ' + ufel.message);
+            }
+            return await klar(`klippkort återbetalt ${aterbetalt} öre${stang ? ', stängt' : ''}`);
           }
           // Ett tillägg (Fas 20.1) har sin egen charge, och sin egen rad.
           if (await aterbetala('pass_tillagg', 'stripe_charge_id', chargeId, 'status', lage)) {
             return await klar(`tillägg återbetalt ${aterbetalt} öre`);
+          }
+          /* Ingen rad bär charge:n: en betalning som inte kunde skrivas ner
+             (betalning_utan_rad) står bara i liggaren, och återbetalas där. */
+          const pi = String(obj.payment_intent ?? '');
+          if (!passen && pi) {
+            const { error: lfel } = await db.rpc('betalning_aterbetald', { p_pi: pi, p_aterbetalt: aterbetalt });
+            if (lfel && lfel.code !== 'PGRST202') throw new Error('betalning_aterbetald: ' + lfel.message);
           }
           return await klar(`återbetalt ${aterbetalt} öre`);
         }

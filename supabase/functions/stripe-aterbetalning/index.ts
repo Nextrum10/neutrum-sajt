@@ -38,8 +38,17 @@
 // som faktiskt betalats minus vad som redan gått tillbaka, läst ur
 // raden. Ett anrop kan alltså inte betala tillbaka mer än vad som kom
 // in. Samma regel som att stripe-checkout räknar priset själv.
+//
+//
+// ETT KÖP AV TIMMAR (2026-10-21, planerna_per_manad)
+//
+// Med { klippkort, timmar? } betalas ett köp tillbaka: helt, eller ett
+// antal timmar, och timmarna dras tillbaka, aldrig under det som
+// använts. Beloppet räknas i databasen och flödet står i
+// _delad/aterbetalning.ts, där det prövas utan Stripe.
 // ============================================================
 
+import { aterbetalaKop } from '../_delad/aterbetalning.ts';
 import { kravAdmin, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import { aterbetalningsLage, StripeError, v1 } from '../_delad/stripe.ts';
@@ -55,16 +64,40 @@ Deno.serve(async (req) => {
   const vem = await kravAdmin(req.headers.get('authorization'));
   if (!vem.ok) return vem.svar;
 
-  let kropp: { pass?: string; belopp_ore?: number; anledning?: string } = {};
+  let kropp: { pass?: string; belopp_ore?: number; anledning?: string; klippkort?: string; timmar?: unknown } = {};
   try {
     kropp = await req.json();
   } catch {
     return json({ error: 'Kroppen är inte JSON.' }, 400, CORS);
   }
-  const passId = String(kropp.pass ?? '').trim();
-  if (!passId) return json({ error: 'Vilket pass?' }, 400, CORS);
 
   const db = serviceklient();
+
+  // Ett köp av timmar (2026-10-21): beloppet och timmarna ur databasen.
+  if (kropp.klippkort !== undefined) {
+    const kort = String(kropp.klippkort ?? '').trim();
+    if (!/^[0-9a-f-]{36}$/i.test(kort)) return json({ error: 'Vilket köp?' }, 400, CORS);
+    const t = kropp.timmar;
+    const timmar = t === undefined || t === null || t === '' ? null : Number(t);
+    if (timmar !== null && !(Number.isInteger(timmar) && timmar >= 1 && timmar <= 200)) {
+      return json({ error: 'Välj ett antal hela timmar.' }, 400, CORS);
+    }
+    const anledning = String(kropp.anledning ?? '').trim().slice(0, 300) || null;
+    try {
+      const u = await aterbetalaKop(v1, (namn, args) => db.rpc(namn, args), {
+        kort, timmar, anledning, av: vem.anvandare,
+      });
+      return u.ok
+        ? json({ ok: true, aterbetalning: u.aterbetalning, belopp_ore: u.belopp_ore, timmar: u.timmar, hela: u.hela,
+                 varning: u.varning }, 200, CORS)
+        : json({ error: u.fel, ...(u.stripe ? { stripe: u.stripe } : {}) }, u.status, CORS);
+    } catch (e) {
+      return json({ error: (e as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
+    }
+  }
+
+  const passId = String(kropp.pass ?? '').trim();
+  if (!passId) return json({ error: 'Vilket pass?' }, 400, CORS);
 
   try {
     const { data: pass, error: passfel } = await db

@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { AVBOKNINGSSKAL, FAKT_LAGE, S, SH_LAGE, UTB_LAGE, funktionsFel, hämtaAlla, kontaktaRuta, kortDatum,
+  const { AVBOKNINGSSKAL, S, SH_LAGE, UTB_LAGE, funktionsFel, hämtaAlla, kontaktaRuta, kortDatum,
           märkFlik, namnFör, närText, pill, rad, ritaPanelen, skriv, tabell, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
@@ -485,7 +485,7 @@
     'lead-notis': 'Intresseanmälan: aviseringen och kvittot',
     'ansokan-notis': 'Beskeden till den som sökt jobb',
     'ansokan-gallring': 'Gallringen av gamla ansökningar',
-    'fakturering': 'Månadskörningen: lönespecifikationerna och fakturautkasten'
+    'fakturering': 'Månadskörningen: lönespecifikationerna'
   };
 
   function notisfelBetyder(n) {
@@ -527,8 +527,9 @@
      INSTÄLLNINGAR (Fas 6)
 
      RUT-taket per år: siffran kommer från Skatteverket och matas in
-     här med källa. Ingen skattesiffra står i koden (Fas 5.3), och
-     utan ett tak för året drar faktureringen ingen RUT alls. Övriga
+     här med källa. Ingen skattesiffra står i koden (Fas 5.3). RUT dras
+     inte på något sedan Fas 14.2: avdraget fanns bara på månadsfakturan,
+     och taket står kvar för den dag kortbetalningen kan dra det. Övriga
      inställningar har redan en plats — rutan under pekar dit i
      stället för att bygga en andra väg till samma sak.
      ============================================================ */
@@ -543,14 +544,14 @@
       { namn: 'Ändrat', rita: r => '<span class="adm-tal">' + esc(kortDatum(r.uppdaterad)) + '</span>' },
       { namn: '', höger: true, rita: r => '<button class="btn btn-ghost btn-sm" type="button" data-rt-bort="'
         + esc(String(r.ar)) + '">Ta bort</button>' }
-    ], rader, 'Inget RUT-tak inlagt — faktureringen drar ingen RUT');
+    ], rader, 'Inget RUT-tak inlagt');
 
     const pekare = $('#inst-pekare');
     if (pekare) {
       const PEKARE = [
         ['Bolagsfakta', 'Organisationsnummer, moms, F-skatt och hur studiehjälparna anlitas.', '#agenter/bolaget'],
         ['Tjänster och priser', 'Pris, ersättning, RUT-andel och villkor per tjänst.', '#katalog/tjanster'],
-        ['Rabattkoder', 'Koder, värden och giltighet.', '#katalog/rabattkoder'],
+        ['Rabattkoder och partnerkoder', 'Koder till planerna, värden, giltighet och användning.', '#koder/rabattkoder'],
         ['Integrationer', 'Google Meet-länkar till onlinepassen. Bokföringen sköts i Fortnox, utan koppling hit.', '#system/integrationer'],
         ['Adminhantering', 'Vem som ser den här vyn, och vad var och en får göra.', '#system/adminanvandare']
       ];
@@ -576,8 +577,7 @@
     if (finns) {
       const ja = await bekräfta({
         titel: 'Byt RUT-taket för ' + ar + '?',
-        text: 'I dag: ' + kronor(finns.tak_ore) + '. Nytt: ' + kronor(kr * 100)
-          + '. Gäller fakturor som skapas från nästa körning.',
+        text: 'I dag: ' + kronor(finns.tak_ore) + '. Nytt: ' + kronor(kr * 100) + '.',
         knapp: 'Byt taket'
       });
       if (!ja) return;
@@ -601,7 +601,7 @@
     const ar = Number(knapp.dataset.rtBort);
     const ja = await bekräfta({
       titel: 'Ta bort RUT-taket för ' + ar + '?',
-      text: 'Utan ett tak för året drar faktureringen ingen RUT alls för det året.',
+      text: 'Taket används inte av något i dag: RUT dras inte på passen.',
       knapp: 'Ta bort'
     });
     if (!ja) return;
@@ -646,7 +646,9 @@
     skapad: 'skapad', borttagen: 'borttagen', andrad: 'ändrad', status: 'ny status',
     aktiverad: 'aktiverad', avaktiverad: 'avaktiverad', sparade: 'sparat', lasta: 'läst', raderade: 'raderat',
     raderat: 'raderat', raderad: 'raderad', avidentifierat: 'avidentifierat', avidentifierad: 'avidentifierad',
-    oppnad: 'öppnad'
+    oppnad: 'öppnad',
+    /* 2026-10-21: intag_lead flyttade anmälan till familjen. */
+    intagen: 'flyttad till familjen'
   };
   const AUDIT_FALT = {
     status: 'läge', match_status: 'matchning', matched_tutor_id: 'studiehjälpare', parent_id: 'familj',
@@ -682,7 +684,8 @@
 
 
   const MATCH_LAGE = { pending: 'väntar', matched: 'matchad', paused: 'pausad' };
-  const STATUS_KARTA = { invoices: FAKT_LAGE, payouts: UTB_LAGE, tutor_profiles: SH_LAGE };
+  /* Fakturornas lägen stod här till 2026-10-21; en gammal rad visar koden. */
+  const STATUS_KARTA = { payouts: UTB_LAGE, tutor_profiles: SH_LAGE };
 
   function auditVärde(nyckel, v, tabellNamn) {
     if (v === null || v === undefined) return '—';
@@ -1040,8 +1043,8 @@
         + esc(S.personer[person] ? namnFör(person) : 'Borttaget konto') + '</option>');
     }
     väljare.value = person || '';
-    /* En handling kopplad till något annat än en person (ett uppdrag,
-       en faktura) byter inte koppling härifrån: rullgardinen hade tömt
+    /* En handling kopplad till något annat än en person (ett uppdrag)
+       byter inte koppling härifrån: rullgardinen hade tömt
        den utan att någon bett om det. */
     väljare.disabled = !!h.kopplad_tabell && h.kopplad_tabell !== 'profiles';
     $('#dok-delad').checked = !!h.delad_med_personen;

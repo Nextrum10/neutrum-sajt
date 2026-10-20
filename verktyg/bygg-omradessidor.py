@@ -422,10 +422,7 @@ OMRADEN = [
              f'Nej. Ingen bindningstid, ingen månadsavgift. {PRIS} i timmen. Ni betalar varje '
              'pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: '
              'väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar '
-             'ni när ni bekräftar rapporten. Före eller efter passet kan ni i stället välja '
-             'faktura, som kommer i början av månaden efter passet med tio dagars betalningstid '
-             'och utan avgift. Är ett pass inte betalt när månaden är slut, och inte på väg att '
-             'dras från kortet, kommer det med på fakturan. Betalningen går till Nextrum.'),
+             'ni när ni bekräftar rapporten. Betalningen går till Nextrum.'),
             ('Kan vi ses på biblioteket i stället för hemma?',
              'Ja. Skriv platsen när ni föreslår tiden, till exempel Solna stadsbibliotek eller '
              'Bergshamra bibliotek.'),
@@ -527,11 +524,7 @@ AMNEN = [
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
              'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
              'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
-             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
-             'Före eller efter passet kan ni i stället välja faktura, som kommer i början av '
-             'månaden efter passet med tio dagars betalningstid och utan avgift. Är ett pass inte '
-             'betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på '
-             'fakturan.'),
+             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.'),
         ],
     },
     {
@@ -603,11 +596,7 @@ AMNEN = [
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
              'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
              'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
-             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
-             'Före eller efter passet kan ni i stället välja faktura, som kommer i början av '
-             'månaden efter passet med tio dagars betalningstid och utan avgift. Är ett pass inte '
-             'betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på '
-             'fakturan.'),
+             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.'),
         ],
     },
     {
@@ -677,11 +666,7 @@ AMNEN = [
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
              'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
              'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
-             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
-             'Före eller efter passet kan ni i stället välja faktura, som kommer i början av '
-             'månaden efter passet med tio dagars betalningstid och utan avgift. Är ett pass inte '
-             'betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på '
-             'fakturan.'),
+             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.'),
         ],
     },
     {
@@ -752,11 +737,7 @@ AMNEN = [
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
              'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
              'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
-             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. '
-             'Före eller efter passet kan ni i stället välja faktura, som kommer i början av '
-             'månaden efter passet med tio dagars betalningstid och utan avgift. Är ett pass inte '
-             'betalt när månaden är slut, och inte på väg att dras från kortet, kommer det med på '
-             'fakturan.'),
+             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.'),
         ],
     },
     {

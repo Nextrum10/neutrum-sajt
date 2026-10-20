@@ -1,11 +1,79 @@
-# Betalningen: siffrorna, kort och faktura, bokslutet och lönerna
+# Betalningen: siffrorna, kortet, bokslutet och lönerna
 
 Arkivet för betalningen ur avsnitt 1 och 11 i `CLAUDE.md`, ordagrant: siffrorna, bekräftelsen,
 den hållna tiden, bokslutet, Betalningar, Månadens ekonomi, Löner, lönespecen och kortvägens
 historia. Timmarna står i `timmar.md`. Reglerna står i kärnan, `CLAUDE.md`; "avsnitt N" i
 texten är kärnans.
 
+**Fakturan är borta sedan 2026-10-21** (nedan, Fakturan tas bort). Allt i den här filen
+som beskriver fakturan, fakturans flöde i adminvyn, obetalda pass på fakturan och
+fakturameningen är historik: avsnitten står kvar för att förklara varför koden och
+databasen ser ut som de gör.
+
 ---
+
+## Fakturan tas bort (2026-10-21)
+
+Leo: "Ta bort fakturasystemet helt: UI, funktioner, edge functions, notismallar,
+tabeller, texter på sajten (priser, FAQ, villkorstext som nämner faktura). Det har
+aldrig använts på riktigt. Kontrollera ändå först att alla fakturarader tillhör
+testkontot Leo Trikke. Finns rader som tillhör någon annan, avbryt droppen, behåll
+tabellerna och rapportera."
+
+**Varför i två delar.** En droppad tabell kommer bara tillbaka ur en backup, och vyerna,
+funktionerna och edge-funktionerna som läste fakturan måste vara ute först. Del 1 tar
+därför inte bort något, och del 2 droppar efter en backup, för hand:
+
+1. `fakturan_tas_bort` (20261021000000). Vakten först: varje rad i `invoices`,
+   `invoice_lines`, `faktura_sparr` och varje pass med `betalning_status = 'faktura'`
+   ska höra till ett konto med namnet Leo Trikke eller ett konto med en adminroll (sedan
+   2026-10-20: i driften låg ett fakturautkast och fyra genomförda fakturapass på Leos eget
+   adminkonto, och Leo valde att räkna dem som test, som statistiken redan gör; förut var
+   ett annat adminkonto "någon annan"). Hör en rad till en familj stannar filen, säger
+   hur många rader och vems (namn och id), och ingenting är ändrat. Sedan md5-vakter på varje funktion den skriver om, strömbrytaren `faktura`
+   av och låst (`flaggor_faktura_av`, som `kortsparr`), och allt som delas med lönerna
+   och larmen omskrivet utan fakturan: `passunderlag` (`fakturerad` alltid falsk),
+   `avvikelser_rader` och `kontroll_ekonomiska_avvikelser` (inga fakturalarm),
+   `manad_lage`, `admin_att_gora`, `dagliga_kontroller`, `admin_lage` och
+   `analys_ekonomi` (fakturakolumnerna alltid noll, så att vyer och AI-verktyg som
+   bygger på dem står kvar), `skydda_bokningsfalt` (familjen väljer inte betalsätt på
+   passet), `valj_kort`, `mitt_villkorslage` och `betygsgaranti_underlag` (inga sena
+   fakturor). Fakturans egna funktioner blir stubbar som svarar att den är borta.
+   Villkorens version blir 2026-10-21.
+2. `fakturans_tabeller_tas_bort` (20261021090000), efter backup. Samma vakt, en vakt
+   som kräver del 1, och en som letar efter funktioner som fortfarande nämner det som
+   droppas (Postgres följer inte namnen i en funktionskropp). Testkontots fakturapass
+   blir `ingen`, `faktura` försvinner ur `bookings_betalning_status_check`, och vyerna
+   `ofakturerat` och `rut_underlag`, triggern `bookings_kassan_oppnad`, tabellerna och
+   de nio funktionerna droppas, utan cascade. Flaggraden tas bort; villkoret står kvar.
+
+Båda går att köra igen: del 1 efter del 2 gör ingenting med tabellerna, och del 2 utan
+tabeller säger det och slutar. `rls-test.sql` avsnitt 38 prövar båda lägena (1797 av
+1797 med båda, 1794 av 1794 med bara del 1, 2026-10-21), och vakten är prövad med en
+annan familjs faktura i en egen lokal databas: del 1 och del 2 stannade och namngav
+familjen, och gick igenom när bara testkontots rad var kvar.
+
+**Det som står kvar med flit.** `fakturering` och `faktura-utskick` behåller sina namn
+(adresserna står i schemat, i adminvyn och i `config.toml`) men gör bara lönernas
+underlag; `faktura-utskick` nekar allt utom ett underlag. `bookings.fakturerbar` är
+lönens och larmens ("räknas passet"), inte fakturans. RUT (`rut_tak`,
+`kund_skatteuppgifter`, tjänsternas RUT-fält) rörs inte: RUT kan inte slås på sedan Fas
+14.2 och drogs bara på fakturan, så personnumren i `kund_skatteuppgifter` har inget
+syfte längre (en öppen fråga till Leo och juristen, `DATASKYDD.md`). Auditloggens rader
+om fakturor står kvar, och filtret Fakturor (till 2026-10-21) i adminvyn läser dem.
+
+**Sajten.** Villkoren (`#faktura` borta, version 2026-10-21), prissidan, FAQ (frågan om
+faktura borta, schemat ombyggt), integritetspolicyn (Fortnox är bokföringen, inga
+fakturor till familjer), startsidan, läxhjälpssidorna (generatorn), Vår idé och För
+elever och föräldrar, på båda språken. `kolla-betalningsvillkor.py` har
+fakturameningen, meningen om de obetalda passen och "tio dagar" bland det gamla.
+Studievyn har inget fakturaval och inga fakturor att betala, adminvyns Betalningar har
+fliken Månadskörningen i stället för Fakturor (`#ekonomi/fakturor` leds dit), Månadens
+ekonomi har inga fakturor, och förhandsvisningen har ingen faktura i sin värld.
+`prova-fakturor.js` är borttaget.
+
+**Driften** (`DEPLOY-BETALNING.md` 9.18): edge-funktionerna först (de frågar inte
+längre efter fakturan), sedan del 1, sedan backup och del 2.
 
 ### Siffror som måste stämma överallt
 
@@ -157,7 +225,8 @@ texten är kärnans.
     pass för pass gäller ett pass inom 60 dagar. Återbetalningen räknas
     som förut. Allt i `minne/timmar.md`.
 - **Rabattkoden krockar inte med gratis timmar eller timbanken**
-  (2026-10-13, `rabattkoden_krockar_inte`). Leo: "rabattkoden, fixa det
+  (2026-10-13, `rabattkoden_krockar_inte`; sedan 2026-10-21 tar ett pass
+  ingen kod alls, nedan: Koderna gäller bara planköp). Leo: "rabattkoden, fixa det
   ... koden får inte krocka med gratis timmar. jag ska bygga nytt system
   för gratis timmarna. gratis timmarna räknas i timbanken".
   - Förut kunde ett pass få en kod och något annat: första timmen lades
@@ -194,7 +263,8 @@ texten är kärnans.
   - Rabattkoderna var tomma i driften 2026-10-13 (bara `TIPS`). Taket kom
     samma kväll (nedan och `minne/sakerhet.md`).
 - **Rabattkoden: timbanken, köpen, gränserna och taket** (2026-10-13,
-  `rabattkoden_timmar_och_tak`). Leo samma kväll: "rabattkod kan inte
+  `rabattkoden_timmar_och_tak`; sedan 2026-10-21 bara planerna bland köpen
+  och inget pass, nedan). Leo samma kväll: "rabattkod kan inte
   användas om man har timmar i timbanken. rabattkoden kan användas för att
   köpa timmar i timbanken eller om man har noll timmar kvar och vill köpa
   pass för pass", och strax efter: "rabattkoder ska vi också bestämma hur
@@ -264,6 +334,141 @@ texten är kärnans.
   är omvandlingen — gör den en gång, på ett ställe.
 
 ---
+
+## Koderna gäller bara planköp, och partnerkoderna (2026-10-21, `koder_for_planer`, inte i drift)
+
+Leo: "Bygg en flik Koder i admin med två typer: partnerkod (spårar
+partnerföreningars volym) och rabattkod (t.ex. Zayans). Båda gäller ENBART
+planköp, aldrig enskilda pass." Och: "En kod per köp, ingen stapling",
+"Koden skrivs in vid planköp, valideras på servern och rabatten räknas på
+servern innan Checkout skapas", "Admin skapar, inaktiverar och ser
+användning, men rader raderas inte", och "Partnerkopplingen sparas också på
+familjen vid första användningen för uppföljning."
+
+- **Koderna är `rabattkoder`**, med två nya kolumner: `sort` ('rabatt' eller
+  'partner') och `partner_namn`, som en partnerkod måste ha och en rabattkod
+  inte får ha. Beställningens "rabatt_typ" och "rabatt_varde" är `typ`
+  ('procent', eller 'belopp' i öre, kronor i vyn) och `varde`, som nu får vara
+  noll: en partnerkod som bara räknar. Villkoret på `varde` byttes med filens
+  enda `drop constraint`. Giltig från och till räknas i svensk tid.
+- **Bara planer.** `intern.rabattkod_prova` säger nej till varje pass med samma
+  mening för alla koder ("Rabattkoder gäller bara när ni köper en plan."), så
+  passets ruta inte säger vilka koder som finns, och inget försök räknas.
+  `bookings_kod_bara_pa_planer` (BEFORE INSERT OR UPDATE, före
+  `bookings_skydda_rabatt` i namnordning) tar bort en ny kod från ett pass för
+  alla, också admin och databasen; TIPS sätts efter den av
+  `forsta_timmen_bjuds` och står kvar, och ett pass som redan bar en kod
+  behåller den (en ändrad kod går tillbaka till den förra). På köpen gäller
+  koden bara en plan i katalogen (`intern.kod_galler_kopet`: `erbjudanden.sort =
+  'plan'`), aldrig Fyll timbanken, timmar till planen eller gratistimmar.
+  `intern.har_timmar` frågas inte längre av något och står kvar utan drop.
+- **En kod per köp**: `klippkort.rabattkod` är en kolumn. Familjens rabatt och
+  den första planens gratis timme är inga koder, och de staplas med koden som
+  Leo bestämde 2026-10-15.
+- **Noll gäller.** En kod som ger noll står kvar på köpet, med `rabatt_ore` null
+  och priset utan kod, och räknas. En rabatt som tar hela priset gäller inte
+  ("Rabatten är lika stor som priset eller större, och ett köp kan inte bli
+  gratis.").
+- **Kassan** (`_delad/koder.ts`, `planensKod`): koden skrivs som databasen
+  lagrar den, en kod på ett pass, ett tillägg, kortet eller timmar till planen
+  får 409 innan något annat händer (`kodPaFelBetalning`), en plan prövas med
+  familjens token i `kod_pa_planen()`, som också svarar rabattens typ och
+  värde, och kassan räknar om rabatten (`rabattenPa`, samma regel som
+  `intern.rabattkod_prova`, och de ändras tillsammans). Stämmer den inte öppnas
+  ingen kassa: det är en kontroll, inte en andra källa, och beloppet som dras
+  är databasens `begart_ore` som förut. Före migrationen frågar kassan
+  `kolla_rabattkod_kop` (som nu svarar ur `kod_pa_planen`) och prövar bara att
+  beloppen går ihop. Kassaraden säger "Med koden X" för en kod utan rabatt.
+- **Användningen står vid betalningen**: `kod_anvandningar`, en rad per betalt
+  köp med en kod, med `betalning_id` till liggaren, skriven av triggern
+  `betalningar_kod_anvands` (AFTER INSERT på `betalningar`) och fylld i med
+  köpen som redan var betalda. Ingen klient skriver den, inte heller admin.
+  Raden står fast och raderas aldrig (triggrar, som liggaren); bara
+  `klippkort_id` blir null om köpet tas bort (rensa-testkonto.sql).
+- **Familjens partner**: `familjens_partner`, partnerkoden familjen använde
+  första gången, skriven samtidigt och aldrig ändrad. Avidentifieras familjen tas
+  raden bort (`profiles_partner_rensas`), som familjens rabatt: en förenings namn
+  kan säga något om familjen. Användningen står kvar med betalningen.
+- **Rader raderas inte**: `rabattkoder` nekar delete och truncate med triggrar
+  (`rabattkoder_star_fast`, `rabattkoder_toms_aldrig`), authenticated har inte
+  längre rätten, och en kods namn och sort ändras aldrig. Den stängs av.
+- **Statistiken**, bara superadmin: `kod_statistik()` per kod,
+  `partner_statistik()` per partner (alla partnerkoder, också de som inte
+  använts) och `kodens_anvandningar(kod)`. Familjer, köp, köpta timmar (alla
+  timmar i köpen, också den första planens timme på köpet), genomförda timmar
+  (pass med rapport som köpens timmar betalade, `intern.kortets_genomforda`,
+  samma uttryck som `intern.kortets_anvanda`), betalt, återbetalt och rabatten.
+  Testbetalningar räknas inte, som i resten av adminvyn, utom med
+  `p_med_test` (rutan Räkna testbetalningar): Stripe står i testläge.
+- **Adminvyn**: under Koder (`#koder/rabattkoder`, `#koder/partnerkoder`,
+  `nextrum-admin-rabattkoder.js`), bredvid familjernas och studiehjälparnas egna
+  koder. `#katalog/rabattkoder` skickas hit. Familjens panel säger partnern
+  (Översikt och Ekonomi).
+- **Studievyn**: Boka pass och granskningen av ett barns förslag har ingen ruta
+  för en kod (arbetsytans `o.rabattkod` står kvar, men ingen vy skickar den).
+  Rutan under Erbjudanden heter Kod till en plan och prövar bara planerna; Fyll
+  timbanken visar aldrig ett pris med kod.
+- **Villkoren nämner inga koder** och fick ingen ny version. En kods villkor
+  (bara planer, hur många gånger, sista dagen) ska stå där koden delas ut.
+- Provat: `rls-test.sql` avsnitt 28, 32 och 46, `koder_test.ts`,
+  `prova-barnforslag.js` och `prova-koder.js` (planskoderna). Juristen har inte
+  läst rad 33 i `DATASKYDD.md`.
+
+## Betalningsliggaren och köpvillkoren i kassan (2026-10-21, `betalningsliggaren`, inte i drift)
+
+Leo (2026-10-21): Stripe bara genom webhooken, "aldrig" betalstatus eller timmar för att någon kommer
+tillbaka till en tacksida, en tabell `betalningar` med en rad per betalning (familj, belopp, valuta, typ,
+Stripes id:n, status, kod, tider) utan policyer för UPDATE och DELETE, som "raderas ALDRIG och ingår inte
+i något städjobb (bokföringsunderlag i 7 år)", en vy i adminvyn med återbetalning, och en kryssruta för
+köpvillkoren innan kassan öppnas.
+
+**Varför en spegel och inte en andra skrivväg.** Pengarna stod redan på raden de betalar: `bookings`
+(passet), `klippkort` (planer, Fyll timbanken, timmar till planen) och `pass_tillagg` (övertiden), och
+bara tjänstekontot skriver dem (webhooken, `stripe-reservation`, `stripe-aterbetalning`). En egen insert
+från webhooken hade kunnat glida isär från den första. Liggaren skrivs därför av AFTER-triggrar
+(`<tabell>_bokfors_ny` och `<tabell>_bokfors`, funktionen `intern.betalningar_bokfor()`) i samma
+transaktion som pengarna, en rad per PaymentIntent (unik nyckel): när tjänstekontot eller databasen själv
+(`auth.uid()` är null) sätter en betalning med ett PaymentIntent bokförs den, och när den återbetalas
+eller blir en tvist ändras radens belopp tillbaka och läge (`intern.betalning_lage`: betald,
+delvis_aterbetald, aterbetald, tvist). En admin som ändrar en betalningskolumn för hand bokför ingenting.
+Typerna är `plan` (en plan och timmar till planen), `timbank` (Fyll timbanken), `pass` och `tillagg`;
+`kod` är rabattkoden, och `skarp` är falsk för testbetalningar, som aldrig räknas i summorna.
+
+**Raden står fast.** `intern.betalningar_star_fast` (BEFORE UPDATE OR DELETE och BEFORE TRUNCATE) nekar
+delete och truncate för alla, också postgres och tjänstekontot, och nekar ändringar av allt utom det
+Stripe kan ändra efteråt: återbetalt (aldrig nedåt), läget, charge, avgift och netto. RLS: bara admin
+läser, ingen inloggad skriver. `familj` har `on delete restrict`, så en familj med en rad i liggaren
+avidentifieras i `radera_person` och raderas aldrig helt (`intern.radering_underlag`); `klippkort_id` och
+`booking_id` blir null om raden de pekar på tas bort, och raden står kvar.
+
+**En betalning utan rad.** Har två kassor stått öppna för samma pass eller köp och båda betalats skriver
+webhooken bara den första på raden och gör en uppgift av den andra (`ejNedskriven`). Sedan 2026-10-21
+bokförs också den andra (`betalning_utan_rad()`, tjänstekontot, `utan_rad = true`): det är riktiga
+pengar in som ska tillbaka. Återbetalas den i Stripe skriver webhooken det med `betalning_aterbetald()`.
+Båda tål att funktionen saknas (PGRST202), så webhooken kan gå ut före migrationen.
+
+**Fylld bakåt.** Migrationen bokför allt som redan är betalt med ett PaymentIntent, med `on conflict do
+nothing`, så den går att köra två gånger.
+
+**Köpvillkoren i kassan.** Varje kassa (ett köp, ett pass, ett tillägg, att spara kortet) föregås av en
+ruta i vyn (`NXStudie.kassansVillkor`) som säger vad som köps och vad det kostar, med kryssrutan "Jag har
+läst och godkänner köpvillkoren" och länken `CFG.KOPVILLKOR_URL` (`/anvandarvillkor#kopvillkor`, där en
+platshållare står tills Leo skrivit texten). Till kassan går inte att trycka på före krysset, och Avbryt,
+Escape eller ett tryck utanför gör ingenting (inte heller att en rapport bekräftas). Ta bort kortet frågar
+inte. `stripe-checkout` nekar ett anrop utan `villkor: true` (utom Ta bort kortet) och sparar krysset i
+`kopvillkor_godkannanden` (vad det gällde, raden, användarvillkorens version och databasens tid,
+`intern.kopvillkor_tid`), med tjänstekontot; saknas tabellen (före migrationen) öppnas kassan ändå och
+loggen säger det. Krysset är vägen in, inte skyddet: databasen kräver fortfarande att användarvillkoren är
+godkända (`klippkort_kraver_villkor`, `bookings_kraver_villkor`, `kortreservationer_kraver_villkor`), och
+att `villkor: true` kom från en människa kan ingen server pröva.
+
+**Kort, Apple Pay och Google Pay.** Kassan tar bara kort (`payment_method_types: ['card']`), och Apple Pay
+och Google Pay är kort: de syns när de är påslagna i Stripe och, för den inbäddade kassan, domänen är
+registrerad (`DEPLOY-BETALNING.md` 9.19). Swish och Klarna tas inte.
+
+**Adminvyn.** Betalningar → Liggaren (`nextrum-admin-liggaren.js`, bara superadmin, Betalningar i
+adminvyn nedan). Proven: `rls-test.sql` avsnitt 42 (BL), `verktyg/prova-kassan.js` och
+`_delad/aterbetalning_test.ts`.
 
 ## Kortet reserveras vid bokningen (2026-10-13, i drift sedan 2026-10-14)
 
@@ -531,6 +736,58 @@ NexLäx-sessionen väntade med sin bank tills kedjan var klar):
 
 ---
 
+## Kortet försöker igen (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift)
+
+Leo (2026-10-21), för passen som betalas med det sparade kortet: reservation 48 timmar före passet, direkt
+om passet bokas närmare än så, dragning när passet är genomfört, en ny dragning utan familjen om
+reservationen hunnit gå ut, och när kortet nekas ett mejl med en länk dit kortet byts, nya försök och en
+uppgift till oss efter 24 timmar. Passet avbokas aldrig för att betalningen inte gick. Lägena ej försökt,
+reserverad, dragen, nekad, frigjord och återbetald, och en konstant `sen_avbokning_timmar` med 0 som förval.
+
+**Det som fanns** (`kortet_reserveras`, ovan): reservationen 48 timmar före (Leos 48 timmar är villkorens
+"två dagar"), dragningen efter rapporten, dragningen utan reservation (`debitera`), släppet och mejlet
+`kort_nekat`. Lägena heter i databasen `vald` (ej försökt), `reserverad`, `dragen`, `misslyckad` (nekad),
+`slapps` och `slappt` (frigjord) och `utgangen`; återbetald står på betalningen (`betalning_status` och
+liggaren), inte på reservationen. Namnen byttes inte: de står i fem edge-filer, vyerna och auditen, och
+adminvyn visar Leos ord. Jobbet `kortreservation` går var tionde minut, inte var femtonde: tätare var
+redan byggt.
+
+**Det nya:**
+1. `betalning_installning` (en rad): `automatiska_forsok` (3, det första inräknat),
+   `timmar_mellan_forsok` (6), `larm_efter_timmar` (24) och `sen_avbokning_timmar`, låst på 0 med ett
+   villkor (`betalning_installning_sen_avbokning_lst`, som `kortsparr`): villkoren har ingen
+   avbokningsavgift, och en reservation för ett sent avbokat pass får inte dras. `intern.sen_avbokning()`
+   står klar för den dag villkoren säger annat; med 0 släpps reservationen som förut. Bara admin läser.
+2. `kortreservationer.nekad_sedan` (`intern.kortreservation_nekad_sedan`, BEFORE-trigger): när serien
+   började. Sätts när läget blir nekat, står kvar under försöken, töms när en reservation eller dragning
+   går igenom eller släpps.
+3. `intern.kortreservation_forsok_igen()`, först i `kortreservation_vack()`: ett nekat kort som
+   `intern.kortet_provas_igen(fel, forsok)` släpper fram blir valt igen efter sex timmar, och jobbet
+   reserverar eller drar som vanligt. Regeln: en kod där ett nytt försök kan gå (`card_declined`,
+   `insufficient_funds`, `generic_decline`, `do_not_honor`, `processing_error`, `try_again_later`,
+   `issuer_not_available`, `card_velocity_exceeded` och vårt `nekat`), och färre försök än
+   `automatiska_forsok`. Kräver kortet familjen (`authentication_required`, ett utgånget kort) görs inget
+   nytt försök.
+   Har kortet varit nekat i ett dygn och passet ska betalas med det blir det en uppgift
+   (`skapa_uppgift`, nyckeln `kort-nekat:<pass>:<nekad_sedan>`, en per serie).
+4. Mejlet `kort_nekat` går en gång per serie: vid första nekandet (`forsok = 1`), inte vid de automatiska
+   försöken. Familjens egna försök (Försök igen, ett nytt kort) nollställer `forsok` (`valj_kort`,
+   `kort_sparat`) och börjar en ny serie. Mejlet säger "Vi försöker igen om några timmar" bara när
+   `kortet` är `igen`, som databasen sätter med samma regel som jobbet (`intern.kortet_provas_igen`): ett
+   utgånget kort får aldrig ett löfte om ett försök som inte görs. Före passet leder knappen till
+   `/foralder#profil/kort` (Byt kort), efter passet till betalningen.
+5. `intern.kortreservation_vack_nu()`: triggrar på `kortreservationer` (läget blir valt) och `bookings`
+   (passet blir bekräftat eller genomfört) väcker `stripe-reservation` genom `intern.natanrop` när just
+   det passet har något att göra nu, i stället för vid nästa tiotal minuter: det är "direkt om passet
+   bokas närmare än 48 timmar". pg_net skickar först när transaktionen gått igenom, och ett fel stoppar
+   aldrig det som väckte den (raden hamnar i `notis_fel`). Jobbets egna nya försök väcker den inte en gång
+   per rad (`nextrum.kortet_vacks_samlat`).
+6. `kortreservation_forsok_nu()` (superadmin): Försök igen i adminvyn, för ett nekat eller utgånget kort.
+
+**Ingen betalning avbokar ett pass**: inget i `kortet_reserveras` eller här rör `bookings.status`.
+`stripe-reservation` ändrades inte: försöken styrs av databasen. Proven: `rls-test.sql` avsnitt 44 (KD)
+och `verktyg/prova-kassan.js` (Kortet).
+
 ## Familjen bekräftar rapporten
 
 **Familjen bekräftar rapporten, och får betala då** (Fas 19.1 och 19.2,
@@ -615,7 +872,7 @@ efter månaden.
 **Betalningar (omgjord 2026-09-29).** Leo: "gör om betalningar. den
 behöver vara mycket snyggare, lätt tolkad, lättanvänd och mycket mer
 funktionell". Sektionen `ekonomi` i adminvyn (`nextrum-admin-ekonomi.js`)
-har sex flikar, med adressen `#ekonomi/<flik>`:
+har åtta flikar sedan 2026-10-21, med adressen `#ekonomi/<flik>`:
 - **Att göra** (`attgora`): allt som väntar på er, i alla månader, i
   grupper (korttvister, pengar tillbaka, fakturor, inte betalt än,
   rapporter, löner, övrigt), med knappen som gör det på raden:
@@ -638,6 +895,16 @@ har sex flikar, med adressen `#ekonomi/<flik>`:
 - **Köpta timmar** och **Inställningar** (strömbrytarna `faktura`,
   `erbjudanden` och `kortsparr`, och Stripe: Kontrollera Stripe och Hämta
   från Stripe).
+- **Liggaren** (`liggaren`, 2026-10-21, `nextrum-admin-liggaren.js`, bara superadmin): en rad per
+  betalning i `betalningar`, med summorna (inbetalt, tillbaka, netto, bara skarpa), filter (Planer, Fyll
+  timbanken, Pass, Tillägg, Tillbaka, Test) och sökning på familj, köp, kod och Stripe-id. Återbetala: ett
+  pass som förut (`data-aterbetala`, beloppet att välja), ett köp helt eller med ett antal timmar
+  (`data-aterbetala-kop`, `stripe-aterbetalning` med `{klippkort, timmar}`, `minne/timmar.md`), och ett
+  tillägg eller en betalning utan rad i Stripes dashboard, som webhooken skriver.
+- **Kortet** (`kortdragning`, 2026-10-21): varje pass som betalas med det sparade kortet, de nekade överst,
+  med koden, försöken, när serien började och när nästa automatiska försök görs, och Försök igen
+  (`kortreservation_forsok_nu`). Före migrationerna säger Liggaren att den inte är körd, och Kortet visar
+  raderna utan försöken.
 
 Månadsväljaren (en rad till 2026-10-06, sedan ett fält med en ruta för år och månad,
 `minne/vyerna.md`) gäller Alla betalningar och Bokslut och syns bara där.
@@ -653,7 +920,7 @@ som förut ändrar något. **Raden i listorna heter `.eko-rad`**, och alla
 dess delar börjar på `eko-`: `.bet-atg` fanns redan i familjens
 Betalning, och den första versionen flyttade knapparna där.
 
-## Familjens faktura
+## Familjens faktura (historik: borttagen 2026-10-21)
 
 **En rad per familj och månad, och samma rad hela vägen (2026-10-06).**
 Leo: "det ska inte vara 4 st olika underlag för en familj och sen köra
@@ -705,7 +972,7 @@ ruta, där det skulle torrköras innan något skapades.
   driftsättningen. Provet är `verktyg/prova-fakturor.js` (Playwright mot en
   falsk Supabase, inte i CI).
 
-## Obetalda pass på fakturan (2026-10-16, `obetalda_pass_pa_fakturan`)
+## Obetalda pass på fakturan (2026-10-16, `obetalda_pass_pa_fakturan`; historik: borttagna 2026-10-21)
 
 Beslutat 2026-10-01 (avsnitt 11 sa "inte byggt" till 2026-10-15). Leo: en
 familj som har ett pass den 30 september och bekräftar i oktober "ska inte
@@ -1067,10 +1334,10 @@ Samma dag i finstilen och FAQ:n:
 
 ## 11. Vad som inte är byggt: betalningen
 
-- **Obetalda pass på månadens faktura** (beslutat 2026-10-01) är i drift
-  sedan 2026-10-16: avsnittet Obetalda pass på fakturan ovan, och
-  `DEPLOY-BETALNING.md` 9.17. Kvar: familjerna ska få veta, och juristen har
-  inte läst villkoren.
+- **Fakturan är borttagen** (2026-10-21) i koden och migrationerna, inte i
+  driften: avsnittet Fakturan tas bort överst, och `DEPLOY-BETALNING.md` 9.18.
+  Obetalda pass på månadens faktura (i drift 2026-10-16) gick med den.
+  Det nedan om fakturan är historik.
 - **Betalning.** Familjen betalar varje pass med kort, **i förväg eller
   efter passet när de bekräftar rapporten** (Fas 19.2; före passet från
   Fas 14.2). Faktura finns sedan Fas 14.6 som andra betalsätt, **byggt

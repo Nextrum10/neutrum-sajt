@@ -130,6 +130,12 @@ function värld(o) {
   if (!o.utanIntervjuKolumn) {
     w.applications.forEach(a => { if (!('till_intervju_at' in a)) a.till_intervju_at = null; });
   }
+  /* Kolumnen intervju_mejl_skickat_at (migrationen intervjumejlet,
+     2026-10-21): bara när provet ber om den, så att stegen ovan provar
+     vyn som den var innan mejlet fanns. */
+  if (o.medIntervjumejl) {
+    w.applications.forEach(a => { a.intervju_mejl_skickat_at = null; });
+  }
   return w;
 }
 
@@ -932,6 +938,59 @@ async function provaSkickaHarifran(webb) {
 /* ============ rekryteringens steg utan kolumnen (2026-10-13) ============
    Före migrationen ansokan_till_intervju räknas Intervju ur läget
    Kontaktad, och Till intervju sätter läget, som det gjorde 2026-10-13. */
+/* ============ Intervjumejlet (2026-10-21) ============
+   Skicka vidare till intervju köar ett mejl, så frågan visar det först,
+   ord för ord; Avbryt sparar inget, och ett mejl som redan gått sägs. */
+async function provaIntervjumejlet(webb) {
+  const { context, page, S, konsol } = await öppna(webb, { inloggad: true, steg: true, medIntervjumejl: true });
+  await page.goto(BAS + '/admin#ansokningar');
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+  await vänta(800);
+  const patchar = () => S.logg.filter(r => r.metod === 'PATCH' && r.väg === '/rest/v1/applications');
+
+  await page.click('#ans-tabell [data-dp="ansokan:ans-ung"]');
+  await vänta(400);
+  await page.click('.dp-atgard [data-ans-vidare="intervju:ans-ung"]');
+  await page.waitForSelector('.nx-fraga-prov', { timeout: 3000 }).catch(() => {});
+  const prov = await text(page, '.nx-fraga-prov');
+  prova('intervjumejlet: frågan visar Leos mejl med bokningslänken',
+    prov.includes('Ämne: Du går vidare till intervju') && prov.includes('Hej Tove!')
+    && prov.includes('Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.')
+    && prov.includes('Boka en tid för intervjun som passar dig här:\nhttps://calendar.app.google/9pBZSKMmgtdMLX4i7\n\n'
+      + 'Intervjun hålls i Google Meet, och länken till mötet kommer i bekräftelsen när du har bokat. '
+      + 'Du behöver inget Google-konto. Passar ingen av tiderna får du gärna mejla oss på info@nextrum.se.')
+    && prov.includes('Hälsningar\nLeo och Alex, Nextrum'), prov);
+  await bild(page, 'intervjumejlet-ruta', '.nx-fraga-box');
+  await page.click('[data-svar="nej"]');
+  await vänta(200);
+  prova('intervjumejlet: Avbryt sparar inget', patchar().length === 0, JSON.stringify(patchar()));
+
+  await page.click('.dp-atgard [data-ans-vidare="intervju:ans-ung"]');
+  await page.waitForSelector('.nx-fraga-prov', { timeout: 3000 }).catch(() => {});
+  await page.click('[data-svar="ja"]');
+  await vänta(500);
+  const sparat = patchar().pop();
+  prova('intervjumejlet: Skicka vidare och mejla sparar bara steget', sparat
+    && Object.keys(sparat.kropp || {}).join() === 'till_intervju_at', JSON.stringify(sparat));
+  await page.click('[data-dp-stang]').catch(() => {});
+  await vänta(200);
+
+  /* Ett mejl som redan gått: frågan säger att inget nytt går. */
+  S.W.applications.find(a => a.id === 'ans-gammal').intervju_mejl_skickat_at = '2026-10-10T10:00:00Z';
+  await page.evaluate(() => location.reload());
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+  await vänta(800);
+  await page.click('[data-ans-vidare="intervju:ans-gammal"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  const redan = await text(page, '.nx-fraga-box p');
+  prova('intervjumejlet: ett mejl som gått mejlas inte igen, och frågan säger det',
+    /fick intervjumejlet .* inget nytt mejl går/.test(redan) && (await page.locator('.nx-fraga-prov').count()) === 0, redan);
+  await page.click('[data-svar="nej"]');
+
+  prova('intervjumejlet: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+}
+
 async function provaStegenUtanKolumnen(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, { inloggad: true, steg: true, utanIntervjuKolumn: true });
   await page.goto(BAS + '/admin#ansokningar');
@@ -1039,6 +1098,7 @@ async function provaStegenUtanKolumnen(webb) {
     await provaBokningssidan(webb);
     await provaSkickaHarifran(webb);
     await provaStegenUtanKolumnen(webb);
+    await provaIntervjumejlet(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);
   } finally {

@@ -117,8 +117,9 @@ export type RenData = {
   timmar: number | null;
   status: 'requested' | 'confirmed' | 'cancelled' | 'completed' | null;
   skal: Avbokningsskal | null;
-  /** Fas 14.6. En kod, aldrig text: 'faktura', 'timmar' (Fas 22.2: köpta
-   *  timmar eller timbanken har betalat passet) eller null. */
+  /** Fas 14.6. En kod, aldrig text: 'timmar' (Fas 22.2: köpta timmar eller
+   *  timbanken har betalat passet) eller null. 'faktura' gick med fakturan
+   *  (2026-10-21). */
   betalsatt: Betalsatt | null;
   /** Fas 21.2. Köpta timmar som är kvar på ett kort som snart går ut. */
   kvar: number | null;
@@ -128,9 +129,10 @@ export type RenData = {
    *  för true, aldrig för text. */
   gratis: boolean;
   /** kortet_reserveras. Varför kortet inte gick: 'bekrafta' (banken vill
-   *  att familjen bekräftar betalningen) eller 'nekat'. En kod, aldrig
-   *  Stripes text. */
-  kortet: 'bekrafta' | 'nekat' | null;
+   *  att familjen bekräftar betalningen) eller 'nekat'. Sedan 2026-10-21
+   *  (kortdragningen_forsoker_igen) 'igen' när vi provar kortet igen av oss
+   *  själva, så att mejlet bara lovar det då. En kod, aldrig Stripes text. */
+  kortet: 'bekrafta' | 'nekat' | 'igen' | null;
   /** barnets_epost. Koden i länken som bekräftar barnets adress:
    *  barnets id, en punkt och en HMAC. Ingen personuppgift: den räknas
    *  fram när mejlet skickas och sparas ingenstans. */
@@ -168,7 +170,7 @@ const KOD = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[A-Z
 const STATUSAR = ['requested', 'confirmed', 'cancelled', 'completed'] as const;
 
 /** Koderna intern.betalsatt_kod() skickar. Allt annat blir null. */
-const BETALSATT = ['faktura', 'timmar'] as const;
+const BETALSATT = ['timmar'] as const;
 export type Betalsatt = typeof BETALSATT[number];
 
 export function renData(v: unknown): RenData {
@@ -189,7 +191,7 @@ export function renData(v: unknown): RenData {
     betalsatt: BETALSATT.find((k) => k === d.betalsatt) ?? null,
     kvar: kvarOk(d.kvar),
     gratis: d.gratis === true,
-    kortet: d.kortet === 'bekrafta' || d.kortet === 'nekat' ? d.kortet : null,
+    kortet: d.kortet === 'bekrafta' || d.kortet === 'nekat' || d.kortet === 'igen' ? d.kortet : null,
     kod: typeof d.kod === 'string' && KOD.test(d.kod) ? d.kod : null,
     prov: d.prov === true,
   };

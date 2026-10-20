@@ -58,6 +58,22 @@ att visa **rätt sida**, inte för att skydda data.
   `is_admin`, `matched_tutor_id`, `status` och bokningsfälten av
   **triggers** som vägrar ändringen från en inloggad session. Det går
   inte att göra sig själv till admin från någon vy, med flit.
+- **Restriktiva policyer finns sedan 2026-10-21** (utbildningsprovet,
+  `minne/affaren.md`). "utbildningsprovet först" på `bookings`,
+  `students`, `lesson_reports`, `messages`, `study_plans`,
+  `tutor_reviews`, `notiser` och `profiles` är `as restrictive for all to
+  authenticated`: de läggs OVANPÅ de vanliga, och en rad syns bara om
+  båda släpper igenom den. Villkoret är `(select not
+  intern.provet_sparrar())`, som räknas en gång per fråga och är sant för
+  alla utom en studiehjälpare som ska göra provet; på `profiles` syns den
+  egna raden alltid. En policy som läser en spärrad tabell i en
+  underfråga spärras med den (RLS gäller också i underfrågan), men en
+  SECURITY DEFINER-funktion går förbi: därför frågar `is_my_student()`
+  och barnchattens tre funktioner `intern.provet_sparrar()` själva. En ny
+  funktion som lämnar ut något om en studiehjälpares elever gör
+  likadant, eller går genom `is_my_student()`. Funktionen läser
+  `tutor_profiles`, `admin_roller` och provets tabeller som ägaren, så
+  policyerna läser aldrig sig själva (ingen rekursion).
   Sedan barnkonton_och_admin (2026-09-30) är `admin_roller` sanningen och
   `is_admin` en spegel av superadmin. Admin ges under System →
   Adminhantering (`gor_till_admin`, `ta_bort_admin`, `admin-skapa`), av en
@@ -660,8 +676,9 @@ på en fråga om en PERSON ska ha is_admins vakt från första raden.**
 1. **Läckta lösenord kontrolleras inte.** Supabase Auth kan stämma av
    mot HaveIBeenPwned. Det är en kryssruta under Authentication →
    Policies, kostar ingenting och gäller nya och ändrade lösenord.
-2. **`kolla_rabattkod` och `kolla_rabattkod_kop` har ett tak per konto**
-   (2026-10-13, `rabattkoden_timmar_och_tak`). Förut fanns inget, för
+2. **`kolla_rabattkod`, `kolla_rabattkod_kop` och `kod_pa_planen` har ett tak per konto**
+   (2026-10-13, `rabattkoden_timmar_och_tak`; `kod_pa_planen` sedan 2026-10-21, och passets ruta
+   prövar sedan dess ingen kod alls: samma nej för varje kod, och inget försök räknas). Förut fanns inget, för
    `rabattkoder` var tom; men rutan stod i varje förälders förslag
    (`rabattkoden_krockar_inte`) och sedan under Erbjudanden, och en
    inloggad hade kunnat pröva koder i en slinga när den första koden

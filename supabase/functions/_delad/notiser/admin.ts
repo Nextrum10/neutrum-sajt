@@ -7,7 +7,7 @@
 //     stund. (Intresseanmälan mejlas direkt av lead-notis, som förut.)
 //   · MORGON: det som ligger kvar i Att göra kl. 9 svensk tid, i ETT mejl
 //     om dagen. Rapporter som familjen inte bekräftat, pass utan rapport,
-//     fakturor, utbetalningar, frågor, uppgifter. Varje sak kommer med en
+//     utbetalningar, frågor, uppgifter. Varje sak kommer med en
 //     gång.
 //   · PROV: morgonmejlet som ett testmejl, märkt som ett, när en människa
 //     bett om ett.
@@ -61,8 +61,6 @@ export const ADMIN_SORTER = [
   { typ: 'pass_saknar_rapport', ental: 'pass utan rapport', flertal: 'pass utan rapport' },
   { typ: 'genomfort_utan_rapport', ental: 'genomfört pass utan rapport', flertal: 'genomförda pass utan rapport' },
   { typ: 'rapport_obekraftad', ental: 'rapport som familjen inte bekräftat', flertal: 'rapporter som familjerna inte bekräftat' },
-  { typ: 'faktura_lagga_in', ental: 'faktura att lägga in i Fortnox', flertal: 'fakturor att lägga in i Fortnox' },
-  { typ: 'faktura_obetald', ental: 'obetald faktura', flertal: 'obetalda fakturor' },
   { typ: 'utbetalning', ental: 'utbetalning att göra', flertal: 'utbetalningar att göra' },
   { typ: 'uppgift', ental: 'uppgift från systemet', flertal: 'uppgifter från systemet' },
 ] as const;

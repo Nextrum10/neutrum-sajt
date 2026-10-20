@@ -599,15 +599,14 @@
 
      Sektionen finns ändå, för den svarar på en annan fråga än
      Bokningar. Bokningar tittar framåt. Lektioner tittar bakåt:
-     hände det, skrevs det en rapport, kan det faktureras.
+     hände det, skrevs det en rapport, räknas det.
 
      RAPPORTEN ÄR PENGAR
 
      Ett pass blir 'completed' när studiehjälparen skrivit
-     rapporten, och bara completed-pass hamnar på fakturan. Ett
-     hållet men orapporterat pass är alltså en timme ingen får
-     betalt för — varken familjen faktureras eller studiehjälparen
-     ersätts. Därför är "rapport saknas" sektionens första siffra
+     rapporten, och bara completed-pass räknas. Ett hållet men
+     orapporterat pass är alltså en timme ingen får betalt för —
+     varken familjen debiteras eller studiehjälparen ersätts. Därför är "rapport saknas" sektionens första siffra
      och dess enda larm.
 
      MÅNAD FÖR MÅNAD (2026-09-29)
@@ -783,7 +782,7 @@
       { namn: 'Rapport', höger: true, rita: b => {
         if (b.status === 'completed') {
           return pill('Skriven', 'ar-klar')
-            + '<span class="adm-und lekt-fakturerad">Kan faktureras</span>';
+            + '<span class="adm-und lekt-fakturerad">Räknas</span>';
         }
         /* Inte ett fel att laga härifrån: rapporten skrivs av
            studiehjälparen i hens egen vy. Adminvyn kan se att den
@@ -935,7 +934,7 @@
   /* Vart en uppgift pekar, och vad det heter. Hittas inte raden
      visas tabellens namn — hellre det än en länk till ingenting. */
   const UPPG_MAL = {
-    bookings: '#bokningar', invoices: '#ekonomi/fakturor', payouts: '#loner',
+    bookings: '#bokningar', payouts: '#loner',
     leads: '#leads', applications: '#ansokningar', profiles: '#familjer', students: '#elever',
     uppdrag: '#uppdrag', tjanster: '#katalog/tjanster', lesson_reports: '#lektioner'
   };
@@ -947,8 +946,8 @@
       const b = (S.bokningar || []).find(x => x.id === id);
       text = b ? 'Pass ' + kortDatum(b.wanted_date) + ' · ' + namnFör(b.parent_id) : 'Ett pass';
     } else if (u.kopplad_tabell === 'invoices') {
-      const f = (S.fakturor || []).find(x => x.id === id);
-      text = f ? 'Faktura ' + String(f.period || '').slice(0, 7) + ' · ' + namnFör(f.parent_id) : 'En faktura';
+      // En uppgift från tiden med fakturan (till 2026-10-21): tabellen finns inte längre.
+      text = 'En faktura';
     } else if (u.kopplad_tabell === 'payouts') {
       const p = (S.utbetalningar || []).find(x => x.id === id);
       text = p ? 'Utbetalning ' + String(p.period || '').slice(0, 7) + ' · ' + namnFör(p.tutor_id) : 'En utbetalning';

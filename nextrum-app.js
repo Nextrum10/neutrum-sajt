@@ -102,8 +102,10 @@ const NX = (function () {
     ingenDatabasForm:['Vi kan inte ta emot formuläret just nu. Mejla oss på {oss} så hör vi av oss.',
                       'We cannot receive the form right now. Email us at {oss} and we will get back to you.'],
     kundeInteSkicka: ['Kunde inte skicka: ', 'Could not send: '],
-    tackAnsokan:     ['Tack för din ansökan. Vi läser alla och hör av oss inom 24 timmar.',
-                      'Thank you for your application. We read every one and will be in touch within 24 hours.'],
+    /* Ordagrant (2026-10-21, Leo): "Tack, din ansökan är skickad! Vi hör
+       av oss inom 24 timmar." */
+    tackAnsokan:     ['Tack, din ansökan är skickad! Vi hör av oss inom 24 timmar.',
+                      'Thanks, your application has been sent! We will be in touch within 24 hours.'],
     /* Vi ringer alla som anmäler intresse (2026-10-11; kontaktvalet
        Ring mig eller Mejla först, 2026-10-03, gick). {tel} och inte
        {e}: se ingenDatabasForm ovan. Uppstart: medan Nextrum bildas
@@ -125,8 +127,8 @@ const NX = (function () {
                            'Please enter your parent or guardian’s email. You are under 18, so we need their approval.'],
     vardnadshavareSamma:  ['Skriv din vårdnadshavares egen e-post, inte din.',
                            'Please enter your parent or guardian’s own email, not yours.'],
-    tackAnsokanUnder18:   ['Tack för din ansökan. Vi läser alla och hör av oss inom 24 timmar. Din vårdnadshavare får ett mejl från oss om att godkänna den.',
-                           'Thank you for your application. We read every one and will be in touch within 24 hours. Your parent or guardian will get an email from us asking them to approve it.'],
+    tackAnsokanUnder18:   ['Tack, din ansökan är skickad! Vi hör av oss inom 24 timmar. Din vårdnadshavare får ett mejl från oss om att godkänna den.',
+                           'Thanks, your application has been sent! We will be in touch within 24 hours. Your parent or guardian will get an email from us asking them to approve it.'],
     fyllTelefon:     ['Skriv ert telefonnummer, så ringer vi upp.',
                       'Please enter your phone number so we can call you.'],
     felTelefon:      ['Telefonnumret ser inte komplett ut. Skriv hela numret, med riktnummer.',
@@ -580,7 +582,7 @@ const NX = (function () {
 
        Här stod tre barn = pris + extra * 2, alltså 517 kr mot
        systemets 448. En prissida som lovar ett annat belopp än
-       fakturan är en diskussion i första samtalet — även när den,
+       kassan är en diskussion i första samtalet — även när den,
        som här, lovade för mycket. */
     const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
     $$('[data-stat="extra-barn"]').forEach(el => el.textContent = kr(extra));

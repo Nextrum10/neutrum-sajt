@@ -74,9 +74,18 @@ function värld() {
     ],
     leads: [
       { id: 'lead-ny', parent_name: 'Karin Karlsson', email: 'karin@example.se', child_name: 'Kim', grade: 'Åk 8',
-        subject: 'Engelska, Matematik', tjanst: 'laxhjalp', status: 'new', created_at: nu(-30), kund_id: null }
+        subject: 'Engelska, Matematik', tjanst: 'laxhjalp', status: 'new', created_at: nu(-30), kund_id: null,
+        kalla: 'google', medium: 'cpc', kampanj: 'host26', message: 'Telefon: 070-111 22 33\nHej' },
+      /* Intagen före 2026-10-21: kontot och eleven finns, anmälan står kvar. */
+      { id: 'lead-gammal', parent_name: 'Per Persson', email: 'per@example.se', child_name: 'Pia', grade: 'Åk 5',
+        subject: 'Matematik', tjanst: 'laxhjalp', status: 'matched', created_at: nu(-20000), kund_id: 'familj-1',
+        kalla: 'facebook', medium: 'social', kampanj: null, message: 'Telefon: 070-999 88 77\nVi vill ha hjälp' }
     ],
-    students: [],
+    intagna_anmalningar: [],
+    students: [
+      { id: 'elev-pia', parent_id: 'familj-1', name: 'Pia', grade: 'Åk 5', matched_tutor_id: null, match_status: 'pending',
+        created_at: nu(-19000) }
+    ],
     ansokan_utskick: [],
     admin_sett: [{ omrade: 'leads', sett_till: nu(-1) }, { omrade: 'ansokningar', sett_till: nu(-1) }],
     tjanster: [{ kod: 'laxhjalp', namn: 'Läxhjälp', aktiv: true, for_jobb: true, for_kund: true, ordning: 1 }],
@@ -139,6 +148,20 @@ function falskSupabase(o) {
     return [200, { ok: true, id, till: epost, roll, skickat: 'inbjudan' }];
   }
   const RPC = {
+    /* Anmälan flyttas till familjen (2026-10-21), som intern.intag_lead:
+       raden ur leads och källan, koden och meddelandet till
+       intagna_anmalningar. Utan o.utanIntag finns funktionen. */
+    intag_lead: o.utanIntag ? null : k => {
+      const i = W.leads.findIndex(l => l.id === k.p_lead);
+      if (i < 0) return { redan: true };
+      const l = W.leads.splice(i, 1)[0];
+      const familj = k.p_familj || l.kund_id;
+      W.intagna_anmalningar.push({ id: l.id, parent_id: familj, anmald_at: l.created_at, kontaktad_at: l.kontaktad_at || null,
+        intagen_at: nu(0), intagen_av: 'admin-1', tjanst: l.tjanst, grade: l.grade, subject: l.subject,
+        kalla: l.kalla || null, medium: l.medium || null, kampanj: l.kampanj || null, kod: l.kod || null,
+        meddelande: l.message || null });
+      return { redan: false, familj, kalla: l.kalla || null };
+    },
     mina_behorigheter: () => ({ admin: true, superadmin: true, behorigheter: [] }),
     notisfel: () => [], ekonomiska_avvikelser: () => [], tipskoder_lage: () => [],
     admin_sett_markera: k => k.p_till,
@@ -372,6 +395,15 @@ async function provaFamiljen(webb) {
     < S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/students'));
   prova('familj: kvittot säger att familjen är intagen och vad som händer sedan', (await text(page, '.nx-fraga-box h3')) === 'Familjen är intagen'
     && (await text(page, '.nx-fraga-box')).includes('väljer sitt lösenord'), await text(page, '.nx-fraga-box'));
+  /* 2026-10-21: anmälan flyttas till familjen sist, när eleven finns. */
+  const flytt = S.logg.find(r => r.väg === '/rest/v1/rpc/intag_lead');
+  prova('familj: anmälan flyttas till det nya kontot', flytt && flytt.kropp.p_lead === 'lead-ny' && flytt.kropp.p_familj === 'ny-1',
+    JSON.stringify(flytt && flytt.kropp));
+  prova('familj: flytten kommer efter eleven', S.logg.indexOf(flytt) > S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/students'));
+  prova('familj: kvittot säger att anmälan flyttats och inte står i listan', (await text(page, '.nx-fraga-box')).includes('är flyttad till familjen'),
+    await text(page, '.nx-fraga-box'));
+  prova('familj: anmälan står inte längre i listan', !S.W.leads.some(l => l.id === 'lead-ny')
+    && (await page.locator('#leads-tabell [data-dp="anmalan:lead-ny"]').count()) === 0);
   prova('familj: vidare till matchningen finns', await synlig(page, '[data-le-match]'));
   prova('familj: ingen första timme pass för pass väljs', !S.logg.some(r => r.väg === '/rest/v1/rpc/ge_forsta_timmen'));
   prova('familj: kvittot säger inget om första timmen', !/första timmen/i.test(await text(page, '.nx-fraga-box')),
@@ -410,9 +442,12 @@ async function provaFamiljenElevenFaller(webb) {
   await page.click('#le-skapa');
   await page.waitForFunction(() => /intagen/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
   prova('eleven faller: andra trycket bjuder inte in igen', S.bjudIn.length === 1, S.bjudIn.length);
-  prova('eleven faller: andra trycket skapar eleven på kontot', S.W.students.length === 1 && S.W.students[0].parent_id === 'ny-1',
+  const nyaElever = S.W.students.filter(e => e.parent_id === 'ny-1');
+  prova('eleven faller: andra trycket skapar eleven på kontot', nyaElever.length === 1,
     JSON.stringify(S.W.students));
   prova('eleven faller: kvittot säger att familjen är intagen', (await text(page, '.nx-fraga-box h3')) === 'Familjen är intagen');
+  prova('eleven faller: anmälan flyttas först när eleven finns, en gång',
+    S.logg.filter(r => r.väg === '/rest/v1/rpc/intag_lead').length === 1);
   prova('eleven faller: inga gratistimmar när fältet står på 0', !S.logg.some(r => r.väg === '/rest/v1/rpc/ge_gratistimmar'));
   prova('eleven faller: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
@@ -462,6 +497,59 @@ async function provaGratistimmarIPanelen(webb) {
     && (await text(page, '.dp-gratis .ok-msg')) === '2 gratistimmar togs tillbaka.', await text(page, '.dp-gratis .ok-msg'));
   prova('gratis: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
+}
+
+/* ============ 3d. Flytta till familjen, och familjen är intagen (2026-10-21) ============
+   En anmälan som togs in före flytten står kvar i listan som Intagen.
+   Knappen i panelen flyttar den, efter en fråga, och familjens panel
+   öppnas med källan och meddelandet. Familjelistan säger Intagen, och
+   barnet säger om det är matchat. */
+async function provaFlyttaTillFamiljen(webb) {
+  const { context, page, S, konsol } = await öppna(webb, {});
+  await tillAdmin(page, 'familjer');
+  const lista = await page.locator('#fam-tabell').innerText();
+  prova('intag: familjelistan säger Intagen, inte matchad', /Intagen/.test(lista) && !/Ingen matchad|matchade/.test(lista), lista);
+  await tillAdmin(page, 'leads');
+  await page.click('[data-dp="anmalan:lead-gammal"]');
+  await vänta(400);
+  prova('intag: anmälan som redan är intagen heter Intagen', (await page.locator('.dp').first().innerText()).includes('Intagen'));
+  prova('intag: knappen Flytta till familjen står där', await synlig(page, '[data-lead-intag="lead-gammal"]'));
+  prova('intag: ingen Ta in familjen på en intagen anmälan', (await page.locator('[data-lead-elev="lead-gammal"]').count()) === 0);
+  await page.click('[data-lead-intag="lead-gammal"]');
+  await page.waitForSelector('.nx-fraga.open', { timeout: 3000 }).catch(() => {});
+  prova('intag: frågar först, och säger vad som flyttas', (await text(page, '.nx-fraga-box')).includes('Källan, koden och det Per Persson skrev'),
+    await text(page, '.nx-fraga-box'));
+  await bild(page, 'intag-fraga', '.nx-fraga-box');
+  await page.click('.nx-fraga [data-svar="ja"]');
+  await page.waitForFunction(() => /Kom via/.test((document.querySelector('.dp') || {}).innerText || ''), null, { timeout: 6000 }).catch(() => {});
+  const flytt = S.logg.find(r => r.väg === '/rest/v1/rpc/intag_lead');
+  prova('intag: intag_lead får anmälan och familjen', flytt && flytt.kropp.p_lead === 'lead-gammal' && flytt.kropp.p_familj === 'familj-1',
+    JSON.stringify(flytt && flytt.kropp));
+  const panel = await page.locator('.dp').first().innerText();
+  prova('intag: familjens panel öppnas med Intagen, källan och meddelandet', /Intagen/.test(panel) && /Kom via\s*facebook \/ social/.test(panel)
+    && panel.includes('Vi vill ha hjälp'), panel);
+  await bild(page, 'intag-familjen', '.dp');
+  await page.click('.dp [data-dp-flik="barn"]');
+  await vänta(300);
+  prova('intag: barnet säger att det inte är matchat', /Ej matchad/.test(await page.locator('.dp').first().innerText()),
+    await page.locator('.dp').first().innerText());
+  prova('intag: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
+
+  /* Utan migrationen: Ta in familjen gör som förut och säger det. */
+  const u = await öppna(webb, { utanIntag: true });
+  await tillAdmin(u.page, 'leads');
+  await u.page.click('[data-dp="anmalan:lead-ny"]');
+  await vänta(400);
+  await u.page.click('[data-lead-elev="lead-ny"]');
+  await u.page.waitForSelector('#le-t', { timeout: 4000 }).catch(() => {});
+  await u.page.click('#le-skapa');
+  await u.page.waitForFunction(() => /intagen/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
+  prova('intag utan migrationen: kvittot säger att anmälan är intagen, utan flytt', (await text(u.page, '.nx-fraga-box')).includes('är markerad som intagen'),
+    await text(u.page, '.nx-fraga-box'));
+  prova('intag utan migrationen: anmälan står kvar', u.S.W.leads.some(l => l.id === 'lead-ny'));
+  prova('intag utan migrationen: inga fel i konsolen', u.konsol.length === 0, u.konsol.join(' | '));
+  await u.context.close();
 }
 
 /* ============ 4. Skicka inbjudan igen ============ */
@@ -534,6 +622,7 @@ async function provaIgen(webb) {
     await provaFamiljen(webb);
     await provaFamiljenElevenFaller(webb);
     await provaGratistimmarIPanelen(webb);
+    await provaFlyttaTillFamiljen(webb);
     await provaIgen(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);

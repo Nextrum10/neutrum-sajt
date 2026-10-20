@@ -9,32 +9,22 @@
 // ett schema, pg_cron manadskorning: utan det finns ingen lönespec för
 // en månad förrän någon kommer ihåg knappen under Ekonomi →
 // Månadskörning. Sedan 2026-10-01 går det varje natt för förra månaden
-// (manadskorningen_gar_varje_natt): den 1:a skapas underlagen och
-// fakturautkasten, och resten av månaden läggs pass som rapporterats
-// sent till på utkasten (PASSETS MÅNAD nedan). Knappen finns kvar, för
-// en månad som aldrig kördes och en körning som inte gick.
+// (manadskorningen_gar_varje_natt): den 1:a skapas underlagen, och
+// resten av månaden läggs pass som rapporterats sent till på utkasten
+// (PASSETS MÅNAD nedan). Knappen finns kvar, för en månad som aldrig
+// kördes och en körning som inte gick.
 //
-// FAMILJEN BETALAR MED KORT, ELLER MOT FAKTURA OM DEN VALT DET.
-// Fas 14.2 tog bort månadsfakturan: familjen betalar varje pass med
-// kort, genom stripe-checkout, i förväg eller efter passet när de
-// bekräftar rapporten (Fas 19.2). Pass som hölls utan att
-// familjen betalat räknas upp i svaret under `obetalda`, med beloppet,
-// och syns under Avvikelser som Inte betalt. De försvinner inte tyst.
+// FAMILJEN BETALAR MED KORT ELLER MED TIMMARNA. Fas 14.2 tog bort
+// månadsfakturan: familjen betalar varje pass med kort, genom
+// stripe-checkout eller kortet som reserveras, eller med timmarna i
+// timbanken. Pass som hölls utan att familjen betalat räknas upp i svaret
+// under `obetalda`, med beloppet, och syns under Avvikelser som Inte
+// betalt. De försvinner inte tyst.
 //
-// OBETALDA PASS PÅ FAKTURAN (2026-10-15, beslutat 2026-10-01). Ett pass
-// som inte är betalt när månaden faktureras läggs på familjens faktura:
-// fakturera_obetalda() väljer passen i databasen och skriver dem som
-// faktura innan fakturapassen hämtas. Undantagen (en öppen kassa, ett
-// kort som betalar, familjer utan faktura och pass bokade innan familjen
-// godkänt villkoren som säger det) står kvar som Inte betalt och under
-// `obetalda`. Svaret säger vilka som lades på fakturan (`pa_fakturan`).
-//
-// Fas 14.6 lät familjen välja faktura på ett pass. Bara de passen,
-// betalning_status = 'faktura', samlas på ett fakturautkast per
-// familj och period i invoices, med en rad per pass i invoice_lines.
-// Utkastet läggs in i Fortnox av admin, för hand (Ekonomi → Fakturor,
-// knappen Lagd i Fortnox), och det är Fortnox som skickar fakturan.
-// Den här funktionen skickar ingenting.
+// INGEN FAKTURA (2026-10-21). Fas 14.6 lät familjen välja faktura på ett
+// pass, och 2026-10-16 lades obetalda pass på den av sig själva. Ingen
+// faktura gick någonsin till en familj, och Leo tog bort fakturan helt
+// (fakturan_tas_bort): körningen skapar bara underlag.
 //
 // Funktionen heter kvar fakturering. Namnet är adressen adminvyn och
 // ett framtida schema anropar, och ett nytt namn hade varit en ny
@@ -45,8 +35,8 @@
 // ligger i _delad/pris.ts, där den är testad öre för öre (pris_test.ts).
 //
 // SÄKERHET
-// Den här funktionen använder service_role, för payouts och fakturornas
-// belopp skrivs med flit inte från webbläsaren: kan ingen skriva belopp
+// Den här funktionen använder service_role, för underlagens belopp
+// skrivs med flit inte från webbläsaren: kan ingen skriva belopp
 // där kan ingen skriva fel belopp. Därför får den heller inte gå att
 // anropa av vem som helst. Tre vägar in:
 //
@@ -88,19 +78,18 @@
 //
 // PASSETS MÅNAD (2026-10-01)
 // Leo: "passen som är hållna i september ska spärras av för september".
-// Ett pass hamnar på sin egen månads underlag och faktura, så länge
-// personens dokument för den månaden är ett utkast eller inte skapat
-// än: raderna läggs till på utkastet och summan räknas om. Bara ett
-// låst dokument (godkänt, skickat, betalt) skickar passet vidare, till
-// den första senare månaden som tar emot det. Regeln är malmanad() i
-// _delad/pris.ts. Ett nytt dokument skapas bara för perioden.
+// Ett pass hamnar på sin egen månads underlag, så länge studiehjälparens
+// underlag för den månaden är ett utkast eller inte skapat än: raderna
+// läggs till på utkastet och summan räknas om. Bara ett låst underlag
+// (godkänt, utbetalt) skickar passet vidare, till den första senare
+// månaden som tar emot det. Regeln är malmanad() i _delad/pris.ts. Ett
+// nytt underlag skapas bara för perioden.
 //
 // Förut gick allt till periodens dokument. Studiehjälparen har ett
 // underlag per månad (unique(tutor_id, period)), så när september
 // kördes med knappen den 29 september fick tre pass den 29 och 30
-// september, som rapporterades efter det, vänta en månad på lönen, och
-// fakturapasset den 30:e hade hamnat på oktobers faktura. Schemat
-// svarade 207 den 1 oktober.
+// september, som rapporterades efter det, vänta en månad på lönen.
+// Schemat svarade 207 den 1 oktober.
 //
 // KÖR TORRT FÖRST
 // Med { "torrkorning": true } räknar den ut allt och svarar med vad
@@ -112,8 +101,8 @@ import { cors, json as jsonMed, preflight } from '../_delad/http.ts';
 import { kravAdmin, lika, serviceklient } from '../_delad/auth.ts';
 import { hemlighetOk } from '../_delad/notis.ts';
 import {
-  byggFakturor, byggUnderlag, type Dokument, fordela, manadenArSlut, manadenNu, manadFor, minuterSum, type Pass,
-  sammanfatta, somFaktura, sorteraPass, standardTjanst, summa, type Tjanst,
+  byggUnderlag, type Dokument, fordela, manadenArSlut, manadenNu, manadFor, minuterSum, type Pass,
+  sammanfatta, sorteraPass, standardTjanst, summa, type Tjanst,
 } from '../_delad/pris.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -178,43 +167,35 @@ type Klient = ReturnType<typeof serviceklient>;
 
 // Lägger raderna på ett utkast som redan finns (PASSETS MÅNAD ovan), och
 // räknar om dess summa ur alla dess rader. Raderna först: ett pass står
-// på högst en rad (payout_lines_ett_pass_en_gang och
-// invoice_lines_ett_pass_en_gang), så två körningar samtidigt kan inte
-// lägga det två gånger. Summan sedan, och bara medan dokumentet är ett
-// utkast. Hann någon godkänna eller skicka det tas raderna bort igen, och
-// passen tas av nästa körning. Svarar med felet, eller null.
-async function laggTill(
-  db: Klient,
-  dok: { tabell: 'payouts' | 'invoices'; rader: 'payout_lines' | 'invoice_lines'; kolumn: 'payout_id' | 'invoice_id' },
-  id: string,
-  rader: Record<string, unknown>[],
-): Promise<string | null> {
-  const ny = await db.from(dok.rader).insert(rader.map((r) => ({ ...r, [dok.kolumn]: id }))).select('id');
+// på högst en rad (payout_lines_ett_pass_en_gang), så två körningar
+// samtidigt kan inte lägga det två gånger. Summan sedan, och bara medan
+// underlaget är ett utkast. Hann någon godkänna det tas raderna bort
+// igen, och passen tas av nästa körning. Svarar med felet, eller null.
+async function laggTill(db: Klient, id: string, rader: Record<string, unknown>[]): Promise<string | null> {
+  const ny = await db.from('payout_lines').insert(rader.map((r) => ({ ...r, payout_id: id }))).select('id');
   if (ny.error) return ny.error.message;
   const nya = ((ny.data ?? []) as { id: string }[]).map((r) => r.id);
   const angra = async (varfor: string) => {
-    const bort = await db.from(dok.rader).delete().in('id', nya);
+    const bort = await db.from('payout_lines').delete().in('id', nya);
     return bort.error ? `${varfor} Raderna gick inte att ta bort igen: ${bort.error.message}` : varfor;
   };
 
   let alla: { belopp_ore: number; minuter: number }[];
   try {
-    alla = await allaRader<{ belopp_ore: number; minuter: number }>((fran, till) => db.from(dok.rader)
-      .select('id, belopp_ore, minuter').eq(dok.kolumn, id).order('id').range(fran, till));
+    alla = await allaRader<{ belopp_ore: number; minuter: number }>((fran, till) => db.from('payout_lines')
+      .select('id, belopp_ore, minuter').eq('payout_id', id).order('id').range(fran, till));
   } catch (fel) {
     return await angra('Summan gick inte att räkna om: ' + (fel as Error).message);
   }
-  // Underlaget har minuterna i en egen kolumn, fakturan bara på raderna.
-  const andring: Record<string, number> = { belopp_ore: alla.reduce((a, r) => a + Number(r.belopp_ore), 0) };
-  if (dok.tabell === 'payouts') andring.minuter = alla.reduce((a, r) => a + Number(r.minuter), 0);
-  const upp = await db.from(dok.tabell).update(andring).eq('id', id).eq('status', 'utkast').select('id');
+  const andring = {
+    belopp_ore: alla.reduce((a, r) => a + Number(r.belopp_ore), 0),
+    minuter: alla.reduce((a, r) => a + Number(r.minuter), 0),
+  };
+  const upp = await db.from('payouts').update(andring).eq('id', id).eq('status', 'utkast').select('id');
   if (upp.error) return await angra('Summan gick inte att spara: ' + upp.error.message);
-  if (!upp.data?.length) return await angra('Utkastet hann bli godkänt eller skickat, så passen tas av nästa körning.');
+  if (!upp.data?.length) return await angra('Utkastet hann bli godkänt, så passen tas av nästa körning.');
   return null;
 }
-
-const UNDERLAG = { tabell: 'payouts', rader: 'payout_lines', kolumn: 'payout_id' } as const;
-const FAKTURA = { tabell: 'invoices', rader: 'invoice_lines', kolumn: 'invoice_id' } as const;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight(CORS);
@@ -268,7 +249,7 @@ Deno.serve(async (req) => {
     // ovan). Torrkörningen skriver ingenting och får visa en som pågår.
     if (!torrkorning && !manadenArSlut(period, new Date())) {
       return json({
-        error: `Månaden är inte slut. Underlag och fakturor för ${period.slice(0, 7)} går att skapa från ${slut}.`,
+        error: `Månaden är inte slut. Underlag för ${period.slice(0, 7)} går att skapa från ${slut}.`,
       }, 409);
     }
 
@@ -309,79 +290,25 @@ Deno.serve(async (req) => {
       }, 500);
     }
 
-    // ---------- obetalda pass på fakturan (2026-10-15) ----------
-    // Före passen hämtas, så att båda frågorna nedan ser läget som det
-    // blev. Utan funktionen (migrationen är inte körd) står allt som förut.
-    // Torrkörningen skriver ingenting: passen läggs till i svaret nedan.
-    let paFakturan: string[] = [];
-    {
-      const { data, error } = await db.rpc('fakturera_obetalda', { p_fore: slut, p_torr: torrkorning });
-      if (error && error.code !== 'PGRST202') {
-        return json({ error: 'Kunde inte lägga obetalda pass på fakturan: ' + error.message }, 500);
-      }
-      paFakturan = Array.isArray(data) ? data.map(String) : [];
-    }
-
     // ---------- passen som inte tagits med ----------
     // Vyn passunderlag svarar för varje genomfört pass om det har en
-    // rapport, är undantaget, står på en äldre faktura, är betalt och
-    // redan är med på ett underlag. Bara pass till och med periodens
-    // sista dag, och bara de som inte redan finns på ett underlag.
+    // rapport, är undantaget, är betalt och redan är med på ett underlag.
+    // Bara pass till och med periodens sista dag, och bara de som inte
+    // redan finns på ett underlag.
     //
-    // Förut hämtades också pass som fanns på ett underlag men inte på
-    // en faktura, för familjens halva. Den halvan finns inte längre.
     // Ett obetalt pass som redan är med på ett underlag räknas inte upp
     // här en gång till — avvikelsen ej_betalt ser det varje dag.
     let allaPass: Pass[];
     try {
       allaPass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
         .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
-          + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status, debiterade_min, lon_min, timbank_min')
+          + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, pa_underlag, betalning_status, debiterade_min, lon_min, timbank_min')
         .lt('wanted_date', slut)
         .eq('pa_underlag', false)
         .order('wanted_date').order('id')
         .range(fran, till));
     } catch (fel) {
       return json({ error: 'Kunde inte hämta passen: ' + (fel as Error).message }, 500);
-    }
-
-    // ---------- fakturapassen (Fas 14.6) ----------
-    // En egen fråga, för urvalet ovan tar bara pass som inte står på ett
-    // underlag. Ett fakturapass kan redan ha kommit med på
-    // studiehjälparens underlag förra månaden (rapporten kom i tid) och
-    // ändå sakna faktura (familjen valde faktura efteråt, eller körningen
-    // fanns inte). Villkoret är fakturan, inte underlaget.
-    let fakturapass: Pass[];
-    try {
-      fakturapass = await allaRader<Pass>((fran, till) => db.from('passunderlag')
-        .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
-          + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status, debiterade_min, lon_min, timbank_min')
-        .lt('wanted_date', slut)
-        .eq('betalning_status', 'faktura')
-        .eq('fakturerad', false)
-        .eq('fakturerbar', true)
-        .eq('har_rapport', true)
-        .order('wanted_date').order('id')
-        .range(fran, till));
-    } catch (fel) {
-      return json({ error: 'Kunde inte hämta fakturapassen: ' + (fel as Error).message }, 500);
-    }
-
-    // Torrkörningen har inte skrivit något, så passen som skulle läggas på
-    // fakturan räknas som fakturapass här, och inte som obetalda.
-    if (torrkorning && paFakturan.length) {
-      try {
-        const extra = await allaRader<Pass>((fran, till) => db.from('passunderlag')
-          .select('id, subject, tjanst, wanted_date, duration_min, parent_id, tutor_id, antal_barn, '
-            + 'rabatt_ore, timpris_ore, extra_ore, fakturerbar, har_rapport, fakturerad, pa_underlag, betalning_status, debiterade_min, lon_min, timbank_min')
-          .in('id', paFakturan)
-          .order('id')
-          .range(fran, till));
-        fakturapass = somFaktura(fakturapass, extra, paFakturan);
-        somFaktura(allaPass, [], paFakturan);
-      } catch (fel) {
-        return json({ error: 'Kunde inte hämta passen för fakturan: ' + (fel as Error).message }, 500);
-      }
     }
 
     // Två sorters pass som INTE går vidare, och som ska synas i svaret
@@ -401,97 +328,47 @@ Deno.serve(async (req) => {
     // ---------- räkna ----------
     const underlag = byggUnderlag({ pass, tjanster: katalog, timprisOre, timpenningar });
     const { perTutor } = underlag;
-    const fakturor = byggFakturor({ pass: fakturapass, tjanster: katalog, timprisOre });
 
-    // ---------- dokumenten som redan finns (PASSETS MÅNAD ovan) ----------
-    // Personernas underlag och fakturor från det äldsta passets månad till
-    // och med perioden. Läget avgör vart varje pass går.
+    // ---------- underlagen som redan finns (PASSETS MÅNAD ovan) ----------
+    // Studiehjälparnas underlag från det äldsta passets månad till och med
+    // perioden. Läget avgör vart varje pass går.
     const datumFor = new Map<string, string>();
-    for (const b of [...pass, ...fakturapass]) datumFor.set(b.id, b.wanted_date);
+    for (const b of pass) datumFor.set(b.id, b.wanted_date);
     const tidigast = [...datumFor.values()].map(manadFor).sort()[0] ?? period;
     const tutorer = [...perTutor.keys()];
-    const foraldrar = [...fakturor.keys()];
     let utbDok: (Dokument & { tutor_id: string })[] = [];
-    let faktDok: (Dokument & { parent_id: string })[] = [];
     try {
-      [utbDok, faktDok] = await Promise.all([
-        tutorer.length
-          ? allaRader<Dokument & { tutor_id: string }>((fran, till) => db.from('payouts')
-            .select('id, tutor_id, period, status').in('tutor_id', tutorer)
-            .gte('period', tidigast).lte('period', period).order('id').range(fran, till))
-          : [],
-        foraldrar.length
-          ? allaRader<Dokument & { parent_id: string }>((fran, till) => db.from('invoices')
-            .select('id, parent_id, period, status').in('parent_id', foraldrar)
-            .gte('period', tidigast).lte('period', period).order('id').range(fran, till))
-          : [],
-      ]);
+      utbDok = tutorer.length
+        ? await allaRader<Dokument & { tutor_id: string }>((fran, till) => db.from('payouts')
+          .select('id, tutor_id, period, status').in('tutor_id', tutorer)
+          .gte('period', tidigast).lte('period', period).order('id').range(fran, till))
+        : [];
     } catch (fel) {
-      return json({ error: 'Kunde inte hämta underlagen och fakturorna som redan finns: ' + (fel as Error).message }, 500);
+      return json({ error: 'Kunde inte hämta underlagen som redan finns: ' + (fel as Error).message }, 500);
     }
-    const perPerson = <D extends Dokument>(lista: D[], vem: (d: D) => string) => {
-      const ut = new Map<string, Dokument[]>();
-      for (const d of lista) ut.set(vem(d), [...(ut.get(vem(d)) ?? []), d]);
-      return ut;
-    };
-    const utbetalningarFordelade = fordela({
-      rader: perTutor, datumFor, period, dokument: perPerson(utbDok, (d) => d.tutor_id),
-    });
-    const fakturorFordelade = fordela({
-      rader: fakturor, datumFor, period, dokument: perPerson(faktDok, (d) => d.parent_id),
-    });
+    const perTutorDok = new Map<string, Dokument[]>();
+    for (const d of utbDok) perTutorDok.set(d.tutor_id, [...(perTutorDok.get(d.tutor_id) ?? []), d]);
+    const utbetalningarFordelade = fordela({ rader: perTutor, datumFor, period, dokument: perTutorDok });
 
     const sammanfattning = sammanfatta({
-      korningAv, period, slut, timprisOre, underlag, fakturor, utanRapport, undantagna,
-      utbetalningarFordelade, fakturorFordelade,
+      korningAv, period, slut, timprisOre, underlag, utanRapport, undantagna, utbetalningarFordelade,
     });
 
-    if (torrkorning) return json({ torrkorning: true, ...sammanfattning, pa_fakturan: paFakturan }, 200);
+    if (torrkorning) return json({ torrkorning: true, ...sammanfattning }, 200);
 
     // ---------- skriv ----------
-    // Underlag, och ett fakturautkast per familj som valt faktura. Ett
-    // obetalt kortpass skrivs inte någonstans: det finns i svaret som
-    // `obetalda`, och i databasen som avvikelsen ej_betalt.
-    const skapade = { utbetalningar: 0, fakturor: 0 };
-    const tillagda = { utbetalningar: 0, fakturor: 0 };
+    // Underlagen. Ett obetalt pass skrivs inte någonstans: det finns i
+    // svaret som `obetalda`, och i databasen som avvikelsen ej_betalt.
+    const skapade = { utbetalningar: 0 };
+    const tillagda = { utbetalningar: 0 };
     const problem: string[] = [];
     const vad = (person: string, manad: string) => `${person} ${manad.slice(0, 7)}`;
 
-    /* Fakturan FÖRST, raderna SEDAN, och fakturan tas bort om raderna
-       inte gick in — samma ordning som underlaget nedan. En faktura
-       utan rader hade larmat som faktura_summa_fel, men ett utkast med
-       rätt summa och fel rader hade lagts in i Fortnox utan att någon sett
-       det. UNIQUE(parent_id, period) gör att två körningar samtidigt
-       krockar i stället för att skapa en andra faktura: krocken står i
-       `problem`. Finns fakturan som utkast läggs raderna till på den. */
-    for (const { person: foralder, manad, dokument, rader } of fakturorFordelade.poster) {
-      const radrader = rader.map((r) => ({
-        booking_id: r.booking_id, beskrivning: r.beskrivning,
-        minuter: r.minuter, pris_per_timme_ore: r.pris_per_timme_ore, belopp_ore: r.belopp_ore,
-      }));
-      if (dokument) {
-        const fel = await laggTill(db, FAKTURA, dokument.id, radrader);
-        if (fel) problem.push(`faktura ${vad(foralder, manad)}: ${fel}`);
-        else tillagda.fakturor++;
-        continue;
-      }
-
-      const f = await db.from('invoices').insert({
-        parent_id: foralder, period: manad, status: 'utkast', belopp_ore: summa(rader),
-      }).select('id').single();
-
-      if (f.error) { problem.push(`faktura ${vad(foralder, manad)}: ${f.error.message}`); continue; }
-
-      const l = await db.from('invoice_lines').insert(radrader.map((r) => ({ ...r, invoice_id: f.data.id })));
-
-      if (l.error) {
-        await db.from('invoices').delete().eq('id', f.data.id);
-        problem.push(`fakturarader ${vad(foralder, manad)}: ${l.error.message}`);
-        continue;
-      }
-      skapade.fakturor++;
-    }
-
+    /* Underlaget FÖRST, raderna SEDAN, och underlaget tas bort om raderna
+       inte gick in. UNIQUE(tutor_id, period) gör att två körningar
+       samtidigt krockar i stället för att skapa ett andra underlag:
+       krocken står i `problem`. Finns underlaget som utkast läggs raderna
+       till på det. */
     for (const { person: tutorId, manad, dokument, rader } of utbetalningarFordelade.poster) {
       // Radens egen timpenning: tjänstens ersättning när den är satt,
       // annars studiehjälparens egen. För läxhjälp alltid hens egen.
@@ -500,7 +377,7 @@ Deno.serve(async (req) => {
         minuter: r.minuter, timpenning_ore: r.timpris_ore, belopp_ore: r.belopp_ore,
       }));
       if (dokument) {
-        const fel = await laggTill(db, UNDERLAG, dokument.id, radrader);
+        const fel = await laggTill(db, dokument.id, radrader);
         if (fel) problem.push(`utbetalning ${vad(tutorId, manad)}: ${fel}`);
         else tillagda.utbetalningar++;
         continue;
@@ -527,10 +404,9 @@ Deno.serve(async (req) => {
     // granskar, och utbetalningen den 25:e görs från banken. Stripe är
     // inte med i den här halvan alls: Connect togs bort i Fas 12.5,
     // eftersom en överföring per pass hade betalat samma timmar två
-    // gånger — en gång vid passet och en gång här. Fakturan skickas av
-    // Fortnox, inte härifrån.
+    // gånger — en gång vid passet och en gång här.
 
-    return json({ ...sammanfattning, pa_fakturan: paFakturan, skapade, tillagda, problem }, problem.length ? 207 : 200);
+    return json({ ...sammanfattning, skapade, tillagda, problem }, problem.length ? 207 : 200);
   } catch (fel) {
     return json({ error: String((fel as Error)?.message ?? fel) }, 500);
   }

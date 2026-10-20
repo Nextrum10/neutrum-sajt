@@ -27,6 +27,11 @@
    #koder/studiehjalpare för listan, så att Tillbaka i webbläsaren går
    tillbaka till valet. Bara superadmin (BARA_SUPER i
    nextrum-admin-behorighet.js): koder_lage svarar bara admin.
+
+   RABATTKODERNA OCH PARTNERKODERNA (2026-10-21, koder_for_planer) står i
+   samma val och samma flikar (#koder/rabattkoder, #koder/partnerkoder),
+   men ritas av nextrum-admin-rabattkoder.js: de gäller planköp, inte
+   intresseanmälan och jobbansökan. Här står bara deras kort i valet.
    ============================================================ */
 (function () {
   'use strict';
@@ -61,6 +66,21 @@
       kort: 'Koden skrivs i jobbansökan. 300 kr i lönen, inklusive semesterersättning, när vi tar in den som sökt.'
     }
   };
+
+  /* Rabattkoderna och partnerkoderna (2026-10-21): kortet i valet och
+     fliken, och nextrum-admin-rabattkoder.js ritar resten. */
+  const PLANKODER = {
+    rabattkoder: {
+      sort: 'rabatt', namn: 'Rabattkoder', ik: 'rabatt',
+      kort: 'En kod som ger en rabatt när familjen köper en plan, till exempel för en kampanj. Aldrig på ett pass.'
+    },
+    partnerkoder: {
+      sort: 'partner', namn: 'Partnerkoder', ik: 'partner',
+      kort: 'En partnerförenings kod till en plan. Den räknar familjerna och vad de köpt, med eller utan rabatt.'
+    }
+  };
+  IKON.rabatt = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5V5.5A1.5 1.5 0 0 1 5.5 4h7l7.5 7.5-8.5 8.5z"/><circle cx="8.5" cy="8.5" r="1.4"/></svg>';
+  IKON.partner = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12l4-4 3 2 4-4 3 3 4-1"/><path d="M5 20h14M8 20v-4M12 20v-6M16 20v-5"/></svg>';
 
   /* Svaren från koder_lage per sort. undefined: inte hämtat, null: fel. */
   const K = {
@@ -106,6 +126,11 @@
     if (huvud !== 'koder') return null;
     return SORT[del] ? del : '';
   }
+  /* Rabattkoderna eller partnerkoderna, som en annan fil ritar. */
+  function planDel() {
+    const [huvud, del] = String(location.hash || '').replace(/^#/, '').split('/');
+    return huvud === 'koder' && PLANKODER[del] ? del : null;
+  }
 
   /* ------------------------------------------------------------
      RÄKNINGEN
@@ -130,8 +155,12 @@
   const n = (antal, en, fler) => antal + ' ' + (antal === 1 ? en : fler);
 
   /* Vilka som använt koden. Anmälningarna och ansökningarna står i S;
-     ingen ny fråga behövs. */
+     ingen ny fråga behövs. En anmälan som flyttats till familjen
+     (intagna_anmalningar, 2026-10-21) står som familjen, med
+     anmälningsdagen. */
   const anmälningar = kod => (S.leads || []).filter(l => l.kod === kod)
+    .concat((S.intagna || []).filter(i => i.kod === kod)
+      .map(i => ({ id: i.id, intagen: true, kund_id: i.parent_id, created_at: i.anmald_at })))
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
   const ansökningar = kod => (S.ansokningar || []).filter(a => a.kod === kod)
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
@@ -164,6 +193,19 @@
       return '<a class="kod-val-kort" href="#koder/' + del + '">'
         + '<span class="kod-val-ik">' + IKON[o.sort] + '</span>'
         + '<span class="kod-val-text"><b>' + esc(o.namn) + '</b><span>' + esc(o.kort) + '</span>' + siffror + '</span>'
+        + '<span class="kod-val-pil">' + IKON.pil + '</span>'
+        + '</a>';
+    }).join('') + Object.keys(PLANKODER).map(del => {
+      const o = PLANKODER[del];
+      const koder = (S.rabattkoder || []).filter(r => r.kod !== 'TIPS' && (r.sort || 'rabatt') === o.sort);
+      const aktiva = koder.filter(r => r.aktiv).length;
+      const använda = koder.reduce((a, r) => a + Number(r.antal_anvandningar || 0), 0);
+      return '<a class="kod-val-kort kod-val-plan" href="#koder/' + del + '">'
+        + '<span class="kod-val-ik">' + IKON[o.ik] + '</span>'
+        + '<span class="kod-val-text"><b>' + esc(o.namn) + '</b><span>' + esc(o.kort) + '</span>'
+        + '<span class="kod-val-tal"><b>' + koder.length + '</b> ' + (koder.length === 1 ? 'kod' : 'koder')
+        + ' · <b>' + aktiva + '</b> ' + (aktiva === 1 ? 'aktiv' : 'aktiva')
+        + ' · <b>' + använda + '</b> ' + (använda === 1 ? 'användning' : 'användningar') + '</span></span>'
         + '<span class="kod-val-pil">' + IKON.pil + '</span>'
         + '</a>';
     }).join('');
@@ -238,7 +280,11 @@
       const lista = anmälningar(r.kod);
       return '<p class="kod-del">Anmälningar med koden</p>'
         + (lista.length ? '<ul class="kod-vilka">' + lista.map(l => '<li>'
-          + '<button type="button" class="eko-lank" data-dp="anmalan:' + esc(l.id) + '">' + esc(l.parent_name || 'Anmälan') + '</button>'
+          + (l.intagen
+            ? (l.kund_id
+              ? '<button type="button" class="eko-lank" data-dp="familj:' + esc(l.kund_id) + '">' + esc(namnFör(l.kund_id)) + '</button>'
+              : '<span>Raderad familj</span>')
+            : '<button type="button" class="eko-lank" data-dp="anmalan:' + esc(l.id) + '">' + esc(l.parent_name || 'Anmälan') + '</button>')
           + '<span class="kod-vilka-nar">' + esc(kortDatum(l.created_at)) + '</span>'
           + (l.kund_id ? pill('Kund', 'ar-klar') : pill((LEAD_LAGE[l.status] || [l.status || '—'])[0], (LEAD_LAGE[l.status] || [])[1] || ''))
           + '</li>').join('') + '</ul>'
@@ -334,11 +380,18 @@
     });
   }
 
+  /* Alla fyra flikarna, också rabattkodernas och partnerkodernas, som
+     nextrum-admin-rabattkoder.js ritar i sin egen rad. */
+  function kodflikar(del) {
+    const alla = Object.assign({}, SORT, PLANKODER);
+    return Object.keys(alla).map(k => '<a class="vy-flik" role="tab" href="#koder/' + k + '"'
+      + ' aria-selected="' + (k === del) + '">' + esc(alla[k].namn) + '</a>').join('');
+  }
+
   function ritaFlikar(del) {
     const host = $('#kod-flikar');
     if (!host) return;
-    host.innerHTML = Object.keys(SORT).map(k => '<a class="vy-flik" role="tab" href="#koder/' + k + '"'
-      + ' aria-selected="' + (k === del) + '">' + esc(SORT[k].namn) + '</a>').join('');
+    host.innerHTML = kodflikar(del);
   }
 
   /* ------------------------------------------------------------
@@ -349,8 +402,11 @@
     if (!valHost || !vyHost) return;
     const del = var_();
     const visaLista = !!del;
-    valHost.hidden = visaLista;
+    /* Rabattkoderna och partnerkoderna har sin egen yta (#kp-vy). */
+    const plan = planDel();
+    valHost.hidden = visaLista || !!plan;
     vyHost.hidden = !visaLista;
+    if (plan) return;
     if (!visaLista) { ritaVal(); return; }
     const o = SORT[del];
     const rader = K.rader[o.sort];
@@ -373,7 +429,8 @@
   function öppnad() {
     if (var_() === null || !får()) return;
     ritaKoderna();
-    hämta().then(ritaKoderna);
+    // Rabattkoderna och partnerkoderna hämtar sitt eget.
+    if (!planDel()) hämta().then(ritaKoderna);
   }
 
   window.addEventListener('hashchange', öppnad);
@@ -468,8 +525,8 @@
      listan. */
   function ritaKodsidan() {
     ritaKoderna();
-    if (var_() !== null && får()) hämta().then(ritaKoderna);
+    if (var_() !== null && !planDel() && får()) hämta().then(ritaKoderna);
   }
 
-  Object.assign(NXAdmin.rita, { ritaKodsidan });
+  Object.assign(NXAdmin.rita, { ritaKodsidan, kodflikar });
 })();

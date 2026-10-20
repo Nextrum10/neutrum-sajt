@@ -42,21 +42,8 @@ window.NEXTRUM_CONFIG = {
      delar sin uppmärksamhet, och det ska synas. */
   PRIS_EXTRA_BARN: 69,
 
-  /* Betalningstiden på en månadsfaktura, i dagar (Fas 14.6). Samma
-     siffra som BETALNINGSVILLKOR_DAGAR i
-     supabase/functions/_delad/konstanter.ts, och samma som ska stå i
-     Fortnox: fakturan skapas där, med betalningsvillkoret som är satt
-     i Fortnox. Står det olika på fakturan och i villkoren är det en
-     tvist, inte ett skrivfel. verktyg/kolla-betalningsvillkor.py
-     jämför de två filerna. */
-  BETALNINGSVILLKOR_DAGAR: 10,
-
-  /* Bankgironumret familjen betalar en faktura till (Fas 19.6), som
-     det står på fakturan i Fortnox, till exempel '123-4567'. Tom sträng
-     = inte satt: rutan Fakturor att betala hänvisar då till fakturan i
-     stället för att visa ett nummer. Fylls i när bolaget har bankgiro,
-     samma dag som flaggan faktura slås på. */
-  BANKGIRO: '',
+  /* BETALNINGSVILLKOR_DAGAR och BANKGIRO stod här, fakturans
+     betalningstid och bankgiro, tills fakturan togs bort 2026-10-21. */
 
   // Kontaktuppgifter som visas i sidfoten och i formulärsvar.
   EPOST: 'info@nextrum.se',
@@ -72,6 +59,12 @@ window.NEXTRUM_CONFIG = {
      studiehjälpare som inte vet hur rapporten fungerar lämnar inga
      rapporter, och utan rapport blir passet aldrig genomfört. */
   UTBILDNING_URL: '',
+
+  /* Köpvillkoren i kassan (2026-10-21). Rutan före kassan kräver ett
+     kryss och länkar hit. PLATSHÅLLARE: avsnittet #kopvillkor i
+     anvandarvillkor.html (och en/anvandarvillkor.html) bär en platshållare
+     tills Leo skrivit köpvillkoren. Byts adressen ändras bara den här. */
+  KOPVILLKOR_URL: '/anvandarvillkor#kopvillkor',
 
   /* Bokningssidan för intervjun (2026-10-20): ett bokningsschema i
      Google Kalender, med Google Meet som plats. Adressen ser ut som

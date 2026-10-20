@@ -4,7 +4,7 @@
 // Själva anropet, en gång. Vad som händer när Resend säger nej —
 // reservavsändare eller inte, status eller inte — bestämmer den som
 // anropar, för det skiljer sig med flit mellan en avisering till oss
-// och en faktura till en familj.
+// och ett underlag till en studiehjälpare.
 //
 // headers och tidsgransMs är valfria och kom till för notis-ko:
 // headers för notismejlens List-Unsubscribe, tidsgransMs för att ett

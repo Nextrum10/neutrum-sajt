@@ -17,11 +17,12 @@
    förhandsvisningen inte når.
 
    Det provet säger:
-     - förslaget har raden Betalning (Efter passet, Kort, Faktura), och
-       valet följer med passet: kortet väljs, eller fakturan
+     - förslaget har raden Betalning (Efter passet, Kort), och valet
+       följer med passet: kortet väljs. Fakturan var ett tredje val till
+       2026-10-21, då den togs bort.
      - granskningen av ett barns förslag har samma rad
-     - passets sida väljer kortet och väljer bort det, och fakturan före
-       passet; Betala i förväg är borta
+     - passets sida väljer kortet och väljer bort det; Betala i förväg
+       och fakturan är borta
      - Mina lektioner säger Kort i stället för Ej betalt
      - Profil → Kortet visar kortet
      - med strömbrytaren av och inget kort är vyn som förut
@@ -164,11 +165,11 @@ async function provaPå(webb) {
   }, id(108));
   prova('på: Mina lektioner märker passet med Kort', märke && märke.indexOf('Kort') !== -1, JSON.stringify(märke));
 
-  /* Ett bekräftat pass utan val: Välj kort och fakturan, inte Betala i förväg. */
+  /* Ett bekräftat pass utan val: Välj kort, inte Betala i förväg och inte fakturan. */
   await tillPasset(page, id(106));
-  prova('på: passets sida har Välj kort och Betala mot faktura',
+  prova('på: passets sida har Välj kort och ingen faktura',
     (await synlig(page, '#pass-sida .vy-betalval [data-kort-val]'))
-    && (await synlig(page, '#pass-sida .vy-betalval [data-faktura-fore]')), await text(page, '#pass-sida .ps-gor'));
+    && !/faktura/i.test(await text(page, '#pass-sida .ps-gor')), await text(page, '#pass-sida .ps-gor'));
   prova('på: Betala i förväg är borta', (await page.locator('#pass-sida [data-betala]').count()) === 0,
     await text(page, '#pass-sida .ps-gor'));
   prova('på: beskedet säger att priset reserveras två dagar före',
@@ -194,23 +195,13 @@ async function provaPå(webb) {
   await vänta(300);
   prova('på: Välj bort kortet tar bort raden', (await reservation(page, id(106))) === null);
   prova('på: Välj kort står där igen', await synlig(page, '#pass-sida .vy-betalval [data-kort-val]'));
+  prova('på: passet står kvar utan betalsätt', (await betalning(page, id(106))) === 'ingen', await betalning(page, id(106)));
 
-  /* Fakturan före passet, och tillbaka till kortet. */
-  await page.click('#pass-sida .vy-betalval [data-faktura-fore]');
-  await svaraJa(page);
-  await page.waitForFunction(p => NXForhandsvisning.värld.bookings.find(b => b.id === p).betalning_status === 'faktura',
-    id(106), { timeout: 5000 }).catch(() => {});
-  await vänta(300);
-  prova('på: fakturan går att välja före passet', (await betalning(page, id(106))) === 'faktura', await betalning(page, id(106)));
-  prova('på: ett fakturapass erbjuder kortet i stället, inte Betala med kort nu',
-    /Välj kort i stället/.test(await text(page, '#pass-sida .ps-alt [data-kort-val]'))
-    && (await page.locator('#pass-sida [data-betala]').count()) === 0, await text(page, '#pass-sida .ps-alt'));
-  await page.click('#pass-sida .ps-alt [data-kort-val]');
+  /* Kortet igen, för Profil → Kortet nedan räknar två pass. */
+  await page.click('#pass-sida .vy-betalval [data-kort-val]');
   await page.waitForFunction(p => NXForhandsvisning.värld.kortreservationer.some(r => r.booking_id === p), id(106),
     { timeout: 5000 }).catch(() => {});
-  prova('på: kortet i stället byter fakturan mot kortet',
-    (await betalning(page, id(106))) === 'ingen' && (await reservation(page, id(106))) === 'vald',
-    (await betalning(page, id(106))) + ' / ' + (await reservation(page, id(106))));
+  prova('på: kortet går att välja igen', (await reservation(page, id(106))) === 'vald', await reservation(page, id(106)));
 
   /* Profil → Kortet. */
   await page.evaluate(() => { location.hash = '#profil/kort'; });
@@ -235,8 +226,8 @@ async function provaPå(webb) {
   await page.evaluate(() => { location.hash = '#boka'; });
   let dag = await väljTid(page);
   await page.waitForSelector('#boka-inner #bk-betal', { timeout: 6000 }).catch(() => {});
-  prova('på: förslaget har raden Betalning med tre val',
-    JSON.stringify(await page.$$eval('#boka-inner #bk-betal button', b => b.map(x => x.dataset.v))) === '["efter","kort","faktura"]',
+  prova('på: förslaget har raden Betalning med två val, utan faktura',
+    JSON.stringify(await page.$$eval('#boka-inner #bk-betal button', b => b.map(x => x.dataset.v))) === '["efter","kort"]',
     JSON.stringify(await page.$$eval('#boka-inner #bk-betal button', b => b.map(x => x.dataset.v)).catch(() => null)));
   prova('på: förvalet är Efter passet', (await page.getAttribute('#boka-inner #bk-betal button[data-v="efter"]', 'aria-pressed', { timeout: 3000 }).catch(() => null)) === 'true');
   await page.click('#boka-inner #bk-betal button[data-v="kort"]');
@@ -253,20 +244,13 @@ async function provaPå(webb) {
   prova('på: kvittot säger att priset reserveras', /Priset reserveras på Visa ·· 4242/.test(await text(page, '#boka-inner .bk-kvitto')),
     await text(page, '#boka-inner .bk-kvitto'));
 
-  /* Ett förslag mot faktura. Valet från förra förslaget står kvar. */
+  /* Valet från förra förslaget står kvar till nästa. (Här skickades
+     ett förslag mot faktura till 2026-10-21.) */
   await page.click('#boka-inner [data-bk-igen]').catch(() => {});
   dag = await väljTid(page);
   await page.waitForSelector('#boka-inner #bk-betal', { timeout: 5000 }).catch(() => {});
   prova('på: valet står kvar till nästa förslag',
     (await page.getAttribute('#boka-inner #bk-betal button[data-v="kort"]', 'aria-pressed', { timeout: 3000 }).catch(() => null)) === 'true');
-  await page.click('#boka-inner #bk-betal button[data-v="faktura"]');
-  await page.click('#boka-inner #bk-boka');
-  await page.waitForSelector('#boka-inner .bk-kvitto', { timeout: 6000 }).catch(() => {});
-  pass = await nyttPass(page, dag);
-  prova('på: förslaget mot faktura står på faktura', pass && pass.betalning_status === 'faktura',
-    pass ? pass.betalning_status : 'inget pass');
-  prova('på: kvittot säger fakturan', /Passet betalas mot faktura/.test(await text(page, '#boka-inner .bk-kvitto')),
-    await text(page, '#boka-inner .bk-kvitto'));
 
   /* Alvas förslag, granskat och skickat med kort. */
   await page.click('#boka-inner [data-bk-igen]').catch(() => {});
@@ -455,6 +439,23 @@ async function provaLägen(webb) {
   await context.close();
 }
 
+/* ============ ett genomfört pass som inte är betalt ============
+   Passets sida för ett genomfört obetalt pass, utan kort valt. Fas 1
+   (fakturan bort, 2026-10-21) tog med grenen för tillägget när fakturans
+   gren togs bort, och sidan kastade ett fel i stället för att ritas. */
+async function provaGenomförtObetalt(webb) {
+  const { context, page, konsol } = await öppna(webb);
+  await laddaVyn(page);
+  await tillPasset(page, id(104));
+  prova('genomfört obetalt: passets sida ritas', await synlig(page, '#pass-sida .ps-titel'));
+  prova('genomfört obetalt: beskedet ber om betalsätt och rapporten',
+    /Passet är genomfört\. Läs rapporten nedan och bekräfta den genom att välja hur ni betalar\./.test(await text(page, BESKED)),
+    await text(page, BESKED));
+  prova('genomfört obetalt: betalvalen står på sidan', (await page.locator('#pass-sida .vy-betalval').count()) > 0);
+  prova('genomfört obetalt: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
+  await context.close();
+}
+
 /* ============ adminvyn: familjens panel under Ekonomi ============
    Mot en falsk Supabase på https://supabase.test, som de andra
    adminproven. saknas: tabellerna finns inte (migrationen är inte körd),
@@ -554,7 +555,9 @@ async function öppnaAdmin(webb, o) {
     document.body.insertAdjacentHTML('beforeend', '<button type="button" id="prov-dp" data-dp="familj:foralder-1" data-dp-start="ekonomi">Öppna</button>');
     document.getElementById('prov-dp').click();
   });
-  await page.waitForFunction(() => /Faktura som betalsätt/.test(document.body.textContent), null, { timeout: 8000 }).catch(() => {});
+  /* Ekonomin i panelen är ritad när rubriken Kortet står där. */
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('.dp-rubrik span'))
+    .some(x => x.textContent === 'Kortet'), null, { timeout: 8000 }).catch(() => {});
   await vänta(300);
   return { context, page, konsol, anrop, riktiga };
 }
@@ -583,7 +586,9 @@ async function provaAdminvyn(webb) {
     const { context, page, konsol } = await öppnaAdmin(webb, { saknas: true });
     const ekonomi = await page.evaluate(() => document.body.textContent);
     const rubriken = await page.evaluate(() => Array.from(document.querySelectorAll('.dp-rubrik span')).some(x => x.textContent === 'Kortet'));
-    prova('admin utan migrationen: ingen rubrik Kortet och inget fel', /Faktura som betalsätt/.test(ekonomi)
+    /* Ekonomi har ritats: talet för hållna pass som inte är betalda (Faktura
+       som betalsätt stod här till 2026-10-21). */
+    prova('admin utan migrationen: ingen rubrik Kortet och inget fel', /Hållna, inte betalda/.test(ekonomi)
       && !rubriken && !/Kortet gick inte att läsa/.test(ekonomi), ekonomi.slice(0, 200));
     prova('admin utan migrationen: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
     await context.close();
@@ -602,7 +607,7 @@ async function provaTelefonen(webb) {
     knappar: Array.from(document.querySelectorAll('#bk-betal button')).map(b => Math.round(b.getBoundingClientRect().height))
   }));
   prova('telefon: ingen sidledsscroll i förslaget', mått.bredd <= mått.fönster, JSON.stringify(mått));
-  prova('telefon: betalningens knappar är minst 44 px', mått.knappar.length === 3 && mått.knappar.every(h => h >= 44), JSON.stringify(mått.knappar));
+  prova('telefon: betalningens knappar är minst 44 px', mått.knappar.length === 2 && mått.knappar.every(h => h >= 44), JSON.stringify(mått.knappar));
   await bild(page, 'telefon-forslaget', '#boka-inner');
   await tillPasset(page, id(108));
   const mått2 = await page.evaluate(() => ({ bredd: document.documentElement.scrollWidth, fönster: window.innerWidth }));
@@ -625,6 +630,7 @@ async function provaTelefonen(webb) {
     await provaUtanMigrationen(webb);
     await provaAvMedVal(webb);
     await provaLägen(webb);
+    await provaGenomförtObetalt(webb);
     await provaTelefonen(webb);
     await provaAdminvyn(webb);
   } catch (e) {

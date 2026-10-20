@@ -53,7 +53,7 @@
 //
 // Kroppen säger vilket pass det gäller. Ingenting annat. Priset,
 // rabatten och ersättningen läses ur databasen, av samma skäl som
-// invoices och payouts med flit saknar INSERT-policy för användare:
+// payouts med flit saknar INSERT-policy för användare:
 // kan ingen skicka in ett belopp kan ingen skicka in fel belopp.
 //
 // Räkningen lånas ur _delad/pris.ts, den som faktureringen redan
@@ -67,8 +67,9 @@ import { arStripeId, descriptor, StripeError, v1, VALUTA } from '../_delad/strip
 import { familjebelopp, passpris, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
 import {
   arErbjudandekod, type ErbjudandePris, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen,
-  sammaInnehall,
+  manadensForsta, planManad, sammaInnehall,
 } from '../_delad/erbjudanden.ts';
+import { kodPaFelBetalning, planensKod } from '../_delad/koder.ts';
 
 const CORS = cors();
 
@@ -87,7 +88,24 @@ const CORS = cors();
       och raden och metadata säger koden.
    9: familjens rabatt (familjerabatter, 2026-10-15): raden säger den, på
       ett pass och på ett köp, och beloppet är databasens efter den. */
-const SESSIONSFORM = 9;
+const SESSIONSFORM = 10;
+
+/* KÖPVILLKOREN I KASSAN (2026-10-21, betalningsliggaren). Vyn visar en
+   kryssruta för köpvillkoren innan kassan öppnas, och utan krysset
+   öppnas ingen kassa: anropet bär villkor: true, och allt utom att ta
+   bort kortet kräver det. Att krysset fanns sparas här, med databasens
+   tid och användarvillkorens version (kopvillkor_godkannanden). Saknas
+   tabellen, före migrationen, öppnas kassan ändå: krysset stod i vyn. */
+async function sparaKryss(
+  db: ReturnType<typeof serviceklient>,
+  anvandare: string,
+  avser: 'kop' | 'pass' | 'tillagg' | 'kort',
+  referens: string | null,
+): Promise<void> {
+  const { error } = await db.from('kopvillkor_godkannanden')
+    .insert({ anvandare, avser, referens, villkor_version: '-' });
+  if (error) console.warn('stripe-checkout: krysset sparades inte', JSON.stringify({ avser, kod: error.code }));
+}
 
 /* DEN INBÄDDADE KASSAN (Fas 14.5)
 
@@ -165,14 +183,16 @@ function egenAdress(u: unknown, reserv: string): string {
 
    Inget client_reference_id: webhooken läser det som ett pass-id.
 
-   EN RABATTKOD (rabattkoden_timmar_och_tak, 2026-10-13, Leo:
-   "rabattkoden kan användas för att köpa timmar i timbanken"). Kassan
-   prövar koden med familjens token (kolla_rabattkod_kop), så att
-   familjen får veta varför en kod inte gäller i stället för att betala
-   fullt pris. Beloppet räknas ändå i databasen: triggern
-   intern.klippkort_rabatt sätter rabatt_ore och begart_ore när köpet
-   skapas, och det är begart_ore som dras. Tar triggern bort koden (den
-   tog slut emellan) öppnas ingen kassa.
+   EN KOD, BARA PÅ EN PLAN (rabattkoden_timmar_och_tak 2026-10-13, och
+   koder_for_planer 2026-10-21, Leo: "Båda gäller ENBART planköp, aldrig
+   enskilda pass"). Kassan prövar koden med familjens token
+   (kod_pa_planen, genom planensKod i _delad/koder.ts), så att familjen
+   får veta varför en kod inte gäller i stället för att betala fullt
+   pris, och räknar om rabatten ur typen och värdet. Beloppet räknas ändå
+   i databasen: triggern intern.klippkort_rabatt sätter rabatt_ore och
+   begart_ore när köpet skapas, och det är begart_ore som dras. Tar
+   triggern bort koden (den tog slut emellan) öppnas ingen kassa. En
+   partnerkod utan rabatt följer med köpet och räknas, till samma pris.
 
    FAMILJENS RABATT (familjerabatter, 2026-10-15) dras på samma ställe,
    från varje betald timme, före en kod. Kassan räknar samma sak bara för
@@ -181,12 +201,10 @@ function egenAdress(u: unknown, reserv: string): string {
    ============================================================ */
 async function köpErbjudande(
   vem: Inloggad,
-  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: string; timmar?: unknown },
+  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: unknown; timmar?: unknown; manad?: unknown },
 ): Promise<Response> {
   const kod = String(kropp.erbjudande ?? '').trim();
   if (!arErbjudandekod(kod)) return json({ error: 'Vilket erbjudande?' }, 400, CORS);
-  // Samma form som i databasen: stora bokstäver, utan mellanslag runt.
-  const rabattkod = String(kropp.rabattkod ?? '').trim().toUpperCase() || null;
 
   const db = serviceklient();
   const { data: flagga } = await db.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle();
@@ -215,21 +233,21 @@ async function köpErbjudande(
     .maybeSingle();
   if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
 
+  /* PLANENS MÅNAD (2026-10-21, planerna_per_manad). Vyn skickar den här
+     eller nästa månad bara när databasen har planens_manader(), alltså
+     efter migrationen, och bara för en plan. Utan månad sätter databasen
+     den här månaden på en plan (efter migrationen) eller inget (före). */
+  const manad = planManad(kropp.manad);
+  const gallerFran = e.sort === 'plan' && manad ? manadensForsta(manad) : null;
+
   /* Vad familjen ska betala: katalogens pris minus familjens rabatt, eller
      priset med koden som databasen säger att den gäller (efter rabatten). */
   const egen = familjerabattPaKop(e as ErbjudandePris, await familjensRabatt(vem));
   let attBetala = Number(e.pris_ore) - egen.summa;
-  if (rabattkod) {
-    const { data: prov, error: provfel } = await vem.klient
-      .rpc('kolla_rabattkod_kop', { p_kod: rabattkod, p_erbjudande: e.kod });
-    const svar = Array.isArray(prov) ? prov[0] : prov;
-    if (provfel || !svar) {
-      return json({ error: 'Rabattkoden gick inte att pröva just nu. Försök igen, eller köp utan koden.' }, 409, CORS);
-    }
-    if (!svar.giltig) return json({ error: String(svar.orsak || 'Koden gäller inte.') }, 409, CORS);
-    attBetala = Number(svar.att_betala_ore);
-    if (!(attBetala > 0)) return json({ error: 'Koden gäller inte köp av timmar.' }, 409, CORS);
-  }
+  const kodbeslut = await planensKod({ rpc: (fn, args) => vem.klient.rpc(fn, args) }, kropp.rabattkod, e);
+  if (!kodbeslut.ok) return json({ error: kodbeslut.fel }, kodbeslut.status, CORS);
+  const rabattkod = kodbeslut.kod;
+  if (kodbeslut.kod !== null) attBetala = kodbeslut.attBetala;
 
   try {
     /* Trycker familjen Köp två gånger ska det bli ETT köp. Ett väntande
@@ -249,12 +267,21 @@ async function köpErbjudande(
     let belopp: number;
     // Familjens rabatt per timme på köpet, som databasen satte den.
     let rabattPerTimme: number;
+    // Planens månad på raden, som databasen satte den (null före migrationen).
+    let kopManad: string | null;
+    /* Ett väntande köp för en annan månad är ett annat köp. Utan månad i
+       anropet sätter databasen den här månaden på en plan, så det är den
+       som jämförs, när raden har kolumnen. */
+    const vantadManad = gallerFran
+      ?? (e.sort === 'plan' && forut && 'galler_fran' in forut ? manadensForsta('denna') : null);
     if (kanAteranvandas(forut, attBetala) && sammaInnehall(forut, e as ErbjudandePris)
         && (forut?.rabattkod ?? null) === rabattkod
-        && (Number(forut?.familjerabatt_ore) || 0) === egen.perTimme) {
+        && (Number(forut?.familjerabatt_ore) || 0) === egen.perTimme
+        && ((forut?.galler_fran as string | null | undefined) ?? null) === vantadManad) {
       kopId = String(forut!.id);
       belopp = Number(forut!.begart_ore);
       rabattPerTimme = Number(forut!.familjerabatt_ore) || 0;
+      kopManad = (forut!.galler_fran as string | null | undefined) ?? null;
     } else {
       const { data: ny, error: nyfel } = await db.from('klippkort').insert({
         parent_id: vem.anvandare,
@@ -272,12 +299,18 @@ async function köpErbjudande(
         // Med en kod eller familjens rabatt räknar triggern om beloppet.
         begart_ore: attBetala,
         ...(rabattkod ? { rabattkod } : {}),
+        ...(gallerFran ? { galler_fran: gallerFran } : {}),
         // Hela raden tillbaka: familjerabatt_ore finns först efter migrationen.
       }).select('*').single();
-      if (nyfel || !ny) return json({ error: 'Köpet gick inte att spara. Försök igen.' }, 500, CORS);
+      if (nyfel || !ny) {
+        // Databasen nekar en månad som hunnit bli fel (midnatt den sista): säg det.
+        if (nyfel?.code === '22023') return json({ error: nyfel.message }, 409, CORS);
+        return json({ error: 'Köpet gick inte att spara. Försök igen.' }, 500, CORS);
+      }
       kopId = String(ny.id);
       belopp = Number(ny.begart_ore);
       rabattPerTimme = Number(ny.familjerabatt_ore) || 0;
+      kopManad = (ny.galler_fran as string | null | undefined) ?? null;
       /* Databasen tog bort koden (den tog slut emellan) och satte
          katalogens pris. Då öppnas ingen kassa: familjen trodde att
          koden gällde. Köpet står kvar som väntande och används inte. */
@@ -295,7 +328,12 @@ async function köpErbjudande(
       : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
           cancel_url: `${bas}/foralder#erbjudanden` };
 
-    const rad = kassarad(e as ErbjudandePris, rabattkod, rabattPerTimme);
+    // Kodens egen rabatt, som databasen drog den: noll för en partnerkod utan rabatt.
+    const kodensRabatt = rabattkod
+      ? Number(e.pris_ore) - familjerabattPaKop(e as ErbjudandePris, rabattPerTimme).summa - belopp
+      : null;
+    const rad = kassarad(e as ErbjudandePris, rabattkod, rabattPerTimme, kopManad, kodensRabatt);
+    await sparaKryss(db, vem.anvandare, 'kop', kopId);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -433,6 +471,7 @@ async function köpTimmarTillPlanen(
       : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
           cancel_url: `${bas}/foralder#erbjudanden` };
 
+    await sparaKryss(db, vem.anvandare, 'kop', kopId);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -579,6 +618,7 @@ async function betalaTillagg(
           cancel_url: `${bas}/foralder?betalning=avbruten` };
 
     const metadata = { tillagg_booking_id: pass.id, minuter: String(minuter) };
+    await sparaKryss(db, vem.anvandare, 'tillagg', pass.id);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -720,7 +760,7 @@ async function kortet(
     if (!prof || prof.role !== 'parent') return json({ error: 'Kortet sparas av familjen.' }, 403, CORS);
     const { data: flagga } = await db.from('flaggor').select('aktiv').eq('kod', 'kortreservation').maybeSingle();
     if (!flagga?.aktiv) {
-      return json({ error: 'Kort går inte att spara just nu. Betala efter passet, eller välj faktura.' }, 409, CORS);
+      return json({ error: 'Kort går inte att spara just nu. Betala efter passet.' }, 409, CORS);
     }
 
     const kund = await familjensKund(db, vem.anvandare);
@@ -748,6 +788,7 @@ async function kortet(
        är klar eller har gått ut går inte att öppna: då en ny, med en egen
        nyckel, som för passet. */
     const nyckel = `nextrum-kortkassa-${vem.anvandare}-${Math.floor(Date.now() / 60_000)}-${inbaddad ? 'inbaddad' : 'sida'}`;
+    await sparaKryss(db, vem.anvandare, 'kort', null);
     let session = await v1('POST', '/v1/checkout/sessions', parametrar, nyckel);
     if (String((session as { status?: string }).status ?? 'open') !== 'open') {
       session = await v1('POST', '/v1/checkout/sessions', parametrar, `${nyckel}-n${Date.now()}`);
@@ -777,13 +818,23 @@ Deno.serve(async (req) => {
 
   let kropp: {
     pass?: string; retur?: string; ui?: string; erbjudande?: string; timmar?: unknown; tillagg?: boolean;
-    kort?: string; familj?: string;
+    kort?: string; familj?: string; villkor?: unknown; manad?: unknown; rabattkod?: unknown;
   } = {};
   try {
     kropp = await req.json();
   } catch {
     return json({ error: 'Kroppen är inte JSON.' }, 400, CORS);
   }
+  // Köpvillkoren (2026-10-21): ingen kassa utan krysset. Att ta bort kortet är ingen kassa.
+  if (kropp.kort !== 'ta_bort' && kropp.villkor !== true) {
+    return json({ error: 'Kryssa i att ni godkänner köpvillkoren, så öppnas kassan.' }, 400, CORS);
+  }
+  /* Koderna (koder_for_planer, 2026-10-21): en kod gäller bara när
+     familjen köper en plan. Följer den med ett pass, ett tillägg, kortet
+     eller timmar till planen blir det ett nej innan något annat händer,
+     inte en kassa som tyst tar betalt utan den. */
+  const kodfel = kodPaFelBetalning(kropp);
+  if (kodfel) return json({ error: kodfel }, 409, CORS);
   // Ett erbjudande (Fas 16.1) är ett eget köp, inte ett pass.
   if (kropp.erbjudande !== undefined) return await köpErbjudande(vem, kropp);
   // Kortet som sparas eller tas bort (2026-10-13) är inte heller ett pass.
@@ -834,13 +885,12 @@ Deno.serve(async (req) => {
      "neka 'betald'". Allt annat släpptes in och fick 'vantar' skrivet
      över sig: en tvist blev en öppen kassa, en återbetalning likaså.
      Ett pass som ska betalas med kort står i ett av tre lägen, och bara
-     de släpps in, plus ett fakturapass som inte står på en faktura än
-     (nedan). */
+     de släpps in. (Ett fakturapass släpptes också in, från Fas 14.6 tills
+     fakturan togs bort 2026-10-21.) */
   if (pass.betalning_status === 'betald') {
     return json({ error: 'Passet är redan betalt.' }, 409, CORS);
   }
-  const påFaktura = pass.betalning_status === 'faktura';
-  if (!påFaktura && !['ingen', 'vantar', 'misslyckad'].includes(String(pass.betalning_status ?? 'ingen'))) {
+  if (!['ingen', 'vantar', 'misslyckad'].includes(String(pass.betalning_status ?? 'ingen'))) {
     return json({ error: 'Passet har en återbetalning eller en tvist och kan inte betalas här. Skriv till oss.' }, 409, CORS);
   }
   if (!pass.fakturerbar) {
@@ -848,34 +898,6 @@ Deno.serve(async (req) => {
   }
 
   const db = serviceklient();
-
-  /* ETT FAKTURAPASS BETALAS MED KORT I SAMMA TRYCK (2026-09-28). Leo:
-     "trycker man på betala nu ska man komma vidare till stripe och
-     passet kan räknas som betalt efter att man betalat det". Förut
-     nekade funktionen ett fakturapass, och vyn bytte därför först
-     passet till obetalt: rapporten kom tillbaka under Bekräfta rapport,
-     och stängdes kassan utan betalning hade passet inget betalsätt kvar.
-
-     Nu står passet kvar som 'faktura' medan kassan är öppen (skrivningen
-     nedan rör inte läget), och webhooken skriver 'betald' när kortet
-     dragits: 'faktura' står i dess TAR_EMOT_BETALNING sedan Fas 14.6.
-     Stängs kassan betalas passet mot fakturan, som familjen valt.
-     Månadskörningen tar bara 'faktura', så ett pass som betalats med
-     kort kommer aldrig med på en faktura.
-
-     Står passet redan på en faktura, också ett utkast, betalas det
-     genom den: samma regel som skydda_bokningsfalt har för bytet
-     tillbaka till kort. Hinner månadskörningen lägga passet på fakturan
-     medan kassan står öppen, och familjen betalar ändå, larmar
-     betald_och_fakturerad. */
-  if (påFaktura) {
-    const { data: rader, error: radfel } = await db.from('invoice_lines')
-      .select('id').eq('booking_id', pass.id).limit(1);
-    if (radfel) return json({ error: 'Passet gick inte att läsa.' }, 500, CORS);
-    if (rader?.length) {
-      return json({ error: 'Passet står redan på en faktura och betalas genom den.' }, 409, CORS);
-    }
-  }
 
   try {
     // ---------- beloppet, ur databasen ----------
@@ -1038,6 +1060,7 @@ Deno.serve(async (req) => {
     // en inbäddad och en på Stripes sida är olika parametrar, och vyn
     // kan be om den ena efter den andra för samma pass.
     const nyckel = `nextrum-pass-${pass.id}-${netto}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`;
+    await sparaKryss(db, vem.anvandare, 'pass', pass.id);
     let session = await v1('POST', '/v1/checkout/sessions', parametrar, nyckel);
 
     /* EN ÅTERANVÄND NYCKEL KAN GE EN STÄNGD KASSA (2026-09-29). Stripe
@@ -1089,22 +1112,18 @@ Deno.serve(async (req) => {
 
        SKRIVNINGEN KRÄVER ATT PASSET FORTFARANDE ÄR OBETALT (Fas 22.1).
        Passet lästes innan sessionen skapades, och under tiden kan familjen
-       ha betalat det med timmar eller timbanken, eller valt faktura. Utan
+       ha betalat det med timmar eller timbanken. Utan
        villkoret skrev 'vantar' över 'betald': timmarna var dragna och
        passet stod som obetalt, och betalade familjen sedan kassan togs
        passet två gånger. Nu träffar skrivningen ingenting, och kassan som
-       just skapades stängs innan någon hunnit se den.
-
-       Ett fakturapass får inget 'vantar' (se ovan): det betalas mot
-       fakturan tills kortet är draget. Villkoret är då att det
-       fortfarande är ett fakturapass. */
+       just skapades stängs innan någon hunnit se den. */
     const sessionId = String((session as { id?: string }).id ?? '');
     const { data: skrivna, error: sparfel } = await db.from('bookings').update({
-      ...(påFaktura ? {} : { betalning_status: 'vantar' }),
+      betalning_status: 'vantar',
       stripe_session_id: sessionId,
       begart_ore: netto,
     }).eq('id', pass.id)
-      .in('betalning_status', påFaktura ? ['faktura'] : ['ingen', 'vantar', 'misslyckad']).select('id');
+      .in('betalning_status', ['ingen', 'vantar', 'misslyckad']).select('id');
 
     if (!sparfel && !skrivna?.length) {
       try {

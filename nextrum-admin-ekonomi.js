@@ -19,20 +19,21 @@
        knappar, och varje larm skickade en till en annan flik.
      · Månaden gömde det som väntade i en annan: i september var
        Fakturor tom fast augustis utkast skulle läggas in i Fortnox.
+       (Fakturan togs bort helt 2026-10-21, och fliken blev
+       Månadskörningen.)
      · Utbetalningar och Månadskörning fanns redan under Löner.
 
    Nu är sidan familjernas pengar, i sex flikar:
      Att göra          allt som väntar på er, i alla månader, med
                        knappen som gör det på raden
      Alla betalningar  månadens betalningar, en rad var, med filter
-     Fakturor          från fakturapass till betald faktura, alla perioder
+     Månadskörningen   underlagen den 1:a, för hand när en natt inte gick
      Bokslut           månaden går ihop, och stängs
      Köpta timmar      planer, klippkort och timbanken
      Inställningar     strömbrytarna och Stripe
 
    INGET NYTT I DATABASEN. Allt ritas ur det adminvyn redan hämtar, och
-   knapparna som ändrar något är samma lyssnare som förut (data-fakt-*,
-   data-aterbetala, data-avv-*, data-bokslut-*, data-kor-*, flaggorna,
+   knapparna som ändrar något är samma lyssnare som förut (data-aterbetala, data-avv-*, data-bokslut-*, data-kor-*, flaggorna,
    data-timbank-ut). Det enda nya som gör något är Påminn, och det
    skriver bara ett utkast i er Gmail (kontaktaRuta).
 
@@ -48,7 +49,7 @@
   const kronor = NXBetalning.kronor;
   const tim = m => NXBetalning.timmar(m);
 
-  const { DAG, FAKT_LAGE, S, TILLAGG_LAGE, elevNamn, fråga, funktionsFel, gmailAdress, hämtaAllt,
+  const { DAG, S, TILLAGG_LAGE, elevNamn, fråga, funktionsFel, gmailAdress, hämtaAllt,
           hämtaEkonomiunderlag, kontaktaRuta, kortDatum, matchar, märkFlik, namnFör,
           pill, skriv, skrivOmOförändrad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
@@ -67,10 +68,10 @@
      en rad i listan och ett tal i bokslutet aldrig räknas på två sätt.
 
      Raden står bara under de två flikarna (CSS, nextrum-arbetsyta.css
-     BETALNINGAR). Att göra, Fakturor och Köpta timmar gäller alla
-     månader: det som väntar ska inte gömmas för att fel månad råkade
-     vara vald, och det var just så augustis fakturor försvann i
-     september.
+     BETALNINGAR). Att göra och Köpta timmar gäller alla månader: det
+     som väntar ska inte gömmas för att fel månad råkade vara vald, och
+     det var just så augustis fakturor försvann i september (innan
+     fakturan togs bort, 2026-10-21).
 
      Raden startas första gången något här frågar efter månaden, inte
      i skalet: då kan ingen lista ritas innan det finns en månad.
@@ -185,8 +186,8 @@
   document.addEventListener('click', e => {
     const flik = e.target.closest('[data-eko-flik]');
     if (flik) { visaFlik(flik.dataset.ekoFlik); return; }
-    /* Fakturaflödets steg leder till sin grupp. Inte en ankarlänk:
-       en hash som inte är en sektion skickar sidomenyn till Översikt. */
+    /* En rad som leder till en grupp på sidan. Inte en ankarlänk: en
+       hash som inte är en sektion skickar sidomenyn till Översikt. */
     const till = e.target.closest('[data-eko-till]');
     if (till) {
       const mål = document.getElementById(till.dataset.ekoTill);
@@ -197,8 +198,6 @@
   /* ============================================================
      SMÅ BYGGSTENAR
      ============================================================ */
-  const DAGAR = Number((NX.CFG && NX.CFG.BETALNINGSVILLKOR_DAGAR) || 10);
-
   /* Datum och klockslag i svensk tid. kortDatum() skär av en
      tidsstämpel vid tecken tio, alltså UTC-datumet: en månad stängd
      strax efter midnatt hade stått på dagen innan. */
@@ -220,7 +219,6 @@
   const IKON = {
     tvist: '<path d="M12 3.5 19.5 6.5v5.2c0 4.3-3.1 7.8-7.5 8.8-4.4-1-7.5-4.5-7.5-8.8V6.5z"/><path d="M12 8.5v4.2M12 15.8h.01"/>',
     tillbaka: '<path d="M9.5 14.5 4.5 9.5l5-5"/><path d="M4.5 9.5h10a5 5 0 0 1 0 10H11"/>',
-    faktura: '<path d="M6.5 3.5h8l3 3v14h-11z"/><path d="M9.5 10.5h5M9.5 14h5M9.5 17.5h3"/>',
     kort: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/>',
     rapport: '<path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/>',
     loner: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.2 2.5-5 5.5-5 1 0 1.9.2 2.7.5"/><circle cx="16.5" cy="15.5" r="4"/><path d="M16.5 13.5v4"/>',
@@ -290,9 +288,8 @@
   const AVV_TEXT = {
     pass_utan_rapport: ['Pass utan rapport', 'Genomfört men utan rapport, så det kommer inte med på underlaget. Koppla rapporten eller undanta passet under Betalningar → Att göra.'],
     fristaende_rapport: ['Rapport utan pass', 'En rapport som inte hör till något pass. Koppla den till sitt pass under Betalningar → Att göra.'],
-    ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy. '
-      + 'Natten efter månaden läggs passet på familjens faktura (sedan 2026-10-16), utom med en öppen kassa, ett kort som betalar, '
-      + 'en familj utan faktura eller ett pass bokat innan familjen godkänt villkoren som säger det.'],
+    ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy, '
+      + 'och det är ni som följer upp.'],
     /* Fas 20.1. Passet var betalt och drog över. Familjen betalar
        tillägget med kort när de bekräftar rapporten; beloppet räknas i
        stripe-checkout och står därför inte i larmet. */
@@ -301,29 +298,21 @@
        det som ska tillbaka, räknat till passets frysta pris; rubriken
        bär det (avvText). */
     betalt_for_lange: ['Betalt för längre tid än passet höll', 'Passet blev kortare än det familjen betalade för. Återbetala skillnaden under Betalningar → Att göra.'],
-    /* Fas 14.6. */
-    faktura_saknas: ['Fakturapass utan faktura', 'Familjen valde faktura, månaden är slut och passet står inte på någon faktura. Kör månadskörningen.'],
-    betald_och_fakturerad: ['Betalt två gånger', 'Betalt med kort och dessutom på en faktura. Kreditera raden i Fortnox.'],
     /* Fas 14.2c. Betalsidan kan ligga öppen medan passet avbokas, och
        betalas den efteråt drar Stripe pengarna ändå. Beloppet är det
        som inte gått tillbaka än. */
     betald_men_avbokad: ['Betalt men avbokat', 'Familjen har betalat ett pass som är avbokat. Villkoren lovar hela beloppet tillbaka.'],
     ej_utbetalt: ['Inte utbetalt', 'Klart för underlag, men månaden det hölls är slut.'],
-    faktura_forfallen: ['Förfallen faktura', 'Skickad, obetald och efter förfallodagen.'],
-    faktura_gammalt_utkast: ['Faktura inte inlagd i Fortnox', 'Utkastet skapades för mer än en vecka sedan.'],
     utbetalning_vantar: ['Utbetalning som väntar', 'Utkast eller godkänd, för en månad före förra.'],
     utbetalning_misslyckad: ['Misslyckad utbetalning', 'Pengarna gick inte iväg.'],
     timpenning_saknas: ['Ingen ersättning att räkna med', 'Studiehjälparen saknar timpenning och tjänsten saknar ersättning.'],
     pass_utan_studiehjalpare: ['Pass utan studiehjälpare', 'Genomfört, men ingen att betala ut till.'],
-    rut_utan_skatteuppgifter: ['RUT utan skatteuppgifter', 'Kunden saknar personnummer, så passet faktureras utan avdrag.'],
-    rut_utan_tak: ['RUT-tak saknas', 'Inget tak för året under System → Inställningar, så ingen RUT dras.'],
-    rut_over_tak: ['Över RUT-taket', 'Kunden har fått mer avdrag i år än taket.'],
-    faktura_summa_fel: ['Fakturans summa stämmer inte', 'Beloppet skiljer sig från summan av raderna.'],
-    utbetalning_summa_fel: ['Utbetalningens summa stämmer inte', 'Beloppet skiljer sig från summan av raderna.'],
-    fakturerat_ogiltigt_pass: ['Fakturerat pass som inte gäller', 'Passet är inte längre genomfört eller fakturerbart.']
+    utbetalning_summa_fel: ['Utbetalningens summa stämmer inte', 'Beloppet skiljer sig från summan av raderna.']
   };
+  /* Larmen om fakturan och RUT (som bara drogs på fakturan) gick med
+     fakturan 2026-10-21. En gammal kod visas ändå, med sin kod. */
   /* Tabellerna en uppgift får kopplas till (check-villkoret i uppgifter). */
-  const UPPG_TABELLER = ['bookings', 'invoices', 'payouts', 'lesson_reports', 'profiles'];
+  const UPPG_TABELLER = ['bookings', 'payouts', 'lesson_reports', 'profiles'];
   /* Uppgiftens nyckel: vilken avvikelse, på vad. Databasen tillåter en
      öppen uppgift per nyckel, så samma problem blir aldrig två — och
      två olika problem på samma pass blir två (Fas 6, nyckel). */
@@ -349,7 +338,7 @@
      ============================================================ */
   function utanRapport() {
     return (S.passunderlag || []).filter(p =>
-      p.fakturerbar && !p.har_rapport && !p.fakturerad && !p.pa_underlag);
+      p.fakturerbar && !p.har_rapport && !p.pa_underlag);
   }
 
   const dagnummer = iso => Math.round(Date.parse(String(iso || '').slice(0, 10)) / DAG) || 0;
@@ -371,21 +360,17 @@
      gör det på raden. Förut stod larmen i bokslutet med en länk till
      fliken där de åtgärdades, och samma rader en gång till under
      Avvikelser med en knapp som gjorde dem till uppgifter. Nu är
-     Återbetala, Lagd i Fortnox, Betald, Koppla rapport, Undanta, Kör
-     månadskörningen och Påminn på raden själv.
+     Återbetala, Koppla rapport, Undanta och Påminn på raden själv.
 
      Källorna är de som redan fanns: avvikelserna (avvikelser_rader i
-     databasen, samma som bokslutet), fakturorna, tvisterna och
-     betalningar utan Stripes avgift. Fyra saker slås ihop, för det är
-     EN sak att göra:
+     databasen, samma som bokslutet), tvisterna och betalningar utan
+     Stripes avgift. Två saker slås ihop, för det är EN sak att göra:
        · en familjs obetalda pass och tillägg blir en rad per familj,
          för det är familjen man hör av sig till
-       · fakturapass utan faktura blir en rad per månad, för det är
-         månaden man kör
-       · ett utkast står en gång, som "Lägg in i Fortnox", också när
-         det är äldre än en vecka och därför också är ett larm
        · en fristående rapport som kan höra till ett pass utan rapport
          står på passets rad, med Koppla rapport
+     (Fakturornas rader, Lägg in i Fortnox och Förfallen faktura, gick
+     med fakturan 2026-10-21.)
 
      Talet på fliken och vid Betalningar i menyn är antalet rader här,
      och räknas bara här (märkEkonomi). Två tal för samma sak hade
@@ -399,12 +384,11 @@
       'Missas sista dagen är tvisten förlorad, och då är både beloppet och Stripes avgift för tvisten borta.'],
     ['tillbaka', 'Pengar tillbaka till familjer', true,
       'Pengar som är familjens. Återbetala skickar dem tillbaka till kortet; Stripes avgift kommer inte tillbaka.'],
-    ['fakturor', 'Fakturor', true, ''],
     ['obetalt', 'Inte betalt än', false,
-      'Passen har hållits. Familjen betalar på passets sida i studievyn, med kort eller faktura, och ingen sista '
+      'Passen har hållits. Familjen betalar med kort på passets sida i studievyn, och ingen sista '
       + 'dag är satt: det är ni som följer upp. Påminn skriver ett mejl åt er.'],
     ['rapporter', 'Rapporter', true,
-      'Ett pass utan rapport kommer inte med på underlaget eller fakturan.'],
+      'Ett pass utan rapport kommer inte med på underlaget.'],
     ['loner', 'Löner', false, ''],
     ['ovrigt', 'Övrigt', false, '']
   ];
@@ -513,42 +497,11 @@
     };
   }
 
-  function utkastPost(f, avv) {
-    const n = (f.invoice_lines || []).length;
-    return {
-      grupp: 'fakturor', ton: 'lera', ikon: 'faktura', datum: f.created_at ? isoFor(new Date(f.created_at)) : String(f.period),
-      rubrik: 'Lägg in fakturan i Fortnox',
-      meta: [familjLänk(f.parent_id), esc('för ' + NXBetalning.periodText(f.period)), esc(n + ' pass'),
-        f.created_at ? esc('utkast sedan ' + lokalDag(f.created_at)) : ''],
-      belopp: f.belopp_ore,
-      hur: 'Underlag visar det som ska stå på fakturan. Skapa den i Fortnox och tryck Lagd i Fortnox med numret.',
-      knappar: knapp('data-fakt-underlag', f.id, 'Underlag') + knapp('data-fakt-fortnox', f.id, 'Lagd i Fortnox', true),
-      avv: avv || []
-    };
-  }
-
-  function förfallenPost(f, avv) {
-    const sen = f.forfaller ? -dagarTill(f.forfaller) : 0;
-    return {
-      grupp: 'fakturor', ton: 'lera', ikon: 'faktura', datum: String(f.forfaller || f.period).slice(0, 10),
-      rubrik: 'Förfallen faktura',
-      meta: [familjLänk(f.parent_id), esc('för ' + NXBetalning.periodText(f.period)),
-        f.fortnox_fakturanummer ? esc('nr ' + f.fortnox_fakturanummer) : '',
-        f.forfaller ? esc('förföll ' + kortDatum(f.forfaller) + (sen > 0 ? ', ' + sen + (sen === 1 ? ' dag sedan' : ' dagar sedan') : '')) : ''],
-      belopp: f.belopp_ore,
-      hur: 'Markera den betald när betalningen syns i Fortnox. Ingen påminnelseavgift: villkoren nämner ingen.',
-      knappar: påminnKnapp(f.parent_id, ' data-eko-faktura="' + esc(f.id) + '"')
-        + knapp('data-fakt-betald', f.id, 'Betald', true),
-      avv: avv || []
-    };
-  }
-
   /* En avvikelse som en rad, med sin egen knapp. Bokslutets larm ritas
      med den här, en rad per larm; Att göra slår ihop några (ovan). */
   function postFörAvvikelse(a0) {
     const a = fullAvvikelse(a0);
     const b = a.objekt_tabell === 'bookings' ? bokning(a.objekt_id) : null;
-    const f = a.objekt_tabell === 'invoices' ? (S.fakturor || []).find(x => x.id === a.objekt_id) : null;
     const [rubrik, hur] = avvText(a);
     const familj = a.kund_id || (b && b.parent_id) || null;
     const bas = {
@@ -565,7 +518,7 @@
           grupp: 'rapporter', ikon: 'rapport',
           hur: n ? (n === 1 ? 'Studiehjälparen har en fristående rapport som kan höra hit.'
                             : 'Studiehjälparen har ' + n + ' fristående rapporter som kan höra hit.')
-            : 'Kommer inte med på underlaget eller fakturan förrän rapporten finns. Be studiehjälparen skriva den, eller undanta passet om det inte ska räknas.',
+            : 'Kommer inte med på underlaget förrän rapporten finns. Be studiehjälparen skriva den, eller undanta passet om det inte ska räknas.',
           knappar: p ? (n ? knapp('data-avv-koppla', p.id, 'Koppla rapport', true) : '')
             + knapp('data-avv-undanta', p.id, 'Undanta') : ''
         });
@@ -585,7 +538,7 @@
       case 'ej_betalt':
         return Object.assign(bas, {
           grupp: 'obetalt', ton: 'ockra', ikon: 'kort', rubrik: 'Hölls men är inte betalt',
-          belopp: a.belopp_ore, hur: 'Familjen betalar på passets sida i studievyn, med kort eller faktura.',
+          belopp: a.belopp_ore, hur: 'Familjen betalar med kort på passets sida i studievyn.',
           knappar: påminnKnapp(familj)
         });
       case 'tillagg_obetalt':
@@ -609,29 +562,6 @@
           hur: 'Passet är avbokat men betalt. Villkoren lovar hela beloppet tillbaka för ett pass som aldrig hölls.',
           knappar: kanÅterbetalas(b) ? knapp('data-aterbetala', b.id, 'Återbetala', true) : ''
         });
-      case 'betald_och_fakturerad':
-        return Object.assign(bas, { grupp: 'tillbaka', ikon: 'tillbaka', belopp: a.belopp_ore });
-      case 'faktura_saknas':
-        return Object.assign(bas, {
-          grupp: 'fakturor', ikon: 'faktura', belopp: a.belopp_ore,
-          hur: 'Månaden är slut och passet står inte på någon faktura. '
-            + (S.körschemaPå ? 'Månadskörningen lägger det på familjens faktura i natt; Skapa nu gör det direkt.'
-              : 'Skapa nu gör månadskörningen och lägger det på familjens faktura.'),
-          knappar: knapp('data-fakt-skapa', '', 'Skapa nu', true)
-        });
-      case 'faktura_gammalt_utkast':
-        if (f) return utkastPost(f, [a]);
-        break;
-      case 'faktura_forfallen':
-        if (f) return förfallenPost(f, [a]);
-        break;
-      case 'faktura_summa_fel':
-      case 'fakturerat_ogiltigt_pass':
-        return Object.assign(bas, {
-          grupp: 'fakturor', ikon: 'faktura', belopp: a.belopp_ore,
-          meta: f ? [familjLänk(f.parent_id), esc('faktura för ' + NXBetalning.periodText(f.period))] : bas.meta,
-          knappar: knapp('data-eko-flik', 'fakturor', 'Till Fakturor')
-        });
       default:
         if (LÖNELARM.indexOf(a.typ) !== -1) {
           return Object.assign(bas, {
@@ -639,9 +569,6 @@
             meta: [hjälparLänk(a.studiehjalpare_id), b ? passLänk(b) : (a.datum ? esc(kortDatum(a.datum)) : '')],
             belopp: a.belopp_ore, knappar: länkKnapp('#loner', 'Till Löner')
           });
-        }
-        if (String(a.typ).indexOf('rut_') === 0) {
-          return Object.assign(bas, { knappar: länkKnapp('#system/installningar', 'Inställningar') });
         }
     }
     return Object.assign(bas, { belopp: a.belopp_ore });
@@ -670,38 +597,17 @@
     };
   }
 
-  /* Fakturapass utan faktura i en månad som är slut, som en rad. */
-  function saknasPost(m, lista) {
-    const familjer = Array.from(new Set(lista.map(a => a.kund_id || ((bokning(a.objekt_id) || {}).parent_id)).filter(Boolean)));
-    const summa = lista.reduce((n, a) => n + Number(a.belopp_ore || 0), 0);
-    return {
-      grupp: 'fakturor', ton: 'lera', ikon: 'faktura', datum: m,
-      rubrik: (lista.length === 1 ? 'Ett fakturapass' : lista.length + ' fakturapass') + ' från '
-        + NXStudie.månadsNamn(m, false) + ' har ingen faktura',
-      meta: familjer.map(familjLänk),
-      belopp: summa || null,
-      hur: (S.körschemaPå ? 'Månadskörningen gör ett fakturautkast per familj av dem i natt, av sig själv. Skapa nu gör det direkt'
-        : 'Skapa nu gör månadskörningen, ett fakturautkast per familj,') + ' och visar först vad som skapas.',
-      knappar: knapp('data-fakt-skapa', '', 'Skapa nu', true),
-      avv: lista
-    };
-  }
-
   function attGöraPoster() {
     const ut = [];
     const avv = S.avvikelser || [];
 
     (S.tvister || []).filter(väntarPåOss).forEach(x => ut.push(tvistPost(x)));
-    (S.fakturor || []).filter(f => f.status === 'utkast').forEach(f =>
-      ut.push(utkastPost(f, avv.filter(a => a.typ === 'faktura_gammalt_utkast' && a.objekt_id === f.id))));
 
     const erbjudna = new Set();
     if (!S.passunderlagFel) utanRapport().forEach(p => kandidater(p).forEach(r => erbjudna.add(r.id)));
 
     const obetalt = new Map();
-    const saknas = new Map();
     avv.forEach(a => {
-      if (a.typ === 'faktura_gammalt_utkast') return;
       if (a.typ === 'fristaende_rapport' && erbjudna.has(a.objekt_id)) return;
       if (a.typ === 'ej_betalt' || a.typ === 'tillagg_obetalt') {
         const id = a.kund_id || ((bokning(a.objekt_id) || {}).parent_id) || '';
@@ -709,19 +615,9 @@
         obetalt.get(id).push(a);
         return;
       }
-      if (a.typ === 'faktura_saknas' && a.datum) {
-        const m = månadFör(a.datum);
-        if (!saknas.has(m)) saknas.set(m, []);
-        saknas.get(m).push(a);
-        return;
-      }
-      /* En faktura som förfallit och som inte längre finns i listan
-         (borttagen under tiden) har inget att göra på raden. */
-      if ((a.typ === 'faktura_forfallen') && !(S.fakturor || []).some(f => f.id === a.objekt_id)) return;
       ut.push(postFörAvvikelse(a));
     });
     obetalt.forEach((lista, id) => ut.push(obetaltPost(id, lista)));
-    saknas.forEach((lista, m) => ut.push(saknasPost(m, lista)));
 
     const utanAvgift = saknarAvstamning().length;
     if (utanAvgift) {
@@ -767,12 +663,6 @@
   function märkEkonomi(antal) {
     const n = antal == null ? attGöraPoster().length : antal;
     märkFlik('#flik-attgora-mark', n);
-    /* Fakturor: det som väntar på oss där, utkast att lägga in och
-       förfallna. En skickad faktura som inte förfallit väntar på
-       familjen. Samma tal som admin_lage räknar för översikten. */
-    const f = S.fakturor || [];
-    märkFlik('#flik-fakt-mark', f.filter(x => x.status === 'utkast').length
-      + f.filter(x => NXBetalning.fakturaLage(x) === 'forfallen').length);
     if (S.sido) S.sido.märke('ekonomi', n);
     return n;
   }
@@ -861,7 +751,7 @@
   let katalogen = null;
   function laddaKatalogen() {
     if (katalogen || typeof NXTjanster === 'undefined') return;
-    katalogen = NXTjanster.ladda().then(() => { ritaBetalningslistan(); ritaFakturor(); }, () => {});
+    katalogen = NXTjanster.ladda().then(() => { ritaBetalningslistan(); }, () => {});
   }
 
   /* Raderna läses också av Månadens ekonomi (betalningsrader nedan),
@@ -874,11 +764,11 @@
     return Object.assign({
       filter: new Set(), meta: [], knappar: '', påminn: '', under: '', belopp: null, beloppText: null, sätt: '',
       in: 0, attFåIn: 0, kommande: 0, tillbaka: 0, attÅterbetala: 0, avgift: 0, oanvänt: 0, test: false, sök: '',
-      parent: null, booking: null, min: 0, räknas: false, fakturaläge: null
+      parent: null, booking: null, min: 0, räknas: false
     }, o);
   }
 
-  function passRad(b, u, fakt, tvist, förLänge, larmad) {
+  function passRad(b, u, tvist, förLänge, larmad) {
     const st = b.betalning_status || 'ingen';
     const elev = elevNamn(b.student_id);
     const r = nyRad({
@@ -994,33 +884,6 @@
         r.läge = ['Återbetalt', ''];
         r.filter.add('tillbaka');
         return r;
-      case 'faktura': {
-        r.sätt = 'Faktura';
-        if (fakt) {
-          const fl = NXBetalning.fakturaLage(fakt.f);
-          r.fakturaläge = fl;
-          r.belopp = Number(fakt.rad.belopp_ore || 0);
-          r.under = 'faktura ' + (fakt.f.fortnox_fakturanummer || NXBetalning.periodText(fakt.f.period));
-          if (fl === 'betald') { r.läge = ['Fakturan betald', 'ar-klar']; r.in = r.belopp; r.filter.add('betalda'); }
-          else if (fl === 'makulerad') { r.läge = ['Fakturan makulerad', '']; }
-          else {
-            r.läge = fl === 'forfallen' ? ['Fakturan förfallen', 'ar-ny']
-              : fl === 'skickad' ? ['Fakturerad', 'ar-vantar'] : ['Inte i Fortnox än', 'ar-ny'];
-            r.attFåIn = r.belopp;
-            r.filter.add('attbetala');
-          }
-          return r;
-        }
-        const p = pris();
-        r.belopp = p;
-        r.fakturaläge = 'saknas';
-        const nästa = NXStudie.månadsGräns(månadFör(b.wanted_date)).till;
-        const slut = isoFor(new Date()) >= nästa;
-        r.läge = slut ? ['Ingen faktura än', 'ar-ny'] : ['Faktureras i ' + NXStudie.månadsNamn(nästa, false), 'ar-vantar'];
-        r.under = p == null ? 'pris saknas' : 'på nästa faktura';
-        if (b.status === 'completed') { r.attFåIn = p || 0; r.filter.add('attbetala'); }
-        return r;
-      }
       default: {
         /* ingen, vantar eller misslyckad: samma tre lägen som avvikelsen
            ej_betalt och OBETALDA_LAGEN i _delad/pris.ts. */
@@ -1132,10 +995,6 @@
       return d >= g.från && d < g.till;
     };
     const pu = new Map((S.passunderlag || []).map(p => [p.id, p]));
-    const påFaktura = new Map();
-    (S.fakturor || []).forEach(f => (f.invoice_lines || []).forEach(l => {
-      if (l.booking_id) påFaktura.set(l.booking_id, { f, rad: l });
-    }));
     /* Den öppna tvisten före en stängd, och den senaste av två. */
     const tvister = new Map();
     (S.tvister || []).forEach(x => {
@@ -1159,7 +1018,7 @@
          förslag är inget pass än. */
       const pengar = b.betalt_ore != null || ['betald', 'tvist', 'aterbetald'].indexOf(b.betalning_status) !== -1;
       if (b.status === 'cancelled' ? !pengar : (b.status !== 'confirmed' && b.status !== 'completed')) return;
-      rader.push(passRad(b, pu.get(b.id) || null, påFaktura.get(b.id) || null, tvister.get(b.id) || null,
+      rader.push(passRad(b, pu.get(b.id) || null, tvister.get(b.id) || null,
         förLänge.get(b.id) || 0, larmade.has('ej_betalt:' + b.id)));
     });
     (S.tillagg || []).forEach(t => {
@@ -1263,7 +1122,6 @@
   document.addEventListener('input', e => {
     if (!e.target) return;
     if (e.target.id === 'kort-sok') NXStudie.hållLista($('#bet-lista'), e.target, ritaBetalningslistan);
-    if (e.target.id === 'fakt-sok') NXStudie.hållLista($('#fakt-lista'), e.target, ritaFakturor);
   });
 
   /* Skalet ritar om efter en återbetalning och en körning. Namnet är
@@ -1282,516 +1140,10 @@
     ritaAttGöra();
   }
 
-  /* ============================================================
-     FAKTUROR (Fas 14.6, omgjord 2026-09-29 och 2026-10-06)
-
-     Familjen kan välja faktura på ett pass. Månadskörningen samlar
-     varje familjs fakturapass på ett utkast. Fakturan skapas och
-     skickas sedan i FORTNOX, som också bokför den. Härifrån skickas
-     ingenting: utkastet läggs in i Fortnox för hand, med underlaget,
-     och fakturanumret, OCR och förfallodagen skrivs tillbaka. Betald
-     markeras när betalningen syns i Fortnox.
-
-     Fliken är flödet, inte en månad: Samlas, Lägg in i Fortnox, Hos
-     familjen, Betalda. Förut filtrerades fakturorna på sin period, och
-     i september, när augustis utkast skulle läggas in, var listan tom
-     tills någon kom på att välja augusti.
-
-     En API-koppling till Fortnox finns inte, med flit. Fortnox har ett
-     dokumenterat API, så kopplingen går att bygga senare, men den
-     byggs först när handarbetet faktiskt kostar tid: en koppling mot
-     bokföringen som går sönder tyst är värre än ingen.
-
-     Beloppen går inte att ändra härifrån. De räknades av fakturering
-     ur passen, med samma pris som kortet tar, och las_fakturabelopp
-     vägrar skriva om dem från en webbläsare.
-     ============================================================ */
-
-  /* ============================================================
-     FAMILJENS FAKTURA (2026-10-06)
-
-     Leo: "det ska inte vara 4 st olika underlag för en familj och sen
-     köra torrkörning, utan familjen ska samla på sig siffran på en stor
-     faktura som i slutet av månaden blir till underlag för fortnox,
-     sedan när man trycker på familjen ska man kunna se info och när och
-     med vem de hade lektionen".
-
-     En rad per familj och månad, från första fakturapasset till betald
-     faktura, och det är samma rad hela vägen. Förut var fakturapassen
-     utan faktura en rad per MÅNAD med familjerna som länkar, utkastet en
-     rad till, och knappen ledde till körningens ruta, där det skulle
-     torrköras innan något skapades.
-
-     Under månaden finns fakturan bara här, räknad ur passen med samma
-     pris som körningen tar (NXBetalning.passpris). Databasen skapar den
-     först när månaden är slut, och det ändras inte: fakturering nekar en
-     månad som pågår med 409, för passet som rapporteras den sista
-     kvällen ska med (2026-10-01). Natten mot den 1:a gör schemat
-     utkastet av passen, och varje natt efter det lägger det till sena
-     pass så länge fakturan är ett utkast. Ingen behöver köra något.
-     Skapa nu gör nattens körning direkt (SKAPA NU nedan).
-
-     Ett pass hamnar där körningen lägger det: NXBetalning.lonemanad med
-     familjens fakturor, samma regel som malmanad i _delad/pris.ts. Sin
-     egen månads faktura så länge den är ett utkast eller inte skapad,
-     annars nästa. Ett pass utan rapport tar körningen inte; det står på
-     raden med det skälet och räknas inte i summan.
-
-     Trycker man på familjen fälls passen ut: när, med vem, vad och vad
-     det kostar, och familjens e-post och telefon. Hela familjen öppnar
-     panelen.
-     ============================================================ */
-  const nuMånad = () => NXStudie.månadIso(new Date());
-  /* Den månad nattens körning gäller, 'ÅÅÅÅ-MM'. */
-  const körMånad = () => NXStudie.månadIso(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1, 12)).slice(0, 7);
-  const klockslag = b => b && b.wanted_time ? String(b.wanted_time).slice(0, 5) : '';
-
-  function familjefakturor() {
-    const pu = new Map((S.passunderlag || []).map(p => [p.id, p]));
-    const bok = new Map((S.bokningar || []).map(b => [b.id, b]));
-    const nu = nuMånad();
-    const poster = new Map();
-    const post = (parent, period) => {
-      const k = (parent || '') + '|' + period;
-      if (!poster.has(k)) poster.set(k, { nyckel: k, parent: parent || null, period, f: null, pass: [] });
-      return poster.get(k);
-    };
-    const lägen = new Map();
-    const på = new Set();
-    (S.fakturor || []).forEach(f => {
-      const period = String(f.period).slice(0, 7) + '-01';
-      const x = post(f.parent_id, period);
-      x.f = f;
-      if (!lägen.has(f.parent_id)) lägen.set(f.parent_id, {});
-      lägen.get(f.parent_id)[period] = f.status;
-      (f.invoice_lines || []).forEach(l => {
-        if (l.booking_id) på.add(l.booking_id);
-        const b = (l.booking_id && bok.get(l.booking_id)) || null;
-        x.pass.push({ b, datum: b ? b.wanted_date : null, beskrivning: l.beskrivning,
-          min: Number(l.minuter || 0), öre: Number(l.belopp_ore || 0), läge: 'pa' });
-      });
-    });
-    /* Samma urval som ritaFakturor hade: hållna fakturapass som inte är
-       undantagna och inte står på någon faktura. */
-    (S.bokningar || []).forEach(b => {
-      if (b.betalning_status !== 'faktura' || b.status !== 'completed' || b.fakturerbar === false || på.has(b.id)) return;
-      const u = pu.get(b.id) || null;
-      const period = b.wanted_date ? NXBetalning.lonemanad(b.wanted_date, lägen.get(b.parent_id) || {}) : nu;
-      const min = Number((u && u.debiterade_min) || b.duration_min || 60) - Number((u && u.timbank_min) || 0);
-      post(b.parent_id, period).pass.push({ b, datum: b.wanted_date, min, öre: NXBetalning.passpris(b, u, min),
-        läge: u && u.har_rapport === false ? 'rapport' : period >= nu ? 'samlas' : 'natt' });
-    });
-    return Array.from(poster.values()).map(x => {
-      x.pass.sort((a, c) => (String(a.datum || '') + klockslag(a.b)).localeCompare(String(c.datum || '') + klockslag(c.b)));
-      const med = x.pass.filter(p => p.läge !== 'rapport');
-      const nya = med.filter(p => p.läge !== 'pa');
-      x.nya = nya.length;
-      x.utanRapport = x.pass.length - med.length;
-      x.utanPris = nya.filter(p => p.öre == null).length;
-      x.tillkommer = nya.reduce((n, p) => n + Number(p.öre || 0), 0);
-      x.belopp = (x.f ? Number(x.f.belopp_ore || 0) : 0) + x.tillkommer;
-      x.min = med.reduce((n, p) => n + Number(p.min || 0), 0);
-      x.antal = med.length;
-      x.läge = x.f ? NXBetalning.fakturaLage(x.f) : !x.nya ? 'rapport' : x.period >= nu ? 'samlas' : 'skapas';
-      x.familj = x.parent ? namnFör(x.parent) : '—';
-      return x;
-    });
-  }
-
-  /* Vilka rader som står utfällda. Listan ritas om när något hämtas, och
-     då ska det man tittar på inte fällas ihop under en. */
-  const UTFÄLLDA = new Set();
-
-  function familjeLäge(x) {
-    if (x.läge === 'samlas') return ['Samlas', 'ar-vantar'];
-    if (x.läge === 'skapas') return S.körschemaPå ? ['Blir utkast i natt', 'ar-vantar'] : ['Ingen faktura än', 'ar-ny'];
-    if (x.läge === 'rapport') return ['Väntar på rapport', 'ar-vantar'];
-    return FAKT_LAGE[x.läge] || [x.läge, ''];
-  }
-
-  /* Ett pass under familjens faktura: dagen, med vem, klockan, ämnet,
-     eleven, tiden och beloppet. Studiehjälparen står först, för det är
-     den frågan raden finns för. */
-  const VECKODAG = ['sön', 'mån', 'tis', 'ons', 'tor', 'fre', 'lör'];
-  function familjPassRad(p) {
-    const b = p.b;
-    const vem = b && b.tutor_id ? namnFör(b.tutor_id) : '';
-    const elev = b ? elevNamn(b.student_id) : '';
-    const dag = p.datum ? VECKODAG[new Date(String(p.datum).slice(0, 10) + 'T12:00').getDay()] : '';
-    const titel = b ? (vem && vem !== '—' ? 'Med ' + vem : 'Ingen studiehjälpare') : (p.beskrivning || 'Pass');
-    const meta = [
-      [dag, klockslag(b) ? 'kl. ' + klockslag(b) : ''].filter(Boolean).join(' '),
-      b ? b.subject : '', elev && elev !== '—' ? elev : '', minText(p.min)
-    ].filter(Boolean);
-    const lägePill = p.läge === 'natt' ? pill(S.körschemaPå ? 'Läggs på i natt' : 'Inte på fakturan än', 'ar-vantar')
-      : p.läge === 'rapport' ? pill('Ingen rapport än', 'ar-ny') : '';
-    return '<div class="eko-rad">' + dagRuta(p.datum)
-      + '<span class="eko-mitt">' + (b
-        ? '<button type="button" class="eko-titel" data-dp="pass:' + esc(b.id) + '">' + esc(titel) + '</button>'
-        : '<span class="eko-titel">' + esc(titel) + '</span>')
-      + '<span class="eko-meta">' + meta.map(m => '<span>' + esc(m) + '</span>').join('') + '</span></span>'
-      + '<span class="eko-atg"></span>'
-      + '<span class="eko-lage">' + lägePill + '</span>'
-      + '<span class="eko-belopp"><b>' + esc(p.öre == null ? '—' : kronor(p.öre)) + '</b>'
-      + (p.öre == null ? '<small>utan pris</small>' : p.läge === 'rapport' ? '<small>inte med än</small>' : '')
-      + '</span></div>';
-  }
-
-  function familjensUppgifter(x) {
-    const p = (x.parent && S.personer[x.parent]) || {};
-    const delar = [
-      p.email ? gmailAdress(p.email) : '',
-      p.phone ? '<a href="tel:' + esc(String(p.phone).replace(/[^\d+]/g, '')) + '">' + esc(p.phone) + '</a>' : '',
-      x.parent ? '<button type="button" class="eko-lank" data-dp="familj:' + esc(x.parent) + '">Hela familjen</button>' : ''
-    ].filter(Boolean);
-    return (delar.length ? '<p class="fakt-fam-kontakt">' + delar.map(d => '<span>' + d + '</span>').join('') + '</p>' : '')
-      + '<div class="man-fam-rader">' + x.pass.map(familjPassRad).join('') + '</div>';
-  }
-
-  function familjefakturaRad(x) {
-    const f = x.f;
-    const l = familjeLäge(x);
-    const nästa = NXBetalning.manadEfter(x.period);
-    const meta = [
-      esc((x.antal === 1 ? '1 pass' : x.antal + ' pass') + (x.min ? ' · ' + tim(x.min) : '')),
-      f && f.fortnox_fakturanummer ? esc('nr ' + f.fortnox_fakturanummer) : '',
-      f && f.ocr ? esc('OCR ' + f.ocr) : '',
-      x.läge === 'samlas' ? esc('blir ett utkast 1 ' + NXStudie.månadsNamn(nästa, false)) : '',
-      x.läge === 'utkast' && f.created_at ? esc('utkast sedan ' + lokalDag(f.created_at)) : '',
-      x.läge === 'betald' && f.betald_at ? esc('betald ' + lokalDag(f.betald_at)) : '',
-      x.utanRapport ? '<b>' + esc(x.utanRapport === 1 ? '1 pass utan rapport' : x.utanRapport + ' pass utan rapport') + '</b>' : ''
-    ].filter(Boolean);
-    /* Nästa steg för just den här fakturan, och bara det. Skickad utan
-       fakturanumret i Fortnox och förfallodag är en rad ingen kan följa
-       upp i Fortnox, därför ingen rullgardin. */
-    const k = [];
-    if (f) k.push(knapp('data-fakt-underlag', f.id, 'Underlag'));
-    if (!f && x.läge === 'skapas') k.push(knapp('data-fakt-skapa', '', 'Skapa nu', true));
-    if (f && f.status === 'utkast') {
-      if (x.nya) k.push(knapp('data-fakt-skapa', '', 'Lägg till nu'));
-      k.push(knapp('data-fakt-bort', f.id, 'Ta bort'));
-      k.push(knapp('data-fakt-fortnox', f.id, 'Lagd i Fortnox', true));
-    } else if (f && (f.status === 'skickad' || f.status === 'forfallen')) {
-      k.push(knapp('data-fakt-makulera', f.id, 'Makulera'));
-      if (x.läge === 'forfallen') k.push(påminnKnapp(f.parent_id, ' data-eko-faktura="' + esc(f.id) + '"'));
-      k.push(knapp('data-fakt-betald', f.id, 'Betald', true));
-    }
-    const under = x.läge === 'forfallen' ? 'förföll ' + kortDatum(f.forfaller)
-      : x.läge === 'skickad' && f.forfaller ? 'förfaller ' + kortDatum(f.forfaller)
-      : x.läge === 'samlas' ? 'hittills'
-      : f && x.tillkommer ? 'varav ' + kronor(x.tillkommer) + (S.körschemaPå ? ' i natt' : ' inte på än')
-      : '';
-    const utanPris = x.utanPris ? (x.utanPris === 1 ? '1 pass utan pris' : x.utanPris + ' pass utan pris') : '';
-    const öppen = UTFÄLLDA.has(x.nyckel);
-    const n = x.pass.length;
-    return '<div class="fakt-fam">'
-      + '<div class="eko-rad">' + periodRuta(x.period)
-      + '<span class="eko-mitt"><button type="button" class="eko-titel" data-fakt-visa aria-expanded="' + öppen + '">'
-      + esc(x.familj) + '</button>'
-      + '<span class="eko-meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</span></span>'
-      + '<span class="eko-atg">' + k.join('') + '</span>'
-      + '<span class="eko-lage">' + pill(l[0], l[1]) + '</span>'
-      + '<span class="eko-belopp"><b>' + esc(kronor(x.belopp)) + '</b>'
-      + (under || utanPris ? '<small>' + esc([under, utanPris].filter(Boolean).join(', ')) + '</small>' : '') + '</span></div>'
-      + '<details class="fakt-fam-pass" data-fakt-nyckel="' + esc(x.nyckel) + '"' + (öppen ? ' open' : '') + '>'
-      + '<summary>' + esc(n === 1 ? 'Passet och familjen' : 'De ' + n + ' passen och familjen') + '</summary>'
-      + familjensUppgifter(x) + '</details>'
-      + '</div>';
-  }
-
-  document.addEventListener('click', e => {
-    const k = e.target.closest('[data-fakt-visa]');
-    if (!k) return;
-    const d = k.closest('.fakt-fam') && k.closest('.fakt-fam').querySelector('details.fakt-fam-pass');
-    if (d) d.open = !d.open;
-  });
-  /* toggle bubblar inte; den fångas på vägen ner. */
-  document.addEventListener('toggle', e => {
-    const d = e.target;
-    if (!d || !d.matches || !d.matches('details.fakt-fam-pass')) return;
-    if (d.open) UTFÄLLDA.add(d.dataset.faktNyckel); else UTFÄLLDA.delete(d.dataset.faktNyckel);
-    const k = d.closest('.fakt-fam') && d.closest('.fakt-fam').querySelector('[data-fakt-visa]');
-    if (k) k.setAttribute('aria-expanded', String(d.open));
-  }, true);
-
-  function ritaFakturor() {
-    const host = $('#fakt-lista');
-    if (!host) return;
-    NXStudie.släppLista(host);
-    märkEkonomi();
-    const sök = String(($('#fakt-sok') || {}).value || '').trim();
-    const flagga = S.fakturaFlagga;
-    const nu = nuMånad();
-
-    const alla = familjefakturor().filter(x => matchar({ familj: x.familj, nr: (x.f && x.f.fortnox_fakturanummer) || '' },
-      ['familj', 'nr'], sök));
-    const tid = (x, fält) => String((x.f && x.f[fält]) || '');
-    const namn = (a, b) => a.familj.localeCompare(b.familj, 'sv');
-    /* Samlas: den här månadens, som ingen kan göra något med än. Lägg in
-       i Fortnox: utkasten, och en avslutad månad som natten inte hunnit
-       göra utkast av. */
-    const samlas = alla.filter(x => !x.f && x.period >= nu).sort(namn);
-    const attLägga = alla.filter(x => x.läge === 'utkast' || (!x.f && x.period < nu))
-      .sort((a, b) => a.period.localeCompare(b.period) || namn(a, b));
-    const ute = alla.filter(x => x.läge === 'skickad' || x.läge === 'forfallen')
-      .sort((a, b) => ((a.läge === 'forfallen' ? 0 : 1) - (b.läge === 'forfallen' ? 0 : 1))
-        || tid(a, 'forfaller').localeCompare(tid(b, 'forfaller')));
-    const betalda = alla.filter(x => x.läge === 'betald').sort((a, b) => tid(b, 'betald_at').localeCompare(tid(a, 'betald_at')));
-    const makulerade = alla.filter(x => x.läge === 'makulerad');
-    const förfallna = ute.filter(x => x.läge === 'forfallen').length;
-    const iNatt = attLägga.filter(x => !x.f && x.nya).length;
-    const samlatÖre = samlas.reduce((n, x) => n + x.belopp, 0);
-
-    /* Flödet överst: fyra steg med antal, och vems drag det är. */
-    const steg = (id, tal, rubrik, under, ton) => '<li class="' + (tal ? ton : 'ar-tom') + '">'
-      + '<button type="button" data-eko-till="' + id + '"' + (tal ? '' : ' disabled') + '>'
-      + '<b>' + tal + '</b><span>' + esc(rubrik) + '</span><small>' + esc(under) + '</small></button></li>';
-    const flöde = $('#fakt-steg');
-    if (flöde) {
-      flöde.innerHTML = steg('fakt-samlas', samlas.length, 'Samlas', samlas.length ? kronor(samlatÖre) + ' hittills' : 'den här månaden', 'ar-vantar')
-        + steg('fakt-utkast', attLägga.length, 'Lägg in i Fortnox',
-          iNatt ? (iNatt === 1 ? '1 blir utkast i natt' : iNatt + ' blir utkast i natt') : 'utkast', 'ar-gor')
-        + steg('fakt-ute', ute.length, 'Hos familjen', förfallna ? förfallna + ' förfallna' : 'väntar på betalning', förfallna ? 'ar-gor' : 'ar-vantar')
-        + steg('fakt-betalda', betalda.length, 'Betalda', betalda.length ? 'senast ' + lokalDag(betalda[0].f.betald_at) : 'inga än', 'ar-klar');
-    }
-
-    let h = '';
-    if (flagga && !flagga.aktiv) {
-      h += '<p class="kor-not">Faktura är avstängt: familjerna kan inte välja faktura på nya pass. '
-        + 'Pass som redan valts för faktura faktureras ändå. Strömbrytaren står under '
-        + '<button type="button" class="eko-lank" data-eko-flik="installningar">Inställningar</button>.</p>';
-    }
-    const rader = lista => lista.map(familjefakturaRad).join('');
-    if (samlas.length) {
-      h += grupp('fakt-samlas', 'Samlas i ' + NXStudie.månadsNamn(nu, false), samlas.length, rader(samlas), false,
-        'En faktura per familj, som växer med varje pass de väljer faktura på. Den blir ett utkast för Fortnox av sig själv natten mot 1 '
-        + NXStudie.månadsNamn(NXBetalning.manadEfter(nu), false) + '. Tryck på familjen för att se passen.');
-    }
-    if (attLägga.length) {
-      h += grupp('fakt-utkast', 'Lägg in i Fortnox', attLägga.length, rader(attLägga), true,
-        'Underlag visar det som ska stå på fakturan. Skapa den i Fortnox, skicka den, och tryck Lagd i Fortnox med numret.');
-    }
-    if (ute.length) h += grupp('fakt-ute', 'Hos familjen', ute.length, rader(ute), förfallna > 0);
-    if (betalda.length) {
-      const visa = betalda.slice(0, 10);
-      h += grupp('fakt-betalda', 'Betalda', betalda.length, rader(visa)
-        + (betalda.length > visa.length ? '<details class="eko-mer-rader"><summary>Visa '
-          + (betalda.length - visa.length) + ' äldre</summary>' + rader(betalda.slice(10)) + '</details>' : ''));
-    }
-    if (makulerade.length) {
-      h += '<details class="eko-mer"><summary>Makulerade fakturor (' + makulerade.length + ')</summary>'
-        + '<div class="vy-kort"><div class="vy-lista">' + rader(makulerade) + '</div></div></details>';
-    }
-    if (!alla.length) {
-      h += '<div class="vy-kort"><div class="vy-lista">' + (sök
-        ? tomt('Inga fakturor matchar', 'Sök på familjens namn eller fakturanumret i Fortnox.')
-        : tomt('Inga fakturor än', 'Familjen väljer faktura när de bekräftar rapporten. Passen samlas på en faktura per familj och månad, '
-          + 'och den blir ett utkast för Fortnox när månaden är slut.'))
-        + '</div></div>';
-    }
-    host.innerHTML = h;
-  }
-
-  /* Underlaget för Fortnox: det som ska stå på fakturan. Kunden är
-     familjens namn och e-post; Fortnox skickar fakturan till adressen.
-     Raderna säger ämne och datum, aldrig barnets namn. */
-  function fakturaUnderlag(f) {
-    const p = S.personer[f.parent_id] || {};
-    const rader = (f.invoice_lines || []).slice().sort((a, c) => String(a.beskrivning).localeCompare(String(c.beskrivning)));
-    return [
-      'Kund: ' + (p.full_name || '—') + ' (privatperson)',
-      'E-post: ' + (p.email || '—'),
-      'Period: ' + NXBetalning.periodText(f.period),
-      'Betalningsvillkor: ' + DAGAR + ' dagar, ingen avgift',
-      '',
-      ...rader.map(r => r.beskrivning + '  ·  ' + tim(r.minuter) + ' à '
-        + kronor(r.pris_per_timme_ore) + '/h  ·  ' + kronor(r.belopp_ore)),
-      '',
-      'Att betala: ' + kronor(f.belopp_ore)
-    ].join('\n');
-  }
-
-  document.addEventListener('click', async e => {
-    const flagga = e.target.closest('[data-fakturaflagga]');
-    if (flagga) {
-      const på = flagga.dataset.fakturaflagga === '1';
-      const f = S.fakturaFlagga || {};
-      const ja = await bekräfta(på ? {
-        titel: 'Slå på faktura?',
-        text: 'Från och med nu kan alla familjer välja "Få faktura nästa månad" när de bekräftar rapporten. '
-          + 'Deras pass kommer med på en faktura i början av nästa månad, att betala inom ' + DAGAR + ' dagar. '
-          + 'Fyll i BANKGIRO i nextrum-config.js först, så att familjen ser vart de betalar.',
-        forhandsvisning: f.vantar_pa ? 'Det här ska vara avgjort först:\n\n' + f.vantar_pa : null,
-        knapp: 'Slå på'
-      } : {
-        titel: 'Stäng av faktura?',
-        text: 'Familjerna kan inte längre välja faktura. Pass som redan valts för faktura faktureras ändå.',
-        knapp: 'Stäng av'
-      });
-      if (!ja) return;
-      await medan(flagga, på ? 'Slår på…' : 'Stänger av…', async () => {
-        const { error } = await supa.from('flaggor').update({ aktiv: på }).eq('kod', 'faktura');
-        if (error) { alert('Kunde inte ändra strömbrytaren: ' + felText(error)); return; }
-        /* Läget läses tillbaka i stället för att antas. En uppdatering
-           som RLS nekar ger inget fel, bara noll rader. */
-        const { data } = await supa.from('flaggor').select('*').eq('kod', 'faktura').maybeSingle();
-        if (data) S.fakturaFlagga = data;
-        ritaInställningar();
-        ritaFakturor();
-      });
-      return;
-    }
-
-    const und = e.target.closest('[data-fakt-underlag]');
-    if (und) {
-      const f = (S.fakturor || []).find(x => x.id === und.dataset.faktUnderlag);
-      if (!f) return;
-      const text = fakturaUnderlag(f);
-      const kopiera = await bekräfta({
-        titel: 'Underlag för Fortnox',
-        text: 'Skapa en kundfaktura i Fortnox med de här uppgifterna, och skicka den som e-post. '
-          + 'Tryck sedan Lagd i Fortnox och skriv in fakturanumret.',
-        forhandsvisning: text,
-        knapp: 'Kopiera',
-        avbryt: 'Stäng'
-      });
-      if (kopiera) {
-        try { await navigator.clipboard.writeText(text); }
-        catch (fel) { alert('Kopieringen gick inte. Markera texten och kopiera den för hand.'); }
-      }
-      return;
-    }
-
-    const fortnox = e.target.closest('[data-fakt-fortnox]');
-    if (fortnox) {
-      const f = (S.fakturor || []).find(x => x.id === fortnox.dataset.faktFortnox);
-      if (!f) return;
-      const förval = new Date(Date.now() + DAGAR * 86400000);
-      const värde = await fråga({
-        titel: 'Lagd i Fortnox',
-        text: namnFör(f.parent_id) + ', ' + NXBetalning.periodText(f.period) + ', ' + kronor(f.belopp_ore)
-          + '. Skriv fakturanumret, OCR-numret och förfallodagen som de står på fakturan i Fortnox.',
-        /* OCR (Fas 19.6). Familjen ser det under Fakturor att betala och
-           betalar med det i sin bank. Det skrivs av från fakturan, aldrig
-           räknas fram här: Fortnox bestämmer det ur bankgiroavtalet.
-           Kontrollsiffran prövas både här och i databasen
-           (invoices_ocr_giltigt). Tomt går, om fakturan saknar OCR; då
-           är fakturanumret familjens meddelande. */
-        innehåll: '<div class="fgroup" style="margin-top:14px"><label for="fakt-nr">Fakturanummer i Fortnox</label>'
-          + '<input class="inp" id="fakt-nr" inputmode="numeric" autocomplete="off" maxlength="30"></div>'
-          + '<div class="fgroup" style="margin-top:12px"><label for="fakt-ocr">OCR-nummer</label>'
-          + '<input class="inp" id="fakt-ocr" inputmode="numeric" autocomplete="off" maxlength="25"></div>'
-          + '<div class="fgroup" style="margin-top:12px"><label for="fakt-forfaller">Förfaller</label>'
-          + '<input class="inp" id="fakt-forfaller" type="date" value="' + isoFor(förval) + '"></div>',
-        knapp: 'Spara',
-        läs: ruta => {
-          const nr = $('#fakt-nr', ruta).value.trim();
-          const ocr = $('#fakt-ocr', ruta).value.replace(/\s+/g, '');
-          const dag = $('#fakt-forfaller', ruta).value;
-          if (!/^[A-Za-z0-9-]{1,30}$/.test(nr)) return { fel: 'Fakturanumret får bara innehålla siffror, bokstäver och bindestreck.' };
-          if (ocr && !NXBetalning.ocrGiltigt(ocr)) return { fel: 'OCR-numret stämmer inte: kontrollsiffran är fel. Skriv det exakt som på fakturan.' };
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(dag)) return { fel: 'Välj förfallodagen.' };
-          return { värde: { nr, ocr: ocr || null, dag } };
-        }
-      });
-      if (!värde) return;
-      await medan(fortnox, 'Sparar…', async () => {
-        /* Bara om det är samma utkast som visades (2026-10-01). Körningen
-           går varje natt och kan ha lagt ett sent fakturapass på det, och
-           då stämmer det inte med fakturan som skrevs in i Fortnox. */
-        const svar = await skrivOmOförändrad('invoices', f.id, {
-          status: 'skickad', skickad_at: new Date().toISOString(),
-          fortnox_fakturanummer: värde.nr, ocr: värde.ocr, forfaller: värde.dag
-        }, { status: 'utkast', belopp_ore: f.belopp_ore });
-        if (svar === 'ändrad') {
-          await hämtaAllt();
-          await laddaOmEkonomi();
-          const ny = (S.fakturor || []).find(x => x.id === f.id);
-          /* Noll rader utan att något ändrats är databasen som nekar, inte
-             natten som lagt till ett pass. */
-          const sammaSom = ny && ny.status === 'utkast' && Number(ny.belopp_ore) === Number(f.belopp_ore);
-          alert(sammaSom
-            ? 'Fakturan gick inte att spara. Ingenting ändrades.'
-            : ny && ny.status === 'utkast'
-            ? 'Utkastet har ändrats sedan sidan hämtades: det är nu ' + kronor(ny.belopp_ore) + ' i stället för '
-              + kronor(f.belopp_ore) + ', för ett pass har lagts till. Ändra fakturan i Fortnox efter Underlag, '
-              + 'och tryck Lagd i Fortnox igen. Ingenting sparades.'
-            : 'Utkastet har ändrats sedan sidan hämtades. Ingenting sparades, och listan är hämtad på nytt.');
-          return;
-        }
-        if (svar) {
-          Object.assign(f, { status: 'skickad', fortnox_fakturanummer: värde.nr, ocr: värde.ocr, forfaller: värde.dag });
-          ritaFakturor(); await laddaOmEkonomi();
-        }
-      });
-      return;
-    }
-
-    const betald = e.target.closest('[data-fakt-betald]');
-    if (betald) {
-      const f = (S.fakturor || []).find(x => x.id === betald.dataset.faktBetald);
-      if (!f) return;
-      const ja = await bekräfta({
-        titel: 'Har pengarna kommit in?',
-        text: 'Faktura ' + (f.fortnox_fakturanummer || '') + ' till ' + namnFör(f.parent_id) + ', ' + kronor(f.belopp_ore)
-          + '. Markera bara betald när Fortnox visar att betalningen kommit in.',
-        knapp: 'Ja, den är betald'
-      });
-      if (!ja) return;
-      await medan(betald, 'Sparar…', async () => {
-        const nu = new Date().toISOString();
-        if (await skriv('invoices', f.id, { status: 'betald', betald_at: nu })) {
-          Object.assign(f, { status: 'betald', betald_at: nu });
-          ritaFakturor(); await laddaOmEkonomi();
-        }
-      });
-      return;
-    }
-
-    const mak = e.target.closest('[data-fakt-makulera]');
-    if (mak) {
-      const f = (S.fakturor || []).find(x => x.id === mak.dataset.faktMakulera);
-      if (!f) return;
-      const ja = await bekräfta({
-        titel: 'Makulera fakturan?',
-        text: 'Gör det bara när fakturan är krediterad i Fortnox. Passen på den faktureras inte igen: '
-          + 'de räknas som avskrivna. Ska de faktureras om, ta kontakt med familjen först.',
-        knapp: 'Makulera'
-      });
-      if (!ja) return;
-      await medan(mak, 'Sparar…', async () => {
-        if (await skriv('invoices', f.id, { status: 'makulerad' })) {
-          f.status = 'makulerad';
-          ritaFakturor(); await laddaOmEkonomi();
-        }
-      });
-      return;
-    }
-
-    const bort = e.target.closest('[data-fakt-bort]');
-    if (bort) {
-      const f = (S.fakturor || []).find(x => x.id === bort.dataset.faktBort);
-      if (!f || f.status !== 'utkast') return;
-      const ja = await bekräfta({
-        titel: 'Ta bort utkastet?',
-        text: 'Passen på det blir kvar som fakturapass. Körningen går varje natt och lägger dem på ett nytt '
-          + 'utkast, om de inte undantas under Att göra. Ingenting har skickats.',
-        knapp: 'Ta bort'
-      });
-      if (!ja) return;
-      await medan(bort, 'Tar bort…', async () => {
-        /* .eq('status', 'utkast'): hann någon lägga in fakturan i Fortnox
-           under tiden ska den inte försvinna härifrån. Raderna följer
-           med (on delete cascade). */
-        const { data, error } = await supa.from('invoices').delete()
-          .eq('id', f.id).eq('status', 'utkast').select('id');
-        if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }
-        if (!data || !data.length) { alert('Utkastet hann ändras. Listan laddas om.'); }
-        await hämtaAllt();
-        ritaFakturor(); await laddaOmEkonomi();
-      });
-    }
-  });
+  /* Fakturorna (Fas 14.6, omgjorda 2026-09-29 och 2026-10-06) stod här:
+     flödet från fakturapass till betald faktura, familjens faktura per
+     månad, underlaget för Fortnox och knapparna Lagd i Fortnox, Betald
+     och Makulera. Fakturan togs bort 2026-10-21 (fakturan_tas_bort). */
 
   /* ============================================================
      PÅMINN (2026-09-29)
@@ -1805,9 +1157,9 @@
 
      Texten säger vad som inte är betalt, med beloppen ur larmen (samma
      pris som kortet tar), och var familjen betalar: passets egen sida
-     när det är ett pass, annars Bekräfta rapport. Faktura nämns bara
-     när familjen faktiskt kan välja den. Ingen avgift, för villkoren
-     nämner ingen, och ingen sista dag, för villkoren sätter ingen.
+     när det är ett pass, annars Bekräfta rapport. Ingen avgift, för
+     villkoren nämner ingen, och ingen sista dag, för villkoren sätter
+     ingen.
      ============================================================ */
   function ämneIText(s) {
     const t = String(s || '').trim();
@@ -1828,11 +1180,7 @@
         + (a.typ === 'tillagg_obetalt' ? 'övertid på passet i ' : '') + ämneIText(b.subject)
         + (belopp != null ? ': ' + kronor(belopp) : '');
     };
-    /* Faktura bara när familjen kan välja den och det finns ett pass att
-       välja den på: ett tillägg för övertid betalas med kort (Fas 20.1). */
-    const faktura = !!(S.fakturaFlagga && S.fakturaFlagga.aktiv) && !(S.fakturaSparr && S.fakturaSparr.has(id))
-      && lista.some(a => a.typ === 'ej_betalt');
-    const sätt = faktura ? 'med kort eller genom att välja faktura' : 'med kort';
+    const sätt = 'med kort';
     const ettPass = lista.length === 1 && lista[0].typ === 'ej_betalt';
     let mitt;
     if (!lista.length) {
@@ -1858,31 +1206,13 @@
     };
   }
 
-  function brevOmFaktura(f) {
-    const bg = String((NX.CFG && NX.CFG.BANKGIRO) || '').trim();
-    const period = NXBetalning.periodText(f.period);
-    return {
-      amne: 'Fakturan för ' + period + ' är inte betald',
-      text: 'Hej ' + förnamn(f.parent_id) + ',\n\n'
-        + 'Fakturan för ' + period + (f.fortnox_fakturanummer ? ' (nummer ' + f.fortnox_fakturanummer + ')' : '')
-        + ' på ' + kronor(f.belopp_ore) + ' skulle ha betalats senast den ' + kortDatum(f.forfaller)
-        + ', och vi har inte sett betalningen än.\n\n'
-        + (bg ? 'Ni betalar till bankgiro ' + bg + (f.ocr ? ' med OCR-nummer ' + f.ocr : '') + '.'
-          : 'Betalningsuppgifterna står på fakturan' + (f.ocr ? ', och OCR-numret är ' + f.ocr : '') + '.')
-        + ' Fakturan står också under Betalning i studievyn:\n' + vyAdress() + '#betalning\n\n'
-        + 'Har ni redan betalat kan ni bortse från det här. Hör gärna av er om något inte stämmer.\n\n'
-        + 'Hälsningar,\nNextrum'
-    };
-  }
-
   document.addEventListener('click', e => {
     const k = e.target.closest('[data-eko-paminn]');
     if (!k) return;
     const id = k.dataset.ekoPaminn;
     const p = S.personer[id] || {};
     if (!p.email) return;
-    const f = k.dataset.ekoFaktura ? (S.fakturor || []).find(x => x.id === k.dataset.ekoFaktura) : null;
-    const brev = f ? brevOmFaktura(f) : brevOmPass(id);
+    const brev = brevOmPass(id);
     kontaktaRuta({
       titel: 'Påminn ' + (p.full_name || p.email),
       namn: p.full_name, till: p.email, amne: brev.amne, text: brev.text
@@ -1906,8 +1236,10 @@
 
      Talen räknas i manad_lage(), inte här, och sparas i
      manadsbokslut.summering när månaden stängs: det som visas är
-     alltså exakt det som frystes. De står i tre kort (passen, pengarna,
-     underlag och fakturor) i stället för tio rutor som såg likadana ut.
+     alltså exakt det som frystes. De står i tre kort (passen, pengarna
+     och underlagen) i stället för tio rutor som såg likadana ut. En
+     månad som stängdes medan fakturan fanns bär fakturans tal i
+     summeringen; de visas inte längre.
      Larmen är samma rader som under Att göra, med samma knappar.
      ============================================================ */
   let bokslutFråga = 0;
@@ -1963,7 +1295,7 @@
     if (!d || String(d.manad).slice(0, 10) !== månad) return;
 
     const p = d.pass || {}, k = d.kort || {}, t = d.tillagg || {};
-    const u = d.underlag || {}, f = d.fakturor || {};
+    const u = d.underlag || {};
     const larm = d.larm || [];
     const b = d.bokslut;
     const stängd = !!(b && b.stangd);
@@ -2043,14 +1375,11 @@
         d.timmar ? ['Betalda med köpta timmar', d.timmar + ' pass'] : null,
         tb.pass ? ['Betalda ur timbanken', tb.pass + ' pass'] : null,
         tb.overtid_min ? ['Övertid ur timbanken', tim(tb.overtid_min)] : null,
-        d.faktura && d.faktura.pass ? ['Mot faktura', d.faktura.pass + ' pass'] : null,
         d.test ? ['Testbetalningar', d.test + ', räknas inte in'] : null
       ])
-      + talKort('Underlag och fakturor', [
+      + talKort('Underlagen', [
         ['Underlag till studiehjälpare', (u.antal || 0) + ' st · ' + kronor(u.belopp_ore)],
-        ['Utbetalda', utbetalda + ' av ' + (u.antal || 0)],
-        ['Fakturor', (f.antal || 0) + ' st · ' + kronor(f.belopp_ore)],
-        ['Betalda fakturor', (f.betalda || 0) + ' av ' + (f.antal || 0)]
+        ['Utbetalda', utbetalda + ' av ' + (u.antal || 0)]
       ])
       + '</div>';
 
@@ -2063,8 +1392,8 @@
        översikten läser. Utan datum hör ett larm inte till någon månad. */
     h += andraMånaderText(andraMånader(S.avvikelser || [], a => a.datum), 'Larm');
     h += '<p class="vy-finstilt">Månaden är passets månad, inte betalningens: ett pass i september som betalas i '
-      + 'oktober hör till september. Testbetalningar räknas för sig och aldrig in i summorna. Underlag och fakturor '
-      + 'låses inte av stängningen, för de betalas efter månadsskiftet.</p>';
+      + 'oktober hör till september. Testbetalningar räknas för sig och aldrig in i summorna. Underlagen '
+      + 'låses inte av stängningen, för de betalas ut efter månadsskiftet.</p>';
 
     host.innerHTML = h;
     märkFlik('#flik-bokslut-mark', larm.length);
@@ -2095,8 +1424,8 @@
       const ja = await bekräfta({
         titel: 'Stäng ' + namn + '?',
         text: 'Pass och rapporter i månaden går inte att ändra efter det, inte heller härifrån. '
-          + 'Månadens tal sparas som de ser ut nu. Underlag och fakturor går fortfarande att markera '
-          + 'betalda. Månaden kan öppnas igen, med ett skäl.',
+          + 'Månadens tal sparas som de ser ut nu. Underlagen går fortfarande att markera '
+          + 'utbetalda. Månaden kan öppnas igen, med ett skäl.',
         knapp: 'Stäng månaden'
       });
       if (!ja) return;
@@ -2323,19 +1652,10 @@
     const host = $('#eko-brytare');
     if (host) {
       const saknas = kod => tomt('Strömbrytaren gick inte att läsa', S.kortsparrFel || 'Raden ' + kod + ' saknas i flaggor.');
-      const fa = S.fakturaFlagga, er = S.erbFlagga, ks = S.kortsparr, ti = S.tipsFlagga;
-      const spärrade = S.fakturaSparr ? S.fakturaSparr.size : 0;
+      /* Strömbrytaren faktura stod först här, till 2026-10-21. */
+      const er = S.erbFlagga, ks = S.kortsparr, ti = S.tipsFlagga;
       const n = kortbetalda();
-      host.innerHTML = (fa ? brytare({
-          titel: 'Faktura som betalsätt', på: fa.aktiv, påText: fa.aktiv ? 'På' : 'Av',
-          text: fa.beskrivning || 'Familjen kan välja faktura på ett genomfört pass.',
-          krav: !fa.aktiv && fa.vantar_pa ? 'Ska vara avgjort först: ' + fa.vantar_pa : '',
-          not: (spärrade ? spärrade + (spärrade === 1 ? ' familj är avstängd' : ' familjer är avstängda')
-            + ' från faktura, under familjens Ekonomi. ' : '') + 'Ändrad ' + kortDatum(fa.uppdaterad) + '.',
-          knapp: '<button class="btn ' + (fa.aktiv ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-fakturaflagga="'
-            + (fa.aktiv ? '0' : '1') + '">' + (fa.aktiv ? 'Stäng av' : 'Slå på') + '</button>'
-        }) : saknas('faktura'))
-        + (er ? brytare({
+      host.innerHTML = (er ? brytare({
           titel: 'Planer och Fyll timbanken', på: er.aktiv, påText: er.aktiv ? 'Går att köpa' : 'Av',
           text: er.beskrivning || 'Familjerna kan köpa timmar i förväg i studievyn.',
           krav: !er.aktiv && er.vantar_pa ? 'Ska vara avgjort först: ' + er.vantar_pa : '',
@@ -2377,8 +1697,7 @@
       const ja = await bekräfta({
         titel: 'Slå på spärren?',
         text: 'Från och med nu går ett pass som familjen inte betalat inte att rapportera, '
-          + 'och studiehjälparen ser i sin vy att passet inte ska hållas. Ett pass familjen valt '
-          + 'att betala mot faktura räknas som betalt nog: fakturan kommer efter passet.'
+          + 'och studiehjälparen ser i sin vy att passet inte ska hållas.'
           + (kortbetalda() ? ''
             : '\n\nIngen kortbetalning har gått igenom än. Slår du på nu kan ingen '
               + 'studiehjälpare rapportera ett enda pass förrän en familj har betalat.'),
@@ -2612,6 +1931,8 @@
       /* Larmet betalt_for_lange och bokslutets återbetalda belopp
          räknas i databasen och måste hämtas om, inte ritas om. */
       await laddaOmEkonomi();
+      // Liggaren (2026-10-21) visar återbetalningen när den hämtats om.
+      if (NXAdmin.rita.ritaLiggaren) await NXAdmin.rita.ritaLiggaren();
     });
   });
 
@@ -2647,8 +1968,7 @@
   });
 
   /* Månadens ekonomi och Löner (2026-09-28) räknar på samma rader som
-     listorna här: en faktura som läggs in i Fortnox eller ett underlag
-     som godkänns ska synas där också. De bor i egna filer som laddas
+     listorna här: ett underlag som godkänns ska synas där också. De bor i egna filer som laddas
      efter den här, och nås därför genom rita. */
   function ritaMånadsvyerna() {
     ['ritaMånaden', 'ritaLöner'].forEach(n => {
@@ -2663,7 +1983,6 @@
     await hämtaEkonomiunderlag();
     ritaAttGöra();
     ritaBetalningslistan();
-    ritaFakturor();
     ritaMånadsvyerna();
     await Promise.all([ritaÖversikt(), laddaBokslut()]);
   }
@@ -2767,23 +2086,21 @@
   });
 
   /* ============================================================
-     MÅNADSKÖRNINGEN (Fas 2; underlag, och fakturautkast sedan Fas 14.6)
+     MÅNADSKÖRNINGEN (Fas 2; fakturautkast också, Fas 14.6 till 2026-10-21)
 
      Två steg, som vid utskicket: först en torrkörning som visar vad
      som skulle skapas, sedan det skarpa anropet — och det går bara
      för samma månad som torrkörningen gällde. Det skarpa steget
      skapar UTKAST. Ingenting skickas och ingenting betalas härifrån.
 
-     En familj som valt faktura får ett utkast per månad, som läggs in
-     i Fortnox under Fakturor. Pass som hölls utan att familjen betalat
-     med kort, och utan att de valt faktura, kommer tillbaka i svaret
+     Pass som hölls utan att familjen betalat kommer tillbaka i svaret
      som `obetalda` och står här per familj, så att någon kan höra av
-     sig. De faktureras inte av sig själva.
+     sig. De drivs inte in av sig själva.
 
      EN RUTA, TRE STÄLLEN (2026-09-28). Körningen står under
-     Betalningar → Fakturor (sedan 2026-09-29; förut en egen flik),
-     under Löner och under Månadens ekonomi: Leo ville skapa lönernas
-     underlag och familjernas fakturor där han tittar på dem. Det är
+     Betalningar → Månadskörningen (Fakturor till 2026-10-21), under
+     Löner och under Månadens ekonomi: Leo ville skapa lönernas
+     underlag där han tittar på dem. Det är
      samma körning på alla tre, och samma lyssnare. En ruta är ett
      element med data-kor-ruta: perioden (en väljare med
      data-kor-period, eller attributet på rutan själv), knapparna
@@ -2792,14 +2109,11 @@
      till sin ruta. En torrkörning under Löner ger ingen Skapa-knapp här,
      för den som trycker här har inte sett vad som skapas.
 
-     Väljaren här följer inte månadsraden längre: Fakturor gäller alla
-     månader, och raden står inte ens under fliken. Den står på förra
-     månaden, som är den som körs.
+     Väljaren här följer inte månadsraden: raden står inte under
+     fliken. Den står på förra månaden, som är den som körs.
 
      FÖR HAND BARA NÄR NATTEN INTE GICK (2026-10-06). Schemat gör
-     fakturorna och underlagen varje natt, så rutan står hopfälld under
-     Fakturor och Månadens ekonomi. Raderna har Skapa nu i stället, som
-     gör nattens körning direkt (SKAPA NU nedan).
+     underlagen varje natt, så rutan står hopfälld.
 
      EN MÅNAD SOM INTE HAR BÖRJAT GÅR INTE ATT KÖRA (2026-09-28).
      Löner och Månadens ekonomi visar också kommande månader, och deras
@@ -2821,10 +2135,10 @@
 
      PASSETS MÅNAD (2026-10-01, samma kväll). Leo: "passen som är hållna
      i september ska spärras av för september". Ett pass som rapporteras
-     eller sätts på faktura efter körningen läggs på sin månads utkast,
-     och svaret säger vilken månad varje rad går till och om den läggs
-     till (tillagg). Pass vars månad redan är godkänd eller skickad står
-     under vantar och tas av nästa månads körning.
+     efter körningen läggs på sin månads utkast, och svaret säger vilken
+     månad varje rad går till och om den läggs till (tillagg). Pass vars
+     månad redan är godkänd står under vantar och tas av nästa månads
+     körning.
      ============================================================ */
   /* SCHEMAT (2026-09-28). pg_cron-jobbet manadskorning skriver förra
      månadens underlag den 1:a, och sedan 2026-10-01 varje natt det som
@@ -2846,7 +2160,7 @@
     }
     const d = data || {};
     const på = !!(d.pa && d.adress);
-    if (S.körschemaPå !== på) { S.körschemaPå = på; ritaFakturor(); ritaAttGöra(); ritaMånadsvyerna(); }
+    if (S.körschemaPå !== på) { S.körschemaPå = på; ritaAttGöra(); ritaMånadsvyerna(); }
     if (!d.pa) {
       host.innerHTML = rad(pill('Av', ''), 'Månadskörningen går bara från knappen här, och en månad har '
         + 'ingen lönespecifikation förrän någon kört den. Schemat slås på med en migration, när '
@@ -2870,9 +2184,9 @@
     if (d.schema === '17 4 * * *') {
       let nästa = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), nu.getUTCDate(), 4, 17));
       if (nästa <= nu) nästa = new Date(nästa.getTime() + 86400000);
-      när = 'varje natt för förra månaden, nästa gång ' + klockan(nästa) + '. Den 1:a skapas underlagen '
-        + 'och fakturautkasten, och resten av månaden läggs pass som rapporterats sent till på utkasten, '
-        + 'så länge de inte är godkända eller skickade.';
+      när = 'varje natt för förra månaden, nästa gång ' + klockan(nästa) + '. Den 1:a skapas underlagen, '
+        + 'och resten av månaden läggs pass som rapporterats sent till på utkasten, '
+        + 'så länge de inte är godkända.';
     } else if (d.schema === '17 4 1 * *') {
       let nästa = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), 1, 4, 17));
       if (nästa <= nu) nästa = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth() + 1, 1, 4, 17));
@@ -2895,7 +2209,7 @@
     }
     if (p === nu) {
       return { spärr: false, skapaSpärr: true, text: stor(namn(p)) + ' pågår. Torrkörningen visar läget hittills, '
-        + 'men underlag och fakturor skapas först när månaden är slut, från den 1 '
+        + 'men underlagen skapas först när månaden är slut, från den 1 '
         + namn(NXStudie.månadsGräns(p).till) + '.' };
     }
     /* Månader före den här som har pass att betala men inte ett enda
@@ -3007,7 +2321,6 @@
     const rad = (vänster, höger, total) => '<div class="sum-line' + (total ? ' total' : '') + '">'
       + '<span>' + vänster + '</span><span class="adm-tal">' + höger + '</span></div>';
     const underlag = d.utbetalningar || [];
-    const fakturor = d.fakturor || [];
     const obetalda = d.obetalda || [];
 
     let h = '<p class="small" style="margin:14px 0 8px"><b>'
@@ -3023,17 +2336,7 @@
       esc(kronor(u.belopp_ore)))).join('');
     h += rad('Studiehjälparna, ' + underlag.length + ' underlag', esc(kronor(summa(underlag))), true);
 
-    if (fakturor.length) {
-      h += fakturor.map(f => rad(esc(namnFör(f.parent_id)) + ' · ' + f.pass + ' pass' + esc(vart(f)),
-        esc(kronor(f.belopp_ore)))).join('');
-      h += rad('Fakturor att lägga in i Fortnox, ' + fakturor.length + ' st', esc(kronor(summa(fakturor))), true);
-    }
-
-    /* Per familj, för det är familjen man hör av sig till. Sedan
-       2026-10-15 läggs ett obetalt pass på fakturan av sig självt
-       (pa_fakturan); de som står här är undantagen: en öppen kassa, ett
-       kort som betalar, en familj utan faktura eller ett pass bokat före
-       villkoren som säger det. */
+    /* Per familj, för det är familjen man hör av sig till. */
     if (obetalda.length) {
       const per = {};
       obetalda.forEach(o => { (per[o.parent_id] = per[o.parent_id] || []).push(o); });
@@ -3043,23 +2346,10 @@
     }
 
     const noter = [];
-    const paFakturan = (d.pa_fakturan || []).length;
-    if (paFakturan) {
-      /* En torrkörning för en månad som pågår räknar pass som hinner
-         betalas innan den är slut. */
-      const pågår = String(d.period || '').slice(0, 7) + '-01' === NXStudie.månadIso(new Date());
-      const betalt = paFakturan === 1 ? 'betalt' : 'betalda';
-      noter.push(paFakturan + ' pass ' + (pågår
-        ? 'är inte ' + betalt + ' än och läggs på familjens faktura om ' + (paFakturan === 1 ? 'det' : 'de')
-          + ' inte betalas innan månaden är slut'
-        : 'var inte ' + betalt + ' när månaden tog slut och ' + (torr ? 'läggs' : 'lades') + ' på familjens faktura')
-        + ' (villkoren sedan 2026-10-16).');
-    }
     if (obetalda.length) {
       noter.push('⚠️ ' + obetalda.length + (obetalda.length === 1 ? ' pass hölls' : ' pass hölls')
-        + ' utan att familjen betalat och kom inte på fakturan: en öppen kassa, ett kort som betalar, en familj '
-        + 'utan faktura eller ett pass bokat före villkoren som säger det. Betala-knappen ligger kvar på passet i '
-        + 'familjens vy, och Påminn under Att göra skriver ett mejl. <a href="#ekonomi/attgora">Till Att göra</a>.');
+        + ' utan att familjen betalat. Betala-knappen ligger kvar på passet i familjens vy, och Påminn under '
+        + 'Att göra skriver ett mejl. <a href="#ekonomi/attgora">Till Att göra</a>.');
     }
     const utan = d.hoppade_over_utan_rapport || [];
     if (utan.length) {
@@ -3069,34 +2359,29 @@
     (d.hoppade_over_utan_timpenning || []).forEach(id => noter.push('⚠️ ' + esc(namnFör(id))
       + ' har ingen timpenning, så hens pass väntar till nästa körning.'));
     if (d.undantagna_pass) noter.push(d.undantagna_pass + ' undantagna pass räknades inte.');
-    const väntar = ((d.vantar && d.vantar.underlag) || []).length + ((d.vantar && d.vantar.fakturor) || []).length;
+    const väntar = ((d.vantar && d.vantar.underlag) || []).length;
     if (väntar) {
-      noter.push(väntar + ' pass hör till en månad vars underlag eller faktura redan är godkänd eller skickad, '
+      noter.push(väntar + ' pass hör till en månad vars underlag redan är godkänt, '
         + 'och tas av nästa månads körning.');
     }
-    const fakturorna = n => n + (n === 1 ? ' faktura' : ' fakturor');
-    if (d.skapade && (d.skapade.utbetalningar || d.skapade.fakturor)) {
-      noter.push('Skapade: ' + d.skapade.utbetalningar + ' underlag'
-        + (d.skapade.fakturor ? ' och ' + fakturorna(d.skapade.fakturor) : '')
-        + ', alla som utkast.' + (d.skapade.fakturor ? ' Lägg in fakturorna i Fortnox under <a href="#ekonomi/fakturor">Fakturor</a>.' : ''));
+    if (d.skapade && d.skapade.utbetalningar) {
+      noter.push('Skapade: ' + d.skapade.utbetalningar + ' underlag, alla som utkast.');
     }
-    if (d.tillagda && (d.tillagda.utbetalningar || d.tillagda.fakturor)) {
-      noter.push('Lade till pass på ' + d.tillagda.utbetalningar + ' underlag'
-        + (d.tillagda.fakturor ? ' och ' + fakturorna(d.tillagda.fakturor) : '') + ' som redan var utkast.');
+    if (d.tillagda && d.tillagda.utbetalningar) {
+      noter.push('Lade till pass på ' + d.tillagda.utbetalningar + ' underlag som redan var utkast.');
     }
     (d.problem || []).forEach(p => noter.push('⚠️ ' + esc(p)));
-    if (!underlag.length && !fakturor.length && torr) noter.push('Inget underlag och ingen faktura att skapa för den här månaden.');
+    if (!underlag.length && torr) noter.push('Inget underlag att skapa för den här månaden.');
 
     return h + noter.map(n => '<p class="xsmall" style="margin:8px 0 0;line-height:1.6">' + n + '</p>').join('');
   }
 
-  /* Efter en skarp körning finns nya underlag och fakturor, och allt
-     som räknar på dem hämtas om: listorna här, översikten, bokslutet,
-     Månadens ekonomi och Löner. */
+  /* Efter en skarp körning finns nya underlag, och allt som räknar på
+     dem hämtas om: listorna här, översikten, bokslutet, Månadens
+     ekonomi och Löner. */
   async function efterKörning() {
     await hämtaAllt();
     await hämtaEkonomiunderlag();
-    ritaFakturor();
     ritaKortbetalningar();
     ritaAttGöra();
     ritaMånadsvyerna();
@@ -3131,8 +2416,7 @@
       if (fel) { host.innerHTML = tomt('Torrkörningen gick inte', await funktionsFel(fel)); return; }
       torrkörda.set(ruta, { period, torr: res.data });
       host.innerHTML = ritaKörning(res.data, true);
-      skapaKnapp.disabled = körningensLäge(period).skapaSpärr
-        || (!(res.data.utbetalningar || []).length && !(res.data.fakturor || []).length);
+      skapaKnapp.disabled = körningensLäge(period).skapaSpärr || !(res.data.utbetalningar || []).length;
       return;
     }
 
@@ -3140,11 +2424,9 @@
     if (!k || k.period !== period) { skapaKnapp.disabled = true; return; }
     const t = k.torr;
     const summa = lista => (lista || []).reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
-    const fakt = t.fakturor || [];
     const ja = await bekräfta({
       titel: 'Skapa utkast för ' + NXBetalning.periodText(t.period) + '?',
       text: t.utbetalningar.length + ' underlag på ' + kronor(summa(t.utbetalningar))
-        + (fakt.length ? ' och ' + fakt.length + (fakt.length === 1 ? ' faktura' : ' fakturor') + ' på ' + kronor(summa(fakt)) : '')
         + '. De skapas som utkast, eller läggs till på utkast som redan finns — ingenting skickas och ingenting betalas ut härifrån.',
       knapp: 'Skapa utkast'
     });
@@ -3159,88 +2441,9 @@
     await efterKörning();
   });
 
-  /* ============================================================
-     SKAPA NU (2026-10-06)
-
-     Nattens körning, direkt, från en rad under Fakturor, Månadens
-     ekonomi eller Att göra. Leo ville inte torrköra: torrkörningen görs
-     ändå, i bakgrunden, och rutan som frågar visar vad den skulle skapa.
-     Den som trycker ser alltså fortfarande vad som skapas innan något
-     skrivs, utan ett eget steg för det.
-
-     Alltid FÖRRA månaden, som schemat: körningen lägger varje pass där
-     malmanad säger, också på ett äldre utkast, och en körning för en
-     äldre månad hade kunnat skapa nya dokument där som natten aldrig
-     skapat. En månad som pågår går fortfarande inte (körningensLäge och
-     409 i fakturering). Körningen skriver också studiehjälparnas
-     underlag för månaden, som natten gör, och rutan säger det.
-     ============================================================ */
-  function körningstext(t) {
-    const rad = (namn, x) => '  ' + namn + ' · ' + x.pass + ' pass · ' + kronor(x.belopp_ore)
-      + (x.tillagg ? ' (läggs till på utkastet för ' + NXBetalning.periodText(x.period) + ')' : '');
-    const fakt = t.fakturor || [];
-    const und = t.utbetalningar || [];
-    const delar = [];
-    if (fakt.length) delar.push('Fakturor, som utkast för Fortnox\n' + fakt.map(f => rad(namnFör(f.parent_id), f)).join('\n'));
-    if (und.length) delar.push('Studiehjälparnas underlag, lönen den 25:e\n' + und.map(u => rad(namnFör(u.tutor_id), u)).join('\n'));
-    const utan = (t.hoppade_over_utan_rapport || []).length;
-    if (utan) delar.push(utan + (utan === 1 ? ' pass saknar' : ' pass saknar') + ' rapport och kommer inte med.');
-    const ob = (t.obetalda || []).length;
-    if (ob) delar.push(ob + (ob === 1 ? ' pass hölls' : ' pass hölls') + ' utan betalning. De faktureras inte, de står under Att göra.');
-    return delar.join('\n\n');
-  }
-
-  document.addEventListener('click', async e => {
-    const k = e.target.closest('[data-fakt-skapa]');
-    if (!k) return;
-    /* Räknas när någon trycker: en sida som stått öppen över
-       månadsskiftet ska köra den nya förra månaden. */
-    const period = körMånad();
-    const läge = körningensLäge(period);
-    if (läge.spärr || läge.skapaSpärr) { alert(läge.text || 'Månaden går inte att köra än.'); return; }
-    const svarRuta = k.closest('section, .vy-flik-panel');
-    const svar = svarRuta && svarRuta.querySelector('[data-fakt-svar]');
-    const visaSvar = text => {
-      if (svar) { svar.textContent = text; svar.hidden = !text; } else if (text) alert(text);
-    };
-    visaSvar('');
-
-    const torr = await medan(k, 'Räknar…', () =>
-      supa.functions.invoke('fakturering', { body: { torrkorning: true, period } }));
-    const torrFel = torr.error || (torr.data && torr.data.error);
-    if (torrFel) { alert('Körningen gick inte att räkna: ' + await funktionsFel(torrFel)); return; }
-    const t = torr.data || {};
-    const fakt = t.fakturor || [];
-    const und = t.utbetalningar || [];
-    if (!fakt.length && !und.length) {
-      visaSvar('Det finns inget att skapa för ' + NXBetalning.periodText(t.period || period + '-01')
-        + ' just nu. Listan hämtas om.');
-      await efterKörning();
-      return;
-    }
-    const summa = lista => lista.reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
-    const ja = await bekräfta({
-      titel: 'Skapa fakturorna för ' + NXBetalning.periodText(t.period || period + '-01') + ' nu?',
-      text: (fakt.length ? (fakt.length === 1 ? 'En faktura' : fakt.length + ' fakturor') + ' på ' + kronor(summa(fakt)) : 'Ingen faktura')
-        + (und.length ? ' och studiehjälparnas underlag på ' + kronor(summa(und)) : '')
-        + '. Det här gör körningen i natt av sig själv. Allt blir utkast, och ingenting skickas: '
-        + 'fakturan läggs in i Fortnox under Lägg in i Fortnox.',
-      forhandsvisning: körningstext(t),
-      knapp: 'Skapa utkast'
-    });
-    if (!ja) return;
-    const res = await medan(k, 'Skapar…', () => supa.functions.invoke('fakturering', { body: { period } }));
-    const fel = res.error || (res.data && res.data.error);
-    if (fel) { alert('Körningen gick inte: ' + await funktionsFel(fel)); return; }
-    const d = res.data || {};
-    const nyaF = (d.skapade && d.skapade.fakturor) || 0;
-    const tillF = (d.tillagda && d.tillagda.fakturor) || 0;
-    const gjort = [];
-    if (nyaF) gjort.push(nyaF === 1 ? 'en ny faktura' : nyaF + ' nya fakturor');
-    if (tillF) gjort.push('pass tillagda på ' + (tillF === 1 ? 'ett utkast' : tillF + ' utkast'));
-    visaSvar(gjort.length ? 'Klart: ' + gjort.join(' och ') + '. De står under Lägg in i Fortnox.' : 'Körningen är gjord.');
-    await efterKörning();
-  });
+  /* SKAPA NU (2026-10-06) körde nattens körning från en rad under
+     Fakturor, Månadens ekonomi eller Att göra. Raderna var fakturans, och
+     knappen gick med den 2026-10-21; körningen för hand står kvar ovan. */
 
   /* Priset redigeras inte här — det gör tjänstekatalogen. Kvar är
      talet i månadskörningens ruta, som visar vad fakturering FAKTISKT
@@ -3256,8 +2459,8 @@
 
   /* Det andra områden anropar. */
   Object.assign(NXAdmin.rita, {
-    avvText, betRad, betalningsrader, familjefakturaRad, familjefakturor, fyllPerioder, kandidater, laddaBokslut, laddaOmEkonomi,
-    märkEkonomi, påminnKnapp, ritaAttGöra, ritaAvvikelser, ritaBokslut, ritaFakturor, ritaInställningar, ritaKortbetalningar,
+    avvText, betRad, betalningsrader, fyllPerioder, kandidater, laddaBokslut, laddaOmEkonomi,
+    märkEkonomi, påminnKnapp, ritaAttGöra, ritaAvvikelser, ritaBokslut, ritaInställningar, ritaKortbetalningar,
     ritaPris, ritaUtbetalningar, sättKörningsperiod, utanRapport, visaBetalningsmånad
   });
 })();

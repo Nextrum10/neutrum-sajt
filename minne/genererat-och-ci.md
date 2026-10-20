@@ -236,7 +236,8 @@ Körs på varje push och PR. Ska vara grön före merge.
 1. `node --check` på all JavaScript
 2. `node verktyg/testa-agent.js`
 3. `verktyg/kolla-betalningsvillkor.py` (betalningslöftet, och att det gamla är borta; `KORTET_RESERVERAS`
-   väljer meningen efter strömbrytaren `kortreservation`, som `FAKTURA_I_TEXTEN` efter `faktura`)
+   väljer meningen efter strömbrytaren `kortreservation`. Fakturameningen, meningen om de obetalda
+   passen och "tio dagar" står bland det gamla sedan 2026-10-21, då fakturan togs bort)
 4. `verktyg/kolla-migrationer.py`, och `verktyg/bygg-uppgifter.py --kolla`
    (uppgiftsbankens form, och att den har sin migration)
 5. `verktyg/kolla-csp.py` (fyra vyer sedan `/barn`, och `/lank` sedan
@@ -254,7 +255,9 @@ Körs på varje push och PR. Ska vara grön före merge.
 6. `verktyg/kolla-webp.py`, och `verktyg/kolla-mejltexter.py` (2026-10-05):
    nejet som läget Avböjd visar (`NEJ_MEJLET` i
    `nextrum-admin-rekrytering.js`) är samma som mejlet (`NEJ` i
-   `_delad/notiser/ansokan.ts`), fält för fält, och `verktyg/kolla-villkor.py`
+   `_delad/notiser/ansokan.ts`), fält för fält, och sedan 2026-10-21 också
+   intervjumejlet (`INTERVJU_MEJLET` mot `INTERVJU` i
+   `_delad/notiser/intervju.ts`), och `verktyg/kolla-villkor.py`
    (2026-10-07): användarvillkorens datum, på båda språken, är versionen i
    `intern.villkor_version()` i den senaste migrationen som skriver den
 7. `verktyg/satt-version.py --kolla`
@@ -455,8 +458,9 @@ villkor, ingen ruta för den som godkänt eller när funktionen saknas, och
 `/foralder`, utan att studsa. Tryckytorna mäts med `offsetHeight`: rutan glider fram med en skala.
 `prova-intag.js` provar raden i adminvyns panel.
 
-### Webbläsarprovet för familjens faktura (2026-10-06)
-`verktyg/prova-fakturor.js` är byggt som de nedan (egen port, 8964), med
+### Webbläsarprovet för familjens faktura (2026-10-06, borttaget 2026-10-21)
+Borttaget med fakturan 2026-10-21. Det som stod här:
+`verktyg/prova-fakturor.js` var byggt som de nedan (egen port, 8964), med
 klockan fast på 6 oktober 2026 (`page.clock.setFixedTime`): en rad per
 familj och månad under Betalningar → Fakturor, oktobers faktura som
 samlas och septembers utkast med det sena passet, att familjens namn
@@ -471,6 +475,21 @@ reserven när kolumnen saknas, rutan som visar nejet innan läget blir Avböjd,
 godkännandet i ansökan, frågan i Ta in i poolen, och att siffran vid
 Ansökningar och Intresseanmälningar går bort när sektionen visats, med och
 utan tabellen `admin_sett`.
+
+### Webbläsarprovet för utbildningsprovet i studiehjälparvyn (2026-10-21)
+`verktyg/prova-utbildningsprovet.js` (egen port, 8978) är byggt som
+introduktionens: en falsk Supabase med en studiehjälpare, en admin och fyra
+frågor. I studiehjälparvyn: rutan före vyn, inget facit i sidan, att alla
+frågor måste besvaras och att bara fråga → alternativ skickas, underkänt med
+tiden då provet går att göra om, godkänt med Fortsätt, den som väntar, den
+som inte behöver provet och en databas utan migrationen (ingen ruta), på en
+telefon och i mörkt läge (44 px, 16 px text, rutan ryms). I adminvyn: fliken
+Provet i vyn, varningen under fem frågor, facit markerat, en ny fråga som
+nekas och en som sparas, Stäng av under gränsen, gränsen som tal, och
+Utbildningsprovet i studiehjälparens panel med Nollställ provet. Det som
+skyddar provet prövas i `rls-test.sql` avsnitt 41; webbläsarprovet visar
+bara att vyerna gör rätt. `prova-ansokningar.js` provar sedan samma dag
+rutan som visar intervjumejlet innan en ansökan skickas vidare.
 
 ### Webbläsarprovet för barnkontona och adminbehörigheterna (2026-09-30)
 `verktyg/prova-barnkonton.js` kör barnets vy, NexLäx i barnets vy och
@@ -550,9 +569,9 @@ och provet tog Saras motförslag för familjens förslag (tre prov föll).
 `verktyg/prova-kortet.js` (port 8976) provar kortets vyer
 (`kortet_reserveras`) i förhandsvisningens värld, som har strömbrytaren
 på, Annas Visa ·· 4242 och `valj_kort` med databasens prövning: raden
-Betalning i förslaget och i granskningen av barnets förslag (kort,
-faktura, valet som står kvar), Välj kort och Välj bort på passets sida,
-fakturan före passet och kortet i stället, märket i Mina lektioner,
+Betalning i förslaget och i granskningen av barnets förslag (Efter passet
+och Kort, utan faktura sedan 2026-10-21, och valet som står kvar), Välj
+kort, Välj bort och Välj kort igen på passets sida, märket i Mina lektioner,
 Profil → Kortet, och lägena som jobbet och Stripe skriver (nekat,
 reserverat, ett genomfört pass under Bekräfta rapport), inskrivna i
 världen i webbläsarens lagring. Sedan strömbrytaren av och inget kort
@@ -583,3 +602,56 @@ adminvyn utan tabellerna. 63 prov.
 
 Flera prov samtidigt kan fälla `prova-ansokningar.js` på tid (den väntar
 800 ms på adminvyns siffror). Ensam går den igenom.
+
+### Webbläsarprovet för kassan, timbankens månader och Liggaren (2026-10-21)
+`verktyg/prova-kassan.js` (port 8979) provar Fas 3 mot en falsk Supabase, som
+`prova-familjerabatter.js`, med webbläsaren i Stockholms tid: timbankens två månader ("3 av 8
+timmar återstår", "0 av 0", textContent utan undefined), batteriet som bara räknar det som gäller,
+nästa månads plan som kommande, timmar som betalats tillbaka ("1 av 6"), månadsvalet på plankorten
+(förval, bara sin plan, kortet byter inte höjd, 44 px), rutan med köpvillkoren (vad som köps, priset
+och månaden, fokus på krysset, Till kassan stängd före krysset, Escape och Avbryt öppnar ingen kassa,
+länken), kassans anrop (planen, `manad`, `villkor: true`, aldrig ett belopp; Fyll timbanken utan
+månad), passets kassa, Profil → Timbanken, vyn utan migrationerna, tillbaka från Stripe (inga
+skrivningar utöver en vanlig sidladdning, adressen städad), telefonen och mörkt läge. I adminvyn
+Liggaren (summorna bara skarpa, raderna, filtren, sökningen, återbetalning av ett köp med timmar och
+aldrig ett belopp, telefonen) och Kortet (de nekade överst, försöken, nästa försök bara när koden
+tillåter, Försök igen) och adminvyn utan migrationerna. 83 prov. `prova-barnforslag.js` och
+`prova-forhandsvisning.js` kryssar sedan samma dag i köpvillkoren före kassan.
+`_delad/aterbetalning_test.ts` provar återbetalningen av ett köp med en falsk Stripe och databas
+(nyckeln, Stripe först, ett nej från databasen eller Stripe, webhookens avstämning, och att en
+återbetalning aldrig går under det som använts: `provaKopetsLage` prövar databasens svar innan
+pengar går ut). Sedan Fas 4 (samma dag) provar `prova-kassan.js` också hela kassan med en falsk
+Stripe.js (`js.stripe.com/v3/` byts mot ett skript med `initEmbeddedCheckout`): panelen öppnas med
+funktionens nyckel och sessionens hemlighet, och när Stripe säger klart står beskedet och vyn skriver
+ingenting själv.
+
+### Stripe utan nät: webhookens mottagning och kortets rader (2026-10-21)
+Leo bad om Stripe-logiken i rena moduler med en inskickad klient. `_delad/webhooken.ts` är webhookens
+mottagning (signaturen på den råa kroppen och taket mot dubbletter i `stripe_handelser`), och
+`webhooken_test.ts` provar en giltig och en ogiltig signatur, samma händelse två gånger med EN effekt,
+en leverans som föll och körs om, och en tabell som inte svarar. `_delad/reservationen.ts` är det
+`stripe-reservation` gör med en rad (reservera, dra, debitera, släppa), med 48-timmarsfönstret prövat
+en gång till (`reservationsfonster`, `passetsStart` i Stockholms tid), och `reservationen_test.ts`
+provar fönstret (före, exakt 48 timmar, efter, ett pass bokat närmare än så), reservationen, att inget
+dras två gånger, dragningen och dess tak, en reservation som gått ut, ett nekat kort, en bank som vill
+att familjen bekräftar, och släppet. Båda funktionerna gör samma sak som förut; koden flyttade.
+
+### Två samtidiga dragningar (2026-10-21)
+`verktyg/prova-samtidigt.sh` bygger en egen databas (`nextrum-samtidigt`, port 54330, med
+`lokal-databas.sh`) och låter två sessioner ta samma sista timme samtidigt: den första håller låset
+i två sekunder, den andra ska vänta, säga nej och lämna saldot på noll med en använd timme. `rls-test.sql`
+kan inte pröva lås, för den är en transaktion. Provat 2026-10-21: 6 av 6, och med låset i
+`klippkort_dra` bortlappat föll fyra av dem (båda passen tog timmen).
+
+### Koderna bara på planer (koder_for_planer, 2026-10-21)
+`_delad/koder.ts` är det kassan gör med en kod före Stripe (formen, nej på ett pass, ett tillägg, kortet och
+timmar till planen, bara en plan, databasens svar och kontrollen av rabatten), med databasen inskickad
+(`Kodklient`). `koder_test.ts` provar procent, kronor, noll och en rabatt över priset (samma exempel som
+`rls-test.sql` avsnitt 46 räknar i databasen), databasens nej (utgången, inte börjad, slut, en gång per
+familj, finns inte), en rabatt som inte stämmer med typen och värdet, ett fel och ett tomt svar, och vägen före
+migrationen (`kolla_rabattkod_kop`). I `rls-test.sql` skrevs avsnitt 28 och 32 om till den nya regeln (ett pass
+tar ingen kod, för någon; gränserna prövas på köpen), och avsnitt 46 är nytt: sort och partner, noll, inget
+raderas, prövningen i svensk tid, användningen vid betalningen, familjens partner och avidentifieringen, vem
+som når vad och statistiken med och utan testbetalningar. `prova-koder.js` provar flikarna under Koder
+(planskoderna) med ett partnernamn som bär en `<img onerror>`, och `prova-barnforslag.js` att Boka pass och
+granskningen inte har någon ruta för en kod och att Fyll timbanken aldrig visar ett pris med kod.

@@ -16,7 +16,7 @@
   const kronor = NXBetalning.kronor;
   const M = NXMedia;
 
-  const { ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DP, FAKT_LAGE, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
+  const { ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DP, KORT_LAGE, LEAD_LAGE, S, SH_LAGE, TILLAGG_LAGE,
           UTB_LAGE, elevHjälpare, elevNamn, funktionsFel, gmailAdress, hämtaAllt, hämtaMatchunderlag, kortDatum, läge,
           namnFör, närText, lägesväljare, pill, rad, ärRaderad, får, ärSuperadmin } = NXAdmin;
   /* Funktioner som bor i andra områden, nådda när de anropas. En som
@@ -186,6 +186,15 @@
         .select('parent_id, created_at').eq('tutor_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
       läggVillkor(id);
+      /* Utbildningsprovet i vyn (2026-10-21): läget, försöken och om
+         spärren gäller. Policyerna ger superadmin och den som får
+         godkänna studiehjälpare raderna. */
+      lägg('prov', supa.from('prov_studiehjalpare')
+        .select('kravs, utbildningsprov_godkant_at, aterstalld_at, undantagen, andrad_at').eq('id', id));
+      lägg('provForsok', supa.from('prov_forsok')
+        .select('id, inlamnad_at, ratt, antal, procent, godkand').eq('studiehjalpare_id', id)
+        .order('inlamnad_at', { ascending: false }).limit(20));
+      lägg('provLage', supa.rpc('utbildningsprovet_lage'));
     } else {
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
@@ -195,8 +204,8 @@
          S.chattar är en rad per tråd, och S.meddelanden är kapad
          till de 400 senaste i hela systemet — en familj som varit
          tyst en månad hade då fått en tom tidslinje trots att
-         tråden finns. Pass, fakturor, noteringar och uppgifter
-         ligger redan i minnet och hämtas inte om. */
+         tråden finns. Pass, noteringar och uppgifter ligger redan i
+         minnet och hämtas inte om. */
       lägg('anmalningar', supa.from('leads')
         .select('id, created_at, kontaktad_at, status, subject, tjanst, uppdrag_id')
         .eq('kund_id', id).order('created_at', { ascending: false }));
@@ -542,6 +551,28 @@
           + '<a href="#katalog/familjerabatter">Tjänster → Familjerabatter</a>.</p>');
   }
 
+  /* PARTNERN (koder_for_planer, 2026-10-21). Leo: "Partnerkopplingen
+     sparas också på familjen vid första användningen för uppföljning."
+     Partnerkoden familjen använde första gången den köpte en plan med en
+     (familjens_partner, skriven av databasen och aldrig ändrad), och
+     partnern är kodens. Utan koppling, eller utan migrationen, står
+     ingenting. */
+  function familjensPartner(p) {
+    const rad = (S.familjensPartner || {})[p.id];
+    if (!rad) return null;
+    const kod = (S.rabattkoder || []).find(k => k.kod === rad.kod) || null;
+    return { rad, partner: kod && kod.partner_namn ? kod.partner_namn : rad.kod };
+  }
+
+  function dpPartner(p) {
+    if (!fullAdmin()) return '';
+    const fp = familjensPartner(p);
+    if (!fp) return '';
+    return dpRubrik('Partner', 'sparas första gången familjen köper en plan med en partnerkod')
+      + dpRad(fp.partner, 'Koden ' + fp.rad.kod + ', första köpet ' + kortDatum(fp.rad.kopplad_at),
+        '<a class="btn btn-ghost btn-sm" href="#koder/partnerkoder">Partnerkoderna</a>');
+  }
+
   /* Kortet (kortet_reserveras, 2026-10-13): familjens sparade kort och
      passen där det valts och som inte är avgjorda. Kortet finns hos
      Stripe; här står märket, de sista fyra siffrorna och när det går ut.
@@ -664,15 +695,6 @@
         (b.duration_min || 60) + ' min'].filter(Boolean).join(' · '));
     });
 
-    const fakturor = S.fakturor.filter(f => f.parent_id === p.id);
-    fakturor.forEach(f => {
-      const period = NX.MANADER[Number(String(f.period).slice(5, 7)) - 1]
-        + ' ' + String(f.period).slice(0, 4);
-      lägg(f.created_at, 'Faktura skapad', period + ' · ' + kronor(f.belopp_ore));
-      lägg(f.skickad_at, 'Faktura skickad', period);
-      lägg(f.betald_at, 'Faktura betald', period + ' · ' + kronor(f.belopp_ore));
-    });
-
     (d.meddelanden || []).forEach(m => {
       /* namnFör svarar med ett tankstreck för en profil som inte
          finns kvar, aldrig med tomt — reservvärdet måste därför
@@ -691,8 +713,7 @@
     const mina = new Set([p.id]
       .concat((d.anmalningar || []).map(l => l.id))
       .concat(barn.map(e => e.id))
-      .concat(pass.map(b => b.id))
-      .concat(fakturor.map(f => f.id)));
+      .concat(pass.map(b => b.id)));
     (S.uppgifter || []).filter(u => u.kopplad_id && mina.has(u.kopplad_id)).forEach(u => {
       lägg(u.created_at, 'Uppgift skapad',
         tlKort(u.titel, 90) + (u.skapad_av_typ === 'manniska' ? '' : ' · automatisk'));
@@ -715,7 +736,7 @@
 
     if (!h.length) {
       return varning + tomt('Inget har hänt än',
-        'Anmälan, pass, fakturor och meddelanden dyker upp här allteftersom.');
+        'Anmälan, pass och meddelanden dyker upp här allteftersom.');
     }
 
     /* "Nytt" betyder det senaste dygnet, inte framtiden. Ett pass om
@@ -1067,43 +1088,27 @@
           + (ärFamilj ? 'Ingen studiehjälpare och ingen tråd än.' : 'Inga elever och ingen tråd än.') + '</p>');
   }
 
-  /* En faktura i familjens Ekonomi (2026-10-06): månaden, beloppet och
-     läget, och passen på den med dag, klocka och studiehjälpare. Posterna
-     är Betalningar → Fakturors (familjefakturor), så fakturan som samlas
-     under månaden står här också, med passen som läggs på den. */
-  function dpFaktura(x) {
-    const f = x.f;
-    const månad = NX.MANADER[Number(String(x.period).slice(5, 7)) - 1] || '';
-    const period = månad.charAt(0).toUpperCase() + månad.slice(1) + ' ' + String(x.period).slice(0, 4);
-    const läget = x.läge === 'samlas' ? pill('Samlas', 'ar-vantar')
-      : x.läge === 'skapas' ? pill('Ingen faktura än', 'ar-ny')
-      : x.läge === 'rapport' ? pill('Väntar på rapport', 'ar-vantar')
-      : läge(FAKT_LAGE, x.läge);
-    const passen = (x.pass || []).map(q => {
-      const b = q.b;
-      return dpRad((q.datum ? kortDatum(q.datum) : '—') + (b && b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : ''),
-        [b ? (b.tutor_id ? 'med ' + namnFör(b.tutor_id) : 'ingen studiehjälpare') : q.beskrivning,
-          b ? b.subject : null, b ? elevNamn(b.student_id) : null,
-          q.öre == null ? 'utan pris' : kronor(q.öre),
-          q.läge === 'rapport' ? 'ingen rapport än' : q.läge === 'natt' ? 'inte på fakturan än' : null]
-          .filter(v => v && v !== '—').join(' · '),
-        b ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="pass:' + esc(b.id) + '">Öppna</button>' : '');
-    }).join('');
-    return '<div class="dp-faktura">'
-      + dpRad(period, [kronor(x.belopp), x.antal === 1 ? '1 pass' : x.antal + ' pass',
-          f && f.fortnox_fakturanummer ? 'faktura ' + f.fortnox_fakturanummer : null,
-          f && f.forfaller ? 'förfaller ' + kortDatum(f.forfaller) : null].filter(Boolean).join(' · '), läget)
-      + (passen ? '<div class="dp-faktura-pass">' + passen + '</div>' : '')
-      + '</div>';
+  /* Intagen (2026-10-21): när familjen togs in och varifrån den kom, ur
+     anmälan som flyttades hit (intagna_anmalningar). En familj som togs
+     in före flytten, eller utan anmälan, har bara raden Intagen. */
+  function dpIntagen(p) {
+    const r = (S.intagenFör || {})[p.id];
+    if (!r) return [];
+    return [
+      ['Intagen', esc(kortDatum(r.intagen_at)) + (r.anmald_at ? ' <span class="xsmall">anmälde sig '
+        + esc(kortDatum(r.anmald_at)) + '</span>' : '')],
+      ['Kom via', kör('källText', r) ? '<span title="' + esc(kör('källTitel', r) || '') + '">'
+        + esc(kör('källText', r)) + '</span>' : null, 'okänt'],
+      ['Kod', r.kod ? esc(r.kod) : null, 'ingen'],
+      ['Ur anmälan', r.meddelande ? '<div class="dp-text">' + esc(r.meddelande) + '</div>' : null,
+        'gallrat eller tomt']
+    ];
   }
 
   function dpFamilj(p, d) {
     const barn = S.elever[p.id] || [];
     const pass = passFör(b => b.parent_id === p.id);
     const genomförda = pass.filter(b => b.status === 'completed');
-    const fakturor = S.fakturor.filter(f => f.parent_id === p.id);
-    const obetalt = fakturor.filter(f => f.status === 'skickad' || f.status === 'forfallen')
-      .reduce((n, f) => n + (f.belopp_ore || 0), 0);
     const idag = isoFor(new Date());
     const nästa = pass.filter(b => b.wanted_date >= idag && b.status !== 'cancelled').pop();
 
@@ -1118,6 +1123,7 @@
           + '<span>' + (t ? 'Studiehjälpare: ' + esc(t.full_name || t.email || '—')
                           : 'Ingen studiehjälpare') + '</span></div>'
           + '<span class="dp-rad-hoger">'
+          + (t ? pill('Matchad', 'ar-klar') : pill('Ej matchad', 'ar-ny')) + ' '
           + '<button class="btn btn-ghost btn-sm" data-dp="elev:' + esc(e.id) + '">Öppna</button>'
           + '</span></div>';
       }).join('');
@@ -1129,58 +1135,43 @@
       b.tutor_id ? 'med ' + namnFör(b.tutor_id) : null].filter(v => v && v !== '—').join(' · '));
 
     if (DP.flik === 'ekonomi') {
-      /* Fakturavalet (Fas 14.6). När strömbrytaren är på får alla
-         familjer välja faktura; det här är bromsen för en enda. En
-         familj som redan valt faktura behåller sina fakturapass. */
-      const spärrad = S.fakturaSparr && S.fakturaSparr.has(p.id);
-      /* Samma poster som Betalningar → Fakturor, också fakturan som
-         samlas under månaden. Utan ekonomifilen: fakturorna som de är. */
-      const fam = kör('familjefakturor');
-      const familjens = (Array.isArray(fam) ? fam.filter(x => x.parent === p.id)
-        : fakturor.map(f => ({ f, period: String(f.period).slice(0, 7) + '-01', läge: NXBetalning.fakturaLage(f),
-          belopp: f.belopp_ore, antal: (f.invoice_lines || []).length, pass: [] })))
-        .sort((a, b) => b.period.localeCompare(a.period));
-      const fakturapass = pass.filter(b => b.betalning_status === 'faktura' && b.status !== 'cancelled').length;
+      /* Fakturorna och fakturaspärren stod här från Fas 14.6 till
+         2026-10-21. Nu: hur passen är betalda, timbanken, rabatten och
+         kortet. Obetalda är avvikelsen ej_betalt, samma som Att göra. */
+      const obetalda = (S.avvikelser || []).filter(a => a.typ === 'ej_betalt' && a.kund_id === p.id).length;
+      const betalda = pass.filter(b => b.betalning_status === 'betald' || b.betalning_status === 'tvist').length;
       return dpTal([
-        [kronor(obetalt), 'Utestående'],
-        [fakturor.length, 'Fakturor'],
-        [fakturapass, 'Pass mot faktura']
+        [obetalda, 'Hållna, inte betalda'],
+        [betalda, 'Betalda pass']
       ])
       + dpTimbank(p)
       + dpRabatt(p)
-      + dpKortet(p, d)
-      + dpRubrik('Faktura som betalsätt')
-      + dpRad(spärrad ? 'Avstängd för den här familjen' : 'Tillåten',
-          spärrad ? 'Familjen kan bara betala med kort. Pass som redan valts för faktura faktureras ändå.'
-            : (S.fakturaFlagga && S.fakturaFlagga.aktiv ? 'Familjen kan välja faktura på ett pass.'
-              : 'Faktura är avstängt för alla just nu, under Betalningar → Inställningar.'),
-          ärSuperadmin()
-            ? '<button class="btn btn-ghost btn-sm" type="button" data-fakturasparr="' + esc(p.id) + '" data-sparra="'
-              + (spärrad ? '0' : '1') + '">' + (spärrad ? 'Tillåt faktura' : 'Stäng av faktura') + '</button>'
-            : '')
-      + dpRubrik('Fakturor', 'en per månad')
-      + (familjens.length ? familjens.map(dpFaktura).join('')
-        : tomt('Inga fakturor', 'Familjen betalar med kort, eller har inte valt faktura på något pass än.'));
+      + dpPartner(p)
+      + dpKortet(p, d);
     }
 
     if (DP.flik === 'tidslinje') return dpTidslinje(p, d);
 
     if (DP.flik === 'anteckningar') return dpNoteringar(p.id, d);
 
+    /* Utestående var de skickade fakturorna till 2026-10-21. Nu är det
+       de hållna passen som inte är betalda, som under Ekonomi. */
     return dpTal([
       [barn.length, barn.length === 1 ? 'Barn' : 'Barn'],
       [genomförda.length, 'Genomförda pass'],
-      [kronor(obetalt), 'Utestående']
+      [(S.avvikelser || []).filter(a => a.typ === 'ej_betalt' && a.kund_id === p.id).length, 'Hållna, inte betalda']
     ])
     + dpRubrik('Kontakt')
     + dpFakta([
       ['E-post', dpMejl(p.email)],
       ['Telefon', dpTelefon(p.phone)],
       ['Konto skapat', p.created_at ? esc(kortDatum(p.created_at)) : null],
+      ...dpIntagen(p),
       ['Senast inloggad', dpSenast(p)],
       ['Användarvillkoren', dpVillkor(d), 'okänt'],
       ['Första timmen gratis', dpFörstaTimmen(d), 'okänt'],
       ...(fullAdmin() ? [['Timbanken', dpTimbankKort(p), 'okänt'], ['Familjerabatt', dpRabattKort(p), 'okänt']] : []),
+      ...(fullAdmin() && familjensPartner(p) ? [['Partner', esc(familjensPartner(p).partner), 'okänt']] : []),
       ['Om familjen', p.bio ? esc(p.bio) : null]
     ])
     + dpRubrik('Nästa pass')
@@ -1299,7 +1290,7 @@
     const veckor = u.veckor || [], under = veckor.filter(v => v.under);
     const lista = (rader, tom, rita) => rader.length ? rader.map(rita).join('')
       : '<p class="xsmall" style="margin:0 0 12px;color:var(--bl-3)">' + esc(tom) + '</p>';
-    const betalt = (u.obetalda || []).length + (u.sena_fakturor || []).length;
+    const betalt = (u.obetalda || []).length;
     return '<div class="dp-underlag" style="margin:6px 0 18px">'
       + '<p class="xsmall" style="margin:0 0 12px;line-height:1.6;color:var(--bl-3)">'
       + esc((u.fran ? 'Från första passet ' + kortDatum(u.fran) : 'Inget pass efter anmälan än') + ' till ' + kortDatum(u.till)
@@ -1342,10 +1333,7 @@
       + dpRubrik('Betalningarna')
       + (betalt
         ? (u.obetalda || []).map(x => dpRad(kortDatum(x.datum), 'passet är inte betalt', pill('Obetalt', 'ar-ny'))).join('')
-          + (u.sena_fakturor || []).map(x => dpRad('Fakturan för ' + kortDatum(x.period).replace(/^1 /, ''),
-              'förföll ' + kortDatum(x.forfaller) + (x.betald ? ', markerad betald ' + kortDatum(x.betald) : ', inte betald'),
-              pill('Sen', 'ar-ny'))).join('')
-        : lista([], 'Alla pass är betalda, och ingen faktura betalades sent.', null))
+        : lista([], 'Alla pass är betalda.', null))
       + dpRubrik('Bedöms av er')
       + '<ul class="xsmall" style="margin:0 0 12px;padding-left:18px;line-height:1.6">'
       + BEDÖMS.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>'
@@ -1437,7 +1425,7 @@
     if (DP.flik === 'rapporter') {
       const r = d.rapporter || [];
       if (!r.length) return tomt('Inga rapporter än',
-        'Studiehjälparen skriver en efter varje pass. Utan den faktureras inte passet.');
+        'Studiehjälparen skriver en efter varje pass. Utan den räknas passet inte som genomfört.');
       return r.map(x => '<div style="margin-bottom:18px">'
         + dpRubrik(kortDatum(x.lesson_date))
         + dpFakta([
@@ -1537,7 +1525,7 @@
             NX.MANADER[Number(String(u.period).slice(5, 7)) - 1] + ' ' + String(u.period).slice(0, 4),
             kronor(u.belopp_ore) + ' · ' + NXBetalning.timmar(u.minuter || 0),
             läge(UTB_LAGE, u.status))).join('')
-        : tomt('Inga underlag än', 'De skapas av faktureringskörningen efter varje månad.'));
+        : tomt('Inga underlag än', 'De skapas av månadskörningen efter varje månad.'));
     }
 
     if (DP.flik === 'anteckningar') return dpNoteringar(p.id, d);
@@ -1581,6 +1569,7 @@
       ? '<button class="btn btn-ghost btn-sm" type="button" data-sh-kontakt="' + esc(p.id) + '">Kontakta</button>'
       : '')
     + '</div>'
+    + dpProvet(p, d)
     + dpChattar(p, d, 'studiehjalpare')
     + dpDokument(p)
     + dpHantera('studiehjalpare', p, {
@@ -1590,6 +1579,77 @@
           + 'bokföringen och lönen. Elever ska matchas om först.'
       });
   }
+
+  /* Utbildningsprovet i studiehjälparvyn (2026-10-21): om det krävs, när
+     det godkändes, och försöken med poängen (aldrig svaren). Nollställ
+     och Kräv provet för den som får godkänna studiehjälpare. Utan
+     migrationen, eller utan läsrätt, står ingenting. */
+  function dpProvet(p, d) {
+    if (d.provSaknas || d.provForsokSaknas || d.provFel) return '';
+    const st = (d.prov || [])[0] || null;
+    const försök = d.provForsok || [];
+    const lage = d.provLage && !Array.isArray(d.provLage) ? d.provLage : null;
+    const godkänt = st && st.utbildningsprov_godkant_at;
+    const krävs = !st || st.kravs !== false;
+    const läget = godkänt ? 'Godkänt ' + kortDatum(godkänt)
+      : !krävs ? 'Krävs inte' + (st && st.undantagen ? ' (' + st.undantagen + ')' : '')
+      : 'Krävs, inte godkänt än';
+    const spärr = lage && !lage.sparr_galler && krävs && !godkänt
+      ? 'Gäller inte än: ' + lage.aktiva + ' aktiva frågor, och spärren börjar vid ' + lage.min_aktiva_fragor + '.'
+      : null;
+    const kan = får('studiehjalpare_godkann');
+    return dpRubrik('Utbildningsprovet', 'görs vid första inloggningen')
+      + dpFakta([
+        ['Läget', esc(läget)],
+        ...(spärr ? [['Spärren', esc(spärr)]] : []),
+        ...(st && st.aterstalld_at ? [['Nollställt', esc(kortDatum(st.aterstalld_at))]] : [])
+      ])
+      + försök.map(f => dpRad(kortDatum(f.inlamnad_at), f.ratt + ' av ' + f.antal + ' rätt',
+          f.godkand ? pill('Godkänt', 'ar-klar') : pill('Underkänt', 'ar-ny'))).join('')
+      + (kan
+        ? '<div class="dp-atgard">'
+          + (godkänt || försök.length
+            ? '<button class="btn btn-ghost btn-sm" type="button" data-prov-aterstall="' + esc(p.id) + '">'
+              + 'Nollställ provet</button>'
+            : '')
+          + '<button class="btn btn-ghost btn-sm" type="button" data-prov-krav="' + esc(p.id) + ':'
+          + (krävs ? 'nej' : 'ja') + '">' + (krävs ? 'Kräv inte provet' : 'Kräv provet') + '</button>'
+          + '</div>'
+        : '');
+  }
+
+  document.addEventListener('click', async e => {
+    const nollställ = e.target.closest('[data-prov-aterstall]');
+    const krav = e.target.closest('[data-prov-krav]');
+    if (!nollställ && !krav) return;
+    const knapp = nollställ || krav;
+    const id = nollställ ? nollställ.dataset.provAterstall : krav.dataset.provKrav.split(':')[0];
+    const på = krav ? krav.dataset.provKrav.split(':')[1] === 'ja' : null;
+    const vem = namnFör(id);
+    const ja = await bekräfta(nollställ
+      ? { titel: 'Nollställa provet för ' + vem + '?',
+          text: vem + ' gör om provet vid nästa inloggning, utan väntetid, och kommer inte åt elever, pass och '
+            + 'meddelanden förrän det är godkänt. Försöken står kvar.',
+          knapp: 'Nollställ', avbryt: 'Avbryt' }
+      : på
+        ? { titel: 'Kräva provet av ' + vem + '?',
+            text: 'Har ' + vem + ' inte klarat provet stängs elever, pass och meddelanden tills det är godkänt.',
+            knapp: 'Kräv provet', avbryt: 'Avbryt' }
+        : { titel: 'Ta bort kravet för ' + vem + '?',
+            text: vem + ' kommer in i studiehjälparvyn utan provet.',
+            knapp: 'Ta bort kravet', avbryt: 'Avbryt' });
+    if (!ja) return;
+    await medan(knapp, '…', async () => {
+      const { error } = nollställ
+        ? await supa.rpc('aterstall_utbildningsprov', { p_studiehjalpare: id })
+        : await supa.rpc('satt_provkrav', { p_studiehjalpare: id, p_kravs: på });
+      if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
+      delete S.detaljCache['studiehjalpare:' + id];
+      await hämtaDetalj('studiehjalpare', id);
+      if (DP.typ === 'studiehjalpare' && DP.id === id) ritaDetalj();
+      if (NXAdmin.rita.ritaProvet) NXAdmin.rita.ritaProvet();
+    });
+  });
 
   function dpNoteringar(profilId, d) {
     // admin_noteringar läser och skriver bara en superadmin.
@@ -1671,6 +1731,12 @@
       + (l.status !== 'matched' && ärSuperadmin()
         ? '<button class="btn btn-primary btn-sm" type="button" data-lead-elev="' + esc(l.id) + '">'
           + (familj ? 'Skapa elev' : 'Ta in familjen') + '</button>'
+        : '')
+      /* Intagen men kvar i listan (intagen före 2026-10-21, eller flytten
+         föll): flytta den till familjen, som Ta in familjen gör sist. */
+      + (l.status === 'matched' && familj && ärSuperadmin()
+        ? '<button class="btn btn-primary btn-sm" type="button" data-lead-intag="' + esc(l.id) + '">'
+          + 'Flytta till familjen</button>'
         : '')
       + '</div>'
       + dpHantera('anmalan', l, {
@@ -1774,7 +1840,7 @@
       ? 'Namnet och allt familjen och studiehjälparen skrev om barnet är borta. Rapporterna står kvar utan text, för att studiehjälparens lön räknas på dem.'
       : typ === 'studiehjalpare'
         ? 'Namnet, kontaktuppgifterna, profilen och inloggningen är borta. Rapporterna och underlagen står kvar, för lönen och bokföringen.'
-        : 'Namnet, kontaktuppgifterna, inloggningen och barnens uppgifter är borta. Passen, fakturorna och köpen av timmar står kvar, för bokföringen.';
+        : 'Namnet, kontaktuppgifterna, inloggningen och barnens uppgifter är borta. Passen och köpen av timmar står kvar, för bokföringen.';
     return '<div class="dp-text">Raderad ' + esc(kortDatum(p.raderad_at)) + '. ' + esc(vad)
       + ' Det sparas i sju år (bokföringslagen).</div>'
       + dpRubrik('Pass', pass.length ? String(pass.length) : '')
@@ -2142,33 +2208,6 @@
   /* En lyssnare för hela materialrutan: typväxlaren, AI-knappen,
      "Använd den här" och borttagningen. Panelen ritas om i sin
      helhet vid varje flikbyte, så inget får bindas vid uppritning. */
-  /* Fakturaspärren för en familj (Fas 14.6). En rad i faktura_sparr
-     betyder avstängd; bara admin skriver, och databasen prövar det. */
-  document.addEventListener('click', async ev => {
-    const k = ev.target.closest('[data-fakturasparr]');
-    if (!k) return;
-    const id = k.dataset.fakturasparr;
-    const stäng = k.dataset.sparra === '1';
-    if (stäng) {
-      const ja = await bekräfta({
-        titel: 'Stäng av faktura för familjen?',
-        text: namnFör(id) + ' kan då bara betala med kort. Pass de redan valt faktura för faktureras ändå, '
-          + 'och kan betalas med kort om de byter själva.',
-        knapp: 'Stäng av'
-      });
-      if (!ja) return;
-    }
-    await medan(k, 'Sparar…', async () => {
-      const { error } = stäng
-        ? await supa.from('faktura_sparr').insert({ parent_id: id })
-        : await supa.from('faktura_sparr').delete().eq('parent_id', id);
-      if (error && error.code !== '23505') { alert('Kunde inte ändra: ' + felText(error)); return; }
-      const { data } = await supa.from('faktura_sparr').select('parent_id');
-      S.fakturaSparr = new Set((data || []).map(r => r.parent_id));
-      ritaDetalj();
-    });
-  });
-
   document.addEventListener('click', async ev => {
     const typ = ev.target.closest('[data-dp-mat-typ]');
     if (typ) {
@@ -2375,11 +2414,10 @@
         const tp = S.tutorProfiler[DP.id] || {};
         märken = läge(SH_LAGE, tp.status);
       } else {
-        const barn = S.elever[DP.id] || [];
-        const matchade = barn.filter(e => e.matched_tutor_id && e.match_status === 'matched').length;
-        märken = pill(barn.length
-          ? matchade + ' av ' + barn.length + (barn.length === 1 ? ' barn matchat' : ' barn matchade')
-          : 'Inga barn inlagda', matchade === barn.length && barn.length ? 'ar-klar' : 'ar-ny');
+        /* Familjen är intagen; matchad är barnet (2026-10-21). Barnen
+           står med sin studiehjälpare under fliken Barn. */
+        const intagen = (S.intagenFör || {})[DP.id];
+        märken = pill(intagen ? 'Intagen ' + kortDatum(intagen.intagen_at) : 'Intagen', 'ar-klar');
       }
       if (person.is_admin) märken += ' ' + pill('Admin', 'ar-vantar');
     }
@@ -2681,8 +2719,9 @@
 
 
   /* Det andra områden anropar. stängDetalj anropas av raderingen, som
-     inte har något kvar att visa efteråt. */
+     inte har något kvar att visa efteråt, och öppnaDetalj av Flytta till
+     familjen, som visar familjen anmälan flyttades till. */
   Object.assign(NXAdmin.rita, {
-    ritaDetalj, stängDetalj
+    ritaDetalj, stängDetalj, öppnaDetalj
   });
 })();
