@@ -439,16 +439,22 @@ Läxor och Meddelanden. En enda elev väljs inte; kortet säger bara vem.
 ## Utbildningsprovet i studiehjälparvyn (2026-10-21, `utbildningsprovet_i_studiehjalparvyn`, i drift sedan 2026-10-20)
 
 Leo: ett prov som studiehjälparen gör vid första inloggningen, innan studiehjälparvyn öppnas. Mer än 50 %
-rätt är godkänt och gränsen står i en inställning; provet görs en gång; den som inte klarar det gör om det
+rätt är godkänt (55 % sedan 2026-10-20) och gränsen står i en inställning; provet görs en gång; den som inte klarar det gör om det
 efter 24 timmar, och admin kan nollställa. Rättningen sker på servern, facit når aldrig webbläsaren, och
 spärren står i databasen. Den gäller först när det finns minst fem aktiva frågor (till dess en varning i
 adminvyn), de som var godkända före migrationen slipper, och admin slår på och av kravet per person.
+De två som slapp har alltså inte gjort något prov, fast FAQ:n och Så fungerar Nextrum säger att alla studiehjälpare
+klarat ett prov innan de matchas. Leo 2026-10-20: "Alla kommer att utbildas snart". Texten stämmer för dem först
+när Kräv provet slagits på och de klarat det, och medan kravet gäller ser de inga elever.
 
-Det är **inte** provet i rekryteringen (`utbildningsprov.html`, `applications.prov_*`, `minne/notiser.md`,
-Utbildningsprovet, Fas 22.1), som den som söker gör genom en länk innan hen har ett konto. Båda finns nu, och
-om det gamla ska bort är Leos fråga.
+**Det är det enda provet sedan 2026-10-21.** Provet i rekryteringen (Fas 22.1: `utbildningsprov.html`, som den som
+sökte skulle göra genom en länk innan hen hade ett konto) togs bort med `provet_i_ansokan_tas_bort`, Leos svar
+samma kväll ("ta bort gamla"); ingen hade gjort det. Utbildningsmötet öppnar inget och mejlar inget, och Markera
+utbildad frågar först och mejlar sista steget. Vad som gick och vad som står kvar som historik:
+`minne/notiser.md`, Utbildningsprovet i ansökan.
 
-**Tabellerna.** `prov_installning` (en rad: `grans_procent` 50, `min_aktiva_fragor` 5, `vantetid_timmar` 24),
+**Tabellerna.** `prov_installning` (en rad: `grans_procent` 55 sedan 2026-10-20, 50 till dess, `min_aktiva_fragor`
+5, `vantetid_timmar` 24),
 `prov_fragor` (frågan, 2–6 alternativ, `ratt_svar` som index, `aktiv`, `ordning`), `prov_forsok` (varje
 inlämnat försök med svaren och vilka som var rätt) och `prov_studiehjalpare` (läget per person: `kravs`,
 `utbildningsprov_godkant_at`, `aterstalld_at`, `undantagen`). **Läget står inte på `tutor_profiles`**:
@@ -471,13 +477,16 @@ Familjerna och admins spärras aldrig.
 nu (`kravs` är spärren, inte kolumnen). `lamna_in_utbildningsprov(p_svar)` låser personens rad, prövar spärren,
 att provet inte redan är klarat och att väntetiden gått, kräver ett heltal för varje aktiv fråga (frågas en ny
 fråga in medan någon skriver får hen "Svara på alla frågor" och läser in sidan igen), sparar försöket och svarar
-bara `{ratt, antal, godkand}`. Godkänt är **mer än** gränsen: med 50 % och sex frågor är tre rätt underkänt.
+bara `{ratt, antal, godkand}`. Godkänt är **mer än** gränsen: med 50 % och sex frågor är tre rätt underkänt,
+och med 55 % och 26 frågor krävs 15. Mer än och minst 55 % skiljer sig bara när antalet aktiva är 20, 40, 60
+eller 80.
 `spara_provfraga()` och `satt_provinstallning()` är superadminens; `satt_provkrav()`, `aterstall_utbildningsprov()`
 och `utbildningsprovet_lage()` också den med behörigheten Godkänna. En nollställning sätter `aterstalld_at` och
 tar bort godkännandet: försöken står kvar men räknas inte för väntetiden. Ingen fråga tas bort, den stängs av.
 
 **Vyn.** `nextrum-provet.js` (`NXProvet.förstGörs`) körs i studiehjälparvyns start för en godkänd
-studiehjälpare, före introduktionen. Rutan är samma som lösenordets och villkorens och går inte att stänga:
+studiehjälpare, direkt efter lösenordet och före villkoren och introduktionen (2026-10-20, Leo: "först välja
+lösenord och sen provet"; förut kom villkoren före provet). Rutan är samma som lösenordets och villkorens och går inte att stänga:
 frågorna som radioknappar, Lämna in, och sedan godkänt med Fortsätt eller underkänt med tiden då provet går att
 göra om och Logga ut. Svarar databasen inte, eller saknas funktionen, visas ingen ruta.
 
@@ -485,8 +494,26 @@ göra om och Logga ut. Svarar databasen inte, eller saknas funktionen, visas ing
 inte gäller än, frågorna med det rätta svaret markerat, Lägg till fråga, Stäng av och Slå på (frågar först om
 det tar spärren under gränsen), gränsen, spärren och väntetiden, och studiehjälparna med sitt läge. I
 studiehjälparens panel (Översikt) står Utbildningsprovet med läget, försöken och Nollställ provet och Kräv
-provet eller Kräv inte provet. **Frågorna skriver Leo**: ingen migration lägger in frågor, och inga påhittade
-frågor ska in i driften.
+provet eller Kräv inte provet.
+
+**Frågorna kommer ur Handledarhandboken** (2026-10-20, Leo, med handboken som PDF: "provet ska vara utformat
+efter det dokumenten, 55% rätt för godkänd"). 34 frågor med fyra alternativ, i handbokens ordning, lagda med
+`supabase/scripts/provets-fragor-ur-handboken.sql`, som inte är en migration och inte registreras. 26 är provet i
+ansökan ord för ord (`_delad/utbildningsprov.ts`, borttagen 2026-10-21) och 8 är nya för det som där saknar fråga, med sidan i
+handboken i filen. **Fyra av de nya står avstängda**: interleaving, psykisk ohälsa, den aggressiva föräldern och
+att dokumentera objektivt. Leo tog bort frågorna om de ämnena ur provet i ansökan 2026-10-02, efter att ha gjort
+det själv (`minne/notiser.md`, Utbildningsprovet i ansökan), så bara Leo slår på dem. Provet visar alternativen i den
+ordning de står (`mitt_utbildningsprov()` blandar inte), så det rätta står på olika platser, och att alltid välja
+det längsta ger 2 rätt av 30.
+
+**Samma kväll blev de 26 lättare frågor** (Leo: "ta bort gamla och ersätt med nya på 26 frågor, 55% rätt släpper
+in läxhjälparen i sin vy, provet ska bara göras en gång, vid aktivering av konto ... gör provet relativt lätt"),
+med `supabase/scripts/provets-fragor-latta.sql`: samma 26 ämnen som provet i ansökan, kortare frågor, tre
+alternativ, det rätta nära handbokens ord och de fel som går emot den. Raderna skrevs över där de stod (ingen hade
+gjort provet), och de åtta som blev över står avstängda sist. Det rätta är längst i 8 frågor, kortast i 9 och
+mittemellan i 9, och ingen tumregel ger mer än 9 av de 15 rätt som krävs. En fråga ändras i vyn, aldrig i
+filerna, och ändras handboken läses frågorna om. Ingen migration lägger in frågor, och inga påhittade frågor
+ska in i driften.
 
 ## Studiehjälparen utåt och omdömena
 

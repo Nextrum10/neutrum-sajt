@@ -392,8 +392,8 @@ select jobname, schedule, active from cron.job where jobname = 'admin-paminnelse
 I drift sedan kvällen 2026-10-20, i den här ordningen: `notis-ko` v29 (med bokningslänken i mejlet), sedan
 `intervjumejlet` och `utbildningsprovet_i_studiehjalparvyn` med resten av PR #307 (`DEPLOY-BETALNING.md` 9.21). De fyra
 ansökningar som skickades vidare under minuten innan migrationen fick mejlet för hand samma kväll, på Leos ord
-(`minne/notiser.md`), provet har inga frågor än, och de två godkända studiehjälparna är undantagna. Steg 6 och 7
-nedan är kvar.
+(`minne/notiser.md`), provet fick 26 lätta frågor ur handboken samma kväll (steg 7), och de två godkända
+studiehjälparna är undantagna. Steg 6 nedan är kvar.
 
 Två saker som hör till rekryteringen och går ut tillsammans: mejlet till den som går vidare till intervju
 (`20261021100000_intervjumejlet`) och provet som en godkänd studiehjälpare gör före studiehjälparvyn
@@ -422,9 +422,32 @@ migrationen, för där finns inga sådana rader.
 6. **Prova mejlet i sandlådan.** Sätt `notis_drift.mejl_sandlada`, skicka en provansökan vidare till intervju i
    adminvyn (rutan visar mejlet först) och läs mejlet i sandlådan: ämnet börjar med "[Prov till sökande]".
    Skicka sedan samma ansökan vidare igen: inget nytt mejl. Töm sandlådan efteråt.
-7. **Skriv frågorna** under Ansökningar → Provet i vyn. Spärren gäller först när fem frågor är aktiva, och
-   varningen överst säger hur många som saknas. Studiehjälparna som var godkända när migrationen kördes slipper
+7. **Frågorna** (gjort 2026-10-20): 34 ur Handledarhandboken med `supabase/scripts/provets-fragor-ur-handboken.sql`,
+   ersatta samma kväll av 26 lättare (`provets-fragor-latta.sql`), och gränsen 55 (`minne/affaren.md`). Spärren gäller sedan dess; nya frågor skrivs under
+   Ansökningar → Provet i vyn. Studiehjälparna som var godkända när migrationen kördes slipper
    provet; slå på kravet för någon av dem i listan eller i personens panel om de ska göra det.
 
 Kvar efter det: säg till studiehjälparna att provet kommer vid nästa inloggning (de nya får det direkt), och
 låt juristen läsa rad 31 i `DATASKYDD.md` och policyns stycke om provet.
+
+## 9. Provet i ansökan tas bort (2026-10-21, PR #312)
+
+Leo 2026-10-20: "ta bort gamla och ersätt med nya på 26 frågor ... provet ska bara göras en gång, vid aktivering
+av konto". Det som går och det som står kvar står i `minne/notiser.md` (Utbildningsprovet i ansökan). Ingen hade
+gjort provet, så ingen påverkas.
+
+**Ordningen är migrationen först, `ansokan-notis` sedan.** Den nya `ansokan-notis` känner inte provets tre steg och
+skriver en sådan rad som ett okänt steg; med migrationen körd köas inga. Körs funktionen först och någon bockar av
+ett utbildningsmöte innan migrationen är körd, köar den gamla triggern ett provmejl som aldrig går fram.
+
+1. **Merga.** Vyerna tål ordningen: adminvyn läser inte längre provets kolumner eller försök. Men tills steg 2 är
+   kört öppnar ett avbockat utbildningsmöte fortfarande provet i databasen och mejlar en länk till en sida som inte
+   finns längre, så kör steg 2 direkt efter merge och bocka inte av något utbildningsmöte innan dess.
+2. **`provet_i_ansokan_tas_bort`** (20261021160000), hämtad från merge-commiten och prövad mot sin md5. Inget
+   `drop` och inget `delete`: kör den hel i ett do-block och registrera filens text. Vakten stannar om ett prov är
+   öppet, om ett provmejl står i kön eller om `intern.ansokan_besked` ändrats (md5 `9d0ea3e3…`). Efteråt ska
+   `intern.ansokan_besked` ha md5 `f69babe7…`, som en databas byggd ur filerna.
+3. **`ansokan-notis`** från merge-commiten. Hämta tillbaka och jämför byte för byte.
+4. **Hela `rls-test.sql`** mot driften, tillbakarullat, och advisorn: inget nytt för `anon`.
+5. **Leo tar bort edge-funktionen `utbildningsprov`** i Supabases panel (Edge Functions → utbildningsprov → Delete).
+   Verktygen kan inte ta bort en funktion, och med migrationen körd når den ingenting.

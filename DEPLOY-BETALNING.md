@@ -1863,6 +1863,6 @@ Leo: "Merga och driftsätt hela kedjan". En session körde den, och de andra fic
    uttryckliga ja (verktygets bekräftelse syntes inte; `minne/databasen.md`).
 7. **Efteråt**: `rls-test.sql` 1897 av 1897 mot driften, tillbakarullat, och advisorn utan något nytt för `anon`.
 
-Kvar, och Leos: fem frågor till utbildningsprovet, Stripes Apple Pay
+Kvar, och Leos (utbildningsprovet fick sina frågor samma kväll, `DEPLOY-NOTISER.md` 8): Stripes Apple Pay
 och Google Pay med domänerna (9.19 steg 7), provköpen i testläge (9.19 steg 7 och 9.20 steg 5), att säga till
 familjerna (villkoren, planerna per kalendermånad, koderna bara på planer) och studiehjälparna (provet), och juristen.

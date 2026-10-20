@@ -163,8 +163,8 @@
          nämner den hade annars tömt raden ovanför. */
       lägg('passRabatt', supa.from('bookings').select('familjerabatt_ore').eq('id', id));
     } else if (typ === 'anmalan' || typ === 'ansokan') {
-      /* Allt om en anmälan eller en ansökan finns redan i S: raden,
-         besöken i mejlkön och provförsöken. Ingen fråga till. */
+      /* Allt om en anmälan eller en ansökan finns redan i S: raden och
+         besöken i mejlkön. Ingen fråga till. */
     } else if (typ === 'chatt') {
       /* Genom chatt_las() och inte en select: funktionen skriver
          öppningen i auditloggen i samma transaktion som den läser. */
@@ -1758,9 +1758,6 @@
     const epost = String(a.email || '').toLowerCase();
     const konto = epost && Object.values(S.personer).find(p =>
       p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost);
-    /* Öppna provet härifrån (2026-09-29): steg 3 i fliken Rekryteringen
-       låg nedanför skärmkanten, och här stod bara "Inte öppnat". */
-    const provKnapp = kör('provKnapp', a) || '';
     /* Skicka vidare till intervju, eller därifrån till utbildning, under
        läget (2026-10-15): nästa steg är knappen att trycka på, så Ta in i
        poolen är det bara när inget steg står kvar före den. */
@@ -1795,8 +1792,7 @@
           const [år, mån] = String(b.period).split('-').map(Number);
           return esc(NXBetalning.kronor(b.belopp_ore) + ', ' + l + ', i lönen den 25 '
             + NXStudie.månadsNamn(NXStudie.månadIso(new Date(år, mån, 1, 12))));
-        })()]] : []),
-        ['Provet', esc(kör('provKort', a) || '') + (provKnapp ? ' ' + provKnapp : '')]
+        })()]] : [])
       ])
       + dpRubrik('Varför hen söker')
       + (text ? '<div class="dp-text">' + esc(text) + '</div>' : tomt('Inget skrivet', ''))

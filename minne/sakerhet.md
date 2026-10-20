@@ -580,8 +580,9 @@ kör `verktyg/satt-version.py`.
   `?kod=` i intresseanmälan är en familjs tipskod, och i jobbansökan
   (2026-10-13) en studiehjälpares. **En sida med en
   nyckel i adressen laddar inte `nextrum-samtycke.js` alls**:
-  `utbildningsprov` (`?t=`, provets nyckel) och `avanmal` (`?t=`,
-  avregistreringen, som aldrig går ut). `avanmal` sa i sin kommentar
+  `avanmal` (`?t=`, avregistreringen, som aldrig går ut), och till
+  2026-10-21 `utbildningsprov` (`?t=`, provets nyckel), som gick med
+  provet i ansökan. `avanmal` sa i sin kommentar
   att den inte mättes men laddade rutan ändå fram till 2026-10-11.
 - **Källspårningen hör till annonser.** Med ett ja minns
   webbläsaren landningen tills fliken stängs (sessionStorage

@@ -3158,13 +3158,14 @@ select pg_temp.prova('16.1 och ingen kan markera ett besked skickat', '00000000-
   'nekad');
 
 -- ------------------------------------------------------------
--- Fas 22.1: utbildningsprovet
+-- Fas 22.1: utbildningsprovet i ansökan, borttaget 2026-10-21
 -- ------------------------------------------------------------
+-- Provet görs bara i studiehjälparvyn, direkt efter lösenordet (avsnitt
+-- 41), sedan provet_i_ansokan_tas_bort. Kolumnerna och tabellen står kvar
+-- som historik, och skydden runt dem gäller som förut.
 
--- En ansökan utifrån kan inte öppna ett prov åt sig själv: sista
--- dagen, nyckeln och mötet sätts av Nextrum. Påminnelsejobbet mejlar
--- varje rad med en satt sista dag, så det här är skyddet mot att
--- formuläret blir ett sätt att få oss att mejla främlingar.
+-- Provets fält går fortfarande inte att sätta utifrån: sista dagen,
+-- nyckeln och mötet sätts av Nextrum (skydda_ansokningsfalt).
 do $$
 declare skyddad bigint; fel text;
 begin
@@ -3188,17 +3189,16 @@ begin
           case when fel = 'rulla tillbaka' then 'rader: ' || skyddad else fel end);
 end $$;
 
--- Admin markerar mötet: provet öppnas i tre dagar räknat i svensk tid,
--- en nyckel skapas, och länken köas en gång. Klarar hen provet blir
--- hen utbildad och mejlet om kontot köas. 23 av 30 räcker inte, och
--- det elfte försöket samma dygn tas inte emot.
+-- Mötet öppnar inget prov och köar inget mejl om ett. Inte heller med
+-- en sista dag satt för hand: grenen i ansokan_besked och påminnelserna
+-- är borta, jobbet med dem finns inte, och ansokan_utskick säger nej till
+-- provets steg. Mejlet om sista steget går när admin markerar utbildad,
+-- en gång.
 do $$
 declare
   a constant uuid := '00000000-0000-4000-8000-0000000022b1';
-  idag date := (now() at time zone 'Europe/Stockholm')::date;
   r public.applications%rowtype;
-  provmejl bigint; stangt date; under record; over record; konto bigint;
-  tak text; fel text; n int;
+  provmejl bigint; paminn integer; konto bigint; jobb bigint; villkor text; fel text;
 begin
   begin
     insert into public.applications (id, name, email, status)
@@ -3206,40 +3206,43 @@ begin
 
     perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
     update public.applications set utbildningsmote_at = now() where id = a;
-    update public.applications set utbildningsmote_at = null where id = a;
-    select prov_sista_dag into stangt from public.applications where id = a;
-    update public.applications set utbildningsmote_at = now() where id = a;
     select * into r from public.applications where id = a;
-    select count(*) into provmejl from public.ansokan_utskick where ansokan_id = a and steg = 'prov';
     reset role;
     perform set_config('request.jwt.claims', null, true);
 
-    select * into under from public.utbildningsprov_lamna(r.prov_nyckel, 23, 30, '{}');
-    select * into over from public.utbildningsprov_lamna(r.prov_nyckel, 24, 30, '{}');
-    select count(*) into konto from public.ansokan_utskick where ansokan_id = a and steg = 'sista_steget';
+    update public.applications set prov_sista_dag = (now() at time zone 'Europe/Stockholm')::date where id = a;
+    paminn := intern.utbildningsprov_paminn();
+    select count(*) into provmejl from public.ansokan_utskick
+     where ansokan_id = a and steg in ('prov', 'prov_paminnelse', 'prov_sista_dagen');
+    update public.applications set prov_sista_dag = null where id = a;
 
-    -- Taket: en ny ansökan, tio underkända, och ett elfte.
-    update public.applications set prov_godkant_at = null, utbildad_at = null where id = a;
-    delete from public.utbildningsprov_forsok where ansokan_id = a;
-    for n in 1..10 loop perform public.utbildningsprov_lamna(r.prov_nyckel, 1, 30, '{}'); end loop;
-    select utfall into tak from public.utbildningsprov_lamna(r.prov_nyckel, 30, 30, '{}');
+    perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
+    update public.applications set utbildad_at = now() where id = a;
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    select count(*) into konto from public.ansokan_utskick where ansokan_id = a and steg = 'sista_steget';
+    select count(*) into jobb from cron.job where jobname = 'utbildningsprov-paminn';
+    begin
+      insert into public.ansokan_utskick (ansokan_id, steg, nyckel) values (a, 'prov_paminnelse', 'prov:rls');
+      villkor := 'släpptes in';
+    exception when check_violation then villkor := 'nej';
+    end;
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
   end;
   reset role;
   perform set_config('request.jwt.claims', null, true);
   if fel <> 'rulla tillbaka' then
-    insert into utfall (test, ok, detalj) values ('22.1 provet', false, fel);
+    insert into utfall (test, ok, detalj) values ('22.1 provet i ansökan är borttaget', false, fel);
   else
     insert into utfall (test, ok, detalj) values
-      ('22.1 mötet öppnar provet till och med dag tre', r.prov_sista_dag = idag + 3 and r.prov_nyckel is not null,
-       coalesce(r.prov_sista_dag::text, 'null') || ' mot ' || (idag + 3)),
-      ('22.1 att ångra mötet stänger provet', stangt is null, coalesce(stangt::text, 'null')),
-      ('22.1 länken köas en gång, också när mötet ångras och markeras igen', provmejl = 1, 'rader: ' || provmejl),
-      ('22.1 23 av 30 är inte godkänt', under.utfall = 'ok' and not under.godkant, under::text),
-      ('22.1 24 av 30 är godkänt, och mejlet om kontot köas', over.godkant and konto = 1,
-       over::text || ' konto: ' || konto),
-      ('22.1 elfte försöket samma dygn tas inte emot', tak = 'for_manga', coalesce(tak, 'null'));
+      ('22.1 mötet öppnar inget prov längre', r.prov_sista_dag is null and r.prov_nyckel is null,
+       coalesce(r.prov_sista_dag::text, 'null') || ' ' || coalesce(r.prov_nyckel::text, 'null')),
+      ('22.1 inget mejl om provet köas, inte heller en påminnelse', provmejl = 0 and paminn = 0,
+       'rader: ' || provmejl || ', påminnelser: ' || paminn),
+      ('22.1 markera utbildad köar mejlet om sista steget en gång', konto = 1, 'rader: ' || konto),
+      ('22.1 påminnelsejobbet finns inte', jobb = 0, 'jobb: ' || jobb),
+      ('22.1 mejlkön säger nej till provets steg', villkor = 'nej', villkor);
   end if;
 end $$;
 
@@ -3254,6 +3257,31 @@ select pg_temp.prova('22.1 anon lämnar inte in ett försök förbi funktionen',
 select pg_temp.prova('22.1 inte en inloggad heller', '00000000-0000-4000-8000-0000000000f1',
   array[$q$select * from public.utbildningsprov_lamna('00000000-0000-4000-8000-000000000000', 30, 30, '{}')$q$],
   'nekad');
+
+-- Inte heller tjänstekontot: edge-funktionen utbildningsprov finns inte i
+-- repot, och den som står kvar i driften tills den tas bort når ingenting.
+do $$
+declare fel1 text; fel2 text;
+begin
+  begin
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    perform * from public.utbildningsprov_lage('00000000-0000-4000-8000-000000000000');
+  exception when others then fel1 := sqlstate;
+  end;
+  reset role;
+  begin
+    perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+    execute 'set local role service_role';
+    perform * from public.utbildningsprov_lamna('00000000-0000-4000-8000-000000000000', 30, 30, '{}');
+  exception when others then fel2 := sqlstate;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+  insert into utfall (test, ok, detalj)
+  values ('22.1 inte heller tjänstekontot kör provets funktioner', fel1 = '42501' and fel2 = '42501',
+          coalesce(fel1, 'kördes') || ' ' || coalesce(fel2, 'kördes'));
+end $$;
 
 insert into public.applications (id, name, email) values
   ('00000000-0000-4000-8000-0000000022c1', 'Prov Försök', 'rls-forsok@example.invalid');

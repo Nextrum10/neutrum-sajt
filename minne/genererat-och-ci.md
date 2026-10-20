@@ -168,7 +168,8 @@ båda språken (`minne/vyerna.md`). Det ersatte spalten Läxhjälp (navet, fyra
 gånger i den svenska footern, vilket också var skälet till nästan alla
 TEXTNODER-avvikelser i språkbaslinjen. Generatorn läser blocket ur
 `var-ide.html`; de handskrivna sidorna ändras för hand, och
-`utbildningsprov.html`, som saknade två länkar, fick samma block. "Hammarby
+`utbildningsprov.html`, som saknade två länkar, fick samma block (sidan
+togs bort 2026-10-21, med provet i ansökan). "Hammarby
 Sjöstad" står i baslinjen som svenska kvar i engelskan på varje engelsk sida:
 det är ett ortnamn.
 

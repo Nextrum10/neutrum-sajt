@@ -463,10 +463,6 @@
               <h2>Ansökningar</h2>
               <p>Unga som vill jobba. Skicka vidare med knappen på raden eller i ansökan: från Alla ansökningar till Intervju, därifrån till Utbildning, och sedan in i poolen. Läget sätter du själv i ansökan, och Kontaktad flyttar ingen till Intervju. Tryck på ett namn för ansökan, CV:t och rekryteringens steg.</p>
             </div>
-            <!-- Provläget: admin gör utbildningsprovet själv, med facit
-                 efteråt. Inget sparas (edge-funktionen prövar admin). -->
-            <a class="btn btn-ghost btn-sm" href="/utbildningsprov?prova" target="_blank" rel="noopener"
-               title="Gör utbildningsprovet som den som söker gör det. Inget sparas, och efteråt ser du facit.">Prova utbildningsprovet</a>
           </div>
           <div class="vy-flikar" role="tablist" aria-label="Rekryteringens steg">
             <button class="vy-flik" type="button" role="tab" data-flik="alla"
@@ -524,8 +520,8 @@
           <!-- Utbildningsprovet i studiehjälparvyn (2026-10-21): frågorna med
                facit, gränsen och hur det gått för var och en. Studiehjälparen
                gör det vid första inloggningen (nextrum-provet.js), och databasen
-               spärrar elevernas uppgifter tills det är godkänt. Det här är inte
-               provet i rekryteringen (Prova utbildningsprovet ovan).
+               spärrar elevernas uppgifter tills det är godkänt. Det är det enda
+               provet: provet i ansökan (Fas 22.1) togs bort 2026-10-21.
                nextrum-admin-provet.js. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="prov"
                id="panel-ans-prov" aria-labelledby="flik-ans-prov" hidden>
@@ -2566,7 +2562,7 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=e7efc5da"></script>
+<script src="nextrum-config.js?v=adfb7419"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=a262aca7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
@@ -2576,12 +2572,12 @@
 <script src="nextrum-betalning.js?v=60e55cea"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=8a37f109"></script>
-<script src="nextrum-admin-detalj.js?v=dd0594f9"></script>
+<script src="nextrum-admin-karna.js?v=4bce718b"></script>
+<script src="nextrum-admin-detalj.js?v=3e7d760b"></script>
 <script src="nextrum-admin-oversikt.js?v=4675189b"></script>
 <script src="nextrum-admin-kunder.js?v=c59f9f8c"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
-<script src="nextrum-admin-rekrytering.js?v=d0db415e"></script>
+<script src="nextrum-admin-rekrytering.js?v=2d14aa9c"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=d2b8b595"></script>
@@ -2594,7 +2590,7 @@
 <script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
 <script src="nextrum-admin-system.js?v=1f4b7fcf"></script>
 <script src="nextrum-admin-behorighet.js?v=576427c6"></script>
-<script src="nextrum-admin-automationer.js?v=f8750cf7"></script>
+<script src="nextrum-admin-automationer.js?v=a75d7589"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->

@@ -170,10 +170,8 @@ applications (insert/update)
 | "Kontakt" | **inget** — admin skriver själv, med förslag på tider eller länken till bokningssidan (2026-10-20), där Google mejlar tiden. Sedan samma dag går det admin skrivit från info@ genom `ansokan-mejl`, inte genom kön (`minne/vyerna.md`) |
 | mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
 | "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
-| "Utbildningsmötet är hållet", eller Öppna provet i ansökans översikt | `prov`: länken till provet, öppet i tre dagar (Fas 22.1). Adminvyn frågar först |
-| dagen efter, och sista dagen, kl. 9 | `prov_paminnelse`, `prov_sista_dagen` (pg_cron `utbildningsprov-paminn`) |
-| "Öppna provet i tre dagar till" | `prov` igen, med den nya sista dagen |
-| provet klarat, eller "Markera utbildad" | `sista_steget`: kontot skapar vi åt hen när profilen godkänns, och ingen knapp (2026-10-06; förut: skapa konto med samma e-post) |
+| "Utbildningsmötet är hållet" | **inget** sedan 2026-10-21. Förut `prov`, länken till provet i ansökan, och två påminnelser (`prov_paminnelse`, `prov_sista_dagen`), som gick med provet (Utbildningsprovet i ansökan, nedan) |
+| "Markera utbildad", som frågar först sedan 2026-10-21 | `sista_steget`: kontot skapar vi åt hen när profilen godkänns, och ingen knapp (2026-10-06; förut: skapa konto med samma e-post). Förut också när provet i ansökan klarades |
 | läget blir Godkänd | `valkommen`, som sedan 2026-10-06 också säger att länken för lösenordet kommer i ett eget mejl. Tas hen in med ett nytt konto (Ta in i poolen) skickar Auth inbjudan samtidigt |
 | ansökan kommer in, under 18 med vårdnadshavarens e-post (2026-10-05) | `vardnadshavare`: till vårdnadshavaren, barnet har sökt och vi behöver ett skriftligt godkännande |
 | admin rättar eller lägger till vårdnadshavarens e-post, utan godkännande | `vardnadshavare` igen, en gång per adress |
@@ -303,7 +301,7 @@ applications.till_intervju_at: null → satt (Skicka vidare till intervju)
    fyra ansökningar under dagen och tog ut och in dem två gånger, sist
    18.28–18.29 UTC. Blocket med migrationen började 18.29.41
    (`DEPLOY-BETALNING.md` 9.21), så triggern fanns inte och inget köades. På
-   hans ord ("Kan du skicka ut intervju mejlen till de som är i intervju")
+   Leos ord ("Kan du skicka ut intervju mejlen till de som är i intervju")
    köades de 18.51 i ett do-block: triggerns villkor utom övergången (inte
    avböjd, inget möte, inget `kontaktad_at`, en adress), samma rad och nyckel
    som triggern lägger, och `intervju_mejl_skickat_at` satt med
@@ -361,13 +359,43 @@ lägga in kopia av mail till barnet."
   som för introduktionen: det kan finnas på annat sätt.
 - Adminvyn visar raderna bara när kolumnerna finns.
 
-### Utbildningsprovet (Fas 22.1)
+### Utbildningsprovet i ansökan (Fas 22.1, borttaget 2026-10-21)
 
-**Provet i studiehjälparvyn (2026-10-21) är ett annat prov**: det görs av den som
-redan är godkänd och har ett konto, vid första inloggningen, och står i
-`minne/affaren.md` (Utbildningsprovet i studiehjälparvyn). Det här står kvar orört.
+**Borttaget 2026-10-21** (`provet_i_ansokan_tas_bort`; Leo 2026-10-20: "ta bort
+gamla och ersätt med nya på 26 frågor ... provet ska bara göras en gång, vid
+aktivering av konto. först välja lösenord och sen provet"). Ingen gjorde det:
+ingen ansökan fick ett prov öppnat, och `utbildningsprov_forsok` var tom. Det
+enda provet är det i studiehjälparvyn, direkt efter lösenordet
+(`minne/affaren.md`, Utbildningsprovet i studiehjälparvyn), med 26 lätta frågor
+på samma ämnen som härifrån (`supabase/scripts/provets-fragor-latta.sql`). Det
+som gick:
 
-Efter utbildningsmötet gör den som söker ett prov på nätet:
+- sidan `utbildningsprov.html` med `nextrum-utbildningsprov.js` och
+  `nextrum-prov.css`, edge-funktionen `utbildningsprov` med
+  `_delad/utbildningsprov*.ts` och dess rad i `config.toml`, och Prova
+  utbildningsprovet i adminvyn;
+- provets tre mejl i `ansokan.ts` och `ansokan-notis`, grenen i
+  `intern.ansokan_besked` som köade dem och jobbet `utbildningsprov-paminn`.
+  `intern.utbildningsprov_paminn` svarar 0, `intern.utbildningsprov_oppnas`
+  lämnar raden som den är, och villkoret `ansokan_utskick_inga_provmejl` säger
+  nej till de tre stegen; `ansokan_utskick_steg_check` har dem kvar som
+  historik, för att skriva om den är drop;
+- `utbildningsprov_lage` och `utbildningsprov_lamna` kör ingen, inte heller
+  `service_role`, så funktionen som står kvar i driften tills den tas bort i
+  Supabases panel når ingenting;
+- i adminvyn Öppna provet, Öppna provet i tre dagar till, raden Provet i
+  ansökans översikt och provets läge i steg 3. Utbildningsmötet är en bock som
+  inte mejlar något, och Markera utbildad frågar alltid först, för den mejlar
+  sista steget.
+
+Kvar som historik, tomma: `applications.prov_sista_dag`, `prov_nyckel` och
+`prov_godkant_at` (skydden i `skydda_ansokningsfalt`, auditen och gallringen
+läser dem som förut) och tabellen `utbildningsprov_forsok` med sina policyer.
+Att ta bort dem är drop.
+
+Det som följer är hur provet i ansökan var byggt, som historik.
+
+Efter utbildningsmötet gjorde den som sökte ett prov på nätet:
 `/utbildningsprov?t=<nyckel>`, tjugosex flervalsfrågor om
 Handledarhandboken, ingen tidsgräns, godkänt vid 21 rätt (80 procent).
 Frågorna var trettio till 2026-10-02, då Leo tog bort fyra (varierad
@@ -578,9 +606,9 @@ per dag), direktmejlet, bromsen, mottagarna och rättigheterna.
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
   kalender härifrån (kopplingen till Google gör bara onlinepassens
   Meet-länkar, Fas 18.1; sedan 2026-10-20 bokar den sökande själv på en
-  bokningssida i Google Kalender, som vyn aldrig läser). Sedan Fas 22.1 har utbildningen ett prov systemet läser
-  resultatet av, men det prövar att hen läst handboken, inte vem hen
-  är.
+  bokningssida i Google Kalender, som vyn aldrig läser). Sedan 2026-10-21 gör studiehjälparen ett prov om
+  handledarhandboken vid första inloggningen (förut i ansökan, Fas 22.1), och systemet läser resultatet, men
+  det prövar att hen läst handboken, inte vem hen är.
 
 ### Barnets förslag till föräldern (barnet_foreslar_pass, 2026-10-12)
 Typen `barnforslag` går till föräldern när barnet föreslagit ett pass:

@@ -1445,9 +1445,12 @@ vem som gick vidare.
   (läget Kontaktad, inget mejl, ingen fråga; tillbaka är läget Ny i
   panelen). Intervju har Till utbildning, som är "Mötet är hållet" och
   därför frågar först: det mejlar tacket med introduktionen som nästa steg.
-  Utbildning har Öppna provet (`provKnapp`) eller, för den som är utbildad,
-  Ta in i poolen. Den utbildade stod förut varken under Intervju eller
-  Utbildning.
+  Utbildning har utbildningens nästa steg (`utbKnapp`, 2026-10-21; förut
+  Öppna provet, `provKnapp`, som gick med provet i ansökan):
+  Utbildningsmötet är hållet, som inte mejlar och inte frågar, sedan
+  Markera utbildad, som frågar först för den mejlar sista steget, och för
+  den som är utbildad Ta in i poolen. Den utbildade stod förut varken
+  under Intervju eller Utbildning.
 - **Flikarna räknar** (`vy-flik-mark`), så att ett tryck i Alla syns flytta.
 - **Bokningar har en väljare för familjen** (`#bok-familj`, `familjeval()` i
   `nextrum-admin-drift.js`): de familjer som har pass, med barnens namn
@@ -1710,8 +1713,9 @@ lektioner, detta ska ske efter att man bekräftat sitt nya lösenord."
 
 ### Utbildningsprovet före studiehjälparvyn (2026-10-21)
 Ordningen vid inloggningen i studiehjälparvyn är lösenordet (`lösenordFörst`),
-villkoren (`villkorFörst`), provet (`NXProvet.förstGörs`, bara för en godkänd
-studiehjälpare) och introduktionen. Provet är samma ruta (`.nx-fraga.nx-prov`)
+provet (`NXProvet.förstGörs`, bara för en godkänd studiehjälpare), villkoren
+(`villkorFörst`) och introduktionen; provet kom efter villkoren till 2026-10-20
+(Leo: "först välja lösenord och sen provet"). Provet är samma ruta (`.nx-fraga.nx-prov`)
 och går inte att stänga: Escape gör inget, och utan provet finns inget att
 visa, för databasen lämnar inte ut elever, pass eller meddelanden förrän det
 är klart (`minne/affaren.md`). Logga ut står kvar. Alternativen är hela
