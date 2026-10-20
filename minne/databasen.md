@@ -1532,7 +1532,10 @@ bort), och ordningen i driften i `DEPLOY-BETALNING.md` 9.18.
   fakturor. Efteråt noll i `bookings`, `lesson_reports`, `payouts`,
   `payout_lines`, `klippkort` och `timbank_uttag`; sex konton och tre barn
   kvar; liggarens rad kvar (`skarp = false`, `klippkort_id` null). September
-  är öppen tills den stängs i adminvyn, och då fryses nollor.
+  stängdes igen samma kväll (Leo: "Fixa") med `stang_manad()` i ett `do`-block
+  med Leos `sub` i `request.jwt.claims` för transaktionen, så att funktionen
+  gjorde sina egna prov (månaden slut, inga larm) och `stangd_av` är Leo:
+  summeringen är noll pass, noll underlag, noll kortbetalningar och inga larm.
 
 Provat lokalt 2026-10-21: en databas byggd ur alla 203 migrationer gav 1797 av
 1797 i `rls-test.sql`, och 1794 av 1794 utan del 2. Alla tre filerna kördes en

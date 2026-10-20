@@ -723,7 +723,7 @@ Detaljer: `minne/grunden.md`.
   passen Leos adminkonto `leo thriskos` och Leo Trikke studiehjälparen, och ett konto som inte är en
   familj nekas (med Leo Trikke hade skriptet raderat ingenting). **Körd i driften 2026-10-20** (Leo:
   "nollställ statistiken"): 16 pass, 6 rapporter, septembers underlag och testköpet är borta, liggarens
-  rad står kvar som test, och september är öppen tills den stängs igen (`minne/databasen.md`).
+  rad står kvar som test, och septembers bokslut är stängt igen med nollor (`minne/databasen.md`).
 ### Notiserna
 - Trigger → `intern.notis_skapa()` → `intern.notis_koa()` → `notis-minut` → `notis-ko` → Resend.
   `notiser_mejl` är strömbrytaren (av och trasigt ser likadana ut); `loggad` är slutläge.
