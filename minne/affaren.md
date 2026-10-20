@@ -443,6 +443,9 @@ rätt är godkänt (55 % sedan 2026-10-20) och gränsen står i en inställning;
 efter 24 timmar, och admin kan nollställa. Rättningen sker på servern, facit når aldrig webbläsaren, och
 spärren står i databasen. Den gäller först när det finns minst fem aktiva frågor (till dess en varning i
 adminvyn), de som var godkända före migrationen slipper, och admin slår på och av kravet per person.
+De två som slapp har alltså inte gjort något prov, fast FAQ:n och Så fungerar Nextrum säger att alla studiehjälpare
+klarat ett prov innan de matchas. Leo 2026-10-20: "Alla kommer att utbildas snart". Texten stämmer för dem först
+när Kräv provet slagits på och de klarat det, och medan kravet gäller ser de inga elever.
 
 **Det är det enda provet sedan 2026-10-21.** Provet i rekryteringen (Fas 22.1: `utbildningsprov.html`, som den som
 sökte skulle göra genom en länk innan hen hade ett konto) togs bort med `provet_i_ansokan_tas_bort`, Leos svar

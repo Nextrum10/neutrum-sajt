@@ -935,7 +935,10 @@ Detaljer: `minne/grunden.md`.
   köas när en ansökan skickas vidare. De fyra som skickades vidare under minuten innan triggern fanns fick det för hand
   samma kväll, på Leos ord (`minne/notiser.md`, Intervjumejlet punkt 7).
   Provet har 26 lätta frågor ur Handledarhandboken sedan 2026-10-20 och spärrar varje ny studiehjälpare tills hen
-  fått 15 rätt (gränsen 55 %); de två godkända studiehjälparna är undantagna. **Provet i ansökan tas bort** med
+  fått 15 rätt (gränsen 55 %); de två godkända studiehjälparna är undantagna. FAQ:n och Så fungerar Nextrum säger att
+  alla klarat ett prov innan de matchas, och det har de två inte gjort (Leo samma kväll: "Alla kommer att utbildas
+  snart"); för dem stämmer texten först när Kräv provet slagits på (Ansökningar → Provet) och de klarat det, och
+  tills dess ser de inga elever. **Provet i ansökan tas bort** med
   PR #312: efter merge körs `provet_i_ansokan_tas_bort` och `ansokan-notis` driftsätts, i den ordningen, och sedan tar
   Leo bort edge-funktionen `utbildningsprov` i Supabases panel (verktygen kan inte ta bort en funktion). Med
   migrationen körd når den ingenting.
