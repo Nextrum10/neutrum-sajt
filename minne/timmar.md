@@ -827,7 +827,7 @@ finns kvar".
   `rendera_test.ts`. Batteriet provades i förhandsvisningen med påhittade köp
   (rutor, stapel, tomt, mörkt läge); provet checkades inte in.
 
-## Planerna per kalendermånad, och ett köp som betalas tillbaka (2026-10-21, `planerna_per_manad`, inte i drift)
+## Planerna per kalendermånad, och ett köp som betalas tillbaka (2026-10-21, `planerna_per_manad`, i drift sedan 2026-10-20)
 
 Leo (2026-10-21): en plan köps för "Den här månaden" eller "Nästa månad", timmarna går ut när månaden är
 slut, timbanken visar båda månaderna ("3 av 8 timmar återstår", "0 av 0" för en månad utan plan),

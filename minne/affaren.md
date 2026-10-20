@@ -436,7 +436,7 @@ det var stod ovanför sektionen, 800 px över formuläret på en telefon.
 Rutan står därför inte längre under Lektioner & elever, bara ovanför
 Läxor och Meddelanden. En enda elev väljs inte; kortet säger bara vem.
 
-## Utbildningsprovet i studiehjälparvyn (2026-10-21, `utbildningsprovet_i_studiehjalparvyn`, inte i drift)
+## Utbildningsprovet i studiehjälparvyn (2026-10-21, `utbildningsprovet_i_studiehjalparvyn`, i drift sedan 2026-10-20)
 
 Leo: ett prov som studiehjälparen gör vid första inloggningen, innan studiehjälparvyn öppnas. Mer än 50 %
 rätt är godkänt och gränsen står i en inställning; provet görs en gång; den som inte klarar det gör om det
