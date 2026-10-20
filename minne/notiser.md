@@ -167,7 +167,7 @@ applications (insert/update)
 | Händelse i adminvyn | Mejl |
 |---|---|
 | ansökan kommer in (vem som helst) | `mottagen`: tack, svar inom 24 timmar |
-| "Kontakt" | **inget** — admin skriver själv, med förslag på tider |
+| "Kontakt" | **inget** — admin skriver själv, med förslag på tider eller länken till bokningssidan (2026-10-20), där Google mejlar tiden |
 | mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
 | "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
 | "Utbildningsmötet är hållet", eller Öppna provet i ansökans översikt | `prov`: länken till provet, öppet i tre dagar (Fas 22.1). Adminvyn frågar först |
@@ -462,8 +462,9 @@ per dag), direktmejlet, bromsen, mottagarna och rättigheterna.
   Fas 13.1 gav rekryteringen en ORDNING (kontakt, digitalt möte,
   utbildning, poolen) med skälet till varje steg skrivet i vyn, men
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
-  kalender (kopplingen till Google gör bara onlinepassens Meet-länkar,
-  Fas 18.1). Sedan Fas 22.1 har utbildningen ett prov systemet läser
+  kalender härifrån (kopplingen till Google gör bara onlinepassens
+  Meet-länkar, Fas 18.1; sedan 2026-10-20 bokar den sökande själv på en
+  bokningssida i Google Kalender, som vyn aldrig läser). Sedan Fas 22.1 har utbildningen ett prov systemet läser
   resultatet av, men det prövar att hen läst handboken, inte vem hen
   är.
 

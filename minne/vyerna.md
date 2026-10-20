@@ -1485,6 +1485,36 @@ av nio ansökningar där för att Leo hört av sig till dem.
   migrationen direkt efter (`minne/databasen.md`). Mellan de två räknade vyn
   Intervju som förut, ur läget, och efter migrationen är fliken tom.
 
+### Intervjun bokas på en bokningssida (2026-10-20)
+
+Leo: "hur fixar jag som ett schema i google där de kan boka in sig för
+google meet", och sedan "gör allt så att det blir klart så att jag bara kan
+skicka ut länk till ansökande". Ingen koppling till kalendern: Google Kalenders
+bokningsschema, med Meet som plats, och länken i vårt mejl.
+
+- **Länken står i `INTERVJU_BOKNING_URL`** i `nextrum-config.js`, och bara en
+  https-adress räknas (`bokningssida()`). Tom är allt som förut: mejlet
+  föreslår tre tider.
+- **Mallen** (`mallIntervju`) har länken i stället för de tre tiderna, säger
+  att mötet är i Meet, att länken kommer i Googles bekräftelse, att inget
+  Google-konto behövs och att den som inte hittar en tid kan svara på mejlet.
+- **Skriv till hen skickar en ny till Intervju** när länken är satt
+  (`till_intervju_at`, samma stämpel som Skicka vidare). Mejlet är då
+  kallelsen: hen bokar själv, och Boka möte, som annars skickar vidare, används
+  inte. Utan länken är Skriv till hen bara en kontakt, som 2026-10-15. Läget
+  rörs som förut (Ny blir Kontaktad).
+- **Steg 1 och 2 i Rekryteringen säger det**: steg 1 visar bokningssidan, eller
+  var den sätts; steg 2 säger att mötet står i kalendern för info@, inte här,
+  och att Boka möte mejlar tiden en gång till också när hen redan bokat.
+- **Vyn läser aldrig kalendern.** En bokning syns i adminvyn först om någon
+  sparar den med Boka möte, och fliken Intervju säger Kontaktad, inte en tid.
+- **Bokningssidan ska ligga i info@nextrum.se**: där gäller Workspace-avtalet
+  (`DATASKYDD.md` avsnitt 3), och policyn säger "vår kalender hos Google". Den
+  lovar också att bokningen tas bort för hand senast ett år efter intervjun
+  (rad 10 och avsnitt 8 i `DATASKYDD.md`).
+- `verktyg/prova-ansokningar.js` provar mallen, stämpeln och stegens text med
+  en länk satt, och att inget ändras utan den.
+
 ### Tusen rader (2026-09-29)
 
 Leo: "de raderna ska inte försvinna efter 1000st". PostgREST lämnar ut

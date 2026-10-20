@@ -540,6 +540,10 @@ lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillb
 finnas där som jag har klickat i"): bara den som skickats vidare (`till_intervju_at`: Skicka vidare till
 intervju på raden, i panelen under läget och i Rekryteringen, eller ett bokat möte), aldrig läget
 Kontaktad. Läget (Ny, Kontaktad, Godkänd, Avböjd) sätter Leo själv, och Skicka vidare rör det inte.
+**Intervjun bokas på en bokningssida** (2026-10-20, Leo: "så att jag bara kan skicka ut länk"): ett bokningsschema i
+Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNING_URL`). Länken står i mejlet Skriv till hen, som då
+också skickar en ny till Intervju; Google mejlar tiden och Meet-länken, vyn läser aldrig kalendern, och Boka möte mejlar
+den en gång till. Policyn lovar att bokningen tas bort för hand senast ett år efter intervjun.
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
 Familjernas och studiehjälparnas sidor behåller `mailto:`.
