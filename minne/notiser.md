@@ -303,7 +303,7 @@ applications.till_intervju_at: null → satt (Skicka vidare till intervju)
    fyra ansökningar under dagen och tog ut och in dem två gånger, sist
    18.28–18.29 UTC. Blocket med migrationen började 18.29.41
    (`DEPLOY-BETALNING.md` 9.21), så triggern fanns inte och inget köades. På
-   hans ord ("Kan du skicka ut intervju mejlen till de som är i intervju")
+   Leos ord ("Kan du skicka ut intervju mejlen till de som är i intervju")
    köades de 18.51 i ett do-block: triggerns villkor utom övergången (inte
    avböjd, inget möte, inget `kontaktad_at`, en adress), samma rad och nyckel
    som triggern lägger, och `intervju_mejl_skickat_at` satt med
@@ -366,6 +366,8 @@ lägga in kopia av mail till barnet."
 **Provet i studiehjälparvyn (2026-10-21) är ett annat prov**: det görs av den som
 redan är godkänd och har ett konto, vid första inloggningen, och står i
 `minne/affaren.md` (Utbildningsprovet i studiehjälparvyn). Det här står kvar orört.
+Sedan 2026-10-20 har det de 26 frågorna härifrån och fyra till ur handboken, så
+en fråga som skrivs om här skrivs om där också, i vyn.
 
 Efter utbildningsmötet gör den som söker ett prov på nätet:
 `/utbildningsprov?t=<nyckel>`, tjugosex flervalsfrågor om

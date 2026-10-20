@@ -1639,6 +1639,6 @@ migrationerna. Hur det gick till, i ordning:
   mot driften, tillbakarullat, och advisorn larmade inte om något nytt för `anon`; de tolv nya posterna gäller
   funktioner som `authenticated` når och som prövar behörigheten själva, och `intern.kassan_oppnad` är borta ur
   listan. Två anmälningar flyttades till familjen, fakturatabellerna är borta, Leos fyra fakturapass är `ingen` och
-  syns inte under Att göra, liggaren fick en rad (en testbetalning), inga koder hade använts, provet har inga frågor
-  (spärren gäller inte) och de två godkända studiehjälparna är undantagna, och intervjumejlet gick inte ut till de
+  syns inte under Att göra, liggaren fick en rad (en testbetalning), inga koder hade använts, provet hade inga frågor
+  (de kom samma kväll, `minne/affaren.md`) och de två godkända studiehjälparna är undantagna, och intervjumejlet gick inte ut till de
   fyra ansökningar som redan var vidareskickade (de fick det för hand samma kväll, `minne/notiser.md`).
