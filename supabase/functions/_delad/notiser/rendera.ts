@@ -26,6 +26,13 @@
 // stängs av: Gmail och Outlook färgar annars om bakgrunderna på egen
 // hand och lämnar texten kvar, och bark på bark är ett tomt mejl.
 //
+// PALETTEN HÖLL INTE MED (2026-10-20): sajten gick från #F2EDE3 till #F1EDE6
+// den 8 oktober och mejlen stod kvar, så loggans PNG (ritad på det nya
+// papperet) låg som en synlig ruta i varje brev. FARG nedan är nu sajtens
+// egna värden igen, och footern är sajtens mörka ton (--ftr-bg) i en remsa
+// längst ner, som på sidorna. Remsan är ingen ram: papperet runt brevet är
+// orört, och loggan står kvar överst.
+//
 // INGEN RAM RUNT BREVET (2026-09-25). Förut låg brevet som ett kort
 // med kant och rundade hörn på en mörkare yta, och mejlprogrammet
 // ritar redan sin egen yta runt allt — vit i Gmail. Det blev tre lager
@@ -79,15 +86,23 @@ export const SAJT = 'https://nextrum.se';
 export const KONTAKT = 'info@nextrum.se';
 export const LOGGA_URL = `${SAJT}/bilder/nextrum-logo-512.png`;
 
+// 2026-10-20 (Leo: "gör de snyggare så de matchar nya färgerna på sidan"):
+// paletten är i nivå med sajten igen. Papperet blev #F1EDE6 den 8 oktober
+// (och loggans PNG ritades på det, så med #F2EDE3 låg märket på en synlig
+// ruta), den lugna ytan #E7E2D8 och linjen #CAC2B3. Footern är sajtens egen
+// mörka ton (--ftr-bg) i en smal remsa längst ner, som på sidorna.
 export const FARG = {
-  papper: '#F2EDE3',     // --pap, hela brevet ända ut till kanten
-  yta: '#E9E2D4',        // --pap-2, lugn yta: faktarutan och provraden
+  papper: '#F1EDE6',     // --pap, hela brevet ända ut till kanten
+  yta: '#E7E2D8',        // --pap-2, lugn yta: faktarutan och provraden
   text: '#2E2A20',       // --bl, bark (12,3:1 mot papperet)
   brod: '#4F4738',       // --bl-2, brödtext (7,9:1)
   dampad: '#665C49',     // --bl-3, klarar AA även mot --pap-2 (5,1:1)
-  linje: '#CDC2AC',      // --ln-2
+  linje: '#CAC2B3',      // --ln-2
   knapp: '#9C4520',      // --acc, lera (5,5:1 mot papperet)
   knapptext: '#EFE6D6',  // --acc-ink, som sajtens knappar (5,2:1 mot leran)
+  fot: '#1F1915',        // --ftr-bg, footern: samma mörka ton som på sidorna
+  fotText: '#B3A88F',    // --nt-mut, dämpad text på footern (7,0:1)
+  fotLank: '#EFE6D6',    // --nt-fg, kräm: länkar och det som ska läsas (14,6:1)
 } as const;
 
 export const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
@@ -225,12 +240,19 @@ function text(r: Ram): string {
 function faktaHtml(rader: [string, string][]): string {
   if (!rader.length) return '';
   const celler = rader.map(([k, v]) =>
-    `<tr><td style="padding:4px 18px 4px 0;font:400 14px/1.5 ${SANS};color:${FARG.dampad};`
+    `<tr><td style="padding:5px 20px 5px 0;font:400 14px/1.5 ${SANS};color:${FARG.dampad};`
     + `white-space:nowrap;vertical-align:top">${esc(k)}</td>`
-    + `<td style="padding:4px 0;font:600 14px/1.5 ${SANS};color:${FARG.text}">${esc(v)}</td></tr>`).join('');
+    + `<td style="padding:5px 0;font:600 15px/1.5 ${SANS};color:${FARG.text}">${esc(v)}</td></tr>`).join('');
+  /* Faktarutan är den lugna ytan med en smal lerrand till vänster, som en
+     markering i marginalen. Randen är en egen cell och ingen border-left:
+     Outlook på Windows ritar en cells kant på sitt eget sätt, och en cell
+     med bakgrund gör det inte. */
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" `
-    + `style="background:${FARG.yta};border-radius:12px;margin:0 0 26px">`
-    + `<tr><td bgcolor="${FARG.yta}" style="padding:16px 20px;background:${FARG.yta};border-radius:12px">`
+    + `style="margin:0 0 28px"><tr>`
+    + `<td width="4" bgcolor="${FARG.knapp}" style="width:4px;background:${FARG.knapp};`
+    + `border-radius:4px 0 0 4px;font-size:0;line-height:0">&nbsp;</td>`
+    + `<td bgcolor="${FARG.yta}" style="padding:16px 22px 16px 20px;background:${FARG.yta};`
+    + `border-radius:0 12px 12px 0">`
     + `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${celler}</table>`
     + `</td></tr></table>`;
 }
@@ -240,9 +262,9 @@ function knappHtml(text: string, adress: string): string {
      inte en länk någon höjd, och då kollapsar knappen till en
      understruken rad mitt i brevet. */
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px">`
-    + `<tr><td bgcolor="${FARG.knapp}" style="background:${FARG.knapp};border-radius:10px">`
-    + `<a href="${esc(adress)}" style="display:inline-block;padding:14px 26px;font:600 15px/1 ${SANS};`
-    + `color:${FARG.knapptext};text-decoration:none;border-radius:10px">${esc(text)}</a>`
+    + `<tr><td bgcolor="${FARG.knapp}" style="background:${FARG.knapp};border-radius:12px">`
+    + `<a href="${esc(adress)}" style="display:inline-block;padding:16px 30px;font:600 16px/1 ${SANS};`
+    + `color:${FARG.knapptext};text-decoration:none;border-radius:12px">${esc(text)}</a>`
     + `</td></tr></table>`;
 }
 
@@ -288,7 +310,17 @@ export type Skal = {
   /** Färdig HTML. Allt i den ska redan ha gått genom esc(). */
   innehall: string;
   provrad?: string | null;
+  /** Footerns innehåll, färdig HTML som redan gått genom esc(), med färgerna `fotText` och
+   *  `fotLank`. Utan den står bara raden om vart man skriver. */
+  fot?: string;
 };
+
+/** Raden om vart man skriver, i footerns färger. Notismejlen har den sist i sin footer,
+ *  och ett mejl utan egen footer (underlaget, aviseringen) har bara den. */
+function fotKontakt(): string {
+  return `<p style="margin:0">Frågor? Svara på mejlet eller skriv till `
+    + `<a href="mailto:${KONTAKT}" style="color:${FARG.fotLank};text-decoration:underline">${KONTAKT}</a>.</p>`;
+}
 
 /**
  * Skalet runt varje mejl vi skickar: dokumentet, papperet och loggan.
@@ -324,18 +356,32 @@ export function skal(s: Skal): string {
        marginal runt. Luften mot kanten är innerpadding på samma
        papper, så att ingenting annat än papperet syns utanför texten. */
     + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="${FARG.papper}" `
-    + `style="background:${FARG.papper}"><tr><td align="center" style="padding:36px 24px 44px">`
+    + `style="background:${FARG.papper}"><tr><td align="center" style="padding:36px 24px 40px">`
     + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="520" `
     + `style="width:100%;max-width:520px">`
     + provrad
-    + `<tr><td style="padding:0 0 28px">${logga()}</td></tr>`
+    + `<tr><td style="padding:0 0 32px">${logga()}</td></tr>`
     + `<tr><td>${s.innehall}</td></tr>`
-    + `</table></td></tr></table></body></html>`;
+    + `</table></td></tr>`
+    /* Footern är sajtens egen mörka ton (--ftr-bg) i en remsa över hela bredden,
+       som på sidorna: papperet över den, barken under. Den ligger i yttertabellen,
+       så papperet runt brevet är orört. Bakgrunden står som bgcolor och style av
+       samma skäl som papperet. */
+    + `<tr><td align="center" bgcolor="${FARG.fot}" style="background:${FARG.fot};padding:28px 24px 36px">`
+    + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="520" `
+    + `style="width:100%;max-width:520px"><tr>`
+    + `<td style="font:400 13px/1.6 ${SANS};color:${FARG.fotText}">${s.fot ?? fotKontakt()}</td>`
+    + `</tr></table></td></tr>`
+    + `</table></body></html>`;
 }
 
 /** Rubriken, en gång. Underlaget och aviseringen har samma som notismejlen. */
 export function rubrikHtml(text: string): string {
-  return `<h1 style="margin:0 0 12px;font:700 24px/1.25 ${SANS};letter-spacing:-.015em;color:${FARG.text}">`
+  /* Den korta lerstrecket över rubriken är sajtens accent, en gång per mejl. */
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px"><tr>`
+    + `<td width="36" height="4" bgcolor="${FARG.knapp}" style="width:36px;height:4px;background:${FARG.knapp};`
+    + `border-radius:2px;font-size:0;line-height:0">&nbsp;</td></tr></table>`
+    + `<h1 style="margin:0 0 14px;font:700 28px/1.2 ${SANS};letter-spacing:-.02em;color:${FARG.text}">`
     + `${esc(text)}</h1>`;
 }
 
@@ -343,38 +389,37 @@ function html(r: Ram): string {
   const i = r.innehall;
   const p = (s: string, stil: string) => `<p style="margin:0 0 16px;${stil}">${esc(s)}</p>`;
   const lank = (text: string, adress: string) =>
-    `<a href="${esc(adress)}" style="color:${FARG.text};text-decoration:underline">${esc(text)}</a>`;
+    `<a href="${esc(adress)}" style="color:${FARG.fotLank};text-decoration:underline">${esc(text)}</a>`;
 
   const innehall = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">`
-    + `<tr><td style="padding:0 0 28px">`
-    + p(r.halsning, `font:400 16px/1.6 ${SANS};color:${FARG.brod}`)
+    + `<tr><td style="padding:0">`
+    + p(r.halsning, `font:400 15px/1.6 ${SANS};color:${FARG.dampad};margin-bottom:22px`)
     + rubrikHtml(i.rubrik)
-    + p(i.mening, `font:400 16px/1.6 ${SANS};color:${FARG.brod};margin-bottom:22px`)
+    + p(i.mening, `font:400 16px/1.65 ${SANS};color:${FARG.brod};margin-bottom:24px`)
     + faktaHtml(i.fakta)
     + (i.knapp ? knappHtml(i.knapp, r.knappAdress) : '')
     + (r.resa ? resaHtml(r.resa) : '')
     + (r.avslutning
       ? `<p style="margin:18px 0 0;font:400 15px/1.6 ${SANS};color:${FARG.brod}">${esc(r.avslutning)}</p>`
       : '')
-    + `</td></tr>`
-    + `<tr><td><div style="height:1px;line-height:1px;font-size:1px;background:${FARG.linje}">&nbsp;</div></td></tr>`
-    + `<tr><td style="padding:20px 0 0;font:400 13px/1.6 ${SANS};color:${FARG.dampad}">`
-    + `<p style="margin:0 0 8px">${esc(r.varfor)}</p>`
+    + `</td></tr></table>`;
+
+  /* Footern: varför mejlet kom, vart man går för att slippa det och vart man skriver.
+     Den står i sajtens mörka footerremsa (skal()), så länkarna är kräm. */
+  const fot = `<p style="margin:0 0 10px">${esc(r.varfor)}</p>`
     /* Var länk för sig, precis som i textversionen. Ett gemensamt
        villkor hade tyst tappat BÅDA om bara den ena vore null, och de
        två versionerna av samma mejl hade då sagt olika saker. */
     + (r.avregistrera || r.val
-      ? `<p style="margin:0 0 8px">`
+      ? `<p style="margin:0 0 10px">`
         + (r.avregistrera ? lank('Sluta få mejl om det här', r.avregistrera) : '')
         + (r.avregistrera && r.val ? `&nbsp;&nbsp;&middot;&nbsp;&nbsp;` : '')
         + (r.val ? lank('Ändra dina val', r.val) : '')
         + `</p>`
       : '')
-    + `<p style="margin:0">Frågor? Svara på mejlet eller skriv till `
-    + `<a href="mailto:${KONTAKT}" style="color:${FARG.text}">${KONTAKT}</a>.</p>`
-    + `</td></tr></table>`;
+    + fotKontakt();
 
-  return skal({ amne: i.amne, forhandstext: i.mening, innehall, provrad: r.provrad });
+  return skal({ amne: i.amne, forhandstext: i.mening, innehall, provrad: r.provrad, fot });
 }
 
 /** Ämne, text och HTML för en rad ur kön. Kastar för en typ som inte mejlas. */
