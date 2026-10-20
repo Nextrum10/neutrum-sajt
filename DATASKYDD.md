@@ -451,11 +451,12 @@ Inget av det här går att göra i koden.
   båda språken. Säg till studiehjälparna att provet kommer vid nästa
   inloggning, om vi slår på kravet för dem.
 - [ ] **Betalningsliggaren, köpvillkoren och planerna per månad (2026-10-21):**
-  låt juristen läsa rad 8 och 32, köpvillkoren (`anvandarvillkor.html#kopvillkor`, som Leo
-  skriver; i dag en platshållare) och planernas nya ord om kalendermånaden i villkoren, på
-  båda språken. Två frågor: får liggaren stå kvar efter de sju åren (Leo: "raderas ALDRIG"),
-  eller ska familjens id då tas bort från raden; och räcker krysset i kassan som bevis för att
-  ångerrätten lästs. Säg till familjerna att planerna följer kalendermånaden i samma mejl
+  låt juristen läsa rad 8 och 32, köpvillkoren (`anvandarvillkor.html#kopvillkor`, skrivna
+  2026-10-20) och planernas nya ord om kalendermånaden i villkoren, på båda språken. Tre
+  frågor: får liggaren stå kvar efter de sju åren (Leo: "raderas ALDRIG"), eller ska familjens
+  id då tas bort från raden; räcker krysset i kassan som bevis för att ångerrätten lästs; och
+  räcker Stripes kvitto som bekräftelsen av avtalet på ett varaktigt medium (2 kap. 3 §
+  distansavtalslagen), eller ska vi mejla villkoren själva. Säg till familjerna att planerna följer kalendermånaden i samma mejl
   som villkorsändringen.
 - [ ] **Koderna bara på planer och partnerkoderna (2026-10-21):** låt juristen läsa rad 33
   och policyns meningar om koden på ett köp och partnern familjen kom genom, på båda

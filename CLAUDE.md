@@ -324,9 +324,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och en familj med en rad avidentifieras i stället för att raderas (`on delete restrict`). En betalning som inte
   kunde skrivas ner (två kassor) står där också (`betalning_utan_rad`). Liggaren och Kortet står under Betalningar.
 - **Köpvillkoren i kassan** (2026-10-21, inte i drift): varje kassa föregås av en ruta med vad som köps, priset och
-  kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken `CFG.KOPVILLKOR_URL`, där texten är Leos och i dag
-  en platshållare), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
-  (`kopvillkor_godkannanden`, databasens tid och version). Anropet bär vad som köps, aldrig ett belopp.
+  kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken `CFG.KOPVILLKOR_URL`; texten sedan 2026-10-20, Leo:
+  "fixa"), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
+  (`kopvillkor_godkannanden`, databasens tid och version). Anropet bär vad som köps, aldrig ett belopp. Köpvillkoren
+  pekar på reglerna i resten av villkoren i stället för att säga dem igen, och punkten om ett nekat kort (två försök
+  till, sex timmar emellan) ändras med `betalning_installning`.
 - **Kortet försöker igen** (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift): ett nekat kort provas igen
   efter sex timmar, högst tre försök, bara med en kod där ett nytt försök kan gå (`intern.kortet_provas_igen`, som
   också avgör om mejlet lovar ett försök: `kortet: 'igen'`), mejlas en gång per serie, och efter ett dygn blir det en
@@ -911,9 +913,9 @@ Detaljer: `minne/grunden.md`.
 - **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3)
   är byggda och provade lokalt (1867 av 1867 i `rls-test.sql` med alla 208 migrationer, `prova-kassan.js` 83 av 83),
   inte i driften: kedjan står i `DEPLOY-BETALNING.md` 9.19 (merge, edge-funktionerna, de tre migrationerna, Stripes
-  Apple Pay och Google Pay med domänen, provköpen). Köpvillkoren på `/anvandarvillkor#kopvillkor` är en platshållare
-  tills Leo skrivit dem, och en ny text är en ny version av villkoren. Juristen har inte läst rad 8 och 32 i
-  `DATASKYDD.md` eller planernas nya ord om kalendermånaden.
+  Apple Pay och Google Pay med domänen, provköpen). Köpvillkoren på `/anvandarvillkor#kopvillkor` är skrivna sedan
+  2026-10-20, i versionen 2026-10-21; en ny text efter att den gått ut är en ny version av villkoren. Juristen har inte
+  läst rad 8 och 32 i `DATASKYDD.md`, köpvillkoren eller planernas nya ord om kalendermånaden.
 - **Koderna bara på planer och partnerkoderna** (2026-10-21, Fas 4) är byggda och provade lokalt (`rls-test.sql`
   avsnitt 28, 32 och 46, `koder_test.ts`, `prova-koder.js` och `prova-barnforslag.js`), inte i driften: kedjan står i
   `DEPLOY-BETALNING.md` 9.20 (merge, `koder_for_planer` med sin enda `drop constraint`, sedan `stripe-checkout` och

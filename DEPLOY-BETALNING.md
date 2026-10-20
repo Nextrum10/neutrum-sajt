@@ -1740,7 +1740,7 @@ arbetar i repot (`minne/databasen.md`):
    inget månadsval och planen köps som förut, och utan `betalningar` säger
    Liggaren att migrationen inte är körd. Rutan med köpvillkoren står före varje
    kassa från första stund; länken går till `/anvandarvillkor#kopvillkor`, där
-   platshållaren står tills Leo skrivit texten (steg 8).
+   köpvillkoren står (steg 8).
 2. **Edge-funktionerna**: `stripe-checkout` (SESSIONSFORM 10: nekar ett anrop
    utan `villkor: true` utom Ta bort kortet, sparar krysset, tar planens månad),
    `stripe-aterbetalning` (köp av timmar, helt eller ett antal timmar),
@@ -1779,11 +1779,15 @@ arbetar i repot (`minne/databasen.md`):
    testkortet `4000 0000 0000 0341`, som sparas men nekas när det dras: mejlet
    kommer en gång, Kortet visar försöken, och efter ett dygn står en uppgift
    under Att göra. Passet står kvar.
-8. **Köpvillkoren.** Leo skriver texten i `anvandarvillkor.html#kopvillkor` och
-   `en/anvandarvillkor.html#kopvillkor`, i stället för platshållaren (köpet,
-   priset, ångerrätten och hur den används, återbetalningen), och flyttar
-   villkorens version med sidans datum och `intern.villkor_version()` i en ny
-   migration (`kolla-villkor.py`): alla får frågan igen.
+8. **Köpvillkoren** står sedan 2026-10-20 i `anvandarvillkor.html#kopvillkor` och
+   `en/anvandarvillkor.html#kopvillkor`, i stället för platshållaren (vem ni köper
+   av, vad, priset, betalsätten, när köpet är klart och kvittot, ett nekat kort,
+   ångerrätten, återbetalningen och fel i en betalning; Leo: "fixa"). De gick med
+   i versionen 2026-10-21, för ingen hade godkänt den, så inget steg här. Ändras
+   de efter att versionen gått ut flyttas villkorens version med sidans datum och
+   `intern.villkor_version()` i en ny migration (`kolla-villkor.py`), och alla
+   får frågan igen. Ändras `automatiska_forsok` eller `timmar_mellan_forsok` i
+   `betalning_installning` ändras punkten om ett nekat kort samtidigt.
 
 Kvar efter det: juristen (rad 8 och 32 i `DATASKYDD.md`, köpvillkoren och
 planernas nya ord om kalendermånaden i villkoren), att säga till familjerna att
