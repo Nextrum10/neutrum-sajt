@@ -399,6 +399,20 @@ riktiga filerna mot en stubbad databas vars `auth` alltid svarar
 `.vercelignore` är en nekande lista som inte täcker den. Den står i
 `.gitignore` sedan den en gång följde med en commit.
 
+### Korta AI-svar läser textblocken (2026-10-21)
+
+`generate-feedback`, `generate-message` och `material-forslag` gick från
+`claude-sonnet-5` till `claude-sonnet-5-5`, och juridik och ekonomi (den delade
+`MODELL`) från `claude-opus-5` till `claude-opus-5-5`. **Ett rakt byte av
+modellsträngen hade brutit rapporterna**: Sonnet 5.5 tänker först som förval, på
+high, så första blocket kan vara ett tankeblock och tänkandet äter av
+`max_tokens` (220 och 400). De tre läste `content[0].text`. Nu går de genom
+`_delad/kortsvar.ts`: `kortaSvar()` sätter `thinking: between_tools` (inga
+verktyg, alltså inget tänkande) och ett uttryckligt `effort`, och `svarstext()`
+läser bara textblocken och svarar null på ett avhugget svar, som motorn.
+Juridik och ekonomi berördes inte av fällan: motorn skriver redan ut `high` och
+filtrerar textblocken. Driftsätts från main efter merge, alla fem.
+
 ### Maskoten har med flit ingen modell
 
 En publik chatt mot en API-nyckel har sin adress i sidans JavaScript.

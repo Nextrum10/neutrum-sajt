@@ -201,7 +201,7 @@ välj först, för de två ser helt olika ut i koden.
 
 ## Vad det kostar
 
-Modellen är `claude-opus-5`. En juridikfråga som hämtar tre dokument landar
+Modellen är `claude-opus-5-5`. En juridikfråga som hämtar tre dokument landar
 grovt på någon eller några kronor. En ekonomifråga som bara läser er databas
 är billigare.
 
