@@ -557,7 +557,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `admin-paminnelse` | var femte minut | räknar Att göra och skriver kl. 9 svensk tid ETT mejl till admin med det som ligger kvar och inte mejlats; klockan avgörs i funktionen, inte i schemat (2026-10-02, Notiserna) |
 | `timmar-betalar` | var femte minut | obesvarade förslag lämnar tillbaka timmen, lediga timmar betalar nästa pass (Fas 22.3–22.4) |
 | `timmar-gar-ut` | :07 varje timme | mejlet tio dagar innan köpta eller gratis timmar går ut (Fas 21.2, gratis sedan `gratistimmarna_paminns`) |
-| ~~`utbildningsprov-paminn`~~ | :13 varje timme | påminnelserna om provet i ansökan; tas bort av `provet_i_ansokan_tas_bort` (2026-10-21) |
+| ~~`utbildningsprov-paminn`~~ | :13 varje timme | påminnelserna om provet i ansökan; borttaget av `provet_i_ansokan_tas_bort`, i drift sedan 2026-10-20 |
 | `notis-stada` | 03:17 | städar notiserna och utskicken |
 | `cron-stada` | 03:23 | tar bort körningar äldre än sju dagar ur `cron.job_run_details` |
 | `ansokan-gallring` | 03:41 | ansökningar och CV:n efter ett år (Gallringen nedan) |
@@ -1558,7 +1558,10 @@ prövat i en egen databas byggd till och med `intervjumejlet`, där en studiehj�
 körningar inte fick något undantag.
 
 ### Provet i ansökan tas bort (2026-10-21, PR #312)
-`provet_i_ansokan_tas_bort` (20261021160000), skriven och provad lokalt; den körs efter merge. Vad som gick och
+`provet_i_ansokan_tas_bort` (20261021160000), i drift sedan kvällen 2026-10-20: kördes direkt efter merge av
+PR #312 (f33f82d), hel i ett do-block, hämtad från merge-commiten, prövad mot sin md5 (`98d3cdff…`) och registrerad
+med filens text. `intern.ansokan_besked` (`f69babe7…`), `intern.utbildningsprov_oppnas` och
+`intern.utbildningsprov_paminn` är byte för byte som i den lokala databasen. Vad som gick och
 varför: `minne/notiser.md`, Utbildningsprovet i ansökan. Inget `drop` och inget `delete`, så den kan köras hel i
 ett do-block och registreras med filens text.
 

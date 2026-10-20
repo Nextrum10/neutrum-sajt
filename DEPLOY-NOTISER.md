@@ -432,6 +432,11 @@ låt juristen läsa rad 31 i `DATASKYDD.md` och policyns stycke om provet.
 
 ## 9. Provet i ansökan tas bort (2026-10-21, PR #312)
 
+I drift sedan kvällen 2026-10-20: steg 1 till 4 gjorda, i den ordningen (PR #312 mergad som f33f82d,
+migrationen md5 `98d3cdff…`, `ansokan-notis` v10, `rls-test.sql` 1897 av 1897 mot driften). Första körningen av
+sviten gav 1706 av 1772, för driftens 26 provfrågor spärrade fixturernas studiehjälpare; sviten stänger nu av
+dem i sin egen transaktion (`minne/genererat-och-ci.md`). Steg 5 är Leos.
+
 Leo 2026-10-20: "ta bort gamla och ersätt med nya på 26 frågor ... provet ska bara göras en gång, vid aktivering
 av konto". Det som går och det som står kvar står i `minne/notiser.md` (Utbildningsprovet i ansökan). Ingen hade
 gjort provet, så ingen påverkas.
