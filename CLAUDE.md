@@ -921,7 +921,8 @@ Detaljer: `minne/grunden.md`.
   (`ingen`) och ger inga larm under Att göra. Villkoren har versionen 2026-10-21, så alla får frågan igen. Spärren
   "ingen betalning, inget pass" kan inte slås på.
 - **Intervjumejlet och utbildningsprovet i studiehjälparvyn** (2026-10-21), i drift sedan 2026-10-20 (ovan): mejlet
-  köas när en ansökan skickas vidare från och med nu, och de fyra som redan var vidareskickade fick inget i efterhand.
+  köas när en ansökan skickas vidare. De fyra som skickades vidare under minuten innan triggern fanns fick det för hand
+  samma kväll, på Leos ord (`minne/notiser.md`, Intervjumejlet punkt 7).
   Provet spärrar ingen förrän Leo skrivit fem frågor (inga än), och de två godkända studiehjälparna är undantagna.
   Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
 - **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3), i
