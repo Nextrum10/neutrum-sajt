@@ -1028,16 +1028,31 @@ const NXAdmin = (function () {
     return '<a href="' + esc(gmailLänk(adress)) + '" target="_blank" rel="noopener">' + esc(adress) + '</a>';
   }
 
+  /* o.skicka (2026-10-20, Leo: "jag ska kunna redigera mailet och sen
+     bara tryck skicka"): mejlet går härifrån, från info@, i stället för
+     som ett utkast i Gmail. o.skicka får ämnet, texten och en nyckel för
+     rutan och svarar med felet som text, eller null när mejlet gått.
+     Adressen väljer funktionen själv, så Till går inte att ändra. Gmail
+     står kvar bredvid, för den dag funktionen inte svarar. */
   function kontaktaRuta(o) {
+    const direkt = typeof o.skicka === 'function';
+    /* Samma nyckel för varje tryck i rutan: ett dubbelklick blir ett mejl. */
+    const forsok = direkt
+      ? (window.crypto && crypto.randomUUID ? crypto.randomUUID()
+        : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12))
+      : null;
     const ruta = document.createElement('div');
     ruta.className = 'nx-fraga';
     ruta.innerHTML =
       '<div class="nx-fraga-box nx-fraga-bred" role="dialog" aria-modal="true" aria-labelledby="kt-t">'
       + '<h3 id="kt-t">' + esc(o.titel || 'Skriv till ' + (o.namn || '')) + '</h3>'
-      + '<p>Utkastet öppnas i Gmail i en ny flik, med din adress som avsändare, så att '
-      + 'svaret kommer till dig. Ändra fritt innan du skickar.</p>'
+      + (direkt
+        ? '<p>Mejlet skickas från info@nextrum.se, och svaret kommer dit. En kopia hamnar i '
+          + 'inkorgen. Ändra fritt innan du skickar.</p>'
+        : '<p>Utkastet öppnas i Gmail i en ny flik, med din adress som avsändare, så att '
+          + 'svaret kommer till dig. Ändra fritt innan du skickar.</p>')
       + '<div class="fgroup"><label for="kt-till">Till</label>'
-      + '<input class="inp" id="kt-till" value="' + esc(o.till || '') + '"></div>'
+      + '<input class="inp" id="kt-till" value="' + esc(o.till || '') + '"' + (direkt ? ' readonly' : '') + '></div>'
       + '<div class="fgroup" style="margin-top:12px"><label for="kt-amne">Ämne</label>'
       + '<input class="inp" id="kt-amne" value="' + esc(o.amne || '') + '"></div>'
       + '<div class="fgroup" style="margin-top:12px"><label for="kt-text">Meddelande</label>'
@@ -1045,7 +1060,10 @@ const NXAdmin = (function () {
       + '<p class="ok-msg" id="kt-msg"></p>'
       + '<div class="nx-fraga-knappar">'
       + '<button type="button" class="btn btn-ghost" data-kt-stang>Avbryt</button>'
-      + '<button type="button" class="btn btn-primary" id="kt-oppna">Öppna i Gmail</button>'
+      + (direkt
+        ? '<button type="button" class="btn btn-ghost" id="kt-oppna">Öppna i Gmail</button>'
+          + '<button type="button" class="btn btn-primary" id="kt-skicka">Skicka</button>'
+        : '<button type="button" class="btn btn-primary" id="kt-oppna">Öppna i Gmail</button>')
       + '</div></div>';
 
     visaRuta(ruta);
@@ -1065,6 +1083,24 @@ const NXAdmin = (function () {
 
       if (typeof o.efterat === 'function') await o.efterat();
       stäng();
+    });
+
+    if (direkt) $('#kt-skicka', ruta).addEventListener('click', async ev => {
+      const knapp = ev.currentTarget;
+      const amne = $('#kt-amne', ruta).value.trim();
+      const text = $('#kt-text', ruta).value;
+      if (!amne || !text.trim()) { säg($('#kt-msg', ruta), 'Skriv ett ämne och ett meddelande.', false); return; }
+      await medan(knapp, 'Skickar…', async () => {
+        const fel = await o.skicka({ amne, text, forsok });
+        if (fel) {
+          const skäl = String(fel).trim();
+          säg($('#kt-msg', ruta), 'Mejlet skickades inte: ' + skäl + (/[.!?]$/.test(skäl) ? '' : '.')
+            + ' Du kan öppna utkastet i Gmail i stället.', false);
+          return;
+        }
+        if (typeof o.efterat === 'function') await o.efterat();
+        stäng();
+      });
     });
   }
 

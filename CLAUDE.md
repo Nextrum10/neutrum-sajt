@@ -546,7 +546,10 @@ också skickar en ny till Intervju; Google mejlar tiden och Meet-länken, vyn l�
 den en gång till. Policyn lovar att bokningen tas bort för hand senast ett år efter intervjun.
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
-Familjernas och studiehjälparnas sidor behåller `mailto:`.
+Familjernas och studiehjälparnas sidor behåller `mailto:`. **Till den som sökt jobb skickas mejlet härifrån** (2026-10-20,
+Leo: "jag ska kunna redigera mailet och sen bara tryck skicka"): Skriv till hen och Skicka utbildningen har Skicka, och
+`ansokan-mejl` skickar från info@ med adressen ur ansökan (aldrig ur anropet), en hemlig kopia till info@ och en nyckel per
+ruta; texten sparas inte. Gmail står kvar bredvid som reserv.
 **Förhandsvisningen** (2026-10-12, Leo: "föreslå tid och byta vy och acceptera"): sektionen
 Förhandsvisning (för varje admin) öppnar `/foralder?forhandsvisning` och `/larare?forhandsvisning`, de
 riktiga vyerna med en påhittad familj och studiehjälpare. `nextrum-forhandsvisning.js` laddas före

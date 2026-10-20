@@ -1319,6 +1319,9 @@ snyggt." En egen sektion i gruppen Kunder, efter Studiehjälpare
 
 ### Mejl från adminvyn skrivs i Gmail (2026-10-11)
 
+**Utom till den som sökt jobb sedan 2026-10-20** (nedan, Mejlet till den som
+söker skickas härifrån): där är Gmail reserven bredvid Skicka.
+
 Leo: "när vi ska skicka mail från plattformen, se till att det alltid görs i
 gmail och inte mail". Adminvyn öppnade utkasten med `mailto:`, och det öppnar
 datorns förvalda program, som på en Mac är Mail. Nu öppnar allt Gmails
@@ -1503,7 +1506,8 @@ bokningsschema, med Meet som plats, och länken i vårt mejl.
   kallelsen: hen bokar själv, och Boka möte, som annars skickar vidare, används
   inte. Utan länken är Skriv till hen bara en kontakt, som 2026-10-15. Läget
   rörs som förut (Ny blir Kontaktad).
-- **Steg 1 och 2 i Rekryteringen säger det**: steg 1 visar bokningssidan, eller
+- **Steg 1 och 2 i Rekryteringen säger det**: steg 1 visar bokningssidan (och sedan samma dag att mejlet
+  går från info@, nedan), eller
   var den sätts; steg 2 säger att mötet står i kalendern för info@, inte här,
   och att Boka möte mejlar tiden en gång till också när hen redan bokat.
 - **Vyn läser aldrig kalendern.** En bokning syns i adminvyn först om någon
@@ -1514,6 +1518,32 @@ bokningsschema, med Meet som plats, och länken i vårt mejl.
   (rad 10 och avsnitt 8 i `DATASKYDD.md`).
 - `verktyg/prova-ansokningar.js` provar mallen, stämpeln och stegens text med
   en länk satt, och att inget ändras utan den.
+- Länken är satt sedan samma dag: `https://calendar.app.google/9pBZSKMmgtdMLX4i7`
+  (Leos bokningsschema i info@).
+
+### Mejlet till den som söker skickas härifrån (2026-10-20)
+
+Leo samma dag: "går det inte bara att skicka mail från plattformen? jag ska
+kunna redigera mailet och sen bara tryck skicka". Rutan öppnade förut ett utkast
+i Gmail, från det konto som råkade vara inloggat i webbläsaren.
+
+- **`kontaktaRuta` tar `skicka`** (kärnan): då står Skicka som primär knapp,
+  Öppna i Gmail bredvid som reserv, och Till går inte att ändra, för adressen
+  väljer funktionen. Svaret är felet som text eller null; ett fel står i rutan,
+  som står kvar, och inget stämplas. Går mejlet körs `efterat` som för Gmail.
+- **Bara Rekryteringen har den**: Skriv till hen och Skicka utbildningen
+  (`skickaTill()`, `ansokan-mejl`). Anmälningarna, studiehjälparna, Påminn och
+  felgrupperna öppnar Gmail som förut.
+- **Funktionen tar ansökans id, ämnet, texten och en nyckel per ruta**
+  (`forsok`), aldrig en adress: adressen läses ur ansökan med adminens token.
+  Mejlet går från info@ i mejlens skal, ett stycke per tom rad och
+  https-adresser som länkar, med en hemlig kopia till info@. Varför:
+  `supabase/functions/_delad/ansokan_mejl.ts`.
+- **Utan funktionen** (före driftsättningen) svarar den 404, och rutan säger
+  att `ansokan-mejl` inte är driftsatt än och att Gmail går.
+- Proven: `_delad/ansokan_mejl_test.ts` (adressen, gränserna, nyckeln,
+  escapningen och länkarna) och `verktyg/prova-ansokningar.js` (rutan, anropet,
+  stämpeln och felet).
 
 ### Tusen rader (2026-09-29)
 

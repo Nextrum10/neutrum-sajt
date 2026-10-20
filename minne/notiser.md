@@ -167,7 +167,7 @@ applications (insert/update)
 | Händelse i adminvyn | Mejl |
 |---|---|
 | ansökan kommer in (vem som helst) | `mottagen`: tack, svar inom 24 timmar |
-| "Kontakt" | **inget** — admin skriver själv, med förslag på tider eller länken till bokningssidan (2026-10-20), där Google mejlar tiden |
+| "Kontakt" | **inget** — admin skriver själv, med förslag på tider eller länken till bokningssidan (2026-10-20), där Google mejlar tiden. Sedan samma dag går det admin skrivit från info@ genom `ansokan-mejl`, inte genom kön (`minne/vyerna.md`) |
 | mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
 | "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
 | "Utbildningsmötet är hållet", eller Öppna provet i ansökans översikt | `prov`: länken till provet, öppet i tre dagar (Fas 22.1). Adminvyn frågar först |

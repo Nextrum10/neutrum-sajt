@@ -183,6 +183,9 @@ function falskSupabase(o) {
     if (p === '/auth/v1/token') return svar(route, 200, session());
     if (p === '/auth/v1/user') return o.inloggad ? svar(route, 200, ADMIN) : svar(route, 401, { message: 'no user' });
     if (p.startsWith('/auth/v1/')) return svar(route, 200, {});
+    /* ansokan-mejl (2026-10-20): med o.mejl svarar den som när mejlet gått,
+       annars som en funktion som inte är driftsatt. */
+    if (p === '/functions/v1/ansokan-mejl' && o.mejl) return svar(route, 200, { ok: true, till: 'bo@example.se' });
     if (p.startsWith('/functions/v1/')) return svar(route, 404, {});
     if (p.startsWith('/storage/v1/')) return svar(route, 200, { Key: 'cv/x' });
     if (p.startsWith('/rest/v1/rpc/')) {
@@ -863,6 +866,69 @@ async function provaBokningssidan(webb) {
   }
 }
 
+/* ============ mejlet skickas härifrån (2026-10-20) ============
+   Skicka i rutan anropar ansokan-mejl med ansökan, det redigerade ämnet
+   och texten och en nyckel för rutan, aldrig en adress. Går mejlet
+   stämplas det som Öppna i Gmail gjorde; går det inte står rutan kvar
+   med felet, och inget sparas. */
+async function provaSkickaHarifran(webb) {
+  const SIDA = 'https://calendar.app.google/provet123';
+  for (const går of [true, false]) {
+    const namn = går ? 'skicka' : 'skicka utan funktionen';
+    const { context, page, S, riktiga, konsol } = await öppna(webb,
+      { inloggad: true, steg: true, bokning: SIDA, mejl: går });
+    await page.goto(BAS + '/admin#ansokningar');
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
+    await vänta(800);
+    await page.evaluate(() => { window.open = u => { window.öppnadGmail = String(u); return null; }; });
+    const patchar = () => S.logg.filter(r => r.metod === 'PATCH' && r.väg === '/rest/v1/applications');
+    const anrop = () => S.logg.filter(r => r.väg === '/functions/v1/ansokan-mejl' && r.metod === 'POST');
+    const flikTal = async () => (await text(page, '#flik-ans-intervju-mark')) + ' / ' + (await text(page, '#flik-ans-utbildning-mark'));
+
+    await page.click('#ans-tabell [data-dp="ansokan:ans-boka"]');
+    await vänta(400);
+    await page.click('.dp-flik[data-dp-flik="rekrytering"]');
+    await vänta(300);
+    await page.click('[data-ans-kontakt="ans-boka"]');
+    await page.waitForSelector('#kt-skicka', { timeout: 3000 }).catch(() => {});
+    if (går) {
+      prova(namn + ': rutan har Skicka och Gmail bredvid', (await page.locator('#kt-skicka.btn-primary').count()) === 1
+        && (await page.locator('#kt-oppna.btn-ghost').count()) === 1);
+      prova(namn + ': Till går inte att ändra', await page.locator('#kt-till').evaluate(el => el.readOnly));
+      prova(namn + ': rutan säger att mejlet går från info@', (await text(page, '.nx-fraga-box')).includes('skickas från info@nextrum.se'));
+      await bild(page, 'skicka-ruta', '.nx-fraga-box');
+    }
+    const före = patchar().length;
+    await page.fill('#kt-amne', 'Intervju hos Nextrum');
+    await page.locator('#kt-text').evaluate(el => { el.value = el.value + '\n\nPS. Hör av dig om något är oklart.'; });
+    await page.click('#kt-skicka');
+    await vänta(700);
+    const a = anrop().pop();
+    prova(namn + ': Skicka anropar ansokan-mejl med ansökan, ämnet och den redigerade texten',
+      a && a.kropp && a.kropp.ansokan === 'ans-boka' && a.kropp.amne === 'Intervju hos Nextrum'
+      && a.kropp.text.includes('PS. Hör av dig') && a.kropp.text.includes(SIDA)
+      && /^[a-z0-9-]{8,64}$/i.test(a.kropp.forsok || '') && !('till' in a.kropp),
+      JSON.stringify(a && a.kropp).slice(0, 300));
+    prova(namn + ': Gmail öppnas inte', !(await page.evaluate(() => window.öppnadGmail)));
+    if (går) {
+      prova(namn + ': rutan stängs', (await page.locator('#kt-skicka').count()) === 0);
+      const st = patchar().pop();
+      prova(namn + ': stämpeln sparas och hen står under Intervju', patchar().length === före + 1
+        && st && 'till_intervju_at' in st.kropp && (await flikTal()) === '2 / 2',
+        JSON.stringify(st && st.kropp) + ' ' + (await flikTal()));
+    } else {
+      const fel = await text(page, '#kt-msg');
+      prova(namn + ': rutan står kvar med felet och Gmail som väg', (await page.locator('#kt-skicka').count()) === 1
+        && fel.startsWith('Mejlet skickades inte: ansokan-mejl är inte driftsatt än.') && fel.includes('Gmail'), fel);
+      prova(namn + ': inget sparas', patchar().length === före, patchar().length + ' mot ' + före);
+      await bild(page, 'skicka-fel', '.nx-fraga-box');
+    }
+    prova(namn + ': inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    prova(namn + ': inga fel i konsolen', konsol.filter(k => !/ansokan-mejl|non-2xx/.test(k)).length === 0, konsol.join(' | '));
+    await context.close();
+  }
+}
+
 /* ============ rekryteringens steg utan kolumnen (2026-10-13) ============
    Före migrationen ansokan_till_intervju räknas Intervju ur läget
    Kontaktad, och Till intervju sätter läget, som det gjorde 2026-10-13. */
@@ -971,6 +1037,7 @@ async function provaStegenUtanKolumnen(webb) {
     await provaAdminvyn(webb);
     await provaStegen(webb);
     await provaBokningssidan(webb);
+    await provaSkickaHarifran(webb);
     await provaStegenUtanKolumnen(webb);
   } catch (e) {
     prova('provet kraschade', false, e && e.stack || e);

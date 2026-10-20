@@ -332,6 +332,19 @@
   /* Mallarna. Skrivna för att kunna skickas som de är, men de är
      utkast: rutan är redigerbar just för att ingen familj ska få ett
      mejl som låter som ett formulär. */
+  /* Mejlet går härifrån, från info@, genom ansokan-mejl (2026-10-20).
+     Funktionen tar adressen ur ansökan, så bara id:t skickas. Svaret är
+     felet som text, eller null när mejlet gått. */
+  async function skickaTill(a, brev) {
+    const { data, error } = await supa.functions.invoke('ansokan-mejl',
+      { body: { ansokan: a.id, amne: brev.amne, text: brev.text, forsok: brev.forsok } });
+    /* En funktion som inte är driftsatt svarar 404 med Supabases egen text
+       på engelska: säg vad det betyder i stället. */
+    if (error && error.context && error.context.status === 404) return 'ansokan-mejl är inte driftsatt än.';
+    if (error) return await funktionsFel(error);
+    return data && data.ok ? null : 'Okänt svar.';
+  }
+
   /* Bokningssidan i Google Kalender (2026-10-20, INTERVJU_BOKNING_URL).
      Bara en https-adress, som möteslänken: mejlet går ut med vår
      avsändare, och en adress som inte är en länk hade stått som text. */
@@ -384,6 +397,7 @@
       namn: a.name, till: a.email,
       amne: 'Din ansökan till Nextrum',
       text: mallIntervju(a),
+      skicka: brev => skickaTill(a, brev),
       efterat: async () => {
         const nu = new Date().toISOString();
         const ändring = { kontaktad_at: nu, status: a.status === 'new' ? 'contacted' : a.status };
@@ -393,7 +407,7 @@
            bara en kontakt, som förut. */
         if (bokningssida() && harIntervjuKolumn(a) && ansSteg(a) === 'ny') ändring.till_intervju_at = nu;
         const { error } = await supa.from('applications').update(ändring).eq('id', a.id);
-        if (error) { alert('Utkastet öppnades, men det sparades inte att du skrev till hen: ' + felText(error)); return; }
+        if (error) { alert('Det sparades inte att du skrev till hen: ' + felText(error)); return; }
         Object.assign(a, ändring);
         ritaOm();
       }
@@ -773,11 +787,10 @@
               + 'ansokan_till_intervju är körd. ')
           + 'Kvittot på ansökan har redan gått av sig självt. '
           + (sida
-            ? 'Skriv till hen med länken till bokningssidan, där hen väljer en tid själv. Utkastet '
-              + 'öppnas i Gmail med din adress som avsändare, så att svaret kommer till dig, och hen '
-              + 'hamnar under Intervju.'
-            : 'Skriv till hen för att föreslå tider för mötet: utkastet öppnas i Gmail med din adress '
-              + 'som avsändare, så att svaret kommer till dig.'),
+            ? 'Skriv till hen med länken till bokningssidan, där hen väljer en tid själv. Mejlet går '
+              + 'från info@nextrum.se, och svaret kommer dit. När du skickat det hamnar hen under Intervju.'
+            : 'Skriv till hen för att föreslå tider för mötet. Mejlet går från info@nextrum.se, och '
+              + 'svaret kommer dit.'),
           harKolumn ? a.till_intervju_at : a.kontaktad_at,
           tillIntervjuKnapp(a)
           + '<button type="button" class="btn btn-ghost btn-sm" data-ans-kontakt="' + id + '">'
@@ -973,7 +986,8 @@
       titel: 'Skicka utbildningen till ' + (a.name || a.email || ''),
       namn: a.name, till: a.email,
       amne: 'Introduktionen inför ditt första pass',
-      text: mallUtbildning(a)
+      text: mallUtbildning(a),
+      skicka: brev => skickaTill(a, brev)
     });
   });
 

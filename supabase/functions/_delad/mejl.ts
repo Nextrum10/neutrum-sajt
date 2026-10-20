@@ -22,6 +22,8 @@ export type Mejl = {
   text: string;
   html: string;
   svaraTill?: string[];
+  /** Hemlig kopia. ansokan-mejl lägger det skickade i inkorgen så (2026-10-20). */
+  kopia?: string[];
   /** Samma nyckel inom Resends fönster skickar bara en gång. */
   idempotens?: string;
   /** Extra mejlheaders, till exempel List-Unsubscribe. */
@@ -74,6 +76,7 @@ export async function skickaViaResend(m: Mejl): Promise<Response> {
       from: m.fran,
       to: m.till,
       reply_to: m.svaraTill && m.svaraTill.length ? m.svaraTill : undefined,
+      bcc: m.kopia && m.kopia.length ? m.kopia : undefined,
       subject: m.amne,
       text: m.text,
       html: m.html,
