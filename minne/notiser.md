@@ -178,7 +178,7 @@ applications (insert/update)
 | ansökan kommer in, under 18 med vårdnadshavarens e-post (2026-10-05) | `vardnadshavare`: till vårdnadshavaren, barnet har sökt och vi behöver ett skriftligt godkännande |
 | admin rättar eller lägger till vårdnadshavarens e-post, utan godkännande | `vardnadshavare` igen, en gång per adress |
 | läget blir Avböjd (2026-10-05) | `avbojd`: tack, vi har valt att gå vidare med andra sökande. Tidigast en halvtimme senare, aldrig 20–9, inte om läget hunnit bytas. Adminvyn visar mejlet innan |
-| Skicka vidare till intervju (`till_intervju_at` sätts, 2026-10-21) | `ansokan_intervju`: Leos text, "Du går vidare till intervju". **Genom notiskön, inte `ansokan_utskick`** (Intervjumejlet, nedan). Adminvyn visar mejlet innan |
+| Skicka vidare till intervju (`till_intervju_at` sätts, 2026-10-21) | `ansokan_intervju`: Leos text, "Du går vidare till intervju", med länken till bokningssidan (2026-10-20). **Genom notiskön, inte `ansokan_utskick`** (Intervjumejlet, nedan). Adminvyn visar mejlet innan |
 
 Sex regler bär det:
 
@@ -236,15 +236,27 @@ Sex regler bär det:
 
 Leo: när admin skickar en ansökan vidare till intervju ska den som sökt få ett
 mejl, högst en gång per ansökan, och det ska gå genom notiskön och följa läget.
-Texten är hans, ord för ord, och ingenting läggs till (ingen knapp, ingen fot,
-ingen avregistrering: det är ett besked om en ansökan mottagaren själv skickat,
-som de andra mejlen i tabellen ovan):
+Texten är hans, och ingenting läggs till (ingen knapp, ingen fot, ingen
+avregistrering: det är ett besked om en ansökan mottagaren själv skickat, som de
+andra mejlen i tabellen ovan).
+
+**Mejlet är kallelsen** (2026-10-20, Leo: "lägg in bokningslänken i det
+automatiska meddelandet och meddelandet ska skickas när jag trycker [Skicka
+vidare till intervju]"): förut sa andra stycket att inbjudan kom senare ("Håll
+koll på din mejl de kommande dagarna, för det är dit vi skickar inbjudan till
+intervjun"), och nu står länken till bokningssidan i Google Kalender där, som
+en vanlig länk. Hen bokar en tid själv, och Google mejlar tiden och Meet-länken.
+Adressen är `INTERVJU_BOKNING_URL` i `nextrum-config.js`; mallen läser inte
+configen, så den står i `intervju.ts`, i adminvyn och i configen, och
+`kolla-mejltexter.py` prövar alla tre. Mejlet lovar ingen längd på intervjun.
 
 ```
 Ämne: Du går vidare till intervju
 Hej [förnamn]!
 Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.
-Håll koll på din mejl de kommande dagarna, för det är dit vi skickar inbjudan till intervjun. Har du önskemål om när intervjun ska hållas får du gärna mejla oss på info@nextrum.se.
+Boka en tid för intervjun som passar dig här:
+https://calendar.app.google/9pBZSKMmgtdMLX4i7
+Intervjun hålls i Google Meet, och länken till mötet kommer i bekräftelsen när du har bokat. Du behöver inget Google-konto. Passar ingen av tiderna får du gärna mejla oss på info@nextrum.se.
 Hälsningar
 Leo och Alex, Nextrum
 ```

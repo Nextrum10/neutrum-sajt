@@ -20,13 +20,19 @@ som en.
 INTERVJUMEJLET (2026-10-21) på samma sätt: Skicka vidare till intervju
 visar mejlet innan steget sätts (INTERVJU_MEJLET i
 nextrum-admin-rekrytering.js), och mejlet byggs ur INTERVJU i
-supabase/functions/_delad/notiser/intervju.ts. Texten är Leos, ord för ord.
+supabase/functions/_delad/notiser/intervju.ts. Texten är Leos.
+
+BOKNINGSLÄNKEN (2026-10-20) står i intervjumejlet (lank) och ska vara
+bokningssidan i nextrum-config.js (INTERVJU_BOKNING_URL), den som Skriv
+till hen också skickar. Mallen kan inte läsa configen, så adressen står
+på tre ställen, och byts bokningssidan på ett av dem går kallelsen till
+den gamla.
 """
 import io, os, re, sys
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FALT = ('amne', 'rubrik', 'mening', 'avslutning')
-INTERVJU_FALT = ('amne', 'forsta', 'andra', 'halsning', 'signatur')
+INTERVJU_FALT = ('amne', 'forsta', 'boka', 'lank', 'andra', 'halsning', 'signatur')
 
 
 def las(rel):
@@ -69,15 +75,29 @@ def jamfor(ts_fil, ts_namn, js_namn, falt):
     return fynd
 
 
+def bokningslanken():
+    """Intervjumejlets länk mot bokningssidan i configen."""
+    ts_fil = 'supabase/functions/_delad/notiser/intervju.ts'
+    lank = falten(objektet(las(ts_fil), 'INTERVJU', ts_fil), INTERVJU_FALT).get('lank', '')
+    m = re.search(r"\bINTERVJU_BOKNING_URL\s*:\s*'([^']*)'", las('nextrum-config.js'))
+    if not m:
+        return ['SAKNAS  INTERVJU_BOKNING_URL i nextrum-config.js']
+    if m.group(1).strip() != lank:
+        return ['OLIKA   bokningslänken\n          mejlet:  %s\n          configen: %s' % (lank, m.group(1))]
+    return []
+
+
 def main():
     fynd = jamfor('supabase/functions/_delad/notiser/ansokan.ts', 'NEJ', 'NEJ_MEJLET', FALT)
     fynd += jamfor('supabase/functions/_delad/notiser/intervju.ts', 'INTERVJU', 'INTERVJU_MEJLET', INTERVJU_FALT)
+    fynd += bokningslanken()
 
     if fynd:
         print('\n'.join(fynd))
-        print('\nAdminvyn och mejlet säger inte samma sak. Ändra båda.')
+        print('\nAdminvyn, mejlet och configen säger inte samma sak. Ändra alla.')
         return 1
-    print('ok   nejet och intervjumejlet säger samma sak i adminvyn och i mejlen (%d och %d fält)'
+    print('ok   nejet och intervjumejlet säger samma sak i adminvyn och i mejlen (%d och %d fält), '
+          'och intervjumejlet länkar till bokningssidan i configen'
           % (len(FALT), len(INTERVJU_FALT)))
     return 0
 

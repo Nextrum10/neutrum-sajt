@@ -784,8 +784,8 @@
       + spårSteg(1, 'Till intervju',
           (harKolumn && harIntervjumejl(a)
             ? 'Du väljer vem som går vidare: hen hamnar under fliken Intervju och får mejlet "Du går vidare '
-              + 'till intervju", en gång per ansökan. Kommer steget med ett bokat möte, eller med kallelsen '
-              + 'när du skriver till hen, mejlas bara den. '
+              + 'till intervju" med länken till bokningssidan, där hen bokar en tid själv, en gång per ansökan. '
+              + 'Kommer steget med ett bokat möte, eller med kallelsen när du skriver till hen, mejlas bara den. '
               + 'Läget (Ny, Kontaktad) sätter du själv under Ansökan, och det flyttar ingen. '
             : harKolumn
             ? 'Du väljer vem som går vidare: hen hamnar under fliken Intervju, och ingenting mejlas. '
@@ -793,7 +793,10 @@
             : 'Läget Kontaktad flyttar hen till fliken Intervju tills migrationen '
               + 'ansokan_till_intervju är körd. ')
           + 'Kvittot på ansökan har redan gått av sig självt. '
-          + (sida
+          + (sida && harKolumn && harIntervjumejl(a)
+            ? 'Vill du skriva något eget skriver du till hen i stället, också med länken. Mejlet går från '
+              + 'info@nextrum.se, och svaret kommer dit. När du skickat det hamnar hen under Intervju.'
+            : sida
             ? 'Skriv till hen med länken till bokningssidan, där hen väljer en tid själv. Mejlet går '
               + 'från info@nextrum.se, och svaret kommer dit. När du skickat det hamnar hen under Intervju.'
             : 'Skriv till hen för att föreslå tider för mötet. Mejlet går från info@nextrum.se, och '
@@ -1380,13 +1383,18 @@
 
      TEXTEN ÄR LEOS OCH STÅR PÅ TVÅ STÄLLEN: här och i mallen (INTERVJU
      i supabase/functions/_delad/notiser/intervju.ts).
-     verktyg/kolla-mejltexter.py håller dem lika.
+     verktyg/kolla-mejltexter.py håller dem lika. Länken till
+     bokningssidan (2026-10-20, Leo) står med i mejlet och ska vara
+     INTERVJU_BOKNING_URL, som kontrollen också prövar: mallen kan inte
+     läsa configen, så frågan visar mallens adress, inte bokningssida().
      ============================================================ */
   const INTERVJU_MEJLET = {
     amne: 'Du går vidare till intervju',
     forsta: 'Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.',
-    andra: 'Håll koll på din mejl de kommande dagarna, för det är dit vi skickar inbjudan till intervjun. '
-      + 'Har du önskemål om när intervjun ska hållas får du gärna mejla oss på info@nextrum.se.',
+    boka: 'Boka en tid för intervjun som passar dig här:',
+    lank: 'https://calendar.app.google/9pBZSKMmgtdMLX4i7',
+    andra: 'Intervjun hålls i Google Meet, och länken till mötet kommer i bekräftelsen när du har bokat. '
+      + 'Du behöver inget Google-konto. Passar ingen av tiderna får du gärna mejla oss på info@nextrum.se.',
     halsning: 'Hälsningar',
     signatur: 'Leo och Alex, Nextrum'
   };
@@ -1415,6 +1423,8 @@
       forhandsvisning: 'Ämne: ' + INTERVJU_MEJLET.amne + '\n\n'
         + (namn ? 'Hej ' + namn + '!' : 'Hej!') + '\n\n'
         + INTERVJU_MEJLET.forsta + '\n\n'
+        + INTERVJU_MEJLET.boka + '\n'
+        + INTERVJU_MEJLET.lank + '\n\n'
         + INTERVJU_MEJLET.andra + '\n\n'
         + INTERVJU_MEJLET.halsning + '\n'
         + INTERVJU_MEJLET.signatur,

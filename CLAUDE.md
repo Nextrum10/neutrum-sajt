@@ -219,8 +219,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   möte bokas i samma steg (mötets mejl är inbjudan) eller när Skriv till hen skickar kallelsen med
   bokningssidan (`kontaktad_at` i samma ändring, 2026-10-20: det mejlet är kallelsen). Det går genom notiskön (`notis_utskick.ansokan_id`,
   rollen `sokande`), så sandlådan och `notiser_mejl` gäller; `notis_konfig.lage` läses inte av någon kod och
-  rörs inte. Texten är Leos ord för ord, i `intervju.ts` och i adminvyn (`INTERVJU_MEJLET`, som visar mejlet
-  innan steget sätts), och `kolla-mejltexter.py` håller dem lika. Ansökans tack är "Tack, din ansökan är
+  rörs inte. Texten är Leos, i `intervju.ts` och i adminvyn (`INTERVJU_MEJLET`, som visar mejlet
+  innan steget sätts), och `kolla-mejltexter.py` håller dem lika. **Mejlet är kallelsen** (2026-10-20, Leo: "lägg in
+  bokningslänken i det automatiska meddelandet"): det har länken till bokningssidan, där hen bokar en tid själv, och
+  adressen är `INTERVJU_BOKNING_URL`, som kontrollen också prövar (mallen läser inte configen). Ansökans tack är "Tack, din ansökan är
   skickad! Vi hör av oss inom 24 timmar."
 - **Utbildningsprovet i studiehjälparvyn** (2026-10-21): en godkänd studiehjälpare gör provet vid första
   inloggningen, före vyn (`NXProvet`), och en gång: mer än gränsen rätt (`prov_installning`, 50 % som förval)
