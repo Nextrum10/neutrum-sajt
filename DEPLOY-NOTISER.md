@@ -390,8 +390,9 @@ select jobname, schedule, active from cron.job where jobname = 'admin-paminnelse
 ## 8. Intervjumejlet och utbildningsprovet (2026-10-21, i drift sedan 2026-10-20)
 
 I drift sedan kvällen 2026-10-20, i den här ordningen: `notis-ko` v29 (med bokningslänken i mejlet), sedan
-`intervjumejlet` och `utbildningsprovet_i_studiehjalparvyn` med resten av PR #307 (`DEPLOY-BETALNING.md` 9.21). Inget
-mejl gick ut i efterhand, provet har inga frågor än, och de två godkända studiehjälparna är undantagna. Steg 6 och 7
+`intervjumejlet` och `utbildningsprovet_i_studiehjalparvyn` med resten av PR #307 (`DEPLOY-BETALNING.md` 9.21). De fyra
+ansökningar som skickades vidare under minuten innan migrationen fick mejlet för hand samma kväll, på Leos ord
+(`minne/notiser.md`), provet har inga frågor än, och de två godkända studiehjälparna är undantagna. Steg 6 och 7
 nedan är kvar.
 
 Två saker som hör till rekryteringen och går ut tillsammans: mejlet till den som går vidare till intervju

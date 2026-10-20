@@ -299,6 +299,22 @@ applications.till_intervju_at: null → satt (Skicka vidare till intervju)
    sökande]" och brevet säger att det är ett prov.
 6. **`notis-ko` före migrationen.** En äldre `notis-ko` känner inte rollen
    `sokande`.
+7. **De fyra som missade triggern** (2026-10-20 kväll). Leo skickade vidare
+   fyra ansökningar under dagen och tog ut och in dem två gånger, sist
+   18.28–18.29 UTC. Blocket med migrationen började 18.29.41
+   (`DEPLOY-BETALNING.md` 9.21), så triggern fanns inte och inget köades. På
+   hans ord ("Kan du skicka ut intervju mejlen till de som är i intervju")
+   köades de 18.51 i ett do-block: triggerns villkor utom övergången (inte
+   avböjd, inget möte, inget `kontaktad_at`, en adress), samma rad och nyckel
+   som triggern lägger, och `intervju_mejl_skickat_at` satt med
+   `applications_till_intervju` avstängd runt raden och på igen efteråt, som
+   `flaggor_stampla` (`skydda_ansokningsfalt` släpper igenom postgres och rör
+   inte kolumnen). Inte genom ännu ett ut och in med `till_intervju_at`:
+   auditen loggar den kolumnen, och det hade blivit åtta rader i en logg som
+   inte går att ändra. Blocket kördes först i en transaktion som rullades
+   tillbaka, där `notis_utskick_ta` lämnade ut alla fyra med rollen `sokande`,
+   sina egna adresser och inte sandlådan. Alla fyra gick 18.52 vid första
+   försöket, med ett id från Resend.
 
 Ansökans tack i formuläret (`tackAnsokan` i `nextrum-app.js`) är sedan samma dag
 "Tack, din ansökan är skickad! Vi hör av oss inom 24 timmar."
