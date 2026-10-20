@@ -386,6 +386,20 @@ tar bort filens `begin;`, slutraden och `rollback;`, kör den med
 % gröna. FEL: %'`. Felet rullar tillbaka allt, tillägget behöver inte
 skapas (det står i `extensions`), och svaret står i felmeddelandet.
 
+**Driftens provfrågor stängs av i sviten** (2026-10-20). Den första
+körningen mot driften efter att utbildningsprovet fått sina frågor gav
+1706 av 1772: med minst fem aktiva frågor spärrar `intern.provet_sparrar`
+varje studiehjälpare utan godkänt prov, och fixturernas studiehjälpare
+har inget, så varje prov där en studiehjälpare skriver en rapport, bokar
+eller ser sina elever föll på policyn "utbildningsprovet först", och
+avsnitt 41, som räknar med noll frågor, fick "Svara på alla frågor". En
+lokal databas har inga frågor och gick igenom. Sviten stänger nu av alla
+aktiva frågor och sätter `prov_installning` till migrationens förval
+direkt efter `begin;`, i samma transaktion som allt annat. Samma fel
+gick att återskapa lokalt med 26 aktiva frågor och gränsen 55, och med
+rättelsen gav samma databas 1897 av 1897. En ny tabell i driften som
+ändrar vad fixturerna får göra ska neutraliseras på samma ställe.
+
 **Ett avsnitt för en migration som inte är körd klipps bort i blocket.**
 Ett sådant avsnitt prövar tabeller som inte finns i driften och faller.
 Så var det 2026-10-14 med avsnitt 33 (`kortet_reserveras`). Sviten slutar

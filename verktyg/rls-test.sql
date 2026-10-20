@@ -80,6 +80,22 @@ begin;
 -- Proven för själva låset stänger sina egna månader.
 update public.manadsbokslut set stangd = false where stangd;
 
+-- Driftens frågor till utbildningsprovet stängs av, också bara i den här
+-- transaktionen (2026-10-20). Med minst fem aktiva frågor gäller spärren
+-- (intern.provet_sparrar) för varje studiehjälpare utan godkänt prov, och
+-- fixturernas studiehjälpare har inget: mot driften föll 66 prov där en
+-- studiehjälpare skriver en rapport, bokar eller ser sina elever, medan en
+-- lokal databas utan frågor gick igenom. Avsnitt 41 lägger in egna frågor
+-- och provar spärren med dem. Inställningen går tillbaka till migrationens
+-- förval av samma skäl: gränsen är 55 i driften sedan 2026-10-20.
+do $$
+begin
+  if to_regclass('public.prov_fragor') is not null then
+    update public.prov_fragor set aktiv = false where aktiv;
+    update public.prov_installning set grans_procent = 50, min_aktiva_fragor = 5, vantetid_timmar = 24;
+  end if;
+end $$;
+
 -- Notistriggrarna stängs av, så att fixturpassen och provanmälningarna
 -- aldrig kan bli ett mejl. Också de ändringarna rullas tillbaka.
 --

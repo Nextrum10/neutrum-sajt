@@ -893,7 +893,9 @@ Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
   den går inte att prova på en gren; en utebliven körning syns bara i Actions.
 - **`verktyg/rls-test.sql`** körs inte i CI. Kör HELA filen som ett anrop efter varje ändring i
   en policy eller trigger; varje rad ska vara ok. Den slår upp triggrar på funktionen, har
-  flaggan `erbjudanden` av, och en fixtur syns för resten av filen. Lokalt först, med
+  flaggan `erbjudanden` av, stänger av driftens frågor till utbildningsprovet och sätter provets förval
+  (2026-10-20: med driftens 26 frågor spärrades fixturernas studiehjälpare, och 66 prov föll), och en
+  fixtur syns för resten av filen. Lokalt först, med
   `verktyg/lokal-databas.sh` (`STOPP=`); driften i en transaktion som rullas tillbaka, hämtad
   med tillägget `http` från en commit.
   I en molnsession: `dockerd &`, och Deno ur npm med en importkarta (`minne/genererat-och-ci.md`).
