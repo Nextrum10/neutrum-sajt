@@ -439,6 +439,23 @@ async function provaLägen(webb) {
   await context.close();
 }
 
+/* ============ ett genomfört pass som inte är betalt ============
+   Passets sida för ett genomfört obetalt pass, utan kort valt. Fas 1
+   (fakturan bort, 2026-10-21) tog med grenen för tillägget när fakturans
+   gren togs bort, och sidan kastade ett fel i stället för att ritas. */
+async function provaGenomförtObetalt(webb) {
+  const { context, page, konsol } = await öppna(webb);
+  await laddaVyn(page);
+  await tillPasset(page, id(104));
+  prova('genomfört obetalt: passets sida ritas', await synlig(page, '#pass-sida .ps-titel'));
+  prova('genomfört obetalt: beskedet ber om betalsätt och rapporten',
+    /Passet är genomfört\. Läs rapporten nedan och bekräfta den genom att välja hur ni betalar\./.test(await text(page, BESKED)),
+    await text(page, BESKED));
+  prova('genomfört obetalt: betalvalen står på sidan', (await page.locator('#pass-sida .vy-betalval').count()) > 0);
+  prova('genomfört obetalt: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
+  await context.close();
+}
+
 /* ============ adminvyn: familjens panel under Ekonomi ============
    Mot en falsk Supabase på https://supabase.test, som de andra
    adminproven. saknas: tabellerna finns inte (migrationen är inte körd),
@@ -538,7 +555,9 @@ async function öppnaAdmin(webb, o) {
     document.body.insertAdjacentHTML('beforeend', '<button type="button" id="prov-dp" data-dp="familj:foralder-1" data-dp-start="ekonomi">Öppna</button>');
     document.getElementById('prov-dp').click();
   });
-  await page.waitForFunction(() => /Faktura som betalsätt/.test(document.body.textContent), null, { timeout: 8000 }).catch(() => {});
+  /* Ekonomin i panelen är ritad när rubriken Kortet står där. */
+  await page.waitForFunction(() => Array.from(document.querySelectorAll('.dp-rubrik span'))
+    .some(x => x.textContent === 'Kortet'), null, { timeout: 8000 }).catch(() => {});
   await vänta(300);
   return { context, page, konsol, anrop, riktiga };
 }
@@ -611,6 +630,7 @@ async function provaTelefonen(webb) {
     await provaUtanMigrationen(webb);
     await provaAvMedVal(webb);
     await provaLägen(webb);
+    await provaGenomförtObetalt(webb);
     await provaTelefonen(webb);
     await provaAdminvyn(webb);
   } catch (e) {

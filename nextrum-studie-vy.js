@@ -5689,6 +5689,7 @@
          som under Bekräfta rapport. */
       besked = { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den genom att välja hur ni betalar.', ton: 'fraga' };
       val = betalVal(b);
+    } else if (b.status === 'completed' && till) {
       /* Betalt i förväg, och passet drog över (Fas 20.1). Tillägget
          betalas när rapporten bekräftas, och att betala det bekräftar
          den, som under Bekräfta rapport. */
