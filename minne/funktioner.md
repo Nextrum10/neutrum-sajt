@@ -393,6 +393,20 @@ kontroll av att eleven fanns; den fick bli `ai_finns()`.
 - `verktyg/testa-agent.js` vaktar drift-agentens verktygslista i CI:
   exakt nio verktyg, inget utgående, och ett stegtak som är satt.
 
+**Drift och förslagen är borta ur adminvyn** (2026-10-21). Leo valde det
+(AI-delen var "svår och ostrukturerad" och han förstod inte hur den skulle
+användas i praktiken). Tre system sa samma sak: de dagliga kontrollerna lägger
+uppgifter i Att göra, matchningsförslagen står på varje omatchad elev under
+Matchning, och drift läste samma rader och föreslog samma saker, men bara när
+någon skrev en fråga i en tom ruta, och svaret hamnade i en annan flik.
+`nextrum-admin-ai.js` är borta, Fråga NEX på Översikt likaså (ringen och läget
+står kvar, de kostar ingenting), och Agenter har två flikar: Juridik och Ekonomi.
+Bolagsfakta och Läget (nu System → Agenterna) står under System, Återkopplingen
+under Lektioner. Backenden står kvar: edge-funktionen `drift`, `ai_forslag`,
+`godkann_forslag()` och rollen `nextrum_ai`. Ingenting skapar förslag längre, och
+`testa-agent.js` vaktar fortfarande drifts verktygslista, så en framtida väg dit
+börjar med samma spärrar.
+
 **Provbänken `_prov-admin-*` får aldrig checkas in.** Den laddar de
 riktiga filerna mot en stubbad databas vars `auth` alltid svarar
 "inloggad admin" — alltså hela adminvyn utan inloggning — och

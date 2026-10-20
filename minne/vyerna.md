@@ -1226,7 +1226,7 @@ Designen är samma hus som ovan; det här är skalet runt den.
 - **Arbetskön ritas en gång**, i Att göra under NEX, med det som gått
   fel först under en egen rubrik. `S.attGora` och `S.problem` räknas i
   `ritaÖversikt()` och läses av konsolen, notisklockan och menyns
-  siffror, precis som förut. NEX är ett band (ringen, läget, samtalet),
+  siffror, precis som förut. NEX är ett band (ringen och läget; samtalet med drift-agenten togs bort 2026-10-21),
   inte en 286 px hög ring med kön bredvid. `.adm-att-gora` finns inte
   längre; raderna är `.kon-rad` i `nextrum-admin-konsol.css`, i samma
   form som den hade.

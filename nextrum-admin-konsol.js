@@ -5,25 +5,17 @@
    roll står redan i toppradens konto, så det blocket bar ingen
    information som inte fanns någon annanstans.
 
-   TVÅ DELAR, OCH DE KOSTAR OLIKA MYCKET:
+   LÄGET läses ur S.lage, alltså vyn admin_lage, som redan är
+   hämtad av ritaÖversikt(), och arbetskön ur S.problem och
+   S.attGora. Den kostar ingenting, är alltid färsk, och ritas vid
+   varje sidladdning: ringen och talet i NEX-bandet, och listan Att
+   göra under det.
 
-   1. LÄGET läses ur S.lage, alltså vyn admin_lage, som redan är
-      hämtad av ritaÖversikt(), och arbetskön ur S.problem och
-      S.attGora. Den kostar ingenting, är alltid färsk, och ritas vid
-      varje sidladdning: ringen och talet i NEX-bandet, och listan Att
-      göra under det.
-
-   2. AGENTEN, alltså NEX som man talar med, körs BARA när någon
-      frågar den något. Drift-agenten är
-      ett betalt API-anrop med ett stegtak på fjorton steg. Att köra
-      den automatiskt vid varje sidladdning hade varit precis den
-      räkning som växer medan ingen tittar, vilket är hela skälet
-      till att stegtaket finns (se _delad/agent.ts).
-
-   Konsolen bygger alltså ingen egen agent och inget eget anrop: den
-   matar NXAgent.stall(), som sköter laddning, vägran, källtvång och
-   märkningen av påhittade adresser. En andra väg in till samma agent
-   hade varit en andra uppsättning spärrar att hålla i synk.
+   Samtalet med drift-agenten (Fråga NEX, med diktering) stod här till
+   2026-10-21. Det togs bort med drift och förslagskön (Leo: AI-delen
+   var "svår och ostrukturerad"): det agenten kunde säga stod redan i
+   Att göra och under Matchning, och en tom ruta att fråga i är inget
+   arbetssätt.
    ============================================================ */
 (function () {
   'use strict';
@@ -32,20 +24,6 @@
   const { S } = NXAdmin;
   const kronor = NXBetalning.kronor;
 
-  /* Frågor som faktiskt går att besvara med drift-agentens nio
-     läsande verktyg. Exempel som agenten måste vägra lär bara ut att
-     den inte fungerar. */
-  const EXEMPEL = [
-    'Vad bör jag göra först idag?',
-    'Vilka elever har väntat längst på matchning?',
-    'Finns det pass nästa vecka utan bekräftad studiehjälpare?',
-    'Sammanfatta veckan i siffror.'
-  ];
-
-  /* En post ur S.problem eller S.attGora blir en rad: antalet, vad det
-     är, en mening om varför det väntar och vägen dit. Texten byggs med
-     samma ental/rubrik-par som notisklockan och menyns siffror, så att
-     de säger ordagrant samma sak. */
   function rad(p) {
     return '<a class="kon-rad" href="' + esc(p.till) + '">'
       + '<span class="kon-rad-antal">' + esc(String(p.antal)) + '</span>'
@@ -132,124 +110,5 @@
     }
   }
 
-  /* ------------------------------------------------------------
-     SAMTALET
-
-     Samma koppling som agentfliken använder (nextrum-admin-agenter.js
-     kopplaAgent), men mot ett enda fält och utan körningslogg — den
-     som vill se historiken går till Agenter.
-     ------------------------------------------------------------ */
-  function koppla() {
-    const ruta = $('#kon-fraga');
-    const ut = $('#kon-ut');
-    const knapp = $('#kon-skicka');
-    const exempel = $('#kon-exempel');
-    if (!ruta || !ut || !knapp) return;
-
-    if (exempel) {
-      exempel.innerHTML = EXEMPEL.map(f =>
-        '<button class="kon-exempel-knapp" type="button">' + esc(f) + '</button>').join('');
-      exempel.addEventListener('click', e => {
-        const b = e.target.closest('button');
-        if (!b) return;
-        ruta.value = b.textContent.trim();
-        ruta.focus();
-      });
-    }
-
-    /* NEX rör sig medan den tänker. Klassen sätts runt anropet och tas
-       bort i finally: en kastad körning, ett timeout eller en vägran
-       ska inte lämna ringarna snurrande i all evighet. */
-    async function skicka() {
-      if (!ruta.value.trim()) { ruta.focus(); return; }
-      const nex = $('#kon-disk');
-      if (nex) nex.classList.add('ar-tanker');
-      try {
-        await NXAgent.stall({ agent: 'drift', fraga: ruta.value, ut: ut, knapp: knapp });
-      } finally {
-        if (nex) nex.classList.remove('ar-tanker');
-      }
-    }
-
-    knapp.addEventListener('click', skicka);
-    kopplaMikrofon(ruta);
-
-    /* Ctrl+Enter skickar, precis som i agentfliken. En textarea där
-       Enter skickar går inte att skriva en flerradig fråga i. */
-    ruta.addEventListener('keydown', e => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') skicka();
-    });
-  }
-
-
-  /* ------------------------------------------------------------
-     DIKTERING
-
-     Webbläsarens egen taligenkänning, inget eget API och ingen egen
-     nyckel. Tre saker är medvetna:
-
-     1. KNAPPEN ÄR DOLD TILLS VI SETT ATT DET GÅR. Firefox har ingen
-        SpeechRecognition alls, och Safari vägrar utan användargest på
-        vissa versioner. En knapp som inte gör något är värre än ingen
-        knapp, för då provar man den igen.
-     2. LJUDET LÄMNAR HUSET. Chrome skickar det till Googles tjänst.
-        Resten av kodbasen är byggd för att barns namn inte ska lämna
-        oss — då måste det stå vid knappen, inte i en hjälptext.
-     3. TALET SKICKAS INTE. Det skrivs i rutan och stannar där tills
-        någon trycker Fråga. En feltolkning ska gå att rätta innan den
-        kostar ett agentanrop.
-     ------------------------------------------------------------ */
-  function kopplaMikrofon(ruta) {
-    const knapp = $('#kon-mik');
-    const not = $('#kon-mik-not');
-    const Igenkanning = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!knapp || !Igenkanning) return;
-
-    knapp.hidden = false;
-    if (not) not.hidden = false;
-
-    let ig = null;
-    let fore = '';
-
-    function av() {
-      knapp.setAttribute('aria-pressed', 'false');
-      ig = null;
-    }
-
-    knapp.addEventListener('click', () => {
-      if (ig) { ig.stop(); return; }
-
-      ig = new Igenkanning();
-      ig.lang = document.documentElement.lang === 'en' ? 'en-GB' : 'sv-SE';
-      ig.interimResults = true;
-      ig.continuous = false;
-
-      /* Texten som redan stod i rutan sparas undan och läggs tillbaka
-         framför varje uppdatering. Utan det raderar andra meningen den
-         första, eftersom resultatlistan börjar om vid varje omgång. */
-      fore = ruta.value ? ruta.value.replace(/\s*$/, '') + ' ' : '';
-
-      ig.onresult = e => {
-        let text = '';
-        for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
-        ruta.value = fore + text;
-      };
-      /* Både onerror och onend nollställer: en nekad mikrofon ger error
-         utan end i vissa webbläsare, och en tyst timeout ger end utan
-         error. Missas den ena sitter knappen kvar som "lyssnar" medan
-         ingenting lyssnar. */
-      ig.onerror = av;
-      ig.onend = () => { av(); ruta.focus(); };
-
-      try {
-        ig.start();
-        knapp.setAttribute('aria-pressed', 'true');
-      } catch (fel) {
-        av();
-      }
-    });
-  }
-
-  koppla();
   NXAdmin.rita.ritaKonsol = ritaKonsol;
 })();

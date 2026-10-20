@@ -110,7 +110,7 @@ börjar med understreck) utan följer med i båda buntarna automatiskt.
 Kör det här **innan** du ställer en riktig fråga. Det rör inte modellen,
 kostar ingenting, och skiljer ett infrastrukturfel från ett promptfel.
 
-Enklast: logga in på `/admin`, gå till **Agenter → Läget** och tryck
+Enklast: logga in på `/admin`, gå till **System → Agenterna** (till 2026-10-21 Agenter → Läget) och tryck
 **Kör självtestet**. Knappen gör exakt det som står nedan och ritar upp
 svaret rad för rad.
 

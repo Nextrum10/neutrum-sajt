@@ -861,6 +861,11 @@ Detaljer: `minne/sakerhet.md`.
   får "fel lösenord" provas också som barnadress (`NXStudie.loggaIn`).
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
   med regex), `ekonomi` skriver aldrig, och agenterna läser källan, aldrig ur minnet.
+- **Adminvyns AI är två frågeverktyg** (2026-10-21, Leo: AI-delen var "svår och ostrukturerad"):
+  Agenter är Juridik och Ekonomi. Drift-agenten, förslagskön och Fråga NEX på Översikt är borta ur vyn,
+  för det de sa stod redan i Att göra och under Matchning; Bolagsfakta och självtestet står under System,
+  Återkopplingen under Lektioner. `drift`, `ai_forslag` och rollen `nextrum_ai` står kvar i repot och
+  driften, oanvända av vyn: en ny väg dit är ett beslut, inte en flik som läggs tillbaka.
 - **AI-lagret**: `drift` har inget utgående verktyg, och ingen AI-väg skriver i affärstabeller
   (rollen `nextrum_ai`). AI:n formulerar aldrig en nyckel eller en titel; `godkann_forslag()`
   utför med adminens token, en gren per typ, aldrig `update <tabell> set <payload>`. Databasens

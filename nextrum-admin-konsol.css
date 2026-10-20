@@ -22,15 +22,16 @@
    och sedan en gång till i två block under: 570 px innan första talet
    på en dator, drygt 2 000 på en telefon.
 
-   Två spalter på en bred skärm: ringen med läget bredvid, och
-   samtalet. Under 1100 px står samtalet under, och under 560 px blir
-   ringen mindre. Svaret tar hela bredden under. */
+   Ringen med läget bredvid, och under 560 px blir ringen mindre.
+   Samtalet med drift-agenten stod i en andra spalt till 2026-10-21,
+   då drift togs bort ur adminvyn: läget är gratis och alltid färskt,
+   och det agenten föreslog stod redan under Att göra och Matchning. */
 .vy-admin .kon{margin-bottom:clamp(14px,1.6vw,20px)}
 .vy-admin .kon-hero{
   position:relative;
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
-  grid-template-areas:"disk prat";
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"disk";
   align-items:center;
   gap:clamp(18px,2.4vw,40px);
   padding:clamp(18px,2.2vw,26px) clamp(20px,2.4vw,30px);
@@ -46,25 +47,10 @@
     var(--yta);
 }
 .vy-admin .kon-disk{grid-area:disk}
-.vy-admin .kon-prat{grid-area:prat;min-width:0}
-/* Svaret får en egen rad under, över hela bredden, och bara när det
-   finns: en tom rad i mallen hade ändå fått ett mellanrum under sig. */
-.vy-admin .kon-ut{grid-column:1/-1;min-width:0}
-.vy-admin .kon-ut:empty{display:none}
-@media (max-width:1100px){
-  .vy-admin .kon-hero{grid-template-columns:minmax(0,1fr);grid-template-areas:"disk" "prat"}
-}
-
 /* Hörnmarkeringarna är borta (2026-09-29). De gjorde konsolen till ett
    instrument, och det är det ena stället i adminvyn som inte liknade
    studievyns kort. NEX-emblemet och lägesringarna står kvar: de är
    innehållet, inte ramen. */
-
-.vy-admin .kon-et{
-  display:block;margin-bottom:10px;
-  font-size:.94rem;font-weight:650;
-  letter-spacing:-.01em;text-transform:none;color:var(--bl);
-}
 
 /* Beloppen under läget. De är fakta om verksamheten, inte arbetsposter,
    och hör därför inte hemma i listan. */
@@ -259,82 +245,6 @@
   transition:stroke .16s var(--e),transform .16s var(--e);
 }
 .vy-admin .kon-rad:hover > svg{stroke:var(--acc-text);transform:translateX(2px)}
-
-/* ------------------------------------------------------------
-   SAMTALET
-   ------------------------------------------------------------ */
-/* Exempelfrågorna under fältet. En exempelfråga är en hel mening och
-   bryts hellre än sticker ut ur bandet på en telefon. */
-.vy-admin .kon-exempel{
-  display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;
-}
-.vy-admin .kon-exempel-knapp{
-  font-size:.76rem;font-weight:550;line-height:1.3;
-  padding:5px 11px;border-radius:100px;
-  border:1px solid var(--ln-2);background:transparent;color:var(--bl-2);
-  max-width:100%;text-align:left;cursor:pointer;
-  transition:background .16s var(--e),border-color .16s var(--e),color .16s var(--e);
-}
-.vy-admin .kon-exempel-knapp:hover{
-  border-color:var(--acc-line);color:var(--acc-text);background:var(--acc-soft);
-}
-.vy-admin .kon-falt{
-  display:flex;gap:8px;align-items:flex-end;
-}
-.vy-admin .kon-falt .inp{
-  flex-grow:1;min-width:0;resize:vertical;
-  min-height:44px;padding-top:11px;padding-bottom:11px;line-height:1.4;
-}
-.vy-admin .kon-falt .btn{flex:none;height:44px}
-.vy-admin .kon-falt .kon-mik{
-  padding:0;width:44px;height:44px;
-  display:flex;align-items:center;justify-content:center;
-  border-color:var(--ln-kontroll);color:var(--bl-2);
-}
-.vy-admin .kon-falt .kon-mik svg{width:19px;height:19px;fill:currentColor}
-.vy-admin .kon-falt .kon-mik:hover{
-  border-color:var(--acc-line);color:var(--acc-text);background:var(--acc-soft);
-}
-/* Att mikrofonen LYSSNAR sägs av färg, ram OCH en puls, och dessutom av
-   aria-pressed. En ensam kulör räcker inte när skillnaden är att rummet
-   spelas in. */
-.vy-admin .kon-falt .kon-mik[aria-pressed="true"]{
-  border-color:var(--fel);color:var(--fel);
-  background:color-mix(in srgb, var(--fel) 12%, transparent);
-  animation:kon-mik-puls 1.3s ease-in-out infinite;
-}
-@keyframes kon-mik-puls{50%{opacity:.55}}
-@media (prefers-reduced-motion:reduce){
-  .vy-admin .kon-falt .kon-mik[aria-pressed="true"]{animation:none}
-}
-
-/* Rutan skickar ljud ut ur huset. Det ska stå där man trycker, inte i en
-   hjälptext någon annanstans — och vi säger rakt ut att barnnamn inte hör
-   hemma i den, eftersom ALLT annat i den här kodbasen är byggt för att
-   just de namnen inte ska lämna oss. */
-.vy-admin .kon-mik-not{
-  margin:10px 0 0;font-size:.74rem;line-height:1.45;color:var(--ockra);
-}
-
-/* På en telefon får textrutan hela bredden och knapparna en egen rad
-   under. Sida vid sida blir rutan så smal att en fråga inte går att
-   läsa medan man skriver den. */
-@media (max-width:560px){
-  .vy-admin .kon-falt{flex-wrap:wrap}
-  .vy-admin .kon-falt .inp{flex:1 0 100%}
-  .vy-admin .kon-falt .btn-primary{margin-left:auto}
-}
-
-/* Svaret ritas av NXAgent.stall() och bär därför .ag-*-klasserna.
-   De styr sig själva genom palettens tokens; det enda som behövs här
-   är luften ovanför och ett tak, så att ett långt svar inte trycker
-   ned resten av Översikt utanför skärmen. */
-.vy-admin .kon-ut:not(:empty){
-  padding-top:16px;
-  border-top:1px solid var(--ln);
-  max-height:420px;overflow-y:auto;
-}
-.vy-admin .kon-ut .ag-svar{border-top:none;padding-top:0;margin-top:0}
 
 @media (max-width:560px){
   .vy-admin .kon-ring{width:88px}

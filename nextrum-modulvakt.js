@@ -112,7 +112,6 @@
         ritaAudit:         'nextrum-admin-system.js',
         ritaAdminhantering: 'nextrum-admin-behorighet.js',
         ritaAutomationer:  'nextrum-admin-automationer.js',
-        ritaAI:            'nextrum-admin-ai.js',
         visaRadering:      'nextrum-admin-radera.js',
         ritaKonsol:        'nextrum-admin-konsol.js'
       };

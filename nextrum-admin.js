@@ -81,7 +81,6 @@
   const ritaAudit = (...a) => NXAdmin.rita.ritaAudit(...a);
   const ritaDokument = (...a) => NXAdmin.rita.ritaDokument(...a);
   const ritaAutomationer = (...a) => NXAdmin.rita.ritaAutomationer(...a);
-  const ritaAI = (...a) => NXAdmin.rita.ritaAI(...a);
   const ritaUppdrag = (...a) => NXAdmin.rita.ritaUppdrag(...a);
   const ritaUppgifter = (...a) => NXAdmin.rita.ritaUppgifter(...a);
   const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
@@ -1099,7 +1098,6 @@
       ritaUppgifter();
       ritaBibliotek();
       ritaAutomationer();
-      await ritaAI();
       await ritaÖversikt();
       /* Står man redan i Ansökningar (en adress med #ansokningar) är det
          nya sett när det ritats. */

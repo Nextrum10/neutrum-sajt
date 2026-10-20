@@ -29,7 +29,7 @@
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
      densamma som i studievyn och studiehjälparvyn. -->
 <link rel="stylesheet" href="nextrum-admin-palett.css?v=510b6564">
-<link rel="stylesheet" href="nextrum-admin-konsol.css?v=b0f189d5">
+<link rel="stylesheet" href="nextrum-admin-konsol.css?v=a8a1c9ea">
 </head>
 <body class="vy vy-admin">
 
@@ -297,13 +297,11 @@
                göra", med det som gått fel först och en mening om varje
                rad (2026-09-29).
 
-               NEX är ett band och inte ett torn: ringen, läget och
-               samtalet på en rad. Läget läses ur vyn admin_lage, som
-               redan är hämtad. Samtalet kör drift-agenten BARA när någon
-               frågar den något — ett betalt anrop med stegtak, och att
-               köra det vid varje laddning vore precis den räkning som
-               växer medan ingen tittar. Agenten har med flit inget
-               utgående verktyg (CLAUDE.md, AI-lagret). -->
+               NEX är ett band och inte ett torn: ringen och läget på en
+               rad. Läget läses ur vyn admin_lage, som redan är hämtad, och
+               kostar ingenting. Samtalet med drift-agenten (Fråga NEX) stod
+               här till 2026-10-21, då drift togs bort ur adminvyn: det
+               agenten kunde säga stod redan i Att göra och under Matchning. -->
           <div class="kon" id="adm-konsol">
             <div class="kon-hero">
 
@@ -345,41 +343,10 @@
                     <b id="kon-disk-tal">–</b>
                     <span id="kon-disk-text">läser</span>
                   </p>
-                  <p class="kon-hero-not" id="kon-hero-not">Läser verksamheten och siffrorna. Föreslår, utför inget.</p>
+                  <p class="kon-hero-not" id="kon-hero-not">Läget ur verksamhetens siffror. Det som väntar på er står under Att göra.</p>
                   <div class="kon-pengar" id="kon-pengar"></div>
                 </div>
               </div>
-
-              <div class="kon-prat">
-                <label class="kon-et" for="kon-fraga">Fråga NEX</label>
-                <div class="kon-falt">
-                  <textarea class="inp" id="kon-fraga" rows="1"
-                            placeholder="Vad bör jag göra först idag?"></textarea>
-                  <!-- Diktering. Knappen är dold tills nextrum-admin-konsol.js
-                       sett att webbläsaren faktiskt har taligenkänning — en
-                       knapp som inte gör något är värre än ingen knapp. Den
-                       skriver bara i textrutan; ingenting skickas förrän man
-                       trycker Fråga, så en feltolkning går att rätta innan den
-                       kostar ett agentanrop. -->
-                  <button class="btn btn-ghost kon-mik" type="button" id="kon-mik"
-                          aria-pressed="false" hidden
-                          title="Diktera frågan">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/>
-                      <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"
-                            fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round"/>
-                    </svg>
-                    <span class="nx-dold">Diktera frågan</span>
-                  </button>
-                  <button class="btn btn-primary" type="button" id="kon-skicka">Fråga</button>
-                </div>
-                <div class="kon-exempel" id="kon-exempel"></div>
-                <p class="kon-mik-not" id="kon-mik-not" hidden>Dikteringen sker hos din
-                  webbläsares leverantör, inte hos oss. Läs inte upp namn på barn.</p>
-              </div>
-
-              <div class="kon-ut" id="kon-ut"></div>
             </div>
           </div>
 
@@ -953,6 +920,22 @@
             <div id="lekt-andra"></div>
             <div id="lekt-tabell"><div class="loading">Hämtar</div></div>
           </div>
+
+          <!-- Återkopplingen stod under Agenter till 2026-10-21. Den hör
+               till rapporterna, inte till agenterna: det är en arbetslista,
+               och knappen är generate-feedback, samma som studiehjälparen
+               har i sin vy. Ritas av nextrum-admin-agenter.js (#ak-lista). -->
+            <div class="dbox">
+              <h5>Återkoppling till föräldrar</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:20px">
+                Lektionsrapporter där studiehjälparens råa anteckningar ännu inte polerats till
+                något en förälder kan läsa. Studiehjälparen gör det normalt själv i sin egen vy
+                — listan här är för de rapporter där det inte blivit gjort. Knappen skriver om
+                anteckningarna med det som faktiskt står i dem och hittar inte på framsteg som
+                ingen nämnt.
+              </p>
+              <div id="ak-lista"><div class="loading">Hämtar</div></div>
+            </div>
         </section>
 
         <!-- ============================================================
@@ -1542,10 +1525,12 @@
         <!-- ============================================================
              AGENTER
 
-             Två agenter, juridik och ekonomi, plus det de behöver för
-             att fungera. Allt ligger under EN post i menyn och fyra
-             flikar inuti: menyn var redan tretton rader lång, och
-             agenterna är en sak man går till, inte fyra.
+             Två agenter, juridik och ekonomi: frågeverktyg man går till
+             när man har en fråga, inget man måste sköta. Drift-agenten
+             och förslagskön stod här till 2026-10-21 (Leo: AI-delen var
+             "svår och ostrukturerad"); det de gjorde stod redan i Att göra
+             och under Matchning. Bolagsfakta och självtestet står under
+             System, Återkopplingen under Lektioner.
 
              Det viktiga i vyn är inte svaren utan loggen under dem.
              En agent som läser lagen eller er ekonomi måste gå att
@@ -1564,78 +1549,15 @@
           </div>
 
           <div class="vy-flikar" role="tablist" aria-label="Delar av agentvyn">
-            <button class="vy-flik" type="button" role="tab" data-flik="lage"
-                    id="flik-ag-lage" aria-controls="panel-ag-lage">Läget</button>
             <button class="vy-flik" type="button" role="tab" data-flik="juridik"
                     id="flik-ag-juridik" aria-controls="panel-ag-juridik">Juridik</button>
             <button class="vy-flik" type="button" role="tab" data-flik="ekonomi"
                     id="flik-ag-ekonomi" aria-controls="panel-ag-ekonomi">Ekonomi</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="bolaget"
-                    id="flik-ag-bolaget" aria-controls="panel-ag-bolaget">Bolagsfakta</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="aterkoppling"
-                    id="flik-ag-aterkoppling" aria-controls="panel-ag-aterkoppling">Återkoppling</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="drift"
-                    id="flik-ag-drift" aria-controls="panel-ag-drift">Drift</button>
-            <button class="vy-flik" type="button" role="tab" data-flik="forslag"
-                    id="flik-ag-forslag" aria-controls="panel-ag-forslag">Förslag
-              <span class="vy-flik-mark" id="flik-forslag-mark" hidden></span></button>
-          </div>
-
-          <!-- ---------- LÄGET ---------- -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="lage"
-               id="panel-ag-lage" aria-labelledby="flik-ag-lage">
-
-            <div class="adm-tal-rad">
-              <div class="adm-kpi"><b id="kpi-korningar">0</b><span>Körningar totalt</span></div>
-              <div class="adm-kpi"><b id="kpi-kastade">0</b><span>Kastade utan källa</span></div>
-              <div class="adm-kpi"><b id="kpi-tokens">0</b><span>Tokens förbrukade</span></div>
-            </div>
-
-            <div class="split">
-              <div class="stack">
-
-                <div class="dbox">
-                  <h5>Självtest</h5>
-                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
-                    Kontrollerar att agenterna når sina rättskällor, och lika viktigt: att de
-                    <b>inte</b> når något annat. Rör inte modellen och kostar ingenting.
-                  </p>
-                  <button class="btn btn-primary btn-sm btn-block" id="sjalvtest-knapp">Kör självtestet</button>
-                  <div id="sjalvtest-ut" style="margin-top:16px"></div>
-                </div>
-
-                <div class="dbox">
-                  <h5>Vad agenterna är</h5>
-                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7">
-                    <b>Juridik</b> slår upp svensk rätt inom sex avgränsade områden och vägrar
-                    resten. Den svarar aldrig ur minnet: den hämtar lagtexten och citerar den.
-                    Kan den inte peka på en källa den läst lämnas svaret inte ut.
-                  </p>
-                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-top:12px">
-                    <b>Ekonomi</b> läser era siffror och slår upp Skatteverket.
-                    Alla dess verktyg är läsande. Den bokför ingenting, och det är designen,
-                    inte en tillfällig försiktighet.
-                  </p>
-                  <p class="xsmall" style="color:var(--bl-3);line-height:1.7;margin-top:12px">
-                    Ingen av dem ersätter en jurist eller en redovisningskonsult.
-                  </p>
-                </div>
-
-              </div>
-              <div class="stack">
-
-                <div class="dbox">
-                  <h5>Senaste körningarna</h5>
-                  <div id="ov-korningar"><div class="loading">Hämtar</div></div>
-                </div>
-
-              </div>
-            </div>
           </div>
 
           <!-- ---------- JURIDIK ---------- -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="juridik"
-               id="panel-ag-juridik" aria-labelledby="flik-ag-juridik" hidden>
+               id="panel-ag-juridik" aria-labelledby="flik-ag-juridik">
 
             <div class="dbox">
               <h5>Juridikagenten</h5>
@@ -1713,164 +1635,6 @@
             </div>
           </div>
 
-          <!-- ---------- BOLAGSFAKTA ---------- -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="bolaget"
-               id="panel-ag-bolaget" aria-labelledby="flik-ag-bolaget" hidden>
-
-            <div class="dbox">
-              <h5>Bolagsfakta</h5>
-              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
-                Vad ekonomiagenten vet om bolaget. Inga datum, inga belopp, inga procentsatser
-                — sådant hämtas från Skatteverket vid varje fråga i stället för att ligga och
-                bli inaktuellt här.
-              </p>
-
-              <div class="ag-viktig" id="form-larm">
-                <b style="font-size:14px;color:var(--bl)">Anställda eller uppdragstagare?</b>
-                <p>
-                  Det här är den viktigaste uppgiften på sidan. Om studiehjälparna är anställda
-                  eller uppdragstagare avgör arbetsgivaravgifter, skatteavdrag, AGI, försäkringar
-                  och arbetsmiljöansvar. Står den kvar på <b>oklart</b> vägrar ekonomiagenten
-                  svara på personalfrågor, och den vägran är rätt. Vet ni inte svaret är det den
-                  frågan ni ska ställa till en redovisningskonsult först.
-                </p>
-                <div class="fgroup" style="margin-top:16px;max-width:320px">
-                  <label for="bf-form">Studiehjälparnas form</label>
-                  <select class="inp" id="bf-form">
-                    <option value="oklart">Oklart — inte utrett än</option>
-                    <option value="anstallda">Anställda</option>
-                    <option value="uppdragstagare">Uppdragstagare</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="ag-faltrad">
-                <div class="fgroup">
-                  <label for="bf-orgnr">Organisationsnummer</label>
-                  <input class="inp" id="bf-orgnr" placeholder="000000-0000">
-                </div>
-                <div class="fgroup">
-                  <label for="bf-bolagsform">Bolagsform</label>
-                  <input class="inp" id="bf-bolagsform" placeholder="ab, enskild firma, hb">
-                </div>
-                <div class="fgroup">
-                  <label for="bf-rakenskapsar">Räkenskapsårets slut</label>
-                  <input class="inp" id="bf-rakenskapsar" placeholder="12-31">
-                </div>
-                <div class="fgroup">
-                  <label for="bf-momsperiod">Momsperiod</label>
-                  <select class="inp" id="bf-momsperiod">
-                    <option value="">Inte angivet</option>
-                    <option value="manad">Varje månad</option>
-                    <option value="kvartal">Varje kvartal</option>
-                    <option value="helar">Helår</option>
-                  </select>
-                </div>
-                <div class="fgroup">
-                  <label for="bf-system">Bokföringssystem</label>
-                  <input class="inp" id="bf-system" placeholder="fortnox, inget">
-                </div>
-                <div class="fgroup">
-                  <label for="bf-konsult">Redovisningskonsult</label>
-                  <input class="inp" id="bf-konsult" placeholder="Namn, eller tomt om ni sköter det själva">
-                </div>
-              </div>
-
-              <div style="margin-top:8px">
-                <label class="ag-kryss"><input type="checkbox" id="bf-moms"> Momsregistrerade</label>
-                <label class="ag-kryss"><input type="checkbox" id="bf-fskatt"> Godkända för F-skatt</label>
-                <label class="ag-kryss"><input type="checkbox" id="bf-arbetsgivare"> Registrerade som arbetsgivare</label>
-              </div>
-
-              <div class="fgroup" style="margin-top:16px">
-                <label for="bf-anteckningar">Anteckningar</label>
-                <textarea class="inp" id="bf-anteckningar" rows="3" placeholder="Sådant agenten bör känna till som inte passar i något fält ovan."></textarea>
-              </div>
-
-              <div class="ag-rad">
-                <button class="btn btn-primary" id="bf-spara">Spara</button>
-                <p class="ok-msg" id="bf-msg" style="margin:0"></p>
-              </div>
-            </div>
-          </div>
-
-          <!-- ---------- ÅTERKOPPLING ---------- -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="aterkoppling"
-               id="panel-ag-aterkoppling" aria-labelledby="flik-ag-aterkoppling" hidden>
-
-            <div class="dbox">
-              <h5>Återkoppling till föräldrar</h5>
-              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:20px">
-                Lektionsrapporter där studiehjälparens råa anteckningar ännu inte polerats till
-                något en förälder kan läsa. Studiehjälparen gör det normalt själv i sin egen vy
-                — listan här är för de rapporter där det inte blivit gjort. Knappen skriver om
-                anteckningarna med det som faktiskt står i dem och hittar inte på framsteg som
-                ingen nämnt.
-              </p>
-              <div id="ak-lista"><div class="loading">Hämtar</div></div>
-            </div>
-          </div>
-          <!-- ---------- DRIFT (Fas 8) ----------
-               Den tredje agenten. Den läser verksamhetens eget läge och
-               föreslår — den har med flit inget utgående verktyg, och
-               talar med databasen genom en enda dörr som ägs av en roll
-               utan tabellrättigheter.
-
-               Självtestet kör alla läsverktygen utan att röra modellen,
-               och visar vilka fält de lämnar ut. Det är den kontroll
-               som säger att inga namn följer med. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="drift"
-               id="panel-ag-drift" aria-labelledby="flik-ag-drift" hidden>
-            <div class="dbox">
-              <div class="vy-sek-topp">
-                <div>
-                  <h3>Fråga drift-agenten</h3>
-                  <p class="small">Den läser anmälningar, omatchade elever, kommande pass och pass
-                    utan rapport. Den matchar ingen och mejlar ingen: allt den vill göra blir ett
-                    förslag som du godkänner under fliken Förslag.</p>
-                </div>
-                <button class="btn btn-ghost btn-sm" type="button" id="drift-sjalvtest">Självtest</button>
-              </div>
-              <div id="drift-sjalvtest-ut"></div>
-              <div class="fgroup">
-                <label for="drift-fraga">Fråga</label>
-                <textarea class="inp" id="drift-fraga" rows="3"
-                  placeholder="Vad behöver göras idag?"></textarea>
-              </div>
-              <p class="ok-msg" id="drift-msg"></p>
-              <button class="btn btn-primary" type="button" id="drift-kor">Fråga</button>
-              <div id="drift-svar"></div>
-            </div>
-
-            <!-- Loggen. Fas 8.1 säger att den ska kunna svara på frågan
-                 "vad gjorde AI:n?", och för drift-agenten är det den
-                 enda vägen dit: varje steg visar vilket verktyg som
-                 anropades, med vilka argument, och vad det svarade. -->
-            <div class="dbox">
-              <h3 style="margin:0 0 10px">Senaste körningarna</h3>
-              <div id="drift-logg"></div>
-            </div>
-          </div>
-
-          <!-- ---------- FÖRSLAG (Fas 8) ----------
-               Kön av det AI:n vill göra. Ett förslag är inte en uppgift:
-               trycker du ja utför databasen åtgärden, med din inloggning,
-               så att triggrar och auditlogg fungerar precis som när du
-               själv klickar i vyn. -->
-          <div class="vy-flik-panel" role="tabpanel" data-flik="forslag"
-               id="panel-ag-forslag" aria-labelledby="flik-ag-forslag" hidden>
-            <div class="dbox">
-              <div class="adm-verktyg">
-                <select class="sel" id="forslag-filter" aria-label="Visa förslag">
-                  <option value="oppna">Väntar på svar</option>
-                  <option value="alla">Alla</option>
-                </select>
-                <span class="small" id="forslag-antal" style="margin-left:auto;color:var(--bl-3)"></span>
-              </div>
-              <p class="ok-msg" id="forslag-msg"></p>
-              <div id="forslag-tabell"><div class="loading">Hämtar</div></div>
-            </div>
-          </div>
         </section>
 
         <!-- ============================================================
@@ -2085,6 +1849,10 @@
                     id="flik-audit" aria-controls="panel-audit">Auditlogg</button>
             <button class="vy-flik" type="button" role="tab" data-flik="automationer"
                     id="flik-automationer" aria-controls="panel-automationer">Automationer</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="bolagsfakta"
+                    id="flik-bolagsfakta" aria-controls="panel-bolagsfakta">Bolagsfakta</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="agentkontroll"
+                    id="flik-agentkontroll" aria-controls="panel-agentkontroll">Agenterna</button>
           </div>
 
           <!-- ============ ADMINHANTERING (barnkonton_och_admin) ============
@@ -2545,6 +2313,146 @@
               <div id="aut-schema"><div class="loading">Hämtar</div></div>
             </div>
           </div>
+
+          <!-- ============ BOLAGSFAKTA ============
+               Flyttad hit från Agenter 2026-10-21. Ekonomiagenten läser den;
+               den fylls i en gång och ändras sällan. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="bolagsfakta"
+               id="panel-bolagsfakta" aria-labelledby="flik-bolagsfakta" hidden>
+
+            <div class="dbox">
+              <h5>Bolagsfakta</h5>
+              <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:18px">
+                Vad ekonomiagenten vet om bolaget. Inga datum, inga belopp, inga procentsatser
+                — sådant hämtas från Skatteverket vid varje fråga i stället för att ligga och
+                bli inaktuellt här.
+              </p>
+
+              <div class="ag-viktig" id="form-larm">
+                <b style="font-size:14px;color:var(--bl)">Anställda eller uppdragstagare?</b>
+                <p>
+                  Det här är den viktigaste uppgiften på sidan. Om studiehjälparna är anställda
+                  eller uppdragstagare avgör arbetsgivaravgifter, skatteavdrag, AGI, försäkringar
+                  och arbetsmiljöansvar. Står den kvar på <b>oklart</b> vägrar ekonomiagenten
+                  svara på personalfrågor, och den vägran är rätt. Vet ni inte svaret är det den
+                  frågan ni ska ställa till en redovisningskonsult först.
+                </p>
+                <div class="fgroup" style="margin-top:16px;max-width:320px">
+                  <label for="bf-form">Studiehjälparnas form</label>
+                  <select class="inp" id="bf-form">
+                    <option value="oklart">Oklart — inte utrett än</option>
+                    <option value="anstallda">Anställda</option>
+                    <option value="uppdragstagare">Uppdragstagare</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="ag-faltrad">
+                <div class="fgroup">
+                  <label for="bf-orgnr">Organisationsnummer</label>
+                  <input class="inp" id="bf-orgnr" placeholder="000000-0000">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-bolagsform">Bolagsform</label>
+                  <input class="inp" id="bf-bolagsform" placeholder="ab, enskild firma, hb">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-rakenskapsar">Räkenskapsårets slut</label>
+                  <input class="inp" id="bf-rakenskapsar" placeholder="12-31">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-momsperiod">Momsperiod</label>
+                  <select class="inp" id="bf-momsperiod">
+                    <option value="">Inte angivet</option>
+                    <option value="manad">Varje månad</option>
+                    <option value="kvartal">Varje kvartal</option>
+                    <option value="helar">Helår</option>
+                  </select>
+                </div>
+                <div class="fgroup">
+                  <label for="bf-system">Bokföringssystem</label>
+                  <input class="inp" id="bf-system" placeholder="fortnox, inget">
+                </div>
+                <div class="fgroup">
+                  <label for="bf-konsult">Redovisningskonsult</label>
+                  <input class="inp" id="bf-konsult" placeholder="Namn, eller tomt om ni sköter det själva">
+                </div>
+              </div>
+
+              <div style="margin-top:8px">
+                <label class="ag-kryss"><input type="checkbox" id="bf-moms"> Momsregistrerade</label>
+                <label class="ag-kryss"><input type="checkbox" id="bf-fskatt"> Godkända för F-skatt</label>
+                <label class="ag-kryss"><input type="checkbox" id="bf-arbetsgivare"> Registrerade som arbetsgivare</label>
+              </div>
+
+              <div class="fgroup" style="margin-top:16px">
+                <label for="bf-anteckningar">Anteckningar</label>
+                <textarea class="inp" id="bf-anteckningar" rows="3" placeholder="Sådant agenten bör känna till som inte passar i något fält ovan."></textarea>
+              </div>
+
+              <div class="ag-rad">
+                <button class="btn btn-primary" id="bf-spara">Spara</button>
+                <p class="ok-msg" id="bf-msg" style="margin:0"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- ÅTERKOPPLING ---------- -->
+          <!-- ============ AGENTERNA ============
+               Läget stod först under Agenter till 2026-10-21: körningar,
+               tokens, självtestet och de senaste frågorna. Det är kontroll
+               av verktyget, inget man arbetar i, så det står här. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="agentkontroll"
+               id="panel-agentkontroll" aria-labelledby="flik-agentkontroll" hidden>
+
+            <div class="adm-tal-rad">
+              <div class="adm-kpi"><b id="kpi-korningar">0</b><span>Körningar totalt</span></div>
+              <div class="adm-kpi"><b id="kpi-kastade">0</b><span>Kastade utan källa</span></div>
+              <div class="adm-kpi"><b id="kpi-tokens">0</b><span>Tokens förbrukade</span></div>
+            </div>
+
+            <div class="split">
+              <div class="stack">
+
+                <div class="dbox">
+                  <h5>Självtest</h5>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-bottom:16px">
+                    Kontrollerar att agenterna når sina rättskällor, och lika viktigt: att de
+                    <b>inte</b> når något annat. Rör inte modellen och kostar ingenting.
+                  </p>
+                  <button class="btn btn-primary btn-sm btn-block" id="sjalvtest-knapp">Kör självtestet</button>
+                  <div id="sjalvtest-ut" style="margin-top:16px"></div>
+                </div>
+
+                <div class="dbox">
+                  <h5>Vad agenterna är</h5>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7">
+                    <b>Juridik</b> slår upp svensk rätt inom sex avgränsade områden och vägrar
+                    resten. Den svarar aldrig ur minnet: den hämtar lagtexten och citerar den.
+                    Kan den inte peka på en källa den läst lämnas svaret inte ut.
+                  </p>
+                  <p class="xsmall" style="color:var(--bl-2);line-height:1.7;margin-top:12px">
+                    <b>Ekonomi</b> läser era siffror och slår upp Skatteverket.
+                    Alla dess verktyg är läsande. Den bokför ingenting, och det är designen,
+                    inte en tillfällig försiktighet.
+                  </p>
+                  <p class="xsmall" style="color:var(--bl-3);line-height:1.7;margin-top:12px">
+                    Ingen av dem ersätter en jurist eller en redovisningskonsult.
+                  </p>
+                </div>
+
+              </div>
+              <div class="stack">
+
+                <div class="dbox">
+                  <h5>Senaste körningarna</h5>
+                  <div id="ov-korningar"><div class="loading">Hämtar</div></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
         </section>
 
       </div>
@@ -2589,16 +2497,15 @@
 <script src="nextrum-admin-rabattkoder.js?v=da71bc94"></script>
 <script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
 <script src="nextrum-admin-system.js?v=1f4b7fcf"></script>
-<script src="nextrum-admin-behorighet.js?v=576427c6"></script>
+<script src="nextrum-admin-behorighet.js?v=aadaf2d8"></script>
 <script src="nextrum-admin-automationer.js?v=a75d7589"></script>
-<script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
 <script src="nextrum-admin-radera.js?v=85c68990"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=0b10c92f"></script>
-<script src="nextrum-modulvakt.js?v=bca26bc2"></script>
-<script src="nextrum-admin.js?v=d3f87ab1"></script>
+<script src="nextrum-admin-konsol.js?v=32783ea1"></script>
+<script src="nextrum-modulvakt.js?v=04316b63"></script>
+<script src="nextrum-admin.js?v=40610b93"></script>
 </body>
 </html>
