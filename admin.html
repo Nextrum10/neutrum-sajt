@@ -22,8 +22,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=f21d3928">
-<link rel="stylesheet" href="nextrum-vy.css?v=9ac5eca2">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=55fe009b">
+<link rel="stylesheet" href="nextrum-vy.css?v=571fbd0a">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=e29b736f">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -477,6 +477,8 @@
             <button class="vy-flik" type="button" role="tab" data-flik="utbildning"
                     id="flik-ans-utbildning" aria-controls="panel-ans-utbildning">Utbildning
               <span class="vy-flik-mark" id="flik-ans-utbildning-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="prov"
+                    id="flik-ans-prov" aria-controls="panel-ans-prov">Provet i vyn</button>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="alla"
@@ -516,6 +518,38 @@
             <div class="dbox">
               <h5>I utbildningen <em id="ans-utbildning-antal"></em></h5>
               <div id="ans-utbildning"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+
+          <!-- Utbildningsprovet i studiehjälparvyn (2026-10-21): frågorna med
+               facit, gränsen och hur det gått för var och en. Studiehjälparen
+               gör det vid första inloggningen (nextrum-provet.js), och databasen
+               spärrar elevernas uppgifter tills det är godkänt. Det här är inte
+               provet i rekryteringen (Prova utbildningsprovet ovan).
+               nextrum-admin-provet.js. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="prov"
+               id="panel-ans-prov" aria-labelledby="flik-ans-prov" hidden>
+            <div id="prov-varning"></div>
+            <div class="dbox">
+              <h5>Frågorna <em id="prov-antal"></em></h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 14px">
+                Studiehjälparen svarar på alla aktiva frågor vid första inloggningen, innan studiehjälparvyn öppnas.
+                Facit syns bara här, och provet rättas i databasen. Godkänd får sina elever, pass och meddelanden;
+                underkänd gör om provet efter väntetiden. En fråga tas aldrig bort: stäng av den.
+              </p>
+              <div id="prov-fragor"><div class="loading">Hämtar</div></div>
+            </div>
+            <div class="dbox">
+              <h5>Gränsen och väntetiden</h5>
+              <div id="prov-inst"></div>
+            </div>
+            <div class="dbox">
+              <h5>Studiehjälparna</h5>
+              <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 14px">
+                De som var godkända när provet kom (2026-10-21) slipper det. Tryck på ett namn för att nollställa
+                provet eller kräva det av någon.
+              </p>
+              <div id="prov-personer"><div class="loading">Hämtar</div></div>
             </div>
           </div>
         </section>
@@ -2508,7 +2542,7 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=a1535527"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=0b805164"></script>
+<script src="nextrum-app.js?v=a262aca7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-studie.js?v=d8530c80"></script>
 <script src="nextrum-arbetsyta.js?v=91456198"></script>
@@ -2517,10 +2551,11 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=885c9aeb"></script>
-<script src="nextrum-admin-detalj.js?v=4f720586"></script>
+<script src="nextrum-admin-detalj.js?v=2f667c52"></script>
 <script src="nextrum-admin-oversikt.js?v=4675189b"></script>
 <script src="nextrum-admin-kunder.js?v=c59f9f8c"></script>
-<script src="nextrum-admin-rekrytering.js?v=b4c66c4f"></script>
+<script src="nextrum-admin-provet.js?v=0850a22d"></script>
+<script src="nextrum-admin-rekrytering.js?v=6f491068"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=d2b8b595"></script>
@@ -2530,7 +2565,7 @@
 <script src="nextrum-admin-koder.js?v=b8bc88c4"></script>
 <script src="nextrum-admin-tjanster.js?v=84bd81c9"></script>
 <script src="nextrum-admin-system.js?v=9aeaacb2"></script>
-<script src="nextrum-admin-behorighet.js?v=49f2054a"></script>
+<script src="nextrum-admin-behorighet.js?v=6a033e34"></script>
 <script src="nextrum-admin-automationer.js?v=f8750cf7"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2539,7 +2574,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=0b10c92f"></script>
-<script src="nextrum-modulvakt.js?v=d84f1619"></script>
-<script src="nextrum-admin.js?v=71c22cb0"></script>
+<script src="nextrum-modulvakt.js?v=078889f3"></script>
+<script src="nextrum-admin.js?v=4bf088eb"></script>
 </body>
 </html>

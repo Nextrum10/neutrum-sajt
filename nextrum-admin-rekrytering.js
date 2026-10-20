@@ -206,6 +206,7 @@
     let ändring;
     if (steg === 'intervju') {
       if (ansSteg(a) !== 'ny') return;
+      if (!(await bekräftaIntervju(a))) return;
       ändring = harIntervjuKolumn(a) ? { till_intervju_at: new Date().toISOString() } : { status: 'contacted' };
     } else if (steg === 'utbildning') {
       if (ansSteg(a) !== 'intervju') return;
@@ -397,6 +398,7 @@
        eller i Intervju: längre fram är det de senare stegen som ångras. */
     if (kolumn === 'till_intervju_at'
         && (!harIntervjuKolumn(a) || ansSteg(a) !== (nu ? 'ny' : 'intervju'))) return;
+    if (kolumn === 'till_intervju_at' && nu && !(await bekräftaIntervju(a))) return;
 
     /* Fas 22.1: utbildningen är provet. Att markera någon som utbildad
        utan godkänt prov går, men det ska vara ett val och inte ett
@@ -741,7 +743,11 @@
       /* Steg 1 är valet att gå vidare, med kontakten i (2026-10-15).
          Förut var det bara kontakten, och läget Kontaktad var intervjun. */
       + spårSteg(1, 'Till intervju',
-          (harKolumn
+          (harKolumn && harIntervjumejl(a)
+            ? 'Du väljer vem som går vidare: hen hamnar under fliken Intervju och får mejlet "Du går vidare '
+              + 'till intervju", en gång per ansökan. Kommer steget med ett bokat möte mejlas bara mötet. '
+              + 'Läget (Ny, Kontaktad) sätter du själv under Ansökan, och det flyttar ingen. '
+            : harKolumn
             ? 'Du väljer vem som går vidare: hen hamnar under fliken Intervju, och ingenting mejlas. '
               + 'Läget (Ny, Kontaktad) sätter du själv under Ansökan, och det flyttar ingen. '
             : 'Läget Kontaktad flyttar hen till fliken Intervju tills migrationen '
@@ -755,6 +761,10 @@
           + (a.kontaktad_at ? 'Skriv igen' : 'Skriv till hen') + '</button>',
           (harKolumn && a.kontaktad_at
             ? '<div class="ans-steg-fakta"><b>Skrev till hen:</b> ' + esc(kortDatum(a.kontaktad_at)) + '</div>'
+            : '')
+          + (a.intervju_mejl_skickat_at
+            ? '<div class="ans-steg-fakta"><b>Intervjumejlet:</b> köat ' + esc(kortDatum(a.intervju_mejl_skickat_at))
+              + '</div>'
             : '')
           + besked(a, 'mottagen') + besked(a, 'vardnadshavare'))
 
@@ -1303,6 +1313,58 @@
     avslutning: 'Du är välkommen att söka igen längre fram. Undrar du något om beskedet? '
       + 'Svara på det här mejlet.'
   };
+
+  /* ============================================================
+     INTERVJUMEJLET (2026-10-21)
+
+     Skicka vidare till intervju köar ett mejl till den som sökt, en gång
+     per ansökan (intern.ansokan_intervjumejl, genom notiskön). Det går
+     direkt, så frågan visar mejlet först, som nejet.
+
+     TEXTEN ÄR LEOS OCH STÅR PÅ TVÅ STÄLLEN: här och i mallen (INTERVJU
+     i supabase/functions/_delad/notiser/intervju.ts).
+     verktyg/kolla-mejltexter.py håller dem lika.
+     ============================================================ */
+  const INTERVJU_MEJLET = {
+    amne: 'Du går vidare till intervju',
+    forsta: 'Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.',
+    andra: 'Håll koll på din mejl de kommande dagarna, för det är dit vi skickar inbjudan till intervjun. '
+      + 'Har du önskemål om när intervjun ska hållas får du gärna mejla oss på info@nextrum.se.',
+    halsning: 'Hälsningar',
+    signatur: 'Leo och Alex, Nextrum'
+  };
+
+  /* Utan migrationen intervjumejlet köar databasen inget, och frågan
+     hade lovat ett mejl som aldrig går. */
+  const harIntervjumejl = a => !!a && 'intervju_mejl_skickat_at' in a;
+
+  /* Frågan innan steget sätts. Svarar true när det får sättas. */
+  async function bekräftaIntervju(a) {
+    if (!harIntervjumejl(a) || a.status === 'rejected') return true;
+    const vem = a.name || 'Den sökande';
+    if (a.intervju_mejl_skickat_at) {
+      return bekräfta({
+        titel: 'Skicka ' + vem + ' vidare till intervju?',
+        text: vem + ' fick intervjumejlet ' + kortDatum(a.intervju_mejl_skickat_at)
+          + '. Det mejlas en gång, så inget nytt mejl går.',
+        knapp: 'Skicka vidare',
+        avbryt: 'Avbryt'
+      });
+    }
+    const namn = förnamn(a.name);
+    return bekräfta({
+      titel: 'Skicka ' + vem + ' vidare till intervju?',
+      text: vem + ' får mejlet nedan inom några minuter. Det går en gång per ansökan, också om du ångrar steget.',
+      forhandsvisning: 'Ämne: ' + INTERVJU_MEJLET.amne + '\n\n'
+        + (namn ? 'Hej ' + namn + '!' : 'Hej!') + '\n\n'
+        + INTERVJU_MEJLET.forsta + '\n\n'
+        + INTERVJU_MEJLET.andra + '\n\n'
+        + INTERVJU_MEJLET.halsning + '\n'
+        + INTERVJU_MEJLET.signatur,
+      knapp: 'Skicka vidare och mejla',
+      avbryt: 'Avbryt'
+    });
+  }
 
   /* Förnamnet som mallen tar det (fornamn() i _delad/notiser/typer.ts). */
   function förnamn(namn) {

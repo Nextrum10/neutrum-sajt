@@ -50,6 +50,7 @@
   const fyllPerioder = (...a) => NXAdmin.rita.fyllPerioder(...a);
   const ritaAdminhantering = (...a) => NXAdmin.rita.ritaAdminhantering(...a);
   const ritaAnsokningar = (...a) => NXAdmin.rita.ritaAnsokningar(...a);
+  const ritaProvet = (...a) => NXAdmin.rita.ritaProvet(...a);
   const ritaBibliotek = (...a) => NXAdmin.rita.ritaBibliotek(...a);
   const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
   const ritaBokningar = (...a) => NXAdmin.rita.ritaBokningar(...a);
@@ -1053,6 +1054,9 @@
 
       ritaLeads();
       ritaAnsokningar();
+      /* Utbildningsprovet i vyn (2026-10-21) hämtar sitt eget, och väntas
+         inte in: fliken står längst bak i Ansökningar. */
+      ritaProvet();
       ritaKontakt();
       ritaChattar();
       ritaFamiljer();

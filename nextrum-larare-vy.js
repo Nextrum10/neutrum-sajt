@@ -4327,6 +4327,14 @@
       return;
     }
 
+    /* Utbildningsprovet (2026-10-21): efter villkoren och före
+       introduktionen, för den som är godkänd och ska göra det. Rutan står
+       kvar tills provet är godkänt; databasen spärrar elevernas uppgifter
+       till dess (NXProvet, intern.provet_sparrar). */
+    if (S.tutorProfil.status === 'approved' && typeof NXProvet !== 'undefined') {
+      await NXProvet.förstGörs(supa);
+    }
+
     /* Introduktionen första gången, och Fortsätt sist leder in i vyn
        (NXStudie.introduktion). En profil som inte är godkänd än får veta
        att vyn öppnas när den är det. */

@@ -678,7 +678,12 @@ databasen annars nekar:
   anteckningarna, Lägg till ett dokument, elevens material och AI-förslagen,
   och timpenningen i Redigera (för andra gick den tyst tillbaka);
 - `studiehjalpare_godkann`: läget på en studiehjälpare och Visa på
-  startsidan (`skydda_tutorfalt`; för andra står läget som ett märke);
+  startsidan (`skydda_tutorfalt`; för andra står läget som ett märke),
+  och sedan 2026-10-21 utbildningsprovet i studiehjälparens panel
+  (Nollställ provet, Kräv provet; `satt_provkrav()`,
+  `aterstall_utbildningsprov()`). Fliken Provet i vyn under Ansökningar,
+  med frågorna och facit, är bara superadminens (`ritaProvet` i
+  `BARA_SUPER`, och `prov_fragor` läser bara `is_admin()`);
 - `anvandare_redigera`: Redigera uppgifterna på en familj, en elev och en
   studiehjälpare (för en elev sparade `skydda_studentfalt` annars bara
   matchningen), och `leads` på en anmälan.

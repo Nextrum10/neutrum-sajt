@@ -5065,3 +5065,34 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
   .kod-siffror{justify-content:flex-start;text-align:left}
   .kod-under{text-align:left}
 }
+
+/* ============================================================
+   UTBILDNINGSPROVET I VYN (2026-10-21)
+   Ansökningar → Provet i vyn (nextrum-admin-provet.js): frågorna med
+   facit, gränsen och studiehjälparna. Varningen står överst så länge
+   spärren inte gäller, i ockra: något väntar, inget är fel.
+   ============================================================ */
+.prov-varning{
+  margin:0 0 16px;padding:14px 18px;border-radius:16px;
+  background:var(--ockra-soft);color:var(--ockra-text);font-size:.92rem;line-height:1.55;
+}
+.prov-lista{list-style:none;margin:0 0 6px;padding:0}
+.prov-fraga{padding:14px 0;border-top:1px solid var(--ln)}
+.prov-fraga:first-child{border-top:0;padding-top:0}
+.prov-fraga.ar-av{opacity:.62}
+.prov-fraga-topp{font-size:.96rem;line-height:1.5;color:var(--bl);margin-bottom:8px}
+.prov-alt{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:4px}
+.prov-alt li{font-size:.9rem;line-height:1.5;color:var(--bl-2);padding-left:18px;position:relative}
+.prov-alt li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;
+  border:1.5px solid var(--bl-3)}
+.prov-alt li.ar-ratt{color:var(--bl);font-weight:600}
+.prov-alt li.ar-ratt::before{background:var(--mossa);border-color:var(--mossa)}
+.prov-facit{font-size:.78rem;font-weight:600;color:var(--mossa-text);margin-left:6px}
+.prov-form{display:grid;gap:12px}
+.prov-form-alt{border:0;padding:0;margin:0;min-width:0;display:grid;gap:8px}
+.prov-form-alt legend{padding:0;margin-bottom:6px;font-size:.86rem;font-weight:600;color:var(--bl)}
+.prov-form-rad{display:flex;align-items:center;gap:10px}
+.prov-form-rad input[type="radio"]{width:20px;height:20px;flex:none;margin:0;accent-color:var(--acc)}
+.prov-form-rad .inp{flex:1;min-width:0}
+.prov-form-aktiv{align-self:end;min-height:44px}
+.prov-ny{margin-top:14px}

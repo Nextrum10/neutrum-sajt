@@ -672,6 +672,26 @@ body.betalar .hdr.bort{transform:none}
   font-weight:600;color:var(--acc-lugn);text-decoration:underline;text-underline-offset:3px;
 }
 .nx-fraga-box form[data-villkor]{margin-top:4px}
+/* Utbildningsprovet (NXProvet, 2026-10-21). Samma ruta, bredare, och
+   frågorna som en lista med ett val per fråga. Varje alternativ är en
+   tryckyta för tummen, och texten är 16 px så att en iPhone inte zoomar. */
+.nx-prov .nx-fraga-box{max-width:min(640px, calc(100vw - 32px))}
+.nx-prov form[data-prov]{margin-top:14px}
+.nx-prov-fraga{border:0;padding:0;margin:0 0 22px;min-width:0}
+.nx-prov-fraga legend{
+  padding:0;margin-bottom:10px;
+  font-size:1rem;font-weight:600;line-height:1.45;color:var(--bl);
+}
+.nx-prov-nr{color:var(--bl-3);font-weight:600}
+.nx-prov-alt{
+  display:flex;align-items:center;gap:12px;min-height:44px;
+  padding:8px 14px;margin-bottom:8px;
+  border:1px solid var(--ln);border-radius:14px;background:var(--yta);
+  font-size:1rem;line-height:1.4;color:var(--bl);cursor:pointer;
+}
+.nx-prov-alt:has(input:checked){border-color:var(--acc);background:var(--acc-soft)}
+.nx-prov-alt input{width:20px;height:20px;flex:none;margin:0;accent-color:var(--acc)}
+.nx-prov-alt input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 /* ============================================================
    INTRODUKTIONEN (2026-10-06)

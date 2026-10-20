@@ -1626,6 +1626,18 @@ lektioner, detta ska ske efter att man bekräftat sitt nya lösenord."
   användarnamn föräldern gett det, och vyn har fyra delar. Den
   behövs inte, och ingen bad om den.
 
+### Utbildningsprovet före studiehjälparvyn (2026-10-21)
+Ordningen vid inloggningen i studiehjälparvyn är lösenordet (`lösenordFörst`),
+villkoren (`villkorFörst`), provet (`NXProvet.förstGörs`, bara för en godkänd
+studiehjälpare) och introduktionen. Provet är samma ruta (`.nx-fraga.nx-prov`)
+och går inte att stänga: Escape gör inget, och utan provet finns inget att
+visa, för databasen lämnar inte ut elever, pass eller meddelanden förrän det
+är klart (`minne/affaren.md`). Logga ut står kvar. Alternativen är hela
+etiketter på minst 44 px med 16 px text (`.nx-prov-alt`), och den valda tar
+accentens färg med `:has(input:checked)`. Svarar databasen inte, eller saknas
+`mitt_utbildningsprov()`, visas ingen ruta. Förhandsvisningens värld svarar
+att provet är klart (`nextrum-forhandsvisning.js`).
+
 ### Notiserna vid inloggningen (2026-10-12)
 Leo: "gör ett notissystem som kommer som en popup när man loggar in. har
 man inga nya notiser kommer en popup inte upp, har man nya notiser såsom

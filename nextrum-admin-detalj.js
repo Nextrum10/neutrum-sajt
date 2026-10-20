@@ -186,6 +186,15 @@
         .select('parent_id, created_at').eq('tutor_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
       läggVillkor(id);
+      /* Utbildningsprovet i vyn (2026-10-21): läget, försöken och om
+         spärren gäller. Policyerna ger superadmin och den som får
+         godkänna studiehjälpare raderna. */
+      lägg('prov', supa.from('prov_studiehjalpare')
+        .select('kravs, utbildningsprov_godkant_at, aterstalld_at, undantagen, andrad_at').eq('id', id));
+      lägg('provForsok', supa.from('prov_forsok')
+        .select('id, inlamnad_at, ratt, antal, procent, godkand').eq('studiehjalpare_id', id)
+        .order('inlamnad_at', { ascending: false }).limit(20));
+      lägg('provLage', supa.rpc('utbildningsprovet_lage'));
     } else {
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
@@ -1536,6 +1545,7 @@
       ? '<button class="btn btn-ghost btn-sm" type="button" data-sh-kontakt="' + esc(p.id) + '">Kontakta</button>'
       : '')
     + '</div>'
+    + dpProvet(p, d)
     + dpChattar(p, d, 'studiehjalpare')
     + dpDokument(p)
     + dpHantera('studiehjalpare', p, {
@@ -1545,6 +1555,77 @@
           + 'bokföringen och lönen. Elever ska matchas om först.'
       });
   }
+
+  /* Utbildningsprovet i studiehjälparvyn (2026-10-21): om det krävs, när
+     det godkändes, och försöken med poängen (aldrig svaren). Nollställ
+     och Kräv provet för den som får godkänna studiehjälpare. Utan
+     migrationen, eller utan läsrätt, står ingenting. */
+  function dpProvet(p, d) {
+    if (d.provSaknas || d.provForsokSaknas || d.provFel) return '';
+    const st = (d.prov || [])[0] || null;
+    const försök = d.provForsok || [];
+    const lage = d.provLage && !Array.isArray(d.provLage) ? d.provLage : null;
+    const godkänt = st && st.utbildningsprov_godkant_at;
+    const krävs = !st || st.kravs !== false;
+    const läget = godkänt ? 'Godkänt ' + kortDatum(godkänt)
+      : !krävs ? 'Krävs inte' + (st && st.undantagen ? ' (' + st.undantagen + ')' : '')
+      : 'Krävs, inte godkänt än';
+    const spärr = lage && !lage.sparr_galler && krävs && !godkänt
+      ? 'Gäller inte än: ' + lage.aktiva + ' aktiva frågor, och spärren börjar vid ' + lage.min_aktiva_fragor + '.'
+      : null;
+    const kan = får('studiehjalpare_godkann');
+    return dpRubrik('Utbildningsprovet', 'görs vid första inloggningen')
+      + dpFakta([
+        ['Läget', esc(läget)],
+        ...(spärr ? [['Spärren', esc(spärr)]] : []),
+        ...(st && st.aterstalld_at ? [['Nollställt', esc(kortDatum(st.aterstalld_at))]] : [])
+      ])
+      + försök.map(f => dpRad(kortDatum(f.inlamnad_at), f.ratt + ' av ' + f.antal + ' rätt',
+          f.godkand ? pill('Godkänt', 'ar-klar') : pill('Underkänt', 'ar-ny'))).join('')
+      + (kan
+        ? '<div class="dp-atgard">'
+          + (godkänt || försök.length
+            ? '<button class="btn btn-ghost btn-sm" type="button" data-prov-aterstall="' + esc(p.id) + '">'
+              + 'Nollställ provet</button>'
+            : '')
+          + '<button class="btn btn-ghost btn-sm" type="button" data-prov-krav="' + esc(p.id) + ':'
+          + (krävs ? 'nej' : 'ja') + '">' + (krävs ? 'Kräv inte provet' : 'Kräv provet') + '</button>'
+          + '</div>'
+        : '');
+  }
+
+  document.addEventListener('click', async e => {
+    const nollställ = e.target.closest('[data-prov-aterstall]');
+    const krav = e.target.closest('[data-prov-krav]');
+    if (!nollställ && !krav) return;
+    const knapp = nollställ || krav;
+    const id = nollställ ? nollställ.dataset.provAterstall : krav.dataset.provKrav.split(':')[0];
+    const på = krav ? krav.dataset.provKrav.split(':')[1] === 'ja' : null;
+    const vem = namnFör(id);
+    const ja = await bekräfta(nollställ
+      ? { titel: 'Nollställa provet för ' + vem + '?',
+          text: vem + ' gör om provet vid nästa inloggning, utan väntetid, och kommer inte åt elever, pass och '
+            + 'meddelanden förrän det är godkänt. Försöken står kvar.',
+          knapp: 'Nollställ', avbryt: 'Avbryt' }
+      : på
+        ? { titel: 'Kräva provet av ' + vem + '?',
+            text: 'Har ' + vem + ' inte klarat provet stängs elever, pass och meddelanden tills det är godkänt.',
+            knapp: 'Kräv provet', avbryt: 'Avbryt' }
+        : { titel: 'Ta bort kravet för ' + vem + '?',
+            text: vem + ' kommer in i studiehjälparvyn utan provet.',
+            knapp: 'Ta bort kravet', avbryt: 'Avbryt' });
+    if (!ja) return;
+    await medan(knapp, '…', async () => {
+      const { error } = nollställ
+        ? await supa.rpc('aterstall_utbildningsprov', { p_studiehjalpare: id })
+        : await supa.rpc('satt_provkrav', { p_studiehjalpare: id, p_kravs: på });
+      if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
+      delete S.detaljCache['studiehjalpare:' + id];
+      await hämtaDetalj('studiehjalpare', id);
+      if (DP.typ === 'studiehjalpare' && DP.id === id) ritaDetalj();
+      if (NXAdmin.rita.ritaProvet) NXAdmin.rita.ritaProvet();
+    });
+  });
 
   function dpNoteringar(profilId, d) {
     // admin_noteringar läser och skriver bara en superadmin.

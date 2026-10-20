@@ -1,5 +1,5 @@
 -- ============================================================
--- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen, kortet, timmarna som delas, steget till intervju, familjerabatterna, nivåerna i adminvyn, betygsgarantins prövning, fakturan som är borta och anmälan som flyttas till familjen)
+-- NEXTRUM — behörighetstester (Fas 1, 2, 5, 6, 7, 8, 9, 14, 16, 18, 19, 20, 21, 22, 23, gallringen, månadskörningen, schemat, raderingen, de delade dokumenten, taken för det anonyma, chatten som admin öppnar, svaret på en föreslagen tid, tipskoderna, barnkontona, adminbehörigheterna, påminnelserna till admin, vårdnadshavaren och nejet i ansökan, det admin sett, barnets chatt, barnets behörigheter, villkoren, betygsgarantin, planerna, barnets förslag på pass, adminkontona utanför statistiken, rabattkoden, de gratis timmarnas 60 dagar, gratistimmarna i timbanken, koderna med bonusen, kortet, timmarna som delas, steget till intervju, familjerabatterna, nivåerna i adminvyn, betygsgarantins prövning, fakturan som är borta, anmälan som flyttas till familjen, intervjumejlet och utbildningsprovet i studiehjälparvyn)
 --
 -- Kör hela filen som ETT anrop i Supabase SQL Editor (eller via
 -- execute_sql). Allt sker i en transaktion som rullas tillbaka på
@@ -58,7 +58,8 @@
 -- rabattkoden_timmar_och_tak och kortet_reserveras (2026-10-13), timmarna_delas_och_kops_till
 -- (2026-10-14), ansokan_till_intervju, familjerabatter, nexlax_i_adminvyn, betygsgarantin_provas,
 -- gratistimmarna_paminns och obetalda_pass_pa_fakturan (2026-10-15),
--- fakturan_tas_bort och anmalan_flyttas_till_familjen (2026-10-21) är körda.
+-- fakturan_tas_bort, anmalan_flyttas_till_familjen, intervjumejlet och
+-- utbildningsprovet_i_studiehjalparvyn (2026-10-21) är körda.
 -- fakturans_tabeller_tas_bort (del 2, efter en backup) kan vara körd eller
 -- inte: avsnitt 38 provar det som gäller i båda lägena.
 --
@@ -17398,6 +17399,337 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('IN Anmälan flyttas till familjen', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 40. Intervjumejlet (intervjumejlet, 2026-10-21)
+--
+-- När admin skickar en ansökan vidare till intervju köar databasen ett
+-- mejl i notiskön, en gång per ansökan, och sätter
+-- intervju_mejl_skickat_at. Boka möte (steget och mötet i samma ändring)
+-- och en avböjd ansökan ger inget mejl. Kön lämnar ut raden med rollen
+-- sokande och följer strömbrytaren och sandlådan. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  t0   timestamptz;
+  n    bigint;
+  r    record;
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  S1   constant uuid := '00000000-0000-4000-8000-000000040a01';  -- skickas vidare
+  S2   constant uuid := '00000000-0000-4000-8000-000000040a02';  -- Boka möte
+  S3   constant uuid := '00000000-0000-4000-8000-000000040a03';  -- avböjd
+  S4   constant uuid := '00000000-0000-4000-8000-000000040a04';  -- försöker bära tidpunkten själv
+begin
+  if to_regprocedure('intern.ansokan_intervjumejl()') is null then
+    insert into utfall (test, ok, detalj) values ('IV Intervjumejlet: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    insert into public.applications (id, name, email, tjanster) values
+      (S1, 'Sara Lind Ek', 'rls-s40a@example.invalid', '{laxhjalp}'),
+      (S2, 'Moa Möte',     'rls-s40b@example.invalid', '{laxhjalp}'),
+      (S3, 'Nils Nej',     'rls-s40c@example.invalid', '{laxhjalp}');
+    insert into public.applications (id, name, email, tjanster, intervju_mejl_skickat_at)
+    values (S4, 'Tid Själv', 'rls-s40d@example.invalid', '{laxhjalp}', now());
+    ut := ut || jsonb_build_object('t', 'IV en ny ansökan bär ingen tidpunkt för mejlet',
+            'ok', (select a.intervju_mejl_skickat_at is null from public.applications a where a.id = S4), 'd', '');
+
+    -- ---------- admin skickar vidare ----------
+    perform pg_temp.bli(AD);
+    update public.applications set till_intervju_at = now() where id = S1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select a.intervju_mejl_skickat_at into t0 from public.applications a where a.id = S1;
+    select count(*) into n from public.notis_utskick q
+     where q.ansokan_id = S1 and q.typ = 'ansokan_intervju' and q.kanal = 'mejl' and q.status = 'vantar'
+       and q.mottagare is null and q.barn_id is null;
+    ut := ut || jsonb_build_object('t', 'IV Skicka vidare till intervju köar ett mejl i notiskön och sätter tidpunkten',
+            'ok', n = 1 and t0 is not null, 'd', n::text || ' ' || coalesce(t0::text, 'null'));
+
+    -- ---------- högst ett mejl ----------
+    perform pg_temp.bli(AD);
+    update public.applications set till_intervju_at = null where id = S1;
+    update public.applications set till_intervju_at = now() where id = S1;
+    update public.applications set intervju_mejl_skickat_at = null where id = S1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n from public.notis_utskick q where q.ansokan_id = S1;
+    ut := ut || jsonb_build_object('t', 'IV ångra och skicka vidare igen ger inget nytt mejl, och admin rör inte tidpunkten',
+            'ok', n = 1 and (select a.intervju_mejl_skickat_at from public.applications a where a.id = S1) = t0,
+            'd', n::text);
+
+    -- ---------- Boka möte och ett nej ----------
+    perform pg_temp.bli(AD);
+    update public.applications
+       set mote_tid = now() + interval '2 days', mote_lank = 'https://meet.google.com/abc-defg-hij',
+           till_intervju_at = now()
+     where id = S2;
+    update public.applications set status = 'rejected' where id = S3;
+    update public.applications set till_intervju_at = now() where id = S3;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'IV Boka möte sätter steget utan intervjumejlet: mötesmejlet är inbjudan',
+            'ok', not exists (select 1 from public.notis_utskick q where q.ansokan_id = S2)
+                  and (select a.intervju_mejl_skickat_at is null and a.till_intervju_at is not null
+                         from public.applications a where a.id = S2),
+            'd', '');
+    ut := ut || jsonb_build_object('t', 'IV en avböjd ansökan får inget intervjumejl',
+            'ok', not exists (select 1 from public.notis_utskick q where q.ansokan_id = S3), 'd', '');
+
+    -- ---------- vem som får ----------
+    t := pg_temp.svar_som(A, format('update public.applications set till_intervju_at = now() where id = %L', S4));
+    ut := ut || jsonb_build_object('t', 'IV en studiehjälpare skickar ingen vidare',
+            'ok', t in ('noll', '42501')
+                  and not exists (select 1 from public.notis_utskick q where q.ansokan_id = S4), 'd', t);
+    begin
+      insert into public.notis_utskick (mottagare, ansokan_id, kanal, typ, idempotens)
+      values (AD, S1, 'mejl', 'ansokan_intervju', 'rls-40-dubbel');
+      t := 'gick igenom';
+    exception when others then t := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'IV en rad i kön har exakt en mottagare', 'ok', t = '23514', 'd', t);
+
+    -- ---------- kön lämnar ut raden ----------
+    update public.flaggor set aktiv = true where kod = 'notiser_mejl';
+    select x.* into r from public.notis_utskick_ta(100) x where x.mottagare = S1;
+    ut := ut || jsonb_build_object('t', 'IV kön lämnar ut raden som sokande, till adressen i ansökan, med förnamnet',
+            'ok', r.roll = 'sokande' and r.epost = 'rls-s40a@example.invalid' and r.fornamn = 'Sara'
+                  and r.typ = 'ansokan_intervju' and r.till_sandlada = false,
+            'd', coalesce(row_to_json(r)::text, 'ingen rad'));
+
+    update public.notis_utskick set status = 'vantar', lanad_till = null where ansokan_id = S1;
+    update public.flaggor set aktiv = false where kod = 'notiser_mejl';
+    update public.notis_drift set mejl_sandlada = 'rls-sandlada@example.invalid' where id = 1;
+    select x.* into r from public.notis_utskick_ta(100) x where x.mottagare = S1;
+    ut := ut || jsonb_build_object('t', 'IV med strömbrytaren av går mejlet till sandlådan',
+            'ok', r.epost = 'rls-sandlada@example.invalid' and r.till_sandlada = true,
+            'd', coalesce(row_to_json(r)::text, 'ingen rad'));
+
+    update public.notis_utskick set status = 'vantar', lanad_till = null where ansokan_id = S1;
+    update public.notis_drift set mejl_sandlada = null where id = 1;
+    perform count(*) from public.notis_utskick_ta(100);
+    ut := ut || jsonb_build_object('t', 'IV utan strömbrytare och sandlåda loggas mejlet, och går inte',
+            'ok', (select q.status from public.notis_utskick q where q.ansokan_id = S1) = 'loggad',
+            'd', (select q.status from public.notis_utskick q where q.ansokan_id = S1));
+
+    update public.notis_utskick set status = 'vantar', lanad_till = null where ansokan_id = S1;
+    update public.flaggor set aktiv = true where kod = 'notiser_mejl';
+    perform pg_temp.bli(AD);
+    update public.applications set till_intervju_at = null where id = S1;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform count(*) from public.notis_utskick_ta(100);
+    ut := ut || jsonb_build_object('t', 'IV ett steg som ångrats innan mejlet gick hoppas över',
+            'ok', (select q.status = 'hoppad' and q.fel like '%intervju%' from public.notis_utskick q where q.ansokan_id = S1),
+            'd', (select q.status || ' ' || coalesce(q.fel, '') from public.notis_utskick q where q.ansokan_id = S1));
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('IV Intervjumejlet', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 41. Utbildningsprovet i studiehjälparvyn
+--     (utbildningsprovet_i_studiehjalparvyn, 2026-10-21)
+--
+-- Studiehjälparen A (godkänd efter migrationen, alltså utan undantag)
+-- spärras från elevernas uppgifter när det finns fem aktiva frågor, tills
+-- provet är godkänt. Frågorna når aldrig studiehjälparen med facit,
+-- rättningen sker i databasen, underkänt väntar 24 timmar, admin
+-- nollställer, och godkänt är MER än gränsen. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  j    jsonb;
+  n    bigint;
+  q    uuid[] := '{}';
+  i    integer;
+  ratt jsonb;
+  fel5 jsonb;
+  tre  jsonb;
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  BG   constant uuid := '00000000-0000-4000-8000-0000000bca41';
+  E1   constant uuid := '00000000-0000-4000-8000-0000000005a1';
+begin
+  if to_regprocedure('public.mitt_utbildningsprov()') is null then
+    insert into utfall (test, ok, detalj) values ('UP Utbildningsprovet: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (BG, 'rls-bg41@example.invalid', '{"role":"parent","full_name":"Test Behörig"}');
+    insert into public.admin_roller (user_id, behorigheter) values (BG, '{studiehjalpare_godkann}');
+
+    -- ---------- utan fem frågor gäller ingen spärr ----------
+    t := pg_temp.svar_som(A, format('select 1 from public.bookings where tutor_id = %L', A));
+    perform pg_temp.bli(A);
+    j := public.mitt_utbildningsprov();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'UP utan fem aktiva frågor ser studiehjälparen sina pass, och provet krävs inte',
+            'ok', t = 'ok' and (j ->> 'kravs')::boolean = false, 'd', t || ' ' || j::text);
+
+    -- ---------- bara superadmin skriver frågorna ----------
+    t := pg_temp.svar_som(A, $q$select public.spara_provfraga(null, 'Fråga?', array['a', 'b'], 0)$q$)
+      || ' ' || pg_temp.svar_som(BG, $q$select public.spara_provfraga(null, 'Fråga?', array['a', 'b'], 0)$q$)
+      || ' ' || pg_temp.svar_som(A, 'select public.satt_provinstallning(10, 1, 0)');
+    ut := ut || jsonb_build_object('t', 'UP bara superadmin skriver frågorna och inställningen (studiehjälpare, behörig admin)',
+            'ok', t = '42501 42501 42501', 'd', t);
+    t := pg_temp.svar_som(AD, $q$select public.spara_provfraga(null, 'Fråga?', array['Lika', 'lika'], 0)$q$)
+      || ' ' || pg_temp.svar_som(AD, $q$select public.spara_provfraga(null, 'Fråga?', array['a', 'b'], 2)$q$);
+    ut := ut || jsonb_build_object('t', 'UP två lika alternativ och ett facit utanför alternativen nekas',
+            'ok', t = '22023 22023', 'd', t);
+
+    perform pg_temp.bli(AD);
+    for i in 1 .. 5 loop
+      q := q || public.spara_provfraga(null, 'Fråga nummer ' || i, array['Svar A', 'Svar B', 'Svar C'], i % 3);
+    end loop;
+    j := public.utbildningsprovet_lage();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'UP fem aktiva frågor: spärren gäller',
+            'ok', (j ->> 'aktiva')::int = 5 and (j ->> 'sparr_galler')::boolean, 'd', j::text);
+
+    select jsonb_object_agg(x.id::text, (o::int % 3)) into ratt from unnest(q) with ordinality x(id, o);
+    select jsonb_object_agg(x.id::text, ((o::int % 3) + 1) % 3) into fel5 from unnest(q) with ordinality x(id, o);
+    select jsonb_object_agg(x.id::text, case when o <= 3 then (o::int % 3) else ((o::int % 3) + 1) % 3 end)
+      into tre from unnest(q) with ordinality x(id, o);
+
+    -- ---------- spärren ----------
+    t := pg_temp.svar_som(A, format('select 1 from public.bookings where tutor_id = %L', A))
+      || ' ' || pg_temp.svar_som(A, format('select 1 from public.students where id = %L', E1))
+      || ' ' || pg_temp.svar_som(A, format('select 1 from public.profiles where id = %L', P))
+      || ' ' || pg_temp.svar_som(A, format('select 1 from public.messages where tutor_id = %L', A))
+      || ' ' || pg_temp.svar_som(A, format('select 1 from public.profiles where id = %L', A));
+    ut := ut || jsonb_build_object('t', 'UP spärrad: inga pass, elever, familjer eller meddelanden, men den egna profilen',
+            'ok', t = 'noll noll noll noll ok', 'd', t);
+    perform pg_temp.bli(A);
+    t := public.is_my_student(E1)::text || ' ' || public.barnchatt_tradar()::text;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'UP spärrad: is_my_student och barnchatten släpper inget',
+            'ok', t = 'false []', 'd', t);
+    t := pg_temp.svar_som(P, format('select 1 from public.bookings where parent_id = %L', P))
+      || ' ' || pg_temp.svar_som(AD, format('select 1 from public.bookings where tutor_id = %L', A));
+    ut := ut || jsonb_build_object('t', 'UP familjen och admin ser passen som förut', 'ok', t = 'ok ok', 'd', t);
+
+    -- ---------- frågorna utan facit ----------
+    perform pg_temp.bli(A);
+    j := public.mitt_utbildningsprov();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'UP studiehjälparen får fem frågor med alternativ, och inget facit',
+            'ok', (j ->> 'kravs')::boolean and jsonb_array_length(j -> 'fragor') = 5
+                  and position('ratt_svar' in j::text) = 0 and (j -> 'fragor' -> 0 ? 'alternativ'),
+            'd', left(j::text, 300));
+    t := pg_temp.svar_som(A, 'select 1 from public.prov_fragor')
+      || ' ' || pg_temp.svar_som(A, 'select 1 from public.prov_forsok')
+      || ' ' || pg_temp.svar_som(A, format($q$insert into public.prov_forsok (studiehjalpare_id, antal, ratt, procent, grans_procent, godkand) values (%L, 5, 5, 100, 50, true)$q$, A))
+      || ' ' || pg_temp.svar_som(A, format('update public.prov_studiehjalpare set utbildningsprov_godkant_at = now() where id = %L', A));
+    ut := ut || jsonb_build_object('t', 'UP studiehjälparen läser varken frågorna eller försöken, och skriver inget själv',
+            'ok', t in ('noll noll 42501 noll', 'noll noll 42501 42501'), 'd', t);
+
+    -- ---------- underkänt ----------
+    t := pg_temp.svar_som(A, format('select public.lamna_in_utbildningsprov(%L::jsonb)', (fel5 - (q[1])::text)::text));
+    ut := ut || jsonb_build_object('t', 'UP ett svar som saknas nekas', 'ok', t = '22023', 'd', t);
+    perform pg_temp.bli(A);
+    j := public.lamna_in_utbildningsprov(fel5);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'UP fel svar: bara poängen och underkänt, inget om vilka',
+            'ok', j = jsonb_build_object('ratt', 0, 'antal', 5, 'godkand', false), 'd', j::text);
+    t := pg_temp.svar_som(A, format('select public.lamna_in_utbildningsprov(%L::jsonb)', ratt::text));
+    perform pg_temp.bli(A);
+    j := public.mitt_utbildningsprov();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'UP underkänd gör om tidigast efter väntetiden, och får inga frågor under tiden',
+            'ok', t = '22023' and j ->> 'kan_gora_om_fran' is not null and jsonb_array_length(j -> 'fragor') = 0
+                  and (j -> 'senaste' ->> 'godkand')::boolean = false,
+            'd', t || ' ' || left(j::text, 200));
+
+    -- ---------- admin nollställer, och godkänt ----------
+    t := pg_temp.svar_som(A, format('select public.aterstall_utbildningsprov(%L)', A))
+      || ' ' || pg_temp.svar_som(BG, format('select public.aterstall_utbildningsprov(%L)', A));
+    perform pg_temp.bli(A);
+    j := public.lamna_in_utbildningsprov(tre);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'UP behörig admin nollställer (inte studiehjälparen), och 3 av 5 är godkänt (60 > 50)',
+            'ok', t = '42501 ok' and j = jsonb_build_object('ratt', 3, 'antal', 5, 'godkand', true), 'd', t || ' ' || j::text);
+    t := pg_temp.svar_som(A, format('select 1 from public.bookings where tutor_id = %L', A));
+    ut := ut || jsonb_build_object('t', 'UP godkänt: utbildningsprov_godkant_at är satt och passen syns igen',
+            'ok', t = 'ok' and (select p.utbildningsprov_godkant_at is not null from public.prov_studiehjalpare p where p.id = A),
+            'd', t);
+    t := pg_temp.svar_som(A, format('select public.lamna_in_utbildningsprov(%L::jsonb)', ratt::text));
+    ut := ut || jsonb_build_object('t', 'UP ett godkänt prov görs inte om', 'ok', t = '22023', 'd', t);
+
+    -- ---------- gränsen är MER än ----------
+    perform pg_temp.bli(AD);
+    perform public.satt_provinstallning(60, 5, 24);
+    perform public.aterstall_utbildningsprov(A);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    perform pg_temp.bli(A);
+    j := public.lamna_in_utbildningsprov(tre);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'UP med gränsen 60 är 3 av 5 inte godkänt: godkänt är mer än gränsen',
+            'ok', (j ->> 'godkand')::boolean = false, 'd', j::text);
+
+    -- ---------- undantaget ----------
+    t := pg_temp.svar_som(A, format('select public.satt_provkrav(%L, false)', A))
+      || ' ' || pg_temp.svar_som(AD, format('select public.satt_provkrav(%L, false)', A))
+      || ' ' || pg_temp.svar_som(A, format('select 1 from public.bookings where tutor_id = %L', A));
+    ut := ut || jsonb_build_object('t', 'UP admin tar bort kravet för en person, och spärren släpper',
+            'ok', t = '42501 ok ok', 'd', t);
+
+    -- ---------- resultaten och rensningen ----------
+    t := pg_temp.svar_som(BG, format('select 1 from public.prov_forsok where studiehjalpare_id = %L', A))
+      || ' ' || pg_temp.svar_som(BG, 'select 1 from public.prov_fragor');
+    ut := ut || jsonb_build_object('t', 'UP behörig admin läser försöken men inte frågorna med facit',
+            'ok', t = 'ok noll', 'd', t);
+    perform intern.provet_rensa(A);
+    ut := ut || jsonb_build_object('t', 'UP försöken tas bort när personen raderas',
+            'ok', not exists (select 1 from public.prov_forsok f where f.studiehjalpare_id = A), 'd', '');
+    ut := ut || jsonb_build_object('t', 'UP auditen har kravet och nollställningen, utan svaren',
+            'ok', exists (select 1 from public.audit_logg al where al.tabell = 'prov_studiehjalpare' and al.objekt_id = A::text)
+                  and not exists (select 1 from public.audit_logg al where al.tabell = 'prov_forsok'),
+            'd', (select count(*)::text from public.audit_logg al where al.tabell like 'prov%'));
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('UP Utbildningsprovet', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

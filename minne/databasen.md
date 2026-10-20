@@ -1514,3 +1514,33 @@ gång till efteråt utan fel, och sviten gav samma tal. Vakten provades i en
 egen databas byggd till och med 20261016110000 med en annan familjs faktura:
 del 1 och del 2 stannade och namngav familjen, och gick igenom när bara
 testkontots rad var kvar.
+
+### Intervjumejlet och utbildningsprovet (2026-10-21, inte i drift)
+Två filer, skrivna och provade lokalt; ingenting är kört mot driften. Vad de gör står i `minne/notiser.md`
+(Intervjumejlet) och `minne/affaren.md` (Utbildningsprovet i studiehjälparvyn), och ordningen i driften i
+`DEPLOY-NOTISER.md` 8.
+
+- `intervjumejlet` (20261021100000): `applications.intervju_mejl_skickat_at`, `notis_utskick.ansokan_id`,
+  villkoret `notis_utskick_en_mottagare` med tre mottagare i stället för två, triggern
+  `applications_till_intervju` (efter `applications_skydda` i namnordning, så att den ser det skyddade) och en
+  lapp i `notis_utskick_ta`. Vakten är md5 på `notis_utskick_ta` som den byggs ur migrationerna, och en kropp
+  som redan nämner `ansokan_id` släpps igenom. **Villkoret byts med `drop constraint`**, och det kan inte
+  undvikas: en rad till den som söker har varken `mottagare` eller `barn_id`. Kör filen i SQL Editor som ett
+  anrop eller avsnitt för avsnitt, aldrig i ett do-block.
+- `utbildningsprovet_i_studiehjalparvyn` (20261021110000): fyra tabeller, `intern.provet_sparrar()`, de första
+  restriktiva policyerna (`minne/sakerhet.md`), lappar i `is_my_student`, `barnchatt_skriv`, `barnchatt_trad`,
+  `barnchatt_tradar` och `radera_person` (md5 på var och en, och en kropp som redan nämner `provet_` släpps
+  igenom), sju funktioner, rättigheter och auditen (`logga_andring` med basen `prov`). Ett `delete`, i
+  `intern.provet_rensa`. Policyerna skapas i ett do-block efter en kontroll i `pg_policies`.
+
+**Ingen fil har `begin` och `commit`**, som ingen av de andra 200: varje fil skrivs för att köras som EN
+transaktion av den som kör den (`psql -1` i `lokal-databas.sh`, ett do-block eller ett anrop till
+`execute_sql` i driften, och SQL Editor, som kör ett anrop med flera satser som en transaktion). Ett `begin` i
+filen hade gjort den omöjlig att köra i ett do-block (`EXECUTE` tar inga transaktionskommandon). `set local
+lock_timeout` överst gäller bara i en transaktion, och säger till om filen körs utan.
+
+Provat lokalt 2026-10-21: en databas byggd ur alla 205 migrationer gav 1828 av 1828 i `rls-test.sql` (avsnitt
+40 och 41 är nya), och båda filerna kördes en gång till utan fel och med samma tal. **Undantaget för dem som
+var godkända skrivs bara första gången** (inställningens rad skrivs direkt efter och säger att filen körts):
+prövat i en egen databas byggd till och med `intervjumejlet`, där en studiehjälpare godkänd mellan två
+körningar inte fick något undantag.

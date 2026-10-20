@@ -212,6 +212,24 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
   kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
   poolen frågar först om det saknas.
+- **Intervjumejlet** (2026-10-21): när admin skickar en ansökan vidare till intervju köar databasen Leos
+  mejl "Du går vidare till intervju" till den som sökt, en gång per ansökan (`intern.ansokan_intervjumejl`;
+  `applications.intervju_mejl_skickat_at` sätter bara databasen), aldrig till en avböjd och aldrig när ett
+  möte bokas i samma steg (mötets mejl är inbjudan). Det går genom notiskön (`notis_utskick.ansokan_id`,
+  rollen `sokande`), så sandlådan och `notiser_mejl` gäller; `notis_konfig.lage` läses inte av någon kod och
+  rörs inte. Texten är Leos ord för ord, i `intervju.ts` och i adminvyn (`INTERVJU_MEJLET`, som visar mejlet
+  innan steget sätts), och `kolla-mejltexter.py` håller dem lika. Ansökans tack är "Tack, din ansökan är
+  skickad! Vi hör av oss inom 24 timmar."
+- **Utbildningsprovet i studiehjälparvyn** (2026-10-21): en godkänd studiehjälpare gör provet vid första
+  inloggningen, före vyn (`NXProvet`), och en gång: mer än gränsen rätt (`prov_installning`, 50 % som förval)
+  är godkänt (`prov_studiehjalpare.utbildningsprov_godkant_at`), och den som inte klarar det gör om det efter
+  väntetiden (24 timmar). Databasen rättar (`lamna_in_utbildningsprov()` svarar bara poängen och godkänt eller
+  inte), `mitt_utbildningsprov()` lämnar frågorna utan facit, och `prov_fragor` läser bara superadmin.
+  Spärren står i databasen (`intern.provet_sparrar()`, avsnitt 6) och gäller först med minst fem aktiva
+  frågor; adminvyn varnar till dess. De som var godkända före migrationen är undantagna, och admin slår av och
+  på kravet och nollställer provet per person (superadmin eller Godkänna). Frågorna skriver Leo under
+  Ansökningar → Provet i vyn, aldrig en migration med påhittade frågor. Provet i ansökan
+  (`utbildningsprov.html`, `applications.prov_*`) är ett annat och står kvar.
 - **Barnkontona** (2026-09-30): ett barnkonto är ett användarnamn och ett lösenord, inget mer.
   Varje inloggning tar e-post eller användarnamn (`NXStudie.loggaIn`, 2026-10-01): med @ en
   vuxen, utan @ ett barn, som hamnar på `/barn`. Adressen `<namn>@barn.nextrum.se` finns bara
@@ -682,6 +700,10 @@ Detaljer: `minne/grunden.md`.
   adminvyn (`kolla-mejltexter.py`).
   Provets facit finns bara i funktionen, resultatet visas per avsnitt, fel svar är lika
   utförliga som rätt, nyckeln hamnar aldrig i en logg, och ändras handboken läses frågorna om.
+  Intervjumejlet (2026-10-21) är det enda till den som söker som går genom notiskön: en rad med
+  `ansokan_id` (villkoret `notis_utskick_en_mottagare` kräver exakt en av `mottagare`, `barn_id` och
+  `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i intervju och är
+  inte avböjd), och `notis-ko` mejlar den från info@ (`intervju.ts`).
 
 Detaljer: `minne/databasen.md`, `minne/notiser.md`.
 
@@ -707,6 +729,12 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   inklistrat avtal genom `min_handling_text()`: en handling är en fil eller en text, och texten
   ändras aldrig (`handlingar_texten_star_fast`).
   Notishemligheten står i `notis_konfig`, inte i en secret.
+- **Utbildningsprovet** (2026-10-21) har databasens första restriktiva policyer ("utbildningsprovet först"
+  på `bookings`, `students`, `lesson_reports`, `messages`, `study_plans`, `tutor_reviews`, `notiser` och
+  `profiles`, där den egna raden alltid syns), och `is_my_student()` och barnchatten frågar
+  `intern.provet_sparrar()`: resten (läxor, material, NexLäx, förberedelser, tillägg) går genom dem. En ny väg
+  till en studiehjälpares elever gör likadant. Provets läge står i `prov_studiehjalpare`, aldrig på
+  `tutor_profiles` (`skydda_tutorfalt` släpper bara vitlistade kolumner), och admins spärras aldrig.
 - Rå servertext visas bara i de inloggade vyerna; en återvändsgränd bär `{oss}`. Anonyma
   skrivningar har tak, och deras `created_at` sätts av databasen.
 - Hinkarna är privata och sökvägen är ett uuid, aldrig ett namn. I `cv` ändras `CV_RAD` och
@@ -834,6 +862,10 @@ Detaljer: `minne/grunden.md`.
 - **Fakturan är borttagen** (2026-10-21) i koden och i migrationerna, men inte i driften: kedjan står
   i `DEPLOY-BETALNING.md` 9.18 (funktionerna först, sedan del 1, backup, del 2). Villkoren har versionen
   2026-10-21, så alla får frågan igen. Spärren "ingen betalning, inget pass" kan inte slås på.
+- **Intervjumejlet och utbildningsprovet i studiehjälparvyn** (2026-10-21) är byggda och provade lokalt, inte i
+  driften: kedjan står i `DEPLOY-NOTISER.md` 8 (`notis-ko` före `intervjumejlet`, som byter ett villkor med `drop
+  constraint`). Provet spärrar ingen förrän Leo skrivit fem frågor, och de som var godkända när migrationen körs
+  slipper det. Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
 - **Timmarna**: provköpet (DEPLOY-BETALNING.md 9.12) är ogjort. Leos testköp står kvar med
   sina timmar till kortets sista dag, och är sedan 2026-09-30 märkt som test igen
   (`stripe_skarp = false`): det räknas inte längre som intäkt.

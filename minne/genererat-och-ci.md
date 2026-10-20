@@ -255,7 +255,9 @@ Körs på varje push och PR. Ska vara grön före merge.
 6. `verktyg/kolla-webp.py`, och `verktyg/kolla-mejltexter.py` (2026-10-05):
    nejet som läget Avböjd visar (`NEJ_MEJLET` i
    `nextrum-admin-rekrytering.js`) är samma som mejlet (`NEJ` i
-   `_delad/notiser/ansokan.ts`), fält för fält, och `verktyg/kolla-villkor.py`
+   `_delad/notiser/ansokan.ts`), fält för fält, och sedan 2026-10-21 också
+   intervjumejlet (`INTERVJU_MEJLET` mot `INTERVJU` i
+   `_delad/notiser/intervju.ts`), och `verktyg/kolla-villkor.py`
    (2026-10-07): användarvillkorens datum, på båda språken, är versionen i
    `intern.villkor_version()` i den senaste migrationen som skriver den
 7. `verktyg/satt-version.py --kolla`
@@ -473,6 +475,21 @@ reserven när kolumnen saknas, rutan som visar nejet innan läget blir Avböjd,
 godkännandet i ansökan, frågan i Ta in i poolen, och att siffran vid
 Ansökningar och Intresseanmälningar går bort när sektionen visats, med och
 utan tabellen `admin_sett`.
+
+### Webbläsarprovet för utbildningsprovet i studiehjälparvyn (2026-10-21)
+`verktyg/prova-utbildningsprovet.js` (egen port, 8978) är byggt som
+introduktionens: en falsk Supabase med en studiehjälpare, en admin och fyra
+frågor. I studiehjälparvyn: rutan före vyn, inget facit i sidan, att alla
+frågor måste besvaras och att bara fråga → alternativ skickas, underkänt med
+tiden då provet går att göra om, godkänt med Fortsätt, den som väntar, den
+som inte behöver provet och en databas utan migrationen (ingen ruta), på en
+telefon och i mörkt läge (44 px, 16 px text, rutan ryms). I adminvyn: fliken
+Provet i vyn, varningen under fem frågor, facit markerat, en ny fråga som
+nekas och en som sparas, Stäng av under gränsen, gränsen som tal, och
+Utbildningsprovet i studiehjälparens panel med Nollställ provet. Det som
+skyddar provet prövas i `rls-test.sql` avsnitt 41; webbläsarprovet visar
+bara att vyerna gör rätt. `prova-ansokningar.js` provar sedan samma dag
+rutan som visar intervjumejlet innan en ansökan skickas vidare.
 
 ### Webbläsarprovet för barnkontona och adminbehörigheterna (2026-09-30)
 `verktyg/prova-barnkonton.js` kör barnets vy, NexLäx i barnets vy och

@@ -418,3 +418,36 @@ Deno.test('en bekräftelse utan giltig kod skickas inte', async () => {
   assertEquals(k.skickade.length, 0);
   assertEquals(k.klara[0].ok, false);
 });
+
+/* ---------- mejlet till den som går vidare till intervju (2026-10-21) ---------- */
+
+const ANSOKAN = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
+
+Deno.test('den som går vidare till intervju får Leos mejl, från info@ och utan avregistrering', async () => {
+  const k = bank([rad({ mottagare: ANSOKAN, roll: 'sokande', typ: 'ansokan_intervju', data: {}, fornamn: 'Sara Ek',
+                        epost: 'sara@example.se' })]);
+  const r = await korKon(k.b);
+
+  assertEquals(r.skickade, 1);
+  const m = k.skickade[0];
+  assertEquals(m.fran, 'Nextrum <info@nextrum.se>');
+  assertEquals(m.till, ['sara@example.se']);
+  assertEquals(m.amne, 'Du går vidare till intervju');
+  assertStringIncludes(m.text, 'Hej Sara!');
+  assertStringIncludes(m.text, 'du går vidare till intervjufasen.');
+  assertEquals(m.headers?.['List-Unsubscribe'], undefined);
+  assertEquals((m.idempotens ?? '').startsWith('nextrum-notis-'), true);
+});
+
+Deno.test('en ansökans rad får bara intervjumejlet, och i sandlådan står det att det är ett prov', async () => {
+  const fel = bank([rad({ mottagare: ANSOKAN, roll: 'sokande', typ: 'meddelande', data: {} })]);
+  await korKon(fel.b);
+  assertEquals(fel.skickade.length, 0);
+  assertEquals(fel.klara.map((x) => [x.ok, x.permanent]), [[false, true]]);
+
+  const sand = bank([rad({ mottagare: ANSOKAN, roll: 'sokande', typ: 'ansokan_intervju', data: {},
+                           till_sandlada: true, epost: 'sandlada@example.se' })]);
+  await korKon(sand.b);
+  assertEquals(sand.skickade.length, 1);
+  assertStringIncludes(sand.skickade[0].amne, '[Prov till sökande]');
+});

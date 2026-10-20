@@ -178,6 +178,7 @@ applications (insert/update)
 | ansökan kommer in, under 18 med vårdnadshavarens e-post (2026-10-05) | `vardnadshavare`: till vårdnadshavaren, barnet har sökt och vi behöver ett skriftligt godkännande |
 | admin rättar eller lägger till vårdnadshavarens e-post, utan godkännande | `vardnadshavare` igen, en gång per adress |
 | läget blir Avböjd (2026-10-05) | `avbojd`: tack, vi har valt att gå vidare med andra sökande. Tidigast en halvtimme senare, aldrig 20–9, inte om läget hunnit bytas. Adminvyn visar mejlet innan |
+| Skicka vidare till intervju (`till_intervju_at` sätts, 2026-10-21) | `ansokan_intervju`: Leos text, "Du går vidare till intervju". **Genom notiskön, inte `ansokan_utskick`** (Intervjumejlet, nedan). Adminvyn visar mejlet innan |
 
 Sex regler bär det:
 
@@ -231,6 +232,61 @@ Sex regler bär det:
    välkomsten, men bara den senare godkänner profilen. Lägesväljaren
    frågar därför först.
 
+### Intervjumejlet (2026-10-21, `intervjumejlet`, inte i drift)
+
+Leo: när admin skickar en ansökan vidare till intervju ska den som sökt få ett
+mejl, högst en gång per ansökan, och det ska gå genom notiskön och följa läget.
+Texten är hans, ord för ord, och ingenting läggs till (ingen knapp, ingen fot,
+ingen avregistrering: det är ett besked om en ansökan mottagaren själv skickat,
+som de andra mejlen i tabellen ovan):
+
+```
+Ämne: Du går vidare till intervju
+Hej [förnamn]!
+Tack för din ansökan till Nextrum. Vi har läst den och du går vidare till intervjufasen.
+Håll koll på din mejl de kommande dagarna, för det är dit vi skickar inbjudan till intervjun. Har du önskemål om när intervjun ska hållas får du gärna mejla oss på info@nextrum.se.
+Hälsningar
+Leo och Alex, Nextrum
+```
+
+```
+applications.till_intervju_at: null → satt (Skicka vidare till intervju)
+  → BEFORE-trigger applications_till_intervju → intern.ansokan_intervjumejl()
+      rad i notis_utskick med ansokan_id (typ ansokan_intervju,
+      idempotens 'ansokan_intervju:<id>'), intervju_mejl_skickat_at := now()
+  → notis-minut → notis-ko → notis_utskick_ta (roll 'sokande') → intervju.ts → Resend (från info@)
+```
+
+1. **Varför notiskön och inte `ansokan-notis`.** Alla andra mejl till den som
+   söker går genom `ansokan_utskick` och `ansokan-notis`, som inte följer
+   sandlådan eller `notiser_mejl`. Kön gör det, och det var beställningen.
+   Den som söker har inget konto, så raden har en tredje sorts mottagare:
+   `notis_utskick.ansokan_id` (on delete cascade), och villkoret
+   `notis_utskick_en_mottagare` kräver exakt en av `mottagare`, `barn_id` och
+   `ansokan_id`. Att byta villkoret är en `drop constraint` (DEPLOY-NOTISER.md 8).
+2. **"Läget" är sandlådan och `notiser_mejl`, inte `notis_konfig.lage`.**
+   Den kolumnen är en rest från den gamla kön i driften och läses inte av
+   någon kod; Leo bad oss inte röra den, och ingenting gör det.
+3. **En gång per ansökan.** `intervju_mejl_skickat_at` sätts av triggern och
+   står kvar (bara databasen skriver den: triggern behåller det gamla värdet
+   vid varje annan UPDATE), och kön har en unik nyckel per ansökan. Ångra
+   steget och skicka vidare igen: inget nytt mejl.
+4. **Inte till en avböjd, och inte när ett möte bokas i samma steg.** Boka
+   möte sätter `till_intervju_at` och `mote_tid` i samma ändring, och då är
+   mötesmejlet (`mote`) inbjudan. `notis_utskick_ta` prövar igen när raden ska
+   gå: ansökan finns, är inte avböjd och står kvar i intervju. Annars `loggad`.
+5. **Texten står på två ställen**: `INTERVJU` i `_delad/notiser/intervju.ts`
+   och `INTERVJU_MEJLET` i `nextrum-admin-rekrytering.js`, som visar mejlet i
+   rutan innan steget sätts (`bekräftaIntervju`; har mejlet redan gått säger
+   rutan det, och utan kolumnen frågar den inget). `kolla-mejltexter.py`
+   håller dem lika, som nejet. I sandlådan börjar ämnet med "[Prov till
+   sökande]" och brevet säger att det är ett prov.
+6. **`notis-ko` före migrationen.** En äldre `notis-ko` känner inte rollen
+   `sokande`.
+
+Ansökans tack i formuläret (`tackAnsokan` i `nextrum-app.js`) är sedan samma dag
+"Tack, din ansökan är skickad! Vi hör av oss inom 24 timmar."
+
 ### Vårdnadshavarens godkännande (2026-10-05)
 
 Leo: "jobbansökan, fråga om den sökande är under 18, är den det så ber du
@@ -263,6 +319,10 @@ lägga in kopia av mail till barnet."
 - Adminvyn visar raderna bara när kolumnerna finns.
 
 ### Utbildningsprovet (Fas 22.1)
+
+**Provet i studiehjälparvyn (2026-10-21) är ett annat prov**: det görs av den som
+redan är godkänd och har ett konto, vid första inloggningen, och står i
+`minne/affaren.md` (Utbildningsprovet i studiehjälparvyn). Det här står kvar orört.
 
 Efter utbildningsmötet gör den som söker ett prov på nätet:
 `/utbildningsprov?t=<nyckel>`, tjugosex flervalsfrågor om

@@ -70,8 +70,8 @@ jobs:
       # 2026-10-05: läget Avböjd visar nejet ord för ord innan det
       # köas, och mejlet byggs av edge-funktionen. Texten står på två
       # ställen; glider de isär har admin godkänt ett annat mejl än det
-      # som går.
-      - name: Nejet i adminvyn är samma som mejlet
+      # som går. 2026-10-21: intervjumejlet likadant.
+      - name: Nejet och intervjumejlet i adminvyn är samma som mejlen
         run: python3 verktyg/kolla-mejltexter.py
 
       # 2026-10-07: den som inte godkänt den gällande versionen av

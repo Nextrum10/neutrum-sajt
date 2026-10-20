@@ -809,6 +809,13 @@ window.NXForhandsvisning = (function () {
             bonus_utbetald_ore: 0, bonus_ges: true, bonus_belopp_ore: 30000 };
     },
     forsta_timmen_lage: function () { return { beviljad: false, tagen: false }; },
+    /* Utbildningsprovet i studiehjälparvyn (2026-10-21): den påhittade
+       studiehjälparen har klarat det, så vyn öppnas som för vem som helst. */
+    mitt_utbildningsprov: function () {
+      return roll === 'foralder' ? { studiehjalpare: false, kravs: false }
+        : { studiehjalpare: true, kravs: false, godkant_at: tid(-20, '19:00'), grans_procent: 50,
+            kan_gora_om_fran: null, senaste: null, fragor: [] };
+    },
     /* Familjens rabatt per timme (familjerabatter, 2026-10-15): den påhittade
        familjen har ingen, och priset vid knappen är katalogens. */
     min_familjerabatt: function () { return 0; },

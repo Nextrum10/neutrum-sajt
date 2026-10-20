@@ -433,6 +433,58 @@ det var stod ovanför sektionen, 800 px över formuläret på en telefon.
 Rutan står därför inte längre under Lektioner & elever, bara ovanför
 Läxor och Meddelanden. En enda elev väljs inte; kortet säger bara vem.
 
+## Utbildningsprovet i studiehjälparvyn (2026-10-21, `utbildningsprovet_i_studiehjalparvyn`, inte i drift)
+
+Leo: ett prov som studiehjälparen gör vid första inloggningen, innan studiehjälparvyn öppnas. Mer än 50 %
+rätt är godkänt och gränsen står i en inställning; provet görs en gång; den som inte klarar det gör om det
+efter 24 timmar, och admin kan nollställa. Rättningen sker på servern, facit når aldrig webbläsaren, och
+spärren står i databasen. Den gäller först när det finns minst fem aktiva frågor (till dess en varning i
+adminvyn), de som var godkända före migrationen slipper, och admin slår på och av kravet per person.
+
+Det är **inte** provet i rekryteringen (`utbildningsprov.html`, `applications.prov_*`, `minne/notiser.md`,
+Utbildningsprovet, Fas 22.1), som den som söker gör genom en länk innan hen har ett konto. Båda finns nu, och
+om det gamla ska bort är Leos fråga.
+
+**Tabellerna.** `prov_installning` (en rad: `grans_procent` 50, `min_aktiva_fragor` 5, `vantetid_timmar` 24),
+`prov_fragor` (frågan, 2–6 alternativ, `ratt_svar` som index, `aktiv`, `ordning`), `prov_forsok` (varje
+inlämnat försök med svaren och vilka som var rätt) och `prov_studiehjalpare` (läget per person: `kravs`,
+`utbildningsprov_godkant_at`, `aterstalld_at`, `undantagen`). **Läget står inte på `tutor_profiles`**:
+`skydda_tutorfalt` släpper bara vitlistade kolumner när studiehjälparen själv ändrar sin rad, och provet lämnas
+in som studiehjälparen. Ingen rad i `prov_studiehjalpare` betyder att provet krävs, och de som var godkända när
+filen kördes fick en rad med `kravs = false` och "godkänd före provet (2026-10-21)". Ingen inloggad har
+skrivrättigheter på någon av dem: allt går genom funktionerna.
+
+**Spärren** är `intern.provet_sparrar(uid)`: sant för den som har en rad i `tutor_profiles`, ingen adminroll,
+inte klarat provet och inte är undantagen, när minst `min_aktiva_fragor` frågor är aktiva. Den ligger i
+restriktiva policyer på `bookings`, `students`, `lesson_reports`, `messages`, `study_plans`, `tutor_reviews`,
+`notiser` och `profiles` (den egna raden syns alltid), i `is_my_student()` och i barnchattens tre funktioner.
+Läxorna, materialet, utvecklingen och NexLäx-försöken bygger på `is_my_student()`, och förberedelsen, mötet,
+tilläggen, timbankens uttag och uppdragen läser `bookings` och `students` i sina policyer: de spärras med dem.
+Det som inte spärras är med flit: den egna profilen och `tutor_profiles` (vyn behöver dem), lönen och
+underlagen (de egna), och `upptagna_tider()` för den egna kalendern (datum och timmar, inga namn).
+Familjerna och admins spärras aldrig.
+
+**Funktionerna.** `mitt_utbildningsprov()` säger läget och lämnar frågorna utan facit bara när provet ska göras
+nu (`kravs` är spärren, inte kolumnen). `lamna_in_utbildningsprov(p_svar)` låser personens rad, prövar spärren,
+att provet inte redan är klarat och att väntetiden gått, kräver ett heltal för varje aktiv fråga (frågas en ny
+fråga in medan någon skriver får hen "Svara på alla frågor" och läser in sidan igen), sparar försöket och svarar
+bara `{ratt, antal, godkand}`. Godkänt är **mer än** gränsen: med 50 % och sex frågor är tre rätt underkänt.
+`spara_provfraga()` och `satt_provinstallning()` är superadminens; `satt_provkrav()`, `aterstall_utbildningsprov()`
+och `utbildningsprovet_lage()` också den med behörigheten Godkänna. En nollställning sätter `aterstalld_at` och
+tar bort godkännandet: försöken står kvar men räknas inte för väntetiden. Ingen fråga tas bort, den stängs av.
+
+**Vyn.** `nextrum-provet.js` (`NXProvet.förstGörs`) körs i studiehjälparvyns start för en godkänd
+studiehjälpare, före introduktionen. Rutan är samma som lösenordets och villkorens och går inte att stänga:
+frågorna som radioknappar, Lämna in, och sedan godkänt med Fortsätt eller underkänt med tiden då provet går att
+göra om och Logga ut. Svarar databasen inte, eller saknas funktionen, visas ingen ruta.
+
+**Adminvyn.** Ansökningar → Provet i vyn (`nextrum-admin-provet.js`, bara superadmin): varningen när spärren
+inte gäller än, frågorna med det rätta svaret markerat, Lägg till fråga, Stäng av och Slå på (frågar först om
+det tar spärren under gränsen), gränsen, spärren och väntetiden, och studiehjälparna med sitt läge. I
+studiehjälparens panel (Översikt) står Utbildningsprovet med läget, försöken och Nollställ provet och Kräv
+provet eller Kräv inte provet. **Frågorna skriver Leo**: ingen migration lägger in frågor, och inga påhittade
+frågor ska in i driften.
+
 ## Studiehjälparen utåt och omdömena
 
 En studiehjälpare syns publikt först när admin satt läget till

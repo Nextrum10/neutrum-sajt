@@ -98,6 +98,7 @@
         ritaÖversikt:      'nextrum-admin-oversikt.js',
         ritaLeads:         'nextrum-admin-kunder.js',
         ritaAnsokningar:   'nextrum-admin-rekrytering.js',
+        ritaProvet:        'nextrum-admin-provet.js',
         ritaBibliotek:     'nextrum-admin-bibliotek.js',
         ritaChattar:       'nextrum-admin-kommunikation.js',
         ritaBokningar:     'nextrum-admin-drift.js',
@@ -144,6 +145,11 @@
       [typeof NXUppgifter !== 'undefined' && !!NXUppgifter.ritaVäg && typeof NXUppgifter.uppdragHtml === 'function',
        'nextrum-uppgifter.js']
     );
+    /* Utbildningsprovet (2026-10-21) laddas bara i studiehjälparvyn, som
+       frågar det innan vyn öppnas. */
+    if (document.querySelector('script[src*="nextrum-provet.js"]')) {
+      krav.push([typeof NXProvet !== 'undefined' && typeof NXProvet.förstGörs === 'function', 'nextrum-provet.js']);
+    }
     /* Förhandsvisningen (2026-10-12) prövas bara i förhandsvisningen:
        för alla andra är filen tom. Kom den inte fram har nextrum-app.js
        ingen klient alls, hellre än adminens riktiga konto. */
