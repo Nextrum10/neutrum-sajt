@@ -1507,7 +1507,16 @@ bort), och ordningen i driften i `DEPLOY-BETALNING.md` 9.18.
   annars en NOTICE och ingenting.
 - `supabase/scripts/rensa-testkonto.sql` är ingen migration (CLAUDE.md
   avsnitt 5): en `pg_temp`-funktion med `dry_run` som förval, körd bara med
-  `dry_run` lokalt.
+  `dry_run` lokalt. **Namnet är familjens** (2026-10-20): skriptet skrevs med
+  Leo Trikke, men i driften är Leo Trikke studiehjälparen på alla 16 passen
+  och familjen Leos adminkonto `leo thriskos`, så skriptet hade hittat ett
+  konto utan pass och raderat ingenting. Anropet tar nu `leo thriskos`, och
+  ett konto vars roll inte är `parent` nekas. Det driften hade den dagen,
+  allt test: 16 pass (9 i september, som är stängd), 6 rapporter, ett
+  underlag i utkast för september (960 kr, fyra av passen), ett köp av
+  Standard (1 364 kr, `stripe_skarp = false`) och dess rad i liggaren, som
+  står kvar. Septembers bokslut frös passen i `summering`, så att talen där
+  nollas först när månaden öppnas och stängs igen.
 
 Provat lokalt 2026-10-21: en databas byggd ur alla 203 migrationer gav 1797 av
 1797 i `rls-test.sql`, och 1794 av 1794 utan del 2. Alla tre filerna kördes en
