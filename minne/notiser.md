@@ -368,7 +368,18 @@ på det gamla papperet samma dag som sajtens ljusnade. Papperet står på
 `body` för Apple Mail OCH som `bgcolor` på yttertabellen för Gmail, som
 kastar body-stilen: tas ett av dem bort blir det vitt i det programmet.
 Det vita som ändå syns runt ett mejl i Gmail på datorn är Gmails eget
-och går inte att nå inifrån ett mejl. Kontomejlen (bekräfta konto,
+och går inte att nå inifrån ett mejl.
+
+**Mejlens utseende följer sajten** (2026-10-20, Leo: "gör de snyggare så de matchar nya
+färgerna på sidan"): `FARG` i `rendera.ts` är sajtens värden (papper #F1EDE6, lugn yta #E7E2D8,
+linje #CAC2B3), och loggans PNG är ritad på just det papperet, så en ändrad `--pap` ändrar
+båda. Rubriken har ett kort lerstreck över sig (`rubrikHtml()`), faktarutan en lerrand till
+vänster (en egen cell, ingen `border-left`: Outlook), knappen är större, och footern
+(varför mejlet kom, avanmälan, vart man skriver) står i en mörk remsa i sajtens `--ftr-bg`
+(#1F1915), över hela bredden men inne i yttertabellen: papperet runt brevet är orört. Ett mejl
+utan egen footer (underlaget, aviseringen) får bara raden om vart man skriver (`Skal.fot`).
+Provet: rendera mallarna med `node --experimental-strip-types` och titta i en webbläsare i
+600 och 390 px; `deno test _delad/notiser/` ska gå igenom. Kontomejlen (bekräfta konto,
 inbjudan från `bjud-in`, Glömt lösenordet) skickas av Supabase Auth med
 mallar i dashboarden, inte härifrån, och har inte det här skalet.
 Texterna står i `minne/sakerhet.md` (Kontomejlen).
