@@ -333,12 +333,39 @@
   /* Mallarna. Skrivna för att kunna skickas som de är, men de är
      utkast: rutan är redigerbar just för att ingen familj ska få ett
      mejl som låter som ett formulär. */
+  /* Mejlet går härifrån, från info@, genom ansokan-mejl (2026-10-20).
+     Funktionen tar adressen ur ansökan, så bara id:t skickas. Svaret är
+     felet som text, eller null när mejlet gått. */
+  async function skickaTill(a, brev) {
+    const { data, error } = await supa.functions.invoke('ansokan-mejl',
+      { body: { ansokan: a.id, amne: brev.amne, text: brev.text, forsok: brev.forsok } });
+    /* En funktion som inte är driftsatt svarar 404 med Supabases egen text
+       på engelska: säg vad det betyder i stället. */
+    if (error && error.context && error.context.status === 404) return 'ansokan-mejl är inte driftsatt än.';
+    if (error) return await funktionsFel(error);
+    return data && data.ok ? null : 'Okänt svar.';
+  }
+
+  /* Bokningssidan i Google Kalender (2026-10-20, INTERVJU_BOKNING_URL).
+     Bara en https-adress, som möteslänken: mejlet går ut med vår
+     avsändare, och en adress som inte är en länk hade stått som text. */
+  function bokningssida() {
+    const u = String(CFG.INTERVJU_BOKNING_URL || '').trim();
+    return /^https:\/\/\S+$/.test(u) ? u : '';
+  }
+
   function mallIntervju(a) {
+    const sida = bokningssida();
     return 'Hej ' + (String(a.name || '').split(' ')[0] || '') + ',\n\n'
       + 'Tack för din ansökan till Nextrum. Vi har läst den och skulle gärna '
       + 'prata med dig en kvart om hur du tänker kring att hjälpa andra att plugga.\n\n'
-      + 'Passar någon av de här tiderna?\n'
-      + '  · \n  · \n  · \n\n'
+      + (sida
+        ? 'Välj en tid som passar dig här:\n' + sida + '\n\n'
+          + 'Vi ses i Google Meet, och länken kommer i bekräftelsen när du bokat. Du behöver '
+          + 'inget Google-konto. Passar ingen av tiderna kan du svara på det här mejlet, så '
+          + 'hittar vi en annan.\n\n'
+        : 'Passar någon av de här tiderna?\n'
+          + '  · \n  · \n  · \n\n')
       + 'Det är ett samtal, inget prov. Vi vill veta hur du förklarar saker och '
       + 'vilka ämnen du känner dig trygg i.\n\n'
       + 'Hälsningar,\nNextrum';
@@ -371,13 +398,18 @@
       namn: a.name, till: a.email,
       amne: 'Din ansökan till Nextrum',
       text: mallIntervju(a),
+      skicka: brev => skickaTill(a, brev),
       efterat: async () => {
         const nu = new Date().toISOString();
-        await supa.from('applications')
-          .update({ kontaktad_at: nu, status: a.status === 'new' ? 'contacted' : a.status })
-          .eq('id', a.id);
-        a.kontaktad_at = nu;
-        if (a.status === 'new') a.status = 'contacted';
+        const ändring = { kontaktad_at: nu, status: a.status === 'new' ? 'contacted' : a.status };
+        /* Med bokningssidan är mejlet kallelsen till intervjun
+           (2026-10-20): hen bokar själv, och inget Boka möte här skickar
+           hen vidare, som ett bokat möte annars gör. Utan sidan är det
+           bara en kontakt, som förut. */
+        if (bokningssida() && harIntervjuKolumn(a) && ansSteg(a) === 'ny') ändring.till_intervju_at = nu;
+        const { error } = await supa.from('applications').update(ändring).eq('id', a.id);
+        if (error) { alert('Det sparades inte att du skrev till hen: ' + felText(error)); return; }
+        Object.assign(a, ändring);
         ritaOm();
       }
     });
@@ -688,6 +720,12 @@
      som ser ut att boka men bara skriver i vår egen databas är värre
      än en som säger vad den gör: den sparar tiden och länken här, och
      databasen mejlar dem till den sökande (Fas 16.1).
+
+     Sedan 2026-10-20 kan mejlet i steg 1 bära länken till en
+     bokningssida i Google Kalender (INTERVJU_BOKNING_URL). Där bokar
+     den sökande själv, och Google mejlar tiden och Meet-länken. Ingen
+     koppling: vyn läser aldrig kalendern, så en bokning syns här först
+     om någon sparar den med Boka möte.
      ============================================================ */
 
   /* Stegknapparna nedan ritar om listan, och listan ritar om panelen
@@ -736,6 +774,7 @@
     const id = esc(a.id);
     const möte = mötesText(a);
     const utbLänk = String(CFG.UTBILDNING_URL || '').trim();
+    const sida = bokningssida();
     const harKolumn = harIntervjuKolumn(a);
 
     return '<div class="ans-spar-lista">'
@@ -745,16 +784,20 @@
       + spårSteg(1, 'Till intervju',
           (harKolumn && harIntervjumejl(a)
             ? 'Du väljer vem som går vidare: hen hamnar under fliken Intervju och får mejlet "Du går vidare '
-              + 'till intervju", en gång per ansökan. Kommer steget med ett bokat möte mejlas bara mötet. '
+              + 'till intervju", en gång per ansökan. Kommer steget med ett bokat möte, eller med kallelsen '
+              + 'när du skriver till hen, mejlas bara den. '
               + 'Läget (Ny, Kontaktad) sätter du själv under Ansökan, och det flyttar ingen. '
             : harKolumn
             ? 'Du väljer vem som går vidare: hen hamnar under fliken Intervju, och ingenting mejlas. '
               + 'Läget (Ny, Kontaktad) sätter du själv under Ansökan, och det flyttar ingen. '
             : 'Läget Kontaktad flyttar hen till fliken Intervju tills migrationen '
               + 'ansokan_till_intervju är körd. ')
-          + 'Kvittot på ansökan har redan gått av sig självt. Skriv till hen för att föreslå tider '
-          + 'för mötet: utkastet öppnas i Gmail med din adress som avsändare, så att svaret kommer '
-          + 'till dig.',
+          + 'Kvittot på ansökan har redan gått av sig självt. '
+          + (sida
+            ? 'Skriv till hen med länken till bokningssidan, där hen väljer en tid själv. Mejlet går '
+              + 'från info@nextrum.se, och svaret kommer dit. När du skickat det hamnar hen under Intervju.'
+            : 'Skriv till hen för att föreslå tider för mötet. Mejlet går från info@nextrum.se, och '
+              + 'svaret kommer dit.'),
           harKolumn ? a.till_intervju_at : a.kontaktad_at,
           tillIntervjuKnapp(a)
           + '<button type="button" class="btn btn-ghost btn-sm" data-ans-kontakt="' + id + '">'
@@ -766,13 +809,25 @@
             ? '<div class="ans-steg-fakta"><b>Intervjumejlet:</b> köat ' + esc(kortDatum(a.intervju_mejl_skickat_at))
               + '</div>'
             : '')
+          /* Var den sätts står här, som för utbildningslänken: den som
+             läser det här är den som ska sätta den. */
+          + (sida
+            ? '<div class="ans-steg-fakta"><b>Bokningssida:</b> ' + esc(sida) + '</div>'
+            : '<div class="ans-steg-fakta">Ingen bokningssida är satt, så mejlet föreslår tider. '
+              + 'Lägg länken till bokningsschemat i Google Kalender i <code>INTERVJU_BOKNING_URL</code> '
+              + 'i nextrum-config.js, så kommer den med i mejlet.</div>')
           + besked(a, 'mottagen') + besked(a, 'vardnadshavare'))
 
       + spårSteg(2, 'Digitalt möte',
           'En kvart över video. Det är ett samtal, inget prov — vi vill höra hur hen '
-          + 'förklarar saker och vilka ämnen hen är trygg i. Tiden och länken mejlas till hen '
-          + 'när du sparar dem, och igen om du ändrar dem. Ett bokat möte skickar hen vidare till '
-          + 'Intervju, om du inte redan gjort det. "Mötet är hållet" är Skicka vidare till utbildning: '
+          + 'förklarar saker och vilka ämnen hen är trygg i. '
+          + (sida
+            ? 'Hen bokar på bokningssidan, och Google mejlar tiden och Meet-länken: mötet står i '
+              + 'kalendern för info@nextrum.se, inte här. Boka möte behövs bara när ni bestämt tiden '
+              + 'på annat sätt, för det du sparar här mejlas till hen också när hen redan bokat. '
+            : 'Tiden och länken mejlas till hen när du sparar dem, och igen om du ändrar dem. Ett '
+              + 'bokat möte skickar hen vidare till Intervju, om du inte redan gjort det. ')
+          + '"Mötet är hållet" är Skicka vidare till utbildning: '
           + 'det mejlar ett tack och säger att introduktionen är nästa steg.',
           a.intervju_at,
           '<button type="button" class="btn btn-ghost btn-sm" data-ans-mote="' + id + '">'
@@ -862,7 +917,8 @@
       titel: 'Boka digitalt möte med ' + (a.name || 'den sökande'),
       text: 'Tiden och länken sparas på ansökan och mejlas till den sökande direkt. Ändrar du '
         + 'dem senare går ett nytt mejl med den nya tiden. Ingen kalender bokas härifrån, och '
-        + 'länken skapar du själv i Google Meet.',
+        + 'länken skapar du själv i Google Meet.'
+        + (bokningssida() ? ' Har hen bokat på bokningssidan har Google redan mejlat tiden och länken.' : ''),
       innehåll: '<div class="ag-faltrad">'
         + '<div class="fgroup"><label for="mo-datum">Datum</label>'
         + '<input class="inp" id="mo-datum" type="date" value="'
@@ -941,7 +997,8 @@
       titel: 'Skicka utbildningen till ' + (a.name || a.email || ''),
       namn: a.name, till: a.email,
       amne: 'Introduktionen inför ditt första pass',
-      text: mallUtbildning(a)
+      text: mallUtbildning(a),
+      skicka: brev => skickaTill(a, brev)
     });
   });
 

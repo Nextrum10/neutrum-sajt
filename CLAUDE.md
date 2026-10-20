@@ -215,7 +215,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Intervjumejlet** (2026-10-21): när admin skickar en ansökan vidare till intervju köar databasen Leos
   mejl "Du går vidare till intervju" till den som sökt, en gång per ansökan (`intern.ansokan_intervjumejl`;
   `applications.intervju_mejl_skickat_at` sätter bara databasen), aldrig till en avböjd och aldrig när ett
-  möte bokas i samma steg (mötets mejl är inbjudan). Det går genom notiskön (`notis_utskick.ansokan_id`,
+  möte bokas i samma steg (mötets mejl är inbjudan) eller när Skriv till hen skickar kallelsen med
+  bokningssidan (`kontaktad_at` i samma ändring, 2026-10-20: det mejlet är kallelsen). Det går genom notiskön (`notis_utskick.ansokan_id`,
   rollen `sokande`), så sandlådan och `notiser_mejl` gäller; `notis_konfig.lage` läses inte av någon kod och
   rörs inte. Texten är Leos ord för ord, i `intervju.ts` och i adminvyn (`INTERVJU_MEJLET`, som visar mejlet
   innan steget sätts), och `kolla-mejltexter.py` håller dem lika. Ansökans tack är "Tack, din ansökan är
@@ -564,9 +565,16 @@ lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillb
 finnas där som jag har klickat i"): bara den som skickats vidare (`till_intervju_at`: Skicka vidare till
 intervju på raden, i panelen under läget och i Rekryteringen, eller ett bokat möte), aldrig läget
 Kontaktad. Läget (Ny, Kontaktad, Godkänd, Avböjd) sätter Leo själv, och Skicka vidare rör det inte.
+**Intervjun bokas på en bokningssida** (2026-10-20, Leo: "så att jag bara kan skicka ut länk"): ett bokningsschema i
+Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNING_URL`). Länken står i mejlet Skriv till hen, som då
+också skickar en ny till Intervju; Google mejlar tiden och Meet-länken, vyn läser aldrig kalendern, och Boka möte mejlar
+den en gång till. Policyn lovar att bokningen tas bort för hand senast ett år efter intervjun.
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
-Familjernas och studiehjälparnas sidor behåller `mailto:`.
+Familjernas och studiehjälparnas sidor behåller `mailto:`. **Till den som sökt jobb skickas mejlet härifrån** (2026-10-20,
+Leo: "jag ska kunna redigera mailet och sen bara tryck skicka"): Skriv till hen och Skicka utbildningen har Skicka, och
+`ansokan-mejl` skickar från info@ med adressen ur ansökan (aldrig ur anropet), en hemlig kopia till info@ och en nyckel per
+ruta; texten sparas inte. Gmail står kvar bredvid som reserv.
 **Förhandsvisningen** (2026-10-12, Leo: "föreslå tid och byta vy och acceptera"): sektionen
 Förhandsvisning (för varje admin) öppnar `/foralder?forhandsvisning` och `/larare?forhandsvisning`, de
 riktiga vyerna med en påhittad familj och studiehjälpare. `nextrum-forhandsvisning.js` laddas före
@@ -1134,6 +1142,15 @@ Detaljer: `minne/grunden.md`.
   hela `rls-test.sql` gick 1798 av 1798 mot driften, tillbakarullat, och advisorn larmade inte om något nytt. Alla får
   frågan igen vid nästa inloggning; ingen hade godkänt 2026-10-16, ingen familj hade en rabatt och ingen valet av första
   timmen pass för pass. Juristen har inte läst den nya punkten.
+- **Bokningssidan för intervjun och mejlet till den som söker** (2026-10-20) är i drift sedan samma dag (Leo: "merge
+  och driftsätt"): PR #306 mergades (864e49e), Vercel lade ut sajten (configen med `INTERVJU_BOKNING_URL`, Rekryteringen och
+  policyn på båda språken, kontrollerat från databasen mot nextrum.se), och `ansokan-mejl` v1 gick ut från merge-commiten,
+  hämtad tillbaka och byte för byte lika i alla tio filer. Röktest från databasen: preflighten svarade `ok` ur funktionens
+  egen kod, och ett anrop utan inloggning 401. Ingen migration. Inget riktigt mejl är skickat än. Kvar: ett första mejl
+  till en egen ansökan (och att kopian når info@), juristen (policyns meningar och rad 10 i `DATASKYDD.md`), och att ta
+  bort intervjubokningarna ur kalendern för hand. **En annan session bygger ett automatiskt intervjumejl**
+  (`20261021100000_intervjumejlet`, inte i main 2026-10-20) som köas när `till_intervju_at` sätts; Skriv till hen med
+  bokningslänken sätter den, så går båda ut får den sökande två mejl. Hur de ska samsas är Leos beslut.
 - **Kontomejlen**: mallarna klistras in i Supabase för hand. `/lank` skyddar länken mot
   mejlfilter som öppnar den, inte mot ett som trycker på knappar; ingen kod i stället för
   länken (`minne/sakerhet.md`).

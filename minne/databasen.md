@@ -1539,7 +1539,7 @@ transaktion av den som kör den (`psql -1` i `lokal-databas.sh`, ett do-block el
 filen hade gjort den omöjlig att köra i ett do-block (`EXECUTE` tar inga transaktionskommandon). `set local
 lock_timeout` överst gäller bara i en transaktion, och säger till om filen körs utan.
 
-Provat lokalt 2026-10-21: en databas byggd ur alla 205 migrationer gav 1828 av 1828 i `rls-test.sql` (avsnitt
+Provat lokalt 2026-10-21: en databas byggd ur alla 205 migrationer gav 1829 av 1829 i `rls-test.sql` (avsnitt
 40 och 41 är nya), och båda filerna kördes en gång till utan fel och med samma tal. **Undantaget för dem som
 var godkända skrivs bara första gången** (inställningens rad skrivs direkt efter och säger att filen körts):
 prövat i en egen databas byggd till och med `intervjumejlet`, där en studiehjälpare godkänd mellan två

@@ -26,7 +26,9 @@
 --      till_intervju_at går från tom till satt, om mejlet inte gått, om
 --      ansökan inte är avböjd och har en adress, och om steget inte kom
 --      med ett bokat möte i samma ändring (Boka möte sätter steget och
---      mötet samtidigt, och då är mötesmejlet inbjudan). Kön har en
+--      mötet samtidigt, och då är mötesmejlet inbjudan) eller med ett
+--      mejl vi skrivit (Skriv till hen med bokningssidan sätter steget och
+--      kontaktad_at samtidigt, 2026-10-20, och då är det kallelsen). Kön har en
 --      unik nyckel per ansökan (ansokan_intervju:<id>), så inte heller
 --      två samtidiga ändringar ger två mejl.
 --   4. notis_utskick_ta: en rad med ansokan_id prövas med läget just nu
@@ -112,6 +114,9 @@ begin
      and new.status is distinct from 'rejected'
      -- Boka möte sätter steget och mötet i samma ändring: då är mötesmejlet inbjudan.
      and not (new.mote_tid is not null and old.mote_tid is null)
+     -- Skriv till hen med bokningssidan sätter steget och kontaktad_at i samma
+     -- ändring (2026-10-20): då är det mejlet kallelsen, och det här går inte.
+     and new.kontaktad_at is not distinct from old.kontaktad_at
      and nullif(btrim(coalesce(new.email, '')), '') is not null then
     insert into public.notis_utskick (ansokan_id, kanal, typ, data, idempotens, skicka_efter)
     values (new.id, 'mejl', 'ansokan_intervju', '{}'::jsonb, 'ansokan_intervju:' || new.id::text, now())

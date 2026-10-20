@@ -355,6 +355,9 @@ inte öppet sparas länken inte. Är Google inte kopplat står den gamla
 texten kvar: länken kommer i meddelanden. Leo valde bara det här av
 Workspace-kopplingen; kalendern, inbjudningarna och rekryteringsmötet
 valdes bort, och mejlen går genom Resend som förut (INTEGRATIONER.md).
+Intervjun bokas sedan 2026-10-20 på en bokningssida i Google Kalender,
+utan koppling: länken står i mejlet till den som söker
+(`INTERVJU_BOKNING_URL`, `minne/vyerna.md`).
 
 Ur avsnitt 11:
 

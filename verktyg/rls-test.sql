@@ -17410,8 +17410,9 @@ end $$;
 --
 -- När admin skickar en ansökan vidare till intervju köar databasen ett
 -- mejl i notiskön, en gång per ansökan, och sätter
--- intervju_mejl_skickat_at. Boka möte (steget och mötet i samma ändring)
--- och en avböjd ansökan ger inget mejl. Kön lämnar ut raden med rollen
+-- intervju_mejl_skickat_at. Boka möte (steget och mötet i samma ändring),
+-- Skriv till hen med kallelsen (steget och kontaktad_at i samma ändring,
+-- 2026-10-20) och en avböjd ansökan ger inget mejl. Kön lämnar ut raden med rollen
 -- sokande och följer strömbrytaren och sandlådan. Allt rullas tillbaka.
 -- ------------------------------------------------------------
 do $$
@@ -17428,6 +17429,7 @@ declare
   S2   constant uuid := '00000000-0000-4000-8000-000000040a02';  -- Boka möte
   S3   constant uuid := '00000000-0000-4000-8000-000000040a03';  -- avböjd
   S4   constant uuid := '00000000-0000-4000-8000-000000040a04';  -- försöker bära tidpunkten själv
+  S5   constant uuid := '00000000-0000-4000-8000-000000040a05';  -- Skriv till hen med kallelsen
 begin
   if to_regprocedure('intern.ansokan_intervjumejl()') is null then
     insert into utfall (test, ok, detalj) values ('IV Intervjumejlet: migrationen är inte körd', true, 'hoppas över');
@@ -17438,7 +17440,8 @@ begin
     insert into public.applications (id, name, email, tjanster) values
       (S1, 'Sara Lind Ek', 'rls-s40a@example.invalid', '{laxhjalp}'),
       (S2, 'Moa Möte',     'rls-s40b@example.invalid', '{laxhjalp}'),
-      (S3, 'Nils Nej',     'rls-s40c@example.invalid', '{laxhjalp}');
+      (S3, 'Nils Nej',     'rls-s40c@example.invalid', '{laxhjalp}'),
+      (S5, 'Kim Kallad',   'rls-s40e@example.invalid', '{laxhjalp}');
     insert into public.applications (id, name, email, tjanster, intervju_mejl_skickat_at)
     values (S4, 'Tid Själv', 'rls-s40d@example.invalid', '{laxhjalp}', now());
     ut := ut || jsonb_build_object('t', 'IV en ny ansökan bär ingen tidpunkt för mejlet',
@@ -17476,6 +17479,9 @@ begin
      where id = S2;
     update public.applications set status = 'rejected' where id = S3;
     update public.applications set till_intervju_at = now() where id = S3;
+    update public.applications
+       set kontaktad_at = now(), status = 'contacted', till_intervju_at = now()
+     where id = S5;
     reset role;
     perform set_config('request.jwt.claims', '', true);
     ut := ut || jsonb_build_object('t', 'IV Boka möte sätter steget utan intervjumejlet: mötesmejlet är inbjudan',
@@ -17485,6 +17491,11 @@ begin
             'd', '');
     ut := ut || jsonb_build_object('t', 'IV en avböjd ansökan får inget intervjumejl',
             'ok', not exists (select 1 from public.notis_utskick q where q.ansokan_id = S3), 'd', '');
+    ut := ut || jsonb_build_object('t', 'IV Skriv till hen med kallelsen sätter steget utan intervjumejlet: det mejlet är kallelsen',
+            'ok', not exists (select 1 from public.notis_utskick q where q.ansokan_id = S5)
+                  and (select a.intervju_mejl_skickat_at is null and a.till_intervju_at is not null
+                         from public.applications a where a.id = S5),
+            'd', '');
 
     -- ---------- vem som får ----------
     t := pg_temp.svar_som(A, format('update public.applications set till_intervju_at = now() where id = %L', S4));

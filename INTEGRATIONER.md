@@ -223,7 +223,10 @@ Kortet lovade länge "Kalendern och mejlen". Båda valdes bort
   ännu en ström av mejl, från Google, ovanpå notiserna, och en ny
   inbjudan och en avbokning varje gång ett pass flyttas.
 - **Rekryteringsmötet** bokas som förut: tiden och länken skrivs in för
-  hand och mejlas till den sökande (Fas 16.1). Kopplingen finns nu, så
+  hand och mejlas till den sökande (Fas 16.1). Sedan 2026-10-20 kan den
+  sökande också boka själv på en bokningssida i Google Kalender
+  (`INTERVJU_BOKNING_URL`), och det är ingen koppling: länken står i
+  mejlet, Google mejlar tiden, och vyn läser aldrig kalendern. Kopplingen finns nu, så
   en knapp som skapar mötets länk är en liten ändring den dag någon vill
   ha den.
 

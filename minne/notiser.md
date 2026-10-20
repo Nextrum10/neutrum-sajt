@@ -167,7 +167,7 @@ applications (insert/update)
 | Händelse i adminvyn | Mejl |
 |---|---|
 | ansökan kommer in (vem som helst) | `mottagen`: tack, svar inom 24 timmar |
-| "Kontakt" | **inget** — admin skriver själv, med förslag på tider |
+| "Kontakt" | **inget** — admin skriver själv, med förslag på tider eller länken till bokningssidan (2026-10-20), där Google mejlar tiden. Sedan samma dag går det admin skrivit från info@ genom `ansokan-mejl`, inte genom kön (`minne/vyerna.md`) |
 | mötet sparas eller får ny tid/länk | `mote`: tid i svensk tid, länken som knapp |
 | "Mötet är hållet" | `utbildning`: tack, introduktionen är nästa steg |
 | "Utbildningsmötet är hållet", eller Öppna provet i ansökans översikt | `prov`: länken till provet, öppet i tre dagar (Fas 22.1). Adminvyn frågar först |
@@ -271,9 +271,13 @@ applications.till_intervju_at: null → satt (Skicka vidare till intervju)
    står kvar (bara databasen skriver den: triggern behåller det gamla värdet
    vid varje annan UPDATE), och kön har en unik nyckel per ansökan. Ångra
    steget och skicka vidare igen: inget nytt mejl.
-4. **Inte till en avböjd, och inte när ett möte bokas i samma steg.** Boka
+4. **Inte till en avböjd, och inte när steget kommer med ett mejl.** Boka
    möte sätter `till_intervju_at` och `mote_tid` i samma ändring, och då är
-   mötesmejlet (`mote`) inbjudan. `notis_utskick_ta` prövar igen när raden ska
+   mötesmejlet (`mote`) inbjudan. Skriv till hen med bokningssidan (main,
+   2026-10-20) sätter `till_intervju_at` och `kontaktad_at` i samma ändring,
+   och då är det mejlet kallelsen: att få "håll koll på din mejl, vi skickar
+   inbjudan" efter inbjudan vore fel ordning. Skicka vidare till intervju rör
+   bara `till_intervju_at`. `notis_utskick_ta` prövar igen när raden ska
    gå: ansökan finns, är inte avböjd och står kvar i intervju. Annars `loggad`.
 5. **Texten står på två ställen**: `INTERVJU` i `_delad/notiser/intervju.ts`
    och `INTERVJU_MEJLET` i `nextrum-admin-rekrytering.js`, som visar mejlet i
@@ -428,7 +432,18 @@ på det gamla papperet samma dag som sajtens ljusnade. Papperet står på
 `body` för Apple Mail OCH som `bgcolor` på yttertabellen för Gmail, som
 kastar body-stilen: tas ett av dem bort blir det vitt i det programmet.
 Det vita som ändå syns runt ett mejl i Gmail på datorn är Gmails eget
-och går inte att nå inifrån ett mejl. Kontomejlen (bekräfta konto,
+och går inte att nå inifrån ett mejl.
+
+**Mejlens utseende följer sajten** (2026-10-20, Leo: "gör de snyggare så de matchar nya
+färgerna på sidan"): `FARG` i `rendera.ts` är sajtens värden (papper #F1EDE6, lugn yta #E7E2D8,
+linje #CAC2B3), och loggans PNG är ritad på just det papperet, så en ändrad `--pap` ändrar
+båda. Rubriken har ett kort lerstreck över sig (`rubrikHtml()`), faktarutan en lerrand till
+vänster (en egen cell, ingen `border-left`: Outlook), knappen är större, och footern
+(varför mejlet kom, avanmälan, vart man skriver) står i en mörk remsa i sajtens `--ftr-bg`
+(#1F1915), över hela bredden men inne i yttertabellen: papperet runt brevet är orört. Ett mejl
+utan egen footer (underlaget, aviseringen) får bara raden om vart man skriver (`Skal.fot`).
+Provet: rendera mallarna med `node --experimental-strip-types` och titta i en webbläsare i
+600 och 390 px; `deno test _delad/notiser/` ska gå igenom. Kontomejlen (bekräfta konto,
 inbjudan från `bjud-in`, Glömt lösenordet) skickas av Supabase Auth med
 mallar i dashboarden, inte härifrån, och har inte det här skalet.
 Texterna står i `minne/sakerhet.md` (Kontomejlen).
@@ -522,8 +537,9 @@ per dag), direktmejlet, bromsen, mottagarna och rättigheterna.
   Fas 13.1 gav rekryteringen en ORDNING (kontakt, digitalt möte,
   utbildning, poolen) med skälet till varje steg skrivet i vyn, men
   inget av stegen kontrollerar något utifrån: mötet bokas inte i en
-  kalender (kopplingen till Google gör bara onlinepassens Meet-länkar,
-  Fas 18.1). Sedan Fas 22.1 har utbildningen ett prov systemet läser
+  kalender härifrån (kopplingen till Google gör bara onlinepassens
+  Meet-länkar, Fas 18.1; sedan 2026-10-20 bokar den sökande själv på en
+  bokningssida i Google Kalender, som vyn aldrig läser). Sedan Fas 22.1 har utbildningen ett prov systemet läser
   resultatet av, men det prövar att hen läst handboken, inte vem hen
   är.
 
