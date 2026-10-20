@@ -48,8 +48,9 @@ window.NEXTRUM_CONFIG = {
   // Kontaktuppgifter som visas i sidfoten och i formulärsvar.
   EPOST: 'info@nextrum.se',
 
-  /* Länken den sökande får i steget Utbildning: introduktionen och
-     provet som ska vara gjort innan hen tas in i poolen.
+  /* Länken den sökande får i steget Utbildning: introduktionen, som ska
+     vara genomgången innan hen tas in i poolen. Provet om den görs i
+     studiehjälparvyn, direkt efter lösenordet (nextrum-provet.js).
 
      Tom sträng = knappen skickar ingen länk, utan säger att den inte
      är satt. Samma regel som GOOGLE_RECENSION_URL: hellre en knapp

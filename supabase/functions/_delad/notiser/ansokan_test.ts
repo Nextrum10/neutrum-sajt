@@ -13,28 +13,25 @@
 //   · de går inte att välja bort, och de ber om svar till en läst adress
 //   · nejet och mejlet till vårdnadshavaren (2026-10-05) visar inga steg,
 //     och vårdnadshavaren hälsas aldrig med barnets namn
+//   · provet i ansökan är borttaget (2026-10-21): inget mejl om ett prov,
+//     och ingen länk till en sida som inte finns
 // ============================================================
 
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import {
-  ANSOKAN_FRAN, ANSOKAN_STEG, NEJ, POLICY_VARDNADSHAVARE, RESAN, arAnsokanSteg, motesText, provAdress,
-  renderaAnsokan, resa, sakerLank, type AnsokanSteg,
+  ANSOKAN_FRAN, ANSOKAN_STEG, NEJ, POLICY_VARDNADSHAVARE, RESAN, arAnsokanSteg, motesText, renderaAnsokan, resa,
+  sakerLank, type AnsokanSteg,
 } from './ansokan.ts';
 import { KONTAKT, LOGGA_URL, SAJT } from './rendera.ts';
 import { SVAR_INOM_TIMMAR } from './kvitto.ts';
 
 const MOTE = '2026-10-02T15:00:00Z'; // kl. 17:00 i Stockholm, sommartid
 const LANK = 'https://meet.google.com/abc-defg-hij';
-const NYCKEL = '3f2c1a9e-8b7d-4c6e-9f10-2a3b4c5d6e7f';
-const SISTA = '2026-09-30';
 /** Stegen som visar resan. Nejet och mejlet till vårdnadshavaren gör det inte. */
 const MED_RESA = ANSOKAN_STEG.filter((s) => s !== 'vardnadshavare' && s !== 'avbojd');
 
 function mejl(steg: AnsokanSteg, extra: Record<string, unknown> = {}) {
-  return renderaAnsokan({
-    steg, namn: 'Tove Lindqvist', moteTid: MOTE, moteLank: LANK,
-    provNyckel: NYCKEL, provSistaDag: SISTA, ...extra,
-  });
+  return renderaAnsokan({ steg, namn: 'Tove Lindqvist', moteTid: MOTE, moteLank: LANK, ...extra });
 }
 
 Deno.test('kvittot tackar och lovar svar så fort vi kan, senast inom löftet på sajten', () => {
@@ -48,7 +45,6 @@ Deno.test('kvittot tackar och lovar svar så fort vi kan, senast inom löftet p�
 Deno.test('varje stegmejl visar alla fyra stegen och var mottagaren står', () => {
   const nu: Partial<Record<AnsokanSteg, string | null>> = {
     mottagen: 'Ansökan', mote: 'Digitalt möte', utbildning: 'Introduktion',
-    prov: 'Introduktion', prov_paminnelse: 'Introduktion', prov_sista_dagen: 'Introduktion',
     sista_steget: 'Konto och godkännande', valkommen: null,
   };
   for (const steg of MED_RESA) {
@@ -137,9 +133,7 @@ Deno.test('sista steget ber inte om ett konto, välkomsten leder till vyn', () =
 
 Deno.test('ingenting ur ansökan återges, bara förnamnet', () => {
   for (const steg of ANSOKAN_STEG) {
-    const m = renderaAnsokan({
-      steg, namn: 'Tove Lindqvist', moteTid: MOTE, moteLank: LANK, provNyckel: NYCKEL, provSistaDag: SISTA,
-    });
+    const m = renderaAnsokan({ steg, namn: 'Tove Lindqvist', moteTid: MOTE, moteLank: LANK });
     // Vårdnadshavaren hälsas utan namn: namnet i ansökan är barnets.
     assertStringIncludes(m.text, steg === 'vardnadshavare' ? 'Hej,' : 'Hej Tove,');
     assertEquals(m.text.includes('Lindqvist'), false, `${steg}: efternamnet följde med`);
@@ -184,10 +178,11 @@ Deno.test('kontakten har ingen mall, med flit, och listan speglar databasen', ()
   assertEquals(arAnsokanSteg('avbojd'), true);
   assertEquals(arAnsokanSteg('mottagen'), true);
   // Listan speglar check-villkoret i ansokan_utskick.steg
-  // (20261005230000_ansokan_vardnadshavare_och_nej).
+  // (20261005230000_ansokan_vardnadshavare_och_nej) utan provets tre steg,
+  // som ansokan_utskick_inga_provmejl säger nej till
+  // (20261021160000_provet_i_ansokan_tas_bort).
   assertEquals([...ANSOKAN_STEG], [
-    'mottagen', 'mote', 'utbildning', 'prov', 'prov_paminnelse', 'prov_sista_dagen', 'sista_steget', 'valkommen',
-    'vardnadshavare', 'avbojd',
+    'mottagen', 'mote', 'utbildning', 'sista_steget', 'valkommen', 'vardnadshavare', 'avbojd',
   ]);
 });
 
@@ -234,41 +229,15 @@ Deno.test('vårdnadshavaren får barnets förnamn, vad vi behöver och varför m
   assertEquals(ond.amne.includes('evil.example'), false);
 });
 
-Deno.test('provmejlen länkar till provet och säger sista dagen i klartext', () => {
-  const adress = `${SAJT}/utbildningsprov?t=${NYCKEL}`;
-  for (const steg of ['prov', 'prov_paminnelse', 'prov_sista_dagen'] as const) {
+Deno.test('provet i ansökan finns inte: inga provsteg, ingen länk till provsidan', () => {
+  // Det enda provet görs i studiehjälparvyn efter lösenordet (2026-10-21),
+  // och sidan /utbildningsprov finns inte längre.
+  for (const steg of ['prov', 'prov_paminnelse', 'prov_sista_dagen']) {
+    assertEquals(arAnsokanSteg(steg), false, steg);
+  }
+  for (const steg of ANSOKAN_STEG) {
     const m = mejl(steg);
-    assertStringIncludes(m.text, `Gör provet:\n${adress}`, steg);
-    assertStringIncludes(m.html, adress, steg);
-    assertStringIncludes(m.text, '21 rätt av 26', steg);
-    assertStringIncludes(m.text, 'göra om', steg);
+    assertEquals(m.text.includes('/utbildningsprov'), false, `${steg}: länk till provsidan`);
+    assertEquals(m.html.includes('/utbildningsprov'), false, `${steg}: länk till provsidan`);
   }
-  assertStringIncludes(mejl('prov').text, 'onsdag 30 september');
-  assertStringIncludes(mejl('prov_paminnelse').text, 'till och med onsdag 30 september');
-  // Sista dagen säger "i kväll", inte ett datum man måste räkna på.
-  assertStringIncludes(mejl('prov_sista_dagen').text, 'stänger i kväll');
-  assertEquals(mejl('prov').amne, 'Ditt prov efter utbildningen hos Nextrum');
-  assertEquals(mejl('prov_sista_dagen').amne, 'I dag är sista dagen för ditt prov hos Nextrum');
-});
-
-Deno.test('ett provmejl utan en riktig nyckel går inte att rendera', () => {
-  assertEquals(provAdress(NYCKEL.toUpperCase()), `${SAJT}/utbildningsprov?t=${NYCKEL}`);
-  for (const ond of ['', 'javascript:alert(1)', `${NYCKEL}&x=1`, null, 42]) {
-    assertEquals(provAdress(ond), null, String(ond));
-  }
-  // Ett mejl om ett prov som inte går att öppna är värre än inget mejl.
-  let kastade = false;
-  try {
-    mejl('prov', { provNyckel: 'inte-en-nyckel' });
-  } catch {
-    kastade = true;
-  }
-  assert(kastade, 'renderades utan nyckel');
-  kastade = false;
-  try {
-    mejl('prov_paminnelse', { provSistaDag: null });
-  } catch {
-    kastade = true;
-  }
-  assert(kastade, 'renderades utan sista dag');
 });

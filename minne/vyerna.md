@@ -1445,9 +1445,12 @@ vem som gick vidare.
   (läget Kontaktad, inget mejl, ingen fråga; tillbaka är läget Ny i
   panelen). Intervju har Till utbildning, som är "Mötet är hållet" och
   därför frågar först: det mejlar tacket med introduktionen som nästa steg.
-  Utbildning har Öppna provet (`provKnapp`) eller, för den som är utbildad,
-  Ta in i poolen. Den utbildade stod förut varken under Intervju eller
-  Utbildning.
+  Utbildning har utbildningens nästa steg (`utbKnapp`, 2026-10-21; förut
+  Öppna provet, `provKnapp`, som gick med provet i ansökan):
+  Utbildningsmötet är hållet, som inte mejlar och inte frågar, sedan
+  Markera utbildad, som frågar först för den mejlar sista steget, och för
+  den som är utbildad Ta in i poolen. Den utbildade stod förut varken
+  under Intervju eller Utbildning.
 - **Flikarna räknar** (`vy-flik-mark`), så att ett tryck i Alla syns flytta.
 - **Bokningar har en väljare för familjen** (`#bok-familj`, `familjeval()` i
   `nextrum-admin-drift.js`): de familjer som har pass, med barnens namn

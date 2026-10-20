@@ -57,14 +57,17 @@ import { fornamn } from './typer.ts';
 import { datumText } from './tid.ts';
 import { SVAR_INOM_TIMMAR } from './kvitto.ts';
 import { KONTAKT, SAJT, renderaRam, type Ram, type Renderat, type Resa } from './rendera.ts';
-import { ANTAL_FRAGOR, GRANS_PROCENT, kravRatt } from '../utbildningsprov_grans.ts';
 
 /** Avsändaren. Varje mejl ber om svar, så de kommer från en läst adress. */
 export const ANSOKAN_FRAN = `Nextrum <${KONTAKT}>`;
 
+/* Provets tre mejl (Fas 22.1, prov, prov_paminnelse och prov_sista_dagen)
+   gick med provet i ansökan 2026-10-21 (provet_i_ansokan_tas_bort): det enda
+   provet görs i studiehjälparvyn, direkt efter lösenordet, och mejlas inte.
+   Villkoret på ansokan_utskick.steg har dem kvar som historik, och ett eget
+   villkor (ansokan_utskick_inga_provmejl) säger nej till dem. */
 export const ANSOKAN_STEG = [
-  'mottagen', 'mote', 'utbildning', 'prov', 'prov_paminnelse', 'prov_sista_dagen', 'sista_steget', 'valkommen',
-  'vardnadshavare', 'avbojd',
+  'mottagen', 'mote', 'utbildning', 'sista_steget', 'valkommen', 'vardnadshavare', 'avbojd',
 ] as const;
 export type AnsokanSteg = typeof ANSOKAN_STEG[number];
 
@@ -82,41 +85,9 @@ export const RESAN = ['Ansökan', 'Digitalt möte', 'Introduktion', 'Konto och g
 /** Mejlen som inte visar stegen: till vårdnadshavaren, och nejet. */
 type UtanResa = 'vardnadshavare' | 'avbojd';
 
-/* Provet (Fas 22.1) hör till introduktionen: det är sista delen av
-   den, inte ett eget steg för den som söker. */
 const PLATS: Record<Exclude<AnsokanSteg, UtanResa>, number> = {
-  mottagen: 0, mote: 1, utbildning: 2, prov: 2, prov_paminnelse: 2, prov_sista_dagen: 2,
-  sista_steget: 3, valkommen: RESAN.length,
+  mottagen: 0, mote: 1, utbildning: 2, sista_steget: 3, valkommen: RESAN.length,
 };
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Adressen till provet, eller null om nyckeln inte är en nyckel.
- *
- * Nyckeln sätts av databasen (gen_random_uuid) och kan inte skrivas
- * av den som söker. Den prövas ändå här, av samma skäl som
- * möteslänken: en knapp i ett mejl från vår domän är det mottagaren
- * litar mest på.
- */
-export function provAdress(nyckel: unknown): string | null {
-  if (typeof nyckel !== 'string' || !UUID.test(nyckel)) return null;
-  return `${SAJT}/utbildningsprov?t=${nyckel.toLowerCase()}`;
-}
-
-/** '2026-09-30' → 'onsdag 30 september'. Null om det inte är ett datum. */
-export function provDag(v: unknown): string | null {
-  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
-  return datumText(v);
-}
-
-/** Det provmejlen säger om provet, en gång. */
-function omProvet(): [string, string][] {
-  return [
-    ['Frågor', `${ANTAL_FRAGOR}, flerval`],
-    ['Godkänt', `${kravRatt()} rätt av ${ANTAL_FRAGOR} (${GRANS_PROCENT} procent)`],
-  ];
-}
 
 /** Stegen och var mottagaren står, eller null för de två mejlen utan resa. */
 export function resa(steg: AnsokanSteg): Resa | null {
@@ -180,9 +151,6 @@ export type AnsokanIn = {
   moteLank?: unknown;
   /** Det har redan gått ett mötesmejl för den här ansökan: det här är en ny tid. */
   ombokat?: boolean;
-  /** Provets nyckel och sista dag (Fas 22.1). Bara provmejlen läser dem. */
-  provNyckel?: unknown;
-  provSistaDag?: unknown;
 };
 
 type Text = {
@@ -286,54 +254,6 @@ function texten(a: AnsokanIn): Text {
           + 'upp och hur rapporten efteråt fungerar. Vi hör av oss om hur du går igenom den.',
         avslutning: 'Har du frågor om mötet eller om nästa steg? Svara på det här mejlet.',
       };
-
-    case 'prov':
-    case 'prov_paminnelse':
-    case 'prov_sista_dagen': {
-      const adress = provAdress(a.provNyckel);
-      const dag = provDag(a.provSistaDag);
-      // Ett provmejl utan länk är ett mejl om ett prov som inte går att
-      // göra. ansokan-notis prövar samma sak innan den renderar och
-      // skriver raden som ett fel; det här är den andra spärren.
-      if (!adress || !dag) throw new Error('Provmejlet saknar länk eller sista dag.');
-      const tillOchMed: [string, string] = ['Öppet till och med', dag];
-      if (a.steg === 'prov') {
-        return {
-          amne: 'Ditt prov efter utbildningen hos Nextrum',
-          rubrik: 'Tack för att du var med på utbildningen',
-          mening: 'Sista delen av introduktionen är ett prov om handledarhandboken vi gick igenom. '
-            + 'Det tar ungefär 20 minuter och har ingen tidsgräns. Du får göra om det tills du klarar det.',
-          fakta: [tillOchMed, ...omProvet()],
-          knapp: 'Gör provet',
-          knappAdress: adress,
-          avslutning: 'När du klarat provet får du ett mejl om sista steget, ditt konto. '
-            + 'Undrar du något? Svara på det här mejlet.',
-        };
-      }
-      if (a.steg === 'prov_paminnelse') {
-        return {
-          amne: 'Påminnelse: ditt prov hos Nextrum',
-          rubrik: 'Har du hunnit göra provet?',
-          mening: `Provet efter utbildningen är öppet till och med ${dag}. Det tar ungefär 20 minuter, `
-            + 'och du får göra om det tills du klarar det.',
-          fakta: [tillOchMed, ...omProvet()],
-          knapp: 'Gör provet',
-          knappAdress: adress,
-          avslutning: 'Har du redan börjat? Svaren sparas i webbläsaren tills du lämnar in. '
-            + 'Undrar du något? Svara på det här mejlet.',
-        };
-      }
-      return {
-        amne: 'I dag är sista dagen för ditt prov hos Nextrum',
-        rubrik: 'I dag är sista dagen för provet',
-        mening: 'Provet efter utbildningen stänger i kväll vid midnatt. Det tar ungefär 20 minuter, '
-          + 'och du får göra om det så många gånger du behöver i dag.',
-        fakta: omProvet(),
-        knapp: 'Gör provet',
-        knappAdress: adress,
-        avslutning: 'Hinner du inte? Svara på det här mejlet så hittar vi en lösning.',
-      };
-    }
 
     // Kontot skapas av oss när profilen godkänns (Ta in i poolen,
     // 2026-10-06): mejlet ber inte längre den som sökt att registrera sig,

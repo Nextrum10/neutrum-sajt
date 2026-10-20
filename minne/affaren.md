@@ -444,9 +444,11 @@ efter 24 timmar, och admin kan nollställa. Rättningen sker på servern, facit 
 spärren står i databasen. Den gäller först när det finns minst fem aktiva frågor (till dess en varning i
 adminvyn), de som var godkända före migrationen slipper, och admin slår på och av kravet per person.
 
-Det är **inte** provet i rekryteringen (`utbildningsprov.html`, `applications.prov_*`, `minne/notiser.md`,
-Utbildningsprovet, Fas 22.1), som den som söker gör genom en länk innan hen har ett konto. Båda finns nu, och
-om det gamla ska bort är Leos fråga.
+**Det är det enda provet sedan 2026-10-21.** Provet i rekryteringen (Fas 22.1: `utbildningsprov.html`, som den som
+sökte skulle göra genom en länk innan hen hade ett konto) togs bort med `provet_i_ansokan_tas_bort`, Leos svar
+samma kväll ("ta bort gamla"); ingen hade gjort det. Utbildningsmötet öppnar inget och mejlar inget, och Markera
+utbildad frågar först och mejlar sista steget. Vad som gick och vad som står kvar som historik:
+`minne/notiser.md`, Utbildningsprovet i ansökan.
 
 **Tabellerna.** `prov_installning` (en rad: `grans_procent` 55 sedan 2026-10-20, 50 till dess, `min_aktiva_fragor`
 5, `vantetid_timmar` 24),
@@ -494,10 +496,10 @@ provet eller Kräv inte provet.
 **Frågorna kommer ur Handledarhandboken** (2026-10-20, Leo, med handboken som PDF: "provet ska vara utformat
 efter det dokumenten, 55% rätt för godkänd"). 34 frågor med fyra alternativ, i handbokens ordning, lagda med
 `supabase/scripts/provets-fragor-ur-handboken.sql`, som inte är en migration och inte registreras. 26 är provet i
-ansökan ord för ord (`_delad/utbildningsprov.ts`) och 8 är nya för det som där saknar fråga, med sidan i
+ansökan ord för ord (`_delad/utbildningsprov.ts`, borttagen 2026-10-21) och 8 är nya för det som där saknar fråga, med sidan i
 handboken i filen. **Fyra av de nya står avstängda**: interleaving, psykisk ohälsa, den aggressiva föräldern och
 att dokumentera objektivt. Leo tog bort frågorna om de ämnena ur provet i ansökan 2026-10-02, efter att ha gjort
-det själv (`minne/notiser.md`, Utbildningsprovet), så bara Leo slår på dem. Provet visar alternativen i den
+det själv (`minne/notiser.md`, Utbildningsprovet i ansökan), så bara Leo slår på dem. Provet visar alternativen i den
 ordning de står (`mitt_utbildningsprov()` blandar inte), så det rätta står på olika platser, och att alltid välja
 det längsta ger 2 rätt av 30.
 

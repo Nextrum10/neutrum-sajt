@@ -41,7 +41,7 @@ const NXAdmin = (function () {
        köpte en plan med en (familjens_partner), familjens id → raden. */
     familjensPartner: {},
     /* Fas 16.1: mejlen till den som sökt jobb, per ansökan. */
-    ansokanUtskick: {}, ansokanUtskickFel: null, provForsok: {},
+    ansokanUtskick: {}, ansokanUtskickFel: null,
     /* 2026-10-05: hur långt den inloggade har sett anmälningarna och
        ansökningarna (admin_sett), och vilka rader som var nya när hen
        öppnade sektionen. null: tabellen finns inte, och läget Ny räknas
@@ -500,7 +500,7 @@ const NXAdmin = (function () {
     const bara = fråga => full ? fråga() : Promise.resolve({ data: [], error: null });
 
     const [leads, ans, kontakt, bok, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
-           upd, uppg, rt, audit, bib, flaggor, tvister, kk, ansUt, tillagg, bank, prov,
+           upd, uppg, rt, audit, bib, flaggor, tvister, kk, ansUt, tillagg, bank,
            bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna, partner] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
@@ -568,11 +568,6 @@ const NXAdmin = (function () {
          har minuter: det är pengar vi är skyldiga, och en lista med alla
          familjer på noll hade gömt dem. */
       bara(() => hämtaAlla('timbank_saldo', 'parent_id, saldo_min, varde_ore', q => q.gt('saldo_min', 0), 'parent_id')),
-      /* Fas 22.1: försöken på utbildningsprovet. Bara resultatet, inte
-         svaren: rekryteringsrutan säger hur det gått, inte vad hen
-         kryssade. Bara admin läser tabellen. */
-      bara(() => hämtaAlla('utbildningsprov_forsok', 'id, ansokan_id, ratt, antal, godkant, skapad',
-        nyastFörst('skapad'))),
       /* 2026-09-28, för Månadens ekonomi: vilka pass timbanken betalat
          hela (ett sådant pass är betalt utan kort och utan klippkort),
          och vilka köp av timmar som var testbetalningar. klippkort_saldo
@@ -637,10 +632,6 @@ const NXAdmin = (function () {
       (S.ansokanUtskick[r.ansokan_id] = S.ansokanUtskick[r.ansokan_id] || []).push(r);
     });
     S.ansokanUtskickFel = ansUt.error ? felText(ansUt.error) : null;
-    S.provForsok = {};
-    (prov.data || []).forEach(r => {
-      (S.provForsok[r.ansokan_id] = S.provForsok[r.ansokan_id] || []).push(r);
-    });
     S.kontakt = kontakt.data || [];
     S.bokningar = bok.data || [];
     S.utbetalningar = utb.data || [];

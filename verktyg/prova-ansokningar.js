@@ -95,8 +95,8 @@ function värld(o) {
     tjanster: [{ kod: 'laxhjalp', namn: 'Läxhjälp', aktiv: true, for_jobb: true, for_kund: true, ordning: 1 }],
     flaggor: []
   };
-  /* Rekryteringens steg (2026-10-13): en i utbildningen utan öppnat
-     prov, och en som är utbildad och väntar på poolen. Med steget till
+  /* Rekryteringens steg (2026-10-13): en i utbildningen utan hållet
+     utbildningsmöte, och en som är utbildad och väntar på poolen. Med steget till
      intervju (2026-10-15) också en som skickats dit och en ny att boka
      ett möte med. */
   if (o.steg && !o.utanIntervjuKolumn) {
@@ -115,8 +115,7 @@ function värld(o) {
         vardnadshavare_epost: null, vardnadshavare_godkand_at: null, vardnadshavare_svar: null },
       { id: 'ans-klar', name: 'Klara Klar', email: 'klara@example.se', age: 21, status: 'contacted',
         created_at: '2026-09-21T10:00:00Z', intervju_at: '2026-09-28T10:00:00Z', utbildningsmote_at: '2026-10-02T10:00:00Z',
-        prov_sista_dag: '2026-10-05', prov_godkant_at: '2026-10-03T10:00:00Z', utbildad_at: '2026-10-03T10:00:00Z',
-        tjanster: ['laxhjalp'], why: 'Hej',
+        utbildad_at: '2026-10-03T10:00:00Z', tjanster: ['laxhjalp'], why: 'Hej',
         vardnadshavare_epost: null, vardnadshavare_godkand_at: null, vardnadshavare_svar: null });
   }
   if (o.utanKolumner) {
@@ -715,7 +714,7 @@ async function provaStegen(webb) {
     && (await flikTal()) === '1 / 4', await flikTal());
 
   await flik('utbildning');
-  prova('steg: Utbildning har dem, provet att öppna och poolen för den som är klar',
+  prova('steg: Utbildning har dem, utbildningsmötet att bocka av och poolen för den som är klar',
     (await page.locator('#ans-utbildning [data-dp="ansokan:ans-gammal"]').count()) === 1
     && (await page.locator('#ans-utbildning [data-dp="ansokan:ans-ung"]').count()) === 1
     && (await page.locator('#ans-utbildning [data-ans-steg="utbmote:ans-utb"]').count()) === 1
@@ -723,6 +722,41 @@ async function provaStegen(webb) {
   prova('steg: den som är klar säger det', (await text(page, '#ans-utbildning li:has([data-dp="ansokan:ans-klar"]) .adm-namn-text span'))
     .includes('klar att tas in i poolen'));
   await bild(page, 'steg-utbildning', '#panel-ans-utbildning');
+
+  /* Utbildningens nästa steg på raden (2026-10-21, när provet i ansökan
+     togs bort): utbildningsmötet går utan fråga och mejlar inget, och
+     Markera utbildad frågar först, för den mejlar sista steget. */
+  const förMötet = patchar().length;
+  await page.click('#ans-utbildning [data-ans-steg="utbmote:ans-utb"]');
+  await vänta(500);
+  const mötet = patchar().pop();
+  prova('steg: utbildningsmötet sparas utan fråga och sätter bara sin tid',
+    patchar().length === förMötet + 1 && mötet.sök.includes('ans-utb')
+    && Object.keys(mötet.kropp || {}).join() === 'utbildningsmote_at'
+    && (await page.locator('.nx-fraga-box').count()) === 0, JSON.stringify(mötet));
+  prova('steg: sedan är Markera utbildad nästa steg på raden',
+    (await page.locator('#ans-utbildning [data-ans-steg="utbildad:ans-utb"]').count()) === 1
+    && (await text(page, '#ans-utbildning li:has([data-dp="ansokan:ans-utb"]) .adm-namn-text span'))
+      .includes('inte markerad utbildad än'),
+    await text(page, '#ans-utbildning li:has([data-dp="ansokan:ans-utb"]) .adm-namn-text span'));
+  const förUtbildad = patchar().length;
+  await page.click('#ans-utbildning [data-ans-steg="utbildad:ans-utb"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  prova('steg: Markera utbildad frågar först och säger att sista steget mejlas',
+    (await text(page, '.nx-fraga-box')).includes('mejlet om sista steget'), await text(page, '.nx-fraga-box'));
+  await page.click('[data-svar="nej"]');
+  await vänta(200);
+  prova('steg: Avbryt sparar inget', patchar().length === förUtbildad);
+  await page.click('#ans-utbildning [data-ans-steg="utbildad:ans-utb"]');
+  await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
+  await page.click('[data-svar="ja"]');
+  await vänta(500);
+  const utbildad = patchar().pop();
+  prova('steg: Markera utbildad sätter bara utbildad_at', patchar().length === förUtbildad + 1
+    && utbildad.sök.includes('ans-utb') && Object.keys(utbildad.kropp || {}).join() === 'utbildad_at',
+    JSON.stringify(utbildad));
+  prova('steg: och då är poolen nästa steg på raden',
+    (await page.locator('#ans-utbildning [data-ans-pool="ans-utb"]').count()) === 1);
 
   /* Ett bokat möte är intervjun: den nya hamnar under Intervju. */
   await flik('alla');
@@ -1056,7 +1090,7 @@ async function provaStegenUtanKolumnen(webb) {
     && (await text(page, '#flik-ans-intervju-mark')) === '1' && (await text(page, '#flik-ans-utbildning-mark')) === '3');
 
   await flik('utbildning');
-  prova('steg utan kolumnen: Utbildning har Kalle, provet att öppna och poolen för den som är klar',
+  prova('steg utan kolumnen: Utbildning har Kalle, utbildningsmötet att bocka av och poolen för den som är klar',
     (await page.locator('#ans-utbildning [data-dp="ansokan:ans-gammal"]').count()) === 1
     && (await page.locator('#ans-utbildning [data-ans-steg="utbmote:ans-utb"]').count()) === 1
     && (await page.locator('#ans-utbildning [data-ans-pool="ans-klar"]').count()) === 1);

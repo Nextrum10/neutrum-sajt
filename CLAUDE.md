@@ -235,9 +235,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   på kravet och nollställer provet per person (superadmin eller Godkänna). **Frågorna kommer ur
   Handledarhandboken** (2026-10-20, Leo: "provet ska vara utformat efter det dokumenten, 55% rätt för godkänd"):
   26 lätta frågor med tre alternativ (Leo samma kväll: "ersätt med nya på 26 frågor ... gör provet relativt lätt"),
-  på de 26 ämnen provet i ansökan hade, och åtta äldre avstängda (`supabase/scripts/provets-fragor-latta.sql`). De ändras i vyn under Ansökningar → Provet, aldrig i en
-  migration och aldrig med påhittade frågor, och ändras handboken läses båda provens frågor om. Provet i ansökan
-  (`utbildningsprov.html`, `applications.prov_*`) är ett annat och står kvar.
+  på de 26 ämnen som provet i ansökan hade, och åtta äldre avstängda (`supabase/scripts/provets-fragor-latta.sql`). De ändras i vyn under Ansökningar → Provet, aldrig i en
+  migration och aldrig med påhittade frågor, och ändras handboken läses de om. **Det är det enda provet**
+  (2026-10-21, `provet_i_ansokan_tas_bort`, Leo: "ta bort gamla"): provet i ansökan (Fas 22.1, `utbildningsprov.html`
+  och edge-funktionen `utbildningsprov`) är borta utan att någon gjort det, utbildningsmötet öppnar inget, och inget
+  mejl om ett prov köas (`ansokan_utskick_inga_provmejl`). `applications.prov_*` och `utbildningsprov_forsok` står
+  kvar tomma, som historik.
 - **Barnkontona** (2026-09-30): ett barnkonto är ett användarnamn och ett lösenord, inget mer.
   Varje inloggning tar e-post eller användarnamn (`NXStudie.loggaIn`, 2026-10-01): med @ en
   vuxen, utan @ ett barn, som hamnar på `/barn`. Adressen `<namn>@barn.nextrum.se` finns bara
@@ -746,8 +749,8 @@ Detaljer: `minne/grunden.md`.
   Avböjd mejlar ett nej (2026-10-05) men inte genast: tidigast en halvtimme senare, aldrig 20–9,
   och inte om läget hunnit bytas. Avböjd visar mejlet först, och texten står i mallen och i
   adminvyn (`kolla-mejltexter.py`).
-  Provets facit finns bara i funktionen, resultatet visas per avsnitt, fel svar är lika
-  utförliga som rätt, nyckeln hamnar aldrig i en logg, och ändras handboken läses frågorna om.
+  Provet i ansökan och dess tre mejl är borta (2026-10-21): utbildningsmötet mejlar inget, och Markera
+  utbildad mejlar sista steget, en gång och efter en fråga.
   Intervjumejlet (2026-10-21) är det enda till den som söker som går genom notiskön: en rad med
   `ansokan_id` (villkoret `notis_utskick_en_mottagare` kräver exakt en av `mottagare`, `barn_id` och
   `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i intervju och är
@@ -806,7 +809,7 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   (`G-V6Y6Q0SRXX`, 2026-10-11) hör till syftet statistik och laddas först efter ja, aldrig med
   statisk tagg; Google Ads hör till annonser. Consent Mode börjar på `denied` för alla fyra och
   uppdateras per syfte, `ad_personalization` aldrig. Adressen lämnar oss utan frågesträng utom
-  utm (`renAdress`), och en sida med en nyckel i adressen (`avanmal`, `utbildningsprov`) laddar
+  utm (`renAdress`), och en sida med en nyckel i adressen (`avanmal`) laddar
   inte samtyckesrutan. Okänd källa är `null`, aldrig "direkt"; Global Privacy Control är nej; ja och
   nej är samma sorts knapp (Godkänn alla och Neka alla båda fyllda, kryssrutorna bakom Anpassa,
   2026-10-11); klasserna heter `nx-kakor-*`. Ändras lagringen följer `lagring.html`
@@ -930,7 +933,10 @@ Detaljer: `minne/grunden.md`.
   köas när en ansökan skickas vidare. De fyra som skickades vidare under minuten innan triggern fanns fick det för hand
   samma kväll, på Leos ord (`minne/notiser.md`, Intervjumejlet punkt 7).
   Provet har 26 lätta frågor ur Handledarhandboken sedan 2026-10-20 och spärrar varje ny studiehjälpare tills hen
-  fått 15 rätt (gränsen 55 %); de två godkända studiehjälparna är undantagna.
+  fått 15 rätt (gränsen 55 %); de två godkända studiehjälparna är undantagna. **Provet i ansökan tas bort** med
+  PR #312: efter merge körs `provet_i_ansokan_tas_bort` och `ansokan-notis` driftsätts, i den ordningen, och sedan tar
+  Leo bort edge-funktionen `utbildningsprov` i Supabases panel (verktygen kan inte ta bort en funktion). Med
+  migrationen körd når den ingenting.
   Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
 - **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3), i
   drift sedan 2026-10-20 (ovan). Liggaren fylldes med en rad (en testbetalning). **Köpvillkoren** stod som en

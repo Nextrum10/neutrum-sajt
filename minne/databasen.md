@@ -147,7 +147,9 @@ försök på provet: admin läser, bara `utbildningsprov_lamna()` skriver)
 och fyra kolumner på `applications`: `utbildningsmote_at`,
 `prov_sista_dag`, `prov_nyckel` och `prov_godkant_at`. Numret krockar:
 timbanken kördes som `fas22_1_timbanken` samma förmiddag i en annan
-session. Namnen i driften går inte att byta i efterhand.
+session. Namnen i driften går inte att byta i efterhand. Provet togs bort
+2026-10-21 (`provet_i_ansokan_tas_bort`, nedan) utan att någon gjort det,
+och tabellen och de tre provkolumnerna står kvar tomma.
 Fas 18.1 la till `google_koppling` (nyckeln till Nextrums Google-konto:
 RLS utan policy, bara `service_role`) och `pass_moten` (Meet-länken per
 pass: parterna och admin läser, bara `service_role` skriver, och
@@ -555,7 +557,7 @@ Jobben 2026-09-29, alla som `postgres`, tider i UTC:
 | `admin-paminnelse` | var femte minut | räknar Att göra och skriver kl. 9 svensk tid ETT mejl till admin med det som ligger kvar och inte mejlats; klockan avgörs i funktionen, inte i schemat (2026-10-02, Notiserna) |
 | `timmar-betalar` | var femte minut | obesvarade förslag lämnar tillbaka timmen, lediga timmar betalar nästa pass (Fas 22.3–22.4) |
 | `timmar-gar-ut` | :07 varje timme | mejlet tio dagar innan köpta eller gratis timmar går ut (Fas 21.2, gratis sedan `gratistimmarna_paminns`) |
-| `utbildningsprov-paminn` | :13 varje timme | påminnelserna om utbildningsprovet |
+| ~~`utbildningsprov-paminn`~~ | :13 varje timme | påminnelserna om provet i ansökan; tas bort av `provet_i_ansokan_tas_bort` (2026-10-21) |
 | `notis-stada` | 03:17 | städar notiserna och utskicken |
 | `cron-stada` | 03:23 | tar bort körningar äldre än sju dagar ur `cron.job_run_details` |
 | `ansokan-gallring` | 03:41 | ansökningar och CV:n efter ett år (Gallringen nedan) |
@@ -1545,6 +1547,28 @@ Provat lokalt 2026-10-21: en databas byggd ur alla 205 migrationer gav 1829 av 1
 var godkända skrivs bara första gången** (inställningens rad skrivs direkt efter och säger att filen körts):
 prövat i en egen databas byggd till och med `intervjumejlet`, där en studiehjälpare godkänd mellan två
 körningar inte fick något undantag.
+
+### Provet i ansökan tas bort (2026-10-21, PR #312)
+`provet_i_ansokan_tas_bort` (20261021160000), skriven och provad lokalt; den körs efter merge. Vad som gick och
+varför: `minne/notiser.md`, Utbildningsprovet i ansökan. Inget `drop` och inget `delete`, så den kan köras hel i
+ett do-block och registreras med filens text.
+
+- Vakten stannar om ett prov i ansökan är öppet, om ett provmejl står i `ansokan_utskick`, eller om
+  `intern.ansokan_besked` inte har md5 `9d0ea3e3…` (en kropp som redan bär `provet_i_ansokan_tas_bort` släpps
+  igenom).
+- `intern.utbildningsprov_oppnas` lämnar raden som den är (triggern står kvar), grenen i `intern.ansokan_besked`
+  som köade `prov` byts mot en kommentar med `replace()` och en räknare som kräver exakt en träff,
+  `intern.utbildningsprov_paminn` svarar 0, jobbet `utbildningsprov-paminn` tas ur pg_cron, och villkoret
+  `ansokan_utskick_inga_provmejl` säger nej till provets tre steg. `ansokan_utskick_steg_check` står kvar med dem:
+  att skriva om den är drop.
+- `utbildningsprov_lage` och `utbildningsprov_lamna` får inga rättigheter, inte heller `service_role`, så
+  edge-funktionen som står kvar i driften tills den tas bort i panelen når ingenting.
+
+Provat lokalt 2026-10-21: en databas byggd ur alla 210 migrationer gav 1897 av 1897 i `rls-test.sql` (avsnittet
+om Fas 22.1 är omskrivet: mötet öppnar inget prov, inget provmejl köas, inte heller med en sista dag satt för
+hand, Markera utbildad köar sista steget en gång, jobbet finns inte, mejlkön säger nej till provets steg, och
+ingen roll kör provets funktioner), och filen kördes en gång till utan fel. Efter filen har
+`intern.ansokan_besked` md5 `f69babe7…` lokalt.
 
 ### Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, i drift sedan 2026-10-20)
 Tre filer, skrivna och provade lokalt; ingenting är kört mot driften. Vad de gör står i `minne/betalning.md`

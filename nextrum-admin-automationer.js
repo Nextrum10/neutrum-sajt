@@ -84,7 +84,6 @@
     'notis-stada': 'Gamla notiser städas bort',
     'ansokan-besked': 'Nya försök med beskeden till sökande',
     'admin-paminnelse': 'Morgonmejl kl. 9 till admin med det som ligger kvar i Att göra',
-    'utbildningsprov-paminn': 'Påminnelser om utbildningsprovet',
     'timmar-betalar': 'Lediga timmar betalar nästa pass',
     'timmar-gar-ut': 'Mejlet om timmar som snart går ut',
     'manadskorning': 'Månadskörningen: lönespecifikationerna',
