@@ -60,6 +60,12 @@ window.NEXTRUM_CONFIG = {
      rapporter, och utan rapport blir passet aldrig genomfört. */
   UTBILDNING_URL: '',
 
+  /* Köpvillkoren i kassan (2026-10-21). Rutan före kassan kräver ett
+     kryss och länkar hit. PLATSHÅLLARE: avsnittet #kopvillkor i
+     anvandarvillkor.html (och en/anvandarvillkor.html) bär en platshållare
+     tills Leo skrivit köpvillkoren. Byts adressen ändras bara den här. */
+  KOPVILLKOR_URL: '/anvandarvillkor#kopvillkor',
+
   /* Bokningssidan för intervjun (2026-10-20): ett bokningsschema i
      Google Kalender, med Google Meet som plats. Adressen ser ut som
      https://calendar.app.google/XXXXXXXX och står i mejlet Skriv till

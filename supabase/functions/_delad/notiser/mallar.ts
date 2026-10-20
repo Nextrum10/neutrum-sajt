@@ -55,7 +55,7 @@ import { datumText, narText, paminnelseNar } from './tid.ts';
  * kvittot på en intresseanmälan går till någon som ännu inte har ett
  * konto, och en knapp till en inloggad vy hade mött en inloggning.
  */
-export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten';
+export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten' | 'kortet';
 
 export type Innehall = {
   amne: string;
@@ -322,21 +322,30 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
   // banken att familjen bekräftar betalningen säger mejlet det, annars
   // att kortet nekades. Före passet: inget är reserverat, och familjen kan
   // lägga till ett kort eller betala efter passet. Efter: betala i Nextrum.
+  //
+  // kortdragningen_forsoker_igen (2026-10-21): mejlet går en gång per
+  // serie, och vi försöker igen av oss själva när koden säger att det kan
+  // gå (kortet: 'igen', samma regel som jobbet; inte när banken vill att
+  // familjen bekräftar eller kortet gått ut). Före passet leder
+  // knappen dit kortet byts, för ett nytt kort provas direkt; efter passet
+  // till betalningen, där passet också kan betalas i kassan. Passet står
+  // kvar: ingen betalning avbokar det.
   kort_nekat(m) {
     const nar = narText(m.d.datum, m.d.tid);
     const efter = m.d.status === 'completed';
-    const varfor = m.d.kortet === 'bekrafta'
-      ? 'Er bank vill att ni bekräftar betalningen själva'
-      : 'Kortet nekades';
+    const bekrafta = m.d.kortet === 'bekrafta';
+    const varfor = bekrafta ? 'Er bank vill att ni bekräftar betalningen själva' : 'Kortet nekades';
+    const igen = m.d.kortet === 'igen' ? ' Vi försöker igen om några timmar.' : '';
     return {
       amne: medNar(efter ? 'Betalningen för passet gick inte igenom' : 'Kortet kunde inte reserveras', nar),
       rubrik: efter ? 'Betalningen gick inte igenom' : 'Kortet kunde inte reserveras',
       mening: efter
-        ? `${varfor} när vi skulle dra betalningen för passet${med(m)}. Betala passet med kort i Nextrum.`
-        : `${varfor} när vi skulle reservera beloppet för passet${med(m)}. Inget är reserverat. Lägg till kortet`
-          + ' igen i Nextrum, eller ett annat kort, så försöker vi igen. Annars betalar ni med kort efter passet.',
-      knapp: 'Gå till betalningen',
-      mal: 'betalning',
+        ? `${varfor} när vi skulle dra betalningen för passet${med(m)}.${igen} Ni kan också betala passet med kort`
+          + ' i Nextrum, eller byta kort där.'
+        : `${varfor} när vi skulle reservera beloppet för passet${med(m)}. Inget är reserverat.${igen} Byter ni kort i`
+          + ' Nextrum försöker vi med det nya direkt. Annars betalar ni med kort efter passet.',
+      knapp: efter ? 'Gå till betalningen' : 'Byt kort',
+      mal: efter ? 'betalning' : 'kortet',
       fakta: passFakta(m, nar),
     };
   },

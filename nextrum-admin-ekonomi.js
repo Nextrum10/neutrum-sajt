@@ -1931,6 +1931,8 @@
       /* Larmet betalt_for_lange och bokslutets återbetalda belopp
          räknas i databasen och måste hämtas om, inte ritas om. */
       await laddaOmEkonomi();
+      // Liggaren (2026-10-21) visar återbetalningen när den hämtats om.
+      if (NXAdmin.rita.ritaLiggaren) await NXAdmin.rita.ritaLiggaren();
     });
   });
 

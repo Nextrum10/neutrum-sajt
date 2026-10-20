@@ -1017,12 +1017,18 @@ async function provaFörälderns(webb) {
     prova('köp med kod: raden i Fyll timbanken visar priset med koden',
       /3\s?591(,00)?\s*kr/.test(klipp) && klipp.includes('med koden VAN10') && !klipp.includes('per timme'), klipp);
     await page.click('[data-kop="plan_standard"]');
-    await page.waitForFunction(() => true, null, { timeout: 500 }).catch(() => {});
+    /* Köpvillkoren först (2026-10-21): rutan säger priset med koden, och
+       kassan öppnas först när villkoren kryssats i. */
+    await page.waitForSelector('.nx-kassa-villkor [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+    prova('köp med kod: rutan före kassan visar priset med koden',
+      /2\s?728,80\s*kr/.test(await text(page, '.nx-kassa-villkor')), await text(page, '.nx-kassa-villkor'));
+    await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
+    await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
     await new Promise(r => setTimeout(r, 800));
     const kassa = S.logg.filter(r => r.metod === 'POST' && r.väg === '/functions/v1/stripe-checkout').pop();
-    prova('köp med kod: Köp skickar koden till kassan, och priset räknas där',
+    prova('köp med kod: Köp skickar koden och krysset till kassan, och priset räknas där',
       kassa && kassa.kropp && kassa.kropp.erbjudande === 'plan_standard' && kassa.kropp.rabattkod === 'VAN10'
-      && kassa.kropp.belopp_ore === undefined, JSON.stringify(kassa && kassa.kropp));
+      && kassa.kropp.villkor === true && kassa.kropp.belopp_ore === undefined, JSON.stringify(kassa && kassa.kropp));
     await context.close();
   }
 
@@ -1138,11 +1144,16 @@ async function provaFörälderns(webb) {
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
     await bild(page, 'foraldern-kop-till-timmar-telefon', '#erb-mina-box');
     await page.click('#erb-mina [data-extra-kop]');
+    await page.waitForSelector('.nx-kassa-villkor [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+    prova('köp till timmar: rutan före kassan säger timmarna och planens sista dag',
+      /3 timmar till Standard/.test(await text(page, '.nx-kassa-villkor')), await text(page, '.nx-kassa-villkor'));
+    await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
+    await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
     await vänta(500);
     const kassa = S.logg.filter(r => r.metod === 'POST' && r.väg === '/functions/v1/stripe-checkout').pop();
-    prova('köp till timmar: kassan får planens erbjudande och antalet timmar, aldrig ett pris',
+    prova('köp till timmar: kassan får planens erbjudande, antalet timmar och krysset, aldrig ett pris',
       kassa && kassa.kropp && kassa.kropp.erbjudande === 'plan_extra' && kassa.kropp.timmar === 3
-      && !('pris' in kassa.kropp) && !('belopp_ore' in kassa.kropp), JSON.stringify(kassa && kassa.kropp));
+      && kassa.kropp.villkor === true && !('pris' in kassa.kropp) && !('belopp_ore' in kassa.kropp), JSON.stringify(kassa && kassa.kropp));
     prova('köp till timmar: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
     await context.close();
   }

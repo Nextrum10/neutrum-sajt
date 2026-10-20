@@ -5096,3 +5096,14 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .prov-form-rad .inp{flex:1;min-width:0}
 .prov-form-aktiv{align-self:end;min-height:44px}
 .prov-ny{margin-top:14px}
+
+/* ============================================================
+   LIGGAREN OCH KORTET (2026-10-21, nextrum-admin-liggaren.js)
+   Raderna är Alla betalningars (.eko-rad). En betalning som betalas
+   tillbaka i Stripe säger det på raden i stället för en knapp.
+   ============================================================ */
+.eko-not{font-size:.8rem;color:var(--bl-3);align-self:center}
+.lig-val{border:0;padding:0;margin:0}
+.lig-val legend{font-size:.82rem;font-weight:600;color:var(--bl-2);margin-bottom:6px}
+.lig-alt{display:flex;align-items:center;gap:10px;min-height:44px;font-size:1rem;color:var(--bl)}
+.lig-alt input{flex:none;width:18px;height:18px}

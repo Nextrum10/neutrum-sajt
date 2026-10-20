@@ -129,9 +129,10 @@ export type RenData = {
    *  för true, aldrig för text. */
   gratis: boolean;
   /** kortet_reserveras. Varför kortet inte gick: 'bekrafta' (banken vill
-   *  att familjen bekräftar betalningen) eller 'nekat'. En kod, aldrig
-   *  Stripes text. */
-  kortet: 'bekrafta' | 'nekat' | null;
+   *  att familjen bekräftar betalningen) eller 'nekat'. Sedan 2026-10-21
+   *  (kortdragningen_forsoker_igen) 'igen' när vi provar kortet igen av oss
+   *  själva, så att mejlet bara lovar det då. En kod, aldrig Stripes text. */
+  kortet: 'bekrafta' | 'nekat' | 'igen' | null;
   /** barnets_epost. Koden i länken som bekräftar barnets adress:
    *  barnets id, en punkt och en HMAC. Ingen personuppgift: den räknas
    *  fram när mejlet skickas och sparas ingenstans. */
@@ -190,7 +191,7 @@ export function renData(v: unknown): RenData {
     betalsatt: BETALSATT.find((k) => k === d.betalsatt) ?? null,
     kvar: kvarOk(d.kvar),
     gratis: d.gratis === true,
-    kortet: d.kortet === 'bekrafta' || d.kortet === 'nekat' ? d.kortet : null,
+    kortet: d.kortet === 'bekrafta' || d.kortet === 'nekat' || d.kortet === 'igen' ? d.kortet : null,
     kod: typeof d.kod === 'string' && KOD.test(d.kod) ? d.kod : null,
     prov: d.prov === true,
   };

@@ -2460,7 +2460,7 @@
   /* kod (2026-10-13): en rabattkod på köp av timmar, prövad i databasen
      för varje kort: { kod, beskrivning, pris: { erbjudande: att betala } }. */
   S.erb = { aktiv: false, katalog: [], kort: [], bank: { saldo: 0, varde: null, perPass: {}, finns: false },
-            rorelser: undefined, dragningar: undefined, kod: null };
+            rorelser: undefined, dragningar: undefined, kod: null, manader: null, manad: {} };
   /* Familjens rabatt (familjerabatter, 2026-10-15): kronor av per timme som
      admin satt på familjen, ur min_familjerabatt(). Bara beloppet, aldrig
      koden, och den syns bara där familjen betalar: på korten under
@@ -2469,10 +2469,69 @@
      migrationen. */
   S.familjerabatt = 0;
   const familjerabatt = () => Math.max(Number(S.familjerabatt) || 0, 0);
+
+  /* ============================================================
+     PLANERNA PER MÅNAD (2026-10-21, planerna_per_manad)
+
+     Leo: en plan köps för "Den här månaden" eller "Nästa månad", och
+     timmarna går ut när månaden är slut. Månaderna kommer ur databasen
+     (planens_manader), som räknar dem i Stockholms tid och prövar dem
+     igen när köpet sparas. Timbanken visar båda: "3 av 8 timmar
+     återstår", och "0 av 0" för en månad utan plan.
+     ============================================================ */
+  const MÅNADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september',
+    'oktober', 'november', 'december'];
+  /* "2026-10-01" ger månadens sista dag, "2026-10-31". */
+  function månadensSista(första) {
+    const [år, mån] = String(första).split('-').map(Number);
+    return isoFor(new Date(år, mån, 0));
+  }
+  function månadensNamn(första) {
+    return MÅNADER[Number(String(första).split('-')[1]) - 1] || '';
+  }
+  /* Vad valet betyder, under knapparna och i rutan före kassan. */
+  function planensMånadText(val) {
+    const m = S.erb.manader;
+    if (!m) return '';
+    const första = val === 'nasta' ? m.nasta : m.denna;
+    const sista = månadensSista(första);
+    if (val === 'nasta') return 'Gäller 1–' + Number(sista.slice(8)) + ' ' + månadensNamn(första);
+    const dagar = Math.round((Date.parse(sista) - Date.parse(m.idag)) / 864e5) + 1;
+    return 'Gäller till och med ' + datumText(sista) + (dagar === 1 ? ', sista dagen i dag' : ', ' + dagar + ' dagar');
+  }
+  /* En plans timmar per månad: den här och nästa, för timbanken. Köp till
+     timmar räknas med sin plan. En plan köpt före 2026-10-21 har ingen
+     månad och räknas till den här så länge den gäller. */
+  function planensMånader() {
+    const m = S.erb.manader;
+    if (!m) return null;
+    const idag = m.idag;
+    const sum = första => S.erb.kort.filter(k => k.status === 'betald' && k.sort === 'plan'
+      && (k.galler_fran ? String(k.galler_fran) === första
+        : första === m.denna && String(k.giltigt_till) >= idag))
+      .reduce((t, k) => ({ kvar: t.kvar + (Number(k.kvar) || 0),
+        alla: t.alla + Math.max((Number(k.timmar) || 0) - (Number(k.aterbetalda_timmar) || 0), 0) }), { kvar: 0, alla: 0 });
+    return [
+      Object.assign({ namn: månadensNamn(m.denna), not: 'Går ut ' + datumText(månadensSista(m.denna)) }, sum(m.denna)),
+      Object.assign({ namn: månadensNamn(m.nasta), not: 'Gäller 1–' + Number(månadensSista(m.nasta).slice(8)) + ' '
+        + månadensNamn(m.nasta) }, sum(m.nasta))
+    ];
+  }
+  function månadsRader() {
+    const ms = planensMånader();
+    if (!ms) return '';
+    return '<div class="tb-manader" aria-label="Planernas timmar per månad">'
+      + ms.map(x => '<div class="tb-manad">'
+        + '<span class="tb-manad-namn">' + esc(x.namn.charAt(0).toUpperCase() + x.namn.slice(1)) + '</span>'
+        + '<span class="tb-manad-tal"><b>' + x.kvar + '</b> av ' + x.alla + ' timmar återstår</span>'
+        + '<span class="tb-manad-not">' + esc(x.not) + '</span>'
+        + '</div>').join('')
+      + '</div>';
+  }
   const medErRabatt = 'med er rabatt';
 
   async function laddaErbjudanden() {
-    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta, rabatt] = await Promise.all([
+    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta, rabatt, manader] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       /* Alla kolumner (planerna, 2026-10-07): timmar_pa_kopet finns först
          efter migrationen, och en uttrycklig lista med den hade gett ett
@@ -2505,8 +2564,13 @@
       supa.rpc('forsta_timmen_lage'),
       /* Familjens rabatt per timme (familjerabatter, 2026-10-15). Ett fel,
          eller en databas före migrationen, är ingen rabatt. */
-      supa.rpc('min_familjerabatt')
+      supa.rpc('min_familjerabatt'),
+      /* Planerna per månad (2026-10-21): den 1:a i den här och nästa månad,
+         ur databasen. Utan funktionen (före migrationen) inget månadsval,
+         och planen köps som förut. */
+      supa.rpc('planens_manader')
     ]);
+    S.erb.manader = manader.error || !manader.data || !manader.data.denna ? null : manader.data;
     S.forstaTimmen = forsta.error ? null : (forsta.data || null);
     S.familjerabatt = rabatt.error ? 0 : Math.max(Number(rabatt.data) || 0, 0);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
@@ -2806,18 +2870,20 @@
        Samma kassa, samma svar; funktionen räknar minuterna och beloppet
        ur passunderlag, och anropet säger bara vilket pass. */
     return startaKassa(tillägg
-      ? { pass: passId, tillagg: true, ui: ui, retur: location.origin }
-      : { pass: passId, retur: location.origin, ui: ui });
+      ? { pass: passId, tillagg: true, ui: ui, retur: location.origin, villkor: true }
+      : { pass: passId, retur: location.origin, ui: ui, villkor: true });
   }
   /* Ett erbjudande går genom samma kassa, med koden i stället för ett
      pass (Fas 16.1). Beloppet räknas av stripe-checkout. */
-  async function startaKöp(kod, ui, extra) {
+  async function startaKöp(kod, ui, extra, månad) {
     /* En rabattkod följer med när den gäller kortet (2026-10-13). Kassan
        prövar den igen och drar det databasen räknat fram. Timmar till
-       planen (2026-10-14) köps utan kod: extra bär antalet timmar. */
+       planen (2026-10-14) köps utan kod: extra bär antalet timmar. En
+       plan bär sin månad (2026-10-21), och villkor: true säger att
+       köpvillkoren kryssats i före kassan. */
     const rk = !extra && S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
-    return startaKassa(Object.assign({ erbjudande: kod, retur: location.origin, ui: ui }, rk ? { rabattkod: rk } : {},
-      extra || {}));
+    return startaKassa(Object.assign({ erbjudande: kod, retur: location.origin, ui: ui, villkor: true },
+      rk ? { rabattkod: rk } : {}, månad ? { manad: månad } : {}, extra || {}));
   }
   async function startaKassa(body) {
     const svar = await supa.functions.invoke('stripe-checkout', { body: body });
@@ -3151,9 +3217,13 @@
 
   async function sparaKort(knapp) {
     if (!S.kort.pa) return;
+    if (!await NXStudie.kassansVillkor({
+      titel: S.kort.kort ? 'Byt kort' : 'Spara kortet',
+      rader: ['Inget dras nu.', 'Priset för ett pass reserveras två dagar före passet och dras när rapporten är skriven.']
+    })) return;
     await medan(knapp, 'Öppnar…', async () => {
       const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
-      const svar = await startaKassa({ kort: 'spara', retur: location.origin, ui: 'inbaddad' });
+      const svar = await startaKassa({ kort: 'spara', retur: location.origin, ui: 'inbaddad', villkor: true });
       if (!svar) return;
       if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
         const Stripe = await stripeKlar;
@@ -3168,7 +3238,7 @@
             return;
           } catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
         }
-        const reserv = await startaKassa({ kort: 'spara', retur: location.origin, ui: 'sida' });
+        const reserv = await startaKassa({ kort: 'spara', retur: location.origin, ui: 'sida', villkor: true });
         if (reserv && reserv.url) { location.href = reserv.url; return; }
         if (!reserv) return;
       } else if (svar.url) {
@@ -3337,10 +3407,20 @@
   async function köpErbjudande(knapp, kod) {
     const e = S.erb.katalog.find(x => x.kod === kod);
     if (!e || !S.erb.aktiv || S.väntar) return;
+    /* Planens månad (2026-10-21), när databasen har månaderna. */
+    const månad = e.sort === 'plan' && S.erb.manader ? (S.erb.manad[kod] || 'denna') : null;
+    const kodPris = S.erb.kod && S.erb.kod.pris[kod] != null ? Number(S.erb.kod.pris[kod]) : null;
+    const ok = await NXStudie.kassansVillkor({
+      titel: 'Köp ' + e.namn,
+      rader: [erbTimmar(e) + ' · ' + NXBetalning.kronor(kodPris != null ? kodPris : medRabatt(e).pris)]
+        .concat(månad ? [planensMånadText(månad)] : []),
+      text: 'Betalningen görs med kort i nästa steg.'
+    });
+    if (!ok) return;
     await köpIKassan(knapp, kod, null, 'Köp ' + e.namn, svar => erbTimmar(e) + ' · '
       + NXBetalning.kronor(svar.belopp_ore != null ? svar.belopp_ore : e.pris_ore)
       + medVad(Number(svar.familjerabatt_ore) > 0,
-        Number(svar.rabatt_ore) > Number(svar.familjerabatt_ore || 0) && S.erb.kod ? S.erb.kod.kod : null));
+        Number(svar.rabatt_ore) > Number(svar.familjerabatt_ore || 0) && S.erb.kod ? S.erb.kod.kod : null), månad);
   }
 
   /* "med er rabatt", "med koden X" eller båda, efter beloppet i kassan. */
@@ -3352,10 +3432,10 @@
   /* Ett köp i samma kassa som passen. extra följer med till
      stripe-checkout (timmarna till planen), och vad(svar) är raden under
      rubriken: beloppet där är det kassan räknat. */
-  async function köpIKassan(knapp, kod, extra, titel, vad) {
+  async function köpIKassan(knapp, kod, extra, titel, vad, månad) {
     await medan(knapp, 'Öppnar…', async () => {
       const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
-      const svar = await startaKöp(kod, 'inbaddad', extra);
+      const svar = await startaKöp(kod, 'inbaddad', extra, månad);
       if (!svar) return;
       if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
         const Stripe = await stripeKlar;
@@ -3371,7 +3451,7 @@
             return;
           } catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
         }
-        const reserv = await startaKöp(kod, 'sida', extra);
+        const reserv = await startaKöp(kod, 'sida', extra, månad);
         if (reserv && reserv.url) { location.href = reserv.url; return; }
         if (!reserv) return;
       } else if (svar.url) {
@@ -3525,9 +3605,22 @@
      och raden ovanför korten säger det. Knappen är orange (2026-10-12,
      Leo: "Köp knappen ska vara orange"), som Betala i förväg: båda är ett
      val att betala med kort, inget drag. Den låsta står kvar som ghost. */
-  const köpKnapp = e => S.erb.aktiv && !S.väntar
-    ? '<button type="button" class="btn btn-orange btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>'
-    : '<button type="button" class="btn btn-ghost btn-sm" disabled>' + (S.väntar ? 'Köp' : 'Snart') + '</button>';
+  const köpKnapp = e => {
+    if (!(S.erb.aktiv && !S.väntar)) {
+      return '<button type="button" class="btn btn-ghost btn-sm" disabled>' + (S.väntar ? 'Köp' : 'Snart') + '</button>';
+    }
+    const köp = '<button type="button" class="btn btn-orange btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>';
+    /* Planerna per månad (2026-10-21): den här eller nästa månad, när
+       databasen har månaderna. Fyll timbanken har ingen månad. */
+    if (e.sort !== 'plan' || !S.erb.manader) return köp;
+    const vald = S.erb.manad[e.kod] || 'denna';
+    return '<div class="erb-manad" role="group" aria-label="Vilken månad planen gäller">'
+      + ['denna', 'nasta'].map(m => '<button type="button" class="erb-manad-val" data-erb-manad="' + m + '" data-erb-kod="'
+        + esc(e.kod) + '" aria-pressed="' + (vald === m) + '">' + (m === 'denna' ? 'Den här månaden' : 'Nästa månad')
+        + '</button>').join('')
+      + '</div><p class="erb-manad-not" data-erb-manad-not="' + esc(e.kod) + '">' + esc(planensMånadText(vald)) + '</p>'
+      + köp;
+  };
 
   /* Klippkorten som EN kolumn bredvid planerna, som fälls ut
      (2026-09-27, som på prissidan). Fem kort i en egen ruta var en
@@ -3688,7 +3781,9 @@
     let köpta = 0, gratis = 0, använda = 0;
     S.erb.kort.forEach(k => {
       if (k.status !== 'betald') return;
-      const tim = Number(k.timmar) || 0, kvar = Number(k.kvar) || 0;
+      // Nästa månads plan (2026-10-21) gäller inte än; den står per månad under batteriet.
+      if (k.galler_fran && String(k.galler_fran) > idag) return;
+      const tim = Math.max((Number(k.timmar) || 0) - (Number(k.aterbetalda_timmar) || 0), 0), kvar = Number(k.kvar) || 0;
       if (String(k.giltigt_till) >= idag) {
         const g = NXBetalning.gratistimmar(k) ? kvar : Math.min(Number(k.gratis_kvar) || 0, kvar);
         gratis += g;
@@ -3803,6 +3898,9 @@
     const box = $('#erb-mina-box'), mina = $('#erb-mina');
     if (!box || !mina) return;
     const brukbara = S.erb.kort.filter(k => k.brukbar);
+    // Nästa månads plan (2026-10-21) gäller inte än, men står med.
+    const idagE = isoFor(new Date());
+    const kommande = S.erb.kort.filter(k => k.status === 'betald' && k.galler_fran && String(k.galler_fran) > idagE);
     const minuter = S.erb.bank.saldo;
     const t = batteriTimmar();
     box.hidden = false;
@@ -3810,10 +3908,12 @@
       + '<div class="erb-mitt-topp"><b>Tillgängliga timmar</b>'
       + (minuter ? '<span>och ' + esc(tidLängd(minuter) + ' sparat') + '</span>' : '') + '</div>'
       + '<div data-batteri="erbjudanden"></div>'
+      + månadsRader()
       + (t.kvar || minuter ? ''
         : '<p class="erb-bank-text">Fyll timbanken med en plan eller med timmar nedan, så betalar timmarna era pass av sig själva.</p>')
       + '</div>'
       + brukbara.map(k => kortRad(k)).join('')
+      + kommande.map(k => kortRad(k)).join('')
       + extraRuta()
       + tipsKort(false)
       + '<p class="erb-bank-text erb-tillg-lank">Hur timmarna används, hur länge de gäller och villkoren står under '
@@ -3841,7 +3941,9 @@
   function planFörExtra() {
     const idag = isoFor(new Date());
     return S.erb.kort
-      .filter(k => k.sort === 'plan' && k.status === 'betald' && String(k.giltigt_till) > idag)
+      .filter(k => k.sort === 'plan' && k.status === 'betald' && String(k.giltigt_till) > idag
+        // planerna_per_manad (2026-10-21): den här månadens plan, inte nästa och inte timmar till en plan.
+        && (!k.galler_fran || String(k.galler_fran) <= idag) && !k.till_plan)
       .sort((a, c) => String(c.giltigt_till).localeCompare(String(a.giltigt_till))
         || String(c.created_at || '').localeCompare(String(a.created_at || '')))[0] || null;
   }
@@ -3898,6 +4000,11 @@
     const plan = planFörExtra();
     if (!plan || !S.erb.aktiv || S.väntar) return;
     const n = S.extra.timmar;
+    if (!await NXStudie.kassansVillkor({
+      titel: 'Köp till timmar',
+      rader: [timText(n) + ' till ' + plan.namn, 'Gäller till och med ' + datumText(plan.giltigt_till) + ', som planen'],
+      text: 'Priset står i kassan, och betalningen görs med kort i nästa steg.'
+    })) return;
     await köpIKassan(knapp, 'plan_extra', { timmar: n }, 'Köp till timmar',
       svar => timText(n) + ' till ' + plan.namn + (svar.belopp_ore ? ' · ' + NXBetalning.kronor(svar.belopp_ore) : '')
         + (Number(svar.familjerabatt_ore) > 0 ? ' ' + medErRabatt : ''));
@@ -3912,7 +4019,10 @@
        2026-10-13): timmen gäller till 60 dagar efter köpet, och raden
        visar den och dess sista dag. */
     const baraGratis = k.brukbar && String(k.giltigt_till) < idag && harGratis(k, idag);
-    const kvar = baraGratis ? kortetsTimmar(k, idag) : Number(k.kvar), tim = Number(k.timmar);
+    const kvar = baraGratis ? kortetsTimmar(k, idag) : Number(k.kvar);
+    // Timmar som betalats tillbaka (2026-10-21) räknas inte.
+    const tim = Math.max(Number(k.timmar) - (Number(k.aterbetalda_timmar) || 0), 0);
+    const kommande = !!(k.galler_fran && String(k.galler_fran) > idag);
     const sista = baraGratis ? k.gratis_till : k.giltigt_till;
     /* Tio dagar före sista dagen går påminnelsemejlet (Fas 21.2), och
        vyn säger samma sak från samma dag: timmar som inte används
@@ -3923,6 +4033,7 @@
       : k.status === 'tvist' ? 'Betalningen är ifrågasatt'
       : kvar === 0 ? 'Förbrukat'
       : baraGratis ? 'Gratistimmen gäller till ' + datumText(k.gratis_till)
+      : kommande ? 'Gäller 1–' + Number(String(k.giltigt_till).slice(8)) + ' ' + månadensNamn(k.galler_fran)
       : String(k.giltigt_till) < idag ? 'Gick ut ' + datumText(k.giltigt_till)
       : 'Gäller till ' + datumText(k.giltigt_till);
     /* Gratistimmar som admin satt in (gratistimmar) är gratis rakt igenom. */
@@ -3934,7 +4045,7 @@
     /* Gratis timmar gröna och köpta orange, som i batteriet (2026-10-15). */
     const gratisKvar = NXBetalning.gratistimmar(k) || baraGratis ? kvar
       : String(k.giltigt_till) >= idag ? Math.min(Number(k.gratis_kvar) || 0, kvar) : 0;
-    return '<div class="erb-mitt' + (k.brukbar ? '' : ' ar-slut') + '">'
+    return '<div class="erb-mitt' + (k.brukbar || kommande ? '' : ' ar-slut') + (kommande ? ' ar-kommande' : '') + '">'
       + '<div class="erb-mitt-topp"><b>' + esc(k.namn) + '</b><span>' + esc(läge) + '</span></div>'
       + mätare(kvar - gratisKvar, gratisKvar, tim, kvar + ' av ' + tim + ' timmar kvar')
       + '<span class="erb-kvar"><b>' + kvar + '</b> av ' + tim + ' timmar kvar' + esc(gratis) + '</span>'
@@ -4000,7 +4111,7 @@
     if (!host) return;
     const kort = S.erb.kort;
     /* Batteriet (2026-10-15) överst, när det finns timmar att visa. */
-    const batteri = batteriTimmar().alla ? '<div data-batteri="profil"></div>' : '';
+    const batteri = (batteriTimmar().alla ? '<div data-batteri="profil"></div>' : '') + månadsRader();
     if (!kort.length) {
       /* Har familjen timmar för tips står de under, så då är det bara
          köpta timmar och gratistimmar den saknar. */
@@ -4230,6 +4341,15 @@
   async function betalaIKassan(knapp, passId, tillägg) {
     // Betalar ni ett genomfört pass bekräftar ni dess rapport (Fas 19.2).
     const påRapport = !!knapp.closest('[data-rb-rapport]') || !!rapportFörPass(passId);
+    /* Köpvillkoren först (2026-10-21): avbryter ni här händer ingenting,
+       inte heller att rapporten bekräftas. */
+    const b = (S.bokningar || []).find(x => x.id === passId);
+    if (!await NXStudie.kassansVillkor({
+      titel: tillägg ? 'Betala tillägget' : 'Betala passet',
+      rader: b ? [(b.subject ? b.subject + ', ' : '') + datumText(b.wanted_date)
+        + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')] : [],
+      text: 'Beloppet står i kassan, och betalningen görs med kort i nästa steg.'
+    })) return;
     await medan(knapp, 'Öppnar…', async () => {
       // Stripe.js hämtas medan sessionen skapas, inte efter.
       const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
@@ -4326,6 +4446,17 @@
     if (tb) { await betalaMedBanken(tb, tb.dataset.timbank); return; }
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
+    /* Planens månad (2026-10-21): bara knapparna och raden under byts,
+       så att kortet inte byter höjd under fingret. */
+    const mån = e.target.closest('[data-erb-manad]');
+    if (mån) {
+      const kod = mån.dataset.erbKod;
+      S.erb.manad[kod] = mån.dataset.erbManad;
+      $$('[data-erb-manad][data-erb-kod="' + CSS.escape(kod) + '"]').forEach(x =>
+        x.setAttribute('aria-pressed', String(x.dataset.erbManad === S.erb.manad[kod])));
+      $$('[data-erb-manad-not="' + CSS.escape(kod) + '"]').forEach(x => { x.textContent = planensMånadText(S.erb.manad[kod]); });
+      return;
+    }
     if (e.target.closest('#erb-kod-anvand')) { await provaErbKod(); return; }
     /* Köp till timmar (2026-10-14): Välj själv, stegen och kassan. */
     if (e.target.closest('[data-extra-valj]')) {

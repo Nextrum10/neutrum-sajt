@@ -1701,6 +1701,26 @@ accentens färg med `:has(input:checked)`. Svarar databasen inte, eller saknas
 `mitt_utbildningsprov()`, visas ingen ruta. Förhandsvisningens värld svarar
 att provet är klart (`nextrum-forhandsvisning.js`).
 
+### Köpvillkoren före kassan, planens månad och Liggaren (2026-10-21)
+**Rutan före kassan** (`NXStudie.kassansVillkor`, `.nx-kassa-villkor`): varje väg till Stripe i studievyn
+(Köp under Erbjudanden, Köp till timmar, Betala med kort och tillägget på passet, Spara kortet och Byt kort)
+frågar först, i samma `.nx-fraga`-ruta som resten av vyn. Den säger vad som köps och priset (kodens pris när en
+rabattkod gäller, annars `medRabatt()`), för en plan också månaden, och har kryssrutan med länken till
+köpvillkoren (`CFG.KOPVILLKOR_URL`). Fokus står på krysset när den öppnas, Till kassan är `disabled` tills det
+är ikryssat, Tab stannar i rutan, och Escape, Avbryt eller ett tryck utanför stänger utan att något händer.
+Krysset är en etikett på minst 44 px, och knappen bär orange som Köp. Anropet bär `villkor: true`, aldrig ett
+belopp.
+**Planens månad**: plankorten har två knappar (`.erb-manad`, `[data-erb-manad]`, `aria-pressed`, minst 44 px)
+och raden under (`[data-erb-manad-not]`); ett tryck byter bara knapparnas läge och radens text, så kortet inte
+byter höjd under fingret (fälla 4). Valet bor i `S.erb.manad` per plan, och det syns bara när
+`planens_manader()` svarat. **Timbanken** har en rad per månad under batteriet (`.tb-manader`, `.tb-manad`, i Er
+timbank och i Profil → Timbanken), nästa månads plan står i listan med streckad linje ovanför
+(`.ar-kommande`) men inte i batteriet, och timmar som betalats tillbaka räknas inte någonstans.
+**Adminvyn**: Betalningar har flikarna Liggaren och Kortet (`nextrum-admin-liggaren.js`, `ritaLiggaren`, i
+`BARA_SUPER` och modulvakten). Raderna är `.eko-rad` som Alla betalningar, med `data-lig-rad`; filtren är
+chippen `[data-lig-filter]`, och sökningen är `#lig-sok`. Före migrationerna säger listan det i stället för ett
+fel. Proven: `verktyg/prova-kassan.js`.
+
 ### Notiserna vid inloggningen (2026-10-12)
 Leo: "gör ett notissystem som kommer som en popup när man loggar in. har
 man inga nya notiser kommer en popup inte upp, har man nya notiser såsom

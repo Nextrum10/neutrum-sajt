@@ -291,6 +291,17 @@ applications.till_intervju_at: null → satt (Skicka vidare till intervju)
 Ansökans tack i formuläret (`tackAnsokan` i `nextrum-app.js`) är sedan samma dag
 "Tack, din ansökan är skickad! Vi hör av oss inom 24 timmar."
 
+### Ett nekat kort, en gång per serie (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift)
+`kort_nekat` (kortet_reserveras) går sedan 2026-10-21 bara vid första nekandet i en serie (`forsok = 1` i
+`intern.kortreservation_notis`), inte när jobbet provar kortet igen; familjens egna försök börjar en ny serie.
+`kortet` i datan har ett tredje värde, `igen`, som databasen sätter när kortet kommer att provas igen av sig
+självt (`intern.kortet_provas_igen`, samma regel som jobbet), och bara då säger mejlet "Vi försöker igen om
+några timmar" (`mallar.ts`; `typer.ts` släpper igenom de tre koderna och inget annat). Före passet heter knappen
+Byt kort och leder till `/foralder#profil/kort` (målet `kortet` i `vyAdress`), efter passet till betalningen.
+En äldre `notis-ko` gör `igen` till null och skickar det förra mejlet utan löfte, så ordningen i driften spelar
+ingen roll för vad som lovas. Efter ett dygn blir det en uppgift till oss, aldrig ett mejl till familjen till
+(`minne/betalning.md`, Kortet försöker igen).
+
 ### Vårdnadshavarens godkännande (2026-10-05)
 
 Leo: "jobbansökan, fråga om den sökande är under 18, är den det så ber du

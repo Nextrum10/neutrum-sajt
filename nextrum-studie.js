@@ -879,6 +879,71 @@ window.NXStudie = (function () {
     });
   }
 
+  /* ---------- köpvillkoren före kassan (2026-10-21) ----------
+     Leo: ingen kassa utan att köpvillkoren kryssats i. Rutan säger vad
+     som köps och vad det kostar, och Till kassan går inte att trycka på
+     förrän rutan är ikryssad. Länken går till köpvillkoren
+     (CFG.KOPVILLKOR_URL), och texten där skriver Leo. stripe-checkout
+     nekar ett anrop utan villkor: true och sparar när det kom
+     (kopvillkor_godkannanden), så krysset här är vägen in, inte skyddet.
+     Svarar med ett löfte som blir true eller false. */
+  function kassansVillkor(opts) {
+    var o = opts || {};
+    var url = (NX.CFG && NX.CFG.KOPVILLKOR_URL) || '/anvandarvillkor#kopvillkor';
+    return new Promise(function (klar) {
+      var ruta = document.createElement('div');
+      ruta.className = 'nx-fraga nx-kassa-villkor';
+      ruta.innerHTML =
+        '<div class="nx-fraga-box" role="dialog" aria-modal="true" aria-labelledby="kassa-t">'
+        + '<h3 id="kassa-t">' + esc(o.titel || 'Till kassan') + '</h3>'
+        + (o.rader && o.rader.length
+          ? '<ul class="nx-kassa-rader">' + o.rader.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>'
+          : '')
+        + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
+        + '<label class="nx-kassa-kryss"><input type="checkbox" data-kassa-kryss> <span>Jag har läst och godkänner '
+        + '<a href="' + esc(url) + '" target="_blank" rel="noopener">köpvillkoren</a>.</span></label>'
+        + '<div class="nx-fraga-knappar">'
+        + '<button type="button" class="btn btn-ghost" data-svar="nej">Avbryt</button>'
+        + '<button type="button" class="btn btn-orange" data-svar="ja" disabled>' + esc(o.knapp || 'Till kassan') + '</button>'
+        + '</div></div>';
+
+      var sistaFokus = document.activeElement;
+      var kryss = ruta.querySelector('[data-kassa-kryss]');
+      var ja = ruta.querySelector('[data-svar="ja"]');
+      function stäng(svar) {
+        ruta.remove();
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', tangent);
+        if (sistaFokus && sistaFokus.focus) sistaFokus.focus();
+        klar(svar);
+      }
+      function tangent(e) {
+        if (e.key === 'Escape') stäng(false);
+        if (e.key === 'Tab') {
+          var kan = Array.prototype.filter.call(ruta.querySelectorAll('a[href], input, button'), function (x) { return !x.disabled; });
+          var f = kan[0], s = kan[kan.length - 1];
+          if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
+          else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
+        }
+      }
+      kryss.addEventListener('change', function () { ja.disabled = !kryss.checked; });
+      ruta.addEventListener('click', function (e) {
+        if (e.target === ruta) return stäng(false);
+        var k = e.target.closest('[data-svar]');
+        if (!k) return;
+        if (k.dataset.svar === 'ja' && !kryss.checked) return;
+        stäng(k.dataset.svar === 'ja');
+      });
+      document.addEventListener('keydown', tangent);
+
+      document.body.appendChild(ruta);
+      document.body.style.overflow = 'hidden';
+      void ruta.offsetWidth;
+      ruta.classList.add('open');
+      kryss.focus();
+    });
+  }
+
   /* ---------- avbokning med skäl (2026-09-24) ----------
      Ett avbokat pass säger varför, och skälet följer med i mejlet
      till den som inte avbokade. Skälet är en FAST KOD, aldrig
@@ -4392,7 +4457,7 @@ window.NXStudie = (function () {
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,
     rapportKort: rapportKort,
     radLank: radLank, betalval: betalval, IKON: IKON, barnTråd: barnTråd, längdText: längdText,
-    bekräfta: bekräfta, avbokaRuta: avbokaRuta, svarRuta: svarRuta, SVAR_MAX: SVAR_MAX,
+    bekräfta: bekräfta, kassansVillkor: kassansVillkor, avbokaRuta: avbokaRuta, svarRuta: svarRuta, SVAR_MAX: SVAR_MAX,
     medan: medan, kolla: kolla
   };
 })();

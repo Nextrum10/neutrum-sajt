@@ -2183,6 +2183,35 @@ a.pass-lank:hover{color:var(--acc)}
 @media (prefers-reduced-motion:reduce){
   .tb-ruta,.tb-stapel i{transition:none}
 }
+/* Planerna per månad (2026-10-21): den här och nästa månad under
+   batteriet, en rad var, "3 av 8 timmar återstår" och "0 av 0". */
+.tb-manader{display:grid;gap:0;margin:14px 0 0;border:1px solid var(--ln);border-radius:12px;overflow:hidden}
+.tb-manad{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding:12px 14px;
+  background:var(--yta)}
+.tb-manad + .tb-manad{border-top:1px solid var(--ln)}
+.tb-manad-namn{font-weight:600;color:var(--bl)}
+.tb-manad-tal{font-size:.9rem;color:var(--bl-2);font-variant-numeric:tabular-nums;text-align:right}
+.tb-manad-tal b{font-size:1.15rem;color:var(--bl);margin-right:2px}
+.tb-manad-not{grid-column:1 / -1;font-size:.8rem;color:var(--bl-3)}
+/* Nästa månads plan: strecket ovanför streckat, för den gäller inte än. */
+.erb-mitt + .erb-mitt.ar-kommande{border-top-style:dashed}
+/* Valet av månad på plankortet: två lika breda knappar, den valda fylld.
+   aria-pressed animeras inte (fällorna i vyerna). */
+.erb-manad{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin:12px 0 0}
+.erb-manad-val{
+  min-height:44px;padding:8px 10px;border-radius:10px;border:1px solid var(--ln);background:var(--yta);
+  color:var(--bl);font:inherit;font-size:.86rem;font-weight:600;line-height:1.2;cursor:pointer;
+}
+.erb-manad-val[aria-pressed="true"]{border-color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,var(--yta))}
+.erb-manad-val:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.erb-manad-not{margin:6px 0 10px;font-size:.8rem;color:var(--bl-2)}
+/* Köpvillkoren före kassan (2026-10-21): vad som köps, och krysset. */
+.nx-kassa-rader{margin:6px 0 12px;padding-left:18px;color:var(--bl);line-height:1.5}
+.nx-kassa-kryss{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:10px 0;font-size:1rem;
+  color:var(--bl);cursor:pointer}
+.nx-kassa-kryss input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange)}
+.nx-kassa-kryss a{color:var(--acc);font-weight:600}
+.nx-kassa-villkor .btn[disabled]{opacity:.5;cursor:not-allowed}
 /* Fas 22.1: timbanken, under klippkorten i Era timmar. */
 .erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
 .erb-bank-text a{color:var(--acc);font-weight:600}

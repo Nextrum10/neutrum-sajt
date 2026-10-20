@@ -466,7 +466,7 @@ inom 60 dagar (`minne/timmar.md`). Gratistimmar som admin sätter in i
 timbanken (samma dag: när familjen tas in eller senare) räknas för sig,
 gäller också i 60 dagar och dras först, sparar inga minuter och betalas
 aldrig ut. Med en plan som gäller kan familjen köpa till 1–20 timmar till
-planens timpris, som går ut med planen (2026-10-14). Ett pass på noll kronor är inte obetalt. Bokföringen och lönen
+planens timpris, som går ut med planen (2026-10-14). Sedan 2026-10-21 (byggt, inte i drift) köps en plan för den här eller nästa kalendermånad och går ut när månaden är slut, timbanken visar båda månaderna, och ett köp kan betalas tillbaka med ett antal timmar, aldrig under det som använts (`minne/timmar.md`). Varje betalning står i liggaren `betalningar`, som databasen skriver ur pengarna på raden och som aldrig raderas; köpvillkoren kryssas i före varje kassa; och ett nekat kort provas igen av sig självt, mejlas en gång och blir en uppgift efter ett dygn, utan att passet avbokas (`minne/betalning.md`). Ett pass på noll kronor är inte obetalt. Bokföringen och lönen
 sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
 Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28). Ingen
 API-koppling förrän handarbetet kostar tid. Adminvyns Betalningar är det som

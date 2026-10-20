@@ -2,6 +2,9 @@ import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
   arErbjudandekod, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen, sammaInnehall,
   svensktDatum,
+  manadensForsta,
+  planensPeriod,
+  planManad,
 } from './erbjudanden.ts';
 
 Deno.test('erbjudandekoden: bara katalogens form släpps in', () => {
@@ -139,4 +142,37 @@ Deno.test('datumet på svenska, och ett datum i fel form står som det är', () 
   assertEquals(svensktDatum('2026-12-31'), '31 december 2026');
   assertEquals(svensktDatum('2026-13-01'), '2026-13-01');
   assertEquals(svensktDatum('igår'), 'igår');
+});
+
+Deno.test('planens månad: bara den här eller nästa (2026-10-21)', () => {
+  assertEquals(planManad('denna'), 'denna');
+  assertEquals(planManad('nasta'), 'nasta');
+  assertEquals(planManad('2026-12'), null);
+  assertEquals(planManad(undefined), null);
+});
+
+Deno.test('planens första dag räknas i Stockholms tid, också över ett årsskifte', () => {
+  // 23.30 UTC den 31 oktober är redan den 1 november i Stockholm.
+  assertEquals(manadensForsta('denna', new Date('2026-10-31T23:30:00Z')), '2026-11-01');
+  assertEquals(manadensForsta('nasta', new Date('2026-10-31T23:30:00Z')), '2026-12-01');
+  assertEquals(manadensForsta('denna', new Date('2026-10-20T10:00:00Z')), '2026-10-01');
+  assertEquals(manadensForsta('nasta', new Date('2026-12-15T10:00:00Z')), '2027-01-01');
+  // Sommartid: 22.30 UTC den 30 juni är 00.30 den 1 juli i Stockholm.
+  assertEquals(manadensForsta('denna', new Date('2027-06-30T22:30:00Z')), '2027-07-01');
+});
+
+Deno.test('planens period är hela kalendermånaden', () => {
+  assertEquals(planensPeriod('2026-11-01'), '1–30 november 2026');
+  assertEquals(planensPeriod('2028-02-01'), '1–29 februari 2028');
+  assertEquals(planensPeriod('2026-12-01'), '1–31 december 2026');
+  assertEquals(planensPeriod('2026-11-15'), '2026-11-15');
+});
+
+Deno.test('kassaraden säger planens månad när planen har en', () => {
+  const e = { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, rabatt_procent: 5, giltig_manader: 1,
+    timpris_ore: 39900, pris_ore: 303200, timmar_pa_kopet: 0, rabatterat_timpris_ore: 37900 };
+  assertEquals(kassarad(e, null, 0, '2026-11-01').description,
+    '8 timmar läxhjälp, 5 % rabatt. Gäller 1–30 november 2026.');
+  // Utan månad som förut.
+  assertEquals(kassarad(e).description, '8 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet.');
 });

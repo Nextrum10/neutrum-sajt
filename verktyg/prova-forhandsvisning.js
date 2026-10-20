@@ -275,6 +275,12 @@ async function provaStudievyn(webb) {
   await page.evaluate(() => { location.hash = '#erbjudanden'; });
   await page.waitForSelector('[data-kop]', { timeout: 5000 }).catch(() => {});
   await page.locator('[data-kop]').first().click().catch(() => {});
+  /* Köpvillkoren först (2026-10-21): Till kassan går inte före krysset. */
+  await page.waitForSelector('.nx-kassa-villkor [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+  prova('studievyn: köpet frågar efter köpvillkoren, och Till kassan väntar på krysset',
+    await page.evaluate(() => { const b = document.querySelector('.nx-kassa-villkor [data-svar="ja"]'); return !!b && b.disabled; }));
+  await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
+  await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
   await vänta(800);
   prova('studievyn: ett köp säger att det inte görs här', dialoger.some(t => /förhandsvisningen/.test(t)), JSON.stringify(dialoger));
 

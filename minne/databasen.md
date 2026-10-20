@@ -1544,3 +1544,35 @@ Provat lokalt 2026-10-21: en databas byggd ur alla 205 migrationer gav 1829 av 1
 var godkända skrivs bara första gången** (inställningens rad skrivs direkt efter och säger att filen körts):
 prövat i en egen databas byggd till och med `intervjumejlet`, där en studiehjälpare godkänd mellan två
 körningar inte fick något undantag.
+
+### Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, inte i drift)
+Tre filer, skrivna och provade lokalt; ingenting är kört mot driften. Vad de gör står i `minne/betalning.md`
+(Betalningsliggaren och köpvillkoren i kassan, Kortet försöker igen) och `minne/timmar.md` (Planerna per
+kalendermånad), och ordningen i driften i `DEPLOY-BETALNING.md` 9.19. Ingen har `drop` eller `delete` (bara `on
+delete` i nycklarna), så var och en kan köras hel i ett do-block och registreras med filens text.
+
+- `betalningsliggaren` (20261021120000): `betalningar` (raderas aldrig: triggrar nekar delete och truncate för
+  alla, och bara det Stripe kan ändra efteråt får ändras), `intern.betalningar_bokfor()` som AFTER-triggrar på
+  `bookings`, `klippkort` och `pass_tillagg` (`<tabell>_bokfors_ny`, `<tabell>_bokfors`), `betalning_utan_rad()`
+  och `betalning_aterbetald()` för tjänstekontot, liggaren fylld bakåt, `kopvillkor_godkannanden` med databasens
+  tid och version (`intern.kopvillkor_tid`), och en lapp i `intern.radering_underlag` (vakten är dess md5).
+  `familj` har `on delete restrict`: en familj med en rad avidentifieras, raderas aldrig helt.
+- `planerna_per_manad` (20261021130000): `klippkort.galler_fran` (villkoret: den 1:a) och
+  `klippkort.aterbetalda_timmar` (villkoret: aldrig fler än köpets), triggern `klippkort_manad` (BEFORE INSERT),
+  lappar i `klippkort_betald`, `intern.timmar_fordela` och `extra_timmar_erbjudande` (md5 på var och en),
+  `klippkort_aterbetalningar` (en rad per Stripe-återbetalning, `re_`-id unikt), `klippkort_saldo` med två
+  kolumner sist (`create or replace view`, `security_invoker` kvar), `klippkort_aterbetalning_lage()`,
+  `klippkort_aterbetalad()` (bara tjänstekontot) och `planens_manader()`.
+- `kortdragningen_forsoker_igen` (20261021140000): `betalning_installning` (en rad, `sen_avbokning_timmar` låst
+  på 0 med ett villkor, som `kortsparr`), `kortreservationer.nekad_sedan` med sin BEFORE-trigger,
+  `intern.kortreservation_forsok_igen()` först i `kortreservation_vack()`, en lapp i
+  `intern.kortreservation_notis()` (ett mejl per serie), `intern.kortreservation_vack_nu()` med triggrarna
+  `kortreservationer_vack` och `bookings_vacker_kortet` (genom `intern.natanrop`), `intern.sen_avbokning()` och
+  `kortreservation_forsok_nu()` (superadmin). Vakterna: md5 på `kortreservation_vack`, `kortreservation_notis` och
+  `kortreservation_att_gora`.
+
+Varje vakt släpper igenom en kropp som redan bär filens markör (`betalningar`, `planerna_per_manad`,
+`kortdragningen_forsoker_igen`), så filerna går att köra två gånger. Provat lokalt 2026-10-21: en databas byggd ur
+alla 208 migrationer gav 1866 av 1866 i `rls-test.sql` (avsnitt 42–44 är nya, och 22.2 räknar sedan dess
+datumen i Stockholms tid, för en plan gäller nu sin kalendermånad), och alla tre filerna kördes en gång till utan
+fel och med samma tal.

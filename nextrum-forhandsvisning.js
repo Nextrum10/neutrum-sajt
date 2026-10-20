@@ -819,6 +819,13 @@ window.NXForhandsvisning = (function () {
     /* Familjens rabatt per timme (familjerabatter, 2026-10-15): den påhittade
        familjen har ingen, och priset vid knappen är katalogens. */
     min_familjerabatt: function () { return 0; },
+    /* Planerna per månad (2026-10-21): den 1:a i den här och nästa månad,
+       så att månadsvalet och timbankens månader syns som i driften. */
+    planens_manader: function () {
+      var d = new Date(NU);
+      var denna = new Date(d.getFullYear(), d.getMonth(), 1), nasta = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      return { denna: iso(denna), nasta: iso(nasta), idag: iso(d) };
+    },
     mina_barnkonton: function () {
       return [{ barn_id: ALVA, anvandarnamn: 'alva.a', barn_aktiv: true, visa_rapporter: true,
                 vardnadshavare_godkand_at: tid(-20, '20:00'), senast_inloggad: tid(-1, '18:40') }];

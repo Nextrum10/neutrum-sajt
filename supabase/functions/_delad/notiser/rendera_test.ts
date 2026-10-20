@@ -153,6 +153,9 @@ Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, stu
     assertEquals(hjalpare.text.includes('betal'), false, `${typ} till studiehjälparen nämner betalning`);
   }
   assertEquals(vyAdress('parent', 'betalning'), `${SAJT}/foralder#betalning`);
+  // kortdragningen_forsoker_igen (2026-10-21): ett nekat kort före passet leder dit kortet byts.
+  assertEquals(vyAdress('parent', 'kortet'), `${SAJT}/foralder#profil/kort`);
+  assertEquals(vyAdress('tutor', 'kortet'), `${SAJT}/larare#lektioner/pass`);
   assertEquals(vyAdress('tutor', 'betalning'), `${SAJT}/larare#lektioner/pass`);
 });
 
@@ -229,6 +232,29 @@ Deno.test('påminnelsen om gratis timmar lovar inga pengar tillbaka (gratistimma
   // "gratis" som text är inget gratis: då är det köptimmarnas mejl.
   const text = rendera('timmar_gar_ut', 'parent', { data: { datum: '2026-10-23', kvar: 2, gratis: 'true' } });
   assertStringIncludes(text.text, 'Ni har 2 timmar kvar');
+});
+
+Deno.test('ett nekat kort lovar ett nytt försök bara när vi gör ett (kortdragningen_forsoker_igen)', () => {
+  const fore = { ...SMUTSIG, status: 'confirmed' };
+  const igen = rendera('kort_nekat', 'parent', { data: { ...fore, kortet: 'igen' } });
+  assertStringIncludes(igen.text, 'Kortet nekades när vi skulle reservera beloppet');
+  assertStringIncludes(igen.text, 'Vi försöker igen om några timmar.');
+  assertStringIncludes(igen.text, 'Byter ni kort i Nextrum försöker vi med det nya direkt.');
+  assertStringIncludes(igen.text, `${SAJT}/foralder#profil/kort`);
+  // Ett kort som gått ut, eller en bank som vill att familjen bekräftar: inget löfte.
+  for (const kortet of ['nekat', 'bekrafta', undefined]) {
+    const m = rendera('kort_nekat', 'parent', { data: { ...fore, kortet } });
+    assertEquals(m.text.includes('Vi försöker igen'), false, `kortet ${kortet} lovar ett nytt försök`);
+  }
+  const bekrafta = rendera('kort_nekat', 'parent', { data: { ...fore, kortet: 'bekrafta' } });
+  assertStringIncludes(bekrafta.text, 'Er bank vill att ni bekräftar betalningen själva');
+  // Efter passet: till betalningen, och samma regel.
+  const efter = rendera('kort_nekat', 'parent', { data: { ...SMUTSIG, status: 'completed', kortet: 'igen' } });
+  assertStringIncludes(efter.text, 'när vi skulle dra betalningen för passet');
+  assertStringIncludes(efter.text, 'Vi försöker igen om några timmar.');
+  assertStringIncludes(efter.text, `${SAJT}/foralder#betalning`);
+  // Passet står kvar: mejlet säger aldrig att det avbokas.
+  assertEquals(/avboka/i.test(igen.text + efter.text), false);
 });
 
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {

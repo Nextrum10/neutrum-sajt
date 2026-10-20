@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=f21d3928">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=81de04a0">
 </head>
 <body>
 
@@ -244,7 +244,8 @@
       <li>Messages between family and tutor in the platform’s chat</li>
       <li>If the child has a login of their own: what the child and the tutor write to each other
         in the child’s view, and when it was read</li>
-      <li>Payments and pay statements: which session was paid, amounts and when, when a card payment for a session was started, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when, until which day and whether we took them back). We never have the card details</li>
+      <li>Payments and pay statements: which session was paid, amounts and when, when a card payment for a session was started, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when, until which day and whether we took them back). Every payment is also a row in our payment ledger (what it was for, the amount, the discount code and Stripe's ids), a plan with the month it applies to, and if we refund a purchase: how many hours were taken back, the amount and who at Nextrum did it. We never have the card details</li>
+      <li>When you tick the purchase terms before the checkout opens: what it was for (a purchase, a session or the card), which version of the terms it was and when</li>
       <li>If we have given you a discount, for example through a partner: which of our discounts it
         is, when it was set or removed and by whom at our end, and for each session and purchase how
         much it took off. You see the discount as a lower price; only we see which code it has</li>
@@ -324,6 +325,9 @@
         exist, and when, in a form we cannot read back to the account.</li>
       <li><b>Accounting records</b>: legal obligation (Article 6(1)(c)), the Swedish Accounting
         Act.</li>
+      <li><b>That you ticked the purchase terms</b>: legal obligation and legitimate interest (Article 6(1)(c) and (f)):
+        we must be able to show that you received the terms and the information about the right of withdrawal before
+        the purchase.</li>
       <li><b>Job applications</b>: legitimate interest (Article 6(1)(f)), being able to hire the
         right tutors. If you are hired, the contract applies.</li>
       <li><b>A parent or guardian’s email and reply</b>: legitimate interest (Article 6(1)(f)).
@@ -503,7 +507,11 @@
       <li><b>Accounting records</b>: payments and payout records, and the bonus for
         recommendations, seven years. That is required by the Swedish Accounting Act and not
         something we can shorten, not even on request. A bonus remains even when the application it
-        came from has been deleted, without the code and the application.</li>
+        came from has been deleted, without the code and the application.
+        We never delete the rows in the payment ledger: if you have paid for something, the account is not
+        deleted entirely but remains without a name, and the rows point to it.</li>
+      <li><b>That you ticked the purchase terms</b>: as long as the account exists. If you have paid for something, it
+        remains on the account without a name, with the payments.</li>
       <li><b>The change log</b>: as long as the business exists. It carries states and times,
         never names or text, and it is our receipt of who did what.</li>
       <li><b>Agreements and certificates</b>: as long as they apply, and after that as long as
@@ -788,7 +796,7 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<script src="../nextrum-config.js?v=46a25f82"></script>
+<script src="../nextrum-config.js?v=6949b9e0"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
 <script src="../nextrum-app.js?v=a262aca7"></script>

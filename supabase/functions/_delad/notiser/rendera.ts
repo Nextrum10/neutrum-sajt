@@ -135,9 +135,12 @@ export function vyAdress(roll: Roll, mal: Mal | 'val'): string {
   // i stället för en sektion som inte finns.
   // Betalning likaså: studiehjälparen betalar ingenting, och får
   // passlistan om en sådan knapp någonsin hamnar hos hen.
-  const hash = mal === 'pass' || ((mal === 'boka' || mal === 'betalning') && roll === 'tutor') ? '#lektioner/pass'
+  const hash = mal === 'pass' || ((mal === 'boka' || mal === 'betalning' || mal === 'kortet') && roll === 'tutor')
+    ? '#lektioner/pass'
     : mal === 'boka' ? '#boka'
     : mal === 'betalning' ? '#betalning'
+    // kortdragningen_forsoker_igen (2026-10-21): dit kortet byts.
+    : mal === 'kortet' ? '#profil/kort'
     : mal === 'meddelanden' ? '#meddelanden' : '#profil/notiser';
   return `${SAJT}${vy}${hash}`;
 }

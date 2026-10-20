@@ -51,6 +51,7 @@
   const ritaAdminhantering = (...a) => NXAdmin.rita.ritaAdminhantering(...a);
   const ritaAnsokningar = (...a) => NXAdmin.rita.ritaAnsokningar(...a);
   const ritaProvet = (...a) => NXAdmin.rita.ritaProvet(...a);
+  const ritaLiggaren = (...a) => NXAdmin.rita.ritaLiggaren(...a);
   const ritaBibliotek = (...a) => NXAdmin.rita.ritaBibliotek(...a);
   const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
   const ritaBokningar = (...a) => NXAdmin.rita.ritaBokningar(...a);
@@ -1057,6 +1058,9 @@
       /* Utbildningsprovet i vyn (2026-10-21) hämtar sitt eget, och väntas
          inte in: fliken står längst bak i Ansökningar. */
       ritaProvet();
+      /* Liggaren och Kortet under Betalningar (2026-10-21) hämtar sitt eget
+         och väntas inte in. */
+      ritaLiggaren();
       ritaKontakt();
       ritaChattar();
       ritaFamiljer();

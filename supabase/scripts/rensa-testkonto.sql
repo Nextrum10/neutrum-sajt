@@ -37,7 +37,11 @@
 -- barnkonton, villkorsgodkännandena, notisvalen, det sparade kortet och
 -- kunden hos Stripe (tas bort under Profil → Kortet, så att inget blir
 -- kvar hos Stripe), betygsgarantin och auditloggen, som får en rad per
--- borttagen rad av sina egna triggrar.
+-- borttagen rad av sina egna triggrar. Inte heller betalningsliggaren
+-- (betalningar, 2026-10-21) och godkännandena i kassan
+-- (kopvillkor_godkannanden): liggaren raderas aldrig, så testbetalningarna
+-- står kvar där, märkta som test (skarp = false), och deras koppling till
+-- passet eller köpet blir tom när raden här tas bort (on delete set null).
 --
 -- HINDER (inget raderas):
 --   - inget konto, eller fler än ett, med namnet

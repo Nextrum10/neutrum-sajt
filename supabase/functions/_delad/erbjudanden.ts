@@ -71,6 +71,7 @@ export function kassarad(
   e: ErbjudandePris,
   rabattkod: string | null = null,
   familjerabattOre = 0,
+  gallerFran: string | null = null,
 ): { name: string; description: string } {
   const man = e.giltig_manader === 1 ? '1 månad' : `${e.giltig_manader} månader`;
   const timmar = Number(e.timmar);
@@ -82,7 +83,9 @@ export function kassarad(
   // Koden står på raden, så att kvittot säger varför beloppet är lägre.
   const kod = rabattkod ? ` Med rabattkoden ${rabattkod}.` : '';
   const egen = Number(familjerabattOre) > 0 ? ` Med er rabatt på ${kr(familjerabattOre)} kr per timme.` : '';
-  return { name: e.namn, description: `${vad}. Gäller i ${man} från köpet.${egen}${kod}` };
+  // Planerna per månad (2026-10-21): planen gäller sin kalendermånad.
+  const nar = gallerFran ? `Gäller ${planensPeriod(gallerFran)}.` : `Gäller i ${man} från köpet.`;
+  return { name: e.namn, description: `${vad}. ${nar}${egen}${kod}` };
 }
 
 /**
@@ -141,6 +144,46 @@ export function extraTimmar(v: unknown): number | null {
 
 const MANADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september',
   'oktober', 'november', 'december'];
+
+/* ============================================================
+   PLANERNA PER MÅNAD (2026-10-21, planerna_per_manad)
+
+   Leo: en plan köps för "Den här månaden" eller "Nästa månad", och
+   timmarna går ut när månaden är slut. Kassan räknar planens första dag
+   här, i Stockholms tid, och databasen prövar den igen
+   (intern.klippkort_manad): bara den 1:a i den här eller nästa månad.
+   ============================================================ */
+
+/** Planens månad i anropet: den här eller nästa. Allt annat är null. */
+export function planManad(v: unknown): 'denna' | 'nasta' | null {
+  return v === 'denna' || v === 'nasta' ? v : null;
+}
+
+/** Den 1:a i den här eller nästa månad i Stockholms tid, som "2026-11-01". */
+export function manadensForsta(val: 'denna' | 'nasta', nu: Date = new Date()): string {
+  const delar = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit' })
+    .formatToParts(nu);
+  let ar = Number(delar.find((d) => d.type === 'year')?.value);
+  let man = Number(delar.find((d) => d.type === 'month')?.value);
+  if (val === 'nasta') {
+    man += 1;
+    if (man > 12) {
+      man = 1;
+      ar += 1;
+    }
+  }
+  return `${ar}-${String(man).padStart(2, '0')}-01`;
+}
+
+/** "2026-11-01" som "1–30 november 2026", planens hela månad. En annan form står som den är. */
+export function planensPeriod(forsta: string): string {
+  const m = /^(\d{4})-(\d{2})-01$/.exec(String(forsta ?? ''));
+  if (!m || Number(m[2]) < 1 || Number(m[2]) > 12) return String(forsta ?? '');
+  const ar = Number(m[1]);
+  const man = Number(m[2]);
+  const sista = new Date(Date.UTC(ar, man, 0)).getUTCDate();
+  return `1–${sista} ${MANADER[man - 1]} ${ar}`;
+}
 
 /** "2026-11-03" som "3 november 2026". Ett datum i fel form står som det är. */
 export function svensktDatum(iso: string): string {

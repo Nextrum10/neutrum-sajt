@@ -1713,3 +1713,75 @@ familjerna ska få veta att fakturan inte finns (ingen har valt den i driften,
 så ingen förlorar ett betalsätt de använt). Juristen har inte läst de nya
 villkoren eller rad 1 och 8 i `DATASKYDD.md`. `kund_skatteuppgifter` (RUT,
 personnummer) har inget syfte kvar: om tabellen ska bort är Leos fråga.
+
+### 9.19 Liggaren, planerna per månad och kortet som försöker igen (2026-10-21, inte i drift)
+
+Leo (2026-10-21): Stripe bara genom webhooken, en liggare med en rad per
+betalning, planerna per kalendermånad ("Den här månaden" eller "Nästa månad"),
+en timbank som visar båda månaderna, en återbetalning som drar tillbaka timmar
+men aldrig under det som använts, köpvillkoren i kassan, och kortet som försöker
+igen och larmar efter ett dygn. Hur det fungerar står i `minne/betalning.md`
+(Betalningsliggaren och köpvillkoren i kassan, Kortet försöker igen) och
+`minne/timmar.md` (Planerna per kalendermånad). Ingenting är kört mot driften.
+
+Tre migrationer, i den här ordningen: `20261021120000_betalningsliggaren`,
+`20261021130000_planerna_per_manad` och `20261021140000_kortdragningen_forsoker_igen`.
+Ingen har `drop` eller `delete` (bara `on delete` i nycklarna; liggaren nekar
+delete och truncate med triggrar), och alla prövar funktionerna de lappar mot
+sin md5 och stannar innan något ändrats om driften inte är som filen lästes.
+
+I den här ordningen, från main efter merge. Fråga först de andra sessionerna som
+arbetar i repot (`minne/databasen.md`):
+
+1. **Merga.** Vyerna tål att migrationerna saknas: utan `planens_manader()` står
+   inget månadsval och planen köps som förut, och utan `betalningar` säger
+   Liggaren att migrationen inte är körd. Rutan med köpvillkoren står före varje
+   kassa från första stund; länken går till `/anvandarvillkor#kopvillkor`, där
+   platshållaren står tills Leo skrivit texten (steg 8).
+2. **Edge-funktionerna**: `stripe-checkout` (SESSIONSFORM 10: nekar ett anrop
+   utan `villkor: true` utom Ta bort kortet, sparar krysset, tar planens månad),
+   `stripe-aterbetalning` (köp av timmar, helt eller ett antal timmar),
+   `stripe-webhook` (en betalning utan rad står i liggaren, och en återbetalning
+   av ett köp stäms av mot timmarna) och `notis-ko` (mejlet om ett nekat kort
+   länkar till kortet under Profil). De tål att migrationerna saknas: krysset
+   sparas inte (en rad i loggen), och webhooken hoppar över en funktion som inte
+   finns (PGRST202). Merga ändå först: den nya `stripe-checkout` nekar en gammal
+   sida som inte skickar krysset. Hämta tillbaka varje funktion och jämför byte
+   för byte, som förut.
+3. **`betalningsliggaren`**, hämtad från merge-commiten och prövad mot sin md5.
+   Kör den hel i ett do-block (eller i SQL Editor som ett anrop) och registrera
+   filens text. Vakten stannar om `intern.radering_underlag` ändrats. Den fyller
+   liggaren med det som redan är betalt, testbetalningarna med `skarp = false`.
+4. **`planerna_per_manad`**, på samma sätt. Vakterna: `intern.timmar_fordela`,
+   `klippkort_betald` och `extra_timmar_erbjudande`. `klippkort_saldo` byts med
+   `create or replace view` och två nya kolumner sist: läs vyns kolumner i
+   driften först (CLAUDE.md avsnitt 5). Planer köpta före filen behåller sina
+   datum (`galler_fran` null).
+5. **`kortdragningen_forsoker_igen`**, på samma sätt. Vakterna:
+   `intern.kortreservation_vack`, `intern.kortreservation_notis` och
+   `kortreservation_att_gora`. Strömbrytaren `kortreservation` rörs inte, och
+   `betalning_installning.sen_avbokning_timmar` är låst på 0 (som `kortsparr`).
+6. **Hela `rls-test.sql`** mot driften, tillbakarullat (avsnitt 42–44), och
+   advisorn: inget nytt för `anon`. `betalningar`, `kopvillkor_godkannanden`,
+   `klippkort_aterbetalningar` och `betalning_installning` har RLS, och bara
+   admin läser.
+7. **Stripe**, i testläge först. Webhookens händelser är desamma som i 9.14,
+   inga nya. Apple Pay och Google Pay är kortbetalningar och kräver ingen kod:
+   slå på dem under Settings → Payment methods, och lägg till `nextrum.se` och
+   `www.nextrum.se` under Settings → Payment method domains, för den inbäddade
+   kassan visar Apple Pay bara på en verifierad domän. Prova sedan: köp en plan
+   för nästa månad (timbanken visar "0 av 0" i den här månaden och planen i
+   nästa), betala tillbaka två timmar under Betalningar → Liggaren (raden blir
+   Delvis tillbaka och timmarna går tillbaka), och välj kort på ett pass med
+   testkortet `4000 0000 0000 0341`, som sparas men nekas när det dras: mejlet
+   kommer en gång, Kortet visar försöken, och efter ett dygn står en uppgift
+   under Att göra. Passet står kvar.
+8. **Köpvillkoren.** Leo skriver texten i `anvandarvillkor.html#kopvillkor` och
+   `en/anvandarvillkor.html#kopvillkor`, i stället för platshållaren (köpet,
+   priset, ångerrätten och hur den används, återbetalningen), och flyttar
+   villkorens version med sidans datum och `intern.villkor_version()` i en ny
+   migration (`kolla-villkor.py`): alla får frågan igen.
+
+Kvar efter det: juristen (rad 8 och 32 i `DATASKYDD.md`, köpvillkoren och
+planernas nya ord om kalendermånaden i villkoren), att säga till familjerna att
+planerna följer kalendermånaden, och provköpen i testläge.

@@ -21,9 +21,9 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=f21d3928">
-<link rel="stylesheet" href="nextrum-vy.css?v=571fbd0a">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=e29b736f">
+<link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
+<link rel="stylesheet" href="nextrum-vy.css?v=61e1c2ac">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=09fea443">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -1163,6 +1163,10 @@
               <span class="vy-flik-mark" id="flik-attgora-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="betalningar"
                     id="flik-betalningar" aria-controls="panel-betalningar">Alla betalningar</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="liggaren"
+                    id="flik-liggaren" aria-controls="panel-liggaren">Liggaren</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="kortdragning"
+                    id="flik-kortdragning" aria-controls="panel-kortdragning">Kortet</button>
             <button class="vy-flik" type="button" role="tab" data-flik="korning"
                     id="flik-korning" aria-controls="panel-korning">Månadskörningen</button>
             <button class="vy-flik" type="button" role="tab" data-flik="bokslut"
@@ -1195,6 +1199,27 @@
             </div>
             <div class="vy-kort"><div class="vy-lista" id="bet-lista"><div class="loading">Hämtar</div></div></div>
             <p class="vy-finstilt" id="bet-fot"></p>
+          </div>
+
+          <!-- Liggaren och Kortet (2026-10-21, nextrum-admin-liggaren.js):
+               varje kortbetalning en rad, med återbetalningen, och passen
+               som betalas med det sparade kortet, de nekade överst. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="liggaren"
+               id="panel-liggaren" aria-labelledby="flik-liggaren" hidden>
+            <div class="bet-sam eko-sam" id="lig-sam"></div>
+            <div class="eko-verktyg">
+              <div class="chips eko-chips" id="lig-chips" role="group" aria-label="Visa betalningar i liggaren"></div>
+              <input class="inp eko-sok" id="lig-sok" type="search" placeholder="Sök familj, köp, kod eller Stripe-id" aria-label="Sök i liggaren" autocomplete="off">
+            </div>
+            <div class="vy-kort"><div class="vy-lista" id="lig-lista"><div class="loading">Hämtar</div></div></div>
+            <p class="vy-finstilt" id="lig-fot"></p>
+          </div>
+
+          <div class="vy-flik-panel" role="tabpanel" data-flik="kortdragning"
+               id="panel-kortdragning" aria-labelledby="flik-kortdragning" hidden>
+            <div class="bet-sam eko-sam" id="kd-sam"></div>
+            <div class="vy-kort"><div class="vy-lista" id="kd-lista"><div class="loading">Hämtar</div></div></div>
+            <p class="vy-finstilt" id="kd-fot"></p>
           </div>
 
           <!-- Månadskörningen. Fliken hette Fakturor och hade fakturorna
@@ -1249,7 +1274,7 @@
             <div class="vy-kort"><div class="vy-lista" id="timmar-kop"><div class="loading">Hämtar</div></div></div>
             <div class="vy-grupp"><h3>Sparade minuter i timbanken</h3></div>
             <div class="vy-kort"><div class="vy-lista" id="timmar-bank"><div class="loading">Hämtar</div></div></div>
-            <p class="vy-finstilt">Timmar och minuter familjerna betalat för men inte använt är deras tills de använts. Slutar en familj betalas det tillbaka som villkoren räknar: de använda timmarna till ordinarie pris, inom ångerfristen till det avtalade. Återbetalningen görs i Stripes dashboard, och webhooken stänger köpet när den kommer. Markera utbetald flyttar inga pengar.</p>
+            <p class="vy-finstilt">Timmar och minuter familjerna betalat för men inte använt är deras tills de använts. Slutar en familj betalas det tillbaka som villkoren räknar: de använda timmarna till ordinarie pris, inom ångerfristen till det avtalade. Ett köp betalas tillbaka under Liggaren, helt eller med ett antal timmar, och timmarna dras då tillbaka; en återbetalning i Stripes dashboard stänger köpet. Markera utbetald flyttar inga pengar.</p>
           </div>
 
           <!-- Strömbrytarna och Stripe. Fas 14.3: stripe-lage frågar Stripe
@@ -2540,11 +2565,11 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=46a25f82"></script>
+<script src="nextrum-config.js?v=6949b9e0"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=a262aca7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=d8530c80"></script>
+<script src="nextrum-studie.js?v=e4708805"></script>
 <script src="nextrum-arbetsyta.js?v=91456198"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=60e55cea"></script>
@@ -2559,13 +2584,14 @@
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=d2b8b595"></script>
-<script src="nextrum-admin-ekonomi.js?v=26746710"></script>
+<script src="nextrum-admin-ekonomi.js?v=8e7e6225"></script>
+<script src="nextrum-admin-liggaren.js?v=8eeee83a"></script>
 <script src="nextrum-admin-manaden.js?v=51040ed6"></script>
 <script src="nextrum-admin-loner.js?v=2c10dffa"></script>
 <script src="nextrum-admin-koder.js?v=b8bc88c4"></script>
 <script src="nextrum-admin-tjanster.js?v=84bd81c9"></script>
 <script src="nextrum-admin-system.js?v=9aeaacb2"></script>
-<script src="nextrum-admin-behorighet.js?v=6a033e34"></script>
+<script src="nextrum-admin-behorighet.js?v=576427c6"></script>
 <script src="nextrum-admin-automationer.js?v=f8750cf7"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
@@ -2574,7 +2600,7 @@
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=0b10c92f"></script>
-<script src="nextrum-modulvakt.js?v=078889f3"></script>
-<script src="nextrum-admin.js?v=4bf088eb"></script>
+<script src="nextrum-modulvakt.js?v=f69ddaee"></script>
+<script src="nextrum-admin.js?v=8fe12e4b"></script>
 </body>
 </html>

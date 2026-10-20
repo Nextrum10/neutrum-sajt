@@ -67,7 +67,7 @@ import { arStripeId, descriptor, StripeError, v1, VALUTA } from '../_delad/strip
 import { familjebelopp, passpris, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
 import {
   arErbjudandekod, type ErbjudandePris, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen,
-  sammaInnehall,
+  manadensForsta, planManad, sammaInnehall,
 } from '../_delad/erbjudanden.ts';
 
 const CORS = cors();
@@ -87,7 +87,24 @@ const CORS = cors();
       och raden och metadata säger koden.
    9: familjens rabatt (familjerabatter, 2026-10-15): raden säger den, på
       ett pass och på ett köp, och beloppet är databasens efter den. */
-const SESSIONSFORM = 9;
+const SESSIONSFORM = 10;
+
+/* KÖPVILLKOREN I KASSAN (2026-10-21, betalningsliggaren). Vyn visar en
+   kryssruta för köpvillkoren innan kassan öppnas, och utan krysset
+   öppnas ingen kassa: anropet bär villkor: true, och allt utom att ta
+   bort kortet kräver det. Att krysset fanns sparas här, med databasens
+   tid och användarvillkorens version (kopvillkor_godkannanden). Saknas
+   tabellen, före migrationen, öppnas kassan ändå: krysset stod i vyn. */
+async function sparaKryss(
+  db: ReturnType<typeof serviceklient>,
+  anvandare: string,
+  avser: 'kop' | 'pass' | 'tillagg' | 'kort',
+  referens: string | null,
+): Promise<void> {
+  const { error } = await db.from('kopvillkor_godkannanden')
+    .insert({ anvandare, avser, referens, villkor_version: '-' });
+  if (error) console.warn('stripe-checkout: krysset sparades inte', JSON.stringify({ avser, kod: error.code }));
+}
 
 /* DEN INBÄDDADE KASSAN (Fas 14.5)
 
@@ -181,7 +198,7 @@ function egenAdress(u: unknown, reserv: string): string {
    ============================================================ */
 async function köpErbjudande(
   vem: Inloggad,
-  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: string; timmar?: unknown },
+  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: string; timmar?: unknown; manad?: unknown },
 ): Promise<Response> {
   const kod = String(kropp.erbjudande ?? '').trim();
   if (!arErbjudandekod(kod)) return json({ error: 'Vilket erbjudande?' }, 400, CORS);
@@ -214,6 +231,13 @@ async function köpErbjudande(
     .eq('kod', kod)
     .maybeSingle();
   if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
+
+  /* PLANENS MÅNAD (2026-10-21, planerna_per_manad). Vyn skickar den här
+     eller nästa månad bara när databasen har planens_manader(), alltså
+     efter migrationen, och bara för en plan. Utan månad sätter databasen
+     den här månaden på en plan (efter migrationen) eller inget (före). */
+  const manad = planManad(kropp.manad);
+  const gallerFran = e.sort === 'plan' && manad ? manadensForsta(manad) : null;
 
   /* Vad familjen ska betala: katalogens pris minus familjens rabatt, eller
      priset med koden som databasen säger att den gäller (efter rabatten). */
@@ -249,12 +273,21 @@ async function köpErbjudande(
     let belopp: number;
     // Familjens rabatt per timme på köpet, som databasen satte den.
     let rabattPerTimme: number;
+    // Planens månad på raden, som databasen satte den (null före migrationen).
+    let kopManad: string | null;
+    /* Ett väntande köp för en annan månad är ett annat köp. Utan månad i
+       anropet sätter databasen den här månaden på en plan, så det är den
+       som jämförs, när raden har kolumnen. */
+    const vantadManad = gallerFran
+      ?? (e.sort === 'plan' && forut && 'galler_fran' in forut ? manadensForsta('denna') : null);
     if (kanAteranvandas(forut, attBetala) && sammaInnehall(forut, e as ErbjudandePris)
         && (forut?.rabattkod ?? null) === rabattkod
-        && (Number(forut?.familjerabatt_ore) || 0) === egen.perTimme) {
+        && (Number(forut?.familjerabatt_ore) || 0) === egen.perTimme
+        && ((forut?.galler_fran as string | null | undefined) ?? null) === vantadManad) {
       kopId = String(forut!.id);
       belopp = Number(forut!.begart_ore);
       rabattPerTimme = Number(forut!.familjerabatt_ore) || 0;
+      kopManad = (forut!.galler_fran as string | null | undefined) ?? null;
     } else {
       const { data: ny, error: nyfel } = await db.from('klippkort').insert({
         parent_id: vem.anvandare,
@@ -272,12 +305,18 @@ async function köpErbjudande(
         // Med en kod eller familjens rabatt räknar triggern om beloppet.
         begart_ore: attBetala,
         ...(rabattkod ? { rabattkod } : {}),
+        ...(gallerFran ? { galler_fran: gallerFran } : {}),
         // Hela raden tillbaka: familjerabatt_ore finns först efter migrationen.
       }).select('*').single();
-      if (nyfel || !ny) return json({ error: 'Köpet gick inte att spara. Försök igen.' }, 500, CORS);
+      if (nyfel || !ny) {
+        // Databasen nekar en månad som hunnit bli fel (midnatt den sista): säg det.
+        if (nyfel?.code === '22023') return json({ error: nyfel.message }, 409, CORS);
+        return json({ error: 'Köpet gick inte att spara. Försök igen.' }, 500, CORS);
+      }
       kopId = String(ny.id);
       belopp = Number(ny.begart_ore);
       rabattPerTimme = Number(ny.familjerabatt_ore) || 0;
+      kopManad = (ny.galler_fran as string | null | undefined) ?? null;
       /* Databasen tog bort koden (den tog slut emellan) och satte
          katalogens pris. Då öppnas ingen kassa: familjen trodde att
          koden gällde. Köpet står kvar som väntande och används inte. */
@@ -295,7 +334,8 @@ async function köpErbjudande(
       : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
           cancel_url: `${bas}/foralder#erbjudanden` };
 
-    const rad = kassarad(e as ErbjudandePris, rabattkod, rabattPerTimme);
+    const rad = kassarad(e as ErbjudandePris, rabattkod, rabattPerTimme, kopManad);
+    await sparaKryss(db, vem.anvandare, 'kop', kopId);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -433,6 +473,7 @@ async function köpTimmarTillPlanen(
       : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
           cancel_url: `${bas}/foralder#erbjudanden` };
 
+    await sparaKryss(db, vem.anvandare, 'kop', kopId);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -579,6 +620,7 @@ async function betalaTillagg(
           cancel_url: `${bas}/foralder?betalning=avbruten` };
 
     const metadata = { tillagg_booking_id: pass.id, minuter: String(minuter) };
+    await sparaKryss(db, vem.anvandare, 'tillagg', pass.id);
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -748,6 +790,7 @@ async function kortet(
        är klar eller har gått ut går inte att öppna: då en ny, med en egen
        nyckel, som för passet. */
     const nyckel = `nextrum-kortkassa-${vem.anvandare}-${Math.floor(Date.now() / 60_000)}-${inbaddad ? 'inbaddad' : 'sida'}`;
+    await sparaKryss(db, vem.anvandare, 'kort', null);
     let session = await v1('POST', '/v1/checkout/sessions', parametrar, nyckel);
     if (String((session as { status?: string }).status ?? 'open') !== 'open') {
       session = await v1('POST', '/v1/checkout/sessions', parametrar, `${nyckel}-n${Date.now()}`);
@@ -777,12 +820,16 @@ Deno.serve(async (req) => {
 
   let kropp: {
     pass?: string; retur?: string; ui?: string; erbjudande?: string; timmar?: unknown; tillagg?: boolean;
-    kort?: string; familj?: string;
+    kort?: string; familj?: string; villkor?: unknown; manad?: unknown;
   } = {};
   try {
     kropp = await req.json();
   } catch {
     return json({ error: 'Kroppen är inte JSON.' }, 400, CORS);
+  }
+  // Köpvillkoren (2026-10-21): ingen kassa utan krysset. Att ta bort kortet är ingen kassa.
+  if (kropp.kort !== 'ta_bort' && kropp.villkor !== true) {
+    return json({ error: 'Kryssa i att ni godkänner köpvillkoren, så öppnas kassan.' }, 400, CORS);
   }
   // Ett erbjudande (Fas 16.1) är ett eget köp, inte ett pass.
   if (kropp.erbjudande !== undefined) return await köpErbjudande(vem, kropp);
@@ -1009,6 +1056,7 @@ Deno.serve(async (req) => {
     // en inbäddad och en på Stripes sida är olika parametrar, och vyn
     // kan be om den ena efter den andra för samma pass.
     const nyckel = `nextrum-pass-${pass.id}-${netto}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`;
+    await sparaKryss(db, vem.anvandare, 'pass', pass.id);
     let session = await v1('POST', '/v1/checkout/sessions', parametrar, nyckel);
 
     /* EN ÅTERANVÄND NYCKEL KAN GE EN STÄNGD KASSA (2026-09-29). Stripe

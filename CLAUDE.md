@@ -310,6 +310,23 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   före strömbrytaren (Leos beslut, PR #281); sedan kedjan i `DEPLOY-BETALNING.md` 9.14 kördes samma eftermiddag
   säger sidorna, villkoren, mejlen, agenterna och vyn samma sak, pass för pass (PR #283, Leo: "sajt ska säga samma
   sak som vyn, lektion per lektion"), och databasens version blev 2026-10-15.
+- **Betalningsliggaren** (2026-10-21, `betalningsliggaren`, inte i drift; Leo: "raderas ALDRIG och ingår inte i
+  något städjobb"): en rad per betalning i `betalningar`, skriven av databasen själv (AFTER-triggrar,
+  `intern.betalningar_bokfor()`) när tjänstekontot sätter pengarna på passet, köpet eller tillägget, en rad per
+  PaymentIntent, aldrig av en vy och aldrig för att någon kommer tillbaka från Stripe. Triggrar nekar delete och
+  truncate för alla, bara det Stripe ändrar efteråt (återbetalt, läget, avgift) får ändras, ingen inloggad skriver,
+  och en familj med en rad avidentifieras i stället för att raderas (`on delete restrict`). En betalning som inte
+  kunde skrivas ner (två kassor) står där också (`betalning_utan_rad`). Liggaren och Kortet står under Betalningar.
+- **Köpvillkoren i kassan** (2026-10-21, inte i drift): varje kassa föregås av en ruta med vad som köps, priset och
+  kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken `CFG.KOPVILLKOR_URL`, där texten är Leos och i dag
+  en platshållare), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
+  (`kopvillkor_godkannanden`, databasens tid och version). Anropet bär vad som köps, aldrig ett belopp.
+- **Kortet försöker igen** (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift): ett nekat kort provas igen
+  efter sex timmar, högst tre försök, bara med en kod där ett nytt försök kan gå (`intern.kortet_provas_igen`, som
+  också avgör om mejlet lovar ett försök: `kortet: 'igen'`), mejlas en gång per serie, och efter ett dygn blir det en
+  uppgift till oss; admin försöker igen under Betalningar → Kortet. Passet avbokas aldrig för att kortet nekas.
+  Inställningarna står i `betalning_installning`, och `sen_avbokning_timmar` är låst på 0 som `kortsparr`: villkoren
+  har ingen avbokningsavgift. Databasen väcker `stripe-reservation` direkt när ett pass har något att göra nu.
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -330,6 +347,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | rapport | `lesson_reports`; **passet är genomfört först när rapporten finns** |
 | underlag | vad studiehjälparen ska få (`payouts`) |
 | betalning | vad familjen betalat för ett pass (`betalning_status`, `betalt_ore`) |
+| liggaren | `betalningar`: en rad per kortbetalning (pass, plan, Fyll timbanken, tillägg), skriven av databasen och aldrig raderad |
 | tjänst | rad i `tjanster`; `aktiv` avgör vad som syns |
 | uppgift | det eleven gör mellan passen (`homework`); i adminvyn att göra-listan |
 | nivå | 5–12 frågor i en bana (`nivaer`); Mästarprov och repetition drar ur banan |
@@ -372,7 +390,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   orange timmar är köpta och gratis är gröna ... 9 av 9 timmar finns kvar") står överst på båda ställena: en ruta per
   timme i det som gäller nu (köp som inte gått ut, med de använda tomma; planens gratis timme efter planen; timmarna för
   tips), gratis närmast de tomma för de dras först, "N av M timmar kvar", och en stapel över 24 timmar
-  (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger.
+  (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger. **En plan gäller en kalendermånad**
+  (2026-10-21, `planerna_per_manad`, inte i drift; Leo: "Den här månaden" eller "Nästa månad"): familjen väljer
+  månaden på plankortet, `klippkort.galler_fran` är den 1:a (databasen prövar den), och planen går ut månadens sista
+  dag; Fyll timbanken, gratistimmarna, planens gratis timme och tipstimmen räknas som förut. Under batteriet står en
+  rad per månad, "3 av 8 timmar återstår" och "0 av 0" (`planens_manader()`), och nästa månads plan räknas inte i
+  batteriet förrän den gäller. **Ett köp betalas tillbaka** under Liggaren, helt eller med ett antal timmar:
+  databasen räknar beloppet (`klippkort_aterbetalning_lage`), och timmarna dras tillbaka, aldrig under det som
+  använts (`klippkort_aterbetalningar`, en rad per återbetalning i Stripe).
 - Betalningsmeningen står på 36 ställen i 23 filer och i mejlen, och `kolla-betalningsvillkor.py` räknar
   dem. **En betalning som tas på ett annat sätt än villkoren lovar är en tvist, inte ett skrivfel.**
   Fakturameningen, meningen om de obetalda passen och `BETALNINGSVILLKOR_DAGAR` gick med fakturan
@@ -874,6 +899,12 @@ Detaljer: `minne/grunden.md`.
   driften: kedjan står i `DEPLOY-NOTISER.md` 8 (`notis-ko` före `intervjumejlet`, som byter ett villkor med `drop
   constraint`). Provet spärrar ingen förrän Leo skrivit fem frågor, och de som var godkända när migrationen körs
   slipper det. Juristen har inte läst rad 10 och 31 i `DATASKYDD.md` eller policyns meningar om provet.
+- **Liggaren, planerna per kalendermånad, köpvillkoren i kassan och kortet som försöker igen** (2026-10-21, Fas 3)
+  är byggda och provade lokalt (1867 av 1867 i `rls-test.sql` med alla 208 migrationer, `prova-kassan.js` 83 av 83),
+  inte i driften: kedjan står i `DEPLOY-BETALNING.md` 9.19 (merge, edge-funktionerna, de tre migrationerna, Stripes
+  Apple Pay och Google Pay med domänen, provköpen). Köpvillkoren på `/anvandarvillkor#kopvillkor` är en platshållare
+  tills Leo skrivit dem, och en ny text är en ny version av villkoren. Juristen har inte läst rad 8 och 32 i
+  `DATASKYDD.md` eller planernas nya ord om kalendermånaden.
 - **Timmarna**: provköpet (DEPLOY-BETALNING.md 9.12) är ogjort. Leos testköp står kvar med
   sina timmar till kortets sista dag, och är sedan 2026-09-30 märkt som test igen
   (`stripe_skarp = false`): det räknas inte längre som intäkt.

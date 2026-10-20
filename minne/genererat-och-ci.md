@@ -602,3 +602,20 @@ adminvyn utan tabellerna. 63 prov.
 
 Flera prov samtidigt kan fälla `prova-ansokningar.js` på tid (den väntar
 800 ms på adminvyns siffror). Ensam går den igenom.
+
+### Webbläsarprovet för kassan, timbankens månader och Liggaren (2026-10-21)
+`verktyg/prova-kassan.js` (port 8979) provar Fas 3 mot en falsk Supabase, som
+`prova-familjerabatter.js`, med webbläsaren i Stockholms tid: timbankens två månader ("3 av 8
+timmar återstår", "0 av 0", textContent utan undefined), batteriet som bara räknar det som gäller,
+nästa månads plan som kommande, timmar som betalats tillbaka ("1 av 6"), månadsvalet på plankorten
+(förval, bara sin plan, kortet byter inte höjd, 44 px), rutan med köpvillkoren (vad som köps, priset
+och månaden, fokus på krysset, Till kassan stängd före krysset, Escape och Avbryt öppnar ingen kassa,
+länken), kassans anrop (planen, `manad`, `villkor: true`, aldrig ett belopp; Fyll timbanken utan
+månad), passets kassa, Profil → Timbanken, vyn utan migrationerna, tillbaka från Stripe (inga
+skrivningar utöver en vanlig sidladdning, adressen städad), telefonen och mörkt läge. I adminvyn
+Liggaren (summorna bara skarpa, raderna, filtren, sökningen, återbetalning av ett köp med timmar och
+aldrig ett belopp, telefonen) och Kortet (de nekade överst, försöken, nästa försök bara när koden
+tillåter, Försök igen) och adminvyn utan migrationerna. 83 prov. `prova-barnforslag.js` och
+`prova-forhandsvisning.js` kryssar sedan samma dag i köpvillkoren före kassan.
+`_delad/aterbetalning_test.ts` provar återbetalningen av ett köp med en falsk Stripe och databas
+(nyckeln, Stripe först, ett nej från databasen eller Stripe, webhookens avstämning).

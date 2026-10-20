@@ -331,6 +331,62 @@ längre efter fakturan), sedan del 1, sedan backup och del 2.
 
 ---
 
+## Betalningsliggaren och köpvillkoren i kassan (2026-10-21, `betalningsliggaren`, inte i drift)
+
+Leo (2026-10-21): Stripe bara genom webhooken, "aldrig" betalstatus eller timmar för att någon kommer
+tillbaka till en tacksida, en tabell `betalningar` med en rad per betalning (familj, belopp, valuta, typ,
+Stripes id:n, status, kod, tider) utan policyer för UPDATE och DELETE, som "raderas ALDRIG och ingår inte
+i något städjobb (bokföringsunderlag i 7 år)", en vy i adminvyn med återbetalning, och en kryssruta för
+köpvillkoren innan kassan öppnas.
+
+**Varför en spegel och inte en andra skrivväg.** Pengarna stod redan på raden de betalar: `bookings`
+(passet), `klippkort` (planer, Fyll timbanken, timmar till planen) och `pass_tillagg` (övertiden), och
+bara tjänstekontot skriver dem (webhooken, `stripe-reservation`, `stripe-aterbetalning`). En egen insert
+från webhooken hade kunnat glida isär från den första. Liggaren skrivs därför av AFTER-triggrar
+(`<tabell>_bokfors_ny` och `<tabell>_bokfors`, funktionen `intern.betalningar_bokfor()`) i samma
+transaktion som pengarna, en rad per PaymentIntent (unik nyckel): när tjänstekontot eller databasen själv
+(`auth.uid()` är null) sätter en betalning med ett PaymentIntent bokförs den, och när den återbetalas
+eller blir en tvist ändras radens belopp tillbaka och läge (`intern.betalning_lage`: betald,
+delvis_aterbetald, aterbetald, tvist). En admin som ändrar en betalningskolumn för hand bokför ingenting.
+Typerna är `plan` (en plan och timmar till planen), `timbank` (Fyll timbanken), `pass` och `tillagg`;
+`kod` är rabattkoden, och `skarp` är falsk för testbetalningar, som aldrig räknas i summorna.
+
+**Raden står fast.** `intern.betalningar_star_fast` (BEFORE UPDATE OR DELETE och BEFORE TRUNCATE) nekar
+delete och truncate för alla, också postgres och tjänstekontot, och nekar ändringar av allt utom det
+Stripe kan ändra efteråt: återbetalt (aldrig nedåt), läget, charge, avgift och netto. RLS: bara admin
+läser, ingen inloggad skriver. `familj` har `on delete restrict`, så en familj med en rad i liggaren
+avidentifieras i `radera_person` och raderas aldrig helt (`intern.radering_underlag`); `klippkort_id` och
+`booking_id` blir null om raden de pekar på tas bort, och raden står kvar.
+
+**En betalning utan rad.** Har två kassor stått öppna för samma pass eller köp och båda betalats skriver
+webhooken bara den första på raden och gör en uppgift av den andra (`ejNedskriven`). Sedan 2026-10-21
+bokförs också den andra (`betalning_utan_rad()`, tjänstekontot, `utan_rad = true`): det är riktiga
+pengar in som ska tillbaka. Återbetalas den i Stripe skriver webhooken det med `betalning_aterbetald()`.
+Båda tål att funktionen saknas (PGRST202), så webhooken kan gå ut före migrationen.
+
+**Fylld bakåt.** Migrationen bokför allt som redan är betalt med ett PaymentIntent, med `on conflict do
+nothing`, så den går att köra två gånger.
+
+**Köpvillkoren i kassan.** Varje kassa (ett köp, ett pass, ett tillägg, att spara kortet) föregås av en
+ruta i vyn (`NXStudie.kassansVillkor`) som säger vad som köps och vad det kostar, med kryssrutan "Jag har
+läst och godkänner köpvillkoren" och länken `CFG.KOPVILLKOR_URL` (`/anvandarvillkor#kopvillkor`, där en
+platshållare står tills Leo skrivit texten). Till kassan går inte att trycka på före krysset, och Avbryt,
+Escape eller ett tryck utanför gör ingenting (inte heller att en rapport bekräftas). Ta bort kortet frågar
+inte. `stripe-checkout` nekar ett anrop utan `villkor: true` (utom Ta bort kortet) och sparar krysset i
+`kopvillkor_godkannanden` (vad det gällde, raden, användarvillkorens version och databasens tid,
+`intern.kopvillkor_tid`), med tjänstekontot; saknas tabellen (före migrationen) öppnas kassan ändå och
+loggen säger det. Krysset är vägen in, inte skyddet: databasen kräver fortfarande att användarvillkoren är
+godkända (`klippkort_kraver_villkor`, `bookings_kraver_villkor`, `kortreservationer_kraver_villkor`), och
+att `villkor: true` kom från en människa kan ingen server pröva.
+
+**Kort, Apple Pay och Google Pay.** Kassan tar bara kort (`payment_method_types: ['card']`), och Apple Pay
+och Google Pay är kort: de syns när de är påslagna i Stripe och, för den inbäddade kassan, domänen är
+registrerad (`DEPLOY-BETALNING.md` 9.19). Swish och Klarna tas inte.
+
+**Adminvyn.** Betalningar → Liggaren (`nextrum-admin-liggaren.js`, bara superadmin, Betalningar i
+adminvyn nedan). Proven: `rls-test.sql` avsnitt 42 (BL), `verktyg/prova-kassan.js` och
+`_delad/aterbetalning_test.ts`.
+
 ## Kortet reserveras vid bokningen (2026-10-13, i drift sedan 2026-10-14)
 
 Leo: "när man klickar på boka pass eller godkänn förslaget från barnet
@@ -597,6 +653,58 @@ NexLäx-sessionen väntade med sin bank tills kedjan var klar):
 
 ---
 
+## Kortet försöker igen (2026-10-21, `kortdragningen_forsoker_igen`, inte i drift)
+
+Leo (2026-10-21), för passen som betalas med det sparade kortet: reservation 48 timmar före passet, direkt
+om passet bokas närmare än så, dragning när passet är genomfört, en ny dragning utan familjen om
+reservationen hunnit gå ut, och när kortet nekas ett mejl med en länk dit kortet byts, nya försök och en
+uppgift till oss efter 24 timmar. Passet avbokas aldrig för att betalningen inte gick. Lägena ej försökt,
+reserverad, dragen, nekad, frigjord och återbetald, och en konstant `sen_avbokning_timmar` med 0 som förval.
+
+**Det som fanns** (`kortet_reserveras`, ovan): reservationen 48 timmar före (Leos 48 timmar är villkorens
+"två dagar"), dragningen efter rapporten, dragningen utan reservation (`debitera`), släppet och mejlet
+`kort_nekat`. Lägena heter i databasen `vald` (ej försökt), `reserverad`, `dragen`, `misslyckad` (nekad),
+`slapps` och `slappt` (frigjord) och `utgangen`; återbetald står på betalningen (`betalning_status` och
+liggaren), inte på reservationen. Namnen byttes inte: de står i fem edge-filer, vyerna och auditen, och
+adminvyn visar Leos ord. Jobbet `kortreservation` går var tionde minut, inte var femtonde: tätare var
+redan byggt.
+
+**Det nya:**
+1. `betalning_installning` (en rad): `automatiska_forsok` (3, det första inräknat),
+   `timmar_mellan_forsok` (6), `larm_efter_timmar` (24) och `sen_avbokning_timmar`, låst på 0 med ett
+   villkor (`betalning_installning_sen_avbokning_lst`, som `kortsparr`): villkoren har ingen
+   avbokningsavgift, och en reservation för ett sent avbokat pass får inte dras. `intern.sen_avbokning()`
+   står klar för den dag villkoren säger annat; med 0 släpps reservationen som förut. Bara admin läser.
+2. `kortreservationer.nekad_sedan` (`intern.kortreservation_nekad_sedan`, BEFORE-trigger): när serien
+   började. Sätts när läget blir nekat, står kvar under försöken, töms när en reservation eller dragning
+   går igenom eller släpps.
+3. `intern.kortreservation_forsok_igen()`, först i `kortreservation_vack()`: ett nekat kort som
+   `intern.kortet_provas_igen(fel, forsok)` släpper fram blir valt igen efter sex timmar, och jobbet
+   reserverar eller drar som vanligt. Regeln: en kod där ett nytt försök kan gå (`card_declined`,
+   `insufficient_funds`, `generic_decline`, `do_not_honor`, `processing_error`, `try_again_later`,
+   `issuer_not_available`, `card_velocity_exceeded` och vårt `nekat`), och färre försök än
+   `automatiska_forsok`. Kräver kortet familjen (`authentication_required`, ett utgånget kort) görs inget
+   nytt försök.
+   Har kortet varit nekat i ett dygn och passet ska betalas med det blir det en uppgift
+   (`skapa_uppgift`, nyckeln `kort-nekat:<pass>:<nekad_sedan>`, en per serie).
+4. Mejlet `kort_nekat` går en gång per serie: vid första nekandet (`forsok = 1`), inte vid de automatiska
+   försöken. Familjens egna försök (Försök igen, ett nytt kort) nollställer `forsok` (`valj_kort`,
+   `kort_sparat`) och börjar en ny serie. Mejlet säger "Vi försöker igen om några timmar" bara när
+   `kortet` är `igen`, som databasen sätter med samma regel som jobbet (`intern.kortet_provas_igen`): ett
+   utgånget kort får aldrig ett löfte om ett försök som inte görs. Före passet leder knappen till
+   `/foralder#profil/kort` (Byt kort), efter passet till betalningen.
+5. `intern.kortreservation_vack_nu()`: triggrar på `kortreservationer` (läget blir valt) och `bookings`
+   (passet blir bekräftat eller genomfört) väcker `stripe-reservation` genom `intern.natanrop` när just
+   det passet har något att göra nu, i stället för vid nästa tiotal minuter: det är "direkt om passet
+   bokas närmare än 48 timmar". pg_net skickar först när transaktionen gått igenom, och ett fel stoppar
+   aldrig det som väckte den (raden hamnar i `notis_fel`). Jobbets egna nya försök väcker den inte en gång
+   per rad (`nextrum.kortet_vacks_samlat`).
+6. `kortreservation_forsok_nu()` (superadmin): Försök igen i adminvyn, för ett nekat eller utgånget kort.
+
+**Ingen betalning avbokar ett pass**: inget i `kortet_reserveras` eller här rör `bookings.status`.
+`stripe-reservation` ändrades inte: försöken styrs av databasen. Proven: `rls-test.sql` avsnitt 44 (KD)
+och `verktyg/prova-kassan.js` (Kortet).
+
 ## Familjen bekräftar rapporten
 
 **Familjen bekräftar rapporten, och får betala då** (Fas 19.1 och 19.2,
@@ -681,7 +789,7 @@ efter månaden.
 **Betalningar (omgjord 2026-09-29).** Leo: "gör om betalningar. den
 behöver vara mycket snyggare, lätt tolkad, lättanvänd och mycket mer
 funktionell". Sektionen `ekonomi` i adminvyn (`nextrum-admin-ekonomi.js`)
-har sex flikar, med adressen `#ekonomi/<flik>`:
+har åtta flikar sedan 2026-10-21, med adressen `#ekonomi/<flik>`:
 - **Att göra** (`attgora`): allt som väntar på er, i alla månader, i
   grupper (korttvister, pengar tillbaka, fakturor, inte betalt än,
   rapporter, löner, övrigt), med knappen som gör det på raden:
@@ -704,6 +812,16 @@ har sex flikar, med adressen `#ekonomi/<flik>`:
 - **Köpta timmar** och **Inställningar** (strömbrytarna `faktura`,
   `erbjudanden` och `kortsparr`, och Stripe: Kontrollera Stripe och Hämta
   från Stripe).
+- **Liggaren** (`liggaren`, 2026-10-21, `nextrum-admin-liggaren.js`, bara superadmin): en rad per
+  betalning i `betalningar`, med summorna (inbetalt, tillbaka, netto, bara skarpa), filter (Planer, Fyll
+  timbanken, Pass, Tillägg, Tillbaka, Test) och sökning på familj, köp, kod och Stripe-id. Återbetala: ett
+  pass som förut (`data-aterbetala`, beloppet att välja), ett köp helt eller med ett antal timmar
+  (`data-aterbetala-kop`, `stripe-aterbetalning` med `{klippkort, timmar}`, `minne/timmar.md`), och ett
+  tillägg eller en betalning utan rad i Stripes dashboard, som webhooken skriver.
+- **Kortet** (`kortdragning`, 2026-10-21): varje pass som betalas med det sparade kortet, de nekade överst,
+  med koden, försöken, när serien började och när nästa automatiska försök görs, och Försök igen
+  (`kortreservation_forsok_nu`). Före migrationerna säger Liggaren att den inte är körd, och Kortet visar
+  raderna utan försöken.
 
 Månadsväljaren (en rad till 2026-10-06, sedan ett fält med en ruta för år och månad,
 `minne/vyerna.md`) gäller Alla betalningar och Bokslut och syns bara där.
