@@ -83,10 +83,11 @@ window.NEXTRUM_CONFIG = {
      delar sin uppmärksamhet, och det ska synas.
 
      SYSKONTILLÄGGET SOM SKULD (syskontillagg_som_skuld, 2026-10-21) tar
-     samma pris PER EXTRA BARN och timme, som en skuld efter passet. Det
-     gäller först när strömbrytaren syskonskuld slås på, och då ska
-     prissidan, områdessidorna och FAQ:n säga per extra barn i samma
-     ändring (tre barn blir 537 kr i timmen, inte 468). */
+     samma pris, lika mycket med ett som med två syskon (syskontillagget_fast,
+     Leo: "Tre barn kostar 468 i timmen"), men som en skuld efter passet.
+     Det gäller först när strömbrytaren syskonskuld slås på, och då ska
+     prissidan, områdessidorna och FAQ:n säga att tillägget betalas efter
+     passet, i samma ändring. Priset på dem står kvar. */
   PRIS_SYSKON_TILLAGG_KR_PER_TIMME: 69,
 
   /* Villkoren för syskontillägget (TILLAGG_VILLKOR_VERSION står i

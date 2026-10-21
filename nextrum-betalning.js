@@ -267,18 +267,20 @@ window.NXBetalning = (function () {
   }
 
   /* ---------- syskontillägget (syskontillagg_som_skuld, 2026-10-21) ----------
-     Tillägget per extra barn och timme, som en skuld efter passet. Samma
-     regel som databasen (intern.tillaggets_belopp) och _delad/tillagg.ts:
-     extra barn × pris per extra barn och timme × minuter / 60, avrundat
-     till hela ören. Bara visning: databasen räknar och fryser beloppet när
-     passet bokas. */
+     Tillägget för fler barn, som en skuld efter passet. Samma regel som
+     databasen (intern.tillaggets_belopp) och _delad/tillagg.ts: pris för
+     fler barn och timme × minuter / 60, avrundat till hela ören, lika
+     mycket med ett som med två syskon (syskontillagget_fast, Leo: "Tre barn
+     kostar 468 i timmen"). Bara visning: databasen räknar och fryser
+     beloppet när passet bokas. */
   function tillaggetsBelopp(extra, prisOre, minuter) {
     var n = Number(extra) || 0, p = Number(prisOre) || 0, m = Number(minuter) || 0;
-    return n > 0 && p > 0 && m > 0 ? Math.round(n * p * m / 60) : 0;
+    return n > 0 && p > 0 && m > 0 ? Math.round(p * m / 60) : 0;
   }
-  /* "Tillägg: 2 × 69 kr × 1 h = 138 kr", som rutan i bokningen visar det. */
+  /* "Tillägg för syskon: 69 kr × 2 h = 138 kr", som rutan i bokningen
+     visar det. Antalet syskon står inte i raden: det ändrar inte beloppet. */
   function tillaggRad(extra, prisOre, minuter) {
-    return 'Tillägg: ' + extra + ' × ' + kronor(prisOre) + ' × ' + timmar(minuter) + ' = '
+    return 'Tillägg för syskon: ' + kronor(prisOre) + ' × ' + timmar(minuter) + ' = '
       + kronor(tillaggetsBelopp(extra, prisOre, minuter));
   }
   /* Postens läge i ord och märkets färg (adminvyns tre: mossa klart,

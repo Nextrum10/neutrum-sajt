@@ -2042,14 +2042,16 @@ månadskörning och inget sparat kort för tillägget."
 
 - **Varför strömbrytaren står av.** Sajten, prissidan, FAQ:n, villkoren och Siffror säger att
   tillägget är fast, 69 kr i timmen för två eller tre barn (tre barn 468), och att det betalas med
-  passet. Beställningen säger 69 kr per extra barn och timme (tre barn 537), som en skuld efter
-  passet. Att byta pris och betalsätt utan nya villkor är en tvist, så allt är byggt bakom
+  passet. Beställningen sa 69 kr per extra barn och timme (tre barn 537), som en skuld efter
+  passet; samma kväll bestämde Leo priset: "Tre barn kostar 468 i timmen" (`syskontillagget_fast`,
+  nedan), så det som byts när strömbrytaren slås på är betalsättet, inte priset. Att byta
+  betalsätt utan nya villkor är en tvist, så allt är byggt bakom
   `syskonskuld`, som inte går att slå på medan `tillagg_installning.villkor_version` är `'utkast'`
   (`flaggor_syskonskuld_villkor`), och versionen går inte tillbaka till utkastet medan den är på
   (`tillagg_installning_vakt`). Med den av bokas syskon som förut (`antal_barn`, och tillägget i
   passets pris), och `bookings_syskon_prova` nekar `extra_barn`. Leo skriver texten, sätter
   versionen till sidans datum, ändrar sidorna och villkoren, och slår på den, i den ordningen.
-- **En plats för talen.** Priset per extra barn och taket är tjänstens (`tjanster.extra_personer_ore`
+- **En plats för talen.** Priset för fler barn och taket är tjänstens (`tjanster.extra_personer_ore`
   och `extra_personer_max`), samma källa som passets pris; `PRIS_SYSKON_TILLAGG_KR_PER_TIMME` i
   configen är sajtens kopia, som `PRIS_PER_TIMME` (hette `PRIS_EXTRA_BARN`). Beställningens TILLAGG_*
   (villkorens version, sen avbokning, debitera vid sen avbokning, obligatoriskt i nästa betalning,
@@ -2059,9 +2061,11 @@ månadskörning och inget sparat kort för tillägget."
 - **Passet.** Familjen väljer syskonen i Boka pass (raden Syskon i stället för Antal barn), och
   vyn skickar bara barnens id (`extra_barn`), aldrig ett belopp. Passet har `antal_barn = 1`:
   passets pris och timmarna är ett barns, och passet drar en timme per timme ur timbanken. Posten
-  (`tillagg_poster`, en per pass) får beloppet fryst när passet bokas: extra barn gånger
-  `extra_ore` gånger minuterna delat med 60, avrundat till hela ören (`intern.tillaggets_belopp`,
-  och villkoret `tillagg_poster_belopp` håller raden till det). Barnen, längden och antalet står fast
+  (`tillagg_poster`, en per pass) får beloppet fryst när passet bokas: `extra_ore` gånger
+  minuterna delat med 60, avrundat till hela ören, lika mycket med ett som med två syskon
+  (`intern.tillaggets_belopp`, och villkoret `tillagg_poster_belopp` håller raden till det; till
+  `syskontillagget_fast` gånger antalet extra barn). Antalet står kvar på posten för kvittot och
+  adminvyn. Barnen, längden och antalet står fast
   efter bokningen, också för admin och databasen (`bookings_syskon_star_fast`); ett motförslag
   ändrar bara tiden (Leo: "Ett motförslag på tid får inte ändra passets längd, annars avvisas det"),
   och familjen och studiehjälparen stoppas redan av `skydda_bokningsfalt`. Studiehjälparen väljer
@@ -2189,3 +2193,26 @@ migration, innan den kördes.
 - Provat: `rls-test.sql` avsnitt 51 (14 prov till, `SK`), `tillagg_test.ts` (8 prov för en kassa åt
   gången och buntningen med regeln) och `prova-adminvyn.js` (fixturen har ett betalt tillägg och ett
   som väntar på Klarna, så att Släpp betalningen och raderna i månaden ritas mot en riktig databas).
+
+## Syskontillägget fast: tre barn kostar 468 (2026-10-21, `syskontillagget_fast`, inte i drift)
+
+Leo, samma kväll som syskontillägget som skuld gick ut, på frågan om tre barn skulle kosta 537 kr i
+timmen med strömbrytaren på: "Tre barn kostar 468 i timmen".
+
+- **Regeln**: tillägget är `extra_ore` gånger minuterna delat med 60, lika mycket med ett som med två
+  syskon. Det är samma pris som sajten, villkoren och Siffror redan säger, så när `syskonskuld` slås
+  på byts bara betalsättet (en skuld efter passet), inte priset. Sidorna och villkoren ska då säga
+  just det, och ingen siffra på dem ändras.
+- **Var den står**: `intern.tillaggets_belopp` och villkoret `tillagg_poster_belopp` i databasen
+  (migrationen `20261021230000_syskontillagget_fast`), `tillaggetsBelopp` i `_delad/tillagg.ts` och i
+  `nextrum-betalning.js`, och bokningsrutans text ("Tillägg för syskon: 69 kr × 2 h = 138 kr", och
+  "69 kr i timmen oavsett hur många syskon som är med"). De ändras tillsammans.
+- **Inga edge-funktioner**: ingen funktion i drift anropar `tillaggetsBelopp` (beloppet är alltid
+  databasens), så kassan, webhooken och återbetalningen bär den gamla kopian utan att läsa den. Den
+  följer med nästa gång de läggs ut av annat skäl.
+- **Vakten**: migrationen stannar om `tillagg_poster` har en rad, för en post räknad per extra barn
+  ska inte få ett nytt villkor under sig. Strömbrytaren har aldrig stått på, och i driften fanns
+  inga poster 2026-10-21.
+- **Kvar**: beslutet om sen avbokning. `tillagg_installning` gör tillägget upplupet när ett bekräftat
+  pass avbokas inom 24 timmar (`sen_avbokning_timmar`, `debitera_vid_sen_avbokning`), och villkoren
+  har ingen avbokningsavgift. Leo avgör innan strömbrytaren slås på.

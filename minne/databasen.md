@@ -1856,3 +1856,19 @@ månadsrapport), utom kassan (nedan); hela förloppet står i `DEPLOY-BETALNING.
   Skriptet står kvar för en riktig betalning (`markera_riktiga`), i SQL Editor.
 - **Verktygets ruta, igen**: `alter table … drop constraint` gick igenom utan fråga, medan `create function` med tre
   `delete` fastnade. Rutan syntes inte i Leos app den här kvällen heller.
+
+### Syskontillägget fast (syskontillagget_fast, 2026-10-21, inte i drift)
+En fil (20261021230000), provad lokalt. Leo: "Tre barn kostar 468 i timmen" (`minne/betalning.md`).
+
+- **Beloppet**: `intern.tillaggets_belopp(extra, pris, minuter)` är `round(pris × minuter / 60)` när extra är minst ett,
+  annars noll, och villkoret `tillagg_poster_belopp` är `belopp_ore = round(pris_ore_per_timme × minuter / 60)`.
+  `antal_extra_barn` står kvar på posten, för kvittot och adminvyn.
+- **Ett `drop`**: villkoret byts med `drop constraint if exists` och `add`. Finns poster räknade per extra barn
+  går `add` inte igenom; vakten först i filen stannar redan då, med ett besked. Inget `delete`. Den går att köra två
+  gånger (provat).
+- **Texterna**: kommentarerna på `tillagg_poster` och `tillagg_installning`, och strömbrytarens beskrivning och
+  `vantar_pa`, med `flaggor_stampla` av bara runt den raden och en vakt som prövar att den står på igen, som i
+  `fyll_timbanken`.
+- Provat lokalt: databasen byggd ur alla 221 migrationer, `rls-test.sql` 2107 av 2107 (avsnitt 51 räknar nu 69 kr ×
+  2 h för passet med tre barn, och ett nytt prov säger att två extra barn kostar som ett), `prova-syskon.js` 95 av 95
+  och Deno 484 av 484.

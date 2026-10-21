@@ -19801,7 +19801,14 @@ begin
            values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, A, idag + 21, S2));
     ut := ut || jsonb_build_object('t', 'SK studiehjälparen väljer inte barnen', 'ok', t = '42501', 'd', t);
 
-    -- Tre barn, två timmar: 2 × 69 kr × 2 h.
+    ut := ut || jsonb_build_object('t', 'SK två extra barn kostar som ett, och inga extra barn är inget tillägg',
+            'ok', intern.tillaggets_belopp(2, 6900, 120) = 13800 and intern.tillaggets_belopp(1, 6900, 120) = 13800
+                  and intern.tillaggets_belopp(2, 6900, 90) = 10350 and intern.tillaggets_belopp(0, 6900, 60) = 0,
+            'd', concat_ws(' ', intern.tillaggets_belopp(2, 6900, 120), intern.tillaggets_belopp(1, 6900, 120),
+                           intern.tillaggets_belopp(2, 6900, 90), intern.tillaggets_belopp(0, 6900, 60)));
+
+    -- Tre barn, två timmar: 69 kr × 2 h, lika mycket som med ett syskon (syskontillagget_fast,
+    -- Leo 2026-10-21: "Tre barn kostar 468 i timmen").
     perform pg_temp.bli(P);
     insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
                                  duration_min, status, extra_barn)
@@ -19809,9 +19816,9 @@ begin
     reset role;
     perform set_config('request.jwt.claims', '', true);
     select * into r from public.tillagg_poster where bokning_id = X1;
-    ut := ut || jsonb_build_object('t', 'SK tre barn på två timmar: posten är bokad med 2 × 69 kr × 2 h',
+    ut := ut || jsonb_build_object('t', 'SK tre barn på två timmar: posten är bokad med 69 kr × 2 h, som med ett syskon',
             'ok', r.status = 'bokad' and r.antal_extra_barn = 2 and r.pris_ore_per_timme = 6900 and r.minuter = 120
-                  and r.belopp_ore = 27600 and r.familj_id = P and r.betalningsforsok_id is null
+                  and r.belopp_ore = 13800 and r.familj_id = P and r.betalningsforsok_id is null
                   and r.pass_start = ((idag + 21) + time '10:00') at time zone 'Europe/Stockholm',
             'd', concat_ws(' ', r.status, r.antal_extra_barn, r.pris_ore_per_timme, r.minuter, r.belopp_ore));
     select string_agg(barn_id::text || ':' || ar_huvudbarn, ' ' order by ar_huvudbarn desc, barn_id) into t
@@ -19825,7 +19832,7 @@ begin
 
     update public.tjanster set extra_personer_ore = 7500 where kod = 'laxhjalp';
     ut := ut || jsonb_build_object('t', 'SK ett ändrat pris rör inte en bokad post',
-            'ok', (select belopp_ore from public.tillagg_poster where bokning_id = X1) = 27600, 'd', '');
+            'ok', (select belopp_ore from public.tillagg_poster where bokning_id = X1) = 13800, 'd', '');
     update public.tjanster set extra_personer_ore = 6900 where kod = 'laxhjalp';
 
     t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
@@ -20040,7 +20047,7 @@ begin
 
       select * into r from public.tillagg_skuld(P);
       ut := ut || jsonb_build_object('t', 'SK skulden är summan av de upplupna, antalet och den äldsta',
-              'ok', r.belopp_ore = 6900 + 27600 and r.antal_pass = 2 and r.aldsta_post is not null,
+              'ok', r.belopp_ore = 6900 + 13800 and r.antal_pass = 2 and r.aldsta_post is not null,
               'd', concat_ws(' ', r.belopp_ore, r.antal_pass, r.aldsta_post));
       t := pg_temp.svar_som(Q, format('select * from public.tillagg_skuld(%L)', P));
       perform pg_temp.bli(Q);
@@ -20054,7 +20061,7 @@ begin
       reset role;
       perform set_config('request.jwt.claims', '', true);
       ut := ut || jsonb_build_object('t', 'SK familjen ser sin skuld och sina poster',
-              'ok', (j ->> 'upplupet_ore')::int = 34500 and (j ->> 'upplupna')::int = 2 and (j ->> 'pa')::boolean
+              'ok', (j ->> 'upplupet_ore')::int = 20700 and (j ->> 'upplupna')::int = 2 and (j ->> 'pa')::boolean
                     and j ->> 'version' = VERS and j ->> 'godkand_at' is not null and n = 4,
               'd', j::text);
 
@@ -20064,7 +20071,7 @@ begin
       j := public.tillagg_forsok_skapa(P, 'manuell');
       fid := (j ->> 'forsok')::uuid;
       ut := ut || jsonb_build_object('t', 'SK försöket låser alla upplupna poster för hela summan',
-              'ok', fid is not null and (j ->> 'belopp_ore')::int = 34500 and (j ->> 'antal_pass')::int = 2
+              'ok', fid is not null and (j ->> 'belopp_ore')::int = 20700 and (j ->> 'antal_pass')::int = 2
                     and (select count(*) from public.tillagg_poster where betalningsforsok_id = fid and status = 'i_betalning') = 2
                     and (j ->> 'pagar')::boolean is false,
               'd', j::text);
@@ -20086,7 +20093,7 @@ begin
       update public.bookings set status = 'completed' where id = X4;
       ut := ut || jsonb_build_object('t', 'SK en post som blir upplupen efter försöket ingår inte i det',
               'ok', (select status from public.tillagg_poster where bokning_id = X4) = 'upplupen'
-                    and (select belopp_ore from public.tillagg_forsok where id = fid) = 34500
+                    and (select belopp_ore from public.tillagg_forsok where id = fid) = 20700
                     and (select count(*) from public.tillagg_forsok_poster where forsok_id = fid) = 2,
               'd', '');
       -- Nu kan köpet ta den nya posten, men inte de låsta.
@@ -20152,17 +20159,17 @@ begin
                     and exists (select 1 from public.uppgifter where nyckel = 'tillagg_dubbel:pi_rls51fel'),
               'd', t);
 
-      t := public.tillagg_forsok_betald(fid, 'pi_rls51a', 'ch_rls51a', 34500, false, 1200, 33300);
-      t2 := public.tillagg_forsok_betald(fid, 'pi_rls51a', 'ch_rls51a', 34500, false, 1200, 33300);
+      t := public.tillagg_forsok_betald(fid, 'pi_rls51a', 'ch_rls51a', 20700, false, 1200, 19500);
+      t2 := public.tillagg_forsok_betald(fid, 'pi_rls51a', 'ch_rls51a', 20700, false, 1200, 19500);
       select id into bet from public.betalningar where stripe_payment_intent = 'pi_rls51a';
       ut := ut || jsonb_build_object('t', 'SK betalningen skrivs en gång: samma händelse två gånger ger en effekt',
               'ok', t = 'betald' and t2 = 'redan' and bet is not null
                     and (select count(*) from public.betalningar where stripe_payment_intent = 'pi_rls51a') = 1,
               'd', t || ' ' || t2);
       ut := ut || jsonb_build_object('t', 'SK liggaren har betalningen som syskontillägg, och en rad per post',
-              'ok', (select typ || ':' || belopp_ore || ':' || status from public.betalningar where id = bet) = 'syskon:34500:betald'
+              'ok', (select typ || ':' || belopp_ore || ':' || status from public.betalningar where id = bet) = 'syskon:20700:betald'
                     and (select count(*) from public.betalningsrader where betalning_id = bet and typ = 'syskon') = 2
-                    and (select sum(belopp_ore) from public.betalningsrader where betalning_id = bet) = 34500,
+                    and (select sum(belopp_ore) from public.betalningsrader where betalning_id = bet) = 20700,
               'd', '');
       ut := ut || jsonb_build_object('t', 'SK posterna är betalda med betalningen, och försöket stängt',
               'ok', (select count(*) from public.tillagg_poster where id in (post1, post2) and status = 'betald'
@@ -20171,7 +20178,7 @@ begin
               'd', '');
       ut := ut || jsonb_build_object('t', 'SK kvittot köas till familjen med dag, antal barn och belopp, utan namn',
               'ok', exists (select 1 from public.notiser n where n.mottagare = P and n.typ = 'tillagg_kvitto'
-                              and (n.data ->> 'belopp')::int = 34500 and jsonb_array_length(n.data -> 'rader') = 2
+                              and (n.data ->> 'belopp')::int = 20700 and jsonb_array_length(n.data -> 'rader') = 2
                               and n.data::text !~* '(Yngst|Mellan|Äldst)'),
               'd', '');
       t := pg_temp.svar_som(P, 'select * from public.betalningsrader')
@@ -20198,9 +20205,9 @@ begin
       ut := ut || jsonb_build_object('t', 'SK en återbetalning går aldrig över det raden eller betalningen betalade',
               'ok', (select aterbetalt_ore from public.betalningsrader where id = rad1) = 6900
                     and (select status || ':' || aterbetalt_ore from public.tillagg_poster where id = post2) = 'betald:1000'
-                    and (select aterbetalt_ore from public.betalningar where id = bet) = 34500,
+                    and (select aterbetalt_ore from public.betalningar where id = bet) = 20700,
               'd', n::text);
-      n := public.betalningsrader_aterbetalda('pi_rls51a', jsonb_build_object(rad2, 1000), 34500);
+      n := public.betalningsrader_aterbetalda('pi_rls51a', jsonb_build_object(rad2, 1000), 20700);
       ut := ut || jsonb_build_object('t', 'SK samma återbetalning två gånger ändrar ingenting', 'ok', n = 0, 'd', n::text);
 
 

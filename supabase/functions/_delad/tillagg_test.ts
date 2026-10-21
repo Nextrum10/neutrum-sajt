@@ -18,7 +18,7 @@ import { type Handelselager, markeraKlar, taEmotLeverans } from './webhooken.ts'
 
 // ---------- beloppet ----------
 
-Deno.test('tillägget: ett extra barn i en timme är priset per barn och timme', () => {
+Deno.test('tillägget: ett extra barn i en timme är priset för fler barn och timme', () => {
   assertEquals(tillaggetsBelopp(1, 6900, 60), 6900);
 });
 
@@ -26,9 +26,11 @@ Deno.test('tillägget: en och en halv timme räknas på minuterna', () => {
   assertEquals(tillaggetsBelopp(1, 6900, 90), 10350);
 });
 
-Deno.test('tillägget: två extra barn är två gånger priset', () => {
-  assertEquals(tillaggetsBelopp(2, 6900, 60), 13800);
-  assertEquals(tillaggetsBelopp(2, 6900, 90), 20700);
+// syskontillagget_fast (2026-10-21, Leo: "Tre barn kostar 468 i timmen").
+Deno.test('tillägget: två extra barn kostar som ett', () => {
+  assertEquals(tillaggetsBelopp(2, 6900, 60), 6900);
+  assertEquals(tillaggetsBelopp(2, 6900, 90), 10350);
+  assertEquals(tillaggetsBelopp(2, 6900, 120), tillaggetsBelopp(1, 6900, 120));
 });
 
 Deno.test('tillägget: inga extra barn är inget tillägg', () => {
