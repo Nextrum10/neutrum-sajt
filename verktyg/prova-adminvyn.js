@@ -331,8 +331,29 @@ async function genomAdminvyn(webb, roll, o) {
     await page.locator('[data-tl-filter="alla"]').first().click({ timeout: 3000 }).catch(() => {});
     await lugnt(page, 300);
     const alla = await page.locator('#tl-lista .tl-post').count();
-    prova(namn + ': syskontillägg: Alla visar båda posterna', alla === 2, String(alla));
+    // Granskningen 2026-10-21: fixturen har också en betald post och en som väntar på Klarna.
+    prova(namn + ': syskontillägg: Alla visar alla fyra posterna', alla === 4, String(alla));
+    const släpp = await page.locator('#tl-lista [data-tl-slapp]').count();
+    prova(namn + ': syskontillägg: Släpp betalningen står bara på posten som står i en betalning', släpp === 1,
+      String(släpp));
     await bild(page, namn.replace(/ /g, '-') + '-ekonomi-tillagg');
+    // Tilläggen räknas i månaden: en rad i Betalningar, och en rad i bokslutet.
+    await page.locator('.vy-flik[data-flik="betalningar"]').first().click({ timeout: 3000 }).catch(() => {});
+    await lugnt(page, 500);
+    const betalningar = await page.locator('#bet-lista').textContent().catch(() => '') || '';
+    prova(namn + ': betalningar: syskontillägget står som en betalning i månaden',
+      /Syskontillägg/.test(betalningar) && /Betala tillägg nu/.test(betalningar), betalningar.slice(0, 300));
+    await page.locator('.vy-flik[data-flik="bokslut"]').first().click({ timeout: 3000 }).catch(() => {});
+    await lugnt(page, 900);
+    const bokslut = await page.locator('[data-flik="bokslut"].vy-flik-panel').textContent().catch(() => '') || '';
+    prova(namn + ': bokslut: syskontilläggen betalda i månaden står med',
+      /Syskontillägg, betalda i månaden/.test(bokslut) && /69\s*kr · 1 st/.test(bokslut), bokslut.slice(0, 400));
+    if (await page.locator('a[data-sek="manaden"]').count()) {
+      await page.evaluate(() => { location.hash = '#manaden'; });
+      await lugnt(page, 900);
+      const pengar = await page.locator('#man-pengar').textContent().catch(() => '') || '';
+      prova(namn + ': månadens ekonomi: syskontillägget har kommit in', /Syskontillägg/.test(pengar), pengar.slice(0, 300));
+    }
     const nyaKonsol = konsol.slice(före.k);
     const nyaDb = dbfel.slice(före.d);
     prova(namn + ': syskontillägg: inga fel i konsolen', nyaKonsol.length === 0, nyaKonsol.join(' | '));

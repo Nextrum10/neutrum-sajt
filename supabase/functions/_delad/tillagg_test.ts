@@ -8,10 +8,11 @@
 // leveranser går genom webhooken.ts med ett falskt händelselager.
 // ============================================================
 
-import { assertEquals, assertThrows } from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import { assertEquals, assertRejects, assertThrows } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  buntaKassan, fordelaAterbetalningar, forsokUrMetadata, hanteraTillagg, huvudbeloppUrTotal, tillaggetsBelopp,
-  tillaggetsLinje, tillaggetsRadtext, type TillaggDb, utgangstid,
+  buntaKassan, fordelaAterbetalningar, type Forsoket, forsoketsKassa, forsokUrMetadata, gamlaKassanGarUt,
+  hanteraTillagg, type KassaStripe, tillaggetFoljerMed, tillaggetsBelopp, tillaggetsLinje, tillaggetsRadtext,
+  type TillaggDb, utgangstid,
 } from './tillagg.ts';
 import { type Handelselager, markeraKlar, taEmotLeverans } from './webhooken.ts';
 
@@ -79,8 +80,19 @@ Deno.test('tillägget: kassan går ut när försöket gör det, så att två try
 
 const PLAN = { typ: 'plan' as const, namn: 'Standard', beloppOre: 303200, rabattOre: 30320, kod: 'ZAYAN10' };
 
+Deno.test('bunta: följer med när regeln är på, och annars tills familjen kryssat ur', () => {
+  assertEquals(tillaggetFoljerMed(true, false), true);
+  assertEquals(tillaggetFoljerMed(true, undefined), true);
+  assertEquals(tillaggetFoljerMed(false, undefined), true);
+  assertEquals(tillaggetFoljerMed(false, true), true);
+  assertEquals(tillaggetFoljerMed(false, false), false);
+  // Bara ett uttryckligt false kryssar ur: en sträng eller noll gör det inte.
+  assertEquals(tillaggetFoljerMed(false, 'false'), true);
+  assertEquals(tillaggetFoljerMed(false, 0), true);
+});
+
 Deno.test('bunta: rabattkoden räknas bara på planraden, tilläggsraden är orörd och totalen stämmer', () => {
-  const k = buntaKassan(PLAN, { beloppOre: 13800, antalPass: 2 }, { obligatorisk: true, medTillagg: true });
+  const k = buntaKassan(PLAN, { beloppOre: 13800, antalPass: 2 }, { obligatorisk: true, med: true });
   assertEquals(k.medTillagg, true);
   assertEquals(k.rader.length, 2);
   assertEquals(k.rader[0], { typ: 'plan', namn: 'Standard', beloppOre: 272880, rabattOre: 30320, kod: 'ZAYAN10' });
@@ -90,50 +102,151 @@ Deno.test('bunta: rabattkoden räknas bara på planraden, tilläggsraden är or�
   assertEquals(k.totalOre, 272880 + 13800);
 });
 
-Deno.test('bunta: med flaggan på följer tillägget med, också om familjen kryssat ur', () => {
-  const k = buntaKassan(PLAN, { beloppOre: 13800, antalPass: 2 }, { obligatorisk: true, medTillagg: false });
+Deno.test('bunta: med regeln på följer tillägget med, också om familjen kryssat ur', () => {
+  const k = buntaKassan(PLAN, { beloppOre: 13800, antalPass: 2 }, { obligatorisk: true, med: false });
   assertEquals(k.medTillagg, true);
   assertEquals(k.totalOre, 286680);
 });
 
-Deno.test('bunta: med flaggan av får familjen kryssa ur raden', () => {
-  const ur = buntaKassan(PLAN, { beloppOre: 13800, antalPass: 2 }, { obligatorisk: false, medTillagg: false });
+Deno.test('bunta: med regeln av får familjen kryssa ur raden, och utan kryss följer den med', () => {
+  const ur = buntaKassan(PLAN, { beloppOre: 13800, antalPass: 2 }, { obligatorisk: false, med: false });
   assertEquals(ur.medTillagg, false);
   assertEquals(ur.rader.map((r) => r.typ), ['plan']);
   assertEquals(ur.totalOre, 272880);
-  const med = buntaKassan(PLAN, { beloppOre: 13800, antalPass: 2 }, { obligatorisk: false, medTillagg: true });
-  assertEquals(med.medTillagg, true);
-  assertEquals(med.totalOre, 286680);
+  const tyst = buntaKassan(PLAN, { beloppOre: 13800, antalPass: 2 }, { obligatorisk: false, med: undefined });
+  assertEquals(tyst.medTillagg, true);
+  assertEquals(tyst.totalOre, 286680);
 });
 
 Deno.test('bunta: utan skuld är det bara planen', () => {
   for (const t of [null, { beloppOre: 0, antalPass: 0 }]) {
-    const k = buntaKassan(PLAN, t, { obligatorisk: true, medTillagg: true });
+    const k = buntaKassan(PLAN, t, { obligatorisk: true, med: true });
     assertEquals(k.medTillagg, false);
     assertEquals(k.rader.length, 1);
     assertEquals(k.totalOre, 272880);
   }
 });
 
-Deno.test('bunta: ett pass pass för pass får tillägget på samma sätt', () => {
-  const pass = { typ: 'pass' as const, namn: 'Matematik 23 oktober', beloppOre: 39900, rabattOre: 0, kod: null };
-  const k = buntaKassan(pass, { beloppOre: 6900, antalPass: 1 }, { obligatorisk: true, medTillagg: true });
-  assertEquals(k.rader.map((r) => [r.typ, r.beloppOre]), [['pass', 39900], ['tillagg', 6900]]);
-  assertEquals(k.totalOre, 46800);
+Deno.test('bunta: Fyll timbanken utan kod får tillägget på samma sätt', () => {
+  const kort = { typ: 'timbank' as const, namn: 'Fyll timbanken, 10 timmar', beloppOre: 399000, rabattOre: 0, kod: null };
+  const k = buntaKassan(kort, { beloppOre: 6900, antalPass: 1 }, { obligatorisk: true, med: true });
+  assertEquals(k.rader.map((r) => [r.typ, r.beloppOre]), [['timbank', 399000], ['tillagg', 6900]]);
+  assertEquals(k.totalOre, 405900);
 });
 
 Deno.test('bunta: en rabatt blir aldrig hela priset eller mer, och aldrig negativ', () => {
-  assertThrows(() => buntaKassan({ ...PLAN, rabattOre: 303200 }, null, { obligatorisk: true, medTillagg: true }));
-  assertThrows(() => buntaKassan({ ...PLAN, rabattOre: -1 }, null, { obligatorisk: true, medTillagg: true }));
-  assertThrows(() => buntaKassan(PLAN, { beloppOre: -5, antalPass: 1 }, { obligatorisk: true, medTillagg: true }));
+  assertThrows(() => buntaKassan({ ...PLAN, rabattOre: 303200 }, null, { obligatorisk: true, med: true }));
+  assertThrows(() => buntaKassan({ ...PLAN, rabattOre: -1 }, null, { obligatorisk: true, med: true }));
+  assertThrows(() => buntaKassan(PLAN, { beloppOre: -5, antalPass: 1 }, { obligatorisk: true, med: true }));
 });
 
-Deno.test('webhooken: huvudradens belopp är totalen minus tillägget, aldrig under noll', () => {
-  assertEquals(huvudbeloppUrTotal(286680, 13800), 272880);
-  assertEquals(huvudbeloppUrTotal(13800, 13800), 0);
-  assertEquals(huvudbeloppUrTotal(1000, 2000), null);
-  assertEquals(huvudbeloppUrTotal(1000, -1), null);
-  assertEquals(huvudbeloppUrTotal(Number.NaN, 0), null);
+// ---------- en kassa åt gången (granskningen 2026-10-21) ----------
+
+/** Stripes kassor i minnet: läget och ui per session, och vad som hände. */
+function falskaKassor(kassor: Record<string, { status: string; ui_mode: string }>) {
+  const logg: string[] = [];
+  const stripe: KassaStripe = {
+    utgang: (sid) => {
+      logg.push('utgang ' + sid);
+      const k = kassor[sid];
+      if (!k || k.status !== 'open') return Promise.reject(new Error('Bara en öppen kassa kan gå ut.'));
+      k.status = 'expired';
+      return Promise.resolve({});
+    },
+    hamta: (sid) => {
+      logg.push('hamta ' + sid);
+      return Promise.resolve({ ...(kassor[sid] ?? { status: 'expired', ui_mode: 'hosted' }) });
+    },
+  };
+  return { stripe, logg, kassor };
+}
+
+function forsoken(...svar: Forsoket[]) {
+  const slappta: string[] = [];
+  let i = 0;
+  return {
+    slappta,
+    skapa: () => Promise.resolve(svar[Math.min(i++, svar.length - 1)]),
+    slapp: (f: string, orsak: string) => {
+      slappta.push(`${f}:${orsak}`);
+      return Promise.resolve();
+    },
+    antal: () => i,
+  };
+}
+
+const NYTT: Forsoket = { forsok: 'f2', belopp_ore: 20700, antal_pass: 3, aterbruk: false, session: null };
+const ATERBRUKAT: Forsoket = { forsok: 'f1', belopp_ore: 20700, antal_pass: 3, aterbruk: true, session: 'cs_test_a1' };
+
+Deno.test('en kassa: samma försök, samma läge och öppen kassa ger samma kassa och inget släpps', async () => {
+  const k = falskaKassor({ cs_test_a1: { status: 'open', ui_mode: 'embedded' } });
+  const f = forsoken(ATERBRUKAT);
+  const svar = await forsoketsKassa(k.stripe, f.slapp, f.skapa, true);
+  assertEquals(svar, ATERBRUKAT);
+  assertEquals(f.slappta, []);
+  assertEquals(k.logg, ['hamta cs_test_a1']);
+  assertEquals(k.kassor.cs_test_a1.status, 'open');
+});
+
+Deno.test('en kassa: sida i stället för inbäddad stänger den gamla och ger ett nytt försök', async () => {
+  const k = falskaKassor({ cs_test_a1: { status: 'open', ui_mode: 'embedded' } });
+  const f = forsoken(ATERBRUKAT, NYTT);
+  const svar = await forsoketsKassa(k.stripe, f.slapp, f.skapa, false);
+  assertEquals(svar, NYTT);
+  assertEquals(f.slappta, ['f1:ersatt']);
+  assertEquals(k.kassor.cs_test_a1.status, 'expired');
+  assertEquals(f.antal(), 2);
+});
+
+Deno.test('en kassa: en gammal kassa som redan betalats (eller väntar på Klarna) ger ingen ny', async () => {
+  const k = falskaKassor({ cs_test_a1: { status: 'complete', ui_mode: 'embedded' } });
+  const f = forsoken(ATERBRUKAT, NYTT);
+  assertEquals(await forsoketsKassa(k.stripe, f.slapp, f.skapa, false), 'pagar');
+  assertEquals(f.slappta, []);
+  assertEquals(f.antal(), 1);
+});
+
+Deno.test('en kassa: en kassa som gått ut ersätts, i samma läge också', async () => {
+  const k = falskaKassor({ cs_test_a1: { status: 'expired', ui_mode: 'embedded' } });
+  const f = forsoken(ATERBRUKAT, NYTT);
+  assertEquals(await forsoketsKassa(k.stripe, f.slapp, f.skapa, true), NYTT);
+  assertEquals(f.slappta, ['f1:ersatt']);
+});
+
+Deno.test('en kassa: databasen ersatte ett försök nära utgången, och dess kassa går ut', async () => {
+  const k = falskaKassor({ cs_test_gammal: { status: 'open', ui_mode: 'hosted' } });
+  const f = forsoken({ ...NYTT, ersatt_session: 'cs_test_gammal' });
+  const svar = await forsoketsKassa(k.stripe, f.slapp, f.skapa, true);
+  assertEquals((svar as Forsoket).forsok, 'f2');
+  assertEquals(k.kassor.cs_test_gammal.status, 'expired');
+  assertEquals(f.slappta, []);
+});
+
+Deno.test('en kassa: hann den ersatta kassan betalas släpps det nya försöket', async () => {
+  const k = falskaKassor({ cs_test_gammal: { status: 'complete', ui_mode: 'hosted' } });
+  const f = forsoken({ ...NYTT, ersatt_session: 'cs_test_gammal' });
+  assertEquals(await forsoketsKassa(k.stripe, f.slapp, f.skapa, true), 'pagar');
+  assertEquals(f.slappta, ['f2:avbruten']);
+});
+
+Deno.test('en kassa: en kassa som inte går att stänga är ett fel, aldrig en kassa till', async () => {
+  const stripe: KassaStripe = {
+    utgang: () => Promise.reject(new Error('nätet föll')),
+    hamta: () => Promise.resolve({ status: 'open', ui_mode: 'embedded' }),
+  };
+  await assertRejects(() => gamlaKassanGarUt(stripe, 'cs_test_x'));
+  const f = forsoken(ATERBRUKAT, NYTT);
+  await assertRejects(() => forsoketsKassa(stripe, f.slapp, f.skapa, false));
+  assertEquals(f.slappta, []);
+});
+
+Deno.test('en kassa: utan försök eller utan kassa görs inget hos Stripe', async () => {
+  const k = falskaKassor({});
+  const utan = forsoken({ forsok: null, belopp_ore: 0, antal_pass: 0, pagar: true });
+  assertEquals((await forsoketsKassa(k.stripe, utan.slapp, utan.skapa, true) as Forsoket).pagar, true);
+  assertEquals(await gamlaKassanGarUt(k.stripe, null), 'borta');
+  assertEquals(await gamlaKassanGarUt(k.stripe, 'inte-en-kassa'), 'borta');
+  assertEquals(k.logg, []);
 });
 
 // ---------- återbetalningen per rad ----------

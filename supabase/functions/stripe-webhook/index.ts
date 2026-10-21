@@ -240,6 +240,27 @@ Deno.serve(async (req) => {
     return { chargeId, avgiftOre: b.avgiftOre, nettoOre: b.nettoOre };
   };
 
+  /* AVGIFTEN FÖR EN BETALNING SOM BARA ÄR TILLÄGG (Betala tillägg nu,
+     granskningen 2026-10-21). Ingen pass-, köp- eller övertidsrad bär
+     chargen, så avgiften skrivs på liggarens rad när den kommer med
+     charge.updated. En avgift som redan står skrivs aldrig över. */
+  const avgiftenPaLiggaren = async (chargeId: string, forsta: ReturnType<typeof balans>) => {
+    const { data: lig, error } = await db.from('betalningar')
+      .select('id, avgift_ore').eq('stripe_charge', chargeId).eq('typ', 'syskon').maybeSingle();
+    if (error) throw new Error('betalningar: ' + error.message);
+    if (!lig) return await klar('charge utan pass');
+    if (lig.avgift_ore !== null && lig.avgift_ore !== undefined) return await klar('avgiften fanns redan');
+    let bt = forsta;
+    if (bt.avgiftOre === null && arStripeId(bt.id, 'txn')) {
+      bt = balans(await v1('GET', `/v1/balance_transactions/${bt.id}`));
+    }
+    const { error: avgfel } = await db.from('betalningar')
+      .update({ avgift_ore: bt.avgiftOre, netto_ore: bt.nettoOre })
+      .eq('id', lig.id).is('avgift_ore', null);
+    if (avgfel) throw new Error('liggarens avgift: ' + avgfel.message);
+    return await klar(bt.avgiftOre === null ? 'balanstransaktion utan avgift' : `avgift ${bt.avgiftOre} öre på liggaren`);
+  };
+
   /* EN BETALNING MED TILLÄGG ÅTERBETALAS PER RAD (syskontillagg_som_skuld).
      Liggaren har en rad per PaymentIntent, och betalningsrader en per del:
      köpet och varje tillägg. Stripes lista över återbetalningarna fördelas
@@ -581,7 +602,7 @@ Deno.serve(async (req) => {
           .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
         if (l3) throw new Error('pass_tillagg: ' + l3.message);
         const rad = pass ?? kort ?? tillagg;
-        if (!rad) return await klar('charge utan pass');
+        if (!rad) return await avgiftenPaLiggaren(chargeId, bt);
         if (rad.stripe_avgift_ore !== null && rad.stripe_avgift_ore !== undefined) {
           return await klar('avgiften fanns redan');
         }
@@ -878,17 +899,19 @@ Deno.serve(async (req) => {
           .select('id, booking_id, status').eq('stripe_charge_id', chargeId).maybeSingle();
         if (l3) throw new Error('pass_tillagg: ' + l3.message);
 
-        /* En betalning som bara är tillägg (Betala tillägg nu) bärs av ingen
-           rad ovan: tvisten flaggas på liggarens rad, och inget annat görs
-           (syskontillagg_som_skuld). */
-        const tillaggSvar = !pass && !kort && !tillagg ? await hanteraTillagg(typ, obj, skarp, tillaggDb) : null;
-
         const { data: forut, error: l4 } = await db.from('stripe_tvister')
           .select('stangd, lage').eq('id', tvistId).maybeSingle();
         if (l4) throw new Error('stripe_tvister: ' + l4.message);
         if (forut?.stangd && !stangs) {
           return await klar(`tvist ${tvistId}: sen händelse efter stängning, ignorerad`);
         }
+
+        /* En betalning som bara är tillägg (Betala tillägg nu) bärs av ingen
+           rad ovan: tvisten flaggas på liggarens rad, och inget annat görs
+           (syskontillagg_som_skuld). Efter vakten ovan (granskningen
+           2026-10-21): en sen updated efter en stängd tvist satte annars
+           betalningen i tvist igen. */
+        const tillaggSvar = !pass && !kort && !tillagg ? await hanteraTillagg(typ, obj, skarp, tillaggDb) : null;
 
         const evidens = obj.evidence_details as Record<string, unknown> | undefined;
         const { error: tvfel } = await db.from('stripe_tvister').upsert({

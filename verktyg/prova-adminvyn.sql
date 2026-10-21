@@ -157,6 +157,30 @@ insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wa
    'a1000000-0000-4000-8000-0000000005a1', 'a1000000-0000-4000-8000-0000000000f1',
    (now() at time zone 'Europe/Stockholm')::date + 8, '17:00', 60, 'confirmed', 'Matematik', 'laxhjalp',
    array['a1000000-0000-4000-8000-0000000005a2']::uuid[]);
+-- Granskningen 2026-10-21: ett betalt tillägg (Betala tillägg nu), så att Betalningar, Månadens ekonomi och
+-- bokslutet räknar ett syskontillägg, och ett som väntar på Klarna, så att Släpp betalningen syns.
+insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min,
+                             status, subject, tjanst, extra_barn) values
+  ('a1000000-0000-4000-8000-00000000b008', 'a1000000-0000-4000-8000-0000000000f1', 'a1000000-0000-4000-8000-0000000000a1',
+   'a1000000-0000-4000-8000-0000000005a1', 'a1000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date - 6, '17:00', 60, 'confirmed', 'Matematik', 'laxhjalp',
+   array['a1000000-0000-4000-8000-0000000005a2']::uuid[]),
+  ('a1000000-0000-4000-8000-00000000b009', 'a1000000-0000-4000-8000-0000000000f1', 'a1000000-0000-4000-8000-0000000000a1',
+   'a1000000-0000-4000-8000-0000000005a1', 'a1000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date - 5, '17:00', 60, 'confirmed', 'Matematik', 'laxhjalp',
+   array['a1000000-0000-4000-8000-0000000005a2']::uuid[]);
+do $$
+declare
+  f jsonb;
+begin
+  update public.bookings set status = 'completed' where id = 'a1000000-0000-4000-8000-00000000b008';
+  f := public.tillagg_forsok_skapa('a1000000-0000-4000-8000-0000000000f1', 'manuell');
+  perform public.tillagg_forsok_betald((f ->> 'forsok')::uuid, 'pi_provsyskon', 'ch_provsyskon',
+                                       (f ->> 'belopp_ore')::int, true, 450, 6450);
+  update public.bookings set status = 'completed' where id = 'a1000000-0000-4000-8000-00000000b009';
+  f := public.tillagg_forsok_skapa('a1000000-0000-4000-8000-0000000000f1', 'manuell');
+  perform public.tillagg_forsok_vantar((f ->> 'forsok')::uuid, 'cs_provklarna');
+end $$;
 insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, amne,
                                    start_tid, slut_tid) values
   ('a1000000-0000-4000-8000-00000000e003', 'a1000000-0000-4000-8000-0000000005a1', 'a1000000-0000-4000-8000-0000000000a1',

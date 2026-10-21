@@ -82,7 +82,7 @@
   const { $, esc, säg, felText, isoFor } = NX;
   const { bekräfta, medan, tomt } = NXStudie;
   const kronor = NXBetalning.kronor;
-  const { S, UTB_LAGE, fråga, hämtaAlla, kortDatum, lönemånad, namnFör, pill, tabell, underlagslägen, lägesväljare } = NXAdmin;
+  const { S, UTB_LAGE, fråga, hämtaAlla, kortDatum, lönemånad, namnFör, pill, sthlmDag, tabell, underlagslägen, lägesväljare } = NXAdmin;
 
   /* Anställningsnumren och bolagsfakta. Hämtas när sidan ritas första
      gången, och om efter varje ändring härifrån. */
@@ -639,7 +639,7 @@
       bonus: x.id,
       anstid: L.anst.get(x.varvare_profil_id),
       lonart: L.bolag.lonart_tipsbonus,
-      datum: String(x.intjanad_at).slice(0, 10),
+      datum: sthlmDag(x.intjanad_at),
       minuter: null,
       antal: 1,
       apris_ore: Number(x.brutto_ore),

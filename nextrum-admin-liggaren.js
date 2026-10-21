@@ -48,7 +48,7 @@
   const { $, $$, esc, felText } = NX;
   const { medan } = NXStudie;
   const kronor = NXBetalning.kronor;
-  const { S, fråga, funktionsFel, hämtaAlla, kortDatum, namnFör, pill, ärSuperadmin } = NXAdmin;
+  const { S, fråga, funktionsFel, hämtaAlla, kortDatum, namnFör, pill, sthlmDag, ärSuperadmin } = NXAdmin;
 
   const L = {
     rader: [], kort: [], inst: null, filter: 'alla', sök: '',
@@ -214,7 +214,7 @@
       + (märkt && märkt.skal === 'test' ? ' ' + pill('Dold', '') : '') + '</span>'
       + '</div>'
       + '<div class="lig-kort-vem">' + (familjLänk(r.familj) || '<span>Familj saknas</span>')
-      + '<time datetime="' + esc(String(r.betald_at || '').slice(0, 10)) + '">' + esc(kortDatum(r.betald_at)) + '</time></div>'
+      + '<time datetime="' + esc(sthlmDag(r.betald_at)) + '">' + esc(kortDatum(r.betald_at)) + '</time></div>'
       + '<div class="lig-kort-taggar"><span class="lig-typ" data-typ="' + esc(r.typ) + '">' + esc(TYP[r.typ] || r.typ) + '</span>'
       + (r.kod ? '<span class="lig-kod">Kod <code translate="no">' + esc(r.kod) + '</code></span>' : '')
       + (r.utan_rad ? '<span class="lig-varning">Inte nedskriven på sin rad</span>' : '')

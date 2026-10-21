@@ -15,7 +15,10 @@
        på läget. Frigör (bokad eller upplupen) och Avskriv (upplupen) kräver
        en orsak och görs i databasen (tillagg_frigor, tillagg_skriv_av),
        som också nekar allt annat. Återbetala gäller en betald post och går
-       genom dess rad i liggaren (stripe-aterbetalning, med raden).
+       genom dess rad i liggaren (stripe-aterbetalning, med raden). Släpp
+       betalningen (i betalning, granskningen 2026-10-21) gäller en betalning
+       som fastnat, oftast Klarna som aldrig blev klar: posterna blir
+       upplupna igen (tillagg_forsok_slapp_admin, med orsaken och vem).
 
    Bara superadmin: tabellerna och funktionerna släpper bara fram
    is_admin(). Orsaken är fritext från admin och visas som text. Före
@@ -42,7 +45,7 @@
     + esc(värde) + '">' + esc(text) + '</button>';
   const familjLänk = id => '<button type="button" class="eko-lank" data-dp="familj:' + esc(id) + '">'
     + esc(namnFör(id)) + '</button>';
-  const dag = iso => iso ? kortDatum(String(iso).slice(0, 10)) : '—';
+  const dag = iso => iso ? kortDatum(iso) : '—';
 
   async function hämta() {
     const [o, p, r, i] = await Promise.all([
@@ -146,6 +149,8 @@
       + pill(l[0], l[1]) + (tvist ? ' ' + pill('Tvist', 'ar-ny') : '')
       + (p.status === 'bokad' || p.status === 'upplupen' ? knapp('data-tl-frigor', p.id, 'Frigör') : '')
       + (p.status === 'upplupen' ? knapp('data-tl-skriv-av', p.id, 'Avskriv') : '')
+      + (p.status === 'i_betalning' && p.betalningsforsok_id
+        ? knapp('data-tl-slapp', p.betalningsforsok_id, 'Släpp betalningen') : '')
       + (p.status === 'betald' && r && kvar > 0 && !tvist ? knapp('data-aterbetala-rad', r.id, 'Återbetala') : '')
       + '</div>';
   }
@@ -189,6 +194,21 @@
       await medan(fr, 'Frigör…', async () => {
         const { error } = await supa.rpc('tillagg_frigor', { p_post: fr.dataset.tlFrigor, p_orsak: o });
         if (error) { alert(felText(error)); return; }
+        await ritaTillagg();
+      });
+      return;
+    }
+
+    const sl = e.target.closest('[data-tl-slapp]');
+    if (sl) {
+      const o = await orsak('Släpp betalningen?', 'Gör det bara när Stripe visar att betalningen inte gått igenom, till '
+        + 'exempel Klarna som aldrig blev klar. Alla poster i betalningen blir upplupna igen och kan betalas på nytt. '
+        + 'Kommer pengarna ändå senare bokförs de och blir en uppgift.', 'Släpp betalningen');
+      if (!o) return;
+      await medan(sl, 'Släpper…', async () => {
+        const { data, error } = await supa.rpc('tillagg_forsok_slapp_admin', { p_forsok: sl.dataset.tlSlapp, p_orsak: o });
+        if (error) { alert(felText(error)); return; }
+        if (!data) alert('Betalningen var redan släppt eller betald. Listan visar läget nu.');
         await ritaTillagg();
       });
       return;

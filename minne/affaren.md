@@ -152,6 +152,20 @@ när, skriven av databasen efter skrivningen. Den ändras aldrig, inte ens av
 djupare). Bara superadmin läser. Ansökningarna som fanns fick en rad med
 sitt steg.
 
+**Granskningen 2026-10-21**: en superadmin kunde runda stegen genom Avböjd
+(`status = 'rejected'` med `intervju_at`, sedan `status = 'new'`, gav steget
+Utbildning utan Intervju och utan intervjumejl) och genom en INSERT av en
+ansökan som redan var Godkänd. Nu börjar en ny ansökan alltid i Ny, utom för
+databasen själv, och medan en ansökan är (eller blir) Avböjd står stegets
+kolumner still, så ett ja tar den tillbaka till steget den hade. Loggen
+stoppade radering av en person som stod i den (nyckeln `andrad_av … on
+delete set null` gjorde en UPDATE som triggern nekade): en ändring där bara
+`andrad_av` blir null släpps igenom när en annan trigger eller nyckel gör den
+(`pg_trigger_depth() > 1`). Backfillen av loggen fick sina tider skrivna
+över av `now()`: tiden sätts nu bara när den saknas. Provat: `rls-test.sql`
+avsnitt 47 (`AS`, tre prov till), och de två äldre proven (16.1 och
+Intervjumejlet) som gick genom Avböjd tar nu felet 23514.
+
 **Skicka intervjulänk igen** (`ansokan_intervjulank_igen()`): samma mejl som
 när hen skickades vidare, köat i notiskön med nyckeln
 `ansokan_intervju:<id>:igen:<millisekunder>`, bara i steget Intervju och
@@ -1192,9 +1206,13 @@ visar bonusen som underlag för Leos utbetalning." Migrationen
   i tacket) eller för många försök (koden följer med, och databasen prövar
   den). Svaret säger aldrig vems koden är, och en okänd kod räknas mot ett
   tak, tio i timmen per IP-nummer som en HMAC i ett dygn (samma tabell som
-  rabattkodernas försök; IP-numret är det första i `x-forwarded-for`, som
-  barninloggningens räknare, och går att förfalska: taket är ett hinder,
-  inget skydd). En kod som inte gäller fäller aldrig ansökan.
+  rabattkodernas försök, med nyckeln `jobbkod:`), och högst 500 okända i
+  timmen totalt. IP-numret är Cloudflares `cf-connecting-ip`, och bara utan
+  den det första i `x-forwarded-for` eller `x-real-ip` (granskningen
+  2026-10-21: det första värdet i `x-forwarded-for` sätter klienten själv;
+  barninloggningens räknare läser det fortfarande, och det är äldre än
+  grenen). Taket är ett hinder, inget skydd. En kod som inte gäller fäller
+  aldrig ansökan.
 - **Kopplingen på ansökan** sätter databasen (`intern.ansokan_tipskod`):
   koden prövas (finns, sorten studiehjälpare, aktiv, ägaren godkänd och
   inte raderad), och `varvad_av_profil_id` blir ägaren. En klient kan inte
@@ -1272,6 +1290,48 @@ visar bonusen som underlag för Leos utbetalning." Migrationen
   `varvningsbonus` och avsnitt 52, VB, med 21 prov), `prova-varvning.js`
   57 av 57, `prova-adminvyn.js` mot en riktig databas och `prova-koder.js`
   (`minne/genererat-och-ci.md`).
+- **Granskningen 2026-10-21** (två granskare, oberoende av varandra, hittade
+  samma fel och bevisade det mot en lokal databas). Bonusen gick till den
+  som FÖRST skickat en ansökan med en adress: indexet på HMAC:en gällde alla
+  lägen, en senare ansökan från samma adress fick ingen rad, och kontot
+  hittade bonusen på adressen. Vem som helst med en giltig kod kunde alltså
+  skicka en ansökan med en kompis adress och ta kompisens värvning, också
+  när den ansökan avböjdes. Rättat:
+  - **Bonusen följer ansökan som blev kontot** (`applications.konto_id`;
+    adressen bara när ingen ansökan har kontot). `varvning_prova` prövar i
+    ordning: ansökan finns, en annan ansökan från samma person blev kontot,
+    ansökan avböjdes, egen kod (kontot är värvarens eget, också på adressen),
+    kontot fanns före ansökan, personen har sökt förut, personen har redan
+    gett en bonus; först sedan händelsen. Att personen är ny prövas alltså
+    igen när bonusen tjänas in (förut bara när ansökan kom, mot den adress
+    den hade då; admin som rättade adressen till ett gammalt konto gav en
+    bonus för ett konto från i våras).
+  - **En väntande rad annulleras med skälet** när ansökan avböjs, gallras
+    eller tas bort ("Ansökan gallrades eller togs bort innan bonusen
+    tjänades in"), när en annan ansökan från samma person blir kontot, och
+    när admin tar bort eller byter koden ("Koden togs bort ur ansökan",
+    "Koden i ansökan byttes"; triggern går på `update of kod,
+    varvad_av_profil_id`, för en `UPDATE OF`-trigger ser bara kolumnerna i
+    själva satsen, och värvaren sätts av en BEFORE-trigger), och den nya
+    värvaren får en ny rad. När bonusen tjänats in står koden fast (23514).
+  - **Unikheten gäller bara levande rader**: en per ansökan och en per konto
+    som inte är annullerad, och en intjänad eller utbetald per person. En
+    annullerad rad håller inte längre en adress, så ingen kan låsa en annans
+    adress med en falsk ansökan.
+  - **En rad skapas bara som `vantar` eller `annullerad`**
+    (`varvningsbonus_ny`; förut bara en BEFORE UPDATE-vakt, så en
+    edge-funktion med tjänstekontot kunde skriva en intjänad rad direkt), och
+    tjänstekontot har inga skrivrättigheter i `varvningsbonus` eller
+    `varvning_installning`.
+  - **Personen** är en HMAC av `intern.varvning_epost_nyckel`: gemener, utan
+    +tagg, och för Gmail utan punkter och med googlemail.com som gmail.com,
+    för där är kim.kompis och kimkompis samma brevlåda.
+  - `mina_tips()` visar inte en väntande rad vars ansökan avböjts, och
+    adminvyns CSV sätter en apostrof före ett värde som börjar med `=`, `+`,
+    `-`, `@`, tabb eller CR (ett namn ur en anonym ansökan hade annars blivit
+    en formel i Excel). Datumen i sektionen och lönefilen är Stockholms
+    (`sthlmDag`).
+  - Provat: `rls-test.sql` avsnitt 52 (`VB`, tio prov till) och KB.
 
 ---
 

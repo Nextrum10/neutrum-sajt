@@ -51,7 +51,7 @@
 
   const { DAG, S, TILLAGG_LAGE, elevNamn, fråga, funktionsFel, gmailAdress, hämtaAllt,
           hämtaEkonomiunderlag, kontaktaRuta, kortDatum, matchar, märkFlik, namnFör,
-          pill, skriv, skrivOmOförändrad } = NXAdmin;
+          pill, skriv, skrivOmOförändrad, sthlmDag } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
@@ -985,6 +985,41 @@
     return r;
   }
 
+  /* SYSKONTILLÄGGET (syskontillagg_som_skuld, granskningen 2026-10-21): en
+     rad per tillägg i liggaren, på dagen betalningen kom (Stockholms dag).
+     Betala tillägg nu är en egen betalning; i ett köp av timmar är
+     tillägget en egen rad i samma betalning, och köpets rad ovan räknar
+     bara köpets del. Avgiften står bara på en betalning som är tillägg och
+     inget annat: i ett köp står den på köpet. */
+  const SYSKON_LAGE = { betald: ['Betalt', 'ar-klar'], tvist: ['Tvist', 'ar-ny'], aterbetald: ['Återbetalt', ''] };
+
+  function syskonRad(r) {
+    const b = r.betalning;
+    const egen = b.typ === 'syskon';
+    const r2 = nyRad({
+      typ: 'syskon', datum: sthlmDag(b.betald_at), tid: '', dp: 'familj:' + b.familj,
+      titel: 'Syskontillägg',
+      meta: [familjLänk(b.familj), esc(egen ? 'Betala tillägg nu' : 'med ett köp av timmar')],
+      sätt: 'Kort', sök: [namnFör(b.familj), 'syskontillägg tillägg extra barn'].join(' '),
+      parent: b.familj
+    });
+    r2.test = b.skarp === false;
+    if (r2.test) r2.filter.add('test');
+    const betalt = Number(r.belopp_ore || 0), åter = Math.min(Number(r.aterbetalt_ore || 0), betalt);
+    r2.belopp = betalt;
+    r2.läge = åter >= betalt && betalt > 0 ? SYSKON_LAGE.aterbetald : (SYSKON_LAGE[b.status] || [b.status, '']);
+    if (r2.test && b.status === 'betald') r2.läge = ['Testbetalning', ''];
+    if (!r2.test) {
+      r2.in = betalt - åter;
+      r2.tillbaka = åter;
+      if (egen) r2.avgift = Number(b.avgift_ore || 0);
+    }
+    if (b.status === 'betald' && !r2.test) r2.filter.add('betalda');
+    if (b.status === 'tvist') r2.filter.add('tvist');
+    if (åter > 0) { r2.filter.add('tillbaka'); r2.under = '−' + kronor(åter) + ' tillbaka'; }
+    return r2;
+  }
+
   /* Månadens betalningar. Utan månad den som är vald här; Månadens
      ekonomi skickar sin egen och räknar sina pengar på samma rader, så
      att samma månad aldrig har två belopp på två sidor. */
@@ -1031,6 +1066,9 @@
     (S.klippkort || []).forEach(k => {
       if (['betald', 'aterbetald', 'tvist'].indexOf(k.status) === -1 || !k.betald_at) return;
       if (iMånaden(isoFor(new Date(k.betald_at)))) rader.push(köpRad(k));
+    });
+    (S.syskonRader || []).forEach(r => {
+      if (iMånaden(sthlmDag(r.betalning.betald_at))) rader.push(syskonRad(r));
     });
     return rader.sort((a, b) => (String(b.datum) + (b.tid || '')).localeCompare(String(a.datum) + (a.tid || '')));
   }
@@ -1105,7 +1143,7 @@
     const fot = $('#bet-fot');
     if (fot) {
       fot.textContent = (rader.length !== alla.length ? 'Visar ' + rader.length + ' av ' + alla.length + '. ' : '')
-        + 'Passen står på passets datum och köpta timmar på dagen de betalades. Testbetalningar räknas aldrig in i talen. '
+        + 'Passen står på passets datum, och köpta timmar och syskontillägg på dagen de betalades. Testbetalningar räknas aldrig in i talen. '
         + 'Återbetala skickar pengarna tillbaka till kortet; Stripes avgift kommer inte tillbaka. Studiehjälparnas lön står under Löner.';
     }
   }
@@ -1296,7 +1334,7 @@
     // Svaret för en annan månad står kvar nedtonat tills det nya kommer.
     if (!d || String(d.manad).slice(0, 10) !== månad) return;
 
-    const p = d.pass || {}, k = d.kort || {}, t = d.tillagg || {};
+    const p = d.pass || {}, k = d.kort || {}, t = d.tillagg || {}, sy = d.syskon || {};
     const u = d.underlag || {};
     const larm = d.larm || [];
     const b = d.bokslut;
@@ -1374,6 +1412,8 @@
         ['Netto efter Stripe', kronor(k.netto_ore)],
         ['Tillägg för övertid', kronor(t.betalt_ore) + ' · ' + (t.antal || 0) + ' st'
           + (Number(t.aterbetalt_ore) ? ' · ' + kronor(t.aterbetalt_ore) + ' tillbaka' : '')],
+        Number(sy.antal) ? ['Syskontillägg, betalda i månaden', kronor(sy.betalt_ore) + ' · ' + sy.antal + ' st'
+          + (Number(sy.aterbetalt_ore) ? ' · ' + kronor(sy.aterbetalt_ore) + ' tillbaka' : '')] : null,
         d.timmar ? ['Betalda med köpta timmar', d.timmar + ' pass'] : null,
         tb.pass ? ['Betalda ur timbanken', tb.pass + ' pass'] : null,
         tb.overtid_min ? ['Övertid ur timbanken', tim(tb.overtid_min)] : null,

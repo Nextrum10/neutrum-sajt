@@ -24,7 +24,7 @@
   const { $, esc, felText, datumText } = NX;
   const { medan, tomt } = NXStudie;
   const kronor = NXBetalning.kronor;
-  const { S, fråga, hämtaAlla, namnFör, pill, tabell, ärSuperadmin } = NXAdmin;
+  const { S, fråga, hämtaAlla, namnFör, pill, sthlmDag, tabell, ärSuperadmin } = NXAdmin;
 
   const V = { status: 'alla', månad: 'alla' };
 
@@ -48,7 +48,6 @@
   const ansökan = id => (S.ansokningar || []).find(a => a.id === id);
   // Månaden en rad hör till i filtret: den intjänade, annars när ansökan kom in.
   /* Dagarna och månaderna i Stockholms tid, inte i webbläsarens eller i UTC. */
-  const sthlmDag = t => t ? new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }) : '';
   const sthlmMånad = t => t ? sthlmDag(t).slice(0, 7) + '-01' : null;
   const dagText = t => t ? datumText(sthlmDag(t)) : '—';
   const radensMånad = b => b.manad || sthlmMånad(b.skapad_at);
@@ -58,7 +57,8 @@
     if (b.varvad_profil_id) return tutorLänk(b.varvad_profil_id);
     const a = b.varvad_ansokan_id ? ansökan(b.varvad_ansokan_id) : null;
     return a ? '<button type="button" class="eko-lank" data-dp="ansokan:' + esc(a.id) + '">' + esc(a.name || 'Ansökan')
-      + '</button><span class="adm-und">ansökan</span>' : '<span>—</span>';
+      + '</button><span class="adm-und">' + (a.status === 'rejected' ? 'ansökan, avböjd' : 'ansökan') + '</span>'
+      : '<span>—</span>';
   }
 
   function synliga() {
@@ -169,8 +169,11 @@
      Excel läser, och ett BOM så att å, ä och ö kommer med. Ören som heltal
      bredvid kronorna, så att ingen avrundning kan smyga in. */
   const kr = öre => öre == null ? '' : (Number(öre) / 100).toFixed(2).replace('.', ',');
+  /* Ett värde som börjar med = + - @ eller tabb läses som en formel i
+     Excel: det får en apostrof först. Namnen skriver den som söker. */
   const fält = v => {
-    const t = v == null ? '' : String(v);
+    let t = v == null ? '' : String(v);
+    if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
     return /[";\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
   };
   function csv(rader) {

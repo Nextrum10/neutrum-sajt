@@ -142,9 +142,14 @@ declare
 begin
   if tg_op = 'INSERT' then
     -- Kontot kopplas bara av Utbildning hållen. En ansökan som kommer in med
-    -- ett konto hade lagt beslag på en studiehjälpares konto.
+    -- ett konto hade lagt beslag på en studiehjälpares konto. Och en ny
+    -- ansökan börjar i steget Ny, också när admin skriver in den.
     if not betrodd then
       new.konto_id := null;
+      if intern.ansokan_steg(new.konto_id, new.status, new.till_intervju_at, new.intervju_at,
+                             new.utbildningsmote_at, new.utbildad_at) <> 'ny' then
+        raise exception using errcode = '23514', message = 'En ny ansökan börjar i steget Ny.';
+      end if;
     end if;
     return new;
   end if;
@@ -162,13 +167,22 @@ begin
       message = 'Kontot kopplas till ansökan med Utbildning hållen, inte för hand.';
   end if;
 
-  -- Ett nej är ett beslut, inget steg: det går att avböja i varje steg.
+  -- Ett nej är ett beslut, inget steg: det går att avböja i varje steg, men
+  -- stegen står still medan ansökan är avböjd. Tas nejet tillbaka prövas
+  -- steget mot det ansökan stod i före nejet, som vilket byte som helst.
   if new.status = 'rejected' then
+    if new.till_intervju_at is distinct from old.till_intervju_at
+       or new.intervju_at is distinct from old.intervju_at
+       or new.utbildningsmote_at is distinct from old.utbildningsmote_at
+       or new.utbildad_at is distinct from old.utbildad_at then
+      raise exception using errcode = '23514',
+        message = 'En avböjd ansökan byter inte steg. Ta tillbaka nejet först.';
+    end if;
     return new;
   end if;
 
-  fran := intern.ansokan_steg(old.konto_id, old.status, old.till_intervju_at, old.intervju_at,
-                              old.utbildningsmote_at, old.utbildad_at);
+  fran := intern.ansokan_steg(old.konto_id, case when old.status = 'rejected' then 'new' else old.status end,
+                              old.till_intervju_at, old.intervju_at, old.utbildningsmote_at, old.utbildad_at);
   till := intern.ansokan_steg(new.konto_id, new.status, new.till_intervju_at, new.intervju_at,
                               new.utbildningsmote_at, new.utbildad_at);
   if fran = till then
@@ -253,7 +267,11 @@ begin
   if new.andrad_av is not null and not exists (select 1 from public.profiles p where p.id = new.andrad_av) then
     new.andrad_av := null;
   end if;
-  new.andrad_at := now();
+  -- Databasens tid, utom när ägaren skriver raden direkt: migrationen fyller
+  -- loggen bakåt med stegens egna tider.
+  if pg_trigger_depth() > 1 or session_user not in ('postgres', 'supabase_admin') then
+    new.andrad_at := now();
+  end if;
   return new;
 end $function$;
 
@@ -265,10 +283,16 @@ create or replace function intern.ansokan_steg_logg_star_fast()
  set search_path to ''
 as $function$
 -- Loggen ändras aldrig. Den raderas bara med sin ansökan (kaskaden körs av
--- en referenstrigger, alltså ett steg djupare än en radering för hand).
+-- en referenstrigger, alltså ett steg djupare än en radering för hand), och
+-- ett konto som tas bort nollar andrad_av genom främmande nyckeln; inget
+-- annat i raden får ändras.
 begin
   if tg_op = 'DELETE' and pg_trigger_depth() > 1 then
     return old;
+  end if;
+  if tg_op = 'UPDATE' and pg_trigger_depth() > 1 and new.andrad_av is null
+     and (to_jsonb(new) - 'andrad_av') = (to_jsonb(old) - 'andrad_av') then
+    return new;
   end if;
   raise exception using errcode = '42501',
     message = 'Loggen över ansökningarnas steg ändras aldrig. Den följer med ansökan när den gallras.';

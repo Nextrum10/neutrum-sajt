@@ -503,6 +503,16 @@ Rabatten kan aldrig bli negativ och gäller aldrig syskontillägget."
   hela priset. Den är en förhandsvisning: databasen räknar igen vid köpet.
 - Provat: `rls-test.sql` avsnitt 48 (KÄ) och `prova-koder.js`.
 
+**Granskningen 2026-10-21, två kassor.** Gränsen per familj räknade bara familjens betalda köp
+(`rabattkod_anvand(…, false)`), och `klippkort_betald` prövar inte koden igen: med Basic i en flik och
+Standard i en annan fick båda rabatten, och båda kunde betalas. Nu räknar `intern.klippkort_rabatt`,
+under kodens radlås, också familjens egna väntande köp med koden som öppnats den senaste timmen (lite
+mer än kassans halvtimme), så den andra kassan får inte koden och kassan säger det. Den som lämnat en
+kassa kan använda koden på en annan plan efter en timme, och samma plan igen återanvänder det väntande
+köpet. Betalas två köp ändå blir det en uppgift (`kod_for_manga:<kod>:<familj>`, triggern
+`kod_anvandningar_for_manga`), för pengarna har då redan rört sig. Provat: `rls-test.sql` avsnitt 48
+(tre prov till).
+
 ## Betalningsliggaren och köpvillkoren i kassan (2026-10-21, `betalningsliggaren`, i drift sedan 2026-10-20)
 
 Leo (2026-10-21): Stripe bara genom webhooken, "aldrig" betalstatus eller timmar för att någon kommer
@@ -2006,6 +2016,13 @@ plan/pass/tillägg); bara visning."
   summorna.
 - Provat: `rls-test.sql` avsnitt 50 (`BD`, 7 prov) och `prova-kassan.js`
   (korten, raderna, kanten, Dolda och Annullerad).
+- **Granskningen 2026-10-21**: så länge Stripe står i testläge är varje familjs
+  betalningar `skarp = false`, och ett fel men befintligt familjenamn hade dolt en
+  annan familjs betalningar för gott. Skriptet tar därför bara ett konto med en
+  adminroll (i driften Leos), och märker en riktig betalning `annullerad` bara med
+  `markera_riktiga => true`; utan den listas de, och inget märks. Tjänstekontot
+  (`service_role`) har inga skrivrättigheter i `betalningar_dolda`: bara ägaren
+  skriver, som kommentaren alltid sagt.
 
 
 ## Syskontillägget som skuld (2026-10-21, `syskontillagg_som_skuld`, inte i drift, strömbrytaren av)
@@ -2101,3 +2118,65 @@ månadskörning och inget sparat kort för tillägget."
   flik och ett köp, två köp: varje post i exakt ett försök, och den andra väntade på låset),
   `_delad/tillagg_test.ts` (34), `prova-syskon.js` (95) och `prova-adminvyn.js` (fliken mot en
   riktig databas).
+
+### Granskningen 2026-10-21
+
+En granskare som inte skrivit koden läste pengaflödet och bevisade fynden mot en lokal databas
+(skripten i scratchpaden, varje gång mellan `begin` och `rollback`). Allt nedan rättades i samma
+migration, som inte är körd.
+
+- **Ett försök som aldrig kan bli betalt släpps.** Svarade databasen `kop_redan` (köpet betalt i
+  en annan kassa), `fel_belopp` eller `dubbel` stod försöket öppet för alltid: jobbet släpper bara
+  ett försök vars session inte blivit klar, och admin kunde varken frigöra, skriva av eller släppa
+  posterna (de stod i `i_betalning`). Nu släpps försöket i samma transaktion, och pengarna bokförs
+  utan rad med en uppgift, som förut.
+- **Klarna som aldrig blir klar.** `tillagg_forsok_vantar` känner igen försöket ur metadatan, vilken
+  kassa det än var (förut krävde den samma session, och en andra kassa som sida i stället för
+  inbäddad fick jobbet att släppa posterna medan pengarna var på väg). Jobbet frågar inte Stripe,
+  så ett försök som väntat i en vecka blir en uppgift (`tillagg_vantar:<id>`), och admin släpper
+  det under Betalningar → Syskontillägg med Släpp betalningen (`tillagg_forsok_slapp_admin`:
+  `is_admin()`, orsak 3–500 tecken, `slapp_orsak = 'admin'`, `slapp_kommentar` och `slappt_av`).
+  Kommer pengarna ändå bokförs de och blir en uppgift, som en dubbel betalning.
+- **En kassa åt gången** (`forsoketsKassa` och `gamlaKassanGarUt` i `_delad/tillagg.ts`, provade i
+  `tillagg_test.ts`). Ett försök som återanvänds har redan en kassa: är den öppen och i samma läge
+  ger samma idempotensnyckel samma kassa; annars går den ut hos Stripe (`/expire`), försöket släpps
+  med `ersatt` och ett nytt skapas med en ny halvtimme (Stripe kräver minst 30 minuter till
+  utgången, så den gamla tiden dög inte). Ett försök som databasen ersatte nära sin utgång lämnar
+  `ersatt_session`, och den kassan går också ut. Har den gamla redan blivit klar (betald, eller
+  Klarna väntar) öppnas ingen ny: kassan svarar 409 med `pagar`, och det nya försöket släpps, så
+  att betalningen bokförs på det gamla när den kommer. Kryssar familjen ur tillägget går det öppna
+  försökets kassa ut på samma sätt. Står en kassa kvar öppen trots `/expire` är det ett fel, aldrig
+  en kassa till.
+- **Buntningen som provas är den som körs.** `buntaKassan` bygger köpets rader i kassan (köpet med
+  kodens rabatt som databasen räknade den, och tillägget som egen rad), med samma regel som
+  `tillaggetFoljerMed`: med `obligatorisk_i_nasta_betalning` alltid, annars tills familjen kryssat ur
+  (bara ett uttryckligt `false`). Förut stod en annan regel i den oanvända funktionen. Raderna måste
+  gå ihop med det låsta försöket, annars öppnas ingen kassa. `huvudbeloppUrTotal` är borta: databasen
+  delar beloppet (`klippkort_betald_med_tillagg`). Ett läsfel på `tillagg_installning` är ett fel,
+  inte ett köp utan tillägget; bara en tabell som saknas (före migrationen) är som förut.
+- **Ett hållet pass som avbokas mitt i en betalning.** Förut blev posten upplupen igen när kassan
+  gick ut, och betalades kassan blev tillägget för ett avbokat pass betalt. Nu blir det en uppgift
+  när passet avbokas (`tillagg_avbokat:<post>`), och släpps betalningen blir posten frigjord:
+  `intern.tillagg_poster_tillbaka` läser `bookings.avbokad_fran` (vad passet var när det avbokades),
+  så en sen avbokning av ett bekräftat pass blir upplupen igen och ett hållet pass som avbokats
+  frigjord. Betalas den, betalas raden tillbaka för hand.
+- **Flytten före avbokningen.** Familjen kunde flytta ett bekräftat pass inom gränsen för sen
+  avbokning (passet blev en förfrågan) och sedan dra tillbaka förfrågan: tillägget blev frigjort.
+  `bookings_syskon_star_fast` nekar nu familjen att flytta ett bekräftat pass med en bokad post inom
+  gränsen (23514, med `debitera_vid_sen_avbokning` på); längre fram går det som förut.
+- **Tvisten.** Webhooken prövar en sen `charge.dispute.updated` mot den stängda tvisten innan den går
+  in i tilläggets gren (förut satte en sen händelse betalningen i tvist igen, och återbetalningen
+  nekades), och `betalning_tvist` hoppar över en helt återbetald betalning, som passen.
+- **Kodernas statistik.** En plan med tillägget som egen rad är en betalning, med planens kod och hela
+  beloppet, så partnerns volym blåstes upp med tillägget. `kod_statistik`, `partner_statistik` och
+  `kodens_anvandningar` räknar nu betalningens rader utom tilläggens (`intern.betalningens_kopdel`).
+- **Månaden.** Tilläggen räknas på betalningsdagen i Stockholm: en rad per tillägg i Betalningar och
+  Månadens ekonomi (raden Syskontillägg under Kommit in), och `syskon` i bokslutet (`manad_lage`),
+  utan testbetalningar. Avgiften för Betala tillägg nu skriver `charge.updated` på liggarens rad,
+  för ingen pass-, köp- eller övertidsrad bär den chargen; i ett köp står den på köpet.
+- **Raderingen.** `tillagg_godkannanden` raderas med kontot (förut stoppade nyckeln en familj som
+  bara godkänt villkoren), och ett barn som är syskon på ett kommande pass raderas inte förrän
+  passet avbokats (hindret `syskon_kommande`): barnen på ett pass ändras inte.
+- Provat: `rls-test.sql` avsnitt 51 (13 prov till, `SK`), `tillagg_test.ts` (8 prov för en kassa åt
+  gången och buntningen med regeln) och `prova-adminvyn.js` (fixturen har ett betalt tillägg och ett
+  som väntar på Klarna, så att Släpp betalningen och raderna i månaden ritas mot en riktig databas).

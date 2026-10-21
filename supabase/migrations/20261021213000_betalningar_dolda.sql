@@ -107,6 +107,10 @@ begin
   if exists (select 1 from pg_roles where rolname = 'nextrum_ai') then
     execute 'revoke all on public.betalningar_dolda from nextrum_ai';
   end if;
+  -- Inte heller tjänstekontot: bara databasens ägare märker (SQL Editor).
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'revoke insert, update, delete, truncate on public.betalningar_dolda from service_role';
+  end if;
 end $$;
 grant select on public.betalningar_dolda to authenticated;
 

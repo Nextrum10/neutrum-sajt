@@ -1875,3 +1875,27 @@ Regeln står i `minne/affaren.md` (Värvningsbonusen); här bara ytorna.
 - **Jobbansökan** (`bli-studiehjalpare`, båda språken): beskedet under kodfältet (`.nx-kod-besked`, `role="status"`,
   `aria-describedby` på fältet) i mossa när koden gäller och i `--acc-lugn` när den inte gör det, som filnamnets fel
   (`.nx-fil-namn.fel`); ansökan går in ändå.
+
+## Granskningen i adminvyn (2026-10-21)
+
+En granskare som inte skrivit koden läste vyerna med fokus på tidszonen; en annan pengaflödet.
+
+- **En dag ur en tidsstämpel är Stockholms.** `kortDatum` skar `slice(0, 10)` ur en tidsstämpel, alltså UTC-dagen,
+  och grenen använde den på nya ställen (rekryteringen, Löner, Koder, Insatta timmar, Liggaren, Syskontillägg): en
+  bonus intjänad 1 november kl. 00.30 stod under novembers lön med texten "intjänad 31 oktober". Kärnan har nu
+  `sthlmDag(iso)` (`toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })`; ett datum utan tid lämnas som det
+  är, och en ogiltig tid faller tillbaka på de tio första tecknen), `kortDatum` går genom den, och lönefilens datum
+  (PAXml), Liggarens `datetime`, Värvningsbonus och Avser månad under Insatta timmar använder den. Ett datum ur
+  databasen som redan är en dag (passets `wanted_date`) rörs inte.
+- **Syskontillägg → Släpp betalningen**: en post som står i en betalning har knappen; den frågar efter orsaken (3–500
+  tecken, utan namn) och kör `tillagg_forsok_slapp_admin`, som släpper hela betalningen (alla poster i den blir
+  upplupna igen, utom ett hållet pass som avbokats). Svarar databasen nej var den redan släppt eller betald.
+- **Betalningar och Månadens ekonomi** har en rad per syskontillägg, på dagen betalningen kom
+  (`S.syskonRader`, hämtade med ekonomiunderlaget: liggarens rader av typen `syskon` och betalningen de hör till),
+  med läget ur betalningen och raden (återbetald när raden är det), Stripes avgift bara för en betalning som är
+  tillägg och inget annat, och testbetalningar utanför talen. Månadens ekonomi har raden Syskontillägg under Kommit
+  in, och bokslutet raden Syskontillägg, betalda i månaden (`manad_lage` → `syskon`). Saknas tabellerna är raderna
+  inga.
+- **Radera**: hindret `syskon_kommande` säger att passen avbokas först, för barnen på ett pass ändras inte.
+- Provat: `prova-adminvyn.js` mot en databas byggd ur alla migrationer, med en betald och en väntande betalning för
+  tillägget i fixturen, så att knappen, raderna och bokslutet ritas mot de riktiga tabellerna.

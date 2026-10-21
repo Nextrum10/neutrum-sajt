@@ -42,17 +42,26 @@
 --      är en rad per sak, och raden `hinder` om något stoppar.
 --   2. Läs listan. Ändra sedan sista raden till dry_run => false och kör
 --      igen. Allt sker i en transaktion: stoppar något rullas allt tillbaka.
+--      Då döljs testbetalningarna och passen och köpen raderas; en riktig
+--      betalning listas men märks inte.
+--   3. Står det en riktig betalning i listan och ska den märkas annullerad:
+--      kör en gång till med markera_riktiga => true. Märkningen går inte att
+--      ta tillbaka (betalningar_dolda står fast).
 --   Kräver migrationen betalningar_dolda (20261021213000).
 --
 -- HINDER (inget ändras):
 --   - inget konto, eller fler än ett, med namnet, eller ett som inte är en familj
+--   - kontot har ingen adminroll: testkontot är Leos adminkonto, och en
+--     vanlig familj med ett liknande namn ska aldrig kunna träffas (så länge
+--     Stripe står i testläge är varje familjs betalningar testbetalningar)
 --   - migrationen betalningar_dolda är inte körd
 --
 -- Namnet är familjens: i driften heter familjen med testpassen "leo thriskos"
 -- (Leos adminkonto), och Leo Trikke är studiehjälparen (rensa-testkonto.sql).
 -- ============================================================
 
-create or replace function pg_temp.rensa_leo_testbetalning(p_namn text, dry_run boolean default true)
+create or replace function pg_temp.rensa_leo_testbetalning(p_namn text, dry_run boolean default true,
+                                                            markera_riktiga boolean default false)
 returns table (sort text, id text, datum date, detalj text)
 language plpgsql
 as $$
@@ -79,6 +88,9 @@ begin
   select p.id into konto from public.profiles p where lower(btrim(p.full_name)) = lower(btrim(p_namn));
   if (select p.role from public.profiles p where p.id = konto) is distinct from 'parent' then
     raise exception 'rensa_leo_testbetalning: "%" är inte en familj. Skriv familjens namn; inget har ändrats.', p_namn;
+  end if;
+  if not intern.har_adminroll(konto) then
+    raise exception 'rensa_leo_testbetalning: "%" har ingen adminroll. Skriptet tar bara testkontot (Leos adminkonto); inget har ändrats.', p_namn;
   end if;
   if not har_dolda then
     hinder := hinder || 'migrationen betalningar_dolda är inte körd: utan den går en betalning inte att märka'::text;
@@ -127,9 +139,10 @@ begin
 
   -- ---------- listan ----------
   return query select 'konto'::text, konto::text, null::date,
-    format('%s testbetalningar döljs, %s riktiga märks annullerade, %s pass och %s köp raderas, %s pass och %s köp står kvar',
-           cardinality(test), cardinality(riktiga), cardinality(pass), cardinality(kop),
-           cardinality(pass_kvar), cardinality(kop_kvar));
+    format('%s testbetalningar döljs, %s riktiga %s, %s pass och %s köp raderas, %s pass och %s köp står kvar',
+           cardinality(test), cardinality(riktiga),
+           case when markera_riktiga then 'märks annullerade' else 'listas men märks inte (markera_riktiga => true)' end,
+           cardinality(pass), cardinality(kop), cardinality(pass_kvar), cardinality(kop_kvar));
 
   return query
     select 'betalning test'::text, b.id::text, (b.betald_at at time zone 'Europe/Stockholm')::date,
@@ -141,9 +154,11 @@ begin
 
   return query
     select 'betalning riktig'::text, b.id::text, (b.betald_at at time zone 'Europe/Stockholm')::date,
-           format('%s, %s öre (%s tillbaka), %s, %s — RIKTIGA PENGAR: märks annullerad och döljs, står kvar i summorna; '
+           format('%s, %s öre (%s tillbaka), %s, %s — RIKTIGA PENGAR: %s, står kvar i summorna; '
                   'betala tillbaka i Stripe om den var ett prov', b.typ, b.belopp_ore, b.aterbetalt_ore, b.status,
-                  b.stripe_payment_intent)
+                  b.stripe_payment_intent,
+                  case when markera_riktiga then 'märks annullerad och döljs'
+                       else 'märks bara med markera_riktiga => true' end)
       from public.betalningar b where b.id = any (riktiga) order by b.betald_at;
 
   if har_rader then
@@ -208,11 +223,13 @@ begin
              from unnest($1::uuid[]) x
            on conflict (betalning_id) do nothing'
     using test;
-  execute 'insert into public.betalningar_dolda (betalning_id, skal, kommentar)
-           select x, ''annullerad'', ''Riktig betalning på testkontot: står kvar i summorna. Betala tillbaka i Stripe om den var ett prov.''
-             from unnest($1::uuid[]) x
-           on conflict (betalning_id) do nothing'
-    using riktiga;
+  if markera_riktiga then
+    execute 'insert into public.betalningar_dolda (betalning_id, skal, kommentar)
+             select x, ''annullerad'', ''Riktig betalning på testkontot: står kvar i summorna. Betala tillbaka i Stripe om den var ett prov.''
+               from unnest($1::uuid[]) x
+             on conflict (betalning_id) do nothing'
+      using riktiga;
+  end if;
 
   -- ---------- passen och köpen ----------
   -- Passen före köpen: bookings.klippkort_id är RESTRICT. Kortreservationerna,
@@ -224,7 +241,8 @@ begin
 
   return query select 'klart'::text, konto::text, null::date,
     format('märkt: %s test, %s annullerade; raderat: %s pass, %s köp',
-           cardinality(test), cardinality(riktiga), cardinality(pass), cardinality(kop));
+           cardinality(test), case when markera_riktiga then cardinality(riktiga) else 0 end,
+           cardinality(pass), cardinality(kop));
 end $$;
 
 select * from pg_temp.rensa_leo_testbetalning('leo thriskos', dry_run => true);

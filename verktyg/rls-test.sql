@@ -3147,7 +3147,12 @@ begin
     update public.applications set intervju_at = now() where id = a;
     select count(*) into utb from public.ansokan_utskick where ansokan_id = a and steg = 'utbildning';
 
-    update public.applications set status = 'rejected', utbildad_at = now() where id = a;
+    -- Sedan 2026-10-21 (granskningen av ansokningarnas_steg) byter en avböjd
+    -- ansökan inte steg alls, så samma ändring nekas; inget mejlas någon gång.
+    begin
+      update public.applications set status = 'rejected', utbildad_at = now() where id = a;
+    exception when sqlstate '23514' then null;
+    end;
     select count(*) into nej from public.ansokan_utskick where ansokan_id = a and steg in ('sista_steget', 'valkommen');
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
@@ -17692,7 +17697,12 @@ begin
            till_intervju_at = now()
      where id = S2;
     update public.applications set status = 'rejected' where id = S3;
-    update public.applications set till_intervju_at = now() where id = S3;
+    -- Sedan 2026-10-21 byter en avböjd ansökan inte steg (ansokningarnas_steg):
+    -- försöket nekas, och inget mejl köas.
+    begin
+      update public.applications set till_intervju_at = now() where id = S3;
+    exception when sqlstate '23514' then null;
+    end;
     update public.applications
        set kontaktad_at = now(), status = 'contacted', till_intervju_at = now()
      where id = S5;
@@ -18998,6 +19008,8 @@ declare
   S3   constant uuid := '00000000-0000-4000-8000-000000047a03';
   K1   constant uuid := '00000000-0000-4000-8000-000000047b01';  -- kontot för S1
   K2   constant uuid := '00000000-0000-4000-8000-000000047b02';  -- ett konto med en annan adress
+  K3   constant uuid := '00000000-0000-4000-8000-000000047b03';  -- ett konto som står i loggen och raderas
+  S4   constant uuid := '00000000-0000-4000-8000-000000047a04';
 begin
   if to_regprocedure('public.ansokan_utbildning_hallen(uuid,uuid,numeric,text[],text)') is null then
     insert into utfall (test, ok, detalj) values ('AS Ansökningarnas steg: migrationen är inte körd', true, 'hoppas över');
@@ -19061,6 +19073,21 @@ begin
     t2 := pg_temp.svar_som(AD, format('update public.applications set status = ''new'' where id = %L', S3));
     ut := ut || jsonb_build_object('t', 'AS ett nej går i varje steg, och går att ta tillbaka',
             'ok', t = 'ok' and t2 = 'ok', 'd', t || ' ' || t2);
+
+    -- Granskningen 2026-10-21: stegen står still medan ansökan är avböjd, och
+    -- ett nej som tas tillbaka prövas som ett vanligt byte.
+    t := pg_temp.svar_som(AD, format('update public.applications set status = ''rejected'', intervju_at = now() where id = %L', S3))
+      || ' ' || pg_temp.svar_som(AD, format('update public.applications set status = ''rejected'' where id = %L', S3))
+      || ' ' || pg_temp.svar_som(AD, format('update public.applications set intervju_at = now() where id = %L', S3))
+      || ' ' || pg_temp.svar_som(AD, format('update public.applications set status = ''approved'' where id = %L', S3))
+      || ' ' || pg_temp.svar_som(AD, format('update public.applications set status = ''new'' where id = %L', S3));
+    ut := ut || jsonb_build_object('t', 'AS ett nej flyttar inget steg, varken när det sätts eller tas tillbaka',
+            'ok', t = '23514 ok 23514 23514 ok' and (select a.steg from public.applications a where a.id = S3) = 'ny', 'd', t);
+
+    t := pg_temp.svar_som(AD, format('insert into public.applications (id, name, email, tjanster, status)
+                                       values (%L, ''Admin Ny'', ''rls-s47d@example.invalid'', ''{laxhjalp}'', ''approved'')', S4));
+    ut := ut || jsonb_build_object('t', 'AS en ny ansökan börjar i Ny, också när admin skriver in den',
+            'ok', t <> 'ok' and not exists (select 1 from public.applications a where a.id = S4), 'd', t);
 
     t := pg_temp.svar_som(A, format('update public.applications set till_intervju_at = now() where id = %L', S3));
     ut := ut || jsonb_build_object('t', 'AS en studiehjälpare flyttar ingen', 'ok', t in ('noll', '42501'), 'd', t);
@@ -19187,6 +19214,23 @@ begin
     ut := ut || jsonb_build_object('t', 'AS loggen följer med ansökan när den raderas',
             'ok', not exists (select 1 from public.ansokan_steg_logg l where l.ansokan_id = S3), 'd', '');
 
+    -- Granskningen 2026-10-21: ett konto som står i loggen går att radera
+    -- (andrad_av blir null), och ägaren som skriver loggen bakåt behåller tiden.
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (K3, 'rls-s47-logg@example.invalid', '{"role":"tutor","full_name":"Logg Testsson"}');
+    insert into public.ansokan_steg_logg (ansokan_id, fran, till, andrad_av, andrad_at)
+    values (S2, 'ny', 'intervju', K3, '2026-09-01 10:00:00+00');
+    begin
+      delete from auth.users where id = K3;
+      t := 'gick';
+    exception when others then t := sqlstate || ' ' || sqlerrm;
+    end;
+    ut := ut || jsonb_build_object('t', 'AS ett konto som står i loggen går att radera, och raden står kvar utan det',
+            'ok', t = 'gick' and exists (select 1 from public.ansokan_steg_logg l
+                                          where l.ansokan_id = S2 and l.andrad_av is null
+                                            and l.andrad_at = '2026-09-01 10:00:00+00'),
+            'd', t);
+
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
   end;
@@ -19225,6 +19269,10 @@ declare
   AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
   KP    constant uuid := '00000000-0000-4000-8000-000000048c01';
   KQ    constant uuid := '00000000-0000-4000-8000-000000048c02';
+  K3    constant uuid := '00000000-0000-4000-8000-000000048c03';
+  K4    constant uuid := '00000000-0000-4000-8000-000000048c04';
+  K5    constant uuid := '00000000-0000-4000-8000-000000048c05';
+  bas   bigint;
 begin
   if to_regprocedure('intern.kodens_agare()') is null then
     insert into utfall (test, ok, detalj) values ('KÄ Kodernas ägare: migrationen är inte körd', true, 'hoppas över');
@@ -19302,6 +19350,36 @@ begin
     perform set_config('request.jwt.claims', '', true);
     ut := ut || jsonb_build_object('t', 'KÄ en familj använder samma rabattkod en gång',
             'ok', not k.giltig and k.orsak like '%en gång per familj%', 'd', concat_ws(' ', k.giltig, k.orsak));
+
+    -- ---------- två kassor med samma kod (granskningen 2026-10-21) ----------
+    select e.pris_ore into bas from public.erbjudanden_pris e where e.kod = 'plan_basic';
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status, rabattkod)
+    values (K3, P, 'plan_basic', 'Basic', 'plan', 4, 1, 5, 39900, bas, 'vantar', 'RLS-AEGEN');
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status, rabattkod)
+    values (K4, P, 'plan_standard', 'Standard', 'plan', 8, 1, 5, 39900, pris, 'vantar', 'RLS-AEGEN');
+    ut := ut || jsonb_build_object('t', 'KÄ två kassor med samma kod samtidigt: den första får rabatten, den andra inte',
+            'ok', (select k2.rabattkod = 'RLS-AEGEN' and k2.begart_ore < bas from public.klippkort k2 where k2.id = K3)
+                  and (select k2.rabattkod is null and k2.begart_ore = pris from public.klippkort k2 where k2.id = K4),
+            'd', (select string_agg(coalesce(k2.rabattkod, 'ingen') || ' ' || k2.begart_ore, ', ' order by k2.id)
+                    from public.klippkort k2 where k2.id in (K3, K4)));
+    -- En kassa som stått öppen mer än en timme räknas inte: familjen kan ha lämnat den.
+    update public.klippkort set created_at = now() - interval '2 hours' where id = K3;
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status, rabattkod)
+    values (K5, P, 'plan_standard', 'Standard', 'plan', 8, 1, 5, 39900, pris, 'vantar', 'RLS-AEGEN');
+    ut := ut || jsonb_build_object('t', 'KÄ en kassa äldre än en timme hindrar inte koden på ett nytt köp',
+            'ok', (select k2.rabattkod = 'RLS-AEGEN' from public.klippkort k2 where k2.id = K5), 'd', '');
+    -- Betalas båda ändå har pengarna redan rört sig: en uppgift, och båda användningarna står.
+    perform public.klippkort_betald(K3, (select begart_ore::integer from public.klippkort where id = K3),
+                                    'pi_rls48k3', 'ch_rls48k3', null, null, null, false);
+    perform public.klippkort_betald(K5, (select begart_ore::integer from public.klippkort where id = K5),
+                                    'pi_rls48k5', 'ch_rls48k5', null, null, null, false);
+    ut := ut || jsonb_build_object('t', 'KÄ två betalda köp med en kod som gäller en gång blir en uppgift till oss',
+            'ok', (select count(*) from public.kod_anvandningar a where a.kod = 'RLS-AEGEN' and a.familj = P) = 2
+                  and exists (select 1 from public.uppgifter u where u.nyckel = 'kod_for_manga:RLS-AEGEN:' || P),
+            'd', (select count(*) from public.kod_anvandningar a where a.kod = 'RLS-AEGEN' and a.familj = P)::text);
 
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
@@ -19444,6 +19522,16 @@ begin
             'ok', t = 'Gallrad när kontot avidentifierades.'
                   and (select count(*) from public.timmar_insatta where familj = P) = 3,
             'd', coalesce(t, 'inga rader'));
+    -- Granskningen 2026-10-21: markeringen tas inte tillbaka, så orsaken kan
+    -- inte tömmas med en markering som sätts och tas bort.
+    t := pg_temp.svar_som(AD, format('update public.profiles set raderad_at = null where id = %L', P));
+    begin
+      update public.profiles set raderad_at = null where id = P;
+      t := t || ' gick';
+    exception when others then t := t || ' ' || sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'TI ett raderat konto blir inte oraderat, inte heller av databasens ägare',
+            'ok', t in ('42501 42501', 'noll 42501'), 'd', t);
 
     raise exception 'rulla tillbaka';
   exception when others then fel := sqlerrm;
@@ -19624,6 +19712,7 @@ declare
   X5     constant uuid := '00000000-0000-4000-8000-000000051b05';
   X6     constant uuid := '00000000-0000-4000-8000-000000051b06';
   KK     constant uuid := '00000000-0000-4000-8000-000000051c01';
+  BJ     constant uuid := '00000000-0000-4000-8000-000000051f01';
   VERS   constant text := '2026-10-21';
 begin
   if to_regclass('public.tillagg_poster') is null then
@@ -20053,9 +20142,11 @@ begin
       j := public.tillagg_forsok_skapa(P, 'manuell');
       fid := (j ->> 'forsok')::uuid;
       t := public.tillagg_forsok_betald(fid, 'pi_rls51fel', 'ch_rls51fel', 1000, false);
-      ut := ut || jsonb_build_object('t', 'SK fel belopp skriver inget på posterna men bokförs och blir en uppgift',
+      -- Sedan granskningen 2026-10-21 släpps försöket: det kan aldrig bli betalt, och posterna blir upplupna igen.
+      ut := ut || jsonb_build_object('t', 'SK fel belopp skriver inget på posterna men bokförs, blir en uppgift och släpper försöket',
               'ok', t = 'fel_belopp'
-                    and (select count(*) from public.tillagg_poster where id in (post1, post2) and status = 'i_betalning') = 2
+                    and (select count(*) from public.tillagg_poster where id in (post1, post2) and status = 'upplupen') = 2
+                    and (select status from public.tillagg_forsok where id = fid) = 'slappt'
                     and exists (select 1 from public.betalningar where stripe_payment_intent = 'pi_rls51fel' and utan_rad)
                     and exists (select 1 from public.uppgifter where nyckel = 'tillagg_dubbel:pi_rls51fel'),
               'd', t);
@@ -20086,6 +20177,13 @@ begin
         || ' ' || pg_temp.svar_som(Q, format('select * from public.tillagg_forsok where familj = %L', P));
       ut := ut || jsonb_build_object('t', 'SK familjerna läser inga betalningsrader, och Q inga av P:s försök', 'ok', t = 'noll noll', 'd', t);
 
+      -- Tvisten flaggas på liggarens rad, och släpps när den vunnits.
+      perform public.betalning_tvist('ch_rls51a', 'oppen');
+      t := (select status from public.betalningar where id = bet);
+      perform public.betalning_tvist('ch_rls51a', 'vunnen');
+      t := t || ' ' || (select status from public.betalningar where id = bet);
+      ut := ut || jsonb_build_object('t', 'SK en tvist flaggas på betalningen och släpps när den vunnits', 'ok', t = 'tvist betald', 'd', t);
+
       -- Delåterbetalning per rad: den första raden helt, sedan för mycket, sedan en del av den andra.
       select id into rad1 from public.betalningsrader where betalning_id = bet and tillagg_post_id = post1;
       select id into rad2 from public.betalningsrader where betalning_id = bet and tillagg_post_id = post2;
@@ -20104,12 +20202,6 @@ begin
       n := public.betalningsrader_aterbetalda('pi_rls51a', jsonb_build_object(rad2, 1000), 34500);
       ut := ut || jsonb_build_object('t', 'SK samma återbetalning två gånger ändrar ingenting', 'ok', n = 0, 'd', n::text);
 
-      -- Tvisten flaggas på liggarens rad.
-      perform public.betalning_tvist('ch_rls51a', 'oppen');
-      t := (select status from public.betalningar where id = bet);
-      perform public.betalning_tvist('ch_rls51a', 'vunnen');
-      t := t || ' ' || (select status from public.betalningar where id = bet);
-      ut := ut || jsonb_build_object('t', 'SK en tvist flaggas på betalningen och släpps när den vunnits', 'ok', t = 'tvist aterbetald', 'd', t);
 
       -- Raderna och liggaren står fast.
       t := '';
@@ -20326,6 +20418,189 @@ begin
     reset role;
     perform set_config('request.jwt.claims', '', true);
 
+    -- ---------- J. Granskningens fynd (2026-10-21) ----------
+    -- Ett hållet pass avbokas medan posten står i en betalning: en uppgift,
+    -- och släpps betalningen blir posten frigjord. En sen avbokning i samma
+    -- betalning blir upplupen igen.
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]),
+             (X6, P, B, S1, P, (snart at time zone 'Europe/Stockholm')::date,
+              to_char(snart at time zone 'Europe/Stockholm', 'HH24:MI'), 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X2;
+      perform pg_temp.bli(P);
+      update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = X6;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      fid := (j ->> 'forsok')::uuid;
+      update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = X2;
+      select id into post1 from public.tillagg_poster where bokning_id = X2;
+      ut := ut || jsonb_build_object('t', 'SK ett hållet pass som avbokas mitt i en betalning blir en uppgift, och posten står kvar i den',
+              'ok', (j ->> 'antal_pass')::int = 2
+                    and (select status from public.tillagg_poster where id = post1) = 'i_betalning'
+                    and exists (select 1 from public.uppgifter u where u.nyckel = 'tillagg_avbokat:' || post1),
+              'd', (select status from public.tillagg_poster where id = post1));
+      perform public.tillagg_forsok_slapp(fid, 'utgangen');
+      ut := ut || jsonb_build_object('t', 'SK släpps betalningen blir det avbokade hållna passets post frigjord, den sena avbokningens upplupen',
+              'ok', (select status from public.tillagg_poster where bokning_id = X2) = 'frigjord'
+                    and (select status from public.tillagg_poster where bokning_id = X6) = 'upplupen',
+              'd', (select string_agg(status, ' ' order by pass_start) from public.tillagg_poster where bokning_id in (X2, X6)));
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Ett köp som redan betalats i en annan kassa, fel belopp, Klarna som
+    -- aldrig blir klar och admins släpp.
+    begin
+      update public.flaggor set aktiv = true where kod = 'erbjudanden';
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X2;
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status)
+      select KK, P, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore, 'vantar'
+        from public.erbjudanden_pris e where e.kod = 'plan_basic';
+      select begart_ore into bel from public.klippkort where id = KK;
+      j := public.tillagg_forsok_skapa(P, 'kop', KK);
+      fid := (j ->> 'forsok')::uuid;
+      perform public.tillagg_forsok_vantar(fid, 'cs_rls51klarna');
+      perform public.klippkort_betald(KK, bel, 'pi_rls51kort', 'ch_rls51kort', null, null, null, false);
+      t := public.klippkort_betald_med_tillagg(KK, bel + 6900, 'pi_rls51klarna', 'ch_rls51klarna', null, null, null,
+                                               false, fid);
+      ut := ut || jsonb_build_object('t', 'SK ett köp som hunnit betalas i en annan kassa: försöket släpps, och posten blir upplupen igen',
+              'ok', t = 'kop_redan' and (select status from public.tillagg_forsok where id = fid) = 'slappt'
+                    and (select status from public.tillagg_poster where bokning_id = X2) = 'upplupen',
+              'd', t || ' ' || (select status from public.tillagg_forsok where id = fid));
+
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      fid := (j ->> 'forsok')::uuid;
+      t := public.tillagg_forsok_betald(fid, 'pi_rls51fel', 'ch_rls51fel', 100, false);
+      ut := ut || jsonb_build_object('t', 'SK fel belopp: bokfört utan rad med en uppgift, försöket släppt och posten upplupen',
+              'ok', t = 'fel_belopp'
+                    and (select utan_rad from public.betalningar where stripe_payment_intent = 'pi_rls51fel')
+                    and exists (select 1 from public.uppgifter u where u.nyckel = 'tillagg_dubbel:pi_rls51fel')
+                    and (select status from public.tillagg_forsok where id = fid) = 'slappt'
+                    and (select status from public.tillagg_poster where bokning_id = X2) = 'upplupen',
+              'd', t);
+
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      fid := (j ->> 'forsok')::uuid;
+      perform public.tillagg_forsok_session(fid, 'cs_rls51inbaddad');
+      t := public.tillagg_forsok_vantar(fid, 'cs_rls51sida')::text;
+      n := intern.tillagg_forsok_stada(now() + interval '36 minutes');
+      ut := ut || jsonb_build_object('t', 'SK Klarna i en andra kassa för samma försök känns igen, och jobbet släpper inte posterna',
+              'ok', t = 'true' and n = 0 and (select status from public.tillagg_forsok where id = fid) = 'oppen',
+              'd', t || ' ' || n);
+      n := intern.tillagg_forsok_stada(now() + interval '8 days');
+      ut := ut || jsonb_build_object('t', 'SK en betalning som väntat en vecka blir en uppgift, och jobbet släpper den inte',
+              'ok', n = 0 and exists (select 1 from public.uppgifter u where u.nyckel = 'tillagg_vantar:' || fid)
+                    and (select status from public.tillagg_forsok where id = fid) = 'oppen',
+              'd', n::text);
+      t := pg_temp.svar_som(P, format('select public.tillagg_forsok_slapp_admin(%L, %L)', fid, 'Familjen vill'))
+        || ' ' || pg_temp.svar_som(AD, format('select public.tillagg_forsok_slapp_admin(%L, %L)', fid, 'x'));
+      ut := ut || jsonb_build_object('t', 'SK familjen släpper ingen betalning, och admin inte utan orsak',
+              'ok', t = '42501 22023', 'd', t);
+      perform pg_temp.bli(AD);
+      t := public.tillagg_forsok_slapp_admin(fid, 'Klarna blev aldrig klar enligt Stripe')::text
+        || ' ' || public.tillagg_forsok_slapp_admin(fid, 'Klarna blev aldrig klar enligt Stripe')::text;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'SK admin släpper en betalning som fastnat: orsaken och vem står kvar, och posten blir upplupen',
+              'ok', t = 'true false'
+                    and (select slapp_orsak || ':' || slapp_kommentar || ':' || (slappt_av = AD)::text
+                           from public.tillagg_forsok where id = fid) = 'admin:Klarna blev aldrig klar enligt Stripe:true'
+                    and (select status from public.tillagg_poster where bokning_id = X2) = 'upplupen',
+              'd', t);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Tvisten, flytten inom gränsen, raderingen och kodernas statistik.
+    begin
+      update public.flaggor set aktiv = true where kod = 'erbjudanden';
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X2;
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      perform public.tillagg_forsok_betald((j ->> 'forsok')::uuid, 'pi_rls51ater', 'ch_rls51ater', 6900, false);
+      update public.betalningar set aterbetalt_ore = belopp_ore, status = 'aterbetald'
+       where stripe_payment_intent = 'pi_rls51ater';
+      t := public.betalning_tvist('ch_rls51ater', 'oppen')::text;
+      ut := ut || jsonb_build_object('t', 'SK en helt återbetald tilläggsbetalning sätts inte i tvist',
+              'ok', t = 'false' and (select status from public.betalningar where stripe_payment_intent = 'pi_rls51ater') = 'aterbetald',
+              'd', t);
+
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X6, P, B, S1, P, (snart at time zone 'Europe/Stockholm')::date,
+              to_char(snart at time zone 'Europe/Stockholm', 'HH24:MI'), 60, 'confirmed', array[S2]),
+             (X5, P, A, S1, P, idag + 10, '10:00', 60, 'confirmed', array[S2]);
+      -- Som vyns motförslag: en ny tid, och passet blir en förfrågan från familjen.
+      t := pg_temp.svar_som(P, format($q$update public.bookings set wanted_date = %L, wanted_time = '10:00',
+             status = 'requested', created_by = %L where id = %L$q$, idag + 30, P, X6))
+        || ' ' || pg_temp.svar_som(P, format($q$update public.bookings set wanted_date = %L, wanted_time = '10:00',
+             status = 'requested', created_by = %L where id = %L$q$, idag + 31, P, X5));
+      ut := ut || jsonb_build_object('t', 'SK familjen flyttar inte ett bekräftat pass med syskon inom gränsen för sen avbokning, längre fram går det',
+              'ok', t = '23514 ok', 'd', t);
+
+      j := intern.radering_underlag('elev', S2);
+      select count(*) into n from public.bookings bk
+       where S2 = any (bk.extra_barn) and bk.status in ('requested', 'confirmed') and not intern.passet_har_borjat(bk);
+      ut := ut || jsonb_build_object('t', 'SK ett barn som är syskon på ett kommande pass raderas inte förrän passet avbokats',
+              'ok', n >= 1 and exists (select 1 from jsonb_array_elements(j -> 'hinder') h
+                                        where h ->> 'kod' = 'syskon_kommande' and (h ->> 'antal')::int = n),
+              'd', n || ' ' || (j -> 'hinder')::text);
+
+      insert into auth.users (id, email, raw_user_meta_data) values
+        (BJ, 'rls51-bara-ja@example.invalid', '{"role":"parent","full_name":"Bara Ja"}');
+      insert into public.tillagg_godkannanden (familj, version) values (BJ, VERS);
+      t := pg_temp.svar_som(AD, format($q$select public.radera_person('familj', %L)$q$, BJ));
+      ut := ut || jsonb_build_object('t', 'SK en familj som bara godkänt villkoren raderas helt, med godkännandet',
+              'ok', t = 'ok' and not exists (select 1 from public.profiles where id = BJ)
+                    and not exists (select 1 from public.tillagg_godkannanden where familj = BJ),
+              'd', t);
+
+      insert into public.rabattkoder (kod, typ, varde, sort, partner_namn, max_per_familj, aktiv)
+      values ('RLS51PARTNER', 'procent', 10, 'partner', 'Provföreningen 51', 5, true);
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status, rabattkod)
+      select KK, P, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore,
+             'vantar', 'RLS51PARTNER'
+        from public.erbjudanden_pris e where e.kod = 'plan_basic';
+      select begart_ore into bel from public.klippkort where id = KK;
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X3, P, B, S1, P, idag - 2, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X3;
+      j := public.tillagg_forsok_skapa(P, 'kop', KK);
+      t := public.klippkort_betald_med_tillagg(KK, bel + (j ->> 'belopp_ore')::int, 'pi_rls51kod', 'ch_rls51kod',
+                                               null, null, null, false, (j ->> 'forsok')::uuid);
+      perform pg_temp.bli(AD);
+      select s.betalt_ore into n from public.kod_statistik(true) s where s.kod = 'RLS51PARTNER';
+      select s.betalt_ore into m from public.partner_statistik(true) s where s.partner_namn = 'Provföreningen 51';
+      select a.betalt_ore::text into t2 from public.kodens_anvandningar('RLS51PARTNER') a;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'SK kodens och partnerns statistik räknar köpets rad, inte syskontillägget i samma betalning',
+              'ok', t = 'betald' and (j ->> 'belopp_ore')::int = 6900 and n = bel and m = bel and t2 = bel::text,
+              'd', concat_ws(' ', t, bel, n, m, t2));
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
     -- Strömbrytaren av: inga nya pass med extra barn.
     update public.flaggor set aktiv = false where kod = 'syskonskuld';
     t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
@@ -20385,6 +20660,20 @@ declare
   AN5   constant uuid := '00000000-0000-4000-8000-000000052b05';
   AN6   constant uuid := '00000000-0000-4000-8000-000000052b06';
   BK    constant uuid := '00000000-0000-4000-8000-000000052c01';
+  -- Granskningen 2026-10-21.
+  K1    constant uuid := '00000000-0000-4000-8000-000000052d01';
+  G1    constant uuid := '00000000-0000-4000-8000-000000052d02';
+  H1    constant uuid := '00000000-0000-4000-8000-000000052d03';
+  AN7   constant uuid := '00000000-0000-4000-8000-000000052b07';
+  AN8   constant uuid := '00000000-0000-4000-8000-000000052b08';
+  AN9   constant uuid := '00000000-0000-4000-8000-000000052b09';
+  AN10  constant uuid := '00000000-0000-4000-8000-000000052b10';
+  AN11  constant uuid := '00000000-0000-4000-8000-000000052b11';
+  AN12  constant uuid := '00000000-0000-4000-8000-000000052b12';
+  AN13  constant uuid := '00000000-0000-4000-8000-000000052b13';
+  AN14  constant uuid := '00000000-0000-4000-8000-000000052b14';
+  AN15  constant uuid := '00000000-0000-4000-8000-000000052b15';
+  ja    jsonb;
 begin
   if to_regclass('public.varvningsbonus') is null then
     insert into utfall (test, ok, detalj) values ('VB Värvningsbonusen: migrationen är inte körd', true, 'hoppas över');
@@ -20470,12 +20759,13 @@ begin
       select n * 10 + count(*) into n from public.notis_utskick u where u.mottagare = A and u.typ = 'varvningsbonus';
       ut := ut || jsonb_build_object('t', 'VB bonusen tjänas in exakt en gång, med ett mejl', 'ok', n = 11, 'd', n::text);
 
-      -- Samma person söker igen med B:s kod: ingen rad till.
+      -- Samma person söker igen med B:s kod: raden skrivs annullerad, med
+      -- skälet, och ingen bonus kan tjänas in för den.
       insert into public.applications (id, name, email, kod) values (AN2, 'Ny Kompis', ' RLS-Kompis+jobb@Example.invalid ', kodB);
-      select count(*) into n from public.varvningsbonus
-       where varvad_ansokan_id = AN2 or varvare_profil_id = B;
+      select count(*) filter (where status <> 'annullerad') || ' ' || coalesce(max(annullerad_orsak), '-') into t
+        from public.varvningsbonus where varvad_ansokan_id = AN2 or varvare_profil_id = B;
       ut := ut || jsonb_build_object('t', 'VB samma person ger högst en bonus, också med en annan kod och en annan stavning',
-              'ok', n = 0, 'd', n::text);
+              'ok', t like '0 Har sökt förut%', 'd', t);
 
       -- Lägena går bara framåt, också för databasen själv.
       begin
@@ -20622,6 +20912,136 @@ begin
       select t || ' ' || status || ':' || coalesce(utlosare, '-') into t from public.varvningsbonus where varvad_ansokan_id = AN2;
       ut := ut || jsonb_build_object('t', 'VB byts händelsen prövas de väntande direkt mot den nya',
               'ok', t = 'vantar intjanad:konto_skapat', 'd', coalesce(t, 'ingen rad'));
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- granskningen 2026-10-21: bonusen följer ansökan som blev kontot ----------
+    begin
+      -- B skickar in en ansökan med Kims adress och sin kod; Kim söker själv med A:s kod.
+      insert into public.applications (id, name, email, kod, created_at)
+      values (AN7, 'Kim', 'rls-kim@example.invalid', kodB, now() - interval '2 hours');
+      insert into public.applications (id, name, email, kod, created_at)
+      values (AN8, 'Kim Kompis', 'RLS-Kim@Example.invalid', kodA, now() - interval '1 hour');
+      select string_agg(status || ':' || coalesce(annullerad_orsak, '-'), ' | ' order by (varvad_ansokan_id = AN7) desc) into t
+        from public.varvningsbonus where varvad_ansokan_id in (AN7, AN8);
+      ut := ut || jsonb_build_object('t', 'VB en andra ansökan med samma adress räknas inte som ny',
+              'ok', t like 'vantar:- | annullerad:Har sökt förut%', 'd', coalesce(t, 'inga rader'));
+      update public.applications set status = 'rejected' where id = AN7;
+      perform pg_temp.bli(B);
+      ja := public.mina_tips();
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'VB värvaren ser inte en väntande bonus vars ansökan avböjts',
+              'ok', not exists (select 1 from jsonb_array_elements(coalesce(ja->'varvningar', '[]'::jsonb)) e
+                                 where e->>'id' = (select v.id::text from public.varvningsbonus v where v.varvad_ansokan_id = AN7)),
+              'd', coalesce((ja->'varvningar')::text, '-'));
+      -- Kims konto blir av hens egen ansökan.
+      insert into auth.users (id, email, raw_user_meta_data) values
+        (K1, 'rls-kim@example.invalid', '{"role":"tutor","full_name":"Kim Kompis"}');
+      update public.applications set konto_id = K1 where id = AN8;
+      update public.tutor_profiles set status = 'approved' where id = K1;
+      select string_agg(status || ':' || coalesce(annullerad_orsak, '-'), ' | ' order by (varvad_ansokan_id = AN7) desc) into t
+        from public.varvningsbonus where varvad_ansokan_id in (AN7, AN8);
+      ut := ut || jsonb_build_object('t', 'VB den som skickat in en ansökan med någon annans adress får ingen bonus',
+              'ok', t like 'annullerad:En annan ansökan från samma person blev kontot. | annullerad:Har sökt förut%',
+              'd', coalesce(t, 'inga rader'));
+
+      -- Gustav har ett konto sedan länge, söker med A:s kod och en ny adress, och
+      -- admin rättar adressen till kontots innan kontot kopplas.
+      insert into auth.users (id, email, raw_user_meta_data) values
+        (G1, 'rls-gustav@example.invalid', '{"role":"tutor","full_name":"Gustav Gammal"}');
+      update public.profiles set created_at = now() - interval '200 days' where id = G1;
+      update public.tutor_profiles set status = 'approved' where id = G1;
+      insert into public.applications (id, name, email, kod) values (AN9, 'Gustav', 'rls-gustav-ny@example.invalid', kodA);
+      select status into t from public.varvningsbonus where varvad_ansokan_id = AN9;
+      update public.applications set email = 'rls-gustav@example.invalid' where id = AN9;
+      update public.applications set konto_id = G1 where id = AN9;
+      select t || ' ' || status || ':' || coalesce(annullerad_orsak, '-') into t
+        from public.varvningsbonus where varvad_ansokan_id = AN9;
+      ut := ut || jsonb_build_object('t', 'VB den som hade ett konto före ansökan räknas inte som ny, också när adressen rättas',
+              'ok', t like 'vantar annullerad:Hade redan ett konto%', 'd', coalesce(t, 'ingen rad'));
+
+      -- En väntande bonus vars ansökan gallras annulleras.
+      insert into public.applications (id, name, email, kod) values (AN10, 'Gallras', 'rls-gallras@example.invalid', kodA);
+      delete from public.applications where id = AN10;
+      select count(*) into n from public.varvningsbonus
+       where varvare_profil_id = A and status = 'annullerad' and annullerad_orsak like 'Ansökan gallrades%';
+      ut := ut || jsonb_build_object('t', 'VB en väntande bonus vars ansökan gallras annulleras', 'ok', n = 1, 'd', n::text);
+
+      -- Admin byter koden, tar bort den, och lägger till en i efterhand.
+      insert into public.applications (id, name, email, kod) values (AN11, 'Byte', 'rls-byte@example.invalid', kodA);
+      t := pg_temp.svar_som(AD, format('update public.applications set kod = %L where id = %L', kodB, AN11));
+      select t || ' ' || string_agg(case when varvare_profil_id = A then 'A' else 'B' end || ':' || status, ' '
+                                    order by status, varvare_profil_id = A desc) into t
+        from public.varvningsbonus where varvad_ansokan_id = AN11;
+      t := t || ' ' || pg_temp.svar_som(AD, format('update public.applications set kod = null where id = %L', AN11));
+      select t || ' ' || count(*) filter (where status <> 'annullerad') into t
+        from public.varvningsbonus where varvad_ansokan_id = AN11;
+      insert into public.applications (id, name, email) values (AN12, 'Sen kod', 'rls-senkod@example.invalid');
+      t := t || ' ' || pg_temp.svar_som(AD, format('update public.applications set kod = %L where id = %L', kodA, AN12));
+      select t || ' ' || coalesce(string_agg(status, ' '), 'ingen') into t
+        from public.varvningsbonus where varvad_ansokan_id = AN12 and varvare_profil_id = A;
+      ut := ut || jsonb_build_object('t', 'VB bonusen följer koden när admin byter, tar bort eller lägger till den',
+              'ok', t = 'ok A:annullerad B:vantar ok 0 ok vantar', 'd', coalesce(t, '-'));
+
+      -- En intjänad bonus följer inte med ett byte: det nekas.
+      insert into public.applications (id, name, email, kod) values (AN13, 'Hanna', 'rls-hanna@example.invalid', kodA);
+      insert into auth.users (id, email, raw_user_meta_data) values
+        (H1, 'rls-hanna@example.invalid', '{"role":"tutor","full_name":"Hanna Värvad"}');
+      update public.tutor_profiles set status = 'approved' where id = H1;
+      select status into t from public.varvningsbonus where varvad_ansokan_id = AN13;
+      t := t || ' ' || pg_temp.svar_som(AD, format('update public.applications set kod = %L where id = %L', kodB, AN13));
+      ut := ut || jsonb_build_object('t', 'VB koden byts inte på en ansökan vars bonus är intjänad',
+              'ok', t = 'intjanad 23514', 'd', t);
+
+      -- Gmail: punkter och googlemail.com är samma brevlåda.
+      insert into public.applications (id, name, email, created_at)
+      values (AN14, 'Gmail', 'rlskimkompis@gmail.com', now() - interval '1 day');
+      insert into public.applications (id, name, email, kod) values (AN15, 'Gmail', 'Rls.Kim.Kompis+x@googlemail.com', kodA);
+      select status || ':' || coalesce(annullerad_orsak, '-') into t from public.varvningsbonus where varvad_ansokan_id = AN15;
+      ut := ut || jsonb_build_object('t', 'VB en Gmail-adress med punkter räknas som samma person',
+              'ok', t like 'annullerad:Har sökt förut%', 'd', coalesce(t, 'ingen rad'));
+
+      -- En rad börjar som väntande, och tjänstekontot skriver inte i tabellen.
+      begin
+        insert into public.varvningsbonus (varvare_profil_id, varvad_epost_hmac, brutto_ore, status, semester_procent,
+                                           grundersattning_ore, semesterersattning_ore, utlosare, intjanad_at)
+        values (A, 'x', 30000, 'intjanad', 12, 26786, 3214, 'konto_skapat', now());
+        t := 'gick';
+      exception when others then t := sqlstate;
+      end;
+      begin
+        execute 'set local role service_role';
+        insert into public.varvningsbonus (varvare_profil_id, varvad_epost_hmac, brutto_ore) values (A, 'y', 1);
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      reset role;
+      ut := ut || jsonb_build_object('t', 'VB en ny rad är väntande, och tjänstekontot skriver inte i tabellen',
+              'ok', t = '23514 42501', 'd', t);
+
+      -- Taket i formuläret: cf-connecting-ip går före ett x-forwarded-for som byts,
+      -- och ett tak för alla tillsammans.
+      perform pg_temp.bli(null);
+      for i in 1..10 loop
+        perform set_config('request.headers',
+          format('{"cf-connecting-ip": "10.52.9.9", "x-forwarded-for": "1.1.1.%s"}', i), true);
+        perform public.prova_jobbkod('OKAND-CF-' || i);
+      end loop;
+      t := public.prova_jobbkod(kodA);
+      reset role;
+      insert into intern.rabattkod_forsok (nyckel) select 'jobbkod:fyllt-' || g from generate_series(1, 500) g;
+      perform set_config('request.headers', '{"cf-connecting-ip": "10.52.9.10"}', true);
+      perform pg_temp.bli(null);
+      t := t || ' ' || public.prova_jobbkod(kodA);
+      reset role;
+      perform set_config('request.headers', '', true);
+      ut := ut || jsonb_build_object('t', 'VB taket följer cf-connecting-ip, och alla tillsammans har ett tak',
+              'ok', t = 'for_manga for_manga', 'd', t);
       raise exception 'delblock';
     exception when others then
       if sqlerrm <> 'delblock' then raise; end if;

@@ -226,6 +226,14 @@ begin
           message = 'Bara en studiehjälpares kod gäller jobbansökan.';
       end if;
     end if;
+    -- En intjänad eller utbetald bonus följer inte med ett byte: den
+    -- annulleras först (en utbetald står fast). Databasens egna vägar går igenom.
+    if new.kod is distinct from old.kod and auth.uid() is not null
+       and exists (select 1 from public.varvningsbonus x
+                    where x.varvad_ansokan_id = new.id and x.status in ('intjanad', 'utbetald')) then
+      raise exception using errcode = '23514',
+        message = 'Bonusen för ansökan är redan intjänad. Annullera den under Värvningsbonus innan koden ändras.';
+    end if;
     if new.kod is distinct from old.kod then
       new.varvad_av_profil_id := (select t.person_id from public.tipskoder t
                                    where t.kod = new.kod and t.sort = 'studiehjalpare');
@@ -280,8 +288,9 @@ create table if not exists public.varvningsbonus (
   varvad_ansokan_id       uuid references public.applications(id) on delete set null,
   -- Kontot ansökan blev, satt när kontot kopplas.
   varvad_profil_id        uuid references public.profiles(id) on delete set null,
-  -- HMAC av den värvades normaliserade adress: en bonus per person, över
-  -- alla bonusar, också efter att ansökan gallrats. Aldrig adressen.
+  -- HMAC av den värvades normaliserade adress: en intjänad bonus per
+  -- person, över alla bonusar, också efter att ansökan gallrats. Aldrig
+  -- adressen.
   varvad_epost_hmac       text not null,
   -- Ögonblicksbilder: bruttot när raden skrevs, delningen när den tjänades in.
   brutto_ore              integer not null check (brutto_ore > 0),
@@ -317,12 +326,17 @@ create table if not exists public.varvningsbonus (
   constraint varvningsbonus_annullerad check ((status = 'annullerad') = (annullerad_at is not null and annullerad_orsak is not null))
 );
 
+-- En levande rad (inte annullerad) per ansökan och per konto, och en
+-- intjänad eller utbetald per person. En annullerad rad spärrar inget: den
+-- betalas aldrig, och skälet står på den. Så kan en ansökan som någon annan
+-- skickat in med en kompis adress aldrig låsa kompisens bonus.
 create unique index if not exists varvningsbonus_en_per_ansokan
-  on public.varvningsbonus (varvad_ansokan_id) where varvad_ansokan_id is not null;
+  on public.varvningsbonus (varvad_ansokan_id) where varvad_ansokan_id is not null and status <> 'annullerad';
 create unique index if not exists varvningsbonus_en_per_konto
-  on public.varvningsbonus (varvad_profil_id) where varvad_profil_id is not null;
+  on public.varvningsbonus (varvad_profil_id) where varvad_profil_id is not null and status <> 'annullerad';
 create unique index if not exists varvningsbonus_en_per_person
-  on public.varvningsbonus (varvad_epost_hmac);
+  on public.varvningsbonus (varvad_epost_hmac) where status in ('intjanad', 'utbetald');
+create index if not exists varvningsbonus_person on public.varvningsbonus (varvad_epost_hmac);
 create index if not exists varvningsbonus_varvare on public.varvningsbonus (varvare_profil_id, status);
 
 comment on table public.varvningsbonus is
@@ -342,6 +356,14 @@ create or replace function intern.varvningsbonus_vakt()
 as $function$
 -- varvningsbonus (2026-10-21).
 begin
+  -- Ansökan gallras eller tas bort innan bonusen tjänats in (nyckeln blir
+  -- null genom främmande nyckeln): den kan inte längre bli ett konto.
+  if old.status = 'vantar' and new.status = 'vantar' and old.varvad_ansokan_id is not null
+     and new.varvad_ansokan_id is null and pg_trigger_depth() > 1 then
+    new.status := 'annullerad';
+    new.annullerad_at := now();
+    new.annullerad_orsak := 'Ansökan gallrades eller togs bort innan bonusen tjänades in.';
+  end if;
   if new.id is distinct from old.id
      or new.varvare_profil_id is distinct from old.varvare_profil_id
      or new.varvad_epost_hmac is distinct from old.varvad_epost_hmac
@@ -399,6 +421,31 @@ create or replace trigger varvningsbonus_vakt
   before update on public.varvningsbonus
   for each row execute function intern.varvningsbonus_vakt();
 
+/* En ny rad börjar som väntande, eller annullerad med skälet; intjänad
+   blir den bara genom intern.varvning_prova. Bara flytten ur tipsbonus
+   (tipsbonus_id) tar med sitt läge. */
+create or replace function intern.varvningsbonus_ny()
+ returns trigger
+ language plpgsql
+ set search_path to ''
+as $function$
+-- varvningsbonus (2026-10-21).
+begin
+  if new.tipsbonus_id is null
+     and (new.status not in ('vantar', 'annullerad') or new.grundersattning_ore is not null
+          or new.intjanad_at is not null or new.utbetald_at is not null) then
+    raise exception using errcode = '23514',
+      message = 'En värvningsbonus börjar som väntande; den tjänas in av databasen.';
+  end if;
+  return new;
+end $function$;
+
+revoke all on function intern.varvningsbonus_ny() from public, anon, authenticated;
+
+create or replace trigger varvningsbonus_ny
+  before insert on public.varvningsbonus
+  for each row execute function intern.varvningsbonus_ny();
+
 create or replace function intern.varvningsbonus_raderas_aldrig()
  returns trigger
  language plpgsql
@@ -433,9 +480,29 @@ end $$;
 
 
 -- ---------- 5. vem som är ny ----------
-/* HMAC av den normaliserade adressen, med notiskonfigurationens nyckel
-   (samma som rabattkodernas försök). Null för en tom adress. Byts nyckeln
-   räknas en tidigare värvad som ny: byt den inte. */
+/* Adressen som den räknas för en person i värvningen: som
+   intern.epost_nyckel (gemener, utan +tagg), och för Gmail utan punkter
+   före @ och med googlemail.com som gmail.com, för där är kim.kompis och
+   kimkompis samma brevlåda. Bara värvningen räknar så; resten av
+   databasen jämför adresser som förut. */
+create or replace function intern.varvning_epost_nyckel(p_epost text)
+ returns text
+ language sql
+ immutable
+ set search_path to ''
+as $function$
+  select case when split_part(x.k, '@', 2) in ('gmail.com', 'googlemail.com')
+              then replace(split_part(x.k, '@', 1), '.', '') || '@gmail.com'
+              else x.k end
+    from (select intern.epost_nyckel(p_epost) as k) x
+$function$;
+
+revoke all on function intern.varvning_epost_nyckel(text) from public, anon, authenticated;
+
+/* HMAC av adressen så som den räknas för en person, med
+   notiskonfigurationens nyckel (samma som rabattkodernas försök). Null för
+   en tom adress. Byts nyckeln räknas en tidigare värvad som ny: byt den
+   inte. */
 create or replace function intern.varvning_epost_hmac(p_epost text)
  returns text
  language sql
@@ -443,11 +510,12 @@ create or replace function intern.varvning_epost_hmac(p_epost text)
  security definer
  set search_path to ''
 as $function$
-  select case when intern.epost_nyckel(p_epost) = '' then null else coalesce(
-    (select encode(extensions.hmac(convert_to('varvning:v1:' || intern.epost_nyckel(p_epost), 'UTF8'),
+  select case when intern.varvning_epost_nyckel(p_epost) = '' then null else coalesce(
+    (select encode(extensions.hmac(convert_to('varvning:v1:' || intern.varvning_epost_nyckel(p_epost), 'UTF8'),
                                    decode(k.barn_nyckel, 'base64'), 'sha256'), 'base64')
        from public.notis_konfig k where k.id = 1 and k.barn_nyckel is not null),
-    encode(extensions.digest(convert_to('varvning:v1:' || intern.epost_nyckel(p_epost), 'UTF8'), 'sha256'), 'base64'))
+    encode(extensions.digest(convert_to('varvning:v1:' || intern.varvning_epost_nyckel(p_epost), 'UTF8'), 'sha256'),
+           'base64'))
   end
 $function$;
 
@@ -455,9 +523,10 @@ revoke all on function intern.varvning_epost_hmac(text) from public, anon, authe
 
 
 -- ---------- 6. intjänandet ----------
-/* Kontot en bonus gäller: det som kopplats, annars ansökans konto
-   (konto_id), annars en studiehjälpares konto med ansökans adress (Ta in i
-   poolen kopplade ingen ansökan före 2026-10-21). */
+/* Kontot en bonus gäller: det som kopplats, annars det ansökan blev
+   (konto_id, Utbildning hållen), annars en studiehjälpare med ansökans
+   adress (godkänd i poolen utan Utbildning hållen, som före 2026-10-21).
+   Att det är rätt ansökans konto prövar intern.varvning_prova. */
 create or replace function intern.varvning_kontot(p_bonus uuid)
  returns uuid
  language sql
@@ -467,7 +536,8 @@ create or replace function intern.varvning_kontot(p_bonus uuid)
 as $function$
   select coalesce(v.varvad_profil_id, a.konto_id,
            (select p.id from public.profiles p join public.tutor_profiles t on t.id = p.id
-             where intern.epost_nyckel(p.email) = intern.epost_nyckel(a.email) and intern.epost_nyckel(a.email) <> ''
+             where intern.varvning_epost_nyckel(p.email) = intern.varvning_epost_nyckel(a.email)
+               and intern.varvning_epost_nyckel(a.email) <> ''
                and p.raderad_at is null
              order by p.created_at limit 1))
     from public.varvningsbonus v
@@ -477,11 +547,15 @@ $function$;
 
 revoke all on function intern.varvning_kontot(uuid) from public, anon, authenticated;
 
-/* Pröva en väntande bonus: kopplar kontot när det finns, och tjänar in
-   bonusen om händelsen i inställningen har inträffat för det. Exakt en
-   gång: bara en rad i vantar ändras, under radlås. Värvaren ska vara
-   godkänd och aktiv, och flaggan tipsbonus på; annars annulleras den med
-   skälet. Svarar läget efteråt. */
+/* Pröva en väntande bonus. Den följer ansökan som blev kontot, och
+   personen ska vara ny: det prövas här, när kontot finns och med kontots
+   adress, för adressen i ansökan kan ha rättats sedan raden skrevs (en
+   ansökan som avböjts, en annan ansökan som blev kontot, ett konto som
+   fanns före ansökan eller en tidigare ansökan ger ingen bonus). Sedan
+   kopplas kontot, och bonusen tjänas in om händelsen i inställningen har
+   inträffat, med värvaren godkänd och flaggan tipsbonus på. Exakt en
+   gång: bara en rad i vantar ändras, under radlås. Ett nej annullerar
+   raden med skälet. Svarar läget efteråt. */
 create or replace function intern.varvning_prova(p_bonus uuid)
  returns text
  language plpgsql
@@ -491,8 +565,11 @@ as $function$
 -- varvningsbonus (2026-10-21).
 declare
   v      public.varvningsbonus%rowtype;
+  a      public.applications%rowtype;
   inst   public.varvning_installning%rowtype;
   konto  uuid;
+  knyck  text;
+  vnyck  text;
   skett  boolean;
   orsak  text;
   grund  integer;
@@ -506,20 +583,46 @@ begin
   if konto is null then
     return 'vantar';
   end if;
-  if konto = v.varvare_profil_id then
-    update public.varvningsbonus x set status = 'annullerad', annullerad_at = now(),
-           annullerad_orsak = 'Egen kod: kontot är värvarens eget.'
+  select * into a from public.applications x where x.id = v.varvad_ansokan_id;
+  knyck := intern.varvning_epost_nyckel((select p.email from public.profiles p where p.id = konto));
+  vnyck := intern.varvning_epost_nyckel((select p.email from public.profiles p where p.id = v.varvare_profil_id));
+
+  orsak := case
+    when a.id is null
+      then 'Ansökan finns inte längre.'
+    when exists (select 1 from public.applications x where x.konto_id = konto and x.id <> a.id)
+      then 'En annan ansökan från samma person blev kontot.'
+    when a.status = 'rejected'
+      then 'Ansökan avböjdes.'
+    when konto = v.varvare_profil_id or (knyck <> '' and knyck = vnyck)
+      then 'Egen kod: kontot är värvarens eget.'
+    when (select p.created_at from public.profiles p where p.id = konto) < a.created_at
+      then 'Hade redan ett konto hos oss när ansökan kom in, och räknas inte som ny.'
+    when exists (select 1 from public.applications x
+                  where x.id <> a.id and (x.created_at, x.id) < (a.created_at, a.id)
+                    and (x.konto_id = konto
+                         or (knyck <> '' and intern.varvning_epost_nyckel(x.email) = knyck)
+                         or intern.varvning_epost_nyckel(x.email) = intern.varvning_epost_nyckel(a.email)))
+      then 'Har sökt förut, och räknas inte som ny.'
+    when exists (select 1 from public.varvningsbonus x
+                  where x.id <> v.id and x.status in ('intjanad', 'utbetald')
+                    and (x.varvad_profil_id = konto
+                         or x.varvad_epost_hmac in (v.varvad_epost_hmac, coalesce(intern.varvning_epost_hmac(knyck), ''))))
+      then 'Personen har redan gett en bonus.'
+    end;
+  if orsak is not null then
+    update public.varvningsbonus x set status = 'annullerad', annullerad_at = now(), annullerad_orsak = orsak
      where x.id = v.id;
     return 'annullerad';
   end if;
+
+  -- Det här är rätt ansökans rad. En annan väntande rad som kopplats till
+  -- kontot (en annan ansökan med samma adress) är inaktuell.
   if v.varvad_profil_id is null then
-    -- Ett konto som redan har en bonus (en annan ansökan) får ingen till.
-    if exists (select 1 from public.varvningsbonus x where x.varvad_profil_id = konto) then
-      update public.varvningsbonus x set status = 'annullerad', annullerad_at = now(),
-             annullerad_orsak = 'Kontot har redan gett en bonus.'
-       where x.id = v.id;
-      return 'annullerad';
-    end if;
+    update public.varvningsbonus x
+       set status = 'annullerad', annullerad_at = now(),
+           annullerad_orsak = 'En annan ansökan från samma person blev kontot.'
+     where x.varvad_profil_id = konto and x.status = 'vantar' and x.id <> v.id;
     update public.varvningsbonus x set varvad_profil_id = konto where x.id = v.id;
   end if;
 
@@ -528,13 +631,13 @@ begin
     when 'konto_skapat' then
       exists (select 1 from public.tutor_profiles t join public.profiles p on p.id = t.id
                where t.id = konto and t.status = 'approved' and p.raderad_at is null)
-      or exists (select 1 from public.applications a where a.id = v.varvad_ansokan_id and a.konto_id = konto)
+      or a.konto_id = konto
     when 'prov_godkant' then
       exists (select 1 from public.prov_studiehjalpare s where s.id = konto and s.utbildningsprov_godkant_at is not null)
     when 'forsta_pass_genomfort' then
       exists (select 1 from public.lesson_reports r where r.tutor_id = konto and r.booking_id is not null)
     else false end;
-  if not skett then
+  if not coalesce(skett, false) then
     return 'vantar';
   end if;
 
@@ -578,7 +681,8 @@ end $function$;
 revoke all on function intern.varvning_prova(uuid) from public, anon, authenticated;
 
 /* Pröva alla väntande bonusar för ett konto: de som kopplats till det,
-   den vars ansökan blev det, och de vars ansökan har kontots adress. */
+   den vars ansökan blev det, och de vars ansökan har kontots adress. Den
+   ansökan som blev kontot prövas först, så att dess rad vinner. */
 create or replace function intern.varvning_prova_konto(p_konto uuid)
  returns void
  language plpgsql
@@ -588,7 +692,7 @@ as $function$
 -- varvningsbonus (2026-10-21).
 declare
   id_ uuid;
-  ep  text := (select intern.epost_nyckel(p.email) from public.profiles p where p.id = p_konto);
+  ep  text := (select intern.varvning_epost_nyckel(p.email) from public.profiles p where p.id = p_konto);
 begin
   for id_ in
     select v.id from public.varvningsbonus v
@@ -596,8 +700,8 @@ begin
      where v.status = 'vantar'
        and (v.varvad_profil_id = p_konto
             or (v.varvad_profil_id is null
-                and (a.konto_id = p_konto or (coalesce(ep, '') <> '' and intern.epost_nyckel(a.email) = ep))))
-     order by v.skapad_at, v.id
+                and (a.konto_id = p_konto or (coalesce(ep, '') <> '' and intern.varvning_epost_nyckel(a.email) = ep))))
+     order by (a.konto_id is not distinct from p_konto) desc, v.skapad_at, v.id
   loop
     perform intern.varvning_prova(id_);
   end loop;
@@ -609,9 +713,12 @@ revoke all on function intern.varvning_prova_konto(uuid) from public, anon, auth
 -- ---------- 7. raden när ansökan kommer in ----------
 /* En ansökan med en giltig kod ger en rad: vantar om den som söker är ny,
    annars annullerad med skälet, så att beslutet syns. Ingen rad när
-   flaggan tipsbonus står av, eller när personen redan har en bonusrad
-   (en per person). Kommer koden till senare (admin) prövas raden direkt,
-   för kontot kan redan finnas. */
+   flaggan tipsbonus står av. Byter admin koden annulleras den väntande
+   raden för den förra värvaren och en ny skrivs för den nya, och den
+   prövas direkt, för kontot kan redan finnas; en intjänad rad hindrar
+   bytet (intern.ansokan_tipskod). Triggern går på kod också: värvaren
+   sätts av en BEFORE-trigger, och en UPDATE OF ser bara kolumnerna i
+   själva UPDATE:n. */
 create or replace function intern.varvning_skapa()
  returns trigger
  language plpgsql
@@ -620,36 +727,45 @@ create or replace function intern.varvning_skapa()
 as $function$
 -- varvningsbonus (2026-10-21).
 declare
-  nyckel text := intern.epost_nyckel(new.email);
+  nyckel text := intern.varvning_epost_nyckel(new.email);
   h      text;
   orsak  text;
   id_    uuid;
 begin
-  if new.varvad_av_profil_id is null
-     or (tg_op = 'UPDATE' and new.varvad_av_profil_id is not distinct from old.varvad_av_profil_id) then
+  if tg_op = 'UPDATE' then
+    if new.varvad_av_profil_id is not distinct from old.varvad_av_profil_id then
+      return null;
+    end if;
+    update public.varvningsbonus x
+       set status = 'annullerad', annullerad_at = now(),
+           annullerad_orsak = case when new.varvad_av_profil_id is null then 'Koden togs bort ur ansökan.'
+                                   else 'Koden i ansökan byttes.' end
+     where x.varvad_ansokan_id = new.id and x.status = 'vantar';
+  end if;
+  if new.varvad_av_profil_id is null then
     return null;
   end if;
   if not coalesce((select f.aktiv from public.flaggor f where f.kod = 'tipsbonus'), false) then
     return null;
   end if;
-  if exists (select 1 from public.varvningsbonus v where v.varvad_ansokan_id = new.id) then
-    return null;
-  end if;
   h := intern.varvning_epost_hmac(new.email);
-  if h is null or exists (select 1 from public.varvningsbonus v where v.varvad_epost_hmac = h) then
+  if h is null then
     return null;
   end if;
 
   orsak := case
-    when intern.epost_nyckel((select p.email from public.profiles p where p.id = new.varvad_av_profil_id)) = nyckel
+    when intern.varvning_epost_nyckel((select p.email from public.profiles p where p.id = new.varvad_av_profil_id)) = nyckel
       then 'Egen kod: den som sökte äger koden.'
     when exists (select 1 from public.applications a
-                  where a.id <> new.id and intern.epost_nyckel(a.email) = nyckel
+                  where a.id <> new.id and intern.varvning_epost_nyckel(a.email) = nyckel
                     and (a.created_at, a.id) < (new.created_at, new.id))
       then 'Har sökt förut, och räknas inte som ny.'
     when exists (select 1 from public.profiles p
-                  where intern.epost_nyckel(p.email) = nyckel and p.created_at < new.created_at)
+                  where intern.varvning_epost_nyckel(p.email) = nyckel and p.created_at < new.created_at)
       then 'Hade redan ett konto hos oss när ansökan kom in, och räknas inte som ny.'
+    when exists (select 1 from public.varvningsbonus v
+                  where v.varvad_epost_hmac = h and v.status in ('intjanad', 'utbetald'))
+      then 'Personen har redan gett en bonus.'
     end;
 
   insert into public.varvningsbonus (varvare_profil_id, varvad_ansokan_id, varvad_epost_hmac, brutto_ore,
@@ -668,7 +784,7 @@ end $function$;
 revoke all on function intern.varvning_skapa() from public, anon, authenticated;
 
 create or replace trigger applications_varvning
-  after insert or update of varvad_av_profil_id on public.applications
+  after insert or update of kod, varvad_av_profil_id on public.applications
   for each row execute function intern.varvning_skapa();
 
 
@@ -951,7 +1067,10 @@ begin
                                 end)
                      order by b.skapad_at desc, b.id), '[]'::jsonb)
                      from public.varvningsbonus b
-                    where b.varvare_profil_id = jag and b.status <> 'annullerad')
+                    where b.varvare_profil_id = jag and b.status <> 'annullerad'
+                      and not (b.status = 'vantar'
+                               and exists (select 1 from public.applications x
+                                            where x.id = b.varvad_ansokan_id and x.status = 'rejected')))
   );
 end $function$;
 
@@ -1038,6 +1157,7 @@ as $function$
 -- varvningsbonus (2026-10-21).
 declare
   ren    text := upper(regexp_replace(coalesce(p_kod, ''), '[[:space:]]', '', 'g'));
+  h      json;
   ip     text;
   nyckel text;
 begin
@@ -1045,16 +1165,27 @@ begin
     return 'tom';
   end if;
   begin
-    ip := split_part(coalesce(current_setting('request.headers', true)::json ->> 'x-forwarded-for',
-                              current_setting('request.headers', true)::json ->> 'x-real-ip', ''), ',', 1);
+    h := current_setting('request.headers', true)::json;
   exception when others then
-    ip := '';
+    h := null;
   end;
-  nyckel := (select encode(extensions.hmac(convert_to('jobbkod-forsok:v1:' || coalesce(nullif(btrim(ip), ''), 'okand'), 'UTF8'),
-                                           decode(k.barn_nyckel, 'base64'), 'sha256'), 'base64')
-               from public.notis_konfig k where k.id = 1 and k.barn_nyckel is not null);
-  nyckel := coalesce(nyckel, 'jobbkod:' || md5(coalesce(nullif(btrim(ip), ''), 'okand')));
-  if intern.rabattkod_for_manga(nyckel) then
+  -- Cloudflares cf-connecting-ip går inte att skicka med själv genom
+  -- Cloudflare; finns den inte, det första numret i x-forwarded-for, som
+  -- barninloggningens räknare. Taket är ett hinder, inget skydd: koden
+  -- prövas igen när ansökan kommer in.
+  ip := coalesce(nullif(btrim(h ->> 'cf-connecting-ip'), ''),
+                 nullif(btrim(split_part(coalesce(h ->> 'x-forwarded-for', ''), ',', 1)), ''),
+                 nullif(btrim(h ->> 'x-real-ip'), ''), 'okand');
+  nyckel := 'jobbkod:' || coalesce(
+    (select encode(extensions.hmac(convert_to('jobbkod-forsok:v1:' || ip, 'UTF8'),
+                                   decode(k.barn_nyckel, 'base64'), 'sha256'), 'base64')
+       from public.notis_konfig k where k.id = 1 and k.barn_nyckel is not null),
+    encode(extensions.digest(convert_to('jobbkod-forsok:v1:' || ip, 'UTF8'), 'sha256'), 'base64'));
+  -- Ett tak för alla tillsammans också, så att ett nytt nummer i varje anrop
+  -- inte fyller tabellen: 500 okända koder i timmen.
+  if intern.rabattkod_for_manga(nyckel)
+     or (select count(*) from intern.rabattkod_forsok f
+          where f.nyckel like 'jobbkod:%' and f.tid > now() - interval '1 hour') >= 500 then
     return 'for_manga';
   end if;
   if ren ~ '^[A-Z0-9][A-Z0-9-]{2,23}$'
@@ -1223,6 +1354,14 @@ begin
   end loop;
 end $$;
 grant select on public.varvning_installning, public.varvningsbonus to authenticated;
+-- Inte heller tjänstekontot (edge-funktionerna) skriver i dem: bara
+-- databasens egna funktioner, som körs som ägaren, och Leo med SQL.
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    revoke insert, update, delete, truncate on public.varvning_installning, public.varvningsbonus from service_role;
+  end if;
+end $$;
 
 do $$
 begin

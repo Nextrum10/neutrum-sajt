@@ -363,9 +363,20 @@ const NXAdmin = (function () {
     return p ? (p.full_name || p.email || '—') : '—';
   }
 
+  /* Dagen i Stockholms tid (2026-10-21). En tidsstämpel kommer från
+     databasen i UTC, så en händelse 00.30 den 1:a hade stått som dagen
+     före; ett datum utan klocka står som det är. */
+  function sthlmDag(iso) {
+    if (!iso) return '';
+    const t = String(iso);
+    if (t.length <= 10) return t;
+    const d = new Date(t);
+    return isNaN(d) ? t.slice(0, 10) : d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+  }
+
   function kortDatum(iso) {
     if (!iso) return '—';
-    return datumText(String(iso).slice(0, 10));
+    return datumText(sthlmDag(iso));
   }
 
   /* VILKEN MÅNADS LÖN ETT PASS HÖR TILL (2026-09-28, om 2026-10-01)
@@ -661,7 +672,7 @@ const NXAdmin = (function () {
     /* Saknas tabellen (migrationen varvningsbonus är inte körd) är
        bonusarna inga, och Löner räknar som förut. Lönemånaden är månaden
        bonusen tjänades in, i Stockholms tid, som passens. */
-    const sthlmMånad = t => new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }).slice(0, 7) + '-01';
+    const sthlmMånad = t => sthlmDag(t).slice(0, 7) + '-01';
     S.varvningsbonus = (bonus.data || []).map(b => Object.assign({}, b, {
       manad: b.intjanad_at ? sthlmMånad(b.intjanad_at) : null
     }));
@@ -731,18 +742,32 @@ const NXAdmin = (function () {
      som saknar sin. Saknas vyn — migrationen inte körd — säger
      avvikelsefliken det, i stället för att hela vyn dör. */
   async function hämtaEkonomiunderlag() {
-    const [pu, fri, avv] = await Promise.all([
+    const [pu, fri, avv, syr, syb] = await Promise.all([
       hämtaAlla('passunderlag', '*', nyastFörst('wanted_date')),
       hämtaAlla('lesson_reports', 'id, student_id, tutor_id, lesson_date, created_at, raw_notes',
         q => q.is('booking_id', null).order('lesson_date', { ascending: false })),
       /* Fas 6: allt annat som inte går ihop, räknat i databasen. */
-      supa.rpc('ekonomiska_avvikelser')
+      supa.rpc('ekonomiska_avvikelser'),
+      /* Syskontilläggen (syskontillagg_som_skuld, granskningen 2026-10-21):
+         liggarens rader av typen syskon, både Betala tillägg nu och raden i
+         ett köp, med betalningen de hör till. Köpets egen rad räknar bara
+         köpets del, så utan de här saknades tillägget i månadens summa. */
+      hämtaAlla('betalningsrader', 'id, betalning_id, belopp_ore, aterbetalt_ore', q => q.eq('typ', 'syskon')),
+      hämtaAlla('betalningar', 'id, familj, typ, status, betald_at, skarp, avgift_ore', q => q)
     ]);
     S.passunderlagFel = pu.error ? felText(pu.error) : null;
     S.passunderlag = pu.data || [];
     S.fristaendeRapporter = fri.data || [];
     S.avvikelserFel = avv.error ? felText(avv.error) : null;
     S.avvikelser = avv.data || [];
+    /* Saknas tabellerna (migrationerna är inte körda) finns inga tillägg att räkna. */
+    const saknasTabell = fel => fel && (/PGRST205|42P01/.test(String(fel.code))
+      || /could not find the table/i.test(String(fel.message || '')));
+    const betalningar = new Map((syb.data || []).map(b => [b.id, b]));
+    S.syskonRader = (syr.data || []).map(r => Object.assign({}, r, { betalning: betalningar.get(r.betalning_id) || null }))
+      .filter(r => r.betalning && r.betalning.betald_at);
+    S.syskonFel = syr.error && !saknasTabell(syr.error) ? felText(syr.error)
+      : syb.error && !saknasTabell(syb.error) ? felText(syb.error) : null;
   }
 
   /* ------------------------------------------------------------
@@ -1125,7 +1150,7 @@ const NXAdmin = (function () {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     gmailAdress, gmailLänk, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
-    kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,
+    kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad, sthlmDag,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
     lägesväljare, räknas, får,
     ärAdminkonto, ärNyNu, ärRaderad, ärSuperadmin, rita

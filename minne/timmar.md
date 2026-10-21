@@ -930,4 +930,14 @@ skapade kortet). Det saknades: varför, och vilken månad.
   migrationer 2026-10-21.
 - Provat: `rls-test.sql` avsnitt 49 (`TI`, 15 prov), `prova-intag.js` och
   `prova-adminvyn.js` (raden läses ur en riktig databas).
+- **Granskningen 2026-10-21**: orsaken gick att tömma på en familj som fanns
+  kvar. `skydda_profilfalt` släpper igenom admin, så en superadmin som satte
+  `profiles.raderad_at` och tog bort den igen gav orsaken "Gallrad", och
+  familjen stod kvar som förut. Nu står `raderad_at` fast när den satts
+  (`profiles_raderad_star_fast`, också mot databasens ägare: en raderad
+  familj blir aldrig oraderad), och `timmar_insatta_star_fast` släpper vid
+  `pg_trigger_depth() > 1` bara det databasen gör där: en nyckel som blir
+  null och orsaken som töms vid gallringen, inget annat. Provat:
+  `rls-test.sql` avsnitt 49 (ett prov till). Avser månad förväljs i
+  Stockholms tid också i webbläsaren (`nextrum-admin-detalj.js`).
 

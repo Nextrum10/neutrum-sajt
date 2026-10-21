@@ -745,3 +745,19 @@ ur `prova-adminvyn.sql` (intjänad genom att kontot godkänns, väntande, och an
 `prova-koder.js` provar Markera utbetald i Löner, och `prova-barnkonton.js` att en admin med behörigheter aldrig
 hämtar bonusarna eller inställningen.
 
+
+### Granskningen (2026-10-21)
+Tre granskare som inte skrivit koden läste hela diffen (databasens skydd, pengaflödet, tidszonen och vyerna) och
+bevisade sina fynd mot en lokal databas, varje gång mellan `begin` och `rollback`. Proven för rättelserna:
+`rls-test.sql` fick 30 prov till (AS 3, KÄ 3, TI 1, SK 13, VB 10) och två ändrade (fel belopp släpper nu försöket,
+och tvisten provas före återbetalningarna, för en helt återbetald betalning sätts inte längre i tvist); hela filen
+gick 2105 av 2105 mot en databas byggd ur alla 220 migrationer. Två äldre prov (16.1 stegen och Intervjumejlet) gick
+genom Avböjd för att hoppa över steg och fångar nu 23514. `tillagg_test.ts` fick 8 prov för en kassa åt gången
+(`forsoketsKassa`, `gamlaKassanGarUt` med en falsk Stripe) och buntningen med samma regel som kassan
+(`tillaggetFoljerMed`); proven för `huvudbeloppUrTotal` och ett pass som buntas är borta med funktionen och regeln.
+`prova-adminvyn.sql` har en betald och en väntande betalning för tillägget, så att Släpp betalningen, raderna i
+Betalningar och Månadens ekonomi och bokslutets rad ritas mot de riktiga tabellerna.
+
+Ett fel i ett prov att komma ihåg: en DO-block-variabel heter som ett tabellalias utan att märkas (`B constant uuid`
+och `from public.bookings b` ger "column reference "b" is ambiguous", för plpgsql skiljer inte på versaler). Avsnitt
+51 har `B` för en studiehjälpare, så aliaset där är `bk`.

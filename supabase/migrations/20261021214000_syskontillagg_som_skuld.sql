@@ -43,6 +43,13 @@
 --      kvittot.
 --   9. Två jobb: ett försök som ingen betalat släpps efter 35 minuter, och
 --      påminnelsen går en gång om dagen.
+--  10. Granskningen 2026-10-21 (innan filen kördes någonstans): ett försök
+--      som aldrig kan bli betalt släpps, admin släpper ett som fastnat med en
+--      orsak, ett hållet pass som avbokas mitt i en betalning blir frigjort
+--      när betalningen släpps, familjen flyttar inte ett bekräftat pass inom
+--      gränsen för sen avbokning, godkännandet raderas med kontot, och
+--      kodernas statistik och bokslutet räknar tilläggen rätt (avsnitt 16
+--      och 17).
 --
 -- PASS FÖR PASS BUNTAS INTE. Betala nu för ett pass skrivs av webhooken
 -- på tre vägar (passets rad, timmarna tillbaka och timbank_kort_vinner),
@@ -159,7 +166,9 @@ create or replace trigger tillagg_installning_vakt
 
 -- ---------- 2. familjens ja ----------
 create table if not exists public.tillagg_godkannanden (
-  familj      uuid not null references public.profiles(id) on delete restrict,
+  -- Följer kontot, som villkor_godkannanden och kopvillkor_godkannanden: med
+  -- restrict gick en familj som bara godkänt villkoren inte att radera.
+  familj      uuid not null references public.profiles(id) on delete cascade,
   version     text not null check (version ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'),
   godkand_at  timestamptz not null default now(),
   primary key (familj, version)
@@ -283,7 +292,10 @@ create table if not exists public.tillagg_forsok (
   stripe_payment_intent  text check (stripe_payment_intent is null or stripe_payment_intent ~ '^pi_[A-Za-z0-9_]+$'),
   betalning_id           uuid references public.betalningar(id) on delete restrict,
   slapp_orsak            text check (slapp_orsak is null
-                                     or slapp_orsak in ('utgangen', 'avbruten', 'jobbet', 'ersatt')),
+                                     or slapp_orsak in ('utgangen', 'avbruten', 'jobbet', 'ersatt', 'admin')),
+  -- När admin släppte det (tillagg_forsok_slapp_admin): skälet och vem.
+  slapp_kommentar        text check (slapp_kommentar is null or char_length(btrim(slapp_kommentar)) between 3 and 500),
+  slappt_av              uuid,
   skapad_at              timestamptz not null default now(),
   upphor_at              timestamptz not null,
   -- Sessionen är klar men pengarna kommer senare (Klarna): jobbet släpper den inte.
@@ -292,7 +304,8 @@ create table if not exists public.tillagg_forsok (
   constraint tillagg_forsok_kop check ((slag = 'kop') = (klippkort_id is not null)),
   constraint tillagg_forsok_betald check ((status = 'betald') = (betalning_id is not null)),
   constraint tillagg_forsok_betald_pi check (status <> 'betald' or stripe_payment_intent is not null),
-  constraint tillagg_forsok_slappt check (status <> 'slappt' or slapp_orsak is not null)
+  constraint tillagg_forsok_slappt check (status <> 'slappt' or slapp_orsak is not null),
+  constraint tillagg_forsok_admin check ((slapp_orsak = 'admin') = (slapp_kommentar is not null))
 );
 create index if not exists tillagg_forsok_oppna on public.tillagg_forsok (familj) where status = 'oppen';
 
@@ -442,7 +455,7 @@ begin
   if new.status is distinct from old.status then
     if not ((old.status = 'bokad' and new.status in ('upplupen', 'frigjord'))
             or (old.status = 'upplupen' and new.status in ('i_betalning', 'avskriven', 'frigjord'))
-            or (old.status = 'i_betalning' and new.status in ('betald', 'upplupen'))
+            or (old.status = 'i_betalning' and new.status in ('betald', 'upplupen', 'frigjord'))
             or (old.status = 'betald' and new.status = 'aterbetald')) then
       raise exception using errcode = '23514',
         message = format('Tillägget kan inte gå från %s till %s.', old.status, new.status);
@@ -452,7 +465,7 @@ begin
     new.frigjord_at := case when new.status = 'frigjord' then now() else old.frigjord_at end;
     new.avskriven_at := case when new.status = 'avskriven' then now() else old.avskriven_at end;
     new.aterbetald_at := case when new.status = 'aterbetald' then now() else old.aterbetald_at end;
-    if new.status = 'upplupen' then
+    if new.status in ('upplupen', 'frigjord') then
       new.betalningsforsok_id := null;
     end if;
   elsif (new.upplupen_at, new.betald_at, new.frigjord_at, new.avskriven_at, new.aterbetald_at)
@@ -527,8 +540,9 @@ begin
         message = format('Betalningsförsöket kan inte gå från %s till %s.', old.status, new.status);
     end if;
     new.avslutad_at := now();
-  elsif (new.betalning_id, new.stripe_payment_intent, new.slapp_orsak, new.avslutad_at)
-        is distinct from (old.betalning_id, old.stripe_payment_intent, old.slapp_orsak, old.avslutad_at) then
+  elsif (new.betalning_id, new.stripe_payment_intent, new.slapp_orsak, new.avslutad_at, new.slapp_kommentar, new.slappt_av)
+        is distinct from
+        (old.betalning_id, old.stripe_payment_intent, old.slapp_orsak, old.avslutad_at, old.slapp_kommentar, old.slappt_av) then
     raise exception using errcode = '42501', message = 'Försökets betalning följer bara läget.';
   end if;
   return new;
@@ -972,7 +986,26 @@ create or replace function intern.bookings_syskon_star_fast()
  set search_path to ''
 as $function$
 -- syskontillagg_som_skuld (2026-10-21).
+declare
+  i public.tillagg_installning%rowtype;
 begin
+  -- Granskningen 2026-10-21: att flytta ett bekräftat pass inom gränsen för
+  -- sen avbokning och sedan dra tillbaka förfrågan hade frigjort tillägget.
+  -- Familjen flyttar därför inte ett sådant pass; den avbokar det, och då
+  -- gäller regeln för sen avbokning.
+  if old.status = 'confirmed' and auth.uid() is not null and auth.uid() = old.parent_id
+     and (new.wanted_date is distinct from old.wanted_date or new.wanted_time is distinct from old.wanted_time)
+     and exists (select 1 from public.tillagg_poster t where t.bokning_id = old.id and t.status = 'bokad') then
+    select * into i from public.tillagg_installning where id = 1;
+    if coalesce(i.debitera_vid_sen_avbokning, true)
+       and intern.tillagg_sen_avbokning(intern.passets_start(old.wanted_date, old.wanted_time), now(),
+                                        coalesce(i.sen_avbokning_timmar, 24)) then
+      raise exception using errcode = '23514',
+        message = format('Passet börjar inom %s timmar och har tillägg för syskon. Det flyttas inte nu: '
+                         || 'avboka det (det räknas som en sen avbokning) eller låt det stå.',
+                         coalesce(i.sen_avbokning_timmar, 24));
+    end if;
+  end if;
   if coalesce(new.extra_barn, '{}') is distinct from coalesce(old.extra_barn, '{}') then
     raise exception using errcode = '42501',
       message = 'Barnen på ett bokat pass ändras inte. Avboka passet och boka ett nytt med rätt barn.';
@@ -1093,6 +1126,18 @@ begin
   elsif new.status = 'cancelled' and old.status = 'completed' and p.status = 'upplupen' then
     ny := 'frigjord';
     varfor := 'Passet avbokades efter att det markerats som genomfört.';
+  elsif new.status = 'cancelled' and old.status = 'completed' and p.status in ('i_betalning', 'betald') then
+    -- Granskningen 2026-10-21: posten står i en betalning eller är betald.
+    -- Släpps betalningen blir posten frigjord (intern.tillagg_poster_tillbaka);
+    -- betalas den, eller är den betald, betalas raden tillbaka för hand.
+    perform public.skapa_uppgift(
+      'Ett pass med syskontillägg avbokades efter att det hållits',
+      'tillagg_avbokat:' || p.id,
+      'problem',
+      'Tillägget för passet ' || new.id || ' ' || case when p.status = 'betald' then 'är betalt'
+        else 'betalas just nu' end || '. Betala tillbaka raden under Betalningar → Syskontillägg om familjen inte '
+        || 'ska betala det.',
+      'profiles', p.familj_id::text);
   end if;
 
   if ny is not null then
@@ -1108,8 +1153,33 @@ create or replace trigger bookings_syskon_foljer
   for each row execute function intern.bookings_syskon_foljer();
 
 -- ---------- 9. betalningsförsöken ----------
-/* Släpp ett öppet försök: posterna tillbaka till upplupen. Svarar sant
-   om något släpptes nu. Anroparen håller familjens lås. */
+/* Posterna i ett släppt försök tillbaka: upplupna igen, utom för ett pass
+   som hållits och sedan avbokats medan betalningen pågick. Den posten hade
+   blivit frigjord utan försöket, och blir det nu (granskningen 2026-10-21).
+   avbokad_fran säger vad passet var när det avbokades (stampla_avbokningen):
+   en sen avbokning av ett bekräftat pass är en skuld, ett hållet pass som
+   avbokas är det inte. */
+create or replace function intern.tillagg_poster_tillbaka(p_forsok uuid)
+ returns void
+ language plpgsql
+ security definer
+ set search_path to ''
+as $function$
+-- syskontillagg_som_skuld (2026-10-21).
+begin
+  update public.tillagg_poster t
+     set status = case when b.status = 'cancelled' and b.avbokad_fran = 'completed'
+                       then 'frigjord' else 'upplupen' end,
+         orsak = case when b.status = 'cancelled' and b.avbokad_fran = 'completed'
+                      then 'Passet avbokades efter att det markerats som genomfört.' else t.orsak end
+    from public.bookings b
+   where t.betalningsforsok_id = p_forsok and t.status = 'i_betalning' and b.id = t.bokning_id;
+end $function$;
+
+revoke all on function intern.tillagg_poster_tillbaka(uuid) from public, anon, authenticated;
+
+/* Släpp ett öppet försök: posterna tillbaka. Svarar sant om något
+   släpptes nu. Anroparen håller familjens lås. */
 create or replace function intern.tillagg_forsok_slapp_inre(p_forsok uuid, p_orsak text)
  returns boolean
  language plpgsql
@@ -1123,12 +1193,50 @@ begin
   if not found then
     return false;
   end if;
-  update public.tillagg_poster t set status = 'upplupen'
-   where t.betalningsforsok_id = p_forsok and t.status = 'i_betalning';
+  perform intern.tillagg_poster_tillbaka(p_forsok);
   return true;
 end $function$;
 
 revoke all on function intern.tillagg_forsok_slapp_inre(uuid, text) from public, anon, authenticated;
+
+/* Admin släpper ett försök som fastnat (granskningen 2026-10-21): en
+   betalning med Klarna som aldrig blev klar, eller ett svar från Stripe
+   som aldrig kom. Skälet krävs och står på försöket, med vem. Kommer
+   pengarna ändå senare bokförs de och blir en uppgift, som en dubbel
+   betalning. */
+create or replace function public.tillagg_forsok_slapp_admin(p_forsok uuid, p_orsak text)
+ returns boolean
+ language plpgsql
+ security definer
+ set search_path to ''
+as $function$
+-- syskontillagg_som_skuld (2026-10-21).
+declare
+  fam uuid;
+begin
+  if not public.is_admin() then
+    raise exception using errcode = '42501', message = 'Bara admin släpper en betalning för syskontillägget.';
+  end if;
+  if char_length(btrim(coalesce(p_orsak, ''))) not between 3 and 500 then
+    raise exception using errcode = '22023', message = 'Skriv varför betalningen släpps, minst tre tecken.';
+  end if;
+  select f.familj into fam from public.tillagg_forsok f where f.id = p_forsok;
+  if fam is null then
+    return false;
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('tillagg:' || fam::text, 0));
+  update public.tillagg_forsok f
+     set status = 'slappt', slapp_orsak = 'admin', slapp_kommentar = btrim(p_orsak), slappt_av = auth.uid()
+   where f.id = p_forsok and f.status = 'oppen';
+  if not found then
+    return false;
+  end if;
+  perform intern.tillagg_poster_tillbaka(p_forsok);
+  return true;
+end $function$;
+
+revoke all on function public.tillagg_forsok_slapp_admin(uuid, text) from public, anon;
+grant execute on function public.tillagg_forsok_slapp_admin(uuid, text) to authenticated;
 
 /* Kassan låser familjens upplupna poster till ett försök. Bara kassan
    (stripe-checkout med service_role, efter att familjens token prövats):
@@ -1158,6 +1266,7 @@ declare
   n      integer;
   ny     uuid;
   upphor timestamptz;
+  ersatt_session text;
 begin
   if auth.uid() is not null then
     raise exception using errcode = '42501', message = 'Bara kassan skapar ett betalningsförsök.';
@@ -1191,6 +1300,9 @@ begin
     end if;
     if f.session_klar_at is null then
       perform intern.tillagg_forsok_slapp_inre(f.id, 'ersatt');
+      -- Kassan låter den sessionen gå ut hos Stripe (granskningen
+      -- 2026-10-21), så att den inte betalas efter att posterna låsts igen.
+      ersatt_session := f.stripe_session_id;
     end if;
   end if;
 
@@ -1201,7 +1313,7 @@ begin
            for update) t;
 
   if n = 0 then
-    return jsonb_build_object('forsok', null, 'belopp_ore', 0, 'antal_pass', 0,
+    return jsonb_build_object('forsok', null, 'belopp_ore', 0, 'antal_pass', 0, 'ersatt_session', ersatt_session,
       'pagar', exists (select 1 from public.tillagg_poster t where t.familj_id = p_familj and t.status = 'i_betalning'));
   end if;
 
@@ -1215,7 +1327,7 @@ begin
   update public.tillagg_poster t set status = 'i_betalning', betalningsforsok_id = ny where t.id = any (ids);
 
   return jsonb_build_object('forsok', ny, 'belopp_ore', summa, 'antal_pass', n, 'aterbruk', false,
-    'upphor_at', upphor, 'session', null,
+    'upphor_at', upphor, 'session', null, 'ersatt_session', ersatt_session,
     'pagar', exists (select 1 from public.tillagg_poster t where t.familj_id = p_familj
                        and t.status = 'i_betalning' and t.betalningsforsok_id <> ny));
 end $function$;
@@ -1258,10 +1370,12 @@ begin
   if auth.uid() is not null then
     raise exception using errcode = '42501', message = 'Bara webhooken skriver det.';
   end if;
+  -- Försöket ur metadatan, vilken session det än var (granskningen
+  -- 2026-10-21): kassan kan ha öppnat en andra, som sida i stället för
+  -- inbäddad, och då hade jobbet släppt posterna medan pengarna var på väg.
   update public.tillagg_forsok f
      set session_klar_at = now(), stripe_session_id = coalesce(f.stripe_session_id, nullif(p_session, ''))
-   where f.id = p_forsok and f.status = 'oppen' and f.session_klar_at is null
-     and (f.stripe_session_id is null or f.stripe_session_id = p_session);
+   where f.id = p_forsok and f.status = 'oppen' and f.session_klar_at is null;
   return found;
 end $function$;
 
@@ -1319,6 +1433,22 @@ begin
     if intern.tillagg_forsok_slapp_inre(f.id, 'jobbet') then
       n := n + 1;
     end if;
+  end loop;
+  -- En betalning som väntat en vecka (Klarna, eller ett svar som aldrig
+  -- kom) släpps inte av jobbet, som inte kan fråga Stripe: den blir en
+  -- uppgift, och admin släpper den (granskningen 2026-10-21).
+  for f in select x.id, x.familj from public.tillagg_forsok x
+            where x.status = 'oppen' and x.session_klar_at is not null
+              and x.session_klar_at < p_nu - interval '7 days'
+  loop
+    perform public.skapa_uppgift(
+      'En betalning av syskontillägg har väntat i en vecka',
+      'tillagg_vantar:' || f.id,
+      'problem',
+      'Betalningen (försöket ' || f.id || ') blev klar i kassan men pengarna har inte kommit. Kontrollera den i '
+        || 'Stripe. Har den inte gått igenom: släpp den under Betalningar → Syskontillägg, så blir posterna upplupna '
+        || 'igen. Kommer pengarna senare bokförs de och blir en uppgift.',
+      'profiles', f.familj::text);
   end loop;
   return n;
 end $function$;
@@ -1424,6 +1554,11 @@ begin
       'En betalning för syskontillägg kom in men kunde inte skrivas på posterna (försöket '
         || f.id || '). Pengarna står i liggaren. Stäm av med familjen och betala tillbaka det som inte ska behållas.',
       'profiles', f.familj::text);
+    -- Posterna står inte kvar i ett försök som aldrig kan bli betalt
+    -- (granskningen 2026-10-21).
+    if f.status = 'oppen' then
+      perform intern.tillagg_forsok_slapp_inre(f.id, 'avbruten');
+    end if;
     return case when p_belopp is distinct from f.belopp_ore then 'fel_belopp' else 'dubbel' end;
   end if;
 
@@ -1502,11 +1637,17 @@ begin
   if exists (select 1 from public.betalningar b where b.stripe_payment_intent = p_pi) then
     return 'redan';
   end if;
+  -- Köpet väntade inte, eller beloppet går inte ihop: webhooken bokför
+  -- pengarna och en människa avgör. Försöket släpps i samma transaktion, så
+  -- att posterna inte står i en betalning som aldrig blir skriven
+  -- (granskningen 2026-10-21).
   if k.status not in ('vantar', 'misslyckad') then
+    perform intern.tillagg_forsok_slapp_inre(f.id, 'avbruten');
     return 'kop_redan';
   end if;
   huvud := coalesce(p_betalt, 0) - f.belopp_ore;
   if huvud <= 0 then
+    perform intern.tillagg_forsok_slapp_inre(f.id, 'avbruten');
     return 'fel_belopp';
   end if;
 
@@ -1646,6 +1787,9 @@ begin
                                         x.belopp_ore, x.aterbetalt_ore),
          andrad_at = now()
    where x.stripe_charge = p_charge and x.typ = 'syskon'
+     -- En helt återbetald betalning har fått tillbaka pengarna en gång; tvisten
+     -- syns i stripe_tvister (granskningen 2026-10-21, som passen).
+     and x.aterbetalt_ore < x.belopp_ore
      and x.status is distinct from intern.betalning_lage(case when p_utfall = 'vunnen' then 'betald' else 'tvist' end,
                                                          x.belopp_ore, x.aterbetalt_ore);
   return found;
@@ -1933,6 +2077,17 @@ declare
   b2 text := $b$or exists (select 1 from public.betalningar x where x.familj = p_id)
        -- syskontillagg_som_skuld (2026-10-21): posten raderas aldrig.
        or exists (select 1 from public.tillagg_poster t where t.familj_id = p_id)$b$;
+  a3 text := $a$     where b.student_id = p_id and b.status = 'confirmed' and intern.passet_har_borjat(b);
+    hinder := hinder || intern.radering_rad('ej_rapporterat', n);$a$;
+  b3 text := $b$     where b.student_id = p_id and b.status = 'confirmed' and intern.passet_har_borjat(b);
+    hinder := hinder || intern.radering_rad('ej_rapporterat', n);
+
+    -- syskontillagg_som_skuld (granskningen 2026-10-21): barnet är med som
+    -- syskon på ett kommande pass. Barnen på ett pass ändras inte, så passet
+    -- avbokas först, och tillägget frigörs då.
+    select count(*) into n from public.bookings b
+     where p_id = any (b.extra_barn) and b.status in ('requested', 'confirmed') and not intern.passet_har_borjat(b);
+    hinder := hinder || intern.radering_rad('syskon_kommande', n);$b$;
 begin
   fore := pg_get_functiondef('intern.radering_underlag(text,uuid)'::regprocedure);
   if position('tillagg_obetalt' in fore) > 0 then
@@ -1946,7 +2101,11 @@ begin
   if traffar <> 1 then
     raise exception 'radering_underlag: % träffar på betalningar. Läs driften.', traffar;
   end if;
-  efter := replace(replace(fore, a1, b1), a2, b2);
+  traffar := (length(fore) - length(replace(fore, a3, ''))) / length(a3);
+  if traffar <> 1 then
+    raise exception 'radering_underlag: % träffar på elevens ej_rapporterat. Läs driften.', traffar;
+  end if;
+  efter := replace(replace(replace(fore, a1, b1), a2, b2), a3, b3);
   execute efter;
 end $lapp$;
 
@@ -2044,3 +2203,87 @@ select cron.unschedule(jobid) from cron.job where jobname in ('tillagg-forsok', 
 select cron.schedule('tillagg-forsok', '*/15 * * * *', $$select intern.tillagg_forsok_stada()$$);
 -- 08.23 UTC är 09.23 eller 10.23 i Stockholm: mejlet kommer på förmiddagen.
 select cron.schedule('tillagg-paminnelse', '23 8 * * *', $$select intern.tillagg_paminnelser_koa()$$);
+
+-- ---------- 16. kodernas statistik räknar inte tillägget (granskningen 2026-10-21) ----------
+/* En plan med tilläggen som egna rader är en betalning i liggaren, med
+   planens kod och hela beloppet. kod_statistik, partner_statistik och
+   kodens_anvandningar summerade betalningens belopp, så en partners volym
+   blåstes upp med syskontillägget. Nu räknas betalningens rader utom
+   tilläggens: köpet, det koden gällde. En betalning utan rader (bara före
+   betalningar_rader har gått) räknas hel, som förut. */
+create or replace function intern.betalningens_kopdel(p_betalning uuid, p_belopp integer, p_aterbetalt integer,
+                                                     out belopp_ore integer, out aterbetalt_ore integer)
+ language sql
+ stable
+ set search_path to ''
+as $function$
+-- syskontillagg_som_skuld (granskningen 2026-10-21).
+  select case when count(*) = 0 then p_belopp
+              else coalesce(sum(r.belopp_ore) filter (where r.typ <> 'syskon'), 0)::integer end,
+         case when count(*) = 0 then p_aterbetalt
+              else coalesce(sum(r.aterbetalt_ore) filter (where r.typ <> 'syskon'), 0)::integer end
+    from public.betalningsrader r
+   where r.betalning_id = p_betalning
+$function$;
+
+revoke all on function intern.betalningens_kopdel(uuid, integer, integer) from public, anon, authenticated;
+
+do $lapp$
+declare
+  f       text;
+  fore    text;
+  traffar integer;
+  a1 text := $a$join public.betalningar b on b.id = a.betalning_id$a$;
+  b1 text := $b$join (select b0.id, b0.skarp, b0.erbjudande, b0.status, d.belopp_ore, d.aterbetalt_ore
+            from public.betalningar b0
+            cross join lateral intern.betalningens_kopdel(b0.id, b0.belopp_ore, b0.aterbetalt_ore) d) b
+      on b.id = a.betalning_id -- syskontillagg_som_skuld (granskningen 2026-10-21): utan tilläggens rader$b$;
+begin
+  foreach f in array array['public.kod_statistik(boolean)', 'public.partner_statistik(boolean)',
+                           'public.kodens_anvandningar(text)'] loop
+    fore := pg_get_functiondef(f::regprocedure);
+    if position('granskningen 2026-10-21' in fore) > 0 then
+      continue;
+    end if;
+    traffar := (length(fore) - length(replace(fore, a1, ''))) / length(a1);
+    if traffar <> 1 then
+      raise exception '%: % träffar på betalningens join. Läs driften.', f, traffar;
+    end if;
+    execute replace(fore, a1, b1);
+  end loop;
+end $lapp$;
+
+-- ---------- 17. bokslutet räknar syskontillägget (granskningen 2026-10-21) ----------
+/* manad_lage räknade passens kort och övertiden, men inte tilläggen: en
+   månad med Betala tillägg nu, eller ett köp med tillägget som egen rad,
+   hade pengar in som bokslutet inte såg. Nu står de under syskon, på
+   dagen de betalades i Stockholm, som Månadens ekonomi och Betalningar
+   räknar dem. Testbetalningar räknas inte. */
+do $lapp$
+declare
+  fore    text;
+  traffar integer;
+  a1 text := $a$    'test', ($a$;
+  b1 text := $b$    'syskon', (
+      -- syskontillagg_som_skuld (granskningen 2026-10-21)
+      select jsonb_build_object(
+        'antal', count(distinct r.betalning_id),
+        'betalt_ore', coalesce(sum(r.belopp_ore), 0),
+        'aterbetalt_ore', coalesce(sum(r.aterbetalt_ore), 0))
+        from public.betalningsrader r
+        join public.betalningar bt on bt.id = r.betalning_id
+       where r.typ = 'syskon' and bt.skarp is not false
+         and (bt.betald_at at time zone 'Europe/Stockholm')::date >= forsta
+         and (bt.betald_at at time zone 'Europe/Stockholm')::date < sista),
+    'test', ($b$;
+begin
+  fore := pg_get_functiondef('public.manad_lage(date)'::regprocedure);
+  if position('granskningen 2026-10-21' in fore) > 0 then
+    return;
+  end if;
+  traffar := (length(fore) - length(replace(fore, a1, ''))) / length(a1);
+  if traffar <> 1 then
+    raise exception 'manad_lage: % träffar på testbetalningarna. Läs driften.', traffar;
+  end if;
+  execute replace(fore, a1, b1);
+end $lapp$;

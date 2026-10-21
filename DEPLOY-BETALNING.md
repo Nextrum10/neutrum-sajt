@@ -1924,6 +1924,16 @@ här ett pris eller en betalning: syskon bokas som förut, och inga poster skapa
    tillägget som egen rad; en kassa som går ut och släpper posterna; en återbetalning av en rad; och
    en familj över spärren som inte kan välja syskon men kan boka ett pass för ett barn.
 
+Granskningen 2026-10-21 ändrade migrationen, `stripe-checkout` och `stripe-webhook` innan något kördes; ordningen
+ovan är densamma. Det som är nytt i driften: kassan låter en äldre kassa för samma skuld gå ut
+(`POST /v1/checkout/sessions/{id}/expire`, som Stripes hemliga nyckel får göra; en begränsad nyckel behöver
+skrivrätt på Checkout Sessions) och läser den (`GET`), Stripe skickar då `checkout.session.expired` för den, som
+webhooken redan tar emot; `charge.updated` skriver avgiften för en betalning som bara är tillägg på liggarens rad.
+Provet i steg 8 får tre steg till: Betala tillägg nu i den inbäddade kassan och sedan som sida (den första går ut
+hos Stripe, och bara den andra går att betala), en Klarna-betalning som står och väntar (Släpp betalningen under
+Betalningar → Syskontillägg kräver en orsak, och posterna blir upplupna igen), och en plan med en partnerkod och
+tillägget, där Koder → Partnerkoder bara räknar planens del.
+
 Kvar efter: juristen (rad 35, policyns stycke, villkoren för tillägget), och att säga till familjerna med
 fler barn att tillägget räknas per extra barn och betalas efter passet, innan strömbrytaren slås på.
 
@@ -1958,6 +1968,11 @@ lönen, och Leo betalar den med lönen.
    (`/bli-studiehjalpare?kod=…`), och en med en kod som inte finns (beskedet, och ansökan går in utan
    kod); ta in den första med Utbildning hållen och se raden bli Intjänad med 267,86 + 32,14 kr och
    mejlet i sandlådan; Markera utbetald med lönemånaden, CSV:n, och Annullera på en väntande.
+
+Granskningen 2026-10-21 ändrade migrationen innan den kördes: bonusen följer ansökan som blev kontot, en
+väntande rad annulleras när ansökan avböjs eller gallras och när koden byts, och unikheten gäller bara levande
+rader. Steg 8 får ett steg till: en andra ansökan med samma adress och en annan kod, där den första avböjs och den
+andra tas in, ska ge bonusen åt den andras värvare och annullera den första med skälet.
 
 Kvar efter: juristen (rad 27 i `DATASKYDD.md` och policyns stycken om koden och förnamnet), och att säga
 till studiehjälparna att bonusen heter värvningsbonus och syns under Värva en kompis.

@@ -1734,6 +1734,17 @@ En fil (20261021214000), skriven och provad lokalt; ingenting är kört mot drif
 Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, `rls-test.sql`
 gick 2053 av 2053 (avsnitt 51, SK, 76 prov), och `prova-tillagg-samtidigt.sh` var grönt i alla tre varven.
 
+**Granskningen 2026-10-21** (`minne/betalning.md`, Granskningen) ändrade samma fil, som inte är körd:
+`tillagg_godkannanden.familj` är `on delete cascade` (godkännandet raderas med kontot); `tillagg_forsok` har
+`slapp_orsak` 'admin', `slapp_kommentar` och `slappt_av` (villkoret `tillagg_forsok_admin`: en orsak och en person
+när admin släppt); posternas väg tillbaka är en funktion (`intern.tillagg_poster_tillbaka`, som läser
+`avbokad_fran`), och vakten släpper `i_betalning` till `frigjord` för den; `tillagg_forsok_slapp_admin(uuid, text)` är
+admins; `tillagg_forsok_skapa` svarar `ersatt_session`; jobbet gör en uppgift av ett försök som väntat på Klarna i en
+vecka. Avsnitt 16 och 17 lappar `kod_statistik`, `partner_statistik`, `kodens_anvandningar` och `manad_lage` med
+`replace()` och räknade träffar (markören är "granskningen 2026-10-21"), och avsnitt 13 lägger hindret
+`syskon_kommande` i `intern.radering_underlag`. Filen går fortfarande att köra två gånger, och `rls-test.sql` gick
+2105 av 2105 med den och de andra rättelserna.
+
 ### Värvningsbonusen (varvningsbonus, 2026-10-21, inte i drift)
 En fil (20261021215000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
 `minne/affaren.md` (Värvningsbonusen), och ordningen i driften i `DEPLOY-BETALNING.md` 9.24.
@@ -1772,3 +1783,26 @@ En fil (20261021215000), skriven och provad lokalt; ingenting är kört mot drif
 
 Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, och
 `rls-test.sql` gick igenom med avsnitt KB omskrivet och avsnitt 52 (VB) nytt.
+
+**Granskningen 2026-10-21** (`minne/affaren.md`, Värvningsbonusen) ändrade samma fil, som inte är körd: indexen är
+partiella (`varvningsbonus_en_per_ansokan` och `_en_per_konto` där läget inte är `annullerad`,
+`varvningsbonus_en_per_person` bara för `intjanad` och `utbetald`, och ett vanligt index på personen); personen är en
+HMAC av `intern.varvning_epost_nyckel` (Gmail utan punkter); `intern.varvningsbonus_ny` (BEFORE INSERT) släpper bara
+`vantar` och `annullerad` om raden inte flyttas från `tipsbonus`; vakten annullerar en väntande rad när dess ansökan
+blir null i en kaskad; `applications_varvning` går på `insert or update of kod, varvad_av_profil_id`;
+`intern.ansokan_tipskod` låser koden när bonusen tjänats in (23514, bara för en inloggad); `prova_jobbkod` läser
+`cf-connecting-ip` och har ett tak på 500 okända i timmen totalt (nyckeln `jobbkod:`); och `service_role` har inga
+skrivrättigheter i `varvningsbonus` eller `varvning_installning`.
+
+### Granskningens övriga rättelser (2026-10-21, i filerna som inte är körda)
+- **`ansokningarnas_steg`**: en INSERT som inte är betrodd måste ha steget `ny`; medan läget är eller blir
+  `rejected` står stegets kolumner still; loggens tid sätts bara när den saknas (backfillen behåller sina tider);
+  och `ansokan_steg_logg_star_fast` släpper en UPDATE där bara `andrad_av` blir null vid `pg_trigger_depth() > 1`.
+  Två äldre prov (16.1 och Intervjumejlet) som gick genom Avböjd fångar nu 23514.
+- **`timmar_med_orsak`**: `timmar_insatta_star_fast` släpper vid djup över 1 bara nyckeln som blir null och orsaken
+  som töms, och `profiles_raderad_star_fast` (`intern.profil_raderad_star_fast`) låser `raderad_at` när den satts.
+- **`koderna_agare_och_en_gang`**: avsnitt 4 lappar `intern.klippkort_rabatt` (familjens väntande köp med koden den
+  senaste timmen) och lägger triggern `kod_anvandningar_for_manga`.
+- **`betalningar_dolda`**: `service_role` förlorar insert, update, delete och truncate.
+- **`supabase/scripts/rensa-leo-testbetalning.sql`**: kontot måste ha en adminroll, och `markera_riktiga` (falsk som
+  förval) krävs för att märka en riktig betalning annullerad. Provat lokalt med funktionen i sparpunkter.

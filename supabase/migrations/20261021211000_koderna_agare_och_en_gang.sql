@@ -166,3 +166,82 @@ end $$;
 comment on column public.rabattkoder.max_per_familj is
   'Hur många köp en familj gör med koden. En rabattkod: alltid 1 (rabattkoder_rabatt_en_gang, 2026-10-21). En '
   'partnerkod: som admin satt den, null utan gräns. Ett återbetalt köp ger tillbaka sin gång.';
+
+
+-- ---------- 4. två kassor med samma kod (granskningen 2026-10-21) ----------
+/* En kod med en gräns per familj räknade bara familjens betalda köp, så två
+   kassor öppna samtidigt (Basic i en flik, Standard i en annan) gav
+   rabatten två gånger. Nu räknar köpet också familjens egna kassor med
+   koden som öppnats den senaste timmen, under kodens radlås: den andra
+   kassan öppnas utan koden (stripe-checkout säger det och öppnar ingen
+   kassa). Den som lämnat en kassa kan använda koden på en annan plan efter
+   en timme, och samma plan igen återanvänder det väntande köpet. Betalas
+   ändå två köp med koden blir det en uppgift till oss
+   (kod_anvandningar_for_manga), för pengarna har då redan rört sig. */
+do $lapp$
+declare
+  fore    text;
+  traffar integer;
+  a1 text := $a$  perform 1 from public.rabattkoder where kod = new.rabattkod for update;$a$;
+  b1 text := $b$  perform 1 from public.rabattkoder where kod = new.rabattkod for update;
+  -- koderna_agare_och_en_gang (granskningen 2026-10-21): familjens egna
+  -- kassor med koden den senaste timmen räknas mot gränsen per familj.
+  if (select r.max_per_familj from public.rabattkoder r where r.kod = new.rabattkod) is not null
+     and intern.rabattkod_anvand(new.rabattkod, new.parent_id, false)
+         + (select count(*) from public.klippkort x
+             where x.parent_id = new.parent_id and x.rabattkod = new.rabattkod and x.status = 'vantar'
+               and x.id <> new.id and x.created_at > now() - interval '1 hour')
+         >= (select r.max_per_familj from public.rabattkoder r where r.kod = new.rabattkod) then
+    new.rabattkod := null;
+    new.rabatt_ore := null;
+    new.begart_ore := pris - fam;
+    return new;
+  end if;$b$;
+begin
+  fore := pg_get_functiondef('intern.klippkort_rabatt()'::regprocedure);
+  if position('granskningen 2026-10-21' in fore) > 0 then
+    return;
+  end if;
+  traffar := (length(fore) - length(replace(fore, a1, ''))) / length(a1);
+  if traffar <> 1 then
+    raise exception 'klippkort_rabatt: % träffar på kodens radlås. Läs driften.', traffar;
+  end if;
+  execute replace(fore, a1, b1);
+end $lapp$;
+
+create or replace function intern.kod_anvandningar_for_manga()
+ returns trigger
+ language plpgsql
+ security definer
+ set search_path to ''
+as $function$
+-- koderna_agare_och_en_gang (granskningen 2026-10-21).
+declare
+  per integer := (select r.max_per_familj from public.rabattkoder r where r.kod = new.kod);
+  n   integer;
+begin
+  if per is null then
+    return null;
+  end if;
+  select count(*) into n from public.kod_anvandningar a where a.kod = new.kod and a.familj = new.familj;
+  if n > per then
+    perform public.skapa_uppgift(
+      'En familj har använt en kod fler gånger än den gäller',
+      'kod_for_manga:' || new.kod || ':' || new.familj,
+      'problem',
+      format('Koden %s gäller %s gång(er) per familj och har nu använts %s gånger av samma familj, '
+             || 'troligen i två kassor som var öppna samtidigt. Betalningarna står i Liggaren: '
+             || 'ta ut mellanskillnaden eller låt det vara.', new.kod, per, n),
+      'profiles', new.familj::text);
+  end if;
+  return null;
+exception when others then
+  -- En uppgift får aldrig stoppa bokföringen av en betalning.
+  return null;
+end $function$;
+
+revoke all on function intern.kod_anvandningar_for_manga() from public, anon, authenticated;
+
+create or replace trigger kod_anvandningar_for_manga
+  after insert on public.kod_anvandningar
+  for each row execute function intern.kod_anvandningar_for_manga();

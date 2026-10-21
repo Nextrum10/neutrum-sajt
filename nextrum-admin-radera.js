@@ -103,6 +103,10 @@
     tillagg_obetalt: h => ['Obetalt syskontillägg: ' + kronor(h.belopp_ore || 0)
       + (h.antal > 1 ? ' (' + h.antal + ' pass)' : ''),
       'Låt familjen betala det, eller skriv av det under Betalningar → Syskontillägg.'],
+    // Granskningen 2026-10-21: barnen på ett pass ändras inte, så passet avbokas först.
+    syskon_kommande: h => [st(h.antal, 'kommande pass', 'kommande pass') + ' med barnet som syskon',
+      'Barnen på ett pass ändras inte efter bokningen. Avboka passen under Bokningar, så frigörs tillägget, '
+        + 'och boka om dem utan barnet om de ska hållas.'],
     ej_rapporterat: h => [st(h.antal, 'pass', 'pass') + ' har börjat men saknar rapport',
       'Studiehjälparen får lön först när rapporten finns, och den går inte att skriva efteråt. Be hen '
         + 'skriva den, eller avboka passet under Bokningar om det aldrig hölls.'],

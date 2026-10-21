@@ -11,17 +11,20 @@
 // står det Stripe-delen gör med den, så att det går att pröva utan nät
 // och utan databas (tillagg_test.ts):
 //
-//   · tillaggetsBelopp räknar som databasen (intern.tillaggets_belopp):
-//     extra barn × pris per barn och timme × minuter / 60, avrundat till
-//     hela ören. De ändras tillsammans. Beloppet som dras är alltid
-//     databasens; den här är en kontroll och en visning.
-//   · buntaKassan lägger tillägget som en egen rad bredvid planen eller
-//     passet. Rabattkoden räknas bara på huvudraden, aldrig på tillägget,
-//     och totalen är raderna. Med TILLAGG_OBLIGATORISK_I_NASTA_BETALNING
+//   · tillaggetsBelopp är regeln som databasen räknar med
+//     (intern.tillaggets_belopp): extra barn × pris per barn och timme ×
+//     minuter / 60, avrundat till hela ören. Ingen funktion drar ett belopp
+//     ur den: beloppet är alltid databasens, och vyn visar det med samma
+//     regel (nextrum-betalning.js). Proven håller avrundningen fast, och de
+//     tre ändras tillsammans.
+//   · tillaggetFoljerMed och buntaKassan: kassan (stripe-checkout) bygger
+//     raderna i ett köp av timmar med dem. Tillägget är en egen rad bredvid
+//     köpet, rabattkoden räknas bara på köpets rad och totalen är raderna.
+//     Med TILLAGG_OBLIGATORISK_I_NASTA_BETALNING
 //     (tillagg_installning.obligatorisk_i_nasta_betalning) följer det
-//     alltid med; annars får familjen kryssa ur det.
-//   · huvudbeloppUrTotal: webhooken skriver bara huvudradens del på
-//     köpet eller passet, aldrig tillägget.
+//     alltid med; annars följer det med tills familjen kryssar ur det.
+//     Pass för pass buntas aldrig (se migrationen). Webhooken delar inte
+//     upp beloppet: klippkort_betald_med_tillagg gör det i databasen.
 //   · fordelaAterbetalningar: en återbetalning hör till raden den bär i
 //     metadata, och en rad får aldrig mer tillbaka än den betalade.
 //   · hanteraTillagg: webhookens gren för en betalning som BARA är
@@ -81,10 +84,20 @@ export function utgangstid(upphorAt: string | null | undefined, nuMs: number): n
   return Number.isFinite(t) ? Math.floor(t / 1000) : Math.floor(nuMs / 1000) + 30 * 60 + 30;
 }
 
+/**
+ * Följer tillägget med i ett köp av timmar? Med regeln på
+ * (obligatorisk_i_nasta_betalning) alltid; utan den tills familjen kryssat
+ * ur raden (med_tillagg: false). Bara ett uttryckligt false kryssar ur:
+ * ett anrop som inte säger något får tillägget, som förvalet.
+ */
+export function tillaggetFoljerMed(obligatorisk: boolean, med: unknown): boolean {
+  return obligatorisk || med !== false;
+}
+
 export type Huvudrad = {
-  typ: 'plan' | 'timbank' | 'pass';
+  typ: 'plan' | 'timbank';
   namn: string;
-  /** Huvudradens pris före koden (efter familjens rabatt), i öre. */
+  /** Köpets pris före koden (efter familjens rabatt), i öre. */
   beloppOre: number;
   /** Kodens rabatt, som databasen räknat den. Noll utan kod. */
   rabattOre: number;
@@ -92,7 +105,7 @@ export type Huvudrad = {
 };
 
 export type Kassarad = {
-  typ: 'plan' | 'timbank' | 'pass' | 'tillagg';
+  typ: 'plan' | 'timbank' | 'tillagg';
   namn: string;
   beloppOre: number;
   rabattOre: number;
@@ -100,14 +113,14 @@ export type Kassarad = {
 };
 
 /**
- * Kassans rader: huvudraden med koden dragen, och tillägget som en egen
- * rad, orört. Rabattkoden räknas bara på huvudraden. Ett köp blir aldrig
- * gratis av en kod, och ingen rad är negativ.
+ * Kassans rader i ett köp av timmar: köpet med koden dragen, och tillägget
+ * som en egen rad, orört. Rabattkoden räknas bara på köpets rad. Ett köp
+ * blir aldrig gratis av en kod, och ingen rad är negativ.
  */
 export function buntaKassan(
   huvud: Huvudrad,
   tillagg: { beloppOre: number; antalPass: number } | null,
-  val: { obligatorisk: boolean; medTillagg: boolean },
+  val: { obligatorisk: boolean; med: unknown },
 ): { rader: Kassarad[]; totalOre: number; medTillagg: boolean } {
   if (!Number.isInteger(huvud.beloppOre) || huvud.beloppOre <= 0) throw new Error('Huvudraden saknar belopp.');
   if (!Number.isInteger(huvud.rabattOre) || huvud.rabattOre < 0) throw new Error('Rabatten är inte ett belopp.');
@@ -120,7 +133,7 @@ export function buntaKassan(
     kod: huvud.kod,
   }];
   const finns = !!tillagg && tillagg.beloppOre > 0;
-  const med = finns && (val.obligatorisk || val.medTillagg);
+  const med = finns && tillaggetFoljerMed(val.obligatorisk, val.med);
   if (med) {
     rader.push({ typ: 'tillagg', namn: tillaggetsRadtext(tillagg!.antalPass), beloppOre: tillagg!.beloppOre,
                  rabattOre: 0, kod: null });
@@ -128,14 +141,78 @@ export function buntaKassan(
   return { rader, totalOre: rader.reduce((a, r) => a + r.beloppOre, 0), medTillagg: med };
 }
 
+/** Ett försök som kassan fått av databasen (tillagg_forsok_skapa). */
+export type Forsoket = {
+  forsok: string | null; belopp_ore: number; antal_pass: number; aterbruk?: boolean; pagar?: boolean;
+  upphor_at?: string | null; session?: string | null; ersatt_session?: string | null;
+};
+
+/** Stripes två anrop för en äldre kassa, utifrån: kassan skickar in v1, proven en falsk. */
+export type KassaStripe = {
+  /** Låt kassan gå ut (POST …/expire). Kastar när Stripe nekar: bara en öppen kassa kan gå ut. */
+  utgang: (session: string) => Promise<unknown>;
+  /** Kassans läge (open, complete, expired) och ui_mode (embedded eller hosted). */
+  hamta: (session: string) => Promise<{ status?: unknown; ui_mode?: unknown }>;
+};
+
+/** Ett id för en Stripe-kassa (cs_test_… har ett understreck till). */
+const KASSA_ID = /^cs_[A-Za-z0-9_]+$/;
+
 /**
- * Huvudradens del av det Stripe drog, när ett tillägg följde med i samma
- * betalning. null när det inte går ihop: då skrivs ingenting som betalt.
+ * EN KASSA ÅT GÅNGEN (granskningen 2026-10-21). En äldre kassa för samma
+ * skuld går ut hos Stripe innan en ny öppnas: annars gick den att betala
+ * till sin utgång, och pengarna kom in en gång för mycket. 'betald' när
+ * den redan blivit klar (betald, eller Klarna väntar), och då öppnas ingen
+ * ny. Står den kvar öppen trots allt är det ett fel, aldrig en ny kassa.
  */
-export function huvudbeloppUrTotal(totalOre: number, tillaggOre: number): number | null {
-  if (!Number.isInteger(totalOre) || !Number.isInteger(tillaggOre)) return null;
-  if (tillaggOre < 0 || totalOre < tillaggOre) return null;
-  return totalOre - tillaggOre;
+export async function gamlaKassanGarUt(stripe: KassaStripe, session: string | null | undefined): Promise<'borta' | 'betald'> {
+  const sid = String(session ?? '');
+  if (!KASSA_ID.test(sid)) return 'borta';
+  try {
+    await stripe.utgang(sid);
+    return 'borta';
+  } catch {
+    // Bara en öppen kassa kan gå ut: läs vad den blev.
+    const s = await stripe.hamta(sid);
+    if (s.status === 'complete') return 'betald';
+    if (s.status === 'expired') return 'borta';
+    throw new Error('Den förra kassan gick inte att stänga.');
+  }
+}
+
+/**
+ * Försöket för en betalning, med en kassa åt gången. Ett försök som
+ * återanvänds har redan en kassa: är den öppen och i samma läge (inbäddad
+ * eller sida) ger samma idempotensnyckel samma kassa. Annars går den ut,
+ * försöket släpps och ett nytt skapas med en ny halvtimme (Stripe kräver
+ * minst 30 minuter till utgången). Ett försök som databasen ersatte nära
+ * sin utgång (ersatt_session) har en kassa som också får gå ut. 'pagar'
+ * när en äldre kassa redan blivit betald: då släpps det nya försöket, och
+ * betalningen bokförs på det gamla när den kommer.
+ */
+export async function forsoketsKassa(
+  stripe: KassaStripe,
+  slapp: (forsok: string, orsak: 'ersatt' | 'avbruten') => Promise<void>,
+  skapa: () => Promise<Forsoket | null>,
+  inbaddad: boolean,
+): Promise<Forsoket | 'pagar' | null> {
+  let f = await skapa();
+  if (f?.forsok && f.aterbruk && f.session) {
+    const sid = String(f.session);
+    if (!KASSA_ID.test(sid)) throw new Error('Försökets kassa har ett id vi inte känner igen.');
+    const gammal = await stripe.hamta(sid);
+    if (gammal.status === 'complete') return 'pagar';
+    if (!(gammal.status === 'open' && (gammal.ui_mode === 'embedded') === inbaddad)) {
+      if (await gamlaKassanGarUt(stripe, sid) === 'betald') return 'pagar';
+      await slapp(f.forsok, 'ersatt');
+      f = await skapa();
+    }
+  }
+  if (f?.ersatt_session && await gamlaKassanGarUt(stripe, f.ersatt_session) === 'betald') {
+    if (f.forsok && !f.aterbruk) await slapp(f.forsok, 'avbruten');
+    return 'pagar';
+  }
+  return f;
 }
 
 export type Aterbetalning = {

@@ -427,11 +427,12 @@
   }
 
   /* Månaderna insatta timmar kan avse: september 2026 till nästa månad,
-     som ge_gratistimmar prövar. Den innevarande är förvald. */
+     som ge_gratistimmar prövar. Den innevarande är förvald, räknad i
+     Stockholms tid som i databasen, inte i webbläsarens. */
   function gratisMånader() {
-    const nu = new Date();
-    const denna = nu.getFullYear() + '-' + String(nu.getMonth() + 1).padStart(2, '0') + '-01';
-    const slut = new Date(nu.getFullYear(), nu.getMonth() + 1, 1, 12);
+    const [år, mån] = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }).split('-').map(Number);
+    const denna = år + '-' + String(mån).padStart(2, '0') + '-01';
+    const slut = new Date(år, mån, 1, 12);
     const lista = [];
     for (let d = new Date(2026, 8, 1, 12); d <= slut; d = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12)) {
       lista.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01');

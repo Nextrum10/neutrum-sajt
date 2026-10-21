@@ -62,9 +62,10 @@ comment on column public.timmar_insatta.avser_manad is
 comment on column public.timmar_insatta.orsak is
   'Varför timmarna sattes in, 3–500 tecken, obligatorisk. Töms när familjen avidentifieras (profiles_timmar_insatta_gallras).';
 
--- Ingen ändrar eller tar bort en rad. Det som går förbi körs av databasen
--- i en trigger (pg_trigger_depth() > 1): en främmande nyckel som blir null
--- när kontot eller kortet tas bort, och gallringen nedan.
+-- Ingen ändrar eller tar bort en rad. Det enda som går förbi körs av
+-- databasen i en trigger (pg_trigger_depth() > 1), och bara det: en
+-- främmande nyckel som blir null när kontot eller kortet tas bort, och
+-- gallringen nedan, som tömmer orsaken. Inget annat i raden ändras.
 create or replace function intern.timmar_insatta_star_fast()
  returns trigger
  language plpgsql
@@ -72,10 +73,13 @@ create or replace function intern.timmar_insatta_star_fast()
 as $function$
 -- timmar_med_orsak (2026-10-21).
 begin
-  if tg_level = 'ROW' and pg_trigger_depth() > 1 then
-    if tg_op = 'DELETE' then
-      return old;
-    end if;
+  if tg_level = 'ROW' and tg_op = 'UPDATE' and pg_trigger_depth() > 1
+     and (new.familj is null or new.familj = old.familj)
+     and (new.klippkort_id is null or new.klippkort_id = old.klippkort_id)
+     and (new.insatt_av is null or new.insatt_av = old.insatt_av)
+     and (new.orsak = old.orsak or new.orsak = 'Gallrad när kontot avidentifierades.')
+     and (to_jsonb(new) - 'familj' - 'klippkort_id' - 'insatt_av' - 'orsak')
+         = (to_jsonb(old) - 'familj' - 'klippkort_id' - 'insatt_av' - 'orsak') then
     return new;
   end if;
   raise exception using errcode = '42501',
@@ -123,6 +127,26 @@ create or replace trigger profiles_timmar_insatta_gallras
   after update of raderad_at on public.profiles
   for each row when (old.raderad_at is null and new.raderad_at is not null)
   execute function intern.timmar_insatta_gallras();
+
+-- Ett konto som markerats raderat blir aldrig oraderat: radera_person
+-- avidentifierar det i samma steg, och utan den här spärren hade en
+-- markering som togs tillbaka kunnat tömma en insättnings orsak.
+create or replace function intern.profil_raderad_star_fast()
+ returns trigger
+ language plpgsql
+ set search_path to ''
+as $function$
+-- timmar_med_orsak (2026-10-21).
+begin
+  raise exception using errcode = '42501', message = 'Ett raderat konto blir inte oraderat.';
+end $function$;
+
+revoke all on function intern.profil_raderad_star_fast() from public, anon, authenticated;
+
+create or replace trigger profiles_raderad_star_fast
+  before update of raderad_at on public.profiles
+  for each row when (old.raderad_at is not null and new.raderad_at is null)
+  execute function intern.profil_raderad_star_fast();
 
 alter table public.timmar_insatta enable row level security;
 revoke all on public.timmar_insatta from anon, authenticated;
