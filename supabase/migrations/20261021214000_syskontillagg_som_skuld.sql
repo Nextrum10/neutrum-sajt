@@ -2152,6 +2152,15 @@ begin
         || 'from %I', roll);
     end if;
   end loop;
+  -- Inte heller tjänstekontot (granskningen 2026-10-21): kassan och webhooken
+  -- läser tabellerna och skriver bara genom databasens funktioner, som alla
+  -- är security definer. En edge-funktion kan alltså inte skriva en post,
+  -- ett försök eller en rad förbi vakterna.
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'revoke insert, update, delete, truncate on public.tillagg_installning, public.tillagg_godkannanden, '
+      || 'public.bokning_barn, public.tillagg_poster, public.tillagg_forsok, public.tillagg_forsok_poster, '
+      || 'public.betalningsrader from service_role';
+  end if;
 end $$;
 grant select on public.tillagg_installning, public.tillagg_godkannanden, public.bokning_barn, public.tillagg_poster,
                 public.tillagg_forsok, public.tillagg_forsok_poster, public.betalningsrader

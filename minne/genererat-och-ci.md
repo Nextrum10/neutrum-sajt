@@ -749,9 +749,11 @@ hämtar bonusarna eller inställningen.
 ### Granskningen (2026-10-21)
 Tre granskare som inte skrivit koden läste hela diffen (databasens skydd, pengaflödet, tidszonen och vyerna) och
 bevisade sina fynd mot en lokal databas, varje gång mellan `begin` och `rollback`. Proven för rättelserna:
-`rls-test.sql` fick 30 prov till (AS 3, KÄ 3, TI 1, SK 13, VB 10) och två ändrade (fel belopp släpper nu försöket,
+`rls-test.sql` fick 31 prov till (AS 3, KÄ 3, TI 1, SK 14, VB 10) och två ändrade (fel belopp släpper nu försöket,
 och tvisten provas före återbetalningarna, för en helt återbetald betalning sätts inte längre i tvist); hela filen
-gick 2105 av 2105 mot en databas byggd ur alla 220 migrationer. Två äldre prov (16.1 stegen och Intervjumejlet) gick
+gick 2106 av 2106 mot en databas byggd ur alla 220 migrationer. Ett av proven kör som `service_role` och visar att
+tjänstekontot inte skriver direkt i tilläggets tabeller, `timmar_insatta` eller `ansokan_steg_logg`, men att
+`tillagg_forsok_skapa` går. Två äldre prov (16.1 stegen och Intervjumejlet) gick
 genom Avböjd för att hoppa över steg och fångar nu 23514. `tillagg_test.ts` fick 8 prov för en kassa åt gången
 (`forsoketsKassa`, `gamlaKassanGarUt` med en falsk Stripe) och buntningen med samma regel som kassan
 (`tillaggetFoljerMed`); proven för `huvudbeloppUrTotal` och ett pass som buntas är borta med funktionen och regeln.

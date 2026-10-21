@@ -808,6 +808,8 @@ Detaljer: `minne/grunden.md`.
   efter 35 minuter, och gör en uppgift av ett som väntat på Klarna i en vecka) och `tillagg-paminnelse` (en gång om
   dagen, dagarna räknade i Stockholms tid). Ett försök släpps av kassan, webhooken, jobbet eller admin med en orsak, och
   posterna i det blir upplupna igen genom `intern.tillagg_poster_tillbaka`, utom ett hållet pass som avbokats.
+  `service_role` skriver inte direkt i tilläggets tabeller, `timmar_insatta`, `ansokan_steg_logg`, `betalningar_dolda`
+  eller `varvningsbonus`: edge-funktionerna läser och skriver genom databasens funktioner (granskningen 2026-10-21).
 - **Värvningsbonusen** (2026-10-21): `varvningsbonus` raderas aldrig (triggrar mot delete och truncate), lägena går
   bara framåt (`intern.varvningsbonus_vakt`), och bara databasen skriver: raden när ansökan kommer in
   (`applications_varvning`), intjänandet (`intern.varvning_prova`, från triggrarna på `tutor_profiles`,

@@ -339,6 +339,11 @@ begin
   if exists (select 1 from pg_roles where rolname = 'nextrum_ai') then
     execute 'revoke all on public.ansokan_steg_logg from nextrum_ai';
   end if;
+  -- Inte heller tjänstekontot (granskningen 2026-10-21): bara databasens
+  -- trigger skriver loggen (intern.ansokan_steg_logga, security definer).
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'revoke insert, update, delete, truncate on public.ansokan_steg_logg from service_role';
+  end if;
   if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'ansokan_steg_logg'
                   and policyname = 'admin läser ansökningarnas steg') then
     create policy "admin läser ansökningarnas steg" on public.ansokan_steg_logg for select to authenticated

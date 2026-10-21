@@ -2177,6 +2177,8 @@ migration, som inte är körd.
 - **Raderingen.** `tillagg_godkannanden` raderas med kontot (förut stoppade nyckeln en familj som
   bara godkänt villkoren), och ett barn som är syskon på ett kommande pass raderas inte förrän
   passet avbokats (hindret `syskon_kommande`): barnen på ett pass ändras inte.
-- Provat: `rls-test.sql` avsnitt 51 (13 prov till, `SK`), `tillagg_test.ts` (8 prov för en kassa åt
+- **Tjänstekontot** skriver inte direkt i tilläggets tabeller: kassan och webhooken läser dem och skriver bara genom
+  databasens funktioner, så en edge-funktion kan inte skriva en post, ett försök eller en rad förbi vakterna.
+- Provat: `rls-test.sql` avsnitt 51 (14 prov till, `SK`), `tillagg_test.ts` (8 prov för en kassa åt
   gången och buntningen med regeln) och `prova-adminvyn.js` (fixturen har ett betalt tillägg och ett
   som väntar på Klarna, så att Släpp betalningen och raderna i månaden ritas mot en riktig databas).

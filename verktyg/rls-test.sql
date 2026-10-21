@@ -19713,6 +19713,7 @@ declare
   X6     constant uuid := '00000000-0000-4000-8000-000000051b06';
   KK     constant uuid := '00000000-0000-4000-8000-000000051c01';
   BJ     constant uuid := '00000000-0000-4000-8000-000000051f01';
+  tab    text;
   VERS   constant text := '2026-10-21';
 begin
   if to_regclass('public.tillagg_poster') is null then
@@ -20517,6 +20518,51 @@ begin
                            from public.tillagg_forsok where id = fid) = 'admin:Klarna blev aldrig klar enligt Stripe:true'
                     and (select status from public.tillagg_poster where bokning_id = X2) = 'upplupen',
               'd', t);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Tjänstekontot skriver bara genom databasens funktioner (granskningen
+    -- 2026-10-21): inte i tilläggets tabeller, de insatta timmarna eller
+    -- stegloggen, men kassans funktion går.
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X2;
+      t := '';
+      foreach tab in array array['tillagg_poster', 'tillagg_forsok', 'tillagg_forsok_poster', 'betalningsrader',
+                                 'tillagg_godkannanden', 'bokning_barn', 'tillagg_installning', 'timmar_insatta',
+                                 'ansokan_steg_logg'] loop
+        begin
+          perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+          execute 'set local role service_role';
+          execute format('insert into public.%I default values', tab);
+          t := t || ' gick';
+        exception when others then t := t || ' ' || sqlstate;
+        end;
+        reset role;
+      end loop;
+      begin
+        perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+        execute 'set local role service_role';
+        update public.tillagg_poster set status = 'frigjord' where bokning_id = X2;
+        t2 := 'gick';
+      exception when others then t2 := sqlstate;
+      end;
+      reset role;
+      perform set_config('request.jwt.claims', '{"role":"service_role"}', true);
+      execute 'set local role service_role';
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'SK tjänstekontot skriver inte direkt i tilläggets, timmarnas eller stegens tabeller, men kassans funktion går',
+              'ok', btrim(t) = '42501 42501 42501 42501 42501 42501 42501 42501 42501' and t2 = '42501'
+                    and (j ->> 'forsok') is not null and (j ->> 'belopp_ore')::int = 6900,
+              'd', btrim(t) || ' / ' || t2 || ' / ' || coalesce(j::text, ''));
       raise exception 'delblock';
     exception when others then
       if sqlerrm <> 'delblock' then raise; end if;

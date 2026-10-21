@@ -158,6 +158,11 @@ begin
   if exists (select 1 from pg_roles where rolname = 'nextrum_ai') then
     execute 'revoke all on public.timmar_insatta from nextrum_ai';
   end if;
+  -- Inte heller tjänstekontot (granskningen 2026-10-21): bara ge_gratistimmar
+  -- och gallringen skriver, och båda är security definer.
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'revoke insert, update, delete, truncate on public.timmar_insatta from service_role';
+  end if;
 end $$;
 grant select on public.timmar_insatta to authenticated;
 
