@@ -29,7 +29,7 @@
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
      densamma som i studievyn och studiehjälparvyn. -->
 <link rel="stylesheet" href="nextrum-admin-palett.css?v=510b6564">
-<link rel="stylesheet" href="nextrum-admin-konsol.css?v=b0f189d5">
+<link rel="stylesheet" href="nextrum-admin-konsol.css?v=9198edac">
 </head>
 <body class="vy vy-admin">
 
@@ -381,6 +381,26 @@
 
               <div class="kon-ut" id="kon-ut"></div>
             </div>
+          </div>
+
+          <!-- ============ NEX MÅNADSRAPPORT (2026-10-21) ============
+               Nex skriver den själv den 1:a varje månad, om förra månaden
+               (nex-manadsrapport, väckt av pg_cron). Bara summor lämnar oss,
+               aldrig namn. Skriv nu skriver om förra månadens, eller väljer
+               en annan månad i väljaren. Ritas av nextrum-admin-konsol.js. -->
+          <div class="dbox kon-rapport" id="nex-rapport">
+            <div class="kon-rapport-topp">
+              <div>
+                <h5>Nex månadsrapport <em id="nex-rapport-manad"></em></h5>
+                <p class="xsmall kon-rapport-not">Nex skriver den själv den 1:a varje månad. Bara summor lämnar oss, inga namn.</p>
+              </div>
+              <div class="kon-rapport-val">
+                <select class="sel" id="nex-rapport-valj" aria-label="Välj månad för rapporten"></select>
+                <button class="btn btn-ghost btn-sm" type="button" id="nex-rapport-skriv">Skriv nu</button>
+              </div>
+            </div>
+            <p class="ok-msg" id="nex-rapport-msg"></p>
+            <div id="nex-rapport-text"><div class="loading">Hämtar</div></div>
           </div>
 
           <!-- ============ HUR GÅR DET ============
@@ -2575,12 +2595,12 @@
 <script src="nextrum-admin-karna.js?v=4bce718b"></script>
 <script src="nextrum-admin-detalj.js?v=3e7d760b"></script>
 <script src="nextrum-admin-oversikt.js?v=4675189b"></script>
-<script src="nextrum-admin-kunder.js?v=c59f9f8c"></script>
+<script src="nextrum-admin-kunder.js?v=152f59f6"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
 <script src="nextrum-admin-rekrytering.js?v=2d14aa9c"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
-<script src="nextrum-admin-drift.js?v=d2b8b595"></script>
+<script src="nextrum-admin-drift.js?v=6da99b95"></script>
 <script src="nextrum-admin-ekonomi.js?v=8cfce2dc"></script>
 <script src="nextrum-admin-liggaren.js?v=8eeee83a"></script>
 <script src="nextrum-admin-manaden.js?v=51040ed6"></script>
@@ -2597,7 +2617,7 @@
 <script src="nextrum-admin-radera.js?v=85c68990"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=0b10c92f"></script>
+<script src="nextrum-admin-konsol.js?v=420a6d63"></script>
 <script src="nextrum-modulvakt.js?v=bca26bc2"></script>
 <script src="nextrum-admin.js?v=d3f87ab1"></script>
 </body>

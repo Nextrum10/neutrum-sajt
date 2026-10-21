@@ -223,11 +223,27 @@
             <div class="pay-field"><label for="l-format">Önskat upplägg</label>
               <select class="sel" id="l-format" name="format">
                 <option value="">Spelar ingen roll</option>
-                <option>Online</option><option>På plats</option><option>Blandat</option>
+                <option value="online">Online</option><option value="pa_plats">På plats</option><option value="bada">Blandat</option>
               </select>
             </div>
             <div class="pay-field"><label for="l-tider">Tider för passen</label>
               <input class="inp" id="l-tider" name="tider" placeholder="t.ex. vardagar efter 16"></div>
+            <!-- BEHOVEN (2026-10-21). Samma sex koder som barnets behov i
+                 studievyn (NX.BEHOV) och studiehjälparens styrkor, och de
+                 sparas som koder (leads.behov): matchningen ger poäng när
+                 ett behov möts av en styrka. Valfritt, flera går. Samma
+                 fält står i en/intresseanmalan.html. -->
+            <fieldset class="nx-val full" id="l-behov">
+              <legend>Vad ska hjälpen göra? <span class="lbl-valfri">välj gärna flera</span></legend>
+              <div class="nx-val-rad fyra">
+                <label><input type="checkbox" value="laxor">Läxorna i vardagen</label>
+                <label><input type="checkbox" value="prov">Inför prov</label>
+                <label><input type="checkbox" value="ikapp">Komma ikapp</label>
+                <label><input type="checkbox" value="utmaning">Mer utmaning</label>
+                <label><input type="checkbox" value="struktur">Planering och studieteknik</label>
+                <label><input type="checkbox" value="motivation">Motivation och självförtroende</label>
+              </div>
+            </fieldset>
             <div class="pay-field full"><label for="l-msg">Vad eleven behöver hjälp med</label>
               <textarea class="inp" id="l-msg" name="message" placeholder="Vad går trögt just nu? Finns det något vi bör veta för att välja rätt person?"></textarea>
               <p class="nx-fil-hjalp">Skriv inte diagnoser, personnummer eller annat känsligt här. Det räcker med vad eleven behöver hjälp med, resten tar vi i samtalet.</p>
@@ -617,9 +633,16 @@
       if (!supa) { säg(msg, t('ingenDatabasForm'), false); return; }
 
       const extra = [];
+      /* Upplägget och behoven sparas som koder (2026-10-21), och står
+         också i meddelandet på svenska, så att den som ringer ser dem
+         i anmälan utan att adminvyn behöver slå upp något. */
       const format = $('#l-format').value;
+      const formatText = format ? $('#l-format').selectedOptions[0].textContent.trim() : '';
+      const behov = $$('#l-behov input:checked').map(i => i.value)
+        .filter(k => NX.BEHOV.some(b => b.kod === k));
       const tider = $('#l-tider').value.trim();
-      if (format) extra.push('Önskat upplägg: ' + format);
+      if (format) extra.push('Önskat upplägg: ' + (NX.FORMAT_ONSKEMAL.find(f => f.kod === format) || { text: formatText }).text);
+      if (behov.length) extra.push('Behov: ' + behov.map(k => NX.BEHOV.find(b => b.kod === k).text).join(', '));
       if (tider) extra.push('Tider för passen: ' + tider);
       extra.push('Läst integritetspolicyn: ja (' + new Date().toISOString().slice(0, 10) + ')');
 
@@ -650,7 +673,7 @@
       const k = NX.källa();
 
       knapp.setAttribute('aria-busy', 'true');
-      const { error } = await supa.from('leads').insert({
+      const rad = {
         parent_name: namn,
         email: epost,
         child_name: $('#l-child').value.trim() || null,
@@ -665,8 +688,19 @@
         sokord: k.term,
         hanvisare: k.hänvisare,
         landningssida: k.landning,
-        kod: kodInp ? (renKod(kodInp.value) || null) : null
-      });
+        kod: kodInp ? (renKod(kodInp.value) || null) : null,
+        behov: behov,
+        format_onskemal: format || null
+      };
+      let { error } = await supa.from('leads').insert(rad);
+      /* Sidan går ut före migrationen behov_i_matchningen. Finns
+         kolumnerna inte än skickas anmälan utan dem: behoven står ändå
+         i meddelandet, och en anmälan får aldrig falla för en kolumn. */
+      if (error && /behov|format_onskemal/.test(String(error.message || ''))) {
+        delete rad.behov;
+        delete rad.format_onskemal;
+        ({ error } = await supa.from('leads').insert(rad));
+      }
       knapp.removeAttribute('aria-busy');
 
       if (error) { säg(msg, t('kundeInteSkicka') + felText(error), false); return; }

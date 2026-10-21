@@ -269,5 +269,21 @@ ok('motorn räknar de cachade tokenen',
   /cache_read_input_tokens/.test(motorKod)
     && /cache_creation_input_tokens/.test(motorKod), true);
 
+/* ============================================================
+   NEX MÅNADSRAPPORT (2026-10-21)
+
+   Den skrivs utan att någon frågar, så den får mindre än drift: inga
+   verktyg, ingen slinga, och bara summor till modellen. Proven vaktar
+   att det förblir så.
+   ============================================================ */
+const nexKod = fs.readFileSync(
+  path.join(rot, 'supabase', 'functions', 'nex-manadsrapport', 'index.ts'), 'utf8');
+ok('månadsrapporten har inga verktyg', /\btools\s*:/.test(nexKod), false);
+ok('månadsrapporten skickar underlaget, aldrig raderna', /JSON\.stringify\(underlag/.test(nexKod)
+  && !/JSON\.stringify\((analys|omatchade|nyaLeads|saknadeRapporter|avvikelser|kommandePass)\b/.test(nexKod), true);
+ok('månadsrapporten prövar hemligheten eller adminens token före allt annat',
+  nexKod.indexOf('hemlighetOk(') < nexKod.indexOf('serviceklient()')
+    && nexKod.indexOf('kravAdmin(') < nexKod.indexOf('serviceklient()'), true);
+
 console.log(fel === 0 ? '\nAlla tester gröna.' : '\n' + fel + ' test misslyckades.');
 process.exit(fel === 0 ? 0 : 1);

@@ -36,6 +36,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
    **samtidigt**. Först då öppnas bokningen, köpen och tråden; före det är vyn öppen med barnen,
    NexLäx och profilen, och säger att vi letar studiehjälpare (`S.väntar`, 2026-10-07; inget väntläge)
 5. Föräldern lägger in barnet, hjälparen skriver studieplanen
+- **Behoven styr matchningen** (2026-10-21, `behov_i_matchningen`, Leo: "det är ju behovet som ska ge oss den
+  statistiken"): familjens behov (`NX.BEHOV`, sex koder) väljs i intresseanmälan (`leads.behov`, och upplägget i
+  `leads.format_onskemal`) eller på barnet, och Ta in familjen för dem till eleven; studiehjälparen väljer samma
+  koder som styrkor i sin profil (`tutor_profiles.styrkor`, i vitlistan i `skydda_tutorfalt`). `matchningspoang()`
+  ger behoven 12 av 100 (ämne 45, årskurs 27, utrymme 10, erfarenhet 6), aldrig ett hårt nej, och halva när någon
+  sida saknar dem. Koderna ändras i `NX.BEHOV`, `students.behov`, `leads` och `tutor_profiles` samtidigt.
 - **Uppstartsrutan**: `data-uppstart` och banans vecka byts tillsammans, på båda sidorna; när
   passen börjat går rutan och `nextrum-uppstart.css` bort. Den är en låg remsa ovanför formuläret, och
   intresseanmälan har inget sidhuvud: formuläret står överst med rubriken i sin yta (`.nx-anm`, 2026-10-08,
@@ -874,6 +880,14 @@ Detaljer: `minne/sakerhet.md`.
   får "fel lösenord" provas också som barnadress (`NXStudie.loggaIn`).
 - **Agentregeln**: hårt stegtak, källtvång i kod, bara verifierade `kallor` klickbara (aldrig
   med regex), `ekonomi` skriver aldrig, och agenterna läser källan, aldrig ur minnet.
+- **Nex månadsrapport** (2026-10-21, Leo: "det är ju bra att den automatiskt ger en inblick i läget av
+  företaget varje månad"): `nex-manadsrapport` skriver förra månadens rapport den 1:a (pg_cron
+  `nex-manadsrapport`, 06.13 UTC, `intern.nex_manadsrapport_vack()`, `notis_konfig.nex_url`), och Skriv nu på
+  Översikt skriver den när som helst. Inga verktyg och ingen slinga: drifts läsfunktioner läses med
+  `service_role` efter hemligheten eller en superadmins token, och bara summor går till modellen
+  (`_delad/manadsrapport.ts`; inga id:n, initialer eller fritext). Rapporten är en körning i `agent_korningar`
+  (agent `drift`, frågan "Månadsrapport för …", en per månad) och en uppgift (`nex-manad:ÅÅÅÅ-MM`) säger att den
+  är klar, så den syns i Att göra och morgonmejlet. Texten töms med agentloggen efter 90 dagar.
 - **AI-lagret**: `drift` har inget utgående verktyg, och ingen AI-väg skriver i affärstabeller
   (rollen `nextrum_ai`). AI:n formulerar aldrig en nyckel eller en titel; `godkann_forslag()`
   utför med adminens token, en gren per typ, aldrig `update <tabell> set <payload>`. Databasens
@@ -928,7 +942,7 @@ Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
 - **Betala nu, Klarna, planerna i 30 dagar och NexLäx enklare och ljus** (2026-10-21) är byggda men INTE i drift:
-  migrationen `betala_nu` (20261021170000) och `stripe-checkout` (SESSIONSFORM 11), `stripe-webhook`,
+  migrationen `betala_nu` (20261021200000) och `stripe-checkout` (SESSIONSFORM 11), `stripe-webhook`,
   `stripe-reservation`, `notis-ko`, `drift` och `ekonomi` från merge-commiten, i den ordningen efter merge
   (`DEPLOY-BETALNING.md` 9.22). Före: Klarna slås på i Stripes dashboard, och endpointen får
   `checkout.session.async_payment_succeeded` och `_failed`. Villkorens version är 2026-10-22 (en hade godkänt

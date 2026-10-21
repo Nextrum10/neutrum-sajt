@@ -341,3 +341,25 @@
   .vy-admin .kon-nex-namn{font-size:1.1rem}
   .vy-admin .kon-hero-not{display:none}
 }
+
+/* ------------------------------------------------------------
+   NEX MÅNADSRAPPORT (2026-10-21)
+   Texten är Nex, ritad ur rubriker (## ) och punkter (- ). Ett tak på
+   höjden, som svaret i bandet, så att en lång rapport inte trycker ned
+   resten av Översikt.
+   ------------------------------------------------------------ */
+.vy-admin .kon-rapport{margin-bottom:clamp(14px,1.6vw,20px)}
+.vy-admin .kon-rapport-topp{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-start;justify-content:space-between}
+.vy-admin .kon-rapport-topp h5{margin:0 0 4px}
+.vy-admin .kon-rapport-not{margin:0;color:var(--bl-2);line-height:1.6}
+.vy-admin .kon-rapport-val{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.vy-admin .kon-rapport-val .sel{width:auto;min-width:0}
+.vy-admin #nex-rapport-text{margin-top:14px;max-height:520px;overflow-y:auto}
+.vy-admin #nex-rapport-text h6{margin:16px 0 6px;font-size:.92rem;font-weight:650;color:var(--bl)}
+.vy-admin #nex-rapport-text h6:first-child{margin-top:0}
+.vy-admin #nex-rapport-text p,.vy-admin #nex-rapport-text li{font-size:.9rem;line-height:1.65;color:var(--bl-2)}
+.vy-admin #nex-rapport-text p{margin:0 0 8px}
+.vy-admin #nex-rapport-text ul{margin:0 0 8px;padding-left:1.15em;list-style:disc}
+.vy-admin #nex-rapport-text li{margin:0 0 4px}
+.vy-admin .kon-rapport-nar{font-size:.78rem;color:var(--bl-3);margin-top:10px}
+

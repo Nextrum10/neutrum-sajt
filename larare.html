@@ -1174,9 +1174,18 @@
                     <div class="fgroup">
                       <label>Format</label>
                       <div class="vy-val" id="pr-format-val" role="group" aria-label="Format"></div>
+                    </div>
+                    <!-- Styrkorna (behov_i_matchningen, 2026-10-21): samma sex
+                         koder som familjens behov (NX.BEHOV). Matchningen ger
+                         poäng när ett behov möts av en styrka. Fältet döljs av
+                         vyn om kolumnen inte finns än. -->
+                    <div class="fgroup" id="pr-styrka-grupp">
+                      <label>Det du är extra bra på</label>
+                      <div class="vy-val" id="pr-styrka-val" role="group" aria-label="Det du är extra bra på"></div>
                       <p class="xsmall" style="margin-top:9px;color:var(--bl-2);line-height:1.6">
-                        Ämnen, årskurser och format styr vilka elever vi föreslår dig för.
-                        Lämnar du dem tomma syns du som "vet ej" i matchningen.
+                        Ämnen, årskurser, format och det du är bra på styr vilka elever vi föreslår dig för.
+                        Lämnar du dem tomma syns du som "vet ej" i matchningen. Välj det du verkligen är bra
+                        på, inte allt: familjerna väljer samma saker när de anmäler sig.
                       </p>
                     </div>
                     <div class="fgroup"><label for="pr-bio">Kort text om dig</label><textarea class="inp" id="pr-bio" style="min-height:90px" maxlength="1200" placeholder="Vad du pluggar, vad du är bra på att förklara, och hur du brukar lägga upp ett pass."></textarea></div>
@@ -1307,6 +1316,6 @@
 <script src="nextrum-introduktion.js?v=1a07de96"></script>
 <script src="nextrum-provet.js?v=a8310910"></script>
 <script src="nextrum-modulvakt.js?v=bca26bc2"></script>
-<script src="nextrum-larare-vy.js?v=046b3f97"></script>
+<script src="nextrum-larare-vy.js?v=23119a17"></script>
 </body>
 </html>

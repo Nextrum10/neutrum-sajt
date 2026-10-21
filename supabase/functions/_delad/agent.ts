@@ -51,7 +51,7 @@ import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.116.
 
 // Kolla https://docs.claude.com/en/docs/about-claude/models om det här
 // börjar ge fel. Modellnamn ändras över tid.
-export const MODELL = 'claude-opus-5';
+export const MODELL = 'claude-opus-5-5';
 
 // Sex steg räcker för "sök, hämta två källor, jämför, svara" och
 // hindrar samtidigt en agent som fastnat från att mala vidare.

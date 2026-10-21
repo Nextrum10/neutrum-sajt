@@ -1878,7 +1878,7 @@ Efter merge, en session, i den här ordningen:
    `stripe-webhook` FÖRE `stripe-checkout` (en kassa med Klarna mot en webhook som inte känner
    `async_payment_succeeded` kan lämna en betalning oskriven), sedan `stripe-checkout` (SESSIONSFORM 11),
    `stripe-reservation`, `notis-ko`, `drift` och `ekonomi`.
-3. **Migrationen** `20261021170000_betala_nu`, hel i ett do-block eller avsnitt för avsnitt (inget
+3. **Migrationen** `20261021200000_betala_nu`, hel i ett do-block eller avsnitt för avsnitt (inget
    `drop`, inget `delete`), prövad mot sin md5 och registrerad med filens text. Vakterna läser
    `klippkort_betald`, `intern.admin_att_gora` och `intern.kortreservation_vack` som de står i driften
    2026-10-21; har någon ändrat dem stannar filen.
