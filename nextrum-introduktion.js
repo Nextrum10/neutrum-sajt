@@ -116,7 +116,10 @@
   }
 
   /* o.roll        'foralder' eller 'studiehjalpare'
-     o.sparat      lösenordet sparades nyss: första bilden säger det
+     o.sparat      lösenordet sparades nyss, alltså första gången: första bilden
+                   hälsar välkommen. Den säger inte längre att lösenordet är
+                   sparat (2026-10-21): villkoren, och för en studiehjälpare
+                   provet, kommer emellan, så det var flera steg sedan.
      o.väntar      vyn är inte öppen än (VÄNTAR)
      o.igen        öppnad från Profil: går att stänga
      Svarar när Fortsätt (eller Stäng) trycks. */
@@ -169,7 +172,7 @@
         förladda(steg[nu + 1] && bildFör(roll, steg[nu + 1].bild));
         var klarRad = ruta.querySelector('.nx-intro-klar');
         klarRad.hidden = !(nu === 0 && o.sparat);
-        klarRad.textContent = o.sparat ? 'Lösenordet är sparat. Välkommen till Nextrum! Så här fungerar det.' : '';
+        klarRad.textContent = o.sparat ? 'Välkommen till Nextrum! Så här fungerar det.' : '';
         ruta.querySelector('#nx-intro-t').textContent = s.rubrik;
         ruta.querySelector('#nx-intro-text').textContent = s.text;
         var väntar = ruta.querySelector('.nx-intro-vantar');
