@@ -268,10 +268,10 @@ async function provaFamiljenTagenIn(webb) {
   prova('familj: ingen Stäng första gången', (await page.locator('[data-intro-stang]').count()) === 0);
 
   const sett = await genomIntro(page);
-  prova('familj: sju bilder, 1 av 7 till 7 av 7', sett.length === 7 && sett[0].nr === '1 av 7' && sett[6].nr === '7 av 7',
+  prova('familj: sex bilder, 1 av 6 till 6 av 6 (Bekräfta rapport togs bort 2026-10-21)', sett.length === 6 && sett[0].nr === '1 av 6' && sett[5].nr === '6 av 6',
     sett.map(s => s.nr).join(', '));
   prova('familj: rubrikerna följer menyn', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(
-    ['Översikt', 'Boka pass', 'Mina lektioner', 'Bekräfta rapport', 'NexLäx', 'Meddelanden', 'Profil & inställningar']),
+    ['Översikt', 'Boka pass', 'Mina lektioner', 'NexLäx', 'Meddelanden', 'Profil & inställningar']),
     sett.map(s => s.rubrik).join(', '));
   prova('familj: första bilden hälsar välkommen, de andra inte', sett[0].klar && sett.slice(1).every(s => !s.klar));
   /* Lösenordet sparades flera steg tidigare (villkoren, och för en studiehjälpare
@@ -279,17 +279,17 @@ async function provaFamiljenTagenIn(webb) {
   prova('familj: välkomstraden säger inget om lösenordet',
     sett[0].klarText === 'Välkommen till Nextrum! Så här fungerar det.', sett[0].klarText);
   prova('familj: Tillbaka går inte på första bilden', sett[0].bak && sett.slice(1).every(s => !s.bak));
-  prova('familj: Nästa, och Fortsätt sist', sett.slice(0, 6).every(s => s.knapp === 'Nästa') && sett[6].knapp === 'Fortsätt',
+  prova('familj: Nästa, och Fortsätt sist', sett.slice(0, 5).every(s => s.knapp === 'Nästa') && sett[5].knapp === 'Fortsätt',
     sett.map(s => s.knapp).join(', '));
   prova('familj: varje bild kom fram och har en alt-text', sett.every(s => s.bild && s.bild.w === 780 && s.bild.alt.length > 30),
     JSON.stringify(sett.map(s => s.bild && [s.bild.src, s.bild.w])));
   prova('familj: knappen står still mellan bilderna, också när den blir Fortsätt (dator)',
     new Set(sett.map(s => s.topp + ':' + s.höger + ':' + s.bredd)).size === 1,
     sett.map(s => s.topp + '/' + s.höger + '/' + s.bredd).join(', '));
-  prova('familj: sista bilden säger att vi matchar dem först', sett[6].väntar && sett.slice(0, 6).every(s => !s.väntar));
+  prova('familj: sista bilden säger att vi matchar dem först', sett[5].väntar && sett.slice(0, 5).every(s => !s.väntar));
   prova('familj: sista bilden säger var familjen och barnet loggar in nästa gång',
-    /Logga in på nextrum\.se/.test(sett[6].text) && /barnet på samma ställe med sitt användarnamn/.test(sett[6].text),
-    sett[6].text);
+    /Logga in på nextrum\.se/.test(sett[5].text) && /barnet på samma ställe med sitt användarnamn/.test(sett[5].text),
+    sett[5].text);
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 6000 }).catch(() => {});
   /* Före matchningen är vyn öppen (2026-10-07): inget väntläge, men
      bokningen och köpen väntar på studiehjälparen. */
@@ -351,7 +351,7 @@ async function provaUtanLänken(webb) {
     await page.waitForSelector('.nx-intro.open', { timeout: 8000 }).catch(() => {});
     prova('intro kvar: ingen lösenordsruta', !(await synlig(page, '#nylos-t')));
     const sett = await genomIntro(page);
-    prova('intro kvar: introduktionen, utan välkomstraden', sett.length === 7 && !sett[0].klar);
+    prova('intro kvar: introduktionen, utan välkomstraden', sett.length === 6 && !sett[0].klar);
     prova('intro kvar: en matchad familj får ingen rad om matchningen', sett.every(s => !s.väntar));
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
     prova('intro kvar: Fortsätt leder in i vyn', await synlig(page, '#view-app'));
@@ -371,12 +371,12 @@ async function provaUtanLänken(webb) {
     await vänta(400);
     await page.click('[data-intro="foralder"]');
     await page.waitForSelector('.nx-intro.open', { timeout: 4000 }).catch(() => {});
-    prova('Profil: Visa introduktionen öppnar den', (await text(page, '.nx-intro-nr')) === '1 av 7');
+    prova('Profil: Visa introduktionen öppnar den', (await text(page, '.nx-intro-nr')) === '1 av 6');
     prova('Profil: öppnad igen har den Stäng', await synlig(page, '[data-intro-stang]'));
     await page.keyboard.press('ArrowRight');
-    prova('Profil: pilen åt höger går framåt', (await text(page, '.nx-intro-nr')) === '2 av 7', await text(page, '.nx-intro-nr'));
+    prova('Profil: pilen åt höger går framåt', (await text(page, '.nx-intro-nr')) === '2 av 6', await text(page, '.nx-intro-nr'));
     await page.keyboard.press('ArrowLeft');
-    prova('Profil: pilen åt vänster går tillbaka', (await text(page, '.nx-intro-nr')) === '1 av 7', await text(page, '.nx-intro-nr'));
+    prova('Profil: pilen åt vänster går tillbaka', (await text(page, '.nx-intro-nr')) === '1 av 6', await text(page, '.nx-intro-nr'));
     await page.keyboard.press('Escape');
     await vänta(150);
     prova('Profil: Escape stänger den', !(await synlig(page, '.nx-intro')));

@@ -431,6 +431,44 @@ utveckling som är roligare att följa, och ett quest-system.
 
 ---
 
+## Enklare och ljust (2026-10-21)
+
+**Leo 2026-10-21:** "nexläx ska ändra utseende, jag tycker de blev för komplicerat. Där de är svart på
+studievyn på ljus vy gör de vit lite coolt samma stil. Så den färgen ska kolumnerna under nexläx också ha
+och Dagens uppdrag, de sektionerna som är separata ska sättas ihop, och elever som blir tilldelade
+exempelvis att hen har matte som läxhjälp åk 6 ska kunna plugga på flera ämnen och årskurser. Din
+utveckling måste också ändra de är alldeles för svårt och för mycket att trycka igenom. Ämnen kan
+exempelvis gå bort och statistik av hur långt man kommit i ämnen kan stå på översikt. Ta bort Rättat
+också. Sätt ihop rank och märken. Och flytta upp studiehjälpare sektionen upp till bredvid utveckling."
+Det här gäller före allt längre ned där de skiljer sig:
+- **Ljust, inte bark.** Huvudet (`.nl-spelrad`), kortet på vägen, rankkortet, märkenas topp och profilen
+  står på ytan (`--yta`) med kant och `--sk-1`. Det görs inte regel för regel: inne i de ytorna pekar
+  barkens tokens om (`--nt` och `--nt-2` på ytan, `--nt-fg` på `--bl`, `--nt-mut` på `--bl-3`, och de ljusa
+  syskonen `-l` på de vanliga tonerna), så att reglerna ovan gäller som de är. I mörkt läge är ytan mörk,
+  som förut. Gradienten på NexLäx står kvar, i de mörkare tonerna mot ytan (sista avsnittet i
+  `nextrum-uppgifter.css`).
+- **Ett kort på vägen** (`.nl-kort`, `ritaVäg`): toppen (streak, XP, rank, Nästa steg och dagens rad),
+  studiehjälparens remsa, Dagens uppdrag (hopfällt som förut) och ämnesbanderollen, med en linje emellan.
+  Banderollen är ljus med ämnet i sin färg och säger "Byt ämne eller årskurs"; väljaren fälls ut under
+  kortet (`insertAdjacentHTML` efter `.nl-kort`), så att inget ovanför banderollen byter höjd.
+- **Flera ämnen och årskurser** gick redan (allt i NexLäx är öppet sedan 2026-10-06, och `barn_nexlax()`
+  och `nivaer` lämnar ut hela banken; ingen databasfunktion filtrerar på elevens ämne). Väljaren säger det nu:
+  "Öva i vilket ämne och vilken årskurs du vill. Allt är öppet.", rubrikerna Ämne och Årskurs i …, och
+  pricken för din årskurs. Förvalet är elevens eget ämne (`students.subjects`) och egen årskurs
+  (`förvaldÅrskurs`).
+- **Fyra flikar:** Din väg, Din utveckling, Studiehjälparen (`hjalpare`, med siffran för öppna uppgifter,
+  `#flik-lax-mark`) och Rank och märken (`rank`: ranken överst, märkena under, två värdar i samma panel).
+  Studiehjälparen ritas av `ritaUtveckling` i den värd som `data-nl-hjalpare` på Din utvecklings värd pekar
+  på, så vyerna behövde inte ändras. `#nexlax/marken` och en länk till `marken` leder till `rank`
+  (`FLIKNAMN`, `tagFlik`); i studievyn faller en okänd flik i adressen tillbaka på Din väg.
+- **Din utveckling är en sida** (`utvecklingHtml`): I siffror, Dina ämnen (en rad per ämne och årskurs med
+  procent, mätare och nivåer), Höjdpunkter, XP per vecka, de fyra senaste veckorna och Uppdrag. Inga
+  sidknappar, inget svep, inget val NexLäx/Studiehjälparen. Rättat och Område för område är borta från
+  vyn (rättningen av en nivå visas fortfarande i spelaren och vid uppgifterna; `försöksRad` och
+  `områdesHtml` står kvar i modulen).
+- **På telefonen** bryter flikarnas namn på två rader (Studie&shy;hjälparen med mjukt bindestreck).
+- **Prov:** `prova-nexlax.js` följer med (kortet, ljusheten, flikarna, en sida i Din utveckling).
+
 ## NexLäx som spel, ranker, märken och profil (2026-10-13)
 
 **Leo 2026-10-13:** fler uppgifter och mer interaktivt, bättre ljud "som Duolingo", mindre

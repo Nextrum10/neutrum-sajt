@@ -2195,16 +2195,10 @@ a.pass-lank:hover{color:var(--acc)}
 .tb-manad-not{grid-column:1 / -1;font-size:.8rem;color:var(--bl-3)}
 /* Nästa månads plan: strecket ovanför streckat, för den gäller inte än. */
 .erb-mitt + .erb-mitt.ar-kommande{border-top-style:dashed}
-/* Valet av månad på plankortet: två lika breda knappar, den valda fylld.
-   aria-pressed animeras inte (fällorna i vyerna). */
-.erb-manad{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin:12px 0 0}
-.erb-manad-val{
-  min-height:44px;padding:8px 10px;border-radius:10px;border:1px solid var(--ln);background:var(--yta);
-  color:var(--bl);font:inherit;font-size:.86rem;font-weight:600;line-height:1.2;cursor:pointer;
-}
-.erb-manad-val[aria-pressed="true"]{border-color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,var(--yta))}
-.erb-manad-val:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* Planens giltighet, ovanför Köp (2026-10-21: 30 dagar från köpet; valet
+   av månad på kortet stod här samma dag). Köp är kortets fulla bredd. */
 .erb-manad-not{margin:6px 0 10px;font-size:.8rem;color:var(--bl-2)}
+.erb-kort [data-kop]{width:100%;justify-content:center}
 /* Köpvillkoren före kassan (2026-10-21): vad som köps, och krysset. */
 .nx-kassa-rader{margin:6px 0 12px;padding-left:18px;color:var(--bl);line-height:1.5}
 .nx-kassa-kryss{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:10px 0;font-size:1rem;

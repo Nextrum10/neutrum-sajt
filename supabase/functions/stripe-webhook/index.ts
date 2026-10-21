@@ -291,6 +291,15 @@ Deno.serve(async (req) => {
   try {
     switch (typ) {
       // ---------- betalningen gick igenom ----------
+      /* KLARNA (2026-10-21, Leo: "betala direkt med kort eller betala med
+         klarna"). Klarna i kassan blir i regel klar direkt, och då kommer
+         betalningen som en vanlig checkout.session.completed med
+         payment_status 'paid'. Skulle Stripe ändå fullborda sessionen som
+         obetald och låta pengarna komma efteråt kommer de med
+         async_payment_succeeded, med samma session och payment_status
+         'paid': samma gren skriver dem. Utan den raden hade familjen betalat
+         och passet stått som obetalt för alltid. */
+      case 'checkout.session.async_payment_succeeded':
       case 'checkout.session.completed': {
         /* KORTET SPARAS (kortet_reserveras, 2026-10-13). En kassa i läget
            setup tar ingen betalning: den sparar familjens kort hos Stripe,
@@ -459,6 +468,12 @@ Deno.serve(async (req) => {
       }
 
       // ---------- betalningen gick inte igenom ----------
+      /* Klarna sa nej efter att sessionen fullbordats: PaymentIntent får
+         sitt eget payment_intent.payment_failed, som skriver läget nedan.
+         Här finns inget mer att göra. */
+      case 'checkout.session.async_payment_failed':
+        return await klar('klarna sa nej, payment_intent.payment_failed skriver det');
+
       case 'payment_intent.payment_failed': {
         /* En reservation eller en dragning med det sparade kortet
            (kortet_reserveras, 2026-10-13): stripe-reservation skriver nejet

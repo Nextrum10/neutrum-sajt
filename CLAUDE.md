@@ -76,11 +76,16 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Chatten** läser admin med `chatt_las()` (loggat, aldrig cachat), aldrig `NXKontakt.tråd()`;
   att vi kan läsa står i policyn och chatten och tas inte bort.
 - **Månader** väljs på passets månad, och ingen väljare börjar före september 2026.
-- **Betalning**: kort, och pengarna dras först när rapporten är skriven: kortet som väljs när
-  familjen bokar reserveras två dagar före passet och dras efter rapporten, annars betalar familjen
-  med kort när rapporten bekräftas (`villkoren_kortet`). Med strömbrytaren `kortreservation` av gäller
-  det förra, kort i förväg; texten och strömbrytaren följs åt (Siffror nedan). Ett hållet pass betalas
-  även obekräftat. Ett pass med kortpengar avbokas inte från en vy, och ett i tvist återbetalas inte.
+- **Betalning: Betala nu** (2026-10-21, `betala_nu`, Leo: "man betalar när man fått de bekräftat att man
+  kan boka lektionen", "betala direkt med kort eller betala med klarna", "Alla betala knappar ska vara oranga och
+  stå betala nu. Så bekräfta rapport kan tas bort"): familjen betalar varje pass med kort eller Klarna så fort
+  studiehjälparen bekräftat tiden, med den orange knappen Betala nu (på passet, i listorna och under Betalning,
+  som visar Att betala och Betalt), och betalar de inte hålls passet ändå och vi följer upp (Leo: "Passet hålls,
+  vi jagar"). **Bekräfta rapport finns inte**: menyn, sektionen och knapparna är borta, `#bekrafta` leder till
+  Betalning, och `rapport_bekraftelser` står kvar som historik. Kassan tar `BETALSATT` (`card`, `klarna`) och
+  webhooken `checkout.session.async_payment_succeeded`. Strömbrytaren `kortreservation` står av och ska inte slås
+  på utan nya villkor; texten och strömbrytaren följs åt (Siffror nedan). Ett hållet pass betalas
+  även obetalt före. Ett pass med kortpengar avbokas inte från en vy, och ett i tvist återbetalas inte.
   **Ingen faktura** (2026-10-21, Leo: "Ta bort fakturasystemet helt"; ingen hade gått till en familj):
   inget betalsätt, ingen månadsfaktura för obetalda pass, ingen text som lovar en. Del 1
   (`fakturan_tas_bort`) låser strömbrytaren `faktura` av (`flaggor_faktura_av`, som `kortsparr`) och
@@ -94,7 +99,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   underlag.
 - **Hållen tid** (Fas 20.1) debiteras per påbörjad kvart; avvikelse kräver skäl, ingen ändring i
   efterhand. Övertid på egen rad (`pass_tillagg`), aldrig passets betalningskolumner. Lönen
-  följer tiden nedåt, uppåt bara när övertiden är betald.
+  följer tiden nedåt, uppåt bara när övertiden är betald. Blir ett betalt pass kortare går mellanskillnaden
+  tillbaka av sig själv (2026-10-21: `kortare_pass_att_aterbetala()`, `stripe-reservation`, `_delad/kortare.ts`),
+  och villkoren lovar det; tillägget betalas med Betala nu.
 - **En stängd månad** (Fas 20.2) är låst i databasen, också för admin, tills den öppnas.
 - **Betalningar, Månadens ekonomi och Löner** räknar på `betalningsrader()` och
   `NXBetalning.passpris`, så en månad har ett belopp; testbetalningar räknas aldrig. En månad
@@ -148,11 +155,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   och barnets vy har inga länkar ut. Fel i en fråga rapporteras i spelaren (`rapportera_fragefel`,
   fyra skäl, ingen fritext, ingen person) och syns under Material i adminvyn. Ljuden räknas fram i webbläsaren (`nextrum-ljud.js`) och
   valet sparas där. Ämnen som bara finns i NexLäx står i `NX.NEXLAX_AMNEN`, aldrig i `NX.AMNEN`.
-  **NexLäx är ett spel i studievyn** (2026-10-13): fyra flikar (Din väg, Din utveckling med NexLäx eller
-  Studiehjälparen att välja mellan, Rank, Märken), alltid på Din väg när man kommer in, banan synlig direkt
-  (Dagens uppdrag hopfällt, väljaren bakom ämnesbanderollen), huvudsidans gradient på NexLäx titel och val (ingen separat sida: menyn och hälsningen står kvar, Leo
-  2026-10-13), ranker som en rad kort att svepa i med rankmärken som belöning (aldrig pengar), märken som
-  färgglada medaljer i egen flik och på profilen (räknade, aldrig sparade), Din utveckling i tre sidor, tre ämnen framme och resten bakom Visa fler ämnen, och klockljud i
+  **NexLäx är ett spel i studievyn** (2026-10-13; enklare och ljust 2026-10-21, Leo: "jag tycker de blev för
+  komplicerat"): fyra flikar (Din väg, Din utveckling, Studiehjälparen, Rank och märken), alltid på Din väg när man
+  kommer in, banan synlig direkt (toppen, studiehjälparens remsa, Dagens uppdrag hopfällt och ämnesbanderollen i ETT
+  kort, `.nl-kort`; väljaren under kortet, där ämne och årskurs byts fritt med elevens egna som förval), ytan och inte
+  barken i ljust läge (barkens tokens pekar om på ytan, så mörkt läge är mörkt som förut), huvudsidans gradient på NexLäx titel och val (ingen separat sida: menyn och hälsningen står kvar, Leo
+  2026-10-13), ranker som en rad kort att svepa i med rankmärken som belöning (aldrig pengar) och märkena under i samma
+  flik, märken som färgglada medaljer (räknade, aldrig sparade) också på profilen, Din utveckling som EN sida
+  (talen, ämne för ämne, veckorna, uppdragen; inga sidknappar, ingen Rättat), tre ämnen framme och resten bakom Visa fler ämnen, och klockljud i
   `nextrum-ljud.js` som bara låter för det man klarar (rätt svar, nivå, uppdrag, kista, märke, ny rank): knappar
   och flikar ger bara vibration (Leo 2026-10-13). Grupper att tävla i är inte byggda (`minne/nexlax.md`).
   Att vi bygger mest på matematik, svenska och engelska (2026-10-12) står under ämnesbrickorna
@@ -309,7 +319,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   kan ändra eller ta bort den och att det bokade och köpta behåller sitt pris, och Att sluta säger att timmarna och minuterna
   då räknas till ordinarie timpris med rabatten dragen; beloppet ser familjen vid priset. Auditen får att familjen fick eller blev av med en
   rabatt (`har_rabatt`), aldrig koden, som kan säga vilken partner familjen kom genom.
-- **Kortet reserveras** (2026-10-13, i drift sedan 2026-10-14; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
+- **Kortet reserveras** (av sedan 2026-10-21, `betala_nu`: familjen betalar med Betala nu; koden och tabellerna
+  står kvar, och jobbet släpper det som ändå skulle stå reserverat och betalar tillbaka kortare pass. Historik:
+  2026-10-13, i drift sedan 2026-10-14; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
   och när passet har hållits och läxhjälparen har skrivit rapport så dras pengarna"): valet är frivilligt, och kortet
   och reservationen står i egna tabeller, aldrig på `bookings` (`kortreservationer`, bara genom `valj_kort()` och
   tjänstekontot). Kortet sparas hos Stripe (`sparade_kort`; familjen ser märke, sista fyra och giltighetstid genom
@@ -413,22 +425,22 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   orange timmar är köpta och gratis är gröna ... 9 av 9 timmar finns kvar") står överst på båda ställena: en ruta per
   timme i det som gäller nu (köp som inte gått ut, med de använda tomma; planens gratis timme efter planen; timmarna för
   tips), gratis närmast de tomma för de dras först, "N av M timmar kvar", och en stapel över 24 timmar
-  (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger. **En plan gäller en kalendermånad**
-  (2026-10-21, `planerna_per_manad`, i drift sedan 2026-10-20; Leo: "Den här månaden" eller "Nästa månad"): familjen väljer
-  månaden på plankortet, `klippkort.galler_fran` är den 1:a (databasen prövar den), och planen går ut månadens sista
-  dag; Fyll timbanken, gratistimmarna, planens gratis timme och tipstimmen räknas som förut. Under batteriet står en
-  rad per månad, "3 av 8 timmar återstår" och "0 av 0" (`planens_manader()`), och nästa månads plan räknas inte i
-  batteriet förrän den gäller. **Ett köp betalas tillbaka** under Liggaren, helt eller med ett antal timmar:
+  (`batteriTimmar`, `fyllBatteri`). Kortens mätare har samma färger. **En plan gäller 30 dagar från betalningen**
+  (2026-10-21, `betala_nu`, Leo: planen köps "direkt och den används 30 dagar framåt"; samma dag hade en plan köpts för en
+  kalendermånad, `planerna_per_manad`, och ingen hann köpa en): inget månadsval på plankortet, `intern.klippkort_manad`
+  sätter ingen `galler_fran`, och `klippkort_betald` räknar 30 dagar (`PLANENS_DAGAR` i vyn och i
+  `_delad/erbjudanden.ts`). Fyll timbanken, gratistimmarna, planens gratis timme och tipstimmen räknas som förut. Under
+  batteriet står en rad per plan som gäller, "3 av 8 timmar återstår" och när den går ut (`planRader`). **Ett köp betalas tillbaka** under Liggaren, helt eller med ett antal timmar:
   databasen räknar beloppet (`klippkort_aterbetalning_lage`), och timmarna dras tillbaka, aldrig under det som
   använts (`klippkort_aterbetalningar`, en rad per återbetalning i Stripe).
 - Betalningsmeningen står på 36 ställen i 23 filer och i mejlen, och `kolla-betalningsvillkor.py` räknar
   dem. **En betalning som tas på ett annat sätt än villkoren lovar är en tvist, inte ett skrivfel.**
   Fakturameningen, meningen om de obetalda passen och `BETALNINGSVILLKOR_DAGAR` gick med fakturan
   2026-10-21 och står bland det gamla: en sida som säger att familjen kan välja faktura lovar ett
-  betalsätt som inte finns. Meningen följer strömbrytaren `kortreservation` (`KORTET_RESERVERAS`): på
-  säger den att pengarna dras först när rapporten är skriven och att kortet reserveras två dagar före
-  passet, och "betala i förväg" får inte stå; slås strömbrytaren av går den förra meningen tillbaka i
-  samma ändring.
+  betalsätt som inte finns. Meningen är sedan 2026-10-21 "med kort eller Klarna så fort studiehjälparen har
+  bekräftat tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden"; kortet som reserveras
+  och "när ni bekräftar rapporten" står bland det gamla. Slås `kortreservation` på igen ändras meningen, villkoren
+  och kontrollen i samma ändring.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
   och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`; svaret är månadskostnaden och
@@ -580,8 +592,9 @@ knappen stängs med `NXStudie.medan()`.
 ### Innehållet i studievyn och studiehjälparvyn
 Lägets färg säger vems drag det är: lera ert drag eller fel, ockra väntar, mossa klart (tokens i
 cinemas `:root` och båda mörka blocken); som serier skiljs de inte åt av färgblinda, och
-ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knappen
-Betala i förväg (Välj kort med strömbrytaren `kortreservation` på) och Köp under Erbjudanden (2026-10-12),
+ämnesfärgerna finns bara i NexLäx. Orange (`--orange`) är inget läge: den bär bara knapparna
+som betalar: Betala nu, Betala med timmar och Köp under Erbjudanden (2026-10-21, Leo: "Alla betala knappar ska vara
+oranga"; valen i `.vy-betalval` med `ar-orange`),
 och köpta timmar i timbankens batteri och mätare, där gratis timmar är mossa (2026-10-15, Leo). Ett drag överst, en knapp per listrad, tid och plats genom
 `NXKontakt.passRad`, betalvalen i `.vy-betalval`. Adminvyns månadsväljare är ett fält med en
 ruta för år och månad (2026-10-06), från september 2026 till och med december nästa år; märket
@@ -928,6 +941,13 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Betala nu, Klarna, planerna i 30 dagar och NexLäx enklare och ljus** (2026-10-21) är byggda men INTE i drift:
+  migrationen `betala_nu` (20261021200000) och `stripe-checkout` (SESSIONSFORM 11), `stripe-webhook`,
+  `stripe-reservation`, `notis-ko`, `drift` och `ekonomi` från merge-commiten, i den ordningen efter merge
+  (`DEPLOY-BETALNING.md` 9.22). Före: Klarna slås på i Stripes dashboard, och endpointen får
+  `checkout.session.async_payment_succeeded` och `_failed`. Villkorens version är 2026-10-22 (en hade godkänt
+  2026-10-21). Juristen har inte läst villkoren, Klarna i policyn eller raden i `DATASKYDD.md`. Introduktionens bilder
+  (NexLäx, och Bekräfta rapport som togs bort) är inte omtagna.
 - **Skarp kortbetalning**: bara testläge. Stripes endpoint behöver `charge.updated`,
   `charge.dispute.updated` och kortets tre (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
   `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox. Stegen till skarpt läge, i

@@ -195,42 +195,28 @@
         tills vidare, för det ni bokar och köper medan ni har den. Vi kan ändra eller ta bort den, och
         det ni redan har bokat eller köpt behåller sitt pris. Hur den räknas om ni slutar står under
         <a href="#erbjudanden">Planer och timbanken</a>.</li>
-      <li>Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit
-        rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar
-        ni när ni bekräftar rapporten. Efter passet skriver studiehjälparen en rapport, och den läser
-        och bekräftar ni i er vy.</li>
-      <!-- Kortet reserveras (kortet_reserveras, 2026-10-13, Leo: "då
-           reserveras pengar från stripe och när passet har hållits och
-           läxhjälparen har skrivit rapport så dras pengarna"). Reservationen
-           görs av jobbet kortreservation för ett bekräftat pass som börjar
-           inom 48 timmar, dragningen när rapporten finns, högst det
-           reserverade (stripe-reservation). Den som väljer kortet ska ha
-           godkänt den här versionen (kortreservationer_kraver_villkor). -->
-      <li id="kortet"><b>Kortet ni väljer när ni bokar.</b> Kort väljer ni när ni föreslår passet, eller
-        senare på passets sida så länge passet inte har hållits, och kortet sparas då hos Stripe. Med
-        valet ger ni oss rätt att reservera och dra passets pris från kortet, så här: priset för den bokade tiden reserveras tidigast
-        två dagar före passet, när studiehjälparen har bekräftat tiden, och pengarna dras när
-        studiehjälparen har skrivit rapporten, för den tid passet hölls. Det som dras är aldrig mer än det
-        som reserverades, och resten släpps. Blev passet längre betalar ni tillägget när ni bekräftar
-        rapporten. Avbokas passet eller betalas det på annat sätt släpps reservationen, och flyttas det
-        reserveras priset på nytt inför den nya tiden. Ni kan välja bort kortet på passet fram till att
-        pengarna har dragits, och ta bort kortet under Profil när ni vill. Då släpps det som är
-        reserverat. Går priset inte att reservera eller dra får ni ett mejl, och betalar då på något av de
-        andra sätten.</li>
-      <li>Rapporten bekräftar ni också när passet redan är betalt. Ett pass som har hållits ska
-        betalas även om rapporten inte har bekräftats.</li>
+      <!-- Betala nu (2026-10-21, Leo: "man betalar när man fått de bekräftat att man kan boka
+           lektionen", "betala direkt med kort eller betala med klarna", och "bekräfta rapport kan
+           tas bort"). Ett obetalt pass hålls ändå, och vi följer upp det (Leo samma dag: "Passet
+           hålls, vi jagar"). Kortet som reserverades två dagar före passet (kortet_reserveras,
+           2026-10-13 till 2026-10-21) är borta, och punkten #kortet med det. -->
+      <li id="betala-nu">Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat
+        tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden. Ni betalar
+        med Betala nu i er vy, på passet eller under Betalning. Hinner ni inte betala innan passet
+        hålls det ändå, och ett pass som har hållits ska betalas: då står det kvar under Betalning, och vi
+        påminner er. Efter passet skriver studiehjälparen en rapport, som ni läser i er vy.</li>
       <li id="hallen-tid">Priset gäller den tid passet faktiskt hölls, räknat per påbörjad kvart.
         Studiehjälparen skriver in tiden i rapporten, och blev passet längre eller kortare än bokat
-        står det där, med skälet, innan ni bekräftar. Stämmer inte tiden, skriv till oss innan ni
-        betalar. Har ni redan betalt och passet blev längre betalar ni tillägget när ni bekräftar
-        rapporten. Blev det kortare betalar vi tillbaka mellanskillnaden. Var passet betalt med
+        står det där, med skälet. Stämmer inte tiden, skriv till oss. Har ni redan betalt och passet
+        blev längre betalar ni tillägget med Betala nu under Betalning. Blev det kortare betalar vi
+        tillbaka mellanskillnaden av oss själva, till kortet eller Klarna, när rapporten är skriven. Var passet betalt med
         timmar från en plan eller ur timbanken kommer timmar som inte påbörjades tillbaka av sig
         själva, och det som blev över av den sista timmen sparas i er <a href="#timbank">timbank</a>.</li>
       <li>Har ni fyllt er timbank med timmar i förväg, med en plan eller Fyll timbanken, betalar timmarna passet i
         stället, av sig själva, redan när ni föreslår det. Se <a href="#erbjudanden">Planer och timbanken</a> nedan.</li>
-      <li>Kortbetalningen sköts av Stripe. Kortuppgifterna lämnar ni direkt till Stripe, aldrig
-        till oss. Ett kort ni sparar står hos Stripe, och vi ser bara märket, de fyra sista siffrorna
-        och när det går ut.</li>
+      <li>Betalningen sköts av Stripe. Kortuppgifterna lämnar ni direkt till Stripe, aldrig
+        till oss. Betalar ni med Klarna gör ni det hos Klarna, på Klarnas villkor för det betalsätt ni
+        väljer där, och Klarna betalar oss. Vi sparar inga kort.</li>
       <li>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar för de
         pass ni bokar och för timmar ni själva valt att köpa i förväg, inget annat.</li>
     </ul>
@@ -283,8 +269,8 @@
          flit: en kods villkor står där koden delas ut. -->
     <h2 id="kopvillkor">Köpvillkor</h2>
     <p>Det här gäller när ni betalar hos oss, för ett pass, ett tillägg för ett pass som blev längre,
-      en plan, timmar till en plan eller Fyll timbanken, och när ni sparar ett kort för passen. Innan
-      kassan öppnas kryssar ni i att ni har läst det.</p>
+      en plan, timmar till en plan eller Fyll timbanken. Innan kassan öppnas kryssar ni i att ni har
+      läst det.</p>
     <ul>
       <li><b>Vem ni köper av.</b> Ni köper av oss, så som det står under Vem avtalet är med överst på
         sidan, och det är oss ni kontaktar om köpet: <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
@@ -292,23 +278,22 @@
         står ovan, och vad timmarna ger, hur länge de gäller och hur de används står under
         <a href="#erbjudanden">Planer och timbanken</a>.</li>
       <li><b>Priset.</b> Priset i kronor står i kassan innan ni betalar, med en rabatt dragen om ni har
-        en, och inga avgifter läggs till. Betalar ett sparat kort passet är priset passets, så som det
-        står under <a href="#kortet">Kortet ni väljer när ni bokar</a>.</li>
-      <li><b>Hur ni betalar.</b> Med kort, i Stripes kassa. Apple Pay och Google Pay går också
-        när kassan visar dem, för de betalar med ett kort. Andra betalsätt tar vi inte. När ni sparar
-        ett kort dras ingenting.</li>
-      <li><b>När köpet är klart.</b> Ett köp av timmar är klart när Stripe har godkänt betalningen. Då
-        står timmarna i er timbank, och en plan för nästa månad gäller från månadens första dag.
+        en, och inga avgifter läggs till av oss.</li>
+      <li><b>Hur ni betalar.</b> Med kort eller Klarna, i Stripes kassa. Apple Pay och Google Pay går
+        också när kassan visar dem, för de betalar med ett kort. Väljer ni Klarna gäller Klarnas villkor
+        för det betalsätt ni väljer där, och det är Klarna som avgör om det går. Andra betalsätt tar vi
+        inte.</li>
+      <li><b>När köpet är klart.</b> Ett köp av timmar är klart när betalningen är godkänd. Då
+        står timmarna i er timbank, och en plan gäller i 30 dagar från den dagen.
         Stripe mejlar ett kvitto till adressen på ert konto.</li>
-      <li><b>Om kortet nekas.</b> Nekas kortet när ett pass ska reserveras eller betalas får ni ett
-        mejl, och ni kan då byta kort i er vy eller betala passet på ett annat sätt. Går det att försöka
-        igen, till exempel när det saknades täckning, provar vi samma betalning med samma kort efter
-        sex timmar, högst två gånger till. Passet avbokas inte för att kortet nekas, och det ska
-        betalas när det har hållits.</li>
+      <li><b>Om betalningen inte går igenom.</b> Nekas kortet eller säger Klarna nej är ingenting
+        betalt, och ni kan försöka igen med Betala nu, med ett annat kort eller betalsätt. Passet
+        avbokas inte för att betalningen inte gick, och det ska betalas när det har hållits.</li>
       <li><b>Ångerrätt.</b> Ni har 14 dagars ångerrätt, för ett pass från dagen det bokades och för ett
         köp av timmar från köpdagen. Hur ni ångrar er och vad vi då betalar tillbaka står under
         <a href="#angerratt">Ångerrätt</a>.</li>
-      <li><b>Återbetalning.</b> Pengar vi betalar tillbaka går till kortet ni betalade med. Betalar vi
+      <li><b>Återbetalning.</b> Pengar vi betalar tillbaka går till kortet ni betalade med, eller
+        till Klarna, som räknar av det från det ni ska betala dem. Betalar vi
         tillbaka ett köp av timmar räknas beloppet som under Att sluta i
         <a href="#erbjudanden">Planer och timbanken</a>, eller under Ångerrätt de första 14 dagarna,
         och timmarna vi betalar tillbaka tas bort ur er timbank. En timme som redan har betalat ett
@@ -319,17 +304,18 @@
     </ul>
 
     <h2 id="erbjudanden">Planer och timbanken</h2>
-    <p>Ni kan fylla er timbank med timmar i förväg på två sätt: med en plan för en kalendermånad, till ett
+    <p>Ni kan fylla er timbank med timmar i förväg på två sätt: med en plan som gäller i 30 dagar, till ett
       lägre timpris, eller med Fyll timbanken, till ordinarie timpris. Har ni en plan kan ni också köpa
       till timmar till den (se <a href="#kop-till">Köp till timmar</a>). Betalar ni pass för pass används
       inte timbanken, och varje pass betalas som under Pris och betalning ovan.
       Vilka som finns och vad de kostar står på <a href="/priser#erbjudanden">prissidan</a>. Köpet
-      görs en gång, med kort. Det är inget abonnemang och förnyas inte av sig självt.</p>
+      görs en gång, med kort eller Klarna. Det är inget abonnemang och förnyas inte av sig självt.</p>
     <ul>
-      <!-- planerna_per_manad (2026-10-21): en plan köps för den här eller nästa kalendermånad. -->
-      <li><b>Hur länge timmarna gäller.</b> En plan köps för den här eller nästa kalendermånad och gäller
-        till och med månadens sista dag. En plan för nästa månad betalar inga pass före månadens första
-        dag. Timmar ni köpt
+      <!-- planerna_30_dagar (2026-10-21, Leo: "köper planen direkt och den används 30 dagar
+           framåt"). Samma dag hade en plan köpts för en kalendermånad (planerna_per_manad);
+           det gick innan någon köpt en. -->
+      <li><b>Hur länge timmarna gäller.</b> En plan gäller i 30 dagar från dagen den betalas, och
+        börjar gälla direkt. Timmar ni köpt
         med Fyll timbanken gäller i 6 månader från köpet, hur många ni än köpt. Timmar ni köpt till
         en plan gäller till planens sista dag. En gratis timme
         gäller i 60 dagar från dagen den läggs in (se <a href="#forsta-timmen">Första timmen gratis</a>,
@@ -379,7 +365,7 @@
         gratis timmarna. Det som blir över av en gratistimme när ett pass slutar före en hel timme
         sparas inte, och gratistimmar som inte används förfaller. De är en gåva:
         de räknas inte som köpta timmar och betalas aldrig ut som pengar.</li>
-      <li id="kop-till"><b>Köp till timmar.</b> Har ni en plan för den här månaden som gäller minst en dag till kan ni köpa
+      <li id="kop-till"><b>Köp till timmar.</b> Har ni en plan som gäller minst en dag till kan ni köpa
         till 1–20 timmar åt gången, under Er timbank i vyn. De kostar planens timpris, det ni betalade
         per timme för planen, och går ut samma dag som planen. De är ett eget köp med samma regler som
         planen: det som står här, under Att sluta och under <a href="#angerratt">Ångerrätt</a> gäller
@@ -544,7 +530,7 @@
         Formuläret nedan går att använda, men det är inget krav: ett mejl där det tydligt står
         att ni ångrar bokningen räcker.</li>
       <li>Har ni betalat passet betalar vi tillbaka hela beloppet senast 14 dagar efter att vi
-        fått ert besked, till kortet ni betalade med. Har ni inte betalat ännu betalar ni
+        fått ert besked, till kortet ni betalade med eller till Klarna. Har ni inte betalat ännu betalar ni
         ingenting för ett pass som inte har börjat.</li>
       <li>De flesta pass hålls inom ångerfristen. När ni föreslår en tid ber ni oss därför att
         hålla passet även om fristen inte har gått ut. Ångrar ni er efter att passet har börjat
@@ -609,7 +595,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 21 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 22 oktober 2026.</p>
   </div>
 </section>
 
@@ -790,7 +776,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=72594d80"></script>
+<script src="nextrum-maskot-svar.js?v=58fbd1e6"></script>
 <script src="nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

@@ -28,6 +28,9 @@ export type ErbjudandePris = {
   rabatterat_timpris_ore?: number;
 };
 
+/** Hur länge en plan gäller från betalningen, som klippkort_betald räknar (2026-10-21). */
+export const PLANENS_DAGAR = 30;
+
 const timmarText = (n: number) => (n === 1 ? '1 timme' : `${n} timmar`);
 
 /** Ören som kronor på kvittot: hela kronor utan decimaler, annars två. */
@@ -87,8 +90,11 @@ export function kassarad(
   const kod = !rabattkod ? ''
     : kodensRabattOre === 0 ? ` Med koden ${rabattkod}.` : ` Med rabattkoden ${rabattkod}.`;
   const egen = Number(familjerabattOre) > 0 ? ` Med er rabatt på ${kr(familjerabattOre)} kr per timme.` : '';
-  // Planerna per månad (2026-10-21): planen gäller sin kalendermånad.
-  const nar = gallerFran ? `Gäller ${planensPeriod(gallerFran)}.` : `Gäller i ${man} från köpet.`;
+  // En plan gäller 30 dagar från köpet (2026-10-21, Leo: "köper planen
+  // direkt och den används 30 dagar framåt"). Ett köp som bär en månad
+  // (planerna per kalendermånad, samma dag) säger sin månad.
+  const nar = gallerFran ? `Gäller ${planensPeriod(gallerFran)}.`
+    : e.sort === 'plan' ? `Gäller i ${PLANENS_DAGAR} dagar från köpet.` : `Gäller i ${man} från köpet.`;
   return { name: e.namn, description: `${vad}. ${nar}${egen}${kod}` };
 }
 

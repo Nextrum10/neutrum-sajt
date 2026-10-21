@@ -70,10 +70,12 @@ nämner den.
 Två siffror och ett löfte står på många ställen samtidigt: 399 kr/tim
 utan bindning (sedan 2026-10-08; paketen 379 kr/tim, en månad i
 taget), 69 kr/tim fast tillägg för flera barn (tak tre, alltså 468 för
-tre barn, inte 537), och att familjen betalar varje pass med kort, antingen i
-förväg eller efter passet när de bekräftar rapporten (Fas 19.2; före
-passet sa Fas 14.2). Rapporten bekräftas också när passet redan är
-betalt, och ett hållet pass ska betalas även utan bekräftelse. Spärren
+tre barn, inte 537), och att familjen betalar varje pass med kort eller
+Klarna så fort studiehjälparen bekräftat tiden, med Betala nu, och får
+mellanskillnaden tillbaka om passet blir kortare (2026-10-21, `betala_nu`;
+förut kort i förväg eller när rapporten bekräftades, Fas 19.2). Rapporten
+bekräftas inte längre, och ett hållet pass ska betalas även om det inte
+betalades före. Spärren
 `kortsparr` kan inte slås på sedan dess. Studiehjälparen får betalt den
 25:e och ser underlaget som månadens lönespecifikation, före skatt
 (2026-09-28); pg_cron-jobbet `manadskorning` skriver det den 1:a,
@@ -466,7 +468,7 @@ inom 60 dagar (`minne/timmar.md`). Gratistimmar som admin sätter in i
 timbanken (samma dag: när familjen tas in eller senare) räknas för sig,
 gäller också i 60 dagar och dras först, sparar inga minuter och betalas
 aldrig ut. Med en plan som gäller kan familjen köpa till 1–20 timmar till
-planens timpris, som går ut med planen (2026-10-14). Sedan 2026-10-21 (i drift sedan 2026-10-20) köps en plan för den här eller nästa kalendermånad och går ut när månaden är slut, timbanken visar båda månaderna, och ett köp kan betalas tillbaka med ett antal timmar, aldrig under det som använts (`minne/timmar.md`). Varje betalning står i liggaren `betalningar`, som databasen skriver ur pengarna på raden och som aldrig raderas; köpvillkoren kryssas i före varje kassa; och ett nekat kort provas igen av sig självt, mejlas en gång och blir en uppgift efter ett dygn, utan att passet avbokas (`minne/betalning.md`). Rabattkoder och partnerkoder gäller sedan 2026-10-21 (byggt, inte i drift) bara när familjen köper en plan, aldrig ett pass: en kod per köp, användningen står vid betalningen och raderas aldrig, partnern sparas på familjen första gången, och de står under Koder i adminvyn (CLAUDE.md avsnitt 1, `minne/betalning.md`). Ett pass på noll kronor är inte obetalt. Bokföringen och lönen
+planens timpris, som går ut med planen (2026-10-14). Sedan 2026-10-21 gäller en plan 30 dagar från köpet (`betala_nu`; samma dag köptes den en kort stund för en kalendermånad), och ett köp kan betalas tillbaka med ett antal timmar, aldrig under det som använts (`minne/timmar.md`). Varje betalning står i liggaren `betalningar`, som databasen skriver ur pengarna på raden och som aldrig raderas; köpvillkoren kryssas i före varje kassa; och ett nekat kort provas igen av sig självt, mejlas en gång och blir en uppgift efter ett dygn, utan att passet avbokas (`minne/betalning.md`). Rabattkoder och partnerkoder gäller sedan 2026-10-21 (byggt, inte i drift) bara när familjen köper en plan, aldrig ett pass: en kod per köp, användningen står vid betalningen och raderas aldrig, partnern sparas på familjen första gången, och de står under Koder i adminvyn (CLAUDE.md avsnitt 1, `minne/betalning.md`). Ett pass på noll kronor är inte obetalt. Bokföringen och lönen
 sköts i Fortnox, med flit utan API-koppling hit (Fas 14.9 bytte Wint mot
 Fortnox). Lönen går dit som en PAXml-fil från Löner (2026-09-28). Ingen
 API-koppling förrän handarbetet kostar tid. Adminvyns Betalningar är det som

@@ -110,6 +110,31 @@ async function stängNotisrutan(page) {
 async function laddaVyn(page) {
   await page.goto(BAS + '/foralder?forhandsvisning');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  /* Strömbrytaren står av sedan 2026-10-21 (betala_nu), också i
+     förhandsvisningens värld. Provet gäller den vilande koden, så första
+     gången på en sida slås den på, med Annas Visa ·· 4242 och ett förslag
+     med kortet valt, som världen hade till dess. provaAv slår av den igen. */
+  if (!page.__kortetPå) {
+    page.__kortetPå = true;
+    await page.evaluate(n => {
+      const l = JSON.parse(localStorage.getItem(n));
+      if (!l) return;
+      const id = k => 'f0000000-0000-4000-8000-' + String(k).padStart(12, '0');
+      l.W.flaggor.forEach(f => { if (f.kod === 'kortreservation') f.aktiv = true; });
+      const anna = { id: id(1) };
+      if (!l.W.sparade_kort.length) {
+        l.W.sparade_kort = [{ parent_id: anna.id, stripe_metod: 'pm_forhandsvisning', marke: 'visa', sista4: '4242',
+          utgar_manad: 8, utgar_ar: 2028, sparat: new Date().toISOString() }];
+        l.W.kortreservationer = [{ booking_id: id(108), parent_id: anna.id, lage: 'vald', stripe_reservation: null,
+          reserverat_ore: null, reserverat_till: null, reserverat_for: null, dragen_ore: null, fel: null, forsok: 0,
+          vald: new Date().toISOString(), andrad: new Date().toISOString() }];
+      }
+      l.rev += 1;
+      localStorage.setItem(n, JSON.stringify(l));
+    }, VÄRLDEN);
+    await page.reload();
+    await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  }
   await stängNotisrutan(page);
 }
 const värld = (page, f, arg) => page.evaluate(f, arg);
@@ -291,10 +316,10 @@ async function provaAv(webb) {
   await laddaVyn(page);
 
   await tillPasset(page, id(106));
-  prova('av: passets sida har Betala i förväg och inget Välj kort',
+  prova('av: passets sida har Betala nu och inget Välj kort',
     (await page.locator('#pass-sida [data-betala]').count()) > 0 && (await page.locator('#pass-sida [data-kort-val]').count()) === 0,
     await text(page, '#pass-sida .ps-gor'));
-  prova('av: beskedet är som förut', /Betala nu, eller efter passet när ni bekräftar rapporten\./.test(await text(page, BESKED)),
+  prova('av: beskedet säger Betala nu (betala_nu, 2026-10-21)', /Betala det nu, med kort eller Klarna\./.test(await text(page, BESKED)),
     await text(page, BESKED));
 
   await page.evaluate(() => { location.hash = '#boka'; });
@@ -426,14 +451,7 @@ async function provaLägen(webb) {
   prova('reserverat: Välj bort kortet släpper reservationen', (await reservation(page, id(105))) === 'slappt'
     && (await synlig(page, '#pass-sida .vy-betalval [data-kort-val]')), await reservation(page, id(105)));
 
-  /* Genomfört, med kortet valt: under Bekräfta rapport. */
-  await page.evaluate(() => { location.hash = '#bekrafta'; });
-  await page.waitForSelector('#rb-lista [data-rb-rapport]', { timeout: 6000 }).catch(() => {});
-  const rapporten = await page.evaluate(() => Array.from(document.querySelectorAll('#rb-lista [data-rb-rapport]'))
-    .map(x => x.textContent).find(t => /Priset dras från/.test(t)) || '');
-  prova('genomfört: Bekräfta rapport säger att kortet drar priset, utan betalval',
-    /Priset dras från Visa ·· 4242 inom några minuter\./.test(rapporten), rapporten.slice(0, 200));
-  await bild(page, 'bekrafta-med-kortet', '#rb-lista');
+  /* Bekräfta rapport, där kortets dragning stod, togs bort 2026-10-21. */
 
   prova('lägena: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));
   await context.close();
@@ -448,8 +466,8 @@ async function provaGenomförtObetalt(webb) {
   await laddaVyn(page);
   await tillPasset(page, id(104));
   prova('genomfört obetalt: passets sida ritas', await synlig(page, '#pass-sida .ps-titel'));
-  prova('genomfört obetalt: beskedet ber om betalsätt och rapporten',
-    /Passet är genomfört\. Läs rapporten nedan och bekräfta den genom att välja hur ni betalar\./.test(await text(page, BESKED)),
+  prova('genomfört obetalt: beskedet ber om Betala nu (2026-10-21)',
+    /Passet är genomfört men inte betalt\. Betala det nu, med kort eller Klarna\./.test(await text(page, BESKED)),
     await text(page, BESKED));
   prova('genomfört obetalt: betalvalen står på sidan', (await page.locator('#pass-sida .vy-betalval').count()) > 0);
   prova('genomfört obetalt: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));

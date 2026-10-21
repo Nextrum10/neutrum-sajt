@@ -6,9 +6,8 @@
 
    Inga hexkoder: allt är cinemas tokens, så mörkt läge följer med av
    sig självt. Rätt är mossa, fel är lera, stjärnorna och XP är ockra.
-   Toppen i NexLäx är barken, samma mörka yta som resten av sajtens
-   mörka partier, och där gäller de ljusa syskonen (--lera-l,
-   --mossa-l, --ockra-l): de mörka faller under AA på bark.
+   Toppen i NexLäx var barken till 2026-10-21; nu står den på ytan, och
+   barkens tokens pekar om dit (LJUS NEXLÄX OCH ETT KORT, sist i filen).
 
    Tre regler från CLAUDE.md avsnitt 3 gäller extra här, för spelaren
    är det mest tryckta i hela vyn:
@@ -2035,3 +2034,110 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
 .upg-slut-rang b{display:block;font-size:1.3rem;font-weight:800;letter-spacing:-.025em;color:var(--bl)}
 .upg-slut-rang:not([hidden]) .upg-slut-rang-ik{animation:upg-pop .6s var(--vy-fjader,ease) .1s backwards}
 @media (prefers-reduced-motion:reduce){.upg-slut-rang:not([hidden]) .upg-slut-rang-ik{animation:none}}
+
+
+/* ============================================================
+   LJUS NEXLÄX OCH ETT KORT (2026-10-21)
+   Leo: "nexläx ska ändra utseende, jag tycker de blev för komplicerat.
+   Där de är svart på studievyn på ljus vy gör de vit lite coolt samma
+   stil. Så den färgen ska kolumnerna under nexläx också ha och Dagens
+   uppdrag, de sektionerna som är separata ska sättas ihop".
+   · Barken i NexLäx (huvudet, toppen, rankkortet, märkenas topp och
+     profilen) står på ytan. Barkens tokens pekar om till sidans inne i
+     de ytorna, så att reglerna ovan gäller som de är: i ljust läge är
+     ytan vit, i mörkt läge mörk som förut. De ljusa syskonen (-l) pekar
+     på de vanliga tonerna, som klarar AA mot ytan i båda lägena.
+   · Toppen, studiehjälparens remsa, Dagens uppdrag och banderollen är
+     ETT kort (.nl-kort) med avdelare, inte fyra lådor.
+   · Gradienten på NexLäx står kvar, i de mörkare tonerna mot ytan.
+   ============================================================ */
+.nl-kort,.nl-spelrad,.nl-rangkort,.nl-marken-topp,.nl-prof{
+  --nt:var(--yta);--nt-2:var(--yta);--nt-fg:var(--bl);--nt-mut:var(--bl-3);--nt-ln:var(--ln);
+  --nt-glod:color-mix(in srgb,var(--acc) 7%,transparent);
+  --nt-mossa:color-mix(in srgb,var(--mossa) 7%,transparent);
+  --lera-l:var(--acc);--mossa-l:var(--mossa);--ockra-l:var(--ockra);
+  --amne-ma-l:var(--amne-ma);--amne-sv-l:var(--amne-sv);--amne-en-l:var(--amne-en);--amne-no-l:var(--amne-no);
+  --amne-so-l:var(--amne-so);--amne-prog-l:var(--amne-prog);--amne-ms-l:var(--amne-ms);--amne-ju-l:var(--amne-ju);
+  --amne-fek-l:var(--amne-fek);--amne-psy-l:var(--amne-psy);--amne-fil-l:var(--amne-fil);
+  border:1px solid var(--ln);box-shadow:var(--sk-1);
+}
+
+/* Huvudet: NexLäx i gradienten på ytan. */
+.nl-spelrad{background:radial-gradient(90% 140% at 0% 0%,var(--nt-glod),transparent 60%),var(--yta)}
+.nl-spelrad-namn{
+  background:linear-gradient(96deg,var(--amne-ma) 6%,var(--amne-en) 56%,var(--amne-ms) 98%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+}
+.nl-spelrad-ljud{background:var(--tint)}
+
+/* Kortet: ytan, ämnets sken i hörnet, och raderna med avdelare. */
+.nl-kort{
+  position:relative;overflow:hidden;border-radius:24px;
+  background:
+    radial-gradient(70% 55% at 100% 0%,color-mix(in srgb,var(--nl-f,var(--acc)) 9%,transparent),transparent 62%),
+    radial-gradient(90% 60% at 0% 0%,var(--nt-glod),transparent 55%),
+    var(--yta);
+}
+.nl-kort .nl-topp{background:none;box-shadow:none;border-radius:0;color:var(--bl)}
+.nl-kort .nl-stat-pill{background:var(--tint);border-color:var(--ln)}
+.nl-kort .nl-cta{background:var(--tint);border-color:var(--ln)}
+.nl-kort .nl-mal-ikon{background:var(--tint)}
+.nl-kort .nl-mat{background:var(--pap-3)}
+.nl-kort .nl-prickar i{background:var(--pap-3)}
+.nl-kort .nl-cta-knapp{color:var(--yta)}
+.nl-kort .nl-cta-knapp:hover{background:var(--acc-lugn,var(--acc))}
+.nl-kort .nl-cta-knapp:focus-visible{outline-color:var(--focus)}
+.nl-kort .nl-cta-amne{background:color-mix(in srgb,var(--nl-f,var(--acc)) 12%,var(--yta));color:var(--nl-f,var(--acc))}
+
+/* Raderna under toppen: samma yta, en linje emellan. */
+.nl-kort > .nl-hjalp-remsa,
+.nl-kort > .nl-uppdrag,
+.nl-kort > .nl-baner{
+  margin:0;border:0;border-top:1px solid var(--ln);border-radius:0;box-shadow:none;background:transparent;
+}
+.nl-kort > .nl-hjalp-remsa{min-height:56px;padding:10px 16px 10px 14px}
+.nl-kort > .nl-hjalp-remsa .nl-hjalp-ik{background:color-mix(in srgb,var(--ockra) 16%,var(--yta));color:var(--ockra-text)}
+.nl-kort > .nl-uppdrag .nl-uppdrag-huvud{border-radius:0}
+
+/* Banderollen: ämnet i sin färg på ytan, och vad ett tryck gör. */
+.nl-kort > .nl-baner{color:var(--bl);min-height:72px;padding:12px 16px 16px 14px}
+.nl-kort .nl-baner-ik{background:color-mix(in srgb,var(--nl-f,var(--bl)) 14%,var(--yta));color:var(--nl-f,var(--bl))}
+.nl-kort .nl-baner-et{color:var(--bl-3);opacity:1}
+.nl-kort .nl-baner-text b{color:var(--nl-f,var(--bl))}
+.nl-baner-byt{font-size:.78rem;font-weight:600;color:var(--bl-3)}
+.nl-kort .nl-baner-pct{color:var(--nl-f,var(--bl))}
+.nl-kort .nl-baner-pil{color:var(--bl-3)}
+.nl-kort .nl-baner-mat{left:16px;right:16px;bottom:8px;height:4px;border-radius:4px;background:var(--pap-3);overflow:hidden}
+.nl-kort .nl-baner-mat i{background:var(--nl-f,var(--mossa));border-radius:4px}
+@media (hover:hover){
+  .nl-kort > .nl-hjalp-remsa:hover,.nl-kort > .nl-baner:hover,.nl-kort .nl-uppdrag-huvud:hover{background:var(--tint)}
+}
+.nl-kort + .nl-valj{margin-top:10px}
+.nl-kort ~ .nl-grupp:first-of-type{margin-top:22px}
+
+/* Väljaren säger vad den gör (2026-10-21). */
+.nl-valj-intro{margin:0;font-size:.86rem;line-height:1.45;color:var(--bl-2)}
+.nl-valj-rubrik{
+  display:flex;align-items:center;gap:10px;margin:2px 0 -4px;
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--bl-3);
+}
+.nl-valj-rubrik span{display:inline-flex;align-items:center;gap:5px;text-transform:none;letter-spacing:0;font-family:inherit}
+.nl-valj-rubrik span i{display:block;width:5px;height:5px;border-radius:50%;background:var(--acc)}
+
+/* Rank och märken i en flik: ranken överst, märkena under. */
+.nl-rank-och-marken:not([hidden]){display:grid;gap:clamp(16px,1.8vw,22px)}
+.nl-rangkort,.nl-marken-topp,.nl-prof{background:radial-gradient(70% 60% at 100% 0%,color-mix(in srgb,var(--rk,var(--ockra)) 12%,transparent),transparent 60%),var(--yta)}
+.nl-marken-topp b{background:linear-gradient(96deg,var(--amne-ma) 6%,var(--amne-en) 56%,var(--amne-ms) 98%);-webkit-background-clip:text;background-clip:text}
+.nl-marken-topp .nl-mat{background:var(--pap-3)}
+.nl-rangkort .nl-mat{background:var(--pap-3)}
+.nl-prof-marken .upg-marke{background:var(--tint)}
+
+/* Den valda fliken: ytan och gradienten, som förut, med en ram som syns mot papperet. */
+.nl-flikar .vy-flik[aria-selected="true"]{box-shadow:var(--sk-1),0 0 0 1.5px color-mix(in srgb,var(--amne-en) 32%,transparent)}
+.nl-rangkort .nl-rang-steg i:not(.klar):not(.nu){background:var(--pap-3)}
+
+/* Fyra flikar med längre namn (2026-10-21): på en telefon bryter de på två
+   rader i stället för att krocka. Studiehjälparen bryter vid &shy;. */
+@media (max-width:600px){
+  .nl-flikar .vy-flik{white-space:normal;line-height:1.15;padding:4px 3px;font-size:.78rem;text-align:center;hyphens:manual}
+}

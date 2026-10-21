@@ -106,6 +106,7 @@ avsnitt 8).
 | Resend | mejl | USA | standardavtalsklausuler, DPF | ingår i villkoren, länkad från resend.com/legal |
 | Anthropic | rapportutkast, hälsningar, agenterna | USA | standardavtalsklausuler | ingår i Commercial Terms för API:t |
 | Stripe | kortbetalningar | EU och USA | standardavtalsklausuler, DPF | ingår i Stripes villkor; Stripe är självt ansvarigt för bedrägerikontroll |
+| Klarna (genom Stripe) | betalning med Klarna i kassan (betala_nu, 2026-10-21) | Sverige, EU | – | Klarna är självständigt personuppgiftsansvarigt för kreditprövningen och betalningen; Stripe lämnar e-post, belopp och vad köpet gäller. Juristen har inte läst raden |
 | Google | Meet-rum (inte kopplat än); kalendern och Meet för intervjuerna med den som söker jobb (bokningssidan, 2026-10-20); inkorgen info@nextrum.se (Workspace), där bland annat betygsgarantins anmälningar och betygskopior kommer in; Google Analytics, besöksstatistik efter ja (2026-10-11) | EU och USA | standardavtalsklausuler, DPF | Workspace Data Processing Amendment, godkänns i Admin Console; för Analytics Google Ads Data Processing Terms, som ingår i villkoren för ett konto i EES (kontots land i Analytics ska vara Sverige; inte kontrollerat) |
 | Fortnox | bokföring och lön (för hand, lönen som fil); fakturor till 2026-10-21, då fakturan togs bort, och ingen hade gått till en familj | Sverige | ingen överföring | Fortnox villkor; fakturorna står i policyn sedan 2026-09-28, lönen inte än, se avsnitt 8 |
 

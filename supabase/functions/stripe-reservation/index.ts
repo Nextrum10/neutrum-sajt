@@ -15,6 +15,13 @@
 //   slapp      reservationen ska bort (avbokat, betalt på annat sätt, kortet
 //              bortvalt eller borttaget, passet flyttat)
 //
+// och sedan betala_nu (2026-10-21), när strömbrytaren kortreservation står
+// av och familjen betalar med Betala nu:
+//
+//   tillbaka   ett pass som betalats för mer tid än det höll: mellanskillnaden
+//              går tillbaka till kortet eller Klarna (kortare_pass_att_aterbetala,
+//              _delad/kortare.ts)
+//
 // Leo 2026-10-13: "när passet har rapporterats kan pengarna dras". Varför
 // två dagar före passet: Stripe släpper en reservation som inte dragits,
 // för Visa efter fyra dygn och arton timmar när familjen inte är med.
@@ -50,7 +57,8 @@
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import { CORS, db, hemlighetOk, json } from '../_delad/notis.ts';
 import { preflight } from '../_delad/http.ts';
-import { StripeError, v1 } from '../_delad/stripe.ts';
+import { aterbetalningsLage, StripeError, v1 } from '../_delad/stripe.ts';
+import { betalaTillbakaKortare, type KortareRad } from '../_delad/kortare.ts';
 import { passpris, standardTjanst, type Tjanst } from '../_delad/pris.ts';
 import type { Passpris } from '../_delad/kortreservation.ts';
 import { gorRad, type Pass, type Rad, type Reservationslage } from '../_delad/reservationen.ts';
@@ -80,13 +88,39 @@ Deno.serve(async (req) => {
     return json({ error: 'Stripe är inte inställt.' }, 500);
   }
 
+  const utfall: Record<string, number> = {};
+
+  /* PENGARNA TILLBAKA (betala_nu, 2026-10-21). Före reservationerna och
+     oberoende av dem: utan migrationen finns funktionen inte, och då
+     loggas felet och resten görs som förut. */
+  const { data: tillbaka, error: tbfel } = await klient.rpc('kortare_pass_att_aterbetala', { p_grans: GRANS });
+  if (tbfel) console.error('stripe-reservation: återbetalningarna gick inte att läsa', tbfel.message);
+  for (const r of (tillbaka ?? []) as KortareRad[]) {
+    let resultat: string;
+    try {
+      resultat = await betalaTillbakaKortare(r, v1, async (pass, aterbetalt, betalt, charge) => {
+        const { error } = await klient.from('bookings').update({
+          aterbetald_ore: aterbetalt,
+          betalning_status: aterbetalningsLage(aterbetalt, betalt),
+          ...(charge ? { stripe_charge_id: charge } : {}),
+        }).eq('id', pass);
+        if (error) throw new Error('bookings: ' + error.message);
+      });
+    } catch (e) {
+      const vad = e instanceof StripeError ? `Stripe ${e.fel.status} ${e.fel.typ} ${e.fel.kod}` : (e as Error)?.message ?? String(e);
+      console.error('stripe-reservation: tillbaka', r.booking_id, vad);
+      resultat = 'fel';
+    }
+    const k = `tillbaka: ${resultat}`;
+    utfall[k] = (utfall[k] ?? 0) + 1;
+  }
+
   const { data: rader, error: listfel } = await klient.rpc('kortreservation_att_gora', { p_grans: GRANS });
   if (listfel) {
     console.error('stripe-reservation: listan gick inte att läsa', listfel.message);
     return json({ error: 'Listan gick inte att läsa.' }, 500);
   }
   const lista = (rader ?? []) as Rad[];
-  const utfall: Record<string, number> = {};
   if (!lista.length) return json({ ok: true, utfall }, 200);
 
   // ---------- passen, priserna och radernas ändringstid, en gång ----------

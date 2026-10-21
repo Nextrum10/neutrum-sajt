@@ -63,11 +63,11 @@
 
 import { arAdmin, type Inloggad, kravInloggad, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
-import { arStripeId, descriptor, StripeError, v1, VALUTA } from '../_delad/stripe.ts';
+import { arStripeId, BETALSATT, descriptor, StripeError, v1, VALUTA } from '../_delad/stripe.ts';
 import { familjebelopp, passpris, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
 import {
   arErbjudandekod, type ErbjudandePris, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen,
-  manadensForsta, planManad, sammaInnehall,
+  sammaInnehall,
 } from '../_delad/erbjudanden.ts';
 import { kodPaFelBetalning, planensKod } from '../_delad/koder.ts';
 
@@ -87,8 +87,11 @@ const CORS = cors();
       2026-10-13): beloppet är köpets begart_ore, som databasen räknat,
       och raden och metadata säger koden.
    9: familjens rabatt (familjerabatter, 2026-10-15): raden säger den, på
-      ett pass och på ett köp, och beloppet är databasens efter den. */
-const SESSIONSFORM = 10;
+      ett pass och på ett köp, och beloppet är databasens efter den.
+  10: planerna per kalendermånad (2026-10-21).
+  11: kort eller Klarna, och en plan gäller 30 dagar från köpet
+      (2026-10-21): en väntande kassa från förut hade bara kort. */
+const SESSIONSFORM = 11;
 
 /* KÖPVILLKOREN I KASSAN (2026-10-21, betalningsliggaren). Vyn visar en
    kryssruta för köpvillkoren innan kassan öppnas, och utan krysset
@@ -233,12 +236,11 @@ async function köpErbjudande(
     .maybeSingle();
   if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
 
-  /* PLANENS MÅNAD (2026-10-21, planerna_per_manad). Vyn skickar den här
-     eller nästa månad bara när databasen har planens_manader(), alltså
-     efter migrationen, och bara för en plan. Utan månad sätter databasen
-     den här månaden på en plan (efter migrationen) eller inget (före). */
-  const manad = planManad(kropp.manad);
-  const gallerFran = e.sort === 'plan' && manad ? manadensForsta(manad) : null;
+  /* PLANENS MÅNAD (planerna_per_manad) gick samma dag som den kom
+     (2026-10-21, Leo: planen "används 30 dagar framåt"): en plan gäller 30
+     dagar från betalningen, och en månad i anropet läses inte. Databasen
+     sätter ingen månad på ett nytt köp (planerna_30_dagar). */
+  const gallerFran: string | null = null;
 
   /* Vad familjen ska betala: katalogens pris minus familjens rabatt, eller
      priset med koden som databasen säger att den gäller (efter rabatten). */
@@ -272,8 +274,7 @@ async function köpErbjudande(
     /* Ett väntande köp för en annan månad är ett annat köp. Utan månad i
        anropet sätter databasen den här månaden på en plan, så det är den
        som jämförs, när raden har kolumnen. */
-    const vantadManad = gallerFran
-      ?? (e.sort === 'plan' && forut && 'galler_fran' in forut ? manadensForsta('denna') : null);
+    const vantadManad = gallerFran;
     if (kanAteranvandas(forut, attBetala) && sammaInnehall(forut, e as ErbjudandePris)
         && (forut?.rabattkod ?? null) === rabattkod
         && (Number(forut?.familjerabatt_ore) || 0) === egen.perTimme
@@ -339,7 +340,7 @@ async function köpErbjudande(
       locale: 'sv',
       ...efter,
       // Samma två val som för ett pass, av samma skäl: se Deno.serve.
-      payment_method_types: ['card'],
+      payment_method_types: BETALSATT,
       managed_payments: { enabled: false },
       customer_email: prof.email ?? undefined,
       metadata: { klippkort_id: kopId, erbjudande: e.kod, ...(rabattkod ? { rabattkod } : {}) },
@@ -477,7 +478,7 @@ async function köpTimmarTillPlanen(
       locale: 'sv',
       ...efter,
       // Samma två val som för ett pass, av samma skäl: se Deno.serve.
-      payment_method_types: ['card'],
+      payment_method_types: BETALSATT,
       managed_payments: { enabled: false },
       customer_email: epost,
       metadata: { klippkort_id: kopId, erbjudande: 'plan_extra' },
@@ -624,7 +625,7 @@ async function betalaTillagg(
       locale: 'sv',
       ...efter,
       // Samma två val som för passet, av samma skäl: se Deno.serve.
-      payment_method_types: ['card'],
+      payment_method_types: BETALSATT,
       managed_payments: { enabled: false },
       customer_email: kund?.email ?? undefined,
       metadata,
@@ -992,16 +993,17 @@ Deno.serve(async (req) => {
       mode: 'payment',
       locale: 'sv',
       ...efter,
-      /* BARA KORT (punkt 6 på MVP-listan, Fas 14.3). Utan raden väljer
-         Stripe betalsätt ur dashboardens inställningar, och slås Klarna
-         eller Swish på där erbjuds de här. Båda kan bli klara först i
-         efterhand: sessionen fullbordas som obetald och pengarna kommer
-         med checkout.session.async_payment_succeeded, en händelse
-         webhooken inte lyssnar på. Familjen hade betalat och passet
-         stått som obetalt för alltid. Villkoren säger kort, och det är
-         det som tas emot. Apple Pay och Google Pay är kort i plånbok och
-         följer med. */
-      payment_method_types: ['card'],
+      /* KORT ELLER KLARNA (2026-10-21, Leo: "betala direkt med kort eller
+         betala med klarna"). Fram till dess bara kort (punkt 6 på
+         MVP-listan, Fas 14.3), för en metod som blir klar först i
+         efterhand fullbordar sessionen som obetald och pengarna kommer med
+         checkout.session.async_payment_succeeded, som webhooken då inte
+         lyssnade på. Nu gör den det, och samma gren skriver betalningen.
+         Listan står här och inte bara i dashboarden: Swish eller något
+         annat som slås på där ska inte dyka upp i kassan utan att
+         webhooken och villkoren följt med. Apple Pay och Google Pay är kort
+         i plånbok och följer med kortet. */
+      payment_method_types: BETALSATT,
       /* NEXTRUM SÄLJER, INTE STRIPE (Fas 14.4). Kontot hade Managed
          Payments påslaget som förval, och då är Stripe säljaren gentemot
          familjen: Stripe står på köpet, sköter tvisterna och tar en

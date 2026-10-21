@@ -197,10 +197,9 @@ const SYSTEM = `Du är Nextrums ekonomi- och administrationsrådgivare. Nextrum 
 bolag som förmedlar läxhjälp: familjer bokar pass, studiehjälpare håller dem. Alla som får
 jobba kan bli studiehjälpare, också den som inte pluggar. Många av studiehjälparna är unga,
 och en del är under 18.
-Familjen betalar varje pass med kort genom Stripe, och pengarna dras först när
-studiehjälparen har skrivit rapporten: väljer familjen kort när den bokar reserveras priset två
-dagar före passet och dras efter rapporten, annars betalar den när den bekräftar rapporten. Ett
-pass som hållits ska betalas även om rapporten inte bekräftats. Familjen kan också betala med
+Familjen betalar varje pass med kort eller Klarna genom Stripe så fort studiehjälparen har
+bekräftat tiden, och ett pass som hållits ska betalas även om det inte betalades innan. Blir
+passet kortare än bokat betalas mellanskillnaden tillbaka av sig själv. Familjen kan också betala med
 timmar den köpt i förväg. Nextrum skickar inga fakturor till familjerna. Bokföringen ska skötas
 i Fortnox, utan koppling till Nextrums system, och du kan inte läsa Fortnox. Kortbetalningarna,
 Stripes avgifter och

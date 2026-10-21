@@ -4,9 +4,9 @@
 
        NODE_PATH="$(npm root -g)" node verktyg/prova-kassan.js [mapp för bilder]
 
-   Leo (2026-10-21): köpvillkoren kryssas i före varje kassa, en plan
-   köps för "Den här månaden" eller "Nästa månad", timbanken visar båda
-   månaderna ("3 av 8 timmar återstår", "0 av 0"), kassan får bara vad
+   Leo (2026-10-21): köpvillkoren kryssas i före varje kassa, en plan (som
+   köptes för en månad samma dag; sedan betala_nu gäller den 30 dagar från
+   köpet, och timbanken visar en rad per plan), kassan får bara vad
    som köps och aldrig ett belopp, att komma tillbaka från Stripe
    skriver ingenting, och adminvyn har en liggare med en rad per
    betalning och återbetalning, och en lista över kortet med de nekade
@@ -78,11 +78,11 @@ const FAMILJ = { id: 'fam-a', aud: 'authenticated', role: 'authenticated', email
 /* Den här månadens plan: 8 timmar, 5 använda. */
 const PLAN_DENNA = {
   id: 'plan-denna', parent_id: 'fam-a', erbjudande: 'plan_standard', namn: 'Standard', sort: 'plan',
-  timmar: 8, anvanda: 5, kvar: 3, giltigt_till: sista(DENNA), status: 'betald', begart_ore: 303200, betalt_ore: 303200,
+  timmar: 8, anvanda: 5, kvar: 3, giltigt_till: dag(28), status: 'betald', begart_ore: 303200, betalt_ore: 303200,
   aterbetald_ore: 0, timpris_ore: 39900, betald_at: nu(-2880), created_at: nu(-2880), brukbar: true,
   vid_uppsagning_ore: 103700, angerfrist_till: dag(12), vid_anger_ore: 113700, gratis_kvar: 0, gratis_till: null,
   aterkallad_at: null, till_plan: null, rabatterat_timpris_ore: 37900, familjerabatt_ore: 0,
-  galler_fran: DENNA, aterbetalda_timmar: 0
+  galler_fran: null, aterbetalda_timmar: 0
 };
 /* Nästa månads plan, köpt i dag: gäller inte än. */
 const PLAN_NASTA = Object.assign({}, PLAN_DENNA, {
@@ -365,6 +365,11 @@ async function tillErbjudanden(page) {
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
   await page.waitForSelector('#erb-planer .erb-kort', { timeout: 8000 }).catch(() => {});
   await vänta(700);
+  /* Notisrutan (2026-10-12): ett pass att betala väntar sedan 2026-10-21. */
+  if (await page.locator('.nx-notisruta [data-notisruta-stang]').count()) {
+    await page.click('.nx-notisruta [data-notisruta-stang]').catch(() => {});
+    await vänta(300);
+  }
 }
 async function tillAdmin(page, sek) {
   await page.goto(BAS + '/admin#' + sek);
@@ -378,66 +383,37 @@ async function kryssaOchTillKassan(page) {
   await vänta(700);
 }
 
-/* ============ 1. Timbanken och planerna per månad ============ */
+/* ============ 1. Timbanken och planerna i 30 dagar ============
+   Sedan 2026-10-21 (betala_nu, Leo: planen "används 30 dagar framåt")
+   gäller en plan 30 dagar från köpet. Inget månadsval på kortet, och
+   under batteriet en rad per plan som gäller. */
 async function provaMånaderna(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, { anv: FAMILJ });
-  /* Kassans nej är en alert (startaKassa); Playwright stänger den. */
   const larm = [];
   page.on('dialog', d => { larm.push(d.message()); d.dismiss().catch(() => {}); });
   await tillErbjudanden(page);
 
-  /* Er timbank: båda månaderna, med textContent. */
   const rader = await page.locator('#erb-mina .tb-manad').allTextContents().catch(() => []);
-  prova('timbanken: två månader under batteriet', rader.length === 2, rader.join(' | '));
-  prova('timbanken: den här månaden "3 av 8 timmar återstår" och sista dagen',
-    (rader[0] || '').includes(stor(månad(DENNA))) && /3 av 8 timmar återstår/.test(rader[0] || '')
-      && /Går ut/.test(rader[0] || ''), rader[0]);
-  prova('timbanken: nästa månad utan plan är "0 av 0"',
-    (rader[1] || '').includes(stor(månad(NASTA))) && /0 av 0 timmar återstår/.test(rader[1] || '')
-      && (rader[1] || '').includes(NÄSTA_TEXT), rader[1]);
+  prova('timbanken: en rad per plan under batteriet', rader.length === 1, rader.join(' | '));
+  prova('timbanken: planen "3 av 8 timmar återstår" och när den går ut',
+    /Standard/.test(rader[0] || '') && /3 av 8 timmar återstår/.test(rader[0] || '') && /Går ut/.test(rader[0] || ''), rader[0]);
   prova('timbanken: inget odefinierat i texten', !/undefined|NaN|null/.test(await innehåll(page, '#erb-mina-box')),
     await innehåll(page, '#erb-mina-box'));
-  prova('timbanken: batteriet räknar den här månadens timmar',
+  prova('timbanken: batteriet räknar planens timmar',
     /3 av 8 timmar kvar/.test(await innehåll(page, '#erb-mina-box .tb-batteri-tal')),
     await innehåll(page, '#erb-mina-box .tb-batteri-tal'));
-  await bild(page, 'timbanken-manader', '#erb-mina-box');
+  await bild(page, 'timbanken-planer', '#erb-mina-box');
 
-  /* Plankorten: Den här månaden som förval, och Fyll timbanken utan val. */
-  const val = await page.locator('#erb-planer [data-erb-manad]').count();
-  prova('planerna: två månadsval per plan, inget på Fyll timbanken', val === 4
-    && (await page.locator('#erb-planer .erb-klippkol [data-erb-manad]').count()) === 0, String(val));
-  const tryckt = sel => page.locator(sel).first().getAttribute('aria-pressed').catch(() => null);
-  prova('planerna: Den här månaden är valt från början',
-    (await tryckt('[data-erb-manad="denna"][data-erb-kod="plan_standard"]')) === 'true'
-      && (await tryckt('[data-erb-manad="nasta"][data-erb-kod="plan_standard"]')) === 'false');
-  prova('planerna: raden under säger till vilken dag planen gäller',
-    /^Gäller till och med \d{1,2} \S+/.test(await innehåll(page, '[data-erb-manad-not="plan_standard"]')),
-    await innehåll(page, '[data-erb-manad-not="plan_standard"]'));
-  const kortet = page.locator('#erb-planer .erb-kort', { has: page.locator('[data-kop="plan_standard"]') }).first();
-  const höjdFöre = await kortet.evaluate(el => el.getBoundingClientRect().height).catch(() => -1);
-  await page.click('[data-erb-manad="nasta"][data-erb-kod="plan_standard"]');
-  await vänta(150);
-  prova('planerna: Nästa månad väljs, och raden säger månaden',
-    (await tryckt('[data-erb-manad="nasta"][data-erb-kod="plan_standard"]')) === 'true'
-      && (await tryckt('[data-erb-manad="denna"][data-erb-kod="plan_standard"]')) === 'false'
-      && (await innehåll(page, '[data-erb-manad-not="plan_standard"]')) === NÄSTA_TEXT,
-    await innehåll(page, '[data-erb-manad-not="plan_standard"]'));
-  prova('planerna: valet gäller bara sin plan',
-    (await tryckt('[data-erb-manad="denna"][data-erb-kod="plan_basic"]')) === 'true');
-  const höjdEfter = await kortet.evaluate(el => el.getBoundingClientRect().height).catch(() => -2);
-  prova('planerna: kortet byter inte höjd när månaden väljs', Math.abs(höjdFöre - höjdEfter) < 1,
-    höjdFöre + ' mot ' + höjdEfter);
-  const minHöjd = await page.locator('#erb-planer [data-erb-manad]').evaluateAll(l =>
-    Math.min(...l.map(el => el.getBoundingClientRect().height)));
-  prova('planerna: månadsknapparna är minst 44 px', minHöjd >= 44, String(minHöjd));
-  await bild(page, 'planerna-manad', '#erb-planer');
+  prova('planerna: inget månadsval', (await page.locator('#erb-planer [data-erb-manad]').count()) === 0);
+  prova('planerna: varje plan säger 30 dagar från köpet',
+    (await page.locator('#erb-planer .erb-manad-not').allTextContents()).filter(t => t === 'Gäller i 30 dagar från köpet').length === 2);
+  await bild(page, 'planerna', '#erb-planer');
 
-  /* Köp: rutan med köpvillkoren, som avbryts och sedan godkänns. */
   await page.click('[data-kop="plan_standard"]');
   await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
   const ruta = await innehåll(page, villkorsruta);
-  prova('kassan: rutan säger vad som köps, priset och månaden',
-    /Köp Standard/.test(ruta) && /8 timmar/.test(ruta) && /3\s?032\s*kr/.test(ruta) && ruta.includes(NÄSTA_TEXT), ruta);
+  prova('kassan: rutan säger vad som köps, priset, 30 dagar och Klarna',
+    /Köp Standard/.test(ruta) && /8 timmar/.test(ruta) && /3\s?032\s*kr/.test(ruta) && /30 dagar/.test(ruta) && /Klarna/.test(ruta), ruta);
   prova('kassan: krysset har fokus, och Till kassan går inte att trycka på före det',
     await page.evaluate(sel => {
       const ja = document.querySelector(sel + ' [data-svar="ja"]');
@@ -445,11 +421,6 @@ async function provaMånaderna(webb) {
     }, villkorsruta));
   prova('kassan: länken går till köpvillkoren',
     (await page.locator(villkorsruta + ' a').first().getAttribute('href').catch(() => '')) === '/anvandarvillkor#kopvillkor');
-  await bild(page, 'kassan-villkor', villkorsruta + ' .nx-fraga-box');
-  await page.click(villkorsruta + ' [data-svar="ja"]', { force: true, timeout: 1000 }).catch(() => {});
-  await vänta(200);
-  prova('kassan: ett tryck på Till kassan utan kryss gör ingenting',
-    kassor(S).length === 0 && await synlig(page, villkorsruta));
   await page.keyboard.press('Escape');
   await vänta(250);
   prova('kassan: Escape stänger rutan, och ingen kassa öppnas',
@@ -457,80 +428,44 @@ async function provaMånaderna(webb) {
 
   await page.click('[data-kop="plan_standard"]');
   await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
-  await page.click(villkorsruta + ' [data-kassa-kryss]');
-  prova('kassan: krysset släpper fram Till kassan',
-    await page.evaluate(sel => !document.querySelector(sel + ' [data-svar="ja"]').disabled, villkorsruta));
-  await page.click(villkorsruta + ' [data-svar="ja"]');
-  await vänta(800);
+  await kryssaOchTillKassan(page);
   const k = (kassor(S).pop() || {}).kropp || {};
-  prova('kassan: anropet bär planen, nästa månad och krysset, aldrig ett belopp',
-    k.erbjudande === 'plan_standard' && k.manad === 'nasta' && k.villkor === true
+  prova('kassan: anropet bär planen och krysset, ingen månad och aldrig ett belopp',
+    k.erbjudande === 'plan_standard' && !('manad' in k) && k.villkor === true
       && !('belopp_ore' in k) && !('pris' in k) && !('pris_ore' in k), JSON.stringify(k));
   prova('kassan: kassans nej säger funktionens egen text', larm.includes('Provet öppnar ingen kassa.'), larm.join(' | '));
 
-  /* Fyll timbanken: ingen månad i anropet. */
-  await page.click('#erb-planer .erb-klippkol summary').catch(() => {});
-  await vänta(250);
-  await page.click('[data-kop="klipp10"]').catch(() => {});
-  await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
-  await kryssaOchTillKassan(page);
-  const k2 = (kassor(S).pop() || {}).kropp || {};
-  prova('kassan: Fyll timbanken bär ingen månad', k2.erbjudande === 'klipp10' && !('manad' in k2) && k2.villkor === true,
-    JSON.stringify(k2));
-
-  /* Profil → Timbanken visar samma månader. */
   await page.evaluate(() => { location.hash = '#profil/timbank'; });
   await page.waitForSelector('#timbank-timmar .tb-manad', { timeout: 5000 }).catch(() => {});
   const profil = await page.locator('#timbank-timmar .tb-manad').allTextContents().catch(() => []);
-  prova('profilen: Timbanken visar båda månaderna', profil.length === 2 && /3 av 8 timmar återstår/.test(profil[0] || '')
-    && /0 av 0 timmar återstår/.test(profil[1] || ''), profil.join(' | '));
-  prova('månaderna: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
-  prova('månaderna: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  prova('profilen: Timbanken visar samma plan', profil.length === 1 && /3 av 8 timmar återstår/.test(profil[0] || ''),
+    profil.join(' | '));
+  prova('planerna: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('planerna: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
 }
 
-/* ============ 2. Nästa månads plan, och timmar som betalats tillbaka ============ */
+/* ============ 2. Timmar som betalats tillbaka ============ */
 async function provaKöptaMånader(webb) {
-  {
-    const { context, page, konsol } = await öppna(webb, { anv: FAMILJ,
-      värld: W => { W.klippkort_saldo.push(Object.assign({}, PLAN_NASTA)); } });
-    await tillErbjudanden(page);
-    const rader = await page.locator('#erb-mina .tb-manad').allTextContents().catch(() => []);
-    prova('nästa månads plan: "4 av 4 timmar återstår" i nästa månad', /4 av 4 timmar återstår/.test(rader[1] || '')
-      && /3 av 8 timmar återstår/.test(rader[0] || ''), rader.join(' | '));
-    prova('nästa månads plan: batteriet räknar den inte än',
-      /3 av 8 timmar kvar/.test(await innehåll(page, '#erb-mina-box .tb-batteri-tal')),
-      await innehåll(page, '#erb-mina-box .tb-batteri-tal'));
-    const kommande = page.locator('#erb-mina .erb-mitt.ar-kommande');
-    prova('nästa månads plan: står i listan med sin månad',
-      (await kommande.count()) === 1 && (await kommande.first().textContent()).includes(NÄSTA_TEXT)
-        && /Basic/.test(await kommande.first().textContent()), await innehåll(page, '#erb-mina'));
-    prova('nästa månads plan: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
-    await bild(page, 'timbanken-nasta-manad', '#erb-mina-box');
-    await context.close();
-  }
-  {
-    const { context, page, konsol } = await öppna(webb, { anv: FAMILJ,
-      värld: W => { Object.assign(W.klippkort_saldo[0], { aterbetalda_timmar: 2, kvar: 1 }); } });
-    await tillErbjudanden(page);
-    const rader = await page.locator('#erb-mina .tb-manad').allTextContents().catch(() => []);
-    prova('återbetalda timmar: räknas inte i månaden ("1 av 6")', /1 av 6 timmar återstår/.test(rader[0] || ''),
-      rader.join(' | '));
-    prova('återbetalda timmar: inte heller på köpets rad',
-      /1 av 6 timmar kvar/.test(await innehåll(page, '#erb-mina .erb-mitt:not(.ar-kommande) .erb-kvar')),
-      await innehåll(page, '#erb-mina'));
-    prova('återbetalda timmar: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
-    await context.close();
-  }
+  const { context, page, konsol } = await öppna(webb, { anv: FAMILJ,
+    värld: W => { Object.assign(W.klippkort_saldo[0], { aterbetalda_timmar: 2, kvar: 1 }); } });
+  await tillErbjudanden(page);
+  const rader = await page.locator('#erb-mina .tb-manad').allTextContents().catch(() => []);
+  prova('återbetalda timmar: räknas inte i planen ("1 av 6")', /1 av 6 timmar återstår/.test(rader[0] || ''),
+    rader.join(' | '));
+  prova('återbetalda timmar: inte heller på köpets rad',
+    /1 av 6 timmar kvar/.test(await innehåll(page, '#erb-mina .erb-mitt .erb-kvar')),
+    await innehåll(page, '#erb-mina'));
+  prova('återbetalda timmar: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await context.close();
 }
 
 /* ============ 3. Utan migrationerna ============ */
 async function provaUtanMånader(webb) {
   const { context, page, S, konsol } = await öppna(webb, { anv: FAMILJ, utanMigrationen: true });
   await tillErbjudanden(page);
-  prova('utan migrationen: inget månadsval och inga månader i timbanken',
-    (await page.locator('[data-erb-manad]').count()) === 0 && (await page.locator('.tb-manader').count()) === 0
-      && (await page.locator('[data-kop="plan_standard"]').count()) === 1);
+  prova('utan migrationen: inget månadsval, och Köp står där',
+    (await page.locator('[data-erb-manad]').count()) === 0 && (await page.locator('[data-kop="plan_standard"]').count()) === 1);
   await page.click('[data-kop="plan_standard"]');
   await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
   prova('utan migrationen: köpvillkoren frågas ändå', await synlig(page, villkorsruta));
@@ -548,6 +483,10 @@ async function provaPasset(webb) {
   await page.goto(BAS + '/foralder#pass/pass-1');
   await page.waitForSelector('#pass-sida [data-betala]', { timeout: 10000 }).catch(() => {});
   await vänta(300);
+  if (await page.locator('.nx-notisruta [data-notisruta-stang]').count()) {
+    await page.click('.nx-notisruta [data-notisruta-stang]').catch(() => {});
+    await vänta(300);
+  }
   await page.click('#pass-sida [data-betala]').catch(() => {});
   await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
   const ruta = await innehåll(page, villkorsruta);
@@ -617,9 +556,9 @@ async function provaTelefonOchMörkt(webb) {
     const { context, page, konsol } = await öppna(webb, { anv: FAMILJ, context: { colorScheme: 'dark' } });
     await tillErbjudanden(page);
     const färg = sel => page.locator(sel).first().evaluate(el => getComputedStyle(el).backgroundColor).catch(() => '');
-    const på = await färg('[data-erb-manad="denna"][data-erb-kod="plan_standard"]');
-    const av = await färg('[data-erb-manad="nasta"][data-erb-kod="plan_standard"]');
-    prova('mörkt: det valda månadsvalet syns', på && av && på !== av, på + ' mot ' + av);
+    const köp = await färg('[data-kop="plan_standard"]');
+    const kort = await färg('#erb-planer .erb-kort');
+    prova('mörkt: Köp syns mot kortet', köp && kort && köp !== kort, köp + ' mot ' + kort);
     const tal = await page.locator('#erb-mina .tb-manad-tal').first().evaluate(el => getComputedStyle(el).color).catch(() => '');
     const yta = await page.locator('#erb-mina-box').first().evaluate(el => getComputedStyle(el).backgroundColor).catch(() => '');
     prova('mörkt: månadernas text har en egen färg mot ytan', tal && tal !== yta, tal + ' på ' + yta);
@@ -782,7 +721,6 @@ async function provaFalskStripe(webb) {
   await context.route('https://js.stripe.com/v3/', route => route.fulfill({
     status: 200, contentType: 'application/javascript', body: FALSK_STRIPE }));
   await tillErbjudanden(page);
-  await page.click('[data-erb-manad="nasta"][data-erb-kod="plan_standard"]');
   await page.click('[data-kop="plan_standard"]');
   await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
   await kryssaOchTillKassan(page);
@@ -792,8 +730,8 @@ async function provaFalskStripe(webb) {
   prova('falsk Stripe: Stripe får den publika nyckeln och sessionens hemlighet ur funktionens svar',
     stripeFick[0] === 'pk_test_falsk' && stripeFick[1] === 'cs_test_falsk_kassa', JSON.stringify(stripeFick));
   const k = (kassor(S).pop() || {}).kropp || {};
-  prova('falsk Stripe: anropet bad om den inbäddade kassan för nästa månad, med krysset och utan belopp',
-    k.ui === 'inbaddad' && k.manad === 'nasta' && k.villkor === true && !('belopp_ore' in k), JSON.stringify(k));
+  prova('falsk Stripe: anropet bad om den inbäddade kassan, med krysset, utan månad och utan belopp',
+    k.ui === 'inbaddad' && !('manad' in k) && k.villkor === true && !('belopp_ore' in k), JSON.stringify(k));
   prova('falsk Stripe: panelen säger vad som köps och kassans belopp',
     /Köp Standard/.test(await innehåll(page, '.betalpanel-titel')) && /3\s?032\s*kr/.test(await innehåll(page, '[data-betalpanel-vad]')),
     (await innehåll(page, '.betalpanel-titel')) + ' | ' + (await innehåll(page, '[data-betalpanel-vad]')));

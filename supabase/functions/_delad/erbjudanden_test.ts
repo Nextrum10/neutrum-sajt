@@ -22,40 +22,40 @@ Deno.test('kassaraden säger timmar, rabatt och hur länge det gäller', () => {
   const basic = { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5,
     giltig_manader: 1, timpris_ore: 39900, pris_ore: 151600, timmar_pa_kopet: 0 };
   assertEquals(kassarad(basic).name, 'Basic');
-  assertEquals(kassarad(basic).description, '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet.');
-  assertEquals(kassarad({ ...basic, namn: 'Klippkort 100 timmar', timmar: 100, rabatt_procent: 5, giltig_manader: 18 })
+  assertEquals(kassarad(basic).description, '4 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet.');
+  assertEquals(kassarad({ ...basic, sort: 'klippkort', namn: 'Klippkort 100 timmar', timmar: 100, rabatt_procent: 5, giltig_manader: 18 })
     .description, '100 timmar läxhjälp, 5 % rabatt. Gäller i 18 månader från köpet.');
   // Standard sedan 2026-10-08: 5 % som de andra, ingen timme på köpet.
   assertEquals(kassarad({ ...basic, kod: 'plan_standard', namn: 'Standard', timmar: 8, pris_ore: 303200 }).description,
-    '8 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet.');
+    '8 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet.');
   // Före planerna (2026-10-07) fanns ingen kolumn: raden är densamma som förut.
   const utan = { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5,
     giltig_manader: 1, timpris_ore: 37900, pris_ore: 144000 };
-  assertEquals(kassarad(utan).description, '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet.');
+  assertEquals(kassarad(utan).description, '4 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet.');
 });
 
 Deno.test('kassaraden säger rabattkoden när köpet har en (2026-10-13)', () => {
   const basic = { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5,
     giltig_manader: 1, timpris_ore: 39900, pris_ore: 151600, timmar_pa_kopet: 0 };
   assertEquals(kassarad(basic, 'VAR10').description,
-    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med rabattkoden VAR10.');
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet. Med rabattkoden VAR10.');
   // Utan kod är raden densamma som förut, också med null.
   assertEquals(kassarad(basic, null).description, kassarad(basic).description);
   // En partnerkod utan rabatt (2026-10-21) gör inte beloppet lägre: raden säger bara koden.
   assertEquals(kassarad(basic, 'FORENING', 0, null, 0).description,
-    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med koden FORENING.');
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet. Med koden FORENING.');
   assertEquals(kassarad(basic, 'VAR10', 0, null, 15160).description,
-    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med rabattkoden VAR10.');
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet. Med rabattkoden VAR10.');
 });
 
 Deno.test('kassaraden säger familjens rabatt, aldrig koden (familjerabatter, 2026-10-15)', () => {
   const basic = { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5,
     giltig_manader: 1, timpris_ore: 39900, pris_ore: 151600, timmar_pa_kopet: 0 };
   assertEquals(kassarad(basic, null, 1000).description,
-    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med er rabatt på 10 kr per timme.');
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet. Med er rabatt på 10 kr per timme.');
   // Med en rabattkod ovanpå står båda, rabatten först.
   assertEquals(kassarad(basic, 'VAR10', 1000).description,
-    '4 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet. Med er rabatt på 10 kr per timme. Med rabattkoden VAR10.');
+    '4 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet. Med er rabatt på 10 kr per timme. Med rabattkoden VAR10.');
   // Noll är ingen rabatt, och raden är densamma som förut.
   assertEquals(kassarad(basic, null, 0).description, kassarad(basic).description);
 });
@@ -78,16 +78,16 @@ Deno.test('kassaraden säger timmen på köpet och aldrig 0 % rabatt (planerna, 
     giltig_manader: 1, timpris_ore: 37900, pris_ore: 265300, timmar_pa_kopet: 1 };
   assertEquals(kassarad(standard).name, 'Standard');
   assertEquals(kassarad(standard).description,
-    '8 timmar läxhjälp för priset av 7 (1 timme på köpet). Gäller i 1 månad från köpet.');
+    '8 timmar läxhjälp för priset av 7 (1 timme på köpet). Gäller i 30 dagar från köpet.');
   // Båda på en gång, om katalogen någon gång får det.
   assertEquals(kassarad({ ...standard, timmar: 12, timmar_pa_kopet: 2, rabatt_procent: 5 }).description,
-    '12 timmar läxhjälp för priset av 10 (2 timmar på köpet), 5 % rabatt. Gäller i 1 månad från köpet.');
+    '12 timmar läxhjälp för priset av 10 (2 timmar på köpet), 5 % rabatt. Gäller i 30 dagar från köpet.');
   // Ingenting av någondera: bara timmarna.
   assertEquals(kassarad({ ...standard, timmar_pa_kopet: 0 }).description,
-    '8 timmar läxhjälp. Gäller i 1 månad från köpet.');
+    '8 timmar läxhjälp. Gäller i 30 dagar från köpet.');
   // Fler timmar på köpet än det finns kan databasen inte ha; raden lovar ändå aldrig ett gratis köp.
   assertEquals(kassarad({ ...standard, timmar_pa_kopet: 9 }).description,
-    '8 timmar läxhjälp för priset av 1 (7 timmar på köpet). Gäller i 1 månad från köpet.');
+    '8 timmar läxhjälp för priset av 1 (7 timmar på köpet). Gäller i 30 dagar från köpet.');
 });
 
 Deno.test('ett väntande köp återanvänds bara med samma pris och inom ett dygn', () => {
@@ -179,5 +179,5 @@ Deno.test('kassaraden säger planens månad när planen har en', () => {
   assertEquals(kassarad(e, null, 0, '2026-11-01').description,
     '8 timmar läxhjälp, 5 % rabatt. Gäller 1–30 november 2026.');
   // Utan månad som förut.
-  assertEquals(kassarad(e).description, '8 timmar läxhjälp, 5 % rabatt. Gäller i 1 månad från köpet.');
+  assertEquals(kassarad(e).description, '8 timmar läxhjälp, 5 % rabatt. Gäller i 30 dagar från köpet.');
 });

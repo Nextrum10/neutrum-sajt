@@ -3963,6 +3963,11 @@ a:has(> .adm-status){
 .vy-valk.ar-forst:hover{background:var(--acc-lugn);border-color:var(--acc-lugn)}
 .vy-valk.ar-forst span span{color:var(--acc-ink);opacity:.82}
 .vy-valk.ar-forst .vy-valk-ik{background:color-mix(in srgb,var(--acc-ink) 16%,transparent);color:var(--acc-ink)}
+/* Betala nu (2026-10-21): ett val som betalar är orange, som knappen. */
+.vy-valk.ar-orange{background:var(--orange);border-color:var(--orange);color:var(--orange-ink);box-shadow:var(--sk-1)}
+.vy-valk.ar-orange:hover{background:var(--orange-lugn);border-color:var(--orange-lugn)}
+.vy-valk.ar-orange span span{color:var(--orange-ink);opacity:.8}
+.vy-valk.ar-orange .vy-valk-ik{background:color-mix(in srgb,var(--orange-ink) 14%,transparent);color:var(--orange-ink)}
 .vy-valk[aria-busy="true"]{opacity:.7;cursor:progress}
 .vy .vy-valk{
   transition:background-color .22s var(--e),border-color .22s var(--e),box-shadow .25s var(--e),scale .5s var(--vy-fjader);
@@ -4210,6 +4215,24 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
 .bet-sam > div.ar-gor{background:var(--acc-soft);border-color:color-mix(in srgb,var(--acc) 30%,var(--ln))}
 .bet-sam > div.ar-gor small,.bet-sam > div.ar-gor span{color:var(--acc-lugn)}
 .bet-sam:empty{display:none}
+/* Betala nu (2026-10-21): två rutor, Att betala och Betalt. Att betala är
+   familjens drag och bär betalknappens orange, som en kant och en ton, så
+   att beloppet står kvar i textens färg och går att läsa i båda lägena. */
+.bet-sam{grid-template-columns:repeat(2,minmax(0,1fr))}
+.bet-sam > div.ar-betala{
+  background:color-mix(in srgb,var(--orange) 12%,var(--yta));
+  border-color:color-mix(in srgb,var(--orange) 45%,var(--ln));
+  box-shadow:inset 4px 0 0 var(--orange),var(--sk-1);
+}
+.bet-sam > div.ar-betala small{color:var(--bl-2)}
+/* Betalsätten som små brickor, så att Klarna syns innan kassan öppnas. */
+.bet-satt{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:14px 4px 2px}
+.bet-satt-et{font-size:.8rem;color:var(--bl-3);margin-right:4px}
+.bet-satt-chip{
+  display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;
+  border:1px solid var(--ln);background:var(--yta);font-size:.78rem;font-weight:600;color:var(--bl-2);
+}
+.bet-satt-klarna{border-color:color-mix(in srgb,var(--orange) 40%,var(--ln))}
 .vy [data-sek="betalning"] .bet-erb-tips{margin:10px 4px 0;font-size:.84rem}
 .vy-finstilt{margin:12px 4px 0;font-size:.8rem;line-height:1.6;color:var(--bl-3)}
 .vy .pass-atg .vy-rad-belopp{font-size:.95rem}

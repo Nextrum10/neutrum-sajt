@@ -484,6 +484,11 @@ async function provaStudievyn(webb) {
     await page.goto(BAS + '/foralder#boka');
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 10000 }).catch(() => {});
     await vänta(900);
+    /* Notisrutan: ett pass att betala väntar sedan 2026-10-21 (betala_nu). */
+    if (await page.locator('.nx-notisruta [data-notisruta-stang]').count()) {
+      await page.click('.nx-notisruta [data-notisruta-stang]').catch(() => {});
+      await vänta(300);
+    }
     const vald = await väljDagOchTid(page);
     const pris = await text(page, '#boka-inner .bk-sum-pris');
     prova('studievyn ' + namn + ': priset vid knappen', vald && (rabatt

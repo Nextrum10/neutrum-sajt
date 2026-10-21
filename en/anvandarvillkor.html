@@ -188,36 +188,24 @@
         it. We may change or remove it, and what you have already booked or bought keeps its price. How
         it is counted if you stop is set out under
         <a href="#erbjudanden">Plans and the time bank</a>.</li>
-      <li>You pay for each session by card, and the money is only taken once the tutor has written
-        the report: if you choose card payment when you book, the price is reserved two days before the
-        session, otherwise you pay when you confirm the report. After the session the tutor writes a
-        report, and you read and confirm it in your view.</li>
-      <li id="kortet"><b>The card you choose when you book.</b> You choose card payment when you propose
-        the session, or later on the session's page as long as the session has not been held, and the
-        card is then saved with Stripe. By choosing it you give us the right to reserve and take the
-        session's price from the card, as follows: the price for the booked time is reserved at the earliest two days before the
-        session, once the tutor has confirmed the time, and the money is taken when the tutor has written
-        the report, for the time the session lasted. What is taken is never more than what was reserved,
-        and the rest is released. If the session ran longer, you pay the extra when you confirm the
-        report. If the session is cancelled or paid another way, the reservation is released, and if it
-        is moved, the price is reserved again for the new time. You can deselect the card on the session
-        until the money has been taken, and remove the card under Profile whenever you like. Anything
-        reserved is then released. If the price cannot be reserved or taken, you get an email, and you
-        then pay in one of the other ways.</li>
-      <li>You confirm the report even when the session has already been paid. A session that has
-        taken place must be paid even if the report has not been confirmed.</li>
+      <!-- Betala nu (2026-10-21). Se anvandarvillkor.html. -->
+      <li id="betala-nu">You pay for each session by card or Klarna as soon as the tutor has confirmed the
+        time, and if the session is shorter than booked we refund the difference. You pay with Pay now
+        in your view, on the session or under Payment. If you do not manage to pay before the session,
+        it still takes place, and a session that has taken place must be paid: it then stays under
+        Payment, and we remind you. After the session the tutor writes a report, which you read in your view.</li>
       <li id="hallen-tid">The price applies to the time the session actually lasted, counted per started
         quarter of an hour. The tutor enters the time in the report, and if the session ran longer or
-        shorter than booked, it says so there, with the reason, before you confirm. If the time is
-        wrong, write to us before you pay. If you have already paid and the session ran longer, you
-        pay the extra when you confirm the report. If it was shorter, we refund the difference. If
+        shorter than booked, it says so there, with the reason. If the time is wrong, write to us. If you
+        have already paid and the session ran longer, you pay the extra with Pay now under Payment. If
+        it was shorter, we refund the difference ourselves, to the card or Klarna, once the report is written. If
         the session was paid with hours from a plan or the time bank, hours that were not started
         come back automatically, and what was left of the last hour is saved in your <a href="#timbank">time bank</a>.</li>
       <li>If you have filled your time bank with hours in advance, with a plan or Fill the time bank, your hours pay for the
         session instead, automatically, as soon as you propose it. See <a href="#erbjudanden">Plans and the time bank</a> below.</li>
-      <li>Card payments are handled by Stripe. You give your card details directly to Stripe, never
-        to us. A card you save is kept by Stripe, and we only see the brand, the last four digits
-        and when it expires.</li>
+      <li>Payments are handled by Stripe. You give your card details directly to Stripe, never
+        to us. If you pay with Klarna you do so with Klarna, on Klarna's terms for the payment option you
+        choose there, and Klarna pays us. We do not save any cards.</li>
       <li>No registration fee, no monthly fee and no minimum term. You pay for the sessions you
         book and for hours you have chosen to buy in advance, nothing else.</li>
     </ul>
@@ -253,8 +241,8 @@
          mot texten 2026-10-20, i samma version. Se anvandarvillkor.html. -->
     <h2 id="kopvillkor">Purchase terms</h2>
     <p>These apply when you pay us, for a session, an extra charge for a session that ran longer,
-      a plan, hours for a plan or Fill the time bank, and when you save a card for your sessions. Before
-      checkout opens, you tick a box to confirm that you have read them.</p>
+      a plan, hours for a plan or Fill the time bank. Before checkout opens, you tick a box to confirm
+      that you have read them.</p>
     <ul>
       <li><b>Who you buy from.</b> You buy from us, as set out under Who the agreement is with at the top
         of this page, and you contact us about the purchase: <a href="mailto:info@nextrum.se">info@nextrum.se</a>.</li>
@@ -262,23 +250,23 @@
         booked and paid for is set out above, and what the hours give you, how long they are valid and
         how they are used is set out under <a href="#erbjudanden">Plans and the time bank</a>.</li>
       <li><b>The price.</b> The price in kronor is shown in checkout before you pay, with any discount
-        you have taken off, and no fees are added. If a saved card pays for a session, the price is the
-        session's, as set out under <a href="#kortet">The card you choose when you book</a>.</li>
-      <li><b>How you pay.</b> By card, in Stripe's checkout. Apple Pay and Google Pay also
-        work when checkout shows them, since they pay with a card. We do not take other payment methods.
-        Nothing is taken when you save a card.</li>
-      <li><b>When the purchase is complete.</b> A purchase of hours is complete when Stripe has approved
-        the payment. The hours are then in your time bank, and a plan for next month is valid from the
-        first day of the month. Stripe emails a receipt to the address on your account.</li>
-      <li><b>If the card is declined.</b> If the card is declined when a session is to be reserved or
-        paid, you get an email, and you can then change card in your view or pay for the session another
-        way. If it can be tried again, for example when there were insufficient funds, we try the same
-        payment with the same card after six hours, at most two more times. The session is not
-        cancelled because the card is declined, and it must be paid once it has taken place.</li>
+        you have taken off, and we add no fees.</li>
+      <li><b>How you pay.</b> By card or Klarna, in Stripe's checkout. Apple Pay and Google Pay also
+        work when checkout shows them, since they pay with a card. If you choose Klarna, Klarna's terms
+        for the payment option you choose there apply, and Klarna decides whether it is possible. We do
+        not take other payment methods.</li>
+      <li><b>When the purchase is complete.</b> A purchase of hours is complete when the payment has
+        been approved. The hours are then in your time bank, and a plan is valid for 30 days from that
+        day. Stripe emails a receipt to the address on your account.</li>
+      <li><b>If the payment does not go through.</b> If the card is declined or Klarna says no, nothing
+        has been paid, and you can try again with Pay now, with another card or payment method. The
+        session is not cancelled because the payment did not go through, and it must be paid once it
+        has taken place.</li>
       <li><b>Right of withdrawal.</b> You have a 14-day right of withdrawal, for a session from the day
         it was booked and for a purchase of hours from the day of purchase. How you withdraw and what we
         then refund is set out under <a href="#angerratt">Right of withdrawal</a>.</li>
-      <li><b>Refunds.</b> Money we refund goes to the card you paid with. If we refund a purchase of
+      <li><b>Refunds.</b> Money we refund goes to the card you paid with, or to Klarna, which
+        deducts it from what you owe them. If we refund a purchase of
         hours, the amount is calculated as under Stopping in
         <a href="#erbjudanden">Plans and the time bank</a>, or under Right of withdrawal during the first 14 days,
         and the hours we refund are removed from your time bank. An hour that has already paid for a
@@ -289,18 +277,17 @@
     </ul>
 
     <h2 id="erbjudanden">Plans and the time bank</h2>
-    <p>You can fill your time bank with hours in advance in one of two ways: with a plan for one
-      calendar month, at a lower hourly price, or with Fill the time bank, at the regular hourly price. If you
+    <p>You can fill your time bank with hours in advance in one of two ways: with a plan that is valid
+      for 30 days, at a lower hourly price, or with Fill the time bank, at the regular hourly price. If you
       have a plan you can also buy more hours for it (see <a href="#kop-till">Buy more hours</a>). If you
       pay session by session the time bank is not used, and each session is paid as under Price and
       payment above.
       What is available and what it costs is shown on the <a href="/en/priser#erbjudanden">pricing page</a>. It is a
-      one-off purchase, by card. It is not a subscription and does not renew by itself.</p>
+      one-off purchase, by card or Klarna. It is not a subscription and does not renew by itself.</p>
     <ul>
-      <!-- planerna_per_manad (2026-10-21): en plan köps för den här eller nästa kalendermånad. -->
-      <li><b>How long the hours are valid.</b> A plan is bought for this or next calendar month and is
-        valid until the last day of that month. A plan for next month pays for no sessions before the
-        first day of the month.
+      <!-- planerna_30_dagar (2026-10-21). Se anvandarvillkor.html. -->
+      <li><b>How long the hours are valid.</b> A plan is valid for 30 days from the day it is paid, and
+        is valid straight away.
         Hours bought with Fill the time bank are valid for 6 months from the purchase, however many you
         bought. Hours you bought for a plan are valid until the plan's last day. A free hour is valid for 60 days from the day it is added (see <a href="#forsta-timmen">The first hour free</a>,
         <a href="#gratistimmar">Free hours</a> and <a href="#tips">Recommend a family</a>). The last day is shown in your view.</li>
@@ -341,7 +328,7 @@
         first, with the other free hours. What is left of a free hour when a session ends before a
         full hour is not saved, and free hours that are not used expire. They are
         a gift: they do not count as bought hours and are never paid out as money.</li>
-      <li id="kop-till"><b>Buy more hours.</b> If you have a plan for this month that is valid for at least one more day,
+      <li id="kop-till"><b>Buy more hours.</b> If you have a plan that is valid for at least one more day,
         you can buy 1–20 more hours at a time, under Your time bank in your view. They cost the plan's
         hourly price, what you paid per hour for the plan, and expire on the same day as the plan. They
         are a separate purchase with the same rules as the plan: what is set out here, under Stopping and
@@ -482,7 +469,7 @@
         You can use the form below, but you do not have to: an email that clearly says you are
         withdrawing from the booking is enough.</li>
       <li>If you have paid for the session, we refund the full amount no later than 14 days after
-        we receive your notice, to the card you paid with. If you have not paid yet, you pay
+        we receive your notice, to the card you paid with or to Klarna. If you have not paid yet, you pay
         nothing for a session that has not started.</li>
       <li>Most sessions take place within the withdrawal period. When you suggest a time, you are
         therefore asking us to hold the session even though the period has not yet ended. If you
@@ -549,7 +536,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Swedish National Board for Consumer Disputes (ARN)</a>
       or by a Swedish general court.</p>
 
-    <p class="jur-datum">Last updated 21 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 22 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 
@@ -730,7 +717,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=72594d80"></script>
+<script src="../nextrum-maskot-svar.js?v=58fbd1e6"></script>
 <script src="../nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {
