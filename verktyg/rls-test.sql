@@ -8462,6 +8462,18 @@ begin
   return kod;
 end $$;
 
+-- Gratistimmarna sätts in med en orsak sedan timmar_med_orsak (2026-10-21):
+-- ge_gratistimmar(familj, timmar, orsak, månad). Före migrationen den
+-- gamla, så att sviten går mot en databas med eller utan den.
+create function pg_temp.gratis(p_familj uuid, p_timmar integer) returns jsonb
+language plpgsql as $$
+begin
+  if to_regprocedure('public.ge_gratistimmar(uuid, integer, text, date)') is not null then
+    return public.ge_gratistimmar(p_familj, p_timmar, 'Prov', null);
+  end if;
+  return public.ge_gratistimmar(p_familj, p_timmar);
+end $$;
+
 -- ---------- stämplarna sätts bara av databasen ----------
 select pg_temp.prova('Svar familjen skriver inte avbokad_fran själv', '00000000-0000-4000-8000-0000000000f1',
   array[$q$update public.bookings set avbokad_fran = 'confirmed' where id = '00000000-0000-4000-8000-000000009303'$q$],
@@ -14492,9 +14504,9 @@ begin
     -- ---------- A. Bara admin, utan villkor, och förslaget betalas direkt ----------
     begin
       -- Ingen annan än admin sätter in.
-      t := pg_temp.svar_som(Q, format('select public.ge_gratistimmar(%L, 2)', Q));
-      t := t || ' ' || pg_temp.svar_som(A, format('select public.ge_gratistimmar(%L, 2)', Q));
-      t := t || ' ' || pg_temp.svar_som(null, format('select public.ge_gratistimmar(%L, 2)', Q));
+      t := pg_temp.svar_som(Q, format('select pg_temp.gratis(%L, 2)', Q));
+      t := t || ' ' || pg_temp.svar_som(A, format('select pg_temp.gratis(%L, 2)', Q));
+      t := t || ' ' || pg_temp.svar_som(null, format('select pg_temp.gratis(%L, 2)', Q));
       ut := ut || jsonb_build_object('t', 'GTB varken familjen, studiehjälparen eller anon sätter in gratistimmar',
               'ok', t = '42501 42501 42501', 'd', t);
 
@@ -14508,7 +14520,7 @@ begin
       -- Familjen tas in innan den loggat in: inga godkända villkor.
       delete from public.villkor_godkannanden where anvandare = Q;
       perform pg_temp.bli(AD);
-      r := public.ge_gratistimmar(Q, 3);
+      r := pg_temp.gratis(Q, 3);
       reset role;
       perform set_config('request.jwt.claims', '', true);
       g := (r ->> 'id')::uuid;
@@ -14526,9 +14538,9 @@ begin
               'd', coalesce(g::text, 'null') || ' betalda ' || coalesce(r ->> 'betalda_pass', '?'));
       g := (r ->> 'id')::uuid;
 
-      t := pg_temp.svar_som(AD, format('select public.ge_gratistimmar(%L, 0)', Q))
-        || ' ' || pg_temp.svar_som(AD, format('select public.ge_gratistimmar(%L, 41)', Q))
-        || ' ' || pg_temp.svar_som(AD, format('select public.ge_gratistimmar(%L, 2)', A));
+      t := pg_temp.svar_som(AD, format('select pg_temp.gratis(%L, 0)', Q))
+        || ' ' || pg_temp.svar_som(AD, format('select pg_temp.gratis(%L, 41)', Q))
+        || ' ' || pg_temp.svar_som(AD, format('select pg_temp.gratis(%L, 2)', A));
       ut := ut || jsonb_build_object('t', 'GTB noll och 41 timmar nekas, och en studiehjälpare är ingen familj',
               'ok', t = '22023 22023 P0002', 'd', t);
 
@@ -14590,7 +14602,7 @@ begin
       values (KK, Q, 'klipp10', 'Prov Fyll timbanken', 'klippkort', 4, 6, 0, tp, 4 * tp, 4 * tp, 'betald',
               idag + 10, now(), 'ch_rlsprov_gratistimmar');
       perform pg_temp.bli(AD);
-      g := (public.ge_gratistimmar(Q, 3) ->> 'id')::uuid;
+      g := (pg_temp.gratis(Q, 3) ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
 
@@ -14656,7 +14668,7 @@ begin
     -- ---------- C. Ta tillbaka när inget pass har timmarna ----------
     begin
       perform pg_temp.bli(AD);
-      g := (public.ge_gratistimmar(Q, 2) ->> 'id')::uuid;
+      g := (pg_temp.gratis(Q, 2) ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
       perform pg_temp.bli(Q);
@@ -14716,7 +14728,7 @@ begin
       values (KK, Q, 'klipp10', 'Prov Fyll timbanken', 'klippkort', 4, 6, 0, tp, 4 * tp, 4 * tp, 'betald',
               idag + 30, now(), 'ch_rlsprov_gratistimmar');
       perform pg_temp.bli(AD);
-      g := (public.ge_gratistimmar(Q, 3) ->> 'id')::uuid;
+      g := (pg_temp.gratis(Q, 3) ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
 
@@ -14757,8 +14769,8 @@ begin
       values (KK, Q, 'klipp10', 'Prov Fyll timbanken', 'klippkort', 4, 6, 0, tp, 4 * tp, 4 * tp, 'betald',
               idag + 5, now(), 'ch_rlsprov_gratistimmar');
       perform pg_temp.bli(AD);
-      g := (public.ge_gratistimmar(Q, 3) ->> 'id')::uuid;
-      r := public.ge_gratistimmar(Q, 2);
+      g := (pg_temp.gratis(Q, 3) ->> 'id')::uuid;
+      r := pg_temp.gratis(Q, 2);
       perform public.ta_tillbaka_gratistimmar((r ->> 'id')::uuid);
       reset role;
       perform set_config('request.jwt.claims', '', true);
@@ -15136,7 +15148,7 @@ begin
       ('RLS-KOP', 'Köp av timmar',      'procent', 10,  true, null, null),
       ('RLS-HEL', 'Hela priset',        'procent', 100, true, null, null);
     perform pg_temp.bli(AD);
-    perform public.ge_gratistimmar(T, 3);
+    perform pg_temp.gratis(T, 3);
     reset role;
     perform set_config('request.jwt.claims', '', true);
     select e.pris_ore into pris from public.erbjudanden_pris e where e.kod = 'plan_basic';
@@ -15899,7 +15911,7 @@ begin
     -- ---------- A. Två kort, i ordning, och saldot ----------
     begin
       perform pg_temp.bli(AD);
-      g := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      g := (pg_temp.gratis(Q, 1) ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
       insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
@@ -15973,7 +15985,7 @@ begin
     begin
       insert into public.forsta_timmen_beviljad (parent_id) values (Q);
       perform pg_temp.bli(AD);
-      g := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      g := (pg_temp.gratis(Q, 1) ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
       insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
@@ -16008,8 +16020,8 @@ begin
     -- ---------- C. Ett kortare pass lämnar tillbaka bakifrån, och de sparade minuterna ----------
     begin
       perform pg_temp.bli(AD);
-      g := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
-      g2 := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      g := (pg_temp.gratis(Q, 1) ->> 'id')::uuid;
+      g2 := (pg_temp.gratis(Q, 1) ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
       insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
@@ -16063,7 +16075,7 @@ begin
     -- ---------- D. Betala med timmar, som klippkort-betala kör den ----------
     begin
       perform pg_temp.bli(AD);
-      g := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      g := (pg_temp.gratis(Q, 1) ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
       insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
@@ -16107,7 +16119,7 @@ begin
       -- Planen har en timme kvar (X1 tog två av fyra).
       update public.klippkort set timmar = 3 where id = PL;
       perform pg_temp.bli(AD);
-      g2 := (public.ge_gratistimmar(Q, 1) ->> 'id')::uuid;
+      g2 := (pg_temp.gratis(Q, 1) ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
       begin
@@ -16330,7 +16342,7 @@ begin
 
       -- En gratistimme räcker till X1:s andra timme (den första bjuds).
       perform pg_temp.bli(AD);
-      r := public.ge_gratistimmar(Q, 1);
+      r := pg_temp.gratis(Q, 1);
       g := (r ->> 'id')::uuid;
       reset role;
       perform set_config('request.jwt.claims', '', true);
@@ -16815,7 +16827,7 @@ begin
       values (K4, G, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore,
               e.timmar_pa_kopet);
       perform pg_temp.bli(AD);
-      r := public.ge_gratistimmar(F, 2);
+      r := pg_temp.gratis(F, 2);
       reset role;
       perform set_config('request.jwt.claims', '', true);
       select string_agg(kk.begart_ore || ':' || coalesce(kk.familjerabatt_ore::text, 'null'), ' ' order by kk.id = K4 desc)
@@ -19183,6 +19195,148 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('KÄ Kodernas ägare', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 49. Insatta timmar med orsak och månad (timmar_med_orsak, 2026-10-21)
+--
+-- Leo: "timmar, månad, obligatorisk orsak, egen oföränderlig loggrad".
+-- Admin sätter in gratistimmar med en orsak och en månad, och en rad i
+-- timmar_insatta skrivs i samma transaktion. Utan orsak, med en månad
+-- utanför september 2026 till nästa månad, eller med den gamla funktionen
+-- går ingenting in. Raden står fast, också för databasens ägare; orsaken
+-- töms när familjen avidentifieras. Bara admin läser. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  t     text;
+  j     jsonb;
+  j2    jsonb;
+  r     record;
+  n     integer;
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  denna date := date_trunc('month', (now() at time zone 'Europe/Stockholm'))::date;
+  före  integer;
+begin
+  if to_regclass('public.timmar_insatta') is null then
+    insert into utfall (test, ok, detalj) values ('TI Insatta timmar: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into före from public.klippkort where parent_id = P and erbjudande = 'gratis';
+
+    -- ---------- med orsak och månad ----------
+    perform pg_temp.bli(AD);
+    j := public.ge_gratistimmar(P, 3, '  Inställt pass i september  ', date '2026-09-17');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select * into r from public.timmar_insatta where klippkort_id = (j ->> 'id')::uuid;
+    ut := ut || jsonb_build_object('t', 'TI admin sätter in tre timmar med orsak och månad, och raden skrivs med vem',
+            'ok', r.familj = P and r.timmar = 3 and r.avser_manad = date '2026-09-01'
+                  and r.orsak = 'Inställt pass i september' and r.insatt_av = AD and j ->> 'avser_manad' = '2026-09-01',
+            'd', concat_ws(' ', r.familj, r.timmar, r.avser_manad, r.orsak, r.insatt_av, j::text));
+    ut := ut || jsonb_build_object('t', 'TI kortet är gratistimmar som förut, i 60 dagar från i dag',
+            'ok', exists (select 1 from public.klippkort k where k.id = (j ->> 'id')::uuid and k.erbjudande = 'gratis'
+                            and k.timmar = 3 and k.giltigt_till = idag + 60 and k.betalt_ore = 0),
+            'd', j::text);
+
+    perform pg_temp.bli(AD);
+    j2 := public.ge_gratistimmar(P, 1, 'Välkomsttimme');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'TI utan månad avser timmarna den innevarande',
+            'ok', (select avser_manad from public.timmar_insatta where klippkort_id = (j2 ->> 'id')::uuid) = denna,
+            'd', j2::text);
+
+    -- ---------- utan orsak, fel månad, den gamla och fel person ----------
+    t := pg_temp.svar_som(AD, format($q$select public.ge_gratistimmar(%L, 2, '  ', null)$q$, P))
+      || ' ' || pg_temp.svar_som(AD, format($q$select public.ge_gratistimmar(%L, 2, null, null)$q$, P))
+      || ' ' || pg_temp.svar_som(AD, format($q$select public.ge_gratistimmar(%L, 2, 'ab', null)$q$, P));
+    ut := ut || jsonb_build_object('t', 'TI utan orsak, eller med en för kort, sätts ingenting in', 'ok', t = '22023 22023 22023', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$select public.ge_gratistimmar(%L, 2, 'Prov', '2026-08-01')$q$, P))
+      || ' ' || pg_temp.svar_som(AD, format($q$select public.ge_gratistimmar(%L, 2, 'Prov', %L)$q$, P,
+                                            (denna + interval '2 months')::date));
+    ut := ut || jsonb_build_object('t', 'TI en månad före september 2026 eller efter nästa månad nekas', 'ok', t = '22023 22023', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$select public.ge_gratistimmar(%L, 2, 'Prov', %L)$q$, P,
+                                     (denna + interval '1 month')::date));
+    ut := ut || jsonb_build_object('t', 'TI nästa månad går', 'ok', t = 'ok', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$select public.ge_gratistimmar(%L, 2)$q$, P))
+      || ' ' || pg_temp.svar_som(null, format($q$select public.ge_gratistimmar(%L, 2)$q$, P));
+    ut := ut || jsonb_build_object('t', 'TI den gamla funktionen utan orsak kör ingen inloggad, inte ens admin',
+            'ok', t = '42501 42501', 'd', t);
+    t := pg_temp.svar_som(P, format($q$select public.ge_gratistimmar(%L, 2, 'Egen', null)$q$, P))
+      || ' ' || pg_temp.svar_som(A, format($q$select public.ge_gratistimmar(%L, 2, 'Egen', null)$q$, P))
+      || ' ' || pg_temp.svar_som(null, format($q$select public.ge_gratistimmar(%L, 2, 'Egen', null)$q$, P));
+    ut := ut || jsonb_build_object('t', 'TI varken familjen, studiehjälparen eller anon sätter in', 'ok', t = '42501 42501 42501', 'd', t);
+    select count(*) - före into n from public.klippkort where parent_id = P and erbjudande = 'gratis';
+    ut := ut || jsonb_build_object('t', 'TI bara de tre godkända insättningarna blev kort, och varje kort har en rad',
+            'ok', n = 3 and (select count(*) from public.timmar_insatta where familj = P) = 3,
+            'd', n::text || ' ' || (select count(*) from public.timmar_insatta where familj = P));
+
+    -- ---------- vem läser ----------
+    perform pg_temp.bli(P);
+    select count(*) into n from public.timmar_insatta;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'TI familjen ser inga rader', 'ok', n = 0, 'd', n::text);
+    perform pg_temp.bli(AD);
+    select count(*) into n from public.timmar_insatta where familj = P;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'TI admin läser raderna', 'ok', n = 3, 'd', n::text);
+    t := pg_temp.svar_som(null, 'select * from public.timmar_insatta');
+    ut := ut || jsonb_build_object('t', 'TI anon når inte raderna', 'ok', t = '42501', 'd', t);
+
+    -- ---------- raden står fast ----------
+    t := pg_temp.svar_som(AD, 'update public.timmar_insatta set timmar = 40')
+      || ' ' || pg_temp.svar_som(AD, 'delete from public.timmar_insatta')
+      || ' ' || pg_temp.svar_som(AD, format($q$insert into public.timmar_insatta (familj, timmar, avser_manad, orsak)
+                                                values (%L, 1, '2026-10-01', 'Utan funktionen')$q$, P));
+    ut := ut || jsonb_build_object('t', 'TI admin ändrar, tar bort och skriver inga rader själv', 'ok', t = '42501 42501 42501', 'd', t);
+    begin
+      update public.timmar_insatta set timmar = 40 where familj = P;
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    begin
+      delete from public.timmar_insatta where familj = P;
+      t := t || ' gick';
+    exception when others then t := t || ' ' || sqlstate;
+    end;
+    begin
+      truncate public.timmar_insatta;
+      t := t || ' gick';
+    exception when others then t := t || ' ' || sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'TI inte heller databasens ägare ändrar, tar bort eller tömmer', 'ok', t = '42501 42501 42501', 'd', t);
+
+    -- ---------- avidentifieringen ----------
+    update public.profiles set raderad_at = now() where id = P;
+    select string_agg(distinct orsak, ' | ') into t from public.timmar_insatta where familj = P;
+    ut := ut || jsonb_build_object('t', 'TI orsaken töms när familjen avidentifieras, raderna står kvar',
+            'ok', t = 'Gallrad när kontot avidentifierades.'
+                  and (select count(*) from public.timmar_insatta where familj = P) = 3,
+            'd', coalesce(t, 'inga rader'));
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('TI Insatta timmar', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

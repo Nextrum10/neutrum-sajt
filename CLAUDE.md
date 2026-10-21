@@ -127,7 +127,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   köpta timmar och går inte ut. Timbanken visar sedan 2026-10-13 också timmar för tips, som är ett avdrag
   på nästa pass, inte ett köp. Vid ånger eller uppsägning: avboka först allt kommande.
 - **Gratistimmar** (2026-10-13, Leo): admin sätter in dem i familjens timbank, i Ta in familjen och i
-  familjens panel under Ekonomi, och bara genom `ge_gratistimmar()` (1–40 åt gången, `is_admin()`). De är
+  familjens panel under Ekonomi, och bara genom `ge_gratistimmar()` (1–40 åt gången, `is_admin()`). **Med en orsak
+  och en månad** (2026-10-21, `timmar_med_orsak`, Leo: "timmar, månad, obligatorisk orsak, egen oföränderlig
+  loggrad"): `ge_gratistimmar(familj, timmar, orsak, månad)` kräver orsaken (3–500 tecken) och månaden timmarna avser
+  (september 2026 till nästa månad, utan månad den innevarande), och skriver en rad i `timmar_insatta` som ingen
+  ändrar eller tar bort (orsaken töms när familjen avidentifieras); den gamla med två argument kör ingen inloggad.
+  Månaden säger vad timmarna avser, inte när de går ut. Raden Första timmen gratis i familjens panel är borta
+  (samma dag, Leo); timmen själv följer den första planen som förut. De är
   en rad i `klippkort` med erbjudandet `gratis` (katalograden säljs aldrig), utan betalning (`betalt_ore`
   0, `betald_at` null) och utan villkor först: en gåva är inget köp. De gäller i 60 dagar och dras först,
   med planens gratis timme, före köpta timmar (Leo: "de används först av alla timmar"; ordningen är
@@ -961,6 +967,10 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Insatta timmar med orsak och månad** (2026-10-21, `timmar_med_orsak`, 20261021212000) är byggda men INTE i
+  drift: migrationen och adminvyn, i den ordningen. Före migrationen säger vyn att funktionen med orsak saknas, och
+  ingen gratistimme kan sättas in förrän den körts. Inga gratistimmar fanns i driften 2026-10-16, så ingen rad saknar
+  orsak. Juristen har inte läst rad 34 i `DATASKYDD.md` eller policyns nya ord om orsaken.
 - **Kodernas ägare och en gång per familj** (2026-10-21, `koderna_agare_och_en_gang`, 20261021211000) är byggda men INTE
   i drift: migrationen och adminvyn, i den ordningen (vyn skapar en kod utan ägare också före migrationen). Den sätter
   `max_per_familj` 1 på alla rabattkoder som redan finns; i driften fanns bara `TIPS`, som aldrig är aktiv. Ingen

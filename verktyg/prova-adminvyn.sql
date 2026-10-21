@@ -91,6 +91,15 @@ values ('a1000000-0000-4000-8000-00000000c001', 'a1000000-0000-4000-8000-0000000
 select public.klippkort_betald('a1000000-0000-4000-8000-00000000c001', 303200, 'pi_provadmin2', 'ch_provadmin2',
                                null, null, null, false);
 
+-- Gratistimmar med orsak och månad (timmar_med_orsak, 2026-10-21), insatta av
+-- superadmin genom funktionen, som i vyn: familjens panel läser raden.
+select set_config('request.jwt.claims',
+                  json_build_object('sub', 'a1000000-0000-4000-8000-0000000000ad', 'role', 'authenticated')::text, false);
+set role authenticated;
+select public.ge_gratistimmar('a1000000-0000-4000-8000-0000000000f1', 2, 'Provkörning: passet ställdes in av oss', null);
+reset role;
+select set_config('request.jwt.claims', '', false);
+
 insert into public.leads (id, parent_name, email, child_name, grade, subject, message, status, tjanst, created_at) values
   ('a1000000-0000-4000-8000-00000000d001', 'Linda Lead', 'prov-lead1@example.invalid', 'Lisa', 'Åk 6', 'Matematik',
    'Vi behöver hjälp med matten.', 'new', 'laxhjalp', now() - interval '1 day'),

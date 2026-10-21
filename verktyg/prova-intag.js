@@ -190,7 +190,17 @@ function falskSupabase(o) {
         brukbar: true, betalt_ore: 0, betald_at: null, vid_uppsagning_ore: 0, vid_anger_ore: 0, angerfrist_till: null,
         created_at: nu(0) };
       (W.klippkort_saldo = W.klippkort_saldo || []).push(rad);
-      return { ok: true, id: rad.id, timmar: k.p_timmar, giltigt_till: sista, betalda_pass: 0 };
+      /* Med orsaken och månaden (timmar_med_orsak, 2026-10-21), som databasen:
+         utan orsak sätts ingenting in. */
+      if (!k.p_orsak || String(k.p_orsak).trim().length < 3) {
+        W.klippkort_saldo.pop();
+        return { code: '22023', message: 'Skriv varför timmarna sätts in, 3–500 tecken.' };
+      }
+      const nu0 = new Date();
+      const manad = k.p_manad || (nu0.getFullYear() + '-' + String(nu0.getMonth() + 1).padStart(2, '0') + '-01');
+      (W.timmar_insatta = W.timmar_insatta || []).push({ id: ++löpnr, familj: k.p_familj, klippkort_id: rad.id,
+        timmar: k.p_timmar, avser_manad: manad, orsak: String(k.p_orsak).trim(), insatt_av: 'admin-1', insatt_at: nu(0) });
+      return { ok: true, id: rad.id, timmar: k.p_timmar, giltigt_till: sista, betalda_pass: 0, avser_manad: manad };
     },
     ta_tillbaka_gratistimmar: k => {
       const i = (W.klippkort_saldo || []).findIndex(r => r.id === k.p_id);
@@ -397,6 +407,12 @@ async function provaFamiljen(webb) {
   prova('familj: 41 gratistimmar nekas innan kontot skapas', S.bjudIn.length === 0
     && (await text(page, '#le-msg')).includes('mellan 0 och 40'), await text(page, '#le-msg'));
   await page.fill('#le-gratis', '3');
+  prova('familj: orsaken fälls ut när timmarna är fler än noll', await synlig(page, '#le-gratis-orsak'));
+  await page.click('#le-skapa');
+  await vänta(300);
+  prova('familj: gratistimmar utan orsak nekas innan kontot skapas', S.bjudIn.length === 0
+    && (await text(page, '#le-msg')).includes('Skriv varför familjen får gratistimmarna'), await text(page, '#le-msg'));
+  await page.fill('#le-gratis-orsak', 'Välkomsttimmar vid intaget');
   await bild(page, 'familj-ta-in', '.nx-fraga-box');
   await page.click('#le-skapa');
   await page.waitForFunction(() => /intagen/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
@@ -428,8 +444,9 @@ async function provaFamiljen(webb) {
   prova('familj: kvittot säger inget om första timmen', !/första timmen/i.test(await text(page, '.nx-fraga-box')),
     await text(page, '.nx-fraga-box'));
   const gt = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_gratistimmar');
-  prova('familj: gratistimmarna sätts in på det nya kontot', gt && gt.kropp.p_familj === 'ny-1' && gt.kropp.p_timmar === 3,
-    JSON.stringify(gt && gt.kropp));
+  prova('familj: gratistimmarna sätts in på det nya kontot, med orsaken och den här månaden',
+    gt && gt.kropp.p_familj === 'ny-1' && gt.kropp.p_timmar === 3 && gt.kropp.p_orsak === 'Välkomsttimmar vid intaget'
+    && gt.kropp.p_manad === null, JSON.stringify(gt && gt.kropp));
   prova('familj: gratistimmarna sätts in efter kontot och före eleven', S.logg.indexOf(gt) > S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
     && S.logg.indexOf(gt) < S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/students'));
   prova('familj: kvittot säger hur många gratistimmar och till vilken dag', /3 gratistimmar står i familjens timbank, till och med \d+ \S+/
@@ -482,22 +499,45 @@ async function provaGratistimmarIPanelen(webb) {
   await vänta(400);
   const fakta = await page.locator('.dp-fakta').first().innerText();
   prova('gratis: Översikt säger timbanken, utan timmar', /Timbanken\s*0 timmar/.test(fakta), fakta);
-  prova('panel: första timmen är ett läge, utan knapp pass för pass (2026-10-15)',
-    /Första timmen gratis\s*inte given än/.test(fakta) && (await page.locator('[data-dp-forsta]').count()) === 0, fakta);
+  prova('panel: raden Första timmen gratis är borta (2026-10-21), och ingen fråga om den',
+    !/Första timmen/.test(fakta) && (await page.locator('[data-dp-forsta]').count()) === 0
+    && !S.logg.some(r => r.väg === '/rest/v1/rpc/forsta_timmen_lage'), fakta);
   await page.click('.dp-fakta [data-dp-flik="ekonomi"]');
   await page.waitForSelector('form[data-dp-gratis="familj-1"]', { timeout: 3000 }).catch(() => {});
   prova('gratis: knappen går till Ekonomi, där rutan finns', await synlig(page, 'form[data-dp-gratis="familj-1"]'));
+  /* Månaden och orsaken (timmar_med_orsak, 2026-10-21). */
+  const månader = await page.locator('#dp-gratis-manad option').evaluateAll(l => l.map(o => o.value));
+  const denna = (() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01'; })();
+  prova('gratis: månaderna börjar i september 2026, slutar nästa månad, och den här är vald',
+    månader[0] === '2026-09-01' && månader.includes(denna) && månader.indexOf(denna) === månader.length - 2
+    && (await page.inputValue('#dp-gratis-manad')) === denna, JSON.stringify(månader));
+  const varningar = [];
+  page.on('dialog', d => { varningar.push(d.message()); d.dismiss().catch(() => {}); });
   await page.fill('#dp-gratis-n', '2');
   await page.click('form[data-dp-gratis] [type="submit"]');
+  await vänta(300);
+  // Fältet krävs (required, minst tre tecken): webbläsaren stoppar formuläret.
+  prova('gratis: utan orsak sätts inget in, och fältet säger att det krävs',
+    (await page.evaluate(() => !document.querySelector('#dp-gratis-orsak').checkValidity()))
+    && !S.logg.some(r => r.väg === '/rest/v1/rpc/ge_gratistimmar'), varningar.join(' | '));
+  await page.fill('#dp-gratis-orsak', 'Passet 14 oktober ställdes in av oss');
+  await page.selectOption('#dp-gratis-manad', '2026-09-01');
+  await page.click('form[data-dp-gratis] [type="submit"]');
   await page.waitForSelector('.nx-fraga.open', { timeout: 3000 }).catch(() => {});
-  prova('gratis: frågar först, med antalet och sista dagen', /Sätt in 2 gratistimmar\?/.test(await text(page, '.nx-fraga-box h3'))
-    && (await text(page, '.nx-fraga-box')).includes('till och med'), await text(page, '.nx-fraga-box'));
+  prova('gratis: frågar först, med antalet, sista dagen, månaden och orsaken', /Sätt in 2 gratistimmar\?/.test(await text(page, '.nx-fraga-box h3'))
+    && (await text(page, '.nx-fraga-box')).includes('till och med') && (await text(page, '.nx-fraga-box')).includes('september 2026')
+    && (await text(page, '.nx-fraga-box')).includes('Passet 14 oktober ställdes in av oss'), await text(page, '.nx-fraga-box'));
   await page.click('.nx-fraga [data-svar="ja"]');
   await page.waitForFunction(() => /insatta/.test((document.querySelector('.dp-gratis .ok-msg') || {}).textContent || ''),
     null, { timeout: 6000 }).catch(() => {});
   const gt = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_gratistimmar');
-  prova('gratis: ge_gratistimmar får familjen och antalet', gt && gt.kropp.p_familj === 'familj-1' && gt.kropp.p_timmar === 2,
+  prova('gratis: ge_gratistimmar får familjen, antalet, orsaken och månaden', gt && gt.kropp.p_familj === 'familj-1'
+    && gt.kropp.p_timmar === 2 && gt.kropp.p_orsak === 'Passet 14 oktober ställdes in av oss' && gt.kropp.p_manad === '2026-09-01',
     JSON.stringify(gt && gt.kropp));
+  const insatta = await page.locator('.dp').first().innerText();
+  prova('gratis: insättningen står under Insatta timmar, med månaden, orsaken och vem',
+    /INSATTA TIMMAR|Insatta timmar/.test(insatta) && insatta.includes('2 gratistimmar, avser september 2026')
+    && insatta.includes('Passet 14 oktober ställdes in av oss') && insatta.includes('av Leo Admin'), insatta);
   const panel = await page.locator('.dp').first().innerText();
   prova('gratis: kortet står i panelen med timmarna', panel.includes('Gratistimmar från Nextrum') && panel.includes('2 av 2 timmar kvar'), panel);
   prova('gratis: kvittot säger att de är insatta', (await text(page, '.dp-gratis .ok-msg')).startsWith('2 gratistimmar insatta, till och med'),

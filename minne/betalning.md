@@ -229,7 +229,7 @@ längre efter fakturan), sedan del 1, sedan backup och del 2.
     lektionen, ta bort den. det ska bara finnas ge gratis timmar till
     timbanken". Rutan i Ta in familjen och knappen i familjens panel är
     borta, och raden Första timmen gratis i panelen säger bara om timmen
-    getts. Ingen familj hade valet och inget pass hade timmen, så
+    getts (raden togs bort 2026-10-21, Leo; `minne/timmar.md`, Insatta timmar). Ingen familj hade valet och inget pass hade timmen, så
     databasen ändrades inte: tabellen, funktionen och Fas 19.5:s väg står
     kvar utan knapp, och studievyn visar fortfarande en timme som är
     `beviljad`. Villkoren sa att vi "kan, om vi kommit överens om det"

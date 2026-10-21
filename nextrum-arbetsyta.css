@@ -2104,7 +2104,9 @@ body.vy-admin .dbox * + h5{margin-top:24px}
 .le-familj-saknas{border-style:dashed}
 .le-familj .btn{align-self:flex-start;margin-top:8px}
 /* Gratistimmar när familjen tas in (2026-10-13): antalet bredvid
-   rubriken, och vad timmarna är under. */
+   rubriken, och vad timmarna är under. Orsaken (2026-10-21,
+   timmar_med_orsak) står under antalet och fälls ut när det är mer än
+   noll. */
 .le-gratis{
   display:grid;grid-template-columns:minmax(0,1fr) 6.5rem;gap:6px 12px;align-items:center;
   margin-top:12px;
@@ -2113,6 +2115,9 @@ body.vy-admin .dbox * + h5{margin-top:24px}
 .le-gratis .inp{width:100%;min-height:44px;text-align:center}
 .le-gratis span{grid-column:1 / -1;font-size:.82rem;line-height:1.5;color:var(--bl-2)}
 .le-gratis[hidden]{display:none}
+.le-gratis .le-gratis-orsak{grid-column:1 / -1;display:flex;flex-direction:column;gap:6px}
+.le-gratis .le-gratis-orsak[hidden]{display:none}
+.le-gratis .le-gratis-orsak .inp{text-align:left}
 /* Familjerabatten när familjen tas in (2026-10-15): koden behöver bredden. */
 .le-rabatt{grid-template-columns:minmax(0,1fr)}
 .le-rabatt .sel{width:100%;min-height:44px}
@@ -2460,21 +2465,23 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
   font-size:.8rem;line-height:1.45;color:var(--bl-2);
 }
 .dp-rad-hoger{text-align:right;flex:none;white-space:nowrap}
-/* Sätt in gratistimmar under familjens Ekonomi (2026-10-13): antalet
-   och knappen i en rad, vad timmarna är under, och kvittot sist. */
+/* Sätt in gratistimmar under familjens Ekonomi (2026-10-13; sedan
+   2026-10-21 med månaden och orsaken, timmar_med_orsak): antalet och
+   månaden i en rad, orsaken under, knappen, vad timmarna är och kvittot
+   sist. */
 .dp-gratis{
-  display:grid;grid-template-columns:minmax(0,1fr) 5.5rem auto;gap:8px 10px;align-items:center;
+  display:grid;grid-template-columns:6rem minmax(0,1fr);gap:10px 12px;align-items:end;
   margin:10px 0 18px;padding:12px 14px;border-radius:14px;background:var(--tint);
 }
-.dp-gratis label{font-size:.88rem;font-weight:650;color:var(--bl)}
-.dp-gratis .inp{width:100%;min-height:44px;text-align:center}
-.dp-gratis .btn{min-height:44px}
+.dp-gratis-rubrik{grid-column:1 / -1;font-size:.9rem;font-weight:650;color:var(--bl)}
+.dp-gratis-falt{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dp-gratis label{font-size:.82rem;font-weight:600;color:var(--bl-2)}
+.dp-gratis .inp,.dp-gratis .sel{width:100%;min-height:44px}
+.dp-gratis #dp-gratis-n{text-align:center}
+.dp-gratis-orsak{grid-column:1 / -1}
+.dp-gratis .btn{min-height:44px;justify-self:start}
 .dp-gratis-not{grid-column:1 / -1;font-size:.8rem;line-height:1.5;color:var(--bl-2)}
 .dp-gratis .ok-msg{grid-column:1 / -1;margin:0}
-@media (max-width:420px){
-  .dp-gratis{grid-template-columns:minmax(0,1fr) 5.5rem}
-  .dp-gratis label{grid-column:1 / -1}
-}
 /* Familjerabatten under familjens Ekonomi (2026-10-15): koden att välja och
    knappen i en rad, vad den gör under, som gratistimmarna. */
 .dp-rabatt{
