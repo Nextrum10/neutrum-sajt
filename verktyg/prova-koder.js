@@ -124,7 +124,7 @@ function värld() {
       { kod: 'TIPS', sort: 'rabatt', partner_namn: null, typ: 'belopp', varde: 1, aktiv: false, antal_anvandningar: 3,
         skapad: '2026-09-30T10:00:00Z' },
       { kod: 'ZAYAN10', sort: 'rabatt', partner_namn: null, beskrivning: 'Zayans 10 %', typ: 'procent', varde: 10, aktiv: true,
-        antal_anvandningar: 2, max_anvandningar: 50, max_per_familj: 1, skapad: '2026-10-15T10:00:00Z' },
+        antal_anvandningar: 2, max_anvandningar: 50, max_per_familj: 1, skapad: '2026-10-15T10:00:00Z', agare: 'sh-a' },
       { kod: 'GAMMAL', sort: 'rabatt', partner_namn: null, beskrivning: 'Sommaren', typ: 'belopp', varde: 5000, aktiv: false,
         antal_anvandningar: 0, skapad: '2026-06-01T10:00:00Z' },
       { kod: 'FORENING', sort: 'partner', partner_namn: 'Föreningen Prov', beskrivning: null, typ: 'procent', varde: 0,
@@ -132,7 +132,14 @@ function värld() {
       { kod: 'ELAK', sort: 'partner', partner_namn: '<img src=x onerror="window.__xss=1">Elak förening',
         beskrivning: '<b>fet</b>', typ: 'belopp', varde: 2000, aktiv: true, antal_anvandningar: 0, skapad: '2026-10-17T10:00:00Z' }
     ],
-    familjens_partner: [{ familj: 'fam-b', kod: 'FORENING', kopplad_at: '2026-10-18T10:00:00Z' }]
+    familjens_partner: [{ familj: 'fam-b', kod: 'FORENING', kopplad_at: '2026-10-18T10:00:00Z' }],
+    /* Katalogen till förhandsvisningen: tre planer och Fyll timbanken, som aldrig tar en kod. */
+    erbjudanden_pris: [
+      { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, pris_ore: 151600, ordning: 10 },
+      { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, pris_ore: 303200, ordning: 20 },
+      { kod: 'plan_intensiv', sort: 'plan', namn: 'Intensiv', timmar: 12, pris_ore: 454800, ordning: 25 },
+      { kod: 'klipp10', sort: 'klippkort', namn: 'Fyll timbanken', timmar: 10, pris_ore: 399000, ordning: 40 }
+    ]
   };
 }
 
@@ -433,6 +440,86 @@ async function provaPlanskoderna(webb) {
     && !/TIPS/.test(lista) && !/FORENING/.test(lista), lista);
   prova('planskoder: raden säger rabatten, gränsen och läget',
     /10 %/.test(lista) && /en gång per familj/.test(lista) && /Aktiv/.test(lista) && /Avstängd/.test(lista), lista);
+
+  /* Ägaren, lägena och söket (koderna_agare_och_en_gang, 2026-10-21). */
+  prova('planskoder: raden säger vem koden är utlagd hos',
+    /Utlagd hos Sara Ahl \(studiehjälpare\)/.test(await text(page, '#kp-lista .kod-rad[data-kp-kod="ZAYAN10"] summary')),
+    await text(page, '#kp-lista .kod-rad[data-kp-kod="ZAYAN10"] summary'));
+  const chips = await text(page, '#kp-chips');
+  prova('planskoder: fyra lägen med antal: alla två, en gäller nu, ingen väntar, en avstängd',
+    (await page.locator('#kp-chips .chip').count()) === 4 && /Alla\s*2/.test(chips) && /Gäller nu\s*1/.test(chips)
+    && /Gäller inte nu\s*0/.test(chips) && /Avstängda\s*1/.test(chips), chips);
+  await page.click('#kp-chips [data-kp-filter="av"]');
+  await vänta(300);
+  prova('planskoder: Avstängda visar bara den avstängda',
+    (await page.locator('#kp-lista .kod-rad').count()) === 1 && /GAMMAL/.test(await text(page, '#kp-lista')),
+    await text(page, '#kp-lista'));
+  await page.click('#kp-chips [data-kp-filter="alla"]');
+  await vänta(300);
+  await page.fill('#kp-sok', 'sara');
+  await vänta(200);
+  prova('planskoder: söket hittar en kod på ägarens namn',
+    (await page.locator('#kp-lista .kod-rad').count()) === 1 && /ZAYAN10/.test(await text(page, '#kp-lista')),
+    await text(page, '#kp-lista'));
+  await page.fill('#kp-sok', 'sommar');
+  await vänta(200);
+  prova('planskoder: söket hittar en kod på beskrivningen',
+    (await page.locator('#kp-lista .kod-rad').count()) === 1 && /GAMMAL/.test(await text(page, '#kp-lista')),
+    await text(page, '#kp-lista'));
+  await page.fill('#kp-sok', 'xyz');
+  await vänta(200);
+  prova('planskoder: ett sök utan träff säger det', /Ingen kod passar/.test(await text(page, '#kp-lista')),
+    await text(page, '#kp-lista'));
+  await page.fill('#kp-sok', '');
+  await vänta(200);
+
+  /* En gång per familj står låst för en rabattkod. */
+  prova('planskoder: Gånger per familj är låst på 1 för en rabattkod, och säger varför',
+    (await page.inputValue('#kp-familj')) === '1' && await page.isDisabled('#kp-familj')
+    && /en gång per familj/.test(await text(page, '#kp-familj-not')), await page.inputValue('#kp-familj'));
+
+  /* Förhandsvisningen: samma regel som databasen, och bara planerna. */
+  await page.selectOption('#kp-typ', 'procent');
+  await page.fill('#kp-varde', '10');
+  await vänta(200);
+  const förhand = await text(page, '#kp-forhand');
+  prova('planskoder: förhandsvisningen räknar rabatten på varje plan, nedåt till hel öre',
+    /Basic/.test(förhand) && /1\s516 kr/.test(förhand) && /−151,60 kr/.test(förhand) && /1\s364,40 kr/.test(förhand)
+    && /Standard/.test(förhand) && /Intensiv/.test(förhand) && !/Fyll timbanken/.test(förhand), förhand);
+  await page.selectOption('#kp-typ', 'belopp');
+  await page.fill('#kp-varde', '2000');
+  await vänta(200);
+  const förhand2 = await text(page, '#kp-forhand');
+  prova('planskoder: en rabatt som tar hela priset säger att köpet nekas',
+    /Basic[\s\S]*Nekas/.test(förhand2) && /Intensiv[\s\S]*2\s548 kr/.test(förhand2), förhand2);
+  await page.fill('#kp-varde', '');
+
+  /* Ägaren väljs ur sök, och följer med när koden skapas. */
+  await page.fill('#kp-agare-sok', 'cec');
+  await vänta(200);
+  prova('planskoder: ägarsöket föreslår familjer och studiehjälpare som finns',
+    /Cecilia Carlsson/.test(await text(page, '#kp-agare-forslag')) && /Familj/.test(await text(page, '#kp-agare-forslag')),
+    await text(page, '#kp-agare-forslag'));
+  await page.click('#kp-agare-forslag [data-kp-agare="fam-c"]');
+  await vänta(200);
+  prova('planskoder: den valda ägaren står, och söket göms',
+    /Cecilia Carlsson \(familj\)/.test(await text(page, '#kp-agare-vald')) && !(await synlig(page, '#kp-agare-sok')),
+    await text(page, '#kp-agare-vald'));
+  await page.fill('#kp-kod', 'ceci10');
+  await page.selectOption('#kp-typ', 'procent');
+  await page.fill('#kp-varde', '10');
+  await page.click('#kp-spara');
+  await page.waitForFunction(() => /CECI10 är skapad/.test((document.querySelector('#kp-msg') || {}).textContent || ''),
+    null, { timeout: 4000 }).catch(() => {});
+  const ägd = S.logg.filter(r => r.metod === 'POST' && r.väg === '/rest/v1/rabattkoder').pop();
+  prova('planskoder: koden skrivs med ägaren och en gång per familj',
+    ägd && ägd.kropp.kod === 'CECI10' && ägd.kropp.agare === 'fam-c' && ägd.kropp.max_per_familj === 1,
+    JSON.stringify(ägd && ägd.kropp));
+  prova('planskoder: beskedet säger vem koden är utlagd hos, och ägaren töms',
+    /utlagd hos Cecilia Carlsson \(familj\)/.test(await text(page, '#kp-msg')) && await synlig(page, '#kp-agare-sok')
+    && !(await synlig(page, '#kp-agare-vald')), await text(page, '#kp-msg'));
+  await page.fill('#kp-kod', '');
+  await page.fill('#kp-varde', '');
   const anrop = S.logg.filter(r => r.väg === '/rest/v1/rpc/kod_statistik');
   prova('planskoder: statistiken hämtas utan testbetalningar', anrop.length >= 1 && anrop[0].kropp.p_med_test === false,
     JSON.stringify(anrop.map(a => a.kropp)));
@@ -472,9 +559,10 @@ async function provaPlanskoderna(webb) {
   await page.waitForFunction(() => /HOST25 är skapad/.test((document.querySelector('#kp-msg') || {}).textContent || ''),
     null, { timeout: 4000 }).catch(() => {});
   const ny = S.logg.filter(r => r.metod === 'POST' && r.väg === '/rest/v1/rabattkoder').pop();
-  prova('planskoder: en ny rabattkod skrivs med sorten, i versaler, en gång per familj som förval',
+  prova('planskoder: en ny rabattkod skrivs med sorten, i versaler, en gång per familj, och utan ägare',
     ny && ny.kropp.kod === 'HOST25' && ny.kropp.sort === 'rabatt' && ny.kropp.partner_namn === null && ny.kropp.typ === 'procent'
-    && ny.kropp.varde === 25 && ny.kropp.max_per_familj === 1 && ny.kropp.aktiv === true, JSON.stringify(ny && ny.kropp));
+    && ny.kropp.varde === 25 && ny.kropp.max_per_familj === 1 && ny.kropp.aktiv === true && !('agare' in ny.kropp),
+    JSON.stringify(ny && ny.kropp));
   prova('planskoder: den nya koden står i listan', /HOST25/.test(await text(page, '#kp-lista')));
   await page.fill('#kp-kod', 'KR50');
   await page.selectOption('#kp-typ', 'belopp');
@@ -486,7 +574,11 @@ async function provaPlanskoderna(webb) {
   prova('planskoder: kronor skrivs i kronor och lagras i öre', kr && kr.kropp.kod === 'KR50' && kr.kropp.varde === 5000,
     JSON.stringify(kr && kr.kropp));
 
-  /* Stäng av: en fråga först, och en uppdatering, aldrig en borttagning. */
+  /* Stäng av: knappen står i raden, en fråga först, och en uppdatering,
+     aldrig en borttagning. Ett tryck på den fäller inte ihop raden. */
+  const varÖppen = await page.evaluate(() => document.querySelector('#kp-lista .kod-rad[data-kp-kod="ZAYAN10"]').open);
+  prova('planskoder: snabbknappen står i radens summary',
+    (await page.locator('#kp-lista .kod-rad[data-kp-kod="ZAYAN10"] summary [data-kp-vaxla]').count()) === 1);
   await page.click('#kp-lista .kod-rad[data-kp-kod="ZAYAN10"] [data-kp-vaxla]');
   await page.waitForSelector('.nx-fraga-box', { timeout: 3000 }).catch(() => {});
   prova('planskoder: Stäng av frågar först', /Stäng av koden ZAYAN10/.test(await text(page, '.nx-fraga-box')));
@@ -497,6 +589,8 @@ async function provaPlanskoderna(webb) {
     av && av.kropp && av.kropp.aktiv === false && !S.logg.some(r => r.metod === 'DELETE'), JSON.stringify(av));
   prova('planskoder: raden säger Avstängd efteråt',
     /Avstängd/.test(await text(page, '#kp-lista .kod-rad[data-kp-kod="ZAYAN10"] summary')));
+  prova('planskoder: raden är lika öppen som före trycket',
+    (await page.evaluate(() => document.querySelector('#kp-lista .kod-rad[data-kp-kod="ZAYAN10"]').open)) === varÖppen);
 
   /* Partnerkoderna. */
   await page.click('#kp-flikar a[href="#koder/partnerkoder"]');
@@ -510,8 +604,9 @@ async function provaPlanskoderna(webb) {
     /<img src=x/.test(await text(page, '#kp-vy')) && (await page.locator('#kp-vy img').count()) === 0
     && (await page.evaluate(() => window.__xss)) === undefined && (await page.locator('#kp-vy b:text("fet")').count()) === 0,
     await text(page, '#kp-partner'));
-  prova('planskoder: formuläret frågar efter partnern', await synlig(page, '#kp-partner-namn')
-    && (await page.inputValue('#kp-familj')) === '');
+  prova('planskoder: formuläret frågar efter partnern, och gränsen per familj är öppen', await synlig(page, '#kp-partner-namn')
+    && (await page.inputValue('#kp-familj')) === '' && !(await page.isDisabled('#kp-familj'))
+    && !(await synlig(page, '#kp-familj-not')));
   await page.fill('#kp-kod', 'BIBLIOTEK');
   await page.fill('#kp-varde', '');
   await page.click('#kp-spara');
@@ -585,7 +680,11 @@ async function provaLöner(webb) {
   /* Ansökans panel. */
   await page.goto(BAS + '/admin#ansokningar');
   await vänta(1000);
-  await page.click('[data-dp="ansokan:ans-ny"]').catch(() => {});
+  /* Nils är tagen in, så ansökan står under Konto skapat: Nya ansökningar
+     visar bara steget Ny (ansokningarnas_steg, 2026-10-21). */
+  await page.click('#flik-ans-konto').catch(() => {});
+  await vänta(300);
+  await page.click('#panel-ans-konto [data-dp="ansokan:ans-ny"]').catch(() => {});
   await vänta(500);
   const fakta = await text(page, '.dp-fakta');
   prova('ansökan: panelen säger vem som tipsat och bonusen', /Tipsad av/.test(fakta) && /Sara Ahl/.test(fakta)

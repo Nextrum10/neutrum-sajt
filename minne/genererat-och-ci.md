@@ -483,7 +483,7 @@ fäller ut passen med dag, klocka och studiehjälpare, att Skapa nu torrkör
 i bakgrunden och visar vad innan det skarpa anropet, familjens panel,
 Månadens ekonomi, en telefon, och samma rader med schemat av.
 
-### Röktestet av adminvyn mot en riktig databas (2026-10-22)
+### Röktestet av adminvyn mot en riktig databas (2026-10-21)
 Leo: "Öppna varje sektion i adminvyn i testmiljön. Läs konsol- och
 nätverksfel, SQL/RLS-fel och trasiga knappar. ... Lägg till ett
 regressionstest som öppnar varje adminsektion och misslyckas vid
@@ -507,11 +507,11 @@ behörigheter (leads, användare, bokningar, rapporter, matchning, godkänna)
 och på en telefon i mörkt läge, där ingenting heller får göra sidan bredare
 än skärmen (en bred tabell i en ruta som rullar i sidled är med flit).
 Provet faller på fel i konsolen, sidfel, en fil som saknas och varje svar
-från databasen på 400 eller mer, med databasens text. Provat 2026-10-22:
+från databasen på 400 eller mer, med databasens text. Provat 2026-10-21:
 med `select` på `leads` borttagen föll fem prov med "permission denied
 for table leads"; med rättigheterna på plats 128 av 128.
 
-Det första som gick (2026-10-22) hittade inga fel från databasen eller i
+Det första som gick (2026-10-21) hittade inga fel från databasen eller i
 konsolen. Det som rättades den dagen var det adminvyn visade fel: märkena i
 Liggaren och Kortet bar klasserna `klar`, `pa` och `fel`, som ingen regel
 har, och var grå i båda lägena; Liggarens och Kortets tre rutor stod i fyra
@@ -524,7 +524,7 @@ vårdnadshavarens fält i formuläret på båda språken och vad som skickas,
 reserven när kolumnen saknas, rutan som visar nejet innan ansökan avböjs,
 godkännandet i ansökan, och att siffran vid Ansökningar och
 Intresseanmälningar går bort när sektionen visats, med och utan tabellen
-`admin_sett`. Sedan 2026-10-22 också ansökningarnas steg (flikarna med antal,
+`admin_sett`. Sedan 2026-10-21 också ansökningarnas steg (flikarna med antal,
 Intervjus tre knappar, Ångra, Utbildning hållen med och utan konto på
 adressen, och frågan om vårdnadshavarens godkännande där), Skriv till hen
 vid adressen och vyn före migrationen.

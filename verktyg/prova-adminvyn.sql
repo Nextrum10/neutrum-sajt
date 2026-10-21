@@ -124,6 +124,8 @@ insert into public.homework (student_id, tutor_id, title, instructions, subject,
 insert into public.rabattkoder (kod, beskrivning, typ, varde, sort, partner_namn, max_per_familj, aktiv) values
   ('PROVRABATT', 'Provkod', 'procent', 10, 'rabatt', null, 1, true),
   ('PROVPARTNER', 'Provpartner', 'belopp', 0, 'partner', 'Provföreningen', null, true);
+-- Utlagd hos familjen (koderna_agare_och_en_gang, 2026-10-21).
+update public.rabattkoder set agare = 'a1000000-0000-4000-8000-0000000000f1' where kod = 'PROVRABATT';
 
 -- Tipskoderna, som Koder skapar när vyn öppnas.
 select intern.ny_tipskod(p.id, case when p.role = 'tutor' then 'studiehjalpare' else 'familj' end)

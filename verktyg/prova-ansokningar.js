@@ -14,7 +14,7 @@
    formuläret på båda språken och vad som skickas, rutan som visar nejet
    innan ansökan avböjs, godkännandet i ansökan, att siffran vid
    Ansökningar och Intresseanmälningar går bort när man tittat, och
-   ansökningarnas steg (2026-10-22): flikarna Nya ansökningar, Intervju,
+   ansökningarnas steg (2026-10-21): flikarna Nya ansökningar, Intervju,
    Utbildning, Konto skapat och Avböjda med antal, Intervjus tre knappar
    (Skicka intervjulänk igen, Ångra intervju, Gå vidare till utbildning)
    och Utbildning hållen, som skapar kontot med bjud-in och kopplar det i
@@ -72,7 +72,7 @@ function värld(o) {
         match_status: 'pending', created_at: '2026-09-01T10:00:00Z' },
       { id: 'sh-1', role: 'tutor', full_name: 'Tove Lind', email: 'tove@example.se', is_admin: false,
         created_at: '2026-10-03T10:00:00Z' },
-      /* Ulla har redan ett konto med adressen i ansökan (2026-10-22). */
+      /* Ulla har redan ett konto med adressen i ansökan (2026-10-21). */
       { id: 'sh-ulla', role: 'tutor', full_name: 'Ulla Utbildning', email: 'ulla@example.se', is_admin: false,
         created_at: '2026-10-04T10:00:00Z' }
     ],
@@ -107,7 +107,7 @@ function värld(o) {
     tjanster: [{ kod: 'laxhjalp', namn: 'Läxhjälp', aktiv: true, for_jobb: true, for_kund: true, ordning: 1 }],
     flaggor: []
   };
-  /* Ansökningarnas steg (2026-10-22): en i Intervju och en till i Ny, två i
+  /* Ansökningarnas steg (2026-10-21): en i Intervju och en till i Ny, två i
      Utbildning (en med konto på adressen), en under 18 i Utbildning utan
      vårdnadshavarens godkännande, en med konto och en avböjd. */
   if (o.steg) {
@@ -193,7 +193,7 @@ function falskSupabase(o) {
 
   const RPC = {
     mina_behorigheter: () => ({ admin: true, superadmin: true, behorigheter: [] }),
-    /* ansokningarnas_steg (2026-10-22): samma svar som databasen ger. */
+    /* ansokningarnas_steg (2026-10-21): samma svar som databasen ger. */
     ansokan_intervjulank_igen: k => {
       const a = W.applications.find(x => x.id === k.p_ansokan);
       return a && stegFör(a) === 'intervju' && a.status !== 'rejected'
@@ -235,7 +235,7 @@ function falskSupabase(o) {
     /* ansokan-mejl (2026-10-20): med o.mejl svarar den som när mejlet gått,
        annars som en funktion som inte är driftsatt. */
     if (p === '/functions/v1/ansokan-mejl' && o.mejl) return svar(route, 200, { ok: true, till: 'bo@example.se' });
-    /* bjud-in (2026-10-22): skapar studiehjälparkontot, som den riktiga, och
+    /* bjud-in (2026-10-21): skapar studiehjälparkontot, som den riktiga, och
        säger 409 om adressen redan har ett. */
     if (p === '/functions/v1/bjud-in') {
       const epost = String(kropp && kropp.epost || '').toLowerCase();
@@ -597,7 +597,7 @@ async function provaAdminvyn(webb) {
   }
 }
 
-/* ============ ansökningarnas steg (2026-10-22) ============
+/* ============ ansökningarnas steg (2026-10-21) ============
    Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. ... Vyn 'Alla
    ansökningar' visar bara de som ligger i Ny." Flikarna med antal, de tre
    knapparna i Intervju, Ångra, Gå vidare till utbildning och Utbildning
@@ -829,7 +829,7 @@ async function provaStegen(webb) {
   }
 }
 
-/* ============ Skriv till hen (2026-10-20, flyttad 2026-10-22) ============
+/* ============ Skriv till hen (2026-10-20, flyttad 2026-10-21) ============
    Skicka i rutan anropar ansokan-mejl med ansökan, det redigerade ämnet
    och texten och en nyckel för rutan, aldrig en adress. Knappen står vid
    adressen i ansökan, inte i stegen, och flyttar ingen: att vi skrivit

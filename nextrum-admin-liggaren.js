@@ -45,7 +45,7 @@
   const TYP = { plan: 'Plan', timbank: 'Fyll timbanken', pass: 'Pass', tillagg: 'Tillägg' };
   /* Märkenas färger är adminvyns tre (.adm-status): mossa klart, ockra
      väntar, lera ert drag eller fel. Här stod 'klar', 'pa' och 'fel', som
-     ingen regel hade, och märkena blev grå (2026-10-22). */
+     ingen regel hade, och märkena blev grå (2026-10-21). */
   const LÄGE = {
     betald: ['Betald', 'ar-klar'],
     delvis_aterbetald: ['Delvis tillbaka', 'ar-vantar'],
@@ -225,7 +225,7 @@
     const i = L.inst;
     /* Strömbrytaren kortreservation står av sedan betala_nu (2026-10-21):
        familjen betalar med Betala nu, och jobbet släpper det som ändå står
-       reserverat. Texten följer strömbrytaren (2026-10-22). */
+       reserverat. Texten följer strömbrytaren (2026-10-21). */
     const på = !!(S.kortFlagga && S.kortFlagga.aktiv);
     fot.textContent = (på
       ? 'Kortet reserveras två dagar före passet och dras när rapporten är skriven.'

@@ -25,7 +25,7 @@
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
 
   /* ============================================================
-     ANSÖKNINGARNAS STEG (2026-10-22)
+     ANSÖKNINGARNAS STEG (2026-10-21)
 
      Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. En ansökan finns
      i exakt ett läge åt gången. Vyn 'Alla ansökningar' visar bara de som
@@ -372,7 +372,7 @@
 
   /* Skriv till hen: ett eget mejl från info@, när något ska sägas som
      inget av stegens mejl säger. Länken till intervjun har sin egen
-     knapp (Skicka intervjulänk igen, 2026-10-22), så mallen är bara
+     knapp (Skicka intervjulänk igen, 2026-10-21), så mallen är bara
      hälsningen och rutan är redigerbar. */
   function mallSkriv(a) {
     return 'Hej ' + (String(a.name || '').split(' ')[0] || '') + ',\n\n\n\n'
@@ -488,7 +488,7 @@
   }
 
   /* ============================================================
-     PANELEN: VAR HEN STÅR (2026-10-22)
+     PANELEN: VAR HEN STÅR (2026-10-21)
 
      Leo: "Korta ner intervjudelen kraftigt: status plus tre knappar,
      inget annat. ... Gör hela profilen enkel att läsa: tydlig rubrik,
@@ -582,7 +582,7 @@
     });
   });
   /* ============================================================
-     UTBILDNING HÅLLEN (2026-10-22): kontot och poolen
+     UTBILDNING HÅLLEN (2026-10-21): kontot och poolen
 
      Leo: "Från Utbildning: knappen 'Utbildning hållen'. Då skapas
      studiehjälparkontot (använd befintlig inbjudningsmekanism via edge

@@ -1,8 +1,8 @@
 -- ============================================================
 -- Ansökningarnas steg: Ny, Intervju, Utbildning och Konto skapat
--- (2026-10-22)
+-- (2026-10-21)
 --
--- Beställningen (Leo, 2026-10-22): "Lägen: Ny, Intervju, Utbildning,
+-- Beställningen (Leo, 2026-10-21): "Lägen: Ny, Intervju, Utbildning,
 -- Konto skapat. En ansökan finns i exakt ett läge åt gången. Vyn 'Alla
 -- ansökningar' visar bara de som ligger i Ny. ... Statusövergångar
 -- tvingas i databasen (trigger). Tillåtet: ny till intervju, intervju
@@ -77,7 +77,7 @@ create unique index if not exists applications_ett_konto
   on public.applications (konto_id) where konto_id is not null;
 
 comment on column public.applications.konto_id is
-  '2026-10-22 (ansokningarnas_steg). Studiehjälparkontot ansökan blev. Sätts bara av ansokan_utbildning_hallen(), '
+  '2026-10-21 (ansokningarnas_steg). Studiehjälparkontot ansökan blev. Sätts bara av ansokan_utbildning_hallen(), '
   'och ett konto hör till en ansökan (applications_ett_konto). Utbildning hållen med samma konto igen gör ingenting.';
 
 
@@ -91,7 +91,7 @@ create or replace function intern.ansokan_steg(
  parallel safe
  set search_path to ''
 as $function$
-  -- ansokningarnas_steg (2026-10-22). Samma regel i kolumnen steg, i vakten
+  -- ansokningarnas_steg (2026-10-21). Samma regel i kolumnen steg, i vakten
   -- och i vyn (ansSteg i nextrum-admin-rekrytering.js). Ändras den här ska
   -- kolumnen räknas om: en lagrad genererad kolumn räknas bara när raden skrivs.
   select case
@@ -115,7 +115,7 @@ alter table public.applications
                                            utbildningsmote_at, utbildad_at)) stored;
 
 comment on column public.applications.steg is
-  '2026-10-22 (ansokningarnas_steg). Var ansökan står: ny, intervju, utbildning eller konto_skapat. Räknas ur '
+  '2026-10-21 (ansokningarnas_steg). Var ansökan står: ny, intervju, utbildning eller konto_skapat. Räknas ur '
   'konto_id, läget och tidsstämplarna (intern.ansokan_steg), och byts bara som intern.ansokan_steg_vakt tillåter. '
   'En avböjd ansökan (status rejected) står utanför stegen.';
 
@@ -127,7 +127,7 @@ create or replace function intern.ansokan_steg_vakt()
  security definer
  set search_path to ''
 as $function$
--- ansokningarnas_steg (2026-10-22). Före ansokan_till_intervju och efter
+-- ansokningarnas_steg (2026-10-21). Före ansokan_till_intervju och efter
 -- applications_skydda i namnordning, så stegen den ser är de som sparas.
 declare
   klanger text := current_setting('request.jwt.claims', true);
@@ -219,7 +219,7 @@ create table if not exists public.ansokan_steg_logg (
 create index if not exists ansokan_steg_logg_ansokan on public.ansokan_steg_logg (ansokan_id, andrad_at);
 
 comment on table public.ansokan_steg_logg is
-  '2026-10-22 (ansokningarnas_steg). En rad per steg en ansökan tagit: varifrån, vart, vem och när. Skrivs bara av '
+  '2026-10-21 (ansokningarnas_steg). En rad per steg en ansökan tagit: varifrån, vart, vem och när. Skrivs bara av '
   'databasen (intern.ansokan_steg_logga), ändras aldrig och följer med ansökan när den gallras. Bara superadmin läser.';
 
 create or replace function intern.ansokan_steg_logga()
@@ -228,7 +228,7 @@ create or replace function intern.ansokan_steg_logga()
  security definer
  set search_path to ''
 as $function$
--- ansokningarnas_steg (2026-10-22). Efter skrivningen: den genererade
+-- ansokningarnas_steg (2026-10-21). Efter skrivningen: den genererade
 -- kolumnen är räknad, och raden är den som sparades.
 begin
   if tg_op = 'INSERT' then
@@ -360,7 +360,7 @@ create or replace function public.ansokan_intervjulank_igen(p_ansokan uuid)
  security definer
  set search_path to ''
 as $function$
--- ansokningarnas_steg (2026-10-22). Samma mejl som när hen skickades
+-- ansokningarnas_steg (2026-10-21). Samma mejl som när hen skickades
 -- vidare (ansokan_intervju, Leos text med länken till bokningssidan), köat
 -- en gång till med en egen nyckel. Kön prövar läget igen när det går.
 declare
@@ -406,7 +406,7 @@ revoke all on function public.ansokan_intervjulank_igen(uuid) from public, anon;
 grant execute on function public.ansokan_intervjulank_igen(uuid) to authenticated;
 
 comment on function public.ansokan_intervjulank_igen(uuid) is
-  '2026-10-22 (ansokningarnas_steg). Skicka intervjulänk igen: köar intervjumejlet en gång till, högst en gång i tio '
+  '2026-10-21 (ansokningarnas_steg). Skicka intervjulänk igen: köar intervjumejlet en gång till, högst en gång i tio '
   'minuter och bara medan ansökan står i Intervju. Bara superadmin.';
 
 
@@ -418,7 +418,7 @@ create or replace function public.ansokan_utbildning_hallen(
  security definer
  set search_path to ''
 as $function$
--- ansokningarnas_steg (2026-10-22). Kontot skapas före, av bjud-in med
+-- ansokningarnas_steg (2026-10-21). Kontot skapas före, av bjud-in med
 -- adressen i ansökan (eller finns redan med den adressen). Här kopplas det,
 -- profilen godkänns med uppgifterna ur ansökan, och ansökan blir utbildad
 -- och Godkänd, i samma transaktion. Samma konto igen gör ingenting, och
@@ -511,7 +511,7 @@ revoke all on function public.ansokan_utbildning_hallen(uuid, uuid, numeric, tex
 grant execute on function public.ansokan_utbildning_hallen(uuid, uuid, numeric, text[], text) to authenticated;
 
 comment on function public.ansokan_utbildning_hallen(uuid, uuid, numeric, text[], text) is
-  '2026-10-22 (ansokningarnas_steg). Utbildning hållen: kopplar studiehjälparkontot (samma adress som ansökan) till '
+  '2026-10-21 (ansokningarnas_steg). Utbildning hållen: kopplar studiehjälparkontot (samma adress som ansökan) till '
   'ansökan, godkänner profilen och sätter utbildad och Godkänd. En ansökan blir ett konto; samma konto igen gör '
   'ingenting. Kontot skapas före, av bjud-in. Bara superadmin.';
 
@@ -521,7 +521,7 @@ do $$
 declare
   def  text;
   fore constant text := '      elsif an.till_intervju_at is null then';
-  ny   constant text := '      -- ansokningarnas_steg (2026-10-22): bara medan hen står i Intervju.' || chr(10)
+  ny   constant text := '      -- ansokningarnas_steg (2026-10-21): bara medan hen står i Intervju.' || chr(10)
                      || '      elsif an.till_intervju_at is null or an.steg is distinct from ''intervju'' then';
   n integer;
 begin

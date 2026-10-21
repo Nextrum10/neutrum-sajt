@@ -3463,12 +3463,12 @@ a:has(> .adm-status){
 }
 
 /* ============================================================
-  16. REKRYTERINGEN (Fas 13.1, ansökningarnas steg 2026-10-22)
+  16. REKRYTERINGEN (Fas 13.1, ansökningarnas steg 2026-10-21)
 
    Överst i ansökan står steget hen är i och knapparna för just det
    steget (.ans-nu): Leo, "status plus tre knappar, inget annat".
    Fliken Rekryteringen med fyra numrerade steg och skälen bredvid är
-   borta sedan 2026-10-22; stegen byts med knapparna, och databasen
+   borta sedan 2026-10-21; stegen byts med knapparna, och databasen
    vaktar ordningen. Mejlen till hen står hopfällda längst ned
    (.ans-mejlen), med ett besked per mejl (.ans-steg-fakta).
    ============================================================ */
@@ -4537,7 +4537,7 @@ section[data-sek="ekonomi"]:not(:has(> .vy-flikar .vy-flik[aria-selected="true"]
 /* ---------- talen överst: samma rutor som familjens Betalning ---------- */
 .bet-sam.eko-sam{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:clamp(16px,2vw,22px)}
 /* Liggaren och Kortet har tre rutor, som Köpta timmar: med fyra kolumner
-   stod en tom (2026-10-22). */
+   stod en tom (2026-10-21). */
 #timmar-sam.eko-sam,#lig-sam.eko-sam,#kd-sam.eko-sam{grid-template-columns:repeat(3,minmax(0,1fr))}
 .bet-sam.eko-sam b{font-variant-numeric:proportional-nums}
 @media (max-width:1100px){
@@ -5089,6 +5089,48 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .kp-fel{margin:0;font-size:.86rem;color:var(--bl-2)}
 #kp-partner{margin-bottom:clamp(16px,1.8vw,22px)}
 #kp-vy .dbox + .dbox,#kp-vy .dbox + #kp-lista{margin-top:clamp(16px,1.8vw,22px)}
+
+/* Ägaren, förhandsvisningen och listans sök (2026-10-21,
+   koderna_agare_och_en_gang). Bara tokens. */
+#kp-vy .dbox + .kp-lista-verktyg{margin-top:clamp(16px,1.8vw,22px)}
+.kp-not{display:block;margin-top:6px;color:var(--bl-3);line-height:1.5}
+.kp-valfri{font-weight:400;color:var(--bl-3)}
+.kp-agare-forslag{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.kp-agare-forslag:empty{display:none}
+.kp-agare-val{
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  min-height:44px;padding:8px 14px;border:1px solid var(--ln);border-radius:12px;
+  background:var(--yta);color:var(--bl);font:inherit;text-align:left;cursor:pointer;
+  transition:background .16s var(--e),scale .16s var(--e);
+}
+.kp-agare-val:hover{background:var(--tint)}
+.kp-agare-val:active{scale:.99}
+.kp-agare-val:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.kp-agare-val b{font-size:.9rem;font-weight:650}
+.kp-agare-val span{font-size:.8rem;color:var(--bl-2);overflow-wrap:anywhere}
+.kp-agare-vald{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;
+  min-height:44px;padding:6px 6px 6px 14px;border:1px solid var(--ln-2);border-radius:12px;background:var(--tint);
+}
+.kp-agare-namn{margin-right:auto;font-size:.9rem;font-weight:600;color:var(--bl);overflow-wrap:anywhere}
+.kp-forhand{margin-top:14px}
+.kp-forhand:empty{display:none}
+.kp-forhand-lista{list-style:none;margin:0 0 6px;padding:0;border:1px solid var(--ln);border-radius:14px;overflow:hidden;background:var(--yta)}
+.kp-forhand-lista li{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:baseline;gap:4px 14px;
+  min-height:44px;padding:10px 14px;font-size:.88rem;color:var(--bl-2);font-variant-numeric:tabular-nums;
+}
+.kp-forhand-lista li + li{border-top:1px solid var(--ln)}
+.kp-forhand-lista li > b:first-child{color:var(--bl);font-weight:650}
+.kp-forhand-av{color:var(--mossa-text)}
+.kp-forhand-pris{color:var(--bl);font-weight:700}
+.kp-forhand-nej{grid-column:2 / -1;justify-self:end;color:var(--acc-text)}
+.kod-lage .kp-snabb{flex:none;white-space:nowrap}
+@media (max-width:420px){
+  /* Ordinarie pris går, rabatten och det som betalas står kvar. */
+  .kp-forhand-lista li{grid-template-columns:minmax(0,1fr) auto auto}
+  .kp-forhand-lista li > span:nth-child(2):not(.kp-forhand-nej){display:none}
+}
 
 /* ============================================================
    UTBILDNINGSPROVET I VYN (2026-10-21)

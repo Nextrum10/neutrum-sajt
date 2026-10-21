@@ -3121,7 +3121,7 @@ declare
   a constant uuid := '00000000-0000-4000-8000-0000000016b1';
 begin
   begin
-    -- ansokningarnas_steg (2026-10-22): ansökan står i Intervju, så att
+    -- ansokningarnas_steg (2026-10-21): ansökan står i Intervju, så att
     -- mötet hållet är ett tillåtet steg (Intervju till Utbildning).
     insert into public.applications (id, name, email, till_intervju_at)
     values (a, 'Prov Steg', 'rls-steg@example.invalid', now());
@@ -3234,7 +3234,7 @@ declare
   provmejl bigint; paminn integer; konto bigint; jobb bigint; villkor text; fel text;
 begin
   begin
-    -- ansokningarnas_steg (2026-10-22): i Intervju, så att utbildningsmötet
+    -- ansokningarnas_steg (2026-10-21): i Intervju, så att utbildningsmötet
     -- är ett tillåtet steg.
     insert into public.applications (id, name, email, status, till_intervju_at)
     values (a, 'Prov Utbildning', 'rls-utb@example.invalid', 'contacted', now());
@@ -15290,7 +15290,9 @@ begin
             and k.orsak = 'Rabattkoder gäller bara när ni köper en plan.',
             'd', concat_ws(' ', coalesce(rd.rabattkod, 'null'), rd.begart_ore, rd.pris_ore, k.orsak));
 
-    perform pg_temp.bli(T);
+    -- R, inte T: T har betalat ett köp med RLS-KOP, och en rabattkod gäller
+    -- en gång per familj (koderna_agare_och_en_gang, avsnitt KÄ).
+    perform pg_temp.bli(R);
     select * into k from public.kolla_rabattkod_kop('rls-kop', 'plan_basic');
     reset role;
     perform set_config('request.jwt.claims', '', true);
@@ -18843,7 +18845,7 @@ select 'Nex: en inloggad familj läser ingen rapport', r = '0', r
           $q$select count(*)::text from public.agent_korningar$q$) r) x;
 
 -- ------------------------------------------------------------
--- 47. Ansökningarnas steg (ansokningarnas_steg, 2026-10-22)
+-- 47. Ansökningarnas steg (ansokningarnas_steg, 2026-10-21)
 --
 -- Steget räknas ur det ansökan bär (konto_id, läget och tidsstämplarna)
 -- och står i en kolumn som ingen skriver. Stegen byts bara Ny till
@@ -19065,6 +19067,122 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('AS Ansökningarnas steg', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 48. Koderna: ägaren, den egna koden och en gång per familj
+--     (koderna_agare_och_en_gang, 2026-10-21)
+--
+-- Leo: "Man kan inte använda sin egen kod. En familj kan använda samma
+-- kod högst en gång." En kod kan läggas ut hos en familj eller en
+-- studiehjälpare (agare). Ägaren får nej i kassan och vid köpet; en annan
+-- familj får koden. En rabattkod har alltid gränsen en gång per familj, en
+-- partnerkod den admin satt. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  t     text;
+  t2    text;
+  k     record;
+  pris  bigint;
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q     constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  KP    constant uuid := '00000000-0000-4000-8000-000000048c01';
+  KQ    constant uuid := '00000000-0000-4000-8000-000000048c02';
+begin
+  if to_regprocedure('intern.kodens_agare()') is null then
+    insert into utfall (test, ok, detalj) values ('KÄ Kodernas ägare: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    select e.pris_ore into pris from public.erbjudanden_pris e where e.kod = 'plan_standard';
+
+    -- ---------- ägaren ----------
+    t := pg_temp.svar_som(AD, format($q$insert into public.rabattkoder (kod, typ, varde, aktiv, agare)
+                                       values ('RLS-PEGEN', 'procent', 10, true, %L)$q$, P));
+    t2 := pg_temp.svar_som(AD, format($q$insert into public.rabattkoder (kod, typ, varde, aktiv, agare)
+                                        values ('RLS-AEGEN', 'procent', 10, true, %L)$q$, A));
+    ut := ut || jsonb_build_object('t', 'KÄ admin lägger ut en kod hos en familj och hos en studiehjälpare',
+            'ok', t = 'ok' and t2 = 'ok', 'd', t || ' ' || t2);
+    t := pg_temp.svar_som(AD, $q$insert into public.rabattkoder (kod, typ, varde, aktiv, agare)
+                                 values ('RLS-INGEN', 'procent', 10, true, '00000000-0000-4000-8000-0000000048ff')$q$);
+    ut := ut || jsonb_build_object('t', 'KÄ en kod läggs inte ut hos någon som inte finns', 'ok', t in ('23514', '23503'), 'd', t);
+    t := pg_temp.svar_som(P, format($q$update public.rabattkoder set agare = %L where kod = 'RLS-AEGEN'$q$, P));
+    ut := ut || jsonb_build_object('t', 'KÄ en familj gör inte en kod till sin', 'ok', t in ('42501', 'noll'), 'd', t);
+    ut := ut || jsonb_build_object('t', 'KÄ en rabattkod får gränsen en gång per familj av databasen',
+            'ok', (select max_per_familj from public.rabattkoder where kod = 'RLS-PEGEN') = 1, 'd', '');
+    t := pg_temp.svar_som(AD, $q$update public.rabattkoder set max_per_familj = 3 where kod = 'RLS-PEGEN'$q$);
+    ut := ut || jsonb_build_object('t', 'KÄ en rabattkod får aldrig fler gånger per familj',
+            'ok', (select max_per_familj from public.rabattkoder where kod = 'RLS-PEGEN') = 1, 'd', t);
+    t := pg_temp.svar_som(AD, $q$insert into public.rabattkoder (kod, sort, partner_namn, typ, varde, aktiv, max_per_familj)
+                                 values ('RLS-PARTNER3', 'partner', 'Föreningen Tre', 'procent', 0, true, 3)$q$);
+    ut := ut || jsonb_build_object('t', 'KÄ en partnerkod behåller gränsen admin satt',
+            'ok', t = 'ok' and (select max_per_familj from public.rabattkoder where kod = 'RLS-PARTNER3') = 3, 'd', t);
+    begin
+      alter table public.rabattkoder disable trigger rabattkoder_en_gang;
+      update public.rabattkoder set max_per_familj = null where kod = 'RLS-PEGEN';
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    alter table public.rabattkoder enable trigger rabattkoder_en_gang;
+    ut := ut || jsonb_build_object('t', 'KÄ villkoret säger nej till en rabattkod utan gräns, också utan triggern',
+            'ok', t = '23514', 'd', t);
+
+    -- ---------- den egna koden i kassan ----------
+    perform pg_temp.bli(P);
+    select * into k from public.kod_pa_planen('RLS-PEGEN', 'plan_standard');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KÄ ägaren får nej till sin egen kod i kassan',
+            'ok', not k.giltig and k.orsak like '%egen kod%', 'd', concat_ws(' ', k.giltig, k.orsak));
+    perform pg_temp.bli(Q);
+    select * into k from public.kod_pa_planen('RLS-PEGEN', 'plan_standard');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KÄ en annan familj får koden',
+            'ok', k.giltig and k.rabatt_ore = floor(pris * 10 / 100.0), 'd', concat_ws(' ', k.giltig, k.orsak, k.rabatt_ore));
+
+    -- ---------- och vid köpet ----------
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status, rabattkod)
+    values (KP, P, 'plan_standard', 'Standard', 'plan', 8, 1, 5, 39900, pris, 'vantar', 'RLS-PEGEN'),
+           (KQ, Q, 'plan_standard', 'Standard', 'plan', 8, 1, 5, 39900, pris, 'vantar', 'RLS-PEGEN');
+    ut := ut || jsonb_build_object('t', 'KÄ ägarens köp tar ingen rabatt med sin egen kod, en annan familjs gör',
+            'ok', (select k2.rabattkod is null and k2.begart_ore = pris from public.klippkort k2 where k2.id = KP)
+                  and (select k2.rabattkod = 'RLS-PEGEN' and k2.begart_ore = pris - floor(pris * 10 / 100.0)
+                         from public.klippkort k2 where k2.id = KQ),
+            'd', (select string_agg(coalesce(k2.rabattkod, 'ingen') || ' ' || k2.begart_ore, ', ' order by k2.id)
+                    from public.klippkort k2 where k2.id in (KP, KQ)));
+
+    -- ---------- en gång per familj ----------
+    perform public.klippkort_betald(KQ, (select begart_ore::integer from public.klippkort where id = KQ),
+                                    'pi_rls48q', 'ch_rls48q', null, null, null, false);
+    perform pg_temp.bli(Q);
+    select * into k from public.kod_pa_planen('RLS-PEGEN', 'plan_standard');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KÄ en familj använder samma rabattkod en gång',
+            'ok', not k.giltig and k.orsak like '%en gång per familj%', 'd', concat_ws(' ', k.giltig, k.orsak));
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('KÄ Kodernas ägare', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

@@ -1749,7 +1749,7 @@
         });
   }
 
-  /* Ansökan (2026-10-22, ansokningarnas_steg). Leo: "Gör hela profilen
+  /* Ansökan (2026-10-21, ansokningarnas_steg). Leo: "Gör hela profilen
      enkel att läsa: tydlig rubrik, uppgifterna kompakt, en tydlig
      nästa-åtgärd." Steget och dess knappar står först (nästaSteg i
      nextrum-admin-rekrytering.js), sedan uppgifterna, det hen skrev och
@@ -1760,7 +1760,7 @@
     const cv = kör('cvKnapp', a);
     const tjänster = (a.tjanster || []).map(k => ((S.tjanster || []).find(t => t.kod === k) || {}).namn || k);
     /* Kontot ansökan blev, eller ett studiehjälparkonto med samma adress
-       (en ansökan som togs in före 2026-10-22 kan sakna kopplingen). */
+       (en ansökan som togs in före 2026-10-21 kan sakna kopplingen). */
     const epost = String(a.email || '').toLowerCase();
     const konto = (a.konto_id && S.personer[a.konto_id]) || (epost && Object.values(S.personer).find(p =>
       p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost));

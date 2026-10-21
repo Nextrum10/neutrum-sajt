@@ -4,8 +4,8 @@
        NODE_PATH="$(npm root -g)" node verktyg/prova-intag.js [mapp för bilder]
 
    Leo: "när man ska ta in en anställd är det krångligt att skapa konto
-   åt den, samma med familj". Ta in i poolen skapar nu kontot med
-   adressen i ansökan när ingen har den, Ta in familjen gör konto,
+   åt den, samma med familj". Utbildning hållen (Ta in i poolen till
+   2026-10-21) skapar kontot med adressen i ansökan när ingen har den, Ta in familjen gör konto,
    inbjudan och elev i ett tryck, och Skicka inbjudan igen står vid den
    som aldrig loggat in. Sedan 2026-10-07 står knappen också vid den som
    loggat in, som Skicka länk för lösenord. Edge-funktionen bjud-in svarar här som den gör
@@ -163,6 +163,17 @@ function falskSupabase(o) {
       return { redan: false, familj, kalla: l.kalla || null };
     },
     mina_behorigheter: () => ({ admin: true, superadmin: true, behorigheter: [] }),
+    /* Utbildning hållen (ansokningarnas_steg, 2026-10-21), som databasen:
+       ansökan får kontot och blir godkänd, och profilen godkänns med
+       timpenningen. */
+    ansokan_utbildning_hallen: k => {
+      const a = W.applications.find(x => x.id === k.p_ansokan);
+      if (!a) return { ok: false, fel: 'Ansökan finns inte.' };
+      Object.assign(a, { konto_id: k.p_konto, status: 'approved', utbildad_at: a.utbildad_at || nu(0) });
+      const t = W.tutor_profiles.find(x => x.id === k.p_konto);
+      if (t) Object.assign(t, { status: 'approved', hourly_rate: k.p_timpenning });
+      return { ok: true, konto: k.p_konto, redan: false };
+    },
     notisfel: () => [], ekonomiska_avvikelser: () => [], tipskoder_lage: () => [],
     admin_sett_markera: k => k.p_till,
     /* Adminens eget läge: panelen läser bara den gällande versionen ur det. */
@@ -286,71 +297,79 @@ async function tillAdmin(page, sek) {
   await vänta(700);
 }
 
-/* ============ 1. Ta in i poolen, utan konto ============ */
+/* ============ 1. Utbildning hållen, utan konto ============
+   Ta in i poolen blev Utbildning hållen (ansokningarnas_steg, 2026-10-21):
+   kontot skapas med adressen i ansökan genom bjud-in, och databasen
+   kopplar det och godkänner profilen (ansokan_utbildning_hallen). Stegen
+   provas i prova-ansokningar.js; här provas intaget: adressen, namnet,
+   rollen, ordningen och kvittot. */
 async function provaPoolenUtanKonto(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, {});
   await tillAdmin(page, 'ansokningar');
-  await page.click('[data-dp="ansokan:ans-ny"]');
+  await page.click('#flik-ans-utbildning');
+  await vänta(300);
+  await page.click('#panel-ans-utbildning [data-dp="ansokan:ans-ny"]');
   await vänta(400);
-  prova('pool: ansökan säger att kontot skapas när hen tas in', (await page.locator('.dp-fakta').first().innerText())
-    .includes('det skapas när hen tas in i poolen'));
-  /* Panelens knapp: Utbildning-listan i Rekryteringen har en likadan
-     (2026-10-13), dold medan Ansökningar visas. */
-  await page.click('.dp-atgard [data-ans-pool="ans-ny"]');
-  await page.waitForSelector('#ap-konto', { timeout: 4000 }).catch(() => {});
-  prova('pool: Skapa kontot med adressen i ansökan är valt', (await page.inputValue('#ap-konto')) === '__nytt'
-    && (await text(page, '#ap-konto option[value="__nytt"]')).includes('sara.n@example.se'), await page.inputValue('#ap-konto'));
-  prova('pool: rutan säger att hen får länken till lösenordet', (await text(page, '#ap-konto-text')).includes('länk där hen väljer sitt lösenord'),
-    await text(page, '#ap-konto-text'));
-  prova('pool: knappen säger vad den gör', (await text(page, '#ap-godkann')) === 'Ta in och skicka inbjudan', await text(page, '#ap-godkann'));
-  prova('pool: den som registrerat sig själv står kvar att välja', (await page.locator('#ap-konto option[value="sh-1"]').count()) === 1);
-  await bild(page, 'pool-skapa', '.nx-fraga-box');
+  prova('intag: ansökan säger att Utbildning hållen skapar kontot', (await text(page, '.dp .ans-nu'))
+    .includes('Utbildning hållen skapar kontot'), await text(page, '.dp .ans-nu'));
+  await page.click('.dp [data-ans-hallen="ans-ny"]');
+  await page.waitForSelector('#uh-ok', { timeout: 4000 }).catch(() => {});
+  prova('intag: rutan säger att kontot skapas med adressen i ansökan och att hen väljer lösenordet',
+    (await text(page, '.nx-fraga-box')).includes('sara.n@example.se')
+    && (await text(page, '.nx-fraga-box')).includes('väljer sitt lösenord'), await text(page, '.nx-fraga-box'));
+  prova('intag: knappen säger vad den gör', (await text(page, '#uh-ok')) === 'Skapa kontot och skicka inbjudan', await text(page, '#uh-ok'));
+  await bild(page, 'intag-utbildning-hallen', '.nx-fraga-box');
 
-  await page.click('#ap-godkann');
-  prova('pool: utan timpenning skickas ingenting', S.bjudIn.length === 0 && (await text(page, '#ap-msg')).includes('timpenningen'));
-  await page.fill('#ap-timpenning', '180');
-  await page.click('#ap-godkann');
-  await page.waitForFunction(() => /intagen/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
+  await page.click('#uh-ok');
+  prova('intag: utan timpenning skickas ingenting', S.bjudIn.length === 0 && (await text(page, '#uh-msg')).includes('timpenningen'));
+  await page.fill('#uh-timpenning', '180');
+  await page.click('#uh-ok');
+  await page.waitForFunction(() => /har fått sitt konto/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''),
+    null, { timeout: 6000 }).catch(() => {});
   const b = S.bjudIn[0];
-  prova('pool: bjud-in får adressen, namnet och rollen studiehjälpare', b && b.epost === 'Sara.N@example.se'
+  prova('intag: bjud-in får adressen, namnet och rollen studiehjälpare', b && b.epost === 'Sara.N@example.se'
     && b.namn === 'Sara Nyberg' && b.roll === 'tutor' && !b.igen, JSON.stringify(b));
-  const tp = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/tutor_profiles');
-  prova('pool: det nya kontot godkänns, med timpenningen', tp && /id=eq\.ny-1/.test(tp.sök) && tp.kropp.status === 'approved'
-    && tp.kropp.hourly_rate === 180, JSON.stringify(tp));
-  prova('pool: kontot skapas före godkännandet', S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
-    < S.logg.findIndex(r => r.metod === 'PATCH' && r.väg === '/rest/v1/tutor_profiles'));
-  const ap = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/applications');
-  prova('pool: ansökan blir godkänd', ap && ap.kropp.status === 'approved' && /id=eq\.ans-ny/.test(ap.sök), JSON.stringify(ap));
-  prova('pool: kvittot säger vart länken gick', (await text(page, '.nx-fraga-box h3')) === 'Sara Nyberg är intagen'
+  const h = S.logg.find(r => r.väg === '/rest/v1/rpc/ansokan_utbildning_hallen');
+  prova('intag: databasen kopplar det nya kontot, med timpenningen', h && h.kropp.p_ansokan === 'ans-ny'
+    && h.kropp.p_konto === 'ny-1' && h.kropp.p_timpenning === 180, JSON.stringify(h && h.kropp));
+  prova('intag: kontot skapas före kopplingen', S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
+    < S.logg.findIndex(r => r.väg === '/rest/v1/rpc/ansokan_utbildning_hallen'));
+  prova('intag: vyn skriver inte själv i tutor_profiles eller applications',
+    !S.logg.some(r => r.metod === 'PATCH' && (r.väg === '/rest/v1/tutor_profiles' || r.väg === '/rest/v1/applications')));
+  prova('intag: kvittot säger vart länken gick', (await text(page, '.nx-fraga-box h3')) === 'Sara Nyberg har fått sitt konto'
     && (await text(page, '.nx-fraga-box')).includes('sara.n@example.se'), await text(page, '.nx-fraga-box'));
-  await bild(page, 'pool-kvitto', '.nx-fraga-box');
-  await page.click('[data-ap-stang]');
-  prova('pool: Stäng stänger kvittot', !(await synlig(page, '.nx-fraga')));
-  prova('pool: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
-  prova('pool: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await bild(page, 'intag-kvitto', '.nx-fraga-box');
+  await page.click('[data-uh-stang]');
+  prova('intag: Stäng stänger kvittot', !(await synlig(page, '.nx-fraga')));
+  prova('intag: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('intag: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
 }
 
-/* ============ 2. Ta in i poolen, med kontot hen skapat själv ============ */
+/* ============ 2. Utbildning hållen, med kontot hen skapat själv ============ */
 async function provaPoolenMedKonto(webb) {
   const { context, page, S, konsol } = await öppna(webb, {});
   await tillAdmin(page, 'ansokningar');
-  await page.click('[data-dp="ansokan:ans-har"]');
+  await page.click('#flik-ans-utbildning');
+  await vänta(300);
+  await page.click('#panel-ans-utbildning [data-dp="ansokan:ans-har"]');
   await vänta(400);
-  await page.click('.dp-atgard [data-ans-pool="ans-har"]');
-  await page.waitForSelector('#ap-konto', { timeout: 4000 }).catch(() => {});
-  prova('pool med konto: kontot med samma adress är valt', (await page.inputValue('#ap-konto')) === 'sh-1', await page.inputValue('#ap-konto'));
-  prova('pool med konto: inget nytt konto erbjuds för en adress som redan finns',
-    (await page.locator('#ap-konto option[value="__nytt"]').count()) === 0);
-  prova('pool med konto: knappen heter som förut', (await text(page, '#ap-godkann')) === 'Ta in i poolen');
-  await page.fill('#ap-timpenning', '170');
-  await page.click('#ap-godkann');
-  await vänta(600);
-  prova('pool med konto: ingen inbjudan', S.bjudIn.length === 0);
-  const tp = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/tutor_profiles');
-  prova('pool med konto: kontot godkänns', tp && /id=eq\.sh-1/.test(tp.sök) && tp.kropp.status === 'approved', JSON.stringify(tp));
-  prova('pool med konto: rutan stängs som förut', !(await synlig(page, '.nx-fraga')));
-  prova('pool med konto: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await page.click('.dp [data-ans-hallen="ans-har"]');
+  await page.waitForSelector('#uh-ok', { timeout: 4000 }).catch(() => {});
+  prova('intag med konto: kontot med samma adress kopplas, inget nytt skapas',
+    (await text(page, '#uh-ok')) === 'Koppla kontot och godkänn' && (await text(page, '.nx-fraga-box')).includes('finns redan'),
+    await text(page, '.nx-fraga-box'));
+  await page.fill('#uh-timpenning', '170');
+  await page.click('#uh-ok');
+  await page.waitForFunction(() => /har fått sitt konto/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''),
+    null, { timeout: 6000 }).catch(() => {});
+  prova('intag med konto: ingen inbjudan', S.bjudIn.length === 0);
+  const h = S.logg.find(r => r.väg === '/rest/v1/rpc/ansokan_utbildning_hallen');
+  prova('intag med konto: databasen kopplar kontot som fanns', h && h.kropp.p_konto === 'sh-1' && h.kropp.p_timpenning === 170,
+    JSON.stringify(h && h.kropp));
+  prova('intag med konto: kvittot säger att hen loggar in med kontot hen har',
+    (await text(page, '.nx-fraga-box')).includes('loggar in med kontot hen redan har'), await text(page, '.nx-fraga-box'));
+  prova('intag med konto: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
 }
 

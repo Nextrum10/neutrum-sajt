@@ -464,6 +464,45 @@ familjen vid första användningen för uppföljning."
   `prova-barnforslag.js` och `prova-koder.js` (planskoderna). Juristen har inte
   läst rad 33 i `DATASKYDD.md`.
 
+### Ägaren, aldrig den egna koden och en gång per familj (2026-10-21, `koderna_agare_och_en_gang`)
+
+Leo: koderna är "rabatt- och värvningskoder som admin lägger ut hos familjer och
+lärare, och som kan användas av andra (familj till familj, lärare till lärare)",
+och "en kod per köp, ingen stapling. Man kan inte använda sin egen kod. En
+familj kan använda samma kod högst en gång. Validering sker på servern.
+Rabatten kan aldrig bli negativ och gäller aldrig syskontillägget."
+
+- **Ägaren**: `rabattkoder.agare`, familjen eller studiehjälparen koden är
+  utlagd hos, eller null. Triggern `rabattkoder_agare` släpper bara en förälder
+  eller studiehjälpare som finns (inte ett barn, inte ett raderat konto), och
+  ägaren blir null när kontot tas bort (on delete set null). Auditen får
+  id:t, inget namn.
+- **Aldrig den egna**: `intern.rabattkod_prova` säger "Det är er egen kod. Den
+  är till för andra familjer." till ägaren, före datumen och gränserna, så
+  kassan (`kod_pa_planen`) och köpet (`intern.klippkort_rabatt`) nekar den
+  båda. Lappen läggs med `replace()` och en vakt som räknar träffarna.
+- **En gång per familj**: `rabattkoder_en_gang` (BEFORE INSERT OR UPDATE)
+  sätter `max_per_familj` 1 på varje rabattkod, och villkoret
+  `rabattkoder_rabatt_en_gang` (`is not distinct from 1`, för ett CHECK släpper
+  igenom null) är backstoppet. En partnerkod behåller gränsen admin satt: den
+  finns för att räkna föreningens volym, och en gång hade bara räknat det
+  första köpet. Ett återbetalt köp ger tillbaka sin gång som förut.
+- **Det som inte byggdes**: "galler_for (planer/alla)": koderna gäller bara
+  planer sedan 2026-10-21 (Leo: "Båda gäller ENBART planköp"). "typ
+  rabatt/varvning": värvningskoderna är familjernas och studiehjälparnas egna
+  tipskoder (`tipskoder`, avsnittet om tipskoderna), inte rader här. Syskon-
+  tillägget får aldrig en kod: ett pass tar ingen kod alls.
+- **Adminvyn** (`nextrum-admin-rabattkoder.js`): sök på kod, beskrivning,
+  partner och ägare; lägena Alla, Gäller nu, Gäller inte nu (på, men före
+  första dagen, efter sista eller slut) och Avstängda; snabbknappen Stäng av
+  eller Slå på i raden (med samma fråga som förut); ägaren väljs ur ett sök
+  bland familjerna och studiehjälparna och visas i raden med en länk till
+  panelen; Gånger per familj står låst på 1 för en rabattkod; och
+  förhandsvisningen räknar rabatten på varje plan i `erbjudanden_pris` med
+  samma regel som databasen (`rabattPå`), och säger Nekas när rabatten tar
+  hela priset. Den är en förhandsvisning: databasen räknar igen vid köpet.
+- Provat: `rls-test.sql` avsnitt 48 (KÄ) och `prova-koder.js`.
+
 ## Betalningsliggaren och köpvillkoren i kassan (2026-10-21, `betalningsliggaren`, i drift sedan 2026-10-20)
 
 Leo (2026-10-21): Stripe bara genom webhooken, "aldrig" betalstatus eller timmar för att någon kommer

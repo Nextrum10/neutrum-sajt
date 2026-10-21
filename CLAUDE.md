@@ -201,7 +201,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används
   (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad, och `fler_*.py`, Fas 23.5).
 - **Intaget** (2026-10-06): vi skapar familjens och studiehjälparens konto (Ta in familjen, Utbildning
-  hållen som hette Ta in i poolen till 2026-10-22, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
+  hållen som hette Ta in i poolen till 2026-10-21, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
   ruta som inte går att stänga (`user_metadata.valkommen = 'losenord'`, `NXStudie.lösenordFörst`).
   **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
   ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
@@ -299,7 +299,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`kod_statistik`, `partner_statistik`, `kodens_anvandningar`) är superadminens och räknar inte testbetalningar utom på
   begäran. Adminvyn: Koder → Rabattkoder och Partnerkoder. Studievyn: rutan Kod till en plan under Erbjudanden, och ingen ruta i
   Boka pass. **Hur många gånger** sätts per kod, totalt och per familj (`max_anvandningar`, `max_per_familj`), och ett
-  återbetalt köp ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6). Villkoren nämner inga koder: en kods villkor
+  återbetalt köp ger tillbaka sin gång. **En rabattkod gäller en gång per familj, och aldrig den egna** (2026-10-21,
+  `koderna_agare_och_en_gang`, Leo: "Man kan inte använda sin egen kod. En familj kan använda samma kod högst en gång"):
+  databasen sätter `max_per_familj` 1 på varje rabattkod (`rabattkoder_en_gang`, villkoret `rabattkoder_rabatt_en_gang`),
+  och en partnerkod behåller gränsen admin satt, för den räknar föreningens volym. En kod kan vara utlagd hos en familj
+  eller en studiehjälpare (`rabattkoder.agare`, som triggern `rabattkoder_agare` prövar), och `intern.rabattkod_prova`
+  nekar ägaren koden. Adminvyn har sök, lägen, ägaren och en förhandsvisning av rabatten på varje plan (`rabattPå`, samma
+  regel som `rabattenPa`). Prövningen har ett tak (avsnitt 6). Villkoren nämner inga koder: en kods villkor
   ska stå där den delas ut (avsnitt 11). Historiken (koden på ett pass, 2026-10-13 till 2026-10-21): `minne/betalning.md`.
 - **Familjerabatter** (2026-10-15, Leo: "egna rabattkoder som bara vi har tillgång till ... 10 kr billigare på alla
   timmar som köps tex ... tills vi tar bort rabatten. ... de ser bara att de har rabatt vid checkout men inte annat"): våra
@@ -622,7 +628,7 @@ Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-1
 sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
 (`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
 lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka.
-**Ansökningarnas steg** (2026-10-22, `ansokningarnas_steg`, Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. En
+**Ansökningarnas steg** (2026-10-21, `ansokningarnas_steg`, Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. En
 ansökan finns i exakt ett läge åt gången"): `applications.steg` är genererad ur det ansökan bär (`intern.ansokan_steg`:
 `konto_id` eller läget Godkänd, intervjun hållen, `till_intervju_at`), och `intern.ansokan_steg_vakt` släpper bara Ny till
 Intervju, tillbaka till Ny (Ångra intervju), Intervju till Utbildning och Utbildning till Konto skapat, det sista bara genom
@@ -777,7 +783,7 @@ Detaljer: `minne/grunden.md`.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
-  möteslänken är https, ett steg mejlas en gång, och Godkänd sätts bara av Utbildning hållen (2026-10-22).
+  möteslänken är https, ett steg mejlas en gång, och Godkänd sätts bara av Utbildning hållen (2026-10-21).
   Avböjd mejlar ett nej (2026-10-05) men inte genast: tidigast en halvtimme senare, aldrig 20–9,
   och inte om läget hunnit bytas. Avböjd visar mejlet först, och texten står i mallen och i
   adminvyn (`kolla-mejltexter.py`).
@@ -786,7 +792,7 @@ Detaljer: `minne/grunden.md`.
   Intervjumejlet (2026-10-21) är det enda till den som söker som går genom notiskön: en rad med
   `ansokan_id` (villkoret `notis_utskick_en_mottagare` kräver exakt en av `mottagare`, `barn_id` och
   `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i steget Intervju
-  och är inte avböjd, sedan 2026-10-22 också med `steg`), och `notis-ko` mejlar den från info@
+  och är inte avböjd, sedan 2026-10-21 också med `steg`), och `notis-ko` mejlar den från info@
   (`intervju.ts`). Skicka intervjulänk igen köar samma mejl med en egen nyckel (`ansokan_intervju:<id>:igen:<tid>`).
 
 Detaljer: `minne/databasen.md`, `minne/notiser.md`.
@@ -938,7 +944,7 @@ Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
   `verktyg/lokal-databas.sh` (`STOPP=`); driften i en transaktion som rullas tillbaka, hämtad
   med tillägget `http` från en commit.
   I en molnsession: `dockerd &`, och Deno ur npm med en importkarta (`minne/genererat-och-ci.md`).
-- **`verktyg/prova-adminvyn.js`** (2026-10-22) körs inte i CI heller: adminvyn mot PostgREST framför en lokal
+- **`verktyg/prova-adminvyn.js`** (2026-10-21) körs inte i CI heller: adminvyn mot PostgREST framför en lokal
   databas med `prova-adminvyn.sql`, varje sektion, flik och den första panelen, som superadmin, som admin med
   behörigheter och på en telefon i mörkt läge. Det faller på varje fel i konsolen och varje svar från databasen på
   400 eller mer, och de andra webbläsarproven, som svarar ur en falsk värld, ser inte de felen. Kör det efter en
@@ -955,7 +961,12 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Ansökningarnas steg** (2026-10-22, `ansokningarnas_steg`, 20261022100000) är byggda men INTE i drift: migrationen
+- **Kodernas ägare och en gång per familj** (2026-10-21, `koderna_agare_och_en_gang`, 20261021211000) är byggda men INTE
+  i drift: migrationen och adminvyn, i den ordningen (vyn skapar en kod utan ägare också före migrationen). Den sätter
+  `max_per_familj` 1 på alla rabattkoder som redan finns; i driften fanns bara `TIPS`, som aldrig är aktiv. Ingen
+  edge-funktion ändras: kassan frågar `kod_pa_planen()`, som svarar ur `intern.rabattkod_prova`. Juristen har inte läst
+  den nya meningen på rad 33 i `DATASKYDD.md` eller policyns om koden som är er.
+- **Ansökningarnas steg** (2026-10-21, `ansokningarnas_steg`, 20261021210000) är byggda men INTE i drift: migrationen
   och adminvyn, i den ordningen (vyn räknar steget själv före migrationen, men Utbildning hållen och Skicka
   intervjulänk igen kräver funktionerna). Migrationen kopplar de ansökningar som redan tagits in till kontot med
   samma adress; en som inte har ett sådant konto står ändå i Konto skapat, för läget är Godkänd. Ingen edge-funktion

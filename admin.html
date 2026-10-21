@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
 <link rel="stylesheet" href="nextrum-vy.css?v=70487768">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=d8f38dcb">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=122fedc2">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -484,7 +484,7 @@
               <p>Unga som vill jobba. En ansökan står i ett steg åt gången: Ny, Intervju, Utbildning och Konto skapat. Skicka vidare med knappen på raden eller i ansökan. Tryck på ett namn för ansökan och CV:t.</p>
             </div>
           </div>
-          <!-- Stegen (ansokningarnas_steg, 2026-10-22). Databasen räknar steget
+          <!-- Stegen (ansokningarnas_steg, 2026-10-21). Databasen räknar steget
                (applications.steg) och vaktar bytena: Ny till Intervju och
                tillbaka, Intervju till Utbildning, Utbildning till Konto skapat.
                Avböjda står utanför stegen, i en egen flik. -->
@@ -777,7 +777,8 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
                 Koden lagras i versaler och familjen skriver den när den köper en plan. Rabatten får vara noll.
                 Lämna <b>Gånger totalt</b> tomt för obegränsat, och <b>Gäller till</b> tomt för ingen slutdag.
-                En kod raderas aldrig: den stängs av.
+                En kod raderas aldrig: den stängs av. Läggs koden ut hos en familj eller en studiehjälpare kan
+                den inte använda koden själv.
               </p>
               <form id="kp-form" novalidate>
                 <div class="ag-faltrad">
@@ -816,17 +817,32 @@
                   <div class="fgroup">
                     <label for="kp-familj">Gånger per familj</label>
                     <input class="inp" id="kp-familj" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                    <span class="xsmall kp-not" id="kp-familj-not" hidden>En rabattkod gäller en gång per familj.</span>
                   </div>
                 </div>
+                <div class="kp-forhand" id="kp-forhand" aria-live="polite"></div>
                 <div class="fgroup" style="margin-top:14px">
                   <label for="kp-text">Beskrivning</label>
                   <input class="inp" id="kp-text" maxlength="80" placeholder="Syns för familjen när koden godkänns">
+                </div>
+                <div class="fgroup kp-agare" style="margin-top:14px">
+                  <label for="kp-agare-sok">Utlagd hos <span class="kp-valfri">(valfritt)</span></label>
+                  <div class="kp-agare-vald" id="kp-agare-vald" hidden></div>
+                  <input class="inp" id="kp-agare-sok" type="search" placeholder="Sök familj eller studiehjälpare"
+                         autocomplete="off" aria-describedby="kp-agare-not">
+                  <div class="kp-agare-forslag" id="kp-agare-forslag"></div>
+                  <span class="xsmall kp-not" id="kp-agare-not">Familjen eller studiehjälparen som delar ut koden. Den kan inte använda koden själv.</span>
                 </div>
                 <div class="ag-rad">
                   <button class="btn btn-primary btn-sm" type="submit" id="kp-spara">Skapa koden</button>
                   <p class="ok-msg" id="kp-msg" style="margin:0"></p>
                 </div>
               </form>
+            </div>
+            <div class="eko-verktyg kp-lista-verktyg">
+              <div class="chips eko-chips" id="kp-chips" role="group" aria-label="Vilka koder som visas"></div>
+              <input class="inp eko-sok" id="kp-sok" type="search" placeholder="Sök kod, beskrivning, partner eller ägare"
+                     aria-label="Sök bland koderna" autocomplete="off">
             </div>
             <div id="kp-lista"><div class="loading">Hämtar</div></div>
           </div>
@@ -2604,20 +2620,20 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=c54def46"></script>
-<script src="nextrum-admin-detalj.js?v=be34d8f9"></script>
+<script src="nextrum-admin-detalj.js?v=68f6853f"></script>
 <script src="nextrum-admin-oversikt.js?v=4675189b"></script>
 <script src="nextrum-admin-kunder.js?v=152f59f6"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
-<script src="nextrum-admin-rekrytering.js?v=9565e23c"></script>
+<script src="nextrum-admin-rekrytering.js?v=e3191f1b"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=6da99b95"></script>
 <script src="nextrum-admin-ekonomi.js?v=8cfce2dc"></script>
-<script src="nextrum-admin-liggaren.js?v=36820736"></script>
+<script src="nextrum-admin-liggaren.js?v=c3b33e6f"></script>
 <script src="nextrum-admin-manaden.js?v=51040ed6"></script>
 <script src="nextrum-admin-loner.js?v=2c10dffa"></script>
 <script src="nextrum-admin-koder.js?v=a0486d8a"></script>
-<script src="nextrum-admin-rabattkoder.js?v=da71bc94"></script>
+<script src="nextrum-admin-rabattkoder.js?v=4d96cdb6"></script>
 <script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
 <script src="nextrum-admin-system.js?v=1f4b7fcf"></script>
 <script src="nextrum-admin-behorighet.js?v=576427c6"></script>
@@ -2630,6 +2646,6 @@
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=420a6d63"></script>
 <script src="nextrum-modulvakt.js?v=bca26bc2"></script>
-<script src="nextrum-admin.js?v=e4429c57"></script>
+<script src="nextrum-admin.js?v=75a9b04d"></script>
 </body>
 </html>

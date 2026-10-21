@@ -1,11 +1,11 @@
 /* ============================================================
-   NEXTRUM — röktestet av adminvyn mot en riktig databas (2026-10-22)
+   NEXTRUM — röktestet av adminvyn mot en riktig databas (2026-10-21)
 
        verktyg/lokal-databas.sh bygg          (eller PORT=… NAMN=… för en egen)
        psql … -f verktyg/prova-adminvyn.sql   (datan, som postgres)
        NODE_PATH="$(npm root -g)" node verktyg/prova-adminvyn.js [mapp för bilder]
 
-   Leo 2026-10-22: "Öppna varje sektion i adminvyn i testmiljön. Läs
+   Leo 2026-10-21: "Öppna varje sektion i adminvyn i testmiljön. Läs
    konsol- och nätverksfel, SQL/RLS-fel och trasiga knappar. ... Lägg till
    ett regressionstest som öppnar varje adminsektion och misslyckas vid
    konsolfel."
@@ -195,6 +195,26 @@ async function bild(page, namn) {
   await page.screenshot({ path: path.join(BILDER, namn + '.png') }).catch(() => {});
 }
 
+/* På en telefon: ingenting i sektionen får göra sidan bredare än skärmen. */
+async function iSidled(page, namn, sek, rubrik) {
+  const bredd = await page.evaluate(s => {
+    const sek = document.querySelector('section.vy-sek[data-sek="' + s + '"]');
+    const brett = sek ? [...sek.querySelectorAll('*')].filter(el => {
+      const r = el.getBoundingClientRect();
+      if (!(r.width > 0 && r.right > innerWidth + 1)) return false;
+      // En bred tabell i en ruta som rullar i sidled är med flit: sidan står still.
+      for (let p = el.parentElement; p && p !== sek.parentElement; p = p.parentElement) {
+        if (/auto|scroll|hidden|clip/.test(getComputedStyle(p).overflowX)) return false;
+      }
+      return true;
+    }).slice(0, 3).map(el => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + '.' + [...el.classList].join('.')
+      + ' ' + Math.round(el.getBoundingClientRect().right)) : [];
+    return { sida: document.documentElement.scrollWidth, skärm: innerWidth, brett };
+  }, sek);
+  prova(namn + ': ' + rubrik + ': inget sticker ut åt sidan', bredd.sida <= bredd.skärm && !bredd.brett.length,
+    JSON.stringify(bredd));
+}
+
 async function genomAdminvyn(webb, roll, o) {
   const anv = ADMINS[roll];
   const namn = roll + (o && o.namn ? ' ' + o.namn : '');
@@ -257,24 +277,39 @@ async function genomAdminvyn(webb, roll, o) {
     const nyaDb = dbfel.slice(före.d);
     prova(namn + ': ' + sek + ': inga fel i konsolen', nyaKonsol.length === 0, nyaKonsol.join(' | '));
     prova(namn + ': ' + sek + ': inga fel från databasen', nyaDb.length === 0, nyaDb.join(' | '));
-    if (o && o.smal) {
-      // På en telefon: ingenting i sektionen får göra sidan bredare än skärmen.
-      const bredd = await page.evaluate(s => {
-        const sek = document.querySelector('section.vy-sek[data-sek="' + s + '"]');
-        const brett = sek ? [...sek.querySelectorAll('*')].filter(el => {
-          const r = el.getBoundingClientRect();
-          if (!(r.width > 0 && r.right > innerWidth + 1)) return false;
-          // En bred tabell i en ruta som rullar i sidled är med flit: sidan står still.
-          for (let p = el.parentElement; p && p !== sek.parentElement; p = p.parentElement) {
-            if (/auto|scroll|hidden|clip/.test(getComputedStyle(p).overflowX)) return false;
-          }
-          return true;
-        }).slice(0, 3).map(el => el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + '.' + [...el.classList].join('.')
-          + ' ' + Math.round(el.getBoundingClientRect().right)) : [];
-        return { sida: document.documentElement.scrollWidth, skärm: innerWidth, brett };
-      }, sek);
-      prova(namn + ': ' + sek + ': inget sticker ut åt sidan', bredd.sida <= bredd.skärm && !bredd.brett.length,
-        JSON.stringify(bredd));
+    if (o && o.smal) await iSidled(page, namn, sek, sek);
+  }
+
+  /* Undersidorna som bara nås med adressen (2026-10-21): Koders fyra ytor
+     har länkar, inte flikar, så loopen ovan når bara valet. Den första
+     raden fälls ut, så att en kods användningar hämtas också. */
+  if (sektioner.includes('koder')) {
+    for (const u of ['koder/familjer', 'koder/studiehjalpare', 'koder/rabattkoder', 'koder/partnerkoder']) {
+      const före = { k: konsol.length, d: dbfel.length };
+      await page.evaluate(s => { location.hash = '#' + s; }, u);
+      await lugnt(page, 700);
+      const rad = page.locator('section.vy-sek[data-sek="koder"] details.kod-rad > summary').first();
+      if (await rad.count() && await rad.isVisible().catch(() => false)) {
+        await rad.click({ timeout: 3000 }).catch(() => {});
+        await lugnt(page, 500);
+      }
+      await bild(page, namn.replace(/ /g, '-') + '-' + u.replace('/', '-'));
+      if (u === 'koder/rabattkoder') {
+        const lista = await page.locator('#kp-lista').innerText().catch(() => '');
+        prova(namn + ': ' + u + ': koden står med sin ägare ur databasen', /PROVRABATT/.test(lista) && /Utlagd hos/.test(lista),
+          lista.slice(0, 300));
+        await page.fill('#kp-varde', '10').catch(() => {});
+        await lugnt(page, 300);
+        const förhand = await page.locator('#kp-forhand').innerText().catch(() => '');
+        prova(namn + ': ' + u + ': förhandsvisningen har planerna ur erbjudanden_pris', /Så blir priset/i.test(förhand) && /Basic/.test(förhand),
+          förhand.slice(0, 300));
+        await page.fill('#kp-varde', '').catch(() => {});
+      }
+      const nyaKonsol = konsol.slice(före.k);
+      const nyaDb = dbfel.slice(före.d);
+      prova(namn + ': ' + u + ': inga fel i konsolen', nyaKonsol.length === 0, nyaKonsol.join(' | '));
+      prova(namn + ': ' + u + ': inga fel från databasen', nyaDb.length === 0, nyaDb.join(' | '));
+      if (o && o.smal) await iSidled(page, namn, 'koder', u);
     }
   }
 

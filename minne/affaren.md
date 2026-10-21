@@ -95,7 +95,7 @@ tryck som personen tas in, med personens egen adress:
   elev, som förut. Går eleven inte att skapa efter kontot står familjen
   kvar i rutan och knappen blir Skapa elev.
 - **Ta in i poolen** (ansökan, `nextrum-admin-rekrytering.js`), sedan
-  2026-10-22 **Utbildning hållen** (nedan, Ansökningarnas steg): har
+  2026-10-21 **Utbildning hållen** (nedan, Ansökningarnas steg): har
   adressen i ansökan inget konto skapas det med `roll: 'tutor'` före
   godkännandet, som sedan är detsamma som för ett konto som fanns; kvittot
   säger att två mejl går (länken och välkomstmejlet).
@@ -115,7 +115,7 @@ tryck som personen tas in, med personens egen adress:
   stället, för samma steg för personen; varför står i
   `minne/sakerhet.md`.
 
-## Ansökningarnas steg (2026-10-22, `ansokningarnas_steg`)
+## Ansökningarnas steg (2026-10-21, `ansokningarnas_steg`)
 
 Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. En ansökan finns i
 exakt ett läge åt gången. Vyn 'Alla ansökningar' visar bara de som ligger i

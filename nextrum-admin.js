@@ -118,7 +118,7 @@
       return;
     }
 
-    /* Ansökningarnas läge sattes här med märkena till 2026-10-22. Nu byts
+    /* Ansökningarnas läge sattes här med märkena till 2026-10-21. Nu byts
        steget med knapparna i ansökan (nextrum-admin-rekrytering.js), och
        Avböj har en egen knapp: databasen vaktar stegens ordning
        (ansokningarnas_steg). */
