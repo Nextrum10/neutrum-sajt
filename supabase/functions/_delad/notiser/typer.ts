@@ -24,6 +24,7 @@
 export const NOTIS_TYPER = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
   'meddelande', 'rapport', 'paminnelse', 'timmar_gar_ut', 'barnforslag', 'kort_nekat',
+  'tillagg_paminnelse', 'tillagg_kvitto',
 ] as const;
 
 export type NotisTyp = typeof NOTIS_TYPER[number];
@@ -32,10 +33,13 @@ export type NotisTyp = typeof NOTIS_TYPER[number];
  *  barnforslag (barnet_foreslar_pass, 2026-10-12): ett barn har föreslagit
  *  ett pass som väntar på föräldern. kort_nekat (kortet_reserveras,
  *  2026-10-13): det sparade kortet nekades när beloppet skulle reserveras
- *  eller dras. */
+ *  eller dras. tillagg_paminnelse och tillagg_kvitto (syskontillagg_som_skuld,
+ *  2026-10-21): det upplupna tillägget för syskon, och kvittot när det
+ *  betalats. Belopp och antal pass, aldrig ett barns namn. */
 export const MEJLBARA = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
   'meddelande', 'paminnelse', 'timmar_gar_ut', 'barnforslag', 'kort_nekat',
+  'tillagg_paminnelse', 'tillagg_kvitto',
 ] as const;
 
 export type MejlbarTyp = typeof MEJLBARA[number];
@@ -138,6 +142,12 @@ export type RenData = {
    *  fram när mejlet skickas och sparas ingenstans. */
   kod: string | null;
   prov: boolean;
+  /** syskontillagg_som_skuld (2026-10-21). Det upplupna eller betalda
+   *  tillägget i ören, antalet pass, och kvittots rader: dagen, antalet barn
+   *  på passet och beloppet. Inga namn: renData tar bara de tre talen. */
+  belopp: number | null;
+  antalPass: number | null;
+  rader: { datum: string; barn: number; belopp: number }[];
 };
 
 function datumOk(v: unknown): string | null {
@@ -162,6 +172,26 @@ function timmarOk(v: unknown): number | null {
 function kvarOk(v: unknown): number | null {
   const n = typeof v === 'number' ? v : typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : NaN;
   return Number.isInteger(n) && n >= 1 && n <= 200 ? n : null;
+}
+
+/** Ett belopp i hela ören, från noll till en miljon kronor. */
+function oreOk(v: unknown): number | null {
+  const n = typeof v === 'number' ? v : typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : NaN;
+  return Number.isInteger(n) && n >= 0 && n <= 100_000_000 ? n : null;
+}
+
+/** Kvittots rader: högst 60, och varje rad dag, antal barn (2–10) och belopp. */
+function raderOk(v: unknown): { datum: string; barn: number; belopp: number }[] {
+  if (!Array.isArray(v)) return [];
+  const ut: { datum: string; barn: number; belopp: number }[] = [];
+  for (const r of v.slice(0, 60)) {
+    const x = (r && typeof r === 'object' ? r : {}) as Record<string, unknown>;
+    const datum = datumOk(x.datum);
+    const barn = typeof x.barn === 'number' && Number.isInteger(x.barn) && x.barn >= 2 && x.barn <= 10 ? x.barn : null;
+    const belopp = oreOk(x.belopp);
+    if (datum && barn !== null && belopp !== null) ut.push({ datum, barn, belopp });
+  }
+  return ut;
 }
 
 /** intern.barn_epost_kod(): ett uuid, en punkt, 43 tecken base64url. */
@@ -194,6 +224,9 @@ export function renData(v: unknown): RenData {
     kortet: d.kortet === 'bekrafta' || d.kortet === 'nekat' || d.kortet === 'igen' ? d.kortet : null,
     kod: typeof d.kod === 'string' && KOD.test(d.kod) ? d.kod : null,
     prov: d.prov === true,
+    belopp: oreOk(d.belopp),
+    antalPass: kvarOk(d.antal_pass),
+    rader: raderOk(d.rader),
   };
 }
 

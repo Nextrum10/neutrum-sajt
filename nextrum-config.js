@@ -72,13 +72,28 @@ window.NEXTRUM_CONFIG = {
      inte förrän någon verifierat den. Se GOOGLE-FORETAGSPROFIL.md. */
   GOOGLE_RECENSION_URL: '',
 
-  /* Tillägg när fler än ett barn sitter med i samma pass, per timme.
+  /* Tillägg när fler än ett barn sitter med i samma pass, per timme
+     (hette PRIS_EXTRA_BARN till 2026-10-21). Databasens pris är tjänstens
+     (tjanster.extra_personer_ore), och de ska vara samma tal; det här
+     visas på de öppna sidorna, som läser det härifrån.
 
-     FAST, inte per barn: två barn och tre barn kostar samma sak, och
-     tre är taket (tjanster.extra_personer_max). Ett syskon som sitter
+     I DAG FAST, inte per barn: två barn och tre barn kostar samma sak,
+     och tre är taket (tjanster.extra_personer_max). Ett syskon som sitter
      med kostar alltså inte ett helt nytt pass — men studiehjälparen
-     delar sin uppmärksamhet, och det ska synas. */
-  PRIS_EXTRA_BARN: 69,
+     delar sin uppmärksamhet, och det ska synas.
+
+     SYSKONTILLÄGGET SOM SKULD (syskontillagg_som_skuld, 2026-10-21) tar
+     samma pris PER EXTRA BARN och timme, som en skuld efter passet. Det
+     gäller först när strömbrytaren syskonskuld slås på, och då ska
+     prissidan, områdessidorna och FAQ:n säga per extra barn i samma
+     ändring (tre barn blir 537 kr i timmen, inte 468). */
+  PRIS_SYSKON_TILLAGG_KR_PER_TIMME: 69,
+
+  /* Villkoren för syskontillägget (TILLAGG_VILLKOR_VERSION står i
+     databasen, tillagg_installning.villkor_version). PLATSHÅLLARE: Leo
+     skriver texten och sätter länken här när punkten finns i villkoren.
+     Tom sträng = rutan säger att villkoren skrivs, utan länk. */
+  TILLAGG_VILLKOR_URL: '',
 
   /* BETALNINGSVILLKOR_DAGAR och BANKGIRO stod här, fakturans
      betalningstid och bankgiro, tills fakturan togs bort 2026-10-21. */

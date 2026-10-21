@@ -22,8 +22,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
-<link rel="stylesheet" href="nextrum-vy.css?v=70487768">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=8ac5f07a">
+<link rel="stylesheet" href="nextrum-vy.css?v=a022d2ea">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=65fa2daa">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -1285,6 +1285,8 @@
                     id="flik-liggaren" aria-controls="panel-liggaren">Liggaren</button>
             <button class="vy-flik" type="button" role="tab" data-flik="kortdragning"
                     id="flik-kortdragning" aria-controls="panel-kortdragning">Kortet</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="tillagg"
+                    id="flik-tillagg" aria-controls="panel-tillagg">Syskontillägg</button>
             <button class="vy-flik" type="button" role="tab" data-flik="korning"
                     id="flik-korning" aria-controls="panel-korning">Månadskörningen</button>
             <button class="vy-flik" type="button" role="tab" data-flik="bokslut"
@@ -1333,6 +1335,24 @@
                  typen, koden, dagen och raderna betalningen betalade. -->
             <div class="lig-korten" id="lig-lista"><div class="loading">Hämtar</div></div>
             <p class="vy-finstilt" id="lig-fot"></p>
+          </div>
+
+          <!-- Syskontillägget (syskontillagg_som_skuld, 2026-10-21,
+               nextrum-admin-tillagg.js): det obetalda per familj med spärren
+               och Skicka påminnelse, och posterna med Frigör, Avskriv och
+               Återbetala. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="tillagg"
+               id="panel-tillagg" aria-labelledby="flik-tillagg" hidden>
+            <div class="bet-sam eko-sam" id="tl-sam"></div>
+            <h3 class="tl-rubrik">Familjer med obetalt tillägg</h3>
+            <div id="tl-familjer"><div class="loading">Hämtar</div></div>
+            <h3 class="tl-rubrik">Posterna</h3>
+            <div class="eko-verktyg">
+              <div class="chips eko-chips" id="tl-chips" role="group" aria-label="Visa poster"></div>
+              <input class="inp eko-sok" id="tl-sok" type="search" placeholder="Sök familj" aria-label="Sök familj" autocomplete="off">
+            </div>
+            <div id="tl-lista"><div class="loading">Hämtar</div></div>
+            <p class="vy-finstilt" id="tl-fot"></p>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="kortdragning"
@@ -2611,14 +2631,14 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=8102aac0"></script>
+<script src="nextrum-config.js?v=f4c156fa"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a262aca7"></script>
+<script src="nextrum-app.js?v=98fb5d72"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=29852e6b"></script>
-<script src="nextrum-arbetsyta.js?v=71f4330a"></script>
+<script src="nextrum-studie.js?v=f804228a"></script>
+<script src="nextrum-arbetsyta.js?v=aa0a869d"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
-<script src="nextrum-betalning.js?v=60e55cea"></script>
+<script src="nextrum-betalning.js?v=cef93fad"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=c54def46"></script>
@@ -2631,23 +2651,24 @@
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=6da99b95"></script>
 <script src="nextrum-admin-ekonomi.js?v=8cfce2dc"></script>
-<script src="nextrum-admin-liggaren.js?v=b65b4ce3"></script>
+<script src="nextrum-admin-liggaren.js?v=4c0fbde0"></script>
+<script src="nextrum-admin-tillagg.js?v=78afa508"></script>
 <script src="nextrum-admin-manaden.js?v=51040ed6"></script>
 <script src="nextrum-admin-loner.js?v=2c10dffa"></script>
 <script src="nextrum-admin-koder.js?v=a0486d8a"></script>
 <script src="nextrum-admin-rabattkoder.js?v=4d96cdb6"></script>
 <script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
 <script src="nextrum-admin-system.js?v=1f4b7fcf"></script>
-<script src="nextrum-admin-behorighet.js?v=576427c6"></script>
-<script src="nextrum-admin-automationer.js?v=a75d7589"></script>
+<script src="nextrum-admin-behorighet.js?v=ad5b6e7c"></script>
+<script src="nextrum-admin-automationer.js?v=46019126"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
-<script src="nextrum-admin-radera.js?v=85c68990"></script>
+<script src="nextrum-admin-radera.js?v=93925ced"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=420a6d63"></script>
-<script src="nextrum-modulvakt.js?v=bca26bc2"></script>
-<script src="nextrum-admin.js?v=75a9b04d"></script>
+<script src="nextrum-modulvakt.js?v=c2dc60e5"></script>
+<script src="nextrum-admin.js?v=7e70d4a8"></script>
 </body>
 </html>

@@ -899,6 +899,20 @@ window.NXStudie = (function () {
         + (o.rader && o.rader.length
           ? '<ul class="nx-kassa-rader">' + o.rader.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>'
           : '')
+        /* Syskontillägget som egen rad i ett köp (syskontillagg_som_skuld,
+           2026-10-21): raden för sig, och totalen. Är tillägget inte
+           obligatoriskt får familjen kryssa ur det; valet står sedan i
+           o.tillagg.med. */
+        + (o.tillagg
+          ? '<div class="nx-kassa-tillagg">'
+            + (o.tillagg.valfri
+              ? '<label class="nx-kassa-kryss"><input type="checkbox" data-kassa-tillagg' + (o.tillagg.med ? ' checked' : '')
+                + '> <span>' + esc(o.tillagg.rad) + '</span></label>'
+              : '<p>' + esc(o.tillagg.rad) + '</p>')
+            + (o.tillagg.totalMed ? '<p class="nx-kassa-total" data-kassa-total>' + esc(o.tillagg.med ? o.tillagg.totalMed
+              : o.tillagg.totalUtan || '') + '</p>' : '')
+            + '</div>'
+          : '')
         + (o.text ? '<p>' + esc(o.text) + '</p>' : '')
         + '<label class="nx-kassa-kryss"><input type="checkbox" data-kassa-kryss> <span>Jag har läst och godkänner '
         + '<a href="' + esc(url) + '" target="_blank" rel="noopener">köpvillkoren</a>.</span></label>'
@@ -927,6 +941,12 @@ window.NXStudie = (function () {
         }
       }
       kryss.addEventListener('change', function () { ja.disabled = !kryss.checked; });
+      var tk = ruta.querySelector('[data-kassa-tillagg]');
+      if (tk) tk.addEventListener('change', function () {
+        o.tillagg.med = tk.checked;
+        var tot = ruta.querySelector('[data-kassa-total]');
+        if (tot) tot.textContent = tk.checked ? o.tillagg.totalMed : (o.tillagg.totalUtan || '');
+      });
       ruta.addEventListener('click', function (e) {
         if (e.target === ruta) return stäng(false);
         var k = e.target.closest('[data-svar]');
@@ -942,6 +962,13 @@ window.NXStudie = (function () {
       ruta.classList.add('open');
       kryss.focus();
     });
+  }
+
+  /* Namn i en mening: "Alva", "Alva och Ludvig", "Alva, Ludvig och Mira".
+     Passets barn (syskontillagg_som_skuld, 2026-10-21) i båda vyerna. */
+  function listaOrd(ord) {
+    var l = (ord || []).filter(Boolean);
+    return l.length <= 1 ? (l[0] || '') : l.slice(0, -1).join(', ') + ' och ' + l[l.length - 1];
   }
 
   /* ---------- avbokning med skäl (2026-09-24) ----------
@@ -3888,7 +3915,10 @@ window.NXStudie = (function () {
     /* barnet_foreslar_pass (2026-10-12). Bara familjen får förslagen. */
     { typ: 'barnforslag',    namn: 'Barnens förslag',      om: 'När ett barn föreslår ett pass i sin vy. Inget går till studiehjälparen förrän ni skickat det.', bara: 'parent' },
     /* kortet_reserveras (2026-10-13). Bara familjen betalar med kort. */
-    { typ: 'kort_nekat',     namn: 'Kort som nekas',       om: 'När kortet nekas, före passet när beloppet ska reserveras eller efter när det ska dras.', bara: 'parent' }
+    { typ: 'kort_nekat',     namn: 'Kort som nekas',       om: 'När kortet nekas, före passet när beloppet ska reserveras eller efter när det ska dras.', bara: 'parent' },
+    /* syskontillagg_som_skuld (2026-10-21). Bara familjen har tillägget. */
+    { typ: 'tillagg_paminnelse', namn: 'Påminnelse om tillägg', om: 'När tillägget för syskon varit obetalt en tid. Högst ett mejl per period.', bara: 'parent' },
+    { typ: 'tillagg_kvitto',     namn: 'Kvitto på tillägg',     om: 'När tillägget för syskon är betalt, med passen det gällde.', bara: 'parent' }
   ];
 
   function notisval(o) {
@@ -4458,7 +4488,7 @@ window.NXStudie = (function () {
     dagMedVeckodag: dagMedVeckodag, GICK: GICK,
     rapportKort: rapportKort,
     radLank: radLank, betalval: betalval, IKON: IKON, barnTråd: barnTråd, längdText: längdText,
-    bekräfta: bekräfta, kassansVillkor: kassansVillkor, avbokaRuta: avbokaRuta, svarRuta: svarRuta, SVAR_MAX: SVAR_MAX,
+    bekräfta: bekräfta, kassansVillkor: kassansVillkor, listaOrd: listaOrd, avbokaRuta: avbokaRuta, svarRuta: svarRuta, SVAR_MAX: SVAR_MAX,
     medan: medan, kolla: kolla
   };
 })();

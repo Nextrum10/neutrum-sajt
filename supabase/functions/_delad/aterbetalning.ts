@@ -144,11 +144,16 @@ export async function aterbetalaKop(
  * skrivs med sina timmar (samma rad två gånger blir en). Det som
  * återbetalats utan köpets id (i Stripes panel) räknas ihop: då drogs
  * inga timmar tillbaka, och köpet ska stängas som förut.
+ *
+ * En betalning för ett köp och syskontillägg (syskontillagg_som_skuld,
+ * 2026-10-21) har fler rader: en återbetalning av en tilläggsrad bär sin
+ * rad i metadata (betalningsrad) och är inte köpets, så den räknas inte
+ * som främmande för köpet (utom).
  */
 export async function stamAvKopet(
   stripe: StripeAnrop,
   rpc: Rpc,
-  a: { kort: string; charge: string },
+  a: { kort: string; charge: string; utom?: (metadata: Record<string, string>) => boolean },
 ): Promise<{ registrerade: number; framande_ore: number }> {
   const lista = await stripe('GET', `/v1/refunds?charge=${encodeURIComponent(a.charge)}&limit=100`);
   const rader = Array.isArray(lista.data) ? (lista.data as Record<string, unknown>[]) : [];
@@ -159,6 +164,7 @@ export async function stamAvKopet(
     if (status !== 'succeeded' && status !== 'pending') continue;
     const md = (r.metadata ?? {}) as Record<string, string>;
     const belopp = Math.round(Number(r.amount) || 0);
+    if (a.utom?.(md)) continue;
     if (md.klippkort_id === a.kort && /^\d{1,4}$/.test(String(md.timmar ?? ''))) {
       const { error } = await rpc('klippkort_aterbetalad', {
         p_refund: String(r.id ?? ''),

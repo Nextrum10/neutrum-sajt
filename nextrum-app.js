@@ -584,7 +584,7 @@ const NX = (function () {
        systemets 448. En prissida som lovar ett annat belopp än
        kassan är en diskussion i första samtalet — även när den,
        som här, lovade för mycket. */
-    const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
+    const extra = Number(CFG.PRIS_SYSKON_TILLAGG_KR_PER_TIMME) || 0;
     $$('[data-stat="extra-barn"]').forEach(el => el.textContent = kr(extra));
     $$('[data-stat="tva-barn"]').forEach(el => el.textContent = kr(pris + extra));
     $$('[data-stat="tre-barn"]').forEach(el => el.textContent = kr(pris + extra));
@@ -927,7 +927,7 @@ const NX = (function () {
     const box = $('[data-kalk]');
     if (!box) return;
     const pris = Number(CFG.PRIS_PER_TIMME) || 0;
-    const extra = Number(CFG.PRIS_EXTRA_BARN) || 0;
+    const extra = Number(CFG.PRIS_SYSKON_TILLAGG_KR_PER_TIMME) || 0;
     const val = { barn: 1, tim: 1 };
     const lugnt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let först = true;

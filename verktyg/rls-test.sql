@@ -17956,9 +17956,11 @@ begin
     exception when others then t2 := sqlstate;
     end;
     -- Med koder_for_planer pekar kod_anvandningar på liggaren, och då
-    -- nekar Postgres truncate redan före triggern (0A000). Nej båda gångerna.
+    -- nekar Postgres truncate redan före triggern (0A000). Med
+    -- syskontillagg_som_skuld väntar betalningsradernas uppskjutna trigger
+    -- på raderna som skrevs ovan, och då nekar Postgres med 55006. Nej alla gånger.
     ut := ut || jsonb_build_object('t', 'BL liggaren raderas aldrig, inte heller av ägaren',
-            'ok', t = '42501' and t2 in ('42501', '0A000'), 'd', t || ' ' || t2);
+            'ok', t = '42501' and t2 in ('42501', '0A000', '55006'), 'd', t || ' ' || t2);
     begin
       update public.betalningar x set belopp_ore = 1 where x.stripe_payment_intent = 'pi_rls42k1';
       t := 'gick';
@@ -19444,6 +19446,787 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('BD Liggarens markeringar', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- Samma klockslag n dagar bort i Stockholm: ett datum som sommartiden
+-- inte flyttar (avsnitt 51).
+create function pg_temp.sk_dag(n integer) returns timestamptz
+language sql stable as $$
+  select ((now() at time zone 'Europe/Stockholm') + make_interval(days => n)) at time zone 'Europe/Stockholm'
+$$;
+
+-- ------------------------------------------------------------
+-- 51. Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21)
+--
+-- Leo: tillägget per extra barn blir en skuld när passet är hållet, och
+-- betalas när familjen vill eller med nästa köp. Ett pass med extra barn
+-- kräver familjens ja till den gällande versionen, barn ur familjen och
+-- taket; posten följer passet (hållet, avslaget, avbokat i tid och sent),
+-- bara de tillåtna övergångarna går, och ingen klient skriver. Skulden
+-- summeras, en post ingår i högst ett öppet försök, ett försök släpps,
+-- betalningen bokförs per rad, en återbetalning går aldrig över raden,
+-- spärren slår till vid taket och åldern, och påminnelsen går en gång per
+-- intervall. Familj P med tre barn, studiehjälpare A och B. Varje delblock
+-- rullas tillbaka för sig, och allt rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut     jsonb := '[]'::jsonb;
+  fel    text;
+  t      text;
+  t2     text;
+  n      bigint;
+  m      bigint;
+  j      jsonb;
+  j2     jsonb;
+  r      record;
+  fid    uuid;
+  bet    uuid;
+  rad1   uuid;
+  rad2   uuid;
+  post1  uuid;
+  post2  uuid;
+  bel    integer;
+  idag   date := (now() at time zone 'Europe/Stockholm')::date;
+  snart  timestamptz := now() + interval '2 hours';
+  P      constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q      constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  A      constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  B      constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  AD     constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  S1     constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  S2     constant uuid := '00000000-0000-4000-8000-0000000005b1';
+  SQ     constant uuid := '00000000-0000-4000-8000-0000000005c1';
+  S3     constant uuid := '00000000-0000-4000-8000-0000000051d1';
+  S4     constant uuid := '00000000-0000-4000-8000-0000000051e1';
+  X1     constant uuid := '00000000-0000-4000-8000-000000051b01';
+  X2     constant uuid := '00000000-0000-4000-8000-000000051b02';
+  X3     constant uuid := '00000000-0000-4000-8000-000000051b03';
+  X4     constant uuid := '00000000-0000-4000-8000-000000051b04';
+  X5     constant uuid := '00000000-0000-4000-8000-000000051b05';
+  X6     constant uuid := '00000000-0000-4000-8000-000000051b06';
+  KK     constant uuid := '00000000-0000-4000-8000-000000051c01';
+  VERS   constant text := '2026-10-21';
+begin
+  if to_regclass('public.tillagg_poster') is null then
+    insert into utfall (test, ok, detalj) values ('SK Syskontillägget: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    -- Strömbrytaren går inte på med utkastet.
+    begin
+      update public.flaggor set aktiv = true where kod = 'syskonskuld';
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'SK strömbrytaren går inte att slå på medan villkoren är ett utkast',
+            'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(P, 'select public.godkann_tillaggsvillkor(''utkast'')');
+    ut := ut || jsonb_build_object('t', 'SK ingen godkänner ett utkast', 'ok', t = '22023', 'd', t);
+
+    update public.tillagg_installning set villkor_version = VERS where id = 1;
+    update public.flaggor set aktiv = true where kod = 'syskonskuld';
+    begin
+      update public.tillagg_installning set villkor_version = 'utkast' where id = 1;
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'SK villkoren blir inte ett utkast igen medan tillägget är på', 'ok', t = '23514', 'd', t);
+
+    insert into public.students (id, parent_id, name, grade) values
+      (S3, P, 'Mellan Prov', '5'), (S4, P, 'Minst Prov', '2');
+    update public.students set grade = '8' where id = S1;
+    update public.students set grade = '6' where id = S2;
+
+    -- ---------- A. Godkännandet ----------
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 20, S2));
+    ut := ut || jsonb_build_object('t', 'SK ett pass med extra barn nekas utan godkännande', 'ok', t = '42501', 'd', t);
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status)
+           values (%L, %L, %L, %L, %L, '11:00', 60, 'requested')$q$, P, A, S1, P, idag + 20));
+    ut := ut || jsonb_build_object('t', 'SK ett vanligt pass bokas utan godkännandet', 'ok', t = 'ok', 'd', t);
+
+    insert into public.tillagg_godkannanden (familj, version) values (P, '2026-10-01');
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 20, S2));
+    ut := ut || jsonb_build_object('t', 'SK ett godkännande av en äldre version räcker inte', 'ok', t = '42501', 'd', t);
+
+    t := pg_temp.svar_som(P, 'select public.godkann_tillaggsvillkor(''2026-10-01'')')
+      || ' ' || pg_temp.svar_som(A, format('select public.godkann_tillaggsvillkor(%L)', VERS))
+      || ' ' || pg_temp.svar_som(null, format('select public.godkann_tillaggsvillkor(%L)', VERS));
+    ut := ut || jsonb_build_object('t', 'SK fel version, studiehjälparen och anon godkänner inte',
+            'ok', t = '22023 42501 42501', 'd', t);
+    t := pg_temp.svar_som(P, format($q$insert into public.tillagg_godkannanden (familj, version) values (%L, %L)$q$, P, VERS));
+    ut := ut || jsonb_build_object('t', 'SK familjen skriver inte sitt godkännande själv', 'ok', t = '42501', 'd', t);
+    t := pg_temp.svar_som(P, format('select public.godkann_tillaggsvillkor(%L)', VERS));
+    ut := ut || jsonb_build_object('t', 'SK familjen godkänner den gällande versionen genom funktionen',
+            'ok', t = 'ok' and exists (select 1 from public.tillagg_godkannanden where familj = P and version = VERS), 'd', t);
+
+    -- ---------- B. Barnen och taket ----------
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 21, SQ));
+    ut := ut || jsonb_build_object('t', 'SK ett barn från en annan familj nekas', 'ok', t = '42501', 'd', t);
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L, %L]::uuid[])$q$, P, A, S1, P, idag + 21, S2, S2))
+      || ' ' || pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 21, S1));
+    ut := ut || jsonb_build_object('t', 'SK samma barn två gånger, eller huvudbarnet som extra, nekas', 'ok', t = '23514 23514', 'd', t);
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L, %L, %L]::uuid[])$q$,
+           P, A, S1, P, idag + 21, S2, S3, S4));
+    ut := ut || jsonb_build_object('t', 'SK fyra barn är över taket (tre) och nekas', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, antal_barn, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', 2, array[%L]::uuid[])$q$, P, A, S1, P, idag + 21, S2));
+    ut := ut || jsonb_build_object('t', 'SK antalet barn och barnen samtidigt nekas', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(A, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, A, idag + 21, S2));
+    ut := ut || jsonb_build_object('t', 'SK studiehjälparen väljer inte barnen', 'ok', t = '42501', 'd', t);
+
+    -- Tre barn, två timmar: 2 × 69 kr × 2 h.
+    perform pg_temp.bli(P);
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                 duration_min, status, extra_barn)
+    values (X1, P, A, S1, P, idag + 21, '10:00', 120, 'requested', array[S2, S3]);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select * into r from public.tillagg_poster where bokning_id = X1;
+    ut := ut || jsonb_build_object('t', 'SK tre barn på två timmar: posten är bokad med 2 × 69 kr × 2 h',
+            'ok', r.status = 'bokad' and r.antal_extra_barn = 2 and r.pris_ore_per_timme = 6900 and r.minuter = 120
+                  and r.belopp_ore = 27600 and r.familj_id = P and r.betalningsforsok_id is null
+                  and r.pass_start = ((idag + 21) + time '10:00') at time zone 'Europe/Stockholm',
+            'd', concat_ws(' ', r.status, r.antal_extra_barn, r.pris_ore_per_timme, r.minuter, r.belopp_ore));
+    select string_agg(barn_id::text || ':' || ar_huvudbarn, ' ' order by ar_huvudbarn desc, barn_id) into t
+      from public.bokning_barn where bokning_id = X1;
+    ut := ut || jsonb_build_object('t', 'SK passets barn: huvudbarnet och de två extra',
+            'ok', t = S1 || ':true ' || S2 || ':false ' || S3 || ':false', 'd', coalesce(t, 'inga'));
+    select antal_barn || ':' || coalesce(extra_ore::text, 'null') || ':' || coalesce(timpris_ore::text, 'null')
+      into t from public.bookings where id = X1;
+    ut := ut || jsonb_build_object('t', 'SK passet räknas som ett barn: priset och timmarna är ett barns',
+            'ok', t = '1:6900:' || (select pris_per_timme_ore from public.tjanster where kod = 'laxhjalp'), 'd', t);
+
+    update public.tjanster set extra_personer_ore = 7500 where kod = 'laxhjalp';
+    ut := ut || jsonb_build_object('t', 'SK ett ändrat pris rör inte en bokad post',
+            'ok', (select belopp_ore from public.tillagg_poster where bokning_id = X1) = 27600, 'd', '');
+    update public.tjanster set extra_personer_ore = 6900 where kod = 'laxhjalp';
+
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '10:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 21, S4));
+    ut := ut || jsonb_build_object('t', 'SK dubbelbokning av samma tid hos samma studiehjälpare nekas',
+            'ok', t in ('23505', '23P01'), 'd', t);
+
+    -- ---------- C. Ingen klient skriver ----------
+    t := pg_temp.svar_som(P, format('update public.tillagg_poster set status = ''frigjord'', orsak = ''Egen'' where bokning_id = %L', X1))
+      || ' ' || pg_temp.svar_som(P, format('update public.tillagg_poster set belopp_ore = 1 where bokning_id = %L', X1))
+      || ' ' || pg_temp.svar_som(P, format('delete from public.tillagg_poster where bokning_id = %L', X1))
+      || ' ' || pg_temp.svar_som(P, format($q$insert into public.tillagg_poster (bokning_id, familj_id, antal_extra_barn,
+                  pris_ore_per_timme, minuter, belopp_ore, pass_start) values (%L, %L, 1, 1, 60, 1, now())$q$, X1, P))
+      || ' ' || pg_temp.svar_som(AD, format('update public.tillagg_poster set status = ''avskriven'', orsak = ''Egen'' where bokning_id = %L', X1));
+    ut := ut || jsonb_build_object('t', 'SK familjen och admin skriver, ändrar och tar inte bort en post själva',
+            'ok', t = '42501 42501 42501 42501 42501', 'd', t);
+    t := pg_temp.svar_som(P, format('update public.bookings set extra_barn = ''{}'' where id = %L', X1))
+      || ' ' || pg_temp.svar_som(P, format('update public.bookings set antal_barn = 3 where id = %L', X1));
+    ut := ut || jsonb_build_object('t', 'SK familjen ändrar inte barnen eller antalet efter bokningen',
+            'ok', t = '42501 42501', 'd', t);
+    t := pg_temp.svar_som(A, format($q$update public.bookings set wanted_time = '13:00', duration_min = 60,
+           created_by = %L, svar_meddelande = 'En annan tid' where id = %L$q$, A, X1));
+    ut := ut || jsonb_build_object('t', 'SK ett motförslag som ändrar passets längd avvisas', 'ok', t = '42501', 'd', t);
+    t := pg_temp.svar_som(AD, format('update public.bookings set duration_min = 60 where id = %L', X1))
+      || ' ' || pg_temp.svar_som(AD, format('update public.bookings set extra_barn = array[%L]::uuid[] where id = %L', S2, X1));
+    begin
+      update public.bookings set antal_barn = 2 where id = X1;
+      t := t || ' gick';
+    exception when others then t := t || ' ' || sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'SK längden, barnen och antalet står fast också för admin och databasen',
+            'ok', t = '42501 42501 42501', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$update public.bookings set duration_min = 120
+           where parent_id = %L and wanted_date = %L and wanted_time = '11:00' and extra_barn = '{}'$q$, P, idag + 20));
+    ut := ut || jsonb_build_object('t', 'SK admin ändrar längden på ett pass utan syskon som förut', 'ok', t = 'ok', 'd', t);
+    t := pg_temp.svar_som(P, 'update public.betalningsrader set aterbetalt_ore = 1')
+      || ' ' || pg_temp.svar_som(P, 'update public.tillagg_forsok set status = ''betald''');
+    ut := ut || jsonb_build_object('t', 'SK familjen når inte raderna eller försöken', 'ok', t in ('42501 42501'), 'd', t);
+
+    -- ---------- D. Lägena ----------
+    begin
+      -- Hållet: upplupen, och nu är det en skuld.
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 2, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X2;
+      select * into r from public.tillagg_poster where bokning_id = X2;
+      ut := ut || jsonb_build_object('t', 'SK ett hållet pass blir upplupet med tiden satt',
+              'ok', r.status = 'upplupen' and r.upplupen_at is not null and r.belopp_ore = 6900,
+              'd', concat_ws(' ', r.status, r.upplupen_at, r.belopp_ore));
+
+      -- Avslaget av studiehjälparen: frigjord.
+      perform pg_temp.bli(P);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X3, P, A, S1, P, idag + 22, '10:00', 60, 'requested', array[S2]);
+      reset role;
+      perform pg_temp.bli(A);
+      update public.bookings set status = 'cancelled', svar_meddelande = 'Den tiden har jag inte' where id = X3;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select status || ':' || coalesce(orsak, '') into t from public.tillagg_poster where bokning_id = X3;
+      ut := ut || jsonb_build_object('t', 'SK ett avslag frigör posten', 'ok', t = 'frigjord:Studiehjälparen avböjde tiden.', 'd', t);
+
+      -- Studiehjälparen avbokar ett bekräftat pass: frigjord.
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X4, P, A, S1, P, idag + 23, '10:00', 60, 'confirmed', array[S2]);
+      perform pg_temp.bli(A);
+      update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = X4;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select status into t from public.tillagg_poster where bokning_id = X4;
+      ut := ut || jsonb_build_object('t', 'SK studiehjälparens avbokning frigör posten', 'ok', t = 'frigjord', 'd', t);
+
+      -- Familjen avbokar ett bekräftat pass mer än 24 timmar före: frigjord.
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X5, P, A, S1, P, idag + 24, '10:00', 60, 'confirmed', array[S2]);
+      perform pg_temp.bli(P);
+      update public.bookings set status = 'cancelled', avbokningsskal = 'forhinder' where id = X5;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select status || ':' || coalesce(orsak, '') into t from public.tillagg_poster where bokning_id = X5;
+      ut := ut || jsonb_build_object('t', 'SK familjen avbokar i tid: frigjord', 'ok', t = 'frigjord:Familjen avbokade i tid.', 'd', t);
+
+      -- Familjen avbokar om två timmar: sent, upplupen.
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X6, P, B, S1, P, (snart at time zone 'Europe/Stockholm')::date,
+              to_char(snart at time zone 'Europe/Stockholm', 'HH24:MI'), 60, 'confirmed', array[S2]);
+      perform pg_temp.bli(P);
+      update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = X6;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select * into r from public.tillagg_poster where bokning_id = X6;
+      ut := ut || jsonb_build_object('t', 'SK familjen avbokar sent: posten blir upplupen ändå',
+              'ok', r.status = 'upplupen' and r.upplupen_at is not null and r.orsak like 'Sen avbokning%',
+              'd', concat_ws(' ', r.status, r.orsak));
+
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Samma sena avbokning med strömbrytaren av, och en förfrågan som dras tillbaka.
+    begin
+      update public.tillagg_installning set debitera_vid_sen_avbokning = false where id = 1;
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X6, P, B, S1, P, (snart at time zone 'Europe/Stockholm')::date,
+              to_char(snart at time zone 'Europe/Stockholm', 'HH24:MI'), 60, 'confirmed', array[S2]);
+      perform pg_temp.bli(P);
+      update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = X6;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select status into t from public.tillagg_poster where bokning_id = X6;
+      ut := ut || jsonb_build_object('t', 'SK sen avbokning med debitera_vid_sen_avbokning av: frigjord', 'ok', t = 'frigjord', 'd', t);
+
+      perform pg_temp.bli(P);
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X5, P, A, S1, P, idag + 25, '10:00', 60, 'requested', array[S2]);
+      update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = X5;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      select status into t from public.tillagg_poster where bokning_id = X5;
+      ut := ut || jsonb_build_object('t', 'SK en förfrågan familjen drar tillbaka blir aldrig en skuld', 'ok', t = 'frigjord', 'd', t);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Gränsen själv: mer än 24 timmar före är i tid, exakt 24 timmar är sent.
+    ut := ut || jsonb_build_object('t', 'SK exakt 24 timmar före start är sent, en sekund till är i tid',
+            'ok', intern.tillagg_sen_avbokning(snart, snart - interval '24 hours', 24)
+                  and not intern.tillagg_sen_avbokning(snart, snart - interval '24 hours 1 second', 24)
+                  and intern.tillagg_sen_avbokning(snart, snart - interval '23 hours 59 minutes', 24),
+            'd', '');
+
+    -- ---------- E. Övergångar som inte finns, och posten står kvar ----------
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 2, '12:00', 60, 'confirmed', array[S2]);
+      select id into post1 from public.tillagg_poster where bokning_id = X2;
+      t := '';
+      begin
+        update public.tillagg_poster set status = 'betald' where id = post1;
+        t := 'gick';
+      exception when others then t := sqlstate;
+      end;
+      update public.bookings set status = 'completed' where id = X2;
+      begin
+        update public.tillagg_poster set status = 'betald' where id = post1;
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      begin
+        update public.tillagg_poster set status = 'bokad' where id = post1;
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      update public.tillagg_poster set status = 'avskriven', orsak = 'Prov' where id = post1;
+      begin
+        update public.tillagg_poster set status = 'upplupen' where id = post1;
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'SK bokad till betald, upplupen till betald eller bokad, och avskriven tillbaka avvisas',
+              'ok', t = '23514 23514 23514 23514', 'd', t);
+      t := '';
+      begin
+        update public.tillagg_poster set belopp_ore = 1, antal_extra_barn = 1, minuter = 60, pris_ore_per_timme = 1 where id = post1;
+        t := 'gick';
+      exception when others then t := sqlstate;
+      end;
+      begin
+        delete from public.tillagg_poster where id = post1;
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      begin
+        truncate public.tillagg_poster;
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'SK posten ändras, raderas och töms inte, inte heller av databasens ägare',
+              'ok', t ~ '^42501 42501 (42501|0A000|55006)$', 'd', t);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- F. Skulden, försöken, betalningen och återbetalningen ----------
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]),
+             (X3, P, B, S1, P, idag - 2, '12:00', 120, 'confirmed', array[S2, S3]),
+             (X4, P, B, S1, P, idag - 1, '12:00', 60, 'confirmed', array[S3]);
+      update public.bookings set status = 'completed' where id in (X2, X3);
+      select id into post1 from public.tillagg_poster where bokning_id = X2;
+      select id into post2 from public.tillagg_poster where bokning_id = X3;
+
+      select * into r from public.tillagg_skuld(P);
+      ut := ut || jsonb_build_object('t', 'SK skulden är summan av de upplupna, antalet och den äldsta',
+              'ok', r.belopp_ore = 6900 + 27600 and r.antal_pass = 2 and r.aldsta_post is not null,
+              'd', concat_ws(' ', r.belopp_ore, r.antal_pass, r.aldsta_post));
+      t := pg_temp.svar_som(Q, format('select * from public.tillagg_skuld(%L)', P));
+      perform pg_temp.bli(Q);
+      select count(*) into n from public.tillagg_poster;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'SK familj Q når inte P:s skuld eller poster', 'ok', t = '42501' and n = 0, 'd', t || ' ' || n);
+      perform pg_temp.bli(P);
+      j := public.mitt_tillagg();
+      select count(*) into n from public.tillagg_poster;
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'SK familjen ser sin skuld och sina poster',
+              'ok', (j ->> 'upplupet_ore')::int = 34500 and (j ->> 'upplupna')::int = 2 and (j ->> 'pa')::boolean
+                    and j ->> 'version' = VERS and j ->> 'godkand_at' is not null and n = 4,
+              'd', j::text);
+
+      t := pg_temp.svar_som(P, format('select public.tillagg_forsok_skapa(%L, ''manuell'')', P));
+      ut := ut || jsonb_build_object('t', 'SK familjen skapar inget betalningsförsök själv', 'ok', t = '42501', 'd', t);
+
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      fid := (j ->> 'forsok')::uuid;
+      ut := ut || jsonb_build_object('t', 'SK försöket låser alla upplupna poster för hela summan',
+              'ok', fid is not null and (j ->> 'belopp_ore')::int = 34500 and (j ->> 'antal_pass')::int = 2
+                    and (select count(*) from public.tillagg_poster where betalningsforsok_id = fid and status = 'i_betalning') = 2
+                    and (j ->> 'pagar')::boolean is false,
+              'd', j::text);
+      j2 := public.tillagg_forsok_skapa(P, 'manuell');
+      ut := ut || jsonb_build_object('t', 'SK två tryck blir samma försök', 'ok', (j2 ->> 'forsok')::uuid = fid
+              and (j2 ->> 'aterbruk')::boolean, 'd', j2::text);
+
+      -- Ett köp medan betalningen pågår tar inga låsta poster.
+      update public.flaggor set aktiv = true where kod = 'erbjudanden';
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status)
+      select KK, P, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore, 'vantar'
+        from public.erbjudanden_pris e where e.kod = 'plan_basic';
+      j2 := public.tillagg_forsok_skapa(P, 'kop', KK);
+      ut := ut || jsonb_build_object('t', 'SK en andra betalning medan en är öppen tar inga poster och säger att en pågår',
+              'ok', j2 ->> 'forsok' is null and (j2 ->> 'pagar')::boolean, 'd', j2::text);
+
+      -- En post som blir upplupen efter försöket ingår inte i det.
+      update public.bookings set status = 'completed' where id = X4;
+      ut := ut || jsonb_build_object('t', 'SK en post som blir upplupen efter försöket ingår inte i det',
+              'ok', (select status from public.tillagg_poster where bokning_id = X4) = 'upplupen'
+                    and (select belopp_ore from public.tillagg_forsok where id = fid) = 34500
+                    and (select count(*) from public.tillagg_forsok_poster where forsok_id = fid) = 2,
+              'd', '');
+      -- Nu kan köpet ta den nya posten, men inte de låsta.
+      j2 := public.tillagg_forsok_skapa(P, 'kop', KK);
+      ut := ut || jsonb_build_object('t', 'SK ett köp tar bara posten som inte är låst, och säger att en betalning pågår',
+              'ok', (j2 ->> 'belopp_ore')::int = 6900 and (j2 ->> 'antal_pass')::int = 1 and (j2 ->> 'pagar')::boolean,
+              'd', j2::text);
+      perform public.tillagg_forsok_slapp((j2 ->> 'forsok')::uuid, 'avbruten');
+
+      -- Den första sessionen går ut: posterna tillbaka, med samma upplupen_at.
+      select upplupen_at into r from public.tillagg_poster where id = post1;
+      perform public.tillagg_forsok_slapp(fid, 'utgangen');
+      ut := ut || jsonb_build_object('t', 'SK ett utgånget försök släpper posterna tillbaka till upplupen',
+              'ok', (select count(*) from public.tillagg_poster where id in (post1, post2) and status = 'upplupen'
+                       and betalningsforsok_id is null) = 2
+                    and (select status || ':' || slapp_orsak from public.tillagg_forsok where id = fid) = 'slappt:utgangen'
+                    and (select upplupen_at from public.tillagg_poster where id = post1) = r.upplupen_at,
+              'd', '');
+
+      -- Jobbet: ett försök äldre än 35 minuter släpps, ett yngre och ett som väntar på Klarna inte.
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      fid := (j ->> 'forsok')::uuid;
+      n := intern.tillagg_forsok_stada(now() + interval '34 minutes');
+      t := n::text;
+      perform public.tillagg_forsok_vantar(fid, 'cs_rls51vantar');
+      n := intern.tillagg_forsok_stada(now() + interval '36 minutes');
+      t := t || ' ' || n;
+      ut := ut || jsonb_build_object('t', 'SK jobbet släpper inte ett försök yngre än 35 minuter eller ett som väntar på pengarna',
+              'ok', t = '0 0' and (select status from public.tillagg_forsok where id = fid) = 'oppen', 'd', t);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]),
+             (X3, P, B, S1, P, idag - 2, '12:00', 120, 'confirmed', array[S2, S3]),
+             (X4, P, B, S1, P, idag - 1, '12:00', 60, 'confirmed', array[S3]);
+      update public.bookings set status = 'completed' where id in (X2, X3);
+      select id into post1 from public.tillagg_poster where bokning_id = X2;
+      select id into post2 from public.tillagg_poster where bokning_id = X3;
+
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      fid := (j ->> 'forsok')::uuid;
+      n := intern.tillagg_forsok_stada(now() + interval '36 minutes');
+      ut := ut || jsonb_build_object('t', 'SK jobbet släpper ett försök äldre än 35 minuter',
+              'ok', n = 1 and (select status || ':' || slapp_orsak from public.tillagg_forsok where id = fid) = 'slappt:jobbet',
+              'd', n::text);
+
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      fid := (j ->> 'forsok')::uuid;
+      t := public.tillagg_forsok_betald(fid, 'pi_rls51fel', 'ch_rls51fel', 1000, false);
+      ut := ut || jsonb_build_object('t', 'SK fel belopp skriver inget på posterna men bokförs och blir en uppgift',
+              'ok', t = 'fel_belopp'
+                    and (select count(*) from public.tillagg_poster where id in (post1, post2) and status = 'i_betalning') = 2
+                    and exists (select 1 from public.betalningar where stripe_payment_intent = 'pi_rls51fel' and utan_rad)
+                    and exists (select 1 from public.uppgifter where nyckel = 'tillagg_dubbel:pi_rls51fel'),
+              'd', t);
+
+      t := public.tillagg_forsok_betald(fid, 'pi_rls51a', 'ch_rls51a', 34500, false, 1200, 33300);
+      t2 := public.tillagg_forsok_betald(fid, 'pi_rls51a', 'ch_rls51a', 34500, false, 1200, 33300);
+      select id into bet from public.betalningar where stripe_payment_intent = 'pi_rls51a';
+      ut := ut || jsonb_build_object('t', 'SK betalningen skrivs en gång: samma händelse två gånger ger en effekt',
+              'ok', t = 'betald' and t2 = 'redan' and bet is not null
+                    and (select count(*) from public.betalningar where stripe_payment_intent = 'pi_rls51a') = 1,
+              'd', t || ' ' || t2);
+      ut := ut || jsonb_build_object('t', 'SK liggaren har betalningen som syskontillägg, och en rad per post',
+              'ok', (select typ || ':' || belopp_ore || ':' || status from public.betalningar where id = bet) = 'syskon:34500:betald'
+                    and (select count(*) from public.betalningsrader where betalning_id = bet and typ = 'syskon') = 2
+                    and (select sum(belopp_ore) from public.betalningsrader where betalning_id = bet) = 34500,
+              'd', '');
+      ut := ut || jsonb_build_object('t', 'SK posterna är betalda med betalningen, och försöket stängt',
+              'ok', (select count(*) from public.tillagg_poster where id in (post1, post2) and status = 'betald'
+                       and betalning_id = bet and betald_at is not null) = 2
+                    and (select status from public.tillagg_forsok where id = fid) = 'betald',
+              'd', '');
+      ut := ut || jsonb_build_object('t', 'SK kvittot köas till familjen med dag, antal barn och belopp, utan namn',
+              'ok', exists (select 1 from public.notiser n where n.mottagare = P and n.typ = 'tillagg_kvitto'
+                              and (n.data ->> 'belopp')::int = 34500 and jsonb_array_length(n.data -> 'rader') = 2
+                              and n.data::text !~* '(Yngst|Mellan|Äldst)'),
+              'd', '');
+      t := pg_temp.svar_som(P, 'select * from public.betalningsrader')
+        || ' ' || pg_temp.svar_som(Q, format('select * from public.tillagg_forsok where familj = %L', P));
+      ut := ut || jsonb_build_object('t', 'SK familjerna läser inga betalningsrader, och Q inga av P:s försök', 'ok', t = 'noll noll', 'd', t);
+
+      -- Delåterbetalning per rad: den första raden helt, sedan för mycket, sedan en del av den andra.
+      select id into rad1 from public.betalningsrader where betalning_id = bet and tillagg_post_id = post1;
+      select id into rad2 from public.betalningsrader where betalning_id = bet and tillagg_post_id = post2;
+      n := public.betalningsrader_aterbetalda('pi_rls51a', jsonb_build_object(rad1, 6900), 6900);
+      ut := ut || jsonb_build_object('t', 'SK en återbetald rad gör bara sin post återbetald',
+              'ok', (select status || ':' || aterbetalt_ore from public.tillagg_poster where id = post1) = 'aterbetald:6900'
+                    and (select status || ':' || aterbetalt_ore from public.tillagg_poster where id = post2) = 'betald:0'
+                    and (select status || ':' || aterbetalt_ore from public.betalningar where id = bet) = 'delvis_aterbetald:6900',
+              'd', n::text);
+      n := public.betalningsrader_aterbetalda('pi_rls51a', jsonb_build_object(rad1, 99999, rad2, 1000), 99999);
+      ut := ut || jsonb_build_object('t', 'SK en återbetalning går aldrig över det raden eller betalningen betalade',
+              'ok', (select aterbetalt_ore from public.betalningsrader where id = rad1) = 6900
+                    and (select status || ':' || aterbetalt_ore from public.tillagg_poster where id = post2) = 'betald:1000'
+                    and (select aterbetalt_ore from public.betalningar where id = bet) = 34500,
+              'd', n::text);
+      n := public.betalningsrader_aterbetalda('pi_rls51a', jsonb_build_object(rad2, 1000), 34500);
+      ut := ut || jsonb_build_object('t', 'SK samma återbetalning två gånger ändrar ingenting', 'ok', n = 0, 'd', n::text);
+
+      -- Tvisten flaggas på liggarens rad.
+      perform public.betalning_tvist('ch_rls51a', 'oppen');
+      t := (select status from public.betalningar where id = bet);
+      perform public.betalning_tvist('ch_rls51a', 'vunnen');
+      t := t || ' ' || (select status from public.betalningar where id = bet);
+      ut := ut || jsonb_build_object('t', 'SK en tvist flaggas på betalningen och släpps när den vunnits', 'ok', t = 'tvist aterbetald', 'd', t);
+
+      -- Raderna och liggaren står fast.
+      t := '';
+      begin
+        update public.betalningsrader set belopp_ore = 1 where id = rad2;
+        t := 'gick';
+      exception when others then t := sqlstate;
+      end;
+      begin
+        update public.betalningsrader set aterbetalt_ore = 0 where id = rad2;
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      begin
+        delete from public.betalningsrader where id = rad2;
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      begin
+        delete from public.tillagg_forsok where id = fid;
+        t := t || ' gick';
+      exception when others then t := t || ' ' || sqlstate;
+      end;
+      ut := ut || jsonb_build_object('t', 'SK betalningsrader och försök ändras och raderas inte, och återbetalt går inte tillbaka',
+              'ok', t = '42501 42501 42501 42501', 'd', t);
+
+      -- Admins knappar på den tredje posten.
+      update public.bookings set status = 'completed' where id = X4;
+      select id into post1 from public.tillagg_poster where bokning_id = X4;
+      t := pg_temp.svar_som(AD, format('select public.tillagg_skriv_av(%L, '' '')', post1))
+        || ' ' || pg_temp.svar_som(P, format('select public.tillagg_skriv_av(%L, ''Egen avskrivning'')', post1))
+        || ' ' || pg_temp.svar_som(AD, format('select public.tillagg_skriv_av(%L, ''Familjen flyttade utomlands'')', post1));
+      ut := ut || jsonb_build_object('t', 'SK avskriv kräver orsak och admin, och loggas',
+              'ok', t = '22023 42501 ok'
+                    and (select status || ':' || andrad_av from public.tillagg_poster where id = post1) = 'avskriven:' || AD
+                    and exists (select 1 from public.audit_logg a where a.tabell = 'tillagg_poster' and a.objekt_id = post1::text
+                                  and a.efter ->> 'status' = 'avskriven' and a.aktor = AD),
+              'd', t);
+      t := pg_temp.svar_som(AD, format('select public.tillagg_frigor(%L, ''Prov'')', post1));
+      ut := ut || jsonb_build_object('t', 'SK ett avskrivet tillägg frigörs inte', 'ok', t = '23514', 'd', t);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- G. Ett köp med tillägget som egen rad ----------
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X2;
+      select id into post1 from public.tillagg_poster where bokning_id = X2;
+      update public.flaggor set aktiv = true where kod = 'erbjudanden';
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status)
+      select KK, P, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore, 'vantar'
+        from public.erbjudanden_pris e where e.kod = 'plan_basic';
+      select begart_ore::integer into bel from public.klippkort where id = KK;
+      j := public.tillagg_forsok_skapa(P, 'kop', KK);
+      fid := (j ->> 'forsok')::uuid;
+      t := public.klippkort_betald_med_tillagg(KK, bel + 6900, 'pi_rls51k', 'ch_rls51k', null, null, null, false, fid);
+      t2 := public.klippkort_betald_med_tillagg(KK, bel + 6900, 'pi_rls51k', 'ch_rls51k', null, null, null, false, fid);
+      select id into bet from public.betalningar where stripe_payment_intent = 'pi_rls51k';
+      ut := ut || jsonb_build_object('t', 'SK köpet med tillägg betalas en gång, och köpet får bara sin del',
+              'ok', t = 'betald' and t2 = 'redan'
+                    and (select status || ':' || betalt_ore from public.klippkort where id = KK) = 'betald:' || bel
+                    and (select typ || ':' || belopp_ore from public.betalningar where id = bet) = 'plan:' || (bel + 6900),
+              'd', t || ' ' || t2);
+      ut := ut || jsonb_build_object('t', 'SK raderna skiljer planen och tillägget åt, och posten är betald',
+              'ok', (select string_agg(typ || ':' || belopp_ore, ' ' order by typ) from public.betalningsrader
+                      where betalning_id = bet) = 'plan:' || bel || ' syskon:6900'
+                    and (select status from public.tillagg_poster where id = post1) = 'betald',
+              'd', (select string_agg(typ || ':' || belopp_ore, ' ' order by typ) from public.betalningsrader where betalning_id = bet));
+      t := public.klippkort_betald_med_tillagg(KK, bel + 6900, 'pi_rls51k2', 'ch_rls51k2', null, null, null, false,
+                                              gen_random_uuid());
+      ut := ut || jsonb_build_object('t', 'SK ett okänt försök på ett köp skriver ingenting', 'ok', t = 'okant', 'd', t);
+
+      -- En vanlig betalning utan egna rader får en rad med hela beloppet när transaktionen sluts.
+      insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                    timpris_ore, begart_ore, status)
+      select gen_random_uuid(), P, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore,
+             e.pris_ore, 'vantar'
+        from public.erbjudanden_pris e where e.kod = 'plan_basic'
+      returning id into fid;
+      perform public.klippkort_betald(fid, bel, 'pi_rls51vanlig', 'ch_rls51vanlig', null, null, null, false);
+      set constraints public.betalningar_rader immediate;
+      ut := ut || jsonb_build_object('t', 'SK en betalning utan egna rader får en rad med hela beloppet',
+              'ok', (select string_agg(br.typ || ':' || br.belopp_ore || ':' || (br.klippkort_id = fid), ' ')
+                       from public.betalningsrader br join public.betalningar b on b.id = br.betalning_id
+                      where b.stripe_payment_intent = 'pi_rls51vanlig') = 'plan:' || bel || ':true',
+              'd', '');
+      set constraints public.betalningar_rader deferred;
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- H. Spärren ----------
+    begin
+      update public.tillagg_installning set max_upplupet_ore = 6900 where id = 1;
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X2;
+      t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+             wanted_date, wanted_time, duration_min, status, extra_barn)
+             values (%L, %L, %L, %L, %L, '14:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 30, S2));
+      ut := ut || jsonb_build_object('t', 'SK exakt vid taket är det ingen spärr', 'ok', t = 'ok', 'd', t);
+
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X3, P, B, S1, P, idag - 2, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X3;
+      t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+             wanted_date, wanted_time, duration_min, status, extra_barn)
+             values (%L, %L, %L, %L, %L, '15:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 30, S2))
+        || ' ' || pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+             wanted_date, wanted_time, duration_min, status)
+             values (%L, %L, %L, %L, %L, '16:00', 60, 'requested')$q$, P, A, S1, P, idag + 30))
+        || ' ' || pg_temp.svar_som(AD, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+             wanted_date, wanted_time, duration_min, status, extra_barn)
+             values (%L, %L, %L, %L, %L, '17:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, AD, idag + 30, S2));
+      ut := ut || jsonb_build_object('t', 'SK över taket: inga extra barn, men ett vanligt pass går, och admin bokar',
+              'ok', t = '42501 ok ok', 'd', t);
+      ut := ut || jsonb_build_object('t', 'SK redan bokade pass rörs inte av spärren',
+              'ok', (select count(*) from public.tillagg_poster t where t.familj_id = P and t.status = 'bokad') = 3, 'd', '');
+
+      perform pg_temp.bli(AD);
+      perform public.tillagg_skriv_av((select id from public.tillagg_poster where bokning_id = X3), 'Prov av spärren');
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+             wanted_date, wanted_time, duration_min, status, extra_barn)
+             values (%L, %L, %L, %L, %L, '18:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 30, S2));
+      ut := ut || jsonb_build_object('t', 'SK spärren lyfts när admin skrivit av', 'ok', t = 'ok', 'd', t);
+
+      -- Åldern: fyrtiofyra, fyrtiofem och fyrtiosex dagar efter att posten blev upplupen.
+      update public.tillagg_installning set max_upplupet_ore = 100000 where id = 1;
+      t := coalesce(intern.tillagg_sparr(P, pg_temp.sk_dag(44)), 'ingen')
+        || ' ' || coalesce(intern.tillagg_sparr(P, pg_temp.sk_dag(45)), 'ingen')
+        || ' ' || coalesce(intern.tillagg_sparr(P, pg_temp.sk_dag(46)), 'ingen');
+      ut := ut || jsonb_build_object('t', 'SK åldersspärren: före och exakt vid 45 dagar ingen, efter spärr',
+              'ok', t = 'ingen ingen alder', 'd', t);
+      alter table public.tillagg_poster disable trigger tillagg_poster_vakt;
+      update public.tillagg_poster set upplupen_at = pg_temp.sk_dag(-46) where bokning_id = X2;
+      alter table public.tillagg_poster enable trigger tillagg_poster_vakt;
+      t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+             wanted_date, wanted_time, duration_min, status, extra_barn)
+             values (%L, %L, %L, %L, %L, '19:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 31, S2));
+      ut := ut || jsonb_build_object('t', 'SK en post äldre än 45 dagar spärrar nya pass med extra barn', 'ok', t = '42501', 'd', t);
+      j := public.tillagg_forsok_skapa(P, 'manuell');
+      perform public.tillagg_forsok_betald((j ->> 'forsok')::uuid, 'pi_rls51sparr', 'ch_rls51sparr',
+                                           (j ->> 'belopp_ore')::int, false);
+      t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+             wanted_date, wanted_time, duration_min, status, extra_barn)
+             values (%L, %L, %L, %L, %L, '19:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 31, S2));
+      ut := ut || jsonb_build_object('t', 'SK spärren lyfts när skulden betalats', 'ok', t = 'ok', 'd', t);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- ---------- I. Påminnelsen, passens barn och raderingen ----------
+    begin
+      insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time,
+                                   duration_min, status, extra_barn)
+      values (X2, P, B, S1, P, idag - 3, '12:00', 60, 'confirmed', array[S2]);
+      update public.bookings set status = 'completed' where id = X2;
+      t := intern.tillagg_paminnelser_koa(pg_temp.sk_dag(14))
+        || ' ' || intern.tillagg_paminnelser_koa(pg_temp.sk_dag(15))
+        || ' ' || intern.tillagg_paminnelser_koa(pg_temp.sk_dag(15))
+        || ' ' || intern.tillagg_paminnelser_koa(pg_temp.sk_dag(28))
+        || ' ' || intern.tillagg_paminnelser_koa(pg_temp.sk_dag(29));
+      ut := ut || jsonb_build_object('t', 'SK påminnelsen går när posten är äldre än 14 dagar, och högst en gång per intervall',
+              'ok', t = '0 1 0 0 1'
+                    and (select count(*) from public.notiser where mottagare = P and typ = 'tillagg_paminnelse') = 2
+                    and (select data from public.notiser where mottagare = P and typ = 'tillagg_paminnelse' limit 1)
+                        = jsonb_build_object('belopp', 6900, 'antal_pass', 1),
+              'd', t);
+      t := pg_temp.svar_som(AD, format('select public.tillagg_paminn(%L)', P))
+        || ' ' || pg_temp.svar_som(P, format('select public.tillagg_paminn(%L)', P));
+      ut := ut || jsonb_build_object('t', 'SK admin skickar en påminnelse, familjen inte', 'ok', t = 'ok 42501', 'd', t);
+
+      perform pg_temp.bli(P);
+      select count(*) into n from public.passens_barn(array[X2]);
+      reset role;
+      perform pg_temp.bli(B);
+      select string_agg(fornamn || ':' || coalesce(arskurs, '') || ':' || ar_huvudbarn, ' ' order by ar_huvudbarn desc)
+        into t from public.passens_barn(array[X2]);
+      reset role;
+      perform pg_temp.bli(A);
+      select count(*) into m from public.passens_barn(array[X2]);
+      reset role;
+      perform set_config('request.jwt.claims', '', true);
+      ut := ut || jsonb_build_object('t', 'SK familjen och passets studiehjälpare ser barnens förnamn och årskurs, en annan inte',
+              'ok', n = 2 and t = 'Äldst:8:true Yngst:6:false' and m = 0, 'd', coalesce(t, 'inga') || ' ' || n || ' ' || m);
+
+      j := intern.radering_underlag('familj', P);
+      ut := ut || jsonb_build_object('t', 'SK en familj med obetalt tillägg raderas inte förrän det är uppgjort, och aldrig helt',
+              'ok', j ->> 'satt' = 'avidentifieras'
+                    and exists (select 1 from jsonb_array_elements(j -> 'hinder') h
+                                 where h ->> 'kod' = 'tillagg_obetalt' and (h ->> 'belopp_ore')::int = 6900),
+              'd', (j -> 'hinder')::text);
+      raise exception 'delblock';
+    exception when others then
+      if sqlerrm <> 'delblock' then raise; end if;
+    end;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    -- Strömbrytaren av: inga nya pass med extra barn.
+    update public.flaggor set aktiv = false where kod = 'syskonskuld';
+    t := pg_temp.svar_som(P, format($q$insert into public.bookings (parent_id, tutor_id, student_id, created_by,
+           wanted_date, wanted_time, duration_min, status, extra_barn)
+           values (%L, %L, %L, %L, %L, '12:00', 60, 'requested', array[%L]::uuid[])$q$, P, A, S1, P, idag + 26, S2));
+    ut := ut || jsonb_build_object('t', 'SK med strömbrytaren av bokas inga pass med extra barn', 'ok', t = '42501', 'd', t);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('SK Syskontillägget', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

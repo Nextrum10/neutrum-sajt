@@ -1890,3 +1890,39 @@ Efter merge, en session, i den här ordningen:
 Kvar efter: juristen (villkoren 2026-10-22, Klarna i policyn och raden i `DATASKYDD.md`), och
 introduktionens bilder (`bygg-introbilder.js`).
 
+
+### 9.23 Syskontillägget som skuld (2026-10-21, inte körd, strömbrytaren av)
+
+Efter merge, en session, i den här ordningen. Med strömbrytaren `syskonskuld` av ändrar inget av det
+här ett pris eller en betalning: syskon bokas som förut, och inga poster skapas.
+
+1. **Backup** av `betalningar` (Supabases dagliga räcker, men ta en för hand före migrationen: filen
+   fyller `betalningsrader` bakåt med en rad per betalning).
+2. **`stripe-webhook`** från merge-commiten, hämtad tillbaka och jämförd byte för byte. Den känner
+   tilläggets metadata, `checkout.session.expired` och återbetalningen per rad, och gör inget annat
+   än förut utan dem.
+3. **Migrationen** `20261021214000_syskontillagg_som_skuld`, hel i ett do-block eller avsnitt för avsnitt.
+   Den har ett `drop` (`betalningar_typ_check`, som byts mot ett villkor som också tar `syskon`) och
+   inget `delete`, så verktyget kan be om en bekräftelse (CLAUDE.md avsnitt 5): kör det steget i SQL
+   Editor om rutan inte syns. Pröva md5 och registrera filens text.
+4. **`stripe-checkout`** (SESSIONSFORM 11, oförändrad: en kassa utan tillägg ser ut som förut),
+   **`stripe-aterbetalning`** och **`notis-ko`** (mallarna `tillagg_paminnelse` och `tillagg_kvitto`)
+   från merge-commiten, hämtade tillbaka och jämförda byte för byte.
+5. **Stripe**: lägg till `checkout.session.expired` på webhookens endpoint (utan den släpps ett försök
+   först av jobbet `tillagg-forsok` efter 35 minuter). `async_payment_succeeded` och `_failed` ska
+   redan stå där (9.22).
+6. Hela `rls-test.sql` mot driften, tillbakarullat, och advisorn. Jobben `tillagg-forsok` och
+   `tillagg-paminnelse` syns under System → Automationer.
+7. **Innan strömbrytaren slås på**, och bara då: Leo skriver villkorstexten för syskontillägget och
+   lägger länken i `TILLAGG_VILLKOR_URL` i `nextrum-config.js`; prissidan, FAQ:n, områdessidorna,
+   användarvillkoren (ny version) och Siffror i CLAUDE.md säger 69 kr per extra barn och timme som en
+   skuld efter passet; juristen har läst (DATASKYDD.md rad 35); sedan
+   `update tillagg_installning set villkor_version = '<sidans datum>'` och sist
+   `update flaggor set aktiv = true where kod = 'syskonskuld'`.
+8. **Provet i testläge**, med strömbrytaren på: ett pass med två syskon som bokas (villkorsrutan, sedan
+   inte), hålls och blir upplupet; Betala tillägg nu med kort och med Klarna; en plan som köps med
+   tillägget som egen rad; en kassa som går ut och släpper posterna; en återbetalning av en rad; och
+   en familj över spärren som inte kan välja syskon men kan boka ett pass för ett barn.
+
+Kvar efter: juristen (rad 35, policyns stycke, villkoren för tillägget), och att säga till familjerna med
+fler barn att tillägget räknas per extra barn och betalas efter passet, innan strömbrytaren slås på.

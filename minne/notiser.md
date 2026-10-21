@@ -328,6 +328,17 @@ En äldre `notis-ko` gör `igen` till null och skickar det förra mejlet utan l�
 ingen roll för vad som lovas. Efter ett dygn blir det en uppgift till oss, aldrig ett mejl till familjen till
 (`minne/betalning.md`, Kortet försöker igen).
 
+### Syskontillägget: påminnelsen och kvittot (2026-10-21, `syskontillagg_som_skuld`, inte i drift)
+Två nya typer, i `notis_typer()`, `notis_mejlbara()` och `typer.ts` i samma ändring: `tillagg_paminnelse` (kategorin
+betalning) och `tillagg_kvitto`. Båda till familjen, båda med belopp och antal pass, kvittot också en rad per pass
+med datum och antal barn (`rader`, där `typer.ts` släpper igenom bara datum, tal och belopp), och ingen av dem nämner
+ett barn: Leo bad om "inga namn på barn". Påminnelsen köas av `intern.tillagg_paminnelse_koa_en`, högst en per
+familj och intervall (`paminnelse_dagar`, dagarna räknade i Stockholm), med nyckeln
+`tillagg_paminnelse:mejl:<familj>:<dag>`, så att admins Skicka påminnelse och jobbet samma dag blir ett mejl.
+Kvittot köas av `intern.tillagg_kvitto` när webhooken bokfört betalningen; ett fel där blir en rad i `notis_fel`,
+aldrig ett fel i betalningen. Båda går att välja bort under Profil → Notiser (en saknad rad i `notis_val` är på), och
+`notis_konfig.lage` rörs inte: sandlådan och `notiser_mejl` gäller som för allt annat i kön.
+
 ### Vårdnadshavarens godkännande (2026-10-05)
 
 Leo: "jobbansökan, fråga om den sökande är under 18, är den det så ber du

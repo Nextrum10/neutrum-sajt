@@ -266,9 +266,37 @@ window.NXBetalning = (function () {
     return !!k && k.erbjudande === GRATIS;
   }
 
+  /* ---------- syskontillägget (syskontillagg_som_skuld, 2026-10-21) ----------
+     Tillägget per extra barn och timme, som en skuld efter passet. Samma
+     regel som databasen (intern.tillaggets_belopp) och _delad/tillagg.ts:
+     extra barn × pris per extra barn och timme × minuter / 60, avrundat
+     till hela ören. Bara visning: databasen räknar och fryser beloppet när
+     passet bokas. */
+  function tillaggetsBelopp(extra, prisOre, minuter) {
+    var n = Number(extra) || 0, p = Number(prisOre) || 0, m = Number(minuter) || 0;
+    return n > 0 && p > 0 && m > 0 ? Math.round(n * p * m / 60) : 0;
+  }
+  /* "Tillägg: 2 × 69 kr × 1 h = 138 kr", som rutan i bokningen visar det. */
+  function tillaggRad(extra, prisOre, minuter) {
+    return 'Tillägg: ' + extra + ' × ' + kronor(prisOre) + ' × ' + timmar(minuter) + ' = '
+      + kronor(tillaggetsBelopp(extra, prisOre, minuter));
+  }
+  /* Postens läge i ord och märkets färg (adminvyns tre: mossa klart,
+     ockra väntar, lera ert drag). */
+  var TILLAGG_LAGE = {
+    bokad: ['Bokat', ''],
+    upplupen: ['Upplupet', 'ar-ny'],
+    i_betalning: ['Betalning pågår', 'ar-vantar'],
+    betald: ['Betalt', 'ar-klar'],
+    frigjord: ['Frigjort', ''],
+    avskriven: ['Avskrivet', ''],
+    aterbetald: ['Återbetalt', '']
+  };
+
   return {
     kronor: kronor, timmar: timmar, periodText: periodText,
     UTBETALNING: UTBETALNING, lonemanad: lonemanad, lonespec: lonespec, manadEfter: manadEfter,
-    pagaende: pagaende, passpris: passpris, gratistimmar: gratistimmar
+    pagaende: pagaende, passpris: passpris, gratistimmar: gratistimmar,
+    tillaggetsBelopp: tillaggetsBelopp, tillaggRad: tillaggRad, TILLAGG_LAGE: TILLAGG_LAGE
   };
 })();

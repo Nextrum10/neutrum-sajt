@@ -2206,6 +2206,12 @@ a.pass-lank:hover{color:var(--acc)}
 .nx-kassa-kryss input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange)}
 .nx-kassa-kryss a{color:var(--acc);font-weight:600}
 .nx-kassa-villkor .btn[disabled]{opacity:.5;cursor:not-allowed}
+/* Syskontillägget som egen rad i kassans ruta (syskontillagg_som_skuld),
+   med totalen under. */
+.nx-kassa-tillagg{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:var(--tint);color:var(--bl);line-height:1.5}
+.nx-kassa-tillagg p{margin:0}
+.nx-kassa-tillagg .nx-kassa-kryss{padding:0;min-height:44px;align-items:center}
+.nx-kassa-total{margin-top:6px !important;font-weight:700}
 /* Fas 22.1: timbanken, under klippkorten i Era timmar. */
 .erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
 .erb-bank-text a{color:var(--acc);font-weight:600}

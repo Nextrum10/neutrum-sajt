@@ -1695,3 +1695,41 @@ migrationerna. Hur det gick till, i ordning:
   syns inte under Att göra, liggaren fick en rad (en testbetalning), inga koder hade använts, provet hade inga frågor
   (de kom samma kväll, `minne/affaren.md`) och de två godkända studiehjälparna är undantagna, och intervjumejlet gick inte ut till de
   fyra ansökningar som redan var vidareskickade (de fick det för hand samma kväll, `minne/notiser.md`).
+
+### Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21, inte i drift)
+En fil (20261021214000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
+`minne/betalning.md` (Syskontillägget som skuld), och ordningen i driften i `DEPLOY-BETALNING.md` 9.23.
+
+- **En `drop`**: `betalningar_typ_check` byts mot ett villkor som också tar `syskon` (`drop constraint if exists`
+  och `add`, som `koder_for_planer`). Inget `delete` i filen. Den går att köra två gånger.
+- **Tabellerna**: `tillagg_installning` (en rad, auditad), `tillagg_godkannanden` (familj och version),
+  `bokning_barn` (passets barn, ett huvudbarn), `tillagg_poster` (en per pass, `bokning_id` unik och restrict),
+  `tillagg_forsok` och `tillagg_forsok_poster` (försöken och vad de tog), och `betalningsrader` (en rad per del av en
+  betalning; fylls bakåt med en rad per betalning som redan stod). Alla med RLS: familjen läser sina poster, försök,
+  godkännanden och passens barn, och bara superadmin läser försökens poster och betalningens rader. Ingen inloggad
+  skriver någon av dem: `revoke all` och bara `select` tillbaka.
+- **Raderas aldrig**: `tillagg_poster`, `tillagg_forsok`, `tillagg_forsok_poster` och `betalningsrader` nekar delete
+  och truncate med triggrar, också för ägaren (prova-tillagg-samtidigt.sh städar sina fixturer med
+  `session_replication_role = replica`, bara lokalt). En familj med en post avidentifieras i stället för att raderas
+  (`intern.radering_underlag`, hindret `tillagg_obetalt` medan något är obetalt), och ett pass med en post räknas som
+  bokfört (`intern.passet_bar_bokforing`).
+- **Triggrarna på `bookings`**: `bookings_syskon_prova` (BEFORE INSERT), `bookings_syskon_star_fast` (BEFORE UPDATE)
+  och, efter skrivningen, `bookings_syskon_skapa` (AFTER INSERT) och `bookings_syskon_foljer` (AFTER UPDATE). Båda
+  BEFORE-triggrarna kommer före `bookings_timmarna_tillbaka` i namnordningen, som ska stå sist, och
+  `bookings_syskon_prova` efter `bookings_frys_priset`, så att priset per extra barn redan är fryst.
+- **`betalningar_rader`** är en deferred constraint trigger på `betalningar`: vid commit får en betalning utan rad en
+  standardrad (`intern.betalningsrader_standard`), så att varje betalning har minst en rad utan att de befintliga
+  vägarna i webhooken ändras. En `truncate` på `betalningar` svarar därför 55006 (en väntande trigger) före
+  liggarens egen trigger; avsnitt BL tar båda som ett nej.
+- **Låsen**: `tillagg_forsok_skapa` tar `pg_advisory_xact_lock(hashtextextended('tillagg:' || familj, 0))` och sedan
+  `for update` på de upplupna posterna. Två försök för samma familj väntar på varandra, och det andra hittar inga
+  upplupna poster. `rls-test.sql` kan inte pröva det (en transaktion), så `verktyg/prova-tillagg-samtidigt.sh`
+  öppnar två psql-sessioner mot den lokala databasen.
+- **Jobben**: `tillagg-forsok` (`*/15 * * * *`, `intern.tillagg_forsok_stada()`) och `tillagg-paminnelse`
+  (`23 8 * * *` UTC, `intern.tillagg_paminnelser_koa()`); dagarna räknas i Stockholm i funktionerna, aldrig i
+  schemat. Båda står under System → Automationer.
+- **Typlistorna**: `notis_typer()` och `notis_mejlbara()` lappas med `replace()` och en vakt
+  (`tillagg_paminnelse`, `tillagg_kvitto`), och `typer.ts` ändras i samma ändring.
+
+Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, `rls-test.sql`
+gick 2053 av 2053 (avsnitt 51, SK, 76 prov), och `prova-tillagg-samtidigt.sh` var grönt i alla tre varven.

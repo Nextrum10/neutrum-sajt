@@ -16,6 +16,9 @@
   NX.initHeader();
 
   const S = { aktivSek: null, passFrån: null, yFör: {}, laddatPass: false, user: null, profil: null, tutor: null, barn: [], valtBarn: null, kal: null, bokningar: [], trad: null, minAvatar: null, laxor: [], rapporter: [], progress: [], olästaAntal: 0, plan: null, sido: null, progressAntal: 0, schema: null, tillgangFinns: false, underlag: {}, tillagg: {},
+    /* Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21): läget ur
+       mitt_tillagg() (null före migrationen), och passens barn ur bokning_barn. */
+    syskon: null, passBarn: {},
     /* NexLäx (Fas 23.1, 23.2). banaVal minns ämne och årskurs per barn;
        nl är det som hör till vägen: den öppnade noden, det som just
        klarades, de påbörjade försöken och läget (XP och serien). */
@@ -1588,8 +1591,166 @@
      passRad själv (2026-09-28); förut fogade varje lista in dem i sin
      egen rad, och platsen stod två gånger när båda gjorde det. */
   function medBarn(b) {
+    const alla = passetsBarn(b);
+    if (alla.length > 1) return 'med ' + NXStudie.listaOrd(alla);
     const barn = S.barn.find(x => x.id === b.student_id);
     return barn && barn.name ? 'med ' + String(barn.name).trim().split(/\s+/)[0] : '';
+  }
+
+  /* Barnens förnamn på ett pass med extra barn (bokning_barn), huvudbarnet
+     först. Ett pass utan extra barn svarar med en tom lista. */
+  function passetsBarn(b) {
+    const rader = S.passBarn[b.id] || [];
+    return rader.slice().sort((x, y) => (y.ar_huvudbarn ? 1 : 0) - (x.ar_huvudbarn ? 1 : 0))
+      .map(r => { const x = S.barn.find(c => c.id === r.barn_id); return x && x.name ? String(x.name).trim().split(/\s+/)[0] : 'Ett barn'; });
+  }
+
+  /* ============================================================
+     SYSKONTILLÄGGET SOM SKULD (syskontillagg_som_skuld, 2026-10-21)
+
+     Leo: "Tillägget blir en skuld på familjen när passet är hållet.
+     Familjen kan betala skulden när hen vill under Betalningar, eller så
+     läggs den som en egen rad i nästa betalning". Läget kommer ur
+     mitt_tillagg(): strömbrytaren, villkorens version och familjens ja,
+     gränserna, skulden, det som står i en betalning och spärren. Inget
+     belopp räknas här: databasen frös det när passet bokades.
+     ============================================================ */
+  async function laddaSyskon() {
+    const [{ data, error }, rader] = await Promise.all([
+      supa.rpc('mitt_tillagg'),
+      supa.from('bokning_barn').select('bokning_id, barn_id, ar_huvudbarn')
+    ]);
+    S.syskon = error ? null : (data || null);
+    S.passBarn = {};
+    if (!rader.error) (rader.data || []).forEach(r => { (S.passBarn[r.bokning_id] = S.passBarn[r.bokning_id] || []).push(r); });
+    ritaSyskonskuld();
+    ritaNotiser();
+    if (S.laddatPass) ritaAttBetala();
+  }
+
+  /* Bokningsytans läge: null när strömbrytaren är av. */
+  function syskonLäge() {
+    const t = S.syskon;
+    if (!t || !t.pa) return null;
+    const max = Number(t.max_upplupet_ore) || 0, dagar = Number(t.sparr_efter_dagar) || 0;
+    return {
+      pa: true,
+      huvud: S.valtBarn,
+      barn: (S.barn || []).map(b => ({ id: b.id, namn: String(b.name || 'Barn').trim().split(/\s+/)[0] })),
+      version: t.version,
+      godkand: !!t.godkand_at,
+      sparr: t.sparr || null,
+      sparrText: t.sparr === 'belopp'
+        ? 'Extra barn går inte att boka just nu: det obetalda tillägget är över ' + NXBetalning.kronor(max) + '. Betala det under Betalning, så lyfts spärren.'
+        : t.sparr === 'alder'
+          ? 'Extra barn går inte att boka just nu: ett tillägg har varit obetalt i mer än ' + dagar + ' dagar. Betala det under Betalning, så lyfts spärren.'
+          : null,
+      maxOre: max, sparrDagar: dagar,
+      senTimmar: Number(t.sen_avbokning_timmar) || 0,
+      debitera: !!t.debitera_vid_sen_avbokning,
+      obligatorisk: !!t.obligatorisk
+    };
+  }
+
+  /* Tillägget för passets syskon, som posten står: efter passet, att betala
+     eller betalt. Bara de poster mitt_tillagg() lämnar (inte avslutade). */
+  function syskonTillägg(b) {
+    const p = S.syskon ? (S.syskon.poster || []).find(x => x.bokning === b.id) : null;
+    if (!p) return '';
+    const k = NXBetalning.kronor(p.belopp_ore);
+    return p.status === 'bokad' ? ' · tillägg ' + k + ', som skuld efter passet'
+      : p.status === 'upplupen' ? ' · tillägg ' + k + ' att betala'
+      : ' · tillägg ' + k + ', betalning pågår';
+  }
+
+  async function godkännSyskon(version) {
+    const { error } = await supa.rpc('godkann_tillaggsvillkor', { p_version: version });
+    if (error) return 'Villkoren gick inte att godkänna: ' + felText(error);
+    await laddaSyskon();
+    return null;
+  }
+
+  /* Kortet Upplupet tillägg under Betalning: beloppet, ett pass per rad
+     (dagen, extra barn och beloppet) och Betala tillägg nu. Står en
+     betalning redan öppen säger kortet det i stället för knappen, och en
+     spärr står som en egen rad. Utan skuld och utan spärr syns inget. */
+  function ritaSyskonskuld() {
+    const host = $('#bet-tillagg');
+    if (!host) return;
+    const t = S.syskon;
+    const upplupna = t ? (t.poster || []).filter(p => p.status === 'upplupen') : [];
+    const pågår = t ? Number(t.i_betalning) || 0 : 0;
+    if (!t || (!upplupna.length && !pågår && !t.sparr)) { host.hidden = true; host.innerHTML = ''; return; }
+    const kronor = NXBetalning.kronor;
+    const dag = p => { const d = new Date(p.start); return isNaN(d) ? '' : datumText(isoFor(d)); };
+    const banner = (klass, rubrik, text) => '<div class="bet-tillagg-banner ' + klass + '" role="status"><b>'
+      + esc(rubrik) + '</b><span>' + esc(text) + '</span></div>';
+    host.hidden = false;
+    host.innerHTML =
+      (t.sparr ? banner('ar-sparr', 'Extra barn är spärrat', syskonLäge() ? syskonLäge().sparrText
+        : 'Det obetalda tillägget är för stort eller för gammalt. Betala det, så lyfts spärren.') : '')
+      + (pågår ? banner('ar-pagar', 'En betalning pågår redan', 'Kassan för ' + (pågår === 1 ? '1 pass' : pågår + ' pass')
+        + ' med tillägg är öppen. Betalar ni inte går den ut efter 30 minuter, och tillägget står kvar här.') : '')
+      + (upplupna.length
+        ? '<article class="bet-tillagg-kort">'
+          + '<div class="bet-tillagg-topp"><div><small>Upplupet tillägg</small><b>' + esc(kronor(t.upplupet_ore)) + '</b></div>'
+          + '<button type="button" class="btn btn-orange" data-betala-skuld>Betala tillägg nu</button></div>'
+          + '<ul class="bet-tillagg-rader" aria-label="Tillägget pass för pass">'
+          + upplupna.map(p => '<li><span>' + esc(dag(p)) + '</span><span>'
+            + esc(p.extra === 1 ? '1 extra barn' : p.extra + ' extra barn') + '</span><b>' + esc(kronor(p.belopp_ore))
+            + '</b></li>').join('')
+          + '</ul>'
+          + '<p class="bet-tillagg-not">' + esc(t.obligatorisk
+            ? 'Betalar ni inte nu följer tillägget med som en egen rad nästa gång ni köper timmar. Inget dras av sig självt.'
+            : 'Betalar ni inte nu kan ni ta med tillägget som en egen rad nästa gång ni köper timmar. Inget dras av sig självt.')
+          + '</p></article>'
+        : '');
+  }
+
+  /* Betala tillägg nu: hela det upplupna, i en egen kassa. Köpvillkoren
+     först, som för allt annat. */
+  async function betalaSkulden(knapp) {
+    const t = S.syskon;
+    if (!t || !(Number(t.upplupet_ore) > 0)) return;
+    const n = Number(t.upplupna) || 0;
+    if (!await NXStudie.kassansVillkor({
+      titel: 'Betala tillägget',
+      rader: ['Upplupet tillägg för extra barn, ' + (n === 1 ? '1 pass' : n + ' pass') + ' · ' + NXBetalning.kronor(t.upplupet_ore)],
+      text: 'Ni betalar med kort eller Klarna i nästa steg. Rabattkoder gäller inte tillägget.'
+    })) return;
+    await medan(knapp, 'Öppnar…', async () => {
+      const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
+      const svar = await startaKassa({ skuld: true, retur: location.origin, ui: 'inbaddad', villkor: true });
+      if (!svar) { laddaSyskon().catch(() => {}); return; }
+      const vad = 'Upplupet tillägg för extra barn, ' + (svar.antal_pass === 1 ? '1 pass' : svar.antal_pass + ' pass')
+        + ' · ' + NXBetalning.kronor(svar.belopp_ore);
+      if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
+        const Stripe = await stripeKlar;
+        if (Stripe) {
+          try {
+            await öppnaKassa(knapp, null, svar, Stripe, { titel: 'Betala tillägget', vad: vad, sort: 'skuld', klar: skuldenBetald });
+            return;
+          } catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
+        }
+        const reserv = await startaKassa({ skuld: true, retur: location.origin, ui: 'sida', villkor: true });
+        if (reserv && reserv.url) { location.href = reserv.url; return; }
+        if (!reserv) return;
+      } else if (svar.url) {
+        location.href = svar.url;
+        return;
+      }
+      alert('Kassan kunde inte öppnas. Försök igen, eller hör av dig till oss.');
+    });
+  }
+
+  function skuldenBetald() {
+    const p = panel;
+    if (!p) return;
+    p.klar = true;
+    p.besked.textContent = '✓ Tack! Tillägget är betalt. Det kan ta en liten stund innan det syns här, och kvittot kommer med mejl.';
+    p.besked.hidden = false;
+    setTimeout(() => { laddaSyskon().catch(() => {}); }, 2500);
+    setTimeout(() => { laddaSyskon().catch(() => {}); }, 8000);
   }
 
   /* ============================================================
@@ -1900,7 +2061,9 @@
       meta: [förnamn ? 'Rapport från ' + förnamn : 'Rapport från er studiehjälpare',
         r.lesson_date ? { ikon: 'dag', text: versal(NXStudie.dagMedVeckodag(r.lesson_date)) } : null,
         tid ? { ikon: 'tid', text: tid } : null,
-        plats],
+        plats,
+        // Ett pass med syskon (syskontillagg_som_skuld): rapporten gäller alla barnen.
+        b && passetsBarn(b).length > 1 ? 'Barn på passet: ' + NXStudie.listaOrd(passetsBarn(b)) : null],
       gick: r.gick,
       text: r.ai_feedback || r.raw_notes,
       trana: r.needs_practice,
@@ -2617,7 +2780,9 @@
        timbanken köps utan kod: extra bär antalet timmar. villkor: true
        säger att köpvillkoren kryssats i före kassan. */
     const plan = S.erb.katalog.some(e => e.kod === kod && e.sort === 'plan');
-    const rk = !extra && plan && S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
+    /* Timmar till planen köps utan kod; med_tillagg (syskontillägget) är
+       inget annat köp, och koden följer med som förut. */
+    const rk = !(extra && extra.timmar) && plan && S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
     return startaKassa(Object.assign({ erbjudande: kod, retur: location.origin, ui: ui, villkor: true },
       rk ? { rabattkod: rk } : {}, extra || {}));
   }
@@ -3139,17 +3304,55 @@
     const e = S.erb.katalog.find(x => x.kod === kod);
     if (!e || !S.erb.aktiv || S.väntar) return;
     const kodPris = S.erb.kod && S.erb.kod.pris[kod] != null ? Number(S.erb.kod.pris[kod]) : null;
+    const pris = kodPris != null ? kodPris : medRabatt(e).pris;
+    const tl = tilläggIKassan(pris);
     const ok = await NXStudie.kassansVillkor({
       titel: 'Köp ' + e.namn,
-      rader: [erbTimmar(e) + ' · ' + NXBetalning.kronor(kodPris != null ? kodPris : medRabatt(e).pris)]
+      rader: [erbTimmar(e) + ' · ' + NXBetalning.kronor(pris)]
         .concat(e.sort === 'plan' ? ['Gäller i ' + PLANENS_DAGAR + ' dagar från köpet'] : []),
+      tillagg: tl,
       text: 'Ni betalar med kort eller Klarna i nästa steg.'
     });
     if (!ok) return;
-    await köpIKassan(knapp, kod, null, 'Köp ' + e.namn, svar => erbTimmar(e) + ' · '
+    await köpIKassan(knapp, kod, tl && tl.valfri && !tl.med ? { med_tillagg: false } : null, 'Köp ' + e.namn,
+      svar => erbTimmar(e) + ' · '
       + NXBetalning.kronor(svar.belopp_ore != null ? svar.belopp_ore : e.pris_ore)
       + medVad(Number(svar.familjerabatt_ore) > 0,
-        Number(svar.rabatt_ore) > Number(svar.familjerabatt_ore || 0) && S.erb.kod ? S.erb.kod.kod : null));
+        Number(svar.rabatt_ore) > Number(svar.familjerabatt_ore || 0) && S.erb.kod ? S.erb.kod.kod : null)
+      + tilläggISvaret(svar));
+  }
+
+  /* Syskontillägget i kassans ruta (syskontillagg_som_skuld, 2026-10-21):
+     det upplupna som egen rad, utan rabattkod, och totalen. Står det i en
+     betalning som pågår följer det inte med, och rutan säger det. Beloppet
+     är det mitt_tillagg() sa; kassan tar databasens, och raden i Stripe
+     står för sig. */
+  function tilläggIKassan(prisOre) {
+    const t = S.syskon;
+    if (!t) return null;
+    const n = Number(t.upplupna) || 0;
+    if (!n) {
+      return Number(t.i_betalning) > 0
+        ? { rad: 'Tillägget för extra barn: en betalning pågår redan, så det följer inte med det här köpet.', valfri: false, med: false }
+        : null;
+    }
+    const kronor = NXBetalning.kronor;
+    return {
+      rad: 'Upplupet tillägg för extra barn, ' + (n === 1 ? '1 pass' : n + ' pass') + ' · ' + kronor(t.upplupet_ore)
+        + (t.obligatorisk ? ' (egen rad, utan rabattkod)' : ' (betala det nu, som egen rad utan rabattkod)'),
+      valfri: !t.obligatorisk,
+      med: true,
+      totalMed: prisOre ? 'Totalt ' + kronor(Number(prisOre) + Number(t.upplupet_ore)) : null,
+      totalUtan: prisOre ? 'Totalt ' + kronor(Number(prisOre)) : null
+    };
+  }
+  /* Raden under rubriken i panelen säger tillägget när det följde med. */
+  function tilläggISvaret(svar) {
+    if (Number(svar.tillagg_ore) > 0) {
+      laddaSyskon().catch(() => {});
+      return ' + tillägg ' + NXBetalning.kronor(svar.tillagg_ore);
+    }
+    return svar.tillagg_pagar ? ' (tillägget betalas i en annan betalning som pågår)' : '';
   }
 
   /* "med er rabatt", "med koden X" eller båda, efter beloppet i kassan. */
@@ -3723,14 +3926,17 @@
     const plan = planFörExtra();
     if (!plan || !S.erb.aktiv || S.väntar) return;
     const n = S.extra.timmar;
+    const tl = tilläggIKassan(null);
     if (!await NXStudie.kassansVillkor({
       titel: 'Köp till timmar',
       rader: [timText(n) + ' till ' + plan.namn, 'Gäller till och med ' + datumText(plan.giltigt_till) + ', som planen'],
+      tillagg: tl,
       text: 'Priset står i kassan, och betalningen görs med kort i nästa steg.'
     })) return;
-    await köpIKassan(knapp, 'plan_extra', { timmar: n }, 'Köp till timmar',
+    await köpIKassan(knapp, 'plan_extra', Object.assign({ timmar: n }, tl && tl.valfri && !tl.med ? { med_tillagg: false } : {}),
+      'Köp till timmar',
       svar => timText(n) + ' till ' + plan.namn + (svar.belopp_ore ? ' · ' + NXBetalning.kronor(svar.belopp_ore) : '')
-        + (Number(svar.familjerabatt_ore) > 0 ? ' ' + medErRabatt : ''));
+        + (Number(svar.familjerabatt_ore) > 0 ? ' ' + medErRabatt : '') + tilläggISvaret(svar));
   }
 
   /* Ett köpt kort: timmarna kvar som en mätare, och sista dagen. Samma
@@ -4059,10 +4265,17 @@
   async function betalaIKassan(knapp, passId, tillägg) {
     /* Köpvillkoren först (2026-10-21): avbryter ni här händer ingenting. */
     const b = (S.bokningar || []).find(x => x.id === passId);
+    /* Syskontillägget buntas inte med ett pass (syskontillagg_som_skuld,
+       2026-10-21: passets betalning skrivs på tre vägar, se migrationen).
+       Rutan säger beloppet för sig, och att det betalas på annat sätt. */
+    const sk = S.syskon && Number(S.syskon.upplupna) > 0 ? S.syskon : null;
     if (!await NXStudie.kassansVillkor({
       titel: tillägg ? 'Betala tillägget' : 'Betala passet',
       rader: b ? [(b.subject ? b.subject + ', ' : '') + datumText(b.wanted_date)
         + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')] : [],
+      tillagg: sk && !tillägg ? { rad: 'Upplupet tillägg för extra barn, ' + NXBetalning.kronor(sk.upplupet_ore)
+        + ': ingår inte här. Betala det med Betala tillägg nu under Betalning, eller med nästa köp av timmar.',
+        valfri: false, med: false } : null,
       text: 'Beloppet står i kassan, och ni betalar med kort eller Klarna i nästa steg.'
     })) return;
     await medan(knapp, 'Öppnar…', async () => {
@@ -4183,6 +4396,9 @@
     if (kt) { await taBortKort(kt); return; }
     const bet = e.target.closest('[data-betala]');
     if (bet) { await betalaIKassan(bet, bet.dataset.betala, false); return; }
+    // Betala tillägg nu (syskontillagg_som_skuld, 2026-10-21).
+    const sk = e.target.closest('[data-betala-skuld]');
+    if (sk) { await betalaSkulden(sk); return; }
     /* Tillägget (Fas 20.1): samma kassa, samma bekräftelse av rapporten. */
     const tl = e.target.closest('[data-tillagg]');
     if (tl) { await betalaIKassan(tl, tl.dataset.tillagg, true); return; }
@@ -4289,6 +4505,19 @@
         text: efter ? (efter === 1 ? 'Ett av dem har redan hållits.' : efter + ' av dem har redan hållits.') + ' Betala med kort eller Klarna.'
           : 'Betala med kort eller Klarna, så är det klart före passet.',
         mål: '#bet-att-betala'
+      });
+    }
+
+    /* Upplupet syskontillägg (syskontillagg_som_skuld, 2026-10-21): en
+       skuld för pass som hållits. Familjen betalar när den vill; posten
+       säger beloppet och var. */
+    const sk = S.syskon && Number(S.syskon.upplupna) > 0 ? S.syskon : null;
+    if (sk) {
+      poster.push({
+        rubrik: 'Upplupet tillägg ' + NXBetalning.kronor(sk.upplupet_ore),
+        text: 'För syskon på ' + (Number(sk.upplupna) === 1 ? '1 pass' : sk.upplupna + ' pass')
+          + ' som hållits. Betala under Betalning, eller med nästa köp av timmar.',
+        mål: '#bet-tillagg'
       });
     }
 
@@ -4449,6 +4678,10 @@
        listan ovanför ytan. */
     neka: id => nekaBarnforslag(id),
     efterGranskning: () => ritaBarnforslag(),
+    /* Syskonen på passet (syskontillagg_som_skuld, 2026-10-21): bara med
+       strömbrytaren på; annars väljs antalet barn som förut. */
+    syskon: () => syskonLäge(),
+    godkännSyskon: version => godkännSyskon(version),
     /* Hur passet betalas (kortet_reserveras, 2026-10-13): bara med
        strömbrytaren på, och då är Betala i förväg borta. */
     betalval: () => betalvalFörslag(),
@@ -4463,7 +4696,11 @@
         created_by: S.user.id,
         subject: v.amne,
         tjanst: NXTjanster.standard(),
-        antal_barn: v.barn || 1,
+        /* Med syskonen valda är passet ett barns (antal_barn 1), och
+           tillägget en egen skuld (bookings_syskon_skapa). extra_barn står
+           bara med när den har barn: före migrationen finns kolumnen inte. */
+        antal_barn: v.extra && v.extra.length ? 1 : (v.barn || 1),
+        ...(v.extra && v.extra.length ? { extra_barn: v.extra } : {}),
         wanted_date: v.datum,
         wanted_time: v.tid,
         duration_min: v.minuter,
@@ -4492,6 +4729,7 @@
          på Föreslå tiden ska få svaret när databasen gett det. */
       laddaPass();
       if (betalt) laddaErbjudanden().catch(() => {});
+      if (v.extra && v.extra.length) laddaSyskon().catch(() => {});
       /* Timmen på köpet för ett tips drogs i samma skrivning. */
       if (data && data.rabattkod === 'TIPS') laddaTips().catch(() => {});
       return { status: data ? data.status : null, id: data ? data.id : null, betalt: betalt,
@@ -4789,7 +5027,7 @@
     const idag = isoFor(new Date());
     const lista = attBetala();
     ritaBetSam(lista);
-    if (S.sido) S.sido.märke('betalning', lista.length);
+    if (S.sido) S.sido.märke('betalning', lista.length + (S.syskon && Number(S.syskon.upplupna) > 0 ? 1 : 0));
     $('#bet-att-antal').textContent = lista.length ? String(lista.length) : '';
     if (!lista.length) {
       host.innerHTML = tomt('Inget att betala',
@@ -4901,7 +5139,8 @@
      inte visar beskedet igen, och så att sidan öppnar på Betalning. */
   function läsBetalsvar() {
     const q = new URLSearchParams(location.search);
-    const svar = q.has('betalt') ? 'betalt' : q.has('kopt') ? 'kopt'
+    // Betala tillägg nu (syskontillagg_som_skuld) kommer tillbaka med ?tillagg=.
+    const svar = q.has('betalt') ? 'betalt' : q.has('tillagg') ? 'skuld' : q.has('kopt') ? 'kopt'
       // Kassan som sparar kortet (kortet_reserveras) kommer tillbaka med ?kort=.
       : q.has('kort') ? (q.get('kort') === 'avbrutet' ? 'kortAvbrutet' : 'kort')
       : q.get('betalning') === 'avbruten' ? 'avbruten' : null;
@@ -4929,6 +5168,11 @@
     }
     const msg = $('#bet-msg');
     if (!svar || !msg) return;
+    if (svar === 'skuld') {
+      säg(msg, '✓ Tack! Betalningen för tillägget är mottagen. Det kan ta en liten stund innan det syns här, och kvittot kommer med mejl.', true);
+      setTimeout(() => { laddaSyskon().catch(() => {}); }, 5000);
+      return;
+    }
     if (svar === 'betalt') {
       säg(msg, '✓ Tack! Betalningen är mottagen. Det kan ta en liten stund innan passet står som betalt här.', true);
       /* Webhooken brukar hinna före familjen tillbaka hit, men inte
@@ -5512,8 +5756,12 @@
         varde: online ? (länk || 'Online') : (b.location || 'Plats inte angiven, skriv till ' + förnamn),
         under: online ? (länk ? 'Online' : möte ? möte[1] : null) : (b.format || null) },
       { ikon: 'vem', etikett: 'Vem',
-        varde: barn ? barn.name : ((b.antal_barn || 1) > 1 ? b.antal_barn + ' barn' : 'Er familj'),
-        under: [barn && (b.antal_barn || 1) > 1 ? b.antal_barn + ' barn på passet' : null,
+        /* Syskon på passet (syskontillagg_som_skuld): alla barnen, och
+           tillägget för dem, som skuld efter passet. */
+        varde: passetsBarn(b).length > 1 ? NXStudie.listaOrd(passetsBarn(b))
+          : barn ? barn.name : ((b.antal_barn || 1) > 1 ? b.antal_barn + ' barn' : 'Er familj'),
+        under: [passetsBarn(b).length > 1 ? passetsBarn(b).length + ' barn på passet' + syskonTillägg(b)
+          : barn && (b.antal_barn || 1) > 1 ? b.antal_barn + ' barn på passet' : null,
           S.tutor && S.tutor.full_name ? 'Med ' + S.tutor.full_name + ', studiehjälpare' : 'Med er studiehjälpare'].filter(Boolean).join(' · ') },
       { ikon: 'kort', etikett: 'Pris',
         varde: pris === null ? betalning : NXBetalning.kronor(pris) + (b.startrabatt ? ', ' + påKöpet(b) : ''),
@@ -5849,7 +6097,8 @@
     /* Kortet (2026-10-13) före passen, som dess val och lägen ritas ur.
        Ett fel här stoppar inte vyn: utan kortet är den som förut. */
     await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden(), laddaTips(),
-      laddaKort().catch(err => console.warn('kortet:', err))]);
+      laddaKort().catch(err => console.warn('kortet:', err)),
+      laddaSyskon().catch(err => console.warn('tillägget:', err))]);
     await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaNexlax(), laddaProgress(), laddaPass(), laddaBokning(), laddaRapporterna(), laddaBarnforslag()]);
     /* Barnens förslag kan komma medan fliken står öppen: de hämtas när
        man kommer tillbaka till den, högst en gång i minuten. */

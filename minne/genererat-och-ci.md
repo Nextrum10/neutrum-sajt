@@ -708,3 +708,21 @@ raderas, prövningen i svensk tid, användningen vid betalningen, familjens part
 som når vad och statistiken med och utan testbetalningar. `prova-koder.js` provar flikarna under Koder
 (planskoderna) med ett partnernamn som bär en `<img onerror>`, och `prova-barnforslag.js` att Boka pass och
 granskningen inte har någon ruta för en kod och att Fyll timbanken aldrig visar ett pris med kod.
+
+### Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21)
+`_delad/tillagg.ts` är det webhooken och kassan gör med tillägget (beloppet, raden i kassan, utgångstiden,
+buntningen, fördelningen av en återbetalning per rad och händelserna), med databasen inskickad (`TillaggDb`), och
+`tillagg_test.ts` (34) provar beloppen och avrundningen, raden utan kod, utgångstiden, en betald, en som väntar
+(Klarna), en utgången och en misslyckad kassa, samma händelse två gånger, en signatur som inte stämmer, en
+återbetalning per rad ur metadatan (också en som misslyckades och en köprad), och en tvist. I `rls-test.sql` är
+avsnitt 51 (SK, 76 prov) nytt: villkoren och versionen, barnen och taket, att ingen klient skriver, lägena (hållet,
+avslaget, avbokat i tid, sent och exakt 24 timmar), försöken och låsen i en transaktion, betalningen och raderna,
+buntningen, återbetalningen per rad, tvisten, spärren (beloppet och åldern i Stockholms dagar), påminnelsen,
+admins knappar och att barnen, längden och antalet står fast. `verktyg/prova-tillagg-samtidigt.sh` öppnar två
+psql-sessioner mot den lokala databasen och betalar samma skuld samtidigt i tre varv (två flikar, en flik och ett
+köp, två köp): varje post i exakt ett försök, och den andra sessionen väntade på låset. `prova-syskon.js` (port
+8983, 95 prov) provar vyerna mot en falsk Supabase: Boka pass med syskon, livepriset, villkoren första gången och
+krysset, att vyn skickar barnen och aldrig ett belopp, spärren, kortet Upplupet tillägg och Betala tillägg nu,
+banderollerna, tillägget som egen rad i ett köp (obligatoriskt och valfritt), passens barn, strömbrytaren av och
+utan migrationen, telefon och mörkt läge, och studiehjälparens Barnen på passet, med ett barnnamn som är HTML.
+`prova-adminvyn.js` öppnar fliken mot en riktig databas med två poster ur `prova-adminvyn.sql`.

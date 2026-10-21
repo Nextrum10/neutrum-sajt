@@ -318,6 +318,9 @@ window.NXForhandsvisning = (function () {
       betygsgarantier: [],
       pass_tillagg: [],
       timbank_uttag: [],
+      /* Passens barn (syskontillagg_som_skuld, 2026-10-21): tom, för
+         strömbrytaren syskonskuld står av och inget pass har extra barn. */
+      bokning_barn: [],
       notis_val: [],
       notis_installning: [{ id: 1, paminnelser_timmar: 24, chatt_samla_minuter: 15 }],
       pass_moten: [],
@@ -808,6 +811,17 @@ window.NXForhandsvisning = (function () {
     /* Familjens rabatt per timme (familjerabatter, 2026-10-15): den påhittade
        familjen har ingen, och priset vid knappen är katalogens. */
     min_familjerabatt: function () { return 0; },
+    /* Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21):
+       strömbrytaren står av, som i driften, och familjen har ingen skuld.
+       Villkoren är ett utkast, så rutan för extra barn syns inte. */
+    mitt_tillagg: function () {
+      return roll !== 'foralder' ? null
+        : { pa: false, version: 'utkast', godkand_at: null, sen_avbokning_timmar: 24, debitera_vid_sen_avbokning: true,
+            obligatorisk: true, max_upplupet_ore: 100000, sparr_efter_dagar: 45, paminnelse_dagar: 14, sparr: null,
+            upplupet_ore: 0, upplupna: 0, i_betalning_ore: 0, i_betalning: 0, poster: [] };
+    },
+    /* Barnen på studiehjälparens pass: inget pass har extra barn här. */
+    passens_barn: function () { return []; },
     /* Planerna per månad (2026-10-21): den 1:a i den här och nästa månad,
        så att månadsvalet och timbankens månader syns som i driften. */
     planens_manader: function () {

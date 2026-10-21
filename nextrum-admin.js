@@ -52,6 +52,7 @@
   const ritaAnsokningar = (...a) => NXAdmin.rita.ritaAnsokningar(...a);
   const ritaProvet = (...a) => NXAdmin.rita.ritaProvet(...a);
   const ritaLiggaren = (...a) => NXAdmin.rita.ritaLiggaren(...a);
+  const ritaTillagg = (...a) => NXAdmin.rita.ritaTillagg(...a);
   const ritaBibliotek = (...a) => NXAdmin.rita.ritaBibliotek(...a);
   const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
   const ritaBokningar = (...a) => NXAdmin.rita.ritaBokningar(...a);
@@ -1032,6 +1033,8 @@
       /* Liggaren och Kortet under Betalningar (2026-10-21) hämtar sitt eget
          och väntas inte in. */
       ritaLiggaren();
+      // Syskontillägget (2026-10-21) under Betalningar, med sitt eget hämtande.
+      ritaTillagg();
       ritaKontakt();
       ritaChattar();
       ritaFamiljer();

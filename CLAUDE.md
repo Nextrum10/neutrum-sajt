@@ -380,6 +380,22 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   uppgift till oss; admin försöker igen under Betalningar → Kortet. Passet avbokas aldrig för att kortet nekas.
   Inställningarna står i `betalning_installning`, och `sen_avbokning_timmar` är låst på 0 som `kortsparr`: villkoren
   har ingen avbokningsavgift. Databasen väcker `stripe-reservation` direkt när ett pass har något att göra nu.
+- **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, strömbrytaren `syskonskuld` AV; Leo: "Tillägget
+  blir en skuld på familjen när passet är hållet. Familjen kan betala skulden när hen vill under Betalningar, eller så
+  läggs den som en egen rad i nästa betalning"): med strömbrytaren på väljer familjen vilka syskon som är med
+  (`bookings.extra_barn`, `bokning_barn`), passet har `antal_barn = 1` (passets pris och timmarna är ett barns), och
+  tillägget är en egen post (`tillagg_poster`, en per pass, beloppet fryst vid bokningen: extra barn gånger tjänstens
+  `extra_personer_ore` gånger minuterna, aldrig ur anropet). Posten är `bokad`, blir `upplupen` när passet hålls eller
+  familjen avbokar ett bekräftat pass inom `sen_avbokning_timmar`, och `frigjord` annars; bara triggrarna och
+  databasens funktioner byter läge, och ingen klient skriver. Skulden betalas med Betala tillägg nu (`stripe-checkout`
+  med `skuld: true`) eller som en egen rad i nästa köp av timmar (plan, Fyll timbanken, timmar till planen), aldrig i
+  Betala nu för ett pass (varför: `minne/betalning.md`). En post står i högst ett öppet försök (`tillagg_forsok`,
+  familjens lås och radlås), bara webhooken sätter den betald, och en rabattkod räknas aldrig på tillägget. Barnen,
+  längden och antalet står fast efter bokningen, också för admin. Spärren (över `max_upplupet_ore` eller en post äldre
+  än `sparr_efter_dagar`) stoppar extra barn i databasen, aldrig ett pass för ett barn. Gränserna och villkorens
+  version står i `tillagg_installning` (`'utkast'` tills Leo skrivit texten), familjens ja i `tillagg_godkannanden`.
+  **Strömbrytaren går inte på med utkastet**, och slås den på blir tre barn 537 kr i timmen i stället för 468: sidorna,
+  villkoren och Siffror nedan ändras i samma ändring. Betalningens delar står i `betalningsrader`, som aldrig raderas.
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -419,9 +435,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | timmar till planen | Köp till timmar: 1–20 timmar till en plan som gäller, till planens timpris, som går ut med planen (`klippkort` med erbjudandet `plan_extra` och `till_plan`; Välj själv under Er timbank) |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
+| syskontillägg | 69 kr per extra barn och timme som en skuld efter passet (`tillagg_poster`, typen `syskon` i liggaren), med `syskonskuld` på; aldrig övertid, som är `pass_tillagg` och typen `tillagg` |
+| upplupet tillägg | familjens obetalda syskontillägg för hållna pass (`tillagg_skuld()`), som betalas med Betala tillägg nu eller i nästa köp av timmar |
 ### Siffror som måste stämma överallt
 - **399 kr/tim** utan bindning (`PRIS_PER_TIMME` och läxhjälpens rad i `tjanster`, 2026-10-08), och
-  det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537).
+  det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537), så länge
+  `syskonskuld` står av. Med den på är det 69 kr per extra barn och timme, som en skuld efter passet (tre barn 537),
+  och då ändras sidorna, villkoren och den här raden samtidigt (avsnitt 1). Priset står i `tjanster`
+  (`extra_personer_ore`) och i `PRIS_SYSKON_TILLAGG_KR_PER_TIMME`, som hette `PRIS_EXTRA_BARN` till 2026-10-21.
   **Paketen** (planerna) kostar 379 kr i timmen, en månad i taget: 5 % av 399 nedåt till hel krona. De
   binder inte: villkoren säger ingen bindningstid och att det som är kvar betalas tillbaka, så sajten säger
   "en månad i taget" eller "obundet", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
@@ -741,6 +762,11 @@ Detaljer: `minne/grunden.md`.
   `har_rapport`, varje rad bär `underlag_rader`, och luckor redovisas i stället för att fyllas.
 - Ett schema som står av ser ut som ett som fungerar: jobben syns under System → Automationer,
   utan sina kommandon. Flyttas `manadskorning` flyttas `manadskorning-svar` med.
+- **Syskontillägget** (2026-10-21): `tillagg_poster`, `tillagg_forsok`, `tillagg_forsok_poster` och `betalningsrader`
+  raderas aldrig (triggrar mot delete och truncate, också för ägaren), och en post byter bara läge längs de tillåtna
+  övergångarna (`tillagg_poster_vakt`). Varje betalning får en rad i `betalningsrader` vid commit om ingen skrev en
+  (`betalningar_rader`, en deferred constraint trigger). Jobben `tillagg-forsok` (var 15:e minut, släpper ett försök
+  efter 35 minuter) och `tillagg-paminnelse` (en gång om dagen, dagarna räknade i Stockholms tid).
 - **Gallringen**: lagringstiderna hålls av databasen (`DATASKYDD.md` är registret). Anmälningar
   avidentifieras, konton raderas aldrig av sig själva, ett jobb som fastnat blir en uppgift, och
   `landningssida` bär bara våra utm-taggar. Ett nytt rekryteringssteg med tidsstämpel ska in i
@@ -890,6 +916,12 @@ Detaljer: `minne/sakerhet.md`.
   begärda); den kastar varje fel så att Stripe försöker igen, och en tvist äger läget. Kassan
   tar bara kort, `faktura-utskick` skickar bara underlag och mejlet före statusen, och `google-meet`
   sparar bara öppna rum.
+- **Syskontillägget** (2026-10-21): `stripe-checkout` tar `skuld: true` (Betala tillägg nu, utan kod) och lägger
+  tillägget som en egen rad i ett köp av timmar (`med_tillagg: false` bara när det inte är obligatoriskt); beloppet
+  är databasens (`tillagg_forsok_skapa`), och kassans utgångstid är försökets. `stripe-webhook` skriver betalningen
+  genom `tillagg_forsok_betald` och `klippkort_betald_med_tillagg` (planen och tillägget i en transaktion), släpper
+  försöket vid `checkout.session.expired` och `async_payment_failed`, och fördelar en återbetalning per rad
+  (`_delad/tillagg.ts`). `stripe-aterbetalning` betalar tillbaka en rad (`betalningsrad`), aldrig över den.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
@@ -963,6 +995,9 @@ Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
   behörigheter och på en telefon i mörkt läge. Det faller på varje fel i konsolen och varje svar från databasen på
   400 eller mer, och de andra webbläsarproven, som svarar ur en falsk värld, ser inte de felen. Kör det efter en
   ändring i adminvyn eller i en policy den läser.
+- **`verktyg/prova-tillagg-samtidigt.sh`** (2026-10-21) körs inte i CI: två psql-sessioner betalar samma skuld
+  samtidigt mot den lokala databasen, och varje post ska stå i exakt ett försök. Kör det efter en ändring i
+  `tillagg_forsok_skapa` eller låsen; `rls-test.sql` kör i en transaktion och kan inte pröva två samtidiga.
 
 Detaljer: `minne/genererat-och-ci.md`.
 
@@ -975,6 +1010,13 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, 20261021214000) är byggt men INTE i drift, och
+  strömbrytaren `syskonskuld` står av: migrationen, sedan `stripe-checkout`, `stripe-webhook`, `stripe-aterbetalning`
+  och `notis-ko` från merge-commiten, i den ordningen (`DEPLOY-BETALNING.md` 9.23). Stripes endpoint får
+  `checkout.session.expired` (utan den släpps ett försök först av jobbet efter 35 minuter). Kvar för Leo: villkorstexten
+  för syskontillägget (en platshållare står i bokningsrutan, länken i `CFG.TILLAGG_VILLKOR_URL`), versionen i
+  `tillagg_installning`, sidorna och villkoren om per extra barn, och sist strömbrytaren. Juristen har inte läst rad 35
+  i `DATASKYDD.md` eller policyns stycke om tillägget. Med strömbrytaren av bokas syskon som förut, och inget pris ändras.
 - **Liggarens markeringar och testbetalningen** (2026-10-21, `betalningar_dolda`, 20261021213000) är byggda men INTE i
   drift: migrationen och adminvyn, sedan `supabase/scripts/rensa-leo-testbetalning.sql` i SQL Editor, först som den står
   (dry_run) och sedan med `dry_run => false` om listan stämmer. Skriptet är provat lokalt: torrkörningen, och den skarpa

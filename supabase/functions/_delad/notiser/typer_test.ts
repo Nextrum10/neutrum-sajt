@@ -44,8 +44,8 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   // det här provet, och den som lägger till det får läsa kommentaren
   // överst innan det går igenom.
   assertEquals(Object.keys(rad).sort(), [
-    'amne', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid', 'gratis',
-    'kod', 'kortet', 'kvar', 'prov', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
+    'amne', 'antalPass', 'belopp', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid', 'gratis',
+    'kod', 'kortet', 'kvar', 'prov', 'rader', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
   ]);
 
   // Ingen av texterna finns kvar någonstans i svaret.
@@ -176,8 +176,8 @@ Deno.test('rapport finns som notistyp men mejlas aldrig', () => {
 
   // Listorna står också i databasen (notis_typer, notis_mejlbara).
   // Ändras den ena ska den andra ändras i samma ändring.
-  assertEquals(NOTIS_TYPER.length, 11);
-  assertEquals(MEJLBARA.length, 10);
+  assertEquals(NOTIS_TYPER.length, 13);
+  assertEquals(MEJLBARA.length, 12);
   for (const t of MEJLBARA) assertEquals(arNotisTyp(t), true, `${t} saknas i NOTIS_TYPER`);
 
   assertEquals(arNotisTyp('pass_installt'), false);
@@ -195,6 +195,25 @@ Deno.test('kortet är en av tre koder, aldrig Stripes text (kortet_reserveras, 2
   assertEquals(renData({ kortet: 'Your card has insufficient funds.' }).kortet, null);
   assertEquals(renData({ kortet: 'card_declined' }).kortet, null);
   assertEquals(renData({}).kortet, null);
+});
+
+Deno.test('tillägget: bara belopp, antal pass och kvittots tal följer med, aldrig ett namn', () => {
+  const d = renData({
+    belopp: 13800, antal_pass: 2, elev: 'Alva', barn: ['Alva', 'Ludvig'],
+    rader: [
+      { datum: '2026-10-14', barn: 3, belopp: 6900, namn: 'Alva och Ludvig' },
+      { datum: 'igår', barn: 2, belopp: 6900 },
+      { datum: '2026-10-15', barn: 1, belopp: 6900 },
+      { datum: '2026-10-16', barn: 2, belopp: -5 },
+    ],
+  });
+  assertEquals(d.belopp, 13800);
+  assertEquals(d.antalPass, 2);
+  assertEquals(d.rader, [{ datum: '2026-10-14', barn: 3, belopp: 6900 }]);
+  assertEquals(JSON.stringify(d.rader).includes('Alva'), false);
+  assertEquals(renData({ belopp: 'mycket', antal_pass: 0, rader: 'x' }).belopp, null);
+  assertEquals(renData({ antal_pass: 0 }).antalPass, null);
+  assertEquals(renData({ rader: 'x' }).rader, []);
 });
 
 Deno.test('de två listorna är inte samma lista', () => {

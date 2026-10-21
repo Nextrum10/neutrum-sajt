@@ -191,8 +191,13 @@ function värld() {
     betalningsrader: [
       { id: 'rad-1', betalning_id: 'lig-1', typ: 'plan', belopp_ore: 296300, klippkort_id: 'plan-denna', booking_id: null,
         kod: 'VAN10', beskrivning: null },
-      { id: 'rad-2', betalning_id: 'lig-1', typ: 'tillagg', belopp_ore: 6900, klippkort_id: null, booking_id: 'pass-2',
-        kod: null, beskrivning: null }
+      { id: 'rad-2', betalning_id: 'lig-1', typ: 'syskon', belopp_ore: 6900, aterbetalt_ore: 0, klippkort_id: null,
+        booking_id: 'pass-2', tillagg_post_id: 'post-2', kod: null, beskrivning: null }
+    ],
+    /* Syskontillägget som raden betalade (syskontillagg_som_skuld, 2026-10-21). */
+    tillagg_poster: [
+      { id: 'post-2', bokning_id: 'pass-2', familj_id: 'fam-a', pass_start: dag(-12) + 'T15:00:00+00:00',
+        antal_extra_barn: 1, minuter: 60, belopp_ore: 6900, status: 'betald', aterbetalt_ore: 0 }
     ],
     kortreservationer: [
       { booking_id: 'pass-k1', parent_id: 'fam-a', lage: 'misslyckad', fel: 'card_declined', forsok: 2,
@@ -621,8 +626,10 @@ async function provaLiggaren(webb) {
   const kort1 = await innehåll(page, '[data-lig-rad="lig-1"]');
   prova('korten: planen med kod bär två rader, planen och tillägget för syskon',
     (await page.locator('[data-lig-rad="lig-1"] .lig-rader li').count()) === 2
-      && (await page.getAttribute('[data-lig-rad="lig-1"] .lig-rader li:nth-child(2)', 'data-typ')) === 'tillagg'
-      && /2\s?963\s*kr/.test(kort1) && /69\s*kr/.test(kort1) && /Kod\s*VAN10/.test(kort1), kort1);
+      && (await page.getAttribute('[data-lig-rad="lig-1"] .lig-rader li:nth-child(2)', 'data-typ')) === 'syskon'
+      && /2\s?963\s*kr/.test(kort1) && /69\s*kr/.test(kort1) && /1 extra barn/.test(kort1) && /Kod\s*VAN10/.test(kort1), kort1);
+  prova('korten: syskontilläggets rad har en egen Återbetala',
+    (await page.locator('[data-lig-rad="lig-1"] [data-aterbetala-rad="rad-2"]').count()) === 1);
   prova('korten: ett kort utan rader har betalningen själv som rad',
     (await page.locator('[data-lig-rad="lig-2"] .lig-rader li').count()) === 1);
   const kant = sel => page.locator(sel).first().evaluate(el => getComputedStyle(el, '::before').backgroundColor).catch(() => '');

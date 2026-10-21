@@ -1992,3 +1992,97 @@ plan/pass/tillägg); bara visning."
 - Provat: `rls-test.sql` avsnitt 50 (`BD`, 7 prov) och `prova-kassan.js`
   (korten, raderna, kanten, Dolda och Annullerad).
 
+
+## Syskontillägget som skuld (2026-10-21, `syskontillagg_som_skuld`, inte i drift, strömbrytaren av)
+
+Leo: "bokar en familj ett pass med fler än ett barn tillkommer ett tillägg per extra barn.
+Tillägget blir en skuld på familjen när passet är hållet. Familjen kan betala skulden när hen
+vill under Betalningar, eller så läggs den som en egen rad i nästa betalning (planköp eller
+pass-för-pass). Inget debiteras när bokningen skapas. Det finns INGEN automatisk dragning, INGEN
+månadskörning och inget sparat kort för tillägget."
+
+- **Varför strömbrytaren står av.** Sajten, prissidan, FAQ:n, villkoren och Siffror säger att
+  tillägget är fast, 69 kr i timmen för två eller tre barn (tre barn 468), och att det betalas med
+  passet. Beställningen säger 69 kr per extra barn och timme (tre barn 537), som en skuld efter
+  passet. Att byta pris och betalsätt utan nya villkor är en tvist, så allt är byggt bakom
+  `syskonskuld`, som inte går att slå på medan `tillagg_installning.villkor_version` är `'utkast'`
+  (`flaggor_syskonskuld_villkor`), och versionen går inte tillbaka till utkastet medan den är på
+  (`tillagg_installning_vakt`). Med den av bokas syskon som förut (`antal_barn`, och tillägget i
+  passets pris), och `bookings_syskon_prova` nekar `extra_barn`. Leo skriver texten, sätter
+  versionen till sidans datum, ändrar sidorna och villkoren, och slår på den, i den ordningen.
+- **En plats för talen.** Priset per extra barn och taket är tjänstens (`tjanster.extra_personer_ore`
+  och `extra_personer_max`), samma källa som passets pris; `PRIS_SYSKON_TILLAGG_KR_PER_TIMME` i
+  configen är sajtens kopia, som `PRIS_PER_TIMME` (hette `PRIS_EXTRA_BARN`). Beställningens TILLAGG_*
+  (villkorens version, sen avbokning, debitera vid sen avbokning, obligatoriskt i nästa betalning,
+  max upplupet, spärr efter dagar, påminnelse efter dagar) står i `tillagg_installning`, en rad, i
+  databasen som håller dem: en spärr som bara stod i configen hade bara funnits i webbläsaren.
+  Länken till villkorstexten står i `CFG.TILLAGG_VILLKOR_URL` (tom: en platshållare i rutan).
+- **Passet.** Familjen väljer syskonen i Boka pass (raden Syskon i stället för Antal barn), och
+  vyn skickar bara barnens id (`extra_barn`), aldrig ett belopp. Passet har `antal_barn = 1`:
+  passets pris och timmarna är ett barns, och passet drar en timme per timme ur timbanken. Posten
+  (`tillagg_poster`, en per pass) får beloppet fryst när passet bokas: extra barn gånger
+  `extra_ore` gånger minuterna delat med 60, avrundat till hela ören (`intern.tillaggets_belopp`,
+  och villkoret `tillagg_poster_belopp` håller raden till det). Barnen, längden och antalet står fast
+  efter bokningen, också för admin och databasen (`bookings_syskon_star_fast`); ett motförslag
+  ändrar bara tiden (Leo: "Ett motförslag på tid får inte ändra passets längd, annars avvisas det"),
+  och familjen och studiehjälparen stoppas redan av `skydda_bokningsfalt`. Studiehjälparen väljer
+  aldrig barnen, och barnen måste vara familjens (`bokning_barn_vakt`).
+- **Lägena** (triggern `tillagg_poster_vakt`, alla andra nekas): bokad → upplupen (passet hålls,
+  eller familjen avbokar ett bekräftat pass inom `sen_avbokning_timmar` före start med
+  `debitera_vid_sen_avbokning` på; exakt 24 timmar är sent) eller frigjord (avslag, studiehjälparens
+  eller Nextrums avbokning, familjens avbokning i tid eller av en förfrågan); upplupen → i_betalning
+  (ett försök), avskriven (admin, orsak) eller frigjord (admin, orsak); i_betalning → betald eller
+  tillbaka till upplupen; betald → aterbetald (bara när hela raden betalats tillbaka). Bara familjens
+  avbokning av ett BEKRÄFTAT pass kan bli en skuld: en förfrågan blev aldrig ett pass.
+- **Betala tillägg nu**: `stripe-checkout` med `skuld: true` låser familjens alla upplupna poster i
+  ett försök (`tillagg_forsok_skapa`, familjens rådgivande lås och radlås på posterna) och öppnar
+  en kassa för exakt summan, med utgångstid 30 minuter (försökets `upphor_at`, så att två tryck blir
+  samma session hos Stripe). Ett andra försök medan ett är öppet får inga poster ("En betalning
+  pågår redan"). Ingen kod: `kodPaFelBetalning` säger nej till en kod utan erbjudande.
+- **Buntat med nästa köp**: ett köp av timmar (plan, Fyll timbanken, timmar till planen) tar med
+  det upplupna som en egen rad i kassan ("Upplupet tillägg för extra barn, N pass"), utan
+  rabattkod; med `obligatorisk_i_nasta_betalning` av får familjen kryssa ur raden
+  (`med_tillagg: false`). Bara posterna som var upplupna när kassan öppnades följer med.
+  Webhooken skriver köpet och tillägget i en transaktion (`klippkort_betald_med_tillagg`: liggarens
+  rad med hela beloppet först, sedan köpet med sin del och raderna per post).
+- **Varför pass för pass inte buntas**: Betala nu för ett pass skrivs av webhooken på tre vägar
+  (passets rad, timmarna tillbaka och `timbank_kort_vinner`), och passets `betalt_ore` är det som
+  betalas tillbaka när passet blir kortare (`kortare_pass_att_aterbetala`). En tilläggsrad i samma
+  betalning hade krävt att alla tre flyttas in i en databasfunktion och att återbetalningen räknar
+  bort tillägget, alltså att det befintliga flödet ändras. Beställningen sa att i det fallet bunta
+  bara vid planköp och manuell betalning, och rapportera varför.
+- **Webhooken är den enda sanningen**: `checkout.session.completed` och
+  `async_payment_succeeded` sätter posterna betalda (`tillagg_forsok_betald`), aldrig att familjen
+  kommer tillbaka till `?tillagg=`. Händelsen sparas med sitt id (`stripe_handelser`), så en dubbel
+  ger ingen dubbel effekt. `expired` och `async_payment_failed` släpper försöket, och jobbet
+  `tillagg-forsok` släpper ett försök utan bekräftelse efter 35 minuter. En Klarna-betalning som
+  väntar markerar försöket (`session_klar_at`), så att jobbet inte släpper det. Kommer en betalning
+  för ett försök som redan släppts tas posterna igen om de fortfarande är upplupna, annars är det
+  `dubbel`: betalningen skrivs utan rad (`utan_rad`) och blir en uppgift att betala tillbaka.
+- **Återbetalning per rad**: `betalningsrader` har en rad per del av betalningen. Admin betalar
+  tillbaka en rad i Liggaren och Syskontillägg (`stripe-aterbetalning` med `betalningsrad`), aldrig
+  mer än raden; `charge.refunded` fördelar Stripes återbetalningar per rad ur metadatan
+  (`fordelaAterbetalningar`) och skriver summorna absolut, så att en händelse som kommer två gånger
+  inte räknas två gånger. En tvist (`charge.dispute.*`) flaggas på betalningen, inget annat.
+- **Spärren** (Leo: "Spärren sitter i databasen (trigger), inte bara i UI"): upplupet plus det som
+  står i en betalning över `max_upplupet_ore`, eller en upplupen post äldre än `sparr_efter_dagar`
+  (dagarna räknade i Stockholm), nekar extra barn på ett nytt pass; ett pass för ett barn går
+  alltid, redan bokade rörs inte, och admin stoppas inte.
+- **Påminnelsen och kvittot** går genom notiskön (`tillagg_paminnelse`, `tillagg_kvitto`), med
+  belopp, antal pass och passens datum och antal barn, aldrig barnens namn. Påminnelsen går när den
+  äldsta posten är äldre än `paminnelse_dagar`, högst en per intervall och familj (jobbet
+  `tillagg-paminnelse`), och admin kan skicka en i dag (`tillagg_paminn`, en per dag). Båda går att
+  välja bort under Profil → Notiser.
+- **Adminvyn**: Betalningar → Syskontillägg (`nextrum-admin-tillagg.js`): familjerna med skuld,
+  spärren och Skicka påminnelse, posterna med Frigör och Avskriv (orsak 3–500 tecken, utan namn,
+  `andrad_av`) och Återbetala per rad. Liggaren visar raderna per typ (`syskon` heter
+  Syskontillägg, `tillagg` är övertiden).
+- **Antaganden** (beställningen mot schemat): typen i liggaren är `syskon`, för `tillagg` var redan
+  övertiden; en delåterbetalning av en rad lämnar posten betald; en återbetalning i Stripes
+  dashboard utan rad blir en uppgift; villkorens version är databasens, inte en konstant i
+  configen, för triggern ska pröva den; godkännandet krävs också när admin bokar, men spärren
+  gäller inte admin.
+- Provat: `rls-test.sql` avsnitt 51 (SK, 76 prov), `prova-tillagg-samtidigt.sh` (två flikar, en
+  flik och ett köp, två köp: varje post i exakt ett försök, och den andra väntade på låset),
+  `_delad/tillagg_test.ts` (34), `prova-syskon.js` (95) och `prova-adminvyn.js` (fliken mot en
+  riktig databas).

@@ -602,6 +602,25 @@
 .bk-betal-text{margin:-2px 0 0;font-size:.86rem;line-height:1.5;color:var(--bl-2);max-width:62ch}
 /* Där barnet hade sett ett pris står vem som ser förslaget först. */
 .bk-sum-pris > b.bk-sum-till{font-size:1rem;letter-spacing:0}
+/* SYSKONEN PÅ PASSET (syskontillagg_som_skuld, 2026-10-21). Valen är en
+   vanlig knapprad; tillägget står under, räknat, och att det blir en skuld
+   efter passet. Villkoren första gången i en ram, med kryssrutan på 44 px.
+   Spärren är ingen lägesfärg för ett fel familjen gjort: den säger varför. */
+.bk-syskon-info{margin:-2px 0 4px;max-width:62ch}
+.bk-tillagg{margin:0;font-size:.95rem;font-weight:700;color:var(--bl);font-variant-numeric:tabular-nums}
+.bk-tillagg-not{margin:4px 0 0;font-size:.86rem;line-height:1.5;color:var(--bl-2)}
+.bk-syskon-sparr{margin:0;font-size:.88rem;line-height:1.5;color:var(--bl-2)}
+.bk-syskon-villkor{
+  margin:12px 0 0;padding:14px 16px;border:1px solid var(--ln);border-radius:16px;background:var(--yta);
+  font-size:.88rem;line-height:1.55;color:var(--bl);
+}
+.bk-syskon-villkor p{margin:0}
+.bk-syskon-villkor ul{margin:8px 0 0;padding-left:18px}
+.bk-syskon-villkor li + li{margin-top:4px}
+.bk-syskon-platshallare{margin-top:8px !important;font-size:.82rem;color:var(--bl-3)}
+.bk-syskon-platshallare a{color:var(--acc);font-weight:600}
+.bk-syskon-kryss{display:flex;align-items:flex-start;gap:10px;min-height:44px;padding:10px 0 0;font-size:1rem;cursor:pointer}
+.bk-syskon-kryss input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange)}
 /* Listan med barnens förslag över ytan, i förälderns Boka pass, och
    barnets egna förslag under ytan i elevvyn. */
 .bf{margin-bottom:clamp(16px,2vw,22px)}
@@ -4219,6 +4238,41 @@ a.vy-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   box-shadow:inset 4px 0 0 var(--orange),var(--sk-1);
 }
 .bet-sam > div.ar-betala small{color:var(--bl-2)}
+/* UPPLUPET TILLÄGG (syskontillagg_som_skuld, 2026-10-21): ett kort med
+   beloppet, ett pass per rad och Betala tillägg nu, i betalknappens orange.
+   Spärren och en betalning som pågår står som rader över kortet, med
+   lägenas färger: ockra väntar, lera ert drag. */
+.bet-tillagg{display:grid;gap:10px;margin:14px 0 4px}
+.bet-tillagg[hidden]{display:none}
+.bet-tillagg-banner{
+  display:grid;gap:2px;padding:12px 16px;border-radius:16px;border:1px solid var(--ln);background:var(--yta);
+  font-size:.88rem;line-height:1.5;color:var(--bl-2);
+}
+.bet-tillagg-banner b{color:var(--bl);font-size:.92rem}
+.bet-tillagg-banner.ar-pagar{box-shadow:inset 4px 0 0 var(--ockra)}
+.bet-tillagg-banner.ar-sparr{box-shadow:inset 4px 0 0 var(--acc)}
+.bet-tillagg-kort{
+  background:color-mix(in srgb,var(--orange) 8%,var(--yta));
+  border:1px solid color-mix(in srgb,var(--orange) 40%,var(--ln));border-radius:20px;box-shadow:var(--sk-1);
+  padding:16px 18px;
+}
+.bet-tillagg-topp{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bet-tillagg-topp small{display:block;font-size:.8rem;font-weight:600;color:var(--bl-2)}
+.bet-tillagg-topp b{display:block;margin-top:2px;font-size:1.45rem;font-weight:700;letter-spacing:-.03em;color:var(--bl);white-space:nowrap}
+.bet-tillagg-rader{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.bet-tillagg-rader li{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:baseline;
+  font-size:.88rem;color:var(--bl-2);font-variant-numeric:tabular-nums;
+}
+.bet-tillagg-rader li b{color:var(--bl);font-weight:600}
+.bet-tillagg-not{margin:12px 0 0;font-size:.82rem;line-height:1.5;color:var(--bl-2)}
+@media (max-width:560px){
+  .bet-tillagg-topp .btn{width:100%}
+  .bet-tillagg-rader li{grid-template-columns:minmax(0,1fr) auto;row-gap:0}
+  .bet-tillagg-rader li > span:nth-child(2){grid-column:1;grid-row:2;font-size:.8rem}
+  .bet-tillagg-rader li b{grid-column:2;grid-row:1 / span 2}
+}
+
 /* Betalsätten som små brickor, så att Klarna syns innan kassan öppnas. */
 .bet-satt{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:14px 4px 2px}
 .bet-satt-et{font-size:.8rem;color:var(--bl-3);margin-right:4px}
@@ -5221,3 +5275,13 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .lig-val legend{font-size:.82rem;font-weight:600;color:var(--bl-2);margin-bottom:6px}
 .lig-alt{display:flex;align-items:center;gap:10px;min-height:44px;font-size:1rem;color:var(--bl)}
 .lig-alt input{flex:none;width:18px;height:18px}
+
+/* ============================================================
+   SYSKONTILLÄGGET I ADMINVYN (syskontillagg_som_skuld, 2026-10-21)
+   Familjerna med obetalt tillägg och posterna, som Liggarens rader.
+   Orsaken till en frigjord eller avskriven post står som en egen rad.
+   ============================================================ */
+.tl-rubrik{margin:clamp(18px,2.4vw,26px) 4px 10px;font-size:1rem;font-weight:700;color:var(--bl)}
+.tl-familj,.tl-post{gap:10px;flex-wrap:wrap}
+.tl-orsak{display:block;margin-top:4px;font-size:.82rem;line-height:1.45;color:var(--bl-2);max-width:60ch}
+.tl-orsak-not{display:block;margin-top:6px;font-size:.85rem;line-height:1.45;color:var(--bl-2)}

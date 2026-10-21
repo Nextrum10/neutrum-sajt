@@ -86,6 +86,8 @@
     'admin-paminnelse': 'Morgonmejl kl. 9 till admin med det som ligger kvar i Att göra',
     'timmar-betalar': 'Lediga timmar betalar nästa pass',
     'timmar-gar-ut': 'Mejlet om timmar som snart går ut',
+    'tillagg-forsok': 'Syskontillägg i en kassa som ingen betalat släpps efter 35 minuter',
+    'tillagg-paminnelse': 'Påminnelsen om obetalt syskontillägg, en gång om dagen',
     'manadskorning': 'Månadskörningen: lönespecifikationerna',
     'manadskorning-svar': 'Månadskörningens svar: fel blir en uppgift',
     'leads-avidentifiering': 'Intresseanmälningar avidentifieras',

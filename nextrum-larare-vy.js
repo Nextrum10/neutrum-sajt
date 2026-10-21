@@ -1370,6 +1370,37 @@
       + (annan.status === 'requested' ? ', ett förslag' : '');
   }
 
+  /* ============================================================
+     PASSENS BARN (syskontillagg_som_skuld, 2026-10-21)
+     Leo: "Lärare och admin ser antal barn, förnamn och årskurs på
+     passet. Lektionsrapporten kopplas till passet och visar alla barn."
+     Ett syskon behöver inte vara din egen elev, så barnen läses genom
+     passens_barn(), som bara svarar för dina egna pass. Ett pass utan
+     extra barn har bara huvudbarnet och sparas inte här. Ingen lön
+     räknas på antalet barn: det är bara datan.
+     ============================================================ */
+  async function laddaPassensBarn() {
+    const ids = (S.bokningar || []).filter(b => b.status !== 'cancelled').map(b => b.id).slice(-500);
+    S.passBarn = {};
+    if (!ids.length) return;
+    const { data, error } = await supa.rpc('passens_barn', { p_bokningar: ids });
+    if (error) return;
+    const per = {};
+    (data || []).forEach(r => { (per[r.bokning_id] = per[r.bokning_id] || []).push(r); });
+    Object.keys(per).forEach(id => {
+      if (per[id].length > 1) {
+        S.passBarn[id] = per[id].sort((x, y) => (y.ar_huvudbarn ? 1 : 0) - (x.ar_huvudbarn ? 1 : 0));
+      }
+    });
+  }
+  const passetsBarn = b => (S.passBarn && S.passBarn[b.id]) || [];
+  const antalBarn = b => passetsBarn(b).length || Number(b.antal_barn || 1);
+  /* "Alva (åk 8) och Ludvig (åk 6)". */
+  function barnenText(b) {
+    return NXStudie.listaOrd(passetsBarn(b).map(r => (r.fornamn || 'Ett barn')
+      + (r.arskurs ? ' (' + NX.årskursText(r.arskurs).toLowerCase() + ')' : '')));
+  }
+
   function förslagRad(b, vem, knappar) {
     /* Platsen och familjens anteckning står på raden: det är vad man
        behöver för att säga ja. Resten — eleven, målet, familjen —
@@ -1378,7 +1409,7 @@
     return NXKontakt.passRad(b, {
       href: '#pass/' + b.id,
       med: medElev(b),
-      under: b.antal_barn > 1 ? b.antal_barn + ' barn' : '',
+      under: antalBarn(b) > 1 ? antalBarn(b) + ' barn' : '',
       not: NXKontakt.kortNot(b.note),
       varning: krockFör(b),
       lage: null,
@@ -1626,6 +1657,7 @@
     }
     S.bokningar = data || [];
     S.laddatPass = true;
+    await laddaPassensBarn();
 
     /* Ett förslag är inget pass än. Här står det som faktiskt blir av
        — och det som redan hänt. Förslagen står i Föreslagna tider. */
@@ -1907,9 +1939,11 @@
       ? (b.subject || 'Pass') + (e ? ' med ' + e.name.split(' ')[0] : '')
       : 'Fristående rapport';
     const under = $('#rp-under');
+    /* Rapporten gäller alla barnen på ett pass med syskon. */
     if (under) under.textContent = b
       ? versal(NXStudie.dagMedVeckodag(b.wanted_date))
         + (b.wanted_time ? ', ' + NXStudie.tidsspann(b.wanted_time, b.duration_min) : '')
+        + (passetsBarn(b).length > 1 ? ' · Barn på passet: ' + barnenText(b) : '')
       : 'Om något ni gjorde utanför ett bokat pass.';
   }
 
@@ -4135,9 +4169,13 @@
       { ikon: 'vem', etikett: 'Eleven',
         varde: elevNamn || 'Ingen elev vald',
         under: e ? [e.grade ? NX.årskursText(e.grade) : null, e.school].filter(Boolean).join(' · ') : null },
+      // Syskon på passet (syskontillagg_som_skuld): förnamn och årskurs.
+      passetsBarn(b).length > 1 ? { ikon: 'vem', etikett: 'Barnen på passet',
+        varde: passetsBarn(b).length + ' barn', under: barnenText(b) } : null,
       { ikon: 'meddelande', etikett: 'Familjen',
         varde: f ? (f.full_name || f.email) : 'Familjen',
-        under: [(b.antal_barn || 1) > 1 ? b.antal_barn + ' barn på passet' : null, närvaro].filter(Boolean).join(' · ') },
+        under: [passetsBarn(b).length < 2 && (b.antal_barn || 1) > 1 ? b.antal_barn + ' barn på passet' : null, närvaro]
+          .filter(Boolean).join(' · ') },
       { ikon: 'lax', etikett: 'Ämnen', varde: e && e.subjects && e.subjects.length ? e.subjects.join(', ') : null },
       { ikon: 'mal', etikett: 'Behöver', varde: e ? behovText(e.behov) : null, under: önskar ? 'Önskar ' + önskar.toLowerCase() : null }
     ];

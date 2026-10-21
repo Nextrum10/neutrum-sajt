@@ -313,6 +313,32 @@ async function genomAdminvyn(webb, roll, o) {
     }
   }
 
+  /* Syskontillägget (syskontillagg_som_skuld, 2026-10-21): fliken läser
+     tillagg_oversikt() och posterna ur den riktiga databasen, och
+     fixturens familj har ett upplupet tillägg och ett bokat. */
+  if (sektioner.includes('ekonomi') && await page.locator('.vy-flik[data-flik="tillagg"]').count()) {
+    const före = { k: konsol.length, d: dbfel.length };
+    await page.evaluate(() => { location.hash = '#ekonomi'; });
+    await lugnt(page, 500);
+    await page.locator('.vy-flik[data-flik="tillagg"]').first().click({ timeout: 3000 }).catch(() => {});
+    await lugnt(page, 700);
+    const familjer = await page.locator('#tl-familjer').innerText().catch(() => '');
+    prova(namn + ': syskontillägg: familjen står med 69 kr upplupet ur databasen',
+      /Familjen Ett/.test(familjer) && /69\s*kr upplupet, 1 pass/.test(familjer), familjer.slice(0, 300));
+    const lista = await page.locator('#tl-lista').innerText().catch(() => '');
+    prova(namn + ': syskontillägg: obetalt visar den upplupna posten, inte den bokade',
+      /1 extra barn/.test(lista) && /Upplupet/.test(lista) && !/Bokat/.test(lista), lista.slice(0, 300));
+    await page.locator('[data-tl-filter="alla"]').first().click({ timeout: 3000 }).catch(() => {});
+    await lugnt(page, 300);
+    const alla = await page.locator('#tl-lista .tl-post').count();
+    prova(namn + ': syskontillägg: Alla visar båda posterna', alla === 2, String(alla));
+    await bild(page, namn.replace(/ /g, '-') + '-ekonomi-tillagg');
+    const nyaKonsol = konsol.slice(före.k);
+    const nyaDb = dbfel.slice(före.d);
+    prova(namn + ': syskontillägg: inga fel i konsolen', nyaKonsol.length === 0, nyaKonsol.join(' | '));
+    prova(namn + ': syskontillägg: inga fel från databasen', nyaDb.length === 0, nyaDb.join(' | '));
+  }
+
   prova(namn + ': inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   if (funktioner.length) console.log('(' + namn + ' anropade edge-funktioner, som svarade 404: '
     + [...new Set(funktioner)].join(', ') + ')');

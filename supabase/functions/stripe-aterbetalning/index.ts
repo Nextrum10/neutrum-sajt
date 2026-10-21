@@ -46,9 +46,20 @@
 // antal timmar, och timmarna dras tillbaka, aldrig under det som
 // använts. Beloppet räknas i databasen och flödet står i
 // _delad/aterbetalning.ts, där det prövas utan Stripe.
+//
+//
+// EN RAD MED SYSKONTILLÄGG (2026-10-21, syskontillagg_som_skuld)
+//
+// Med { betalningsrad, belopp_ore? } betalas en tilläggsrad tillbaka:
+// det som är kvar på raden, eller mindre. Raden och det som är kvar läses
+// med admins token (betalningsrad_att_aterbetala), och återbetalningen bär
+// raden i Stripes metadata, så att webhooken och den här funktionen
+// fördelar Stripes lista likadant (fordelaAterbetalningar). Ingen rad får
+// mer tillbaka än den betalade, och resten av betalningen rörs inte.
 // ============================================================
 
 import { aterbetalaKop } from '../_delad/aterbetalning.ts';
+import { type Aterbetalning, fordelaAterbetalningar } from '../_delad/tillagg.ts';
 import { kravAdmin, serviceklient } from '../_delad/auth.ts';
 import { cors, json, preflight } from '../_delad/http.ts';
 import { aterbetalningsLage, StripeError, v1 } from '../_delad/stripe.ts';
@@ -64,7 +75,9 @@ Deno.serve(async (req) => {
   const vem = await kravAdmin(req.headers.get('authorization'));
   if (!vem.ok) return vem.svar;
 
-  let kropp: { pass?: string; belopp_ore?: number; anledning?: string; klippkort?: string; timmar?: unknown } = {};
+  let kropp: {
+    pass?: string; belopp_ore?: number; anledning?: string; klippkort?: string; timmar?: unknown; betalningsrad?: string;
+  } = {};
   try {
     kropp = await req.json();
   } catch {
@@ -92,6 +105,59 @@ Deno.serve(async (req) => {
                  varning: u.varning }, 200, CORS)
         : json({ error: u.fel, ...(u.stripe ? { stripe: u.stripe } : {}) }, u.status, CORS);
     } catch (e) {
+      return json({ error: (e as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
+    }
+  }
+
+  // En rad med syskontillägg (2026-10-21): det som är kvar på raden, ur databasen.
+  if (kropp.betalningsrad !== undefined) {
+    const rad = String(kropp.betalningsrad ?? '').trim();
+    if (!/^[0-9a-f-]{36}$/i.test(rad)) return json({ error: 'Vilken rad?' }, 400, CORS);
+    const { data: l, error: lfel } = await vem.klient.rpc('betalningsrad_att_aterbetala', { p_rad: rad });
+    if (lfel) return json({ error: lfel.message }, lfel.code === '42501' ? 403 : 409, CORS);
+    const lage = (l ?? {}) as { pi?: string; charge?: string | null; post?: string | null; betalning?: string; kvar_ore?: number };
+    const kvar = Math.round(Number(lage.kvar_ore) || 0);
+    if (!(kvar > 0)) return json({ error: 'Raden är redan återbetald.' }, 409, CORS);
+    if (!lage.pi || !lage.betalning) return json({ error: 'Raden saknar en betalning i Stripe.' }, 409, CORS);
+    const onskat = Number(kropp.belopp_ore ?? 0);
+    const belopp = onskat > 0 ? Math.min(Math.round(onskat), kvar) : kvar;
+    const anledning = String(kropp.anledning ?? '').slice(0, 300);
+    try {
+      const aterbetalning = await v1('POST', '/v1/refunds', {
+        payment_intent: lage.pi,
+        amount: belopp,
+        metadata: { betalningsrad: rad, tillagg_post: lage.post ?? '', av: vem.anvandare, anledning },
+      }, `nextrum-aterbet-rad-${rad}-${kvar}-${belopp}`);
+
+      /* Raderna skrivs ur Stripes lista, som webhooken gör: summor per rad,
+         så att den här skrivningen och webhookens blir samma. Faller den
+         skriver webhooken samma sak när charge.refunded kommer. */
+      let varning: string | null = null;
+      const chargeId = lage.charge ?? (aterbetalning as { charge?: string }).charge ?? null;
+      try {
+        if (!chargeId) throw new Error('ingen charge');
+        const [lista, charge, { data: rader, error: rfel }] = await Promise.all([
+          v1('GET', `/v1/refunds?charge=${encodeURIComponent(chargeId)}&limit=100`),
+          v1('GET', `/v1/charges/${chargeId}`),
+          db.from('betalningsrader').select('id, belopp_ore, klippkort_id').eq('betalning_id', lage.betalning),
+        ]);
+        if (rfel) throw new Error(rfel.message);
+        const f = fordelaAterbetalningar(
+          (rader ?? []).map((x) => ({ id: String(x.id), beloppOre: Number(x.belopp_ore), klippkortId: x.klippkort_id ?? null })),
+          (Array.isArray(lista.data) ? lista.data : []) as Aterbetalning[],
+        );
+        const { error: sfel } = await db.rpc('betalningsrader_aterbetalda', {
+          p_pi: lage.pi, p_per_rad: f.perRad,
+          p_totalt: Number((charge as { amount_refunded?: number }).amount_refunded ?? 0),
+        });
+        if (sfel) throw new Error(sfel.message);
+      } catch (e) {
+        varning = 'Pengarna är tillbaka, men raden skrivs först när webhooken kommer: ' + ((e as Error)?.message ?? '');
+      }
+      return json({ ok: true, aterbetalning: (aterbetalning as { id?: string }).id ?? null, belopp_ore: belopp, varning },
+        200, CORS);
+    } catch (e) {
+      if (e instanceof StripeError) return json({ error: 'Stripe nekade: ' + e.fel.meddelande, stripe: e.fel }, 502, CORS);
       return json({ error: (e as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
     }
   }

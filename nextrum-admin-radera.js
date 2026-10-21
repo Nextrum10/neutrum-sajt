@@ -99,6 +99,10 @@
       'Passet och rapporten är beviset i tvisten. Vänta tills Stripe avgjort den, under Betalningar → Att göra.'],
     betalt_for_lange: h => ['Betalt för längre tid än passen höll: ' + kronor(h.belopp_ore || 0),
       'Betala tillbaka skillnaden under Betalningar → Att göra.'],
+    // syskontillagg_som_skuld (2026-10-21): skulden görs upp först.
+    tillagg_obetalt: h => ['Obetalt syskontillägg: ' + kronor(h.belopp_ore || 0)
+      + (h.antal > 1 ? ' (' + h.antal + ' pass)' : ''),
+      'Låt familjen betala det, eller skriv av det under Betalningar → Syskontillägg.'],
     ej_rapporterat: h => [st(h.antal, 'pass', 'pass') + ' har börjat men saknar rapport',
       'Studiehjälparen får lön först när rapporten finns, och den går inte att skriva efteråt. Be hen '
         + 'skriva den, eller avboka passet under Bokningar om det aldrig hölls.'],

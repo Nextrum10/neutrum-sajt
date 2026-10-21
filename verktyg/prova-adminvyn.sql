@@ -141,4 +141,28 @@ select intern.ny_tipskod(p.id, case when p.role = 'tutor' then 'studiehjalpare' 
   from public.profiles p
  where p.id in ('a1000000-0000-4000-8000-0000000000f1', 'a1000000-0000-4000-8000-0000000000a1');
 
+-- Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21): strömbrytaren
+-- står på bara medan passen skrivs, så att Syskontillägg under Betalningar har
+-- en familj med ett upplupet tillägg och ett bokat. Sedan av igen, som i driften.
+update public.tillagg_installning set villkor_version = '2026-10-21' where id = 1;
+update public.flaggor set aktiv = true where kod = 'syskonskuld';
+insert into public.tillagg_godkannanden (familj, version) values ('a1000000-0000-4000-8000-0000000000f1', '2026-10-21');
+insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min,
+                             status, subject, tjanst, extra_barn) values
+  ('a1000000-0000-4000-8000-00000000b006', 'a1000000-0000-4000-8000-0000000000f1', 'a1000000-0000-4000-8000-0000000000a1',
+   'a1000000-0000-4000-8000-0000000005a1', 'a1000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date - 4, '17:00', 60, 'confirmed', 'Matematik', 'laxhjalp',
+   array['a1000000-0000-4000-8000-0000000005a2']::uuid[]),
+  ('a1000000-0000-4000-8000-00000000b007', 'a1000000-0000-4000-8000-0000000000f1', 'a1000000-0000-4000-8000-0000000000a1',
+   'a1000000-0000-4000-8000-0000000005a1', 'a1000000-0000-4000-8000-0000000000f1',
+   (now() at time zone 'Europe/Stockholm')::date + 8, '17:00', 60, 'confirmed', 'Matematik', 'laxhjalp',
+   array['a1000000-0000-4000-8000-0000000005a2']::uuid[]);
+insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_notes, lesson_date, narvaro, amne,
+                                   start_tid, slut_tid) values
+  ('a1000000-0000-4000-8000-00000000e003', 'a1000000-0000-4000-8000-0000000005a1', 'a1000000-0000-4000-8000-0000000000a1',
+   'a1000000-0000-4000-8000-00000000b006', 'Båda barnen räknade bråk.', (now() at time zone 'Europe/Stockholm')::date - 4,
+   'narvarande', 'Matematik', '17:00', '18:00');
+update public.flaggor set aktiv = false where kod = 'syskonskuld';
+update public.tillagg_installning set villkor_version = 'utkast' where id = 1;
+
 commit;

@@ -102,7 +102,7 @@ begin
         or exists (select 1 from public.timbank_uttag u where u.booking_id = x));
   if har_poster then
     execute 'select array(select x from unnest($1::uuid[]) x where x = any ($2) or exists
-                          (select 1 from public.tillagg_poster t where t.booking_id = x))'
+                          (select 1 from public.tillagg_poster t where t.bokning_id = x))'
       into pass_kvar using pass, pass_kvar;
   end if;
   pass := array(select x from unnest(pass) x where not (x = any (pass_kvar)));
@@ -117,6 +117,12 @@ begin
      where exists (select 1 from public.bookings y
                     where (y.klippkort_id = x or y.forsta_klippkort_id = x) and not (y.id = any (pass)))
         or exists (select 1 from public.klippkort c where c.till_plan = x and not (c.id = any (kop))));
+  -- Ett köp som ett betalningsförsök för syskontillägget pekar på står kvar (restrict).
+  if to_regclass('public.tillagg_forsok') is not null then
+    execute 'select array(select x from unnest($1::uuid[]) x where x = any ($2) or exists
+                          (select 1 from public.tillagg_forsok f where f.klippkort_id = x))'
+      into kop_kvar using kop, kop_kvar;
+  end if;
   kop := array(select x from unnest(kop) x where not (x = any (kop_kvar)));
 
   -- ---------- listan ----------
@@ -157,8 +163,8 @@ begin
   if har_poster then
     return query execute
       'select ''tilläggspost''::text, t.id::text, null::date,
-              format(''pass %s, %s, %s öre — står kvar (raderas aldrig)'', t.booking_id, t.status, t.belopp_ore)
-         from public.tillagg_poster t where t.familj = $1 order by t.skapad_at'
+              format(''pass %s, %s, %s öre — står kvar (raderas aldrig)'', t.bokning_id, t.status, t.belopp_ore)
+         from public.tillagg_poster t where t.familj_id = $1 order by t.skapad_at'
       using konto;
   end if;
 

@@ -198,12 +198,12 @@ ok('timpriset i fakta stämmer med nextrum-config.js',
   faktaText.includes(konfigTal('PRIS_PER_TIMME') + ' kronor i timmen'), true);
 
 ok('barntillägget i fakta stämmer med nextrum-config.js',
-  faktaText.includes(konfigTal('PRIS_EXTRA_BARN') + ' kronor i timmen i tillägg'), true);
+  faktaText.includes(konfigTal('PRIS_SYSKON_TILLAGG_KR_PER_TIMME') + ' kronor i timmen i tillägg'), true);
 
 /* Tre barn = grundpris + ETT tillägg. Står summan fel i prompten
    svarar NEX med ett pris ingen familj har fått. */
 ok('tre-barn-exemplet är uträknat rätt',
-  faktaText.includes((konfigTal('PRIS_PER_TIMME') + konfigTal('PRIS_EXTRA_BARN')) + ' kronor i timmen'),
+  faktaText.includes((konfigTal('PRIS_PER_TIMME') + konfigTal('PRIS_SYSKON_TILLAGG_KR_PER_TIMME')) + ' kronor i timmen'),
   true);
 
 const FORBJUDET = [

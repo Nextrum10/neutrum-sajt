@@ -100,6 +100,7 @@
         ritaAnsokningar:   'nextrum-admin-rekrytering.js',
         ritaProvet:        'nextrum-admin-provet.js',
         ritaLiggaren:      'nextrum-admin-liggaren.js',
+        ritaTillagg:       'nextrum-admin-tillagg.js',
         ritaBibliotek:     'nextrum-admin-bibliotek.js',
         ritaChattar:       'nextrum-admin-kommunikation.js',
         ritaBokningar:     'nextrum-admin-drift.js',
