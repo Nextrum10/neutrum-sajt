@@ -209,6 +209,7 @@ async function genomIntro(page) {
         topp: Math.round(k.top), höger: Math.round(k.right), bredd: Math.round(k.width),
         bild: img ? { src: img.getAttribute('src'), alt: img.getAttribute('alt'), w: img.naturalWidth } : null,
         klar: !document.querySelector('.nx-intro-klar').hidden,
+        klarText: document.querySelector('.nx-intro-klar').textContent,
         väntar: !document.querySelector('.nx-intro-vantar').hidden
       };
     }));
@@ -272,7 +273,11 @@ async function provaFamiljenTagenIn(webb) {
   prova('familj: rubrikerna följer menyn', JSON.stringify(sett.map(s => s.rubrik)) === JSON.stringify(
     ['Översikt', 'Boka pass', 'Mina lektioner', 'Bekräfta rapport', 'NexLäx', 'Meddelanden', 'Profil & inställningar']),
     sett.map(s => s.rubrik).join(', '));
-  prova('familj: första bilden säger att lösenordet är sparat, de andra inte', sett[0].klar && sett.slice(1).every(s => !s.klar));
+  prova('familj: första bilden hälsar välkommen, de andra inte', sett[0].klar && sett.slice(1).every(s => !s.klar));
+  /* Lösenordet sparades flera steg tidigare (villkoren, och för en studiehjälpare
+     provet, kommer emellan), så raden säger inte längre det (2026-10-21). */
+  prova('familj: välkomstraden säger inget om lösenordet',
+    sett[0].klarText === 'Välkommen till Nextrum! Så här fungerar det.', sett[0].klarText);
   prova('familj: Tillbaka går inte på första bilden', sett[0].bak && sett.slice(1).every(s => !s.bak));
   prova('familj: Nästa, och Fortsätt sist', sett.slice(0, 6).every(s => s.knapp === 'Nästa') && sett[6].knapp === 'Fortsätt',
     sett.map(s => s.knapp).join(', '));
@@ -346,7 +351,7 @@ async function provaUtanLänken(webb) {
     await page.waitForSelector('.nx-intro.open', { timeout: 8000 }).catch(() => {});
     prova('intro kvar: ingen lösenordsruta', !(await synlig(page, '#nylos-t')));
     const sett = await genomIntro(page);
-    prova('intro kvar: introduktionen, utan raden om lösenordet', sett.length === 7 && !sett[0].klar);
+    prova('intro kvar: introduktionen, utan välkomstraden', sett.length === 7 && !sett[0].klar);
     prova('intro kvar: en matchad familj får ingen rad om matchningen', sett.every(s => !s.väntar));
     await page.waitForSelector('#view-app:not([hidden])', { timeout: 8000 }).catch(() => {});
     prova('intro kvar: Fortsätt leder in i vyn', await synlig(page, '#view-app'));
