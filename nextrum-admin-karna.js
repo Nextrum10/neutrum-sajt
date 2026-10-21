@@ -543,7 +543,7 @@ const NXAdmin = (function () {
          lästes här från Fas 14.6 till 2026-10-21.) */
       /* 2026-09-30: och timmen på köpet för ett tips, samma sort.
          2026-10-13: och bonusen för tips, som står under Koder. */
-      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'erbjudanden', 'tipstimme', 'tipsbonus']),
+      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'erbjudanden', 'tipstimme', 'tipsbonus', 'kortreservation']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
       bara(() => hämtaAlla('stripe_tvister', '*', nyastFörst('skapad'))),
@@ -653,6 +653,7 @@ const NXAdmin = (function () {
     S.erbFlagga = (flaggor.data || []).find(f => f.kod === 'erbjudanden') || null;
     S.tipsFlagga = (flaggor.data || []).find(f => f.kod === 'tipstimme') || null;
     S.bonusFlagga = (flaggor.data || []).find(f => f.kod === 'tipsbonus') || null;
+    S.kortFlagga = (flaggor.data || []).find(f => f.kod === 'kortreservation') || null;
     /* Saknas tabellen (migrationen tipskoder_bonus_och_timbanken är inte
        körd) är bonusarna inga, och Löner räknar som förut. */
     S.tipsbonus = bonus.data || [];

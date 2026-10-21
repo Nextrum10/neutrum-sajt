@@ -938,6 +938,11 @@ Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
   `verktyg/lokal-databas.sh` (`STOPP=`); driften i en transaktion som rullas tillbaka, hämtad
   med tillägget `http` från en commit.
   I en molnsession: `dockerd &`, och Deno ur npm med en importkarta (`minne/genererat-och-ci.md`).
+- **`verktyg/prova-adminvyn.js`** (2026-10-22) körs inte i CI heller: adminvyn mot PostgREST framför en lokal
+  databas med `prova-adminvyn.sql`, varje sektion, flik och den första panelen, som superadmin, som admin med
+  behörigheter och på en telefon i mörkt läge. Det faller på varje fel i konsolen och varje svar från databasen på
+  400 eller mer, och de andra webbläsarproven, som svarar ur en falsk värld, ser inte de felen. Kör det efter en
+  ändring i adminvyn eller i en policy den läser.
 
 Detaljer: `minne/genererat-och-ci.md`.
 

@@ -603,7 +603,9 @@
       ].filter(Boolean).join(' · ');
       return dpRad(när, under, '');
     }).join('');
-    return dpRubrik('Kortet', 'priset reserveras två dagar före passet och dras efter rapporten') + kortrad + passrader;
+    return dpRubrik('Kortet', S.kortFlagga && S.kortFlagga.aktiv
+      ? 'priset reserveras två dagar före passet och dras efter rapporten'
+      : 'reserveras inte längre: familjen betalar med Betala nu') + kortrad + passrader;
   }
 
   function dpRubrik(text, extra) {

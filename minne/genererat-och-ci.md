@@ -483,13 +483,51 @@ fäller ut passen med dag, klocka och studiehjälpare, att Skapa nu torrkör
 i bakgrunden och visar vad innan det skarpa anropet, familjens panel,
 Månadens ekonomi, en telefon, och samma rader med schemat av.
 
+### Röktestet av adminvyn mot en riktig databas (2026-10-22)
+Leo: "Öppna varje sektion i adminvyn i testmiljön. Läs konsol- och
+nätverksfel, SQL/RLS-fel och trasiga knappar. ... Lägg till ett
+regressionstest som öppnar varje adminsektion och misslyckas vid
+konsolfel." `verktyg/prova-adminvyn.js` gör det mot riktiga tabeller: de
+andra webbläsarproven svarar ur en falsk värld, där en kolumn som inte
+finns, en funktion utan EXECUTE eller en policy som nekar aldrig syns.
+
+    PORT=54331 NAMN=nextrum-adminprov verktyg/lokal-databas.sh bygg
+    PGPASSWORD=postgres psql -h localhost -p 54331 -U postgres -d postgres -f verktyg/prova-adminvyn.sql
+    PORT=54331 NODE_PATH="$(npm root -g)" node verktyg/prova-adminvyn.js [mapp för bilder]
+
+En egen databas (`PORT`, `NAMN`), så att datan inte syns i `rls-test.sql`.
+Provet sätter `authenticator`s lösenord, startar PostgREST
+(`postgrest/postgrest:v12.2.3`, `--network host`, port 54332) och tar bort
+den efteråt (`BEHALL=1` låter den stå). Inloggningen är en JWT signerad med
+PostgREST:ens hemlighet för en admin i datan; REST går vidare till
+PostgREST med den, Auth svarar ur provet, och edge-funktionerna svarar 404
+som en funktion som inte är driftsatt. Varje sektion i menyn, varje flik i
+den och den första panelen med sina flikar, som superadmin, som admin med
+behörigheter (leads, användare, bokningar, rapporter, matchning, godkänna)
+och på en telefon i mörkt läge, där ingenting heller får göra sidan bredare
+än skärmen (en bred tabell i en ruta som rullar i sidled är med flit).
+Provet faller på fel i konsolen, sidfel, en fil som saknas och varje svar
+från databasen på 400 eller mer, med databasens text. Provat 2026-10-22:
+med `select` på `leads` borttagen föll fem prov med "permission denied
+for table leads"; med rättigheterna på plats 128 av 128.
+
+Det första som gick (2026-10-22) hittade inga fel från databasen eller i
+konsolen. Det som rättades den dagen var det adminvyn visade fel: märkena i
+Liggaren och Kortet bar klasserna `klar`, `pa` och `fel`, som ingen regel
+har, och var grå i båda lägena; Liggarens och Kortets tre rutor stod i fyra
+kolumner med en tom; och Kortet sa att kortet reserveras två dagar före
+passet, också när strömbrytaren `kortreservation` står av (Betala nu).
+
 ### Webbläsarprovet för ansökan under 18, nejet och det admin sett (2026-10-05)
 `verktyg/prova-ansokningar.js` är byggt som de två nedan (egen port, 8963):
 vårdnadshavarens fält i formuläret på båda språken och vad som skickas,
-reserven när kolumnen saknas, rutan som visar nejet innan läget blir Avböjd,
-godkännandet i ansökan, frågan i Ta in i poolen, och att siffran vid
-Ansökningar och Intresseanmälningar går bort när sektionen visats, med och
-utan tabellen `admin_sett`.
+reserven när kolumnen saknas, rutan som visar nejet innan ansökan avböjs,
+godkännandet i ansökan, och att siffran vid Ansökningar och
+Intresseanmälningar går bort när sektionen visats, med och utan tabellen
+`admin_sett`. Sedan 2026-10-22 också ansökningarnas steg (flikarna med antal,
+Intervjus tre knappar, Ångra, Utbildning hållen med och utan konto på
+adressen, och frågan om vårdnadshavarens godkännande där), Skriv till hen
+vid adressen och vyn före migrationen.
 
 ### Webbläsarprovet för utbildningsprovet i studiehjälparvyn (2026-10-21)
 `verktyg/prova-utbildningsprovet.js` (egen port, 8978) är byggt som

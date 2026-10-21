@@ -4536,14 +4536,16 @@ section[data-sek="ekonomi"]:not(:has(> .vy-flikar .vy-flik[aria-selected="true"]
 
 /* ---------- talen överst: samma rutor som familjens Betalning ---------- */
 .bet-sam.eko-sam{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:clamp(16px,2vw,22px)}
-#timmar-sam.eko-sam{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* Liggaren och Kortet har tre rutor, som Köpta timmar: med fyra kolumner
+   stod en tom (2026-10-22). */
+#timmar-sam.eko-sam,#lig-sam.eko-sam,#kd-sam.eko-sam{grid-template-columns:repeat(3,minmax(0,1fr))}
 .bet-sam.eko-sam b{font-variant-numeric:proportional-nums}
 @media (max-width:1100px){
   .bet-sam.eko-sam{grid-template-columns:repeat(2,minmax(0,1fr))}
-  #timmar-sam.eko-sam{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #timmar-sam.eko-sam,#lig-sam.eko-sam,#kd-sam.eko-sam{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media (max-width:760px){
-  #timmar-sam.eko-sam{grid-template-columns:minmax(0,1fr)}
+  #timmar-sam.eko-sam,#lig-sam.eko-sam,#kd-sam.eko-sam{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:560px){
   .bet-sam.eko-sam{grid-template-columns:minmax(0,1fr)}

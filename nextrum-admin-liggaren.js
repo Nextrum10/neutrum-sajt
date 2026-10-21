@@ -43,23 +43,26 @@
   };
 
   const TYP = { plan: 'Plan', timbank: 'Fyll timbanken', pass: 'Pass', tillagg: 'Tillägg' };
+  /* Märkenas färger är adminvyns tre (.adm-status): mossa klart, ockra
+     väntar, lera ert drag eller fel. Här stod 'klar', 'pa' och 'fel', som
+     ingen regel hade, och märkena blev grå (2026-10-22). */
   const LÄGE = {
-    betald: ['Betald', 'klar'],
-    delvis_aterbetald: ['Delvis tillbaka', 'pa'],
-    aterbetald: ['Återbetald', 'pa'],
-    tvist: ['Tvist', 'fel']
+    betald: ['Betald', 'ar-klar'],
+    delvis_aterbetald: ['Delvis tillbaka', 'ar-vantar'],
+    aterbetald: ['Återbetald', ''],
+    tvist: ['Tvist', 'ar-ny']
   };
   /* Kortets lägen med Leos namn (2026-10-21): ej försökt, reserverad,
      dragen (capturad), nekad (misslyckad), frigjord. Återbetald står på
      betalningen i Liggaren, inte på reservationen. */
   const KORT = {
     vald: ['Ej försökt', ''],
-    reserverad: ['Reserverad', 'pa'],
-    dragen: ['Dragen', 'klar'],
+    reserverad: ['Reserverad', 'ar-vantar'],
+    dragen: ['Dragen', 'ar-klar'],
     slapps: ['Släpps', ''],
     slappt: ['Frigjord', ''],
-    utgangen: ['Gick ut, dras efter passet', 'pa'],
-    misslyckad: ['Nekad', 'fel']
+    utgangen: ['Gick ut, dras efter passet', 'ar-vantar'],
+    misslyckad: ['Nekad', 'ar-ny']
   };
   const FILTER = [['alla', 'Alla'], ['plan', 'Planer'], ['timbank', 'Fyll timbanken'], ['pass', 'Pass'],
     ['tillagg', 'Tillägg'], ['tillbaka', 'Tillbaka'], ['test', 'Test']];
@@ -220,7 +223,15 @@
       || String(c.andrad).localeCompare(String(a.andrad)));
     host.innerHTML = rader.length ? rader.map(kortRad).join('') : '<p class="vy-tom">Inga pass betalas med kortet än.</p>';
     const i = L.inst;
-    fot.textContent = 'Kortet reserveras två dagar före passet och dras när rapporten är skriven. Nekas det försöker vi igen'
+    /* Strömbrytaren kortreservation står av sedan betala_nu (2026-10-21):
+       familjen betalar med Betala nu, och jobbet släpper det som ändå står
+       reserverat. Texten följer strömbrytaren (2026-10-22). */
+    const på = !!(S.kortFlagga && S.kortFlagga.aktiv);
+    fot.textContent = (på
+      ? 'Kortet reserveras två dagar före passet och dras när rapporten är skriven.'
+      : 'Kortet reserveras inte längre: familjen betalar varje pass med Betala nu. Här står reservationerna som fanns, '
+        + 'och jobbet släpper dem som inte ska dras.')
+      + ' Nekas en dragning försöker vi igen'
       + (i ? ' efter ' + i.timmar_mellan_forsok + ' timmar, högst ' + i.automatiska_forsok + ' försök' : '')
       + ', när koden säger att det kan gå, och efter ' + (i ? i.larm_efter_timmar : 24) + ' timmar blir det en uppgift '
       + 'under Att göra. Passet avbokas aldrig för att kortet nekas.';
