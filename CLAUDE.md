@@ -36,6 +36,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
    **samtidigt**. Först då öppnas bokningen, köpen och tråden; före det är vyn öppen med barnen,
    NexLäx och profilen, och säger att vi letar studiehjälpare (`S.väntar`, 2026-10-07; inget väntläge)
 5. Föräldern lägger in barnet, hjälparen skriver studieplanen
+- **Behoven styr matchningen** (2026-10-21, `behov_i_matchningen`, Leo: "det är ju behovet som ska ge oss den
+  statistiken"): familjens behov (`NX.BEHOV`, sex koder) väljs i intresseanmälan (`leads.behov`, och upplägget i
+  `leads.format_onskemal`) eller på barnet, och Ta in familjen för dem till eleven; studiehjälparen väljer samma
+  koder som styrkor i sin profil (`tutor_profiles.styrkor`, i vitlistan i `skydda_tutorfalt`). `matchningspoang()`
+  ger behoven 12 av 100 (ämne 45, årskurs 27, utrymme 10, erfarenhet 6), aldrig ett hårt nej, och halva när någon
+  sida saknar dem. Koderna ändras i `NX.BEHOV`, `students.behov`, `leads` och `tutor_profiles` samtidigt.
 - **Uppstartsrutan**: `data-uppstart` och banans vecka byts tillsammans, på båda sidorna; när
   passen börjat går rutan och `nextrum-uppstart.css` bort. Den är en låg remsa ovanför formuläret, och
   intresseanmälan har inget sidhuvud: formuläret står överst med rubriken i sin yta (`.nx-anm`, 2026-10-08,

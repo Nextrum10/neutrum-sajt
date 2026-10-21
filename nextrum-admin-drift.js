@@ -105,7 +105,7 @@
 
   /* Ental och flertal, och de två fallen där ett tomt fält inte
      betyder nej utan "vi vet inte". Samma meningar som förut. */
-  function skälFör(rad, elev) {
+  function skälFör(rad, elev, tutor) {
     const skäl = [];
 
     if (rad.amne_utfall === 'vet_ej') {
@@ -128,6 +128,22 @@
       skäl.push(['ja', 'Undervisar ' + elev.grade]);
     } else {
       skäl.push(['nej', 'Undervisar inte ' + elev.grade]);
+    }
+
+    /* Behoven (behov_i_matchningen, 2026-10-21). Poängen räknas i
+       databasen; meningen räknas här ur samma två listor, elevens behov
+       och studiehjälparens styrkor. Saknas styrkor helt i underlaget
+       (före migrationen) står raden inte med. Behoven ger aldrig ett
+       hårt nej, och därför heller aldrig ett kryss: bara ja eller vet ej. */
+    if (tutor && Array.isArray(tutor.styrkor)) {
+      const behov = (elev.behov || []).filter(k => NX.BEHOV.some(x => x.kod === k));
+      const möts = behov.filter(k => tutor.styrkor.indexOf(k) !== -1);
+      const ord = k => (NX.BEHOV.find(x => x.kod === k) || {}).text || k;
+      if (!behov.length) skäl.push(['vet-ej', 'Eleven har inga behov angivna']);
+      else if (!tutor.styrkor.length) skäl.push(['vet-ej', 'Studiehjälparen har inga styrkor angivna']);
+      else if (möts.length === behov.length) skäl.push(['ja', 'Bra på allt eleven behöver']);
+      else if (möts.length) skäl.push(['ja', 'Bra på ' + möts.map(ord).join(', ').toLowerCase()]);
+      else skäl.push(['vet-ej', 'Inget av elevens behov bland styrkorna']);
     }
 
     const antal = Number(rad.antal_elever || 0);
@@ -249,7 +265,7 @@
         const r = poängFörTutor[t.tutor_id]
           || { poang: 0, amne_utfall: 'vet_ej', arskurs_utfall: 'vet_ej',
                antal_elever: t.antal_elever, genomforda_pass: t.genomforda_pass, hart_nej: false };
-        return { tutor: t, poäng: r.poang, hårtNej: !!r.hart_nej, skäl: skälFör(r, elev) };
+        return { tutor: t, poäng: r.poang, hårtNej: !!r.hart_nej, skäl: skälFör(r, elev, t) };
       })
       .sort((a, b) => {
         /* Den nuvarande studiehjälparen ligger alltid först,
@@ -272,11 +288,11 @@
       fakta.push(['ar-tom', 'Inga ämnen angivna']);
     }
     if (elev.school) fakta.push(['', elev.school]);
-    /* Det familjen skrev om behov och format när barnet lades till.
-       Poängen räknas inte på dem (matchningspoang() vet inget om
-       dem), men det är precis vad en människa ska läsa innan hon
-       väljer: en elev som behöver motivation och en som vill ha mer
-       utmaning ska inte få samma studiehjälpare för att ämnet stämmer. */
+    /* Det familjen skrev om behov och format, i anmälan eller när
+       barnet lades till. Sedan 2026-10-21 räknas poängen också på
+       behoven, mot studiehjälparens styrkor (matchningspoang()); formatet
+       räknas inte, men det är precis vad en människa ska läsa innan hon
+       väljer. */
     (elev.behov || []).forEach(k => {
       const b = NX.BEHOV.find(x => x.kod === k);
       if (b) fakta.push(['ar-behov', b.text]);

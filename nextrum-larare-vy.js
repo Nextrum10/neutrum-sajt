@@ -3080,7 +3080,30 @@
       + (valda.indexOf(v) !== -1 ? 'true' : 'false') + '">' + esc(v) + '</button>').join('');
   }
 
-  function ritaAllaPrVal() { Object.keys(PR_LISTOR).forEach(id => ritaPrVal(id)); }
+  /* Styrkorna (behov_i_matchningen, 2026-10-21) är koder, inte text,
+     så de har en egen lista: knappen visar NX.BEHOV:s ord och sparar
+     koden. Samma koder som familjens behov, och matchningen ger poäng
+     när de möts. S.styrkorFinns är falsk före migrationen, och då
+     döljs fältet och sparas inget i den kolumnen. */
+  let prStyrkor = [];
+  function ritaPrStyrkor() {
+    const host = $('#pr-styrka-val');
+    if (!host) return;
+    host.innerHTML = NX.BEHOV.map(b =>
+      '<button type="button" data-v="' + esc(b.kod) + '" aria-pressed="'
+      + (prStyrkor.indexOf(b.kod) !== -1 ? 'true' : 'false') + '">' + esc(b.text) + '</button>').join('');
+  }
+  if ($('#pr-styrka-val')) {
+    $('#pr-styrka-val').addEventListener('click', e => {
+      const b = e.target.closest('[data-v]');
+      if (!b) return;
+      const i = prStyrkor.indexOf(b.dataset.v);
+      if (i === -1) prStyrkor.push(b.dataset.v); else prStyrkor.splice(i, 1);
+      ritaPrStyrkor();
+    });
+  }
+
+  function ritaAllaPrVal() { Object.keys(PR_LISTOR).forEach(id => ritaPrVal(id)); ritaPrStyrkor(); }
 
   Object.keys(PR_LISTOR).forEach(id => {
     $('#' + id).addEventListener('click', e => {
@@ -3119,6 +3142,8 @@
     prVal.amnen = (t.subjects || []).map(v => prKanonisk(PR_AMNEN, v));
     prVal.arskurser = (t.grade_levels || []).map(v => prKanonisk(PR_ARSKURSER, v));
     prVal.format = (t.formats || []).map(v => prKanonisk(PR_FORMAT, v));
+    prStyrkor = (t.styrkor || []).filter(k => NX.BEHOV.some(x => x.kod === k));
+    if ($('#pr-styrka-grupp')) $('#pr-styrka-grupp').hidden = !S.styrkorFinns;
     ritaAllaPrVal();
 
     /* Notisvalen under Profil → Notiser. Samma modul som föräldravyn
@@ -3161,6 +3186,7 @@
         formats: prVal.format.slice(),
         bio: $('#pr-bio').value.trim() || null
       };
+      if (S.styrkorFinns) ändring.styrkor = prStyrkor.slice();
       const { error } = await supa.from('tutor_profiles').update(ändring).eq('id', S.user.id);
       if (error) { säg(msg, 'Kunde inte spara: ' + felText(error), false); return; }
 
@@ -4314,6 +4340,13 @@
       const st = await supa.from('tutor_profiles')
         .select('stripe_account_id, stripe_klar').eq('id', S.user.id).maybeSingle();
       if (st.data) Object.assign(S.tutorProfil, st.data);
+      /* Styrkorna hämtas för sig av samma skäl (behov_i_matchningen):
+         före migrationen svarar frågan med fel, och då ska bara fältet
+         försvinna, inte profilen. */
+      const sk = await supa.from('tutor_profiles')
+        .select('styrkor').eq('id', S.user.id).maybeSingle();
+      S.styrkorFinns = !sk.error;
+      if (sk.data) S.tutorProfil.styrkor = sk.data.styrkor || [];
     }
 
     if (!S.tutorProfil) {

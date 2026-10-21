@@ -1115,3 +1115,27 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
 | tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`, 2026-09-30; per formulär sedan 2026-10-13); en kampanjkod är en affischs |
 | tipstimme | en timme i timbanken för ett tips (sedan 2026-10-13), dragen sist: `startrabatt` och `rabattkod = 'TIPS'` på passet |
 | tipsbonus | 300 kr i lön till en studiehjälpare när vi tar in någon som sökt med hens kod (`tipsbonus`, 2026-10-13); aldrig ett underlag i `payouts` |
+
+## Behoven i matchningen (2026-10-21)
+
+Leo: "det är ju behovet som ska ge oss den statistiken". Barnets behov fanns sedan Fas 15.4
+(`students.behov`, sex koder i `NX.BEHOV`), men ingenting matchade mot dem, och
+intresseanmälan frågade inte. `behov_i_matchningen` (20261021180000):
+
+- **Intresseanmälan** frågar "Vad ska hjälpen göra?" (valfritt, flera går) och sparar koderna i
+  `leads.behov`; upplägget sparas som kod i `leads.format_onskemal` (online, pa_plats, bada). Båda
+  står också på svenska i meddelandet, så att den som ringer ser dem. Villkoren släpper bara igenom
+  koderna, högst sex. Sidan tål att migrationen saknas: då skickas anmälan utan kolumnerna.
+- **Ta in familjen** för behoven och upplägget till eleven (`nextrum-admin-kunder.js`).
+- **Studiehjälparen** väljer sina styrkor bland samma sex i profilen (`tutor_profiles.styrkor`,
+  "Det du är extra bra på"), och `skydda_tutorfalt` har kolumnen i vitlistan. Fältet döljs om
+  kolumnen inte finns.
+- **Poängen**: `matchningspoang()` har en ny signatur med elevens behov och studiehjälparens styrkor
+  (`behov_mots()`), och den gamla med sju argument anropar den med tomma listor. Vikterna är omfördelade
+  så att summan är 100, för adminvyn visar procent: ämne 45, årskurs 27, behov 12, utrymme 10,
+  erfarenhet 6. Behoven ger aldrig ett hårt nej, och halva när någon sida saknar dem, som ämne och
+  årskurs. Provat mot driften i en tillbakarullad transaktion: åk 9-eleven i matte, där båda
+  studiehjälparna stod på 88, blev 94 mot 82 när den ena hade elevens två behov som styrkor.
+- **Adminvyn** skriver meningen under Matchning ur samma två listor ("Bra på allt eleven behöver").
+- Integritetspolicyn (båda språken) och `DATASKYDD.md` rad 1, 3 och 10 säger det.
+
