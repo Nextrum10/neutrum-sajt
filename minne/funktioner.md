@@ -378,6 +378,10 @@ kontroll av att eleven fanns; den fick bli `ai_finns()`.
   **den kan fortfarande innehålla namn**: familjen skriver ofta
   "Elsa behöver hjälp med matten" i rutan. Det är en avvägning, inte
   ett skydd som håller tätt.
+- **Ämnena jämförs som koder** (2026-10-21): `amnen_mots()` går genom `amne_koder()`, som gör
+  Matte till matematik, NO till fysik, kemi och biologi, SO till sina fyra och "Flera ämnen"
+  till matematik, svenska och engelska. Förut jämfördes fritext med `position()`, och en elev
+  med flera ämnen fick ett hårt nej mot varje studiehjälpare. Driftsatt samma natt.
 - Matchningspoängen ligger i `matchningspoang()`. Adminvyn hämtar
   svaret och skriver meningarna själv — databasen svarar med koder,
   aldrig med svensk text, så att samma svar kan läsas av en agent utan
