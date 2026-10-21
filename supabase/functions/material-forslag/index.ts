@@ -40,10 +40,11 @@
 
 import { json, preflight } from '../_delad/http.ts';
 import { kravAdmin } from '../_delad/auth.ts';
+import { kortaSvar, svarstext } from '../_delad/kortsvar.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
-const MODEL = 'claude-sonnet-5';
+const MODEL = 'claude-sonnet-5-5';
 
 /* Fri text från klienten går in i prompten. Den kapas, så att ett
    långt fält inte kan användas för att skicka iväg en uppsats på
@@ -99,6 +100,7 @@ Regler för innehållet:
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 2000,
+        ...kortaSvar('medium'),
         messages: [{ role: 'user', content: prompt }],
       }),
     });
@@ -108,7 +110,7 @@ Regler för innehållet:
     }
 
     const aiJson = await aiRes.json();
-    const rå = aiJson?.content?.[0]?.text?.trim();
+    const rå = svarstext(aiJson);
     if (!rå) return json({ error: 'Fick inget svar från AI:n.' }, 502);
 
     /* Modellen ombeds svara med ren JSON, men en inledande mening

@@ -17,13 +17,14 @@
 import { json, preflight } from '../_delad/http.ts';
 import { arAdmin, kravInloggad } from '../_delad/auth.ts';
 import { fornamn, maskera } from '../_delad/minimera.ts';
+import { kortaSvar, svarstext } from '../_delad/kortsvar.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
 // Kolla https://docs.claude.com/en/docs/about-claude/models för det
 // senaste modellnamnet om det här börjar ge fel, modellnamn ändras
 // över tid.
-const MODEL = 'claude-sonnet-5';
+const MODEL = 'claude-sonnet-5-5';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight();
@@ -90,7 +91,8 @@ Skriv om detta till 3–5 korta meningar på svenska, riktat till föräldern. R
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 400,
+        max_tokens: 600,
+        ...kortaSvar('low'),
         messages: [{ role: 'user', content: prompt }],
       }),
     });
@@ -101,7 +103,7 @@ Skriv om detta till 3–5 korta meningar på svenska, riktat till föräldern. R
     }
 
     const aiJson = await aiRes.json();
-    const feedback = aiJson?.content?.[0]?.text?.trim();
+    const feedback = svarstext(aiJson);
     if (!feedback) return json({ error: 'Fick inget svar från AI:n.' }, 502);
 
     const { error: writeErr } = await supa
