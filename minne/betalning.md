@@ -2194,7 +2194,7 @@ migration, innan den kördes.
   gången och buntningen med regeln) och `prova-adminvyn.js` (fixturen har ett betalt tillägg och ett
   som väntar på Klarna, så att Släpp betalningen och raderna i månaden ritas mot en riktig databas).
 
-## Syskontillägget fast: tre barn kostar 468 (2026-10-21, `syskontillagget_fast`, inte i drift)
+## Syskontillägget fast: tre barn kostar 468 (2026-10-21, `syskontillagget_fast`, i drift samma kväll)
 
 Leo, samma kväll som syskontillägget som skuld gick ut, på frågan om tre barn skulle kosta 537 kr i
 timmen med strömbrytaren på: "Tre barn kostar 468 i timmen".
@@ -2213,6 +2213,8 @@ timmen med strömbrytaren på: "Tre barn kostar 468 i timmen".
 - **Vakten**: migrationen stannar om `tillagg_poster` har en rad, för en post räknad per extra barn
   ska inte få ett nytt villkor under sig. Strömbrytaren har aldrig stått på, och i driften fanns
   inga poster 2026-10-21.
+- **I drift** sedan kvällen 2026-10-21 (PR #327, 05cb8c1; `DEPLOY-BETALNING.md` 9.26). Med
+  `syskonskuld` av har inget pris och ingen betalning ändrats.
 - **Kvar**: beslutet om sen avbokning. `tillagg_installning` gör tillägget upplupet när ett bekräftat
   pass avbokas inom 24 timmar (`sen_avbokning_timmar`, `debitera_vid_sen_avbokning`), och villkoren
   har ingen avbokningsavgift. Leo avgör innan strömbrytaren slås på.

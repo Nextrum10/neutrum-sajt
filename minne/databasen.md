@@ -1857,8 +1857,9 @@ månadsrapport), utom kassan (nedan); hela förloppet står i `DEPLOY-BETALNING.
 - **Verktygets ruta, igen**: `alter table … drop constraint` gick igenom utan fråga, medan `create function` med tre
   `delete` fastnade. Rutan syntes inte i Leos app den här kvällen heller.
 
-### Syskontillägget fast (syskontillagget_fast, 2026-10-21, inte i drift)
-En fil (20261021230000), provad lokalt. Leo: "Tre barn kostar 468 i timmen" (`minne/betalning.md`).
+### Syskontillägget fast (syskontillagget_fast, 2026-10-21, i drift samma kväll)
+En fil (20261021230000), provad lokalt och i drift sedan kvällen 2026-10-21. Leo: "Tre barn kostar 468 i timmen"
+(`minne/betalning.md`).
 
 - **Beloppet**: `intern.tillaggets_belopp(extra, pris, minuter)` är `round(pris × minuter / 60)` när extra är minst ett,
   annars noll, och villkoret `tillagg_poster_belopp` är `belopp_ore = round(pris_ore_per_timme × minuter / 60)`.
@@ -1872,3 +1873,7 @@ En fil (20261021230000), provad lokalt. Leo: "Tre barn kostar 468 i timmen" (`mi
 - Provat lokalt: databasen byggd ur alla 221 migrationer, `rls-test.sql` 2107 av 2107 (avsnitt 51 räknar nu 69 kr ×
   2 h för passet med tre barn, och ett nytt prov säger att två extra barn kostar som ett), `prova-syskon.js` 95 av 95
   och Deno 484 av 484.
+- **I driften** (Leo: "Merge oxh migrera"): bytet som en egen sats med texten synlig, som gick igenom utan fråga, och
+  resten i ett do-block ur merge-commiten (05cb8c1), som prövade hela filens och restens md5, att villkoret var bytt
+  och funktionens kropp innan filens text registrerades (`DEPLOY-BETALNING.md` 9.26). Inga poster fanns. Hela
+  `rls-test.sql` gick 2107 av 2107 mot driften, tillbakarullat, och advisorn var oförändrad (148 poster).
