@@ -28,6 +28,17 @@
 
    Bara superadmin: Betalningar är superadminens, och båda tabellerna
    släpper bara fram is_admin(). Före migrationerna står en rad om det.
+
+   KORTEN (2026-10-21, Leo: "Snyggare kortsektion i betalningsvyn"): en
+   betalning är ett kort med beloppet, läget i färg, familjen, typen,
+   koden och dagen, och raderna den betalade: en betalning som bär en plan
+   och tillägg (betalningsrader, syskontillägget) är ett kort med en rad
+   per sak. Utan raderna är betalningen själv raden. Bara visning: det
+   bokförda ändras aldrig härifrån.
+
+   MARKERINGARNA (betalningar_dolda, 2026-10-21): en testbetalning som
+   rensa-leo-testbetalning.sql dolt står bara under Dolda, och en riktig
+   betalning märkt annullerad står kvar, i summorna, med märket Annullerad.
    ============================================================ */
 (function () {
   'use strict';
@@ -39,7 +50,9 @@
 
   const L = {
     rader: [], kort: [], inst: null, filter: 'alla', sök: '',
-    saknas: false, fel: null, kortSaknas: false, kortFel: null
+    saknas: false, fel: null, kortSaknas: false, kortFel: null,
+    // betalningens rader per betalning, och markeringarna per betalning
+    betRader: {}, dolda: {}
   };
 
   const TYP = { plan: 'Plan', timbank: 'Fyll timbanken', pass: 'Pass', tillagg: 'Tillägg' };
@@ -65,7 +78,7 @@
     misslyckad: ['Nekad', 'ar-ny']
   };
   const FILTER = [['alla', 'Alla'], ['plan', 'Planer'], ['timbank', 'Fyll timbanken'], ['pass', 'Pass'],
-    ['tillagg', 'Tillägg'], ['tillbaka', 'Tillbaka'], ['test', 'Test']];
+    ['tillagg', 'Tillägg'], ['tillbaka', 'Tillbaka'], ['test', 'Test'], ['dolda', 'Dolda']];
 
   /* Samma byggstenar som Alla betalningar (nextrum-admin-ekonomi.js). */
   const knapp = (attr, värde, text, primär) => '<button class="btn ' + (primär ? 'btn-primary' : 'btn-ghost')
@@ -83,11 +96,18 @@
   const saknasKod = fel => !!fel && (fel.code === 'PGRST205' || fel.code === '42P01' || fel.code === 'PGRST202');
 
   async function hämta() {
-    const [l, k, i] = await Promise.all([
+    const [l, k, i, br, bd] = await Promise.all([
       hämtaAlla('betalningar', '*', q => q.order('betald_at', { ascending: false })),
       hämtaAlla('kortreservationer', '*', q => q.order('andrad', { ascending: false }), 'booking_id'),
-      supa.from('betalning_installning').select('*').maybeSingle()
+      supa.from('betalning_installning').select('*').maybeSingle(),
+      // Betalningens rader och markeringarna; före migrationerna finns de inte, och korten klarar sig utan.
+      hämtaAlla('betalningsrader', '*', q => q),
+      hämtaAlla('betalningar_dolda', '*', q => q, 'betalning_id')
     ]);
+    L.betRader = {};
+    (br.error ? [] : (br.data || [])).forEach(x => { (L.betRader[x.betalning_id] = L.betRader[x.betalning_id] || []).push(x); });
+    L.dolda = {};
+    (bd.error ? [] : (bd.data || [])).forEach(x => { L.dolda[x.betalning_id] = x; });
     L.saknas = saknasKod(l.error);
     L.fel = l.error && !L.saknas ? felText(l.error) : null;
     L.rader = l.data || [];
@@ -113,12 +133,36 @@
     return TYP[r.typ] || r.typ;
   }
 
+  /* En testbetalning som skriptet dolt står bara under Dolda. En
+     annullerad står kvar överallt: pengarna rörde sig. */
+  const dold = r => !!L.dolda[r.id] && L.dolda[r.id].skal === 'test';
+
+  /* Raderna betalningen betalade: betalningsrader när de finns, annars
+     betalningen själv. */
+  const RADVAD = { plan: 'Plan', timbank: 'Fyll timbanken', pass: 'Pass', tillagg: 'Tillägg för syskon' };
+  function radVad(x) {
+    const pass = x.booking_id ? (S.bokningar || []).find(b => b.id === x.booking_id) : null;
+    const köp = x.klippkort_id ? (S.klippkort || []).find(k => k.id === x.klippkort_id) : null;
+    if (köp) return köp.namn || RADVAD[x.typ] || x.typ;
+    if (pass) return (RADVAD[x.typ] || x.typ) + ', pass ' + kortDatum(pass.wanted_date);
+    return x.beskrivning || RADVAD[x.typ] || x.typ;
+  }
+  function raderFör(r) {
+    const egna = L.betRader[r.id] || [];
+    return egna.length
+      ? egna.map(x => ({ typ: x.typ, vad: radVad(x), belopp: Number(x.belopp_ore || 0), kod: x.kod || null }))
+      : [{ typ: r.typ, vad: vad(r), belopp: Number(r.belopp_ore || 0), kod: r.kod || null }];
+  }
+
   function synlig(r) {
+    if (L.filter === 'dolda') return dold(r);
+    if (dold(r)) return false;
     if (L.filter === 'test' ? r.skarp !== false : L.filter !== 'alla' && r.skarp === false) return false;
     if (L.filter === 'tillbaka' && !(r.aterbetalt_ore > 0)) return false;
     if (TYP[L.filter] && r.typ !== L.filter) return false;
     if (!L.sök) return true;
-    return [namnFör(r.familj), vad(r), r.kod, r.stripe_payment_intent].join(' ').toLowerCase().indexOf(L.sök) !== -1;
+    return [namnFör(r.familj), vad(r), r.kod, r.stripe_payment_intent].concat(raderFör(r).map(x => x.vad))
+      .join(' ').toLowerCase().indexOf(L.sök) !== -1;
   }
 
   function radKnappar(r) {
@@ -134,21 +178,39 @@
     return '';
   }
 
+  /* Ett kort per betalning: beloppet och läget överst, familjen och dagen,
+     typen och koden, raderna, och knappen sist. Läget färgar kortets kant
+     (lig-<status>), och märkena är adminvyns. */
   function rad(r) {
     const tillbaka = Number(r.aterbetalt_ore || 0);
-    const meta = [familjLänk(r.familj), esc(TYP[r.typ] || r.typ)]
-      .concat(r.kod ? ['Kod ' + esc(r.kod)] : [])
-      .concat(r.utan_rad ? ['Inte nedskriven på sin rad'] : []);
-    return '<div class="eko-rad" data-lig-rad="' + esc(r.id) + '">'
-      + dagRuta(r.betald_at)
-      + '<span class="eko-mitt"><span class="eko-titel">' + esc(vad(r)) + '</span>'
-      + '<span class="eko-meta">' + meta.map(m => '<span>' + m + '</span>').join('') + '</span></span>'
-      + '<span class="eko-atg">' + radKnappar(r) + '</span>'
-      + '<span class="eko-lage">' + pill(LÄGE[r.status][0], LÄGE[r.status][1])
-      + (r.skarp === false ? ' ' + pill('Test', '') : '') + '</span>'
-      + '<span class="eko-belopp"><b>' + esc(kronor(r.belopp_ore)) + '</b>'
+    const läget = LÄGE[r.status] || [r.status, ''];
+    const märkt = L.dolda[r.id];
+    const knappar = radKnappar(r);
+    const rader = raderFör(r);
+    return '<article class="lig-kort lig-' + esc(r.status) + '" data-lig-rad="' + esc(r.id) + '">'
+      + '<div class="lig-kort-topp">'
+      + '<span class="lig-belopp"><b>' + esc(kronor(r.belopp_ore)) + '</b>'
       + (tillbaka > 0 ? '<small>' + esc(kronor(tillbaka)) + ' tillbaka</small>' : '') + '</span>'
-      + '</div>';
+      + '<span class="lig-lage">' + pill(läget[0], läget[1])
+      + (r.skarp === false ? ' ' + pill('Test', '') : '')
+      + (märkt && märkt.skal === 'annullerad' ? ' ' + pill('Annullerad', 'ar-ny') : '')
+      + (märkt && märkt.skal === 'test' ? ' ' + pill('Dold', '') : '') + '</span>'
+      + '</div>'
+      + '<div class="lig-kort-vem">' + (familjLänk(r.familj) || '<span>Familj saknas</span>')
+      + '<time datetime="' + esc(String(r.betald_at || '').slice(0, 10)) + '">' + esc(kortDatum(r.betald_at)) + '</time></div>'
+      + '<div class="lig-kort-taggar"><span class="lig-typ" data-typ="' + esc(r.typ) + '">' + esc(TYP[r.typ] || r.typ) + '</span>'
+      + (r.kod ? '<span class="lig-kod">Kod <code translate="no">' + esc(r.kod) + '</code></span>' : '')
+      + (r.utan_rad ? '<span class="lig-varning">Inte nedskriven på sin rad</span>' : '')
+      + '</div>'
+      + '<ul class="lig-rader" aria-label="Det betalningen betalade">'
+      + rader.map(x => '<li data-typ="' + esc(x.typ) + '"><span class="lig-rad-typ">' + esc(TYP[x.typ] || x.typ) + '</span>'
+        // Raden säger inte typen två gånger (Fyll timbanken utan namn på köpet).
+        + '<span class="lig-rad-vad">' + esc(x.vad === (TYP[x.typ] || x.typ) ? '' : x.vad)
+        + (x.kod && rader.length > 1 ? ' · kod ' + esc(x.kod) : '') + '</span>'
+        + '<b>' + esc(kronor(x.belopp)) + '</b></li>').join('')
+      + '</ul>'
+      + (knappar ? '<div class="lig-kort-fot">' + knappar + '</div>' : '')
+      + '</article>';
   }
 
   function rita() {
@@ -165,13 +227,18 @@
     sam.innerHTML = samKort('Inbetalt', kronor(in_), skarpa.length + (skarpa.length === 1 ? ' betalning' : ' betalningar'))
       + samKort('Tillbaka till familjer', kronor(ut), 'återbetalt')
       + samKort('Netto', kronor(in_ - ut), 'före Stripes avgifter');
-    chips.innerHTML = FILTER.map(([k, t]) => '<button type="button" class="chip" data-lig-filter="' + k
-      + '" aria-pressed="' + (L.filter === k) + '">' + esc(t) + '</button>').join('');
+    // Dolda står bara när något är dolt.
+    const antalDolda = L.rader.filter(dold).length;
+    chips.innerHTML = FILTER.filter(([k]) => k !== 'dolda' || antalDolda || L.filter === 'dolda')
+      .map(([k, t]) => '<button type="button" class="chip" data-lig-filter="' + k
+      + '" aria-pressed="' + (L.filter === k) + '">' + esc(t)
+      + (k === 'dolda' ? ' <span class="eko-chip-tal">' + antalDolda + '</span>' : '') + '</button>').join('');
     const synliga = L.rader.filter(synlig);
     host.innerHTML = synliga.length ? synliga.map(rad).join('')
       : '<p class="vy-tom">' + (L.rader.length ? 'Inga betalningar som passar.' : 'Inga betalningar än.') + '</p>';
-    fot.textContent = 'En rad per betalning i Stripe, skriven av databasen när webhooken skrivit pengarna. Raderna raderas '
-      + 'aldrig: de är bokföringsunderlag i sju år. Testbetalningar räknas inte i summorna.';
+    fot.textContent = 'Ett kort per betalning i Stripe, skriven av databasen när webhooken skrivit pengarna. Raderna raderas '
+      + 'aldrig: de är bokföringsunderlag i sju år. Testbetalningar räknas inte i summorna, och de som är dolda står under '
+      + 'Dolda. En annullerad betalning står kvar i summorna tills den betalats tillbaka.';
   }
 
   /* ---------- kortet ---------- */

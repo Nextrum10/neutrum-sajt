@@ -19343,6 +19343,113 @@ begin
   end if;
 end $$;
 
+-- ------------------------------------------------------------
+-- 50. Liggarens markeringar (betalningar_dolda, 2026-10-21)
+--
+-- En testbetalning döljs och en riktig märks annullerad, i en egen tabell:
+-- liggarens rad rörs inte. Bara databasens ägare skriver, ingen ändrar eller
+-- tar bort en markering, en riktig betalning döljs aldrig som test, och bara
+-- admin läser. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  t     text;
+  n     integer;
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  KT    constant uuid := '00000000-0000-4000-8000-000000050c01';
+  KS    constant uuid := '00000000-0000-4000-8000-000000050c02';
+  bt    uuid;
+  bs    uuid;
+  före  text;
+begin
+  if to_regclass('public.betalningar_dolda') is null then
+    insert into utfall (test, ok, detalj) values ('BD Liggarens markeringar: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    update public.flaggor set aktiv = true where kod = 'erbjudanden';
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, status)
+    select x.id, P, e.kod, e.namn, e.sort, e.timmar, e.giltig_manader, e.rabatt_procent, e.timpris_ore, e.pris_ore, 'vantar'
+      from public.erbjudanden_pris e, (values (KT), (KS)) x(id) where e.kod = 'plan_basic';
+    perform public.klippkort_betald(KT, (select begart_ore::integer from public.klippkort where id = KT),
+                                    'pi_rls50test', 'ch_rls50test', null, null, null, false);
+    perform public.klippkort_betald(KS, (select begart_ore::integer from public.klippkort where id = KS),
+                                    'pi_rls50skarp', 'ch_rls50skarp', null, null, null, true);
+    select id into bt from public.betalningar where stripe_payment_intent = 'pi_rls50test';
+    select id into bs from public.betalningar where stripe_payment_intent = 'pi_rls50skarp';
+    select md5(string_agg(b::text, '|' order by b.id)) into före from public.betalningar b where b.id in (bt, bs);
+
+    -- ---------- vem skriver ----------
+    t := pg_temp.svar_som(AD, format($q$insert into public.betalningar_dolda (betalning_id, skal) values (%L, 'test')$q$, bt))
+      || ' ' || pg_temp.svar_som(P, format($q$insert into public.betalningar_dolda (betalning_id, skal) values (%L, 'test')$q$, bt));
+    ut := ut || jsonb_build_object('t', 'BD varken admin eller familjen märker en betalning själv', 'ok', t = '42501 42501', 'd', t);
+
+    insert into public.betalningar_dolda (betalning_id, skal, kommentar) values (bt, 'test', 'Prov');
+    begin
+      insert into public.betalningar_dolda (betalning_id, skal) values (bs, 'test');
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BD en riktig betalning döljs aldrig som test', 'ok', t = '23514', 'd', t);
+    insert into public.betalningar_dolda (betalning_id, skal, kommentar) values (bs, 'annullerad', 'Prov');
+    ut := ut || jsonb_build_object('t', 'BD databasens ägare döljer en testbetalning och märker en riktig annullerad',
+            'ok', (select count(*) from public.betalningar_dolda where betalning_id in (bt, bs)) = 2, 'd', '');
+
+    -- ---------- står fast ----------
+    t := '';
+    begin
+      update public.betalningar_dolda set skal = 'annullerad' where betalning_id = bt;
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    begin
+      delete from public.betalningar_dolda where betalning_id = bt;
+      t := t || ' gick';
+    exception when others then t := t || ' ' || sqlstate;
+    end;
+    begin
+      truncate public.betalningar_dolda;
+      t := t || ' gick';
+    exception when others then t := t || ' ' || sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'BD en markering ändras, tas bort och töms aldrig, inte heller av ägaren',
+            'ok', t = '42501 42501 42501', 'd', t);
+    ut := ut || jsonb_build_object('t', 'BD liggarens rader är orörda',
+            'ok', (select md5(string_agg(b::text, '|' order by b.id)) from public.betalningar b where b.id in (bt, bs)) = före,
+            'd', '');
+
+    -- ---------- vem läser ----------
+    perform pg_temp.bli(P);
+    select count(*) into n from public.betalningar_dolda;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'BD familjen ser inga markeringar', 'ok', n = 0, 'd', n::text);
+    perform pg_temp.bli(AD);
+    select count(*) into n from public.betalningar_dolda where betalning_id in (bt, bs);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'BD admin läser markeringarna', 'ok', n = 2, 'd', n::text);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('BD Liggarens markeringar', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
 reset role;
 select set_config('request.jwt.claims', null, true);
 

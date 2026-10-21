@@ -5097,6 +5097,47 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 #kp-partner{margin-bottom:clamp(16px,1.8vw,22px)}
 #kp-vy .dbox + .dbox,#kp-vy .dbox + #kp-lista{margin-top:clamp(16px,1.8vw,22px)}
 
+/* LIGGARENS KORT (2026-10-21, nextrum-admin-liggaren.js): ett kort per
+   betalning, beloppet och läget överst, familjen och dagen, typen och
+   koden, raderna betalningen betalade och knappen sist. Läget färgar
+   kanten (mossa betald, ockra delvis tillbaka, lera tvist, linje
+   återbetald). En kolumn på en telefon. Bara tokens. */
+.lig-korten{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:clamp(10px,1.4vw,14px)}
+.lig-korten > .vy-tom,.lig-korten > .loading{grid-column:1 / -1}
+.lig-kort{
+  position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;
+  padding:16px 16px 14px 20px;border:1px solid var(--ln);border-radius:18px;
+  background:var(--yta);box-shadow:var(--sk-1);overflow:hidden;
+}
+.lig-kort::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--lig-kant,var(--ln-2))}
+.lig-kort.lig-betald::before{--lig-kant:var(--mossa)}
+.lig-kort.lig-delvis_aterbetald::before{--lig-kant:var(--ockra)}
+.lig-kort.lig-tvist::before{--lig-kant:var(--acc)}
+.lig-kort-topp{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.lig-belopp{display:flex;flex-direction:column;min-width:0}
+.lig-belopp b{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--bl);font-variant-numeric:tabular-nums}
+.lig-belopp small{margin-top:2px;font-size:.8rem;color:var(--bl-2)}
+.lig-lage{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.lig-kort-vem{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;font-size:.88rem;color:var(--bl-2)}
+.lig-kort-vem .eko-lank{font-weight:650;color:var(--bl)}
+.lig-kort-vem time{margin-left:auto;font-size:.82rem;color:var(--bl-3);white-space:nowrap}
+.lig-kort-taggar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.lig-typ{padding:3px 9px;border-radius:999px;font-size:.76rem;font-weight:650;background:var(--bricka);color:var(--bl-2)}
+.lig-typ[data-typ="plan"]{background:var(--acc-soft);color:var(--acc-lugn)}
+.lig-typ[data-typ="timbank"]{background:var(--mossa-soft);color:var(--mossa-text)}
+.lig-typ[data-typ="tillagg"]{background:var(--ockra-soft);color:var(--ockra-text)}
+.lig-kod{font-size:.8rem;color:var(--bl-2)}
+.lig-kod code{padding:2px 6px;border-radius:6px;font-family:var(--f-mono);font-size:.78rem;background:var(--bricka);color:var(--bl)}
+.lig-varning{font-size:.8rem;font-weight:600;color:var(--acc-text)}
+.lig-rader{list-style:none;margin:0;padding:8px 0 0;border-top:1px dashed var(--ln-2)}
+.lig-rader li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:baseline;gap:8px;padding:4px 0;font-size:.86rem}
+.lig-rad-typ{font-family:var(--f-mono);font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--bl-3)}
+.lig-rader li[data-typ="tillagg"] .lig-rad-typ{color:var(--ockra-text)}
+.lig-rad-vad{min-width:0;color:var(--bl-2);overflow-wrap:anywhere}
+.lig-rader b{font-weight:650;color:var(--bl);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lig-kort-fot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:auto}
+.lig-kort-fot:empty{display:none}
+
 /* Ägaren, förhandsvisningen och listans sök (2026-10-21,
    koderna_agare_och_en_gang). Bara tokens. */
 #kp-vy .dbox + .kp-lista-verktyg{margin-top:clamp(16px,1.8vw,22px)}

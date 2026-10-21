@@ -1943,3 +1943,47 @@ kedjan står i `DEPLOY-BETALNING.md` 9.15.
   tillbaka och byte för byte lika (`minne/databasen.md`, Familjerabatterna).
   Ingen kod var skapad och ingen familj hade en rabatt. Kvar: provet i testläge
   (`DEPLOY-BETALNING.md` 9.15 steg 4) och juristen.
+
+## Testbetalningen ur liggaren, markeringarna och korten (2026-10-21, `betalningar_dolda`)
+
+Leo: "Skript supabase/scripts/rensa-leo-testbetalning.sql med dry_run=true som
+standard, som visar raderna som tas bort (betalning, rader, bokningar,
+kod_anvandningar, tillagg_poster), bara testkonto + Stripe testläge; riktiga
+betalningar raderas inte utan markeras annullerad/dold och rapporteras", och
+"Snyggare kortsektion i betalningsvyn (belopp, färgad status, familj, typ,
+kod, datum; ... flerradiga betalningar som ett kort med typade rader
+plan/pass/tillägg); bara visning."
+
+- **Varför inget raderas ur liggaren**: Leo sa samma dag att liggaren "raderas
+  ALDRIG och ingår inte i något städjobb", och triggrarna nekar delete och
+  truncate för alla. Kodernas användning, betalningens rader och
+  tilläggsposterna hör till den. Skriptet döljer därför en testbetalning i
+  stället för att radera den, och listar raderna som hör till den.
+- **`betalningar_dolda`**: en rad per betalning, `test` eller `annullerad`, med
+  en kommentar. Bara databasens ägare skriver (ingen grant till en inloggad),
+  ingen ändrar eller tar bort en rad (triggrar, också mot ägaren), och `test`
+  går bara på en betalning med `skarp = false` (triggern
+  `betalningar_dolda_test_ar_test`): en betalning med riktiga pengar döljs
+  aldrig. Bara en superadmin läser.
+- **Skriptet** tar familjens namn (som rensa-testkonto.sql: i driften "leo
+  thriskos") och gör, med `dry_run => false`: märker kontots testbetalningar
+  `test` och dess riktiga `annullerad` (och listar dem som RIKTIGA PENGAR),
+  raderar pass och köp i testläge som bara testbetalningar gällde och som inte
+  har en rapport, ett underlag, ett uttag ur timbanken, en tilläggspost, ett
+  pass som drar timmar eller timmar köpta till sig (de står som "kvar" och
+  rensa-testkonto.sql tar dem), och listar kodanvändningen, betalningens
+  rader och tilläggsposterna, som står kvar. Det går att köra två gånger.
+  Provat lokalt: torrkörningen, och den skarpa vägen i en transaktion som
+  rullades tillbaka (Leo bad om bara torrkörningen; den skarpa provades på
+  den lokala databasen, aldrig mot driften, för att inte lämna över ett
+  oprovat skript).
+- **Korten**: Liggaren är ett rutnät av kort, ett per betalning: beloppet
+  stort och återbetalt under, läget som märke och som kantens färg (mossa
+  betald, ockra delvis tillbaka, lera tvist), familjen och dagen, typen som
+  bricka och koden, raderna (`betalningsrader` per typ, annars betalningen
+  själv) och knappen sist. En kolumn på en telefon. Dolda står under valet
+  Dolda (med antalet), och en annullerad har märket Annullerad och står kvar
+  i summorna.
+- Provat: `rls-test.sql` avsnitt 50 (`BD`, 7 prov) och `prova-kassan.js`
+  (korten, raderna, kanten, Dolda och Annullerad).
+

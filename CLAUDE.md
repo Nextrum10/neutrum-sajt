@@ -360,6 +360,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   truncate för alla, bara det Stripe ändrar efteråt (återbetalt, läget, avgift) får ändras, ingen inloggad skriver,
   och en familj med en rad avidentifieras i stället för att raderas (`on delete restrict`). En betalning som inte
   kunde skrivas ner (två kassor) står där också (`betalning_utan_rad`). Liggaren och Kortet står under Betalningar.
+  **En betalning döljs eller annulleras utan att röras** (2026-10-21, `betalningar_dolda`, Leo: "riktiga betalningar
+  raderas inte utan markeras annullerad/dold"): en rad i `betalningar_dolda`, skriven bara av databasens ägare
+  (`supabase/scripts/rensa-leo-testbetalning.sql`), som aldrig ändras eller tas bort. `test` (bara på en betalning med
+  `skarp = false`) döljer den i Liggaren, under Dolda; `annullerad` märker en riktig betalning, som står kvar i
+  summorna tills den betalats tillbaka i Stripe. **Liggaren är kort** (samma dag, Leo: "Snyggare kortsektion i
+  betalningsvyn"): ett kort per betalning med beloppet, läget som kantens färg, familjen, typen, koden, dagen och
+  raderna betalningen betalade (`betalningsrader` när de finns), bara visning.
 - **Köpvillkoren i kassan** (2026-10-21, i drift sedan 2026-10-20; texten sedan samma kväll, Leo: "fixa"): varje kassa
   föregås av en ruta med vad som köps, priset och kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken
   `CFG.KOPVILLKOR_URL`), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
@@ -967,6 +974,11 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Liggarens markeringar och testbetalningen** (2026-10-21, `betalningar_dolda`, 20261021213000) är byggda men INTE i
+  drift: migrationen och adminvyn, sedan `supabase/scripts/rensa-leo-testbetalning.sql` i SQL Editor, först som den står
+  (dry_run) och sedan med `dry_run => false` om listan stämmer. Skriptet är provat lokalt: torrkörningen, och den skarpa
+  vägen i en transaktion som rullades tillbaka. I driften väntas den dölja Leos testbetalning (en rad, `skarp = false`)
+  och radera ingenting, för rensa-testkonto.sql tog passen och testköpet 2026-10-20.
 - **Insatta timmar med orsak och månad** (2026-10-21, `timmar_med_orsak`, 20261021212000) är byggda men INTE i
   drift: migrationen och adminvyn, i den ordningen. Före migrationen säger vyn att funktionen med orsak saknas, och
   ingen gratistimme kan sättas in förrän den körts. Inga gratistimmar fanns i driften 2026-10-16, så ingen rad saknar
