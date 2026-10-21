@@ -1695,3 +1695,118 @@ migrationerna. Hur det gick till, i ordning:
   syns inte under Att göra, liggaren fick en rad (en testbetalning), inga koder hade använts, provet hade inga frågor
   (de kom samma kväll, `minne/affaren.md`) och de två godkända studiehjälparna är undantagna, och intervjumejlet gick inte ut till de
   fyra ansökningar som redan var vidareskickade (de fick det för hand samma kväll, `minne/notiser.md`).
+
+### Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21, inte i drift)
+En fil (20261021214000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
+`minne/betalning.md` (Syskontillägget som skuld), och ordningen i driften i `DEPLOY-BETALNING.md` 9.23.
+
+- **En `drop`**: `betalningar_typ_check` byts mot ett villkor som också tar `syskon` (`drop constraint if exists`
+  och `add`, som `koder_for_planer`). Inget `delete` i filen. Den går att köra två gånger.
+- **Tabellerna**: `tillagg_installning` (en rad, auditad), `tillagg_godkannanden` (familj och version),
+  `bokning_barn` (passets barn, ett huvudbarn), `tillagg_poster` (en per pass, `bokning_id` unik och restrict),
+  `tillagg_forsok` och `tillagg_forsok_poster` (försöken och vad de tog), och `betalningsrader` (en rad per del av en
+  betalning; fylls bakåt med en rad per betalning som redan stod). Alla med RLS: familjen läser sina poster, försök,
+  godkännanden och passens barn, och bara superadmin läser försökens poster och betalningens rader. Ingen inloggad
+  skriver någon av dem: `revoke all` och bara `select` tillbaka.
+- **Raderas aldrig**: `tillagg_poster`, `tillagg_forsok`, `tillagg_forsok_poster` och `betalningsrader` nekar delete
+  och truncate med triggrar, också för ägaren (prova-tillagg-samtidigt.sh städar sina fixturer med
+  `session_replication_role = replica`, bara lokalt). En familj med en post avidentifieras i stället för att raderas
+  (`intern.radering_underlag`, hindret `tillagg_obetalt` medan något är obetalt), och ett pass med en post räknas som
+  bokfört (`intern.passet_bar_bokforing`).
+- **Triggrarna på `bookings`**: `bookings_syskon_prova` (BEFORE INSERT), `bookings_syskon_star_fast` (BEFORE UPDATE)
+  och, efter skrivningen, `bookings_syskon_skapa` (AFTER INSERT) och `bookings_syskon_foljer` (AFTER UPDATE). Båda
+  BEFORE-triggrarna kommer före `bookings_timmarna_tillbaka` i namnordningen, som ska stå sist, och
+  `bookings_syskon_prova` efter `bookings_frys_priset`, så att priset per extra barn redan är fryst.
+- **`betalningar_rader`** är en deferred constraint trigger på `betalningar`: vid commit får en betalning utan rad en
+  standardrad (`intern.betalningsrader_standard`), så att varje betalning har minst en rad utan att de befintliga
+  vägarna i webhooken ändras. En `truncate` på `betalningar` svarar därför 55006 (en väntande trigger) före
+  liggarens egen trigger; avsnitt BL tar båda som ett nej.
+- **Låsen**: `tillagg_forsok_skapa` tar `pg_advisory_xact_lock(hashtextextended('tillagg:' || familj, 0))` och sedan
+  `for update` på de upplupna posterna. Två försök för samma familj väntar på varandra, och det andra hittar inga
+  upplupna poster. `rls-test.sql` kan inte pröva det (en transaktion), så `verktyg/prova-tillagg-samtidigt.sh`
+  öppnar två psql-sessioner mot den lokala databasen.
+- **Jobben**: `tillagg-forsok` (`*/15 * * * *`, `intern.tillagg_forsok_stada()`) och `tillagg-paminnelse`
+  (`23 8 * * *` UTC, `intern.tillagg_paminnelser_koa()`); dagarna räknas i Stockholm i funktionerna, aldrig i
+  schemat. Båda står under System → Automationer.
+- **Typlistorna**: `notis_typer()` och `notis_mejlbara()` lappas med `replace()` och en vakt
+  (`tillagg_paminnelse`, `tillagg_kvitto`), och `typer.ts` ändras i samma ändring.
+
+Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, `rls-test.sql`
+gick 2053 av 2053 (avsnitt 51, SK, 76 prov), och `prova-tillagg-samtidigt.sh` var grönt i alla tre varven.
+
+**Granskningen 2026-10-21** (`minne/betalning.md`, Granskningen) ändrade samma fil, som inte är körd:
+`tillagg_godkannanden.familj` är `on delete cascade` (godkännandet raderas med kontot); `tillagg_forsok` har
+`slapp_orsak` 'admin', `slapp_kommentar` och `slappt_av` (villkoret `tillagg_forsok_admin`: en orsak och en person
+när admin släppt); posternas väg tillbaka är en funktion (`intern.tillagg_poster_tillbaka`, som läser
+`avbokad_fran`), och vakten släpper `i_betalning` till `frigjord` för den; `tillagg_forsok_slapp_admin(uuid, text)` är
+admins; `tillagg_forsok_skapa` svarar `ersatt_session`; jobbet gör en uppgift av ett försök som väntat på Klarna i en
+vecka. Avsnitt 16 och 17 lappar `kod_statistik`, `partner_statistik`, `kodens_anvandningar` och `manad_lage` med
+`replace()` och räknade träffar (markören är "granskningen 2026-10-21"), och avsnitt 13 lägger hindret
+`syskon_kommande` i `intern.radering_underlag`. `service_role` har inga skrivrättigheter i tilläggets sju tabeller:
+kassan och webhooken läser dem och skriver bara genom funktionerna, som alla är security definer (kontrollerat i
+`pg_proc`), och ett prov i avsnitt 51 gör samma kontroll. Filen går fortfarande att köra två gånger, och
+`rls-test.sql` gick 2106 av 2106 med den och de andra rättelserna.
+
+### Värvningsbonusen (varvningsbonus, 2026-10-21, inte i drift)
+En fil (20261021215000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
+`minne/affaren.md` (Värvningsbonusen), och ordningen i driften i `DEPLOY-BETALNING.md` 9.24.
+
+- **Ingen `drop` och inget `delete`.** Triggrarna skrivs med `create or replace trigger`, och de som bara ska finnas en
+  gång (auditen) skapas bakom `if not exists`. Den går att köra två gånger.
+- **Vakten i avsnitt 0** prövar sex funktioner mot den md5 de har i en databas byggd ur migrationerna (`mina_tips`,
+  `tipsbonus_vid_intag`, `ansokan_tipskod`, `ny_tipskod`, `tipsbonus_ore`, `koder_lage`); en som redan bär ändringen
+  (ordet `varvningsbonus` i kroppen) släpps igenom. `intern.radering_underlag`, `notis_typer()` och `notis_mejlbara()`
+  lappas med `replace()` och räknade träffar.
+- **Tabellerna**: `varvning_installning` (en rad, auditad: beloppet, procenten och händelsen), och `varvningsbonus`
+  (en rad per bonus, auditad utan skälet). `applications.varvad_av_profil_id` (on delete set null) är den nya
+  kolumnen på ansökan. RLS: alla inloggade läser inställningen (den säger bara beloppet), bara admin läser
+  bonusarna, och ingen inloggad skriver någon av dem (`revoke all`, bara `select` tillbaka; `nextrum_barn` och
+  `nextrum_ai` får inget).
+- **Raderas aldrig**: delete och truncate på `varvningsbonus` nekas med triggrar, också för ägaren. Värvaren är
+  `on delete restrict`; ansökan och den värvades konto är `on delete set null`, och vakten släpper igenom just det.
+- **Unikt**: en rad per ansökan, per värvat konto och per person (`varvad_epost_hmac`, HMAC av
+  `intern.epost_nyckel(adressen)` med `notis_konfig.barn_nyckel` och prefixet `varvning:v1:`; utan nyckel en
+  sha256, som bara lokalt). Byts `barn_nyckel` räknas en tidigare värvad som ny.
+- **Triggrarna**: `applications_tipskod` (BEFORE INSERT och UPDATE OF kod och värvaren, efter
+  `applications_skydda` i namnordningen) prövar koden och sätter värvaren; `applications_varvning` (AFTER INSERT
+  och UPDATE OF värvaren) skriver raden; `applications_varvning_konto` (AFTER UPDATE OF konto_id),
+  `tutor_profiles_tipsbonus` (godkänd, som förut), `prov_studiehjalpare_varvning` och `lesson_reports_varvning`
+  prövar intjänandet, och `varvning_installning_andrad` prövar alla väntande när händelsen byts. Intjänandet tar
+  radlåset (`for update`) och ändrar bara en rad i `vantar`, så två händelser samtidigt ger en bonus.
+- **Admins funktioner**: `varvningsbonus_utbetald(uuid[], text)` (de intjänade, lönemånaden ÅÅÅÅ-MM, svarar
+  antalet) och `varvningsbonus_annullera(uuid, text)` (skälet 3 till 500 tecken, svarar `annullerad`, `redan` eller
+  `utbetald`), båda `is_admin()` först och `andrad_av` satt av databasen. `prova_jobbkod(text)` är nåbar för `anon`
+  med flit: svaret är `ok`, `okand`, `tom` eller `for_manga`, och taket är rabattkodernas
+  (`intern.rabattkod_for_manga`, `intern.rabattkod_forsok_notera`) med en HMAC av IP-numret som nyckel.
+- **Det som redan fanns**: varje godkänd studiehjälpare som inte är admin får en kod; raderna i `tipsbonus` flyttas
+  hit (`tipsbonus_id`, unik) innan ansökningarna som är i gång får sin värvare, så att ingen får två bonusar; och
+  `tipsbonus` får inga nya rader (`intern.tipsbonus_vid_intag` skriver inte dit längre).
+- **Typlistorna**: `varvningsbonus` i `notis_typer()` och `notis_mejlbara()`, och i `typer.ts` i samma ändring.
+
+Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, och
+`rls-test.sql` gick igenom med avsnitt KB omskrivet och avsnitt 52 (VB) nytt.
+
+**Granskningen 2026-10-21** (`minne/affaren.md`, Värvningsbonusen) ändrade samma fil, som inte är körd: indexen är
+partiella (`varvningsbonus_en_per_ansokan` och `_en_per_konto` där läget inte är `annullerad`,
+`varvningsbonus_en_per_person` bara för `intjanad` och `utbetald`, och ett vanligt index på personen); personen är en
+HMAC av `intern.varvning_epost_nyckel` (Gmail utan punkter); `intern.varvningsbonus_ny` (BEFORE INSERT) släpper bara
+`vantar` och `annullerad` om raden inte flyttas från `tipsbonus`; vakten annullerar en väntande rad när dess ansökan
+blir null i en kaskad; `applications_varvning` går på `insert or update of kod, varvad_av_profil_id`;
+`intern.ansokan_tipskod` låser koden när bonusen tjänats in (23514, bara för en inloggad); `prova_jobbkod` läser
+`cf-connecting-ip` och har ett tak på 500 okända i timmen totalt (nyckeln `jobbkod:`); och `service_role` har inga
+skrivrättigheter i `varvningsbonus` eller `varvning_installning`.
+
+### Granskningens övriga rättelser (2026-10-21, i filerna som inte är körda)
+- **`ansokningarnas_steg`**: en INSERT som inte är betrodd måste ha steget `ny`; medan läget är eller blir
+  `rejected` står stegets kolumner still; loggens tid sätts bara när den saknas (backfillen behåller sina tider);
+  `ansokan_steg_logg_star_fast` släpper en UPDATE där bara `andrad_av` blir null vid `pg_trigger_depth() > 1`; och
+  `service_role` har inga skrivrättigheter i loggen (bara triggern skriver, security definer).
+  Två äldre prov (16.1 och Intervjumejlet) som gick genom Avböjd fångar nu 23514.
+- **`timmar_med_orsak`**: `timmar_insatta_star_fast` släpper vid djup över 1 bara nyckeln som blir null och orsaken
+  som töms, `profiles_raderad_star_fast` (`intern.profil_raderad_star_fast`) låser `raderad_at` när den satts, och
+  `service_role` har inga skrivrättigheter i `timmar_insatta`.
+- **`koderna_agare_och_en_gang`**: avsnitt 4 lappar `intern.klippkort_rabatt` (familjens väntande köp med koden den
+  senaste timmen) och lägger triggern `kod_anvandningar_for_manga`.
+- **`betalningar_dolda`**: `service_role` förlorar insert, update, delete och truncate.
+- **`supabase/scripts/rensa-leo-testbetalning.sql`**: kontot måste ha en adminroll, och `markera_riktiga` (falsk som
+  förval) krävs för att märka en riktig betalning annullerad. Provat lokalt med funktionen i sparpunkter.

@@ -260,7 +260,7 @@ blivit pengar).
   kan sättas in när familjen tas in, innan de loggat in. Timmarna betalar inget
   förrän familjen godkänt villkoren och föreslagit ett pass.
 - **Sätta in**: `ge_gratistimmar(familj, timmar)`, 1–40 åt gången, bara
-  `is_admin()`. Efter insättningen betalar timmarna familjens obetalda förslag
+  `is_admin()` (sedan 2026-10-21 med orsak och månad, nedan). Efter insättningen betalar timmarna familjens obetalda förslag
   och bokade pass direkt (`intern.timmar_betalar_obetalda`, samma som jobbet
   `timmar-betalar`), och svaret säger hur många. Strömbrytaren `erbjudanden`
   gäller som för köpta timmar: står den av betalar timmarna inget.
@@ -891,3 +891,53 @@ skriver webhooken samma återbetalning ur Stripes metadata när `charge.refunded
 samma återbetalning två gånger blir en rad. Användes timmar under tiden drogs färre tillbaka, och det blir
 en uppgift. En återbetalning i Stripes dashboard (utan köpets id) stänger köpet som förut och blir en
 uppgift: där drogs inga timmar.
+
+## Insatta timmar med orsak och månad (2026-10-21, `timmar_med_orsak`)
+
+Leo: "Verifiera att admin kan lägga in timmar manuellt med loggrad. Om det
+saknas, bygg det: timmar, månad, obligatorisk orsak, egen oföränderlig
+loggrad." Det fanns: `ge_gratistimmar(familj, timmar)` och auditen (vem som
+skapade kortet). Det saknades: varför, och vilken månad.
+
+- **`ge_gratistimmar(familj, timmar, orsak, månad)`**: kräver en orsak (3–500
+  tecken, btrim) och en månad från september 2026 till och med nästa månad,
+  svensk tid; utan månad den innevarande. Den kör den gamla insättningen och
+  skriver raden i samma transaktion. Den gamla med två argument kör ingen
+  inloggad längre (inget drop: den körs av den nya).
+- **`timmar_insatta`**: familjen, kortet, timmarna, `avser_manad` (första
+  dagen), orsaken, vem (`insatt_av`) och när. Bara funktionen skriver; ingen
+  ändrar, tar bort eller tömmer tabellen, inte heller databasens ägare
+  (`timmar_insatta_star_fast`, före update, delete och truncate). Det som går
+  förbi körs av databasen i en trigger (`pg_trigger_depth() > 1`): en
+  främmande nyckel som blir null när kontot eller kortet tas bort, och
+  gallringen. Bara en superadmin läser (`is_admin()`), som köpen.
+- **Gallringen**: orsaken är fritext och kan nämna familjen, så den töms när
+  familjen avidentifieras (`profiles_timmar_insatta_gallras`, som
+  `profiles_partner_rensas`). Antalet, månaden och kortet står kvar.
+- **Månaden** säger vad timmarna avser (ett pass som ställdes in i
+  september), inte när de går ut: det är 60 dagar från insättningen, som förut.
+- **Vyerna**: familjens panel, Ekonomi: Sätt in har Timmar, Avser månad
+  (september 2026 till nästa månad, den här förvald) och Orsak (krävs, minst
+  tre tecken), frågan före säger månaden och orsaken, och raderna står under
+  Insatta timmar med månaden, orsaken, vem och när. Ta in familjen: orsaken
+  fälls ut när timmarna är fler än noll och krävs innan kontot skapas;
+  timmarna avser den månaden. Raden Första timmen gratis under Översikt är
+  borta (Leo samma dag), med frågan `forsta_timmen_lage` panelen ställde.
+- **Första timmen med planen fungerar**: `intern.planens_forsta_timme` ger den
+  första planen familjen betalar en timme till när `klippkort_betald` (som
+  webhooken kör) sätter den betald, också med rabattkod, och aldrig Fyll
+  timbanken; `rls-test.sql` avsnitt 28 provar det och gick igenom med alla
+  migrationer 2026-10-21.
+- Provat: `rls-test.sql` avsnitt 49 (`TI`, 15 prov), `prova-intag.js` och
+  `prova-adminvyn.js` (raden läses ur en riktig databas).
+- **Granskningen 2026-10-21**: orsaken gick att tömma på en familj som fanns
+  kvar. `skydda_profilfalt` släpper igenom admin, så en superadmin som satte
+  `profiles.raderad_at` och tog bort den igen gav orsaken "Gallrad", och
+  familjen stod kvar som förut. Nu står `raderad_at` fast när den satts
+  (`profiles_raderad_star_fast`, också mot databasens ägare: en raderad
+  familj blir aldrig oraderad), och `timmar_insatta_star_fast` släpper vid
+  `pg_trigger_depth() > 1` bara det databasen gör där: en nyckel som blir
+  null och orsaken som töms vid gallringen, inget annat. Provat:
+  `rls-test.sql` avsnitt 49 (ett prov till). Avser månad förväljs i
+  Stockholms tid också i webbläsaren (`nextrum-admin-detalj.js`).
+

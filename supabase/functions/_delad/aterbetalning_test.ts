@@ -125,6 +125,19 @@ Deno.test('webhooken: våra återbetalningar skrivs med timmarna, Stripes panel 
   });
 });
 
+Deno.test('webhooken: en återbetald tilläggsrad på samma betalning är inte främmande för köpet', async () => {
+  const { stripe } = falskStripe(() => ({
+    data: [
+      { id: 're_vår', status: 'succeeded', amount: 37900, metadata: { klippkort_id: KORT, timmar: '1', hela: 'nej' } },
+      { id: 're_tillagg', status: 'succeeded', amount: 6900, metadata: { betalningsrad: 'rad-1', tillagg_post: 'post-1' } },
+      { id: 're_panel', status: 'succeeded', amount: 1000, metadata: {} },
+    ],
+  }));
+  const db = falskDb({ klippkort_aterbetalad: { data: { ok: true } } });
+  const u = await stamAvKopet(stripe, db.rpc, { kort: KORT, charge: 'ch_1', utom: (md) => !!md.betalningsrad });
+  assertEquals(u, { registrerade: 1, framande_ore: 1000 });
+});
+
 Deno.test('webhooken: ett fel när timmarna skrivs kastas, så att Stripe försöker igen', async () => {
   const { stripe } = falskStripe(() => ({
     data: [{ id: 're_vår', status: 'succeeded', amount: 100, metadata: { klippkort_id: KORT, timmar: '1', hela: 'nej' } }],

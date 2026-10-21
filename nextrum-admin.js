@@ -52,6 +52,7 @@
   const ritaAnsokningar = (...a) => NXAdmin.rita.ritaAnsokningar(...a);
   const ritaProvet = (...a) => NXAdmin.rita.ritaProvet(...a);
   const ritaLiggaren = (...a) => NXAdmin.rita.ritaLiggaren(...a);
+  const ritaTillagg = (...a) => NXAdmin.rita.ritaTillagg(...a);
   const ritaBibliotek = (...a) => NXAdmin.rita.ritaBibliotek(...a);
   const ritaAvvikelser = (...a) => NXAdmin.rita.ritaAvvikelser(...a);
   const ritaBokningar = (...a) => NXAdmin.rita.ritaBokningar(...a);
@@ -87,6 +88,7 @@
   const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
   const ritaMånaden = (...a) => NXAdmin.rita.ritaMånaden(...a);
   const ritaLöner = (...a) => NXAdmin.rita.ritaLöner(...a);
+  const ritaVarvning = (...a) => NXAdmin.rita.ritaVarvning(...a);
 
   document.addEventListener('change', async e => {
     const el = e.target;
@@ -118,41 +120,10 @@
       return;
     }
 
-    if (el.dataset && el.dataset.ans) {
-      const a = S.ansokningar.find(x => x.id === el.dataset.ans);
-      const gammal = a.status;
-      /* Godkänd mejlar en välkomst (Fas 16.1), och mejlet säger att
-         profilen är godkänd. Satt härifrån är den inte det: det är
-         "Ta in i poolen" som godkänner profilen och gör hen matchbar.
-         Ett välkomstmejl går inte att ta tillbaka. */
-      if (el.value === 'approved' && gammal !== 'approved') {
-        const ja = await bekräfta({
-          titel: 'Godkänna utan att ta in i poolen?',
-          text: (a.name || 'Den sökande') + ' får ett välkomstmejl som säger att profilen är '
-            + 'godkänd. Men bara läget ändras härifrån: profilen godkänns först med "Ta in i '
-            + 'poolen", och till dess går hen inte att matcha.',
-          knapp: 'Godkänn och mejla ändå',
-          avbryt: 'Avbryt'
-        });
-        if (!ja) { el.value = gammal; return; }
-      }
-      /* Avböjd mejlar ett nej (2026-10-05), en halvtimme senare och aldrig
-         på kvällen. Rutan visar mejlet och när det går (bekräftaNej i
-         nextrum-admin-rekrytering.js). */
-      if (el.value === 'rejected' && gammal !== 'rejected') {
-        const ja = await NXAdmin.rita.bekräftaNej(a);
-        if (!ja) { el.value = gammal; return; }
-      }
-      a.status = el.value;
-      if (!await skriv('applications', a.id, { status: el.value })) { a.status = gammal; el.value = gammal; }
-      /* Databasen köar nejet, eller låter det gå förbi när läget byts
-         tillbaka. Rekryteringen visar när det går, så raden hämtas om. */
-      if ((a.status === 'rejected') !== (gammal === 'rejected') && NXAdmin.rita.hämtaBesked) {
-        await NXAdmin.rita.hämtaBesked(a.id);
-      }
-      ritaAnsokningar(); ritaÖversikt();
-      return;
-    }
+    /* Ansökningarnas läge sattes här med märkena till 2026-10-21. Nu byts
+       steget med knapparna i ansökan (nextrum-admin-rekrytering.js), och
+       Avböj har en egen knapp: databasen vaktar stegens ordning
+       (ansokningarnas_steg). */
 
     if (el.dataset && el.dataset.sh) {
       const t = S.tutorProfiler[el.dataset.sh];
@@ -340,7 +311,7 @@
   /* Sök- och filterfälten. input, inte change: en lista som
      uppdateras när man tappar fokus känns trasig. */
   [['#leads-sok', ritaLeads], ['#leads-status', ritaLeads],
-   ['#ans-sok', ritaAnsokningar], ['#ans-status', ritaAnsokningar],
+   ['#ans-sok', ritaAnsokningar],
    ['#msg-sok', ritaKontakt], ['#msg-ohanterade', ritaKontakt],
    ['#fam-sok', ritaFamiljer], ['#fam-status', ritaFamiljer],
    ['#sh-sok', ritaStudiehjalpare], ['#sh-status', ritaStudiehjalpare],
@@ -1063,6 +1034,8 @@
       /* Liggaren och Kortet under Betalningar (2026-10-21) hämtar sitt eget
          och väntas inte in. */
       ritaLiggaren();
+      // Syskontillägget (2026-10-21) under Betalningar, med sitt eget hämtande.
+      ritaTillagg();
       ritaKontakt();
       ritaChattar();
       ritaFamiljer();
@@ -1082,6 +1055,8 @@
       /* Efter Ekonomi: båda läser dess stängda månader och passunderlaget. */
       ritaMånaden();
       ritaLöner();
+      // Värvningsbonusen (2026-10-21) läser samma rader som Löner.
+      ritaVarvning();
       ritaIntegrationer();
       ritaAdminhantering();
       ritaPris();

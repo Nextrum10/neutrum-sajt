@@ -55,7 +55,7 @@ import { datumText, narText, paminnelseNar } from './tid.ts';
  * kvittot på en intresseanmälan går till någon som ännu inte har ett
  * konto, och en knapp till en inloggad vy hade mött en inloggning.
  */
-export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten' | 'kortet';
+export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten' | 'kortet' | 'varvning';
 
 export type Innehall = {
   amne: string;
@@ -80,9 +80,22 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
   timmar_gar_ut: 'timmar som går ut',
   barnforslag: 'barnens förslag på pass',
   kort_nekat: 'kort som nekas',
+  tillagg_paminnelse: 'påminnelser om tillägg',
+  tillagg_kvitto: 'kvitton på tillägg',
+  varvningsbonus: 'värvningsbonus',
 };
 
 const SVARA = 'Svara ja eller nej i Nextrum.';
+
+/** Ett belopp i ören som kronor, med ören bara när de finns: 138 kr, 172,50 kr. */
+function kronor(ore: number): string {
+  const kr = Math.floor(ore / 100);
+  const rest = ore % 100;
+  const hela = String(kr).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+  return rest ? `${hela},${String(rest).padStart(2, '0')}\u00a0kr` : `${hela}\u00a0kr`;
+}
+
+const passOrd = (n: number) => (n === 1 ? '1 pass' : `${n} pass`);
 
 /* Samma mening som villkoren, prissidan och FAQ:n. Den räknas av
    verktyg/kolla-betalningsvillkor.py, så att mejlet inte kan börja säga
@@ -347,6 +360,67 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       knapp: efter ? 'Gå till betalningen' : 'Byt kort',
       mal: efter ? 'betalning' : 'kortet',
       fakta: passFakta(m, nar),
+    };
+  },
+
+  // syskontillagg_som_skuld (2026-10-21). Familjen har ett upplupet tillägg
+  // för syskon på pass som hållits, och den äldsta posten är äldre än
+  // påminnelsegränsen. Belopp, antal pass och en länk till Betalning, inga
+  // namn på barn. Inget dras av sig självt: familjen betalar under
+  // Betalning, eller med nästa köp av timmar.
+  tillagg_paminnelse(m) {
+    const belopp = m.d.belopp !== null && m.d.belopp > 0 ? kronor(m.d.belopp) : null;
+    const pass = m.d.antalPass !== null ? passOrd(m.d.antalPass) : null;
+    const fakta: [string, string][] = [];
+    if (belopp) fakta.push(['Upplupet tillägg', belopp]);
+    if (pass) fakta.push(['Pass', pass]);
+    return {
+      amne: belopp ? `Upplupet tillägg för syskon: ${belopp}` : 'Ni har ett upplupet tillägg för syskon',
+      rubrik: 'Ett tillägg för syskon väntar på betalning',
+      mening: `Ni har ${belopp ? `${belopp} i ` : ''}upplupet tillägg för syskon som varit med på `
+        + `${pass ? pass : 'pass'} som redan hållits. Betala det under Betalning när det passar er, så följer det `
+        + 'annars med som en egen rad när ni köper timmar nästa gång. Inget dras av sig självt.',
+      knapp: 'Gå till betalningen',
+      mal: 'betalning',
+      fakta,
+    };
+  },
+
+  // syskontillagg_som_skuld (2026-10-21). Kvittot när tillägget betalats:
+  // en rad per pass med dagen, antalet barn och beloppet, och summan. Inga
+  // namn. Stripe skickar sitt eget kvitto på betalningen; det här säger
+  // vilka pass den gällde.
+  tillagg_kvitto(m) {
+    const belopp = m.d.belopp !== null && m.d.belopp > 0 ? kronor(m.d.belopp) : null;
+    const fakta: [string, string][] = m.d.rader.map(
+      (r) => [datumText(r.datum), `${r.barn} barn, ${kronor(r.belopp)}`] as [string, string],
+    );
+    if (belopp) fakta.push(['Totalt', belopp]);
+    return {
+      amne: belopp ? `Kvitto: tillägg för syskon, ${belopp}` : 'Kvitto: tillägg för syskon',
+      rubrik: 'Tack, tillägget är betalt',
+      mening: `Vi har tagit emot betalningen för tillägget för syskon på `
+        + `${m.d.antalPass !== null ? passOrd(m.d.antalPass) : 'passen nedan'}. Det finns inget mer att betala för dem.`,
+      knapp: 'Visa betalningarna',
+      mal: 'betalning',
+      fakta,
+    };
+  },
+
+  // varvningsbonus (2026-10-21). Värvarens bonus är intjänad. Bara beloppet
+  // och att den hanteras enligt villkoren (Leo: "bara belopp och att den
+  // hanteras enligt villkoren"); aldrig vem som värvats eller hur långt hen
+  // kommit. Inget betalas ut härifrån: bonusen är lön.
+  varvningsbonus(m) {
+    const belopp = m.d.belopp !== null && m.d.belopp > 0 ? kronor(m.d.belopp) : null;
+    return {
+      amne: belopp ? `Din värvningsbonus är intjänad: ${belopp}` : 'Din värvningsbonus är intjänad',
+      rubrik: 'Tack för att du värvade en kompis',
+      mening: `Din värvningsbonus${belopp ? ` på ${belopp}, inklusive semesterersättning,` : ''} är intjänad. `
+        + 'Den hanteras enligt villkoren för värvningsbonusen och betalas med lönen.',
+      knapp: 'Se dina värvningar',
+      mal: 'varvning',
+      fakta: belopp ? [['Värvningsbonus', belopp]] : [],
     };
   },
 };

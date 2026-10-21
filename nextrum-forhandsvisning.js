@@ -318,6 +318,9 @@ window.NXForhandsvisning = (function () {
       betygsgarantier: [],
       pass_tillagg: [],
       timbank_uttag: [],
+      /* Passens barn (syskontillagg_som_skuld, 2026-10-21): tom, för
+         strömbrytaren syskonskuld står av och inget pass har extra barn. */
+      bokning_barn: [],
       notis_val: [],
       notis_installning: [{ id: 1, paminnelser_timmar: 24, chatt_samla_minuter: 15 }],
       pass_moten: [],
@@ -334,7 +337,9 @@ window.NXForhandsvisning = (function () {
       ],
       payout_lines: [],
       /* 2026-10-13: bonusen för tips, lön som studiehjälparen läser själv. */
-      tipsbonus: []
+      /* Värvningsbonusen (varvningsbonus, 2026-10-21): ingen inloggad läser
+         tabellen utom admin, och värvaren ser sina genom mina_tips(). */
+      varvningsbonus: []
     };
   }
 
@@ -463,7 +468,7 @@ window.NXForhandsvisning = (function () {
       case 'kortreservationer': return roll === 'foralder' && r.parent_id === JAG;
       case 'sparade_kort': return false;
       case 'payouts': case 'arbetade_timmar': case 'payout_lines': return roll !== 'foralder' && r.tutor_id === JAG;
-      case 'tipsbonus': return roll !== 'foralder' && r.studiehjalpare_id === JAG;
+      case 'varvningsbonus': return false;
       case 'niva_fragor': return roll !== 'foralder';
       case 'notis_val': return r.profil_id === JAG;
       default: return true;
@@ -794,8 +799,13 @@ window.NXForhandsvisning = (function () {
       return roll === 'foralder'
         ? { kod: tipsKod, sort: 'familj', aktiv: true, anmalda: 0, kunder: 0, timmar: 0, anvanda: 0, kvar: 0,
             kvar_till: null, timme_ges: true }
+        /* Värvningsbonusen (varvningsbonus, 2026-10-21): en kompis har sökt
+           med koden och väntar, med bara läget, som i driften. */
         : { kod: tipsKod, sort: 'studiehjalpare', aktiv: true, ansokningar: 1, intagna: 0, bonus_ore: 0,
-            bonus_utbetald_ore: 0, bonus_ges: true, bonus_belopp_ore: 30000 };
+            bonus_utbetald_ore: 0, bonus_ges: true, bonus_belopp_ore: 30000, semester_procent: 12,
+            utlosare: 'konto_skapat',
+            varvningar: [{ id: 'varv-1', status: 'vantar', intjanad: null, utbetald: null,
+                           period: null, belopp_ore: 30000, fornamn: null }] };
     },
     forsta_timmen_lage: function () { return { beviljad: false, tagen: false }; },
     /* Utbildningsprovet i studiehjälparvyn (2026-10-21): den påhittade
@@ -808,6 +818,17 @@ window.NXForhandsvisning = (function () {
     /* Familjens rabatt per timme (familjerabatter, 2026-10-15): den påhittade
        familjen har ingen, och priset vid knappen är katalogens. */
     min_familjerabatt: function () { return 0; },
+    /* Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21):
+       strömbrytaren står av, som i driften, och familjen har ingen skuld.
+       Villkoren är ett utkast, så rutan för extra barn syns inte. */
+    mitt_tillagg: function () {
+      return roll !== 'foralder' ? null
+        : { pa: false, version: 'utkast', godkand_at: null, sen_avbokning_timmar: 24, debitera_vid_sen_avbokning: true,
+            obligatorisk: true, max_upplupet_ore: 100000, sparr_efter_dagar: 45, paminnelse_dagar: 14, sparr: null,
+            upplupet_ore: 0, upplupna: 0, i_betalning_ore: 0, i_betalning: 0, poster: [] };
+    },
+    /* Barnen på studiehjälparens pass: inget pass har extra barn här. */
+    passens_barn: function () { return []; },
     /* Planerna per månad (2026-10-21): den 1:a i den här och nästa månad,
        så att månadsvalet och timbankens månader syns som i driften. */
     planens_manader: function () {

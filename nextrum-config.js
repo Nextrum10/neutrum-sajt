@@ -12,6 +12,44 @@
    Nej, anon-nyckeln är inte hemlig. Den är byggd för att ligga i
    webbläsaren. Det som skyddar datan är RLS-reglerna i schema.sql,
    inte nyckeln. Service_role-nyckeln däremot får ALDRIG hamna här.
+
+   ------------------------------------------------------------
+   BOKNINGSSIDAN FÖR INTERVJUN (INTERVJU_BOKNINGSLANK nedan)
+
+   Den som går vidare till intervju bokar en tid själv på en
+   bokningssida i Google Kalender. Ingen koppling till Google behövs:
+   det är bara en länk. Så här skapar du sidan (Leo, 2026-10-21):
+
+     1. Öppna Google Kalender inloggad som info@nextrum.se, aldrig ett
+        privat Gmail: Workspace-avtalet med Google gäller bara där, och
+        integritetspolicyn säger att bokningen ligger i vår kalender.
+     2. Skapa → Bokningsschema (på engelska Appointment schedule).
+     3. Titel: "Intervju med Nextrum". Längd: till exempel 20 minuter.
+        Tillgänglighet: de dagar och tider ni kan intervjua. Under
+        Bokningsfönster: hur långt fram man får boka och hur nära i tid
+        (till exempel högst fyra veckor fram, minst 12 timmar innan).
+        Gärna en buffert mellan mötena och ett tak per dag.
+     4. Plats och konferens: Google Meet. Då får den som bokar
+        Meet-länken i bekräftelsen.
+     5. Bokningsformulär: förnamn, efternamn och e-post räcker. Lägg
+        inte till frågor: svaren hamnar hos Google, och det vi behöver
+        står redan i ansökan.
+     6. Bekräftelser och påminnelser: låt Google mejla bekräftelsen och
+        en påminnelse. Den som bokar behöver inget Google-konto.
+     7. Spara. Öppna bokningssidan och kopiera dess adress (Dela →
+        Kopiera länk). Den ser ut som https://calendar.app.google/XXXXXXXX.
+     8. Klistra in adressen i INTERVJU_BOKNINGSLANK nedan, och samma
+        adress i supabase/functions/_delad/notiser/intervju.ts (lank):
+        mejlet läser inte den här filen. Kör
+        python3 verktyg/kolla-mejltexter.py, som säger till om de två
+        skiljer sig. Driftsätt sedan notis-ko, så att det automatiska
+        mejlet bär den nya länken.
+     9. Prova själv: öppna länken i ett privat fönster och boka en tid.
+        Ta bort provbokningen i kalendern efteråt.
+
+   Bokningarna står i kalendern, inte i adminvyn: vyn läser aldrig
+   kalendern. Policyn lovar att en bokning tas bort för hand senast ett
+   år efter intervjun.
    ============================================================ */
 
 window.NEXTRUM_CONFIG = {
@@ -34,13 +72,34 @@ window.NEXTRUM_CONFIG = {
      inte förrän någon verifierat den. Se GOOGLE-FORETAGSPROFIL.md. */
   GOOGLE_RECENSION_URL: '',
 
-  /* Tillägg när fler än ett barn sitter med i samma pass, per timme.
+  /* Tillägg när fler än ett barn sitter med i samma pass, per timme
+     (hette PRIS_EXTRA_BARN till 2026-10-21). Databasens pris är tjänstens
+     (tjanster.extra_personer_ore), och de ska vara samma tal; det här
+     visas på de öppna sidorna, som läser det härifrån.
 
-     FAST, inte per barn: två barn och tre barn kostar samma sak, och
-     tre är taket (tjanster.extra_personer_max). Ett syskon som sitter
+     I DAG FAST, inte per barn: två barn och tre barn kostar samma sak,
+     och tre är taket (tjanster.extra_personer_max). Ett syskon som sitter
      med kostar alltså inte ett helt nytt pass — men studiehjälparen
-     delar sin uppmärksamhet, och det ska synas. */
-  PRIS_EXTRA_BARN: 69,
+     delar sin uppmärksamhet, och det ska synas.
+
+     SYSKONTILLÄGGET SOM SKULD (syskontillagg_som_skuld, 2026-10-21) tar
+     samma pris PER EXTRA BARN och timme, som en skuld efter passet. Det
+     gäller först när strömbrytaren syskonskuld slås på, och då ska
+     prissidan, områdessidorna och FAQ:n säga per extra barn i samma
+     ändring (tre barn blir 537 kr i timmen, inte 468). */
+  PRIS_SYSKON_TILLAGG_KR_PER_TIMME: 69,
+
+  /* Villkoren för syskontillägget (TILLAGG_VILLKOR_VERSION står i
+     databasen, tillagg_installning.villkor_version). PLATSHÅLLARE: Leo
+     skriver texten och sätter länken här när punkten finns i villkoren.
+     Tom sträng = rutan säger att villkoren skrivs, utan länk. */
+  TILLAGG_VILLKOR_URL: '',
+  /* Villkoren för värvningsbonusen (varvningsbonus, 2026-10-21): punkten
+     #tips i användarvillkoren, omskriven för bonusen i versionen 2026-10-22
+     (Leo: "Fixa nr 6"). Tom sträng = kortet Värva en kompis säger att
+     villkoren skrivs. Beloppet, semesterersättningens del och händelsen
+     står i databasen (varvning_installning), inte här. */
+  VARVNING_VILLKOR_URL: '/anvandarvillkor#tips',
 
   /* BETALNINGSVILLKOR_DAGAR och BANKGIRO stod här, fakturans
      betalningstid och bankgiro, tills fakturan togs bort 2026-10-21. */
@@ -67,19 +126,22 @@ window.NEXTRUM_CONFIG = {
      tills Leo skrivit köpvillkoren. Byts adressen ändras bara den här. */
   KOPVILLKOR_URL: '/anvandarvillkor#kopvillkor',
 
-  /* Bokningssidan för intervjun (2026-10-20): ett bokningsschema i
-     Google Kalender, med Google Meet som plats. Adressen ser ut som
-     https://calendar.app.google/XXXXXXXX och står i mejlet Skriv till
-     hen i Rekryteringen, där den sökande väljer en tid själv. Google
-     mejlar tiden och Meet-länken, och bokningen står i kalendern,
-     inte i adminvyn.
+  /* Bokningssidan för intervjun (2026-10-20; namnet INTERVJU_BOKNINGSLANK
+     sedan 2026-10-21, förut INTERVJU_BOKNING_URL): ett bokningsschema i
+     Google Kalender, med Google Meet som plats. Hur den skapas står
+     överst i filen. Adressen ser ut som https://calendar.app.google/XXXXXXXX
+     och står i det automatiska intervjumejlet (samma adress i
+     intervju.ts), i Skicka intervjulänk igen och i Skriv till hen i
+     Ansökningar, där den sökande väljer en tid själv. Google mejlar tiden
+     och Meet-länken, och bokningen står i kalendern, inte i adminvyn.
 
      Bara i kalendern för info@nextrum.se: där gäller Workspace-avtalet
      med Google, och integritetspolicyn säger att bokningen ligger i vår
      kalender där. Ett privat Gmail har inget sådant avtal.
 
-     Tom sträng = mejlet föreslår tider som förut. */
-  INTERVJU_BOKNING_URL: 'https://calendar.app.google/rRiTTLP5ymKQunSv7',
+     Tom sträng = Skicka intervjulänk igen säger att länken saknas och
+     skickar inget, och Skriv till hen föreslår tider som förut. */
+  INTERVJU_BOKNINGSLANK: 'https://calendar.app.google/rRiTTLP5ymKQunSv7',
 
   /* Det som kräver besökarens samtycke (nextrum-samtycke.js).
      Står allt här av visas ingen ruta och ingenting lagras.

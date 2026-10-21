@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=81de04a0">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=8f2dabf9">
 </head>
 <body>
 
@@ -217,9 +217,12 @@
         keep your answers, how many were right, whether you passed and when. Only we see your
         answers, and they are deleted if your account is deleted</li>
       <li>The code, if you type one: a tutor's, if someone who works with us recommended you. We then
-        see who recommended you, and if we take you on, that tutor gets a bonus in their pay. They see
-        how many applied with the code and how many we took on, but not who, and can tell from the
-        bonus that someone they recommended has started.</li>
+        see who recommended you, and once you have your account with us, that tutor gets a
+        recruitment bonus in their pay. They see that someone applied with the code and how the bonus
+        is going (pending, earned, paid), and once you have your account your first name, but never
+        your application or your address. So that the same person only gives one bonus, we keep with
+        the bonus a code calculated from your email address, never the address. If the form tries a
+        code that does not exist, we count it for a day, in a form we cannot read back to your IP address.</li>
       <li>Remove your personal identity number from the CV before you send it. We do not need it
         to read an application.</li>
     </ul>
@@ -248,7 +251,7 @@
       <li>Messages between family and tutor in the platform’s chat</li>
       <li>If the child has a login of their own: what the child and the tutor write to each other
         in the child’s view, and when it was read</li>
-      <li>Payments and pay statements: which session was paid, amounts and when, when a card payment for a session was started, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when, until which day and whether we took them back). Every payment is also a row in our payment ledger (what it was for, the amount, the discount code and Stripe's ids), a plan with the month it applies to, and if we refund a purchase: how many hours were taken back, the amount and who at Nextrum did it. If you buy a plan with a discount code or a partner organisation’s code, we store which code the purchase had and the discount it gave, with the payment, and the first time you use a partner code also which partner you came through. We never have the card details</li>
+      <li>Payments and pay statements: which session was paid, amounts and when, when a card payment for a session was started, whether the family has had its free first hour and how, and free hours we have added to the family's time bank (how many, when, until which day, which month they relate to, why we added them and whether we took them back; the reason is cleared when the account is removed). Every payment is also a row in our payment ledger (what it was for, the amount, the discount code and Stripe's ids, and whether we have hidden it as a test payment or marked it cancelled), a plan with the month it applies to, and if we refund a purchase: how many hours were taken back, the amount and who at Nextrum did it. If you buy a plan with a discount code or a partner organisation’s code, we store which code the purchase had and the discount it gave, with the payment, and the first time you use a partner code also which partner you came through. If we give you a code to hand out, for example a discount code to share with other families, we store that it was given to you, so that you do not use it yourselves. If you book a session with siblings, once that option is switched on, we store which of your children took part, the surcharge for the extra children (number, amount and whether it is paid, released or written off, and why), that you accepted the terms for the surcharge and when, and your payment attempts for it (and if we release a payment that got stuck: why, and who at Nextrum); the surcharge and the attempts are kept with the payments and are not deleted, the acceptance for as long as the account exists, and the reminder and the receipt for the surcharge never name the children. We never have the card details</li>
       <li>When you tick the purchase terms before the checkout opens: what it was for (a purchase, a session or the card), which version of the terms it was and when</li>
       <li>If we have given you a discount, for example through a partner: which of our discounts it
         is, when it was set or removed and by whom at our end, and for each session and purchase how
@@ -257,8 +260,9 @@
         when it expires, Stripe’s IDs for the card and for you as a customer, and for each session
         where you chose the card whether the amount is reserved, charged or released and what it
         was. We never have the full card number</li>
-      <li>For a tutor who recommended someone: the bonus for the recommendation, who it concerns, the
-        amount and when it was paid</li>
+      <li>For a tutor who recruited someone: the recruitment bonus, who it concerns, the amount and how
+        it is split into base pay and holiday pay, its status, the pay month it was paid with and, if it
+        was cancelled, the reason</li>
     </ul>
 
     <h3>If you write to us or something breaks</h3>
@@ -350,8 +354,11 @@
       <li><b>The code in the enquiry and the job application, and recommendations</b>: legitimate
         interest (Article 6(1)(f)), knowing which recommendations and posters lead to someone getting
         in touch. For a family that recommended, the hour in the time bank is part of the contract
-        (Article 6(1)(b)), and for a tutor the bonus is part of their pay (Article 6(1)(b)), which is
-        accounted for as pay (Article 6(1)(c)).</li>
+        (Article 6(1)(b)), and for a tutor the recruitment bonus is part of their pay (Article 6(1)(b)),
+        which is accounted for as pay (Article 6(1)(c)). The code from the address, the first name the
+        recruiter sees and counting codes that do not exist are legitimate interest (Article 6(1)(f)):
+        that the same person only gives one bonus, that the recruiter knows which bonus is which and
+        that the codes cannot be guessed.</li>
       <li><b>The grade guarantee</b>: the contract with you (Article 6(1)(b)). You sign up for it,
         with the child’s current grade, and make the claim, and the grades are what show whether
         the conditions are met.</li>
@@ -515,10 +522,11 @@
       <li><b>A saved card</b>: as long as you keep it saved. If you remove it, or the account, it
         is deleted here and detached at Stripe. What was reserved and charged for a session
         remains with the payment.</li>
-      <li><b>Accounting records</b>: payments and payout records, and the bonus for
-        recommendations, seven years. That is required by the Swedish Accounting Act and not
-        something we can shorten, not even on request. A bonus remains even when the application it
-        came from has been deleted, without the code and the application.
+      <li><b>Accounting records</b>: payments and payout records, and the recruitment bonus, seven
+        years. That is required by the Swedish Accounting Act and not something we can shorten, not
+        even on request. A bonus remains even when the application it came from has been deleted,
+        without the application but with the code from the address, so that the same person does not
+        give another bonus.
         We never delete the rows in the payment ledger: if you have paid for something, the account is not
         deleted entirely but remains without a name, and the rows point to it. Which code a purchase had
         stays with the payment, for as long.</li>
@@ -810,10 +818,10 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<script src="../nextrum-config.js?v=adfb7419"></script>
+<script src="../nextrum-config.js?v=7488550a"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=a262aca7"></script>
+<script src="../nextrum-app.js?v=20eb9020"></script>
 <script src="../nextrum-samtycke.js?v=92474eaf"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

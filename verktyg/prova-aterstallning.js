@@ -474,8 +474,9 @@ async function provaLänken(webb) {
 
   /* En inbjudan från bjud-in (2026-10-01): studievyn och studiehjälparvyn ber om ett lösenord.
      Sedan 2026-10-06 går rutan inte att hoppa över, och introduktionen följer
-     (verktyg/prova-introduktion.js provar den i detalj). */
-  for (const [väg, id, sedan, steg] of [['/foralder', 'foralder-1', '#view-app', 7], ['/larare', 'handledare-1', '#view-pending', 8]]) {
+     (verktyg/prova-introduktion.js provar den i detalj). Familjens har sex
+     steg sedan Betala nu (2026-10-21), då Bekräfta rapport togs bort. */
+  for (const [väg, id, sedan, steg] of [['/foralder', 'foralder-1', '#view-app', 6], ['/larare', 'handledare-1', '#view-pending', 8]]) {
     const v = väg.slice(1);
     const { context, page, S, konsol } = await öppna(webb, {});
     await page.goto(BAS + väg + länk(id, 'invite'));

@@ -70,6 +70,10 @@ import {
   sammaInnehall,
 } from '../_delad/erbjudanden.ts';
 import { kodPaFelBetalning, planensKod } from '../_delad/koder.ts';
+import {
+  buntaKassan, type Forsoket, forsoketsKassa as forsoketsKassaMed, gamlaKassanGarUt as gamlaKassanGarUtMed,
+  type KassaStripe, tillaggetFoljerMed, tillaggetsLinje, utgangstid,
+} from '../_delad/tillagg.ts';
 
 const CORS = cors();
 
@@ -155,6 +159,222 @@ async function familjensRabatt(vem: Inloggad): Promise<number> {
   return Number.isInteger(ore) && ore > 0 ? ore : 0;
 }
 
+/* SYSKONTILLÄGGET (syskontillagg_som_skuld, 2026-10-21)
+
+   Leo: tillägget per extra barn "läggs som en egen rad i nästa betalning".
+   Ett betalningsförsök låser familjens upplupna poster i databasen
+   (tillagg_forsok_skapa, under familjens lås och med radlås): bara de som
+   är upplupna nu följer med, en post ingår i högst ett öppet försök, och
+   står de redan i en betalning tas de inte med ("En betalning pågår
+   redan"). Beloppet är databasens. Kassan med tillägget går ut efter 30
+   minuter, och försöket släpps då (webhooken, och jobbet efter 35).
+
+   Med tillagg_installning.obligatorisk_i_nasta_betalning (förvalet) följer
+   tillägget alltid med ett köp av timmar; utan den följer det med tills
+   familjen kryssar ur det (med_tillagg: false, tillaggetFoljerMed). Kassans
+   rader byggs av buntaKassan, samma funktion som proven prövar. Pass för
+   pass buntas inte: se migrationen. Saknas tabellen, före migrationen, är
+   det som förut; ett annat fel när regeln läses är ett fel, inte ett köp
+   utan tillägget. */
+type Tillagget = Forsoket;
+
+/** En tabell eller funktion som inte finns än: migrationen är inte körd. */
+function finnsInte(kod: string | undefined): boolean {
+  return kod === 'PGRST202' || kod === 'PGRST205' || kod === '42P01' || kod === '42883';
+}
+
+/* EN KASSA ÅT GÅNGEN (granskningen 2026-10-21): _delad/tillagg.ts, med
+   Stripes två anrop härifrån. */
+const KASSAN: KassaStripe = {
+  utgang: (sid) => v1('POST', `/v1/checkout/sessions/${sid}/expire`, {}),
+  hamta: (sid) => v1('GET', `/v1/checkout/sessions/${sid}`),
+};
+
+function gamlaKassanGarUt(sid: string | null | undefined): Promise<'borta' | 'betald'> {
+  return gamlaKassanGarUtMed(KASSAN, sid);
+}
+
+function forsoketsKassa(
+  db: ReturnType<typeof serviceklient>,
+  skapa: () => Promise<Tillagget | null>,
+  inbaddad: boolean,
+): Promise<Tillagget | 'pagar' | null> {
+  return forsoketsKassaMed(KASSAN, async (forsok, orsak) => {
+    const { error } = await db.rpc('tillagg_forsok_slapp', { p_forsok: forsok, p_orsak: orsak });
+    if (error) throw new Error('tillagg_forsok_slapp: ' + error.message);
+  }, skapa, inbaddad);
+}
+
+/** Kassans session på försöket. Skrivs den inte står det i loggen: jobbet släpper ändå försöket i tid. */
+async function sparaSessionen(db: ReturnType<typeof serviceklient>, forsok: string, session: unknown): Promise<void> {
+  const sid = String((session as { id?: string }).id ?? '');
+  if (!/^cs_[A-Za-z0-9_]+$/.test(sid)) return;
+  const { data, error } = await db.rpc('tillagg_forsok_session', { p_forsok: forsok, p_session: sid });
+  if (error || data !== true) {
+    console.warn('stripe-checkout: försökets kassa skrevs inte', JSON.stringify({ forsok, kod: error?.code ?? null }));
+  }
+}
+
+async function tillaggTillKopet(
+  db: ReturnType<typeof serviceklient>,
+  familj: string,
+  kopId: string,
+  med: unknown,
+  inbaddad: boolean,
+): Promise<{ forsok: Tillagget | null; obligatorisk: boolean } | 'pagar'> {
+  const { data: inst, error: ifel } = await db.from('tillagg_installning')
+    .select('obligatorisk_i_nasta_betalning').eq('id', 1).maybeSingle();
+  if (ifel) {
+    if (finnsInte(ifel.code)) return { forsok: null, obligatorisk: true };
+    throw new Error('tillagg_installning: ' + ifel.message);
+  }
+  // Utan raden gäller förvalet: tillägget följer med.
+  const obligatorisk = inst?.obligatorisk_i_nasta_betalning !== false;
+  if (!tillaggetFoljerMed(obligatorisk, med)) {
+    // Familjen kryssade ur raden: ett öppet försök för köpet släpps, och dess kassa går ut.
+    const { data: oppna, error: ofel } = await db.from('tillagg_forsok').select('id, stripe_session_id')
+      .eq('familj', familj).eq('klippkort_id', kopId).eq('status', 'oppen');
+    if (ofel) throw new Error('tillagg_forsok: ' + ofel.message);
+    for (const f of oppna ?? []) {
+      if (await gamlaKassanGarUt(f.stripe_session_id) === 'betald') return 'pagar';
+      const { error: sfel } = await db.rpc('tillagg_forsok_slapp', { p_forsok: f.id, p_orsak: 'avbruten' });
+      if (sfel) throw new Error('tillagg_forsok_slapp: ' + sfel.message);
+    }
+    return { forsok: null, obligatorisk };
+  }
+  const forsok = await forsoketsKassa(db, async () => {
+    const { data, error } = await db.rpc('tillagg_forsok_skapa', { p_familj: familj, p_slag: 'kop', p_klippkort: kopId });
+    if (error) {
+      if (finnsInte(error.code)) return null;
+      throw new Error('tillagg_forsok_skapa: ' + error.message);
+    }
+    return data as Tillagget;
+  }, inbaddad);
+  return forsok === 'pagar' ? 'pagar' : { forsok, obligatorisk };
+}
+
+/* Kassans rader i ett köp av timmar (buntaKassan): köpet med kodens rabatt
+   dragen, som databasen räknade den, och tillägget som en egen rad. Följer
+   ett låst försök inte med är något fel, och ingen kassa öppnas. */
+function kopetsRader(
+  huvud: { typ: 'plan' | 'timbank'; beloppOre: number; kodensRabatt: number | null; kod: string | null;
+           produkt: Record<string, unknown> },
+  tillagget: Tillagget | null,
+  regel: { obligatorisk: boolean; med: unknown },
+) {
+  const tf = tillagget?.forsok ?? null;
+  const rabatt = huvud.kod ? Math.max(0, huvud.kodensRabatt ?? 0) : 0;
+  const bunt = buntaKassan(
+    { typ: huvud.typ, namn: String(huvud.produkt.name ?? ''), beloppOre: huvud.beloppOre + rabatt, rabattOre: rabatt,
+      kod: huvud.kod },
+    tf ? { beloppOre: Number(tillagget!.belopp_ore), antalPass: Number(tillagget!.antal_pass) } : null,
+    regel,
+  );
+  if (!!tf !== bunt.medTillagg || bunt.rader[0].beloppOre !== huvud.beloppOre) {
+    throw new Error('Kassans rader går inte ihop med köpet och tillägget.');
+  }
+  return bunt.rader.map((r) => r.typ === 'tillagg'
+    ? tillaggetsLinje(r.beloppOre, Number(tillagget!.antal_pass), VALUTA)
+    : { quantity: 1, price_data: { currency: VALUTA, unit_amount: r.beloppOre, product_data: huvud.produkt } });
+}
+
+/** En äldre kassa för samma skuld blev betald medan den här förbereddes. */
+function pagarRedan(): Response {
+  return json({ error: 'En betalning pågår redan. Vänta en stund och titta under Betalningar.', pagar: true }, 409, CORS);
+}
+
+/** Svaret till vyn om tillägget i ett köp: vad som följde med, och om en betalning redan pågår. */
+function tillaggetsSvar(t: Tillagget | null) {
+  return t ? { tillagg_ore: t.forsok ? Number(t.belopp_ore) : 0, tillagg_pass: t.forsok ? Number(t.antal_pass) : 0,
+               tillagg_pagar: !!t.pagar } : { tillagg_ore: 0, tillagg_pass: 0, tillagg_pagar: false };
+}
+
+/* BETALA TILLÄGG NU: familjens hela upplupna skuld i en egen kassa, för
+   exakt summan. Två tryck blir samma försök och samma session hos Stripe
+   (utgångstiden är försökets). Ingen kod: koderna gäller planer. */
+async function betalaSkulden(vem: Inloggad, kropp: { retur?: string; ui?: string }): Promise<Response> {
+  const { data: prof } = await vem.klient
+    .from('profiles').select('email, role').eq('id', vem.anvandare).maybeSingle();
+  if (!prof || prof.role !== 'parent') return json({ error: 'Tillägget betalas av familjen.' }, 403, CORS);
+
+  const db = serviceklient();
+  const pk = kropp.ui === 'inbaddad' ? publicerbarNyckel() : null;
+  const inbaddad = pk !== null;
+  let saknas = false;
+  let skapafel = false;
+  let f: Tillagget | 'pagar' | null;
+  try {
+    f = await forsoketsKassa(db, async () => {
+      const { data, error } = await db.rpc('tillagg_forsok_skapa', { p_familj: vem.anvandare, p_slag: 'manuell' });
+      if (error) {
+        if (finnsInte(error.code)) {
+          saknas = true;
+          return null;
+        }
+        console.error('stripe-checkout: tillagg_forsok_skapa', JSON.stringify({ kod: error.code, fel: error.message }));
+        skapafel = true;
+        return null;
+      }
+      return data as Tillagget;
+    }, inbaddad);
+  } catch (fel) {
+    console.error('stripe-checkout: den förra kassan', JSON.stringify({ fel: (fel as Error)?.message ?? String(fel) }));
+    return json({ error: 'Betalningen gick inte att förbereda. Försök igen om en stund.' }, 502, CORS);
+  }
+  if (f === 'pagar') return pagarRedan();
+  if (saknas) return json({ error: 'Tillägget går inte att betala här än.' }, 409, CORS);
+  if (skapafel || !f) return json({ error: 'Betalningen gick inte att förbereda. Försök igen om en stund.' }, 500, CORS);
+  if (!f.forsok) {
+    return f.pagar
+      ? json({ error: 'En betalning pågår redan.', pagar: true }, 409, CORS)
+      : json({ error: 'Det finns inget upplupet tillägg att betala.' }, 409, CORS);
+  }
+
+  const bas = egenAdress(kropp.retur, 'https://nextrum.se');
+  const efter = inbaddad
+    ? { ui_mode: 'embedded', redirect_on_completion: 'if_required',
+        return_url: `${bas}/foralder?tillagg={CHECKOUT_SESSION_ID}#betalning` }
+    : { success_url: `${bas}/foralder?tillagg={CHECKOUT_SESSION_ID}#betalning`,
+        cancel_url: `${bas}/foralder#betalning` };
+  try {
+    await sparaKryss(db, vem.anvandare, 'tillagg', f.forsok);
+    const session = await v1('POST', '/v1/checkout/sessions', {
+      mode: 'payment',
+      locale: 'sv',
+      ...efter,
+      payment_method_types: BETALSATT,
+      managed_payments: { enabled: false },
+      customer_email: prof.email ?? undefined,
+      expires_at: utgangstid(f.upphor_at, Date.now()),
+      metadata: { tillagg_forsok: f.forsok },
+      line_items: [tillaggetsLinje(Number(f.belopp_ore), Number(f.antal_pass), VALUTA)],
+      payment_intent_data: {
+        metadata: { tillagg_forsok: f.forsok },
+        statement_descriptor_suffix: descriptor('TILLAGG'),
+        receipt_email: prof.email ?? undefined,
+      },
+    }, `nextrum-skuld-${f.forsok}-${f.belopp_ore}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
+    const sid = String((session as { id?: string }).id ?? '');
+    await sparaSessionen(db, f.forsok, session);
+
+    const svar = { session: sid, belopp_ore: Number(f.belopp_ore), antal_pass: Number(f.antal_pass), forsok: f.forsok,
+                   pagar: !!f.pagar };
+    return inbaddad
+      ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
+               nyckel: pk, ...svar }, 200, CORS)
+      : json({ lage: 'sida', url: (session as { url?: string }).url ?? null, ...svar }, 200, CORS);
+  } catch (fel) {
+    // Ingen kassa blev av: posterna ska inte stå låsta i en halvtimme för det.
+    if (!f.aterbruk) await db.rpc('tillagg_forsok_slapp', { p_forsok: f.forsok, p_orsak: 'avbruten' });
+    if (fel instanceof StripeError) {
+      console.error('stripe-checkout: Stripe nekade tillägget', JSON.stringify({ ...fel.fel }));
+      return json({ error: 'Stripe nekade: ' + fel.fel.meddelande, stripe: fel.fel }, 502, CORS);
+    }
+    console.error('stripe-checkout: fel i tillägget', JSON.stringify({ fel: (fel as Error)?.message ?? String(fel) }));
+    return json({ error: (fel as Error)?.message ?? 'Okänt fel.' }, 500, CORS);
+  }
+}
+
 /* Bara vår egen sajt får vara returadress. En öppen omdirigering i ett
    betalflöde är en inloggningssida som ser äkta ut. */
 function egenAdress(u: unknown, reserv: string): string {
@@ -204,7 +424,10 @@ function egenAdress(u: unknown, reserv: string): string {
    ============================================================ */
 async function köpErbjudande(
   vem: Inloggad,
-  kropp: { retur?: string; ui?: string; erbjudande?: string; rabattkod?: unknown; timmar?: unknown; manad?: unknown },
+  kropp: {
+    retur?: string; ui?: string; erbjudande?: string; rabattkod?: unknown; timmar?: unknown; manad?: unknown;
+    med_tillagg?: unknown;
+  },
 ): Promise<Response> {
   const kod = String(kropp.erbjudande ?? '').trim();
   if (!arErbjudandekod(kod)) return json({ error: 'Vilket erbjudande?' }, 400, CORS);
@@ -251,6 +474,7 @@ async function köpErbjudande(
   const rabattkod = kodbeslut.kod;
   if (kodbeslut.kod !== null) attBetala = kodbeslut.attBetala;
 
+  let tillagget: Tillagget | null = null;
   try {
     /* Trycker familjen Köp två gånger ska det bli ETT köp. Ett väntande
        köp av samma erbjudande, till samma pris och yngre än ett dygn,
@@ -334,7 +558,18 @@ async function köpErbjudande(
       ? Number(e.pris_ore) - familjerabattPaKop(e as ErbjudandePris, rabattPerTimme).summa - belopp
       : null;
     const rad = kassarad(e as ErbjudandePris, rabattkod, rabattPerTimme, kopManad, kodensRabatt);
+    // Familjens upplupna syskontillägg som egen rad, med koden bara på planen (syskontillagg_som_skuld).
+    const tk = await tillaggTillKopet(db, vem.anvandare, kopId, kropp.med_tillagg, inbaddad);
+    if (tk === 'pagar') return pagarRedan();
+    tillagget = tk.forsok;
+    const tf = tillagget?.forsok ?? null;
+    const raderna = kopetsRader(
+      { typ: e.sort === 'plan' ? 'plan' : 'timbank', beloppOre: belopp, kodensRabatt, kod: rabattkod,
+        produkt: rad as unknown as Record<string, unknown> },
+      tillagget, { obligatorisk: tk.obligatorisk, med: kropp.med_tillagg });
     await sparaKryss(db, vem.anvandare, 'kop', kopId);
+    const md = { klippkort_id: kopId, erbjudande: e.kod, ...(rabattkod ? { rabattkod } : {}),
+                 ...(tf ? { tillagg_forsok: tf } : {}) };
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -343,30 +578,34 @@ async function köpErbjudande(
       payment_method_types: BETALSATT,
       managed_payments: { enabled: false },
       customer_email: prof.email ?? undefined,
-      metadata: { klippkort_id: kopId, erbjudande: e.kod, ...(rabattkod ? { rabattkod } : {}) },
-      line_items: [{
-        quantity: 1,
-        price_data: { currency: VALUTA, unit_amount: belopp, product_data: rad },
-      }],
+      ...(tf ? { expires_at: utgangstid(tillagget!.upphor_at, Date.now()) } : {}),
+      metadata: md,
+      line_items: raderna,
       payment_intent_data: {
-        metadata: { klippkort_id: kopId, erbjudande: e.kod, ...(rabattkod ? { rabattkod } : {}) },
+        metadata: md,
         statement_descriptor_suffix: descriptor(String(e.namn)),
         receipt_email: prof.email ?? undefined,
       },
-    }, `nextrum-klippkort-${kopId}-${belopp}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
+    }, `nextrum-klippkort-${kopId}-${belopp}${tf ? `-t${tf}-${tillagget!.belopp_ore}` : ''}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
 
     await db.from('klippkort')
       .update({ stripe_session_id: String((session as { id?: string }).id ?? '') })
       .eq('id', kopId);
+    if (tf) await sparaSessionen(db, tf, session);
 
     const svar = { session: (session as { id?: string }).id, belopp_ore: belopp, klippkort: kopId,
                    rabatt_ore: Number(e.pris_ore) - belopp,
-                   familjerabatt_ore: familjerabattPaKop(e as ErbjudandePris, rabattPerTimme).summa };
+                   familjerabatt_ore: familjerabattPaKop(e as ErbjudandePris, rabattPerTimme).summa,
+                   ...tillaggetsSvar(tillagget) };
     return inbaddad
       ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
                nyckel: pk, ...svar }, 200, CORS)
       : json({ lage: 'sida', url: (session as { url?: string }).url ?? null, ...svar }, 200, CORS);
   } catch (fel) {
+    // Ett nytt försök för tillägget släpps när ingen kassa blev av.
+    if (tillagget?.forsok && !tillagget.aterbruk) {
+      await serviceklient().rpc('tillagg_forsok_slapp', { p_forsok: tillagget.forsok, p_orsak: 'avbruten' });
+    }
     if (fel instanceof StripeError) {
       console.error('stripe-checkout: Stripe nekade erbjudandet', JSON.stringify({ erbjudande: kod, ...fel.fel }));
       return json({ error: 'Stripe nekade: ' + fel.fel.meddelande, stripe: fel.fel }, 502, CORS);
@@ -396,7 +635,7 @@ async function köpErbjudande(
    ============================================================ */
 async function köpTimmarTillPlanen(
   vem: Inloggad,
-  kropp: { retur?: string; ui?: string; timmar?: unknown },
+  kropp: { retur?: string; ui?: string; timmar?: unknown; med_tillagg?: unknown },
   epost: string | undefined,
 ): Promise<Response> {
   const timmar = extraTimmar(kropp.timmar);
@@ -422,6 +661,7 @@ async function köpTimmarTillPlanen(
   }
 
   const db = serviceklient();
+  let tillagget: Tillagget | null = null;
   try {
     const { data: forut } = await db.from('klippkort')
       .select('*')
@@ -472,7 +712,17 @@ async function köpTimmarTillPlanen(
       : { success_url: `${bas}/foralder?kopt={CHECKOUT_SESSION_ID}#erbjudanden`,
           cancel_url: `${bas}/foralder#erbjudanden` };
 
+    // Familjens upplupna syskontillägg som egen rad (syskontillagg_som_skuld).
+    const tk = await tillaggTillKopet(db, vem.anvandare, kopId, kropp.med_tillagg, inbaddad);
+    if (tk === 'pagar') return pagarRedan();
+    tillagget = tk.forsok;
+    const tf = tillagget?.forsok ?? null;
+    const raderna = kopetsRader(
+      { typ: 'plan', beloppOre: Number(e.pris_ore), kodensRabatt: null, kod: null,
+        produkt: rad as unknown as Record<string, unknown> },
+      tillagget, { obligatorisk: tk.obligatorisk, med: kropp.med_tillagg });
     await sparaKryss(db, vem.anvandare, 'kop', kopId);
+    const md = { klippkort_id: kopId, erbjudande: 'plan_extra', ...(tf ? { tillagg_forsok: tf } : {}) };
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -481,29 +731,31 @@ async function köpTimmarTillPlanen(
       payment_method_types: BETALSATT,
       managed_payments: { enabled: false },
       customer_email: epost,
-      metadata: { klippkort_id: kopId, erbjudande: 'plan_extra' },
-      line_items: [{
-        quantity: 1,
-        price_data: { currency: VALUTA, unit_amount: e.pris_ore, product_data: rad },
-      }],
+      ...(tf ? { expires_at: utgangstid(tillagget!.upphor_at, Date.now()) } : {}),
+      metadata: md,
+      line_items: raderna,
       payment_intent_data: {
-        metadata: { klippkort_id: kopId, erbjudande: 'plan_extra' },
+        metadata: md,
         statement_descriptor_suffix: descriptor(String(e.plan_namn ?? 'TIMMAR')),
         receipt_email: epost,
       },
-    }, `nextrum-klippkort-${kopId}-${e.pris_ore}-${e.giltigt_till}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
+    }, `nextrum-klippkort-${kopId}-${e.pris_ore}-${e.giltigt_till}${tf ? `-t${tf}-${tillagget!.belopp_ore}` : ''}-f${SESSIONSFORM}-${inbaddad ? 'inbaddad' : 'sida'}`);
 
     await db.from('klippkort')
       .update({ stripe_session_id: String((session as { id?: string }).id ?? '') })
       .eq('id', kopId);
+    if (tf) await sparaSessionen(db, tf, session);
 
     const svar = { session: (session as { id?: string }).id, belopp_ore: e.pris_ore, klippkort: kopId,
-                   familjerabatt_ore: rabattPerTimme * timmar };
+                   familjerabatt_ore: rabattPerTimme * timmar, ...tillaggetsSvar(tillagget) };
     return inbaddad
       ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
                nyckel: pk, ...svar }, 200, CORS)
       : json({ lage: 'sida', url: (session as { url?: string }).url ?? null, ...svar }, 200, CORS);
   } catch (fel) {
+    if (tillagget?.forsok && !tillagget.aterbruk) {
+      await db.rpc('tillagg_forsok_slapp', { p_forsok: tillagget.forsok, p_orsak: 'avbruten' });
+    }
     if (fel instanceof StripeError) {
       console.error('stripe-checkout: Stripe nekade timmarna till planen', JSON.stringify({ ...fel.fel }));
       return json({ error: 'Stripe nekade: ' + fel.fel.meddelande, stripe: fel.fel }, 502, CORS);
@@ -820,6 +1072,7 @@ Deno.serve(async (req) => {
   let kropp: {
     pass?: string; retur?: string; ui?: string; erbjudande?: string; timmar?: unknown; tillagg?: boolean;
     kort?: string; familj?: string; villkor?: unknown; manad?: unknown; rabattkod?: unknown;
+    skuld?: unknown; med_tillagg?: unknown;
   } = {};
   try {
     kropp = await req.json();
@@ -836,6 +1089,8 @@ Deno.serve(async (req) => {
      inte en kassa som tyst tar betalt utan den. */
   const kodfel = kodPaFelBetalning(kropp);
   if (kodfel) return json({ error: kodfel }, 409, CORS);
+  // Betala tillägg nu (syskontillagg_som_skuld, 2026-10-21): familjens hela upplupna tillägg.
+  if (kropp.skuld === true) return await betalaSkulden(vem, kropp);
   // Ett erbjudande (Fas 16.1) är ett eget köp, inte ett pass.
   if (kropp.erbjudande !== undefined) return await köpErbjudande(vem, kropp);
   // Kortet som sparas eller tas bort (2026-10-13) är inte heller ett pass.

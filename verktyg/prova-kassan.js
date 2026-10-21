@@ -174,7 +174,30 @@ function värld() {
       { id: 'lig-5', familj: 'fam-a', typ: 'pass', erbjudande: null, klippkort_id: null, booking_id: 'pass-1',
         belopp_ore: 39900, aterbetalt_ore: 0, valuta: 'sek', status: 'betald', kod: null,
         stripe_payment_intent: 'pi_utan5', stripe_charge: null, skarp: true, utan_rad: true,
-        betald_at: nu(-7000), bokford_at: nu(-7000), andrad_at: null }
+        betald_at: nu(-7000), bokford_at: nu(-7000), andrad_at: null },
+      /* En testbetalning som rensa-leo-testbetalning.sql dolt (2026-10-21). */
+      { id: 'lig-6', familj: 'fam-b', typ: 'pass', erbjudande: null, klippkort_id: null, booking_id: null,
+        belopp_ore: 39900, aterbetalt_ore: 0, valuta: 'sek', status: 'betald', kod: null,
+        stripe_payment_intent: 'pi_test6', stripe_charge: 'ch_test6', skarp: false, utan_rad: false,
+        betald_at: nu(-9000), bokford_at: nu(-9000), andrad_at: null }
+    ],
+    /* Markeringarna (betalningar_dolda): testbetalningen dold, tillägget
+       annullerat. Liggarens rader är orörda. */
+    betalningar_dolda: [
+      { betalning_id: 'lig-6', skal: 'test', kommentar: 'Testbetalning på testkontot.', markerad_at: nu(-60) },
+      { betalning_id: 'lig-3', skal: 'annullerad', kommentar: 'Riktig betalning på testkontot.', markerad_at: nu(-60) }
+    ],
+    /* Betalningens rader: planen bar ett tillägg för syskon, ett kort med två rader. */
+    betalningsrader: [
+      { id: 'rad-1', betalning_id: 'lig-1', typ: 'plan', belopp_ore: 296300, klippkort_id: 'plan-denna', booking_id: null,
+        kod: 'VAN10', beskrivning: null },
+      { id: 'rad-2', betalning_id: 'lig-1', typ: 'syskon', belopp_ore: 6900, aterbetalt_ore: 0, klippkort_id: null,
+        booking_id: 'pass-2', tillagg_post_id: 'post-2', kod: null, beskrivning: null }
+    ],
+    /* Syskontillägget som raden betalade (syskontillagg_som_skuld, 2026-10-21). */
+    tillagg_poster: [
+      { id: 'post-2', bokning_id: 'pass-2', familj_id: 'fam-a', pass_start: dag(-12) + 'T15:00:00+00:00',
+        antal_extra_barn: 1, minuter: 60, belopp_ore: 6900, status: 'betald', aterbetalt_ore: 0 }
     ],
     kortreservationer: [
       { booking_id: 'pass-k1', parent_id: 'fam-a', lage: 'misslyckad', fel: 'card_declined', forsok: 2,
@@ -223,7 +246,8 @@ function falskSupabase(o) {
   const familj = ANV.id !== 'admin-1';
   /* Utan migrationerna: liggaren, inställningen och månaderna finns inte. */
   const SAKNAS = o && o.utanMigrationen
-    ? ['betalningar', 'betalning_installning', 'planens_manader', 'klippkort_aterbetalning_lage', 'kortreservation_forsok_nu']
+    ? ['betalningar', 'betalning_installning', 'planens_manader', 'klippkort_aterbetalning_lage', 'kortreservation_forsok_nu',
+       'betalningar_dolda', 'betalningsrader']
     : [];
   const RPC = {
     mina_behorigheter: () => (familj ? { admin: false, superadmin: false, behorigheter: [] }
@@ -576,13 +600,15 @@ async function provaTelefonOchMörkt(webb) {
 async function provaLiggaren(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, {});
   await tillAdmin(page, 'ekonomi/liggaren');
-  await page.waitForSelector('#lig-lista .eko-rad', { timeout: 6000 }).catch(() => {});
+  await page.waitForSelector('#lig-lista .lig-kort', { timeout: 6000 }).catch(() => {});
   prova('liggaren: fliken finns och öppnas från adressen', await synlig(page, '#panel-liggaren #lig-lista'));
   const sam = await innehåll(page, '#lig-sam');
   prova('liggaren: summorna räknar bara skarpa betalningar',
     /Inbetalt\s*3\s?930\s*kr\s*4 betalningar/.test(sam) && /Tillbaka till familjer\s*100\s*kr/.test(sam)
       && /Netto\s*3\s?830\s*kr/.test(sam), sam);
-  prova('liggaren: en rad per betalning, testköpet med', (await page.locator('#lig-lista .eko-rad').count()) === 5);
+  prova('liggaren: ett kort per betalning, testköpet med, den dolda och den annullerade inte',
+    (await page.locator('#lig-lista .lig-kort').count()) === 4 && (await page.locator('[data-lig-rad="lig-6"]').count()) === 0
+      && (await page.locator('[data-lig-rad="lig-3"]').count()) === 0);
   const plan = await innehåll(page, '[data-lig-rad="lig-1"]');
   prova('liggaren: köpet med namn, kod, läge och belopp',
     /Standard/.test(plan) && /Kod VAN10/.test(plan) && /Betald/.test(plan) && /3\s?032\s*kr/.test(plan)
@@ -591,28 +617,49 @@ async function provaLiggaren(webb) {
   prova('liggaren: passet delvis tillbaka, med passets knapp',
     /Delvis tillbaka/.test(pass) && /100\s*kr tillbaka/.test(pass)
       && (await page.locator('[data-lig-rad="lig-2"] [data-aterbetala="pass-2"]').count()) === 1, pass);
-  prova('liggaren: tillägget och betalningen utan rad betalas tillbaka i Stripe',
-    /Betalas tillbaka i Stripe/.test(await innehåll(page, '[data-lig-rad="lig-3"]'))
-      && /Inte nedskriven på sin rad/.test(await innehåll(page, '[data-lig-rad="lig-5"]'))
+  prova('liggaren: betalningen utan rad betalas tillbaka i Stripe',
+    /Inte nedskriven på sin rad/.test(await innehåll(page, '[data-lig-rad="lig-5"]'))
       && /Betalas tillbaka i Stripe/.test(await innehåll(page, '[data-lig-rad="lig-5"]')));
-  prova('liggaren: testköpet är märkt', /Test/.test(await innehåll(page, '[data-lig-rad="lig-4"] .eko-lage')));
+  prova('liggaren: testköpet är märkt', /Test/.test(await innehåll(page, '[data-lig-rad="lig-4"] .lig-lage')));
+
+  /* Korten (2026-10-21): beloppet, läget i färg, familjen, typen, koden, dagen och raderna. */
+  const kort1 = await innehåll(page, '[data-lig-rad="lig-1"]');
+  prova('korten: planen med kod bär två rader, planen och tillägget för syskon',
+    (await page.locator('[data-lig-rad="lig-1"] .lig-rader li').count()) === 2
+      && (await page.getAttribute('[data-lig-rad="lig-1"] .lig-rader li:nth-child(2)', 'data-typ')) === 'syskon'
+      && /2\s?963\s*kr/.test(kort1) && /69\s*kr/.test(kort1) && /1 extra barn/.test(kort1) && /Kod\s*VAN10/.test(kort1), kort1);
+  prova('korten: syskontilläggets rad har en egen Återbetala',
+    (await page.locator('[data-lig-rad="lig-1"] [data-aterbetala-rad="rad-2"]').count()) === 1);
+  prova('korten: ett kort utan rader har betalningen själv som rad',
+    (await page.locator('[data-lig-rad="lig-2"] .lig-rader li').count()) === 1);
+  const kant = sel => page.locator(sel).first().evaluate(el => getComputedStyle(el, '::before').backgroundColor).catch(() => '');
+  const kantBetald = await kant('[data-lig-rad="lig-1"]');
+  const kantDelvis = await kant('[data-lig-rad="lig-2"]');
+  prova('korten: läget färgar kanten, betald och delvis tillbaka olika', kantBetald && kantDelvis && kantBetald !== kantDelvis,
+    kantBetald + ' mot ' + kantDelvis);
+  prova('korten: Dolda står bland valen, med antalet: den dolda testbetalningen och den annullerade',
+    /Dolda\s*2/.test(await innehåll(page, '#lig-chips')), await innehåll(page, '#lig-chips'));
   prova('liggaren: finstilen säger att raderna aldrig raderas', /raderas aldrig/.test(await innehåll(page, '#lig-fot')));
   await bild(page, 'liggaren', '#panel-liggaren');
 
   const filter = async (k, väntat, namn) => {
     await page.click('[data-lig-filter="' + k + '"]');
     await vänta(120);
-    const id = await page.locator('#lig-lista .eko-rad').evaluateAll(l => l.map(el => el.dataset.ligRad));
+    const id = await page.locator('#lig-lista .lig-kort').evaluateAll(l => l.map(el => el.dataset.ligRad));
     prova('liggaren: ' + namn, JSON.stringify(id) === JSON.stringify(väntat), JSON.stringify(id));
   };
   await filter('plan', ['lig-1'], 'Planer visar planen');
   await filter('test', ['lig-4'], 'Test visar bara testköpet');
   await filter('tillbaka', ['lig-2'], 'Tillbaka visar det som gått tillbaka');
-  await filter('alla', ['lig-1', 'lig-2', 'lig-3', 'lig-4', 'lig-5'], 'Alla visar allt');
+  await filter('dolda', ['lig-3', 'lig-6'], 'Dolda visar den annullerade och den dolda testbetalningen');
+  prova('korten: den annullerade har märket, och tillägget betalas tillbaka i Stripe',
+    /Annullerad/.test(await innehåll(page, '[data-lig-rad="lig-3"] .lig-lage'))
+      && /Betalas tillbaka i Stripe/.test(await innehåll(page, '[data-lig-rad="lig-3"]')));
+  await filter('alla', ['lig-1', 'lig-2', 'lig-4', 'lig-5'], 'Alla visar allt utom det dolda och det annullerade');
   await page.fill('#lig-sok', 'pi_utan5');
   await vänta(150);
   prova('liggaren: sökningen hittar Stripes id',
-    JSON.stringify(await page.locator('#lig-lista .eko-rad').evaluateAll(l => l.map(el => el.dataset.ligRad))) === '["lig-5"]');
+    JSON.stringify(await page.locator('#lig-lista .lig-kort').evaluateAll(l => l.map(el => el.dataset.ligRad))) === '["lig-5"]');
   await page.fill('#lig-sok', '');
   await vänta(150);
 

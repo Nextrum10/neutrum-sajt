@@ -51,7 +51,7 @@
 <!-- ordningen spelar roll: bas → startsida → cinema -->
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
+<link rel="stylesheet" href="nextrum-cinema.css?v=8f2dabf9">
 </head>
 <body>
 
@@ -216,9 +216,12 @@
         sparar dina svar, hur många som var rätt, om du klarade provet och när. Dina svar ser bara
         vi, och de tas bort om ditt konto raderas</li>
       <li>Koden, om du skriver en: en studiehjälpares, om någon som jobbar hos oss tipsat dig. Då
-        ser vi vem som tipsat dig, och tar vi in dig får den studiehjälparen en bonus i lönen. Hen
-        ser hur många som sökt med koden och hur många vi tagit in, men inte vilka, och kan förstå
-        av bonusen att någon hen tipsat har börjat.</li>
+        ser vi vem som tipsat dig, och när du fått ditt konto hos oss får den studiehjälparen en
+        värvningsbonus i lönen. Hen ser att någon sökt med koden och hur det går för bonusen
+        (väntar, intjänad, utbetald), och när du fått ditt konto ditt förnamn, men aldrig din
+        ansökan eller din adress. För att samma person bara ska ge en bonus sparar vi med bonusen
+        en kod räknad ur din e-postadress, aldrig adressen. Prövar formuläret en kod som inte
+        finns räknar vi det i ett dygn, i en form vi inte kan läsa tillbaka till ditt IP-nummer.</li>
       <li>Ta bort ditt personnummer ur CV:t innan du skickar det. Vi behöver det inte för att
         läsa en ansökan.</li>
     </ul>
@@ -246,7 +249,7 @@
       <li>Meddelanden mellan familj och studiehjälpare i plattformens chatt</li>
       <li>Har barnet en egen inloggning: det barnet och studiehjälparen skriver till varandra i
         barnets vy, och när det lästes</li>
-      <li>Betalningar och ersättningsunderlag: vilket pass som betalats, belopp och när, när en kortbetalning för ett pass påbörjades, om familjen fått sin första timme gratis och hur, och gratistimmar vi satt in i familjens timbank (hur många, när, till vilken dag och om vi tagit tillbaka dem). Varje betalning står också som en rad i vår betalningsliggare (vad den gällde, beloppet, rabattkoden och Stripes id:n), en plan med den månad den gäller, och betalar vi tillbaka ett köp: hur många timmar som drogs tillbaka, beloppet och vem hos oss som gjorde det. Köper ni en plan med en rabattkod eller en partnerförenings kod sparar vi vilken kod köpet hade och rabatten den gav, med betalningen, och första gången ni använder en partnerkod också vilken partner ni kom genom. Kortuppgifterna har vi aldrig</li>
+      <li>Betalningar och ersättningsunderlag: vilket pass som betalats, belopp och när, när en kortbetalning för ett pass påbörjades, om familjen fått sin första timme gratis och hur, och gratistimmar vi satt in i familjens timbank (hur många, när, till vilken dag, vilken månad de avser, varför vi satte in dem och om vi tagit tillbaka dem; varför töms när kontot tas bort). Varje betalning står också som en rad i vår betalningsliggare (vad den gällde, beloppet, rabattkoden och Stripes id:n, och om vi dolt den som en testbetalning eller märkt den annullerad), en plan med den månad den gäller, och betalar vi tillbaka ett köp: hur många timmar som drogs tillbaka, beloppet och vem hos oss som gjorde det. Köper ni en plan med en rabattkod eller en partnerförenings kod sparar vi vilken kod köpet hade och rabatten den gav, med betalningen, och första gången ni använder en partnerkod också vilken partner ni kom genom. Lägger vi ut en kod hos er, till exempel en rabattkod att dela med andra familjer, sparar vi att den är utlagd hos er, så att ni inte använder den själva. Bokar ni ett pass med syskon, när den möjligheten är på, sparar vi vilka av era barn som var med, tillägget för de extra barnen (antal, belopp och om det är betalt, frigjort eller avskrivet, och varför), att ni godkänt villkoren för tillägget och när, och era betalningsförsök för det (och släpper vi en betalning som fastnat: varför, och vem hos oss); tillägget och försöken sparas med betalningarna och raderas inte, godkännandet så länge kontot finns, och påminnelsen och kvittot om tillägget nämner aldrig barnens namn. Kortuppgifterna har vi aldrig</li>
       <li>När ni kryssar i köpvillkoren innan kassan öppnas: vad det gällde (ett köp, ett pass eller kortet), vilken version av villkoren det var och när</li>
       <li>Har vi gett er en rabatt, till exempel genom en samarbetspartner: vilken av våra rabatter
         det är, när den sattes eller togs bort och av vem hos oss, och på varje pass och köp hur
@@ -254,8 +257,9 @@
       <li>Har ni sparat ett kort för att betala passen: kortets märke, de fyra sista siffrorna och när
         det går ut, Stripes id för kortet och för er som kund, och för varje pass där ni valt kortet
         om beloppet är reserverat, draget eller släppt och vad det var. Hela kortnumret har vi aldrig</li>
-      <li>För en studiehjälpare som tipsat: bonusen för tips, med vem den gäller, beloppet och när den
-        betalades</li>
+      <li>För en studiehjälpare som värvat: värvningsbonusen, med vem den gäller, beloppet och hur det
+        delas i grundersättning och semesterersättning, läget, lönemånaden den betalades med och,
+        om den annullerades, skälet</li>
     </ul>
 
     <h3>Om du skriver till oss eller något går sönder</h3>
@@ -341,7 +345,10 @@
       <li><b>Koden i intresseanmälan och jobbansökan, och tipsen</b>: berättigat intresse (artikel
         6.1 f), att veta vilka tips och affischer som leder till att någon hör av sig. För en familj
         som tipsat är timmen i timbanken en del av avtalet (artikel 6.1 b), och för en
-        studiehjälpare är bonusen en del av lönen (artikel 6.1 b), som bokföras som lön (artikel 6.1 c).</li>
+        studiehjälpare är värvningsbonusen en del av lönen (artikel 6.1 b), som bokföras som lön
+        (artikel 6.1 c). Koden ur adressen, förnamnet värvaren ser och räkningen av koder som inte
+        finns är berättigat intresse (artikel 6.1 f): att samma person bara ger en bonus, att
+        värvaren vet vilken bonus som är vilken och att koderna inte går att gissa.</li>
       <li><b>Betygsgarantin</b>: avtalet med er (artikel 6.1 b). Ni anmäler den, med barnets
         nuvarande betyg, och gör anspråket, och betygen är det som visar om villkoren är
         uppfyllda.</li>
@@ -499,9 +506,10 @@
       <li><b>Ett sparat kort</b>: så länge ni har det sparat. Tar ni bort det, eller kontot, tas
         det bort hos oss och kopplas bort hos Stripe. Vad som reserverades och drogs för ett pass
         står kvar med betalningen.</li>
-      <li><b>Bokföringsunderlag</b>: betalningar och ersättningsunderlag, och bonusen för tips, sju
+      <li><b>Bokföringsunderlag</b>: betalningar och ersättningsunderlag, och värvningsbonusen, sju
         år. Det är bokföringslagens krav och något vi inte kan förkorta, inte ens på begäran. En
-        bonus står kvar också när ansökan den kom ur har tagits bort, utan koden och ansökan.
+        bonus står kvar också när ansökan den kom ur har tagits bort, utan ansökan men med koden
+        ur adressen, så att samma person inte ger en bonus till.
         Raderna i betalningsliggaren raderar vi aldrig: har ni betalat något raderas kontot inte helt,
         utan står kvar utan namn, och raderna pekar på det. Vilken kod ett köp hade står med
         betalningen, lika länge.</li>
@@ -787,10 +795,10 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=adfb7419"></script>
+<script src="nextrum-config.js?v=7488550a"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a262aca7"></script>
+<script src="nextrum-app.js?v=20eb9020"></script>
 <script src="nextrum-samtycke.js?v=92474eaf"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

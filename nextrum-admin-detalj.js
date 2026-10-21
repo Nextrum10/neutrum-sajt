@@ -218,8 +218,12 @@
         .select('tutor_id, created_at').eq('parent_id', id)
         .order('created_at', { ascending: false }).limit(TRAD_MAX));
       läggVillkor(id);
-      /* Första timmen (2026-10-09): om familjen redan fått sin timme. */
-      lägg('forstaTimmen', supa.rpc('forsta_timmen_lage', { p_familj: id }));
+      /* Insatta timmar (timmar_med_orsak, 2026-10-21): varje insättning med
+         månaden och orsaken. Bara en superadmin får raderna. Raden Första
+         timmen gratis och dess fråga togs bort samma dag (Leo). */
+      lägg('insatta', supa.from('timmar_insatta')
+        .select('id, klippkort_id, timmar, avser_manad, orsak, insatt_av, insatt_at').eq('familj', id)
+        .order('insatt_at', { ascending: false }).limit(100));
       /* Kortet (kortet_reserveras, 2026-10-13): familjens sparade kort och
          passen där det valts. Policyerna ger bara en superadmin raderna. */
       lägg('kort', supa.from('sparade_kort')
@@ -281,7 +285,7 @@
        är bara namn, och allt de skrev står här, med Redigera och Radera
        som för alla andra. Rekryteringens steg stod förut i en egen ruta. */
     anmalan:        [['oversikt', 'Anmälan']],
-    ansokan:        [['oversikt', 'Ansökan'], ['rekrytering', 'Rekryteringen']],
+    ansokan:        [['oversikt', 'Ansökan']],
     /* 2026-09-29: tråden mellan en familj och en studiehjälpare, öppnad
        med Öppna chatt. Id:t är familjens och studiehjälparens, med ett
        | emellan: tråden har inget eget id (schema-v4). */
@@ -388,23 +392,11 @@
       : 'inte godkända än';
   }
 
-  /* Första timmen gratis (2026-10-09, Leo: "bara folk som köper planen
-     ska få gratis första lektion", och högst en timme per familj). Den
-     första planen familjen betalar får timmen av sig själv, och raden
-     säger om den getts och hur. Knappen Ge den pass för pass togs bort
-     2026-10-15 (Leo: "det ska bara finnas ge gratis timmar till
-     timbanken"): vill vi bjuda en familj sätter vi in gratistimmar. Ett
-     val pass för pass som redan står i databasen visas som förut, men
-     ingen familj hade något. Utan funktionen (en databas före
-     migrationen) står raden som okänd. */
-  function dpFörstaTimmen(d) {
-    if (d.forstaTimmenFel) return null;
-    const l = d.forstaTimmen || {};
-    if (l.i_planen) return 'given, i familjens första plan';
-    if (l.pa_pass) return 'given, på ett pass';
-    return l.beviljad ? 'vald pass för pass, och annars i den första planen'
-      : 'inte given än, den följer med familjens första plan';
-  }
+  /* Raden Första timmen gratis stod i familjens översikt 2026-10-09 till
+     2026-10-21 (Leo: "Ta bort raden 'Första timmen gratis' i
+     familjeprofilerna"). Timmen själv är kvar: den första planen familjen
+     betalar får den av sig själv (intern.planens_forsta_timme), och
+     timbanken under Ekonomi visar planen med timmen i. */
 
   /* TIMBANKEN OCH GRATISTIMMARNA (2026-10-13)
 
@@ -434,7 +426,38 @@
       + ' <button class="btn btn-ghost btn-sm" type="button" data-dp-flik="ekonomi">Sätt in gratistimmar</button>';
   }
 
-  function dpTimbank(p) {
+  /* Månaderna insatta timmar kan avse: september 2026 till nästa månad,
+     som ge_gratistimmar prövar. Den innevarande är förvald, räknad i
+     Stockholms tid som i databasen, inte i webbläsarens. */
+  function gratisMånader() {
+    const [år, mån] = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }).split('-').map(Number);
+    const denna = år + '-' + String(mån).padStart(2, '0') + '-01';
+    const slut = new Date(år, mån, 1, 12);
+    const lista = [];
+    for (let d = new Date(2026, 8, 1, 12); d <= slut; d = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12)) {
+      lista.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01');
+    }
+    return { lista, denna };
+  }
+  const månadText = iso => {
+    const [år, m] = String(iso).split('-');
+    return NX.MANADER[Number(m) - 1] + ' ' + år;
+  };
+
+  /* Insatta timmar (timmar_med_orsak, 2026-10-21): en rad per insättning,
+     med månaden, orsaken, vem och när. Raderna står fast i databasen. */
+  function dpInsatta(d) {
+    if (d.insattaSaknas) return '';
+    if (d.insattaFel) return dpRubrik('Insatta timmar') + tomt('Insättningarna gick inte att läsa', d.insattaFel);
+    const rader = d.insatta || [];
+    if (!rader.length) return '';
+    return dpRubrik('Insatta timmar', 'med orsak, och de ändras aldrig')
+      + rader.map(r => dpRad(gratisTimmar(Number(r.timmar)) + ', avser ' + månadText(r.avser_manad),
+          [r.orsak, 'insatta ' + kortDatum(r.insatt_at) + (r.insatt_av ? ' av ' + namnFör(r.insatt_av) : '')].join(' · '),
+          '')).join('');
+  }
+
+  function dpTimbank(p, d) {
     if (!fullAdmin()) return '';
     const idag = isoFor(new Date());
     if (S.klippkortFel) {
@@ -471,13 +494,27 @@
         ? dpRad('Sparade minuter', bank.saldo_min + ' min'
             + (bank.varde_ore != null ? ', värda ' + kronor(bank.varde_ore) + ' om familjen slutar' : ''), '')
         : '')
+      + dpInsatta(d || {})
+      /* Timmarna, månaden de avser och orsaken (timmar_med_orsak,
+         2026-10-21): orsaken krävs, och databasen skriver en rad som står
+         fast. */
       + '<form class="dp-gratis" data-dp-gratis="' + esc(p.id) + '">'
-      + '<label for="dp-gratis-n">Sätt in gratistimmar</label>'
-      + '<input class="inp" id="dp-gratis-n" name="timmar" type="number" min="1" max="40" step="1" inputmode="numeric" value="1" required>'
+      + '<b class="dp-gratis-rubrik">Sätt in gratistimmar</b>'
+      + '<div class="dp-gratis-falt"><label for="dp-gratis-n">Timmar</label>'
+      + '<input class="inp" id="dp-gratis-n" name="timmar" type="number" min="1" max="40" step="1" inputmode="numeric" value="1" required></div>'
+      + '<div class="dp-gratis-falt"><label for="dp-gratis-manad">Avser månad</label>'
+      + '<select class="sel" id="dp-gratis-manad" name="manad">'
+      + (() => { const m = gratisMånader(); return m.lista.map(x => '<option value="' + x + '"' + (x === m.denna ? ' selected' : '')
+          + '>' + esc(månadText(x)) + '</option>').join(''); })()
+      + '</select></div>'
+      + '<div class="dp-gratis-falt dp-gratis-orsak"><label for="dp-gratis-orsak">Orsak</label>'
+      + '<input class="inp" id="dp-gratis-orsak" name="orsak" minlength="3" maxlength="500" autocomplete="off" required'
+      + ' placeholder="Till exempel: passet 14 oktober ställdes in av oss"></div>'
       + '<button class="btn btn-primary" type="submit">Sätt in</button>'
       + '<span class="dp-gratis-not">Från oss, utan kostnad. De gäller i 60 dagar och betalar familjens pass före köpta '
       + 'timmar, också förslag och bokade pass som inte är betalda. Det som blir över av en timme sparas inte, och de '
-      + 'betalas aldrig ut. Studiehjälparen får lön för passen som vanligt.</span>'
+      + 'betalas aldrig ut. Studiehjälparen får lön för passen som vanligt. Orsaken sparas och ändras aldrig: skriv '
+      + 'varför, utan namn.</span>'
       + (besked ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '">' + esc(besked.text) + '</p>' : '')
       + '</form>';
   }
@@ -603,7 +640,9 @@
       ].filter(Boolean).join(' · ');
       return dpRad(när, under, '');
     }).join('');
-    return dpRubrik('Kortet', 'priset reserveras två dagar före passet och dras efter rapporten') + kortrad + passrader;
+    return dpRubrik('Kortet', S.kortFlagga && S.kortFlagga.aktiv
+      ? 'priset reserveras två dagar före passet och dras efter rapporten'
+      : 'reserveras inte längre: familjen betalar med Betala nu') + kortrad + passrader;
   }
 
   function dpRubrik(text, extra) {
@@ -1144,7 +1183,7 @@
         [obetalda, 'Hållna, inte betalda'],
         [betalda, 'Betalda pass']
       ])
-      + dpTimbank(p)
+      + dpTimbank(p, d)
       + dpRabatt(p)
       + dpPartner(p)
       + dpKortet(p, d);
@@ -1169,7 +1208,6 @@
       ...dpIntagen(p),
       ['Senast inloggad', dpSenast(p)],
       ['Användarvillkoren', dpVillkor(d), 'okänt'],
-      ['Första timmen gratis', dpFörstaTimmen(d), 'okänt'],
       ...(fullAdmin() ? [['Timbanken', dpTimbankKort(p), 'okänt'], ['Familjerabatt', dpRabattKort(p), 'okänt']] : []),
       ...(fullAdmin() && familjensPartner(p) ? [['Partner', esc(familjensPartner(p).partner), 'okänt']] : []),
       ['Om familjen', p.bio ? esc(p.bio) : null]
@@ -1747,25 +1785,29 @@
         });
   }
 
+  /* Ansökan (2026-10-21, ansokningarnas_steg). Leo: "Gör hela profilen
+     enkel att läsa: tydlig rubrik, uppgifterna kompakt, en tydlig
+     nästa-åtgärd." Steget och dess knappar står först (nästaSteg i
+     nextrum-admin-rekrytering.js), sedan uppgifterna, det hen skrev och
+     mejlen till hen, hopfällda. Fliken Rekryteringen med fyra steg är
+     borta: stegen byts med knapparna, och databasen vaktar ordningen. */
   function dpAnsokan(a) {
-    if (DP.flik === 'rekrytering') return kör('spårLista', a) || '';
-
     const text = kör('ansökansText', a);
     const cv = kör('cvKnapp', a);
     const tjänster = (a.tjanster || []).map(k => ((S.tjanster || []).find(t => t.kod === k) || {}).namn || k);
-    /* Kontot hen skapat, om det finns. Samma jämförelse som "Ta in i
-       poolen" gör när den föreslår ett konto. */
+    /* Kontot ansökan blev, eller ett studiehjälparkonto med samma adress
+       (en ansökan som togs in före 2026-10-21 kan sakna kopplingen). */
     const epost = String(a.email || '').toLowerCase();
-    const konto = epost && Object.values(S.personer).find(p =>
-      p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost);
-    /* Skicka vidare till intervju, eller därifrån till utbildning, under
-       läget (2026-10-15): nästa steg är knappen att trycka på, så Ta in i
-       poolen är det bara när inget steg står kvar före den. */
-    const vidare = kör('panelVidare', a) || '';
+    const konto = (a.konto_id && S.personer[a.konto_id]) || (epost && Object.values(S.personer).find(p =>
+      p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost));
 
-    return dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
+    return (kör('nästaSteg', a) || '')
+      + dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
       + dpFakta([
-        ['E-post', dpMejl(a.email)],
+        ['E-post', a.email
+          ? dpMejl(a.email) + ' <button class="btn btn-ghost btn-sm" type="button" data-ans-kontakt="'
+            + esc(a.id) + '">Skriv till hen</button>'
+          : null],
         ['Ålder', a.age ? esc(a.age + ' år') : null],
         /* Under 18: vårdnadshavaren och godkännandet (2026-10-05). */
         ...(kör('vhFakta', a) || []),
@@ -1777,21 +1819,24 @@
         ['Konto', konto
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
             + esc(konto.full_name || konto.email) + '</button>'
-          : null, 'inget än: det skapas när hen tas in i poolen'],
-        /* Koden (2026-10-13): en studiehjälpares, som får 300 kr i lönen
-           när hen tas in i poolen (tipsbonus). Bara en kod som gällde
-           står här; databasen tömde de andra. */
+          : null, 'inget än: det skapas med Utbildning hållen'],
+        /* Koden (2026-10-13): en studiehjälpares, som får värvningsbonusen
+           (varvningsbonus, 2026-10-21) när hen får sitt konto. Bara en kod
+           som gällde står här; databasen tömde de andra. Värvaren står på
+           ansökan (varvad_av_profil_id) och följer koden. */
         ['Kod', dpKod(a), 'ingen'],
-        ...(a.kod ? [['Bonus för tipset', (() => {
-          const b = (S.tipsbonus || []).find(x => x.ansokan_id === a.id);
+        ...(a.kod ? [['Värvningsbonus', (() => {
+          const b = (S.varvningsbonus || []).find(x => x.varvad_ansokan_id === a.id);
           if (!b) return esc(S.bonusFlagga && !S.bonusFlagga.aktiv
             ? 'ingen: bonusen är avstängd under Koder'
-            : 'ges när hen tas in i poolen');
-          const l = { utkast: 'utkast', godkand: 'godkänd', utbetald: 'utbetald', struken: 'struken' }[b.status] || b.status;
-          /* Lönen för månaden hen togs in, som betalas den 25:e månaden efter. */
-          const [år, mån] = String(b.period).split('-').map(Number);
-          return esc(NXBetalning.kronor(b.belopp_ore) + ', ' + l + ', i lönen den 25 '
-            + NXStudie.månadsNamn(NXStudie.månadIso(new Date(år, mån, 1, 12))));
+            : 'ingen rad');
+          if (b.status === 'annullerad') return esc('ingen: ' + (b.annullerad_orsak || 'annullerad'));
+          if (b.status === 'vantar') return esc(NXBetalning.kronor(b.brutto_ore) + ', väntar: tjänas in när hen får sitt konto');
+          if (b.status === 'utbetald') return esc(NXBetalning.kronor(b.brutto_ore) + ', utbetald med lönen för ' + (b.utbetald_period || ''));
+          /* Lönen för månaden den tjänades in, som betalas den 25:e månaden efter. */
+          const [år, mån] = String(b.manad || '').split('-').map(Number);
+          return esc(NXBetalning.kronor(b.brutto_ore) + ', intjänad' + (år ? ', i lönen den 25 '
+            + NXStudie.månadsNamn(NXStudie.månadIso(new Date(år, mån, 1, 12))) : ''));
         })()]] : [])
       ])
       + dpRubrik('Varför hen söker')
@@ -1800,22 +1845,17 @@
       + (a.vardnadshavare_godkand_at
         ? dpRubrik('Vårdnadshavarens svar', 'inlagt ' + kortDatum(a.vardnadshavare_godkand_at)) + (kör('vhSvar', a) || '')
         : '')
-      + dpRubrik('Läge')
-      + lägesväljare(ANS_LAGE, a.status, 'data-ans="' + esc(a.id) + '"')
-      + '<div class="dp-atgard">'
-      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-flik="rekrytering">Rekryteringens steg</button>'
-      + (a.status !== 'approved'
-        ? '<button class="btn ' + (vidare ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-ans-pool="'
-          + esc(a.id) + '">Ta in i poolen</button>'
+      + (kör('beskedLista', a) || '')
+      + (a.status !== 'rejected'
+        ? '<div class="dp-atgard"><button class="btn btn-ghost btn-sm" type="button" data-ans-nej="' + esc(a.id) + '">'
+          + 'Avböj ansökan</button></div>'
         : '')
-      + vidare
-      + '</div>'
       + dpHantera('ansokan', a, {
           rubrik: 'Radera ansökan',
           text: 'När hen själv ber om det, eller ansökan är skräp. Ansökan, CV:t och meddelanden med '
             + 'samma adress tas bort ur våra system, och ett nej som inte gått än går aldrig. Ska hen '
-            + 'få ett: sätt läget till Avböjd och radera först när nejet gått (det står under '
-            + 'Rekryteringen). Har hen ett konto raderas det under Studiehjälpare.'
+            + 'få ett: avböj och radera först när nejet gått (det står under Mejlen till hen). Har hen '
+            + 'ett konto raderas det under Studiehjälpare.'
         });
   }
 
@@ -2516,6 +2556,9 @@
   async function efterGratis(id, text, ok) {
     gratisBesked = { id, text, ok };
     await hämtaAllt();
+    // Insättningarnas rader står i panelens egen hämtning.
+    delete S.detaljCache['familj:' + id];
+    await hämtaDetalj('familj', id);
     kör('ritaKortbetalningar');
     if (DP.typ === 'familj' && DP.id === id) ritaDetalj();
   }
@@ -2530,21 +2573,30 @@
       alert('Sätt in ett helt antal timmar, mellan 1 och 40.');
       return;
     }
+    /* Orsaken krävs och prövas igen i databasen (3–500 tecken). */
+    const orsak = String(f.elements.orsak.value || '').trim();
+    if (orsak.length < 3) {
+      alert('Skriv varför timmarna sätts in, minst tre tecken.');
+      f.elements.orsak.focus();
+      return;
+    }
+    const manad = f.elements.manad.value || null;
     const sista = new Date();
     sista.setDate(sista.getDate() + 60);
     const ja = await bekräfta({
       titel: 'Sätt in ' + gratisTimmar(n) + '?',
       text: namnFör(id) + ' får dem i sin timbank i dag, och de gäller till och med ' + datumText(isoFor(sista)) + '. '
+        + 'De avser ' + (manad ? månadText(manad) : 'den här månaden') + ', och orsaken sparas: "' + orsak + '". '
         + 'De betalar familjens pass före köpta timmar, också förslag och bokade pass som inte är betalda. '
         + 'Studiehjälparen får lön för passen som vanligt.',
       knapp: 'Sätt in ' + gratisTimmar(n)
     });
     if (!ja) return;
     await medan(f.querySelector('button[type="submit"]'), 'Sätter in…', async () => {
-      const { data, error } = await supa.rpc('ge_gratistimmar', { p_familj: id, p_timmar: n });
+      const { data, error } = await supa.rpc('ge_gratistimmar', { p_familj: id, p_timmar: n, p_orsak: orsak, p_manad: manad });
       if (error) {
         alert('Kunde inte sätta in: ' + (saknasFunktion(error)
-          ? 'funktionen finns inte i databasen än (migrationen gratistimmar).' : felText(error)));
+          ? 'funktionen med orsak finns inte i databasen än (migrationen timmar_med_orsak).' : felText(error)));
         return;
       }
       const betalda = Number((data && data.betalda_pass) || 0);

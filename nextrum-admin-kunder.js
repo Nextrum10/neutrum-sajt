@@ -658,7 +658,14 @@
       + (familj ? '' : '<div class="le-gratis"><label for="le-gratis">Gratistimmar i timbanken</label>'
         + '<input class="inp" id="le-gratis" type="number" min="0" max="40" step="1" inputmode="numeric" value="0">'
         + '<span>Från oss, utan kostnad. De gäller i 60 dagar och betalar familjens pass före köpta timmar. '
-        + 'Det som blir över av en timme sparas inte, och de betalas aldrig ut.</span></div>')
+        + 'Det som blir över av en timme sparas inte, och de betalas aldrig ut.</span>'
+        /* Orsaken (timmar_med_orsak, 2026-10-21): krävs när timmarna är fler
+           än noll, och sparas med insättningen. Timmarna avser den här
+           månaden; en annan månad väljs i familjens panel. */
+        + '<div class="le-gratis-orsak" hidden><label for="le-gratis-orsak">Orsak</label>'
+        + '<input class="inp" id="le-gratis-orsak" maxlength="500" autocomplete="off"'
+        + ' placeholder="Till exempel: välkomsttimmar vid intaget">'
+        + '<span>Sparas med insättningen och ändras aldrig. Skriv varför, utan namn.</span></div></div>')
       /* Familjerabatt (2026-10-15, Leo: "precis som när vi ger ut gratis
          timmar"): en av våra koder, till exempel för familjer som kommer
          genom en samarbetspartner. Samma regler som i familjens panel
@@ -682,6 +689,12 @@
     ruta.addEventListener('click', ev => {
       if (ev.target === ruta || ev.target.closest('[data-le-stang]')) { stäng(); return; }
       if (ev.target.closest('[data-le-match]')) { stäng(); location.hash = '#matchning'; }
+    });
+    // Orsaken fälls ut när timmarna är fler än noll.
+    ruta.addEventListener('input', ev => {
+      if (ev.target.id !== 'le-gratis') return;
+      const rad = $('.le-gratis-orsak', ruta);
+      if (rad) rad.hidden = !(Number(ev.target.value) > 0);
     });
 
     /* Kontot först, när familjen inte har något. Svarar false när
@@ -738,6 +751,15 @@
         säg(msg, 'Gratistimmarna är ett helt antal timmar, mellan 0 och 40.', false);
         return;
       }
+      /* Orsaken prövas också före kontot (timmar_med_orsak): databasen
+         sätter inte in timmar utan den. */
+      const orsakFält = $('#le-gratis-orsak', ruta);
+      const gratisOrsak = orsakFält ? String(orsakFält.value || '').trim() : '';
+      if (gratis > 0 && gratisOrsak.length < 3) {
+        säg(msg, 'Skriv varför familjen får gratistimmarna, minst tre tecken.', false);
+        if (orsakFält) { orsakFält.closest('.le-gratis-orsak').hidden = false; orsakFält.focus(); }
+        return;
+      }
 
       await medan($('#le-skapa', ruta), familj ? 'Skapar…' : 'Tar in…', async () => {
         if (!familj && !(await bjudIn(msg))) return;
@@ -745,8 +767,10 @@
         /* Gratistimmarna, en gång, när kontot finns. Familjen har inte
            godkänt villkoren än, och behöver inte: en gåva är inget köp. */
         if (gratis > 0 && inbjuden && gratisVal === null) {
-          const v = await supa.rpc('ge_gratistimmar', { p_familj: parent, p_timmar: gratis });
-          gratisVal = v.error ? felText(v.error) : (v.data || {});
+          const v = await supa.rpc('ge_gratistimmar', { p_familj: parent, p_timmar: gratis, p_orsak: gratisOrsak, p_manad: null });
+          gratisVal = v.error
+            ? (v.error.code === 'PGRST202' ? 'migrationen timmar_med_orsak är inte körd' : felText(v.error))
+            : (v.data || {});
           gratisFält.closest('.le-gratis').hidden = true;
         }
         /* Familjerabatten, en gång, när kontot finns. */

@@ -639,6 +639,13 @@ window.NXArbete = (function () {
       /* Hur många barn passet gäller. Tillägget är EN summa oavsett
          om de är två eller tre — regeln och taket står i tjanster. */
       barn: 1,
+      /* SYSKONTILLÄGGET SOM SKULD (syskontillagg_som_skuld, 2026-10-21):
+         med strömbrytaren på väljer familjen vilka syskon som är med, och
+         tillägget per extra barn blir en skuld efter passet i stället för
+         en del av passets pris. extra är barnens id:n, syskonOk krysset för
+         villkoren första gången. */
+      extra: [],
+      syskonOk: false,
       manad: null,
       dag: null,
       tid: null,
@@ -745,6 +752,29 @@ window.NXArbete = (function () {
     function extraOre() {
       var t = tjanstRad();
       return (t && t.extra_personer_ore) || 0;
+    }
+    /* Syskontillägget som skuld: vyns läge (o.syskon), eller null när
+       strömbrytaren är av eller ytan inte är familjens. Då är det Antal
+       barn som förut. */
+    function syskon() {
+      if (o.utanPris || !o.syskon) return null;
+      var s = o.syskon();
+      return s && s.pa ? s : null;
+    }
+    function syskonen(sy) {
+      return (sy.barn || []).filter(function (b) { return b.id !== sy.huvud; });
+    }
+    /* Ett annat barn valt i vyn: syskonen som valts står kvar, utom det
+       barn som nu är passets eget. */
+    function rensaSyskon(sy) {
+      var ids = syskonen(sy).map(function (b) { return b.id; });
+      st.extra = st.extra.filter(function (id) { return ids.indexOf(id) !== -1; }).slice(0, Math.max(barnTak() - 1, 0));
+    }
+    /* Kryssrutan för villkoren behövs när extra barn är valda och familjen
+       inte godkänt den gällande versionen. */
+    function syskonKräverJa() {
+      var sy = syskon();
+      return !!(sy && !sy.sparr && st.extra.length && !sy.godkand);
     }
     /* Timpriset ur katalogen — samma källa som kassan tar betalt
        efter. o.pris (kronor, ur konfigurationen) gäller bara innan
@@ -877,7 +907,8 @@ window.NXArbete = (function () {
             vald: st.tid,
             tom: 'Inga tider kvar den dagen för ' + längdText() + '. Välj en annan dag eller en kortare längd.'
           }))
-        + (barnTak() > 1 ? rad('Antal barn', chips('bk-barn', barnPoster, st.barn, 'Antal barn')) : '')
+        + (syskon() ? syskonRad(syskon())
+          : barnTak() > 1 ? rad('Antal barn', chips('bk-barn', barnPoster, st.barn, 'Antal barn')) : '')
         + rad('Var ses ni?', chips('bk-format', FORMAT, st.format, 'Var ses ni?'))
         + (st.format === 'På plats'
           ? '<div class="bk-valrad bk-faltrad"><label class="bk-valrad-et" for="bk-plats">Adress</label>'
@@ -907,6 +938,67 @@ window.NXArbete = (function () {
           : '<p class="bk-anger">När ni föreslår tiden ber ni också att passet får hållas inom '
             + 'ångerfristen på 14 dagar. Ett genomfört pass går inte att ångra. '
             + '<a href="/anvandarvillkor#angerratt" target="_blank" rel="noopener">Om ångerrätten</a></p>');
+    }
+
+    /* SYSKONEN PÅ PASSET (syskontillagg_som_skuld, 2026-10-21). Familjen
+       väljer vilka syskon som är med, högst till tjänstens tak. Tillägget
+       står direkt under, räknat som databasen räknar det ("Tillägg: 2 × 69
+       kr × 1 h = 138 kr"), och att det blir en skuld efter passet. Är
+       bokning med extra barn spärrad står varför i stället för valen: ett
+       pass för ett barn går att boka ändå. Första gången står villkoren
+       med en kryssruta; databasen nekar extra barn utan ett godkännande av
+       den gällande versionen (bookings_syskon_prova). */
+    function syskonRad(sy) {
+      rensaSyskon(sy);
+      var andra = syskonen(sy);
+      if (barnTak() <= 1 || !andra.length) return '';
+      if (sy.sparr) {
+        return rad('Syskon', '<p class="bk-syskon-sparr" role="status">' + esc(sy.sparrText || 'Extra barn går inte att boka just nu.')
+          + ' Ett pass för ett barn går att boka som vanligt.</p>');
+      }
+      var fullt = 1 + st.extra.length >= barnTak();
+      var knappar = '<div class="vy-val" id="bk-syskon" role="group" aria-label="Syskon på passet">'
+        + andra.map(function (b) {
+          var på = st.extra.indexOf(b.id) !== -1;
+          return '<button type="button" data-v="' + esc(b.id) + '" aria-pressed="' + (på ? 'true' : 'false') + '"'
+            + (!på && fullt ? ' disabled' : '') + '>' + esc(b.namn) + '</button>';
+        }).join('') + '</div>';
+      var n = st.extra.length;
+      var tillägg = n
+        ? '<p class="bk-tillagg" data-bk-tillagg>' + esc(NXBetalning.tillaggRad(n, extraOre(), st.minuter)) + '</p>'
+          + '<p class="bk-tillagg-not">Tillägget läggs som en skuld på ert konto när passet är hållet. Ni betalar det '
+          + 'när ni vill under Betalning, eller med nästa köp av timmar. Inget dras nu.</p>'
+        : '<p class="bk-tillagg-not">Välj ett syskon som är med på passet. Tillägget är '
+          + esc(NXBetalning.kronor(extraOre())) + ' per extra barn och timme, och betalas efter passet.</p>';
+      return rad('Syskon', knappar) + '<div class="bk-syskon-info">' + tillägg
+        + (syskonKräverJa() ? syskonVillkor(sy) : '') + '</div>';
+    }
+
+    /* Villkoren första gången, med talen ur databasen (mitt_tillagg).
+       PLATSHÅLLARE: texten skriver Leo, och länken står i
+       NX.CFG.TILLAGG_VILLKOR_URL. */
+    function syskonVillkor(sy) {
+      var url = NX.CFG && NX.CFG.TILLAGG_VILLKOR_URL;
+      return '<div class="bk-syskon-villkor">'
+        + '<p><b>Villkor för syskontillägget</b></p>'
+        + '<ul>'
+        + '<li>Tillägget för extra barn läggs som en skuld på ert konto när passet är hållet.</li>'
+        + (sy.obligatorisk
+          ? '<li>Ni betalar det när ni vill under Betalning. Står det obetalt följer det med som en egen rad nästa gång ni köper timmar.</li>'
+          : '<li>Ni betalar det när ni vill under Betalning, eller som en egen rad när ni köper timmar.</li>')
+        + (sy.debitera
+          ? '<li>Avbokar ni ett bekräftat pass mindre än ' + esc(String(sy.senTimmar)) + ' timmar före start blir '
+            + 'tillägget en skuld ändå.</li>' : '')
+        + '<li>Är det obetalda tillägget över ' + esc(NXBetalning.kronor(sy.maxOre)) + ', eller äldre än '
+        + esc(String(sy.sparrDagar)) + ' dagar, går det inte att boka extra barn förrän det är betalt.</li>'
+        + '</ul>'
+        + '<p class="bk-syskon-platshallare">' + (url
+          ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Läs hela villkoren för syskontillägget</a>'
+          : 'Platshållare: villkorstexten för syskontillägget skrivs av Nextrum, och länken till den läggs in här.')
+        + '</p>'
+        + '<label class="bk-syskon-kryss"><input type="checkbox" data-bk-syskon-ok' + (st.syskonOk ? ' checked' : '')
+        + '> <span>Jag godkänner villkoren för syskontillägget</span></label>'
+        + '</div>';
     }
 
     /* BETALNINGEN (kortet_reserveras, 2026-10-13). Leo: "när man klickar på
@@ -1065,7 +1157,7 @@ window.NXArbete = (function () {
     function sammanfattning() {
       if (!st.dag) return '';
       var vald = !!st.tid;
-      var klar = vald && platsOk() && ämneOk();
+      var klar = vald && platsOk() && ämneOk() && (!syskonKräverJa() || st.syskonOk);
       var vem = o.hos || 'Er studiehjälpare';
       /* Räcker köpta timmar står de där priset hade stått (Leo
          2026-09-28). Med en timme på köpet betalar timmarna resten
@@ -1099,7 +1191,8 @@ window.NXArbete = (function () {
         + '<div class="bk-sum-vad">'
         + (vald
           ? '<b>' + esc(när) + '</b>'
-            + '<span>' + esc([ämnet() || 'Ämne saknas', längdText(), st.barn > 1 ? st.barn + ' barn' : null,
+            + '<span>' + esc([ämnet() || 'Ämne saknas', längdText(),
+                st.barn > 1 ? st.barn + ' barn' : st.extra.length ? (1 + st.extra.length) + ' barn' : null,
                 st.format === 'På plats' ? (st.plats.trim() || 'Adress saknas') : st.format]
                 .filter(Boolean).join(' · ')) + '</span>'
           : '<b>Välj en tid</b>'
@@ -1299,6 +1392,11 @@ window.NXArbete = (function () {
         var grupp = val.closest('.vy-val').id;
         if (grupp === 'bk-amnen') st.amne = val.dataset.v;
         else if (grupp === 'bk-barn') st.barn = Number(val.dataset.v) || 1;
+        else if (grupp === 'bk-syskon') {
+          var i = st.extra.indexOf(val.dataset.v);
+          if (i !== -1) st.extra.splice(i, 1);
+          else if (1 + st.extra.length < barnTak()) st.extra.push(val.dataset.v);
+        }
         else if (grupp === 'bk-format') { st.format = val.dataset.v; st.formatValt = true; }
         else if (grupp === 'bk-betal') st.betalsatt = val.dataset.v;
         else if (grupp === 'bk-langder') {
@@ -1327,6 +1425,14 @@ window.NXArbete = (function () {
       }
 
       if (e.target.closest('#bk-boka')) skicka();
+    });
+
+    host.addEventListener('change', function (e) {
+      if (!e.target.matches('[data-bk-syskon-ok]')) return;
+      st.syskonOk = e.target.checked;
+      // Bara knappen: rutan står kvar med fokus i kryssrutan.
+      var knapp = $('#bk-boka', host);
+      if (knapp) knapp.disabled = !(st.dag && st.tid && platsOk() && ämneOk() && (!syskonKräverJa() || st.syskonOk));
     });
 
     host.addEventListener('input', function (e) {
@@ -1406,7 +1512,7 @@ window.NXArbete = (function () {
       if (!st.granskar) return;
       st.granskar = null;
       st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
-      st.dag = null; st.tid = null; st.barn = 1; st.not = ''; st.annat = '';
+      st.dag = null; st.tid = null; st.barn = 1; st.not = ''; st.annat = ''; st.extra = []; st.syskonOk = false;
       st.besked = null; st.fel = null; st.nyttId = null; st.skickatFörslag = null; st.kodTappad = null;
       st.betalKvitto = null;
       st.formatValt = false;
@@ -1430,6 +1536,7 @@ window.NXArbete = (function () {
     function skicka() {
       var knapp = $('#bk-boka', host);
       if (!st.dag || !st.tid || !platsOk() || !ämneOk()) return;
+      if (syskonKräverJa() && !st.syskonOk) return;
       st.besked = null; st.fel = null;
       NXStudie.medan(knapp, 'Skickar…', async function () {
         /* En kod i rutan som inte prövats mot det här priset prövas
@@ -1442,8 +1549,17 @@ window.NXArbete = (function () {
         }
         var g = st.granskar;
         var kod = !o.utanPris && st.rabatt && rabattGäller() ? st.rabatt.kod : null;
+        /* Villkoren för syskontillägget godkänns i databasen före passet
+           (godkann_tillaggsvillkor), med versionen rutan visade. */
+        var sy = syskon();
+        if (sy) rensaSyskon(sy);
+        var extra = sy && !sy.sparr ? st.extra.slice() : [];
+        if (extra.length && !sy.godkand && o.godkännSyskon) {
+          var nej = await o.godkännSyskon(sy.version);
+          if (nej) { st.fel = nej; ritaDel(); return; }
+        }
         var r = tolka(await o.boka({
-          datum: st.dag, tid: st.tid, minuter: st.minuter, amne: ämnet(), barn: st.barn,
+          datum: st.dag, tid: st.tid, minuter: st.minuter, amne: ämnet(), barn: st.barn, extra: extra,
           format: st.format,
           plats: st.format === 'På plats' ? st.plats.trim() : null,
           not: st.not.trim() || null,
@@ -1472,7 +1588,7 @@ window.NXArbete = (function () {
            ett annat än vid knappen. */
         st.kodTappad = kod && r.rabatt !== kod && !r.betalt && !r.gratis ? kod : null;
         st.betalKvitto = r.betalText ? { text: r.betalText, kortKnapp: r.kortKnapp } : null;
-        st.dag = null; st.tid = null; st.barn = 1; st.not = '';
+        st.dag = null; st.tid = null; st.barn = 1; st.not = ''; st.extra = []; st.syskonOk = false;
         st.rabatt = null; st.rabattText = ''; st.rabattFel = null;
         if (g) {
           /* Granskningen är slut: överraden går, och nästa förslag i
@@ -1536,7 +1652,7 @@ window.NXArbete = (function () {
       st.minuter = [60, 120, 180].indexOf(Number(f.langd_min)) !== -1 ? Number(f.langd_min) : 60;
       if ((o.amnen || []).indexOf(f.amne) !== -1) { st.amne = f.amne; st.annat = ''; }
       else if ((o.amnen || []).indexOf(ANNAT) !== -1) { st.amne = ANNAT; st.annat = String(f.amne || ''); }
-      st.barn = 1;
+      st.barn = 1; st.extra = []; st.syskonOk = false;
       st.format = f.format === 'På plats' || f.format === 'Online' ? f.format : null;
       st.formatValt = true;
       st.plats = st.format === 'På plats' ? String(f.plats || '') : '';

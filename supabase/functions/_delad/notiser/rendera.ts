@@ -141,6 +141,8 @@ export function vyAdress(roll: Roll, mal: Mal | 'val'): string {
     : mal === 'betalning' ? '#betalning'
     // kortdragningen_forsoker_igen (2026-10-21): dit kortet byts.
     : mal === 'kortet' ? '#profil/kort'
+    // varvningsbonus (2026-10-21): Värva en kompis finns bara i studiehjälparvyn.
+    : mal === 'varvning' && roll === 'tutor' ? '#profil/tips'
     : mal === 'meddelanden' ? '#meddelanden' : '#profil/notiser';
   return `${SAJT}${vy}${hash}`;
 }

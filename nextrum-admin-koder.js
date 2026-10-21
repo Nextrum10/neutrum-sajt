@@ -164,12 +164,14 @@
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
   const ansökningar = kod => (S.ansokningar || []).filter(a => a.kod === kod)
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
-  const bonusarFör = id => (S.tipsbonus || []).filter(b => b.studiehjalpare_id === id)
-    .sort((a, b) => String(b.intjanad_at).localeCompare(String(a.intjanad_at)));
+  /* Värvningsbonusen (varvningsbonus, 2026-10-21; bonusen för tips sedan
+     2026-10-13): en rad per ansökan med koden. */
+  const bonusarFör = id => (S.varvningsbonus || []).filter(b => b.varvare_profil_id === id)
+    .sort((a, b) => String(b.skapad_at).localeCompare(String(a.skapad_at)));
 
   const BONUS_LAGE = {
-    utkast: ['Bonus, utkast', ''], godkand: ['Bonus godkänd', 'ar-vantar'],
-    utbetald: ['Bonus utbetald', 'ar-klar'], struken: ['Bonus struken', '']
+    vantar: ['Bonus väntar', 'ar-vantar'], intjanad: ['Bonus intjänad', 'ar-ny'],
+    utbetald: ['Bonus utbetald', 'ar-klar'], annullerad: ['Ingen bonus', '']
   };
 
   /* ------------------------------------------------------------
@@ -294,25 +296,26 @@
     const bonusar = bonusarFör(r.person_id);
     return '<p class="kod-del">Ansökningar med koden</p>'
       + (lista.length ? '<ul class="kod-vilka">' + lista.map(a => {
-          const b = bonusar.find(x => x.ansokan_id === a.id);
+          const b = bonusar.find(x => x.varvad_ansokan_id === a.id);
           return '<li>'
             + '<button type="button" class="eko-lank" data-dp="ansokan:' + esc(a.id) + '">' + esc(a.name || 'Ansökan') + '</button>'
             + '<span class="kod-vilka-nar">' + esc(kortDatum(a.created_at)) + '</span>'
-            + (b ? pill((BONUS_LAGE[b.status] || [b.status])[0] + ', ' + kronor(b.belopp_ore), (BONUS_LAGE[b.status] || [])[1] || '')
+            + (b ? pill((BONUS_LAGE[b.status] || [b.status])[0] + ', ' + kronor(b.brutto_ore), (BONUS_LAGE[b.status] || [])[1] || '')
               : pill((ANS_LAGE[a.status] || [a.status || '—'])[0], (ANS_LAGE[a.status] || [])[1] || ''))
             + '</li>';
         }).join('') + '</ul>'
         : '<p class="kod-tom">Ingen har sökt jobb med koden än.</p>')
       /* En bonus vars ansökan gallrats står kvar: den är lön. */
-      + (bonusar.some(b => !b.ansokan_id || !lista.some(a => a.id === b.ansokan_id))
+      + (bonusar.some(b => b.status !== 'annullerad' && (!b.varvad_ansokan_id || !lista.some(a => a.id === b.varvad_ansokan_id)))
         ? '<p class="kod-del">Bonus för ansökningar som gallrats</p><ul class="kod-vilka">'
-          + bonusar.filter(b => !b.ansokan_id || !lista.some(a => a.id === b.ansokan_id)).map(b => '<li>'
-            + (b.ny_studiehjalpare_id
-              ? '<button type="button" class="eko-lank" data-dp="studiehjalpare:' + esc(b.ny_studiehjalpare_id) + '">'
-                + esc(namnFör(b.ny_studiehjalpare_id)) + '</button>'
+          + bonusar.filter(b => b.status !== 'annullerad'
+              && (!b.varvad_ansokan_id || !lista.some(a => a.id === b.varvad_ansokan_id))).map(b => '<li>'
+            + (b.varvad_profil_id
+              ? '<button type="button" class="eko-lank" data-dp="studiehjalpare:' + esc(b.varvad_profil_id) + '">'
+                + esc(namnFör(b.varvad_profil_id)) + '</button>'
               : '<span>Kontot finns inte längre</span>')
-            + '<span class="kod-vilka-nar">' + esc(kortDatum(b.intjanad_at)) + '</span>'
-            + pill((BONUS_LAGE[b.status] || [b.status])[0] + ', ' + kronor(b.belopp_ore), (BONUS_LAGE[b.status] || [])[1] || '')
+            + '<span class="kod-vilka-nar">' + esc(kortDatum(b.intjanad_at || b.skapad_at)) + '</span>'
+            + pill((BONUS_LAGE[b.status] || [b.status])[0] + ', ' + kronor(b.brutto_ore), (BONUS_LAGE[b.status] || [])[1] || '')
             + '</li>').join('') + '</ul>'
         : '');
   }

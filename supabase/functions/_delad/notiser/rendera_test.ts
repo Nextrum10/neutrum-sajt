@@ -257,6 +257,43 @@ Deno.test('ett nekat kort lovar ett nytt försök bara när vi gör ett (kortdra
   assertEquals(/avboka/i.test(igen.text + efter.text), false);
 });
 
+Deno.test('tillägget för syskon: påminnelsen och kvittot säger belopp och pass, aldrig ett barns namn', () => {
+  const pam = rendera('tillagg_paminnelse', 'parent', { data: { ...SMUTSIG, belopp: 20700, antal_pass: 2 } });
+  assertStringIncludes(pam.amne, 'Upplupet tillägg för syskon: 207\u00a0kr');
+  assertStringIncludes(pam.text, 'Ni har 207\u00a0kr i upplupet tillägg för syskon som varit med på 2 pass');
+  assertStringIncludes(pam.text, 'Inget dras av sig självt.');
+  assertStringIncludes(pam.text, `${SAJT}/foralder#betalning`);
+  const kv = rendera('tillagg_kvitto', 'parent', { data: {
+    ...SMUTSIG, belopp: 20700, antal_pass: 2,
+    rader: [{ datum: '2026-10-14', barn: 2, belopp: 6900 }, { datum: '2026-10-15', barn: 3, belopp: 13800 }],
+  } });
+  assertStringIncludes(kv.amne, 'Kvitto: tillägg för syskon, 207\u00a0kr');
+  assertStringIncludes(kv.text, '2 barn, 69\u00a0kr');
+  assertStringIncludes(kv.text, '3 barn, 138\u00a0kr');
+  for (const m of [pam, kv]) {
+    // SMUTSIG bär elevens fullständiga namn: det finns inte i mejlen.
+    assertEquals(m.text.includes('Alva') || m.html.includes('Alva'), false);
+  }
+  // Ören visas när de finns, och inget NaN utan belopp.
+  const ore = rendera('tillagg_paminnelse', 'parent', { data: { belopp: 17250, antal_pass: 1 } });
+  assertStringIncludes(ore.text, '172,50\u00a0kr');
+  const tom = rendera('tillagg_paminnelse', 'parent', { data: {} });
+  assertEquals(/NaN|undefined|null/.test(tom.text), false);
+});
+
+Deno.test('värvningsbonusen: bara beloppet och villkoren, aldrig vem som värvats (varvningsbonus, 2026-10-21)', () => {
+  const m = rendera('varvningsbonus', 'tutor', { data: { ...SMUTSIG, belopp: 30000 } });
+  assertStringIncludes(m.amne, 'Din värvningsbonus är intjänad: 300\u00a0kr');
+  assertStringIncludes(m.text, 'inklusive semesterersättning');
+  assertStringIncludes(m.text, 'Den hanteras enligt villkoren för värvningsbonusen');
+  assertStringIncludes(m.text, `${SAJT}/larare#profil/tips`);
+  assertStringIncludes(m.text, 'värvningsbonus är påslaget');
+  // SMUTSIG bär namn: inget av dem står i mejlet.
+  assertEquals(m.text.includes('Alva') || m.html.includes('Alva'), false);
+  const tom = rendera('varvningsbonus', 'tutor', { data: {} });
+  assertEquals(/NaN|undefined|null/.test(tom.text), false);
+});
+
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
   const m = rendera('meddelande', 'parent');
   assertStringIncludes(m.text, 'Du får det här för att du har ett konto på Nextrum');

@@ -1973,6 +1973,13 @@ a.pass-lank:hover{color:var(--acc)}
 .nx-tips-tal{margin:14px 0 0;line-height:1.55}
 .nx-tips-av{margin:0;line-height:1.6}
 .nx-tips-not{margin:16px 0 0;color:var(--muted-2);line-height:1.6}
+/* Värva en kompis (varvningsbonus, 2026-10-21): beloppet och listan. */
+.nx-tips-bonus{margin:0 0 16px;line-height:1.55}
+.nx-tips-rubrik{margin:22px 0 8px;font-size:.92rem}
+.nx-varv-lista{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.nx-varv-lista li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 12px;border-radius:12px;background:var(--tint)}
+.nx-varv-vem{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.nx-varv-dag{flex:1 1 auto;color:var(--muted);font-size:.88rem}
 @media (max-width:460px){
   .nx-tips-knappar .btn{flex:1 1 100%;justify-content:center}
 }
@@ -2206,6 +2213,12 @@ a.pass-lank:hover{color:var(--acc)}
 .nx-kassa-kryss input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange)}
 .nx-kassa-kryss a{color:var(--acc);font-weight:600}
 .nx-kassa-villkor .btn[disabled]{opacity:.5;cursor:not-allowed}
+/* Syskontillägget som egen rad i kassans ruta (syskontillagg_som_skuld),
+   med totalen under. */
+.nx-kassa-tillagg{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:var(--tint);color:var(--bl);line-height:1.5}
+.nx-kassa-tillagg p{margin:0}
+.nx-kassa-tillagg .nx-kassa-kryss{padding:0;min-height:44px;align-items:center}
+.nx-kassa-total{margin-top:6px !important;font-weight:700}
 /* Fas 22.1: timbanken, under klippkorten i Era timmar. */
 .erb-bank-text{margin:6px 0 0;font-size:.84rem;color:var(--bl-2);line-height:1.5}
 .erb-bank-text a{color:var(--acc);font-weight:600}

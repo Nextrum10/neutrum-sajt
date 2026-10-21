@@ -127,7 +127,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   köpta timmar och går inte ut. Timbanken visar sedan 2026-10-13 också timmar för tips, som är ett avdrag
   på nästa pass, inte ett köp. Vid ånger eller uppsägning: avboka först allt kommande.
 - **Gratistimmar** (2026-10-13, Leo): admin sätter in dem i familjens timbank, i Ta in familjen och i
-  familjens panel under Ekonomi, och bara genom `ge_gratistimmar()` (1–40 åt gången, `is_admin()`). De är
+  familjens panel under Ekonomi, och bara genom `ge_gratistimmar()` (1–40 åt gången, `is_admin()`). **Med en orsak
+  och en månad** (2026-10-21, `timmar_med_orsak`, Leo: "timmar, månad, obligatorisk orsak, egen oföränderlig
+  loggrad"): `ge_gratistimmar(familj, timmar, orsak, månad)` kräver orsaken (3–500 tecken) och månaden timmarna avser
+  (september 2026 till nästa månad, utan månad den innevarande), och skriver en rad i `timmar_insatta` som ingen
+  ändrar eller tar bort (orsaken töms när familjen avidentifieras, och `profiles.raderad_at` står fast när den satts:
+  `profiles_raderad_star_fast`, granskningen 2026-10-21); den gamla med två argument kör ingen inloggad.
+  Månaden säger vad timmarna avser, inte när de går ut. Raden Första timmen gratis i familjens panel är borta
+  (samma dag, Leo); timmen själv följer den första planen som förut. De är
   en rad i `klippkort` med erbjudandet `gratis` (katalograden säljs aldrig), utan betalning (`betalt_ore`
   0, `betald_at` null) och utan villkor först: en gåva är inget köp. De gäller i 60 dagar och dras först,
   med planens gratis timme, före köpta timmar (Leo: "de används först av alla timmar"; ordningen är
@@ -179,17 +186,42 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   Den gäller i 60 dagar från den dagen (2026-10-13, `intern.tipstimmar_kvar`).
   Den står utanför taket för första timmen. **Den står i timbanken** (2026-10-13, Leo: "timmarna läggs
   in i timbanken för familjerna"): Er timbank och Profil → Timbanken visar den med sista dagen, och den
-  dras först, som en gratis timme (`forsta_timmen_bjuds`). **En studiehjälpare får 300 kr i
-  lön, inklusive semesterersättning** (Leo samma dag: "bonus redovisas som lön", och "300kr är inklusive
-  semesterersättning": lönearten i Fortnox är inte semestergrundande, som timlönens) när vi tar in den som sökt med hens kod
-  (`tutor_profiles.status` blir `approved`; ansökan hittas på adressen): en LAGRAD rad i `tipsbonus`, en
-  per ny studiehjälpare och bara om hen var ny när hen sökte, med eget läge (Utkast, Godkänd, Utbetald,
-  Struken) under Löner, i lönefilen på en egen löneart (`foretagsfakta.lonart_tipsbonus`), aldrig i
-  `payouts`; beloppet är `intern.tipsbonus_ore()` och ändras med villkoren, och flaggan `tipsbonus`
-  stänger av. Förut fick studiehjälpare ingen ersättning, med flit. Den som tipsat ser antal, aldrig
-  vilka. **Koder** i adminvyn (`koder_lage`, `nextrum-admin-koder.js`) har allas kod och skapar de som
+  dras först, som en gratis timme (`forsta_timmen_bjuds`). En studiehjälpares kod är hens
+  värvningskod och ger **värvningsbonusen** (nedan; från 2026-10-13 till 2026-10-21 bonusen för tips i
+  `tipsbonus`, som står kvar som historik). En familj som tipsat ser antal, aldrig vilka. **Koder** i adminvyn (`koder_lage`, `nextrum-admin-koder.js`) har allas kod och skapar de som
   saknas, utom åt admins. `/affisch` tar ingen fritext ur adressen, och QR-koden går till formuläret,
   inte till en områdessida.
+- **Värvningsbonusen** (2026-10-21, `varvningsbonus`; Leo: "en studiehjälpare som värvar en kompis får en bonus på
+  300 kr brutto, inklusive semesterersättning, när kompisen har fått sitt studiehjälparkonto. Systemet betalar INGENTING
+  ut"): bonusen är underlag för lönen, aldrig en utbetalning och aldrig i `payouts`. **Koden** är studiehjälparens
+  tipskod, som databasen skapar när hen blir godkänd (`intern.tipsbonus_vid_intag`; en ny kod har åtta tecken ur
+  `gen_random_bytes`), och den gäller bara medan ägaren är godkänd och kontot inte raderat. Jobbansökan tar den i fältet
+  Kod från en studiehjälpare och ur `?kod=`, frågar `prova_jobbkod()` (gäller eller inte, aldrig vems; tio okända i
+  timmen per IP-nummer, Cloudflares och aldrig ett värde klienten satt först i X-Forwarded-For, som en HMAC, och högst
+  500 okända i timmen totalt) och skickar ansökan utan en kod som inte gäller, med ett besked. Databasen sätter
+  `applications.kod` och värvaren (`varvad_av_profil_id`) när ansökan kommer in; bara admin ändrar koden, värvaren
+  följer den, och när bonusen tjänats in står koden fast. **En rad** i `varvningsbonus` per ansökan med en giltig kod:
+  `vantar`, eller `annullerad` med skälet när den som söker inte är ny (sin egen kod, har sökt förut, hade ett konto).
+  **Bonusen följer ansökan som blev kontot** (`applications.konto_id`; granskningen 2026-10-21): en väntande rad
+  annulleras med skälet när dess ansökan avböjs, gallras eller tas bort, när en annan ansökan från samma person blir
+  kontot och när admin byter eller tar bort koden (då med en ny rad åt den nya värvaren), och att personen är ny prövas
+  igen när bonusen tjänas in (kontot fanns före ansökan, en tidigare ansökan, den egna koden). Högst en levande bonus per
+  ansökan och per konto, och en intjänad per person. Den blir `intjanad` **exakt en gång**, under radlås,
+  när händelsen i `varvning_installning.utlosare` inträffar för kompisen (`konto_skapat` som förval: godkänd i poolen
+  eller kopplad av Utbildning hållen; `prov_godkant`; `forsta_pass_genomfort`), med värvaren godkänd och flaggan
+  `tipsbonus` på (annars annulleras den med skälet). Bruttot fryses när raden skrivs och delningen när den tjänas in:
+  grund `round(brutto / (1 + procent/100))`, semester resten, 26 786 + 3 214 = 30 000 öre. **`varvning_installning` är
+  det enda stället** för beloppet, procenten och händelsen (VARVNINGSBONUS_BRUTTO_KR, SEMESTERERSATTNING_PROCENT,
+  VARVNINGSBONUS_TRIGGER), och en ändring där rör aldrig en intjänad rad; ändras händelsen ändras policyn och villkoren
+  med. Lägena går bara framåt (`vantar` till `intjanad` eller `annullerad`, `intjanad` till `utbetald` eller
+  `annullerad`; `intern.varvningsbonus_vakt`), ingen klient skriver och raden raderas aldrig. Admin markerar utbetald med
+  lönemånaden och annullerar med ett skäl, bara genom `varvningsbonus_utbetald()` och `varvningsbonus_annullera()`
+  (sektionen Värvningsbonus, med filter, summering per värvare och månad och CSV, och rutan under Löner), och lönefilen
+  tar de intjänade på lönearten `lonart_tipsbonus`. Värvaren ser under Värva en kompis bara läget och, när kontot finns,
+  förnamnet (`mina_tips()`), och får ett mejl när bonusen tjänas in, med beloppet och inget om kompisen. Villkoren för
+  bonusen är punkten `#tips` i användarvillkoren, omskriven för den i versionen 2026-10-22 (Leo: "Fixa nr 6"; länken i
+  `CFG.VARVNING_VILLKOR_URL`), och ändras med händelsen, beloppet och det värvaren ser. Revisorn avgör anställningen,
+  avgifterna och semesterersättningen före första utbetalningen.
 - **Materialbanken** (2026-10-02): bladen är våra egna. Nationella prov och läromedel kopieras aldrig in,
   banken länkar till provgruppernas egna sidor (`verktyg/bladen/lankar.py`), NP-träningen är egna
   uppgifter i provens stil som säger det på bladet, och genomgångarna är egna faktablad, aldrig bokens text.
@@ -200,8 +232,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används
   (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad, och `fler_*.py`, Fas 23.5).
-- **Intaget** (2026-10-06): vi skapar familjens och studiehjälparens konto (Ta in familjen, Ta in i
-  poolen, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
+- **Intaget** (2026-10-06): vi skapar familjens och studiehjälparens konto (Ta in familjen, Utbildning
+  hållen som hette Ta in i poolen till 2026-10-21, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
   ruta som inte går att stänga (`user_metadata.valkommen = 'losenord'`, `NXStudie.lösenordFörst`).
   **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
   ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
@@ -227,8 +259,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   kurser" är vad matchningen letar efter, inget krav för att söka.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
-  kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
-  poolen frågar först om det saknas.
+  kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Utbildning
+  hållen frågar först om det saknas.
 - **Intervjumejlet** (2026-10-21): när admin skickar en ansökan vidare till intervju köar databasen Leos
   mejl "Du går vidare till intervju" till den som sökt, en gång per ansökan (`intern.ansokan_intervjumejl`;
   `applications.intervju_mejl_skickat_at` sätter bara databasen), aldrig till en avböjd och aldrig när ett
@@ -238,7 +270,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   rörs inte. Texten är Leos, i `intervju.ts` och i adminvyn (`INTERVJU_MEJLET`, som visar mejlet
   innan steget sätts), och `kolla-mejltexter.py` håller dem lika. **Mejlet är kallelsen** (2026-10-20, Leo: "lägg in
   bokningslänken i det automatiska meddelandet"): det har länken till bokningssidan, där hen bokar en tid själv, och
-  adressen är `INTERVJU_BOKNING_URL`, som kontrollen också prövar (mallen läser inte configen). Ansökans tack är "Tack, din ansökan är
+  adressen är `INTERVJU_BOKNINGSLANK`, som kontrollen också prövar (mallen läser inte configen). Ansökans tack är "Tack, din ansökan är
   skickad! Vi hör av oss inom 24 timmar."
 - **Utbildningsprovet i studiehjälparvyn** (2026-10-21): en godkänd studiehjälpare gör provet vid första
   inloggningen, direkt efter lösenordet och före villkoren och vyn (`NXProvet`; 2026-10-20, Leo: "först välja
@@ -299,7 +331,16 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (`kod_statistik`, `partner_statistik`, `kodens_anvandningar`) är superadminens och räknar inte testbetalningar utom på
   begäran. Adminvyn: Koder → Rabattkoder och Partnerkoder. Studievyn: rutan Kod till en plan under Erbjudanden, och ingen ruta i
   Boka pass. **Hur många gånger** sätts per kod, totalt och per familj (`max_anvandningar`, `max_per_familj`), och ett
-  återbetalt köp ger tillbaka sin gång. Prövningen har ett tak (avsnitt 6). Villkoren nämner inga koder: en kods villkor
+  återbetalt köp ger tillbaka sin gång. **En rabattkod gäller en gång per familj, och aldrig den egna** (2026-10-21,
+  `koderna_agare_och_en_gang`, Leo: "Man kan inte använda sin egen kod. En familj kan använda samma kod högst en gång"):
+  databasen sätter `max_per_familj` 1 på varje rabattkod (`rabattkoder_en_gang`, villkoret `rabattkoder_rabatt_en_gang`),
+  och en partnerkod behåller gränsen admin satt, för den räknar föreningens volym. En kod kan vara utlagd hos en familj
+  eller en studiehjälpare (`rabattkoder.agare`, som triggern `rabattkoder_agare` prövar), och `intern.rabattkod_prova`
+  nekar ägaren koden. **Två kassor samtidigt** (granskningen 2026-10-21): familjens egna köp med koden den senaste timmen
+  räknas mot gränsen (`intern.klippkort_rabatt`), så den andra kassan får inte koden, och betalas två köp ändå blir det en
+  uppgift (`kod_for_manga`). Statistiken räknar köpets rad i liggaren, aldrig ett syskontillägg i samma betalning
+  (`intern.betalningens_kopdel`). Adminvyn har sök, lägen, ägaren och en förhandsvisning av rabatten på varje plan (`rabattPå`, samma
+  regel som `rabattenPa`). Prövningen har ett tak (avsnitt 6). Villkoren nämner inga koder: en kods villkor
   ska stå där den delas ut (avsnitt 11). Historiken (koden på ett pass, 2026-10-13 till 2026-10-21): `minne/betalning.md`.
 - **Familjerabatter** (2026-10-15, Leo: "egna rabattkoder som bara vi har tillgång till ... 10 kr billigare på alla
   timmar som köps tex ... tills vi tar bort rabatten. ... de ser bara att de har rabatt vid checkout men inte annat"): våra
@@ -348,6 +389,15 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   truncate för alla, bara det Stripe ändrar efteråt (återbetalt, läget, avgift) får ändras, ingen inloggad skriver,
   och en familj med en rad avidentifieras i stället för att raderas (`on delete restrict`). En betalning som inte
   kunde skrivas ner (två kassor) står där också (`betalning_utan_rad`). Liggaren och Kortet står under Betalningar.
+  **En betalning döljs eller annulleras utan att röras** (2026-10-21, `betalningar_dolda`, Leo: "riktiga betalningar
+  raderas inte utan markeras annullerad/dold"): en rad i `betalningar_dolda`, skriven bara av databasens ägare
+  (`supabase/scripts/rensa-leo-testbetalning.sql`, som bara tar ett konto med en adminroll och märker en riktig betalning
+  bara med `markera_riktiga => true`; tjänstekontot skriver inte heller där), som aldrig ändras eller tas bort. `test` (bara på en betalning med
+  `skarp = false`) döljer den i Liggaren, under Dolda; `annullerad` märker en riktig betalning, som också döljs i
+  standardvyn (Leo: "märkas annullerad och döljas i standardvyn") men står kvar i summorna tills den betalats tillbaka
+  i Stripe. **Liggaren är kort** (samma dag, Leo: "Snyggare kortsektion i
+  betalningsvyn"): ett kort per betalning med beloppet, läget som kantens färg, familjen, typen, koden, dagen och
+  raderna betalningen betalade (`betalningsrader` när de finns), bara visning.
 - **Köpvillkoren i kassan** (2026-10-21, i drift sedan 2026-10-20; texten sedan samma kväll, Leo: "fixa"): varje kassa
   föregås av en ruta med vad som köps, priset och kryssrutan för köpvillkoren (`NXStudie.kassansVillkor`, länken
   `CFG.KOPVILLKOR_URL`), och `stripe-checkout` nekar allt utom Ta bort kortet utan `villkor: true` och sparar krysset
@@ -360,6 +410,30 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   uppgift till oss; admin försöker igen under Betalningar → Kortet. Passet avbokas aldrig för att kortet nekas.
   Inställningarna står i `betalning_installning`, och `sen_avbokning_timmar` är låst på 0 som `kortsparr`: villkoren
   har ingen avbokningsavgift. Databasen väcker `stripe-reservation` direkt när ett pass har något att göra nu.
+- **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, strömbrytaren `syskonskuld` AV; Leo: "Tillägget
+  blir en skuld på familjen när passet är hållet. Familjen kan betala skulden när hen vill under Betalningar, eller så
+  läggs den som en egen rad i nästa betalning"): med strömbrytaren på väljer familjen vilka syskon som är med
+  (`bookings.extra_barn`, `bokning_barn`), passet har `antal_barn = 1` (passets pris och timmarna är ett barns), och
+  tillägget är en egen post (`tillagg_poster`, en per pass, beloppet fryst vid bokningen: extra barn gånger tjänstens
+  `extra_personer_ore` gånger minuterna, aldrig ur anropet). Posten är `bokad`, blir `upplupen` när passet hålls eller
+  familjen avbokar ett bekräftat pass inom `sen_avbokning_timmar`, och `frigjord` annars; bara triggrarna och
+  databasens funktioner byter läge, och ingen klient skriver. Skulden betalas med Betala tillägg nu (`stripe-checkout`
+  med `skuld: true`) eller som en egen rad i nästa köp av timmar (plan, Fyll timbanken, timmar till planen), aldrig i
+  Betala nu för ett pass (varför: `minne/betalning.md`). En post står i högst ett öppet försök (`tillagg_forsok`,
+  familjens lås och radlås), bara webhooken sätter den betald, och en rabattkod räknas aldrig på tillägget. Barnen,
+  längden och antalet står fast efter bokningen, också för admin. Spärren (över `max_upplupet_ore` eller en post äldre
+  än `sparr_efter_dagar`) stoppar extra barn i databasen, aldrig ett pass för ett barn. Gränserna och villkorens
+  version står i `tillagg_installning` (`'utkast'` tills Leo skrivit texten), familjens ja i `tillagg_godkannanden`.
+  **Strömbrytaren går inte på med utkastet**, och slås den på blir tre barn 537 kr i timmen i stället för 468: sidorna,
+  villkoren och Siffror nedan ändras i samma ändring. Betalningens delar står i `betalningsrader`, som aldrig raderas.
+  **Granskningen 2026-10-21**: en kassa åt gången (en äldre kassa för samma skuld går ut hos Stripe innan en ny öppnas,
+  och har den redan betalats öppnas ingen: `forsoketsKassa`); ett försök som aldrig kan bli betalt (köpet betalt i en
+  annan kassa, fel belopp, dubbelt) släpps; Klarna som väntar känns igen på försöket, inte på kassan, blir en uppgift
+  efter en vecka och släpps av admin med en orsak (Släpp betalningen, `tillagg_forsok_slapp_admin`); ett hållet pass som
+  avbokas medan posten står i en betalning blir en uppgift, och posten blir frigjord om betalningen släpps
+  (`avbokad_fran`); familjen flyttar inte ett bekräftat pass med syskon inom gränsen för sen avbokning; ett barn som är
+  syskon på ett kommande pass raderas inte (`syskon_kommande`), och godkännandet raderas med kontot. Tilläggen räknas
+  på betalningsdagen i Betalningar, Månadens ekonomi och bokslutet (`manad_lage` → `syskon`).
 - **Barnets chatt** (2026-10-06): barnet och studiehjälparen skriver i `barn_meddelanden`, bara
   genom funktionerna (`barn_chatt_skriv()`, `barnchatt_skriv()`, med tak); föräldern läser men
   skriver aldrig, och admin läser bara genom `barnchatt_las()` (loggat). Att föräldern och
@@ -389,7 +463,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips, i timbanken i 60 dagar: `startrabatt` och `rabattkod = 'TIPS'` på passet |
-| tipsbonus | 300 kr i lön, inklusive semesterersättning, till en studiehjälpare för ett tips som vi tagit in (`tipsbonus`), aldrig ett underlag |
+| värvningsbonus | 300 kr brutto, inklusive semesterersättning, till en studiehjälpare vars kod en kompis sökt jobb med, intjänad när kompisen fått sitt konto (`varvningsbonus`); underlag för lönen, aldrig en utbetalning och aldrig ett underlag. Hette tipsbonus (`tipsbonus`) till 2026-10-21 |
 | timbanken | familjens köpta timmar (en plan eller Fyll timbanken), gratistimmar och sparade minuter; pass för pass går inte genom den |
 | gratistimmar | timmar vi sätter in i familjens timbank utan kostnad (`klippkort` med erbjudandet `gratis`); 60 dagar, dras först med planens gratis timme. Inte första timmen eller tipstimmen |
 | familjerabatt | kronor av per timme för en familj vi satt en av våra koder på (`familjerabatter`, `familjens_rabatt`); aldrig en rabattkod, och familjen ser aldrig koden, bara priset |
@@ -399,9 +473,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | timmar till planen | Köp till timmar: 1–20 timmar till en plan som gäller, till planens timpris, som går ut med planen (`klippkort` med erbjudandet `plan_extra` och `till_plan`; Välj själv under Er timbank) |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
+| syskontillägg | 69 kr per extra barn och timme som en skuld efter passet (`tillagg_poster`, typen `syskon` i liggaren), med `syskonskuld` på; aldrig övertid, som är `pass_tillagg` och typen `tillagg` |
+| upplupet tillägg | familjens obetalda syskontillägg för hållna pass (`tillagg_skuld()`), som betalas med Betala tillägg nu eller i nästa köp av timmar |
 ### Siffror som måste stämma överallt
 - **399 kr/tim** utan bindning (`PRIS_PER_TIMME` och läxhjälpens rad i `tjanster`, 2026-10-08), och
-  det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537).
+  det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537), så länge
+  `syskonskuld` står av. Med den på är det 69 kr per extra barn och timme, som en skuld efter passet (tre barn 537),
+  och då ändras sidorna, villkoren och den här raden samtidigt (avsnitt 1). Priset står i `tjanster`
+  (`extra_personer_ore`) och i `PRIS_SYSKON_TILLAGG_KR_PER_TIMME`, som hette `PRIS_EXTRA_BARN` till 2026-10-21.
   **Paketen** (planerna) kostar 379 kr i timmen, en månad i taget: 5 % av 399 nedåt till hel krona. De
   binder inte: villkoren säger ingen bindningstid och att det som är kvar betalas tillbaka, så sajten säger
   "en månad i taget" eller "obundet", aldrig "bindning" (Leo 2026-10-08; en riktig bindning kräver nya villkor).
@@ -621,15 +700,25 @@ databasen bara släpper fram för en superadmin eller en behörighet ritas efter
 Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-10-05), och att visa
 sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
 (`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
-lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka.
-**Ansökningarnas Intervju är ett val, inte ett läge** (2026-10-15, Leo: "i intervjudelen ska namn bara
-finnas där som jag har klickat i"): bara den som skickats vidare (`till_intervju_at`: Skicka vidare till
-intervju på raden, i panelen under läget och i Rekryteringen, eller ett bokat möte), aldrig läget
-Kontaktad. Läget (Ny, Kontaktad, Godkänd, Avböjd) sätter Leo själv, och Skicka vidare rör det inte.
+lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka. En dag ur en tidsstämpel är
+Stockholms (`sthlmDag` i kärnan, som `kortDatum` går genom), aldrig `slice(0, 10)` av UTC (granskningen 2026-10-21).
+**Ansökningarnas steg** (2026-10-21, `ansokningarnas_steg`, Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. En
+ansökan finns i exakt ett läge åt gången"): `applications.steg` är genererad ur det ansökan bär (`intern.ansokan_steg`:
+`konto_id` eller läget Godkänd, intervjun hållen, `till_intervju_at`), och `intern.ansokan_steg_vakt` släpper bara Ny till
+Intervju, tillbaka till Ny (Ångra intervju), Intervju till Utbildning och Utbildning till Konto skapat, det sista bara genom
+`ansokan_utbildning_hallen()`, för admin också; en ny ansökan börjar i Ny, och medan den är Avböjd står stegets kolumner
+still (granskningen 2026-10-21). Avböjd är inget steg utan ett beslut: egen flik, och det går i varje steg.
+Flikarna är Nya ansökningar (bara Ny), Intervju, Utbildning, Konto skapat och Avböjda, med antal. Panelen börjar med steget
+och dess knappar (`nästaSteg`): Intervju har tre, Skicka intervjulänk igen (`ansokan_intervjulank_igen()`, notiskön, högst
+en gång i tio minuter), Ångra intervju och Gå vidare till utbildning. **Utbildning hållen** är det som var Ta in i poolen:
+`bjud-in` skapar kontot med ansökans adress, och funktionen kopplar det (`konto_id`, unikt åt båda hållen), godkänner
+profilen och sätter utbildad och Godkänd i en transaktion; samma konto igen gör ingenting. Fliken Rekryteringen, läget
+Kontaktad som val, Boka digitalt möte, Skicka utbildningen och Markera utbildad är borta. Varje steg står i
+`ansokan_steg_logg`, som aldrig ändras och går med ansökan (utom att `andrad_av` blir null när den personen raderas). Skriv till hen står vid adressen och flyttar ingen.
 **Intervjun bokas på en bokningssida** (2026-10-20, Leo: "så att jag bara kan skicka ut länk"): ett bokningsschema i
-Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNING_URL`). Länken står i mejlet Skriv till hen, som då
-också skickar en ny till Intervju; Google mejlar tiden och Meet-länken, vyn läser aldrig kalendern, och Boka möte mejlar
-den en gång till. Policyn lovar att bokningen tas bort för hand senast ett år efter intervjun.
+Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNINGSLANK`, som hette `INTERVJU_BOKNING_URL` till
+2026-10-21, och hur det skapas står överst i nextrum-config.js; ingen OAuth: det är en länk). Länken står i intervjumejlet; Google mejlar tiden och Meet-länken, och vyn läser aldrig kalendern.
+Policyn lovar att bokningen tas bort för hand senast ett år efter intervjun.
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
 Familjernas och studiehjälparnas sidor behåller `mailto:`. **Till den som sökt jobb skickas mejlet härifrån** (2026-10-20,
@@ -713,6 +802,23 @@ Detaljer: `minne/grunden.md`.
   `har_rapport`, varje rad bär `underlag_rader`, och luckor redovisas i stället för att fyllas.
 - Ett schema som står av ser ut som ett som fungerar: jobben syns under System → Automationer,
   utan sina kommandon. Flyttas `manadskorning` flyttas `manadskorning-svar` med.
+- **Syskontillägget** (2026-10-21): `tillagg_poster`, `tillagg_forsok`, `tillagg_forsok_poster` och `betalningsrader`
+  raderas aldrig (triggrar mot delete och truncate, också för ägaren), och en post byter bara läge längs de tillåtna
+  övergångarna (`tillagg_poster_vakt`). Varje betalning får en rad i `betalningsrader` vid commit om ingen skrev en
+  (`betalningar_rader`, en deferred constraint trigger). Jobben `tillagg-forsok` (var 15:e minut, släpper ett försök
+  efter 35 minuter, och gör en uppgift av ett som väntat på Klarna i en vecka) och `tillagg-paminnelse` (en gång om
+  dagen, dagarna räknade i Stockholms tid). Ett försök släpps av kassan, webhooken, jobbet eller admin med en orsak, och
+  posterna i det blir upplupna igen genom `intern.tillagg_poster_tillbaka`, utom ett hållet pass som avbokats.
+  `service_role` skriver inte direkt i tilläggets tabeller, `timmar_insatta`, `ansokan_steg_logg`, `betalningar_dolda`
+  eller `varvningsbonus`: edge-funktionerna läser och skriver genom databasens funktioner (granskningen 2026-10-21).
+- **Värvningsbonusen** (2026-10-21): `varvningsbonus` raderas aldrig (triggrar mot delete och truncate), lägena går
+  bara framåt (`intern.varvningsbonus_vakt`), och bara databasen skriver: raden när ansökan kommer in
+  (`applications_varvning`), intjänandet (`intern.varvning_prova`, från triggrarna på `tutor_profiles`,
+  `applications.konto_id`, `prov_studiehjalpare` och `lesson_reports`, och för alla väntande när händelsen i
+  `varvning_installning` byts) och admins två funktioner. En rad skapas bara som `vantar` eller `annullerad`
+  (`varvningsbonus_ny`), och unikheten gäller bara levande rader (en per ansökan och konto som inte är annullerad, en
+  intjänad eller utbetald per person). Personen räknas som en HMAC av adressen (`intern.varvning_epost_nyckel`: gemener,
+  utan +tagg, och Gmail utan punkter) med `notis_konfig.barn_nyckel`: byts nyckeln räknas en tidigare värvad som ny.
 - **Gallringen**: lagringstiderna hålls av databasen (`DATASKYDD.md` är registret). Anmälningar
   avidentifieras, konton raderas aldrig av sig själva, ett jobb som fastnat blir en uppgift, och
   `landningssida` bär bara våra utm-taggar. Ett nytt rekryteringssteg med tidsstämpel ska in i
@@ -769,7 +875,7 @@ Detaljer: `minne/grunden.md`.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
-  möteslänken är https, ett steg mejlas en gång, och Godkänd som läge är inte Ta in i poolen.
+  möteslänken är https, ett steg mejlas en gång, och Godkänd sätts bara av Utbildning hållen (2026-10-21).
   Avböjd mejlar ett nej (2026-10-05) men inte genast: tidigast en halvtimme senare, aldrig 20–9,
   och inte om läget hunnit bytas. Avböjd visar mejlet först, och texten står i mallen och i
   adminvyn (`kolla-mejltexter.py`).
@@ -777,8 +883,12 @@ Detaljer: `minne/grunden.md`.
   utbildad mejlar sista steget, en gång och efter en fråga.
   Intervjumejlet (2026-10-21) är det enda till den som söker som går genom notiskön: en rad med
   `ansokan_id` (villkoret `notis_utskick_en_mottagare` kräver exakt en av `mottagare`, `barn_id` och
-  `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i intervju och är
-  inte avböjd), och `notis-ko` mejlar den från info@ (`intervju.ts`).
+  `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i steget Intervju
+  och är inte avböjd, sedan 2026-10-21 också med `steg`), och `notis-ko` mejlar den från info@
+  (`intervju.ts`). Skicka intervjulänk igen köar samma mejl med en egen nyckel (`ansokan_intervju:<id>:igen:<tid>`).
+- **Värvningsbonusen** (2026-10-21) mejlar värvaren en gång per bonus när den tjänas in (typen `varvningsbonus`,
+  nyckeln `varvningsbonus:mejl:<id>`, valet under Profil → Notiser): beloppet och att bonusen hanteras enligt
+  villkoren, aldrig kompisens namn. Ett mejl som inte går att köa tar aldrig bonusen med sig (`notis_fel`).
 
 Detaljer: `minne/databasen.md`, `minne/notiser.md`.
 
@@ -861,6 +971,16 @@ Detaljer: `minne/sakerhet.md`.
   begärda); den kastar varje fel så att Stripe försöker igen, och en tvist äger läget. Kassan
   tar bara kort, `faktura-utskick` skickar bara underlag och mejlet före statusen, och `google-meet`
   sparar bara öppna rum.
+- **Syskontillägget** (2026-10-21): `stripe-checkout` tar `skuld: true` (Betala tillägg nu, utan kod) och lägger
+  tillägget som en egen rad i ett köp av timmar (`med_tillagg: false` bara när det inte är obligatoriskt); beloppet
+  är databasens (`tillagg_forsok_skapa`), och kassans utgångstid är försökets. `stripe-webhook` skriver betalningen
+  genom `tillagg_forsok_betald` och `klippkort_betald_med_tillagg` (planen och tillägget i en transaktion), släpper
+  försöket vid `checkout.session.expired` och `async_payment_failed`, och fördelar en återbetalning per rad
+  (`_delad/tillagg.ts`). `stripe-aterbetalning` betalar tillbaka en rad (`betalningsrad`), aldrig över den.
+  Granskningen 2026-10-21: kassan har en kassa åt gången per försök (`forsoketsKassa`: en äldre session går ut med
+  `/expire`, och en som redan blivit klar ger 409 med `pagar`), bygger köpets rader med `buntaKassan` och läser
+  regeln som ett fel om den inte går att läsa; webhooken prövar en sen tvisthändelse före tilläggets gren och skriver
+  avgiften för en betalning som bara är tillägg på liggarens rad (`charge.updated`).
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
@@ -929,6 +1049,14 @@ Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
   `verktyg/lokal-databas.sh` (`STOPP=`); driften i en transaktion som rullas tillbaka, hämtad
   med tillägget `http` från en commit.
   I en molnsession: `dockerd &`, och Deno ur npm med en importkarta (`minne/genererat-och-ci.md`).
+- **`verktyg/prova-adminvyn.js`** (2026-10-21) körs inte i CI heller: adminvyn mot PostgREST framför en lokal
+  databas med `prova-adminvyn.sql`, varje sektion, flik och den första panelen, som superadmin, som admin med
+  behörigheter och på en telefon i mörkt läge. Det faller på varje fel i konsolen och varje svar från databasen på
+  400 eller mer, och de andra webbläsarproven, som svarar ur en falsk värld, ser inte de felen. Kör det efter en
+  ändring i adminvyn eller i en policy den läser.
+- **`verktyg/prova-tillagg-samtidigt.sh`** (2026-10-21) körs inte i CI: två psql-sessioner betalar samma skuld
+  samtidigt mot den lokala databasen, och varje post ska stå i exakt ett försök. Kör det efter en ändring i
+  `tillagg_forsok_skapa` eller låsen; `rls-test.sql` kör i en transaktion och kan inte pröva två samtidiga.
 
 Detaljer: `minne/genererat-och-ci.md`.
 
@@ -941,6 +1069,47 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Den oberoende granskningen av del 1–8** (2026-10-21): tre granskare som inte skrivit koden läste hela diffen
+  (databasens skydd, pengaflödet, tidszonen och vyerna) och bevisade sina fynd mot en lokal databas. Allt rättades i
+  samma migrationer, som inte är körda, med prov i `rls-test.sql` (avsnitt 47–52) och `tillagg_test.ts`. Kvar, och
+  äldre än grenen: bokslutet räknar inga köp av timmar, en återbetalning som står som pending räknas som återbetald,
+  och `betalning_tvist` litar på webhookens vakt mot sena tvisthändelser.
+- **Värvningsbonusen** (2026-10-21, `varvningsbonus`, 20261021215000) är byggd men INTE i drift: `notis-ko` från
+  merge-commiten FÖRE migrationen (mallen för `varvningsbonus`; annars blir mejlet ett fel i kön), sedan migrationen,
+  som ger varje godkänd studiehjälpare en kod, flyttar raderna i `tipsbonus` (inga fanns 2026-10-13) och ger de
+  ansökningar som är i gång med en studiehjälpares kod en rad (`DEPLOY-BETALNING.md` 9.24). Villkoren `#tips` är
+  omskrivna för bonusen i versionen 2026-10-22, som Betala nu för med sig och ingen godkänt (Leo: "Fixa nr 6"): när
+  kompisen fått sitt konto, vem som räknas som ny, och att värvaren ser läget och förnamnet; Leo läser dem. Revisorn
+  avgör anställningen, arbetsgivaravgifterna och semesterersättningen före första
+  utbetalningen, och lönearten (`lonart_tipsbonus`) sätts i Fortnox. Juristen har inte läst rad 27 i `DATASKYDD.md`
+  eller policyns nya ord om koden och förnamnet.
+- **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, 20261021214000) är byggt men INTE i drift, och
+  strömbrytaren `syskonskuld` står av: migrationen, sedan `stripe-checkout`, `stripe-webhook`, `stripe-aterbetalning`
+  och `notis-ko` från merge-commiten, i den ordningen (`DEPLOY-BETALNING.md` 9.23). Stripes endpoint får
+  `checkout.session.expired` (utan den släpps ett försök först av jobbet efter 35 minuter). Kvar för Leo: villkorstexten
+  för syskontillägget (en platshållare står i bokningsrutan, länken i `CFG.TILLAGG_VILLKOR_URL`), versionen i
+  `tillagg_installning`, sidorna och villkoren om per extra barn, och sist strömbrytaren. Juristen har inte läst rad 35
+  i `DATASKYDD.md` eller policyns stycke om tillägget. Med strömbrytaren av bokas syskon som förut, och inget pris ändras.
+- **Liggarens markeringar och testbetalningen** (2026-10-21, `betalningar_dolda`, 20261021213000) är byggda men INTE i
+  drift: migrationen och adminvyn, sedan `supabase/scripts/rensa-leo-testbetalning.sql` i SQL Editor, först som den står
+  (dry_run) och sedan med `dry_run => false` om listan stämmer; en riktig betalning märks annullerad bara med
+  `markera_riktiga => true`, och kontot måste ha en adminroll (granskningen 2026-10-21). Skriptet är provat lokalt: torrkörningen, och den skarpa
+  vägen i en transaktion som rullades tillbaka. I driften väntas den dölja Leos testbetalning (en rad, `skarp = false`)
+  och radera ingenting, för rensa-testkonto.sql tog passen och testköpet 2026-10-20.
+- **Insatta timmar med orsak och månad** (2026-10-21, `timmar_med_orsak`, 20261021212000) är byggda men INTE i
+  drift: migrationen och adminvyn, i den ordningen. Före migrationen säger vyn att funktionen med orsak saknas, och
+  ingen gratistimme kan sättas in förrän den körts. Inga gratistimmar fanns i driften 2026-10-16, så ingen rad saknar
+  orsak. Juristen har inte läst rad 34 i `DATASKYDD.md` eller policyns nya ord om orsaken.
+- **Kodernas ägare och en gång per familj** (2026-10-21, `koderna_agare_och_en_gang`, 20261021211000) är byggda men INTE
+  i drift: migrationen och adminvyn, i den ordningen (vyn skapar en kod utan ägare också före migrationen). Den sätter
+  `max_per_familj` 1 på alla rabattkoder som redan finns; i driften fanns bara `TIPS`, som aldrig är aktiv. Ingen
+  edge-funktion ändras: kassan frågar `kod_pa_planen()`, som svarar ur `intern.rabattkod_prova`. Juristen har inte läst
+  den nya meningen på rad 33 i `DATASKYDD.md` eller policyns om koden som är er.
+- **Ansökningarnas steg** (2026-10-21, `ansokningarnas_steg`, 20261021210000) är byggda men INTE i drift: migrationen
+  och adminvyn, i den ordningen (vyn räknar steget själv före migrationen, men Utbildning hållen och Skicka
+  intervjulänk igen kräver funktionerna). Migrationen kopplar de ansökningar som redan tagits in till kontot med
+  samma adress; en som inte har ett sådant konto står ändå i Konto skapat, för läget är Godkänd. Ingen edge-funktion
+  ändras. Juristen har inte läst raden om stegen i `DATASKYDD.md` (rad 10).
 - **Betala nu, Klarna, planerna i 30 dagar och NexLäx enklare och ljus** (2026-10-21) är byggda men INTE i drift:
   migrationen `betala_nu` (20261021200000) och `stripe-checkout` (SESSIONSFORM 11), `stripe-webhook`,
   `stripe-reservation`, `notis-ko`, `drift` och `ekonomi` från merge-commiten, i den ordningen efter merge
@@ -1266,7 +1435,7 @@ Detaljer: `minne/grunden.md`.
   frågan igen vid nästa inloggning; ingen hade godkänt 2026-10-16, ingen familj hade en rabatt och ingen valet av första
   timmen pass för pass. Juristen har inte läst den nya punkten.
 - **Bokningssidan för intervjun och mejlet till den som söker** (2026-10-20) är i drift sedan samma dag (Leo: "merge
-  och driftsätt"): PR #306 mergades (864e49e), Vercel lade ut sajten (configen med `INTERVJU_BOKNING_URL`, Rekryteringen och
+  och driftsätt"): PR #306 mergades (864e49e), Vercel lade ut sajten (configen med `INTERVJU_BOKNINGSLANK`, Rekryteringen och
   policyn på båda språken, kontrollerat från databasen mot nextrum.se), och `ansokan-mejl` v1 gick ut från merge-commiten,
   hämtad tillbaka och byte för byte lika i alla tio filer. Röktest från databasen: preflighten svarade `ok` ur funktionens
   egen kod, och ett anrop utan inloggning 401. Ingen migration. Inget riktigt mejl är skickat än. Kvar: ett första mejl

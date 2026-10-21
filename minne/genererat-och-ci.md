@@ -483,13 +483,51 @@ fäller ut passen med dag, klocka och studiehjälpare, att Skapa nu torrkör
 i bakgrunden och visar vad innan det skarpa anropet, familjens panel,
 Månadens ekonomi, en telefon, och samma rader med schemat av.
 
+### Röktestet av adminvyn mot en riktig databas (2026-10-21)
+Leo: "Öppna varje sektion i adminvyn i testmiljön. Läs konsol- och
+nätverksfel, SQL/RLS-fel och trasiga knappar. ... Lägg till ett
+regressionstest som öppnar varje adminsektion och misslyckas vid
+konsolfel." `verktyg/prova-adminvyn.js` gör det mot riktiga tabeller: de
+andra webbläsarproven svarar ur en falsk värld, där en kolumn som inte
+finns, en funktion utan EXECUTE eller en policy som nekar aldrig syns.
+
+    PORT=54331 NAMN=nextrum-adminprov verktyg/lokal-databas.sh bygg
+    PGPASSWORD=postgres psql -h localhost -p 54331 -U postgres -d postgres -f verktyg/prova-adminvyn.sql
+    PORT=54331 NODE_PATH="$(npm root -g)" node verktyg/prova-adminvyn.js [mapp för bilder]
+
+En egen databas (`PORT`, `NAMN`), så att datan inte syns i `rls-test.sql`.
+Provet sätter `authenticator`s lösenord, startar PostgREST
+(`postgrest/postgrest:v12.2.3`, `--network host`, port 54332) och tar bort
+den efteråt (`BEHALL=1` låter den stå). Inloggningen är en JWT signerad med
+PostgREST:ens hemlighet för en admin i datan; REST går vidare till
+PostgREST med den, Auth svarar ur provet, och edge-funktionerna svarar 404
+som en funktion som inte är driftsatt. Varje sektion i menyn, varje flik i
+den och den första panelen med sina flikar, som superadmin, som admin med
+behörigheter (leads, användare, bokningar, rapporter, matchning, godkänna)
+och på en telefon i mörkt läge, där ingenting heller får göra sidan bredare
+än skärmen (en bred tabell i en ruta som rullar i sidled är med flit).
+Provet faller på fel i konsolen, sidfel, en fil som saknas och varje svar
+från databasen på 400 eller mer, med databasens text. Provat 2026-10-21:
+med `select` på `leads` borttagen föll fem prov med "permission denied
+for table leads"; med rättigheterna på plats 128 av 128.
+
+Det första som gick (2026-10-21) hittade inga fel från databasen eller i
+konsolen. Det som rättades den dagen var det adminvyn visade fel: märkena i
+Liggaren och Kortet bar klasserna `klar`, `pa` och `fel`, som ingen regel
+har, och var grå i båda lägena; Liggarens och Kortets tre rutor stod i fyra
+kolumner med en tom; och Kortet sa att kortet reserveras två dagar före
+passet, också när strömbrytaren `kortreservation` står av (Betala nu).
+
 ### Webbläsarprovet för ansökan under 18, nejet och det admin sett (2026-10-05)
 `verktyg/prova-ansokningar.js` är byggt som de två nedan (egen port, 8963):
 vårdnadshavarens fält i formuläret på båda språken och vad som skickas,
-reserven när kolumnen saknas, rutan som visar nejet innan läget blir Avböjd,
-godkännandet i ansökan, frågan i Ta in i poolen, och att siffran vid
-Ansökningar och Intresseanmälningar går bort när sektionen visats, med och
-utan tabellen `admin_sett`.
+reserven när kolumnen saknas, rutan som visar nejet innan ansökan avböjs,
+godkännandet i ansökan, och att siffran vid Ansökningar och
+Intresseanmälningar går bort när sektionen visats, med och utan tabellen
+`admin_sett`. Sedan 2026-10-21 också ansökningarnas steg (flikarna med antal,
+Intervjus tre knappar, Ångra, Utbildning hållen med och utan konto på
+adressen, och frågan om vårdnadshavarens godkännande där), Skriv till hen
+vid adressen och vyn före migrationen.
 
 ### Webbläsarprovet för utbildningsprovet i studiehjälparvyn (2026-10-21)
 `verktyg/prova-utbildningsprovet.js` (egen port, 8978) är byggt som
@@ -670,3 +708,58 @@ raderas, prövningen i svensk tid, användningen vid betalningen, familjens part
 som når vad och statistiken med och utan testbetalningar. `prova-koder.js` provar flikarna under Koder
 (planskoderna) med ett partnernamn som bär en `<img onerror>`, och `prova-barnforslag.js` att Boka pass och
 granskningen inte har någon ruta för en kod och att Fyll timbanken aldrig visar ett pris med kod.
+
+### Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21)
+`_delad/tillagg.ts` är det webhooken och kassan gör med tillägget (beloppet, raden i kassan, utgångstiden,
+buntningen, fördelningen av en återbetalning per rad och händelserna), med databasen inskickad (`TillaggDb`), och
+`tillagg_test.ts` (34) provar beloppen och avrundningen, raden utan kod, utgångstiden, en betald, en som väntar
+(Klarna), en utgången och en misslyckad kassa, samma händelse två gånger, en signatur som inte stämmer, en
+återbetalning per rad ur metadatan (också en som misslyckades och en köprad), och en tvist. I `rls-test.sql` är
+avsnitt 51 (SK, 76 prov) nytt: villkoren och versionen, barnen och taket, att ingen klient skriver, lägena (hållet,
+avslaget, avbokat i tid, sent och exakt 24 timmar), försöken och låsen i en transaktion, betalningen och raderna,
+buntningen, återbetalningen per rad, tvisten, spärren (beloppet och åldern i Stockholms dagar), påminnelsen,
+admins knappar och att barnen, längden och antalet står fast. `verktyg/prova-tillagg-samtidigt.sh` öppnar två
+psql-sessioner mot den lokala databasen och betalar samma skuld samtidigt i tre varv (två flikar, en flik och ett
+köp, två köp): varje post i exakt ett försök, och den andra sessionen väntade på låset. `prova-syskon.js` (port
+8983, 95 prov) provar vyerna mot en falsk Supabase: Boka pass med syskon, livepriset, villkoren första gången och
+krysset, att vyn skickar barnen och aldrig ett belopp, spärren, kortet Upplupet tillägg och Betala tillägg nu,
+banderollerna, tillägget som egen rad i ett köp (obligatoriskt och valfritt), passens barn, strömbrytaren av och
+utan migrationen, telefon och mörkt läge, och studiehjälparens Barnen på passet, med ett barnnamn som är HTML.
+`prova-adminvyn.js` öppnar fliken mot en riktig databas med två poster ur `prova-adminvyn.sql`.
+
+### Värvningsbonusen (varvningsbonus, 2026-10-21)
+I `rls-test.sql` är avsnitt KB omskrivet: med `varvningsbonus` i databasen provar det den nya bonusen (raden när
+ansökan kommer in, delningen 26 786 + 3 214, en gång, den som hade ett konto, flaggan av, att värvaren inte läser
+tabellen men ser listan genom `mina_tips()`, att ingen klient skriver, hindret vid radering och Markera utbetald), och
+utan den de gamla proven för `tipsbonus`. Avsnitt 52 (VB) är nytt: koden av sig själv, `prova_jobbkod()` och taket per
+IP-nummer, att ansökan bär koden och ägaren och aldrig en värvare ur anropet, en ändrad inställning före och efter
+intjänandet, mejlet en gång, samma person med en annan kod, lägena, Markera utbetald och Annullera, egen kod, den som
+sökt förut, värvaren som inte är godkänd, provet och första passet som händelse, att de väntande prövas när händelsen
+byts, och att värvaren följer koden. `prova-varvning.js` (port 8984, 57 prov) provar mot en falsk Supabase
+jobbansökan med och utan kod på båda språken (koden ur adressen, beskedet, att ansökan går in utan en kod som inte
+gäller, och taket), Värva en kompis (beloppet och händelsen ur inställningen, länken, listan med bara läget och
+förnamnet, platshållaren för villkoren, Ersättning) och sektionen Värvningsbonus (filtren, summorna, summeringen per
+värvare och lönemånad, CSV:n, Markera utbetald med lönemånaden och Annullera med skälet, bara genom funktionerna), med
+ett namn som är HTML, telefon och mörkt läge. `prova-adminvyn.js` öppnar sektionen mot en riktig databas med tre rader
+ur `prova-adminvyn.sql` (intjänad genom att kontot godkänns, väntande, och annullerad för ett konto som fanns före),
+`prova-koder.js` provar Markera utbetald i Löner, och `prova-barnkonton.js` att en admin med behörigheter aldrig
+hämtar bonusarna eller inställningen.
+
+
+### Granskningen (2026-10-21)
+Tre granskare som inte skrivit koden läste hela diffen (databasens skydd, pengaflödet, tidszonen och vyerna) och
+bevisade sina fynd mot en lokal databas, varje gång mellan `begin` och `rollback`. Proven för rättelserna:
+`rls-test.sql` fick 31 prov till (AS 3, KÄ 3, TI 1, SK 14, VB 10) och två ändrade (fel belopp släpper nu försöket,
+och tvisten provas före återbetalningarna, för en helt återbetald betalning sätts inte längre i tvist); hela filen
+gick 2106 av 2106 mot en databas byggd ur alla 220 migrationer. Ett av proven kör som `service_role` och visar att
+tjänstekontot inte skriver direkt i tilläggets tabeller, `timmar_insatta` eller `ansokan_steg_logg`, men att
+`tillagg_forsok_skapa` går. Två äldre prov (16.1 stegen och Intervjumejlet) gick
+genom Avböjd för att hoppa över steg och fångar nu 23514. `tillagg_test.ts` fick 8 prov för en kassa åt gången
+(`forsoketsKassa`, `gamlaKassanGarUt` med en falsk Stripe) och buntningen med samma regel som kassan
+(`tillaggetFoljerMed`); proven för `huvudbeloppUrTotal` och ett pass som buntas är borta med funktionen och regeln.
+`prova-adminvyn.sql` har en betald och en väntande betalning för tillägget, så att Släpp betalningen, raderna i
+Betalningar och Månadens ekonomi och bokslutets rad ritas mot de riktiga tabellerna.
+
+Ett fel i ett prov att komma ihåg: en DO-block-variabel heter som ett tabellalias utan att märkas (`B constant uuid`
+och `from public.bookings b` ger "column reference "b" is ambiguous", för plpgsql skiljer inte på versaler). Avsnitt
+51 har `B` för en studiehjälpare, så aliaset där är `bk`.

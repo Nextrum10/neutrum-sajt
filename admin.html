@@ -21,9 +21,9 @@
 <link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
-<link rel="stylesheet" href="nextrum-vy.css?v=70487768">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=3078eece">
+<link rel="stylesheet" href="nextrum-cinema.css?v=8f2dabf9">
+<link rel="stylesheet" href="nextrum-vy.css?v=f736a65d">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=5cfab89e">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -261,6 +261,7 @@
         <a href="#manaden" data-sek="manaden" title="Månadens ekonomi"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M8.5 17v-3M12 17v-4.5M15.5 17v-2"/></svg><span class="adm-etikett">Månadens ekonomi</span></a>
         <a href="#ekonomi" data-sek="ekonomi" title="Betalningar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/></svg><span class="adm-etikett">Betalningar</span></a>
         <a href="#loner" data-sek="loner" title="Löner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.2 2.5-5 5.5-5 1 0 1.9.2 2.7.5"/><circle cx="16.5" cy="15.5" r="4"/><path d="M16.5 13.5v4M15 14.5h2.2a1 1 0 0 1 0 2H15"/></svg><span class="adm-etikett">Löner</span></a>
+        <a href="#varvning" data-sek="varvning" title="Värvningsbonus"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M3 19c0-2.8 2.3-4.6 5-4.6"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M12.5 19c0-2.4 1.8-4 4-4s4 1.6 4 4"/><path d="M11.5 6.5h3M13 5v3"/></svg><span class="adm-etikett">Värvningsbonus</span></a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Inställningar</span>
         <a href="#katalog" data-sek="katalog" title="Tjänster &amp; priser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.3V4.5a1 1 0 0 1 1-1h7.8l8.2 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></svg><span class="adm-etikett">Tjänster &amp; priser</span></a>
@@ -481,18 +482,29 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ansökningar</h2>
-              <p>Unga som vill jobba. Skicka vidare med knappen på raden eller i ansökan: från Alla ansökningar till Intervju, därifrån till Utbildning, och sedan in i poolen. Läget sätter du själv i ansökan, och Kontaktad flyttar ingen till Intervju. Tryck på ett namn för ansökan, CV:t och rekryteringens steg.</p>
+              <p>Unga som vill jobba. En ansökan står i ett steg åt gången: Ny, Intervju, Utbildning och Konto skapat. Skicka vidare med knappen på raden eller i ansökan. Tryck på ett namn för ansökan och CV:t.</p>
             </div>
           </div>
+          <!-- Stegen (ansokningarnas_steg, 2026-10-21). Databasen räknar steget
+               (applications.steg) och vaktar bytena: Ny till Intervju och
+               tillbaka, Intervju till Utbildning, Utbildning till Konto skapat.
+               Avböjda står utanför stegen, i en egen flik. -->
           <div class="vy-flikar" role="tablist" aria-label="Rekryteringens steg">
             <button class="vy-flik" type="button" role="tab" data-flik="alla"
-                    id="flik-ans-alla" aria-controls="panel-ans-alla">Alla ansökningar</button>
+                    id="flik-ans-alla" aria-controls="panel-ans-alla">Nya ansökningar
+              <span class="vy-flik-mark" id="flik-ans-alla-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="intervju"
                     id="flik-ans-intervju" aria-controls="panel-ans-intervju">Intervju
               <span class="vy-flik-mark" id="flik-ans-intervju-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="utbildning"
                     id="flik-ans-utbildning" aria-controls="panel-ans-utbildning">Utbildning
               <span class="vy-flik-mark" id="flik-ans-utbildning-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="konto"
+                    id="flik-ans-konto" aria-controls="panel-ans-konto">Konto skapat
+              <span class="vy-flik-mark" id="flik-ans-konto-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="avbojda"
+                    id="flik-ans-avbojda" aria-controls="panel-ans-avbojda">Avböjda
+              <span class="vy-flik-mark" id="flik-ans-avbojda-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="prov"
                     id="flik-ans-prov" aria-controls="panel-ans-prov">Provet i vyn</button>
           </div>
@@ -501,31 +513,17 @@
                id="panel-ans-alla" aria-labelledby="flik-ans-alla">
           <div class="dbox">
             <div class="adm-verktyg">
-              <input class="inp adm-sok" id="ans-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök ansökan" autocomplete="off">
-              <select class="sel" id="ans-status" aria-label="Filtrera på steg">
-                <option value="">Alla steg</option>
-                <option value="ny">Nya</option>
-                <option value="kontaktad">Kontaktade</option>
-                <option value="intervju">Intervju</option>
-                <option value="utbildning">Utbildning</option>
-                <option value="godkand">Godkända</option>
-                <option value="avbojd">Avböjda</option>
-              </select>
+              <input class="inp adm-sok" id="ans-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök bland nya ansökningar" autocomplete="off">
               <span class="small" id="ans-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
             <div id="ans-tabell"><div class="loading">Hämtar</div></div>
           </div>
           </div>
 
-          <!-- Rekryteringens två steg som egna flikar (Fas 6): vem som
-               gått vidare till en intervju, och vem som är i utbildningen.
-               Knappen på raden skickar vidare (2026-10-13), och samma
-               knapp står i ansökan (2026-10-15). Intervju har bara dem
-               som skickats dit, aldrig läget Kontaktad. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="intervju"
                id="panel-ans-intervju" aria-labelledby="flik-ans-intervju" hidden>
             <div class="dbox">
-              <h5>Till intervju <em id="ans-intervju-antal"></em></h5>
+              <h5>I intervju <em id="ans-intervju-antal"></em></h5>
               <div id="ans-intervju"><div class="loading">Hämtar</div></div>
             </div>
           </div>
@@ -534,6 +532,20 @@
             <div class="dbox">
               <h5>I utbildningen <em id="ans-utbildning-antal"></em></h5>
               <div id="ans-utbildning"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+          <div class="vy-flik-panel" role="tabpanel" data-flik="konto"
+               id="panel-ans-konto" aria-labelledby="flik-ans-konto" hidden>
+            <div class="dbox">
+              <h5>Konto skapat <em id="ans-konto-antal"></em></h5>
+              <div id="ans-konto"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+          <div class="vy-flik-panel" role="tabpanel" data-flik="avbojda"
+               id="panel-ans-avbojda" aria-labelledby="flik-ans-avbojda" hidden>
+            <div class="dbox">
+              <h5>Avböjda <em id="ans-avbojda-antal"></em></h5>
+              <div id="ans-avbojda"><div class="loading">Hämtar</div></div>
             </div>
           </div>
 
@@ -766,7 +778,8 @@
               <p class="xsmall" style="color:var(--muted-2);line-height:1.7;margin-bottom:16px">
                 Koden lagras i versaler och familjen skriver den när den köper en plan. Rabatten får vara noll.
                 Lämna <b>Gånger totalt</b> tomt för obegränsat, och <b>Gäller till</b> tomt för ingen slutdag.
-                En kod raderas aldrig: den stängs av.
+                En kod raderas aldrig: den stängs av. Läggs koden ut hos en familj eller en studiehjälpare kan
+                den inte använda koden själv.
               </p>
               <form id="kp-form" novalidate>
                 <div class="ag-faltrad">
@@ -805,17 +818,32 @@
                   <div class="fgroup">
                     <label for="kp-familj">Gånger per familj</label>
                     <input class="inp" id="kp-familj" type="number" min="1" step="1" inputmode="numeric" placeholder="Obegränsat">
+                    <span class="xsmall kp-not" id="kp-familj-not" hidden>En rabattkod gäller en gång per familj.</span>
                   </div>
                 </div>
+                <div class="kp-forhand" id="kp-forhand" aria-live="polite"></div>
                 <div class="fgroup" style="margin-top:14px">
                   <label for="kp-text">Beskrivning</label>
                   <input class="inp" id="kp-text" maxlength="80" placeholder="Syns för familjen när koden godkänns">
+                </div>
+                <div class="fgroup kp-agare" style="margin-top:14px">
+                  <label for="kp-agare-sok">Utlagd hos <span class="kp-valfri">(valfritt)</span></label>
+                  <div class="kp-agare-vald" id="kp-agare-vald" hidden></div>
+                  <input class="inp" id="kp-agare-sok" type="search" placeholder="Sök familj eller studiehjälpare"
+                         autocomplete="off" aria-describedby="kp-agare-not">
+                  <div class="kp-agare-forslag" id="kp-agare-forslag"></div>
+                  <span class="xsmall kp-not" id="kp-agare-not">Familjen eller studiehjälparen som delar ut koden. Den kan inte använda koden själv.</span>
                 </div>
                 <div class="ag-rad">
                   <button class="btn btn-primary btn-sm" type="submit" id="kp-spara">Skapa koden</button>
                   <p class="ok-msg" id="kp-msg" style="margin:0"></p>
                 </div>
               </form>
+            </div>
+            <div class="eko-verktyg kp-lista-verktyg">
+              <div class="chips eko-chips" id="kp-chips" role="group" aria-label="Vilka koder som visas"></div>
+              <input class="inp eko-sok" id="kp-sok" type="search" placeholder="Sök kod, beskrivning, partner eller ägare"
+                     aria-label="Sök bland koderna" autocomplete="off">
             </div>
             <div id="kp-lista"><div class="loading">Hämtar</div></div>
           </div>
@@ -1258,6 +1286,8 @@
                     id="flik-liggaren" aria-controls="panel-liggaren">Liggaren</button>
             <button class="vy-flik" type="button" role="tab" data-flik="kortdragning"
                     id="flik-kortdragning" aria-controls="panel-kortdragning">Kortet</button>
+            <button class="vy-flik" type="button" role="tab" data-flik="tillagg"
+                    id="flik-tillagg" aria-controls="panel-tillagg">Syskontillägg</button>
             <button class="vy-flik" type="button" role="tab" data-flik="korning"
                     id="flik-korning" aria-controls="panel-korning">Månadskörningen</button>
             <button class="vy-flik" type="button" role="tab" data-flik="bokslut"
@@ -1302,8 +1332,28 @@
               <div class="chips eko-chips" id="lig-chips" role="group" aria-label="Visa betalningar i liggaren"></div>
               <input class="inp eko-sok" id="lig-sok" type="search" placeholder="Sök familj, köp, kod eller Stripe-id" aria-label="Sök i liggaren" autocomplete="off">
             </div>
-            <div class="vy-kort"><div class="vy-lista" id="lig-lista"><div class="loading">Hämtar</div></div></div>
+            <!-- Ett kort per betalning (2026-10-21): beloppet, läget, familjen,
+                 typen, koden, dagen och raderna betalningen betalade. -->
+            <div class="lig-korten" id="lig-lista"><div class="loading">Hämtar</div></div>
             <p class="vy-finstilt" id="lig-fot"></p>
+          </div>
+
+          <!-- Syskontillägget (syskontillagg_som_skuld, 2026-10-21,
+               nextrum-admin-tillagg.js): det obetalda per familj med spärren
+               och Skicka påminnelse, och posterna med Frigör, Avskriv och
+               Återbetala. -->
+          <div class="vy-flik-panel" role="tabpanel" data-flik="tillagg"
+               id="panel-tillagg" aria-labelledby="flik-tillagg" hidden>
+            <div class="bet-sam eko-sam" id="tl-sam"></div>
+            <h3 class="tl-rubrik">Familjer med obetalt tillägg</h3>
+            <div id="tl-familjer"><div class="loading">Hämtar</div></div>
+            <h3 class="tl-rubrik">Posterna</h3>
+            <div class="eko-verktyg">
+              <div class="chips eko-chips" id="tl-chips" role="group" aria-label="Visa poster"></div>
+              <input class="inp eko-sok" id="tl-sok" type="search" placeholder="Sök familj" aria-label="Sök familj" autocomplete="off">
+            </div>
+            <div id="tl-lista"><div class="loading">Hämtar</div></div>
+            <p class="vy-finstilt" id="tl-fot"></p>
           </div>
 
           <div class="vy-flik-panel" role="tabpanel" data-flik="kortdragning"
@@ -1426,17 +1476,17 @@
             <div id="lon-personer"><div class="loading">Hämtar</div></div>
           </div>
 
-          <!-- Bonusen för tips (2026-10-13): 300 kr till en studiehjälpare
-               när vi tar in någon som sökt jobb med hens kod. Ingår i Att
-               betala ut och kommer med i lönefilen när den är godkänd, på
-               sin egen löneart. Rutan står bara när månaden har en bonus. -->
+          <!-- Värvningsbonusen (2026-10-21; bonusen för tips sedan
+               2026-10-13): 300 kr till en studiehjälpare som värvat en
+               kompis. Ingår i Att betala ut och kommer med i lönefilen när
+               den är intjänad, på sin egen löneart. Rutan står bara när
+               månaden har en bonus; alla står under Värvningsbonus. -->
           <div class="dbox" style="margin-bottom:clamp(16px,1.8vw,22px)" hidden>
-            <h5>Bonus för tips</h5>
+            <h5>Värvningsbonus</h5>
             <p class="xsmall" style="color:var(--muted-2);line-height:1.6;margin:0 0 14px">
-              300 kr i lön, inklusive semesterersättning, när vi tagit in någon som sökt jobb med
-              studiehjälparens kod, för månaden hen togs in. Godkänn bonusen när du sett att det
-              stämmer, så kommer den med i lönefilen,
-              och sätt Utbetald när lönen gått. Struken betalas inte.
+              Bonusen är lön, inklusive semesterersättning, för månaden den tjänades in. Den intjänade
+              kommer med i lönefilen. Markera den utbetald med lönemånaden när lönen gått, eller
+              annullera den med ett skäl. Alla bonusar står under Värvningsbonus.
             </p>
             <div id="lon-bonus"><div class="loading">Hämtar</div></div>
           </div>
@@ -1475,6 +1525,32 @@
               </div>
             </div>
           </div>
+        </section>
+
+        <!-- VÄRVNINGSBONUSEN (varvningsbonus, 2026-10-21,
+             nextrum-admin-varvning.js). Leo: tabell med värvare, värvad,
+             belopp (brutto, grund, semester), läge och datum, filter på
+             månad och läge, Markera utbetald (lönemånaden krävs) och
+             Annullera (skälet krävs), summering per värvare och månad och
+             CSV för revisorn och lönen. Inget betalas ut härifrån. -->
+        <section class="vy-sek" data-sek="varvning" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Värvningsbonus</h2>
+              <p>Bonusen till en studiehjälpare som värvat en kompis: en rad när kompisen söker med koden, intjänad när händelsen inträffar, och underlag för lönen. Inget betalas ut härifrån.</p>
+            </div>
+          </div>
+          <p class="vy-finstilt" id="vb-om"></p>
+          <div class="bet-sam eko-sam" id="vb-sam"></div>
+          <div class="eko-verktyg">
+            <div class="chips eko-chips" id="vb-chips" role="group" aria-label="Visa bonusar"></div>
+            <select class="sel vb-manad" id="vb-manad" aria-label="Månad"><option value="alla">Alla månader</option></select>
+            <button class="btn btn-ghost btn-sm" type="button" data-vb-csv>Ladda ned CSV</button>
+          </div>
+          <div id="vb-lista"><div class="loading">Hämtar</div></div>
+          <h3 class="tl-rubrik">Per värvare och lönemånad</h3>
+          <div id="vb-summa"><div class="loading">Hämtar</div></div>
+          <p class="vy-finstilt">Lägena går bara framåt: Väntar, Intjänad, Utbetald, eller Annullerad med ett skäl. Raderna raderas aldrig, och vem som markerade står i auditloggen. Annullerade utan att någon tryckt (egen kod, sökt förut, ett konto innan, värvaren inte godkänd, bonusen avstängd) har skälet skrivet av databasen.</p>
         </section>
 
         <!-- ============================================================
@@ -2582,43 +2658,45 @@
 </footer>
 
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=adfb7419"></script>
+<script src="nextrum-config.js?v=7488550a"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=a262aca7"></script>
+<script src="nextrum-app.js?v=20eb9020"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=29852e6b"></script>
-<script src="nextrum-arbetsyta.js?v=71f4330a"></script>
+<script src="nextrum-studie.js?v=38a10bc3"></script>
+<script src="nextrum-arbetsyta.js?v=aa0a869d"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
-<script src="nextrum-betalning.js?v=60e55cea"></script>
+<script src="nextrum-betalning.js?v=d93b402d"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=4bce718b"></script>
-<script src="nextrum-admin-detalj.js?v=3e7d760b"></script>
+<script src="nextrum-admin-karna.js?v=e147e039"></script>
+<script src="nextrum-admin-detalj.js?v=90808297"></script>
 <script src="nextrum-admin-oversikt.js?v=4675189b"></script>
-<script src="nextrum-admin-kunder.js?v=152f59f6"></script>
+<script src="nextrum-admin-kunder.js?v=d162f9bb"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
-<script src="nextrum-admin-rekrytering.js?v=2d14aa9c"></script>
+<script src="nextrum-admin-rekrytering.js?v=6fd9d942"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=6da99b95"></script>
-<script src="nextrum-admin-ekonomi.js?v=8cfce2dc"></script>
-<script src="nextrum-admin-liggaren.js?v=8eeee83a"></script>
-<script src="nextrum-admin-manaden.js?v=51040ed6"></script>
-<script src="nextrum-admin-loner.js?v=2c10dffa"></script>
-<script src="nextrum-admin-koder.js?v=a0486d8a"></script>
-<script src="nextrum-admin-rabattkoder.js?v=da71bc94"></script>
+<script src="nextrum-admin-ekonomi.js?v=28a77929"></script>
+<script src="nextrum-admin-liggaren.js?v=d27876b8"></script>
+<script src="nextrum-admin-tillagg.js?v=c6d459e6"></script>
+<script src="nextrum-admin-manaden.js?v=51db97c2"></script>
+<script src="nextrum-admin-loner.js?v=8d75813e"></script>
+<script src="nextrum-admin-varvning.js?v=e4cae4c5"></script>
+<script src="nextrum-admin-koder.js?v=b68d453f"></script>
+<script src="nextrum-admin-rabattkoder.js?v=4d96cdb6"></script>
 <script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
 <script src="nextrum-admin-system.js?v=1f4b7fcf"></script>
-<script src="nextrum-admin-behorighet.js?v=576427c6"></script>
-<script src="nextrum-admin-automationer.js?v=a75d7589"></script>
+<script src="nextrum-admin-behorighet.js?v=1d3259a1"></script>
+<script src="nextrum-admin-automationer.js?v=46019126"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
-<script src="nextrum-admin-radera.js?v=85c68990"></script>
+<script src="nextrum-admin-radera.js?v=b1f93dc2"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=420a6d63"></script>
-<script src="nextrum-modulvakt.js?v=bca26bc2"></script>
-<script src="nextrum-admin.js?v=d3f87ab1"></script>
+<script src="nextrum-modulvakt.js?v=0af1bb13"></script>
+<script src="nextrum-admin.js?v=556c6ad7"></script>
 </body>
 </html>

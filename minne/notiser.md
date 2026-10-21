@@ -244,7 +244,7 @@ vidare till intervju]"): förut sa andra stycket att inbjudan kom senare ("Håll
 koll på din mejl de kommande dagarna, för det är dit vi skickar inbjudan till
 intervjun"), och nu står länken till bokningssidan i Google Kalender där, som
 en vanlig länk. Hen bokar en tid själv, och Google mejlar tiden och Meet-länken.
-Adressen är `INTERVJU_BOKNING_URL` i `nextrum-config.js`; mallen läser inte
+Adressen är `INTERVJU_BOKNINGSLANK` i `nextrum-config.js`; mallen läser inte
 configen, så den står i `intervju.ts`, i adminvyn och i configen, och
 `kolla-mejltexter.py` prövar alla tre. Mejlet lovar ingen längd på intervjun.
 
@@ -327,6 +327,17 @@ Byt kort och leder till `/foralder#profil/kort` (målet `kortet` i `vyAdress`), 
 En äldre `notis-ko` gör `igen` till null och skickar det förra mejlet utan löfte, så ordningen i driften spelar
 ingen roll för vad som lovas. Efter ett dygn blir det en uppgift till oss, aldrig ett mejl till familjen till
 (`minne/betalning.md`, Kortet försöker igen).
+
+### Syskontillägget: påminnelsen och kvittot (2026-10-21, `syskontillagg_som_skuld`, inte i drift)
+Två nya typer, i `notis_typer()`, `notis_mejlbara()` och `typer.ts` i samma ändring: `tillagg_paminnelse` (kategorin
+betalning) och `tillagg_kvitto`. Båda till familjen, båda med belopp och antal pass, kvittot också en rad per pass
+med datum och antal barn (`rader`, där `typer.ts` släpper igenom bara datum, tal och belopp), och ingen av dem nämner
+ett barn: Leo bad om "inga namn på barn". Påminnelsen köas av `intern.tillagg_paminnelse_koa_en`, högst en per
+familj och intervall (`paminnelse_dagar`, dagarna räknade i Stockholm), med nyckeln
+`tillagg_paminnelse:mejl:<familj>:<dag>`, så att admins Skicka påminnelse och jobbet samma dag blir ett mejl.
+Kvittot köas av `intern.tillagg_kvitto` när webhooken bokfört betalningen; ett fel där blir en rad i `notis_fel`,
+aldrig ett fel i betalningen. Båda går att välja bort under Profil → Notiser (en saknad rad i `notis_val` är på), och
+`notis_konfig.lage` rörs inte: sandlådan och `notiser_mejl` gäller som för allt annat i kön.
 
 ### Vårdnadshavarens godkännande (2026-10-05)
 
@@ -659,3 +670,13 @@ avanmälan. Barnets avanmälningstoken har fem delar
 genom `notis-avanmal` till `barn_notis_avregistrera`, som bara stänger av
 i `barn_epost.av`. `/avanmal` behandlar tokenen som text och behövde
 ingen ändring. Se `minne/barnkonton-och-admin.md`.
+
+### Värvningsbonusen: mejlet till värvaren (2026-10-21, `varvningsbonus`, inte i drift)
+En ny typ, i `notis_typer()`, `notis_mejlbara()` och `typer.ts` i samma ändring: `varvningsbonus` (kategorin
+värvningsbonus, bara till en studiehjälpare). Den köas av `intern.varvning_prova` när en bonus blir intjänad, en gång
+per bonus (nyckeln `varvningsbonus:mejl:<id>`), med bara beloppet i datan: ämnet "Din värvningsbonus är intjänad: 300
+kr", meningen att bonusen, inklusive semesterersättning, hanteras enligt villkoren för värvningsbonusen och betalas med
+lönen, och knappen Se dina värvningar till `#profil/tips`. Kompisens namn står aldrig i mejlet. Notisen i klockan
+står i `notiser` som de andra. Ett fel när mejlet köas blir en rad i `notis_fel`, aldrig ett fel i bonusen. Den går att
+välja bort under Profil → Notiser (Värvningsbonus, bara för en studiehjälpare), och `notis_konfig.lage` rörs inte:
+sandlådan och `notiser_mejl` gäller som för allt annat i kön.

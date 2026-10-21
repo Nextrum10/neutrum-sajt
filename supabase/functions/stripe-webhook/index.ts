@@ -70,6 +70,14 @@
 //    händelsen och på passet, så att en testbetalning aldrig ser ut
 //    som en intäkt i ett underlag till bokföringen.
 //
+// 8. SYSKONTILLÄGGET (syskontillagg_som_skuld, 2026-10-21). En session
+//    med tillagg_forsok i metadata betalar familjens upplupna tillägg:
+//    ensam (Betala tillägg nu) eller som egen rad i ett köp av timmar.
+//    Databasen skriver liggaren, betalningens rader och posterna i en
+//    transaktion; en session som går ut eller avbryts släpper posterna.
+//    Endpointen behöver checkout.session.expired för det; utan händelsen
+//    släpper jobbet tillagg-forsok dem efter 35 minuter.
+//
 //
 // verify_jwt = false. Anroparen är Stripe, inte en inloggad
 // användare. Skyddet är signaturen, och raden står i config.toml i
@@ -86,6 +94,9 @@ import {
 } from '../_delad/stripe.ts';
 import { type Handelselager, markeraKlar, taEmotLeverans } from '../_delad/webhooken.ts';
 import { kortetsDelar, reservationensPass, reserveradTill, slappetsLage } from '../_delad/kortreservation.ts';
+import {
+  type Aterbetalning, fordelaAterbetalningar, forsokUrMetadata, hanteraTillagg, type TillaggDb,
+} from '../_delad/tillagg.ts';
 
 type Handelse = {
   id?: string;
@@ -203,6 +214,123 @@ Deno.serve(async (req) => {
       };
     }
     return { chargeId: null, b: balans(null) };
+  };
+
+  /* SYSKONTILLÄGGET (syskontillagg_som_skuld, 2026-10-21). Databasens
+     funktioner gör varje steg i en transaktion: liggaren, raderna, posterna
+     och försöket. Här är bara anropen, och varje fel kastas, så att raden i
+     stripe_handelser står kvar ohanterad och Stripe försöker igen. Logiken
+     står i _delad/tillagg.ts, och tillagg_test.ts prövar den. */
+  const rpcText = async (namn: string, args: Record<string, unknown>): Promise<string> => {
+    const { data, error } = await db.rpc(namn, args);
+    if (error) throw new Error(namn + ': ' + error.message);
+    return String(data);
+  };
+  const tillaggDb: TillaggDb = {
+    betald: (a) => rpcText('tillagg_forsok_betald', {
+      p_forsok: a.forsok, p_pi: a.pi, p_charge: a.charge, p_belopp: a.belopp, p_skarp: a.skarp,
+      p_avgift: a.avgift, p_netto: a.netto,
+    }),
+    vantar: async (a) => (await rpcText('tillagg_forsok_vantar', { p_forsok: a.forsok, p_session: a.session })) === 'true',
+    slapp: async (a) => (await rpcText('tillagg_forsok_slapp', { p_forsok: a.forsok, p_orsak: a.orsak })) === 'true',
+    tvist: async (a) => (await rpcText('betalning_tvist', { p_charge: a.charge, p_utfall: tvistUtfall(a.lage) })) === 'true',
+  };
+  const chargeUppslag = async (pi: string) => {
+    const { chargeId, b } = await chargeOchBalans(pi);
+    return { chargeId, avgiftOre: b.avgiftOre, nettoOre: b.nettoOre };
+  };
+
+  /* AVGIFTEN FÖR EN BETALNING SOM BARA ÄR TILLÄGG (Betala tillägg nu,
+     granskningen 2026-10-21). Ingen pass-, köp- eller övertidsrad bär
+     chargen, så avgiften skrivs på liggarens rad när den kommer med
+     charge.updated. En avgift som redan står skrivs aldrig över. */
+  const avgiftenPaLiggaren = async (chargeId: string, forsta: ReturnType<typeof balans>) => {
+    const { data: lig, error } = await db.from('betalningar')
+      .select('id, avgift_ore').eq('stripe_charge', chargeId).eq('typ', 'syskon').maybeSingle();
+    if (error) throw new Error('betalningar: ' + error.message);
+    if (!lig) return await klar('charge utan pass');
+    if (lig.avgift_ore !== null && lig.avgift_ore !== undefined) return await klar('avgiften fanns redan');
+    let bt = forsta;
+    if (bt.avgiftOre === null && arStripeId(bt.id, 'txn')) {
+      bt = balans(await v1('GET', `/v1/balance_transactions/${bt.id}`));
+    }
+    const { error: avgfel } = await db.from('betalningar')
+      .update({ avgift_ore: bt.avgiftOre, netto_ore: bt.nettoOre })
+      .eq('id', lig.id).is('avgift_ore', null);
+    if (avgfel) throw new Error('liggarens avgift: ' + avgfel.message);
+    return await klar(bt.avgiftOre === null ? 'balanstransaktion utan avgift' : `avgift ${bt.avgiftOre} öre på liggaren`);
+  };
+
+  /* EN BETALNING MED TILLÄGG ÅTERBETALAS PER RAD (syskontillagg_som_skuld).
+     Liggaren har en rad per PaymentIntent, och betalningsrader en per del:
+     köpet och varje tillägg. Stripes lista över återbetalningarna fördelas
+     på raderna ur metadata (fordelaAterbetalningar): tilläggets rad bär
+     betalningsrad, köpets bär klippkort_id. Databasen skriver summorna, så
+     samma händelse två gånger ändrar ingenting, och ingen rad får mer än
+     den betalade. Köpets del skrivs på köpet som förut, men bara köpets
+     del. En återbetalning utan rad (Stripes panel) fördelas inte av en
+     maskin: köpet stängs som förut, och en människa får en uppgift.
+     Svarar null när betalningen inte har en tilläggsrad: då gör grenen
+     nedan som förut. */
+  const aterbetalaRader = async (chargeId: string, pi: string, aterbetalt: number): Promise<string | null> => {
+    const fraga = db.from('betalningar').select('id, stripe_payment_intent');
+    const { data: bet, error: bfel } = await (arStripeId(pi, 'pi')
+      ? fraga.eq('stripe_payment_intent', pi) : fraga.eq('stripe_charge', chargeId)).maybeSingle();
+    if (bfel) {
+      if (bfel.code === '42P01' || bfel.code === 'PGRST205') return null;
+      throw new Error('betalningar: ' + bfel.message);
+    }
+    if (!bet) return null;
+    const { data: rader, error: rfel } = await db.from('betalningsrader')
+      .select('id, typ, belopp_ore, klippkort_id').eq('betalning_id', bet.id);
+    if (rfel) {
+      if (rfel.code === '42P01' || rfel.code === 'PGRST205') return null;
+      throw new Error('betalningsrader: ' + rfel.message);
+    }
+    if (!(rader ?? []).some((r) => r.typ === 'syskon')) return null;
+
+    const lista = await v1('GET', `/v1/refunds?charge=${encodeURIComponent(chargeId)}&limit=100`);
+    const aterbet = (Array.isArray(lista.data) ? lista.data : []) as Aterbetalning[];
+    const f = fordelaAterbetalningar(
+      (rader ?? []).map((r) => ({ id: String(r.id), beloppOre: Number(r.belopp_ore), klippkortId: r.klippkort_id ?? null })),
+      aterbet,
+    );
+    await rpcText('betalningsrader_aterbetalda', {
+      p_pi: bet.stripe_payment_intent, p_per_rad: f.perRad, p_totalt: aterbetalt,
+    });
+
+    let kopText = '';
+    const plan = (rader ?? []).find((r) => r.klippkort_id);
+    if (plan) {
+      const kopet = String(plan.klippkort_id);
+      const { framande_ore } = await stamAvKopet(v1, (namn, args) => db.rpc(namn, args),
+        { kort: kopet, charge: chargeId, utom: (md) => !!md.betalningsrad });
+      const kopets = f.perRad[String(plan.id)] ?? 0;
+      const stang = framande_ore > 0 || kopets >= Number(plan.belopp_ore);
+      const { error: k1 } = await db.from('klippkort')
+        .update(stang ? { aterbetald_ore: kopets, status: 'aterbetald' } : { aterbetald_ore: kopets })
+        .eq('id', kopet).neq('status', 'tvist');
+      if (k1) throw new Error('klippkort: ' + k1.message);
+      const { error: k2 } = await db.from('klippkort').update({ aterbetald_ore: kopets })
+        .eq('id', kopet).eq('status', 'tvist');
+      if (k2) throw new Error('klippkort: ' + k2.message);
+      kopText = `, köpet ${kopets} öre${stang ? ', stängt' : ''}`;
+    }
+    if (f.ofordelat > 0 || f.overskott > 0) {
+      const { error: ufel } = await db.rpc('skapa_uppgift', {
+        p_titel: 'En återbetalning på en betalning med tillägg saknar rad',
+        p_nyckel: `aterbetalning-utan-rad:${chargeId}:${aterbetalt}`,
+        p_typ: 'kontroll',
+        p_beskrivning: `${Math.round((f.ofordelat + f.overskott) / 100)} kr betalades tillbaka utan att det står `
+          + 'vilken rad det gällde (troligen i Stripes dashboard). Betalningen bär både ett köp och syskontillägg. '
+          + 'Avgör vilken rad som betalades tillbaka; köpet är stängt för säkerhets skull.',
+        p_kopplad_tabell: plan ? 'klippkort' : null,
+        p_kopplad_id: plan ? String(plan.klippkort_id) : null,
+        p_skapad_av_typ: 'system',
+      });
+      if (ufel) throw new Error('skapa_uppgift: ' + ufel.message);
+    }
+    return `återbetalt per rad ${aterbetalt} öre${kopText}`;
   };
 
   /* PASSETS BETALNING SKRIVS (Fas 14.1; en egen funktion sedan 2026-10-13).
@@ -340,6 +468,12 @@ Deno.serve(async (req) => {
           return await klar(arStripeId(forra, 'pm') ? 'kortet bytt' : 'kortet sparat');
         }
 
+        /* BETALA TILLÄGG NU (syskontillagg_som_skuld, 2026-10-21): en session
+           som bara är tillägg. En session som väntar på pengarna (Klarna)
+           märks, så att jobbet inte släpper posterna. */
+        const tSvar = await hanteraTillagg(typ, obj, skarp, tillaggDb, chargeUppslag);
+        if (tSvar !== null) return await klar(tSvar);
+
         if (obj.payment_status !== 'paid') return await klar('session utan betalning');
 
         /* ETT KÖPT KLIPPKORT (Fas 16.1) bär sitt id i metadata och
@@ -371,6 +505,24 @@ Deno.serve(async (req) => {
            Ett fel kastas, så att Stripe försöker igen — ett köp som inte
            blev skrivet är pengar familjen inte kan använda. */
         if (kkId) {
+          /* MED TILLÄGGET SOM EGEN RAD (syskontillagg_som_skuld, 2026-10-21):
+             köpet, liggaren, raderna och posterna skrivs i en transaktion.
+             Köpet får bara sin del av beloppet; tillägget är posternas. */
+          const forsok = forsokUrMetadata(obj.metadata);
+          if (forsok) {
+            const svar = await rpcText('klippkort_betald_med_tillagg', {
+              p_id: kkId, p_betalt: draget, p_pi: piId || null, p_charge: chargeId, p_bt: b.id,
+              p_avgift: b.avgiftOre, p_netto: b.nettoOre, p_skarp: skarp, p_forsok: forsok,
+            });
+            if (svar === 'betald') return await klar('klippkort och tillägg betalda');
+            if (svar === 'redan') return await klar('klippkortet och tillägget var redan betalda');
+            if (svar === 'dubbel') return await klar('klippkort betalt, tillägget betalt två gånger: uppgift skapad');
+            if (svar !== 'kop_redan') {
+              // Försöket hörde inte till köpet, eller beloppet gick inte ihop: pengarna bokförs och en människa avgör.
+              return await ejNedskriven(`klippkortet ${kkId} med tillägg (${svar})`, piId, draget, null, { klippkort: kkId });
+            }
+            // Köpet väntade inte: samma prövning som utan tillägg, nedan.
+          }
           const { data: blev, error: kkfel } = await db.rpc('klippkort_betald', {
             p_id: kkId, p_betalt: draget, p_pi: piId || null, p_charge: chargeId,
             p_bt: b.id, p_avgift: b.avgiftOre, p_netto: b.nettoOre, p_skarp: skarp,
@@ -450,7 +602,7 @@ Deno.serve(async (req) => {
           .select('id, stripe_avgift_ore').eq('stripe_charge_id', chargeId).maybeSingle();
         if (l3) throw new Error('pass_tillagg: ' + l3.message);
         const rad = pass ?? kort ?? tillagg;
-        if (!rad) return await klar('charge utan pass');
+        if (!rad) return await avgiftenPaLiggaren(chargeId, bt);
         if (rad.stripe_avgift_ore !== null && rad.stripe_avgift_ore !== undefined) {
           return await klar('avgiften fanns redan');
         }
@@ -471,8 +623,22 @@ Deno.serve(async (req) => {
       /* Klarna sa nej efter att sessionen fullbordats: PaymentIntent får
          sitt eget payment_intent.payment_failed, som skriver läget nedan.
          Här finns inget mer att göra. */
-      case 'checkout.session.async_payment_failed':
-        return await klar('klarna sa nej, payment_intent.payment_failed skriver det');
+      case 'checkout.session.async_payment_failed': {
+        // Ett försök för tillägget släpps: posterna blir upplupna igen (syskontillagg_som_skuld).
+        const tSvar = await hanteraTillagg(typ, obj, skarp, tillaggDb);
+        return await klar(tSvar ? `${tSvar}; klarna sa nej, payment_intent.payment_failed skriver resten`
+          : 'klarna sa nej, payment_intent.payment_failed skriver det');
+      }
+
+      /* EN SESSION SOM GÅR UT (syskontillagg_som_skuld, 2026-10-21). Bara ett
+         försök för tillägget skrivs: posterna blir upplupna igen, så att
+         familjen kan betala dem en annan gång. Jobbet tillagg-forsok gör
+         samma sak efter 35 minuter om händelsen aldrig kommer. Ett köp eller
+         ett pass står kvar som förut. */
+      case 'checkout.session.expired': {
+        const tSvar = await hanteraTillagg(typ, obj, skarp, tillaggDb);
+        return await klar(tSvar ?? 'sessionen gick ut');
+      }
 
       case 'payment_intent.payment_failed': {
         /* En reservation eller en dragning med det sparade kortet
@@ -558,6 +724,9 @@ Deno.serve(async (req) => {
            det HÄR siffran hamnar. */
         const chargeId = String(obj.id ?? '');
         if (chargeId) {
+          // En betalning med tillägg återbetalas per rad (syskontillagg_som_skuld).
+          const radSvar = await aterbetalaRader(chargeId, String(obj.payment_intent ?? ''), aterbetalt);
+          if (radSvar !== null) return await klar(radSvar);
           const passen = await aterbetala('bookings', 'stripe_charge_id', chargeId, 'betalning_status', lage);
           /* Ett köp av timmar (Fas 16.1). En återbetalning i Stripes panel
              STÄNGER köpet, också en delvis: villkoren har tre skäl att
@@ -737,6 +906,13 @@ Deno.serve(async (req) => {
           return await klar(`tvist ${tvistId}: sen händelse efter stängning, ignorerad`);
         }
 
+        /* En betalning som bara är tillägg (Betala tillägg nu) bärs av ingen
+           rad ovan: tvisten flaggas på liggarens rad, och inget annat görs
+           (syskontillagg_som_skuld). Efter vakten ovan (granskningen
+           2026-10-21): en sen updated efter en stängd tvist satte annars
+           betalningen i tvist igen. */
+        const tillaggSvar = !pass && !kort && !tillagg ? await hanteraTillagg(typ, obj, skarp, tillaggDb) : null;
+
         const evidens = obj.evidence_details as Record<string, unknown> | undefined;
         const { error: tvfel } = await db.from('stripe_tvister').upsert({
           id: tvistId,
@@ -820,7 +996,7 @@ Deno.serve(async (req) => {
         /* Tvisten belastar Nextrums saldo. Studiehjälparens ersättning
            räknas ur rapporten och påverkas inte av en tvist: om den ska
            det är ett beslut för en människa, inte för en webhook. */
-        return await klar(`tvist ${tvistId}: ${lage}${uppgiftsfel}`);
+        return await klar(`tvist ${tvistId}: ${lage}${tillaggSvar ? ', ' + tillaggSvar : ''}${uppgiftsfel}`);
       }
 
       /* HÄR LÅG transfer.created, transfer.reversed, account.updated

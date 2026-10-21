@@ -94,12 +94,11 @@ tryck som personen tas in, med personens egen adress:
   studiehjälpare är steg 4. Har familjen redan ett konto är rutan Skapa
   elev, som förut. Går eleven inte att skapa efter kontot står familjen
   kvar i rutan och knappen blir Skapa elev.
-- **Ta in i poolen** (ansökan, `nextrum-admin-rekrytering.js`): har
-  adressen i ansökan inget konto står "Skapa kontot med <adressen>" först
-  i kontolistan och är valt, och knappen heter Ta in och skicka inbjudan.
-  Kontot skapas med `roll: 'tutor'` före godkännandet, som sedan är
-  detsamma som för ett konto som fanns; kvittot säger att två mejl går
-  (länken och välkomstmejlet).
+- **Ta in i poolen** (ansökan, `nextrum-admin-rekrytering.js`), sedan
+  2026-10-21 **Utbildning hållen** (nedan, Ansökningarnas steg): har
+  adressen i ansökan inget konto skapas det med `roll: 'tutor'` före
+  godkännandet, som sedan är detsamma som för ett konto som fanns; kvittot
+  säger att två mejl går (länken och välkomstmejlet).
 - Personen trycker på länken, väljer lösenordet två gånger, går igenom
   introduktionen och trycker Fortsätt (`minne/sakerhet.md`, Konton vi
   skapar). Väntar familjen på sin matchning, eller studiehjälparens
@@ -115,6 +114,86 @@ tryck som personen tas in, med personens egen adress:
 - Leo bad om lösenordet 12345678 för alla nya konton. Det blev en länk i
   stället, för samma steg för personen; varför står i
   `minne/sakerhet.md`.
+
+## Ansökningarnas steg (2026-10-21, `ansokningarnas_steg`)
+
+Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. En ansökan finns i
+exakt ett läge åt gången. Vyn 'Alla ansökningar' visar bara de som ligger i
+Ny. ... Statusövergångar tvingas i databasen (trigger). Tillåtet: ny till
+intervju, intervju till ny (ångra), intervju till utbildning, utbildning
+till konto skapat." Och om profilen: "Korta ner intervjudelen kraftigt:
+status plus tre knappar, inget annat."
+
+**Steget räknas, det lagras inte en gång till.** `applications.steg` är en
+genererad kolumn ur `intern.ansokan_steg(konto_id, status, till_intervju_at,
+intervju_at, utbildningsmote_at, utbildad_at)`: konto_skapat när kontot är
+kopplat eller läget är Godkänd, utbildning när intervjun är hållen eller
+utbildningen påbörjad, intervju när hen skickats vidare, annars ny.
+Tidsstämplarna fanns redan och läses av gallringen, auditloggen och mejlen;
+ett eget lägesfält bredvid dem hade varit en andra sanning. "Exakt ett läge"
+gäller därför av konstruktion. Funktionen körs som den som skriver raden,
+också anon när ansökan skickas, så den har EXECUTE för alla (som en funktion
+bakom ett CHECK-villkor). Ändras regeln ska kolumnen räknas om: en lagrad
+genererad kolumn räknas bara när raden skrivs.
+
+**Vakten** (`intern.ansokan_steg_vakt`, BEFORE INSERT OR UPDATE, efter
+`applications_skydda` i namnordning) släpper bara de fyra bytena, för admin
+också, och Konto skapat bara genom `ansokan_utbildning_hallen()`, som sätter
+`nextrum.ansokan_konto` i transaktionen. `konto_id` skrivs aldrig för hand
+(42501), och en ansökan utifrån får aldrig ett. Databasen själv
+(tjänstekontot, gallringen) och en ändring en annan trigger eller kaskad gör
+(`pg_trigger_depth() > 1`, ett raderat konto) går förbi. Ett nej är inget
+steg: det går i varje steg, och går att ta tillbaka. Två äldre prov i
+`rls-test.sql` hoppade över steg (16.1 och 22.1) och går nu i ordning.
+
+**Loggen** (`ansokan_steg_logg`): en rad per steg, varifrån, vart, vem och
+när, skriven av databasen efter skrivningen. Den ändras aldrig, inte ens av
+ägaren (triggrar), och raderas bara med sin ansökan (kaskaden, ett steg
+djupare). Bara superadmin läser. Ansökningarna som fanns fick en rad med
+sitt steg.
+
+**Granskningen 2026-10-21**: en superadmin kunde runda stegen genom Avböjd
+(`status = 'rejected'` med `intervju_at`, sedan `status = 'new'`, gav steget
+Utbildning utan Intervju och utan intervjumejl) och genom en INSERT av en
+ansökan som redan var Godkänd. Nu börjar en ny ansökan alltid i Ny, utom för
+databasen själv, och medan en ansökan är (eller blir) Avböjd står stegets
+kolumner still, så ett ja tar den tillbaka till steget den hade. Loggen
+stoppade radering av en person som stod i den (nyckeln `andrad_av … on
+delete set null` gjorde en UPDATE som triggern nekade): en ändring där bara
+`andrad_av` blir null släpps igenom när en annan trigger eller nyckel gör den
+(`pg_trigger_depth() > 1`). Backfillen av loggen fick sina tider skrivna
+över av `now()`: tiden sätts nu bara när den saknas. Provat: `rls-test.sql`
+avsnitt 47 (`AS`, tre prov till), och de två äldre proven (16.1 och
+Intervjumejlet) som gick genom Avböjd tar nu felet 23514.
+
+**Skicka intervjulänk igen** (`ansokan_intervjulank_igen()`): samma mejl som
+när hen skickades vidare, köat i notiskön med nyckeln
+`ansokan_intervju:<id>:igen:<millisekunder>`, bara i steget Intervju och
+högst en gång i tio minuter. Kön (`notis_utskick_ta`) skickar ett
+intervjumejl bara medan ansökan står i Intervju. Utan
+`INTERVJU_BOKNINGSLANK` säger knappen det och inget köas: mallen har länken
+hårdkodad (`intervju.ts`), och `kolla-mejltexter.py` håller den lika
+configen, så en tom config är en länk som inte ska gå ut.
+
+**Utbildning hållen** (`ansokan_utbildning_hallen(p_ansokan, p_konto,
+p_timpenning, p_amnen, p_ort)`): kontot skapas före, av `bjud-in` med
+ansökans adress (409 betyder att adressen hann få ett, och då kopplas det),
+och funktionen kopplar det, godkänner profilen med ämnena, orten,
+timpenningen och ansökans skola, ålder, tider och tjänster, och sätter
+utbildad och Godkänd, i en transaktion. Samma konto igen svarar `redan`, ett
+annat konto nekas, ett konto med en annan adress nekas, och ett konto hör
+till en ansökan (unikt index). Välkomstmejlet går som förut (läget blir
+Godkänd i samma ändring som utbildad, så sista steget mejlas inte), och
+bonusen för tips följer `tutor_profiles.status` som förut (sedan
+värvningsbonusen samma dag tjänas den in när kontot kopplas eller blir
+godkänt, nedan).
+
+**Panelen**: steget och dess knappar överst (`.ans-nu`), sedan uppgifterna
+(Skriv till hen vid adressen), det hen skrev och Mejlen till hen hopfällda
+(fäller ut sig när ett mejl inte gått fram), och Avböj ansökan. Fliken
+Rekryteringen, Boka digitalt möte, Skicka utbildningen, Utbildningsmötet är
+hållet och Markera utbildad är borta, och läget sätts inte längre med
+märkena. Webbläsarprovet är `verktyg/prova-ansokningar.js` (138 prov).
 
 ## Anmälan flyttar till familjen (2026-10-21, `anmalan_flyttas_till_familjen`)
 
@@ -357,7 +436,7 @@ Workspace-kopplingen; kalendern, inbjudningarna och rekryteringsmötet
 valdes bort, och mejlen går genom Resend som förut (INTEGRATIONER.md).
 Intervjun bokas sedan 2026-10-20 på en bokningssida i Google Kalender,
 utan koppling: länken står i mejlet till den som söker
-(`INTERVJU_BOKNING_URL`, `minne/vyerna.md`).
+(`INTERVJU_BOKNINGSLANK`, `minne/vyerna.md`).
 
 Ur avsnitt 11:
 
@@ -1043,7 +1122,7 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
 - **Bonusen är lön.** 300 kr (`intern.tipsbonus_ore()`) till studiehjälparen
   vars kod den nya sökte med, när vi tar in hen: triggern
   `tutor_profiles_tipsbonus` när `tutor_profiles.status` blir `approved`
-  (Ta in i poolen och lägesväljaren gör det). Ansökan hittas på adressen,
+  (Utbildning hållen gör det, och studiehjälparens läge i adminvyn). Ansökan hittas på adressen,
   som allt annat som kopplar en ansökan till ett konto: den första ansökan
   med en studiehjälpares kod från samma adress, som inte är avböjd. Den nya
   ska vara ny när hen sökte: aldrig godkänd i poolen före ansökan
@@ -1095,6 +1174,166 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
   tillbakarullat (`minne/databasen.md`, Körda i driften). Ingen bonus och
   ingen kod för en studiehjälpare i en ansökan fanns då.
 
+## Värvningsbonusen (2026-10-21, `varvningsbonus`, inte i drift)
+
+Leo: "en studiehjälpare som värvar en kompis får en bonus på 300 kr brutto,
+inklusive semesterersättning, när kompisen har fått sitt
+studiehjälparkonto. Systemet betalar INGENTING ut. Det registrerar och
+visar bonusen som underlag för Leos utbetalning." Migrationen
+20261021215000; ordningen i driften i `DEPLOY-BETALNING.md` 9.24.
+
+- **Byggd på det som fanns, inte bredvid.** Studiehjälparens tipskod gällde
+  redan jobbansökan, och den vars kod en ny studiehjälpare sökte med fick
+  300 kr i lönen (`tipsbonus`, 2026-10-13). En andra tabell för samma bonus
+  hade gett två bonusar för samma kompis. Därför är värvningskoden
+  tipskoden (sorten `studiehjalpare` är beställningens "typ varvning"),
+  `applications.kod` är beställningens `varvad_av_kod_id` (koden är
+  tabellens nyckel), och `varvningsbonus` tar över bonusen: `tipsbonus` får
+  inga nya rader, och det som står där flyttas hit med `tipsbonus_id` (utkast
+  och godkänd blir intjänad, utbetald står kvar med lönemånaden, struken
+  blir annullerad med skälet "Struken under Löner före 2026-10-21").
+- **Koden skapas av sig själv** när någon blir godkänd i poolen
+  (`intern.tipsbonus_vid_intag`, men aldrig åt ett adminkonto), och
+  migrationen ger varje godkänd studiehjälpare en. En ny kod har åtta
+  tecken ur `gen_random_bytes` (32 tecken, ungefär 10^12 möjliga); de
+  gamla på sex står kvar, för de kan redan stå på en affisch eller i ett
+  meddelande. Koden gäller bara medan ägaren är godkänd och kontot inte
+  raderat: "inaktiverat konto betyder inaktiv kod".
+- **Formuläret** (`bli-studiehjalpare`, båda språken): fältet Kod från en
+  studiehjälpare tar också `?kod=`, och `NX.provaJobbkod` frågar
+  `prova_jobbkod()` när fältet ändras: gäller (Koden gäller), finns inte
+  (beskedet under fältet, och fältet töms när ansökan skickas, med en mening
+  i tacket) eller för många försök (koden följer med, och databasen prövar
+  den). Svaret säger aldrig vems koden är, och en okänd kod räknas mot ett
+  tak, tio i timmen per IP-nummer som en HMAC i ett dygn (samma tabell som
+  rabattkodernas försök, med nyckeln `jobbkod:`), och högst 500 okända i
+  timmen totalt. IP-numret är Cloudflares `cf-connecting-ip`, och bara utan
+  den det första i `x-forwarded-for` eller `x-real-ip` (granskningen
+  2026-10-21: det första värdet i `x-forwarded-for` sätter klienten själv;
+  barninloggningens räknare läser det fortfarande, och det är äldre än
+  grenen). Taket är ett hinder, inget skydd. En kod som inte gäller fäller
+  aldrig ansökan.
+- **Kopplingen på ansökan** sätter databasen (`intern.ansokan_tipskod`):
+  koden prövas (finns, sorten studiehjälpare, aktiv, ägaren godkänd och
+  inte raderad), och `varvad_av_profil_id` blir ägaren. En klient kan inte
+  ändra någon av dem efteråt (42501); admin kan rätta koden, och värvaren
+  följer den (att sätta en annan värvare än kodens ägare är 23514).
+- **Raden** skrivs när ansökan kommer in (`applications_varvning`, AFTER
+  INSERT och när värvaren ändras): `vantar`, eller `annullerad` med skälet
+  när den som söker inte är ny: sin egen kod ("Egen kod: den som sökte äger
+  koden"), en tidigare ansökan med samma adress ("Har sökt förut") eller ett
+  konto med adressen som fanns före ansökan ("Hade redan ett konto"). En
+  annullerad rad skrivs med flit i stället för ingen: den visar admin varför,
+  och den håller personens HMAC så att samma person aldrig ger en bonus
+  senare. Unikt per ansökan, per konto och per person (HMAC av adressen över
+  alla bonusar, `intern.varvning_epost_hmac`).
+- **Intjänandet** (`intern.varvning_prova`, under radlås): kontot är det som
+  kopplats, annars ansökans `konto_id` (Utbildning hållen), annars en
+  studiehjälpare med ansökans adress. Är kontot värvarens eget annulleras
+  den; har kontot redan gett en bonus annulleras den. Sedan händelsen i
+  `varvning_installning.utlosare`: `konto_skapat` (förvalet, fullt byggt:
+  kontot är godkänt i poolen eller kopplat till ansökan), `prov_godkant`
+  (`prov_studiehjalpare.utbildningsprov_godkant_at`) eller
+  `forsta_pass_genomfort` (en rapport med ett pass). Har den inträffat, och
+  värvaren är godkänd och flaggan `tipsbonus` på, blir raden `intjanad` med
+  delningen och händelsen; annars annulleras den med skälet. Triggrarna som
+  prövar sitter på `tutor_profiles` (godkänd), `applications.konto_id`,
+  `prov_studiehjalpare` och `lesson_reports`. Bara en rad i `vantar` ändras,
+  så samma händelse två gånger ger en bonus.
+- **Beloppet**: bruttot fryses när raden skrivs (`brutto_ore`), procenten och
+  delningen när den tjänas in: grund `round(brutto / (1 + procent/100))`,
+  semester resten, så att summan alltid är bruttot (26 786 + 3 214 = 30 000
+  öre). En ändring i `varvning_installning` rör aldrig en intjänad rad, och
+  en väntande behåller sitt brutto (det som visades när kompisen sökte).
+- **Lägena** går bara framåt (`intern.varvningsbonus_vakt`): `vantar` till
+  `intjanad` eller `annullerad`, `intjanad` till `utbetald` (med lönemånaden
+  ÅÅÅÅ-MM) eller `annullerad` (med ett skäl), och `utbetald` och `annullerad`
+  är slutliga. Delningen, bruttot, värvaren och ansökan står fast; bara
+  nycklarna till ansökan och den värvade får bli null när de tas bort. Raden
+  raderas aldrig (delete och truncate nekas), och auditloggen får läget,
+  beloppen, lönemånaden och vem, aldrig skälet.
+- **Admin** (sektionen Värvningsbonus, `nextrum-admin-varvning.js`, bara
+  superadmin): inställningen överst, Väntar, Intjänade och Utbetalt, filter
+  på läge och månad, en rad per bonus med värvare, värvad, belopp och
+  delning, läge och datum, Markera utbetald (en eller alla intjänade som
+  syns; lönemånaden krävs och föreslås som månaden den tjänades in),
+  Annullera (skälet krävs, minst tre tecken), summeringen per värvare och
+  lönemånad och CSV för revisorn och lönen (semikolon, decimalkomma, ören
+  och skälet). Knapparna går bara genom `varvningsbonus_utbetald()` och
+  `varvningsbonus_annullera()`. Under Löner står månadens bonusar i samma
+  ruta som förut, med samma knappar; Godkänd finns inte längre, så den
+  intjänade kommer med i lönefilen, och det som inte ska betalas annulleras.
+- **Värvaren** (Profil → Värva en kompis, `nextrum-studie.js`): koden,
+  länken till `/bli-studiehjalpare?kod=…#ansok`, beloppet och händelsen ur
+  inställningen ("300 kr inklusive semesterersättning när din kompis har
+  fått sitt konto"), och en rad per kompis med bara läget, förnamnet först
+  när kontot finns, och för en intjänad eller utbetald bonus dagen den
+  tjänades in eller lönemånaden (`mina_tips()`, som aldrig lämnar ut
+  ansökan, när kompisen sökte, adressen eller kontot och aldrig de
+  annullerade; dagarna räknas i Stockholms tid i databasen). Villkoren är
+  punkten `#tips`, omskriven för bonusen i versionen 2026-10-22 (Leo: "Fixa nr
+  6"), och kortet länkar dit (`CFG.VARVNING_VILLKOR_URL`). Under
+  Statistik → Ersättning står månadens intjänade bonus, och lönespecen
+  kallar den värvningsbonus.
+- **Mejlet** (`varvningsbonus`, `minne/notiser.md`): till värvaren när
+  bonusen tjänas in, bara beloppet och att den hanteras enligt villkoren.
+- **Raderingen**: en värvare med en intjänad bonus som inte är utbetald
+  raderas inte (hindret `varvningsbonus`), och en med en rad alls
+  avidentifieras i stället (raden är lön). Den värvade raderas som förut;
+  raden tappar kontot och ansökan och behåller HMAC:en.
+- **Byts händelsen** i `varvning_installning` prövas alla väntande rader
+  mot den nya direkt (`varvning_installning_andrad`), i stället för först när
+  något händer kompisen igen; bruttot på en väntande rad står fast.
+- **Inte byggt, med flit**: ingen utbetalning och ingen Stripe; och villkoren
+  `#tips` säger fortfarande "när vi tar in" och att den som tipsat inte ser
+  vilka (Leo skriver bonusvillkoren och `#tips` om i samma version).
+- **Provat** lokalt: `rls-test.sql` (avsnitt KB omskrivet för
+  `varvningsbonus` och avsnitt 52, VB, med 21 prov), `prova-varvning.js`
+  57 av 57, `prova-adminvyn.js` mot en riktig databas och `prova-koder.js`
+  (`minne/genererat-och-ci.md`).
+- **Granskningen 2026-10-21** (två granskare, oberoende av varandra, hittade
+  samma fel och bevisade det mot en lokal databas). Bonusen gick till den
+  som FÖRST skickat en ansökan med en adress: indexet på HMAC:en gällde alla
+  lägen, en senare ansökan från samma adress fick ingen rad, och kontot
+  hittade bonusen på adressen. Vem som helst med en giltig kod kunde alltså
+  skicka en ansökan med en kompis adress och ta kompisens värvning, också
+  när den ansökan avböjdes. Rättat:
+  - **Bonusen följer ansökan som blev kontot** (`applications.konto_id`;
+    adressen bara när ingen ansökan har kontot). `varvning_prova` prövar i
+    ordning: ansökan finns, en annan ansökan från samma person blev kontot,
+    ansökan avböjdes, egen kod (kontot är värvarens eget, också på adressen),
+    kontot fanns före ansökan, personen har sökt förut, personen har redan
+    gett en bonus; först sedan händelsen. Att personen är ny prövas alltså
+    igen när bonusen tjänas in (förut bara när ansökan kom, mot den adress
+    den hade då; admin som rättade adressen till ett gammalt konto gav en
+    bonus för ett konto från i våras).
+  - **En väntande rad annulleras med skälet** när ansökan avböjs, gallras
+    eller tas bort ("Ansökan gallrades eller togs bort innan bonusen
+    tjänades in"), när en annan ansökan från samma person blir kontot, och
+    när admin tar bort eller byter koden ("Koden togs bort ur ansökan",
+    "Koden i ansökan byttes"; triggern går på `update of kod,
+    varvad_av_profil_id`, för en `UPDATE OF`-trigger ser bara kolumnerna i
+    själva satsen, och värvaren sätts av en BEFORE-trigger), och den nya
+    värvaren får en ny rad. När bonusen tjänats in står koden fast (23514).
+  - **Unikheten gäller bara levande rader**: en per ansökan och en per konto
+    som inte är annullerad, och en intjänad eller utbetald per person. En
+    annullerad rad håller inte längre en adress, så ingen kan låsa en annans
+    adress med en falsk ansökan.
+  - **En rad skapas bara som `vantar` eller `annullerad`**
+    (`varvningsbonus_ny`; förut bara en BEFORE UPDATE-vakt, så en
+    edge-funktion med tjänstekontot kunde skriva en intjänad rad direkt), och
+    tjänstekontot har inga skrivrättigheter i `varvningsbonus` eller
+    `varvning_installning`.
+  - **Personen** är en HMAC av `intern.varvning_epost_nyckel`: gemener, utan
+    +tagg, och för Gmail utan punkter och med googlemail.com som gmail.com,
+    för där är kim.kompis och kimkompis samma brevlåda.
+  - `mina_tips()` visar inte en väntande rad vars ansökan avböjts, och
+    adminvyns CSV sätter en apostrof före ett värde som börjar med `=`, `+`,
+    `-`, `@`, tabb eller CR (ett namn ur en anonym ansökan hade annars blivit
+    en formel i Excel). Datumen i sektionen och lönefilen är Stockholms
+    (`sthlmDag`).
+  - Provat: `rls-test.sql` avsnitt 52 (`VB`, tio prov till) och KB.
+
 ---
 
 ### Ordlistan (använd den, i kod och i text)
@@ -1114,7 +1353,7 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
 | XP | poäng som räknas ur svaren och försöken och aldrig sparas (Fas 23.2, reglerna i `intern.nexlax_*`) |
 | tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`, 2026-09-30; per formulär sedan 2026-10-13); en kampanjkod är en affischs |
 | tipstimme | en timme i timbanken för ett tips (sedan 2026-10-13), dragen sist: `startrabatt` och `rabattkod = 'TIPS'` på passet |
-| tipsbonus | 300 kr i lön till en studiehjälpare när vi tar in någon som sökt med hens kod (`tipsbonus`, 2026-10-13); aldrig ett underlag i `payouts` |
+| värvningsbonus | 300 kr brutto, inklusive semesterersättning, till en studiehjälpare vars kod en kompis sökt jobb med, intjänad när kompisen fått sitt konto (`varvningsbonus`, 2026-10-21); underlag för lönen, aldrig ett underlag i `payouts`. Hette tipsbonus (`tipsbonus`, 2026-10-13) |
 
 ## Behoven i matchningen (2026-10-21)
 

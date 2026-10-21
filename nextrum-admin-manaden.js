@@ -145,12 +145,14 @@
     const kort = r => r.typ === 'pass';
     const tillägg = r => r.typ === 'tillagg';
     const köp = r => r.typ === 'kop';
+    // Syskontillägget (syskontillagg_som_skuld): Betala tillägg nu, och raden i ett köp av timmar.
+    const syskon = r => r.typ === 'syskon';
     const alla = () => true;
     const lön = typeof NXAdmin.rita.lönFörMånad === 'function' ? NXAdmin.rita.lönFörMånad(valdMånad()) : null;
 
     const p = {
       in: {
-        kort: s(kort, 'in'), tillägg: s(tillägg, 'in'), köp: s(köp, 'in'),
+        kort: s(kort, 'in'), tillägg: s(tillägg, 'in'), köp: s(köp, 'in'), syskon: s(syskon, 'in'),
         oanvänt: s(köp, 'oanvänt'), avgift: s(alla, 'avgift')
       },
       väntar: {
@@ -160,7 +162,7 @@
       },
       ut: { lön, tillbaka: s(alla, 'attÅterbetala') }
     };
-    p.in.summa = p.in.kort + p.in.tillägg + p.in.köp;
+    p.in.summa = p.in.kort + p.in.tillägg + p.in.köp + p.in.syskon;
     p.väntar.summa = p.väntar.kort + p.väntar.tillägg + p.väntar.kommande;
     p.ut.summa = (lön ? lön.öre : 0) + p.ut.tillbaka;
     p.kvarNu = p.in.summa - p.in.avgift - p.ut.summa;
@@ -413,6 +415,7 @@
       + kolumn('Kommit in', p.in.summa, [
           { text: 'Kort för passen', öre: p.in.kort, alltid: true },
           { text: 'Tillägg för övertid', öre: p.in.tillägg },
+          { text: 'Syskontillägg', öre: p.in.syskon },
           { text: 'Köpta timmar', öre: p.in.köp, under: 'betalda i ' + esc(månadNamn()) }
         ], inNot)
       + kolumn('Väntar', p.väntar.summa, [

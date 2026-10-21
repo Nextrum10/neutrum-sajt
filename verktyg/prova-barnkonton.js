@@ -739,10 +739,12 @@ async function provaBarnetsNexlax(webb) {
     prova('barn nexlax: vägen visar banans nivåer', väg.includes('Jämför bråk'), väg.slice(0, 160));
     /* Studiehjälparens uppgifter har en egen flik (2026-10-13); vägen har en remsa dit. */
     prova('barn nexlax: vägen har en remsa till studiehjälparens uppgifter', väg.includes('Sara har gett dig 2'), väg.slice(0, 200));
-    await page.click('#bv-flik-utveckling');
-    await page.click('#bv-nl-utveckling [data-nl-del="hjalpare"]');
+    /* Studiehjälparen är en egen flik sedan NexLäx blev enklare (2026-10-21),
+       inte en del av Din utveckling. */
+    await page.click('#bv-flik-hjalpare');
+    await page.waitForSelector('#bv-panel-hjalpare:not([hidden])', { timeout: 3000 }).catch(() => {});
     await vänta(200);
-    const hj = await text(page, '#bv-nl-utveckling');
+    const hj = await text(page, '#bv-nl-hjalpare');
     prova('barn nexlax: det studiehjälparen gett står under Studiehjälparen', hj.includes('Läs kapitel 3') && hj.includes('Rekommenderat av Sara'), hj.slice(0, 200));
     prova('barn nexlax: text ur databasen ritas som text',
       (await page.locator('#bv-nexlax img[data-elak]').count()) === 0 && hj.includes('<img src=x data-elak=1>'));
@@ -784,7 +786,8 @@ async function provaBarnetsNexlax(webb) {
     /* Din utveckling: talen, men ingen bedömning och inga pass. */
     await page.click('#bv-flik-utveckling');
     await page.waitForSelector('#bv-panel-utveckling:not([hidden])', { timeout: 3000 }).catch(() => {});
-    await page.click('#bv-nl-utveckling [data-nl-del="nexlax"]');
+    // En sida utan sidknappar sedan 2026-10-21.
+    await vänta(200);
     const utv = await text(page, '#bv-nl-utveckling');
     prova('barn nexlax: Din utveckling visar XP', utv.includes('XP totalt'), utv.slice(0, 120));
     prova('barn nexlax: ingen bedömning och inga pass i Din utveckling',
@@ -1366,7 +1369,7 @@ async function provaAdminvyn(webb) {
     await page.goto(BAS + '/admin#koder/studiehjalpare');
     await vänta(400);
     prova('begränsad: en adress till Koder visar inga koder', !(await synlig(page, '#kod-vy')) && !(await synlig(page, '#kod-val .kod-val-kort')));
-    const förbjudna = S.logg.filter(r => /rpc\/(ekonomiska_avvikelser|audit_sok|tipskoder_lage|koder_lage|driftkorningar)|\/(passunderlag|analys_|admin_lage|tipsbonus)/.test(r.väg));
+    const förbjudna = S.logg.filter(r => /rpc\/(ekonomiska_avvikelser|audit_sok|tipskoder_lage|koder_lage|driftkorningar)|\/(passunderlag|analys_|admin_lage|tipsbonus|varvningsbonus|varvning_installning)/.test(r.väg));
     prova('begränsad: det superadminen ser hämtas inte', förbjudna.length === 0, förbjudna.map(r => r.väg).join(', '));
     await page.goto(BAS + '/admin#system/adminanvandare');
     await vänta(300);

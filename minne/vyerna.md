@@ -1513,7 +1513,7 @@ google meet", och sedan "gör allt så att det blir klart så att jag bara kan
 skicka ut länk till ansökande". Ingen koppling till kalendern: Google Kalenders
 bokningsschema, med Meet som plats, och länken i vårt mejl.
 
-- **Länken står i `INTERVJU_BOKNING_URL`** i `nextrum-config.js`, och bara en
+- **Länken står i `INTERVJU_BOKNINGSLANK`** i `nextrum-config.js`, och bara en
   https-adress räknas (`bokningssida()`). Tom är allt som förut: mejlet
   föreslår tre tider.
 - **Mallen** (`mallIntervju`) har länken i stället för de tre tiderna, säger
@@ -1849,3 +1849,53 @@ eller faktura".
   `ärAdminkonto()` i kärnan, ur `admin_roller`) eller i Statistik
   (analysvyerna, `minne/databasen.md`). Listorna visar dem som förut.
 
+
+## Värvningsbonusen i vyerna (2026-10-21, `varvningsbonus`)
+
+Regeln står i `minne/affaren.md` (Värvningsbonusen); här bara ytorna.
+
+- **Adminvyn, sektionen Värvningsbonus** (`#varvning`, `nextrum-admin-varvning.js`, `ritaVarvning`, efter Löner i
+  menyn och bara superadmin: `BARA_SUPER`, modulvakten och `kolla-csp.py`). Raderna hämtar kärnan
+  (`S.varvningsbonus`, med `manad` ur `intjanad_at` i svensk tid) bakom `bara()`, så en admin med behörigheter hämtar
+  dem aldrig. Inställningen står i en rad överst, sedan Väntar, Intjänade, inte utbetalda och Utbetalt
+  (`.adm-tal-rad`), chippen för läget och väljaren för månaden (månaden bonusen tjänades in, annars månaden raden
+  skrevs), en rad per bonus i `tabell()` och summeringen per värvare och lönemånad. Markera utbetald och Annullera
+  frågar i `fråga()` med ett fält (lönemånaden ÅÅÅÅ-MM, skälet minst tre tecken) och läser om allt efteråt, också
+  Löner. Allt ur databasen går genom `esc()`, och CSV:n byggs ur samma rader som syns (BOM, semikolon,
+  decimalkomma), med ören bredvid kronorna för lönen. Dagarna och lönemånaden räknas i Stockholms tid
+  (`toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })`, också i kärnans `manad`), inte i webbläsarens.
+- **Löner** har kvar sin ruta för månadens bonusar, med samma knappar; lyssnaren står i `nextrum-admin-varvning.js`,
+  så knappen gör samma sak var den än står.
+- **Studiehjälparvyn, Profil → Värva en kompis** (fliken hette Tipsa en studiehjälpare; `nextrum-studie.js`,
+  `ritaVärvning`): koden, länken med Kopiera, beloppet och händelsen ur `mina_tips()`, och listan med en rad per
+  kompis (`.nx-varv-lista`: förnamnet eller "En kompis som sökt", bonusens dag eller lönemånad och läget som märke;
+  en väntande har inget datum, för när kompisen sökte är en uppgift ur ansökan). Villkoren länkas ur
+  `CFG.VARVNING_VILLKOR_URL` (`#tips` sedan versionen 2026-10-22); tom ger den en platshållare. Utan `varvningar` i svaret
+  (migrationen inte körd) ritas den gamla rutan med antal.
+- **Jobbansökan** (`bli-studiehjalpare`, båda språken): beskedet under kodfältet (`.nx-kod-besked`, `role="status"`,
+  `aria-describedby` på fältet) i mossa när koden gäller och i `--acc-lugn` när den inte gör det, som filnamnets fel
+  (`.nx-fil-namn.fel`); ansökan går in ändå.
+
+## Granskningen i adminvyn (2026-10-21)
+
+En granskare som inte skrivit koden läste vyerna med fokus på tidszonen; en annan pengaflödet.
+
+- **En dag ur en tidsstämpel är Stockholms.** `kortDatum` skar `slice(0, 10)` ur en tidsstämpel, alltså UTC-dagen,
+  och grenen använde den på nya ställen (rekryteringen, Löner, Koder, Insatta timmar, Liggaren, Syskontillägg): en
+  bonus intjänad 1 november kl. 00.30 stod under novembers lön med texten "intjänad 31 oktober". Kärnan har nu
+  `sthlmDag(iso)` (`toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })`; ett datum utan tid lämnas som det
+  är, och en ogiltig tid faller tillbaka på de tio första tecknen), `kortDatum` går genom den, och lönefilens datum
+  (PAXml), Liggarens `datetime`, Värvningsbonus och Avser månad under Insatta timmar använder den. Ett datum ur
+  databasen som redan är en dag (passets `wanted_date`) rörs inte.
+- **Syskontillägg → Släpp betalningen**: en post som står i en betalning har knappen; den frågar efter orsaken (3–500
+  tecken, utan namn) och kör `tillagg_forsok_slapp_admin`, som släpper hela betalningen (alla poster i den blir
+  upplupna igen, utom ett hållet pass som avbokats). Svarar databasen nej var den redan släppt eller betald.
+- **Betalningar och Månadens ekonomi** har en rad per syskontillägg, på dagen betalningen kom
+  (`S.syskonRader`, hämtade med ekonomiunderlaget: liggarens rader av typen `syskon` och betalningen de hör till),
+  med läget ur betalningen och raden (återbetald när raden är det), Stripes avgift bara för en betalning som är
+  tillägg och inget annat, och testbetalningar utanför talen. Månadens ekonomi har raden Syskontillägg under Kommit
+  in, och bokslutet raden Syskontillägg, betalda i månaden (`manad_lage` → `syskon`). Saknas tabellerna är raderna
+  inga.
+- **Radera**: hindret `syskon_kommande` säger att passen avbokas först, för barnen på ett pass ändras inte.
+- Provat: `prova-adminvyn.js` mot en databas byggd ur alla migrationer, med en betald och en väntande betalning för
+  tillägget i fixturen, så att knappen, raderna och bokslutet ritas mot de riktiga tabellerna.

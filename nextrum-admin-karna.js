@@ -74,8 +74,9 @@ const NXAdmin = (function () {
     /* 2026-09-28: Månadens ekonomi. Pass som timbanken betalat hela,
        och köp av timmar som var testbetalningar. */
     timbankPass: new Set(), klippkortTest: new Set(),
-    /* 2026-10-13: bonusen för tips, och dess strömbrytare. */
-    tipsbonus: [], tipsbonusFel: null, bonusFlagga: null,
+    /* 2026-10-13: bonusen för tips, och dess strömbrytare. Sedan
+       2026-10-21 värvningsbonusen (varvningsbonus), med inställningen. */
+    varvningsbonus: [], varvningFel: null, varvningInst: null, bonusFlagga: null,
     /* 2026-10-12: våra egna konton, som statistiken inte räknar. */
     adminkonton: new Set()
   };
@@ -362,9 +363,20 @@ const NXAdmin = (function () {
     return p ? (p.full_name || p.email || '—') : '—';
   }
 
+  /* Dagen i Stockholms tid (2026-10-21). En tidsstämpel kommer från
+     databasen i UTC, så en händelse 00.30 den 1:a hade stått som dagen
+     före; ett datum utan klocka står som det är. */
+  function sthlmDag(iso) {
+    if (!iso) return '';
+    const t = String(iso);
+    if (t.length <= 10) return t;
+    const d = new Date(t);
+    return isNaN(d) ? t.slice(0, 10) : d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+  }
+
   function kortDatum(iso) {
     if (!iso) return '—';
-    return datumText(String(iso).slice(0, 10));
+    return datumText(sthlmDag(iso));
   }
 
   /* VILKEN MÅNADS LÖN ETT PASS HÖR TILL (2026-09-28, om 2026-10-01)
@@ -501,7 +513,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, kk, ansUt, tillagg, bank,
-           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna, partner] = await Promise.all([
+           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna, partner, varvInst] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -543,7 +555,7 @@ const NXAdmin = (function () {
          lästes här från Fas 14.6 till 2026-10-21.) */
       /* 2026-09-30: och timmen på köpet för ett tips, samma sort.
          2026-10-13: och bonusen för tips, som står under Koder. */
-      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'erbjudanden', 'tipstimme', 'tipsbonus']),
+      supa.from('flaggor').select('*').in('kod', ['kortsparr', 'erbjudanden', 'tipstimme', 'tipsbonus', 'kortreservation']),
       /* Fas 14.3: korttvisterna, med sista dagen att svara. Bara admin
          ser tabellen; för alla andra är svaret tomt. */
       bara(() => hämtaAlla('stripe_tvister', '*', nyastFörst('skapad'))),
@@ -589,10 +601,11 @@ const NXAdmin = (function () {
          De räknas inte i Översiktens och Statistikens tal. Bara den som
          ser Översikt behöver dem, och bara den får läsa rollerna. */
       bara(() => supa.from('admin_roller').select('user_id')),
-      /* 2026-10-13: bonusen för tips, 300 kr i lön när vi tar in någon
-         som sökt jobb med en studiehjälpares kod. Löner räknar den och
-         lägger den i lönefilen, Koder visar den per kod. */
-      bara(() => hämtaAlla('tipsbonus', '*', nyastFörst('intjanad_at'))),
+      /* 2026-10-21 (varvningsbonus; bonusen för tips sedan 2026-10-13):
+         300 kr i lön till den som värvat en studiehjälpare. Värvningsbonus
+         visar och markerar dem, Löner räknar dem och lägger dem i
+         lönefilen, Koder visar dem per kod. */
+      bara(() => hämtaAlla('varvningsbonus', '*', nyastFörst('skapad_at'))),
       /* 2026-10-15: familjerabatterna, våra egna koder som bara vi ser, och
          vilken familj som har vilken. Fliken under Tjänster och familjens
          panel ritar dem. En rad per familj som någon gång haft en. */
@@ -605,7 +618,9 @@ const NXAdmin = (function () {
       /* 2026-10-21 (koder_for_planer): partnern familjen kom genom, sparad
          första gången den köpte en plan med en partnerkod. Bara superadmin
          läser den, och utan migrationen är den tom. */
-      bara(() => supa.from('familjens_partner').select('familj, kod, kopplad_at'))
+      bara(() => supa.from('familjens_partner').select('familj, kod, kopplad_at')),
+      /* 2026-10-21 (varvningsbonus): beloppet, procenten och händelsen. */
+      bara(() => supa.from('varvning_installning').select('*').eq('id', 1).maybeSingle())
     ]);
 
     S.leads = leads.data || [];
@@ -653,9 +668,15 @@ const NXAdmin = (function () {
     S.erbFlagga = (flaggor.data || []).find(f => f.kod === 'erbjudanden') || null;
     S.tipsFlagga = (flaggor.data || []).find(f => f.kod === 'tipstimme') || null;
     S.bonusFlagga = (flaggor.data || []).find(f => f.kod === 'tipsbonus') || null;
-    /* Saknas tabellen (migrationen tipskoder_bonus_och_timbanken är inte
-       körd) är bonusarna inga, och Löner räknar som förut. */
-    S.tipsbonus = bonus.data || [];
+    S.kortFlagga = (flaggor.data || []).find(f => f.kod === 'kortreservation') || null;
+    /* Saknas tabellen (migrationen varvningsbonus är inte körd) är
+       bonusarna inga, och Löner räknar som förut. Lönemånaden är månaden
+       bonusen tjänades in, i Stockholms tid, som passens. */
+    const sthlmMånad = t => sthlmDag(t).slice(0, 7) + '-01';
+    S.varvningsbonus = (bonus.data || []).map(b => Object.assign({}, b, {
+      manad: b.intjanad_at ? sthlmMånad(b.intjanad_at) : null
+    }));
+    S.varvningInst = varvInst && !varvInst.error ? (varvInst.data || null) : null;
     /* Saknas tabellerna (migrationen familjerabatter är inte körd) säger
        fliken och panelen det, och ingen familj har en rabatt. */
     const saknas = fel => fel && (/PGRST205|42P01/.test(String(fel.code))
@@ -665,7 +686,7 @@ const NXAdmin = (function () {
     S.familjensRabatt = {};
     (frFamiljer.data || []).forEach(r => { S.familjensRabatt[r.parent_id] = r; });
     S.familjensRabattFel = frFamiljer.error ? (saknas(frFamiljer.error) ? 'saknas' : felText(frFamiljer.error)) : null;
-    S.tipsbonusFel = bonus.error ? (/PGRST205|42P01/.test(String(bonus.error.code)) ? 'saknas' : felText(bonus.error)) : null;
+    S.varvningFel = bonus.error ? (/PGRST205|42P01/.test(String(bonus.error.code)) ? 'saknas' : felText(bonus.error)) : null;
     /* Saknas funktionen (migrationen tipskoder_och_kampanjkoder är inte
        körd) är listan tom och säger det, i stället för att fälla vyn. */
     S.tipskoder = tips.data || [];
@@ -721,18 +742,32 @@ const NXAdmin = (function () {
      som saknar sin. Saknas vyn — migrationen inte körd — säger
      avvikelsefliken det, i stället för att hela vyn dör. */
   async function hämtaEkonomiunderlag() {
-    const [pu, fri, avv] = await Promise.all([
+    const [pu, fri, avv, syr, syb] = await Promise.all([
       hämtaAlla('passunderlag', '*', nyastFörst('wanted_date')),
       hämtaAlla('lesson_reports', 'id, student_id, tutor_id, lesson_date, created_at, raw_notes',
         q => q.is('booking_id', null).order('lesson_date', { ascending: false })),
       /* Fas 6: allt annat som inte går ihop, räknat i databasen. */
-      supa.rpc('ekonomiska_avvikelser')
+      supa.rpc('ekonomiska_avvikelser'),
+      /* Syskontilläggen (syskontillagg_som_skuld, granskningen 2026-10-21):
+         liggarens rader av typen syskon, både Betala tillägg nu och raden i
+         ett köp, med betalningen de hör till. Köpets egen rad räknar bara
+         köpets del, så utan de här saknades tillägget i månadens summa. */
+      hämtaAlla('betalningsrader', 'id, betalning_id, belopp_ore, aterbetalt_ore', q => q.eq('typ', 'syskon')),
+      hämtaAlla('betalningar', 'id, familj, typ, status, betald_at, skarp, avgift_ore', q => q)
     ]);
     S.passunderlagFel = pu.error ? felText(pu.error) : null;
     S.passunderlag = pu.data || [];
     S.fristaendeRapporter = fri.data || [];
     S.avvikelserFel = avv.error ? felText(avv.error) : null;
     S.avvikelser = avv.data || [];
+    /* Saknas tabellerna (migrationerna är inte körda) finns inga tillägg att räkna. */
+    const saknasTabell = fel => fel && (/PGRST205|42P01/.test(String(fel.code))
+      || /could not find the table/i.test(String(fel.message || '')));
+    const betalningar = new Map((syb.data || []).map(b => [b.id, b]));
+    S.syskonRader = (syr.data || []).map(r => Object.assign({}, r, { betalning: betalningar.get(r.betalning_id) || null }))
+      .filter(r => r.betalning && r.betalning.betald_at);
+    S.syskonFel = syr.error && !saknasTabell(syr.error) ? felText(syr.error)
+      : syb.error && !saknasTabell(syb.error) ? felText(syb.error) : null;
   }
 
   /* ------------------------------------------------------------
@@ -1115,7 +1150,7 @@ const NXAdmin = (function () {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     gmailAdress, gmailLänk, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
-    kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad,
+    kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad, sthlmDag,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
     lägesväljare, räknas, får,
     ärAdminkonto, ärNyNu, ärRaderad, ärSuperadmin, rita

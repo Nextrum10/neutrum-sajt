@@ -358,6 +358,8 @@ Deno.test('reservationens händelser står bland dem endpointen måste ha (2026-
   assert(WEBHOOK_HANDELSER.includes('payment_intent.canceled'));
   // Klarna: pengarna som kommer efter kassan.
   assert(WEBHOOK_HANDELSER.includes('checkout.session.async_payment_succeeded'));
+  // Syskontillägget: en kassa som går ut släpper försöket.
+  assert(WEBHOOK_HANDELSER.includes('checkout.session.expired'));
   assertEquals(new Set(WEBHOOK_HANDELSER).size, WEBHOOK_HANDELSER.length);
 });
 

@@ -4,8 +4,8 @@
        NODE_PATH="$(npm root -g)" node verktyg/prova-intag.js [mapp för bilder]
 
    Leo: "när man ska ta in en anställd är det krångligt att skapa konto
-   åt den, samma med familj". Ta in i poolen skapar nu kontot med
-   adressen i ansökan när ingen har den, Ta in familjen gör konto,
+   åt den, samma med familj". Utbildning hållen (Ta in i poolen till
+   2026-10-21) skapar kontot med adressen i ansökan när ingen har den, Ta in familjen gör konto,
    inbjudan och elev i ett tryck, och Skicka inbjudan igen står vid den
    som aldrig loggat in. Sedan 2026-10-07 står knappen också vid den som
    loggat in, som Skicka länk för lösenord. Edge-funktionen bjud-in svarar här som den gör
@@ -163,6 +163,17 @@ function falskSupabase(o) {
       return { redan: false, familj, kalla: l.kalla || null };
     },
     mina_behorigheter: () => ({ admin: true, superadmin: true, behorigheter: [] }),
+    /* Utbildning hållen (ansokningarnas_steg, 2026-10-21), som databasen:
+       ansökan får kontot och blir godkänd, och profilen godkänns med
+       timpenningen. */
+    ansokan_utbildning_hallen: k => {
+      const a = W.applications.find(x => x.id === k.p_ansokan);
+      if (!a) return { ok: false, fel: 'Ansökan finns inte.' };
+      Object.assign(a, { konto_id: k.p_konto, status: 'approved', utbildad_at: a.utbildad_at || nu(0) });
+      const t = W.tutor_profiles.find(x => x.id === k.p_konto);
+      if (t) Object.assign(t, { status: 'approved', hourly_rate: k.p_timpenning });
+      return { ok: true, konto: k.p_konto, redan: false };
+    },
     notisfel: () => [], ekonomiska_avvikelser: () => [], tipskoder_lage: () => [],
     admin_sett_markera: k => k.p_till,
     /* Adminens eget läge: panelen läser bara den gällande versionen ur det. */
@@ -179,7 +190,17 @@ function falskSupabase(o) {
         brukbar: true, betalt_ore: 0, betald_at: null, vid_uppsagning_ore: 0, vid_anger_ore: 0, angerfrist_till: null,
         created_at: nu(0) };
       (W.klippkort_saldo = W.klippkort_saldo || []).push(rad);
-      return { ok: true, id: rad.id, timmar: k.p_timmar, giltigt_till: sista, betalda_pass: 0 };
+      /* Med orsaken och månaden (timmar_med_orsak, 2026-10-21), som databasen:
+         utan orsak sätts ingenting in. */
+      if (!k.p_orsak || String(k.p_orsak).trim().length < 3) {
+        W.klippkort_saldo.pop();
+        return { code: '22023', message: 'Skriv varför timmarna sätts in, 3–500 tecken.' };
+      }
+      const nu0 = new Date();
+      const manad = k.p_manad || (nu0.getFullYear() + '-' + String(nu0.getMonth() + 1).padStart(2, '0') + '-01');
+      (W.timmar_insatta = W.timmar_insatta || []).push({ id: ++löpnr, familj: k.p_familj, klippkort_id: rad.id,
+        timmar: k.p_timmar, avser_manad: manad, orsak: String(k.p_orsak).trim(), insatt_av: 'admin-1', insatt_at: nu(0) });
+      return { ok: true, id: rad.id, timmar: k.p_timmar, giltigt_till: sista, betalda_pass: 0, avser_manad: manad };
     },
     ta_tillbaka_gratistimmar: k => {
       const i = (W.klippkort_saldo || []).findIndex(r => r.id === k.p_id);
@@ -286,71 +307,79 @@ async function tillAdmin(page, sek) {
   await vänta(700);
 }
 
-/* ============ 1. Ta in i poolen, utan konto ============ */
+/* ============ 1. Utbildning hållen, utan konto ============
+   Ta in i poolen blev Utbildning hållen (ansokningarnas_steg, 2026-10-21):
+   kontot skapas med adressen i ansökan genom bjud-in, och databasen
+   kopplar det och godkänner profilen (ansokan_utbildning_hallen). Stegen
+   provas i prova-ansokningar.js; här provas intaget: adressen, namnet,
+   rollen, ordningen och kvittot. */
 async function provaPoolenUtanKonto(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, {});
   await tillAdmin(page, 'ansokningar');
-  await page.click('[data-dp="ansokan:ans-ny"]');
+  await page.click('#flik-ans-utbildning');
+  await vänta(300);
+  await page.click('#panel-ans-utbildning [data-dp="ansokan:ans-ny"]');
   await vänta(400);
-  prova('pool: ansökan säger att kontot skapas när hen tas in', (await page.locator('.dp-fakta').first().innerText())
-    .includes('det skapas när hen tas in i poolen'));
-  /* Panelens knapp: Utbildning-listan i Rekryteringen har en likadan
-     (2026-10-13), dold medan Ansökningar visas. */
-  await page.click('.dp-atgard [data-ans-pool="ans-ny"]');
-  await page.waitForSelector('#ap-konto', { timeout: 4000 }).catch(() => {});
-  prova('pool: Skapa kontot med adressen i ansökan är valt', (await page.inputValue('#ap-konto')) === '__nytt'
-    && (await text(page, '#ap-konto option[value="__nytt"]')).includes('sara.n@example.se'), await page.inputValue('#ap-konto'));
-  prova('pool: rutan säger att hen får länken till lösenordet', (await text(page, '#ap-konto-text')).includes('länk där hen väljer sitt lösenord'),
-    await text(page, '#ap-konto-text'));
-  prova('pool: knappen säger vad den gör', (await text(page, '#ap-godkann')) === 'Ta in och skicka inbjudan', await text(page, '#ap-godkann'));
-  prova('pool: den som registrerat sig själv står kvar att välja', (await page.locator('#ap-konto option[value="sh-1"]').count()) === 1);
-  await bild(page, 'pool-skapa', '.nx-fraga-box');
+  prova('intag: ansökan säger att Utbildning hållen skapar kontot', (await text(page, '.dp .ans-nu'))
+    .includes('Utbildning hållen skapar kontot'), await text(page, '.dp .ans-nu'));
+  await page.click('.dp [data-ans-hallen="ans-ny"]');
+  await page.waitForSelector('#uh-ok', { timeout: 4000 }).catch(() => {});
+  prova('intag: rutan säger att kontot skapas med adressen i ansökan och att hen väljer lösenordet',
+    (await text(page, '.nx-fraga-box')).includes('sara.n@example.se')
+    && (await text(page, '.nx-fraga-box')).includes('väljer sitt lösenord'), await text(page, '.nx-fraga-box'));
+  prova('intag: knappen säger vad den gör', (await text(page, '#uh-ok')) === 'Skapa kontot och skicka inbjudan', await text(page, '#uh-ok'));
+  await bild(page, 'intag-utbildning-hallen', '.nx-fraga-box');
 
-  await page.click('#ap-godkann');
-  prova('pool: utan timpenning skickas ingenting', S.bjudIn.length === 0 && (await text(page, '#ap-msg')).includes('timpenningen'));
-  await page.fill('#ap-timpenning', '180');
-  await page.click('#ap-godkann');
-  await page.waitForFunction(() => /intagen/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
+  await page.click('#uh-ok');
+  prova('intag: utan timpenning skickas ingenting', S.bjudIn.length === 0 && (await text(page, '#uh-msg')).includes('timpenningen'));
+  await page.fill('#uh-timpenning', '180');
+  await page.click('#uh-ok');
+  await page.waitForFunction(() => /har fått sitt konto/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''),
+    null, { timeout: 6000 }).catch(() => {});
   const b = S.bjudIn[0];
-  prova('pool: bjud-in får adressen, namnet och rollen studiehjälpare', b && b.epost === 'Sara.N@example.se'
+  prova('intag: bjud-in får adressen, namnet och rollen studiehjälpare', b && b.epost === 'Sara.N@example.se'
     && b.namn === 'Sara Nyberg' && b.roll === 'tutor' && !b.igen, JSON.stringify(b));
-  const tp = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/tutor_profiles');
-  prova('pool: det nya kontot godkänns, med timpenningen', tp && /id=eq\.ny-1/.test(tp.sök) && tp.kropp.status === 'approved'
-    && tp.kropp.hourly_rate === 180, JSON.stringify(tp));
-  prova('pool: kontot skapas före godkännandet', S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
-    < S.logg.findIndex(r => r.metod === 'PATCH' && r.väg === '/rest/v1/tutor_profiles'));
-  const ap = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/applications');
-  prova('pool: ansökan blir godkänd', ap && ap.kropp.status === 'approved' && /id=eq\.ans-ny/.test(ap.sök), JSON.stringify(ap));
-  prova('pool: kvittot säger vart länken gick', (await text(page, '.nx-fraga-box h3')) === 'Sara Nyberg är intagen'
+  const h = S.logg.find(r => r.väg === '/rest/v1/rpc/ansokan_utbildning_hallen');
+  prova('intag: databasen kopplar det nya kontot, med timpenningen', h && h.kropp.p_ansokan === 'ans-ny'
+    && h.kropp.p_konto === 'ny-1' && h.kropp.p_timpenning === 180, JSON.stringify(h && h.kropp));
+  prova('intag: kontot skapas före kopplingen', S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
+    < S.logg.findIndex(r => r.väg === '/rest/v1/rpc/ansokan_utbildning_hallen'));
+  prova('intag: vyn skriver inte själv i tutor_profiles eller applications',
+    !S.logg.some(r => r.metod === 'PATCH' && (r.väg === '/rest/v1/tutor_profiles' || r.väg === '/rest/v1/applications')));
+  prova('intag: kvittot säger vart länken gick', (await text(page, '.nx-fraga-box h3')) === 'Sara Nyberg har fått sitt konto'
     && (await text(page, '.nx-fraga-box')).includes('sara.n@example.se'), await text(page, '.nx-fraga-box'));
-  await bild(page, 'pool-kvitto', '.nx-fraga-box');
-  await page.click('[data-ap-stang]');
-  prova('pool: Stäng stänger kvittot', !(await synlig(page, '.nx-fraga')));
-  prova('pool: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
-  prova('pool: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await bild(page, 'intag-kvitto', '.nx-fraga-box');
+  await page.click('[data-uh-stang]');
+  prova('intag: Stäng stänger kvittot', !(await synlig(page, '.nx-fraga')));
+  prova('intag: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+  prova('intag: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
 }
 
-/* ============ 2. Ta in i poolen, med kontot hen skapat själv ============ */
+/* ============ 2. Utbildning hållen, med kontot hen skapat själv ============ */
 async function provaPoolenMedKonto(webb) {
   const { context, page, S, konsol } = await öppna(webb, {});
   await tillAdmin(page, 'ansokningar');
-  await page.click('[data-dp="ansokan:ans-har"]');
+  await page.click('#flik-ans-utbildning');
+  await vänta(300);
+  await page.click('#panel-ans-utbildning [data-dp="ansokan:ans-har"]');
   await vänta(400);
-  await page.click('.dp-atgard [data-ans-pool="ans-har"]');
-  await page.waitForSelector('#ap-konto', { timeout: 4000 }).catch(() => {});
-  prova('pool med konto: kontot med samma adress är valt', (await page.inputValue('#ap-konto')) === 'sh-1', await page.inputValue('#ap-konto'));
-  prova('pool med konto: inget nytt konto erbjuds för en adress som redan finns',
-    (await page.locator('#ap-konto option[value="__nytt"]').count()) === 0);
-  prova('pool med konto: knappen heter som förut', (await text(page, '#ap-godkann')) === 'Ta in i poolen');
-  await page.fill('#ap-timpenning', '170');
-  await page.click('#ap-godkann');
-  await vänta(600);
-  prova('pool med konto: ingen inbjudan', S.bjudIn.length === 0);
-  const tp = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/tutor_profiles');
-  prova('pool med konto: kontot godkänns', tp && /id=eq\.sh-1/.test(tp.sök) && tp.kropp.status === 'approved', JSON.stringify(tp));
-  prova('pool med konto: rutan stängs som förut', !(await synlig(page, '.nx-fraga')));
-  prova('pool med konto: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+  await page.click('.dp [data-ans-hallen="ans-har"]');
+  await page.waitForSelector('#uh-ok', { timeout: 4000 }).catch(() => {});
+  prova('intag med konto: kontot med samma adress kopplas, inget nytt skapas',
+    (await text(page, '#uh-ok')) === 'Koppla kontot och godkänn' && (await text(page, '.nx-fraga-box')).includes('finns redan'),
+    await text(page, '.nx-fraga-box'));
+  await page.fill('#uh-timpenning', '170');
+  await page.click('#uh-ok');
+  await page.waitForFunction(() => /har fått sitt konto/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''),
+    null, { timeout: 6000 }).catch(() => {});
+  prova('intag med konto: ingen inbjudan', S.bjudIn.length === 0);
+  const h = S.logg.find(r => r.väg === '/rest/v1/rpc/ansokan_utbildning_hallen');
+  prova('intag med konto: databasen kopplar kontot som fanns', h && h.kropp.p_konto === 'sh-1' && h.kropp.p_timpenning === 170,
+    JSON.stringify(h && h.kropp));
+  prova('intag med konto: kvittot säger att hen loggar in med kontot hen har',
+    (await text(page, '.nx-fraga-box')).includes('loggar in med kontot hen redan har'), await text(page, '.nx-fraga-box'));
+  prova('intag med konto: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
   await context.close();
 }
 
@@ -378,6 +407,12 @@ async function provaFamiljen(webb) {
   prova('familj: 41 gratistimmar nekas innan kontot skapas', S.bjudIn.length === 0
     && (await text(page, '#le-msg')).includes('mellan 0 och 40'), await text(page, '#le-msg'));
   await page.fill('#le-gratis', '3');
+  prova('familj: orsaken fälls ut när timmarna är fler än noll', await synlig(page, '#le-gratis-orsak'));
+  await page.click('#le-skapa');
+  await vänta(300);
+  prova('familj: gratistimmar utan orsak nekas innan kontot skapas', S.bjudIn.length === 0
+    && (await text(page, '#le-msg')).includes('Skriv varför familjen får gratistimmarna'), await text(page, '#le-msg'));
+  await page.fill('#le-gratis-orsak', 'Välkomsttimmar vid intaget');
   await bild(page, 'familj-ta-in', '.nx-fraga-box');
   await page.click('#le-skapa');
   await page.waitForFunction(() => /intagen/.test((document.querySelector('.nx-fraga-box h3') || {}).textContent || ''), null, { timeout: 6000 }).catch(() => {});
@@ -409,8 +444,9 @@ async function provaFamiljen(webb) {
   prova('familj: kvittot säger inget om första timmen', !/första timmen/i.test(await text(page, '.nx-fraga-box')),
     await text(page, '.nx-fraga-box'));
   const gt = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_gratistimmar');
-  prova('familj: gratistimmarna sätts in på det nya kontot', gt && gt.kropp.p_familj === 'ny-1' && gt.kropp.p_timmar === 3,
-    JSON.stringify(gt && gt.kropp));
+  prova('familj: gratistimmarna sätts in på det nya kontot, med orsaken och den här månaden',
+    gt && gt.kropp.p_familj === 'ny-1' && gt.kropp.p_timmar === 3 && gt.kropp.p_orsak === 'Välkomsttimmar vid intaget'
+    && gt.kropp.p_manad === null, JSON.stringify(gt && gt.kropp));
   prova('familj: gratistimmarna sätts in efter kontot och före eleven', S.logg.indexOf(gt) > S.logg.findIndex(r => r.väg === '/functions/v1/bjud-in')
     && S.logg.indexOf(gt) < S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/students'));
   prova('familj: kvittot säger hur många gratistimmar och till vilken dag', /3 gratistimmar står i familjens timbank, till och med \d+ \S+/
@@ -463,22 +499,45 @@ async function provaGratistimmarIPanelen(webb) {
   await vänta(400);
   const fakta = await page.locator('.dp-fakta').first().innerText();
   prova('gratis: Översikt säger timbanken, utan timmar', /Timbanken\s*0 timmar/.test(fakta), fakta);
-  prova('panel: första timmen är ett läge, utan knapp pass för pass (2026-10-15)',
-    /Första timmen gratis\s*inte given än/.test(fakta) && (await page.locator('[data-dp-forsta]').count()) === 0, fakta);
+  prova('panel: raden Första timmen gratis är borta (2026-10-21), och ingen fråga om den',
+    !/Första timmen/.test(fakta) && (await page.locator('[data-dp-forsta]').count()) === 0
+    && !S.logg.some(r => r.väg === '/rest/v1/rpc/forsta_timmen_lage'), fakta);
   await page.click('.dp-fakta [data-dp-flik="ekonomi"]');
   await page.waitForSelector('form[data-dp-gratis="familj-1"]', { timeout: 3000 }).catch(() => {});
   prova('gratis: knappen går till Ekonomi, där rutan finns', await synlig(page, 'form[data-dp-gratis="familj-1"]'));
+  /* Månaden och orsaken (timmar_med_orsak, 2026-10-21). */
+  const månader = await page.locator('#dp-gratis-manad option').evaluateAll(l => l.map(o => o.value));
+  const denna = (() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01'; })();
+  prova('gratis: månaderna börjar i september 2026, slutar nästa månad, och den här är vald',
+    månader[0] === '2026-09-01' && månader.includes(denna) && månader.indexOf(denna) === månader.length - 2
+    && (await page.inputValue('#dp-gratis-manad')) === denna, JSON.stringify(månader));
+  const varningar = [];
+  page.on('dialog', d => { varningar.push(d.message()); d.dismiss().catch(() => {}); });
   await page.fill('#dp-gratis-n', '2');
   await page.click('form[data-dp-gratis] [type="submit"]');
+  await vänta(300);
+  // Fältet krävs (required, minst tre tecken): webbläsaren stoppar formuläret.
+  prova('gratis: utan orsak sätts inget in, och fältet säger att det krävs',
+    (await page.evaluate(() => !document.querySelector('#dp-gratis-orsak').checkValidity()))
+    && !S.logg.some(r => r.väg === '/rest/v1/rpc/ge_gratistimmar'), varningar.join(' | '));
+  await page.fill('#dp-gratis-orsak', 'Passet 14 oktober ställdes in av oss');
+  await page.selectOption('#dp-gratis-manad', '2026-09-01');
+  await page.click('form[data-dp-gratis] [type="submit"]');
   await page.waitForSelector('.nx-fraga.open', { timeout: 3000 }).catch(() => {});
-  prova('gratis: frågar först, med antalet och sista dagen', /Sätt in 2 gratistimmar\?/.test(await text(page, '.nx-fraga-box h3'))
-    && (await text(page, '.nx-fraga-box')).includes('till och med'), await text(page, '.nx-fraga-box'));
+  prova('gratis: frågar först, med antalet, sista dagen, månaden och orsaken', /Sätt in 2 gratistimmar\?/.test(await text(page, '.nx-fraga-box h3'))
+    && (await text(page, '.nx-fraga-box')).includes('till och med') && (await text(page, '.nx-fraga-box')).includes('september 2026')
+    && (await text(page, '.nx-fraga-box')).includes('Passet 14 oktober ställdes in av oss'), await text(page, '.nx-fraga-box'));
   await page.click('.nx-fraga [data-svar="ja"]');
   await page.waitForFunction(() => /insatta/.test((document.querySelector('.dp-gratis .ok-msg') || {}).textContent || ''),
     null, { timeout: 6000 }).catch(() => {});
   const gt = S.logg.find(r => r.väg === '/rest/v1/rpc/ge_gratistimmar');
-  prova('gratis: ge_gratistimmar får familjen och antalet', gt && gt.kropp.p_familj === 'familj-1' && gt.kropp.p_timmar === 2,
+  prova('gratis: ge_gratistimmar får familjen, antalet, orsaken och månaden', gt && gt.kropp.p_familj === 'familj-1'
+    && gt.kropp.p_timmar === 2 && gt.kropp.p_orsak === 'Passet 14 oktober ställdes in av oss' && gt.kropp.p_manad === '2026-09-01',
     JSON.stringify(gt && gt.kropp));
+  const insatta = await page.locator('.dp').first().innerText();
+  prova('gratis: insättningen står under Insatta timmar, med månaden, orsaken och vem',
+    /INSATTA TIMMAR|Insatta timmar/.test(insatta) && insatta.includes('2 gratistimmar, avser september 2026')
+    && insatta.includes('Passet 14 oktober ställdes in av oss') && insatta.includes('av Leo Admin'), insatta);
   const panel = await page.locator('.dp').first().innerText();
   prova('gratis: kortet står i panelen med timmarna', panel.includes('Gratistimmar från Nextrum') && panel.includes('2 av 2 timmar kvar'), panel);
   prova('gratis: kvittot säger att de är insatta', (await text(page, '.dp-gratis .ok-msg')).startsWith('2 gratistimmar insatta, till och med'),

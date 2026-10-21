@@ -99,6 +99,14 @@
       'Passet och rapporten är beviset i tvisten. Vänta tills Stripe avgjort den, under Betalningar → Att göra.'],
     betalt_for_lange: h => ['Betalt för längre tid än passen höll: ' + kronor(h.belopp_ore || 0),
       'Betala tillbaka skillnaden under Betalningar → Att göra.'],
+    // syskontillagg_som_skuld (2026-10-21): skulden görs upp först.
+    tillagg_obetalt: h => ['Obetalt syskontillägg: ' + kronor(h.belopp_ore || 0)
+      + (h.antal > 1 ? ' (' + h.antal + ' pass)' : ''),
+      'Låt familjen betala det, eller skriv av det under Betalningar → Syskontillägg.'],
+    // Granskningen 2026-10-21: barnen på ett pass ändras inte, så passet avbokas först.
+    syskon_kommande: h => [st(h.antal, 'kommande pass', 'kommande pass') + ' med barnet som syskon',
+      'Barnen på ett pass ändras inte efter bokningen. Avboka passen under Bokningar, så frigörs tillägget, '
+        + 'och boka om dem utan barnet om de ska hållas.'],
     ej_rapporterat: h => [st(h.antal, 'pass', 'pass') + ' har börjat men saknar rapport',
       'Studiehjälparen får lön först när rapporten finns, och den går inte att skriva efteråt. Be hen '
         + 'skriva den, eller avboka passet under Bokningar om det aldrig hölls.'],
@@ -114,6 +122,11 @@
         + (h.antal === 1 ? '' : 'a') + ': ' + kronor(h.belopp_ore || 0),
       'Betala ut bonusen med nästa lön och markera den Utbetald under Löner, eller stryk den där om den '
         + 'inte ska betalas.'],
+    /* 2026-10-21: värvningsbonusen är lön som inte är betald än. */
+    varvningsbonus: h => [st(h.antal, 'värvningsbonus', 'värvningsbonusar') + ' som inte är utbetald'
+        + (h.antal === 1 ? '' : 'a') + ': ' + kronor(h.belopp_ore || 0),
+      'Betala ut bonusen med nästa lön och markera den utbetald under Värvningsbonus, eller annullera den där med '
+        + 'ett skäl om den inte ska betalas.'],
     /* kortet_reserveras (2026-10-13): inget ska bli kvar hos Stripe. */
     kort_sparat: () => ['Familjen har ett sparat kort',
       'Ta bort kortet med Ta bort kortet i familjens panel under Ekonomi, eller be familjen göra det under '
@@ -143,6 +156,7 @@
     klippkort: ['köp av timmar', 'köp av timmar'],
     underlag: ['löneunderlag', 'löneunderlag'],
     tipsbonus: ['bonus för tips', 'bonusar för tips'],
+    varvningsbonus: ['värvningsbonus', 'värvningsbonusar'],
     elevernas_material: ['läxa, plan eller material hen skrivit åt en elev (eleven har det kvar)',
       'läxor, planer och material hen skrivit åt elever (eleverna har dem kvar)'],
     handlingar: ['handling under System → Dokument. Ta bort den där om den inte ska sparas',
