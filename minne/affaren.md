@@ -157,7 +157,7 @@ när hen skickades vidare, köat i notiskön med nyckeln
 `ansokan_intervju:<id>:igen:<millisekunder>`, bara i steget Intervju och
 högst en gång i tio minuter. Kön (`notis_utskick_ta`) skickar ett
 intervjumejl bara medan ansökan står i Intervju. Utan
-`INTERVJU_BOKNING_URL` säger knappen det och inget köas: mallen har länken
+`INTERVJU_BOKNINGSLANK` säger knappen det och inget köas: mallen har länken
 hårdkodad (`intervju.ts`), och `kolla-mejltexter.py` håller den lika
 configen, så en tom config är en länk som inte ska gå ut.
 
@@ -420,7 +420,7 @@ Workspace-kopplingen; kalendern, inbjudningarna och rekryteringsmötet
 valdes bort, och mejlen går genom Resend som förut (INTEGRATIONER.md).
 Intervjun bokas sedan 2026-10-20 på en bokningssida i Google Kalender,
 utan koppling: länken står i mejlet till den som söker
-(`INTERVJU_BOKNING_URL`, `minne/vyerna.md`).
+(`INTERVJU_BOKNINGSLANK`, `minne/vyerna.md`).
 
 Ur avsnitt 11:
 

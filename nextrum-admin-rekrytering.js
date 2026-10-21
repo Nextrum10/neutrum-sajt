@@ -214,7 +214,7 @@
      Samma mejl som när hen skickades vidare, köat en gång till genom
      notiskön (ansokan_intervjulank_igen), högst en gång i tio minuter
      och bara medan hen står i Intervju. Länken står i
-     INTERVJU_BOKNING_URL: saknas den skickas inget. */
+     INTERVJU_BOKNINGSLANK: saknas den skickas inget. */
   document.addEventListener('click', async e => {
     const knapp = e.target.closest('[data-ans-igen]');
     if (!knapp) return;
@@ -222,7 +222,7 @@
     if (!a || ansSteg(a) !== 'intervju') return;
     if (!bokningssida()) {
       alert('Ingen bokningssida är satt, så det finns ingen länk att skicka. Lägg länken till '
-        + 'bokningsschemat i Google Kalender i INTERVJU_BOKNING_URL i nextrum-config.js först.');
+        + 'bokningsschemat i Google Kalender i INTERVJU_BOKNINGSLANK i nextrum-config.js först.');
       return;
     }
     const namn = förnamn(a.name);
@@ -362,11 +362,11 @@
     return data && data.ok ? null : 'Okänt svar.';
   }
 
-  /* Bokningssidan i Google Kalender (2026-10-20, INTERVJU_BOKNING_URL).
+  /* Bokningssidan i Google Kalender (2026-10-20, INTERVJU_BOKNINGSLANK).
      Bara en https-adress, som möteslänken: mejlet går ut med vår
      avsändare, och en adress som inte är en länk hade stått som text. */
   function bokningssida() {
-    const u = String(CFG.INTERVJU_BOKNING_URL || '').trim();
+    const u = String(CFG.INTERVJU_BOKNINGSLANK || '').trim();
     return /^https:\/\/\S+$/.test(u) ? u : '';
   }
 
@@ -497,7 +497,7 @@
      knappar för mötet, utbildningsmötet och Markera utbildad. Nu ett
      block överst i ansökan: steget, när hen kom dit, och knapparna för
      just det steget. Boka digitalt möte är borta: hen bokar själv på
-     bokningssidan (INTERVJU_BOKNING_URL), och Google mejlar tiden och
+     bokningssidan (INTERVJU_BOKNINGSLANK), och Google mejlar tiden och
      Meet-länken.
      ============================================================ */
   function ritaOm() {
@@ -894,7 +894,7 @@
      i supabase/functions/_delad/notiser/intervju.ts).
      verktyg/kolla-mejltexter.py håller dem lika. Länken till
      bokningssidan (2026-10-20, Leo) står med i mejlet och ska vara
-     INTERVJU_BOKNING_URL, som kontrollen också prövar: mallen kan inte
+     INTERVJU_BOKNINGSLANK, som kontrollen också prövar: mallen kan inte
      läsa configen, så frågan visar mallens adress, inte bokningssida().
      ============================================================ */
   const INTERVJU_MEJLET = {

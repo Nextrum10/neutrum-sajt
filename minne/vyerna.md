@@ -1513,7 +1513,7 @@ google meet", och sedan "gör allt så att det blir klart så att jag bara kan
 skicka ut länk till ansökande". Ingen koppling till kalendern: Google Kalenders
 bokningsschema, med Meet som plats, och länken i vårt mejl.
 
-- **Länken står i `INTERVJU_BOKNING_URL`** i `nextrum-config.js`, och bara en
+- **Länken står i `INTERVJU_BOKNINGSLANK`** i `nextrum-config.js`, och bara en
   https-adress räknas (`bokningssida()`). Tom är allt som förut: mejlet
   föreslår tre tider.
 - **Mallen** (`mallIntervju`) har länken i stället för de tre tiderna, säger

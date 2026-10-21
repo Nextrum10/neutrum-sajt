@@ -22,7 +22,7 @@
 // själv på bokningssidan i Google Kalender, som mejlar tiden och
 // Meet-länken. Förut sa det andra stycket att inbjudan kom senare.
 // Länken är en vanlig länk, ingen knapp, och adressen är
-// INTERVJU_BOKNING_URL i nextrum-config.js: funktionen läser inte
+// INTERVJU_BOKNINGSLANK i nextrum-config.js: funktionen läser inte
 // configen, så kolla-mejltexter.py håller de tre lika. Byts
 // bokningssidan byts adressen på alla tre ställena.
 // ============================================================

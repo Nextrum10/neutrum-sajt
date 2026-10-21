@@ -303,7 +303,7 @@ async function öppna(webb, o) {
   await context.route(/nextrum-config\.js/, async route => {
     const text = fs.readFileSync(path.join(ROT, 'nextrum-config.js'), 'utf8')
       .replace(/SUPABASE_URL:\s*'[^']*'/, "SUPABASE_URL: '" + FALSK + "'")
-      .replace(/INTERVJU_BOKNING_URL:\s*'[^']*'/, "INTERVJU_BOKNING_URL: '" + (o.bokning || '') + "'");
+      .replace(/INTERVJU_BOKNINGSLANK:\s*'[^']*'/, "INTERVJU_BOKNINGSLANK: '" + (o.bokning || '') + "'");
     return route.fulfill({ status: 200, contentType: 'application/javascript', body: text });
   });
   await context.route(/^https:\/\/supabase\.test\//, S.hantera);
@@ -784,7 +784,7 @@ async function provaStegen(webb) {
     await vänta(400);
     await page.click('[data-ans-igen="ans-intervju"]');
     await vänta(400);
-    prova('steg utan bokningssida: tydligt fel och inget köas', dialoger.some(d => d.includes('INTERVJU_BOKNING_URL'))
+    prova('steg utan bokningssida: tydligt fel och inget köas', dialoger.some(d => d.includes('INTERVJU_BOKNINGSLANK'))
       && !S.logg.some(r => r.väg === '/rest/v1/rpc/ansokan_intervjulank_igen'), dialoger.join(' | '));
     prova('steg utan bokningssida: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
     await context.close();

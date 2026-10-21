@@ -23,7 +23,7 @@ nextrum-admin-rekrytering.js), och mejlet byggs ur INTERVJU i
 supabase/functions/_delad/notiser/intervju.ts. Texten är Leos.
 
 BOKNINGSLÄNKEN (2026-10-20) står i intervjumejlet (lank) och ska vara
-bokningssidan i nextrum-config.js (INTERVJU_BOKNING_URL), den som Skriv
+bokningssidan i nextrum-config.js (INTERVJU_BOKNINGSLANK), den som Skriv
 till hen också skickar. Mallen kan inte läsa configen, så adressen står
 på tre ställen, och byts bokningssidan på ett av dem går kallelsen till
 den gamla.
@@ -79,9 +79,9 @@ def bokningslanken():
     """Intervjumejlets länk mot bokningssidan i configen."""
     ts_fil = 'supabase/functions/_delad/notiser/intervju.ts'
     lank = falten(objektet(las(ts_fil), 'INTERVJU', ts_fil), INTERVJU_FALT).get('lank', '')
-    m = re.search(r"\bINTERVJU_BOKNING_URL\s*:\s*'([^']*)'", las('nextrum-config.js'))
+    m = re.search(r"\bINTERVJU_BOKNINGSLANK\s*:\s*'([^']*)'", las('nextrum-config.js'))
     if not m:
-        return ['SAKNAS  INTERVJU_BOKNING_URL i nextrum-config.js']
+        return ['SAKNAS  INTERVJU_BOKNINGSLANK i nextrum-config.js']
     if m.group(1).strip() != lank:
         return ['OLIKA   bokningslänken\n          mejlet:  %s\n          configen: %s' % (lank, m.group(1))]
     return []

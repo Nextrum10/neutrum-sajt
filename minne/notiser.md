@@ -244,7 +244,7 @@ vidare till intervju]"): förut sa andra stycket att inbjudan kom senare ("Håll
 koll på din mejl de kommande dagarna, för det är dit vi skickar inbjudan till
 intervjun"), och nu står länken till bokningssidan i Google Kalender där, som
 en vanlig länk. Hen bokar en tid själv, och Google mejlar tiden och Meet-länken.
-Adressen är `INTERVJU_BOKNING_URL` i `nextrum-config.js`; mallen läser inte
+Adressen är `INTERVJU_BOKNINGSLANK` i `nextrum-config.js`; mallen läser inte
 configen, så den står i `intervju.ts`, i adminvyn och i configen, och
 `kolla-mejltexter.py` prövar alla tre. Mejlet lovar ingen längd på intervjun.
 

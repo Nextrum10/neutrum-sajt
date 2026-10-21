@@ -244,7 +244,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   rörs inte. Texten är Leos, i `intervju.ts` och i adminvyn (`INTERVJU_MEJLET`, som visar mejlet
   innan steget sätts), och `kolla-mejltexter.py` håller dem lika. **Mejlet är kallelsen** (2026-10-20, Leo: "lägg in
   bokningslänken i det automatiska meddelandet"): det har länken till bokningssidan, där hen bokar en tid själv, och
-  adressen är `INTERVJU_BOKNING_URL`, som kontrollen också prövar (mallen läser inte configen). Ansökans tack är "Tack, din ansökan är
+  adressen är `INTERVJU_BOKNINGSLANK`, som kontrollen också prövar (mallen läser inte configen). Ansökans tack är "Tack, din ansökan är
   skickad! Vi hör av oss inom 24 timmar."
 - **Utbildningsprovet i studiehjälparvyn** (2026-10-21): en godkänd studiehjälpare gör provet vid första
   inloggningen, direkt efter lösenordet och före villkoren och vyn (`NXProvet`; 2026-10-20, Leo: "först välja
@@ -654,8 +654,8 @@ profilen och sätter utbildad och Godkänd i en transaktion; samma konto igen g�
 Kontaktad som val, Boka digitalt möte, Skicka utbildningen och Markera utbildad är borta. Varje steg står i
 `ansokan_steg_logg`, som aldrig ändras och går med ansökan. Skriv till hen står vid adressen och flyttar ingen.
 **Intervjun bokas på en bokningssida** (2026-10-20, Leo: "så att jag bara kan skicka ut länk"): ett bokningsschema i
-Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNING_URL`, och hur det skapas står överst i
-nextrum-config.js). Länken står i intervjumejlet; Google mejlar tiden och Meet-länken, och vyn läser aldrig kalendern.
+Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNINGSLANK`, som hette `INTERVJU_BOKNING_URL` till
+2026-10-21, och hur det skapas står överst i nextrum-config.js; ingen OAuth: det är en länk). Länken står i intervjumejlet; Google mejlar tiden och Meet-länken, och vyn läser aldrig kalendern.
 Policyn lovar att bokningen tas bort för hand senast ett år efter intervjun.
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
@@ -1318,7 +1318,7 @@ Detaljer: `minne/grunden.md`.
   frågan igen vid nästa inloggning; ingen hade godkänt 2026-10-16, ingen familj hade en rabatt och ingen valet av första
   timmen pass för pass. Juristen har inte läst den nya punkten.
 - **Bokningssidan för intervjun och mejlet till den som söker** (2026-10-20) är i drift sedan samma dag (Leo: "merge
-  och driftsätt"): PR #306 mergades (864e49e), Vercel lade ut sajten (configen med `INTERVJU_BOKNING_URL`, Rekryteringen och
+  och driftsätt"): PR #306 mergades (864e49e), Vercel lade ut sajten (configen med `INTERVJU_BOKNINGSLANK`, Rekryteringen och
   policyn på båda språken, kontrollerat från databasen mot nextrum.se), och `ansokan-mejl` v1 gick ut från merge-commiten,
   hämtad tillbaka och byte för byte lika i alla tio filer. Röktest från databasen: preflighten svarade `ok` ur funktionens
   egen kod, och ett anrop utan inloggning 401. Ingen migration. Inget riktigt mejl är skickat än. Kvar: ett första mejl
