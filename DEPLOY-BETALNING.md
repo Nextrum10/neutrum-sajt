@@ -1916,8 +1916,8 @@ här ett pris eller en betalning: syskon bokas som förut, och inga poster skapa
    `tillagg-paminnelse` syns under System → Automationer.
 7. **Innan strömbrytaren slås på**, och bara då: Leo skriver villkorstexten för syskontillägget och
    lägger länken i `TILLAGG_VILLKOR_URL` i `nextrum-config.js`; prissidan, FAQ:n, områdessidorna,
-   användarvillkoren (ny version) och Siffror i CLAUDE.md säger 69 kr per extra barn och timme som en
-   skuld efter passet; juristen har läst (DATASKYDD.md rad 35); sedan
+   användarvillkoren (ny version) och Siffror i CLAUDE.md säger att tillägget för syskon (69 kr i
+   timmen, lika mycket med ett som med två, 9.26) betalas som en skuld efter passet; juristen har läst (DATASKYDD.md rad 35); sedan
    `update tillagg_installning set villkor_version = '<sidans datum>'` och sist
    `update flaggor set aktiv = true where kod = 'syskonskuld'`.
 8. **Provet i testläge**, med strömbrytaren på: ett pass med två syskon som bokas (villkorsrutan, sedan
@@ -1936,7 +1936,7 @@ Betalningar → Syskontillägg kräver en orsak, och posterna blir upplupna igen
 tillägget, där Koder → Partnerkoder bara räknar planens del.
 
 Kvar efter: juristen (rad 35, policyns stycke, villkoren för tillägget), och att säga till familjerna med
-fler barn att tillägget räknas per extra barn och betalas efter passet, innan strömbrytaren slås på.
+fler barn att tillägget betalas efter passet, innan strömbrytaren slås på. Priset är detsamma (9.26).
 
 ### 9.24 Värvningsbonusen (2026-10-21, i drift samma kväll, 9.25)
 
@@ -2015,7 +2015,23 @@ nu-sessionen fick veta före. Detaljerna står i `minne/databasen.md` (Kedjan 20
     de mejlen svarade 403. Inget sådant mejl hade köats. v10 från 829d2c0 rättade det, byte för byte lika main.
 
 Kvar, och Leos: provet i testläge (9.22 steg 5 och 9.24 steg 8); före `syskonskuld` villkorstexten och två beslut
-(9.23 steg 7: tre barn blir 537 kr i timmen i stället för 468, och `tillagg_installning` gör tillägget upplupet när ett
-bekräftat pass avbokas inom 24 timmar, fast villkoren inte har någon avbokningsavgift); revisorn (9.24 steg 7);
+(9.23 steg 7: `tillagg_installning` gör tillägget upplupet när ett bekräftat pass avbokas inom 24 timmar, fast
+villkoren inte har någon avbokningsavgift; priset bestämde Leo samma kväll, 9.26); revisorn (9.24 steg 7);
 juristen; Skriv nu för månadsrapporten (`DEPLOY-AGENTER.md`); och att ta bort edge-funktionen `utbildningsprov` i
 Supabases panel.
+
+### 9.26 Syskontillägget fast: tre barn kostar 468 (2026-10-21, inte körd)
+
+Leo: "Tre barn kostar 468 i timmen". `20261021230000_syskontillagget_fast` gör tillägget lika mycket med ett som med
+två syskon (`minne/betalning.md`). Med `syskonskuld` av, som den står, ändrar den inget pris och ingen betalning.
+Efter merge, en session, i den här ordningen:
+
+1. **Bytet av villkoret** `tillagg_poster_belopp`, filens två satser som de står, som en egen sats med texten synlig
+   (`drop constraint if exists` och `add`). Finns det poster räknade per extra barn går `add` inte igenom, och
+   ingenting ändras.
+2. **Resten av filen** i ett do-block ur merge-commiten: pröva hela filens md5 och restens md5 med bytet bortklippt,
+   pröva att villkoret redan är bytt, och registrera hela filens text (som `20261021214000` i 9.25). Vakten i filen
+   stannar om `tillagg_poster` har en rad.
+3. Hela `rls-test.sql` mot driften, tillbakarullat, och advisorn.
+4. **Ingen edge-funktion**: ingen funktion i drift anropar `tillaggetsBelopp` i `_delad/tillagg.ts`. Vyerna går ut
+   med Vercel (`nextrum-betalning.js`, `nextrum-arbetsyta.js`), och syns bara med strömbrytaren på.

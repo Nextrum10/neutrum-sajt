@@ -4,7 +4,9 @@
 // Leo: "bokar en familj ett pass med fler än ett barn tillkommer ett
 // tillägg per extra barn. Tillägget blir en skuld på familjen när passet
 // är hållet. Familjen kan betala skulden när hen vill under Betalningar,
-// eller så läggs den som en egen rad i nästa betalning."
+// eller så läggs den som en egen rad i nästa betalning." Samma kväll:
+// "Tre barn kostar 468 i timmen", så tillägget är lika mycket med ett som
+// med två syskon (syskontillagget_fast).
 //
 // Databasen äger skulden: posterna (tillagg_poster), deras lägen,
 // beloppen och låsningen i ett betalningsförsök (tillagg_forsok). Här
@@ -12,10 +14,10 @@
 // och utan databas (tillagg_test.ts):
 //
 //   · tillaggetsBelopp är regeln som databasen räknar med
-//     (intern.tillaggets_belopp): extra barn × pris per barn och timme ×
-//     minuter / 60, avrundat till hela ören. Ingen funktion drar ett belopp
-//     ur den: beloppet är alltid databasens, och vyn visar det med samma
-//     regel (nextrum-betalning.js). Proven håller avrundningen fast, och de
+//     (intern.tillaggets_belopp): pris för fler barn och timme × minuter /
+//     60, avrundat till hela ören, oavsett hur många extra barn. Ingen
+//     funktion drar ett belopp ur den: beloppet är alltid databasens, och
+//     vyn visar det med samma regel (nextrum-betalning.js). Proven håller avrundningen fast, och de
 //     tre ändras tillsammans.
 //   · tillaggetFoljerMed och buntaKassan: kassan (stripe-checkout) bygger
 //     raderna i ett köp av timmar med dem. Tillägget är en egen rad bredvid
@@ -37,8 +39,10 @@
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Tilläggets belopp i öre: extra barn × pris per barn och timme × minuter
- * / 60, avrundat till hela ören. Samma regel som intern.tillaggets_belopp:
+ * Tilläggets belopp i öre: pris för fler barn och timme × minuter / 60,
+ * avrundat till hela ören, lika mycket med ett som med två extra barn
+ * (syskontillagget_fast). Noll extra barn är noll. Samma regel som
+ * intern.tillaggets_belopp:
  * round() i Postgres avrundar en halv öre uppåt, som Math.round för
  * positiva tal. Ett belopp som inte går att räkna är ett fel, aldrig noll.
  */
@@ -46,7 +50,7 @@ export function tillaggetsBelopp(extraBarn: number, prisOrePerTimme: number, min
   if (!Number.isInteger(extraBarn) || extraBarn < 0) throw new Error('Antalet extra barn är inte ett heltal från noll.');
   if (!Number.isInteger(prisOrePerTimme) || prisOrePerTimme < 0) throw new Error('Priset är inte ett belopp i öre.');
   if (!Number.isInteger(minuter) || minuter <= 0) throw new Error('Passets längd är inte ett antal minuter.');
-  return Math.round((extraBarn * prisOrePerTimme * minuter) / 60);
+  return extraBarn > 0 ? Math.round((prisOrePerTimme * minuter) / 60) : 0;
 }
 
 /** Raden i kassan och i Stripe. Aldrig ett namn på ett barn. */

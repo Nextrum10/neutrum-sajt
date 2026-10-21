@@ -414,8 +414,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   blir en skuld på familjen när passet är hållet. Familjen kan betala skulden när hen vill under Betalningar, eller så
   läggs den som en egen rad i nästa betalning"): med strömbrytaren på väljer familjen vilka syskon som är med
   (`bookings.extra_barn`, `bokning_barn`), passet har `antal_barn = 1` (passets pris och timmarna är ett barns), och
-  tillägget är en egen post (`tillagg_poster`, en per pass, beloppet fryst vid bokningen: extra barn gånger tjänstens
-  `extra_personer_ore` gånger minuterna, aldrig ur anropet). Posten är `bokad`, blir `upplupen` när passet hålls eller
+  tillägget är en egen post (`tillagg_poster`, en per pass, beloppet fryst vid bokningen: tjänstens `extra_personer_ore`
+  gånger minuterna, lika mycket med ett som med två syskon, aldrig ur anropet; `syskontillagget_fast`). Posten är `bokad`, blir `upplupen` när passet hålls eller
   familjen avbokar ett bekräftat pass inom `sen_avbokning_timmar`, och `frigjord` annars; bara triggrarna och
   databasens funktioner byter läge, och ingen klient skriver. Skulden betalas med Betala tillägg nu (`stripe-checkout`
   med `skuld: true`) eller som en egen rad i nästa köp av timmar (plan, Fyll timbanken, timmar till planen), aldrig i
@@ -424,8 +424,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   längden och antalet står fast efter bokningen, också för admin. Spärren (över `max_upplupet_ore` eller en post äldre
   än `sparr_efter_dagar`) stoppar extra barn i databasen, aldrig ett pass för ett barn. Gränserna och villkorens
   version står i `tillagg_installning` (`'utkast'` tills Leo skrivit texten), familjens ja i `tillagg_godkannanden`.
-  **Strömbrytaren går inte på med utkastet**, och slås den på blir tre barn 537 kr i timmen i stället för 468: sidorna,
-  villkoren och Siffror nedan ändras i samma ändring. Betalningens delar står i `betalningsrader`, som aldrig raderas.
+  **Strömbrytaren går inte på med utkastet**. Tre barn kostar 468 kr i timmen också med den på (Leo 2026-10-21: "Tre barn
+  kostar 468 i timmen"): det som ändras är att tillägget betalas efter passet, och sidorna och villkoren säger det i
+  samma ändring. Betalningens delar står i `betalningsrader`, som aldrig raderas.
   **Granskningen 2026-10-21**: en kassa åt gången (en äldre kassa för samma skuld går ut hos Stripe innan en ny öppnas,
   och har den redan betalats öppnas ingen: `forsoketsKassa`); ett försök som aldrig kan bli betalt (köpet betalt i en
   annan kassa, fel belopp, dubbelt) släpps; Klarna som väntar känns igen på försöket, inte på kassan, blir en uppgift
@@ -473,13 +474,13 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | timmar till planen | Köp till timmar: 1–20 timmar till en plan som gäller, till planens timpris, som går ut med planen (`klippkort` med erbjudandet `plan_extra` och `till_plan`; Välj själv under Er timbank) |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
-| syskontillägg | 69 kr per extra barn och timme som en skuld efter passet (`tillagg_poster`, typen `syskon` i liggaren), med `syskonskuld` på; aldrig övertid, som är `pass_tillagg` och typen `tillagg` |
+| syskontillägg | 69 kr i timmen för syskon på passet, lika mycket med ett som med två, som en skuld efter passet (`tillagg_poster`, typen `syskon` i liggaren), med `syskonskuld` på; aldrig övertid, som är `pass_tillagg` och typen `tillagg` |
 | upplupet tillägg | familjens obetalda syskontillägg för hållna pass (`tillagg_skuld()`), som betalas med Betala tillägg nu eller i nästa köp av timmar |
 ### Siffror som måste stämma överallt
 - **399 kr/tim** utan bindning (`PRIS_PER_TIMME` och läxhjälpens rad i `tjanster`, 2026-10-08), och
-  det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537), så länge
-  `syskonskuld` står av. Med den på är det 69 kr per extra barn och timme, som en skuld efter passet (tre barn 537),
-  och då ändras sidorna, villkoren och den här raden samtidigt (avsnitt 1). Priset står i `tjanster`
+  det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537), också
+  med `syskonskuld` på (Leo 2026-10-21: "Tre barn kostar 468 i timmen", `syskontillagget_fast`): då betalas det som en
+  skuld efter passet, och sidorna och villkoren säger det när den slås på (avsnitt 1). Priset står i `tjanster`
   (`extra_personer_ore`) och i `PRIS_SYSKON_TILLAGG_KR_PER_TIMME`, som hette `PRIS_EXTRA_BARN` till 2026-10-21.
   **Paketen** (planerna) kostar 379 kr i timmen, en månad i taget: 5 % av 399 nedåt till hel krona. De
   binder inte: villkoren säger ingen bindningstid och att det som är kvar betalas tillbaka, så sajten säger
@@ -1070,6 +1071,13 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Syskontillägget fast** (2026-10-21, `syskontillagget_fast`, 20261021230000) är byggt men INTE i drift (Leo: "Tre barn
+  kostar 468 i timmen"): tillägget är `extra_ore` gånger minuterna, lika mycket med ett som med två syskon, i databasen
+  (`intern.tillaggets_belopp`, villkoret `tillagg_poster_belopp`), i `_delad/tillagg.ts`, i `nextrum-betalning.js` och i
+  bokningsrutan. Efter merge: migrationen, med bytet av villkoret som en egen sats (ett `drop`), och resten i ett
+  do-block (`DEPLOY-BETALNING.md` 9.26); vakten stannar om `tillagg_poster` har en rad (inga fanns 2026-10-21). Ingen
+  edge-funktion behöver läggas ut: ingen anropar spegeln i drift. Lokalt 2107 av 2107 i `rls-test.sql`, 95 av 95 i
+  `prova-syskon.js` och 484 Deno-tester.
 - **Kedjan 2026-10-21 är i drift** sedan kvällen 2026-10-21 (Leo: "Fixa nr 6 och Merge sen och driftsätt och migrera"):
   PR #325 mergades (829d2c0) och Vercel lade ut sajten; sedan 13 edge-funktioner från merge-commiten, hämtade tillbaka
   och byte för byte lika main, och de tio migrationerna `20261021170000` till `20261021215000`, var och en i ett eget
@@ -1100,7 +1108,8 @@ Detaljer: `minne/grunden.md`.
   v9 och `notis-ko` v32 (`stripe-webhook` v16 gick ut före, med Betala nu). Stripes endpoint tar emot
   `checkout.session.expired`, och jobben `tillagg-forsok` och `tillagg-paminnelse` går. Kvar för Leo: villkorstexten för
   syskontillägget (en platshållare står i bokningsrutan, länken i `CFG.TILLAGG_VILLKOR_URL`), versionen i
-  `tillagg_installning`, sidorna och villkoren om per extra barn, och sist strömbrytaren. Före den också ett beslut:
+  `tillagg_installning`, att sidorna och villkoren säger att tillägget betalas efter passet, och sist strömbrytaren. Priset
+  är bestämt: tre barn kostar 468 kr i timmen också med den på (`syskontillagget_fast`, ovan). Före den också ett beslut:
   `tillagg_installning` gör tillägget upplupet när ett bekräftat pass avbokas inom 24 timmar (`sen_avbokning_timmar`,
   `debitera_vid_sen_avbokning`), och villkoren har ingen avbokningsavgift. Juristen har inte läst rad 35 i
   `DATASKYDD.md` eller policyns stycke om tillägget. Med strömbrytaren av bokas syskon som förut, och inget pris ändras.

@@ -71,8 +71,8 @@ Två siffror och ett löfte står på många ställen samtidigt: 399 kr/tim
 utan bindning (sedan 2026-10-08; paketen 379 kr/tim, en månad i
 taget), 69 kr/tim fast tillägg för flera barn (tak tre, alltså 468 för
 tre barn, inte 537; med strömbrytaren `syskonskuld` på, som står av tills
-villkoren är skrivna, 69 kr per extra barn och timme som en skuld efter
-passet, 2026-10-21), och att familjen betalar varje pass med kort eller
+villkoren är skrivna, samma 69 kr i timmen som en skuld efter passet, lika
+mycket med ett som med två syskon, 2026-10-21, `syskontillagget_fast`), och att familjen betalar varje pass med kort eller
 Klarna så fort studiehjälparen bekräftat tiden, med Betala nu, och får
 mellanskillnaden tillbaka om passet blir kortare (2026-10-21, `betala_nu`;
 förut kort i förväg eller när rapporten bekräftades, Fas 19.2). Rapporten

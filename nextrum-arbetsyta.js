@@ -641,8 +641,9 @@ window.NXArbete = (function () {
       barn: 1,
       /* SYSKONTILLÄGGET SOM SKULD (syskontillagg_som_skuld, 2026-10-21):
          med strömbrytaren på väljer familjen vilka syskon som är med, och
-         tillägget per extra barn blir en skuld efter passet i stället för
-         en del av passets pris. extra är barnens id:n, syskonOk krysset för
+         tillägget för fler barn blir en skuld efter passet i stället för
+         en del av passets pris, lika mycket med ett som med två syskon
+         (syskontillagget_fast). extra är barnens id:n, syskonOk krysset för
          villkoren första gången. */
       extra: [],
       syskonOk: false,
@@ -942,8 +943,9 @@ window.NXArbete = (function () {
 
     /* SYSKONEN PÅ PASSET (syskontillagg_som_skuld, 2026-10-21). Familjen
        väljer vilka syskon som är med, högst till tjänstens tak. Tillägget
-       står direkt under, räknat som databasen räknar det ("Tillägg: 2 × 69
-       kr × 1 h = 138 kr"), och att det blir en skuld efter passet. Är
+       står direkt under, räknat som databasen räknar det ("Tillägg för
+       syskon: 69 kr × 2 h = 138 kr", lika mycket med ett som med två
+       syskon), och att det blir en skuld efter passet. Är
        bokning med extra barn spärrad står varför i stället för valen: ett
        pass för ett barn går att boka ändå. Första gången står villkoren
        med en kryssruta; databasen nekar extra barn utan ett godkännande av
@@ -969,7 +971,7 @@ window.NXArbete = (function () {
           + '<p class="bk-tillagg-not">Tillägget läggs som en skuld på ert konto när passet är hållet. Ni betalar det '
           + 'när ni vill under Betalning, eller med nästa köp av timmar. Inget dras nu.</p>'
         : '<p class="bk-tillagg-not">Välj ett syskon som är med på passet. Tillägget är '
-          + esc(NXBetalning.kronor(extraOre())) + ' per extra barn och timme, och betalas efter passet.</p>';
+          + esc(NXBetalning.kronor(extraOre())) + ' i timmen oavsett hur många syskon som är med, och betalas efter passet.</p>';
       return rad('Syskon', knappar) + '<div class="bk-syskon-info">' + tillägg
         + (syskonKräverJa() ? syskonVillkor(sy) : '') + '</div>';
     }

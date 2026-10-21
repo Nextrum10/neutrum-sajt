@@ -62,12 +62,14 @@ const SARA = { id: 'sh-a', aud: 'authenticated', role: 'authenticated', email: '
 const MIO = '<b>Mio</b>';
 
 /* Skulden som mitt_tillagg() lämnar den: två hållna pass med tillägg
-   (ett och två extra barn) och ett bokat. */
+   (ett extra barn i en timme, två i två timmar) och ett bokat. Tillägget
+   är lika mycket med ett som med två syskon (syskontillagget_fast), så
+   det andra är 69 kr × 2 h. */
 function poster() {
   return [
     { id: 'post-1', bokning: 'pass-h1', start: dag(-5) + 'T15:00:00+00:00', extra: 1, minuter: 60, belopp_ore: 6900,
       status: 'upplupen', upplupen_at: nu(-5 * 1440) },
-    { id: 'post-2', bokning: 'pass-h2', start: dag(-12) + 'T15:00:00+00:00', extra: 2, minuter: 60, belopp_ore: 13800,
+    { id: 'post-2', bokning: 'pass-h2', start: dag(-12) + 'T15:00:00+00:00', extra: 2, minuter: 120, belopp_ore: 13800,
       status: 'upplupen', upplupen_at: nu(-12 * 1440) },
     { id: 'post-3', bokning: 'pass-b', start: dag(6) + 'T14:00:00+00:00', extra: 1, minuter: 60, belopp_ore: 6900,
       status: 'bokad', upplupen_at: null }
@@ -111,7 +113,7 @@ function värld() {
     flaggor: [{ kod: 'erbjudanden', aktiv: true, beskrivning: 'Erbjudandena', uppdaterad: '2026-09-27T10:00:00Z' }],
     bookings: [
       pass('pass-h1', dag(-5), 'completed'),
-      pass('pass-h2', dag(-12), 'completed'),
+      pass('pass-h2', dag(-12), 'completed', { duration_min: 120, betalt_ore: 79800 }),
       pass('pass-b', dag(6), 'confirmed')
     ],
     lesson_reports: [],
@@ -353,14 +355,14 @@ async function provaBokaFörstaGången(webb) {
   prova('boka: ett val per syskon, inte passets eget barn', JSON.stringify(knappar) === JSON.stringify(['Vera', MIO]),
     JSON.stringify(knappar));
   prova('boka: ett HTML-namn står som text', (await page.locator('#boka-inner #bk-syskon button b').count()) === 0);
-  prova('boka: utan valt syskon står priset per barn och timme',
-    /69\s*kr per extra barn och timme/.test(await innehåll(page, '#boka-inner .bk-syskon-info')),
+  prova('boka: utan valt syskon står priset i timmen, oavsett antalet syskon',
+    /69\s*kr i timmen oavsett hur många syskon/.test(await innehåll(page, '#boka-inner .bk-syskon-info')),
     await innehåll(page, '#boka-inner .bk-syskon-info'));
   prova('boka: knappen går före ett val', !(await page.locator('#bk-boka').isDisabled()));
 
   await page.click('#boka-inner #bk-syskon button[data-v="elev-c"]');
   await vänta(200);
-  prova('boka: ett syskon ger tillägget med livepris', (await innehåll(page, '[data-bk-tillagg]')) === 'Tillägg: 1 × 69 kr × 1 h = 69 kr',
+  prova('boka: ett syskon ger tillägget med livepris', (await innehåll(page, '[data-bk-tillagg]')) === 'Tillägg för syskon: 69 kr × 1 h = 69 kr',
     await innehåll(page, '[data-bk-tillagg]'));
   const villkor = await innehåll(page, '#boka-inner .bk-syskon-villkor');
   prova('boka: villkoren står första gången, med talen ur databasen',
@@ -372,11 +374,11 @@ async function provaBokaFörstaGången(webb) {
 
   await page.click('#boka-inner #bk-syskon button[data-v="elev-d"]');
   await vänta(200);
-  prova('boka: två syskon', (await innehåll(page, '[data-bk-tillagg]')) === 'Tillägg: 2 × 69 kr × 1 h = 138 kr',
+  prova('boka: två syskon kostar som ett', (await innehåll(page, '[data-bk-tillagg]')) === 'Tillägg för syskon: 69 kr × 1 h = 69 kr',
     await innehåll(page, '[data-bk-tillagg]'));
   await page.click('#boka-inner #bk-langder button[data-v="120"]');
   await vänta(200);
-  prova('boka: längden räknas in direkt', (await innehåll(page, '[data-bk-tillagg]')) === 'Tillägg: 2 × 69 kr × 2 h = 276 kr',
+  prova('boka: längden räknas in direkt', (await innehåll(page, '[data-bk-tillagg]')) === 'Tillägg för syskon: 69 kr × 2 h = 138 kr',
     await innehåll(page, '[data-bk-tillagg]'));
   prova('boka: summeringen säger tre barn och passets pris för två timmar',
     /3 barn/.test(await innehåll(page, '#boka-inner .bk-sum-vad')) && /798\s*kr/.test(await innehåll(page, '#boka-inner .bk-sum-pris')),
@@ -412,7 +414,7 @@ async function provaBokaGodkänd(webb) {
     await page.click('#boka-inner #bk-syskon button[data-v="elev-c"]');
     await vänta(200);
     prova('godkänt: tillägget står, villkoren inte', (await page.locator('#boka-inner .bk-syskon-villkor').count()) === 0
-      && /Tillägg: 1 × 69 kr/.test(await innehåll(page, '[data-bk-tillagg]')));
+      && /Tillägg för syskon: 69 kr × 1 h/.test(await innehåll(page, '[data-bk-tillagg]')));
     prova('godkänt: knappen går direkt', !(await page.locator('#bk-boka').isDisabled()));
     await page.click('#bk-boka');
     await vänta(1200);
