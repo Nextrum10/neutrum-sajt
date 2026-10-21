@@ -726,3 +726,22 @@ krysset, att vyn skickar barnen och aldrig ett belopp, spärren, kortet Upplupet
 banderollerna, tillägget som egen rad i ett köp (obligatoriskt och valfritt), passens barn, strömbrytaren av och
 utan migrationen, telefon och mörkt läge, och studiehjälparens Barnen på passet, med ett barnnamn som är HTML.
 `prova-adminvyn.js` öppnar fliken mot en riktig databas med två poster ur `prova-adminvyn.sql`.
+
+### Värvningsbonusen (varvningsbonus, 2026-10-21)
+I `rls-test.sql` är avsnitt KB omskrivet: med `varvningsbonus` i databasen provar det den nya bonusen (raden när
+ansökan kommer in, delningen 26 786 + 3 214, en gång, den som hade ett konto, flaggan av, att värvaren inte läser
+tabellen men ser listan genom `mina_tips()`, att ingen klient skriver, hindret vid radering och Markera utbetald), och
+utan den de gamla proven för `tipsbonus`. Avsnitt 52 (VB) är nytt: koden av sig själv, `prova_jobbkod()` och taket per
+IP-nummer, att ansökan bär koden och ägaren och aldrig en värvare ur anropet, en ändrad inställning före och efter
+intjänandet, mejlet en gång, samma person med en annan kod, lägena, Markera utbetald och Annullera, egen kod, den som
+sökt förut, värvaren som inte är godkänd, provet och första passet som händelse, att de väntande prövas när händelsen
+byts, och att värvaren följer koden. `prova-varvning.js` (port 8984, 57 prov) provar mot en falsk Supabase
+jobbansökan med och utan kod på båda språken (koden ur adressen, beskedet, att ansökan går in utan en kod som inte
+gäller, och taket), Värva en kompis (beloppet och händelsen ur inställningen, länken, listan med bara läget och
+förnamnet, platshållaren för villkoren, Ersättning) och sektionen Värvningsbonus (filtren, summorna, summeringen per
+värvare och lönemånad, CSV:n, Markera utbetald med lönemånaden och Annullera med skälet, bara genom funktionerna), med
+ett namn som är HTML, telefon och mörkt läge. `prova-adminvyn.js` öppnar sektionen mot en riktig databas med tre rader
+ur `prova-adminvyn.sql` (intjänad genom att kontot godkänns, väntande, och annullerad för ett konto som fanns före),
+`prova-koder.js` provar Markera utbetald i Löner, och `prova-barnkonton.js` att en admin med behörigheter aldrig
+hämtar bonusarna eller inställningen.
+

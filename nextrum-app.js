@@ -122,6 +122,15 @@ const NX = (function () {
                       'You need to have started upper secondary school to work with us. You are welcome to apply once you have!'],
     valjTimmar:      ['Svara ja eller nej på om du kan jobba minst 4 timmar i veckan.',
                       'Please answer yes or no to whether you can work at least 4 hours a week.'],
+    /* Koden i jobbansökan (varvningsbonus, 2026-10-21): gäller eller inte,
+       aldrig vems. En kod som inte gäller följer inte med ansökan. */
+    kodGaller:       ['Koden gäller.', 'The code is valid.'],
+    kodGallerInte:   ['Koden gäller inte. Kontrollera den, eller skicka ansökan utan kod.',
+                      'The code is not valid. Check it, or send your application without a code.'],
+    kodForManga:     ['Koden kunde inte prövas just nu. Vi prövar den när ansökan kommer in.',
+                      'The code could not be checked right now. We will check it when your application arrives.'],
+    kodTomdes:       ['Koden du skrev gällde inte, så ansökan skickades utan den.',
+                      'The code you entered was not valid, so your application was sent without it.'],
     /* Under 18 (2026-10-05): vårdnadshavarens e-post i ansökan. */
     vardnadshavareSaknas: ['Skriv din vårdnadshavares e-post. Du är under 18, och då behöver vi hens godkännande.',
                            'Please enter your parent or guardian’s email. You are under 18, so we need their approval.'],
@@ -1197,6 +1206,18 @@ const NX = (function () {
      Svenska: den läses av oss, inte av den som söker. */
   const KOLUMN_I_WHY = { vardnadshavare_epost: 'Vårdnadshavarens e-post', kod: 'Kod från en studiehjälpare' };
 
+  /* Gäller koden i jobbansökan? (varvningsbonus, 2026-10-21) Svarar 'ok',
+     'okand', 'tom' eller 'for_manga' ur prova_jobbkod(), och null när
+     frågan inte gick: databasen prövar koden igen när ansökan kommer in,
+     så null stoppar ingenting. Svaret säger aldrig vems koden är. */
+  async function provaJobbkod(kod) {
+    if (!supa) return null;
+    try {
+      const { data, error } = await supa.rpc('prova_jobbkod', { p_kod: kod });
+      return error ? null : data;
+    } catch (e) { return null; }
+  }
+
   /* ---------- ansökan om att bli studiehjälpare ----------
      Samma formulär finns i modalen på startsidan och som vanligt
      formulär på bli-studiehjalpare.html. Logiken bor här så att en
@@ -1234,6 +1255,13 @@ const NX = (function () {
 
       const knapp = form.querySelector('button[type="submit"]');
       if (knapp) knapp.setAttribute('aria-busy', 'true');
+
+      /* Det sidan behöver fråga databasen om före ansökan, som koden i
+         jobbansökan (varvningsbonus, 2026-10-21). Ett fel här stoppar
+         aldrig ansökan: databasen prövar koden igen när den kommer in. */
+      if (typeof o.innan === 'function') {
+        try { await o.innan(); } catch (e) { /* ansökan går in ändå */ }
+      }
 
       /* Åldern som ett tal (2026-10-05): "16 år" var förut NaN och
          sparades som null. Under 18 frågar formuläret efter
@@ -1579,7 +1607,7 @@ const NX = (function () {
   return {
     $, $$, esc, kr, isoFor, datumText, säg, rensa, felText, t, epostOk,
     initHeader, initReveal, kollaKoppling, spamskydd,
-    initFaq, initPris, initErbjudanden, initKalkyl, kopplaAnsökan, läsÅlder, märkInloggad,
+    initFaq, initPris, initErbjudanden, initKalkyl, kopplaAnsökan, provaJobbkod, läsÅlder, märkInloggad,
     källa, händelse, uppstart,
     bildIntoning, initVagval,
     /* hämtaTillganglighet stod här i Fas 14.0-grenen. Main tog bort

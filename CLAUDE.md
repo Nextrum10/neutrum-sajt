@@ -185,17 +185,36 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   Den gäller i 60 dagar från den dagen (2026-10-13, `intern.tipstimmar_kvar`).
   Den står utanför taket för första timmen. **Den står i timbanken** (2026-10-13, Leo: "timmarna läggs
   in i timbanken för familjerna"): Er timbank och Profil → Timbanken visar den med sista dagen, och den
-  dras först, som en gratis timme (`forsta_timmen_bjuds`). **En studiehjälpare får 300 kr i
-  lön, inklusive semesterersättning** (Leo samma dag: "bonus redovisas som lön", och "300kr är inklusive
-  semesterersättning": lönearten i Fortnox är inte semestergrundande, som timlönens) när vi tar in den som sökt med hens kod
-  (`tutor_profiles.status` blir `approved`; ansökan hittas på adressen): en LAGRAD rad i `tipsbonus`, en
-  per ny studiehjälpare och bara om hen var ny när hen sökte, med eget läge (Utkast, Godkänd, Utbetald,
-  Struken) under Löner, i lönefilen på en egen löneart (`foretagsfakta.lonart_tipsbonus`), aldrig i
-  `payouts`; beloppet är `intern.tipsbonus_ore()` och ändras med villkoren, och flaggan `tipsbonus`
-  stänger av. Förut fick studiehjälpare ingen ersättning, med flit. Den som tipsat ser antal, aldrig
-  vilka. **Koder** i adminvyn (`koder_lage`, `nextrum-admin-koder.js`) har allas kod och skapar de som
+  dras först, som en gratis timme (`forsta_timmen_bjuds`). En studiehjälpares kod är hens
+  värvningskod och ger **värvningsbonusen** (nedan; från 2026-10-13 till 2026-10-21 bonusen för tips i
+  `tipsbonus`, som står kvar som historik). En familj som tipsat ser antal, aldrig vilka. **Koder** i adminvyn (`koder_lage`, `nextrum-admin-koder.js`) har allas kod och skapar de som
   saknas, utom åt admins. `/affisch` tar ingen fritext ur adressen, och QR-koden går till formuläret,
   inte till en områdessida.
+- **Värvningsbonusen** (2026-10-21, `varvningsbonus`; Leo: "en studiehjälpare som värvar en kompis får en bonus på
+  300 kr brutto, inklusive semesterersättning, när kompisen har fått sitt studiehjälparkonto. Systemet betalar INGENTING
+  ut"): bonusen är underlag för lönen, aldrig en utbetalning och aldrig i `payouts`. **Koden** är studiehjälparens
+  tipskod, som databasen skapar när hen blir godkänd (`intern.tipsbonus_vid_intag`; en ny kod har åtta tecken ur
+  `gen_random_bytes`), och den gäller bara medan ägaren är godkänd och kontot inte raderat. Jobbansökan tar den i fältet
+  Kod från en studiehjälpare och ur `?kod=`, frågar `prova_jobbkod()` (gäller eller inte, aldrig vems; tio okända i
+  timmen per IP-nummer, som en HMAC) och skickar ansökan utan en kod som inte gäller, med ett besked. Databasen sätter
+  `applications.kod` och värvaren (`varvad_av_profil_id`) när ansökan kommer in; bara admin ändrar koden, och värvaren
+  följer den. **En rad** i `varvningsbonus` per ansökan med en giltig kod: `vantar`, eller `annullerad` med skälet när den
+  som söker inte är ny (sin egen kod, har sökt förut, hade ett konto); högst en bonus per ansökan, per konto och per
+  person (en HMAC av den normaliserade adressen, över alla bonusar). Den blir `intjanad` **exakt en gång**, under radlås,
+  när händelsen i `varvning_installning.utlosare` inträffar för kompisen (`konto_skapat` som förval: godkänd i poolen
+  eller kopplad av Utbildning hållen; `prov_godkant`; `forsta_pass_genomfort`), med värvaren godkänd och flaggan
+  `tipsbonus` på (annars annulleras den med skälet). Bruttot fryses när raden skrivs och delningen när den tjänas in:
+  grund `round(brutto / (1 + procent/100))`, semester resten, 26 786 + 3 214 = 30 000 öre. **`varvning_installning` är
+  det enda stället** för beloppet, procenten och händelsen (VARVNINGSBONUS_BRUTTO_KR, SEMESTERERSATTNING_PROCENT,
+  VARVNINGSBONUS_TRIGGER), och en ändring där rör aldrig en intjänad rad; ändras händelsen ändras policyn och villkoren
+  med. Lägena går bara framåt (`vantar` till `intjanad` eller `annullerad`, `intjanad` till `utbetald` eller
+  `annullerad`; `intern.varvningsbonus_vakt`), ingen klient skriver och raden raderas aldrig. Admin markerar utbetald med
+  lönemånaden och annullerar med ett skäl, bara genom `varvningsbonus_utbetald()` och `varvningsbonus_annullera()`
+  (sektionen Värvningsbonus, med filter, summering per värvare och månad och CSV, och rutan under Löner), och lönefilen
+  tar de intjänade på lönearten `lonart_tipsbonus`. Värvaren ser under Värva en kompis bara läget och, när kontot finns,
+  förnamnet (`mina_tips()`), och får ett mejl när bonusen tjänas in, med beloppet och inget om kompisen. Villkoren för
+  bonusen skriver Leo (en platshållare i vyn, länken i `CFG.VARVNING_VILLKOR_URL`), och revisorn avgör anställningen,
+  avgifterna och semesterersättningen före första utbetalningen.
 - **Materialbanken** (2026-10-02): bladen är våra egna. Nationella prov och läromedel kopieras aldrig in,
   banken länkar till provgruppernas egna sidor (`verktyg/bladen/lankar.py`), NP-träningen är egna
   uppgifter i provens stil som säger det på bladet, och genomgångarna är egna faktablad, aldrig bokens text.
@@ -425,7 +444,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | XP | poäng ur svaren och försöken, aldrig sparade |
 | tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips, i timbanken i 60 dagar: `startrabatt` och `rabattkod = 'TIPS'` på passet |
-| tipsbonus | 300 kr i lön, inklusive semesterersättning, till en studiehjälpare för ett tips som vi tagit in (`tipsbonus`), aldrig ett underlag |
+| värvningsbonus | 300 kr brutto, inklusive semesterersättning, till en studiehjälpare vars kod en kompis sökt jobb med, intjänad när kompisen fått sitt konto (`varvningsbonus`); underlag för lönen, aldrig en utbetalning och aldrig ett underlag. Hette tipsbonus (`tipsbonus`) till 2026-10-21 |
 | timbanken | familjens köpta timmar (en plan eller Fyll timbanken), gratistimmar och sparade minuter; pass för pass går inte genom den |
 | gratistimmar | timmar vi sätter in i familjens timbank utan kostnad (`klippkort` med erbjudandet `gratis`); 60 dagar, dras först med planens gratis timme. Inte första timmen eller tipstimmen |
 | familjerabatt | kronor av per timme för en familj vi satt en av våra koder på (`familjerabatter`, `familjens_rabatt`); aldrig en rabattkod, och familjen ser aldrig koden, bara priset |
@@ -767,6 +786,12 @@ Detaljer: `minne/grunden.md`.
   övergångarna (`tillagg_poster_vakt`). Varje betalning får en rad i `betalningsrader` vid commit om ingen skrev en
   (`betalningar_rader`, en deferred constraint trigger). Jobben `tillagg-forsok` (var 15:e minut, släpper ett försök
   efter 35 minuter) och `tillagg-paminnelse` (en gång om dagen, dagarna räknade i Stockholms tid).
+- **Värvningsbonusen** (2026-10-21): `varvningsbonus` raderas aldrig (triggrar mot delete och truncate), lägena går
+  bara framåt (`intern.varvningsbonus_vakt`), och bara databasen skriver: raden när ansökan kommer in
+  (`applications_varvning`), intjänandet (`intern.varvning_prova`, från triggrarna på `tutor_profiles`,
+  `applications.konto_id`, `prov_studiehjalpare` och `lesson_reports`, och för alla väntande när händelsen i
+  `varvning_installning` byts) och admins två funktioner. Personen räknas som
+  en HMAC av adressen med `notis_konfig.barn_nyckel`: byts nyckeln räknas en tidigare värvad som ny.
 - **Gallringen**: lagringstiderna hålls av databasen (`DATASKYDD.md` är registret). Anmälningar
   avidentifieras, konton raderas aldrig av sig själva, ett jobb som fastnat blir en uppgift, och
   `landningssida` bär bara våra utm-taggar. Ett nytt rekryteringssteg med tidsstämpel ska in i
@@ -834,6 +859,9 @@ Detaljer: `minne/grunden.md`.
   `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i steget Intervju
   och är inte avböjd, sedan 2026-10-21 också med `steg`), och `notis-ko` mejlar den från info@
   (`intervju.ts`). Skicka intervjulänk igen köar samma mejl med en egen nyckel (`ansokan_intervju:<id>:igen:<tid>`).
+- **Värvningsbonusen** (2026-10-21) mejlar värvaren en gång per bonus när den tjänas in (typen `varvningsbonus`,
+  nyckeln `varvningsbonus:mejl:<id>`, valet under Profil → Notiser): beloppet och att bonusen hanteras enligt
+  villkoren, aldrig kompisens namn. Ett mejl som inte går att köa tar aldrig bonusen med sig (`notis_fel`).
 
 Detaljer: `minne/databasen.md`, `minne/notiser.md`.
 
@@ -1010,6 +1038,15 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Värvningsbonusen** (2026-10-21, `varvningsbonus`, 20261021215000) är byggd men INTE i drift: `notis-ko` från
+  merge-commiten FÖRE migrationen (mallen för `varvningsbonus`; annars blir mejlet ett fel i kön), sedan migrationen,
+  som ger varje godkänd studiehjälpare en kod, flyttar raderna i `tipsbonus` (inga fanns 2026-10-13) och ger de
+  ansökningar som är i gång med en studiehjälpares kod en rad (`DEPLOY-BETALNING.md` 9.24). Kvar för Leo: villkoren för
+  bonusen (platshållaren under Värva en kompis, länken i `CFG.VARVNING_VILLKOR_URL`); villkoren `#tips` säger fortfarande
+  "när vi tar in" och att den som tipsat inte ser vilka, och vyn visar nu förnamnet när kontot finns, så de skrivs om
+  i samma version. Revisorn avgör anställningen, arbetsgivaravgifterna och semesterersättningen före första
+  utbetalningen, och lönearten (`lonart_tipsbonus`) sätts i Fortnox. Juristen har inte läst rad 27 i `DATASKYDD.md`
+  eller policyns nya ord om koden och förnamnet.
 - **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, 20261021214000) är byggt men INTE i drift, och
   strömbrytaren `syskonskuld` står av: migrationen, sedan `stripe-checkout`, `stripe-webhook`, `stripe-aterbetalning`
   och `notis-ko` från merge-commiten, i den ordningen (`DEPLOY-BETALNING.md` 9.23). Stripes endpoint får

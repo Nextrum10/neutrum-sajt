@@ -1733,3 +1733,42 @@ En fil (20261021214000), skriven och provad lokalt; ingenting är kört mot drif
 
 Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, `rls-test.sql`
 gick 2053 av 2053 (avsnitt 51, SK, 76 prov), och `prova-tillagg-samtidigt.sh` var grönt i alla tre varven.
+
+### Värvningsbonusen (varvningsbonus, 2026-10-21, inte i drift)
+En fil (20261021215000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
+`minne/affaren.md` (Värvningsbonusen), och ordningen i driften i `DEPLOY-BETALNING.md` 9.24.
+
+- **Ingen `drop` och inget `delete`.** Triggrarna skrivs med `create or replace trigger`, och de som bara ska finnas en
+  gång (auditen) skapas bakom `if not exists`. Den går att köra två gånger.
+- **Vakten i avsnitt 0** prövar sex funktioner mot den md5 de har i en databas byggd ur migrationerna (`mina_tips`,
+  `tipsbonus_vid_intag`, `ansokan_tipskod`, `ny_tipskod`, `tipsbonus_ore`, `koder_lage`); en som redan bär ändringen
+  (ordet `varvningsbonus` i kroppen) släpps igenom. `intern.radering_underlag`, `notis_typer()` och `notis_mejlbara()`
+  lappas med `replace()` och räknade träffar.
+- **Tabellerna**: `varvning_installning` (en rad, auditad: beloppet, procenten och händelsen), och `varvningsbonus`
+  (en rad per bonus, auditad utan skälet). `applications.varvad_av_profil_id` (on delete set null) är den nya
+  kolumnen på ansökan. RLS: alla inloggade läser inställningen (den säger bara beloppet), bara admin läser
+  bonusarna, och ingen inloggad skriver någon av dem (`revoke all`, bara `select` tillbaka; `nextrum_barn` och
+  `nextrum_ai` får inget).
+- **Raderas aldrig**: delete och truncate på `varvningsbonus` nekas med triggrar, också för ägaren. Värvaren är
+  `on delete restrict`; ansökan och den värvades konto är `on delete set null`, och vakten släpper igenom just det.
+- **Unikt**: en rad per ansökan, per värvat konto och per person (`varvad_epost_hmac`, HMAC av
+  `intern.epost_nyckel(adressen)` med `notis_konfig.barn_nyckel` och prefixet `varvning:v1:`; utan nyckel en
+  sha256, som bara lokalt). Byts `barn_nyckel` räknas en tidigare värvad som ny.
+- **Triggrarna**: `applications_tipskod` (BEFORE INSERT och UPDATE OF kod och värvaren, efter
+  `applications_skydda` i namnordningen) prövar koden och sätter värvaren; `applications_varvning` (AFTER INSERT
+  och UPDATE OF värvaren) skriver raden; `applications_varvning_konto` (AFTER UPDATE OF konto_id),
+  `tutor_profiles_tipsbonus` (godkänd, som förut), `prov_studiehjalpare_varvning` och `lesson_reports_varvning`
+  prövar intjänandet, och `varvning_installning_andrad` prövar alla väntande när händelsen byts. Intjänandet tar
+  radlåset (`for update`) och ändrar bara en rad i `vantar`, så två händelser samtidigt ger en bonus.
+- **Admins funktioner**: `varvningsbonus_utbetald(uuid[], text)` (de intjänade, lönemånaden ÅÅÅÅ-MM, svarar
+  antalet) och `varvningsbonus_annullera(uuid, text)` (skälet 3 till 500 tecken, svarar `annullerad`, `redan` eller
+  `utbetald`), båda `is_admin()` först och `andrad_av` satt av databasen. `prova_jobbkod(text)` är nåbar för `anon`
+  med flit: svaret är `ok`, `okand`, `tom` eller `for_manga`, och taket är rabattkodernas
+  (`intern.rabattkod_for_manga`, `intern.rabattkod_forsok_notera`) med en HMAC av IP-numret som nyckel.
+- **Det som redan fanns**: varje godkänd studiehjälpare som inte är admin får en kod; raderna i `tipsbonus` flyttas
+  hit (`tipsbonus_id`, unik) innan ansökningarna som är i gång får sin värvare, så att ingen får två bonusar; och
+  `tipsbonus` får inga nya rader (`intern.tipsbonus_vid_intag` skriver inte dit längre).
+- **Typlistorna**: `varvningsbonus` i `notis_typer()` och `notis_mejlbara()`, och i `typer.ts` i samma ändring.
+
+Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, och
+`rls-test.sql` gick igenom med avsnitt KB omskrivet och avsnitt 52 (VB) nytt.

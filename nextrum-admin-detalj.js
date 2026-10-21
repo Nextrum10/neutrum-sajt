@@ -1819,20 +1819,23 @@
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
             + esc(konto.full_name || konto.email) + '</button>'
           : null, 'inget än: det skapas med Utbildning hållen'],
-        /* Koden (2026-10-13): en studiehjälpares, som får 300 kr i lönen
-           när hen får sitt konto (tipsbonus). Bara en kod som gällde
-           står här; databasen tömde de andra. */
+        /* Koden (2026-10-13): en studiehjälpares, som får värvningsbonusen
+           (varvningsbonus, 2026-10-21) när hen får sitt konto. Bara en kod
+           som gällde står här; databasen tömde de andra. Värvaren står på
+           ansökan (varvad_av_profil_id) och följer koden. */
         ['Kod', dpKod(a), 'ingen'],
-        ...(a.kod ? [['Bonus för tipset', (() => {
-          const b = (S.tipsbonus || []).find(x => x.ansokan_id === a.id);
+        ...(a.kod ? [['Värvningsbonus', (() => {
+          const b = (S.varvningsbonus || []).find(x => x.varvad_ansokan_id === a.id);
           if (!b) return esc(S.bonusFlagga && !S.bonusFlagga.aktiv
             ? 'ingen: bonusen är avstängd under Koder'
-            : 'ges när hen får sitt konto');
-          const l = { utkast: 'utkast', godkand: 'godkänd', utbetald: 'utbetald', struken: 'struken' }[b.status] || b.status;
-          /* Lönen för månaden hen togs in, som betalas den 25:e månaden efter. */
-          const [år, mån] = String(b.period).split('-').map(Number);
-          return esc(NXBetalning.kronor(b.belopp_ore) + ', ' + l + ', i lönen den 25 '
-            + NXStudie.månadsNamn(NXStudie.månadIso(new Date(år, mån, 1, 12))));
+            : 'ingen rad');
+          if (b.status === 'annullerad') return esc('ingen: ' + (b.annullerad_orsak || 'annullerad'));
+          if (b.status === 'vantar') return esc(NXBetalning.kronor(b.brutto_ore) + ', väntar: tjänas in när hen får sitt konto');
+          if (b.status === 'utbetald') return esc(NXBetalning.kronor(b.brutto_ore) + ', utbetald med lönen för ' + (b.utbetald_period || ''));
+          /* Lönen för månaden den tjänades in, som betalas den 25:e månaden efter. */
+          const [år, mån] = String(b.manad || '').split('-').map(Number);
+          return esc(NXBetalning.kronor(b.brutto_ore) + ', intjänad' + (år ? ', i lönen den 25 '
+            + NXStudie.månadsNamn(NXStudie.månadIso(new Date(år, mån, 1, 12))) : ''));
         })()]] : [])
       ])
       + dpRubrik('Varför hen söker')

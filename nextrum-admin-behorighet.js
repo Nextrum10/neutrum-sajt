@@ -88,7 +88,7 @@
   };
   const BARA_SUPER = ['ritaÖversikt', 'ritaStatistik', 'ritaAnsokningar', 'ritaProvet', 'ritaLiggaren', 'ritaTillagg', 'ritaKontakt', 'ritaChattar',
     'ritaLektioner', 'ritaUppdrag', 'ritaUppgifter', 'ritaBibliotek', 'ritaUtbetalningar',
-    'ritaKortbetalningar', 'ritaAvvikelser', 'fyllPerioder', 'ritaMånaden', 'ritaLöner', 'ritaIntegrationer',
+    'ritaKortbetalningar', 'ritaAvvikelser', 'fyllPerioder', 'ritaMånaden', 'ritaLöner', 'ritaVarvning', 'ritaIntegrationer',
     'ritaPris', 'ritaTjanster', 'ritaRabattkoder', 'ritaFamiljerabatter', 'hämtaFamiljerabatter', 'ritaKoder', 'ritaKodsidan', 'ritaInställningar', 'ritaFel', 'ritaInstallningar', 'ritaDokument',
     'ritaAudit', 'ritaAutomationer', 'ritaMaskinUppgifter', 'ritaAI', 'ritaFörslag', 'ritaDriftlogg',
     'laddaOmEkonomi', 'ritaAttGöra', 'ritaBokslut', 'laddaBokslut'];

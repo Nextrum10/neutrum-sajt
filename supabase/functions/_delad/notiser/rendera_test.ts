@@ -281,6 +281,19 @@ Deno.test('tillägget för syskon: påminnelsen och kvittot säger belopp och pa
   assertEquals(/NaN|undefined|null/.test(tom.text), false);
 });
 
+Deno.test('värvningsbonusen: bara beloppet och villkoren, aldrig vem som värvats (varvningsbonus, 2026-10-21)', () => {
+  const m = rendera('varvningsbonus', 'tutor', { data: { ...SMUTSIG, belopp: 30000 } });
+  assertStringIncludes(m.amne, 'Din värvningsbonus är intjänad: 300\u00a0kr');
+  assertStringIncludes(m.text, 'inklusive semesterersättning');
+  assertStringIncludes(m.text, 'Den hanteras enligt villkoren för värvningsbonusen');
+  assertStringIncludes(m.text, `${SAJT}/larare#profil/tips`);
+  assertStringIncludes(m.text, 'värvningsbonus är påslaget');
+  // SMUTSIG bär namn: inget av dem står i mejlet.
+  assertEquals(m.text.includes('Alva') || m.html.includes('Alva'), false);
+  const tom = rendera('varvningsbonus', 'tutor', { data: {} });
+  assertEquals(/NaN|undefined|null/.test(tom.text), false);
+});
+
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
   const m = rendera('meddelande', 'parent');
   assertStringIncludes(m.text, 'Du får det här för att du har ett konto på Nextrum');

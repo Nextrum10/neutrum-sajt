@@ -5285,3 +5285,7 @@ button.eko-titel:focus-visible{outline:2px solid var(--focus);outline-offset:2px
 .tl-familj,.tl-post{gap:10px;flex-wrap:wrap}
 .tl-orsak{display:block;margin-top:4px;font-size:.82rem;line-height:1.45;color:var(--bl-2);max-width:60ch}
 .tl-orsak-not{display:block;margin-top:6px;font-size:.85rem;line-height:1.45;color:var(--bl-2)}
+/* Värvningsbonusen (varvningsbonus, 2026-10-21). */
+.vb-manad{width:auto;min-width:180px}
+.vb-bulk{margin:0 0 12px}
+.vb-orsak{max-width:40ch;white-space:normal}

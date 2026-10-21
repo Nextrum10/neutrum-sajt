@@ -123,7 +123,7 @@ window.NXBetalning = (function () {
      o.namn   studiehjälparens namn, som det står i profilen
      o.noter  meningar under summan, till exempel om pass från månaden
               som står på en senare lönespecifikation
-     o.bonus  bonusen för tips samma månad (2026-10-13): en rad var under
+     o.bonus  värvningsbonusen samma månad (2026-10-13; bonusen för tips till 2026-10-21): en rad var under
               passen, och summan med dem. Den står inte på underlaget,
               men den betalas med samma lön. */
   function dagText(d) {
@@ -171,7 +171,7 @@ window.NXBetalning = (function () {
     var bonus = o.bonus || [];
     var bonusÖre = bonus.reduce(function (n, b) { return n + Number(b.belopp_ore || 0); }, 0);
     bonus.forEach(function (b) {
-      kropp += '<tr class="lonespec-bonus"><td>Bonus för tips</td><td class="lonespec-tal">–</td>'
+      kropp += '<tr class="lonespec-bonus"><td>Värvningsbonus</td><td class="lonespec-tal">–</td>'
         + '<td class="lonespec-tal">' + esc(kronor(b.belopp_ore)) + '</td></tr>';
     });
     var epost = (NX.CFG && NX.CFG.EPOST) || 'info@nextrum.se';
@@ -192,8 +192,8 @@ window.NXBetalning = (function () {
       + (antal ? '<span>' + antal + ' pass</span>' : '') + '</th>'
       + '<td class="lonespec-tal">' + esc(timmar(p.minuter)) + '</td>'
       + '<td class="lonespec-tal">' + esc(kronor(Number(p.belopp_ore || 0) + bonusÖre)) + '</td></tr></tfoot></table>'
-      + '<p class="lonespec-not">Timpenningen' + (bonusÖre ? ' och bonusen för tips är' : ' är') + ' inklusive semesterersättning.'
-      + (bonusÖre ? ' Summan har ' + esc(kronor(bonusÖre)) + ' i bonus för tips med.' : '') + '</p>'
+      + '<p class="lonespec-not">Timpenningen' + (bonusÖre ? ' och värvningsbonusen är' : ' är') + ' inklusive semesterersättning.'
+      + (bonusÖre ? ' Summan har ' + esc(kronor(bonusÖre)) + ' i värvningsbonus med.' : '') + '</p>'
       + (p.status === 'misslyckad' && p.fel ? '<p class="lonespec-not lonespec-fel">' + esc(p.fel) + '</p>' : '')
       + (o.noter || []).map(function (n) { return '<p class="lonespec-not">' + esc(n) + '</p>'; }).join('')
       + '<p class="lonespec-fraga">Frågor om lönen: <a href="mailto:' + esc(epost) + '">' + esc(epost) + '</a></p>'

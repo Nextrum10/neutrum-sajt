@@ -3187,6 +3187,8 @@
       host: $('#notisval-lista'),
       supa: supa,
       anvandare: S.user.id,
+      // Studiehjälparens egna sorter (värvningsbonusen, 2026-10-21).
+      roll: 'tutor',
       msg: $('#notisval-msg')
     });
   }
@@ -3466,15 +3468,17 @@
           .or('pa_underlag.eq.false,wanted_date.gte.' + gräns.från)),
       supa.from('payouts').select('id, period, status, belopp_ore, minuter, fel, utbetald_at')
         .eq('tutor_id', S.user.id),
-      /* Bonusen för tips (2026-10-13): 300 kr i lönen för månaden vi tog
-         in någon som sökt jobb med din kod. Saknas tabellen är det ingen
-         bonus, inte ett fel. */
-      supa.from('tipsbonus').select('id, belopp_ore, period, status, intjanad_at')
-        .eq('studiehjalpare_id', S.user.id).neq('status', 'struken')
+      /* Värvningsbonusen (varvningsbonus, 2026-10-21; förut bonusen för
+         tips, 2026-10-13): lön för månaden den tjänades in. Raderna läses
+         genom mina_tips(), som bara ger läget, beloppet och dagarna. Ett
+         fel är ingen bonus, inte ett fel i lönen. */
+      supa.rpc('mina_tips')
     ]);
     if (nr !== ersFråga) return;
-    const bonusar = bon && !bon.error
-      ? (bon.data || []).filter(b => String(b.period).slice(0, 10) === m) : [];
+    const värv = bon && !bon.error && bon.data && Array.isArray(bon.data.varvningar) ? bon.data.varvningar : [];
+    const bonusar = värv.filter(v => (v.status === 'intjanad' || v.status === 'utbetald') && v.intjanad
+      && String(v.intjanad).slice(0, 7) + '-01' === m)
+      .map(v => ({ belopp_ore: Number(v.belopp_ore || 0), status: v.status }));
     const bonusÖre = bonusar.reduce((n, b) => n + Number(b.belopp_ore || 0), 0);
 
     /* INGET UTBETALNINGSKONTO HÄR, och det är ett beslut (Fas 12.5).
@@ -3582,8 +3586,8 @@
     if (bonusÖre) {
       const utbetald = bonusar.every(b => b.status === 'utbetald');
       pag.insertAdjacentHTML('beforeend', '<p class="bet-not lonespec-bonus"><b>' + esc(B.kronor(bonusÖre))
-        + ' i bonus för tips</b> ' + esc((bonusar.length === 1 ? 'för någon' : 'för ' + bonusar.length + ' personer')
-        + ' vi tog in i ' + mNamn + ' som sökt jobb med din kod. '
+        + ' i värvningsbonus</b> ' + esc((bonusar.length === 1 ? 'för en kompis' : 'för ' + bonusar.length + ' kompisar')
+        + ' du värvat, intjänad i ' + mNamn + '. '
         + (utbetald ? 'Den är utbetald.' : 'Den betalas med lönen den 25 ' + nästa + '.')) + '</p>');
     }
 

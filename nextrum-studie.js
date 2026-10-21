@@ -3918,7 +3918,9 @@ window.NXStudie = (function () {
     { typ: 'kort_nekat',     namn: 'Kort som nekas',       om: 'När kortet nekas, före passet när beloppet ska reserveras eller efter när det ska dras.', bara: 'parent' },
     /* syskontillagg_som_skuld (2026-10-21). Bara familjen har tillägget. */
     { typ: 'tillagg_paminnelse', namn: 'Påminnelse om tillägg', om: 'När tillägget för syskon varit obetalt en tid. Högst ett mejl per period.', bara: 'parent' },
-    { typ: 'tillagg_kvitto',     namn: 'Kvitto på tillägg',     om: 'När tillägget för syskon är betalt, med passen det gällde.', bara: 'parent' }
+    { typ: 'tillagg_kvitto',     namn: 'Kvitto på tillägg',     om: 'När tillägget för syskon är betalt, med passen det gällde.', bara: 'parent' },
+    /* Värvningsbonusen (varvningsbonus, 2026-10-21): bara beloppet. */
+    { typ: 'varvningsbonus',     namn: 'Värvningsbonus',        om: 'När bonusen för en kompis du värvat är intjänad.', bara: 'tutor' }
   ];
 
   function notisval(o) {
@@ -4248,12 +4250,74 @@ window.NXStudie = (function () {
           + ' i ansökan' + (data.bonus_ges ? ', så får jag en bonus om ni börjar.' : '.');
     }
 
+    /* VÄRVA EN KOMPIS (varvningsbonus, 2026-10-21). Leo: kortet "Värva en
+       kompis" med egen kod, kopierbar länk, beloppet ur inställningen och
+       en lista över de värvade med bara läget. Förnamnet står först när
+       kompisen fått sitt konto, och inget annat om den värvade.
+       Annullerade står inte med. Före migrationen (inga varvningar i
+       svaret) ritas rutan som förut. */
+    var HÄNDELSE = {
+      konto_skapat: 'när din kompis har fått sitt konto',
+      prov_godkant: 'när din kompis har klarat utbildningsprovet',
+      forsta_pass_genomfort: 'när din kompis har hållit sitt första pass'
+    };
+    var VÄRV_LÄGE = {
+      vantar: ['Väntar', 'ar-vantar'], intjanad: ['Intjänad', 'ar-klar'], utbetald: ['Utbetald', 'ar-klar']
+    };
+    function värvDag(v) {
+      var dag = function (t) { return t ? datumText(String(t).slice(0, 10)) : ''; };
+      if (v.status === 'utbetald') {
+        return v.period ? 'Utbetald med lönen för ' + månadsNamn(v.period + '-01') : 'Utbetald ' + dag(v.utbetald);
+      }
+      /* En väntande har inget datum: när kompisen sökte är en uppgift ur ansökan. */
+      return v.status === 'intjanad' ? 'Intjänad ' + dag(v.intjanad) : '';
+    }
+    function ritaVärvning() {
+      var belopp = Number(data.bonus_belopp_ore || 0);
+      var när = HÄNDELSE[data.utlosare] || HÄNDELSE.konto_skapat;
+      var lista = data.varvningar;
+      var url = NX.CFG && NX.CFG.VARVNING_VILLKOR_URL;
+      host.innerHTML = '<p class="nx-tips-intro">Känner du någon som vill jobba som studiehjälpare? Dela din länk, '
+        + 'eller be hen skriva koden i jobbansökan.</p>'
+        + (data.bonus_ges && belopp
+          ? '<p class="nx-tips-bonus" data-varv-bonus><b>' + esc(kr(belopp) + ' inklusive semesterersättning ' + när + '.') + '</b></p>'
+          : '<p class="nx-tips-bonus" data-varv-bonus>Just nu ger en värvning ingen bonus, men vi ser att tipset kom från dig.</p>')
+        + (data.aktiv
+          ? '<div class="nx-tips-kod"><span class="nx-tips-et">Din kod</span><b translate="no">' + esc(data.kod) + '</b></div>'
+            + '<label class="nx-tips-et" for="tips-lank">Länken</label>'
+            + '<input class="inp nx-tips-lank" id="tips-lank" readonly value="' + esc(länk()) + '">'
+            + '<div class="nx-tips-knappar">'
+            + (navigator.share ? '<button class="btn btn-primary btn-sm" type="button" data-tips-dela>Dela länken</button>' : '')
+            + '<button class="btn ' + (navigator.share ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-tips-kopiera>Kopiera länken</button>'
+            + '</div>'
+          : '<p class="nx-tips-av">Koden gäller inte just nu. Skriv till oss om du undrar varför.</p>')
+        + '<h6 class="nx-tips-rubrik">Dina värvningar</h6>'
+        + (lista.length
+          ? '<ul class="nx-varv-lista">' + lista.map(function (v) {
+              var l = VÄRV_LÄGE[v.status] || [String(v.status || ''), ''];
+              return '<li data-varv-rad><span class="nx-varv-vem">' + esc(v.fornamn || 'En kompis som sökt') + '</span>'
+                + '<span class="nx-varv-dag">' + esc(värvDag(v)) + '</span>'
+                + '<span class="lage ' + l[1] + '">' + esc(l[0]) + '</span></li>';
+            }).join('') + '</ul>'
+          : '<p class="xsmall nx-dok-tom">Ingen har sökt med din kod än.</p>')
+        + '<p class="xsmall nx-tips-not">Du ser bara läget, och förnamnet när kompisen har fått sitt konto. Bonusen är lön, '
+        + 'inklusive semesterersättning, och betalas med lönen. '
+        + (url
+          ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Villkoren för värvningsbonusen</a>'
+          /* PLATSHÅLLARE: villkorstexten skriver Leo, och länken står i
+             NX.CFG.VARVNING_VILLKOR_URL. */
+          : '<span data-varv-platshallare>Platshållare: villkoren för värvningsbonusen skrivs av Nextrum, och länken läggs '
+            + 'in här. Tills dess gäller </span><a href="/anvandarvillkor#tips">villkoren för tips</a>.')
+        + '</p>';
+    }
+
     function rita() {
       if (!data) {
-        host.innerHTML = '<p class="xsmall nx-dok-tom">' + (familj ? 'Tipsa en familj' : 'Tipsa en studiehjälpare')
+        host.innerHTML = '<p class="xsmall nx-dok-tom">' + (familj ? 'Tipsa en familj' : 'Värva en kompis')
           + ' finns inte här än.</p>';
         return;
       }
+      if (!familj && Array.isArray(data.varvningar)) { ritaVärvning(); return; }
       var kvar = Number(data.kvar || 0);
       var tal = [];
       if (familj) {

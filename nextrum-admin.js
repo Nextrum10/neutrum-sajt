@@ -88,6 +88,7 @@
   const laddaOmEkonomi = (...a) => NXAdmin.rita.laddaOmEkonomi(...a);
   const ritaMånaden = (...a) => NXAdmin.rita.ritaMånaden(...a);
   const ritaLöner = (...a) => NXAdmin.rita.ritaLöner(...a);
+  const ritaVarvning = (...a) => NXAdmin.rita.ritaVarvning(...a);
 
   document.addEventListener('change', async e => {
     const el = e.target;
@@ -1054,6 +1055,8 @@
       /* Efter Ekonomi: båda läser dess stängda månader och passunderlaget. */
       ritaMånaden();
       ritaLöner();
+      // Värvningsbonusen (2026-10-21) läser samma rader som Löner.
+      ritaVarvning();
       ritaIntegrationer();
       ritaAdminhantering();
       ritaPris();

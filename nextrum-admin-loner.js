@@ -63,14 +63,15 @@
    Filen byggs i webbläsaren ur det admin redan får läsa. Ingenting
    skickas härifrån, och ingenting ändras av att filen laddas ned.
 
-   BONUSEN FÖR TIPS (2026-10-13). Leo: "bonus redovisas som lön". 300 kr
-   till en studiehjälpare när vi tar in någon som sökt jobb med hens kod
-   (tipsbonus, skriven av databasen). Den hör till lönen för månaden den
-   tjänades in, som passen. Den är inget pass och har ingen tid, så den
-   står inte på underlaget: den har ett eget läge (Utkast, Godkänd,
-   Utbetald, Struken) i rutan Bonus för tips, räknas i Att betala ut,
-   och lönefilen tar den godkända som en egen lönetransaktion på en
-   egen löneart (foretagsfakta.lonart_tipsbonus), antal 1. Beloppet är
+   VÄRVNINGSBONUSEN (2026-10-21; bonusen för tips sedan 2026-10-13). Leo:
+   "bonus redovisas som lön". 300 kr till en studiehjälpare som värvat en
+   kompis (varvningsbonus, skriven av databasen). Den hör till lönen för
+   månaden den tjänades in, som passen. Den är inget pass och har ingen
+   tid, så den står inte på underlaget: den har ett eget läge (Väntar,
+   Intjänad, Utbetald, Annullerad) i rutan Värvningsbonus och under
+   sektionen Värvningsbonus, räknas i Att betala ut, och lönefilen tar den
+   intjänade som en egen lönetransaktion på en egen löneart
+   (foretagsfakta.lonart_tipsbonus), antal 1. Beloppet är
    inklusive semesterersättning (Leo 2026-10-13: "300kr är inklusive
    semesterersättning"), som timpenningen, så lönearten ska inte vara
    semestergrundande: annars lägger Fortnox på den en gång till.
@@ -205,11 +206,11 @@
     bonus: []
   });
 
-  /* Månadens bonusar för tips, utan de strukna. Lönemånaden är bonusens
-     period: månaden den tjänades in. */
-  const månadensBonus = månad => (S.tipsbonus || []).filter(b =>
-    String(b.period).slice(0, 10) === månad && b.status !== 'struken');
-  const bonusÖre = r => r.bonus.reduce((n, b) => n + Number(b.belopp_ore || 0), 0);
+  /* Månadens värvningsbonusar, intjänade och utbetalda. Lönemånaden är
+     månaden bonusen tjänades in (manad, satt i kärnan). */
+  const månadensBonus = månad => (S.varvningsbonus || []).filter(b =>
+    b.manad === månad && (b.status === 'intjanad' || b.status === 'utbetald'));
+  const bonusÖre = r => r.bonus.reduce((n, b) => n + Number(b.brutto_ore || 0), 0);
 
   /* En rad per studiehjälpare för månaden. underlag är månadens
      underlag om det finns; beräknat är de pass en körning lägger på det,
@@ -233,7 +234,7 @@
     (S.utbetalningar || []).forEach(u => {
       if (String(u.period).slice(0, 10) === g.från) post(u.tutor_id).underlag = u;
     });
-    månadensBonus(g.från).forEach(b => post(b.studiehjalpare_id).bonus.push(b));
+    månadensBonus(g.från).forEach(b => post(b.varvare_profil_id).bonus.push(b));
 
     (S.passunderlag || []).forEach(p => {
       if (!p.tutor_id || !p.fakturerbar) return;
@@ -288,10 +289,10 @@
           utbetaltÖre += Number(r.underlag.belopp_ore || 0) + r.beräknat.öre;
         }
       }
-      /* Bonusen för tips har sitt eget läge (2026-10-13). */
+      /* Värvningsbonusen har sitt eget läge (2026-10-13, 2026-10-21). */
       r.bonus.forEach(b => {
         bonusar++;
-        if (b.status === 'utbetald') { bonusUtbetalda++; utbetaltÖre += Number(b.belopp_ore || 0); }
+        if (b.status === 'utbetald') { bonusUtbetalda++; utbetaltÖre += Number(b.brutto_ore || 0); }
       });
     });
     return {
@@ -343,7 +344,7 @@
     const utanNummer = rader.filter(r => harNågotAttFå(r) && !L.anst.has(r.id)).length;
     const utanTimpenning = rader.reduce((n, r) => n + r.beräknat.utanTimpenning, 0);
     const bonusar = rader.reduce((a, r) => a.concat(r.bonus), []);
-    const bonusSumma = bonusar.reduce((n, b) => n + Number(b.belopp_ore || 0), 0);
+    const bonusSumma = bonusar.reduce((n, b) => n + Number(b.brutto_ore || 0), 0);
 
     host.innerHTML = '<div class="adm-tal-rad">'
       + kpi(kronor(öre), 'Att betala ut', (beräknat ? 'beräknat · ' : '') + 'den 25 ' + namn(g.till, false)
@@ -364,9 +365,9 @@
           utanNummer > 0)
         : kpi('—', 'Saknar anställningsnummer', L.anstFel ? 'gick inte att läsa' : 'hämtar'))
       + (utanTimpenning ? kpi(utanTimpenning, 'Pass utan timpenning', 'körningen hoppar över dem', true) : '')
-      /* Bonusen för tips (2026-10-13): ingår i Att betala ut, har egna lägen. */
-      + (bonusar.length ? kpi(kronor(bonusSumma), 'Bonus för tips', bonusar.length + (bonusar.length === 1 ? ' bonus · ' : ' bonusar · ')
-        + bonusar.filter(b => b.status === 'godkand').length + ' godkända · '
+      /* Värvningsbonusen (2026-10-21): ingår i Att betala ut, har egna lägen. */
+      + (bonusar.length ? kpi(kronor(bonusSumma), 'Värvningsbonus', bonusar.length + (bonusar.length === 1 ? ' bonus · ' : ' bonusar · ')
+        + bonusar.filter(b => b.status === 'intjanad').length + ' intjänade · '
         + bonusar.filter(b => b.status === 'utbetald').length + ' utbetalda') : '')
       + '</div>';
   }
@@ -408,7 +409,7 @@
             : r.beräknat.pass ? '<span class="adm-und">beräknat</span>' : '')
           + (r.beräknat.utanTimpenning ? '<span class="adm-und" style="color:var(--acc-text)">'
             + r.beräknat.utanTimpenning + ' pass utan timpenning</span>' : '')
-          + (r.bonus.length ? '<span class="adm-und">varav ' + esc(kronor(bonusÖre(r))) + ' bonus för tips</span>' : '');
+          + (r.bonus.length ? '<span class="adm-und">varav ' + esc(kronor(bonusÖre(r))) + ' värvningsbonus</span>' : '');
       } },
       /* Läget och Skicka underlag sköts av lyssnarna i nextrum-admin.js. */
       { namn: 'Underlag', höger: true, rita: r => r.underlag
@@ -421,78 +422,54 @@
   }
 
   /* ------------------------------------------------------------
-     BONUSEN FÖR TIPS (2026-10-13)
-     Månadens bonusar, också de strukna, så att en struken går att ta
-     tillbaka. Läget sätts med märkena, som underlagets.
+     VÄRVNINGSBONUSEN (2026-10-21; bonusen för tips sedan 2026-10-13)
+     Månadens bonusar, intjänade, utbetalda och annullerade. Lägena byts
+     bara framåt, genom databasens två funktioner: Markera utbetald (med
+     lönemånaden) och Annullera (med ett skäl). Knapparna sköts av
+     sektionen Värvningsbonus (nextrum-admin-varvning.js), som ritar om
+     Löner efteråt.
      ------------------------------------------------------------ */
   const BONUS_LAGE = {
-    utkast: ['Utkast', ''], godkand: ['Godkänd', 'ar-vantar'],
-    utbetald: ['Utbetald', 'ar-klar'], struken: ['Struken', '']
+    vantar: ['Väntar', 'ar-vantar'], intjanad: ['Intjänad', 'ar-ny'],
+    utbetald: ['Utbetald', 'ar-klar'], annullerad: ['Annullerad', '']
   };
 
   function ritaBonus(månad) {
     const host = $('#lon-bonus');
     if (!host) return;
     const ruta = host.closest('.dbox');
-    const rader = (S.tipsbonus || []).filter(b => String(b.period).slice(0, 10) === månad)
+    const rader = (S.varvningsbonus || []).filter(b => b.manad === månad)
       .sort((a, b) => String(a.intjanad_at).localeCompare(String(b.intjanad_at)));
     /* Utan bonusar, och utan tabellen, står rutan inte med. */
-    if (ruta) ruta.hidden = !rader.length && !S.tipsbonusFel;
-    if (S.tipsbonusFel && S.tipsbonusFel !== 'saknas') {
-      host.innerHTML = tomt('Bonusarna gick inte att läsa', S.tipsbonusFel);
+    if (ruta) ruta.hidden = !rader.length && !S.varvningFel;
+    if (S.varvningFel && S.varvningFel !== 'saknas') {
+      host.innerHTML = tomt('Bonusarna gick inte att läsa', S.varvningFel);
       return;
     }
-    if (ruta && S.tipsbonusFel === 'saknas') ruta.hidden = true;
+    if (ruta && S.varvningFel === 'saknas') ruta.hidden = true;
     host.innerHTML = tabell([
       { namn: 'Studiehjälpare', rita: b => '<button type="button" class="eko-lank" data-dp="studiehjalpare:'
-        + esc(b.studiehjalpare_id) + '"><b>' + esc(namnFör(b.studiehjalpare_id)) + '</b></button>'
-        + (L.klar && !L.anstFel && !L.anst.has(b.studiehjalpare_id) && b.status !== 'struken'
+        + esc(b.varvare_profil_id) + '"><b>' + esc(namnFör(b.varvare_profil_id)) + '</b></button>'
+        + (L.klar && !L.anstFel && !L.anst.has(b.varvare_profil_id) && b.status === 'intjanad'
           ? ' ' + pill('Anst.nr saknas', 'ar-ny') : '') },
-      { namn: 'För att vi tog in', rita: b => (b.ny_studiehjalpare_id
-          ? '<button type="button" class="eko-lank" data-dp="studiehjalpare:' + esc(b.ny_studiehjalpare_id) + '">'
-            + esc(namnFör(b.ny_studiehjalpare_id)) + '</button>'
+      { namn: 'Värvade', rita: b => (b.varvad_profil_id
+          ? '<button type="button" class="eko-lank" data-dp="studiehjalpare:' + esc(b.varvad_profil_id) + '">'
+            + esc(namnFör(b.varvad_profil_id)) + '</button>'
           : '<span>kontot finns inte längre</span>')
-        + '<span class="adm-und">' + esc(kortDatum(b.intjanad_at)) + '</span>' },
-      { namn: 'Belopp', rita: b => '<span class="adm-tal">' + esc(kronor(b.belopp_ore)) + '</span>' },
-      { namn: 'Läge', höger: true, rita: b => lägesväljare(BONUS_LAGE, b.status, 'data-bonus="' + esc(b.id) + '"') }
-    ], rader, 'Ingen bonus för tips i ' + namn(månad));
+        + '<span class="adm-und">intjänad ' + esc(kortDatum(b.intjanad_at)) + '</span>' },
+      { namn: 'Belopp', rita: b => '<span class="adm-tal">' + esc(kronor(b.brutto_ore)) + '</span>'
+        + (b.grundersattning_ore != null ? '<span class="adm-und">' + esc(kronor(b.grundersattning_ore)) + ' + '
+          + esc(kronor(b.semesterersattning_ore)) + ' semester</span>' : '') },
+      { namn: 'Läge', höger: true, rita: b => pill((BONUS_LAGE[b.status] || [b.status])[0], (BONUS_LAGE[b.status] || [])[1])
+        + (b.status === 'utbetald' && b.utbetald_period ? '<span class="adm-und">' + esc(b.utbetald_period) + '</span>' : '')
+        + (b.status === 'intjanad'
+          ? ' <button type="button" class="btn btn-ghost btn-sm" data-varv-utbetald="' + esc(b.id) + '">Markera utbetald</button>'
+          : '')
+        + (b.status === 'intjanad' || b.status === 'vantar'
+          ? ' <button type="button" class="btn btn-ghost btn-sm" data-varv-annullera="' + esc(b.id) + '">Annullera</button>'
+          : '') }
+    ], rader, 'Ingen värvningsbonus i ' + namn(månad));
   }
-
-  document.addEventListener('change', async e => {
-    const el = e.target;
-    if (!el.dataset || !el.dataset.bonus) return;
-    const b = (S.tipsbonus || []).find(x => x.id === el.dataset.bonus);
-    if (!b) return;
-    const till = el.value;
-    if (till === 'utbetald' && b.status !== 'godkand') {
-      alert('Godkänn bonusen först. Utbetald går bara att sätta på en godkänd bonus, som på underlaget.');
-      el.value = b.status;
-      return;
-    }
-    const fråga = till === 'utbetald'
-      ? { titel: 'Har bonusen betalats ut?', text: kronor(b.belopp_ore) + ' till ' + namnFör(b.studiehjalpare_id)
-          + '. Markera den bara när lönen den står på är betald.', knapp: 'Ja, den är betald' }
-      : till === 'struken'
-      ? { titel: 'Stryk bonusen?', text: 'Den betalas inte och kommer inte med i lönefilen. Den går att ta tillbaka här.',
-          knapp: 'Stryk' }
-      : b.status === 'utbetald'
-      ? { titel: 'Ångra utbetald?', text: 'Gör det bara om lönen med bonusen aldrig gick iväg.', knapp: 'Ångra' }
-      : null;
-    if (fråga && !(await bekräfta(fråga))) { el.value = b.status; return; }
-
-    /* Bara om läget fortfarande är det som visades. Stämplarna sätter
-       databasen (intern.tipsbonus_skydda). */
-    const { data, error } = await supa.from('tipsbonus').update({ status: till })
-      .eq('id', b.id).eq('status', b.status).select('*');
-    if (error || !data || !data.length) {
-      alert(error ? 'Kunde inte spara: ' + felText(error)
-        : 'Bonusen har ändrats sedan sidan hämtades. Ingenting sparades; ladda om sidan.');
-      el.value = b.status;
-      return;
-    }
-    Object.assign(b, data[0]);
-    ritaLöner();
-  });
 
   /* ------------------------------------------------------------
      LÖNEFILEN
@@ -504,15 +481,15 @@
     const b = L.bolag;
     const underlag = rader.filter(r => r.underlag).map(r => r.underlag);
     const godkända = underlag.filter(u => u.status === 'godkand');
-    /* Bonusen för tips (2026-10-13): den godkända kommer med, på sin
-       egen löneart. */
-    const bonusar = rader.reduce((a, r) => a.concat(r.bonus.filter(x => x.status === 'godkand')), []);
-    const utanNummer = Array.from(new Set(godkända.map(u => u.tutor_id).concat(bonusar.map(x => x.studiehjalpare_id))))
+    /* Värvningsbonusen (2026-10-21): den intjänade och inte utbetalda
+       kommer med, på sin egen löneart. */
+    const bonusar = rader.reduce((a, r) => a.concat(r.bonus.filter(x => x.status === 'intjanad')), []);
+    const utanNummer = Array.from(new Set(godkända.map(u => u.tutor_id).concat(bonusar.map(x => x.varvare_profil_id))))
       .filter(id => !L.anst.has(id));
     const hinder = [];
     const varningar = [];
     if (!b.lonart_timlon && godkända.length) hinder.push('Lönearten för timlön är inte satt.');
-    if (!b.lonart_tipsbonus && bonusar.length) hinder.push('Lönearten för bonus för tips är inte satt.');
+    if (!b.lonart_tipsbonus && bonusar.length) hinder.push('Lönearten för värvningsbonus är inte satt.');
     if (b.studiehjalpare_form === 'uppdragstagare') {
       hinder.push('Bolagsfakta säger att studiehjälparna är uppdragstagare. Då får de inte lön genom Fortnox Lön, de fakturerar.');
     }
@@ -550,9 +527,9 @@
     const b = L.bolag;
     const l = lönefilensLäge(rader, månad);
     const summa = l.godkända.reduce((n, u) => n + Number(u.belopp_ore || 0), 0);
-    const bonusSumma = l.bonusar.reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
-    /* Bonusen för tips (2026-10-13) har sin egen löneart. Raden står när
-       månaden har en bonus, eller när lönearten redan är satt. */
+    const bonusSumma = l.bonusar.reduce((n, x) => n + Number(x.brutto_ore || 0), 0);
+    /* Värvningsbonusen (2026-10-13, 2026-10-21) har sin egen löneart. Raden
+       står när månaden har en bonus, eller när lönearten redan är satt. */
     const månadensBonusar = rader.reduce((n, r) => n + r.bonus.length, 0);
     const bock = (ok, text, knapp) => '<li class="' + (ok ? 'ar-ok' : 'ar-saknas') + '"><span>' + text + '</span>'
       + (knapp || '') + '</li>';
@@ -561,7 +538,7 @@
       + bock(!!b.lonart_timlon, 'Löneart för timlön: ' + (b.lonart_timlon ? '<b>' + esc(b.lonart_timlon) + '</b>' : 'inte satt'),
           '<button type="button" class="btn btn-ghost btn-sm" data-lon-lonart>' + (b.lonart_timlon ? 'Ändra' : 'Sätt') + '</button>')
       + (månadensBonusar || b.lonart_tipsbonus
-        ? bock(!!b.lonart_tipsbonus, 'Löneart för bonus för tips: '
+        ? bock(!!b.lonart_tipsbonus, 'Löneart för värvningsbonus: '
             + (b.lonart_tipsbonus ? '<b>' + esc(b.lonart_tipsbonus) + '</b>' : 'inte satt'),
             '<button type="button" class="btn btn-ghost btn-sm" data-lon-lonart="bonus">' + (b.lonart_tipsbonus ? 'Ändra' : 'Sätt') + '</button>')
         : '')
@@ -571,13 +548,13 @@
             + (l.bonusar.length ? ': filen har bara bonusen' : ''))
       + (månadensBonusar
         ? bock(l.bonusar.length > 0, l.bonusar.length
-            ? l.bonusar.length + (l.bonusar.length === 1 ? ' godkänd bonus för tips, ' : ' godkända bonusar för tips, ')
+            ? l.bonusar.length + (l.bonusar.length === 1 ? ' intjänad värvningsbonus, ' : ' intjänade värvningsbonusar, ')
               + esc(kronor(bonusSumma))
-            : 'Ingen bonus för tips är godkänd')
+            : 'Ingen värvningsbonus väntar på lönen')
         : '')
-      + bock(!l.godkända.some(u => !L.anst.has(u.tutor_id)) && !l.bonusar.some(x => !L.anst.has(x.studiehjalpare_id)),
-          l.godkända.some(u => !L.anst.has(u.tutor_id)) || l.bonusar.some(x => !L.anst.has(x.studiehjalpare_id))
-            ? 'Anställningsnummer saknas för någon med godkänt underlag eller godkänd bonus'
+      + bock(!l.godkända.some(u => !L.anst.has(u.tutor_id)) && !l.bonusar.some(x => !L.anst.has(x.varvare_profil_id)),
+          l.godkända.some(u => !L.anst.has(u.tutor_id)) || l.bonusar.some(x => !L.anst.has(x.varvare_profil_id))
+            ? 'Anställningsnummer saknas för någon med godkänt underlag eller intjänad bonus'
             : 'Alla med godkänt underlag har anställningsnummer')
       + bock(b.studiehjalpare_form === 'anstallda', 'Studiehjälparnas form i bolagsfakta: <b>'
           + esc(FORM[b.studiehjalpare_form] || 'okänd') + '</b>',
@@ -654,20 +631,20 @@
 
     const underlag = new Map(godkända.map(u => [u.id, u]));
     const lonart = L.bolag.lonart_timlon;
-    /* Bonusen för tips: en rad var, på sin egen löneart, daterad den dag
-       den tjänades in (2026-10-13). */
+    /* Värvningsbonusen: en rad var, på sin egen löneart, daterad den dag
+       den tjänades in (2026-10-13, 2026-10-21). */
     const bonusRader = (bonusar || []).map(x => ({
-      tutor: x.studiehjalpare_id,
+      tutor: x.varvare_profil_id,
       payout: null,
       bonus: x.id,
-      anstid: L.anst.get(x.studiehjalpare_id),
+      anstid: L.anst.get(x.varvare_profil_id),
       lonart: L.bolag.lonart_tipsbonus,
       datum: String(x.intjanad_at).slice(0, 10),
       minuter: null,
       antal: 1,
-      apris_ore: Number(x.belopp_ore),
-      belopp_ore: Number(x.belopp_ore),
-      beskrivning: 'Bonus för tips'
+      apris_ore: Number(x.brutto_ore),
+      belopp_ore: Number(x.brutto_ore),
+      beskrivning: 'Värvningsbonus'
     }));
     return rader.map(r => ({
       tutor: underlag.get(r.payout_id).tutor_id,
@@ -722,16 +699,16 @@
       return 'Anst.nr ' + L.anst.get(u.tutor_id) + '  ' + namnFör(u.tutor_id) + '  ·  '
         + egna.length + ' pass  ·  ' + tim(egna.reduce((n, r) => n + r.minuter, 0))
         + '  ·  ' + kronor(u.belopp_ore);
-    }).concat(l.bonusar.map(x => 'Anst.nr ' + L.anst.get(x.studiehjalpare_id) + '  ' + namnFör(x.studiehjalpare_id)
-      + '  ·  bonus för tips  ·  ' + kronor(x.belopp_ore)));
-    const bonusSumma = l.bonusar.reduce((n, x) => n + Number(x.belopp_ore || 0), 0);
+    }).concat(l.bonusar.map(x => 'Anst.nr ' + L.anst.get(x.varvare_profil_id) + '  ' + namnFör(x.varvare_profil_id)
+      + '  ·  värvningsbonus  ·  ' + kronor(x.brutto_ore)));
+    const bonusSumma = l.bonusar.reduce((n, x) => n + Number(x.brutto_ore || 0), 0);
     const ja = await bekräfta({
       titel: 'Ladda ned lönefilen för den 25 ' + namn(utbetalning) + '?',
       text: 'Passen i ' + namn(månad) + '. I Fortnox: Lön → Kalender → Importera löneunderlag, för utbetalningen '
         + 'den 25 ' + namn(utbetalning, false) + ', och välj filen. Läs in den en gång: '
-        + 'finns timmarna redan i Fortnox läggs de till en gång till. Markera underlagen'
-        + (l.bonusar.length ? ' och bonusarna' : '') + ' Utbetald här '
-        + 'när lönen är betald, så kommer de inte med i nästa fil.'
+        + 'finns timmarna redan i Fortnox läggs de till en gång till. Markera underlagen Utbetald här'
+        + (l.bonusar.length ? ', och bonusarna med Markera utbetald under Värvningsbonus,' : '')
+        + ' när lönen är betald, så kommer de inte med i nästa fil.'
         + (l.varningar.length ? '\n\n' + l.varningar.join('\n') : '')
         + (avrundade ? '\n\n' + avrundade + (avrundade === 1 ? ' rad har' : ' rader har')
           + ' ett belopp som inte är exakt timmar gånger timpris. Beloppet i filen är underlagets.' : ''),

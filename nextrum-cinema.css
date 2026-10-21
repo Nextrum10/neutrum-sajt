@@ -2188,6 +2188,10 @@ html:not([data-motion]) .nx-story-stilla{display:block;padding-block:var(--luft-
   background:transparent;border-color:var(--nt-ln);color:var(--nt-fg);
 }
 .nx-mork .nx-fil-namn,.nx-mork .nx-fil-hjalp,.nx-mork .lbl-valfri{color:var(--nt-mut)}
+/* Koden i jobbansökan (varvningsbonus, 2026-10-21): gäller eller inte. */
+.nx-kod-besked{margin-top:8px;font-size:.88rem;line-height:1.5;color:var(--bl-3)}
+.nx-kod-besked.ar-ok{color:var(--mossa)}
+.nx-kod-besked.ar-fel{color:var(--acc-lugn);font-weight:600}
 
 /* ============================================================
    ÖVERSTYRNINGAR AV DE ÄRVDA BLOCKEN

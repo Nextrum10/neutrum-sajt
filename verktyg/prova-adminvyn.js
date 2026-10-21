@@ -339,6 +339,28 @@ async function genomAdminvyn(webb, roll, o) {
     prova(namn + ': syskontillägg: inga fel från databasen', nyaDb.length === 0, nyaDb.join(' | '));
   }
 
+  /* Värvningsbonusen (varvningsbonus, 2026-10-21): sektionen läser
+     raderna ur den riktiga databasen. Fixturen har en intjänad, en som
+     väntar och en annullerad med databasens skäl. Inget trycks här: att
+     markera och annullera provas i prova-varvning.js. */
+  if (sektioner.includes('varvning')) {
+    const före = { k: konsol.length, d: dbfel.length };
+    await page.evaluate(() => { location.hash = '#varvning'; });
+    await lugnt(page, 700);
+    const lista = await page.locator('#vb-lista').innerText().catch(() => '');
+    prova(namn + ': värvningsbonus: tre rader ur databasen, med lägena och delningen',
+      /Kalle Kompis/.test(lista) && /Intjänad/.test(lista) && /Väntar/.test(lista) && /Annullerad/.test(lista)
+        && /267,86\s*kr grund \+ 32,14\s*kr semester/.test(lista) && /Hade redan ett konto/.test(lista), lista.slice(0, 400));
+    const summa = await page.locator('#vb-summa').innerText().catch(() => '');
+    prova(namn + ': värvningsbonus: summeringen per värvare och lönemånad', /Tove/.test(summa) && /300\s*kr/.test(summa),
+      summa.slice(0, 300));
+    await bild(page, namn.replace(/ /g, '-') + '-varvning');
+    const nyaKonsol = konsol.slice(före.k);
+    const nyaDb = dbfel.slice(före.d);
+    prova(namn + ': värvningsbonus: inga fel i konsolen', nyaKonsol.length === 0, nyaKonsol.join(' | '));
+    prova(namn + ': värvningsbonus: inga fel från databasen', nyaDb.length === 0, nyaDb.join(' | '));
+  }
+
   prova(namn + ': inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   if (funktioner.length) console.log('(' + namn + ' anropade edge-funktioner, som svarade 404: '
     + [...new Set(funktioner)].join(', ') + ')');

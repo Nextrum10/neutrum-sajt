@@ -24,7 +24,7 @@
 export const NOTIS_TYPER = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
   'meddelande', 'rapport', 'paminnelse', 'timmar_gar_ut', 'barnforslag', 'kort_nekat',
-  'tillagg_paminnelse', 'tillagg_kvitto',
+  'tillagg_paminnelse', 'tillagg_kvitto', 'varvningsbonus',
 ] as const;
 
 export type NotisTyp = typeof NOTIS_TYPER[number];
@@ -35,11 +35,13 @@ export type NotisTyp = typeof NOTIS_TYPER[number];
  *  2026-10-13): det sparade kortet nekades när beloppet skulle reserveras
  *  eller dras. tillagg_paminnelse och tillagg_kvitto (syskontillagg_som_skuld,
  *  2026-10-21): det upplupna tillägget för syskon, och kvittot när det
- *  betalats. Belopp och antal pass, aldrig ett barns namn. */
+ *  betalats. Belopp och antal pass, aldrig ett barns namn. varvningsbonus
+ *  (varvningsbonus, 2026-10-21): värvarens bonus är intjänad. Bara
+ *  beloppet, aldrig vem som värvats. */
 export const MEJLBARA = [
   'pass_nytt', 'pass_bekraftat', 'pass_flyttat', 'pass_avbokat', 'pass_avbojt',
   'meddelande', 'paminnelse', 'timmar_gar_ut', 'barnforslag', 'kort_nekat',
-  'tillagg_paminnelse', 'tillagg_kvitto',
+  'tillagg_paminnelse', 'tillagg_kvitto', 'varvningsbonus',
 ] as const;
 
 export type MejlbarTyp = typeof MEJLBARA[number];

@@ -1348,6 +1348,21 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   semesterersättningen får ingå i lönen bekräftar revisorn med
   `studiehjalpare_form`. `Skicka underlag` (mejlet) handlar om passen och bär
   inte bonusen.
+- **Värvningsbonusen** (2026-10-21, `varvningsbonus`, inte i drift) tar över
+  bonusen för tips (`minne/affaren.md`, Värvningsbonusen). Under Löner står
+  månadens bonusar i samma ruta, nu Värvningsbonus, med lönemånaden lika med
+  månaden bonusen tjänades in (`manad`, ur `intjanad_at` i svensk tid). Läget
+  Godkänd finns inte längre: en intjänad bonus kommer med i lönefilen på samma
+  löneart (`lonart_tipsbonus`, antal 1, beloppet brutto), och den som inte ska
+  betalas annulleras med ett skäl. Markera utbetald och Annullera går bara
+  genom databasens funktioner (`varvningsbonus_utbetald()` med lönemånaden
+  ÅÅÅÅ-MM, `varvningsbonus_annullera()` med skälet), aldrig en `update` från
+  vyn, och knapparna är desamma som i sektionen Värvningsbonus. Att betala ut,
+  personens Att få och Månadens ekonomi räknar de intjänade och utbetalda.
+  Bruttot delas på raden i grundersättning och semesterersättning
+  (`round(brutto / 1,12)`, 26 786 + 3 214 öre), som underlag för revisorn
+  och CSV:n; lönefilen tar bruttot, för lönearten är inte semestergrundande.
+  Inget betalas ut av systemet.
 
 ## Lönespecen
 

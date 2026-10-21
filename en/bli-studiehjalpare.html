@@ -53,7 +53,7 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=81de04a0">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=8f2dabf9">
 <link rel="stylesheet" href="../nextrum-start.css?v=8a3f88cc">
 <link rel="stylesheet" href="../nextrum-sidor.css?v=89c1fa67">
 </head>
@@ -286,8 +286,9 @@
           <div class="pay-field"><label for="ap-why">Why do you want to become a tutor?</label><textarea class="inp" id="ap-why" name="varfor" style="min-height:110px"></textarea></div>
           <!-- KODEN (2026-10-13). Se bli-studiehjalpare.html. -->
           <div class="pay-field"><label for="ap-kod">Code from a tutor <span class="lbl-valfri">optional</span></label>
-            <input class="inp" id="ap-kod" name="kod" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <input class="inp" id="ap-kod" name="kod" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="ap-kod-besked">
             <p class="nx-fil-hjalp">Did someone who already works with us recommend you? Enter their code. Only a tutor's code works here, not a family's or a poster's.</p>
+            <p class="nx-kod-besked" id="ap-kod-besked" role="status" aria-live="polite" hidden></p>
           </div>
 
           <div class="pay-field">
@@ -541,10 +542,10 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="../bibliotek/supabase-js-2.116.0.js"></script>
-<script src="../nextrum-config.js?v=f4c156fa"></script>
+<script src="../nextrum-config.js?v=679d65ab"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=98fb5d72"></script>
+<script src="../nextrum-app.js?v=20eb9020"></script>
 <script src="../nextrum-samtycke.js?v=92474eaf"></script>
 <script src="../nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
@@ -648,6 +649,35 @@
     if (frånAdressen) kodFält.value = frånAdressen;
   }
 
+  /* VÄRVNINGEN (varvningsbonus, 2026-10-21). Koden prövas när fältet
+     lämnas och igen när ansökan skickas. Gäller den inte står det under
+     fältet, och den följer inte med ansökan (databasen hade gjort den tom
+     ändå); ansökan går in. Svaret säger aldrig vems koden är. */
+  const kodBesked = $('#ap-kod-besked');
+  let kodTömd = false;
+  const visaKod = svar => {
+    if (!kodBesked) return;
+    const text = svar === 'ok' ? t('kodGaller') : svar === 'okand' ? t('kodGallerInte')
+      : svar === 'for_manga' ? t('kodForManga') : '';
+    kodBesked.textContent = text;
+    kodBesked.hidden = !text;
+    kodBesked.classList.toggle('ar-ok', svar === 'ok');
+    kodBesked.classList.toggle('ar-fel', svar === 'okand');
+    if (kodFält) kodFält.setAttribute('aria-invalid', svar === 'okand' ? 'true' : 'false');
+  };
+  const provaKod = async () => {
+    const kod = kodFält ? renKod(kodFält.value) : '';
+    if (!kod) { visaKod(null); return null; }
+    const svar = await NX.provaJobbkod(kod);
+    visaKod(svar);
+    return svar;
+  };
+  if (kodFält) {
+    kodFält.addEventListener('change', provaKod);
+    if (kodFält.value) provaKod();
+  }
+  $('#apply-form').addEventListener('reset', () => setTimeout(() => visaKod(null)));
+
   /* Timmarna: ja eller nej måste väljas. Rutan markeras som den
      glömda samtyckesrutan och släpper när något väljs. */
   const timmarFält = $('#ap-timmar');
@@ -700,7 +730,15 @@
     överst: () => 'Skola nu: ' + (SKOLA_I_WHY[skolVal()] || '') + '\nMinst 4 timmar i veckan: ' + timmarVal(),
     kolumner: () => Object.assign(under18() ? { vardnadshavare_epost: vh.value.trim() } : {},
       kodFält && renKod(kodFält.value) ? { kod: renKod(kodFält.value) } : {}),
-    tack: () => (under18() ? t('tackAnsokanUnder18') : ''),
+    /* Koden prövas före ansökan, och en som inte gäller töms. */
+    innan: async () => {
+      kodTömd = false;
+      if (kodFält && (await provaKod()) === 'okand') { kodFält.value = ''; kodTömd = true; }
+    },
+    tack: () => {
+      const bas = under18() ? t('tackAnsokanUnder18') : (kodTömd ? t('tackAnsokan') : '');
+      return kodTömd ? bas + ' ' + t('kodTomdes') : bas;
+    },
     extra: () => {
       const rader = [];
       const tel = $('#ap-phone') && $('#ap-phone').value.trim();

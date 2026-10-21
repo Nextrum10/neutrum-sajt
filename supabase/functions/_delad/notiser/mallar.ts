@@ -55,7 +55,7 @@ import { datumText, narText, paminnelseNar } from './tid.ts';
  * kvittot på en intresseanmälan går till någon som ännu inte har ett
  * konto, och en knapp till en inloggad vy hade mött en inloggning.
  */
-export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten' | 'kortet';
+export type Mal = 'pass' | 'meddelanden' | 'boka' | 'betalning' | 'sajten' | 'kortet' | 'varvning';
 
 export type Innehall = {
   amne: string;
@@ -82,6 +82,7 @@ export const KATEGORI: Record<MejlbarTyp, string> = {
   kort_nekat: 'kort som nekas',
   tillagg_paminnelse: 'påminnelser om tillägg',
   tillagg_kvitto: 'kvitton på tillägg',
+  varvningsbonus: 'värvningsbonus',
 };
 
 const SVARA = 'Svara ja eller nej i Nextrum.';
@@ -403,6 +404,23 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
       knapp: 'Visa betalningarna',
       mal: 'betalning',
       fakta,
+    };
+  },
+
+  // varvningsbonus (2026-10-21). Värvarens bonus är intjänad. Bara beloppet
+  // och att den hanteras enligt villkoren (Leo: "bara belopp och att den
+  // hanteras enligt villkoren"); aldrig vem som värvats eller hur långt hen
+  // kommit. Inget betalas ut härifrån: bonusen är lön.
+  varvningsbonus(m) {
+    const belopp = m.d.belopp !== null && m.d.belopp > 0 ? kronor(m.d.belopp) : null;
+    return {
+      amne: belopp ? `Din värvningsbonus är intjänad: ${belopp}` : 'Din värvningsbonus är intjänad',
+      rubrik: 'Tack för att du värvade en kompis',
+      mening: `Din värvningsbonus${belopp ? ` på ${belopp}, inklusive semesterersättning,` : ''} är intjänad. `
+        + 'Den hanteras enligt villkoren för värvningsbonusen och betalas med lönen.',
+      knapp: 'Se dina värvningar',
+      mal: 'varvning',
+      fakta: belopp ? [['Värvningsbonus', belopp]] : [],
     };
   },
 };

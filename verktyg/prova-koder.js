@@ -96,11 +96,16 @@ function värld() {
       { id: 'ans-2', name: 'Olle Olsson', email: 'olle@example.se', age: 17, status: 'contacted',
         created_at: nu(-600), tjanster: ['laxhjalp'], kod: 'SHAAAA', why: 'Hej.' }
     ],
-    tipsbonus: [
-      { id: 'bonus-1', studiehjalpare_id: 'sh-a', ny_studiehjalpare_id: 'sh-ny', ansokan_id: 'ans-ny',
-        belopp_ore: 30000, period: förraMånaden, status: 'utkast', intjanad_at: förraMånaden + 'T12:00:00+00:00',
-        godkand_at: null, utbetald_at: null, created_at: förraMånaden + 'T12:00:00+00:00' }
+    /* Värvningsbonusen (varvningsbonus, 2026-10-21; förut tipsbonus):
+       intjänad förra månaden, inte utbetald. */
+    varvningsbonus: [
+      { id: 'bonus-1', varvare_profil_id: 'sh-a', varvad_profil_id: 'sh-ny', varvad_ansokan_id: 'ans-ny',
+        varvad_epost_hmac: 'x', brutto_ore: 30000, semester_procent: 12, grundersattning_ore: 26786,
+        semesterersattning_ore: 3214, utlosare: 'konto_skapat', status: 'intjanad',
+        skapad_at: förraMånaden + 'T09:00:00+00:00', intjanad_at: förraMånaden + 'T12:00:00+00:00',
+        utbetald_at: null, utbetald_period: null, annullerad_at: null, annullerad_orsak: null, andrad_av: null }
     ],
+    varvning_installning: [{ id: 1, brutto_ore: 30000, semester_procent: 12, utlosare: 'konto_skapat' }],
     flaggor: [
       { kod: 'tipstimme', aktiv: true, beskrivning: 'Timmen', uppdaterad: '2026-09-30T10:00:00Z' },
       { kod: 'tipsbonus', aktiv: true, beskrivning: 'Bonusen', uppdaterad: '2026-10-13T10:00:00Z' }
@@ -204,7 +209,18 @@ function falskSupabase(o) {
     koder_lage: k => KODER[k.p_sort] || [],
     /* Raderingsrutan för en studiehjälpare med en obetald och en betald bonus. */
     radering_lage: k => ({ typ: k.p_typ, satt: 'avidentifieras', larm: [], avbokas: 0, tas_bort: {}, filer: [],
-      hinder: [{ kod: 'tipsbonus', antal: 1, belopp_ore: 30000 }], star_kvar: { tipsbonus: 1 } }),
+      hinder: [{ kod: 'varvningsbonus', antal: 1, belopp_ore: 30000 }], star_kvar: { varvningsbonus: 1 } }),
+    /* Markera utbetald (varvningsbonus_utbetald): de intjänade, med månaden. */
+    varvningsbonus_utbetald: k => {
+      let n = 0;
+      W.varvningsbonus.forEach(b => {
+        if ((k.p_ids || []).includes(b.id) && b.status === 'intjanad') {
+          Object.assign(b, { status: 'utbetald', utbetald_at: nu(0), utbetald_period: k.p_period, andrad_av: 'admin-1' });
+          n++;
+        }
+      });
+      return n;
+    },
     admin_sett_markera: k => k.p_till,
     mitt_villkorslage: () => ({ version: '2026-10-13', godkant_at: '2026-10-13T09:00:00+00:00', tidigare: false }),
     forsta_timmen_lage: () => ({ beviljad: false, tagen: false, i_planen: false, pa_pass: false }),
@@ -375,7 +391,7 @@ async function provaKoder(webb) {
   await vänta(250);
   const vilka2 = await text(page, '#kod-lista .kod-rad[data-kod="SHAAAA"] .kod-kropp');
   prova('koder: utfälld visar ansökningarna och bonusens läge', /Nils Nyman/.test(vilka2) && /Olle Olsson/.test(vilka2)
-    && /Bonus, utkast, 300 kr/.test(vilka2), vilka2);
+    && /Bonus intjänad, 300 kr/.test(vilka2), vilka2);
   await bild(page, 'koder-studiehjalpare');
 
   /* Strömbrytaren frågar först och skriver sedan. */
@@ -657,25 +673,43 @@ async function provaLöner(webb) {
   const { context, page, S, riktiga, konsol } = await öppna(webb, {});
   await tillAdmin(page, 'loner');
   const tal = await text(page, '#lon-tal');
-  prova('löner: bonusen står bland talen', /Bonus för tips/.test(tal) && /300 kr/.test(tal), tal);
-  prova('löner: rutan Bonus för tips syns', await synlig(page, '#lon-bonus table'));
+  prova('löner: bonusen står bland talen', /Värvningsbonus/.test(tal) && /300 kr/.test(tal), tal);
+  prova('löner: rutan Värvningsbonus syns', await synlig(page, '#lon-bonus table'));
   prova('löner: studiehjälparen och den hen tipsat', /Sara Ahl/.test(await text(page, '#lon-bonus'))
     && /Nils Nyman/.test(await text(page, '#lon-bonus')), await text(page, '#lon-bonus'));
-  prova('löner: Att få säger att bonusen ingår', /varav 300 kr bonus för tips/.test(await text(page, '#lon-personer')),
+  prova('löner: Att få säger att bonusen ingår', /varav 300 kr värvningsbonus/.test(await text(page, '#lon-personer')),
     await text(page, '#lon-personer'));
   const fil = await text(page, '#lon-fil');
-  prova('löner: lönefilen visar lönearten för bonusen', /Löneart för bonus för tips/.test(fil), fil);
+  prova('löner: lönefilen visar lönearten för bonusen', /Löneart för värvningsbonus/.test(fil), fil);
+  prova('löner: delningen står vid beloppet', /267,86\s*kr \+ 32,14\s*kr semester/.test(await text(page, '#lon-bonus')),
+    await text(page, '#lon-bonus'));
   await bild(page, 'loner-bonus', '#lon-bonus');
 
-  /* Utbetald före Godkänd går inte. */
-  await page.click('[data-bonus="bonus-1"] button[value="godkand"]');
-  await vänta(500);
-  const patch = S.logg.find(r => r.metod === 'PATCH' && r.väg === '/rest/v1/tipsbonus');
-  prova('löner: Godkänd skrivs bara om läget är det som visades',
-    patch && patch.kropp && patch.kropp.status === 'godkand' && /status=eq\.utkast/.test(patch.sök), JSON.stringify(patch));
+  /* En intjänad bonus utan löneart stoppar filen. */
+  await page.click('[data-lon-fil]').catch(() => {});
+  await vänta(300);
   const hinder = await text(page, '#lon-fil');
-  prova('löner: en godkänd bonus utan löneart stoppar filen', /Lönearten för bonus för tips är inte satt/.test(hinder), hinder);
+  prova('löner: en intjänad bonus utan löneart stoppar filen', /Lönearten för värvningsbonus är inte satt/.test(hinder), hinder);
   await bild(page, 'loner-fil', '#lon-fil');
+
+  /* Markera utbetald: lönemånaden krävs, och bara databasens funktion skriver. */
+  await page.click('[data-varv-utbetald="bonus-1"]');
+  await page.waitForSelector('.nx-fraga-box #vb-period', { timeout: 3000 }).catch(() => {});
+  const förslag = await page.inputValue('.nx-fraga-box #vb-period').catch(() => '');
+  prova('löner: Markera utbetald föreslår månaden bonusen tjänades in', förslag === förraMånaden.slice(0, 7), förslag);
+  await page.fill('.nx-fraga-box #vb-period', '2026-13');
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(200);
+  prova('löner: en månad som inte finns nekas i rutan', /ÅÅÅÅ-MM/.test(await text(page, '.nx-fraga-box #fr-msg')),
+    await text(page, '.nx-fraga-box #fr-msg'));
+  await page.fill('.nx-fraga-box #vb-period', förraMånaden.slice(0, 7));
+  await page.click('.nx-fraga-box [data-fr="ja"]');
+  await vänta(700);
+  const rpc = S.logg.find(r => r.väg === '/rest/v1/rpc/varvningsbonus_utbetald');
+  prova('löner: utbetald går genom databasens funktion med lönemånaden, aldrig en PATCH',
+    rpc && JSON.stringify(rpc.kropp.p_ids) === '["bonus-1"]' && rpc.kropp.p_period === förraMånaden.slice(0, 7)
+      && !S.logg.some(r => r.metod === 'PATCH' && r.väg === '/rest/v1/varvningsbonus'), JSON.stringify(rpc && rpc.kropp));
+  prova('löner: rutan säger Utbetald efteråt', /Utbetald/.test(await text(page, '#lon-bonus')), await text(page, '#lon-bonus'));
 
   /* Ansökans panel. */
   await page.goto(BAS + '/admin#ansokningar');
@@ -688,7 +722,7 @@ async function provaLöner(webb) {
   await vänta(500);
   const fakta = await text(page, '.dp-fakta');
   prova('ansökan: panelen säger vem som tipsat och bonusen', /Tipsad av/.test(fakta) && /Sara Ahl/.test(fakta)
-    && /Bonus för tipset/.test(fakta) && /300 kr/.test(fakta), fakta);
+    && /Värvningsbonus/.test(fakta) && /300 kr/.test(fakta), fakta);
   await bild(page, 'ansokan-kod', '.dp-fakta');
 
   /* Raderingsrutan: hindret har ord, och bonusen står kvar. */
@@ -702,11 +736,11 @@ async function provaLöner(webb) {
   await page.waitForSelector('.rad-box', { timeout: 3000 }).catch(() => {});
   const hindret = await text(page, '.rad-hinder');
   prova('radera: hindret säger bonusen och vad som ska göras',
-    /1 bonus för tips som inte är utbetald: 300 kr/.test(hindret) && /markera den Utbetald under Löner/.test(hindret)
-      && !/tipsbonus/.test(hindret), hindret);
+    /1 värvningsbonus som inte är utbetald: 300 kr/.test(hindret) && /markera den utbetald under Värvningsbonus/.test(hindret)
+      && !/varvningsbonus/.test(hindret), hindret);
   const kvar = await page.evaluate(() => Array.from(document.querySelectorAll('.rad-box .rad-grupp'))
     .filter(g => /Står kvar/.test(g.textContent)).map(g => g.textContent).join(' '));
-  prova('radera: bonusen står under Står kvar', /1 bonus för tips/.test(kvar), kvar);
+  prova('radera: bonusen står under Står kvar', /1 värvningsbonus/.test(kvar), kvar);
   await bild(page, 'radera-bonus', '.rad-box');
   await page.keyboard.press('Escape');
 

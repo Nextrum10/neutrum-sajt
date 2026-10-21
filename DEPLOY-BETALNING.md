@@ -1926,3 +1926,38 @@ här ett pris eller en betalning: syskon bokas som förut, och inga poster skapa
 
 Kvar efter: juristen (rad 35, policyns stycke, villkoren för tillägget), och att säga till familjerna med
 fler barn att tillägget räknas per extra barn och betalas efter passet, innan strömbrytaren slås på.
+
+### 9.24 Värvningsbonusen (2026-10-21, inte körd)
+
+Efter merge, en session, i den här ordningen. Inget betalas ut av något av det här: bonusen är underlag för
+lönen, och Leo betalar den med lönen.
+
+1. **Backup** av `tipsbonus`, `tipskoder` och `applications` (Supabases dagliga räcker, men ta en för hand:
+   migrationen flyttar raderna i `tipsbonus` och sätter värvaren på ansökningar som är i gång).
+2. **`notis-ko`** från merge-commiten FÖRE migrationen, hämtad tillbaka och jämförd byte för byte. Den har
+   mallen för `varvningsbonus`; utan den blir värvarens mejl ett fel i kön när en bonus tjänas in.
+3. **Migrationen** `20261021215000_varvningsbonus`, hel i ett do-block eller avsnitt för avsnitt. Den har
+   inget `drop` och inget `delete`. Avsnitt 0 prövar sex funktioner mot den md5 de hade 2026-10-21; stannar
+   den har någon ändrat dem, och migrationen skrivs om mot driften. Pröva filens md5 och registrera
+   filens text.
+4. Hela `rls-test.sql` mot driften, tillbakarullat (avsnitt KB och VB), och advisorn: `prova_jobbkod` är
+   nåbar för `anon` med flit (formuläret frågar den, och den har ett tak).
+5. **Kontrollera** att varje godkänd studiehjälpare som inte är admin har en kod
+   (`select count(*) from tutor_profiles t where t.status = 'approved' and not exists (select 1 from tipskoder k where k.person_id = t.id and k.sort = 'studiehjalpare')`
+   ger 0 utom för adminkonton), och att `tipsbonus` och `varvningsbonus` har lika många rader med
+   `tipsbonus_id`.
+6. **Innan någon får veta om bonusen**: Leo skriver villkoren för värvningsbonusen och lägger länken i
+   `VARVNING_VILLKOR_URL` i `nextrum-config.js` (till dess står en platshållare under Värva en kompis).
+   Villkoren `#tips` säger "när vi tar in" och att den som tipsat inte ser vilka; vyn visar förnamnet
+   när kontot finns, så de skrivs om i en ny version (`kolla-villkor.py`). Ändras händelsen
+   (`varvning_installning.utlosare`) ändras villkoren, policyn och texten i vyn med.
+7. **Revisorn** före första utbetalningen: anställningen (`studiehjalpare_form`), arbetsgivaravgifterna,
+   och att semesterersättningen får ingå i de 300 kr. Lönearten `foretagsfakta.lonart_tipsbonus` i
+   Fortnox får inte vara semestergrundande, annars läggs semesterersättningen på en gång till.
+8. **Provet**, med sandlådan satt: en ansökan med en egen provstudiehjälpares kod genom länken
+   (`/bli-studiehjalpare?kod=…`), och en med en kod som inte finns (beskedet, och ansökan går in utan
+   kod); ta in den första med Utbildning hållen och se raden bli Intjänad med 267,86 + 32,14 kr och
+   mejlet i sandlådan; Markera utbetald med lönemånaden, CSV:n, och Annullera på en väntande.
+
+Kvar efter: juristen (rad 27 i `DATASKYDD.md` och policyns stycken om koden och förnamnet), och att säga
+till studiehjälparna att bonusen heter värvningsbonus och syns under Värva en kompis.

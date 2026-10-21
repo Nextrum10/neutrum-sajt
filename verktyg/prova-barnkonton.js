@@ -1369,7 +1369,7 @@ async function provaAdminvyn(webb) {
     await page.goto(BAS + '/admin#koder/studiehjalpare');
     await vänta(400);
     prova('begränsad: en adress till Koder visar inga koder', !(await synlig(page, '#kod-vy')) && !(await synlig(page, '#kod-val .kod-val-kort')));
-    const förbjudna = S.logg.filter(r => /rpc\/(ekonomiska_avvikelser|audit_sok|tipskoder_lage|koder_lage|driftkorningar)|\/(passunderlag|analys_|admin_lage|tipsbonus)/.test(r.väg));
+    const förbjudna = S.logg.filter(r => /rpc\/(ekonomiska_avvikelser|audit_sok|tipskoder_lage|koder_lage|driftkorningar)|\/(passunderlag|analys_|admin_lage|tipsbonus|varvningsbonus|varvning_installning)/.test(r.väg));
     prova('begränsad: det superadminen ser hämtas inte', förbjudna.length === 0, förbjudna.map(r => r.väg).join(', '));
     await page.goto(BAS + '/admin#system/adminanvandare');
     await vänta(300);

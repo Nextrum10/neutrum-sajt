@@ -165,4 +165,19 @@ insert into public.lesson_reports (id, student_id, tutor_id, booking_id, raw_not
 update public.flaggor set aktiv = false where kod = 'syskonskuld';
 update public.tillagg_installning set villkor_version = 'utkast' where id = 1;
 
+-- Värvningsbonusen (varvningsbonus, 2026-10-21): tre ansökningar med Toves
+-- kod. Kalle får sitt konto och bonusen tjänas in, Kim väntar, och Tea hade
+-- redan ett konto när hon sökte, så hennes rad är annullerad med skälet.
+insert into public.applications (id, name, email, kod, tjanster, status, created_at) values
+  ('a1000000-0000-4000-8000-00000000a006', 'Kalle Kompis', 'prov-kompis1@example.invalid',
+   (select kod from public.tipskoder where person_id = 'a1000000-0000-4000-8000-0000000000a1'), '{laxhjalp}', 'new', now()),
+  ('a1000000-0000-4000-8000-00000000a007', 'Kim Kompis', 'prov-kompis2@example.invalid',
+   (select kod from public.tipskoder where person_id = 'a1000000-0000-4000-8000-0000000000a1'), '{laxhjalp}', 'new', now()),
+  ('a1000000-0000-4000-8000-00000000a008', 'Tea Väntar', 'prov-tutor3@example.invalid',
+   (select kod from public.tipskoder where person_id = 'a1000000-0000-4000-8000-0000000000a1'), '{laxhjalp}', 'new',
+   now() + interval '1 minute');
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('a1000000-0000-4000-8000-0000000000a6', 'prov-kompis1@example.invalid', '{"role":"tutor","full_name":"Kalle Kompis"}');
+update public.tutor_profiles set status = 'approved', hourly_rate = 160 where id = 'a1000000-0000-4000-8000-0000000000a6';
+
 commit;
