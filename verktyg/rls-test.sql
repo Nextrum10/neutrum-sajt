@@ -18737,6 +18737,26 @@ begin
   end if;
 end $$;
 
+-- ============================================================
+-- NEX MÅNADSRAPPORT (nex_manadsrapport, 2026-10-21)
+-- Schemat väcker edge-funktionen den 1:a. Bara pg_cron får väcka den,
+-- och jobbet ska finnas: ett schema som står av ser ut som ett som
+-- fungerar (avsnitt 5).
+-- ============================================================
+insert into utfall (test, ok, detalj)
+select 'Nex: väckningen går inte att köra för anon eller inloggade',
+       coalesce(not has_function_privilege('anon', to_regprocedure('intern.nex_manadsrapport_vack()'), 'execute')
+            and not has_function_privilege('authenticated', to_regprocedure('intern.nex_manadsrapport_vack()'), 'execute'), false),
+       case when to_regprocedure('intern.nex_manadsrapport_vack()') is null then 'funktionen finns inte' else '' end
+union all
+select 'Nex: jobbet går den 1:a varje månad',
+       exists (select 1 from cron.job where jobname = 'nex-manadsrapport' and schedule = '13 6 1 * *' and active),
+       coalesce((select schedule from cron.job where jobname = 'nex-manadsrapport'), 'saknas')
+union all
+select 'Nex: en inloggad familj läser ingen rapport', r = '0', r
+  from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
+          $q$select count(*)::text from public.agent_korningar$q$) r) x;
+
 reset role;
 select set_config('request.jwt.claims', null, true);
 

@@ -94,6 +94,14 @@ verify_jwt = false
 [functions.admin-paminnelse]
 verify_jwt = false
 
+# Nex månadsrapport (2026-10-21). Väcks av pg_cron-jobbet nex-manadsrapport
+# den 1:a varje månad genom notis_konfig.nex_url, med hemligheten i
+# x-nextrum-notis. Skriv nu på Översikt anropar den med en superadmins egen
+# token, som funktionen prövar själv (kravAdmin). Står raden inte kvar
+# svarar funktionen 401 den 1:a, och ingen rapport skrivs.
+[functions.nex-manadsrapport]
+verify_jwt = false
+
 # Gallringen av ansökningar och CV:n efter ett år. Väcks av pg_cron-
 # jobbet ansokan-gallring genom notis_konfig.gallring_url, med samma
 # hemlighet i headern. Står den här raden inte kvar svarar funktionen
