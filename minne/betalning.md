@@ -16,7 +16,7 @@ Avsnitten Kortet reserveras vid bokningen, Kortet försöker igen och Familjen b
 
 ---
 
-## Betala nu (2026-10-21, `betala_nu`, inte i drift än)
+## Betala nu (2026-10-21, `betala_nu`, i drift samma kväll)
 
 Leo, samma kväll som fakturan och kortet som försöker igen gick ut: "Hela betalning är fel. De
 ska vara att man betalar när man fått de bekräftat att man kan boka lektionen. Eller att man köper
@@ -1358,7 +1358,7 @@ allt räknas ur det adminvyn redan hämtar, på passets månad, så en merge
   semesterersättningen får ingå i lönen bekräftar revisorn med
   `studiehjalpare_form`. `Skicka underlag` (mejlet) handlar om passen och bär
   inte bonusen.
-- **Värvningsbonusen** (2026-10-21, `varvningsbonus`, inte i drift) tar över
+- **Värvningsbonusen** (2026-10-21, `varvningsbonus`, i drift samma kväll) tar över
   bonusen för tips (`minne/affaren.md`, Värvningsbonusen). Under Löner står
   månadens bonusar i samma ruta, nu Värvningsbonus, med lönemånaden lika med
   månaden bonusen tjänades in (`manad`, ur `intjanad_at` i svensk tid). Läget
@@ -2023,9 +2023,16 @@ plan/pass/tillägg); bara visning."
   `markera_riktiga => true`; utan den listas de, och inget märks. Tjänstekontot
   (`service_role`) har inga skrivrättigheter i `betalningar_dolda`: bara ägaren
   skriver, som kommentaren alltid sagt.
+- **I driften** (kvällen 2026-10-21): skriptet fastnade på verktygets
+  bekräftelse (den temporära funktionen har tre `delete`) och kördes inte.
+  Torrkörningens lista togs med läsfrågor: en betalning i hela liggaren, Leos
+  plan för 1 364 kr den 2026-09-28 (`skarp = false`), och inga riktiga
+  betalningar, pass, köp, kodanvändningar eller tilläggsposter. Den märktes
+  `test` med en `insert` med skriptets vakter, och ingenting raderades
+  (`minne/databasen.md`, Kedjan 2026-10-21).
 
 
-## Syskontillägget som skuld (2026-10-21, `syskontillagg_som_skuld`, inte i drift, strömbrytaren av)
+## Syskontillägget som skuld (2026-10-21, `syskontillagg_som_skuld`, i drift samma kväll, strömbrytaren av)
 
 Leo: "bokar en familj ett pass med fler än ett barn tillkommer ett tillägg per extra barn.
 Tillägget blir en skuld på familjen när passet är hållet. Familjen kan betala skulden när hen
@@ -2123,7 +2130,7 @@ månadskörning och inget sparat kort för tillägget."
 
 En granskare som inte skrivit koden läste pengaflödet och bevisade fynden mot en lokal databas
 (skripten i scratchpaden, varje gång mellan `begin` och `rollback`). Allt nedan rättades i samma
-migration, som inte är körd.
+migration, innan den kördes.
 
 - **Ett försök som aldrig kan bli betalt släpps.** Svarade databasen `kop_redan` (köpet betalt i
   en annan kassa), `fel_belopp` eller `dubbel` stod försöket öppet för alltid: jobbet släpper bara

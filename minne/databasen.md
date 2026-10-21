@@ -1696,8 +1696,8 @@ migrationerna. Hur det gick till, i ordning:
   (de kom samma kväll, `minne/affaren.md`) och de två godkända studiehjälparna är undantagna, och intervjumejlet gick inte ut till de
   fyra ansökningar som redan var vidareskickade (de fick det för hand samma kväll, `minne/notiser.md`).
 
-### Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21, inte i drift)
-En fil (20261021214000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
+### Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21, i drift samma kväll)
+En fil (20261021214000), provad lokalt och i drift sedan kvällen 2026-10-21 (Kedjan 2026-10-21, nedan). Vad den gör står i
 `minne/betalning.md` (Syskontillägget som skuld), och ordningen i driften i `DEPLOY-BETALNING.md` 9.23.
 
 - **En `drop`**: `betalningar_typ_check` byts mot ett villkor som också tar `syskon` (`drop constraint if exists`
@@ -1734,7 +1734,7 @@ En fil (20261021214000), skriven och provad lokalt; ingenting är kört mot drif
 Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, `rls-test.sql`
 gick 2053 av 2053 (avsnitt 51, SK, 76 prov), och `prova-tillagg-samtidigt.sh` var grönt i alla tre varven.
 
-**Granskningen 2026-10-21** (`minne/betalning.md`, Granskningen) ändrade samma fil, som inte är körd:
+**Granskningen 2026-10-21** (`minne/betalning.md`, Granskningen) ändrade samma fil innan den kördes:
 `tillagg_godkannanden.familj` är `on delete cascade` (godkännandet raderas med kontot); `tillagg_forsok` har
 `slapp_orsak` 'admin', `slapp_kommentar` och `slappt_av` (villkoret `tillagg_forsok_admin`: en orsak och en person
 när admin släppt); posternas väg tillbaka är en funktion (`intern.tillagg_poster_tillbaka`, som läser
@@ -1747,8 +1747,8 @@ kassan och webhooken läser dem och skriver bara genom funktionerna, som alla ä
 `pg_proc`), och ett prov i avsnitt 51 gör samma kontroll. Filen går fortfarande att köra två gånger, och
 `rls-test.sql` gick 2106 av 2106 med den och de andra rättelserna.
 
-### Värvningsbonusen (varvningsbonus, 2026-10-21, inte i drift)
-En fil (20261021215000), skriven och provad lokalt; ingenting är kört mot driften. Vad den gör står i
+### Värvningsbonusen (varvningsbonus, 2026-10-21, i drift samma kväll)
+En fil (20261021215000), provad lokalt och i drift sedan kvällen 2026-10-21 (Kedjan 2026-10-21, nedan). Vad den gör står i
 `minne/affaren.md` (Värvningsbonusen), och ordningen i driften i `DEPLOY-BETALNING.md` 9.24.
 
 - **Ingen `drop` och inget `delete`.** Triggrarna skrivs med `create or replace trigger`, och de som bara ska finnas en
@@ -1786,7 +1786,7 @@ En fil (20261021215000), skriven och provad lokalt; ingenting är kört mot drif
 Provat lokalt 2026-10-21: filen kördes två gånger utan fel mot databasen byggd ur alla migrationer, och
 `rls-test.sql` gick igenom med avsnitt KB omskrivet och avsnitt 52 (VB) nytt.
 
-**Granskningen 2026-10-21** (`minne/affaren.md`, Värvningsbonusen) ändrade samma fil, som inte är körd: indexen är
+**Granskningen 2026-10-21** (`minne/affaren.md`, Värvningsbonusen) ändrade samma fil innan den kördes: indexen är
 partiella (`varvningsbonus_en_per_ansokan` och `_en_per_konto` där läget inte är `annullerad`,
 `varvningsbonus_en_per_person` bara för `intjanad` och `utbetald`, och ett vanligt index på personen); personen är en
 HMAC av `intern.varvning_epost_nyckel` (Gmail utan punkter); `intern.varvningsbonus_ny` (BEFORE INSERT) släpper bara
@@ -1796,7 +1796,7 @@ blir null i en kaskad; `applications_varvning` går på `insert or update of kod
 `cf-connecting-ip` och har ett tak på 500 okända i timmen totalt (nyckeln `jobbkod:`); och `service_role` har inga
 skrivrättigheter i `varvningsbonus` eller `varvning_installning`.
 
-### Granskningens övriga rättelser (2026-10-21, i filerna som inte är körda)
+### Granskningens övriga rättelser (2026-10-21, i drift samma kväll)
 - **`ansokningarnas_steg`**: en INSERT som inte är betrodd måste ha steget `ny`; medan läget är eller blir
   `rejected` står stegets kolumner still; loggens tid sätts bara när den saknas (backfillen behåller sina tider);
   `ansokan_steg_logg_star_fast` släpper en UPDATE där bara `andrad_av` blir null vid `pg_trigger_depth() > 1`; och
@@ -1810,3 +1810,49 @@ skrivrättigheter i `varvningsbonus` eller `varvning_installning`.
 - **`betalningar_dolda`**: `service_role` förlorar insert, update, delete och truncate.
 - **`supabase/scripts/rensa-leo-testbetalning.sql`**: kontot måste ha en adminroll, och `markera_riktiga` (falsk som
   förval) krävs för att märka en riktig betalning annullerad. Provat lokalt med funktionen i sparpunkter.
+
+### Kedjan 2026-10-21 i drift: tio migrationer, och testbetalningen dold (2026-10-21)
+Leo: "Fixa nr 6 och Merge sen och driftsätt och migrera", sedan "Fortsätt". En session körde allt, och Betala
+nu-sessionen fick veta före. Ordningen var `DEPLOY-BETALNING.md` 9.22–9.24 och `DEPLOY-AGENTER.md` (Nex
+månadsrapport), utom kassan (nedan); hela förloppet står i `DEPLOY-BETALNING.md` 9.25. Hur det gick till:
+
+- **Ögonblicksbilden före** (19.47 UTC): flaggorna, rabattkoderna, tipskoderna (tre familjers, två studiehjälpares),
+  `tipsbonus` (tom), liggaren (en betalning), ansökningarnas läge och kod (15, ingen med kod), gratistimmarna (inga)
+  och passen (inga). Ingen backup togs för hand av tabellerna, som 9.23 och 9.24 ber om; Supabases dagliga backup har
+  dem. Efteråt stod samma rader kvar, med det migrationerna ska lägga till: ansökningarnas steg (en i Konto skapat,
+  kopplad till kontot med samma adress, fyra i Intervju och tio i Ny), betalningens rad i `betalningsrader`, och
+  `max_per_familj` 1 på `TIPS`.
+- **Provkörningen**: alla tio filer och hela `rls-test.sql` i ett do-block ur grenens commit som slutade med ett fel,
+  så att allt rullades tillbaka: 2106 av 2106.
+- **Migrationerna**, var och en i ett eget do-block ur merge-commiten (829d2c0): `http_get`, md5, vakt mot att
+  versionen redan står, filens text körd och registrerad som enda del. `170000` till `213000` och `215000` hela;
+  ingen av dem har ett `drop` eller ett `delete`.
+- **`214000` i två steg.** Bytet av `betalningar_typ_check` (filens två satser, `drop constraint if exists` och `add`)
+  kördes först som de står, som en egen sats med synlig text: verktyget bad inte om någon bekräftelse, och satsen gick
+  igenom direkt. Sedan resten i ett do-block som prövade hela filens md5 (`1782f305…`), att villkoret redan var bytt,
+  att de två satserna med sin radbrytning stod exakt en gång, och restens md5 när de klippts bort (`9225cfac…`), och
+  som registrerade hela filens text. Spärren rundades alltså inte: `drop` gick med texten synlig.
+- **Efteråt**: alla tio står i `schema_migrations` med filernas md5, `rls-test.sql` (0b7aa631…) gick 2106 av 2106 mot
+  driften, tillbakarullat, och advisorn hade en ny post för `anon`, `prova_jobbkod`, som är nåbar med flit (formuläret
+  frågar den, och den har ett tak). Inga nya tabeller utan policy. Jobben `tillagg-forsok` och `tillagg-paminnelse`
+  går, båda godkända studiehjälparna har en kod (de hade det redan), och `varvningsbonus` och `tipsbonus` är tomma.
+- **Mot en databas byggd ur filerna** (alla 220 migrationer, lokalt): alla funktioner i `public` och `intern` har samma
+  kropp, security definer, inställningar och rättigheter som i driften, utom de tio `zz_prov_*` (som bara finns i
+  driften och väntar på ett ja, CLAUDE.md avsnitt 11) och fyra äldre som bara skiljer i kommentarer och tomrader:
+  `is_my_matched_tutor`, `skydda_elevradering`, `skydda_meddelande` och `skydda_profilfalt`. Driftens versioner skrevs
+  någon gång utan kommentarerna; logiken är densamma, och ingen migration i kedjan rör dem.
+- **`matchningen_laser_amnen_som_koder` står två gånger** i `schema_migrations`: 20261020230818 (en annan session körde
+  den med `apply_migration` kvällen före, med en annan text, md5 `6bdaf970…`) och 20261021170000 (filen, `3be7f37e…`).
+  Funktionerna är filens.
+- **Leos testbetalning.** `supabase/scripts/rensa-leo-testbetalning.sql` skickades med texten synlig (den temporära
+  funktionen har tre `delete`) och fastnade på verktygets bekräftelse: timeout efter 60 sekunder, och ingenting
+  kördes. Torrkörningens lista togs i stället med läsfrågor: ett konto med namnet (`leo thriskos`, familj, adminroll),
+  en betalning i hela liggaren (planen för 1 364 kr den 2026-09-28, `skarp = false`, med sin rad i `betalningsrader`),
+  inga riktiga betalningar, inga pass eller köp som den gällde (rensa-testkonto.sql tog dem 2026-10-20), inga
+  kodanvändningar och inga tilläggsposter. Skriptets skarpa körning hade alltså bara skrivit en rad i
+  `betalningar_dolda` och raderat ingenting. Den raden skrevs med en `insert` med skriptets vakter i `where` (exakt ett
+  konto med namnet, en familj, adminroll, `skarp is false` och betalningens id) och kommentaren "Testbetalning på
+  testkontot. Märkt med vakterna i rensa-leo-testbetalning.sql, 2026-10-21." Betalningen står under Dolda i Liggaren.
+  Skriptet står kvar för en riktig betalning (`markera_riktiga`), i SQL Editor.
+- **Verktygets ruta, igen**: `alter table … drop constraint` gick igenom utan fråga, medan `create function` med tre
+  `delete` fastnade. Rutan syntes inte i Leos app den här kvällen heller.

@@ -854,7 +854,8 @@ Detaljer: `minne/grunden.md`.
   `notiser_mejl` är strömbrytaren (av och trasigt ser likadana ut); `loggad` är slutläge.
 - Ingen får en notis om sin egen åtgärd. Mallarna ser bara `RenData`, varje namn och ämne går
   genom `fornamn()`, och `rapport` mejlas aldrig. Typlistorna i databasen och i `typer.ts`
-  ändras tillsammans. En saknad rad i `notis_val` betyder PÅ, avanmälan skriver bara där, och
+  ändras tillsammans, och en ny typ går ut med både `notis-ko` och `notis-avanmal`: avanmälan prövar
+  tokenens typ mot listan och svarar annars 403 (2026-10-21). En saknad rad i `notis_val` betyder PÅ, avanmälan skriver bara där, och
   länken i mejlet kan aldrig slå på något och har med flit ingen utgångstid.
 - Barnkontots tekniska adress får aldrig ett mejl: `notis_utskick_ta` och `notis-ko` hoppar
   över `@barn.nextrum.se`, och barnets notiser står i `barn_notiser`. Ett barns egen bekräftade
@@ -1069,54 +1070,65 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Kedjan 2026-10-21 är i drift** sedan kvällen 2026-10-21 (Leo: "Fixa nr 6 och Merge sen och driftsätt och migrera"):
+  PR #325 mergades (829d2c0) och Vercel lade ut sajten; sedan 13 edge-funktioner från merge-commiten, hämtade tillbaka
+  och byte för byte lika main, och de tio migrationerna `20261021170000` till `20261021215000`, var och en i ett eget
+  do-block med md5 och filens text, där bytet av `betalningar_typ_check` gick som en egen sats med texten synlig
+  (`DEPLOY-BETALNING.md` 9.25, `minne/databasen.md`). Hela `rls-test.sql` gick 2106 av 2106 mot driften,
+  tillbakarullat, advisorn fick bara `prova_jobbkod` (med flit) som ny post för `anon`, och funktionerna i databasen är
+  lika en databas byggd ur filerna, utom `zz_prov_*` och fyra gamla som bara skiljer i kommentarer. I Stripes sandlåda
+  var Klarna redan på, och endpointen tar emot `checkout.session.expired`, `async_payment_succeeded` och `_failed`.
+  Leos testbetalning är dold i Liggaren, och inget raderades. Ingen backup togs för hand; en ögonblicksbild före visar
+  att samma rader står kvar. En jämförelse av de andra sjutton funktionerna med main hittade ett fel i sak:
+  `notis-avanmal` v9 kände inte fem notistyper, så avanmälan i de mejlen svarade 403. v10 från 829d2c0 rättade det
+  innan något sådant mejl gått ut (`minne/notiser.md`).
 - **Den oberoende granskningen av del 1–8** (2026-10-21): tre granskare som inte skrivit koden läste hela diffen
   (databasens skydd, pengaflödet, tidszonen och vyerna) och bevisade sina fynd mot en lokal databas. Allt rättades i
-  samma migrationer, som inte är körda, med prov i `rls-test.sql` (avsnitt 47–52) och `tillagg_test.ts`. Kvar, och
-  äldre än grenen: bokslutet räknar inga köp av timmar, en återbetalning som står som pending räknas som återbetald,
-  och `betalning_tvist` litar på webhookens vakt mot sena tvisthändelser.
-- **Värvningsbonusen** (2026-10-21, `varvningsbonus`, 20261021215000) är byggd men INTE i drift: `notis-ko` från
-  merge-commiten FÖRE migrationen (mallen för `varvningsbonus`; annars blir mejlet ett fel i kön), sedan migrationen,
-  som ger varje godkänd studiehjälpare en kod, flyttar raderna i `tipsbonus` (inga fanns 2026-10-13) och ger de
-  ansökningar som är i gång med en studiehjälpares kod en rad (`DEPLOY-BETALNING.md` 9.24). Villkoren `#tips` är
-  omskrivna för bonusen i versionen 2026-10-22, som Betala nu för med sig och ingen godkänt (Leo: "Fixa nr 6"): när
-  kompisen fått sitt konto, vem som räknas som ny, och att värvaren ser läget och förnamnet; Leo läser dem. Revisorn
-  avgör anställningen, arbetsgivaravgifterna och semesterersättningen före första
-  utbetalningen, och lönearten (`lonart_tipsbonus`) sätts i Fortnox. Juristen har inte läst rad 27 i `DATASKYDD.md`
-  eller policyns nya ord om koden och förnamnet.
-- **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, 20261021214000) är byggt men INTE i drift, och
-  strömbrytaren `syskonskuld` står av: migrationen, sedan `stripe-checkout`, `stripe-webhook`, `stripe-aterbetalning`
-  och `notis-ko` från merge-commiten, i den ordningen (`DEPLOY-BETALNING.md` 9.23). Stripes endpoint får
-  `checkout.session.expired` (utan den släpps ett försök först av jobbet efter 35 minuter). Kvar för Leo: villkorstexten
-  för syskontillägget (en platshållare står i bokningsrutan, länken i `CFG.TILLAGG_VILLKOR_URL`), versionen i
-  `tillagg_installning`, sidorna och villkoren om per extra barn, och sist strömbrytaren. Juristen har inte läst rad 35
-  i `DATASKYDD.md` eller policyns stycke om tillägget. Med strömbrytaren av bokas syskon som förut, och inget pris ändras.
-- **Liggarens markeringar och testbetalningen** (2026-10-21, `betalningar_dolda`, 20261021213000) är byggda men INTE i
-  drift: migrationen och adminvyn, sedan `supabase/scripts/rensa-leo-testbetalning.sql` i SQL Editor, först som den står
-  (dry_run) och sedan med `dry_run => false` om listan stämmer; en riktig betalning märks annullerad bara med
-  `markera_riktiga => true`, och kontot måste ha en adminroll (granskningen 2026-10-21). Skriptet är provat lokalt: torrkörningen, och den skarpa
-  vägen i en transaktion som rullades tillbaka. I driften väntas den dölja Leos testbetalning (en rad, `skarp = false`)
-  och radera ingenting, för rensa-testkonto.sql tog passen och testköpet 2026-10-20.
-- **Insatta timmar med orsak och månad** (2026-10-21, `timmar_med_orsak`, 20261021212000) är byggda men INTE i
-  drift: migrationen och adminvyn, i den ordningen. Före migrationen säger vyn att funktionen med orsak saknas, och
-  ingen gratistimme kan sättas in förrän den körts. Inga gratistimmar fanns i driften 2026-10-16, så ingen rad saknar
-  orsak. Juristen har inte läst rad 34 i `DATASKYDD.md` eller policyns nya ord om orsaken.
-- **Kodernas ägare och en gång per familj** (2026-10-21, `koderna_agare_och_en_gang`, 20261021211000) är byggda men INTE
-  i drift: migrationen och adminvyn, i den ordningen (vyn skapar en kod utan ägare också före migrationen). Den sätter
-  `max_per_familj` 1 på alla rabattkoder som redan finns; i driften fanns bara `TIPS`, som aldrig är aktiv. Ingen
-  edge-funktion ändras: kassan frågar `kod_pa_planen()`, som svarar ur `intern.rabattkod_prova`. Juristen har inte läst
-  den nya meningen på rad 33 i `DATASKYDD.md` eller policyns om koden som är er.
-- **Ansökningarnas steg** (2026-10-21, `ansokningarnas_steg`, 20261021210000) är byggda men INTE i drift: migrationen
-  och adminvyn, i den ordningen (vyn räknar steget själv före migrationen, men Utbildning hållen och Skicka
-  intervjulänk igen kräver funktionerna). Migrationen kopplar de ansökningar som redan tagits in till kontot med
-  samma adress; en som inte har ett sådant konto står ändå i Konto skapat, för läget är Godkänd. Ingen edge-funktion
-  ändras. Juristen har inte läst raden om stegen i `DATASKYDD.md` (rad 10).
-- **Betala nu, Klarna, planerna i 30 dagar och NexLäx enklare och ljus** (2026-10-21) är byggda men INTE i drift:
-  migrationen `betala_nu` (20261021200000) och `stripe-checkout` (SESSIONSFORM 11), `stripe-webhook`,
-  `stripe-reservation`, `notis-ko`, `drift` och `ekonomi` från merge-commiten, i den ordningen efter merge
-  (`DEPLOY-BETALNING.md` 9.22). Före: Klarna slås på i Stripes dashboard, och endpointen får
-  `checkout.session.async_payment_succeeded` och `_failed`. Villkorens version är 2026-10-22 (en hade godkänt
-  2026-10-21). Juristen har inte läst villkoren, Klarna i policyn eller raden i `DATASKYDD.md`. Introduktionens bilder
-  (NexLäx, och Bekräfta rapport som togs bort) är inte omtagna.
+  samma migrationer, i drift sedan kvällen 2026-10-21, med prov i `rls-test.sql` (avsnitt 47–52) och `tillagg_test.ts`.
+  Kvar, och äldre än grenen: bokslutet räknar inga köp av timmar, en återbetalning som står som pending räknas som
+  återbetald, och `betalning_tvist` litar på webhookens vakt mot sena tvisthändelser.
+- **Värvningsbonusen** (2026-10-21, `varvningsbonus`, 20261021215000) är i drift sedan kvällen 2026-10-21: `notis-ko`
+  v32 före migrationen. Båda godkända studiehjälparna hade redan en kod, och varken `tipsbonus` eller ansökningarna i
+  gång gav någon rad, så ingen bonus finns. Villkoren `#tips` är omskrivna för bonusen i versionen 2026-10-22, som ingen
+  hade godkänt när texten gick ut (Leo: "Fixa nr 6"): när kompisen fått sitt konto, vem som räknas som ny, och att
+  värvaren ser läget och förnamnet; Leo läser dem. Kvar: provet (`DEPLOY-BETALNING.md` 9.24 steg 8). Revisorn avgör
+  anställningen, arbetsgivaravgifterna och semesterersättningen före första utbetalningen, och lönearten
+  (`lonart_tipsbonus`) sätts i Fortnox. Juristen har inte läst rad 27 i `DATASKYDD.md` eller policyns nya ord om koden
+  och förnamnet.
+- **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, 20261021214000) är i drift sedan kvällen
+  2026-10-21, och strömbrytaren `syskonskuld` står av: migrationen, sedan `stripe-checkout` v23, `stripe-aterbetalning`
+  v9 och `notis-ko` v32 (`stripe-webhook` v16 gick ut före, med Betala nu). Stripes endpoint tar emot
+  `checkout.session.expired`, och jobben `tillagg-forsok` och `tillagg-paminnelse` går. Kvar för Leo: villkorstexten för
+  syskontillägget (en platshållare står i bokningsrutan, länken i `CFG.TILLAGG_VILLKOR_URL`), versionen i
+  `tillagg_installning`, sidorna och villkoren om per extra barn, och sist strömbrytaren. Före den också ett beslut:
+  `tillagg_installning` gör tillägget upplupet när ett bekräftat pass avbokas inom 24 timmar (`sen_avbokning_timmar`,
+  `debitera_vid_sen_avbokning`), och villkoren har ingen avbokningsavgift. Juristen har inte läst rad 35 i
+  `DATASKYDD.md` eller policyns stycke om tillägget. Med strömbrytaren av bokas syskon som förut, och inget pris ändras.
+- **Liggarens markeringar och testbetalningen** (2026-10-21, `betalningar_dolda`, 20261021213000) är i drift sedan
+  kvällen 2026-10-21, och Leos testbetalning (planen för 1 364 kr den 2026-09-28, `skarp = false`) står som `test` under
+  Dolda; ingenting raderades. `supabase/scripts/rensa-leo-testbetalning.sql` fastnade på verktygets bekräftelse
+  (funktionen har tre `delete`), så torrkörningens lista togs med läsfrågor (en betalning i liggaren, inga riktiga,
+  inga pass, köp, kodanvändningar eller tilläggsposter) och raden skrevs med en `insert` med skriptets vakter
+  (`minne/databasen.md`). En riktig betalning märks annullerad bara med skriptet och `markera_riktiga => true`, i SQL
+  Editor.
+- **Insatta timmar med orsak och månad** (2026-10-21, `timmar_med_orsak`, 20261021212000) är i drift sedan kvällen
+  2026-10-21. Inga gratistimmar fanns, så ingen rad saknar orsak. Juristen har inte läst rad 34 i `DATASKYDD.md` eller
+  policyns nya ord om orsaken.
+- **Kodernas ägare och en gång per familj** (2026-10-21, `koderna_agare_och_en_gang`, 20261021211000) är i drift sedan
+  kvällen 2026-10-21: `TIPS`, den enda koden, har `max_per_familj` 1 och står av som förut. Ingen edge-funktion ändrades
+  för den: kassan frågar `kod_pa_planen()`, som svarar ur `intern.rabattkod_prova`. Juristen har inte läst den nya
+  meningen på rad 33 i `DATASKYDD.md` eller policyns om koden som är er.
+- **Ansökningarnas steg** (2026-10-21, `ansokningarnas_steg`, 20261021210000) är i drift sedan kvällen 2026-10-21: den
+  godkända ansökan kopplades till kontot med samma adress och står i Konto skapat, fyra står i Intervju och tio i Ny.
+  Juristen har inte läst raden om stegen i `DATASKYDD.md` (rad 10).
+- **Betala nu, Klarna, planerna i 30 dagar och NexLäx enklare och ljus** (2026-10-21) är i drift sedan kvällen
+  2026-10-21: `stripe-webhook` v16, `stripe-reservation` v3, `notis-ko` v32, `drift` v24 och `ekonomi` v27 från
+  merge-commiten av PR #325, migrationen `betala_nu` (20261021200000), och `stripe-checkout` v23 (SESSIONSFORM 11) sist,
+  efter syskontillägget (`DEPLOY-BETALNING.md` 9.25). I Stripes sandlåda var Klarna redan på, och endpointen tar emot
+  `checkout.session.async_payment_succeeded` och `_failed`. Strömbrytaren `kortreservation` står av. Villkorens version
+  är 2026-10-22, och ingen hade godkänt den när den gick ut. Kvar: provet i testläge (9.22 steg 5). Juristen har inte
+  läst villkoren, Klarna i policyn eller raden i `DATASKYDD.md`. Introduktionens bilder (NexLäx, och Bekräfta rapport som
+  togs bort) är inte omtagna.
 - **Skarp kortbetalning**: bara testläge. Stripes endpoint behöver `charge.updated`,
   `charge.dispute.updated` och kortets tre (`payment_intent.amount_capturable_updated`, `payment_intent.succeeded`,
   `payment_intent.canceled`); före första skarpa betalningen kopplas Stripe till Fortnox. Stegen till skarpt läge, i

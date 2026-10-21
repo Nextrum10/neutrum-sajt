@@ -202,7 +202,10 @@ välj först, för de två ser helt olika ut i koden.
 ## Nex månadsrapport (2026-10-21)
 
 Nex skriver förra månadens rapport själv den 1:a, och Skriv nu på Översikt
-skriver den när som helst. Driftsättning, i den här ordningen och efter merge:
+skriver den när som helst. I drift sedan kvällen 2026-10-21 (`DEPLOY-BETALNING.md`
+9.25): `nex-manadsrapport` v1 från 829d2c0, byte för byte lika main, sedan
+migrationen; jobbet står. Steg 3 och 4 är inte gjorda. Driftsättning, i den här
+ordningen och efter merge:
 
 1. Edge-funktionen från main: `supabase functions deploy nex-manadsrapport`.
    `verify_jwt = false` står i `supabase/config.toml`; läs tillbaka filerna och

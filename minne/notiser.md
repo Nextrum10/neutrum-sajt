@@ -328,7 +328,7 @@ En äldre `notis-ko` gör `igen` till null och skickar det förra mejlet utan l�
 ingen roll för vad som lovas. Efter ett dygn blir det en uppgift till oss, aldrig ett mejl till familjen till
 (`minne/betalning.md`, Kortet försöker igen).
 
-### Syskontillägget: påminnelsen och kvittot (2026-10-21, `syskontillagg_som_skuld`, inte i drift)
+### Syskontillägget: påminnelsen och kvittot (2026-10-21, `syskontillagg_som_skuld`, i drift samma kväll)
 Två nya typer, i `notis_typer()`, `notis_mejlbara()` och `typer.ts` i samma ändring: `tillagg_paminnelse` (kategorin
 betalning) och `tillagg_kvitto`. Båda till familjen, båda med belopp och antal pass, kvittot också en rad per pass
 med datum och antal barn (`rader`, där `typer.ts` släpper igenom bara datum, tal och belopp), och ingen av dem nämner
@@ -671,7 +671,7 @@ genom `notis-avanmal` till `barn_notis_avregistrera`, som bara stänger av
 i `barn_epost.av`. `/avanmal` behandlar tokenen som text och behövde
 ingen ändring. Se `minne/barnkonton-och-admin.md`.
 
-### Värvningsbonusen: mejlet till värvaren (2026-10-21, `varvningsbonus`, inte i drift)
+### Värvningsbonusen: mejlet till värvaren (2026-10-21, `varvningsbonus`, i drift samma kväll)
 En ny typ, i `notis_typer()`, `notis_mejlbara()` och `typer.ts` i samma ändring: `varvningsbonus` (kategorin
 värvningsbonus, bara till en studiehjälpare). Den köas av `intern.varvning_prova` när en bonus blir intjänad, en gång
 per bonus (nyckeln `varvningsbonus:mejl:<id>`), med bara beloppet i datan: ämnet "Din värvningsbonus är intjänad: 300
@@ -680,3 +680,13 @@ lönen, och knappen Se dina värvningar till `#profil/tips`. Kompisens namn stå
 står i `notiser` som de andra. Ett fel när mejlet köas blir en rad i `notis_fel`, aldrig ett fel i bonusen. Den går att
 välja bort under Profil → Notiser (Värvningsbonus, bara för en studiehjälpare), och `notis_konfig.lage` rörs inte:
 sandlådan och `notiser_mejl` gäller som för allt annat i kön.
+
+### En ny typ går ut med notis-avanmal (2026-10-21)
+Avanmälningslänken bär mejlets egen typ i tokenen (`notiser/ko.ts`, `skapaToken(mottagare, 'mejl', typ, …)`), både i
+texten och i List-Unsubscribe, och `notis-avanmal` prövar typen mot listan i sin kopia av `typer.ts` (`typOk()` i
+`notiser/token.ts`). En typ som `notis-ko` skickar men `notis-avanmal` inte känner ger 403 "Länken är ogiltig." på båda
+vägarna, och inget sparas. Kvällen 2026-10-21 hade `notis-avanmal` fortfarande v9 från 2026-10-01, utan `barnforslag`,
+`kort_nekat`, `tillagg_paminnelse`, `tillagg_kvitto` och `varvningsbonus`. En granskning av de driftsatta funktionerna
+mot main hittade det (`minne/funktioner.md`, Kedjan 2026-10-21). Inget mejl av de typerna hade köats, så ingen hade
+drabbats. `notis-avanmal` v10 från 829d2c0 rättade det samma kväll, och en länk som redan skickats fungerar då, för den har ingen
+utgångstid. Därför: en ny typ i `typer.ts` driftsätts med både `notis-ko` och `notis-avanmal`.
