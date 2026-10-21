@@ -200,8 +200,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   En fråga med svar tas aldrig bort, en ändrad får nytt id. De skrivs från grunden mot Lgr22,
   aldrig ur nationella prov, och ska förstås ensamma. Nytt läggs sist i en bana som används
   (`TILLAGG` i `verktyg/uppgiftsbanken/blad_*.py`, som bär nivåerna ur materialbankens blad, och `fler_*.py`, Fas 23.5).
-- **Intaget** (2026-10-06): vi skapar familjens och studiehjälparens konto (Ta in familjen, Ta in i
-  poolen, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
+- **Intaget** (2026-10-06): vi skapar familjens och studiehjälparens konto (Ta in familjen, Utbildning
+  hållen som hette Ta in i poolen till 2026-10-22, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
   ruta som inte går att stänga (`user_metadata.valkommen = 'losenord'`, `NXStudie.lösenordFörst`).
   **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
   ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
@@ -227,8 +227,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   kurser" är vad matchningen letar efter, inget krav för att söka.
 - **Under 18 i jobbansökan** (2026-10-05): åldern under 18 fäller ut vårdnadshavarens e-post, och
   databasen mejlar vårdnadshavaren om ett skriftligt godkännande. Admin lägger in svaret (tid och
-  kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Ta in i
-  poolen frågar först om det saknas.
+  kopia) i ansökan. Adressen sparas bara under 18, godkännandet skrivs aldrig utifrån, och Utbildning
+  hållen frågar först om det saknas.
 - **Intervjumejlet** (2026-10-21): när admin skickar en ansökan vidare till intervju köar databasen Leos
   mejl "Du går vidare till intervju" till den som sökt, en gång per ansökan (`intern.ansokan_intervjumejl`;
   `applications.intervju_mejl_skickat_at` sätter bara databasen), aldrig till en avböjd och aldrig när ett
@@ -622,14 +622,22 @@ Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-1
 sektionen är att se den; utan tabellen räknas läget Ny som förut. Ett läge sätts med märkena
 (`lägesväljare()`, 2026-10-06), aldrig en rullgardin: gruppen skickar `change` som en `<select>`, så
 lyssnarna är desamma, och ett nej på frågan före bytet sätter `value` tillbaka.
-**Ansökningarnas Intervju är ett val, inte ett läge** (2026-10-15, Leo: "i intervjudelen ska namn bara
-finnas där som jag har klickat i"): bara den som skickats vidare (`till_intervju_at`: Skicka vidare till
-intervju på raden, i panelen under läget och i Rekryteringen, eller ett bokat möte), aldrig läget
-Kontaktad. Läget (Ny, Kontaktad, Godkänd, Avböjd) sätter Leo själv, och Skicka vidare rör det inte.
+**Ansökningarnas steg** (2026-10-22, `ansokningarnas_steg`, Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. En
+ansökan finns i exakt ett läge åt gången"): `applications.steg` är genererad ur det ansökan bär (`intern.ansokan_steg`:
+`konto_id` eller läget Godkänd, intervjun hållen, `till_intervju_at`), och `intern.ansokan_steg_vakt` släpper bara Ny till
+Intervju, tillbaka till Ny (Ångra intervju), Intervju till Utbildning och Utbildning till Konto skapat, det sista bara genom
+`ansokan_utbildning_hallen()`, för admin också. Avböjd är inget steg utan ett beslut: egen flik, och det går i varje steg.
+Flikarna är Nya ansökningar (bara Ny), Intervju, Utbildning, Konto skapat och Avböjda, med antal. Panelen börjar med steget
+och dess knappar (`nästaSteg`): Intervju har tre, Skicka intervjulänk igen (`ansokan_intervjulank_igen()`, notiskön, högst
+en gång i tio minuter), Ångra intervju och Gå vidare till utbildning. **Utbildning hållen** är det som var Ta in i poolen:
+`bjud-in` skapar kontot med ansökans adress, och funktionen kopplar det (`konto_id`, unikt åt båda hållen), godkänner
+profilen och sätter utbildad och Godkänd i en transaktion; samma konto igen gör ingenting. Fliken Rekryteringen, läget
+Kontaktad som val, Boka digitalt möte, Skicka utbildningen och Markera utbildad är borta. Varje steg står i
+`ansokan_steg_logg`, som aldrig ändras och går med ansökan. Skriv till hen står vid adressen och flyttar ingen.
 **Intervjun bokas på en bokningssida** (2026-10-20, Leo: "så att jag bara kan skicka ut länk"): ett bokningsschema i
-Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNING_URL`). Länken står i mejlet Skriv till hen, som då
-också skickar en ny till Intervju; Google mejlar tiden och Meet-länken, vyn läser aldrig kalendern, och Boka möte mejlar
-den en gång till. Policyn lovar att bokningen tas bort för hand senast ett år efter intervjun.
+Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNING_URL`, och hur det skapas står överst i
+nextrum-config.js). Länken står i intervjumejlet; Google mejlar tiden och Meet-länken, och vyn läser aldrig kalendern.
+Policyn lovar att bokningen tas bort för hand senast ett år efter intervjun.
 **Mejl från adminvyn skrivs i Gmail** (2026-10-11, Leo: "alltid ... i gmail och inte mail"):
 `gmailLänk()` och `gmailAdress()` i kärnan, en ny flik, aldrig `mailto:` (som öppnar Mail på en Mac).
 Familjernas och studiehjälparnas sidor behåller `mailto:`. **Till den som sökt jobb skickas mejlet härifrån** (2026-10-20,
@@ -769,7 +777,7 @@ Detaljer: `minne/grunden.md`.
 - **Sätt sandlådan innan du provar något som köar.** Ett gammalt anrop utan pg_net-svar är inget
   fel. Mejlens papper står på `body` och som `bgcolor`; loggans `.gitignore`-undantag står kvar.
 - Till den som söker: bara kvittot och vårdnadshavarens mejl styrs av en INSERT, med samma broms;
-  möteslänken är https, ett steg mejlas en gång, och Godkänd som läge är inte Ta in i poolen.
+  möteslänken är https, ett steg mejlas en gång, och Godkänd sätts bara av Utbildning hållen (2026-10-22).
   Avböjd mejlar ett nej (2026-10-05) men inte genast: tidigast en halvtimme senare, aldrig 20–9,
   och inte om läget hunnit bytas. Avböjd visar mejlet först, och texten står i mallen och i
   adminvyn (`kolla-mejltexter.py`).
@@ -777,8 +785,9 @@ Detaljer: `minne/grunden.md`.
   utbildad mejlar sista steget, en gång och efter en fråga.
   Intervjumejlet (2026-10-21) är det enda till den som söker som går genom notiskön: en rad med
   `ansokan_id` (villkoret `notis_utskick_en_mottagare` kräver exakt en av `mottagare`, `barn_id` och
-  `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i intervju och är
-  inte avböjd), och `notis-ko` mejlar den från info@ (`intervju.ts`).
+  `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i steget Intervju
+  och är inte avböjd, sedan 2026-10-22 också med `steg`), och `notis-ko` mejlar den från info@
+  (`intervju.ts`). Skicka intervjulänk igen köar samma mejl med en egen nyckel (`ansokan_intervju:<id>:igen:<tid>`).
 
 Detaljer: `minne/databasen.md`, `minne/notiser.md`.
 
@@ -941,6 +950,11 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Ansökningarnas steg** (2026-10-22, `ansokningarnas_steg`, 20261022100000) är byggda men INTE i drift: migrationen
+  och adminvyn, i den ordningen (vyn räknar steget själv före migrationen, men Utbildning hållen och Skicka
+  intervjulänk igen kräver funktionerna). Migrationen kopplar de ansökningar som redan tagits in till kontot med
+  samma adress; en som inte har ett sådant konto står ändå i Konto skapat, för läget är Godkänd. Ingen edge-funktion
+  ändras. Juristen har inte läst raden om stegen i `DATASKYDD.md` (rad 10).
 - **Betala nu, Klarna, planerna i 30 dagar och NexLäx enklare och ljus** (2026-10-21) är byggda men INTE i drift:
   migrationen `betala_nu` (20261021200000) och `stripe-checkout` (SESSIONSFORM 11), `stripe-webhook`,
   `stripe-reservation`, `notis-ko`, `drift` och `ekonomi` från merge-commiten, i den ordningen efter merge

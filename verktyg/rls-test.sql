@@ -3117,12 +3117,14 @@ end $$;
 -- ansökan skapad som postgres så att bara stegmejlen mäts.
 do $$
 declare
-  mote1 bigint; mote2 bigint; mote3 bigint; utb bigint; nej bigint; fel text;
+  mote1 bigint; mote2 bigint; mote3 bigint; utb bigint; nej bigint; angra text; fel text;
   a constant uuid := '00000000-0000-4000-8000-0000000016b1';
 begin
   begin
-    insert into public.applications (id, name, email)
-    values (a, 'Prov Steg', 'rls-steg@example.invalid');
+    -- ansokningarnas_steg (2026-10-22): ansökan står i Intervju, så att
+    -- mötet hållet är ett tillåtet steg (Intervju till Utbildning).
+    insert into public.applications (id, name, email, till_intervju_at)
+    values (a, 'Prov Steg', 'rls-steg@example.invalid', now());
 
     perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
     update public.applications set mote_tid = date_trunc('minute', now()) + interval '2 days',
@@ -3136,7 +3138,12 @@ begin
     select count(*) into mote3 from public.ansokan_utskick where ansokan_id = a and steg = 'mote';
 
     update public.applications set intervju_at = now() where id = a;
-    update public.applications set intervju_at = null where id = a;
+    -- Utbildning går inte tillbaka till Intervju (ansokningarnas_steg).
+    begin
+      update public.applications set intervju_at = null where id = a;
+      angra := 'gick';
+    exception when others then angra := sqlstate;
+    end;
     update public.applications set intervju_at = now() where id = a;
     select count(*) into utb from public.ansokan_utskick where ansokan_id = a and steg = 'utbildning';
 
@@ -3154,7 +3161,8 @@ begin
       ('16.1 ett bokat möte köar ett mejl, samma tid igen inget', mote1 = 1, 'rader: ' || mote1),
       ('16.1 en ny tid köar ett nytt', mote2 = 2, 'rader: ' || mote2),
       ('16.1 en tid som redan varit köar inget', mote3 = 2, 'rader: ' || mote3),
-      ('16.1 mötet hållet, ångrat och hållet igen mejlas en gång', utb = 1, 'rader: ' || utb),
+      ('16.1 mötet hållet mejlas en gång, och steget går inte att ångra', utb = 1 and angra = '23514',
+       'rader: ' || utb || ', ångra: ' || angra),
       ('16.1 en avböjd ansökan köar inget, inte heller för andra steg', nej = 0, 'rader: ' || nej);
   end if;
 end $$;
@@ -3226,8 +3234,10 @@ declare
   provmejl bigint; paminn integer; konto bigint; jobb bigint; villkor text; fel text;
 begin
   begin
-    insert into public.applications (id, name, email, status)
-    values (a, 'Prov Utbildning', 'rls-utb@example.invalid', 'contacted');
+    -- ansokningarnas_steg (2026-10-22): i Intervju, så att utbildningsmötet
+    -- är ett tillåtet steg.
+    insert into public.applications (id, name, email, status, till_intervju_at)
+    values (a, 'Prov Utbildning', 'rls-utb@example.invalid', 'contacted', now());
 
     perform pg_temp.bli('00000000-0000-4000-8000-0000000000ad');
     update public.applications set utbildningsmote_at = now() where id = a;
@@ -18831,6 +18841,235 @@ union all
 select 'Nex: en inloggad familj läser ingen rapport', r = '0', r
   from (select pg_temp.som('00000000-0000-4000-8000-0000000000f1', null,
           $q$select count(*)::text from public.agent_korningar$q$) r) x;
+
+-- ------------------------------------------------------------
+-- 47. Ansökningarnas steg (ansokningarnas_steg, 2026-10-22)
+--
+-- Steget räknas ur det ansökan bär (konto_id, läget och tidsstämplarna)
+-- och står i en kolumn som ingen skriver. Stegen byts bara Ny till
+-- Intervju, tillbaka till Ny, Intervju till Utbildning och Utbildning
+-- till Konto skapat, och det sista bara genom Utbildning hållen, som
+-- kopplar ett konto med samma adress en gång. Skicka intervjulänk igen
+-- köar mejlet bara i Intervju, högst en gång i tio minuter. Loggen ändras
+-- aldrig och följer med ansökan. Allt rullas tillbaka.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  t2   text;
+  n    bigint;
+  r    jsonb;
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  S1   constant uuid := '00000000-0000-4000-8000-000000047a01';
+  S2   constant uuid := '00000000-0000-4000-8000-000000047a02';
+  S3   constant uuid := '00000000-0000-4000-8000-000000047a03';
+  K1   constant uuid := '00000000-0000-4000-8000-000000047b01';  -- kontot för S1
+  K2   constant uuid := '00000000-0000-4000-8000-000000047b02';  -- ett konto med en annan adress
+begin
+  if to_regprocedure('public.ansokan_utbildning_hallen(uuid,uuid,numeric,text[],text)') is null then
+    insert into utfall (test, ok, detalj) values ('AS Ansökningarnas steg: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    -- ---------- ansökan utifrån ----------
+    perform pg_temp.bli(null);
+    insert into public.applications (id, name, email, tjanster, konto_id, till_intervju_at)
+    values (S1, 'Sam Steg', 'rls-s47a@example.invalid', '{laxhjalp}', A, now());
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'AS en ansökan utifrån står i Ny, utan konto och utan steg',
+            'ok', (select a.steg = 'ny' and a.konto_id is null and a.till_intervju_at is null
+                     from public.applications a where a.id = S1),
+            'd', (select a.steg || ' ' || coalesce(a.konto_id::text, 'null') from public.applications a where a.id = S1));
+    ut := ut || jsonb_build_object('t', 'AS ansökan har en rad i loggen: Ny',
+            'ok', (select count(*) = 1 and bool_and(l.till = 'ny' and l.fran is null)
+                     from public.ansokan_steg_logg l where l.ansokan_id = S1), 'd', '');
+
+    begin
+      update public.applications set steg = 'intervju' where id = S1;
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'AS steget går inte att skriva, det räknas', 'ok', t = '428C9', 'd', t);
+
+    insert into public.applications (id, name, email, tjanster) values
+      (S2, 'Kim Konto', 'rls-s47b@example.invalid', '{laxhjalp}'),
+      (S3, 'Ola Ordning', 'rls-s47c@example.invalid', '{laxhjalp}');
+
+    -- ---------- stegen, som admin ----------
+    t := pg_temp.svar_som(AD, format('update public.applications set intervju_at = now() where id = %L', S3));
+    ut := ut || jsonb_build_object('t', 'AS Ny går inte direkt till Utbildning', 'ok', t = '23514', 'd', t);
+
+    t := pg_temp.svar_som(AD, format('update public.applications set till_intervju_at = now() where id = %L', S1));
+    ut := ut || jsonb_build_object('t', 'AS Ny till Intervju', 'ok', t = 'ok'
+            and (select a.steg from public.applications a where a.id = S1) = 'intervju', 'd', t);
+
+    t := pg_temp.svar_som(AD, format('update public.applications set till_intervju_at = null where id = %L', S1));
+    ut := ut || jsonb_build_object('t', 'AS Intervju går att ångra till Ny', 'ok', t = 'ok'
+            and (select a.steg from public.applications a where a.id = S1) = 'ny', 'd', t);
+
+    t := pg_temp.svar_som(AD, format('update public.applications set till_intervju_at = now() where id = %L', S1));
+    t2 := pg_temp.svar_som(AD, format('update public.applications set intervju_at = now() where id = %L', S1));
+    ut := ut || jsonb_build_object('t', 'AS Intervju till Utbildning', 'ok', t = 'ok' and t2 = 'ok'
+            and (select a.steg from public.applications a where a.id = S1) = 'utbildning', 'd', t || ' ' || t2);
+
+    t := pg_temp.svar_som(AD, format('update public.applications set intervju_at = null where id = %L', S1));
+    ut := ut || jsonb_build_object('t', 'AS Utbildning går inte tillbaka till Intervju', 'ok', t = '23514', 'd', t);
+
+    t := pg_temp.svar_som(AD, format('update public.applications set status = ''approved'' where id = %L', S1));
+    ut := ut || jsonb_build_object('t', 'AS Godkänd för hand ger inget konto: det gör Utbildning hållen',
+            'ok', t = '42501', 'd', t);
+
+    t := pg_temp.svar_som(AD, format('update public.applications set konto_id = %L where id = %L', A, S1));
+    ut := ut || jsonb_build_object('t', 'AS kontot kopplas inte för hand, inte heller av admin', 'ok', t = '42501', 'd', t);
+
+    t := pg_temp.svar_som(AD, format('update public.applications set status = ''rejected'' where id = %L', S3));
+    t2 := pg_temp.svar_som(AD, format('update public.applications set status = ''new'' where id = %L', S3));
+    ut := ut || jsonb_build_object('t', 'AS ett nej går i varje steg, och går att ta tillbaka',
+            'ok', t = 'ok' and t2 = 'ok', 'd', t || ' ' || t2);
+
+    t := pg_temp.svar_som(A, format('update public.applications set till_intervju_at = now() where id = %L', S3));
+    ut := ut || jsonb_build_object('t', 'AS en studiehjälpare flyttar ingen', 'ok', t in ('noll', '42501'), 'd', t);
+
+    -- ---------- Skicka intervjulänk igen ----------
+    update public.notis_utskick set status = 'skickad', skapad = now() - interval '1 hour' where ansokan_id = S1;
+    t := pg_temp.som(A, null, format('select public.ansokan_intervjulank_igen(%L)::text', S2));
+    ut := ut || jsonb_build_object('t', 'AS bara admin skickar intervjulänken igen', 'ok', t like 'FEL 42501%', 'd', t);
+
+    t := pg_temp.som(AD, null, format('select public.ansokan_intervjulank_igen(%L)::text', S2));
+    ut := ut || jsonb_build_object('t', 'AS länken går inte i Ny', 'ok',
+            pg_temp.j(t) ->> 'ok' = 'false' and not exists (select 1 from public.notis_utskick q where q.ansokan_id = S2),
+            'd', t);
+
+    perform pg_temp.svar_som(AD, format('update public.applications set till_intervju_at = now() where id = %L', S2));
+    -- Det första mejlet köades av steget. Låt det ha gått för en timme sedan.
+    update public.notis_utskick set status = 'skickad', skapad = now() - interval '1 hour' where ansokan_id = S2;
+    perform pg_temp.bli(AD);
+    t := public.ansokan_intervjulank_igen(S2)::text;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n from public.notis_utskick q
+     where q.ansokan_id = S2 and q.typ = 'ansokan_intervju' and q.status = 'vantar' and q.idempotens like '%:igen:%';
+    ut := ut || jsonb_build_object('t', 'AS i Intervju köas mejlet en gång till, med en egen nyckel',
+            'ok', pg_temp.j(t) ->> 'ok' = 'true' and n = 1, 'd', t || ' ' || n);
+
+    perform pg_temp.bli(AD);
+    t := public.ansokan_intervjulank_igen(S2)::text;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select count(*) into n from public.notis_utskick q where q.ansokan_id = S2 and q.status = 'vantar';
+    ut := ut || jsonb_build_object('t', 'AS två tryck inom tio minuter blir ett mejl',
+            'ok', pg_temp.j(t) ->> 'ok' = 'false' and n = 1, 'd', t || ' ' || n);
+
+    -- Kön skickar det bara medan hen står i Intervju.
+    perform pg_temp.svar_som(AD, format('update public.applications set intervju_at = now() where id = %L', S2));
+    update public.flaggor set aktiv = true where kod = 'notiser_mejl';
+    perform count(*) from public.notis_utskick_ta(100);
+    ut := ut || jsonb_build_object('t', 'AS ett köat intervjumejl hoppas över när hen gått vidare till Utbildning',
+            'ok', (select bool_and(q.status = 'hoppad') from public.notis_utskick q
+                    where q.ansokan_id = S2 and q.status <> 'skickad'),
+            'd', (select string_agg(q.status || ' ' || coalesce(q.fel, ''), '; ') from public.notis_utskick q
+                   where q.ansokan_id = S2));
+    update public.flaggor set aktiv = false where kod = 'notiser_mejl';
+
+    -- ---------- Utbildning hållen ----------
+    insert into auth.users (id, email, raw_user_meta_data) values
+      (K1, 'RLS-s47a@example.invalid', '{"role":"tutor","full_name":"Sam Steg"}'),
+      (K2, 'rls-s47-annan@example.invalid', '{"role":"tutor","full_name":"Annan Adress"}');
+
+    t := pg_temp.som(A, null, format('select public.ansokan_utbildning_hallen(%L, %L, 180, ''{Matte}'', ''Stockholm'')::text', S1, K1));
+    ut := ut || jsonb_build_object('t', 'AS bara admin håller utbildningen', 'ok', t like 'FEL 42501%', 'd', t);
+
+    t := pg_temp.som(AD, null, format('select public.ansokan_utbildning_hallen(%L, %L, 180, ''{Matte}'', ''Stockholm'')::text', S3, K1));
+    ut := ut || jsonb_build_object('t', 'AS Utbildning hållen nekas den som inte står i Utbildning',
+            'ok', pg_temp.j(t) ->> 'ok' = 'false', 'd', t);
+
+    t := pg_temp.som(AD, null, format('select public.ansokan_utbildning_hallen(%L, %L, 180, ''{Matte}'', ''Stockholm'')::text', S1, K2));
+    ut := ut || jsonb_build_object('t', 'AS ett konto med en annan adress kopplas inte',
+            'ok', pg_temp.j(t) ->> 'ok' = 'false'
+                  and (select a.konto_id is null from public.applications a where a.id = S1), 'd', t);
+
+    t := pg_temp.som(AD, null, format('select public.ansokan_utbildning_hallen(%L, %L, 0, ''{Matte}'', ''Stockholm'')::text', S1, K1));
+    ut := ut || jsonb_build_object('t', 'AS Utbildning hållen kräver timpenningen',
+            'ok', pg_temp.j(t) ->> 'ok' = 'false', 'd', t);
+
+    perform pg_temp.bli(AD);
+    t := public.ansokan_utbildning_hallen(S1, K1, 180, array['Matte', ' ', 'Engelska'], 'Stockholm')::text;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'AS Utbildning hållen kopplar kontot, godkänner profilen och ger Konto skapat',
+            'ok', pg_temp.j(t) ->> 'ok' = 'true'
+                  and (select a.steg = 'konto_skapat' and a.konto_id = K1 and a.status = 'approved' and a.utbildad_at is not null
+                         from public.applications a where a.id = S1)
+                  and (select tp.status = 'approved' and tp.hourly_rate = 180 and tp.subjects = '{Matte,Engelska}'
+                         from public.tutor_profiles tp where tp.id = K1),
+            'd', t);
+
+    t := pg_temp.som(AD, null, format('select public.ansokan_utbildning_hallen(%L, %L, 180, ''{Matte}'', ''Stockholm'')::text', S1, K1));
+    ut := ut || jsonb_build_object('t', 'AS samma konto igen gör ingenting',
+            'ok', pg_temp.j(t) ->> 'ok' = 'true' and pg_temp.j(t) ->> 'redan' = 'true', 'd', t);
+
+    t := pg_temp.som(AD, null, format('select public.ansokan_utbildning_hallen(%L, %L, 180, ''{Matte}'', ''Stockholm'')::text', S1, K2));
+    ut := ut || jsonb_build_object('t', 'AS en ansökan blir ett konto: ett andra nekas',
+            'ok', pg_temp.j(t) ->> 'ok' = 'false'
+                  and (select a.konto_id = K1 from public.applications a where a.id = S1), 'd', t);
+
+    -- En andra ansökan från samma person kan inte ta samma konto.
+    insert into public.applications (id, name, email, tjanster, till_intervju_at, intervju_at)
+    values ('00000000-0000-4000-8000-000000047a04', 'Sam Igen', 'rls-s47a@example.invalid', '{laxhjalp}', now(), now());
+    t := pg_temp.som(AD, null, format('select public.ansokan_utbildning_hallen(%L, %L, 180, ''{Matte}'', ''Stockholm'')::text',
+                                      '00000000-0000-4000-8000-000000047a04', K1));
+    ut := ut || jsonb_build_object('t', 'AS ett konto hör till en ansökan', 'ok', pg_temp.j(t) ->> 'ok' = 'false', 'd', t);
+
+    t := pg_temp.svar_som(AD, format('update public.applications set status = ''new'' where id = %L', S1));
+    ut := ut || jsonb_build_object('t', 'AS Konto skapat går inte tillbaka', 'ok',
+            (select a.steg from public.applications a where a.id = S1) = 'konto_skapat', 'd', t);
+
+    -- ---------- loggen ----------
+    ut := ut || jsonb_build_object('t', 'AS loggen har ett steg per byte, i ordning',
+            'ok', (select string_agg(coalesce(l.fran, '-') || '>' || l.till, ',' order by l.id)
+                     from public.ansokan_steg_logg l where l.ansokan_id = S1)
+                  = '->ny,ny>intervju,intervju>ny,ny>intervju,intervju>utbildning,utbildning>konto_skapat',
+            'd', (select string_agg(coalesce(l.fran, '-') || '>' || l.till, ',' order by l.id)
+                    from public.ansokan_steg_logg l where l.ansokan_id = S1));
+    ut := ut || jsonb_build_object('t', 'AS loggen säger vem som bytte steg',
+            'ok', (select count(*) from public.ansokan_steg_logg l where l.ansokan_id = S1 and l.andrad_av = AD) = 5, 'd', '');
+
+    t := pg_temp.svar_som(AD, format('update public.ansokan_steg_logg set till = ''ny'' where ansokan_id = %L', S1));
+    t2 := pg_temp.svar_som(AD, format('delete from public.ansokan_steg_logg where ansokan_id = %L', S1));
+    ut := ut || jsonb_build_object('t', 'AS loggen ändras och raderas inte, inte av admin heller',
+            'ok', t in ('42501', 'noll') and t2 in ('42501', 'noll'), 'd', t || ' ' || t2);
+    begin
+      update public.ansokan_steg_logg set till = 'ny' where ansokan_id = S1;
+      t := 'gick';
+    exception when others then t := sqlstate;
+    end;
+    ut := ut || jsonb_build_object('t', 'AS loggen ändras inte av databasens ägare heller', 'ok', t = '42501', 'd', t);
+
+    t := pg_temp.som(A, null, 'select count(*)::text from public.ansokan_steg_logg');
+    ut := ut || jsonb_build_object('t', 'AS en studiehjälpare läser inte loggen', 'ok', t = '0', 'd', t);
+
+    delete from public.applications where id = S3;
+    ut := ut || jsonb_build_object('t', 'AS loggen följer med ansökan när den raderas',
+            'ok', not exists (select 1 from public.ansokan_steg_logg l where l.ansokan_id = S3), 'd', '');
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('AS Ansökningarnas steg', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
 
 reset role;
 select set_config('request.jwt.claims', null, true);

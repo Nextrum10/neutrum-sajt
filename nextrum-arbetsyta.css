@@ -3463,43 +3463,30 @@ a:has(> .adm-status){
 }
 
 /* ============================================================
-  16. REKRYTERINGEN (Fas 13.1)
+  16. REKRYTERINGEN (Fas 13.1, ansökningarnas steg 2026-10-22)
 
-   Spåret med fyra prickar i ansökningstabellen är borta sedan
-   2026-09-28: listan är namnen, och stegen står i personpanelens
-   flik Rekryteringen. Listan där säger vad man GÖR, i ordning, med
-   skälet bredvid knappen. Numret till vänster är hela hierarkin —
-   steg 3 kommer efter steg 2 därför att utbildningen ska vara gjord
-   innan någon släpps in i poolen, inte därför att den råkade hamna där.
+   Överst i ansökan står steget hen är i och knapparna för just det
+   steget (.ans-nu): Leo, "status plus tre knappar, inget annat".
+   Fliken Rekryteringen med fyra numrerade steg och skälen bredvid är
+   borta sedan 2026-10-22; stegen byts med knapparna, och databasen
+   vaktar ordningen. Mejlen till hen står hopfällda längst ned
+   (.ans-mejlen), med ett besked per mejl (.ans-steg-fakta).
    ============================================================ */
-.ans-spar-lista{display:grid;gap:14px;margin:18px 0 4px}
-
-.ans-steg{
-  display:flex;gap:14px;align-items:flex-start;
-  padding:14px 16px;
-  border:1px solid var(--ln);border-radius:14px;
+.ans-nu{
+  display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;
+  margin:4px 0 18px;padding:14px 16px;
+  border:1px solid var(--ln);border-left:3px solid var(--ockra);border-radius:14px;
+  background:var(--pap-2);
 }
-.ans-steg-nr{
-  flex:none;width:26px;height:26px;border-radius:50%;
-  display:grid;place-items:center;
-  border:1px solid var(--ln-2);
-  font-family:var(--f-mono);font-size:.76rem;color:var(--bl-3);
+.ans-nu-text{flex:1 1 220px;min-width:0;display:grid;gap:2px}
+.ans-nu-text b{font-size:1rem}
+.ans-nu-text span{font-size:.82rem;line-height:1.5;color:var(--bl-2)}
+.ans-nu-knappar{display:flex;flex-wrap:wrap;gap:8px}
+.ans-mejlen{margin:18px 0 6px}
+.ans-mejlen summary{
+  cursor:pointer;font-size:.84rem;color:var(--bl-2);
+  min-height:44px;display:flex;align-items:center;
 }
-/* Gjort steg: mossgrönt, samma gröna som läget Klar i listorna. */
-.ans-steg.ar-gjord{border-color:var(--mossa)}
-.ans-steg.ar-gjord .ans-steg-nr{
-  background:var(--mossa);border-color:var(--mossa);color:var(--pap);
-}
-.ans-steg-kropp{flex:1;min-width:0}
-.ans-steg-kropp h4{
-  margin:0 0 4px;font-size:.98rem;
-  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
-}
-.ans-steg-tid{
-  font-family:var(--f-mono);font-size:.7rem;color:var(--mossa);
-  font-weight:400;
-}
-.ans-steg-kropp p{margin:0;font-size:.84rem;line-height:1.6;color:var(--bl-2)}
 .ans-steg-fakta{
   margin-top:8px;padding:8px 10px;border-radius:9px;
   background:var(--pap-2);border:1px solid var(--ln);
@@ -3507,10 +3494,10 @@ a:has(> .adm-status){
   overflow-wrap:anywhere;
 }
 .ans-steg-fakta code{font-family:var(--f-mono);font-size:.74rem}
-.ans-steg-knappar{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 
 @media (max-width:560px){
-  .ans-steg{flex-direction:column;gap:8px}
+  .ans-nu{flex-direction:column;align-items:stretch}
+  .ans-nu-knappar .btn{flex:1 1 auto}
 }
 
 /* ============================================================

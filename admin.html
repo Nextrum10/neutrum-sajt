@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
 <link rel="stylesheet" href="nextrum-vy.css?v=70487768">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=3078eece">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=6f38b886">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -481,18 +481,29 @@
           <div class="vy-sek-topp">
             <div>
               <h2>Ansökningar</h2>
-              <p>Unga som vill jobba. Skicka vidare med knappen på raden eller i ansökan: från Alla ansökningar till Intervju, därifrån till Utbildning, och sedan in i poolen. Läget sätter du själv i ansökan, och Kontaktad flyttar ingen till Intervju. Tryck på ett namn för ansökan, CV:t och rekryteringens steg.</p>
+              <p>Unga som vill jobba. En ansökan står i ett steg åt gången: Ny, Intervju, Utbildning och Konto skapat. Skicka vidare med knappen på raden eller i ansökan. Tryck på ett namn för ansökan och CV:t.</p>
             </div>
           </div>
+          <!-- Stegen (ansokningarnas_steg, 2026-10-22). Databasen räknar steget
+               (applications.steg) och vaktar bytena: Ny till Intervju och
+               tillbaka, Intervju till Utbildning, Utbildning till Konto skapat.
+               Avböjda står utanför stegen, i en egen flik. -->
           <div class="vy-flikar" role="tablist" aria-label="Rekryteringens steg">
             <button class="vy-flik" type="button" role="tab" data-flik="alla"
-                    id="flik-ans-alla" aria-controls="panel-ans-alla">Alla ansökningar</button>
+                    id="flik-ans-alla" aria-controls="panel-ans-alla">Nya ansökningar
+              <span class="vy-flik-mark" id="flik-ans-alla-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="intervju"
                     id="flik-ans-intervju" aria-controls="panel-ans-intervju">Intervju
               <span class="vy-flik-mark" id="flik-ans-intervju-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="utbildning"
                     id="flik-ans-utbildning" aria-controls="panel-ans-utbildning">Utbildning
               <span class="vy-flik-mark" id="flik-ans-utbildning-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="konto"
+                    id="flik-ans-konto" aria-controls="panel-ans-konto">Konto skapat
+              <span class="vy-flik-mark" id="flik-ans-konto-mark" hidden></span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="avbojda"
+                    id="flik-ans-avbojda" aria-controls="panel-ans-avbojda">Avböjda
+              <span class="vy-flik-mark" id="flik-ans-avbojda-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="prov"
                     id="flik-ans-prov" aria-controls="panel-ans-prov">Provet i vyn</button>
           </div>
@@ -501,31 +512,17 @@
                id="panel-ans-alla" aria-labelledby="flik-ans-alla">
           <div class="dbox">
             <div class="adm-verktyg">
-              <input class="inp adm-sok" id="ans-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök ansökan" autocomplete="off">
-              <select class="sel" id="ans-status" aria-label="Filtrera på steg">
-                <option value="">Alla steg</option>
-                <option value="ny">Nya</option>
-                <option value="kontaktad">Kontaktade</option>
-                <option value="intervju">Intervju</option>
-                <option value="utbildning">Utbildning</option>
-                <option value="godkand">Godkända</option>
-                <option value="avbojd">Avböjda</option>
-              </select>
+              <input class="inp adm-sok" id="ans-sok" type="search" placeholder="Sök namn, e-post, ämne" aria-label="Sök bland nya ansökningar" autocomplete="off">
               <span class="small" id="ans-antal" style="margin-left:auto;color:var(--bl-3)"></span>
             </div>
             <div id="ans-tabell"><div class="loading">Hämtar</div></div>
           </div>
           </div>
 
-          <!-- Rekryteringens två steg som egna flikar (Fas 6): vem som
-               gått vidare till en intervju, och vem som är i utbildningen.
-               Knappen på raden skickar vidare (2026-10-13), och samma
-               knapp står i ansökan (2026-10-15). Intervju har bara dem
-               som skickats dit, aldrig läget Kontaktad. -->
           <div class="vy-flik-panel" role="tabpanel" data-flik="intervju"
                id="panel-ans-intervju" aria-labelledby="flik-ans-intervju" hidden>
             <div class="dbox">
-              <h5>Till intervju <em id="ans-intervju-antal"></em></h5>
+              <h5>I intervju <em id="ans-intervju-antal"></em></h5>
               <div id="ans-intervju"><div class="loading">Hämtar</div></div>
             </div>
           </div>
@@ -534,6 +531,20 @@
             <div class="dbox">
               <h5>I utbildningen <em id="ans-utbildning-antal"></em></h5>
               <div id="ans-utbildning"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+          <div class="vy-flik-panel" role="tabpanel" data-flik="konto"
+               id="panel-ans-konto" aria-labelledby="flik-ans-konto" hidden>
+            <div class="dbox">
+              <h5>Konto skapat <em id="ans-konto-antal"></em></h5>
+              <div id="ans-konto"><div class="loading">Hämtar</div></div>
+            </div>
+          </div>
+          <div class="vy-flik-panel" role="tabpanel" data-flik="avbojda"
+               id="panel-ans-avbojda" aria-labelledby="flik-ans-avbojda" hidden>
+            <div class="dbox">
+              <h5>Avböjda <em id="ans-avbojda-antal"></em></h5>
+              <div id="ans-avbojda"><div class="loading">Hämtar</div></div>
             </div>
           </div>
 
@@ -2593,11 +2604,11 @@
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=4bce718b"></script>
-<script src="nextrum-admin-detalj.js?v=3e7d760b"></script>
+<script src="nextrum-admin-detalj.js?v=7f137914"></script>
 <script src="nextrum-admin-oversikt.js?v=4675189b"></script>
 <script src="nextrum-admin-kunder.js?v=152f59f6"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
-<script src="nextrum-admin-rekrytering.js?v=2d14aa9c"></script>
+<script src="nextrum-admin-rekrytering.js?v=9565e23c"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
 <script src="nextrum-admin-drift.js?v=6da99b95"></script>
@@ -2619,6 +2630,6 @@
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=420a6d63"></script>
 <script src="nextrum-modulvakt.js?v=bca26bc2"></script>
-<script src="nextrum-admin.js?v=d3f87ab1"></script>
+<script src="nextrum-admin.js?v=e4429c57"></script>
 </body>
 </html>

@@ -281,7 +281,7 @@
        är bara namn, och allt de skrev står här, med Redigera och Radera
        som för alla andra. Rekryteringens steg stod förut i en egen ruta. */
     anmalan:        [['oversikt', 'Anmälan']],
-    ansokan:        [['oversikt', 'Ansökan'], ['rekrytering', 'Rekryteringen']],
+    ansokan:        [['oversikt', 'Ansökan']],
     /* 2026-09-29: tråden mellan en familj och en studiehjälpare, öppnad
        med Öppna chatt. Id:t är familjens och studiehjälparens, med ett
        | emellan: tråden har inget eget id (schema-v4). */
@@ -1747,25 +1747,29 @@
         });
   }
 
+  /* Ansökan (2026-10-22, ansokningarnas_steg). Leo: "Gör hela profilen
+     enkel att läsa: tydlig rubrik, uppgifterna kompakt, en tydlig
+     nästa-åtgärd." Steget och dess knappar står först (nästaSteg i
+     nextrum-admin-rekrytering.js), sedan uppgifterna, det hen skrev och
+     mejlen till hen, hopfällda. Fliken Rekryteringen med fyra steg är
+     borta: stegen byts med knapparna, och databasen vaktar ordningen. */
   function dpAnsokan(a) {
-    if (DP.flik === 'rekrytering') return kör('spårLista', a) || '';
-
     const text = kör('ansökansText', a);
     const cv = kör('cvKnapp', a);
     const tjänster = (a.tjanster || []).map(k => ((S.tjanster || []).find(t => t.kod === k) || {}).namn || k);
-    /* Kontot hen skapat, om det finns. Samma jämförelse som "Ta in i
-       poolen" gör när den föreslår ett konto. */
+    /* Kontot ansökan blev, eller ett studiehjälparkonto med samma adress
+       (en ansökan som togs in före 2026-10-22 kan sakna kopplingen). */
     const epost = String(a.email || '').toLowerCase();
-    const konto = epost && Object.values(S.personer).find(p =>
-      p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost);
-    /* Skicka vidare till intervju, eller därifrån till utbildning, under
-       läget (2026-10-15): nästa steg är knappen att trycka på, så Ta in i
-       poolen är det bara när inget steg står kvar före den. */
-    const vidare = kör('panelVidare', a) || '';
+    const konto = (a.konto_id && S.personer[a.konto_id]) || (epost && Object.values(S.personer).find(p =>
+      p.role === 'tutor' && !ärRaderad(p) && String(p.email || '').toLowerCase() === epost));
 
-    return dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
+    return (kör('nästaSteg', a) || '')
+      + dpRubrik('Ansökan', 'kom in ' + kortDatum(a.created_at))
       + dpFakta([
-        ['E-post', dpMejl(a.email)],
+        ['E-post', a.email
+          ? dpMejl(a.email) + ' <button class="btn btn-ghost btn-sm" type="button" data-ans-kontakt="'
+            + esc(a.id) + '">Skriv till hen</button>'
+          : null],
         ['Ålder', a.age ? esc(a.age + ' år') : null],
         /* Under 18: vårdnadshavaren och godkännandet (2026-10-05). */
         ...(kör('vhFakta', a) || []),
@@ -1777,16 +1781,16 @@
         ['Konto', konto
           ? '<button class="btn btn-ghost btn-sm" type="button" data-dp="studiehjalpare:' + esc(konto.id) + '">'
             + esc(konto.full_name || konto.email) + '</button>'
-          : null, 'inget än: det skapas när hen tas in i poolen'],
+          : null, 'inget än: det skapas med Utbildning hållen'],
         /* Koden (2026-10-13): en studiehjälpares, som får 300 kr i lönen
-           när hen tas in i poolen (tipsbonus). Bara en kod som gällde
+           när hen får sitt konto (tipsbonus). Bara en kod som gällde
            står här; databasen tömde de andra. */
         ['Kod', dpKod(a), 'ingen'],
         ...(a.kod ? [['Bonus för tipset', (() => {
           const b = (S.tipsbonus || []).find(x => x.ansokan_id === a.id);
           if (!b) return esc(S.bonusFlagga && !S.bonusFlagga.aktiv
             ? 'ingen: bonusen är avstängd under Koder'
-            : 'ges när hen tas in i poolen');
+            : 'ges när hen får sitt konto');
           const l = { utkast: 'utkast', godkand: 'godkänd', utbetald: 'utbetald', struken: 'struken' }[b.status] || b.status;
           /* Lönen för månaden hen togs in, som betalas den 25:e månaden efter. */
           const [år, mån] = String(b.period).split('-').map(Number);
@@ -1800,22 +1804,17 @@
       + (a.vardnadshavare_godkand_at
         ? dpRubrik('Vårdnadshavarens svar', 'inlagt ' + kortDatum(a.vardnadshavare_godkand_at)) + (kör('vhSvar', a) || '')
         : '')
-      + dpRubrik('Läge')
-      + lägesväljare(ANS_LAGE, a.status, 'data-ans="' + esc(a.id) + '"')
-      + '<div class="dp-atgard">'
-      + '<button class="btn btn-ghost btn-sm" type="button" data-dp-flik="rekrytering">Rekryteringens steg</button>'
-      + (a.status !== 'approved'
-        ? '<button class="btn ' + (vidare ? 'btn-ghost' : 'btn-primary') + ' btn-sm" type="button" data-ans-pool="'
-          + esc(a.id) + '">Ta in i poolen</button>'
+      + (kör('beskedLista', a) || '')
+      + (a.status !== 'rejected'
+        ? '<div class="dp-atgard"><button class="btn btn-ghost btn-sm" type="button" data-ans-nej="' + esc(a.id) + '">'
+          + 'Avböj ansökan</button></div>'
         : '')
-      + vidare
-      + '</div>'
       + dpHantera('ansokan', a, {
           rubrik: 'Radera ansökan',
           text: 'När hen själv ber om det, eller ansökan är skräp. Ansökan, CV:t och meddelanden med '
             + 'samma adress tas bort ur våra system, och ett nej som inte gått än går aldrig. Ska hen '
-            + 'få ett: sätt läget till Avböjd och radera först när nejet gått (det står under '
-            + 'Rekryteringen). Har hen ett konto raderas det under Studiehjälpare.'
+            + 'få ett: avböj och radera först när nejet gått (det står under Mejlen till hen). Har hen '
+            + 'ett konto raderas det under Studiehjälpare.'
         });
   }
 

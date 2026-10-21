@@ -94,12 +94,11 @@ tryck som personen tas in, med personens egen adress:
   studiehjälpare är steg 4. Har familjen redan ett konto är rutan Skapa
   elev, som förut. Går eleven inte att skapa efter kontot står familjen
   kvar i rutan och knappen blir Skapa elev.
-- **Ta in i poolen** (ansökan, `nextrum-admin-rekrytering.js`): har
-  adressen i ansökan inget konto står "Skapa kontot med <adressen>" först
-  i kontolistan och är valt, och knappen heter Ta in och skicka inbjudan.
-  Kontot skapas med `roll: 'tutor'` före godkännandet, som sedan är
-  detsamma som för ett konto som fanns; kvittot säger att två mejl går
-  (länken och välkomstmejlet).
+- **Ta in i poolen** (ansökan, `nextrum-admin-rekrytering.js`), sedan
+  2026-10-22 **Utbildning hållen** (nedan, Ansökningarnas steg): har
+  adressen i ansökan inget konto skapas det med `roll: 'tutor'` före
+  godkännandet, som sedan är detsamma som för ett konto som fanns; kvittot
+  säger att två mejl går (länken och välkomstmejlet).
 - Personen trycker på länken, väljer lösenordet två gånger, går igenom
   introduktionen och trycker Fortsätt (`minne/sakerhet.md`, Konton vi
   skapar). Väntar familjen på sin matchning, eller studiehjälparens
@@ -115,6 +114,70 @@ tryck som personen tas in, med personens egen adress:
 - Leo bad om lösenordet 12345678 för alla nya konton. Det blev en länk i
   stället, för samma steg för personen; varför står i
   `minne/sakerhet.md`.
+
+## Ansökningarnas steg (2026-10-22, `ansokningarnas_steg`)
+
+Leo: "Lägen: Ny, Intervju, Utbildning, Konto skapat. En ansökan finns i
+exakt ett läge åt gången. Vyn 'Alla ansökningar' visar bara de som ligger i
+Ny. ... Statusövergångar tvingas i databasen (trigger). Tillåtet: ny till
+intervju, intervju till ny (ångra), intervju till utbildning, utbildning
+till konto skapat." Och om profilen: "Korta ner intervjudelen kraftigt:
+status plus tre knappar, inget annat."
+
+**Steget räknas, det lagras inte en gång till.** `applications.steg` är en
+genererad kolumn ur `intern.ansokan_steg(konto_id, status, till_intervju_at,
+intervju_at, utbildningsmote_at, utbildad_at)`: konto_skapat när kontot är
+kopplat eller läget är Godkänd, utbildning när intervjun är hållen eller
+utbildningen påbörjad, intervju när hen skickats vidare, annars ny.
+Tidsstämplarna fanns redan och läses av gallringen, auditloggen och mejlen;
+ett eget lägesfält bredvid dem hade varit en andra sanning. "Exakt ett läge"
+gäller därför av konstruktion. Funktionen körs som den som skriver raden,
+också anon när ansökan skickas, så den har EXECUTE för alla (som en funktion
+bakom ett CHECK-villkor). Ändras regeln ska kolumnen räknas om: en lagrad
+genererad kolumn räknas bara när raden skrivs.
+
+**Vakten** (`intern.ansokan_steg_vakt`, BEFORE INSERT OR UPDATE, efter
+`applications_skydda` i namnordning) släpper bara de fyra bytena, för admin
+också, och Konto skapat bara genom `ansokan_utbildning_hallen()`, som sätter
+`nextrum.ansokan_konto` i transaktionen. `konto_id` skrivs aldrig för hand
+(42501), och en ansökan utifrån får aldrig ett. Databasen själv
+(tjänstekontot, gallringen) och en ändring en annan trigger eller kaskad gör
+(`pg_trigger_depth() > 1`, ett raderat konto) går förbi. Ett nej är inget
+steg: det går i varje steg, och går att ta tillbaka. Två äldre prov i
+`rls-test.sql` hoppade över steg (16.1 och 22.1) och går nu i ordning.
+
+**Loggen** (`ansokan_steg_logg`): en rad per steg, varifrån, vart, vem och
+när, skriven av databasen efter skrivningen. Den ändras aldrig, inte ens av
+ägaren (triggrar), och raderas bara med sin ansökan (kaskaden, ett steg
+djupare). Bara superadmin läser. Ansökningarna som fanns fick en rad med
+sitt steg.
+
+**Skicka intervjulänk igen** (`ansokan_intervjulank_igen()`): samma mejl som
+när hen skickades vidare, köat i notiskön med nyckeln
+`ansokan_intervju:<id>:igen:<millisekunder>`, bara i steget Intervju och
+högst en gång i tio minuter. Kön (`notis_utskick_ta`) skickar ett
+intervjumejl bara medan ansökan står i Intervju. Utan
+`INTERVJU_BOKNING_URL` säger knappen det och inget köas: mallen har länken
+hårdkodad (`intervju.ts`), och `kolla-mejltexter.py` håller den lika
+configen, så en tom config är en länk som inte ska gå ut.
+
+**Utbildning hållen** (`ansokan_utbildning_hallen(p_ansokan, p_konto,
+p_timpenning, p_amnen, p_ort)`): kontot skapas före, av `bjud-in` med
+ansökans adress (409 betyder att adressen hann få ett, och då kopplas det),
+och funktionen kopplar det, godkänner profilen med ämnena, orten,
+timpenningen och ansökans skola, ålder, tider och tjänster, och sätter
+utbildad och Godkänd, i en transaktion. Samma konto igen svarar `redan`, ett
+annat konto nekas, ett konto med en annan adress nekas, och ett konto hör
+till en ansökan (unikt index). Välkomstmejlet går som förut (läget blir
+Godkänd i samma ändring som utbildad, så sista steget mejlas inte), och
+bonusen för tips följer `tutor_profiles.status` som förut.
+
+**Panelen**: steget och dess knappar överst (`.ans-nu`), sedan uppgifterna
+(Skriv till hen vid adressen), det hen skrev och Mejlen till hen hopfällda
+(fäller ut sig när ett mejl inte gått fram), och Avböj ansökan. Fliken
+Rekryteringen, Boka digitalt möte, Skicka utbildningen, Utbildningsmötet är
+hållet och Markera utbildad är borta, och läget sätts inte längre med
+märkena. Webbläsarprovet är `verktyg/prova-ansokningar.js` (138 prov).
 
 ## Anmälan flyttar till familjen (2026-10-21, `anmalan_flyttas_till_familjen`)
 
@@ -1043,7 +1106,7 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
 - **Bonusen är lön.** 300 kr (`intern.tipsbonus_ore()`) till studiehjälparen
   vars kod den nya sökte med, när vi tar in hen: triggern
   `tutor_profiles_tipsbonus` när `tutor_profiles.status` blir `approved`
-  (Ta in i poolen och lägesväljaren gör det). Ansökan hittas på adressen,
+  (Utbildning hållen gör det, och studiehjälparens läge i adminvyn). Ansökan hittas på adressen,
   som allt annat som kopplar en ansökan till ett konto: den första ansökan
   med en studiehjälpares kod från samma adress, som inte är avböjd. Den nya
   ska vara ny när hen sökte: aldrig godkänd i poolen före ansökan
