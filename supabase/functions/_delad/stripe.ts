@@ -258,6 +258,12 @@ export async function prövaSignatur(
 
 export const VALUTA = 'sek';
 
+/* Betalsätten i kassan när familjen betalar (2026-10-21): kort, med Apple
+   Pay och Google Pay i plånboken, och Klarna. En kassa som bara sparar
+   kortet (läget setup) tar bara kort. Ett nytt betalsätt läggs till här,
+   i webhooken om det blir klart i efterhand, och i villkoren. */
+export const BETALSATT = ['card', 'klarna'];
+
 /* Kontoutdragets text. Stripe tillåter varken <>'"* eller tecken
    utanför latin-1, och svarar med ett fel i stället för att kapa.
 
@@ -425,6 +431,9 @@ export const WEBHOOK_HANDELSER = [
   'payment_intent.amount_capturable_updated',
   'payment_intent.succeeded',
   'payment_intent.canceled',
+  // Klarna (2026-10-21): en betalning som blir klar först efter kassan.
+  'checkout.session.async_payment_succeeded',
+  'checkout.session.async_payment_failed',
 ];
 
 export type Balans = { id: string | null; avgiftOre: number | null; nettoOre: number | null };

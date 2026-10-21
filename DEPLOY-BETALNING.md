@@ -1866,3 +1866,27 @@ Leo: "Merga och driftsätt hela kedjan". En session körde den, och de andra fic
 Kvar, och Leos (utbildningsprovet fick sina frågor samma kväll, `DEPLOY-NOTISER.md` 8): Stripes Apple Pay
 och Google Pay med domänerna (9.19 steg 7), provköpen i testläge (9.19 steg 7 och 9.20 steg 5), att säga till
 familjerna (villkoren, planerna per kalendermånad, koderna bara på planer) och studiehjälparna (provet), och juristen.
+
+### 9.22 Betala nu, Klarna och planerna i 30 dagar (2026-10-21, inte körd)
+
+Efter merge, en session, i den här ordningen:
+
+1. **Stripe, före allt annat**: slå på Klarna under Settings → Payment methods (testläge först),
+   och lägg till `checkout.session.async_payment_succeeded` och `checkout.session.async_payment_failed`
+   på webhookens endpoint. Kontrollera Stripe i adminvyn säger vilka som saknas.
+2. **Edge-funktionerna** från merge-commiten, hämtade tillbaka och jämförda byte för byte:
+   `stripe-webhook` FÖRE `stripe-checkout` (en kassa med Klarna mot en webhook som inte känner
+   `async_payment_succeeded` kan lämna en betalning oskriven), sedan `stripe-checkout` (SESSIONSFORM 11),
+   `stripe-reservation`, `notis-ko`, `drift` och `ekonomi`.
+3. **Migrationen** `20261021170000_betala_nu`, hel i ett do-block eller avsnitt för avsnitt (inget
+   `drop`, inget `delete`), prövad mot sin md5 och registrerad med filens text. Vakterna läser
+   `klippkort_betald`, `intern.admin_att_gora` och `intern.kortreservation_vack` som de står i driften
+   2026-10-21; har någon ändrat dem stannar filen.
+4. Hela `rls-test.sql` mot driften, tillbakarullat, och advisorn.
+5. **Provet i testläge**: ett pass som bekräftas och betalas med Betala nu, med kort och med Klarna
+   (Stripes testnummer för Klarna), en plan som köps och gäller 30 dagar, ett pass som rapporteras
+   kortare och får mellanskillnaden tillbaka inom tio minuter.
+
+Kvar efter: juristen (villkoren 2026-10-22, Klarna i policyn och raden i `DATASKYDD.md`), och
+introduktionens bilder (`bygg-introbilder.js`).
+

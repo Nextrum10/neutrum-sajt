@@ -60,29 +60,22 @@ import glob, io, os, re, sys
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# KORTET RESERVERAS (kortet_reserveras). Med strömbrytaren kortreservation
-# på väljer familjen kort när den bokar: priset reserveras två dagar före
-# passet och dras när rapporten är skriven, och Betala i förväg finns inte
-# i vyn. Då dras pengarna aldrig före rapporten, och det är löftet. Med
-# strömbrytaren av gäller det förra löftet, kort i förväg eller efter
-# passet. Texten och strömbrytaren följs åt: slås den av ska meningen
-# tillbaka i samma ändring, och KORTET_RESERVERAS sättas till False
-# (DEPLOY-BETALNING.md 9.14).
-KORTET_RESERVERAS = True
-
+# BETALA NU (2026-10-21, Leo: "man betalar när man fått de bekräftat att man
+# kan boka lektionen", "betala direkt med kort eller betala med klarna").
+# Familjen betalar passet med kort eller Klarna så fort studiehjälparen
+# bekräftat tiden, med knappen Betala nu, och hinner de inte hålls passet
+# ändå och betalas efteråt. Blir passet kortare betalar vi tillbaka av oss
+# själva. Kortet som reserverades två dagar före passet (kortet_reserveras,
+# 2026-10-13 till 2026-10-21) och familjens bekräftelse av rapporten är
+# borta: deras meningar står bland det gamla nedan.
+#
 # Mellanrummen är \s+: i villkoren bryts meningen över två rader i
 # källan, och ett mönster med vanliga mellanslag hade sett det som ett
 # omskrivet löfte.
-if KORTET_RESERVERAS:
-    LOFTE_SV = (r'pengarna\s+dras\s+först\s+när\s+studiehjälparen\s+har\s+skrivit\s+rapporten:\s+väljer\s+ni\s+kort\s+'
-                r'när\s+ni\s+bokar\s+reserveras\s+priset\s+två\s+dagar\s+före\s+passet,\s+annars\s+betalar\s+ni\s+när\s+ni\s+'
-                r'bekräftar\s+rapporten')
-    LOFTE_EN = (r'the\s+money\s+is\s+only\s+taken\s+once\s+the\s+tutor\s+has\s+written\s+the\s+report:\s+if\s+you\s+'
-                r'choose\s+card\s+payment\s+when\s+you\s+book,\s+the\s+price\s+is\s+reserved\s+two\s+days\s+before\s+the\s+'
-                r'session,\s+otherwise\s+you\s+pay\s+when\s+you\s+confirm\s+the\s+report')
-else:
-    LOFTE_SV = r'antingen\s+i\s+förväg\s+eller\s+efter\s+passet\s+när\s+ni\s+bekräftar\s+rapporten'
-    LOFTE_EN = r'either\s+in\s+advance\s+or\s+after\s+the\s+session\s+when\s+you\s+confirm\s+the\s+report'
+LOFTE_SV = (r'med\s+kort\s+eller\s+Klarna\s+så\s+fort\s+studiehjälparen\s+har\s+bekräftat\s+tiden,\s+och\s+blir\s+'
+            r'passet\s+kortare\s+än\s+bokat\s+betalar\s+vi\s+tillbaka\s+mellanskillnaden')
+LOFTE_EN = (r'by\s+card\s+or\s+Klarna\s+as\s+soon\s+as\s+the\s+tutor\s+has\s+confirmed\s+the\s+time,\s+and\s+if\s+the\s+'
+            r'session\s+is\s+shorter\s+than\s+booked\s+we\s+refund\s+the\s+difference')
 
 # (fil, mönster, hur många träffar som ska finnas, vad stället är)
 LOFTET = [
@@ -182,19 +175,19 @@ KOD_SOM_SVARAR = [
     'supabase/functions/_delad/nextrum-fakta.ts',
 ]
 
-# Med kortet som reserveras finns inget Betala i förväg: kortet väljs när
-# familjen bokar och dras när rapporten är skriven. Det förra löftet får
-# inte stå kvar någonstans (timmar köpta i förväg är något annat, och
-# skrivs "betalar timmarna i förväg" eller "köpa timmar i förväg").
-if KORTET_RESERVERAS:
-    DET_GAMLA += [
-        r'antingen\s+i\s+förväg\s+eller\s+efter\s+passet',
-        r'betala\s+(?:det\s+|passet\s+)?i\s+förväg',
-        r'i\s+förväg\s+går\s+det',
-        r'either\s+in\s+advance\s+or\s+after\s+the\s+session',
-        r'pay\s+(?:for\s+it\s+|for\s+the\s+session\s+)?in\s+advance',
-        r'in\s+advance\s+(?:is\s+possible|works)',
-    ]
+# Kortet som reserverades (2026-10-13 till 2026-10-21) och betalningen när
+# familjen bekräftar rapporten (Fas 19.2 till 2026-10-21). Ingen sida får
+# lova dem: familjen betalar med Betala nu, och rapporten bekräftas inte.
+DET_GAMLA += [
+    r'pengarna\s+dras\s+först\s+när',
+    r'reserveras\s+priset',
+    r'när\s+ni\s+bekräftar\s+rapporten',
+    r'antingen\s+i\s+förväg\s+eller\s+efter\s+passet',
+    r'money\s+is\s+only\s+taken',
+    r'price\s+is\s+reserved',
+    r'when\s+you\s+confirm\s+the\s+report',
+    r'either\s+in\s+advance\s+or\s+after\s+the\s+session',
+]
 
 
 def las(fil):

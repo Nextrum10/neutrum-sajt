@@ -298,23 +298,12 @@ window.NXForhandsvisning = (function () {
       flaggor: [
         { kod: 'kortsparr', aktiv: false }, { kod: 'erbjudanden', aktiv: true },
         { kod: 'tipstimme', aktiv: true },
-        /* Kortet reserveras (kortet_reserveras, 2026-10-13): på här, så att
-           valet syns i förhandsvisningen. I driften står det av tills
-           villkoren är klara. */
-        { kod: 'kortreservation', aktiv: true }
+        /* Kortet som reserverades (kortet_reserveras) står av sedan
+           2026-10-21, som i driften: familjen betalar med Betala nu. */
+        { kod: 'kortreservation', aktiv: false }
       ],
-      /* Annas sparade kort, och ett förslag där hon valt det. Kortet sparas
-         och tas bort hos Stripe, vilket förhandsvisningen inte gör; att
-         välja kort på ett pass går (valj_kort nedan). */
-      sparade_kort: [
-        { parent_id: ANNA, stripe_metod: 'pm_forhandsvisning', marke: 'visa', sista4: '4242', utgar_manad: 8,
-          utgar_ar: 2028, sparat: tid(-6, '20:12') }
-      ],
-      kortreservationer: [
-        { booking_id: id(108), parent_id: ANNA, lage: 'vald', stripe_reservation: null, reserverat_ore: null,
-          reserverat_till: null, reserverat_for: null, dragen_ore: null, fel: null, forsok: 0,
-          vald: tid(0, '08:41'), andrad: tid(0, '08:41') }
-      ],
+      sparade_kort: [],
+      kortreservationer: [],
       erbjudanden: [
         { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 10 },
         { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 20 },

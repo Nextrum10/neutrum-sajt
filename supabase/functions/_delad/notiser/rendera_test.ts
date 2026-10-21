@@ -124,12 +124,12 @@ Deno.test('varje mejl har en knapp till rätt vy, och bara en', () => {
 });
 
 Deno.test('familjens bekräftelse och påminnelse säger hur passet betalas, studiehjälparens inte', () => {
-  // Samma mening som villkoren och sidorna (kortet_reserveras): pengarna
-  // dras först när rapporten är skriven. Det gamla löftet att ett
+  // Samma mening som villkoren och sidorna (2026-10-21): kort eller Klarna
+  // så fort tiden är bekräftad, med Betala nu. Det gamla löftet att ett
   // obetalt pass inte hålls får inte stå kvar, och inte heller Betala i
-  // förväg, som inte finns med kortet som reserveras.
-  const VILLKORET = 'pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar '
-    + 'reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten';
+  // förväg, som heter Betala nu.
+  const VILLKORET = 'med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir passet kortare '
+    + 'än bokat betalar vi tillbaka mellanskillnaden';
   const bekraftat = rendera('pass_bekraftat', 'parent');
   assertStringIncludes(bekraftat.text, VILLKORET);
   // Fakturan är borta (2026-10-21): inget mejl erbjuder den.

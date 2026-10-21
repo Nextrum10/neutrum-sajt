@@ -420,9 +420,8 @@ OMRADEN = [
              'steg som är det svåra.'),
             ('Måste vi binda upp oss?',
              f'Nej. Ingen bindningstid, ingen månadsavgift. {PRIS} i timmen. Ni betalar varje '
-             'pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: '
-             'väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar '
-             'ni när ni bekräftar rapporten. Betalningen går till Nextrum.'),
+             'pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir '
+             'passet kortare än bokat betalar vi tillbaka mellanskillnaden. Betalningen går till Nextrum.'),
             ('Kan vi ses på biblioteket i stället för hemma?',
              'Ja. Skriv platsen när ni föreslår tiden, till exempel Solna stadsbibliotek eller '
              'Bergshamra bibliotek.'),
@@ -522,9 +521,8 @@ AMNEN = [
              'att eleven ska klara nästa uppgift också när ingen sitter bredvid.'),
             ('Vad kostar mattehjälpen?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
-             'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
-             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.'),
+             'månadsavgift. Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir '
+             'passet kortare än bokat betalar vi tillbaka mellanskillnaden.'),
         ],
     },
     {
@@ -594,9 +592,8 @@ AMNEN = [
              'varje pass visar hur det går.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
-             'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
-             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.'),
+             'månadsavgift. Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir '
+             'passet kortare än bokat betalar vi tillbaka mellanskillnaden.'),
         ],
     },
     {
@@ -664,9 +661,8 @@ AMNEN = [
              'eleverna brukar det gå lättare att ses.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
-             'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
-             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.'),
+             'månadsavgift. Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir '
+             'passet kortare än bokat betalar vi tillbaka mellanskillnaden.'),
         ],
     },
     {
@@ -735,9 +731,8 @@ AMNEN = [
              'med tre veckor hinner ni förstå det, inte bara känna igen det.'),
             ('Vad kostar det?',
              f'{PRIS} i timmen, samma som alla andra ämnen. Ingen bindningstid och ingen '
-             'månadsavgift. Ni betalar varje pass med kort, och pengarna dras först när '
-             'studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras '
-             'priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.'),
+             'månadsavgift. Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir '
+             'passet kortare än bokat betalar vi tillbaka mellanskillnaden.'),
         ],
     },
     {

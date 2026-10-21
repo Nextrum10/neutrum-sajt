@@ -88,9 +88,9 @@ const SVARA = 'Svara ja eller nej i Nextrum.';
    verktyg/kolla-betalningsvillkor.py, så att mejlet inte kan börja säga
    något annat än sidorna. */
 // Varje mening som räknas står i en sträng: mönstren ser inte över ett +.
-const VILLKORET = 'Ni betalar varje pass med kort, och '
-  + 'pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten.';
-const BETALA = `${VILLKORET} Vill ni välja kort gör ni det i Nextrum före passet, om ni inte redan har gjort det.`;
+const VILLKORET = 'Ni betalar varje pass '
+  + 'med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden.';
+const BETALA = `${VILLKORET} Betala med Betala nu i Nextrum, på passet eller under Betalning, om ni inte redan har gjort det.`;
 const TIMMAR = 'Passet är betalt med timmarna ni köpt i förväg, så det finns inget att betala.';
 
 /** Vad familjen ska göra med betalningen, och vart knappen går. */

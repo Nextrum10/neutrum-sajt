@@ -416,15 +416,19 @@
         sina modeller på det. Vi använder också Anthropic som stöd i vårt eget arbete, till
         exempel för att se vilka anmälningar som väntar på svar. Då får den elevers initialer,
         årskurs och ämne och maskad fritext, aldrig namn, e-post eller adresser.</li>
-      <li><b>Stripe</b>: tar emot kortbetalningarna. Kortuppgifterna lämnar ni direkt till Stripe,
-        aldrig till oss, och vi sparar dem inte. Väljer ni att betala ett pass med kort när ni
-        föreslår det sparar Stripe kortet, så att vi kan reservera beloppet två dagar före passet
-        och dra det när rapporten är skriven. Ni tar bort kortet under Profil när ni vill. Stripe
+      <li><b>Stripe</b>: tar emot betalningarna, med kort eller Klarna. Kortuppgifterna lämnar ni
+        direkt till Stripe, aldrig till oss, och vi sparar dem inte. Stripe
         får er e-postadress, beloppet och vilket
         pass betalningen gäller (ämne och datum), och vi får tillbaka att passet är betalt. För
         bedrägerikontroll och det lagen kräver av en betaltjänst är Stripe själv
         personuppgiftsansvarig, vilket står i
         <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripes integritetspolicy</a>.</li>
+      <!-- Klarna (betala_nu, 2026-10-21): betalsättet i kassan. -->
+      <li><b>Klarna</b> (Sverige): väljer ni Klarna i kassan skickar Stripe er e-postadress, beloppet
+        och vad köpet gäller till Klarna, och de uppgifter Klarna ber om lämnar ni direkt till Klarna.
+        Klarna är själv personuppgiftsansvarig för sin kreditprövning och sin betalning, vilket står i
+        <a href="https://www.klarna.com/se/dataskydd/" target="_blank" rel="noopener noreferrer">Klarnas dataskyddsinformation</a>.
+        Vi får bara tillbaka att betalningen är gjord.</li>
       <li><b>Fortnox</b> (Sverige): vår bokföring. Vi skickar inga fakturor till familjer.</li>
       <li><b>Google</b>, men inte än: i dag kommer länken till ett onlinepass i meddelanden. När
         vi har kopplat Google Meet får varje bekräftat onlinepass ett eget rum där, och länken står
@@ -607,7 +611,7 @@
     <p>Ändrar vi något väsentligt uppdaterar vi datumet nedan, och hör av oss till er som har
       konto om ändringen påverkar er.</p>
 
-    <p class="jur-datum">Senast uppdaterad 21 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 22 oktober 2026.</p>
   </div>
 </section>
 
@@ -788,7 +792,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=72594d80"></script>
+<script src="nextrum-maskot-svar.js?v=58fbd1e6"></script>
 <script src="nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

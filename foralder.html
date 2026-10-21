@@ -28,11 +28,11 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=81de04a0">
-<link rel="stylesheet" href="nextrum-vy.css?v=61e1c2ac">
+<link rel="stylesheet" href="nextrum-vy.css?v=70487768">
 <!-- Ombyggnaden av vyn: hälsningsblocket, grupperad meny, flikar,
      det förenklade bokningsflödet. Sist, så den vinner. -->
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=73650383">
-<link rel="stylesheet" href="nextrum-uppgifter.css?v=71ec1700">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=3078eece">
+<link rel="stylesheet" href="nextrum-uppgifter.css?v=f9716512">
 </head>
 <body class="vy">
 
@@ -198,7 +198,6 @@
         <span class="vy-sido-rubrik" aria-hidden="true">Studier</span>
         <a href="#boka" data-sek="boka"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3M12 13v4M10 15h4"/></svg>Boka pass</a>
         <a href="#lektioner" data-sek="lektioner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Mina lektioner</a>
-        <a href="#bekrafta" data-sek="bekrafta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.5H6.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9z"/><path d="M14 3.5V9h5.5M8.5 14.5l2.5 2.5 4.5-4.5"/></svg>Bekräfta rapport</a>
         <a href="#nexlax" data-sek="nexlax"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19.5c3.4 0 3.2-4.6 7-4.6s3.6-5.4 7-5.4"/><circle cx="5" cy="19.5" r="1.4"/><path d="M19 3.5v6"/><path d="M19 3.8h-3.6l1.2 1.6-1.2 1.6H19"/></svg>NexLäx</a>
 
         <span class="vy-sido-rubrik" aria-hidden="true">Kontakt</span>
@@ -243,7 +242,7 @@
              som väntade (en föreslagen tid) stod ensamt överst. -->
 
         <!-- ============ ATT GÖRA ============
-             Tider att svara på, rapporter att bekräfta och försenade
+             Tider att svara på, pass att betala och försenade
              uppgifter, i den ordningen: en föreslagen tid håller
              studiehjälparens kalender ockuperad tills någon svarat,
              och därför duger det inte att svaret ligger bakom ett
@@ -416,48 +415,9 @@
         </div>
       </section>
 
-      <!-- ============================================================
-           BEKRÄFTA RAPPORT (Fas 19.1)
-           Leo 2026-09-27: rapporten ska komma till familjen i en egen
-           post i menyn, där de läser den och bekräftar den. Under
-           Mina lektioner → Efter passen låg den förut bara att läsa,
-           en flik bort, och ingenting sa att en ny kommit.
-
-           Rapporten står här tills den är bekräftad OCH passet är
-           betalt. Sedan Fas 19.2 betalar familjen med kort i förväg eller
-           efter passet (fakturan efter passet togs bort 2026-10-21). Det
-           senare görs HÄR, i samband med bekräftelsen: att välja betalsätt
-           är att bekräfta rapporten.
-           Är passet redan betalt bekräftar familjen ändå, med knappen
-           Bekräfta rapporten.
-
-           Alla barn på en gång, inte bara det valda: det som väntar på
-           familjen ska inte gömma sig bakom barnväljaren. Ritas av
-           ritaBekrafta() i nextrum-studie-vy.js.
-
-           De bekräftade visas månad för månad (2026-09-28), på passets
-           månad, med samma rad som rapporterna i studiehjälparvyn. Att
-           bekräfta har ingen månad: det som väntar står alltid framme.
-           ============================================================ -->
-      <section class="vy-sek vy-sek-smal" data-sek="bekrafta" hidden>
-        <div class="vy-sek-topp">
-          <div>
-            <h2>Bekräfta rapport</h2>
-            <p>Läs vad ni gick igenom på passet och bekräfta att ni tagit del av rapporten. Är passet inte betalt än, bekräftar ni genom att välja hur ni betalar.</p>
-          </div>
-        </div>
-        <!-- Rubrikerna står på papperet och korten under (2026-09-28).
-             Förut låg varje rapport i en ruta i en panel, och i den en
-             ruta till för tiden. #rb-grupp är det omritningen håller
-             stilla (rbRitaOm). -->
-        <p class="ok-msg" id="rb-msg"></p>
-        <div class="vy-grupp" id="rb-grupp"><h3>Att bekräfta</h3><span class="vy-antal ar-gor" id="rb-antal"></span></div>
-        <div id="rb-lista"><div class="loading">Hämtar</div></div>
-
-        <div class="vy-grupp"><h3>Bekräftade</h3><span class="vy-antal" id="rb-klara-antal"></span></div>
-        <div id="rb-manader" aria-label="Visa de bekräftade rapporterna för månaden" hidden></div>
-        <div class="vy-kort vy-lista" id="rb-klara"><div class="loading">Hämtar</div></div>
-      </section>
+      <!-- Bekräfta rapport (Fas 19.1) stod här till 2026-10-21, då den togs
+           bort (Leo: "bekräfta rapport kan tas bort"). Rapporten läses på
+           passets sida, och det som ska betalas står under Betalning. -->
 
       <!-- ============================================================
            PASSETS SIDA (#pass/<id>)
@@ -513,10 +473,12 @@
         </div>
 
         <!-- Huvudet (2026-10-13): NexLäx i mitten och ljudet till höger, och spelets
-             meny under: Din väg, Din utveckling (NexLäx eller studiehjälparen), Rank
-             och Märken. Menyn och hälsningen står kvar: NexLäx är en sektion som de
+             meny under. Menyn och hälsningen står kvar: NexLäx är en sektion som de
              andra, inte en separat sida (Leo: "det var jobbigt"). Går man ut och in
-             igen står man på Din väg (bytteSektion). -->
+             igen står man på Din väg (bytteSektion). Flikarna sedan 2026-10-21 (Leo:
+             "Sätt ihop rank och märken. Och flytta upp studiehjälpare sektionen upp
+             till bredvid utveckling"): Din väg, Din utveckling, Studiehjälparen, och
+             Rank och märken. -->
         <div class="nl-spelhuvud">
           <div class="nl-spelrad">
             <span class="nl-spelrad-namn">NexLäx</span>
@@ -527,12 +489,12 @@
             <button class="vy-flik" type="button" role="tab" data-flik="vag"
                     id="flik-nl-vag" aria-controls="panel-nl-vag"><span class="vy-flik-t">Din väg</span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="utveckling"
-                    id="flik-nl-utveckling" aria-controls="panel-nl-utveckling"><span class="vy-flik-t">Din utveckling</span>
+                    id="flik-nl-utveckling" aria-controls="panel-nl-utveckling"><span class="vy-flik-t">Din utveckling</span></button>
+            <button class="vy-flik" type="button" role="tab" data-flik="hjalpare"
+                    id="flik-nl-hjalpare" aria-controls="panel-nl-hjalpare"><span class="vy-flik-t">Studie&shy;hjälparen</span>
               <span class="vy-flik-mark" id="flik-lax-mark" hidden></span></button>
             <button class="vy-flik" type="button" role="tab" data-flik="rank"
-                    id="flik-nl-rank" aria-controls="panel-nl-rank"><span class="vy-flik-t">Rank</span></button>
-            <button class="vy-flik" type="button" role="tab" data-flik="marken"
-                    id="flik-nl-marken" aria-controls="panel-nl-marken"><span class="vy-flik-t">Märken</span></button>
+                    id="flik-nl-rank" aria-controls="panel-nl-rank"><span class="vy-flik-t">Rank och märken</span></button>
           </div>
         </div>
 
@@ -542,19 +504,21 @@
           <div class="nl" id="nl-vag"><div class="loading">Hämtar</div></div>
         </div>
 
-        <div class="vy-flik-panel" role="tabpanel" data-flik="rank"
-             id="panel-nl-rank" aria-labelledby="flik-nl-rank" hidden>
-          <div class="nl stack" id="nl-rank"><div class="loading">Hämtar</div></div>
-        </div>
-
-        <div class="vy-flik-panel" role="tabpanel" data-flik="marken"
-             id="panel-nl-marken" aria-labelledby="flik-nl-marken" hidden>
-          <div class="nl stack" id="nl-marken"><div class="loading">Hämtar</div></div>
-        </div>
-
         <div class="vy-flik-panel" role="tabpanel" data-flik="utveckling"
              id="panel-nl-utveckling" aria-labelledby="flik-nl-utveckling" hidden>
-          <div class="nl stack" id="nl-utveckling"><div class="loading">Hämtar</div></div>
+          <div class="nl stack" id="nl-utveckling" data-nl-hjalpare="#nl-hjalpare"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <div class="vy-flik-panel" role="tabpanel" data-flik="hjalpare"
+             id="panel-nl-hjalpare" aria-labelledby="flik-nl-hjalpare" hidden>
+          <div class="nl stack" id="nl-hjalpare"><div class="loading">Hämtar</div></div>
+        </div>
+
+        <!-- Ranken överst och märkena under, i en flik (2026-10-21). -->
+        <div class="vy-flik-panel nl-rank-och-marken" role="tabpanel" data-flik="rank"
+             id="panel-nl-rank" aria-labelledby="flik-nl-rank" hidden>
+          <div class="nl stack" id="nl-rank"><div class="loading">Hämtar</div></div>
+          <div class="nl stack" id="nl-marken"><div class="loading">Hämtar</div></div>
         </div>
       </section>
       <!-- ============================================================
@@ -599,14 +563,6 @@
         </div>
       </section>
       <!-- ============================================================
-           BETALNING (Fas 14.2, Fas 19.2)
-           Varje pass betalas med kort, och pengarna dras först när
-           rapporten är skriven (kortet_reserveras). Här står det som väljs
-           före passet och det som är betalt, båda ritade ur passen, av
-           ritaAttBetala() och ritaBetalda(). Ett genomfört pass betalas
-           under Bekräfta rapport, där rapporten står bredvid.
-           ============================================================ -->
-      <!-- ============================================================
            ERBJUDANDEN (Fas 16.1)
            Planer och klippkort: timmar som köps i förväg till ett lägre
            timpris och dras när familjen föreslår ett pass (Fas 22.4;
@@ -625,7 +581,7 @@
         <div class="vy-sek-topp">
           <div>
             <h2>Erbjudanden</h2>
-            <p>Fyll er timbank i förväg: med en plan, som gör timmen billigare och gäller en månad, eller med Fyll timbanken, till timpriset och i sex månader. När ni föreslår ett pass betalar timmarna det av sig själva, i stället för kortet, och säger er studiehjälpare nej kommer de tillbaka. Betalar ni pass för pass används inte timbanken.</p>
+            <p>Fyll er timbank i förväg: med en plan, som gör timmen billigare och gäller i 30 dagar, eller med Fyll timbanken, till timpriset och i sex månader. När ni föreslår ett pass betalar timmarna det av sig själva, i stället för kortet, och säger er studiehjälpare nej kommer de tillbaka. Betalar ni pass för pass används inte timbanken.</p>
           </div>
         </div>
         <div class="stack">
@@ -675,46 +631,41 @@
         </div>
       </section>
 
+      <!-- ============================================================
+           BETALNING (Fas 14.2; Betala nu sedan 2026-10-21)
+           Leo 2026-10-21: familjen betalar "när man fått de bekräftat att
+           man kan boka lektionen", med kort eller Klarna, och alla
+           betalknappar är orange och heter Betala nu. Överst summan, sedan
+           allt som ska betalas (bekräftade pass, genomförda pass och
+           tillägg) och sist det betalda, ritat ur passen av
+           ritaAttBetala() och ritaBetalda().
+           ============================================================ -->
       <section class="vy-sek vy-sek-smal" data-sek="betalning" hidden>
         <div class="vy-sek-topp">
           <div>
             <h2>Betalning</h2>
-            <p>Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. Kort väljer ni när ni bokar eller på passets sida, och utan kortet betalar ni efter passet under Bekräfta rapport. Kortuppgifterna skriver ni in hos Stripe, och ett kort ni sparar står hos Stripe, aldrig hos oss. Ett förslag som inte blivit ett pass kostar ingenting.</p>
+            <p>Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden. Tryck Betala nu, så öppnas kassan här på sidan. Kortuppgifterna skriver ni in hos Stripe, aldrig hos oss. Ett förslag som inte blivit ett pass kostar ingenting.</p>
           </div>
         </div>
-        <!-- ============ INNEHÅLLET (2026-09-28) ============
-             Summan överst: vad som väntar efter passet, vad som står
-             före passet och vad som betalats den här månaden.
-             Sedan en grupp per sort, med rubriken på papperet och
-             raderna i ett kort. Det som väntar på familjen (ett
-             genomfört pass) står före det som är ett val (i förväg) och
-             det som är gjort (betalda pass). -->
         <p class="ok-msg" id="bet-msg"></p>
         <div class="bet-sam" id="bet-sam"></div>
 
-        <!-- Genomförda pass som inte är betalda, och tillägg för ett pass
-             som drog över (Fas 19.2, 20.1). De betalas under Bekräfta
-             rapport, där rapporten står. Ritas av ritaAttBetala(). -->
-        <div class="vy-del" id="bet-efter-grupp" hidden>
-          <div class="vy-grupp"><h3>Efter passet</h3><span class="vy-antal ar-gor" id="bet-efter-antal"></span>
-            <a class="vy-lank" href="#bekrafta">Bekräfta rapport<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></div>
-          <div class="vy-kort vy-lista" id="bet-efter"></div>
-        </div>
-
-        <!-- Pass före passet, att välja kort eller betala för. Ritas av ritaAttBetala() ur
-             samma lista som Mina lektioner, så att ett pass som
-             betalats där försvinner här i samma stund. -->
-        <div class="vy-grupp"><h3>Före passet</h3><span class="vy-antal" id="bet-att-antal"></span></div>
+        <div class="vy-grupp"><h3>Att betala</h3><span class="vy-antal ar-gor" id="bet-att-antal"></span></div>
         <div class="vy-kort vy-lista" id="bet-att-betala"><div class="loading">Hämtar</div></div>
         <!-- Fas 21.3: vägen till köpta timmar där familjen betalar.
              Syns bara när erbjudandena går att köpa och familjen
              inte redan har timmar att betala med; ritaErbjudanden()
              avgör det. -->
-        <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Fyll er timbank i förväg, så betalar timmarna passen av sig själva, och med en plan blir timmen billigare. <a href="#erbjudanden">Se planer och Fyll timbanken</a></p>
+        <p class="xsmall bet-erb-tips" id="bet-erb-tips" hidden>Bokar ni ofta? Med en plan blir timmen billigare, och timmarna betalar passen av sig själva. <a href="#erbjudanden">Se planerna</a></p>
+
+        <div class="bet-satt" aria-label="Betalsätt">
+          <span class="bet-satt-et">Ni kan betala med</span>
+          <span class="bet-satt-chip">Kort</span><span class="bet-satt-chip">Apple Pay</span><span class="bet-satt-chip">Google Pay</span><span class="bet-satt-chip bet-satt-klarna">Klarna</span>
+        </div>
 
         <div class="vy-grupp"><h3>Betalda pass</h3><span class="vy-antal" id="bet-antal"></span></div>
         <div class="vy-kort vy-lista" id="bet-lista"><div class="loading">Hämtar</div></div>
-        <p class="vy-finstilt">Ett pass som aldrig hölls kostar ingenting. Är det betalt med kort och behöver avbokas, hör av er till oss så betalar vi tillbaka. Ett pass betalt med köpta timmar avbokar ni själva på passets sida, och timmarna kommer tillbaka.</p>
+        <p class="vy-finstilt">Ett pass som aldrig hölls kostar ingenting. Är det betalt och behöver avbokas, hör av er till oss så betalar vi tillbaka. Blev passet kortare än bokat går mellanskillnaden tillbaka av sig själv när rapporten är skriven. Ett pass betalt med köpta timmar avbokar ni själva på passets sida, och timmarna kommer tillbaka.</p>
       </section>
 
       <!-- ============================================================
@@ -971,7 +922,7 @@
                förklaringen och villkoren står överst här. -->
           <div class="dbox">
             <h5>Vad är timbanken?</h5>
-            <p class="erb-bank-text">Timbanken är familjens konto för läxhjälpstimmar. Ni fyller den med en plan, som gör timmen billigare och gäller en månad, eller med Fyll timbanken, till timpriset och i sex månader. Ibland sätter vi in gratistimmar åt er, som gäller i 60 dagar. Tipsar ni en familj får ni också en timme här när den nya familjen haft två timmar läxhjälp; den gäller också i 60 dagar och dras först, som en timme på köpet på nästa pass ni föreslår. När ni föreslår ett pass för ett barn betalar timmarna det av sig själva, gratis timmar först, och det som blir över av ett pass betalt med köpta timmar sparas som minuter, som aldrig går ut. Betalar ni pass för pass används timbanken bara för gratistimmar och timmar för tips. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för planer och timbanken</a></p>
+            <p class="erb-bank-text">Timbanken är familjens konto för läxhjälpstimmar. Ni fyller den med en plan, som gör timmen billigare och gäller i 30 dagar, eller med Fyll timbanken, till timpriset och i sex månader. Ibland sätter vi in gratistimmar åt er, som gäller i 60 dagar. Tipsar ni en familj får ni också en timme här när den nya familjen haft två timmar läxhjälp; den gäller också i 60 dagar och dras först, som en timme på köpet på nästa pass ni föreslår. När ni föreslår ett pass för ett barn betalar timmarna det av sig själva, gratis timmar först, och det som blir över av ett pass betalt med köpta timmar sparas som minuter, som aldrig går ut. Betalar ni pass för pass används timbanken bara för gratistimmar och timmar för tips. <a href="/anvandarvillkor#erbjudanden" target="_blank" rel="noopener">Villkoren för planer och timbanken</a></p>
           </div>
           <!-- 2026-10-13: rutan visar också gratistimmarna vi satt in
                (erbjudandet 'gratis'), och heter därför Timmar. -->
@@ -1015,7 +966,7 @@
             <div class="sum-line total"><span>Bindningstid</span><span>Ingen</span></div>
             <p class="xsmall" data-pris-extra-not style="margin-top:14px;color:var(--muted-2);line-height:1.6">Tillägget för syskon är en fast summa per timme, oavsett om de är två eller tre — inte ett pris per barn.</p>
             <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Första timmen är gratis när ni köper er första plan: planen får en timme till. Ni får högst en sådan timme; gratistimmar vi sätter in i er timbank räknas för sig.</p>
-            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort, och pengarna dras först när studiehjälparen har skrivit rapporten: väljer ni kort när ni bokar reserveras priset två dagar före passet, annars betalar ni när ni bekräftar rapporten. Betalningarna står under Betalning.</p>
+            <p class="xsmall" style="margin-top:10px;color:var(--muted-2);line-height:1.6">Ni betalar varje pass med kort eller Klarna så fort studiehjälparen har bekräftat tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden. Betalningarna står under Betalning.</p>
           </div>
         </div>
 
@@ -1115,19 +1066,19 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=adfb7419"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-forhandsvisning.js?v=c2a0d6a3"></script>
+<script src="nextrum-forhandsvisning.js?v=566656a6"></script>
 <script src="nextrum-app.js?v=a262aca7"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
 <script src="nextrum-kontakt.js?v=c30f9d7e"></script>
-<script src="nextrum-studie.js?v=e4708805"></script>
+<script src="nextrum-studie.js?v=29852e6b"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-arbetsyta.js?v=71f4330a"></script>
 <script src="nextrum-media.js?v=e56396db"></script>
 <script src="nextrum-betalning.js?v=60e55cea"></script>
 <script src="nextrum-ljud.js?v=6df8ca84"></script>
-<script src="nextrum-uppgifter.js?v=7183a63f"></script>
-<script src="nextrum-introduktion.js?v=ffb6677f"></script>
+<script src="nextrum-uppgifter.js?v=c552f00e"></script>
+<script src="nextrum-introduktion.js?v=1a07de96"></script>
 <script src="nextrum-modulvakt.js?v=bca26bc2"></script>
-<script src="nextrum-studie-vy.js?v=e7914888"></script>
+<script src="nextrum-studie-vy.js?v=5e165e69"></script>
 </body>
 </html>

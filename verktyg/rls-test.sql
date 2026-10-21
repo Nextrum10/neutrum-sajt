@@ -1604,6 +1604,14 @@ select '9.9 AI-omslagen är inte anropbara för inloggade: ' || f,
        case when to_regprocedure(f) is null then 'funktionen finns inte' else 'anon/authenticated execute' end
 from unnest(array['public.ai_analys(integer)', 'public.ai_avvikelser()']) f;
 
+-- betala_nu (2026-10-21): listan över pass att betala tillbaka är bara tjänstekontots.
+insert into utfall (test, ok, detalj)
+select 'betala_nu: kortare_pass_att_aterbetala går inte att anropa för inloggade',
+       to_regprocedure('public.kortare_pass_att_aterbetala(integer)') is null
+       or (not has_function_privilege('authenticated', 'public.kortare_pass_att_aterbetala(integer)', 'execute')
+           and not has_function_privilege('anon', 'public.kortare_pass_att_aterbetala(integer)', 'execute')),
+       'anon/authenticated execute';
+
 insert into utfall (test, ok, detalj)
 select '9.9 dörren ai_verktyg ägs fortfarande av nextrum_ai',
        pg_get_userbyid(p.proowner) = 'nextrum_ai',
@@ -3855,6 +3863,7 @@ select pg_temp.prova('20.1 familjen sätter inte stripe_minuter på ett bokat pa
 do $$
 declare
   deb int; betalda int; lon int; larm int; larm2 int; belopp bigint; fel text;
+  tillbaka bigint; tillbaka_efter int;
   deb_p int; lon_a int; syns_q int; syns_p int; kvar1 int; kvar2 int; lon_k int; ej int;
   halv bigint;
 begin
@@ -3915,7 +3924,8 @@ begin
   -- får katalogens timpris när den bokas, och det är inte alltid 379 kr.
   fel := null;
   begin
-    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = timpris_ore, stripe_minuter = 60
+    update public.bookings set betalning_status = 'betald', betald_at = now(), betalt_ore = timpris_ore, stripe_minuter = 60,
+           stripe_payment_intent_id = 'pi_rls_kortare'
      where id = '00000000-0000-4000-8000-00000000b0c1';
     select timpris_ore - round(timpris_ore * 30 / 60.0) into halv
       from public.bookings where id = '00000000-0000-4000-8000-00000000b0c1';
@@ -3925,7 +3935,16 @@ begin
     select lon_min into lon from public.passunderlag where id = '00000000-0000-4000-8000-00000000b0c1';
     select sum(a.belopp_ore) into belopp from public.avvikelser_rader() a
      where a.typ = 'betalt_for_lange' and a.objekt_id = '00000000-0000-4000-8000-00000000b0c1';
+    -- betala_nu (2026-10-21): samma pass och belopp i listan som stripe-reservation betalar tillbaka.
+    if to_regprocedure('public.kortare_pass_att_aterbetala(integer)') is not null then
+      execute 'select coalesce(sum(belopp_ore), -1) from public.kortare_pass_att_aterbetala(50)
+                where booking_id = ''00000000-0000-4000-8000-00000000b0c1''' into tillbaka;
+    end if;
     update public.bookings set aterbetald_ore = halv where id = '00000000-0000-4000-8000-00000000b0c1';
+    if to_regprocedure('public.kortare_pass_att_aterbetala(integer)') is not null then
+      execute 'select count(*) from public.kortare_pass_att_aterbetala(50)
+                where booking_id = ''00000000-0000-4000-8000-00000000b0c1''' into tillbaka_efter;
+    end if;
     select count(*) into larm from public.avvikelser_rader()
      where typ = 'betalt_for_lange' and objekt_id = '00000000-0000-4000-8000-00000000b0c1';
     raise exception 'rulla tillbaka';
@@ -3938,7 +3957,11 @@ begin
       ('20.1 kortare pass sänker lönen', lon = 30, 'lon_min ' || lon),
       ('20.1 kortare pass larmar med halva beloppet', belopp = halv,
        'belopp ' || coalesce(belopp::text, 'null') || ', väntat ' || coalesce(halv::text, 'null')),
-      ('20.1 återbetalt: larmet går', larm = 0, 'rader: ' || larm);
+      ('20.1 återbetalt: larmet går', larm = 0, 'rader: ' || larm),
+      ('betala_nu: det kortare passet står i listan att betala tillbaka, med larmets belopp',
+       tillbaka is null or tillbaka = halv, 'belopp ' || coalesce(tillbaka::text, 'migrationen saknas')),
+      ('betala_nu: återbetalt står det inte kvar i listan', tillbaka_efter is null or tillbaka_efter = 0,
+       'rader: ' || coalesce(tillbaka_efter::text, 'migrationen saknas'));
   end if;
 
   -- 3. Betalt efter passet, för den hållna tiden.
@@ -11268,10 +11291,10 @@ begin
             exists (select 1 from intern.admin_att_gora() al where al.typ = 'elev_utan_sh' and al.objekt_id = ELEV2::text)
             and not exists (select 1 from intern.admin_att_gora() al where al.typ = 'elev_utan_sh' and al.objekt_id = ELEV::text), 'd', null);
 
-    -- Rapporten som familjen inte bekräftat: med i listan tills den bekräftas.
+    -- Rapporten bekräftas inte sedan betala_nu (2026-10-21): den står aldrig i listan.
     rap := RAP0;
-    ut := ut || jsonb_build_object('t', 'AP Att göra: en rapport utan bekräftelse kommer med', 'ok',
-            exists (select 1 from intern.admin_att_gora() al where al.typ = 'rapport_obekraftad' and al.objekt_id = rap::text), 'd', null);
+    ut := ut || jsonb_build_object('t', 'AP Att göra: en rapport utan bekräftelse kommer inte med (betala_nu)', 'ok',
+            not exists (select 1 from intern.admin_att_gora() al where al.typ = 'rapport_obekraftad' and al.objekt_id = rap::text), 'd', null);
     insert into public.rapport_bekraftelser (rapport_id, foralder_id) values (rap, P);
     ut := ut || jsonb_build_object('t', 'AP Att göra: en bekräftad rapport tas ur listan', 'ok',
             not exists (select 1 from intern.admin_att_gora() al where al.typ = 'rapport_obekraftad' and al.objekt_id = rap::text), 'd', null);
@@ -18028,9 +18051,10 @@ begin
                                   timpris_ore, begart_ore, status, galler_fran)
     values (K2, Q, 'plan_standard', 'Prov Standard', 'plan', 8, 1, 5, 39900, 303200, 'vantar', nasta),
            (K4, Q, 'klipp10', 'Prov Fyll', 'klippkort', 10, 6, 0, 39900, 399000, 'vantar', nasta);
-    ut := ut || jsonb_build_object('t', 'PM en plan utan månad gäller den här månaden, Fyll timbanken har ingen',
-            'ok', (select k.galler_fran from public.klippkort k where k.id = K1) = denna
-                  and (select k.galler_fran from public.klippkort k where k.id = K2) = nasta
+    -- betala_nu (2026-10-21): en plan gäller 30 dagar från betalningen, och inget köp får en månad.
+    ut := ut || jsonb_build_object('t', 'PM inget köp får en månad, inte heller med en i anropet (betala_nu)',
+            'ok', (select k.galler_fran is null from public.klippkort k where k.id = K1)
+                  and (select k.galler_fran is null from public.klippkort k where k.id = K2)
                   and (select k.galler_fran is null from public.klippkort k where k.id = K4),
             'd', '');
 
@@ -18048,25 +18072,24 @@ begin
       t2 := 'gick';
     exception when others then t2 := sqlstate;
     end;
-    ut := ut || jsonb_build_object('t', 'PM en plan köps bara för den här eller nästa månad, från den 1:a',
-            'ok', t = '22023' and t2 in ('22023', '23514'), 'd', t || ' ' || t2);
+    ut := ut || jsonb_build_object('t', 'PM en månad i anropet nekas inte, den läses inte (betala_nu)',
+            'ok', t = 'gick' and t2 = 'gick', 'd', t || ' ' || t2);
 
     perform public.klippkort_betald(K1, 151600, 'pi_rls43k1', 'ch_rls43k1', null, null, null, false);
     perform public.klippkort_betald(K2, 303200, 'pi_rls43k2', 'ch_rls43k2', null, null, null, false);
-    ut := ut || jsonb_build_object('t', 'PM planen gäller till och med månadens sista dag',
-            'ok', (select k.giltigt_till from public.klippkort k where k.id = K1) = (nasta - 1)
-                  and (select k.giltigt_till from public.klippkort k where k.id = K2)
-                      = ((nasta + interval '1 month')::date - 1),
+    ut := ut || jsonb_build_object('t', 'PM planen gäller 30 dagar från betalningen (betala_nu)',
+            'ok', (select k.giltigt_till from public.klippkort k where k.id = K1) = idag + 30
+                  and (select k.giltigt_till from public.klippkort k where k.id = K2) = idag + 30,
             'd', (select string_agg(k.id::text || ' ' || k.giltigt_till, ', ') from public.klippkort k where k.id in (K1, K2)));
 
     insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
                                   timpris_ore, begart_ore, status, till_plan)
     values (K3, Q, 'plan_extra', 'Prov timmar till planen', 'plan', 2, 1, 5, 39900, 75800, 'vantar', K1);
-    ut := ut || jsonb_build_object('t', 'PM timmar till planen tar planens månad',
-            'ok', (select k.galler_fran from public.klippkort k where k.id = K3) = denna, 'd', '');
+    ut := ut || jsonb_build_object('t', 'PM timmar till planen tar planens månad, som är ingen',
+            'ok', (select k.galler_fran is null from public.klippkort k where k.id = K3), 'd', '');
 
-    ut := ut || jsonb_build_object('t', 'PM nästa månads plan går inte att använda än, den här månadens gör det',
-            'ok', (select not s.brukbar from public.klippkort_saldo s where s.id = K2)
+    ut := ut || jsonb_build_object('t', 'PM båda planerna går att använda direkt (betala_nu)',
+            'ok', (select s.brukbar from public.klippkort_saldo s where s.id = K2)
                   and (select s.brukbar from public.klippkort_saldo s where s.id = K1),
             'd', '');
 

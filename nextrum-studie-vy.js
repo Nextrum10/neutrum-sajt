@@ -110,9 +110,9 @@
     if (S.boka && S.boka.sättHos) S.boka.sättHos(t.full_name);
     $('#tr-vem').textContent = t.full_name.split(' ')[0];
     $('#tr-text').placeholder = 'Skriv till ' + t.full_name.split(' ')[0] + '…';
-    /* Rapporterna är brev från studiehjälparen, med namn och bild. De kan
-       ha ritats innan namnet kom; då ritas de om med det. */
-    if (S.rb && S.rb.laddat) ritaBekrafta();
+    /* Rapporten på passets sida är ett brev med namn och bild. Den kan
+       ha ritats innan namnet kom; då ritas den om med det. */
+    if (S.rb && S.rb.laddat && passIdIAdressen()) ritaPassSida();
   }
 
   /* ============ kontakt ============ */
@@ -1709,19 +1709,16 @@
       atgarder: '<a class="btn btn-primary btn-sm" href="#boka">Föreslå ny tid</a>'
     })));
 
-    /* Rapporterna räknas först när både de och passen finns, som under
-       Bekräfta rapport: utan passen ser ett obetalt pass betalt ut. */
-    const att = S.rb.laddat && S.laddatPass ? rbAttBekräfta() : [];
-    if (att.length) {
-      const namn = att.slice(0, 3).map(r => rbTitel(r, rbPass(r)));
-      const obetalda = att.filter(rbObetald).length;
+    /* Det som ska betalas (2026-10-21): bekräftade och genomförda pass
+       som inte är betalda, och tillägg. Räknas först när passen finns. */
+    const betala = S.laddatPass ? attBetala() : [];
+    if (betala.length) {
+      const summa = betala.reduce((n, b) => { const t = tillägg(b); return n + ((t ? t.belopp : passetsPris(b)) || 0); }, 0);
       rader.push(NXStudie.radLank({
-        href: '#bekrafta', ikon: 'rapport',
-        titel: att.length === 1 ? 'En rapport att bekräfta' : att.length + ' rapporter att bekräfta',
-        meta: [namn.join(', ') + (att.length > 3 ? ' …' : ''),
-          obetalda ? (obetalda === 1 ? (att.length === 1 ? 'passet är inte betalt' : 'en med något att betala')
-            : obetalda + ' med något att betala') : null],
-        lank: 'Läs och bekräfta'
+        href: '#betalning', ikon: 'kort',
+        titel: betala.length === 1 ? 'Ett pass att betala' : betala.length + ' pass att betala',
+        meta: [summa ? NXBetalning.kronor(summa) : null, 'Kort eller Klarna'],
+        lank: 'Betala nu'
       }));
     }
 
@@ -1759,7 +1756,7 @@
     /* Dold, inte tom: en ruta som står kvar och säger "inget att
        göra" tar plats överst varje gång man öppnar vyn. */
     grupp.hidden = !rader.length;
-    const antal = föreslagna.length + barnens.length + avslagna.length + att.length + sena.length;
+    const antal = föreslagna.length + barnens.length + avslagna.length + betala.length + sena.length;
     $('#ov-gora-antal').textContent = antal ? String(antal) : '';
     host.innerHTML = rader.join('');
   }
@@ -1788,73 +1785,50 @@
   }
 
   /* ============================================================
-     BEKRÄFTA RAPPORT (Fas 19.1)
+     RAPPORTERNA
 
-     Leo 2026-09-27: rapporten ska komma till familjen i en egen post i
-     menyn, där de läser den och bekräftar den, och är passet inte
-     betalt bekräftar de genom att välja hur det betalas.
-
-     SÄTTEN ATT BETALA (Fas 19.2, Leo samma dag): kort i förväg och kort
-     efter passet, och fakturan efter passet fram till 2026-10-21, då den
-     togs bort. Det första görs när tiden är bekräftad, det andra HÄR, i
-     samband med bekräftelsen, och villkoren säger det. Är passet redan betalt bekräftar familjen
-     ändå: bekräftelsen är att de läst rapporten, betalningen är en egen
-     sak.
-
-     BEKRÄFTELSEN ÄR INTE VILLKORET FÖR BETALNINGEN. Ett pass som hölls
-     ska betalas även om ingen trycker här, och villkoren säger det
-     också. rapport_bekraftelser säger bara att familjen läst rapporten.
-     En rapport står därför kvar under Att bekräfta tills den är
-     bekräftad OCH passet inte längre väntar på betalning — annars hade
-     ett obetalt pass kunnat "bekräftas" bort ur sikte.
-
-     Att välja betalsätt på ett genomfört pass bekräftar dess rapport,
-     här eller på passets sida (rapportFörPass). Den som väljer har
-     rapporten framför sig. Avbryts kassan står rapporten kvar,
-     bekräftad och obetald, och säger det.
-
-     Alla barn på en gång, inte bara det valda i barnväljaren: det som
-     väntar på familjen ska inte gömma sig bakom ett val de gjorde för
-     att läsa något annat.
+     Bekräfta rapport (Fas 19.1, 2026-09-27) var en egen post i menyn där
+     familjen läste rapporten, bekräftade den och betalade ett obetalt pass.
+     Den togs bort 2026-10-21 (Leo: "bekräfta rapport kan tas bort"):
+     familjen betalar med Betala nu när tiden är bekräftad, eller efteråt
+     under Betalning, och läser rapporten på passets sida.
      ============================================================ */
-  S.rb = { rapporter: [], bekräftade: {}, laddat: false };
+  S.rb = { rapporter: [], laddat: false };
 
-  async function laddaBekrafta() {
-    const host = $('#rb-lista');
-    if (!host) return;
+  /* Rapporterna, för passets sida och Mina lektioner. Bekräfta rapport
+     (Fas 19.1 till 2026-10-21) är borta, Leo 2026-10-21: "bekräfta rapport
+     kan tas bort". Familjen betalar med Betala nu och läser rapporten på
+     passet; rapport_bekraftelser står kvar i databasen som historik. */
+  async function laddaRapporterna() {
     const barn = (S.barn || []).map(x => x.id);
-    if (!barn.length) { S.rb.rapporter = []; S.rb.laddat = true; ritaBekrafta(); return; }
-
-    NXStudie.laddarFörsta(host);
-    const [rap, bek] = await Promise.all([
-      supa.from('lesson_reports')
-        .select('id, booking_id, student_id, tutor_id, lesson_date, amne, gick, ai_feedback, raw_notes, needs_practice, next_focus, start_tid, slut_tid, debiterade_min, avvikelse_skal')
-        .in('student_id', barn).order('lesson_date', { ascending: true }),
-      supa.from('rapport_bekraftelser').select('rapport_id, bekraftad_at')
-    ]);
-    if (rap.error) { host.innerHTML = '<div class="empty">' + esc(felText(rap.error)) + '</div>'; return; }
-    /* Kan bekräftelserna inte läsas står varje rapport som obekräftad.
-       Fel åt det säkra hållet: en rapport för mycket att bekräfta, aldrig
-       en som försvinner utan att ha lästs. En bekräftelse till av samma
-       rapport nekas av databasen och räknas här som att det gick. */
-    if (bek.error) console.warn('Bekräftelserna gick inte att läsa', bek.error);
+    if (!barn.length) { S.rb.rapporter = []; S.rb.laddat = true; return; }
+    const rap = await supa.from('lesson_reports')
+      .select('id, booking_id, student_id, tutor_id, lesson_date, amne, gick, ai_feedback, raw_notes, needs_practice, next_focus, start_tid, slut_tid, debiterade_min, avvikelse_skal')
+      .in('student_id', barn).order('lesson_date', { ascending: true });
+    if (rap.error) { console.warn('Rapporterna gick inte att läsa', rap.error); return; }
     S.rb.rapporter = rap.data || [];
-    S.rb.bekräftade = {};
-    (bek.data || []).forEach(x => { S.rb.bekräftade[x.rapport_id] = x.bekraftad_at; });
     S.rb.laddat = true;
-    ritaBekrafta();
-    ritaNotiser();
-    // Passets sida visar Bekräfta rapporten först när bekräftelserna finns.
     if (passIdIAdressen()) ritaPassSida();
   }
 
   const rbPass = r => (r.booking_id && (S.bokningar || []).find(b => b.id === r.booking_id)) || null;
-  const rbObetald = r => { const b = rbPass(r); return !!(b && kanBetalas(b)); };
-  /* Samma urval för listan, siffran i menyn och notisen. Ett obetalt
-     tillägg (Fas 20.1) håller kvar rapporten på samma sätt som ett
-     obetalt pass: övertiden betalas när rapporten bekräftas. */
-  const rbAttBekräfta = () => S.rb.rapporter.filter(r => !S.rb.bekräftade[r.id] || rbObetald(r)
-    || !!(rbPass(r) && tillägg(rbPass(r))));
+  /* Rapporten till ett genomfört pass, för passets sida. */
+  function rapportFörPass(passId) {
+    const b = (S.bokningar || []).find(x => x.id === passId);
+    if (!b || b.status !== 'completed') return null;
+    return S.rb.rapporter.find(r => r.booking_id === passId) || null;
+  }
+
+  /* Det som väntar på att betalas (2026-10-21): bekräftade pass som inte
+     är betalda, genomförda som inte är betalda, och tillägg för ett pass
+     som drog över. Samma urval för Betalning, siffran i menyn, Att göra
+     och notisrutan. Leo: familjen betalar "när man fått de bekräftat att
+     man kan boka lektionen". */
+  const attBetala = () => {
+    const nyckel = b => String(b.wanted_date || '') + String(b.wanted_time || '');
+    return (S.bokningar || []).filter(b => kanBetalas(b) || tillägg(b))
+      .sort((a, c) => nyckel(a).localeCompare(nyckel(c)));
+  };
 
   /* Rubriken på brevet: "Engelska med Theo". */
   function rbTitel(r, b) {
@@ -1976,222 +1950,9 @@
   }
 
   function tilläggKnapp(b, till, liten) {
-    return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-tillagg="' + esc(b.id) + '">'
-      + 'Betala tillägget' + (till.belopp ? ', ' + esc(NXBetalning.kronor(till.belopp)) : '') + '</button>';
+    return '<button type="button" class="btn btn-orange' + (liten ? ' btn-sm' : '') + '" data-tillagg="' + esc(b.id) + '">'
+      + 'Betala nu' + (till.belopp && !liten ? ', ' + esc(NXBetalning.kronor(till.belopp)) : '') + '</button>';
   }
-
-  /* Foten under brevet: det som väntar och valen. Obetalt: betalvalen,
-     och att välja ett ÄR bekräftelsen, så ingen separat
-     bekräfta-knapp (då hade ett obetalt pass gått att bekräfta ur
-     listan utan att betalas). Beloppet är det kassan tar: den
-     debiterade tiden (Fas 20.1). Betalt i förväg och drog över: samma
-     regel för tillägget. Annars: vad som gäller för betalningen, och
-     Bekräfta rapporten. */
-  function rbKort(r) {
-    const b = rbPass(r);
-    const bekräftad = S.rb.bekräftade[r.id];
-    const till = b ? tillägg(b) : null;
-    const visa = b ? '<a class="vy-lank" href="#pass/' + esc(b.id) + '">Visa passet' + NXStudie.IKON.pil + '</a>' : '';
-    let fot;
-    if (b && kanBetalas(b)) {
-      const pris = passetsPris(b);
-      const hjälp = (bekräftad ? 'Rapporten är bekräftad, men passet är inte betalt än.'
-          : 'Passet är inte betalt än. Välj hur ni betalar, så är rapporten bekräftad.')
-        + (b.betalning_status === 'vantar' ? ' En betalning är påbörjad men inte klar.'
-          : b.betalning_status === 'misslyckad' ? ' Förra försöket gick inte igenom.' : '');
-      fot = '<div class="rb-fot-rad"><div>'
-        + (pris ? '<p class="rb-att"><small>Att betala</small><b>' + esc(NXBetalning.kronor(pris)) + '</b></p>' : '')
-        + '<p class="rb-hjalp">' + esc(hjälp) + '</p></div>' + visa + '</div>'
-        + '<div class="vy-betalval">' + betalVal(b) + '</div>';
-    } else if (till) {
-      fot = '<div class="rb-fot-rad"><div>'
-        + (till.belopp ? '<p class="rb-att"><small>Tillägg att betala</small><b>' + esc(NXBetalning.kronor(till.belopp)) + '</b></p>' : '')
-        + '<p class="rb-hjalp">' + esc(tilläggRad(till) + ' ' + (bekräftad ? 'Rapporten är bekräftad, men tillägget är inte betalt än.'
-          : 'Betala tillägget, så är rapporten bekräftad.')) + '</p></div>'
-        + '<div class="rb-fot-knappar">' + visa
-        + '<button type="button" class="btn btn-primary" data-tillagg="' + esc(b.id) + '">Betala tillägget</button></div></div>';
-    } else {
-      const läge = !b || b.fakturerbar === false ? ''
-        : ingetAttBetala(b) ? 'Passet kostar ingenting: ' + påKöpet(b).replace(' på köpet', ' är på köpet') + '.'
-        : b.betalning_status === 'betald' ? (b.klippkort_id ? 'Passet är betalt med timmar.'
-          : medBanken(b) ? 'Passet är betalt med timbanken.' : 'Passet är betalt.')
-        /* Kortet drar priset när rapporten finns (kortet_reserveras), inte
-           när den bekräftas: jobbet går var tionde minut. */
-        : kortBetalar(b) ? 'Priset dras från ' + kortNamn(S.kort.kort) + ' inom några minuter.'
-        : (BETALNING_TEXT[b.betalning_status] ? 'Betalning: ' + BETALNING_TEXT[b.betalning_status].toLowerCase() + '.' : '');
-      fot = '<div class="rb-fot-rad">'
-        + (läge ? '<p class="rb-klart"><span class="rb-bock">' + NXStudie.IKON.bock + '</span><span>' + esc(läge) + '</span></p>' : '<span></span>')
-        + '<div class="rb-fot-knappar">' + visa
-        + '<button type="button" class="btn btn-primary" data-rb-bekrafta="' + esc(r.id) + '">Bekräfta rapporten</button></div></div>';
-    }
-    return rbBrev(r, b, { attr: 'data-rb-rapport="' + esc(r.id) + '"', fot: fot });
-  }
-
-  /* Ritas först när både rapporterna och passen finns: utan passen ser
-     ett obetalt pass betalt ut, och knappen hade bytts under fingret. */
-  function ritaBekrafta() {
-    const host = $('#rb-lista');
-    if (!host || !S.rb.laddat || !S.laddatPass) return;
-    const att = rbAttBekräfta();
-    $('#rb-antal').textContent = att.length ? String(att.length) : '';
-    if (S.sido) S.sido.märke('bekrafta', att.length);
-    ritaÖvGöra();
-
-    host.innerHTML = att.length ? att.map(rbKort).join('')
-      : tomt('Inget att bekräfta', 'När er studiehjälpare har skrivit rapporten efter ett pass står den här.');
-    rbRitaKlara(att);
-  }
-
-  /* DE BEKRÄFTADE, MÅNAD FÖR MÅNAD (2026-09-28). Leo: "bekräftade
-     rapporter ska filtreras efter månad". Samma rad som rapporterna i
-     studiehjälparvyn, den innevarande månaden förvald, och månaden är
-     PASSETS: en rapport från den 28 augusti som bekräftades den 2
-     september står under augusti, som i studiehjälparens lista och i
-     adminvyns Ekonomi. Förut stod de tjugo senast bekräftade, och den
-     tjugoförsta gick inte att hitta härifrån.
-
-     Att bekräfta filtreras inte: det som väntar på familjen ska inte
-     gömma sig bakom en månad, lika lite som bakom barnväljaren.
-
-     Rapporterna finns redan, alla, så månaden väljs här och inte i en
-     ny fråga. Raden skapas första gången listan ritas och står dold
-     tills något är bekräftat: tolv månader ovanför "Inga bekräftade
-     rapporter än" är ett val utan något att välja. Hela rapporterna står
-     också under Mina lektioner → Efter passen. */
-  let rbMånad = null, rbReserv = 0;
-
-  function rbRitaKlara(att = rbAttBekräfta()) {
-    const klara = $('#rb-klara'), rad = $('#rb-manader');
-    if (!klara) return;
-    /* Stegaren, som studiehjälparens rapporter sedan samma dag:
-       ‹ September 2026 › i stället för tolv knappar i sidled. */
-    if (!rbMånad && rad) rbMånad = NXStudie.månadsval(rad, { stegare: true, vidVal: rbBytMånad });
-    const m = rbMånad ? rbMånad.vald() : NXStudie.månadIso(new Date());
-    const g = NXStudie.månadsGräns(m);
-    const alla = S.rb.rapporter.filter(r => att.indexOf(r) === -1);
-    /* lesson_date är ett datum utan tid, så strängen jämförs med
-       strängen, som i adminvyns iMånaden(). */
-    const gjorda = alla.filter(r => r.lesson_date >= g.från && r.lesson_date < g.till)
-      .sort((a, c) => String(c.lesson_date).localeCompare(String(a.lesson_date))
-        || String(S.rb.bekräftade[c.id]).localeCompare(String(S.rb.bekräftade[a.id])));
-    if (rad) rad.hidden = !alla.length;
-    $('#rb-klara-antal').textContent = gjorda.length ? String(gjorda.length) : '';
-
-    /* En lista att gå tillbaka till, inte en vägg av text. */
-    klara.innerHTML = gjorda.length
-      ? gjorda.map(r => {
-          const b = rbPass(r);
-          const inre = '<span class="rb-bock">' + NXStudie.IKON.bock + '</span>'
-            + '<span class="vy-rad-mitt"><span class="vy-rad-titel">' + esc(rbTitel(r, b)) + '</span>'
-            + '<span class="vy-rad-meta"><span>' + esc(versal(NXStudie.dagMedVeckodag(r.lesson_date))) + '</span>'
-            + (r.gick && NXStudie.GICK[r.gick] ? '<span>' + esc(NXStudie.GICK[r.gick]) + '</span>' : '') + '</span></span>'
-            + '<span class="vy-rad-hoger"><small>Bekräftad ' + esc(kortDatum(isoFor(new Date(S.rb.bekräftade[r.id])))) + '</small>'
-            + (b ? '<span class="vy-rad-pil">' + NXStudie.IKON.pil + '</span>' : '') + '</span>';
-          return b ? '<a class="vy-rad" href="#pass/' + esc(b.id) + '">' + inre + '</a>'
-            : '<div class="vy-rad">' + inre + '</div>';
-        }).join('')
-      : alla.length
-        ? tomt('Inga bekräftade rapporter i ' + NXStudie.månadsNamn(m), 'Välj en annan månad ovanför för att se dem.')
-        : tomt('Inga bekräftade rapporter än', 'En rapport ni bekräftat står här.');
-  }
-
-  /* Ett byte av månad håller raden stilla (fälla 4 i CLAUDE.md), men
-     håll() kan inte scrolla förbi sidans slut. Listan står sist på
-     sidan, och har den nya månaden färre rapporter blir sidan kortare:
-     står man längst ned klämmer webbläsaren scrollen, och raden man
-     just tryckte i flyttade sig 84 px nedåt på en telefon i provbänken.
-     Listan behåller därför så mycket av sin höjd som behövs för att
-     raden ska stå kvar, och släpper den när tomrummet hamnat under
-     skärmkanten, där ingen ser sidan krympa. */
-  function rbBytMånad() {
-    const rad = $('#rb-manader'), klara = $('#rb-klara');
-    const förut = klara.offsetHeight;
-    const underSkärmen = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-    NXStudie.håll(rad, () => {
-      klara.style.minHeight = '';
-      rbRitaKlara();
-      rbReserv = Math.max(0, förut - klara.offsetHeight - underSkärmen);
-      if (rbReserv) klara.style.minHeight = (klara.offsetHeight + rbReserv) + 'px';
-    });
-  }
-
-  window.addEventListener('scroll', () => {
-    if (!rbReserv) return;
-    const klara = $('#rb-klara');
-    if (klara.getBoundingClientRect().bottom - rbReserv >= window.innerHeight) {
-      klara.style.minHeight = '';
-      rbReserv = 0;
-    }
-  }, { passive: true });
-
-  /* Svarar true när rapporten är bekräftad, också om den redan var det
-     (23505: bekräftad i en annan flik eller på en annan enhet). Vem och
-     när sätts av databasen; härifrån skickas bara vilken rapport. */
-  async function bekräftaRapport(id, knapp) {
-    if (!id) return false;
-    if (S.rb.bekräftade[id]) return true;
-    const { error } = await supa.from('rapport_bekraftelser').insert({ rapport_id: id });
-    if (error && error.code !== '23505') {
-      /* Beskedet där familjen tryckte: på passets sida eller i
-         passlistan syns #rb-msg inte. */
-      const sek = knapp && knapp.isConnected ? knapp.closest('.vy-sek') : null;
-      säg((sek && sek.querySelector('.ok-msg')) || $('#rb-msg'),
-        'Rapporten gick inte att bekräfta: ' + felText(error), false);
-      return false;
-    }
-    S.rb.bekräftade[id] = new Date().toISOString();
-    return true;
-  }
-
-  /* Rapporten till ett genomfört pass. Ett pass som inte är genomfört
-     har ingen, och där är ett betalsätt en betalning i förväg. */
-  function rapportFörPass(passId) {
-    const b = (S.bokningar || []).find(x => x.id === passId);
-    if (!b || b.status !== 'completed') return null;
-    return S.rb.rapporter.find(r => r.booking_id === passId) || null;
-  }
-
-  /* Bekräfta-knappen där rapporten står utanför listan: passets sida.
-     Bara när det finns något att bekräfta. */
-  function rbKnappFör(b) {
-    const r = rapportFörPass(b.id);
-    return r && !S.rb.bekräftade[r.id]
-      ? '<button type="button" class="btn btn-primary" data-rb-bekrafta="' + esc(r.id) + '">Bekräfta rapporten</button>'
-      : '';
-  }
-
-  /* Ett betalsätt valt på ett genomfört pass bekräftar dess rapport,
-     i listan eller på passets sida (Fas 19.2: betalningen efter passet
-     görs i samband med bekräftelsen). Ritar inte om: kassan kan vara
-     öppen, och laddaPass() ritar listan när betalningen kommit fram.
-     Svarar om det fanns en rapport att bekräfta. */
-  async function bekräftaVid(knapp, passId) {
-    const kort = knapp && knapp.closest('[data-rb-rapport]');
-    const r = kort ? { id: kort.dataset.rbRapport } : rapportFörPass(passId);
-    if (!r) return false;
-    await bekräftaRapport(r.id, knapp);
-    return true;
-  }
-
-  /* Omritning med rubriken Att bekräfta stilla. Kortet under den
-     försvinner eller byter text; rubriken, och beskedet ovanför den,
-     står kvar på sin plats (fälla 4 i CLAUDE.md). */
-  function rbRitaOm(före) {
-    const rubrik = $('#rb-grupp');
-    NXStudie.håll(rubrik, () => { ritaBekrafta(); if (före) före(); });
-    ritaNotiser();
-  }
-
-  document.addEventListener('click', async e => {
-    const k = e.target.closest('[data-rb-bekrafta]');
-    if (!k) return;
-    await medan(k, 'Bekräftar…', async () => {
-      if (!(await bekräftaRapport(k.dataset.rbBekrafta, k))) return;
-      rbRitaOm(() => säg($('#rb-msg'), 'Tack. Rapporten är bekräftad.', true));
-      // Knappen kan också stå på passets sida.
-      if (passIdIAdressen()) ritaPassSida();
-    });
-  });
 
   /* Kortbetalningen (Fas 12.2, "bara kort" enligt Fas 14). Samma
      tre lägen som avvikelsen ej_betalt och OBETALDA_LAGEN i
@@ -2460,7 +2221,7 @@
   /* kod (2026-10-13): en rabattkod på köp av timmar, prövad i databasen
      för varje kort: { kod, beskrivning, pris: { erbjudande: att betala } }. */
   S.erb = { aktiv: false, katalog: [], kort: [], bank: { saldo: 0, varde: null, perPass: {}, finns: false },
-            rorelser: undefined, dragningar: undefined, kod: null, manader: null, manad: {} };
+            rorelser: undefined, dragningar: undefined, kod: null };
   /* Familjens rabatt (familjerabatter, 2026-10-15): kronor av per timme som
      admin satt på familjen, ur min_familjerabatt(). Bara beloppet, aldrig
      koden, och den syns bara där familjen betalar: på korten under
@@ -2471,67 +2232,46 @@
   const familjerabatt = () => Math.max(Number(S.familjerabatt) || 0, 0);
 
   /* ============================================================
-     PLANERNA PER MÅNAD (2026-10-21, planerna_per_manad)
+     PLANERNA I 30 DAGAR (2026-10-21, betala_nu)
 
-     Leo: en plan köps för "Den här månaden" eller "Nästa månad", och
-     timmarna går ut när månaden är slut. Månaderna kommer ur databasen
-     (planens_manader), som räknar dem i Stockholms tid och prövar dem
-     igen när köpet sparas. Timbanken visar båda: "3 av 8 timmar
-     återstår", och "0 av 0" för en månad utan plan.
+     Leo: planen köps "direkt och den används 30 dagar framåt". Samma dag
+     köptes en plan för en kalendermånad, med Den här månaden och Nästa
+     månad på kortet; de valen är borta, och databasen räknar 30 dagar från
+     betalningen (klippkort_betald). Under batteriet står en rad per plan
+     som gäller: "3 av 8 timmar återstår", och när den går ut.
      ============================================================ */
+  const PLANENS_DAGAR = 30;
   const MÅNADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september',
     'oktober', 'november', 'december'];
-  /* "2026-10-01" ger månadens sista dag, "2026-10-31". */
-  function månadensSista(första) {
-    const [år, mån] = String(första).split('-').map(Number);
-    return isoFor(new Date(år, mån, 0));
-  }
+  // Ett köp med en månad (planerna_per_manad, bara 2026-10-21) säger sin månad.
   function månadensNamn(första) {
     return MÅNADER[Number(String(första).split('-')[1]) - 1] || '';
   }
-  /* Vad valet betyder, under knapparna och i rutan före kassan. */
-  function planensMånadText(val) {
-    const m = S.erb.manader;
-    if (!m) return '';
-    const första = val === 'nasta' ? m.nasta : m.denna;
-    const sista = månadensSista(första);
-    if (val === 'nasta') return 'Gäller 1–' + Number(sista.slice(8)) + ' ' + månadensNamn(första);
-    const dagar = Math.round((Date.parse(sista) - Date.parse(m.idag)) / 864e5) + 1;
-    return 'Gäller till och med ' + datumText(sista) + (dagar === 1 ? ', sista dagen i dag' : ', ' + dagar + ' dagar');
-  }
-  /* En plans timmar per månad: den här och nästa, för timbanken. Köp till
-     timmar räknas med sin plan. En plan köpt före 2026-10-21 har ingen
-     månad och räknas till den här så länge den gäller. */
-  function planensMånader() {
-    const m = S.erb.manader;
-    if (!m) return null;
-    const idag = m.idag;
-    const sum = första => S.erb.kort.filter(k => k.status === 'betald' && k.sort === 'plan'
-      && (k.galler_fran ? String(k.galler_fran) === första
-        : första === m.denna && String(k.giltigt_till) >= idag))
-      .reduce((t, k) => ({ kvar: t.kvar + (Number(k.kvar) || 0),
-        alla: t.alla + Math.max((Number(k.timmar) || 0) - (Number(k.aterbetalda_timmar) || 0), 0) }), { kvar: 0, alla: 0 });
-    return [
-      Object.assign({ namn: månadensNamn(m.denna), not: 'Går ut ' + datumText(månadensSista(m.denna)) }, sum(m.denna)),
-      Object.assign({ namn: månadensNamn(m.nasta), not: 'Gäller 1–' + Number(månadensSista(m.nasta).slice(8)) + ' '
-        + månadensNamn(m.nasta) }, sum(m.nasta))
-    ];
-  }
-  function månadsRader() {
-    const ms = planensMånader();
-    if (!ms) return '';
-    return '<div class="tb-manader" aria-label="Planernas timmar per månad">'
-      + ms.map(x => '<div class="tb-manad">'
-        + '<span class="tb-manad-namn">' + esc(x.namn.charAt(0).toUpperCase() + x.namn.slice(1)) + '</span>'
-        + '<span class="tb-manad-tal"><b>' + x.kvar + '</b> av ' + x.alla + ' timmar återstår</span>'
-        + '<span class="tb-manad-not">' + esc(x.not) + '</span>'
-        + '</div>').join('')
+  function planRader() {
+    const idag = isoFor(new Date());
+    const planer = (S.erb.kort || []).filter(k => k.status === 'betald' && k.sort === 'plan'
+      && k.erbjudande !== 'gratis' && !k.till_plan && String(k.giltigt_till || '') >= idag)
+      .sort((a, c) => String(a.giltigt_till).localeCompare(String(c.giltigt_till)));
+    if (!planer.length) return '';
+    // Timmar köpta till en plan räknas med sin plan, som förut.
+    const till = id => (S.erb.kort || []).filter(k => k.status === 'betald' && k.till_plan === id);
+    return '<div class="tb-manader" aria-label="Planernas timmar">'
+      + planer.map(p => {
+        const delar = [p].concat(till(p.id));
+        const kvar = delar.reduce((t, k) => t + (Number(k.kvar) || 0), 0);
+        const alla = delar.reduce((t, k) => t + Math.max((Number(k.timmar) || 0) - (Number(k.aterbetalda_timmar) || 0), 0), 0);
+        return '<div class="tb-manad">'
+          + '<span class="tb-manad-namn">' + esc(p.namn || 'Plan') + '</span>'
+          + '<span class="tb-manad-tal"><b>' + kvar + '</b> av ' + alla + ' timmar återstår</span>'
+          + '<span class="tb-manad-not">Går ut ' + esc(datumText(String(p.giltigt_till))) + '</span>'
+          + '</div>';
+      }).join('')
       + '</div>';
   }
   const medErRabatt = 'med er rabatt';
 
   async function laddaErbjudanden() {
-    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta, rabatt, manader] = await Promise.all([
+    const [flagga, katalog, kort, saldo, uttag, rorelser, dragningar, forsta, rabatt] = await Promise.all([
       supa.from('flaggor').select('aktiv').eq('kod', 'erbjudanden').maybeSingle(),
       /* Alla kolumner (planerna, 2026-10-07): timmar_pa_kopet finns först
          efter migrationen, och en uttrycklig lista med den hade gett ett
@@ -2564,13 +2304,8 @@
       supa.rpc('forsta_timmen_lage'),
       /* Familjens rabatt per timme (familjerabatter, 2026-10-15). Ett fel,
          eller en databas före migrationen, är ingen rabatt. */
-      supa.rpc('min_familjerabatt'),
-      /* Planerna per månad (2026-10-21): den 1:a i den här och nästa månad,
-         ur databasen. Utan funktionen (före migrationen) inget månadsval,
-         och planen köps som förut. */
-      supa.rpc('planens_manader')
+      supa.rpc('min_familjerabatt')
     ]);
-    S.erb.manader = manader.error || !manader.data || !manader.data.denna ? null : manader.data;
     S.forstaTimmen = forsta.error ? null : (forsta.data || null);
     S.familjerabatt = rabatt.error ? 0 : Math.max(Number(rabatt.data) || 0, 0);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
@@ -2743,18 +2478,17 @@
      när det skickas. Knappen gör samma sak direkt, för det som timmarna
      inte hann. */
   function betalaKnapp(b, liten) {
+    /* Alla betalknappar är orange och heter Betala nu (2026-10-21, Leo:
+       "Alla betala knappar ska vara oranga och stå betala nu"). Timmarna
+       står först när de räcker, och säger att det är timmarna. */
     const tim = kortFör(b);
     const bank = !tim && bankFör(b);
-    const kortknapp = '<button type="button" class="btn ' + (tim || bank ? 'btn-ghost' : 'btn-primary') + (liten ? ' btn-sm' : '')
-      + '" data-betala="' + esc(b.id) + '">'
-      + (b.betalning_status === 'misslyckad' ? 'Försök betala igen' : 'Betala med kort') + '</button>';
-    if (bank) {
-      return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-timbank="' + esc(b.id) + '">'
-        + 'Betala med timbanken</button>' + kortknapp;
-    }
+    const sm = liten ? ' btn-sm' : '';
+    const kortknapp = '<button type="button" class="btn ' + (tim || bank ? 'btn-ghost' : 'btn-orange') + sm
+      + '" data-betala="' + esc(b.id) + '">' + (tim || bank ? 'Betala nu med kort eller Klarna' : 'Betala nu') + '</button>';
+    if (bank) return '<button type="button" class="btn btn-orange' + sm + '" data-timbank="' + esc(b.id) + '">Betala med timbanken</button>' + kortknapp;
     if (!tim) return kortknapp;
-    return '<button type="button" class="btn btn-primary' + (liten ? ' btn-sm' : '') + '" data-timmar="' + esc(b.id) + '">'
-      + 'Betala med timmar</button>' + kortknapp;
+    return '<button type="button" class="btn btn-orange' + sm + '" data-timmar="' + esc(b.id) + '">Betala med timmar</button>' + kortknapp;
   }
   /* EN knapp på raden i en lista (2026-09-28, Leo: "det behöver se bra
      ut på mobil och enkelt att använda"). Två knappar bredvid ett märke
@@ -2765,8 +2499,8 @@
   function radBetala(b) {
     const tim = kortFör(b);
     const bank = !tim && bankFör(b);
-    if (tim) return '<button type="button" class="btn btn-primary btn-sm" data-timmar="' + esc(b.id) + '">Betala med timmar</button>';
-    if (bank) return '<button type="button" class="btn btn-primary btn-sm" data-timbank="' + esc(b.id) + '">Betala med timbanken</button>';
+    if (tim) return '<button type="button" class="btn btn-orange btn-sm" data-timmar="' + esc(b.id) + '">Betala med timmar</button>';
+    if (bank) return '<button type="button" class="btn btn-orange btn-sm" data-timbank="' + esc(b.id) + '">Betala med timbanken</button>';
     /* Kortet reserveras (2026-10-13): Betala i förväg är borta med
        strömbrytaren på. Knappen väljer kortet, och ett kort som saknas
        eller nekades är familjens drag. */
@@ -2778,9 +2512,8 @@
     if (kortKanVäljas(b)) {
       return '<button type="button" class="btn btn-orange btn-sm" data-kort-val="' + esc(b.id) + '">Välj kort</button>';
     }
-    return b.betalning_status === 'misslyckad'
-      ? '<button type="button" class="btn btn-primary btn-sm" data-betala="' + esc(b.id) + '">Försök betala igen</button>'
-      : '<button type="button" class="btn btn-orange btn-sm" data-betala="' + esc(b.id) + '">Betala i förväg</button>';
+    // Också efter ett nekat försök: samma knapp, samma ord (2026-10-21).
+    return '<button type="button" class="btn btn-orange btn-sm" data-betala="' + esc(b.id) + '">Betala nu</button>';
   }
   const BETALNING_TEXT = {
     ingen: 'Inte betalt än',
@@ -2808,10 +2541,10 @@
     const val = [];
     if (tim) {
       val.push(V({ attr: 'data-timmar="' + esc(b.id) + '"', ikon: 'timmar', titel: 'Betala med timmar',
-        under: dragText(tim), först: true }));
+        under: dragText(tim), först: true, orange: true }));
     } else if (bank) {
       val.push(V({ attr: 'data-timbank="' + esc(b.id) + '"', ikon: 'bank', titel: 'Betala med timbanken',
-        under: tidLängd(Number(b.duration_min || 60)) + ' ur timbanken', först: true }));
+        under: tidLängd(Number(b.duration_min || 60)) + ' ur timbanken', först: true, orange: true }));
     }
     /* Före passet, med kortreservationen på (2026-10-13): kortet väljs och
        reserveras två dagar före passet. Efter passet är valen som förut. */
@@ -2821,8 +2554,10 @@
       return val.join('');
     }
     val.push(V({ attr: 'data-betala="' + esc(b.id) + '"', ikon: 'kort',
-      titel: b.betalning_status === 'misslyckad' ? 'Försök betala igen' : 'Betala med kort',
-      under: pris ? NXBetalning.kronor(pris) + ' dras direkt' : 'Beloppet står i kassan', först: !tim && !bank }));
+      titel: 'Betala nu',
+      under: [pris ? NXBetalning.kronor(pris) : null, 'Kort eller Klarna',
+        b.betalning_status === 'misslyckad' ? 'förra försöket gick inte igenom' : null].filter(Boolean).join(' · '),
+      först: !tim && !bank, orange: !tim && !bank }));
     return val.join('');
   }
   /* ============================================================
@@ -2875,17 +2610,16 @@
   }
   /* Ett erbjudande går genom samma kassa, med koden i stället för ett
      pass (Fas 16.1). Beloppet räknas av stripe-checkout. */
-  async function startaKöp(kod, ui, extra, månad) {
+  async function startaKöp(kod, ui, extra) {
     /* En rabattkod följer med när den gäller planen (2026-10-13; bara
        planerna sedan 2026-10-21). Kassan prövar den igen och drar det
        databasen räknat fram. Timmar till planen (2026-10-14) och Fyll
-       timbanken köps utan kod: extra bär antalet timmar. En plan bär sin
-       månad (2026-10-21), och villkor: true säger att köpvillkoren
-       kryssats i före kassan. */
+       timbanken köps utan kod: extra bär antalet timmar. villkor: true
+       säger att köpvillkoren kryssats i före kassan. */
     const plan = S.erb.katalog.some(e => e.kod === kod && e.sort === 'plan');
     const rk = !extra && plan && S.erb.kod && S.erb.kod.pris[kod] != null ? S.erb.kod.kod : null;
     return startaKassa(Object.assign({ erbjudande: kod, retur: location.origin, ui: ui, villkor: true },
-      rk ? { rabattkod: rk } : {}, månad ? { manad: månad } : {}, extra || {}));
+      rk ? { rabattkod: rk } : {}, extra || {}));
   }
   async function startaKassa(body) {
     const svar = await supa.functions.invoke('stripe-checkout', { body: body });
@@ -3354,10 +3088,6 @@
       knapp: 'Dra ' + ord(behov)
     });
     if (!ok) return;
-    /* Rapporten bekräftas först när familjen sagt ja i rutan (Fas 19.2:
-       betalsättet ÄR bekräftelsen). Förut skrevs bekräftelsen innan
-       rutan visades, och ett Avbryt lämnade den kvar. */
-    await bekräftaVid(knapp, passId);
     await medan(knapp, 'Drar…', async () => {
       const svar = await supa.functions.invoke('klippkort-betala', { body: { pass: passId } });
       if (svar.error) { beskedNära(knapp, await funktionsText(svar.error), false); return; }
@@ -3381,7 +3111,6 @@
       knapp: 'Dra ' + tidLängd(behov)
     });
     if (!ok) return;
-    await bekräftaVid(knapp, passId);
     await medan(knapp, 'Drar…', async () => {
       const svar = await supa.functions.invoke('klippkort-betala', { body: { pass: passId, timbank: true } });
       if (svar.error) { beskedNära(knapp, await funktionsText(svar.error), false); return; }
@@ -3409,20 +3138,18 @@
   async function köpErbjudande(knapp, kod) {
     const e = S.erb.katalog.find(x => x.kod === kod);
     if (!e || !S.erb.aktiv || S.väntar) return;
-    /* Planens månad (2026-10-21), när databasen har månaderna. */
-    const månad = e.sort === 'plan' && S.erb.manader ? (S.erb.manad[kod] || 'denna') : null;
     const kodPris = S.erb.kod && S.erb.kod.pris[kod] != null ? Number(S.erb.kod.pris[kod]) : null;
     const ok = await NXStudie.kassansVillkor({
       titel: 'Köp ' + e.namn,
       rader: [erbTimmar(e) + ' · ' + NXBetalning.kronor(kodPris != null ? kodPris : medRabatt(e).pris)]
-        .concat(månad ? [planensMånadText(månad)] : []),
-      text: 'Betalningen görs med kort i nästa steg.'
+        .concat(e.sort === 'plan' ? ['Gäller i ' + PLANENS_DAGAR + ' dagar från köpet'] : []),
+      text: 'Ni betalar med kort eller Klarna i nästa steg.'
     });
     if (!ok) return;
     await köpIKassan(knapp, kod, null, 'Köp ' + e.namn, svar => erbTimmar(e) + ' · '
       + NXBetalning.kronor(svar.belopp_ore != null ? svar.belopp_ore : e.pris_ore)
       + medVad(Number(svar.familjerabatt_ore) > 0,
-        Number(svar.rabatt_ore) > Number(svar.familjerabatt_ore || 0) && S.erb.kod ? S.erb.kod.kod : null), månad);
+        Number(svar.rabatt_ore) > Number(svar.familjerabatt_ore || 0) && S.erb.kod ? S.erb.kod.kod : null));
   }
 
   /* "med er rabatt", "med koden X" eller båda, efter beloppet i kassan. */
@@ -3434,10 +3161,10 @@
   /* Ett köp i samma kassa som passen. extra följer med till
      stripe-checkout (timmarna till planen), och vad(svar) är raden under
      rubriken: beloppet där är det kassan räknat. */
-  async function köpIKassan(knapp, kod, extra, titel, vad, månad) {
+  async function köpIKassan(knapp, kod, extra, titel, vad) {
     await medan(knapp, 'Öppnar…', async () => {
       const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
-      const svar = await startaKöp(kod, 'inbaddad', extra, månad);
+      const svar = await startaKöp(kod, 'inbaddad', extra);
       if (!svar) return;
       if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
         const Stripe = await stripeKlar;
@@ -3453,7 +3180,7 @@
             return;
           } catch (err) { console.error('Den inbäddade kassan gick inte att öppna', err); stängBetalpanel(); }
         }
-        const reserv = await startaKöp(kod, 'sida', extra, månad);
+        const reserv = await startaKöp(kod, 'sida', extra);
         if (reserv && reserv.url) { location.href = reserv.url; return; }
         if (!reserv) return;
       } else if (svar.url) {
@@ -3506,7 +3233,8 @@
        i taget, och kortet säger det med samma ord som prissidan (Leo
        2026-10-08 valde de orden framför "bindning"). */
     const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
-    const vad = timmarOrd(Number(e.timmar)) + ' · ' + (e.sort === 'plan' && Number(e.giltig_manader) === 1 ? 'en månad i taget' : 'gäller i ' + mån);
+    // En plan gäller 30 dagar från köpet (2026-10-21, Leo: "används 30 dagar framåt").
+    const vad = timmarOrd(Number(e.timmar)) + ' · ' + (e.sort === 'plan' ? PLANENS_DAGAR + ' dagar, obundet' : 'gäller i ' + mån);
     /* Märket säger vad erbjudandet ger: timmen på köpet, eller timpriset
        utan bindning överstruket och planens bredvid, som på prissidan
        (Leo 2026-10-08: "Ta bort -5% ... skriv istället 399 streck över
@@ -3615,17 +3343,10 @@
     if (!(S.erb.aktiv && !S.väntar)) {
       return '<button type="button" class="btn btn-ghost btn-sm" disabled>' + (S.väntar ? 'Köp' : 'Snart') + '</button>';
     }
-    const köp = '<button type="button" class="btn btn-orange btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>';
-    /* Planerna per månad (2026-10-21): den här eller nästa månad, när
-       databasen har månaderna. Fyll timbanken har ingen månad. */
-    if (e.sort !== 'plan' || !S.erb.manader) return köp;
-    const vald = S.erb.manad[e.kod] || 'denna';
-    return '<div class="erb-manad" role="group" aria-label="Vilken månad planen gäller">'
-      + ['denna', 'nasta'].map(m => '<button type="button" class="erb-manad-val" data-erb-manad="' + m + '" data-erb-kod="'
-        + esc(e.kod) + '" aria-pressed="' + (vald === m) + '">' + (m === 'denna' ? 'Den här månaden' : 'Nästa månad')
-        + '</button>').join('')
-      + '</div><p class="erb-manad-not" data-erb-manad-not="' + esc(e.kod) + '">' + esc(planensMånadText(vald)) + '</p>'
-      + köp;
+    /* En plan gäller 30 dagar från köpet (2026-10-21); Den här månaden och
+       Nästa månad stod här samma dag och är borta. */
+    return (e.sort === 'plan' ? '<p class="erb-manad-not">Gäller i ' + PLANENS_DAGAR + ' dagar från köpet</p>' : '')
+      + '<button type="button" class="btn btn-orange btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>';
   };
 
   /* Klippkorten som EN kolumn bredvid planerna, som fälls ut
@@ -3910,7 +3631,7 @@
       + '<div class="erb-mitt-topp"><b>Tillgängliga timmar</b>'
       + (minuter ? '<span>och ' + esc(tidLängd(minuter) + ' sparat') + '</span>' : '') + '</div>'
       + '<div data-batteri="erbjudanden"></div>'
-      + månadsRader()
+      + planRader()
       + (t.kvar || minuter ? ''
         : '<p class="erb-bank-text">Fyll timbanken med en plan eller med timmar nedan, så betalar timmarna era pass av sig själva.</p>')
       + '</div>'
@@ -4113,7 +3834,7 @@
     if (!host) return;
     const kort = S.erb.kort;
     /* Batteriet (2026-10-15) överst, när det finns timmar att visa. */
-    const batteri = (batteriTimmar().alla ? '<div data-batteri="profil"></div>' : '') + månadsRader();
+    const batteri = (batteriTimmar().alla ? '<div data-batteri="profil"></div>' : '') + planRader();
     if (!kort.length) {
       /* Har familjen timmar för tips står de under, så då är det bara
          köpta timmar och gratistimmar den saknar. */
@@ -4267,7 +3988,6 @@
     byggSchema();
     ritaAttBetala();
     ritaBetalda();
-    ritaBekrafta();
     // Timbankens rörelser under Profil nämner passen vid namn.
     ritaTimbankProfil();
     // Förslagen som väntar tar av timmarna överst i Boka pass.
@@ -4307,13 +4027,9 @@
            (Fas 12.2). Ett pass som studiehjälparen ännu inte tackat ja
            till kan avböjas, och då hade varje förfrågan blivit en
            återbetalning: en kortavgift vi inte får tillbaka, och en
-           familj som undrar vad som hände. Ett genomfört pass betalas
-           under Bekräfta rapport, där rapporten står (Fas 19.2): ett
-           betalsätt valt här hade bekräftat en rapport familjen aldrig
-           sett, och bekräftelsen går inte att ta tillbaka. */
-        knappar = b.status === 'completed'
-          ? '<a class="btn btn-primary btn-sm" href="#bekrafta">Till rapporten</a>'
-          : radBetala(b);
+           familj som undrar vad som hände. Ett genomfört pass betalas med
+           samma knapp (2026-10-21: Bekräfta rapport är borta). */
+        knappar = radBetala(b);
       }
 
       /* Platsen står direkt på raden, och passRad ritar den. Ett pass
@@ -4341,23 +4057,17 @@
      av den. Skillnaden är vad funktionen ombeds ta betalt för och vad
      panelen säger överst. */
   async function betalaIKassan(knapp, passId, tillägg) {
-    // Betalar ni ett genomfört pass bekräftar ni dess rapport (Fas 19.2).
-    const påRapport = !!knapp.closest('[data-rb-rapport]') || !!rapportFörPass(passId);
-    /* Köpvillkoren först (2026-10-21): avbryter ni här händer ingenting,
-       inte heller att rapporten bekräftas. */
+    /* Köpvillkoren först (2026-10-21): avbryter ni här händer ingenting. */
     const b = (S.bokningar || []).find(x => x.id === passId);
     if (!await NXStudie.kassansVillkor({
       titel: tillägg ? 'Betala tillägget' : 'Betala passet',
       rader: b ? [(b.subject ? b.subject + ', ' : '') + datumText(b.wanted_date)
         + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '')] : [],
-      text: 'Beloppet står i kassan, och betalningen görs med kort i nästa steg.'
+      text: 'Beloppet står i kassan, och ni betalar med kort eller Klarna i nästa steg.'
     })) return;
     await medan(knapp, 'Öppnar…', async () => {
       // Stripe.js hämtas medan sessionen skapas, inte efter.
       const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
-      /* Fas 19.1: på en rapport bekräftar valet den. Före kassan, för
-         reserven lämnar sidan och tar ett pågående anrop med sig. */
-      await bekräftaVid(knapp, passId);
       const svar = await startaBetalning(passId, 'inbaddad', tillägg);
       if (!svar) return;
       if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
@@ -4376,10 +4086,6 @@
       }
       alert('Betalningen kunde inte öppnas. Försök igen, eller hör av dig till oss.');
     });
-    /* Rapporten är bekräftad nu, betald eller inte. Kortet ska säga
-       det också om kassan aldrig öppnades eller stängs utan betalning.
-       stängBetalpanel() hittar den nya knappen om kortet ritats om. */
-    if (påRapport) rbRitaOm();
   }
 
   /* Panelens rubrik för ett tillägg. Minuterna och beloppet är
@@ -4448,17 +4154,6 @@
     if (tb) { await betalaMedBanken(tb, tb.dataset.timbank); return; }
     const köp = e.target.closest('[data-kop]');
     if (köp) { await köpErbjudande(köp, köp.dataset.kop); return; }
-    /* Planens månad (2026-10-21): bara knapparna och raden under byts,
-       så att kortet inte byter höjd under fingret. */
-    const mån = e.target.closest('[data-erb-manad]');
-    if (mån) {
-      const kod = mån.dataset.erbKod;
-      S.erb.manad[kod] = mån.dataset.erbManad;
-      $$('[data-erb-manad][data-erb-kod="' + CSS.escape(kod) + '"]').forEach(x =>
-        x.setAttribute('aria-pressed', String(x.dataset.erbManad === S.erb.manad[kod])));
-      $$('[data-erb-manad-not="' + CSS.escape(kod) + '"]').forEach(x => { x.textContent = planensMånadText(S.erb.manad[kod]); });
-      return;
-    }
     if (e.target.closest('#erb-kod-anvand')) { await provaErbKod(); return; }
     /* Köp till timmar (2026-10-14): Välj själv, stegen och kassan. */
     if (e.target.closest('[data-extra-valj]')) {
@@ -4583,49 +4278,17 @@
       });
     }
 
-    /* Ingen notis om pass att betala i förväg (Fas 19.2). Sedan
-       familjen får betala efter passet är ett bekräftat, obetalt pass
-       inte deras drag: det är ett val. Det som faktiskt ska betalas, ett
-       genomfört pass, står i notisen om rapporten nedan, där det betalas. */
-
-    /* En ny rapport (Fas 19.1). Rapporten mejlas aldrig (notis_mejlbara),
-       så den här raden och siffran i menyn är det enda som säger att
-       den kommit.
-
-       Raden säger vad som är kvar på passet (2026-10-12, Leo: "ett pass
-       att bekräfta ska det heta om det redan är betalt. ett pass att
-       betala och bekräfta ska det heta om det inte är betalt än"). Ett
-       pass vars rapport redan är bekräftad men som inte är betalt (kassan
-       avbröts) har bara betalningen kvar, och heter Ett pass att betala.
-       Ett obetalt tillägg (Fas 20.1) är också något att betala. Att
-       bekräfta säger aldrig "betalt": ett pass på noll kronor har inget
-       att betala här, men är inte betalt. */
-    const rapporterAtt = S.rb.laddat && S.laddatPass ? rbAttBekräfta() : [];
-    const nåttAttBetala = r => rbObetald(r) || !!(rbPass(r) && tillägg(rbPass(r)));
-    const betalaOchBekräfta = rapporterAtt.filter(r => nåttAttBetala(r) && !S.rb.bekräftade[r.id]).length;
-    const baraBetala = rapporterAtt.filter(r => nåttAttBetala(r) && S.rb.bekräftade[r.id]).length;
-    const baraBekräfta = rapporterAtt.length - betalaOchBekräfta - baraBetala;
-    const passAtt = (n, vad) => (n === 1 ? 'Ett pass' : n + ' pass') + ' att ' + vad;
-    if (betalaOchBekräfta) {
+    /* Pass att betala (2026-10-21, Leo: familjen betalar "när man fått de
+       bekräftat att man kan boka lektionen"). Ett bekräftat, obetalt pass
+       är nu familjens drag, och ett genomfört ännu mer. */
+    const betala = S.laddatPass ? attBetala() : [];
+    if (betala.length) {
+      const efter = betala.filter(b => b.status === 'completed').length;
       poster.push({
-        rubrik: passAtt(betalaOchBekräfta, 'betala och bekräfta'),
-        text: 'Läs vad ni gick igenom och välj hur ni betalar.',
-        mål: '#rb-lista'
-      });
-    }
-    if (baraBetala) {
-      poster.push({
-        rubrik: passAtt(baraBetala, 'betala'),
-        text: (baraBetala === 1 ? 'Rapporten är bekräftad.' : 'Rapporterna är bekräftade.')
-          + ' Kvar är att välja hur ni betalar.',
-        mål: '#rb-lista'
-      });
-    }
-    if (baraBekräfta) {
-      poster.push({
-        rubrik: passAtt(baraBekräfta, 'bekräfta'),
-        text: 'Läs vad ni gick igenom på passet och bekräfta rapporten.',
-        mål: '#rb-lista'
+        rubrik: (betala.length === 1 ? 'Ett pass' : betala.length + ' pass') + ' att betala',
+        text: efter ? (efter === 1 ? 'Ett av dem har redan hållits.' : efter + ' av dem har redan hållits.') + ' Betala med kort eller Klarna.'
+          : 'Betala med kort eller Klarna, så är det klart före passet.',
+        mål: '#bet-att-betala'
       });
     }
 
@@ -5112,106 +4775,76 @@
      kan därför inte tappa bort ett.
      ============================================================ */
 
-  /* Pass som går att betala. Ur samma S.bokningar som Mina lektioner,
-     så att ett pass som betalas på passets sida försvinner här utan en
-     egen hämtning. Knappen går rakt till Stripes kassa — samma
-     data-betala som överallt. Ett genomfört pass leder i stället till
-     Bekräfta rapport.
-
-     Sedan 2026-09-28 i två grupper: det som väntar efter passet och det
-     som går att betala i förväg. Förut en lista, där "Till rapporten"
-     och "Betala med timmar" stod om varandra under rubriken Betala i
-     förväg. Tillägget för ett pass som drog över (Fas 20.1) står med
-     det genomförda, för det betalas på samma ställe. */
+  /* Det som ska betalas, i datumordning: bekräftade pass, genomförda pass
+     och tillägg (attBetala). Ur samma S.bokningar som Mina lektioner, så
+     att ett pass som betalas på passets sida försvinner här utan en egen
+     hämtning. Varje rad har EN knapp, Betala nu (2026-10-21, Leo: "Alla
+     betala knappar ska vara oranga och stå betala nu"), och samma
+     data-betala som överallt. Förut två grupper, Efter passet (som ledde
+     till Bekräfta rapport) och Före passet. */
   function ritaAttBetala() {
     const host = $('#bet-att-betala');
     if (!host) return;
     const kronor = NXBetalning.kronor;
-    const nyckel = b => String(b.wanted_date || '') + String(b.wanted_time || '');
-    const alla = (S.bokningar || []).slice().sort((a, c) => nyckel(a).localeCompare(nyckel(c)));
-    const efter = alla.filter(b => (b.status === 'completed' && kanBetalas(b)) || tillägg(b));
-    const iFörväg = alla.filter(b => b.status !== 'completed' && kanBetalas(b));
-    /* Siffran i menyn ska betyda "något väntar på er", inte "här
-       finns saker". Sedan Fas 19.2 väntar ingenting här: att betala i
-       förväg är ett val, och det genomförda passet räknas under
-       Bekräfta rapport. Därför ingen siffra alls. */
-    ritaBetSam(efter, iFörväg);
-
-    const efterHost = $('#bet-efter');
-    if (efterHost) {
-      $('#bet-efter-grupp').hidden = !efter.length;
-      $('#bet-efter-antal').textContent = efter.length ? String(efter.length) : '';
-      efterHost.innerHTML = efter.map(b => {
-        const till = tillägg(b);
-        const belopp = till ? till.belopp : passetsPris(b);
-        return NXKontakt.passRad(b, {
-          href: '#pass/' + b.id,
-          med: medBarn(b),
-          tid: false,
-          plats: false,
-          under: till ? 'Passet drog över med ' + tidLängd(till.minuter) + ', tillägget betalas med rapporten'
-            : b.betalning_status === 'misslyckad' ? 'Förra försöket gick inte igenom'
-            : 'Genomfört, betalas när ni bekräftar rapporten',
-          lage: null,
-          atgarder: (belopp ? '<span class="vy-rad-belopp">' + esc(kronor(belopp)) + '</span>' : '')
-            + '<a class="btn btn-primary btn-sm" href="#bekrafta">Till rapporten</a>'
-        });
-      }).join('');
-    }
-
-    $('#bet-att-antal').textContent = iFörväg.length ? String(iFörväg.length) : '';
-    if (!iFörväg.length) {
-      host.innerHTML = S.kort.pa
-        ? tomt('Inget att välja före passet',
-          'När er studiehjälpare bekräftat ett pass kan ni välja kort för det här, så reserveras priset två dagar före passet och dras när studiehjälparen har skrivit rapporten. Annars betalar ni efter passet, när ni bekräftar rapporten.')
-        : tomt('Inget att betala i förväg',
-          'När er studiehjälpare bekräftat ett pass kan ni betala det här i förväg. Annars betalar ni efter passet, när ni bekräftar rapporten.');
+    const idag = isoFor(new Date());
+    const lista = attBetala();
+    ritaBetSam(lista);
+    if (S.sido) S.sido.märke('betalning', lista.length);
+    $('#bet-att-antal').textContent = lista.length ? String(lista.length) : '';
+    if (!lista.length) {
+      host.innerHTML = tomt('Inget att betala',
+        'När er studiehjälpare har bekräftat ett pass står det här, och ni betalar det med Betala nu, med kort eller Klarna.');
       return;
     }
-    host.innerHTML = iFörväg.map(b => {
-      const pris = passetsPris(b);
+    host.innerHTML = lista.map(b => {
+      const till = tillägg(b);
+      const belopp = till ? till.belopp : passetsPris(b);
+      const läge = till ? 'Tillägg: passet drog över med ' + tidLängd(till.minuter)
+        : b.status === 'completed' ? 'Passet har hållits'
+        : b.wanted_date < idag ? 'Passet har varit'
+        : 'Bekräftat ' + NXStudie.relativDag(b.wanted_date);
+      const försök = (till ? till.status : b.betalning_status) === 'misslyckad' ? 'Förra försöket gick inte igenom'
+        : (till ? till.status : b.betalning_status) === 'vantar' ? 'Betalningen är påbörjad men inte klar' : null;
       return NXKontakt.passRad(b, {
         href: '#pass/' + b.id,
         med: medBarn(b),
         plats: false,
-        under: [pris ? kronor(pris) : null,
-          b.betalning_status === 'misslyckad' ? 'Förra försöket gick inte igenom'
-          : b.betalning_status === 'vantar' ? 'Betalningen är påbörjad men inte klar'
-          : b.wanted_date < isoFor(new Date()) ? 'Passet har varit. Hölls det, betala det här' : null].filter(Boolean).join(' · '),
+        under: [läge, försök].filter(Boolean).join(' · '),
         lage: null,
-        atgarder: radBetala(b)
+        atgarder: (belopp ? '<span class="vy-rad-belopp">' + esc(kronor(belopp)) + '</span>' : '')
+          + (till ? tilläggKnapp(b, till, true) : radBetala(b))
       });
     }).join('');
   }
 
-  /* Summan överst i Betalning: tre rutor som svarar på "är vi skyldiga
-     något?" innan någon läst en rad. Efter passet är ert drag och får
-     lerans ton; resten är besked. Betalt räknas på betald_at i den här
-     månaden, med det som gått tillbaka avdraget, och timmarna ur
-     klippkortet står för sig: de är inga kronor. */
-  function ritaBetSam(efter, iFörväg) {
+  /* Summan överst i Betalning: vad som är kvar att betala och vad som
+     betalats den här månaden, innan någon läst en rad. Att betala är ert
+     drag och står i orange. Betalt räknas på betald_at i den här månaden,
+     med det som gått tillbaka avdraget, och timmarna ur timbanken står för
+     sig: de är inga kronor. */
+  function ritaBetSam(lista) {
     const host = $('#bet-sam');
     if (!host) return;
     const kronor = NXBetalning.kronor;
-    const summa = (lista, f) => lista.reduce((n, b) => n + (f(b) || 0), 0);
-    const efterKr = summa(efter, b => { const t = tillägg(b); return t ? t.belopp : passetsPris(b); });
-    const förvägKr = summa(iFörväg, passetsPris);
+    const summa = (l, f) => l.reduce((n, b) => n + (f(b) || 0), 0);
+    const attKr = summa(lista, b => { const t = tillägg(b); return t ? t.belopp : passetsPris(b); });
     const månad = isoFor(new Date()).slice(0, 7);
     const iMånaden = (S.bokningar || []).filter(b => BETALDA.indexOf(b.betalning_status) !== -1
       && b.betald_at && isoFor(new Date(b.betald_at)).slice(0, 7) === månad);
     const betaltKr = summa(iMånaden, b => Math.max(Number(b.betalt_ore || 0) - Number(b.aterbetald_ore || 0), 0));
     const timmarPass = iMånaden.filter(b => b.klippkort_id && !Number(b.betalt_ore || 0));
     const timmar = summa(timmarPass, b => Math.max(1, Math.round(Number(b.duration_min || 60) / 60)));
+    const tillbaka = summa((S.bokningar || []).filter(b => b.betald_at && isoFor(new Date(b.betald_at)).slice(0, 7) === månad),
+      b => Number(b.aterbetald_ore || 0));
     const ruta = (klass, etikett, belopp, under) => '<div' + (klass ? ' class="' + klass + '"' : '') + '>'
       + '<small>' + esc(etikett) + '</small><b>' + esc(belopp) + '</b><span>' + esc(under) + '</span></div>';
     host.innerHTML =
-      ruta(efter.length ? 'ar-gor' : '', 'Efter passet', efter.length ? kronor(efterKr) : '0 kr',
-        efter.length ? (efter.length === 1 ? '1 pass väntar på er' : efter.length + ' pass väntar på er') : 'Inget väntar på er')
-      + ruta('', 'Före passet', iFörväg.length ? kronor(förvägKr) : '0 kr',
-        iFörväg.length ? (iFörväg.length === 1 ? '1 bekräftat pass' : iFörväg.length + ' bekräftade pass') : 'Inget bekräftat pass')
+      ruta(lista.length ? 'ar-betala' : '', 'Att betala', lista.length ? kronor(attKr) : '0 kr',
+        lista.length ? (lista.length === 1 ? '1 pass väntar på er' : lista.length + ' pass väntar på er') : 'Allt är betalt')
       + ruta('', 'Betalt i ' + (NX.MANADER[new Date().getMonth()] || 'månaden'), kronor(betaltKr),
-        timmar ? 'och ' + (timmar === 1 ? '1 timme' : timmar + ' timmar') + ' ur timbanken'
-          : iMånaden.length ? (iMånaden.length === 1 ? '1 pass' : iMånaden.length + ' pass') : 'Inget betalt än');
+        [timmar ? 'och ' + (timmar === 1 ? '1 timme' : timmar + ' timmar') + ' ur timbanken'
+          : iMånaden.length ? (iMånaden.length === 1 ? '1 pass' : iMånaden.length + ' pass') : 'Inget betalt än',
+        tillbaka ? kronor(tillbaka) + ' tillbaka' : null].filter(Boolean).join(' · '));
   }
 
   /* Det betalda, senaste betalningen först. Beloppet är det Stripe
@@ -5488,7 +5121,7 @@
 
   /* Sektionsbytet. Passets sida är en egen sektion utan egen post i
      menyn: den hör till där man kom ifrån. */
-  const SEKTIONSNAMN = { oversikt: 'Översikt', lektioner: 'Mina lektioner', betalning: 'Betalning', boka: 'Boka pass', bekrafta: 'Bekräfta rapport' };
+  const SEKTIONSNAMN = { oversikt: 'Översikt', lektioner: 'Mina lektioner', betalning: 'Betalning', boka: 'Boka pass' };
   /* ============================================================
      BARNENS TRÅDAR (barnets_chatt, 2026-10-06)
 
@@ -5788,8 +5421,9 @@
         : kortBesked(b)
         ? { text: 'Passet är bokat. ' + ses + ' ' + kortBesked(b), ton: kortBetalar(b) ? 'klart' : 'fraga' }
         : kortKanVäljas(b)
-        ? { text: 'Passet är bokat. ' + ses + ' Välj kort, så reserveras priset två dagar före passet, eller betala efter passet när ni bekräftar rapporten.', ton: 'klart' }
-        : { text: 'Passet är bokat. ' + ses + ' Betala nu, eller efter passet när ni bekräftar rapporten.', ton: 'klart' };
+        ? { text: 'Passet är bokat. ' + ses + ' Välj kort, så reserveras priset två dagar före passet.', ton: 'klart' }
+        /* Betala nu (2026-10-21): ett bekräftat, obetalt pass är familjens drag. */
+        : { text: 'Passet är bokat. ' + ses + ' Betala det nu, med kort eller Klarna.', ton: 'fraga' };
       const kr = kortResRad(b);
       if (kr && kortValt(b) && S.kort.pa && (kr.lage === 'misslyckad' || (kr.lage === 'vald' && !S.kort.kort))) {
         /* Kortet saknas eller nekades: att lägga till ett är familjens
@@ -5812,29 +5446,21 @@
         + ' skriva rapporten. Hölls det inte, avbokar ' + förnamn + ' det.', ton: 'fraga' };
       val = betalVal(b);
     } else if (b.status === 'completed' && kanBetalas(b)) {
-      /* Genomfört men inte betalt: betalningen efter passet (Fas 19.2).
-         Rapporten står nedan, och att välja betalsätt här bekräftar den,
-         som under Bekräfta rapport. */
-      besked = { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den genom att välja hur ni betalar.', ton: 'fraga' };
+      /* Genomfört men inte betalt: det hölls ändå, och ska betalas
+         (2026-10-21, Leo: "Passet hålls, vi jagar"). Rapporten står nedan. */
+      besked = { text: 'Passet är genomfört men inte betalt. Betala det nu, med kort eller Klarna. Rapporten står nedan.', ton: 'fraga' };
       val = betalVal(b);
     } else if (b.status === 'completed' && till) {
       /* Betalt i förväg, och passet drog över (Fas 20.1). Tillägget
-         betalas när rapporten bekräftas, och att betala det bekräftar
-         den, som under Bekräfta rapport. */
-      const bekräftad = (() => { const r = rapportFörPass(b.id); return !!(r && S.rb.bekräftade[r.id]); })();
-      besked = { text: 'Passet är genomfört och betalt. ' + tilläggRad(till) + ' '
-        + (bekräftad ? 'Tillägget är inte betalt än.' : 'Läs rapporten nedan och bekräfta den genom att betala tillägget.'), ton: 'fraga' };
+         betalas med Betala nu, här eller under Betalning. */
+      besked = { text: 'Passet är genomfört och betalt. ' + tilläggRad(till) + ' Betala tillägget nu, med kort eller Klarna.', ton: 'fraga' };
       atgarder = tilläggKnapp(b, till, false);
     } else if (b.status === 'completed') {
-      /* Betalt i förväg, eller undantaget från betalning. Rapporten
-         bekräftas ändå (Fas 19.2). */
-      const bekr = rbKnappFör(b);
-      // Kortet drar priset när rapporten finns (kortet_reserveras): jobbet går var tionde minut.
+      /* Betalt, eller undantaget från betalning. Blev passet kortare än
+         det betalda går mellanskillnaden tillbaka av sig själv (betala_nu). */
       const kortet = kortBetalar(b) ? ' Priset dras från ' + kortNamn(S.kort.kort) + ' inom några minuter.' : '';
-      besked = bekr ? { text: 'Passet är genomfört. Läs rapporten nedan och bekräfta den.' + kortet, ton: 'fraga' }
-        : { text: 'Passet är genomfört.' + kortet, ton: 'klart' };
-      atgarder = bekr || bokaNästa(true);
-      if (bekr) fot = bokaNästa(false) + skriv;
+      besked = { text: 'Passet är genomfört.' + kortet, ton: 'klart' };
+      atgarder = bokaNästa(true);
     } else {
       /* Tiden har passerat men passet är varken genomfört eller
          avbokat: rapporten saknas, eller ett förslag blev aldrig
@@ -5938,15 +5564,15 @@
       alternativ,
       fakta,
       fot,
-      /* Samma brev som under Bekräfta rapport, direkt under beskedet som
-         säger "läs rapporten nedan". Rapporten som hämtats för sidan har
+      /* Rapporten som ett brev, direkt under beskedet som säger att den
+         står nedan. Rapporten som hämtats för sidan har
          inte passets elev och dag; de tas från passet. */
       block: (rapport ? [{ rubrik: 'Rapporten', forst: true, html:
         rbBrev(Object.assign({ student_id: b.student_id, lesson_date: b.wanted_date }, rapport), b)
       }] : []).concat(svaret ? [svaret] : [], block)
     });
 
-    /* Rapporten ur Bekräfta rapport finns ofta redan, med samma fält:
+    /* Rapporten ur S.rb finns ofta redan, med samma fält:
        då står den från första ritningen i stället för att skjuta in
        under sidan när hämtningen kommer. */
     rita(rapportFör[b.id] || rapportFörPass(b.id) || null);
@@ -6135,7 +5761,10 @@
       uppgifter: ['nexlax', 'vag'],
       utveckling: ['nexlax', 'utveckling'],
       studiehjalpare: ['meddelanden', null],
-      installningar: ['profil', 'pris']
+      installningar: ['profil', 'pris'],
+      /* Bekräfta rapport togs bort 2026-10-21. Adressen står i gamla mejl
+         och i adminvyns påminnelser; det som var kvar där är att betala. */
+      bekrafta: ['betalning', null]
     };
     function följHash() {
       const [huvud, flik] = String(location.hash || '').replace(/^#/, '').split('/');
@@ -6221,7 +5850,7 @@
        Ett fel här stoppar inte vyn: utan kortet är den som förut. */
     await Promise.all([laddaBarn(), laddaSparr(), laddaErbjudanden(), laddaTips(),
       laddaKort().catch(err => console.warn('kortet:', err))]);
-    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaNexlax(), laddaProgress(), laddaPass(), laddaBokning(), laddaBekrafta(), laddaBarnforslag()]);
+    await Promise.all([laddaTutor().then(startaTråd), laddaPlan(), laddaRapporter(), laddaLaxor(), laddaNexlax(), laddaProgress(), laddaPass(), laddaBokning(), laddaRapporterna(), laddaBarnforslag()]);
     /* Barnens förslag kan komma medan fliken står öppen: de hämtas när
        man kommer tillbaka till den, högst en gång i minuten. */
     let förslagHämtade = Date.now();

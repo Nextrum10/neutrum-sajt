@@ -827,6 +827,13 @@ finns kvar".
   `rendera_test.ts`. Batteriet provades i förhandsvisningen med påhittade köp
   (rutor, stapel, tomt, mörkt läge); provet checkades inte in.
 
+## Planerna i 30 dagar (2026-10-21, `betala_nu`)
+
+Samma kväll (Leo: planen köps "direkt och den används 30 dagar framåt") gick månadsvalet: en plan
+gäller 30 dagar från betalningen (`klippkort_betald`), `intern.klippkort_manad` sätter ingen
+`galler_fran`, och vyn har en rad per plan under batteriet i stället för en per månad. Avsnittet
+nedan är historik, utom återbetalningen av ett köp, som står kvar (`minne/betalning.md`, Betala nu).
+
 ## Planerna per kalendermånad, och ett köp som betalas tillbaka (2026-10-21, `planerna_per_manad`, i drift sedan 2026-10-20)
 
 Leo (2026-10-21): en plan köps för "Den här månaden" eller "Nästa månad", timmarna går ut när månaden är

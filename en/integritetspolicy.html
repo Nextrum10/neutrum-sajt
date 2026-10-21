@@ -429,15 +429,18 @@
         train its models on it. We also use Anthropic to support our own work, for example to
         see which enquiries are waiting for a reply. It then gets students’ initials, school
         year and subject and masked free text, never names, email addresses or addresses.</li>
-      <li><b>Stripe</b>: receives card payments. You give your card details directly to Stripe,
-        never to us, and we do not store them. If you choose to pay for a session by card when you
-        propose it, Stripe saves the card, so that we can reserve the amount two days before the
-        session and charge it when the report has been written. You remove the card under Profile
-        whenever you like. Stripe gets your email address, the amount and
+      <li><b>Stripe</b>: receives payments, by card or Klarna. You give your card details directly
+        to Stripe, never to us, and we do not store them. Stripe gets your email address, the amount and
         which session the payment is for (subject and date), and we get back that the session
         is paid. For fraud checks and what the law requires of a payment service, Stripe is
         itself the controller, as described in
         <a href="https://stripe.com/se/privacy" target="_blank" rel="noopener noreferrer">Stripe’s privacy policy</a>.</li>
+      <!-- Klarna (betala_nu, 2026-10-21). Se integritetspolicy.html. -->
+      <li><b>Klarna</b> (Sweden): if you choose Klarna in checkout, Stripe sends your email address, the
+        amount and what the purchase is for to Klarna, and you give the details Klarna asks for directly
+        to Klarna. Klarna is itself the controller for its credit check and its payment, as described in
+        <a href="https://www.klarna.com/se/dataskydd/" target="_blank" rel="noopener noreferrer">Klarna’s data protection information</a>.
+        We only get back that the payment has been made.</li>
       <li><b>Fortnox</b> (Sweden): our bookkeeping. We do not send invoices to families.</li>
       <li><b>Google</b>, but not yet: today the link to an online session comes in messages. Once
         we have connected Google Meet, every confirmed online session gets its own room there, and
@@ -631,7 +634,7 @@
     <p>If we change anything material we update the date below, and contact those of you with an
       account if the change affects you.</p>
 
-    <p class="jur-datum">Last updated 21 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
+    <p class="jur-datum">Last updated 22 October 2026. This is a translation; in the event of any conflict of interpretation, the Swedish version governs.</p>
   </div>
 </section>
 
@@ -812,7 +815,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="../nextrum-maskot-svar.js?v=72594d80"></script>
+<script src="../nextrum-maskot-svar.js?v=58fbd1e6"></script>
 <script src="../nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

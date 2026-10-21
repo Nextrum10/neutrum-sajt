@@ -10,6 +10,56 @@ som beskriver fakturan, fakturans flöde i adminvyn, obetalda pass på fakturan 
 fakturameningen är historik: avsnitten står kvar för att förklara varför koden och
 databasen ser ut som de gör.
 
+**Kortet som reserveras och Bekräfta rapport är borta sedan 2026-10-21** (nedan, Betala nu).
+Avsnitten Kortet reserveras vid bokningen, Kortet försöker igen och Familjen bekräftar rapporten
+är historik.
+
+---
+
+## Betala nu (2026-10-21, `betala_nu`, inte i drift än)
+
+Leo, samma kväll som fakturan och kortet som försöker igen gick ut: "Hela betalning är fel. De
+ska vara att man betalar när man fått de bekräftat att man kan boka lektionen. Eller att man köper
+planen direkt och den används 30 dagar framåt. Så de ska finnas två alternativ för att köpa betala
+direkt med kort eller betala med klarna. ... Alla betala knappar ska vara oranga och stå betala
+nu. Så bekräfta rapport kan tas bort. Och betalning ska vara anpassad utifrån den nya betalnings
+metoden. Fixa även erbjudande och betalning sidan." På fyra frågor: ett obetalt pass hålls ändå
+och vi följer upp ("Passet hålls, vi jagar"), en plan gäller 30 dagar från köpet (inte
+kalendermånaden från samma morgon), och ett förbetalt pass som blev kortare får mellanskillnaden
+tillbaka.
+
+I driften när det skrevs: inga pass, inga sparade kort, inga reservationer, ingen betald plan
+med en månad, och en hade godkänt villkoren 2026-10-21.
+
+- **Vyn.** Varje knapp som betalar är orange: Betala nu (kort eller Klarna, `data-betala`,
+  också efter ett nekat försök), Betala nu för ett tillägg (`data-tillagg`), Betala med timmar
+  och timbanken. Valen på passets sida bär `ar-orange` (`NXStudie.betalval`). `attBetala()` är
+  ETT urval för Betalning, siffran i menyn, Att göra och notisrutan: bekräftade och genomförda
+  pass som inte är betalda (`kanBetalas`) och obetalda tillägg. Betalning har två rutor (Att
+  betala i orange ton, Betalt i månaden), listan Att betala, betalsätten som brickor och de betalda.
+- **Bekräfta rapport** (Fas 19.1) är borta: posten i menyn, sektionen, bekräftelserna vid
+  betalningen, knappen på passets sida och raden i morgonmejlet (`intern.admin_att_gora`,
+  `rapport_obekraftad`). Rapporten läses på passets sida (`laddaRapporterna`). `#bekrafta` leder
+  till `#betalning`, och adminvyns påminnelse länkar dit. `rapport_bekraftelser` står kvar.
+- **Klarna** i kassan: `BETALSATT` i `_delad/stripe.ts`, i alla kassor som tar betalt (läget
+  setup tar bara kort). Klarna blir i regel klart direkt, men webhooken tar också
+  `checkout.session.async_payment_succeeded` i samma gren som `completed`, för en betalning som
+  kommer efter kassan. SESSIONSFORM 11. Klarna kan inte reserveras utan familjen, och det behövs
+  inte längre. Klarna betalar tillbaka delvis (upp till 180 dagar).
+- **Planerna i 30 dagar**: `intern.klippkort_manad` sätter ingen månad, `klippkort_betald` räknar
+  `idag + 30` för en plan, kassan läser ingen månad och kassaraden säger "Gäller i 30 dagar från
+  köpet" (`PLANENS_DAGAR`). Vyn har inget månadsval, och under batteriet en rad per plan
+  (`planRader`).
+- **Pengarna tillbaka för ett kortare pass**: `kortare_pass_att_aterbetala()` (samma räkning som
+  larmet `betalt_for_lange`, bara tjänstekontot) väcker `stripe-reservation` genom jobbet
+  `kortreservation`, och `_delad/kortare.ts` betalar tillbaka med en nyckel som bär passet, det
+  redan återbetalda och beloppet, läser `amount_refunded` från Stripe och skriver det på passet.
+  Larmet står kvar som reserv.
+- **Strömbrytaren `kortreservation` står av**; koden för reservationen är vilande.
+- **Texten**: meningen på alla ställen (`kolla-betalningsvillkor.py`, utan `KORTET_RESERVERAS`),
+  villkoren (`#betala-nu`, `#hallen-tid`, köpvillkoren, planerna, Klarna; `#kortet` borta) och
+  version 2026-10-22, policyn (Klarna) på båda språken, `DATASKYDD.md`, mejlen och agenternas fakta.
+
 ---
 
 ## Fakturan tas bort (2026-10-21)

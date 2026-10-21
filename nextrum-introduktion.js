@@ -43,9 +43,6 @@
       { bild: 'lektioner', rubrik: 'Mina lektioner',
         text: 'Era pass, planen bakom dem och vad som hände på varje. Tryck på ett pass för att se tid, '
           + 'plats och allt om just det passet.' },
-      { bild: 'bekrafta', rubrik: 'Bekräfta rapport',
-        text: 'Efter varje pass skriver studiehjälparen en rapport. Läs vad ni gick igenom och bekräfta att ni '
-          + 'tagit del av den. Är passet inte betalt än, bekräftar ni genom att välja hur ni betalar.' },
       { bild: 'nexlax', rubrik: 'NexLäx',
         text: 'Övningarna mellan passen, och uppgifterna från er studiehjälpare. Välj ämne och årskurs, och '
           + 'varje svar rättas direkt. Barnet kan göra dem här eller med en egen inloggning.' },

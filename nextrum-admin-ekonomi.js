@@ -291,13 +291,14 @@
     ej_betalt: ['Inte betalt', 'Hölls och rapporterades, men familjen har inte betalat. Betala-knappen ligger kvar på passet i familjens vy, '
       + 'och det är ni som följer upp.'],
     /* Fas 20.1. Passet var betalt och drog över. Familjen betalar
-       tillägget med kort när de bekräftar rapporten; beloppet räknas i
+       tillägget med Betala nu under Betalning (2026-10-21); beloppet räknas i
        stripe-checkout och står därför inte i larmet. */
-    tillagg_obetalt: ['Tillägget för övertid är inte betalt', 'Passet var betalt och drog över. Familjen betalar tillägget när de bekräftar rapporten.'],
+    tillagg_obetalt: ['Tillägget för övertid är inte betalt', 'Passet var betalt och drog över. Familjen betalar tillägget med Betala nu under Betalning i sin vy.'],
     /* Fas 20.1. Betalt med kort för mer tid än passet höll. Beloppet är
        det som ska tillbaka, räknat till passets frysta pris; rubriken
        bär det (avvText). */
-    betalt_for_lange: ['Betalt för längre tid än passet höll', 'Passet blev kortare än det familjen betalade för. Återbetala skillnaden under Betalningar → Att göra.'],
+    betalt_for_lange: ['Betalt för längre tid än passet höll', 'Passet blev kortare än det familjen betalade för. Skillnaden betalas tillbaka '
+      + 'av sig själv inom tio minuter (betala_nu, 2026-10-21); står larmet kvar, återbetala den här.'],
     /* Fas 14.2c. Betalsidan kan ligga öppen medan passet avbokas, och
        betalas den efteråt drar Stripe pengarna ändå. Beloppet är det
        som inte gått tillbaka än. */
@@ -1157,7 +1158,8 @@
 
      Texten säger vad som inte är betalt, med beloppen ur larmen (samma
      pris som kortet tar), och var familjen betalar: passets egen sida
-     när det är ett pass, annars Bekräfta rapport. Ingen avgift, för
+     när det är ett pass, annars Betalning (Bekräfta rapport fanns till
+     2026-10-21). Ingen avgift, för
      villkoren nämner ingen, och ingen sista dag, för villkoren sätter
      ingen.
      ============================================================ */
@@ -1180,7 +1182,7 @@
         + (a.typ === 'tillagg_obetalt' ? 'övertid på passet i ' : '') + ämneIText(b.subject)
         + (belopp != null ? ': ' + kronor(belopp) : '');
     };
-    const sätt = 'med kort';
+    const sätt = 'med kort eller Klarna';
     const ettPass = lista.length === 1 && lista[0].typ === 'ej_betalt';
     let mitt;
     if (!lista.length) {
@@ -1195,7 +1197,7 @@
       mitt = (lista.length === 1 ? 'Det här har vi inte sett någon betalning för än:\n\n'
         : 'De här har vi inte sett någon betalning för än:\n\n')
         + lista.map(a => '  · ' + rad(a)).join('\n') + '\n\n'
-        + 'Ni betalar under Bekräfta rapport i studievyn, ' + sätt + ':\n' + vyAdress() + '#bekrafta\n\n';
+        + 'Ni betalar med Betala nu under Betalning i studievyn, ' + sätt + ':\n' + vyAdress() + '#betalning\n\n';
     }
     return {
       amne: ettPass ? 'Betalningen för passet ' + kortDatum((bokning(lista[0].objekt_id) || {}).wanted_date)

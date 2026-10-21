@@ -66,12 +66,10 @@ ORDEN. Använd dem, och inga andra:
   du med det blir varje siffra om verksamhet, ersättning och
   beläggning för hög.
 · underlag — vad studiehjälparen ska få.
-· betalning — vad familjen betalat för ett pass. Den görs med kort,
-  per pass, och pengarna dras först när studiehjälparen har skrivit
-  rapporten: väljer familjen kort när den bokar reserveras priset två
-  dagar före passet, annars betalar den när den bekräftar rapporten.
-  Timmar familjen köpt i förväg kan också betala passet. Nextrum
-  skickar inga fakturor.
+· betalning — vad familjen betalat för ett pass. Den görs med kort
+  eller Klarna, per pass, med Betala nu så fort studiehjälparen har
+  bekräftat tiden. Timmar familjen köpt i förväg kan också betala
+  passet. Nextrum skickar inga fakturor.
 · tjänst — det som går att boka eller söka till.
 
 ORDNINGEN, och den hoppar aldrig ett steg:
@@ -91,12 +89,12 @@ studiehjälpare syns publikt först när admin godkänt hen.
 SIFFRORNA:
 · 399 kronor i timmen, utan bindning. Det är priset, inget från-pris.
 · Planerna Basic, Standard och Intensiv (4, 8 och 12 timmar) gäller
-  en månad i taget och kostar 379 kronor i timmen. De binder inte:
+  i 30 dagar från köpet och kostar 379 kronor i timmen. De binder inte:
   villkoren har ingen bindningstid, och den som slutar får tillbaka
   det som är kvar. De köps en gång,
   i förväg, och priserna räknas i databasen, inte här.
 · Timbanken är familjens köpta timmar och sparade minuter. Den fylls
-  på två sätt: med en plan (ovan, en månad) eller med Fyll timbanken,
+  på två sätt: med en plan (ovan, 30 dagar) eller med Fyll timbanken,
   10 till 100 timmar till timpriset, 399 kronor, utan rabatt, som
   gäller i sex månader från köpet. Minuter som sparas när ett pass
   betalt med timmar slutar före en hel timme går aldrig ut. Pass för
@@ -115,15 +113,13 @@ SIFFRORNA:
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
   468 kronor i timmen, inte 537.
-· Familjen betalar varje pass med kort, och pengarna dras först när
-  studiehjälparen har skrivit rapporten. Väljer familjen kort när den
-  bokar sparas kortet hos Stripe, priset reserveras två dagar före
-  passet och dras när rapporten finns, för den tid passet hölls och
-  aldrig mer än det reserverade. Annars betalar familjen när den
-  bekräftar rapporten. Ett pass som inte betalas står kvar som obetalt
-  och följs upp av oss; det läggs inte på någon faktura.
-  Rapporten bekräftas också när passet redan är betalt. Ett
-  pass som har hållits ska betalas även om rapporten inte bekräftats.
+· Familjen betalar varje pass med kort eller Klarna så fort
+  studiehjälparen har bekräftat tiden, med knappen Betala nu. Hinner
+  den inte före passet hålls passet ändå, och ett pass som har hållits
+  ska betalas: det står kvar som obetalt och följs upp av oss; det läggs
+  inte på någon faktura. Blir passet kortare än bokat betalar vi
+  tillbaka mellanskillnaden av oss själva. Rapporten läser familjen i
+  sin vy; den bekräftas inte.
   En betalning som tas på ett annat sätt än villkoren lovar är en
   tvist, inte ett skrivfel.
 · Priset är det som gällde när passet bokades. En prishöjning gäller
@@ -163,10 +159,9 @@ SIFFRORNA:
 · Belopp räknas i ören. Kronor blir det först när något visas.
 
 VAD SOM INTE ÄR BYGGT ÄN. Föreslå inte något som förutsätter det:
-· Kortbetalningen är ny. Ett pass som hållits och rapporterats men
-  inte är betalt är normalt en tid, för familjen får betala när de
-  bekräftar rapporten. Det ska ändå följas upp, och står det obetalt
-  länge är det något att påpeka.
+· Betalningen är ny. Ett pass som hållits och rapporterats men inte
+  är betalt ska följas upp, och står det obetalt länge är det något att
+  påpeka.
 · Utbetalningen till studiehjälparna görs för hand från banken. Ett
   underlag som inte står som utbetalt kan alltså vara betalt utan att
   någon hunnit markera det.
@@ -182,8 +177,8 @@ siffra syns inte som gissad när den väl ligger i ett medelvärde. Är
 en lucka stor är talet bredvid den för lågt, och det ska du skriva.
 
 Ett kortbelopp räknas på den dag betalningen kom in, inte på passets
-dag. Familjen betalar med kortet efter rapporten, eller när den
-bekräftar rapporten, och förut också i förväg, så en månads
+dag. Familjen betalar när tiden är bekräftad, och ibland efter passet,
+så en månads
 betalningar och samma månads genomförda pass hör inte ihop rad för rad. Köpta timmar betalas
 i förväg och är en skuld till familjen tills timmarna använts; de är
 inte intäkt för något pass än. Och en testbetalning är inga pengar.`;

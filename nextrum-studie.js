@@ -1873,7 +1873,8 @@ window.NXStudie = (function () {
      attr är knappens data-attribut, samma som de gamla knapparnas, så
      att samma hanterare tar dem. Rubriken bär data-medan (medan()). */
   function betalval(o) {
-    return '<button type="button" class="vy-valk' + (o.först ? ' ar-forst' : '') + '" ' + o.attr + '>'
+    // orange: ett val som betalar (2026-10-21, Leo: "Alla betala knappar ska vara oranga").
+    return '<button type="button" class="vy-valk' + (o.först ? ' ar-forst' : '') + (o.orange ? ' ar-orange' : '') + '" ' + o.attr + '>'
       + '<span class="vy-valk-ik">' + (IKON[o.ikon] || '') + '</span>'
       + '<span><b data-medan>' + esc(o.titel) + '</b>' + (o.under ? '<span>' + esc(o.under) + '</span>' : '') + '</span>'
       + '</button>';
