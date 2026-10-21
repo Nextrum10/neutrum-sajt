@@ -2020,7 +2020,7 @@ villkoren inte har någon avbokningsavgift; priset bestämde Leo samma kväll, 9
 juristen; Skriv nu för månadsrapporten (`DEPLOY-AGENTER.md`); och att ta bort edge-funktionen `utbildningsprov` i
 Supabases panel.
 
-### 9.26 Syskontillägget fast: tre barn kostar 468 (2026-10-21, inte körd)
+### 9.26 Syskontillägget fast: tre barn kostar 468 (2026-10-21, körd samma kväll)
 
 Leo: "Tre barn kostar 468 i timmen". `20261021230000_syskontillagget_fast` gör tillägget lika mycket med ett som med
 två syskon (`minne/betalning.md`). Med `syskonskuld` av, som den står, ändrar den inget pris och ingen betalning.
@@ -2035,3 +2035,12 @@ Efter merge, en session, i den här ordningen:
 3. Hela `rls-test.sql` mot driften, tillbakarullat, och advisorn.
 4. **Ingen edge-funktion**: ingen funktion i drift anropar `tillaggetsBelopp` i `_delad/tillagg.ts`. Vyerna går ut
    med Vercel (`nextrum-betalning.js`, `nextrum-arbetsyta.js`), och syns bara med strömbrytaren på.
+
+**Körd** samma kväll (Leo: "Merge oxh migrera"), i den ordningen och med den andra sessionen underrättad före och
+efter. PR #327 mergades (05cb8c1), och `tillagg_poster` hade inga rader. Bytet gick som en egen sats, med
+`set local lock_timeout = '5s'` först, utan fråga från verktyget. Do-blocket hämtade filen ur 05cb8c1 och prövade hela
+filens md5 (`bee6ae3c…`), att bytet stod exakt en gång, restens md5 (`e66d46da…`) och att villkoret var bytt; sedan
+körde det resten, prövade funktionens kropp (`89a71663…`) och registrerade hela filens text. Efteråt gav
+`intern.tillaggets_belopp` 13 800 öre för två timmar med ett och med två syskon, `flaggor_stampla` stod på, hela
+`rls-test.sql` ur 05cb8c1 gick 2107 av 2107 mot driften, tillbakarullat, advisorn hade samma 148 poster som före, och
+nextrum.se serverade `nextrum-betalning.js` och `nextrum-arbetsyta.js` byte för byte som main (hämtade från databasen).

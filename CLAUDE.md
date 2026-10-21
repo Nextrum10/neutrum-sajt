@@ -1071,13 +1071,14 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Syskontillägget fast** (2026-10-21, `syskontillagget_fast`, 20261021230000) är byggt men INTE i drift (Leo: "Tre barn
-  kostar 468 i timmen"): tillägget är `extra_ore` gånger minuterna, lika mycket med ett som med två syskon, i databasen
-  (`intern.tillaggets_belopp`, villkoret `tillagg_poster_belopp`), i `_delad/tillagg.ts`, i `nextrum-betalning.js` och i
-  bokningsrutan. Efter merge: migrationen, med bytet av villkoret som en egen sats (ett `drop`), och resten i ett
-  do-block (`DEPLOY-BETALNING.md` 9.26); vakten stannar om `tillagg_poster` har en rad (inga fanns 2026-10-21). Ingen
-  edge-funktion behöver läggas ut: ingen anropar spegeln i drift. Lokalt 2107 av 2107 i `rls-test.sql`, 95 av 95 i
-  `prova-syskon.js` och 484 Deno-tester.
+- **Syskontillägget fast** (2026-10-21, `syskontillagget_fast`, 20261021230000) är i drift sedan kvällen 2026-10-21 (Leo:
+  "Tre barn kostar 468 i timmen", sedan "Merge oxh migrera"): tillägget är `extra_ore` gånger minuterna, lika mycket med
+  ett som med två syskon, i databasen (`intern.tillaggets_belopp`, villkoret `tillagg_poster_belopp`), i
+  `_delad/tillagg.ts`, i `nextrum-betalning.js` och i bokningsrutan. PR #327 mergades (05cb8c1), och Vercel lade ut
+  vyerna byte för byte som main; sedan bytet av villkoret som en egen sats med texten synlig (ett `drop`, som gick igenom
+  utan fråga), och resten i ett do-block ur merge-commiten, med filens och restens md5 prövade (`DEPLOY-BETALNING.md`
+  9.26). Inga poster fanns. Ingen edge-funktion lades ut: ingen anropar spegeln i drift. Hela `rls-test.sql` gick 2107
+  av 2107 mot driften, tillbakarullat, och advisorn är oförändrad. `syskonskuld` står av, så inget pris har ändrats.
 - **Kedjan 2026-10-21 är i drift** sedan kvällen 2026-10-21 (Leo: "Fixa nr 6 och Merge sen och driftsätt och migrera"):
   PR #325 mergades (829d2c0) och Vercel lade ut sajten; sedan 13 edge-funktioner från merge-commiten, hämtade tillbaka
   och byte för byte lika main, och de tio migrationerna `20261021170000` till `20261021215000`, var och en i ett eget
