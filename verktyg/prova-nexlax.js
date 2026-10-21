@@ -356,11 +356,26 @@ async function provaBarnet(webb) {
   await vänta(100);
   await bild(page, 'nexlax-barn-vag', '#bv-nexlax');
 
-  /* Spelets meny: Rank, Märken, Din utveckling och Studiehjälparen har
-     var sin flik. */
-  prova('flikarna: fyra delar i spelets meny, Din utveckling efter Din väg',
+  /* Spelets meny (2026-10-21): Din väg, Din utveckling, Studiehjälparen
+     bredvid den, och Rank och märken i en flik. */
+  prova('flikarna: fyra delar i spelets meny, Studiehjälparen bredvid Din utveckling',
     JSON.stringify(await page.$$eval('#bv-nexlax .nl-flikar .vy-flik', b => b.map(x => x.dataset.flik)))
-    === JSON.stringify(['vag', 'utveckling', 'rank', 'marken']));
+    === JSON.stringify(['vag', 'utveckling', 'hjalpare', 'rank']));
+  prova('vägen: toppen, remsan, uppdragen och banderollen är ett kort',
+    (await page.locator('#bv-nl-vag .nl-kort').count()) === 1
+    && (await page.locator('#bv-nl-vag .nl-kort > .nl-topp').count()) === 1
+    && (await page.locator('#bv-nl-vag .nl-kort > details.nl-uppdrag').count()) === 1
+    && (await page.locator('#bv-nl-vag .nl-kort > .nl-baner').count()) === 1);
+  prova('vägen: väljaren står under kortet och säger att allt är öppet',
+    (await page.locator('#bv-nl-vag .nl-kort + .nl-valj').count()) === 1
+    && (await text(page, '#bv-nl-vag .nl-valj')).includes('Allt är öppet'));
+  const ljus = await page.evaluate(() => {
+    const ljusvärde = el => { const m = getComputedStyle(el).backgroundColor.match(/[\d.]+/g).map(Number); return (m[0] + m[1] + m[2]) / 3; };
+    const kort = document.querySelector('#bv-nl-vag .nl-kort');
+    const bg = getComputedStyle(kort).backgroundImage;
+    return { kort: ljusvärde(kort), rad: ljusvärde(document.querySelector('#bv-nexlax .nl-spelrad')), bg };
+  });
+  prova('vägen: kortet och huvudet är ljusa i ljust läge', ljus.kort > 200 && ljus.rad > 200, JSON.stringify(ljus));
   prova('flikarna: huvudet har NexLäx och ljudet, och menyn står kvar (ingen separat sida)', (await text(page, '#bv-nexlax .nl-spelrad-namn')) === 'NexLäx'
     && (await page.locator('#bv-nexlax .nl-spelrad-ljud svg').count()) === 1 && await synlig(page, '#vy-sido') && (await page.locator('#bv-nexlax .nl-spelrad-ut').count()) === 0);
   const mitt = await page.evaluate(() => {
@@ -392,34 +407,25 @@ async function provaBarnet(webb) {
   prova('rank: den nuvarande ranken syns i raden', mått.vänster >= -1 && mått.höger >= -1, JSON.stringify(mått));
   prova('rank: raden går att svepa i sidled', mått.innehåll > mått.bredd && mått.overflowX === 'auto' && mått.overflowY === 'hidden', JSON.stringify(mått));
   await bild(page, 'nexlax-barn-rank', '#bv-nexlax');
-  await page.click('#bv-flik-marken');
-  await vänta(150);
-  prova('märken: egen flik med de man har och de man kan få',
+  prova('märken: i samma flik som ranken, under den', await synlig(page, '#bv-nl-marken')
+    && await page.evaluate(() => document.querySelector('#bv-nl-rank').getBoundingClientRect().top < document.querySelector('#bv-nl-marken').getBoundingClientRect().top));
+  prova('märken: de man har och de man kan få',
     (await page.locator('#bv-nl-marken .upg-marke.klart').count()) > 0 && (await page.locator('#bv-nl-marken .upg-marke:not(.klart)').count()) > 0
     && (await text(page, '#bv-nl-marken .nl-marken-topp')).includes(' av '));
   await bild(page, 'nexlax-barn-marken', '#bv-nexlax');
   await page.click('#bv-flik-utveckling');
   await vänta(150);
-  prova('utveckling: tre sidor, Översikt först', JSON.stringify(await page.$$eval('#bv-nl-utveckling [data-nl-sida]', b => b.map(x => x.dataset.nlSida)))
-    === JSON.stringify(['oversikt', 'amnen', 'rattat']) && (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="oversikt"]', 'aria-pressed')) === 'true');
+  prova('utveckling: en sida, inga sidknappar och inget val', (await page.locator('#bv-nl-utveckling [data-nl-sida], #bv-nl-utveckling [data-nl-del]').count()) === 0);
   prova('utveckling: ranken och märkena har flyttat ut', (await page.locator('#bv-nl-utveckling .nl-rangkort, #bv-nl-utveckling .upg-marken, #bv-nl-utveckling .nl-ranker').count()) === 0);
   const sid1 = await text(page, '#bv-nl-utveckling .nl-sida-kropp');
-  prova('utveckling: veckorna ligger på översikten, ingen egen sida', sid1.includes('XP per vecka') && sid1.includes('De fyra senaste veckorna') && sid1.includes('Uppdrag klara'));
-  await page.click('#bv-nl-utveckling [data-nl-sida="amnen"]');
-  await vänta(100);
-  prova('utveckling: en annan sida byter innehåll och knappen står kvar',
-    (await text(page, '#bv-nl-utveckling .nl-sida-kropp')) !== sid1 && (await text(page, '#bv-nl-utveckling .nl-sida-kropp')).includes('Dina ämnen')
-    && (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="amnen"]', 'aria-pressed')) === 'true'
-    && (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="oversikt"]', 'aria-pressed')) === 'false');
+  prova('utveckling: ämnena och veckorna står på översikten, Rättat är borta', sid1.includes('Dina ämnen') && sid1.includes('XP per vecka')
+    && sid1.includes('Uppdrag klara') && !sid1.includes('Rättade nivåer') && !sid1.includes('Område för område'), sid1.slice(0, 300));
   await bild(page, 'nexlax-barn-utveckling', '#bv-nexlax');
-  prova('utveckling: bara NexLäx eller studiehjälparen att välja mellan', JSON.stringify(await page.$$eval('#bv-nl-utveckling [data-nl-del]', b => b.map(x => x.dataset.nlDel)))
-    === JSON.stringify(['nexlax', 'hjalpare']));
-  await page.click('#bv-nl-utveckling [data-nl-del="hjalpare"]');
+  await page.click('#bv-flik-hjalpare');
   await vänta(150);
-  prova('studiehjälparen: en del av Din utveckling, och barnets vy visar ingen bedömning', /studiehjälpar/i.test(await text(page, '#bv-nl-utveckling'))
-    && (await page.locator('#bv-nl-utveckling [data-nl-sida]').count()) === 0
-    && (await page.locator('#bv-nl-utveckling').getByText('Studiehjälparens bedömning').count()) === 0, await text(page, '#bv-nl-utveckling'));
-  await page.click('#bv-nl-utveckling [data-nl-del="nexlax"]');
+  prova('studiehjälparen: egen flik, och barnets vy visar ingen bedömning', /studiehjälpar/i.test(await text(page, '#bv-nl-hjalpare'))
+    && (await page.locator('#bv-nl-hjalpare').getByText('Studiehjälparens bedömning').count()) === 0, await text(page, '#bv-nl-hjalpare'));
+  await bild(page, 'nexlax-barn-hjalpare', '#bv-nexlax');
   await page.click('#bv-flik-vag');
   await vänta(100);
 
@@ -591,7 +597,7 @@ async function provaBarnet(webb) {
   await page.waitForFunction(() => !document.querySelector('.upg-spel'), null, { timeout: 5000 }).catch(() => {});
   prova('spelaren: stängs, och inga ljud spelas efteråt', !(await synlig(page, '.upg-spel')));
 
-  /* Din utveckling är fyra sidor, ranken och märkena har egna flikar. */
+  /* Din utveckling är en sida, och ranken och märkena har en flik (2026-10-21). */
   await page.click('#bv-flik-rank');
   await vänta(200);
   const rank = await text(page, '#bv-nl-rank');
@@ -599,23 +605,15 @@ async function provaBarnet(webb) {
   prova('rank: alla ranker syns, med den nuvarande', (await page.locator('#bv-nl-rank .nl-rk').count()) === 10
     && (await page.locator('#bv-nl-rank .nl-rk.nu').count()) === 1 && (await page.locator('#bv-nl-rank .nl-rk.klar').count()) === 3);
   prova('rank: varje rank utom den första har ett märke', (await page.locator('#bv-nl-rank .nl-rk-pris:not(.nl-rk-start)').count()) === 9);
-  await page.click('#bv-flik-marken');
-  await vänta(150);
   const märk = await text(page, '#bv-nl-marken');
   prova('märken: märkena för uppdragen', märk.includes('Första uppdraget') && märk.includes('Dagens kista'));
   prova('märken: rankmärkena har en egen grupp', märk.includes('Rankmärken') && märk.includes('Märket') === false
     && (await page.locator('#bv-nl-marken .upg-marke').filter({ hasText: 'Upptäckare' }).count()) === 1);
   await page.click('#bv-flik-utveckling');
   await vänta(200);
-  prova('utveckling: sidan man stod på står kvar', (await page.getAttribute('#bv-nl-utveckling [data-nl-sida="amnen"]', 'aria-pressed')) === 'true');
-  await page.click('#bv-nl-utveckling [data-nl-sida="oversikt"]');
-  await vänta(100);
   const utv = await text(page, '#bv-nl-utveckling');
   prova('utveckling: siffrorna och höjdpunkterna på översikten', utv.includes('I siffror') && utv.includes('Höjdpunkter') && utv.includes('Hela området Bråk klart'), utv.slice(0, 400));
   prova('utveckling: uppdragen i siffror på översikten', utv.includes('Uppdrag klara') && utv.includes('Kistor öppnade'));
-  await page.click('#bv-nl-utveckling [data-nl-sida="rattat"]');
-  await vänta(100);
-  prova('utveckling: Rättat har de rättade nivåerna', (await text(page, '#bv-nl-utveckling .nl-sida-kropp')).includes('Rättade nivåer'));
   await bild(page, 'nexlax-utveckling', '#bv-nexlax');
   await page.click('#bv-flik-vag');
   await vänta(100);

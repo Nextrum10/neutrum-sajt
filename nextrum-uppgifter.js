@@ -856,12 +856,17 @@ window.NXUppgifter = (function () {
     senaste.set(host, Object.assign({}, o, { amne, arskurs, spar, nyss: null }));
 
     /* Studiehjälparens uppgifter, passet och bedömningen har en egen
-       flik (2026-10-13); här finns bara en remsa dit. */
+       flik (2026-10-13); här finns bara en remsa dit.
+       2026-10-21, Leo: "de sektionerna som är separata ska sättas ihop".
+       Toppen, remsan, Dagens uppdrag och banderollen är ETT kort
+       (.nl-kort) med avdelare, och väljaren fälls ut under kortet. */
     const valjOppen = host.dataset.valj === '1';
-    sättHtml(host, toppHtml(o, väg, nästa, spar === 'np' ? np : null)
+    sättHtml(host, '<div class="nl-kort" data-nl-f="' + ämnesKod(amne) + '">'
+      + toppHtml(o, väg, nästa, spar === 'np' ? np : null)
       + hjälpRemsa(o)
       + uppdragHtml(o.läge, { öppen: host.dataset.upp === '1' })
       + (ämnen.length ? banerHtml(o, väg, np, spar, amne, arskurs, valjOppen) : '')
+      + '</div>'
       + (ämnen.length && valjOppen ? valjHtml(o, finns, ämnen, amne, arskurs, host.dataset.fler === '1') : '')
       + (np && !baraNp ? spårHtml(spar, np) : '')
       + (spar === 'np' ? npHtml(o, np) : väg ? vägHtml(o, väg) + repetitionHtml(o, väg) : tommaVägen(o))
@@ -884,7 +889,7 @@ window.NXUppgifter = (function () {
       + '<span class="nl-hjalp-ik">' + IKON.person + '</span>'
       + '<span class="nl-hjalp-text"><b>' + esc(vem || 'Din studiehjälpare') + ' har gett dig '
         + öppna.length + (öppna.length === 1 ? ' uppgift' : ' uppgifter') + '</b>'
-      + '<small>Se dem under Din utveckling</small></span>'
+      + '<small>Se dem under Studiehjälparen</small></span>'
       + '<span class="nl-hjalp-pil">' + IKON.pil + '</span></button>';
   }
 
@@ -896,9 +901,9 @@ window.NXUppgifter = (function () {
       + '</div></div>';
   }
 
-  /* Toppen: serien, XP, rangen och det primära steget. En mörk yta i
-     Nextrums bark, som resten av sajtens mörka partier: det är här spelet
-     börjar. 2026-10-13 (Leo, efter att ha sett den på telefonen): ingen
+  /* Toppen: serien, XP, rangen och det primära steget, överst i vägens
+     kort. Barken till 2026-10-21; nu ytan (Leo: "Där de är svart på
+     studievyn på ljus vy gör de vit"), och mörk i mörkt läge. 2026-10-13 (Leo, efter att ha sett den på telefonen): ingen
      lång topp, banan ska synas så fort man är inne. Banans namn och
      procent står i banderollen under (banerHtml), och Fortsätt säger vilket
      ämne det var. */
@@ -970,7 +975,8 @@ window.NXUppgifter = (function () {
       + '<span class="nl-baner-ik">' + ämnesIkon(amne) + '</span>'
       + '<span class="nl-baner-text"><span class="nl-baner-et">' + esc(NX.årskursText(arskurs)) + (spar === 'np' ? ' · Inför NP' : '')
         + ' · ' + sektion.klara + ' av ' + sektion.totalt + ' klara</span>'
-      + '<b>' + esc(kortÄmne(amne)) + '</b></span>'
+      + '<b>' + esc(kortÄmne(amne)) + '</b>'
+      + '<span class="nl-baner-byt">' + (öppen ? 'Välj ämne och årskurs nedanför' : 'Byt ämne eller årskurs') + '</span></span>'
       + '<span class="nl-baner-pct">' + procent + '<i>%</i></span>'
       + '<span class="nl-baner-pil" aria-hidden="true">' + IKON.pil + '</span>'
       + '<span class="nl-baner-mat" aria-hidden="true"><i style="width:' + procent + '%"></i></span>'
@@ -1129,15 +1135,21 @@ window.NXUppgifter = (function () {
       return lista.length ? '<span class="nl-ak-grupp"><i>' + namn + '</i>' + lista.map(knapp).join('') + '</span>' : '';
     };
     const ak = amne
-      ? '<div class="nl-ak" role="group" aria-label="' + esc('Årskurs i ' + kortÄmne(amne)) + '">'
+      ? '<p class="nl-valj-rubrik">' + esc('Årskurs i ' + kortÄmne(amne)) + (o.elevKod ? '<span><i></i>din årskurs</span>' : '') + '</p>'
+        + '<div class="nl-ak" role="group" aria-label="' + esc('Årskurs i ' + kortÄmne(amne)) + '">'
         + grupp('Åk', /^ak/) + grupp('Gy', /^gy/) + '</div>'
       : '';
+    /* 2026-10-21, Leo: en elev som matchats för till exempel matematik i
+       åk 6 "ska kunna plugga på flera ämnen och årskurser". Det har gått
+       sedan 2026-10-06 (allt i NexLäx är öppet); nu säger väljaren det.
+       Förvalet är elevens eget ämne och egen årskurs. */
+    const intro = '<p class="nl-valj-intro">Öva i vilket ämne och vilken årskurs du vill. Allt är öppet.</p>';
     /* Leo 2026-10-12: matematik, svenska och engelska är det vi bygger
        mest på just nu, och resten kommer med tiden. Det står sist i
        rutan, så att inget ovanför ämnena byter höjd. */
     const bygger = '<p class="nl-valj-not"><b>Just nu bygger vi mest på matematik, svenska och engelska.</b>'
       + ' De andra ämnena finns redan och får fler nivåer efter hand.</p>';
-    return '<div class="nl-valj">' + rutor + ak + bygger + '</div>';
+    return '<div class="nl-valj">' + intro + '<p class="nl-valj-rubrik">Ämne</p>' + rutor + ak + bygger + '</div>';
   }
   function väljareHtml(o, finns, ämnen, amne, arskurs, fler) {
     return '<div class="nl-grupp"><h3>Välj ämne</h3></div>' + valjHtml(o, finns, ämnen, amne, arskurs, !!fler);
@@ -1527,22 +1539,22 @@ window.NXUppgifter = (function () {
   /* ============================================================
      DIN UTVECKLING
      o: { host, katalog, forsok, uppgifter, läge, progress, historik,
-          rapporter, bokningar, elevNamn, alla (visa alla rättade) }
+          rapporter, bokningar, elevNamn }
 
-     2026-10-13, Leo: "Din utveckling är alldeles för lång. Gör flera
-     sidor på NexLäx som man kan scrolla." Den är nu fyra sidor (Översikt,
-     Ämnen, Veckor, Rättat) som man byter mellan med knapparna eller genom
-     att svepa i sidled. Ranken, märkena och studiehjälparens bedömning
-     och pass har egna flikar i NexLäx.
+     2026-10-13 blev den fyra sidor och sedan tre (Översikt, Ämnen,
+     Rättat). 2026-10-21, Leo: "Din utveckling måste också ändra de är
+     alldeles för svårt och för mycket att trycka igenom. Ämnen kan
+     exempelvis gå bort och statistik av hur långt man kommit i ämnen kan
+     stå på översikt. Ta bort Rättat också." Nu en enda sida utan
+     sidknappar och utan svep: talen, hur långt man kommit i varje ämne,
+     höjdpunkterna, veckorna och uppdragen. Studiehjälparen har en egen
+     flik bredvid (hjälpareHtml), och ranken och märkena en tillsammans.
      ============================================================ */
-  const UTV_SIDOR = [['oversikt', 'Översikt'], ['amnen', 'Ämnen'], ['rattat', 'Rättat']];
-
-  function utvSidor(o) {
+  function utvecklingHtml(o) {
     const l = o.läge;
     const d = underlag(o);
     const vem = o.elevNamn || 'eleven';
     const f = o.forsok || [];
-    const klara = f.filter(x => x.klar_at).sort((a, b) => Date.parse(b.klar_at) - Date.parse(a.klar_at));
 
     /* ---------- talen ---------- */
     const u = l && l.uppgifter;
@@ -1591,74 +1603,33 @@ window.NXUppgifter = (function () {
         }).join('');
     };
 
-    return {
-      oversikt: () => {
-        const dagar = veckorOchDagar(l);
-        return block('I siffror', null, tal() + (l
-          /* Reglerna fälls ihop: de läses en gång, talen varje dag. */
-          ? '<details class="nl-skala nl-regler"><summary>Så får du XP</summary><p>'
-            + esc('XP ger den som klarar något nytt: ' + regelText(l) + ' En uppgift ger XP en gång, första gången den sitter direkt. '
-              + 'Serien räknar dagar: en dag med en klar nivå, något klart från studiehjälparen eller ett pass räknas, och den bryts först när en hel dag gått utan något.')
-            + '</p></details>'
-          : ''))
-          + höjdpunkterHtml(o, l)
-          + (l ? block('XP per vecka', 'De åtta senaste veckorna. Den sista är den här veckan.', dagar.veckor) : '')
-          + (l ? block('De fyra senaste veckorna', 'En låga för varje dag med en klar nivå, något från studiehjälparen eller ett pass.', dagar.kalender) : '')
-          + uppdragUtvHtml(l);
-      },
-      amnen: () => block('Dina ämnen', 'Hur långt du kommit i varje bana du gjort något i, räknat i nivåer.' + (harProv ? ' Mästarproven är kronan ovanpå.' : ''),
-          banRader() || NXStudie.tomt('Inget ämne än', 'Gör en nivå under Din väg så syns banan här.'))
-        + block('Område för område', 'Hur stor del som var rätt första gången, per område.' + (o.barnvy ? '' : ' Har studiehjälparen bedömt samma område står bedömningen bredvid.'),
-          områdesHtml(o.katalog, o.forsok, o.barnvy ? [] : o.progress) || NXStudie.tomt('Inget område än', 'Områdena fylls i när en nivå är klar.')),
-      rattat: () => block('Rättade nivåer <em>' + (klara.length ? klara.length + ' st' : '') + '</em>',
-          'Varje klar omgång, senaste först. Rättningen visar varje uppgift, vad som svarades och rätt svar.',
-          klara.length
-            ? '<div class="upg-forsok-lista">' + (o.alla ? klara : klara.slice(0, 6)).map(x => försöksRad(x, efterId(o.katalog)[x.niva_id])).join('') + '</div>'
-              + (klara.length > 6 ? '<button type="button" class="pl-mer" data-nl-alla aria-expanded="' + (o.alla ? 'true' : 'false') + '">'
-                  + (o.alla ? 'Visa färre' : 'Visa alla ' + klara.length) + '</button>' : '')
-            : NXStudie.tomt('Inga rättade nivåer än', 'När ' + vem + ' gjort en nivå står rättningen här.'), true)
-    };
+    const dagar = veckorOchDagar(l);
+    return block('I siffror', null, tal() + (l
+        /* Reglerna fälls ihop: de läses en gång, talen varje dag. */
+        ? '<details class="nl-skala nl-regler"><summary>Så får du XP</summary><p>'
+          + esc('XP ger den som klarar något nytt: ' + regelText(l) + ' En uppgift ger XP en gång, första gången den sitter direkt. '
+            + 'Serien räknar dagar: en dag med en klar nivå, något klart från studiehjälparen eller ett pass räknas, och den bryts först när en hel dag gått utan något.')
+          + '</p></details>'
+        : ''))
+      + block('Dina ämnen', 'Hur långt du kommit i varje ämne och årskurs du övat i, räknat i nivåer.' + (harProv ? ' Mästarproven är kronan ovanpå.' : ''),
+          banRader() || NXStudie.tomt('Inget ämne än', 'Gör en nivå under Din väg så syns ämnet här.'))
+      + höjdpunkterHtml(o, l)
+      + (l ? block('XP per vecka', 'De åtta senaste veckorna. Den sista är den här veckan.', dagar.veckor) : '')
+      + (l ? block('De fyra senaste veckorna', 'En låga för varje dag med en klar nivå, något från studiehjälparen eller ett pass.', dagar.kalender) : '')
+      + uppdragUtvHtml(l);
   }
 
-  /* Din utveckling har två delar och inget mer (2026-10-13, Leo: "bara ha
-     NexLäx-utveckling eller studiehjälpar-utveckling att välja mellan"):
-     det maskinen räknat och det en människa bedömt. De blandas aldrig. */
+  /* Din utveckling och Studiehjälparen ritas ur samma underlag: vyn ger
+     värden för Din utveckling, och fliken Studiehjälparen står i den värd
+     som data-nl-hjalpare pekar på (2026-10-21; förut ett val inne i Din
+     utveckling). Maskinens räkning och en människas omdöme blandas aldrig. */
   function ritaUtveckling(o) {
     const host = o.host;
     if (!host) return;
     senaste.set(host, o);
-    const del = host.dataset.del === 'hjalpare' ? 'hjalpare' : 'nexlax';
-    host.dataset.del = del;
-    const sida = UTV_SIDOR.some(x => x[0] === host.dataset.sida) ? host.dataset.sida : 'oversikt';
-    host.dataset.sida = sida;
-    const öppna = (o.uppgifter || []).filter(h => h.status !== 'klar').length;
-    const val = [['nexlax', 'NexLäx', 0], ['hjalpare', 'Studiehjälparen', öppna]];
-    sättHtml(host, '<div class="nl-del" role="group" aria-label="Vilken utveckling">' + val.map(x =>
-        '<button type="button" class="nl-del-knapp" data-nl-del="' + x[0] + '" aria-pressed="' + (x[0] === del ? 'true' : 'false') + '">'
-        + '<span class="nl-del-t">' + esc(x[1]) + '</span>' + (x[2] ? '<em>' + x[2] + '</em>' : '') + '</button>').join('') + '</div>'
-      + (del === 'hjalpare'
-          ? hjälpareHtml(o)
-          : '<div class="nl-sidor" role="group" aria-label="Sidor i Din utveckling">' + UTV_SIDOR.map(x =>
-              '<button type="button" class="nl-sida-knapp" data-nl-sida="' + x[0] + '" aria-pressed="' + (x[0] === sida ? 'true' : 'false') + '">'
-              + esc(x[1]) + '</button>').join('') + '</div>'
-            + '<div class="nl-sida-kropp">' + utvSidor(o)[sida]() + '</div>'));
-  }
-
-  /* Byt sida i Din utveckling: bara innehållet byts, knapparna står kvar. */
-  function visaSida(host, namn) {
-    const o = senaste.get(host);
-    const sidor = o && host.dataset.del !== 'hjalpare' && utvSidor(o);
-    if (!sidor || !sidor[namn] || host.dataset.sida === namn) return;
-    host.dataset.sida = namn;
-    host.querySelectorAll('[data-nl-sida]').forEach(k => k.setAttribute('aria-pressed', k.dataset.nlSida === namn ? 'true' : 'false'));
-    const kropp = host.querySelector('.nl-sida-kropp');
-    if (kropp) kropp.innerHTML = sidor[namn]();
-    sistaHtml.delete(host);
-    känn('flik');
-    /* Är sidan kortare än den förra och man står långt ned hamnar knapparna
-       ovanför bild: då hämtas de tillbaka. */
-    const rad = host.querySelector('.nl-sidor');
-    if (rad && rad.getBoundingClientRect().top < 60) NXStudie.scrollaTill(window.scrollY + rad.getBoundingClientRect().top - 100);
+    sättHtml(host, '<div class="nl-sida-kropp">' + utvecklingHtml(o) + '</div>');
+    const hh = host.dataset.nlHjalpare ? document.querySelector(host.dataset.nlHjalpare) : null;
+    if (hh) sättHtml(hh, '<div class="nl-sida-kropp">' + hjälpareHtml(o) + '</div>');
   }
 
   /* Rangen överst i Din utveckling: namnet, stegen och hur långt det
@@ -1822,7 +1793,7 @@ window.NXUppgifter = (function () {
       + (topp.length
           ? '<ul class="nl-prof-marken">' + topp.map(m => '<li class="upg-marke klart"' + märkesAttr(m) + '>' + medaljHtml(m) + '<b>' + esc(m.namn) + '</b></li>').join('') + '</ul>'
             + '<p class="nl-prof-not">' + klara.length + (klara.length === 1 ? ' märke' : ' märken') + ' hittills'
-            + (o.länk ? '. <button type="button" class="nl-prof-lank" data-nl-till="marken">Se alla märken</button>' : '') + '</p>'
+            + (o.länk ? '. <button type="button" class="nl-prof-lank" data-nl-till="rank">Se alla märken</button>' : '') + '</p>'
           : '<p class="nl-prof-not">Inga märken än. Klara din första nivå så får du det första.</p>')
       + '</section>';
   }
@@ -3174,7 +3145,10 @@ window.NXUppgifter = (function () {
      profilen): vyn byter sektion först, och sektionen står på Din väg varje
      gång man kommer in. Fliken man ville till lämnas här och tas av vyn. */
   let önskadFlik = null;
-  function tagFlik() { const f = önskadFlik; önskadFlik = null; return f; }
+  function tagFlik() { const f = önskadFlik; önskadFlik = null; return FLIKNAMN[f] || f; }
+  /* Märken och Rank är en flik sedan 2026-10-21 (Leo: "Sätt ihop rank och
+     märken"), och studiehjälparen har en egen. Gamla namn leder dit. */
+  const FLIKNAMN = { marken: 'rank' };
 
   /* Flikarna, remsorna och det som bara byter en bit av en flik. De
      sitter här, som de andra lyssnarna, så att familjens vy och barnets
@@ -3206,16 +3180,10 @@ window.NXUppgifter = (function () {
     }
 
     /* Från en remsa eller en länk till en annan flik i NexLäx. Studiehjälparen
-       är en del av Din utveckling. */
+       har en egen flik bredvid Din utveckling (2026-10-21). */
     const till = mål.closest('[data-nl-till]');
     if (till) {
-      let flik = till.dataset.nlTill;
-      if (flik === 'hjalpare') {
-        flik = 'utveckling';
-        const uh = document.querySelector('#nl-utveckling, #bv-nl-utveckling');
-        const ou = uh && senaste.get(uh);
-        if (uh && ou) { uh.dataset.del = 'hjalpare'; ritaUtveckling(ou); }
-      }
+      const flik = FLIKNAMN[till.dataset.nlTill] || till.dataset.nlTill;
       const fråga = till.closest('section[data-sek="profil"]');
       if (fråga) {
         önskadFlik = flik;
@@ -3240,10 +3208,13 @@ window.NXUppgifter = (function () {
       const öppnar = host.dataset.valj !== '1';
       host.dataset.valj = öppnar ? '1' : '';
       baner.setAttribute('aria-expanded', öppnar ? 'true' : 'false');
+      const byt = baner.querySelector('.nl-baner-byt');
+      if (byt) byt.textContent = öppnar ? 'Välj ämne och årskurs nedanför' : 'Byt ämne eller årskurs';
       const valj = host.querySelector('.nl-valj');
       if (öppnar && !valj) {
         const { finns, ämnen, amne, arskurs } = lösBana(o);
-        baner.insertAdjacentHTML('afterend', valjHtml(o, finns, ämnen, amne, arskurs, host.dataset.fler === '1'));
+        /* Banderollen står sist i kortet: väljaren kommer under kortet. */
+        (baner.closest('.nl-kort') || baner).insertAdjacentHTML('afterend', valjHtml(o, finns, ämnen, amne, arskurs, host.dataset.fler === '1'));
       } else if (!öppnar && valj) {
         valj.remove();
       }
@@ -3252,31 +3223,10 @@ window.NXUppgifter = (function () {
       return;
     }
 
-    /* Utvecklingens två delar. */
-    const del = mål.closest('[data-nl-del]');
-    if (del) {
-      const host = del.closest('.nl');
-      const o = host && senaste.get(host);
-      if (!o || host.dataset.del === del.dataset.nlDel) return;
-      host.dataset.del = del.dataset.nlDel;
-      ritaUtveckling(o);
-      const ny = host.querySelector('[data-nl-del="' + del.dataset.nlDel + '"]');
-      if (ny) ny.focus({ preventScroll: true });
-      känn('flik');
-      return;
-    }
-
     /* Ett val av årskurs är klart: väljaren går ihop. Vyns egen lyssnare byter
        bana och ritar om, och den kommer efter den här. */
     const akVal = mål.closest('.nl-valj [data-nl-ak]');
     if (akVal) { const host = akVal.closest('.nl'); if (host) { host.dataset.valj = ''; sistaHtml.delete(host); } }
-
-    const sida = mål.closest('[data-nl-sida]');
-    if (sida) {
-      const host = sida.closest('.nl');
-      if (host) visaSida(host, sida.dataset.nlSida);
-      return;
-    }
 
     const pil = mål.closest('[data-nl-rank-skrolla]');
     if (pil) {
@@ -3293,26 +3243,6 @@ window.NXUppgifter = (function () {
     const host = d.closest('.nl');
     if (host) host.dataset.upp = d.open ? '1' : '';
   }, true);
-
-  /* Svep i sidled över en sida i Din utveckling byter sida. Bara ett
-     tydligt sidledsdrag: ett lodrätt eller ett kort är en rullning. */
-  let svep = null;
-  document.addEventListener('touchstart', e => {
-    const k = e.target && e.target.closest ? e.target.closest('.nl-sida-kropp') : null;
-    const t = e.touches && e.touches[0];
-    svep = k && t ? { x: t.clientX, y: t.clientY, tid: Date.now(), host: k.closest('.nl') } : null;
-  }, { passive: true });
-  document.addEventListener('touchend', e => {
-    const s0 = svep;
-    svep = null;
-    const t = e.changedTouches && e.changedTouches[0];
-    if (!s0 || !t || !s0.host || Date.now() - s0.tid > 700) return;
-    const dx = t.clientX - s0.x, dy = t.clientY - s0.y;
-    if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
-    const nu = UTV_SIDOR.findIndex(x => x[0] === s0.host.dataset.sida);
-    const nästa = UTV_SIDOR[nu + (dx < 0 ? 1 : -1)];
-    if (nästa) visaSida(s0.host, nästa[0]);
-  }, { passive: true });
 
   /* Knapparna för ljudet och vibrationen visar valet, överallt där de står. */
   function visaVal() {
