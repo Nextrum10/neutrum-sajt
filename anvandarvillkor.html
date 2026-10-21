@@ -476,10 +476,13 @@
          timbanken (Leo: "timmarna läggs in i timbanken för familjerna"),
          gäller i 60 dagar och dras först, på nästa pass
          (intern.tipstimmar_kvar, forsta_timmen_bjuds;
-         gratistimmarna_60_dagar). Studiehjälparens kod gäller jobbansökan, och bonusen
-         skrivs av intern.tipsbonus_vid_intag när den som sökt tas in i
-         poolen, intern.tipsbonus_ore kronor (Leo: "bonus redovisas som
-         lön"). Flaggorna tipstimme och tipsbonus stänger av erbjudandena,
+         gratistimmarna_60_dagar). Studiehjälparens kod gäller jobbansökan, och
+         värvningsbonusen (varvningsbonus, 2026-10-21; punkten skriven om i
+         versionen 2026-10-22, Leo: "Fixa nr 6") blir intjänad när den som sökt
+         fått sitt konto (varvning_installning.utlosare, konto_skapat), med
+         beloppet ur varvning_installning (Leo: "bonus redovisas som lön").
+         Ändras händelsen, beloppet eller vad värvaren ser ändras punkten med.
+         Flaggorna tipstimme och tipsbonus stänger av erbjudandena,
          och det som tjänats in innan ges ändå, som sista punkten lovar.
          Stängs en av ska den här texten ändras i samma veva. -->
     <h2 id="tips">Tipsa en familj eller en studiehjälpare</h2>
@@ -502,13 +505,17 @@
         till tiden, kommer timmen tillbaka och gäller till samma dag som förut.</li>
       <li><b>Timmen är inte pengar.</b> Den går inte att växla in, och den betalas inte tillbaka om
         ni slutar.</li>
-      <li><b>För dig som är studiehjälpare: en bonus i lönen.</b> När vi tar in någon som sökt jobb
-        med din kod får du 300 kronor i lön, inklusive semesterersättning och före skatt. Bonusen
-        betalas med lönen för den månad vi
-        tog in personen, den 25:e månaden efter. Den gäller en person som inte varit studiehjälpare
-        hos oss förut, och ges en gång per person.</li>
+      <li><b>För dig som är studiehjälpare: värvningsbonusen.</b> När någon som sökt jobb med din
+        kod har fått sitt konto som studiehjälpare hos oss får du 300 kronor i lön, inklusive
+        semesterersättning och före skatt. Bonusen betalas med lönen för den månad kontot skapades,
+        den 25:e månaden efter. Den gäller en person som är ny hos oss: inte du själv, inte någon som
+        sökt jobb hos oss förut och inte någon som redan haft ett konto. Den ges en gång per person,
+        och du behöver vara godkänd studiehjälpare när kontot skapas. Avböjer vi ansökan blir det
+        ingen bonus.</li>
       <li><b>Vad ni ser.</b> Ni ser hur många som anmält sig eller sökt jobb med er kod och hur många
-        av dem som blivit kunder eller tagits in, men inte vilka.</li>
+        av dem som blivit kunder eller fått ett konto, men inte vilka. En studiehjälpare ser också
+        läget för varje bonus, och förnamnet på den som sökt med koden när den personen fått sitt
+        konto.</li>
       <li>Vi kan stänga av en kod som används på ett sätt den inte är till för, till exempel i
         reklam som ser ut att komma från oss. Erbjudandena kan ändras eller upphöra; det ni redan
         tjänat in står kvar.</li>
@@ -767,7 +774,7 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=679d65ab"></script>
+<script src="nextrum-config.js?v=7488550a"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=20eb9020"></script>

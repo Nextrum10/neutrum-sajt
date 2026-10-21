@@ -1270,8 +1270,9 @@ visar bonusen som underlag för Leos utbetalning." Migrationen
   när kontot finns, och för en intjänad eller utbetald bonus dagen den
   tjänades in eller lönemånaden (`mina_tips()`, som aldrig lämnar ut
   ansökan, när kompisen sökte, adressen eller kontot och aldrig de
-  annullerade; dagarna räknas i Stockholms tid i databasen). Villkoren är en
-  platshållare tills Leo skrivit dem (`CFG.VARVNING_VILLKOR_URL`). Under
+  annullerade; dagarna räknas i Stockholms tid i databasen). Villkoren är
+  punkten `#tips`, omskriven för bonusen i versionen 2026-10-22 (Leo: "Fixa nr
+  6"), och kortet länkar dit (`CFG.VARVNING_VILLKOR_URL`). Under
   Statistik → Ersättning står månadens intjänade bonus, och lönespecen
   kallar den värvningsbonus.
 - **Mejlet** (`varvningsbonus`, `minne/notiser.md`): till värvaren när

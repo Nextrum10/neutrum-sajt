@@ -94,11 +94,12 @@ window.NEXTRUM_CONFIG = {
      skriver texten och sätter länken här när punkten finns i villkoren.
      Tom sträng = rutan säger att villkoren skrivs, utan länk. */
   TILLAGG_VILLKOR_URL: '',
-  /* Villkoren för värvningsbonusen (varvningsbonus, 2026-10-21). Texten
-     skriver Leo; tills länken står här säger kortet Värva en kompis att
-     villkoren för tips gäller. Beloppet, semesterersättningens del och
-     händelsen står i databasen (varvning_installning), inte här. */
-  VARVNING_VILLKOR_URL: '',
+  /* Villkoren för värvningsbonusen (varvningsbonus, 2026-10-21): punkten
+     #tips i användarvillkoren, omskriven för bonusen i versionen 2026-10-22
+     (Leo: "Fixa nr 6"). Tom sträng = kortet Värva en kompis säger att
+     villkoren skrivs. Beloppet, semesterersättningens del och händelsen
+     står i databasen (varvning_installning), inte här. */
+  VARVNING_VILLKOR_URL: '/anvandarvillkor#tips',
 
   /* BETALNINGSVILLKOR_DAGAR och BANKGIRO stod här, fakturans
      betalningstid och bankgiro, tills fakturan togs bort 2026-10-21. */

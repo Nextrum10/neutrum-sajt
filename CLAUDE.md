@@ -219,7 +219,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (sektionen Värvningsbonus, med filter, summering per värvare och månad och CSV, och rutan under Löner), och lönefilen
   tar de intjänade på lönearten `lonart_tipsbonus`. Värvaren ser under Värva en kompis bara läget och, när kontot finns,
   förnamnet (`mina_tips()`), och får ett mejl när bonusen tjänas in, med beloppet och inget om kompisen. Villkoren för
-  bonusen skriver Leo (en platshållare i vyn, länken i `CFG.VARVNING_VILLKOR_URL`), och revisorn avgör anställningen,
+  bonusen är punkten `#tips` i användarvillkoren, omskriven för den i versionen 2026-10-22 (Leo: "Fixa nr 6"; länken i
+  `CFG.VARVNING_VILLKOR_URL`), och ändras med händelsen, beloppet och det värvaren ser. Revisorn avgör anställningen,
   avgifterna och semesterersättningen före första utbetalningen.
 - **Materialbanken** (2026-10-02): bladen är våra egna. Nationella prov och läromedel kopieras aldrig in,
   banken länkar till provgruppernas egna sidor (`verktyg/bladen/lankar.py`), NP-träningen är egna
@@ -1076,10 +1077,10 @@ Detaljer: `minne/grunden.md`.
 - **Värvningsbonusen** (2026-10-21, `varvningsbonus`, 20261021215000) är byggd men INTE i drift: `notis-ko` från
   merge-commiten FÖRE migrationen (mallen för `varvningsbonus`; annars blir mejlet ett fel i kön), sedan migrationen,
   som ger varje godkänd studiehjälpare en kod, flyttar raderna i `tipsbonus` (inga fanns 2026-10-13) och ger de
-  ansökningar som är i gång med en studiehjälpares kod en rad (`DEPLOY-BETALNING.md` 9.24). Kvar för Leo: villkoren för
-  bonusen (platshållaren under Värva en kompis, länken i `CFG.VARVNING_VILLKOR_URL`); villkoren `#tips` säger fortfarande
-  "när vi tar in" och att den som tipsat inte ser vilka, och vyn visar nu förnamnet när kontot finns, så de skrivs om
-  i samma version. Revisorn avgör anställningen, arbetsgivaravgifterna och semesterersättningen före första
+  ansökningar som är i gång med en studiehjälpares kod en rad (`DEPLOY-BETALNING.md` 9.24). Villkoren `#tips` är
+  omskrivna för bonusen i versionen 2026-10-22, som Betala nu för med sig och ingen godkänt (Leo: "Fixa nr 6"): när
+  kompisen fått sitt konto, vem som räknas som ny, och att värvaren ser läget och förnamnet; Leo läser dem. Revisorn
+  avgör anställningen, arbetsgivaravgifterna och semesterersättningen före första
   utbetalningen, och lönearten (`lonart_tipsbonus`) sätts i Fortnox. Juristen har inte läst rad 27 i `DATASKYDD.md`
   eller policyns nya ord om koden och förnamnet.
 - **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, 20261021214000) är byggt men INTE i drift, och

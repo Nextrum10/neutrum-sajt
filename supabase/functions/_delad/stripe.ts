@@ -434,6 +434,9 @@ export const WEBHOOK_HANDELSER = [
   // Klarna (2026-10-21): en betalning som blir klar först efter kassan.
   'checkout.session.async_payment_succeeded',
   'checkout.session.async_payment_failed',
+  // Syskontillägget (2026-10-21): en kassa som går ut släpper försökets poster.
+  // Utan den gör jobbet tillagg-forsok det först efter 35 minuter.
+  'checkout.session.expired',
 ];
 
 export type Balans = { id: string | null; avgiftOre: number | null; nettoOre: number | null };

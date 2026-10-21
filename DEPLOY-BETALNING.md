@@ -1910,7 +1910,8 @@ här ett pris eller en betalning: syskon bokas som förut, och inga poster skapa
    från merge-commiten, hämtade tillbaka och jämförda byte för byte.
 5. **Stripe**: lägg till `checkout.session.expired` på webhookens endpoint (utan den släpps ett försök
    först av jobbet `tillagg-forsok` efter 35 minuter). `async_payment_succeeded` och `_failed` ska
-   redan stå där (9.22).
+   redan stå där (9.22). Händelsen står i `WEBHOOK_HANDELSER`, så Kontrollera Stripe säger om den saknas
+   (med `stripe-lage` från merge-commiten).
 6. Hela `rls-test.sql` mot driften, tillbakarullat, och advisorn. Jobben `tillagg-forsok` och
    `tillagg-paminnelse` syns under System → Automationer.
 7. **Innan strömbrytaren slås på**, och bara då: Leo skriver villkorstexten för syskontillägget och
@@ -1956,11 +1957,11 @@ lönen, och Leo betalar den med lönen.
    (`select count(*) from tutor_profiles t where t.status = 'approved' and not exists (select 1 from tipskoder k where k.person_id = t.id and k.sort = 'studiehjalpare')`
    ger 0 utom för adminkonton), och att `tipsbonus` och `varvningsbonus` har lika många rader med
    `tipsbonus_id`.
-6. **Innan någon får veta om bonusen**: Leo skriver villkoren för värvningsbonusen och lägger länken i
-   `VARVNING_VILLKOR_URL` i `nextrum-config.js` (till dess står en platshållare under Värva en kompis).
-   Villkoren `#tips` säger "när vi tar in" och att den som tipsat inte ser vilka; vyn visar förnamnet
-   när kontot finns, så de skrivs om i en ny version (`kolla-villkor.py`). Ändras händelsen
-   (`varvning_installning.utlosare`) ändras villkoren, policyn och texten i vyn med.
+6. **Villkoren**: punkten `#tips` är omskriven för värvningsbonusen i versionen 2026-10-22, som Betala nu
+   för med sig och som ingen godkänt innan migrationen `betala_nu` körs (Leo: "Fixa nr 6"), och
+   `VARVNING_VILLKOR_URL` i `nextrum-config.js` pekar dit. Leo läser texten. Ändras händelsen
+   (`varvning_installning.utlosare`), beloppet eller det värvaren ser ändras villkoren (ny version,
+   `kolla-villkor.py`), policyn och texten i vyn med.
 7. **Revisorn** före första utbetalningen: anställningen (`studiehjalpare_form`), arbetsgivaravgifterna,
    och att semesterersättningen får ingå i de 300 kr. Lönearten `foretagsfakta.lonart_tipsbonus` i
    Fortnox får inte vara semestergrundande, annars läggs semesterersättningen på en gång till.

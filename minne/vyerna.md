@@ -1869,8 +1869,8 @@ Regeln står i `minne/affaren.md` (Värvningsbonusen); här bara ytorna.
 - **Studiehjälparvyn, Profil → Värva en kompis** (fliken hette Tipsa en studiehjälpare; `nextrum-studie.js`,
   `ritaVärvning`): koden, länken med Kopiera, beloppet och händelsen ur `mina_tips()`, och listan med en rad per
   kompis (`.nx-varv-lista`: förnamnet eller "En kompis som sökt", bonusens dag eller lönemånad och läget som märke;
-  en väntande har inget datum, för när kompisen sökte är en uppgift ur ansökan). Villkoren är en
-  platshållare med länken till `#tips` tills `CFG.VARVNING_VILLKOR_URL` är satt. Utan `varvningar` i svaret
+  en väntande har inget datum, för när kompisen sökte är en uppgift ur ansökan). Villkoren länkas ur
+  `CFG.VARVNING_VILLKOR_URL` (`#tips` sedan versionen 2026-10-22); tom ger den en platshållare. Utan `varvningar` i svaret
   (migrationen inte körd) ritas den gamla rutan med antal.
 - **Jobbansökan** (`bli-studiehjalpare`, båda språken): beskedet under kodfältet (`.nx-kod-besked`, `role="status"`,
   `aria-describedby` på fältet) i mossa när koden gäller och i `--acc-lugn` när den inte gör det, som filnamnets fel
