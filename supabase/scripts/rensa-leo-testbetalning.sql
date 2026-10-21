@@ -135,7 +135,7 @@ begin
 
   return query
     select 'betalning riktig'::text, b.id::text, (b.betald_at at time zone 'Europe/Stockholm')::date,
-           format('%s, %s öre (%s tillbaka), %s, %s — RIKTIGA PENGAR: märks annullerad, står kvar i summorna; '
+           format('%s, %s öre (%s tillbaka), %s, %s — RIKTIGA PENGAR: märks annullerad och döljs, står kvar i summorna; '
                   'betala tillbaka i Stripe om den var ett prov', b.typ, b.belopp_ore, b.aterbetalt_ore, b.status,
                   b.stripe_payment_intent)
       from public.betalningar b where b.id = any (riktiga) order by b.betald_at;

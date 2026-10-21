@@ -363,8 +363,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   **En betalning döljs eller annulleras utan att röras** (2026-10-21, `betalningar_dolda`, Leo: "riktiga betalningar
   raderas inte utan markeras annullerad/dold"): en rad i `betalningar_dolda`, skriven bara av databasens ägare
   (`supabase/scripts/rensa-leo-testbetalning.sql`), som aldrig ändras eller tas bort. `test` (bara på en betalning med
-  `skarp = false`) döljer den i Liggaren, under Dolda; `annullerad` märker en riktig betalning, som står kvar i
-  summorna tills den betalats tillbaka i Stripe. **Liggaren är kort** (samma dag, Leo: "Snyggare kortsektion i
+  `skarp = false`) döljer den i Liggaren, under Dolda; `annullerad` märker en riktig betalning, som också döljs i
+  standardvyn (Leo: "märkas annullerad och döljas i standardvyn") men står kvar i summorna tills den betalats tillbaka
+  i Stripe. **Liggaren är kort** (samma dag, Leo: "Snyggare kortsektion i
   betalningsvyn"): ett kort per betalning med beloppet, läget som kantens färg, familjen, typen, koden, dagen och
   raderna betalningen betalade (`betalningsrader` när de finns), bara visning.
 - **Köpvillkoren i kassan** (2026-10-21, i drift sedan 2026-10-20; texten sedan samma kväll, Leo: "fixa"): varje kassa

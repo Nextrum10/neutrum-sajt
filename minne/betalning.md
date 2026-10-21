@@ -1958,7 +1958,11 @@ plan/pass/tillägg); bara visning."
   ALDRIG och ingår inte i något städjobb", och triggrarna nekar delete och
   truncate för alla. Kodernas användning, betalningens rader och
   tilläggsposterna hör till den. Skriptet döljer därför en testbetalning i
-  stället för att radera den, och listar raderna som hör till den.
+  stället för att radera den, och listar raderna som hör till den. Leo bad
+  om att testraderna raderas ("Det får bara radera rader som tillhör
+  testkontot och som är Stripe testläge"); det strider mot hans regel för
+  liggaren samma dag och mot triggrarna, så skriptet döljer dem, och
+  slutrapporten säger det.
 - **`betalningar_dolda`**: en rad per betalning, `test` eller `annullerad`, med
   en kommentar. Bara databasens ägare skriver (ingen grant till en inloggad),
   ingen ändrar eller tar bort en rad (triggrar, också mot ägaren), och `test`
@@ -1982,8 +1986,9 @@ plan/pass/tillägg); bara visning."
   betald, ockra delvis tillbaka, lera tvist), familjen och dagen, typen som
   bricka och koden, raderna (`betalningsrader` per typ, annars betalningen
   själv) och knappen sist. En kolumn på en telefon. Dolda står under valet
-  Dolda (med antalet), och en annullerad har märket Annullerad och står kvar
-  i summorna.
+  Dolda (med antalet), också en annullerad (Leo: "märkas annullerad och
+  döljas i standardvyn"), som har märket Annullerad och står kvar i
+  summorna.
 - Provat: `rls-test.sql` avsnitt 50 (`BD`, 7 prov) och `prova-kassan.js`
   (korten, raderna, kanten, Dolda och Annullerad).
 

@@ -36,9 +36,11 @@
    per sak. Utan raderna är betalningen själv raden. Bara visning: det
    bokförda ändras aldrig härifrån.
 
-   MARKERINGARNA (betalningar_dolda, 2026-10-21): en testbetalning som
-   rensa-leo-testbetalning.sql dolt står bara under Dolda, och en riktig
-   betalning märkt annullerad står kvar, i summorna, med märket Annullerad.
+   MARKERINGARNA (betalningar_dolda, 2026-10-21, Leo: "märkas annullerad
+   och döljas i standardvyn"): en testbetalning som
+   rensa-leo-testbetalning.sql dolt och en riktig betalning den märkt
+   annullerad står bara under Dolda. Den annullerade står kvar i summorna:
+   pengarna rörde sig, tills den betalats tillbaka i Stripe.
    ============================================================ */
 (function () {
   'use strict';
@@ -133,9 +135,9 @@
     return TYP[r.typ] || r.typ;
   }
 
-  /* En testbetalning som skriptet dolt står bara under Dolda. En
-     annullerad står kvar överallt: pengarna rörde sig. */
-  const dold = r => !!L.dolda[r.id] && L.dolda[r.id].skal === 'test';
+  /* En betalning skriptet märkt, test eller annullerad, står bara under
+     Dolda. Den annullerade räknas ändå i summorna: pengarna rörde sig. */
+  const dold = r => !!L.dolda[r.id];
 
   /* Raderna betalningen betalade: betalningsrader när de finns, annars
      betalningen själv. */
@@ -237,8 +239,9 @@
     host.innerHTML = synliga.length ? synliga.map(rad).join('')
       : '<p class="vy-tom">' + (L.rader.length ? 'Inga betalningar som passar.' : 'Inga betalningar än.') + '</p>';
     fot.textContent = 'Ett kort per betalning i Stripe, skriven av databasen när webhooken skrivit pengarna. Raderna raderas '
-      + 'aldrig: de är bokföringsunderlag i sju år. Testbetalningar räknas inte i summorna, och de som är dolda står under '
-      + 'Dolda. En annullerad betalning står kvar i summorna tills den betalats tillbaka.';
+      + 'aldrig: de är bokföringsunderlag i sju år. Testbetalningar räknas inte i summorna. Dolda och annullerade '
+      + 'betalningar står under Dolda; en annullerad räknas ändå i summorna, för pengarna rörde sig, tills den betalats '
+      + 'tillbaka i Stripe.';
   }
 
   /* ---------- kortet ---------- */

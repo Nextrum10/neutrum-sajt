@@ -601,8 +601,9 @@ async function provaLiggaren(webb) {
   prova('liggaren: summorna räknar bara skarpa betalningar',
     /Inbetalt\s*3\s?930\s*kr\s*4 betalningar/.test(sam) && /Tillbaka till familjer\s*100\s*kr/.test(sam)
       && /Netto\s*3\s?830\s*kr/.test(sam), sam);
-  prova('liggaren: ett kort per betalning, testköpet med, den dolda inte',
-    (await page.locator('#lig-lista .lig-kort').count()) === 5 && (await page.locator('[data-lig-rad="lig-6"]').count()) === 0);
+  prova('liggaren: ett kort per betalning, testköpet med, den dolda och den annullerade inte',
+    (await page.locator('#lig-lista .lig-kort').count()) === 4 && (await page.locator('[data-lig-rad="lig-6"]').count()) === 0
+      && (await page.locator('[data-lig-rad="lig-3"]').count()) === 0);
   const plan = await innehåll(page, '[data-lig-rad="lig-1"]');
   prova('liggaren: köpet med namn, kod, läge och belopp',
     /Standard/.test(plan) && /Kod VAN10/.test(plan) && /Betald/.test(plan) && /3\s?032\s*kr/.test(plan)
@@ -611,9 +612,8 @@ async function provaLiggaren(webb) {
   prova('liggaren: passet delvis tillbaka, med passets knapp',
     /Delvis tillbaka/.test(pass) && /100\s*kr tillbaka/.test(pass)
       && (await page.locator('[data-lig-rad="lig-2"] [data-aterbetala="pass-2"]').count()) === 1, pass);
-  prova('liggaren: tillägget och betalningen utan rad betalas tillbaka i Stripe',
-    /Betalas tillbaka i Stripe/.test(await innehåll(page, '[data-lig-rad="lig-3"]'))
-      && /Inte nedskriven på sin rad/.test(await innehåll(page, '[data-lig-rad="lig-5"]'))
+  prova('liggaren: betalningen utan rad betalas tillbaka i Stripe',
+    /Inte nedskriven på sin rad/.test(await innehåll(page, '[data-lig-rad="lig-5"]'))
       && /Betalas tillbaka i Stripe/.test(await innehåll(page, '[data-lig-rad="lig-5"]')));
   prova('liggaren: testköpet är märkt', /Test/.test(await innehåll(page, '[data-lig-rad="lig-4"] .lig-lage')));
 
@@ -630,9 +630,8 @@ async function provaLiggaren(webb) {
   const kantDelvis = await kant('[data-lig-rad="lig-2"]');
   prova('korten: läget färgar kanten, betald och delvis tillbaka olika', kantBetald && kantDelvis && kantBetald !== kantDelvis,
     kantBetald + ' mot ' + kantDelvis);
-  prova('korten: en annullerad betalning står kvar, med märket', /Annullerad/.test(await innehåll(page, '[data-lig-rad="lig-3"] .lig-lage')));
-  prova('korten: Dolda står bland valen, med antalet', /Dolda\s*1/.test(await innehåll(page, '#lig-chips')),
-    await innehåll(page, '#lig-chips'));
+  prova('korten: Dolda står bland valen, med antalet: den dolda testbetalningen och den annullerade',
+    /Dolda\s*2/.test(await innehåll(page, '#lig-chips')), await innehåll(page, '#lig-chips'));
   prova('liggaren: finstilen säger att raderna aldrig raderas', /raderas aldrig/.test(await innehåll(page, '#lig-fot')));
   await bild(page, 'liggaren', '#panel-liggaren');
 
@@ -645,8 +644,11 @@ async function provaLiggaren(webb) {
   await filter('plan', ['lig-1'], 'Planer visar planen');
   await filter('test', ['lig-4'], 'Test visar bara testköpet');
   await filter('tillbaka', ['lig-2'], 'Tillbaka visar det som gått tillbaka');
-  await filter('dolda', ['lig-6'], 'Dolda visar den dolda testbetalningen');
-  await filter('alla', ['lig-1', 'lig-2', 'lig-3', 'lig-4', 'lig-5'], 'Alla visar allt utom det dolda');
+  await filter('dolda', ['lig-3', 'lig-6'], 'Dolda visar den annullerade och den dolda testbetalningen');
+  prova('korten: den annullerade har märket, och tillägget betalas tillbaka i Stripe',
+    /Annullerad/.test(await innehåll(page, '[data-lig-rad="lig-3"] .lig-lage'))
+      && /Betalas tillbaka i Stripe/.test(await innehåll(page, '[data-lig-rad="lig-3"]')));
+  await filter('alla', ['lig-1', 'lig-2', 'lig-4', 'lig-5'], 'Alla visar allt utom det dolda och det annullerade');
   await page.fill('#lig-sok', 'pi_utan5');
   await vänta(150);
   prova('liggaren: sökningen hittar Stripes id',
