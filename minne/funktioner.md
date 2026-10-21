@@ -182,6 +182,38 @@ gick inte att verifiera" ur funktionens egen kod för de inloggade, 400
 "stripe-signature saknas" för webhooken och 401 "Fel eller saknad
 hemlighet" för `notis-ko` och `stripe-reservation`; ingen grind svarade.
 
+**De andra sjutton** i driften jämfördes samma kväll med 829d2c0, fil för
+fil (bara läsning, en hjälpagent). Var och en har exakt de filer dess
+`index.ts` importerar, och `verify_jwt` stämmer med `config.toml` för alla
+som finns i repot.
+`barn-konto` och `fakturering` är lika i alla filer. I de andra skiljer bara
+kommentarer eller kod som funktionen aldrig når:
+- Notismallarnas `MALLAR`, `KATEGORI` och `vyAdress()` nås bara genom
+  `renderaMejl()`, och den anropar bara `notis-ko`. Gamla meningar om
+  faktura och "bekräfta rapporten" står alltså kvar i sex driftsatta kopior
+  av `mallar.ts`, men ingen av dem skickar dem.
+- `BETALSATT`, `descriptor()` och `WEBHOOK_HANDELSER` i `stripe.ts` läser
+  varken `klippkort-betala` eller `stripe-avstamning`. Det de läser
+  (`v1`, `StripeError`, `arStripeId`, `balans`, API-versionen) är lika main.
+- `BETALNINGSVILLKOR_DAGAR` importeras inte.
+- Morgonmejlets `ADMIN_SORTER` har två fakturarader som databasen inte
+  längre skickar.
+
+**Ett fel i sak:** `notis-avanmal` v9, från 2026-10-01, hade `typer.ts` utan
+`barnforslag`, `kort_nekat`, `tillagg_paminnelse`, `tillagg_kvitto` och
+`varvningsbonus`, så avanmälan i de mejlen svarade 403
+(`minne/notiser.md`). Ingen hade drabbats. Funktionen läggs ut från
+829d2c0 samma kväll.
+
+Två detaljer till:
+- `bjud-in` v12 och `admin-paminnelse` v4 är inte byte för byte någon
+  commit. Deras kommentarer har stavfel som inte finns i git ("SÄLVA",
+  "föräldern", "stånd", "bokstärliga"), så de gick ut ur omskriven text.
+  Bara kommentarer berörs.
+- `utbildningsprov` (v5) finns bara i driften. Med en nyckel svarar den 500,
+  för `provet_i_ansokan_tas_bort` tog rätten att köra dess funktioner. Leo
+  tar bort den i panelen.
+
 **Verktygslagret avkodar bakstreck-u och fyra hexsiffror** i det som
 skickas i ett verktygsanrop (2026-10-21). `notis-ko` v31 fick ett hårt
 mellanslag i `notiser/mallar.ts` där källan har sex tecken (bakstreck, u,

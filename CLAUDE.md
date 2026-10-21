@@ -854,7 +854,8 @@ Detaljer: `minne/grunden.md`.
   `notiser_mejl` är strömbrytaren (av och trasigt ser likadana ut); `loggad` är slutläge.
 - Ingen får en notis om sin egen åtgärd. Mallarna ser bara `RenData`, varje namn och ämne går
   genom `fornamn()`, och `rapport` mejlas aldrig. Typlistorna i databasen och i `typer.ts`
-  ändras tillsammans. En saknad rad i `notis_val` betyder PÅ, avanmälan skriver bara där, och
+  ändras tillsammans, och en ny typ går ut med både `notis-ko` och `notis-avanmal`: avanmälan prövar
+  tokenens typ mot listan och svarar annars 403 (2026-10-21). En saknad rad i `notis_val` betyder PÅ, avanmälan skriver bara där, och
   länken i mejlet kan aldrig slå på något och har med flit ingen utgångstid.
 - Barnkontots tekniska adress får aldrig ett mejl: `notis_utskick_ta` och `notis-ko` hoppar
   över `@barn.nextrum.se`, och barnets notiser står i `barn_notiser`. Ett barns egen bekräftade

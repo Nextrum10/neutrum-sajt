@@ -680,3 +680,13 @@ lönen, och knappen Se dina värvningar till `#profil/tips`. Kompisens namn stå
 står i `notiser` som de andra. Ett fel när mejlet köas blir en rad i `notis_fel`, aldrig ett fel i bonusen. Den går att
 välja bort under Profil → Notiser (Värvningsbonus, bara för en studiehjälpare), och `notis_konfig.lage` rörs inte:
 sandlådan och `notiser_mejl` gäller som för allt annat i kön.
+
+### En ny typ går ut med notis-avanmal (2026-10-21)
+Avanmälningslänken bär mejlets egen typ i tokenen (`notiser/ko.ts`, `skapaToken(mottagare, 'mejl', typ, …)`), både i
+texten och i List-Unsubscribe, och `notis-avanmal` prövar typen mot listan i sin kopia av `typer.ts` (`typOk()` i
+`notiser/token.ts`). En typ som `notis-ko` skickar men `notis-avanmal` inte känner ger 403 "Länken är ogiltig." på båda
+vägarna, och inget sparas. Kvällen 2026-10-21 hade `notis-avanmal` fortfarande v9 från 2026-10-01, utan `barnforslag`,
+`kort_nekat`, `tillagg_paminnelse`, `tillagg_kvitto` och `varvningsbonus`. En granskning av de driftsatta funktionerna
+mot main hittade det (`minne/funktioner.md`, Kedjan 2026-10-21). Inget mejl av de typerna hade köats, så ingen hade
+drabbats. `notis-avanmal` från 829d2c0 rättar det, och en länk som redan skickats fungerar då, för den har ingen
+utgångstid. Därför: en ny typ i `typer.ts` driftsätts med både `notis-ko` och `notis-avanmal`.
