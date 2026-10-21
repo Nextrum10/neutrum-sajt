@@ -2010,6 +2010,9 @@ nu-sessionen fick veta före. Detaljerna står i `minne/databasen.md` (Kedjan 20
    verktygets ruta, så torrkörningens lista togs med läsfrågor och raden skrevs med skriptets vakter.
 9. **Ingen backup för hand** (9.23 och 9.24 steg 1): en ögonblicksbild av de berörda raderna togs före, och efteråt
    stod samma rader kvar. Supabases dagliga backup har tabellerna.
+10. **De andra sjutton funktionerna** jämfördes med 829d2c0, fil för fil (`minne/funktioner.md`). Bara kommentarer
+    och kod som funktionerna aldrig når skiljer, utom i `notis-avanmal`: v9 kände inte fem notistyper, så avanmälan i
+    de mejlen svarade 403. Inget sådant mejl hade köats. v10 från 829d2c0 rättade det, byte för byte lika main.
 
 Kvar, och Leos: provet i testläge (9.22 steg 5 och 9.24 steg 8); före `syskonskuld` villkorstexten och två beslut
 (9.23 steg 7: tre barn blir 537 kr i timmen i stället för 468, och `tillagg_installning` gör tillägget upplupet när ett

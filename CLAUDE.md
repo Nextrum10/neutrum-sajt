@@ -1079,7 +1079,9 @@ Detaljer: `minne/grunden.md`.
   lika en databas byggd ur filerna, utom `zz_prov_*` och fyra gamla som bara skiljer i kommentarer. I Stripes sandlåda
   var Klarna redan på, och endpointen tar emot `checkout.session.expired`, `async_payment_succeeded` och `_failed`.
   Leos testbetalning är dold i Liggaren, och inget raderades. Ingen backup togs för hand; en ögonblicksbild före visar
-  att samma rader står kvar.
+  att samma rader står kvar. En jämförelse av de andra sjutton funktionerna med main hittade ett fel i sak:
+  `notis-avanmal` v9 kände inte fem notistyper, så avanmälan i de mejlen svarade 403. v10 från 829d2c0 rättade det
+  innan något sådant mejl gått ut (`minne/notiser.md`).
 - **Den oberoende granskningen av del 1–8** (2026-10-21): tre granskare som inte skrivit koden läste hela diffen
   (databasens skydd, pengaflödet, tidszonen och vyerna) och bevisade sina fynd mot en lokal databas. Allt rättades i
   samma migrationer, i drift sedan kvällen 2026-10-21, med prov i `rls-test.sql` (avsnitt 47–52) och `tillagg_test.ts`.

@@ -688,5 +688,5 @@ texten och i List-Unsubscribe, och `notis-avanmal` prövar typen mot listan i si
 vägarna, och inget sparas. Kvällen 2026-10-21 hade `notis-avanmal` fortfarande v9 från 2026-10-01, utan `barnforslag`,
 `kort_nekat`, `tillagg_paminnelse`, `tillagg_kvitto` och `varvningsbonus`. En granskning av de driftsatta funktionerna
 mot main hittade det (`minne/funktioner.md`, Kedjan 2026-10-21). Inget mejl av de typerna hade köats, så ingen hade
-drabbats. `notis-avanmal` från 829d2c0 rättar det, och en länk som redan skickats fungerar då, för den har ingen
+drabbats. `notis-avanmal` v10 från 829d2c0 rättade det samma kväll, och en länk som redan skickats fungerar då, för den har ingen
 utgångstid. Därför: en ny typ i `typer.ts` driftsätts med både `notis-ko` och `notis-avanmal`.

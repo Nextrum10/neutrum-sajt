@@ -202,8 +202,9 @@ kommentarer eller kod som funktionen aldrig når:
 **Ett fel i sak:** `notis-avanmal` v9, från 2026-10-01, hade `typer.ts` utan
 `barnforslag`, `kort_nekat`, `tillagg_paminnelse`, `tillagg_kvitto` och
 `varvningsbonus`, så avanmälan i de mejlen svarade 403
-(`minne/notiser.md`). Ingen hade drabbats. Funktionen läggs ut från
-829d2c0 samma kväll.
+(`minne/notiser.md`). Ingen hade drabbats, och v10 från 829d2c0 rättade
+det samma kväll: byte för byte lika main, och röktestet svarade 403 ur
+funktionens egen kod för en token som inte är en token.
 
 Två detaljer till:
 - `bjud-in` v12 och `admin-paminnelse` v4 är inte byte för byte någon
