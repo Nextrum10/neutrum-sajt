@@ -250,6 +250,150 @@
     });
   }
 
+  /* ------------------------------------------------------------
+     NEX MÅNADSRAPPORT (2026-10-21)
+
+     Nex skriver den själv den 1:a varje månad (nex-manadsrapport). Den
+     ligger som en körning i agent_korningar: agenten drift, frågan
+     "Månadsrapport för oktober 2026". Rutan visar den valda månadens
+     senaste, och väljaren har de månader som finns plus de tre senaste,
+     så att en saknad rapport går att skriva.
+
+     Texten ritas ur två former, ## rubrik och - punkt, och allt annat
+     blir stycken. Varje rad går genom esc(): modellen har skrivit den.
+     ------------------------------------------------------------ */
+  const PREFIX = 'Månadsrapport för ';
+  const MÅNADER = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli',
+    'augusti', 'september', 'oktober', 'november', 'december'];
+  const månadsnamn = iso => MÅNADER[Number(iso.slice(5, 7)) - 1] + ' ' + iso.slice(0, 4);
+  const R = { rapporter: [], vald: null, hämtad: false };
+
+  function rapportHtml(text) {
+    let ut = '', lista = false;
+    String(text || '').split('\n').forEach(rad => {
+      const r = rad.trim();
+      if (/^[-•·]\s+/.test(r)) {
+        if (!lista) { ut += '<ul>'; lista = true; }
+        ut += '<li>' + esc(r.replace(/^[-•·]\s+/, '')) + '</li>';
+        return;
+      }
+      if (lista) { ut += '</ul>'; lista = false; }
+      if (!r) return;
+      if (/^#{1,6}\s+/.test(r)) ut += '<h6>' + esc(r.replace(/^#{1,6}\s+/, '')) + '</h6>';
+      else ut += '<p>' + esc(r) + '</p>';
+    });
+    return ut + (lista ? '</ul>' : '');
+  }
+
+  /* De tre senaste månaderna, den innevarande först (ett läge hittills),
+     i Stockholm. Väljaren börjar aldrig före september 2026. */
+  function senasteMånader() {
+    const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Stockholm' }));
+    const ut = [];
+    for (let i = 0; i < 4; i++) {
+      const m = new Date(d.getFullYear(), d.getMonth() - i, 1);
+      const iso = m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0') + '-01';
+      if (iso >= '2026-09-01') ut.push(iso);
+    }
+    return ut;
+  }
+
+  function isoFörNamn(namn) {
+    const [m, a] = String(namn).split(' ');
+    const i = MÅNADER.indexOf(m);
+    return i === -1 ? null : a + '-' + String(i + 1).padStart(2, '0') + '-01';
+  }
+
+  async function hämtaRapporter() {
+    const { data, error } = await supa.from('agent_korningar')
+      .select('id, fraga, svar, skapad, status')
+      .eq('agent', 'drift').eq('status', 'klar').like('fraga', PREFIX + '%')
+      .order('skapad', { ascending: false }).limit(24);
+    if (error) throw error;
+    R.rapporter = (data || []).map(r => Object.assign(r, { manad: isoFörNamn(r.fraga.slice(PREFIX.length)) }))
+      .filter(r => r.manad && r.svar);
+  }
+
+  function ritaRapporten() {
+    const värd = $('#nex-rapport-text');
+    const väljare = $('#nex-rapport-valj');
+    if (!värd || !väljare) return;
+
+    const månader = Array.from(new Set(senasteMånader().concat(R.rapporter.map(r => r.manad))))
+      .sort().reverse();
+    if (!R.vald) {
+      /* Förvalet är den senaste skrivna, annars förra månaden. */
+      R.vald = (R.rapporter[0] && R.rapporter[0].manad) || månader[1] || månader[0];
+    }
+    väljare.innerHTML = månader.map(m => '<option value="' + m + '"' + (m === R.vald ? ' selected' : '') + '>'
+      + esc(månadsnamn(m)) + (R.rapporter.some(r => r.manad === m) ? '' : ' (ingen än)') + '</option>').join('');
+
+    const r = R.rapporter.find(x => x.manad === R.vald);
+    $('#nex-rapport-manad').textContent = månadsnamn(R.vald);
+    $('#nex-rapport-skriv').textContent = r ? 'Skriv om' : 'Skriv nu';
+    if (!r) {
+      värd.innerHTML = '<p class="xsmall" style="color:var(--bl-2)">Ingen rapport för ' + esc(månadsnamn(R.vald))
+        + ' än. Nex skriver förra månadens själv den 1:a; tryck Skriv nu för att få den nu.</p>';
+      return;
+    }
+    värd.innerHTML = rapportHtml(r.svar)
+      + '<p class="kon-rapport-nar">Skriven ' + esc(new Date(r.skapad).toLocaleString('sv-SE',
+        { timeZone: 'Europe/Stockholm', dateStyle: 'medium', timeStyle: 'short' })) + '</p>';
+  }
+
+  async function ritaManadsrapport() {
+    const värd = $('#nex-rapport-text');
+    if (!värd) return;
+    try {
+      await hämtaRapporter();
+      ritaRapporten();
+    } catch (fel) {
+      värd.innerHTML = '<p class="xsmall" style="color:var(--acc-lugn)">Rapporten kunde inte hämtas: '
+        + esc(NX.felText ? NX.felText(fel) : String(fel)) + '</p>';
+    }
+  }
+
+  function kopplaRapporten() {
+    const väljare = $('#nex-rapport-valj');
+    const knapp = $('#nex-rapport-skriv');
+    if (!väljare || !knapp) return;
+    väljare.addEventListener('change', () => { R.vald = väljare.value; ritaRapporten(); });
+
+    knapp.addEventListener('click', async () => {
+      const msg = $('#nex-rapport-msg');
+      if (msg) NX.rensa(msg);
+      const omskrivning = R.rapporter.some(r => r.manad === R.vald);
+      const kör = async () => {
+        const { data, error } = await supa.functions.invoke('nex-manadsrapport',
+          { body: { manad: R.vald, igen: omskrivning } });
+        let svar = data;
+        if (error && error.context && typeof error.context.json === 'function') {
+          try { svar = await error.context.json(); } catch (e) { /* behåll felet */ }
+        }
+        if (svar && svar.error) throw new Error(svar.error);
+        if (!svar) throw error || new Error('Tomt svar');
+        await hämtaRapporter();
+      };
+      try {
+        if (typeof NXStudie !== 'undefined' && NXStudie.medan) await NXStudie.medan(knapp, 'Nex skriver…', kör);
+        else await kör();
+        /* Efter medan(): den sätter tillbaka knappens gamla text när den
+           släpper, och Skriv nu ska då ha blivit Skriv om. */
+        ritaRapporten();
+      } catch (fel) {
+        if (msg) NX.säg(msg, 'Nex kunde inte skriva rapporten: ' + (fel && fel.message || fel), false);
+      }
+    });
+  }
+
+  /* Hämtas en gång, när Översikt ritas första gången. Konsolen ritas om
+     ofta, och rapporten ändras högst en gång i månaden. */
+  function ritaKonsolOchRapport() {
+    ritaKonsol.apply(null, arguments);
+    if (!R.hämtad) { R.hämtad = true; ritaManadsrapport(); }
+  }
+
   koppla();
-  NXAdmin.rita.ritaKonsol = ritaKonsol;
+  kopplaRapporten();
+  NXAdmin.rita.ritaKonsol = ritaKonsolOchRapport;
 })();

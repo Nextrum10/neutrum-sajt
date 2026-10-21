@@ -29,7 +29,7 @@
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
      densamma som i studievyn och studiehjälparvyn. -->
 <link rel="stylesheet" href="nextrum-admin-palett.css?v=510b6564">
-<link rel="stylesheet" href="nextrum-admin-konsol.css?v=b0f189d5">
+<link rel="stylesheet" href="nextrum-admin-konsol.css?v=9198edac">
 </head>
 <body class="vy vy-admin">
 
@@ -381,6 +381,26 @@
 
               <div class="kon-ut" id="kon-ut"></div>
             </div>
+          </div>
+
+          <!-- ============ NEX MÅNADSRAPPORT (2026-10-21) ============
+               Nex skriver den själv den 1:a varje månad, om förra månaden
+               (nex-manadsrapport, väckt av pg_cron). Bara summor lämnar oss,
+               aldrig namn. Skriv nu skriver om förra månadens, eller väljer
+               en annan månad i väljaren. Ritas av nextrum-admin-konsol.js. -->
+          <div class="dbox kon-rapport" id="nex-rapport">
+            <div class="kon-rapport-topp">
+              <div>
+                <h5>Nex månadsrapport <em id="nex-rapport-manad"></em></h5>
+                <p class="xsmall kon-rapport-not">Nex skriver den själv den 1:a varje månad. Bara summor lämnar oss, inga namn.</p>
+              </div>
+              <div class="kon-rapport-val">
+                <select class="sel" id="nex-rapport-valj" aria-label="Välj månad för rapporten"></select>
+                <button class="btn btn-ghost btn-sm" type="button" id="nex-rapport-skriv">Skriv nu</button>
+              </div>
+            </div>
+            <p class="ok-msg" id="nex-rapport-msg"></p>
+            <div id="nex-rapport-text"><div class="loading">Hämtar</div></div>
           </div>
 
           <!-- ============ HUR GÅR DET ============
@@ -2597,7 +2617,7 @@
 <script src="nextrum-admin-radera.js?v=85c68990"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=0b10c92f"></script>
+<script src="nextrum-admin-konsol.js?v=420a6d63"></script>
 <script src="nextrum-modulvakt.js?v=bca26bc2"></script>
 <script src="nextrum-admin.js?v=d3f87ab1"></script>
 </body>
