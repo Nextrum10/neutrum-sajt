@@ -378,6 +378,10 @@ kontroll av att eleven fanns; den fick bli `ai_finns()`.
   **den kan fortfarande innehålla namn**: familjen skriver ofta
   "Elsa behöver hjälp med matten" i rutan. Det är en avvägning, inte
   ett skydd som håller tätt.
+- **Ämnena jämförs som koder** (2026-10-21): `amnen_mots()` går genom `amne_koder()`, som gör
+  Matte till matematik, NO till fysik, kemi och biologi, SO till sina fyra och "Flera ämnen"
+  till matematik, svenska och engelska. Förut jämfördes fritext med `position()`, och en elev
+  med flera ämnen fick ett hårt nej mot varje studiehjälpare. Driftsatt samma natt.
 - Matchningspoängen ligger i `matchningspoang()`. Adminvyn hämtar
   svaret och skriver meningarna själv — databasen svarar med koder,
   aldrig med svensk text, så att samma svar kan läsas av en agent utan
@@ -412,6 +416,42 @@ verktyg, alltså inget tänkande) och ett uttryckligt `effort`, och `svarstext()
 läser bara textblocken och svarar null på ett avhugget svar, som motorn.
 Juridik och ekonomi berördes inte av fällan: motorn skriver redan ut `high` och
 filtrerar textblocken. Driftsätts från main efter merge, alla fem.
+
+### Nex månadsrapport (2026-10-21)
+
+Leo: "det är ju bra att den automatiskt ger en inblick i läget av företaget
+varje månad". Drift-agenten gjorde det aldrig av sig själv: den svarade när
+någon skrev i rutan på Översikt, och den hade körts en gång sedan september.
+En kväll tidigare stod drift och förslagskön på väg ut ur adminvyn (PR #319,
+stängd utan merge samma förmiddag: Nex och drift står kvar), och i stället
+kom det Leo faktiskt ville ha, en rapport ingen behöver be om.
+
+- **Edge-funktionen `nex-manadsrapport`** (`verify_jwt` av). Släpps in med
+  hemligheten i `x-nextrum-notis` (schemat) eller en superadmins egen token
+  (Skriv nu, `kravAdmin`), prövat innan `service_role` används till något.
+- **Inga verktyg och ingen slinga.** Drifts slinga går genom `ai_verktyg`, som
+  kräver `is_admin()`, och ett schema har ingen inloggning. Funktionen läser i
+  stället `ai_analys`, `ai_avvikelser`, `ai_omatchade_elever`,
+  `ai_saknade_rapporter`, `ai_nya_leads` och `ai_kommande_pass` med
+  `service_role` (som redan fick köra dem) och räknar ihop dem i
+  `_delad/manadsrapport.ts`. **Bara summor går till modellen**: inga id:n,
+  initialer eller anmälningarnas fritext (`manadsrapport_test.ts` och
+  `testa-agent.js` vaktar).
+- **En rapport per månad**: finns en klar körning med frågan "Månadsrapport för
+  oktober 2026" skrivs den inte om, utom med Skriv om. Schemat skriver alltid
+  förra månaden; Skriv nu kan välja en månad i väljaren (den innevarande ger
+  ett läge hittills).
+- **Var den syns**: rutan Nex månadsrapport på Översikt, under NEX-bandet
+  (`nextrum-admin-konsol.js`, `ritaManadsrapport`), och en uppgift
+  `nex-manad:ÅÅÅÅ-MM` ("… är klar") som tar den till Att göra och
+  morgonmejlet kl. 9. Misslyckas schemats körning blir det en uppgift
+  `nex-manad:fel:ÅÅÅÅ-MM`, och saknas adressen `nex-manad:adress`.
+- **Modellen** är `claude-opus-5-5` med sitt förval medium, utan verktyg; svaret
+  läses ur textblocken och ett avhugget svar sparas aldrig som en rapport.
+- **Jobbet** är `nex-manadsrapport`, `13 6 1 * *` (UTC), två timmar efter
+  månadskörningen, så att förra månadens löneunderlag finns.
+- Texten töms med resten av agentloggen efter 90 dagar
+  (`intern.ai_och_uppgifter_gallra`, `DATASKYDD.md` rad 16).
 
 ### Maskoten har med flit ingen modell
 

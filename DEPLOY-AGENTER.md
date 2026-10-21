@@ -199,6 +199,25 @@ välj först, för de två ser helt olika ut i koden.
 
 ---
 
+## Nex månadsrapport (2026-10-21)
+
+Nex skriver förra månadens rapport själv den 1:a, och Skriv nu på Översikt
+skriver den när som helst. Driftsättning, i den här ordningen och efter merge:
+
+1. Edge-funktionen från main: `supabase functions deploy nex-manadsrapport`.
+   `verify_jwt = false` står i `supabase/config.toml`; läs tillbaka filerna och
+   jämför byte för byte med main (`index.ts` och `_delad/manadsrapport.ts`,
+   `agent.ts`, `auth.ts`, `notis.ts`).
+2. Migrationen `20261021190000_nex_manadsrapport.sql` (inget `drop`, inget
+   `delete`): kolumnen `notis_konfig.nex_url`, väckningen och jobbet.
+3. Prova: tryck Skriv nu under Nex månadsrapport på Översikt. En rapport för
+   förra månaden ska visas, och en uppgift "… är klar" stå i Att göra.
+4. Schemat provas utan att vänta till den 1:a med
+   `select intern.nex_manadsrapport_vack();` i SQL Editor; finns förra
+   månadens rapport redan svarar funktionen med den och skriver inget nytt.
+
+Kostnaden är ett anrop i månaden till Opus 5.5 med ett par tusen tokens in.
+
 ## Vad det kostar
 
 Modellen är `claude-opus-5-5`. En juridikfråga som hämtar tre dokument landar
