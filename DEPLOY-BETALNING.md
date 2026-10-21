@@ -1867,7 +1867,7 @@ Kvar, och Leos (utbildningsprovet fick sina frågor samma kväll, `DEPLOY-NOTISE
 och Google Pay med domänerna (9.19 steg 7), provköpen i testläge (9.19 steg 7 och 9.20 steg 5), att säga till
 familjerna (villkoren, planerna per kalendermånad, koderna bara på planer) och studiehjälparna (provet), och juristen.
 
-### 9.22 Betala nu, Klarna och planerna i 30 dagar (2026-10-21, inte körd)
+### 9.22 Betala nu, Klarna och planerna i 30 dagar (2026-10-21, i drift samma kväll, 9.25)
 
 Efter merge, en session, i den här ordningen:
 
@@ -1891,7 +1891,7 @@ Kvar efter: juristen (villkoren 2026-10-22, Klarna i policyn och raden i `DATASK
 introduktionens bilder (`bygg-introbilder.js`).
 
 
-### 9.23 Syskontillägget som skuld (2026-10-21, inte körd, strömbrytaren av)
+### 9.23 Syskontillägget som skuld (2026-10-21, i drift samma kväll, 9.25, strömbrytaren av)
 
 Efter merge, en session, i den här ordningen. Med strömbrytaren `syskonskuld` av ändrar inget av det
 här ett pris eller en betalning: syskon bokas som förut, och inga poster skapas.
@@ -1938,7 +1938,7 @@ tillägget, där Koder → Partnerkoder bara räknar planens del.
 Kvar efter: juristen (rad 35, policyns stycke, villkoren för tillägget), och att säga till familjerna med
 fler barn att tillägget räknas per extra barn och betalas efter passet, innan strömbrytaren slås på.
 
-### 9.24 Värvningsbonusen (2026-10-21, inte körd)
+### 9.24 Värvningsbonusen (2026-10-21, i drift samma kväll, 9.25)
 
 Efter merge, en session, i den här ordningen. Inget betalas ut av något av det här: bonusen är underlag för
 lönen, och Leo betalar den med lönen.
@@ -1977,3 +1977,42 @@ andra tas in, ska ge bonusen åt den andras värvare och annullera den första m
 
 Kvar efter: juristen (rad 27 i `DATASKYDD.md` och policyns stycken om koden och förnamnet), och att säga
 till studiehjälparna att bonusen heter värvningsbonus och syns under Värva en kompis.
+
+### 9.25 Kedjan 9.22–9.24 i drift (2026-10-21)
+
+Leo: "Fixa nr 6 och Merge sen och driftsätt och migrera", sedan "Fortsätt". En session körde den, och Betala
+nu-sessionen fick veta före. Detaljerna står i `minne/databasen.md` (Kedjan 2026-10-21) och `minne/funktioner.md`.
+
+1. **Stripe** (sandlådan), före allt annat: endpointen tar emot `checkout.session.async_payment_succeeded`,
+   `checkout.session.async_payment_failed` och `checkout.session.expired`, 13 händelser i allt. Klarna var redan på
+   i kontots egen konfiguration: en provkassa i kronor fick kort, Klarna, Link och Amazon Pay. Den kassan går ut av
+   sig själv, och webhooken svarar "sessionen gick ut" för den. (Listan över konfigurationer visar också
+   plattformens, med en `parent`, där Klarna står av; de säger inget om kontot.)
+2. **Provkörning**: alla tio migrationer (`20261021170000` till `20261021215000`) och hela `rls-test.sql` mot driften i
+   ett do-block som rullades tillbaka: 2106 av 2106.
+3. **Merge** av PR #325 (829d2c0). Vercel lade ut sajten: villkoren 2026-10-22, med `#tips` för värvningsbonusen, på
+   båda språken (kontrollerat från databasen mot nextrum.se). Ingen hade godkänt 2026-10-22 när texten gick ut.
+4. **Funktionerna** från merge-commiten, hämtade tillbaka och byte för byte lika main: `stripe-webhook` v16 först,
+   sedan `stripe-reservation` v3, `drift` v24, `ekonomi` v27, `juridik` v24, `stripe-lage` v6, `nex-manadsrapport` v1,
+   `material-forslag` v9, `generate-feedback` v23, `generate-message` v23 och `notis-ko` v32.
+5. **Migrationerna** i ordning, var och en i ett eget do-block (md5, vakt mot en version som redan står, filens text
+   registrerad). I `20261021214000` gick bytet av `betalningar_typ_check` först, som en egen sats med texten synlig;
+   verktyget frågade inget.
+6. **`stripe-checkout` v23 och `stripe-aterbetalning` v9** efter `20261021214000`, inte före `betala_nu` som 9.22 steg
+   2 säger: kassan och återbetalningen från main anropar tilläggets funktioner, som inte fanns förrän den filen körts.
+   Under tiden stod `stripe-checkout` v22 mot den nya databasen; ingen kassa öppnades då (inga köpvillkor godkända,
+   inga köp, pass eller Stripe-händelser efter 19.00 UTC).
+7. **Efteråt**: `rls-test.sql` 2106 av 2106 mot driften, tillbakarullat; advisorn med bara `prova_jobbkod` nytt för
+   `anon` (med flit); alla funktioner i databasen lika en databas byggd ur filerna, utom de tio `zz_prov_*` och fyra
+   äldre som bara skiljer i kommentarer; jobben `tillagg-forsok` och `tillagg-paminnelse` står; båda godkända
+   studiehjälparna har en kod; och varje ny funktion svarade ur sin egen kod på ett röktest från databasen.
+8. **Leos testbetalning** är dold (`test` i `betalningar_dolda`), och ingenting är raderat: skriptet fastnade på
+   verktygets ruta, så torrkörningens lista togs med läsfrågor och raden skrevs med skriptets vakter.
+9. **Ingen backup för hand** (9.23 och 9.24 steg 1): en ögonblicksbild av de berörda raderna togs före, och efteråt
+   stod samma rader kvar. Supabases dagliga backup har tabellerna.
+
+Kvar, och Leos: provet i testläge (9.22 steg 5 och 9.24 steg 8); före `syskonskuld` villkorstexten och två beslut
+(9.23 steg 7: tre barn blir 537 kr i timmen i stället för 468, och `tillagg_installning` gör tillägget upplupet när ett
+bekräftat pass avbokas inom 24 timmar, fast villkoren inte har någon avbokningsavgift); revisorn (9.24 steg 7);
+juristen; Skriv nu för månadsrapporten (`DEPLOY-AGENTER.md`); och att ta bort edge-funktionen `utbildningsprov` i
+Supabases panel.

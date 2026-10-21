@@ -328,7 +328,7 @@ En äldre `notis-ko` gör `igen` till null och skickar det förra mejlet utan l�
 ingen roll för vad som lovas. Efter ett dygn blir det en uppgift till oss, aldrig ett mejl till familjen till
 (`minne/betalning.md`, Kortet försöker igen).
 
-### Syskontillägget: påminnelsen och kvittot (2026-10-21, `syskontillagg_som_skuld`, inte i drift)
+### Syskontillägget: påminnelsen och kvittot (2026-10-21, `syskontillagg_som_skuld`, i drift samma kväll)
 Två nya typer, i `notis_typer()`, `notis_mejlbara()` och `typer.ts` i samma ändring: `tillagg_paminnelse` (kategorin
 betalning) och `tillagg_kvitto`. Båda till familjen, båda med belopp och antal pass, kvittot också en rad per pass
 med datum och antal barn (`rader`, där `typer.ts` släpper igenom bara datum, tal och belopp), och ingen av dem nämner
@@ -671,7 +671,7 @@ genom `notis-avanmal` till `barn_notis_avregistrera`, som bara stänger av
 i `barn_epost.av`. `/avanmal` behandlar tokenen som text och behövde
 ingen ändring. Se `minne/barnkonton-och-admin.md`.
 
-### Värvningsbonusen: mejlet till värvaren (2026-10-21, `varvningsbonus`, inte i drift)
+### Värvningsbonusen: mejlet till värvaren (2026-10-21, `varvningsbonus`, i drift samma kväll)
 En ny typ, i `notis_typer()`, `notis_mejlbara()` och `typer.ts` i samma ändring: `varvningsbonus` (kategorin
 värvningsbonus, bara till en studiehjälpare). Den köas av `intern.varvning_prova` när en bonus blir intjänad, en gång
 per bonus (nyckeln `varvningsbonus:mejl:<id>`), med bara beloppet i datan: ämnet "Din värvningsbonus är intjänad: 300

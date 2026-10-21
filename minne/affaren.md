@@ -1174,7 +1174,7 @@ och bonus redovisas som lön". Migrationen `tipskoder_bonus_och_timbanken`.
   tillbakarullat (`minne/databasen.md`, Körda i driften). Ingen bonus och
   ingen kod för en studiehjälpare i en ansökan fanns då.
 
-## Värvningsbonusen (2026-10-21, `varvningsbonus`, inte i drift)
+## Värvningsbonusen (2026-10-21, `varvningsbonus`, i drift samma kväll)
 
 Leo: "en studiehjälpare som värvar en kompis får en bonus på 300 kr brutto,
 inklusive semesterersättning, när kompisen har fått sitt

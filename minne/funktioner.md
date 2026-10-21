@@ -165,6 +165,36 @@ gäller `admin-paminnelse`, `ansokan-gallring`, `ansokan-mejl`,
 `stripe-avstamning` och `stripe-lage`. Driftsätts de av annat skäl
 följer mains kopior med.
 
+**Kedjan 2026-10-21 kväll** (PR #325 och det som stod på main: Betala nu,
+AI-svaren, månadsrapporten, syskontillägget och värvningsbonusen), från
+merge-commiten 829d2c0: `stripe-webhook` v16, `stripe-reservation` v3,
+`drift` v24, `ekonomi` v27, `juridik` v24, `stripe-lage` v6,
+`nex-manadsrapport` v1 (ny), `material-forslag` v9, `generate-feedback` v23,
+`generate-message` v23 och `notis-ko` v32 före migrationerna, och
+`stripe-checkout` v23 och `stripe-aterbetalning` v9 efter
+`syskontillagg_som_skuld`, för kassan och återbetalningen från main anropar
+tilläggets funktioner. Alla gick ut genom MCP från hjälpagenter och
+hämtades tillbaka: byte för byte lika main, md5 per fil
+(`jamfor_funktion.py` i scratchpaden läser ett sparat svar, eller det
+senaste i sessionens och hjälpagenternas transkript). Röktest från
+databasen med tillägget `http` och den publika nyckeln: 401 "Inloggningen
+gick inte att verifiera" ur funktionens egen kod för de inloggade, 400
+"stripe-signature saknas" för webhooken och 401 "Fel eller saknad
+hemlighet" för `notis-ko` och `stripe-reservation`; ingen grind svarade.
+
+**Verktygslagret avkodar bakstreck-u och fyra hexsiffror** i det som
+skickas i ett verktygsanrop (2026-10-21). `notis-ko` v31 fick ett hårt
+mellanslag i `notiser/mallar.ts` där källan har sex tecken (bakstreck, u,
+00a0) i tre strängar, också när bakstrecket skickades dubbelt i JSON:
+avkodningen sker efter JSON-tolkningen och tar varje sådan följd som inte
+står efter ett bakstreck till. Mejlen blev desamma (strängen blir samma
+tecken), men filen skilde, och jämförelsen fångade det. v32 skickade
+bakstrecket självt som en sådan följd (u005c): JSON-tolkningen lämnar den,
+den enda avkodningen gör den till ett bakstreck, och källans sex tecken
+står kvar. Det gäller allt som skrivs i ett anrop, också ett grep eller
+en text till en fil: sök med `grep -F 'u00a0'` och jämför mekaniskt, aldrig
+med ögat.
+
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
 Båda hade ingen anropare kvar: Runda 2 bytte webhookarna som ringde
@@ -415,7 +445,9 @@ high, så första blocket kan vara ett tankeblock och tänkandet äter av
 verktyg, alltså inget tänkande) och ett uttryckligt `effort`, och `svarstext()`
 läser bara textblocken och svarar null på ett avhugget svar, som motorn.
 Juridik och ekonomi berördes inte av fällan: motorn skriver redan ut `high` och
-filtrerar textblocken. Driftsätts från main efter merge, alla fem.
+filtrerar textblocken. I drift sedan kvällen 2026-10-21, alla fem från
+merge-commiten av PR #325 (829d2c0): `generate-feedback` v23,
+`generate-message` v23, `material-forslag` v9, `juridik` v24 och `ekonomi` v27.
 
 ### Nex månadsrapport (2026-10-21)
 
@@ -452,6 +484,9 @@ kom det Leo faktiskt ville ha, en rapport ingen behöver be om.
   månadskörningen, så att förra månadens löneunderlag finns.
 - Texten töms med resten av agentloggen efter 90 dagar
   (`intern.ai_och_uppgifter_gallra`, `DATASKYDD.md` rad 16).
+- **I drift** sedan kvällen 2026-10-21: v1 från 829d2c0, byte för byte lika
+  main, före migrationen 20261021190000; jobbet står. Skriv nu och schemat
+  är inte provade (`DEPLOY-AGENTER.md` steg 3 och 4).
 
 ### Maskoten har med flit ingen modell
 
