@@ -4,7 +4,12 @@
    Sidan /om-oss, efter nextrum-sidor.css. Den bygger på typografi,
    former och N-märket i stället för foton (Leo: "ingen mall-känsla"),
    och har därför en egen rytm: rubriker i stor grad, skälen som rader
-   över hela bredden och ett mörkt band på mitten.
+   över hela bredden och ett mörkt band där berättelsen börjar.
+
+   Ordningen är en berättelse (2026-10-22, Leo: "gör storytelling
+   bättre"): köksbordet där det låser sig, idén som Nextrum började
+   med, vad den ger var och en, hur det går till, vem som får hjälpa,
+   vad ni kan hålla oss till, att vi är nya, och sist en person.
 
    Inga hexkoder: allt är cinemas tokens, så sidan följer mörkt läge
    av sig själv. Det orange i N-märket står i markupen, som i loggan.
@@ -86,7 +91,7 @@
 }
 @keyframes om-varv{to{rotate:360deg}}
 
-/* ---------- 2. Därför finns Nextrum ----------
+/* ---------- 4. Därför finns Nextrum ----------
    Sidans tyngdpunkt. Varje skäl är en rad över hela bredden: vem det
    gäller i ämnesfärgen (--f), påståendet i stor grad och texten under.
    Från 900 px står vem till vänster, som en marginal. */
@@ -135,7 +140,7 @@
   font-size:clamp(1.05rem,1.3vw,1.2rem);color:var(--acc-text);
 }
 
-/* ---------- 3. Så hjälper vi ert barn ---------- */
+/* ---------- 5. Så går det till ---------- */
 .om-fyra{
   list-style:none;margin:clamp(40px,5vw,64px) 0 0;padding:0;
   display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,3vw,40px) clamp(20px,2.4vw,32px);
@@ -160,22 +165,47 @@
 .om-varfor-text p{margin:0;font-size:clamp(1.02rem,1.25vw,1.14rem);line-height:1.6;color:var(--bl-2);max-width:52ch}
 .om-varfor-text p + p{margin-top:12px;color:var(--bl);font-weight:600}
 
-/* ---------- 4. Varför unga studiehjälpare ----------
-   Barken, som de mörka ytorna på startsidan, och rubrikens betoning i
-   ljus lera, som på bark. */
-.om-unga{background:var(--nt);color:var(--nt-fg)}
-.om-unga .nx-et{color:var(--nt-mut)}
-.om-unga .om-h2{color:var(--nt-fg);max-width:16ch}
-.om-unga .om-h2 em{color:var(--lera-l)}
-.om-unga-in{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,72px);align-items:end}
-@media (min-width:900px){.om-unga-in{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}}
-.om-unga-text p{margin:0;font-size:clamp(1.04rem,1.3vw,1.2rem);line-height:1.62;color:var(--nt-mut);max-width:50ch}
-.om-unga-text p:first-child{color:var(--nt-fg)}
-.om-unga-text p + p{margin-top:16px}
+/* ---------- 2. Köksbordet ----------
+   Barken, som de mörka ytorna på startsidan, och betoningen i ljus
+   lera, som på bark. Under rubriken och texten står Leos ankarmening
+   över hela bredden, i sidans största grad efter h1: det är vändningen
+   som resten av sidan svarar på. */
+.om-mork{background:var(--nt);color:var(--nt-fg)}
+.om-mork .nx-et{color:var(--nt-mut)}
+.om-mork .om-h2{color:var(--nt-fg);max-width:16ch}
+.om-mork .om-h2 em,.om-kok-stor em{font-style:normal;color:var(--lera-l)}
+.om-mork-in{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,72px);align-items:end}
+@media (min-width:900px){.om-mork-in{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}}
+.om-mork-text p{margin:0;font-size:clamp(1.04rem,1.3vw,1.2rem);line-height:1.62;color:var(--nt-mut);max-width:50ch}
+.om-mork-text p:first-child{color:var(--nt-fg)}
+.om-mork-text p + p{margin-top:16px}
+.om-kok-vand{margin-top:clamp(48px,7vw,104px);padding-top:clamp(28px,4vw,48px);border-top:1px solid var(--nt-ln)}
+.om-kok-stor{
+  margin:0;max-width:20ch;font-size:clamp(2.1rem,5.6vw,4.6rem);line-height:1.02;letter-spacing:-.045em;font-weight:750;
+  color:var(--nt-fg);text-wrap:balance;
+}
 
-/* ---------- 5. Så väljer vi studiehjälpare ----------
+/* ---------- 3. Idén ----------
+   Iakttagelsen i stor grad med lerans kant, som ett citat ur Vår idé,
+   och två stycken under: vad den betyder och vad en studiehjälpare
+   inte är. Leos egna meningar (.om-egna, under skälen) står sist. */
+.om-ide-stor{
+  margin:clamp(32px,4vw,56px) 0 0;max-width:30ch;padding-left:clamp(18px,2.4vw,30px);border-left:3px solid var(--acc);
+  font-size:clamp(1.45rem,2.9vw,2.4rem);line-height:1.18;letter-spacing:-.032em;font-weight:650;color:var(--bl);text-wrap:balance;
+}
+.om-ide-tva{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:16px clamp(32px,5vw,80px);
+  margin-top:clamp(28px,3.6vw,48px);
+}
+@media (min-width:900px){.om-ide-tva{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.om-ide-tva p{margin:0;max-width:52ch;font-size:clamp(1.02rem,1.25vw,1.14rem);line-height:1.62;color:var(--bl-2);text-wrap:pretty}
+.om-ide .om-egna{margin-top:clamp(36px,5vw,64px);border-top:1px solid var(--ln)}
+
+/* ---------- 6. Vägen till första eleven ----------
    Fyra steg i en rad med en linje genom numren, under varandra på en
-   telefon med linjen lodrätt. Numren är räkneverk i CSS, inte text. */
+   telefon med linjen lodrätt. Numren är räkneverk i CSS, inte text.
+   Ytan skiljer kapitlet från stegen ovanför, som står på papperet. */
+.om-urval{background:var(--yta);border-block:1px solid var(--ln)}
 .om-urval-lista{
   list-style:none;margin:clamp(40px,5vw,64px) 0 0;padding:0;counter-reset:om-steg;
   display:grid;grid-template-columns:minmax(0,1fr);gap:0;
@@ -202,7 +232,7 @@
   .om-urval-lista li:last-child::after{display:none}
 }
 
-/* ---------- 6. Det här kan ni kräva av oss ----------
+/* ---------- 7. Det här kan ni kräva av oss ----------
    En lista med bockar i mossa, läget för "klart" i hela produkten. */
 .om-krav{background:var(--pap-2)}
 .om-krav-in{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,72px);align-items:start}
@@ -221,7 +251,7 @@
   border-left:2px solid var(--pap);border-bottom:2px solid var(--pap);rotate:-45deg;
 }
 
-/* ---------- 7. Vi är nya ---------- */
+/* ---------- 8. Vi är nya ---------- */
 .om-nya{padding-block:clamp(56px,7vw,104px)}
 .om-nya-ruta{
   max-width:780px;margin-inline:auto;padding:clamp(26px,3.6vw,44px);
@@ -229,7 +259,7 @@
 }
 .om-nya-ruta p{margin:14px 0 18px;font-size:clamp(1.04rem,1.3vw,1.18rem);line-height:1.62;color:var(--bl-2);max-width:58ch}
 
-/* ---------- 8. Frågor och nästa steg ---------- */
+/* ---------- 9. Frågor och nästa steg ---------- */
 .om-faq-in{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,72px);align-items:start}
 @media (min-width:900px){.om-faq-in{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
 .om-faq-lista{border-top:1px solid var(--ln-2)}
