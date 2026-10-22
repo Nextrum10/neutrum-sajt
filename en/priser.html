@@ -53,7 +53,7 @@
      och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
 <link rel="stylesheet" href="../nextrum.css">
 <link rel="stylesheet" href="../nextrum-home.css?v=75ffd80e">
-<link rel="stylesheet" href="../nextrum-cinema.css?v=8f2dabf9">
+<link rel="stylesheet" href="../nextrum-cinema.css?v=228d0fea">
 <link rel="stylesheet" href="../nextrum-start.css?v=8a3f88cc">
 <link rel="stylesheet" href="../nextrum-sidor.css?v=89c1fa67">
 
@@ -336,7 +336,7 @@
       <span class="nx-et acc">Offers</span>
       <h2 class="d2" id="erb-t" style="margin-top:18px">Buy the hours in advance. Pay less.</h2>
     </div>
-    <div class="nx-head-aside"><p class="nx-lede">A plan and Fill the time bank both fill your time bank. A plan runs one month at a time and makes every hour cheaper. With Fill the time bank you buy hours at the hourly rate and use them whenever it suits you. Everything is a one-off purchase and never renews by itself.</p></div>
+    <div class="nx-head-aside"><p class="nx-lede">A plan fills your time bank and makes every hour cheaper. It is valid for 30 days from the purchase, is a one-off purchase and never renews by itself.</p></div>
   </div>
 
   <p class="pr-erb-spara" data-erb-spara="6" data-erb-spara-kod="plan_standard" data-erb-spara-forsta data-stig>Save up to <b class="tnum" data-erb-spara-kr>1 359 kr</b> <span class="pr-erb-spara-med">over 6 months with the <span data-erb-spara-plan>Standard</span> plan!</span> <span>Compared with paying session by session, with the first hour free.</span></p>
@@ -394,72 +394,31 @@
   <div class="pr-erb-prickar" data-erb-prickar aria-hidden="true"><i></i><i></i><i></i></div>
   <p class="pr-erb-jamfor-not" data-erb-jamfor-not hidden>The comparisons were made for a pupil in year 9 in October 2026.</p>
 
-  <!-- Fyll timbanken (2026-10-12, Leo: "klippkort ska heta köp timmar
-       till timbanken, de lägg ju in i timbanken", "de ska kosta 399kr",
-       och "6 månader, fyll timbanken ska det heta"): klippkorten under ett
-       nytt namn, till timpriset och utan märke, sex månader. I databasen
-       heter de fortfarande klippkort (klipp10–klipp100).
-
-       Klippkorten är en egen bred rad under planerna sedan 2026-10-07,
-       och fälls ut som förut (2026-09-26). <details>, inte en knapp med
-       skript: raden öppnas också utan javascript, och siffrorna står i
-       sidan för den som aldrig öppnar den. Timpriset, spannet och
-       märket i rubriken (timpriset utan bindning överstruket, sedan
-       2026-10-08 i stället för procenten) skriver initErbjudanden() ur de
-       kort som finns kvar i databasen. Rubriken säger timpriset, inte "från" det
-       billigaste kortet (Leo 2026-10-08: "inte från utan för"), och
-       döljer det om korten inte har samma. -->
-  <details class="nx-price-card pr-erb-klippkol" data-erb-grupp data-stig>
-    <summary>
-      <span class="pr-erb-topp"><span class="eyebrow">Fill the time bank</span></span>
-      <span class="pr-erb-vad">Hours in your time bank that you use whenever it suits you, from <span data-erb-min>10</span> to <span data-erb-max>100</span> hours. They are valid for six months.</span>
-      <span class="nx-amount"><b class="tnum" data-erb-grupp-tim>399 kr</b> <span class="per">/ hour</span></span>
-      <span class="pr-erb-visa"><span class="pr-erb-visa-stangd">See the options</span><span class="pr-erb-visa-oppen">Hide the options</span> <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></span>
-    </summary>
-    <ul class="pr-erb-klipp">
-      <li class="pr-erb-kort" data-erb="klipp10">
-        <b class="pr-erb-namn">10 hours</b>
-        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>3 990 kr</b>
-        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
-      </li>
-      <li class="pr-erb-kort ar-framhavd" data-erb="klipp20">
-        <b class="pr-erb-namn">20 hours</b>
-        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>7 980 kr</b>
-        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
-      </li>
-      <li class="pr-erb-kort" data-erb="klipp30">
-        <b class="pr-erb-namn">30 hours</b>
-        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>11 970 kr</b>
-        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
-      </li>
-      <li class="pr-erb-kort" data-erb="klipp60">
-        <b class="pr-erb-namn">60 hours</b>
-        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>23 940 kr</b>
-        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
-      </li>
-      <li class="pr-erb-kort" data-erb="klipp100">
-        <b class="pr-erb-namn">100 hours</b>
-        <span class="pr-erb-tim"><b data-erb-rabatterat>399 kr</b> / hour</span>
-        <b class="pr-erb-summa tnum" data-erb-pris>39 900 kr</b>
-        <span class="pr-erb-giltig">Valid for <span data-erb-giltig>6 months</span></span>
-      </li>
-    </ul>
-  </details>
+  <!-- Eget upplägg (2026-10-22, Leo: tre planer, 4, 8 och 12 timmar, och
+       "Behöver ni ett eget upplägg? Kontakta oss."). Här stod Fyll
+       timbanken (klipp10–klipp100) från 2026-10-12. Den säljs inte längre:
+       köpta timmar gäller till sin sista dag och syns i studievyn, och
+       stripe-checkout nekar ett nytt köp. Knappen går till
+       kontaktformuläret på FAQ-sidan, som finns sedan förut, och ?amne
+       låter formuläret börja meddelandet med Eget upplägg. -->
+  <div class="nx-price-card pr-erb-eget" data-stig>
+    <div class="pr-erb-eget-text">
+      <span class="eyebrow">Custom set-up</span>
+      <p class="pr-erb-eget-fraga">Need a custom set-up? Contact us.</p>
+      <p class="pr-erb-eget-not">For example more hours a week, several children or a set-up before a test.</p>
+    </div>
+    <a class="btn btn-ghost pr-erb-eget-knapp" href="/en/faq?amne=eget-upplagg#kontakt">Contact us <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+  </div>
 
   <!-- Vad timbanken är (2026-10-12, Leo: "redovisa med en bild och en
        liten text vad timbanken är för något också"). Bilden är en
        illustration utan text, och stegen under den står i HTML, så att
        de översätts och läses upp. Texten säger det villkoren säger
-       (#timbank och #erbjudanden): en plan och Fyll timbanken fyller
-       båda timbanken, en plans timmar gäller en månad och Fyll timbankens
-       sex, sparade minuter går aldrig ut, och pass för pass går inte genom
-       timbanken (Leo samma kväll: "timbanken fylls antingen med plan eller
-       förköpta timmarna ... om man köper lektion för lektion så betalas det
-       per lektion enligt de reglern som redan finns"). -->
+       (#timbank och #erbjudanden): en plan fyller timbanken, sparade
+       minuter går aldrig ut, och pass för pass går inte genom timbanken
+       (Leo samma kväll: "om man köper lektion för lektion så betalas det
+       per lektion enligt de reglern som redan finns"). Fyll timbanken
+       fyllde den också, till 2026-10-22, då den slutade säljas. -->
   <div class="pr-timbank" data-stig>
     <figure class="pr-timbank-bild">
       <svg viewBox="0 0 480 200" aria-hidden="true" focusable="false">
@@ -488,7 +447,7 @@
         <path class="tb-bock" d="M380 120l14 14 28-30"/>
       </svg>
       <ol class="pr-timbank-steg">
-        <li><b>You top up</b> with a plan or hours</li>
+        <li><b>You top up</b> with a plan</li>
         <li><b>The hours wait</b> in your time bank</li>
         <li><b>Sessions are paid</b> by themselves</li>
       </ol>
@@ -496,7 +455,7 @@
     <div class="pr-timbank-text">
       <span class="eyebrow">The time bank</span>
       <h3 class="pr-timbank-rubrik">What is the time bank?</h3>
-      <p>The time bank is your family's account for tutoring hours. You fill it in one of two ways: with a plan, which makes each hour cheaper and runs for one month, or with Fill the time bank, at the hourly rate and for six months. When you propose a session for one child the hours pay for it by themselves. If a session paid with hours ends before a full hour, the rest is saved in the time bank, and the minutes cover overtime on later sessions or pay for a whole session when there are enough of them.</p>
+      <p>The time bank is your family's account for tutoring hours. You fill it with a plan, which makes each hour cheaper and is valid for 30 days. When you propose a session for one child the hours pay for it by themselves. If a session paid with hours ends before a full hour, the rest is saved in the time bank, and the minutes cover overtime on later sessions or pay for a whole session when there are enough of them.</p>
       <p class="pr-timbank-not">If you pay session by session, the time bank is not used: each session is paid on its own, as usual. Saved minutes never expire. Siblings share the time bank, and you find it under Profile in your view.</p>
     </div>
   </div>
@@ -508,7 +467,7 @@
     </div>
     <div class="pr-erb-cta">
       <a class="btn btn-primary btn-lg" href="/en/intresseanmalan">Get started <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-      <p class="nx-terms">Already have an account? Buy under <a href="/foralder#erbjudanden">Offers in your view</a>. Want a plan of your own? <a href="mailto:info@nextrum.se" data-mailtext="keep">Write to us</a>.</p>
+      <p class="nx-terms">Already have an account? Buy under <a href="/foralder#erbjudanden">Offers in your view</a>.</p>
     </div>
   </div>
 </section>
@@ -576,10 +535,12 @@
           <p class="pr-kalk-text">Two and three children cost the same: <span data-stat="extra-barn">69 kr</span> extra an hour in total.</p>
           <p class="pr-kalk-rad" data-kalk-planrad>The plans are for one child per session, so with more children you pay per session.</p>
         </div>
+        <!-- Utan plan för just de timmarna, med ett barn: ett eget
+             upplägg (2026-10-22). Här stod Fyll timbanken till dess. -->
         <div class="pr-kalk-lage" data-kalk-tips="ingen" hidden>
-          <span class="eyebrow">Fill the time bank</span>
-          <p class="pr-kalk-text">Buy hours in advance at the hourly rate, and they pay for your sessions by themselves. You use them whenever it suits you, within six months.</p>
-          <a class="nx-lank" href="#erbjudanden">See the offers <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          <span class="eyebrow">Custom set-up</span>
+          <p class="pr-kalk-text">Need a custom set-up? Contact us.</p>
+          <a class="nx-lank" href="/en/faq?amne=eget-upplagg#kontakt">Contact us <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
         </div>
       </div>
     </div>
@@ -960,7 +921,7 @@
 <script src="../nextrum-config.js?v=085fa9d6"></script>
 <script src="../nextrum-images.js?v=d1aa8fea"></script>
 <script src="../nextrum-fel.js?v=eae02b10"></script>
-<script src="../nextrum-app.js?v=20eb9020"></script>
+<script src="../nextrum-app.js?v=0d5b5afa"></script>
 <script src="../nextrum-samtycke.js?v=92474eaf"></script>
 <script src="../nextrum-motion.js?v=b1a2a211"></script>
 <script src="../nextrum-start.js?v=c809c1c0"></script>

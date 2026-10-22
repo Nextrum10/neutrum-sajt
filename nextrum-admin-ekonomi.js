@@ -1638,7 +1638,7 @@
     const not = $('#timmar-not');
     if (not) {
       not.hidden = !(f && !f.aktiv);
-      not.innerHTML = f && !f.aktiv ? 'Planer och Fyll timbanken är avstängda: inget går att köpa. Strömbrytaren står under '
+      not.innerHTML = f && !f.aktiv ? 'Planerna är avstängda: inget går att köpa. Strömbrytaren står under '
         + '<button type="button" class="eko-lank" data-eko-flik="installningar">Inställningar</button>.' : '';
     }
 
@@ -1647,7 +1647,7 @@
     if (S.klippkortFel) {
       kop.innerHTML = tomt('Köpen gick inte att läsa', S.klippkortFel);
     } else if (!köp.length) {
-      kop.innerHTML = tomt('Inga köpta timmar än', 'Familjerna köper planer och Fyll timbanken i studievyn, under Erbjudanden.');
+      kop.innerHTML = tomt('Inga köpta timmar än', 'Familjerna köper planer i studievyn, under Erbjudanden.');
     } else {
       kop.innerHTML = köp.map(k => {
         const betald = k.status === 'betald';
@@ -1759,7 +1759,7 @@
       const er = S.erbFlagga, ks = S.kortsparr, ti = S.tipsFlagga;
       const n = kortbetalda();
       host.innerHTML = (er ? brytare({
-          titel: 'Planer och Fyll timbanken', på: er.aktiv, påText: er.aktiv ? 'Går att köpa' : 'Av',
+          titel: 'Planer och köpta timmar', på: er.aktiv, påText: er.aktiv ? 'Går att köpa' : 'Av',
           text: er.beskrivning || 'Familjerna kan köpa timmar i förväg i studievyn.',
           krav: !er.aktiv && er.vantar_pa ? 'Ska vara avgjort först: ' + er.vantar_pa : '',
           not: 'Ändrad ' + kortDatum(er.uppdaterad) + '.',
@@ -1829,7 +1829,7 @@
     if (på) {
       const ja = await bekräfta({
         titel: 'Öppna erbjudandena?',
-        text: 'Från och med nu kan familjerna köpa planer och Fyll timbanken i studievyn, och betala bekräftade pass med sina timmar. '
+        text: 'Från och med nu kan familjerna köpa planer i studievyn, och betala bekräftade pass med sina timmar. '
           + 'Köpet går genom Stripe och blir betalt först när webhooken tagit emot det.',
         forhandsvisning: f.vantar_pa ? 'Det här skulle vara avgjort först:\n\n' + f.vantar_pa : null,
         knapp: 'Slå på'

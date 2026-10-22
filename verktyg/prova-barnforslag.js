@@ -956,11 +956,10 @@ async function provaFörälderns(webb) {
       /1\s?364,40\s*kr/.test(kort) && /2\s?728,80\s*kr/.test(kort) && kort.includes('med koden VAN10')
       && (await text(page, '#erb-kod-svar')).includes('VAN10 gäller när ni köper en plan'),
       kort.slice(0, 200) + ' | ' + await text(page, '#erb-kod-svar'));
-    // Fyll timbanken tar ingen kod: katalogens pris, och koden prövas aldrig mot den.
-    const klipp = await text(page, '.erb-klipp-rad');
-    prova('köp med kod: Fyll timbanken visar katalogens pris, aldrig ett med koden',
-      /3\s?990(,00)?\s*kr/.test(klipp) && !klipp.includes('med koden') && klipp.includes('per timme')
-      && !R.anrop.some(x => x[0] === 'kolla_rabattkod_kop' && x[1].p_erbjudande === 'klipp10'), klipp);
+    // Fyll timbanken säljs inte sedan 2026-10-22: ingen rad, och koden prövas aldrig mot den.
+    prova('köp med kod: Fyll timbanken står inte bland planerna, och koden prövas aldrig mot den',
+      (await page.locator('.erb-klipp-rad, [data-kop^="klipp"]').count()) === 0
+      && !R.anrop.some(x => x[0] === 'kolla_rabattkod_kop' && x[1].p_erbjudande === 'klipp10'), kort.slice(0, 200));
     await page.click('[data-kop="plan_standard"]');
     /* Köpvillkoren först (2026-10-21): rutan säger priset med koden, och
        kassan öppnas först när villkoren kryssats i. */

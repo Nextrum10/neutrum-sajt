@@ -94,12 +94,14 @@ SIFFRORNA:
   det som är kvar. De köps en gång,
   i förväg, och priserna räknas i databasen, inte här.
 · Timbanken är familjens köpta timmar och sparade minuter. Den fylls
-  på två sätt: med en plan (ovan, 30 dagar) eller med Fyll timbanken,
-  10 till 100 timmar till timpriset, 399 kronor, utan rabatt, som
-  gäller i sex månader från köpet. Minuter som sparas när ett pass
-  betalt med timmar slutar före en hel timme går aldrig ut. Pass för
-  pass går inte genom timbanken: varje pass betalas för sig. Utåt
-  heter det aldrig klippkort.
+  med en plan (ovan, 30 dagar). Fyll timbanken, 10 till 100 timmar
+  till timpriset, säljs inte sedan 2026-10-22, men timmar en familj
+  redan köpt så gäller i sex månader från köpet och betalar passen som
+  förut. Minuter som sparas när ett pass betalt med timmar slutar före
+  en hel timme går aldrig ut. Pass för pass går inte genom timbanken:
+  varje pass betalas för sig. Behöver en familj något annat än
+  planerna, till exempel fler timmar i veckan, skriver den till oss om
+  ett eget upplägg. Utåt heter det aldrig klippkort.
 · Admin kan sätta in gratistimmar i en familjs timbank, när familjen
   tas in och senare. De gäller i 60 dagar och dras först, med planens
   gratis timme, före köpta timmar. De sparar inga minuter och betalas
@@ -136,7 +138,7 @@ SIFFRORNA:
   bara pass som bokas efter den.
 · Admin kan ge en familj en egen rabatt, till exempel genom en
   samarbetspartner: ett antal kronor av på varje timme familjen betalar,
-  på pass, planer, Fyll timbanken och timmar till en plan, tills admin
+  på pass, planer och timmar till en plan, tills admin
   tar bort den. Den gäller det som bokas och köps medan den finns, och
   en rabattkod räknas på priset efter den. Familjen ser aldrig koden,
   bara det lägre priset: på korten under Erbjudanden, när den bokar och
@@ -144,7 +146,7 @@ SIFFRORNA:
   är alltså inget fel.
 · Rabattkoder och partnerkoder (en partnerförenings kod, som kan ge en
   rabatt eller bara räknas) gäller bara när familjen köper en plan,
-  aldrig ett pass, Fyll timbanken eller timmar till en plan, och ett köp
+  aldrig ett pass eller timmar till en plan, och ett köp
   har högst en kod. Rabatten räknas av databasen innan kassan öppnas,
   och ett köp blir aldrig gratis av en kod. Ett pass som fick en kod
   innan regeln kom 2026-10-21 behåller sitt pris.

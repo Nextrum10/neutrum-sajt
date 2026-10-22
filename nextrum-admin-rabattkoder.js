@@ -48,8 +48,8 @@
   const DEL = {
     rabattkoder: {
       sort: 'rabatt', namn: 'Rabattkoder', ny: 'Ny rabattkod',
-      regel: 'En rabattkod, till exempel för en kampanj, ger en rabatt när familjen köper en plan. Den gäller aldrig ett pass, '
-        + 'Fyll timbanken eller timmar till en plan, och ett köp har högst en kod. Databasen prövar koden och räknar rabatten '
+      regel: 'En rabattkod, till exempel för en kampanj, ger en rabatt när familjen köper en plan. Den gäller aldrig ett pass '
+        + 'eller timmar till en plan, och ett köp har högst en kod. Databasen prövar koden och räknar rabatten '
         + 'innan kassan öppnas, och ett köp blir aldrig gratis av en kod.',
       förval: 1
     },

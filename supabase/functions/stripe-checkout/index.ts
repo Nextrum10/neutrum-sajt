@@ -67,7 +67,7 @@ import { arStripeId, BETALSATT, descriptor, StripeError, v1, VALUTA } from '../_
 import { familjebelopp, passpris, radtext, standardTjanst, tillaggsbelopp, type Tjanst } from '../_delad/pris.ts';
 import {
   arErbjudandekod, type ErbjudandePris, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen,
-  sammaInnehall,
+  saljs, SALJS_INTE, sammaInnehall,
 } from '../_delad/erbjudanden.ts';
 import { kodPaFelBetalning, planensKod } from '../_delad/koder.ts';
 import {
@@ -390,7 +390,9 @@ function egenAdress(u: unknown, reserv: string): string {
 }
 
 /* ============================================================
-   ETT ERBJUDANDE (Fas 16.1): en plan eller ett klippkort
+   ETT ERBJUDANDE (Fas 16.1): en plan eller ett klippkort, och sedan
+   2026-10-22 bara en plan (Leo: tre planer, 4, 8 och 12 timmar). Fyll
+   timbanken, klippkorten, nekas med SALJS_INTE innan något köp skapas.
 
    Samma kassa som för ett pass, men köpet är en rad i klippkort, inte
    ett pass. Tre saker skiljer:
@@ -460,6 +462,11 @@ async function köpErbjudande(
     .eq('kod', kod)
     .maybeSingle();
   if (!e || !(Number(e.pris_ore) > 0)) return json({ error: 'Erbjudandet finns inte.' }, 404, CORS);
+  /* Bara planerna säljs (2026-10-22). Fyll timbanken nekas här, före
+     köpet och kassan, och inte bara i vyn: ett anrop som bär en klippkod
+     direkt får samma nej. 410, för erbjudandet fanns och finns inte längre
+     till salu. Ett väntande köp från förut återanvänds alltså inte heller. */
+  if (!saljs(e as ErbjudandePris)) return json({ error: SALJS_INTE }, 410, CORS);
 
   /* PLANENS MÅNAD (planerna_per_manad) gick samma dag som den kom
      (2026-10-21, Leo: planen "används 30 dagar framåt"): en plan gäller 30
