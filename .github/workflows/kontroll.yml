@@ -87,6 +87,12 @@ jobs:
       - name: Delningsbilderna är aktuella
         run: python3 verktyg/kolla-delningsbilder.py
 
+      # 2026-10-22: Om oss och exemplen på startsidan säger bara det som
+      # går att visa. Inga antal, omdömen, procent, kronor eller namn, och
+      # ekvationerna i exemplet räknas om. Platshållarna skrivs ut.
+      - name: Om oss och exemplen säger bara det som är sant
+        run: python3 test/innehall-regler.py
+
       # Varje bilder/*.jpg ska ha en .webp bredvid sig. Sidorna
       # serverar dem genom <picture>, så en saknad webp går inte
       # sönder — den gör bara den bilden tre gånger tyngre, tyst.

@@ -253,6 +253,12 @@
       "rad": "Guide för föräldrar · Nextrum",
       "foto": "13-kvallsplugg"
     },
+    "om-oss.html": {
+      "bild": "delning/om-oss.jpg",
+      "rubrik": "Läxhjälp av någon som nyss gick kursen.",
+      "rad": "Nextrum · läxhjälp i Stockholm",
+      "foto": null
+    },
     "plugga-infor-prov.html": {
       "bild": "delning/plugga-infor-prov.jpg",
       "rubrik": "Plugga inför provet.",

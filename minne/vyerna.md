@@ -1912,3 +1912,25 @@ En granskare som inte skrivit koden läste vyerna med fokus på tidszonen; en an
   avbokning", och passets panel har delen Sen avbokning med Efterskänk avgiften (superadmin). Kolumnerna hämtas i en
   egen fråga i kärnan och läggs på `S.bokningar`.
 - Provat: `verktyg/prova-sen-avbokning.js` (port 8986).
+
+## Om oss och Så ser ni att det funkar (2026-10-22, grenen `om-oss-sida`)
+Leo ville ha en Om oss-sida och en sektion direkt efter Hur hjälper vi ert barn som visar att det funkar, utan något vi
+inte kan belägga: vi är nya och har inga siffror, omdömen eller resultat.
+- **Om oss** (`/om-oss`): hero med "Läxhjälp av någon som nyss gick kursen." och N-märket i ringar i stället för ett
+  foto, Därför finns Nextrum med tre skäl (eleven, föräldern, studiehjälparen) i ämnesfärgernas ordning och Leos rad
+  som platshållare (layouten fungerar med och utan den), fyra steg, Varför unga studiehjälpare på barken, de fyra stegen
+  innan första eleven (ansökan, intervju, utbildning, provet), Det här kan ni kräva av oss, rutan Vi är nya (det enda
+  stället där ordet omdöme får stå), sex frågor och Nästa steg. Knapparna går till intresseanmälan med
+  `utm_source=om-oss&utm_medium=sajt&utm_campaign=okt26`. Texten är sajtens egen (Vår idé, FAQ:n, startsidan) eller
+  Leos tre ankarmeningar; inget är nytt i sak. Ingen engelsk sida: engelskans footer länkar till den svenska.
+- **Så ser ni att det funkar** (`#exempel`): rapporten med fälten som `NXStudie.rapportKort` ritar dem (läget ur
+  `GICK`, Öva mer på, Nästa gång, "Rapport från er studiehjälpare" när namnet saknas), studieplanen (ämne, mål, planen)
+  och Översikt i föräldrarnas vy (Att göra med Passar bra och Avböj, Kommande pass, och Så går det med Hur passen gick
+  och Kunskapsområdena som `ritaFordelningar()` ritar dem för en elev med ett pass), med
+  vyernas färger för läget: ockra väntar, mossa klart. Siffrorna i kortet pekar på listan bredvid och är dekor
+  (`content: attr() / ""`), listan är en `<ol>`. Tejpen "Exempel, påhittad elev" står på varje flik. Rutorna inne i
+  kortet är `--tint`, för `--pap-2` och `--yta` är nästan samma i mörkt läge, och den valda fliken tar `--bricka` där.
+  En siffra vid en text står i kortets marginal (`--ex-pad`), aldrig på en bokstav, och ekvationerna bryts inte
+  (`.ex-ekv`). Granskad i två varv i 1440 och 390, ljust och mörkt.
+- Engelskans knapp går till `/en/intresseanmalan` med samma utm; startsidans går till `/intresseanmalan` med
+  `utm_source=startsida` och `utm_content=exempel`.

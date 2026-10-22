@@ -9,16 +9,16 @@
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/"/>
-    <lastmod>2026-10-21</lastmod>
-    <!-- summa bd2680b003f7 -->
+    <lastmod>2026-10-22</lastmod>
+    <!-- summa c3aaa41412db -->
   </url>
   <url>
     <loc>https://nextrum.se/en/</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://nextrum.se/en/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/"/>
-    <lastmod>2026-10-21</lastmod>
-    <!-- summa 716ca23aa8ba -->
+    <lastmod>2026-10-22</lastmod>
+    <!-- summa c7cdb02942bc -->
   </url>
   <url>
     <loc>https://nextrum.se/anvandarvillkor</loc>
@@ -313,6 +313,13 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/nationella-prov-ak-9"/>
     <lastmod>2026-10-09</lastmod>
     <!-- summa 4100bc74ba65 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/om-oss</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/om-oss"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/om-oss"/>
+    <lastmod>2026-10-22</lastmod>
+    <!-- summa b3ca2192fd68 -->
   </url>
   <url>
     <loc>https://nextrum.se/plugga-infor-prov</loc>

@@ -15,6 +15,7 @@
 *.sql
 /supabase
 /verktyg
+/test
 /.github
 /.claude
 /tshirt
