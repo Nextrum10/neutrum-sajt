@@ -122,6 +122,16 @@ SIFFRORNA:
   sin vy; den bekräftas inte.
   En betalning som tas på ett annat sätt än villkoren lovar är en
   tvist, inte ett skrivfel.
+· Avbokar familjen ett bokat pass mindre än 12 timmar före start är det
+  en sen avbokning: passet räknas som hållet i halva den bokade tiden.
+  Betalas passet med pengar betalar familjen hälften av priset med
+  Betala nu, och var det redan betalt får den tillbaka resten; betalades
+  det med timmar dras halva tiden ur dem. Samma sak när vi avbokar på
+  familjens begäran. De sista 12 timmarna flyttar familjen inte ett
+  bokat pass. Ett förslag, studiehjälparens avbokning och vår egen
+  kostar ingenting, och regeln gäller bara pass som föreslogs efter att
+  familjen godkänt villkoren med den (versionen 2026-10-23).
+  Studiehjälparen får ingen ersättning för ett sent avbokat pass.
 · Priset är det som gällde när passet bokades. En prishöjning gäller
   bara pass som bokas efter den.
 · Admin kan ge en familj en egen rabatt, till exempel genom en

@@ -295,10 +295,49 @@ window.NXBetalning = (function () {
     aterbetald: ['Återbetalt', '']
   };
 
+  /* ---------- sen avbokning (sen_avbokning, 2026-10-22) ----------
+     Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h av att
+     lektionen ska hållas betalas 50% av belopp, eller spenderas hälften av
+     planerade timmar för lektionen". Speglar betalning_installning, som är
+     låst på 12 timmar och 50 procent, och intern.sen_avbokningens_minuter.
+     Databasen avgör och räknar avgiften (stampla_avbokningen); vyerna
+     räknar bara i förväg vad avbokningsrutan ska säga. */
+  var SEN_AVBOKNING = { timmar: 12, procent: 50 };
+
+  /* Passets start som tidpunkt i millisekunder. Dagen och klockslaget är
+     Stockholms, var familjen än sitter. null utan dag. */
+  function passetsStart(datum, tid) {
+    var d = String(datum || '');
+    if (!/^\d{4}-\d{2}-\d{2}/.test(d)) return null;
+    var hm = String(tid || '00:00').slice(0, 5).split(':');
+    var vagg = Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10), +hm[0] || 0, +hm[1] || 0);
+    var f = {};
+    new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Stockholm', hourCycle: 'h23', year: 'numeric',
+      month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+      .formatToParts(new Date(vagg)).forEach(function (p) { f[p.type] = p.value; });
+    var somStockholm = Date.UTC(+f.year, +f.month - 1, +f.day, +f.hour, +f.minute);
+    return vagg - (somStockholm - vagg);
+  }
+
+  /* Sant när ett bokat pass börjar om mindre än gränsen: en avbokning nu
+     är sen, och familjen flyttar det inte. Också efter start. */
+  function senAvbokningNu(b, nu) {
+    if (!b || b.status !== 'confirmed') return false;
+    var start = passetsStart(b.wanted_date, b.wanted_time);
+    return start !== null && start - (nu || Date.now()) < SEN_AVBOKNING.timmar * 3600 * 1000;
+  }
+
+  /* Den tid ett sent avbokat pass räknas som hållet i, i hela kvartar:
+     60 ger 30, 120 ger 60, 180 ger 90. */
+  function senMinuter(langd) {
+    return Math.max(15, Math.round(Number(langd || 60) * SEN_AVBOKNING.procent / 100 / 15) * 15);
+  }
+
   return {
     kronor: kronor, timmar: timmar, periodText: periodText,
     UTBETALNING: UTBETALNING, lonemanad: lonemanad, lonespec: lonespec, manadEfter: manadEfter,
     pagaende: pagaende, passpris: passpris, gratistimmar: gratistimmar,
-    tillaggetsBelopp: tillaggetsBelopp, tillaggRad: tillaggRad, TILLAGG_LAGE: TILLAGG_LAGE
+    tillaggetsBelopp: tillaggetsBelopp, tillaggRad: tillaggRad, TILLAGG_LAGE: TILLAGG_LAGE,
+    SEN_AVBOKNING: SEN_AVBOKNING, passetsStart: passetsStart, senAvbokningNu: senAvbokningNu, senMinuter: senMinuter
   };
 })();

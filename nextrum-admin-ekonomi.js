@@ -57,6 +57,16 @@
   const ritaÖversikt = (...a) => NXAdmin.rita.ritaÖversikt(...a);
   const skapaUppgift = (...a) => NXAdmin.rita.skapaUppgift(...a);
 
+  /* Larmen som säger att en familj inte betalat något den ska (passet,
+     övertiden, och sedan 2026-10-22 en sen avbokning). */
+  const OBETALDA_LARM = ['ej_betalt', 'tillagg_obetalt', 'sen_avbokning_obetald'];
+  /* Det en familj betalar för ett pass den avbokade mindre än 12 timmar
+     före start (sen_avbokning): bara databasen skriver beloppet, och ett
+     pass på timmar har avgiften 0 (halva tiden drogs i stället).
+     Kolumnerna hämtas för sig i kärnan, så före migrationen är det 0. */
+  const senAvgift = b => b && b.status === 'cancelled' && b.sen_avbokning_minuter != null
+    ? Number(b.sen_avbokning_ore || 0) : 0;
+
   /* ============================================================
      MÅNADEN (Fas 20.2)
 
@@ -302,7 +312,12 @@
     /* Fas 14.2c. Betalsidan kan ligga öppen medan passet avbokas, och
        betalas den efteråt drar Stripe pengarna ändå. Beloppet är det
        som inte gått tillbaka än. */
-    betald_men_avbokad: ['Betalt men avbokat', 'Familjen har betalat ett pass som är avbokat. Villkoren lovar hela beloppet tillbaka.'],
+    betald_men_avbokad: ['Betalt men avbokat', 'Familjen har betalat ett pass som är avbokat. Villkoren lovar beloppet '
+      + 'tillbaka, utom avgiften för en sen avbokning.'],
+    /* sen_avbokning (2026-10-22). Familjen avbokade mindre än 12 timmar före
+       start, och hälften av passet står under Att betala i deras vy. */
+    sen_avbokning_obetald: ['Sen avbokning, obetald', 'Familjen avbokade mindre än 12 timmar före start. Hälften av passet '
+      + 'står under Att betala i deras vy.'],
     ej_utbetalt: ['Inte utbetalt', 'Klart för underlag, men månaden det hölls är slut.'],
     utbetalning_vantar: ['Utbetalning som väntar', 'Utkast eller godkänd, för en månad före förra.'],
     utbetalning_misslyckad: ['Misslyckad utbetalning', 'Pengarna gick inte iväg.'],
@@ -559,8 +574,10 @@
         return Object.assign(bas, {
           grupp: 'tillbaka', ikon: 'tillbaka',
           rubrik: 'Betala tillbaka ' + kronor(a.belopp_ore) + (familj ? ' till ' + namnFör(familj) : ''),
-          meta: b ? passMeta(b, true).concat(esc('avbokat')) : bas.meta, belopp: a.belopp_ore,
-          hur: 'Passet är avbokat men betalt. Villkoren lovar hela beloppet tillbaka för ett pass som aldrig hölls.',
+          meta: b ? passMeta(b, true).concat(esc(senAvgift(b) > 0 ? 'avbokat sent' : 'avbokat')) : bas.meta, belopp: a.belopp_ore,
+          hur: b && senAvgift(b) > 0
+            ? 'Passet avbokades sent, och avgiften (' + kronor(senAvgift(b)) + ') står kvar. Återbetala resten.'
+            : 'Passet är avbokat men betalt. Villkoren lovar hela beloppet tillbaka för ett pass som aldrig hölls.',
           knappar: kanÅterbetalas(b) ? knapp('data-aterbetala', b.id, 'Återbetala', true) : ''
         });
       default:
@@ -578,9 +595,11 @@
   /* En familjs obetalda pass och tillägg, som en rad. */
   function obetaltPost(id, lista) {
     const pass = lista.filter(a => a.typ === 'ej_betalt').length;
-    const tillägg = lista.length - pass;
+    const sena = lista.filter(a => a.typ === 'sen_avbokning_obetald').length;
+    const tillägg = lista.length - pass - sena;
     const delar = [];
     if (pass) delar.push(pass === 1 ? 'ett pass' : pass + ' pass');
+    if (sena) delar.push(sena === 1 ? 'en sen avbokning' : sena + ' sena avbokningar');
     if (tillägg) delar.push(tillägg === 1 ? 'ett tillägg för övertid' : tillägg + ' tillägg för övertid');
     const summa = lista.reduce((n, a) => n + Number(beloppFör(a) || 0), 0);
     const ordnad = lista.slice().sort((x, y) => String(x.datum).localeCompare(String(y.datum)));
@@ -590,7 +609,8 @@
       meta: ordnad.map(a => {
         const b = bokning(a.objekt_id);
         return b ? passLänk(b, kortDatum(b.wanted_date) + ' · ' + (b.subject || 'Pass')
-          + (a.typ === 'tillagg_obetalt' ? ', övertid' : '')) : esc(kortDatum(a.datum));
+          + (a.typ === 'tillagg_obetalt' ? ', övertid' : a.typ === 'sen_avbokning_obetald' ? ', sen avbokning' : ''))
+          : esc(kortDatum(a.datum));
       }),
       belopp: summa || null, hur: '',
       knappar: påminnKnapp(id) + (id ? knapp('data-dp', 'familj:' + id, 'Familjen') : ''),
@@ -610,7 +630,7 @@
     const obetalt = new Map();
     avv.forEach(a => {
       if (a.typ === 'fristaende_rapport' && erbjudna.has(a.objekt_id)) return;
-      if (a.typ === 'ej_betalt' || a.typ === 'tillagg_obetalt') {
+      if (OBETALDA_LARM.indexOf(a.typ) !== -1) {
         const id = a.kund_id || ((bokning(a.objekt_id) || {}).parent_id) || '';
         if (!obetalt.has(id)) obetalt.set(id, []);
         obetalt.get(id).push(a);
@@ -814,15 +834,55 @@
     };
 
     if (b.status === 'cancelled') {
+      /* Sen avbokning (sen_avbokning, 2026-10-22): avgiften är det passet
+         kostade, och det enda som ska tillbaka är resten. Obetald är den
+         något att få in, som ett obetalt pass. */
+      const avgift = senAvgift(b);
+      /* Passet räknas som hållet i halva tiden, som i databasen
+         (intern.debiterade_min), och kommer då med i månadens pass. */
+      const sent = b.sen_avbokning_minuter != null;
+      if (sent) {
+        r.min = Number(b.sen_avbokning_minuter);
+        r.räknas = b.fakturerbar !== false && !r.test;
+        r.meta.push(esc('avbokat sent'));
+      }
+      /* Ett pass på timmar står kvar betalt med dem: halva tiden drogs, och
+         det finns inga pengar att få in eller ge tillbaka. */
+      if (sent && st === 'betald' && !Number(b.betalt_ore || 0)
+          && (b.klippkort_id || (S.timbankPass && S.timbankPass.has(b.id)))) {
+        r.sätt = b.klippkort_id ? (gratisKort(b.klippkort_id) ? 'Gratistimmar' : 'Köpta timmar') : 'Timbanken';
+        r.beloppText = tim(r.min);
+        r.under = 'hälften av ' + tim(b.duration_min || 60);
+        r.läge = ['Sen avbokning, ur timmarna', 'ar-klar'];
+        r.filter.add('betalda');
+        return r;
+      }
+      if (avgift > 0 && ['ingen', 'vantar', 'misslyckad'].indexOf(st) !== -1) {
+        r.sätt = st === 'ingen' ? '' : 'Kort';
+        r.belopp = avgift;
+        r.under = 'hälften av passet';
+        r.läge = st === 'vantar' ? ['Kassan öppnad', 'ar-ny'] : st === 'misslyckad' ? ['Kortet nekades', 'ar-ny']
+          : ['Sen avbokning, obetald', 'ar-ny'];
+        if (r.räknas) r.attFåIn = avgift;
+        r.filter.add('attbetala');
+        if (larmad) r.påminn = påminnKnapp(b.parent_id);
+        return r;
+      }
       kort();
-      r.meta.push(esc('avbokat'));
+      if (!sent) r.meta.push(esc('avbokat'));
+      /* Bara ett pass som kostade något hör till månadens pass: en sen
+         avbokning utan avgift (första timmen bjuden) gör det inte. */
+      if (!(avgift > 0)) r.räknas = false;
+      else if (!r.test && st !== 'tvist') r.filter.add('betalda');
       if (st === 'tvist') tvistLäge();
-      else if (kvar > 0) {
+      else if (kvar - avgift > 0) {
         r.läge = ['Avbokat men betalt', 'ar-ny'];
-        if (!r.test) r.attÅterbetala = kvar;
+        if (avgift > 0) r.under = kronor(avgift) + ' är avgiften för den sena avbokningen';
+        if (!r.test) r.attÅterbetala = kvar - avgift;
         r.filter.add('tillbaka');
         r.knappar = återKnapp();
-      } else r.läge = ['Avbokat, återbetalt', ''];
+      } else r.läge = !(avgift > 0) ? ['Avbokat, återbetalt', '']
+        : kvar >= avgift ? ['Sen avbokning, betald', 'ar-klar'] : ['Återbetalt, också avgiften', ''];
       return r;
     }
 
@@ -1044,18 +1104,18 @@
     (S.avvikelser || []).forEach(a => {
       if (a.objekt_tabell !== 'bookings') return;
       if (a.typ === 'betalt_for_lange' && a.belopp_ore > 0) förLänge.set(a.objekt_id, Number(a.belopp_ore));
-      if (a.typ === 'ej_betalt' || a.typ === 'tillagg_obetalt') larmade.add(a.typ + ':' + a.objekt_id);
+      if (OBETALDA_LARM.indexOf(a.typ) !== -1) larmade.add(a.typ + ':' + a.objekt_id);
     });
 
     const rader = [];
     (S.bokningar || []).forEach(b => {
       if (!iMånaden(b.wanted_date)) return;
-      /* Ett avbokat pass hör hit bara om det har pengar på sig. Ett
-         förslag är inget pass än. */
+      /* Ett avbokat pass hör hit bara om det har pengar på sig, eller en
+         avgift för en sen avbokning (2026-10-22). Ett förslag är inget pass än. */
       const pengar = b.betalt_ore != null || ['betald', 'tvist', 'aterbetald'].indexOf(b.betalning_status) !== -1;
-      if (b.status === 'cancelled' ? !pengar : (b.status !== 'confirmed' && b.status !== 'completed')) return;
+      if (b.status === 'cancelled' ? !(pengar || senAvgift(b) > 0) : (b.status !== 'confirmed' && b.status !== 'completed')) return;
       rader.push(passRad(b, pu.get(b.id) || null, tvister.get(b.id) || null,
-        förLänge.get(b.id) || 0, larmade.has('ej_betalt:' + b.id)));
+        förLänge.get(b.id) || 0, larmade.has('ej_betalt:' + b.id) || larmade.has('sen_avbokning_obetald:' + b.id)));
     });
     (S.tillagg || []).forEach(t => {
       const b = bokning(t.booking_id);
@@ -1210,14 +1270,15 @@
   const vyAdress = () => location.origin + '/foralder';
 
   function brevOmPass(id) {
-    const lista = (S.avvikelser || []).filter(a => (a.typ === 'ej_betalt' || a.typ === 'tillagg_obetalt')
+    const lista = (S.avvikelser || []).filter(a => OBETALDA_LARM.indexOf(a.typ) !== -1
       && (a.kund_id === id || (bokning(a.objekt_id) || {}).parent_id === id))
       .sort((a, b) => String(a.datum).localeCompare(String(b.datum)));
     const rad = a => {
       const b = bokning(a.objekt_id) || {};
       const belopp = beloppFör(a);
       return kortDatum(b.wanted_date || a.datum) + ', '
-        + (a.typ === 'tillagg_obetalt' ? 'övertid på passet i ' : '') + ämneIText(b.subject)
+        + (a.typ === 'tillagg_obetalt' ? 'övertid på passet i '
+          : a.typ === 'sen_avbokning_obetald' ? 'sen avbokning av passet i ' : '') + ämneIText(b.subject)
         + (belopp != null ? ': ' + kronor(belopp) : '');
     };
     const sätt = 'med kort eller Klarna';

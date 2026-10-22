@@ -941,3 +941,13 @@ skapade kortet). Det saknades: varför, och vilken månad.
   `rls-test.sql` avsnitt 49 (ett prov till). Avser månad förväljs i
   Stockholms tid också i webbläsaren (`nextrum-admin-detalj.js`).
 
+
+## Sen avbokning med timmar (2026-10-22, `sen_avbokning`, inte i drift)
+Avbokar familjen ett pass som timmarna betalat mindre än 12 timmar före start räknas det som hållet i halva den
+bokade tiden (`minne/betalning.md`, Sen avbokning). Passet står kvar betalt med timmarna (`klippkortspass_avbokat`
+hoppar över det), och timmarna räknas som för ett pass som blev kortare: `intern.debiterade_min` ger halva tiden,
+`intern.kortets_anvanda` drar de påbörjade timmarna (ett pass på 60 minuter drar en timme), och `intern.timbank_in`
+sparar det som blir över av en köpt timme (30 minuter), aldrig av en gratistimme. En tipstimme och planens gratis
+timme är använda, och ett pass betalt ur timbanken får halva minuterna tillbaka. Efterskänker superadmin avgiften
+blir passet en vanlig avbokning: timmarna kommer tillbaka och `betalning_status` blir `ingen`. Inget larm och inget
+att betala; adminvyn visar passet som "Sen avbokning, ur timmarna" under Alla betalningar.

@@ -16,6 +16,86 @@ Avsnitten Kortet reserveras vid bokningen, Kortet försöker igen och Familjen b
 
 ---
 
+## Sen avbokning (2026-10-22, `sen_avbokning`, inte i drift)
+
+Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h av att lektionen ska hållas betalas
+50% av belopp, eller spenderas hälften av planerade timmar för lektionen", och om villkoren: "skriv
+villkorstexten själv, du har all info".
+
+- **Modellen: hållet i halva tiden.** En sen avbokning räknas som ett pass som hölls i halva den
+  bokade tiden (`intern.sen_avbokningens_minuter`: 60 ger 30, 120 ger 60, 180 ger 90, hela kvartar).
+  Då följer allt det som redan räknar den hållna tiden: pengarna är priset för den tiden
+  (`intern.sen_avbokningens_pris`, samma regel som kassan och `NXBetalning.passpris`, med passets
+  frysta pris och rabatt), och timmarna dras som för ett pass som blev kortare
+  (`intern.debiterade_min` läser `sen_avbokning_minuter` för ett avbokat pass, och
+  `intern.kortets_anvanda`, `timbank_in`, `timbank_saldo`, tipstimmarna och första timmen räknar
+  det sent avbokade passet). En köpt timme som blir över sparas i timbanken, en gratistimme sparar
+  inget, och en tipstimme eller planens gratis timme är använd. Ett pass med en timme på köpet kostar
+  därför inga pengar.
+- **Var regeln bor.** Gränsen och andelen står i `betalning_installning` (`avbokning_avgift_timmar`
+  12, `avbokning_avgift_procent` 50), låsta med villkor: de står i villkoren, och en ändring är en ny
+  version. `sen_avbokning_timmar` i samma tabell är kortreservationens, vilande på 0, och
+  `tillagg_installning.sen_avbokning_timmar` speglar 12 utan att läsas. Avgiften räknas i
+  `stampla_avbokningen`, i samma skrivning som avbokningen, och ingen annan väg sätter den: ett nytt
+  pass har ingen, ett belopp går inte att skriva efteråt (inte heller av admin), och ett avbokat
+  pass som blir något annat igen tappar den. Passet bär `sen_avbokning_minuter`,
+  `sen_avbokning_ore` och `avbokad_for_familjen` (villkoret `bookings_sen_avbokning`), och auditen
+  loggar dem (`bookings_audit_sen_avbokning`, en WHEN-trigger, för en UPDATE OF ser inte det en
+  BEFORE-trigger skrev).
+- **Vem den gäller.** Familjen som avbokar ett bokat (bekräftat) pass mindre än 12 timmar före
+  start, också efter start (`intern.avbokningen_ar_sen`; exakt 12 timmar är i tid, "minst 12h
+  innan"). Nextrum avbokar ett betalt pass åt familjen (det kan bara vi), och säger då i samma
+  uppdatering att familjen bad om det (`avbokad_for_familjen`, bara `is_admin()`): adminvyns Avboka
+  frågar inom 12 timmar om familjen bad om avbokningen för sent, och bara ett ja tar avgiften. Ett
+  förslag, studiehjälparens avbokning och vår egen kostar inget. **Bara pass som föreslogs efter
+  att familjen godkänt villkoren 2026-10-23** (`intern.familjen_har_avbokningsregeln`, på
+  `villkor_godkannanden` och passets `created_at`): ett pass som bokades på de gamla villkoren kostar
+  inget och flyttas som förut.
+- **Inte flytta de sista 12 timmarna.** Att flytta ett bokat pass gör det till ett förslag, och att
+  sedan dra tillbaka förslaget hade varit en sen avbokning utan avgift. `stampla_avbokningen` nekar
+  därför familjen att flytta ett bokat pass inom gränsen (23514), med samma villkor som avgiften;
+  studiehjälparen och vi kan. Spärren mot att flytta ett pass med syskon inom 24 timmar
+  (`bookings_syskon_star_fast`) gick upp i den.
+- **Vyerna frågar databasen** (`sen_avbokning_lage(pass)`: `galler`, `sen`, `minuter`, `ore`,
+  `timmar`; passets familj och superadmin, alla andra null, anon nekas). Familjens Avboka frågar på
+  nytt när familjen trycker och säger vad det kostar innan familjen bestämt sig ("Avboka ändå"), och
+  passets sida säger det de sista 12 timmarna och visar ingen Föreslå ny tid. Vyn räknade först
+  själv, men då hade den varnat för en avgift på varje pass som bokats på de gamla villkoren, och
+  spärrat flytten utan stöd i dem. Saknas funktionen (före migrationen) står allt som förut; svarar
+  den med ett annat fel räknar familjens vy själv (`NXBetalning.senMinuter`, `passpris`), så att
+  ingen avbokar utan att få veta.
+- **Betalningen.** En avgift är `betalning_status` `ingen` på ett avbokat pass med
+  `sen_avbokning_ore` > 0: den står under Att betala med Betala nu (`kanBetalas`, `radBetala`,
+  `betalVal`), och `stripe-checkout` tar ett avbokat pass bara med en avgift (SESSIONSFORM 12,
+  "Sen avbokning: …", beloppet `sen_avbokning_ore`, ingen rabatt till, minuterna `sen_avbokning_minuter`).
+  Webhooken skriver den som en vanlig passbetalning (`betalaPasset`), och liggaren får en rad. Var
+  passet redan betalt: `betald_men_avbokad` larmar bara för det som är mer än avgiften,
+  `intern.passet_betalt_ej_hallet` ser passet som uppgjort när återbetalt + avgift når betalt, och
+  `radering_underlag` drar avgiften. Obetald larmar den som `sen_avbokning_obetald` (Att göra,
+  morgonmejlet, Betalningar, "en sen avbokning"); med timmar larmar inget.
+- **Efterskänka.** Superadmin efterskänker i passets panel (Efterskänk avgiften): båda kolumnerna
+  blir null och inget annat, och var passet betalt med timmar kommer de tillbaka
+  (`betalning_status` `ingen`). Var avgiften betald med kort ligger hela beloppet under Att göra.
+- **Mejlen.** `pass_avbokat` bär `sen_minuter` till båda och `sen_ore` bara till familjen
+  (`notis_vid_pass`, `RenData.senMinuter`/`senOre`): familjens mejl säger avgiften och leder till
+  betalningen, studiehjälparens bara att avbokningen var sen. Familjen får inget mejl om sin egen
+  avbokning; avbokar vi på familjens begäran får båda det.
+- **Syskontillägget**: en sen avbokning gör hälften av posten upplupen (`bookings_syskon_foljer`,
+  minuterna halverade och beloppet räknat om, en övergång `tillagg_poster_vakt` släpper), och en i
+  tid frigör den. `mitt_tillagg()` säger gränsen och andelen ur `betalning_installning`.
+- **Studiehjälparen får ingen lön** för ett sent avbokat pass: det har ingen rapport och kommer inte
+  med på underlaget, och avgiften stannar hos Nextrum. Leos beslut att ändra; då ska avgiften in i
+  `passunderlag`.
+- **Ångerrätten går före.** Ångrar familjen en bokning inom 14 dagar innan passet börjat betalar den
+  ingenting (2 kap. 15 § distansavtalslagen), och villkoren säger det under Ångerrätt. Avgiften
+  gäller alltså i praktiken pass som bokades mer än 14 dagar före, och familjer som avbokar utan att
+  ångra sig. Undantaget för fritidsverksamhet vid en viss tidpunkt (2 kap. 11 §) har ingen prövat
+  för läxhjälp: juristen.
+- **Villkoren** (versionen 2026-10-23): `#avbokning` under Att boka, flytta och avboka, "inget annat"
+  i Pris och betalning, Köpvillkoren, timbankens Avbokning, Ångerrätt och Att sluta; FAQ:n, Så
+  fungerar Nextrum, prisguiden och agentens fakta säger samma sak. Proven: `rls-test.sql` avsnitt 53
+  (SA) och `verktyg/prova-sen-avbokning.js`.
+
 ## Betala nu (2026-10-21, `betala_nu`, i drift samma kväll)
 
 Leo, samma kväll som fakturan och kortet som försöker igen gick ut: "Hela betalning är fel. De
@@ -2215,6 +2295,6 @@ timmen med strömbrytaren på: "Tre barn kostar 468 i timmen".
   inga poster 2026-10-21.
 - **I drift** sedan kvällen 2026-10-21 (PR #327, 05cb8c1; `DEPLOY-BETALNING.md` 9.26). Med
   `syskonskuld` av har inget pris och ingen betalning ändrats.
-- **Kvar**: beslutet om sen avbokning. `tillagg_installning` gör tillägget upplupet när ett bekräftat
-  pass avbokas inom 24 timmar (`sen_avbokning_timmar`, `debitera_vid_sen_avbokning`), och villkoren
-  har ingen avbokningsavgift. Leo avgör innan strömbrytaren slås på.
+- **Beslutet om sen avbokning** (2026-10-22, `sen_avbokning`, ovan): tillägget följer passet, så en
+  sen avbokning gör hälften av posten till en skuld, och villkoren har både regeln (`#avbokning`)
+  och syskontillägget (`#syskontillagg`, versionen 2026-10-23 i `tillagg_installning`).

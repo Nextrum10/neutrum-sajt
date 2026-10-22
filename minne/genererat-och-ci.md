@@ -763,3 +763,11 @@ Betalningar och Månadens ekonomi och bokslutets rad ritas mot de riktiga tabell
 Ett fel i ett prov att komma ihåg: en DO-block-variabel heter som ett tabellalias utan att märkas (`B constant uuid`
 och `from public.bookings b` ger "column reference "b" is ambiguous", för plpgsql skiljer inte på versaler). Avsnitt
 51 har `B` för en studiehjälpare, så aliaset där är `bk`.
+
+### Sen avbokning (sen_avbokning, 2026-10-22)
+I `rls-test.sql` är avsnitt 53 (SA, 24 prov) nytt, och avsnitt 51 räknar halva tillägget vid en sen avbokning; hela
+filen gick 2131 av 2131 lokalt. `prova-sen-avbokning.js` (port 8986, 54 prov) provar vyerna mot en falsk Supabase som
+gör det `stampla_avbokningen` gör och svarar på `sen_avbokning_lage()`: familjens ruta, passets sida och Att betala,
+med timmar, ett pass i tid och ett på de gamla villkoren, utan migrationen, telefon och mörkt läge, och adminvyns
+fråga, Att göra, Alla betalningar, panelen och Efterskänk avgiften. `prova-syskon.js` (96 prov) läser villkorens
+version 2026-10-23, gränsen 12 timmar och länken till `#syskontillagg`.

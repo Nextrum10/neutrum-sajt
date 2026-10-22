@@ -99,7 +99,10 @@ och är sedan låst i databasen tills admin öppnar den med ett skäl (Fas
 20.2). Belopp lagras i ören överallt. Planerna och klippkorten (Fas 16.1) prissätts bara i vyn
 `erbjudanden_pris`, och inom ångerfristen räknas använda timmar till det
 betalda priset, inte till 379 kr. Ett pass betalt med timmar avbokar
-familjen själv, och timmarna kommer tillbaka; tio dagar innan ett kort
+familjen själv, och timmarna kommer tillbaka, utom vid en sen avbokning
+(mindre än 12 timmar före start, sedan 2026-10-22): då räknas passet som
+hållet i halva tiden, som dras ur timmarna, och ett pass betalt med
+pengar kostar hälften (`minne/betalning.md`); tio dagar innan ett kort
 går ut mejlas familjen om timmar finns kvar (Fas 21). Det som blir över
 av den sista påbörjade timmen på ett timpass sparas i familjens timbank
 (Fas 22.1): minuterna tar övertiden på nästa pass av sig själva, kan

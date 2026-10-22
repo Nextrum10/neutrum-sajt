@@ -1899,3 +1899,16 @@ En granskare som inte skrivit koden läste vyerna med fokus på tidszonen; en an
 - **Radera**: hindret `syskon_kommande` säger att passen avbokas först, för barnen på ett pass ändras inte.
 - Provat: `prova-adminvyn.js` mot en databas byggd ur alla migrationer, med en betald och en väntande betalning för
   tillägget i fixturen, så att knappen, raderna och bokslutet ritas mot de riktiga tabellerna.
+
+## Sen avbokning i vyerna (2026-10-22, `sen_avbokning`)
+- **Familjens vy**: Avboka frågar `sen_avbokning_lage()` när familjen trycker och säger vad det kostar ("Avboka
+  ändå"); passets sida säger det de sista 12 timmarna och har ingen Föreslå ny tid (svaret sparas per pass i
+  `S.senLäge`, och sidan ritas inte om efter en väntan om familjen gått vidare). Ett sent avbokat pass har beskedet,
+  priset ("199,50 kr", eller "30 min ur timmarna", aldrig "0 kr") och Betala nu, och står under Att betala som "Avbokat
+  sent: hälften av passet". Kolumnerna hämtas i en egen fråga (`laddaPass`), så vyn tål att de saknas.
+- **Adminvyn**: Avboka frågar inom 12 timmar om familjen bad om avbokningen för sent (bara när databasen säger att
+  regeln gäller), och skriver `avbokad_for_familjen` i samma uppdatering; Betalningar räknas om efteråt. Alla
+  betalningar visar avgiften (obetald under Att få in, betald, eller "ur timmarna"), Att göra och Påminn säger "en sen
+  avbokning", och passets panel har delen Sen avbokning med Efterskänk avgiften (superadmin). Kolumnerna hämtas i en
+  egen fråga i kärnan och läggs på `S.bokningar`.
+- Provat: `verktyg/prova-sen-avbokning.js` (port 8986).

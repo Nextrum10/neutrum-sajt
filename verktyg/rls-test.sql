@@ -19723,7 +19723,9 @@ begin
 
   begin
     perform set_config('request.jwt.claims', '', true);
-    -- Strömbrytaren går inte på med utkastet.
+    -- Strömbrytaren går inte på med utkastet. Sedan sen_avbokning (2026-10-22)
+    -- står villkorstexten i användarvillkoren, så utkastet sätts här.
+    update public.tillagg_installning set villkor_version = 'utkast' where id = 1;
     begin
       update public.flaggor set aktiv = true where kod = 'syskonskuld';
       t := 'gick';
@@ -19930,9 +19932,11 @@ begin
       reset role;
       perform set_config('request.jwt.claims', '', true);
       select * into r from public.tillagg_poster where bokning_id = X6;
-      ut := ut || jsonb_build_object('t', 'SK familjen avbokar sent: posten blir upplupen ändå',
-              'ok', r.status = 'upplupen' and r.upplupen_at is not null and r.orsak like 'Sen avbokning%',
-              'd', concat_ws(' ', r.status, r.orsak));
+      -- sen_avbokning (2026-10-22): hälften av posten, som hälften av passet.
+      ut := ut || jsonb_build_object('t', 'SK familjen avbokar sent: hälften av posten blir upplupen',
+              'ok', r.status = 'upplupen' and r.upplupen_at is not null and r.orsak like 'Sen avbokning%'
+                    and r.minuter = 30 and r.belopp_ore = round(r.pris_ore_per_timme * 30 / 60.0),
+              'd', concat_ws(' ', r.status, r.minuter, r.belopp_ore, r.orsak));
 
       raise exception 'delblock';
     exception when others then
@@ -21134,6 +21138,295 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('VB Värvningsbonusen', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', null, true);
+
+-- Avsnitt 53: ett pass k minuter efter två timmar fram. Pass som står samtidigt
+-- får egna tider, för en studiehjälpares aktiva pass överlappar inte
+-- (bookings_ingen_overlapp); ett avbokat pass lämnar sin tid.
+create function pg_temp.sa_dag(k integer) returns date
+language sql stable as $$
+  select ((now() + interval '2 hours' + make_interval(mins => k)) at time zone 'Europe/Stockholm')::date
+$$;
+create function pg_temp.sa_tid(k integer) returns text
+language sql stable as $$
+  select to_char((now() + interval '2 hours' + make_interval(mins => k)) at time zone 'Europe/Stockholm', 'HH24:MI')
+$$;
+
+-- ------------------------------------------------------------
+-- 53. Sen avbokning (sen_avbokning, 2026-10-22)
+--
+-- Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h av att
+-- lektionen ska hållas betalas 50% av belopp, eller spenderas hälften av
+-- planerade timmar för lektionen". Familjen avbokar ett bokat pass mindre än
+-- 12 timmar före: passet räknas som hållet i halva tiden. I pengar blir
+-- hälften av priset en avgift som larmar tills den betalats, och ett betalt
+-- pass får bara resten tillbaka; med timmar dras halva tiden. I tid,
+-- studiehjälparens och Nextrums avbokningar och ett förslag kostar inget,
+-- Nextrum kan avboka på familjens begäran och efterskänka, familjen flyttar
+-- inte ett bokat pass inom gränsen, och regeln gäller bara ett pass som
+-- föreslogs efter att familjen godkänt villkoren med den (också spärren mot
+-- att flytta). sen_avbokning_lage() säger vyerna vad en avbokning skulle
+-- kosta. Familj P, studiehjälpare A, admin AD, annan familj Q. Allt rullas
+-- tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut    jsonb := '[]'::jsonb;
+  fel   text;
+  t     text;
+  r     record;
+  n     bigint;
+  m     bigint;
+  j     jsonb;
+  idag  date := (now() at time zone 'Europe/Stockholm')::date;
+  snart timestamptz := now() + interval '2 hours';
+  P     constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  A     constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  S1    constant uuid := '00000000-0000-4000-8000-0000000005a1';
+  Y1    constant uuid := '00000000-0000-4000-8000-000000053b01';
+  Y2    constant uuid := '00000000-0000-4000-8000-000000053b02';
+  Y3    constant uuid := '00000000-0000-4000-8000-000000053b03';
+  Y4    constant uuid := '00000000-0000-4000-8000-000000053b04';
+  Y5    constant uuid := '00000000-0000-4000-8000-000000053b05';
+  Y6    constant uuid := '00000000-0000-4000-8000-000000053b06';
+  Y7    constant uuid := '00000000-0000-4000-8000-000000053b07';
+  Y8    constant uuid := '00000000-0000-4000-8000-000000053b08';
+  Y9    constant uuid := '00000000-0000-4000-8000-000000053b09';
+  Y10   constant uuid := '00000000-0000-4000-8000-000000053b10';
+  Y11   constant uuid := '00000000-0000-4000-8000-000000053b11';
+  Y12   constant uuid := '00000000-0000-4000-8000-000000053b12';
+  Y13   constant uuid := '00000000-0000-4000-8000-000000053b13';
+  Y14   constant uuid := '00000000-0000-4000-8000-000000053b14';
+  Q     constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  KK    constant uuid := '00000000-0000-4000-8000-000000053c01';
+begin
+  if to_regprocedure('intern.avbokningen_ar_sen(timestamptz, timestamptz)') is null then
+    insert into utfall (test, ok, detalj) values ('SA Sen avbokning: migrationen är inte körd', true, 'hoppas över');
+    return;
+  end if;
+
+  begin
+    perform set_config('request.jwt.claims', '', true);
+    -- Notistriggern står av i sviten; här prövas vad mejlen bär.
+    alter table public.bookings enable trigger bookings_notis;
+
+    -- ---------- gränsen ----------
+    ut := ut || jsonb_build_object('t', 'SA mindre än 12 timmar före är sent, exakt 12 i tid, och efter start sent',
+            'ok', intern.avbokningen_ar_sen(snart, snart - interval '11 hours 59 minutes')
+                  and not intern.avbokningen_ar_sen(snart, snart - interval '12 hours')
+                  and intern.avbokningen_ar_sen(snart, snart + interval '1 hour')
+                  and intern.sen_avbokningens_minuter(60) = 30 and intern.sen_avbokningens_minuter(180) = 90,
+            'd', '');
+
+    -- ---------- A. i pengar, familjen avbokar sent ----------
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (Y1, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 60, 'confirmed');
+    t := pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = %L$q$, Y1));
+    select * into r from public.bookings where id = Y1;
+    ut := ut || jsonb_build_object('t', 'SA familjen avbokar två timmar före: halva tiden, och hälften av priset att betala',
+            'ok', t = 'ok' and r.sen_avbokning_minuter = 30 and r.timpris_ore > 0
+                  and r.sen_avbokning_ore = round(r.timpris_ore * 30 / 60.0) and r.betalning_status = 'ingen'
+                  and r.avbokad_av = P and not r.avbokad_for_familjen,
+            'd', concat_ws(' ', t, r.sen_avbokning_minuter, r.sen_avbokning_ore, r.timpris_ore, r.betalning_status));
+    select count(*) into n from public.avvikelser_rader() a
+     where a.typ = 'sen_avbokning_obetald' and a.objekt_id = Y1::text and a.belopp_ore = r.sen_avbokning_ore;
+    ut := ut || jsonb_build_object('t', 'SA den obetalda avgiften larmar, med beloppet', 'ok', n = 1, 'd', n);
+    select x.data into j from public.notiser x where x.pass_id = Y1 and x.mottagare = A and x.typ = 'pass_avbokat';
+    ut := ut || jsonb_build_object('t', 'SA studiehjälparens mejl säger att avbokningen var sen, utan avgiften',
+            'ok', (j ->> 'sen_minuter') = '30' and not (j ? 'sen_ore'), 'd', coalesce(j::text, 'ingen notis')
+);
+
+    -- Betalningen av avgiften, som webhooken skriver den.
+    update public.bookings
+       set betalning_status = 'betald', betalt_ore = r.sen_avbokning_ore, betald_at = now(),
+           stripe_payment_intent_id = 'pi_rls_53_avgift', stripe_charge_id = 'ch_rls_53_avgift'
+     where id = Y1;
+    select count(*) into n from public.avvikelser_rader() a
+     where a.objekt_id = Y1::text and a.typ in ('sen_avbokning_obetald', 'betald_men_avbokad');
+    select count(*) into m from public.betalningar b where b.booking_id = Y1 and b.belopp_ore = r.sen_avbokning_ore;
+    ut := ut || jsonb_build_object('t', 'SA betald avgift: inget larm, och en rad i liggaren',
+            'ok', n = 0 and m = 1 and not intern.passet_betalt_ej_hallet((select b from public.bookings b where b.id = Y1)),
+            'd', n || ' ' || m);
+
+    -- ---------- B. i tid, studiehjälparen, ett förslag ----------
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (Y2, P, A, S1, P, idag + 5, '15:17', 60, 'confirmed'),
+           (Y3, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 60, 'confirmed'),
+           (Y4, P, A, S1, P, pg_temp.sa_dag(70), pg_temp.sa_tid(70), 60, 'requested');
+    t := pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'forhinder' where id = %L$q$, Y2))
+      || ' ' || pg_temp.svar_som(A, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = %L$q$, Y3))
+      || ' ' || pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'annat' where id = %L$q$, Y4));
+    select count(*) into n from public.bookings
+     where id in (Y2, Y3, Y4) and status = 'cancelled' and sen_avbokning_minuter is null and sen_avbokning_ore is null;
+    ut := ut || jsonb_build_object('t', 'SA i tid, studiehjälparens avbokning och ett förslag som dras tillbaka kostar inget',
+            'ok', t = 'ok ok ok' and n = 3, 'd', t || ' ' || n);
+
+    -- ---------- C. Nextrum avbokar, på familjens begäran eller inte ----------
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (Y5, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 120, 'confirmed'),
+           (Y6, P, A, S1, P, pg_temp.sa_dag(130), pg_temp.sa_tid(130), 60, 'confirmed'),
+           (Y7, P, A, S1, P, pg_temp.sa_dag(200), pg_temp.sa_tid(200), 60, 'confirmed');
+    t := pg_temp.svar_som(AD, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom',
+           avbokad_for_familjen = true where id = %L$q$, Y5))
+      || ' ' || pg_temp.svar_som(AD, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'ingen_hjalpare'
+           where id = %L$q$, Y6));
+    select * into r from public.bookings where id = Y5;
+    select x.data into j from public.notiser x where x.pass_id = Y5 and x.mottagare = P and x.typ = 'pass_avbokat';
+    ut := ut || jsonb_build_object('t', 'SA Nextrum avbokar på familjens begäran: samma regel, och familjens mejl har avgiften',
+            'ok', t = 'ok ok' and r.sen_avbokning_minuter = 60 and r.sen_avbokning_ore = r.timpris_ore and r.avbokad_for_familjen
+                  and (j ->> 'sen_ore')::bigint = r.sen_avbokning_ore
+                  and exists (select 1 from public.bookings where id = Y6 and sen_avbokning_minuter is null),
+            'd', concat_ws(' ', t, r.sen_avbokning_minuter, r.sen_avbokning_ore, j::text));
+    t := pg_temp.svar_som(AD, format('update public.bookings set sen_avbokning_minuter = 30, sen_avbokning_ore = 100 where id = %L', Y6))
+      || ' ' || pg_temp.svar_som(AD, format('update public.bookings set sen_avbokning_ore = 1 where id = %L', Y5));
+    ut := ut || jsonb_build_object('t', 'SA ett belopp sätts bara när passet avbokas, inte heller av admin efteråt',
+            'ok', t = '42501 42501', 'd', t);
+
+    -- ---------- D. familjen sätter ingenting själv, och flyttar inte ----------
+    t := pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom',
+           avbokad_for_familjen = true where id = %L$q$, Y7))
+      || ' ' || pg_temp.svar_som(P, format('update public.bookings set sen_avbokning_minuter = null where id = %L', Y5));
+    ut := ut || jsonb_build_object('t', 'SA familjen sätter inte sin begäran och efterskänker inte själv', 'ok', t = '42501 42501', 'd', t);
+    t := pg_temp.svar_som(P, format($q$update public.bookings set wanted_date = %L, status = 'requested', created_by = %L
+           where id = %L$q$, idag + 7, P, Y7));
+    ut := ut || jsonb_build_object('t', 'SA familjen flyttar inte ett bokat pass inom 12 timmar', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(A, format($q$update public.bookings set wanted_date = %L, status = 'requested', created_by = %L
+           where id = %L$q$, idag + 7, A, Y7));
+    ut := ut || jsonb_build_object('t', 'SA studiehjälparen kan flytta det', 'ok', t = 'ok', 'd', t);
+
+    -- ---------- E. ett betalt pass ----------
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status,
+                                 betalning_status, betalt_ore, betald_at, stripe_payment_intent_id, stripe_charge_id)
+    values (Y8, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 60, 'confirmed', 'betald', 39900, now(), 'pi_rls_53_pass', 'ch_rls_53_pass');
+    t := pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = %L$q$, Y8));
+    t := t || ' ' || pg_temp.svar_som(AD, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom',
+           avbokad_for_familjen = true where id = %L$q$, Y8));
+    select * into r from public.bookings where id = Y8;
+    select a.belopp_ore into m from public.avvikelser_rader() a where a.typ = 'betald_men_avbokad' and a.objekt_id = Y8::text;
+    ut := ut || jsonb_build_object('t', 'SA ett betalt pass avbokas genom Nextrum, och bara det som inte är avgiften ska tillbaka',
+            'ok', t = '42501 ok' and r.sen_avbokning_ore = round(r.timpris_ore * 30 / 60.0) and m = 39900 - r.sen_avbokning_ore
+                  and intern.passet_betalt_ej_hallet((select b from public.bookings b where b.id = Y8)),
+            'd', concat_ws(' ', t, r.sen_avbokning_ore, m));
+    update public.bookings set aterbetald_ore = 39900 - r.sen_avbokning_ore where id = Y8;
+    select count(*) into n from public.avvikelser_rader() a where a.typ = 'betald_men_avbokad' and a.objekt_id = Y8::text;
+    ut := ut || jsonb_build_object('t', 'SA när resten är tillbaka larmar inget, och passet är uppgjort',
+            'ok', n = 0 and not intern.passet_betalt_ej_hallet((select b from public.bookings b where b.id = Y8)), 'd', n);
+
+    -- ---------- F. betalt med timmar ----------
+    insert into public.klippkort (id, parent_id, erbjudande, namn, sort, timmar, giltig_manader, rabatt_procent,
+                                  timpris_ore, begart_ore, betalt_ore, status, giltigt_till, betald_at, stripe_charge_id)
+    values (KK, P, 'klipp10', 'Prov sen avbokning', 'klippkort', 4, 6, 0, 39900, 159600, 159600, 'betald', idag + 30, now(),
+            'ch_rls_53_kort');
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status,
+                                 klippkort_id, betalning_status, betald_at)
+    values (Y9, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 60, 'confirmed', KK, 'betald', now()),
+           (Y10, P, A, S1, P, idag + 5, '16:23', 60, 'confirmed', KK, 'betald', now());
+    n := intern.timbank_saldo(P);
+    t := pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = %L$q$, Y9))
+      || ' ' || pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = %L$q$, Y10));
+    select * into r from public.bookings where id = Y9;
+    m := intern.timbank_saldo(P);
+    ut := ut || jsonb_build_object('t', 'SA med timmar: halva tiden dras, timmen står kvar och det som blev över sparas',
+            'ok', t = 'ok ok' and r.sen_avbokning_minuter = 30 and r.sen_avbokning_ore = 0 and r.betalning_status = 'betald'
+                  and intern.kortets_anvanda(KK) = 1 and m - n = 30
+                  and (select betalning_status from public.bookings where id = Y10) = 'ingen',
+            'd', concat_ws(' ', t, r.sen_avbokning_minuter, r.sen_avbokning_ore, r.betalning_status, intern.kortets_anvanda(KK), m - n));
+    select count(*) into m from public.avvikelser_rader() a where a.objekt_id = Y9::text;
+    ut := ut || jsonb_build_object('t', 'SA ett sent avbokat pass betalt med timmar larmar inte', 'ok', m = 0, 'd', m);
+
+    t := pg_temp.svar_som(AD, format('update public.bookings set sen_avbokning_minuter = null, sen_avbokning_ore = null where id = %L', Y9));
+    select * into r from public.bookings where id = Y9;
+    ut := ut || jsonb_build_object('t', 'SA Nextrum efterskänker: timmen och minuterna kommer tillbaka',
+            'ok', t = 'ok' and r.sen_avbokning_minuter is null and r.betalning_status = 'ingen'
+                  and intern.kortets_anvanda(KK) = 0 and intern.timbank_saldo(P) = n,
+            'd', concat_ws(' ', t, r.betalning_status, intern.kortets_anvanda(KK), intern.timbank_saldo(P), n));
+
+    -- ---------- G. tipstimmen ----------
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status,
+                                 rabattkod, startrabatt, rabatt_ore)
+    values (Y11, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 60, 'confirmed', 'TIPS', true, 39900);
+    n := intern.tipstimmar_anvanda(P);
+    t := pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = %L$q$, Y11));
+    select * into r from public.bookings where id = Y11;
+    ut := ut || jsonb_build_object('t', 'SA en tipstimme som avbokas sent är använd, och kostar inga pengar',
+            'ok', t = 'ok' and r.sen_avbokning_minuter = 30 and r.sen_avbokning_ore = 0 and intern.tipstimmar_anvanda(P) = n,
+            'd', concat_ws(' ', t, r.sen_avbokning_ore, n, intern.tipstimmar_anvanda(P)));
+
+    -- ---------- H. mitt_tillagg visar gränsen ----------
+    perform pg_temp.bli(P);
+    j := public.mitt_tillagg();
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'SA syskontilläggets ruta har passets gräns och andel',
+            'ok', (j ->> 'sen_avbokning_timmar') = '12' and (j ->> 'sen_avbokning_procent') = '50', 'd', j::text);
+
+    -- ---------- I. villkoren: ett pass från före godkännandet ----------
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (Y12, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 60, 'confirmed');
+    update public.villkor_godkannanden set godkant_at = now() + interval '1 minute'
+     where anvandare = P and version >= '2026-10-23';
+    t := pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = %L$q$, Y12));
+    select * into r from public.bookings where id = Y12;
+    ut := ut || jsonb_build_object('t', 'SA ett pass som föreslogs innan familjen godkänt regeln kostar inget',
+            'ok', t = 'ok' and r.sen_avbokning_minuter is null, 'd', concat_ws(' ', t, r.sen_avbokning_minuter));
+
+    -- Och det flyttar familjen som förut: utan regeln finns inget att kringgå.
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (Y13, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 60, 'confirmed');
+    perform pg_temp.bli(P);
+    j := public.sen_avbokning_lage(Y13);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    t := pg_temp.svar_som(P, format($q$update public.bookings set wanted_date = %L, status = 'requested', created_by = %L
+           where id = %L$q$, idag + 8, P, Y13));
+    ut := ut || jsonb_build_object('t', 'SA ett pass från före godkännandet: vyn får att regeln inte gäller, och familjen flyttar det',
+            'ok', (j ->> 'galler') = 'false' and (j ->> 'sen') = 'true' and t = 'ok', 'd', concat_ws(' ', j::text, t));
+
+    -- ---------- J. vad en avbokning skulle kosta (sen_avbokning_lage) ----------
+    update public.villkor_godkannanden set godkant_at = now() - interval '1 hour'
+     where anvandare = P and version >= '2026-10-23';
+    insert into public.bookings (id, parent_id, tutor_id, student_id, created_by, wanted_date, wanted_time, duration_min, status)
+    values (Y14, P, A, S1, P, pg_temp.sa_dag(0), pg_temp.sa_tid(0), 60, 'confirmed');
+    perform pg_temp.bli(P);
+    j := public.sen_avbokning_lage(Y14);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    select * into r from public.bookings where id = Y14;
+    ut := ut || jsonb_build_object('t', 'SA familjen får vad en avbokning nu skulle kosta, som databasen räknar den',
+            'ok', (j ->> 'galler') = 'true' and (j ->> 'sen') = 'true' and (j ->> 'minuter') = '30'
+                  and (j ->> 'ore')::bigint = round(r.timpris_ore * 30 / 60.0) and (j ->> 'timmar') = '12',
+            'd', coalesce(j::text, 'null'));
+    perform pg_temp.bli(AD);
+    j := public.sen_avbokning_lage(Y14);
+    reset role;
+    perform pg_temp.bli(Q);
+    ut := ut || jsonb_build_object('t', 'SA Nextrum får svaret, en annan familj null',
+            'ok', (j ->> 'galler') = 'true' and public.sen_avbokning_lage(Y14) is null, 'd', coalesce(j::text, 'null'));
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    t := pg_temp.svar_som(null, format('select public.sen_avbokning_lage(%L)', Y14));
+    ut := ut || jsonb_build_object('t', 'SA anon kan inte fråga', 'ok', t = '42501', 'd', t);
+    t := pg_temp.svar_som(P, format($q$update public.bookings set status = 'cancelled', avbokningsskal = 'sjukdom' where id = %L$q$, Y14));
+    select * into r from public.bookings where id = Y14;
+    ut := ut || jsonb_build_object('t', 'SA avgiften blir den vyn fick',
+            'ok', t = 'ok' and r.sen_avbokning_ore = round(r.timpris_ore * 30 / 60.0), 'd', concat_ws(' ', t, r.sen_avbokning_ore));
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('SA Sen avbokning', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

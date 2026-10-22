@@ -94,8 +94,10 @@ const CORS = cors();
       ett pass och på ett köp, och beloppet är databasens efter den.
   10: planerna per kalendermånad (2026-10-21).
   11: kort eller Klarna, och en plan gäller 30 dagar från köpet
-      (2026-10-21): en väntande kassa från förut hade bara kort. */
-const SESSIONSFORM = 11;
+      (2026-10-21): en väntande kassa från förut hade bara kort.
+  12: en sen avbokning (sen_avbokning, 2026-10-22): passets rad säger att
+      det är avgiften, hälften av passet. */
+const SESSIONSFORM = 12;
 
 /* KÖPVILLKOREN I KASSAN (2026-10-21, betalningsliggaren). Vyn visar en
    kryssruta för köpvillkoren innan kassan öppnas, och utan krysset
@@ -1129,8 +1131,24 @@ Deno.serve(async (req) => {
      motparten tackat ja betyder en återbetalning för varje pass som
      studiehjälparen nekar, och varje återbetalning är en kortavgift vi
      inte får tillbaka. Se filhuvudet. */
-  if (pass.status !== 'confirmed' && pass.status !== 'completed') {
-    return json({ error: 'Passet betalas när det är bekräftat.' }, 409, CORS);
+  /* SEN AVBOKNING (sen_avbokning, 2026-10-22). Avbokade familjen passet
+     mindre än 12 timmar före start betalar den hälften. Avgiften är
+     databasens (stampla_avbokningen, intern.sen_avbokningens_pris), och
+     här räknas ingenting om. En egen fråga, så att kassan tål att
+     kolumnerna saknas innan migrationen körts: då är det inget att betala. */
+  let sen: { minuter: number; ore: number } | null = null;
+  if (pass.status === 'cancelled') {
+    const { data: s, error: senfel } = await vem.klient
+      .from('bookings').select('sen_avbokning_minuter, sen_avbokning_ore').eq('id', pass.id).maybeSingle();
+    const rad = s as { sen_avbokning_minuter?: number | null; sen_avbokning_ore?: number | null } | null;
+    if (!senfel && rad && Number(rad.sen_avbokning_ore) > 0 && Number(rad.sen_avbokning_minuter) > 0) {
+      sen = { minuter: Number(rad.sen_avbokning_minuter), ore: Number(rad.sen_avbokning_ore) };
+    }
+  }
+  if (pass.status !== 'confirmed' && pass.status !== 'completed' && !sen) {
+    return json({
+      error: pass.status === 'cancelled' ? 'Passet är avbokat och har inget att betala.' : 'Passet betalas när det är bekräftat.',
+    }, 409, CORS);
   }
   if (!pass.tutor_id) {
     return json({ error: 'Passet har ingen studiehjälpare än.' }, 409, CORS);
@@ -1180,7 +1198,10 @@ Deno.serve(async (req) => {
        över betalas resten som ett tillägg. Minuterna följer med i
        metadata, så att webhooken kan skriva vad betalningen avsåg. */
     let minuter = Number(pass.duration_min || 60);
-    if (pass.status === 'completed') {
+    if (sen) {
+      // Den sena avbokningen räknas som halva tiden, och beloppet är databasens.
+      minuter = sen.minuter;
+    } else if (pass.status === 'completed') {
       /* Fas 22.1: övertiden timbanken tog när rapporten skrevs är
          betald, med minuter familjen redan köpt. Kortet tar resten. */
       const { data: underlag } = await db.from('passunderlag')
@@ -1193,9 +1214,10 @@ Deno.serve(async (req) => {
       return json({ error: 'Tjänsten saknar pris. Sätt det i adminvyn först.' }, 409, CORS);
     }
 
-    const brutto = familjebelopp(minuter, timprisOre, extraOre, barn);
-    // Rabatten är fryst vid bokningen och räknas aldrig om här.
-    const rabatt = Math.min(Math.max(Number(pass.rabatt_ore || 0), 0), brutto);
+    const brutto = sen ? sen.ore : familjebelopp(minuter, timprisOre, extraOre, barn);
+    // Rabatten är fryst vid bokningen och räknas aldrig om här. Avgiften för
+    // en sen avbokning har den redan dragen.
+    const rabatt = sen ? 0 : Math.min(Math.max(Number(pass.rabatt_ore || 0), 0), brutto);
     const netto = brutto - rabatt;
 
     /* Första timmen bjuds (Fas 19.5): ett pass på en timme kan kosta
@@ -1282,12 +1304,17 @@ Deno.serve(async (req) => {
         price_data: {
           currency: VALUTA,
           unit_amount: netto,
-          product_data: {
-            name: `${text}${barn > 1 ? ` (${barn} barn)` : ''}`,
-            description: `Läxhjälp, ${minuter} minuter`
-              + (pass.startrabatt && rabatt > 0 ? ', första timmen på köpet' : '')
-              + (rabattPerTimme > 0 ? `, med er rabatt på ${Math.round(rabattPerTimme / 100)} kr per timme` : ''),
-          },
+          product_data: sen
+            ? {
+              name: `Sen avbokning: ${text}`,
+              description: `Hälften av passet, som avbokades mindre än 12 timmar före start (${minuter} minuter)`,
+            }
+            : {
+              name: `${text}${barn > 1 ? ` (${barn} barn)` : ''}`,
+              description: `Läxhjälp, ${minuter} minuter`
+                + (pass.startrabatt && rabatt > 0 ? ', första timmen på köpet' : '')
+                + (rabattPerTimme > 0 ? `, med er rabatt på ${Math.round(rabattPerTimme / 100)} kr per timme` : ''),
+            },
         },
       }],
       payment_intent_data: {

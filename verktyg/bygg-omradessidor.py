@@ -2009,8 +2009,9 @@ GUIDER = [
             f'för varje timme kan ni välja en plan, en månad i taget, och med den första planen är '
             f'första timmen gratis.',
             'Ni betalar för den tid passet faktiskt höll, räknat per påbörjad kvart, och ser '
-            'tiden i rapporten innan ni bekräftar den. Matchningen, studieplanen och rapporten '
-            'efter varje pass ingår i timpriset. Hela prisbilden står på prissidan.',
+            'tiden i rapporten. Avbokar ni senast 12 timmar före kostar passet ingenting, och avbokar '
+            'ni senare betalar ni hälften av det. Matchningen, studieplanen och rapporten efter '
+            'varje pass ingår i timpriset. Hela prisbilden står på prissidan.',
         ],
         'faq_rubrik': 'Vad läxhjälp kostar, det ni brukar undra',
         'faq': [

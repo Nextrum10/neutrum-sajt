@@ -1877,3 +1877,27 @@ En fil (20261021230000), provad lokalt och i drift sedan kvällen 2026-10-21. Le
   resten i ett do-block ur merge-commiten (05cb8c1), som prövade hela filens och restens md5, att villkoret var bytt
   och funktionens kropp innan filens text registrerades (`DEPLOY-BETALNING.md` 9.26). Inga poster fanns. Hela
   `rls-test.sql` gick 2107 av 2107 mot driften, tillbakarullat, och advisorn var oförändrad (148 poster).
+
+### Sen avbokning (sen_avbokning, 2026-10-22, inte i drift)
+En fil (20261022100000), provad lokalt (`minne/betalning.md`, Sen avbokning).
+
+- **Byggd ur driftens funktioner**: de 19 funktionerna hämtades med `pg_get_functiondef()` och lappades med exakta
+  ersättningar som räknas (`bygg_migration.py` i en scratchpad, inte i repot). Vakten först i filen prövar varje
+  funktions md5 mot driftens eller filens egen, så att den stannar om en annan session ändrat något, och går att köra
+  två gånger (provat). Inget `drop` och inget `delete`: kolumnerna läggs till med `if not exists`, villkoret och
+  auditens trigger i do-block som prövar om de finns, och strömbrytarens text med `flaggor_stampla` av bara runt raden
+  och en vakt som prövar att den står på igen.
+- **Kolumnerna**: `betalning_installning.avbokning_avgift_timmar` och `_procent` (låsta på 12 och 50), och på
+  `bookings` `sen_avbokning_minuter`, `sen_avbokning_ore` och `avbokad_for_familjen`, med villkoret
+  `bookings_sen_avbokning` (båda null, eller ett avbokat pass med 15–180 minuter och ett belopp). Ingen inloggad
+  skriver dem: `stampla_avbokningen` sätter och nollar, och efteråt släpper den bara att superadmin efterskänker
+  (båda null). Auditen: `bookings_audit_sen_avbokning`, AFTER UPDATE med WHEN på den färdiga raden.
+- **`sen_avbokning_lage(pass)`** är vyernas fråga (security definer, `authenticated`, inte `anon`): passets familj och
+  superadmin får svar, alla andra null. Hjälparna i `intern` (`avbokningen_ar_sen`, `sen_avbokningens_minuter`,
+  `sen_avbokningens_pris`, `familjen_har_avbokningsregeln`) är databasens egna, utan EXECUTE för någon roll.
+- **Villkorens version** blir 2026-10-23 (`intern.villkor_version()`), och `tillagg_installning.villkor_version`
+  samma: syskontilläggets text står i villkoren sedan dess, så strömbrytaren `syskonskuld` går att slå på. Den står av.
+- Provat lokalt: `rls-test.sql` 2131 av 2131 (avsnitt 53, SA, 24 prov: gränsen, pengarna, larmet och liggaren, i tid,
+  studiehjälparen och förslaget, Nextrum på familjens begäran, ingen klient som sätter något, att flytta, ett betalt
+  pass, timmarna och efterskänkningen, tipstimmen, `mitt_tillagg`, villkoren före godkännandet och
+  `sen_avbokning_lage`), avsnitt 51 med halva tillägget vid en sen avbokning, och en databas byggd ur alla migrationer.

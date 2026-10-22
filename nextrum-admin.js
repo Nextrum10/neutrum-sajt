@@ -230,6 +230,38 @@
     const avboka = e.target.closest('[data-avboka]');
     if (avboka) {
       const b = S.bokningar.find(x => x.id === avboka.dataset.avboka);
+      /* Sen avbokning (sen_avbokning, 2026-10-22): avbokar vi ett bokat pass
+         mindre än 12 timmar före start för att familjen bett om det, är det
+         en sen avbokning, som om familjen gjort det själv. Ställer
+         studiehjälparen eller vi in passet kostar det ingenting. Bara ett ja
+         här tar avgiften (avbokad_for_familjen); Nej och Escape avbokar utan
+         den. Databasen svarar om regeln gäller passet (bara om familjen
+         godkänt villkoren med den innan passet bokades) och vad det kostar
+         (sen_avbokning_lage). Saknas funktionen (före migrationen), eller
+         svarar den inte, ställs ingen fråga. */
+      const timmar = b.klippkort_id || (S.timbankPass && S.timbankPass.has(b.id));
+      const betald = b.betalning_status === 'betald' || b.betalning_status === 'tvist';
+      let läge = null;
+      if (b.status === 'confirmed' && NXBetalning.senAvbokningNu(b)) {
+        const { data, error } = await supa.rpc('sen_avbokning_lage', { p_pass: b.id });
+        if (!error && data && data.galler && data.sen) läge = data;
+      }
+      const avgift = läge ? Number(läge.ore) || 0 : 0;
+      let förFamiljen = false;
+      if (läge) {
+        /* Det som räknas är när familjen bad om det: bad de i tid och vi
+           avbokar först nu är svaret nej. */
+        förFamiljen = await bekräfta({
+          titel: 'Bad familjen om avbokningen?',
+          text: 'Passet börjar om mindre än 12 timmar. Bad familjen om avbokningen mindre än 12 timmar före start '
+            + 'räknas den som en sen avbokning: ' + (avgift > 0 ? 'familjen betalar hälften av passet, ' + kronor(avgift) + '.'
+              : 'passet räknas som hållet i halva tiden, ' + NXBetalning.timmar(Number(läge.minuter))
+                + (timmar ? ', som dras ur timmarna.' : '.'))
+            + ' Bad de om den i tid, eller ställer studiehjälparen eller ni in passet, kostar det ingenting.',
+          knapp: 'Ja, en sen avbokning',
+          avbryt: 'Nej, ingen avgift'
+        });
+      }
       /* Skälet frågas nu i stunden, inte bara i efterhand: när admin
          avbokar får BÅDA parterna mejlet, och skälet står i det. Det
          skrivs i samma uppdatering som statusen — annars hade mejlet
@@ -243,7 +275,13 @@
            hur mycket som ska tillbaka är ett beslut. Rutan säger det,
            så att pengarna inte blir liggande för att ingen tänkte på dem. */
         text: kortDatum(b.wanted_date) + ' hos ' + namnFör(b.tutor_id) + '. '
-          + (b.betalning_status === 'betald' || b.betalning_status === 'tvist'
+          + (förFamiljen
+            ? 'Det blir en sen avbokning för familjen'
+              + (avgift > 0 ? (betald ? ', och avgiften (' + kronor(avgift) + ') står kvar. Resten går inte tillbaka '
+                  + 'av sig själv: återbetala den under Betalningar → Att göra.'
+                : ': de betalar ' + kronor(avgift) + ' med Betala nu.')
+                : ': halva tiden räknas som hållen.')
+            : betald
             ? 'Passet är betalt, och pengarna går inte tillbaka av sig själva — återbetala '
               + 'under Betalningar → Att göra.'
             : 'Passet är inte betalt, så det finns inget att betala tillbaka.'),
@@ -252,9 +290,22 @@
       if (!skäl) return;
       await medan(avboka, 'Avbokar…', async () => {
         const gammal = { status: b.status, avbokningsskal: b.avbokningsskal };
+        const fält = Object.assign({ status: 'cancelled', avbokningsskal: skäl },
+          förFamiljen ? { avbokad_for_familjen: true } : {});
         Object.assign(b, { status: 'cancelled', avbokningsskal: skäl });
-        if (!await skriv('bookings', b.id, { status: 'cancelled', avbokningsskal: skäl })) {
+        if (!await skriv('bookings', b.id, fält)) {
           Object.assign(b, gammal);
+        } else if (förFamiljen) {
+          /* Avgiften är databasens, och skriven i samma uppdatering. Ingen
+             avgift trots ett ja är ovanligt (frågan ställs bara när regeln
+             gäller), men säg det hellre än att låta det se ut som en. */
+          const { data } = await supa.from('bookings')
+            .select('sen_avbokning_minuter, sen_avbokning_ore, avbokad_for_familjen, betalning_status')
+            .eq('id', b.id).maybeSingle();
+          if (data) Object.assign(b, data);
+          if (data && data.sen_avbokning_minuter == null) {
+            alert('Passet är avbokat, men utan avgift: databasen räknade inte avbokningen som sen.');
+          }
         }
         /* Samma rad syns på fyra ställen. Ritas bara listan om blir
            kalendern och lektionslistan kvar med det gamla läget, och
@@ -265,6 +316,9 @@
            listan men inte i stapeln, på samma skärm. */
         ritaBokningar(); ritaKalender(); ritaLektioner();
         await hämtaAnalys(); ritaStatistik();
+        /* Pengar på passet, eller en avgift för en sen avbokning: Betalningar
+           och larmen räknas om, annars står passet kvar som obetalt där. */
+        if (förFamiljen || betald) await laddaOmEkonomi();
         await ritaÖversikt();
       });
       return;

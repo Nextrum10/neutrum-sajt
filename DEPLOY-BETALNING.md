@@ -2044,3 +2044,34 @@ körde det resten, prövade funktionens kropp (`89a71663…`) och registrerade h
 `intern.tillaggets_belopp` 13 800 öre för två timmar med ett och med två syskon, `flaggor_stampla` stod på, hela
 `rls-test.sql` ur 05cb8c1 gick 2107 av 2107 mot driften, tillbakarullat, advisorn hade samma 148 poster som före, och
 nextrum.se serverade `nextrum-betalning.js` och `nextrum-arbetsyta.js` byte för byte som main (hämtade från databasen).
+
+### 9.27 Sen avbokning och syskontilläggets villkor (2026-10-22, inte körd)
+
+Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h av att lektionen ska hållas betalas 50% av belopp,
+eller spenderas hälften av planerade timmar för lektionen", och om syskontillägget: "skriv villkorstexten själv".
+`20261022100000_sen_avbokning` (`minne/betalning.md`, Sen avbokning). Efter merge, en session, med de andra
+sessionerna i repot underrättade före och efter, i den här ordningen:
+
+1. **Vercel** lägger ut sajten med merge: villkoren 2026-10-23 (`#avbokning`, `#syskontillagg`), FAQ:n, Så fungerar
+   Nextrum, prisguiden, policyn och vyerna. Vyerna tål att migrationen saknas: utan `sen_avbokning_lage()` och
+   kolumnerna står allt som förut. Kontrollera från databasen (`extensions.http_get`) att nextrum.se serverar
+   `/anvandarvillkor` med "Senast uppdaterad 23 oktober 2026".
+2. **Edge-funktionerna** från merge-commiten, hämtade tillbaka och jämförda byte för byte med main:
+   `stripe-checkout` v24 (SESSIONSFORM 12, tar ett avbokat pass med en avgift), `notis-ko` v33 (avgiften i
+   `pass_avbokat`) och `drift` v25 (agentens fakta). Före migrationen: den gamla kassan hade nekat avgiften, och den
+   gamla kön hade mejlat en sen avbokning utan den. De nya tål att kolumnerna saknas.
+3. **Migrationen** hel i ett do-block ur merge-commiten: pröva filens md5, kör den och registrera filens text. Inget
+   `drop` och inget `delete`. Vakten först prövar 20 funktioner mot den md5 de hade i driften 2026-10-22 (eller filens
+   egen); stannar den har en annan session ändrat dem, och filen skrivs om mot driften. Villkorens version blir
+   2026-10-23, så alla får frågan igen, och `tillagg_installning.villkor_version` blir samma.
+4. Hela `rls-test.sql` mot driften, tillbakarullat (avsnitt 51 och 53), och advisorn: `sen_avbokning_lage` är ny och
+   nåbar för `authenticated`, inte för `anon`, och svarar null för den som inte är passets familj eller superadmin.
+5. **Provet i testläge** (Stripe står i testläge): ett bokat pass som familjen avbokar sent och betalar med Betala nu
+   (kort och Klarna), ett betalt med timmar (halva tiden dras, det över sparas), ett som admin avbokar på familjens
+   begäran, ett redan betalt (återbetala resten under Att göra), Efterskänk avgiften, och ett pass bokat före
+   godkännandet, som kostar inget och går att flytta.
+
+Kvar efter: att säga till familjerna (villkoren och regeln, före första sena avbokningen), juristen (regeln, meningen
+om ångerrätten och undantaget för fritidsverksamhet i 2 kap. 11 § distansavtalslagen, syskontilläggets villkor, rad 5 i
+`DATASKYDD.md`), att Leo tar bort edge-funktionen `utbildningsprov` i Supabases panel, och för syskontillägget det som
+står i 9.22 steg 7 utom texten och versionen.

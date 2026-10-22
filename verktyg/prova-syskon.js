@@ -77,7 +77,7 @@ function poster() {
 }
 function tillägg(över) {
   return Object.assign({
-    pa: true, version: '2026-10-21', godkand_at: '2026-10-21T09:00:00+00:00', sen_avbokning_timmar: 24,
+    pa: true, version: '2026-10-23', godkand_at: '2026-10-21T09:00:00+00:00', sen_avbokning_timmar: 12, sen_avbokning_procent: 50,
     debitera_vid_sen_avbokning: true, obligatorisk: true, max_upplupet_ore: 100000, sparr_efter_dagar: 45,
     paminnelse_dagar: 14, sparr: null, upplupet_ore: 20700, upplupna: 2, i_betalning_ore: 0, i_betalning: 0,
     poster: poster()
@@ -366,8 +366,11 @@ async function provaBokaFörstaGången(webb) {
     await innehåll(page, '[data-bk-tillagg]'));
   const villkor = await innehåll(page, '#boka-inner .bk-syskon-villkor');
   prova('boka: villkoren står första gången, med talen ur databasen',
-    /Villkor för syskontillägget/.test(villkor) && /24 timmar/.test(villkor) && /1\s?000\s*kr/.test(villkor)
-      && /45 dagar/.test(villkor) && /egen rad nästa gång ni köper timmar/.test(villkor) && /Platshållare/.test(villkor), villkor);
+    /Villkor för syskontillägget/.test(villkor) && /12 timmar/.test(villkor) && /hälften av tillägget/.test(villkor)
+      && /1\s?000\s*kr/.test(villkor) && /45 dagar/.test(villkor) && /egen rad nästa gång ni köper timmar/.test(villkor)
+      && /Läs hela villkoren för syskontillägget/.test(villkor), villkor);
+  prova('boka: länken går till punkten i användarvillkoren',
+    (await page.locator('#boka-inner .bk-syskon-villkor a').getAttribute('href')) === '/anvandarvillkor#syskontillagg');
   prova('boka: knappen väntar på krysset', await page.locator('#bk-boka').isDisabled());
   prova('boka: priset vid knappen är passets, utan tillägget',
     /399\s*kr/.test(await innehåll(page, '#boka-inner .bk-sum-pris')), await innehåll(page, '#boka-inner .bk-sum-pris'));
@@ -395,7 +398,7 @@ async function provaBokaFörstaGången(webb) {
   const ja = S.logg.findIndex(r => r.väg === '/rest/v1/rpc/godkann_tillaggsvillkor');
   const post = S.logg.findIndex(r => r.metod === 'POST' && r.väg === '/rest/v1/bookings');
   prova('boka: villkoren godkänns i databasen före passet, med versionen rutan visade',
-    ja !== -1 && post > ja && (S.logg[ja].kropp || {}).p_version === '2026-10-21', JSON.stringify(S.logg[ja] || null));
+    ja !== -1 && post > ja && (S.logg[ja].kropp || {}).p_version === '2026-10-23', JSON.stringify(S.logg[ja] || null));
   const k = post === -1 ? {} : (Array.isArray(S.logg[post].kropp) ? S.logg[post].kropp[0] : S.logg[post].kropp) || {};
   prova('boka: passet skickar syskonen och ett barn, aldrig ett belopp',
     JSON.stringify(k.extra_barn) === JSON.stringify(['elev-c', 'elev-d']) && k.antal_barn === 1 && k.student_id === 'elev-a'

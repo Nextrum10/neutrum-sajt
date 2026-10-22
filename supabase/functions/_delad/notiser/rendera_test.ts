@@ -388,6 +388,35 @@ Deno.test('ett avbokat pass säger skälet med våra ord och leder till en ny ti
   assertEquals(fritext.text.includes('Skäl'), false);
 });
 
+Deno.test('en sen avbokning ger familjen avgiften och studiehjälparen bara att den var sen', () => {
+  // sen_avbokning (2026-10-22). Familjen får mejlet när Nextrum avbokat på
+  // deras begäran; avgiften i kronor står bara i deras.
+  const familj = rendera('pass_avbokat', 'parent',
+    { data: { ...SMUTSIG, status: 'cancelled', skal: 'sjukdom', sen_minuter: 30, sen_ore: 19950 } });
+  assertStringIncludes(familj.text, 'mindre än 12 timmar');
+  assertStringIncludes(familj.text, '199,50');
+  assertStringIncludes(familj.text, 'Att betala');
+  assertStringIncludes(familj.text, `${SAJT}/foralder#betalning`);
+
+  // Betalade timmarna passet finns inget att betala, bara halva tiden.
+  const timmar = rendera('pass_avbokat', 'parent',
+    { data: { ...SMUTSIG, status: 'cancelled', sen_minuter: 30, sen_ore: 0 } });
+  assertStringIncludes(timmar.text, 'halva tiden');
+  assertEquals(timmar.text.includes('Att betala'), false);
+
+  // Studiehjälparen får aldrig beloppet, också om det skulle följa med.
+  const hjalpare = rendera('pass_avbokat', 'tutor',
+    { data: { ...SMUTSIG, status: 'cancelled', sen_minuter: 30, sen_ore: 19950 } });
+  assertStringIncludes(hjalpare.text, 'mindre än 12 timmar');
+  assertEquals(hjalpare.text.includes('199'), false);
+
+  // Ett värde som inte är en hel kvart blir ingenting, och en i tid säger inget om det.
+  const skrap = rendera('pass_avbokat', 'parent',
+    { data: { ...SMUTSIG, status: 'cancelled', sen_minuter: 31, sen_ore: 'mycket' } });
+  assertEquals(skrap.text.includes('12 timmar'), false);
+  assertEquals(rendera('pass_avbokat', 'parent').text.includes('12 timmar'), false);
+});
+
 Deno.test('avböjt och avbokat är olika besked', () => {
   const avbokat = rendera('pass_avbokat', 'parent');
   const avbojt = rendera('pass_avbojt', 'parent');

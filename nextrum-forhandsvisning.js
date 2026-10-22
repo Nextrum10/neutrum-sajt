@@ -820,12 +820,25 @@ window.NXForhandsvisning = (function () {
     min_familjerabatt: function () { return 0; },
     /* Syskontillägget som skuld (syskontillagg_som_skuld, 2026-10-21):
        strömbrytaren står av, som i driften, och familjen har ingen skuld.
-       Villkoren är ett utkast, så rutan för extra barn syns inte. */
+       Villkorens version är driftens, och gränsen för en sen avbokning är
+       12 timmar och hälften (sen_avbokning, 2026-10-22). */
     mitt_tillagg: function () {
       return roll !== 'foralder' ? null
-        : { pa: false, version: 'utkast', godkand_at: null, sen_avbokning_timmar: 24, debitera_vid_sen_avbokning: true,
+        : { pa: false, version: '2026-10-23', godkand_at: null, sen_avbokning_timmar: 12, sen_avbokning_procent: 50,
+            debitera_vid_sen_avbokning: true,
             obligatorisk: true, max_upplupet_ore: 100000, sparr_efter_dagar: 45, paminnelse_dagar: 14, sparr: null,
             upplupet_ore: 0, upplupna: 0, i_betalning_ore: 0, i_betalning: 0, poster: [] };
+    },
+    /* Vad en avbokning skulle kosta (sen_avbokning, 2026-10-22): i världen
+       har familjen godkänt villkoren innan passen bokades, så regeln gäller
+       varje bokat pass. Samma regel som databasen, räknad här. */
+    sen_avbokning_lage: function (k) {
+      var b = W.bookings.filter(function (x) { return x.id === k.p_pass; })[0];
+      var B = window.NXBetalning;
+      if (!b || !B || roll !== 'foralder') return null;
+      var halv = B.senMinuter(b.duration_min);
+      return { galler: b.status === 'confirmed', sen: B.senAvbokningNu(b), minuter: halv,
+        ore: b.klippkort_id ? 0 : (B.passpris(b, null, halv) || 0), timmar: B.SEN_AVBOKNING.timmar };
     },
     /* Barnen på studiehjälparens pass: inget pass har extra barn här. */
     passens_barn: function () { return []; },

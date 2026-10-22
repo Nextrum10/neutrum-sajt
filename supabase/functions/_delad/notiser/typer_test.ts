@@ -45,7 +45,8 @@ Deno.test('renData släpper bara igenom de vitlistade fälten', () => {
   // överst innan det går igenom.
   assertEquals(Object.keys(rad).sort(), [
     'amne', 'antalPass', 'belopp', 'betalsatt', 'datum', 'elev', 'fran', 'franDatum', 'franTid', 'gratis',
-    'kod', 'kortet', 'kvar', 'prov', 'rader', 'skal', 'status', 'studiehjalpare', 'tid', 'timmar',
+    'kod', 'kortet', 'kvar', 'prov', 'rader', 'senMinuter', 'senOre', 'skal', 'status', 'studiehjalpare', 'tid',
+    'timmar',
   ]);
 
   // Ingen av texterna finns kvar någonstans i svaret.
