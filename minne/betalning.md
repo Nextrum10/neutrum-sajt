@@ -16,7 +16,7 @@ Avsnitten Kortet reserveras vid bokningen, Kortet försöker igen och Familjen b
 
 ---
 
-## Sen avbokning (2026-10-22, `sen_avbokning`, inte i drift)
+## Sen avbokning (2026-10-22, `sen_avbokning`, i drift sedan samma kväll)
 
 Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h av att lektionen ska hållas betalas
 50% av belopp, eller spenderas hälften av planerade timmar för lektionen", och om villkoren: "skriv

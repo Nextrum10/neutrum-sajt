@@ -1878,8 +1878,17 @@ En fil (20261021230000), provad lokalt och i drift sedan kvällen 2026-10-21. Le
   och funktionens kropp innan filens text registrerades (`DEPLOY-BETALNING.md` 9.26). Inga poster fanns. Hela
   `rls-test.sql` gick 2107 av 2107 mot driften, tillbakarullat, och advisorn var oförändrad (148 poster).
 
-### Sen avbokning (sen_avbokning, 2026-10-22, inte i drift)
+### Sen avbokning (sen_avbokning, 2026-10-22, i drift sedan samma kväll)
 En fil (20261022100000), provad lokalt (`minne/betalning.md`, Sen avbokning).
+
+- **Körd i driften 2026-10-22** (Leo: "merg och driftsätt"), efter merge av PR #329 (c0d787a) och efter
+  `drift`, `stripe-checkout` och `notis-ko` (`DEPLOY-BETALNING.md` 9.27). Först en provkörning: filen och hela
+  `rls-test.sql` i ett do-block som rullades tillbaka, 2131 av 2131. Sedan filen hel i ett do-block, hämtad ur
+  merge-commiten med `extensions.http_get`: md5 (`15bc9fc3…`) prövad, filen körd (vakten först, mot driftens 20
+  funktioner), 25 funktionskroppar prövade mot md5 av `prosrc` i en databas byggd ur filerna, villkorens version
+  2026-10-23, och filens text registrerad i `schema_migrations`. Inget `drop` eller `delete`, och verktyget frågade
+  inget. Efteråt hela `rls-test.sql` ur c0d787a mot driften, tillbakarullat: 2131 av 2131. Advisorn: 149 poster mot
+  148 före; den nya är `sen_avbokning_lage` för `authenticated`, med flit.
 
 - **Byggd ur driftens funktioner**: de 19 funktionerna hämtades med `pg_get_functiondef()` och lappades med exakta
   ersättningar som räknas (`bygg_migration.py` i en scratchpad, inte i repot). Vakten först i filen prövar varje

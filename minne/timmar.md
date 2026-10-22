@@ -942,7 +942,7 @@ skapade kortet). Det saknades: varför, och vilken månad.
   Stockholms tid också i webbläsaren (`nextrum-admin-detalj.js`).
 
 
-## Sen avbokning med timmar (2026-10-22, `sen_avbokning`, inte i drift)
+## Sen avbokning med timmar (2026-10-22, `sen_avbokning`, i drift sedan samma kväll)
 Avbokar familjen ett pass som timmarna betalat mindre än 12 timmar före start räknas det som hållet i halva den
 bokade tiden (`minne/betalning.md`, Sen avbokning). Passet står kvar betalt med timmarna (`klippkortspass_avbokat`
 hoppar över det), och timmarna räknas som för ett pass som blev kortare: `intern.debiterade_min` ger halva tiden,

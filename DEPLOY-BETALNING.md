@@ -2045,7 +2045,7 @@ körde det resten, prövade funktionens kropp (`89a71663…`) och registrerade h
 `rls-test.sql` ur 05cb8c1 gick 2107 av 2107 mot driften, tillbakarullat, advisorn hade samma 148 poster som före, och
 nextrum.se serverade `nextrum-betalning.js` och `nextrum-arbetsyta.js` byte för byte som main (hämtade från databasen).
 
-### 9.27 Sen avbokning och syskontilläggets villkor (2026-10-22, inte körd)
+### 9.27 Sen avbokning och syskontilläggets villkor (2026-10-22, körd samma kväll)
 
 Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h av att lektionen ska hållas betalas 50% av belopp,
 eller spenderas hälften av planerade timmar för lektionen", och om syskontillägget: "skriv villkorstexten själv".
@@ -2071,7 +2071,24 @@ sessionerna i repot underrättade före och efter, i den här ordningen:
    begäran, ett redan betalt (återbetala resten under Att göra), Efterskänk avgiften, och ett pass bokat före
    godkännandet, som kostar inget och går att flytta.
 
-Kvar efter: att säga till familjerna (villkoren och regeln, före första sena avbokningen), juristen (regeln, meningen
+**Körd** samma kväll (Leo: "merg och driftsätt"), steg 1 till 4 i den ordningen, med den andra sessionen underrättad
+före och efter. PR #329 mergades 18.04 UTC (c0d787a, samma träd som e0aef5f), och nextrum.se serverade
+`/anvandarvillkor` med "Senast uppdaterad 23 oktober 2026", `#avbokning` och `#syskontillagg` (hämtat från databasen).
+Funktionerna gick ut genom MCP: `drift` v25 och `stripe-checkout` v24 från hjälpagenter, hämtade tillbaka och byte för
+byte lika main, och båda svarade 401 ur sin egen kod. `notis-ko` blev rätt i femte försöket (`minne/funktioner.md`):
+v33 och v34 fick det hårda mellanslaget som tecken i stället för escapen i `notiser/mallar.ts` (samma sträng när koden
+körs), v35 fick dubblade bakstreck och hade skrivit escapen som text i varje belopp, i tio minuter (18.46 till 18.56
+UTC) då kön var tom och ingen rad rördes, v36 fick tecknet igen, och v37 (19.13 UTC), med bakstrecket skickat som
+u005c, är byte för byte lika main i alla 16 filer och svarade 401 ur sin egen kod. Provkörningen först: migrationen och
+hela `rls-test.sql` i ett do-block som rullades tillbaka, 2131 av 2131. Sedan migrationen hel i ett do-block ur
+c0d787a (18.32 UTC): filens md5 (`15bc9fc3…`), vakten mot driftens 20 funktioner, 25 funktionskroppar prövade mot en
+databas byggd ur filerna, villkorens version 2026-10-23, och filens text registrerad. Efteråt: `sen_avbokning_lage` körs
+av `authenticated` men inte av `anon`, kolumnerna finns, `tillagg_installning.villkor_version` är 2026-10-23,
+`flaggor_stampla` står på, hela `rls-test.sql` ur c0d787a (md5 `9bf7dfd0…`) gick 2131 av 2131 mot driften,
+tillbakarullat, och advisorn hade 149 poster mot 148 före, med `sen_avbokning_lage` för `authenticated` som den enda nya
+(med flit: den svarar null för alla utom passets familj och superadmin). Steg 5 är inte gjort.
+
+Kvar efter: provet i testläge (steg 5), att säga till familjerna (villkoren och regeln, före första sena avbokningen), juristen (regeln, meningen
 om ångerrätten och undantaget för fritidsverksamhet i 2 kap. 11 § distansavtalslagen, syskontilläggets villkor, rad 5 i
 `DATASKYDD.md`), att Leo tar bort edge-funktionen `utbildningsprov` i Supabases panel, och för syskontillägget det som
 står i 9.22 steg 7 utom texten och versionen.
