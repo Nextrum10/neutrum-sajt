@@ -228,6 +228,26 @@ står kvar. Det gäller allt som skrivs i ett anrop, också ett grep eller
 en text till en fil: sök med `grep -F 'u00a0'` och jämför mekaniskt, aldrig
 med ögat.
 
+**Samma fälla igen 2026-10-22** (sen avbokning, `DEPLOY-BETALNING.md`
+9.27), för noteringen ovan lästes inte före uppladdningen. `notis-ko` v33
+och v34 från hjälpagenter fick tecknet; v35 skickade fyra bakstreck i JSON,
+som blev två i filen, och då skrev `kronor()` escapen som text i varje
+belopp. Den stod ute i tio minuter medan kön var tom, så inget mejl gick.
+v36 skickade två bakstreck och fick tecknet igen: avkodningen tar också
+den följd JSON-tolkningen nyss lämnat. v37 skickade två bakstreck och
+u005c (bakstrecket dubblat i JSON, sedan u005c och u00a0 som vanlig text),
+och är byte för byte lika main. Skrivningen provades först på något
+ofarligt: metadata i en uppgift (`TaskUpdate`), läst ur transkriptet, där
+anropet står som verktyget fick det. Fem skrivningar gav tecknet, en gav
+två bakstreck, och bara den med u005c gav källans sex tecken.
+
+**Sen avbokning 2026-10-22 kväll**, från merge-commiten c0d787a: `drift`
+v25 och `stripe-checkout` v24 (SESSIONSFORM 12) från hjälpagenter, och
+`notis-ko` v37 (ovan), alla före migrationen och hämtade tillbaka: byte för
+byte lika main, md5 per fil. Röktest från databasen: 401 "Inloggningen
+gick inte att verifiera" för `drift` och `stripe-checkout`, och 401 "Fel
+eller saknad hemlighet" för `notis-ko`; ingen grind svarade.
+
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
 Båda hade ingen anropare kvar: Runda 2 bytte webhookarna som ringde

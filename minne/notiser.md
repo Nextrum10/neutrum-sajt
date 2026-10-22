@@ -691,7 +691,7 @@ mot main hittade det (`minne/funktioner.md`, Kedjan 2026-10-21). Inget mejl av d
 drabbats. `notis-avanmal` v10 från 829d2c0 rättade det samma kväll, och en länk som redan skickats fungerar då, för den har ingen
 utgångstid. Därför: en ny typ i `typer.ts` driftsätts med både `notis-ko` och `notis-avanmal`.
 
-### Sen avbokning i mejlet (2026-10-22, `sen_avbokning`, inte i drift)
+### Sen avbokning i mejlet (2026-10-22, `sen_avbokning`, i drift sedan samma kväll med `notis-ko` v37)
 `pass_avbokat` bär `sen_minuter` till båda parter och `sen_ore` bara till familjen (`notis_vid_pass`), och
 `renData` släpper igenom dem som `senMinuter` (15–180, hela kvartar) och `senOre`. Familjens mejl säger "Att betala"
 med avgiften och leder till betalningen, eller att passet räknas som hållet i halva tiden när timmarna betalade;

@@ -1003,6 +1003,10 @@ Detaljer: `minne/sakerhet.md`.
 - **Sen avbokning** (2026-10-22): `stripe-checkout` tar ett avbokat pass bara när det har en avgift (SESSIONSFORM 12),
   med databasens belopp och minuter och ingen rabatt till; webhooken skriver den som en passbetalning. `notis-ko` bär
   avgiften i familjens mejl och bara att avbokningen var sen i studiehjälparens.
+- **Verktyget avkodar bakstreck-u och fyra hexsiffror en gång till**, efter JSON-tolkningen och i varje anrop: escapen
+  för det hårda mellanslaget i `notiser/mallar.ts` går ut som tecknet självt, och dubblade bakstreck blir två i filen.
+  Skicka bakstrecket som en sådan följd (u005c, med bakstrecket före den dubblat i JSON), prova skrivningen på något
+  ofarligt först, och jämför mekaniskt efteråt (`minne/funktioner.md`).
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
@@ -1091,13 +1095,18 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Sen avbokning** (2026-10-22, `sen_avbokning`, 20261022100000) är byggd och provad, inte i drift: migrationen
-  (`rls-test.sql` 2131 av 2131 lokalt, avsnitt 53), `stripe-checkout` (SESSIONSFORM 12), `notis-ko` (avgiften i
-  mejlet), `drift` (agentens fakta), vyerna (`prova-sen-avbokning.js` 54 av 54) och villkoren 2026-10-23 med
-  `#avbokning` och `#syskontillagg` (Leo: "skriv villkorstexten själv, du har all info"), FAQ:n, Så fungerar Nextrum
-  och prisguiden. Kvar: merge och kedjan i `DEPLOY-BETALNING.md` 9.27, och att säga till familjerna. Alla får frågan
-  om villkoren igen, och regeln gäller först pass som föreslås efter att familjen godkänt dem. Juristen har inte läst
-  regeln, meningen om ångerrätten (en ångrad bokning som inte börjat kostar inget, så avgiften gäller i praktiken pass
+- **Sen avbokning** (2026-10-22, `sen_avbokning`, 20261022100000) är i drift sedan kvällen 2026-10-22 (Leo: "merg och
+  driftsätt"): PR #329 mergades (c0d787a), och Vercel lade ut villkoren 2026-10-23 med `#avbokning` och
+  `#syskontillagg` (Leo: "skriv villkorstexten själv, du har all info"), FAQ:n, Så fungerar Nextrum, prisguiden och
+  vyerna. Sedan `drift` v25, `stripe-checkout` v24 (SESSIONSFORM 12) och `notis-ko` v37 (avgiften i mejlet) från
+  merge-commiten, hämtade tillbaka och byte för byte lika main, och sist migrationen hel i ett do-block (md5
+  `15bc9fc3…`, vakten mot driftens 20 funktioner, och 25 funktionskroppar lika en databas byggd ur filerna). Hela
+  `rls-test.sql` gick 2131 av 2131 mot driften, tillbakarullat, före och efter, och advisorn fick bara
+  `sen_avbokning_lage` som ny post, för `authenticated` (`DEPLOY-BETALNING.md` 9.27). `notis-ko` blev rätt först i
+  femte försöket, för verktyget avkodar escapen för det hårda mellanslaget i `mallar.ts` (avsnitt 7); v35 skrev den som
+  text i tio minuter, då kön var tom. Kvar: provet i testläge (9.27 steg 5) och att säga till familjerna. Alla får
+  frågan om villkoren igen, och regeln gäller först pass som föreslås efter att familjen godkänt dem. Juristen har
+  inte läst regeln, meningen om ångerrätten (en ångrad bokning som inte börjat kostar inget, så avgiften gäller i praktiken pass
   bokade mer än 14 dagar före; ingen har prövat undantaget för fritidsverksamhet i 2 kap. 11 §), syskontilläggets
   villkor eller rad 5 i `DATASKYDD.md`. Edge-funktionen `utbildningsprov` tar Leo bort i Supabases panel (verktygen kan
   inte ta bort en funktion).
@@ -1138,9 +1147,9 @@ Detaljer: `minne/grunden.md`.
   2026-10-21, och strömbrytaren `syskonskuld` står av: migrationen, sedan `stripe-checkout` v23, `stripe-aterbetalning`
   v9 och `notis-ko` v32 (`stripe-webhook` v16 gick ut före, med Betala nu). Stripes endpoint tar emot
   `checkout.session.expired`, och jobben `tillagg-forsok` och `tillagg-paminnelse` går. Villkorstexten
-  (`#syskontillagg`, länken i `CFG.TILLAGG_VILLKOR_URL`) och versionen 2026-10-23 i `tillagg_installning` kommer med
-  `sen_avbokning` (nedan), som också avgör den sena avbokningen: hälften av tillägget, som hälften av passet. Kvar för
-  Leo: att prissidan, FAQ:n och /en/ säger att tillägget betalas efter passet, och sist strömbrytaren. Priset är bestämt:
+  (`#syskontillagg`, länken i `CFG.TILLAGG_VILLKOR_URL`) och versionen 2026-10-23 i `tillagg_installning` är i drift
+  sedan 2026-10-22 med `sen_avbokning` (ovan), som också avgör den sena avbokningen: hälften av tillägget, som hälften
+  av passet. Kvar för Leo: att prissidan, FAQ:n och /en/ säger att tillägget betalas efter passet, och sist strömbrytaren. Priset är bestämt:
   tre barn kostar 468 kr i timmen också med den på (`syskontillagget_fast`, ovan). Juristen har inte läst rad 35 i
   `DATASKYDD.md` eller policyns stycke om tillägget. Med strömbrytaren av bokas syskon som förut, och inget pris ändras.
 - **Liggarens markeringar och testbetalningen** (2026-10-21, `betalningar_dolda`, 20261021213000) är i drift sedan
