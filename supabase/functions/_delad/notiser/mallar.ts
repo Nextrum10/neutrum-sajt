@@ -203,15 +203,27 @@ export const MALLAR: Record<MejlbarTyp, (m: MallIn) => Innehall> = {
     if (m.d.skal) fakta.push(['Skäl', SKAL_TEXT[m.d.skal]]);
     const nyTid = m.d.skal !== 'familjen_avslutar';
     const familj = m.roll === 'parent';
+    /* sen_avbokning (2026-10-22): mindre än 12 timmar före start räknas
+       passet som hållet i halva tiden. Familjen, som får mejlet när vi
+       avbokat på deras begäran, får avgiften eller beskedet att timmarna
+       betalade den; studiehjälparen bara att avbokningen var sen. */
+    const sen = m.d.senMinuter !== null;
+    const avgift = familj && sen && m.d.senOre !== null && m.d.senOre > 0 ? kronor(m.d.senOre) : null;
+    if (avgift) fakta.push(['Att betala', `${avgift}, hälften av passet`]);
+    const senText = !sen ? ''
+      : !familj ? ' Familjen avbokade det mindre än 12 timmar före start.'
+      : avgift
+        ? ` Det avbokades mindre än 12 timmar före start, och då betalar ni hälften av passet, ${avgift}, med Betala nu i Nextrum.`
+        : ' Det avbokades mindre än 12 timmar före start, och då räknas det som hållet i halva tiden, som villkoren säger.';
     return {
       amne: medNar('Passet är avbokat', nar),
       rubrik: 'Passet är avbokat',
-      mening: `Passet${med(m)} blir inte av.` + (!nyTid ? ''
+      mening: `Passet${med(m)} blir inte av.` + senText + (!nyTid ? ''
         : familj
           ? ' Föreslå gärna en ny tid som passar er: tryck på en dag under Boka pass, så får studiehjälparen svara.'
           : ' Skriv gärna till familjen vilka tider som passar dig, så kan de föreslå en ny.'),
-      knapp: !nyTid ? 'Visa dina pass' : familj ? 'Föreslå en ny tid' : 'Skriv till familjen',
-      mal: !nyTid ? 'pass' : familj ? 'boka' : 'meddelanden',
+      knapp: avgift ? 'Gå till betalningen' : !nyTid ? 'Visa dina pass' : familj ? 'Föreslå en ny tid' : 'Skriv till familjen',
+      mal: avgift ? 'betalning' : !nyTid ? 'pass' : familj ? 'boka' : 'meddelanden',
       fakta,
     };
   },

@@ -513,7 +513,7 @@ const NXAdmin = (function () {
 
     const [leads, ans, kontakt, bok, utb, chatt, fel, notis, pris, integ, tj, rk, rapporter,
            upd, uppg, rt, audit, bib, flaggor, tvister, kk, ansUt, tillagg, bank,
-           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna, partner, varvInst] = await Promise.all([
+           bankPass, kkSkarp, tips, sett, roller, bonus, frKoder, frFamiljer, intagna, partner, varvInst, senPass] = await Promise.all([
       hämtaAlla('leads', '*', nyastFörst('created_at')),
       bara(() => hämtaAlla('applications', '*', nyastFörst('created_at'))),
       bara(() => hämtaAlla('contact_messages', '*', nyastFörst('created_at'))),
@@ -620,7 +620,13 @@ const NXAdmin = (function () {
          läser den, och utan migrationen är den tom. */
       bara(() => supa.from('familjens_partner').select('familj, kod, kopplad_at')),
       /* 2026-10-21 (varvningsbonus): beloppet, procenten och händelsen. */
-      bara(() => supa.from('varvning_installning').select('*').eq('id', 1).maybeSingle())
+      bara(() => supa.from('varvning_installning').select('*').eq('id', 1).maybeSingle()),
+      /* 2026-10-22 (sen_avbokning): de pass familjen avbokade mindre än 12
+         timmar före start, med avgiften. En egen fråga och inte fler
+         kolumner i passens: före migrationen hade en kolumn som saknas
+         tömt hela listan, och nu blir det bara inga sena avbokningar. */
+      hämtaAlla('bookings', 'id, sen_avbokning_minuter, sen_avbokning_ore, avbokad_for_familjen',
+        q => q.eq('status', 'cancelled').not('sen_avbokning_minuter', 'is', null))
     ]);
 
     S.leads = leads.data || [];
@@ -649,6 +655,10 @@ const NXAdmin = (function () {
     S.ansokanUtskickFel = ansUt.error ? felText(ansUt.error) : null;
     S.kontakt = kontakt.data || [];
     S.bokningar = bok.data || [];
+    /* Utan kolumnerna (migrationen sen_avbokning är inte körd) har inget
+       pass en avgift. */
+    const sena = new Map((senPass.data || []).map(r => [r.id, r]));
+    if (sena.size) S.bokningar = S.bokningar.map(b => sena.has(b.id) ? Object.assign({}, b, sena.get(b.id)) : b);
     S.utbetalningar = utb.data || [];
     S.klientfel = fel.data || [];
     S.notisfel = notis.data || [];

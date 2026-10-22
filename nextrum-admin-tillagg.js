@@ -123,7 +123,8 @@
     fot.textContent = i
       ? 'Gränserna: spärr över ' + kronor(i.max_upplupet_ore) + ' eller efter ' + i.sparr_efter_dagar + ' dagar, påminnelse efter '
         + i.paminnelse_dagar + ' dagar, sen avbokning inom ' + i.sen_avbokning_timmar + ' timmar ('
-        + (i.debitera_vid_sen_avbokning ? 'tillägget uppstår' : 'inget tillägg') + '), och tillägget följer med nästa köp '
+        + (i.debitera_vid_sen_avbokning ? 'hälften av tillägget uppstår, som hälften av passet' : 'inget tillägg')
+        + '), och tillägget följer med nästa köp '
         + (i.obligatorisk_i_nasta_betalning ? 'alltid' : 'om familjen vill') + '. Villkorens version: ' + i.villkor_version
         + '. Ändras i tillagg_installning.'
       : '';

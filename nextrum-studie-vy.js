@@ -2148,6 +2148,8 @@
        inte på familjen, och knapparna för att betala står inte där. */
     if (kortBetalar(b)) return false;
     if (OBETALDA.indexOf(b.betalning_status || 'ingen') === -1) return false;
+    // Sen avbokning (2026-10-22): avgiften betalas med Betala nu.
+    if (b.status === 'cancelled') return senAvgift(b) > 0;
     if (b.status === 'completed') return true;
     if (b.status !== 'confirmed') return false;
     return b.wanted_date >= isoFor(new Date()) || S.kortsparr === true;
@@ -2660,6 +2662,8 @@
      timmarna står först när de räcker, som i betalaKnapp. Alla val står
      på passets sida, dit raden leder. */
   function radBetala(b) {
+    // Sen avbokning (2026-10-22): avgiften är pengar, och betalas med Betala nu.
+    if (b.status === 'cancelled') return '<button type="button" class="btn btn-orange btn-sm" data-betala="' + esc(b.id) + '">Betala nu</button>';
     const tim = kortFör(b);
     const bank = !tim && bankFör(b);
     if (tim) return '<button type="button" class="btn btn-orange btn-sm" data-timmar="' + esc(b.id) + '">Betala med timmar</button>';
@@ -2698,9 +2702,16 @@
      räcker, annars kortet. */
   function betalVal(b) {
     const V = NXStudie.betalval;
+    const pris = passetsPris(b);
+    // Sen avbokning (2026-10-22): avgiften betalas med kort eller Klarna, inte med timmar.
+    if (b.status === 'cancelled') {
+      return V({ attr: 'data-betala="' + esc(b.id) + '"', ikon: 'kort', titel: 'Betala nu',
+        under: [NXBetalning.kronor(pris), 'Kort eller Klarna',
+          b.betalning_status === 'misslyckad' ? 'förra försöket gick inte igenom' : null].filter(Boolean).join(' · '),
+        först: true, orange: true });
+    }
     const tim = kortFör(b);
     const bank = !tim && bankFör(b);
-    const pris = passetsPris(b);
     const val = [];
     if (tim) {
       val.push(V({ attr: 'data-timmar="' + esc(b.id) + '"', ikon: 'timmar', titel: 'Betala med timmar',
@@ -4151,19 +4162,35 @@
     /* Alla pass, inte de tusen första (NXStudie.hämtaAlla, 2026-09-29):
        listan är äldst först, så det hade varit de nya passen som föll
        bort. Underlaget och tilläggen följer passen i antal. */
-    const [pass, und, till] = await Promise.all([
+    const [pass, und, till, senPass] = await Promise.all([
       NXStudie.passMedSvar(supa, S,
         'id, subject, format, location, note, wanted_date, wanted_time, duration_min, antal_barn, tjanst, status, student_id, parent_id, tutor_id, created_by, created_at, avbokningsskal, avbokad_at, avbokad_av, betalning_status, betald_at, fakturerbar, betalt_ore, aterbetald_ore, klippkort_id, timpris_ore, extra_ore, rabatt_ore, startrabatt, rabattkod',
         q => q.eq('parent_id', S.user.id).order('wanted_date', { ascending: true })),
       NXStudie.hämtaAlla(supa, 'passunderlag',
         'id, debiterade_min, betalda_min, timpris_ore, extra_ore, rabatt_ore, timbank_min',
         q => q.eq('parent_id', S.user.id)),
-      NXStudie.hämtaAlla(supa, 'pass_tillagg', 'id, booking_id, minuter, begart_ore, status, betalt_ore, betald_at')
+      NXStudie.hämtaAlla(supa, 'pass_tillagg', 'id, booking_id, minuter, begart_ore, status, betalt_ore, betald_at'),
+      /* Sen avbokning (sen_avbokning, 2026-10-22): vad ett pass som
+         avbokades mindre än 12 timmar före start kostar. En egen fråga, så
+         att vyn tål att kolumnerna saknas innan migrationen körts. */
+      NXStudie.hämtaAlla(supa, 'bookings', 'id, sen_avbokning_minuter, sen_avbokning_ore',
+        q => q.eq('parent_id', S.user.id).eq('status', 'cancelled').not('sen_avbokning_minuter', 'is', null))
     ]);
     const { data, error } = pass;
 
     if (error) { host.innerHTML = '<div class="empty">' + esc(felText(error)) + '</div>'; return; }
     S.bokningar = data || [];
+    if (senPass.error) console.warn('De sena avbokningarna gick inte att läsa', senPass.error);
+    else {
+      const sena = {};
+      (senPass.data || []).forEach(x => { sena[x.id] = x; });
+      S.bokningar.forEach(b => {
+        if (sena[b.id]) {
+          b.sen_avbokning_minuter = sena[b.id].sen_avbokning_minuter;
+          b.sen_avbokning_ore = sena[b.id].sen_avbokning_ore;
+        }
+      });
+    }
     /* Passen under Din utveckling i NexLäx räknar passens längd ur
        samma rader. */
     ritaNexlaxUtveckling();
@@ -4419,8 +4446,16 @@
     /* Fas 21.1: ett pass betalt med timmar går att avboka, och rutan
        säger vart timmarna tar vägen innan familjen bestämt sig. */
     const passet = (S.bokningar || []).find(x => x.id === btn.dataset.avboka);
-    const timmarTillbaka = passet && medTimmar(passet) ? ' Timmarna ni betalade med kommer tillbaka.'
-      : passet && medBanken(passet) ? ' Minuterna ni betalade med kommer tillbaka till timbanken.' : '';
+    /* Sen avbokning (sen_avbokning, 2026-10-22): mindre än 12 timmar före
+       start säger rutan vad det kostar innan familjen bestämt sig, med
+       databasens svar (sen_avbokning_lage). */
+    const sen = !förslag && passet ? await senAvbokningLäge(passet, true) : null;
+    const timmarTillbaka = passet && (medTimmar(passet) || medBanken(passet))
+      ? (sen ? ' Hälften av tiden, ' + tidLängd(sen.minuter) + ', dras ur ' + (medTimmar(passet) ? 'timmarna' : 'timbanken')
+          + (medGratistimmar(passet) ? '. Gratistimmar sparar inga minuter, så en påbörjad gratistimme är använd.'
+            : ', och resten kommer tillbaka.')
+        : medTimmar(passet) ? ' Timmarna ni betalade med kommer tillbaka.' : ' Minuterna ni betalade med kommer tillbaka till timbanken.')
+      : '';
     const skäl = await NXStudie.avbokaRuta(förslag ? {
       titel: 'Dra tillbaka förslaget?',
       text: 'Vill ni hellre ha en annan tid, välj Ändra tiden i stället.',
@@ -4429,7 +4464,12 @@
       not: 'Er studiehjälpare får ett mejl om att förslaget är tillbakadraget och varför.' + timmarTillbaka
     } : {
       titel: 'Avboka passet?',
-      text: 'Vill ni hellre byta tid, välj Föreslå ny tid i stället — då ligger passet kvar tills er studiehjälpare svarat.',
+      text: sen
+        ? 'Passet börjar om mindre än 12 timmar, så det räknas som en sen avbokning: '
+          + (sen.kronor > 0 ? 'ni betalar hälften av passet, ' + NXBetalning.kronor(sen.kronor) + '.'
+            : 'passet räknas som hållet i halva tiden.' + (passet.startrabatt && !timmarTillbaka ? ' Timmen på köpet är då använd.' : ''))
+        : 'Vill ni hellre byta tid, välj Föreslå ny tid i stället — då ligger passet kvar tills er studiehjälpare svarat.',
+      knapp: sen ? 'Avboka ändå' : undefined,
       not: 'Er studiehjälpare får ett mejl om att passet är avbokat och varför.' + timmarTillbaka
     });
     if (!skäl) return;
@@ -5038,6 +5078,7 @@
       const till = tillägg(b);
       const belopp = till ? till.belopp : passetsPris(b);
       const läge = till ? 'Tillägg: passet drog över med ' + tidLängd(till.minuter)
+        : senAvbokad(b) ? 'Avbokat sent: hälften av passet'
         : b.status === 'completed' ? 'Passet har hållits'
         : b.wanted_date < idag ? 'Passet har varit'
         : 'Bekräftat ' + NXStudie.relativDag(b.wanted_date);
@@ -5488,8 +5529,42 @@
      Priset är det som frystes när passet bokades, minus rabatten (Fas
      19.5), som i stripe-checkout och passpris() i _delad/pris.ts. */
   function passetsPris(b) {
+    if (senAvbokad(b)) return senAvgift(b);
     return prisFör(b, b.status === 'completed' ? debiteradeMin(b) - bankMin(b) : Number(b.duration_min || 60));
   }
+
+  /* Sen avbokning (sen_avbokning, 2026-10-22): passet avbokades mindre än
+     12 timmar före start och räknas som hållet i halva tiden. Avgiften i
+     pengar är databasens (stampla_avbokningen), 0 när timmarna betalade. */
+  const senAvbokad = b => !!b && b.status === 'cancelled' && b.sen_avbokning_minuter != null;
+  const senAvgift = b => senAvbokad(b) ? Number(b.sen_avbokning_ore || 0) : 0;
+  /* Vad en avbokning nu skulle kosta, för rutan innan familjen bestämt sig
+     och för passets sida. Databasen svarar (sen_avbokning_lage): regeln
+     gäller bara ett pass som bokades efter att familjen godkänt villkoren
+     med den, och beloppet är det databasen tar. null när den inte gäller,
+     och när funktionen saknas (före migrationen). Svarar databasen med ett
+     annat fel räknar vyn själv, så att ingen avbokar utan att få veta.
+     Svaret sparas per pass (regeln och beloppet ändras inte för ett bokat
+     pass), utom när familjen trycker på Avboka: då frågas det om. */
+  async function senAvbokningLäge(b, färskt) {
+    if (!b || !NXBetalning.senAvbokningNu(b)) return null;
+    const nyckel = [b.id, b.status, b.duration_min, b.wanted_date, b.wanted_time].join('|');
+    S.senLäge = S.senLäge || {};
+    if (färskt || !(nyckel in S.senLäge)) {
+      const { data, error } = await supa.rpc('sen_avbokning_lage', { p_pass: b.id });
+      if (error && (error.code === 'PGRST202' || error.code === '42883')) S.senLäge[nyckel] = null;
+      else if (error) {
+        const halv = NXBetalning.senMinuter(b.duration_min);
+        return { minuter: halv, kronor: medTimmar(b) || medBanken(b) ? 0 : prisFör(b, halv) || 0 };
+      } else S.senLäge[nyckel] = data && data.galler && (!färskt || data.sen)
+        ? { minuter: Number(data.minuter), kronor: Number(data.ore) || 0 } : null;
+    }
+    return S.senLäge[nyckel];
+  }
+  /* Ett pass betalt med gratistimmar sparar inga minuter (intern.timbank_in):
+     det som blir över av en påbörjad gratistimme kommer inte tillbaka. */
+  const medGratistimmar = b => medTimmar(b)
+    && ((S.erb && S.erb.kort) || []).some(k => k.id === b.klippkort_id && NXBetalning.gratistimmar(k));
 
   /* Raden i passunderlag, för ett genomfört pass. Hämtas med passen. */
   const underlagFör = b => (b && S.underlag && S.underlag[b.id]) || null;
@@ -5562,6 +5637,16 @@
        än en mening som säger vart man vänder sig. */
     const betalt = pengarPå(b);
     const viaOss = ' Passet är redan betalt. Ska det avbokas, hör av er till oss så betalar vi tillbaka.';
+    /* Sen avbokning (2026-10-22): de sista 12 timmarna flyttar familjen
+       inte ett bokat pass (stampla_avbokningen), och en avbokning kostar
+       hälften. Knappen för att flytta står inte där, och beskedet säger det. */
+    const sentNu = b.status === 'confirmed' ? await senAvbokningLäge(b) : null;
+    // Svaret kan komma efter att familjen gått vidare till ett annat pass.
+    if (passIdIAdressen() !== b.id) return;
+    const sentText = !sentNu ? ''
+      : ' Det börjar om mindre än 12 timmar, så det går inte att flytta, och avbokas det kostar det hälften'
+        + (sentNu.kronor > 0 ? ' av priset, ' + NXBetalning.kronor(sentNu.kronor) + '.'
+          : medTimmar(b) || medBanken(b) ? ' av tiden.' : ' av tiden, och timmen på köpet är då använd.');
 
     /* Ett drag överst, resten längst ner (2026-09-28, Leo: "det behöver
        se bra ut på mobil och enkelt att använda"). atgarder är det som
@@ -5579,7 +5664,32 @@
        annan (2026-09-30). Står på passet, aldrig i mejlet. */
     const svaret = b.svar_meddelande && (b.status === 'cancelled' || b.status === 'requested')
       ? { rubrik: förnamn + ' skriver', forst: true, html: '<p class="ps-svar">' + esc(b.svar_meddelande) + '</p>' } : null;
-    if (b.status === 'cancelled') {
+    if (b.status === 'cancelled' && senAvbokad(b)) {
+      /* Sen avbokning (sen_avbokning, 2026-10-22): passet räknas som hållet i
+         halva tiden. Avgiften i pengar betalas här; betalade timmarna drogs
+         halva tiden ur dem, och ett betalt pass får resten tillbaka. */
+      const avgift = senAvgift(b);
+      const kr = NXBetalning.kronor;
+      const först = 'Passet avbokades mindre än 12 timmar före start, och då räknas det som hållet i halva tiden ('
+        + tidLängd(b.sen_avbokning_minuter) + ').';
+      const kvar = Number(b.betalt_ore || 0) - Number(b.aterbetald_ore || 0) - avgift;
+      besked = avgift > 0 && kanBetalas(b)
+        ? { text: först + ' Ni betalar hälften av passet, ' + kr(avgift) + '. Betala det nu, med kort eller Klarna.', ton: 'fraga' }
+        : avgift > 0
+        ? { text: först + ' Ni betalar hälften av passet, ' + kr(avgift) + '.'
+            + (kvar > 0 ? ' Resten av det ni betalat, ' + kr(kvar) + ', betalar vi tillbaka till kortet eller Klarna.'
+              : pengarPå(b) ? ' Det är betalt.' : ''), ton: 'klart' }
+        : medGratistimmar(b)
+        ? { text: först + ' Den tiden är dragen ur era gratistimmar, och en påbörjad gratistimme är använd.', ton: 'lugn' }
+        : medTimmar(b) || medBanken(b)
+        ? { text: först + ' Den tiden är dragen ur era ' + (medTimmar(b) ? 'timmar' : 'minuter i timbanken')
+            + ', och resten har kommit tillbaka.', ton: 'lugn' }
+        : b.startrabatt
+        ? { text: först + ' Den tiden täcks av timmen på köpet, så det kostar inga pengar, men timmen är använd.', ton: 'lugn' }
+        : { text: först, ton: 'lugn' };
+      if (avgift > 0 && kanBetalas(b)) val = betalVal(b);
+      atgarder = '<a class="btn ' + (val ? 'btn-ghost' : 'btn-primary') + '" href="#boka">Föreslå en ny tid</a>';
+    } else if (b.status === 'cancelled') {
       const skäl = NXStudie.skälText(b.avbokningsskal);
       besked = avslagen(b)
         ? { text: förnamn + ' kan inte den tiden' + (b.svar_meddelande ? ' och skriver varför nedan.' : '.')
@@ -5668,6 +5778,8 @@
         ? { text: 'Passet är bokat. ' + ses + ' Välj kort, så reserveras priset två dagar före passet.', ton: 'klart' }
         /* Betala nu (2026-10-21): ett bekräftat, obetalt pass är familjens drag. */
         : { text: 'Passet är bokat. ' + ses + ' Betala det nu, med kort eller Klarna.', ton: 'fraga' };
+      // Sen avbokning (2026-10-22): de sista 12 timmarna säger beskedet vad en avbokning kostar.
+      if (sentText) besked = Object.assign({}, besked, { text: besked.text + sentText });
       const kr = kortResRad(b);
       if (kr && kortValt(b) && S.kort.pa && (kr.lage === 'misslyckad' || (kr.lage === 'vald' && !S.kort.kort))) {
         /* Kortet saknas eller nekades: att lägga till ett är familjens
@@ -5677,7 +5789,7 @@
           + (kr.lage === 'misslyckad' && S.kort.kort
             ? '<button type="button" class="btn btn-ghost" data-kort-val="' + esc(b.id) + '">Försök igen</button>' : '');
       } else if (kanBetalas(b)) val = betalVal(b);
-      fot = flytta('Föreslå ny tid') + skriv + (betalt ? '' : avboka('Avboka passet'));
+      fot = (sentNu ? '' : flytta('Föreslå ny tid')) + skriv + (betalt ? '' : avboka('Avboka passet'));
       alternativ = kortValt(b)
         ? '<button type="button" class="btn btn-ghost btn-sm" data-kort-bort="' + esc(b.id) + '">Välj bort kortet</button>'
         : '';
@@ -5763,7 +5875,15 @@
         under: [passetsBarn(b).length > 1 ? passetsBarn(b).length + ' barn på passet' + syskonTillägg(b)
           : barn && (b.antal_barn || 1) > 1 ? b.antal_barn + ' barn på passet' : null,
           S.tutor && S.tutor.full_name ? 'Med ' + S.tutor.full_name + ', studiehjälpare' : 'Med er studiehjälpare'].filter(Boolean).join(' · ') },
-      { ikon: 'kort', etikett: 'Pris',
+      /* Sen avbokning (2026-10-22): hälften av passet, i kronor eller som
+         tiden ur timmarna, aldrig "0 kr". */
+      senAvbokad(b) ? { ikon: 'kort', etikett: 'Pris',
+        varde: senAvgift(b) > 0 ? NXBetalning.kronor(senAvgift(b))
+          : medTimmar(b) ? tidLängd(b.sen_avbokning_minuter) + ' ur timmarna'
+          : medBanken(b) ? tidLängd(b.sen_avbokning_minuter) + ' ur timbanken'
+          : 'Timmen på köpet',
+        under: ['Sen avbokning: hälften av passet', senAvgift(b) > 0 ? betalning : null].filter(Boolean).join(' · ') }
+      : { ikon: 'kort', etikett: 'Pris',
         varde: pris === null ? betalning : NXBetalning.kronor(pris) + (b.startrabatt ? ', ' + påKöpet(b) : ''),
         under: pris === null ? tilläggText : prisUnder }
     ];

@@ -150,6 +150,12 @@ export type RenData = {
   belopp: number | null;
   antalPass: number | null;
   rader: { datum: string; barn: number; belopp: number }[];
+  /** sen_avbokning (2026-10-22). Passet avbokades mindre än 12 timmar före
+   *  start och räknas som hållet i så här många minuter, hälften av det
+   *  bokade. Bara familjens mejl bär senOre: avgiften i ören, 0 när timmarna
+   *  betalade passet (notis_vid_pass). */
+  senMinuter: number | null;
+  senOre: number | null;
 };
 
 function datumOk(v: unknown): string | null {
@@ -180,6 +186,12 @@ function kvarOk(v: unknown): number | null {
 function oreOk(v: unknown): number | null {
   const n = typeof v === 'number' ? v : typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : NaN;
   return Number.isInteger(n) && n >= 0 && n <= 100_000_000 ? n : null;
+}
+
+/** Den hållna halvan av ett pass på en till tre timmar, i hela kvartar. */
+function senMinuterOk(v: unknown): number | null {
+  const n = typeof v === 'number' ? v : typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : NaN;
+  return Number.isInteger(n) && n >= 15 && n <= 180 && n % 15 === 0 ? n : null;
 }
 
 /** Kvittots rader: högst 60, och varje rad dag, antal barn (2–10) och belopp. */
@@ -229,6 +241,8 @@ export function renData(v: unknown): RenData {
     belopp: oreOk(d.belopp),
     antalPass: kvarOk(d.antal_pass),
     rader: raderOk(d.rader),
+    senMinuter: senMinuterOk(d.sen_minuter),
+    senOre: oreOk(d.sen_ore),
   };
 }
 

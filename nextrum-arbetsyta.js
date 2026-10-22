@@ -977,8 +977,8 @@ window.NXArbete = (function () {
     }
 
     /* Villkoren första gången, med talen ur databasen (mitt_tillagg).
-       PLATSHÅLLARE: texten skriver Leo, och länken står i
-       NX.CFG.TILLAGG_VILLKOR_URL. */
+       Hela texten står i användarvillkoren (#syskontillagg, 2026-10-22),
+       och länken i NX.CFG.TILLAGG_VILLKOR_URL. */
     function syskonVillkor(sy) {
       var url = NX.CFG && NX.CFG.TILLAGG_VILLKOR_URL;
       return '<div class="bk-syskon-villkor">'
@@ -989,14 +989,14 @@ window.NXArbete = (function () {
           ? '<li>Ni betalar det när ni vill under Betalning. Står det obetalt följer det med som en egen rad nästa gång ni köper timmar.</li>'
           : '<li>Ni betalar det när ni vill under Betalning, eller som en egen rad när ni köper timmar.</li>')
         + (sy.debitera
-          ? '<li>Avbokar ni ett bekräftat pass mindre än ' + esc(String(sy.senTimmar)) + ' timmar före start blir '
-            + 'tillägget en skuld ändå.</li>' : '')
+          ? '<li>Avbokar ni ett bokat pass mindre än ' + esc(String(sy.senTimmar)) + ' timmar före start blir '
+            + 'hälften av tillägget en skuld, som hälften av passet.</li>' : '')
         + '<li>Är det obetalda tillägget över ' + esc(NXBetalning.kronor(sy.maxOre)) + ', eller äldre än '
         + esc(String(sy.sparrDagar)) + ' dagar, går det inte att boka extra barn förrän det är betalt.</li>'
         + '</ul>'
         + '<p class="bk-syskon-platshallare">' + (url
           ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">Läs hela villkoren för syskontillägget</a>'
-          : 'Platshållare: villkorstexten för syskontillägget skrivs av Nextrum, och länken till den läggs in här.')
+          : 'Villkoren för syskontillägget står i användarvillkoren.')
         + '</p>'
         + '<label class="bk-syskon-kryss"><input type="checkbox" data-bk-syskon-ok' + (st.syskonOk ? ' checked' : '')
         + '> <span>Jag godkänner villkoren för syskontillägget</span></label>'

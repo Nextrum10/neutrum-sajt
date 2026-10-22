@@ -164,11 +164,33 @@
     <ul>
       <li>Pass är hela timmar, en till tre. Familjen föreslår en tid, och studiehjälparen accepterar den
         eller föreslår en annan. Ett pass är bokat först när båda sagt ja.</li>
-      <li>Ett pass kan flyttas eller avbokas av båda parter fram till att det hållits. Den som
-        avbokar anger ett skäl, och motparten får ett mejl om avbokningen med skälet. Ett pass som
-        redan är betalt avbokar ni genom att kontakta oss.</li>
+      <li>Ett pass kan flyttas eller avbokas av båda parter fram till att det hållits, med det som står
+        i nästa punkt. Den som avbokar anger ett skäl, och motparten får ett mejl om avbokningen med
+        skälet. Ett pass som redan är betalt avbokar ni genom att kontakta oss.</li>
+      <!-- sen_avbokning (2026-10-22, Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h
+           av att lektionen ska hållas betalas 50% av belopp, eller spenderas hälften av planerade
+           timmar för lektionen"). Gränsen och andelen står i betalning_installning
+           (avbokning_avgift_timmar, avbokning_avgift_procent), låsta, och avgiften räknas av
+           stampla_avbokningen. Regeln och spärren mot att flytta gäller ett pass som föreslogs efter
+           att familjen godkänt versionen 2026-10-23 (intern.familjen_har_avbokningsregeln). Ändras
+           gränsen eller andelen är det en ny version. Ångerrätten går före: ett pass som inte börjat
+           kostar ingenting för den som ångrar sig inom fristen (2 kap. 15 § distansavtalslagen). -->
+      <li id="avbokning"><b>Avboka senast 12 timmar före.</b> Ett bokat pass avbokar ni senast 12 timmar
+        innan det börjar. Avbokar ni det senare är det en sen avbokning, och passet räknas som hållet i
+        halva den bokade tiden. Betalar ni passet med pengar betalar ni hälften av priset, med Betala nu
+        som för ett pass, och var det redan betalt betalar vi tillbaka resten. Var passet betalt med
+        timmar dras halva tiden ur dem, som när ett pass blir kortare än bokat (se
+        <a href="#erbjudanden">Planer och timbanken</a>): det som blir över av en köpt timme sparas i er
+        timbank, men en påbörjad gratis timme, och en timme på köpet för ett tips, är använd. Samma sak
+        gäller när vi avbokar passet för att ni bett oss om det mindre än 12 timmar före. De sista 12
+        timmarna flyttar ni inte heller ett bokat pass: skriv till er studiehjälpare, som kan flytta det.
+        Ett förslag som ingen sagt ja till än kan ni alltid dra tillbaka utan kostnad, och avbokar
+        studiehjälparen eller vi passet kostar det ingenting. Regeln gäller pass som föreslagits efter
+        att ni godkänt den här versionen av villkoren, och den inskränker inte er
+        <a href="#angerratt">ångerrätt</a>.</li>
       <li>Ett pass räknas som genomfört först när studiehjälparen skrivit rapporten. Ett pass som
-        aldrig hölls kostar ingenting: är det redan betalt betalar vi tillbaka hela beloppet.</li>
+        aldrig hölls kostar ingenting, utom vid en sen avbokning: är det redan betalt betalar vi tillbaka
+        hela beloppet, eller det som är mer än avgiften.</li>
       <li>Uteblir eleven utan att avboka räknas passet som genomfört och ska betalas. Är det redan
         betalt betalas beloppet inte tillbaka.</li>
     </ul>
@@ -218,7 +240,43 @@
         till oss. Betalar ni med Klarna gör ni det hos Klarna, på Klarnas villkor för det betalsätt ni
         väljer där, och Klarna betalar oss. Vi sparar inga kort.</li>
       <li>Ingen anmälningsavgift, ingen månadsavgift och ingen bindningstid. Ni betalar för de
-        pass ni bokar och för timmar ni själva valt att köpa i förväg, inget annat.</li>
+        pass ni bokar, för hälften av ett pass ni avbokar mindre än 12 timmar före (se
+        <a href="#avbokning">Avboka senast 12 timmar före</a>) och för timmar ni själva valt att köpa i
+        förväg, inget annat.</li>
+    </ul>
+
+    <!-- syskontillagg_som_skuld (2026-10-21) och syskontillagget_fast (Leo: "Tre barn kostar 468 i
+         timmen"). Texten skrevs 2026-10-22 (Leo: "skriv villkorstexten själv, du har all info"), och
+         versionen står i tillagg_installning.villkor_version, 2026-10-23 som villkoren. Talen speglar
+         tillagg_installning: max_upplupet_ore 1 000 kr, sparr_efter_dagar 45, paminnelse_dagar 14,
+         obligatorisk_i_nasta_betalning och debitera_vid_sen_avbokning på. Ändras ett tal ändras texten,
+         och det är en ny version. Bokningsrutan länkar hit (TILLAGG_VILLKOR_URL). Strömbrytaren
+         syskonskuld står av: tills den slås på bokas syskon som förut, och punkten gäller ingen. -->
+    <h2 id="syskontillagg">Syskontillägget</h2>
+    <p>Är fler barn med på ett pass kostar varje timme mer. Priset för fler barn står på
+      <a href="/priser">prissidan</a>, och det är lika mycket med ett som med två syskon. Det här gäller
+      när ni bokar syskon på ett pass och har godkänt villkoren för syskontillägget i bokningen: då
+      betalas tillägget för syskonen för sig, efter passet.</p>
+    <ul>
+      <li><b>Vad tillägget är.</b> Priset för fler barn gånger passets bokade tid. Beloppet bestäms när
+        passet bokas och ändras inte efteråt. Passet självt kostar som för ett barn och betalas som
+        andra pass.</li>
+      <li><b>När det ska betalas.</b> När passet har hållits blir tillägget en skuld på ert konto. Avbokar
+        ni passet mindre än 12 timmar före start blir hälften av tillägget en skuld, som hälften av passet
+        (se <a href="#avbokning">Avboka senast 12 timmar före</a>). Avbokas passet i tid, eller av
+        studiehjälparen eller oss, finns inget tillägg att betala.</li>
+      <li><b>Hur ni betalar det.</b> Med Betala tillägg nu under Betalning i er vy, när ni vill, med kort
+        eller Klarna. Står det obetalt när ni köper timmar (en plan, timmar till en plan eller Fyll
+        timbanken) följer det med som en egen rad i det köpet. Det betalas aldrig med timmar, och en
+        rabattkod eller en familjerabatt räknas inte på det.</li>
+      <li><b>Påminnelse och spärr.</b> Har ett tillägg stått obetalt i 14 dagar påminner vi er. Är det
+        obetalda över 1 000 kr, eller har ett tillägg stått obetalt i mer än 45 dagar, går det inte att
+        boka syskon på ett pass förrän det är betalt. Pass för ett barn bokar ni som vanligt.</li>
+      <li><b>Barnen och tiden står fast.</b> Vilka barn som är med och hur långt passet är går inte att
+        ändra efter bokningen. Ska fler eller färre barn vara med, avboka och boka ett nytt pass.</li>
+      <li><b>Fel och återbetalning.</b> Har ni betalat ett tillägg som inte skulle betalas betalar vi
+        tillbaka det, till kortet eller Klarna. Köpvillkoren nedan och er
+        <a href="#angerratt">ångerrätt</a> gäller som för passet.</li>
     </ul>
 
     <!-- Fas 16.1. Vilka planer och klippkort som finns och vad de
@@ -269,7 +327,7 @@
          flit: en kods villkor står där koden delas ut. -->
     <h2 id="kopvillkor">Köpvillkor</h2>
     <p>Det här gäller när ni betalar hos oss, för ett pass, ett tillägg för ett pass som blev längre,
-      en plan, timmar till en plan eller Fyll timbanken. Innan kassan öppnas kryssar ni i att ni har
+      syskontillägget, en sen avbokning, en plan, timmar till en plan eller Fyll timbanken. Innan kassan öppnas kryssar ni i att ni har
       läst det.</p>
     <ul>
       <li><b>Vem ni köper av.</b> Ni köper av oss, så som det står under Vem avtalet är med överst på
@@ -371,7 +429,9 @@
         planen: det som står här, under Att sluta och under <a href="#angerratt">Ångerrätt</a> gäller
         också dem, och de får ingen gratis timme.</li>
       <li><b>Avbokning.</b> Ett pass som betalats med timmar avbokar ni själva i er vy, som ett
-        obetalt pass. Timmarna kommer då tillbaka och gäller till samma dag som förut.
+        obetalt pass. Timmarna kommer då tillbaka och gäller till samma dag som förut. Avbokar ni
+        mindre än 12 timmar före start dras halva tiden ur timmarna (se
+        <a href="#avbokning">Avboka senast 12 timmar före</a>), och resten kommer tillbaka.
         Går en timme förlorad för att vi eller studiehjälparen avbokat för sent för att ni ska
         hinna använda den, betalar vi tillbaka den till det pris ni betalat.</li>
       <li><b>Att sluta.</b> Vill ni sluta innan timmarna är använda betalar vi tillbaka det som
@@ -543,6 +603,8 @@
         hålla passet även om fristen inte har gått ut. Ångrar ni er efter att passet har börjat
         betalar ni för den del som hunnit hållas. Ett pass som är helt genomfört går inte att
         ångra.</li>
+      <li>Ångrar ni en bokning inom ångerfristen innan passet har börjat tar vi inte ut avgiften för en
+        <a href="#avbokning">sen avbokning</a>: då betalar ni ingenting för passet, som ovan.</li>
       <li>Köper ni en plan, timmar till en plan eller Fyll timbanken gäller samma ångerrätt, räknad från dagen för
         köpet. Ångrar ni er betalar vi tillbaka det ni betalat, utom för de timmar som redan
         använts. De räknas till det timpris ni betalade för planen eller timmarna, inte till
@@ -588,7 +650,8 @@
       här. Inget i de här villkoren inskränker dem.</p>
 
     <h2>Att sluta</h2>
-    <p>Ni kan sluta när ni vill. Betalda pass som inte hållits betalar vi tillbaka, och timmar som
+    <p>Ni kan sluta när ni vill. Betalda pass som inte hållits betalar vi tillbaka, utom avgiften för en
+      sen avbokning, och timmar som
       finns kvar i timbanken, köpta timmar och sparade minuter, betalar vi tillbaka enligt
       <a href="#erbjudanden">Planer och timbanken</a>. Gratistimmar betalar vi inte tillbaka. Vi kan stänga av ett konto som bryter mot
       villkoren, och säger då till varför.</p>
@@ -602,7 +665,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 22 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 23 oktober 2026.</p>
   </div>
 </section>
 
@@ -774,7 +837,7 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=5c847941"></script>
+<script src="nextrum-config.js?v=085fa9d6"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=20eb9020"></script>
@@ -783,7 +846,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=58fbd1e6"></script>
+<script src="nextrum-maskot-svar.js?v=7e04adf1"></script>
 <script src="nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

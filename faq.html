@@ -135,7 +135,7 @@
       "name": "Kan vi flytta eller avboka ett pass?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Ja. Både ni och studiehjälparen kan flytta ett pass, och motparten ser ändringen direkt i sin vy. Ett pass som inte är betalt än avbokar ni själva i vyn. Är det redan betalt hör ni av er till oss, så avbokar vi det och betalar tillbaka — ett pass som aldrig hölls kostar ingenting."
+        "text": "Ja, fram till 12 timmar innan passet börjar. Både ni och studiehjälparen kan flytta ett pass, och motparten ser ändringen direkt i sin vy. Ett pass som inte är betalt än avbokar ni själva i vyn. Är det redan betalt hör ni av er till oss, så avbokar vi det och betalar tillbaka. Avbokar ni mindre än 12 timmar före är det en sen avbokning: ni betalar hälften av passet, eller så dras halva tiden ur era timmar, och de sista 12 timmarna går passet inte att flytta. Det står i villkoren."
       }
     },
     {
@@ -143,7 +143,7 @@
       "name": "Vad händer om eleven inte dyker upp?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Uteblir eleven utan att avboka räknas passet som genomfört och ska betalas. Är det redan betalt betalas beloppet inte tillbaka. Studiehjälparen har hållit tiden ledig. Behöver ni ställa in, gör det innan passet börjar: i vyn om passet inte är betalt än, annars genom att höra av er till oss."
+        "text": "Uteblir eleven utan att avboka räknas passet som genomfört och ska betalas. Är det redan betalt betalas beloppet inte tillbaka. Studiehjälparen har hållit tiden ledig. Behöver ni ställa in, gör det senast 12 timmar före: i vyn om passet inte är betalt än, annars genom att höra av er till oss. Avbokar ni senare betalar ni hälften av passet."
       }
     },
     {
@@ -263,7 +263,7 @@
       "name": "Vad händer om ett pass ställs in?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Ett pass som aldrig hölls ger ingen ersättning, och familjen betalar inte för det. Uteblir eleven utan att avboka räknas passet som genomfört, eftersom du hållit tiden ledig."
+        "text": "Ett pass som aldrig hölls ger ingen ersättning. Uteblir eleven utan att avboka räknas passet som genomfört, eftersom du hållit tiden ledig."
       }
     },
     {
@@ -444,11 +444,11 @@
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Kan vi flytta eller avboka ett pass?<span class="pm"></span></button>
-          <div class="faq-a"><p>Ja. Både ni och studiehjälparen kan flytta ett pass, och motparten ser ändringen direkt i sin vy. Ett pass som inte är betalt än avbokar ni själva i vyn. Är det redan betalt hör ni av er till oss, så avbokar vi det och betalar tillbaka — ett pass som aldrig hölls kostar ingenting.</p></div>
+          <div class="faq-a"><p>Ja, fram till 12 timmar innan passet börjar. Både ni och studiehjälparen kan flytta ett pass, och motparten ser ändringen direkt i sin vy. Ett pass som inte är betalt än avbokar ni själva i vyn. Är det redan betalt hör ni av er till oss, så avbokar vi det och betalar tillbaka. Avbokar ni mindre än 12 timmar före är det en sen avbokning: ni betalar hälften av passet, eller så dras halva tiden ur era timmar, och de sista 12 timmarna går passet inte att flytta. Det står i <a href="/anvandarvillkor#avbokning">villkoren</a>.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Vad händer om eleven inte dyker upp?<span class="pm"></span></button>
-          <div class="faq-a"><p>Uteblir eleven utan att avboka räknas passet som genomfört och ska betalas. Är det redan betalt betalas beloppet inte tillbaka. Studiehjälparen har hållit tiden ledig. Behöver ni ställa in, gör det innan passet börjar: i vyn om passet inte är betalt än, annars genom att höra av er till oss.</p></div>
+          <div class="faq-a"><p>Uteblir eleven utan att avboka räknas passet som genomfört och ska betalas. Är det redan betalt betalas beloppet inte tillbaka. Studiehjälparen har hållit tiden ledig. Behöver ni ställa in, gör det senast 12 timmar före: i vyn om passet inte är betalt än, annars genom att höra av er till oss. Avbokar ni senare betalar ni hälften av passet.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">När räknas ett pass som genomfört?<span class="pm"></span></button>
@@ -528,7 +528,7 @@
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Vad händer om ett pass ställs in?<span class="pm"></span></button>
-          <div class="faq-a"><p>Ett pass som aldrig hölls ger ingen ersättning, och familjen betalar inte för det. Uteblir eleven utan att avboka räknas passet som genomfört, eftersom du hållit tiden ledig.</p></div>
+          <div class="faq-a"><p>Ett pass som aldrig hölls ger ingen ersättning. Uteblir eleven utan att avboka räknas passet som genomfört, eftersom du hållit tiden ledig.</p></div>
         </div>
         </div>
       </div>
@@ -776,7 +776,7 @@
 
      Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
-<script src="nextrum-config.js?v=5c847941"></script>
+<script src="nextrum-config.js?v=085fa9d6"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
 <script src="nextrum-app.js?v=20eb9020"></script>
@@ -786,7 +786,7 @@
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
      bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
      Inga nätverksanrop. -->
-<script src="nextrum-maskot-svar.js?v=58fbd1e6"></script>
+<script src="nextrum-maskot-svar.js?v=7e04adf1"></script>
 <script src="nextrum-maskot.js?v=de45b497" defer></script>
 <script>
 (function () {

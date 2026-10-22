@@ -162,6 +162,10 @@
          fråga: kolumnen finns först efter migrationen, och en fråga som
          nämner den hade annars tömt raden ovanför. */
       lägg('passRabatt', supa.from('bookings').select('familjerabatt_ore').eq('id', id));
+      /* Den sena avbokningen (sen_avbokning, 2026-10-22), av samma skäl i en
+         egen fråga. */
+      lägg('passSen', supa.from('bookings')
+        .select('sen_avbokning_minuter, sen_avbokning_ore, avbokad_for_familjen').eq('id', id));
     } else if (typ === 'anmalan' || typ === 'ansokan') {
       /* Allt om en anmälan eller en ansökan finns redan i S: raden och
          besöken i mejlkön. Ingen fråga till. */
@@ -900,6 +904,32 @@
           ? esc(kronor(tillägg.betalt_ore) + (tillägg.betald_at ? ' · ' + kortDatum(tillägg.betald_at) : '')) : null, 'inte betalt'],
         ['Återbetalt', Number(tillägg.aterbetald_ore || 0) > 0 ? esc(kronor(tillägg.aterbetald_ore)) : null, 'inget']
       ]);
+    }
+
+    /* Sen avbokning (sen_avbokning, 2026-10-22): passet räknas som hållet i
+       halva tiden, och familjen betalar det eller fick tiden dragen ur
+       timmarna. Bara superadmin efterskänker avgiften (stampla_avbokningen
+       prövar is_admin()), och då är passet en vanlig avbokning igen. */
+    const sen = (d.passSen || [])[0] || null;
+    if (b.status === 'cancelled' && sen && (sen.sen_avbokning_minuter != null || sen.avbokad_for_familjen)) {
+      const medTimmar = b.klippkort_id || (S.timbankPass && S.timbankPass.has(b.id));
+      h += dpRubrik('Sen avbokning');
+      if (sen.sen_avbokning_minuter == null) {
+        h += '<p class="xsmall" style="color:var(--bl-3);margin:0 0 14px">Avbokat av oss på familjens begäran, utan '
+          + 'avgift: den är efterskänkt, eller så bokades passet innan familjen godkänt villkoren med regeln.</p>';
+      } else {
+        const avgift = Number(sen.sen_avbokning_ore || 0);
+        h += dpFakta([
+          ['Räknas som hållet', esc(minText(sen.sen_avbokning_minuter) + ' av ' + bokat + ' bokade')],
+          ['Avgift', avgift > 0 ? esc(kronor(avgift)) : null,
+            medTimmar ? 'ingen: tiden drogs ur timmarna' : 'ingen: timmen var på köpet'],
+          ['Avbokades', esc(sen.avbokad_for_familjen ? 'av oss, på familjens begäran' : 'av familjen')]
+        ]);
+        if (ärSuperadmin()) {
+          h += '<div class="dp-atgard"><button class="btn btn-ghost btn-sm" type="button" data-dp-sen-efterskank="'
+            + esc(b.id) + '">Efterskänk avgiften</button></div>';
+        }
+      }
     }
 
     /* Larmen för just det här passet, med samma ord som i Ekonomi. */
@@ -2707,6 +2737,44 @@
       delete S.detaljCache['familj:' + id];
       await hämtaDetalj('familj', id);
       if (DP.typ === 'familj' && DP.id === id) ritaDetalj();
+    });
+  });
+
+  /* Efterskänk avgiften för en sen avbokning (sen_avbokning, 2026-10-22).
+     Båda kolumnerna blir null och inget annat (stampla_avbokningen). Var
+     passet betalt med timmar kommer de tillbaka; var avgiften betald med
+     kort ligger hela beloppet under Att göra som något att återbetala. */
+  document.addEventListener('click', async ev => {
+    const k = ev.target.closest('[data-dp-sen-efterskank]');
+    if (!k) return;
+    const id = k.dataset.dpSenEfterskank;
+    const b = (S.bokningar || []).find(x => x.id === id);
+    if (!b) return;
+    const ja = await bekräfta({
+      titel: 'Efterskänk avgiften?',
+      text: 'Passet ' + kortDatum(b.wanted_date) + ' blir en vanlig avbokning för ' + namnFör(b.parent_id) + ', utan avgift. '
+        + (b.klippkort_id || (S.timbankPass && S.timbankPass.has(b.id))
+          ? 'Tiden som drogs kommer tillbaka till timmarna.'
+          : Number(b.betalt_ore || 0) > 0
+            ? 'Det familjen betalat ska då tillbaka: återbetala det under Betalningar → Att göra.'
+            : 'Familjen har inget att betala för passet.'),
+      knapp: 'Efterskänk'
+    });
+    if (!ja) return;
+    await medan(k, 'Sparar…', async () => {
+      const { data, error } = await supa.from('bookings')
+        .update({ sen_avbokning_minuter: null, sen_avbokning_ore: null }).eq('id', id)
+        .select('id, betalning_status, betald_at, sen_avbokning_minuter, sen_avbokning_ore');
+      if (error) { alert('Kunde inte spara: ' + felText(error)); return; }
+      if (!data || !data.length) {
+        alert('Ingenting sparades. Raden finns inte längre, eller så får du inte ändra den.');
+        return;
+      }
+      Object.assign(b, data[0]);
+      delete S.detaljCache['pass:' + id];
+      await hämtaDetalj('pass', id);
+      if (DP.typ === 'pass' && DP.id === id) ritaDetalj();
+      await kör('laddaOmEkonomi');
     });
   });
 

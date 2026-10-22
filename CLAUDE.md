@@ -52,6 +52,19 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 - **Ångerrätten** (14 dagar) gäller också köpta timmar, och använda timmar räknas då till
   avtalat pris. Meningen sist i bokningens dagpanel bär undantaget för hållna pass och får inte
   tas bort.
+- **Sen avbokning** (2026-10-22, `sen_avbokning`, Leo: "minst 12h innan måste det avbokas, avbokas det inom 12h av att
+  lektionen ska hållas betalas 50% av belopp, eller spenderas hälften av planerade timmar för lektionen"): avbokar
+  familjen ett bokat pass mindre än 12 timmar före start (också efter start; exakt 12 är i tid) räknas det som hållet i
+  halva tiden: hälften av priset med Betala nu och resten tillbaka av ett betalt pass, eller halva tiden ur timmarna (en
+  gratistimme sparar inget, tipstimmen och planens gratis timme är använda). Samma när admin avbokar på familjens
+  begäran (`avbokad_for_familjen`, bara `is_admin()`, frågan i Avboka); förslag, studiehjälparens och vår egen
+  avbokning kostar inget, och familjen flyttar inte ett bokat pass inom gränsen. Bara pass som föreslogs efter att
+  familjen godkänt villkoren 2026-10-23 (`intern.familjen_har_avbokningsregeln`), och vyerna frågar databasen
+  (`sen_avbokning_lage()`), aldrig sin egen räkning. Avgiften sätts bara av `stampla_avbokningen` när passet avbokas,
+  och efteråt kan superadmin bara efterskänka den; gränsen och andelen är låsta i `betalning_installning`
+  (`avbokning_avgift_timmar`, `_procent`) och står i villkoren (`#avbokning`), och ändras tillsammans. Studiehjälparen
+  får ingen lön för passet. Ångerrätten går före: en ångrad bokning som inte börjat kostar inget, och villkoren säger
+  det.
 - **Omdömen** hittas aldrig på och visas bara ihop med hur de kontrolleras; alla familjer med
   två rapporter får samma Google-fråga, och `tutor_reviews` blir aldrig publik.
 - **Betygsgarantin** (2026-10-07, `#betygsgaranti`): svår att få genom villkor som går att
@@ -408,23 +421,23 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   efter sex timmar, högst tre försök, bara med en kod där ett nytt försök kan gå (`intern.kortet_provas_igen`, som
   också avgör om mejlet lovar ett försök: `kortet: 'igen'`), mejlas en gång per serie, och efter ett dygn blir det en
   uppgift till oss; admin försöker igen under Betalningar → Kortet. Passet avbokas aldrig för att kortet nekas.
-  Inställningarna står i `betalning_installning`, och `sen_avbokning_timmar` är låst på 0 som `kortsparr`: villkoren
-  har ingen avbokningsavgift. Databasen väcker `stripe-reservation` direkt när ett pass har något att göra nu.
+  Inställningarna står i `betalning_installning`, och `sen_avbokning_timmar` är låst på 0 som `kortsparr`: den är
+  kortreservationens, och den sena avbokningens gräns står i `avbokning_avgift_timmar`. Databasen väcker `stripe-reservation` direkt när ett pass har något att göra nu.
 - **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, strömbrytaren `syskonskuld` AV; Leo: "Tillägget
   blir en skuld på familjen när passet är hållet. Familjen kan betala skulden när hen vill under Betalningar, eller så
   läggs den som en egen rad i nästa betalning"): med strömbrytaren på väljer familjen vilka syskon som är med
   (`bookings.extra_barn`, `bokning_barn`), passet har `antal_barn = 1` (passets pris och timmarna är ett barns), och
   tillägget är en egen post (`tillagg_poster`, en per pass, beloppet fryst vid bokningen: tjänstens `extra_personer_ore`
-  gånger minuterna, lika mycket med ett som med två syskon, aldrig ur anropet; `syskontillagget_fast`). Posten är `bokad`, blir `upplupen` när passet hålls eller
-  familjen avbokar ett bekräftat pass inom `sen_avbokning_timmar`, och `frigjord` annars; bara triggrarna och
+  gånger minuterna, lika mycket med ett som med två syskon, aldrig ur anropet; `syskontillagget_fast`). Posten är `bokad`, blir `upplupen` när passet hålls,
+  till hälften när familjen avbokar sent (Sen avbokning, ovan), och `frigjord` annars; bara triggrarna och
   databasens funktioner byter läge, och ingen klient skriver. Skulden betalas med Betala tillägg nu (`stripe-checkout`
   med `skuld: true`) eller som en egen rad i nästa köp av timmar (plan, Fyll timbanken, timmar till planen), aldrig i
   Betala nu för ett pass (varför: `minne/betalning.md`). En post står i högst ett öppet försök (`tillagg_forsok`,
   familjens lås och radlås), bara webhooken sätter den betald, och en rabattkod räknas aldrig på tillägget. Barnen,
   längden och antalet står fast efter bokningen, också för admin. Spärren (över `max_upplupet_ore` eller en post äldre
   än `sparr_efter_dagar`) stoppar extra barn i databasen, aldrig ett pass för ett barn. Gränserna och villkorens
-  version står i `tillagg_installning` (`'utkast'` tills Leo skrivit texten), familjens ja i `tillagg_godkannanden`.
-  **Strömbrytaren går inte på med utkastet**. Tre barn kostar 468 kr i timmen också med den på (Leo 2026-10-21: "Tre barn
+  version står i `tillagg_installning` (2026-10-23 sedan `sen_avbokning`, med texten i villkoren, `#syskontillagg`, och
+  talen där speglar tabellen), familjens ja i `tillagg_godkannanden`. **Strömbrytaren går inte på med utkastet**. Tre barn kostar 468 kr i timmen också med den på (Leo 2026-10-21: "Tre barn
   kostar 468 i timmen"): det som ändras är att tillägget betalas efter passet, och sidorna och villkoren säger det i
   samma ändring. Betalningens delar står i `betalningsrader`, som aldrig raderas.
   **Granskningen 2026-10-21**: en kassa åt gången (en äldre kassa för samma skuld går ut hos Stripe innan en ny öppnas,
@@ -476,6 +489,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
 | syskontillägg | 69 kr i timmen för syskon på passet, lika mycket med ett som med två, som en skuld efter passet (`tillagg_poster`, typen `syskon` i liggaren), med `syskonskuld` på; aldrig övertid, som är `pass_tillagg` och typen `tillagg` |
 | upplupet tillägg | familjens obetalda syskontillägg för hållna pass (`tillagg_skuld()`), som betalas med Betala tillägg nu eller i nästa köp av timmar |
+| sen avbokning | familjen avbokar ett bokat pass mindre än 12 timmar före start: passet räknas som hållet i halva tiden, och familjen betalar hälften eller får halva tiden dragen ur timmarna (`sen_avbokning_minuter`, `sen_avbokning_ore`); aldrig "avbokningsavgift" utåt |
 ### Siffror som måste stämma överallt
 - **399 kr/tim** utan bindning (`PRIS_PER_TIMME` och läxhjälpens rad i `tjanster`, 2026-10-08), och
   det är priset, aldrig ett "från"-pris; **69 kr/tim** för fler barn, fast (tre barn: 468, inte 537), också
@@ -521,6 +535,9 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   bekräftat tiden, och blir passet kortare än bokat betalar vi tillbaka mellanskillnaden"; kortet som reserveras
   och "när ni bekräftar rapporten" står bland det gamla. Slås `kortreservation` på igen ändras meningen, villkoren
   och kontrollen i samma ändring.
+- **12 timmar och hälften** (sen avbokning, 2026-10-22): villkoren (`#avbokning`, Ångerrätt, Att sluta), FAQ:n, Så
+  fungerar Nextrum, prisguiden (`bygg-omradessidor.py`), agentens fakta, vyerna (`NXBetalning.SEN_AVBOKNING`) och
+  `betalning_installning` säger samma sak. Ändras gränsen eller andelen ändras alla, och villkoren får en ny version.
 - **Den 25:e** lön för månadens rapporterade pass. Erbjudandenas priser står bara i
   `erbjudanden_pris`; prissidans kalkylator (2026-10-06, omgjord 2026-10-07) läser planpriset, namnet
   och märket ur planens kort (`data-erb-ore`) och räknar bara timpris och tillägg ur `CFG`; svaret är månadskostnaden och
@@ -983,6 +1000,9 @@ Detaljer: `minne/sakerhet.md`.
   `/expire`, och en som redan blivit klar ger 409 med `pagar`), bygger köpets rader med `buntaKassan` och läser
   regeln som ett fel om den inte går att läsa; webhooken prövar en sen tvisthändelse före tilläggets gren och skriver
   avgiften för en betalning som bara är tillägg på liggarens rad (`charge.updated`).
+- **Sen avbokning** (2026-10-22): `stripe-checkout` tar ett avbokat pass bara när det har en avgift (SESSIONSFORM 12),
+  med databasens belopp och minuter och ingen rabatt till; webhooken skriver den som en passbetalning. `notis-ko` bär
+  avgiften i familjens mejl och bara att avbokningen var sen i studiehjälparens.
 - `apply_migration` och `functions deploy` ändrar driften direkt: commit:a i samma arbetspass,
   och **driftsätt aldrig från en gren som inte är mergad**. Driften var 2026-09-30 ÄLDRE än
   main i 16 av 23 funktioner; alla driftsattes samma kväll, och `notis-ko`, `notis-avanmal` och
@@ -1071,6 +1091,16 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Sen avbokning** (2026-10-22, `sen_avbokning`, 20261022100000) är byggd och provad, inte i drift: migrationen
+  (`rls-test.sql` 2131 av 2131 lokalt, avsnitt 53), `stripe-checkout` (SESSIONSFORM 12), `notis-ko` (avgiften i
+  mejlet), `drift` (agentens fakta), vyerna (`prova-sen-avbokning.js` 54 av 54) och villkoren 2026-10-23 med
+  `#avbokning` och `#syskontillagg` (Leo: "skriv villkorstexten själv, du har all info"), FAQ:n, Så fungerar Nextrum
+  och prisguiden. Kvar: merge och kedjan i `DEPLOY-BETALNING.md` 9.27, och att säga till familjerna. Alla får frågan
+  om villkoren igen, och regeln gäller först pass som föreslås efter att familjen godkänt dem. Juristen har inte läst
+  regeln, meningen om ångerrätten (en ångrad bokning som inte börjat kostar inget, så avgiften gäller i praktiken pass
+  bokade mer än 14 dagar före; ingen har prövat undantaget för fritidsverksamhet i 2 kap. 11 §), syskontilläggets
+  villkor eller rad 5 i `DATASKYDD.md`. Edge-funktionen `utbildningsprov` tar Leo bort i Supabases panel (verktygen kan
+  inte ta bort en funktion).
 - **Syskontillägget fast** (2026-10-21, `syskontillagget_fast`, 20261021230000) är i drift sedan kvällen 2026-10-21 (Leo:
   "Tre barn kostar 468 i timmen", sedan "Merge oxh migrera"): tillägget är `extra_ore` gånger minuterna, lika mycket med
   ett som med två syskon, i databasen (`intern.tillaggets_belopp`, villkoret `tillagg_poster_belopp`), i
@@ -1107,12 +1137,11 @@ Detaljer: `minne/grunden.md`.
 - **Syskontillägget som skuld** (2026-10-21, `syskontillagg_som_skuld`, 20261021214000) är i drift sedan kvällen
   2026-10-21, och strömbrytaren `syskonskuld` står av: migrationen, sedan `stripe-checkout` v23, `stripe-aterbetalning`
   v9 och `notis-ko` v32 (`stripe-webhook` v16 gick ut före, med Betala nu). Stripes endpoint tar emot
-  `checkout.session.expired`, och jobben `tillagg-forsok` och `tillagg-paminnelse` går. Kvar för Leo: villkorstexten för
-  syskontillägget (en platshållare står i bokningsrutan, länken i `CFG.TILLAGG_VILLKOR_URL`), versionen i
-  `tillagg_installning`, att sidorna och villkoren säger att tillägget betalas efter passet, och sist strömbrytaren. Priset
-  är bestämt: tre barn kostar 468 kr i timmen också med den på (`syskontillagget_fast`, ovan). Före den också ett beslut:
-  `tillagg_installning` gör tillägget upplupet när ett bekräftat pass avbokas inom 24 timmar (`sen_avbokning_timmar`,
-  `debitera_vid_sen_avbokning`), och villkoren har ingen avbokningsavgift. Juristen har inte läst rad 35 i
+  `checkout.session.expired`, och jobben `tillagg-forsok` och `tillagg-paminnelse` går. Villkorstexten
+  (`#syskontillagg`, länken i `CFG.TILLAGG_VILLKOR_URL`) och versionen 2026-10-23 i `tillagg_installning` kommer med
+  `sen_avbokning` (nedan), som också avgör den sena avbokningen: hälften av tillägget, som hälften av passet. Kvar för
+  Leo: att prissidan, FAQ:n och /en/ säger att tillägget betalas efter passet, och sist strömbrytaren. Priset är bestämt:
+  tre barn kostar 468 kr i timmen också med den på (`syskontillagget_fast`, ovan). Juristen har inte läst rad 35 i
   `DATASKYDD.md` eller policyns stycke om tillägget. Med strömbrytaren av bokas syskon som förut, och inget pris ändras.
 - **Liggarens markeringar och testbetalningen** (2026-10-21, `betalningar_dolda`, 20261021213000) är i drift sedan
   kvällen 2026-10-21, och Leos testbetalning (planen för 1 364 kr den 2026-09-28, `skarp = false`) står som `test` under
@@ -1205,8 +1234,8 @@ Detaljer: `minne/grunden.md`.
   `intern.kassan_oppnad` (RLS utan policy, med flit), och torrkörningen lade inget på fakturan. Kvar: att säga till
   familjerna, och juristen (`#faktura`, rad 8 i `DATASKYDD.md`). Inget mejl när ett pass läggs på fakturan, och ett
   tillägg för övertid kommer inte med (`minne/betalning.md`).
-- **Med flit inte**: en faktura (2026-10-21), en Fortnox-koppling, en avbokningsavgift, en frist för betalning efter
-  passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
+- **Med flit inte**: en faktura (2026-10-21), en Fortnox-koppling, en avgift för en avbokning i tid (en sen avbokning
+  kostar hälften sedan 2026-10-22), en frist för betalning efter passet (`ej_betalt` larmar direkt). **Att säga till** familjer och studiehjälpare: om
   villkorsändringarna och om att vi kan läsa chatten, och familjerna om barnens inloggning
   (integritetspolicyn, 2026-09-30).
 - **Affischerna** (2026-09-30): tipskoderna och `/affisch` är i drift; att sätta upp dem enligt

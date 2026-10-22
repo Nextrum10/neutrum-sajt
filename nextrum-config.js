@@ -90,11 +90,12 @@ window.NEXTRUM_CONFIG = {
      passet, i samma ändring. Priset på dem står kvar. */
   PRIS_SYSKON_TILLAGG_KR_PER_TIMME: 69,
 
-  /* Villkoren för syskontillägget (TILLAGG_VILLKOR_VERSION står i
-     databasen, tillagg_installning.villkor_version). PLATSHÅLLARE: Leo
-     skriver texten och sätter länken här när punkten finns i villkoren.
-     Tom sträng = rutan säger att villkoren skrivs, utan länk. */
-  TILLAGG_VILLKOR_URL: '',
+  /* Villkoren för syskontillägget: punkten #syskontillagg i
+     användarvillkoren, skriven 2026-10-22 (Leo: "skriv villkorstexten
+     själv"), och versionen står i databasen
+     (tillagg_installning.villkor_version, 2026-10-23). Tom sträng = rutan
+     säger bara att villkoren står i användarvillkoren, utan länk. */
+  TILLAGG_VILLKOR_URL: '/anvandarvillkor#syskontillagg',
   /* Villkoren för värvningsbonusen (varvningsbonus, 2026-10-21): punkten
      #tips i användarvillkoren, omskriven för bonusen i versionen 2026-10-22
      (Leo: "Fixa nr 6"). Tom sträng = kortet Värva en kompis säger att
