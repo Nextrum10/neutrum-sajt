@@ -1,0 +1,311 @@
+/* ============================================================
+   NEXTRUM — Om oss (2026-10-22)
+
+   Sidan /om-oss, efter nextrum-sidor.css. Den bygger på typografi,
+   former och N-märket i stället för foton (Leo: "ingen mall-känsla"),
+   och har därför en egen rytm: rubriker i stor grad, skälen som rader
+   över hela bredden och ett mörkt band där berättelsen börjar.
+
+   Ordningen är en berättelse (2026-10-22, Leo: "gör storytelling
+   bättre"): köksbordet där det låser sig, idén som Nextrum började
+   med, vad den ger var och en, hur det går till, vem som får hjälpa,
+   vad ni kan hålla oss till, att vi är nya, och sist en person.
+
+   Inga hexkoder: allt är cinemas tokens, så sidan följer mörkt läge
+   av sig själv. Det orange i N-märket står i markupen, som i loggan.
+   data-stig äger transform på det som stiger in, så det som rör sig
+   här använder translate, rotate och scale, aldrig transform.
+   Rörelsen står still med reducerad rörelse och i html[data-motion=
+   "still"], och allt syns utan skript.
+   ============================================================ */
+
+.om{overflow-x:clip}
+.om-wrap{max-width:var(--w-bred);margin-inline:auto;padding-inline:var(--m)}
+.om-sek{padding-block:clamp(64px,9vw,136px)}
+
+.om-h2{
+  margin:18px 0 0;max-width:19ch;
+  font-size:clamp(2rem,4.6vw,3.8rem);line-height:1;letter-spacing:-.04em;font-weight:750;
+  text-wrap:balance;color:var(--bl);
+}
+.om-h1 em,.om-h2 em,.om-sist-h em{font-style:normal;color:var(--acc-lugn)}
+.om-h3{margin:14px 0 0;font-size:clamp(1.4rem,2.4vw,1.9rem);line-height:1.12;letter-spacing:-.03em;font-weight:700}
+
+.om-cta{display:flex;flex-wrap:wrap;align-items:center;gap:16px 28px;margin-top:34px}
+.om-cta .btn svg{width:16px;height:16px;margin-left:10px;flex:none}
+
+/* ---------- 1. Hero ----------
+   Rubriken först, märket under på en telefon och till höger från
+   900 px. Märket är loggans två delar: kroppen i loggans brun (kräm i
+   mörkt läge, --logga-brun) och bladet, som landar på den. */
+/* Sidhuvudet ligger fast över sidan, så heron börjar under det, som
+   menysidornas .nx-page-hero. */
+.om-hero{padding-block:clamp(112px,13vw,176px) clamp(56px,8vw,120px)}
+.om-hero .nx-back{display:inline-flex}
+.om-et-hero{display:flex;margin-top:22px}
+.om-hero-in{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(36px,5vw,64px);align-items:center}
+@media (min-width:900px){.om-hero-in{grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr)}}
+.om-h1{
+  margin:22px 0 0;max-width:13ch;
+  font-size:clamp(2.6rem,7.2vw,6.2rem);line-height:.95;letter-spacing:-.05em;font-weight:800;
+  text-wrap:balance;color:var(--bl);
+}
+.om-h1 em{
+  text-decoration:underline;text-decoration-thickness:.07em;text-underline-offset:.14em;
+  text-decoration-color:color-mix(in srgb,currentColor 32%,transparent);text-decoration-skip-ink:none;
+}
+.om-hero-rad{
+  position:relative;margin:0;padding-left:26px;max-width:42ch;
+  font-size:clamp(1.08rem,1.45vw,1.32rem);line-height:1.5;letter-spacing:-.011em;color:var(--bl-2);
+  text-wrap:pretty;
+}
+/* En prick i leran framför raden, aldrig ett streck: ett streck läses
+   som ett tankstreck. */
+.om-hero-rad::before{
+  content:"";position:absolute;left:4px;top:.56em;width:8px;height:8px;border-radius:50%;background:var(--acc);
+}
+.om-h1 + .om-hero-rad{margin-top:30px}
+.om-hero-rad + .om-hero-rad{margin-top:10px}
+/* Tre löften under knapparna, med mossans bock (klart, som i vyerna). */
+.om-loften{list-style:none;margin:26px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 22px}
+.om-loften li{display:inline-flex;align-items:center;gap:8px;font-size:.95rem;font-weight:600;color:var(--bl-2)}
+.om-loften svg{
+  width:20px;height:20px;flex:none;padding:3px;border-radius:50%;background:var(--mossa-soft);
+  fill:none;stroke:var(--mossa-text);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+}
+
+.om-marke{
+  position:relative;margin:0;justify-self:center;
+  width:min(78vw,360px);aspect-ratio:1;display:grid;place-items:center;
+}
+@media (min-width:900px){.om-marke{justify-self:end;width:min(100%,500px)}}
+.om-ringar{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:none}
+.om-ringar circle{stroke:var(--ln-2);stroke-width:1.2}
+.om-ringar circle:nth-child(2){stroke:var(--acc-line);stroke-dasharray:3 9;stroke-linecap:round}
+.om-ringar circle:nth-child(3){stroke:none;fill:var(--acc-soft)}
+.om-n{position:relative;width:58%;height:auto;overflow:visible}
+.om-n-kropp{fill:var(--logga-brun)}
+.om-n-blad{transform-box:fill-box;transform-origin:50% 60%}
+@media (prefers-reduced-motion:no-preference){
+  html:not([data-motion="still"]) .om-n-blad{animation:om-landa 1.15s var(--e-ut) .35s both}
+  html:not([data-motion="still"]) .om-ringar circle:nth-child(2){
+    transform-box:view-box;transform-origin:50% 50%;animation:om-varv 90s linear infinite;
+  }
+}
+@keyframes om-landa{
+  from{opacity:0;translate:26px -34px;rotate:16deg;scale:.9}
+  to{opacity:1;translate:0 0;rotate:0deg;scale:1}
+}
+@keyframes om-varv{to{rotate:360deg}}
+
+/* ---------- 4. Därför finns Nextrum ----------
+   Sidans tyngdpunkt. Varje skäl är en rad över hela bredden: vem det
+   gäller i ämnesfärgen (--f), påståendet i stor grad och texten under.
+   Från 900 px står vem till vänster, som en marginal. */
+.om-darfor{background:var(--yta);border-block:1px solid var(--ln)}
+.om-skal{list-style:none;margin:clamp(40px,5vw,72px) 0 0;padding:0;border-top:1px solid var(--ln)}
+.om-skal-rad{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:14px;
+  padding-block:clamp(28px,3.6vw,52px);border-bottom:1px solid var(--ln);
+}
+@media (min-width:900px){
+  .om-skal-rad{grid-template-columns:minmax(0,.3fr) minmax(0,1fr);column-gap:clamp(32px,5vw,80px);row-gap:16px}
+  .om-skal-vem{grid-row:1 / span 2;padding-top:.9em}
+}
+.om-skal-vem{
+  display:flex;align-items:center;gap:10px;align-self:start;
+  font-family:var(--f-mono);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--f,var(--acc-lugn));
+}
+.om-skal-vem::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+.om-skal-stor{
+  margin:0;max-width:21ch;
+  font-size:clamp(1.85rem,4.3vw,3.6rem);line-height:1.02;letter-spacing:-.042em;font-weight:750;
+  color:var(--bl);text-wrap:balance;
+}
+.om-skal-text{margin:0;max-width:58ch;font-size:clamp(1.02rem,1.25vw,1.16rem);line-height:1.62;color:var(--bl-2);text-wrap:pretty}
+
+/* Leos egna meningar, i skälens rytm: vem till vänster och texten som
+   ett citat. Raden står inte i sidan förrän han skrivit den, och utan
+   den slutar sektionen på stycket ovanför. */
+.om-egna{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:14px;
+  padding-top:clamp(28px,3.6vw,52px);
+  --f:var(--acc-lugn);
+}
+@media (min-width:900px){
+  .om-egna{grid-template-columns:minmax(0,.3fr) minmax(0,1fr);column-gap:clamp(32px,5vw,80px)}
+  .om-egna .om-skal-vem{padding-top:.5em}
+}
+.om-egna-text{
+  margin:0;max-width:44ch;padding-left:22px;border-left:3px solid var(--acc);
+  font-size:clamp(1.25rem,2vw,1.6rem);line-height:1.45;letter-spacing:-.02em;color:var(--bl);text-wrap:pretty;
+}
+
+/* ---------- 5. Så går det till ---------- */
+.om-fyra{
+  list-style:none;margin:clamp(40px,5vw,64px) 0 0;padding:0;
+  display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,3vw,40px) clamp(20px,2.4vw,32px);
+}
+@media (min-width:620px){.om-fyra{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1080px){.om-fyra{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.om-fyra li{border-top:3px solid var(--f,var(--acc));padding-top:18px}
+.om-nr{display:block;font-family:var(--f-mono);font-size:13px;letter-spacing:.12em;color:var(--f,var(--acc-lugn))}
+.om-fyra h3{margin:10px 0 0;font-size:clamp(1.18rem,1.6vw,1.34rem);line-height:1.2;letter-spacing:-.022em;font-weight:700;color:var(--bl)}
+.om-fyra p{margin:8px 0 0;font-size:1rem;line-height:1.58;color:var(--bl-2);max-width:34ch}
+
+.om-varfor{
+  margin-top:clamp(48px,6vw,84px);padding:clamp(26px,3.6vw,48px);
+  border-radius:28px;background:var(--yta);border:1px solid var(--ln);
+  display:grid;grid-template-columns:minmax(0,1fr);gap:18px clamp(28px,4vw,64px);align-items:start;
+}
+@media (min-width:900px){.om-varfor{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.om-varfor-stor{
+  margin:0;font-size:clamp(1.7rem,3.2vw,2.6rem);line-height:1.05;letter-spacing:-.038em;font-weight:750;
+  color:var(--bl);text-wrap:balance;
+}
+.om-varfor-text p{margin:0;font-size:clamp(1.02rem,1.25vw,1.14rem);line-height:1.6;color:var(--bl-2);max-width:52ch}
+.om-varfor-text p + p{margin-top:12px;color:var(--bl);font-weight:600}
+
+/* Första steget: en ruta i lerans mjuka ton med knappen, mitt på sidan.
+   Bredvid varandra från 900 px, under varandra smalare. */
+.om-borja{
+  margin-top:clamp(40px,5vw,72px);padding:clamp(26px,3.6vw,48px);border-radius:28px;
+  background:var(--acc-soft);border:1px solid var(--acc-line);
+  display:grid;grid-template-columns:minmax(0,1fr);gap:22px clamp(28px,4vw,64px);align-items:center;
+}
+@media (min-width:900px){.om-borja{grid-template-columns:minmax(0,1fr) auto}}
+.om-borja-h{
+  margin:0;font-size:clamp(1.7rem,3.4vw,2.7rem);line-height:1.06;letter-spacing:-.04em;font-weight:750;
+  color:var(--bl);text-wrap:balance;
+}
+.om-borja-h em{font-style:normal;color:var(--acc-lugn)}
+.om-borja-text{margin:12px 0 0;max-width:52ch;font-size:clamp(1.02rem,1.25vw,1.14rem);line-height:1.58;color:var(--bl-2)}
+.om-borja .btn svg{width:16px;height:16px;margin-left:10px;flex:none}
+
+/* ---------- 2. Köksbordet ----------
+   Barken, som de mörka ytorna på startsidan, och betoningen i ljus
+   lera, som på bark. Under rubriken och texten står Leos ankarmening
+   över hela bredden, i sidans största grad efter h1: det är vändningen
+   som resten av sidan svarar på. */
+.om-mork{background:var(--nt);color:var(--nt-fg)}
+.om-mork .nx-et{color:var(--nt-mut)}
+.om-mork .om-h2{color:var(--nt-fg);max-width:16ch}
+.om-mork .om-h2 em,.om-kok-stor em{font-style:normal;color:var(--lera-l)}
+.om-mork-in{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,72px);align-items:end}
+@media (min-width:900px){.om-mork-in{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}}
+.om-mork-text p{margin:0;font-size:clamp(1.04rem,1.3vw,1.2rem);line-height:1.62;color:var(--nt-mut);max-width:50ch}
+.om-mork-text p:first-child{color:var(--nt-fg)}
+.om-mork-text p + p{margin-top:16px}
+.om-kok-vand{margin-top:clamp(48px,7vw,104px);padding-top:clamp(28px,4vw,48px);border-top:1px solid var(--nt-ln)}
+.om-kok-stor{
+  margin:0;max-width:20ch;font-size:clamp(2.1rem,5.6vw,4.6rem);line-height:1.02;letter-spacing:-.045em;font-weight:750;
+  color:var(--nt-fg);text-wrap:balance;
+}
+
+/* ---------- 3. Idén ----------
+   Iakttagelsen i stor grad med lerans kant, som ett citat ur Vår idé,
+   och två stycken under: vad den betyder och vad en studiehjälpare
+   inte är. Leos egna meningar (.om-egna, under skälen) står sist. */
+.om-ide-stor{
+  margin:clamp(32px,4vw,56px) 0 0;max-width:30ch;padding-left:clamp(18px,2.4vw,30px);border-left:3px solid var(--acc);
+  font-size:clamp(1.45rem,2.9vw,2.4rem);line-height:1.18;letter-spacing:-.032em;font-weight:650;color:var(--bl);text-wrap:balance;
+}
+.om-ide-tva{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:16px clamp(32px,5vw,80px);
+  margin-top:clamp(28px,3.6vw,48px);
+}
+@media (min-width:900px){.om-ide-tva{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.om-ide-tva p{margin:0;max-width:52ch;font-size:clamp(1.02rem,1.25vw,1.14rem);line-height:1.62;color:var(--bl-2);text-wrap:pretty}
+.om-ide .om-egna{margin-top:clamp(36px,5vw,64px);border-top:1px solid var(--ln)}
+
+/* ---------- 6. Vägen till första eleven ----------
+   Fyra steg i en rad med en linje genom numren, under varandra på en
+   telefon med linjen lodrätt. Numren är räkneverk i CSS, inte text.
+   Ytan skiljer kapitlet från stegen ovanför, som står på papperet. */
+.om-urval{background:var(--yta);border-block:1px solid var(--ln)}
+.om-urval-lista{
+  list-style:none;margin:clamp(40px,5vw,64px) 0 0;padding:0;counter-reset:om-steg;
+  display:grid;grid-template-columns:minmax(0,1fr);gap:0;
+}
+.om-urval-lista li{
+  counter-increment:om-steg;position:relative;
+  padding:0 0 clamp(26px,3vw,36px) 62px;
+}
+.om-urval-lista li::before{
+  content:counter(om-steg);position:absolute;left:0;top:0;
+  width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+  background:var(--acc);color:var(--acc-ink);font-weight:700;font-size:1rem;
+}
+.om-urval-lista li::after{
+  content:"";position:absolute;left:20px;top:46px;bottom:4px;width:2px;border-radius:2px;background:var(--ln-2);
+}
+.om-urval-lista li:last-child::after{display:none}
+.om-urval-lista h3{margin:6px 0 0;font-size:clamp(1.18rem,1.6vw,1.34rem);line-height:1.2;letter-spacing:-.022em;font-weight:700;color:var(--bl)}
+.om-urval-lista p{margin:8px 0 0;font-size:1rem;line-height:1.58;color:var(--bl-2);max-width:40ch}
+@media (min-width:1000px){
+  .om-urval-lista{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(20px,2.4vw,32px)}
+  .om-urval-lista li{padding:62px 0 0}
+  .om-urval-lista li::after{left:52px;right:-10px;top:20px;bottom:auto;width:auto;height:2px}
+  .om-urval-lista li:last-child::after{display:none}
+}
+
+/* ---------- 7. Det här kan ni kräva av oss ----------
+   En lista med bockar i mossa, läget för "klart" i hela produkten. */
+.om-krav{background:var(--pap-2)}
+.om-krav-in{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,72px);align-items:start}
+@media (min-width:900px){.om-krav-in{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}}
+.om-krav-lista{list-style:none;margin:0;padding:0;border-top:1px solid var(--ln-2)}
+.om-krav-lista li{
+  position:relative;padding:18px 0 18px 46px;border-bottom:1px solid var(--ln-2);
+  font-size:clamp(1.04rem,1.35vw,1.2rem);line-height:1.5;color:var(--bl);text-wrap:pretty;
+}
+.om-krav-lista li::before{
+  content:"";position:absolute;left:0;top:17px;width:28px;height:28px;border-radius:50%;
+  background:var(--mossa);
+}
+.om-krav-lista li::after{
+  content:"";position:absolute;left:9px;top:25px;width:10px;height:6px;
+  border-left:2px solid var(--pap);border-bottom:2px solid var(--pap);rotate:-45deg;
+}
+
+/* ---------- 8. Vi är nya ---------- */
+.om-nya{padding-block:clamp(56px,7vw,104px)}
+.om-nya-ruta{
+  max-width:780px;margin-inline:auto;padding:clamp(26px,3.6vw,44px);
+  border:1.5px dashed var(--ln-2);border-radius:28px;
+}
+.om-nya-ruta p{margin:14px 0 18px;font-size:clamp(1.04rem,1.3vw,1.18rem);line-height:1.62;color:var(--bl-2);max-width:58ch}
+
+/* ---------- 9. Frågor och nästa steg ---------- */
+.om-faq-in{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,72px);align-items:start}
+@media (min-width:900px){.om-faq-in{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
+.om-faq-lista{border-top:1px solid var(--ln-2)}
+.om-faq-lista details{border-bottom:1px solid var(--ln-2)}
+.om-faq-lista summary{
+  position:relative;list-style:none;cursor:pointer;min-height:44px;
+  padding:20px 52px 20px 0;
+  font-size:clamp(1.06rem,1.4vw,1.22rem);font-weight:650;letter-spacing:-.016em;line-height:1.35;color:var(--bl);
+  -webkit-tap-highlight-color:transparent;
+}
+.om-faq-lista summary::-webkit-details-marker{display:none}
+.om-faq-lista summary::before,
+.om-faq-lista summary::after{
+  content:"";position:absolute;right:12px;top:50%;width:16px;height:2px;border-radius:2px;background:var(--acc-lugn);
+  transition:rotate .3s var(--e-ut);
+}
+.om-faq-lista summary::after{rotate:90deg}
+.om-faq-lista details[open] summary::after{rotate:0deg}
+.om-faq-lista summary:focus-visible{outline:2px solid var(--acc);outline-offset:4px;border-radius:8px}
+.om-faq-lista details p{margin:0 0 22px;max-width:60ch;font-size:1.02rem;line-height:1.62;color:var(--bl-2)}
+.om-faq-lista details a{color:var(--acc-text);text-decoration:underline;text-underline-offset:3px}
+
+.om-sist{padding-top:0}
+.om-sist-in{text-align:center;display:flex;flex-direction:column;align-items:center}
+.om-sist-h{
+  margin:0;font-size:clamp(2.6rem,7vw,6rem);line-height:.95;letter-spacing:-.05em;font-weight:800;
+  color:var(--bl);text-wrap:balance;
+}
+.om-sist-text{margin:22px 0 0;max-width:44ch;font-size:clamp(1.06rem,1.4vw,1.24rem);line-height:1.55;color:var(--bl-2)}
+.om-sist .om-cta{justify-content:center}
+.om-sist-not{margin:18px 0 0;font-size:.95rem;color:var(--bl-3)}

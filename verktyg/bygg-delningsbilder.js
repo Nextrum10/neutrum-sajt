@@ -73,14 +73,19 @@ const namnPå = fil => fil.replace(/^en\//, 'en-').replace(/\.html$/, '');
 function radFör(fil, html, en) {
   const sida = fil.replace(/^en\//, '').replace(/\.html$/, '');
   if (sida === 'bli-studiehjalpare') return en ? 'Work as a tutor · Nextrum' : 'Jobba som studiehjälpare · Nextrum';
-  if (['anvandarvillkor', 'integritetspolicy', 'lagring'].includes(sida)) {
+  if (['anvandarvillkor', 'integritetspolicy', 'lagring', 'om-oss'].includes(sida)) {
     return en ? 'Nextrum · tutoring in Stockholm' : 'Nextrum · läxhjälp i Stockholm';
   }
   if (html.includes('>Guide för föräldrar</span>')) return 'Guide för föräldrar · Nextrum';
   return en ? `Tutoring in Stockholm · SEK ${PRIS} an hour` : `Läxhjälp i Stockholm · ${PRIS} kr i timmen`;
 }
 
+/* Om oss har inga foton av människor (2026-10-22), och inte delningsbilden
+   heller: den står på barken med bara namnet och rubriken. */
+const UTAN_FOTO = ['om-oss.html'];
+
 function fotoFör(fil, html, förut) {
+  if (UTAN_FOTO.includes(fil)) return null;
   if (förut && förut.foto) return förut.foto;
   const og = html.match(/og:image" content="https:\/\/nextrum\.se\/bilder\/([a-z0-9-]+)-1280\.jpg"/);
   if (og) return og[1];
@@ -108,7 +113,7 @@ function mall(rubrik, rad, foto) {
   h1 { margin: 0; font-size: ${storlek}px; line-height: 1.04; font-weight: 700; letter-spacing: -.025em; text-wrap: balance; }
   .rad { margin-top: 26px; font-size: 28px; font-weight: 500; color: #C08A2E; }
 </style></head><body>
-<div class="bild"></div><div class="ton"></div>
+${foto ? '<div class="bild"></div><div class="ton"></div>' : ''}
 <div class="text">
   <div class="namn"><img src="${BAS}/apple-touch-icon.png" alt="">Nextrum</div>
   <div><h1>${esc(rubrik)}</h1><div class="rad">${esc(rad)}</div></div>

@@ -1912,3 +1912,41 @@ En granskare som inte skrivit koden läste vyerna med fokus på tidszonen; en an
   avbokning", och passets panel har delen Sen avbokning med Efterskänk avgiften (superadmin). Kolumnerna hämtas i en
   egen fråga i kärnan och läggs på `S.bokningar`.
 - Provat: `verktyg/prova-sen-avbokning.js` (port 8986).
+
+## Om oss och Så ser ni att det funkar (2026-10-22, grenen `om-oss-sida`)
+Leo ville ha en Om oss-sida och en sektion direkt efter Hur hjälper vi ert barn som visar att det funkar, utan något vi
+inte kan belägga: vi är nya och har inga siffror, omdömen eller resultat.
+- **Om oss** (`/om-oss`) är en berättelse i ordning (samma dag, Leo: "gör storytelling bättre"): hero med "Läxhjälp
+  av någon som nyss gick kursen." och N-märket i ringar i stället för ett foto; Köksbordet på barken, där läxan låser
+  sig mellan förälder och barn, med Leos "Ibland behövs bara någon annan än mamma och pappa." som vändning; Idén
+  (iakttagelsen ur Vår idé, vad en studiehjälpare inte är, och plats för Leos rad om varför vi startade, som
+  en kommentar i sidan tills han skrivit den: platshållaren togs bort före merge 2026-10-24, så att den aldrig syns
+  live; layouten fungerar med och utan den); Därför finns Nextrum med ett skäl för eleven, föräldern och studiehjälparen i
+  ämnesfärgernas ordning; Så går det till; Vägen fram till första eleven (ansökan, intervju, utbildning, provet); Det
+  här kan ni kräva av oss; rutan Vi är nya (det enda stället där ordet omdöme får stå); sex frågor och Nästa steg med
+  "samma person varje gång". Ingen mening sägs två gånger. Knapparna går till intresseanmälan med
+  `utm_source=om-oss&utm_medium=sajt&utm_campaign=okt26`. Texten är sajtens egen (Vår idé, FAQ:n, startsidan och
+  guiderna `hjalpa-barn-med-matte` och `laxhjalp-eller-privatlarare`) eller Leos tre ankarmeningar; inget är nytt i
+  sak, och ingenting säger hur ofta något händer ("ibland", aldrig "de flesta"). Ingen engelsk sida: engelskans
+  footer länkar till den svenska.
+- **Så ser ni att det funkar** (`#exempel`): rapporten med fälten som `NXStudie.rapportKort` ritar dem (läget ur
+  `GICK`, Öva mer på, Nästa gång, "Rapport från er studiehjälpare" när namnet saknas), studieplanen (ämne, mål, planen)
+  och Översikt i föräldrarnas vy (Att göra med Passar bra och Avböj, Kommande pass, och Så går det med Hur passen gick
+  och Kunskapsområdena som `ritaFordelningar()` ritar dem för en elev med ett pass), med
+  vyernas färger för läget: ockra väntar, mossa klart. Siffrorna i kortet pekar på listan bredvid och är dekor
+  (`content: attr() / ""`), listan är en `<ol>`. Tejpen "Exempel, påhittad elev" står på varje flik. Varje flik börjar
+  med en rad om var i familjens vecka delen står (`.ex-panel-intro`: Efter varje pass, Vart ni är på väg, Allt på ett
+  ställe), som syns också när panelens rubrik göms av flikarna. Rutorna inne i
+  kortet är `--tint`, för `--pap-2` och `--yta` är nästan samma i mörkt läge, och den valda fliken tar `--bricka` där.
+  En siffra vid en text står i kortets marginal (`--ex-pad`), aldrig på en bokstav, och ekvationerna bryts inte
+  (`.ex-ekv`). Granskad i två varv i 1440 och 390, ljust och mörkt.
+- Engelskans knapp går till `/en/intresseanmalan` med samma utm; startsidans går till `/intresseanmalan` med
+  `utm_source=startsida` och `utm_content=exempel`.
+- **Säljet** (2026-10-24, Leo: "sälj in oss själva mer"): sidan ber om steget fler gånger, men lovar bara det sajten
+  redan lovar. Tre bockar under heron (`.om-loften`: gratis att skriva upp sig, svar inom ett dygn, ingen
+  bindningstid, ur startsidans rad under knapparna), rutan Första steget tar ett par minuter efter Så går det till
+  (`.om-borja`, startsidans "ungefär två minuter"), krav-rubriken "Våra löften. Håll oss till dem." och raden "Det
+  kostar ingenting att fråga och binder er inte till något." (guiden `laxhjalp-eller-privatlarare`) under sista
+  knappen (`.om-sist-not`) och i `#exempel` (`.ex-fot-not`). "24 timmar" står som "ett dygn", för innehållsprovet
+  fäller en siffra före "timmar". Inget pris, inget antal och inget om resultat: säljet är att det är lätt och
+  ofarligt att börja, inte att det går bra för andra.

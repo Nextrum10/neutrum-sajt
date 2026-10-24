@@ -27,8 +27,11 @@
       Hammarby Sjöstad
 
 === index.html  ->  en/index.html
-  STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 1 stycken:
+  STRUKTUR skiljer sig vid tagg 45: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 4 stycken:
+      3x + 5 = 2x + 11
+      3x + 5 = 2x + 11
+      2(x + 3) = 14
       Hammarby Sjöstad
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
@@ -75,7 +78,7 @@
 
 12 av 12 sidpar har avvikelser.
 
-=== svenska sidor utan engelsk tvilling: 35
+=== svenska sidor utan engelsk tvilling: 36
   404.html
   admin.html
   affisch.html
@@ -109,5 +112,6 @@
   laxhjalp-svenska.html
   nationella-prov-ak-6.html
   nationella-prov-ak-9.html
+  om-oss.html
   plugga-infor-prov.html
   vad-kostar-laxhjalp.html

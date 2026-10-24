@@ -67,6 +67,11 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   det.
 - **Omdömen** hittas aldrig på och visas bara ihop med hur de kontrolleras; alla familjer med
   två rapporter får samma Google-fråga, och `tutor_reviews` blir aldrig publik.
+- **Om oss och exemplen** (2026-10-22, `/om-oss` och startsidans `#exempel`, Leo: "varje påstående måste gå att belägga
+  i koden eller i befintlig sajttext"): det som inte går att visa står inte där. Inga antal, omdömen, procent, kronor,
+  namn eller titlar, ingen garanti, inget "forskning visar" och inget om bakgrundskontroller; priset står på prissidan.
+  Exemplets elev är påhittad, utan namn, skola och årskurs, varje flik säger det på en tejp, och ekvationerna räknas.
+  `test/innehall-regler.py` vaktar i CI och skriver ut platshållarna (Leos meningar, bolagsuppgifterna i footern).
 - **Betygsgarantin** (2026-10-07, `#betygsgaranti`): svår att få genom villkor som går att
   räkna (hållen tid, uteblivna pass, uppgifterna i tid, betalningarna), aldrig genom att vi
   bedömer engagemang; den enda bedömningen är Leos regel att ett ämne som inte gick upp för att
@@ -620,7 +625,8 @@ delar som de är; deras text följer inte med formen, och `.faq-item` är orörd
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
-**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
+**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Så ser ni att det funkar (`#exempel`, 2026-10-22:
+rapporten, studieplanen och vyn som förälder som flikar, `nextrum-exempel.js`, statisk och utan anrop), Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
 som vill jobba (`#bli`) och Nästa steg. **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): alla läxhjälps- och guidesidor i fyra grupper (Ämne, Årskurs, Område, Guider) med ämnesfärgens prick, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp; en ny sida i kartan läggs in där på alla sidor, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
@@ -1064,7 +1070,7 @@ Detaljer: `minne/genererat-och-ci.md`.
 ## 9. CI — `.github/workflows/kontroll.yml`
 Varje push och PR, och lokalt före push: `node --check`, `testa-agent.js`,
 `kolla-betalningsvillkor.py`, `kolla-migrationer.py`, `bygg-uppgifter.py --kolla`,
-`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `kolla-delningsbilder.py`, `satt-version.py --kolla`, de genererade filerna
+`kolla-csp.py`, `kolla-behorigheter.py`, `kolla-webp.py`, `kolla-mejltexter.py`, `kolla-villkor.py`, `kolla-delningsbilder.py`, `test/innehall-regler.py`, `satt-version.py --kolla`, de genererade filerna
 (`git diff --exit-code`), språkdiffen (också attributnamn), `deno check` och `deno test`.
 - `node --check` ser bara syntax; ett namn som inte hämtats ur `NXAdmin` smäller vid körning.
 - `indexnow.yml` är ingen kontroll. Nyckeln står i roten och i `verktyg/indexnow.py`: byt båda.
@@ -1119,6 +1125,13 @@ Detaljer: `minne/grunden.md`.
   bokade mer än 14 dagar före; ingen har prövat undantaget för fritidsverksamhet i 2 kap. 11 §), syskontilläggets
   villkor eller rad 5 i `DATASKYDD.md`. Edge-funktionen `utbildningsprov` tar Leo bort i Supabases panel (verktygen kan
   inte ta bort en funktion).
+- **Om oss och Så ser ni att det funkar** (2026-10-22, grenen `om-oss-sida`) är byggda, inte mergade eller i drift:
+  `/om-oss` (bara på svenska; footern länkar dit på varje sida, engelskan med "About us (in Swedish)") och startsidans
+  `#exempel` på båda språken. Ingen migration och ingen edge-funktion. Kvar för Leo: hans två till tre meningar om varför
+  Nextrum startades (rutan `.om-egna` under Idén, som en kommentar i sidan tills han skrivit dem; platshållaren togs bort
+  före merge 2026-10-24) och organisationsnummer och postadress, som inga sidor har än. Sidan säger att en ny studiehjälpare inte ser några elever förrän provet är godkänt: det
+  gäller först när Kräv provet står på och minst fem frågor är aktiva (avsnitt 11, Intervjumejlet och utbildningsprovet).
+  Startsidans `#rost` har fortfarande citatet från "Leo & Alex, grundare av Nextrum"; Om oss nämner inga namn.
 - **Syskontillägget fast** (2026-10-21, `syskontillagget_fast`, 20261021230000) är i drift sedan kvällen 2026-10-21 (Leo:
   "Tre barn kostar 468 i timmen", sedan "Merge oxh migrera"): tillägget är `extra_ore` gånger minuterna, lika mycket med
   ett som med två syskon, i databasen (`intern.tillaggets_belopp`, villkoret `tillagg_poster_belopp`), i

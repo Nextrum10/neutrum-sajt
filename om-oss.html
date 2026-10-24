@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/favicon.svg" color="#643820">
+
+<title>Om oss: därför finns Nextrum | Nextrum</title>
+<meta name="description" content="Ibland behövs bara någon annan än mamma och pappa. Därför finns Nextrum: läxhjälp av någon som nyss gick kursen, och en rapport efter varje pass.">
+<link rel="canonical" href="https://nextrum.se/om-oss">
+<!-- Sidan finns bara på svenska (2026-10-22). Ingen hreflang="en" här: att
+     peka ut en engelsk version som inte finns är sämre än att inte peka alls. -->
+<link rel="alternate" hreflang="sv" href="https://nextrum.se/om-oss">
+<link rel="alternate" hreflang="x-default" href="https://nextrum.se/om-oss">
+<meta name="theme-color" content="#F1EDE6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<!-- delning -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nextrum">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:title" content="Om oss: därför finns Nextrum | Nextrum">
+<meta property="og:description" content="Ibland behövs bara någon annan än mamma och pappa. Därför finns Nextrum: läxhjälp av någon som nyss gick kursen, och en rapport efter varje pass.">
+<meta property="og:url" content="https://nextrum.se/om-oss">
+<meta property="og:image" content="https://nextrum.se/delning/om-oss.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Nextrum: Läxhjälp av någon som nyss gick kursen.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Om oss: därför finns Nextrum | Nextrum">
+<meta name="twitter:description" content="Ibland behövs bara någon annan än mamma och pappa. Därför finns Nextrum: läxhjälp av någon som nyss gick kursen, och en rapport efter varje pass.">
+<meta name="twitter:image" content="https://nextrum.se/delning/om-oss.jpg">
+
+<!-- Typsnitten ligger hos oss, inte hos Google. Överföringen av
+     besökarens IP vid varje sidvisning är därmed borta, och två
+     värdnamn färre ska slås upp innan första texten kan ritas.
+
+     Ingen <link rel="preload"> här med flit: mätt gav den en DUBBEL
+     nedladdning av samma 46 kB. Allt i taggen var rätt — samma
+     adress, as="font", crossorigin, rätt typ — men utan cache-
+     direktiv på svaret återanvänder webbläsaren inte den förladdade
+     kroppen. Cachningen ligger i vercel.json i stället, och där gör
+     den nytta vid varje återbesök i ett år. -->
+<link rel="stylesheet" href="nextrum-typsnitt.css?v=c20ceeba">
+
+<!-- ordningen spelar roll: bas → startsida → cinema → start → sidor.
+     Menysidorna använder startsidans delar som de är (nextrum-start.css
+     och nextrum-start.js); nextrum-sidor.css har det startsidan saknar. -->
+<link rel="stylesheet" href="nextrum.css">
+<link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
+<link rel="stylesheet" href="nextrum-cinema.css?v=228d0fea">
+<link rel="stylesheet" href="nextrum-start.css?v=8a3f88cc">
+<link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
+<!-- Om oss (2026-10-22): det sidan har utöver menysidorna. -->
+<link rel="stylesheet" href="nextrum-om-oss.css?v=8127c788">
+</head>
+<body>
+
+<!-- ==========================================================
+     HEADER — identisk markup på alla fyra publika sidor.
+     Ändrar du här måste du ändra i index.html, priser.html,
+     faq.html och bli-studiehjalpare.html. Länkarna skrivs som
+     "index.html#hur"; på startsidan kortar nextrum-app.js ner dem
+     till rena ankare så att man scrollar istället för att ladda om.
+     ========================================================== -->
+<a class="nx-hoppa" href="#innehall">Hoppa till innehållet</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap nav">
+    <!-- Språkval, övre vänstra hörnet. Det aktiva språket är ett
+         <b>, inte en länk: en länk till sidan man redan står på ser
+         ut som ett val men gör ingenting. -->
+    <div class="sprakval" role="group" aria-label="Språk / Language">
+      <b lang="sv" aria-current="true">SV</b>
+      <i aria-hidden="true"></i>
+      <a lang="en" hreflang="en" href="/en/">ENG</a>
+    </div>
+
+    <a href="/" class="logo" aria-label="Nextrum, till startsidan">
+      <svg class="mark" viewBox="0 0 223.5 169.5" fill="currentColor" aria-hidden="true"><path d="M17.7 169.3c-8.2-1.1-14.8-6.7-17-14.5c-0.5-1.9-0.6-2.4-0.6-18.8c-0.1-18.3 0-21.2 1.1-24.6c0.7-2.4 2.4-5.8 3.8-8c1.4-2 8.8-9.2 19-18.6c3.2-3 9.6-9.1 24.1-23.1c11.8-11.3 13.2-12.5 18.3-14.5c8.6-3.3 19.1-3 26.8 0.9c3.5 1.7 8.5 5.9 18.7 15.5c2.3 2.2 6.2 5.8 8.6 7.9c2.4 2.1 6.2 5.5 8.4 7.5c5 4.5 6.4 5.6 9.7 7.4c1.5 0.8 2.7 1.5 2.8 1.6c0.2 0.4 0.6 0.3 0.4-0.1c0-0.2 0.1-0.7 0.3-1l0.4-0.7l1.2 0.9c2.3 1.7 13.6 7.7 23.9 12.9c7.4 3.6 9.9 4.7 13.7 6c2.6 0.8 2.9 1.7 0.6 1.7c-1 0-1 0.1-0.5 0.4c1 0.7 0.6 2.2-1.1 3.6c-0.5 0.5-4.1 3.9-7.9 7.5c-3.9 3.7-9.9 9.4-13.3 12.7c-8.1 7.7-10.6 9.4-17.1 11.5c-5.3 1.6-13.9 1.5-19.5-0.4c-6.4-2.1-8-3.2-17.4-12c-2.8-2.5-6.4-5.9-8.1-7.4c-1.7-1.5-4.6-4.2-6.5-6c-5.6-5.4-7.2-6.4-10.4-6.3c-2.1 0-3.8 0.7-5.3 2.2c-1.2 1.3-6.4 7.8-8.5 10.8c-1.8 2.4-8.4 11.2-12.8 16.8c-1.8 2.4-4.2 5.4-5.2 6.9c-9.5 12.9-11.6 15.4-13.6 16.9c-4.5 3.3-11.4 5.1-17 4.4z"/><path fill="#F88740" d="M177.1 106.5c-6.6-2.4-34-16.7-35-18.2c-0.6-0.8-0.3-1.3 2-3.4c2.7-2.5 3-3 3.6-7.3c0.5-3.1 0.5-4.8 0.5-15.2c0.1-15.5 0.1-16.2 2.6-21c1.2-2.4 1.9-3.4 3.2-4.6c1.7-1.7 12.4-11.9 15.9-15c1.1-1.1 4.8-4.7 8.3-8.1c7.2-6.9 9-8.4 11.7-10.2c6-3.8 15.3-4.6 21.3-1.8c4.7 2.3 9.3 7.2 11.1 11.8c1.1 2.9 1.3 6.3 1.1 29.3c-0.2 21.9-0.2 22.1-1.7 25.5c-1.8 3.8-3.5 6-8.6 10.8c-2.6 2.5-7.6 7.3-11.1 10.8c-13.9 13.6-16.9 16.5-18 17.1c-1.6 1.1-2.9 1-6.9-0.5z"/></svg>
+      <svg class="logo-text" viewBox="0 0 751.75 169.5" fill="currentColor" role="img" aria-label="Nextrum"><path d="M518.6 143.1c-2-0.3-6.8-1.2-9.5-1.9c-16.9-4-28.3-15.7-31.7-32.7c-1.1-5.6-1.2-9-1.1-40.7c0.2-32 0.1-30.1 1.6-30.8c0.4-0.2 4-0.2 12.1-0.2c12.6 0 12.9 0 13.5 1.4c0.2 0.5 0.3 8.5 0.3 30c0.1 31.4 0.1 31.4 1.4 34.9c2.4 6.6 6.9 11 13.5 12.9c2.1 0.7 8.6 1 11.2 0.5c6.1-1.1 11.6-4.4 14.7-9.1c1.1-1.7 1.9-3.5 2.7-6.3l0.6-2l0.1-30.2c0.1-24.6 0.2-30.4 0.5-30.9c0.7-1.2 1.1-1.3 13.1-1.2c12.1 0 12.3 0 13.1 1.4c0.2 0.5 0.3 7.3 0.2 32.9c-0.1 35.4 0 33.2-1.6 39.5c-2.3 9.4-7.6 17.3-15.4 23.2c-2.7 2.1-8.7 5.1-12.4 6.3c-3.4 1.1-9.9 2.5-13.1 2.9c-2.2 0.2-12.1 0.3-13.8 0.1zM159.8 142.5c-11.9-1.6-20.7-5-28.2-11c-4.1-3.3-9.1-8.5-11.6-12.2c-2.7-4-5.8-11.5-7.2-17.2c-2.1-8.7-1.9-20.1 0.4-29c4-14.7 13-26.2 25.8-32.7c9.3-4.8 17.6-6.6 28.2-6.3c17.8 0.4 33.9 8.9 42.8 22.4c6 9.2 8.9 19.1 9.2 31.7c0.1 5.5 0.1 5.7-0.4 6.5c-1.1 1.7 1.5 1.5-39.7 1.5c-42.1 0-38.6-0.1-38.6 1.9c0 0.6 0.2 1.9 0.5 2.8c2.8 9 10.5 15.7 20.4 17.6c2.1 0.5 8.1 0.4 10.4 0c5.4-1 11.1-4.1 14.3-7.9c2-2.2 0.9-2.1 15.9-2.1c12.9 0 13.3 0 13.8 0.5c0.8 0.8 0.6 1.8-1.2 5.2c-4.5 8.9-11.1 16.3-18.8 21c-2 1.2-7 3.5-9.6 4.4c-7.5 2.7-18.7 3.9-26.4 2.9zM366.3 141.2c-6.1-0.6-13.8-3.3-17.8-6.4c-4.7-3.6-8.4-8.8-10-14.2c-1.7-5.8-1.6-4.1-1.7-32.3c-0.2-24.1-0.2-25.6-0.6-26c-0.4-0.4-1.1-0.4-6.5-0.6c-6.7-0.1-7.2-0.2-7.7-1.7c-0.2-0.4-0.3-3.9-0.2-10.4c0.1-9 0.1-9.8 0.6-10.7c0.8-1.7 1.4-2 4.9-2.2c3.6-0.2 4.5-0.5 6-2c2-2 3-4.5 5.7-13.2c1.5-5.1 2.8-8.3 3.6-9.4c2.4-3.1 9.2-5.1 17.3-5.1c2.4 0 2.6 0.1 3.3 0.6l0.7 0.6l0.1 13.8c0.1 7.6 0.2 13.9 0.2 13.9c0.6 0.7 1.7 0.7 14.2 0.9l13.1 0.1l0.7 0.7l0.7 0.7l0 10.4c0.1 8.9 0.1 10.7-0.3 11.4c-0.7 1.7-0.6 1.7-14.9 1.6l-12.8 0l-0.4 0.5c-0.8 0.9-0.7 39.5 0 42.9c0.8 4.2 2.8 7 6 8.6c3 1.4 5.7 1.7 13.5 1.2c5-0.2 4.9-0.4 6.5 7.7c1.6 7.9 2.3 13.8 1.7 14.9c-0.7 1.3-3 2.2-8.2 3.1c-4.5 0.8-12.9 1.1-17.7 0.6zM0.9 139.5l-0.8-0.7l0.1-50.1c0-27.5 0.1-50.3 0.2-50.5c0.1-0.2 0.4-0.6 0.8-0.9c0.6-0.4 1.4-0.4 12.3-0.4c12.5 0 12.9 0 13.5 1.3c0.1 0.3 0.3 2 0.4 3.6c0.2 4.9 0.3 5 2.5 3c9.8-9 24.3-12.7 38.7-9.9c4.7 0.9 11.1 3.6 15.4 6.5c2.9 1.9 7.5 6.5 9.4 9.5c4.1 6.3 6.4 12.6 7.4 20.3c0.4 3.3 0.6 65.8 0.2 67.1c-0.6 1.9 0.1 1.8-13.2 1.9c-8.9 0.1-12.1 0-12.6-0.2c-1.6-0.7-1.5 0.7-1.4-30.4c0-26.1 0-28.4-0.4-31c-1.6-9.9-7.5-15.9-17-17.5c-5.2-0.8-12.3 0.1-16.2 2.1c-6.7 3.3-10.6 8.7-12.2 16.4c-0.5 2.5-0.5 3.1-0.6 30.7c0 26.6 0 28.1-0.5 28.8c-0.2 0.4-0.7 0.8-1.1 0.9c-0.3 0.2-5.5 0.2-12.3 0.2l-11.7 0l-0.9-0.7zM216.5 140c-0.4-0.2-0.8-0.6-1-0.9c-0.4-0.9 0.2-2.1 3.3-6.2c1.4-2 3.8-5.2 5.2-7.3c1.5-2 3.8-5.3 5.2-7.2c5.5-7.8 10.3-14.6 13-18.5c1.6-2.3 4-5.6 5.3-7.4c2.4-3.3 3.2-4.7 3.3-5.5c-0.1-0.2-1.4-2.3-3.1-4.6c-1.7-2.2-3.7-5-4.6-6.2c-0.8-1.2-3.6-5.2-6.2-8.8c-5.8-8-7.6-10.5-9.6-13.5c-0.9-1.2-3.6-4.9-6-8c-2.5-3.2-4.6-6-4.8-6.3c-0.4-0.8-0.3-1.7 0.3-2.2c0.5-0.5 1.1-0.5 15-0.5c14.2 0 14.6 0 15.4 0.5c1 0.5 1.7 1.5 6.9 9.1c4 5.9 10.9 15.6 11.9 16.6c1 1.1 1.6 0.9 2.9-0.9c4.7-6.6 7.2-10.2 8.7-12.4c2.6-3.9 6.3-9.2 7.4-10.7c1.8-2.4 0.5-2.2 16.4-2.3c11.7-0.1 14.2 0 14.9 0.3c1.6 0.6 1.4 1.6-1 4.8c-3.8 5.1-6.1 8.3-9.3 13c-2 2.9-3.9 5.6-4.3 6.1c-0.8 1.1-5.1 7.2-8.1 11.6c-1.2 1.8-2.6 3.8-3.1 4.5c-3.5 4.8-6.2 9.2-6.3 10c0.1 0.9 2 4 6.7 10.5c1 1.4 2.8 4 4 5.8c1.3 1.8 3.3 4.6 4.5 6.4c1.2 1.7 3.9 5.5 6 8.4c2.1 3 5.2 7.4 7 9.8c6.7 9.2 7.1 9.8 6.7 11c-0.4 1.2-0.6 1.2-15.4 1.2c-12.3 0.1-13.8 0-14.6-0.4c-1-0.4-2-1.7-5.8-7.3c-2.9-4.3-4.8-6.9-9.2-13.1c-1.9-2.8-4.1-5.9-4.8-7c-1.4-1.9-2.2-2.5-2.9-1.9c-0.4 0.3-4.9 6.7-8.2 11.7c-4.6 6.8-9.7 14.3-10.7 15.6c-1.9 2.6-0.1 2.3-16.2 2.4c-8.7 0-14.4-0.1-14.8-0.2zM406.2 139.5l-0.7-0.7l0-6.3c-0.1-54.7 0.1-93 0.3-93.8c0.5-1.9 0.2-1.8 12.9-1.9c7.8-0.1 11.7 0 12.4 0.2c1.5 0.4 1.6 1 1.7 6.2c-0.1 6.1-0.1 6 3.5 2.2c3.2-3.3 4.3-4.1 7.1-5.7c5.3-3.1 12.8-4.9 19-4.7c3.2 0.1 3.9 0.5 4.3 1.9c0.5 1.6 0.4 24.2-0.1 25.2c-0.6 1.5-0.9 1.6-6.6 1.7c-5.5 0.2-7.4 0.5-11 1.7c-6.4 2.1-10.4 5.5-13.1 11.1c-2.8 5.8-2.9 6.4-2.9 36.8c0 27.7 0.1 26.1-1.7 26.6c-0.6 0.2-5.3 0.2-12.6 0.2l-11.7 0l-0.8-0.7zM589.3 140c-0.3-0.1-0.7-0.5-1-0.9c-0.4-0.7-0.4-2.9-0.4-50.3c0-54.4-0.1-50.9 1.5-51.7c1.3-0.6 23.1-0.5 24.4 0.1c1.2 0.6 1.5 1.6 1.3 4.3c-0.1 2.3 0.1 3.6 0.7 3.7c0.2 0 1.3-0.8 2.5-1.8c8.6-7.9 20.4-11.1 32.3-8.8c8.1 1.6 15.5 5.5 20.7 11.3c1.2 1.3 2.2 2.1 2.5 2.1c0.3 0 1.3-0.9 2.5-2c5.6-5.6 13.2-9.6 21.3-11.3c3.3-0.6 11-0.9 14.9-0.5c9.4 1.1 19.1 5.4 25.2 11.4c7 6.8 11.3 15.1 13 25.4c0.8 4.4 0.8 5.6 0.9 37.5c0 28.4 0 29.9-0.4 30.6c-0.3 0.4-0.8 0.8-1.1 0.9c-0.8 0.3-23.4 0.3-24.2 0c-0.3-0.1-0.8-0.5-1.1-0.9c-0.4-0.7-0.4-2.2-0.4-28.7c-0.1-21.2-0.1-28.6-0.4-30.4c-0.8-6.2-2.3-9.6-6-13.3c-4.1-4.1-7.3-5.3-14.1-5.3c-4.9 0-6.5 0.3-9.8 2.1c-5.4 2.9-8.2 6.5-10 12.7l-0.7 2.4l-0.1 29.9c-0.1 24.2-0.2 30-0.5 30.5c-0.7 1.2-1.2 1.2-13.4 1.2l-11.4 0l-0.8-0.7c-0.8-0.9-0.8 1.7-0.7-24.4c0-10.4-0.1-23-0.2-27.9c-0.3-10.1-0.5-11.7-2.6-15.7c-2.7-5.4-5.7-8.1-10.6-9.5c-2.7-0.8-9.5-0.9-12.2-0.2c-7.5 2-12.7 7.8-14.8 16.2c-0.4 1.4-0.5 5.2-0.6 30.9c-0.1 22-0.2 29.4-0.4 29.9c-0.6 1.4-1 1.5-13.7 1.4c-6.3 0-11.8-0.1-12.1-0.2zM189.4 76.1c1.1-1.4-2-7.5-5.7-11.5c-2.9-3.1-6.3-5-10.8-6.3c-2.4-0.6-2.8-0.7-7.3-0.7c-4.3 0-4.9 0.1-7.2 0.7c-7.5 2.1-13.9 7.5-16.4 14c-0.9 2.4-1.1 3.2-0.8 3.7c0.4 0.5 6 0.6 29.5 0.6c18.1 0 18.3 0 18.7-0.5z"/></svg>
+    </a>
+
+    <nav class="nav-links" aria-label="Huvudmeny">
+      <a href="/sa-fungerar-nextrum" data-nav>Så fungerar Nextrum</a>
+      <a href="/for-elever-och-foraldrar" data-nav>För elever &amp; föräldrar</a>
+      <a href="/bli-studiehjalpare" data-nav>Bli studiehjälpare</a>
+      <a href="/priser" data-nav>Priser</a>
+    </nav>
+
+    <div class="nav-actions">
+      <!-- href pekar på föräldravyn så att länken fungerar utan JS.
+           Med JS öppnas vyväljaren istället — utom när man redan är
+           inloggad, då skriver NX.märkInloggad() om länken. -->
+      <a class="login" href="/foralder" id="login-link" data-vagval>Logga in</a>
+      <span class="nx-magnet">
+        <a class="btn btn-primary btn-sm" href="/intresseanmalan">Intresseanmälan</a>
+      </span>
+    </div>
+
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Meny">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="/var-ide">Vår idé</a>
+  <a class="m-link" href="/sa-fungerar-nextrum">Så fungerar Nextrum</a>
+  <a class="m-link" href="/for-elever-och-foraldrar">För elever &amp; föräldrar</a>
+  <a class="m-link" href="/bli-studiehjalpare">Bli studiehjälpare</a>
+  <a class="m-link" href="/priser">Priser</a>
+  <a class="m-link" href="/faq">FAQ / Kontakt</a>
+  <div class="m-actions">
+    <a class="btn btn-primary btn-block btn-lg" href="/intresseanmalan">Skicka intresseanmälan</a>
+    <a class="btn btn-ghost btn-block btn-lg" href="/foralder">Logga in</a>
+  </div>
+  <div class="m-foot">
+    <span class="xsmall">Av unga, för unga.</span>
+    <a class="xsmall" href="mailto:info@nextrum.se">info@nextrum.se</a>
+  </div>
+</div>
+
+<main id="innehall" class="om">
+
+<!-- ==========================================================
+     OM OSS (2026-10-22, Leo)
+     En sida om varför, inte om vilka: inga namn, inga titlar och inga
+     foton på personer, och inget om hur många vi är. Varje påstående
+     står redan på sajten eller i koden, och tabellen över dem står i
+     slutrapporten för grenen om-oss-sida. Inga priser (prissidan har
+     dem), inga omdömen, inga siffror om kunder, elever, timmar eller
+     resultat, och inget tankstreck. test/innehall-regler.py vaktar
+     det, och Leos egna meningar läggs in där kommentaren under Idén
+     säger.
+
+     Formen bygger på typografi, former och N-märket (de två delarna i
+     loggan) i stället för foton. Färgerna är sajtens tokens, så sidan
+     följer mörkt läge, och rörelsen är data-stig och data-avslöj
+     (NXMotion), som står still med reducerad rörelse. Det sidan har
+     utöver menysidorna står i nextrum-om-oss.css.
+     ========================================================== -->
+
+<!-- 1. HERO: rubriken, två rader om matchningen och rapporten, och knappen. -->
+<section class="om-hero" aria-labelledby="om-t">
+  <div class="om-wrap om-hero-in">
+    <div class="om-hero-text">
+      <a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>
+      <span class="nx-et acc om-et-hero" data-stig>Om oss</span>
+      <h1 class="om-h1" id="om-t" data-avslöj>Läxhjälp av någon som <em>nyss gick kursen.</em></h1>
+      <p class="om-hero-rad" data-stig data-fördröj="1">Vi väljer studiehjälparen åt er, för hand, efter vad ert barn behöver.</p>
+      <p class="om-hero-rad" data-stig data-fördröj="2">Efter varje pass skriver studiehjälparen en rapport som ni läser i er vy.</p>
+      <div class="om-cta" data-stig data-fördröj="3">
+        <a class="btn btn-primary btn-lg" href="/intresseanmalan?utm_source=om-oss&amp;utm_medium=sajt&amp;utm_campaign=okt26">Skriv upp er
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+        <a class="nx-lank" href="#borjan">Läs hur det började
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
+      </div>
+      <!-- Tre löften under knappen, som startsidans rad under heron: att
+           skriva upp sig är gratis och binder inte (intresseanmalan.html), vi
+           hör av oss inom 24 timmar (index.html, här som ett dygn) och det
+           finns ingen bindningstid (index.html). -->
+      <ul class="om-loften" data-stig data-fördröj="4">
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg> Gratis att skriva upp sig</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg> Svar inom ett dygn</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg> Ingen bindningstid</li>
+      </ul>
+    </div>
+    <!-- N-märket i två delar: den bruna kroppen och det orange bladet,
+         med samma vägar som loggan. Bladet landar på kroppen när sidan
+         öppnas, och står där direkt med reducerad rörelse. Ringarna
+         bakom är tre personer som möts: eleven, studiehjälparen och ni. -->
+    <figure class="om-marke" aria-hidden="true">
+      <svg class="om-ringar" viewBox="0 0 400 400"><circle cx="200" cy="200" r="196"/><circle cx="200" cy="200" r="146"/><circle cx="200" cy="200" r="96"/></svg>
+      <svg class="om-n" viewBox="0 0 223.5 169.5">
+        <path class="om-n-kropp" d="M17.7 169.3c-8.2-1.1-14.8-6.7-17-14.5c-0.5-1.9-0.6-2.4-0.6-18.8c-0.1-18.3 0-21.2 1.1-24.6c0.7-2.4 2.4-5.8 3.8-8c1.4-2 8.8-9.2 19-18.6c3.2-3 9.6-9.1 24.1-23.1c11.8-11.3 13.2-12.5 18.3-14.5c8.6-3.3 19.1-3 26.8 0.9c3.5 1.7 8.5 5.9 18.7 15.5c2.3 2.2 6.2 5.8 8.6 7.9c2.4 2.1 6.2 5.5 8.4 7.5c5 4.5 6.4 5.6 9.7 7.4c1.5 0.8 2.7 1.5 2.8 1.6c0.2 0.4 0.6 0.3 0.4-0.1c0-0.2 0.1-0.7 0.3-1l0.4-0.7l1.2 0.9c2.3 1.7 13.6 7.7 23.9 12.9c7.4 3.6 9.9 4.7 13.7 6c2.6 0.8 2.9 1.7 0.6 1.7c-1 0-1 0.1-0.5 0.4c1 0.7 0.6 2.2-1.1 3.6c-0.5 0.5-4.1 3.9-7.9 7.5c-3.9 3.7-9.9 9.4-13.3 12.7c-8.1 7.7-10.6 9.4-17.1 11.5c-5.3 1.6-13.9 1.5-19.5-0.4c-6.4-2.1-8-3.2-17.4-12c-2.8-2.5-6.4-5.9-8.1-7.4c-1.7-1.5-4.6-4.2-6.5-6c-5.6-5.4-7.2-6.4-10.4-6.3c-2.1 0-3.8 0.7-5.3 2.2c-1.2 1.3-6.4 7.8-8.5 10.8c-1.8 2.4-8.4 11.2-12.8 16.8c-1.8 2.4-4.2 5.4-5.2 6.9c-9.5 12.9-11.6 15.4-13.6 16.9c-4.5 3.3-11.4 5.1-17 4.4z"/>
+        <path class="om-n-blad" fill="#F88740" d="M177.1 106.5c-6.6-2.4-34-16.7-35-18.2c-0.6-0.8-0.3-1.3 2-3.4c2.7-2.5 3-3 3.6-7.3c0.5-3.1 0.5-4.8 0.5-15.2c0.1-15.5 0.1-16.2 2.6-21c1.2-2.4 1.9-3.4 3.2-4.6c1.7-1.7 12.4-11.9 15.9-15c1.1-1.1 4.8-4.7 8.3-8.1c7.2-6.9 9-8.4 11.7-10.2c6-3.8 15.3-4.6 21.3-1.8c4.7 2.3 9.3 7.2 11.1 11.8c1.1 2.9 1.3 6.3 1.1 29.3c-0.2 21.9-0.2 22.1-1.7 25.5c-1.8 3.8-3.5 6-8.6 10.8c-2.6 2.5-7.6 7.3-11.1 10.8c-13.9 13.6-16.9 16.5-18 17.1c-1.6 1.1-2.9 1-6.9-0.5z"/>
+      </svg>
+    </figure>
+  </div>
+</section>
+
+<!-- 2. KÖKSBORDET. Berättelsen börjar där familjen står: läxan som låser
+     sig mellan förälder och barn. Meningarna står redan på sajten
+     (hjalpa-barn-med-matte och laxhjalp-eller-privatlarare), och den
+     stora raden är Leos ankarmening. Inget om hur ofta det händer: "ibland",
+     aldrig "de flesta". Barken, som de mörka ytorna. -->
+<section class="om-sek om-mork om-kok" id="borjan" aria-labelledby="kok-t">
+  <div class="om-wrap">
+    <div class="om-mork-in">
+      <div>
+        <span class="nx-et" data-stig>Köksbordet</span>
+        <h2 class="om-h2" id="kok-t" data-avslöj>Ibland är det bara <em>fel person.</em></h2>
+      </div>
+      <div class="om-mork-text">
+        <p data-stig>Ibland låser det sig mellan förälder och barn. Tålamodet tar slut på båda sidor, och läxan blir lätt ett bråk i stället för ett pass.</p>
+        <p data-stig data-fördröj="1">Det säger ingenting om vare sig barnet eller föräldern.</p>
+      </div>
+    </div>
+    <div class="om-kok-vand">
+      <p class="om-kok-stor" data-stig>Ibland behövs bara någon annan än <em>mamma och pappa.</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. IDÉN. Iakttagelsen som Nextrum började med (Vår idé), vad den
+     betyder (FAQ:n) och vad en studiehjälpare inte är. Leos egna meningar
+     om varför vi startade hör hemma här, i berättelsens början, och står
+     som en platshållare tills han skrivit dem. Layouten är densamma utan. -->
+<section class="om-sek om-ide" aria-labelledby="ide-t">
+  <div class="om-wrap">
+    <span class="nx-et acc" data-stig>Idén</span>
+    <h2 class="om-h2" id="ide-t" data-avslöj>Nextrum började med en <em>enkel iakttagelse.</em></h2>
+    <p class="om-ide-stor" data-stig>Den som nyligen själv kämpat med en kurs förklarar den ofta bättre än den som kan den utantill.</p>
+    <div class="om-ide-tva">
+      <p data-stig>De minns var det tog stopp och förklarar på ett sätt som ligger nära eleven. Därför letar vi efter en studiehjälpare som nyligen läst samma kurser som ert barn.</p>
+      <p data-stig data-fördröj="1">En studiehjälpare är ingen lärare, och vi kallar dem inte så. Söker ni en legitimerad lärare är vi fel val, och det säger vi hellre nu.</p>
+    </div>
+    <!-- Leos egna meningar om varför Nextrum startades står här när han
+         skrivit dem, som ett citat (stilen finns i nextrum-om-oss.css):
+         <div class="om-egna" data-stig>
+           <span class="om-skal-vem">Varför vi startade</span>
+           <p class="om-egna-text">...</p>
+         </div>
+         Utan dem slutar sektionen på stycket ovanför. -->
+  </div>
+</section>
+
+<!-- 4. DÄRFÖR FINNS NEXTRUM. Ett skäl för var och en av de tre, i stor
+     typografi. Färgen i --f är ämnesfärgernas ordning (CLAUDE.md,
+     Startsidan efter hero): blå, lila, grön. Inget upprepar idén ovan:
+     här står vad den ger eleven, er och studiehjälparen. -->
+<section class="om-sek om-darfor" id="darfor" aria-labelledby="darfor-t">
+  <div class="om-wrap">
+    <span class="nx-et acc" data-stig>Därför finns Nextrum</span>
+    <h2 class="om-h2" id="darfor-t" data-avslöj>Ett skäl för var och en <em>av er tre.</em></h2>
+    <ol class="om-skal">
+      <li class="om-skal-rad" data-stig style="--f:var(--amne-ma)">
+        <span class="om-skal-vem">För eleven</span>
+        <p class="om-skal-stor">Någon att fråga det som känns pinsamt att inte kunna.</p>
+        <p class="om-skal-text">Samma person varje gång, nära i ålder och utan förväntningar från middagsbordet.</p>
+      </li>
+      <li class="om-skal-rad" data-stig style="--f:var(--amne-en)">
+        <span class="om-skal-vem">För er som förälder</span>
+        <p class="om-skal-stor">Ni slipper gissa.</p>
+        <p class="om-skal-text">Efter varje pass kommer en rapport om hur det gick och vad de jobbade med, och den kan säga vad som behöver övas mer och vad som är nästa steg. Ni ser vad som händer utan att behöva sitta med.</p>
+      </li>
+      <li class="om-skal-rad" data-stig style="--f:var(--amne-no)">
+        <span class="om-skal-vem">För studiehjälparen</span>
+        <p class="om-skal-stor">Ett riktigt första jobb.</p>
+        <p class="om-skal-text">Studiehjälparna har börjat gymnasiet eller är äldre. Hos oss får de ett jobb med lön, och en utbildning innan de möter sin första elev.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- 5. SÅ GÅR DET TILL: de fyra stegen, ur Så fungerar Nextrum och
+     startsidan, och varför vi väljer personen åt familjen. -->
+<section class="om-sek om-steg" aria-labelledby="steg-t">
+  <div class="om-wrap">
+    <span class="nx-et acc" data-stig>Så går det till</span>
+    <h2 class="om-h2" id="steg-t" data-avslöj>Fyra steg, och <em>ni tar det första.</em></h2>
+    <ol class="om-fyra">
+      <li data-stig style="--f:var(--amne-ma)"><span class="om-nr" aria-hidden="true">01</span><h3>Ni skriver upp er</h3><p>Berätta vad ert barn behöver hjälp med och i vilka ämnen.</p></li>
+      <li data-stig data-fördröj="1" style="--f:var(--amne-en)"><span class="om-nr" aria-hidden="true">02</span><h3>Vi hör av oss</h3><p>Vi går igenom behovet tillsammans med er innan någon matchning görs.</p></li>
+      <li data-stig data-fördröj="2" style="--f:var(--amne-no)"><span class="om-nr" aria-hidden="true">03</span><h3>Vi väljer studiehjälpare</h3><p>Efter ämne, nivå, behov och personlighet.</p></li>
+      <li data-stig data-fördröj="3" style="--f:var(--amne-sv)"><span class="om-nr" aria-hidden="true">04</span><h3>Plan, pass och rapport</h3><p>Studiehjälparen skriver en studieplan, ni bokar passen, och efter varje pass kommer en rapport.</p></li>
+    </ol>
+    <div class="om-varfor" data-stig>
+      <p class="om-varfor-stor">Ni bläddrar inte i en katalog.</p>
+      <div class="om-varfor-text">
+        <p>Den som är grym på matte är inte självklart rätt person för ett barn som tappat självförtroendet. Därför frågar vi först och väljer sedan, åt er.</p>
+        <p>Fel match är värre än ingen match. En person. Rätt person.</p>
+      </div>
+    </div>
+    <!-- Knappen mitt på sidan, där läsaren just sett hur enkelt det första
+         steget är. Tiden och löftena står på startsidan (index.html:1006 och
+         1012) och i guiderna (laxhjalp-eller-privatlarare.html:162). -->
+    <div class="om-borja" data-stig>
+      <div>
+        <p class="om-borja-h">Första steget tar <em>ett par minuter.</em></p>
+        <p class="om-borja-text">Berätta vad ert barn behöver, så hör vi av oss inom ett dygn. Det kostar ingenting att fråga och binder er inte till något.</p>
+      </div>
+      <a class="btn btn-primary btn-lg" href="/intresseanmalan?utm_source=om-oss&amp;utm_medium=sajt&amp;utm_campaign=okt26">Skriv upp er
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- 6. VÄGEN TILL FÖRSTA ELEVEN. Bara stegen som finns i systemet:
+     ansökan (skolnivån, och vårdnadshavarens skriftliga godkännande
+     under 18), intervjun, utbildningen och provet vid första
+     inloggningen (NXProvet), innan hen ser några elever. -->
+<section class="om-sek om-urval" aria-labelledby="urval-t">
+  <div class="om-wrap">
+    <span class="nx-et acc" data-stig>Så väljer vi studiehjälpare</span>
+    <h2 class="om-h2" id="urval-t" data-avslöj>Vägen fram till <em>första eleven.</em></h2>
+    <ol class="om-urval-lista">
+      <li data-stig><h3>Ansökan</h3><p>Alla som har börjat gymnasiet och får jobba kan söka. Är den som söker under 18 behöver vi vårdnadshavarens skriftliga godkännande.</p></li>
+      <li data-stig data-fördröj="1"><h3>Intervju</h3><p>Ett samtal där vi lär känna personen och hör hur hen förklarar.</p></li>
+      <li data-stig data-fördröj="2"><h3>Utbildning</h3><p>Vi går igenom hur vi arbetar. Först efter utbildningen skapar vi kontot.</p></li>
+      <li data-stig data-fördröj="3"><h3>Prov</h3><p>Vid första inloggningen gör en ny studiehjälpare ett prov om vår handbok, och ser inga elever förrän provet är godkänt.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 7. DET HÄR KAN NI KRÄVA AV OSS. Bara det som är sant i koden och
+     på sajten: rapporten, studieplanen, vyn, bytet, bindningstiden,
+     barnets tråd och vad barnet får se. -->
+<section class="om-sek om-krav" aria-labelledby="krav-t">
+  <div class="om-wrap om-krav-in">
+    <div>
+      <span class="nx-et acc" data-stig>Det här kan ni kräva av oss</span>
+      <h2 class="om-h2" id="krav-t" data-avslöj>Våra löften. <em>Håll oss till dem.</em></h2>
+    </div>
+    <ul class="om-krav-lista" data-stig>
+      <li>En rapport efter varje pass, som ni läser i er vy.</li>
+      <li>En studieplan för ert barn.</li>
+      <li>Att kommande pass, rapporter och studieplanen finns på samma ställe.</li>
+      <li>Att få byta studiehjälpare.</li>
+      <li>Ingen bindningstid.</li>
+      <li>Har ert barn en egen inloggning kan ni läsa det ert barn och studiehjälparen skriver till varandra, och ni bestämmer vad barnet ser.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 8. VI ÄR NYA. Det enda stället på sidan där ordet omdöme står,
+     och test/innehall-regler.py släpper det bara här
+     ([data-vi-ar-nya]). Länken går till exemplen på startsidan. -->
+<section class="om-sek om-nya" aria-labelledby="nya-t" data-vi-ar-nya>
+  <div class="om-wrap">
+    <div class="om-nya-ruta" data-stig>
+      <span class="nx-et">Vi är nya</span>
+      <h2 class="om-h3" id="nya-t">Här står inga omdömen än.</h2>
+      <p>Vi är precis i början, och vi hittar inte på omdömen eller citat. Hellre visar vi exakt vad ni får, så att ni kan bedöma oss själva: rapporten, studieplanen och er vy.</p>
+      <a class="nx-lank" href="/#exempel">Se exakt vad ni får efter varje pass
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- 9. FRÅGOR OCH NÄSTA STEG. <details>, så att svaren går att läsa
+     utan skript. Svaren står redan i FAQ:n eller på startsidan; priset
+     står bara på prissidan. -->
+<section class="om-sek om-faq" aria-labelledby="faq-t">
+  <div class="om-wrap om-faq-in">
+    <div>
+      <span class="nx-et acc" data-stig>Frågor</span>
+      <h2 class="om-h2" id="faq-t" data-avslöj>Det ni <em>kanske undrar.</em></h2>
+    </div>
+    <div class="om-faq-lista" data-stig>
+      <details>
+        <summary>Vem blir vårt barns studiehjälpare?</summary>
+        <p>Någon som har börjat gymnasiet eller är äldre, har nyligen läst samma kurser och har gått igenom vår intervju och utbildning. Vi väljer personen efter ämne, nivå, behov och personlighet.</p>
+      </details>
+      <details>
+        <summary>Är en studiehjälpare en lärare?</summary>
+        <p>Nej, och vi kallar dem inte så. En studiehjälpare har nyligen läst samma kurser som eleven, men är inte utbildad lärare.</p>
+      </details>
+      <details>
+        <summary>Måste vi sitta med på passen?</summary>
+        <p>Nej. Efter varje pass skriver studiehjälparen en rapport, och ni läser den i er vy, bredvid studieplanen och de kommande passen. Så ser ni vad som händer utan att behöva sitta med.</p>
+      </details>
+      <details>
+        <summary>Var hålls passen?</summary>
+        <p>Hemma hos er, på biblioteket eller online.</p>
+      </details>
+      <details>
+        <summary>Kan vi byta studiehjälpare?</summary>
+        <p>Ja. Ni kan pausa, byta studiehjälpare eller sluta helt. Det finns ingen bindningstid.</p>
+      </details>
+      <details>
+        <summary>Vad kostar det?</summary>
+        <p>Det står på <a href="/priser">prissidan</a>.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="om-sek om-sist" aria-labelledby="sist-t">
+  <div class="om-wrap om-sist-in">
+    <h2 class="om-sist-h" id="sist-t" data-avslöj>En person. <em>Rätt person.</em></h2>
+    <p class="om-sist-text" data-stig>Skriv upp er, så hör vi av oss inom ett dygn och går igenom vad ert barn behöver. Sedan väljer vi en person, och det är samma person varje gång.</p>
+    <div class="om-cta" data-stig>
+      <a class="btn btn-primary btn-lg" href="/intresseanmalan?utm_source=om-oss&amp;utm_medium=sajt&amp;utm_campaign=okt26">Skriv upp er
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+      <a class="nx-lank" href="/faq">Fler frågor och svar
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
+    <p class="om-sist-not" data-stig>Det kostar ingenting att fråga och binder er inte till något.</p>
+  </div>
+</section>
+
+</main>
+
+
+
+<!-- ==========================================================
+     FOOTER — identisk på alla publika sidor, se kommentaren
+     vid headern.
+     ========================================================== -->
+<footer class="ftr on-band">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div class="ftr-brand">
+        <a href="/" class="logo">
+          <svg class="mark" viewBox="0 0 223.5 169.5" fill="currentColor" aria-hidden="true"><path d="M17.7 169.3c-8.2-1.1-14.8-6.7-17-14.5c-0.5-1.9-0.6-2.4-0.6-18.8c-0.1-18.3 0-21.2 1.1-24.6c0.7-2.4 2.4-5.8 3.8-8c1.4-2 8.8-9.2 19-18.6c3.2-3 9.6-9.1 24.1-23.1c11.8-11.3 13.2-12.5 18.3-14.5c8.6-3.3 19.1-3 26.8 0.9c3.5 1.7 8.5 5.9 18.7 15.5c2.3 2.2 6.2 5.8 8.6 7.9c2.4 2.1 6.2 5.5 8.4 7.5c5 4.5 6.4 5.6 9.7 7.4c1.5 0.8 2.7 1.5 2.8 1.6c0.2 0.4 0.6 0.3 0.4-0.1c0-0.2 0.1-0.7 0.3-1l0.4-0.7l1.2 0.9c2.3 1.7 13.6 7.7 23.9 12.9c7.4 3.6 9.9 4.7 13.7 6c2.6 0.8 2.9 1.7 0.6 1.7c-1 0-1 0.1-0.5 0.4c1 0.7 0.6 2.2-1.1 3.6c-0.5 0.5-4.1 3.9-7.9 7.5c-3.9 3.7-9.9 9.4-13.3 12.7c-8.1 7.7-10.6 9.4-17.1 11.5c-5.3 1.6-13.9 1.5-19.5-0.4c-6.4-2.1-8-3.2-17.4-12c-2.8-2.5-6.4-5.9-8.1-7.4c-1.7-1.5-4.6-4.2-6.5-6c-5.6-5.4-7.2-6.4-10.4-6.3c-2.1 0-3.8 0.7-5.3 2.2c-1.2 1.3-6.4 7.8-8.5 10.8c-1.8 2.4-8.4 11.2-12.8 16.8c-1.8 2.4-4.2 5.4-5.2 6.9c-9.5 12.9-11.6 15.4-13.6 16.9c-4.5 3.3-11.4 5.1-17 4.4z"/><path fill="#F88740" d="M177.1 106.5c-6.6-2.4-34-16.7-35-18.2c-0.6-0.8-0.3-1.3 2-3.4c2.7-2.5 3-3 3.6-7.3c0.5-3.1 0.5-4.8 0.5-15.2c0.1-15.5 0.1-16.2 2.6-21c1.2-2.4 1.9-3.4 3.2-4.6c1.7-1.7 12.4-11.9 15.9-15c1.1-1.1 4.8-4.7 8.3-8.1c7.2-6.9 9-8.4 11.7-10.2c6-3.8 15.3-4.6 21.3-1.8c4.7 2.3 9.3 7.2 11.1 11.8c1.1 2.9 1.3 6.3 1.1 29.3c-0.2 21.9-0.2 22.1-1.7 25.5c-1.8 3.8-3.5 6-8.6 10.8c-2.6 2.5-7.6 7.3-11.1 10.8c-13.9 13.6-16.9 16.5-18 17.1c-1.6 1.1-2.9 1-6.9-0.5z"/></svg>
+          <svg class="logo-text" viewBox="0 0 751.75 169.5" fill="currentColor" role="img" aria-label="Nextrum"><path d="M518.6 143.1c-2-0.3-6.8-1.2-9.5-1.9c-16.9-4-28.3-15.7-31.7-32.7c-1.1-5.6-1.2-9-1.1-40.7c0.2-32 0.1-30.1 1.6-30.8c0.4-0.2 4-0.2 12.1-0.2c12.6 0 12.9 0 13.5 1.4c0.2 0.5 0.3 8.5 0.3 30c0.1 31.4 0.1 31.4 1.4 34.9c2.4 6.6 6.9 11 13.5 12.9c2.1 0.7 8.6 1 11.2 0.5c6.1-1.1 11.6-4.4 14.7-9.1c1.1-1.7 1.9-3.5 2.7-6.3l0.6-2l0.1-30.2c0.1-24.6 0.2-30.4 0.5-30.9c0.7-1.2 1.1-1.3 13.1-1.2c12.1 0 12.3 0 13.1 1.4c0.2 0.5 0.3 7.3 0.2 32.9c-0.1 35.4 0 33.2-1.6 39.5c-2.3 9.4-7.6 17.3-15.4 23.2c-2.7 2.1-8.7 5.1-12.4 6.3c-3.4 1.1-9.9 2.5-13.1 2.9c-2.2 0.2-12.1 0.3-13.8 0.1zM159.8 142.5c-11.9-1.6-20.7-5-28.2-11c-4.1-3.3-9.1-8.5-11.6-12.2c-2.7-4-5.8-11.5-7.2-17.2c-2.1-8.7-1.9-20.1 0.4-29c4-14.7 13-26.2 25.8-32.7c9.3-4.8 17.6-6.6 28.2-6.3c17.8 0.4 33.9 8.9 42.8 22.4c6 9.2 8.9 19.1 9.2 31.7c0.1 5.5 0.1 5.7-0.4 6.5c-1.1 1.7 1.5 1.5-39.7 1.5c-42.1 0-38.6-0.1-38.6 1.9c0 0.6 0.2 1.9 0.5 2.8c2.8 9 10.5 15.7 20.4 17.6c2.1 0.5 8.1 0.4 10.4 0c5.4-1 11.1-4.1 14.3-7.9c2-2.2 0.9-2.1 15.9-2.1c12.9 0 13.3 0 13.8 0.5c0.8 0.8 0.6 1.8-1.2 5.2c-4.5 8.9-11.1 16.3-18.8 21c-2 1.2-7 3.5-9.6 4.4c-7.5 2.7-18.7 3.9-26.4 2.9zM366.3 141.2c-6.1-0.6-13.8-3.3-17.8-6.4c-4.7-3.6-8.4-8.8-10-14.2c-1.7-5.8-1.6-4.1-1.7-32.3c-0.2-24.1-0.2-25.6-0.6-26c-0.4-0.4-1.1-0.4-6.5-0.6c-6.7-0.1-7.2-0.2-7.7-1.7c-0.2-0.4-0.3-3.9-0.2-10.4c0.1-9 0.1-9.8 0.6-10.7c0.8-1.7 1.4-2 4.9-2.2c3.6-0.2 4.5-0.5 6-2c2-2 3-4.5 5.7-13.2c1.5-5.1 2.8-8.3 3.6-9.4c2.4-3.1 9.2-5.1 17.3-5.1c2.4 0 2.6 0.1 3.3 0.6l0.7 0.6l0.1 13.8c0.1 7.6 0.2 13.9 0.2 13.9c0.6 0.7 1.7 0.7 14.2 0.9l13.1 0.1l0.7 0.7l0.7 0.7l0 10.4c0.1 8.9 0.1 10.7-0.3 11.4c-0.7 1.7-0.6 1.7-14.9 1.6l-12.8 0l-0.4 0.5c-0.8 0.9-0.7 39.5 0 42.9c0.8 4.2 2.8 7 6 8.6c3 1.4 5.7 1.7 13.5 1.2c5-0.2 4.9-0.4 6.5 7.7c1.6 7.9 2.3 13.8 1.7 14.9c-0.7 1.3-3 2.2-8.2 3.1c-4.5 0.8-12.9 1.1-17.7 0.6zM0.9 139.5l-0.8-0.7l0.1-50.1c0-27.5 0.1-50.3 0.2-50.5c0.1-0.2 0.4-0.6 0.8-0.9c0.6-0.4 1.4-0.4 12.3-0.4c12.5 0 12.9 0 13.5 1.3c0.1 0.3 0.3 2 0.4 3.6c0.2 4.9 0.3 5 2.5 3c9.8-9 24.3-12.7 38.7-9.9c4.7 0.9 11.1 3.6 15.4 6.5c2.9 1.9 7.5 6.5 9.4 9.5c4.1 6.3 6.4 12.6 7.4 20.3c0.4 3.3 0.6 65.8 0.2 67.1c-0.6 1.9 0.1 1.8-13.2 1.9c-8.9 0.1-12.1 0-12.6-0.2c-1.6-0.7-1.5 0.7-1.4-30.4c0-26.1 0-28.4-0.4-31c-1.6-9.9-7.5-15.9-17-17.5c-5.2-0.8-12.3 0.1-16.2 2.1c-6.7 3.3-10.6 8.7-12.2 16.4c-0.5 2.5-0.5 3.1-0.6 30.7c0 26.6 0 28.1-0.5 28.8c-0.2 0.4-0.7 0.8-1.1 0.9c-0.3 0.2-5.5 0.2-12.3 0.2l-11.7 0l-0.9-0.7zM216.5 140c-0.4-0.2-0.8-0.6-1-0.9c-0.4-0.9 0.2-2.1 3.3-6.2c1.4-2 3.8-5.2 5.2-7.3c1.5-2 3.8-5.3 5.2-7.2c5.5-7.8 10.3-14.6 13-18.5c1.6-2.3 4-5.6 5.3-7.4c2.4-3.3 3.2-4.7 3.3-5.5c-0.1-0.2-1.4-2.3-3.1-4.6c-1.7-2.2-3.7-5-4.6-6.2c-0.8-1.2-3.6-5.2-6.2-8.8c-5.8-8-7.6-10.5-9.6-13.5c-0.9-1.2-3.6-4.9-6-8c-2.5-3.2-4.6-6-4.8-6.3c-0.4-0.8-0.3-1.7 0.3-2.2c0.5-0.5 1.1-0.5 15-0.5c14.2 0 14.6 0 15.4 0.5c1 0.5 1.7 1.5 6.9 9.1c4 5.9 10.9 15.6 11.9 16.6c1 1.1 1.6 0.9 2.9-0.9c4.7-6.6 7.2-10.2 8.7-12.4c2.6-3.9 6.3-9.2 7.4-10.7c1.8-2.4 0.5-2.2 16.4-2.3c11.7-0.1 14.2 0 14.9 0.3c1.6 0.6 1.4 1.6-1 4.8c-3.8 5.1-6.1 8.3-9.3 13c-2 2.9-3.9 5.6-4.3 6.1c-0.8 1.1-5.1 7.2-8.1 11.6c-1.2 1.8-2.6 3.8-3.1 4.5c-3.5 4.8-6.2 9.2-6.3 10c0.1 0.9 2 4 6.7 10.5c1 1.4 2.8 4 4 5.8c1.3 1.8 3.3 4.6 4.5 6.4c1.2 1.7 3.9 5.5 6 8.4c2.1 3 5.2 7.4 7 9.8c6.7 9.2 7.1 9.8 6.7 11c-0.4 1.2-0.6 1.2-15.4 1.2c-12.3 0.1-13.8 0-14.6-0.4c-1-0.4-2-1.7-5.8-7.3c-2.9-4.3-4.8-6.9-9.2-13.1c-1.9-2.8-4.1-5.9-4.8-7c-1.4-1.9-2.2-2.5-2.9-1.9c-0.4 0.3-4.9 6.7-8.2 11.7c-4.6 6.8-9.7 14.3-10.7 15.6c-1.9 2.6-0.1 2.3-16.2 2.4c-8.7 0-14.4-0.1-14.8-0.2zM406.2 139.5l-0.7-0.7l0-6.3c-0.1-54.7 0.1-93 0.3-93.8c0.5-1.9 0.2-1.8 12.9-1.9c7.8-0.1 11.7 0 12.4 0.2c1.5 0.4 1.6 1 1.7 6.2c-0.1 6.1-0.1 6 3.5 2.2c3.2-3.3 4.3-4.1 7.1-5.7c5.3-3.1 12.8-4.9 19-4.7c3.2 0.1 3.9 0.5 4.3 1.9c0.5 1.6 0.4 24.2-0.1 25.2c-0.6 1.5-0.9 1.6-6.6 1.7c-5.5 0.2-7.4 0.5-11 1.7c-6.4 2.1-10.4 5.5-13.1 11.1c-2.8 5.8-2.9 6.4-2.9 36.8c0 27.7 0.1 26.1-1.7 26.6c-0.6 0.2-5.3 0.2-12.6 0.2l-11.7 0l-0.8-0.7zM589.3 140c-0.3-0.1-0.7-0.5-1-0.9c-0.4-0.7-0.4-2.9-0.4-50.3c0-54.4-0.1-50.9 1.5-51.7c1.3-0.6 23.1-0.5 24.4 0.1c1.2 0.6 1.5 1.6 1.3 4.3c-0.1 2.3 0.1 3.6 0.7 3.7c0.2 0 1.3-0.8 2.5-1.8c8.6-7.9 20.4-11.1 32.3-8.8c8.1 1.6 15.5 5.5 20.7 11.3c1.2 1.3 2.2 2.1 2.5 2.1c0.3 0 1.3-0.9 2.5-2c5.6-5.6 13.2-9.6 21.3-11.3c3.3-0.6 11-0.9 14.9-0.5c9.4 1.1 19.1 5.4 25.2 11.4c7 6.8 11.3 15.1 13 25.4c0.8 4.4 0.8 5.6 0.9 37.5c0 28.4 0 29.9-0.4 30.6c-0.3 0.4-0.8 0.8-1.1 0.9c-0.8 0.3-23.4 0.3-24.2 0c-0.3-0.1-0.8-0.5-1.1-0.9c-0.4-0.7-0.4-2.2-0.4-28.7c-0.1-21.2-0.1-28.6-0.4-30.4c-0.8-6.2-2.3-9.6-6-13.3c-4.1-4.1-7.3-5.3-14.1-5.3c-4.9 0-6.5 0.3-9.8 2.1c-5.4 2.9-8.2 6.5-10 12.7l-0.7 2.4l-0.1 29.9c-0.1 24.2-0.2 30-0.5 30.5c-0.7 1.2-1.2 1.2-13.4 1.2l-11.4 0l-0.8-0.7c-0.8-0.9-0.8 1.7-0.7-24.4c0-10.4-0.1-23-0.2-27.9c-0.3-10.1-0.5-11.7-2.6-15.7c-2.7-5.4-5.7-8.1-10.6-9.5c-2.7-0.8-9.5-0.9-12.2-0.2c-7.5 2-12.7 7.8-14.8 16.2c-0.4 1.4-0.5 5.2-0.6 30.9c-0.1 22-0.2 29.4-0.4 29.9c-0.6 1.4-1 1.5-13.7 1.4c-6.3 0-11.8-0.1-12.1-0.2zM189.4 76.1c1.1-1.4-2-7.5-5.7-11.5c-2.9-3.1-6.3-5-10.8-6.3c-2.4-0.6-2.8-0.7-7.3-0.7c-4.3 0-4.9 0.1-7.2 0.7c-7.5 2.1-13.9 7.5-16.4 14c-0.9 2.4-1.1 3.2-0.8 3.7c0.4 0.5 6 0.6 29.5 0.6c18.1 0 18.3 0 18.7-0.5z"/></svg>
+        </a>
+        <p>Av unga, för unga.</p>
+        <div class="socials">
+          <a href="https://www.instagram.com/nextrum.se" aria-label="Nextrum på Instagram" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1012 18.6 6.6 6.6 0 0012 5.4zm0 10.9a4.3 4.3 0 110-8.6 4.3 4.3 0 010 8.6zm8.4-11.2a1.55 1.55 0 11-3.1 0 1.55 1.55 0 013.1 0z"/></svg></a>
+          <a href="https://www.tiktok.com/@nextrum.ab" aria-label="Nextrum på TikTok" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.1v13.2a2.6 2.6 0 11-2.2-2.6v-3.2a5.8 5.8 0 105.3 5.8V9.1a6.9 6.9 0 004 1.3V7.2a3.9 3.9 0 01-4-4z"/></svg></a>
+          <a href="https://www.facebook.com/share/1DuLomKfy8/" aria-label="Nextrum på Facebook" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z"/></svg></a>
+          <a href="https://www.linkedin.com/company/nextrum-se/" aria-label="Nextrum på LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9.5 9h3.8v1.7h.05c.53-.95 1.83-1.95 3.75-1.95 4 0 4.75 2.5 4.75 5.8V21h-4v-5.6c0-1.35-.03-3.1-1.9-3.1-1.9 0-2.2 1.47-2.2 3v5.7h-4z"/></svg></a>
+        </div>
+      </div>
+
+      <nav aria-labelledby="ftr-nextrum">
+        <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
+        <ul>
+          <li><a href="/var-ide">Vår idé</a></li>
+          <li><a href="/om-oss">Om oss</a></li>
+          <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
+          <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
+          <li><a href="/priser">Priser</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-fordig">
+        <h2 class="ftr-rubrik" id="ftr-fordig">För dig</h2>
+        <ul>
+          <li><a href="/for-elever-och-foraldrar">För elever &amp; föräldrar</a></li>
+          <li><a href="/bli-studiehjalpare">Bli studiehjälpare</a></li>
+          <li><a href="/intresseanmalan">Intresseanmälan</a></li>
+          <li><a href="/foralder" data-vagval>Logga in</a></li>
+        </ul>
+      </nav>
+      <nav aria-labelledby="ftr-hjalp">
+        <h2 class="ftr-rubrik" id="ftr-hjalp">Hjälp</h2>
+        <ul>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/faq#kontakt">Kontakt</a></li>
+          <li><a href="/integritetspolicy">Integritetspolicy</a></li>
+          <li><a href="/anvandarvillkor">Användarvillkor</a></li>
+          <li><a href="/lagring">Cookies och lagring</a></li>
+          <li><a href="/lagring#ditt-val" data-samtycke-oppna>Cookieinställningar</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <nav class="ftr-lax" aria-labelledby="ftr-laxhjalp">
+      <div class="ftr-lax-in">
+        <h2 class="ftr-lax-h" id="ftr-laxhjalp">Läxhjälp</h2>
+        <p>Hitta sidan som passar ämnet, årskursen eller området.</p>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Ämne</h3>
+        <ul>
+          <li><a href="/laxhjalp-matematik">Matematik</a></li>
+          <li><a href="/laxhjalp-svenska">Svenska</a></li>
+          <li><a href="/laxhjalp-engelska">Engelska</a></li>
+          <li><a href="/laxhjalp-no">NO</a></li>
+          <li><a href="/laxhjalp-so">SO</a></li>
+          <li><a href="/laxhjalp-moderna-sprak">Moderna språk</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Årskurs</h3>
+        <ul>
+          <li><a href="/laxhjalp-lagstadiet">Lågstadiet</a></li>
+          <li><a href="/laxhjalp-mellanstadiet">Mellanstadiet</a></li>
+          <li><a href="/laxhjalp-hogstadiet">Högstadiet</a></li>
+          <li><a href="/laxhjalp-gymnasiet">Gymnasiet</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Område</h3>
+        <ul>
+          <li><a href="/laxhjalp-stockholm">Stockholm</a></li>
+          <li><a href="/laxhjalp-sodermalm">Södermalm</a></li>
+          <li><a href="/laxhjalp-hammarby-sjostad">Hammarby Sjöstad</a></li>
+          <li><a href="/laxhjalp-farsta">Farsta</a></li>
+          <li><a href="/laxhjalp-bromma">Bromma</a></li>
+          <li><a href="/laxhjalp-solna">Solna</a></li>
+          <li><a href="/laxhjalp-nacka">Nacka</a></li>
+          <li><a href="/laxhjalp-online">Online</a></li>
+          <li><a href="/en/tutoring-stockholm" lang="en" hreflang="en">In English</a></li>
+        </ul>
+      </div>
+      <div class="ftr-lax-g">
+        <h3 class="ftr-rubrik">Guider</h3>
+        <ul>
+          <li><a href="/vad-kostar-laxhjalp">Vad kostar läxhjälp?</a></li>
+          <li><a href="/laxhjalp-eller-privatlarare">Läxhjälp eller privatlärare?</a></li>
+          <li><a href="/nationella-prov-ak-6">Nationella prov i årskurs&nbsp;6</a></li>
+          <li><a href="/nationella-prov-ak-9">Nationella prov i årskurs&nbsp;9</a></li>
+          <li><a href="/plugga-infor-prov">Plugga inför prov</a></li>
+          <li><a href="/infor-terminsbetyget">Inför terminsbetyget</a></li>
+          <li><a href="/barnet-vill-inte-gora-laxorna">Barnet vill inte göra läxorna</a></li>
+          <li><a href="/hjalpa-barn-med-matte">Hjälpa barn med matte</a></li>
+          <li><a href="/hjalpa-barn-med-lasforstaelse">Hjälpa barn med läsförståelse</a></li>
+          <li><a href="/laxhjalp-efter-sommarlovet">Läxhjälp efter sommarlovet</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="ftr-bot">
+      <span>© <span id="year">2026</span> Nextrum.</span>
+      <span>Byggd i Sverige.</span>
+      <!-- Företagsuppgifterna står inte i footern än: Nextrum AB är under
+           bildande (villkoren och policyn), och adressen finns inte på
+           sajten. När organisationsnumret finns ska det stå på alla sidor. -->
+    </div>
+  </div>
+
+  <!-- sista intrycket: bara ordet, mycket stort, mycket tyst -->
+  <div class="nx-ftr-ord" aria-hidden="true"><span>Nextrum</span></div>
+</footer>
+
+<!-- ==========================================================
+     VYVÄLJARE — dörren in till inloggningen.
+     Inloggningen ligger i foralder.html och larare.html och är
+     densamma på båda (2026-10-07): kontot avgör vyn.
+     ========================================================== -->
+<div class="nx-vagval" id="nx-vagval" role="dialog" aria-modal="true" aria-labelledby="vagval-t" hidden>
+  <button class="nx-vagval-stang" data-vagval-stang aria-label="Stäng"><svg viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+  <div class="nx-vagval-box">
+    <span class="nx-et">Logga in</span>
+    <h2 id="vagval-t" style="margin-top:18px">Välkommen tillbaka.</h2>
+    <p class="nx-lede-s">Du hamnar i din egen vy, vilket du än väljer.</p>
+
+    <div class="nx-vagval-val">
+      <a href="/foralder">
+        <span>
+          <b>Familj och elev</b>
+          <span>Föräldrar med sin e-post, elever med sitt användarnamn.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="/larare">
+        <span>
+          <b>Studiehjälpare</b>
+          <span>Dina elever, ditt schema, meddelanden och rapporter.</span>
+        </span>
+        <svg viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+
+    <p class="nx-vagval-fot">
+      Har ni inte skickat intresseanmälan än? <a href="/intresseanmalan">Gör det här</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Biblioteket ligger hos oss, med fast version.
+
+     Låg förr på unpkg.com som @2 — alltså "vad unpkg råkar mena med
+     tvåan just nu". Under en timmes arbete flyttade den sig från
+     2.115.0 till 2.116.0 av sig själv. Den raden körde på varje sida,
+     också de inloggade, där någon skriver sitt lösenord och ett barns
+     namn och anteckningar visas. En tredjepart med fri versionsrätt
+     på just de sidorna är inte en risk värd att bära för att slippa
+     en fil i repot.
+
+     Uppgradering är nu ett beslut: byt filen, byt raden, testa. -->
+<script src="bibliotek/supabase-js-2.116.0.js"></script>
+<script src="nextrum-config.js?v=085fa9d6"></script>
+<script src="nextrum-images.js?v=d1aa8fea"></script>
+<script src="nextrum-fel.js?v=eae02b10"></script>
+<script src="nextrum-app.js?v=0d5b5afa"></script>
+<script src="nextrum-samtycke.js?v=92474eaf"></script>
+<script src="nextrum-motion.js?v=b1a2a211"></script>
+<script src="nextrum-start.js?v=c809c1c0"></script>
+<!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och
+     bli-studiehjalpare; se verktyg/bygg-maskotsvar.py.
+     Inga nätverksanrop. -->
+<script src="nextrum-maskot-svar.js?v=7e04adf1"></script>
+<script src="nextrum-maskot.js?v=de45b497" defer></script>
+<script>
+(function () {
+  'use strict';
+  NX.initHeader();
+  NX.initReveal();
+  NXFin.allt();
+  NX.bildIntoning();
+  NX.initVagval();
+  NX.initFaq();
+  NX.initPris();
+  NX.märkInloggad();
+})();
+</script>
+</body>
+</html>

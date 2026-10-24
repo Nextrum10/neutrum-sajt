@@ -148,6 +148,9 @@
   ]
 }
 </script>
+<!-- Exemplen efter Hur hjälper vi (2026-10-22): rapporten, studieplanen
+     och vyn. Sist, efter startsidans egna stilar. -->
+<link rel="stylesheet" href="nextrum-exempel.css?v=772a7cbc">
 </head>
 <body>
 
@@ -378,6 +381,171 @@
       <p class="hj-gar-villkor">Villkor gäller. <a class="nx-lank" href="/anvandarvillkor#betygsgaranti">Läs villkoren för garantin
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     1d — SÅ SER NI ATT DET FUNKAR (2026-10-22, Leo)
+     Vi har inga kunder än och därmed inget att bevisa med siffror. I
+     stället visar sektionen exakt vad en familj ser: rapporten efter ett
+     pass, studieplanen och vyn som förälder. Fälten och etiketterna är
+     vyernas egna: rapporten som NXStudie.rapportKort ritar den (läget ur
+     GICK, Öva mer på och Nästa gång, "Rapport från er studiehjälpare"
+     när namnet saknas), studieplanen som foralder.html visar den (ämne,
+     mål och planen, som studiehjälparen skriver i larare.html), och
+     Översikt med Att göra, Kommande pass och Så går det, ritad som
+     ritaFordelningar() ritar den för en elev med ett pass. Inget annat:
+     inga siffror om oss, inga priser och inga omdömen.
+
+     Eleven är påhittad och har inget namn, ingen skola och ingen
+     årskurs, och varje flik säger det på en tejp. Ekvationerna är
+     uträknade, och test/innehall-regler.py räknar om dem.
+
+     Statisk markup och inga anrop. Utan skript står de tre delarna under
+     varandra, var och en med sin rubrik; nextrum-exempel.js gör dem till
+     flikar efter WAI-ARIA:s mönster (piltangenterna, Home och End).
+     Formen: nextrum-exempel.css. Samma markup i en/index.html.
+     ========================================================== -->
+<section class="nx-sek nx-ex" id="exempel" aria-labelledby="ex-t" data-exempel>
+  <div class="nx-wrap-bred">
+    <div class="nx-head split" data-stig>
+      <div>
+        <span class="nx-et acc">Exempel</span>
+        <h2 class="nx-d2" id="ex-t">Så ser ni att <em>det funkar.</em></h2>
+      </div>
+      <div class="nx-head-aside">
+        <p class="nx-lede">Vi är nya, så vi har inga siffror att visa. I stället visar vi exakt vad ni får se, med en påhittad elev: rapporten efter varje pass, studieplanen och er vy.</p>
+      </div>
+    </div>
+
+    <div class="ex-flikar" data-ex-flikar hidden>
+      <button type="button" class="ex-flik" data-ex-flik="rapport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7.5L19 8v12.5H7z"/><path d="M14.5 3.5V8H19M10 12.5h6M10 16h4"/></svg>Lektionsrapport</button>
+      <button type="button" class="ex-flik" data-ex-flik="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h15M4.5 12h15M4.5 17.5h9"/><circle cx="18.5" cy="17.5" r="1.6"/></svg>Studieplan</button>
+      <button type="button" class="ex-flik" data-ex-flik="vy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Er vy som förälder</button>
+    </div>
+
+    <div class="ex-paneler">
+      <div class="ex-panel" id="ex-rapport" data-ex-panel="rapport">
+        <h3 class="ex-panel-rubrik">Lektionsrapport</h3>
+        <p class="ex-panel-intro"><b>Efter varje pass.</b> Ni behöver aldrig fråga hur det gick: studiehjälparen skriver det, och ni läser det i er vy.</p>
+        <div class="ex-scen">
+          <article class="ex-kort" aria-label="Exempel på en lektionsrapport">
+            <span class="nx-tejp ex-tejp"><span class="nx-tejp-stor">Exempel,</span><span class="nx-tejp-liten">påhittad elev</span></span>
+            <div class="ex-huvud">
+              <span class="ex-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></span>
+              <div class="ex-vem">
+                <p class="ex-titel">Matematik</p>
+                <p class="ex-meta"><span>Rapport från er studiehjälpare</span><span>Torsdag</span><span>16.00 till 17.00</span><span>Online</span></p>
+              </div>
+              <span class="ex-gick" data-ex-nr="1">Bra</span>
+            </div>
+            <p class="ex-text" data-ex-nr="2">Vi jobbade med ekvationer där x står på båda sidor. I början flyttade hen över tal utan att byta tecken, så vi gick igenom varför man gör samma sak på båda sidor. Efter det löste hen <span class="ex-ekv">3x + 5 = 2x + 11</span> helt själv, fick <span class="ex-ekv">x = 6</span> och kontrollerade svaret: <span class="ex-ekv">3 · 6 + 5 = 23</span> och <span class="ex-ekv">2 · 6 + 11 = 23</span>.</p>
+            <div class="ex-duo">
+              <div data-ex-nr="3"><small>Öva mer på</small><b>Ekvationer med parenteser</b></div>
+              <div data-ex-nr="4"><small>Nästa gång</small><b>Textuppgifter där hen själv ställer upp ekvationen</b></div>
+            </div>
+          </article>
+          <ol class="ex-forklaring">
+            <li><b>Hur det gick:</b> mycket bra, bra eller behöver följas upp.</li>
+            <li><b>Vad de gjorde,</b> med studiehjälparens egna ord.</li>
+            <li><b>Öva mer på:</b> det som inte sitter än.</li>
+            <li><b>Nästa gång:</b> vad nästa pass börjar med.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="ex-panel" id="ex-plan" data-ex-panel="plan">
+        <h3 class="ex-panel-rubrik">Studieplan</h3>
+        <p class="ex-panel-intro"><b>Vart ni är på väg.</b> Studiehjälparen skriver planen utifrån vad ert barn behöver och uppdaterar den när det behövs.</p>
+        <div class="ex-scen">
+          <article class="ex-kort" aria-label="Exempel på en studieplan">
+            <span class="nx-tejp ex-tejp"><span class="nx-tejp-stor">Exempel,</span><span class="nx-tejp-liten">påhittad elev</span></span>
+            <div class="ex-plan-topp">
+              <p class="ex-titel">Studieplan</p>
+              <span class="ex-uppd">uppdaterad 20 oktober</span>
+            </div>
+            <span class="ex-tag" data-ex-nr="1">Matematik</span>
+            <p class="ex-mal" data-ex-nr="2"><b>Mål:</b> Lösa ekvationer i flera steg och kunna förklara hur.</p>
+            <ol class="ex-veckor" data-ex-nr="3">
+              <li><b>Vecka 1:</b> Vad en ekvation är, och att göra samma sak på båda sidor.</li>
+              <li><b>Vecka 2:</b> Ekvationer med x på båda sidor, som <span class="ex-ekv">3x + 5 = 2x + 11</span>.</li>
+              <li><b>Vecka 3:</b> Ekvationer med parenteser, som <span class="ex-ekv">2(x + 3) = 14</span>.</li>
+              <li><b>Vecka 4:</b> Textuppgifter: att ställa upp ekvationen själv.</li>
+              <li><b>Vecka 5:</b> Repetition och ett övningsprov.</li>
+            </ol>
+          </article>
+          <ol class="ex-forklaring">
+            <li><b>Ämnet</b> planen gäller.</li>
+            <li><b>Målet,</b> med studiehjälparens ord.</li>
+            <li><b>Planen,</b> vecka för vecka. Studiehjälparen skriver den och uppdaterar den när det behövs.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="ex-panel" id="ex-vy" data-ex-panel="vy">
+        <h3 class="ex-panel-rubrik">Er vy som förälder</h3>
+        <p class="ex-panel-intro"><b>Allt på ett ställe.</b> Det som väntar på er, det som är bokat och hur det går.</p>
+        <div class="ex-scen">
+          <div class="ex-kort ex-vy" role="group" aria-label="Exempel på er vy som förälder">
+            <span class="nx-tejp ex-tejp"><span class="nx-tejp-stor">Exempel,</span><span class="nx-tejp-liten">påhittad elev</span></span>
+            <ul class="ex-meny" aria-label="Delarna i vyn">
+              <li class="ar-vald">Översikt</li><li>Boka pass</li><li>Mina lektioner</li><li>NexLäx</li><li>Meddelanden</li><li>Erbjudanden</li><li>Betalning</li><li>Profil &amp; inställningar</li>
+            </ul>
+            <div class="ex-vy-kropp">
+              <div class="ex-vy-topp">
+                <p class="ex-titel">Översikt</p>
+                <p class="ex-vy-under">Det som väntar på er, och hur det går.</p>
+              </div>
+              <div class="ex-grupp" data-ex-nr="1">
+                <p class="ex-grupp-rubrik">Att göra</p>
+                <div class="ex-rad ar-ockra">
+                  <span class="ex-rad-mitt"><b>Matematik</b><span>Tisdag, 16.00 till 17.00, online</span><span class="ex-rad-not">Föreslaget av er studiehjälpare</span></span>
+                  <span class="ex-knappar" aria-hidden="true"><span class="ex-knapp ar-fylld">Passar bra</span><span class="ex-knapp">Avböj</span></span>
+                </div>
+              </div>
+              <div class="ex-grupp" data-ex-nr="2">
+                <p class="ex-grupp-rubrik">Kommande pass</p>
+                <div class="ex-rad ar-mossa">
+                  <span class="ex-rad-mitt"><b>Matematik</b><span>Torsdag, 16.00 till 17.00, online</span></span>
+                  <span class="ex-lage">Bekräftad</span>
+                </div>
+              </div>
+              <div class="ex-grupp">
+                <p class="ex-grupp-rubrik">Så går det</p>
+                <div class="ex-sa">
+                  <p class="ex-delrub" data-ex-nr="3">Hur passen gick<em>1 av 1 rapporter</em></p>
+                  <div class="ex-fd">
+                    <span class="ex-stapel" aria-hidden="true"><i class="ar-mitten"></i></span>
+                    <span class="ex-fd-lista"><span class="ar-tom"><i class="ar-bra"></i>Mycket bra<b>0</b></span><span><i class="ar-mitten"></i>Bra<b>1</b></span><span class="ar-tom"><i class="ar-folj"></i>Behöver följas upp<b>0</b></span></span>
+                  </div>
+                  <p class="ex-delrub" data-ex-nr="4">Kunskapsområdena<em>2 st</em></p>
+                  <div class="ex-fd">
+                    <span class="ex-stapel" aria-hidden="true"><i class="ar-bra"></i><i class="ar-mitten"></i></span>
+                    <span class="ex-fd-lista"><span><i class="ar-bra"></i>Säker eller bättre<b>1</b></span><span><i class="ar-mitten"></i>På god väg<b>1</b></span><span class="ar-tom"><i class="ar-folj"></i>Behöver träna<b>0</b></span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ol class="ex-forklaring">
+            <li><b>Att göra:</b> en ny tid att svara på, med Passar bra och Avböj.</li>
+            <li><b>Kommande pass,</b> med dag, tid och plats.</li>
+            <li><b>Hur passen gick,</b> ur rapporterna efter passen.</li>
+            <li><b>Kunskapsområdena:</b> studiehjälparens bedömning av varje område.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-fot" data-stig>
+      <p class="ex-fot-text">Det här ser ni som förälder efter varje lektion.</p>
+      <span class="nx-magnet">
+        <a class="btn btn-primary btn-lg" href="/intresseanmalan?utm_source=startsida&amp;utm_medium=sajt&amp;utm_campaign=okt26&amp;utm_content=exempel">Skriv upp er
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </span>
+      <p class="ex-fot-not">Det kostar ingenting att fråga och binder er inte till något. Vi hör av oss inom ett dygn.</p>
     </div>
   </div>
 </section>
@@ -1462,6 +1630,7 @@
         <h2 class="ftr-rubrik" id="ftr-nextrum">Nextrum</h2>
         <ul>
           <li><a href="/var-ide">Vår idé</a></li>
+          <li><a href="/om-oss">Om oss</a></li>
           <li><a href="/sa-fungerar-nextrum">Så fungerar Nextrum</a></li>
           <li><a href="/#studiehjalpare">Studiehjälpare</a></li>
           <li><a href="/priser">Priser</a></li>
@@ -1617,6 +1786,8 @@
      Inga nätverksanrop. -->
 <script src="nextrum-maskot-svar.js?v=7e04adf1"></script>
 <script src="nextrum-maskot.js?v=de45b497" defer></script>
+<!-- Flikarna i exemplen (2026-10-22). Utan den står de under varandra. -->
+<script src="nextrum-exempel.js?v=073d4d16" defer></script>
 <script>
 (function () {
   'use strict';
