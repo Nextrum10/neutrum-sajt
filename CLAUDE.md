@@ -1104,11 +1104,15 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Fyll timbanken säljs inte** (2026-10-22, grenen `klippkort-bort`) är byggd, inte mergad eller i drift: prissidan
-  på båda språken, studievyn, adminvyns texter, agentens fakta och `stripe-checkout`. Ingen migration: katalogen, köpen
-  och strömbrytarens beskrivning i `flaggor` (som fortfarande säger Fyll timbanken) rörs inte. Kvar: merge, sedan
-  `stripe-checkout` och `drift` från merge-commiten, och i Stripe ingenting (kassan skapar inga produkter, raderna går
-  med `price_data`). Villkoren (`#erbjudanden`, `#timbank`, köpvillkoren och Att sluta) säger fortfarande att timbanken
+- **Fyll timbanken säljs inte** (2026-10-22, `klippkort-bort`) är i drift sedan kvällen 2026-10-24 (Leo: "push, merge
+  commit och migrera"): PR #331 mergades (9e72f81), och Vercel lade ut prissidan på båda språken, studievyn och adminvyns
+  texter (kontrollerat från databasen mot nextrum.se). Sedan `drift` v26 och `stripe-checkout` v25 från merge-commiten,
+  genom MCP från hjälpagenter, hämtade tillbaka och jämförda fil för fil: `drift` byte för byte lika i alla fem filer,
+  `stripe-checkout` i åtta av nio, och i dess `index.ts` saknas en tom rad mellan två satser (rad 361), samma kod, som
+  blir lika nästa gång kassan driftsätts. Röktest från databasen: 401 "Inloggningen gick inte att verifiera" ur båda
+  funktionernas egen kod. Ingen migration: katalogen, köpen (det fanns inga köp av timmar) och strömbrytarens beskrivning
+  i `flaggor` (som fortfarande säger Fyll timbanken) rörs inte, och i Stripe ingenting (kassan skapar inga produkter,
+  raderna går med `price_data`). Villkoren (`#erbjudanden`, `#timbank`, köpvillkoren och Att sluta) säger fortfarande att timbanken
   fylls med Fyll timbanken: de gäller för de köpta korten, och en ny text är en ny version som alla får frågan om.
 - **Sen avbokning** (2026-10-22, `sen_avbokning`, 20261022100000) är i drift sedan kvällen 2026-10-22 (Leo: "merg och
   driftsätt"): PR #329 mergades (c0d787a), och Vercel lade ut villkoren 2026-10-23 med `#avbokning` och
@@ -1125,8 +1129,10 @@ Detaljer: `minne/grunden.md`.
   bokade mer än 14 dagar före; ingen har prövat undantaget för fritidsverksamhet i 2 kap. 11 §), syskontilläggets
   villkor eller rad 5 i `DATASKYDD.md`. Edge-funktionen `utbildningsprov` tar Leo bort i Supabases panel (verktygen kan
   inte ta bort en funktion).
-- **Om oss och Så ser ni att det funkar** (2026-10-22, grenen `om-oss-sida`) är byggda, inte mergade eller i drift:
-  `/om-oss` (bara på svenska; footern länkar dit på varje sida, engelskan med "About us (in Swedish)") och startsidans
+- **Om oss och Så ser ni att det funkar** (2026-10-22, `om-oss-sida`) är i drift sedan kvällen 2026-10-24: PR #332
+  mergades (deb70ce) efter #331, med main intagen och två versionsstämplar i `om-oss.html` omstämplade, och Vercel lade
+  ut sidorna (kontrollerat från databasen mot nextrum.se: `/om-oss` utan platshållare, `#exempel` och footerns länk på
+  båda språken). `/om-oss` (bara på svenska; footern länkar dit på varje sida, engelskan med "About us (in Swedish)") och startsidans
   `#exempel` på båda språken. Ingen migration och ingen edge-funktion. Kvar för Leo: hans två till tre meningar om varför
   Nextrum startades (rutan `.om-egna` under Idén, som en kommentar i sidan tills han skrivit dem; platshållaren togs bort
   före merge 2026-10-24) och organisationsnummer och postadress, som inga sidor har än. Sidan säger att en ny studiehjälpare inte ser några elever förrän provet är godkänt: det

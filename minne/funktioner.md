@@ -248,6 +248,21 @@ byte lika main, md5 per fil. Röktest från databasen: 401 "Inloggningen
 gick inte att verifiera" för `drift` och `stripe-checkout`, och 401 "Fel
 eller saknad hemlighet" för `notis-ko`; ingen grind svarade.
 
+**Fyll timbanken säljs inte 2026-10-24 kväll**, från merge-commiten 9e72f81
+(PR #331): `drift` v26 och `stripe-checkout` v25 (SESSIONSFORM oförändrad)
+från två hjälpagenter, en funktion var, och hämtade tillbaka och jämförda
+fil för fil med `git archive` av merge-commiten (md5 och byte). `drift` är
+byte för byte lika i alla fem filer. `stripe-checkout` är lika i åtta av
+nio; i `index.ts` saknas en tom rad mellan två satser (rad 361, efter
+`sparaSessionen`), samma kod, och den blir lika nästa gång kassan
+driftsätts, som webhookens tomma rad 2026-10-14. Båda hjälpagenterna
+skickade tecknen utanför ASCII (å, ä, ö, tankstreck, pilar) som JSON-escapes,
+bakstreck, u och fyra hexsiffror, i stället för råa: JSON-tolkningen gjorde
+dem till tecken, och verktygets andra avkodning hade inget kvar att ändra,
+så alla kom fram rätt. Filerna hade inga sådana escapes i källan. Röktest
+från databasen med den publika nyckeln: 401 "Inloggningen gick inte att
+verifiera" ur båda funktionernas egen kod, och ingen grind svarade.
+
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
 Båda hade ingen anropare kvar: Runda 2 bytte webhookarna som ringde

@@ -953,7 +953,9 @@ blir passet en vanlig avbokning: timmarna kommer tillbaka och `betalning_status`
 att betala; adminvyn visar passet som "Sen avbokning, ur timmarna" under Alla betalningar.
 
 
-## Fyll timbanken säljs inte (2026-10-22, grenen `klippkort-bort`, inte i drift)
+## Fyll timbanken säljs inte (2026-10-22, i drift sedan 2026-10-24)
+PR #331 mergades 2026-10-24 (9e72f81), och `drift` v26 och `stripe-checkout` v25 gick ut från merge-commiten samma
+kväll (kärnans avsnitt 11, `minne/funktioner.md`). Det fanns inga köp av timmar i driften, så inget köpt kort berördes.
 Leo: "Det ska bara finnas tre köpbara planer: 4, 8 och 12 timmar", "Redan köpta klippkort ligger kvar och gäller",
 "Servern ska avvisa nya klippkortsköp", och en ruta "Behöver ni ett eget upplägg? Kontakta oss." på prissidan och i
 kassan. Inget får droppas, och ingen migration får ändra eller radera befintlig data.

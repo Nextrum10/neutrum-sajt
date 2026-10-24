@@ -1913,7 +1913,7 @@ En granskare som inte skrivit koden läste vyerna med fokus på tidszonen; en an
   egen fråga i kärnan och läggs på `S.bokningar`.
 - Provat: `verktyg/prova-sen-avbokning.js` (port 8986).
 
-## Om oss och Så ser ni att det funkar (2026-10-22, grenen `om-oss-sida`)
+## Om oss och Så ser ni att det funkar (2026-10-22, i drift sedan 2026-10-24, PR #332)
 Leo ville ha en Om oss-sida och en sektion direkt efter Hur hjälper vi ert barn som visar att det funkar, utan något vi
 inte kan belägga: vi är nya och har inga siffror, omdömen eller resultat.
 - **Om oss** (`/om-oss`) är en berättelse i ordning (samma dag, Leo: "gör storytelling bättre"): hero med "Läxhjälp
