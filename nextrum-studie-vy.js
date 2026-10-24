@@ -2474,7 +2474,12 @@
     S.forstaTimmen = forsta.error ? null : (forsta.data || null);
     S.familjerabatt = rabatt.error ? 0 : Math.max(Number(rabatt.data) || 0, 0);
     S.erb.aktiv = !!(flagga.data && flagga.data.aktiv);
-    S.erb.katalog = katalog.data || [];
+    /* Bara planerna säljs (2026-10-22, Leo: tre planer, 4, 8 och 12
+       timmar). Fyll timbanken (klippkort i katalogen) står kvar i
+       erbjudanden_pris, för köpta kort pekar på katalogen, men visas inte
+       och kan inte köpas: stripe-checkout nekar ett nytt köp. Köpta timmar
+       läses ur klippkort_saldo och betalar passen som förut. */
+    S.erb.katalog = (katalog.data || []).filter(e => e.sort === 'plan');
     /* Gratistimmar som admin tagit tillbaka (aterkallad_at, timmarna_delas
        2026-10-14) står kvar i databasen men inte hos familjen, som när de
        raderades. */
@@ -3517,8 +3522,7 @@
   /* Koden på en plan (2026-10-13, och bara planerna sedan 2026-10-21,
      Leo: "Båda gäller ENBART planköp, aldrig enskilda pass"). Den prövas
      mot den första planen; gäller den prövas resten, så att varje plan
-     kan visa sitt pris. Fyll timbanken och timmarna till planen tar
-     ingen kod. En kod som inte finns räknas mot taket bara en gång. Tom
+     kan visa sitt pris. Timmarna till planen tar ingen kod. En kod som inte finns räknas mot taket bara en gång. Tom
      ruta tar bort koden. */
   async function provaErbKod() {
     const fält = $('#erb-kod'), svarEl = $('#erb-kod-svar'), knapp = $('#erb-kod-anvand');
@@ -3548,7 +3552,7 @@
     });
   }
 
-  /* Köpknappen, lika på planerna och klippkorten. Före matchningen
+  /* Köpknappen på planerna. Före matchningen
      (2026-10-07) köps inga timmar: ingen vet än vem som ska hålla dem,
      och raden ovanför korten säger det. Knappen är orange (2026-10-12,
      Leo: "Köp knappen ska vara orange"), som Betala i förväg: båda är ett
@@ -3563,90 +3567,13 @@
       + '<button type="button" class="btn btn-orange btn-sm" data-kop="' + esc(e.kod) + '">Köp</button>';
   };
 
-  /* Klippkorten som EN kolumn bredvid planerna, som fälls ut
-     (2026-09-27, som på prissidan). Fem kort i en egen ruta var en
-     vägg under planerna.
-
-     Rubriken sammanfattar korten som finns: timpriset och spannet i
-     timmar. Rabatten och timpriset står bara där om de är desamma på
-     alla kort — ett tal som stämmer för ett av dem är ett pris som inte
-     är det kassan drar — och annars "från" det billigaste kortet. Leo
-     2026-10-08: "inte från utan för", så timpriset står först när det
-     finns ett. <details>, så att kolumnen går
-     att öppna med tangentbordet utan en rad skript.
-
-     Sedan 2026-10-12 heter kolumnen Fyll timbanken (Leo), och korten
-     kostar timpriset: överstrykningen och "ni sparar" står bara på ett
-     kort som är billigare än timpriset, för "ni sparar 0 kr" är inget
-     erbjudande. */
-  function klippKolumn(kort, öppen) {
-    if (!kort.length) return '';
-    const kr = NXBetalning.kronor;
-    const lika = f => new Set(kort.map(e => String(e[f]))).size === 1;
-    const tim = kort.map(e => Number(e.timmar));
-    /* Med familjens rabatt (medRabatt): samma timpris på alla kort när
-       katalogens är detsamma, för rabatten är densamma per timme. */
-    const billigast = kort.reduce((a, e) => medRabatt(e).pris < medRabatt(a).pris ? e : a);
-    const fr0 = medRabatt(kort[0]);
-    const spann = Math.min(...tim) === Math.max(...tim)
-      ? Math.min(...tim) + ' timmar'
-      : Math.min(...tim) + ' till ' + Math.max(...tim) + ' timmar';
-    const rader = kort.map(e => {
-      const spar = Number(e.ordinarie_ore) - Number(e.pris_ore);
-      const billigare = Number(e.rabatterat_timpris_ore) < Number(e.timpris_ore);
-      const fr = medRabatt(e);
-      const mån = Number(e.giltig_manader) === 1 ? '1 månad' : e.giltig_manader + ' månader';
-      /* Med familjens rabatt står katalogens summa överstruken och
-         timpriset efter rabatten, i stället för "ni sparar". En rabattkod
-         gäller inte här (koder_for_planer, 2026-10-21): bara planerna. */
-      return '<div class="erb-klipp-rad">'
-        + '<div class="erb-topp"><b class="erb-namn">' + esc(e.timmar + ' timmar') + '</b>'
-        + (fr.av
-          ? '<span class="erb-summa"><s>' + esc(kr(e.pris_ore)) + '</s> <b>' + esc(kr(fr.pris)) + '</b></span>'
-          : '<b class="erb-summa">' + esc(kr(e.pris_ore)) + '</b>')
-        + '</div>'
-        + '<span class="erb-tim">' + (billigare || fr.av ? '<s>' + esc(kr(e.timpris_ore)) + '</s> ' : '')
-            + esc(kr(fr.perTimme)) + ' per timme'
-            + (fr.av ? ' · ' + esc(medErRabatt)
-              : billigare && spar > 0 ? ' · <span class="erb-spar">ni sparar ' + esc(kr(spar)) + '</span>' : '') + '</span>'
-        + '<div class="erb-klipp-fot"><span class="erb-vad">Gäller i ' + esc(mån) + '</span>' + köpKnapp(e) + '</div>'
-        + '</div>';
-    }).join('');
-    return '<details class="erb-kort erb-klippkol"' + (öppen ? ' open' : '') + '>'
-      + '<summary>'
-      + '<span class="erb-topp"><b class="erb-namn">Fyll timbanken</b>'
-      + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
-        && fr0.perTimme < Number(kort[0].timpris_ore)
-        ? '<span class="erb-rabatt"><s><span class="nx-dold">Ordinarie pris </span>' + esc(kr(kort[0].timpris_ore))
-          + '</s> ' + esc(kr(fr0.perTimme)) + '</span>'
-        : '')
-      + '</span>'
-      + '<span class="erb-vad">' + esc(spann) + ' i er timbank, när det passar er</span>'
-      + (lika('rabatterat_timpris_ore') && lika('timpris_ore')
-        ? '<span class="erb-pris">'
-          + (fr0.perTimme < Number(kort[0].timpris_ore) ? '<s>' + esc(kr(kort[0].timpris_ore)) + '</s>' : '')
-          + '<b>' + esc(kr(fr0.perTimme)) + '</b></span><span class="erb-tim">per timme'
-          + (fr0.av ? ', ' + esc(medErRabatt) : '') + '</span>'
-        : '<span class="erb-pris"><span class="erb-fran">från</span><b>' + esc(kr(medRabatt(billigast).pris)) + '</b>'
-          + (medRabatt(billigast).av ? '<span class="erb-pris-kod">' + esc(medErRabatt) + '</span>' : '') + '</span>')
-      + '<span class="erb-visa"><span class="erb-visa-stangd">Se alternativen</span>'
-      + '<span class="erb-visa-oppen">Dölj alternativen</span>'
-      + '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"'
-      + ' stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></span>'
-      + '</summary>'
-      + '<div class="erb-klipp">' + rader + '</div>'
-      + '</details>';
-  }
-
   function ritaErbjudanden() {
     const planer = $('#erb-planer');
     if (!planer) return;
-    /* Omritningen (efter ett köp, eller när timmarna laddas om) ska
-       inte fälla ihop kolumnen under fingret på den som läser i den. */
-    const öppen = !!planer.querySelector('.erb-klippkol[open]');
+    /* Bara planerna (2026-10-22): Fyll timbankens kolumn stod bredvid
+       dem till samma dag. */
     const kat = S.erb.katalog;
     planer.innerHTML = kat.filter(e => e.sort === 'plan').map(erbKort).join('')
-      + klippKolumn(kat.filter(e => e.sort === 'klippkort'), öppen)
       || tomt('Inga erbjudanden just nu', 'Skriv till oss om ni vill ha ett upplägg.');
 
     /* Första timmen gratis som erbjudande (2026-10-15, Leo: "det ska stå
@@ -3669,10 +3596,8 @@
       säg(msg, 'Erbjudandena går att köpa här inom kort. Vill ni ha ett redan nu, skriv till oss så ordnar vi det.', true);
     }
 
-    const kontakt = $('#erb-kontakt');
-    if (kontakt && NX.CFG && NX.CFG.EPOST) {
-      kontakt.href = 'mailto:' + NX.CFG.EPOST + '?subject=' + encodeURIComponent('Eget upplägg');
-    }
+    /* Rutan Eget upplägg går till kontaktformuläret sedan 2026-10-22, och
+       länken står i sidan: här skrevs mejladressen med ämnet till dess. */
 
     /* Vägen hit från Betalning (Fas 21.3). Har familjen redan timmar
        står knappen Betala med timmar på passen, och då är tipset brus. */
@@ -3847,7 +3772,7 @@
       + '<div data-batteri="erbjudanden"></div>'
       + planRader()
       + (t.kvar || minuter ? ''
-        : '<p class="erb-bank-text">Fyll timbanken med en plan eller med timmar nedan, så betalar timmarna era pass av sig själva.</p>')
+        : '<p class="erb-bank-text">Köp en plan nedan, så fyller timmarna er timbank och betalar era pass av sig själva.</p>')
       + '</div>'
       + brukbara.map(k => kortRad(k)).join('')
       + kommande.map(k => kortRad(k)).join('')
@@ -4058,8 +3983,8 @@
       const tips = tipsKort(true);
       host.innerHTML = batteri + '<p class="erb-bank-text tb-inga">'
         + (tips ? 'Ni har inga köpta timmar eller gratistimmar.' : 'Ni har inga timmar i timbanken.')
-        + (S.erb.aktiv ? ' Köper ni en plan eller fyller timbanken betalar timmarna era pass av sig själva. '
-          + '<a href="#erbjudanden">Se planer och Fyll timbanken</a>' : '')
+        + (S.erb.aktiv ? ' Köper ni en plan betalar timmarna era pass av sig själva. '
+          + '<a href="#erbjudanden">Se planerna</a>' : '')
         + '</p>'
         + tips;
       sättBatterier(host);
@@ -4107,7 +4032,7 @@
       lista = '<p class="erb-bank-text">Rörelserna gick inte att hämta. Ladda om sidan, eller skriv till oss.</p>';
     } else if (!rader.length) {
       lista = '<p class="erb-bank-text">Inga minuter har gått in eller ut än.'
-        + (S.erb.aktiv ? ' Minuterna kommer ur timmar ni köpt i förväg. <a href="#erbjudanden">Se planer och Fyll timbanken</a>' : '')
+        + (S.erb.aktiv ? ' Minuterna kommer ur timmar ni köpt i förväg. <a href="#erbjudanden">Se planerna</a>' : '')
         + '</p>';
     } else {
       lista = '<ul class="tb-rorelser">' + rader.map(r => {

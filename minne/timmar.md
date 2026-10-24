@@ -951,3 +951,37 @@ sparar det som blir över av en köpt timme (30 minuter), aldrig av en gratistim
 timme är använda, och ett pass betalt ur timbanken får halva minuterna tillbaka. Efterskänker superadmin avgiften
 blir passet en vanlig avbokning: timmarna kommer tillbaka och `betalning_status` blir `ingen`. Inget larm och inget
 att betala; adminvyn visar passet som "Sen avbokning, ur timmarna" under Alla betalningar.
+
+
+## Fyll timbanken säljs inte (2026-10-22, grenen `klippkort-bort`, inte i drift)
+Leo: "Det ska bara finnas tre köpbara planer: 4, 8 och 12 timmar", "Redan köpta klippkort ligger kvar och gäller",
+"Servern ska avvisa nya klippkortsköp", och en ruta "Behöver ni ett eget upplägg? Kontakta oss." på prissidan och i
+kassan. Inget får droppas, och ingen migration får ändra eller radera befintlig data.
+- **Prissidan** (båda språken): raden Fyll timbanken under planerna är borta, och där står rutan Eget upplägg
+  (`.pr-erb-eget`). Leo bad om en länk till info@ med ämnet Eget upplägg, "finns redan ett kontaktformulär, använd det
+  i stället", och det finns ett (`/faq#kontakt`, `contact_messages`): knappen går dit med `?amne=eget-upplagg`, och
+  formuläret börjar då meddelandet med "Eget upplägg: " (`NX.t('egetUpplagg')`), bara för det värdet. Kalkylatorns
+  tredje läge (ett barn och ingen plan med de timmarna) var Fyll timbanken och är Eget upplägg. Ingressen och Vad är
+  timbanken? säger bara planen. Studievyns ruta går till samma formulär, i en ny flik.
+- **Studievyn**: `S.erb.katalog` är bara planerna, och kolumnen (`klippKolumn`) är borta. Er timbank, batteriet,
+  Profil → Timbanken och Betala med timmar läser köpen ur `klippkort_saldo` som förut, så ett köpt kort syns och räknas
+  ner till sin sista dag. Profilens förklaring säger att timmar köpta med Fyll timbanken gäller i sex månader.
+- **Servern**: `stripe-checkout` nekar allt i katalogen som inte är en plan, efter att raden lästs och före köpet och
+  kassan, med 410 och `SALJS_INTE` (`_delad/erbjudanden.ts`, `saljs()`, provat i `erbjudanden_test.ts`). Ett väntande
+  köp återanvänds alltså inte. En kassa som redan öppnats betalas av webhooken som förut. Timmar till planen
+  (`plan_extra`) går sin egen väg och rörs inte.
+- **Databasen rörs inte**: katalogens rader `klipp10`–`klipp100` står kvar och aktiva (köpta kort pekar på dem, och
+  `erbjudanden_pris` visar dem för den som frågar API:t direkt), och `flaggor.beskrivning` för `erbjudanden` säger
+  fortfarande Fyll timbanken. En vakt i databasen (en BEFORE INSERT på `klippkort` för sorten) skrevs inte: den
+  lokala databasen gick inte att bygga i sessionen (Docker Hub svarade 429, och ECR:s lagring stoppades av proxyn), och
+  en migration som inte provats ska inte till driften. Den är nästa steg om kassan ska sluta vara enda spärren; den
+  måste släppa igenom databasens ägare, annars faller `rls-test.sql`, som lägger `klipp10` som fixtur.
+- **Strömbrytaren `erbjudanden` ska stå på**: `klippkort-betala` nekar utan den, och då betalar inga köpta timmar ett
+  pass.
+- **Villkoren är oförändrade** (2026-10-23): de beskriver Fyll timbanken, som fortfarande gäller för de köpta korten.
+  En text som säger att den inte säljs är en ny version, och alla får frågan igen; Leos beslut.
+- **Stripe**: kassan skapar inga produkter i Stripe (raderna går med `price_data` och `product_data` i varje kassa),
+  så det finns inget att arkivera. Ligger något med namnet Fyll timbanken i Stripes produktkatalog ändå: arkivera, radera
+  inte.
+- Adminvyn: texterna om vad familjerna kan köpa säger planer, och strömbrytaren heter Planer och köpta timmar.
+  Listorna över köp och Liggarens typ `timbank` heter som förut, för de visar köp som redan finns.

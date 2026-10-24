@@ -148,6 +148,8 @@ const NX = (function () {
     inomKort:        ['inom kort', 'very soon'],
     tackKontakt:     ['Mottaget. Vi återkommer på mejlen du angav.',
                       'Received. We will reply to the email address you gave.'],
+    // Kontaktformuläret, när rutan Eget upplägg länkat dit (2026-10-22).
+    egetUpplagg:     ['Eget upplägg: ', 'Custom set-up: '],
     ingenFil:        ['Ingen fil vald', 'No file chosen'],
     filForStor:      ['Filen är större än 5 MB — välj en mindre',
                       'The file is larger than 5 MB — please choose a smaller one'],
@@ -761,41 +763,9 @@ const NX = (function () {
       if (el.hasAttribute('data-erb-vantar')) el.hidden = false;
     });
 
-    /* Klippkortens rad sammanfattar korten i den, och sammanfattningen
-       ska gälla de kort som finns KVAR: "från" det billigaste och spannet
-       i timmar. Märket (timpriset utan bindning överstruket och kortens
-       timpris, sedan 2026-10-08 i stället för procenten) skrivs bara om
-       båda är desamma på alla kort — ett timpris som stämmer för ett av
-       korten är ett pris som inte är det kassan drar. Finns inget kort
-       kvar döljs raden, annars står den där med gamla siffror och fälls
-       ut till ingenting. */
-    $$('[data-erb-grupp]').forEach(g => {
-      const kvar = $$('[data-erb]', g).filter(el => !el.hidden)
-        .map(el => perKod[el.getAttribute('data-erb')]);
-      if (!kvar.length) { g.hidden = true; return; }
-      const timmar = kvar.map(r => Number(r.timmar));
-      const ordinarie = new Set(kvar.map(r => String(r.timpris_ore)));
-      skriv(g, '[data-erb-fran]', kr(Math.min(...kvar.map(r => r.pris_ore)) / 100));
-      /* Timpriset i stället för "från" det billigaste kortet (Leo
-         2026-10-08: "inte från utan för"): bara när det är detsamma på
-         alla kort, annars göms beloppet hellre än står för ett av dem. */
-      const timpriser = new Set(kvar.map(r => String(r.rabatterat_timpris_ore)));
-      $$('[data-erb-grupp-tim]', g).forEach(x => {
-        const ram = x.closest('.nx-amount') || x;
-        ram.hidden = timpriser.size !== 1;
-        if (timpriser.size === 1) x.textContent = kr(Number(kvar[0].rabatterat_timpris_ore) / 100);
-      });
-      skriv(g, '[data-erb-min]', String(Math.min(...timmar)));
-      skriv(g, '[data-erb-max]', String(Math.max(...timmar)));
-      $$('summary .pr-erb-rabatt', g).forEach(märke => {
-        const ett = timpriser.size === 1 && ordinarie.size === 1
-          && Number(kvar[0].rabatterat_timpris_ore) < Number(kvar[0].timpris_ore);
-        märke.hidden = !ett;
-        if (!ett) return;
-        skriv(märke, '[data-erb-timpris]', kr(Number(kvar[0].timpris_ore) / 100));
-        skriv(märke, '[data-erb-rabatterat]', kr(Number(kvar[0].rabatterat_timpris_ore) / 100));
-      });
-    });
+    /* Klippkortens rad (Fyll timbanken) sammanfattades här till
+       2026-10-22, då den slutade säljas och gick ur prissidan. */
+
     /* "Spara upp till N kr på 6 månader" (Leo 2026-10-08). Talet i
        data-erb-spara är antalet månader, och N är skillnaden mellan
        ordinarie pris och planens pris, gånger månaderna, i hela kronor.
@@ -981,17 +951,14 @@ const NX = (function () {
         const andel = ore > 0 && perPass > 0 ? Math.min(1, ore / (perPass * 100)) : 1;
         $$('[data-kalk-andel]', box).forEach(i => i.style.setProperty('--andel', andel.toFixed(3)));
       }
-      /* Utan plan: med flera barn tillägget, med ett barn klippkorten om
-         de finns kvar, och annars inget alls. Rutan behåller sin höjd. */
-      const klipp = $$('[data-erb-grupp]').some(g => !g.closest('[hidden]'));
-      const läge = val.barn > 1 ? 'syskon' : plan ? 'plan' : klipp ? 'ingen' : '';
+      /* Utan plan: med flera barn tillägget, och med ett barn ett eget
+         upplägg (2026-10-22; till dess Fyll timbanken). Rutan behåller sin
+         höjd. */
+      const läge = val.barn > 1 ? 'syskon' : plan ? 'plan' : 'ingen';
       $$('[data-kalk-tips]', box).forEach(el => { el.hidden = el.getAttribute('data-kalk-tips') !== läge; });
       /* Syskonrutans mening om planerna gäller bara när planer syns. */
       const planerSyns = $$('.pr-erb-plan[data-erb]').some(el => !el.closest('[hidden]'));
       $$('[data-kalk-planrad]', box).forEach(el => { el.hidden = !planerSyns; });
-      /* Inget läge alls (databasen har inga erbjudanden): rutan går hellre
-         än står tom. */
-      $$('.pr-kalk-med', box).forEach(el => { el.hidden = !läge; });
       först = false;
     }
 
