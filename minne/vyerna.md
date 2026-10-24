@@ -1919,9 +1919,9 @@ inte kan belägga: vi är nya och har inga siffror, omdömen eller resultat.
 - **Om oss** (`/om-oss`) är en berättelse i ordning (samma dag, Leo: "gör storytelling bättre"): hero med "Läxhjälp
   av någon som nyss gick kursen." och N-märket i ringar i stället för ett foto; Köksbordet på barken, där läxan låser
   sig mellan förälder och barn, med Leos "Ibland behövs bara någon annan än mamma och pappa." som vändning; Idén
-  (iakttagelsen ur Vår idé, vad en studiehjälpare inte är, och plats för Leos rad om varför vi startade, som
-  en kommentar i sidan tills han skrivit den: platshållaren togs bort före merge 2026-10-24, så att den aldrig syns
-  live; layouten fungerar med och utan den); Därför finns Nextrum med ett skäl för eleven, föräldern och studiehjälparen i
+  (iakttagelsen ur Vår idé, vad en studiehjälpare inte är, och sist Varför vi startade, `.om-egna`: tre
+  meningar ur grundarnas citat på startsidan, skrivna 2026-10-24 när Leo sa "lös det själv" om storyn, utan en påhittad
+  scen; platshållaren togs bort före merge samma dag och syntes aldrig live); Därför finns Nextrum med ett skäl för eleven, föräldern och studiehjälparen i
   ämnesfärgernas ordning; Så går det till; Vägen fram till första eleven (ansökan, intervju, utbildning, provet); Det
   här kan ni kräva av oss; rutan Vi är nya (det enda stället där ordet omdöme får stå); sex frågor och Nästa steg med
   "samma person varje gång". Ingen mening sägs två gånger. Knapparna går till intresseanmälan med

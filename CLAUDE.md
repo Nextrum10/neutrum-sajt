@@ -1133,9 +1133,10 @@ Detaljer: `minne/grunden.md`.
   mergades (deb70ce) efter #331, med main intagen och två versionsstämplar i `om-oss.html` omstämplade, och Vercel lade
   ut sidorna (kontrollerat från databasen mot nextrum.se: `/om-oss` utan platshållare, `#exempel` och footerns länk på
   båda språken). `/om-oss` (bara på svenska; footern länkar dit på varje sida, engelskan med "About us (in Swedish)") och startsidans
-  `#exempel` på båda språken. Ingen migration och ingen edge-funktion. Kvar för Leo: hans två till tre meningar om varför
-  Nextrum startades (rutan `.om-egna` under Idén, som en kommentar i sidan tills han skrivit dem; platshållaren togs bort
-  före merge 2026-10-24) och organisationsnummer och postadress, som inga sidor har än. Sidan säger att en ny studiehjälpare inte ser några elever förrän provet är godkänt: det
+  `#exempel` på båda språken. Ingen migration och ingen edge-funktion. Varför vi startade (rutan `.om-egna` sist under
+  Idén) är skriven ur grundarnas egna ord på startsidan (2026-10-24, Leo: "lös det själv"), utan någon scen eller
+  detalj som inte står på sajten; skriver Leo en egen byts den. Organisationsnummer och postadress har inga sidor än:
+  bolaget är under bildande. Sidan säger att en ny studiehjälpare inte ser några elever förrän provet är godkänt: det
   gäller först när Kräv provet står på och minst fem frågor är aktiva (avsnitt 11, Intervjumejlet och utbildningsprovet).
   Startsidans `#rost` har fortfarande citatet från "Leo & Alex, grundare av Nextrum"; Om oss nämner inga namn.
 - **Syskontillägget fast** (2026-10-21, `syskontillagget_fast`, 20261021230000) är i drift sedan kvällen 2026-10-21 (Leo:
