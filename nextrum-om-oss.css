@@ -66,6 +66,13 @@
 }
 .om-h1 + .om-hero-rad{margin-top:30px}
 .om-hero-rad + .om-hero-rad{margin-top:10px}
+/* Tre löften under knapparna, med mossans bock (klart, som i vyerna). */
+.om-loften{list-style:none;margin:26px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 22px}
+.om-loften li{display:inline-flex;align-items:center;gap:8px;font-size:.95rem;font-weight:600;color:var(--bl-2)}
+.om-loften svg{
+  width:20px;height:20px;flex:none;padding:3px;border-radius:50%;background:var(--mossa-soft);
+  fill:none;stroke:var(--mossa-text);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+}
 
 .om-marke{
   position:relative;margin:0;justify-self:center;
@@ -164,6 +171,22 @@
 }
 .om-varfor-text p{margin:0;font-size:clamp(1.02rem,1.25vw,1.14rem);line-height:1.6;color:var(--bl-2);max-width:52ch}
 .om-varfor-text p + p{margin-top:12px;color:var(--bl);font-weight:600}
+
+/* Första steget: en ruta i lerans mjuka ton med knappen, mitt på sidan.
+   Bredvid varandra från 900 px, under varandra smalare. */
+.om-borja{
+  margin-top:clamp(40px,5vw,72px);padding:clamp(26px,3.6vw,48px);border-radius:28px;
+  background:var(--acc-soft);border:1px solid var(--acc-line);
+  display:grid;grid-template-columns:minmax(0,1fr);gap:22px clamp(28px,4vw,64px);align-items:center;
+}
+@media (min-width:900px){.om-borja{grid-template-columns:minmax(0,1fr) auto}}
+.om-borja-h{
+  margin:0;font-size:clamp(1.7rem,3.4vw,2.7rem);line-height:1.06;letter-spacing:-.04em;font-weight:750;
+  color:var(--bl);text-wrap:balance;
+}
+.om-borja-h em{font-style:normal;color:var(--acc-lugn)}
+.om-borja-text{margin:12px 0 0;max-width:52ch;font-size:clamp(1.02rem,1.25vw,1.14rem);line-height:1.58;color:var(--bl-2)}
+.om-borja .btn svg{width:16px;height:16px;margin-left:10px;flex:none}
 
 /* ---------- 2. Köksbordet ----------
    Barken, som de mörka ytorna på startsidan, och betoningen i ljus
@@ -290,6 +313,7 @@
 }
 .om-sist-text{margin:22px 0 0;max-width:44ch;font-size:clamp(1.06rem,1.4vw,1.24rem);line-height:1.55;color:var(--bl-2)}
 .om-sist .om-cta{justify-content:center}
+.om-sist-not{margin:18px 0 0;font-size:.95rem;color:var(--bl-3)}
 
 /* Platshållarraden i footern: företagsuppgifterna Leo fyller i. */
 .ftr-platshallare{flex-basis:100%;opacity:.8}

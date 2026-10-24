@@ -58,7 +58,7 @@
 <link rel="stylesheet" href="nextrum-start.css?v=8a3f88cc">
 <link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
 <!-- Om oss (2026-10-22): det sidan har utöver menysidorna. -->
-<link rel="stylesheet" href="nextrum-om-oss.css?v=adf94d37">
+<link rel="stylesheet" href="nextrum-om-oss.css?v=330e3a31">
 </head>
 <body>
 
@@ -161,6 +161,15 @@
         <a class="nx-lank" href="#borjan">Läs hur det började
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
       </div>
+      <!-- Tre löften under knappen, som startsidans rad under heron: att
+           skriva upp sig är gratis och binder inte (intresseanmalan.html), vi
+           hör av oss inom 24 timmar (index.html, här som ett dygn) och det
+           finns ingen bindningstid (index.html). -->
+      <ul class="om-loften" data-stig data-fördröj="4">
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg> Gratis att skriva upp sig</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg> Svar inom ett dygn</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg> Ingen bindningstid</li>
+      </ul>
     </div>
     <!-- N-märket i två delar: den bruna kroppen och det orange bladet,
          med samma vägar som loggan. Bladet landar på kroppen när sidan
@@ -269,6 +278,17 @@
         <p>Fel match är värre än ingen match. En person. Rätt person.</p>
       </div>
     </div>
+    <!-- Knappen mitt på sidan, där läsaren just sett hur enkelt det första
+         steget är. Tiden och löftena står på startsidan (index.html:1006 och
+         1012) och i guiderna (laxhjalp-eller-privatlarare.html:162). -->
+    <div class="om-borja" data-stig>
+      <div>
+        <p class="om-borja-h">Första steget tar <em>ett par minuter.</em></p>
+        <p class="om-borja-text">Berätta vad ert barn behöver, så hör vi av oss inom ett dygn. Det kostar ingenting att fråga och binder er inte till något.</p>
+      </div>
+      <a class="btn btn-primary btn-lg" href="/intresseanmalan?utm_source=om-oss&amp;utm_medium=sajt&amp;utm_campaign=okt26">Skriv upp er
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    </div>
   </div>
 </section>
 
@@ -296,7 +316,7 @@
   <div class="om-wrap om-krav-in">
     <div>
       <span class="nx-et acc" data-stig>Det här kan ni kräva av oss</span>
-      <h2 class="om-h2" id="krav-t" data-avslöj>Sådant ni kan <em>hålla oss till.</em></h2>
+      <h2 class="om-h2" id="krav-t" data-avslöj>Våra löften. <em>Håll oss till dem.</em></h2>
     </div>
     <ul class="om-krav-lista" data-stig>
       <li>En rapport efter varje pass, som ni läser i er vy.</li>
@@ -317,8 +337,8 @@
     <div class="om-nya-ruta" data-stig>
       <span class="nx-et">Vi är nya</span>
       <h2 class="om-h3" id="nya-t">Här står inga omdömen än.</h2>
-      <p>Vi är precis i början. Vi hittar inte på omdömen och visar inga påhittade citat: vi väntar hellre på riktiga, från familjer som provat. Tills dess får ni bedöma oss på det ni själva kan se.</p>
-      <a class="nx-lank" href="/#exempel">Se exakt vad ni får se efter ett pass
+      <p>Vi är precis i början, och vi hittar inte på omdömen eller citat. Hellre visar vi exakt vad ni får, så att ni kan bedöma oss själva: rapporten, studieplanen och er vy.</p>
+      <a class="nx-lank" href="/#exempel">Se exakt vad ni får efter varje pass
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
     </div>
   </div>
@@ -365,13 +385,14 @@
 <section class="om-sek om-sist" aria-labelledby="sist-t">
   <div class="om-wrap om-sist-in">
     <h2 class="om-sist-h" id="sist-t" data-avslöj>En person. <em>Rätt person.</em></h2>
-    <p class="om-sist-text" data-stig>Skriv upp er, så hör vi av oss och går igenom vad ert barn behöver. Sedan väljer vi en person, och det är samma person varje gång.</p>
+    <p class="om-sist-text" data-stig>Skriv upp er, så hör vi av oss inom ett dygn och går igenom vad ert barn behöver. Sedan väljer vi en person, och det är samma person varje gång.</p>
     <div class="om-cta" data-stig>
       <a class="btn btn-primary btn-lg" href="/intresseanmalan?utm_source=om-oss&amp;utm_medium=sajt&amp;utm_campaign=okt26">Skriv upp er
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
       <a class="nx-lank" href="/faq">Fler frågor och svar
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
     </div>
+    <p class="om-sist-not" data-stig>Det kostar ingenting att fråga och binder er inte till något.</p>
   </div>
 </section>
 

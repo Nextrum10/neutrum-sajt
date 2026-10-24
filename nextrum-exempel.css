@@ -240,3 +240,7 @@
   color:var(--bl);text-wrap:balance;
 }
 .ex-fot .btn svg{width:16px;height:16px;margin-left:10px}
+/* Tryggheten under knappen: gratis att fråga, inget som binder, svar inom
+   ett dygn (laxhjalp-eller-privatlarare.html och startsidans steg). */
+.ex-fot-not{flex-basis:100%;margin:0;font-size:.95rem;color:var(--bl-3)}
+@media (min-width:760px){.ex-fot-not{text-align:right}}

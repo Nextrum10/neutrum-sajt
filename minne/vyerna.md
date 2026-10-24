@@ -1941,3 +1941,11 @@ inte kan belägga: vi är nya och har inga siffror, omdömen eller resultat.
   (`.ex-ekv`). Granskad i två varv i 1440 och 390, ljust och mörkt.
 - Engelskans knapp går till `/en/intresseanmalan` med samma utm; startsidans går till `/intresseanmalan` med
   `utm_source=startsida` och `utm_content=exempel`.
+- **Säljet** (2026-10-24, Leo: "sälj in oss själva mer"): sidan ber om steget fler gånger, men lovar bara det sajten
+  redan lovar. Tre bockar under heron (`.om-loften`: gratis att skriva upp sig, svar inom ett dygn, ingen
+  bindningstid, ur startsidans rad under knapparna), rutan Första steget tar ett par minuter efter Så går det till
+  (`.om-borja`, startsidans "ungefär två minuter"), krav-rubriken "Våra löften. Håll oss till dem." och raden "Det
+  kostar ingenting att fråga och binder er inte till något." (guiden `laxhjalp-eller-privatlarare`) under sista
+  knappen (`.om-sist-not`) och i `#exempel` (`.ex-fot-not`). "24 timmar" står som "ett dygn", för innehållsprovet
+  fäller en siffra före "timmar". Inget pris, inget antal och inget om resultat: säljet är att det är lätt och
+  ofarligt att börja, inte att det går bra för andra.
