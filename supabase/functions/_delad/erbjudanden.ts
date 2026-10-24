@@ -31,6 +31,23 @@ export type ErbjudandePris = {
 /** Hur länge en plan gäller från betalningen, som klippkort_betald räknar (2026-10-21). */
 export const PLANENS_DAGAR = 30;
 
+/**
+ * Säljs erbjudandet? Bara planerna sedan 2026-10-22 (Leo: tre planer, 4, 8
+ * och 12 timmar). Fyll timbanken, sorten 'klippkort' i katalogen, står kvar
+ * i erbjudanden_pris, för köpta kort pekar på sin rad där och syns i
+ * vyerna; därför prövas sorten här och inte i databasen. Det som redan är
+ * köpt rörs inte: klippkort-betala drar timmarna som förut, och en kassa som
+ * öppnades före spärren betalas av webhooken som förut. Timmar till en plan
+ * (plan_extra) går en egen väg i kassan och prövas inte här.
+ */
+export function saljs(e: Pick<ErbjudandePris, 'sort'> | null | undefined): boolean {
+  return !!e && e.sort === 'plan';
+}
+
+/** Kassans nej till ett köp som inte säljs, för familjen. */
+export const SALJS_INTE = 'Fyll timbanken går inte att köpa längre. Välj en av planerna, eller kontakta oss '
+  + 'om ni behöver ett eget upplägg. Timmar ni redan har köpt gäller som förut.';
+
 const timmarText = (n: number) => (n === 1 ? '1 timme' : `${n} timmar`);
 
 /** Ören som kronor på kvittot: hela kronor utan decimaler, annars två. */

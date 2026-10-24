@@ -1,6 +1,7 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import {
-  arErbjudandekod, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen, sammaInnehall,
+  arErbjudandekod, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradTillPlanen, saljs, SALJS_INTE,
+  sammaInnehall,
   svensktDatum,
   manadensForsta,
   planensPeriod,
@@ -16,6 +17,19 @@ Deno.test('erbjudandekoden: bara katalogens form släpps in', () => {
   assertEquals(arErbjudandekod("klipp10'; drop"), false);
   assertEquals(arErbjudandekod(10), false);
   assertEquals(arErbjudandekod('a'.repeat(33)), false);
+});
+
+Deno.test('bara planerna säljs: Fyll timbanken nekas med ett svenskt besked (2026-10-22)', () => {
+  assertEquals(saljs({ sort: 'plan' }), true);
+  assertEquals(saljs({ sort: 'klippkort' }), false);
+  // En okänd sort, eller ingen rad alls, säljs inte heller.
+  assertEquals(saljs({ sort: 'paket' }), false);
+  assertEquals(saljs(null), false);
+  assertEquals(saljs(undefined), false);
+  assertEquals(SALJS_INTE.startsWith('Fyll timbanken går inte att köpa längre.'), true);
+  assertEquals(/Timmar ni redan har köpt gäller som förut\.$/.test(SALJS_INTE), true);
+  // Inga tankstreck i det familjen läser.
+  assertEquals(/[\u2013\u2014]/.test(SALJS_INTE), false);
 });
 
 Deno.test('kassaraden säger timmar, rabatt och hur länge det gäller', () => {

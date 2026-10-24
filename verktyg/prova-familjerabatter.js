@@ -507,19 +507,17 @@ async function provaStudievyn(webb) {
 
     /* Korten under Erbjudanden säger priset med rabatten (Leo 2026-10-15:
        "Visa på korten också"), aldrig koden: Standard 8 betalda timmar,
-       10 kr av på var och en, och Fyll timbanken 10 timmar. */
+       10 kr av på var och en. Fyll timbanken säljs inte sedan 2026-10-22,
+       och dess kolumn står inte där, fast katalogen i svaret har den. */
     await page.goto(BAS + '/foralder#erbjudanden');
     await vänta(900);
     const plan = await text(page, '#erb-planer .erb-kort:not(.erb-klippkol)');
     prova('studievyn ' + namn + ': plankortet', rabatt
       ? /2\s*952\s*kr/.test(plan) && /med er rabatt/.test(plan) && /369\s*kr/.test(plan) && /3\s*192\s*kr/.test(plan)
       : /3\s*032\s*kr/.test(plan) && /379\s*kr/.test(plan) && !/er rabatt/.test(plan), plan);
-    await page.click('#erb-planer .erb-klippkol summary').catch(() => {});
-    await vänta(250);
-    const klipp = await text(page, '#erb-planer .erb-klippkol');
-    prova('studievyn ' + namn + ': Fyll timbanken', rabatt
-      ? /3\s*890\s*kr/.test(klipp) && /389\s*kr per timme/.test(klipp) && /med er rabatt/.test(klipp)
-      : /3\s*990\s*kr/.test(klipp) && /399\s*kr per timme/.test(klipp) && !/er rabatt/.test(klipp), klipp);
+    prova('studievyn ' + namn + ': Fyll timbanken går inte att köpa',
+      (await page.locator('#erb-planer .erb-klippkol, #erb-planer [data-kop^="klipp"]').count()) === 0
+      && !/Fyll timbanken/.test(await text(page, '#erb-planer')), await text(page, '#erb-planer'));
     prova('studievyn ' + namn + ': korten säger aldrig koden', !/PARTNER/.test(await text(page, '#erb-planer')));
     if (rabatt) await bild(page, 'studievyn-kort', '#erb-planer');
 

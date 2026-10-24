@@ -1986,7 +1986,7 @@ a.pass-lank:hover{color:var(--acc)}
 
 /* ============================================================
    ERBJUDANDEN (Fas 16.1)
-   Planer och klippkort som kort i ett rutnät, och familjens egna
+   Planerna som kort i ett rutnät, och familjens egna
    timmar som en mätare. minmax(0,1fr), inte 1fr: ett kort med en lång
    rad hade annars fått spalten att växa ut ur skärmen på en telefon
    (CLAUDE.md avsnitt 3, fälla 2).
@@ -2039,44 +2039,10 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-tim s{color:var(--muted-2)}
 .erb-kort .btn{margin-top:10px;align-self:flex-start}
 
-/* Klippkorten som en kolumn som fälls ut (2026-09-27), som på
-   prissidan. Kortets luft ligger i summary, så att ett tryck i
-   kanten också fäller ut. Fokusringen ligger innanför kanten. */
-.erb-klippkol{padding:0;gap:0}
-.erb-klippkol > summary{
-  display:flex;flex-direction:column;gap:6px;
-  padding:18px 18px 16px;border-radius:inherit;
-  list-style:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
-}
-.erb-klippkol > summary::-webkit-details-marker{display:none}
-.erb-klippkol > summary:focus-visible{outline-offset:-4px}
-.erb-fran{font-size:.84rem;color:var(--bl-2)}
-/* Pilen står i högerkanten, där den inte flyttar sig när texten byts
-   mellan "Se" och "Dölj". */
-.erb-visa{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:.86rem;font-weight:600;color:var(--bl)}
-.erb-visa svg{
-  flex:none;margin-left:auto;width:26px;height:26px;padding:5px;
-  border:1px solid var(--ln);border-radius:50%;transition:transform .3s ease;
-}
-.erb-klippkol > summary:hover .erb-visa svg{border-color:var(--acc-line)}
-.erb-klippkol[open] .erb-visa svg{transform:rotate(180deg)}
-.erb-klippkol:not([open]) .erb-visa-oppen,
-.erb-klippkol[open] .erb-visa-stangd{display:none}
-.erb-klipp{padding:0 18px 8px}
-.erb-klipp-rad{display:flex;flex-direction:column;gap:4px;padding:14px 0;border-top:1px solid var(--ln)}
-.erb-klipp-rad .erb-topp{align-items:baseline}
-.erb-summa{font-size:1.15rem;letter-spacing:-.03em;color:var(--bl);white-space:nowrap}
-.erb-summa s{font-size:.8rem;letter-spacing:0;color:var(--muted-2);margin-right:2px}
-/* Giltigheten och knappen på samma rad: en knapp under varje kort
-   gjorde fem rader till en skärm och en halv på en telefon. */
-.erb-klipp-fot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}
-.erb-klipp-fot .btn{margin-top:0;flex:none}
-/* Utfälld blir kolumnen lång. Planerna bredvid ska inte sträckas med
-   den till kort som mest är tom yta. */
-.erb-grid:has(> .erb-klippkol[open]){align-items:start}
 
-/* Planerna (2026-10-07, Leo: Basic, Standard och Intensiv). Tre planer
-   och klippkorten är fyra kort.
+/* Planerna (2026-10-07, Leo: Basic, Standard och Intensiv). Sedan
+   2026-10-22 är de de enda korten: Fyll timbanken (klippkorten) säljs
+   inte längre.
 
    Märkena: ett för timmen på köpet eller ett med timpriset överstruket,
    och aldrig ett lika pris överstruket. Timmen på köpet är fylld, som på prissidan: det är vad
@@ -2104,32 +2070,15 @@ a.pass-lank:hover{color:var(--acc)}
 .erb-kort > .erb-pris:nth-last-child(2){margin-bottom:10px}
 .erb-kort > .btn{margin-top:auto}
 
-/* Tre i bredd när rutan rymmer det. Med tre planer hamnar klippkorten
-   ensamma på andra raden, och en tredjedel med tom yta bredvid ser ut
-   som något som saknas: där tar de hela bredden som en rad, med
-   sammanfattningen bredvid knappen och alternativen i ett rutnät när de
-   fälls ut. nth-child(3n+1): bara när de faktiskt står först på en rad
-   (med två planer, före migrationen, står de som förut). */
+/* Tre i bredd när rutan rymmer det: de tre planerna på en rad. Fyll
+   timbankens kolumn tog en egen bred rad under dem, till 2026-10-22. */
 @container (min-width:594px){
   .erb-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .erb-grid > .erb-klippkol:nth-child(3n+1){grid-column:1/-1}
-  .erb-grid:has(> .erb-klippkol:nth-child(3n+1)){align-items:stretch}
-  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary{
-    display:grid;grid-template-columns:minmax(0,1fr) auto auto;
-    grid-template-areas:"topp pris visa" "vad tim visa";
-    column-gap:28px;row-gap:4px;align-items:center;
-  }
-  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-topp{grid-area:topp;justify-content:flex-start}
-  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-vad{grid-area:vad}
-  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-pris{grid-area:pris;margin-top:0;justify-content:flex-end}
-  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-tim{grid-area:tim;text-align:right}
-  .erb-grid > .erb-klippkol:nth-child(3n+1) > summary > .erb-visa{grid-area:visa;margin-top:0}
-  .erb-grid > .erb-klippkol:nth-child(3n+1) .erb-klipp{
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));column-gap:28px;
-  }
 }
 
 .erb-eget p{font-size:.92rem;line-height:1.6;color:var(--bl-2);margin:6px 0 14px;max-width:60ch}
+/* Frågan (2026-10-22, som rutan på prissidan) står först och i textens färg. */
+.erb-eget p.erb-eget-fraga{margin-bottom:0;font-size:1rem;font-weight:650;color:var(--bl)}
 .erb-finstilt{font-size:.78rem;line-height:1.55;color:var(--muted-2);margin:2px 4px 0}
 .erb-finstilt a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 

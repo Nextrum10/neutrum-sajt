@@ -483,12 +483,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | tipskod | en familjs egen kod i intresseanmälan, eller en studiehjälpares i jobbansökan (`tipskoder`); en kampanjkod är en affischs |
 | tipstimme | en timme på köpet för ett tips, i timbanken i 60 dagar: `startrabatt` och `rabattkod = 'TIPS'` på passet |
 | värvningsbonus | 300 kr brutto, inklusive semesterersättning, till en studiehjälpare vars kod en kompis sökt jobb med, intjänad när kompisen fått sitt konto (`varvningsbonus`); underlag för lönen, aldrig en utbetalning och aldrig ett underlag. Hette tipsbonus (`tipsbonus`) till 2026-10-21 |
-| timbanken | familjens köpta timmar (en plan eller Fyll timbanken), gratistimmar och sparade minuter; pass för pass går inte genom den |
+| timbanken | familjens köpta timmar (en plan, och Fyll timbanken som köptes före 2026-10-22), gratistimmar och sparade minuter; pass för pass går inte genom den |
 | gratistimmar | timmar vi sätter in i familjens timbank utan kostnad (`klippkort` med erbjudandet `gratis`); 60 dagar, dras först med planens gratis timme. Inte första timmen eller tipstimmen |
 | familjerabatt | kronor av per timme för en familj vi satt en av våra koder på (`familjerabatter`, `familjens_rabatt`); aldrig en rabattkod, och familjen ser aldrig koden, bara priset |
 | rabattkod | en kod som ger en rabatt när familjen köper en plan, aldrig på ett pass (`rabattkoder`, `sort = 'rabatt'`) |
 | partnerkod | en partnerförenings kod till en plan, med eller utan rabatt (`rabattkoder`, `sort = 'partner'`); den första sparas på familjen (`familjens_partner`) |
-| Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); utåt aldrig "klippkort" |
+| Fyll timbanken | timmar köpta i förväg till timpriset, sex månader (`erbjudanden.sort = 'klippkort'`); säljs inte sedan 2026-10-22, men köpta gäller; utåt aldrig "klippkort" |
 | timmar till planen | Köp till timmar: 1–20 timmar till en plan som gäller, till planens timpris, som går ut med planen (`klippkort` med erbjudandet `plan_extra` och `till_plan`; Välj själv under Er timbank) |
 | barnkonto | barnets egen inloggning (`students.user_id`, `app_metadata.roll = 'barn'`, rollen `nextrum_barn`) |
 | superadmin | admin med allt (`admin_roller.ar_superadmin`, `is_admin()`); andra admins har behörigheter (`har_behorighet()`) |
@@ -508,11 +508,14 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   en månad"), så "utan bindning" ställs aldrig mot paketen: 399 kr är "pass för pass" där de står bredvid varandra.
   Plankorten på prissidan säger "N timmar per månad, obundet" och att timmarna betalas i förväg och fördelas på
   pass under månaden (Leo samma dag: "obundet för de betalas som förköp").
-  **Timbanken** är familjens köpta timmar och sparade minuter, och den fylls på två sätt (Leo 2026-10-12: "timbanken
-  fylls antingen med plan eller förköpta timmarna"), och sedan 2026-10-13 visar den också timmar för tips, som inte köps
-  och gäller i 60 dagar: med en plan, eller med **Fyll timbanken** (klippkorten
-  `klipp10`–`klipp100` i databasen), som kostar timpriset, 399 kr, utan rabatt och utan märke, och gäller i sex månader
-  i alla storlekar. Sedan 2026-10-13 sätter vi också in gratistimmar där (avsnitt 1). **Köp till timmar**
+  **Timbanken** är familjens köpta timmar och sparade minuter, och den fylls med en plan; sedan 2026-10-13 visar den
+  också timmar för tips, som inte köps och gäller i 60 dagar. **Fyll timbanken** (klippkorten `klipp10`–`klipp100` i
+  databasen, timpriset och sex månader) **säljs inte sedan 2026-10-22** (Leo: "Det ska bara finnas tre köpbara planer:
+  4, 8 och 12 timmar"): prissidan och studievyn visar bara planerna och rutan Eget upplägg (till kontaktformuläret på
+  `/faq?amne=eget-upplagg#kontakt`, som börjar meddelandet med ämnet), och `stripe-checkout` nekar ett köp av en annan sort än en plan (`saljs()` och `SALJS_INTE` i
+  `_delad/erbjudanden.ts`, 410). Katalogens rader står kvar och aktiva, för köpta kort pekar på dem, och strömbrytaren
+  `erbjudanden` ska stå på: utan den betalar inga köpta timmar ett pass. Köpta timmar gäller till sin sista dag, syns i
+  Er timbank och räknas ner som förut. Sedan 2026-10-13 sätter vi också in gratistimmar där (avsnitt 1). **Köp till timmar**
   (2026-10-14, Leo: "man kan köpa till timmar med plan men de går ut när månaden är slut ... välj själv knapp och
   checkout för de specifika timmarna"): med en plan som gäller minst en dag till köper familjen 1–20 timmar åt
   gången under Er timbank, till planens eget timpris (379 kr i dag; `extra_timmar_erbjudande()` räknar, aldrig
@@ -1101,6 +1104,12 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Fyll timbanken säljs inte** (2026-10-22, grenen `klippkort-bort`) är byggd, inte mergad eller i drift: prissidan
+  på båda språken, studievyn, adminvyns texter, agentens fakta och `stripe-checkout`. Ingen migration: katalogen, köpen
+  och strömbrytarens beskrivning i `flaggor` (som fortfarande säger Fyll timbanken) rörs inte. Kvar: merge, sedan
+  `stripe-checkout` och `drift` från merge-commiten, och i Stripe ingenting (kassan skapar inga produkter, raderna går
+  med `price_data`). Villkoren (`#erbjudanden`, `#timbank`, köpvillkoren och Att sluta) säger fortfarande att timbanken
+  fylls med Fyll timbanken: de gäller för de köpta korten, och en ny text är en ny version som alla får frågan om.
 - **Sen avbokning** (2026-10-22, `sen_avbokning`, 20261022100000) är i drift sedan kvällen 2026-10-22 (Leo: "merg och
   driftsätt"): PR #329 mergades (c0d787a), och Vercel lade ut villkoren 2026-10-23 med `#avbokning` och
   `#syskontillagg` (Leo: "skriv villkorstexten själv, du har all info"), FAQ:n, Så fungerar Nextrum, prisguiden och

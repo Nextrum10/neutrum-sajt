@@ -581,7 +581,7 @@
             + esc(k.kod + ', ' + kronor(k.ore_per_timme) + ' per timme') + '</option>').join('')
           + '</select>'
           + '<button class="btn btn-primary" type="submit">' + (kod ? 'Byt' : 'Ge rabatten') + '</button>'
-          + '<span class="dp-gratis-not">Familjen betalar så många kronor mindre för varje timme: pass, planer, Fyll timbanken '
+          + '<span class="dp-gratis-not">Familjen betalar så många kronor mindre för varje timme: pass, planer '
           + 'och timmar till en plan, för det som bokas och köps från och med nu. Det som redan är bokat och köpt behåller sitt '
           + 'pris, och en rabattkod räknas på priset efter rabatten. Studiehjälparen får lön som vanligt.</span>'
           + kvitto
@@ -2682,7 +2682,7 @@
     if (nu === kod.kod) return;
     const ja = await bekräfta({
       titel: (nu ? 'Byt till ' : 'Ge ') + kod.kod + '?',
-      text: namnFör(id) + ' betalar ' + kronor(kod.ore_per_timme) + ' mindre för varje timme: pass, planer, Fyll timbanken och '
+      text: namnFör(id) + ' betalar ' + kronor(kod.ore_per_timme) + ' mindre för varje timme: pass, planer och '
         + 'timmar till en plan, för det som bokas och köps från och med nu, tills ni tar bort rabatten. Familjen ser aldrig '
         + 'koden, bara det lägre priset. Det som redan är bokat och köpt behåller sitt pris.',
       knapp: nu ? 'Byt' : 'Ge rabatten'

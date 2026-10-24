@@ -82,8 +82,10 @@ function falskSupabase(o) {
     /* Erbjudandena på, med ett klippkort: en matchad familj får Köp, en
        som inte är matchad än inte (2026-10-07). */
     flaggor: [{ kod: 'erbjudanden', aktiv: true }],
-    erbjudanden_pris: [{ kod: 'klipp10', sort: 'klippkort', namn: 'Klippkort 10', timmar: 10, rabatt_procent: 5,
-      giltig_manader: 6, timpris_ore: 37900, ordinarie_ore: 379000, pris_ore: 360000, rabatterat_timpris_ore: 36000,
+    /* En plan: bara planerna säljs sedan 2026-10-22 (här stod ett
+       klippkort, som studievyn inte längre visar). */
+    erbjudanden_pris: [{ kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, rabatt_procent: 5,
+      giltig_manader: 1, timpris_ore: 39900, ordinarie_ore: 159600, pris_ore: 151600, rabatterat_timpris_ore: 37900,
       timmar_pa_kopet: 0 }]
   };
   const svar = (route, status, kropp, extra) => route.fulfill({
