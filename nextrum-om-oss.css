@@ -126,9 +126,8 @@
 .om-skal-text{margin:0;max-width:58ch;font-size:clamp(1.02rem,1.25vw,1.16rem);line-height:1.62;color:var(--bl-2);text-wrap:pretty}
 
 /* Leos egna meningar, i skälens rytm: vem till vänster och texten som
-   ett citat. Utan raden slutar sektionen på sista skälet, och inget
-   annat flyttar sig. Som platshållare är texten en lapp med streckad
-   kant, så att den syns och inte kan läsas som färdig. */
+   ett citat. Raden står inte i sidan förrän han skrivit den, och utan
+   den slutar sektionen på stycket ovanför. */
 .om-egna{
   display:grid;grid-template-columns:minmax(0,1fr);gap:14px;
   padding-top:clamp(28px,3.6vw,52px);
@@ -141,10 +140,6 @@
 .om-egna-text{
   margin:0;max-width:44ch;padding-left:22px;border-left:3px solid var(--acc);
   font-size:clamp(1.25rem,2vw,1.6rem);line-height:1.45;letter-spacing:-.02em;color:var(--bl);text-wrap:pretty;
-}
-.om-egna-text[data-platshallare]{
-  padding:18px 22px;border:1.5px dashed var(--acc-line);border-radius:18px;background:var(--acc-soft);
-  font-size:clamp(1.05rem,1.3vw,1.2rem);color:var(--acc-text);
 }
 
 /* ---------- 5. Så går det till ---------- */
@@ -314,6 +309,3 @@
 .om-sist-text{margin:22px 0 0;max-width:44ch;font-size:clamp(1.06rem,1.4vw,1.24rem);line-height:1.55;color:var(--bl-2)}
 .om-sist .om-cta{justify-content:center}
 .om-sist-not{margin:18px 0 0;font-size:.95rem;color:var(--bl-3)}
-
-/* Platshållarraden i footern: företagsuppgifterna Leo fyller i. */
-.ftr-platshallare{flex-basis:100%;opacity:.8}

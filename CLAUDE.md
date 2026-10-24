@@ -1119,8 +1119,8 @@ Detaljer: `minne/grunden.md`.
 - **Om oss och Så ser ni att det funkar** (2026-10-22, grenen `om-oss-sida`) är byggda, inte mergade eller i drift:
   `/om-oss` (bara på svenska; footern länkar dit på varje sida, engelskan med "About us (in Swedish)") och startsidans
   `#exempel` på båda språken. Ingen migration och ingen edge-funktion. Kvar för Leo: hans två till tre meningar om varför
-  Nextrum startades (`[data-platshallare]` under Därför finns Nextrum) och organisationsnummer och postadress i Om oss
-  footer, som inga sidor har än. Sidan säger att en ny studiehjälpare inte ser några elever förrän provet är godkänt: det
+  Nextrum startades (rutan `.om-egna` under Idén, som en kommentar i sidan tills han skrivit dem; platshållaren togs bort
+  före merge 2026-10-24) och organisationsnummer och postadress, som inga sidor har än. Sidan säger att en ny studiehjälpare inte ser några elever förrän provet är godkänt: det
   gäller först när Kräv provet står på och minst fem frågor är aktiva (avsnitt 11, Intervjumejlet och utbildningsprovet).
   Startsidans `#rost` har fortfarande citatet från "Leo & Alex, grundare av Nextrum"; Om oss nämner inga namn.
 - **Syskontillägget fast** (2026-10-21, `syskontillagget_fast`, 20261021230000) är i drift sedan kvällen 2026-10-21 (Leo:

@@ -58,7 +58,7 @@
 <link rel="stylesheet" href="nextrum-start.css?v=8a3f88cc">
 <link rel="stylesheet" href="nextrum-sidor.css?v=89c1fa67">
 <!-- Om oss (2026-10-22): det sidan har utöver menysidorna. -->
-<link rel="stylesheet" href="nextrum-om-oss.css?v=330e3a31">
+<link rel="stylesheet" href="nextrum-om-oss.css?v=8127c788">
 </head>
 <body>
 
@@ -137,7 +137,8 @@
      slutrapporten för grenen om-oss-sida. Inga priser (prissidan har
      dem), inga omdömen, inga siffror om kunder, elever, timmar eller
      resultat, och inget tankstreck. test/innehall-regler.py vaktar
-     det, och [data-platshallare] är text Leo skriver själv.
+     det, och Leos egna meningar läggs in där kommentaren under Idén
+     säger.
 
      Formen bygger på typografi, former och N-märket (de två delarna i
      loggan) i stället för foton. Färgerna är sajtens tokens, så sidan
@@ -221,13 +222,13 @@
       <p data-stig>De minns var det tog stopp och förklarar på ett sätt som ligger nära eleven. Därför letar vi efter en studiehjälpare som nyligen läst samma kurser som ert barn.</p>
       <p data-stig data-fördröj="1">En studiehjälpare är ingen lärare, och vi kallar dem inte så. Söker ni en legitimerad lärare är vi fel val, och det säger vi hellre nu.</p>
     </div>
-    <!-- Leos egna meningar. Byt texten och ta bort data-platshallare, så blir
-         raden ett citat; vill han inte ha den tas hela diven bort, och
-         sektionen slutar på stycket ovanför. -->
-    <div class="om-egna" data-stig>
-      <span class="om-skal-vem">Varför vi startade</span>
-      <p class="om-egna-text" data-platshallare>[SKRIV HÄR: Leos 2 till 3 meningar om varför Nextrum startades]</p>
-    </div>
+    <!-- Leos egna meningar om varför Nextrum startades står här när han
+         skrivit dem, som ett citat (stilen finns i nextrum-om-oss.css):
+         <div class="om-egna" data-stig>
+           <span class="om-skal-vem">Varför vi startade</span>
+           <p class="om-egna-text">...</p>
+         </div>
+         Utan dem slutar sektionen på stycket ovanför. -->
   </div>
 </section>
 
@@ -514,8 +515,7 @@
       <span>Byggd i Sverige.</span>
       <!-- Företagsuppgifterna står inte i footern än: Nextrum AB är under
            bildande (villkoren och policyn), och adressen finns inte på
-           sajten. Raden står bara här, på Om oss, tills Leo fyllt i den. -->
-      <span class="ftr-platshallare" data-platshallare>[FYLL I: organisationsnummer när bolaget är registrerat, och postadress] · info@nextrum.se</span>
+           sajten. När organisationsnumret finns ska det stå på alla sidor. -->
     </div>
   </div>
 
