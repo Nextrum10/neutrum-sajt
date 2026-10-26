@@ -1124,14 +1124,19 @@ Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
 - **Dokument med bilder, kön i matchningen och papperskorgen** (2026-10-26, `dokument_med_bilder` 20261026140000,
-  `kon_i_matchningen` 20261026150000 och `papperskorgen` 20261026160000) är inte i drift: grenen
-  `claude/kind-thompson-63nu9f`, med vyerna och migrationerna, som körs efter merge i den ordningen (vyerna tål att de
-  saknas: fälten döljs, dokumenten är fil eller text som förut, och papperskorgen säger att migrationen inte är körd).
-  Hela `rls-test.sql` gick lokalt 2202 av 2202, och utan de tre 2131 av 2137, där de sex är de nya proven som säger
-  att migrationerna inte är körda. Integritetspolicyn har versionen 26 oktober på båda språken.
-  Juristen har inte läst rad 17 och 36 i `DATASKYDD.md`, de två nya raderna i konsekvensbedömningen, policyns meningar
-  om kön, eller frågan om diskrimineringslagen 2 kap. 12 § (avsnitt 8 där): säg inte till studiehjälparna att valet
-  finns förrän juristen läst det. Leo bad om kön på "alla profiler"; föräldrarnas sparas inte, och fältet får stå tomt.
+  `kon_i_matchningen` 20261026150000 och `papperskorgen` 20261026160000) är i drift sedan kvällen 2026-10-26 (Leo:
+  "merge och driftsätt"): PR #338 mergades (64d0a90), och Vercel lade ut vyerna och integritetspolicyn på båda språken
+  (kontrollerat från databasen mot nextrum.se). Sedan `dokument_med_bilder` hel i ett do-block ur merge-commiten (md5
+  `71ae383b…`), och `kon_i_matchningen` och `papperskorgen` som var sitt `execute_sql` (de har ett `delete` i en
+  funktion, och då inte genom `http_get` och `execute`), registrerade med filens text ur merge-commiten (md5
+  `6d80122b…`, `b1836d61…`). De 17 funktionskropparna med inställningar, rättigheter och kommentarer, villkoren,
+  triggrarna, policyerna och vyn är lika en databas byggd ur filerna, hela `rls-test.sql` gick 2202 av 2202 mot
+  driften, tillbakarullat, och advisorn fick bara `mina_handlingar_bilder`, `stalle_lage` och `ta_bort_ur_stallet` som
+  nya poster för `authenticated` (med flit). Ingen edge-funktion. Valet om kön syns sedan dess i studiehjälparnas
+  profil, och föräldern kan ange barnets kön. Juristen har inte läst rad 17 och 36 i `DATASKYDD.md`, de två nya
+  raderna i konsekvensbedömningen, policyns meningar om kön, eller frågan om diskrimineringslagen 2 kap. 12 § (avsnitt
+  8 där), och Leo valde att driftsätta före; säg inte till studiehjälparna att valet finns förrän juristen läst det.
+  Leo bad om kön på "alla profiler"; föräldrarnas sparas inte, och fältet får stå tomt.
 - **Fyll timbanken säljs inte** (2026-10-22, `klippkort-bort`) är i drift sedan kvällen 2026-10-24 (Leo: "push, merge
   commit och migrera"): PR #331 mergades (9e72f81), och Vercel lade ut prissidan på båda språken, studievyn och adminvyns
   texter (kontrollerat från databasen mot nextrum.se). Sedan `drift` v26 och `stripe-checkout` v25 från merge-commiten,

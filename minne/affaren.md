@@ -722,10 +722,8 @@ bilderna, som den inte loggar texten.
 
 Driftsättningen och det som är kvar, ur avsnitt 11:
 
-- **Dokument med bilder (2026-10-26) är inte i drift.** Migrationen körs
-  efter merge; före den visar System → Dokument läget, men sparar inget
-  med bilder (beskedet säger att migrationen inte är körd), och personens
-  vy visar varje rad utan fil som en text, som förut.
+- **Dokument med bilder (2026-10-26) är i drift sedan samma kväll**, med kön i
+  matchningen och papperskorgen (PR #338, 64d0a90; `minne/databasen.md`).
 - **Avtal som text (2026-10-05) är i drift.** PR #188 mergades och
   Vercel driftsatte merge-commiten samma kväll. Migrationen
   `avtal_som_text` kördes avsnitt för avsnitt efter merge, som version
@@ -1457,4 +1455,6 @@ inte hjälpa motsatta könet syns då inte den studiehjälparen i matchning." `k
   `DATASKYDD.md` avsnitt 8.
 - Integritetspolicyn (båda språken, 26 oktober) och `DATASKYDD.md` rad 36 och konsekvensbedömningen
   säger det.
+- **I drift sedan kvällen 2026-10-26** (Leo: "merge och driftsätt", PR #338, 64d0a90), före juristen: valet syns i
+  studiehjälparnas profil och barnets kön i förälderns vy. Ingen har sagt till studiehjälparna att valet finns.
 
