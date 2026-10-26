@@ -980,8 +980,12 @@ kassan. Inget får droppas, och ingen migration får ändra eller radera befintl
   måste släppa igenom databasens ägare, annars faller `rls-test.sql`, som lägger `klipp10` som fixtur.
 - **Strömbrytaren `erbjudanden` ska stå på**: `klippkort-betala` nekar utan den, och då betalar inga köpta timmar ett
   pass.
-- **Villkoren är oförändrade** (2026-10-23): de beskriver Fyll timbanken, som fortfarande gäller för de köpta korten.
-  En text som säger att den inte säljs är en ny version, och alla får frågan igen; Leos beslut.
+- **Villkoren** var oförändrade (2026-10-23) när grenen gick ut: de beskrev Fyll timbanken, som fortfarande gäller för
+  de köpta korten. **Versionen 2026-10-26** (Leo: "fixa villkoren", `villkoren_utan_fyll_timbanken`) säger att timbanken
+  fylls med en plan, att Fyll timbanken inte säljs längre och att timmar köpta med den gäller som förut. Fyll timbanken
+  är struken där villkoren räknar upp vad man kan köpa (familjerabatten, betalningen, syskontillägget, köpvillkoren,
+  Planer och timbanken och ångerrätten), och reglerna för köpta timmar står kvar (sex månader, timbanken, prisgarantin
+  och Att sluta). Syskontilläggets egen version, 2026-10-23, står kvar: dess regel är densamma. Alla får frågan igen.
 - **Stripe**: kassan skapar inga produkter i Stripe (raderna går med `price_data` och `product_data` i varje kassa),
   så det finns inget att arkivera. Ligger något med namnet Fyll timbanken i Stripes produktkatalog ändå: arkivera, radera
   inte.

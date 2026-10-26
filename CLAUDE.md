@@ -1112,8 +1112,11 @@ Detaljer: `minne/grunden.md`.
   blir lika nästa gång kassan driftsätts. Röktest från databasen: 401 "Inloggningen gick inte att verifiera" ur båda
   funktionernas egen kod. Ingen migration: katalogen, köpen (det fanns inga köp av timmar) och strömbrytarens beskrivning
   i `flaggor` (som fortfarande säger Fyll timbanken) rörs inte, och i Stripe ingenting (kassan skapar inga produkter,
-  raderna går med `price_data`). Villkoren (`#erbjudanden`, `#timbank`, köpvillkoren och Att sluta) säger fortfarande att timbanken
-  fylls med Fyll timbanken: de gäller för de köpta korten, och en ny text är en ny version som alla får frågan om.
+  raderna går med `price_data`). **Villkoren 2026-10-26** (`villkoren_utan_fyll_timbanken`, 20261026120000, Leo: "fixa
+  villkoren") säger att timbanken fylls med en plan, att Fyll timbanken inte säljs längre och att timmar köpta med den
+  gäller som förut; Fyll timbanken är struken där villkoren räknar upp vad man kan köpa, och reglerna för köpta timmar
+  (sex månader, timbanken, prisgarantin, Att sluta) står kvar. Syskontilläggets version (2026-10-23) står kvar, för dess
+  regel är densamma. Migrationen körs efter merge, och alla får frågan igen.
 - **Sen avbokning** (2026-10-22, `sen_avbokning`, 20261022100000) är i drift sedan kvällen 2026-10-22 (Leo: "merg och
   driftsätt"): PR #329 mergades (c0d787a), och Vercel lade ut villkoren 2026-10-23 med `#avbokning` och
   `#syskontillagg` (Leo: "skriv villkorstexten själv, du har all info"), FAQ:n, Så fungerar Nextrum, prisguiden och
