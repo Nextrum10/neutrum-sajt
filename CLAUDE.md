@@ -731,7 +731,11 @@ av: inget val under Profil → Notiser. Stäng och Escape stänger rutan, ett tr
 Samma hus som de andra vyerna: KÄNSLAN och INNEHÅLLET står på `.vy` och adminvyn har inga egna
 ytor; ändras de andra vyerna oväntat är specificiteten första stället. Menyn är en egen rullyta
 som `sidomeny()` drar, aldrig sidan, och en lång etikett får bryta; `täcktÖverst()` räknar
-toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är bara vårt drag. En knapp som
+toppraden. `.btn-sm` är liten bara som `.vy-admin main .btn-sm`; Att göra är bara vårt drag.
+**Att göra sak för sak** (2026-10-26, Leo: "nex visar 3 saker att göra, jag ser bara två"): ringen räknar
+saker och listan poster, så ringens tal och Att göra leder till `#attgora`, en rad per sak (Översikt står
+vald, bara superadmin). Varje post i `byggAttGöra` och `byggProblem` bär sina `saker` ur samma urval som
+antalet, och en ny post får dem i samma ändring. En knapp som
 databasen bara släpper fram för en superadmin eller en behörighet ritas efter `ärSuperadmin()` eller `får(kod)`
 (2026-10-15), och `skriv()` säger Ingenting sparades när en uppdatering inte träffade något. Siffran vid
 Intresseanmälningar och Ansökningar är det DU inte sett (`admin_sett`, 2026-10-05), och att visa

@@ -29,7 +29,7 @@
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
      densamma som i studievyn och studiehjälparvyn. -->
 <link rel="stylesheet" href="nextrum-admin-palett.css?v=510b6564">
-<link rel="stylesheet" href="nextrum-admin-konsol.css?v=9198edac">
+<link rel="stylesheet" href="nextrum-admin-konsol.css?v=8faebbfc">
 </head>
 <body class="vy vy-admin">
 
@@ -312,7 +312,11 @@
                    enskilda streck: en dasharray på en tjock stroke ger
                    exakt samma bild och går att snurra med en rad CSS. -->
               <div class="kon-disk ar-okand" id="kon-disk">
-                <div class="kon-ring">
+                <!-- Ringen och talet leder till Att göra, sak för sak
+                     (2026-10-26). Ringen är en andra väg dit för musen och
+                     fingret; tangentbordet och skärmläsaren har talet, som
+                     säger vad länken gäller. -->
+                <a class="kon-ring" href="#attgora" tabindex="-1" aria-hidden="true">
                   <svg class="kon-nex" viewBox="0 0 200 200" aria-hidden="true">
                     <g class="nex-yttre">
                       <circle cx="100" cy="100" r="94" stroke-width="2.5"
@@ -340,12 +344,13 @@
                     </g>
                   </svg>
                   <span class="kon-nex-namn">NEX</span>
-                </div>
+                </a>
                 <div class="kon-status">
-                  <p class="kon-nex-lage">
+                  <a class="kon-nex-lage" href="#attgora">
                     <b id="kon-disk-tal">–</b>
                     <span id="kon-disk-text">läser</span>
-                  </p>
+                    <svg class="kon-nex-pil" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7"/></svg>
+                  </a>
                   <p class="kon-hero-not" id="kon-hero-not">Läser verksamheten och siffrorna. Föreslår, utför inget.</p>
                   <div class="kon-pengar" id="kon-pengar"></div>
                 </div>
@@ -424,6 +429,8 @@
             <div class="dbox ov-att">
               <h5>Att göra <em id="kon-antal"></em></h5>
               <div id="kon-lage"><div class="loading">Hämtar</div></div>
+              <a class="vy-mer kon-alla" href="#attgora" id="kon-alla" hidden>Allt att göra, en rad per sak
+                <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7h10M8 3l4 4-4 4"/></svg></a>
             </div>
 
             <div class="stack">
@@ -447,6 +454,25 @@
             </div>
           </div>
 
+        </section>
+
+        <!-- ============================================================
+             ATT GÖRA, SAK FÖR SAK (2026-10-26)
+             Leo: "när jag trycker på att göra grejen ska jag få upp en
+             flik som visar allt att göra". Nås från ringen, talet och
+             Att göra på Översikt, och har ingen post i menyn: Översikt
+             står vald medan den är framme. Samma poster som listan där,
+             en rad per sak, ritade av nextrum-admin-konsol.js. Bara för
+             en superadmin, som Översikt (nextrum-admin-behorighet.js).
+             ============================================================ -->
+        <section class="vy-sek" data-sek="attgora" hidden>
+          <div class="vy-sek-topp">
+            <div>
+              <h2>Att göra</h2>
+              <p>Allt som väntar på er, en rad per sak. Det som gått fel står först.</p>
+            </div>
+          </div>
+          <div id="ag-sidan"><div class="loading">Hämtar</div></div>
         </section>
 
         <!-- ============================================================
@@ -2685,7 +2711,7 @@
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
 <script src="nextrum-admin-karna.js?v=7615cf47"></script>
 <script src="nextrum-admin-detalj.js?v=08360d5d"></script>
-<script src="nextrum-admin-oversikt.js?v=4675189b"></script>
+<script src="nextrum-admin-oversikt.js?v=1709e69d"></script>
 <script src="nextrum-admin-kunder.js?v=a197dfc9"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
 <script src="nextrum-admin-rekrytering.js?v=a703b898"></script>
@@ -2701,7 +2727,7 @@
 <script src="nextrum-admin-koder.js?v=b68d453f"></script>
 <script src="nextrum-admin-rabattkoder.js?v=68cc3d05"></script>
 <script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
-<script src="nextrum-admin-system.js?v=5ce1b043"></script>
+<script src="nextrum-admin-system.js?v=1766bdfb"></script>
 <script src="nextrum-admin-behorighet.js?v=1d3259a1"></script>
 <script src="nextrum-admin-automationer.js?v=46019126"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
@@ -2710,8 +2736,8 @@
 <script src="nextrum-admin-radera.js?v=ee8c6b44"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
-<script src="nextrum-admin-konsol.js?v=420a6d63"></script>
+<script src="nextrum-admin-konsol.js?v=8930c22a"></script>
 <script src="nextrum-modulvakt.js?v=0af1bb13"></script>
-<script src="nextrum-admin.js?v=4b150fd5"></script>
+<script src="nextrum-admin.js?v=c82f930a"></script>
 </body>
 </html>

@@ -1918,6 +1918,9 @@
     ritaAudit: sökAudit, ritaDokument: hämtaHandlingar,
     /* Sortens namn, för personens panel (dpDokument). */
     dokTyp: typ => DOK_TYP[typ] || typ,
+    /* Vad ett utskick som inte gick fram var och vad svaret betyder, för
+       sidan Att göra (2026-10-26), med samma ord som tabellen här. */
+    notisfelText: n => ({ vad: NOTISVÄG[n.kalla] || n.kalla || 'Okänt utskick', betyder: notisfelBetyder(n) }),
     ritaFel, ritaInstallningar, ritaIntegrationer,
     /* Heter inte ritaNotiser: det namnet är taget av klockan i
        topplisten (nextrum-admin.js), och två olika saker på samma

@@ -163,6 +163,24 @@
 .vy-admin .kon-disk.ar-atgard .kon-nex-lage b{color:var(--ockra)}
 .vy-admin .kon-disk.ar-problem .kon-nex-lage b{color:var(--fel)}
 
+/* Ringen och talet leder till Att göra, sak för sak (2026-10-26). Hovringen
+   byter färg och rör ingenting: ett tal som flyttar sig under musen är
+   ett tal man inte kan läsa. */
+.vy-admin a.kon-ring{text-decoration:none}
+.vy-admin a.kon-nex-lage{color:inherit;text-decoration:none;border-radius:10px}
+.vy-admin a.kon-nex-lage:focus-visible{outline:2px solid var(--focus);outline-offset:4px}
+/* På ordens baslinje, inte mitt på raden: talet bredvid är tre gånger så
+   högt, och i mitten av det stod pilen ovanför orden. */
+.vy-admin .kon-nex-pil{
+  width:11px;height:11px;flex:none;align-self:baseline;
+  position:relative;top:2px;margin-left:-3px;
+  fill:none;stroke:var(--bl-3);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .16s var(--e);
+}
+.vy-admin a.kon-nex-lage:hover > span,
+.vy-admin a.kon-nex-lage:hover .kon-nex-pil{color:var(--acc-text);stroke:var(--acc-text)}
+.vy-admin .kon-alla[hidden]{display:none}
+
 /* ------------------------------------------------------------
    RÖRELSEN
 
@@ -341,6 +359,36 @@
   .vy-admin .kon-nex-namn{font-size:1.1rem}
   .vy-admin .kon-hero-not{display:none}
 }
+
+/* ------------------------------------------------------------
+   ATT GÖRA, SAK FÖR SAK (2026-10-26)
+   Sidan #attgora: samma poster som listan på Översikt, en rad per sak,
+   i studievyernas form (.vy-grupp, .vy-kort, .vy-rad). En rad som öppnar
+   panelen är en knapp och de andra är länkar, och de ser likadana ut. Det
+   som gått fel har felfärgen på ikonen och antalet, och rubriken säger
+   det i ord, som på Översikt.
+   ------------------------------------------------------------ */
+.vy-admin .ag-ingress{margin:0;font-size:.9rem;line-height:1.55;color:var(--bl-2);max-width:72ch}
+.vy-admin .ag-del{margin-top:24px}
+.vy-admin .ag-del-rubrik{margin:0;font-size:.84rem;font-weight:650;color:var(--bl-2)}
+.vy-admin .ag-del.ar-problem .ag-del-rubrik{color:var(--fel)}
+.vy-admin .ag-del-rubrik + .vy-grupp{margin-top:10px}
+/* På en telefon tar rubriken platsen, och pilen i länken bredvid krympte till ingenting. */
+.vy-admin .ag-del .vy-lank svg{flex:none}
+.vy-admin button.ag-rad{
+  width:100%;margin:0;border:0;background:none;
+  font:inherit;color:inherit;text-align:left;cursor:pointer;
+}
+/* Knappens border:0 ovan tar annars strecket mellan raderna. */
+.vy-admin .vy-lista > * + button.ag-rad{border-top:1px solid var(--ln)}
+.vy-admin .ag-rad{transition:background .16s var(--e)}
+.vy-admin .ag-rad:hover{background:var(--tint)}
+.vy-admin .ag-rad:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.vy-admin .ag-rad .nx-avatar{width:40px;height:40px;flex:none;font-size:.78rem}
+.vy-admin .ag-rad .vy-rad-hoger small{font-weight:600;color:var(--acc-lugn)}
+.vy-admin .ag-rad:hover .vy-rad-pil{color:var(--acc-text)}
+.vy-admin .vy-rad-ik.ar-fel,
+.vy-admin .vy-antal.ar-fel{background:color-mix(in srgb,var(--fel) 14%,var(--yta));color:var(--fel)}
 
 /* ------------------------------------------------------------
    NEX MÅNADSRAPPORT (2026-10-21)
