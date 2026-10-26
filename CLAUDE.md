@@ -42,6 +42,16 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   koder som styrkor i sin profil (`tutor_profiles.styrkor`, i vitlistan i `skydda_tutorfalt`). `matchningspoang()`
   ger behoven 12 av 100 (ämne 45, årskurs 27, utrymme 10, erfarenhet 6), aldrig ett hårt nej, och halva när någon
   sida saknar dem. Koderna ändras i `NX.BEHOV`, `students.behov`, `leads` och `tutor_profiles` samtidigt.
+- **Kön i matchningen** (2026-10-26, `kon_i_matchningen`, Leo: "vill studiehjälparen inte hjälpa motsatta könet syns
+  då inte den studiehjälparen i matchning"): elevens kön står i `students.kon` (föräldern i studievyn, admin i Ta in
+  familjen och Redigera), och studiehjälparens kön och val (`bara_samma_kon`) i `matchningsval`, aldrig i
+  `tutor_profiles`, som familjen läser: valet ser bara hen och vi. Två koder för alla, `kvinna` och `man` (`NX.KON_ELEV`
+  säger flicka och pojke), och tomt är inget svar. Den som bara vill hjälpa sitt eget kön visas inte för en elev av ett
+  annat eller utan angivet kön (`matchningsforslag_rader`, och adminvyns `krockarMedValet` med samma regel), utom
+  elevens nuvarande, och databasen nekar en ny sådan matchning för alla (`students_vakt_kon`, som går sist av
+  BEFORE-triggrarna); en matchning som redan står rivs aldrig utan blir en uppgift (`kon_krock:<elev>:<studiehjälpare>`).
+  **Förälderns kön sparas inte** (Leo skrev "alla profiler"; matchningen behöver det inte). Det är en särbehandling på
+  grund av kön i en tjänst till allmänheten, och juristen har inte läst den (avsnitt 11).
 - **Uppstartsrutan**: `data-uppstart` och banans vecka byts tillsammans, på båda sidorna; när
   passen börjat går rutan och `nextrum-uppstart.css` bort. Den är en låg remsa ovanför formuläret, och
   intresseanmälan har inget sidhuvud: formuläret står överst med rubriken i sin yta (`.nx-anm`, 2026-10-08,
@@ -742,6 +752,13 @@ en gång i tio minuter), Ångra intervju och Gå vidare till utbildning. **Utbil
 profilen och sätter utbildad och Godkänd i en transaktion; samma konto igen gör ingenting. Fliken Rekryteringen, läget
 Kontaktad som val, Boka digitalt möte, Skicka utbildningen och Markera utbildad är borta. Varje steg står i
 `ansokan_steg_logg`, som aldrig ändras och går med ansökan (utom att `andrad_av` blir null när den personen raderas). Skriv till hen står vid adressen och flyttar ingen.
+**Papperskorgen** (2026-10-26, `papperskorgen`, Leo: "radera uppgifter från det stället ... så finns personen kvar i
+vårt system och i familj"): en ikon sist på varje rad under Intresseanmälningar och i varje flik under Ansökningar,
+bara för superadmin (`papperskorg()` i kärnan, `o.bort` i `namnlista()`), som tar bort den raden och inget annat
+(`ta_bort_ur_stallet()`): en anmälan avidentifieras, en ansökan tas bort med CV:t först. Rutan (`visaPapperskorg`)
+säger ur `stalle_lage()` var personen står kvar; är raden det sista stället heter den "Ta bort X helt?" med Avbryt och
+Gå vidare, och databasen kräver det svaret (`p_helt`). Den frågar också när personen står kvar, för ett CV går inte
+att få tillbaka. Radera i panelen är vägen när personen ska bort med allt från samma adress.
 **Intervjun bokas på en bokningssida** (2026-10-20, Leo: "så att jag bara kan skicka ut länk"): ett bokningsschema i
 Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNINGSLANK`, som hette `INTERVJU_BOKNING_URL` till
 2026-10-21, och hur det skapas står överst i nextrum-config.js; ingen OAuth: det är en länk). Länken står i intervjumejlet; Google mejlar tiden och Meet-länken, och vyn läser aldrig kalendern.
@@ -939,8 +956,10 @@ samma anon-nyckel, och `is_admin` i klienten visar bara rätt sida.
   ny funktion EXECUTE som förval; en triggerfunktion ska inte ha den.
 - `invoices` och `payouts` har ingen INSERT-policy och `integrationer` ingen skrivpolicy;
   `google_koppling` ser ingen inloggad; delade avtal läses genom `mina_handlingar()`, och ett
-  inklistrat avtal genom `min_handling_text()`: en handling är en fil eller en text, och texten
-  ändras aldrig (`handlingar_texten_star_fast`).
+  inklistrat avtal genom `min_handling_text()`: en handling är en fil, eller en text och/eller bilder
+  (`handlingar.bilder`, skärmdumpar, 2026-10-26, genom `mina_handlingar_bilder()`), och texten och bilderna
+  ändras aldrig (`handlingar_texten_star_fast`, `handlingar_bilderna`). Bildernas sökvägar skrivs med raden, i
+  handlingens mapp med ett nummer och inget filnamn, och vyn delar handlingen sist, när bilderna är uppe.
   Notishemligheten står i `notis_konfig`, inte i en secret.
 - **Utbildningsprovet** (2026-10-21) har databasens första restriktiva policyer ("utbildningsprovet först"
   på `bookings`, `students`, `lesson_reports`, `messages`, `study_plans`, `tutor_reviews`, `notiser` och
@@ -1104,6 +1123,15 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Dokument med bilder, kön i matchningen och papperskorgen** (2026-10-26, `dokument_med_bilder` 20261026140000,
+  `kon_i_matchningen` 20261026150000 och `papperskorgen` 20261026160000) är inte i drift: grenen
+  `claude/kind-thompson-63nu9f`, med vyerna och migrationerna, som körs efter merge i den ordningen (vyerna tål att de
+  saknas: fälten döljs, dokumenten är fil eller text som förut, och papperskorgen säger att migrationen inte är körd).
+  Hela `rls-test.sql` gick lokalt 2202 av 2202, och utan de tre 2131 av 2137, där de sex är de nya proven som säger
+  att migrationerna inte är körda. Integritetspolicyn har versionen 26 oktober på båda språken.
+  Juristen har inte läst rad 17 och 36 i `DATASKYDD.md`, de två nya raderna i konsekvensbedömningen, policyns meningar
+  om kön, eller frågan om diskrimineringslagen 2 kap. 12 § (avsnitt 8 där): säg inte till studiehjälparna att valet
+  finns förrän juristen läst det. Leo bad om kön på "alla profiler"; föräldrarnas sparas inte, och fältet får stå tomt.
 - **Fyll timbanken säljs inte** (2026-10-22, `klippkort-bort`) är i drift sedan kvällen 2026-10-24 (Leo: "push, merge
   commit och migrera"): PR #331 mergades (9e72f81), och Vercel lade ut prissidan på båda språken, studievyn och adminvyns
   texter (kontrollerat från databasen mot nextrum.se). Sedan `drift` v26 och `stripe-checkout` v25 från merge-commiten,

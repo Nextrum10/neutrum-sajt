@@ -137,6 +137,7 @@ const NXAdmin = (function () {
      rekryteringsflikarna, där frågan är hur länge någon har väntat.
      o.flik öppnar panelen på en annan flik än den första: från
      rekryteringsflikarna på stegen, för det är dem de flikarna gäller.
+     o.bort är papperskorgen (2026-10-26), sist på raden.
      ============================================================ */
   function namnlista(rader, o) {
     if (!rader.length) return tomt(o.tomt || 'Inget här', '');
@@ -144,13 +145,18 @@ const NXAdmin = (function () {
       const under = o.under ? o.under(r) : '';
       /* o.knapp: radens nästa steg, bredvid namnet och inte i det, för en
          knapp i en knapp går inte att trycka på (2026-10-13, Ansökningar). */
-      const knapp = o.knapp ? o.knapp(r) : '';
+      const steg = o.knapp ? o.knapp(r) : '';
+      const bort = o.bort ? o.bort(r) : '';
+      const knapp = steg + bort;
+      /* Bara papperskorgen: den står kvar på namnets rad också på en
+         telefon, för en ensam ikon på en egen rad är en tom rad. */
+      const klass = !knapp ? '' : steg ? 'har-knapp' : 'har-knapp bara-bort';
       /* Initialerna först (2026-09-29): ögat hittar en person på formen
          innan det läst namnet, och en lista med bara text var en vägg. De
          är aria-hidden; skärmläsaren läser namnet som förut. */
       /* o.nytt: raden kom in sedan du tittade senast (2026-10-05).
          Pricken är en genväg; o.under säger det i ord. */
-      return '<li' + (knapp ? ' class="har-knapp"' : '') + '><button type="button" class="adm-namn'
+      return '<li' + (klass ? ' class="' + klass + '"' : '') + '><button type="button" class="adm-namn'
         + (o.nytt && o.nytt(r) ? ' ar-nytt' : '')
         + '" data-dp="' + esc(o.typ + ':' + o.id(r)) + '"'
         + (o.flik ? ' data-dp-start="' + esc(o.flik) + '"' : '') + '>'
@@ -163,6 +169,28 @@ const NXAdmin = (function () {
         + (knapp ? '<span class="adm-namn-knapp">' + knapp + '</span>' : '')
         + '</li>';
     }).join('') + '</ul>';
+  }
+
+  /* ============================================================
+     PAPPERSKORGEN (2026-10-26)
+
+     Leo: "i intresseanmälningar och ansökan, under varje flik, gör en
+     knapp för papperskorg, vilket är radera uppgifter från det stället."
+     Här är bara knappen på raden. Rutan och borttagningen står i
+     nextrum-admin-radera.js, och reglerna i databasen
+     (ta_bort_ur_stallet, migrationen papperskorgen). Bara en superadmin,
+     som Radera: databasen nekar alla andra, och då ritas knappen inte.
+     ============================================================ */
+  const LISTAN = { anmalan: 'Intresseanmälningar', ansokan: 'Ansökningar' };
+
+  function papperskorg(stalle, id, namn) {
+    if (!ärSuperadmin()) return '';
+    return '<button type="button" class="adm-bort" data-bort="' + esc(stalle + ':' + id) + '"'
+      + ' aria-label="' + esc('Ta bort ' + (namn || 'raden') + ' från ' + LISTAN[stalle]) + '"'
+      + ' title="Ta bort härifrån">'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true">'
+      + '<path d="M4.5 6.5h15M9.5 6.5v-2h5v2M6.5 6.5l1 13h9l1-13M10 10.5v5.5M14 10.5v5.5"/></svg>'
+      + '</button>';
   }
 
   /* En person som radera_person() avidentifierat står kvar i databasen
@@ -1160,7 +1188,7 @@ const NXAdmin = (function () {
     ANS_LAGE, AVBOKNINGSSKAL, BOK_LAGE, DAG, DP, KORT_LAGE, LEAD_LAGE, S, SH_LAGE,
     TILLAGG_LAGE, UTB_LAGE, dagarSedan, elevHjälpare, elevNamn, fråga, funktionsFel,
     gmailAdress, gmailLänk, hämtaAlla, hämtaAllt, hämtaAnalys, hämtaEkonomiunderlag, hämtaMatchunderlag, kontaktaRuta,
-    kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, pill, rad, sthlmDag,
+    kortDatum, läge, lönemånad, markeraSett, matchar, märkFlik, namnFör, namnlista, närText, osedda, papperskorg, pill, rad, sthlmDag,
     ritaPanelen, skriv, skrivOmOförändrad, tabell, tomtText, underlagslägen, visa, visaRuta, väljare,
     lägesväljare, räknas, får,
     ärAdminkonto, ärNyNu, ärRaderad, ärSuperadmin, rita

@@ -898,6 +898,26 @@
      ingenting mer. Den ändras aldrig när den är sparad, av samma skäl
      som filen inte byts här, och databasen nekar det också. Personen
      läser den genom min_handling_text(), aldrig ur tabellen.
+
+     SKÄRMDUMPAR (2026-10-26)
+
+     Leo: "admin ska kunna lägga in skärmdumpar från mobil, mac eller
+     liknande, istället för text. alltså antingen text eller bild, eller
+     både och." Läget Text och bilder tar en text, bilder eller båda
+     (dokument_med_bilder). Bilderna väljs, klistras in eller dras hit,
+     och läses i den ordning de står. Tre saker som inte är godtyckliga:
+
+     1. SÖKVÄGARNA SKRIVS MED RADEN, filerna laddas upp efter. Raden
+        bär listan från början och den ändras aldrig, så vyn väljer
+        handlingens id själv och sätter numren innan något laddas upp.
+
+     2. DELNINGEN KOMMER SIST. Raden skapas odelad och delas när alla
+        bilder är uppe: personen ska aldrig kunna öppna ett avtal med
+        hål i. Går en bild inte upp tas de som hann upp bort, filerna
+        först och raden sedan, som när en handling tas bort.
+
+     3. INGET FILNAMN I SÖKVÄGEN, bara ett nummer: <id>/1.png. Ett
+        filnamn från en dator kan säga vem avtalet gäller.
      ============================================================ */
   const DOK_TYP = {
     avtal: 'Avtal', intyg: 'Intyg', forsakring: 'Försäkring',
@@ -920,13 +940,85 @@
     return !h.fil && typeof h.innehall === 'string';
   }
 
-  /* Fil eller text: bara en ny handling väljer. En sparad handling byter
-     varken fil eller text. */
+  /* Skärmdumparna (dokument_med_bilder): sökvägarna i läsordning, eller
+     en tom lista. Före migrationen har raden ingen kolumn bilder. */
+  function dokBilderAv(h) {
+    return !h.fil && Array.isArray(h.bilder) ? h.bilder : [];
+  }
+
+  /* En handling som läses här och i personens vy: en text, bilder eller
+     båda. Allt annat är en fil, eller en uppladdning som inte blev klar. */
+  function dokLäses(h) {
+    return dokÄrText(h) || dokBilderAv(h).length > 0;
+  }
+
+  /* Fil eller text och bilder: bara en ny handling väljer. En sparad
+     handling byter varken fil, text eller bilder. */
   function dokSom(ny) {
     const text = $('#dok-som').value === 'text';
     $('#dok-som-grupp').hidden = !ny;
     $('#dok-fil-grupp').hidden = !ny || text;
     $('#dok-text-grupp').hidden = !ny || !text;
+    $('#dok-bild-grupp').hidden = !ny || !text;
+  }
+
+  /* ---------- skärmdumparna i formuläret ----------
+     Varje bild som väljs, klistras in eller dras hit görs först redo
+     av NXMedia.skärmdump (en HEIC blir en JPG) och står sedan som en
+     miniatyr med sitt nummer. Ordningen är läsordningen: ← flyttar en
+     bild ett steg fram, × tar bort den. Inget laddas upp förrän
+     formuläret sparas. */
+  const DOK_BILDER_MAX = 20;
+  let dokBilder = [];
+
+  function ritaDokBilder() {
+    const host = $('#dok-bilder');
+    if (!host) return;
+    host.innerHTML = dokBilder.map((b, i) =>
+      '<figure class="dok-bild">'
+      + '<img src="' + esc(b.url) + '" alt="Bild ' + (i + 1) + ' av ' + dokBilder.length + '">'
+      + '<figcaption>' + (i + 1) + '</figcaption>'
+      + (i ? '<button type="button" class="dok-bild-knapp" data-dok-bild-fram="' + i + '"'
+        + ' aria-label="Flytta bild ' + (i + 1) + ' ett steg fram">←</button>' : '')
+      + '<button type="button" class="dok-bild-knapp" data-dok-bild-bort="' + i + '"'
+      + ' aria-label="Ta bort bild ' + (i + 1) + '">×</button>'
+      + '</figure>').join('');
+  }
+
+  function rensaDokBilder() {
+    dokBilder.forEach(b => URL.revokeObjectURL(b.url));
+    dokBilder = [];
+    ritaDokBilder();
+  }
+
+  async function läggTillDokBilder(filer) {
+    const msg = $('#dok-msg');
+    const lista = Array.from(filer || []);
+    if (!lista.length) return;
+    rensa(msg);
+    const fel = [];
+    for (const fil of lista) {
+      if (dokBilder.length >= DOK_BILDER_MAX) {
+        fel.push('Ett dokument får ha högst ' + DOK_BILDER_MAX + ' bilder. Är det fler är det en PDF.');
+        break;
+      }
+      const klar = await M.skärmdump(fil);
+      if (klar.fel) { fel.push(klar.fel); continue; }
+      dokBilder.push({ blob: klar.blob, typ: klar.typ, ändelse: klar.ändelse, url: URL.createObjectURL(klar.blob) });
+    }
+    ritaDokBilder();
+    if (fel.length) säg(msg, fel.join(' '), false);
+  }
+
+  /* Ett id för en ny handling, valt här: bildernas sökvägar ska stå på
+     raden när den skapas (dokument_med_bilder). */
+  function dokNyttId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+    const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+    return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
   }
 
   function dokPersonId(h) {
@@ -1003,6 +1095,7 @@
     const som = $('#dok-som').value;
     form.reset();
     $('#dok-som').value = som;
+    rensaDokBilder();
     $('#dok-rubrik').textContent = 'Ny handling';
     $('#dok-spara').textContent = 'Lägg till';
     $('#dok-avbryt').hidden = true;
@@ -1069,6 +1162,12 @@
   }
   const DOK_TEXT_EJ_KORD = 'Texter finns inte i databasen än: migrationen avtal_som_text '
     + 'är inte körd. Ingenting sparades. Ladda upp avtalet som en fil så länge.';
+  /* Och för bilderna, PGRST204 med kolumnen bilder. */
+  function dokBilderSaknas(fel) {
+    return !!fel && /bilder/.test(String(fel.message || ''));
+  }
+  const DOK_BILDER_EJ_KORD = 'Bilder finns inte i databasen än: migrationen dokument_med_bilder '
+    + 'är inte körd. Ingenting sparades.';
   /* Samma tak som handlingar_innehall_langd. Ett sextiosidigt avtal. */
   const DOK_TEXT_MAX = 200000;
 
@@ -1110,8 +1209,10 @@
       { namn: 'Sort', rita: h => '<b>' + esc(DOK_TYP[h.typ] || h.typ) + '</b>' },
       { namn: 'Vad', rita: h => esc(h.titel)
         + (dokFilnamn(h) ? '<span class="adm-und">' + esc(dokFilnamn(h)) + '</span>'
-          : dokÄrText(h) ? '<span class="adm-und">Text, ' + esc(h.innehall.length.toLocaleString('sv-SE'))
-            + ' tecken</span>' : '') },
+          : dokLäses(h) ? '<span class="adm-und">' + esc([
+              dokÄrText(h) ? 'Text, ' + h.innehall.length.toLocaleString('sv-SE') + ' tecken' : null,
+              dokBilderAv(h).length ? dokBilderAv(h).length + (dokBilderAv(h).length === 1 ? ' bild' : ' bilder') : null
+            ].filter(Boolean).join(' · ')) + '</span>' : '') },
       { namn: 'Person', rita: dokPerson },
       { namn: 'Giltig till', rita: h => h.giltig_till
         ? '<span class="adm-tal">' + esc(kortDatum(h.giltig_till)) + '</span>'
@@ -1120,7 +1221,7 @@
       { namn: 'Uppladdad', rita: h => '<span class="adm-tal">' + esc(kortDatum(h.uppladdad)) + '</span>'
         + '<span class="adm-und">' + esc(h.uppladdad_av ? namnFör(h.uppladdad_av) : 'okänt') + '</span>' },
       { namn: '', höger: true, rita: h =>
-        (h.fil || dokÄrText(h) ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button> ' : '')
+        (h.fil || dokLäses(h) ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button> ' : '')
         + '<button class="btn btn-ghost btn-sm" type="button" data-dok-andra="' + esc(h.id) + '">Ändra</button>' }
     ], rader, filter ? 'Ingen handling här' : 'Inga handlingar än');
   }
@@ -1142,6 +1243,76 @@
   if (dokSomVal) dokSomVal.addEventListener('change', () => {
     dokSom(true);
     rensa($('#dok-msg'));
+  });
+
+  /* Skärmdumparna: välj, klistra in eller dra hit. Väljaren töms efter
+     varje val, så att samma bild går att välja igen efter ett ×. */
+  const dokBildFil = $('#dok-bild-fil');
+  if (dokBildFil) dokBildFil.addEventListener('change', async () => {
+    const filer = Array.from(dokBildFil.files || []);
+    dokBildFil.value = '';
+    await läggTillDokBilder(filer);
+  });
+
+  /* Klistra in: en skärmdump i urklippet (⌘⇧⌃4 på en Mac, Kopiera på en
+     telefon) blir en bild, var i formuläret man än står, så länge en ny
+     handling med text och bilder skrivs. En text i samma urklipp går in
+     i rutan som vanligt. */
+  const dokFormPaste = $('#dok-form');
+  if (dokFormPaste) dokFormPaste.addEventListener('paste', e => {
+    if (dokÄndras || $('#dok-som').value !== 'text') return;
+    const cd = e.clipboardData;
+    if (!cd) return;
+    let filer = Array.from(cd.files || []);
+    if (!filer.length && cd.items) {
+      filer = Array.from(cd.items).filter(x => x.kind === 'file').map(x => x.getAsFile()).filter(Boolean);
+    }
+    filer = filer.filter(f => /^image\//.test(f.type || '') || /\.(heic|heif)$/i.test(f.name || ''));
+    if (!filer.length) return;
+    if (!Array.from(cd.types || []).includes('text/plain')) e.preventDefault();
+    läggTillDokBilder(filer);
+  });
+
+  const dokBildGrupp = $('#dok-bild-grupp');
+  if (dokBildGrupp) {
+    dokBildGrupp.addEventListener('dragover', e => {
+      if (!e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes('Files')) return;
+      e.preventDefault();
+      dokBildGrupp.classList.add('ar-drag');
+    });
+    dokBildGrupp.addEventListener('dragleave', e => {
+      if (!dokBildGrupp.contains(e.relatedTarget)) dokBildGrupp.classList.remove('ar-drag');
+    });
+    dokBildGrupp.addEventListener('drop', e => {
+      if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+      e.preventDefault();
+      dokBildGrupp.classList.remove('ar-drag');
+      läggTillDokBilder(e.dataTransfer.files);
+    });
+  }
+
+  const dokBilderHost = $('#dok-bilder');
+  if (dokBilderHost) dokBilderHost.addEventListener('click', e => {
+    const fram = e.target.closest('[data-dok-bild-fram]');
+    if (fram) {
+      const i = Number(fram.dataset.dokBildFram);
+      if (i > 0 && i < dokBilder.length) {
+        dokBilder.splice(i - 1, 0, dokBilder.splice(i, 1)[0]);
+        ritaDokBilder();
+        /* Fokus följer bilden, så att flera steg går med tangentbordet. */
+        const ny = dokBilderHost.querySelector('[data-dok-bild-fram="' + (i - 1) + '"]')
+          || dokBilderHost.querySelector('[data-dok-bild-bort="' + (i - 1) + '"]');
+        if (ny) ny.focus();
+      }
+      return;
+    }
+    const bort = e.target.closest('[data-dok-bild-bort]');
+    if (bort) {
+      const i = Number(bort.dataset.dokBildBort);
+      const [b] = dokBilder.splice(i, 1);
+      if (b) URL.revokeObjectURL(b.url);
+      ritaDokBilder();
+    }
   });
 
   const dokFlik = $('#flik-dokument');
@@ -1199,15 +1370,78 @@
       return;
     }
 
-    /* ---------- ny text ---------- */
+    /* ---------- ny text, nya bilder, eller båda ---------- */
     if ($('#dok-som').value === 'text') {
       const text = $('#dok-text').value;
-      if (!/\S/.test(text)) { säg(msg, 'Klistra in texten.', false); $('#dok-text').focus(); return; }
+      const harText = /\S/.test(text);
+      if (!harText && !dokBilder.length) {
+        säg(msg, 'Klistra in texten, lägg till minst en bild, eller båda.', false);
+        $('#dok-text').focus();
+        return;
+      }
       if (text.length > DOK_TEXT_MAX) {
         säg(msg, 'Texten är längre än ' + DOK_TEXT_MAX.toLocaleString('sv-SE')
           + ' tecken. Ladda upp avtalet som en fil i stället.', false);
         return;
       }
+
+      if (dokBilder.length) {
+        await medan(knapp, 'Laddar upp…', async () => {
+          const id = dokNyttId();
+          const bilder = dokBilder.slice();
+          const vägar = bilder.map((b, i) => id + '/' + (i + 1) + '.' + b.ändelse);
+          /* Odelad tills bilderna är uppe (2 i rubriken ovan). */
+          const ny = Object.assign({}, rad, {
+            id: id,
+            innehall: harText ? text : null,
+            bilder: vägar,
+            uppladdad_av: S.user.id
+          });
+          delete ny.delad_med_personen;
+          const { error } = await supa.from('handlingar').insert(ny);
+          if (error) {
+            säg(msg, dokBilderSaknas(error) ? DOK_BILDER_EJ_KORD
+              : dokTextSaknas(error) ? DOK_TEXT_EJ_KORD
+              : dokDelningSaknas(error) ? DOK_EJ_KORD : 'Kunde inte spara: ' + felText(error), false);
+            return;
+          }
+
+          const uppe = [];
+          for (let i = 0; i < bilder.length; i++) {
+            knapp.textContent = 'Laddar upp ' + (i + 1) + ' av ' + bilder.length + '…';
+            const upp = await supa.storage.from('dokument').upload(vägar[i], bilder[i].blob, {
+              contentType: bilder[i].typ, upsert: false
+            });
+            if (upp.error) {
+              /* Filerna först, raden sedan: en rad som pekar på filer som
+                 inte finns är ett avtal med hål i. */
+              if (uppe.length) await supa.storage.from('dokument').remove(uppe);
+              await supa.from('handlingar').delete().eq('id', id);
+              säg(msg, 'Bild ' + (i + 1) + ' gick inte upp: ' + upp.error.message + ' Ingenting sparades.', false);
+              return;
+            }
+            uppe.push(vägar[i]);
+          }
+
+          if (delad) {
+            const d = await supa.from('handlingar').update({ delad_med_personen: true }).eq('id', id);
+            if (d.error) {
+              dokNy();
+              säg(msg, 'Dokumentet är sparat men inte delat: ' + felText(d.error)
+                + ' Tryck Ändra på det och kryssa i delningen igen.', false);
+              await hämtaHandlingar();
+              return;
+            }
+          }
+          dokNy();
+          säg(msg, delad
+            ? '✓ Dokumentet är sparat. ' + namnFör(person) + ' läser det under Profil & inställningar → Dokument.'
+            : '✓ Dokumentet är sparat.', true);
+          await hämtaHandlingar();
+        });
+        return;
+      }
+
       await medan(knapp, 'Sparar…', async () => {
         const { error } = await supa.from('handlingar').insert(Object.assign(rad, {
           innehall: text,
@@ -1280,20 +1514,39 @@
     if (öppna) {
       const h = (S.handlingar || []).find(x => x.id === öppna.dataset.dokOppna);
       if (!h || öppna.getAttribute('aria-busy')) return;
-      /* En text visas här, som den står och som personen läser den.
-         Ladda ned ger samma textfil som personen får. */
-      if (dokÄrText(h)) {
+      /* En text och bilder visas här, som de står och som personen läser
+         dem. Ladda ned ger samma textfil som personen får, och en bild
+         öppnas i full storlek i en ny flik. Bildernas länkar gäller fem
+         minuter, som filernas. */
+      if (dokLäses(h)) {
         const person = dokPersonId(h);
+        const vägar = dokBilderAv(h);
+        const harText = dokÄrText(h);
+        let bilder = [];
+        if (vägar.length) {
+          const urls = await medan(öppna, 'Hämtar…',
+            () => Promise.all(vägar.map(v => M.signera('dokument', v, 300))));
+          bilder = urls.map((u, i) => u ? { url: u, alt: 'Bild ' + (i + 1) + ' av ' + urls.length } : null)
+            .filter(Boolean);
+          if (bilder.length < vägar.length) {
+            alert((vägar.length - bilder.length) + ' av bilderna gick inte att hämta. '
+              + 'De kan ha tagits bort ur lagringen.');
+          }
+        }
         const spara = await bekräfta({
           titel: h.titel,
           text: h.delad_med_personen && person
-            ? namnFör(person) + ' läser samma text under Profil & inställningar → Dokument.'
-            : 'Bara vi ser texten.',
-          forhandsvisning: h.innehall,
-          knapp: 'Ladda ned',
+            ? namnFör(person) + ' läser samma ' + (harText && vägar.length ? 'text och bilder'
+                : harText ? 'text' : vägar.length === 1 ? 'bild' : 'bilder')
+              + ' under Profil & inställningar → Dokument.'
+            : h.delad_med_personen ? 'Dokumentet är delat.' : 'Bara vi ser dokumentet.',
+          forhandsvisning: harText ? h.innehall : null,
+          bilder: bilder,
+          knapp: vägar.length ? 'Ladda ned texten' : 'Ladda ned',
+          utanKnapp: !harText,
           avbryt: 'Stäng'
         });
-        if (spara) M.sparaText(h.innehall, h.titel);
+        if (spara && harText) M.sparaText(h.innehall, h.titel);
         return;
       }
       if (!h.fil) return;
@@ -1327,9 +1580,12 @@
       const h = (S.handlingar || []).find(x => x.id === bort.dataset.dokBort);
       if (!h) return;
       const person = dokPersonId(h);
+      const bildvägar = dokBilderAv(h);
       const ja = await bekräfta({
         titel: 'Ta bort handlingen?',
-        text: h.titel + (h.fil ? '. Både raden och filen försvinner' : '. Texten försvinner')
+        text: h.titel + (h.fil ? '. Både raden och filen försvinner'
+            : bildvägar.length ? (dokÄrText(h) ? '. Texten och bilderna försvinner' : '. Bilderna försvinner')
+            : '. Texten försvinner')
           + ', och det går inte att ångra.'
           + (h.delad_med_personen && person
             ? ' ' + namnFör(person) + ' ser den inte längre i sin vy.' : ''),
@@ -1340,14 +1596,16 @@
         /* Filen först, och svaret LÄSES. Sökvägen finns bara i
            raden: försvinner raden först blir filen omöjlig att
            hitta och omöjlig att städa. */
-        if (h.fil) {
-          const { error: filfel } = await supa.storage.from('dokument').remove([h.fil]);
+        const filer = h.fil ? [h.fil] : bildvägar;
+        if (filer.length) {
+          const { error: filfel } = await supa.storage.from('dokument').remove(filer);
           if (filfel) {
-            alert('Filen kunde inte tas bort ur lagringen: ' + felText(filfel)
-              + '\n\nRaden står kvar, annars hade filen blivit omöjlig att hitta.');
+            alert((filer.length > 1 ? 'Bilderna' : 'Filen') + ' kunde inte tas bort ur lagringen: ' + felText(filfel)
+              + '\n\nRaden står kvar, annars hade '
+              + (filer.length > 1 ? 'bilderna blivit omöjliga' : 'filen blivit omöjlig') + ' att hitta.');
             return;
           }
-          M.glömSignerad('dokument', h.fil);
+          filer.forEach(f => M.glömSignerad('dokument', f));
         }
         const { error } = await supa.from('handlingar').delete().eq('id', h.id);
         if (error) { alert('Kunde inte ta bort: ' + felText(error)); return; }

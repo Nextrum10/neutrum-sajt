@@ -841,9 +841,21 @@ window.NXStudie = (function () {
            innehållet kommer från servern, inte från oss. */
         + (o.forhandsvisning
           ? '<pre class="nx-fraga-prov">' + esc(o.forhandsvisning) + '</pre>' : '')
+        /* Bilder att se, som skärmdumparna i ett dokument
+           (dokument_med_bilder, 2026-10-26): { url, alt }, och var och en
+           öppnas i full storlek i en ny flik. Adressen är signerad och
+           kommer från oss; den escapas ändå. */
+        + (o.bilder && o.bilder.length
+          ? '<div class="nx-fraga-bilder">' + o.bilder.map(function (b) {
+              return '<a href="' + esc(b.url) + '" target="_blank" rel="noopener">'
+                + '<img src="' + esc(b.url) + '" alt="' + esc(b.alt || '') + '" loading="lazy"></a>';
+            }).join('') + '</div>'
+          : '')
         + '<div class="nx-fraga-knappar">'
         + '<button type="button" class="btn btn-ghost" data-svar="nej">' + esc(o.avbryt || 'Avbryt') + '</button>'
-        + '<button type="button" class="btn btn-primary" data-svar="ja">' + esc(o.knapp || 'Ta bort') + '</button>'
+        /* utanKnapp: en ruta att bara läsa, med en knapp som stänger. */
+        + (o.utanKnapp ? ''
+          : '<button type="button" class="btn btn-primary" data-svar="ja">' + esc(o.knapp || 'Ta bort') + '</button>')
         + '</div></div>';
 
       var sistaFokus = document.activeElement;
@@ -857,7 +869,8 @@ window.NXStudie = (function () {
       function tangent(e) {
         if (e.key === 'Escape') stäng(false);
         if (e.key === 'Tab') {
-          var kan = ruta.querySelectorAll('button');
+          /* Länkarna med, så att bilderna i rutan går att nå med Tab. */
+          var kan = ruta.querySelectorAll('a[href], button');
           var f = kan[0], s = kan[kan.length - 1];
           if (e.shiftKey && document.activeElement === f) { e.preventDefault(); s.focus(); }
           else if (!e.shiftKey && document.activeElement === s) { e.preventDefault(); f.focus(); }
@@ -4053,6 +4066,14 @@ window.NXStudie = (function () {
      min_handling_text() och fäller ut den under raden, och Ladda ned
      ger en textfil som är personens egen kopia, utanför inloggningen.
 
+     SKÄRMDUMPAR (2026-10-26). En rad utan fil kan också vara bilder,
+     eller en text med bilder (dokument_med_bilder). Vilka raderna är och
+     var bilderna ligger säger mina_handlingar_bilder(), som hämtas med
+     listan; Läs visar texten och sedan bilderna, och en bild öppnas i
+     full storlek i samma tryck (NXMedia.öppnaFil), med en ny länk som
+     gäller fem minuter. Utan migrationen svarar funktionen inte, och då
+     är varje rad utan fil en text, som förut.
+
      supa skickas in, som till notisval: resten av filen rör ingen
      databas, och två vyer med var sin kopia av samma fråga glider isär.
      ============================================================ */
@@ -4071,6 +4092,8 @@ window.NXStudie = (function () {
     var rader = [];
     /* Texterna som hämtats, per id. Läs en gång till hämtar inte igen. */
     var texter = {};
+    /* Bilderna per id ur mina_handlingar_bilder(): { har_text, bilder }. */
+    var bilderFör = {};
     if (!host || !supa) return;
 
     /* Samma regel som NXMedia.öppnaFil: det webbläsaren visar öppnas,
@@ -4078,7 +4101,16 @@ window.NXStudie = (function () {
     function iFlik(d) {
       return /^(application\/pdf|image\/(jpeg|png|webp))$/.test(d.mimetyp || '');
     }
+    /* En rad utan fil läses här: en text, bilder eller båda. */
     function ärText(d) { return !d.fil; }
+    function bilderAv(d) { return (bilderFör[d.id] && bilderFör[d.id].bilder) || []; }
+    function harText(d) { return !bilderFör[d.id] || bilderFör[d.id].har_text; }
+    function vadDetÄr(d) {
+      var n = bilderAv(d).length;
+      if (!n) return 'Text';
+      var bilder = n === 1 ? '1 bild' : n + ' bilder';
+      return harText(d) ? 'Text och ' + bilder : bilder;
+    }
     /* Sökvägen är "<id>/<tidsstämpel>-<filnamn>". */
     function filnamn(d) {
       return String(d.fil || '').split('/').slice(1).join('/').replace(/^\d+-/, '');
@@ -4092,7 +4124,7 @@ window.NXStudie = (function () {
       var idag = NX.isoFor(new Date());
       host.innerHTML = rader.map(function (d) {
         var under = [DOKTYP[d.typ] || 'Dokument',
-                     ärText(d) ? 'Text' : NXMedia.filEtikett(d.mimetyp), NXMedia.filstorlek(d.storlek),
+                     ärText(d) ? vadDetÄr(d) : NXMedia.filEtikett(d.mimetyp), NXMedia.filstorlek(d.storlek),
                      d.uppladdad ? 'tillagt ' + NX.datumText(String(d.uppladdad).slice(0, 10)) : null];
         if (d.giltig_till) {
           under.push((d.giltig_till < idag ? 'gällde till ' : 'gäller till ') + NX.datumText(d.giltig_till));
@@ -4122,8 +4154,22 @@ window.NXStudie = (function () {
         if (t && texter[t.id] != null) NXMedia.sparaText(texter[t.id], t.titel);
         return;
       }
-      /* Texten fälls ut under raden, nedanför knappen: det som står
-         ovanför det man trycker på byter inte höjd. */
+      /* En bild i full storlek: en ny flik i samma tryck, med en ny
+         länk, så att en bild som stått uppfälld en stund ändå öppnas. */
+      var bild = e.target.closest('[data-dok-bild]');
+      if (bild) {
+        e.preventDefault();
+        if (msg) NX.rensa(msg);
+        NXMedia.öppnaFil('dokument', bild.dataset.dokBild, { namn: bild.dataset.dokBild.split('/').pop() })
+          .then(function (fel) {
+            if (!fel) return;
+            if (msg) NX.säg(msg, fel, false);
+            else alert(fel);
+          });
+        return;
+      }
+      /* Texten och bilderna fälls ut under raden, nedanför knappen: det
+         som står ovanför det man trycker på byter inte höjd. */
       var läs = e.target.closest('[data-dok-las]');
       if (läs) {
         if (läs.getAttribute('aria-busy')) return;
@@ -4137,27 +4183,52 @@ window.NXStudie = (function () {
           läs.textContent = 'Läs';
           return;
         }
-        var visa = function () {
-          ruta.innerHTML = '<div class="nx-dok-avtal">' + esc(texter[dt.id]) + '</div>'
-            + '<button class="btn btn-ghost btn-sm" type="button" data-dok-spara="' + esc(dt.id) + '">Ladda ned</button>';
+        var vägar = bilderAv(dt);
+        var visa = function (urls) {
+          var text = harText(dt) && texter[dt.id] != null;
+          ruta.innerHTML = (text ? '<div class="nx-dok-avtal">' + esc(texter[dt.id]) + '</div>' : '')
+            + (urls.length
+              ? '<div class="nx-dok-bilder">' + urls.map(function (u, i) {
+                  return '<a href="' + esc(u) + '" target="_blank" rel="noopener" data-dok-bild="' + esc(vägar[i]) + '">'
+                    + '<img src="' + esc(u) + '" alt="Bild ' + (i + 1) + ' av ' + urls.length + ' i ' + esc(dt.titel) + '"'
+                    + ' loading="lazy"></a>';
+                }).join('') + '</div>'
+                + '<p class="xsmall nx-dok-bild-not">Tryck på en bild för att se den i full storlek och spara den.</p>'
+              : '')
+            + (text ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-spara="' + esc(dt.id) + '">'
+              + (urls.length ? 'Ladda ned texten' : 'Ladda ned') + '</button>' : '');
           ruta.hidden = false;
           läs.setAttribute('aria-expanded', 'true');
           läs.textContent = 'Dölj';
         };
-        if (texter[dt.id] != null) { visa(); return; }
         medan(läs, 'Hämtar…', function () {
-          return supa.rpc('min_handling_text', { p_id: dt.id });
+          var textSvar = harText(dt) && texter[dt.id] == null
+            ? supa.rpc('min_handling_text', { p_id: dt.id }) : Promise.resolve(null);
+          /* Länken gäller fem minuter, som filens: den kan stå i en
+             adressrad, och ett avtal kan bära ett personnummer. */
+          var bildSvar = Promise.all(vägar.map(function (v) { return NXMedia.signera('dokument', v, 300); }));
+          return Promise.all([textSvar, bildSvar]);
         }).then(function (svar) {
+          var textSvar = svar[0], urls = svar[1];
           /* Null är en text som inte längre är delad, eller borttagen
              sedan listan hämtades. */
-          if (!svar || svar.error || typeof svar.data !== 'string') {
+          if (textSvar && (textSvar.error || typeof textSvar.data !== 'string')) {
             var fel = 'Texten gick inte att hämta. Ladda om sidan, eller skriv till oss.';
             if (msg) NX.säg(msg, fel, false);
             else alert(fel);
             return;
           }
-          texter[dt.id] = svar.data;
-          visa();
+          if (textSvar) texter[dt.id] = textSvar.data;
+          var fick = urls.filter(Boolean);
+          if (fick.length < urls.length) {
+            var bildfel = (urls.length - fick.length === 1 ? 'En bild' : (urls.length - fick.length) + ' bilder')
+              + ' gick inte att visa. Ladda om sidan, eller skriv till oss.';
+            if (msg) NX.säg(msg, bildfel, false);
+            else alert(bildfel);
+          }
+          /* Bilderna som fanns, med sina egna sökvägar. */
+          vägar = vägar.filter(function (v, i) { return urls[i]; });
+          visa(fick);
         });
         return;
       }
@@ -4176,9 +4247,10 @@ window.NXStudie = (function () {
     });
 
     host.innerHTML = '<div class="loading">Hämtar</div>';
-    supa.rpc('mina_handlingar').then(function (svar) {
-      if (svar.error) {
-        if (svar.error.code === 'PGRST202' || svar.error.code === '42883') {
+    Promise.all([supa.rpc('mina_handlingar'), supa.rpc('mina_handlingar_bilder')]).then(function (svar) {
+      var lista = svar[0], bilder = svar[1];
+      if (lista.error) {
+        if (lista.error.code === 'PGRST202' || lista.error.code === '42883') {
           rader = [];
           rita();
           return;
@@ -4187,7 +4259,13 @@ window.NXStudie = (function () {
           + 'Ladda om sidan, eller skriv till oss.</p>';
         return;
       }
-      rader = svar.data || [];
+      /* Utan bilderna (migrationen dokument_med_bilder är inte körd, eller
+         frågan föll) är varje rad utan fil en text, som förut. */
+      bilderFör = {};
+      (bilder && !bilder.error ? bilder.data || [] : []).forEach(function (b) {
+        bilderFör[b.id] = { har_text: !!b.har_text, bilder: b.bilder || [] };
+      });
+      rader = lista.data || [];
       rita();
     });
   }

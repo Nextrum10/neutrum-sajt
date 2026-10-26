@@ -16,7 +16,7 @@
   const M = NXMedia;
 
   const { S, fråga, funktionsFel, gmailAdress, hämtaAllt, hämtaMatchunderlag, kontaktaRuta,
-          kortDatum, läge, matchar, märkFlik, namnlista, närText, ritaPanelen, tomtText, visaRuta,
+          kortDatum, läge, matchar, märkFlik, namnlista, närText, papperskorg, ritaPanelen, tomtText, visaRuta,
           ärNyNu, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
@@ -70,12 +70,16 @@
       nytt: a => ärNyNu('ansokningar', a),
       under: a => (ärNyNu('ansokningar', a) ? 'Ny sedan du tittade senast · ' : '') + 'Kom in ' + närText(a.created_at),
       knapp: a => vidareKnapp('intervju', a, 'Till intervju'),
+      bort: släng,
       tomt: tomtText(sök, 'Ingen ny ansökan matchar söket', 'Inga nya ansökningar')
     });
 
     ritaStegflikar();
     ritaPanelen();
   }
+
+  /* Papperskorgen (2026-10-26): bara den här ansökan, i varje flik. */
+  const släng = a => papperskorg('ansokan', a.id, a.name || a.email);
 
   function vidareKnapp(steg, a, text, primär) {
     return '<button type="button" class="btn ' + (primär ? 'btn-primary' : 'btn-ghost') + ' btn-sm" data-ans-vidare="'
@@ -113,7 +117,8 @@
       if (!el) return;
       const antal = $(sel + '-antal');
       if (antal) antal.textContent = rader.length ? rader.length + ' st' : '';
-      el.innerHTML = namnlista(rader, Object.assign({ typ: 'ansokan', id: a => a.id, namn: a => a.name || a.email }, o));
+      el.innerHTML = namnlista(rader, Object.assign({ typ: 'ansokan', id: a => a.id, namn: a => a.name || a.email,
+                                                      bort: släng }, o));
     };
 
     lista('#ans-intervju', intervju, {

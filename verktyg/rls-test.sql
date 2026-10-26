@@ -59,8 +59,9 @@
 -- (2026-10-14), ansokan_till_intervju, familjerabatter, nexlax_i_adminvyn, betygsgarantin_provas,
 -- gratistimmarna_paminns och obetalda_pass_pa_fakturan (2026-10-15),
 -- fakturan_tas_bort, anmalan_flyttas_till_familjen, intervjumejlet,
--- utbildningsprovet_i_studiehjalparvyn, betalningsliggaren, planerna_per_manad och
--- kortdragningen_forsoker_igen (2026-10-21) är körda.
+-- utbildningsprovet_i_studiehjalparvyn, betalningsliggaren, planerna_per_manad,
+-- kortdragningen_forsoker_igen (2026-10-21), dokument_med_bilder,
+-- kon_i_matchningen och papperskorgen (2026-10-26) är körda.
 -- fakturans_tabeller_tas_bort (del 2, efter en backup) kan vara körd eller
 -- inte: avsnitt 38 provar det som gäller i båda lägena.
 --
@@ -21427,6 +21428,586 @@ begin
 
   if fel <> 'rulla tillbaka' then
     insert into utfall (test, ok, detalj) values ('SA Sen avbokning', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- 54. Dokument med bilder (dokument_med_bilder, 2026-10-26)
+--
+-- Leo: "i dokument på plattformen ska admin kunna lägga in skärmdumpar
+-- från mobil, mac eller liknande, istället för text. alltså antingen
+-- text eller bild, eller både och." En handling är en fil, eller en
+-- text och/eller bilder. Bilderna skrivs när raden skapas, i
+-- handlingens egen mapp med ett nummer och inget filnamn, och byts
+-- aldrig, inte ens av admin. Personen ser listan och exakt de filer
+-- raden pekar ut, och bara när handlingen är delad: vyn delar sist,
+-- när bilderna är uppe. Studiehjälpare A, familjerna P och Q, admin AD.
+-- Allt rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  n    bigint;
+  l    uuid[];
+  f    text[];
+  r    record;
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  H1   constant uuid := '00000000-0000-4000-8000-000000054d01';  -- text och två bilder, A
+  H2   constant uuid := '00000000-0000-4000-8000-000000054d02';  -- en bild, P
+  H3   constant uuid := '00000000-0000-4000-8000-000000054d03';  -- bara en bild, A
+  H9   constant uuid := '00000000-0000-4000-8000-000000054d09';  -- villkoren
+  b11  constant text := '00000000-0000-4000-8000-000000054d01/1.png';
+  b12  constant text := '00000000-0000-4000-8000-000000054d01/2.jpg';
+  b13  constant text := '00000000-0000-4000-8000-000000054d01/3.png';   -- i mappen, inte i listan
+  b21  constant text := '00000000-0000-4000-8000-000000054d02/1.webp';
+  b31  constant text := '00000000-0000-4000-8000-000000054d03/1.png';
+begin
+  if to_regprocedure('public.mina_handlingar_bilder()') is null then
+    insert into utfall (test, ok, detalj)
+    values ('DB migrationen dokument_med_bilder är körd', false, 'mina_handlingar_bilder() finns inte');
+    return;
+  end if;
+
+  begin
+    -- Admin: raderna först, odelade och med bildernas sökvägar, sedan
+    -- filerna, sist delningen. Samma ordning som vyn.
+    t := pg_temp.svar_som(AD, format($q$insert into public.handlingar
+           (id, typ, titel, innehall, bilder, kopplad_tabell, kopplad_id, uppladdad_av) values
+           (%L, 'avtal', 'Avtal A', 'Texten till bilderna', array[%L, %L], 'profiles', %L, %L),
+           (%L, 'avtal', 'Skärmdump P', null, array[%L], 'profiles', %L, %L),
+           (%L, 'ovrigt', 'Bara bilder A', null, array[%L], 'profiles', %L, %L)$q$,
+           H1, b11, b12, A, AD, H2, b21, P, AD, H3, b31, A, AD));
+    ut := ut || jsonb_build_object('t', 'DB admin skapar ett dokument med text och bilder, och ett med bara bilder',
+            'ok', t = 'ok', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$insert into storage.objects (bucket_id, name, owner) values
+           ('dokument', %L, %L), ('dokument', %L, %L), ('dokument', %L, %L), ('dokument', %L, %L),
+           ('dokument', %L, %L)$q$, b11, AD, b12, AD, b13, AD, b21, AD, b31, AD));
+    ut := ut || jsonb_build_object('t', 'DB admin laddar upp bilderna i dokumentens mappar', 'ok', t = 'ok', 'd', t);
+
+    -- Odelade syns inte.
+    perform pg_temp.bli(A);
+    select count(*) into n from public.mina_handlingar_bilder();
+    select n + count(*) into n from public.mina_handlingar();
+    select n + count(*) into n from storage.objects o
+     where o.bucket_id = 'dokument' and public.mapp_uuid(o.name) in (H1, H2, H3);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'DB ett dokument med bilder syns inte innan det delats', 'ok', n = 0, 'd', n::text);
+
+    t := pg_temp.svar_som(AD, format($q$update public.handlingar set delad_med_personen = true
+           where id in (%L, %L)$q$, H1, H3));
+    ut := ut || jsonb_build_object('t', 'DB admin delar när bilderna är uppe', 'ok', t = 'ok', 'd', t);
+
+    -- Studiehjälpare A: båda i listan, bilderna i läsordning, bara filerna
+    -- raderna pekar ut, och texten som förut.
+    perform pg_temp.bli(A);
+    select array_agg(x.id order by x.id) into l from public.mina_handlingar() x;
+    ut := ut || jsonb_build_object('t', 'DB studiehjälparen har båda i listan, också det med bara bilder',
+            'ok', l = array[H1, H3], 'd', coalesce(l::text, 'inget'));
+    select x.har_text, x.bilder into r from public.mina_handlingar_bilder() x where x.id = H1;
+    ut := ut || jsonb_build_object('t', 'DB mina_handlingar_bilder: texten finns, och bilderna står i läsordning',
+            'ok', coalesce(r.har_text and r.bilder = array[b11, b12], false), 'd', coalesce(r.bilder::text, 'null'));
+    select x.har_text, x.bilder into r from public.mina_handlingar_bilder() x where x.id = H3;
+    ut := ut || jsonb_build_object('t', 'DB mina_handlingar_bilder: ett dokument med bara bilder har ingen text',
+            'ok', coalesce(not r.har_text and r.bilder = array[b31], false), 'd', coalesce(r.har_text::text, 'null'));
+    select array_agg(o.name order by o.name) into f from storage.objects o
+     where o.bucket_id = 'dokument' and public.mapp_uuid(o.name) in (H1, H2, H3);
+    ut := ut || jsonb_build_object('t', 'DB studiehjälparen läser exakt bilderna raderna pekar ut, inte en annan fil i mappen',
+            'ok', f = array[b11, b12, b31], 'd', coalesce(f::text, 'ingen'));
+    ut := ut || jsonb_build_object('t', 'DB texten läses som förut, och ett dokument utan text ger null',
+            'ok', coalesce(public.min_handling_text(H1) = 'Texten till bilderna' and public.min_handling_text(H3) is null, false),
+            'd', coalesce(public.min_handling_text(H1), 'null'));
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+
+    t := pg_temp.svar_som(A, format($q$insert into storage.objects (bucket_id, name, owner) values ('dokument', %L, %L)$q$,
+           H1 || '/4.png', A));
+    ut := ut || jsonb_build_object('t', 'DB studiehjälparen laddar inte upp i mappen', 'ok', t = '42501', 'd', t);
+    t := pg_temp.svar_som(A, format($q$update public.handlingar set bilder = array[%L] where id = %L$q$, b11, H1));
+    ut := ut || jsonb_build_object('t', 'DB studiehjälparen ändrar inte bilderna', 'ok', t in ('noll', '42501'), 'd', t);
+
+    -- Familj P: inget förrän skärmdumpen delats, sedan bara den. Familj Q
+    -- ingenting.
+    perform pg_temp.bli(P);
+    select count(*) into n from public.mina_handlingar_bilder();
+    select n + count(*) into n from storage.objects o
+     where o.bucket_id = 'dokument' and public.mapp_uuid(o.name) in (H1, H2, H3);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'DB familjen ser inget odelat', 'ok', n = 0, 'd', n::text);
+    t := pg_temp.svar_som(AD, format($q$update public.handlingar set delad_med_personen = true where id = %L$q$, H2));
+    perform pg_temp.bli(P);
+    select array_agg(x.id) into l from public.mina_handlingar() x;
+    select array_agg(o.name) into f from storage.objects o
+     where o.bucket_id = 'dokument' and public.mapp_uuid(o.name) in (H1, H2, H3);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'DB familjen ser sin skärmdump när den delats, och bara den',
+            'ok', coalesce(l = array[H2] and f = array[b21], false),
+            'd', coalesce(l::text, 'inget') || ' ' || coalesce(f::text, 'ingen'));
+    perform pg_temp.bli(Q);
+    select count(*) into n from public.mina_handlingar_bilder();
+    select n + count(*) into n from storage.objects o
+     where o.bucket_id = 'dokument' and public.mapp_uuid(o.name) in (H1, H2, H3);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'DB en annan familj ser ingenting', 'ok', n = 0, 'd', n::text);
+
+    -- Bilderna står fast, också för admin. Titeln går att byta.
+    t := pg_temp.svar_som(AD, format($q$update public.handlingar set bilder = array[%L, %L] where id = %L$q$, b12, b11, H1));
+    ut := ut || jsonb_build_object('t', 'DB bilderna byts inte, inte ens av admin', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$update public.handlingar set titel = 'Nytt namn' where id = %L$q$, H1));
+    ut := ut || jsonb_build_object('t', 'DB titeln går att byta på ett dokument med bilder', 'ok', t = 'ok', 'd', t);
+
+    -- Villkoren när raden skapas.
+    t := pg_temp.svar_som(AD, format($q$insert into public.handlingar (id, typ, titel, bilder)
+           values (%L, 'avtal', 'x', array[%L])$q$, H9, H1 || '/5.png'));
+    ut := ut || jsonb_build_object('t', 'DB en bild i ett annat dokuments mapp nekas', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$insert into public.handlingar (id, typ, titel, bilder)
+           values (%L, 'avtal', 'x', array[%L])$q$, H9, H9 || '/Avtal Alva Berg.png'));
+    ut := ut || jsonb_build_object('t', 'DB en bild med ett filnamn nekas', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$insert into public.handlingar (id, typ, titel, bilder)
+           values (%L, 'avtal', 'x', array[%L, %L])$q$, H9, H9 || '/1.png', H9 || '/1.png'));
+    ut := ut || jsonb_build_object('t', 'DB samma bild två gånger nekas', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$insert into public.handlingar (id, typ, titel, bilder)
+           values (%L, 'avtal', 'x', '{}')$q$, H9));
+    ut := ut || jsonb_build_object('t', 'DB en tom bildlista nekas', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$insert into public.handlingar (id, typ, titel, bilder)
+           select %L, 'avtal', 'x', array_agg(%L || '/' || g || '.png') from generate_series(1, 21) g$q$, H9, H9));
+    ut := ut || jsonb_build_object('t', 'DB fler än tjugo bilder nekas', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$insert into public.handlingar (id, typ, titel, fil, bilder)
+           values (%L, 'avtal', 'x', %L, array[%L])$q$, H9, H9 || '/1-avtal.pdf', H9 || '/1.png'));
+    ut := ut || jsonb_build_object('t', 'DB en fil och bilder på samma dokument nekas', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$insert into public.handlingar (id, typ, titel, bilder)
+           values (%L, 'avtal', 'x', array[%L, %L, %L])$q$, H9, H9 || '/1.png', H9 || '/2.jpg', H9 || '/3.webp'));
+    ut := ut || jsonb_build_object('t', 'DB png, jpg och webp i dokumentets egen mapp går igenom', 'ok', t = 'ok', 'd', t);
+
+    -- Auditloggen har dokumenten, aldrig bilderna.
+    select count(*) into n from public.audit_logg
+     where tabell = 'handlingar' and objekt_id in (H1::text, H2::text, H3::text, H9::text)
+       and (coalesce(fore::text, '') || coalesce(efter::text, '')) ~ '(bilder|\.png|\.jpg|\.webp)';
+    ut := ut || jsonb_build_object('t', 'DB auditloggen nämner aldrig bilderna', 'ok', n = 0, 'd', n::text);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('DB Dokument med bilder', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+select pg_temp.prova('DB anon når inte mina_handlingar_bilder', null,
+  array[$q$select * from public.mina_handlingar_bilder()$q$], 'nekad');
+
+insert into utfall (test, ok, detalj)
+select 'DB mina_handlingar_bilder nås av inloggade, inte av anon',
+       coalesce(f is not null and has_function_privilege('authenticated', f, 'execute')
+                and not has_function_privilege('anon', f, 'execute'), false),
+       coalesce(f::text, 'mina_handlingar_bilder finns inte')
+  from (select to_regprocedure('public.mina_handlingar_bilder()') f) x;
+
+-- ------------------------------------------------------------
+-- 55. Kön i matchningen (kon_i_matchningen, 2026-10-26)
+--
+-- Leo: "studiehjälparen ska lägga in om de vill bara hjälpa elever av
+-- samma kön eller motsatta ... vill studiehjälparen inte hjälpa motsatta
+-- könet syns då inte den studiehjälparen i matchning." Föräldern anger
+-- barnets kön, studiehjälparen sitt och sitt val, i en tabell bara hen
+-- och vi läser. Förslagen visar inte den som bara vill hjälpa sitt eget
+-- kön för en elev av ett annat eller utan angivet kön, utom elevens
+-- nuvarande, och databasen nekar en ny sådan matchning. En krock som
+-- uppstår efteråt blir en uppgift. Studiehjälparna A och B, familjerna P
+-- och Q, admin AD, en admin med matchning (M) och en med bara
+-- anmälningar (LE). Allt rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  n    bigint;
+  n2   bigint;
+  l    uuid[];
+  r    record;
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  B    constant uuid := '00000000-0000-4000-8000-0000000000b1';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  Q    constant uuid := '00000000-0000-4000-8000-0000000000f2';
+  M    constant uuid := '00000000-0000-4000-8000-0000000bcad3';
+  LE   constant uuid := '00000000-0000-4000-8000-0000000bcad1';
+  S1   constant uuid := '00000000-0000-4000-8000-0000000005a1';  -- P:s äldsta, hos A
+  S2   constant uuid := '00000000-0000-4000-8000-0000000005b1';  -- P:s yngsta, hos B
+  S3   constant uuid := '00000000-0000-4000-8000-0000000005c1';  -- Q:s, inte matchad
+begin
+  if to_regclass('public.matchningsval') is null then
+    insert into utfall (test, ok, detalj)
+    values ('KÖ migrationen kon_i_matchningen är körd', false, 'matchningsval finns inte');
+    return;
+  end if;
+
+  begin
+    -- Utgångsläget, vad avsnitten ovanför än lämnat efter sig: S1 hos A,
+    -- S2 hos B och S3 omatchad, inga kön.
+    update public.students set matched_tutor_id = A, match_status = 'matched', kon = null where id = S1;
+    update public.students set matched_tutor_id = B, match_status = 'matched', kon = null where id = S2;
+    update public.students set matched_tutor_id = null, match_status = 'pending', kon = null where id = S3;
+
+    -- Föräldern anger sitt barns kön. En annan familj kan inte, och bara
+    -- de två koderna går in.
+    t := pg_temp.svar_som(P, format($q$update public.students set kon = 'man' where id = %L$q$, S1));
+    ut := ut || jsonb_build_object('t', 'KÖ föräldern anger sitt barns kön', 'ok', t = 'ok', 'd', t);
+    t := pg_temp.svar_som(Q, format($q$update public.students set kon = 'kvinna' where id = %L$q$, S1));
+    ut := ut || jsonb_build_object('t', 'KÖ en annan familj ändrar inte barnets kön', 'ok', t = 'noll', 'd', t);
+    t := pg_temp.svar_som(P, format($q$update public.students set kon = 'flicka' where id = %L$q$, S2));
+    ut := ut || jsonb_build_object('t', 'KÖ bara koderna kvinna och man går in', 'ok', t = '23514', 'd', t);
+
+    -- Studiehjälparens val: sitt eget, aldrig någon annans.
+    t := pg_temp.svar_som(A, format($q$insert into public.matchningsval (tutor_id, kon) values (%L, 'kvinna')$q$, A));
+    ut := ut || jsonb_build_object('t', 'KÖ studiehjälparen anger sitt kön', 'ok', t = 'ok', 'd', t);
+    t := pg_temp.svar_som(A, format($q$insert into public.matchningsval (tutor_id, kon) values (%L, 'man')$q$, B));
+    ut := ut || jsonb_build_object('t', 'KÖ studiehjälparen skriver inte någon annans val', 'ok', t = '42501', 'd', t);
+    t := pg_temp.svar_som(A, format($q$update public.matchningsval set bara_samma_kon = true, kon = null
+           where tutor_id = %L$q$, A));
+    ut := ut || jsonb_build_object('t', 'KÖ bara samma kön kräver ett eget kön', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(P, format($q$insert into public.matchningsval (tutor_id, kon) values (%L, 'kvinna')$q$, P));
+    ut := ut || jsonb_build_object('t', 'KÖ en förälder har inget val att skriva', 'ok', t not in ('ok', 'noll'), 'd', t);
+
+    -- Vem som läser valen: studiehjälparen sitt, familjen inget, den som
+    -- matchar allt.
+    perform pg_temp.bli(P);
+    select count(*) into n from public.matchningsval;
+    reset role;
+    perform pg_temp.bli(B);
+    select n + count(*) into n from public.matchningsval;
+    reset role;
+    perform pg_temp.bli(LE);
+    select n + count(*) into n from public.matchningsval;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KÖ familjen, en annan studiehjälpare och en admin utan matchning läser inte valet',
+            'ok', n = 0, 'd', n::text);
+    perform pg_temp.bli(A);
+    select count(*) into n from public.matchningsval;
+    reset role;
+    perform pg_temp.bli(M);
+    select count(*) into n2 from public.matchningsval;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KÖ studiehjälparen läser sitt val, och den som matchar läser det',
+            'ok', n = 1 and n2 = 1, 'd', n || ' / ' || n2);
+    select count(*) into n from information_schema.columns
+     where table_schema = 'public' and table_name = 'tutor_profiles' and column_name in ('kon', 'bara_samma_kon');
+    ut := ut || jsonb_build_object('t', 'KÖ valet står inte på tutor_profiles, som familjen läser', 'ok', n = 0, 'd', n::text);
+
+    -- A slår på valet medan hen har S1, som är en pojke: matchningen står
+    -- kvar, och vi får en uppgift om den.
+    t := pg_temp.svar_som(A, format($q$update public.matchningsval set bara_samma_kon = true where tutor_id = %L$q$, A));
+    ut := ut || jsonb_build_object('t', 'KÖ studiehjälparen slår på valet', 'ok', t = 'ok', 'd', t);
+    select count(*) into n from public.uppgifter
+     where nyckel = 'kon_krock:' || S1 || ':' || A and status = 'oppen' and kopplad_tabell = 'students';
+    select count(*) into n2 from public.students where id = S1 and matched_tutor_id = A and match_status = 'matched';
+    ut := ut || jsonb_build_object('t', 'KÖ en matchning som redan står blir en uppgift, och rivs inte',
+            'ok', n = 1 and n2 = 1, 'd', n || ' uppgift, ' || n2 || ' matchning');
+
+    perform pg_temp.bli(AD);
+    select v.kon, v.bara_samma_kon into r from public.matchningsunderlag v where v.tutor_id = A;
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'KÖ matchningsunderlaget visar valet för admin',
+            'ok', coalesce(r.kon = 'kvinna' and r.bara_samma_kon, false), 'd', coalesce(r.kon, 'null'));
+
+    -- Förslagen för S3, som inte har något kön angivet: A står inte med, B gör.
+    select array_agg(x.tutor_id) into l from public.matchningsforslag_rader(S3) x;
+    ut := ut || jsonb_build_object('t', 'KÖ förslagen: utan elevens kön står den som bara vill hjälpa sitt eget inte med',
+            'ok', coalesce(not (A = any (l)) and B = any (l), false), 'd', coalesce(l::text, 'inga'));
+    update public.students set kon = 'kvinna' where id = S3;
+    select array_agg(x.tutor_id) into l from public.matchningsforslag_rader(S3) x;
+    ut := ut || jsonb_build_object('t', 'KÖ förslagen: en elev av samma kön får förslaget',
+            'ok', coalesce(A = any (l), false), 'd', coalesce(l::text, 'inga'));
+    update public.students set kon = 'man' where id = S3;
+    select array_agg(x.tutor_id) into l from public.matchningsforslag_rader(S3) x;
+    ut := ut || jsonb_build_object('t', 'KÖ förslagen: en elev av ett annat kön får det inte',
+            'ok', coalesce(not (A = any (l)), false), 'd', coalesce(l::text, 'inga'));
+    select array_agg(x.tutor_id) into l from public.matchningsforslag_rader(S1) x;
+    ut := ut || jsonb_build_object('t', 'KÖ förslagen: elevens nuvarande studiehjälpare står alltid med',
+            'ok', coalesce(A = any (l), false), 'd', coalesce(l::text, 'inga'));
+
+    -- Vakten: ingen ny matchning mot valet, vem som än försöker.
+    t := pg_temp.svar_som(AD, format($q$update public.students set matched_tutor_id = %L, match_status = 'matched'
+           where id = %L$q$, A, S3));
+    ut := ut || jsonb_build_object('t', 'KÖ admin matchar inte en pojke med den som bara vill hjälpa flickor',
+            'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(M, format($q$update public.students set matched_tutor_id = %L, match_status = 'matched'
+           where id = %L$q$, A, S3));
+    ut := ut || jsonb_build_object('t', 'KÖ inte heller den som har behörigheten matchning',
+            'ok', t = '23514', 'd', t);
+    update public.students set kon = null where id = S3;
+    t := pg_temp.svar_som(AD, format($q$update public.students set matched_tutor_id = %L, match_status = 'matched'
+           where id = %L$q$, A, S3));
+    ut := ut || jsonb_build_object('t', 'KÖ inte heller en elev utan angivet kön', 'ok', t = '23514', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$update public.students set kon = 'kvinna', matched_tutor_id = %L,
+           match_status = 'matched' where id = %L$q$, A, S3));
+    ut := ut || jsonb_build_object('t', 'KÖ en flicka matchas med henne', 'ok', t = 'ok', 'd', t);
+    update public.students set matched_tutor_id = null, match_status = 'pending' where id = S3;
+    t := pg_temp.svar_som(AD, format($q$update public.students set matched_tutor_id = %L, match_status = 'matched'
+           where id = %L$q$, A, S1));
+    ut := ut || jsonb_build_object('t', 'KÖ en matchning som redan står går att spara om', 'ok', t = 'ok', 'd', t);
+    t := pg_temp.svar_som(AD, format($q$update public.students set matched_tutor_id = %L, match_status = 'matched'
+           where id = %L$q$, B, S3));
+    ut := ut || jsonb_build_object('t', 'KÖ den som hjälper alla matchas som förut', 'ok', t = 'ok', 'd', t);
+
+    -- Föräldern byter barnets kön medan barnet är matchat: en ny uppgift
+    -- när den förra är klar, ingen när krocken går över.
+    update public.uppgifter set status = 'klar' where nyckel = 'kon_krock:' || S1 || ':' || A;
+    t := pg_temp.svar_som(P, format($q$update public.students set kon = null where id = %L$q$, S1));
+    select count(*) into n from public.uppgifter where nyckel = 'kon_krock:' || S1 || ':' || A and status = 'oppen';
+    ut := ut || jsonb_build_object('t', 'KÖ ett kön som byts till en krock blir en uppgift',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n || ' öppen');
+    update public.uppgifter set status = 'klar' where nyckel = 'kon_krock:' || S1 || ':' || A;
+    t := pg_temp.svar_som(P, format($q$update public.students set kon = 'kvinna' where id = %L$q$, S1));
+    select count(*) into n from public.uppgifter where nyckel = 'kon_krock:' || S1 || ':' || A and status = 'oppen';
+    ut := ut || jsonb_build_object('t', 'KÖ ett kön som löser krocken ger ingen uppgift',
+            'ok', t = 'ok' and n = 0, 'd', t || ', ' || n || ' öppen');
+
+    -- Avidentifieringen tömmer elevens kön, och studiehjälparens val går
+    -- med kontot.
+    update public.students set kon = 'man' where id = S2;
+    perform intern.elev_rensa(S2, false);
+    select count(*) into n from public.students where id = S2 and kon is null and raderad_at is not null;
+    ut := ut || jsonb_build_object('t', 'KÖ en avidentifierad elev har inget kön', 'ok', n = 1, 'd', n::text);
+    insert into public.matchningsval (tutor_id, kon, bara_samma_kon) values (B, 'man', false);
+    update public.profiles set raderad_at = now() where id = B;
+    select count(*) into n from public.matchningsval where tutor_id = B;
+    ut := ut || jsonb_build_object('t', 'KÖ studiehjälparens val tas bort när kontot avidentifieras', 'ok', n = 0, 'd', n::text);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('KÖ Kön i matchningen', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
+
+select pg_temp.prova('KÖ anon läser inte matchningsvalen', null,
+  array[$q$select * from public.matchningsval$q$], 'nekad');
+
+-- ------------------------------------------------------------
+-- 56. Papperskorgen (papperskorgen, 2026-10-26)
+--
+-- Leo: "i intresseanmälningar och ansökan, under varje flik, gör en
+-- knapp för papperskorg, vilket är radera uppgifter från det stället
+-- ... när en person blir raderad och det stället är det sista stället
+-- den är med i så kommer en notis om att det kan ta bort personen helt
+-- och sen avbryt eller gå vidare." Papperskorgen tar bort en rad ur en
+-- lista och inget annat: familjen, kontot, frågan och en annan anmälan
+-- med samma adress står kvar. Är raden det sista stället krävs p_helt.
+-- En ansökans CV tas bort först. Bara superadmin. Superadmin AD,
+-- familjen P, studiehjälparen A, admin L1 med behörigheten leads. Allt
+-- rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  n    bigint;
+  j    jsonb;
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  L1   constant uuid := '00000000-0000-4000-8000-0000000bcad1';
+  LF   constant uuid := '00000000-0000-4000-8000-000000056a01';  -- familjen P:s anmälan
+  LD1  constant uuid := '00000000-0000-4000-8000-000000056a02';  -- två anmälningar, samma adress
+  LD2  constant uuid := '00000000-0000-4000-8000-000000056a03';
+  LK   constant uuid := '00000000-0000-4000-8000-000000056a04';  -- anmälan och en fråga
+  KK   constant uuid := '00000000-0000-4000-8000-000000056c01';
+  AP1  constant uuid := '00000000-0000-4000-8000-000000056b01';  -- ansökan, studiehjälpare A:s adress, CV
+  AP2  constant uuid := '00000000-0000-4000-8000-000000056b02';  -- ansökan, ingen annanstans
+  CV1  constant text := '00000000-0000-4000-8000-000000056cf1/cv.pdf';
+begin
+  if to_regprocedure('public.ta_bort_ur_stallet(text, uuid, boolean)') is null then
+    insert into utfall (test, ok, detalj)
+    values ('PK migrationen papperskorgen är körd', false, 'ta_bort_ur_stallet() finns inte');
+    return;
+  end if;
+
+  begin
+    insert into public.leads (id, parent_name, email, child_name, grade, subject, message, kund_id, status) values
+      (LF, 'Familjen P', 'rls-pk-familj@example.invalid', 'Barnet', 'ak7', 'Matematik', 'Ring efter fem', P, 'matched'),
+      (LD1, 'Dubbel', 'rls-pk-dubbel@example.invalid', null, 'ak5', 'Svenska', 'Första', null, 'new'),
+      (LD2, 'Dubbel', 'RLS-PK-Dubbel+igen@example.invalid', null, 'ak5', 'Svenska', 'Andra', null, 'new'),
+      (LK, 'Frågar', 'rls-pk-fraga@example.invalid', null, 'ak8', 'Engelska', 'Hej', null, 'contacted');
+    insert into public.contact_messages (id, name, email, message)
+    values (KK, 'Frågar', 'rls-pk-fraga@example.invalid', 'En fråga');
+    insert into public.applications (id, name, email, why) values
+      (AP1, 'Anna Sökande', 'rls-a@example.invalid', E'Jag vill hjälpa.\nCV: cv/' || CV1),
+      (AP2, 'Ensam Sökande', 'rls-pk-ensam@example.invalid', 'Bara en ansökan.');
+    update public.applications set vardnadshavare_godkand_at = now() - interval '3 days' where id = AP1;
+    insert into storage.objects (bucket_id, name) values ('cv', CV1);
+    perform public.skapa_uppgift('Följ upp anmälan', 'rls-pk:' || LF, 'uppfoljning', 'Ring', 'leads', LF::text);
+    insert into public.varvningsbonus (varvare_profil_id, varvad_ansokan_id, varvad_epost_hmac, brutto_ore)
+    values (A, AP2, 'rls-pk', 30000);
+    insert into public.ansokan_utskick (ansokan_id, steg, nyckel, status)
+    values (AP2, 'avbojd', 'rls-pk:avbojd', 'vantar');
+
+    -- Bara superadmin: en admin med behörigheten leads, familjen och anon får nej.
+    t := pg_temp.svar_som(L1, format($q$select public.stalle_lage('anmalan', %L)$q$, LF))
+      || ' ' || pg_temp.svar_som(L1, format($q$select public.ta_bort_ur_stallet('anmalan', %L, true)$q$, LF))
+      || ' ' || pg_temp.svar_som(P, format($q$select public.ta_bort_ur_stallet('anmalan', %L, true)$q$, LF))
+      || ' ' || pg_temp.svar_som(null, format($q$select public.stalle_lage('ansokan', %L)$q$, AP2))
+      || ' ' || pg_temp.svar_som(null, format($q$select public.ta_bort_ur_stallet('ansokan', %L, true)$q$, AP2))
+      || ' ' || pg_temp.svar_som(AD, format($q$select intern.stalle_underlag('anmalan', %L)$q$, LF));
+    select count(*) into n from public.leads where id = LF and email = 'rls-pk-familj@example.invalid';
+    ut := ut || jsonb_build_object('t', 'PK bara superadmin: behörigheten leads, familjen och anon får nej, och ingen når intern',
+            'ok', t = '42501 42501 42501 42501 42501 42501' and n = 1, 'd', t || ', ' || n || ' kvar');
+
+    -- Familjens anmälan: familjen finns kvar, så det är inte sista stället.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('anmalan', LF);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'PK familjens anmälan: familjen står kvar, inte sista stället',
+            'ok', j ->> 'sista' = 'false' and j ->> 'namn' = 'Familjen P'
+                  and j -> 'kvar' -> 'konton' @> jsonb_build_array(jsonb_build_object('id', P, 'roll', 'parent')),
+            'd', j::text);
+
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LF));
+    select count(*) into n from public.leads
+     where id = LF and email = 'gallrad' and parent_name = 'Gallrad' and child_name is null and message is null
+       and kund_id = P and status = 'matched';
+    select n * 10 + count(*) into n from public.profiles where id = P and raderad_at is null;
+    ut := ut || jsonb_build_object('t', 'PK anmälan avidentifieras, raden pekar fortfarande ut familjen, och familjen står kvar',
+            'ok', t = 'ok' and n = 11, 'd', t || ', ' || n);
+    select count(*) into n from public.uppgifter where kopplad_tabell = 'leads' and kopplad_id = LF::text;
+    select n * 10 + count(*) into n from public.audit_logg
+     where handling = 'anmalan.avidentifierad' and objekt_id = LF::text and aktor = AD
+       and efter ->> 'papperskorgen' = 'true' and efter ->> 'sista' = 'false';
+    ut := ut || jsonb_build_object('t', 'PK uppgiften om anmälan går med, och auditloggen säger papperskorgen',
+            'ok', n = 1, 'd', n::text);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LF));
+    ut := ut || jsonb_build_object('t', 'PK en anmälan som redan är borta ger ett fel, inte en tyst lyckad',
+            'ok', t = '22023', 'd', t);
+
+    -- Två anmälningar med samma adress (stora bokstäver och +tagg): den
+    -- första står inte sist, och den andra står kvar orörd.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('anmalan', LD1);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'PK en anmälan till med samma adress: inte sista stället',
+            'ok', j ->> 'sista' = 'false' and (j -> 'kvar' ->> 'anmalningar')::int = 1
+                  and jsonb_array_length(j -> 'kvar' -> 'konton') = 0,
+            'd', j::text);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LD1));
+    select count(*) into n from public.leads where id = LD2 and email = 'RLS-PK-Dubbel+igen@example.invalid' and status = 'new';
+    ut := ut || jsonb_build_object('t', 'PK papperskorgen tar en rad, och den andra anmälan står kvar',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n);
+
+    -- Den andra är nu det sista stället: utan p_helt händer ingenting.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('anmalan', LD2);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LD2));
+    select count(*) into n from public.leads where id = LD2 and email <> 'gallrad';
+    ut := ut || jsonb_build_object('t', 'PK sista stället: utan p_helt nekas det, och anmälan står kvar',
+            'ok', j ->> 'sista' = 'true' and t = '23514' and n = 1, 'd', coalesce(j ->> 'sista', 'null') || ', ' || t || ', ' || n);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L, true)$q$, LD2));
+    select count(*) into n from public.leads where id = LD2 and email = 'gallrad' and status = 'declined';
+    ut := ut || jsonb_build_object('t', 'PK sista stället med p_helt: anmälan avidentifieras och blir avböjd',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n);
+
+    -- En fråga under Kommunikation är ett ställe till, och står kvar.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('anmalan', LK);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LK));
+    select count(*) into n from public.contact_messages where id = KK;
+    ut := ut || jsonb_build_object('t', 'PK en fråga med samma adress: inte sista stället, och frågan står kvar',
+            'ok', j ->> 'sista' = 'false' and (j -> 'kvar' ->> 'kontakt')::int = 1 and t = 'ok' and n = 1,
+            'd', coalesce(j ->> 'sista', 'null') || ', ' || t || ', ' || n);
+
+    -- Ansökan med studiehjälparens adress: kontot står kvar, och CV:t
+    -- går först.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('ansokan', AP1);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'PK ansökan: kontot med samma adress står kvar, och CV:t står i filerna',
+            'ok', j ->> 'sista' = 'false'
+                  and j -> 'kvar' -> 'konton' @> jsonb_build_array(jsonb_build_object('id', A, 'roll', 'tutor'))
+                  and j -> 'filer' = jsonb_build_array(jsonb_build_object('hink', 'cv', 'namn', CV1)),
+            'd', j::text);
+    ut := ut || jsonb_build_object('t', 'PK rutan varnar när vårdnadshavarens godkännande går med en studiehjälpares ansökan',
+            'ok', j -> 'varningar' ? 'vardnadshavare', 'd', coalesce(j -> 'varningar' ->> 'vardnadshavare', 'ingen'));
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('ansokan', %L)$q$, AP1));
+    select count(*) into n from public.applications where id = AP1;
+    ut := ut || jsonb_build_object('t', 'PK ansökan tas inte bort medan CV:t finns kvar',
+            'ok', t = '23514' and n = 1, 'd', t || ', ' || n);
+    -- Vyn tar bort filen genom Storage. Här som ägaren, och Supabases spärr
+    -- mot att radera ur lagringens tabeller direkt släpps för satsen.
+    perform set_config('storage.allow_delete_query', 'true', true);
+    delete from storage.objects where bucket_id = 'cv' and name = CV1;
+    perform set_config('storage.allow_delete_query', 'false', true);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('ansokan', %L)$q$, AP1));
+    select count(*) into n from public.applications where id = AP1;
+    select n * 10 + count(*) into n from public.profiles where id = A and raderad_at is null;
+    ut := ut || jsonb_build_object('t', 'PK CV:t först, sedan ansökan, och studiehjälparen står kvar',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n);
+
+    -- Ansökan som är det enda stället, med en bonus och ett nej som väntar.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('ansokan', AP2);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'PK ensam ansökan: sista stället, och rutan varnar för bonusen och nejet',
+            'ok', j ->> 'sista' = 'true' and j -> 'varningar' -> 'bonus' = jsonb_build_array(A)
+                  and j -> 'varningar' -> 'mejl' = '["avbojd"]'::jsonb and not (j -> 'varningar' ? 'vardnadshavare'),
+            'd', j::text);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('ansokan', %L, true)$q$, AP2));
+    select count(*) into n from public.applications where id = AP2;
+    select n * 10 + count(*) into n from public.ansokan_utskick where ansokan_id = AP2;
+    select n * 10 + count(*) into n from public.varvningsbonus
+     where varvare_profil_id = A and varvad_epost_hmac = 'rls-pk' and status = 'annullerad' and varvad_ansokan_id is null;
+    ut := ut || jsonb_build_object('t', 'PK ansökan tas bort, nejet i kön går med, och bonusen annulleras',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n);
+
+    -- En okänd lista.
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('familj', %L, true)$q$, P));
+    select count(*) into n from public.profiles where id = P and raderad_at is null;
+    ut := ut || jsonb_build_object('t', 'PK papperskorgen tar inte bort en familj; det gör Radera',
+            'ok', t = '22023' and n = 1, 'd', t || ', ' || n);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('PK Papperskorgen', false, fel);
   else
     insert into utfall (test, ok, detalj)
     select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;

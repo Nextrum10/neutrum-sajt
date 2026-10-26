@@ -3137,7 +3137,42 @@
     });
   }
 
-  function ritaAllaPrVal() { Object.keys(PR_LISTOR).forEach(id => ritaPrVal(id)); ritaPrStyrkor(); }
+  /* Kön och elever (kon_i_matchningen, 2026-10-26). Ett val per fråga,
+     och ett tryck till på det valda könet tar bort svaret. Valet står i
+     matchningsval, inte i tutor_profiles: familjen läser sin
+     studiehjälpares rad där, och valet är bara vårt och ditt.
+     S.matchningsvalFinns är falsk före migrationen, och då döljs båda. */
+  const PR_ELEVER = [
+    { kod: 'alla', text: 'Alla elever' },
+    { kod: 'samma', text: 'Bara elever av samma kön som jag' }
+  ];
+  let prKon = null;
+  let prSamma = false;
+  function ritaPrKon() {
+    if (!$('#pr-kon-val')) return;
+    $('#pr-kon-val').innerHTML = NX.KON_VUXEN.map(k =>
+      '<button type="button" data-v="' + esc(k.kod) + '" aria-pressed="' + (prKon === k.kod ? 'true' : 'false') + '">'
+      + esc(k.text) + '</button>').join('');
+    $('#pr-elever-val').innerHTML = PR_ELEVER.map(k =>
+      '<button type="button" data-v="' + esc(k.kod) + '" aria-pressed="'
+      + ((k.kod === 'samma') === prSamma ? 'true' : 'false') + '">' + esc(k.text) + '</button>').join('');
+  }
+  if ($('#pr-kon-val')) {
+    $('#pr-kon-val').addEventListener('click', e => {
+      const b = e.target.closest('[data-v]');
+      if (!b) return;
+      prKon = prKon === b.dataset.v ? null : b.dataset.v;
+      ritaPrKon();
+    });
+    $('#pr-elever-val').addEventListener('click', e => {
+      const b = e.target.closest('[data-v]');
+      if (!b) return;
+      prSamma = b.dataset.v === 'samma';
+      ritaPrKon();
+    });
+  }
+
+  function ritaAllaPrVal() { Object.keys(PR_LISTOR).forEach(id => ritaPrVal(id)); ritaPrStyrkor(); ritaPrKon(); }
 
   Object.keys(PR_LISTOR).forEach(id => {
     $('#' + id).addEventListener('click', e => {
@@ -3178,6 +3213,13 @@
     prVal.format = (t.formats || []).map(v => prKanonisk(PR_FORMAT, v));
     prStyrkor = (t.styrkor || []).filter(k => NX.BEHOV.some(x => x.kod === k));
     if ($('#pr-styrka-grupp')) $('#pr-styrka-grupp').hidden = !S.styrkorFinns;
+    const mv = S.matchningsval || {};
+    prKon = mv.kon || null;
+    prSamma = !!mv.bara_samma_kon;
+    if ($('#pr-kon-grupp')) {
+      $('#pr-kon-grupp').hidden = !S.matchningsvalFinns;
+      $('#pr-elever-grupp').hidden = !S.matchningsvalFinns;
+    }
     ritaAllaPrVal();
 
     /* Notisvalen under Profil → Notiser. Samma modul som föräldravyn
@@ -3202,7 +3244,12 @@
     const msg = $('#pr-msg');
     rensa(msg);
     const namn = $('#k-namn').value.trim();
-    const fel = kolla([{ fel: !namn, text: 'Fyll i ditt namn.', falt: $('#k-namn') }]);
+    const fel = kolla([
+      { fel: !namn, text: 'Fyll i ditt namn.', falt: $('#k-namn') },
+      /* Samma regel som matchningsval_samma_kon_kraver_kon. */
+      { fel: S.matchningsvalFinns && prSamma && !prKon,
+        text: 'Välj ditt kön. Annars vet vi inte vilka elever som är av samma kön som du.' }
+    ]);
     if (fel) { säg(msg, '⚠️ ' + fel, false); return; }
 
     await medan(e.submitter, 'Sparar…', async () => {
@@ -3230,6 +3277,17 @@
          ämnen kvar i chipsen tills sidan laddas om. */
       Object.assign(S.tutorProfil || {}, ändring);
       fyllÄmnesval();
+
+      /* Kön och elever, bara när något ändrats: databasen gör en uppgift
+         till oss av en matchning som krockar med valet, och en sparning
+         utan ändring ska inte göra en till. */
+      const mv = S.matchningsval || {};
+      if (S.matchningsvalFinns && ((mv.kon || null) !== prKon || !!mv.bara_samma_kon !== prSamma)) {
+        const val = { tutor_id: S.user.id, kon: prKon, bara_samma_kon: prSamma };
+        const { error: vErr } = await supa.from('matchningsval').upsert(val, { onConflict: 'tutor_id' });
+        if (vErr) { säg(msg, 'Profilen sparades, men inte ditt val om eleverna: ' + felText(vErr), false); return; }
+        S.matchningsval = val;
+      }
 
       säg(msg, prVal.amnen.length
         ? '✓ Profilen är sparad.'
@@ -4389,6 +4447,12 @@
         .select('styrkor').eq('id', S.user.id).maybeSingle();
       S.styrkorFinns = !sk.error;
       if (sk.data) S.tutorProfil.styrkor = sk.data.styrkor || [];
+      /* Kön och elever (kon_i_matchningen) i en egen tabell, av samma skäl
+         för sig: före migrationen döljs bara de två fälten. */
+      const mv = await supa.from('matchningsval')
+        .select('kon, bara_samma_kon').eq('tutor_id', S.user.id).maybeSingle();
+      S.matchningsvalFinns = !mv.error;
+      S.matchningsval = mv.data || { kon: null, bara_samma_kon: false };
     }
 
     if (!S.tutorProfil) {
