@@ -148,6 +148,128 @@
   }
 
   /* ------------------------------------------------------------
+     SAK FÖR SAK (2026-10-26)
+
+     Leo: "när jag trycker på att göra grejen ska jag få upp en flik som
+     visar allt att göra". Ringen räknar saker och Att göra visar poster:
+     två elever utan studiehjälpare var EN rad med en tvåa, så ringen sa
+     3 och listan hade två rader. Varje post bär nu sina saker, och sidan
+     Att göra (#attgora, ritad i nextrum-admin-konsol.js) har en rad per
+     sak.
+
+     Sakerna byggs ur SAMMA urval som postens antal, i samma funktion, så
+     att sidan och ringen inte kan glida isär. En sak med dp öppnar sin
+     panel där man står, så att man är kvar i listan när den stängs; de
+     andra leder till sektionen där det görs, och en elev står vald i
+     Matchning (data-mt-hoppa). Är antalet databasens (admin_lage) och
+     listan här kortare, som felen hos användarna (de 100 senaste), säger
+     sidan hur många som inte syns. gånger är en rad som står för flera:
+     samma fel på samma sida, och samma utskick som fallit på samma sätt.
+     Det som ska göras är att rätta felet, inte att läsa det tolv gånger,
+     och raden säger hur många det är.
+     ------------------------------------------------------------ */
+  const gångerText = (gånger, senast) => gånger === 1 ? närText(senast) : gånger + ' gånger, senast ' + närText(senast);
+  const kortText = (text, max) => {
+    const t = String(text || '').replace(/\s+/g, ' ').trim();
+    return t.length > max ? t.slice(0, max - 1) + '…' : t;
+  };
+  const passTitel = b => (b.subject || 'Pass') + ' ' + kortDatum(b.wanted_date)
+    + (b.wanted_time ? ' kl. ' + String(b.wanted_time).slice(0, 5) : '');
+  // Eleven, eller familjen när passet saknar en, och studiehjälparen.
+  const passVem = b => [b.student_id ? elevNamn(b.student_id) : namnFör(b.parent_id), namnFör(b.tutor_id)];
+
+  const sakAnmälan = l => ({
+    titel: ärRaderad(l) ? 'Avidentifierad anmälan' : (l.parent_name || l.email || 'Anmälan'),
+    meta: [l.child_name, l.subject, 'kom in ' + kortDatum(l.created_at)],
+    dp: 'anmalan:' + l.id, person: true, gör: 'Öppna'
+  });
+  const sakAnsökan = a => ({
+    titel: a.name || a.email || 'Ansökan',
+    meta: [a.school, 'kom in ' + kortDatum(a.created_at)],
+    dp: 'ansokan:' + a.id, person: true, gör: 'Öppna'
+  });
+  const sakAttGodkänna = t => ({
+    titel: namnFör(t.id), meta: ['konto sedan ' + kortDatum(t.created_at)],
+    dp: 'studiehjalpare:' + t.id, person: true, gör: 'Öppna'
+  });
+  const sakElev = e => {
+    const f = S.personer[e.parent_id];
+    return {
+      titel: e.name || '(namn saknas)',
+      meta: [e.grade, f && (f.full_name || f.email), 'inlagd ' + kortDatum(e.created_at)],
+      till: '#matchning', hoppa: e.id, person: true, gör: 'Matcha'
+    };
+  };
+  const sakFråga = k => ({
+    titel: k.name || k.email || 'Fråga',
+    meta: [k.role, 'inkom ' + kortDatum(k.created_at)],
+    not: kortText(k.message, 140),
+    till: '#meddelanden/inkorg', person: true, gör: 'Svara'
+  });
+  const sakOrapporterat = b => ({
+    titel: passTitel(b), meta: passVem(b), dp: 'pass:' + b.id, ikon: 'pass', gör: 'Öppna'
+  });
+  /* Ett genomfört pass utan rapport kopplas till sin rapport eller
+     undantas under Betalningar → Att göra, inte i passets panel. */
+  const sakUtanRapport = p => ({
+    titel: passTitel(p), meta: passVem(p), till: '#ekonomi/attgora', ikon: 'rapport', gör: 'Koppla'
+  });
+  const sakUtbetalning = u => ({
+    titel: namnFör(u.tutor_id),
+    meta: [NXBetalning.periodText(u.period), kronor(u.belopp_ore), u.status === 'godkand' ? 'godkänd' : 'utkast'],
+    till: '#loner', person: true, gör: 'Betala ut'
+  });
+  function sakUppgift(u) {
+    const idag = isoFor(new Date());
+    return {
+      titel: u.titel || 'Uppgift',
+      meta: [u.forfallodag ? (u.forfallodag < idag ? 'skulle vara klar ' : 'klar senast ') + kortDatum(u.forfallodag) : null,
+        u.ansvarig ? namnFör(u.ansvarig) : null],
+      till: '#uppgifter', ikon: 'uppgift', gör: 'Öppna'
+    };
+  }
+  // Larmets namn står i Betalningar (avvText), och där görs det.
+  const sakAvvikelse = a => ({
+    titel: NXAdmin.rita.avvText ? NXAdmin.rita.avvText(a)[0] : a.typ,
+    meta: [a.datum ? kortDatum(a.datum) : null, a.kund_id ? namnFör(a.kund_id) : null,
+      a.studiehjalpare_id ? namnFör(a.studiehjalpare_id) : null, a.belopp_ore != null ? kronor(a.belopp_ore) : null],
+    till: '#ekonomi/attgora', ikon: 'kort', gör: 'Åtgärda'
+  });
+  function sakerFel() {
+    const gräns = Date.now() - DAG;
+    const grupper = new Map();
+    (S.klientfel || []).forEach(f => {
+      if (!(new Date(f.created_at).getTime() > gräns)) return;
+      const sida = String(f.sida || '—').split('#')[0] || '—';
+      const nyckel = String(f.meddelande) + '\n' + sida;
+      const g = grupper.get(nyckel) || { meddelande: f.meddelande, sida, gånger: 0, senast: f.created_at };
+      g.gånger++;
+      grupper.set(nyckel, g);
+    });
+    return Array.from(grupper.values()).map(g => ({
+      titel: kortText(g.meddelande || 'Okänt fel', 120),
+      meta: [g.sida, gångerText(g.gånger, g.senast)],
+      gånger: g.gånger, till: '#system/fel', ikon: 'fel', gör: 'Läs'
+    }));
+  }
+  function sakerNotiser() {
+    const grupper = new Map();
+    (S.notisfel || []).forEach(n => {
+      const t = NXAdmin.rita.notisfelText ? NXAdmin.rita.notisfelText(n) : { vad: n.kalla || 'Ett utskick', betyder: '' };
+      const svar = n.status_kod ? 'svar ' + n.status_kod : n.tog_slut ? 'tidsgräns' : 'inget svar';
+      const nyckel = t.vad + '\n' + svar + '\n' + t.betyder;
+      const g = grupper.get(nyckel) || { t, svar, gånger: 0, senast: n.tidpunkt };
+      g.gånger++;
+      if (String(n.tidpunkt) > String(g.senast)) g.senast = n.tidpunkt;
+      grupper.set(nyckel, g);
+    });
+    return Array.from(grupper.values()).map(g => ({
+      titel: g.t.vad, meta: [gångerText(g.gånger, g.senast), g.svar], not: g.t.betyder,
+      gånger: g.gånger, till: '#system/fel', ikon: 'notis', gör: 'Läs'
+    }));
+  }
+
+  /* ------------------------------------------------------------
      ARBETSKÖN
      Varje post är en sak som ligger och väntar på oss, och varje
      post är vägen dit. Listan byggs ur admin_lage där den finns och
@@ -181,48 +303,57 @@
     const idag = isoFor(new Date());
     const sett = !!S.sett;
 
+    /* Varje urval en gång: postens antal och dess saker (SAK FÖR SAK
+       ovan) är samma rader. */
+    const anmälningar = sett ? osedda('leads') : S.leads.filter(x => x.status === 'new');
+    const ansökningar = sett ? osedda('ansokningar') : S.ansokningar.filter(x => x.status === 'new');
+    const attGodkänna = Object.values(S.tutorProfiler).filter(t => t.status === 'pending');
     /* Elevens egen matchning sedan schema-v14, inte familjens.
        En familj kan vara "matchad" och ändå ha ett barn utan
        studiehjälpare — det är precis det fallet den här raden
        finns för att hitta. */
     const utanHjälpare = S.elevlista.filter(e =>
-      !e.matched_tutor_id || e.match_status !== 'matched').length;
-
+      !e.matched_tutor_id || e.match_status !== 'matched');
+    const frågor = S.kontakt.filter(k => !k.hanterad_at);
+    const orapporterade = S.bokningar.filter(b =>
+      b.status !== 'cancelled' && b.status !== 'completed' && String(b.wanted_date) < idag);
+    const genomfördaUtan = utanRapport();
     const attBetalaUt = S.utbetalningar.filter(u =>
-      u.status === 'utkast' || u.status === 'godkand').length;
+      u.status === 'utkast' || u.status === 'godkand');
 
     return [
-      { antal: sett ? osedda('leads').length
-          : l.nya_leads != null ? l.nya_leads : S.leads.filter(x => x.status === 'new').length,
+      { antal: sett ? anmälningar.length : l.nya_leads != null ? l.nya_leads : anmälningar.length,
         rubrik: 'nya intresseanmälningar', ental: 'ny intresseanmälan',
         under: sett ? 'Har kommit in sedan du tittade senast.' : 'Familjer som hört av sig och väntar på svar.',
-        till: '#leads' },
-      { antal: sett ? osedda('ansokningar').length
-          : l.nya_ansokningar != null ? l.nya_ansokningar : S.ansokningar.filter(x => x.status === 'new').length,
+        till: '#leads', dit: 'Intresseanmälningar', saker: anmälningar.map(sakAnmälan) },
+      { antal: sett ? ansökningar.length : l.nya_ansokningar != null ? l.nya_ansokningar : ansökningar.length,
         rubrik: 'nya ansökningar', ental: 'ny ansökan',
         under: sett ? 'Har kommit in sedan du tittade senast.' : 'Unga som vill bli studiehjälpare.',
-        till: '#ansokningar' },
-      { antal: Object.values(S.tutorProfiler).filter(t => t.status === 'pending').length,
+        till: '#ansokningar', dit: 'Ansökningar', saker: ansökningar.map(sakAnsökan) },
+      { antal: attGodkänna.length,
         rubrik: 'studiehjälpare att godkänna', ental: 'studiehjälpare att godkänna',
-        under: 'Kontot fungerar men vyn är låst tills någon godkänner.', till: '#studiehjalpare' },
-      { antal: utanHjälpare,
+        under: 'Kontot fungerar men vyn är låst tills någon godkänner.',
+        till: '#studiehjalpare', dit: 'Studiehjälpare', saker: attGodkänna.map(sakAttGodkänna) },
+      { antal: utanHjälpare.length,
         rubrik: 'elever saknar studiehjälpare', ental: 'elev saknar studiehjälpare',
-        under: 'Ingen är kopplad till dem än.', till: '#matchning' },
-      { antal: l.ohanterade_meddelanden != null ? l.ohanterade_meddelanden
-          : S.kontakt.filter(k => !k.hanterad_at).length,
+        under: 'Ingen är kopplad till dem än.', till: '#matchning', dit: 'Matchning',
+        saker: utanHjälpare.map(sakElev) },
+      { antal: l.ohanterade_meddelanden != null ? l.ohanterade_meddelanden : frågor.length,
         rubrik: 'frågor i inkorgen', ental: 'fråga i inkorgen',
-        under: 'Från kontaktformuläret, ingen har svarat än.', till: '#meddelanden' },
-      { antal: S.bokningar.filter(b =>
-          b.status !== 'cancelled' && b.status !== 'completed'
-          && String(b.wanted_date) < idag).length,
+        under: 'Från kontaktformuläret, ingen har svarat än.', till: '#meddelanden', dit: 'Frågor',
+        saker: frågor.map(sakFråga) },
+      { antal: orapporterade.length,
         rubrik: 'pass saknar rapport', ental: 'pass saknar rapport',
-        under: 'Hållna men orapporterade. De kommer inte med på underlaget.', till: '#lektioner' },
-      { antal: utanRapport().length,
+        under: 'Hållna men orapporterade. De kommer inte med på underlaget.', till: '#lektioner', dit: 'Lektioner',
+        saker: orapporterade.map(sakOrapporterat) },
+      { antal: genomfördaUtan.length,
         rubrik: 'genomförda pass saknar rapport', ental: 'genomfört pass saknar rapport',
-        under: 'Pass saknar rapport och kan därför inte behandlas automatiskt.', till: '#ekonomi/attgora' },
-      { antal: attBetalaUt,
+        under: 'Pass saknar rapport och kan därför inte behandlas automatiskt.', till: '#ekonomi/attgora',
+        dit: 'Betalningar', saker: genomfördaUtan.map(sakUtanRapport) },
+      { antal: attBetalaUt.length,
         rubrik: 'utbetalningar att göra', ental: 'utbetalning att göra',
-        under: 'Studiehjälpare som väntar på sin ersättning.', till: '#loner' }
+        under: 'Studiehjälpare som väntar på sin ersättning.', till: '#loner', dit: 'Löner',
+        saker: attBetalaUt.map(sakUtbetalning) }
     ].filter(p => p.antal > 0);
   }
 
@@ -246,20 +377,28 @@
     const idag = isoFor(new Date());
     const öppna = (S.uppgifter || []).filter(u => u.status === 'oppen' || u.status === 'pagar');
     const sena = öppna.filter(u => u.forfallodag && u.forfallodag < idag);
+    const försenade = l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length;
+    const avvikelser = övrigaAvvikelser().filter(a => EGEN_RAD.indexOf(a.typ) === -1);
+    const notisfel = S.notisfel || [];
     return [
-      { antal: l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length,
+      { antal: försenade,
         rubrik: 'försenade uppgifter', ental: 'försenad uppgift',
-        under: 'Öppna efter dagen de skulle vara klara.', till: '#uppgifter' },
-      { antal: övrigaAvvikelser().filter(a => EGEN_RAD.indexOf(a.typ) === -1).length,
+        under: 'Öppna efter dagen de skulle vara klara.', till: '#uppgifter', dit: 'Uppgifter',
+        saker: sena.map(sakUppgift) },
+      { antal: avvikelser.length,
         rubrik: 'ekonomiska avvikelser', ental: 'ekonomisk avvikelse',
-        under: 'Pass som hölls utan betalning, eller något i utbetalningarna som inte går ihop.', till: '#ekonomi/attgora' },
+        under: 'Pass som hölls utan betalning, eller något i utbetalningarna som inte går ihop.',
+        till: '#ekonomi/attgora', dit: 'Betalningar', saker: avvikelser.map(sakAvvikelse) },
       { antal: l.klientfel_24h != null ? l.klientfel_24h : 0, rubrik: 'fel hos användarna', ental: 'fel hos en användare',
-        under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel' },
-      { antal: (S.notisfel || []).length, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
-        under: 'Mejl som skulle ha skickats de senaste sex timmarna.', till: '#system/fel' },
-      { antal: öppna.length - (l.forsenade_uppgifter != null ? l.forsenade_uppgifter : sena.length),
+        under: 'Rapporterade från webbläsarna det senaste dygnet.', till: '#system/fel', dit: 'System',
+        saker: sakerFel() },
+      { antal: notisfel.length, rubrik: 'notiser som inte gick fram', ental: 'notis som inte gick fram',
+        under: 'Mejl som skulle ha skickats de senaste sex timmarna.', till: '#system/fel', dit: 'System',
+        saker: sakerNotiser() },
+      { antal: öppna.length - försenade,
         rubrik: 'öppna uppgifter', ental: 'öppen uppgift',
-        under: 'Inte klara, men inte heller sena.', till: '#uppgifter' }
+        under: 'Inte klara, men inte heller sena.', till: '#uppgifter', dit: 'Uppgifter',
+        saker: öppna.filter(u => sena.indexOf(u) === -1).map(sakUppgift) }
     ].filter(p => p.antal > 0);
   }
 

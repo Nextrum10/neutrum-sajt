@@ -280,6 +280,76 @@ async function genomAdminvyn(webb, roll, o) {
     if (o && o.smal) await iSidled(page, namn, sek, sek);
   }
 
+  /* Att göra, sak för sak (2026-10-26): sidan har ingen post i menyn, så
+     loopen ovan når den inte. Talet vid ringen leder dit, och raderna är
+     ringens tal, en per sak. Fixturen har en elev utan studiehjälpare
+     (Cleo Tre), vars rad leder till Matchning med eleven vald, och en
+     studiehjälpare att godkänna (Tea Väntar), vars panel öppnas på sidan.
+     En admin med behörigheter når den inte, som Översikt. */
+  {
+    const före = { k: konsol.length, d: dbfel.length };
+    const framme = () => page.evaluate(() => {
+      const s = document.querySelector('section.vy-sek[data-sek]:not([hidden])');
+      return s ? s.dataset.sek : null;
+    });
+    if (roll === 'superadmin') {
+      await page.evaluate(() => { location.hash = '#oversikt'; });
+      await lugnt(page, 500);
+      const tal = (await page.locator('#kon-disk-tal').innerText().catch(() => '')).trim();
+      prova(namn + ': att göra: vägen dit står under listan på Översikt',
+        await page.locator('#kon-alla:not([hidden])').count() === 1, 'länken är dold');
+      await page.locator('a.kon-nex-lage').click({ timeout: 3000 }).catch(() => {});
+      await lugnt(page, 500);
+      prova(namn + ': att göra: talet vid ringen leder till sidan', await framme() === 'attgora', await framme());
+      await bild(page, namn.replace(/ /g, '-') + '-attgora');
+      prova(namn + ': att göra: Översikt står vald i menyn',
+        await page.locator('#vy-sido a[data-sek="oversikt"].ar-har').count() === 1, 'ingen vald post');
+      // En rad som står för flera (samma fel om och om igen, eller Och N till) bär hur många i data-ganger.
+      const sidan = await page.evaluate(() => {
+        const v = document.querySelector('#ag-sidan');
+        return {
+          antal: [...v.querySelectorAll('.vy-grupp .vy-antal')].reduce((n, x) => n + Number(x.textContent), 0),
+          rader: [...v.querySelectorAll('.ag-rad')].reduce((n, r) => n + Number(r.dataset.ganger || 1), 0),
+          text: v.innerText.replace(/\s+/g, ' ').slice(0, 400)
+        };
+      });
+      prova(namn + ': att göra: grupperna räknar ringens tal', String(sidan.antal) === tal, tal + ' mot ' + JSON.stringify(sidan));
+      prova(namn + ': att göra: raderna är ringens tal, sak för sak', String(sidan.rader) === tal,
+        tal + ' mot ' + JSON.stringify(sidan));
+      const elev = page.locator('#ag-sidan a.ag-rad[data-mt-hoppa="a1000000-0000-4000-8000-0000000005c1"]');
+      const elevText = await elev.innerText().catch(() => '');
+      prova(namn + ': att göra: eleven utan studiehjälpare står med Matcha', /Cleo Tre/.test(elevText) && /Matcha/.test(elevText),
+        sidan.text);
+      const hjälpare = page.locator('#ag-sidan button.ag-rad[data-dp="studiehjalpare:a1000000-0000-4000-8000-0000000000a3"]');
+      if (await hjälpare.count()) {
+        await hjälpare.click({ timeout: 3000 }).catch(() => {});
+        await lugnt(page, 500);
+        prova(namn + ': att göra: studiehjälparens panel öppnas på sidan',
+          await page.locator('.dp.ar-oppen').count() === 1 && await framme() === 'attgora', await framme());
+        await page.locator('[data-dp-stang]').first().click({ timeout: 2000 }).catch(() => {});
+        await vänta(350);
+      } else {
+        prova(namn + ': att göra: studiehjälparen att godkänna står med', false, sidan.text);
+      }
+      if (o && o.smal) await iSidled(page, namn, 'attgora', 'attgora');
+      if (await elev.count()) {
+        await elev.click({ timeout: 3000 }).catch(() => {});
+        await lugnt(page, 700);
+        prova(namn + ': att göra: Matcha leder till Matchning med eleven vald', await framme() === 'matchning'
+          && await page.locator('[data-mt-elev="a1000000-0000-4000-8000-0000000005c1"][aria-pressed="true"]').count() === 1,
+          await framme());
+      }
+    } else {
+      await page.evaluate(() => { location.hash = '#attgora'; });
+      await lugnt(page, 400);
+      prova(namn + ': att göra: sidan är superadminens', await framme() !== 'attgora', await framme());
+    }
+    const nyaKonsol = konsol.slice(före.k);
+    const nyaDb = dbfel.slice(före.d);
+    prova(namn + ': att göra: inga fel i konsolen', nyaKonsol.length === 0, nyaKonsol.join(' | '));
+    prova(namn + ': att göra: inga fel från databasen', nyaDb.length === 0, nyaDb.join(' | '));
+  }
+
   /* Undersidorna som bara nås med adressen (2026-10-21): Koders fyra ytor
      har länkar, inte flikar, så loopen ovan når bara valet. Den första
      raden fälls ut, så att en kods användningar hämtas också. */

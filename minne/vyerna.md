@@ -1285,6 +1285,59 @@ uppdatering utan fel). Listan över knapparna står i
 `minne/barnkonton-och-admin.md`, under Adminvyn.
 
 
+### Att göra, sak för sak (2026-10-26)
+
+Leo: "nex visar 3 saker att göra, jag ser bara två", och sedan "när jag
+trycker på att göra grejen ska jag få upp en flik som visar allt att göra".
+Ringen i NEX-bandet räknar saker (summan av posternas antal) och Att göra
+under den visar poster. I driften var det två elever utan studiehjälpare
+på en rad med en tvåa, och en fråga i inkorgen på en rad till: ringen sa
+3 och listan hade två rader. Ingenting saknades, men ögat räknar rader.
+
+- **Sidan `#attgora`** (sektionen `attgora` i `admin.html`, ritad av
+  `ritaSidan()` i `nextrum-admin-konsol.js`) har samma poster i samma
+  ordning som Att göra, det som gått fel först, och en rad per sak i
+  studievyernas form (`.vy-grupp`, `.vy-kort`, `.vy-rad`). Gruppens rubrik
+  bär postens antal och en länk till sektionen där det görs.
+- **Vägen dit** är talet vid ringen (`a.kon-nex-lage`), ringen själv (en
+  andra länk för musen och fingret, `aria-hidden` och utanför
+  tabbordningen) och Allt att göra, en rad per sak, under listan
+  (`#kon-alla`, dold när inget väntar). Raderna i Att göra leder som förut
+  till sin sektion.
+- **Ingen post i menyn.** Översikt står vald medan sidan är framme
+  (`onByt` i sidomenyn, `nextrum-admin.js`), och raden överst på en telefon
+  säger Att göra (`SEKTIONSNAMN`). Bara superadmin, som Översikt: sektionen
+  står inte i `SEKTIONER` (`nextrum-admin-behorighet.js`).
+- **Sakerna byggs där antalet räknas**, i `byggAttGöra` och `byggProblem`
+  (SAK FÖR SAK i `nextrum-admin-oversikt.js`), ur samma urval, så att sidan
+  och ringen inte kan glida isär. En sak med `dp` öppnar sin panel på sidan
+  (anmälan, ansökan, studiehjälpare, pass), och man står kvar i listan när
+  den stängs. De andra leder dit det görs: en elev till Matchning med
+  eleven vald (`data-mt-hoppa`), en fråga till inkorgen, ett genomfört pass
+  utan rapport och en avvikelse till Betalningar → Att göra, en utbetalning
+  till Löner, en uppgift till Uppgifter och ett fel till System → Fel.
+  Avvikelsens namn är Betalningars (`avvText`) och utskickets System → Fels
+  (`notisfelText`).
+- **En rad kan stå för flera** (`gånger`, i sidan `data-ganger`): samma fel
+  på samma sida, och samma utskick som fallit på samma sätt. Det som ska
+  göras är att rätta felet, inte att läsa det tolv gånger, och raden säger
+  hur många gånger. Är antalet databasens (`admin_lage`) och listan i vyn
+  kortare (felen hos användarna är de 100 senaste) står resten som "Och N
+  till", med länken dit.
+- **En ny post i Att göra får sina saker i samma ändring**, annars står
+  den på sidan som N saker utan rader.
+- **Sidan har innehåll bara medan den står framme.** `ritaSidan()` tömmer
+  den när sektionen är dold och ritar den ur det `ritaKonsol()` senast
+  räknade när den kommer fram (sidomenyns `innan`, före mätningen). Ritad
+  i det dolda stod samma knapp två gånger i dokumentet, här och i sin
+  sektion, och `prova-intag.js` klickade på den dolda: `page.click` tar
+  den första träffen, och sektionen ligger tidigt i `admin.html`.
+- `verktyg/prova-adminvyn.js` prövar sidan mot den lokala databasen: talet
+  leder dit, gruppernas antal och raderna är ringens tal, eleven utan
+  studiehjälpare leder till Matchning med eleven vald, studiehjälparens
+  panel öppnas på sidan, och en admin med behörigheter når den inte.
+
+
 ### Koder i adminvyn (2026-10-13)
 
 Leo: "i admin vyn ska du skapa en ny spalt, där ska koder synas, allas

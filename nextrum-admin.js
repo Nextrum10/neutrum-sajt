@@ -419,7 +419,7 @@
      ============================================================ */
 
   const SEKTIONSNAMN = {
-    oversikt: 'Översikt', leads: 'Intresseanmälningar', ansokningar: 'Ansökningar',
+    oversikt: 'Översikt', attgora: 'Att göra', leads: 'Intresseanmälningar', ansokningar: 'Ansökningar',
     meddelanden: 'Frågor', familjer: 'Familjer', elever: 'Elever',
     studiehjalpare: 'Studiehjälpare', koder: 'Koder', matchning: 'Matchning', bokningar: 'Bokningar',
     lektioner: 'Lektioner', statistik: 'Statistik',
@@ -1049,7 +1049,15 @@
       S.sido = NXStudie.sidomeny({
         nav: $('#vy-sido'), rot: $('#view-app'),
         standard: full ? 'oversikt' : NXAdmin.rita.förstaSektion(),
-        tillåten: full ? null : NXAdmin.rita.tillåten
+        tillåten: full ? null : NXAdmin.rita.tillåten,
+        /* Att göra (2026-10-26) har innehåll bara medan den står framme, och
+           ritas innan sidan mäts (nextrum-admin-konsol.js, ritaSidan). Den har
+           ingen post i menyn: den är Översiktens lista sak för sak, och
+           Översikt står vald medan den är framme. */
+        innan: () => { if (NXAdmin.rita.ritaAttGöraSidan) NXAdmin.rita.ritaAttGöraSidan(); },
+        onByt: sek => {
+          if (sek === 'attgora') $$('#vy-sido a[data-sek="oversikt"]').forEach(a => a.classList.add('ar-har'));
+        }
       });
       NXAdmin.rita.städaMenyn();
 

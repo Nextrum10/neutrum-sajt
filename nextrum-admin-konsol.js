@@ -10,8 +10,8 @@
    1. LÄGET läses ur S.lage, alltså vyn admin_lage, som redan är
       hämtad av ritaÖversikt(), och arbetskön ur S.problem och
       S.attGora. Den kostar ingenting, är alltid färsk, och ritas vid
-      varje sidladdning: ringen och talet i NEX-bandet, och listan Att
-      göra under det.
+      varje sidladdning: ringen och talet i NEX-bandet, listan Att
+      göra under det, och sidan Att göra (#attgora) med en rad per sak.
 
    2. AGENTEN, alltså NEX som man talar med, körs BARA när någon
       frågar den något. Drift-agenten är
@@ -31,6 +31,7 @@
   const { $, esc } = NX;
   const { S } = NXAdmin;
   const kronor = NXBetalning.kronor;
+  const M = NXMedia;
 
   /* Frågor som faktiskt går att besvara med drift-agentens nio
      läsande verktyg. Exempel som agenten måste vägra lär bara ut att
@@ -64,6 +65,103 @@
       + poster.map(rad).join('') + '</div>';
   }
 
+  const LUGNT = '<div class="adm-lugnt">'
+    + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
+    + '<span><b>Ingenting väntar just nu</b>'
+    + '<span>Inga pass utan rapport och inga obesvarade anmälningar.</span></span>'
+    + '</div>';
+
+  /* ------------------------------------------------------------
+     ATT GÖRA, SAK FÖR SAK (2026-10-26)
+
+     Leo: "när jag trycker på att göra grejen ska jag få upp en flik som
+     visar allt att göra". Ringen, talet bredvid den och Att göra leder
+     till sektionen #attgora: samma poster i samma ordning, men en rad
+     per SAK (nextrum-admin-oversikt.js, SAK FÖR SAK). Den räknar inget
+     själv heller. Raderna är ringens tal, och en rad som står för flera
+     (samma fel tio gånger) säger hur många.
+
+     En rad öppnar det den gäller: en person eller ett pass i panelen,
+     och man står kvar i listan när den stängs; annars sektionen där det
+     görs. Sidan ritas om med Översikt, så det som gjorts går ur listan.
+     ------------------------------------------------------------ */
+  const PIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M12 5l7 7-7 7"/></svg>';
+  const IKON = {
+    pass: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>',
+    rapport: '<path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M9 12h6M9 16h4"/>',
+    uppgift: '<rect x="4.5" y="4" width="15" height="17" rx="2"/><path d="m8.5 12.5 2.3 2.3 4.7-4.8"/>',
+    kort: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10.5h18M6.5 14.5h3"/>',
+    fel: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>',
+    notis: '<path d="M3.5 7.5h17v11h-17z"/><path d="m3.5 8 8.5 6 8.5-6"/>'
+  };
+  const stor = t => t.charAt(0).toUpperCase() + t.slice(1);
+
+  function sakRad(s, problem) {
+    const meta = (s.meta || []).filter(m => m && m !== '—');
+    const inne = (s.person
+        ? M.avatar(s.titel, null, { liten: true })
+        : '<span class="vy-rad-ik' + (problem ? ' ar-fel' : '') + '" aria-hidden="true"><svg viewBox="0 0 24 24">'
+          + (IKON[s.ikon] || IKON.fel) + '</svg></span>')
+      + '<span class="vy-rad-mitt"><span class="vy-rad-titel">' + esc(s.titel) + '</span>'
+      + (meta.length ? '<span class="vy-rad-meta">' + meta.map(m => '<span>' + esc(m) + '</span>').join('') + '</span>' : '')
+      + (s.not ? '<span class="vy-rad-not">' + esc(s.not) + '</span>' : '')
+      + '</span>'
+      + '<span class="vy-rad-hoger">' + (s.gör ? '<small>' + esc(s.gör) + '</small>' : '')
+      + '<span class="vy-rad-pil">' + PIL + '</span></span>';
+    // En rad som står för flera bär hur många, så att raderna går att räkna ihop med ringen.
+    const flera = s.gånger > 1 ? ' data-ganger="' + esc(String(s.gånger)) + '"' : '';
+    if (s.dp) return '<button type="button" class="vy-rad ag-rad"' + flera + ' data-dp="' + esc(s.dp) + '">' + inne + '</button>';
+    return '<a class="vy-rad ag-rad"' + flera + ' href="' + esc(s.till) + '"'
+      + (s.hoppa ? ' data-mt-hoppa="' + esc(s.hoppa) + '"' : '') + '>' + inne + '</a>';
+  }
+
+  function sakGrupp(p, problem) {
+    const saker = p.saker || [];
+    const visade = saker.reduce((n, s) => n + (s.gånger || 1), 0);
+    const kvar = p.antal - visade;
+    return '<div class="vy-grupp"><h3>' + esc(stor(p.antal === 1 ? p.ental : p.rubrik)) + '</h3>'
+      + '<span class="vy-antal ' + (problem ? 'ar-fel' : 'ar-gor') + '">' + esc(String(p.antal)) + '</span>'
+      + '<a class="vy-lank" href="' + esc(p.till) + '">' + esc(p.dit || 'Öppna') + PIL + '</a></div>'
+      + '<div class="vy-kort"><div class="vy-lista">'
+      + saker.map(s => sakRad(Object.assign({ till: p.till }, s), problem)).join('')
+      /* Antalet är databasens och listan här har inte alla, som felen hos
+         användarna (de 100 senaste): resten står där posten leder. */
+      + (kvar > 0
+        ? '<a class="vy-rad ag-rad ag-fler" data-ganger="' + kvar + '" href="' + esc(p.till) + '"><span class="vy-rad-mitt">'
+          + '<span class="vy-rad-titel">' + esc(visade ? 'Och ' + kvar + ' till' : kvar + (kvar === 1 ? ' sak' : ' saker'))
+          + '</span><span class="vy-rad-meta"><span>' + esc('Står under ' + (p.dit || 'sektionen')) + '</span></span>'
+          + '</span><span class="vy-rad-hoger"><span class="vy-rad-pil">' + PIL + '</span></span></a>'
+        : '')
+      + '</div></div>';
+  }
+
+  function del(rubrik, poster, problem) {
+    if (!poster.length) return '';
+    return '<div class="ag-del' + (problem ? ' ar-problem' : '') + '">'
+      + '<p class="ag-del-rubrik">' + esc(rubrik) + '</p>'
+      + poster.map(p => sakGrupp(p, problem)).join('') + '</div>';
+  }
+
+  /* Det ritaKonsol senast räknade. Sidan har innehåll bara medan den står
+     framme, och ritas när den kommer fram (sidomenyns innan, nextrum-admin.js):
+     dold hade samma knapp stått två gånger i dokumentet, här och i sin
+     sektion, och den som letar efter den första hittar den som inte syns
+     (prova-intag.js klickade på den dolda). */
+  let senast = null;
+
+  function ritaSidan() {
+    const värd = $('#ag-sidan');
+    if (!värd || !senast) return;
+    const sektion = värd.closest('section[data-sek]');
+    if (sektion && sektion.hidden) { värd.textContent = ''; return; }
+    const { problem, kö, summa } = senast;
+    if (!summa) { värd.innerHTML = LUGNT; return; }
+    värd.innerHTML = '<p class="ag-ingress">' + esc('Nex räknar ' + summa + (summa === 1 ? ' sak' : ' saker')
+        + '. Här står de en och en: tryck på en rad för att öppna det den gäller.') + '</p>'
+      + del('Har gått fel', problem, true)
+      + del('Väntar på dig', kö, false);
+  }
+
   function ritaKonsol() {
     const värd = $('#kon-lage');
     const disk = $('#kon-disk');
@@ -78,8 +176,10 @@
        notisklockan och menyn — precis det fel hjältebildens kort en
        gång gjorde, och som står dokumenterat i nextrum-admin.js.
 
-       Summan i ringen är de två listorna ihop, och eftersom båda syns
-       uppdelade strax under går talet att stämma av med ögat. */
+       Summan i ringen är de två listorna ihop: varje rad med sitt antal.
+       Det gick inte att stämma av med ögat, för ögat räknar rader (Leo
+       2026-10-26: "nex visar 3 saker att göra, jag ser bara två"), så
+       ringen leder till sidan Att göra, där varje sak har sin rad. */
     const problem = S.problem || [];
     const kö = S.attGora || [];
     const summa = problem.concat(kö).reduce((n, p) => n + p.antal, 0);
@@ -98,17 +198,19 @@
     if (antal) antal.textContent = summa ? summa + ' st' : '';
 
     if (!problem.length && !kö.length) {
-      värd.innerHTML = '<div class="adm-lugnt">'
-        + '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg>'
-        + '<span><b>Ingenting väntar just nu</b>'
-        + '<span>Inga pass utan rapport och inga obesvarade anmälningar.</span></span>'
-        + '</div>';
+      värd.innerHTML = LUGNT;
     } else {
       /* Problemen först: det som gått fel är inte samma sak som det
          som väntar, och en lista som blandar dem säger ingenting. */
       värd.innerHTML = grupp('Har gått fel', problem, 'ar-problem')
         + grupp('Väntar på dig', kö, '');
     }
+    /* Sidan Att göra, sak för sak, och vägen dit under listan. Står
+       ingenting finns inget att visa sak för sak. */
+    const alla = $('#kon-alla');
+    if (alla) alla.hidden = !summa;
+    senast = { problem, kö, summa };
+    ritaSidan();
 
     const l = S.lage;
     if (!l) {
@@ -396,4 +498,5 @@
   koppla();
   kopplaRapporten();
   NXAdmin.rita.ritaKonsol = ritaKonsolOchRapport;
+  NXAdmin.rita.ritaAttGöraSidan = ritaSidan;
 })();
