@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Om oss och startsidans exempel säger bara det som är sant.
+"""Om oss säger bara det som är sant.
 
        python3 test/innehall-regler.py
 
-Om oss (/om-oss) och "Så ser ni att det funkar" på startsidan (#exempel)
-skrevs 2026-10-22 efter en regel: varje påstående ska gå att visa i koden
+Om oss (/om-oss) skrevs 2026-10-22 efter en regel: varje påstående ska gå att visa i koden
 eller i sajtens egen text, och det vi inte kan visa står inte där. Vi är
 nya, så det finns inga antal, inga omdömen och inga resultat att peka på,
 och en mening som låter som om de fanns är ett löfte vi inte kan hålla.
@@ -20,11 +19,11 @@ Det här faller på det som brukar smyga sig in när någon putsar en text:
   · omdöme, utom i rutan Vi är nya, som säger att det inte finns några
 
 En platshållare ([data-platshallare]) prövas inte: den ska bytas ut och
-skrivs ut som en påminnelse. Exemplets elev har inget namn, ingen skola
-och ingen årskurs, och varje flik säger att den är påhittad.
+skrivs ut som en påminnelse.
 
-Ekvationerna i exemplet räknas om här: en elev som "löser" en ekvation
-fel på vår egen startsida är värre än inget exempel alls.
+Startsidans exempel, "Så ser ni att det funkar" (#exempel), prövades här
+också, med ekvationerna omräknade, tills det togs bort 2026-10-26 (Leo:
+"ta bort den").
 """
 import html
 import io
@@ -65,8 +64,6 @@ REGLER = [
     ('registerutdrag', r'registerutdrag|belastningsregist'),
 ]
 OMDOME = r'omdöme'
-# Bara i exemplet: eleven är påhittad och ska inte gå att placera.
-ELEVEN = [('en årskurs', r'årskurs|\båk\s*\d|\bklass\s*\d'), ('en skola', r'\bskola\b|\bskolan\b')]
 
 
 class Block:
@@ -139,20 +136,6 @@ def utan_kommentarer(s):
     return re.sub(r'<!--.*?-->', ' ', s, flags=re.S)
 
 
-def sektion(s, id_):
-    """Elementet med id_ och allt i det, till och med sin sluttagg."""
-    m = re.search(r'<(\w+)[^>]*\bid="%s"' % re.escape(id_), s)
-    if not m:
-        return None
-    tagg, start = m.group(1), m.start()
-    djup, i = 0, start
-    for t in re.finditer(r'<(/?)%s\b[^>]*>' % tagg, s[start:]):
-        djup += -1 if t.group(1) else 1
-        if djup == 0:
-            return s[start:start + t.end()]
-    return None
-
-
 def huvudet(s, namn):
     """Titeln och beskrivningarna: det man ser i en sökträff och en delning."""
     ut = []
@@ -174,26 +157,19 @@ def block_i(utsnitt, namn):
     return p.block
 
 
-def prova(blocken, fel, platser, svenska=True, exemplet=False):
+def prova(blocken, fel, platser):
     for b in blocken:
         text = ' '.join(b.delar)
         if b.platshallare:
             platser.append('%s: %s' % (b.var, text))
             continue
         liten = text.lower()
-        regler = list(REGLER)
-        if exemplet:
-            regler += ELEVEN
-        for namn, rx in regler:
-            if not svenska and namn not in ('procent', 'ett kronbelopp', 'tankstreck'):
-                continue
+        for namn, rx in REGLER:
             m = re.search(rx, liten)
             if m:
                 fel.append('%s: %s ("%s") i "%s"' % (b.var, namn, m.group(0).strip(), text))
-        if svenska and re.search(OMDOME, liten) and not b.vi_ar_nya:
+        if re.search(OMDOME, liten) and not b.vi_ar_nya:
             fel.append('%s: omdöme utanför rutan Vi är nya i "%s"' % (b.var, text))
-        if not svenska:
-            continue
         for ord_ in re.findall(r'[\wåäöÅÄÖ]+', text):
             if ord_ in NAMN or ord_.rstrip('s') in NAMN:
                 fel.append('%s: namnet %s i "%s"' % (b.var, ord_, text))
@@ -204,54 +180,6 @@ def prova(blocken, fel, platser, svenska=True, exemplet=False):
         for m in re.finditer(r'(?<=[a-zåäö,]) ([A-ZÅÄÖ][\wåäö]+)', text):
             if m.group(1) not in EGNA:
                 fel.append('%s: "%s" ser ut som ett namn i "%s"' % (b.var, m.group(1), text))
-
-
-# ---------- ekvationerna ----------
-
-def uttryck(s):
-    """'3x + 5' -> '3*x + 5', '2(x + 3)' -> '2*(x + 3)', '3 · 6' -> '3 * 6'."""
-    s = s.replace('·', '*').replace('−', '-')
-    s = re.sub(r'(\d)\s*([x(])', r'\1*\2', s)
-    if not re.fullmatch(r'[\dx+\-*() ]+', s):
-        raise ValueError('okänt uttryck: ' + s)
-    return s
-
-
-def losning(vl, hl):
-    """x i en linjär ekvation, eller None om den inte har en enda lösning."""
-    f = lambda x: eval(uttryck(vl), {'x': x}) - eval(uttryck(hl), {'x': x})
-    a = f(1) - f(0)
-    if a == 0:
-        return None
-    return -f(0) / a
-
-
-def ekvationer(utsnitt, var, fel):
-    text = re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', utan_kommentarer(utsnitt))))
-    antal = 0
-    # Ett stycke i taget, så att "fick x = 6" prövas mot ekvationen före.
-    for stycke in re.split(r'(?<=\.) (?=[A-ZÅÄÖ])|(?<=</p>)', text):
-        senaste = None
-        for m in re.finditer(r'(\d*x(?: [+\-] \d+)?|\d+\(x [+\-] \d+\)) = (\d*x(?: [+\-] \d+)?|\d+)', stycke):
-            vl, hl = m.group(1), m.group(2)
-            if vl == 'x' and hl.isdigit():
-                antal += 1
-                if senaste is None or senaste != int(hl):
-                    fel.append('%s: "x = %s", men ekvationen före har x = %s' % (var, hl, senaste))
-                continue
-            x = losning(vl, hl)
-            antal += 1
-            if x is None or x != int(x):
-                fel.append('%s: %s = %s har ingen heltalslösning (%s)' % (var, vl, hl, x))
-            senaste = None if x is None else int(x)
-        for m in re.finditer(r'(\d+ · \d+ [+\-] \d+) = (\d+)', stycke):
-            antal += 1
-            if eval(uttryck(m.group(1))) != int(m.group(2)):
-                fel.append('%s: %s är inte %s' % (var, m.group(1), m.group(2)))
-            elif senaste is not None and not m.group(1).startswith('%d · ' % senaste) \
-                    and ' · %d ' % senaste not in m.group(1):
-                fel.append('%s: kontrollen %s sätter inte in x = %d' % (var, m.group(1), senaste))
-    return antal
 
 
 def main():
@@ -273,23 +201,6 @@ def main():
     if 'data-vi-ar-nya' not in main_.group(0):
         fel.append('om-oss.html: rutan Vi är nya ([data-vi-ar-nya]) saknas')
 
-    antal_ekv = 0
-    for fil, svenska in (('index.html', True), ('en/index.html', False)):
-        s = las(fil)
-        ex = sektion(s, 'exempel')
-        if not ex:
-            fel.append('%s: sektionen #exempel saknas' % fil)
-            continue
-        prova(block_i(ex, fil + ' #exempel'), fel, platser, svenska=svenska, exemplet=True)
-        tejper = len(re.findall(r'class="nx-tejp ex-tejp"', ex))
-        paneler = len(re.findall(r'data-ex-panel="', ex))
-        if not paneler or tejper != paneler:
-            fel.append('%s #exempel: %d flikar men %d tejper som säger att eleven är påhittad'
-                       % (fil, paneler, tejper))
-        antal_ekv += ekvationer(ex, fil + ' #exempel', fel)
-    if antal_ekv == 0:
-        fel.append('inga ekvationer hittades i exemplet: har texten ändrats utan det här?')
-
     for p in platser:
         print('PLATSHÅLLARE  ' + p)
     if fel:
@@ -297,8 +208,7 @@ def main():
         for f in fel:
             print('  ' + f)
         return 1
-    print('ok   Om oss och exemplen följer innehållsreglerna, %d ekvationer räknade, %d platshållare kvar'
-          % (antal_ekv, len(platser)))
+    print('ok   Om oss följer innehållsreglerna, %d platshållare kvar' % len(platser))
     return 0
 
 

@@ -67,11 +67,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   det.
 - **Omdömen** hittas aldrig på och visas bara ihop med hur de kontrolleras; alla familjer med
   två rapporter får samma Google-fråga, och `tutor_reviews` blir aldrig publik.
-- **Om oss och exemplen** (2026-10-22, `/om-oss` och startsidans `#exempel`, Leo: "varje påstående måste gå att belägga
-  i koden eller i befintlig sajttext"): det som inte går att visa står inte där. Inga antal, omdömen, procent, kronor,
-  namn eller titlar, ingen garanti, inget "forskning visar" och inget om bakgrundskontroller; priset står på prissidan.
-  Exemplets elev är påhittad, utan namn, skola och årskurs, varje flik säger det på en tejp, och ekvationerna räknas.
-  `test/innehall-regler.py` vaktar i CI och skriver ut platshållarna (Leos meningar, bolagsuppgifterna i footern).
+- **Om oss** (2026-10-22, `/om-oss`, Leo: "varje påstående måste gå att belägga i koden eller i befintlig sajttext"):
+  det som inte går att visa står inte där. Inga antal, omdömen, procent, kronor, namn eller titlar, ingen garanti, inget
+  "forskning visar" och inget om bakgrundskontroller; priset står på prissidan. `test/innehall-regler.py` vaktar i CI och
+  skriver ut platshållarna. Startsidans exempel, Så ser ni att det funkar (`#exempel`, `nextrum-exempel.js` och
+  `-css`), togs bort 2026-10-26 (Leo: "ta bort den"), och Om oss länk till det går till studievyn på För elever och
+  föräldrar.
 - **Betygsgarantin** (2026-10-07, `#betygsgaranti`): svår att få genom villkor som går att
   räkna (hållen tid, uteblivna pass, uppgifterna i tid, betalningarna), aldrig genom att vi
   bedömer engagemang; den enda bedömningen är Leos regel att ett ämne som inte gick upp för att
@@ -625,8 +626,7 @@ delar som de är; deras text följer inte med formen, och `.faq-item` är orörd
 Hero är orörd med flit: film, etiketten Nextrum, rubrik och ingress (Leo, igen 2026-10-07). Det enda nya är raden
 under knapparna med pris, första timmen, 24 timmar och bindningstid (2026-10-06). Startlägen gömmer inget utan `html.nx-sr`. Telefonens hero-film görs om
 när originalet byts och provas som VP9. Mörka ytor glider in med `.nx-framme`, aldrig `.nx-in`.
-**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Så ser ni att det funkar (`#exempel`, 2026-10-22:
-rapporten, studieplanen och vyn som förälder som flikar, `nextrum-exempel.js`, statisk och utan anrop), Just nu, Vår idé, studievyn, NexLäx,
+**Ordningen efter heron** (2026-10-08, Leo): Hur hjälper vi ert barn, Just nu, Vår idé, studievyn, NexLäx,
 Från intresseanmälan till första passet, studiehjälparna, Trygg hjälp, bildväggen, omdömena (`#rost`), För dig
 som vill jobba (`#bli`) och Nästa steg. **Läxhjälpssidorna står längst ner i footern** (`.ftr-lax`, 2026-10-13, Leo: "lägg in de längst ner vid de andra landingssidorna och gör de snyggt"): alla läxhjälps- och guidesidor i fyra grupper (Ämne, Årskurs, Område, Guider) med ämnesfärgens prick, på varje publik sida och båda språken, i stället för startsidans sektion Läxhjälp för just ert barn (2026-10-10 till 2026-10-13) och footerns gamla spalt Läxhjälp; en ny sida i kartan läggs in där på alla sidor, och `var-ide.html` är generatorns källa. **Hur hjälper vi ert barn** ("ert barn?" sedan 2026-10-09, Leo; `#sa-hjalper-vi`, avsnitt 17; på startsidan med etiketten
 "Vad är Nextrum" och Leos ingress om prisvärd läxhjälp för elever sedan 2026-10-08, på Vår idé som förut): fyra blad i
@@ -1132,8 +1132,9 @@ Detaljer: `minne/grunden.md`.
 - **Om oss och Så ser ni att det funkar** (2026-10-22, `om-oss-sida`) är i drift sedan kvällen 2026-10-24: PR #332
   mergades (deb70ce) efter #331, med main intagen och två versionsstämplar i `om-oss.html` omstämplade, och Vercel lade
   ut sidorna (kontrollerat från databasen mot nextrum.se: `/om-oss` utan platshållare, `#exempel` och footerns länk på
-  båda språken). `/om-oss` (bara på svenska; footern länkar dit på varje sida, engelskan med "About us (in Swedish)") och startsidans
-  `#exempel` på båda språken. Ingen migration och ingen edge-funktion. Varför vi startade (rutan `.om-egna` sist under
+  båda språken). `/om-oss` (bara på svenska; footern länkar dit på varje sida, engelskan med "About us (in Swedish)").
+  Startsidans `#exempel` togs bort 2026-10-26 (Leo: "ta bort den"), på båda språken. Ingen migration och ingen
+  edge-funktion. Varför vi startade (rutan `.om-egna` sist under
   Idén) är skriven ur grundarnas egna ord på startsidan (2026-10-24, Leo: "lös det själv"), utan någon scen eller
   detalj som inte står på sajten; skriver Leo en egen byts den. Organisationsnummer och postadress har inga sidor än:
   bolaget är under bildande. Sidan säger att en ny studiehjälpare inte ser några elever förrän provet är godkänt: det

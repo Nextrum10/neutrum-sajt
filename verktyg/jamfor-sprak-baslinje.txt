@@ -27,11 +27,8 @@
       Hammarby Sjöstad
 
 === index.html  ->  en/index.html
-  STRUKTUR skiljer sig vid tagg 45: sv <b> vs en <a>
-  SVENSKA KVAR i engelskan, 4 stycken:
-      3x + 5 = 2x + 11
-      3x + 5 = 2x + 11
-      2(x + 3) = 14
+  STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
+  SVENSKA KVAR i engelskan, 1 stycken:
       Hammarby Sjöstad
 
 === integritetspolicy.html  ->  en/integritetspolicy.html
