@@ -986,6 +986,8 @@ kassan. Inget får droppas, och ingen migration får ändra eller radera befintl
   är struken där villkoren räknar upp vad man kan köpa (familjerabatten, betalningen, syskontillägget, köpvillkoren,
   Planer och timbanken och ångerrätten), och reglerna för köpta timmar står kvar (sex månader, timbanken, prisgarantin
   och Att sluta). Syskontilläggets egen version, 2026-10-23, står kvar: dess regel är densamma. Alla får frågan igen.
+  I drift sedan 2026-10-26 (PR #336, 7d5de9d; migrationen ur merge-commiten, md5 `05139538…`, och `rls-test.sql` 2131
+  av 2131 mot driften, tillbakarullat).
 - **Stripe**: kassan skapar inga produkter i Stripe (raderna går med `price_data` och `product_data` i varje kassa),
   så det finns inget att arkivera. Ligger något med namnet Fyll timbanken i Stripes produktkatalog ändå: arkivera, radera
   inte.
