@@ -211,7 +211,7 @@
            intern.timbank_varde). Koden själv står aldrig i familjens vy. -->
       <li id="familjerabatt"><b>Familjerabatt.</b> Vi kan ge er familj en rabatt på ett antal kronor
         per timme, till exempel genom en samarbetspartner. Den dras på varje timme ni betalar med
-        pengar: på pass, planer, Fyll timbanken och timmar till en plan. Tillägget för fler barn och
+        pengar: på pass, planer och timmar till en plan. Tillägget för fler barn och
         timmar som redan är gratis påverkas inte. Priset med rabatten står i er vy när ni bokar eller
         köper och i kassan, innan ni betalar, och en rabattkod räknas på det priset. Rabatten gäller
         tills vidare, för det ni bokar och köper medan ni har den. Vi kan ändra eller ta bort den, och
@@ -234,7 +234,7 @@
         tillbaka mellanskillnaden av oss själva, till kortet eller Klarna, när rapporten är skriven. Var passet betalt med
         timmar från en plan eller ur timbanken kommer timmar som inte påbörjades tillbaka av sig
         själva, och det som blev över av den sista timmen sparas i er <a href="#timbank">timbank</a>.</li>
-      <li>Har ni fyllt er timbank med timmar i förväg, med en plan eller Fyll timbanken, betalar timmarna passet i
+      <li>Har ni timmar i er timbank, till exempel från en plan, betalar timmarna passet i
         stället, av sig själva, redan när ni föreslår det. Se <a href="#erbjudanden">Planer och timbanken</a> nedan.</li>
       <li>Betalningen sköts av Stripe. Kortuppgifterna lämnar ni direkt till Stripe, aldrig
         till oss. Betalar ni med Klarna gör ni det hos Klarna, på Klarnas villkor för det betalsätt ni
@@ -266,8 +266,8 @@
         (se <a href="#avbokning">Avboka senast 12 timmar före</a>). Avbokas passet i tid, eller av
         studiehjälparen eller oss, finns inget tillägg att betala.</li>
       <li><b>Hur ni betalar det.</b> Med Betala tillägg nu under Betalning i er vy, när ni vill, med kort
-        eller Klarna. Står det obetalt när ni köper timmar (en plan, timmar till en plan eller Fyll
-        timbanken) följer det med som en egen rad i det köpet. Det betalas aldrig med timmar, och en
+        eller Klarna. Står det obetalt när ni köper timmar (en plan eller timmar till en
+        plan) följer det med som en egen rad i det köpet. Det betalas aldrig med timmar, och en
         rabattkod eller en familjerabatt räknas inte på det.</li>
       <li><b>Påminnelse och spärr.</b> Har ett tillägg stått obetalt i 14 dagar påminner vi er. Är det
         obetalda över 1 000 kr, eller har ett tillägg stått obetalt i mer än 45 dagar, går det inte att
@@ -327,7 +327,7 @@
          flit: en kods villkor står där koden delas ut. -->
     <h2 id="kopvillkor">Köpvillkor</h2>
     <p>Det här gäller när ni betalar hos oss, för ett pass, ett tillägg för ett pass som blev längre,
-      syskontillägget, en sen avbokning, en plan, timmar till en plan eller Fyll timbanken. Innan kassan öppnas kryssar ni i att ni har
+      syskontillägget, en sen avbokning, en plan eller timmar till en plan. Innan kassan öppnas kryssar ni i att ni har
       läst det.</p>
     <ul>
       <li><b>Vem ni köper av.</b> Ni köper av oss, så som det står under Vem avtalet är med överst på
@@ -362,9 +362,16 @@
     </ul>
 
     <h2 id="erbjudanden">Planer och timbanken</h2>
-    <p>Ni kan fylla er timbank med timmar i förväg på två sätt: med en plan som gäller i 30 dagar, till ett
-      lägre timpris, eller med Fyll timbanken, till ordinarie timpris. Har ni en plan kan ni också köpa
-      till timmar till den (se <a href="#kop-till">Köp till timmar</a>). Betalar ni pass för pass används
+    <!-- 2026-10-26 (Leo: "fixa villkoren"): Fyll timbanken säljs inte sedan
+         2026-10-24 (PR #331, Leo: "Det ska bara finnas tre köpbara planer"),
+         så villkoren säljer den inte längre. Reglerna för timmar som redan
+         köpts med den står kvar: hur länge de gäller, timbanken,
+         prisgarantin och Att sluta. -->
+    <p>Ni fyller er timbank med timmar i förväg med en plan, som gäller i 30 dagar och har ett lägre
+      timpris. Har ni en plan kan ni också köpa
+      till timmar till den (se <a href="#kop-till">Köp till timmar</a>). Fyll timbanken, timmar till
+      ordinarie timpris, säljs inte längre, men timmar ni redan köpt med den gäller som förut, och det
+      som står här gäller också dem. Betalar ni pass för pass används
       inte timbanken, och varje pass betalas som under Pris och betalning ovan.
       Vilka som finns och vad de kostar står på <a href="/priser#erbjudanden">prissidan</a>. Köpet
       görs en gång, med kort eller Klarna. Det är inget abonnemang och förnyas inte av sig självt.</p>
@@ -394,7 +401,7 @@
         Timmarna gäller pass med ett barn; ett pass med fler barn betalas med kort, liksom ett pass
         som timmarna inte räcker till.</li>
       <li id="timbank"><b>Timbanken.</b> I timbanken står timmarna ni köpt, med en plan, till en plan
-        eller med Fyll timbanken, gratistimmar vi satt in, minuter som sparats och timmar ni fått för tips (se <a href="#tips">Tipsa en
+        eller tidigare med Fyll timbanken, gratistimmar vi satt in, minuter som sparats och timmar ni fått för tips (se <a href="#tips">Tipsa en
         familj eller en studiehjälpare</a>). Slutar ett pass som betalats med köpta timmar före en hel timme
         sparas resten i er timbank, räknat per påbörjad kvart: höll ett pass på två timmar i 1 timme
         och 45 minuter sparas 15 minuter. Drar ett senare pass över tas tiden ur timbanken först,
@@ -605,7 +612,7 @@
         ångra.</li>
       <li>Ångrar ni en bokning inom ångerfristen innan passet har börjat tar vi inte ut avgiften för en
         <a href="#avbokning">sen avbokning</a>: då betalar ni ingenting för passet, som ovan.</li>
-      <li>Köper ni en plan, timmar till en plan eller Fyll timbanken gäller samma ångerrätt, räknad från dagen för
+      <li>Köper ni en plan eller timmar till en plan gäller samma ångerrätt, räknad från dagen för
         köpet. Ångrar ni er betalar vi tillbaka det ni betalat, utom för de timmar som redan
         använts. De räknas till det timpris ni betalade för planen eller timmarna, inte till
         ordinarie pris.</li>
@@ -665,7 +672,7 @@
       <a href="https://www.arn.se" target="_blank" rel="noopener noreferrer">Allmänna reklamationsnämnden</a>
       eller av svensk allmän domstol.</p>
 
-    <p class="jur-datum">Senast uppdaterad 23 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 26 oktober 2026.</p>
   </div>
 </section>
 
