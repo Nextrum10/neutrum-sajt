@@ -773,16 +773,16 @@ fråga, Att göra, Alla betalningar, panelen och Efterskänk avgiften. `prova-sy
 version 2026-10-23, gränsen 12 timmar och länken till `#syskontillagg`.
 
 ### Om oss och exemplen (om-oss-sida, 2026-10-22)
-`test/innehall-regler.py` (CI, efter delningsbilderna) läser `<main>`, titeln och beskrivningarna i `om-oss.html` och
-sektionen `#exempel` i båda startsidorna. Den faller på namn ur repot och titlar, ett ord med stor bokstav mitt i en
+`test/innehall-regler.py` (CI, efter delningsbilderna) läser `<main>`, titeln och beskrivningarna i `om-oss.html`, och
+till 2026-10-26 sektionen `#exempel` i båda startsidorna (borttagen den dagen, Leo: "ta bort den"). Den faller på namn ur repot och titlar, ett ord med stor bokstav mitt i en
 mening som inte står i `EGNA`, procent, siffror före elever, familjer, timmar eller betyg, bevis, garanti, "forskning
 visar", tusentals, bäst, kronbelopp, tankstreck, bakgrundskontroll, registerutdrag och omdöme utanför
-`[data-vi-ar-nya]`; på engelska bara procent, kronor och tankstreck. `[data-platshallare]` prövas inte utan skrivs ut.
-Exemplet ska ha en tejp per flik och ingen årskurs eller skola, och varje ekvation räknas om: lösningen, "fick x = 6"
-mot ekvationen före och kontrollerna. Prövad med tjugo inplanterade fel, som alla föll.
-`verktyg/prova-om-oss.js` (port 8989, 63 prov, inte i CI) öppnar `/om-oss` och startsidan i 1440, 820 och 390 i båda
-lägena (konsolen, sidledsrullningen, inga anrop utanför localhost från Om oss och bara Supabase som förut från
-startsidan), rubrikerna med reducerad rörelse, flikarna med klick och tangenter, sidan utan JavaScript och utm på
-knapparna. Delningsbilden för Om oss har inget foto (`UTAN_FOTO` i `bygg-delningsbilder.js`) och inget pris; bara
+`[data-vi-ar-nya]`. `[data-platshallare]` prövas inte utan skrivs ut. Medan exemplet fanns prövades engelskan på
+procent, kronor och tankstreck, exemplet på en tejp per flik och ingen årskurs eller skola, och varje ekvation räknades
+om; den delen gick med exemplet. Prövad med tjugo inplanterade fel, som alla föll.
+`verktyg/prova-om-oss.js` (port 8989, 48 prov sedan 2026-10-26, inte i CI) öppnar `/om-oss` och startsidan i 1440, 820
+och 390 i båda lägena (konsolen, sidledsrullningen, inga anrop utanför localhost från Om oss och bara Supabase som förut
+från startsidan, och att inget exempel eller någon länk dit står kvar), rubrikerna med reducerad rörelse, utm på
+knapparna och länken i Vi är nya. Delningsbilden för Om oss har inget foto (`UTAN_FOTO` i `bygg-delningsbilder.js`) och inget pris; bara
 `delning/om-oss.jpg` byggdes om, de andra bilderna lämnades orörda. `om-oss.html` står i språkbaslinjen som en svensk
-sida utan tvilling, och ekvationerna i `#exempel` står där som svenska kvar i engelskan, för de är samma på båda.
+sida utan tvilling; ekvationerna i `#exempel` stod där som svenska kvar i engelskan tills exemplet togs bort.

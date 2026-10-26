@@ -1,6 +1,5 @@
 /* ============================================================
-   NEXTRUM — webbläsarprov för Om oss och exemplen på startsidan
-   (2026-10-22, grenen om-oss-sida)
+   NEXTRUM — webbläsarprov för Om oss (2026-10-22, grenen om-oss-sida)
 
        NODE_PATH="$(npm root -g)" node verktyg/prova-om-oss.js
 
@@ -12,13 +11,11 @@
      besvaras tomt här och är de enda som går ut;
    · med reducerad rörelse står varje rubrik i Om oss framme utan att
      någon rullat dit;
-   · flikarna i #exempel: WAI-ARIA:s roller, en panel i taget, klick,
-     piltangenterna åt båda hållen och runt, Home och End, och Tab till
-     panelen;
-   · utan JavaScript: de tre delarna står under varandra med sina
-     rubriker, och inga flikar syns;
-   · knapparna till intresseanmälan bär rätt utm, på båda språken;
-   · nextrum-exempel.js och -css hämtar ingenting.
+   · startsidan har inget exempel kvar (#exempel togs bort 2026-10-26,
+     Leo: "ta bort den"), och inget på den pekar dit;
+   · knapparna till intresseanmälan bär rätt utm, och länken i Vi är nya
+     går till studievyn på För elever och föräldrar;
+   · nextrum-om-oss.css hämtar ingenting.
    ============================================================ */
 'use strict';
 
@@ -40,7 +37,6 @@ const SUPABASE_REST = /^https:\/\/[a-z0-9]+\.supabase\.co\/rest\/v1\//;
 const BREDDER = [1440, 820, 390];
 const LÄGEN = ['light', 'dark'];
 const UTM_OM = 'utm_source=om-oss&utm_medium=sajt&utm_campaign=okt26';
-const UTM_EX = 'utm_source=startsida&utm_medium=sajt&utm_campaign=okt26&utm_content=exempel';
 
 const utfall = [];
 function prova(namn, ok, detalj) {
@@ -95,17 +91,18 @@ async function provaBredder(webb) {
       await ctx.close();
     }
     {
-      const { ctx, p, ute, konsol } = await öppna(webb, '/#exempel', { w, cs });
+      const { ctx, p, ute, konsol } = await öppna(webb, '/', { w, cs });
       prova('startsidan ' + namn + ': inga fel i konsolen', konsol.length === 0, konsol.join(' / '));
       prova('startsidan ' + namn + ': ingen sidledsrullning', (await sidledes(p)) <= 0, await sidledes(p));
       const andra = ute.filter(u => !SUPABASE_REST.test(u));
       prova('startsidan ' + namn + ': bara Supabase som förut utanför localhost', andra.length === 0, andra.join(', '));
-      const ex = await p.evaluate(() => {
-        const s = document.getElementById('exempel');
-        const r = s.getBoundingClientRect();
-        return { bred: r.width, flikar: s.querySelectorAll('[role="tab"]').length };
-      });
-      prova('startsidan ' + namn + ': exemplen står med tre flikar', ex.bred > 0 && ex.flikar === 3, JSON.stringify(ex));
+      const ex = await p.evaluate(() => ({
+        sektion: !!document.getElementById('exempel'),
+        länkar: document.querySelectorAll('a[href*="#exempel"]').length,
+        filer: [...document.querySelectorAll('link[href*="exempel"],script[src*="exempel"]')].length
+      }));
+      prova('startsidan ' + namn + ': inget exempel kvar och inget som pekar dit',
+        !ex.sektion && ex.länkar === 0 && ex.filer === 0, JSON.stringify(ex));
       await ctx.close();
     }
   }
@@ -123,81 +120,9 @@ async function provaRörelsen(webb) {
   await ctx.close();
 }
 
-async function provaFlikarna(webb) {
-  const { ctx, p } = await öppna(webb, '/#exempel', { w: 1440 });
-  const läge = () => p.evaluate(() => {
-    const s = document.getElementById('exempel');
-    const lista = s.querySelector('[role="tablist"]');
-    const flikar = [...s.querySelectorAll('[role="tab"]')];
-    return {
-      lista: !!lista, namn: lista && lista.getAttribute('aria-labelledby'),
-      valda: flikar.map(f => f.getAttribute('aria-selected')),
-      tabbar: flikar.map(f => f.tabIndex),
-      synliga: [...s.querySelectorAll('[role="tabpanel"]')].map(x => !x.hidden && x.getBoundingClientRect().height > 0),
-      kopplade: flikar.every(f => {
-        const pnl = document.getElementById(f.getAttribute('aria-controls'));
-        return pnl && pnl.getAttribute('aria-labelledby') === f.id;
-      }),
-      fokus: document.activeElement && (document.activeElement.dataset.exFlik || document.activeElement.id || document.activeElement.tagName)
-    };
-  });
-  let l = await läge();
-  prova('flikarna: tablist med sektionens rubrik som namn', l.lista && l.namn === 'ex-t', JSON.stringify(l));
-  prova('flikarna: tab och tabpanel är kopplade åt båda hållen', l.kopplade);
-  prova('flikarna: rapporten vald först, bara den i tabbordningen och bara dess panel synlig',
-    l.valda.join() === 'true,false,false' && l.tabbar.join() === '0,-1,-1' && l.synliga.join() === 'true,false,false', JSON.stringify(l));
-
-  await p.click('#exempel [data-ex-flik="plan"]');
-  l = await läge();
-  prova('flikarna: klick på Studieplan byter panel', l.valda.join() === 'false,true,false' && l.synliga.join() === 'false,true,false', JSON.stringify(l));
-
-  await p.focus('#exempel [data-ex-flik="rapport"]');
-  await p.keyboard.press('ArrowRight');
-  l = await läge();
-  prova('flikarna: högerpil går till nästa och väljer den', l.fokus === 'plan' && l.valda.join() === 'false,true,false', JSON.stringify(l));
-  await p.keyboard.press('ArrowRight');
-  await p.keyboard.press('ArrowRight');
-  l = await läge();
-  prova('flikarna: högerpil från den sista går runt till den första', l.fokus === 'rapport' && l.valda.join() === 'true,false,false', JSON.stringify(l));
-  await p.keyboard.press('ArrowLeft');
-  l = await läge();
-  prova('flikarna: vänsterpil från den första går runt till den sista', l.fokus === 'vy' && l.valda.join() === 'false,false,true', JSON.stringify(l));
-  await p.keyboard.press('Home');
-  l = await läge();
-  prova('flikarna: Home går till den första', l.fokus === 'rapport' && l.valda.join() === 'true,false,false', JSON.stringify(l));
-  await p.keyboard.press('End');
-  l = await läge();
-  prova('flikarna: End går till den sista', l.fokus === 'vy' && l.valda.join() === 'false,false,true', JSON.stringify(l));
-  await p.keyboard.press('Tab');
-  l = await läge();
-  prova('flikarna: Tab går från fliken till panelen', l.fokus === 'ex-vy', JSON.stringify(l));
-  await ctx.close();
-}
-
-async function provaUtanSkript(webb) {
-  for (const url of ['/', '/en/']) {
-    const { ctx, p } = await öppna(webb, url + '#exempel', { w: 390, js: false });
-    const l = await p.evaluate(() => {
-      const s = document.getElementById('exempel');
-      const synlig = e => !!e && e.getBoundingClientRect().height > 0 && getComputedStyle(e).visibility !== 'hidden';
-      return {
-        flikar: synlig(s.querySelector('[data-ex-flikar]')),
-        roller: s.querySelectorAll('[role="tab"],[role="tabpanel"]').length,
-        paneler: [...s.querySelectorAll('[data-ex-panel]')].map(synlig),
-        rubriker: [...s.querySelectorAll('.ex-panel-rubrik')].map(synlig)
-      };
-    });
-    prova('utan skript ' + url + ': tre delar under varandra med rubriker, inga flikar',
-      !l.flikar && l.roller === 0 && l.paneler.join() === 'true,true,true' && l.rubriker.join() === 'true,true,true', JSON.stringify(l));
-    await ctx.close();
-  }
-}
-
 async function provaLänkarna(webb) {
   const fall = [
-    ['/om-oss', 'main a[href*="intresseanmalan"]', '/intresseanmalan?' + UTM_OM],
-    ['/', '#exempel a[href*="intresseanmalan"]', '/intresseanmalan?' + UTM_EX],
-    ['/en/', '#exempel a[href*="intresseanmalan"]', '/en/intresseanmalan?' + UTM_EX]
+    ['/om-oss', 'main a[href*="intresseanmalan"]', '/intresseanmalan?' + UTM_OM]
   ];
   for (const [url, väljare, väntat] of fall) {
     const { ctx, p } = await öppna(webb, url, { w: 1440 });
@@ -206,10 +131,19 @@ async function provaLänkarna(webb) {
       hrefs.length > 0 && hrefs.every(h => h === väntat), hrefs.join(', '));
     await ctx.close();
   }
+  const { ctx, p } = await öppna(webb, '/om-oss', { w: 1440 });
+  const nya = await p.$$eval('[data-vi-ar-nya] a', as => as.map(a => a.getAttribute('href')));
+  prova('Vi är nya: länken går till studievyn på För elever och föräldrar',
+    nya.length === 1 && nya[0] === '/for-elever-och-foraldrar', nya.join(', '));
+  await ctx.close();
+  const svar = await fetch(BAS + '/for-elever-och-foraldrar');
+  prova('/for-elever-och-foraldrar finns', svar.ok, svar.status);
+  const allaOmOss = fs.readFileSync(path.join(ROT, 'om-oss.html'), 'utf8');
+  prova('om-oss.html pekar inte på #exempel', !/href="[^"]*#exempel"/.test(allaOmOss));
 }
 
 function provaFilerna() {
-  for (const f of ['nextrum-exempel.js', 'nextrum-exempel.css', 'nextrum-om-oss.css']) {
+  for (const f of ['nextrum-om-oss.css']) {
     const s = fs.readFileSync(path.join(ROT, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
     const träff = s.match(/https?:|\/\/[a-z]|fetch\(|XMLHttpRequest|sendBeacon|@import|url\(|WebSocket|localStorage|document\.cookie/);
     prova(f + ' hämtar och sparar ingenting', !träff, träff && träff[0]);
@@ -226,8 +160,6 @@ function provaFilerna() {
   try {
     await provaBredder(webb);
     await provaRörelsen(webb);
-    await provaFlikarna(webb);
-    await provaUtanSkript(webb);
     await provaLänkarna(webb);
     provaFilerna();
   } catch (e) {

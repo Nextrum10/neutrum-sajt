@@ -129,9 +129,6 @@
   ]
 }
 </script>
-<!-- Exemplen efter Hur hjälper vi (2026-10-22): rapporten, studieplanen
-     och vyn. Sist, efter startsidans egna stilar. -->
-<link rel="stylesheet" href="../nextrum-exempel.css?v=772a7cbc">
 </head>
 <body>
 
@@ -355,171 +352,6 @@
       <p class="hj-gar-villkor">Terms apply. <a class="nx-lank" href="/en/anvandarvillkor#betygsgaranti">Read the guarantee terms
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a></p>
-    </div>
-  </div>
-</section>
-
-<!-- ==========================================================
-     1d — SÅ SER NI ATT DET FUNKAR (2026-10-22, Leo)
-     Vi har inga kunder än och därmed inget att bevisa med siffror. I
-     stället visar sektionen exakt vad en familj ser: rapporten efter ett
-     pass, studieplanen och vyn som förälder. Fälten och etiketterna är
-     vyernas egna: rapporten som NXStudie.rapportKort ritar den (läget ur
-     GICK, Öva mer på och Nästa gång, "Rapport från er studiehjälpare"
-     när namnet saknas), studieplanen som foralder.html visar den (ämne,
-     mål och planen, som studiehjälparen skriver i larare.html), och
-     Översikt med Att göra, Kommande pass och Så går det, ritad som
-     ritaFordelningar() ritar den för en elev med ett pass. Inget annat:
-     inga siffror om oss, inga priser och inga omdömen.
-
-     Eleven är påhittad och har inget namn, ingen skola och ingen
-     årskurs, och varje flik säger det på en tejp. Ekvationerna är
-     uträknade, och test/innehall-regler.py räknar om dem.
-
-     Statisk markup och inga anrop. Utan skript står de tre delarna under
-     varandra, var och en med sin rubrik; nextrum-exempel.js gör dem till
-     flikar efter WAI-ARIA:s mönster (piltangenterna, Home och End).
-     Formen: nextrum-exempel.css. Samma markup i en/index.html.
-     ========================================================== -->
-<section class="nx-sek nx-ex" id="exempel" aria-labelledby="ex-t" data-exempel>
-  <div class="nx-wrap-bred">
-    <div class="nx-head split" data-stig>
-      <div>
-        <span class="nx-et acc">Example</span>
-        <h2 class="nx-d2" id="ex-t">See for yourself <em>that it works.</em></h2>
-      </div>
-      <div class="nx-head-aside">
-        <p class="nx-lede">We are new, so we have no figures to show. Instead we show exactly what you get to see, with a made-up pupil: the report after every session, the study plan and your view.</p>
-      </div>
-    </div>
-
-    <div class="ex-flikar" data-ex-flikar hidden>
-      <button type="button" class="ex-flik" data-ex-flik="rapport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7.5L19 8v12.5H7z"/><path d="M14.5 3.5V8H19M10 12.5h6M10 16h4"/></svg>Lesson report</button>
-      <button type="button" class="ex-flik" data-ex-flik="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h15M4.5 12h15M4.5 17.5h9"/><circle cx="18.5" cy="17.5" r="1.6"/></svg>Study plan</button>
-      <button type="button" class="ex-flik" data-ex-flik="vy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 12h7v8h-7zM4 15h7v5H4z"/></svg>Your view as a parent</button>
-    </div>
-
-    <div class="ex-paneler">
-      <div class="ex-panel" id="ex-rapport" data-ex-panel="rapport">
-        <h3 class="ex-panel-rubrik">Lesson report</h3>
-        <p class="ex-panel-intro"><b>After every session.</b> You never have to ask how it went: the tutor writes it down, and you read it in your view.</p>
-        <div class="ex-scen">
-          <article class="ex-kort" aria-label="Example of a lesson report">
-            <span class="nx-tejp ex-tejp"><span class="nx-tejp-stor">Example,</span><span class="nx-tejp-liten">made-up pupil</span></span>
-            <div class="ex-huvud">
-              <span class="ex-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></span>
-              <div class="ex-vem">
-                <p class="ex-titel">Maths</p>
-                <p class="ex-meta"><span>Report from your tutor</span><span>Thursday</span><span>16.00 to 17.00</span><span>Online</span></p>
-              </div>
-              <span class="ex-gick" data-ex-nr="1">Good</span>
-            </div>
-            <p class="ex-text" data-ex-nr="2">We worked on equations with x on both sides. At first they moved numbers across without changing the sign, so we went through why you do the same thing on both sides. After that they solved <span class="ex-ekv">3x + 5 = 2x + 11</span> on their own, got <span class="ex-ekv">x = 6</span> and checked the answer: <span class="ex-ekv">3 · 6 + 5 = 23</span> and <span class="ex-ekv">2 · 6 + 11 = 23</span>.</p>
-            <div class="ex-duo">
-              <div data-ex-nr="3"><small>Practise more</small><b>Equations with brackets</b></div>
-              <div data-ex-nr="4"><small>Next time</small><b>Word problems where they set up the equation themselves</b></div>
-            </div>
-          </article>
-          <ol class="ex-forklaring">
-            <li><b>How it went:</b> very good, good or needs following up.</li>
-            <li><b>What they did,</b> in the tutor’s own words.</li>
-            <li><b>Practise more:</b> what has not stuck yet.</li>
-            <li><b>Next time:</b> what the next session starts with.</li>
-          </ol>
-        </div>
-      </div>
-
-      <div class="ex-panel" id="ex-plan" data-ex-panel="plan">
-        <h3 class="ex-panel-rubrik">Study plan</h3>
-        <p class="ex-panel-intro"><b>Where you are heading.</b> The tutor writes the plan around what your child needs and updates it when needed.</p>
-        <div class="ex-scen">
-          <article class="ex-kort" aria-label="Example of a study plan">
-            <span class="nx-tejp ex-tejp"><span class="nx-tejp-stor">Example,</span><span class="nx-tejp-liten">made-up pupil</span></span>
-            <div class="ex-plan-topp">
-              <p class="ex-titel">Study plan</p>
-              <span class="ex-uppd">updated 20 October</span>
-            </div>
-            <span class="ex-tag" data-ex-nr="1">Maths</span>
-            <p class="ex-mal" data-ex-nr="2"><b>Goal:</b> Solve equations in several steps and be able to explain how.</p>
-            <ol class="ex-veckor" data-ex-nr="3">
-              <li><b>Week 1:</b> What an equation is, and doing the same thing on both sides.</li>
-              <li><b>Week 2:</b> Equations with x on both sides, like <span class="ex-ekv">3x + 5 = 2x + 11</span>.</li>
-              <li><b>Week 3:</b> Equations with brackets, like <span class="ex-ekv">2(x + 3) = 14</span>.</li>
-              <li><b>Week 4:</b> Word problems: setting up the equation yourself.</li>
-              <li><b>Week 5:</b> Revision and a practice test.</li>
-            </ol>
-          </article>
-          <ol class="ex-forklaring">
-            <li><b>The subject</b> the plan is for.</li>
-            <li><b>The goal,</b> in the tutor’s words.</li>
-            <li><b>The plan,</b> week by week. The tutor writes it and updates it when needed.</li>
-          </ol>
-        </div>
-      </div>
-
-      <div class="ex-panel" id="ex-vy" data-ex-panel="vy">
-        <h3 class="ex-panel-rubrik">Your view as a parent</h3>
-        <p class="ex-panel-intro"><b>Everything in one place.</b> What is waiting for you, what is booked and how it is going.</p>
-        <div class="ex-scen">
-          <div class="ex-kort ex-vy" role="group" aria-label="Example of your view as a parent">
-            <span class="nx-tejp ex-tejp"><span class="nx-tejp-stor">Example,</span><span class="nx-tejp-liten">made-up pupil</span></span>
-            <ul class="ex-meny" aria-label="The parts of the view">
-              <li class="ar-vald">Overview</li><li>Book a session</li><li>My lessons</li><li>NexLäx</li><li>Messages</li><li>Offers</li><li>Payment</li><li>Profile &amp; settings</li>
-            </ul>
-            <div class="ex-vy-kropp">
-              <div class="ex-vy-topp">
-                <p class="ex-titel">Overview</p>
-                <p class="ex-vy-under">What is waiting for you, and how it is going.</p>
-              </div>
-              <div class="ex-grupp" data-ex-nr="1">
-                <p class="ex-grupp-rubrik">To do</p>
-                <div class="ex-rad ar-ockra">
-                  <span class="ex-rad-mitt"><b>Maths</b><span>Tuesday, 16.00 to 17.00, online</span><span class="ex-rad-not">Suggested by your tutor</span></span>
-                  <span class="ex-knappar" aria-hidden="true"><span class="ex-knapp ar-fylld">Works for us</span><span class="ex-knapp">Decline</span></span>
-                </div>
-              </div>
-              <div class="ex-grupp" data-ex-nr="2">
-                <p class="ex-grupp-rubrik">Upcoming sessions</p>
-                <div class="ex-rad ar-mossa">
-                  <span class="ex-rad-mitt"><b>Maths</b><span>Thursday, 16.00 to 17.00, online</span></span>
-                  <span class="ex-lage">Confirmed</span>
-                </div>
-              </div>
-              <div class="ex-grupp">
-                <p class="ex-grupp-rubrik">How it is going</p>
-                <div class="ex-sa">
-                  <p class="ex-delrub" data-ex-nr="3">How the sessions went<em>1 of 1 reports</em></p>
-                  <div class="ex-fd">
-                    <span class="ex-stapel" aria-hidden="true"><i class="ar-mitten"></i></span>
-                    <span class="ex-fd-lista"><span class="ar-tom"><i class="ar-bra"></i>Very good<b>0</b></span><span><i class="ar-mitten"></i>Good<b>1</b></span><span class="ar-tom"><i class="ar-folj"></i>Needs follow-up<b>0</b></span></span>
-                  </div>
-                  <p class="ex-delrub" data-ex-nr="4">Knowledge areas<em>2</em></p>
-                  <div class="ex-fd">
-                    <span class="ex-stapel" aria-hidden="true"><i class="ar-bra"></i><i class="ar-mitten"></i></span>
-                    <span class="ex-fd-lista"><span><i class="ar-bra"></i>Confident or better<b>1</b></span><span><i class="ar-mitten"></i>Getting there<b>1</b></span><span class="ar-tom"><i class="ar-folj"></i>Needs practice<b>0</b></span></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <ol class="ex-forklaring">
-            <li><b>To do:</b> a new time to answer, with Works for us and Decline.</li>
-            <li><b>Upcoming sessions,</b> with day, time and place.</li>
-            <li><b>How the sessions went,</b> from the reports after the sessions.</li>
-            <li><b>Knowledge areas:</b> the tutor’s assessment of each area.</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-
-    <div class="ex-fot" data-stig>
-      <p class="ex-fot-text">This is what you see as a parent after every lesson.</p>
-      <span class="nx-magnet">
-        <a class="btn btn-primary btn-lg" href="/en/intresseanmalan?utm_source=startsida&amp;utm_medium=sajt&amp;utm_campaign=okt26&amp;utm_content=exempel">Sign up
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-        </a>
-      </span>
-      <p class="ex-fot-not">It costs nothing to ask and does not commit you to anything. We get back to you within a day.</p>
     </div>
   </div>
 </section>
@@ -1716,8 +1548,6 @@
      Inga nätverksanrop. -->
 <script src="../nextrum-maskot-svar.js?v=7e04adf1"></script>
 <script src="../nextrum-maskot.js?v=de45b497" defer></script>
-<!-- Flikarna i exemplen (2026-10-22). Utan den står de under varandra. -->
-<script src="../nextrum-exempel.js?v=073d4d16" defer></script>
 <script>
 (function () {
   'use strict';

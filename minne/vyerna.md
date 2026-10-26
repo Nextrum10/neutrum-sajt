@@ -1929,7 +1929,10 @@ inte kan belägga: vi är nya och har inga siffror, omdömen eller resultat.
   guiderna `hjalpa-barn-med-matte` och `laxhjalp-eller-privatlarare`) eller Leos tre ankarmeningar; inget är nytt i
   sak, och ingenting säger hur ofta något händer ("ibland", aldrig "de flesta"). Ingen engelsk sida: engelskans
   footer länkar till den svenska.
-- **Så ser ni att det funkar** (`#exempel`): rapporten med fälten som `NXStudie.rapportKort` ritar dem (läget ur
+- **Så ser ni att det funkar** (`#exempel`) **togs bort 2026-10-26** (Leo: "Exempel så ser ni att de funkar sektionen på
+  main sidan ta bort den"): sektionen på båda språken, `nextrum-exempel.js` och `-css`, provens del om den och raden i
+  språkbaslinjen. Om oss länk i Vi är nya går sedan dess till studievyn på För elever och föräldrar ("Se vad ni får i er
+  vy"). Det som stod här beskrev den: rapporten med fälten som `NXStudie.rapportKort` ritar dem (läget ur
   `GICK`, Öva mer på, Nästa gång, "Rapport från er studiehjälpare" när namnet saknas), studieplanen (ämne, mål, planen)
   och Översikt i föräldrarnas vy (Att göra med Passar bra och Avböj, Kommande pass, och Så går det med Hur passen gick
   och Kunskapsområdena som `ritaFordelningar()` ritar dem för en elev med ett pass), med
