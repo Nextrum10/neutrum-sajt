@@ -1116,7 +1116,10 @@ Detaljer: `minne/grunden.md`.
   villkoren") säger att timbanken fylls med en plan, att Fyll timbanken inte säljs längre och att timmar köpta med den
   gäller som förut; Fyll timbanken är struken där villkoren räknar upp vad man kan köpa, och reglerna för köpta timmar
   (sex månader, timbanken, prisgarantin, Att sluta) står kvar. Syskontilläggets version (2026-10-23) står kvar, för dess
-  regel är densamma. Migrationen körs efter merge, och alla får frågan igen.
+  regel är densamma. I drift sedan eftermiddagen 2026-10-26: PR #336 mergades (7d5de9d), Vercel lade ut sidorna
+  (kontrollerat från databasen mot nextrum.se), och migrationen kördes hel i ett do-block, hämtad ur merge-commiten,
+  prövad mot sin md5 (`05139538…`) och registrerad med filens text. Hela `rls-test.sql` gick 2131 av 2131 mot driften,
+  tillbakarullat. Alla får frågan igen; två konton hade godkänt 2026-10-23. Juristen har inte läst den nya texten.
 - **Sen avbokning** (2026-10-22, `sen_avbokning`, 20261022100000) är i drift sedan kvällen 2026-10-22 (Leo: "merg och
   driftsätt"): PR #329 mergades (c0d787a), och Vercel lade ut villkoren 2026-10-23 med `#avbokning` och
   `#syskontillagg` (Leo: "skriv villkorstexten själv, du har all info"), FAQ:n, Så fungerar Nextrum, prisguiden och
