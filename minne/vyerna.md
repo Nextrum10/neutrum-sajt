@@ -1954,7 +1954,7 @@ inte kan belägga: vi är nya och har inga siffror, omdömen eller resultat.
   fäller en siffra före "timmar". Inget pris, inget antal och inget om resultat: säljet är att det är lätt och
   ofarligt att börja, inte att det går bra för andra.
 
-## Papperskorgen (2026-10-26, `papperskorgen`, inte i drift)
+## Papperskorgen (2026-10-26, `papperskorgen`, i drift samma kväll)
 
 Leo: "i intresseanmälningar och ansökan, under varje flik, gör en knapp för papperskorg, vilket är radera uppgifter
 från det stället. alltså finns personen i familj och intresseanmälan och jag raderar den perosnen från

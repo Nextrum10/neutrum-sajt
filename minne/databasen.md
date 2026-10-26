@@ -1911,7 +1911,7 @@ En fil (20261022100000), provad lokalt (`minne/betalning.md`, Sen avbokning).
   pass, timmarna och efterskänkningen, tipstimmen, `mitt_tillagg`, villkoren före godkännandet och
   `sen_avbokning_lage`), avsnitt 51 med halva tillägget vid en sen avbokning, och en databas byggd ur alla migrationer.
 
-### Dokument med bilder och kön i matchningen (dokument_med_bilder, kon_i_matchningen, 2026-10-26, inte i drift)
+### Dokument med bilder och kön i matchningen (dokument_med_bilder, kon_i_matchningen, 2026-10-26, i drift samma kväll)
 
 Två migrationer, byggda ur driftens funktioner (lästa med `pg_get_functiondef()` samma dag) och körbara två gånger:
 inget `drop`, villkor, policyer och triggrar i do-block som prövar om de finns, och funktionerna som andra sessioner
@@ -1942,11 +1942,15 @@ den (`intern.matchningsval_raderas`).
   av 2185, och med `STOPP` före migrationerna 2131 av 2136, där de fem röda är de nya som säger att migrationerna inte
   är körda. Avsnitt 55 sätter elevernas utgångsläge själv: ett tidigare avsnitt lämnar Q:s barn matchat med B, och då
   blev B elevens "nuvarande" i förslagen.
-- **Kvar**: köra båda efter merge (`do`-block ur merge-commiten, md5 och filens text i `schema_migrations`, som de
-  förra), hela `rls-test.sql` mot driften tillbakarullat, och advisorn (`mina_handlingar_bilder` är ny för
-  `authenticated`, med flit). Ingen edge-funktion behöver driftsättas.
+- **I drift sedan kvällen 2026-10-26** (Leo: "merge och driftsätt"), med papperskorgen (nedan): PR #338 mergades
+  (64d0a90), och Vercel lade ut vyerna först. `dokument_med_bilder` har inget `delete` och kördes hel i ett do-block
+  som hämtade filen ur merge-commiten med `extensions.http_get`, prövade md5 (`71ae383b…`), körde och registrerade
+  den. `kon_i_matchningen` har ett `delete` i `intern.matchningsval_raderas` och kördes därför som ett `execute_sql`
+  med filens text, utan fråga från verktyget, och registrerades efteråt i ett do-block med texten ur merge-commiten
+  (md5 `6d80122b…`). Före: driftens `intern.handling_delad_med_mig` och `matchningsunderlag` (kolumnerna och
+  `security_invoker`) var de migrationerna byggdes på, och lappens mål i `mina_handlingar` stod en gång.
 
-### Papperskorgen (papperskorgen, 2026-10-26, inte i drift)
+### Papperskorgen (papperskorgen, 2026-10-26, i drift samma kväll)
 
 `20261026160000_papperskorgen.sql` (Leo: "radera uppgifter från det stället ... så finns personen kvar i vårt system
 och i familj"). Radera ovan tar bort en PERSON, med allt från samma adress; papperskorgen tar bort en RAD ur en lista,
@@ -1980,6 +1984,12 @@ och inget annat.
   2131 av 2137, där de sex röda säger att de inte är körda. Provet tar bort CV:t ur `storage.objects` som
   ägaren, med Supabases spärr mot direkta raderingar släppt för satsen (`storage.allow_delete_query`), så att det går
   också mot driften.
-- **Kvar**: köra den efter merge, efter `kon_i_matchningen` (hel i ett do-block, md5 och filens text), hela
-  `rls-test.sql` mot driften tillbakarullat, och advisorn (`stalle_lage` och `ta_bort_ur_stallet` är nya för
-  `authenticated`, och prövar `is_admin()` först).
+- **I drift sedan kvällen 2026-10-26**, sist av de tre: filen har två funktioner med ett `delete` var och kördes
+  därför som ett `execute_sql` med filens text (verktyget frågade inte), och registrerades i ett do-block med texten
+  ur merge-commiten (md5 `b1836d61…`). Efter alla tre: de 17 funktionerna (`md5(prosrc)`, `prosecdef`,
+  `proconfig`, rättigheterna och kommentaren), de sju villkoren, de sex triggrarna, de fem policyerna på
+  `matchningsval`, vyn, kolumnerna och tabellens rättigheter (utan Postgres 17:s `m`) är lika en databas byggd ur
+  filerna, 38 av 38 rader jämförda mekaniskt. Hela `rls-test.sql` ur merge-commiten (md5 `073fa11d…`) gick 2202 av
+  2202 mot driften, i ett do-block som slutar med ett fel och rullar tillbaka allt. Advisorn fick bara
+  `mina_handlingar_bilder`, `stalle_lage` och `ta_bort_ur_stallet` som nya poster, för `authenticated` (med flit:
+  de prövar den inloggade eller `is_admin()` först), och inget nytt för `anon`.
