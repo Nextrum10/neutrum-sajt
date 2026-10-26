@@ -18,7 +18,7 @@
 
   const { LEAD_LAGE, S, SH_LAGE, elevHjälpare, funktionsFel, hämtaAllt,
           hämtaMatchunderlag, kontaktaRuta, kortDatum, läge, matchar, namnFör,
-          namnlista, närText, pill, ritaPanelen, tabell, tomtText, visaRuta, ärNyNu, ärRaderad } = NXAdmin;
+          namnlista, närText, papperskorg, pill, ritaPanelen, tabell, tomtText, visaRuta, ärNyNu, ärRaderad } = NXAdmin;
   /* Funktioner som bor i andra områden. Anropen går via
      NXAdmin.rita, som fylls när alla filer laddats. */
   const ritaMatchning = (...a) => NXAdmin.rita.ritaMatchning(...a);
@@ -73,6 +73,8 @@
       /* Den som kom in sedan du tittade senast (2026-10-05, ärNyNu). */
       nytt: l => ärNyNu('leads', l),
       under: l => (ärNyNu('leads', l) ? 'Ny sedan du tittade senast · ' + närText(l.created_at) : ''),
+      /* Papperskorgen (2026-10-26): bara den här anmälan, i varje läge. */
+      bort: l => papperskorg('anmalan', l.id, l.parent_name || l.email),
       tomt: tomtText(sök || st, 'Ingen intresseanmälan matchar filtret', 'Inga intresseanmälningar än')
     }) + (gallrade
       ? '<p class="xsmall" style="color:var(--bl-3);margin:12px 0 0">'

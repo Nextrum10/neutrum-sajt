@@ -1046,11 +1046,38 @@ table.adm .adm-tal{
    plats. */
 .adm-namnlista li.har-knapp{display:flex;align-items:center;gap:8px}
 .adm-namnlista li.har-knapp .adm-namn{flex:1;min-width:0}
-.adm-namn-knapp{flex:none;padding-right:14px}
+.adm-namn-knapp{flex:none;padding-right:14px;display:flex;align-items:center;gap:6px}
 @media (max-width:560px){
   .adm-namnlista li.har-knapp{flex-wrap:wrap;gap:0}
   .adm-namnlista li.har-knapp .adm-namn{flex-basis:100%}
   .adm-namn-knapp{padding:0 14px 12px 62px}
+}
+
+/* Papperskorgen (2026-10-26, papperskorg() i nextrum-admin-karna.js):
+   en ikon sist på raden, med tummens 44 px. Grå tills man pekar på
+   den: den ska inte dra blicken från namnet och nästa steg. Står den
+   ensam stannar den på namnets rad också på en telefon (bara-bort), och
+   med ett nästa steg står den längst till höger under namnet. */
+.adm-bort{
+  display:inline-grid;place-items:center;flex:none;
+  width:44px;height:44px;border-radius:12px;
+  color:var(--bl-3);
+  transition:background .16s var(--e),color .16s var(--e);
+}
+.adm-bort svg{
+  width:20px;height:20px;fill:none;stroke:currentColor;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.adm-bort:hover{background:var(--tint);color:var(--fel)}
+.adm-bort:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.adm-bort[aria-busy]{opacity:.5}
+.adm-namnlista li.bara-bort .adm-namn-knapp{padding-right:6px}
+@media (max-width:560px){
+  .adm-namnlista li.har-knapp.bara-bort{flex-wrap:nowrap}
+  .adm-namnlista li.har-knapp.bara-bort .adm-namn{flex-basis:auto}
+  .adm-namnlista li.bara-bort .adm-namn-knapp{padding:0 6px 0 0}
+  .adm-namnlista li.har-knapp:not(.bara-bort) .adm-namn-knapp{flex-basis:100%}
+  .adm-namn-knapp .adm-bort{margin-left:auto}
 }
 
 /* Statusprickar. Färgen är en genväg, aldrig hela beskedet — texten

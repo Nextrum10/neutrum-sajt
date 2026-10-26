@@ -60,8 +60,8 @@
 -- gratistimmarna_paminns och obetalda_pass_pa_fakturan (2026-10-15),
 -- fakturan_tas_bort, anmalan_flyttas_till_familjen, intervjumejlet,
 -- utbildningsprovet_i_studiehjalparvyn, betalningsliggaren, planerna_per_manad,
--- kortdragningen_forsoker_igen (2026-10-21), dokument_med_bilder och
--- kon_i_matchningen (2026-10-26) är körda.
+-- kortdragningen_forsoker_igen (2026-10-21), dokument_med_bilder,
+-- kon_i_matchningen och papperskorgen (2026-10-26) är körda.
 -- fakturans_tabeller_tas_bort (del 2, efter en backup) kan vara körd eller
 -- inte: avsnitt 38 provar det som gäller i båda lägena.
 --
@@ -21811,6 +21811,208 @@ end $$;
 
 select pg_temp.prova('KÖ anon läser inte matchningsvalen', null,
   array[$q$select * from public.matchningsval$q$], 'nekad');
+
+-- ------------------------------------------------------------
+-- 56. Papperskorgen (papperskorgen, 2026-10-26)
+--
+-- Leo: "i intresseanmälningar och ansökan, under varje flik, gör en
+-- knapp för papperskorg, vilket är radera uppgifter från det stället
+-- ... när en person blir raderad och det stället är det sista stället
+-- den är med i så kommer en notis om att det kan ta bort personen helt
+-- och sen avbryt eller gå vidare." Papperskorgen tar bort en rad ur en
+-- lista och inget annat: familjen, kontot, frågan och en annan anmälan
+-- med samma adress står kvar. Är raden det sista stället krävs p_helt.
+-- En ansökans CV tas bort först. Bara superadmin. Superadmin AD,
+-- familjen P, studiehjälparen A, admin L1 med behörigheten leads. Allt
+-- rullas tillbaka sist.
+-- ------------------------------------------------------------
+do $$
+declare
+  ut   jsonb := '[]'::jsonb;
+  fel  text;
+  t    text;
+  n    bigint;
+  j    jsonb;
+  AD   constant uuid := '00000000-0000-4000-8000-0000000000ad';
+  A    constant uuid := '00000000-0000-4000-8000-0000000000a1';
+  P    constant uuid := '00000000-0000-4000-8000-0000000000f1';
+  L1   constant uuid := '00000000-0000-4000-8000-0000000bcad1';
+  LF   constant uuid := '00000000-0000-4000-8000-000000056a01';  -- familjen P:s anmälan
+  LD1  constant uuid := '00000000-0000-4000-8000-000000056a02';  -- två anmälningar, samma adress
+  LD2  constant uuid := '00000000-0000-4000-8000-000000056a03';
+  LK   constant uuid := '00000000-0000-4000-8000-000000056a04';  -- anmälan och en fråga
+  KK   constant uuid := '00000000-0000-4000-8000-000000056c01';
+  AP1  constant uuid := '00000000-0000-4000-8000-000000056b01';  -- ansökan, studiehjälpare A:s adress, CV
+  AP2  constant uuid := '00000000-0000-4000-8000-000000056b02';  -- ansökan, ingen annanstans
+  CV1  constant text := '00000000-0000-4000-8000-000000056cf1/cv.pdf';
+begin
+  if to_regprocedure('public.ta_bort_ur_stallet(text, uuid, boolean)') is null then
+    insert into utfall (test, ok, detalj)
+    values ('PK migrationen papperskorgen är körd', false, 'ta_bort_ur_stallet() finns inte');
+    return;
+  end if;
+
+  begin
+    insert into public.leads (id, parent_name, email, child_name, grade, subject, message, kund_id, status) values
+      (LF, 'Familjen P', 'rls-pk-familj@example.invalid', 'Barnet', 'ak7', 'Matematik', 'Ring efter fem', P, 'matched'),
+      (LD1, 'Dubbel', 'rls-pk-dubbel@example.invalid', null, 'ak5', 'Svenska', 'Första', null, 'new'),
+      (LD2, 'Dubbel', 'RLS-PK-Dubbel+igen@example.invalid', null, 'ak5', 'Svenska', 'Andra', null, 'new'),
+      (LK, 'Frågar', 'rls-pk-fraga@example.invalid', null, 'ak8', 'Engelska', 'Hej', null, 'contacted');
+    insert into public.contact_messages (id, name, email, message)
+    values (KK, 'Frågar', 'rls-pk-fraga@example.invalid', 'En fråga');
+    insert into public.applications (id, name, email, why) values
+      (AP1, 'Anna Sökande', 'rls-a@example.invalid', E'Jag vill hjälpa.\nCV: cv/' || CV1),
+      (AP2, 'Ensam Sökande', 'rls-pk-ensam@example.invalid', 'Bara en ansökan.');
+    update public.applications set vardnadshavare_godkand_at = now() - interval '3 days' where id = AP1;
+    insert into storage.objects (bucket_id, name) values ('cv', CV1);
+    perform public.skapa_uppgift('Följ upp anmälan', 'rls-pk:' || LF, 'uppfoljning', 'Ring', 'leads', LF::text);
+    insert into public.varvningsbonus (varvare_profil_id, varvad_ansokan_id, varvad_epost_hmac, brutto_ore)
+    values (A, AP2, 'rls-pk', 30000);
+    insert into public.ansokan_utskick (ansokan_id, steg, nyckel, status)
+    values (AP2, 'avbojd', 'rls-pk:avbojd', 'vantar');
+
+    -- Bara superadmin: en admin med behörigheten leads, familjen och anon får nej.
+    t := pg_temp.svar_som(L1, format($q$select public.stalle_lage('anmalan', %L)$q$, LF))
+      || ' ' || pg_temp.svar_som(L1, format($q$select public.ta_bort_ur_stallet('anmalan', %L, true)$q$, LF))
+      || ' ' || pg_temp.svar_som(P, format($q$select public.ta_bort_ur_stallet('anmalan', %L, true)$q$, LF))
+      || ' ' || pg_temp.svar_som(null, format($q$select public.stalle_lage('ansokan', %L)$q$, AP2))
+      || ' ' || pg_temp.svar_som(null, format($q$select public.ta_bort_ur_stallet('ansokan', %L, true)$q$, AP2))
+      || ' ' || pg_temp.svar_som(AD, format($q$select intern.stalle_underlag('anmalan', %L)$q$, LF));
+    select count(*) into n from public.leads where id = LF and email = 'rls-pk-familj@example.invalid';
+    ut := ut || jsonb_build_object('t', 'PK bara superadmin: behörigheten leads, familjen och anon får nej, och ingen når intern',
+            'ok', t = '42501 42501 42501 42501 42501 42501' and n = 1, 'd', t || ', ' || n || ' kvar');
+
+    -- Familjens anmälan: familjen finns kvar, så det är inte sista stället.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('anmalan', LF);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'PK familjens anmälan: familjen står kvar, inte sista stället',
+            'ok', j ->> 'sista' = 'false' and j ->> 'namn' = 'Familjen P'
+                  and j -> 'kvar' -> 'konton' @> jsonb_build_array(jsonb_build_object('id', P, 'roll', 'parent')),
+            'd', j::text);
+
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LF));
+    select count(*) into n from public.leads
+     where id = LF and email = 'gallrad' and parent_name = 'Gallrad' and child_name is null and message is null
+       and kund_id = P and status = 'matched';
+    select n * 10 + count(*) into n from public.profiles where id = P and raderad_at is null;
+    ut := ut || jsonb_build_object('t', 'PK anmälan avidentifieras, raden pekar fortfarande ut familjen, och familjen står kvar',
+            'ok', t = 'ok' and n = 11, 'd', t || ', ' || n);
+    select count(*) into n from public.uppgifter where kopplad_tabell = 'leads' and kopplad_id = LF::text;
+    select n * 10 + count(*) into n from public.audit_logg
+     where handling = 'anmalan.avidentifierad' and objekt_id = LF::text and aktor = AD
+       and efter ->> 'papperskorgen' = 'true' and efter ->> 'sista' = 'false';
+    ut := ut || jsonb_build_object('t', 'PK uppgiften om anmälan går med, och auditloggen säger papperskorgen',
+            'ok', n = 1, 'd', n::text);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LF));
+    ut := ut || jsonb_build_object('t', 'PK en anmälan som redan är borta ger ett fel, inte en tyst lyckad',
+            'ok', t = '22023', 'd', t);
+
+    -- Två anmälningar med samma adress (stora bokstäver och +tagg): den
+    -- första står inte sist, och den andra står kvar orörd.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('anmalan', LD1);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'PK en anmälan till med samma adress: inte sista stället',
+            'ok', j ->> 'sista' = 'false' and (j -> 'kvar' ->> 'anmalningar')::int = 1
+                  and jsonb_array_length(j -> 'kvar' -> 'konton') = 0,
+            'd', j::text);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LD1));
+    select count(*) into n from public.leads where id = LD2 and email = 'RLS-PK-Dubbel+igen@example.invalid' and status = 'new';
+    ut := ut || jsonb_build_object('t', 'PK papperskorgen tar en rad, och den andra anmälan står kvar',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n);
+
+    -- Den andra är nu det sista stället: utan p_helt händer ingenting.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('anmalan', LD2);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LD2));
+    select count(*) into n from public.leads where id = LD2 and email <> 'gallrad';
+    ut := ut || jsonb_build_object('t', 'PK sista stället: utan p_helt nekas det, och anmälan står kvar',
+            'ok', j ->> 'sista' = 'true' and t = '23514' and n = 1, 'd', coalesce(j ->> 'sista', 'null') || ', ' || t || ', ' || n);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L, true)$q$, LD2));
+    select count(*) into n from public.leads where id = LD2 and email = 'gallrad' and status = 'declined';
+    ut := ut || jsonb_build_object('t', 'PK sista stället med p_helt: anmälan avidentifieras och blir avböjd',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n);
+
+    -- En fråga under Kommunikation är ett ställe till, och står kvar.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('anmalan', LK);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('anmalan', %L)$q$, LK));
+    select count(*) into n from public.contact_messages where id = KK;
+    ut := ut || jsonb_build_object('t', 'PK en fråga med samma adress: inte sista stället, och frågan står kvar',
+            'ok', j ->> 'sista' = 'false' and (j -> 'kvar' ->> 'kontakt')::int = 1 and t = 'ok' and n = 1,
+            'd', coalesce(j ->> 'sista', 'null') || ', ' || t || ', ' || n);
+
+    -- Ansökan med studiehjälparens adress: kontot står kvar, och CV:t
+    -- går först.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('ansokan', AP1);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'PK ansökan: kontot med samma adress står kvar, och CV:t står i filerna',
+            'ok', j ->> 'sista' = 'false'
+                  and j -> 'kvar' -> 'konton' @> jsonb_build_array(jsonb_build_object('id', A, 'roll', 'tutor'))
+                  and j -> 'filer' = jsonb_build_array(jsonb_build_object('hink', 'cv', 'namn', CV1)),
+            'd', j::text);
+    ut := ut || jsonb_build_object('t', 'PK rutan varnar när vårdnadshavarens godkännande går med en studiehjälpares ansökan',
+            'ok', j -> 'varningar' ? 'vardnadshavare', 'd', coalesce(j -> 'varningar' ->> 'vardnadshavare', 'ingen'));
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('ansokan', %L)$q$, AP1));
+    select count(*) into n from public.applications where id = AP1;
+    ut := ut || jsonb_build_object('t', 'PK ansökan tas inte bort medan CV:t finns kvar',
+            'ok', t = '23514' and n = 1, 'd', t || ', ' || n);
+    -- Vyn tar bort filen genom Storage. Här som ägaren, och Supabases spärr
+    -- mot att radera ur lagringens tabeller direkt släpps för satsen.
+    perform set_config('storage.allow_delete_query', 'true', true);
+    delete from storage.objects where bucket_id = 'cv' and name = CV1;
+    perform set_config('storage.allow_delete_query', 'false', true);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('ansokan', %L)$q$, AP1));
+    select count(*) into n from public.applications where id = AP1;
+    select n * 10 + count(*) into n from public.profiles where id = A and raderad_at is null;
+    ut := ut || jsonb_build_object('t', 'PK CV:t först, sedan ansökan, och studiehjälparen står kvar',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n);
+
+    -- Ansökan som är det enda stället, med en bonus och ett nej som väntar.
+    perform pg_temp.bli(AD);
+    j := public.stalle_lage('ansokan', AP2);
+    reset role;
+    perform set_config('request.jwt.claims', null, true);
+    ut := ut || jsonb_build_object('t', 'PK ensam ansökan: sista stället, och rutan varnar för bonusen och nejet',
+            'ok', j ->> 'sista' = 'true' and j -> 'varningar' -> 'bonus' = jsonb_build_array(A)
+                  and j -> 'varningar' -> 'mejl' = '["avbojd"]'::jsonb and not (j -> 'varningar' ? 'vardnadshavare'),
+            'd', j::text);
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('ansokan', %L, true)$q$, AP2));
+    select count(*) into n from public.applications where id = AP2;
+    select n * 10 + count(*) into n from public.ansokan_utskick where ansokan_id = AP2;
+    select n * 10 + count(*) into n from public.varvningsbonus
+     where varvare_profil_id = A and varvad_epost_hmac = 'rls-pk' and status = 'annullerad' and varvad_ansokan_id is null;
+    ut := ut || jsonb_build_object('t', 'PK ansökan tas bort, nejet i kön går med, och bonusen annulleras',
+            'ok', t = 'ok' and n = 1, 'd', t || ', ' || n);
+
+    -- En okänd lista.
+    t := pg_temp.svar_som(AD, format($q$select public.ta_bort_ur_stallet('familj', %L, true)$q$, P));
+    select count(*) into n from public.profiles where id = P and raderad_at is null;
+    ut := ut || jsonb_build_object('t', 'PK papperskorgen tar inte bort en familj; det gör Radera',
+            'ok', t = '22023' and n = 1, 'd', t || ', ' || n);
+
+    raise exception 'rulla tillbaka';
+  exception when others then fel := sqlerrm;
+  end;
+  reset role;
+  perform set_config('request.jwt.claims', null, true);
+
+  if fel <> 'rulla tillbaka' then
+    insert into utfall (test, ok, detalj) values ('PK Papperskorgen', false, fel);
+  else
+    insert into utfall (test, ok, detalj)
+    select x ->> 't', (x ->> 'ok')::boolean, x ->> 'd' from jsonb_array_elements(ut) x;
+  end if;
+end $$;
 
 reset role;
 select set_config('request.jwt.claims', null, true);

@@ -315,6 +315,18 @@ reglerna står i `radera_person()` (migrationen
   Rutan säger vad som ska göras först. Pengar personen är skyldig oss
   hindrar inte; de står som larm under Betalningar → Att göra.
 
+**Papperskorgen** (2026-10-26) sist på en rad under Intresseanmälningar
+och Ansökningar tar bort den raden och inget annat
+(`ta_bort_ur_stallet()`, migrationen `papperskorgen`): en anmälan
+avidentifieras som ovan, en ansökan tas bort med sitt CV. Personen står
+kvar i allt annat (kontot, en annan anmälan eller ansökan, en fråga),
+och rutan säger var. Är raden det sista stället personen finns hos oss
+säger rutan att hen försvinner helt, och databasen tar bort raden bara
+med det svaret. Ber någon oss radera allt är det Radera, inte
+papperskorgen: Radera tar också andra anmälningar, ansökningar och
+frågor från samma adress. Inget lagras längre eller på ett nytt sätt;
+papperskorgen tar bort tidigare än gallringen.
+
 Filer först, raden sedan (CLAUDE.md avsnitt 6): adminvyn tar bort
 profilbilden, barnens mapp och CV:t innan raden, och databasen vägrar
 radera medan en fil finns kvar. Ändringsloggen raderas inte; den bär

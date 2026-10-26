@@ -1945,3 +1945,41 @@ den (`intern.matchningsval_raderas`).
 - **Kvar**: köra båda efter merge (`do`-block ur merge-commiten, md5 och filens text i `schema_migrations`, som de
   förra), hela `rls-test.sql` mot driften tillbakarullat, och advisorn (`mina_handlingar_bilder` är ny för
   `authenticated`, med flit). Ingen edge-funktion behöver driftsättas.
+
+### Papperskorgen (papperskorgen, 2026-10-26, inte i drift)
+
+`20261026160000_papperskorgen.sql` (Leo: "radera uppgifter från det stället ... så finns personen kvar i vårt system
+och i familj"). Radera ovan tar bort en PERSON, med allt från samma adress; papperskorgen tar bort en RAD ur en lista,
+och inget annat.
+
+- **`intern.stalle_underlag(p_stalle, p_id)`** (`anmalan` eller `ansokan`) räknar var personen finns kvar: andra
+  anmälningar och ansökningar med samma adressnyckel (`intern.epost_nyckel`, som Radera), frågor under Kommunikation
+  med samma adress, och konton som inte är raderade med samma adress eller det raden pekar ut (`leads.kund_id`,
+  `applications.konto_id`), med roll och om det är ett adminkonto. `sista` är att inget av det finns. För en ansökan
+  också CV:n som bara den pekar ut (samma regel som `intern.radering_filer` och `ansokan_gallra`) och varningarna:
+  värvare vars bonus väntar på ansökan, steg vars mejl inte gått (`ansokan_utskick` och intervjumejlet i
+  `notis_utskick`, `vantar` eller `skickar`), och vårdnadshavarens godkännande när personen har ett
+  studiehjälparkonto. `stalle_lage()` är det, för en superadmin.
+- **`ta_bort_ur_stallet(p_stalle, p_id, p_helt default false)`**: `is_admin()`, samma rådgivande lås som
+  `radera_person()` (`radera:<id>`) och radlås, sedan underlaget en gång till. Är raden det sista stället och `p_helt`
+  inte satt: 23514 och ingenting. Står ett CV kvar: 23514 och ingenting (filen först). En anmälan avidentifieras med
+  samma fält som Radera och nattjobbet (`intern.anmalan_i_papperskorgen`; `kund_id` och koden står kvar, så tipstimmen
+  och statistiken räknar som förut, och ny eller kontaktad blir avböjd), uppgifterna om raden tas bort, och
+  auditloggen får `anmalan.avidentifierad` med `papperskorgen` och `sista`. En ansökan tas bort
+  (`intern.ansokan_i_papperskorgen`): stegen och mejlen går med genom nycklarna, en väntande värvningsbonus annulleras
+  (`intern.varvningsbonus_vakt`, nyckeln blir null), och `applications_audit_borttagen` loggar.
+- **En destruktiv sats per funktion** (`anmalan_i_papperskorgen` en `update`, `ansokan_i_papperskorgen` och
+  `uppgifter_om_raden_bort` var sin `delete`), så att verktyget som kör migrationen i driften inte frågar och hänger
+  sig (avsnitt 5). Inget `drop`. Inga befintliga funktioner rörs.
+- **Prov**: `rls-test.sql` avsnitt 56 (PK, 17 rader): bara superadmin (behörigheten leads, familjen och anon får 42501,
+  och ingen når `intern`), familjens anmälan med `kund_id` (inte sista, familjen orörd, uppgiften borta, auditraden),
+  två anmälningar med samma adress i olika skiftläge och med +tagg (den andra står kvar och blir sista stället: utan
+  `p_helt` nej, med ja), en fråga under Kommunikation som står kvar, en ansökan med studiehjälparens adress och ett CV
+  (nej medan filen finns, sedan ja, och varningen för vårdnadshavaren), och en ensam ansökan med en väntande bonus och
+  ett nej i kön (bonusen annulleras, kön går med). Lokalt 2202 av 2202, och utan de tre migrationerna från 2026-10-26
+  2131 av 2137, där de sex röda säger att de inte är körda. Provet tar bort CV:t ur `storage.objects` som
+  ägaren, med Supabases spärr mot direkta raderingar släppt för satsen (`storage.allow_delete_query`), så att det går
+  också mot driften.
+- **Kvar**: köra den efter merge, efter `kon_i_matchningen` (hel i ett do-block, md5 och filens text), hela
+  `rls-test.sql` mot driften tillbakarullat, och advisorn (`stalle_lage` och `ta_bort_ur_stallet` är nya för
+  `authenticated`, och prövar `is_admin()` först).

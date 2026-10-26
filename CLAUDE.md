@@ -752,6 +752,13 @@ en gång i tio minuter), Ångra intervju och Gå vidare till utbildning. **Utbil
 profilen och sätter utbildad och Godkänd i en transaktion; samma konto igen gör ingenting. Fliken Rekryteringen, läget
 Kontaktad som val, Boka digitalt möte, Skicka utbildningen och Markera utbildad är borta. Varje steg står i
 `ansokan_steg_logg`, som aldrig ändras och går med ansökan (utom att `andrad_av` blir null när den personen raderas). Skriv till hen står vid adressen och flyttar ingen.
+**Papperskorgen** (2026-10-26, `papperskorgen`, Leo: "radera uppgifter från det stället ... så finns personen kvar i
+vårt system och i familj"): en ikon sist på varje rad under Intresseanmälningar och i varje flik under Ansökningar,
+bara för superadmin (`papperskorg()` i kärnan, `o.bort` i `namnlista()`), som tar bort den raden och inget annat
+(`ta_bort_ur_stallet()`): en anmälan avidentifieras, en ansökan tas bort med CV:t först. Rutan (`visaPapperskorg`)
+säger ur `stalle_lage()` var personen står kvar; är raden det sista stället heter den "Ta bort X helt?" med Avbryt och
+Gå vidare, och databasen kräver det svaret (`p_helt`). Den frågar också när personen står kvar, för ett CV går inte
+att få tillbaka. Radera i panelen är vägen när personen ska bort med allt från samma adress.
 **Intervjun bokas på en bokningssida** (2026-10-20, Leo: "så att jag bara kan skicka ut länk"): ett bokningsschema i
 Google Kalender för info@, aldrig ett privat Gmail (`INTERVJU_BOKNINGSLANK`, som hette `INTERVJU_BOKNING_URL` till
 2026-10-21, och hur det skapas står överst i nextrum-config.js; ingen OAuth: det är en länk). Länken står i intervjumejlet; Google mejlar tiden och Meet-länken, och vyn läser aldrig kalendern.
@@ -1116,11 +1123,12 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
-- **Dokument med bilder och kön i matchningen** (2026-10-26, `dokument_med_bilder` 20261026140000 och
-  `kon_i_matchningen` 20261026150000) är inte i drift: grenen `claude/kind-thompson-63nu9f`, med vyerna och båda
-  migrationerna, som körs efter merge (vyerna tål att de saknas: fälten döljs och dokumenten är fil eller text som
-  förut). Hela `rls-test.sql` gick lokalt 2185 av 2185, och utan migrationerna 2131 av 2136, där de fem är de nya
-  proven som säger att migrationerna inte är körda. Integritetspolicyn har versionen 26 oktober på båda språken.
+- **Dokument med bilder, kön i matchningen och papperskorgen** (2026-10-26, `dokument_med_bilder` 20261026140000,
+  `kon_i_matchningen` 20261026150000 och `papperskorgen` 20261026160000) är inte i drift: grenen
+  `claude/kind-thompson-63nu9f`, med vyerna och migrationerna, som körs efter merge i den ordningen (vyerna tål att de
+  saknas: fälten döljs, dokumenten är fil eller text som förut, och papperskorgen säger att migrationen inte är körd).
+  Hela `rls-test.sql` gick lokalt 2202 av 2202, och utan de tre 2131 av 2137, där de sex är de nya proven som säger
+  att migrationerna inte är körda. Integritetspolicyn har versionen 26 oktober på båda språken.
   Juristen har inte läst rad 17 och 36 i `DATASKYDD.md`, de två nya raderna i konsekvensbedömningen, policyns meningar
   om kön, eller frågan om diskrimineringslagen 2 kap. 12 § (avsnitt 8 där): säg inte till studiehjälparna att valet
   finns förrän juristen läst det. Leo bad om kön på "alla profiler"; föräldrarnas sparas inte, och fältet får stå tomt.
