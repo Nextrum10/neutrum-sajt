@@ -684,8 +684,48 @@ inte som det (EU-domstolen, Content Services, C-49/11). Ladda ned ger
 familjen en egen kopia, men vill vi kunna visa att de fått villkoren ska
 avtalet också mejlas. Det är en fråga för juristen, inte för koden.
 
+**Ett avtal kan vara skärmdumpar** (2026-10-26, Leo: "i dokument på
+plattformen ska admin kunna lägga in skärmdumpar från mobil, mac eller
+liknande, istället för text. alltså antingen text eller bild, eller både
+och"). Läget heter Text och bilder: en text, bilder eller båda
+(`dokument_med_bilder`, 20261026140000). Bilderna väljs (Lägg till
+bilder), klistras in (en skärmdump ur urklippet, var i formuläret man än
+står) eller dras hit, och står som miniatyrer i läsordning, med ← för ett
+steg fram och × för bort. Personen trycker Läs, och texten och bilderna
+fälls ut under raden; en bild öppnas i full storlek i en ny flik, i samma
+tryck (`NXMedia.öppnaFil`), där den går att spara. Fem saker:
+- **En fil, eller en text och/eller bilder** (`handlingar_fil_eller_bilder`,
+  `handlingar_bilder_antal`: 1 till 20). En fil ihop med bilder hade varit
+  två dokument på en rad, och fler än tjugo skärmdumpar är en PDF.
+- **Bilderna står fast, som texten** (`handlingar_bilderna`, också för
+  admin). Därför skrivs sökvägarna med raden: vyn väljer handlingens id
+  (`crypto.randomUUID`), sätter numren, skapar raden och laddar upp sedan;
+  hinkpolicyn kräver att raden finns. En ny version är en ny handling.
+- **Inget filnamn i sökvägen**: `<id>/1.png`, `<id>/2.jpg`. Ett filnamn
+  från en dator kan säga vem avtalet gäller, och triggern nekar allt annat
+  än handlingens egen mapp, ett nummer och png, jpg eller webp.
+- **Delningen kommer sist.** Raden skapas odelad och delas när alla bilder
+  är uppe, så att personen aldrig ser ett avtal med hål i. Går en bild inte
+  upp tas de som hann upp bort, filerna först och raden sedan.
+- **En HEIC blir en JPG** (`NXMedia.skärmdump`): en skärmdump är en PNG
+  och går upp som den är (en omkodning gör texten suddig), men ett foto
+  från en iPhone som AirDrop lämnat på en Mac visar bara Safari. Allt
+  annat webbläsaren kan läsa ritas om till JPG, högst 4 000 px; kan den
+  inte läsa bilden säger rutan vägen runt. En bild får vara 20 MB, som
+  hinken tar.
+Listan bär inte bilderna: `mina_handlingar()` kan inte få en kolumn till
+utan ett drop, så den tar bara med raderna, och `mina_handlingar_bilder()`
+säger vilka som har bilder, om de har en text och var bilderna ligger.
+Hinken släpper in personen till exakt de filer raden pekar ut
+(`intern.handling_delad_med_mig`, nu med `bilder`). Auditen loggar inte
+bilderna, som den inte loggar texten.
+
 Driftsättningen och det som är kvar, ur avsnitt 11:
 
+- **Dokument med bilder (2026-10-26) är inte i drift.** Migrationen körs
+  efter merge; före den visar System → Dokument läget, men sparar inget
+  med bilder (beskedet säger att migrationen inte är körd), och personens
+  vy visar varje rad utan fil som en text, som förut.
 - **Avtal som text (2026-10-05) är i drift.** PR #188 mergades och
   Vercel driftsatte merge-commiten samma kväll. Migrationen
   `avtal_som_text` kördes avsnitt för avsnitt efter merge, som version
@@ -1377,4 +1417,44 @@ intresseanmälan frågade inte. `behov_i_matchningen` (20261021180000):
   studiehjälparna stod på 88, blev 94 mot 82 när den ena hade elevens två behov som styrkor.
 - **Adminvyn** skriver meningen under Matchning ur samma två listor ("Bra på allt eleven behöver").
 - Integritetspolicyn (båda språken) och `DATASKYDD.md` rad 1, 3 och 10 säger det.
+
+## Kön i matchningen (2026-10-26, `kon_i_matchningen`)
+
+Leo: "studiehjälparen ska lägga in om de vill bara hjälpa elever av samma kön eller motsatta, alla
+profiler klickar in vilket kön de är, man eller kvinna, eller pojke eller flicka. vill studiehjälparen
+inte hjälpa motsatta könet syns då inte den studiehjälparen i matchning." `kon_i_matchningen`
+(20261026150000):
+
+- **Eleven**: `students.kon`, valfritt. Föräldern väljer Flicka eller Pojke i barnets formulär
+  (studievyn), med en rad om varför vi frågar; admin i Ta in familjen och under Redigera på eleven.
+  Föräldern kan ändra det, och ett tryck till på det valda tar bort svaret. Anmälan frågar inte.
+- **Studiehjälparen**: sitt kön och "Vilka elever vill du hjälpa?" (Alla elever, eller Bara elever av
+  samma kön som jag) i profilen, i `matchningsval`. Bara samma kön kräver ett eget kön
+  (`matchningsval_samma_kon_kraver_kon`, och vyn säger det). En superadmin kan sätta valet åt hen i
+  hens panel, Kön och elever, när hen bett om det.
+- **Två koder för alla**: `kvinna` och `man`, så att databasen jämför lika med lika; vyn säger flicka
+  och pojke om en elev (`NX.KON_ELEV`, `NX.KON_VUXEN`). Tomt är inget svar: den som bara vill hjälpa
+  sitt eget kön visas inte för en elev utan angivet kön, för vi vet inte att eleven är det.
+- **Valet står inte på `tutor_profiles`**: familjen läser sin studiehjälpares rad där (policyn
+  "familj läser matchad studiehjälpare"), och RLS begränsar inte kolumner. `matchningsval` läser bara
+  studiehjälparen själv, superadmin och den som har en behörighet att läsa studiehjälparna eller matcha.
+  Barnets kön kan den matchade studiehjälparen läsa, som resten av `students`; det säger policyn.
+- **Matchningen**: `matchningsforslag_rader` tar inte med den som krockar, utom elevens nuvarande, och
+  adminvyn döljer samma studiehjälpare (`krockarMedValet`) och säger vilka i en rad ovanför korten.
+  Drift-agenten ser samma lista. Den nuvarande står kvar, med skälet "Vill bara hjälpa elever av samma kön".
+- **Vakten** (`students_vakt_kon`, `intern.elevens_kon`): ingen NY matchning mot valet, vem som än
+  försöker (adminvyn, en admin med behörigheten matchning, ett godkänt AI-förslag). Namnet börjar med v
+  så att den går sist av BEFORE-triggrarna: `skydda_studentfalt` har då skrivit tillbaka det en förälder
+  inte får ändra. Samma trigger tömmer könet när eleven avidentifieras.
+- **En matchning som redan står rivs inte.** Slår studiehjälparen på valet, eller byter föräldern
+  barnets kön, så att den krockar, blir det en uppgift (`kon_krock:<elev>:<studiehjälpare>`, typen
+  problem, utan namn), och vi byter studiehjälpare. Passen avbokas inte av en kryssruta.
+- **Förälderns kön sparas inte.** Leo skrev "alla profiler", men matchningen frågar bara om elevens och
+  studiehjälparens, och en uppgift utan ändamål samlas inte in (art. 5.1 c).
+- **Juristen** har inte läst det: valet är en särbehandling på grund av kön i en tjänst till
+  allmänheten (diskrimineringslagen 2 kap. 12 §), och håller bara med ett berättigat syfte. Tryggheten i
+  enskild undervisning av barn, ofta i hemmet, är det som kan bära det; "vill inte" gör det inte.
+  `DATASKYDD.md` avsnitt 8.
+- Integritetspolicyn (båda språken, 26 oktober) och `DATASKYDD.md` rad 36 och konsekvensbedömningen
+  säger det.
 

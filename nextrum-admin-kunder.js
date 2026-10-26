@@ -647,6 +647,14 @@
       + '<input class="inp" id="le-arskurs" value="' + esc(lead.grade || '') + '"></div>'
       + '<div class="fgroup"><label for="le-amnen">Ämnen</label>'
       + '<input class="inp" id="le-amnen" value="' + esc(lead.subject || '') + '"></div>'
+      /* Elevens kön (kon_i_matchningen, 2026-10-26), om ni pratat om det:
+         en studiehjälpare som bara vill hjälpa elever av samma kön visas
+         inte i matchningen för en elev utan angivet kön. Anmälan frågar
+         inte; föräldern kan ange och ändra det i studievyn. */
+      + '<div class="fgroup"><label for="le-kon">Kön</label>'
+      + '<select class="sel" id="le-kon"><option value="">Inte angivet</option>'
+      + NX.KON_ELEV.map(k => '<option value="' + esc(k.kod) + '">' + esc(k.text) + '</option>').join('')
+      + '</select></div>'
       + '</div>'
       /* Gratistimmar (2026-10-13, Leo: "när vi tar in en familj ska vi
          kunna fylla deras timbank med önskade timmar som vi klickar in,
@@ -790,7 +798,7 @@
         const ämnen = String($('#le-amnen', ruta).value || '')
           .split(',').map(x => x.trim()).filter(Boolean);
 
-        const { data: ny, error } = await supa.from('students').insert({
+        const elevRad = {
           parent_id: parent,
           name: namn,
           grade: $('#le-arskurs', ruta).value.trim() || null,
@@ -801,7 +809,19 @@
              blir det samma tomma förval som förut. */
           behov: Array.isArray(lead.behov) ? lead.behov.filter(k => NX.BEHOV.some(x => x.kod === k)) : [],
           format_onskemal: NX.FORMAT_ONSKEMAL.some(x => x.kod === lead.format_onskemal) ? lead.format_onskemal : null
-        }).select('id, uppdrag_id').single();
+        };
+        const kon = $('#le-kon', ruta).value || null;
+        if (kon) elevRad.kon = kon;
+        let svar = await supa.from('students').insert(elevRad).select('id, uppdrag_id').single();
+        /* Utan migrationen kon_i_matchningen finns inte kolumnen: eleven
+           skapas ändå, utan könet, och kvittot säger det. */
+        let konSaknas = false;
+        if (svar.error && kon && /kon/.test(String(svar.error.message || ''))) {
+          delete elevRad.kon;
+          konSaknas = true;
+          svar = await supa.from('students').insert(elevRad).select('id, uppdrag_id').single();
+        }
+        const { data: ny, error } = svar;
         if (error) {
           säg(msg, (inbjuden ? 'Familjen har fått sitt konto och mejlet, men eleven kunde inte skapas: '
             : 'Kunde inte skapa: ') + felText(error), false);
@@ -897,6 +917,10 @@
             : flyttad
               ? ' är intagen men kunde inte flyttas (' + esc(flyttad) + '). Tryck Flytta till familjen på anmälan.</p>'
               : ' är markerad som intagen.</p>')
+          + (konSaknas
+            ? '<p style="margin-top:10px;color:var(--acc-text)">Könet sparades inte: migrationen kon_i_matchningen är '
+              + 'inte körd.</p>'
+            : '')
           + '<div class="nx-fraga-knappar">'
           + '<button type="button" class="btn btn-ghost" data-le-stang>Stäng</button>'
           + '<button type="button" class="btn btn-primary" data-le-match>Välj studiehjälpare</button>'

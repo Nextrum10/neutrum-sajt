@@ -1333,6 +1333,50 @@ button.fel-person:hover{border-color:var(--bl-3)}
   background:var(--pap-2);color:var(--bl-2);
 }
 
+/* Skärmdumparna i en ruta (dokument_med_bilder, 2026-10-26): ett
+   dokuments bilder i läsordning, med egen rullning av samma skäl som
+   förhandsvisningen ovanför. Varje bild är en länk till sig själv i
+   full storlek. */
+.nx-fraga-bilder{
+  display:flex;flex-direction:column;gap:10px;
+  max-height:46vh;overflow:auto;
+  margin:16px 0 0;padding:10px;
+  border:1px solid var(--ln);border-radius:12px;background:var(--pap-2);
+}
+/* flex:none: i en kolumn med maxhöjd krymper annars varje bild och klipps,
+   i stället för att rutan rullar. */
+.nx-fraga-bilder a{display:block;flex:none;border:1px solid var(--ln);border-radius:8px;overflow:hidden}
+.nx-fraga-bilder img{display:block;width:100%;height:auto}
+
+/* Skärmdumparna i formuläret under System → Dokument (2026-10-26):
+   miniatyrer i läsordning med sitt nummer, ← för ett steg fram och ×
+   för bort. Knapparna är 44 px, för tummen, och miniatyren visar
+   bildens överkant, där ett avtal börjar. */
+.dok-bilder{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.dok-bilder:empty{display:none}
+.dok-bild{
+  position:relative;margin:0;
+  border:1px solid var(--ln);border-radius:10px;overflow:hidden;background:var(--pap-2);
+}
+.dok-bild img{display:block;width:100%;aspect-ratio:3 / 4;object-fit:cover;object-position:top}
+.dok-bild figcaption{
+  position:absolute;left:6px;top:6px;min-width:24px;padding:2px 7px;
+  border:1px solid var(--ln);border-radius:100px;background:var(--pap);
+  font-size:.75rem;font-weight:700;text-align:center;color:var(--bl);
+}
+.dok-bild-knapp{
+  position:absolute;bottom:6px;width:44px;height:44px;
+  border:1px solid var(--ln);border-radius:100px;background:var(--pap);
+  color:var(--bl);font-size:1.1rem;line-height:1;cursor:pointer;
+}
+.dok-bild-knapp[data-dok-bild-fram]{left:6px}
+.dok-bild-knapp[data-dok-bild-bort]{right:6px}
+.dok-bild-val{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.dok-bild-val input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.dok-bild-val input[type=file]:focus-visible + .btn{outline:2px solid var(--bl-3);outline-offset:2px}
+.dok-bild-val .xsmall{color:var(--muted-2);line-height:1.5}
+#dok-bild-grupp.ar-drag{outline:2px dashed var(--bl-3);outline-offset:6px;border-radius:12px}
+
 /* En avstängd knapp såg ut precis som en påslagen. Det märktes
    knappt förut, för de flesta knappar börjar påslagna — men
    bokningen och "Spara tiderna" öppnar avstängda, och en knapp som
@@ -2108,6 +2152,10 @@ body.vy-admin .dbox * + h5{margin-top:24px}
   border:1px solid var(--ln-2);border-radius:100px;
   padding:3px 10px;background:var(--pap);
 }
+/* Studiehjälparna som inte visas för eleven, för att de bara vill hjälpa
+   elever av samma kön (kon_i_matchningen, 2026-10-26). En rad ovanför
+   korten, så att ingen letar efter dem. */
+.mt-dolda{margin:0 0 14px;font-size:.84rem;line-height:1.55;color:var(--bl-2)}
 /* Skapa elev ur anmälan: familjen står som fakta, inte som ett val.
    Saknas kontot står inbjudan på samma ställe, i streckad ram. */
 .le-familj{
@@ -2514,6 +2562,13 @@ html:has(.dp:not([hidden])){overflow:hidden;scrollbar-gutter:stable}
 @media (max-width:420px){
   .dp-rabatt{grid-template-columns:minmax(0,1fr) auto}
   .dp-rabatt label{grid-column:1 / -1}
+}
+/* Kön och elever i studiehjälparens panel (kon_i_matchningen, 2026-10-26):
+   samma ruta, men två val under varandra och knappen under dem. */
+.dp-kon{grid-template-columns:auto minmax(0,1fr)}
+.dp-kon .btn{grid-column:1 / -1;justify-self:start}
+@media (max-width:420px){
+  .dp-kon{grid-template-columns:minmax(0,1fr)}
 }
 /* Beloppet på en familjerabatt ändras på raden under Tjänster. */
 .fr-belopp{display:flex;gap:8px;align-items:center}

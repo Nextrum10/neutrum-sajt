@@ -156,7 +156,24 @@
       ? ['ja', pass + (pass === 1 ? ' genomfört pass' : ' genomförda pass')]
       : ['vet-ej', 'Inga genomförda pass än']);
 
+    /* Studiehjälparens val om kön (kon_i_matchningen). Bara elevens
+       nuvarande studiehjälpare kan stå här och krocka med det: de andra
+       som krockar visas inte alls (krockarMedValet). */
+    if (krockarMedValet(tutor, elev)) {
+      skäl.push(['nej', elev.kon ? 'Vill bara hjälpa elever av samma kön som hen'
+        : 'Vill bara hjälpa elever av samma kön, och elevens kön är inte angivet']);
+    }
+
     return skäl;
+  }
+
+  /* Studiehjälparen vill bara hjälpa elever av samma kön (kon_i_matchningen,
+     2026-10-26), och eleven är av ett annat eller har inget angivet. Samma
+     regel som matchningsforslag_rader och vakten students_vakt_kon i
+     databasen, som nekar en ny sådan matchning. Före migrationen har
+     underlaget inga sådana kolumner, och då krockar ingen. */
+  function krockarMedValet(tutor, elev) {
+    return !!(tutor && tutor.bara_samma_kon) && tutor.kon !== (elev.kon || null);
   }
 
   function skälIkon(sort) {
@@ -260,7 +277,14 @@
     const poängFörTutor = {};
     (poäng || []).forEach(r => { poängFörTutor[r.tutor_id] = r; });
 
+    /* Den som bara vill hjälpa elever av samma kön och inte kan hjälpa den
+       här eleven visas inte (Leo 2026-10-26: "syns då inte den
+       studiehjälparen i matchning"), utom den nuvarande. Raden ovanför
+       korten säger vilka det är, så att ingen letar efter dem. */
+    const dolda = S.matchunderlag.filter(t => t.tutor_id !== nuvarande && krockarMedValet(t, elev));
+
     const förslag = S.matchunderlag
+      .filter(t => dolda.indexOf(t) === -1)
       .map(t => {
         const r = poängFörTutor[t.tutor_id]
           || { poang: 0, amne_utfall: 'vet_ej', arskurs_utfall: 'vet_ej',
@@ -277,11 +301,16 @@
       });
 
     $('#mt-forslag-antal').textContent = förslag.length
-      ? förslag.length + ' godkända' : '';
+      ? förslag.length + ' godkända' + (dolda.length ? ', ' + dolda.length + ' visas inte' : '') : '';
 
     const fakta = [];
     if (elev.grade) fakta.push(['', elev.grade]);
     else fakta.push(['ar-tom', 'Årskurs saknas']);
+    /* Elevens kön (kon_i_matchningen), när kolumnen finns. */
+    if ('kon' in elev) {
+      const k = NX.KON_ELEV.find(x => x.kod === elev.kon);
+      fakta.push(k ? ['', k.text] : ['ar-tom', 'Kön ej angivet']);
+    }
     if (elev.subjects && elev.subjects.length) {
       elev.subjects.forEach(a => fakta.push(['', a]));
     } else {
@@ -336,9 +365,20 @@
       return;
     }
 
+    if (dolda.length) {
+      const namn = dolda.map(t => t.namn || '—');
+      ut += '<p class="mt-dolda">' + esc('Visas inte: ' + namn.join(', ') + '. '
+        + (dolda.length === 1 ? 'Hen vill' : 'De vill') + ' bara hjälpa elever av samma kön som '
+        + (dolda.length === 1 ? 'hen själv' : 'de själva')
+        + (elev.kon ? ', och eleven är inte det.'
+          : ', och eleven har inget kön angivet. Ange det under Redigera på eleven, så visas de som är av samma kön.'))
+        + '</p>';
+    }
+
     if (!förslag.length) {
-      host.innerHTML = ut + tomt('Inga godkända studiehjälpare',
-        'Godkänn någon under Studiehjälpare, så dyker de upp här.');
+      host.innerHTML = ut + (dolda.length
+        ? tomt('Ingen studiehjälpare att visa', 'Alla som är godkända vill bara hjälpa elever av samma kön som de själva.')
+        : tomt('Inga godkända studiehjälpare', 'Godkänn någon under Studiehjälpare, så dyker de upp här.'));
       return;
     }
 

@@ -1910,3 +1910,38 @@ En fil (20261022100000), provad lokalt (`minne/betalning.md`, Sen avbokning).
   studiehjälparen och förslaget, Nextrum på familjens begäran, ingen klient som sätter något, att flytta, ett betalt
   pass, timmarna och efterskänkningen, tipstimmen, `mitt_tillagg`, villkoren före godkännandet och
   `sen_avbokning_lage`), avsnitt 51 med halva tillägget vid en sen avbokning, och en databas byggd ur alla migrationer.
+
+### Dokument med bilder och kön i matchningen (dokument_med_bilder, kon_i_matchningen, 2026-10-26, inte i drift)
+
+Två migrationer, byggda ur driftens funktioner (lästa med `pg_get_functiondef()` samma dag) och körbara två gånger:
+inget `drop`, villkor, policyer och triggrar i do-block som prövar om de finns, och funktionerna som andra sessioner
+kan ha ändrat lappade med `replace()` och en vakt som räknar träffarna. Den enda `delete` står i en funktion med bara
+den (`intern.matchningsval_raderas`).
+
+- **`dokument_med_bilder` (20261026140000)**: `handlingar.bilder text[]`, villkoren `handlingar_fil_eller_bilder`
+  och `handlingar_bilder_antal` (1–20, inga null), BEFORE-triggern `handlingar_bilderna` (`intern.handling_bilderna`:
+  listan byts aldrig, inte ens av admin, och varje sökväg är `<handlingens id>/<nummer>.png|jpg|webp`, utan
+  dubbletter), `intern.handling_delad_med_mig` med `p_namn = any (h.bilder)`, `mina_handlingar()` lappad så att en
+  rad med bara bilder står med, och `mina_handlingar_bilder()` (security definer, `authenticated`, inte `anon`):
+  id, `har_text` och sökvägarna för den inloggades delade handlingar med bilder. `bilder` står inte i auditens
+  vitlista.
+- **`kon_i_matchningen` (20261026150000)**: `students.kon` (villkoret `students_kon_koder`: kvinna, man eller null),
+  tabellen `matchningsval` (`tutor_id` → `tutor_profiles` on delete cascade, `kon`, `bara_samma_kon`, `andrad_at`
+  satt av `matchningsval_andrad`; villkoret `matchningsval_samma_kon_kraver_kon`), med fem policyer: studiehjälparen
+  läser, skriver och ändrar sin egen rad, superadmin allt, och den som har `anvandare_las`, `anvandare_redigera`,
+  `matchning` eller `studiehjalpare_godkann` läser. `matchningsunderlag` (security_invoker) fick `kon` och
+  `bara_samma_kon` sist, med en left join. `matchningsforslag_rader` lappad: elevens `kon` och `matched_tutor_id` i
+  `elev`, och ett where i CTE:n (den som krockar står inte med, utom den nuvarande). Triggrarna:
+  `students_vakt_kon` (BEFORE INSERT OR UPDATE OF matched_tutor_id, raderad_at; `intern.elevens_kon`, security
+  definer: nekar en ny matchning med 23514 och tömmer könet vid avidentifieringen), `students_kon_krock` (AFTER
+  UPDATE OF kon, WHEN ändrat) och `matchningsval_krock` (AFTER INSERT OR UPDATE) som båda gör uppgiften genom
+  `intern.kon_krock_uppgift` → `skapa_uppgift`, och `profiles_matchningsval_raderas` (AFTER UPDATE OF raderad_at,
+  när den sätts) som tar bort studiehjälparens rad när kontot avidentifieras. `elev_rensa` och `radera_person` rördes
+  inte.
+- **Prov**: `rls-test.sql` avsnitt 54 (DB, 26 rader, med kontrollen av EXECUTE) och 55 (KÖ, 28 rader). Lokalt 2185
+  av 2185, och med `STOPP` före migrationerna 2131 av 2136, där de fem röda är de nya som säger att migrationerna inte
+  är körda. Avsnitt 55 sätter elevernas utgångsläge själv: ett tidigare avsnitt lämnar Q:s barn matchat med B, och då
+  blev B elevens "nuvarande" i förslagen.
+- **Kvar**: köra båda efter merge (`do`-block ur merge-commiten, md5 och filens text i `schema_migrations`, som de
+  förra), hela `rls-test.sql` mot driften tillbakarullat, och advisorn (`mina_handlingar_bilder` är ny för
+  `authenticated`, med flit). Ingen edge-funktion behöver driftsättas.

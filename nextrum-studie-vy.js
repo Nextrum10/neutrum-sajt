@@ -152,9 +152,17 @@
 
   /* ============ barn ============ */
   async function laddaBarn() {
-    const { data, error } = await supa
-      .from('students').select('id, name, grade, school, subjects, goals, about, behov, format_onskemal')
+    const kolumner = 'id, name, grade, school, subjects, goals, about, behov, format_onskemal';
+    let svar = await supa.from('students').select(kolumner + ', kon')
       .eq('parent_id', S.user.id).order('created_at');
+    /* Könet (kon_i_matchningen, 2026-10-26) finns först efter migrationen.
+       Utan den hämtas resten som förut, och fältet i formuläret döljs. */
+    S.konFinns = !svar.error;
+    if (svar.error) {
+      svar = await supa.from('students').select(kolumner)
+        .eq('parent_id', S.user.id).order('created_at');
+    }
+    const { data, error } = svar;
     if (error) { console.warn(error.message); return; }
     S.barn = data || [];
     const val = $('#barn-val');
@@ -302,7 +310,7 @@
      i student_notes, eftersom RLS gäller rader och inte kolumner, och
      en kolumn i students hade studiehjälparen kunnat läsa via API:t.
      ============================================================ */
-  const bf = { läge: null, amnen: [], behov: [], format: null };
+  const bf = { läge: null, amnen: [], behov: [], format: null, kon: null };
 
   function knappar(lista, valda, ettVal) {
     return lista.map(x => '<button type="button" data-v="' + esc(x.kod) + '" aria-pressed="'
@@ -317,6 +325,7 @@
     $('#b-amne-val').innerHTML = knappar(ämnen.map(a => ({ kod: a, text: a })), bf.amnen);
     $('#b-behov-val').innerHTML = knappar(NX.BEHOV, bf.behov);
     $('#b-format-val').innerHTML = knappar(NX.FORMAT_ONSKEMAL, bf.format, true);
+    $('#b-kon-val').innerHTML = knappar(NX.KON_ELEV, bf.kon, true);
   }
 
   (function () {
@@ -341,6 +350,11 @@
     const b = e.target.closest('[data-v]'); if (!b) return;
     bf.format = bf.format === b.dataset.v ? null : b.dataset.v; ritaBarnVal();
   });
+  // Ett tryck till på det valda tar bort svaret: fältet får stå tomt.
+  $('#b-kon-val').addEventListener('click', e => {
+    const b = e.target.closest('[data-v]'); if (!b) return;
+    bf.kon = bf.kon === b.dataset.v ? null : b.dataset.v; ritaBarnVal();
+  });
 
   async function öppnaBarnForm(läge) {
     const f = $('#barn-form');
@@ -357,6 +371,8 @@
     bf.amnen = ((b && b.subjects) || []).slice();
     bf.behov = ((b && b.behov) || []).slice();
     bf.format = (b && b.format_onskemal) || null;
+    bf.kon = (b && b.kon) || null;
+    $('#b-kon-grupp').hidden = !S.konFinns;
     ritaBarnVal();
 
     $('#barn-form-rubrik').textContent = b ? 'Uppgifter om ' + b.name : 'Lägg till ett barn';
@@ -419,6 +435,7 @@
       goals: $('#b-mal').value.trim() || null,
       about: $('#b-om').value.trim() || null
     };
+    if (S.konFinns) uppgifter.kon = bf.kon;
 
     await medan($('#barn-spara'), 'Sparar…', async () => {
       if (bf.läge === 'ny') {

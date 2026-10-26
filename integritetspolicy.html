@@ -163,6 +163,8 @@
     <ul>
       <li>Namn, e-postadress och — om du fyller i det — telefonnummer</li>
       <li>Profilbild, om du laddar upp en</li>
+      <li>Är du studiehjälpare: ditt kön och om du bara vill hjälpa elever av samma kön som du, om du
+        anger det. Bara du och vi ser det, inte familjerna</li>
       <li>Din kod att tipsa med, och hur många som använt den: en familjs kod för en ny familjs
         intresseanmälan, en studiehjälpares kod för någons jobbansökan</li>
       <li>När du godkände användarvillkoren, och vilken version av dem. Det sparas när du godkänner
@@ -177,6 +179,8 @@
       <li>Vad hjälpen ska göra, om ni väljer det i intresseanmälan eller när ni lägger in barnet
         (till exempel inför prov eller komma ikapp), och om ni vill ha passen online eller på plats.
         Vi använder det för att välja studiehjälpare</li>
+      <li>Barnets kön, om ni anger det. Vi använder det bara när vi väljer studiehjälpare: en del
+        studiehjälpare vill bara hjälpa elever av samma kön som de själva. Ni kan låta bli att svara</li>
       <li>Studiemål, om ni fyller i det</li>
       <li>Uppgifter, kunskapsområden och material som studiehjälparen lägger upp</li>
       <li>Svaren på de digitala uppgifterna och hur de rättats: vad som svarades på varje fråga,
@@ -292,7 +296,8 @@
       familj haft två timmar läxhjälp, och kan förstå av det att någon den tipsat har börjat.</p>
 
     <h3>Handlingar om verksamheten</h3>
-    <p>Avtal, intyg och försäkringspapper sparas i ett eget stängt utrymme. Bara vi når det, med
+    <p>Avtal, intyg och försäkringspapper sparas i ett eget stängt utrymme, som en fil, som en text,
+      som bilder (till exempel skärmdumpar) eller som en text med bilder. Bara vi når det, med
       ett undantag: ett avtal vi har med dig, som ett anställningsavtal eller ett avtal med er
       familj, kan vi dela med dig, och då ser du det under Profil &amp; inställningar i din vy.
       Ingen annan ser det. Ett avtal innehåller förstås uppgifter om den det gäller.
@@ -311,6 +316,10 @@
         (artikel 6.1 f). Barnet är inte själv part i avtalet, men det är hjälpen till barnet ni
         har bett om, och den går inte att ge utan uppgifterna. Barnets intressen väger tyngst i
         den avvägningen, och därför samlar vi bara det som behövs för undervisningen.</li>
+      <li><b>Kön för matchningen</b>: berättigat intresse (artikel 6.1 f): att vi kan respektera en
+        studiehjälpares val att bara hjälpa elever av samma kön, och att barnen känner sig trygga.
+        Det är frivilligt för er och för studiehjälparen, och vi frågar aldrig varför någon väljer
+        som den gör.</li>
       <li><b>Barnets egen inloggning</b>: avtalet med er (artikel 6.1 b). Det är ni som ber om
         den, skapar den och kan ta bort den, och när ni skapar den bekräftar ni att ni är
         vårdnadshavare och godkänner att barnet använder Nextrum. Vi sparar när det gjordes.</li>
@@ -365,9 +374,11 @@
       <li><b>En studiehjälpare</b> ser bara de elever hen är matchad med, och bara sina egna pass,
         uppgifter och svaren på dem, material, meddelanden och de avtal vi delat med hen. Hen ser
         vilka ämnen eleven har betygsgaranti i, för garantin räknar tiden ur ämnet i hens rapport.
-        Barnets egen e-post och betygen i betygsgarantin ser hen inte.</li>
+        Barnets egen e-post och betygen i betygsgarantin ser hen inte. Barnets kön, om ni angett
+        det, kan hen se.</li>
       <li><b>En familj</b> ser bara sina egna barn, pass, betalningar, meddelanden och de avtal vi
-        delat med dem.</li>
+        delat med dem. Studiehjälparens kön och val om vilka elever hen hjälper ser familjen inte:
+        det ser bara studiehjälparen själv och vi.</li>
       <li><b>Ett barn med egen inloggning</b> ser bara sina egna pass, timmar, studieplan,
         notiser och NexLäx, och rapporterna, av det föräldern valt. Aldrig priser, betalningar,
         erbjudanden, förälderns uppgifter eller något om andra familjer. Barnet kan göra sina
@@ -476,6 +487,8 @@
         intervjun i vår kalender tar vi bort för hand, senast ett år efter intervjun.</li>
       <li><b>Provet för studiehjälpare</b>: dina svar och ditt resultat så länge ditt konto finns.
         Raderas eller avidentifieras kontot tas svaren bort direkt.</li>
+      <li><b>Kön för matchningen</b>: barnets så länge barnet finns hos oss, och studiehjälparens så
+        länge kontot finns. Raderas barnet eller kontot tas det bort direkt.</li>
       <li><b>Konto och studiehistorik</b>: så länge ni använder tjänsten. Har ett konto inte
         använts på två år hör vi av oss och raderar det som inte behöver finnas kvar. Ni kan
         när som helst be oss radera tidigare.</li>
@@ -623,7 +636,7 @@
     <p>Ändrar vi något väsentligt uppdaterar vi datumet nedan, och hör av oss till er som har
       konto om ändringen påverkar er.</p>
 
-    <p class="jur-datum">Senast uppdaterad 22 oktober 2026.</p>
+    <p class="jur-datum">Senast uppdaterad 26 oktober 2026.</p>
   </div>
 </section>
 
@@ -799,7 +812,7 @@
 <script src="nextrum-config.js?v=085fa9d6"></script>
 <script src="nextrum-images.js?v=d1aa8fea"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=0d5b5afa"></script>
+<script src="nextrum-app.js?v=23460dda"></script>
 <script src="nextrum-samtycke.js?v=92474eaf"></script>
 <script src="nextrum-motion.js?v=b1a2a211"></script>
 <!-- Hjälprutan. Svaren genereras ur FAQ:n, priser och

@@ -322,6 +322,9 @@ window.NXForhandsvisning = (function () {
          strömbrytaren syskonskuld står av och inget pass har extra barn. */
       bokning_barn: [],
       notis_val: [],
+      /* Studiehjälparens kön och val om eleverna (kon_i_matchningen,
+         2026-10-26): tomt, Sara har inte valt något. */
+      matchningsval: [],
       notis_installning: [{ id: 1, paminnelser_timmar: 24, chatt_samla_minuter: 15 }],
       pass_moten: [],
       avatarer: [],
@@ -632,7 +635,7 @@ window.NXForhandsvisning = (function () {
   /* Tabellerna utan ett eget id. */
   var NYCKLAR = { rapport_bekraftelser: ['rapport_id'], student_notes: ['student_id'], notis_val: ['profil_id', 'typ', 'kanal'],
                   avatarer: ['profil_id'], study_plans: ['student_id', 'subject'], progress_items: ['id'],
-                  kortreservationer: ['booking_id'], sparade_kort: ['parent_id'] };
+                  kortreservationer: ['booking_id'], sparade_kort: ['parent_id'], matchningsval: ['tutor_id'] };
 
   function skriv(tabell, metod, sök, kropp, prefer, accept) {
     var rader = W[tabell];
@@ -793,6 +796,8 @@ window.NXForhandsvisning = (function () {
     godkann_villkor: function () { return true; },
     mina_handlingar: function () { return []; },
     min_handling_text: function () { return null; },
+    // dokument_med_bilder (2026-10-26): inga delade dokument i världen.
+    mina_handlingar_bilder: function () { return []; },
     /* Samma form som mina_tips() (tipskoder_bonus_och_timbanken, 2026-10-13):
        familjens timmar för tips, studiehjälparens sökande och bonus. */
     mina_tips: function () {
