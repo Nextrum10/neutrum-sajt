@@ -41,6 +41,9 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import textbredd  # noqa: E402
+
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKAL = os.path.join(ROT, 'var-ide.html')
 
@@ -75,7 +78,79 @@ FLERA_BARN = f'{PRIS_KR + EXTRA_KR} kr'
 # `transport` är hur en studiehjälpare tar sig dit. Det är det enda
 # stället där sidorna säger något om praktiken som skiljer dem åt på
 # riktigt, och det är sant för alla sju.
+#
+# `region` är var orten står i navets katalog, och `grannar` är de
+# orter sidan länkar till under Andra områden i närheten. Sedan
+# 2026-10-26 (Leo: "lägg till landningssidor för varje ort i
+# Stockholm") får stadsdelarna och kommunerna i länet egna sidor, en
+# ort när dess trafik och bibliotek är kontrollerade (tio kommuner
+# väntade den dagen), och då kan en sida inte länka till alla andra:
+# de närmaste och navet räcker, och navet listar alla.
 # ============================================================
+
+# Navets regioner, i den ordning de står där. Footern länkar till dem
+# i stället för till varje ort, och ämnessidorna visar dem som kort.
+# Raden under rubriken står på ämnessidornas kort; varje ort i den har
+# en sida (Årsta och Liljeholmen står på sina stadsdelsområdens).
+REGIONER = [
+    ('innerstaden', 'Innerstaden', 'Läxhjälp i innerstaden',
+     'Södermalm, Kungsholmen, Vasastan och Östermalm'),
+    ('soderort', 'Söderort', 'Läxhjälp i söderort',
+     'Hammarby Sjöstad, Årsta, Liljeholmen, Farsta med flera'),
+    ('vasterort', 'Västerort', 'Läxhjälp i västerort',
+     'Bromma, Vällingby, Spånga och Kista'),
+    ('norr-och-vaster', 'Norr och väster om stan', 'Läxhjälp norr och väster om stan',
+     'Solna, Sundbyberg, Täby, Sollentuna med flera'),
+    ('soder-och-oster', 'Söder och öster om stan', 'Läxhjälp söder och öster om stan',
+     'Nacka, Huddinge, Botkyrka, Salem och Södertälje'),
+]
+
+# Frågor som gäller överallt, med samma svar som på de första sju
+# sidorna. Orterna från 2026-10-26 tar två var, olika för grannar, och
+# har sedan två egna: om området och om biblioteket. Betalningsmeningen
+# står inte här: verktyg/kolla-betalningsvillkor.py räknar var den står.
+F_AMNEN = ('Vilka ämnen och årskurser gäller det?',
+           'Hela grundskolan och gymnasiet, och samma timpris oavsett ämne. Studiehjälparen '
+           'väljs efter ämnet och nivån eleven behöver hjälp med, inte tvärtom.')
+F_IGANG = ('Hur snabbt kan vi komma igång?',
+           'Vi hör av oss inom 24 timmar efter intresseanmälan och går igenom behovet. Hur '
+           'snart första passet blir av beror på när vi hittar rätt person, och det säger vi '
+           'när vi har pratats vid. Att fråga kostar ingenting.')
+F_PROV = ('Går det att få hjälp inför ett nationellt prov?',
+          'Ja. Studieplanen skrivs utifrån vad eleven behöver, och ett mål som "trygg med '
+          'ekvationer inför provet" är precis den sortens mål den är gjord för. Efter varje '
+          'pass får ni en rapport om hur det gick.')
+F_PRIS = ('Vad kostar det?',
+          f'{PRIS} i timmen, plus {EXTRA_BARN} i timmen om syskon sitter med i samma pass, '
+          'samma tillägg upp till tre barn. Ingen bindningstid och ingen månadsavgift. '
+          'Se prissidan för vad som ingår.')
+F_ONLINE = ('Är online sämre än att ses?',
+            'Nej, men det är annorlunda. Samma studiehjälpare, samma studieplan och samma '
+            'rapport efteråt. För de flesta ämnen fungerar det lika bra; för de yngsta eleverna '
+            'brukar på plats fungera bättre.')
+F_SYSKON = ('Kan ett syskon vara med på samma pass?',
+            f'Ja. Tillägget är {EXTRA_BARN} i timmen totalt och gäller upp till tre barn, så två '
+            f'barn en timme blir {FLERA_BARN}, och tre barn kostar lika mycket. Det förutsätter '
+            'att de kan arbeta med ungefär samma sak.')
+F_KVALL = ('Hur sent på kvällen går det att boka?',
+           'Ni föreslår en tid mellan elva på förmiddagen och tio på kvällen på vardagar, '
+           'och mellan nio på morgonen och tio på kvällen på helger, och studiehjälparen '
+           'accepterar den eller föreslår en annan. Läxhjälp blir för det mesta efter '
+           'skolan, alltså eftermiddagar och kvällar.')
+F_RAPPORT = ('Hur vet vi vad som hände på passet?',
+             'Studiehjälparen skriver en rapport efteråt: vad ni gick igenom, hur det gick och '
+             'vad som är nästa steg. Både elev och förälder ser samma rapport i studievyn.')
+F_SAMMA = ('Kan vi få samma studiehjälpare varje gång?',
+           'Ja, det är hela poängen. Matchningen är en person, inte en pool: den som kommer '
+           'nästa vecka vet vad som var svårt förra veckan, för hen var där.')
+F_BYTA = ('Vad händer om det inte funkar mellan eleven och studiehjälparen?',
+          'Säg till oss. Fel match är värre än ingen match, och det är därför vi gör '
+          'matchningen åt er i stället för att låta er bläddra i en katalog. Det finns ingen '
+          'bindningstid som gör det krångligt att byta.')
+F_GYMNASIET = ('Hjälper ni gymnasieelever?',
+               'Ja. Vi letar efter en studiehjälpare som har läst samma kurs nyligen, och det '
+               'märks särskilt på gymnasienivå, där den som läste kursen i fjol minns vilket '
+               'steg som är det svåra.')
 
 OMRADEN = [
     {
@@ -93,11 +168,10 @@ OMRADEN = [
         'i_namn': 'i Stockholm',
         'nav': 'Stockholm',
         'hub': True,
-        'titel': 'Läxhjälp i Stockholm — hemma hos er eller online | Nextrum',
+        'titel': 'Läxhjälp i Stockholm: stadsdelar och kranskommuner | Nextrum',
         'beskrivning': (
-            'Läxhjälp i Stockholm med unga studiehjälpare som nyligen läst samma kurser. '
-            f'Hemma hos er eller online, {PRIS} i timmen, ingen bindningstid. '
-            'Studieplan och rapport efter varje pass.'
+            f'Läxhjälp i hela Stockholm för {PRIS} i timmen, från innerstaden till kranskommunerna: '
+            'hemma hos er, på biblioteket eller online. Välj ert område.'
         ),
         'etikett': 'Läxhjälp i Stockholm',
         'h1': 'Läxhjälp i<br><em>Stockholm.</em>',
@@ -106,8 +180,6 @@ OMRADEN = [
             'kurser själv. Passen sker hemma hos er eller online.'
         ),
         'bild': '05-av-unga-for-unga',
-        'tint': '#8E8C84',
-        'focal': '60% 42%',
         'delar': [
             'Södermalm', 'Hammarby Sjöstad', 'Vasastan', 'Östermalm', 'Kungsholmen',
             'Norrmalm', 'Årsta', 'Enskede', 'Farsta', 'Hägersten', 'Liljeholmen',
@@ -139,10 +211,15 @@ OMRADEN = [
         'namn': 'Södermalm',
         'i_namn': 'på Södermalm',
         'nav': 'Södermalm',
-        'titel': 'Läxhjälp på Södermalm — hemma hos er eller online | Nextrum',
+        'region': 'innerstaden',
+        'grannar': [
+            'laxhjalp-hammarby-sjostad', 'laxhjalp-kungsholmen',
+            'laxhjalp-hagersten-liljeholmen', 'laxhjalp-enskede-arsta-vantor',
+            'laxhjalp-ostermalm', 'laxhjalp-nacka',
+        ],
         'beskrivning': (
-            'Läxhjälp på Södermalm, från Hornstull till Skanstull: hemma hos er, på biblioteket '
-            f'eller online. Unga studiehjälpare, {PRIS} i timmen, ingen bindningstid.'
+            f'Läxhjälp på Södermalm för {PRIS} i timmen, från Hornstull till Skanstull: hemma hos er, '
+            'på biblioteket eller online. Ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp på Södermalm',
         'h1': 'Läxhjälp på<br><em>Södermalm.</em>',
@@ -152,8 +229,6 @@ OMRADEN = [
             'på biblioteket eller online.'
         ),
         'bild': '01-en-till-en',
-        'tint': '#ACA193',
-        'focal': '68% 44%',
         'delar': [
             'Mariatorget', 'Hornstull', 'Zinkensdamm', 'Skanstull', 'Medborgarplatsen',
             'Slussen', 'Katarina', 'Sofia', 'Åsö', 'Tanto', 'Reimersholme', 'Långholmen',
@@ -188,10 +263,14 @@ OMRADEN = [
         'namn': 'Farsta',
         'i_namn': 'i Farsta',
         'nav': 'Farsta',
-        'titel': 'Läxhjälp i Farsta — hemma hos er eller online | Nextrum',
+        'region': 'soderort',
+        'grannar': [
+            'laxhjalp-skarpnack', 'laxhjalp-enskede-arsta-vantor', 'laxhjalp-alvsjo',
+            'laxhjalp-huddinge',
+        ],
         'beskrivning': (
-            'Läxhjälp i Farsta, Hökarängen och Gubbängen: hemma hos er, på Farsta bibliotek '
-            f'eller online. Unga studiehjälpare, {PRIS} i timmen, ingen bindningstid.'
+            f'Läxhjälp i Farsta, Hökarängen och Gubbängen för {PRIS} i timmen: hemma hos er, på '
+            'Farsta bibliotek eller online. Ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Farsta',
         'h1': 'Läxhjälp i<br><em>Farsta.</em>',
@@ -201,8 +280,6 @@ OMRADEN = [
             'biblioteket eller online.'
         ),
         'bild': '06-forklaringen',
-        'tint': '#9A8E79',
-        'focal': '62% 44%',
         'delar': [
             'Farsta centrum', 'Farsta strand', 'Hökarängen', 'Gubbängen', 'Sköndal',
             'Fagersjö', 'Larsboda', 'Tallkrogen', 'Svedmyra',
@@ -238,10 +315,14 @@ OMRADEN = [
         'namn': 'Nacka',
         'i_namn': 'i Nacka',
         'nav': 'Nacka',
-        'titel': 'Läxhjälp i Nacka — hemma hos er eller online | Nextrum',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-hammarby-sjostad', 'laxhjalp-sodermalm', 'laxhjalp-skarpnack',
+            'laxhjalp-farsta',
+        ],
         'beskrivning': (
-            'Läxhjälp i Nacka, från Sickla till Orminge och Saltsjöbaden: hemma hos er, på '
-            f'biblioteket eller online. {PRIS} i timmen, ingen bindningstid.'
+            f'Läxhjälp i Nacka för {PRIS} i timmen, från Sickla till Orminge och Saltsjöbaden: hemma '
+            'hos er, på biblioteket eller online.'
         ),
         'etikett': 'Läxhjälp i Nacka',
         'h1': 'Läxhjälp i<br><em>Nacka.</em>',
@@ -251,8 +332,6 @@ OMRADEN = [
             'passen blir av varje vecka.'
         ),
         'bild': '12-pa-vag',
-        'tint': '#73746C',
-        'focal': '34% 48%',
         'delar': [
             'Sickla', 'Finntorp', 'Järla', 'Nacka Forum', 'Ektorp', 'Orminge', 'Boo',
             'Saltsjöbaden', 'Fisksätra', 'Älta', 'Saltsjö-Duvnäs',
@@ -288,10 +367,14 @@ OMRADEN = [
         'namn': 'Hammarby Sjöstad',
         'i_namn': 'i Hammarby Sjöstad',
         'nav': 'Hammarby Sjöstad',
-        'titel': 'Läxhjälp i Hammarby Sjöstad — hemma hos er eller online | Nextrum',
+        'region': 'soderort',
+        'grannar': [
+            'laxhjalp-sodermalm', 'laxhjalp-nacka', 'laxhjalp-skarpnack',
+            'laxhjalp-enskede-arsta-vantor',
+        ],
         'beskrivning': (
-            'Läxhjälp i Hammarby Sjöstad, Sickla och Hammarbyhöjden: hemma hos er, på '
-            f'LUMA-biblioteket eller online. {PRIS} i timmen, ingen bindningstid.'
+            f'Läxhjälp i Hammarby Sjöstad och Sickla för {PRIS} i timmen: hemma hos er, på '
+            'LUMA-biblioteket eller online. Ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Hammarby Sjöstad',
         'h1': 'Läxhjälp i<br><em>Hammarby Sjöstad.</em>',
@@ -301,8 +384,6 @@ OMRADEN = [
             'biblioteket eller online.'
         ),
         'bild': '13-kvallsplugg',
-        'tint': '#453B28',
-        'focal': '46% 44%',
         'delar': [
             'Sickla Udde', 'Sickla Kaj', 'Lumaparken', 'Henriksdal', 'Lugnet',
             'Sjöstadsparterren', 'Hammarbyhöjden', 'Hammarby Allé',
@@ -337,10 +418,14 @@ OMRADEN = [
         'namn': 'Bromma',
         'i_namn': 'i Bromma',
         'nav': 'Bromma',
-        'titel': 'Läxhjälp i Bromma — hemma hos er eller online | Nextrum',
+        'region': 'vasterort',
+        'grannar': [
+            'laxhjalp-kungsholmen', 'laxhjalp-vallingby-hasselby', 'laxhjalp-spanga-tensta',
+            'laxhjalp-solna', 'laxhjalp-sundbyberg', 'laxhjalp-hagersten-liljeholmen',
+        ],
         'beskrivning': (
-            'Läxhjälp i Bromma, från Alvik till Nockeby: hemma hos er, på Brommaplans '
-            f'bibliotek eller online. {PRIS} i timmen, ingen bindningstid.'
+            f'Läxhjälp i Bromma för {PRIS} i timmen, från Alvik till Nockeby: hemma hos er, på '
+            'Brommaplans bibliotek eller online. Ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Bromma',
         'h1': 'Läxhjälp i<br><em>Bromma.</em>',
@@ -349,8 +434,6 @@ OMRADEN = [
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
         'bild': '10-forsta-motet',
-        'tint': '#948979',
-        'focal': '50% 42%',
         'delar': [
             'Alvik', 'Traneberg', 'Abrahamsberg', 'Åkeshov', 'Brommaplan', 'Ålsten',
             'Höglandet', 'Nockeby', 'Bromma Kyrka', 'Riksby', 'Ulvsunda', 'Mariehäll',
@@ -384,10 +467,14 @@ OMRADEN = [
         'namn': 'Solna',
         'i_namn': 'i Solna',
         'nav': 'Solna',
-        'titel': 'Läxhjälp i Solna — hemma hos er eller online | Nextrum',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-sundbyberg', 'laxhjalp-vasastan', 'laxhjalp-kungsholmen',
+            'laxhjalp-danderyd', 'laxhjalp-kista-rinkeby', 'laxhjalp-bromma',
+        ],
         'beskrivning': (
-            'Läxhjälp i Solna, Råsunda, Hagalund och Bergshamra: hemma hos er, på biblioteket '
-            f'eller online. {PRIS} i timmen, ingen bindningstid.'
+            f'Läxhjälp i Solna, Råsunda och Bergshamra för {PRIS} i timmen: hemma hos er, på '
+            'biblioteket eller online. Ingen bindningstid.'
         ),
         'etikett': 'Läxhjälp i Solna',
         'h1': 'Läxhjälp i<br><em>Solna.</em>',
@@ -396,17 +483,15 @@ OMRADEN = [
             'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
         ),
         'bild': '07-genombrottet',
-        'tint': '#898268',
-        'focal': '38% 40%',
         'delar': [
             'Solna centrum', 'Råsunda', 'Hagalund', 'Huvudsta', 'Bergshamra',
             'Ulriksdal', 'Järvastaden', 'Arenastaden', 'Frösunda', 'Skytteholm',
         ],
         'transport': (
-            'Blå linjen går till Solna centrum, Näckrosen och Hallonbergen, pendeltåget stannar '
-            'vid Solna station och Ulriksdal, och tvärbanan binder ihop Solna med Sundbyberg och '
-            'Alvik. Få områden i Stockholm har fler sätt att ta sig till, vilket gör att en '
-            'studiehjälpare sällan behöver bo i Solna för att kunna komma hit varje vecka.'
+            'Blå linjen går till Solna centrum och Näckrosen, pendeltåget stannar vid Solna '
+            'station och Ulriksdal, och tvärbanan binder ihop Solna med Sundbyberg och Alvik. Få '
+            'områden i Stockholm har fler sätt att ta sig till, vilket gör att en studiehjälpare '
+            'sällan behöver bo i Solna för att kunna komma hit varje vecka.'
         ),
         'bibliotek': ['Solna stadsbibliotek', 'Bergshamra bibliotek'],
         'faq': [
@@ -425,6 +510,1059 @@ OMRADEN = [
             ('Kan vi ses på biblioteket i stället för hemma?',
              'Ja. Skriv platsen när ni föreslår tiden, till exempel Solna stadsbibliotek eller '
              'Bergshamra bibliotek.'),
+        ],
+    },
+    # ---- Orterna från 2026-10-26. Bibliotek, stationer och delområden är
+    # kontrollerade mot kommunernas, bibliotekens och SL:s sidor och
+    # Wikipedia i sökträffarna samma dag, inte öppnade: nätet släppte
+    # inte fram dem. Planerade linjer (tunnelbanan till Barkarby,
+    # Spårväg syd) nämns inte förrän de går.
+    {
+        'slug': 'laxhjalp-huddinge',
+        'namn': 'Huddinge',
+        'i_namn': 'i Huddinge',
+        'nav': 'Huddinge',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-farsta', 'laxhjalp-alvsjo', 'laxhjalp-skarholmen',
+            'laxhjalp-botkyrka', 'laxhjalp-salem',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Huddinge, Flemingsberg och Skogås för {PRIS} i timmen: hemma hos er, på '
+            'biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Huddinge',
+        'h1': 'Läxhjälp i<br><em>Huddinge.</em>',
+        'lede': (
+            'Från Vårby till Skogås. Vi matchar elever i Huddinge med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '06-forklaringen',
+        'delar': [
+            'Huddinge centrum', 'Sjödalen', 'Fullersta', 'Stuvsta', 'Snättringe', 'Flemingsberg',
+            'Segeltorp', 'Kungens kurva', 'Vårby', 'Masmo', 'Skogås', 'Trångsund',
+        ],
+        'transport': (
+            'Pendeltåget stannar i Stuvsta, Huddinge och Flemingsberg, och på grenen mot Nynäshamn '
+            'i Trångsund och Skogås. I väster går röda linjen till Masmo och Vårby gård. Delarna '
+            'ligger alltså på olika linjer, och därför matchar vi efter var eleven bor och inte '
+            'bara efter kommunen.'
+        ),
+        'bibliotek': ['Huvudbiblioteket i Huddinge', 'Flemingsbergs bibliotek', 'Skogås bibliotek'],
+        'faq': [
+            ('Tar ni pass i hela Huddinge?',
+             'Vi matchar elever i Huddinge centrum, Stuvsta, Snättringe, Flemingsberg, Segeltorp, '
+             'Vårby, Masmo, Skogås och Trångsund. Hemma hos er går när matchningen ger en '
+             'studiehjälpare som kan ta sig dit varje vecka; annars börjar ni online.'),
+            F_PROV,
+            F_SYSKON,
+            ('Kan vi ses på biblioteket i stället för hemma?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Huvudbiblioteket, '
+             'Flemingsbergs bibliotek eller Skogås bibliotek.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-botkyrka',
+        'namn': 'Botkyrka',
+        'i_namn': 'i Botkyrka',
+        'nav': 'Botkyrka',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-huddinge', 'laxhjalp-skarholmen', 'laxhjalp-salem',
+            'laxhjalp-sodertalje',
+        ],
+        'beskrivning': (
+            'Läxhjälp i Botkyrka, från Fittja och Alby till Tumba och Tullinge, för '
+            f'{PRIS} i timmen: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Botkyrka',
+        'h1': 'Läxhjälp i<br><em>Botkyrka.</em>',
+        'lede': (
+            'Från Fittja vid Mälaren till Vårsta. Vi matchar elever i Botkyrka med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
+            'eller online.'
+        ),
+        'bild': '04-sjalvfortroende',
+        'delar': [
+            'Alby', 'Fittja', 'Hallunda', 'Norsborg', 'Tumba', 'Tullinge', 'Eriksberg',
+            'Storvreten', 'Riksten', 'Vårsta', 'Grödinge',
+        ],
+        'transport': (
+            'Röda linjen går till Fittja, Alby, Hallunda och Norsborg, där den slutar, och '
+            'pendeltåget stannar i Tullinge och Tumba. Till Vårsta går bussen från Tumba station. '
+            'Norra Botkyrka och Tumba med Tullinge ligger alltså på var sin linje, och vi matchar '
+            'efter var eleven bor.'
+        ),
+        'bibliotek': ['Alby bibliotek', 'Hallunda bibliotek', 'Tumba bibliotek'],
+        'faq': [
+            ('Gäller det hela Botkyrka?',
+             'Vi matchar elever i Alby, Fittja, Hallunda, Norsborg, Tumba, Tullinge, Storvreten '
+             'och Vårsta. Hemma hos er går när studiehjälparen kan ta sig dit varje vecka, och '
+             'annars börjar ni online.'),
+            F_AMNEN,
+            F_RAPPORT,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Alby bibliotek, Hallunda '
+             'bibliotek eller Tumba bibliotek.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-salem',
+        'namn': 'Salem',
+        'i_namn': 'i Salem',
+        'nav': 'Salem',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-botkyrka', 'laxhjalp-sodertalje', 'laxhjalp-huddinge',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Salem och Rönninge för {PRIS} i timmen: hemma hos er, på Salems bibliotek '
+            'eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Salem',
+        'h1': 'Läxhjälp i<br><em>Salem.</em>',
+        'lede': (
+            'Från Rönninge till Söderby. Vi matchar elever i Salem med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '12-pa-vag',
+        'delar': [
+            'Rönninge', 'Salems centrum', 'Söderby', 'Säby', 'Uttringe', 'Hallsta', 'Ersboda',
+        ],
+        'transport': (
+            'Pendeltåget stannar i Rönninge, kommunens enda station, och därifrån går bussen till '
+            'Salems centrum. En studiehjälpare som bor längs pendeltåget söderut har alltså nära '
+            'till er, och längre bort i kommunen är online ofta det som gör att passen blir av '
+            'varje vecka.'
+        ),
+        'bibliotek': ['Salems bibliotek i Salems centrum'],
+        'faq': [
+            ('Kommer ni hem till oss i Salem?',
+             'Ja, när matchningen ger en studiehjälpare som kan ta sig hit varje vecka. Rönninge '
+             'ligger vid pendeltåget, och till Salems centrum går bussen därifrån. Går det inte '
+             'börjar ni online.'),
+            F_IGANG,
+            F_ONLINE,
+            ('Kan vi ses på Salems bibliotek?',
+             'Ja. Skriv platsen när ni föreslår tiden. Biblioteket ligger i Salems centrum, dit '
+             'bussen går från Rönninge station.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-sodertalje',
+        'namn': 'Södertälje',
+        'i_namn': 'i Södertälje',
+        'nav': 'Södertälje',
+        'region': 'soder-och-oster',
+        'grannar': [
+            'laxhjalp-salem', 'laxhjalp-botkyrka',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Södertälje för {PRIS} i timmen, från Östertälje och Hovsjö till Järna: '
+            'hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Södertälje',
+        'h1': 'Läxhjälp i<br><em>Södertälje.</em>',
+        'lede': (
+            'Från Östertälje till Järna. Vi matchar elever i Södertälje med en studiehjälpare som '
+            'nyligen läst samma kurser själv, och bor ingen studiehjälpare nära er blir det online.'
+        ),
+        'bild': '03-digital-laxhjalp',
+        'delar': [
+            'Södertälje centrum', 'Östertälje', 'Hovsjö', 'Ronna', 'Geneta', 'Fornhöjden',
+            'Brunnsäng', 'Pershagen', 'Järna', 'Enhörna', 'Hölö', 'Mölnbo',
+        ],
+        'transport': (
+            'Pendeltåget från Stockholm stannar i Östertälje och Södertälje hamn och slutar i '
+            'Södertälje centrum, och därifrån går en gren via Södertälje syd och Järna till '
+            'Mölnbo. Det är en lång resa från stan, så vi letar i första hand efter en '
+            'studiehjälpare som bor i kommunen. Finns ingen just nu blir det online.'
+        ),
+        'bibliotek': ['Stadsbiblioteket i Lunagallerian', 'Hovsjö bibliotek', 'Järna bibliotek'],
+        'faq': [
+            ('Kommer ni hem till oss i Södertälje?',
+             'När matchningen ger en studiehjälpare som bor nära nog att komma varje vecka, ja. '
+             'Annars börjar ni online, med samma person, samma studieplan och en rapport efter '
+             'varje pass.'),
+            F_AMNEN,
+            F_SAMMA,
+            ('Kan vi ses på biblioteket i stället för hemma?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Stadsbiblioteket i '
+             'Lunagallerian, Hovsjö bibliotek eller Järna bibliotek.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-jarfalla',
+        'namn': 'Järfälla',
+        'i_namn': 'i Järfälla',
+        'nav': 'Järfälla',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-spanga-tensta', 'laxhjalp-vallingby-hasselby',
+            'laxhjalp-sollentuna', 'laxhjalp-upplands-vasby',
+        ],
+        'beskrivning': (
+            'Läxhjälp i Järfälla, från Barkarby och Jakobsberg till Kallhäll, för '
+            f'{PRIS} i timmen: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Järfälla',
+        'h1': 'Läxhjälp i<br><em>Järfälla.</em>',
+        'lede': (
+            'Från Barkarby till Stäket. Vi matchar elever i Järfälla med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '10-forsta-motet',
+        'delar': [
+            'Jakobsberg', 'Barkarby', 'Barkarbystaden', 'Veddesta', 'Skälby', 'Viksjö',
+            'Söderhöjden', 'Kallhäll', 'Stäket', 'Bolinder strand',
+        ],
+        'transport': (
+            'Pendeltåget stannar i Barkarby, Jakobsberg och Kallhäll, så den som bor nära en '
+            'station har en resa utan byten från stan. Viksjö ligger en bit från stationerna, '
+            'och dit är det bussen som gäller. Vi matchar efter var eleven bor, så att resan '
+            'håller varje vecka och inte bara första gången.'
+        ),
+        'bibliotek': ['Jakobsbergs bibliotek', 'Bas Barkarby bibliotek', 'Viksjö bibliotek'],
+        'faq': [
+            ('Vilka delar av Järfälla?',
+             'Jakobsberg, Barkarby och Barkarbystaden, Veddesta, Skälby, Viksjö, Söderhöjden, '
+             'Kallhäll och Stäket. Hemma hos er går när studiehjälparen kan ta sig dit varje '
+             'vecka, och annars börjar ni online.'),
+            F_GYMNASIET,
+            F_KVALL,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Jakobsbergs bibliotek, Bas '
+             'Barkarby bibliotek eller Viksjö bibliotek. Kolla öppettiderna innan ni bokar.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-upplands-vasby',
+        'namn': 'Upplands Väsby',
+        'i_namn': 'i Upplands Väsby',
+        'nav': 'Upplands Väsby',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-sollentuna', 'laxhjalp-jarfalla', 'laxhjalp-vallentuna',
+            'laxhjalp-taby',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Upplands Väsby för {PRIS} i timmen, från Bollstanäs till Runby: hemma hos '
+            'er, på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Upplands Väsby',
+        'h1': 'Läxhjälp i<br><em>Upplands Väsby.</em>',
+        'lede': (
+            'Från Bollstanäs till Runby. Vi matchar elever i Upplands Väsby med en studiehjälpare '
+            'som nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '01-en-till-en',
+        'delar': [
+            'Väsby centrum', 'Bollstanäs', 'Grimstaby', 'Vilunda', 'Smedby', 'Runby', 'Fresta',
+            'Vik', 'Brunnby', 'Odenslunda',
+        ],
+        'transport': (
+            'Pendeltåget stannar vid Upplands Väsby station, mitt i kommunen, mellan Rotebro och '
+            'Rosersberg. En studiehjälpare som bor längs pendeltåget norrut från stan har alltså '
+            'en resa utan byten, och ut i kommunen går bussarna.'
+        ),
+        'bibliotek': ['Upplands Väsby bibliotek'],
+        'faq': [
+            ('Gäller det hela Upplands Väsby?',
+             'Vi matchar elever i Väsby centrum, Bollstanäs, Vilunda, Smedby, Runby, Fresta, Vik, '
+             'Brunnby och Odenslunda. Hemma hos er går när matchningen ger en studiehjälpare som '
+             'kan ta sig dit varje vecka; annars börjar ni online.'),
+            F_PRIS,
+            F_BYTA,
+            ('Kan vi ses på biblioteket i stället för hemma?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Upplands Väsby bibliotek. Det '
+             'passar den som vill ha lugn och ro men inte besök hemma.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-kungsholmen',
+        'namn': 'Kungsholmen',
+        'i_namn': 'på Kungsholmen',
+        'nav': 'Kungsholmen',
+        'region': 'innerstaden',
+        'grannar': [
+            'laxhjalp-vasastan', 'laxhjalp-sodermalm', 'laxhjalp-bromma', 'laxhjalp-solna',
+            'laxhjalp-hagersten-liljeholmen',
+        ],
+        'beskrivning': (
+            f'Läxhjälp på Kungsholmen för {PRIS} i timmen, från Stadshagen till Fridhemsplan och '
+            'Essingen: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp på Kungsholmen',
+        'h1': 'Läxhjälp på<br><em>Kungsholmen.</em>',
+        'lede': (
+            'Från Stadshuset till Stora Essingen. Vi matchar elever på Kungsholmen med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
+            'eller online.'
+        ),
+        'bild': 'hero-nextrum',
+        'delar': [
+            'Fridhemsplan', 'Stadshagen', 'Fredhäll', 'Kristineberg', 'Marieberg', 'Rålambshov',
+            'Thorildsplan', 'Hornsberg', 'Lilla Essingen', 'Stora Essingen',
+        ],
+        'transport': (
+            'Blå linjen stannar vid Rådhuset, Fridhemsplan och Stadshagen, och gröna linjen vid '
+            'Fridhemsplan, Thorildsplan och Kristineberg. Till Stora Essingen går tvärbanan. '
+            'Kungsholmen nås alltså utan byte från stora delar av stan, och resan hit är sällan '
+            'det som avgör om ett pass blir av.'
+        ),
+        'bibliotek': ['Kungsholmens bibliotek vid S:t Eriksgatan'],
+        'faq': [
+            ('Vilka delar av Kungsholmen?',
+             'Fridhemsplan, Stadshagen, Fredhäll, Kristineberg, Marieberg, Thorildsplan, Hornsberg '
+             'och Essingeöarna. Hemma hos er går när studiehjälparen kan ta sig dit varje vecka, '
+             'och annars börjar ni online.'),
+            F_IGANG,
+            F_SAMMA,
+            ('Kan vi ses på Kungsholmens bibliotek?',
+             'Ja. Skriv platsen när ni föreslår tiden. Biblioteket ligger vid S:t Eriksgatan på '
+             'Kungsholmen.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-vasastan',
+        'namn': 'Vasastan',
+        'i_namn': 'i Vasastan',
+        'nav': 'Vasastan',
+        'region': 'innerstaden',
+        'grannar': [
+            'laxhjalp-ostermalm', 'laxhjalp-kungsholmen', 'laxhjalp-solna', 'laxhjalp-sodermalm',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Vasastan för {PRIS} i timmen, från Odenplan och Sankt Eriksplan till '
+            'Norrtull: hemma hos er eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Vasastan',
+        'h1': 'Läxhjälp i<br><em>Vasastan.</em>',
+        'lede': (
+            'Från Sankt Eriksplan till Norrtull. Vi matchar elever i Vasastan med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er eller online.'
+        ),
+        'bild': '07-genombrottet',
+        'delar': [
+            'Odenplan', 'Sankt Eriksplan', 'Sibirien', 'Birkastan', 'Röda bergen', 'Atlasområdet',
+            'Vanadislunden', 'Hagastaden', 'Norrtull', 'Observatorielunden', 'Tegnérlunden',
+        ],
+        'transport': (
+            'Gröna linjen stannar vid Sankt Eriksplan, Odenplan och Rådmansgatan, och pendeltåget '
+            'vid Stockholm Odenplan. Vasastan nås alltså utan byte från stora delar av stan, och '
+            'ett pass hemma hos er blir sällan en resefråga.'
+        ),
+        # Stadsbiblioteket vid Odenplan är stängt för renovering (sedan juni
+        # 2024), och ersättningen Spelbomskan har inga studieplatser. Sidan
+        # nämner därför inget bibliotek i Vasastan, bara grannens.
+        'bibliotek': [],
+        'faq': [
+            ('Vilka delar av Vasastan?',
+             'Odenplan, Sankt Eriksplan, Sibirien, Birkastan, Röda bergen, Atlasområdet, '
+             'Vanadislunden, Hagastaden och Norrtull. Hemma hos er går när studiehjälparen kan ta '
+             'sig dit varje vecka, och annars börjar ni online.'),
+            F_PROV,
+            F_KVALL,
+            ('Kan vi ses på biblioteket i stället?',
+             'Stadsbiblioteket vid Odenplan är stängt för renovering. Vill ni ses på ett bibliotek '
+             'går det bra i en grannstadsdel, till exempel Kungsholmens bibliotek vid S:t '
+             'Eriksgatan. Skriv platsen när ni föreslår tiden.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-ostermalm',
+        'namn': 'Östermalm',
+        'i_namn': 'på Östermalm',
+        'nav': 'Östermalm',
+        'region': 'innerstaden',
+        'grannar': [
+            'laxhjalp-vasastan', 'laxhjalp-lidingo', 'laxhjalp-danderyd', 'laxhjalp-solna',
+            'laxhjalp-sodermalm',
+        ],
+        'beskrivning': (
+            f'Läxhjälp på Östermalm för {PRIS} i timmen, från Stureplan till Gärdet och Ropsten: '
+            'hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp på Östermalm',
+        'h1': 'Läxhjälp på<br><em>Östermalm.</em>',
+        'lede': (
+            'Från Stureplan till Ropsten. Vi matchar elever på Östermalm med en studiehjälpare '
+            'som nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '13-kvallsplugg',
+        'delar': [
+            'Stureplan', 'Östermalmstorg', 'Karlaplan', 'Lärkstaden', 'Villastaden',
+            'Diplomatstaden', 'Gärdet', 'Hjorthagen', 'Ropsten', 'Norra Djurgårdsstaden',
+        ],
+        'transport': (
+            'Röda linjen går genom hela stadsdelen: Östermalmstorg, Karlaplan, Gärdet och Ropsten '
+            'på den ena grenen, Stadion och Tekniska högskolan på den andra. Den som bor längs '
+            'röda linjen kommer alltså utan byten, och från de andra linjerna byter man en gång.'
+        ),
+        'bibliotek': ['Östermalms bibliotek i Fältöversten'],
+        'faq': [
+            ('Vilka delar av Östermalm?',
+             'Stureplan, Östermalmstorg, Karlaplan, Lärkstaden, Villastaden, Gärdet, Hjorthagen och '
+             'Norra Djurgårdsstaden. Hemma hos er går när studiehjälparen kan ta sig dit varje '
+             'vecka, och annars börjar ni online.'),
+            F_GYMNASIET,
+            F_RAPPORT,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Östermalms bibliotek i '
+             'Fältöversten, mellan Karlaplan och Valhallavägen.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-hagersten-liljeholmen',
+        'namn': 'Hägersten och Liljeholmen',
+        'i_namn': 'i Hägersten och Liljeholmen',
+        'nav': 'Hägersten och Liljeholmen',
+        'region': 'soderort',
+        'grannar': [
+            'laxhjalp-sodermalm', 'laxhjalp-kungsholmen', 'laxhjalp-enskede-arsta-vantor',
+            'laxhjalp-alvsjo', 'laxhjalp-skarholmen', 'laxhjalp-bromma',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Hägersten och Liljeholmen för {PRIS} i timmen, från Gröndal till '
+            'Fruängen: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Hägersten och Liljeholmen',
+        'h1': 'Läxhjälp i Hägersten<br>och <em>Liljeholmen.</em>',
+        'lede': (
+            'Från Liljeholmen till Fruängen. Vi matchar elever i Hägersten och Liljeholmen med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
+            'eller online.'
+        ),
+        'bild': '12-pa-vag',
+        'delar': [
+            'Liljeholmen', 'Gröndal', 'Aspudden', 'Örnsberg', 'Axelsberg', 'Mälarhöjden',
+            'Midsommarkransen', 'Telefonplan', 'Hägerstensåsen', 'Västertorp', 'Fruängen',
+        ],
+        'transport': (
+            'Röda linjen delar sig efter Liljeholmen: den ena grenen går via Midsommarkransen, '
+            'Telefonplan och Hägerstensåsen till Fruängen, den andra via Aspudden, Örnsberg och '
+            'Axelsberg till Mälarhöjden och vidare. Tvärbanan stannar i Liljeholmen och Gröndal. '
+            'Nästan varje del ligger alltså vid en station.'
+        ),
+        'bibliotek': ['Aspuddens bibliotek', 'Gröndals bibliotek', 'Fruängens bibliotek'],
+        'faq': [
+            ('Gäller det hela Hägersten och Liljeholmen?',
+             'Vi matchar elever i Liljeholmen, Gröndal, Aspudden, Midsommarkransen, Telefonplan, '
+             'Hägerstensåsen, Västertorp, Fruängen och Mälarhöjden. Hemma hos er går när '
+             'matchningen ger en studiehjälpare som kan ta sig dit varje vecka; annars börjar ni '
+             'online.'),
+            F_PRIS,
+            F_ONLINE,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Aspuddens bibliotek, Gröndals '
+             'bibliotek eller Fruängens bibliotek, som alla ligger nära en station.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-alvsjo',
+        'namn': 'Älvsjö',
+        'i_namn': 'i Älvsjö',
+        'nav': 'Älvsjö',
+        'region': 'soderort',
+        'grannar': [
+            'laxhjalp-hagersten-liljeholmen', 'laxhjalp-enskede-arsta-vantor',
+            'laxhjalp-skarholmen', 'laxhjalp-huddinge', 'laxhjalp-farsta',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Älvsjö för {PRIS} i timmen, från Herrängen och Långbro till Solberga: '
+            'hemma hos er, på Älvsjö bibliotek eller online.'
+        ),
+        'etikett': 'Läxhjälp i Älvsjö',
+        'h1': 'Läxhjälp i<br><em>Älvsjö.</em>',
+        'lede': (
+            'Från Herrängen till Örby slott. Vi matchar elever i Älvsjö med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '10-forsta-motet',
+        # Älvsjös sju stadsdelar, och inga fler: Örby och Hagsätra hör till
+        # Enskede-Årsta-Vantör. Stadsdelsområdet är numera Hägersten-Älvsjö,
+        # men ingen letar efter läxhjälp i Hägersten-Älvsjö.
+        'delar': [
+            'Älvsjö', 'Solberga', 'Liseberg', 'Långbro', 'Herrängen', 'Långsjö', 'Örby slott',
+        ],
+        'transport': (
+            'Pendeltåget stannar i Älvsjö, och där delar sig linjerna söderut. Tunnelbana finns '
+            'inte i stadsdelen, så en studiehjälpare som bor längs pendeltåget har närmast, och '
+            'till de västra delarna går bussen.'
+        ),
+        'bibliotek': ['Älvsjö bibliotek vid stationen'],
+        'faq': [
+            ('Vilka delar av Älvsjö?',
+             'Älvsjö, Solberga, Liseberg, Långbro, Herrängen, Långsjö och Örby slott. Hemma hos er '
+             'går när studiehjälparen kan ta sig dit varje vecka, och annars börjar ni online.'),
+            F_AMNEN,
+            F_BYTA,
+            ('Kan vi ses på Älvsjö bibliotek?',
+             'Ja. Skriv platsen när ni föreslår tiden. Biblioteket ligger vid Älvsjö station, så '
+             'det är lätt för studiehjälparen att ta sig dit.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-skarholmen',
+        'namn': 'Skärholmen',
+        'i_namn': 'i Skärholmen',
+        'nav': 'Skärholmen',
+        'region': 'soderort',
+        'grannar': [
+            'laxhjalp-hagersten-liljeholmen', 'laxhjalp-alvsjo', 'laxhjalp-huddinge',
+            'laxhjalp-botkyrka',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Skärholmen, Bredäng, Sätra och Vårberg för {PRIS} i timmen: hemma hos er, '
+            'på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Skärholmen',
+        'h1': 'Läxhjälp i<br><em>Skärholmen.</em>',
+        'lede': (
+            'Från Bredäng till Vårberg. Vi matchar elever i Skärholmen med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '04-sjalvfortroende',
+        'delar': [
+            'Skärholmen', 'Bredäng', 'Sätra', 'Vårberg',
+        ],
+        'transport': (
+            'Röda linjen går genom hela stadsdelsområdet, med stationer i Bredäng, Sätra, '
+            'Skärholmen och Vårberg på grenen mot Norsborg. En studiehjälpare som bor längs röda '
+            'linjen har alltså en resa utan byten, ända från söderort in till stan.'
+        ),
+        'bibliotek': ['Skärholmens bibliotek i Skärholmens centrum', 'Bredängs bibliotek'],
+        'faq': [
+            ('Gäller det hela Skärholmen?',
+             'Ja: Skärholmen, Bredäng, Sätra och Vårberg. Hemma hos er går när matchningen ger en '
+             'studiehjälpare som kan ta sig dit varje vecka; annars börjar ni online.'),
+            F_IGANG,
+            F_SYSKON,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Skärholmens bibliotek i '
+             'centrum eller Bredängs bibliotek vid Bredängstorget.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-enskede-arsta-vantor',
+        'namn': 'Enskede, Årsta och Vantör',
+        'i_namn': 'i Enskede, Årsta och Vantör',
+        'nav': 'Enskede, Årsta och Vantör',
+        'region': 'soderort',
+        'grannar': [
+            'laxhjalp-sodermalm', 'laxhjalp-hammarby-sjostad', 'laxhjalp-skarpnack',
+            'laxhjalp-farsta', 'laxhjalp-alvsjo', 'laxhjalp-hagersten-liljeholmen',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Årsta, Enskede, Högdalen och Rågsved för {PRIS} i timmen: hemma hos er, '
+            'på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Enskede, Årsta och Vantör',
+        'h1': 'Läxhjälp i Enskede,<br><em>Årsta och Vantör.</em>',
+        'lede': (
+            'Från Gullmarsplan till Hagsätra. Vi matchar elever i Enskede, Årsta och Vantör med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
+            'eller online.'
+        ),
+        'bild': '02-personlig-anpassning',
+        'delar': [
+            'Årsta', 'Östberga', 'Johanneshov', 'Enskede gård', 'Gamla Enskede', 'Enskededalen',
+            'Stureby', 'Bandhagen', 'Högdalen', 'Rågsved', 'Hagsätra', 'Örby',
+        ],
+        'transport': (
+            'Gröna linjen mot Hagsätra går genom hela området, med stationer i Enskede gård, '
+            'Sockenplan, Stureby, Bandhagen, Högdalen och Rågsved, och tvärbanan går genom Årsta '
+            'med byte till pendeltåget vid Årstaberg. Från Gullmarsplan når studiehjälparen '
+            'alltså de flesta delar utan fler byten.'
+        ),
+        'bibliotek': ['Årsta bibliotek', 'Högdalens bibliotek', 'Hagsätra bibliotek'],
+        'faq': [
+            ('Vilka delar gäller det?',
+             'Årsta, Östberga, Johanneshov, Enskede gård, Gamla Enskede, Enskededalen, Stureby, '
+             'Bandhagen, Högdalen, Rågsved, Hagsätra och Örby. Hemma hos er går när '
+             'studiehjälparen kan ta sig dit varje vecka, och annars börjar ni online.'),
+            F_PROV,
+            F_SAMMA,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Årsta bibliotek vid Årsta '
+             'torg, Högdalens bibliotek ovanpå tunnelbanan eller Hagsätra bibliotek.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-skarpnack',
+        'namn': 'Skarpnäck',
+        'i_namn': 'i Skarpnäck',
+        'nav': 'Skarpnäck',
+        'region': 'soderort',
+        'grannar': [
+            'laxhjalp-hammarby-sjostad', 'laxhjalp-enskede-arsta-vantor', 'laxhjalp-farsta',
+            'laxhjalp-nacka',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Skarpnäck, Bagarmossen och Björkhagen för {PRIS} i timmen: hemma hos er, '
+            'på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Skarpnäck',
+        'h1': 'Läxhjälp i<br><em>Skarpnäck.</em>',
+        'lede': (
+            'Från Hammarbyhöjden till Skarpnäck. Vi matchar elever i Skarpnäck med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
+            'eller online.'
+        ),
+        'bild': 'hero-nextrum',
+        'delar': [
+            'Skarpnäcksfältet', 'Bagarmossen', 'Björkhagen', 'Kärrtorp', 'Hammarbyhöjden',
+        ],
+        'transport': (
+            'Gröna linjens gren mot Skarpnäck stannar vid Hammarbyhöjden, Björkhagen, Kärrtorp, '
+            'Bagarmossen och Skarpnäck, så varje del ligger vid en station. En studiehjälpare som '
+            'bor längs gröna linjen kommer alltså utan byten.'
+        ),
+        'bibliotek': ['Bagarmossens bibliotek', 'Björkhagens bibliotek'],
+        'faq': [
+            ('Gäller det hela Skarpnäck?',
+             'Vi matchar elever i Skarpnäcksfältet, Bagarmossen, Björkhagen, Kärrtorp och '
+             'Hammarbyhöjden. Hemma hos er går när matchningen ger en studiehjälpare som kan ta '
+             'sig dit varje vecka; annars börjar ni online.'),
+            F_AMNEN,
+            F_KVALL,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Bagarmossens bibliotek eller '
+             'Björkhagens bibliotek.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-vallingby-hasselby',
+        'namn': 'Vällingby och Hässelby',
+        'i_namn': 'i Vällingby och Hässelby',
+        'nav': 'Vällingby och Hässelby',
+        'region': 'vasterort',
+        'grannar': [
+            'laxhjalp-bromma', 'laxhjalp-spanga-tensta', 'laxhjalp-jarfalla',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Vällingby och Hässelby för {PRIS} i timmen, från Råcksta till Hässelby '
+            'strand: hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Vällingby och Hässelby',
+        'h1': 'Läxhjälp i Vällingby<br>och <em>Hässelby.</em>',
+        'lede': (
+            'Från Råcksta till Hässelby strand. Vi matchar elever i Vällingby och Hässelby med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
+            'eller online.'
+        ),
+        'bild': '05-av-unga-for-unga',
+        'delar': [
+            'Vällingby', 'Råcksta', 'Grimsta', 'Vinsta', 'Johannelund', 'Hässelby gård',
+            'Hässelby strand', 'Hässelby villastad', 'Åkermyntan',
+        ],
+        'transport': (
+            'Gröna linjen går genom hela området: Råcksta, Vällingby, Johannelund, Hässelby gård '
+            'och Hässelby strand, där den slutar. Till Hässelby villastad går bussen från '
+            'Vällingby. En studiehjälpare som bor längs gröna linjen kommer alltså utan byten.'
+        ),
+        'bibliotek': ['Vällingby bibliotek', 'Hässelby gårds bibliotek', 'Hässelby villastads bibliotek'],
+        'faq': [
+            ('Vilka delar gäller det?',
+             'Vällingby, Råcksta, Grimsta, Vinsta, Hässelby gård, Hässelby strand och Hässelby '
+             'villastad. Hemma hos er går när studiehjälparen kan ta sig dit varje vecka, och '
+             'annars börjar ni online.'),
+            F_GYMNASIET,
+            F_SYSKON,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Vällingby bibliotek i Vällingby '
+             'centrum eller Hässelby gårds bibliotek vid Hässelby torg.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-spanga-tensta',
+        'namn': 'Spånga och Tensta',
+        'i_namn': 'i Spånga och Tensta',
+        'nav': 'Spånga och Tensta',
+        'region': 'vasterort',
+        'grannar': [
+            'laxhjalp-kista-rinkeby', 'laxhjalp-vallingby-hasselby', 'laxhjalp-bromma',
+            'laxhjalp-jarfalla', 'laxhjalp-sundbyberg',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Spånga och Tensta för {PRIS} i timmen, från Bromsten till Hjulsta: hemma '
+            'hos er, på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Spånga och Tensta',
+        'h1': 'Läxhjälp i Spånga<br>och <em>Tensta.</em>',
+        'lede': (
+            'Från Bromsten till Hjulsta. Vi matchar elever i Spånga och Tensta med en '
+            'studiehjälpare som nyligen läst samma kurser själv, hemma hos er, på biblioteket '
+            'eller online.'
+        ),
+        'bild': '01-en-till-en',
+        'delar': [
+            'Spånga', 'Tensta', 'Hjulsta', 'Bromsten', 'Solhem', 'Flysta', 'Sundby', 'Lunda',
+        ],
+        'transport': (
+            'Blå linjen stannar i Tensta och Hjulsta, och pendeltåget i Spånga, mitt emot '
+            'biblioteket. Vi matchar efter var eleven bor, så att resan håller varje vecka och '
+            'inte bara första gången.'
+        ),
+        'bibliotek': ['Tensta bibliotek', 'Spånga bibliotek'],
+        'faq': [
+            ('Gäller det hela Spånga och Tensta?',
+             'Vi matchar elever i Spånga, Tensta, Hjulsta, Bromsten, Solhem, Flysta och Sundby. '
+             'Hemma hos er går när matchningen ger en studiehjälpare som kan ta sig dit varje '
+             'vecka; annars börjar ni online.'),
+            F_IGANG,
+            F_RAPPORT,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Tensta bibliotek i Tensta '
+             'centrum eller Spånga bibliotek mitt emot pendeltågsstationen.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-kista-rinkeby',
+        'namn': 'Kista och Rinkeby',
+        'i_namn': 'i Kista och Rinkeby',
+        'nav': 'Kista och Rinkeby',
+        'region': 'vasterort',
+        'grannar': [
+            'laxhjalp-spanga-tensta', 'laxhjalp-sundbyberg', 'laxhjalp-solna',
+            'laxhjalp-sollentuna', 'laxhjalp-jarfalla',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Kista, Husby, Akalla och Rinkeby för {PRIS} i timmen: hemma hos er, på '
+            'biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Kista och Rinkeby',
+        'h1': 'Läxhjälp i Kista<br>och <em>Rinkeby.</em>',
+        'lede': (
+            'Från Rinkeby till Akalla. Vi matchar elever i Kista och Rinkeby med en studiehjälpare '
+            'som nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '12-pa-vag',
+        'delar': [
+            'Kista', 'Husby', 'Akalla', 'Rinkeby',
+        ],
+        'transport': (
+            'Blå linjen går hit på två grenar: mot Akalla med stationer i Kista, Husby och Akalla, '
+            'och mot Hjulsta med station i Rinkeby. Mellan Kista och Rinkeby blir det alltså byte '
+            'eller buss, och därför matchar vi efter var eleven bor.'
+        ),
+        'bibliotek': ['Kista bibliotek i Kista Galleria', 'Husby bibliotek', 'Rinkeby bibliotek'],
+        'faq': [
+            ('Gäller det både Kista och Rinkeby?',
+             'Ja, och Husby och Akalla. Hemma hos er går när matchningen ger en studiehjälpare '
+             'som kan ta sig dit varje vecka; annars börjar ni online.'),
+            F_PROV,
+            F_BYTA,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Kista bibliotek i Kista '
+             'Galleria, Husby bibliotek eller Rinkeby bibliotek i Rinkeby centrum.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-sundbyberg',
+        'namn': 'Sundbyberg',
+        'i_namn': 'i Sundbyberg',
+        'nav': 'Sundbyberg',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-solna', 'laxhjalp-kista-rinkeby', 'laxhjalp-spanga-tensta', 'laxhjalp-bromma',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Sundbyberg för {PRIS} i timmen, från Duvbo och centrala Sundbyberg till '
+            'Hallonbergen och Ursvik: hemma hos er eller online.'
+        ),
+        'etikett': 'Läxhjälp i Sundbyberg',
+        'h1': 'Läxhjälp i<br><em>Sundbyberg.</em>',
+        'lede': (
+            'Från Duvbo till Ursvik. Vi matchar elever i Sundbyberg med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '04-sjalvfortroende',
+        'delar': [
+            'Centrala Sundbyberg', 'Duvbo', 'Lilla Alby', 'Storskogen', 'Tulemarken', 'Hallonbergen',
+            'Ör', 'Rissne', 'Lilla Ursvik', 'Stora Ursvik', 'Brotorp',
+        ],
+        'transport': (
+            'Pendeltåget och blå linjen möts vid Sundbybergs centrum, där tvärbanan också stannar. '
+            'Blå linjen går vidare till Duvbo och Rissne, och på den andra grenen ligger '
+            'Hallonbergen. Få kommuner är lättare att nå, så en studiehjälpare behöver sällan bo i '
+            'Sundbyberg för att komma hit varje vecka.'
+        ),
+        'bibliotek': ['Biblioteket i Signalfabriken', 'Hallonbergens bibliotek'],
+        'faq': [
+            ('Gäller det hela Sundbyberg?',
+             'Vi matchar elever i centrala Sundbyberg, Duvbo, Lilla Alby, Storskogen, Hallonbergen, '
+             'Ör, Rissne och Ursvik. Hemma hos er går när studiehjälparen kan ta sig dit varje '
+             'vecka, och annars börjar ni online.'),
+            F_PRIS,
+            F_ONLINE,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Biblioteket i Signalfabriken i '
+             'centrala Sundbyberg eller Hallonbergens bibliotek.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-danderyd',
+        'namn': 'Danderyd',
+        'i_namn': 'i Danderyd',
+        'nav': 'Danderyd',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-taby', 'laxhjalp-sollentuna', 'laxhjalp-solna', 'laxhjalp-ostermalm',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Danderyd för {PRIS} i timmen, från Stocksund och Djursholm till Enebyberg: '
+            'hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Danderyd',
+        'h1': 'Läxhjälp i<br><em>Danderyd.</em>',
+        'lede': (
+            'Från Stocksund till Enebyberg. Vi matchar elever i Danderyd med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '01-en-till-en',
+        'delar': [
+            'Djursholm', 'Stocksund', 'Enebyberg', 'Danderyd', 'Mörby', 'Djursholms Ösby',
+            'Djursholms Ekeby', 'Altorp',
+        ],
+        'transport': (
+            'Röda linjen går till Danderyds sjukhus och Mörby centrum, och Roslagsbanan genom hela '
+            'kommunen: Stocksund, Mörby och Djursholms Ösby, där banan delar sig mot Enebyberg åt '
+            'ena hållet och Altorp åt det andra. En studiehjälpare som bor längs någon av dem '
+            'kommer alltså utan byten.'
+        ),
+        # Köpcentret heter Danderyds centrum sedan maj 2026; stationen heter
+        # fortfarande Mörby centrum.
+        'bibliotek': ['Danderyds bibliotek i Danderyds centrum', 'Djursholms bibliotek',
+                      'Enebybergs bibliotek'],
+        'faq': [
+            ('Vilka delar av Danderyd?',
+             'Djursholm, Stocksund, Enebyberg, Danderyd och Mörby. Hemma hos er går när '
+             'matchningen ger en studiehjälpare som kan ta sig dit varje vecka; annars börjar ni '
+             'online.'),
+            F_GYMNASIET,
+            F_SAMMA,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Danderyds bibliotek i '
+             'Danderyds centrum vid Mörby centrums tunnelbana, Djursholms bibliotek eller '
+             'Enebybergs bibliotek.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-taby',
+        'namn': 'Täby',
+        'i_namn': 'i Täby',
+        'nav': 'Täby',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-danderyd', 'laxhjalp-sollentuna', 'laxhjalp-vallentuna', 'laxhjalp-osteraker',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Täby för {PRIS} i timmen, från Näsbypark till Täby kyrkby och Arninge: '
+            'hemma hos er, på biblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp i Täby',
+        'h1': 'Läxhjälp i<br><em>Täby.</em>',
+        'lede': (
+            'Från Näsbypark till Täby kyrkby. Vi matchar elever i Täby med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '10-forsta-motet',
+        'delar': [
+            'Täby centrum', 'Tibble', 'Roslags Näsby', 'Näsbypark', 'Lahäll', 'Gribbylund',
+            'Skarpäng', 'Täby kyrkby', 'Ensta', 'Viggbyholm', 'Hägernäs', 'Arninge',
+        ],
+        'transport': (
+            'Roslagsbanan går genom Täby på tre grenar: via Täby centrum, Viggbyholm och Hägernäs '
+            'till Arninge, via Tibble och Ensta till Täby kyrkby, och via Lahäll till Näsbypark. '
+            'En studiehjälpare som bor längs banan har sällan mer än ett byte. Någon tunnelbana '
+            'finns inte i Täby.'
+        ),
+        'bibliotek': ['Huvudbiblioteket vid Täby centrum', 'Näsbyparks bibliotek',
+                      'Gribbylunds bibliotek'],
+        'faq': [
+            ('Gäller det hela Täby?',
+             'Vi matchar elever i Täby centrum, Tibble, Näsbypark, Gribbylund, Skarpäng, Täby '
+             'kyrkby, Ensta, Viggbyholm, Hägernäs och Arninge. Hemma hos er går när '
+             'studiehjälparen kan ta sig dit varje vecka, och annars börjar ni online.'),
+            F_PROV,
+            F_KVALL,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Huvudbiblioteket vid Täby '
+             'centrum, Näsbyparks bibliotek eller Gribbylunds bibliotek.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-lidingo',
+        'namn': 'Lidingö',
+        'i_namn': 'på Lidingö',
+        'nav': 'Lidingö',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-ostermalm', 'laxhjalp-danderyd', 'laxhjalp-taby',
+        ],
+        'beskrivning': (
+            f'Läxhjälp på Lidingö för {PRIS} i timmen, från Torsvik och Larsberg till Gåshaga: '
+            'hemma hos er, på stadsbiblioteket eller online.'
+        ),
+        'etikett': 'Läxhjälp på Lidingö',
+        'h1': 'Läxhjälp på<br><em>Lidingö.</em>',
+        'lede': (
+            'Från Torsvik till Gåshaga. Vi matchar elever på Lidingö med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': '06-forklaringen',
+        'delar': [
+            'Lidingö centrum', 'Torsvik', 'Baggeby', 'Bodal', 'Larsberg', 'Dalénum', 'Hersby',
+            'Skärsätra', 'Mölna', 'Brevik', 'Käppala', 'Gåshaga',
+        ],
+        'transport': (
+            'Lidingöbanan går från Ropsten, där röda linjen slutar, över bron och längs södra '
+            'delen av ön till Gåshaga. En studiehjälpare som bor längs röda linjen byter alltså en '
+            'gång, och till norra Lidingö går bussen.'
+        ),
+        'bibliotek': ['Lidingö stadsbibliotek i stadshuset'],
+        'faq': [
+            ('Kommer ni ut till Lidingö?',
+             'Ja, när matchningen ger en studiehjälpare som kan ta sig hit varje vecka. '
+             'Lidingöbanan går från Ropsten längs södra delen av ön; längre norrut är online ofta '
+             'det som gör att passen blir av varje vecka.'),
+            F_AMNEN,
+            F_SYSKON,
+            ('Kan vi ses på stadsbiblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden. Lidingö stadsbibliotek ligger i stadshuset '
+             'i Lidingö centrum.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-sollentuna',
+        'namn': 'Sollentuna',
+        'i_namn': 'i Sollentuna',
+        'nav': 'Sollentuna',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-kista-rinkeby', 'laxhjalp-taby', 'laxhjalp-danderyd',
+            'laxhjalp-upplands-vasby', 'laxhjalp-jarfalla',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Sollentuna för {PRIS} i timmen, från Helenelund till Rotebro: hemma hos er, '
+            'på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Sollentuna',
+        'h1': 'Läxhjälp i<br><em>Sollentuna.</em>',
+        'lede': (
+            'Från Helenelund till Rotebro. Vi matchar elever i Sollentuna med en studiehjälpare som '
+            'nyligen läst samma kurser själv, hemma hos er, på biblioteket eller online.'
+        ),
+        'bild': 'hero-nextrum',
+        'delar': [
+            'Tureberg', 'Sollentuna centrum', 'Edsberg', 'Helenelund', 'Häggvik', 'Norrviken',
+            'Rotebro',
+        ],
+        'transport': (
+            'Pendeltåget stannar i Helenelund, Sollentuna, Häggvik, Norrviken och Rotebro, i den '
+            'ordningen norrut. Kommunen ligger alltså utmed pendeltåget, och en studiehjälpare som '
+            'bor längs det har en resa utan byten.'
+        ),
+        'bibliotek': ['Sollentuna bibliotek i Turebergshuset', 'biblioteket i Arena Edsberg'],
+        'faq': [
+            ('Vilka delar av Sollentuna?',
+             'Tureberg och Sollentuna centrum, Edsberg, Helenelund, Häggvik, Norrviken och Rotebro. '
+             'Hemma hos er går när matchningen ger en studiehjälpare som kan ta sig dit varje '
+             'vecka; annars börjar ni online.'),
+            F_IGANG,
+            F_RAPPORT,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel Sollentuna bibliotek i '
+             'Turebergshuset eller biblioteket i Arena Edsberg.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-vallentuna',
+        'namn': 'Vallentuna',
+        'i_namn': 'i Vallentuna',
+        'nav': 'Vallentuna',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-taby', 'laxhjalp-osteraker', 'laxhjalp-upplands-vasby',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Vallentuna för {PRIS} i timmen, från Kragstalund till Kårsta: hemma hos er, '
+            'på biblioteket eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Vallentuna',
+        'h1': 'Läxhjälp i<br><em>Vallentuna.</em>',
+        'lede': (
+            'Från Kragstalund till Kårsta. Vi matchar elever i Vallentuna med en studiehjälpare som '
+            'nyligen läst samma kurser själv, och längre ut är online ofta det som gör att passen '
+            'blir av varje vecka.'
+        ),
+        'bild': '13-kvallsplugg',
+        'delar': [
+            'Vallentuna centrum', 'Kragstalund', 'Bällsta', 'Ormsta', 'Molnby', 'Lindholmen',
+            'Frösunda', 'Kårsta', 'Karby', 'Brottby',
+        ],
+        'transport': (
+            'Roslagsbanan mot Kårsta går genom hela kommunen, från Kragstalund och Bällsta via '
+            'Vallentuna och Frösunda till Kårsta. En studiehjälpare som bor längs banan har alltså '
+            'en resa utan byten, och längre ut är online ofta det som fungerar varje vecka.'
+        ),
+        'bibliotek': ['biblioteket i Vallentuna kulturhus', 'Kårsta bibliotek'],
+        'faq': [
+            ('Kommer ni hem till oss i Vallentuna?',
+             'Ja, när matchningen ger en studiehjälpare som kan ta sig dit varje vecka. Nära '
+             'Roslagsbanan går det oftast; längre ut börjar ni online, med samma studieplan och '
+             'rapport.'),
+            F_AMNEN,
+            F_ONLINE,
+            ('Kan vi ses på biblioteket?',
+             'Ja. Skriv platsen när ni föreslår tiden, till exempel biblioteket i Vallentuna '
+             'kulturhus.'),
+        ],
+    },
+    {
+        'slug': 'laxhjalp-osteraker',
+        'namn': 'Österåker',
+        'i_namn': 'i Österåker',
+        'nav': 'Österåker',
+        'region': 'norr-och-vaster',
+        'grannar': [
+            'laxhjalp-taby', 'laxhjalp-vallentuna',
+        ],
+        'beskrivning': (
+            f'Läxhjälp i Österåker och Åkersberga för {PRIS} i timmen, från Rydbo till Österskär: '
+            'hemma hos er eller online. Ingen bindningstid.'
+        ),
+        'etikett': 'Läxhjälp i Österåker',
+        'h1': 'Läxhjälp i<br><em>Österåker.</em>',
+        'lede': (
+            'Från Rydbo till Österskär. Vi matchar elever i Österåker med en studiehjälpare som '
+            'nyligen läst samma kurser själv, och längre ut är online ofta det som gör att passen '
+            'blir av varje vecka.'
+        ),
+        'bild': '12-pa-vag',
+        'delar': [
+            'Åkersberga', 'Österskär', 'Tunagård', 'Åkers Runö', 'Täljö', 'Rydbo',
+        ],
+        'transport': (
+            'Roslagsbanan går genom kommunen med stationer i Rydbo, Täljö, Åkers Runö, Åkersberga, '
+            'Tunagård och Österskär, där grenen slutar. Åkersberga är kommunens knutpunkt för tåg '
+            'och buss, och en studiehjälpare som bor längs banan har en resa utan byten.'
+        ),
+        # Biblioteken i Österåker gick inte att kontrollera 2026-10-26 (sök-
+        # budgeten tog slut). Lägg in dem när de är kontrollerade.
+        'bibliotek': [],
+        'faq': [
+            ('Kommer ni hem till oss i Åkersberga?',
+             'Ja, när matchningen ger en studiehjälpare som kan ta sig dit varje vecka. '
+             'Roslagsbanan går hela vägen till Österskär, så längs banan går det oftast; längre ut '
+             'börjar ni online.'),
+            F_PRIS,
+            F_SAMMA,
+            ('Hur långt ut i kommunen kommer ni?',
+             'Så långt som en studiehjälpare kan ta sig varje vecka utan att resan tar över. Det '
+             'avgör vi när vi vet var ni bor, och går det inte blir det online, med samma person och '
+             'samma pris.'),
         ],
     },
 ]
@@ -458,10 +1596,10 @@ AMNEN = [
         'slug': 'laxhjalp-matematik',
         'i_namn': 'i matte',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp i matte i Stockholm, hemma eller online | Nextrum',
+        'titel': f'Läxhjälp i matte i Stockholm, {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp i matte från mellanstadiet till gymnasiet, med en studiehjälpare som '
-            f'nyss läst samma kurser. Hemma hos er i Stockholm eller online, {PRIS} i timmen.'
+            f'Läxhjälp i matte för {PRIS} i timmen, från mellanstadiet till gymnasiet, med en '
+            'studiehjälpare som nyss läst kursen. Hemma eller online.'
         ),
         'etikett': 'Läxhjälp i matematik',
         'h1': 'Läxhjälp i<br><em>matte.</em>',
@@ -472,8 +1610,6 @@ AMNEN = [
         ),
         'kort': 'Bråk, ekvationer, funktioner och derivata',
         'bild': '01-en-till-en',
-        'tint': '#ACA193',
-        'focal': '68% 44%',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Från tabellerna<br>till <em>derivatan.</em>',
         'lista_ingress': (
@@ -529,10 +1665,10 @@ AMNEN = [
         'slug': 'laxhjalp-svenska',
         'i_namn': 'i svenska',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp i svenska i Stockholm, hemma eller online | Nextrum',
+        'titel': f'Läxhjälp i svenska i Stockholm, {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp i svenska och svenska som andraspråk: läsförståelse, uppsatser och '
-            f'muntliga redovisningar. Hemma hos er i Stockholm eller online, {PRIS} i timmen.'
+            f'Läxhjälp i svenska för {PRIS} i timmen: läsförståelse, uppsatser och redovisningar, '
+            'också i svenska som andraspråk. Hemma eller online.'
         ),
         'etikett': 'Läxhjälp i svenska',
         'h1': 'Läxhjälp i<br><em>svenska.</em>',
@@ -543,8 +1679,6 @@ AMNEN = [
         ),
         'kort': 'Läsförståelse, uppsatser och svenska som andraspråk',
         'bild': '07-genombrottet',
-        'tint': '#898268',
-        'focal': '38% 40%',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Att läsa, skriva<br>och <em>säga det.</em>',
         'lista_ingress': (
@@ -600,10 +1734,10 @@ AMNEN = [
         'slug': 'laxhjalp-engelska',
         'i_namn': 'i engelska',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp i engelska i Stockholm, hemma eller online | Nextrum',
+        'titel': f'Läxhjälp i engelska i Stockholm, {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp i engelska från mellanstadiet till gymnasiet: ordförråd, grammatik, '
-            f'uppsatser och att våga prata. I Stockholm eller online, {PRIS} i timmen.'
+            f'Läxhjälp i engelska för {PRIS} i timmen: ordförråd, grammatik, uppsatser och att '
+            'våga prata. Från mellanstadiet till gymnasiet, hemma eller online.'
         ),
         'etikett': 'Läxhjälp i engelska',
         'h1': 'Läxhjälp i<br><em>engelska.</em>',
@@ -614,8 +1748,6 @@ AMNEN = [
         ),
         'kort': 'Ordförråd, grammatik, uppsatser och muntligt',
         'bild': '04-sjalvfortroende',
-        'tint': '#897D6A',
-        'focal': '56% 36%',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Från glosorna<br>till <em>essän.</em>',
         'lista_ingress': (
@@ -669,10 +1801,10 @@ AMNEN = [
         'slug': 'laxhjalp-no',
         'i_namn': 'i fysik, kemi och biologi',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp i fysik, kemi och biologi i Stockholm | Nextrum',
+        'titel': f'Läxhjälp i fysik, kemi och biologi, {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp i NO med en studiehjälpare som nyss läst samma kurser: fysik, kemi och '
-            f'biologi, formler och labbrapporter. I Stockholm eller online, {PRIS} i timmen.'
+            f'Läxhjälp i NO för {PRIS} i timmen: fysik, kemi och biologi, formler och '
+            'labbrapporter. En studiehjälpare som nyss läst kursen, hemma eller online.'
         ),
         'etikett': 'Läxhjälp i NO',
         'h1': 'Läxhjälp i fysik,<br>kemi och <em>biologi.</em>',
@@ -682,9 +1814,7 @@ AMNEN = [
             'det i den ordning eleven behöver.'
         ),
         'kort': 'Formler, begrepp och labbrapporter',
-        'bild': '13-kvallsplugg',
-        'tint': '#453B28',
-        'focal': '46% 44%',
+        'bild': '02-personlig-anpassning',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Tre ämnen som<br>bygger på <em>sig själva.</em>',
         'lista_ingress': (
@@ -739,10 +1869,10 @@ AMNEN = [
         'slug': 'laxhjalp-so',
         'i_namn': 'i SO',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp i SO i Stockholm: historia och samhällskunskap | Nextrum',
+        'titel': f'Läxhjälp i SO i Stockholm, {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp i historia, samhällskunskap, geografi och religionskunskap, med en '
-            f'studiehjälpare som nyss läst kursen. I Stockholm eller online, {PRIS} i timmen.'
+            f'Läxhjälp i SO för {PRIS} i timmen: historia, samhällskunskap, geografi och religion '
+            'med någon som nyss läst kursen. Hemma eller online.'
         ),
         'etikett': 'Läxhjälp i SO',
         'h1': 'Läxhjälp i<br><em>SO.</em>',
@@ -752,9 +1882,7 @@ AMNEN = [
             'matchar eleven med en studiehjälpare som nyligen läst samma kurs.'
         ),
         'kort': 'Historia, samhällskunskap, geografi och religion',
-        'bild': '05-av-unga-for-unga',
-        'tint': '#8E8C84',
-        'focal': '60% 42%',
+        'bild': '13-kvallsplugg',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Fyra ämnen,<br>ett sätt att <em>tänka.</em>',
         'lista_ingress': (
@@ -808,10 +1936,10 @@ AMNEN = [
         'slug': 'laxhjalp-moderna-sprak',
         'i_namn': 'i spanska, tyska och franska',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp i spanska, tyska och franska i Stockholm | Nextrum',
+        'titel': f'Läxhjälp i spanska, tyska och franska, {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp i moderna språk: glosor, grammatik, hörförståelse och att våga prata. '
-            f'Spanska, tyska och franska, hemma i Stockholm eller online. {PRIS} i timmen.'
+            f'Läxhjälp i spanska, tyska och franska för {PRIS} i timmen: glosor, grammatik och att '
+            'våga prata. Hemma hos er i Stockholm eller online.'
         ),
         'etikett': 'Läxhjälp i moderna språk',
         'h1': 'Läxhjälp i spanska,<br>tyska och <em>franska.</em>',
@@ -821,9 +1949,7 @@ AMNEN = [
             'samma språk.'
         ),
         'kort': 'Glosor, grammatik och att våga prata',
-        'bild': '04-sjalvfortroende',
-        'tint': '#897D6A',
-        'focal': '56% 36%',
+        'bild': '09-online-v2',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Från glosorna<br>till <em>samtalet.</em>',
         'lista_ingress': (
@@ -892,10 +2018,10 @@ ONLINE = {
     'slug': 'laxhjalp-online',
     'i_namn': 'online',
     'plats': 'Stockholm',
-    'titel': 'Läxhjälp online med en personlig studiehjälpare | Nextrum',
+    'titel': f'Läxhjälp online med egen studiehjälpare, {PRIS_KR} kr/tim | Nextrum',
     'beskrivning': (
-        'Läxhjälp online med en studiehjälpare som nyss läst samma kurser. Matte, svenska, '
-        f'engelska och NO, med studieplan och rapport efter varje pass. {PRIS} i timmen.'
+        f'Läxhjälp online för {PRIS} i timmen med en studiehjälpare som nyss läst samma kurser: '
+        'samma studieplan och rapport som när ni ses hemma.'
     ),
     'etikett': 'Läxhjälp online',
     'h1': 'Läxhjälp<br><em>online.</em>',
@@ -906,8 +2032,6 @@ ONLINE = {
     ),
     'kort': 'Samma studiehjälpare och rapport, över video',
     'bild': '03-digital-laxhjalp',
-    'tint': '#948A78',
-    'focal': '60% 44%',
     'lista_etikett': 'Så går ett onlinepass till',
     'lista_rubrik': 'Från länken<br>till <em>rapporten.</em>',
     'lista_ingress': (
@@ -980,10 +2104,10 @@ STADIER = [
         'slug': 'laxhjalp-lagstadiet',
         'i_namn': 'för lågstadiet',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp för lågstadiet i Stockholm, åk 1–3 | Nextrum',
+        'titel': f'Läxhjälp för lågstadiet (åk 1–3), {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp för åk 1–3: läsa, skriva och räkna i barnets egen takt. Hemma hos er i '
-            f'Stockholm, på biblioteket eller online, {PRIS} i timmen och ingen bindningstid.'
+            f'Läxhjälp i åk 1–3 för {PRIS} i timmen: läsa, skriva och räkna i barnets egen takt. '
+            'Hemma hos er i Stockholm, på biblioteket eller online.'
         ),
         'etikett': 'Läxhjälp för lågstadiet',
         'h1': 'Läxhjälp för<br><em>lågstadiet.</em>',
@@ -993,9 +2117,7 @@ STADIER = [
             'barnets takt.'
         ),
         'kort': 'Åk 1–3: läsa, skriva och räkna',
-        'bild': '06-forklaringen',
-        'tint': '#9A8E79',
-        'focal': '62% 44%',
+        'bild': '10-forsta-motet',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Läsa, skriva<br>och <em>räkna.</em>',
         'lista_ingress': (
@@ -1050,10 +2172,10 @@ STADIER = [
         'slug': 'laxhjalp-mellanstadiet',
         'i_namn': 'för mellanstadiet',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp för mellanstadiet i Stockholm, åk 4–6 | Nextrum',
+        'titel': f'Läxhjälp för mellanstadiet (åk 4–6), {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp för åk 4–6: läsförståelse, tabellerna, bråk och engelska, och lugn inför '
-            f'proven i sexan. Hemma hos er i Stockholm eller online, {PRIS} i timmen.'
+            f'Läxhjälp i åk 4–6 för {PRIS} i timmen: läsförståelse, tabellerna, bråk och engelska, '
+            'och lugn inför proven i sexan. Hemma eller online.'
         ),
         'etikett': 'Läxhjälp för mellanstadiet',
         'h1': 'Läxhjälp för<br><em>mellanstadiet.</em>',
@@ -1062,9 +2184,7 @@ STADIER = [
             'matchar eleven med en studiehjälpare som tar det i elevens takt.'
         ),
         'kort': 'Åk 4–6: läsning, tabellerna, bråk och engelska',
-        'bild': '10-forsta-motet',
-        'tint': '#948979',
-        'focal': '50% 42%',
+        'bild': 'hero-nextrum',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Grunden som<br>allt <em>vilar på.</em>',
         'lista_ingress': (
@@ -1120,10 +2240,10 @@ STADIER = [
         'slug': 'laxhjalp-hogstadiet',
         'i_namn': 'för högstadiet',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp för högstadiet i Stockholm, åk 7–9 | Nextrum',
+        'titel': f'Läxhjälp för högstadiet (åk 7–9), {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp för åk 7–9 med en studiehjälpare som själv gått ut nian för inte så länge '
-            f'sedan. Matte, svenska, engelska och NO, hemma eller online. {PRIS} i timmen.'
+            f'Läxhjälp i åk 7–9 för {PRIS} i timmen, med en studiehjälpare som nyss gått ut nian '
+            'själv. Matte, svenska, engelska och NO, hemma eller online.'
         ),
         'etikett': 'Läxhjälp för högstadiet',
         'h1': 'Läxhjälp för<br><em>högstadiet.</em>',
@@ -1132,9 +2252,7 @@ STADIER = [
             'eleven med en studiehjälpare som själv gått igenom samma år för inte så länge sedan.'
         ),
         'kort': 'Åk 7–9: ekvationer, NO, texterna och proven i nian',
-        'bild': '02-personlig-anpassning',
-        'tint': '#8E8C84',
-        'focal': '50% 40%',
+        'bild': '12-pa-vag',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Fler ämnen,<br>högre <em>tempo.</em>',
         'lista_ingress': (
@@ -1186,10 +2304,10 @@ STADIER = [
         'slug': 'laxhjalp-gymnasiet',
         'i_namn': 'för gymnasiet',
         'plats': 'Stockholm',
-        'titel': 'Läxhjälp för gymnasiet i Stockholm, hemma eller online | Nextrum',
+        'titel': f'Läxhjälp för gymnasiet i Stockholm, {PRIS_KR} kr/tim | Nextrum',
         'beskrivning': (
-            'Läxhjälp på gymnasiet i matte, fysik, kemi, svenska och engelska, med en '
-            f'studiehjälpare som läst samma ämne nyligen. I Stockholm eller online, {PRIS} i timmen.'
+            f'Läxhjälp på gymnasiet för {PRIS} i timmen: matte, fysik, kemi, svenska och engelska, '
+            'med en studiehjälpare som läst samma ämne nyligen.'
         ),
         'etikett': 'Läxhjälp för gymnasiet',
         'h1': 'Läxhjälp för<br><em>gymnasiet.</em>',
@@ -1199,9 +2317,7 @@ STADIER = [
             'personen.'
         ),
         'kort': 'Matte, NO och skrivandet, nivå för nivå',
-        'bild': '09-online-v2',
-        'tint': '#948A78',
-        'focal': '58% 42%',
+        'bild': '11-studiehjalparen',
         'lista_etikett': 'Vad passen går ut på',
         'lista_rubrik': 'Rätt ämne,<br>rätt <em>nivå.</em>',
         'lista_ingress': (
@@ -1283,7 +2399,7 @@ GUIDER = [
         'titel': 'Så hjälper du ditt barn med matteläxan | Nextrum',
         'beskrivning': (
             'Konkreta råd för föräldrar: fråga innan du förklarar, låt barnet hålla pennan och '
-            'gå tillbaka ett steg när det tar stopp. Och vad ni gör när det inte går hemma.'
+            'gå tillbaka ett steg när det tar stopp. Och när det inte går hemma.'
         ),
         'etikett': 'Guide för föräldrar',
         'kort_titel': 'Hjälpa barnet med matteläxan',
@@ -1294,8 +2410,6 @@ GUIDER = [
             'handlar det om hur hjälpen ges, inte om vad man kan. Här är det som brukar fungera.'
         ),
         'bild': '06-forklaringen',
-        'tint': '#9A8E79',
-        'focal': '62% 44%',
         'lista_etikett': 'Det som brukar fungera',
         'lista_rubrik': 'Sex saker<br>att <em>prova.</em>',
         'lista_ingress': (
@@ -1371,8 +2485,6 @@ GUIDER = [
             'går att öva hemma, och det mesta handlar om att läsa tillsammans och prata om texten.'
         ),
         'bild': '07-genombrottet',
-        'tint': '#898268',
-        'focal': '38% 40%',
         'lista_etikett': 'Det ni kan göra hemma',
         'lista_rubrik': 'Före, under<br>och efter <em>läsningen.</em>',
         'lista_ingress': (
@@ -1454,8 +2566,6 @@ GUIDER = [
             'att kunna ämnet själv.'
         ),
         'bild': '13-kvallsplugg',
-        'tint': '#453B28',
-        'focal': '46% 44%',
         'lista_etikett': 'Det som fungerar',
         'lista_rubrik': 'Från planen<br>till <em>provdagen.</em>',
         'lista_ingress': (
@@ -1531,7 +2641,7 @@ GUIDER = [
         'i_namn': 'när läxorna tar emot',
         'plats': 'Stockholm',
         'og_typ': 'article',
-        'titel': 'När barnet inte vill göra läxorna | Nextrum',
+        'titel': 'Barnet vill inte göra läxorna? Så minskar ni bråket | Nextrum',
         'beskrivning': (
             'Blir läxan ett gräl varje kväll? Rutiner som tar bort förhandlingen, varför '
             '"jag vill inte" ofta betyder "jag förstår inte", och när ni behöver hjälp.'
@@ -1546,8 +2656,6 @@ GUIDER = [
             'svårt.'
         ),
         'bild': '04-sjalvfortroende',
-        'tint': '#897D6A',
-        'focal': '56% 36%',
         'lista_etikett': 'Det som brukar hjälpa',
         'lista_rubrik': 'Mindre förhandling,<br>mer <em>läxa.</em>',
         'lista_ingress': (
@@ -1628,9 +2736,7 @@ GUIDER = [
             'sätts. Här är vad proven prövar, när de kommer och hur ni förbereder er utan att '
             'hela vårterminen handlar om dem.'
         ),
-        'bild': '13-kvallsplugg',
-        'tint': '#453B28',
-        'focal': '46% 44%',
+        'bild': '02-personlig-anpassning',
         'lista_etikett': 'Proven',
         'lista_rubrik': 'Fem prov,<br>två <em>terminer.</em>',
         'lista_ingress': (
@@ -1713,8 +2819,8 @@ GUIDER = [
         'og_typ': 'article',
         'titel': 'Nationella proven i åk 6: så förbereder ni er | Nextrum',
         'beskrivning': (
-            'Sexan skriver nationella prov i svenska, engelska och matematik, samma år som de '
-            'första betygen kommer. Vad proven prövar och hur ni förbereder er.'
+            'Sexan skriver nationella prov i svenska, engelska och matematik samma år som de '
+            'första betygen. Vad proven prövar och hur ni förbereder er.'
         ),
         'etikett': 'Guide för föräldrar',
         'kort_titel': 'Nationella proven i sexan',
@@ -1726,8 +2832,6 @@ GUIDER = [
             'att förbereda sig lugnt och i god tid.'
         ),
         'bild': '06-forklaringen',
-        'tint': '#9A8E79',
-        'focal': '62% 44%',
         'lista_etikett': 'Proven',
         'lista_rubrik': 'Tre ämnen<br>och de första <em>betygen.</em>',
         'lista_ingress': (
@@ -1807,8 +2911,6 @@ GUIDER = [
             'ni kommer igång utan att läxan blir ett bråk.'
         ),
         'bild': '12-pa-vag',
-        'tint': '#73746C',
-        'focal': '34% 48%',
         'lista_etikett': 'De första veckorna',
         'lista_rubrik': 'Rutinen först,<br>läxorna <em>sedan.</em>',
         'lista_ingress': (
@@ -1887,8 +2989,6 @@ GUIDER = [
             'betyget bygger på och vad som faktiskt går att göra.'
         ),
         'bild': '07-genombrottet',
-        'tint': '#898268',
-        'focal': '38% 40%',
         'lista_etikett': 'Det som går att göra',
         'lista_rubrik': 'Fråga först,<br>plugga <em>sedan.</em>',
         'lista_ingress': (
@@ -1950,7 +3050,7 @@ GUIDER = [
         'i_namn': 'och vad den kostar',
         'plats': 'Stockholm',
         'og_typ': 'article',
-        'titel': 'Vad kostar läxhjälp? Det här styr priset | Nextrum',
+        'titel': 'Vad kostar läxhjälp? Timpris, avgifter och RUT | Nextrum',
         'beskrivning': (
             'Vad som gör läxhjälp dyr eller billig, vad ni ska fråga innan ni bokar, varför '
             'rutavdraget inte gäller och vad vi tar, rakt ut.'
@@ -1964,9 +3064,7 @@ GUIDER = [
             'avgifter som ligger runt omkring avgör vad en termin faktiskt kostar. Här är det som '
             'styr priset, frågorna att ställa och vårt pris, rakt ut.'
         ),
-        'bild': '02-personlig-anpassning',
-        'tint': '#8E8C84',
-        'focal': '50% 40%',
+        'bild': '10-forsta-motet',
         'lista_etikett': 'Det som styr priset',
         'lista_rubrik': 'Mer än<br><em>timpriset.</em>',
         'lista_ingress': (
@@ -2052,9 +3150,7 @@ GUIDER = [
             'en läxhjälpare hjälper eleven med det skolan redan tagit upp. Här är skillnaden, och '
             'när vilken passar bäst, också när svaret inte är vi.'
         ),
-        'bild': '10-forsta-motet',
-        'tint': '#948979',
-        'focal': '50% 42%',
+        'bild': '01-en-till-en',
         'lista_etikett': 'Tre sorters hjälp',
         'lista_rubrik': 'Vem som<br>passar <em>när.</em>',
         'lista_ingress': (
@@ -2134,19 +3230,30 @@ GUIDER = [
 BILDER = os.path.join(ROT, 'nextrum-images.js')
 
 
-def bildtexter():
+def bildregistret():
+    """alt, focal och tint per filnamn. Fokus och tonen stod förut per
+    sida och hade glidit isär från registret (2026-10-26): samma foto
+    fick olika platshållarfärg på två sidor."""
     s = open(BILDER, encoding='utf-8').read()
-    return {m.group(1): m.group(2).replace("\\'", "'") for m in re.finditer(
-        r"file:\s*'([^']+)'[^}]*?alt:\s*'((?:[^'\\]|\\.)*)'", s, re.S)}
+    ut = {}
+    for m in re.finditer(r"file:\s*'([^']+)',(.*?)\n  \}", s, re.S):
+        def falt(namn):
+            f = re.search(namn + r":\s*'((?:[^'\\]|\\.)*)'", m.group(2))
+            return f.group(1).replace("\\'", "'") if f else None
+        ut[m.group(1)] = {'alt': falt('alt'), 'focal': falt('focal'), 'tint': falt('tint')}
+    return ut
 
 
 def satt_bildtexter(sidor):
-    alt = bildtexter()
+    register = bildregistret()
     for o in sidor:
-        if o['bild'] not in alt:
+        bild = register.get(o['bild'])
+        if not bild or not all(bild.values()):
             # Hellre inget bygge än en bild utan beskrivning.
-            sys.exit(f'{o["bild"]} saknar alt i {BILDER}')
-        o['alt'] = alt[o['bild']]
+            sys.exit(f'{o["bild"]} saknar alt, focal eller tint i {BILDER}')
+        o['alt'] = bild['alt']
+        o['focal'] = bild['focal']
+        o['tint'] = bild['tint']
 
 
 # ============================================================
@@ -2207,13 +3314,17 @@ def jsonld(o, andra):
     adress i markupen hade dessutom varit ett beslut om att lägga ut
     en bostadsadress publikt, och det är inte ett beslut den här
     filen ska fatta.
+
+    Priset i Offer är timpriset, som på prissidan (#pris-schema).
+    Paketens 379 kr stod här från 2026-10-14 till 2026-10-26 och sa
+    emot både sidans text och prissidan.
     """
     fragor = ',\n'.join(
         '        {"@type":"Question","name":%s,'
         '"acceptedAnswer":{"@type":"Answer","text":%s}}' % (jstr(q), jstr(a))
         for q, a in o['faq'])
 
-    omr = ',\n'.join('          {"@type":"Place","name":%s}' % jstr(d)
+    omr =',\n'.join('          {"@type":"Place","name":%s}' % jstr(d)
                      for d in o['delar'])
 
     return f"""<script type="application/ld+json">
@@ -2237,11 +3348,17 @@ def jsonld(o, andra):
       ],
       "offers": {{
         "@type": "Offer",
-        "priceCurrency": "SEK",
-        "price": "379",
-        "unitText": "timme",
         "url": "https://nextrum.se/priser",
-        "availability": "https://schema.org/InStock"
+        "priceCurrency": "SEK",
+        "price": "{PRIS_KR}",
+        "availability": "https://schema.org/InStock",
+        "priceSpecification": {{
+          "@type": "UnitPriceSpecification",
+          "priceCurrency": "SEK",
+          "price": "{PRIS_KR}",
+          "unitCode": "HUR",
+          "referenceQuantity": {{"@type": "QuantitativeValue", "value": 1, "unitCode": "HUR"}}
+        }}
       }},
       "audience": {{"@type":"EducationalAudience","educationalRole":"student"}}
     }},
@@ -2340,26 +3457,74 @@ def head(o):
 <body>"""
 
 
+def omrade(slug):
+    for a in OMRADEN:
+        if a['slug'] == slug:
+            return a
+    # Hellre inget bygge än en länk till en sida som inte finns.
+    sys.exit(f'grannen {slug} finns inte i OMRADEN')
+
+
 def andra_omraden(o):
     """Korslänkarna.
 
-    De finns för läsaren som bor i grannområdet, och för att Google
-    ska hitta alla sju från vilken som helst av dem. Navsidan länkar
-    till alla; en stadsdelssida länkar tillbaka till navet och till
-    sina syskon.
+    De finns för läsaren som bor i grannområdet. Förut länkade varje
+    sida till alla andra; med en sida per stadsdelsområde och kommun
+    (2026-10-26) hade det blivit trettio kort, och fler när resten av
+    länet kommer till, så en sida länkar till sina grannar och till
+    navet, och navet länkar till alla.
     """
-    andra = [a for a in OMRADEN if a['slug'] != o['slug']]
+    grannar = [omrade(g) for g in o.get('grannar', [])]
+    alla = kort('laxhjalp-stockholm#orter', 'Läxhjälp i hela Stockholm',
+                'Stadsdelar och kommuner, ort för ort')
+    return kortsektion('Områden', 'Andra områden i närheten',
+                       omradeskort(grannar) + '\n' + alla)
 
-    rubrik = ('Läxhjälp i resten av Stockholm' if o.get('hub')
-              else 'Andra områden')
 
-    return kortsektion('Områden', rubrik, omradeskort(andra))
+def delrad(delar):
+    """Kortets rad: de fyra första delarna, och "med flera" bara när det
+    finns fler. Skärholmen har fyra stadsdelar och inga fler."""
+    if len(delar) > 4:
+        return ', '.join(delar[:4]) + ' med flera'
+    return ', '.join(delar[:-1]) + ' och ' + delar[-1] if len(delar) > 1 else delar[0]
 
 
 def omradeskort(omraden):
-    return '\n'.join(kort(a['slug'], 'Läxhjälp ' + a['i_namn'],
-                          ', '.join(a['delar'][:4]) + ' med flera')
+    return '\n'.join(kort(a['slug'], 'Läxhjälp ' + a['i_namn'], delrad(a['delar']))
                      for a in omraden)
+
+
+def regionkort():
+    """Ett kort per region i navet. Ämnes- och stadiesidorna visar dem i
+    stället för ett kort per ort."""
+    return '\n'.join(kort(f'laxhjalp-stockholm#{rid}', rubrik, rad)
+                     for rid, namn, rubrik, rad in REGIONER)
+
+
+def svensk_ordning(namn):
+    """Bokstavsordning med å, ä och ö sist, som i en svensk ordlista."""
+    return namn.lower().replace('å', '{1').replace('ä', '{2').replace('ö', '{3')
+
+
+def ortskatalog():
+    """Navets katalog: alla orter, region för region (2026-10-26).
+
+    Skrivs in i laxhjalp-stockholm.html mellan ORT_START och ORT_SLUT.
+    Footern länkar till regionernas ankare, så ett ankare som byter
+    namn här ska bytas i footern på alla sidor också."""
+    delar = [f"""
+<section class="sec wrap" id="orter">
+  <div class="nx-head split" data-stig>
+    <div><span class="nx-et acc">Orter</span>
+      <h2 class="nx-d2" style="margin-top:18px">Välj er stadsdel<br>eller <em>kommun.</em></h2></div>
+    <div class="nx-head-aside"><p class="nx-lede">Varje sida säger hur en studiehjälpare tar sig till er, vilka bibliotek som går att ses på och var vi matchar elever. Priset är detsamma överallt.</p></div>
+  </div>
+</section>"""]
+    for rid, namn, rubrik, _ in REGIONER:
+        orter = sorted((a for a in OMRADEN if a.get('region') == rid),
+                       key=lambda a: svensk_ordning(a['namn']))
+        delar.append(kortsektion(namn, rubrik, omradeskort(orter), id_=rid))
+    return ''.join(delar)
 
 
 def amneskort(amnen):
@@ -2375,9 +3540,10 @@ def kort(slug, rubrik, rad):
       </a>"""
 
 
-def kortsektion(etikett, rubrik, kort):
+def kortsektion(etikett, rubrik, kort, id_=None):
+    ankare = f' id="{id_}"' if id_ else ''
     return f"""
-<section class="sec sec-kort wrap">
+<section class="sec sec-kort wrap"{ankare}>
   <div class="rv">
     <span class="nx-et acc">{etikett}</span>
     <h2 class="nx-d2" style="margin-top:18px">{rubrik}</h2>
@@ -2445,8 +3611,12 @@ ANMAL_MITT = f"""
       </div>"""
 
 
-def hjalte(o, tillbaka):
-    return f"""<section class="wrap nx-page-hero">
+def hjalte(o, tillbaka, sidtyp=None):
+    # data-sidtyp läses av verktyg/bygg-delningsbilder.js: en områdessida
+    # får "Hemma eller online" under rubriken i delningsbilden, inte
+    # "Läxhjälp i Stockholm" under "Läxhjälp i Täby".
+    typ = f' data-sidtyp="{sidtyp}"' if sidtyp else ''
+    return f"""<section class="wrap nx-page-hero"{typ}>
   {tillbaka}
   <span class="nx-et acc" data-stig style="margin-top:22px">{esc(o['etikett'])}</span>
   <h1 class="nx-d1" data-avslöj>{o['h1']}</h1>
@@ -2552,9 +3722,12 @@ def sida(o):
     tillbaka = ('<a class="nx-back" href="/"><svg viewBox="0 0 16 16"><path d="M13 8H3M7 4L3 8l4 4"/></svg> Till startsidan</a>'
                 if o.get('hub') else TILLBAKA_NAVET)
 
+    bibl = bibliotek_text(o)
+    bibl = f'\n      <p>{esc(bibl)}</p>' if bibl else ''
+
     return f"""{head(o)}{huvud}<main id="innehall">
 
-{hjalte(o, tillbaka)}
+{hjalte(o, tillbaka, 'omrade')}
 
 <section class="sec wrap">
   <div class="nx-two">
@@ -2563,8 +3736,7 @@ def sida(o):
       <h2 class="nx-d2" style="margin-top:18px">Hemma, på biblioteket<br>eller <em>online.</em></h2>
     </div>
     <div class="nx-text rv">
-      <p>{esc(o['transport'])}</p>
-      <p>{esc(bibliotek_text(o))}</p>
+      <p>{esc(o['transport'])}</p>{bibl}
       <p>Ni väljer hemma eller online för varje pass. Att ses hemma förutsätter att matchningen ger en studiehjälpare som kan ta sig till er varje vecka; går det inte börjar ni online, med samma person, studieplan och rapport.</p>
     </div>
   </div>
@@ -2615,8 +3787,9 @@ def amnessida(o):
         f'      <li><em>{i:02d}</em><div><b>{esc(r)}</b><p>{esc(t)}</p></div></li>'
         for i, (r, t) in enumerate(o['lista'], 1))
     vinkel = '\n'.join(f'      <p>{esc(p)}</p>' for p in o['vinkel'])
-    omraden = [a for a in OMRADEN if not a.get('hub')]
-    omrkort = omradeskort(omraden)
+    # Ett kort per region i navet, inte ett per ort: orterna är
+    # trettio sedan 2026-10-26.
+    omrkort = regionkort()
     # Rubriken säger "eller online", så onlinesidan står bland områdena.
     if o is not ONLINE:
         omrkort += '\n' + kort(ONLINE['slug'], 'Läxhjälp online', ONLINE['kort'])
@@ -2871,25 +4044,90 @@ def sida404():
 
 NAV_START = '<!-- ämneskort: skrivs av verktyg/bygg-omradessidor.py, ändra inte för hand -->'
 NAV_SLUT = '<!-- /ämneskort -->'
+ORT_START = '<!-- orter: skrivs av verktyg/bygg-omradessidor.py, ändra inte för hand -->'
+ORT_SLUT = '<!-- /orter -->'
+
+
+def mellan(s, start, slut, block, p):
+    if start not in s or slut not in s:
+        sys.exit(f'hittar inte markörerna {start!r} i {p}')
+    return s[:s.index(start) + len(start)] + block + s[s.index(slut):]
 
 
 def skriv_navet():
     p = os.path.join(ROT, 'laxhjalp-stockholm.html')
     s = open(p, encoding='utf-8').read()
-    if NAV_START not in s or NAV_SLUT not in s:
-        sys.exit(f'hittar inte ämnesmarkörerna i {p}')
-    fore = s[:s.index(NAV_START) + len(NAV_START)]
-    efter = s[s.index(NAV_SLUT):]
-    block = (kortsektion('Ämnen', 'Läxhjälp per ämne', amneskort(AMNEN))
-             + kortsektion('Stadier', 'Läxhjälp per stadium', stadiekort(STADIER))
-             + guidesektioner())
-    open(p, 'w', encoding='utf-8').write(fore + block + efter)
+    s = mellan(s, NAV_START, NAV_SLUT,
+               kortsektion('Ämnen', 'Läxhjälp per ämne', amneskort(AMNEN))
+               + kortsektion('Stadier', 'Läxhjälp per stadium', stadiekort(STADIER))
+               + guidesektioner(), p)
+    s = mellan(s, ORT_START, ORT_SLUT, ortskatalog() + '\n', p)
+    open(p, 'w', encoding='utf-8').write(s)
+
+
+def omradestitel(o):
+    """En områdessidas titel (2026-10-26): ortnamnet först, sedan att
+    passen hålls hemma eller online och priset, så långt det ryms.
+
+    Den längsta som ryms på textbredd.TITEL_MAL px väljs. Förut stod
+    titeln för hand på varje sida, och Hammarby Sjöstads var 13 px för
+    lång: Google kortade bort "| Nextrum"."""
+    for t in (f'Läxhjälp {o["i_namn"]}: hemma eller online, {PRIS_KR} kr/tim | Nextrum',
+              f'Läxhjälp {o["i_namn"]}, hemma eller online | Nextrum',
+              f'Läxhjälp {o["i_namn"]}, {PRIS_KR} kr/tim | Nextrum',
+              f'Läxhjälp {o["i_namn"]} | Nextrum'):
+        if textbredd.titel(t) <= textbredd.TITEL_MAL:
+            return t
+    sys.exit(f'ingen titel för {o["slug"]} ryms på {textbredd.TITEL_MAL} px')
+
+
+def prova_bredden(sidor):
+    """Titeln och beskrivningen ska synas hela i en sökträff. Det som går
+    över kapar Google, och på läxhjälpssidorna var det priset som föll
+    bort (granskningen 2026-10-26). verktyg/kolla-titlar.py säger samma
+    sak i CI om alla sidor i kartan."""
+    fel = []
+    for o in sidor:
+        t, b = textbredd.titel(o['titel']), textbredd.beskrivning(o['beskrivning'])
+        if t > textbredd.TITEL_MAL:
+            fel.append(f'{o["slug"]}: titeln är {t:.0f} px, högst {textbredd.TITEL_MAL}')
+        if b > textbredd.BESKRIVNING_MAL:
+            fel.append(f'{o["slug"]}: beskrivningen är {b:.0f} px, högst {textbredd.BESKRIVNING_MAL}')
+    if fel:
+        sys.exit('För långt för en sökträff:\n  ' + '\n  '.join(fel))
+
+
+def prova_regionraderna():
+    """En regionrad får bara nämna orter som har en sida i regionen, eller
+    som är en del av en sådan ort. Haninge och Tyresö stod i raden innan
+    de hade sidor (2026-10-26), och då lovar kortet något som inte finns."""
+    for rid, _, _, rad in REGIONER:
+        orter = [a for a in OMRADEN if a.get('region') == rid]
+        kanda = {a['namn'] for a in orter} | {d for a in orter for d in a['delar']}
+        flera = rad.endswith(' med flera')
+        namn = rad[:-len(' med flera')] if flera else rad
+        namn = [n.strip() for d in namn.split(' och ') for n in d.split(',')]
+        okanda = [n for n in namn if n not in kanda]
+        if okanda:
+            sys.exit(f'regionen {rid} nämner {", ".join(okanda)}, som inte har någon sida där')
+        if flera and len(orter) <= len(namn):
+            sys.exit(f'regionen {rid} säger "med flera" men har inga fler orter')
 
 
 def main():
     if not os.path.exists(SKAL):
         sys.exit(f'hittar inte skalsidan {SKAL}')
     satt_bildtexter(OMRADEN + AMNEN + STADIER + GUIDER + [ONLINE])
+    for o in OMRADEN:
+        if not o.get('titel'):
+            o['titel'] = omradestitel(o)
+        for g in o.get('grannar', []):
+            omrade(g)
+        if not o.get('hub') and o.get('region') not in [r[0] for r in REGIONER]:
+            sys.exit(f'{o["slug"]} har ingen region i REGIONER')
+    prova_regionraderna()
+    prova_bredden([o for o in OMRADEN if not o.get('handskriven')]
+                  + AMNEN + STADIER + GUIDER + [ONLINE])
     delar = [a['namn'] for a in OMRADEN if not a.get('hub')]
     for o in AMNEN + STADIER + [ONLINE]:
         o['delar'] = delar
@@ -2918,7 +4156,7 @@ def main():
     open(os.path.join(ROT, '404.html'), 'w', encoding='utf-8').write(sida404())
     print('  skrev 404.html')
     skriv_navet()
-    print('  skrev ämneskorten i laxhjalp-stockholm.html')
+    print('  skrev ämneskorten och ortskatalogen i laxhjalp-stockholm.html')
     print(f'{len(OMRADEN)} områdessidor, {len(AMNEN)} ämnessidor, {len(STADIER)} stadiesidor, onlinesidan och {len(GUIDER)} guider byggda.')
     print('Kör sedan verktyg/bygg-sitemap.py och sist verktyg/satt-version.py.')
 
