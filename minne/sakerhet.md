@@ -127,6 +127,18 @@ att visa **rätt sida**, inte för att skydda data.
   Ett avtal som klistrats in som text (2026-10-05) ligger i
   `handlingar.innehall`, inte i hinken, och personen läser det bara
   genom `min_handling_text()`, samma prövning som filen.
+  Skärmdumparna i ett dokument (2026-10-26, `dokument_med_bilder`)
+  ligger i hinken som filerna, i handlingens mapp med ett nummer och
+  inget filnamn, och policyn prövar varje bild mot `handlingar.bilder`
+  på hela sökvägen, som filen. Listan byts aldrig, och vyn delar
+  handlingen först när alla bilder är uppe.
+- **Studiehjälparens val om kön står i en egen tabell** (2026-10-26,
+  `matchningsval`), inte i `tutor_profiles`: familjen läser sin
+  studiehjälpares rad där, och RLS begränsar inte kolumner. Bara
+  studiehjälparen själv, superadmin och den som har en behörighet att
+  läsa studiehjälparna eller matcha läser den. Elevens kön står i
+  `students.kon`, som den matchade studiehjälparen kan läsa; det säger
+  policyn.
 - **`cv` är undantaget** (v11, läsrätten 2026-09-27). Den som söker
   har inget konto och ingen rad när filen laddas upp, så sökvägen är
   tid, slump och filnamnet, och kopplingen till ansökan är raden

@@ -38,7 +38,7 @@
   const { medan } = NXStudie;
   const kronor = NXBetalning.kronor;
 
-  const { S, elevNamn, hämtaAllt, hämtaMatchunderlag, namnFör, visaRuta } = NXAdmin;
+  const { DP, S, elevNamn, hämtaAllt, hämtaMatchunderlag, kortDatum, namnFör, visaRuta } = NXAdmin;
   /* Funktioner som bor i andra områden, nådda när de anropas. En som
      saknas hoppas över: en lista som inte laddade ska inte stoppa att
      resten ritas om efter en radering. */
@@ -444,6 +444,206 @@
   });
 
 
+  /* ============================================================
+     PAPPERSKORGEN (2026-10-26)
+
+     Leo: "i intresseanmälningar och ansökan, under varje flik, gör en
+     knapp för papperskorg, vilket är radera uppgifter från det stället.
+     alltså finns personen i familj och intresseanmälan och jag raderar
+     den perosnen från intresseanmälan så finns personen kvar i vårt
+     system och i familj. när en person blir raderad och det stället är
+     det sista stället den är med i så kommer en notis om att det kan ta
+     bort personen helt och sen avbryt eller gå vidare."
+
+     Radera ovan tar bort en person ur våra system, med allt från samma
+     adress. Papperskorgen tar bort EN rad ur EN lista: en anmälan
+     avidentifieras som när Radera gör det, en ansökan tas bort med sitt
+     CV, och allt annat står kvar. Databasen säger var personen finns
+     kvar (stalle_lage), och rutan säger det. Är raden det sista stället
+     säger rutan att personen försvinner helt, med Avbryt och Gå vidare,
+     och databasen tar bort den sista raden bara med det svaret (p_helt).
+
+     Rutan frågar också när personen finns kvar någon annanstans, fast
+     Leo bara bad om frågan för det sista stället: en papperskorg i en
+     lista är lätt att träffa, och ett CV som är borta går inte att få
+     tillbaka. Knappen står på raden (papperskorg i kärnan), och bara för
+     en superadmin.
+     ============================================================ */
+  const LISTA = { anmalan: 'Intresseanmälningar', ansokan: 'Ansökningar' };
+  const PK_SAKNAS = 'Papperskorgen finns inte i databasen än: migrationen papperskorgen är inte körd. '
+    + 'Ingenting är borttaget.';
+
+  /* Var personen finns kvar, i ord. Kontona först: det är dit man går. */
+  function kvarRader(kvar) {
+    const k = kvar || {};
+    const rader = [];
+    (k.konton || []).forEach(x => {
+      const namn = esc(namnFör(x.id));
+      rader.push(x.admin ? 'Ett adminkonto: <b>' + namn + '</b>'
+        : x.roll === 'tutor' ? 'Under Studiehjälpare: <b>' + namn + '</b>'
+          : x.roll === 'parent' ? 'Under Familjer: <b>' + namn + '</b>'
+            : 'Ett konto: <b>' + namn + '</b>');
+    });
+    if (k.anmalningar > 0) {
+      rader.push(esc(st(k.anmalningar, 'anmälan till', 'anmälningar till') + ' under Intresseanmälningar, med samma adress'));
+    }
+    if (k.ansokningar > 0) {
+      rader.push(esc(st(k.ansokningar, 'ansökan till', 'ansökningar till') + ' under Ansökningar, med samma adress'));
+    }
+    if (k.kontakt > 0) rader.push(esc(st(k.kontakt, 'fråga', 'frågor') + ' under Kommunikation'));
+    return rader;
+  }
+
+  /* Det som går med en ansökan och inte går att ta tillbaka. */
+  function varningRader(v) {
+    const rader = [];
+    ((v && v.bonus) || []).forEach(id => {
+      rader.push('Värvningsbonusen till <b>' + esc(namnFör(id)) + '</b> väntar på den här ansökan och annulleras.');
+    });
+    const mejl = (v && v.mejl) || [];
+    if (mejl.indexOf('avbojd') >= 0) rader.push(esc('Nejet till hen har inte gått än, och det går aldrig.'));
+    if (mejl.indexOf('intervju') >= 0) rader.push(esc('Intervjumejlet har inte gått än, och det går aldrig.'));
+    if (mejl.some(s => s !== 'avbojd' && s !== 'intervju')) {
+      rader.push(esc('Ett mejl till hen har inte gått än, och det går aldrig.'));
+    }
+    if (v && v.vardnadshavare) {
+      rader.push(esc('Vårdnadshavarens godkännande från ' + kortDatum(v.vardnadshavare) + ' går med ansökan. '
+        + 'Det visar att hen fick ta jobbet: spara det någon annanstans först om ni behöver det.'));
+    }
+    return rader;
+  }
+
+  function papperskorgInnehåll(stalle, namn, läge) {
+    const sista = läge.sista === true;
+    const vad = stalle === 'anmalan'
+      ? 'Anmälan försvinner ur Intresseanmälningar: namnet, adressen och det familjen skrev tas bort. En rad '
+        + 'utan namn står kvar i statistiken.'
+      : 'Ansökan försvinner ur Ansökningar, med ' + ((läge.filer || []).length ? 'CV:t, ' : '')
+        + 'stegen och mejlen till hen.';
+    return '<p>' + esc(vad) + ' Det går inte att ångra.</p>'
+      + (sista
+        ? '<div class="rad-grupp rad-hinder"><b>Det här är det sista stället ' + esc(namn) + ' finns hos oss</b>'
+          + '<p class="xsmall" style="margin:0;line-height:1.55">' + esc('Hen finns inte under Familjer, '
+            + 'Studiehjälpare eller Kommunikation, och inte i någon annan anmälan eller ansökan. Går du vidare är '
+            + namn + ' borta helt ur våra system.') + '</p></div>'
+        : lista('Står kvar', kvarRader(läge.kvar)))
+      + lista('Tänk på', varningRader(läge.varningar));
+  }
+
+  function visaPapperskorg(stalle, id, läge) {
+    const namn = läge.namn || namnPå(stalle, id);
+    const sista = läge.sista === true;
+    const ruta = document.createElement('div');
+    ruta.className = 'nx-fraga';
+    ruta.innerHTML =
+      '<div class="nx-fraga-box rad-box" role="alertdialog" aria-modal="true" aria-labelledby="pk-t">'
+      + '<h3 id="pk-t">' + esc(sista ? 'Ta bort ' + namn + ' helt?' : 'Ta bort ' + namn + ' från ' + LISTA[stalle] + '?')
+      + '</h3>'
+      + papperskorgInnehåll(stalle, namn, läge)
+      + '<p class="ok-msg" id="pk-msg"></p>'
+      + '<div class="nx-fraga-knappar">'
+      + '<button type="button" class="btn btn-ghost" data-pk-stang>Avbryt</button>'
+      + '<button type="button" class="btn btn-fara" id="pk-ja">' + (sista ? 'Gå vidare' : 'Ta bort') + '</button>'
+      + '</div></div>';
+
+    visaRuta(ruta);
+    const knapp = ruta.querySelector('#pk-ja');
+    const msg = ruta.querySelector('#pk-msg');
+    const förra = document.activeElement;
+    /* Fokus tillbaka till papperskorgen, utom när raden är borta. */
+    const stäng = (tillbaka = true) => {
+      ruta.remove();
+      document.body.style.overflow = '';
+      if (tillbaka && förra && förra.isConnected && förra.focus) förra.focus();
+    };
+
+    ruta.addEventListener('click', ev => {
+      if (ev.target === ruta || ev.target.closest('[data-pk-stang]')) stäng();
+    });
+    ruta.addEventListener('keydown', ev => {
+      if (ev.key === 'Escape') { ev.stopPropagation(); stäng(); }
+    });
+    /* Fokus på det ofarliga, som i Radera. */
+    ruta.querySelector('[data-pk-stang]').focus();
+
+    knapp.addEventListener('click', async () => {
+      if (knapp.disabled) return;
+      rensa(msg);
+      await medan(knapp, 'Tar bort…', async () => {
+        /* En gång till innan en fil tas bort: rutan kan ha stått öppen
+           medan personen fick ett konto, eller förlorade det sista. Rutan
+           lovar det den visade, och inget annat. */
+        const färsk = await supa.rpc('stalle_lage', { p_stalle: stalle, p_id: id });
+        if (färsk.error) { säg(msg, '⚠️ ' + (saknas(färsk.error) ? PK_SAKNAS : felText(färsk.error)), false); return; }
+        const nu = färsk.data || {};
+        if (nu.fel) { säg(msg, '⚠️ ' + nu.fel, false); return; }
+        if ((nu.sista === true) !== sista) {
+          säg(msg, '⚠️ Något har ändrats sedan rutan öppnades. Stäng och tryck på papperskorgen igen.', false);
+          return;
+        }
+
+        /* CV:t först, och svaret läses: Storage hoppar tyst över en fil
+           den inte får ta bort, och då ska ansökan stå kvar så att filen
+           går att hitta. ta_bort_ur_stallet() prövar det en gång till. */
+        const namnen = (nu.filer || []).map(f => f.namn);
+        if (namnen.length) {
+          const { data, error } = await supa.storage.from('cv').remove(namnen);
+          if (error) {
+            säg(msg, '⚠️ CV:t kunde inte tas bort ur lagringen: ' + felText(error) + '. Ingenting är borttaget.', false);
+            return;
+          }
+          if (Array.isArray(data) && data.length < namnen.length) {
+            säg(msg, '⚠️ CV:t gick inte att ta bort ur lagringen. Ingenting är borttaget.', false);
+            return;
+          }
+        }
+
+        const { error } = await supa.rpc('ta_bort_ur_stallet', { p_stalle: stalle, p_id: id, p_helt: sista });
+        if (error) { säg(msg, '⚠️ ' + (saknas(error) ? PK_SAKNAS : felText(error)), false); return; }
+
+        /* Listan ritas om ur det vyn redan har, så att nästa rad går att
+           ta direkt: anmälan som nattjobbet lämnar den, ansökan ur listan. */
+        if (stalle === 'anmalan') {
+          const l = (S.leads || []).find(x => x.id === id);
+          if (l) {
+            Object.assign(l, { parent_name: 'Gallrad', email: 'gallrad', child_name: null, message: null,
+                               notering: null,
+                               status: l.status === 'new' || l.status === 'contacted' ? 'declined' : l.status });
+          }
+        } else {
+          const i = (S.ansokningar || []).findIndex(x => x.id === id);
+          if (i >= 0) S.ansokningar.splice(i, 1);
+        }
+        stäng(false);
+        if (DP.typ === stalle && DP.id === id) await kör('stängDetalj');
+        await kör(stalle === 'anmalan' ? 'ritaLeads' : 'ritaAnsokningar');
+        await kör('ritaÖversikt');
+      });
+    });
+  }
+
+  /* Knappen på raden. Den bär bara en ikon, så medan() (som byter text)
+     används inte på den. */
+  document.addEventListener('click', async e => {
+    const knapp = e.target.closest('[data-bort]');
+    if (!knapp || knapp.disabled) return;
+    const [stalle, id] = String(knapp.dataset.bort).split(':');
+    if (!LISTA[stalle] || !id) return;
+    knapp.disabled = true;
+    knapp.setAttribute('aria-busy', 'true');
+    try {
+      const { data, error } = await supa.rpc('stalle_lage', { p_stalle: stalle, p_id: id });
+      if (error) { alert(saknas(error) ? PK_SAKNAS : 'Kunde inte fråga databasen: ' + felText(error)); return; }
+      if (!data) { alert('Databasen svarade inte med något.'); return; }
+      if (data.fel) { alert(data.fel); return; }
+      visaPapperskorg(stalle, id, data);
+    } finally {
+      knapp.disabled = false;
+      knapp.removeAttribute('aria-busy');
+    }
+  });
+
+
   /* Det andra områden anropar. */
-  Object.assign(NXAdmin.rita, { visaRadering });
+  Object.assign(NXAdmin.rita, { visaRadering, visaPapperskorg });
 })();

@@ -1948,6 +1948,13 @@ a.pass-lank:hover{color:var(--acc)}
   margin:0 0 12px;padding:16px 18px;
   border:1px solid var(--ln);border-radius:14px;background:var(--pap-2);
 }
+/* Skärmdumparna (dokument_med_bilder, 2026-10-26) under texten, i
+   läsordning och i full bredd, så att ett avtal i bilder läses med
+   sidan som texten. En bild är en länk till sig själv i full storlek. */
+.nx-dok-bilder{display:flex;flex-direction:column;gap:10px;margin:0 0 8px}
+.nx-dok-bilder a{display:block;flex:none;border:1px solid var(--ln);border-radius:14px;overflow:hidden;background:var(--pap-2)}
+.nx-dok-bilder img{display:block;width:100%;height:auto}
+.nx-dok-bild-not{margin:0 0 12px;color:var(--muted-2);line-height:1.5}
 @media (max-width:460px){
   .nx-dok{flex-wrap:wrap}
   .nx-dok .btn{width:100%;justify-content:center}

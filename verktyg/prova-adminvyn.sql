@@ -204,4 +204,20 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('a1000000-0000-4000-8000-0000000000a6', 'prov-kompis1@example.invalid', '{"role":"tutor","full_name":"Kalle Kompis"}');
 update public.tutor_profiles set status = 'approved', hourly_rate = 160 where id = 'a1000000-0000-4000-8000-0000000000a6';
 
+-- Kön i matchningen och dokument med bilder (2026-10-26). Tove vill bara
+-- hjälpa elever av samma kön; Alva är flicka och Axel pojke, så Axels
+-- matchning krockar och blir en uppgift, och Cleo har inget kön, så Tove
+-- visas inte för henne. Ett avtal med Familjen Ett som text och två bilder,
+-- delat: filerna finns inte i någon hink lokalt, men listan, panelen och
+-- personens vy ritas ur raden.
+update public.students set kon = 'kvinna' where id = 'a1000000-0000-4000-8000-0000000005a1';
+update public.students set kon = 'man' where id = 'a1000000-0000-4000-8000-0000000005a2';
+insert into public.matchningsval (tutor_id, kon, bara_samma_kon)
+values ('a1000000-0000-4000-8000-0000000000a1', 'kvinna', true);
+insert into public.handlingar (id, typ, titel, innehall, bilder, kopplad_tabell, kopplad_id,
+                               delad_med_personen, uppladdad_av)
+values ('a1000000-0000-4000-8000-00000000d001', 'avtal', 'Avtal med Familjen Ett', 'Avtalet i text, och två skärmdumpar.',
+        array['a1000000-0000-4000-8000-00000000d001/1.png', 'a1000000-0000-4000-8000-00000000d001/2.jpg'],
+        'profiles', 'a1000000-0000-4000-8000-0000000000f1', true, 'a1000000-0000-4000-8000-0000000000ad');
+
 commit;

@@ -22,8 +22,8 @@
 <link rel="stylesheet" href="nextrum.css">
 <link rel="stylesheet" href="nextrum-home.css?v=75ffd80e">
 <link rel="stylesheet" href="nextrum-cinema.css?v=228d0fea">
-<link rel="stylesheet" href="nextrum-vy.css?v=cb4626b6">
-<link rel="stylesheet" href="nextrum-arbetsyta.css?v=5cfab89e">
+<link rel="stylesheet" href="nextrum-vy.css?v=28bd9b9c">
+<link rel="stylesheet" href="nextrum-arbetsyta.css?v=714f2c7e">
 <link rel="stylesheet" href="nextrum-agent.css?v=1307337c">
 <!-- Sist: det adminvyn har utöver husets palett (felfärgen, kontroll-
      kanterna, agentflikens betydelse av --acc-lugn). Paletten själv är
@@ -2495,16 +2495,30 @@
                 <div class="fgroup" id="dok-som-grupp"><label for="dok-som">Som</label>
                   <select class="sel" id="dok-som">
                     <option value="fil">En fil</option>
-                    <option value="text">Inklistrad text</option>
+                    <option value="text">Text och bilder</option>
                   </select></div>
                 <div class="fgroup" id="dok-fil-grupp"><label for="dok-fil">Fil</label>
                   <input class="inp" type="file" id="dok-fil"></div>
                 <!-- Ingen maxlength: webbläsaren kortar en inklistrad text
                      tyst vid gränsen, och ett avkortat avtal ser helt ut.
                      Längden prövas när det sparas, med ett besked. -->
-                <div class="fgroup uppg-bred" id="dok-text-grupp" hidden><label for="dok-text">Texten</label>
+                <div class="fgroup uppg-bred" id="dok-text-grupp" hidden><label for="dok-text">Texten <span style="font-weight:400;color:var(--muted-2)">(valfri när det finns bilder)</span></label>
                   <textarea class="inp" id="dok-text" rows="12" spellcheck="false"
                             placeholder="Klistra in avtalet här."></textarea></div>
+                <!-- SKÄRMDUMPAR (dokument_med_bilder, 2026-10-26). Leo:
+                     "admin ska kunna lägga in skärmdumpar från mobil, mac
+                     eller liknande, istället för text ... eller både och".
+                     Bilderna väljs här, klistras in eller dras hit, och
+                     läses i den ordning de står. Ritas av ritaDokBilder(). -->
+                <div class="fgroup uppg-bred" id="dok-bild-grupp" hidden>
+                  <label for="dok-bild-fil">Skärmdumpar <span style="font-weight:400;color:var(--muted-2)">(valfritt, högst 20)</span></label>
+                  <div class="dok-bilder" id="dok-bilder"></div>
+                  <div class="dok-bild-val">
+                    <input type="file" id="dok-bild-fil" accept="image/*" multiple>
+                    <label class="btn btn-ghost btn-sm" for="dok-bild-fil">Lägg till bilder</label>
+                    <span class="xsmall">eller klistra in en skärmdump här, eller dra bilderna hit</span>
+                  </div>
+                </div>
                 <div class="fgroup uppg-bred"><label for="dok-person">Vem det gäller <span style="font-weight:400;color:var(--muted-2)">(valfritt)</span></label>
                   <select class="sel" id="dok-person" style="max-width:none">
                     <option value="">Ingen person, bara vi</option>
@@ -2525,10 +2539,11 @@
                 en försäkring, ett intyg — så syns det i listan när datumet närmar sig.
                 Ett avtal med en studiehjälpare eller en familj: välj personen, så ser hen
                 sin kopia i sin egen vy. Ingen annan gör det.
-                Ett avtal kan också klistras in som text. Radbrytningarna står kvar, men inte
-                fetstil, tabeller eller bilder: ett avtal som behöver dem laddas upp som PDF.
-                Texten ändras inte när den är sparad. En ny version är en ny handling, och den
-                gamla tas bort för sig.</p>
+                Ett avtal kan också vara text och bilder: klistra in texten, lägg till skärmdumpar
+                från telefonen eller datorn, eller båda. Radbrytningarna står kvar, men inte
+                fetstil eller tabeller. Bilderna läses i den ordning de står, och personen kan
+                öppna var och en i full storlek. Texten och bilderna ändras inte när de är sparade.
+                En ny version är en ny handling, och den gamla tas bort för sig.</p>
             </div>
 
             <div class="dbox" style="margin-top:clamp(16px,1.8vw,22px)">
@@ -2686,23 +2701,23 @@
 <script src="bibliotek/supabase-js-2.116.0.js"></script>
 <script src="nextrum-config.js?v=085fa9d6"></script>
 <script src="nextrum-fel.js?v=eae02b10"></script>
-<script src="nextrum-app.js?v=0d5b5afa"></script>
+<script src="nextrum-app.js?v=23460dda"></script>
 <script src="nextrum-tjanster.js?v=5f148a0c"></script>
-<script src="nextrum-studie.js?v=38a10bc3"></script>
+<script src="nextrum-studie.js?v=44db37fd"></script>
 <script src="nextrum-arbetsyta.js?v=977105ae"></script>
-<script src="nextrum-media.js?v=e56396db"></script>
+<script src="nextrum-media.js?v=eb6a8952"></script>
 <script src="nextrum-betalning.js?v=eb4a85db"></script>
 <script src="nextrum-agent.js?v=305c38fd"></script>
 <script src="nextrum-admin-agenter.js?v=e40a04be"></script>
-<script src="nextrum-admin-karna.js?v=0d094ad0"></script>
-<script src="nextrum-admin-detalj.js?v=ffcbc1d8"></script>
+<script src="nextrum-admin-karna.js?v=7615cf47"></script>
+<script src="nextrum-admin-detalj.js?v=08360d5d"></script>
 <script src="nextrum-admin-oversikt.js?v=1709e69d"></script>
-<script src="nextrum-admin-kunder.js?v=d162f9bb"></script>
+<script src="nextrum-admin-kunder.js?v=a197dfc9"></script>
 <script src="nextrum-admin-provet.js?v=0850a22d"></script>
-<script src="nextrum-admin-rekrytering.js?v=6fd9d942"></script>
+<script src="nextrum-admin-rekrytering.js?v=a703b898"></script>
 <script src="nextrum-admin-bibliotek.js?v=390cf1f6"></script>
 <script src="nextrum-admin-kommunikation.js?v=dd0f611c"></script>
-<script src="nextrum-admin-drift.js?v=6da99b95"></script>
+<script src="nextrum-admin-drift.js?v=b185b3bd"></script>
 <script src="nextrum-admin-ekonomi.js?v=f59b3987"></script>
 <script src="nextrum-admin-liggaren.js?v=d27876b8"></script>
 <script src="nextrum-admin-tillagg.js?v=e9af77f1"></script>
@@ -2712,13 +2727,13 @@
 <script src="nextrum-admin-koder.js?v=b68d453f"></script>
 <script src="nextrum-admin-rabattkoder.js?v=68cc3d05"></script>
 <script src="nextrum-admin-tjanster.js?v=2c967f18"></script>
-<script src="nextrum-admin-system.js?v=54810c38"></script>
+<script src="nextrum-admin-system.js?v=1766bdfb"></script>
 <script src="nextrum-admin-behorighet.js?v=1d3259a1"></script>
 <script src="nextrum-admin-automationer.js?v=46019126"></script>
 <script src="nextrum-admin-ai.js?v=b4b3013c"></script>
 <!-- Efter detalj.js (stängDetalj) och ekonomi.js (avvText), som den
      når genom NXAdmin.rita när den körs. -->
-<script src="nextrum-admin-radera.js?v=b1f93dc2"></script>
+<script src="nextrum-admin-radera.js?v=ee8c6b44"></script>
 <!-- Efter karna.js (den skapar NXAdmin) och efter agent.js (den matar
      NXAgent.stall). Före admin.js, som startar vyn. -->
 <script src="nextrum-admin-konsol.js?v=8930c22a"></script>

@@ -279,6 +279,70 @@ window.NXMedia = (function () {
   function filEtikett(mime) { return FILTYPER[mime] || 'Fil'; }
 
   /* ============================================================
+     SKÄRMDUMPARNA I ETT DOKUMENT (dokument_med_bilder, 2026-10-26)
+
+     Leo: "admin ska kunna lägga in skärmdumpar från mobil, mac eller
+     liknande". En skärmdump från en Mac, en iPhone eller en Android är
+     en PNG, och den går upp som den är, liksom JPG och WebP: det är ett
+     avtal som ska läsas, och en omkodning gör texten suddig.
+
+     Allt annat som webbläsaren kan visa ritas om till JPG först. En
+     HEIC (ett foto från en iPhone, som AirDrop lämnar på en Mac) visar
+     bara Safari, och ett dokument ska gå att läsa på familjens telefon
+     vilken webbläsare den än har. Den längsta sidan blir högst 4 000 px,
+     för en iPhone ritar inte större än så. Kan webbläsaren inte läsa
+     bilden alls säger vi det, med vägen runt.
+
+     Svarar med { blob, typ, ändelse } eller { fel }.
+     ============================================================ */
+  var MAX_BILD = 20 * 1024 * 1024;   // hinken dokument tar 20 MB per fil
+  var BILD_ÄNDELSE = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+  var BILD_PX = 4000;
+
+  function skärmdump(fil) {
+    return new Promise(function (klar) {
+      if (!fil) return klar({ fel: 'Ingen bild vald.' });
+      var namn = fil.name || 'Bilden';
+      var förStor = function (bytes) {
+        return namn + ' är för stor (' + filstorlek(bytes) + '). En bild får vara högst 20 MB.';
+      };
+      if (BILD_ÄNDELSE[fil.type]) {
+        if (fil.size > MAX_BILD) return klar({ fel: förStor(fil.size) });
+        return klar({ blob: fil, typ: fil.type, ändelse: BILD_ÄNDELSE[fil.type] });
+      }
+      /* En HEIC har ibland ingen typ alls i Chrome, bara sitt namn. */
+      if (!/^image\//.test(fil.type || '') && !/\.(heic|heif|gif|bmp|tiff?)$/i.test(namn)) {
+        return klar({ fel: namn + ' är ingen bild.' });
+      }
+      var url = URL.createObjectURL(fil);
+      var bild = new Image();
+      bild.onload = function () {
+        var skala = Math.min(1, BILD_PX / Math.max(bild.naturalWidth, bild.naturalHeight));
+        var c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(bild.naturalWidth * skala));
+        c.height = Math.max(1, Math.round(bild.naturalHeight * skala));
+        var ctx = c.getContext('2d');
+        /* JPG har ingen genomskinlighet: vitt bakom, inte svart. */
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(bild, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (blob) {
+          if (!blob) return klar({ fel: namn + ' gick inte att göra om till JPG. Spara den som PNG eller JPG och lägg till den igen.' });
+          if (blob.size > MAX_BILD) return klar({ fel: förStor(blob.size) });
+          klar({ blob: blob, typ: 'image/jpeg', ändelse: 'jpg' });
+        }, 'image/jpeg', 0.92);
+      };
+      bild.onerror = function () {
+        URL.revokeObjectURL(url);
+        klar({ fel: namn + ' går inte att läsa i den här webbläsaren. Öppna den i Safari, eller spara den som PNG '
+          + 'eller JPG (i Förhandsvisning på en Mac: Arkiv → Exportera) och lägg till den igen.' });
+      };
+      bild.src = url;
+    });
+  }
+
+  /* ============================================================
      ÖPPNA EN PRIVAT FIL (2026-09-29)
 
      Dokumenten under System → Dokument, och sedan samma dag deras
@@ -377,7 +441,7 @@ window.NXMedia = (function () {
 
   return {
     kontoAvatar: kontoAvatar,
-    filstorlek: filstorlek, filEtikett: filEtikett,
+    filstorlek: filstorlek, filEtikett: filEtikett, skärmdump: skärmdump,
     signera: signera, glömSignerad: glömSignerad, öppnaFil: öppnaFil, sparaText: sparaText,
     avatar: avatar, avatarKarta: avatarKarta, initialer: initialer,
     beskär: beskär, granska: granska, granskaFil: granskaFil,

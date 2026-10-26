@@ -199,6 +199,10 @@
         .select('id, inlamnad_at, ratt, antal, procent, godkand').eq('studiehjalpare_id', id)
         .order('inlamnad_at', { ascending: false }).limit(20));
       lägg('provLage', supa.rpc('utbildningsprovet_lage'));
+      /* Kön och elever (kon_i_matchningen, 2026-10-26): studiehjälparens
+         val, som bara hen och den som läser studiehjälparna ser. */
+      lägg('matchningsval', supa.from('matchningsval')
+        .select('kon, bara_samma_kon, andrad_at').eq('tutor_id', id));
     } else {
       lägg('noteringar', supa.from('admin_noteringar')
         .select('id, text, skriven_av, created_at').eq('om_profil', id)
@@ -334,8 +338,10 @@
   /* ------------------------------------------------------------
      RITNINGEN
      ------------------------------------------------------------ */
+  /* En rad som är null står inte med: ett fält som bara finns efter en
+     migration (könet, 2026-10-26) skickas som null före den. */
   function dpFakta(rader) {
-    return '<div class="dp-fakta">' + rader.map(r =>
+    return '<div class="dp-fakta">' + rader.filter(Boolean).map(r =>
       '<div><span>' + esc(r[0]) + '</span>'
       + (r[1] ? '<span>' + r[1] + '</span>'
               : '<span class="ar-tom">' + esc(r[2] || 'ej angivet') + '</span>')
@@ -962,14 +968,15 @@
      eller annat avtal med kund" — den som öppnar personen ska se att
      avtalet finns utan att leta i en annan lista. Ett avtal som
      klistrats in som text (2026-10-05) öppnas likadant: Öppna visar
-     texten i samma ruta som under System → Dokument.
+     texten i samma ruta som under System → Dokument, och sedan
+     2026-10-26 skärmdumparna (dokument_med_bilder).
      ------------------------------------------------------------ */
   function dpDokument(p) {
     const egna = (S.handlingar || []).filter(h => h.kopplad_tabell === 'profiles' && h.kopplad_id === p.id);
     const rader = egna.map(h => dpRad(h.titel,
       [kör('dokTyp', h.typ), h.delad_med_personen ? 'ser det i sin vy' : 'bara vi ser det',
        h.giltig_till ? 'giltigt till ' + kortDatum(h.giltig_till) : null].filter(Boolean).join(' · '),
-      h.fil || typeof h.innehall === 'string'
+      h.fil || typeof h.innehall === 'string' || (Array.isArray(h.bilder) && h.bilder.length)
         ? '<button class="btn btn-ghost btn-sm" type="button" data-dok-oppna="' + esc(h.id) + '">Öppna</button>' : ''
     )).join('');
     return dpRubrik('Dokument', egna.length ? String(egna.length) : '')
@@ -1511,6 +1518,9 @@
     + dpRubrik('Eleven')
     + dpFakta([
       ['Årskurs', e.grade ? esc(e.grade) : null],
+      /* Könet (kon_i_matchningen, 2026-10-26), när kolumnen finns. */
+      'kon' in e ? ['Kön', e.kon ? esc((NX.KON_ELEV.find(x => x.kod === e.kon) || {}).text || e.kon) : null,
+        'inte angivet'] : null,
       ['Skola', e.school ? esc(e.school) : null],
       ['Ämnen', (e.subjects || []).length ? esc(e.subjects.join(', ')) : null],
       /* Det familjen skrivit för matchningen (2026-09-24). Koderna blir
@@ -1618,6 +1628,7 @@
       ['Användarvillkoren', dpVillkor(d), 'okänt']
     ])
     + (tp.bio ? dpRubrik('Om hen') + '<div class="dp-text">' + esc(tp.bio) + '</div>' : '')
+    + dpKonOchElever(p, d)
     /* Läget och startsidan stod förut i listan. Publiceringen är ett
        eget beslut, inte en följd av att vara godkänd (schema-v23), och
        knappen står därför bara när hen är godkänd. */
@@ -1647,6 +1658,79 @@
           + 'bokföringen och lönen. Elever ska matchas om först.'
       });
   }
+
+  /* KÖN OCH ELEVER (kon_i_matchningen, 2026-10-26)
+
+     Leo: studiehjälparen väljer om hen bara vill hjälpa elever av samma
+     kön, och vill hen inte hjälpa det andra syns hen inte i matchningen.
+     Valet görs i studiehjälparens profil och står i matchningsval, som
+     bara hen och den som läser studiehjälparna ser. Här syns det, och en
+     superadmin kan sätta det åt hen när hen bett om det: databasen
+     släpper bara fram en superadmin. Före migrationen står ingenting. */
+  let konBesked = null;
+  function dpKonOchElever(p, d) {
+    if (d.matchningsvalSaknas) return '';
+    if (d.matchningsvalFel) return dpRubrik('Kön och elever') + tomt('Valet gick inte att läsa', d.matchningsvalFel);
+    const mv = (d.matchningsval || [])[0] || { kon: null, bara_samma_kon: false };
+    const besked = konBesked && konBesked.id === p.id ? konBesked : null;
+    konBesked = null;
+    const kvitto = besked ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '">' + esc(besked.text) + '</p>' : '';
+    const kön = (NX.KON_VUXEN.find(x => x.kod === mv.kon) || {}).text || null;
+    return dpRubrik('Kön och elever', 'bara vi och studiehjälparen ser det')
+      + dpFakta([
+        ['Kön', kön ? esc(kön) : null, 'inte angivet'],
+        ['Hjälper', esc(mv.bara_samma_kon ? 'Bara elever av samma kön som hen' : 'Alla elever')],
+        mv.andrad_at ? ['Ändrat', esc(kortDatum(mv.andrad_at))] : null
+      ])
+      + (ärSuperadmin()
+        ? '<form class="dp-rabatt dp-kon" data-dp-kon="' + esc(p.id) + '">'
+          + '<label for="dp-kon-kon">Kön</label>'
+          + '<select class="sel" id="dp-kon-kon" name="kon"><option value="">Inte angivet</option>'
+          + NX.KON_VUXEN.map(k => '<option value="' + esc(k.kod) + '"' + (mv.kon === k.kod ? ' selected' : '') + '>'
+            + esc(k.text) + '</option>').join('')
+          + '</select>'
+          + '<label for="dp-kon-elever">Hjälper</label>'
+          + '<select class="sel" id="dp-kon-elever" name="elever">'
+          + '<option value="alla"' + (mv.bara_samma_kon ? '' : ' selected') + '>Alla elever</option>'
+          + '<option value="samma"' + (mv.bara_samma_kon ? ' selected' : '') + '>Bara elever av samma kön</option>'
+          + '</select>'
+          + '<button class="btn btn-primary" type="submit">Spara</button>'
+          + '<span class="dp-gratis-not">Studiehjälparen väljer själv i sin profil; ändra här bara när hen bett om det. '
+          + 'Med bara samma kön visas hen inte i matchningen för en elev av ett annat kön eller utan angivet kön. '
+          + 'Elever hen redan har står kvar, och en som krockar blir en uppgift under Att göra.</span>'
+          + kvitto
+          + '</form>'
+        : kvitto);
+  }
+
+  document.addEventListener('submit', async ev => {
+    const f = ev.target.closest('form[data-dp-kon]');
+    if (!f) return;
+    ev.preventDefault();
+    const id = f.dataset.dpKon;
+    const kon = f.elements.kon.value || null;
+    const samma = f.elements.elever.value === 'samma';
+    if (samma && !kon) {
+      konBesked = { id, text: 'Välj ett kön först. Utan det finns inget "samma".', ok: false };
+      ritaDetalj();
+      return;
+    }
+    await medan(f.querySelector('button[type="submit"]'), 'Sparar…', async () => {
+      const { error } = await supa.from('matchningsval')
+        .upsert({ tutor_id: id, kon: kon, bara_samma_kon: samma }, { onConflict: 'tutor_id' });
+      konBesked = error
+        ? { id, text: 'Kunde inte spara: ' + felText(error), ok: false }
+        : { id, text: samma ? 'Sparat. Hen visas bara för elever av samma kön.' : 'Sparat. Hen visas för alla elever.', ok: true };
+      if (!error) {
+        delete S.detaljCache['studiehjalpare:' + id];
+        await hämtaDetalj('studiehjalpare', id);
+        /* Matchningen läser valet ur sin vy. */
+        await hämtaMatchunderlag();
+        kör('ritaMatchning');
+      }
+      if (DP.typ === 'studiehjalpare' && DP.id === id) ritaDetalj();
+    });
+  });
 
   /* Utbildningsprovet i studiehjälparvyn (2026-10-21): om det krävs, när
      det godkändes, och försöken med poängen (aldrig svaren). Nollställ
@@ -1984,6 +2068,9 @@
     elev: { tabell: 'students', fält: [
       { k: 'name', et: 'Namn', krav: true, max: 80 },
       { k: 'grade', et: 'Årskurs', val: () => NX.ARSKURSER.map(a => a.text) },
+      /* Könet för matchningen (kon_i_matchningen, 2026-10-26): koden
+         sparas, flicka eller pojke visas. Bara när kolumnen finns. */
+      { k: 'kon', et: 'Kön', koder: () => NX.KON_ELEV, om: r => 'kon' in r },
       { k: 'school', et: 'Skola', max: 120 },
       { k: 'subjects', et: 'Ämnen, med komma emellan', lista: true, max: 400 },
       { k: 'goals', et: 'Mål', text: true, max: 600 },
@@ -2040,6 +2127,13 @@
       fält = '<select class="sel" id="' + fid + '" name="' + namn + '">'
         + '<option value="">Ej angivet</option>'
         + alla.map(x => '<option' + (x === v ? ' selected' : '') + '>' + esc(x) + '</option>').join('')
+        + '</select>';
+    } else if (f.koder) {
+      /* En kod sparas och dess text visas, som könet. */
+      fält = '<select class="sel" id="' + fid + '" name="' + namn + '">'
+        + '<option value="">Ej angivet</option>'
+        + f.koder().map(x => '<option value="' + esc(x.kod) + '"' + (x.kod === v ? ' selected' : '') + '>'
+          + esc(x.text) + '</option>').join('')
         + '</select>';
     } else if (f.tal) {
       fält = '<input class="inp" id="' + fid + '" name="' + namn + '" type="number" inputmode="numeric"'

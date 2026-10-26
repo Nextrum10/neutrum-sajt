@@ -2006,3 +2006,36 @@ inte kan belägga: vi är nya och har inga siffror, omdömen eller resultat.
   knappen (`.om-sist-not`) och i `#exempel` (`.ex-fot-not`). "24 timmar" står som "ett dygn", för innehållsprovet
   fäller en siffra före "timmar". Inget pris, inget antal och inget om resultat: säljet är att det är lätt och
   ofarligt att börja, inte att det går bra för andra.
+
+## Papperskorgen (2026-10-26, `papperskorgen`, i drift samma kväll)
+
+Leo: "i intresseanmälningar och ansökan, under varje flik, gör en knapp för papperskorg, vilket är radera uppgifter
+från det stället. alltså finns personen i familj och intresseanmälan och jag raderar den perosnen från
+intresseanmälan så finns personen kvar i vårt system och i familj. när en person blir raderad och det stället är det
+sista stället den är med i så kommer en notis om att det kan ta bort personen helt och sen avbryt eller gå vidare. jag
+vill kunna optimera min admin och flytta folk vart jag vill eller ta bort de helt".
+
+- **Knappen** är en ikon sist på varje rad under Intresseanmälningar (alla lägen) och i varje flik under Ansökningar
+  (Nya, Intervju, Utbildning, Konto skapat, Avböjda): `papperskorg()` i kärnan, som `o.bort` i `namnlista()`, och bara
+  för en superadmin (databasen nekar alla andra). 44 px, grå tills man pekar. Ensam på raden står den kvar på namnets
+  rad också på en telefon (`li.bara-bort`); med ett nästa steg står den längst till höger under namnet.
+- **Rutan** (`visaPapperskorg` i `nextrum-admin-radera.js`) frågar `stalle_lage()` först och säger vad som går och
+  var personen står kvar (Under Familjer, Under Studiehjälpare, ett adminkonto, en anmälan eller ansökan till med samma
+  adress, frågor under Kommunikation), och vad som inte går att ta tillbaka: en värvningsbonus som väntar på ansökan
+  och annulleras, ett mejl till hen som inte gått (nejet, intervjumejlet), och vårdnadshavarens godkännande när
+  personen är studiehjälpare. **Är raden det sista stället** heter rutan "Ta bort X helt?", säger det i en röd ruta och
+  har Avbryt och Gå vidare (Leos ord). Annars "Ta bort X från Intresseanmälningar?" med Avbryt och Ta bort: rutan
+  frågar också då, fast Leo bara bad om frågan för det sista stället, för en papperskorg i en lista är lätt att träffa
+  och ett CV som är borta går inte att få tillbaka. Fokus på Avbryt.
+- **Gå vidare och Ta bort** frågar databasen en gång till och vägrar om svaret på "sista stället" ändrats sedan
+  rutan öppnades; sedan CV:t genom Storage (svaret läses, och en fil som inte gick ger ingen borttagning), sist
+  `ta_bort_ur_stallet()` med `p_helt`. Listan ritas om ur det vyn redan har (anmälan som avidentifierad, ansökan ur
+  `S.ansokningar`), utan att hämta allt, så att nästa rad går att ta direkt; panelen stängs om den visade raden.
+- **Radera i panelen står kvar** och är något annat: den tar bort personen ur våra system, med allt från samma adress
+  (vägen när någon ber oss radera allt). Familjer och Studiehjälpare har ingen papperskorg; där är Radera vägen.
+- **Flytta**: Leos "flytta folk vart jag vill" är redan knapparna Ta in familjen och Flytta till familjen på en
+  anmälan, och stegen på en ansökan (Till intervju, Ångra intervju, Till utbildning, Utbildning hållen, Avböj, Ta
+  tillbaka nejet). Utbildning tillbaka till Intervju och Konto skapat tillbaka finns inte (`ansokan_steg_vakt`).
+- Provat i Chromium mot PostgREST och en lokal databas (ett riktat prov, inte incheckat): 29 av 29, med rutans text i
+  alla fall, CV:t före raden, Avbryt som inte gör något, en admin med behörigheten leads utan knappen, och en
+  telefon i mörkt läge. `prova-adminvyn.js` går igenom med knapparna på raderna.

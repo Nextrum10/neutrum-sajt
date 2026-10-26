@@ -339,6 +339,21 @@ const NX = (function () {
     { kod: 'bada', text: 'Båda går bra' }
   ];
 
+  /* Kön för matchningen (kon_i_matchningen, 2026-10-26): studiehjälparen
+     kan välja att bara hjälpa elever av samma kön som hen. Databasen har
+     två koder för alla, kvinna och man (students_kon_koder,
+     matchningsval_kon_koder), så att den jämför lika med lika; en elev
+     heter flicka eller pojke här. Fältet får stå tomt. Förälderns kön
+     frågar vi inte om: matchningen behöver det inte. */
+  const KON_ELEV = [
+    { kod: 'kvinna', text: 'Flicka' },
+    { kod: 'man', text: 'Pojke' }
+  ];
+  const KON_VUXEN = [
+    { kod: 'kvinna', text: 'Kvinna' },
+    { kod: 'man', text: 'Man' }
+  ];
+
   function årskursText(kod) {
     const a = ARSKURSER.find(x => x.kod === kod);
     return a ? a.text : (kod || '—');
@@ -1585,6 +1600,7 @@ const NX = (function () {
     hämtaSession, hämtaProfil, vyFörRoll, vyFör, ärBarn, skickaBarnHem,
     inbjudan: INBJUDAN, återställning: ÅTERSTÄLLNING, länkfel: LÄNKFEL,
     hämtaUpptagna, tiderFörDatum,
-    MANADER, DAGAR, CFG, AMNEN, NEXLAX_AMNEN, GARANTI_AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, årskursText, årskursKod, facitLänk
+    MANADER, DAGAR, CFG, AMNEN, NEXLAX_AMNEN, GARANTI_AMNEN, ARSKURSER, BEHOV, FORMAT_ONSKEMAL, KON_ELEV, KON_VUXEN,
+    årskursText, årskursKod, facitLänk
   };
 })();

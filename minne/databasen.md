@@ -1910,3 +1910,86 @@ En fil (20261022100000), provad lokalt (`minne/betalning.md`, Sen avbokning).
   studiehjälparen och förslaget, Nextrum på familjens begäran, ingen klient som sätter något, att flytta, ett betalt
   pass, timmarna och efterskänkningen, tipstimmen, `mitt_tillagg`, villkoren före godkännandet och
   `sen_avbokning_lage`), avsnitt 51 med halva tillägget vid en sen avbokning, och en databas byggd ur alla migrationer.
+
+### Dokument med bilder och kön i matchningen (dokument_med_bilder, kon_i_matchningen, 2026-10-26, i drift samma kväll)
+
+Två migrationer, byggda ur driftens funktioner (lästa med `pg_get_functiondef()` samma dag) och körbara två gånger:
+inget `drop`, villkor, policyer och triggrar i do-block som prövar om de finns, och funktionerna som andra sessioner
+kan ha ändrat lappade med `replace()` och en vakt som räknar träffarna. Den enda `delete` står i en funktion med bara
+den (`intern.matchningsval_raderas`).
+
+- **`dokument_med_bilder` (20261026140000)**: `handlingar.bilder text[]`, villkoren `handlingar_fil_eller_bilder`
+  och `handlingar_bilder_antal` (1–20, inga null), BEFORE-triggern `handlingar_bilderna` (`intern.handling_bilderna`:
+  listan byts aldrig, inte ens av admin, och varje sökväg är `<handlingens id>/<nummer>.png|jpg|webp`, utan
+  dubbletter), `intern.handling_delad_med_mig` med `p_namn = any (h.bilder)`, `mina_handlingar()` lappad så att en
+  rad med bara bilder står med, och `mina_handlingar_bilder()` (security definer, `authenticated`, inte `anon`):
+  id, `har_text` och sökvägarna för den inloggades delade handlingar med bilder. `bilder` står inte i auditens
+  vitlista.
+- **`kon_i_matchningen` (20261026150000)**: `students.kon` (villkoret `students_kon_koder`: kvinna, man eller null),
+  tabellen `matchningsval` (`tutor_id` → `tutor_profiles` on delete cascade, `kon`, `bara_samma_kon`, `andrad_at`
+  satt av `matchningsval_andrad`; villkoret `matchningsval_samma_kon_kraver_kon`), med fem policyer: studiehjälparen
+  läser, skriver och ändrar sin egen rad, superadmin allt, och den som har `anvandare_las`, `anvandare_redigera`,
+  `matchning` eller `studiehjalpare_godkann` läser. `matchningsunderlag` (security_invoker) fick `kon` och
+  `bara_samma_kon` sist, med en left join. `matchningsforslag_rader` lappad: elevens `kon` och `matched_tutor_id` i
+  `elev`, och ett where i CTE:n (den som krockar står inte med, utom den nuvarande). Triggrarna:
+  `students_vakt_kon` (BEFORE INSERT OR UPDATE OF matched_tutor_id, raderad_at; `intern.elevens_kon`, security
+  definer: nekar en ny matchning med 23514 och tömmer könet vid avidentifieringen), `students_kon_krock` (AFTER
+  UPDATE OF kon, WHEN ändrat) och `matchningsval_krock` (AFTER INSERT OR UPDATE) som båda gör uppgiften genom
+  `intern.kon_krock_uppgift` → `skapa_uppgift`, och `profiles_matchningsval_raderas` (AFTER UPDATE OF raderad_at,
+  när den sätts) som tar bort studiehjälparens rad när kontot avidentifieras. `elev_rensa` och `radera_person` rördes
+  inte.
+- **Prov**: `rls-test.sql` avsnitt 54 (DB, 26 rader, med kontrollen av EXECUTE) och 55 (KÖ, 28 rader). Lokalt 2185
+  av 2185, och med `STOPP` före migrationerna 2131 av 2136, där de fem röda är de nya som säger att migrationerna inte
+  är körda. Avsnitt 55 sätter elevernas utgångsläge själv: ett tidigare avsnitt lämnar Q:s barn matchat med B, och då
+  blev B elevens "nuvarande" i förslagen.
+- **I drift sedan kvällen 2026-10-26** (Leo: "merge och driftsätt"), med papperskorgen (nedan): PR #338 mergades
+  (64d0a90), och Vercel lade ut vyerna först. `dokument_med_bilder` har inget `delete` och kördes hel i ett do-block
+  som hämtade filen ur merge-commiten med `extensions.http_get`, prövade md5 (`71ae383b…`), körde och registrerade
+  den. `kon_i_matchningen` har ett `delete` i `intern.matchningsval_raderas` och kördes därför som ett `execute_sql`
+  med filens text, utan fråga från verktyget, och registrerades efteråt i ett do-block med texten ur merge-commiten
+  (md5 `6d80122b…`). Före: driftens `intern.handling_delad_med_mig` och `matchningsunderlag` (kolumnerna och
+  `security_invoker`) var de migrationerna byggdes på, och lappens mål i `mina_handlingar` stod en gång.
+
+### Papperskorgen (papperskorgen, 2026-10-26, i drift samma kväll)
+
+`20261026160000_papperskorgen.sql` (Leo: "radera uppgifter från det stället ... så finns personen kvar i vårt system
+och i familj"). Radera ovan tar bort en PERSON, med allt från samma adress; papperskorgen tar bort en RAD ur en lista,
+och inget annat.
+
+- **`intern.stalle_underlag(p_stalle, p_id)`** (`anmalan` eller `ansokan`) räknar var personen finns kvar: andra
+  anmälningar och ansökningar med samma adressnyckel (`intern.epost_nyckel`, som Radera), frågor under Kommunikation
+  med samma adress, och konton som inte är raderade med samma adress eller det raden pekar ut (`leads.kund_id`,
+  `applications.konto_id`), med roll och om det är ett adminkonto. `sista` är att inget av det finns. För en ansökan
+  också CV:n som bara den pekar ut (samma regel som `intern.radering_filer` och `ansokan_gallra`) och varningarna:
+  värvare vars bonus väntar på ansökan, steg vars mejl inte gått (`ansokan_utskick` och intervjumejlet i
+  `notis_utskick`, `vantar` eller `skickar`), och vårdnadshavarens godkännande när personen har ett
+  studiehjälparkonto. `stalle_lage()` är det, för en superadmin.
+- **`ta_bort_ur_stallet(p_stalle, p_id, p_helt default false)`**: `is_admin()`, samma rådgivande lås som
+  `radera_person()` (`radera:<id>`) och radlås, sedan underlaget en gång till. Är raden det sista stället och `p_helt`
+  inte satt: 23514 och ingenting. Står ett CV kvar: 23514 och ingenting (filen först). En anmälan avidentifieras med
+  samma fält som Radera och nattjobbet (`intern.anmalan_i_papperskorgen`; `kund_id` och koden står kvar, så tipstimmen
+  och statistiken räknar som förut, och ny eller kontaktad blir avböjd), uppgifterna om raden tas bort, och
+  auditloggen får `anmalan.avidentifierad` med `papperskorgen` och `sista`. En ansökan tas bort
+  (`intern.ansokan_i_papperskorgen`): stegen och mejlen går med genom nycklarna, en väntande värvningsbonus annulleras
+  (`intern.varvningsbonus_vakt`, nyckeln blir null), och `applications_audit_borttagen` loggar.
+- **En destruktiv sats per funktion** (`anmalan_i_papperskorgen` en `update`, `ansokan_i_papperskorgen` och
+  `uppgifter_om_raden_bort` var sin `delete`), så att verktyget som kör migrationen i driften inte frågar och hänger
+  sig (avsnitt 5). Inget `drop`. Inga befintliga funktioner rörs.
+- **Prov**: `rls-test.sql` avsnitt 56 (PK, 17 rader): bara superadmin (behörigheten leads, familjen och anon får 42501,
+  och ingen når `intern`), familjens anmälan med `kund_id` (inte sista, familjen orörd, uppgiften borta, auditraden),
+  två anmälningar med samma adress i olika skiftläge och med +tagg (den andra står kvar och blir sista stället: utan
+  `p_helt` nej, med ja), en fråga under Kommunikation som står kvar, en ansökan med studiehjälparens adress och ett CV
+  (nej medan filen finns, sedan ja, och varningen för vårdnadshavaren), och en ensam ansökan med en väntande bonus och
+  ett nej i kön (bonusen annulleras, kön går med). Lokalt 2202 av 2202, och utan de tre migrationerna från 2026-10-26
+  2131 av 2137, där de sex röda säger att de inte är körda. Provet tar bort CV:t ur `storage.objects` som
+  ägaren, med Supabases spärr mot direkta raderingar släppt för satsen (`storage.allow_delete_query`), så att det går
+  också mot driften.
+- **I drift sedan kvällen 2026-10-26**, sist av de tre: filen har två funktioner med ett `delete` var och kördes
+  därför som ett `execute_sql` med filens text (verktyget frågade inte), och registrerades i ett do-block med texten
+  ur merge-commiten (md5 `b1836d61…`). Efter alla tre: de 17 funktionerna (`md5(prosrc)`, `prosecdef`,
+  `proconfig`, rättigheterna och kommentaren), de sju villkoren, de sex triggrarna, de fem policyerna på
+  `matchningsval`, vyn, kolumnerna och tabellens rättigheter (utan Postgres 17:s `m`) är lika en databas byggd ur
+  filerna, 38 av 38 rader jämförda mekaniskt. Hela `rls-test.sql` ur merge-commiten (md5 `073fa11d…`) gick 2202 av
+  2202 mot driften, i ett do-block som slutar med ett fel och rullar tillbaka allt. Advisorn fick bara
+  `mina_handlingar_bilder`, `stalle_lage` och `ta_bort_ur_stallet` som nya poster, för `authenticated` (med flit:
+  de prövar den inloggade eller `is_admin()` först), och inget nytt för `anon`.
