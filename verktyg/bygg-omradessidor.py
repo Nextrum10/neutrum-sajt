@@ -4114,6 +4114,26 @@ def prova_regionraderna():
             sys.exit(f'regionen {rid} säger "med flera" men har inga fler orter')
 
 
+def prova_affischen(orter):
+    """Affischens rubrik tar orten och prepositionen ur en fast lista i
+    nextrum-affisch.js, för /affisch tar ingen fritext ur adressen. Den
+    stod kvar på de sex första orterna när de blev trettio (2026-10-26),
+    och den sa "i Södermalm". Den ska vara ortssidornas, med namnet och
+    prepositionen ur i_namn, i svensk bokstavsordning (2026-10-27)."""
+    ratt = []
+    for o in sorted(orter, key=lambda a: svensk_ordning(a['namn'])):
+        prep, namn = o['i_namn'].split(' ', 1)
+        if namn != o['namn']:
+            sys.exit(f'{o["slug"]}: i_namn är inte en preposition och namnet, och affischen behöver dem var för sig')
+        ratt.append((o['slug'].removeprefix('laxhjalp-'), namn, prep))
+    p = os.path.join(ROT, 'nextrum-affisch.js')
+    lista = re.search(r'var OMRADEN = \[(.*?)\];', open(p, encoding='utf-8').read(), re.S)
+    har = re.findall(r"\[\s*'([^']*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'\s*\]", lista.group(1)) if lista else []
+    if har != ratt:
+        sys.exit(f'OMRADEN i {p} är inte ortssidorna. Den ska vara:\n'
+                 + ',\n'.join(f"    ['{s}', '{n}', '{pr}']" for s, n, pr in ratt))
+
+
 def main():
     if not os.path.exists(SKAL):
         sys.exit(f'hittar inte skalsidan {SKAL}')
@@ -4126,6 +4146,7 @@ def main():
         if not o.get('hub') and o.get('region') not in [r[0] for r in REGIONER]:
             sys.exit(f'{o["slug"]} har ingen region i REGIONER')
     prova_regionraderna()
+    prova_affischen([o for o in OMRADEN if not o.get('hub')])
     prova_bredden([o for o in OMRADEN if not o.get('handskriven')]
                   + AMNEN + STADIER + GUIDER + [ONLINE])
     delar = [a['namn'] for a in OMRADEN if not a.get('hub')]

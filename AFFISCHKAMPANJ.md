@@ -32,9 +32,10 @@ adminvyn sedan 2026-09-30.
   ordningsföreskrifter, och sådana affischer tas ned.
 - **Välj områden där era studiehjälpare kan ta sig till passen.** En
   familj i Farsta som vill ha passen hemma och ingen studiehjälpare som
-  når dit är en anmälan ni måste tacka nej till. Områdessidor finns för
-  Farsta, Hammarby sjöstad, Södermalm, Bromma, Solna och Nacka;
-  affischen säger "Läxhjälp i <område>" för dem, annars Stockholm.
+  når dit är en anmälan ni måste tacka nej till. Ortssidor finns för
+  trettio stadsdelsområden och kommuner (navet listar dem under Orter,
+  `/laxhjalp-stockholm#orter`); affischen säger "Läxhjälp i <ort>" eller
+  "på <ort>" för dem, annars Stockholm.
 
 ## Tidsplan
 

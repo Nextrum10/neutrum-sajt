@@ -194,6 +194,14 @@ bibliotek är sämre än ingen. En ny ort läggs in som en post i `OMRADEN` med
 som inte finns och en regionrad som nämner en ort utan sida
 (`prova_regionraderna()`).
 
+**Affischen har samma orter** (2026-10-27). `/affisch` tar ingen fritext ur
+adressen, så rubriken byter ort och preposition ur `OMRADEN` i
+`nextrum-affisch.js`: nyckeln i `?omrade=` (sidans slug utan `laxhjalp-`),
+namnet och prepositionen ur `i_namn`, i svensk bokstavsordning. Listan stod
+kvar på de sex första när orterna blev trettio, och rubriken sa "Läxhjälp i
+Södermalm". Generatorn stannar nu när listan inte är ortssidornas och skriver
+ut den som ska stå där (`prova_affischen()`), så en ny ort läggs in där också.
+
 **Navet har en ortskatalog** (`#orter`, mellan `ORT_START` och `ORT_SLUT` i
 `laxhjalp-stockholm.html`): orterna i fem regioner (Innerstaden, Söderort,
 Västerort, Norr och väster om stan, Söder och öster om stan), i svensk

@@ -19,15 +19,44 @@
 
   var $ = function (s) { return document.querySelector(s); };
 
-  /* Områdessidorna som finns. Området är bara rubriken; QR-koden går
-     till samma formulär. */
+  /* Ortssidorna som finns, med prepositionen: "i Farsta" men "på
+     Södermalm". Nyckeln i ?omrade=, namnet och prepositionen är sidans
+     i verktyg/bygg-omradessidor.py (slug utan laxhjalp-, namn och
+     i_namn), i svensk bokstavsordning, och generatorn stannar när
+     listan inte är dess orter (prova_affischen): den stod kvar på de
+     sex första när orterna blev trettio. Orten är bara rubriken;
+     QR-koden går till samma formulär. */
   var OMRADEN = [
-    ['farsta', 'Farsta'],
-    ['hammarby-sjostad', 'Hammarby sjöstad'],
-    ['sodermalm', 'Södermalm'],
-    ['bromma', 'Bromma'],
-    ['solna', 'Solna'],
-    ['nacka', 'Nacka']
+    ['botkyrka', 'Botkyrka', 'i'],
+    ['bromma', 'Bromma', 'i'],
+    ['danderyd', 'Danderyd', 'i'],
+    ['enskede-arsta-vantor', 'Enskede, Årsta och Vantör', 'i'],
+    ['farsta', 'Farsta', 'i'],
+    ['hammarby-sjostad', 'Hammarby Sjöstad', 'i'],
+    ['huddinge', 'Huddinge', 'i'],
+    ['hagersten-liljeholmen', 'Hägersten och Liljeholmen', 'i'],
+    ['jarfalla', 'Järfälla', 'i'],
+    ['kista-rinkeby', 'Kista och Rinkeby', 'i'],
+    ['kungsholmen', 'Kungsholmen', 'på'],
+    ['lidingo', 'Lidingö', 'på'],
+    ['nacka', 'Nacka', 'i'],
+    ['salem', 'Salem', 'i'],
+    ['skarpnack', 'Skarpnäck', 'i'],
+    ['skarholmen', 'Skärholmen', 'i'],
+    ['sollentuna', 'Sollentuna', 'i'],
+    ['solna', 'Solna', 'i'],
+    ['spanga-tensta', 'Spånga och Tensta', 'i'],
+    ['sundbyberg', 'Sundbyberg', 'i'],
+    ['sodermalm', 'Södermalm', 'på'],
+    ['sodertalje', 'Södertälje', 'i'],
+    ['taby', 'Täby', 'i'],
+    ['upplands-vasby', 'Upplands Väsby', 'i'],
+    ['vallentuna', 'Vallentuna', 'i'],
+    ['vasastan', 'Vasastan', 'i'],
+    ['vallingby-hasselby', 'Vällingby och Hässelby', 'i'],
+    ['alvsjo', 'Älvsjö', 'i'],
+    ['ostermalm', 'Östermalm', 'på'],
+    ['osteraker', 'Österåker', 'i']
   ];
 
   /* Samma dag som data-uppstart i intresseanmalan.html. Efter den står
@@ -47,9 +76,9 @@
   var omrade = String(param.get('omrade') || '');
   if (!OMRADEN.some(function (o) { return o[0] === omrade; })) omrade = '';
 
-  function platsNamn() {
+  function plats() {
     var o = OMRADEN.filter(function (x) { return x[0] === omrade; })[0];
-    return o ? o[1] : 'Stockholm';
+    return o || ['', 'Stockholm', 'i'];
   }
 
   function adress() {
@@ -93,7 +122,9 @@
   }
 
   function rita() {
-    $('#aff-plats').textContent = platsNamn();
+    var p = plats();
+    $('#aff-prep').textContent = p[2];
+    $('#aff-plats').textContent = p[1];
     $('#aff-kod-rubrik').textContent = kod || 'utan kod';
     $('#aff-varning').hidden = !!kod;
     $('#aff-kod').textContent = kod;
