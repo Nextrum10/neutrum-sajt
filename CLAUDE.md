@@ -864,7 +864,12 @@ Förhandsvisning (för varje admin) öppnar `/foralder?forhandsvisning` och `/la
 riktiga vyerna med en påhittad familj och studiehjälpare. `nextrum-forhandsvisning.js` laddas före
 `nextrum-app.js` och ger vyn en klient som svarar ur en värld i webbläsaren; de två vyerna delar den
 (`localStorage`), och remsan överst byter vy. Den når aldrig databasen, så inget av det räknas i
-statistik, lön eller betalningar. Börjar vyerna fråga efter en ny tabell eller funktion ska den in i
+statistik, lön eller betalningar. **Två saker frågar ut** (2026-10-27, Leo): Betala nu, Betala alla och
+planerna öppnar Stripes kassa i TESTLÄGE (`forhandsvisning-kassa`, bara superadmin, ingen kassa med en
+skarp nyckel, beloppet ur världen, och webhooken skriver inget för `forhandsvisning=1`), och NexLäx spelar
+den riktiga banan (`forhandsvisning_niva()`, `forhandsvisning_ratta()`, inget sparat); båda med adminens
+inloggning. Går Stripe skarpt sätts `STRIPE_FORHANDSVISNING_SECRET_KEY` och `_PUBLISHABLE_KEY` till
+testnycklarna (`minne/sakerhet.md`). Börjar vyerna fråga efter en ny tabell eller funktion ska den in i
 världen (`prova-forhandsvisning.js` säger vad som saknas). **Adminkontona räknas inte i
 statistiken** (samma dag): Översiktens tal (`räknas()`, `ärAdminkonto()`) och analysvyerna
 (`intern.utanfor_statistiken`) räknar inga pass där familjen eller studiehjälparen har en adminroll;
@@ -1244,6 +1249,12 @@ Detaljer: `minne/grunden.md`.
   Audience (`RESEND_AUDIENCE_ID`) är en kopia att skicka från. Inget skickar nyhetsbrevet än: varje utskick ska ha
   länken `/nyhetsbrev?a=<token>`. Kvar: migrationen och funktionen efter merge, secreten, att prova flödet, och
   juristen (rad 40 i `DATASKYDD.md`, policyns stycke).
+- **Förhandsvisningens kassa och NexLäx** (2026-10-27, `forhandsvisningens_nexlax` 20261028110000 och edge-funktionen
+  `forhandsvisning-kassa`) är inte i drift. Efter merge: `forhandsvisning-kassa` (ny, med JWT) och `stripe-webhook`
+  (kvitterar `forhandsvisning=1` utan att skriva; utan den kvitteras sessionen ändå som "session utan pass-id"), sedan
+  migrationen. Utan dem svarar förhandsvisningen som förut: kassan säger att den inte nås, och NexLäx har de påhittade
+  nivåerna. Bara superadmin. Datumrutans förslag har samma enda kant som de andra sedan samma dag (Leo: den gula "har extra
+  streck inuti").
 - **Nextrum AB och bonusarna som godkänns** (2026-10-28, `bonusarna_godkanns` 20261028100000) är inte i drift. Efter
   merge: Vercel lägger ut sidorna (footern, villkoren och policyn), sedan `admin-paminnelse` (känner `bonus_godkann`; utan
   den hoppas raden över, inget går sönder), migrationen (md5-vakter mot driften 2026-10-27 för vakten, `varvning_prova`,

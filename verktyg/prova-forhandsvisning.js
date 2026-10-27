@@ -64,6 +64,25 @@ const ADMINENS = {
 };
 const id = n => 'f0000000-0000-4000-8000-' + String(n).padStart(12, '0');
 
+/* Den riktiga banan, i provets storlek (2026-10-27): förhandsvisningen
+   läser nivaer med adminens inloggning och spelar frågorna genom
+   forhandsvisning_niva() och forhandsvisning_ratta(). Fyra nivåer i
+   matematik åk 6 och en i engelska åk 9, så att ett annat ämne och en
+   annan årskurs syns. Facit står bara här, som i databasen. */
+const BANKID = n => 'b0000000-0000-4000-8000-' + String(n).padStart(12, '0');
+const BANKEN = [1, 2, 3, 4].map(n => ({ id: BANKID(n), nyckel: 'prov-ma6-' + n, amne: 'Matematik', arskurs: 'ak6',
+  omrade: 'Taluppfattning', titel: 'Steg ' + n, beskrivning: 'Steg ' + n + ' i provets bana.', ordning: n,
+  antal_fragor: 3, aktiv: true, sort: 'vanlig', lastext: null, spar: 'vag' }))
+  .concat([{ id: BANKID(9), nyckel: 'prov-en9-1', amne: 'Engelska', arskurs: 'ak9', omrade: 'Grammatik', titel: 'Verb',
+    beskrivning: 'Verb.', ordning: 1, antal_fragor: 3, aktiv: true, sort: 'vanlig', lastext: null, spar: 'vag' }]);
+const BANKFRÅGOR = n => [0, 1, 2].map(i => ({ id: BANKID(1000 + n * 10 + i), typ: 'val',
+  fraga: 'Provfråga ' + n + '.' + i + ': vad är ' + i + ' + 1?', alternativ: ['0', '1', '2', '3'], facit: i + 1 }));
+const KASSA = /\/functions\/v1\/forhandsvisning-kassa$/;
+const CORSH = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET,POST,OPTIONS',
+  'access-control-expose-headers': 'content-range' };
+const svaraRiktig = (route, status, kropp, extra) => route.fulfill({ status, contentType: 'application/json',
+  headers: Object.assign({}, CORSH, extra || {}), body: JSON.stringify(kropp) });
+
 async function bild(page, namn, sel) {
   if (!BILDER) return;
   fs.mkdirSync(BILDER, { recursive: true });
@@ -76,9 +95,36 @@ async function bild(page, namn, sel) {
    roll) eller 'utloggad' (ingen inloggning i webbläsaren). */
 async function öppnaFörhandsvisning(webb, o) {
   const context = await webb.newContext(Object.assign({ viewport: { width: 1280, height: 900 } }, o.context || {}));
-  const riktiga = [], grindar = [], dialoger = [], konsol = [];
+  const riktiga = [], grindar = [], dialoger = [], konsol = [], kassor = [];
   await context.route(RIKTIG, route => {
     const u = route.request().url();
+    const req = route.request();
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 200, headers: CORSH, body: '' });
+    /* Banan, rättningen och kassan: utan o.bank svarar provet som en
+       databas före migrationen, och förhandsvisningen tar de påhittade. */
+    if (/\/rest\/v1\/nivaer\?/.test(u)) {
+      if (!o.bank) return svaraRiktig(route, 404, { code: 'PGRST205', message: 'ingen bana i provet' });
+      return svaraRiktig(route, 200, BANKEN, { 'content-range': '0-' + (BANKEN.length - 1) + '/*' });
+    }
+    if (/\/rest\/v1\/rpc\/forhandsvisning_niva$/.test(u)) {
+      const n = BANKEN.findIndex(x => x.id === req.postDataJSON().p_niva) + 1;
+      const niva = BANKEN[n - 1];
+      return svaraRiktig(route, 200, { niva, fragor: BANKFRÅGOR(n).map(f => ({ id: f.id, typ: f.typ, fraga: f.fraga, alternativ: f.alternativ })) });
+    }
+    if (/\/rest\/v1\/rpc\/forhandsvisning_ratta$/.test(u)) {
+      const k = req.postDataJSON();
+      const f = [].concat(...BANKEN.map((_, i) => BANKFRÅGOR(i + 1))).find(x => x.id === k.p_fraga);
+      return svaraRiktig(route, 200, { ratt: !!f && Number(k.p_svar && k.p_svar.val) === f.facit, facit: f ? f.facit : null, forklaring: 'Räkna.' });
+    }
+    if (KASSA.test(u)) {
+      const k = req.postDataJSON();
+      kassor.push(k);
+      if (!o.kassa) return svaraRiktig(route, 404, { error: 'ingen kassa i provet' });
+      if (k.session) return svaraRiktig(route, 200, { status: 'complete', betald: true, belopp_ore: 0 });
+      const sid = 'cs_test_prov' + kassor.length;
+      return svaraRiktig(route, 200, { lage: 'sida', session: sid, belopp_ore: k.rader.reduce((t, r) => t + r.ore, 0),
+        url: BAS + '/foralder?forhandsvisning&fvkassa=' + sid + '#betalning' });
+    }
     if (/\/rest\/v1\/rpc\/mina_behorigheter$/.test(u)) {
       grindar.push({ url: u, auth: route.request().headers()['authorization'] || '' });
       return route.fulfill({
@@ -100,7 +146,7 @@ async function öppnaFörhandsvisning(webb, o) {
   page.on('console', m => { if (m.type() === 'error') konsol.push(m.text()); });
   page.on('pageerror', e => konsol.push('pageerror: ' + e.message));
   page.on('dialog', d => { dialoger.push(d.message()); d.dismiss().catch(() => {}); });
-  return { context, page, riktiga, grindar, dialoger, konsol };
+  return { context, page, riktiga, grindar, dialoger, konsol, kassor };
 }
 
 const logg = page => page.evaluate(() => (window.NXForhandsvisning && NXForhandsvisning.logg) || []);
@@ -180,7 +226,7 @@ async function provaGrinden(webb) {
 }
 
 async function provaStudievyn(webb) {
-  const { context, page, riktiga, grindar, dialoger, konsol } = await öppnaFörhandsvisning(webb, { grind: 'admin' });
+  const { context, page, riktiga, grindar, dialoger, konsol, kassor } = await öppnaFörhandsvisning(webb, { grind: 'admin', bank: true, kassa: true });
   await page.goto(BAS + '/foralder?forhandsvisning');
   await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
   prova('studievyn: vyn laddar', await synlig(page, '#view-app'));
@@ -244,11 +290,13 @@ async function provaStudievyn(webb) {
   await page.waitForFunction(() => /ett prov/.test(document.querySelector('#trad').textContent), null, { timeout: 5000 }).catch(() => {});
   prova('studievyn: ett meddelande står i tråden', (await text(page, '#trad')).includes('Hej Sara, det här är ett prov.'));
 
-  /* NexLäx: nivån i läxan, alla sex rätt. Ett nytt område börjar med
-     faktabladet (2026-10-27), och nivån är två prickar: efter tre frågor
-     kommer Fortsätt till nästa del. */
+  /* NexLäx ur banan (2026-10-27): läxan pekar på den fjärde nivån i
+     matematik åk 6, dit den påhittade historiken flyttats, och nivån är
+     en prick med tre frågor ur databasen. */
   await page.evaluate(() => { location.hash = '#nexlax'; });
-  const starta = '[data-nl-starta="' + id(305) + '"]';
+  const flyttad = await värld(page, () => NXForhandsvisning.värld.homework.find(h => h.title.indexOf('Steg 4') !== -1) || null);
+  prova('studievyn: läxans nivå är flyttad till banan', flyttad && flyttad.niva_id === BANKID(4), JSON.stringify(flyttad));
+  const starta = '[data-nl-starta="' + BANKID(4) + '"]';
   await page.waitForSelector(starta, { timeout: 5000 }).catch(() => {});
   await page.locator(starta).first().click().catch(() => {});
   await page.waitForSelector('.upg-spel .upg-alt, .upg-spel [data-spel="fakta-klar"]', { timeout: 5000 }).catch(() => {});
@@ -266,11 +314,8 @@ async function provaStudievyn(webb) {
     }
     if (!await page.locator('.upg-spel .upg-alt').count()) break;
     const fråga = (await text(page, '.upg-spel .upg-fraga-text, .upg-spel .upg-fraga h3, .upg-spel .upg-fraga')).trim();
-    const rätt = await page.evaluate(t => {
-      const alla = [].concat.apply([], Object.values(NXForhandsvisning.frågor));
-      const f = alla.find(x => t.indexOf(x[0]) !== -1);
-      return f ? f[2] : 0;
-    }, fråga);
+    const m = /Provfråga \d+\.(\d)/.exec(fråga);
+    const rätt = m ? Number(m[1]) + 1 : 0;
     await page.click('.upg-spel .upg-alt[data-alt="' + rätt + '"]');
     await page.click('.upg-spel [data-spel="kolla"]');
     await page.waitForSelector('.upg-spel [data-spel="vidare"]', { timeout: 5000 }).catch(() => {});
@@ -278,14 +323,31 @@ async function provaStudievyn(webb) {
     await vänta(150);
   }
   await page.waitForSelector('.upg-spel .upg-slut', { timeout: 5000 }).catch(() => {});
-  prova('studievyn: en nivå i NexLäx går att göra hela vägen, två prickar', await synlig(page, '.upg-spel .upg-slut') && delar === 1,
+  prova('studievyn: en nivå ur banan går att göra hela vägen, en prick', await synlig(page, '.upg-spel .upg-slut') && delar === 0,
     delar + ' ' + await text(page, '.upg-spel'));
-  const försök = await värld(page, n => NXForhandsvisning.värld.niva_forsok.filter(f => f.niva_id === n && f.klar_at).length, id(305));
-  prova('studievyn: försöket är klart i världen', försök === 1, försök);
+  const försök = await värld(page, n => NXForhandsvisning.värld.niva_forsok.filter(f => f.niva_id === n && f.klar_at && f.stjarnor === 3).length, BANKID(4));
+  prova('studievyn: försöket är klart i världen, med tre stjärnor', försök === 1, försök);
   await bild(page, 'studievyn-nexlax-klar', '.upg-spel');
   await page.click('.upg-spel [data-spel-stang]').catch(() => {});
 
-  /* En betalning går inte iväg. */
+  /* Betala nu på det bekräftade passet, före planen: med timmar i
+     banken öppnar knappen först valet mellan timmarna och kortet. */
+  await page.evaluate(() => { location.hash = '#betalning'; });
+  const betala = '[data-betala="' + id(106) + '"]';
+  await page.waitForSelector(betala + ':visible', { timeout: 5000 }).catch(() => {});
+  await page.locator(betala + ':visible').first().click({ timeout: 5000 }).catch(e => konsol.push('klick: ' + e.message.split('\n')[0]));
+  await page.waitForSelector('.nx-kassa-villkor [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+  await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
+  await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
+  await page.waitForFunction(i => { const b = NXForhandsvisning.värld.bookings.find(x => x.id === i); return b && b.betalning_status === 'betald'; },
+    id(106), { timeout: 15000 }).catch(() => {});
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  await stängNotisrutan(page);
+  const betalt = await värld(page, i => NXForhandsvisning.värld.bookings.find(x => x.id === i), id(106));
+  prova('studievyn: Betala nu går genom Stripes kassa och passet blir betalt', betalt && betalt.betalning_status === 'betald'
+    && betalt.betalt_ore === 39900 && kassor.some(k => k.rader && k.rader[0].ore === 39900), JSON.stringify({ betalt, kassor }));
+
+  /* En plan genom kassan. */
   await page.evaluate(() => { location.hash = '#erbjudanden'; });
   await page.waitForSelector('[data-kop]', { timeout: 5000 }).catch(() => {});
   await page.locator('[data-kop]').first().click().catch(() => {});
@@ -295,8 +357,16 @@ async function provaStudievyn(webb) {
     await page.evaluate(() => { const b = document.querySelector('.nx-kassa-villkor [data-svar="ja"]'); return !!b && b.disabled; }));
   await page.click('.nx-kassa-villkor [data-kassa-kryss]').catch(() => {});
   await page.click('.nx-kassa-villkor [data-svar="ja"]').catch(() => {});
-  await vänta(800);
-  prova('studievyn: ett köp säger att det inte görs här', dialoger.some(t => /förhandsvisningen/.test(t)), JSON.stringify(dialoger));
+  /* Stripes kassa i testläge (2026-10-27): provets kassa svarar med
+     Stripes sida, som leder tillbaka med sessionen, och då är planen köpt. */
+  await page.waitForURL(u => /fvkassa=/.test(u) || !/fvkassa/.test(u), { timeout: 8000 }).catch(() => {});
+  await page.waitForSelector('#view-app:not([hidden])', { timeout: 15000 }).catch(() => {});
+  await page.waitForFunction(() => (NXForhandsvisning.värld.klippkort || []).length === 1, null, { timeout: 8000 }).catch(() => {});
+  const köpt = await värld(page, () => NXForhandsvisning.värld.klippkort);
+  prova('studievyn: planen går genom Stripes kassa och blir köpt i världen', köpt.length === 1 && köpt[0].status === 'betald'
+    && kassor.some(k => k.rader && k.rader[0].ore === 151600), JSON.stringify({ köpt, kassor }));
+  prova('studievyn: adressen bär inte sessionen efteråt', !/fvkassa/.test(page.url()), page.url());
+  await stängNotisrutan(page);
 
   prova('studievyn: inget annat anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
   prova('studievyn: inga fel i konsolen', egnaFel(konsol).length === 0, egnaFel(konsol).join(' | '));

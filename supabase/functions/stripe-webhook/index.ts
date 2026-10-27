@@ -105,6 +105,7 @@ import { type Handelselager, markeraKlar, taEmotLeverans } from '../_delad/webho
 import { kortetsDelar, reservationensPass, reserveradTill, slappetsLage } from '../_delad/kortreservation.ts';
 import { type Aterbetalning, forsokUrMetadata, hanteraTillagg, type TillaggDb } from '../_delad/tillagg.ts';
 import { arFleraPass, type Betalningsrad, kassaUrMetadata, raderUrStripe } from '../_delad/passkassa.ts';
+import { arForhandsvisning } from '../_delad/forhandsvisning.ts';
 
 type Handelse = {
   id?: string;
@@ -164,6 +165,12 @@ Deno.serve(async (req) => {
     await markeraKlar(lager, id, resultat);
     return json({ ok: true, resultat }, 200, {});
   };
+
+  /* FÖRHANDSVISNINGEN (2026-10-27): en kassa ur forhandsvisning-kassa, i
+     Stripes testläge, för en påhittad familj. Sessionen, dess PaymentIntent
+     och dess charge bär markeringen, och ingenting skrivs för dem: inget
+     pass, ingen rad i liggaren och ingen uppgift om en betalning utan rad. */
+  if (arForhandsvisning(obj)) return await klar('förhandsvisningen: inget skrivs');
 
   /* EN BETALNING SOM INTE KUNDE SKRIVAS NER: två kassor stod öppna och
      familjen betalade båda, eller raden tog inte emot betalningen av

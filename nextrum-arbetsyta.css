@@ -3949,14 +3949,15 @@ a:has(> .adm-status){
 .vy .pass-nar.ar-nu,.vy .pass-nar.ar-nu b{color:var(--pap)}
 /* Datumrutans färg (2026-10-27): obetalt rött, betalt grönt, önskat gult.
    Ett förslag till er (studiehjälparens eller barnets) är gult med en prick
-   i hörnet: samma sort, men ert drag. Dagens pass behåller sin mörka ruta
+   i hörnet: samma sort, men ert drag. Alla rutor har samma form och en
+   enda kant; bara färgen skiljer (Leo 2026-10-27: den gula med en extra
+   ring inuti "ser inte snyggt ut"). Dagens pass behåller sin mörka ruta
    och får färgen som kant. */
 .vy .pass-nar[class*="dag-"]{position:relative;box-shadow:inset 0 0 0 1.5px var(--dk,transparent);background:var(--db,var(--bricka))}
 .vy .pass-nar[class*="dag-"],.vy .pass-nar[class*="dag-"] b{color:var(--dt,var(--bl))}
 .vy .pass-nar.dag-rod{--db:var(--dag-rod);--dk:var(--dag-rod-kant);--dt:var(--dag-rod-text)}
 .vy .pass-nar.dag-gron{--db:var(--dag-gron);--dk:var(--dag-gron-kant);--dt:var(--dag-gron-text)}
 .vy .pass-nar:is(.dag-gul,.dag-forslag,.dag-barn){--db:var(--dag-gul);--dk:var(--dag-gul-kant);--dt:var(--dag-gul-text)}
-.vy .pass-nar:is(.dag-forslag,.dag-barn){box-shadow:inset 0 0 0 1.5px var(--dk),inset 0 0 0 4px var(--db),inset 0 0 0 5.5px color-mix(in srgb,var(--acc) 40%,transparent)}
 .vy .pass-nar-bubbla{
   position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;
   background:var(--acc);box-shadow:0 0 0 2.5px var(--yta);
