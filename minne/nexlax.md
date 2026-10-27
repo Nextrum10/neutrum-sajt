@@ -1022,3 +1022,11 @@ Sidopanelen (`sidaHtml`, `.nl-sida`) syns från 1100 px och är bara läget som 
 Dagens uppdrag), aldrig något sparat; under 1100 px döljs den, och över döljs kortets uppdrag och statpiller.
 `toggle`-lyssnaren för Dagens uppdrag räknar inte panelens. Ämnet och årskursen minns webbläsaren per barn
 (`NXUppgifter.minnesBana`, `komIhagBana`). `verktyg/prova-nexlax.js` prövar panelen vid 1280 och 1000 px.
+
+**Mynten** (samma kväll, Leo: "färgen ska bli mer glossy, lite mer inbjudande som duolingos väg", och sedan, om en
+första version med lack, blank fläck, gradient och färgad skugga: "ser typ snuskig ut", med en skärmdump från Duolingo):
+prickarna är mynt sedda snett, som Duolingos, 88 × 70 px, platt färg, en kant på 10 px under och två diagonala ljusa
+ränder (`::before`, 140°), ingen gradient, fläck eller skugga. Färgen står i `--nod` och kanten i `--nod-kant` per läge;
+en klar nivå är mittemellan ämnesfärgen och dess ljusa (`--nl-f`, `--nl-f-l`), klarare än den mörka ämnesfärgen i ljust
+läge. De låsta räknas ur `--bl-3` och `--yta`, inte `--pap-3`, som i mörkt läge är kortets färg. Knappen har 10 px
+marginal under, så att namnet inte står på kanten.

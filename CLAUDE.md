@@ -229,7 +229,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   **Vägen som i Duolingo** (2026-10-27, Leo: "gör den lika fin som duolingo ... när man klarar nivåerna då blir de färg ...
   något kul vid sidan som täcker sidan"): prickarna är större och tjockare med blank översida och bredare sicksack, och
   varje nivå har en egen färg ur de fyra (`områdesFärg(amne, områdesindex + nivånummer)`, `data-nl-f` på prickens `li`), så
-  vägen blir färgglad när man klarar nivåerna; en nivå är ett uppdrag med högst tre frågor per prick, som förut. På en skärm
+  vägen blir färgglad när man klarar nivåerna; prickarna är mynt som Duolingos (`--nod`, samma kväll, Leo skickade en bild:
+  platt färg, tjock kant, diagonala ränder, aldrig lack, gradient eller skugga); en nivå är ett uppdrag med högst tre frågor per prick, som förut. På en skärm
   från 1100 px står dagen i en sidopanel bredvid vägen (`sidaHtml`: serien, rangen med vägen till nästa, Dagens uppdrag öppet),
   och kortets egna uppdrag och statpiller döljs då; inget nytt sparas. Ämnet och årskursen eleven valde minns webbläsaren
   (`nx.nexlax.bana.<barn>`, på `lagring.html`).
