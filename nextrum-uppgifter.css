@@ -416,9 +416,8 @@
 /* Med ringen är det ringen som säger vilken: en kontur till blev två ringar. */
 .upg-nod.vald .upg-nod-knapp:has(.upg-nod-ring){outline:0}
 .upg-nod.vald .upg-nod-knapp:has(.upg-nod-ring):focus-visible{outline:3px solid var(--focus);outline-offset:17px}
-/* Mästarprovet: kronan, i ockra. Det delas i prickar som nivåerna, och
-   ringen och bubblan är också ockra. */
-.upg-nod.mastare .upg-nod-knapp{background:var(--ockra-soft);color:var(--ockra-text);box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 38%,var(--yta))}
+/* Mästarprovet: kronan, i områdets färg som nivåerna och i ockra (guld)
+   när det är klarat. Det delas i prickar som nivåerna. */
 .upg-nod.mastare.klar .upg-nod-knapp{background:var(--ockra);color:var(--pap);box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 60%,var(--bl))}
 /* --bricka och inte --pap-2: i mörkt läge är --pap-2 samma färg som
    kortet, och det låsta provet syntes bara som sin kant (CLAUDE.md
@@ -1086,27 +1085,24 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 [data-nl-f] .nl-omr-aktuellt .nl-omr-lage{background:color-mix(in srgb,var(--nl-f) 14%,var(--yta));color:var(--nl-f)}
 [data-nl-f] .nl-omr-oppet .nl-omr-ik{background:color-mix(in srgb,var(--nl-f) 15%,var(--yta));color:var(--nl-f)}
 
-/* Noderna: nästa steg i ämnets färg, de öppna tonade, de klarade i
-   mossa som förut. Hovringen lyfter med scale, aldrig translate: den
-   äger sicksacken (--x ovan). */
-[data-nl-f] .upg-nod.aktuell .upg-nod-knapp{
+/* Prickarna i områdets färg, som prickarna på startsidan (2026-10-27): de
+   klarade och nästa steg fyllda, de öppna tonade. De klarade var mossa till
+   dess; klart står kvar i mossa i ledet, i områdets huvud och i Din
+   utveckling. Ett klarat Mästarprov är guld. Hovringen lyfter med scale,
+   aldrig translate: den äger sicksacken (--x ovan). */
+[data-nl-f] .upg-nod.aktuell .upg-nod-knapp,
+[data-nl-f] .upg-nod.klar .upg-nod-knapp{
   background:var(--nl-f);color:var(--yta);
   box-shadow:0 6px 0 0 color-mix(in srgb,var(--nl-f) 60%,var(--bl));
+}
+[data-nl-f] .upg-nod.mastare.klar .upg-nod-knapp{
+  background:var(--ockra);color:var(--pap);
+  box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 60%,var(--bl));
 }
 [data-nl-f] .upg-nod.oppen .upg-nod-knapp{
   background:color-mix(in srgb,var(--nl-f) 13%,var(--yta));color:var(--nl-f);
   box-shadow:0 6px 0 0 color-mix(in srgb,var(--nl-f) 32%,var(--yta));
 }
-[data-nl-f] .upg-nod.mastare.oppen .upg-nod-knapp{
-  background:var(--ockra-soft);color:var(--ockra-text);
-  box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 38%,var(--yta));
-}
-[data-nl-f] .upg-nod.mastare.aktuell .upg-nod-knapp{
-  background:var(--ockra);color:var(--pap);
-  box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 60%,var(--bl));
-}
-[data-nl-f] .upg-nod.mastare .upg-nod-bubbla{background:var(--ockra);color:var(--pap)}
-[data-nl-f] .upg-nod.mastare .upg-nod-bubbla::after{border-top-color:var(--ockra)}
 [data-nl-f] .upg-nod.vald .upg-nod-knapp{outline-color:color-mix(in srgb,var(--nl-f) 35%,transparent)}
 [data-nl-f] .upg-nod-bubbla{background:var(--nl-f);color:var(--yta)}
 [data-nl-f] .upg-nod-bubbla::after{border-top-color:var(--nl-f)}
@@ -2256,7 +2252,6 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
 }
 .upg-nod-ring circle{fill:none;stroke:color-mix(in srgb,var(--bl) 11%,transparent);stroke-width:6}
 .upg-nod-ring circle.fylld{stroke:var(--nl-f,var(--acc));stroke-linecap:round}
-.upg-nod.mastare .upg-nod-ring circle.fylld{stroke:var(--ockra)}
 
 /* En del är klar (spelaren): bocken, delarna och nästa del ett tryck bort. */
 .upg-delklar{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 4px 8px}

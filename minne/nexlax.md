@@ -218,7 +218,9 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   VAR man är, inte vems drag det är, och resten av sajten använder den
   inte. **Varje område har en egen färg** (samma kväll, Leo: "gör också
   de olika områdena olika färger"), ur samma palett (`områdesFärg`):
-  det första området har ämnets, och resten går runt. Den sitter som en
+  det första området har ämnets, och resten går runt. Sedan 2026-10-27
+  är det startsidans fyra färger och prickarna fyllda i dem (Fas 25.1
+  punkt 8). Den sitter som en
   rand upptill och i nästa nivå; ett klarat område har kvar mossans
   bock. **Översikten över områdena** (`.nl-hopp`) står under Din väg,
   med läget och områdets färg, och går INTE att trycka på. Den hoppade
@@ -943,3 +945,15 @@ ska ha flera uppgifter som duolingo har här."
    Uppmätt i förhandsvisningen: pricken, pricken under och sidan flyttar sig 0 px, ingen
    omritning och inget layoutskifte, och kortet vid områdets sista prick står ovanpå nästa
    område.
+8. **Startsidans färger** (samma kväll, Leo med en skärmbild av NexLäx-bladet på
+   startsidan: "Färgerna på din väg kör samma färger som dessa som finns på hemsidan").
+   Bladets fyra prickar (`.hj-nex-bild` i `index.html`) är matematikens blå, NO:s gröna,
+   engelskans lila och moderna språkens rosa. Vägens områden går runt i dem, i den ordningen
+   (`OMRÅDESFÄRGER`), och börjar i ämnets egen färg om den är en av de fyra, annars i den
+   blå; förut gick de runt i sju, med SO:s ockra och svenskans röda. Det gäller också
+   översikten över områdena, NP-sektionen och skärmen när en del är klar (`nivånsFärg`).
+   **Prickarna är fyllda i områdets färg** när de är klara, som prickarna på startsidan, och
+   tonade när de är öppna; nästa steg är fyllt med ringen och bubblan. De klarade var mossa
+   till dess. Klart står kvar i mossa där det är ett läge: ledet och huvudet i ett klart
+   område, Din utveckling och bocken när en del är klar. Mästarprovet har områdets färg och
+   blir guld (ockra) när det är klarat. Ändras prickarna på startsidan ändras listan med.

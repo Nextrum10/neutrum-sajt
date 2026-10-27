@@ -205,17 +205,26 @@ window.NXUppgifter = (function () {
     const i = ämnesOrdning().indexOf(a);
     return i < 0 ? 999 : i;
   }
-  /* Varje område i banan har en egen färg (Leo samma kväll: "gör också
-     de olika områdena olika färger"), ur samma palett som ämnena. Det
-     första området har ämnets färg, och resten går runt i en ordning
-     där två grannar aldrig är lika varma eller lika kalla. Ett ämne
-     utanför rundan (juridiken och de andra) har sin egen färg först. */
-  const OMRÅDESFÄRGER = ['ma', 'so', 'no', 'ms', 'prog', 'sv', 'en'];
+  /* Varje område i banan har en egen färg (2026-09-29, Leo: "gör också
+     de olika områdena olika färger"). Färgerna är startsidans (2026-10-27,
+     Leo: "Färgerna på din väg kör samma färger som dessa som finns på
+     hemsidan"): de fyra prickarna i NexLäx-bladet under Hur hjälper vi
+     (.hj-nex-bild i index.html), blå, grön, lila och rosa, i den ordningen.
+     Ett ämne bland de fyra börjar i sin egen färg, alla andra i den blå.
+     Förut gick områdena runt i sju färger, med SO:s ockra och svenskans
+     röda. Ändras prickarna på startsidan ändras listan med. */
+  const OMRÅDESFÄRGER = ['ma', 'no', 'en', 'ms'];
   function områdesFärg(amne, i) {
-    const kod = ämnesKod(amne);
-    const start = OMRÅDESFÄRGER.indexOf(kod);
-    if (start < 0) return i === 0 && kod ? kod : OMRÅDESFÄRGER[(i - (kod ? 1 : 0)) % OMRÅDESFÄRGER.length];
+    const start = Math.max(0, OMRÅDESFÄRGER.indexOf(ämnesKod(amne)));
     return OMRÅDESFÄRGER[(start + i) % OMRÅDESFÄRGER.length];
+  }
+  /* En nivås område räknat i sin bana, som vägen räknar dem, för färgen. */
+  function nivånsFärg(katalog, niva) {
+    const namn = [];
+    banansSteg(katalog, niva.amne, niva.arskurs, ärNp(niva) ? 'np' : 'vag').forEach(n => {
+      if (n.sort !== 'repetition' && namn[namn.length - 1] !== n.omrade) namn.push(n.omrade);
+    });
+    return områdesFärg(niva.amne, Math.max(0, namn.indexOf(niva.omrade)));
   }
 
   /* En ikon per ämne, i ämnesrutorna och i NP-sektionen. Språken har
@@ -3048,7 +3057,7 @@ window.NXUppgifter = (function () {
       const gjorda = T.delar.filter(d => d.till <= T.klara).length;
       const kvar = antal - gjorda;
       känn('upplast');
-      kropp.innerHTML = '<div class="upg-delklar" data-nl-f="' + ämnesKod(T.niva.amne) + '">'
+      kropp.innerHTML = '<div class="upg-delklar" data-nl-f="' + nivånsFärg(o.katalog, efterId(o.katalog)[T.niva.id] || T.niva) + '">'
         + '<span class="upg-delklar-ik">' + IKON.bock + '</span>'
         + '<h2 tabindex="-1">' + esc(antal - kvar === 1 ? 'Första delen klar!' : 'Del ' + (T.del + 1) + ' klar!') + '</h2>'
         + '<p class="upg-delklar-titel">' + esc(stegTitel(T.niva)) + '</p>'
