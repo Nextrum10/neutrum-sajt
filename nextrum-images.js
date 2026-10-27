@@ -185,13 +185,16 @@ window.NEXTRUM_IMAGE_WIDTHS = [640, 960, 1280, 1600, 1920];
    bild och gömt den. De andra dagarna driver stillbilden långsamt
    (.vy-hero-still), som den alltid gjort när filmen inte spelar.
    Bilderna är "för nu", sa Leo: byt en nyckel här, inget annat.
+
+   Fredagen hade 'anpassning' till 2026-10-27: på en telefon syntes bara
+   studiehjälparens tröja, utan huvud. 'forklaringen' visar båda ansiktena.
    ------------------------------------------------------------ */
 window.NEXTRUM_HERO_VECKA = [
   { bild: 'hero', film: 'hero-studievy.mp4' },  // måndag
   { bild: 'entillEn' },                          // tisdag
   { bild: 'digitalt' },                          // onsdag
   { bild: 'sjalvfortroende' },                   // torsdag
-  { bild: 'anpassning' },                        // fredag
+  { bild: 'forklaringen' },                      // fredag
   { bild: 'genombrottet' },                      // lördag
   { bild: 'online' }                             // söndag
 ];

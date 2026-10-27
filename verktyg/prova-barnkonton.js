@@ -294,7 +294,7 @@ const synlig = (page, sel) => page.locator(sel).first().isVisible().catch(() => 
    en gång till, med flit: provet ska se om nextrum-images.js ändrats. */
 const VECKODAGAR = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'];
 const DAGENS_BILD = ['hero-nextrum', '01-en-till-en', '03-digital-laxhjalp', '04-sjalvfortroende',
-  '02-personlig-anpassning', '07-genombrottet', '09-online-v2'];
+  '06-forklaringen', '07-genombrottet', '09-online-v2'];
 async function provaHälsningen(page, vem) {
   const i = (new Date().getDay() + 6) % 7;
   await page.waitForFunction(() => {
