@@ -15,6 +15,21 @@
       "source": "/laxhjalp-osteraker",
       "destination": "/laxhjalp-stockholm#norr-och-vaster",
       "permanent": true
+    },
+    {
+      "source": "/laxhjalp-sodertalje",
+      "destination": "/laxhjalp-stockholm#soder-och-oster",
+      "permanent": true
+    },
+    {
+      "source": "/laxhjalp-nykvarn",
+      "destination": "/laxhjalp-stockholm#soder-och-oster",
+      "permanent": true
+    },
+    {
+      "source": "/laxhjalp-nynashamn",
+      "destination": "/laxhjalp-stockholm#soder-och-oster",
+      "permanent": true
     }
   ],
   "headers": [

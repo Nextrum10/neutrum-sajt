@@ -5,7 +5,7 @@ Allt på sajtens sida är gjort och kontrollerat:
 | | |
 |---|---|
 | favicon | finns, svarar 200 |
-| sitemap.xml | 83 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` (24 ortssidor kom till 2026-10-26 och åtta 2026-10-27; Österåker togs bort samma dag och leder till navet) |
+| sitemap.xml | 80 adresser, båda språken, byggd av `verktyg/bygg-sitemap.py` (24 ortssidor kom till 2026-10-26 och åtta 2026-10-27; Österåker, Södertälje, Nykvarn och Nynäshamn togs bort samma dag och leder till navet) |
 | robots.txt | pekar på sitemap, blockerar inget publikt |
 | strukturerad data | Organization + WebSite med namn, beskrivning, slogan, sociala konton |
 | verifieringspost i DNS | finns redan (`google-site-verification=5o3n…`) |
@@ -53,7 +53,7 @@ På smal skärm är menyn hopfälld bakom hamburgerikonen uppe till
 vänster.
 
 Väl inne: skriv `sitemap.xml` i rutan och klicka **Skicka**. Status
-ska bli *Lyckades* med 51 upptäckta adresser.
+ska bli *Lyckades* med 80 upptäckta adresser.
 
 Kartan är kontrollerad och fungerar — `https://nextrum.se/sitemap.xml`
 svarar 200 med giltig XML. Öppna den i webbläsaren om

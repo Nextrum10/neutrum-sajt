@@ -55,10 +55,7 @@
     ['haninge', 'Haninge', 'i', 'Söder och öster om stan'],
     ['huddinge', 'Huddinge', 'i', 'Söder och öster om stan'],
     ['nacka', 'Nacka', 'i', 'Söder och öster om stan'],
-    ['nykvarn', 'Nykvarn', 'i', 'Söder och öster om stan'],
-    ['nynashamn', 'Nynäshamn', 'i', 'Söder och öster om stan'],
     ['salem', 'Salem', 'i', 'Söder och öster om stan'],
-    ['sodertalje', 'Södertälje', 'i', 'Söder och öster om stan'],
     ['tyreso', 'Tyresö', 'i', 'Söder och öster om stan'],
     ['varmdo', 'Värmdö', 'på', 'Söder och öster om stan']
   ];

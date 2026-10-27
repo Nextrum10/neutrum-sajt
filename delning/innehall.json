@@ -277,18 +277,6 @@
       "rad": "Läxhjälp i Stockholm · 399 kr i timmen",
       "foto": "02-personlig-anpassning"
     },
-    "laxhjalp-nykvarn.html": {
-      "bild": "delning/laxhjalp-nykvarn.jpg",
-      "rubrik": "Läxhjälp i Nykvarn.",
-      "rad": "Hemma eller online · 399 kr i timmen",
-      "foto": "11-studiehjalparen"
-    },
-    "laxhjalp-nynashamn.html": {
-      "bild": "delning/laxhjalp-nynashamn.jpg",
-      "rubrik": "Läxhjälp i Nynäshamn.",
-      "rad": "Hemma eller online · 399 kr i timmen",
-      "foto": "13-kvallsplugg"
-    },
     "laxhjalp-online.html": {
       "bild": "delning/laxhjalp-online.jpg",
       "rubrik": "Läxhjälp online.",
@@ -336,12 +324,6 @@
       "rubrik": "Läxhjälp på Södermalm.",
       "rad": "Hemma eller online · 399 kr i timmen",
       "foto": "01-en-till-en"
-    },
-    "laxhjalp-sodertalje.html": {
-      "bild": "delning/laxhjalp-sodertalje.jpg",
-      "rubrik": "Läxhjälp i Södertälje.",
-      "rad": "Hemma eller online · 399 kr i timmen",
-      "foto": "03-digital-laxhjalp"
     },
     "laxhjalp-sollentuna.html": {
       "bild": "delning/laxhjalp-sollentuna.jpg",
