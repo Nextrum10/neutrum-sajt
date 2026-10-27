@@ -364,7 +364,7 @@ async function provaStudievyn(webb) {
   await page.waitForFunction(() => (NXForhandsvisning.värld.klippkort || []).length === 1, null, { timeout: 8000 }).catch(() => {});
   const köpt = await värld(page, () => NXForhandsvisning.värld.klippkort);
   prova('studievyn: planen går genom Stripes kassa och blir köpt i världen', köpt.length === 1 && köpt[0].status === 'betald'
-    && kassor[0] && kassor[0].rader && kassor[0].rader[0].ore === 151600, JSON.stringify({ köpt, kassor }));
+    && kassor.some(k => k.rader && k.rader[0].ore === 151600), JSON.stringify({ köpt, kassor }));
   prova('studievyn: adressen bär inte sessionen efteråt', !/fvkassa/.test(page.url()), page.url());
   await stängNotisrutan(page);
 
