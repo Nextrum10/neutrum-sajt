@@ -1588,34 +1588,31 @@ window.NXUppgifter = (function () {
   /* Ledet (2026-10-27, Leo: "På sektionerna där de exempelvis står 0/3 eller
      0/2 sätt ihop alla de uppgifterna på sektionen i ledet av uppgifter så
      man ser hur mycket man har kvar av uppgifter på varje sektion som
-     duolingo har"). Områdets nivåer som ett led, en bit per nivå och lika
-     bred som nivåns antal uppgifter, fyllt med det som är gjort, och kronan
-     sist för Mästarprovet. Bredvid står hur många uppgifter som är kvar i
-     hela området, i stället för "0/3" nivåer. */
+     duolingo har"). Samma kväll, Leo: "ha de som en långt streck som fylls
+     på med färg när man klarar uppgifter tills slutet fylls den helt och då
+     är de 100 procent på den lilla kolumnen åt höger där de står 18 uppgifter
+     kvar, så den räknar o procent istället". Ett streck för hela området,
+     fyllt i områdets färg med de klara uppgifterna, kronan sist för
+     Mästarprovet, och bredvid hur många procent av områdets uppgifter som är
+     klara. Procenten avrundas nedåt: 100 % står först när allt är klart. */
   function antalFrågorI(x) { return Number(x.niva.antal_fragor) || 0; }
   function områdetsUppgifter(a) {
     const frågor = a.nivåer.reduce((s, x) => s + antalFrågorI(x), 0);
     const gjorda = a.nivåer.reduce((s, x) => s + Math.round(delGjord(x) * antalFrågorI(x)), 0);
-    return { frågor, gjorda, kvar: Math.max(0, frågor - gjorda),
-             procent: frågor ? Math.round(gjorda / frågor * 100) : (a.nivåer.length ? Math.round(a.klara / a.nivåer.length * 100) : 0) };
+    const andel = a.klart ? 1 : frågor ? Math.min(1, gjorda / frågor) : (a.nivåer.length ? a.klara / a.nivåer.length : 0);
+    return { frågor, gjorda, kvar: Math.max(0, frågor - gjorda), andel, procent: andel >= 1 ? 100 : Math.floor(andel * 100) };
   }
   function ledHtml(a) {
-    const antal = antalFrågorI;
-    const { frågor, gjorda, kvar } = områdetsUppgifter(a);
+    const { frågor, gjorda, andel, procent } = områdetsUppgifter(a);
     const m = a.mästare;
-    const text = a.bemästrat ? 'Bemästrat'
-      : a.klart ? (m && !m.klar ? 'Klart, provet kvar' : 'Klart')
-      : frågor ? kvar + ' kvar' : a.klara + ' av ' + a.nivåer.length;
-    const etikett = frågor
-      ? gjorda + ' av ' + frågor + ' uppgifter klara i ' + a.namn + (kvar ? ', ' + kvar + ' kvar' : '')
-      : a.klara + ' av ' + a.nivåer.length + ' nivåer klara i ' + a.namn;
+    const etikett = procent + ' procent klart i ' + a.namn
+      + (frågor ? ', ' + gjorda + ' av ' + frågor + ' uppgifter' : '')
+      + (a.bemästrat ? ', bemästrat' : a.klart && m && !m.klar ? ', Mästarprovet kvar' : '');
     return '<div class="nl-led" role="img" aria-label="' + esc(etikett) + '">'
-      + '<span class="nl-led-spar">'
-      + a.nivåer.map(x => '<i class="nl-led-del' + (x.klar ? ' klar' : '') + (x.aktuell ? ' nu' : '') + '"'
-          + ' style="flex-grow:' + Math.max(1, antal(x)) + ';--d:' + delGjord(x).toFixed(3) + '"></i>').join('')
+      + '<span class="nl-led-spar"><i class="nl-led-streck" style="--d:' + andel.toFixed(3) + '"></i>'
       + (m ? '<i class="nl-led-krona' + (m.klar ? ' klar' : '') + (a.bemästrat ? ' bem' : '') + '">' + IKON.krona + '</i>' : '')
       + '</span>'
-      + '<span class="nl-led-text nl-omr-lage">' + (frågor && !a.klart ? '<b>' + kvar + '</b> uppgifter kvar' : esc(text)) + '</span>'
+      + '<span class="nl-led-text nl-omr-lage"><b>' + procent + '</b>\u00a0%</span>'
       + '</div>';
   }
 

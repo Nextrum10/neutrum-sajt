@@ -206,7 +206,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   **Faktabladen** (2026-10-27, Fas 25): ett blad per område (vad man lär sig, vad man behöver veta, exempel, ord),
   i `verktyg/faktablad/`, byggt till `nexlax-fakta/<ämne>-<årskurs>.json` av `bygg-faktablad.py`, aldrig en tabell, och
   visat en gång när ett nytt område börjar och under lampan; ett nytt område får sitt blad i samma ändring (CI nekar
-  annars). **Ledet**: varje område har ett streck per nivå som fylls med de klara frågorna; inget sparas. **Prickarna** (Fas 25.1,
+  annars). **Ledet**: varje område har ett enda streck som fylls med de klara frågorna och procenten bredvid, 100 % först när allt är klart; inget sparas. **Prickarna** (Fas 25.1,
   Leo: "max vara 3 uppgifter i varje liksom prick"): en nivå står på vägen som en prick per högst tre frågor (`delar()`), med
   en ring runt den som står på tur, och spelas en del i taget i samma försök; databasen vet inget om delarna, och stjärnorna är
   nivåns. Ett försök fortsätter bara ett dygn (`niva_starta`), så gjorda prickar blir ogjorda efter det. Kortet vid en prick

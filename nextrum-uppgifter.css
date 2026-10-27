@@ -2207,22 +2207,24 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
 .nl-np-omr-huvud > b{flex:1;min-width:0}
 
 .nl-led{display:flex;align-items:center;gap:12px;margin:6px 4px 2px;min-height:28px}
-.nl-led-spar{flex:1;min-width:0;display:flex;align-items:center;gap:5px;height:28px}
-.nl-led-del{
-  position:relative;display:block;flex-basis:0;min-width:10px;height:12px;border-radius:100px;overflow:hidden;
+.nl-led-spar{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:28px}
+/* Ett streck för hela området (Leo samma kväll): fyllt i områdets färg, och
+   i mossa när området är klart. */
+.nl-led-streck{
+  position:relative;display:block;flex:1;min-width:0;height:14px;border-radius:100px;overflow:hidden;
   background:color-mix(in srgb,var(--nl-f,var(--acc)) 15%,var(--pap-3));
 }
 /* Fyllningen är en egen bit som skalas i sidled: bredden räknas en gång
    och rör sig med transform, aldrig med width. */
-.nl-led-del::after{
+.nl-led-streck::after{
   content:"";position:absolute;inset:0;border-radius:inherit;
   background:var(--nl-f,var(--acc));
   transform-origin:left center;transform:scaleX(var(--d,0));
   transition:transform .6s var(--e-ut,ease);
 }
-.nl-led-del.nu{box-shadow:0 0 0 2px color-mix(in srgb,var(--nl-f,var(--acc)) 35%,transparent)}
-.nl-omr-klart .nl-led-del::after,.nl-omr-bem .nl-led-del::after,
-.nl-np-omr.klart .nl-led-del::after{background:var(--mossa)}
+.nl-omr-klart .nl-led-streck::after,.nl-omr-bem .nl-led-streck::after,
+.nl-np-omr.klart .nl-led-streck::after{background:var(--mossa)}
+.nl-led-text{min-width:56px;justify-content:center;font-variant-numeric:tabular-nums}
 .nl-led-krona{
   flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:9px;
   background:var(--bricka);color:var(--bl-3);
@@ -2324,6 +2326,6 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
 .upg-fakta-forst .nl-fakta-del:nth-child(4){animation-delay:.18s}
 @keyframes nl-fakta-in{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
 @media (prefers-reduced-motion:reduce){
-  .nl-led-del::after{transition:none}
+  .nl-led-streck::after{transition:none}
   .upg-fakta-forst .nl-fakta,.upg-fakta-forst .nl-fakta-del{animation:none}
 }

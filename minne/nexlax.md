@@ -957,3 +957,12 @@ ska ha flera uppgifter som duolingo har här."
    till dess. Klart står kvar i mossa där det är ett läge: ledet och huvudet i ett klart
    område, Din utveckling och bocken när en del är klar. Mästarprovet har områdets färg och
    blir guld (ockra) när det är klarat. Ändras prickarna på startsidan ändras listan med.
+9. **Ledet är ett streck med procent** (samma kväll, Leo: "ha de som en långt streck som
+   fylls på med färg när man klarar uppgifter tills slutet fylls den helt och då är de 100
+   procent på den lilla kolumnen åt höger där de står 18 uppgifter kvar, så den räknar o
+   procent istället"). En bit per nivå blev ett streck för hela området (`.nl-led-streck`),
+   fyllt i områdets färg med de klara uppgifterna och i mossa när området är klart, och
+   kronan står kvar sist. Rutan bredvid säger hur många procent av områdets uppgifter som
+   är klara, i stället för "18 uppgifter kvar", "Klart, provet kvar" och "Bemästrat";
+   procenten avrundas nedåt, så 100 % står först när allt är klart (3 av 18 är 16 %).
+   Mästarprovets läge syns i kronan, och skärmläsaren får det i etiketten.
