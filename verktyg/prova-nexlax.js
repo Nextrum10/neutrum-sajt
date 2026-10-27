@@ -387,9 +387,9 @@ async function provaBarnet(webb) {
     && (await page.locator('#bv-nl-vag .nl-kort > .nl-topp').count()) === 1
     && (await page.locator('#bv-nl-vag .nl-kort > details.nl-uppdrag').count()) === 1
     && (await page.locator('#bv-nl-vag .nl-kort > .nl-baner').count()) === 1);
-  prova('vägen: väljaren står under kortet och säger att allt är öppet',
+  prova('vägen: väljaren står under kortet och säger att vägen går ett steg i taget',
     (await page.locator('#bv-nl-vag .nl-kort + .nl-valj').count()) === 1
-    && (await text(page, '#bv-nl-vag .nl-valj')).includes('Allt är öppet'));
+    && (await text(page, '#bv-nl-vag .nl-valj')).includes('ett steg i taget'));
   const ljus = await page.evaluate(() => {
     const ljusvärde = el => { const m = getComputedStyle(el).backgroundColor.match(/[\d.]+/g).map(Number); return (m[0] + m[1] + m[2]) / 3; };
     const kort = document.querySelector('#bv-nl-vag .nl-kort');

@@ -190,8 +190,10 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   De står utanför första timmen, som tipstimmen. Det river beskedet 2026-10-09 "inte få gratis av oss".
 - **NexLäx**: rättningen sker i databasen; frågorna går ut utan facit, försök och svar har ingen
   skrivpolicy, och en digital uppgift bockas inte av för hand. Stjärnor, serie, märken och XP
-  sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. Allt i NexLäx är
-  öppet (2026-10-06): ingen nivå låses, vägen är bara ett förslag. Startsidan visar NexLäx bara som en
+  sparas aldrig; XP:s regler står bara i `intern.nexlax_*`, och XP minskar aldrig. **Din väg går ett steg i
+  taget** (2026-10-27, Leo: "Steg i nexläx din väg ska gå steg för steg"): en nivå öppnas när den före är klar
+  (eller studiehjälparen gett den), och delarna i en nivå görs i ordning; ämne och årskurs väljs fritt, och NP-spåret
+  är helt öppet. Från 2026-10-06 till dess var allt öppet, och det som klarades då står kvar som klart. Startsidan visar NexLäx bara som en
   illustration (2026-10-07): exempelfrågan finns inte i banken; XP och uppdrag i den följer
   `intern.nexlax_*`, rank och märke `RANGER` och `MÄRKEN` i `nextrum-uppgifter.js`, och den ändras med dem. Belöningar är märken, inte pengar, och serien påminns aldrig om: båda är
   beslut. `.nl-hopp` går med flit inte att trycka på. **Uppdragen** (Fas 23.4) räknas av
