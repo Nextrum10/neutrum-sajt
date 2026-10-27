@@ -1240,6 +1240,15 @@ Claude-artefaktlänk kan aldrig prata med Supabase: testa mot riktiga filer.
 Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
+- **Nyhetsbrevet** (2026-10-28, `nyhetsbrev` 20261028120000, Leo: "gör detta arbete simpelt") är inte i drift.
+  Formuläret står i footern på varje öppen sida och i startsidans Nästa steg (`nextrum-nyhetsbrev.js`, laddat av
+  `nextrum-samtycke.js`, så aldrig i vyerna eller på en sida med en nyckel i adressen); ingen popup, inget i
+  webbläsaren och ingen rabatt. Dubbel opt-in genom edge-funktionen `nyhetsbrev` (`verify_jwt` av, taket fem i timmen
+  per IP-hash och 300 totalt, samma svar om adressen finns), och `/nyhetsbrev` bekräftar (`?b=`) och avslutar (`?a=`)
+  med en knapp. En avanmälan raderar raden, och en obekräftad raderas efter sju dagar. Tabellen är sanningen; Resends
+  Audience (`RESEND_AUDIENCE_ID`) är en kopia att skicka från. Inget skickar nyhetsbrevet än: varje utskick ska ha
+  länken `/nyhetsbrev?a=<token>`. Kvar: migrationen och funktionen efter merge, secreten, att prova flödet, och
+  juristen (rad 40 i `DATASKYDD.md`, policyns stycke).
 - **Förhandsvisningens kassa och NexLäx** (2026-10-27, `forhandsvisningens_nexlax` 20261028110000 och edge-funktionen
   `forhandsvisning-kassa`) är inte i drift. Efter merge: `forhandsvisning-kassa` (ny, med JWT) och `stripe-webhook`
   (kvitterar `forhandsvisning=1` utan att skriva; utan den kvitteras sessionen ändå som "session utan pass-id"), sedan

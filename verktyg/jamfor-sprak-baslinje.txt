@@ -38,6 +38,9 @@
       __stripe_mid
       __stripe_sid
 
+=== nyhetsbrev.html  ->  en/nyhetsbrev.html
+  STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
+
 === priser.html  ->  en/priser.html
   STRUKTUR skiljer sig vid tagg 44: sv <b> vs en <a>
 
@@ -47,7 +50,7 @@
 === var-ide.html  ->  en/var-ide.html
   STRUKTUR skiljer sig vid tagg 43: sv <b> vs en <a>
 
-12 av 12 sidpar har avvikelser.
+13 av 13 sidpar har avvikelser.
 
 === svenska sidor utan engelsk tvilling: 64
   404.html
