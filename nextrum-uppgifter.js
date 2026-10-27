@@ -403,6 +403,26 @@ window.NXUppgifter = (function () {
     return årskurser[0];
   }
 
+  /* Den bana eleven valde senast (2026-10-27, Leo: man ska stanna kvar på ämnet
+     och året man höll på med). Bara ett val man trycker på sparas, i
+     webbläsaren och per barn; saknas lagringen börjar banan som förut. */
+  function minnesBana(nyckel) {
+    try {
+      const v = JSON.parse(localStorage.getItem('nx.nexlax.bana.' + nyckel) || 'null');
+      if (v && typeof v.amne === 'string' && v.amne) {
+        return { amne: v.amne, arskurs: typeof v.arskurs === 'string' ? v.arskurs : '', spar: v.spar === 'np' ? 'np' : 'vag' };
+      }
+    } catch (e) { /* utan lagring börjar banan som förut */ }
+    return null;
+  }
+  function komIhagBana(nyckel, val) {
+    try {
+      if (val && val.amne) {
+        localStorage.setItem('nx.nexlax.bana.' + nyckel, JSON.stringify({ amne: val.amne, arskurs: val.arskurs || '', spar: val.spar || 'vag' }));
+      }
+    } catch (e) { /* inget att göra */ }
+  }
+
   /* spar: 'vag' för vägen, 'np' för NP-sektionen, utelämnat för hela
      banan. En nivå utan spar (barnets katalog före 2026-10-06) står på
      vägen. */
@@ -3686,7 +3706,7 @@ window.NXUppgifter = (function () {
 
   return {
     IKON, STJÄRNGRÄNS, BEMÄSTRAD, RANGER, rang, ärNp, harNp, npSpår, uppdragHtml, nyaKlaraUppdrag, ämnesIkon, ämnesOrdning,
-    laddaKatalog, laddaFörsök, laddaPågående, laddaLäge, perNivå, banor, förvaldÅrskurs, efterId,
+    laddaKatalog, laddaFörsök, laddaPågående, laddaLäge, perNivå, banor, förvaldÅrskurs, efterId, minnesBana, komIhagBana,
     vägen, nästaSteg, underlag, märken, perOmråde, stjärnRad, stegTitel, xpText, tusen, ärSant,
     ritaVäg, ritaUtveckling, ritaRank, ritaMärken, ritaProfil, profilHtml, tagFlik, spela, genomgång, förhandsvisa,
     uppgiftsResultat, digitalRad, försöksRad, områdesHtml, sammanfattning

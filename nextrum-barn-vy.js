@@ -633,6 +633,10 @@
      ämnen som har en bana, sedan ämnet i en öppen digital uppgift,
      annars matematik (samma ordning som i studievyn). */
   function nlBana() {
+    if (!S.nl.val.amne) {
+      const minns = U.minnesBana('barn');
+      if (minns) S.nl.val = minns;
+    }
     const d = S.nl.data || {};
     const finns = U.banor(d.katalog || []);
     const given = (d.uppgifter || []).find(h => h.niva_id && h.status !== 'klar' && h.nivaer);
@@ -751,6 +755,7 @@
     if (amne) {
       const ak = amne.dataset.nlAk || '';
       S.nl.val = { amne: amne.dataset.nlAmne, arskurs: ak, spar: S.nl.val.spar || 'vag' };
+      U.komIhagBana('barn', S.nl.val);
       ritaOchHåll('#bv-nl-vag .nl-baner', ritaVägen,
         '#bv-nl-vag .nl-amne[data-nl-amne="' + CSS.escape(amne.dataset.nlAmne) + '"]');
       return;
@@ -758,12 +763,14 @@
     const ak = e.target.closest('#bv-nl-vag [data-nl-ak]');
     if (ak) {
       S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: ak.dataset.nlAk, spar: S.nl.val.spar || 'vag' };
+      U.komIhagBana('barn', S.nl.val);
       ritaOchHåll('#bv-nl-vag .nl-baner', ritaVägen, '#bv-nl-vag .nl-ak-knapp[data-nl-ak="' + CSS.escape(ak.dataset.nlAk) + '"]');
       return;
     }
     const spar = e.target.closest('#bv-nl-vag [data-nl-spar]');
     if (spar) {
       S.nl.val = { amne: host ? host.dataset.amne : '', arskurs: host ? host.dataset.arskurs : '', spar: spar.dataset.nlSpar };
+      U.komIhagBana('barn', S.nl.val);
       ritaOchHåll('#bv-nl-vag .nl-spar', ritaVägen, '#bv-nl-vag [data-nl-spar="' + CSS.escape(spar.dataset.nlSpar) + '"]');
       return;
     }

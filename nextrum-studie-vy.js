@@ -1199,6 +1199,10 @@
      barnets årskurs när ingen är vald. spar är vägen eller sektionen
      inför nationella provet (2026-10-06). */
   function nlBana() {
+    if (S.valtBarn && !S.banaVal[S.valtBarn]) {
+      const minns = U.minnesBana(S.valtBarn);
+      if (minns) S.banaVal[S.valtBarn] = minns;
+    }
     const val = S.banaVal[S.valtBarn] || {};
     const finns = U.banor(S.katalog || []);
     const barn = valtBarnet();
@@ -1288,6 +1292,7 @@
      bana finns inte kvar när den banan är vald. */
   function väljBana(val, fokus) {
     S.banaVal[S.valtBarn] = val;
+    U.komIhagBana(S.valtBarn, val);
     ritaOchHåll('#nl-vag .nl-baner', ritaVägen, fokus);
   }
   document.addEventListener('click', e => {
@@ -1309,6 +1314,7 @@
     const spar = e.target.closest('#nl-vag [data-nl-spar]');
     if (spar) {
       S.banaVal[S.valtBarn] = { amne: host ? host.dataset.amne : '', arskurs: host ? host.dataset.arskurs : '', spar: spar.dataset.nlSpar };
+      U.komIhagBana(S.valtBarn, S.banaVal[S.valtBarn]);
       ritaOchHåll('#nl-vag .nl-spar', ritaVägen, '#nl-vag [data-nl-spar="' + CSS.escape(spar.dataset.nlSpar) + '"]');
       return;
     }
