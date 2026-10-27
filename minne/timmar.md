@@ -993,3 +993,41 @@ kassan. Inget får droppas, och ingen migration får ändra eller radera befintl
   inte.
 - Adminvyn: texterna om vad familjerna kan köpa säger planer, och strömbrytaren heter Planer och köpta timmar.
   Listorna över köp och Liggarens typ `timbank` heter som förut, för de visar köp som redan finns.
+
+## Egna upplägg (2026-10-27, `egna_upplagg`)
+
+Leo: "gör en funktion att admin kan skicka egna upplägg att köpa, det är tex så att admin säljer 6 h till familjen
+därför att det är lov och då skickar vi ett upplägg, villkoren är samma men det är bara 6h istället." Samma meddelande
+sa att planerna skulle gälla köpmånaden i stället för 30 dagar; Leo tog tillbaka det samma dag ("skojade, planerna är
+i 30 dagar"), och inget ändrades där. Samma eftermiddag gjordes upplägget om (Leo: "rabattkod gäller också för upplägg.
+Samma sak som vanliga planer bara annat antal timmar och vi från admin skickar de som möjlighet till köp, De köper och
+möjligheten försvinner, vill de ha eget upplägg igen måste vi skicka igen. Mejl ska gå ut när de fått möjlighet till
+eget upplägg"): den första versionen hade ett timpris admin satte, ingen kod, inga timmar till det och inget mejl.
+
+- **Admin skickar** i familjens panel, under Ekonomi → Egna upplägg (`skicka_eget_upplagg()`, bara `is_admin()`): ett
+  namn som familjen ser och som står på kvittot (högst 60 tecken, hjälptexten ber om inget om barnet), 1–40 timmar och
+  hur många dagar familjen kan köpa det (1–60, 14 som förval). **Priset är planernas**: databasen sätter timpriset ur
+  `erbjudanden_pris` (det lägsta rabatterade timpriset bland planerna, 379 kr i dag) och fryser det på upplägget, så att
+  mejlet och kassan säger samma pris; det finns inget fält för ett eget pris. Högst fem som väntar per familj. Upplägget
+  står fast när det skickats (`intern.egna_upplagg_vakt`): bara att det köpts eller dragits tillbaka
+  (`aterkalla_eget_upplagg()`) skrivs. Skriv i Gmail står kvar för ett eget ord.
+- **Mejlet**: triggern `egna_upplagg_notis` köar ett mejl till familjen (typen `eget_upplagg`, `minne/notiser.md`) med
+  timmarna, priset med familjens rabatt och sista dagen. Det går om fem minuter och bara medan upplägget går att köpa.
+- **Familjen köper en gång** under Betalning & planer, där upplägget står som ett band ovanför planerna (`#erb-upplagg`,
+  `ritaUpplagg`) och i notisrutan, med Köp och köpvillkoren först. `stripe-checkout` (`{ upplagg, rabattkod }`) läser
+  upplägget med familjens token, prövar koden mot uppläggets pris (`kod_pa_upplagget`), och databasen skapar köpet
+  (`eget_upplagg_kop()`, bara tjänstekontot): en rad i `klippkort` med erbjudandet `plan_eget`, sorten `plan`,
+  `upplagg_id` och koden, där `intern.klippkort_rabatt` räknar priset som för en plan ur katalogen (uppläggets pris,
+  familjerabatten på varje timme och koden på det som är kvar). Ett väntande köp av samma upplägg med samma kod och pris
+  återanvänds i 23 timmar. När köpet är betalt är upplägget köpt och syns inte längre, och `eget_upplagg_kop()` och
+  `kod_pa_upplagget` säger nej till det; vill familjen ha ett till skickar admin ett nytt. Katalogens rad `plan_eget` säljs
+  aldrig (`erbjudanden_eget_saljs_inte`), och raden i kassan är `kassaradForUpplagg`, med koden när köpet har en.
+- **Det är en plan**, med allt: 30 dagar från betalningen (`klippkort_betald`), timbanken och ordningen timmarna dras i,
+  första timmen gratis om det är familjens första plan, familjerabatten, rabattkoden, Köp till timmar
+  (`extra_timmar_erbjudande` och vyns `planFörExtra` tar det som en plan, till köpets timpris), påminnelsen tio dagar
+  innan, ångerrätten, Att sluta och återbetalningen under Liggaren. Villkoren säger det (`#eget-upplagg`, version
+  2026-10-27), och nämner inga koder, som resten av villkoren.
+- **Betalt två gånger** (två kassor) eller efter att det drogs tillbaka (kassan stod öppen): köpet står, för pengarna
+  kom, och en uppgift säger vad admin ska avgöra (`eget_upplagg_dubbel:<köp>`, `eget_upplagg_aterkallat:<köp>`).
+- **Provat** i `rls-test.sql` avsnitt 58 (21 rader), `koder_test.ts`, `erbjudanden_test.ts`, `rendera_test.ts` och
+  `prova-kassan.js` (Egna upplägg, och Upplägget med kod).

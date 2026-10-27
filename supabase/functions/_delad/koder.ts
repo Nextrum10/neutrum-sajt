@@ -11,8 +11,10 @@
 //   · koden skrivs som databasen lagrar den (versaler, 3–24 tecken av
 //     A–Z, 0–9 och bindestreck), och en kod på ett pass, ett tillägg,
 //     kortet eller timmar till planen nekas innan något annat händer;
-//   · bara en plan i katalogen tar en kod (sort = 'plan'), aldrig Fyll
-//     timbanken;
+//   · bara en plan tar en kod (sort = 'plan'), aldrig Fyll timbanken
+//     eller timmar till planen; ett eget upplägg är en plan och tar en
+//     (2026-10-27, Leo: "rabattkod gäller också för upplägg"), prövad mot
+//     uppläggets pris (kod_pa_upplagget);
 //   · databasens svar (kod_pa_planen) prövas: gäller koden inte säger
 //     kassan databasens skäl, och rabatten räknas om ur typen och värdet.
 //     Det är en kontroll, inte en andra källa: glider räkningarna isär
@@ -57,13 +59,13 @@ export function kodPaFelBetalning(kropp: Record<string, unknown> | null | undefi
   if (!kropp) return null;
   if (normaliseraKod(kropp.rabattkod) === null) return null;
   if (kropp.pass !== undefined || kropp.tillagg !== undefined || kropp.kort !== undefined
-      || kropp.erbjudande === 'plan_extra' || kropp.erbjudande === undefined) {
+      || kropp.erbjudande === 'plan_extra' || (kropp.erbjudande === undefined && kropp.upplagg === undefined)) {
     return KOD_BARA_PLAN;
   }
   return null;
 }
 
-/** Tar köpet en kod? Bara en plan i katalogen, som intern.kod_galler_kopet. */
+/** Tar köpet en kod? En plan, som intern.kod_galler_kopet: aldrig timmar till planen. */
 export function kodenGallerKopet(e: { kod?: string | null; sort?: string | null } | null | undefined): boolean {
   return !!e && e.sort === 'plan' && e.kod !== 'plan_extra';
 }
@@ -169,5 +171,22 @@ export async function planensKod(
   if (kod === false) return { ok: false, status: 409, fel: KOD_FINNS_INTE };
   if (!kodenGallerKopet(e)) return { ok: false, status: 409, fel: KOD_BARA_PLAN };
   const b = provaKodsvaret(await fragaOmKoden(db, kod, e.kod));
+  return b.ok ? { ok: true, kod, pris: b.pris, rabatt: b.rabatt, attBetala: b.attBetala } : b;
+}
+
+/**
+ * Samma väg för ett eget upplägg (egna_upplagg, 2026-10-27): formen,
+ * databasens svar om koden på uppläggets pris (kod_pa_upplagget, med
+ * familjens token, som också prövar att upplägget är familjens och går att
+ * köpa) och kontrollen. Utan kod frågas inte databasen.
+ */
+export async function upplaggetsKod(db: Kodklient, rabattkod: unknown, upplagg: string): Promise<Kodbeslut> {
+  const kod = normaliseraKod(rabattkod);
+  if (kod === null) return { ok: true, kod: null };
+  if (kod === false) return { ok: false, status: 409, fel: KOD_FINNS_INTE };
+  const { data, error } = await db.rpc('kod_pa_upplagget', { p_kod: kod, p_upplagg: upplagg });
+  if (error) return { ok: false, status: 409, fel: KOD_GICK_INTE };
+  const rad = Array.isArray(data) ? data[0] : data;
+  const b = provaKodsvaret(rad && typeof rad === 'object' ? rad as Kodsvar : null);
   return b.ok ? { ok: true, kod, pris: b.pris, rabatt: b.rabatt, attBetala: b.attBetala } : b;
 }

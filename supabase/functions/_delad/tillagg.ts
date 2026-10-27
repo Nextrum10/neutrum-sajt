@@ -227,22 +227,26 @@ export type Aterbetalning = {
  * Återbetalningarna på en betalning, fördelade per rad. En återbetalning
  * med raden i metadata (betalningsrad) hör till den raden; en med köpets
  * id (klippkort_id, som adminvyns återbetalning av ett köp skriver) hör
- * till köpets rad. En rad får aldrig mer tillbaka än den betalade: det som
+ * till köpets rad, och en med passets id (booking_id, som återbetalningen
+ * av ett kortare pass skriver) till passets rad i en betalning för flera
+ * pass (2026-10-27). En rad får aldrig mer tillbaka än den betalade: det som
  * går över är överskott. En utan rad, eller med en rad som inte finns på
  * betalningen, är ofördelad, och då avgör en människa (en uppgift). Samma
  * återbetalning räknas en gång, och en som misslyckats räknas inte.
  */
 export function fordelaAterbetalningar(
-  rader: { id: string; beloppOre: number; klippkortId?: string | null }[],
+  rader: { id: string; beloppOre: number; klippkortId?: string | null; bookingId?: string | null }[],
   aterbetalningar: Aterbetalning[],
 ): { perRad: Record<string, number>; ofordelat: number; overskott: number } {
   const perRad: Record<string, number> = {};
   const tak = new Map<string, number>();
   const kopetsRad = new Map<string, string>();
+  const passetsRad = new Map<string, string>();
   for (const r of rader) {
     perRad[r.id] = 0;
     tak.set(r.id, Math.max(0, Math.trunc(r.beloppOre)));
     if (r.klippkortId) kopetsRad.set(r.klippkortId, r.id);
+    if (r.bookingId) passetsRad.set(r.bookingId, r.id);
   }
   let ofordelat = 0;
   let overskott = 0;
@@ -253,7 +257,8 @@ export function fordelaAterbetalningar(
     if (a.status !== undefined && a.status !== 'succeeded' && a.status !== 'pending') continue;
     const belopp = Math.max(0, Math.trunc(Number(a.amount) || 0));
     const md = (a.metadata ?? {}) as Record<string, unknown>;
-    const rad = String(md.betalningsrad ?? '') || kopetsRad.get(String(md.klippkort_id ?? '')) || '';
+    const rad = String(md.betalningsrad ?? '') || kopetsRad.get(String(md.klippkort_id ?? ''))
+      || passetsRad.get(String(md.booking_id ?? '')) || '';
     if (!rad || !tak.has(rad)) { ofordelat += belopp; continue; }
     const kvar = tak.get(rad)! - perRad[rad];
     const del = Math.min(belopp, Math.max(0, kvar));

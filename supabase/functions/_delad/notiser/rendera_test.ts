@@ -294,6 +294,22 @@ Deno.test('värvningsbonusen: bara beloppet och villkoren, aldrig vem som värva
   assertEquals(/NaN|undefined|null/.test(tom.text), false);
 });
 
+Deno.test('ett eget upplägg: timmarna, priset och sista dagen, aldrig namnet (egna_upplagg, 2026-10-27)', () => {
+  const m = rendera('eget_upplagg', 'parent',
+    { data: { ...SMUTSIG, timmar: 6, belopp: 227400, datum: '2026-11-10', namn: 'Alva Efternamnsson' } });
+  assertStringIncludes(m.amne, 'Ett upplägg till er: 6 timmar läxhjälp');
+  assertStringIncludes(m.text, 'Vi har lagt in ett upplägg åt er: 6 timmar läxhjälp för 2\u00a0274\u00a0kr.');
+  assertStringIncludes(m.text, 'senast tisdag 10 november');
+  assertStringIncludes(m.text, 'timmarna gäller i 30 dagar från köpet');
+  assertStringIncludes(m.text, `${SAJT}/foralder#betalning/planer`);
+  assertStringIncludes(m.text, 'egna upplägg är påslaget');
+  // Namnet och elevens namn följer aldrig med.
+  assertEquals(m.text.includes('Alva') || m.html.includes('Alva'), false);
+  const tom = rendera('eget_upplagg', 'parent', { data: {} });
+  assertEquals(/NaN|undefined|null/.test(tom.text), false);
+  assertStringIncludes(tom.amne, 'Ett upplägg till er från Nextrum');
+});
+
 Deno.test('foten säger varför mejlet kom, hur man slutar få det, och vart man skriver', () => {
   const m = rendera('meddelande', 'parent');
   assertStringIncludes(m.text, 'Du får det här för att du har ett konto på Nextrum');

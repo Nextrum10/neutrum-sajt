@@ -78,6 +78,15 @@
 //    Endpointen behöver checkout.session.expired för det; utan händelsen
 //    släpper jobbet tillagg-forsok dem efter 35 minuter.
 //
+// 9. BETALA ALLA (flera_pass_och_aterbetalningar, 2026-10-27). En session
+//    med pass_kassa i metadata betalar flera pass. Databasen skriver
+//    liggaren, varje pass med sin del och en rad per pass i en transaktion
+//    (passkassa_betald); passen pekar på kassan, för PaymentIntent och
+//    charge är unika per pass. Avgiften delas på passen, en återbetalning
+//    skrivs per rad och en tvist på liggaren och passen. Varje
+//    återbetalning den ser skrivs också ner (aterbetalning_logga), var den
+//    än gjordes.
+//
 //
 // verify_jwt = false. Anroparen är Stripe, inte en inloggad
 // användare. Skyddet är signaturen, och raden står i config.toml i
@@ -94,9 +103,8 @@ import {
 } from '../_delad/stripe.ts';
 import { type Handelselager, markeraKlar, taEmotLeverans } from '../_delad/webhooken.ts';
 import { kortetsDelar, reservationensPass, reserveradTill, slappetsLage } from '../_delad/kortreservation.ts';
-import {
-  type Aterbetalning, fordelaAterbetalningar, forsokUrMetadata, hanteraTillagg, type TillaggDb,
-} from '../_delad/tillagg.ts';
+import { type Aterbetalning, forsokUrMetadata, hanteraTillagg, type TillaggDb } from '../_delad/tillagg.ts';
+import { arFleraPass, type Betalningsrad, kassaUrMetadata, raderUrStripe } from '../_delad/passkassa.ts';
 
 type Handelse = {
   id?: string;
@@ -241,18 +249,26 @@ Deno.serve(async (req) => {
   };
 
   /* AVGIFTEN FÖR EN BETALNING SOM BARA ÄR TILLÄGG (Betala tillägg nu,
-     granskningen 2026-10-21). Ingen pass-, köp- eller övertidsrad bär
-     chargen, så avgiften skrivs på liggarens rad när den kommer med
-     charge.updated. En avgift som redan står skrivs aldrig över. */
+     granskningen 2026-10-21) ELLER FLERA PASS (Betala alla, 2026-10-27).
+     Ingen pass-, köp- eller övertidsrad bär chargen, så avgiften skrivs på
+     liggarens rad när den kommer med charge.updated, och för flera pass
+     delas den på passen i samma transaktion (betalning_avgift). En avgift
+     som redan står skrivs aldrig över. */
   const avgiftenPaLiggaren = async (chargeId: string, forsta: ReturnType<typeof balans>) => {
-    const { data: lig, error } = await db.from('betalningar')
-      .select('id, avgift_ore').eq('stripe_charge', chargeId).eq('typ', 'syskon').maybeSingle();
+    const { data: ligg, error } = await db.from('betalningar')
+      .select('id, typ, booking_id, avgift_ore').eq('stripe_charge', chargeId);
     if (error) throw new Error('betalningar: ' + error.message);
+    const lig = (ligg ?? []).find((r) => r.typ === 'syskon' || (r.typ === 'pass' && !r.booking_id));
     if (!lig) return await klar('charge utan pass');
     if (lig.avgift_ore !== null && lig.avgift_ore !== undefined) return await klar('avgiften fanns redan');
     let bt = forsta;
     if (bt.avgiftOre === null && arStripeId(bt.id, 'txn')) {
       bt = balans(await v1('GET', `/v1/balance_transactions/${bt.id}`));
+    }
+    if (lig.typ === 'pass') {
+      await rpcText('betalning_avgift', { p_charge: chargeId, p_bt: bt.id, p_avgift: bt.avgiftOre, p_netto: bt.nettoOre });
+      return await klar(bt.avgiftOre === null ? 'balanstransaktion utan avgift'
+        : `avgift ${bt.avgiftOre} öre på liggaren, delad på passen`);
     }
     const { error: avgfel } = await db.from('betalningar')
       .update({ avgift_ore: bt.avgiftOre, netto_ore: bt.nettoOre })
@@ -270,10 +286,18 @@ Deno.serve(async (req) => {
      den betalade. Köpets del skrivs på köpet som förut, men bara köpets
      del. En återbetalning utan rad (Stripes panel) fördelas inte av en
      maskin: köpet stängs som förut, och en människa får en uppgift.
-     Svarar null när betalningen inte har en tilläggsrad: då gör grenen
-     nedan som förut. */
-  const aterbetalaRader = async (chargeId: string, pi: string, aterbetalt: number): Promise<string | null> => {
-    const fraga = db.from('betalningar').select('id, stripe_payment_intent');
+
+     FLERA PASS (Betala alla, 2026-10-27) återbetalas också per rad: en rad
+     per pass, och databasen skriver passets återbetalda belopp och läge ur
+     raden. Är hela betalningen tillbaka är varje rad det, med eller utan
+     metadata; annars avgör en människa en återbetalning utan rad.
+
+     Svarar null när betalningen varken har en tilläggsrad eller är en
+     betalning för flera pass: då gör grenen nedan som förut. */
+  const aterbetalaRader = async (
+    chargeId: string, pi: string, aterbetalt: number, totalt: number, aterbet: Aterbetalning[],
+  ): Promise<string | null> => {
+    const fraga = db.from('betalningar').select('id, stripe_payment_intent, typ, booking_id, utan_rad, familj');
     const { data: bet, error: bfel } = await (arStripeId(pi, 'pi')
       ? fraga.eq('stripe_payment_intent', pi) : fraga.eq('stripe_charge', chargeId)).maybeSingle();
     if (bfel) {
@@ -282,19 +306,39 @@ Deno.serve(async (req) => {
     }
     if (!bet) return null;
     const { data: rader, error: rfel } = await db.from('betalningsrader')
-      .select('id, typ, belopp_ore, klippkort_id').eq('betalning_id', bet.id);
+      .select('id, typ, belopp_ore, klippkort_id, booking_id').eq('betalning_id', bet.id);
     if (rfel) {
       if (rfel.code === '42P01' || rfel.code === 'PGRST205') return null;
       throw new Error('betalningsrader: ' + rfel.message);
     }
-    if (!(rader ?? []).some((r) => r.typ === 'syskon')) return null;
+    const fleraPass = arFleraPass(bet);
+    if (!fleraPass && !(rader ?? []).some((r) => r.typ === 'syskon')) return null;
 
-    const lista = await v1('GET', `/v1/refunds?charge=${encodeURIComponent(chargeId)}&limit=100`);
-    const aterbet = (Array.isArray(lista.data) ? lista.data : []) as Aterbetalning[];
-    const f = fordelaAterbetalningar(
-      (rader ?? []).map((r) => ({ id: String(r.id), beloppOre: Number(r.belopp_ore), klippkortId: r.klippkort_id ?? null })),
-      aterbet,
-    );
+    // Samma fördelning som stripe-aterbetalning och stripe-reservation gör (raderUrStripe).
+    const f = raderUrStripe(bet, (rader ?? []) as Betalningsrad[], aterbet, aterbetalt, totalt);
+
+    if (fleraPass) {
+      await rpcText('betalningsrader_aterbetalda', {
+        p_pi: bet.stripe_payment_intent, p_per_rad: f.perRad, p_totalt: aterbetalt,
+      });
+      if (f.ofordelat > 0 || f.overskott > 0) {
+        const { error: ufel } = await db.rpc('skapa_uppgift', {
+          p_titel: 'En återbetalning på en betalning för flera pass saknar pass',
+          p_nyckel: `aterbetalning-utan-rad:${chargeId}:${aterbetalt}`,
+          p_typ: 'kontroll',
+          p_beskrivning: `${Math.round((f.ofordelat + f.overskott) / 100)} kr betalades tillbaka utan att det står `
+            + 'vilket pass det gällde (troligen i Stripes dashboard). Betalningen gällde flera pass, och inget av '
+            + 'dem är ändrat för den. Avgör vilket pass som betalades tillbaka; betala hellre tillbaka ett pass från '
+            + 'Liggaren i adminvyn nästa gång.',
+          p_kopplad_tabell: 'profiles',
+          p_kopplad_id: String(bet.familj),
+          p_skapad_av_typ: 'system',
+        });
+        if (ufel) throw new Error('skapa_uppgift: ' + ufel.message);
+      }
+      return `återbetalt per pass ${aterbetalt} öre${f.hela ? ', hela betalningen' : ''}`;
+    }
+
     await rpcText('betalningsrader_aterbetalda', {
       p_pi: bet.stripe_payment_intent, p_per_rad: f.perRad, p_totalt: aterbetalt,
     });
@@ -331,6 +375,61 @@ Deno.serve(async (req) => {
       if (ufel) throw new Error('skapa_uppgift: ' + ufel.message);
     }
     return `återbetalt per rad ${aterbetalt} öre${kopText}`;
+  };
+
+  /* VARJE ÅTERBETALNING SKRIVS NER (flera_pass_och_aterbetalningar,
+     2026-10-27), var den än gjordes: i adminvyn (vem och varför står i
+     Stripes metadata, som stripe-aterbetalning skrev dem), av sig själv
+     (ett kortare pass, av 'system') eller i Stripes dashboard (ingen
+     metadata). Samma återbetalning två gånger blir en rad, och
+     stripe-aterbetalning skriver samma sak ur samma metadata, så det spelar
+     ingen roll vem som hinner först. Databasen läser betalningen, familjen
+     och vad det var ur liggaren; anropet säger bara raden, passet eller
+     köpet ur metadata. Före migrationen finns funktionen inte, och då
+     skrivs inget. */
+  const loggaAterbetalningar = async (pi: string, lista: Aterbetalning[]) => {
+    if (!arStripeId(pi, 'pi')) return;
+    const id = (v: unknown) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v ?? ''))
+      ? String(v).toLowerCase() : null;
+    for (const a of lista) {
+      if (!a || (a.status !== undefined && a.status !== 'succeeded' && a.status !== 'pending')) continue;
+      const md = (a.metadata ?? {}) as Record<string, unknown>;
+      const av = id(md.av);
+      const { error } = await db.rpc('aterbetalning_logga', {
+        p_refund: String(a.id ?? ''), p_pi: pi, p_belopp: Math.trunc(Number(a.amount) || 0),
+        p_rad: id(md.betalningsrad), p_booking: id(md.booking_id) ?? id(md.tillagg_booking_id),
+        p_klippkort: id(md.klippkort_id), p_tillagg: !!id(md.tillagg_booking_id),
+        p_anledning: String(md.anledning ?? '').slice(0, 300) || null,
+        p_av: av, p_satt: av ? 'adminvyn' : md.av === 'system' ? 'automatiskt' : 'stripe',
+      });
+      if (error) {
+        if (error.code === 'PGRST202') return;
+        throw new Error('aterbetalning_logga: ' + error.message);
+      }
+    }
+  };
+
+  /* BETALA ALLA (flera_pass_och_aterbetalningar, 2026-10-27). Pengarna för
+     en kassa med flera pass: databasen skriver liggaren, varje pass med sin
+     del på samma tre vägar som betalaPasset nedan (obetalt, timmarna eller
+     timbanken: kortet vinner) och en rad per pass, i en transaktion, och
+     prövar själv vad som redan är betalt. Ett pass som hann betalas på
+     annat sätt får sin rad med en uppgift om att betala tillbaka den. Ett
+     fel kastas, så att Stripe försöker igen. */
+  const betalaKassan = async (kassa: string, piId: string, draget: number | null): Promise<Response> => {
+    if (!arStripeId(piId, 'pi')) return await klar('kassa för flera pass utan payment intent');
+    const { chargeId, b } = await chargeOchBalans(piId);
+    const svar = await rpcText('passkassa_betald', {
+      p_kassa: kassa, p_pi: piId, p_charge: chargeId, p_belopp: draget, p_bt: b.id,
+      p_avgift: b.avgiftOre, p_netto: b.nettoOre, p_skarp: skarp,
+    });
+    if (svar === 'betald') return await klar('kassa för flera pass betald');
+    if (svar === 'delvis') return await klar('kassa för flera pass betald, ett pass var redan betalt: uppgift skapad');
+    if (svar === 'redan') return await klar('kassan för flera pass var redan betald');
+    if (svar === 'dubbel') return await klar('kassa för flera pass betald två gånger: i liggaren, uppgift skapad');
+    if (svar === 'fel_belopp') return await klar('kassa för flera pass med fel belopp: i liggaren, uppgift skapad');
+    // Kassan finns inte (familjen är borta med den): pengarna kom ändå, och en människa betalar tillbaka dem.
+    return await ejNedskriven(`kassan för flera pass ${kassa}`, piId, draget, null);
   };
 
   /* PASSETS BETALNING SKRIVS (Fas 14.1; en egen funktion sedan 2026-10-13).
@@ -473,6 +572,19 @@ Deno.serve(async (req) => {
            märks, så att jobbet inte släpper posterna. */
         const tSvar = await hanteraTillagg(typ, obj, skarp, tillaggDb, chargeUppslag);
         if (tSvar !== null) return await klar(tSvar);
+
+        /* BETALA ALLA (2026-10-27): kassans id i metadata, och inget pass.
+           Pengar som kommer senare (Klarna) märker kassan, så att passen
+           inte betalas en gång till medan de är på väg. */
+        const passkassa = kassaUrMetadata(obj.metadata);
+        if (passkassa) {
+          if (obj.payment_status !== 'paid') {
+            await rpcText('passkassa_vantar', { p_kassa: passkassa, p_session: String(obj.id ?? '') });
+            return await klar('kassa för flera pass: väntar på betalningen');
+          }
+          return await betalaKassan(passkassa, String(obj.payment_intent ?? ''),
+            typeof obj.amount_total === 'number' ? obj.amount_total : null);
+        }
 
         if (obj.payment_status !== 'paid') return await klar('session utan betalning');
 
@@ -624,6 +736,13 @@ Deno.serve(async (req) => {
          sitt eget payment_intent.payment_failed, som skriver läget nedan.
          Här finns inget mer att göra. */
       case 'checkout.session.async_payment_failed': {
+        /* En kassa för flera pass släpps (2026-10-27): sessionen är klar och
+           kan inte betalas igen, och passen ska gå att betala på nytt. */
+        const kassaNej = kassaUrMetadata(obj.metadata);
+        if (kassaNej) {
+          await rpcText('passkassa_slapp', { p_kassa: kassaNej, p_orsak: 'avbruten' });
+          return await klar('klarna sa nej, kassan för flera pass släppt; payment_intent.payment_failed skriver passen');
+        }
         // Ett försök för tillägget släpps: posterna blir upplupna igen (syskontillagg_som_skuld).
         const tSvar = await hanteraTillagg(typ, obj, skarp, tillaggDb);
         return await klar(tSvar ? `${tSvar}; klarna sa nej, payment_intent.payment_failed skriver resten`
@@ -636,6 +755,12 @@ Deno.serve(async (req) => {
          samma sak efter 35 minuter om händelsen aldrig kommer. Ett köp eller
          ett pass står kvar som förut. */
       case 'checkout.session.expired': {
+        // En kassa för flera pass släpps (2026-10-27); passen står kvar som obetalda.
+        const kassaUte = kassaUrMetadata(obj.metadata);
+        if (kassaUte) {
+          const slappt = await rpcText('passkassa_slapp', { p_kassa: kassaUte, p_orsak: 'utgangen' });
+          return await klar(slappt === 'true' ? 'kassan för flera pass gick ut' : 'kassan för flera pass var redan stängd');
+        }
         const tSvar = await hanteraTillagg(typ, obj, skarp, tillaggDb);
         return await klar(tSvar ?? 'sessionen gick ut');
       }
@@ -663,6 +788,12 @@ Deno.serve(async (req) => {
             .eq('id', kkId).eq('status', 'vantar');
           if (error) throw new Error('klippkort: ' + error.message);
           return await klar('klippkort misslyckat');
+        }
+        // Passen i en kassa för flera pass (2026-10-27): de som väntar blir misslyckade.
+        const kassaMiss = kassaUrMetadata(obj.metadata);
+        if (kassaMiss) {
+          const n = await rpcText('passkassa_misslyckad', { p_kassa: kassaMiss });
+          return await klar(`kassa för flera pass misslyckad, ${n} pass`);
         }
         const passId = String((obj.metadata as Record<string, string> | undefined)?.booking_id ?? '');
         if (!passId) return await klar('utan pass-id');
@@ -724,8 +855,14 @@ Deno.serve(async (req) => {
            det HÄR siffran hamnar. */
         const chargeId = String(obj.id ?? '');
         if (chargeId) {
-          // En betalning med tillägg återbetalas per rad (syskontillagg_som_skuld).
-          const radSvar = await aterbetalaRader(chargeId, String(obj.payment_intent ?? ''), aterbetalt);
+          /* Stripes lista över återbetalningarna, en gång: varje återbetalning
+             skrivs ner, och raderna fördelas ur den. */
+          const lista = await v1('GET', `/v1/refunds?charge=${encodeURIComponent(chargeId)}&limit=100`);
+          const aterbet = (Array.isArray(lista.data) ? lista.data : []) as Aterbetalning[];
+          await loggaAterbetalningar(String(obj.payment_intent ?? ''), aterbet);
+          /* En betalning med tillägg (syskontillagg_som_skuld) och en för flera
+             pass (2026-10-27) återbetalas per rad. */
+          const radSvar = await aterbetalaRader(chargeId, String(obj.payment_intent ?? ''), aterbetalt, totalt, aterbet);
           if (radSvar !== null) return await klar(radSvar);
           const passen = await aterbetala('bookings', 'stripe_charge_id', chargeId, 'betalning_status', lage);
           /* Ett köp av timmar (Fas 16.1). En återbetalning i Stripes panel
@@ -906,9 +1043,10 @@ Deno.serve(async (req) => {
           return await klar(`tvist ${tvistId}: sen händelse efter stängning, ignorerad`);
         }
 
-        /* En betalning som bara är tillägg (Betala tillägg nu) bärs av ingen
-           rad ovan: tvisten flaggas på liggarens rad, och inget annat görs
-           (syskontillagg_som_skuld). Efter vakten ovan (granskningen
+        /* En betalning som bara är tillägg (Betala tillägg nu) eller som
+           gällde flera pass (Betala alla, 2026-10-27) bärs av ingen rad ovan:
+           tvisten flaggas på liggarens rad och, för flera pass, på passen
+           (betalning_tvist), och inget annat görs (syskontillagg_som_skuld). Efter vakten ovan (granskningen
            2026-10-21): en sen updated efter en stängd tvist satte annars
            betalningen i tvist igen. */
         const tillaggSvar = !pass && !kort && !tillagg ? await hanteraTillagg(typ, obj, skarp, tillaggDb) : null;

@@ -24,7 +24,8 @@
 // passet och sedan valt timmar står kassan kvar hos Stripe i ett dygn.
 // Den stängs här, så att passet inte kan betalas två gånger. Hinner en
 // betalning igenom ändå vinner kortet i webhooken, och timmarna kommer
-// tillbaka på klippkortet.
+// tillbaka på klippkortet. En kassa för flera pass som bär passet
+// (Betala alla, 2026-10-27) stängs på samma sätt.
 //
 //
 // TIMBANKEN (Fas 22.1)
@@ -92,6 +93,32 @@ Deno.serve(async (req) => {
       if (!(e instanceof StripeError)) {
         console.error('klippkort-betala: kassan stängdes inte', JSON.stringify({ pass: passId, fel: (e as Error)?.message }));
       }
+    }
+  }
+
+  /* En kassa för flera pass som bär passet stängs också (2026-10-27), och
+     släpps. En kassa vars betalning väntar på Klarna, eller som Stripe inte
+     längre kan stänga, står kvar: kommer pengarna vinner kortet i
+     webhooken, och timmarna kommer tillbaka. Före migrationen finns inga. */
+  const { data: iKassor } = await db.from('passkassor_pass').select('kassa_id').eq('booking_id', passId);
+  const kassorna = (iKassor ?? []).map((r) => String(r.kassa_id));
+  if (kassorna.length) {
+    const { data: oppna } = await db.from('passkassor').select('id, stripe_session_id, vantar_at')
+      .in('id', kassorna).eq('status', 'oppen');
+    for (const k of oppna ?? []) {
+      if (k.vantar_at) continue;
+      if (k.stripe_session_id) {
+        try {
+          await v1('POST', `/v1/checkout/sessions/${k.stripe_session_id}/expire`);
+        } catch (e) {
+          if (!(e instanceof StripeError)) {
+            console.error('klippkort-betala: kassan för flera pass stängdes inte', JSON.stringify({ pass: passId }));
+          }
+          continue;
+        }
+      }
+      const { error: sfel } = await db.rpc('passkassa_slapp', { p_kassa: k.id, p_orsak: 'avbruten' });
+      if (sfel) console.error('klippkort-betala: kassan för flera pass släpptes inte', JSON.stringify({ pass: passId, fel: sfel.message }));
     }
   }
 

@@ -309,6 +309,8 @@ window.NXForhandsvisning = (function () {
       ],
       sparade_kort: [],
       kortreservationer: [],
+      /* Egna upplägg (egna_upplagg, 2026-10-27): inga skickade i världen. */
+      egna_upplagg: [],
       erbjudanden: [
         { kod: 'plan_basic', sort: 'plan', namn: 'Basic', timmar: 4, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 10 },
         { kod: 'plan_standard', sort: 'plan', namn: 'Standard', timmar: 8, timmar_pa_kopet: 0, rabatt_procent: 5, giltig_manader: 1, ordning: 20 },
@@ -474,6 +476,7 @@ window.NXForhandsvisning = (function () {
       /* Kortet (kortet_reserveras): familjen läser sina reservationer, och
          kortet bara genom mitt_kort(). */
       case 'kortreservationer': return roll === 'foralder' && r.parent_id === JAG;
+      case 'egna_upplagg': return roll === 'foralder' && r.familj === JAG;
       case 'sparade_kort': return false;
       case 'payouts': case 'arbetade_timmar': case 'payout_lines': return roll !== 'foralder' && r.tutor_id === JAG;
       case 'varvningsbonus': return false;
@@ -883,6 +886,11 @@ window.NXForhandsvisning = (function () {
     kolla_rabattkod_kop: function () {
       return [{ giltig: false, orsak: 'Rabattkoderna prövas inte i förhandsvisningen.', rabatt_ore: 0, beskrivning: null,
                 pris_ore: null, att_betala_ore: null }];
+    },
+    /* En kod på ett eget upplägg (egna_upplagg, 2026-10-27), som på en plan. */
+    kod_pa_upplagget: function () {
+      return [{ giltig: false, orsak: 'Rabattkoderna prövas inte i förhandsvisningen.', rabatt_ore: 0, beskrivning: null,
+                pris_ore: null, att_betala_ore: null, rabatt_typ: null, rabatt_varde: null }];
     },
     /* Kortet (kortet_reserveras, 2026-10-13): samma prövning som
        valj_kort() i databasen. Jobbet som reserverar och släpper finns

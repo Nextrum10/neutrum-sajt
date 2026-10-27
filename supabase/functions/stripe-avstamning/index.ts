@@ -26,6 +26,12 @@
 // skriven av webhooken ur samma källa.
 //
 //
+// FLERA PASS I SAMMA KASSA (2026-10-27, flera_pass_och_aterbetalningar)
+// har ingen charge på passen: den står i liggaren, och avgiften skrivs där
+// och delas på passen av databasen (betalning_avgift), som när
+// charge.updated kommer.
+//
+//
 // ORDNINGEN: anroparens egen token prövas mot Auth och is_admin FÖRST.
 // service_role används sedan till att läsa charge-id:n och skriva
 // tillbaka svaret. Id:n kommer ur vår egen tabell, aldrig ur anropet,
@@ -103,6 +109,35 @@ Deno.serve(async (req) => {
          tvärtom. Det är ett besked, inte ett krasch: raden står kvar,
          och svaret säger varför. */
       svar.fel.push(`${r.id}: ${e instanceof StripeError ? e.fel.meddelande : (e as Error)?.message ?? 'okänt fel'}`);
+    }
+  }
+
+  /* Kassorna för flera pass (2026-10-27): liggarens rad utan avgift. Före
+     migrationen finns inga sådana rader, och frågan svarar tomt. */
+  const { data: kassor } = await db.from('betalningar')
+    .select('id, stripe_charge').eq('typ', 'pass').is('booking_id', null).eq('utan_rad', false)
+    .is('avgift_ore', null).not('stripe_charge', 'is', null)
+    .order('betald_at', { ascending: true }).limit(TAK);
+  for (const k of (kassor ?? []) as { id: string; stripe_charge: string }[]) {
+    svar.granskade++;
+    if (!arStripeId(k.stripe_charge, 'ch') && !arStripeId(k.stripe_charge, 'py')) {
+      svar.fel.push(`${k.id}: charge-id:t har fel form`);
+      continue;
+    }
+    try {
+      const charge = await v1('GET', `/v1/charges/${k.stripe_charge}?expand[]=balance_transaction`);
+      const b = balans(charge.balance_transaction);
+      if (!b.id || b.avgiftOre === null) {
+        svar.vantar++;
+        continue;
+      }
+      const { error: afel } = await db.rpc('betalning_avgift', {
+        p_charge: k.stripe_charge, p_bt: b.id, p_avgift: b.avgiftOre, p_netto: b.nettoOre,
+      });
+      if (afel) svar.fel.push(`${k.id}: ${afel.message}`);
+      else svar.avgifter++;
+    } catch (e) {
+      svar.fel.push(`${k.id}: ${e instanceof StripeError ? e.fel.meddelande : (e as Error)?.message ?? 'okänt fel'}`);
     }
   }
 

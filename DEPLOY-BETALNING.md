@@ -2092,3 +2092,63 @@ Kvar efter: provet i testläge (steg 5), att säga till familjerna (villkoren oc
 om ångerrätten och undantaget för fritidsverksamhet i 2 kap. 11 § distansavtalslagen, syskontilläggets villkor, rad 5 i
 `DATASKYDD.md`), att Leo tar bort edge-funktionen `utbildningsprov` i Supabases panel, och för syskontillägget det som
 står i 9.22 steg 7 utom texten och versionen.
+
+### 9.28 Betala alla, återbetalningarna och egna upplägg (2026-10-27)
+
+Leo: "man ska kunna betala flera saker under samma kassa, eller alltså fler pass samtidigt. antingen alla eller pass för
+pass", "bygg en återbetalningsfunktion för oss i admin" och "gör en funktion att admin kan skicka egna upplägg att
+köpa ... villkoren är samma men det är bara 6h istället". (Samma meddelande sa att planerna skulle gälla köpmånaden;
+Leo tog tillbaka det samma dag: "skojade, planerna är i 30 dagar". Inget ändrades där.) Samma eftermiddag: "rabattkod
+gäller också för upplägg. Samma sak som vanliga planer bara annat antal timmar ... De köper och möjligheten försvinner
+... Mejl ska gå ut när de fått möjlighet till eget upplägg". Två migrationer,
+`20261027160000_flera_pass_och_aterbetalningar` och `20261027170000_egna_upplagg` (`minne/betalning.md`, Betala alla
+och Återbetalningarna; `minne/timmar.md`, Egna upplägg; `minne/notiser.md`, Mejlet om ett eget upplägg). Efter merge,
+en session, med de andra sessionerna i repot underrättade före och efter, i den här ordningen:
+
+1. **Vercel** lägger ut sajten med merge: villkoren 2026-10-27 (`#eget-upplagg`, `#kop-till`, och meningen om flera pass
+   i `#betala-nu` och köpvillkoren), policyn på båda språken, studievyn (Betala alla under Att betala, upplägget ovanför
+   planerna med koden i kodrutan, Köp till timmar till ett upplägg och valet Egna upplägg under Profil → Notiser) och
+   adminvyn (Betalningar → Återbetalningar, Återbetala på passen i en kassa, på övertiden och på en betalning utan rad,
+   och Egna upplägg i familjens panel, utan pris att välja). Vyerna tål att migrationerna och funktionerna saknas: utan
+   tabellerna står inga upplägg, och Återbetalningar säger att migrationen inte är körd. Mellan Vercel och steg 4 svarar
+   den gamla kassan "Vilket pass?" på Betala alla: håll fönstret kort. Kontrollera från databasen
+   (`extensions.http_get`) att nextrum.se serverar `/anvandarvillkor` med "Senast uppdaterad 27 oktober 2026".
+2. **`notis-ko` och `notis-avanmal`** från merge-commiten, hämtade tillbaka och jämförda byte för byte med main, FÖRE
+   migrationerna: de känner typen `eget_upplagg`. Med en äldre `notis-ko` svarar kön "Typen mejlas inte" på mejlet om ett
+   upplägg, och med en äldre `notis-avanmal` svarar avanmälan i det mejlet 403 (avsnitt 5 i CLAUDE.md, Notiserna).
+3. **Migrationerna** i nummerordning, var och en hel i ett do-block ur merge-commiten: pröva filens md5, kör den och
+   registrera filens text. Inget `drop` och inget `delete`. Vakterna stannar om driften inte är som filerna lästes
+   (`timbank_kort_vinner`, `betalningsrader_aterbetalda`, `intern.klippkort_rabatt`, `notis_typer()`,
+   `notis_mejlbara()` och `notis_utskick_ta` lappas med `replace()` och räknar sina träffar, `betalning_tvist`,
+   `kortare_pass_att_aterbetala` och `betalningsrad_att_aterbetala` skrivs om hela bara om kroppen i driften har den md5
+   som filerna lämnade, och villkorens version ska vara 2026-10-26. Den 27 oktober var de omskrivna och de lappade
+   funktionerna i driften som i en databas byggd ur filerna till och med `20261027150000`, varje ankare stod där en gång,
+   och driftens senaste migration var den). Villkorens version blir 2026-10-27, så alla får frågan igen och ingen
+   föreslår pass eller köper timmar innan dess. De gamla funktionerna gör som förut med migrationerna på: ingen kassa
+   för flera pass finns förrän den nya kassan öppnat en.
+4. **Edge-funktionerna** från merge-commiten, hämtade tillbaka och jämförda byte för byte med main, i den här ordningen:
+   `stripe-webhook` (kassan för flera pass, Klarna som väntar, avgiften på liggaren, återbetalningen per rad och varje
+   återbetalning nedskriven), `stripe-reservation` (ett kortare pass i en kassa skrivs per rad), `stripe-aterbetalning`
+   (passet i en kassa, övertiden, betalningen utan rad, och loggen), `stripe-avstamning` (avgiften för en kassa),
+   `klippkort-betala` (stänger en kassa som bär passet), sist `stripe-checkout` (Betala alla och upplägget med koden;
+   SESSIONSFORM står kvar på 12, för passets och köpets kassor har samma parametrar) och sedan `drift` (agentens fakta).
+   Kassan sist: den öppnar de nya kassorna, och då ska webhooken och återbetalningarna redan känna igen dem.
+5. Hela `rls-test.sql` mot driften, tillbakarullat (avsnitt 57 och 58), och advisorn: `skicka_eget_upplagg`,
+   `aterkalla_eget_upplagg` och `kod_pa_upplagget` är nya och nåbara för `authenticated` och prövar `is_admin()` eller den
+   inloggade först, och `betalningsrad_att_aterbetala` som förut. Allt annat nytt kör bara `service_role`, och tabellerna
+   läser bara superadmin (familjen sina upplägg).
+6. **Stripe**: endpointen tar redan emot `checkout.session.expired`, `checkout.session.async_payment_succeeded` och
+   `_failed`, `charge.refunded`, `charge.updated` och tvisterna. Inget nytt.
+7. **Provet i testläge** (Stripe står i testläge, sandlådan för mejlen satt): Betala alla med tre pass (kort och Klarna),
+   samma kassa två gånger, ett av passen betalat med timmar medan kassan stod öppen (kortet vinner, timmarna tillbaka),
+   en kassa som går ut, Återbetala ett pass i kassan (passet återbetalt, de andra orörda), allt tillbaka i Stripes
+   dashboard (varje rad tillbaka), en del i dashboarden (en uppgift), ett kortare pass i kassan (mellanskillnaden av sig
+   själv), övertiden och en betalning utan rad från Liggaren, och fliken Återbetalningar med vem och varför. Ett upplägg:
+   skicka 6 timmar (2 274 kr), mejlet efter fem minuter med timmarna, priset och sista dagen, familjen köper det med en
+   rabattkod (priset med koden i kodrutan, på kortet, i kassan och på kvittot; 30 dagar, första timmen om det är första
+   planen, familjerabatten dragen), upplägget borta efter köpet, Köp till timmar till det, ett annat dras tillbaka inom fem
+   minuter (inget mejl), och Skriv i Gmail.
+
+Kvar efter: provet (steg 7), att säga till familjerna om villkoren 2026-10-27, och juristen: punkten `#eget-upplagg`,
+raderna 37–39 i `DATASKYDD.md`, policyns nya meningar om återbetalningarna, kassan och upplägget, och mejlet om
+upplägget (ett erbjudande till en befintlig kund, med avanmälan i varje mejl).

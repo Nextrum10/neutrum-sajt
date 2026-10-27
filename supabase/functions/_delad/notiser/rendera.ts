@@ -135,10 +135,13 @@ export function vyAdress(roll: Roll, mal: Mal | 'val'): string {
   // i stället för en sektion som inte finns.
   // Betalning likaså: studiehjälparen betalar ingenting, och får
   // passlistan om en sådan knapp någonsin hamnar hos hen.
-  const hash = mal === 'pass' || ((mal === 'boka' || mal === 'betalning' || mal === 'kortet') && roll === 'tutor')
+  const hash = mal === 'pass'
+      || ((mal === 'boka' || mal === 'betalning' || mal === 'kortet' || mal === 'planer') && roll === 'tutor')
     ? '#lektioner/pass'
     : mal === 'boka' ? '#boka'
     : mal === 'betalning' ? '#betalning'
+    // egna_upplagg (2026-10-27): planerna, där upplägget står överst.
+    : mal === 'planer' ? '#betalning/planer'
     // kortdragningen_forsoker_igen (2026-10-21): dit kortet byts.
     : mal === 'kortet' ? '#profil/kort'
     // varvningsbonus (2026-10-21): Värva en kompis finns bara i studiehjälparvyn.
