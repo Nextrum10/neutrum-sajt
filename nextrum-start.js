@@ -197,17 +197,18 @@ const NXStart = (function () {
     const läge = (i, k) => vyer[i] && vyer[i].classList.add(k);
 
     /* Varje skärm: väntan i ms och det som händer på den. Alla fyra
-       står lika länge, fyra sekunder, och ett varv är sexton. Vägen stod
+       står ungefär lika länge, tre sekunder, och ett varv är tolv
+       (2026-10-27, Leo: lite snabbare; förut fyra och sexton). Vägen stod
        längst förut (Leo 2026-10-07: "På väg genom ämnet tar längre tid
        än resten"): första gången fick den en och en halv sekund extra
        medan telefonen reste sig, och linjen under bladet gick då i över
        fem sekunder. Telefonen reser sig nu medan vägen står sin vanliga
        tid. */
     const SKÄRMAR = [
-      [4000],
-      [1000, () => läge(1, 'valt'), 700, () => läge(1, 'ratt'), 2300],
-      [4000],
-      [900, () => läge(3, 'fylld'), 3100]
+      [3000],
+      [800, () => läge(1, 'valt'), 500, () => läge(1, 'ratt'), 1700],
+      [3000],
+      [700, () => läge(3, 'fylld'), 2500]
     ];
     const SLUT = [[], ['valt', 'ratt'], [], ['fylld']];
     const VARV = 3;
