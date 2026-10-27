@@ -973,8 +973,8 @@ const NXFin = (function () {
   }
 
   /* ---------- ämnesbandet ----------
-     Bandet följer scrollen (2026-10-27, Leo): det rör sig bara när sidan
-     scrollas, åt vänster på väg nedåt.
+     Bandet gick på scrollen först och laggade på iPhone (Leo 2026-10-27:
+     "den måste vara smooth och långsammare"): nu en CSS-animation.
      Markupen har en rad ämnen; resten är kopior (aria-hidden) som
      skriptet lägger till tills raden är bredare än två fönster. Bara
      transform, och loopen går bara medan bandet syns. */
@@ -997,29 +997,25 @@ const NXFin = (function () {
         }
       };
       fyll();
-      /* Läget följer sidans scroll rakt av: nedåt flyttar bandet åt
-         vänster, ingen egen drift. Ett varv är en radbredd. */
-      let synlig = false, rad_ = 0;
-      const faktor = NXMotion.tier === 'lite' ? 0.9 : 0.6;
-      const steg = () => {
-        rad_ = 0;
-        if (!synlig || !bredd) return;
-        const r = band.getBoundingClientRect();
-        const bana = window.innerHeight - r.top;
-        const x = -((bana * faktor) % bredd + bredd) % bredd;
-        spar.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
+      /* Bandet går av sig självt med CSS (compositorn, inte skriptet): en
+         radbredd per varv, långsamt, och står still när det är utanför bild. */
+      const gang = () => {
+        const n = spar.querySelectorAll('.nx-amnesband-rad').length;
+        if (!bredd || !n) return;
+        const pxPerS = NXMotion.tier === 'lite' ? 22 : 26;
+        spar.style.setProperty('--band-n', n);
+        spar.style.setProperty('--band-tid', (bredd / pxPerS).toFixed(1) + 's');
+        spar.classList.add('nx-gar');
       };
-      const be = () => { if (synlig && !rad_) rad_ = requestAnimationFrame(steg); };
-      window.addEventListener('scroll', be, { passive: true });
+      gang();
       if ('IntersectionObserver' in window) {
         new IntersectionObserver(es => es.forEach(e => {
-          synlig = e.isIntersecting;
-          be();
+          spar.classList.toggle('nx-pausad', !e.isIntersecting);
         }), { rootMargin: '10% 0px' }).observe(band);
       }
       let tid = 0;
-      window.addEventListener('resize', () => { clearTimeout(tid); tid = setTimeout(fyll, 200); }, { passive: true });
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fyll);
+      window.addEventListener('resize', () => { clearTimeout(tid); tid = setTimeout(() => { fyll(); gang(); }, 200); }, { passive: true });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fyll(); gang(); });
     });
   }
 
