@@ -1994,10 +1994,17 @@ och inget annat.
   `mina_handlingar_bilder`, `stalle_lage` och `ta_bort_ur_stallet` som nya poster, för `authenticated` (med flit:
   de prövar den inloggade eller `is_admin()` först), och inget nytt för `anon`.
 
-### Flera pass i samma kassa och återbetalningarna (flera_pass_och_aterbetalningar, 2026-10-27, inte i drift)
+### Flera pass i samma kassa och återbetalningarna (flera_pass_och_aterbetalningar, 2026-10-27, i drift samma kväll)
 
 `20261027160000_flera_pass_och_aterbetalningar.sql` (Leo: "man ska kunna betala flera saker under samma kassa ... bygg
 en återbetalningsfunktion för oss i admin"). Kedjan i driften: `DEPLOY-BETALNING.md` 9.28.
+
+- **Körd i driften 2026-10-27** (Leo: "Testa så allt funkar som det ska och sen Merge, driftsätt och migrera"), efter
+  merge av PR #354 (b9acaa7) och efter `notis-ko` och `notis-avanmal`. Först en provkörning: den här filen, `egna_upplagg`
+  och hela `rls-test.sql` i ett do-block som rullades tillbaka, 2264 av 2264. Sedan filen hel i ett do-block, hämtad ur
+  merge-commiten med `extensions.http_get`: versionen inte redan registrerad, md5 (`aa680378…`) prövad, filen körd
+  (vakterna först, mot driftens kroppar och ankare) och filens text registrerad i `schema_migrations`. Inget `drop` eller
+  `delete`, och verktyget frågade inget.
 
 - **Kassan för flera pass** är `passkassor` (familjen, 2–20 pass, beloppet, Stripes session och PaymentIntent, läget
   `oppen`, `betald` eller `slappt`, och `vantar_at` när en Klarna-betalning väntar) och `passkassor_pass` (varje pass
@@ -2028,12 +2035,22 @@ en återbetalningsfunktion för oss i admin"). Kedjan i driften: `DEPLOY-BETALNI
   kassa, betalningen i en transaktion med kortet som vinner, avgiften delad, återbetalning och tvist per rad, Klarna
   som väntar, och loggens rader.
 
-### Egna upplägg (egna_upplagg, 2026-10-27, inte i drift)
+### Egna upplägg (egna_upplagg, 2026-10-27, i drift samma kväll)
 
 `20261027170000_egna_upplagg.sql` (Leo: "admin säljer 6 h till familjen därför att det är lov och då skickar vi ett
 upplägg, villkoren är samma men det är bara 6h istället", och samma dag: "rabattkod gäller också för upplägg. Samma sak
 som vanliga planer bara annat antal timmar ... Mejl ska gå ut när de fått möjlighet till eget upplägg"). Körs efter
 `flera_pass_och_aterbetalningar`, och efter `notis-ko` och `notis-avanmal` (de känner typen `eget_upplagg`).
+
+- **Körd i driften 2026-10-27**, direkt efter `flera_pass_och_aterbetalningar`, på samma sätt: hel i ett do-block ur
+  b9acaa7, med md5 (`dab5f0be…`), filens text registrerad, och inget `drop` eller `delete`. Efteråt, för båda filerna: de
+  30 funktioner de skapar eller lappar är lika en lokal databas byggd ur filerna i kropp, inställningar, rättigheter och
+  kommentar (md5 av `prosrc` och av resten, jämförda mekaniskt), och de nya tabellernas kolumner, triggrar (också på
+  `bookings`, `klippkort`, `betalningar`, `notiser` och `erbjudanden`), policyer, RLS och rättigheter har samma
+  fingeravtryck i båda, 116 rader, när Postgres 17:s MAINTAIN räknas bort. Villkorens version är 2026-10-27. Hela
+  `rls-test.sql` ur b9acaa7 gick 2264 av 2264 mot driften efter migrationerna, tillbakarullat, och advisorn fick bara
+  `skicka_eget_upplagg`, `aterkalla_eget_upplagg` och `kod_pa_upplagget` som nya poster för `authenticated` (med flit),
+  och inget nytt för `anon`.
 
 - **Katalogens rad `plan_eget`** (sorten `plan`) säljs aldrig: den står inte aktiv och villkoret
   `erbjudanden_eget_saljs_inte` håller den så, så den finns inte i `erbjudanden_pris`. Köpen pekar på den

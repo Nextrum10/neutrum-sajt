@@ -994,7 +994,7 @@ kassan. Inget får droppas, och ingen migration får ändra eller radera befintl
 - Adminvyn: texterna om vad familjerna kan köpa säger planer, och strömbrytaren heter Planer och köpta timmar.
   Listorna över köp och Liggarens typ `timbank` heter som förut, för de visar köp som redan finns.
 
-## Egna upplägg (2026-10-27, `egna_upplagg`)
+## Egna upplägg (2026-10-27, `egna_upplagg`, i drift samma kväll)
 
 Leo: "gör en funktion att admin kan skicka egna upplägg att köpa, det är tex så att admin säljer 6 h till familjen
 därför att det är lov och då skickar vi ett upplägg, villkoren är samma men det är bara 6h istället." Samma meddelande

@@ -262,6 +262,30 @@ så alla kom fram rätt. Filerna hade inga sådana escapes i källan. Röktest
 från databasen med den publika nyckeln: 401 "Inloggningen gick inte att
 verifiera" ur båda funktionernas egen kod, och ingen grind svarade.
 
+**Betala alla, återbetalningarna och egna upplägg 2026-10-27 kväll**, från
+merge-commiten b9acaa7 (PR #354, `DEPLOY-BETALNING.md` 9.28). `notis-avanmal`
+v11 och `notis-ko` v38 skrevs i den här sessionen, före migrationerna, och
+`mallar.ts`s tre escapes för det hårda mellanslaget gick med bakstrecket
+som u005c: ett prov i en uppgifts metadata visade först att det var den
+enda skrivningen som gav källans sex tecken (dubblat bakstreck och u00a0
+gav tecknet). De sju andra skrevs av hjälpagenter, en funktion var, fem
+samtidigt och sedan kassan med `drift`: `stripe-webhook` v17,
+`stripe-reservation` v4, `stripe-aterbetalning` v10, `stripe-avstamning` v3,
+`klippkort-betala` v5, `stripe-checkout` v26 och `drift` v27. Varje funktion
+jämfördes två gånger, mekaniskt och fil för fil med `git show` av
+merge-commiten: anropet som det stod i transkriptet (sessionens, och
+hjälpagenternas under `subagents/`), och funktionen hämtad tillbaka med
+`get_edge_function`, vars svar sparas i `tool-results/` när det är för
+stort. Alla är byte för byte lika main utom kassan, där `index.ts` saknar
+en tom rad mellan två stycken i en kommentar (rad 400): samma kod, och den
+blir lika nästa gång kassan driftsätts, som 2026-10-14 och 2026-10-24.
+`stripe-reservation` saknar `_delad/aterbetalning.ts` som förut, för den
+importeras bara som typ.
+Hjälpagenterna tog elva till tjugoåtta minuter var, mest för att de provade
+tecknen och sin egen JSON före anropet, och skickade tecknen utanför ASCII
+som JSON-escapes, som kom fram rätt. Röktest från databasen med tillägget
+`http`: 400 och 401 ur varje funktions egen kod, och ingen grind svarade.
+
 ### `pass-notis` och `meddelande-notis` är pensionerade (Fas 14.0)
 
 Båda hade ingen anropare kvar: Runda 2 bytte webhookarna som ringde
@@ -653,8 +677,8 @@ funktionens IP-nummer: `Sb-Forwarded-For` kräver en ny sorts hemlig nyckel
 
 ### Betala alla och återbetalningarna (flera_pass_och_aterbetalningar, 2026-10-27)
 Leo: "man ska kunna betala flera saker under samma kassa, eller alltså fler pass samtidigt.
-antingen alla eller pass för pass. bygg en återbetalningsfunktion för oss i admin". Inte i drift:
-kedjan står i `DEPLOY-BETALNING.md` 9.28.
+antingen alla eller pass för pass. bygg en återbetalningsfunktion för oss i admin". I drift sedan
+kvällen 2026-10-27 (`DEPLOY-BETALNING.md` 9.28).
 - **Kassan bär Stripes id, inte passen.** `bookings.stripe_session_id` och
   `stripe_payment_intent_id` är unika, så flera pass kan inte bära samma kassa. En kassa för flera
   pass är en rad i `passkassor` med passen i `passkassor_pass`, och passen får `passkassa_id` när den

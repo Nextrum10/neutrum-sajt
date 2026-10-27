@@ -698,7 +698,7 @@ med avgiften och leder till betalningen, eller att passet räknas som hållet i 
 studiehjälparens säger bara att familjen avbokade mindre än 12 timmar före start, aldrig ett belopp. Ingen ny typ, så
 `notis-avanmal` behöver inte följa med; `notis-ko` gör det.
 
-## Mejlet om ett eget upplägg (egna_upplagg, 2026-10-27, inte i drift)
+## Mejlet om ett eget upplägg (egna_upplagg, 2026-10-27, i drift samma kväll)
 
 Leo: "Mejl ska gå ut när de fått möjlighet till eget upplägg, dvs eget antal timmar som de vill köpa som vi skickat".
 Typen `eget_upplagg`, den femtonde i `notis_typer()` och den fjortonde mejlbara, i databasen och i
@@ -718,7 +718,8 @@ Typen `eget_upplagg`, den femtonde i `notis_typer()` och den fjortonde mejlbara,
 - **Valet** Egna upplägg under Profil → Notiser (`NOTISVAL` i `nextrum-studie.js`, bara föräldern), och avanmälan i
   mejlet stänger av typen (`notis-avanmal` prövar den mot `NOTIS_TYPER`).
 - **Driftsättningen**: `notis-ko` och `notis-avanmal` före migrationen, så att kön kan mejla typen och avanmälan tar den
-  (`DEPLOY-BETALNING.md` 9.28).
+  (`DEPLOY-BETALNING.md` 9.28). Gjort 2026-10-27: `notis-avanmal` v11 och `notis-ko` v38 från merge-commiten, hämtade
+  tillbaka och byte för byte lika main, en halvtimme före migrationen.
 - Mejlet är ett erbjudande till en befintlig kund, om något familjen redan köper hos oss, med avanmälan i varje mejl.
   Juristen har inte läst det.
 - **Provat** i `rls-test.sql` avsnitt 58 (köas, inte till sig själv, hoppas över när upplägget dragits tillbaka) och
