@@ -977,3 +977,13 @@ ska ha flera uppgifter som duolingo har här."
    är klara, i stället för "18 uppgifter kvar", "Klart, provet kvar" och "Bemästrat";
    procenten avrundas nedåt, så 100 % står först när allt är klart (3 av 18 är 16 %).
    Mästarprovets läge syns i kronan, och skärmläsaren får det i etiketten.
+10. **Ett steg i taget, med en knapp** (samma dag, Leo: "vissa steg är konstiga när du
+   genomför ett steg ska du sedan gå vidare till nästa steg. som duolingo nu gör du de för
+   komplicerat"). Skärmen när en del är klar har bocken, "Del 1 av 2 klar!", delarna och XP:n
+   och bara Fortsätt, till nästa del; texten om stjärnorna och dygnet och Till vägen är borta
+   (krysset uppe stänger). Resultatet efter en klarad nivå har bara Fortsätt, till nästa steg,
+   eller Klar när det inte finns något; en nivå som inte klarades har kvar Försök igen och Klar
+   för nu. Kortet vid en prick som inte är klar har delen, titeln, längden och en knapp
+   (Starta, Fortsätt eller Gör provet), som spelar delen som står på tur; texterna om delarnas
+   ordning, beskrivningen och prickraden är borta. Ett klart kort har kvar stjärnorna och Se
+   rättningen.
