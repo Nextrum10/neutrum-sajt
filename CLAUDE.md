@@ -354,8 +354,12 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   inloggning, med samma rader. Elevvyn har fem delar och inget mer (2026-10-06): Översikt
   (antal genomförda och kommande pass), Mina lektioner (utan betalning), NexLäx, Meddelanden och
   Profil, och Boka pass som en sjätte bara när föräldern låtit barnet föreslå pass (2026-10-12). **En inloggning** för förälder, elev och studiehjälpare (2026-10-07): samma ruta på
-  `/foralder` och `/larare`, två kort (Familj och elev, Studiehjälpare), och kontot avgör vyn:
-  studievyn skickar en studiehjälpare till `/larare`, studiehjälparvyn en förälder till `/foralder`,
+  `/foralder` och `/larare`, två kort (Familj och elev, Studiehjälpare). **Kortet gäller i
+  inloggningen** (2026-10-27, Leo: "trycker jag som studiehjälpare och loggar in som familj så kommer jag
+  in utan problem som familj. fixa det"): ett familje- eller barnkonto under Studiehjälpare och ett
+  studiehjälparkonto under Familj och elev loggas ut igen med ett besked om rätt kort (`rättKort` i
+  `NXStudie.loggaInHär`), och admin loggar in var som helst. En session som redan finns skickas till sin vy
+  som förut: studievyn skickar en studiehjälpare till `/larare`, studiehjälparvyn en förälder till `/foralder`,
   och ett barn hamnar på `/barn`. `#elev` tas bort ur adressen, och `/barn` har ingen egen inloggning.
   **Föräldern väljer vad barnet får** (2026-10-06): pass, studieplan, rapporter, NexLäx, notiserna
   och tråden med studiehjälparen (`barn_behorigheter`, rapporterna i `visa_rapporter`), och att

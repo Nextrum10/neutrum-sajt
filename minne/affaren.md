@@ -110,7 +110,8 @@ tryck som personen tas in, med personens egen adress:
 - **Inget Skapa konto** (2026-10-07, Leo: "ta bort att man skapa konto på vår
   sida, vi gör det genom inbjudan"): familjer kommer in genom Ta in familjen,
   studiehjälpare genom Ta in i poolen, och inloggningen är en för alla, där
-  kontot avgör vyn (`minne/barnkonton-och-admin.md`, En inloggning).
+  kortet man väljer ska stämma med kontot sedan 2026-10-27
+  (`minne/barnkonton-och-admin.md`, En inloggning och Kortet gäller).
 - Leo bad om lösenordet 12345678 för alla nya konton. Det blev en länk i
   stället, för samma steg för personen; varför står i
   `minne/sakerhet.md`.

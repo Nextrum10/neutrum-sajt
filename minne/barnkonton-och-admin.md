@@ -397,6 +397,22 @@ adress, och gjort adressbyten till en Auth-fråga. Nu:
   Vägvalet på de öppna sidorna har två val (52 sidor på båda språken,
   `var-ide.html` som skal för de genererade). Lägena i
   `NXStudie.inloggningsruta` är `'in'`, `'glomt'` och `'lankfel'`.
+- **Kortet gäller i inloggningen (2026-10-27)**, och det river "spelar
+  egentligen ingen roll vart man klickar". Leo: "trycker jag som
+  studiehjälpare och loggar in som familj så kommer jag in utan problem som
+  familj. fixa det". Vyerna ger `NXStudie.loggaInHär` sitt kort ('familj'
+  eller 'studiehjalpare'; adminvyn inget), och efter en lyckad inloggning
+  läser `rättKort` rollen i `profiles`: ett familjekonto eller ett barn under
+  Studiehjälpare, eller ett studiehjälparkonto under Familj och elev, loggas
+  ut igen (`scope: 'local'`) med ett besked om rätt kort. Admin släpps in
+  var som helst, och går rollen inte att läsa släpps man in och vyn
+  dirigerar som förut. Det gäller bara själva inloggningen: en session som
+  redan finns skickas fortfarande till sin vy, för länkarna i mejlen går
+  till en viss sida. Det skyddar inget (det gör RLS), det säger bara åt den
+  som valt fel. Vägvalet och rutan säger "Välj kortet som stämmer med ditt
+  konto" i stället för "Du hamnar i din egen vy, vilket du än väljer" och
+  "Kontot avgör vilken vy du hamnar i". `prova-villkor.js` provar alla fyra
+  kombinationerna genom formuläret.
 - En vuxen som är inloggad i samma webbläsare och öppnar `/barn` ser bara
   "Någon annan är inloggad" och Logga ut, aldrig sin egen vy därifrån.
 - Rolldirigeringen: `NX.ärBarn(user)` läser `app_metadata`, aldrig

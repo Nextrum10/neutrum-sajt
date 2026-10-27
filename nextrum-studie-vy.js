@@ -43,7 +43,7 @@
   function ritaAuth() {
     NXStudie.inloggningsruta(läge, {
       titel: 'Välkommen tillbaka',
-      under: 'Med din e-post eller ditt användarnamn. Kontot avgör vilken vy du hamnar i.',
+      under: 'Med din e-post eller ditt användarnamn. Välj kortet som stämmer med ditt konto.',
       etikett: 'E-post eller användarnamn'
     });
   }
@@ -63,7 +63,7 @@
     const epost = $('#a-email').value.trim();
     const lösen = $('#a-pass').value;
     if (!epost || !lösen) { säg(msg, 'Fyll i e-post eller användarnamn och lösenord.', false); return; }
-    await NXStudie.loggaInHär(supa, epost, lösen);
+    await NXStudie.loggaInHär(supa, epost, lösen, 'familj');
   });
 
   /* ============ studiehjälparkortet ============ */
