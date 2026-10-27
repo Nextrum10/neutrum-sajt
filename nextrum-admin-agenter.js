@@ -199,73 +199,6 @@ const NXAdminAgenter = (function () {
   }
 
   /* ------------------------------------------------------------
-     ÅTERKOPPLING
-
-     Studiehjälparen skriver normalt sin egen återkoppling i
-     larare.html. Listan här är de rapporter där det inte blivit
-     gjort, och knappen anropar samma edge-funktion.
-     ------------------------------------------------------------ */
-  async function laddaAterkoppling() {
-    const ut = $('#ak-lista');
-    const { data, error } = await supa
-      .from('lesson_reports')
-      .select('id, raw_notes, ai_feedback, created_at, students(name)')
-      .order('created_at', { ascending: false })
-      .limit(30);
-
-    if (error) { ut.innerHTML = '<p class="xsmall">Kunde inte hämta: ' + esc(felText(error)) + '</p>'; return; }
-    if (!data || !data.length) { ut.innerHTML = '<p class="xsmall" style="color:var(--bl-3)">Inga rapporter än.</p>'; return; }
-
-    ut.innerHTML = data.map(r => {
-      const namn = (r.students && r.students.name) || 'eleven';
-      const nar = new Date(r.created_at).toLocaleDateString('sv-SE');
-      return '<details class="ag-korning" data-rapport="' + esc(r.id) + '">'
-        + '<summary>'
-        + '<span class="ag-status" data-s="' + (r.ai_feedback ? 'klar' : 'pagar') + '">'
-        + (r.ai_feedback ? 'klar' : 'väntar') + '</span>'
-        + '<span class="ag-korning-fraga">' + esc(namn) + ' — ' + esc((r.raw_notes || '').slice(0, 90)) + '</span>'
-        + '<span class="ag-korning-nar">' + nar + '</span>'
-        + '</summary>'
-        + '<div class="ag-korning-kropp">'
-        + '<p class="xsmall" style="margin-top:16px;color:var(--bl-3)">Studiehjälparens anteckningar</p>'
-        + '<p class="xsmall" style="color:var(--bl-2);line-height:1.7">' + esc(r.raw_notes || '') + '</p>'
-        + '<div class="ak-resultat" style="margin-top:16px">'
-        + (r.ai_feedback
-            ? '<p class="xsmall" style="color:var(--bl-3)">Återkoppling till föräldern</p>'
-              + '<p class="xsmall" style="color:var(--bl-2);line-height:1.7">' + esc(r.ai_feedback) + '</p>'
-            : '<button class="btn btn-primary btn-sm" data-generera="' + esc(r.id) + '">Skriv återkoppling</button>')
-        + '</div></div></details>';
-    }).join('');
-  }
-
-  function kopplaAterkoppling() {
-    const lista = $('#ak-lista');
-    if (!lista) return;
-
-    lista.addEventListener('click', async e => {
-      const knapp = e.target.closest('[data-generera]');
-      if (!knapp) return;
-      const rutan = knapp.closest('.ak-resultat');
-
-      await medan(knapp, 'Skriver', async () => {
-        const { data, error } = await supa.functions.invoke('generate-feedback', {
-          body: { report_id: knapp.dataset.generera }
-        });
-        if (error || !data || !data.ai_feedback) {
-          rutan.innerHTML = '<p class="xsmall" style="color:var(--acc-lugn)">Gick inte: '
-            + esc(felText(error) || (data && data.error) || 'okänt fel') + '</p>';
-          return;
-        }
-        rutan.innerHTML = '<p class="xsmall" style="color:var(--bl-3)">Återkoppling till föräldern</p>'
-          + '<p class="xsmall" style="color:var(--bl-2);line-height:1.7">' + esc(data.ai_feedback) + '</p>';
-        const märke = rutan.closest('details').querySelector('.ag-status');
-        märke.dataset.s = 'klar';
-        märke.textContent = 'klar';
-      });
-    });
-  }
-
-  /* ------------------------------------------------------------
      LÄGET
      ------------------------------------------------------------ */
   async function ritaLäget() {
@@ -323,8 +256,6 @@ const NXAdminAgenter = (function () {
     try {
       kopplaSjälvtest();
       kopplaBolagsfakta();
-      kopplaAterkoppling();
-
       const laddaJur = kopplaAgent('juridik', 'jur');
       const laddaEko = kopplaAgent('ekonomi', 'eko');
 
@@ -332,8 +263,7 @@ const NXAdminAgenter = (function () {
         ritaLäget(),
         laddaJur(),
         laddaEko(),
-        laddaBolagsfakta(),
-        laddaAterkoppling()
+        laddaBolagsfakta()
       ]);
     } catch (fel) {
       const ut = $('#ov-korningar');

@@ -151,7 +151,7 @@ Postgres RLS kan inte begränsa enskilda kolumner, så lösningen är två trigg
   och spärren som stoppar ett obetalt pass är av tills en provbetalning fungerat.
   Utbetalningarna till studiehjälparna: underlaget går att mejla, själva
   överföringen gör ni från banken den 25:e.
-- **AI-återkopplingen är inte deployad.** Koden finns i `supabase/functions/generate-feedback/`, se `DEPLOY-AI-FUNKTION.md`. Tills den är uppe visas studiehjälparens råa anteckningar rakt av för föräldern. Det är en fallback, inte ett fel.
+- **AI-omskrivningen av rapporten är borttagen** (2026-10-27): föräldern ser studiehjälparens text som den skrevs. Edge-funktionen `generate-feedback` tas bort i Supabases panel.
 - **Notiser.** Ingen får mejl när något händer. Ni får kolla adminvyn.
 - **Hero-videon i vyerna.** De inloggade vyerna letar efter
   `bilder/hero-studievy.mp4` och visar hero-fotot så länge filen inte

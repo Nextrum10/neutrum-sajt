@@ -401,7 +401,7 @@ fritext.
 `material-forslag` skriver ut uppgifterna i klartext, aldrig som länk. En
 modell som ombeds hitta en länk hittar på en länk.
 
-`generate-feedback` och `generate-message` använder inte `service_role`,
+`generate-message` använder inte `service_role`,
 de vidarebefordrar användarens egen token.
 
 **Maskoten har med flit ingen språkmodell.** Den svarar med Nextrums egen
