@@ -480,15 +480,23 @@ window.NXUppgifter = (function () {
       if (x.sort === 'mastare') a.mästare = x; else a.nivåer.push(x);
     });
 
-    /* Allt är öppet (Leo 2026-10-06: "hela nexläx ska också vara upplåst
-       så att man kan jobba med vad man vill och behöver"). Vägen har
-       kvar sin ordning och sitt aktuella steg, som ett förslag. */
-    områden.forEach(a => a.nivåer.forEach(x => { x.öppen = true; }));
+    /* Ett steg i taget (2026-10-27, Leo: "Steg i nexläx din väg ska gå steg
+       för steg"): en nivå är öppen när den är klarad, när studiehjälparen
+       gett den eller när den är den första som inte är klarad. Resten är
+       låst tills stegen före är klara, så det klara aldrig står utspritt
+       längs vägen. Ämne och årskurs väljs fritt, och NP-spåret är helt
+       öppet. Från 2026-10-06 till dess var allt öppet och vägen bara ett
+       förslag; det som klarades då står kvar som klart. */
+    let förstaOklara = true;
+    områden.forEach(a => a.nivåer.forEach(x => {
+      x.öppen = x.klar || !!x.given || förstaOklara;
+      if (!x.klar) förstaOklara = false;
+    }));
     områden.forEach(a => {
       a.klara = a.nivåer.filter(x => x.klar).length;
       a.klart = a.nivåer.length > 0 && a.klara === a.nivåer.length;
       const m = a.mästare;
-      if (m) m.öppen = true;
+      if (m) m.öppen = m.klar || !!m.given || a.klart;
       a.bemästrat = !!(m && m.klar && m.stjarnor >= BEMÄSTRAD);
     });
 
@@ -1171,7 +1179,7 @@ window.NXUppgifter = (function () {
        åk 6 "ska kunna plugga på flera ämnen och årskurser". Det har gått
        sedan 2026-10-06 (allt i NexLäx är öppet); nu säger väljaren det.
        Förvalet är elevens eget ämne och egen årskurs. */
-    const intro = '<p class="nl-valj-intro">Öva i vilket ämne och vilken årskurs du vill. Allt är öppet.</p>';
+    const intro = '<p class="nl-valj-intro">Öva i vilket ämne och vilken årskurs du vill. Vägen går ett steg i taget.</p>';
     /* Leo 2026-10-12: matematik, svenska och engelska är det vi bygger
        mest på just nu, och resten kommer med tiden. Det står sist i
        rutan, så att inget ovanför ämnena byter höjd. */
@@ -1680,18 +1688,20 @@ window.NXUppgifter = (function () {
     const första = j === 0, sista = j === antal - 1;
     const klar = n.klar || j < nd.klara;
     const aktuell = n.aktuell && j === nd.nu;
-    const läge = klar ? 'klar' : aktuell ? 'aktuell' : n.öppen ? 'oppen' : 'last';
+    /* Delarna görs i ordning: en del efter den som står på tur är låst. */
+    const öppenDel = n.öppen && (klar || j <= nd.nu);
+    const läge = klar ? 'klar' : aktuell ? 'aktuell' : öppenDel ? 'oppen' : 'last';
     const nyckel = n.niva.id + ':' + j;
     const ärÖppen = o.öppen === nyckel;
     const nyss = o.nyss || {};
     const mästare = n.sort === 'mastare';
-    const ikon = mästare ? IKON.krona : klar ? IKON.bock : !n.öppen ? IKON.lås : aktuell ? IKON.spela : IKON.stjärna;
+    const ikon = mästare && öppenDel ? IKON.krona : klar ? IKON.bock : !öppenDel ? IKON.lås : aktuell ? IKON.spela : IKON.stjärna;
     const storlek = del.till - del.från;
     const iDelen = Math.max(0, Math.min(storlek, nd.gjorda - del.från));
     const ring = !klar && storlek > 0 && (aktuell || iDelen > 0);
     const nyssKlar = nyss.del === nyckel || (nyss.klar === n.niva.id && sista);
     const vad = n.klar ? 'klar, ' + n.stjarnor + ' av 3 stjärnor' : klar ? 'delen är klar'
-      : aktuell ? 'nästa steg' : n.öppen ? 'öppen' : 'låst';
+      : aktuell ? 'nästa steg' : öppenDel ? 'öppen' : 'låst';
     return '<li class="upg-nod ' + läge + (mästare ? ' mastare' : '') + (n.niva.lastext ? ' las' : '') + (ärÖppen ? ' vald' : '')
       + (nyssKlar ? ' nyss-klar' : '') + (nyss.oppen === n.niva.id && första ? ' nyss-oppen' : '') + '" style="--x:' + led + '">'
       + '<button type="button" class="upg-nod-knapp" data-nl-nod="' + esc(nyckel) + '" aria-expanded="' + (ärÖppen ? 'true' : 'false') + '"'
@@ -1729,7 +1739,9 @@ window.NXUppgifter = (function () {
     const förra = i > 0 ? väg.steg.slice(0, i).reverse().find(x => x.sort === 'vanlig') : null;
     let text = '', knapp = '';
     const starta = t => '<button type="button" class="btn btn-primary btn-sm" data-nl-starta="' + esc(niva.id) + '">' + esc(t) + '</button>';
-    if (!n.öppen) {
+    if (n.öppen && !n.klar && nd.nu >= 0 && j > nd.nu) {
+      text = 'Gör del ' + (nd.nu + 1) + ' först, så öppnas den här.';
+    } else if (!n.öppen) {
       text = mästare ? 'Klara alla nivåer i ' + niva.omrade + ' först, så öppnas provet.'
         : 'Klara "' + (förra ? förra.niva.titel : 'nivån före') + '" först, så öppnas den här.';
     } else if (n.klar) {
