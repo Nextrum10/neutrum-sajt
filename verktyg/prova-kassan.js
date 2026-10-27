@@ -278,13 +278,33 @@ function falskSupabase(o) {
       return x ? { rad: x.id, typ: x.typ, pass: x.booking_id || null, familj: b ? b.familj : null, betalning: x.betalning_id,
         pi: b ? b.stripe_payment_intent : null, kvar_ore: x.belopp_ore - (x.aterbetalt_ore || 0) } : null;
     },
-    // Egna upplägg (egna_upplagg, 2026-10-27): admin skickar och drar tillbaka.
+    // Egna upplägg (egna_upplagg, 2026-10-27): admin skickar och drar tillbaka, till planernas timpris.
     skicka_eget_upplagg: k => {
       const id = 'upp-ny-' + ((W.egna_upplagg || []).length + 1);
       (W.egna_upplagg = W.egna_upplagg || []).unshift({ id, familj: k.p_familj, namn: k.p_namn || k.p_timmar + ' timmar',
-        timmar: k.p_timmar, timpris_ore: k.p_timpris_ore, pris_ore: k.p_timmar * k.p_timpris_ore, giltigt_till: dag(k.p_dagar || 14),
+        timmar: k.p_timmar, timpris_ore: 37900, pris_ore: k.p_timmar * 37900, giltigt_till: dag(k.p_dagar || 14),
         skapad_av: 'admin-1', skapad_at: nu(0), aterkallad_at: null, kopt_at: null, klippkort_id: null });
       return id;
+    },
+    /* Koderna (2026-10-27, Leo: "rabattkod gäller också för upplägg"):
+       LOV10 är 10 % på en plan och på ett upplägg, som databasen räknar den. */
+    kolla_rabattkod_kop: k => {
+      const e = W.erbjudanden_pris.find(x => x.kod === k.p_erbjudande);
+      const rab = e && k.p_kod === 'LOV10' ? Math.floor(e.pris_ore * 10 / 100) : null;
+      return [rab === null
+        ? { giltig: false, orsak: 'Koden finns inte, eller gäller inte längre.', rabatt_ore: 0, beskrivning: null,
+            pris_ore: e ? e.pris_ore : null, att_betala_ore: e ? e.pris_ore : null }
+        : { giltig: true, orsak: null, rabatt_ore: rab, beskrivning: '10 % på lovet', pris_ore: e.pris_ore,
+            att_betala_ore: e.pris_ore - rab }];
+    },
+    kod_pa_upplagget: k => {
+      const u = (W.egna_upplagg || []).find(x => x.id === k.p_upplagg);
+      const rab = u && k.p_kod === 'LOV10' ? Math.floor(u.pris_ore * 10 / 100) : null;
+      return [rab === null
+        ? { giltig: false, orsak: 'Upplägget går inte att köpa.', rabatt_ore: 0, beskrivning: null, pris_ore: null,
+            att_betala_ore: null, rabatt_typ: null, rabatt_varde: null }
+        : { giltig: true, orsak: null, rabatt_ore: rab, beskrivning: '10 % på lovet', pris_ore: u.pris_ore,
+            att_betala_ore: u.pris_ore - rab, rabatt_typ: 'procent', rabatt_varde: 10 }];
     },
     aterkalla_eget_upplagg: k => {
       const u = (W.egna_upplagg || []).find(x => x.id === k.p_id && !x.kopt_at && !x.aterkallad_at);
@@ -894,10 +914,13 @@ async function provaÅterbetalningarna(webb) {
 /* ============ 7c. Egna upplägg (2026-10-27) ============
    Leo: "admin säljer 6 h till familjen därför att det är lov och då
    skickar vi ett upplägg, villkoren är samma men det är bara 6h
-   istället." Familjen ser upplägget ovanför planerna och köper det med
-   Köp, och kassan får upplägget id, aldrig ett belopp. Admin skickar ett
-   ur familjens panel, ser det och drar tillbaka det. */
-const UPPLAGGET = { id: 'upp-1', familj: 'fam-a', namn: 'Höstlovet', timmar: 6, timpris_ore: 34900, pris_ore: 209400,
+   istället", och samma dag: "rabattkod gäller också för upplägg. Samma
+   sak som vanliga planer bara annat antal timmar". Familjen ser upplägget
+   ovanför planerna, till planernas timpris, och köper det med Köp, med en
+   kod om den gäller, och kassan får upplägget id och koden, aldrig ett
+   belopp. Admin skickar ett ur familjens panel, utan något timpris att
+   välja, ser det och drar tillbaka det. */
+const UPPLAGGET = { id: 'upp-1', familj: 'fam-a', namn: 'Höstlovet', timmar: 6, timpris_ore: 37900, pris_ore: 227400,
   giltigt_till: dag(10), skapad_av: 'admin-1', skapad_at: nu(-60), aterkallad_at: null, kopt_at: null, klippkort_id: null };
 
 async function provaUpplagg(webb) {
@@ -908,8 +931,8 @@ async function provaUpplagg(webb) {
     await tillErbjudanden(page);
     await page.waitForSelector('#erb-upplagg [data-kop-upplagg]', { timeout: 6000 }).catch(() => {});
     const kort = await innehåll(page, '#erb-upplagg');
-    prova('upplägget: familjen ser det ovanför planerna, med timmarna, priset och att det gäller som en plan',
-      /Höstlovet: 6 timmar, 2\s?094\s*kr/.test(kort) && /349\s*kr i timmen/.test(kort) && /30 dagar från köpet, som en plan/.test(kort),
+    prova('upplägget: familjen ser det ovanför planerna, med timmarna, planernas pris och att det gäller som en plan',
+      /Höstlovet: 6 timmar, 2\s?274\s*kr/.test(kort) && /379\s*kr i timmen/.test(kort) && /30 dagar från köpet, som en plan/.test(kort),
       kort);
     await page.click('#erb-upplagg [data-kop-upplagg="upp-1"]');
     await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
@@ -926,6 +949,40 @@ async function provaUpplagg(webb) {
     prova('upplägget: inga fel i konsolen hos familjen', konsol.length === 0, konsol.join(' | '));
     await context.close();
   }
+  {
+    /* Rabattkoden gäller också för upplägget (2026-10-27): kodrutan prövar
+       den på planerna och upplägget, kortet visar priset med koden, och
+       kassan får koden. */
+    const { context, page, S, riktiga, konsol } = await öppna(webb, { anv: FAMILJ, värld: W => {
+      W.egna_upplagg = [Object.assign({}, UPPLAGGET)];
+    } });
+    await tillErbjudanden(page);
+    await page.waitForSelector('#erb-upplagg [data-kop-upplagg]', { timeout: 6000 }).catch(() => {});
+    await page.evaluate(() => { const d = document.getElementById('erb-kod'); const u = d && d.closest('details'); if (u) u.open = true; });
+    await page.fill('#erb-kod', 'lov10');
+    await page.click('#erb-kod-anvand');
+    await page.waitForFunction(() => /LOV10/.test((document.getElementById('erb-upplagg') || {}).textContent || ''),
+      null, { timeout: 4000 }).catch(() => {});
+    const kort = await innehåll(page, '#erb-upplagg');
+    const fragor = S.logg.filter(r => r.väg === '/rest/v1/rpc/kod_pa_upplagget').map(r => r.kropp);
+    prova('upplägget med kod: koden prövas på upplägget, och kortet visar priset med koden',
+      fragor.some(f => f && f.p_kod === 'LOV10' && f.p_upplagg === 'upp-1')
+        && /2\s?274\s*kr/.test(kort) && /2\s?046,60\s*kr/.test(kort) && /med koden LOV10/.test(kort)
+        && /upplägget/.test(await innehåll(page, '#erb-kod-svar')),
+      kort + ' | ' + await innehåll(page, '#erb-kod-svar'));
+    await page.click('#erb-upplagg [data-kop-upplagg="upp-1"]');
+    await page.waitForSelector(villkorsruta + ' [data-kassa-kryss]', { timeout: 4000 }).catch(() => {});
+    prova('upplägget med kod: köpvillkoren säger priset med koden',
+      /2\s?046,60\s*kr med koden LOV10/.test(await innehåll(page, villkorsruta)), await innehåll(page, villkorsruta));
+    await kryssaOchTillKassan(page);
+    const k = (kassor(S).pop() || {}).kropp || {};
+    prova('upplägget med kod: kassan får upplägget och koden, aldrig ett belopp',
+      k.upplagg === 'upp-1' && k.rabattkod === 'LOV10' && k.villkor === true && !('belopp_ore' in k) && !('erbjudande' in k),
+      JSON.stringify(k));
+    prova('upplägget med kod: inget anrop mot den riktiga Supabase', riktiga.length === 0, riktiga.join(', '));
+    prova('upplägget med kod: inga fel i konsolen', konsol.length === 0, konsol.join(' | '));
+    await context.close();
+  }
   const { context, page, S, riktiga, konsol } = await öppna(webb, { värld: W => {
     W.egna_upplagg = [Object.assign({}, UPPLAGGET)];
   } });
@@ -937,24 +994,26 @@ async function provaUpplagg(webb) {
   await page.waitForSelector('form[data-dp-upplagg]', { timeout: 6000 }).catch(() => {});
   const panel = await innehåll(page, 'aside.dp');
   prova('upplägget i panelen: det som skickats, med läget, Skriv i Gmail och Dra tillbaka',
-    /Höstlovet: 6 timmar, 2\s?094\s*kr/.test(panel) && /Väntar på familjen/.test(panel)
+    /Höstlovet: 6 timmar, 2\s?274\s*kr/.test(panel) && /Väntar på familjen/.test(panel)
       && (await page.locator('[data-dp-upplagg-bort="upp-1"]').count()) === 1
       && /mail\.google\.com/.test(await page.getAttribute('a:has-text("Skriv i Gmail")', 'href').catch(() => '') || ''),
     panel.slice(0, 400));
-  prova('upplägget i panelen: planens timpris är förvalet, och ordinarie är taket',
-    (await page.inputValue('#dp-upp-pris')) === '379' && (await page.getAttribute('#dp-upp-pris', 'max')) === '399');
+  prova('upplägget i panelen: inget timpris att välja, planernas pris, och mejlet går av sig självt',
+    (await page.locator('#dp-upp-pris').count()) === 0 && /planernas timpris, 379 kr/.test(panel)
+      && /Familjen får ett mejl/.test(panel) && /rabattkoderna/.test(panel), panel.slice(-600));
   await page.fill('#dp-upp-timmar', '4');
   await page.fill('#dp-upp-namn', 'Sportlovet');
   await page.click('form[data-dp-upplagg] button[type="submit"]');
   await page.waitForSelector('.nx-fraga.open [data-svar="ja"]', { timeout: 4000 }).catch(() => {});
-  prova('upplägget i panelen: frågan säger timmarna, priset och att det gäller som en plan',
-    /4 timmar för 1\s?516\s*kr/.test(await innehåll(page, '.nx-fraga.open')) && /30 dagar från köpet/.test(await innehåll(page, '.nx-fraga.open')),
+  prova('upplägget i panelen: frågan säger timmarna, planernas pris, mejlet och att det gäller som en plan',
+    /4 timmar för 1\s?516\s*kr/.test(await innehåll(page, '.nx-fraga.open')) && /30 dagar från köpet/.test(await innehåll(page, '.nx-fraga.open'))
+      && /får ett mejl/.test(await innehåll(page, '.nx-fraga.open')),
     await innehåll(page, '.nx-fraga.open'));
   await page.click('.nx-fraga.open [data-svar="ja"]');
   await vänta(900);
   const skickat = (S.logg.filter(r => r.väg === '/rest/v1/rpc/skicka_eget_upplagg').pop() || {}).kropp || {};
-  prova('upplägget i panelen: databasen får familjen, timmarna, timpriset i öre, namnet och dagarna',
-    skickat.p_familj === 'fam-a' && skickat.p_timmar === 4 && skickat.p_timpris_ore === 37900 && skickat.p_namn === 'Sportlovet'
+  prova('upplägget i panelen: databasen får familjen, timmarna, namnet och dagarna, aldrig ett pris',
+    skickat.p_familj === 'fam-a' && skickat.p_timmar === 4 && !('p_timpris_ore' in skickat) && skickat.p_namn === 'Sportlovet'
       && skickat.p_dagar === 14, JSON.stringify(skickat));
   prova('upplägget i panelen: det nya står i listan', /Sportlovet: 4 timmar/.test(await innehåll(page, 'aside.dp')));
   await page.click('[data-dp-upplagg-bort="upp-1"]');

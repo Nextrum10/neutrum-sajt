@@ -662,23 +662,25 @@
 
   /* EGNA UPPLÄGG (egna_upplagg, 2026-10-27, Leo: "admin säljer 6 h till
      familjen därför att det är lov och då skickar vi ett upplägg,
-     villkoren är samma men det är bara 6h istället"). Det som skickats,
-     senaste först, med läget, Dra tillbaka på det som väntar och Skriv i
-     Gmail (inget mejl går av sig själv), och formuläret för ett nytt:
-     timmarna, timpriset med planens som förval och ordinarie som tak,
-     namnet och hur många dagar familjen kan köpa det. Upplägget är en plan
-     med andra timmar och samma villkor, och databasen prövar allt
-     (skicka_eget_upplagg). Bara superadmin. */
+     villkoren är samma men det är bara 6h istället", och samma dag: "Samma
+     sak som vanliga planer bara annat antal timmar ... Mejl ska gå ut när
+     de fått möjlighet till eget upplägg"). Det som skickats, senaste först,
+     med läget, Dra tillbaka på det som väntar och Skriv i Gmail för ett eget
+     ord, och formuläret för ett nytt: timmarna, namnet och hur många dagar
+     familjen kan köpa det. Timpriset är planernas, som databasen sätter
+     (skicka_eget_upplagg), och familjen får ett mejl om det av sig själv.
+     Bara superadmin. */
   let upplaggBesked = null;   // { id, text, ok }: kvittot efter ett skickat upplägg, visas en gång
   const ORDINARIE_KR = Number((NX.CFG && NX.CFG.PRIS_PER_TIMME) || 399);
-  // Planernas timpris, 5 % av ordinarie nedåt till hel krona (379 kr), som förval.
+  /* Planernas timpris, 5 % av ordinarie nedåt till hel krona (379 kr), bara
+     för rutan före Skicka: databasen sätter priset ur planerna. */
   const PLANPRIS_KR = Math.floor(ORDINARIE_KR * 95 / 100);
   const upplaggTimmar = n => (Number(n) === 1 ? '1 timme' : n + ' timmar');
 
   function upplaggMejl(p, u) {
     const text = 'Hej!\n\nVi har lagt in ett upplägg åt er: ' + u.namn + ', ' + upplaggTimmar(u.timmar) + ' för '
-      + kronor(u.pris_ore) + ' (' + kronor(u.timpris_ore) + ' i timmen). Ni köper det när ni loggar in på '
-      + 'nextrum.se/foralder, under Betalning & planer, senast ' + datumText(u.giltigt_till) + '. Timmarna gäller i 30 '
+      + kronor(u.pris_ore) + ' (' + kronor(u.timpris_ore) + ' i timmen, planernas pris). Ni köper det när ni loggar in '
+      + 'på nextrum.se/foralder, under Betalning & planer, senast ' + datumText(u.giltigt_till) + '. Timmarna gäller i 30 '
       + 'dagar från köpet, som en plan, och samma villkor gäller.\n\nHör av er om ni har frågor!\n\nVänliga hälsningar\nNextrum';
     return gmailLänk(p.email || '', 'Ett upplägg till er från Nextrum', text);
   }
@@ -702,25 +704,22 @@
       }).join('');
     const besked = upplaggBesked && upplaggBesked.id === p.id ? upplaggBesked : null;
     upplaggBesked = null;
-    return dpRubrik('Egna upplägg', 'en plan med egna timmar och samma villkor')
+    return dpRubrik('Egna upplägg', 'en plan med egna timmar, samma pris och villkor')
       + (rader || tomt('Inga upplägg', 'Skicka ett nedan, till exempel timmar för ett lov.'))
       + '<form class="dp-gratis dp-upplagg" data-dp-upplagg="' + esc(p.id) + '">'
       + '<b class="dp-gratis-rubrik">Skicka ett upplägg</b>'
       + '<div class="dp-gratis-falt"><label for="dp-upp-timmar">Timmar</label>'
       + '<input class="inp" id="dp-upp-timmar" name="timmar" type="number" min="1" max="40" step="1" inputmode="numeric" value="6" required></div>'
-      + '<div class="dp-gratis-falt"><label for="dp-upp-pris">Timpris i kronor</label>'
-      + '<input class="inp" id="dp-upp-pris" name="timpris" type="number" min="1" max="' + esc(String(ORDINARIE_KR))
-      + '" step="1" inputmode="numeric" value="' + esc(String(PLANPRIS_KR)) + '" required></div>'
       + '<div class="dp-gratis-falt dp-gratis-orsak"><label for="dp-upp-namn">Namn, som familjen ser</label>'
       + '<input class="inp" id="dp-upp-namn" name="namn" maxlength="60" autocomplete="off" placeholder="Till exempel: Höstlovet"></div>'
       + '<div class="dp-gratis-falt"><label for="dp-upp-dagar">Kan köpas i dagar</label>'
       + '<input class="inp" id="dp-upp-dagar" name="dagar" type="number" min="1" max="60" step="1" inputmode="numeric" value="14" required></div>'
       + '<button class="btn btn-primary" type="submit">Skicka</button>'
-      + '<span class="dp-gratis-not">Familjen ser upplägget under Betalning & planer och köper det med kort eller Klarna. '
-      + 'Det är en plan: timmarna gäller i 30 dagar från köpet, och villkoren är planens. Familjerabatten dras på varje '
-      + 'timme, ingen rabattkod gäller, och inga timmar köps till det. Timpriset är högst ordinarie, ' + ORDINARIE_KR
-      + ' kr. Namnet ser familjen, och det står på kvittot: skriv vad det är, inget om barnet. Inget mejl går av sig '
-      + 'själv: skriv till familjen med Skriv i Gmail.</span>'
+      + '<span class="dp-gratis-not">Familjen får ett mejl om upplägget, ser det under Betalning & planer och köper det '
+      + 'med kort eller Klarna, en gång: när det är köpt försvinner det, och vill de ha ett till skickar ni ett nytt. '
+      + 'Det är en plan med andra timmar: planernas timpris, ' + PLANPRIS_KR + ' kr i dag, timmarna gäller i 30 dagar '
+      + 'från köpet, och villkoren, familjerabatten, rabattkoderna och Köp till timmar är planens. Namnet ser familjen, '
+      + 'och det står på kvittot: skriv vad det är, inget om barnet.</span>'
       + (besked ? '<p class="ok-msg show' + (besked.ok ? '' : ' is-err') + '">' + esc(besked.text) + '</p>' : '')
       + '</form>';
   }
@@ -738,34 +737,30 @@
     ev.preventDefault();
     const id = f.dataset.dpUpplagg;
     const timmar = Number(String(f.elements.timmar.value).trim());
-    const kr = Number(String(f.elements.timpris.value).trim());
     const dagar = Number(String(f.elements.dagar.value).trim());
     const namn = String(f.elements.namn.value || '').trim();
     if (!Number.isInteger(timmar) || timmar < 1 || timmar > 40) { alert('Välj mellan 1 och 40 timmar.'); return; }
-    if (!Number.isInteger(kr) || kr < 1 || kr > ORDINARIE_KR) {
-      alert('Timpriset är hela kronor, från 1 kr till ordinarie timpris, ' + ORDINARIE_KR + ' kr.');
-      return;
-    }
     if (!Number.isInteger(dagar) || dagar < 1 || dagar > 60) { alert('Familjen kan köpa upplägget i 1–60 dagar.'); return; }
     const visas = namn || upplaggTimmar(timmar);
     const ja = await bekräfta({
       titel: 'Skicka ' + visas + ' till ' + namnFör(id) + '?',
-      text: upplaggTimmar(timmar) + ' för ' + kronor(timmar * kr * 100) + ' (' + kr + ' kr i timmen, före en familjerabatt). '
-        + 'Familjen kan köpa det i ' + dagar + ' dagar, och timmarna gäller sedan i 30 dagar från köpet, som en plan. '
-        + 'Upplägget ändras inte när det skickats, men ni kan dra tillbaka det tills det köpts.',
+      text: upplaggTimmar(timmar) + ' för ' + kronor(timmar * PLANPRIS_KR * 100) + ' (planernas ' + PLANPRIS_KR
+        + ' kr i timmen, före en familjerabatt och en kod). Familjen får ett mejl om det och kan köpa det i ' + dagar
+        + ' dagar, och timmarna gäller sedan i 30 dagar från köpet, som en plan. Upplägget ändras inte när det '
+        + 'skickats, men ni kan dra tillbaka det tills det köpts.',
       knapp: 'Skicka upplägget'
     });
     if (!ja) return;
     await medan(f.querySelector('button[type="submit"]'), 'Skickar…', async () => {
       const { error } = await supa.rpc('skicka_eget_upplagg', {
-        p_familj: id, p_timmar: timmar, p_timpris_ore: kr * 100, p_namn: namn || null, p_dagar: dagar
+        p_familj: id, p_timmar: timmar, p_namn: namn || null, p_dagar: dagar
       });
       if (error) {
         await efterUpplagg(id, 'Kunde inte skicka: ' + (error.code === 'PGRST202'
           ? 'funktionen finns inte i databasen än (migrationen egna_upplagg).' : felText(error)), false);
         return;
       }
-      await efterUpplagg(id, visas + ' är skickat. Familjen ser det under Betalning & planer; skriv till dem med Skriv i Gmail.', true);
+      await efterUpplagg(id, visas + ' är skickat. Familjen får ett mejl om några minuter och ser det under Betalning & planer.', true);
     });
   });
 
@@ -776,8 +771,8 @@
     if (!familj) return;
     const ja = await bekräfta({
       titel: 'Dra tillbaka upplägget?',
-      text: namnFör(familj) + ' ser det inte längre och kan inte köpa det. Står en kassa redan öppen och betalas ändå '
-        + 'står köpet, och det blir en uppgift under Att göra.',
+      text: namnFör(familj) + ' ser det inte längre och kan inte köpa det, och har mejlet inte gått än går det inte. '
+        + 'Står en kassa redan öppen och betalas ändå står köpet, och det blir en uppgift under Att göra.',
       knapp: 'Dra tillbaka'
     });
     if (!ja) return;

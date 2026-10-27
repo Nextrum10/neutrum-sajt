@@ -887,6 +887,11 @@ window.NXForhandsvisning = (function () {
       return [{ giltig: false, orsak: 'Rabattkoderna prövas inte i förhandsvisningen.', rabatt_ore: 0, beskrivning: null,
                 pris_ore: null, att_betala_ore: null }];
     },
+    /* En kod på ett eget upplägg (egna_upplagg, 2026-10-27), som på en plan. */
+    kod_pa_upplagget: function () {
+      return [{ giltig: false, orsak: 'Rabattkoderna prövas inte i förhandsvisningen.', rabatt_ore: 0, beskrivning: null,
+                pris_ore: null, att_betala_ore: null, rabatt_typ: null, rabatt_varde: null }];
+    },
     /* Kortet (kortet_reserveras, 2026-10-13): samma prövning som
        valj_kort() i databasen. Jobbet som reserverar och släpper finns
        inte här, så en reservation som väljs bort är släppt direkt. */

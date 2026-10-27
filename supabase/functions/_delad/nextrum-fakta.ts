@@ -103,10 +103,11 @@ SIFFRORNA:
   en hel timme går aldrig ut. Pass för pass går inte genom timbanken:
   varje pass betalas för sig. Behöver en familj något annat än
   planerna, till exempel fler timmar under ett lov, kan vi skicka ett
-  eget upplägg: en plan med ett eget antal timmar och timpris, aldrig
-  dyrare per timme än pass för pass, som familjen köper i sin vy och
-  som gäller som en plan, 30 dagar från köpet. Ingen rabattkod gäller
-  det, och timmar köps inte till det. Utåt heter det aldrig klippkort.
+  eget upplägg: en plan med ett annat antal timmar till planernas
+  timpris, som familjen får ett mejl om, köper en gång i sin vy och som
+  gäller som en plan, 30 dagar från köpet. Allt som gäller en plan
+  gäller det, också rabattkoder och Köp till timmar. Vill familjen ha
+  ett till skickar vi ett nytt. Utåt heter det aldrig klippkort.
 · Admin kan sätta in gratistimmar i en familjs timbank, när familjen
   tas in och senare. De gäller i 60 dagar och dras först, med planens
   gratis timme, före köpta timmar. De sparar inga minuter och betalas
@@ -117,7 +118,7 @@ SIFFRORNA:
   (tipstimmen) betalar timmarna resten.
 · Har familjen en plan som gäller kan den köpa till 1–20 timmar till
   planens timpris, 379 kronor. De går ut samma dag som planen. Det
-  gäller en plan från prissidan, inte ett eget upplägg.
+  gäller också ett eget upplägg.
 · 69 kronor i timmen i tillägg för fler än ett barn. Tillägget är
   FAST, inte per barn, och taket är tre barn. Tre barn kostar alltså
   468 kronor i timmen, inte 537.

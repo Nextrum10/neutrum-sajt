@@ -199,17 +199,25 @@ Deno.test('kassaraden säger planens månad när planen har en', () => {
 // ---------- ett eget upplägg (egna_upplagg, 2026-10-27) ----------
 
 Deno.test('upplägget: namnet, timmarna, timpriset och att det gäller som en plan', () => {
-  assertEquals(kassaradForUpplagg({ namn: 'Höstlovet', timmar: 6, timpris_ore: 34900 }), {
+  assertEquals(kassaradForUpplagg({ namn: 'Höstlovet', timmar: 6, timpris_ore: 37900 }), {
     name: 'Eget upplägg: Höstlovet',
-    description: '6 timmar läxhjälp, 349 kr i timmen. Gäller i 30 dagar från köpet, som en plan.',
+    description: '6 timmar läxhjälp, 379 kr i timmen. Gäller i 30 dagar från köpet, som en plan.',
   });
   assertEquals(kassaradForUpplagg({ namn: ' ', timmar: 1, timpris_ore: 37900 }).name, 'Eget upplägg');
   assertEquals(kassaradForUpplagg({ namn: 'x', timmar: 1, timpris_ore: 37900 }).description.startsWith('1 timme läxhjälp'), true);
 });
 
 Deno.test('upplägget: familjens rabatt står på raden när den lämnar ett pris kvar', () => {
-  assertEquals(kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 30000, familjerabatt_ore: 1000 }).description,
-    '4 timmar läxhjälp, 300 kr i timmen, med er rabatt 290 kr. Gäller i 30 dagar från köpet, som en plan.');
-  assertEquals(kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 30000, familjerabatt_ore: 30000 }).description,
-    kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 30000 }).description);
+  assertEquals(kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 37900, familjerabatt_ore: 1000 }).description,
+    '4 timmar läxhjälp, 379 kr i timmen, med er rabatt 369 kr. Gäller i 30 dagar från köpet, som en plan.');
+  assertEquals(kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 37900, familjerabatt_ore: 37900 }).description,
+    kassaradForUpplagg({ namn: 'Lov', timmar: 4, timpris_ore: 37900 }).description);
+});
+
+Deno.test('upplägget: koden står på raden, som på en plan (Leo: "rabattkod gäller också för upplägg")', () => {
+  assertEquals(kassaradForUpplagg({ namn: 'Lov', timmar: 6, timpris_ore: 37900, rabattkod: 'ZAYAN10', kodens_rabatt_ore: 22740 })
+    .description, '6 timmar läxhjälp, 379 kr i timmen. Gäller i 30 dagar från köpet, som en plan. Med rabattkoden ZAYAN10.');
+  // En partnerkod utan rabatt säger bara koden.
+  assertEquals(kassaradForUpplagg({ namn: 'Lov', timmar: 6, timpris_ore: 37900, rabattkod: 'FORENING', kodens_rabatt_ore: 0 })
+    .description.endsWith(' Med koden FORENING.'), true);
 });

@@ -2144,14 +2144,21 @@ förut, i listan och på passet.
 upplägg som väntar: "Ett upplägg till er", namnet, timmarna och priset, timpriset (med "med er
 rabatt" när familjen har en), att det gäller i 30 dagar från köpet som en plan och sista dagen att
 köpa det, och Köp, som går till samma kassa som en plan. Utan studiehjälpare (`S.väntar`) eller
-med erbjudandena av är Köp släckt. Ett upplägg som väntar står också bland notiserna. Köp till
-timmar räknar inte ett upplägg som en plan att köpa till (`planFörExtra`).
+med erbjudandena av är Köp släckt. Ett upplägg som väntar står också bland notiserna. Leo samma
+eftermiddag: "rabattkod gäller också för upplägg. Samma sak som vanliga planer bara annat antal
+timmar". **Kodrutan** (Kod till en plan) prövar koden också på uppläggen som väntar
+(`kod_pa_upplagget`, i `provaErbKod`), och kortet visar då priset utan koden överstruket, priset med
+koden och "med koden X"; Köp skickar koden med (`upplaggetsPris` säger om den gäller upplägget).
+Köp till timmar tar ett upplägg som en plan att köpa till (`planFörExtra`). Ett köpt upplägg står
+inte kvar: listan läser bara de som går att köpa.
 
 **I adminvyn** har familjens panel blocket Egna upplägg (`dpUpplagg`, bara superadmin):
 uppläggen med läget (Väntar på familjen, Köpt, Tillbakadraget, Gick ut), Skriv i Gmail och Dra
-tillbaka på ett som väntar, och formuläret Skicka ett upplägg (timmar 1–40, timpris i hela kronor,
-högst det ordinarie, ett namn, dagar att köpa det). Inget mejl går av sig självt: familjen ser
-upplägget i studievyn, och vill vi säga till skriver vi i Gmail.
+tillbaka på ett som väntar, och formuläret Skicka ett upplägg (timmar 1–40, ett namn, dagar att köpa
+det). Inget pris att välja: timpriset är planernas, som databasen sätter, och rutan före Skicka
+räknar det med `PLANPRIS_KR`. Familjen får ett mejl om upplägget av sig själv (notistypen
+`eget_upplagg`, valet Egna upplägg under Profil → Notiser i studievyn); Skriv i Gmail står kvar för
+ett eget ord.
 Betalningar har fliken **Återbetalningar** (`#ab-lista`): en rad per återbetalning i Stripe, var
 den än gjordes, med vad, hur mycket, vem av oss och varför, och summorna Återbetalat, I adminvyn
 och Utanför adminvyn (en återbetalning i Stripes dashboard, att stämma av). Under Liggaren betalas

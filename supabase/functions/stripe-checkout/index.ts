@@ -70,7 +70,7 @@ import {
   arErbjudandekod, type ErbjudandePris, extraTimmar, familjerabattPaKop, kanAteranvandas, kassarad, kassaradForUpplagg,
   kassaradTillPlanen, saljs, SALJS_INTE, sammaInnehall,
 } from '../_delad/erbjudanden.ts';
-import { kodPaFelBetalning, planensKod } from '../_delad/koder.ts';
+import { kodPaFelBetalning, planensKod, upplaggetsKod } from '../_delad/koder.ts';
 import {
   buntaKassan, type Forsoket, forsoketsKassa as forsoketsKassaMed, gamlaKassanGarUt as gamlaKassanGarUtMed,
   type KassaStripe, tillaggetFoljerMed, tillaggetsLinje, utgangstid,
@@ -782,17 +782,21 @@ async function köpTimmarTillPlanen(
    ETT EGET UPPLÄGG (2026-10-27, egna_upplagg)
 
    Leo: "admin säljer 6 h till familjen därför att det är lov och då
-   skickar vi ett upplägg, villkoren är samma men det är bara 6h istället."
-   Upplägget läses med familjens token (RLS släpper bara fram familjens
-   egna), och databasen skapar köpet (eget_upplagg_kop): priset är
-   upplägget, med familjerabatten dragen, och ingen kod. Sedan är det en
-   plan: samma kassa, samma webhook (klippkort_betald, 30 dagar), och
-   syskontillägget som egen rad som i varje köp av timmar. Anropet säger
-   bara vilket upplägg, aldrig ett belopp.
+   skickar vi ett upplägg, villkoren är samma men det är bara 6h istället",
+   och samma dag: "rabattkod gäller också för upplägg. Samma sak som
+   vanliga planer bara annat antal timmar". Upplägget läses med familjens
+   token (RLS släpper bara fram familjens egna), koden prövas med samma
+   token mot uppläggets pris (kod_pa_upplagget), och databasen skapar köpet
+   (eget_upplagg_kop): priset är uppläggets, med familjerabatten och koden
+   dragna av köpets trigger som för en plan. Har koden hunnit sluta gälla
+   öppnas ingen kassa, som för en plan. Sedan är det en plan: samma kassa,
+   samma webhook (klippkort_betald, 30 dagar), och syskontillägget som egen
+   rad som i varje köp av timmar. Anropet säger bara vilket upplägg och
+   vilken kod, aldrig ett belopp.
    ============================================================ */
 async function köpUpplagg(
   vem: Inloggad,
-  kropp: { upplagg?: unknown; retur?: string; ui?: string; med_tillagg?: unknown },
+  kropp: { upplagg?: unknown; retur?: string; ui?: string; med_tillagg?: unknown; rabattkod?: unknown },
 ): Promise<Response> {
   const id = String(kropp.upplagg ?? '').trim().toLowerCase();
   if (!UUID.test(id)) return json({ error: 'Vilket upplägg?' }, 400, CORS);
@@ -812,10 +816,16 @@ async function köpUpplagg(
       : json({ error: 'Upplägget gick inte att läsa.' }, 500, CORS);
   }
   if (!u || u.familj !== vem.anvandare) return json({ error: 'Upplägget finns inte bland era.' }, 404, CORS);
+  // Koden med familjens token, mot uppläggets pris efter familjens rabatt.
+  const kodbeslut = await upplaggetsKod({ rpc: (fn, args) => vem.klient.rpc(fn, args) }, kropp.rabattkod, id);
+  if (!kodbeslut.ok) return json({ error: kodbeslut.fel }, kodbeslut.status, CORS);
 
   let tillagget: Tillagget | null = null;
   try {
-    const { data: k, error: kfel } = await db.rpc('eget_upplagg_kop', { p_upplagg: id, p_familj: vem.anvandare });
+    const { data: k, error: kfel } = await db.rpc('eget_upplagg_kop', {
+      p_upplagg: id, p_familj: vem.anvandare, p_rabattkod: kodbeslut.kod,
+      p_belopp: kodbeslut.kod !== null ? kodbeslut.attBetala : null,
+    });
     if (kfel) {
       // Köpvillkoren (klippkort_kraver_villkor) säger sitt eget besked, skrivet för familjen.
       if (kfel.code === 'P0001') return json({ error: kfel.message }, 409, CORS);
@@ -823,7 +833,7 @@ async function köpUpplagg(
     }
     const kop = (k ?? {}) as {
       ok?: boolean; fel?: string; klippkort?: string; belopp_ore?: number; familjerabatt_ore?: number; namn?: string;
-      timmar?: number; timpris_ore?: number;
+      timmar?: number; timpris_ore?: number; rabattkod?: string | null; rabatt_ore?: number;
     };
     // Ett besked från databasen, skrivet för familjen: visas som det är.
     if (!kop.ok || !kop.klippkort || !(Number(kop.belopp_ore) > 0)) {
@@ -832,6 +842,14 @@ async function köpUpplagg(
     const kopId = String(kop.klippkort);
     const belopp = Number(kop.belopp_ore);
     const rabattPerTimme = Number(kop.familjerabatt_ore) || 0;
+    /* Databasen tog bort koden (den tog slut emellan) och satte priset utan
+       den. Då öppnas ingen kassa, som för en plan: familjen trodde att koden
+       gällde. Köpet står kvar som väntande och används inte. */
+    const rabattkod = kop.rabattkod ?? null;
+    if (kodbeslut.kod !== null && (rabattkod !== kodbeslut.kod || belopp !== kodbeslut.attBetala)) {
+      return json({ error: 'Koden gick inte att använda just nu. Försök igen, eller köp utan koden.' }, 409, CORS);
+    }
+    const kodensRabatt = rabattkod ? Number(kop.rabatt_ore) || 0 : null;
 
     const bas = egenAdress(kropp.retur, 'https://nextrum.se');
     const pk = kropp.ui === 'inbaddad' ? publicerbarNyckel() : null;
@@ -843,16 +861,18 @@ async function köpUpplagg(
           cancel_url: `${bas}/foralder#erbjudanden` };
 
     const rad = kassaradForUpplagg({ namn: String(kop.namn ?? ''), timmar: Number(kop.timmar),
-                                     timpris_ore: Number(kop.timpris_ore), familjerabatt_ore: rabattPerTimme });
+                                     timpris_ore: Number(kop.timpris_ore), familjerabatt_ore: rabattPerTimme,
+                                     rabattkod, kodens_rabatt_ore: kodensRabatt });
     const tk = await tillaggTillKopet(db, vem.anvandare, kopId, kropp.med_tillagg, inbaddad);
     if (tk === 'pagar') return pagarRedan();
     tillagget = tk.forsok;
     const tf = tillagget?.forsok ?? null;
     const raderna = kopetsRader(
-      { typ: 'plan', beloppOre: belopp, kodensRabatt: null, kod: null, produkt: rad as unknown as Record<string, unknown> },
+      { typ: 'plan', beloppOre: belopp, kodensRabatt, kod: rabattkod, produkt: rad as unknown as Record<string, unknown> },
       tillagget, { obligatorisk: tk.obligatorisk, med: kropp.med_tillagg });
     await sparaKryss(db, vem.anvandare, 'kop', kopId);
-    const md = { klippkort_id: kopId, erbjudande: 'plan_eget', upplagg: id, ...(tf ? { tillagg_forsok: tf } : {}) };
+    const md = { klippkort_id: kopId, erbjudande: 'plan_eget', upplagg: id, ...(rabattkod ? { rabattkod } : {}),
+                 ...(tf ? { tillagg_forsok: tf } : {}) };
     const session = await v1('POST', '/v1/checkout/sessions', {
       mode: 'payment',
       locale: 'sv',
@@ -878,7 +898,8 @@ async function köpUpplagg(
     if (tf) await sparaSessionen(db, tf, session);
 
     const svar = { session: (session as { id?: string }).id, belopp_ore: belopp, klippkort: kopId,
-                   familjerabatt_ore: rabattPerTimme * (Number(kop.timmar) || 0), ...tillaggetsSvar(tillagget) };
+                   familjerabatt_ore: rabattPerTimme * (Number(kop.timmar) || 0),
+                   ...(rabattkod ? { rabattkod, rabatt_ore: kodensRabatt } : {}), ...tillaggetsSvar(tillagget) };
     return inbaddad
       ? json({ lage: 'inbaddad', client_secret: (session as { client_secret?: string }).client_secret ?? null,
                nyckel: pk, ...svar }, 200, CORS)

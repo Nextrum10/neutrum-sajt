@@ -2031,25 +2031,38 @@ en återbetalningsfunktion för oss i admin"). Kedjan i driften: `DEPLOY-BETALNI
 ### Egna upplägg (egna_upplagg, 2026-10-27, inte i drift)
 
 `20261027170000_egna_upplagg.sql` (Leo: "admin säljer 6 h till familjen därför att det är lov och då skickar vi ett
-upplägg, villkoren är samma men det är bara 6h istället"). Körs efter `flera_pass_och_aterbetalningar`.
+upplägg, villkoren är samma men det är bara 6h istället", och samma dag: "rabattkod gäller också för upplägg. Samma sak
+som vanliga planer bara annat antal timmar ... Mejl ska gå ut när de fått möjlighet till eget upplägg"). Körs efter
+`flera_pass_och_aterbetalningar`, och efter `notis-ko` och `notis-avanmal` (de känner typen `eget_upplagg`).
 
 - **Katalogens rad `plan_eget`** (sorten `plan`) säljs aldrig: den står inte aktiv och villkoret
   `erbjudanden_eget_saljs_inte` håller den så, så den finns inte i `erbjudanden_pris`. Köpen pekar på den
   (`klippkort_erbjudande_fkey`), som timmar till planen och gratistimmarna.
-- **`egna_upplagg`**: familjen, namnet (1–60 tecken), 1–40 timmar, timpriset i hela kronor (högst ordinarie, prövat i
-  funktionen), priset (timmarna gånger timpriset, ett villkor), sista dagen att köpa det, vem som skickade det, och
-  `kopt_at`, `klippkort_id` och `aterkallad_at`, som bara skrivs en gång (`intern.egna_upplagg_vakt`). Admin skickar och
-  drar tillbaka med `skicka_eget_upplagg()` och `aterkalla_eget_upplagg()` (`is_admin()`, högst fem som väntar per
-  familj, ett rådgivande lås per familj), familjen läser sina, och ingen inloggad skriver.
-- **Köpet** skapar `eget_upplagg_kop()` (tjänstekontot): en rad i `klippkort` med `plan_eget` och `upplagg_id`
-  (villkoret `klippkort_upplagg_bara_eget`), till timpriset minus familjerabatten gånger timmarna, och ett väntande köp
-  av samma upplägg yngre än 23 timmar återanvänds. Betalt är det en plan: `klippkort_betald` (30 dagar), liggarens typ
-  `plan`, och första timmen gratis om det är familjens första plan. `klippkort_upplagg_kopt` skriver upplägget köpt, och
-  ett köp som betalas för ett upplägg som redan köpts eller dragits tillbaka blir en uppgift
+- **`egna_upplagg`**: familjen, namnet (1–60 tecken), 1–40 timmar, timpriset (planernas när det skickades:
+  `min(rabatterat_timpris_ore)` bland planerna i `erbjudanden_pris`), priset (timmarna gånger timpriset, ett villkor),
+  sista dagen att köpa det, vem som skickade det, och `kopt_at`, `klippkort_id` och `aterkallad_at`, som bara skrivs en gång
+  (`intern.egna_upplagg_vakt`). Admin skickar och drar tillbaka med `skicka_eget_upplagg(familj, timmar, namn, dagar)` och
+  `aterkalla_eget_upplagg()` (`is_admin()`, högst fem som väntar per familj, ett rådgivande lås per familj), familjen läser
+  sina, och ingen inloggad skriver.
+- **Mejlet**: `intern.eget_upplagg_notis()` (AFTER INSERT, triggern `egna_upplagg_notis`) skriver en notis och köar ett
+  mejl med `intern.notis_koa` (nyckeln `eget_upplagg:mejl:<id>`, om fem minuter, senast sista dagens slut) när familjen inte
+  stängt av typen (`notis_vill`); inte när den som skickar är familjen själv, och ett fel hamnar i `notis_fel` i stället för
+  att stoppa upplägget. `notis_typer()` och `notis_mejlbara()` har typen (lappade efter `varvningsbonus`), och
+  `notis_utskick_ta` hoppar över raden när upplägget inte längre går att köpa.
+- **Köpet** skapar `eget_upplagg_kop(upplägg, familj, kod, belopp)` (tjänstekontot): en rad i `klippkort` med `plan_eget`,
+  `upplagg_id` och koden, till uppläggets pris före familjerabatten och koden (villkoret `klippkort_upplagg_bara_eget`), och
+  ett väntande köp av samma upplägg, med samma kod och det pris familjen ska betala nu (utan kod räknat här, med kod kassans
+  belopp ur `kod_pa_upplagget`), yngre än 23 timmar, återanvänds. Betalt är det en plan: `klippkort_betald` (30 dagar),
+  liggarens typ `plan`, och första timmen gratis om det är familjens första plan. `klippkort_upplagg_kopt` skriver upplägget
+  köpt, och ett köp som betalas för ett upplägg som redan köpts eller dragits tillbaka blir en uppgift
   (`eget_upplagg_dubbel:<id>`, `eget_upplagg_aterkallat:<id>`).
-- **Lappade** med `replace()` och vakter som räknar träffarna: `intern.klippkort_rabatt` (lämnar priset och familjerabatten som
-  `eget_upplagg_kop()` satt och tar bort en kod, som för timmar till en plan), `intern.kod_galler_kopet` (inte `plan_eget`, som
-  `kodenGallerKopet` i `_delad/koder.ts`) och `extra_timmar_erbjudande` (inga timmar till ett upplägg).
-  `intern.villkor_version()` blir 2026-10-27, och vakten kräver 2026-10-26 (eller 2026-10-27 när filen körs igen).
-- **Prov**: `rls-test.sql` avsnitt 58 (EU, 16 rader). Lokalt 2259 av 2259 med båda filerna, också när de körts två
+- **Priset och koden som på en plan**: `intern.klippkort_rabatt` är lappad (med `replace()` och en vakt som räknar
+  träffarna) så att den läser uppläggets pris för `plan_eget` och räknar familjerabatten och koden på det som för en plan ur
+  katalogen. `kod_pa_upplagget(kod, upplägg)` svarar som `kod_pa_planen` (samma tak för okända koder), för familjens eget
+  upplägg som går att köpa. `intern.kod_galler_kopet` och `extra_timmar_erbjudande` rörs inte: upplägget är sorten `plan`,
+  och timmar köps till det till köpets timpris. `intern.villkor_version()` blir 2026-10-27, och vakten kräver 2026-10-26
+  (eller 2026-10-27 när filen körs igen).
+- **Läst ur driften 2026-10-27**: ankarena i `notis_typer()`, `notis_mejlbara()`, `notis_utskick_ta` och
+  `intern.klippkort_rabatt` stod där en gång var, och ingen var lappad.
+- **Prov**: `rls-test.sql` avsnitt 58 (EU, 21 rader). Lokalt 2264 av 2264 med båda filerna, också när de körts två
   gånger.

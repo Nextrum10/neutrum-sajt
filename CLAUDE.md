@@ -373,7 +373,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   (procent, eller belopp i öre) och `varde` får vara noll (en partnerkod som bara räknar). **Ett pass tar ingen kod**, för
   någon (`bookings_kod_bara_pa_planer`, och `intern.rabattkod_prova` säger samma nej till varje kod på ett pass); TIPS är
   tipstimmens markering och står kvar, och ett pass som redan bar en kod behåller den. Bland köpen bara en plan i katalogen
-  (`intern.kod_galler_kopet`), aldrig Fyll timbanken, timmar till planen, gratistimmar eller ett eget upplägg. **En kod per köp**
+  (`intern.kod_galler_kopet`), aldrig Fyll timbanken, timmar till planen eller gratistimmar; ett eget upplägg är en plan och
+  tar en kod (2026-10-27, Leo: "rabattkod gäller också för upplägg"; `kod_pa_upplagget`). **En kod per köp**
   (`klippkort.rabattkod`); familjerabatten och den första planens gratis timme är inga koder och staplas med den (Leo
   2026-10-15). Databasen prövar koden och räknar rabatten (`intern.klippkort_rabatt`, aldrig så att köpet blir gratis), och
   kassan frågar `kod_pa_planen()` med familjens token, räknar om rabatten ur typen och värdet (`_delad/koder.ts`, samma regel
@@ -415,16 +416,21 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   då räknas till ordinarie timpris med rabatten dragen; beloppet ser familjen vid priset. Auditen får att familjen fick eller blev av med en
   rabatt (`har_rabatt`), aldrig koden, som kan säga vilken partner familjen kom genom.
 - **Egna upplägg** (2026-10-27, `egna_upplagg`, Leo: "admin säljer 6 h till familjen därför att det är lov och då
-  skickar vi ett upplägg, villkoren är samma men det är bara 6h istället"; inte i drift): admin skickar en familj ett
-  upplägg i familjens panel (`skicka_eget_upplagg()`, `is_admin()`: ett namn, 1–40 timmar, ett timpris i hela kronor
-  högst det ordinarie, och 1–60 dagar att köpa det), och familjen ser det överst bland planerna och köper det. Köpet
-  är en plan (`klippkort` med erbjudandet `plan_eget`, sorten `plan` och `upplagg_id`): 30 dagar från betalningen,
-  timbanken, ordningen, påminnelsen, första timmen gratis om det är familjens första plan, ångerrätten och Att sluta.
-  Tre saker skiljer, och villkoren säger dem (`#eget-upplagg`, version 2026-10-27): priset är uppläggets (timpriset
-  minus familjerabatten, gånger timmarna, räknat i `eget_upplagg_kop()`), ingen kod gäller det, och inga timmar köps
-  till det. Katalogens rad `plan_eget` säljs aldrig (`erbjudanden_eget_saljs_inte`), ett upplägg står fast när det
-  skickats (bara köpt eller tillbakadraget skrivs), och ett köp som betalas för ett upplägg som redan köpts eller dragits
-  tillbaka blir en uppgift. Inget mejl går av sig självt: Skriv i Gmail i panelen.
+  skickar vi ett upplägg, villkoren är samma men det är bara 6h istället", och samma dag: "rabattkod gäller också för
+  upplägg. Samma sak som vanliga planer bara annat antal timmar ... De köper och möjligheten försvinner, vill de ha eget
+  upplägg igen måste vi skicka igen. Mejl ska gå ut när de fått möjlighet till eget upplägg"; inte i drift): admin
+  skickar en familj ett upplägg i familjens panel (`skicka_eget_upplagg()`, `is_admin()`: ett namn, 1–40 timmar och
+  1–60 dagar att köpa det), till planernas timpris (det rabatterade timpriset i `erbjudanden_pris`, 379 kr i dag, satt
+  av databasen och fryst på upplägget; admin sätter inget eget pris). Familjen får ett mejl (notistypen `eget_upplagg`,
+  avsnitt 5), ser det överst bland planerna och köper det en gång: när köpet är betalt är upplägget köpt och syns inte
+  längre, och vill familjen ha ett till skickar vi ett nytt. Köpet är en plan (`klippkort` med erbjudandet `plan_eget`,
+  sorten `plan` och `upplagg_id`), och allt som gäller en plan gäller det: 30 dagar från betalningen, timbanken,
+  ordningen, påminnelsen, första timmen gratis om det är familjens första plan, familjerabatten, rabattkoden
+  (`intern.klippkort_rabatt` räknar den på uppläggets pris, och `kod_pa_upplagget` svarar som `kod_pa_planen`), Köp till
+  timmar, ångerrätten och Att sluta. Villkoren säger det (`#eget-upplagg`, version 2026-10-27, utan att nämna koderna).
+  Katalogens rad `plan_eget` säljs aldrig (`erbjudanden_eget_saljs_inte`), ett upplägg står fast när det skickats (bara
+  köpt eller tillbakadraget skrivs), och ett köp som betalas för ett upplägg som redan köpts eller dragits tillbaka blir
+  en uppgift. Skriv i Gmail står kvar i panelen för ett eget ord.
 - **Kortet reserveras** (av sedan 2026-10-21, `betala_nu`: familjen betalar med Betala nu; koden och tabellerna
   står kvar, och jobbet släpper det som ändå skulle stå reserverat och betalar tillbaka kortare pass. Historik:
   2026-10-13, i drift sedan 2026-10-14; Leo: "betala nu, eller på faktura. då reserveras pengar från stripe
@@ -550,7 +556,7 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
 | upplupet tillägg | familjens obetalda syskontillägg för hållna pass (`tillagg_skuld()`), som betalas med Betala tillägg nu eller i nästa köp av timmar |
 | sen avbokning | familjen avbokar ett bokat pass mindre än 12 timmar före start: passet räknas som hållet i halva tiden, och familjen betalar hälften eller får halva tiden dragen ur timmarna (`sen_avbokning_minuter`, `sen_avbokning_ore`); aldrig "avbokningsavgift" utåt |
 | Betala alla | flera bekräftade pass i en kassa, en rad per pass (`passkassor`, `passkassor_pass`); pass för pass är som förut |
-| eget upplägg | en plan med egna timmar och eget timpris som admin skickar till en familj (`egna_upplagg`, köpet `plan_eget`): samma villkor som en plan, men ingen kod och inga timmar till det |
+| eget upplägg | en plan med ett annat antal timmar, till planernas timpris, som admin skickar till en familj och familjen köper en gång (`egna_upplagg`, köpet `plan_eget`): allt som gäller en plan gäller det, också koderna och Köp till timmar |
 | återbetalningarna | `aterbetalningar`: en rad per återbetalning i Stripe, var den än gjordes, med vem av oss och varför; raderas aldrig |
 ### Siffror som måste stämma överallt
 - **399 kr/tim** utan bindning (`PRIS_PER_TIMME` och läxhjälpens rad i `tjanster`, 2026-10-08), och
@@ -574,8 +580,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   `erbjudanden` ska stå på: utan den betalar inga köpta timmar ett pass. Köpta timmar gäller till sin sista dag, syns i
   Er timbank och räknas ner som förut. Sedan 2026-10-13 sätter vi också in gratistimmar där (avsnitt 1). **Köp till timmar**
   (2026-10-14, Leo: "man kan köpa till timmar med plan men de går ut när månaden är slut ... välj själv knapp och
-  checkout för de specifika timmarna"): med en plan ur katalogen (aldrig ett eget upplägg) som gäller minst en dag
-  till köper familjen 1–20 timmar åt
+  checkout för de specifika timmarna"): med en plan som gäller minst en dag till, också ett eget upplägg, köper
+  familjen 1–20 timmar åt
   gången under Er timbank, till planens eget timpris (379 kr i dag; `extra_timmar_erbjudande()` räknar, aldrig
   anropet), och de går ut samma dag som planen (`klippkort_betald`). De får ingen gratis timme, och påminnelsen
   tio dagar innan räknar dem med planen. Pass för pass går inte genom timbanken. Köpta timmar går ut, sparade minuter gör det inte: sidan
@@ -989,6 +995,10 @@ Detaljer: `minne/grunden.md`.
   `ansokan_id`), som `notis_utskick_ta` prövar igen när den ska gå (ansökan står kvar i steget Intervju
   och är inte avböjd, sedan 2026-10-21 också med `steg`), och `notis-ko` mejlar den från info@
   (`intervju.ts`). Skicka intervjulänk igen köar samma mejl med en egen nyckel (`ansokan_intervju:<id>:igen:<tid>`).
+- **Egna upplägg** (2026-10-27) mejlar familjen när admin skickar ett (typen `eget_upplagg`, nyckeln
+  `eget_upplagg:mejl:<id>`, valet under Profil → Notiser, triggern `egna_upplagg_notis`): timmarna, priset med familjens
+  rabatt och sista dagen, aldrig namnet, om fem minuter, och `notis_utskick_ta` hoppar över det när upplägget inte går att
+  köpa längre. Ingen notis om sin egen åtgärd, och ett mejl som inte går att köa tar aldrig upplägget med sig (`notis_fel`).
 - **Värvningsbonusen** (2026-10-21) mejlar värvaren en gång per bonus när den tjänas in (typen `varvningsbonus`,
   nyckeln `varvningsbonus:mejl:<id>`, valet under Profil → Notiser): beloppet och att bonusen hanteras enligt
   villkoren, aldrig kompisens namn. Ett mejl som inte går att köa tar aldrig bonusen med sig (`notis_fel`).
@@ -1087,8 +1097,9 @@ Detaljer: `minne/sakerhet.md`.
   regeln som ett fel om den inte går att läsa; webhooken prövar en sen tvisthändelse före tilläggets gren och skriver
   avgiften för en betalning som bara är tillägg på liggarens rad (`charge.updated`).
 - **Betala alla och upplägget** (2026-10-27, inte i drift): `stripe-checkout` tar `{passen: [...]}` (2–20 pass,
-  databasens belopp per pass, nyckeln `nextrum-passen-`) och `{upplagg}` (priset ur `eget_upplagg_kop()`, ingen kod,
-  nyckeln `nextrum-upplagg-`), och SESSIONSFORM står kvar på 12. Webhooken betalar kassan genom `passkassa_betald` och
+  databasens belopp per pass, nyckeln `nextrum-passen-`) och `{upplagg, rabattkod}` (koden prövad med familjens token i
+  `kod_pa_upplagget`, priset och koden dragna av databasen i `eget_upplagg_kop()`, och ingen kassa när koden hunnit sluta
+  gälla; nyckeln `nextrum-upplagg-`), och SESSIONSFORM står kvar på 12. Webhooken betalar kassan genom `passkassa_betald` och
   loggar varje återbetalning (`aterbetalning_logga`), och `stripe-aterbetalning` och `stripe-reservation` betalar
   tillbaka ett pass i en kassa på sin rad, med `booking_id` i Stripes metadata (`_delad/passkassa.ts`). Kassan
   driftsätts sist (`DEPLOY-BETALNING.md` 9.28).
@@ -1199,14 +1210,18 @@ Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
 - **Betala alla, återbetalningarna och egna upplägg** (2026-10-27, `flera_pass_och_aterbetalningar` 20261027160000
-  och `egna_upplagg` 20261027170000) är **inte i drift**: kedjan står i `DEPLOY-BETALNING.md` 9.28 (Vercel, migrationerna
-  i ordning, sex edge-funktioner med kassan sist, och `drift`). Lokalt 2259 av 2259 i `rls-test.sql`, också med filerna
-  körda två gånger. Den 27 oktober var de elva funktioner filerna rör i driften byte för byte som i en databas byggd ur
-  filerna, så vakterna släpper igenom dem. Samma meddelande sa att planerna skulle gälla köpmånaden; Leo tog tillbaka det
-  ("skojade, planerna är i 30 dagar"), och inget ändrades där. Villkorens version blir 2026-10-27, så alla får frågan
-  igen. Ett eget upplägg ger första timmen gratis om det är familjens första plan, för villkoren är planens (Leo: "villkoren
-  är samma"). Kvar: provet i testläge (9.28 steg 6), och juristen har inte läst `#eget-upplagg`, raderna 37–39 i
-  `DATASKYDD.md` eller policyns nya meningar om återbetalningarna, kassan och upplägget.
+  och `egna_upplagg` 20261027170000) är **inte i drift**: kedjan står i `DEPLOY-BETALNING.md` 9.28 (Vercel, `notis-ko` och
+  `notis-avanmal` före migrationerna, för de känner mejlet om upplägget, sedan migrationerna i ordning, sex edge-funktioner
+  med kassan sist, och `drift`). Lokalt 2264 av 2264 i `rls-test.sql`, också med filerna körda två gånger. Den 27 oktober
+  var funktionerna filerna skriver om i driften byte för byte som i en databas byggd ur filerna, och varje ankare de lappar
+  stod där en gång, så vakterna släpper igenom dem. Samma meddelande sa att planerna skulle gälla köpmånaden; Leo tog
+  tillbaka det ("skojade, planerna är i 30 dagar"), och inget ändrades där. Upplägget gjordes om samma eftermiddag (Leo:
+  "rabattkod gäller också för upplägg. Samma sak som vanliga planer bara annat antal timmar"): planernas timpris i stället
+  för ett pris admin satte, koderna och Köp till timmar som på en plan, och ett mejl när det skickas. Villkorens version
+  blir 2026-10-27, så alla får frågan igen. Ett eget upplägg ger första timmen gratis om det är familjens första plan, för
+  villkoren är planens. Kvar: provet i testläge (9.28 steg 7), och juristen har inte läst `#eget-upplagg`, raderna 37–39 i
+  `DATASKYDD.md`, policyns nya meningar om återbetalningarna, kassan och upplägget, eller mejlet om upplägget, som är ett
+  erbjudande till en befintlig kund med avanmälan i varje mejl.
 - **Fas 25** (2026-10-27, Leos lista samma morgon: NexLäx från åk 6, faktabladen och ledet, Betalning & planer i
   en sektion, datumrutans färger, hemskärmen, introduktionen med rörelse, inga hopp, och de öppna sidorna;
   `minne/nexlax.md` och `minne/vyerna.md`, Fas 25). PR #346 och Fas 25.1 (#347) är mergade och utlagda av Vercel, och

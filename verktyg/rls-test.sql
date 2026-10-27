@@ -22410,13 +22410,17 @@ end $$;
 -- 58. Egna upplägg som admin skickar till en familj (egna_upplagg, 2026-10-27)
 --
 -- Leo: "admin säljer 6 h till familjen därför att det är lov och då
--- skickar vi ett upplägg, villkoren är samma men det är bara 6h istället."
--- Bara admin skickar och drar tillbaka; familjen läser sina; köpet är en
--- plan (plan_eget) som kassan skapar med tjänstekontot, till upplägget
--- pris med familjerabatten dragen, och gäller 30 dagar från betalningen.
--- Ingen rabattkod, inga timmar till upplägget, och ett köp som betalas två
--- gånger eller efter att upplägget dragits tillbaka blir en uppgift.
--- Familjerna U1 och U2, admin AD. Allt rullas tillbaka sist.
+-- skickar vi ett upplägg, villkoren är samma men det är bara 6h istället",
+-- och samma dag: "rabattkod gäller också för upplägg. Samma sak som vanliga
+-- planer bara annat antal timmar ... De köper och möjligheten försvinner
+-- ... Mejl ska gå ut när de fått möjlighet till eget upplägg". Bara admin
+-- skickar och drar tillbaka, till planernas timpris; familjen läser sina
+-- och får ett mejl; köpet är en plan (plan_eget) som kassan skapar med
+-- tjänstekontot, med familjerabatten och koden dragna som på en plan, och
+-- gäller 30 dagar från betalningen. Timmar köps till det som till en plan,
+-- ett köpt upplägg köps inte igen, och ett köp som betalas två gånger eller
+-- efter att upplägget dragits tillbaka blir en uppgift. Familjerna U1 och
+-- U2, admin AD. Allt rullas tillbaka sist.
 -- ------------------------------------------------------------
 do $$
 declare
@@ -22425,20 +22429,25 @@ declare
   t     text;
   j     jsonb;
   r     record;
+  q     record;
   n     bigint;
   e1    uuid;
   e2    uuid;
   e3    uuid;
+  e4    uuid;
   k1    uuid;
   k2    uuid;
   k3    uuid;
+  kk    uuid;
   ord   integer;
+  att   integer;
+  rab   integer;
   idag  date := (now() at time zone 'Europe/Stockholm')::date;
   AD    constant uuid := '00000000-0000-4000-8000-0000000000ad';
   U1    constant uuid := '00000000-0000-4000-8000-000000058a01';
   U2    constant uuid := '00000000-0000-4000-8000-000000058a02';
 begin
-  if to_regprocedure('public.eget_upplagg_kop(uuid, uuid)') is null then
+  if to_regprocedure('public.eget_upplagg_kop(uuid, uuid, text, integer)') is null then
     insert into utfall (test, ok, detalj) values ('EU Egna upplägg: migrationen är inte körd', true, 'hoppas över');
     return;
   end if;
@@ -22450,30 +22459,44 @@ begin
       (U2, 'rls-e2-58@example.invalid', '{"role":"parent","full_name":"Test Familj U2"}');
     insert into public.villkor_godkannanden (anvandare, version, kalla)
     select x, intern.villkor_version(), 'registrering' from unnest(array[U1, U2]) x;
-    select t2.pris_per_timme_ore into ord from public.tjanster t2 where t2.aktiv and t2.for_kund
-     order by t2.ordning, t2.kod limit 1;
+    -- Planernas timpris, som erbjudanden_pris räknar det.
+    select min(e.rabatterat_timpris_ore) into ord from public.erbjudanden_pris e where e.sort = 'plan';
 
-    -- ---------- admin skickar ----------
+    -- ---------- admin skickar, och familjen får ett mejl ----------
     perform pg_temp.bli(AD);
-    e1 := public.skicka_eget_upplagg(U1, 6, 34900, 'Höstlovet', 14);
+    e1 := public.skicka_eget_upplagg(U1, 6, 'Höstlovet', 14);
     reset role;
     perform set_config('request.jwt.claims', '', true);
     select * into r from public.egna_upplagg where id = e1;
-    ut := ut || jsonb_build_object('t', 'EU admin skickar ett upplägg: namnet, timmarna, timpriset och priset',
-            'ok', r.familj = U1 and r.namn = 'Höstlovet' and r.timmar = 6 and r.timpris_ore = 34900
-                  and r.pris_ore = 6 * 34900 and r.giltigt_till = idag + 14 and r.skapad_av = AD
+    ut := ut || jsonb_build_object('t', 'EU admin skickar ett upplägg: namnet, timmarna och planernas timpris',
+            'ok', ord > 0 and r.familj = U1 and r.namn = 'Höstlovet' and r.timmar = 6 and r.timpris_ore = ord
+                  and r.pris_ore = 6 * ord and r.giltigt_till = idag + 14 and r.skapad_av = AD
                   and r.kopt_at is null and r.aterkallad_at is null,
-            'd', concat_ws(' ', r.namn, r.timmar, r.pris_ore, r.giltigt_till));
-    t := pg_temp.svar_som(U1, format('select public.skicka_eget_upplagg(%L, 6, 34900)', U1))
-      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 6, %s)', U1, ord + 100))
-      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 6, 34950)', U1))
-      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 41, 34900)', U1))
-      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 6, 34900, null, 61)', U1))
+            'd', concat_ws(' ', ord, r.namn, r.timmar, r.timpris_ore, r.pris_ore, r.giltigt_till));
+    select * into q from public.notis_utskick u where u.idempotens = 'eget_upplagg:mejl:' || e1;
+    ut := ut || jsonb_build_object('t', 'EU mejlet till familjen köas om fem minuter, med timmarna, priset och sista dagen',
+            'ok', q.mottagare = U1 and q.typ = 'eget_upplagg' and q.kanal = 'mejl' and q.status = 'vantar'
+                  and (q.data ->> 'timmar')::integer = 6 and (q.data ->> 'belopp')::integer = 6 * ord
+                  and q.data ->> 'datum' = (idag + 14)::text and q.skicka_efter > now() + interval '4 minutes'
+                  and 'eget_upplagg' = any (public.notis_mejlbara()) and 'eget_upplagg' = any (public.notis_typer())
+                  and exists (select 1 from public.notiser x where x.mottagare = U1 and x.typ = 'eget_upplagg'),
+            'd', concat_ws(' ', q.typ, q.status, q.data::text, q.skicka_efter));
+    perform pg_temp.bli(AD);
+    e4 := public.skicka_eget_upplagg(AD, 2);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'EU ingen får ett mejl om sin egen åtgärd',
+            'ok', not exists (select 1 from public.notis_utskick u where u.idempotens = 'eget_upplagg:mejl:' || e4),
+            'd', '');
+    t := pg_temp.svar_som(U1, format('select public.skicka_eget_upplagg(%L, 6)', U1))
+      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 41)', U1))
+      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 0)', U1))
+      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 6, null, 61)', U1))
       -- En studiehjälpare är ingen familj.
-      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 6, 34900)',
+      || ' ' || pg_temp.svar_som(AD, format('select public.skicka_eget_upplagg(%L, 6)',
                                             '00000000-0000-4000-8000-0000000000a1'));
-    ut := ut || jsonb_build_object('t', 'EU familjen skickar inget, och timpriset, timmarna, dagarna och familjen prövas',
-            'ok', t = '42501 22023 22023 22023 22023 22023', 'd', t);
+    ut := ut || jsonb_build_object('t', 'EU familjen skickar inget, och timmarna, dagarna och familjen prövas',
+            'ok', t = '42501 22023 22023 22023 22023', 'd', t);
 
     perform pg_temp.bli(U1);
     select count(*) into n from public.egna_upplagg;
@@ -22488,7 +22511,7 @@ begin
     t := pg_temp.svar_som(U1, format($q$update public.egna_upplagg set timpris_ore = 100 where id = %L$q$, e1))
       || ' ' || pg_temp.svar_som(AD, format($q$update public.egna_upplagg set timpris_ore = 100 where id = %L$q$, e1));
     begin
-      update public.egna_upplagg set timmar = 7, pris_ore = 7 * 34900 where id = e1;
+      update public.egna_upplagg set timmar = 7, pris_ore = 7 * ord where id = e1;
       t := t || ' ändrad';
     exception when others then
       t := t || ' ' || sqlstate;
@@ -22506,16 +22529,49 @@ begin
     select * into r from public.klippkort where id = k1;
     ut := ut || jsonb_build_object('t', 'EU köpet är en plan med upplägget timmar och pris',
             'ok', (j ->> 'aterbruk') = 'false' and r.erbjudande = 'plan_eget' and r.sort = 'plan' and r.timmar = 6
-                  and r.begart_ore = 6 * 34900 and r.timpris_ore = 34900 and r.upplagg_id = e1 and r.status = 'vantar'
+                  and r.begart_ore = 6 * ord and r.timpris_ore = ord and r.upplagg_id = e1 and r.status = 'vantar'
                   and r.rabattkod is null,
             'd', j::text);
     ut := ut || jsonb_build_object('t', 'EU två tryck blir samma köp',
             'ok', (public.eget_upplagg_kop(e1, U1) ->> 'klippkort')::uuid = k1
                   and (select count(*) from public.klippkort where upplagg_id = e1) = 1,
             'd', '');
-    ut := ut || jsonb_build_object('t', 'EU ingen rabattkod på ett upplägg, men på en plan',
-            'ok', not intern.kod_galler_kopet('plan_eget') and intern.kod_galler_kopet('plan_basic'), 'd', '');
-    t := public.klippkort_betald(k1, 6 * 34900, 'pi_rls_eu58_1', 'ch_rls_eu58_1', null, null, null, false)::text;
+
+    -- ---------- koden ----------
+    insert into public.rabattkoder (kod, beskrivning, typ, varde, aktiv) values ('EU-KOD10', 'Prov', 'procent', 10, true);
+    perform pg_temp.bli(U1);
+    select * into q from public.kod_pa_upplagget('eu-kod10', e1);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    rab := (6 * ord * 10) / 100;
+    att := 6 * ord - rab;
+    ut := ut || jsonb_build_object('t', 'EU rabattkoden gäller på ett upplägg, räknad på uppläggets pris',
+            'ok', intern.kod_galler_kopet('plan_eget') and q.giltig and q.pris_ore = 6 * ord and q.rabatt_ore = rab
+                  and q.att_betala_ore = att and q.rabatt_typ = 'procent' and q.rabatt_varde = 10,
+            'd', concat_ws(' ', q.giltig, q.orsak, q.pris_ore, q.rabatt_ore, q.att_betala_ore));
+    j := public.eget_upplagg_kop(e1, U1, 'eu-kod10', att);
+    kk := (j ->> 'klippkort')::uuid;
+    select * into r from public.klippkort where id = kk;
+    ut := ut || jsonb_build_object('t', 'EU köpet med koden: databasen drar koden som på en plan, och två tryck blir ett köp',
+            'ok', kk <> k1 and (j ->> 'aterbruk') = 'false' and r.rabattkod = 'EU-KOD10' and r.rabatt_ore = rab
+                  and r.begart_ore = att and (j ->> 'belopp_ore')::integer = att and (j ->> 'rabattkod') = 'EU-KOD10'
+                  and (public.eget_upplagg_kop(e1, U1, 'EU-KOD10', att) ->> 'klippkort')::uuid = kk,
+            'd', j::text);
+    perform pg_temp.bli(U1);
+    select * into q from public.kod_pa_upplagget('FINNS-INTE', e1);
+    t := q.giltig::text;
+    reset role;
+    perform pg_temp.bli(U2);
+    select * into q from public.kod_pa_upplagget('EU-KOD10', e1);
+    t := t || ' ' || q.giltig::text || ' ' || coalesce(q.orsak, '');
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    t := t || ' ' || pg_temp.svar_som(null, format($q$select * from public.kod_pa_upplagget('EU-KOD10', %L)$q$, e1));
+    ut := ut || jsonb_build_object('t', 'EU en kod som inte finns, en annan familjs upplägg och anon får nej',
+            'ok', t = 'false false Upplägget går inte att köpa. 42501', 'd', t);
+
+    -- ---------- betalt ----------
+    t := public.klippkort_betald(k1, 6 * ord, 'pi_rls_eu58_1', 'ch_rls_eu58_1', null, null, null, false)::text;
     select * into r from public.klippkort where id = k1;
     ut := ut || jsonb_build_object('t', 'EU betalt gäller köpet 30 dagar, som en plan, och upplägget är köpt',
             'ok', t = 'true' and r.status = 'betald' and r.giltigt_till = idag + 30
@@ -22528,28 +22584,34 @@ begin
     perform pg_temp.bli(AD);
     t := public.aterkalla_eget_upplagg(e1)::text;
     reset role;
+    perform pg_temp.bli(U1);
+    select * into q from public.kod_pa_upplagget('EU-KOD10', e1);
+    reset role;
     perform set_config('request.jwt.claims', '', true);
-    ut := ut || jsonb_build_object('t', 'EU ett köpt upplägg köps inte igen och dras inte tillbaka',
-            'ok', j ? 'fel' and t = 'false', 'd', j::text || ' ' || t);
+    ut := ut || jsonb_build_object('t', 'EU ett köpt upplägg försvinner: det köps inte igen, tar ingen kod och dras inte tillbaka',
+            'ok', j ? 'fel' and t = 'false' and not q.giltig, 'd', j::text || ' ' || t || ' ' || coalesce(q.orsak, ''));
     perform pg_temp.bli(U1);
     j := public.extra_timmar_erbjudande(2);
     reset role;
     perform set_config('request.jwt.claims', '', true);
-    ut := ut || jsonb_build_object('t', 'EU timmar köps inte till ett upplägg', 'ok', j ? 'fel', 'd', j::text);
+    ut := ut || jsonb_build_object('t', 'EU timmar köps till ett upplägg som till en plan, till planens timpris',
+            'ok', (j ->> 'ok') = 'true' and (j ->> 'plan')::uuid = k1 and (j ->> 'rabatterat_timpris_ore')::integer = ord
+                  and (j ->> 'pris_ore')::integer = 2 * ord,
+            'd', j::text);
 
     -- ---------- två kassor, och ett upplägg som drogs tillbaka ----------
     perform pg_temp.bli(AD);
-    e2 := public.skicka_eget_upplagg(U1, 2, 37900);
-    e3 := public.skicka_eget_upplagg(U1, 3, 37900, 'Sportlovet');
+    e2 := public.skicka_eget_upplagg(U1, 2);
+    e3 := public.skicka_eget_upplagg(U1, 3, 'Sportlovet');
     reset role;
     perform set_config('request.jwt.claims', '', true);
     k2 := (public.eget_upplagg_kop(e2, U1) ->> 'klippkort')::uuid;
     -- En andra kassa för samma upplägg, som om den första stod öppen när familjen tryckte igen ett dygn senare.
     insert into public.klippkort (parent_id, erbjudande, namn, sort, timmar, timmar_pa_kopet, giltig_manader, rabatt_procent,
                                   timpris_ore, begart_ore, upplagg_id)
-    values (U1, 'plan_eget', '2 timmar', 'plan', 2, 0, 1, 0, 37900, 2 * 37900, e2) returning id into k3;
-    perform public.klippkort_betald(k2, 2 * 37900, 'pi_rls_eu58_2', null, null, null, null, false);
-    perform public.klippkort_betald(k3, 2 * 37900, 'pi_rls_eu58_3', null, null, null, null, false);
+    values (U1, 'plan_eget', '2 timmar', 'plan', 2, 0, 1, 0, ord, 2 * ord, e2) returning id into k3;
+    perform public.klippkort_betald(k2, 2 * ord, 'pi_rls_eu58_2', null, null, null, null, false);
+    perform public.klippkort_betald(k3, 2 * ord, 'pi_rls_eu58_3', null, null, null, null, false);
     ut := ut || jsonb_build_object('t', 'EU samma upplägg betalt två gånger: båda köpen står, och en uppgift',
             'ok', (select klippkort_id from public.egna_upplagg where id = e2) = k2
                   and (select status from public.klippkort where id = k3) = 'betald'
@@ -22561,27 +22623,43 @@ begin
     reset role;
     perform set_config('request.jwt.claims', '', true);
     j := public.eget_upplagg_kop(e3, U1);
-    perform public.klippkort_betald(k3, 3 * 37900, 'pi_rls_eu58_4', null, null, null, null, false);
+    perform public.klippkort_betald(k3, 3 * ord, 'pi_rls_eu58_4', null, null, null, null, false);
     ut := ut || jsonb_build_object('t', 'EU ett tillbakadraget upplägg köps inte, och betalas en öppen kassa ändå blir det en uppgift',
             'ok', t = 'true' and j ? 'fel'
                   and (select kopt_at is not null and aterkallad_at is not null from public.egna_upplagg where id = e3)
                   and exists (select 1 from public.uppgifter where nyckel = 'eget_upplagg_aterkallat:' || k3),
             'd', t || ' ' || j::text);
 
-    -- ---------- familjerabatten ----------
+    -- ---------- familjerabatten, och mejlet som hoppas över ----------
     t := pg_temp.svar_som(AD, $q$insert into public.familjerabatter (kod, ore_per_timme) values ('EU-TIO', 1000)$q$);
     perform pg_temp.bli(AD);
     perform public.satt_familjerabatt(U2, 'EU-TIO');
-    e2 := public.skicka_eget_upplagg(U2, 4, 30000);
+    e2 := public.skicka_eget_upplagg(U2, 4);
     reset role;
     perform set_config('request.jwt.claims', '', true);
     j := public.eget_upplagg_kop(e2, U2);
     select * into r from public.klippkort where id = (j ->> 'klippkort')::uuid;
-    ut := ut || jsonb_build_object('t', 'EU familjerabatten dras på varje timme, som på en plan',
-            'ok', t = 'ok' and r.begart_ore = 4 * (30000 - 1000) and r.familjerabatt_ore = 1000
-                  and (j ->> 'familjerabatt_ore')::integer = 1000,
+    perform pg_temp.bli(U2);
+    select * into q from public.kod_pa_upplagget('EU-KOD10', e2);
+    reset role;
+    perform set_config('request.jwt.claims', '', true);
+    ut := ut || jsonb_build_object('t', 'EU familjerabatten dras på varje timme, i mejlet, köpet och med koden',
+            'ok', t = 'ok' and r.begart_ore = 4 * (ord - 1000) and r.familjerabatt_ore = 1000
+                  and (j ->> 'familjerabatt_ore')::integer = 1000
+                  and (select (u.data ->> 'belopp')::integer from public.notis_utskick u
+                        where u.idempotens = 'eget_upplagg:mejl:' || e2) = 4 * (ord - 1000)
+                  and q.giltig and q.pris_ore = 4 * (ord - 1000) and q.rabatt_ore = (4 * (ord - 1000) * 10) / 100,
             'd', t || ' ' || j::text);
-    t := pg_temp.svar_som(null, 'select public.skicka_eget_upplagg(null, 1, 100)')
+    update public.notis_utskick u set skicka_efter = now() - interval '1 minute'
+     where u.idempotens in ('eget_upplagg:mejl:' || e3, 'eget_upplagg:mejl:' || e2);
+    perform public.notis_utskick_ta(100);
+    select string_agg(coalesce(u.fel, u.status), ' / ' order by u.idempotens = 'eget_upplagg:mejl:' || e2) into t
+      from public.notis_utskick u where u.idempotens in ('eget_upplagg:mejl:' || e3, 'eget_upplagg:mejl:' || e2);
+    ut := ut || jsonb_build_object('t', 'EU mejlet hoppas över om upplägget dragits tillbaka, och går annars',
+            'ok', split_part(t, ' / ', 1) = 'upplägget går inte att köpa längre'
+                  and split_part(t, ' / ', 2) in ('skickar', 'loggad'),
+            'd', t);
+    t := pg_temp.svar_som(null, 'select public.skicka_eget_upplagg(null, 1)')
       || ' ' || pg_temp.svar_som(null, format('select public.aterkalla_eget_upplagg(%L)', e2));
     ut := ut || jsonb_build_object('t', 'EU anon skickar och drar inget tillbaka', 'ok', t = '42501 42501', 'd', t);
     ut := ut || jsonb_build_object('t', 'EU katalogens rad säljs aldrig',

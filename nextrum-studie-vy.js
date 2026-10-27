@@ -3598,7 +3598,9 @@
   /* Koden på en plan (2026-10-13, och bara planerna sedan 2026-10-21,
      Leo: "Båda gäller ENBART planköp, aldrig enskilda pass"). Den prövas
      mot den första planen; gäller den prövas resten, så att varje plan
-     kan visa sitt pris. Timmarna till planen tar ingen kod. En kod som inte finns räknas mot taket bara en gång. Tom
+     kan visa sitt pris, och uppläggen som väntar (egna_upplagg, 2026-10-27,
+     Leo: "rabattkod gäller också för upplägg"), med uppläggets pris
+     (kod_pa_upplagget). Timmarna till planen tar ingen kod. En kod som inte finns räknas mot taket bara en gång. Tom
      ruta tar bort koden. */
   async function provaErbKod() {
     const fält = $('#erb-kod'), svarEl = $('#erb-kod-svar'), knapp = $('#erb-kod-anvand');
@@ -3618,12 +3620,18 @@
       pris[kat[0].kod] = Number(första.att_betala_ore);
       const resten = await Promise.all(kat.slice(1).map(fråga));
       resten.forEach((s, i) => { if (s && s.giltig) pris[kat[i + 1].kod] = Number(s.att_betala_ore); });
-      S.erb.kod = { kod: kod, beskrivning: första.beskrivning || '', pris: pris };
+      const upp = S.erb.upplagg || [];
+      const påUpp = await Promise.all(upp.map(u => supa.rpc('kod_pa_upplagget', { p_kod: kod, p_upplagg: u.id })
+        .then(({ data, error }) => (error ? null : (Array.isArray(data) ? data[0] : data)))));
+      const upplagg = {};
+      påUpp.forEach((s, i) => { if (s && s.giltig) upplagg[upp[i].id] = Number(s.att_betala_ore); });
+      S.erb.kod = { kod: kod, beskrivning: första.beskrivning || '', pris: pris, upplagg: upplagg };
       /* En kod utan rabatt (en partnerförenings) gäller också: priset är
          detsamma, och koden följer med köpet. */
       const utanRabatt = !(Number(första.rabatt_ore) > 0);
       visa('✓ ' + kod + ' gäller när ni köper en plan' + (första.beskrivning ? ' · ' + första.beskrivning : '')
-        + (utanRabatt ? '. Den ger ingen rabatt, men följer med köpet.' : '. Priset med koden står på planerna.'), false);
+        + (utanRabatt ? '. Den ger ingen rabatt, men följer med köpet.'
+          : upp.length ? '. Priset med koden står på planerna och upplägget.' : '. Priset med koden står på planerna.'), false);
       ritaErbjudanden();
     });
   }
@@ -3666,7 +3674,11 @@
     const d = Number(S.familjerabatt) || 0;
     const per = Number(u.timpris_ore);
     const ned = d > 0 && d < per ? d : 0;
-    return { per: per - ned, pris: (per - ned) * Number(u.timmar), rabatt: ned };
+    /* Med en kod som gäller upplägget (Leo: "rabattkod gäller också för
+       upplägg"): databasens pris (kod_pa_upplagget), aldrig räknat här. */
+    const kod = S.erb.kod && S.erb.kod.upplagg && S.erb.kod.upplagg[u.id] != null ? S.erb.kod.kod : null;
+    const utan = (per - ned) * Number(u.timmar);
+    return { per: per - ned, pris: kod ? Number(S.erb.kod.upplagg[u.id]) : utan, utan: utan, rabatt: ned, kod: kod };
   }
   function ritaUpplagg() {
     const host = $('#erb-upplagg');
@@ -3679,9 +3691,11 @@
       const p = upplaggetsPris(u);
       return '<article class="erb-upplagg-kort"><div>'
         + '<h5>Ett upplägg till er</h5>'
-        + '<b>' + esc(u.namn) + ': ' + esc(timmarOrd(Number(u.timmar))) + ', ' + esc(kr(p.pris)) + '</b>'
-        + '<p>' + esc(kr(p.per) + ' i timmen' + (p.rabatt ? ' ' + medErRabatt : '') + '. Gäller i ' + PLANENS_DAGAR
-          + ' dagar från köpet, som en plan. Köp det senast ' + datumText(u.giltigt_till) + '.') + '</p>'
+        + '<b>' + esc(u.namn) + ': ' + esc(timmarOrd(Number(u.timmar))) + ', '
+          + (p.kod && p.pris < p.utan ? '<s>' + esc(kr(p.utan)) + '</s> ' : '') + esc(kr(p.pris)) + '</b>'
+        + '<p>' + esc(kr(p.per) + ' i timmen' + (p.rabatt ? ' ' + medErRabatt : '') + (p.kod ? ', med koden ' + p.kod : '')
+          + '. Gäller i ' + PLANENS_DAGAR + ' dagar från köpet, som en plan. Köp det senast '
+          + datumText(u.giltigt_till) + '.') + '</p>'
         + '</div>'
         + (S.erb.aktiv && !S.väntar
           ? '<button type="button" class="btn btn-orange" data-kop-upplagg="' + esc(u.id) + '">Köp</button>'
@@ -3691,7 +3705,8 @@
   }
 
   /* Köp på ett upplägg: köpvillkoren med timmarna och priset, och sedan
-     samma kassa som för en plan, med upplägget id i stället för en kod. */
+     samma kassa som för en plan, med upplägget id och koden när den gäller
+     upplägget. Kassan prövar koden igen och drar det databasen räknat. */
   async function köpUpplägg(knapp, id) {
     const u = (S.erb.upplagg || []).find(x => x.id === id);
     if (!u || !S.erb.aktiv || S.väntar) return;
@@ -3701,19 +3716,20 @@
     const titel = 'Köp ' + u.namn;
     if (!await NXStudie.kassansVillkor({
       titel: titel,
-      rader: [timmarOrd(Number(u.timmar)) + ' läxhjälp · ' + kronor(p.pris),
+      rader: [timmarOrd(Number(u.timmar)) + ' läxhjälp · ' + kronor(p.pris) + (p.kod ? ' med koden ' + p.kod : ''),
         'Gäller i ' + PLANENS_DAGAR + ' dagar från köpet, som en plan'],
       tillagg: tl,
       text: 'Ni betalar med kort eller Klarna i nästa steg.'
     })) return;
     const extra = tl && tl.valfri && !tl.med ? { med_tillagg: false } : {};
-    const kropp = ui => Object.assign({ upplagg: id, retur: location.origin, ui: ui, villkor: true }, extra);
+    const kropp = ui => Object.assign({ upplagg: id, retur: location.origin, ui: ui, villkor: true },
+      p.kod ? { rabattkod: p.kod } : {}, extra);
     await medan(knapp, 'Öppnar…', async () => {
       const stripeKlar = laddaStripe().catch(err => { console.warn(err); return null; });
       const svar = await startaKassa(kropp('inbaddad'));
       if (!svar) { laddaErbjudanden().catch(() => {}); return; }
       const vad = timmarOrd(Number(u.timmar)) + ' · ' + kronor(svar.belopp_ore != null ? svar.belopp_ore : p.pris)
-        + medVad(Number(svar.familjerabatt_ore) > 0, null) + tilläggISvaret(svar);
+        + medVad(Number(svar.familjerabatt_ore) > 0, svar.rabattkod || null) + tilläggISvaret(svar);
       if (svar.lage === 'inbaddad' && svar.client_secret && svar.nyckel) {
         const Stripe = await stripeKlar;
         if (Stripe) {
@@ -3971,9 +3987,8 @@
     return S.erb.kort
       .filter(k => k.sort === 'plan' && k.status === 'betald' && String(k.giltigt_till) > idag
         // planerna_per_manad (2026-10-21): den här månadens plan, inte nästa och inte timmar till en plan.
-        && (!k.galler_fran || String(k.galler_fran) <= idag) && !k.till_plan
-        // Aldrig till ett eget upplägg (egna_upplagg, 2026-10-27): upplägget pris följer inte med.
-        && k.erbjudande !== 'plan_eget')
+        // Ett eget upplägg är en plan (2026-10-27, Leo: "Samma sak som vanliga planer bara annat antal timmar").
+        && (!k.galler_fran || String(k.galler_fran) <= idag) && !k.till_plan)
       .sort((a, c) => String(c.giltigt_till).localeCompare(String(a.giltigt_till))
         || String(c.created_at || '').localeCompare(String(a.created_at || '')))[0] || null;
   }
