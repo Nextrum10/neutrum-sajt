@@ -3290,16 +3290,14 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   background:linear-gradient(90deg,transparent,var(--bli-kant) 22%,var(--bli-kant) 78%,transparent);
 }
 :is(#bli,.bli-svart) .nx-et{color:var(--lera-l)}
-.bli-svart .nx-page-hero-foto{
-  outline:1px solid var(--bli-kant);outline-offset:7px;
-}
 /* Färre streck av lera på startsidan (2026-10-27, Leo: "De oranga
    strecken på vill du hjälpa någon att jobb blev några för många ta bort
    vissa och gör den sektionen mer clean"). Kvar står linjen i överkanten,
    som markerar gränsen i mörkt läge, och stegens siffror. Fotot står utan
    ram, punkterna utan linjer emellan och bockarna utan ring, och ansökans
-   fyra steg är ytor utan kant. Bli studiehjälpare-sidan (.bli-svart)
-   behåller sina kanter. */
+   fyra steg är ytor utan kant. Bli studiehjälpare-sidan (.bli-svart) fick
+   samma sak samma kväll (Leo: "ta bort de så de ser ut som denna på main
+   sidan"): fotot utan ram, bladen och stegen utan kant. */
 #bli .nx-punkter li,
 #bli .nx-punkter li:last-child{border:0;padding:11px 0}
 #bli .nx-punkter .pk{
@@ -3312,17 +3310,14 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   background:
     linear-gradient(160deg,color-mix(in srgb,var(--lera-l) 13%,transparent),transparent 62%),
     rgba(239,230,214,.03);
-  border-color:var(--bli-kant);
+  border-color:transparent;
 }
-#bli .nx-apply-flow > .nx-apply-step{border-color:transparent}
 :is(#bli,.bli-svart) .nx-apply-step em{color:var(--f,var(--lera-l))}
 @media (hover:hover) and (pointer:fine){
   :is(#bli,.bli-svart) .nx-apply-flow > .nx-apply-step:hover,
   .bli-svart .nx-perk:hover{
     background-color:rgba(239,230,214,.07);
-    border-color:color-mix(in srgb,var(--lera-l) 70%,transparent);
   }
-  #bli .nx-apply-flow > .nx-apply-step:hover{border-color:transparent}
 }
 
 /* ============================================================
