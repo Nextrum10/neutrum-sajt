@@ -687,11 +687,11 @@ const NXFin = (function () {
      Rörelse är en bonus. Texten är inte förhandlingsbar. */
   function nödbroms() {
     const kolla = () => {
-      const väntar = $$('[data-stig]:not(.nx-in), [data-avslöj]:not(.nx-in)');
+      const väntar = $$('[data-stig]:not(.nx-in), [data-avslöj]:not(.nx-in), .nx-ov-h:not(.nx-in), .nx-ftr-ord:not(.nx-in), .nx-rita:not(.nx-ritad), .nx-et:not(.nx-et-in)');
       if (!väntar.length) return false;
       const h = document.documentElement.clientHeight || window.innerHeight || 0;
       väntar.forEach(el => {
-        if (!h || el.getBoundingClientRect().top < h * 0.92) el.classList.add('nx-in');
+        if (!h || el.getBoundingClientRect().top < h * 0.92) el.classList.add('nx-in', 'nx-ritad', 'nx-et-in');
       });
       return true;
     };
@@ -784,6 +784,246 @@ const NXFin = (function () {
     else window.addEventListener('load', ladda, { once: true });
   }
 
+  /* ============================================================
+     EFFEKTER (2026-10-27)
+
+     Fyra effekter i samma anda som React Bits (SplitText/BlurText,
+     SpotlightCard, Aurora, ShinyText), skrivna om i vanlig JS och CSS:
+     sajten har inget React och inget byggsteg. Ingen av dem rör HTML:en
+     på sidorna eller på /en/. De hittar sina element på klasser som
+     redan finns, och stilen ligger i nextrum-cinema.css (EFFEKTER).
+
+     Reglerna som gäller dem alla:
+       - bara transform, opacity och en gradient som följer muspekaren,
+         aldrig layout och ingen animerad box-shadow
+       - still (reducerad rörelse): ingenting delas, ingenting läggs in
+       - lite (telefon, pekskärm): ingen musglans och ingen oskärpa
+       - texten finns kvar för skärmläsare och går att markera
+     ============================================================ */
+
+  /* ---------- rubriker som kommer in ord för ord ----------
+     Som radAvslöj, fast ord för ord med lite oskärpa. Bara h2 i main som
+     inte redan har radavslöj, och aldrig en rubrik vars text sätts av
+     data (priser och tal), för då delades texten innan den kommit. */
+  const ORD_BORT = '[data-ordfyll],[data-avslöj],[data-erb],[data-stat],[data-erb-rabatterat],[data-erb-spara],[data-erb-mindre]';
+  function ordRubriker(sel) {
+    if (NXMotion.reducerad) return;
+    $$(sel).forEach(el => {
+      if (el.dataset.ov === 'klar' || el.matches(ORD_BORT) || el.querySelector(ORD_BORT)) return;
+      if (el.closest('footer, form, [hidden], [aria-hidden="true"]') || el.querySelector('.nx-ord')) return;
+      const namn = el.textContent.replace(/\s+/g, ' ').trim();
+      if (!namn) return;
+      el.dataset.ov = 'klar';
+
+      /* Orden delas i textnoderna, så <em> och <br> står kvar. */
+      let i = 0;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      const noder = [];
+      while (walker.nextNode()) noder.push(walker.currentNode);
+      noder.forEach(n => {
+        const delar = n.nodeValue.split(/(\s+)/);
+        if (delar.every(d => !d.trim())) return;
+        const frag = document.createDocumentFragment();
+        delar.forEach(d => {
+          if (!d) return;
+          if (!d.trim()) { frag.appendChild(document.createTextNode(d)); return; }
+          const s = document.createElement('span');
+          s.className = 'nx-ov';
+          s.style.setProperty('--i', Math.min(i++, 14));
+          s.textContent = d;
+          frag.appendChild(s);
+        });
+        n.parentNode.replaceChild(frag, n);
+      });
+      el.setAttribute('aria-label', namn);
+      el.classList.add('nx-ov-h');
+      Array.from(el.children).forEach(c => { if (!c.matches('br')) c.setAttribute('aria-hidden', 'true'); });
+      /* Textnoder direkt i rubriken (utan <em>) har blivit spans och
+         döljs för skärmläsare av namnet ovan, inte av aria-hidden. */
+
+      if (iVyn(el)) { requestAnimationFrame(() => el.classList.add('nx-in')); return; }
+      NXMotion.scene(el, {
+        läge: 'enter', once: true,
+        run: p => {
+          if (p <= 0.04) return false;
+          el.classList.add('nx-in');
+        }
+      });
+    });
+  }
+
+  /* ---------- glans som följer muspekaren ----------
+     Ett kort får en ljuspunkt under pekaren. Läggs in som ett eget
+     barn (aldrig ::before eller ::after, som korten redan använder) och
+     bara med mus på stor skärm. Färgen är kortets ämnesfärg (--f) när
+     det har en. */
+  function glans(sel) {
+    if (NXMotion.tier !== 'full') return;
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    $$(sel).forEach(kort => {
+      if (kort.dataset.glans === 'klar') return;
+      kort.dataset.glans = 'klar';
+      if (getComputedStyle(kort).position === 'static') kort.style.position = 'relative';
+      const g = document.createElement('span');
+      g.className = 'nx-glans';
+      g.setAttribute('aria-hidden', 'true');
+      kort.insertBefore(g, kort.firstChild);
+      let rad = 0, x = 0, y = 0;
+      const sätt = () => {
+        rad = 0;
+        g.style.setProperty('--gx', x + 'px');
+        g.style.setProperty('--gy', y + 'px');
+      };
+      kort.addEventListener('pointermove', e => {
+        if (e.pointerType && e.pointerType !== 'mouse') return;
+        const r = kort.getBoundingClientRect();
+        x = e.clientX - r.left;
+        y = e.clientY - r.top;
+        if (!rad) rad = requestAnimationFrame(sätt);
+        kort.classList.add('nx-glans-pa');
+      }, { passive: true });
+      kort.addEventListener('pointerleave', () => kort.classList.remove('nx-glans-pa'));
+    });
+  }
+
+  /* ---------- norrsken på de mörka avslutningarna ----------
+     Tre mjuka färgfläckar som driver långsamt bakom texten. Bara
+     transform, och bara medan sektionen syns (klassen pa). */
+  function norrsken(sel) {
+    if (NXMotion.reducerad) return;
+    $$(sel).forEach(sek => {
+      if (sek.querySelector('.nx-norrsken')) return;
+      const n = document.createElement('div');
+      n.className = 'nx-norrsken';
+      n.setAttribute('aria-hidden', 'true');
+      n.innerHTML = '<i></i><i></i><i></i>';
+      sek.insertBefore(n, sek.firstChild);
+      sek.classList.add('nx-har-norrsken');
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(es => es.forEach(e => n.classList.toggle('pa', e.isIntersecting)),
+          { rootMargin: '10% 0px' }).observe(sek);
+      } else {
+        n.classList.add('pa');
+      }
+    });
+  }
+
+  /* ---------- det stora ordet i foten fylls på ----------
+     Samma ord som förut, men en ljusare färg sveper över det en gång när
+     foten kommer fram. */
+  function fotOrd(sel) {
+    if (NXMotion.reducerad) return;
+    $$(sel).forEach(el => {
+      if (iVyn(el)) { el.classList.add('nx-in'); return; }
+      NXMotion.scene(el, {
+        läge: 'enter', once: true,
+        run: p => {
+          if (p <= 0.05) return false;
+          el.classList.add('nx-in');
+        }
+      });
+    });
+  }
+
+  /* ---------- ikoner som ritar sig själva ----------
+     Linjeikonerna på korten (Hur hjälper vi, Rätt match och Allt på ett
+     ställe) ritas upp när de kommer i bild. Bara former utan fyllning
+     (fill none) räknas, och ordningen mellan formerna ger en liten
+     fördröjning (--j). Streckets längd mäts en gång. */
+  function ritaIkoner(sel) {
+    if (NXMotion.reducerad) return;
+    $$(sel).forEach(svg => {
+      if (svg.dataset.rita === 'klar') return;
+      svg.dataset.rita = 'klar';
+      let j = 0;
+      $$('path,circle,line,polyline,rect,ellipse', svg).forEach(f => {
+        if (!f.getTotalLength || getComputedStyle(f).fill !== 'none') return;
+        let l = 0;
+        try { l = Math.ceil(f.getTotalLength()); } catch (e) { return; }
+        if (!l) return;
+        f.style.setProperty('--l', l);
+        f.style.setProperty('--j', j++);
+      });
+      if (!j) return;
+      svg.classList.add('nx-rita');
+      if (iVyn(svg)) { requestAnimationFrame(() => svg.classList.add('nx-ritad')); return; }
+      NXMotion.scene(svg, {
+        läge: 'enter', once: true,
+        run: p => {
+          if (p <= 0.1) return false;
+          svg.classList.add('nx-ritad');
+        }
+      });
+    });
+  }
+
+  /* ---------- strecket framför etiketterna ---------- */
+  function etiketter(sel) {
+    if (NXMotion.reducerad) return;
+    $$(sel).forEach(el => {
+      if (iVyn(el)) { requestAnimationFrame(() => el.classList.add('nx-et-in')); return; }
+      NXMotion.scene(el, {
+        läge: 'enter', once: true,
+        run: p => {
+          if (p <= 0.06) return false;
+          el.classList.add('nx-et-in');
+        }
+      });
+    });
+  }
+
+  /* ---------- ämnesbandet ----------
+     Som ScrollVelocity i React Bits: bandet driver av sig självt, går
+     fortare ju snabbare man scrollar och vänder när man scrollar uppåt.
+     Markupen har en rad ämnen; resten är kopior (aria-hidden) som
+     skriptet lägger till tills raden är bredare än två fönster. Bara
+     transform, och loopen går bara medan bandet syns. */
+  function amnesband(sel) {
+    $$(sel).forEach(band => {
+      const spar = band.querySelector('.nx-amnesband-spar');
+      const rad = spar && spar.querySelector('.nx-amnesband-rad');
+      if (!rad || NXMotion.reducerad) return;
+      let bredd = 0;
+      const fyll = () => {
+        spar.querySelectorAll('.nx-amnesband-rad[aria-hidden]').forEach(k => k.remove());
+        bredd = rad.getBoundingClientRect().width;
+        if (!bredd) return;
+        const antal = Math.min(8, Math.ceil((window.innerWidth * 2) / bredd) + 1);
+        for (let i = 0; i < antal; i++) {
+          const k = rad.cloneNode(true);
+          k.setAttribute('aria-hidden', 'true');
+          k.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+          spar.appendChild(k);
+        }
+      };
+      fyll();
+      let x = 0, fart = NXMotion.tier === 'lite' ? 36 : 54, rikt = -1;
+      let sY = window.scrollY, extra = 0, synlig = false, rad_ = 0, förra = 0;
+      const steg = nu => {
+        rad_ = 0;
+        if (!synlig) { förra = 0; return; }
+        const dt = förra ? Math.min(0.05, (nu - förra) / 1000) : 0;
+        förra = nu;
+        const y = window.scrollY, d = y - sY; sY = y;
+        if (d) { rikt = d > 0 ? -1 : 1; extra = Math.min(7, extra + Math.abs(d) * 0.045); }
+        extra *= 0.93;
+        x += rikt * (fart * (1 + extra)) * dt;
+        if (bredd) { if (x <= -bredd) x += bredd; else if (x > 0) x -= bredd; }
+        spar.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
+        rad_ = requestAnimationFrame(steg);
+      };
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(es => es.forEach(e => {
+          synlig = e.isIntersecting;
+          if (synlig && !rad_) { sY = window.scrollY; rad_ = requestAnimationFrame(steg); }
+        }), { rootMargin: '10% 0px' }).observe(band);
+      }
+      let tid = 0;
+      window.addEventListener('resize', () => { clearTimeout(tid); tid = setTimeout(fyll, 200); }, { passive: true });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fyll);
+    });
+  }
+
   function allt() {
     header();
     tryckbart();
@@ -791,8 +1031,16 @@ const NXFin = (function () {
     radAvslöj('[data-avslöj]');
     stiga('[data-stig]');
     parallax('[data-parallax]');
+    ordRubriker('main h2');
+    glans('.hj-del, .nlx-del, .nx-price-card, .pr-erb-plan, .sid-kort, .jn-kort, .dr-kort, .sc-card');
+    norrsken('.nx-final-cinema, .nx-page-hero.bli-svart');
+    fotOrd('.nx-ftr-ord');
+    ritaIkoner('.bu-fig svg, .hj-ikon svg');
+    etiketter('.nx-et');
+    amnesband('.nx-amnesband');
     nödbroms();
   }
 
-  return { allt, header, heroVideo, radAvslöj, stiga, parallax, nödbroms, tryckbart };
+  return { allt, header, heroVideo, radAvslöj, stiga, parallax, nödbroms, tryckbart,
+           ordRubriker, glans, norrsken, fotOrd, ritaIkoner, etiketter, amnesband };
 })();

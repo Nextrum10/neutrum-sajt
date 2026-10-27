@@ -2165,3 +2165,21 @@ och Utanför adminvyn (en återbetalning i Stripes dashboard, att stämma av). U
 ett pass i en kassa för flera pass tillbaka på sin rad, och övertiden och en betalning utan rad
 har egna knappar (förut bara i Stripes dashboard); beloppet och anledningen frågas i samma ruta
 (`beloppFråga`). `prova-kassan.js` prövar Betala alla, uppläggen och återbetalningarna.
+
+## Effekter på de öppna sidorna (2026-10-27)
+Fyra effekter i samma anda som React Bits (SplitText, SpotlightCard, Aurora, ShinyText), omskrivna i vanlig JS och CSS
+eftersom sajten saknar React och byggsteg: `NXFin.ordRubriker` (h2 i main kommer in ord för ord med oskärpa; hoppar över
+rubriker med `data-erb`/`data-stat`, som får sin text av data), `glans` (ljuspunkt under muspekaren på korten, ett eget
+barn `.nx-glans`, bara `full` och mus), `norrsken` (tre färgfläckar på `.nx-final-cinema` och `.bli-svart`, går bara medan
+sektionen syns) och `fotOrd` (ordet i foten fylls på en gång), plus glans över `.btn-primary` vid hovring (bara CSS). Stilen
+står sist i `nextrum-cinema.css` (EFFEKTER). Ingen HTML ändrades, så `/en/` följer med; `still` delar ingenting och lägger
+inget, `lite` får inga musglans och ingen oskärpa. Nödbromsen visar ord och fotord som aldrig avslöjats. Ett nytt kort
+får glans genom att klassen läggs i listan i `allt()`.
+**Mer rörelse på startsidan** (samma dag, Leo: "ta detta ... och mega ... merga sen allt"): `ritaIkoner` (linjeikonerna på
+Hur hjälper vi och Rätt match/Allt på ett ställe ritas upp; bara former med `fill: none`), `etiketter` (strecket framför
+`.nx-et` växer), understrykningen under det orange ordet i rubrikerna (CSS), **ämnesbandet** (`.nx-amnesband`, ny sektion före
+Möt några av våra studiehjälpare, i `index.html` och `en/index.html`; `amnesband()` kopierar raden tills den är två fönster
+bred, driver av sig själv, går fortare med scrollen och vänder uppåt, bara medan det syns) och en tunn orange rad överst som
+följer scrollen (`body::after`, `animation-timeline: scroll()`, finns bara där webbläsaren kan det). **Klassen `nx-ord` är
+startsidans egen** (`delaOrd` i `nextrum-start.js`, rubriker med `data-ordfyll`); mina ordvisa rubriker heter `nx-ov` och
+hoppar över allt som redan delats. Ämnesbandets ämnen följer footerns lista, och ändras tillsammans med den.

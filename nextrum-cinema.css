@@ -3964,3 +3964,162 @@ html.nx-sr .pr-erb-planer.nx-in > .pr-erb-plan:nth-child(3) .nx-tejp-kort{animat
 @media (prefers-reduced-motion:reduce){
   .pr-kalk-seg:active .pr-kalk-tumme{scale:none}
 }
+
+/* ============================================================
+   EFFEKTER (2026-10-27) — se NXFin i nextrum-motion.js
+
+   Ordvis rubriker, glans under muspekaren, norrsken på de mörka
+   avslutningarna, ordet i foten som fylls på och glans över de
+   orange knapparna. Allt gömmer sig bakom html[data-motion]: utan
+   skriptet, och med reducerad rörelse, står sidan som förut.
+   Bara transform, opacity och gradienter; ingen animerad skugga.
+   ============================================================ */
+
+/* ---------- ordvis rubrik ---------- */
+html[data-motion="full"] .nx-ov-h:not(.nx-in) .nx-ov,
+html[data-motion="lite"] .nx-ov-h:not(.nx-in) .nx-ov{
+  opacity:0;transform:translate3d(0,.55em,0);
+}
+html[data-motion="full"] .nx-ov-h:not(.nx-in) .nx-ov{filter:blur(8px)}
+html[data-motion="full"] .nx-ov,
+html[data-motion="lite"] .nx-ov{
+  display:inline-block;
+  transition:opacity .7s var(--e-ut),transform .85s var(--e-ut),filter .7s var(--e-ut);
+  transition-delay:calc(var(--i,0) * 48ms);
+}
+html[data-motion="lite"] .nx-ov{transition-delay:calc(var(--i,0) * 30ms)}
+
+/* ---------- glans under muspekaren ---------- */
+.nx-glans{
+  position:absolute;inset:0;z-index:0;border-radius:inherit;
+  pointer-events:none;opacity:0;
+  transition:opacity .4s var(--e-ut);
+  background:radial-gradient(380px circle at var(--gx,50%) var(--gy,50%),
+    color-mix(in srgb,var(--f,var(--orange)) 22%,transparent),transparent 65%);
+}
+.nx-glans-pa > .nx-glans{opacity:1}
+
+/* ---------- norrsken ---------- */
+.nx-har-norrsken{position:relative;isolation:isolate;overflow:clip}
+.nx-har-norrsken > *:not(.nx-norrsken){position:relative;z-index:1}
+.nx-norrsken{
+  position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  opacity:.9;
+}
+.nx-norrsken i{
+  position:absolute;border-radius:50%;
+  width:min(70vw,900px);aspect-ratio:1;
+  background:radial-gradient(circle,var(--n-f) 0%,transparent 62%);
+  opacity:.34;will-change:transform;
+}
+.nx-norrsken i:nth-child(1){--n-f:var(--orange);left:-12%;top:-30%}
+.nx-norrsken i:nth-child(2){--n-f:var(--lera-l);right:-16%;top:6%;opacity:.28}
+.nx-norrsken i:nth-child(3){--n-f:var(--orange-lugn);left:26%;bottom:-48%;opacity:.24}
+html[data-motion="full"] .nx-norrsken.pa i:nth-child(1){animation:nx-drift-a 19s ease-in-out infinite alternate}
+html[data-motion="full"] .nx-norrsken.pa i:nth-child(2){animation:nx-drift-b 24s ease-in-out infinite alternate}
+html[data-motion="full"] .nx-norrsken.pa i:nth-child(3){animation:nx-drift-c 21s ease-in-out infinite alternate}
+@keyframes nx-drift-a{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(18%,14%,0) scale(1.18)}}
+@keyframes nx-drift-b{from{transform:translate3d(0,0,0) scale(1.1)}to{transform:translate3d(-20%,10%,0) scale(.9)}}
+@keyframes nx-drift-c{from{transform:translate3d(0,0,0) scale(.95)}to{transform:translate3d(-14%,-16%,0) scale(1.15)}}
+
+/* ---------- ordet i foten ---------- */
+html[data-motion="full"] .nx-ftr-ord span,
+html[data-motion="lite"] .nx-ftr-ord span{
+  --ord-bas:color-mix(in srgb,var(--nt-fg) 11%,transparent);
+  --ord-fyll:color-mix(in srgb,var(--nt-fg) 19%,transparent);
+  color:transparent;
+  background-image:linear-gradient(100deg,var(--ord-fyll) 0 40%,var(--ord-bas) 60% 100%);
+  background-size:260% 100%;background-position:100% 0;background-repeat:no-repeat;
+  -webkit-background-clip:text;background-clip:text;
+  transition:background-position 2.4s var(--e-ut);
+}
+html[data-motion="full"] .nx-ftr-ord.nx-in span,
+html[data-motion="lite"] .nx-ftr-ord.nx-in span{background-position:0 0}
+
+/* ---------- glans över den orange knappen ----------
+   Hovringen sätter `background` som förkortning och nollar bilden,
+   så bilden sätts om här med högre vikt. Bara med mus. */
+@media (hover:hover){
+  html[data-motion="full"] .btn-primary{
+    background-image:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.3) 50%,transparent 62%);
+    background-size:260% 100%;background-position:130% 0;background-repeat:no-repeat;
+  }
+  html[data-motion="full"] .btn-primary:hover{
+    background-image:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.3) 50%,transparent 62%);
+    background-size:260% 100%;background-repeat:no-repeat;
+    background-position:-30% 0;
+    transition:background-position .9s var(--e-ut),background-color .2s,box-shadow .2s;
+  }
+}
+
+/* ---------- ikoner som ritar sig själva ---------- */
+html[data-motion="full"] svg.nx-rita:not(.nx-ritad) :is(path,circle,line,polyline,rect,ellipse),
+html[data-motion="lite"] svg.nx-rita:not(.nx-ritad) :is(path,circle,line,polyline,rect,ellipse){
+  stroke-dasharray:var(--l);stroke-dashoffset:var(--l);
+}
+html[data-motion="full"] svg.nx-rita :is(path,circle,line,polyline,rect,ellipse),
+html[data-motion="lite"] svg.nx-rita :is(path,circle,line,polyline,rect,ellipse){
+  transition:stroke-dashoffset 1.15s var(--e-ut) calc(var(--j,0) * 110ms);
+}
+svg.nx-ritad :is(path,circle,line,polyline,rect,ellipse){stroke-dashoffset:0}
+
+/* ---------- strecket framför etiketterna ---------- */
+html[data-motion="full"] .nx-et::before,
+html[data-motion="lite"] .nx-et::before{
+  transform-origin:0 50%;
+  transition:transform .9s var(--e-ut) .12s;
+}
+html[data-motion="full"] .nx-et:not(.nx-et-in)::before,
+html[data-motion="lite"] .nx-et:not(.nx-et-in)::before{transform:scaleX(0)}
+
+/* ---------- understrykningen under det orange ordet i rubriken ---------- */
+html[data-motion="full"] .nx-ov-h em,
+html[data-motion="full"] [data-ordfyll] em,
+html[data-motion="lite"] .nx-ov-h em,
+html[data-motion="lite"] [data-ordfyll] em{
+  background:linear-gradient(color-mix(in srgb,var(--acc,var(--orange)) 42%,transparent),
+                             color-mix(in srgb,var(--acc,var(--orange)) 42%,transparent))
+             no-repeat 0 94% / 0 .055em;
+  transition:background-size 1s var(--e-ut) .55s;
+}
+html[data-motion] .nx-ov-h.nx-in em,
+html[data-motion] [data-ordfyll].nx-fylld em{background-size:100% .055em}
+
+/* ---------- ämnesbandet ---------- */
+.nx-amnesband{
+  position:relative;overflow:clip;
+  border-block:1px solid var(--ln);
+  padding-block:clamp(22px,3.4vw,46px);
+}
+.nx-amnesband-spar{display:flex;width:max-content;will-change:transform}
+.nx-amnesband-rad{
+  display:flex;flex:none;list-style:none;margin:0;padding:0;
+}
+.nx-amnesband-rad li{
+  display:flex;align-items:center;flex:none;
+  font-size:clamp(2.4rem,7.2vw,6.6rem);font-weight:800;
+  line-height:1;letter-spacing:-.05em;white-space:nowrap;
+  color:var(--bl,currentColor);
+  padding-inline:clamp(14px,2vw,30px);
+}
+.nx-amnesband-rad li:nth-child(even){color:var(--f,currentColor)}
+.nx-amnesband-rad li::after{
+  content:"";flex:none;width:.2em;height:.2em;border-radius:50%;
+  background:var(--f,var(--orange));margin-left:clamp(28px,4vw,60px);
+}
+/* utan rörelse: raden står still och klipps vid kanten */
+html[data-motion="still"] .nx-amnesband-spar{width:auto}
+
+/* ---------- en tunn rad överst som följer scrollen ----------
+   Bara där webbläsaren kan koppla en animation till scrollen; annars
+   finns den inte. Ingen skriptloop. */
+@supports (animation-timeline:scroll()){
+  html[data-motion="full"] body::after,
+  html[data-motion="lite"] body::after{
+    content:"";position:fixed;inset:0 0 auto 0;height:3px;z-index:70;
+    pointer-events:none;background:var(--orange);
+    transform-origin:0 50%;transform:scaleX(0);
+    animation:nx-fram linear both;animation-timeline:scroll(root);
+  }
+  @keyframes nx-fram{to{transform:scaleX(1)}}
+}
