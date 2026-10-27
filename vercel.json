@@ -10,6 +10,11 @@
       "source": "/laxhjalp-programmering",
       "destination": "/laxhjalp-stockholm",
       "permanent": true
+    },
+    {
+      "source": "/laxhjalp-osteraker",
+      "destination": "/laxhjalp-stockholm#norr-och-vaster",
+      "permanent": true
     }
   ],
   "headers": [

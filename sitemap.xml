@@ -171,15 +171,15 @@
     <loc>https://nextrum.se/laxhjalp-botkyrka</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-botkyrka"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-botkyrka"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa c09db7104e7b -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa bfc97a6173d8 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-bromma</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-bromma"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-bromma"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 1522505c9eb9 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa ff231352069f -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-danderyd</loc>
@@ -196,6 +196,13 @@
     <!-- summa bcf65a429d29 -->
   </url>
   <url>
+    <loc>https://nextrum.se/laxhjalp-ekero</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-ekero"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-ekero"/>
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa f27044e8f021 -->
+  </url>
+  <url>
     <loc>https://nextrum.se/laxhjalp-eller-privatlarare</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-eller-privatlarare"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-eller-privatlarare"/>
@@ -206,8 +213,8 @@
     <loc>https://nextrum.se/laxhjalp-engelska</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-engelska"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-engelska"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa e7d0f9b510fe -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa ec17ca8730de -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-enskede-arsta-vantor</loc>
@@ -220,15 +227,15 @@
     <loc>https://nextrum.se/laxhjalp-farsta</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-farsta"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-farsta"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa f422131eb283 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 705f275e3785 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-gymnasiet</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-gymnasiet"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-gymnasiet"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 789b4161b89e -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa c4193abd82f0 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-hagersten-liljeholmen</loc>
@@ -245,25 +252,32 @@
     <!-- summa ff5629973ca0 -->
   </url>
   <url>
+    <loc>https://nextrum.se/laxhjalp-haninge</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-haninge"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-haninge"/>
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 5dd091ee7bfb -->
+  </url>
+  <url>
     <loc>https://nextrum.se/laxhjalp-hogstadiet</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-hogstadiet"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-hogstadiet"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 9f76b939745d -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 2e96502f2d88 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-huddinge</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-huddinge"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-huddinge"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 795fe5b123b9 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 3f3994249779 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-jarfalla</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-jarfalla"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-jarfalla"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 49daef427395 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 5804979ebdfb -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-kista-rinkeby</loc>
@@ -283,8 +297,8 @@
     <loc>https://nextrum.se/laxhjalp-lagstadiet</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-lagstadiet"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-lagstadiet"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa d14fbea14f56 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 9b0db0a7ee03 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-lidingo</loc>
@@ -297,50 +311,57 @@
     <loc>https://nextrum.se/laxhjalp-matematik</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-matematik"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-matematik"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 4e56f9500253 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa bd80ffa44470 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-mellanstadiet</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-mellanstadiet"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-mellanstadiet"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 8f9160abbd55 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 95d15dbbc5ac -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-moderna-sprak</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-moderna-sprak"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-moderna-sprak"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa f1d5c4482877 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa f49d1b6a2094 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-nacka</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-nacka"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-nacka"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 8034601de882 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa ee3578ad07b9 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-no</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-no"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-no"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa e2a065e9ad9b -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 73c0c6ddd6b8 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-nykvarn</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-nykvarn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-nykvarn"/>
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 97cba072193d -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-nynashamn</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-nynashamn"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-nynashamn"/>
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 32ac674cdbe1 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-online</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-online"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-online"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa a513cec6527c -->
-  </url>
-  <url>
-    <loc>https://nextrum.se/laxhjalp-osteraker</loc>
-    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-osteraker"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-osteraker"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 87d9ceca0f6d -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 096113c00ced -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-ostermalm</loc>
@@ -357,6 +378,13 @@
     <!-- summa 1495df268b61 -->
   </url>
   <url>
+    <loc>https://nextrum.se/laxhjalp-sigtuna</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-sigtuna"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-sigtuna"/>
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 6d06af7c1e48 -->
+  </url>
+  <url>
     <loc>https://nextrum.se/laxhjalp-skarholmen</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-skarholmen"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-skarholmen"/>
@@ -367,15 +395,15 @@
     <loc>https://nextrum.se/laxhjalp-skarpnack</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-skarpnack"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-skarpnack"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 728d3dff1ae1 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa bd1fd6751ccd -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-so</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-so"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-so"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 8f81995a9292 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 8d5c3c4ea61a -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-sodermalm</loc>
@@ -388,15 +416,15 @@
     <loc>https://nextrum.se/laxhjalp-sodertalje</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-sodertalje"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-sodertalje"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 8b11558e9d79 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa b3faee2f1a3d -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-sollentuna</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-sollentuna"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-sollentuna"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 421f5287f930 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 07073a1f7bd4 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-solna</loc>
@@ -416,50 +444,71 @@
     <loc>https://nextrum.se/laxhjalp-stockholm</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-stockholm"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-stockholm"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa ca7d46c15b72 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 77914d4f99b0 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-sundbyberg</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-sundbyberg"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-sundbyberg"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 42eec9fd3e52 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 8287587a5202 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-svenska</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-svenska"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-svenska"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa d67333b2b093 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa ed025a9154b3 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-taby</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-taby"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-taby"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 38cf6ded653e -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 723fdf53b157 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-tyreso</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-tyreso"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-tyreso"/>
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 2099f0ab5154 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-upplands-bro</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-upplands-bro"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-upplands-bro"/>
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa ab3a18bee12b -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-upplands-vasby</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-upplands-vasby"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-upplands-vasby"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 693ef9a8933b -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa f6e3385d65e6 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-vallentuna</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-vallentuna"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-vallentuna"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 873df7761bce -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 5e94fc9524fb -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-vallingby-hasselby</loc>
     <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-vallingby-hasselby"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-vallingby-hasselby"/>
-    <lastmod>2026-10-26</lastmod>
-    <!-- summa 9f6634503ec7 -->
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa 42bb2a8f2c33 -->
+  </url>
+  <url>
+    <loc>https://nextrum.se/laxhjalp-varmdo</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://nextrum.se/laxhjalp-varmdo"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nextrum.se/laxhjalp-varmdo"/>
+    <lastmod>2026-10-27</lastmod>
+    <!-- summa fbe09618ec24 -->
   </url>
   <url>
     <loc>https://nextrum.se/laxhjalp-vasastan</loc>

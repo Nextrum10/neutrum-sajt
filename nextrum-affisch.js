@@ -19,16 +19,50 @@
 
   var $ = function (s) { return document.querySelector(s); };
 
-  /* Områdessidorna som finns. Området är bara rubriken; QR-koden går
-     till samma formulär. */
+  /* Ortssidorna som finns: nyckel, namn, preposition och region, i
+     navets ordning. Området är bara rubriken; QR-koden går till samma
+     formulär. */
+  /* orter: skrivs av verktyg/bygg-omradessidor.py, ändra inte för hand */
   var OMRADEN = [
-    ['farsta', 'Farsta'],
-    ['hammarby-sjostad', 'Hammarby sjöstad'],
-    ['sodermalm', 'Södermalm'],
-    ['bromma', 'Bromma'],
-    ['solna', 'Solna'],
-    ['nacka', 'Nacka']
+    ['kungsholmen', 'Kungsholmen', 'på', 'Innerstaden'],
+    ['sodermalm', 'Södermalm', 'på', 'Innerstaden'],
+    ['vasastan', 'Vasastan', 'i', 'Innerstaden'],
+    ['ostermalm', 'Östermalm', 'på', 'Innerstaden'],
+    ['enskede-arsta-vantor', 'Enskede, Årsta och Vantör', 'i', 'Söderort'],
+    ['farsta', 'Farsta', 'i', 'Söderort'],
+    ['hammarby-sjostad', 'Hammarby Sjöstad', 'i', 'Söderort'],
+    ['hagersten-liljeholmen', 'Hägersten och Liljeholmen', 'i', 'Söderort'],
+    ['skarpnack', 'Skarpnäck', 'i', 'Söderort'],
+    ['skarholmen', 'Skärholmen', 'i', 'Söderort'],
+    ['alvsjo', 'Älvsjö', 'i', 'Söderort'],
+    ['bromma', 'Bromma', 'i', 'Västerort'],
+    ['kista-rinkeby', 'Kista och Rinkeby', 'i', 'Västerort'],
+    ['spanga-tensta', 'Spånga och Tensta', 'i', 'Västerort'],
+    ['vallingby-hasselby', 'Vällingby och Hässelby', 'i', 'Västerort'],
+    ['danderyd', 'Danderyd', 'i', 'Norr och väster om stan'],
+    ['ekero', 'Ekerö', 'på', 'Norr och väster om stan'],
+    ['jarfalla', 'Järfälla', 'i', 'Norr och väster om stan'],
+    ['lidingo', 'Lidingö', 'på', 'Norr och väster om stan'],
+    ['sigtuna', 'Sigtuna', 'i', 'Norr och väster om stan'],
+    ['sollentuna', 'Sollentuna', 'i', 'Norr och väster om stan'],
+    ['solna', 'Solna', 'i', 'Norr och väster om stan'],
+    ['sundbyberg', 'Sundbyberg', 'i', 'Norr och väster om stan'],
+    ['taby', 'Täby', 'i', 'Norr och väster om stan'],
+    ['upplands-vasby', 'Upplands Väsby', 'i', 'Norr och väster om stan'],
+    ['upplands-bro', 'Upplands-Bro', 'i', 'Norr och väster om stan'],
+    ['vallentuna', 'Vallentuna', 'i', 'Norr och väster om stan'],
+    ['botkyrka', 'Botkyrka', 'i', 'Söder och öster om stan'],
+    ['haninge', 'Haninge', 'i', 'Söder och öster om stan'],
+    ['huddinge', 'Huddinge', 'i', 'Söder och öster om stan'],
+    ['nacka', 'Nacka', 'i', 'Söder och öster om stan'],
+    ['nykvarn', 'Nykvarn', 'i', 'Söder och öster om stan'],
+    ['nynashamn', 'Nynäshamn', 'i', 'Söder och öster om stan'],
+    ['salem', 'Salem', 'i', 'Söder och öster om stan'],
+    ['sodertalje', 'Södertälje', 'i', 'Söder och öster om stan'],
+    ['tyreso', 'Tyresö', 'i', 'Söder och öster om stan'],
+    ['varmdo', 'Värmdö', 'på', 'Söder och öster om stan']
   ];
+  /* /orter */
 
   /* Samma dag som data-uppstart i intresseanmalan.html. Efter den står
      raden om vecka 45 inte med: en affisch skriven efter starten ska inte
@@ -47,9 +81,9 @@
   var omrade = String(param.get('omrade') || '');
   if (!OMRADEN.some(function (o) { return o[0] === omrade; })) omrade = '';
 
-  function platsNamn() {
+  function plats() {
     var o = OMRADEN.filter(function (x) { return x[0] === omrade; })[0];
-    return o ? o[1] : 'Stockholm';
+    return o ? { namn: o[1], prep: o[2] } : { namn: 'Stockholm', prep: 'i' };
   }
 
   function adress() {
@@ -93,7 +127,12 @@
   }
 
   function rita() {
-    $('#aff-plats').textContent = platsNamn();
+    var p = plats();
+    $('#aff-prep').textContent = p.prep;
+    $('#aff-plats').textContent = p.namn;
+    // "Hägersten och Liljeholmen" tar tre rader i 18 mm och skjuter
+    // rivlapparna över på en andra sida.
+    $('.aff-rubrik').classList.toggle('aff-rubrik-lang', p.namn.length > 14);
     $('#aff-kod-rubrik').textContent = kod || 'utan kod';
     $('#aff-varning').hidden = !!kod;
     $('#aff-kod').textContent = kod;
@@ -117,11 +156,17 @@
 
   var val = $('#aff-omrade');
   if (val) {
+    var grupp = null;
     OMRADEN.forEach(function (o) {
+      if (!grupp || grupp.label !== o[3]) {
+        grupp = document.createElement('optgroup');
+        grupp.label = o[3];
+        val.appendChild(grupp);
+      }
       var opt = document.createElement('option');
       opt.value = o[0];
       opt.textContent = o[1];
-      val.appendChild(opt);
+      grupp.appendChild(opt);
     });
     val.value = omrade;
     val.addEventListener('change', function () {

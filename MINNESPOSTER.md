@@ -325,10 +325,10 @@ Genererat:
 - `nextrum-maskot-svar.js` byggs av `verktyg/bygg-maskotsvar.py` ur
   `faq.html` och `en/faq.html`
 - FAQPage-märkningen i båda faq-sidorna byggs av `verktyg/bygg-faq-schema.py`
-- Sex stadsdelssidor, fyra ämnessidor (`laxhjalp-*.html`), onlinesidan,
-  fyra guider och ämnes- och guidekorten i navet byggs av
-  `verktyg/bygg-omradessidor.py`. Skalet läses ur `var-ide.html`,
-  alt-texten ur `nextrum-images.js`
+- Ortssidorna, ämnes- och stadiesidorna (`laxhjalp-*.html`), onlinesidan,
+  guiderna, `404.html`, korten och ortskatalogen i navet och affischens
+  ortslista (2026-10-27) byggs av `verktyg/bygg-omradessidor.py`. Skalet
+  läses ur `var-ide.html`, alt-texten ur `nextrum-images.js`
 - `sitemap.xml` byggs av `verktyg/bygg-sitemap.py` ur sidornas
   canonical och hreflang. `lastmod` flyttas bara när sidans text
   ändras, inte vid varje commit
@@ -359,8 +359,8 @@ Områdessidorna och ämnessidorna får inte innehålla något som inte är
 sant: inga antal, inga betyg, inga betygshöjningar, inga okontrollerade
 skolnamn, inga kursnamn med årtal. Sidor som säger samma sak med
 utbytt ortnamn är doorway pages: en ort får en sida bara med egna delar,
-egen trafik och egna bibliotek, kontrollerade (trettio orter sedan
-2026-10-26, `minne/genererat-och-ci.md`).
+egen trafik och egna bibliotek, kontrollerade (trettiosju orter sedan
+2026-10-27, `minne/genererat-och-ci.md`).
 
 ---
 
