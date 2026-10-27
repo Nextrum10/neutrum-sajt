@@ -3479,8 +3479,8 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
    skärm, mitt emot rubriken där väggen har luft (längre ned skymde det
    ett foto), och poppar fram när väggen syns (nextrum-socialt.js sätter .vantar
    och sedan .syns). På en smal skärm står det sist i väggen, i flödet.
-   Utan skript, och med rörelse bortvald, står det bara där. Krysset
-   stänger det för sidvisningen. Lutningen sitter på kortet med rotate,
+   Utan skript, och med rörelse bortvald, står det bara där. Det går
+   inte att stänga, och på en smal skärm står kortet mitt i bredden. Lutningen sitter på kortet med rotate,
    och rörelsen är scale och opacity, aldrig transform på trycket. */
 .nx-ig{
   position:relative;z-index:2;
@@ -3503,14 +3503,8 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
 .nx-ig-namn{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--bl-3)}
 .nx-ig-namn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
 .nx-ig-namn svg .fylld{fill:currentColor;stroke:none}
-.nx-ig-stang{
-  display:grid;place-items:center;width:44px;height:44px;flex:none;border:0;border-radius:50%;
-  background:transparent;color:var(--bl-3);cursor:pointer;
-}
-.nx-ig-stang svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 @media (hover:hover) and (pointer:fine){
   .nx-ig-kort:hover{scale:1.02}
-  .nx-ig-stang:hover{color:var(--bl)}
 }
 @media (min-width:1240px){
   .nx-ig{
@@ -3520,11 +3514,9 @@ html.nx-sr .nx-mork.nx-framme > *{translate:0 0}
   .nx-ig-kort{flex-direction:column;align-items:stretch;width:210px;padding:9px 9px 14px;border-radius:22px}
   .nx-ig-bild{width:100%;aspect-ratio:4/5;border-radius:15px}
   .nx-ig-text{padding:2px 6px 0}
-  .nx-ig-stang{order:-1;width:36px;height:36px;background:var(--kort);box-shadow:var(--kort-sk)}
 }
 .nx-ig.vantar{opacity:0;scale:.82;transition:opacity .45s var(--e),scale .6s var(--vy-fjader,cubic-bezier(.3,1.5,.5,1))}
 .nx-ig.vantar.syns{opacity:1;scale:1}
-.nx-ig.stangd{opacity:0;scale:.9;transition:opacity .3s var(--e),scale .3s var(--e)}
 @media (prefers-reduced-motion:reduce){
   .nx-ig.vantar{opacity:1;scale:1;transition:none}
 }
