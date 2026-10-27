@@ -506,7 +506,7 @@ BANOR = [
                 [QUERER['él'], QUERER['yo'], QUERER['tú'], 'queren'], QUERER['él'],
                 'Querer byter e mot ie. Mi amigo är han, och han vill ha heter quiere.'),
             skriv('Fyll i querer i presens: Nosotros ___ dos helados. (Vi vill ha två glassar.)', svar(QUERER['nosotros']),
-                  'I vi-formen blir e inte ie: queremos. I alla andra former blir det ie, som i quiero och quiere.'),
+                  'I vi-formen blir e inte ie: queremos (inte heller i queréis). I de andra formerna blir det ie, som i quiero och quiere.'),
             sant("'Quiero un té' betyder jag vill ha ett te.", True,
                  'Té skrivs med accent för att skilja det från te, som betyder dig, som i ¿te gusta?'),
             val('Du är hungrig. Vad säger du?', ['Tengo hambre.', 'Soy hambre.', 'Estoy hambre.', 'Tengo sed.'],
@@ -517,8 +517,8 @@ BANOR = [
             val("Vad betyder 'un vaso de agua'?", ['ett glas vatten', 'en flaska vatten', 'en kopp vatten', 'lite vatten'],
                 'ett glas vatten',
                 'Un vaso är ett glas. En flaska heter una botella och en kopp una taza.'),
-            skriv('Fyll i ordet som saknas: ¿Cuánto ___ el helado? (Vad kostar glassen?)', svar('cuesta'),
-                  'Costar betyder kosta, och o blir ue: cuesta. ¿Cuánto cuesta? betyder vad kostar det?'),
+            skriv('Fyll i ordet som saknas: ¿Cuánto ___ el helado? (Vad kostar glassen?)', svar('cuesta') + ['vale'],
+                  'Costar betyder kosta, och o blir ue: cuesta. ¿Cuánto cuesta? betyder vad kostar det? I Spanien säger man också ¿Cuánto vale?'),
         ], beskrivning='Beställa på ett café, fråga vad något kostar och be om notan.'),
 
         # -------------------------------------------- Vardagen och reflexiva verb

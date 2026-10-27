@@ -494,7 +494,7 @@ TILLAGG = [
                  'It is kept safely and should never be changed by anyone',
                  'It is short but sounds very old-fashioned today'],
                 'It holds words of many different ages and origins',
-                'Liknelsen med ett museum visar att en vanlig mening rymmer ord med olika ursprung och ålder.'),
+                'Metaforen med ett museum visar att en vanlig mening rymmer ord med olika ursprung och ålder.'),
             val('What does the borrowing of everyday words like "they" suggest about the Vikings and the English?',
                 ['That the two groups lived close together and mixed',
                  'That the Vikings ruled England for a thousand years',

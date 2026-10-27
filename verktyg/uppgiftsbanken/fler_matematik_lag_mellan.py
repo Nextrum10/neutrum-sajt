@@ -563,7 +563,7 @@ AK4_OVERSLAG_1 = niva('ma-ak4-fler-overslag-1', 'Avrunda tal', 'Avrunda och öve
          'Titta bara på tiotalssiffran, som är 4. Den är mindre än 5, så svaret blir %s. '
          'Man avrundar aldrig i två steg.' % tal(avrunda(2449, 100))),
     skriv('Avrunda 8960 till närmaste hundratal.', tal(avrunda(8960, 100)),
-          'Tiotalssiffran är 6, så 8900 går upp till %s.' % tal(avrunda(8960, 100))),
+          'Tiotalssiffran är 6, så 8960 går upp till %s.' % tal(avrunda(8960, 100))),
     para('Para ihop talet med dess avrundning till närmaste tiotal.',
          [(n, avrunda(n, 10)) for n in _TIO_ALT],
          lista('%s blir %s' % (tal(n), tal(avrunda(n, 10))) for n in _TIO_ALT) + '. Entalssiffran avgör.'),

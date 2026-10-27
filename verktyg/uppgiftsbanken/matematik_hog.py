@@ -1543,7 +1543,7 @@ MA_GY1_ALGEBRA_2 = niva('ma-gy1-algebra-2', 'Olikheter och potensekvationer', 'A
          'ska stämma.'),
     skriv('Lös potensekvationen x³ = 64. Vad är x?', x_svar(4),
           'x = ∛64 = 4, för 4 · 4 · 4 = 64. En udda potens har bara en reell lösning.'),
-    skriv('Lös x² = 0,25 där x > 0. Vad är x?', x_svar(rot(F(25, 100))),
+    skriv('Lös x² = 0,25 där x > 0. Vad är x?', x_svar(rot(F(25, 100))) + ['1/2', 'x = 1/2'],
           'x = √0,25 = 0,5, för 0,5 · 0,5 = 0,25.'),
     val('Lös 2x⁴ = 162, där x > 0.', ['x = 3', 'x = 81', 'x = 9', 'x = 4'], 'x = 3',
         'Dela med 2: x⁴ = 81. Fjärderoten ur 81 är 3, för 3 · 3 · 3 · 3 = 81. x = 81 får den som glömmer roten.'),

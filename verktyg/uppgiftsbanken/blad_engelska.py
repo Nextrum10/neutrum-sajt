@@ -1597,7 +1597,7 @@ BANOR = [
             val("Which phrase is more academic than 'I think'?",
                 ['It can be argued that', 'I reckon that', 'I guess that'], 'It can be argued that',
                 'It can be argued that är opersonligt och formellt. Reckon och guess är vardagliga.'),
-            skriv("Skriv substantivet av verbet 'argue'.", ['argument', 'arguments'],
+            skriv("Skriv substantivet av verbet 'argue'.", ['argument', 'arguments', 'argumentation'],
                   'Argue blir argument. E:et i argue faller bort: argument, inte arguement.'),
             val('Which sentence is the most precise?',
                 ['Screen time before bed can delay sleep and reduce its quality.',

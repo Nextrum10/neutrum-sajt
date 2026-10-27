@@ -576,7 +576,7 @@ BANOR = [
 
         niva('sv-ak5-ordklasser-2', 'Pronomen', 'Ordklasser', [
             val('Vilket ord kan stå i stället för ”Emma”? ”Emma är sjuk.”', ['Hon', 'Henne', 'Hennes'], 'Hon',
-                'Emma gör något i meningen. Då blir det hon.'),
+                'Emma är den som meningen handlar om, subjektet. Då blir det hon.'),
             val('Vilket ord passar? ”Jag gav … en bok.” Det handlar om Emma.', ['henne', 'hon', 'hennes'],
                 'henne', 'Emma får boken, hon gör inget. Då blir det henne.'),
             val('Vilket ord passar? ”Kan du hjälpa …?” Det handlar om den som frågar.', ['mig', 'jag', 'min'],
@@ -637,7 +637,7 @@ BANOR = [
 
         niva('sv-ak5-skiljetecken-1', 'Repliker', 'Skiljetecken', [
             skriv('Vad heter strecket som står först i en replik, som i ”– Hej!”?',
-                  ['talstreck', 'talstrecket', 'tankstreck', 'tankstrecket'],
+                  ['talstreck', 'talstrecket', 'tankstreck', 'tankstrecket', 'pratminus', 'pratminuset'],
                   'Det heter talstreck. Samma tecken kallas tankstreck när det står mitt i en mening.'),
             val('Vilken replik är rätt skriven?',
                 ['– Kom hit! ropade Ella.', '– Kom hit ropade Ella!', '– Kom hit, ropade Ella!'],

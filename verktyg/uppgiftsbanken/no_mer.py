@@ -449,7 +449,7 @@ BANOR = [
             val('Ungefär hur lång tid tar det för jorden att gå ett varv runt solen?',
                 ['Ett år', 'Ett dygn', 'En månad', 'En vecka'], 'Ett år',
                 'Ett varv runt solen tar ungefär 365 dagar, och det är ett år.'),
-            skriv('Hur många timmar är ett dygn? Svara med ett tal.', tal(24),
+            skriv('Hur många timmar är ett dygn? Svara med ett tal.', [tal(24), 'tjugofyra'],
                   'Ett dygn är 24 timmar, en dag och en natt, ungefär den tid det tar för jorden att '
                   'snurra ett varv runt sig själv.'),
             sant('Månen går runt jorden.', True,
@@ -473,7 +473,7 @@ BANOR = [
         ], beskrivning='Dag och natt, år och månad och varför månen ändrar form.'),
 
         niva('no-ak4-himlakroppar-2', 'Solsystemet', 'Himlakroppar', [
-            skriv('Hur många planeter finns det i vårt solsystem? Svara med ett tal.', tal(8),
+            skriv('Hur många planeter finns det i vårt solsystem? Svara med ett tal.', [tal(8), 'åtta'],
                   'Det finns åtta planeter: Merkurius, Venus, Jorden, Mars, Jupiter, Saturnus, '
                   'Uranus och Neptunus.'),
             ordna('Ordna planeterna, från den som är närmast solen.',
