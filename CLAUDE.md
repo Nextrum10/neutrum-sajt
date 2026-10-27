@@ -1169,7 +1169,8 @@ Detaljer: `minne/grunden.md`.
   (2026-10-27, Leo: "granska facit så att den inte är fel"): alla 8 762 frågor lösta av AI-granskare utan facit och
   jämförda; inget facit var fel, men en parning var tvetydig, sex förklaringar sa fel och ett trettiotal rätta svar
   godtogs inte ("pratminus", "t = 2", "åtta"). Rättat i `20261027150000_uppgiftsbanken_granskningen` (30 frågor
-  får nytt id), som inte är körd i drift. Trustpilots adress
+  får nytt id), i drift sedan 2026-10-27 (Leo: "kör"): hämtad ur merge-commiten 22a7847, prövad mot sin md5
+  (`a76ce426…`), körd och registrerad i ett do-block; 8 762 frågor och 1 462 nivåer aktiva före och efter. Trustpilots adress
   (`se.trustpilot.com/review/nextrum.se`) och TikToks handtag (`@nextrum.ab`) är inte kontrollerade, och fotot på
   Instagramkortet är vårt eget, inte ur flödet.
 - **Ortssidorna och sökträffarna** (2026-10-26, Leo: "gör rubrikerna bättre, Bilderna mer passande, fixa små felen
