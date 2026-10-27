@@ -1718,6 +1718,14 @@ och 09-online-v2, i den ordning de skickades), så inga nya filer.
   och samma prövning när fliken kommer tillbaka); bara bildlagret ritas om.
 - Laddar inte bildregistret står hero-bilden kvar utan film, och dagen står
   där ändå. Vyerna skickar inga bildvägar längre.
+- Fredagen bytte 2026-10-27 från `anpassning` (02) till `forklaringen` (06),
+  Leo: "vissa ser konstiga ut på mobilvy och byt ut en av de bilderna". På
+  en telefon visade 02 bara studiehjälparens tröja, utan huvud; 06 har båda
+  ansiktena i utsnittet. Söndagen bytte samma kväll från `online` (09), med
+  bara ett halvt ansikte vid kanten, till `studiehjalparen` (11), Leo:
+  "söndagen bilden gillar jag ej". Sju stilleben utan människor (skrivbord, block,
+  lampor) skulle stå varannan dag, men Leo ändrade sig samma kväll ("de ska
+  ej vara i studievyn"), så de finns inte i repot.
 - Provat med klockan ställd på varje veckodag, på dator och telefon, och i
   `verktyg/prova-barnkonton.js` (`provaHälsningen`), som har listan en gång
   till med flit: ändras den i registret blir provet rött.
@@ -2092,6 +2100,30 @@ med ett streck per steg, och steget glider in från det håll man går. Rutan ha
 står still (`prova-introduktion.js`: 85 av 85). Bekräfta rapport-bilden är borta och
 Betalning & planer har en egen (`bygg-introbilder.js` tog om alla bilderna 2026-10-27, så
 datumrutans färger syns i dem). Ändras en del i vyn: ta om bilderna och läs `ring` igen.
+
+**Rundturen i den riktiga vyn** (samma kväll, Fas 25.3, `nextrum-introduktion.js`). Leo: "introduktionen
+du gjorde på studievyerna var kassa, de jag ville var att de live skulle gå igenom en introduktion genom
+vyn i systemet snyggt ... lite då och då ploppar de upp små rutor med två meningars beskrivningar, och att
+man går vidare genom att bara trycka var som helst på skärmen". Skärmdumparna, kartan, zoomen och
+`bygg-introbilder.js` är borta. Nu:
+- Den körs när vyn är hämtad och står framme, före notisrutan (`NXStudie.introduktion` ropas sist i
+  `start` i båda vyerna), och hemskärmsrutan väntar på den (`.nx-intro` står kvar på roten). En
+  studiehjälpare som inte är godkänd har ingen vy: `valkommen` står kvar på `'intro'`, och rundturen kommer
+  när profilen är godkänd.
+- En välkomstruta mitt på, sedan en del i taget i menyns ordning, och sist "Nu är ni igång" med var man
+  loggar in nästa gång (och, före matchningen, vad som öppnas då). Varje del byter sektion genom att trycka
+  på menyns post (så gör sidomenyn allt den gör vid ett byte), lyfter menyn över hinnan med en pulserande
+  ring runt posten (`.nt-lyft`, `.nt-pek`, utan tryck), och rullar sektionens början under sidhuvudet.
+- Hålet (`.nt-hal`, vars skugga är hinnan och aldrig animeras) ramar in det första som syns i sektionen och
+  det under, men slutar där rutan får plats under: rutan ritas dold först och mäts (`förbered`). I NexLäx är
+  rubriken dold, så där är det kortet.
+- Rutan har två meningar, "N av M" och prickar, och en pil mot hålet. Ett tryck var som helst går vidare
+  (`.nt-yta` tar trycket, så inget i vyn under trycks), och Enter, mellanslag och pilarna gör detsamma.
+  Första gången går den inte att stänga; igen från Profil har den Stäng och Escape, och slutar där den
+  började. Sidan rullar inte under rundturen.
+- `verktyg/prova-introduktion.js` (101 av 101): ordningen, att varje del byter till sin sektion, att hålet och
+  rutan står på skärmen och aldrig över varandra, två meningar per del, att tryck mitt på skärmen inte
+  skickar något, dator, telefon i ljust och mörkt och en liten telefon (360 × 640).
 
 **Inga hopp vid tryck.** Leo: "överallt på vyerna när man trycker på knappar ska inget hoppa konstigt
 allt ska vara smooth". Mätt i förhandsvisningen, på en telefon och en dator i båda vyerna: varje knapp,

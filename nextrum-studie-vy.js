@@ -6313,10 +6313,6 @@
        NexLäx och profilen; Boka pass och köpen väntar på
        studiehjälparen (S.väntar), och tråden har ingen att skriva till. */
     S.väntar = S.profil.match_status !== 'matched' || !S.profil.matched_tutor_id;
-    /* Introduktionen första gången, och Fortsätt sist leder in i vyn
-       (NXStudie.introduktion). Den som inte är matchad än får veta vad
-       som öppnas när vi matchat dem. */
-    await NXStudie.introduktion(supa, S.user, 'foralder', { sparat: nyttLösen, väntar: S.väntar });
 
     visa('view-app');
 
@@ -6499,6 +6495,10 @@
        inte hunnit, och då hade ett pass man just betalat stått som
        ett pass att betala. */
     if (S.trad && S.trad.klar) await S.trad.klar.catch(() => {});
+    /* Rundturen första gången (2026-10-27): i den färdiga vyn, när allt
+       är hämtat, och före notisrutan (NXStudie.introduktion). Den som
+       inte är matchad än får veta vad som öppnas när vi matchat dem. */
+    await NXStudie.introduktion(supa, S.user, 'foralder', { sparat: nyttLösen, väntar: S.väntar });
     if (!betalsvar) NXStudie.notisruta({ user: S.user, poster: notisposter(), rubrik: 'Det här väntar på er' });
     /* Studievyn på hemskärmen (2026-10-27): guiden under Profil, och rutan
        i hörnet på en telefon tills den stängs med krysset. Rutan väntar

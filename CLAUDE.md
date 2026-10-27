@@ -311,8 +311,8 @@ regeln står där. `.vercelignore` utesluter `*.md` och `/minne`.
   hållen som hette Ta in i poolen till 2026-10-21, `bjud-in`) med personens adress, och personen väljer lösenordet själv, två gånger, i en
   ruta som inte går att stänga (`user_metadata.valkommen = 'losenord'`, `NXStudie.lösenordFörst`).
   **Inget gemensamt startlösenord**: ett känt lösenord är ett konto vem som helst kan ta före
-  ägaren. Sedan introduktionen (`'intro'`, `NXIntro`), där Fortsätt släpper in; den öppnas igen
-  under Profil. Skicka inbjudan igen står alltid i personens panel (2026-10-07): före första
+  ägaren. Sedan rundturen (`'intro'`, `NXIntro`) i den färdiga vyn, där sista trycket släpper in; den går
+  igen under Profil, och en studiehjälpare som inte är godkänd får den först när vyn finns. Skicka inbjudan igen står alltid i personens panel (2026-10-07): före första
   inloggningen en ny inbjudan, sedan en länk för lösenord (`bjud-in` med `igen`). Bara det senaste
   mejlet fungerar, och en trasig länk ger rutan Länken fungerar inte längre (`'lankfel'`), aldrig
   Glömt lösenordet. Mejlen skickar `bjud-in` själv med tiden i ämnet, så att Gmail aldrig lägger
@@ -699,10 +699,12 @@ Detaljer: `minne/grunden.md`.
 - Delat: `nextrum-studie.js` och syskonen; vyerna `-studie-vy`, `-larare-vy`, `-barn-vy` (bara NX,
   NXStudie, NXUppgifter och NXArbete för hälsningen) och `nextrum-admin.js`, med `-admin-karna.js` först och ett område per
   `-admin-*.js`; `-admin-behorighet.js` avgör vad en admin med behörigheter ser.
-  `nextrum-introduktion.js` (`NXIntro`) är introduktionen i studievyn och studiehjälparvyn, med rörelse sedan
-  2026-10-27 (en karta över delarna, skärmdumpar som zoomar mot en ring, `ring` i `STEG`); bilderna
-  står i `NEXTRUM_INTRO` och tas med `bygg-introbilder.js`. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
-  för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna och sist i introduktionen.
+  `nextrum-introduktion.js` (`NXIntro`) är rundturen i studievyn och studiehjälparvyn, i den riktiga vyn sedan
+  2026-10-27 (Leo: "live när man är inne i vyn första gången ... små rutor med två meningars beskrivningar ... går
+  vidare genom att bara trycka var som helst"): den byter sektion med menyn, tonar ner allt utom ett hål runt
+  sektionens början (`.nt-hal`) och låter en ruta med två meningar ploppa upp bredvid; inga skärmdumpar, och den
+  körs när vyn är hämtad, före notisrutan. `nextrum-hemskarm.js` (`NXHemskarm`) är rutan och guiden
+  för att lägga vyn på hemskärmen (krysset i `nx.hemskarm`, lagring.html), i båda vyerna.
   `nextrum-socialt.js` ritar Trustpilot och Instagram på startsidan.
 - **Loggan** (2026-10-15, Leo: "implementera våran nya logga"): märket och ordet nextrum, spårade i vektor ur Leos
   bild, och källan är `bilder/nextrum-logga.svg`. Sidorna har dem som två inline-svg (`.mark`, `.logo-text`) i samma
@@ -1181,7 +1183,6 @@ Byggs av `verktyg/`: `bygg-maskotsvar.py`, `bygg-faq-schema.py`, `bygg-omradessi
 (`laxhjalp-*` med stadiesidorna, orterna, guiderna, navets kort och ortskatalog, affischens ortslista och `404.html`), `bygg-sitemap.py` (`lastmod` ur texten), `bygg-logga.js` (för hand: favicons, mejlloggan, BIMI och profilbilden ur
 `bilder/nextrum-logga.svg`),
 `bygg-banken.py` (för hand, och `--facit`; bladen och facit står i `verktyg/bladen/`), `bygg-webp.py` (inte i CI; `kolla-webp.py` vaktar),
-`bygg-introbilder.js` (för hand mot en falsk Supabase, när en del som en bild visar ändras),
 `bygg-delningsbilder.js` (för hand: en delningsbild per sida i kartan, `delning/`, med rubriken och
 priset; körs när en rubrik eller priset ändras, och `kolla-delningsbilder.py` vaktar) och
 `bygg-uppgifter.py --sql` (alltid en ny migration), `bygg-faktablad.py --skriv` (faktabladen i `nexlax-fakta/`).

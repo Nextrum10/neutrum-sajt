@@ -696,150 +696,105 @@ body.betalar .hdr.bort{transform:none}
 .nx-prov-alt input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 /* ============================================================
-   INTRODUKTIONEN (2026-10-06, med rörelse sedan 2026-10-27)
-   NXIntro i nextrum-introduktion.js. Samma ruta som bekräftelserna
-   (.nx-fraga). Ett band överst med ett streck per steg, och scenen:
-   välkomstkartan, en skärmdump som zoomar mot det viktiga med en ring
-   runt det, eller telefonen som lägger vyn på hemskärmen. Steget glider
-   in från det håll man går åt (data-rikt på .nx-intro-scen, och klassen
-   ni-in som sätts om för varje steg).
+   RUNDTUREN (2026-10-06, i den riktiga vyn sedan 2026-10-27)
+   NXIntro i nextrum-introduktion.js. Vyn själv syns: en hinna tonar ner
+   allt utom hålet (.nt-hal, vars skugga ÄR hinnan), hålet glider mellan
+   stegen, och en liten ruta ploppar upp bredvid det. Ett tryck var som
+   helst går vidare: .nt-yta ligger över allt och tar trycket.
 
-   KNAPPARNA STÅR STILLA (fällan om det som står ovanför det man trycker
-   på): rutan har en fast höjd, och scenen tar det som blir över och
-   rullar inom sig om texten inte ryms. Bilden har sina proportioner
-   innan den laddat. Inga hexkoder (CLAUDE.md avsnitt 3).
+   Skuggan animeras aldrig, bara hålets plats och storlek (en ruta, en
+   gång per steg). Menyn lyfts över hinnan medan rundturen pekar i den
+   (.nt-lyft), och posten den pratar om pulserar (.nt-pek). Inga
+   hexkoder (CLAUDE.md avsnitt 3).
    ============================================================ */
-.nx-intro-box{
-  max-width:460px;padding:clamp(16px,2.2vw,26px);
-  display:flex;flex-direction:column;
-  height:min(calc(100dvh - 24px),760px);
+.nx-tur{
+  --nt-hinna:color-mix(in srgb,var(--bl) 62%,transparent);
+  position:fixed;inset:0;z-index:900;
+  opacity:0;transition:opacity .22s var(--e);
 }
-.nx-intro-topp{flex:none;margin-bottom:12px}
-.ni-band{display:flex;gap:4px}
-.ni-band i{position:relative;flex:1;height:4px;border-radius:2px;overflow:hidden;background:var(--ln-2)}
-.ni-band i::after{
-  content:"";position:absolute;inset:0;border-radius:inherit;background:var(--bl);
-  transform-origin:0 50%;scale:0 1;transition:scale .5s var(--e);
+.nx-tur.open{opacity:1}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .nx-tur{--nt-hinna:color-mix(in srgb,var(--pap) 84%,transparent)}
 }
-.ni-band i.sedd::after,.ni-band i.nu::after{scale:1 1}
-.ni-topprad{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:32px;margin-top:8px}
-.nx-intro-nr{font-size:.8rem;font-weight:600;letter-spacing:.02em;color:var(--bl-3);font-variant-numeric:tabular-nums}
-.nx-intro-scen{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-.nx-intro-knappar{flex:none;justify-content:space-between;margin-top:14px}
-/* Nästa och Fortsätt är lika breda: knappen flyttar sig inte när den byter ord. */
-.nx-intro-knappar [data-intro-fram]{min-width:8.6em}
+:root[data-theme="dark"] .nx-tur{--nt-hinna:color-mix(in srgb,var(--pap) 84%,transparent)}
 
-/* Inträdet: scenen glider in från det håll man går åt. */
-.nx-intro-scen.ni-in > *{animation:ni-in-fram .45s var(--e-ut,var(--e)) both}
-.nx-intro-scen.ni-in[data-rikt="bak"] > *{animation-name:ni-in-bak}
-@keyframes ni-in-fram{from{opacity:0;translate:28px 0}to{opacity:1;translate:0 0}}
-@keyframes ni-in-bak{from{opacity:0;translate:-28px 0}to{opacity:1;translate:0 0}}
+.nt-yta{position:absolute;inset:0;z-index:3;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
+/* Utan hål (första och sista rutan) är hinnan hela skärmen. */
+.nt-hal{
+  position:fixed;left:50%;top:50%;width:0;height:0;
+  border-radius:18px;
+  box-shadow:0 0 0 200vmax var(--nt-hinna);
+  pointer-events:none;
+  transition:left .5s var(--e-ut),top .5s var(--e-ut),width .5s var(--e-ut),height .5s var(--e-ut);
+}
+.nt-hal::after{
+  content:"";position:absolute;inset:-3px;border-radius:21px;
+  border:2px solid var(--orange);opacity:0;
+}
+.nx-tur.har-hal .nt-hal::after{animation:nt-ring 1.6s var(--e) .45s both}
+@keyframes nt-ring{0%{opacity:0;scale:1.06}35%{opacity:1;scale:1}100%{opacity:.55;scale:1}}
 
-/* Välkomstkartan: märket, rubriken och vyns delar som knappar, som
-   flyger in en i taget. */
-.ni-valkommen{display:grid;justify-items:center;text-align:center;padding:6px 2px 4px}
-.ni-mark{display:block;width:64px;height:64px;border-radius:18px;overflow:hidden;box-shadow:var(--sk-2)}
-.ni-mark img{display:block;width:100%;height:100%}
-.nx-intro-box .ni-valkommen .nx-intro-klar{margin:14px 0 0}
-.ni-valkommen h3{margin-top:12px}
-.nx-intro-box .ni-valkommen .nx-intro-text{max-width:34ch;margin-top:6px}
-.ni-karta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;margin-top:18px}
-.ni-del{
-  display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;text-align:left;
-  border:1px solid var(--ln);border-radius:16px;background:var(--pap);color:var(--bl);
-  font:inherit;font-size:.92rem;font-weight:600;letter-spacing:-.01em;cursor:pointer;
-  transition:scale .2s var(--e),border-color .2s var(--e);
+.vy-sido.nt-lyft{z-index:901;pointer-events:none}
+.vy-sido a.nt-pek{position:relative;background:var(--pap-2);color:var(--bl)}
+.vy-sido a.nt-pek.ar-har{background:var(--bl);color:var(--pap)}
+.vy-sido a.nt-pek::after{
+  content:"";position:absolute;inset:-3px;border-radius:14px;
+  border:2px solid var(--orange);pointer-events:none;
+  animation:nt-pek 1.4s var(--e) infinite;
 }
-.ni-del:active{scale:.97}
-.ni-del:last-child:nth-child(odd){grid-column:1/-1}
-.ni-del-ik{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:9px;background:var(--bricka)}
-.ni-del-ik svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.nx-intro-scen.ni-in .ni-mark{animation:ni-pop .6s var(--vy-fjader,var(--e)) .05s both}
-.nx-intro-scen.ni-in .ni-del{animation:ni-del .5s var(--e-ut,var(--e)) both;animation-delay:calc(.25s + var(--i) * .07s)}
-@keyframes ni-pop{from{opacity:0;scale:.6}to{opacity:1;scale:1}}
-@keyframes ni-del{from{opacity:0;translate:0 14px;scale:.94}to{opacity:1;translate:0 0;scale:1}}
-@media (hover:hover) and (pointer:fine){
-  .ni-del:hover{border-color:var(--bl-3)}
-}
+@keyframes nt-pek{0%{opacity:.9;scale:1}70%{opacity:0;scale:1.12}100%{opacity:0;scale:1.12}}
 
-/* En del: skärmdumpen zoomar sakta mot ringen (transform-origin i
-   ringens mitt, satt av skriptet), ringen tänds och ett tryck syns. */
-.nx-intro-bild{
-  position:relative;margin:0 auto;border-radius:16px;overflow:hidden;
-  border:1px solid var(--ln);background:var(--pap-2);
-  aspect-ratio:780/880;max-height:min(46dvh,420px);
+.nt-ruta{
+  position:fixed;z-index:4;left:12px;top:12px;width:min(360px,calc(100vw - 24px));
+  padding:16px 18px 14px;
+  border-radius:18px;background:var(--yta);color:var(--bl);
+  box-shadow:var(--sk-2);
+  opacity:0;scale:.86;pointer-events:none;outline:none;
+  transform-origin:var(--pil,50%) 0;
 }
-.nx-intro-bild picture,.nx-intro-bild img{display:block;width:100%;height:100%}
-.nx-intro-bild img{object-fit:cover;object-position:top center}
-.ni-zoom{position:relative;width:100%;height:100%}
-.nx-intro-scen.ni-in .ni-zoom{animation:ni-zoom 4.5s cubic-bezier(.25,.1,.25,1) .35s both}
-@keyframes ni-zoom{from{scale:1}to{scale:1.12}}
-.ni-ring{
-  position:absolute;border-radius:16px;pointer-events:none;
-  box-shadow:0 0 0 2px var(--orange,var(--acc)),0 0 0 999px color-mix(in srgb,var(--bl) 22%,transparent);
-  opacity:0;
+.nt-ruta[data-sida="over"]{transform-origin:var(--pil,50%) 100%}
+.nt-ruta:not([data-sida]){transform-origin:50% 50%}
+.nt-ruta.nt-upp{opacity:1;scale:1;pointer-events:auto;transition:opacity .2s var(--e),scale .42s var(--vy-fjader,var(--e-ut))}
+/* Pilen mot hålet. */
+.nt-ruta[data-sida]::before{
+  content:"";position:absolute;left:calc(var(--pil,50%) - 7px);top:-6px;
+  width:14px;height:14px;rotate:45deg;border-radius:3px;background:var(--yta);
 }
-.nx-intro-scen.ni-in .ni-ring{animation:ni-ring .7s var(--e-ut,var(--e)) .55s both}
-@keyframes ni-ring{from{opacity:0;scale:1.08}to{opacity:1;scale:1}}
-.ni-tryck{
-  position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;pointer-events:none;
-  background:color-mix(in srgb,var(--bl) 26%,transparent);border:2px solid color-mix(in srgb,var(--pap) 75%,transparent);
-  opacity:0;
+.nt-ruta[data-sida="over"]::before{top:auto;bottom:-6px}
+.nt-ruta:not([data-sida]){text-align:center}
+.nt-ruta h3{margin:0 0 6px;font-size:1.08rem;letter-spacing:-.02em}
+.nt-ruta p{margin:0;font-size:.94rem;line-height:1.5;color:var(--bl-2)}
+.nt-et{display:block;margin-bottom:4px;font-size:.74rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--orange);font-variant-numeric:tabular-nums}
+.nt-mark{display:block;width:52px;height:52px;margin:2px auto 10px;border-radius:15px;overflow:hidden;box-shadow:var(--sk-2)}
+.nt-mark img{display:block;width:100%;height:100%}
+.nt-ruta .nt-klar{margin:0 0 4px;font-size:.88rem;font-weight:600;color:var(--mossa)}
+.nt-ruta .nt-vantar{margin-top:10px;font-size:.86rem;color:var(--bl-3)}
+.nt-fot{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:30px;margin-top:12px}
+.nt-ruta:not([data-sida]) .nt-fot{justify-content:center}
+.nt-tips{font-size:.8rem;font-weight:600;color:var(--bl-3)}
+.nt-tips::before{
+  content:"";display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;
+  background:var(--orange);vertical-align:1px;animation:nt-tips 1.6s var(--e) infinite;
 }
-.nx-intro-scen.ni-in .ni-tryck{animation:ni-tryck 1.1s var(--e) 1.4s both}
-@keyframes ni-tryck{0%{opacity:0;scale:1.5}30%{opacity:1;scale:1}50%{scale:.78}75%{opacity:1;scale:1}100%{opacity:0;scale:1.2}}
-.nx-intro-kropp{margin-top:16px}
-.ni-chip{
-  display:inline-flex;align-items:center;gap:7px;margin-bottom:8px;padding:4px 10px 4px 5px;border-radius:100px;
-  background:var(--bricka);font-size:.78rem;font-weight:700;color:var(--bl-2);
+@keyframes nt-tips{0%,100%{opacity:1;scale:1}50%{opacity:.35;scale:.7}}
+.nt-prickar{display:flex;gap:5px}
+.nt-prickar i{width:6px;height:6px;border-radius:3px;background:var(--ln-2);transition:width .3s var(--e-ut),background .3s var(--e)}
+.nt-prickar i.sedd{background:var(--bl-3)}
+.nt-prickar i.nu{width:18px;background:var(--orange)}
+.nt-stang{
+  min-height:44px;margin:-8px -8px -8px auto;padding:0 10px;border:0;background:none;
+  font:inherit;font-size:.86rem;font-weight:600;color:var(--bl-2);cursor:pointer;
 }
-.ni-chip .ni-del-ik{width:22px;height:22px;border-radius:7px;background:var(--pap)}
-.ni-chip .ni-del-ik svg{width:13px;height:13px}
-.ni-chip:not(:has(.ni-del-ik)){padding-left:10px}
-.nx-intro-scen.ni-in .nx-intro-kropp > *{animation:ni-text .5s var(--e-ut,var(--e)) both}
-.nx-intro-scen.ni-in .nx-intro-kropp > :nth-child(2){animation-delay:.08s}
-.nx-intro-scen.ni-in .nx-intro-kropp > :nth-child(n+3){animation-delay:.16s}
-@keyframes ni-text{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
-/* Två klasser: .nx-fraga-box p (0,1,1) sätter storlek och färg på alla stycken i rutan. */
-.nx-intro-box .nx-intro-klar{margin:0 0 8px;font-size:.88rem;font-weight:600;color:var(--mossa)}
-.nx-intro-box h3{margin-bottom:6px}
-.nx-intro-box .nx-intro-vantar{margin-top:10px;font-size:.86rem;color:var(--bl-3)}
+/* Rutan tar fokus bara för skärmläsaren: ingen ram runt den. */
+.nt-ruta:focus,.nt-ruta:focus-visible{outline:none}
+.nt-stang:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
-/* Hemskärmens steg: telefonen ur NXHemskarm, utan ram runt. */
-.nx-intro-bild.ni-hem-fig{aspect-ratio:auto;max-height:none;overflow:visible;border:0;background:none;display:grid;place-items:center;padding:4px 0}
-.ni-hem-fig .hs-scen{--hs-b:min(176px,40dvh * .5)}
-
-@media (min-width:760px){
-  .nx-intro-box{max-width:820px;height:min(calc(100dvh - 48px),600px)}
-  .nx-intro-mitt{
-    display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);
-    gap:clamp(22px,2.6vw,32px);align-items:center;height:100%;
-  }
-  .nx-intro-bild{max-height:100%;width:100%}
-  .nx-intro-kropp{margin-top:0}
-  .ni-karta{grid-template-columns:repeat(4,minmax(0,1fr));max-width:740px}
-  .ni-del{font-size:.88rem;padding:8px 10px;gap:8px}
-  .ni-valkommen .ni-mark{width:56px;height:56px}
-  .ni-del:last-child:nth-child(odd){grid-column:auto}
-}
-@media (max-width:520px){
-  .nx-fraga.nx-intro{padding:12px}
-}
-/* Med rörelse bortvald står allt i sitt slutläge: ingen zoom, inget
-   inträde, ringen tänd och inget tryck. */
-.ni-lugn .nx-intro-scen.ni-in > *,
-.ni-lugn .nx-intro-scen.ni-in .ni-del,
-.ni-lugn .nx-intro-scen.ni-in .ni-mark,
-.ni-lugn .nx-intro-scen.ni-in .nx-intro-kropp > *,
-.ni-lugn .nx-intro-scen.ni-in .ni-zoom{animation:none}
-.ni-lugn .ni-ring{opacity:1;animation:none !important}
-.ni-lugn .ni-tryck{display:none}
-.ni-lugn .ni-band i::after{transition:none}
+.nt-lugn,.nt-lugn .nt-hal,.nt-lugn .nt-ruta.nt-upp{transition:none}
+.nt-lugn.har-hal .nt-hal::after,.nt-lugn .nt-tips::before{animation:none;opacity:1}
 @media (prefers-reduced-motion:reduce){
-  .nx-intro-scen.ni-in > *,.nx-intro-scen.ni-in .ni-del,.nx-intro-scen.ni-in .ni-mark,
-  .nx-intro-scen.ni-in .nx-intro-kropp > *,.nx-intro-scen.ni-in .ni-zoom{animation:none}
-  .ni-ring{opacity:1;animation:none !important}
-  .ni-tryck{display:none}
+  .nx-tur,.nt-hal,.nt-ruta.nt-upp,.nt-prickar i{transition:none}
+  .nx-tur.har-hal .nt-hal::after{animation:none;opacity:1}
+  .vy-sido a.nt-pek::after,.nt-tips::before{animation:none}
 }
 /* Svaret på en föreslagen tid (NXStudie.svarRuta, och flytta-rutan när
    studiehjälparen svarar med en annan tid, 2026-09-30). Räknaren står

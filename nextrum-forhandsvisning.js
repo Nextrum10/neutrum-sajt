@@ -106,7 +106,7 @@ window.NXForhandsvisning = (function () {
   }
 
   /* ============ världen ============
-     Samma familjer som introduktionens bilder (verktyg/bygg-introbilder.js),
+     Samma familjer som introduktionens bilder hade (2026-10-06 till 2026-10-27),
      med dagens datum och dagens pris. Studiehjälparen ser båda familjerna,
      föräldern sin egen (synlig() nedan, som RLS). */
   var TIMPRIS = Math.round(Number((window.NEXTRUM_CONFIG || {}).PRIS_PER_TIMME) || 399) * 100;
