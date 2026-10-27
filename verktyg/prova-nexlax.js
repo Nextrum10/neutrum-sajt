@@ -136,7 +136,7 @@ function nexlaxRpc() {
     niva_starta: k => {
       anrop.push(['niva_starta', k]);
       return { forsok: 'forsok-1', niva: { id: k.p_niva, titel: 'Jämför bråk', amne: 'Matematik', omrade: 'Bråk', arskurs: 'ak6',
-               sort: 'vanlig', lastext: null }, fragor: frågor, klara: [] };
+               sort: 'vanlig', lastext: null }, fragor: frågor, klara: [...rätt] };
     },
     niva_svara: k => {
       anrop.push(['niva_svara', k]);
@@ -311,6 +311,27 @@ async function provaBarnet(webb) {
     const k = document.querySelector('#bv-nl-vag .upg-nod-knapp, #bv-nl-vag .nl-omr');
     return !!k && k.getBoundingClientRect().top < window.innerHeight;
   }));
+  /* Kortet vid en prick (2026-10-27): det öppnas och stängs på plats, ovanpå
+     vägen. Vägen ritas inte om och ingenting under pricken flyttar sig. */
+  const kortet = await page.evaluate(async () => {
+    const vänta = ms => new Promise(r => setTimeout(r, ms));
+    const knapp = document.querySelector('#bv-nl-vag .upg-nod.aktuell .upg-nod-knapp') || document.querySelector('#bv-nl-vag .upg-nod-knapp');
+    const li = knapp.closest('.upg-nod');
+    const nästa = li.nextElementSibling && li.nextElementSibling.querySelector('.upg-nod-knapp');
+    const före = nästa ? nästa.getBoundingClientRect().top : 0;
+    knapp.click();
+    await vänta(450);
+    const kort = li.querySelector('.upg-nod-kort');
+    const ut = { öppen: li.classList.contains('vald') && !!kort && getComputedStyle(kort).position === 'absolute',
+      sammaKnapp: knapp.isConnected, flytt: nästa ? Math.round(nästa.getBoundingClientRect().top - före) : 0,
+      värd: document.querySelector('#bv-nl-vag').dataset.nod === knapp.dataset.nlNod };
+    document.querySelector('#bv-nl-vag .nl-omr-huvud').click();
+    await vänta(450);
+    ut.stängt = !li.classList.contains('vald') && !li.querySelector('.upg-nod-kort') && !document.querySelector('#bv-nl-vag').dataset.nod;
+    return ut;
+  });
+  prova('banan: kortet vid en prick öppnas på plats, ovanpå vägen, och ett tryck utanför stänger det',
+    kortet.öppen && kortet.sammaKnapp && kortet.flytt === 0 && kortet.värd && kortet.stängt, JSON.stringify(kortet));
   await page.click('#bv-nl-vag [data-nl-baner]');
   await vänta(100);
   prova('banan: banderollen öppnar väljaren', (await page.getAttribute('#bv-nl-vag [data-nl-baner]', 'aria-expanded')) === 'true'
@@ -546,7 +567,21 @@ async function provaBarnet(webb) {
     (await page.evaluate(() => window.__vibb.length)) === 0 && (await page.locator('[data-nl-vibb]').count()) === 0);
   await page.click('.upg-spel [data-spel="vidare"]');
   await svara(0);
+  /* Fyra uppgifter är två prickar på vägen (2026-10-27): efter två är första
+     delen klar, och Fortsätt hämtar nivån igen och spelar nästa. */
+  prova('spelaren: mätaren är delens', (await text(page, '.upg-spel .upg-spel-tal')) === '2/2', await text(page, '.upg-spel .upg-spel-tal'));
   await page.click('.upg-spel [data-spel="vidare"]');
+  await page.waitForSelector('.upg-spel .upg-delklar', { timeout: 5000 }).catch(() => {});
+  prova('spelaren: första delen klar, med delarna och nästa del ett tryck bort',
+    (await text(page, '.upg-spel .upg-delklar')).includes('Första delen klar') && (await page.locator('.upg-spel .upg-delklar .nl-delrad i').count()) === 2
+    && (await page.locator('.upg-spel [data-spel="nasta-del"]').count()) === 1 && (await känt(page)).includes('upplast'),
+    await text(page, '.upg-spel .upg-delklar'));
+  await page.click('.upg-spel [data-spel="nasta-del"]');
+  await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
+  const startAnrop = anrop.filter(a => a[0] === 'niva_starta');
+  prova('spelaren: nästa del fortsätter i samma försök', startAnrop.length === 2
+    && (await text(page, '.upg-spel .upg-spel-tal')) === '0/2' && (await text(page, '.upg-spel .upg-fraga-text')).includes('Fråga 3'),
+    startAnrop.length + ' ' + await text(page, '.upg-spel .upg-fraga-text'));
   await svara(0);
   prova('spelaren: tre i rad säger det', (await text(page, '.upg-spel .upg-besked')).includes('Tre i rad')
     && (await page.locator('.upg-spel.het').count()) === 1, await text(page, '.upg-spel .upg-besked'));
@@ -660,6 +695,12 @@ async function provaTelefonen(webb) {
       for (let i = 0; i < 14; i++) {
         if (await synlig(page, '.upg-spel .upg-slut')) break;
         if (await synlig(page, '.upg-spel [data-spel="vidare"]')) { await page.click('.upg-spel [data-spel="vidare"]'); continue; }
+        /* Nivån är två prickar: efter den första kommer Fortsätt till nästa. */
+        if (await synlig(page, '.upg-spel [data-spel="nasta-del"]')) {
+          await page.click('.upg-spel [data-spel="nasta-del"]');
+          await page.waitForSelector('.upg-spel .upg-alt', { timeout: 5000 }).catch(() => {});
+          continue;
+        }
         await page.click('.upg-spel .upg-alt[data-alt="0"]').catch(() => {});
         await page.click('.upg-spel [data-spel="kolla"]').catch(() => {});
         await page.waitForSelector('.upg-spel [data-spel="vidare"]', { timeout: 3000 }).catch(() => {});

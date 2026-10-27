@@ -23,7 +23,7 @@
        nl är det som hör till vägen: den öppnade noden, det som just
        klarades, de påbörjade försöken och läget (XP och serien). */
     katalog: null, forsok: [], banaVal: {},
-    nl: { öppen: null, nyss: null, pågående: {}, läge: null, laddad: false, alla: false } };
+    nl: { nyss: null, pågående: {}, läge: null, laddad: false, alla: false } };
 
   const VYER = ['view-loading', 'view-auth', 'view-wrongrole', 'view-app', 'view-fel'];
   function visa(id) { NXStudie.visaVy(VYER, id); }
@@ -251,7 +251,7 @@
        uppgift, ett ögonblick. */
     S.forsok = [];
     S.laxorLaddade = false;
-    S.nl = { öppen: null, nyss: null, pågående: {}, läge: null, laddad: false, alla: false };
+    S.nl = { nyss: null, pågående: {}, läge: null, laddad: false, alla: false };
     laddaPlan(); laddaRapporter(); laddaLaxor(); laddaNexlax(); laddaProgress(); laddaBokning();
   }
 
@@ -1245,7 +1245,7 @@
     if (!S.nl.laddad || !S.laxorLaddade) return;
     const b = nlBana();
     const ut = U.ritaVäg(Object.assign(nlUnderlag(), {
-      host, amne: b.amne, arskurs: b.arskurs, spar: b.spar, öppen: S.nl.öppen, nyss: S.nl.nyss,
+      host, amne: b.amne, arskurs: b.arskurs, spar: b.spar, nyss: S.nl.nyss,
       hjälpare: S.tutor ? { namn: S.tutor.full_name } : null
     }));
     /* Det som just klarades eller öppnades rör sig en gång, sedan inte. */
@@ -1288,7 +1288,6 @@
      bana finns inte kvar när den banan är vald. */
   function väljBana(val, fokus) {
     S.banaVal[S.valtBarn] = val;
-    S.nl.öppen = null;
     ritaOchHåll('#nl-vag .nl-baner', ritaVägen, fokus);
   }
   document.addEventListener('click', e => {
@@ -1310,17 +1309,11 @@
     const spar = e.target.closest('#nl-vag [data-nl-spar]');
     if (spar) {
       S.banaVal[S.valtBarn] = { amne: host ? host.dataset.amne : '', arskurs: host ? host.dataset.arskurs : '', spar: spar.dataset.nlSpar };
-      S.nl.öppen = null;
       ritaOchHåll('#nl-vag .nl-spar', ritaVägen, '#nl-vag [data-nl-spar="' + CSS.escape(spar.dataset.nlSpar) + '"]');
       return;
     }
-    const nod = e.target.closest('[data-nl-nod]');
-    if (nod) {
-      const id = nod.dataset.nlNod;
-      S.nl.öppen = S.nl.öppen === id ? null : id;
-      ritaOchHåll('[data-nl-nod="' + CSS.escape(id) + '"]', ritaVägen);
-      return;
-    }
+    /* En prick på vägen öppnar sitt kort på plats, i NXUppgifter (växlaNod):
+       vägen ritas inte om av ett tryck. */
     const alla = e.target.closest('[data-nl-alla]');
     if (alla) {
       const öppnar = !S.nl.alla;
@@ -1341,8 +1334,7 @@
       hämtaLäge: () => U.laddaLäge(supa, barnet),
       onStäng: ut => {
         if (!ut || !ut.ändrat) return;
-        S.nl.öppen = null;
-        S.nl.nyss = { klar: ut.klar, oppen: ut.oppen };
+        S.nl.nyss = { klar: ut.klar, oppen: ut.oppen, del: ut.del };
         laddaLaxor();
         laddaNexlax();
       }

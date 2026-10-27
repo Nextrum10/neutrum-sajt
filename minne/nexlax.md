@@ -218,7 +218,9 @@ flikarna Din väg (`#nexlax/vag`) och Din utveckling
   VAR man är, inte vems drag det är, och resten av sajten använder den
   inte. **Varje område har en egen färg** (samma kväll, Leo: "gör också
   de olika områdena olika färger"), ur samma palett (`områdesFärg`):
-  det första området har ämnets, och resten går runt. Den sitter som en
+  det första området har ämnets, och resten går runt. Sedan 2026-10-27
+  är det startsidans fyra färger och prickarna fyllda i dem (Fas 25.1
+  punkt 8). Den sitter som en
   rand upptill och i nästa nivå; ett klarat område har kvar mossans
   bock. **Översikten över områdena** (`.nl-hopp`) står under Din väg,
   med läget och områdets färg, och går INTE att trycka på. Den hoppade
@@ -867,6 +869,100 @@ man har kvar av uppgifter på varje sektion som duolingo har."
    ställen omskrivna, 26 rader).
 5. **Ledet.** Varje område har ett band med ett streck per nivå, och strecken fylls
    med frågorna som är klara (`ledHtml`, `områdetsUppgifter`), så man ser hur mycket
-   som är kvar av området; noden på vägen har en ring som fylls på samma sätt.
-   Ingenting sparas för det: det räknas ur försöken, som stjärnorna.
+   som är kvar av området; noden på vägen fick en ring som fylldes på samma sätt
+   (sedan Fas 25.1 är ringen prickens, nedan). Ingenting sparas för det: det räknas
+   ur försöken, som stjärnorna.
 6. Allt är skrivet med AI och har inte lästs av någon som undervisar i ämnet.
+
+## Fas 25.1: prickarna, ringen och det gråa (2026-10-27)
+
+Leo samma eftermiddag, med skärmbilder av Duolingos väg: "De är nånting fel i
+nexläx de blir såhär grått ibland fixa de. De med uppgifter de måste se bättre ut
+och vara skönare att trycka på de knapparna med lite feedback. Utöver de så ska de
+max vara 3 uppgifter i varje liksom prick. Den ska se ut som duolingos här. Vägen
+ska ha flera uppgifter som duolingo har här."
+
+1. **Det gråa.** `NXStudie.laddarFörsta` sätter `aria-busy` på Din väg och Din
+   utveckling medan NexLäx hämtas om (vyn tonar ned med opacity .55) och släpper det
+   när innehållet byts. `sättHtml` byter inte ett innehåll som är detsamma
+   (2026-10-13, så att inget blinkar), och då stod fliken grå tills nästa omritning:
+   till exempel Din utveckling efter en nivå som öppnats och stängts. `sättHtml` tar
+   nu bort `aria-busy` själv. Provat i förhandsvisningen: före ändringen stod
+   `#nl-utveckling` kvar med `aria-busy="true"`, efter inte.
+2. **Prickarna.** En nivå står på vägen som en prick per högst tre frågor
+   (`PER_PRICK`, `delar()`), med delarna så lika som det går (8 blir 3, 3, 2 och 10
+   blir 3, 3, 2, 2), och Mästarprovet delas likadant (i ockra, med kronan). Namnet står
+   under den första pricken och stjärnorna under den sista. **Databasen vet inget om
+   delarna**: försöket, rättningen, stjärnorna (rätt på första försöket i hela nivån)
+   och XP:n är nivåns som förut, och ingen migration behövs. Spelaren (`starta`)
+   spelar bara delen som står på tur, den första med en fråga som inte är rätt
+   besvarad. Ett fel kommer tillbaka sist i samma del, och mätaren och talet är delens.
+   När delen är klar och nivån inte kommer en egen skärm (`delKlar`: Första delen klar!,
+   delarna, delens XP, Fortsätt och Till vägen, och ljudet `upplast`) i stället för
+   resultatet. Fortsätt startar nivån igen, och `niva_starta` fortsätter i samma försök.
+   Delarna görs i ordning, så vägen räknar dem ur antalet klara frågor
+   (`nodensDelar`); en senare prick i en påbörjad nivå säger det och startar delen som
+   står på tur. Repetitionen står inte på vägen och delas inte. Fortsätt där du slutade
+   säger vilken del som står på tur.
+3. **Ett dygn.** `niva_starta` fortsätter bara ett försök som började det senaste dygnet
+   (Fas 23.2). Med tre frågor i en prick slutar fler mitt i en nivå än förut, och den
+   som kommer tillbaka efter mer än ett dygn börjar om nivån: prickarna hen gjort blir
+   ogjorda. Skärmen efter en del säger det ("Det du gjort står kvar i ett dygn"). En
+   längre tid kräver en migration, med `niva_starta`, `pagaende` i `nexlax_for_barnet`
+   och `laddaPågående` ändrade samtidigt, och är Leos beslut: den är inte skriven.
+4. **Ringen.** Runt pricken som står på tur, och runt en påbörjad, står en ring som i
+   Duolingo: ett grått spår och delens klara frågor i områdets färg, med mitten 3 px
+   under prickens så att den omsluter kanten under. Fas 25:s ring blev en liten ring i
+   nodens hörn, för `.upg-nod-knapp svg` (ikonens 30 px) och `svg{max-width:100%}` i
+   `nextrum.css` vann över dess storlek. Den har nu två klasser och `max-width:none`.
+   Pulsen runt nästa steg är borta: ringen och bubblan räcker.
+5. **Trycket.** Prickarna har en kant under (en skugga som står still), de öppna i
+   områdets ton i stället för en kontur, och trycket sjunker mot kanten (`scale` .9 med
+   `transform-origin` nedtill, och `brightness`), fjädrar tillbaka och vibrerar
+   (`känn('tryck')`, som förut). Inget `translate` och ingen animerad skugga (CLAUDE.md
+   avsnitt 3): Duolingos knapp flyttas ned över kanten, vår krymper mot den. Kortet
+   under en prick har en pil mot pricken (`--x`) och fjädrar in med `scale`, och en prick
+   som just klarats studsar (`nyss.del`, som vyerna får ur `onStäng`). Uppmätt i
+   förhandsvisningen: en tryckt prick flyttar sig 0 px när kortet öppnas och stängs.
+6. **Förhandsvisningen** har sex frågor per nivå (två prickar), och dess `niva_starta`
+   fortsätter ett försök från det senaste dygnet, som databasen. `prova-nexlax.js` provar
+   delen: mätaren, skärmen och att nästa del fortsätter i samma försök, och kortet på plats
+   (107 av 107), och
+   `prova-forhandsvisning.js` gör en nivå i två prickar (72 av 72). Det senare föll på
+   faktabladet sedan Fas 25, som ingen hade kört det mot. Faktabladets knapp i områdets
+   huvud är 44 px hög; den var 40 med en osynlig yta runt, och provet mäter knappen.
+7. **Kortet står ovanpå vägen** (samma kväll, Leo: "Hela din väg måste blir mer smooth
+   att trycka på och kännas bättre"). Förut ritade vyn om hela vägen vid varje tryck på
+   en prick (`S.nl.öppen` och `ritaOchHåll`): knappen byttes mitt i trycket och hann
+   aldrig fjädra tillbaka, och kortet stod i flödet och sköt allt under sig nedåt, som
+   sidan sedan rullades för att hålla still. Nu sköter NXUppgifter trycket själv
+   (`växlaNod`, i samma lyssnare som väljaren): kortet sätts in och tas bort på plats, med
+   en rörelse in och en ut, och vilken prick som är öppen står på värden (`data-nod`), så
+   att en omritning visar samma kort. Kortet står ovanpå vägen (`position:absolute`), som
+   Duolingos, och täcker pricken under; ett tryck utanför, Escape eller Starta stänger det.
+   Får det inte plats under pricken på skärmen står det ovanför (`placeraKort`, `.ovan`,
+   med sidhuvudet ur `NXStudie.täcktÖverst`). Vyerna har ingen kod för prickarna längre.
+   Uppmätt i förhandsvisningen: pricken, pricken under och sidan flyttar sig 0 px, ingen
+   omritning och inget layoutskifte, och kortet vid områdets sista prick står ovanpå nästa
+   område.
+8. **Startsidans färger** (samma kväll, Leo med en skärmbild av NexLäx-bladet på
+   startsidan: "Färgerna på din väg kör samma färger som dessa som finns på hemsidan").
+   Bladets fyra prickar (`.hj-nex-bild` i `index.html`) är matematikens blå, NO:s gröna,
+   engelskans lila och moderna språkens rosa. Vägens områden går runt i dem, i den ordningen
+   (`OMRÅDESFÄRGER`), och börjar i ämnets egen färg om den är en av de fyra, annars i den
+   blå; förut gick de runt i sju, med SO:s ockra och svenskans röda. Det gäller också
+   översikten över områdena, NP-sektionen och skärmen när en del är klar (`nivånsFärg`).
+   **Prickarna är fyllda i områdets färg** när de är klara, som prickarna på startsidan, och
+   tonade när de är öppna; nästa steg är fyllt med ringen och bubblan. De klarade var mossa
+   till dess. Klart står kvar i mossa där det är ett läge: ledet och huvudet i ett klart
+   område, Din utveckling och bocken när en del är klar. Mästarprovet har områdets färg och
+   blir guld (ockra) när det är klarat. Ändras prickarna på startsidan ändras listan med.
+9. **Ledet är ett streck med procent** (samma kväll, Leo: "ha de som en långt streck som
+   fylls på med färg när man klarar uppgifter tills slutet fylls den helt och då är de 100
+   procent på den lilla kolumnen åt höger där de står 18 uppgifter kvar, så den räknar o
+   procent istället"). En bit per nivå blev ett streck för hela området (`.nl-led-streck`),
+   fyllt i områdets färg med de klara uppgifterna och i mossa när området är klart, och
+   kronan står kvar sist. Rutan bredvid säger hur många procent av områdets uppgifter som
+   är klara, i stället för "18 uppgifter kvar", "Klart, provet kvar" och "Bemästrat";
+   procenten avrundas nedåt, så 100 % står först när allt är klart (3 av 18 är 16 %).
+   Mästarprovets läge syns i kronan, och skärmläsaren får det i etiketten.

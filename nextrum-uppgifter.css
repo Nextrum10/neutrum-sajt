@@ -126,7 +126,15 @@
 .nl-topp .nl-prickar i.klar{background:var(--mossa-l)}
 .nl-prickmat{display:block;width:100%;max-width:220px;height:8px;border-radius:8px;background:var(--pap-3);overflow:hidden}
 .nl-prickmat i{display:block;height:100%;background:var(--mossa)}
-.nl-nod-prickar{justify-content:center;max-width:170px;translate:calc(var(--x) * 38px) 0}
+/* Delarna i en nivå (prickarna på vägen): gjorda, den som står på tur och
+   resten. I kortet, i Fortsätt där du slutade och när en del är klar. */
+.nl-delrad{display:inline-flex;align-items:center;gap:6px}
+.nl-delrad i{display:block;width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--bl) 16%,transparent)}
+.nl-delrad i.klar{background:var(--mossa)}
+.nl-delrad i.nu{background:var(--nl-f,var(--acc));box-shadow:0 0 0 3px color-mix(in srgb,var(--nl-f,var(--acc)) 22%,transparent)}
+.nl-cta .nl-delrad{grid-column:1;margin-top:6px}
+.nl-cta .nl-delrad i{background:rgba(239,230,214,.16)}
+.nl-cta .nl-delrad i.klar{background:var(--mossa-l)}
 
 /* ---------- från studiehjälparen ---------- */
 .nl-rek{
@@ -358,12 +366,15 @@
    förskjutningen i steg om 38 px, satt per nod i nextrum-uppgifter.js.
    translate och inte margin: en nod som flyttas ska inte ändra
    radernas höjd. */
-.upg-stig{list-style:none;margin:0;padding:8px 0 4px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.upg-stig{list-style:none;margin:0;padding:8px 0 4px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .upg-nod{
-  --x:0;
+  --x:0;--xs:38px;
+  position:relative;
   display:flex;flex-direction:column;align-items:center;gap:6px;
   width:min(100%,360px);padding:4px 0;
 }
+/* Den öppna pricken och dess kort står över pricken under. */
+.upg-nod.vald{z-index:4}
 .upg-nod > .upg-nod-knapp,
 .upg-nod > .upg-nod-namn,
 .upg-nod > .upg-stj,
@@ -372,11 +383,12 @@
   .upg-nod > .upg-nod-knapp,
   .upg-nod > .upg-nod-namn,
   .upg-nod > .upg-stj,
-  .upg-nod > .upg-nod-given,
-  .nl-nod-prickar{translate:calc(var(--x) * 26px) 0}
+  .upg-nod > .upg-nod-given{translate:calc(var(--x) * 26px) 0}
+  .upg-nod{--xs:26px}
 }
 .upg-nod-knapp{
   position:relative;
+  touch-action:manipulation;
   width:72px;height:72px;border-radius:50%;
   display:grid;place-items:center;
   border:0;cursor:pointer;
@@ -384,41 +396,37 @@
   /* Djupet är en kant under, inte en skugga: box-shadow ska inte
      animeras (CLAUDE.md avsnitt 3), och kanten står still. */
   box-shadow:0 6px 0 0 color-mix(in srgb,var(--bl) 14%,transparent);
-  transition:scale .5s var(--vy-fjader,ease), background-color .2s var(--e), translate .2s var(--e);
+  /* Trycket sjunker mot kanten under (scale med origo nedtill, som en knapp
+     som trycks ned), mörknar och fjädrar tillbaka när fingret släpper. */
+  transform-origin:50% 100%;
+  transition:scale .5s var(--vy-fjader,ease), background-color .2s var(--e), filter .15s var(--e), translate .2s var(--e);
   -webkit-tap-highlight-color:transparent;
 }
 .upg-nod-knapp svg{width:30px;height:30px;stroke-width:2.2}
-.upg-nod-knapp:active{scale:.92;transition-duration:.09s}
+.upg-nod-knapp:active{scale:.9;filter:brightness(.92);transition-duration:.08s}
 .upg-nod-knapp:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
 
 .upg-nod.klar .upg-nod-knapp{background:var(--mossa);color:var(--pap);box-shadow:0 6px 0 0 color-mix(in srgb,var(--mossa) 60%,var(--bl))}
 .upg-nod.klar .upg-nod-knapp svg{stroke-width:3}
 .upg-nod.aktuell .upg-nod-knapp{background:var(--acc);color:var(--acc-ink);box-shadow:0 6px 0 0 var(--acc-lugn)}
-.upg-nod.oppen .upg-nod-knapp{background:var(--yta);color:var(--acc);border:2px solid var(--acc-line)}
+.upg-nod.oppen .upg-nod-knapp{background:color-mix(in srgb,var(--acc) 12%,var(--yta));color:var(--acc);box-shadow:0 6px 0 0 color-mix(in srgb,var(--acc) 30%,var(--yta))}
+.upg-nod.oppen .upg-nod-knapp > svg:not(.upg-nod-ring){width:26px;height:26px}
 .upg-nod.last .upg-nod-knapp{opacity:.8}
 .upg-nod.vald .upg-nod-knapp{outline:3px solid color-mix(in srgb,var(--acc) 30%,transparent);outline-offset:5px}
-/* Mästarprovet: en krona, större och i ockra när det är klarat. */
-.upg-nod.mastare .upg-nod-knapp{width:80px;height:80px;border-radius:26px}
-.upg-nod.mastare.klar .upg-nod-knapp{background:var(--ockra);box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 60%,var(--bl))}
+/* Med ringen är det ringen som säger vilken: en kontur till blev två ringar. */
+.upg-nod.vald .upg-nod-knapp:has(.upg-nod-ring){outline:0}
+.upg-nod.vald .upg-nod-knapp:has(.upg-nod-ring):focus-visible{outline:3px solid var(--focus);outline-offset:17px}
+/* Mästarprovet: kronan, i områdets färg som nivåerna och i ockra (guld)
+   när det är klarat. Det delas i prickar som nivåerna. */
+.upg-nod.mastare.klar .upg-nod-knapp{background:var(--ockra);color:var(--pap);box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 60%,var(--bl))}
 /* --bricka och inte --pap-2: i mörkt läge är --pap-2 samma färg som
    kortet, och det låsta provet syntes bara som sin kant (CLAUDE.md
    avsnitt 3, Adminvyns skal). */
 .upg-nod.mastare.last .upg-nod-knapp{background:var(--bricka);color:var(--bl-3)}
 
-/* Ringen runt den nivå man står på. En egen pseudo med opacity och
-   scale, aldrig en skugga som växer. */
-.upg-nod.aktuell .upg-nod-knapp::after{
-  content:"";position:absolute;inset:-8px;border-radius:inherit;
-  border:2px solid var(--acc-line);
-  animation:upg-puls 2.2s var(--e-mjuk) infinite;
-}
-@keyframes upg-puls{
-  0%{opacity:.9;scale:.94}
-  70%{opacity:0;scale:1.18}
-  100%{opacity:0;scale:1.18}
-}
+/* Bubblan över den prick som står på tur, ovanför ringen. */
 .upg-nod-bubbla{
-  position:absolute;bottom:calc(100% + 10px);left:50%;translate:-50% 0;
+  position:absolute;bottom:calc(100% + 20px);left:50%;translate:-50% 0;
   padding:5px 11px;border-radius:10px;white-space:nowrap;
   font-size:.78rem;font-weight:700;letter-spacing:.02em;
   background:var(--bl);color:var(--pap);
@@ -430,7 +438,7 @@
   border:6px solid transparent;border-top-color:var(--bl);
 }
 @keyframes upg-gunga{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.upg-nod.aktuell{padding-top:34px}
+.upg-nod.aktuell{padding-top:46px}
 
 /* Det som just klarades och det som just öppnades rör sig en gång. */
 .upg-nod.nyss-klar .upg-nod-knapp{animation:nl-klarad .8s var(--vy-fjader,ease) both}
@@ -442,16 +450,38 @@
 .upg-nod.last .upg-nod-namn{color:var(--bl-3);font-weight:500}
 .upg-nod-given{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc-text)}
 
-/* Kortet under en vald nod. Det växer NEDÅT, under det man tryckte
-   på: det enda som flyttar sig är det som står under fingret. */
+/* Kortet vid en vald prick står OVANPÅ vägen, som Duolingos (2026-10-27,
+   Leo: "Hela din väg måste blir mer smooth att trycka på"): ingenting under
+   det flyttar sig när det öppnas eller stängs, och sidan rullas inte för att
+   hålla något still. Det står under pricken, eller ovanför när det inte får
+   plats på skärmen (.ovan, placeraKort). Pilen pekar på pricken, som står
+   förskjuten i sicksacken (--x), och kortet växer ut ur pilen. */
 .upg-nod-kort{
-  width:100%;margin-top:8px;padding:16px;
+  position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:1;
+  padding:16px;
   border:1px solid var(--ln);border-radius:20px;background:var(--yta);
-  box-shadow:var(--sk-1);text-align:left;
+  box-shadow:var(--sk-2);text-align:left;
   display:flex;flex-direction:column;align-items:flex-start;gap:8px;
-  animation:upg-in .28s var(--e-ut) both;
+  transform-origin:calc(50% + var(--x) * var(--xs)) 0;
 }
-.nl-omr .upg-nod-kort{background:var(--tint);box-shadow:none;border-color:transparent}
+.upg-nod-kort.in{animation:upg-kort-in .36s var(--vy-fjader,ease) both}
+.upg-nod-kort.stanger{animation:upg-kort-ut .16s var(--e) both;pointer-events:none}
+.upg-nod-kort.ovan{top:auto;bottom:var(--ovan,100%);transform-origin:calc(50% + var(--x) * var(--xs)) 100%}
+.upg-nod-kort::before{
+  content:"";position:absolute;top:-8px;left:calc(50% - 8px);width:14px;height:14px;
+  translate:calc(var(--x) * var(--xs)) 0;rotate:45deg;
+  background:inherit;border:1px solid;border-color:inherit;border-right-color:transparent;border-bottom-color:transparent;
+  border-top-left-radius:4px;
+}
+.upg-nod-kort.ovan::before{top:auto;bottom:-8px;rotate:225deg}
+@keyframes upg-kort-in{from{opacity:0;scale:.9}to{opacity:1;scale:1}}
+@keyframes upg-kort-ut{to{opacity:0;scale:.94}}
+.nl-omr .upg-nod-kort{
+  background:color-mix(in srgb,var(--nl-f,var(--acc)) 7%,var(--yta));
+  border-color:color-mix(in srgb,var(--nl-f,var(--acc)) 30%,transparent);
+}
+.upg-nod-del{font-family:var(--f-mono);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--nl-f,var(--acc-text))}
+.upg-nod-kort .nl-delrad{margin:2px 0}
 .upg-nod-kort b{font-size:1rem;font-weight:650;color:var(--bl)}
 .upg-nod-kort p{margin:0;font-size:.88rem;line-height:1.5;color:var(--bl-2)}
 .upg-nod-kort .upg-nod-lage{color:var(--bl)}
@@ -949,8 +979,8 @@ li.efter .upg-genom-tecken{background:var(--acc);color:var(--acc-ink)}
 li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-alt{margin-left:0}
 
 @media (prefers-reduced-motion:reduce){
-  .upg-nod.aktuell .upg-nod-knapp::after,.upg-nod-bubbla,.nl-serie.tand svg,.upg-slut-laga.tand svg{animation:none}
-  .upg-fraga,.upg-las,.upg-besked,.upg-nod-kort,.upg-marke.nytt,.upg-slut-ny,.upg-slut-stj i.tand,
+  .upg-nod-bubbla,.nl-serie.tand svg,.upg-slut-laga.tand svg,.upg-delklar-ik{animation:none}
+  .upg-fraga,.upg-las,.upg-besked,.upg-nod-kort,.upg-nod-kort.in,.upg-nod-kort.stanger,.upg-marke.nytt,.upg-slut-ny,.upg-slut-stj i.tand,
   .upg-besked-xp,.upg-spel-xp.studs,.upg-slut-xp,.upg-slut-serie,.upg-slut-upp,
   .upg-nod.nyss-klar .upg-nod-knapp,.upg-nod.nyss-oppen .upg-nod-knapp{animation:none}
   .nl-mat i,.upg-spel-mat i{transition:none}
@@ -1055,17 +1085,23 @@ li.forhand .upg-genom-facit,li.forhand .upg-genom-varfor,li.forhand .upg-genom-a
 [data-nl-f] .nl-omr-aktuellt .nl-omr-lage{background:color-mix(in srgb,var(--nl-f) 14%,var(--yta));color:var(--nl-f)}
 [data-nl-f] .nl-omr-oppet .nl-omr-ik{background:color-mix(in srgb,var(--nl-f) 15%,var(--yta));color:var(--nl-f)}
 
-/* Noderna: nästa steg i ämnets färg, de öppna tonade, de klarade i
-   mossa som förut. Hovringen lyfter med scale, aldrig translate: den
-   äger sicksacken (--x ovan). */
-[data-nl-f] .upg-nod.aktuell .upg-nod-knapp{
+/* Prickarna i områdets färg, som prickarna på startsidan (2026-10-27): de
+   klarade och nästa steg fyllda, de öppna tonade. De klarade var mossa till
+   dess; klart står kvar i mossa i ledet, i områdets huvud och i Din
+   utveckling. Ett klarat Mästarprov är guld. Hovringen lyfter med scale,
+   aldrig translate: den äger sicksacken (--x ovan). */
+[data-nl-f] .upg-nod.aktuell .upg-nod-knapp,
+[data-nl-f] .upg-nod.klar .upg-nod-knapp{
   background:var(--nl-f);color:var(--yta);
   box-shadow:0 6px 0 0 color-mix(in srgb,var(--nl-f) 60%,var(--bl));
 }
-[data-nl-f] .upg-nod.aktuell .upg-nod-knapp::after{border-color:color-mix(in srgb,var(--nl-f) 55%,transparent)}
+[data-nl-f] .upg-nod.mastare.klar .upg-nod-knapp{
+  background:var(--ockra);color:var(--pap);
+  box-shadow:0 6px 0 0 color-mix(in srgb,var(--ockra) 60%,var(--bl));
+}
 [data-nl-f] .upg-nod.oppen .upg-nod-knapp{
-  background:color-mix(in srgb,var(--nl-f) 9%,var(--yta));color:var(--nl-f);
-  border-color:color-mix(in srgb,var(--nl-f) 45%,transparent);
+  background:color-mix(in srgb,var(--nl-f) 13%,var(--yta));color:var(--nl-f);
+  box-shadow:0 6px 0 0 color-mix(in srgb,var(--nl-f) 32%,var(--yta));
 }
 [data-nl-f] .upg-nod.vald .upg-nod-knapp{outline-color:color-mix(in srgb,var(--nl-f) 35%,transparent)}
 [data-nl-f] .upg-nod-bubbla{background:var(--nl-f);color:var(--yta)}
@@ -2154,7 +2190,7 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
    ============================================================ */
 .nl-omr-fakta{
   flex:none;display:inline-flex;align-items:center;gap:6px;
-  min-height:40px;padding:0 14px 0 11px;border-radius:100px;
+  min-height:44px;padding:0 14px 0 11px;border-radius:100px;
   border:1.5px solid color-mix(in srgb,var(--nl-f,var(--acc)) 34%,var(--ln));
   background:var(--yta);color:var(--nl-f,var(--acc-text));
   font:inherit;font-size:.8rem;font-weight:700;letter-spacing:.01em;cursor:pointer;
@@ -2167,31 +2203,28 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
 @media (hover:hover){
   .nl-omr-fakta:hover{background:color-mix(in srgb,var(--nl-f,var(--acc)) 8%,var(--yta))}
 }
-/* En tumme behöver 44 px: ytan runt knappen räknas med. */
-@media (pointer:coarse){
-  .nl-omr-fakta{position:relative}
-  .nl-omr-fakta::after{content:"";position:absolute;inset:-4px -2px}
-}
 .nl-np-omr-huvud{display:flex;align-items:center;gap:10px}
 .nl-np-omr-huvud > b{flex:1;min-width:0}
 
 .nl-led{display:flex;align-items:center;gap:12px;margin:6px 4px 2px;min-height:28px}
-.nl-led-spar{flex:1;min-width:0;display:flex;align-items:center;gap:5px;height:28px}
-.nl-led-del{
-  position:relative;display:block;flex-basis:0;min-width:10px;height:12px;border-radius:100px;overflow:hidden;
+.nl-led-spar{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:28px}
+/* Ett streck för hela området (Leo samma kväll): fyllt i områdets färg, och
+   i mossa när området är klart. */
+.nl-led-streck{
+  position:relative;display:block;flex:1;min-width:0;height:14px;border-radius:100px;overflow:hidden;
   background:color-mix(in srgb,var(--nl-f,var(--acc)) 15%,var(--pap-3));
 }
 /* Fyllningen är en egen bit som skalas i sidled: bredden räknas en gång
    och rör sig med transform, aldrig med width. */
-.nl-led-del::after{
+.nl-led-streck::after{
   content:"";position:absolute;inset:0;border-radius:inherit;
   background:var(--nl-f,var(--acc));
   transform-origin:left center;transform:scaleX(var(--d,0));
   transition:transform .6s var(--e-ut,ease);
 }
-.nl-led-del.nu{box-shadow:0 0 0 2px color-mix(in srgb,var(--nl-f,var(--acc)) 35%,transparent)}
-.nl-omr-klart .nl-led-del::after,.nl-omr-bem .nl-led-del::after,
-.nl-np-omr.klart .nl-led-del::after{background:var(--mossa)}
+.nl-omr-klart .nl-led-streck::after,.nl-omr-bem .nl-led-streck::after,
+.nl-np-omr.klart .nl-led-streck::after{background:var(--mossa)}
+.nl-led-text{min-width:56px;justify-content:center;font-variant-numeric:tabular-nums}
 .nl-led-krona{
   flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:9px;
   background:var(--bricka);color:var(--bl-3);
@@ -2206,14 +2239,39 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
 .nl-omr-bem .nl-led-text,.nl-np-omr.bem .nl-led-text{background:var(--ockra-soft)!important;color:var(--ockra-text)!important}
 @media (max-width:380px){
   .nl-omr-fakta span{display:none}
-  .nl-omr-fakta{padding:0;width:40px;justify-content:center}
+  .nl-omr-fakta{padding:0;width:44px;justify-content:center}
 }
 
-/* Ringen runt en påbörjad nivå: hur många av dess uppgifter som är gjorda. */
-.upg-nod-ring{position:absolute;inset:-9px;width:calc(100% + 18px);height:calc(100% + 18px);pointer-events:none;rotate:-90deg;overflow:visible}
-.upg-nod-ring circle{fill:none;stroke:color-mix(in srgb,var(--nl-f,var(--acc)) 18%,transparent);stroke-width:5}
+/* Ringen runt pricken som står på tur, och runt en påbörjad: ett grått
+   spår och delens uppgifter i ämnets färg, som i Duolingo. Den omsluter
+   pricken och kanten under den, och därför står mitten 3 px under prickens.
+   Två klasser och max-width: .upg-nod-knapp svg (ikonens 30 px) och
+   nextrum.css svg{max-width:100%} gjorde den till en liten ring i hörnet
+   (Leo 2026-10-27). */
+.upg-nod-knapp .upg-nod-ring{
+  position:absolute;left:-14px;top:-11px;width:calc(100% + 28px);height:calc(100% + 28px);max-width:none;
+  pointer-events:none;rotate:-90deg;overflow:visible;
+}
+.upg-nod-ring circle{fill:none;stroke:color-mix(in srgb,var(--bl) 11%,transparent);stroke-width:6}
 .upg-nod-ring circle.fylld{stroke:var(--nl-f,var(--acc));stroke-linecap:round}
-.upg-nod.mastare .upg-nod-ring{display:none}
+
+/* En del är klar (spelaren): bocken, delarna och nästa del ett tryck bort. */
+.upg-delklar{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 4px 8px}
+.upg-delklar-ik{
+  display:grid;place-items:center;width:84px;height:84px;border-radius:50%;
+  background:var(--mossa);color:var(--pap);box-shadow:0 7px 0 0 color-mix(in srgb,var(--mossa) 60%,var(--bl));
+  animation:nl-klarad .7s var(--vy-fjader,ease) both;margin-bottom:8px;
+}
+.upg-delklar-ik svg{width:40px;height:40px;stroke-width:3}
+.upg-delklar h2{margin:0;font-size:1.5rem;font-weight:750;letter-spacing:-.02em;color:var(--bl)}
+.upg-delklar-titel{margin:0;font-size:.95rem;color:var(--bl-2)}
+.upg-delklar-rad{margin:6px 0 2px}
+.upg-delklar-rad i{width:14px;height:14px}
+.upg-delklar-xp{
+  display:inline-flex;align-items:center;gap:6px;margin:4px 0 0;padding:6px 12px;border-radius:100px;
+  background:var(--ockra-soft);color:var(--ockra-text);font-weight:750;font-variant-numeric:tabular-nums;
+}
+.upg-delklar-xp svg{width:16px;height:16px}
 
 /* Översikten över områdena: ringen runt numret är hur långt man kommit. */
 .nl-hopp-aktuellt .nl-hopp-ik,.nl-hopp-oppet .nl-hopp-ik{
@@ -2268,6 +2326,6 @@ section[data-sek="nexlax"] .vy-flik-panel:not([hidden]),
 .upg-fakta-forst .nl-fakta-del:nth-child(4){animation-delay:.18s}
 @keyframes nl-fakta-in{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
 @media (prefers-reduced-motion:reduce){
-  .nl-led-del::after{transition:none}
+  .nl-led-streck::after{transition:none}
   .upg-fakta-forst .nl-fakta,.upg-fakta-forst .nl-fakta-del{animation:none}
 }
