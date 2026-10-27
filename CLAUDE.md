@@ -1135,9 +1135,12 @@ Detaljer: `minne/grunden.md`.
 
 ## 11. Vad som inte är byggt
 - **Ortssidorna och sökträffarna** (2026-10-26, Leo: "gör rubrikerna bättre, Bilderna mer passande, fixa små felen
-  ... Lägg även till landningssidor för varje ort i Stockholm") är inte mergade: 24 nya ortssidor (30 med de första),
-  navets ortskatalog, footerns regioner, nya titlar och beskrivningar på alla öppna sidor, `kolla-titlar.py` i CI och
-  ämnets, stadiets eller ortens eget foto i delningsbilderna. Ingen migration och ingen edge-funktion. **Tio kommuner
+  ... Lägg även till landningssidor för varje ort i Stockholm") är i drift sedan natten till 2026-10-27 (Leo: "merge"):
+  24 nya ortssidor (30 med de första), navets ortskatalog, footerns regioner, nya titlar och beskrivningar på alla öppna
+  sidor, `kolla-titlar.py` i CI och ämnets, stadiets eller ortens eget foto i delningsbilderna. PR #341 mergades
+  (6a20718) efter en provmerge med main där alla kontroller gick igenom, och Vercels driftsättning av merge-commiten
+  blev klar med nextrum.se som alias; sidorna är inte hämtade därifrån, för miljön nådde inte nextrum.se. Ingen
+  migration och ingen edge-funktion. Kvar: sitemapen på nytt i Search Console (`GOOGLE.md`). **Tio kommuner
   har ingen sida** (Vaxholm, Sigtuna, Upplands-Bro, Ekerö, Norrtälje, Nykvarn, Haninge, Tyresö, Nynäshamn och Värmdö):
   sökbudgeten tog slut innan deras trafik och bibliotek var kontrollerade, och Österåkers bibliotek likaså. Inga nya
   foton: nätet släppte inte fram någon bildtjänst, så sidorna delar på de 14 som finns, och inget foto visar orten.
